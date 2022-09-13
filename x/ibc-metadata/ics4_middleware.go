@@ -2,6 +2,7 @@ package ibc_metadata
 
 import (
 	"encoding/json"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -11,12 +12,14 @@ import (
 )
 
 type ICS4Middleware struct {
-	channel porttypes.ICS4Wrapper
+	channel        porttypes.ICS4Wrapper
+	ContractKeeper *wasmkeeper.PermissionedKeeper // ToDo: Turn hooks into an object and move this there
 }
 
-func NewICS4Middleware(channel porttypes.ICS4Wrapper) ICS4Middleware {
+func NewICS4Middleware(channel porttypes.ICS4Wrapper, contractKeeper *wasmkeeper.PermissionedKeeper) ICS4Middleware {
 	return ICS4Middleware{
-		channel: channel,
+		channel:        channel,
+		ContractKeeper: contractKeeper,
 	}
 }
 

@@ -206,7 +206,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// ChannelKeeper wrapper for rate limiting SendPacket(). The wasmKeeper needs to be added after it's created
 	rateLimitingParams := appKeepers.GetSubspace(ibcratelimittypes.ModuleName)
 	rateLimitingParams = rateLimitingParams.WithKeyTable(ibcratelimittypes.ParamKeyTable())
-	metadataICS4wrapper := ibcmetadata.NewICS4Middleware(appKeepers.IBCKeeper.ChannelKeeper)
+	metadataICS4wrapper := ibcmetadata.NewICS4Middleware(appKeepers.IBCKeeper.ChannelKeeper, nil)
 	appKeepers.MetadataICS4Wrapper = &metadataICS4wrapper
 	rateLimitingICS4Wrapper := ibcratelimit.NewICS4Middleware(
 		appKeepers.MetadataICS4Wrapper,
@@ -380,6 +380,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// Update the ICS4Wrapper with the proper contractKeeper
 	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
 	appKeepers.RateLimitingICS4Wrapper.ContractKeeper = appKeepers.ContractKeeper
+	appKeepers.MetadataICS4Wrapper.ContractKeeper = appKeepers.ContractKeeper
 
 	// wire up x/wasm to IBC
 	ibcRouter.AddRoute(wasm.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper))
@@ -510,7 +511,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.IncentivesKeeper.SetHooks(
 		incentivestypes.NewMultiIncentiveHooks(
-		// insert incentive hooks receivers here
+			// insert incentive hooks receivers here
 		),
 	)
 
@@ -534,7 +535,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.GovKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// insert governance hooks receivers here
+			// insert governance hooks receivers here
 		),
 	)
 }

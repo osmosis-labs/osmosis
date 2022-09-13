@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
@@ -38,50 +39,20 @@ func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 }
 
 func (suite *MiddlewareTestSuite) InstantiateSwapRouterContract(chain *osmosisibctesting.TestChain) sdk.AccAddress {
-	//osmosisApp := chain.GetOsmosisApp()
-	//transferModule := osmosisApp.AccountKeeper.GetModuleAddress(transfertypes.ModuleName)
-	//govModule := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
-
-	initMsgBz := []byte(fmt.Sprintf(`{}`))
+	initMsgBz := []byte(fmt.Sprintf(`{"owner": "%v"}`, suite.TestAccs[0].String()))
 	addr, err := chain.InstantiateContract(1, initMsgBz, "swap router contract")
 	suite.Require().NoError(err)
 	return addr
 }
 
-// ToDO: Move this to a utility module
-
-func (suite *MiddlewareTestSuite) NewValidMessage(forward bool, amount sdk.Int) sdk.Msg {
-	var coins sdk.Coin
-	var port, channel, accountFrom, accountTo string
-
-	if forward {
-		coins = sdk.NewCoin(sdk.DefaultBondDenom, amount)
-		port = suite.path.EndpointA.ChannelConfig.PortID
-		channel = suite.path.EndpointA.ChannelID
-		accountFrom = suite.chainA.SenderAccount.GetAddress().String()
-		accountTo = suite.chainB.SenderAccount.GetAddress().String()
-	} else {
-		coins = transfertypes.GetTransferCoin(
-			suite.path.EndpointB.ChannelConfig.PortID,
-			suite.path.EndpointB.ChannelID,
-			sdk.DefaultBondDenom,
-			sdk.NewInt(1),
-		)
-		coins = sdk.NewCoin(sdk.DefaultBondDenom, amount)
-		port = suite.path.EndpointB.ChannelConfig.PortID
-		channel = suite.path.EndpointB.ChannelID
-		accountFrom = suite.chainB.SenderAccount.GetAddress().String()
-		accountTo = suite.chainA.SenderAccount.GetAddress().String()
-	}
-
-	timeoutHeight := clienttypes.NewHeight(0, 100)
+func (suite *MiddlewareTestSuite) NewMessage(fromEndpoint *ibctesting.Endpoint, fromAccount, toAccount authtypes.AccountI, amount sdk.Int) sdk.Msg {
 	return transfertypes.NewMsgTransfer(
-		port,
-		channel,
-		coins,
-		accountFrom,
-		accountTo,
-		timeoutHeight,
+		fromEndpoint.ChannelConfig.PortID,
+		fromEndpoint.ChannelID,
+		sdk.NewCoin(sdk.DefaultBondDenom, amount),
+		fromAccount.GetAddress().String(),
+		toAccount.GetAddress().String(),
+		clienttypes.NewHeight(0, 100),
 		0,
 	)
 }
@@ -103,8 +74,7 @@ func (suite *MiddlewareTestSuite) SetupTest() {
 }
 
 func (suite *MiddlewareTestSuite) TestSendTransferWithoutMetadata() {
-	one := sdk.NewInt(1)
-	msg := suite.NewValidMessage(true, one)
+	msg := suite.NewMessage(suite.path.EndpointA, suite.chainA.SenderAccount, suite.chainB.SenderAccount, sdk.NewInt(1))
 	_, err := suite.chainA.SendMsgsNoCheck(msg)
 	suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
 }
@@ -195,6 +165,21 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithMetadata() {
 	fmt.Println(string(ackBytes))
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err := json.Unmarshal(ackBytes, &ack)
+	suite.Require().NoError(err)
+	suite.Require().NotContains(ack, "error")
+	fmt.Println(ack)
+}
+
+func (suite *MiddlewareTestSuite) TestRecvTransferWithSwap() {
+	err := suite.chainA.StoreContractCode("./testdata/swaprouter.wasm")
+	suite.Require().NoError(err)
+	addr := suite.InstantiateSwapRouterContract(suite.chainA)
+	contractAddr, err := sdk.Bech32ifyAddressBytes("osmo", addr)
+	suite.Require().NoError(err)
+	ackBytes := suite.receivePacket([]byte(fmt.Sprintf(`{"callback": "%v"}`, contractAddr)))
+	fmt.Println(string(ackBytes))
+	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
+	err = json.Unmarshal(ackBytes, &ack)
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 	fmt.Println(ack)
