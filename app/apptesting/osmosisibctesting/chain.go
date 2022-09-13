@@ -1,6 +1,7 @@
 package osmosisibctesting
 
 import (
+	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -16,6 +17,15 @@ import (
 
 type TestChain struct {
 	*ibctesting.TestChain
+}
+
+func NewTransferPath(chainA, chainB *TestChain) *ibctesting.Path {
+	path := ibctesting.NewPath(chainA.TestChain, chainB.TestChain)
+	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
+	path.EndpointB.ChannelConfig.PortID = ibctesting.TransferPort
+	path.EndpointA.ChannelConfig.Version = transfertypes.Version
+	path.EndpointB.ChannelConfig.Version = transfertypes.Version
+	return path
 }
 
 // SendMsgsNoCheck overrides ibctesting.TestChain.SendMsgs so that it doesn't check for errors. That should be handled by the caller

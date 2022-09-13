@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"strconv"
 	"strings"
 	"testing"
@@ -41,15 +42,6 @@ func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 	return osmosisApp, app.NewDefaultGenesisState()
 }
 
-func NewTransferPath(chainA, chainB *osmosisibctesting.TestChain) *ibctesting.Path {
-	path := ibctesting.NewPath(chainA.TestChain, chainB.TestChain)
-	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
-	path.EndpointB.ChannelConfig.PortID = ibctesting.TransferPort
-	path.EndpointA.ChannelConfig.Version = transfertypes.Version
-	path.EndpointB.ChannelConfig.Version = transfertypes.Version
-	return path
-}
-
 func (suite *MiddlewareTestSuite) SetupTest() {
 	suite.Setup()
 	ibctesting.DefaultTestingAppInit = SetupTestingApp
@@ -62,7 +54,7 @@ func (suite *MiddlewareTestSuite) SetupTest() {
 	suite.chainB = &osmosisibctesting.TestChain{
 		TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(2)),
 	}
-	suite.path = NewTransferPath(suite.chainA, suite.chainB)
+	suite.path = osmosisibctesting.NewTransferPath(suite.chainA, suite.chainB)
 	suite.coordinator.Setup(suite.path)
 }
 
@@ -105,6 +97,22 @@ func (suite *MiddlewareTestSuite) NewValidMessage(forward bool, amount sdk.Int) 
 		timeoutHeight,
 		0,
 	)
+}
+
+func (suite *MiddlewareTestSuite) InstantiateRateLimitingContract(chain *osmosisibctesting.TestChain, quotas string) sdk.AccAddress {
+	osmosisApp := chain.GetOsmosisApp()
+	transferModule := osmosisApp.AccountKeeper.GetModuleAddress(transfertypes.ModuleName)
+	govModule := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+
+	initMsgBz := []byte(fmt.Sprintf(`{
+           "gov_module":  "%s",
+           "ibc_module":"%s",
+           "paths": [%s]
+        }`,
+		govModule, transferModule, quotas))
+	addr, err := chain.InstantiateContract(1, initMsgBz, "rate limiting contract")
+	suite.Require().NoError(err)
+	return addr
 }
 
 // Tests that a receiver address longer than 4096 is not accepted
@@ -190,9 +198,10 @@ func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 
 func (suite *MiddlewareTestSuite) fullSendTest() map[string]string {
 	// Setup contract
-	suite.chainA.StoreContractCode(&suite.Suite)
+	err := suite.chainA.StoreContractCode("./testdata/rate_limiter.wasm")
+	suite.Require().NoError(err)
 	quotas := suite.BuildChannelQuota("weekly", 604800, 5, 5)
-	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
+	addr := suite.InstantiateRateLimitingContract(suite.chainA, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// Setup sender chain's quota
@@ -254,9 +263,10 @@ func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 // Test rate limiting on receives
 func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimiting() {
 	// Setup contract
-	suite.chainA.StoreContractCode(&suite.Suite)
+	err := suite.chainA.StoreContractCode("./testdata/rate_limiter.wasm")
+	suite.Require().NoError(err)
 	quotas := suite.BuildChannelQuota("weekly", 604800, 5, 5)
-	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
+	addr := suite.InstantiateRateLimitingContract(suite.chainA, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// Setup receiver chain's quota
@@ -280,8 +290,9 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimiting() {
 // Test no rate limiting occurs when the contract is set, but not quotas are condifured for the path
 func (suite *MiddlewareTestSuite) TestSendTransferNoQuota() {
 	// Setup contract
-	suite.chainA.StoreContractCode(&suite.Suite)
-	addr := suite.chainA.InstantiateContract(&suite.Suite, ``)
+	err := suite.chainA.StoreContractCode("./testdata/rate_limiter.wasm")
+	suite.Require().NoError(err)
+	addr := suite.InstantiateRateLimitingContract(suite.chainA, "")
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// send 1 token.
@@ -292,9 +303,10 @@ func (suite *MiddlewareTestSuite) TestSendTransferNoQuota() {
 // Test rate limits are reverted if a "send" fails
 func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	// Setup contract
-	suite.chainA.StoreContractCode(&suite.Suite)
+	err := suite.chainA.StoreContractCode("./testdata/rate_limiter.wasm")
+	suite.Require().NoError(err)
 	quotas := suite.BuildChannelQuota("weekly", 604800, 1, 1)
-	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
+	addr := suite.InstantiateRateLimitingContract(suite.chainA, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// Setup sender chain's quota
@@ -323,7 +335,7 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	suite.chainA.Coordinator.IncrementTime()
 
 	// Update both clients
-	err := suite.path.EndpointA.UpdateClient()
+	err = suite.path.EndpointA.UpdateClient()
 	suite.Require().NoError(err)
 	err = suite.path.EndpointB.UpdateClient()
 	suite.Require().NoError(err)

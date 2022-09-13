@@ -37,15 +37,18 @@ func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 	return osmosisApp, app.NewDefaultGenesisState()
 }
 
-// ToDO: Move this to a utility module
-func NewTransferPath(chainA, chainB *osmosisibctesting.TestChain) *ibctesting.Path {
-	path := ibctesting.NewPath(chainA.TestChain, chainB.TestChain)
-	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
-	path.EndpointB.ChannelConfig.PortID = ibctesting.TransferPort
-	path.EndpointA.ChannelConfig.Version = transfertypes.Version
-	path.EndpointB.ChannelConfig.Version = transfertypes.Version
-	return path
+func (suite *MiddlewareTestSuite) InstantiateSwapRouterContract(chain *osmosisibctesting.TestChain) sdk.AccAddress {
+	//osmosisApp := chain.GetOsmosisApp()
+	//transferModule := osmosisApp.AccountKeeper.GetModuleAddress(transfertypes.ModuleName)
+	//govModule := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+
+	initMsgBz := []byte(fmt.Sprintf(`{}`))
+	addr, err := chain.InstantiateContract(1, initMsgBz, "swap router contract")
+	suite.Require().NoError(err)
+	return addr
 }
+
+// ToDO: Move this to a utility module
 
 func (suite *MiddlewareTestSuite) NewValidMessage(forward bool, amount sdk.Int) sdk.Msg {
 	var coins sdk.Coin
@@ -95,7 +98,7 @@ func (suite *MiddlewareTestSuite) SetupTest() {
 	suite.chainB = &osmosisibctesting.TestChain{
 		TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(2)),
 	}
-	suite.path = NewTransferPath(suite.chainA, suite.chainB)
+	suite.path = osmosisibctesting.NewTransferPath(suite.chainA, suite.chainB)
 	suite.coordinator.Setup(suite.path)
 }
 

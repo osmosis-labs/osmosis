@@ -1,7 +1,6 @@
 package osmosisibctesting
 
 import (
-	"fmt"
 	"io/ioutil"
 
 	"github.com/stretchr/testify/require"
@@ -10,17 +9,17 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	"github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
-	"github.com/stretchr/testify/suite"
 )
 
-func (chain *TestChain) StoreContractCode(suite *suite.Suite) {
+func (chain *TestChain) StoreContractCode(contractFileName string) error {
 	osmosisApp := chain.GetOsmosisApp()
 
 	govKeeper := osmosisApp.GovKeeper
-	wasmCode, err := ioutil.ReadFile("./testdata/rate_limiter.wasm")
-	suite.Require().NoError(err)
+	wasmCode, err := ioutil.ReadFile(contractFileName)
+	if err != nil {
+		return err
+	}
 
 	addr := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
 	src := wasmtypes.StoreCodeProposalFixture(func(p *wasmtypes.StoreCodeProposal) {
@@ -30,32 +29,26 @@ func (chain *TestChain) StoreContractCode(suite *suite.Suite) {
 
 	// when stored
 	storedProposal, err := govKeeper.SubmitProposal(chain.GetContext(), src, false)
-	suite.Require().NoError(err)
+	if err != nil {
+		return err
+	}
 
 	// and proposal execute
 	handler := govKeeper.Router().GetRoute(storedProposal.ProposalRoute())
 	err = handler(chain.GetContext(), storedProposal.GetContent())
-	suite.Require().NoError(err)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (chain *TestChain) InstantiateContract(suite *suite.Suite, quotas string) sdk.AccAddress {
+func (chain *TestChain) InstantiateContract(codeId int, initMsgBz []byte, label string) (sdk.AccAddress, error) {
 	osmosisApp := chain.GetOsmosisApp()
-	transferModule := osmosisApp.AccountKeeper.GetModuleAddress(transfertypes.ModuleName)
-	govModule := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
-
-	initMsgBz := []byte(fmt.Sprintf(`{
-           "gov_module":  "%s",
-           "ibc_module":"%s",
-           "paths": [%s]
-        }`,
-		govModule, transferModule, quotas))
-
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
-	codeID := uint64(1)
+	codeID := uint64(codeId)
 	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
-	addr, _, err := contractKeeper.Instantiate(chain.GetContext(), codeID, creator, creator, initMsgBz, "rate limiting contract", nil)
-	suite.Require().NoError(err)
-	return addr
+	addr, _, err := contractKeeper.Instantiate(chain.GetContext(), codeID, creator, creator, initMsgBz, label, nil)
+	return addr, err
 }
 
 func (chain *TestChain) RegisterRateLimitingContract(addr []byte) {
