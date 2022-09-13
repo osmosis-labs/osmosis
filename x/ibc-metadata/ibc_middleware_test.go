@@ -10,8 +10,8 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
 	"github.com/osmosis-labs/osmosis/v12/app"
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmosisibctesting"
 	"github.com/osmosis-labs/osmosis/v12/x/ibc-metadata/types"
-	osmosisibctesting "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/testutil"
 	"github.com/stretchr/testify/suite"
 	"testing"
 )
@@ -184,7 +184,7 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithoutMetadata() {
 
 func (suite *MiddlewareTestSuite) TestRecvTransferWithBadMetadata() {
 	ack := suite.receivePacket([]byte(`{"callback": 1234}`))
-	suite.Require().Contains(ack, "error")
+	suite.Require().Contains(string(ack), "error")
 }
 
 func (suite *MiddlewareTestSuite) TestRecvTransferWithMetadata() {

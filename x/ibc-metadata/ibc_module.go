@@ -18,7 +18,7 @@ type IBCModule struct {
 	app            porttypes.IBCModule
 	ics4Middleware *ICS4Middleware
 
-	// Hooks
+	// Hooks. TODO: Turn this into multi-hooks
 	OnRecvPacketHook OnRecvPacketHookType
 }
 

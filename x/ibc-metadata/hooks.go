@@ -9,11 +9,13 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/ibc-metadata/types"
 )
 
+// ToDo: Split this into its own package
+
 type Metadata struct {
 	Callback string `json:"callback"`
 }
 
-func TestHook(im IBCModule, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
+func SwapHook(im IBCModule, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
 	var data types.FungibleTokenPacketData
 	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
 		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf("cannot unmarshal sent packet data: %s", err.Error()))

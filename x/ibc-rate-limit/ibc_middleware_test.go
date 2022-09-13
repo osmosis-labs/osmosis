@@ -15,7 +15,7 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
 	"github.com/osmosis-labs/osmosis/v12/app"
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/testutil"
+	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmosisibctesting"
 	"github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 	"github.com/stretchr/testify/suite"
 )

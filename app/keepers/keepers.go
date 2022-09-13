@@ -237,7 +237,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	metadataTransferModule := ibcmetadata.NewIBCModule(
 		transferIBCModule, appKeepers.MetadataICS4Wrapper,
 	).WithOnRecvPacketHook(
-		ibcmetadata.TestHook,
+		ibcmetadata.SwapHook,
 	)
 	rateLimitingTransferModule := ibcratelimit.NewIBCModule(metadataTransferModule, appKeepers.RateLimitingICS4Wrapper)
 
