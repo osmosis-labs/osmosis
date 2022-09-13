@@ -1,0 +1,56 @@
+package osmoutils_test
+
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
+)
+
+func (s *TestSuite) TestCreateModuleAccount() {
+	baseWithAddr := func(addr sdk.AccAddress) authtypes.AccountI {
+		acc := authtypes.ProtoBaseAccount()
+		acc.SetAddress(addr)
+		return acc
+	}
+	userAcc := func(addr sdk.AccAddress) authtypes.AccountI {
+		base := baseWithAddr(addr)
+		base.SetSequence(2)
+		return base
+	}
+	defaultModuleAccAddr := address.Module("dummy module", []byte{1})
+	testcases := map[string]struct {
+		priorAccounts []authtypes.AccountI
+		moduleAccAddr sdk.AccAddress
+		expErr        bool
+	}{
+		"no prior acc": {
+			priorAccounts: []authtypes.AccountI{},
+			moduleAccAddr: defaultModuleAccAddr,
+			expErr:        false,
+		},
+		"prior empty acc at addr": {
+			priorAccounts: []authtypes.AccountI{baseWithAddr(defaultModuleAccAddr)},
+			moduleAccAddr: defaultModuleAccAddr,
+			expErr:        false,
+		},
+		"prior user acc at addr": {
+			priorAccounts: []authtypes.AccountI{userAcc(defaultModuleAccAddr)},
+			moduleAccAddr: defaultModuleAccAddr,
+			expErr:        true,
+		},
+	}
+	for name, tc := range testcases {
+		s.Run(name, func() {
+			s.SetupTest()
+			for _, priorAcc := range tc.priorAccounts {
+				s.App.AccountKeeper.SetAccount(s.Ctx, priorAcc)
+			}
+			err := osmoutils.CreateModuleAccount(s.Ctx, s.App.AccountKeeper, tc.moduleAccAddr)
+			osmoassert.ConditionalError(s.T(), tc.expErr, err)
+		})
+	}
+
+}
