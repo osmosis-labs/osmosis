@@ -1,6 +1,6 @@
 # Mint
 
-The `mint` module is responsible for creating tokens in a flexible way to reward 
+The `mint` module is responsible for creating tokens in a flexible way to reward
 validators, incentivize providing pool liquidity, provide funds for Osmosis governance,
 and pay developers to maintain and improve Osmosis.
 
@@ -16,9 +16,8 @@ The module uses time basis epochs supported by the `epochs` module.
 3. **[Begin Epoch](#begin-epoch)**
 4. **[Parameters](#network-parameters)**
 5. **[Events](#events)**
-6. **[Transactions](#transaction)**
-7. **[Queries](#queries)**
-    
+6. **[Queries](#queries)**
+
 ## Concepts
 
 The `x/mint` module is designed to handle the regular printing of new
@@ -26,14 +25,14 @@ tokens within a chain. The design taken within Osmosis is to
 
 - Mint new tokens once per epoch (default one week)
 - To have a "Reductioning factor" every period, which reduces the number of
-    rewards per epoch. (default: period is 3 years, where a
-    year is 52 epochs. The next period's rewards are 2/3 of the prior
-    period's rewards)
+  rewards per epoch. (default: period is 3 years, where a
+  year is 52 epochs. The next period's rewards are 2/3 of the prior
+  period's rewards)
 
 ### Reduction factor
 
 This is a generalization over the Bitcoin-style halvenings. Every year, the number
- of rewards issued per week will reduce by a governance-specified 
+of rewards issued per week will reduce by a governance-specified
 factor, instead of a fixed `1/2`. So
 `RewardsPerEpochNextPeriod = ReductionFactor * CurrentRewardsPerEpoch)`.
 When `ReductionFactor = 1/2`, the Bitcoin halvenings are recreated. We
@@ -105,35 +104,34 @@ The minting module contains the following parameters:
 | weighted_developer_rewards_receivers       | array        | [{"address": "osmoxx", "weight": "1"}] |
 | minting_rewards_distribution_start_epoch   | int64        | 10                                     |
 
+Below are all the network parameters for the `mint` module:
 
-Below are all the network parameters for the ```mint``` module:
+- **`mint_denom`** - Token type being minted
+- **`genesis_epoch_provisions`** - Amount of tokens generated at the epoch to the distribution categories (see distribution_proportions)
+- **`epoch_identifier`** - Type of epoch that triggers token issuance (day, week, etc.)
+- **`reduction_period_in_epochs`** - How many epochs must occur before implementing the reduction factor
+- **`reduction_factor`** - What the total token issuance factor will reduce by after the reduction period passes (if set to 66.66%, token issuance will reduce by 1/3)
+- **`distribution_proportions`** - Categories in which the specified proportion of newly released tokens are distributed to
+  - **`staking`** - Proportion of minted funds to incentivize staking OSMO
+  - **`pool_incentives`** - Proportion of minted funds to incentivize pools on Osmosis
+  - **`developer_rewards`** - Proportion of minted funds to pay developers for their past and future work
+  - **`community_pool`** - Proportion of minted funds to be set aside for the community pool
+- **`weighted_developer_rewards_receivers`** - Addresses that developer rewards will go to. The weight attached to an address is the percent of the developer rewards that the specific address will receive
+- **`minting_rewards_distribution_start_epoch`** - What epoch will start the rewards distribution to the aforementioned distribution categories
 
-- **```mint_denom```** - Token type being minted
-- **```genesis_epoch_provisions```** - Amount of tokens generated at the epoch to the distribution categories (see distribution_proportions)
-- **```epoch_identifier```** - Type of epoch that triggers token issuance (day, week, etc.)
-- **```reduction_period_in_epochs```** - How many epochs must occur before implementing the reduction factor
-- **```reduction_factor```** - What the total token issuance factor will reduce by after the reduction period passes (if set to 66.66%, token issuance will reduce by 1/3)
-- **```distribution_proportions```** - Categories in which the specified proportion of newly released tokens are distributed to
-  - **```staking```** - Proportion of minted funds to incentivize staking OSMO
-  - **```pool_incentives```** - Proportion of minted funds to incentivize pools on Osmosis
-  - **```developer_rewards```** - Proportion of minted funds to pay developers for their past and future work
-  - **```community_pool```** - Proportion of minted funds to be set aside for the community pool
-- **```weighted_developer_rewards_receivers```** - Addresses that developer rewards will go to. The weight attached to an address is the percent of the developer rewards that the specific address will receive
-- **```minting_rewards_distribution_start_epoch```** - What epoch will start the rewards distribution to the aforementioned distribution categories
-
-**Notes**
+### Notes
 
 1. `mint_denom` defines denom for minting token - uosmo
 2. `genesis_epoch_provisions` provides minting tokens per epoch at genesis.
 3. `epoch_identifier` defines the epoch identifier to be used for the mint module e.g. "weekly"
 4. `reduction_period_in_epochs` defines the number of epochs to pass to reduce the mint amount
 5. `reduction_factor` defines the reduction factor of tokens at every `reduction_period_in_epochs`
-6. `distribution_proportions` defines distribution rules for minted tokens, when the developer 
-    rewards address is empty, it distributes tokens to the community pool.
-7. `weighted_developer_rewards_receivers` provides the addresses that receive developer 
-    rewards by weight
+6. `distribution_proportions` defines distribution rules for minted tokens, when the developer
+   rewards address is empty, it distributes tokens to the community pool.
+7. `weighted_developer_rewards_receivers` provides the addresses that receive developer
+   rewards by weight
 8. `minting_rewards_distribution_start_epoch` defines the start epoch of minting to make sure
-    minting start after initial pools are set
+   minting start after initial pools are set
 
 ## Events
 
@@ -141,11 +139,11 @@ The minting module emits the following events:
 
 ### End of Epoch
 
-|  Type  | Attribute Key     |  Attribute Value  |
-|  ------ | ------------------- | -------------------|
-|  mint |  epoch\_number     |  {epochNumber}    |
-|  mint |  epoch\_provisions |  {epochProvisions}|
-|  mint |  amount            |  {amount}         |
+| Type | Attribute Key    | Attribute Value   |
+| ---- | ---------------- | ----------------- |
+| mint | epoch_number     | {epochNumber}     |
+| mint | epoch_provisions | {epochProvisions} |
+| mint | amount           | {amount}          |
 
 </br>
 </br>
@@ -158,7 +156,7 @@ Query all the current mint parameter values
 
 ```sh
 query mint params
-``` 
+```
 
 ::: details Example
 
@@ -248,8 +246,8 @@ An example of the output:
   "minting_rewards_distribution_start_epoch": "1"
 }
 ```
-:::
 
+:::
 
 ### epoch-provisions
 
@@ -266,16 +264,17 @@ List the current epoch provisions:
 ```bash
 osmosisd query mint epoch-provisions
 ```
-As of this writing, this number will be equal to the ```genesis-epoch-provisions```. Once the ```reduction_period_in_epochs``` is reached, the ```reduction_factor``` will be initiated and reduce the amount of OSMO minted per epoch.
+
+As of this writing, this number will be equal to the `genesis-epoch-provisions`. Once the `reduction_period_in_epochs` is reached, the `reduction_factor` will be initiated and reduce the amount of OSMO minted per epoch.
 :::
 
 ## Appendix
 
 ### Current Configuration
 
-```mint``` **module: Network Parameter effects and current configuration**
+`mint` **module: Network Parameter effects and current configuration**
 
-The following tables show overall effects on different configurations of the ```mint``` related network parameters:
+The following tables show overall effects on different configurations of the `mint` related network parameters:
 
 <table><thead><tr><th></th> 
 <th><code>mint_denom</code></th> 

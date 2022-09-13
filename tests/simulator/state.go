@@ -2,9 +2,9 @@ package simapp
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"log"
 	"math/rand"
+	"os"
 	"time"
 
 	"github.com/osmosis-labs/osmosis/v12/app"
@@ -54,7 +54,7 @@ func AppStateFn() osmosim.AppStateFn {
 
 		case config.ParamsFile != "":
 			appParams := make(simtypes.AppParams)
-			bz, err := ioutil.ReadFile(config.ParamsFile)
+			bz, err := os.ReadFile(config.ParamsFile)
 			if err != nil {
 				panic(err)
 			}

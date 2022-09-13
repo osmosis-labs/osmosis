@@ -9,8 +9,7 @@ import (
 )
 
 type (
-	TwapNotFoundError = twapNotFoundError
-	TimeTooOldError   = timeTooOldError
+	TimeTooOldError = timeTooOldError
 )
 
 func (k Keeper) StoreNewRecord(ctx sdk.Context, record types.TwapRecord) {
@@ -47,6 +46,10 @@ func (k Keeper) GetChangedPools(ctx sdk.Context) []uint64 {
 
 func (k Keeper) UpdateRecord(ctx sdk.Context, record types.TwapRecord) types.TwapRecord {
 	return k.updateRecord(ctx, record)
+}
+
+func (k Keeper) UpdateRecords(ctx sdk.Context, poolId uint64) error {
+	return k.updateRecords(ctx, poolId)
 }
 
 func (k Keeper) PruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime time.Time) error {

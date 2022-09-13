@@ -281,7 +281,12 @@ test-sim-bench:
 # In that case, run `make e2e-remove-resources`
 # manually.
 # Utilizes Go cache.
-test-e2e: e2e-setup
+test-e2e: e2e-setup test-e2e-ci
+
+# test-e2e-ci runs a full e2e test suite
+# does not do any validation about the state of the Docker environment
+# As a result, avoid using this locally.
+test-e2e-ci:
 	@VERSION=$(VERSION) OSMOSIS_E2E_DEBUG_LOG=True OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION)  go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 # test-e2e-debug runs a full e2e test suite but does
@@ -334,11 +339,20 @@ e2e-remove-resources:
 lint:
 	@echo "--> Running linter"
 	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --timeout=10m
+	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md"
 
 format:
 	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run ./... --fix
 	@go run mvdan.cc/gofumpt -l -w x/ app/ ante/ tests/
+	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md" --fix
 
+mdlint:
+	@echo "--> Running markdown linter"
+	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md"
+
+markdown:
+	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md" --fix
+	
 ###############################################################################
 ###                                Localnet                                 ###
 ###############################################################################
