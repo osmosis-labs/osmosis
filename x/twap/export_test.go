@@ -76,6 +76,16 @@ func NewTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0,
 	return newTwapRecord(k, ctx, poolId, denom0, denom1)
 }
 
+func GetSpotPrices(
+	ctx sdk.Context,
+	k types.AmmInterface,
+	poolId uint64,
+	denom0, denom1 string,
+	previousErrorTime time.Time,
+) (sp0 sdk.Dec, sp1 sdk.Dec, latestErrTime time.Time) {
+	return getSpotPrices(ctx, k, poolId, denom0, denom1, previousErrorTime)
+}
+
 func (k *Keeper) GetAmmInterface() types.AmmInterface {
 	return k.ammkeeper
 }

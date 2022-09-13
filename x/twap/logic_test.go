@@ -16,10 +16,12 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/twap/types/twapmock"
 )
 
-var zeroDec = sdk.ZeroDec()
-var oneDec = sdk.OneDec()
-var twoDec = oneDec.Add(oneDec)
-var OneSec = sdk.MustNewDecFromStr("1000.000000000000000000")
+var (
+	zeroDec = sdk.ZeroDec()
+	oneDec  = sdk.OneDec()
+	twoDec  = oneDec.Add(oneDec)
+	OneSec  = sdk.MustNewDecFromStr("1000.000000000000000000")
+)
 
 func newRecord(poolId uint64, t time.Time, sp0, accum0, accum1 sdk.Dec) types.TwapRecord {
 	return types.TwapRecord{
@@ -43,6 +45,68 @@ func newExpRecord(accum0, accum1 sdk.Dec) types.TwapRecord {
 		// make new copies
 		P0ArithmeticTwapAccumulator: accum0.Add(sdk.ZeroDec()),
 		P1ArithmeticTwapAccumulator: accum1.Add(sdk.ZeroDec()),
+	}
+}
+
+func (s *TestSuite) TestGetSpotPrices() {
+	currTime := time.Now()
+	poolID := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
+	mockAMMI := twapmock.NewProgrammedAmmInterface(s.App.TwapKeeper.GetAmmInterface())
+	s.App.TwapKeeper.SetAmmInterface(mockAMMI)
+
+	ctx := s.Ctx.WithBlockTime(currTime.Add(5 * time.Second))
+
+	testCases := map[string]struct {
+		poolID                uint64
+		prevErrTime           time.Time
+		mockSp0               sdk.Dec
+		mockSp1               sdk.Dec
+		mockSp0Err            error
+		mockSp1Err            error
+		expectedSp0           sdk.Dec
+		expectedSp1           sdk.Dec
+		expectedLatestErrTime time.Time
+	}{
+		"zero sp": {
+			poolID:                poolID,
+			prevErrTime:           currTime,
+			mockSp0:               sdk.ZeroDec(),
+			mockSp1:               sdk.ZeroDec(),
+			mockSp0Err:            fmt.Errorf("foo"),
+			expectedSp0:           sdk.ZeroDec(),
+			expectedSp1:           sdk.ZeroDec(),
+			expectedLatestErrTime: ctx.BlockTime(),
+		},
+		"exceeds max spot price": {
+			poolID:                poolID,
+			prevErrTime:           currTime,
+			mockSp0:               types.MaxSpotPrice.Add(sdk.OneDec()),
+			mockSp1:               types.MaxSpotPrice.Add(sdk.OneDec()),
+			expectedSp0:           types.MaxSpotPrice,
+			expectedSp1:           types.MaxSpotPrice,
+			expectedLatestErrTime: ctx.BlockTime(),
+		},
+		"valid spot prices": {
+			poolID:                poolID,
+			prevErrTime:           currTime,
+			mockSp0:               sdk.NewDecWithPrec(55, 2),
+			mockSp1:               sdk.NewDecWithPrec(6, 1),
+			expectedSp0:           sdk.NewDecWithPrec(55, 2),
+			expectedSp1:           sdk.NewDecWithPrec(6, 1),
+			expectedLatestErrTime: currTime,
+		},
+	}
+
+	for name, tc := range testCases {
+		s.Run(name, func() {
+			mockAMMI.ProgramPoolSpotPriceOverride(tc.poolID, denom0, denom1, tc.mockSp0, tc.mockSp0Err)
+			mockAMMI.ProgramPoolSpotPriceOverride(tc.poolID, denom1, denom0, tc.mockSp1, tc.mockSp1Err)
+
+			sp0, sp1, latestErrTime := twap.GetSpotPrices(ctx, mockAMMI, tc.poolID, denom0, denom1, tc.prevErrTime)
+			s.Require().Equal(tc.expectedSp0, sp0)
+			s.Require().Equal(tc.expectedSp1, sp1)
+			s.Require().Equal(tc.expectedLatestErrTime, latestErrTime)
+		})
 	}
 }
 
