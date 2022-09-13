@@ -105,11 +105,8 @@ func (simState *simState) SimulateBlock(simCtx *simtypes.SimCtx, blockSimulator 
 	if simState.curTime == (time.Time{}) {
 		simState.curTime = time.Unix(0, 0)
 	}
-	simState.curTime = simState.curTime.Add(time.Second * 6)
-
 	requestBeginBlock := simState.beginBlock(simCtx)
-	simState.header.Time = simState.curTime
-	ctx := simCtx.BaseApp().NewContext(false, simState.header).WithBlockTime(simState.curTime)
+	ctx := simCtx.BaseApp().NewContext(false, simState.header).WithBlockTime(simState.header.Time)
 
 	// Run queued operations. Ignores blocksize if blocksize is too small
 	numQueuedOpsRan, err := simState.runQueuedOperations(simCtx, ctx)
