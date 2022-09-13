@@ -36,8 +36,13 @@ func newTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0,
 // returns spot prices for both pairs of assets, and the 'latest error time'.
 // The latest error time is the previous time if there is no error in getting spot prices.
 // if there is an error in getting spot prices, then the latest error time is ctx.Blocktime()
-func getSpotPrices(ctx sdk.Context, k types.AmmInterface, poolId uint64, denom0, denom1 string, previousErrorTime time.Time) (
-	sp0 sdk.Dec, sp1 sdk.Dec, latestErrTime time.Time) {
+func getSpotPrices(
+	ctx sdk.Context,
+	k types.AmmInterface,
+	poolId uint64,
+	denom0, denom1 string,
+	previousErrorTime time.Time,
+) (sp0 sdk.Dec, sp1 sdk.Dec, latestErrTime time.Time) {
 	latestErrTime = previousErrorTime
 	sp0, err0 := k.CalculateSpotPrice(ctx, poolId, denom0, denom1)
 	sp1, err1 := k.CalculateSpotPrice(ctx, poolId, denom1, denom0)
