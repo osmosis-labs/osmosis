@@ -20,15 +20,6 @@ type Querier struct {
 
 var _ queryproto.QueryServer = Querier{}
 
-func (q Querier) Params(grpcCtx context.Context,
-	req *queryproto.ParamsRequest,
-) (*queryproto.ParamsResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.Params(ctx, *req)
-}
 func (q Querier) ArithmeticTwap(grpcCtx context.Context,
 	req *queryproto.ArithmeticTwapRequest,
 ) (*queryproto.ArithmeticTwapResponse, error) {
@@ -46,4 +37,13 @@ func (q Querier) ArithmeticTwapToNow(grpcCtx context.Context,
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.ArithmeticTwapToNow(ctx, *req)
+}
+func (q Querier) Params(grpcCtx context.Context,
+	req *queryproto.ParamsRequest,
+) (*queryproto.ParamsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.Params(ctx, *req)
 }
