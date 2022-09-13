@@ -47,8 +47,6 @@ type simState struct {
 	opCount    int
 
 	config Config
-
-	curTime time.Time
 }
 
 func newSimulatorState(simParams Params, initialHeader tmproto.Header, tb testing.TB, w io.Writer, validators mockValidators, config Config) *simState {
@@ -102,9 +100,6 @@ func (simState *simState) SimulateBlock(simCtx *simtypes.SimCtx, blockSimulator 
 		return true, nil
 	}
 
-	if simState.curTime == (time.Time{}) {
-		simState.curTime = time.Unix(0, 0)
-	}
 	requestBeginBlock := simState.beginBlock(simCtx)
 	ctx := simCtx.BaseApp().NewContext(false, simState.header).WithBlockTime(simState.header.Time)
 
