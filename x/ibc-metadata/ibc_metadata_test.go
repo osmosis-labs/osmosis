@@ -2,7 +2,6 @@ package ibc_metadata_test
 
 import (
 	"encoding/json"
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
@@ -38,12 +37,12 @@ func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 	return osmosisApp, app.NewDefaultGenesisState()
 }
 
-func (suite *MiddlewareTestSuite) InstantiateSwapRouterContract(chain *osmosisibctesting.TestChain) sdk.AccAddress {
-	initMsgBz := []byte(fmt.Sprintf(`{"owner": "%v"}`, suite.TestAccs[0].String()))
-	addr, err := chain.InstantiateContract(1, initMsgBz, "swap router contract")
-	suite.Require().NoError(err)
-	return addr
-}
+//func (suite *MiddlewareTestSuite) InstantiateSwapRouterContract(chain *osmosisibctesting.TestChain) sdk.AccAddress {
+//	initMsgBz := []byte(fmt.Sprintf(`{"owner": "%v"}`, suite.TestAccs[0].String()))
+//	addr, err := chain.InstantiateContract(1, initMsgBz, "swap router contract")
+//	suite.Require().NoError(err)
+//	return addr
+//}
 
 func (suite *MiddlewareTestSuite) NewMessage(fromEndpoint *ibctesting.Endpoint, fromAccount, toAccount authtypes.AccountI, amount sdk.Int) sdk.Msg {
 	return transfertypes.NewMsgTransfer(
@@ -83,12 +82,12 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithMetadata() {
 	channelCap := suite.chainA.GetChannelCapability(
 		suite.path.EndpointA.ChannelConfig.PortID,
 		suite.path.EndpointA.ChannelID)
-	packetData := types.FungibleTokenPacketData{
+	packetData := types.FungibleTokenPacketData{ // This is our overridden packet that contains the metadata field
 		Denom:    sdk.DefaultBondDenom,
 		Amount:   "1",
 		Sender:   suite.chainA.SenderAccount.GetAddress().String(),
 		Receiver: suite.chainB.SenderAccount.GetAddress().String(),
-		Metadata: []byte(`{"callback": "something"}`),
+		Metadata: []byte{}, // Emptu metadata
 	}
 
 	var packet = channeltypes.NewPacket(
@@ -101,7 +100,7 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithMetadata() {
 		clienttypes.NewHeight(0, 100),
 		0,
 	)
-	err := suite.chainA.GetOsmosisApp().MetadataICS4Wrapper.SendPacket(
+	err := suite.chainA.GetOsmosisApp().IBCKeeper.ChannelKeeper.SendPacket(
 		suite.chainA.GetContext(), channelCap, packet)
 	suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
 }
@@ -110,12 +109,12 @@ func (suite *MiddlewareTestSuite) receivePacket(metadata []byte) []byte {
 	channelCap := suite.chainB.GetChannelCapability(
 		suite.path.EndpointB.ChannelConfig.PortID,
 		suite.path.EndpointB.ChannelID)
-	packetData := types.FungibleTokenPacketData{
+	packetData := types.FungibleTokenPacketData{ // This is our overridden packet that contains the metadata field
 		Denom:    sdk.DefaultBondDenom,
 		Amount:   "1",
 		Sender:   suite.chainB.SenderAccount.GetAddress().String(),
 		Receiver: suite.chainA.SenderAccount.GetAddress().String(),
-		Metadata: metadata,
+		Metadata: metadata, // The metadata is here, but it's empty, since the tests bellow don't provide it
 	}
 
 	var packet = channeltypes.NewPacket(
@@ -128,7 +127,7 @@ func (suite *MiddlewareTestSuite) receivePacket(metadata []byte) []byte {
 		clienttypes.NewHeight(0, 100),
 		0,
 	)
-	err := suite.chainB.GetOsmosisApp().MetadataICS4Wrapper.SendPacket(
+	err := suite.chainB.GetOsmosisApp().IBCKeeper.ChannelKeeper.SendPacket(
 		suite.chainB.GetContext(), channelCap, packet)
 	suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
 
@@ -155,32 +154,34 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithoutMetadata() {
 	suite.receivePacket(nil)
 }
 
-func (suite *MiddlewareTestSuite) TestRecvTransferWithBadMetadata() {
-	ack := suite.receivePacket([]byte(`{"callback": 1234}`))
-	suite.Require().Contains(string(ack), "error")
-}
-
-func (suite *MiddlewareTestSuite) TestRecvTransferWithMetadata() {
-	ackBytes := suite.receivePacket([]byte(`{"callback": "test2"}`))
-	fmt.Println(string(ackBytes))
-	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
-	err := json.Unmarshal(ackBytes, &ack)
-	suite.Require().NoError(err)
-	suite.Require().NotContains(ack, "error")
-	fmt.Println(ack)
-}
-
-func (suite *MiddlewareTestSuite) TestRecvTransferWithSwap() {
-	err := suite.chainA.StoreContractCode("./testdata/swaprouter.wasm")
-	suite.Require().NoError(err)
-	addr := suite.InstantiateSwapRouterContract(suite.chainA)
-	contractAddr, err := sdk.Bech32ifyAddressBytes("osmo", addr)
-	suite.Require().NoError(err)
-	ackBytes := suite.receivePacket([]byte(fmt.Sprintf(`{"callback": "%v"}`, contractAddr)))
-	fmt.Println(string(ackBytes))
-	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
-	err = json.Unmarshal(ackBytes, &ack)
-	suite.Require().NoError(err)
-	suite.Require().NotContains(ack, "error")
-	fmt.Println(ack)
-}
+// // This requires the metadata middleware
+//
+//func (suite *MiddlewareTestSuite) TestRecvTransferWithBadMetadata() {
+//	ack := suite.receivePacket([]byte(`{"callback": 1234}`))
+//	suite.Require().Contains(string(ack), "error")
+//}
+//
+//func (suite *MiddlewareTestSuite) TestRecvTransferWithMetadata() {
+//	ackBytes := suite.receivePacket([]byte(`{"callback": "test2"}`))
+//	fmt.Println(string(ackBytes))
+//	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
+//	err := json.Unmarshal(ackBytes, &ack)
+//	suite.Require().NoError(err)
+//	suite.Require().NotContains(ack, "error")
+//	fmt.Println(ack)
+//}
+//
+//func (suite *MiddlewareTestSuite) TestRecvTransferWithSwap() {
+//	err := suite.chainA.StoreContractCode("./testdata/swaprouter.wasm")
+//	suite.Require().NoError(err)
+//	addr := suite.InstantiateSwapRouterContract(suite.chainA)
+//	contractAddr, err := sdk.Bech32ifyAddressBytes("osmo", addr)
+//	suite.Require().NoError(err)
+//	ackBytes := suite.receivePacket([]byte(fmt.Sprintf(`{"callback": "%v"}`, contractAddr)))
+//	fmt.Println(string(ackBytes))
+//	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
+//	err = json.Unmarshal(ackBytes, &ack)
+//	suite.Require().NoError(err)
+//	suite.Require().NotContains(ack, "error")
+//	fmt.Println(ack)
+//}

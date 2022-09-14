@@ -2,7 +2,6 @@ package keepers
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,9 +32,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	ibcmetadata "github.com/osmosis-labs/osmosis/v12/x/ibc-metadata"
-	ibcratelimit "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 
 	icahost "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/keeper"
@@ -114,14 +110,10 @@ type AppKeepers struct {
 	SuperfluidKeeper     *superfluidkeeper.Keeper
 	GovKeeper            *govkeeper.Keeper
 	WasmKeeper           *wasm.Keeper
-	ContractKeeper       *wasmkeeper.PermissionedKeeper
 	TokenFactoryKeeper   *tokenfactorykeeper.Keeper
-
 	// IBC modules
 	// transfer module
-	TransferModule          transfer.AppModule
-	MetadataICS4Wrapper     *ibcmetadata.ICS4Middleware
-	RateLimitingICS4Wrapper *ibcratelimit.ICS4Wrapper
+	TransferModule transfer.AppModule
 
 	// keys to access the substores
 	keys    map[string]*sdk.KVStoreKey
@@ -203,26 +195,12 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.ScopedIBCKeeper,
 	)
 
-	// ChannelKeeper wrapper for rate limiting SendPacket(). The wasmKeeper needs to be added after it's created
-	rateLimitingParams := appKeepers.GetSubspace(ibcratelimittypes.ModuleName)
-	rateLimitingParams = rateLimitingParams.WithKeyTable(ibcratelimittypes.ParamKeyTable())
-	metadataICS4wrapper := ibcmetadata.NewICS4Middleware(appKeepers.IBCKeeper.ChannelKeeper, nil)
-	appKeepers.MetadataICS4Wrapper = &metadataICS4wrapper
-	rateLimitingICS4Wrapper := ibcratelimit.NewICS4Middleware(
-		appKeepers.MetadataICS4Wrapper,
-		appKeepers.AccountKeeper,
-		nil,
-		appKeepers.BankKeeper,
-		rateLimitingParams,
-	)
-	appKeepers.RateLimitingICS4Wrapper = &rateLimitingICS4Wrapper
-
 	// Create Transfer Keepers
 	transferKeeper := ibctransferkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[ibctransfertypes.StoreKey],
 		appKeepers.GetSubspace(ibctransfertypes.ModuleName),
-		appKeepers.RateLimitingICS4Wrapper, // The ICS4Wrapper is replaced by the rateLimitingICS4Wrapper instead of the channel
+		appKeepers.IBCKeeper.ChannelKeeper,
 		appKeepers.IBCKeeper.ChannelKeeper,
 		&appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.AccountKeeper,
@@ -232,14 +210,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.TransferKeeper = &transferKeeper
 	appKeepers.TransferModule = transfer.NewAppModule(*appKeepers.TransferKeeper)
 	transferIBCModule := transfer.NewIBCModule(*appKeepers.TransferKeeper)
-
-	// RateLimiting IBC Middleware
-	metadataTransferModule := ibcmetadata.NewIBCModule(
-		transferIBCModule, appKeepers.MetadataICS4Wrapper,
-	).WithOnRecvPacketHook(
-		ibcmetadata.SwapHook,
-	)
-	rateLimitingTransferModule := ibcratelimit.NewIBCModule(metadataTransferModule, appKeepers.RateLimitingICS4Wrapper)
 
 	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, appKeepers.keys[icahosttypes.StoreKey],
@@ -256,7 +226,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
-		AddRoute(ibctransfertypes.ModuleName, &rateLimitingTransferModule)
+		AddRoute(ibctransfertypes.ModuleName, transferIBCModule)
 	// Note: the sealing is done after creating wasmd and wiring that up
 
 	// create evidence keeper with router
@@ -377,10 +347,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		wasmOpts...,
 	)
 	appKeepers.WasmKeeper = &wasmKeeper
-	// Update the ICS4Wrapper with the proper contractKeeper
-	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
-	appKeepers.RateLimitingICS4Wrapper.ContractKeeper = appKeepers.ContractKeeper
-	appKeepers.MetadataICS4Wrapper.ContractKeeper = appKeepers.ContractKeeper
 
 	// wire up x/wasm to IBC
 	ibcRouter.AddRoute(wasm.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper))
@@ -474,7 +440,6 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
 	paramsKeeper.Subspace(twaptypes.ModuleName)
-	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
 
 	return paramsKeeper
 }
@@ -511,7 +476,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.IncentivesKeeper.SetHooks(
 		incentivestypes.NewMultiIncentiveHooks(
-			// insert incentive hooks receivers here
+		// insert incentive hooks receivers here
 		),
 	)
 
@@ -535,7 +500,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.GovKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// insert governance hooks receivers here
+		// insert governance hooks receivers here
 		),
 	)
 }
