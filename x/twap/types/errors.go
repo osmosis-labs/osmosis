@@ -65,9 +65,9 @@ func (e InvalidRecordCountError) Error() string {
 
 type InvalidRecordTimeError struct {
 	RecordBlockHeight int64
-	RecordTime time.Time
+	RecordTime        time.Time
 	ActualBlockHeight int64
-	ActualTime time.Time
+	ActualTime        time.Time
 }
 
 func (e InvalidRecordTimeError) Error() string {
