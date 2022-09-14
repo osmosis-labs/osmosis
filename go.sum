@@ -882,8 +882,8 @@ github.com/osmosis-labs/go-mutesting v0.0.0-20220811235203-65a53b4ea8e3 h1:/imbK
 github.com/osmosis-labs/go-mutesting v0.0.0-20220811235203-65a53b4ea8e3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
 github.com/osmosis-labs/iavl v0.17.3-osmo-v7 h1:6KcADC/WhL7yDmNQxUIJt2XmzNt4FfRmq9gRke45w74=
 github.com/osmosis-labs/iavl v0.17.3-osmo-v7/go.mod h1:lJEOIlsd3sVO0JDyXWIXa9/Ur5FBscP26zJx0KxHjto=
-github.com/osmosis-labs/wasmd v0.27.0-rc2.0.20220517191021-59051aa18d58 h1:15l3Iss2oCGCeJRi2g3CuCnqmEjpAr3Le7cDnoN/LS0=
-github.com/osmosis-labs/wasmd v0.27.0-rc2.0.20220517191021-59051aa18d58/go.mod h1:0h8WBsFhyingomsrN+34JVZe/qRySHYHICyTEokCkYU=
+github.com/osmosis-labs/wasmd v0.28.0-osmo-v12.1 h1:CZJSa65banZjQNyDhp+nGPr9MRYrIfOU/aO3ww2V1Rg=
+github.com/osmosis-labs/wasmd v0.28.0-osmo-v12.1/go.mod h1:7YWBfoD6zPuu6pmqnq/kMNpc+xqOaxEtolJ5/7xHzB8=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
 github.com/otiai10/copy v1.7.0 h1:hVoPiN+t+7d2nzzwMiDHPSOogsWAStewq3TwU05+clE=
 github.com/otiai10/curr v0.0.0-20150429015615-9b4961190c95/go.mod h1:9qAhocn7zKJG+0mI8eUu6xqkFDYS2kb2saOteoSB3cE=
