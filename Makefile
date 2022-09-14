@@ -344,6 +344,16 @@ format:
 	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run ./... --fix
 	@go run mvdan.cc/gofumpt -l -w x/ app/ ante/ tests/
 
+<<<<<<< HEAD
+=======
+mdlint:
+	@echo "--> Running markdown linter"
+	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md"
+
+markdown:
+	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md" --fix
+
+>>>>>>> 69d648c7 (localosmosis patch (#2728))
 ###############################################################################
 ###                                Localnet                                 ###
 ###############################################################################
@@ -352,7 +362,7 @@ localnet-keys:
 	. tests/localosmosis/scripts/add_keys.sh
 
 localnet-build:
-	@docker-compose -f tests/localosmosis/docker-compose.yml build
+	@DOCKER_BUILDKIT=1 docker-compose -f tests/localosmosis/docker-compose.yml build
 
 localnet-build-state-export:
 	@docker build -t local:osmosis-se --build-arg ID=$(ID) -f tests/localosmosis/mainnet_state/Dockerfile-stateExport .
