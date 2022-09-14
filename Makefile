@@ -352,7 +352,7 @@ localnet-keys:
 	. tests/localosmosis/scripts/add_keys.sh
 
 localnet-build:
-	@docker-compose -f tests/localosmosis/docker-compose.yml build
+	@DOCKER_BUILDKIT=1 docker-compose -f tests/localosmosis/docker-compose.yml build
 
 localnet-build-state-export:
 	@docker build -t local:osmosis-se --build-arg ID=$(ID) -f tests/localosmosis/mainnet_state/Dockerfile-stateExport .
