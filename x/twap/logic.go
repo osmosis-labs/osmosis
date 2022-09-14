@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
-	gammkeeper "github.com/osmosis-labs/osmosis/v12/x/gamm/keeper"
 )
 
 func newTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
@@ -147,7 +146,7 @@ func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 // updateRecord returns a new record with updated accumulators and block time
 // for the current block time.
 func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) (types.TwapRecord, error) {
-	if record.Height > ctx.BlockHeight() || record.Time.After(ctx.BlockTime()) || record.Time.Equal(ctx.BlockTime()) {
+	if record.Height >= ctx.BlockHeight() || record.Time.After(ctx.BlockTime()) || record.Time.Equal(ctx.BlockTime()) {
 		return types.TwapRecord{}, types.InvalidRecordTimeError{
 			RecordBlockHeight: record.Height,
 			RecordTime:        record.Time,
