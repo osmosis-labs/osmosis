@@ -197,7 +197,6 @@ func TestMsgBeginUnlocking(t *testing.T) {
 				require.Equal(t, signers[0].String(), addr1)
 			} else {
 				require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
-
 			}
 		})
 	}
