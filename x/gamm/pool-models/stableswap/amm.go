@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	cubeRootTwo, _        = sdk.NewDec(2).ApproxRoot(3)
-	threeCubeRootTwo      = cubeRootTwo.MulInt64(3)
+	cubeRootTwo, _   = sdk.NewDec(2).ApproxRoot(3)
+	threeCubeRootTwo = cubeRootTwo.MulInt64(3)
 )
 
 // solidly CFMM is xy(x^2 + y^2) = k
