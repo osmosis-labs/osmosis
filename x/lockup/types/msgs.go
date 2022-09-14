@@ -111,8 +111,8 @@ func (m MsgBeginUnlocking) ValidateBasic() error {
 		return fmt.Errorf("invalid lockup ID, got %v", m.ID)
 	}
 
-	// only allow unlocks with a single denom or nil
-	if m.Coins.Len() > 1 {
+	// only allow unlocks with a single denom or empty
+	if m.Coins.Len() != 1 || !m.Coins.Empty() {
 		return fmt.Errorf("can only unlock one denom per lock ID, got %v", m.Coins)
 	}
 
