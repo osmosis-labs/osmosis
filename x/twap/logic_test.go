@@ -21,30 +21,6 @@ var oneDec = sdk.OneDec()
 var twoDec = oneDec.Add(oneDec)
 var OneSec = sdk.MustNewDecFromStr("1000.000000000000000000")
 
-<<<<<<< HEAD
-func newRecord(poolId uint64, t time.Time, sp0, accum0, accum1 sdk.Dec) types.TwapRecord {
-	return types.TwapRecord{
-		PoolId:          poolId,
-		Asset0Denom:     defaultTwoAssetCoins[0].Denom,
-		Asset1Denom:     defaultTwoAssetCoins[1].Denom,
-		Time:            t,
-		P0LastSpotPrice: sp0,
-		P1LastSpotPrice: sdk.OneDec().Quo(sp0),
-		// make new copies
-		P0ArithmeticTwapAccumulator: accum0.Add(sdk.ZeroDec()),
-		P1ArithmeticTwapAccumulator: accum1.Add(sdk.ZeroDec()),
-	}
-}
-
-// make an expected record for math tests, we adjust other values in the test runner.
-func newExpRecord(accum0, accum1 sdk.Dec) types.TwapRecord {
-	return types.TwapRecord{
-		Asset0Denom: defaultTwoAssetCoins[0].Denom,
-		Asset1Denom: defaultTwoAssetCoins[1].Denom,
-		// make new copies
-		P0ArithmeticTwapAccumulator: accum0.Add(sdk.ZeroDec()),
-		P1ArithmeticTwapAccumulator: accum1.Add(sdk.ZeroDec()),
-=======
 func (s *TestSuite) TestGetSpotPrices() {
 	currTime := time.Now()
 	poolID := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
@@ -104,7 +80,6 @@ func (s *TestSuite) TestGetSpotPrices() {
 			s.Require().Equal(tc.expectedSp1, sp1)
 			s.Require().Equal(tc.expectedLatestErrTime, latestErrTime)
 		})
->>>>>>> 45c47a07 (x/twap: three asset pool tests (part 2 of 2) (#2690))
 	}
 }
 
