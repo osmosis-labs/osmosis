@@ -152,9 +152,7 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 	}
 
 	// call an hook after the minting and distribution of new coins
-	_ = k.hooks.AfterDistributeMintedCoin(ctx)
-
-	return err
+	return k.hooks.AfterDistributeMintedCoin(ctx)
 }
 
 // getLastReductionEpochNum returns last reduction epoch number.
