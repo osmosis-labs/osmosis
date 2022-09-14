@@ -948,8 +948,8 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				// The original record at t + 1.
 				{
-					spotPriceA: tPlus10sp5Record.P0LastSpotPrice,
-					spotPriceB: tPlus10sp5Record.P1LastSpotPrice,
+					spotPriceA: tPlus10sp5ThreeAssetRecordAB.P0LastSpotPrice,
+					spotPriceB: tPlus10sp5ThreeAssetRecordAB.P1LastSpotPrice,
 				},
 				// The new record added.
 				{
@@ -959,9 +959,47 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 		},
-		// TODO: complete multi-asset pool tests:
-		// "multi-asset pool; pre-set at t and t + 1; creates new records": {},
-		// "multi-asset pool; pre-set at t and t + 1; pre-existing records some with error and some with too large spot price, overwrites erorr time":                        {},
+		"multi-asset pool; pre-set at t and t + 1 with err, large spot price, overwrites erorr time": {
+			preSetRecords: []types.TwapRecord{threeAssetRecordAB, withLastErrTime(tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAB.Time)},
+			poolId:        threeAssetRecordAB.PoolId,
+
+			blockTime: threeAssetRecordAB.Time.Add(time.Second * 11),
+
+			spOverrides: []spOverride{
+				{
+					baseDenom:  threeAssetRecordAB.Asset0Denom,
+					quoteDenom: threeAssetRecordAB.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:   threeAssetRecordAB.Asset1Denom,
+					quoteDenom:  threeAssetRecordAB.Asset0Denom,
+					overrideSp:  types.MaxSpotPrice.Add(sdk.OneDec()),
+					overrideErr: nil, // twap logic should identify the large spot price and mark it as error.
+				},
+			},
+
+			expectedHistoricalRecords: []expectedResults{
+				// The original record at t.
+				{
+					spotPriceA:    threeAssetRecordAB.P0LastSpotPrice,
+					spotPriceB:    threeAssetRecordAB.P1LastSpotPrice,
+				},
+				// The original record at t + 1.
+				{
+					spotPriceA: tPlus10sp5Record.P0LastSpotPrice,
+					spotPriceB: tPlus10sp5Record.P1LastSpotPrice,
+					lastErrorTime: tPlus10sp5Record.Time,
+				},
+				// The new record added.
+				{
+					spotPriceA:    sdk.OneDec(),
+					spotPriceB:    types.MaxSpotPrice,               // Although the price returned from AMM was MaxSpotPrice + 1, it is reset to just MaxSpotPrice.
+					lastErrorTime: threeAssetRecordAB.Time.Add(time.Second * 11), // equals to block time
+					isMostRecent:  true,
+				},
+			},
+		},
 	}
 
 	for name, tc := range tests {
