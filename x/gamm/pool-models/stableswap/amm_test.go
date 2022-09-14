@@ -112,53 +112,6 @@ func TestCFMMInvariantMultiAssets(t *testing.T) {
 		// 	sdk.NewDec(100000),
 		// 	sdk.NewDec(10000),
 		// },
-
-		// panic catching
-		{ // negative xReserve
-			sdk.NewDec(-100),
-			sdk.NewDec(100),
-			// represents a 4-asset pool with 100 in each reserve
-			sdk.NewDec(200),
-			sdk.NewDec(20000),
-			sdk.NewDec(1),
-			true,
-		},
-		{ // negative yReserve
-			sdk.NewDec(100),
-			sdk.NewDec(-100),
-			// represents a 4-asset pool with 100 in each reserve
-			sdk.NewDec(200),
-			sdk.NewDec(20000),
-			sdk.NewDec(1),
-			true,
-		},
-		{ // negative uReserve
-			sdk.NewDec(100),
-			sdk.NewDec(100),
-			// represents a 4-asset pool with 100 in each reserve
-			sdk.NewDec(-200),
-			sdk.NewDec(20000),
-			sdk.NewDec(1),
-			true,
-		},
-		{ // negative sumSquares
-			sdk.NewDec(100),
-			sdk.NewDec(100),
-			// represents a 4-asset pool with 100 in each reserve
-			sdk.NewDec(200),
-			sdk.NewDec(-20000),
-			sdk.NewDec(1),
-			true,
-		},
-		{ // negative yIn
-			sdk.NewDec(100),
-			sdk.NewDec(100),
-			// represents a 4-asset pool with 100 in each reserve
-			sdk.NewDec(200),
-			sdk.NewDec(-20000),
-			sdk.NewDec(1),
-			true,
-		},
 	}
 
 	for _, test := range tests {
