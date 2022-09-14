@@ -2,6 +2,7 @@ package ibc_metadata_test
 
 import (
 	"encoding/json"
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
@@ -78,7 +79,7 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithoutMetadata() {
 	suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
 }
 
-func (suite *MiddlewareTestSuite) TestSendTransferWithMetadata() {
+func (suite *MiddlewareTestSuite) sendPacket(metadata []byte) error {
 	channelCap := suite.chainA.GetChannelCapability(
 		suite.path.EndpointA.ChannelConfig.PortID,
 		suite.path.EndpointA.ChannelID)
@@ -87,7 +88,7 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithMetadata() {
 		Amount:   "1",
 		Sender:   suite.chainA.SenderAccount.GetAddress().String(),
 		Receiver: suite.chainB.SenderAccount.GetAddress().String(),
-		Metadata: []byte{}, // Emptu metadata
+		Metadata: metadata, // Empty metadata
 	}
 
 	var packet = channeltypes.NewPacket(
@@ -100,9 +101,18 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithMetadata() {
 		clienttypes.NewHeight(0, 100),
 		0,
 	)
-	err := suite.chainA.GetOsmosisApp().IBCKeeper.ChannelKeeper.SendPacket(
+	return suite.chainA.GetOsmosisApp().IBCKeeper.ChannelKeeper.SendPacket(
 		suite.chainA.GetContext(), channelCap, packet)
-	suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
+}
+
+func (suite *MiddlewareTestSuite) TestSendTransferWithEmptyMetadata() {
+	err := suite.sendPacket([]byte{})
+	suite.Require().NoError(err)
+}
+
+func (suite *MiddlewareTestSuite) TestSendTransferWithMetadata() { // This should fail
+	err := suite.sendPacket([]byte(`{"metadata": "test"}`))
+	suite.Require().NoError(err) // The send succeeds because ibc doesn't care about the packet data.
 }
 
 func (suite *MiddlewareTestSuite) receivePacket(metadata []byte) []byte {
@@ -156,20 +166,20 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithoutMetadata() {
 
 // // This requires the metadata middleware
 //
-//func (suite *MiddlewareTestSuite) TestRecvTransferWithBadMetadata() {
-//	ack := suite.receivePacket([]byte(`{"callback": 1234}`))
-//	suite.Require().Contains(string(ack), "error")
-//}
-//
-//func (suite *MiddlewareTestSuite) TestRecvTransferWithMetadata() {
-//	ackBytes := suite.receivePacket([]byte(`{"callback": "test2"}`))
-//	fmt.Println(string(ackBytes))
-//	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
-//	err := json.Unmarshal(ackBytes, &ack)
-//	suite.Require().NoError(err)
-//	suite.Require().NotContains(ack, "error")
-//	fmt.Println(ack)
-//}
+//	func (suite *MiddlewareTestSuite) TestRecvTransferWithBadMetadata() {
+//		ack := suite.receivePacket([]byte(`{"callback": 1234}`))
+//		suite.Require().Contains(string(ack), "error")
+//	}
+func (suite *MiddlewareTestSuite) TestRecvTransferWithMetadata() { // This should fail
+	ackBytes := suite.receivePacket([]byte(`{"callback": "test2"}`))
+	fmt.Println(string(ackBytes))
+	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
+	err := json.Unmarshal(ackBytes, &ack)
+	suite.Require().NoError(err)
+	suite.Require().Contains(ack, "error") // The acknowledgement is an error, since the receiving chain doesn't know how to handle a packet with metadata
+	fmt.Println(ack)
+}
+
 //
 //func (suite *MiddlewareTestSuite) TestRecvTransferWithSwap() {
 //	err := suite.chainA.StoreContractCode("./testdata/swaprouter.wasm")
