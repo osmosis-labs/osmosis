@@ -214,14 +214,14 @@ func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, prop
 	reqBeginBlock := abci.RequestBeginBlock{Header: header, LastCommitInfo: lastCommitInfo}
 
 	fmt.Println("beginning block ", s.Ctx.BlockHeight())
-	s.App.BeginBlock(reqBeginBlock)
+	s.App.BeginBlocker(s.Ctx, reqBeginBlock)
 	s.Ctx = s.App.NewContext(false, reqBeginBlock.Header)
 }
 
 // EndBlock ends the block, and runs commit
 func (s *KeeperTestHelper) EndBlock() {
 	reqEndBlock := abci.RequestEndBlock{Height: s.Ctx.BlockHeight()}
-	s.App.EndBlock(reqEndBlock)
+	s.App.EndBlocker(s.Ctx, reqEndBlock)
 }
 
 // AllocateRewardsToValidator allocates reward tokens to a distribution module then allocates rewards to the validator address.
