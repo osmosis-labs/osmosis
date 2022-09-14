@@ -183,6 +183,7 @@ func (server msgServer) ExtendLockup(goCtx context.Context, msg *types.MsgExtend
 	return &types.MsgExtendLockupResponse{}, nil
 }
 
+// ForceUnlock
 // checks owner = lock owner in validate basic
 func (server msgServer) ForceUnlock(goCtx context.Context, msg *types.MsgForceUnlock) (*types.MsgForceUnlockResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -210,10 +211,13 @@ func (server msgServer) ForceUnlock(goCtx context.Context, msg *types.MsgForceUn
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	// force unlock
-	err = server.keeper.ForceUnlock(ctx, *lock)
+	// force unlock given lock
+	// This also supports the case of force unlocking lock as a whole when msg.Coins
+	// provided is empty.
+	err = server.keeper.PartialForceUnlock(ctx, *lock, msg.Coins)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
+
 	return &types.MsgForceUnlockResponse{Success: true}, nil
 }
