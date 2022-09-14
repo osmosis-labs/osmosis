@@ -11,19 +11,11 @@ import (
 
 var (
 	cubeRootTwo, _        = sdk.NewDec(2).ApproxRoot(3)
-	threeRootTwo, _       = sdk.NewDec(3).ApproxRoot(2)
-	cubeRootThree, _      = sdk.NewDec(3).ApproxRoot(3)
 	threeCubeRootTwo      = cubeRootTwo.MulInt64(3)
-	cubeRootSixSquared, _ = (sdk.NewDec(6).MulInt64(6)).ApproxRoot(3)
-	twoCubeRootThree      = cubeRootThree.MulInt64(2)
-	twentySevenRootTwo, _ = sdk.NewDec(27).ApproxRoot(2)
 )
 
 // solidly CFMM is xy(x^2 + y^2) = k
 func cfmmConstant(xReserve, yReserve sdk.Dec) sdk.Dec {
-	if !xReserve.IsPositive() || !yReserve.IsPositive() {
-		panic("invalid input: reserves must be positive")
-	}
 	xy := xReserve.Mul(yReserve)
 	x2 := xReserve.Mul(xReserve)
 	y2 := yReserve.Mul(yReserve)
@@ -36,10 +28,6 @@ func cfmmConstant(xReserve, yReserve sdk.Dec) sdk.Dec {
 // of their squares (e.g. v = w^2 + z^2).
 // When u = 1 and v = 0, this is equivalent to solidly's CFMM
 func cfmmConstantMulti(xReserve, yReserve, uReserve, vSumSquares sdk.Dec) sdk.Dec {
-	if !xReserve.IsPositive() || !yReserve.IsPositive() || !uReserve.IsPositive() || vSumSquares.IsNegative() {
-		panic("invalid input: reserves must be positive")
-	}
-
 	xyu := xReserve.Mul(yReserve.Mul(uReserve))
 	x2 := xReserve.Mul(xReserve)
 	y2 := yReserve.Mul(yReserve)
@@ -52,8 +40,8 @@ func cfmmConstantMulti(xReserve, yReserve, uReserve, vSumSquares sdk.Dec) sdk.De
 // So we solve the following expression for `a`
 // xy(x^2 + y^2) = (x - a)(y + b)((x - a)^2 + (y + b)^2)
 func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
-	if !xReserve.IsPositive() || !yReserve.IsPositive() || !yIn.IsPositive() {
-		panic("invalid input: reserves and input must be positive")
+	if !yReserve.Add(yIn).IsPositive() {
+		panic("invalid yReserve, yIn combo")
 	}
 
 	// use the following wolfram alpha link to solve the equation
@@ -163,11 +151,6 @@ func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 	term3 := term3Numerator.Quo(bpy)
 
 	a := term1.Sub(term2).Add(term3)
-
-	if a.GTE(xReserve) {
-		panic("invalid output: greater than full pool reserves")
-	}
-
 	return a
 }
 
@@ -177,8 +160,8 @@ func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 // So we solve the following expression for `a`
 // xyz(x^2 + y^2 + w) = (x - a)(y + b)z((x - a)^2 + (y + b)^2 + w)
 func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
-	if !xReserve.IsPositive() || !yReserve.IsPositive() || !yIn.IsPositive() {
-		panic("invalid input: reserves and input must be positive")
+	if !yReserve.Add(yIn).IsPositive() {
+		panic("invalid yReserve, yIn combo")
 	}
 
 	// Use the following wolfram alpha link to solve the equation
@@ -273,60 +256,7 @@ func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
 
 	a := term1.Sub(term2).Add(term3)
 
-	if a.GTE(xReserve) {
-		panic("invalid output: greater than full pool reserves")
-	}
-
 	return a
-}
-
-// solidly CFMM is xy(x^2 + y^2) = k
-// So we want to solve for a given addition of `b` units of y into the pool,
-// how many units `a` of x do we get out.
-// Let y' = y + b
-// we solve k = (x'y')(x'^2 + y^2) for x', using the following equation {wolfram alpha link}
-// Then we use that to derive the change in x as x_out = x' - x
-func solveCfmmDirect(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
-	if !xReserve.IsPositive() || !yReserve.IsPositive() || !yIn.IsPositive() {
-		panic("invalid input: reserves and input must be positive")
-	}
-
-	// find k using existing reserves
-	k := cfmmConstant(xReserve, yReserve)
-
-	// find new yReserve after join
-	y_new := yReserve.Add(yIn)
-
-	// store powers to simplify calculations
-	y2 := y_new.Mul(y_new)
-	y3 := y2.Mul(y_new)
-	y4 := y3.Mul(y_new)
-	large_term := (y4.Quo(k)).Mul(sdk.NewDec(2).Quo(twentySevenRootTwo))
-	large_term2 := large_term.Mul(large_term)
-
-	// solve for new xReserve using new yReserve and old k using a solver derived from xy(x^2 + y^2) = k
-	sqrt_term, err := (sdk.OneDec().Add(large_term2)).ApproxRoot(2)
-	if err != nil {
-		panic(err)
-	}
-
-	common_factor, err := (y2.MulInt64(9).Mul(k).Mul((sqrt_term.Add(sdk.OneDec())))).ApproxRoot(3)
-	if err != nil {
-		panic(err)
-	}
-
-	term1 := cubeRootTwo.Mul(common_factor).Quo(y_new)
-	term2 := twoCubeRootThree.Mul(y3).Quo(common_factor)
-	x_new := (term1.Sub(term2)).Quo(cubeRootSixSquared)
-
-	// find amount of x to output using initial and final xReserve values
-	xOut := xReserve.Sub(x_new)
-
-	if xOut.GTE(xReserve) {
-		panic("invalid output: greater than full pool reserves")
-	}
-
-	return xOut
 }
 
 func approxDecEqual(a, b, tol sdk.Dec) bool {
