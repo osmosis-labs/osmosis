@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
+	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
 	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
 	"github.com/osmosis-labs/osmosis/v12/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v12/tests/e2e/initialization"
@@ -149,8 +150,6 @@ func (s *IntegrationTestSuite) TestAddToExistingLock() {
 // The records are guranteed to be pruned at the next epoch
 // because twap keep time = epoch time / 4 and we use a timer
 // to wait for at least the twap keep time.
-// TODO: implement querying for TWAP, once such queries are exposed:
-// https://github.com/osmosis-labs/osmosis/issues/2602
 func (s *IntegrationTestSuite) TestTWAP() {
 	const (
 		poolFile   = "nativeDenomThreeAssetPool.json"
