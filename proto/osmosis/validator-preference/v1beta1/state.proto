@@ -1,0 +1,39 @@
+syntax = "proto3";
+package osmosis.validatorpreference.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v12/x/validator-preference/types";
+option (gogoproto.goproto_getters_all) = false;
+
+// ValidatorPreference defines the message structure for CreateValidatorSetPreference. 
+// It allows a user to set {val_addr, weight} in state. 
+// If a user does not have a validator set preference list set, and has
+// staked, make their preference list default to their current staking
+// distribution.
+message ValidatorPreference {
+  // val_oper_address holds the validator address the user wants to delegate
+  // funds to.
+  string val_oper_address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+  // weight is decimal between 0 and 1, and they all sum to 1.
+  string weight = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// ValidatorSetPreferences is a wrapper that holds a list of {valAddr, weights}.
+// The weights are arranged in decimal notation from 0 to 1 and must add up to 1.
+// A delegator can only have one validator-set and they have the ability to modify 
+// the weights and the validator.
+message ValidatorSetPreferences {
+  // delegator is the address of the user who created the validator-set.
+  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+
+  // preference holds {valAddr, weight} for the user who created it.
+  repeated ValidatorPreference preferences = 2 [
+    (gogoproto.moretags) = "yaml:\"preferences\"",
+    (gogoproto.nullable) = false
+  ];
+}

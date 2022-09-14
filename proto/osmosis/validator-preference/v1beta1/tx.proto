@@ -1,0 +1,100 @@
+syntax = "proto3";
+package osmosis.validatorpreference.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "osmosis/validator-preference/v1beta1/state.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v12/x/validator-preference/types";
+
+// Msg defines the validator-preference modules's gRPC message service.
+service Msg {
+  // CreateValidatorSetPreference creates a set of validator preference.
+  rpc CreateValidatorSetPreference(MsgCreateValidatorSetPreference)
+      returns (MsgCreateValidatorSetPreferenceResponse);
+
+  // UpdateValidatorSetPreference updates an existing set of validator preference.
+  rpc UpdateValidatorSetPreference(MsgUpdateValidatorSetPreference)
+    returns (MsgUpdateValidatorSetPreferenceResponse); 
+
+  // StakeToValidatorSet gets the owner, coins and stakes to a validator-set.
+  rpc StakeToValidatorSet(MsgStakeToValidatorSet)
+      returns (MsgStakeToValidatorSetResponse);
+
+  // UnStakeFromValidatorSet gets the owner and coins and unstakes from
+  // validator-set. The unbonding logic will follow the `Undelegate` logic from the sdk.
+  rpc UnStakeFromValidatorSet(MsgUnStakeFromValidatorSet)
+      returns (MsgUnStakeFromValidatorSetResponse);
+  
+  // WithdrawDelegationRewards allows users to claim rewards from the validator-set.
+  rpc WithdrawDelegationRewards(MsgWithdrawDelegationRewards)
+      returns (MsgWithdrawDelegationRewardsResponse);
+}
+
+// MsgCreateValidatorSetPreference is a list that holds validator-set.
+message MsgCreateValidatorSetPreference {
+    // delegator is the user who is trying to create a validator-set.
+    string delegator = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+
+    // list of {valAddr, weight} to delegate to 
+    repeated ValidatorPreference preferences = 2 [
+      (gogoproto.moretags) = "yaml:\"preferences\"",
+      (gogoproto.nullable) = false
+    ];
+}
+
+message MsgCreateValidatorSetPreferenceResponse {}
+
+// MsgCreateValidatorSetPreference is a set of list that holds validator-preference.
+message MsgUpdateValidatorSetPreference {
+  // delegator is the user who is trying to update a validator-set.
+  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+
+  // updated list of delegators validator-set {valAddr, weight}
+  repeated ValidatorPreference preferences = 2 [
+    (gogoproto.moretags) = "yaml:\"preferences\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgUpdateValidatorSetPreferenceResponse {}
+
+// MsgStakeToValidatorSet allows users to stake to an existing validator-set
+message MsgStakeToValidatorSet {
+  // delegator is the user who is trying to stake.
+  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+
+  // the amount of tokens the user is trying to stake.
+  // For ex: UnStake 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
+  // our unstake logic would attempt to stake 5osmo to A , 3osmo to B, 2osmo to C.
+  cosmos.base.v1beta1.Coin coin = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+}
+
+message MsgStakeToValidatorSetResponse {}
+
+message MsgUnStakeFromValidatorSet {
+  // delegator is the user who is trying to unstake.
+  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+
+  // the amount the user wants to unstake
+  // For ex: UnStake 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
+  // our unstake logic would attempt to unstake 5osmo from A , 3osmo from B, 2osmo from C
+  cosmos.base.v1beta1.Coin coin = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+}
+
+message MsgUnStakeFromValidatorSetResponse {}
+
+// MsgWithdrawDelegationRewards allows user to claim staking rewards from the validator set.
+// This message 
+message MsgWithdrawDelegationRewards {
+  // delegator is the user who is trying to claim staking rewards.
+  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+}
+
+message MsgWithdrawDelegationRewardsResponse {}
