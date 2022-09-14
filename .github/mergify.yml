@@ -17,7 +17,7 @@ pull_request_rules:
       - label=A:automerge
       # - check-success=Tests / e2e
       # - check-success=Tests / go
-      - check-success=Tests / go
+      - check-success=Tests / go (pull_request)
     actions:
       queue:
         name: default
