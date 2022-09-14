@@ -16,6 +16,9 @@ var (
 
 // solidly CFMM is xy(x^2 + y^2) = k
 func cfmmConstant(xReserve, yReserve sdk.Dec) sdk.Dec {
+	if !xReserve.IsPositive() || !yReserve.IsPositive() {
+		panic("invalid input: reserves must be positive")
+	}
 	xy := xReserve.Mul(yReserve)
 	x2 := xReserve.Mul(xReserve)
 	y2 := yReserve.Mul(yReserve)
@@ -28,6 +31,10 @@ func cfmmConstant(xReserve, yReserve sdk.Dec) sdk.Dec {
 // of their squares (e.g. v = w^2 + z^2).
 // When u = 1 and v = 0, this is equivalent to solidly's CFMM
 func cfmmConstantMulti(xReserve, yReserve, uReserve, vSumSquares sdk.Dec) sdk.Dec {
+	if !xReserve.IsPositive() || !yReserve.IsPositive() || !uReserve.IsPositive() || vSumSquares.IsNegative() {
+		panic("invalid input: reserves must be positive")
+	}
+
 	xyu := xReserve.Mul(yReserve.Mul(uReserve))
 	x2 := xReserve.Mul(xReserve)
 	y2 := yReserve.Mul(yReserve)
@@ -40,8 +47,8 @@ func cfmmConstantMulti(xReserve, yReserve, uReserve, vSumSquares sdk.Dec) sdk.De
 // So we solve the following expression for `a`
 // xy(x^2 + y^2) = (x - a)(y + b)((x - a)^2 + (y + b)^2)
 func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
-	if !yReserve.Add(yIn).IsPositive() {
-		panic("invalid yReserve, yIn combo")
+	if !xReserve.IsPositive() || !yReserve.IsPositive() || !yIn.IsPositive() {
+		panic("invalid input: reserves and input must be positive")
 	}
 
 	// use the following wolfram alpha link to solve the equation
@@ -151,6 +158,11 @@ func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 	term3 := term3Numerator.Quo(bpy)
 
 	a := term1.Sub(term2).Add(term3)
+
+	if a.GTE(xReserve) {
+		panic("invalid output: greater than full pool reserves")
+	}
+
 	return a
 }
 
@@ -160,8 +172,8 @@ func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 // So we solve the following expression for `a`
 // xyz(x^2 + y^2 + w) = (x - a)(y + b)z((x - a)^2 + (y + b)^2 + w)
 func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
-	if !yReserve.Add(yIn).IsPositive() {
-		panic("invalid yReserve, yIn combo")
+	if !xReserve.IsPositive() || !yReserve.IsPositive() || !yIn.IsPositive() {
+		panic("invalid input: reserves and input must be positive")
 	}
 
 	// Use the following wolfram alpha link to solve the equation
@@ -255,6 +267,10 @@ func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
 	term3 := term3Numerator.Quo(bpy)
 
 	a := term1.Sub(term2).Add(term3)
+
+	if a.GTE(xReserve) {
+		panic("invalid output: greater than full pool reserves")
+	}
 
 	return a
 }
