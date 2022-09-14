@@ -182,3 +182,38 @@ func (server msgServer) ExtendLockup(goCtx context.Context, msg *types.MsgExtend
 
 	return &types.MsgExtendLockupResponse{}, nil
 }
+
+// checks owner = lock owner in validate basic
+func (server msgServer) ForceUnlock(goCtx context.Context, msg *types.MsgForceUnlock) (*types.MsgForceUnlockResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// check for chain parameter that the address is allowed to force unlock
+	forceUnlockAllowedAddresses := server.keeper.GetForceUnlockAllowedAddresses(ctx)
+	found := false
+	for _, address := range forceUnlockAllowedAddresses {
+		if address == msg.Owner {
+			found = true
+		}
+	}
+	if !found {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Sender not allowed to force unlock")
+	}
+
+	lock, err := server.keeper.GetLockByID(ctx, msg.ID)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	// check that given lock is not superfluid staked
+	synthLocks := server.keeper.GetAllSyntheticLockupsByLockup(ctx, lock.ID)
+	if len(synthLocks) > 1 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	// force unlock
+	err = server.keeper.ForceUnlock(ctx, *lock)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+	return &types.MsgForceUnlockResponse{Success: true}, nil
+}

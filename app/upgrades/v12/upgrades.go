@@ -12,6 +12,7 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
 
 	"github.com/osmosis-labs/osmosis/v12/app/keepers"
@@ -83,6 +84,7 @@ func CreateUpgradeHandler(
 
 		// Set TWAP parameters to default values.
 		keepers.TwapKeeper.SetParams(ctx, twaptypes.DefaultParams())
+		keepers.LockupKeeper.SetParams(ctx, lockuptypes.DefaultParams())
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
