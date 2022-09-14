@@ -253,7 +253,8 @@ func (s *TestSuite) TestUpdateRecord() {
 				defaultTwoAssetCoins[1].Denom, defaultTwoAssetCoins[0].Denom,
 				test.spotPriceResult1.Sp, test.spotPriceResult1.Err)
 
-			newRecord := s.twapkeeper.UpdateRecord(s.Ctx, test.record)
+			newRecord, err := s.twapkeeper.UpdateRecord(s.Ctx, test.record)
+			s.Require().NoError(err)
 			s.Equal(test.expRecord, newRecord)
 		})
 	}
@@ -900,25 +901,11 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 
-			expectedHistoricalRecords: []expectedResults{
-				// The original record at t.
-				{
-					spotPriceA: baseRecord.P0LastSpotPrice,
-					spotPriceB: baseRecord.P1LastSpotPrice,
-				},
-				// The new record added.
-				// TODO: it should not be possible to add a record between existing records.
-				// https://github.com/osmosis-labs/osmosis/issues/2686
-				{
-					spotPriceA:   sdk.OneDec(),
-					spotPriceB:   sdk.OneDec().Add(sdk.OneDec()),
-					isMostRecent: true,
-				},
-				// The original record at t + 1.
-				{
-					spotPriceA: tPlus10sp5Record.P0LastSpotPrice,
-					spotPriceB: tPlus10sp5Record.P1LastSpotPrice,
-				},
+			expectError: types.InvalidRecordTimeError{
+				RecordBlockHeight: tPlus10sp5Record.Height,
+				RecordTime: tPlus10sp5Record.Time,
+				ActualBlockHeight: (baseRecord.Height + 1),
+				ActualTime: baseRecord.Time.Add(time.Second * 5),
 			},
 		},
 		// TODO: complete multi-asset pool tests:

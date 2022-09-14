@@ -134,7 +134,10 @@ func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 	}
 
 	for _, record := range records {
-		newRecord := k.updateRecord(ctx, record)
+		newRecord, err := k.updateRecord(ctx, record)
+		if err != nil {
+			return err
+		}
 		k.storeNewRecord(ctx, newRecord)
 	}
 	return nil
@@ -142,8 +145,16 @@ func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 
 // updateRecord returns a new record with updated accumulators and block time
 // for the current block time.
-func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.TwapRecord {
+func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) (types.TwapRecord, error) {
 	newRecord := recordWithUpdatedAccumulators(record, ctx.BlockTime())
+	if record.Height >= ctx.BlockHeight() || record.Time.After(ctx.BlockTime()) || record.Time.Equal(ctx.BlockTime()) {
+		return types.TwapRecord{}, types.InvalidRecordTimeError{
+			RecordBlockHeight: record.Height,
+			RecordTime: record.Time,
+			ActualBlockHeight: ctx.BlockHeight(),
+			ActualTime: ctx.BlockTime(),
+		}
+	}
 	newRecord.Height = ctx.BlockHeight()
 
 	newSp0, newSp1, lastErrorTime := getSpotPrices(
@@ -154,7 +165,7 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 	newRecord.P1LastSpotPrice = newSp1
 	newRecord.LastErrorTime = lastErrorTime
 
-	return newRecord
+	return newRecord, nil
 }
 
 // pruneRecords prunes twap records that happened earlier than recordHistoryKeepPeriod
