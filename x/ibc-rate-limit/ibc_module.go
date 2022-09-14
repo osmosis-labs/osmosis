@@ -103,27 +103,12 @@ func (im *IBCModule) OnChanCloseConfirm(
 	return im.app.OnChanCloseConfirm(ctx, portID, channelID)
 }
 
-func ValidateReceiverAddress(packet channeltypes.Packet) error {
-	var packetData transfertypes.FungibleTokenPacketData
-	if err := json.Unmarshal(packet.GetData(), &packetData); err != nil {
-		return err
-	}
-	if len(packetData.Receiver) >= 4096 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "IBC Receiver address too long. Max supported length is %d", 4096)
-	}
-	return nil
-}
-
 // OnRecvPacket implements the IBCModule interface
 func (im *IBCModule) OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) exported.Acknowledgement {
-	if err := ValidateReceiverAddress(packet); err != nil {
-		return channeltypes.NewErrorAcknowledgement(err.Error())
-	}
-
 	contract := im.ics4Middleware.GetParams(ctx)
 	if contract == "" {
 		// The contract has not been configured. Continue as usual
@@ -146,7 +131,7 @@ func (im *IBCModule) OnRecvPacket(
 		amount,
 	)
 	if err != nil {
-		return channeltypes.NewErrorAcknowledgement(types.ErrRateLimitExceeded.Error())
+		return channeltypes.NewErrorAcknowledgement(types.RateLimitExceededMsg)
 	}
 
 	// if this returns an Acknowledgement that isn't successful, all state changes are discarded

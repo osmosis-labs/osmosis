@@ -1,5 +1,4 @@
-use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Addr, Uint256};
+use cosmwasm_std::Addr;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -45,7 +44,7 @@ impl QuotaMsg {
 
 /// Initialize the contract with the address of the IBC module and any existing channels.
 /// Only the ibc module is allowed to execute actions on this contract
-#[cw_serde]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct InstantiateMsg {
     pub gov_module: Addr,
     pub ibc_module: Addr,
@@ -54,7 +53,8 @@ pub struct InstantiateMsg {
 
 /// The caller (IBC module) is responsible for correctly calculating the funds
 /// being sent through the channel
-#[cw_serde]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
     AddPath {
         channel_id: String,
@@ -72,33 +72,34 @@ pub enum ExecuteMsg {
     },
 }
 
-#[cw_serde]
-#[derive(QueryResponses)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
-    #[returns(Vec<crate::state::RateLimit>)]
     GetQuotas { channel_id: String, denom: String },
 }
 
-#[cw_serde]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
 pub enum SudoMsg {
     SendPacket {
         channel_id: String,
         denom: String,
-        channel_value: Uint256,
-        funds: Uint256,
+        channel_value: u128,
+        funds: u128,
     },
     RecvPacket {
         channel_id: String,
         denom: String,
-        channel_value: Uint256,
-        funds: Uint256,
+        channel_value: u128,
+        funds: u128,
     },
     UndoSend {
         channel_id: String,
         denom: String,
-        funds: Uint256,
+        funds: u128,
     },
 }
 
-#[cw_serde]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
 pub enum MigrateMsg {}

@@ -130,6 +130,7 @@ type OsmosisApp struct {
 	mm           *module.Manager
 	sm           *simtypes.Manager
 	configurator module.Configurator
+	txConfig     client.TxConfig
 }
 
 // init sets DefaultNodeHome to default osmosisd install location.
@@ -173,6 +174,7 @@ func NewOsmosisApp(
 		appCodec:          appCodec,
 		interfaceRegistry: interfaceRegistry,
 		invCheckPeriod:    invCheckPeriod,
+		txConfig:          encodingConfig.TxConfig,
 	}
 
 	wasmDir := filepath.Join(homePath, "wasm")
