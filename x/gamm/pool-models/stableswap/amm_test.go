@@ -1,7 +1,7 @@
 package stableswap
 
 import (
-	fmt "fmt"
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,11 +36,12 @@ func TestCFMMInvariantTwoAssets(t *testing.T) {
 			sdk.NewDec(1000),
 			false,
 		},
-		// {
-		// 	sdk.NewDec(100000),
-		// 	sdk.NewDec(100000),
-		// 	sdk.NewDec(10000),
-		// },
+		{ // can support 2 billion pool TVL given small trade size
+			sdk.NewDec(1000000000),
+			sdk.NewDec(1000000000),
+			sdk.NewDec(1000),
+			false,
+		},
 
 		// panic catching
 		{ // xReserve negative
@@ -68,18 +69,10 @@ func TestCFMMInvariantTwoAssets(t *testing.T) {
 		sut := func() {
 			// using two-asset cfmm
 			k0 := cfmmConstant(test.xReserve, test.yReserve)
-			xOut := solveCfmm(test.xReserve, test.yReserve, test.yIn)
+			xOut := solveCFMMBinarySearch(cfmmConstant)(test.xReserve, test.yReserve, test.yIn)
 
 			k1 := cfmmConstant(test.xReserve.Sub(xOut), test.yReserve.Add(test.yIn))
 			osmoassert.DecApproxEq(t, k0, k1, kErrTolerance)
-
-			// using multi-asset cfmm (should be equivalent with u = 1, w = 0)
-			k2 := cfmmConstantMulti(test.xReserve, test.yReserve, sdk.OneDec(), sdk.ZeroDec())
-			osmoassert.DecApproxEq(t, k2, k0, kErrTolerance)
-			xOut2 := solveCfmmMulti(test.xReserve, test.yReserve, sdk.ZeroDec(), test.yIn)
-			fmt.Println(xOut2)
-			k3 := cfmmConstantMulti(test.xReserve.Sub(xOut2), test.yReserve.Add(test.yIn), sdk.OneDec(), sdk.ZeroDec())
-			osmoassert.DecApproxEq(t, k2, k3, kErrTolerance)
 		}
 
 		osmoassert.ConditionalPanic(t, test.expectPanic, sut)
