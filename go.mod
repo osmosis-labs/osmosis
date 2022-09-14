@@ -3,7 +3,7 @@ module github.com/osmosis-labs/osmosis/v12
 go 1.18
 
 require (
-	github.com/CosmWasm/wasmd v0.27.0
+	github.com/CosmWasm/wasmd v0.28.0-osmo-v12
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
 	github.com/cosmos/cosmos-sdk v0.46.1
 	github.com/cosmos/go-bip39 v1.0.0
@@ -30,7 +30,7 @@ require (
 	go.uber.org/multierr v1.8.0
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
 	google.golang.org/genproto v0.0.0-20220725144611-272f38e5d71b
-	google.golang.org/grpc v1.48.0
+	google.golang.org/grpc v1.49.0
 	gopkg.in/yaml.v2 v2.4.0
 	mvdan.cc/gofumpt v0.3.1
 )
@@ -166,7 +166,7 @@ require (
 	github.com/hdevalence/ed25519consensus v0.0.0-20210204194344-59a8610d2b87 // indirect
 	github.com/hexops/gotextdiff v1.0.3 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
-	github.com/improbable-eng/grpc-web v0.14.1 // indirect
+	github.com/improbable-eng/grpc-web v0.15.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jessevdk/go-flags v1.4.0 // indirect
 	github.com/jgautheron/goconst v1.5.1 // indirect
@@ -292,7 +292,7 @@ require (
 
 replace (
 	// branch: v0.28.0-osmo-v12, current tag: v0.28.0-osmo-v12
-	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.28.0-osmo-v12
+	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.28.0-osmo-v12.0
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: osmosis-main. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/5c9a51c277d067e0ec5cf48df30a85fae95bcd14
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220822135534-5c9a51c277d0
 	// Use Osmosis fast iavl
