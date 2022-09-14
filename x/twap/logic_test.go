@@ -23,31 +23,6 @@ var (
 	OneSec  = sdk.MustNewDecFromStr("1000.000000000000000000")
 )
 
-func newRecord(poolId uint64, t time.Time, sp0, accum0, accum1 sdk.Dec) types.TwapRecord {
-	return types.TwapRecord{
-		PoolId:          poolId,
-		Asset0Denom:     defaultTwoAssetCoins[0].Denom,
-		Asset1Denom:     defaultTwoAssetCoins[1].Denom,
-		Time:            t,
-		P0LastSpotPrice: sp0,
-		P1LastSpotPrice: sdk.OneDec().Quo(sp0),
-		// make new copies
-		P0ArithmeticTwapAccumulator: accum0.Add(sdk.ZeroDec()),
-		P1ArithmeticTwapAccumulator: accum1.Add(sdk.ZeroDec()),
-	}
-}
-
-// make an expected record for math tests, we adjust other values in the test runner.
-func newExpRecord(accum0, accum1 sdk.Dec) types.TwapRecord {
-	return types.TwapRecord{
-		Asset0Denom: defaultTwoAssetCoins[0].Denom,
-		Asset1Denom: defaultTwoAssetCoins[1].Denom,
-		// make new copies
-		P0ArithmeticTwapAccumulator: accum0.Add(sdk.ZeroDec()),
-		P1ArithmeticTwapAccumulator: accum1.Add(sdk.ZeroDec()),
-	}
-}
-
 func (s *TestSuite) TestGetSpotPrices() {
 	currTime := time.Now()
 	poolID := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
@@ -303,6 +278,45 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 	}
 }
 
+func TestRecordWithUpdatedAccumulators_ThreeAsset(t *testing.T) {
+	poolId := uint64(2)
+	tests := map[string]struct {
+		record          []types.TwapRecord
+		interpolateTime time.Time
+		expRecord       []types.TwapRecord
+	}{
+		"accum with zero value": {
+			record:          newThreeAssetRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), zeroDec, zeroDec, zeroDec),
+			interpolateTime: time.Unix(2, 0),
+			expRecord:       newThreeAssetExpRecord(poolId, OneSec.MulInt64(10), OneSec.QuoInt64(10), OneSec.MulInt64(20)),
+		},
+		"small starting accumulators": {
+			record:          newThreeAssetRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), twoDec, oneDec, twoDec),
+			interpolateTime: time.Unix(2, 0),
+			expRecord:       newThreeAssetExpRecord(poolId, twoDec.Add(OneSec.MulInt64(10)), oneDec.Add(OneSec.QuoInt64(10)), twoDec.Add(OneSec.MulInt64(20))),
+		},
+		"larger time interval": {
+			record:          newThreeAssetRecord(poolId, time.Unix(11, 0), sdk.NewDec(10), twoDec, oneDec, twoDec),
+			interpolateTime: time.Unix(55, 0),
+			expRecord:       newThreeAssetExpRecord(poolId, twoDec.Add(OneSec.MulInt64(44*10)), oneDec.Add(OneSec.MulInt64(44).QuoInt64(10)), twoDec.Add(OneSec.MulInt64(44*20))),
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			for i := range test.record {
+				// correct expected record based off copy/paste values
+				test.expRecord[i].Time = test.interpolateTime
+				test.expRecord[i].P0LastSpotPrice = test.record[i].P0LastSpotPrice
+				test.expRecord[i].P1LastSpotPrice = test.record[i].P1LastSpotPrice
+
+				gotRecord := twap.RecordWithUpdatedAccumulators(test.record[i], test.interpolateTime)
+				require.Equal(t, test.expRecord[i], gotRecord)
+			}
+		})
+	}
+}
+
 func (s *TestSuite) TestGetInterpolatedRecord() {
 	baseRecord := newTwoAssetPoolTwapRecordWithDefaults(baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec())
 
@@ -383,16 +397,71 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 	}
 }
 
-func newOneSidedRecord(time time.Time, accum sdk.Dec, useP0 bool) types.TwapRecord {
-	record := types.TwapRecord{Time: time, Asset0Denom: denom0, Asset1Denom: denom1}
-	if useP0 {
-		record.P0ArithmeticTwapAccumulator = accum
-	} else {
-		record.P1ArithmeticTwapAccumulator = accum
+func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
+	baseRecord := newThreeAssetRecord(2, baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	// all tests occur with updateTime = base time + time.Unix(1, 0)
+	tests := map[string]struct {
+		recordsToPreSet       []types.TwapRecord
+		testTime              time.Time
+		expectedP0Accumulator []sdk.Dec
+		expectedP1Accumulator []sdk.Dec
+		expectedErr           error
+	}{
+		"call 1 second after existing record": {
+			recordsToPreSet: baseRecord,
+			testTime:        baseTime.Add(time.Second),
+			// P0 and P1 TwapAccumulators both start at 0
+			// A 10 spot price * 1000ms = 10000
+			// A 10 spot price * 1000ms = 10000
+			// B .1 spot price * 1000ms = 100
+			expectedP0Accumulator: []sdk.Dec{baseRecord[0].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(10000)),
+				baseRecord[1].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(10000)),
+				baseRecord[2].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(100))},
+			// B .1 spot price * 1000ms = 100
+			// C 20 spot price * 1000ms = 20000
+			// C 20 spot price * 1000ms = 20000
+			expectedP1Accumulator: []sdk.Dec{baseRecord[0].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(100)),
+				baseRecord[1].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(20000)),
+				baseRecord[2].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(20000))},
+		},
+		"call 1 second before existing record": {
+			recordsToPreSet: baseRecord,
+			testTime:        baseTime.Add(-time.Second),
+			expectedErr: fmt.Errorf("looking for a time thats too old, not in the historical index. "+
+				" Try storing the accumulator value. (requested time %s)", baseTime.Add(-time.Second)),
+		},
+		"test non lexicographical order parameter": {
+			recordsToPreSet: baseRecord,
+			testTime:        baseTime,
+		},
 	}
-	record.P0LastSpotPrice = sdk.ZeroDec()
-	record.P1LastSpotPrice = sdk.OneDec()
-	return record
+
+	for name, test := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			for i := range test.recordsToPreSet {
+				s.twapkeeper.StoreNewRecord(s.Ctx, test.recordsToPreSet[i])
+
+				interpolatedRecord, err := s.twapkeeper.GetInterpolatedRecord(s.Ctx, baseRecord[i].PoolId, baseRecord[i].Asset0Denom, baseRecord[i].Asset1Denom, test.testTime)
+				if test.expectedErr != nil {
+					s.Require().Error(err)
+					s.Require().Equal(test.expectedErr.Error(), err.Error())
+					return
+				}
+				s.Require().NoError(err)
+
+				if test.testTime.Equal(baseTime) {
+					s.Require().Equal(test.recordsToPreSet[i], interpolatedRecord)
+				} else {
+					s.Require().Equal(test.testTime, interpolatedRecord.Time)
+					s.Require().Equal(test.recordsToPreSet[i].P0LastSpotPrice, interpolatedRecord.P0LastSpotPrice)
+					s.Require().Equal(test.recordsToPreSet[i].P1LastSpotPrice, interpolatedRecord.P1LastSpotPrice)
+					s.Require().Equal(test.expectedP0Accumulator[i], interpolatedRecord.P0ArithmeticTwapAccumulator)
+					s.Require().Equal(test.expectedP1Accumulator[i], interpolatedRecord.P1ArithmeticTwapAccumulator)
+				}
+			}
+		})
+	}
 }
 
 type computeArithmeticTwapTestCase struct {
@@ -400,6 +469,14 @@ type computeArithmeticTwapTestCase struct {
 	endRecord   types.TwapRecord
 	quoteAsset  string
 	expTwap     sdk.Dec
+	expErr      bool
+}
+
+type computeThreeAssetArithmeticTwapTestCase struct {
+	startRecord []types.TwapRecord
+	endRecord   []types.TwapRecord
+	quoteAsset  []string
+	expTwap     []sdk.Dec
 	expErr      bool
 }
 
@@ -481,6 +558,52 @@ func TestComputeArithmeticTwap(t *testing.T) {
 	}
 }
 
+func TestComputeArithmeticTwap_ThreeAsset(t *testing.T) {
+	testThreeAssetCaseFromDeltas := func(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeThreeAssetArithmeticTwapTestCase {
+		return computeThreeAssetArithmeticTwapTestCase{
+			newThreeAssetOneSidedRecord(baseTime, startAccum, true),
+			newThreeAssetOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), true),
+			[]string{denom0, denom0, denom1},
+			[]sdk.Dec{expectedTwap, expectedTwap, expectedTwap},
+			false,
+		}
+	}
+
+	tenSecAccum := OneSec.MulInt64(10)
+	pointOneAccum := OneSec.QuoInt64(10)
+	tests := map[string]computeThreeAssetArithmeticTwapTestCase{
+		"three asset basic: spot price = 1 for one second, 0 init accumulator": {
+			startRecord: newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			endRecord:   newThreeAssetOneSidedRecord(tPlusOne, OneSec, true),
+			quoteAsset:  []string{denom0, denom0, denom1},
+			expTwap:     []sdk.Dec{sdk.OneDec(), sdk.OneDec(), sdk.OneDec()},
+		},
+		"three asset same record: asset1, end spot price = 1": {
+			startRecord: newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			endRecord:   newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			quoteAsset:  []string{denom1, denom2, denom2},
+			expTwap:     []sdk.Dec{sdk.OneDec(), sdk.OneDec(), sdk.OneDec()},
+		},
+		"three asset. accumulator = 10*OneSec, t=5s. 0 base accum": testThreeAssetCaseFromDeltas(
+			sdk.ZeroDec(), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
+
+		// test that base accum has no impact
+		"three asset. accumulator = 10*OneSec, t=5s. 10 base accum": testThreeAssetCaseFromDeltas(
+			sdk.NewDec(10), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
+		"three asset. accumulator = 10*OneSec, t=100s. .1*second base accum": testThreeAssetCaseFromDeltas(
+			pointOneAccum, tenSecAccum, 100*time.Second, sdk.NewDecWithPrec(1, 1)),
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			for i, startRec := range test.startRecord {
+				actualTwap, err := twap.ComputeArithmeticTwap(startRec, test.endRecord[i], test.quoteAsset[i])
+				require.Equal(t, test.expTwap[i], actualTwap)
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
 // This tests the behavior of computeArithmeticTwap, around error returning
 // when there has been an intermediate spot price error.
 func TestComputeArithmeticTwapWithSpotPriceError(t *testing.T) {
@@ -539,24 +662,24 @@ func (s *TestSuite) TestPruneRecords() {
 	recordHistoryKeepPeriod := s.twapkeeper.RecordHistoryKeepPeriod(s.Ctx)
 
 	pool1OlderMin2MsRecord, // deleted
-		pool2OlderMin1MsRecord,  // deleted
+		pool2OlderMin1MsRecordAB, pool2OlderMin1MsRecordAC, pool2OlderMin1MsRecordBC, // deleted
 		pool3OlderBaseRecord,    // kept as newest under keep period
 		pool4OlderPlus1Record := // kept as newest under keep period
 		s.createTestRecordsFromTime(baseTime.Add(2 * -recordHistoryKeepPeriod))
 
 	pool1Min2MsRecord, // kept as newest under keep period
-		pool2Min1MsRecord,  // kept as newest under keep period
+		pool2Min1MsRecordAB, pool2Min1MsRecordAC, pool2Min1MsRecordBC, // kept as newest under keep period
 		pool3BaseRecord,    // kept as it is at the keep period boundary
 		pool4Plus1Record := // kept as it is above the keep period boundary
 		s.createTestRecordsFromTime(baseTime.Add(-recordHistoryKeepPeriod))
 
 	// non-ascending insertion order.
 	recordsToPreSet := []types.TwapRecord{
-		pool2OlderMin1MsRecord,
+		pool2OlderMin1MsRecordAB, pool2OlderMin1MsRecordAC, pool2OlderMin1MsRecordBC,
 		pool4Plus1Record,
 		pool4OlderPlus1Record,
 		pool3OlderBaseRecord,
-		pool2Min1MsRecord,
+		pool2Min1MsRecordAB, pool2Min1MsRecordAC, pool2Min1MsRecordBC,
 		pool3BaseRecord,
 		pool1Min2MsRecord,
 		pool1OlderMin2MsRecord,
@@ -569,7 +692,7 @@ func (s *TestSuite) TestPruneRecords() {
 		pool3OlderBaseRecord,
 		pool4OlderPlus1Record,
 		pool1Min2MsRecord,
-		pool2Min1MsRecord,
+		pool2Min1MsRecordAB, pool2Min1MsRecordAC, pool2Min1MsRecordBC,
 		pool3BaseRecord,
 		pool4Plus1Record,
 	}
