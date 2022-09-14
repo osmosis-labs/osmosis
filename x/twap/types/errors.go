@@ -62,3 +62,14 @@ type InvalidRecordCountError struct {
 func (e InvalidRecordCountError) Error() string {
 	return fmt.Sprintf("The number of records do not match, expected: %d\n got: %d", e.Expected, e.Actual)
 }
+
+type InvalidRecordTimeError struct {
+	RecordBlockHeight int64
+	RecordTime time.Time
+	ActualBlockHeight int64
+	ActualTime time.Time
+}
+
+func (e InvalidRecordTimeError) Error() string {
+	return fmt.Sprintf("Can not update the record, the context time must be greater than record time. Record: block %d at %s\n Actual: block %d at %s\n", e.RecordBlockHeight, e.RecordTime, e.ActualBlockHeight, e.ActualTime)
+}
