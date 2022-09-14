@@ -156,26 +156,17 @@ func (s *IntegrationTestSuite) TestTWAP() {
 		poolFile   = "nativeDenomThreeAssetPool.json"
 		walletName = "swap-exact-amount-in-wallet"
 
-<<<<<<< HEAD
-		coinIn       = "101stake"
-		minAmountOut = "99"
-		denomOut     = "uosmo"
-=======
 		denomA = "stake"
 		denomB = "uion"
 		denomC = "uosmo"
 
 		minAmountOut = "1"
->>>>>>> 79432d20 (e2e: make TWAP test for three asset pools (#2718))
 
 		epochIdentifier = "day"
 	)
 
-<<<<<<< HEAD
-=======
 	coinAIn, coinBIn, coinCIn := fmt.Sprintf("2000000%s", denomA), fmt.Sprintf("2000000%s", denomB), fmt.Sprintf("2000000%s", denomC)
 
->>>>>>> 79432d20 (e2e: make TWAP test for three asset pools (#2718))
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
@@ -184,18 +175,6 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	poolId := chainANode.CreatePool(poolFile, initialization.ValidatorWalletName)
 	swapWalletAddr := chainANode.CreateWallet(walletName)
 
-<<<<<<< HEAD
-	chainANode.BankSend(coinIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
-	heightBeforeSwap := chainANode.QueryCurrentHeight()
-
-	// Triggers the creation of TWAP records.
-	chainANode.SwapExactAmountIn(coinIn, minAmountOut, fmt.Sprintf("%d", poolId), denomOut, swapWalletAddr)
-
-	keepPeriodCountDown := time.NewTimer(initialization.TWAPPruningKeepPeriod)
-
-	// Make sure still producing blocks.
-	chainA.WaitUntilHeight(heightBeforeSwap + 3)
-=======
 	timeBeforeSwap := chainANode.QueryLatestBlockTime()
 	// Wait for the next height so that the requested twap
 	// start time (timeBeforeSwap) is not equal to the block time.
@@ -293,7 +272,6 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsAB, twapFromAfterToNowAB, sdk.NewDecWithPrec(1, 3))
 	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsBC, twapFromAfterToNowBC, sdk.NewDecWithPrec(1, 3))
 	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsCA, twapFromAfterToNowCA, sdk.NewDecWithPrec(1, 3))
->>>>>>> 79432d20 (e2e: make TWAP test for three asset pools (#2718))
 
 	if !s.skipUpgrade {
 		// TODO: we should reduce the pruning time in the v11
@@ -308,15 +286,6 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	// Make sure that the pruning keep period has passed.
 	s.T().Logf("waiting for pruning keep period of (%.f) seconds to pass", initialization.TWAPPruningKeepPeriod.Seconds())
 	<-keepPeriodCountDown.C
-<<<<<<< HEAD
-	oldEpochNumber := chainANode.QueryCurrentEpoch(epochIdentifier)
-	// The pruning should happen at the next epoch.
-	chainANode.WaitUntil(func(_ coretypes.SyncInfo) bool {
-		newEpochNumber := chainANode.QueryCurrentEpoch(epochIdentifier)
-		s.T().Logf("Current epoch number is (%d), waiting to reach (%d)", newEpochNumber, oldEpochNumber+1)
-		return newEpochNumber > oldEpochNumber
-	})
-=======
 
 	// Epoch end triggers the prunning of TWAP records.
 	// Records before swap should be pruned.
@@ -357,7 +326,6 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningAB, twapAfterSwapBeforePruning10MsAB, sdk.NewDecWithPrec(1, 3))
 	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningBC, twapAfterSwapBeforePruning10MsBC, sdk.NewDecWithPrec(1, 3))
 	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningCA, twapAfterSwapBeforePruning10MsCA, sdk.NewDecWithPrec(1, 3))
->>>>>>> 79432d20 (e2e: make TWAP test for three asset pools (#2718))
 }
 
 func (s *IntegrationTestSuite) TestStateSync() {
