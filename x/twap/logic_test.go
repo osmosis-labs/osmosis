@@ -921,6 +921,44 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 		},
+		"multi-asset pool; pre-set at t and t + 1; creates new records": {
+			preSetRecords: []types.TwapRecord{threeAssetRecordAB, tPlus10sp5ThreeAssetRecordAB},
+			poolId:        threeAssetRecordAB.PoolId,
+
+			blockTime: threeAssetRecordAB.Time.Add(time.Second * 11),
+
+			spOverrides: []spOverride{
+				{
+					baseDenom:  threeAssetRecordAB.Asset0Denom,
+					quoteDenom: threeAssetRecordAB.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:  threeAssetRecordAB.Asset1Denom,
+					quoteDenom: threeAssetRecordAB.Asset0Denom,
+					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+				},
+			},
+
+			expectedHistoricalRecords: []expectedResults{
+				// The original record at t.
+				{
+					spotPriceA: threeAssetRecordAB.P0LastSpotPrice,
+					spotPriceB: threeAssetRecordAB.P1LastSpotPrice,
+				},
+				// The original record at t + 1.
+				{
+					spotPriceA: tPlus10sp5Record.P0LastSpotPrice,
+					spotPriceB: tPlus10sp5Record.P1LastSpotPrice,
+				},
+				// The new record added.
+				{
+					spotPriceA:   sdk.OneDec(),
+					spotPriceB:   sdk.OneDec().Add(sdk.OneDec()),
+					isMostRecent: true,
+				},
+			},
+		},
 		// TODO: complete multi-asset pool tests:
 		// "multi-asset pool; pre-set at t and t + 1; creates new records": {},
 		// "multi-asset pool; pre-set at t and t + 1; pre-existing records some with error and some with too large spot price, overwrites erorr time":                        {},
@@ -967,6 +1005,7 @@ func (s *TestSuite) TestUpdateRecords() {
 			validateRecords(expectedMostRecentRecords, poolMostRecentRecords)
 
 			poolHistoricalRecords := s.getAllHistoricalRecordsForPool(tc.poolId)
+			fmt.Println(poolHistoricalRecords)
 			s.Require().NoError(err)
 			validateRecords(tc.expectedHistoricalRecords, poolHistoricalRecords)
 		})
