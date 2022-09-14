@@ -1,6 +1,18 @@
 package types
 
-import sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+import (
+	fmt "fmt"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+)
+
+type PoolDoesNotExistError struct {
+	PoolId uint64
+}
+
+func (e PoolDoesNotExistError) Error() string {
+	return fmt.Sprintf("pool with ID %d does not exist", e.PoolId)
+}
 
 // x/gamm module sentinel errors.
 var (

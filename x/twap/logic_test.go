@@ -10,15 +10,80 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
+	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v12/x/twap"
 	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
 	"github.com/osmosis-labs/osmosis/v12/x/twap/types/twapmock"
 )
 
-var zeroDec = sdk.ZeroDec()
-var oneDec = sdk.OneDec()
-var twoDec = oneDec.Add(oneDec)
-var OneSec = sdk.MustNewDecFromStr("1000.000000000000000000")
+var (
+	zeroDec = sdk.ZeroDec()
+	oneDec  = sdk.OneDec()
+	twoDec  = oneDec.Add(oneDec)
+	OneSec  = sdk.MustNewDecFromStr("1000.000000000000000000")
+)
+
+func (s *TestSuite) TestGetSpotPrices() {
+	currTime := time.Now()
+	poolID := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
+	mockAMMI := twapmock.NewProgrammedAmmInterface(s.App.TwapKeeper.GetAmmInterface())
+	s.App.TwapKeeper.SetAmmInterface(mockAMMI)
+
+	ctx := s.Ctx.WithBlockTime(currTime.Add(5 * time.Second))
+
+	testCases := map[string]struct {
+		poolID                uint64
+		prevErrTime           time.Time
+		mockSp0               sdk.Dec
+		mockSp1               sdk.Dec
+		mockSp0Err            error
+		mockSp1Err            error
+		expectedSp0           sdk.Dec
+		expectedSp1           sdk.Dec
+		expectedLatestErrTime time.Time
+	}{
+		"zero sp": {
+			poolID:                poolID,
+			prevErrTime:           currTime,
+			mockSp0:               sdk.ZeroDec(),
+			mockSp1:               sdk.ZeroDec(),
+			mockSp0Err:            fmt.Errorf("foo"),
+			expectedSp0:           sdk.ZeroDec(),
+			expectedSp1:           sdk.ZeroDec(),
+			expectedLatestErrTime: ctx.BlockTime(),
+		},
+		"exceeds max spot price": {
+			poolID:                poolID,
+			prevErrTime:           currTime,
+			mockSp0:               types.MaxSpotPrice.Add(sdk.OneDec()),
+			mockSp1:               types.MaxSpotPrice.Add(sdk.OneDec()),
+			expectedSp0:           types.MaxSpotPrice,
+			expectedSp1:           types.MaxSpotPrice,
+			expectedLatestErrTime: ctx.BlockTime(),
+		},
+		"valid spot prices": {
+			poolID:                poolID,
+			prevErrTime:           currTime,
+			mockSp0:               sdk.NewDecWithPrec(55, 2),
+			mockSp1:               sdk.NewDecWithPrec(6, 1),
+			expectedSp0:           sdk.NewDecWithPrec(55, 2),
+			expectedSp1:           sdk.NewDecWithPrec(6, 1),
+			expectedLatestErrTime: currTime,
+		},
+	}
+
+	for name, tc := range testCases {
+		s.Run(name, func() {
+			mockAMMI.ProgramPoolSpotPriceOverride(tc.poolID, denom0, denom1, tc.mockSp0, tc.mockSp0Err)
+			mockAMMI.ProgramPoolSpotPriceOverride(tc.poolID, denom1, denom0, tc.mockSp1, tc.mockSp1Err)
+
+			sp0, sp1, latestErrTime := twap.GetSpotPrices(ctx, mockAMMI, tc.poolID, denom0, denom1, tc.prevErrTime)
+			s.Require().Equal(tc.expectedSp0, sp0)
+			s.Require().Equal(tc.expectedSp1, sp1)
+			s.Require().Equal(tc.expectedLatestErrTime, latestErrTime)
+		})
+	}
+}
 
 func (s *TestSuite) TestNewTwapRecord() {
 	// prepare pool before test
@@ -83,7 +148,7 @@ func (s *TestSuite) TestNewTwapRecord() {
 	}
 }
 
-func (s *TestSuite) TestUpdateTwap() {
+func (s *TestSuite) TestUpdateRecord() {
 	poolId := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
 	programmableAmmInterface := twapmock.NewProgrammedAmmInterface(s.App.TwapKeeper.GetAmmInterface())
 	s.App.TwapKeeper.SetAmmInterface(programmableAmmInterface)
@@ -643,4 +708,390 @@ func (s *TestSuite) TestPruneRecords() {
 	s.Require().NoError(err)
 
 	s.validateExpectedRecords(expectedKeptRecords)
+}
+
+// TestUpdateRecords tests that the records are updated correctly.
+// It tests the following:
+// - two-asset pools
+// - multi-asset pools
+// - with spot price errors
+// - without spot price errors
+// - that new records are created
+// - older historical records are not updated
+// - spot price error times are either propagated from
+// older records or set to current block time in case error occurred.
+func (s *TestSuite) TestUpdateRecords() {
+	type spOverride struct {
+		poolId      uint64
+		baseDenom   string
+		quoteDenom  string
+		overrideSp  sdk.Dec
+		overrideErr error
+	}
+
+	type expectedResults struct {
+		spotPriceA    sdk.Dec
+		spotPriceB    sdk.Dec
+		lastErrorTime time.Time
+		isMostRecent  bool
+	}
+
+	var spError = errors.New("spot price error")
+
+	validateRecords := func(expectedRecords []expectedResults, actualRecords []types.TwapRecord) {
+		s.Require().Equal(len(expectedRecords), len(actualRecords))
+		for i, r := range expectedRecords {
+			s.Require().Equal(r.spotPriceA, actualRecords[i].P0LastSpotPrice, "record %d", i)
+			s.Require().Equal(r.spotPriceB, actualRecords[i].P1LastSpotPrice, "record %d", i)
+			s.Require().Equal(r.lastErrorTime, actualRecords[i].LastErrorTime, "record %d", i)
+		}
+	}
+
+	tests := map[string]struct {
+		preSetRecords []types.TwapRecord
+		poolId        uint64
+		ammMock       twapmock.ProgrammedAmmInterface
+		spOverrides   []spOverride
+		blockTime     time.Time
+
+		expectedHistoricalRecords []expectedResults
+		expectError               error
+	}{
+		"no records pre-set; error": {
+			preSetRecords: []types.TwapRecord{},
+			poolId:        1,
+			blockTime:     baseTime,
+
+			expectError: gammtypes.PoolDoesNotExistError{PoolId: 1},
+		},
+		"existing records in different pool; no-op": {
+			preSetRecords: []types.TwapRecord{baseRecord},
+			poolId:        baseRecord.PoolId + 1,
+			blockTime:     baseTime.Add(time.Second),
+
+			expectError: gammtypes.PoolDoesNotExistError{PoolId: baseRecord.PoolId + 1},
+		},
+		"the returned number of records does not match expected": {
+			preSetRecords: []types.TwapRecord{baseRecord},
+			poolId:        baseRecord.PoolId,
+			blockTime:     baseRecord.Time.Add(time.Second),
+
+			spOverrides: []spOverride{
+				{
+					baseDenom:  baseRecord.Asset0Denom,
+					quoteDenom: baseRecord.Asset1Denom,
+					overrideSp: sdk.NewDec(2),
+				},
+				{
+					baseDenom:  baseRecord.Asset1Denom,
+					quoteDenom: baseRecord.Asset0Denom,
+					overrideSp: sdk.NewDecWithPrec(2, 1),
+				},
+				{
+					baseDenom:  baseRecord.Asset1Denom,
+					quoteDenom: "extradenom",
+					overrideSp: sdk.NewDecWithPrec(3, 1),
+				},
+			},
+
+			expectError: types.InvalidRecordCountError{Expected: 3, Actual: 1},
+		},
+		"two-asset; pre-set record at t; updated valid spot price": {
+			preSetRecords: []types.TwapRecord{baseRecord},
+			poolId:        baseRecord.PoolId,
+			blockTime:     baseRecord.Time.Add(time.Second),
+
+			spOverrides: []spOverride{
+				{
+					baseDenom:  baseRecord.Asset0Denom,
+					quoteDenom: baseRecord.Asset1Denom,
+					overrideSp: sdk.NewDec(2),
+				},
+				{
+					baseDenom:  baseRecord.Asset1Denom,
+					quoteDenom: baseRecord.Asset0Denom,
+					overrideSp: sdk.NewDecWithPrec(2, 1),
+				},
+			},
+
+			expectedHistoricalRecords: []expectedResults{
+				// The original record.
+				{
+					spotPriceA: baseRecord.P0LastSpotPrice,
+					spotPriceB: baseRecord.P1LastSpotPrice,
+				},
+				// The new record added.
+				{
+					spotPriceA:   sdk.NewDec(2),
+					spotPriceB:   sdk.NewDecWithPrec(2, 1),
+					isMostRecent: true,
+				},
+			},
+		},
+		"two-asset; pre-set record at t; updated with spot price error in both denom pairs": {
+			preSetRecords: []types.TwapRecord{baseRecord},
+			poolId:        baseRecord.PoolId,
+			blockTime:     baseRecord.Time.Add(time.Second),
+
+			spOverrides: []spOverride{
+				{
+					baseDenom:   baseRecord.Asset0Denom,
+					quoteDenom:  baseRecord.Asset1Denom,
+					overrideErr: spError,
+				},
+				{
+					baseDenom:   baseRecord.Asset1Denom,
+					quoteDenom:  baseRecord.Asset0Denom,
+					overrideSp:  sdk.NewDecWithPrec(2, 1),
+					overrideErr: spError,
+				},
+			},
+
+			expectedHistoricalRecords: []expectedResults{
+				// The original record.
+				{
+					spotPriceA: baseRecord.P0LastSpotPrice,
+					spotPriceB: baseRecord.P1LastSpotPrice,
+				},
+				// The new record added.
+				{
+					spotPriceA:    sdk.ZeroDec(),
+					spotPriceB:    sdk.NewDecWithPrec(2, 1),
+					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
+					isMostRecent:  true,
+				},
+			},
+		},
+		"two-asset; pre-set record at t; large spot price in one of the pairs": {
+			preSetRecords: []types.TwapRecord{baseRecord},
+			poolId:        baseRecord.PoolId,
+			blockTime:     baseRecord.Time.Add(time.Second),
+
+			spOverrides: []spOverride{
+				{
+					baseDenom:  baseRecord.Asset0Denom,
+					quoteDenom: baseRecord.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:   baseRecord.Asset1Denom,
+					quoteDenom:  baseRecord.Asset0Denom,
+					overrideSp:  types.MaxSpotPrice.Add(sdk.OneDec()),
+					overrideErr: nil, // twap logic should identify the large spot price and mark it as error.
+				},
+			},
+
+			expectedHistoricalRecords: []expectedResults{
+				// The original record.
+				{
+					spotPriceA: baseRecord.P0LastSpotPrice,
+					spotPriceB: baseRecord.P1LastSpotPrice,
+				},
+				// The new record added.
+				{
+					spotPriceA:    sdk.OneDec(),
+					spotPriceB:    types.MaxSpotPrice,               // Although the price returned from AMM was MaxSpotPrice + 1, it is reset to just MaxSpotPrice.
+					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
+					isMostRecent:  true,
+				},
+			},
+		},
+		"two-asset; pre-set record at t with sp error; new record with no sp error; new record has old sp error": {
+			preSetRecords: []types.TwapRecord{withLastErrTime(baseRecord, baseRecord.Time)},
+			poolId:        baseRecord.PoolId,
+			blockTime:     baseRecord.Time.Add(time.Second),
+
+			spOverrides: []spOverride{
+				{
+					baseDenom:  baseRecord.Asset0Denom,
+					quoteDenom: baseRecord.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:  baseRecord.Asset1Denom,
+					quoteDenom: baseRecord.Asset0Denom,
+					overrideSp: sdk.OneDec(),
+				},
+			},
+
+			expectedHistoricalRecords: []expectedResults{
+				// The original record.
+				{
+					spotPriceA:    baseRecord.P0LastSpotPrice,
+					spotPriceB:    baseRecord.P1LastSpotPrice,
+					lastErrorTime: baseRecord.Time,
+				},
+				// The new record added.
+				{
+					spotPriceA:    sdk.OneDec(),
+					spotPriceB:    sdk.OneDec(),
+					lastErrorTime: baseRecord.Time,
+					isMostRecent:  true,
+				},
+			},
+		},
+		"two-asset; pre-set record at t with sp error; new record with sp error and has its sp err time updated": {
+			preSetRecords: []types.TwapRecord{withLastErrTime(baseRecord, baseRecord.Time)},
+			poolId:        baseRecord.PoolId,
+			blockTime:     baseRecord.Time.Add(time.Second),
+
+			spOverrides: []spOverride{
+				{
+					baseDenom:  baseRecord.Asset0Denom,
+					quoteDenom: baseRecord.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:   baseRecord.Asset1Denom,
+					quoteDenom:  baseRecord.Asset0Denom,
+					overrideErr: spError,
+				},
+			},
+
+			expectedHistoricalRecords: []expectedResults{
+				// The original record.
+				{
+					spotPriceA:    baseRecord.P0LastSpotPrice,
+					spotPriceB:    baseRecord.P1LastSpotPrice,
+					lastErrorTime: baseRecord.Time,
+				},
+				// The new record added.
+				{
+					spotPriceA:    sdk.OneDec(),
+					spotPriceB:    sdk.ZeroDec(),
+					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
+					isMostRecent:  true,
+				},
+			},
+		},
+		"two-asset; pre-set at t and t + 1, new record with updated spot price created": {
+			preSetRecords: []types.TwapRecord{baseRecord, tPlus10sp5Record},
+			poolId:        baseRecord.PoolId,
+
+			blockTime: baseRecord.Time.Add(time.Second * 11),
+
+			spOverrides: []spOverride{
+				{
+					baseDenom:  baseRecord.Asset0Denom,
+					quoteDenom: baseRecord.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:  baseRecord.Asset1Denom,
+					quoteDenom: baseRecord.Asset0Denom,
+					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+				},
+			},
+
+			expectedHistoricalRecords: []expectedResults{
+				// The original record at t.
+				{
+					spotPriceA: baseRecord.P0LastSpotPrice,
+					spotPriceB: baseRecord.P1LastSpotPrice,
+				},
+				// The original record at t + 1.
+				{
+					spotPriceA: tPlus10sp5Record.P0LastSpotPrice,
+					spotPriceB: tPlus10sp5Record.P1LastSpotPrice,
+				},
+				// The new record added.
+				{
+					spotPriceA:   sdk.OneDec(),
+					spotPriceB:   sdk.OneDec().Add(sdk.OneDec()),
+					isMostRecent: true,
+				},
+			},
+		},
+		// This case should never happen in-practice since ctx.BlockTime
+		// should always be greater than the last record's time.
+		"two-asset; pre-set at t and t + 1, new record inserted between existing": {
+			preSetRecords: []types.TwapRecord{baseRecord, tPlus10sp5Record},
+			poolId:        baseRecord.PoolId,
+
+			blockTime: baseRecord.Time.Add(time.Second * 5),
+
+			spOverrides: []spOverride{
+				{
+					baseDenom:  baseRecord.Asset0Denom,
+					quoteDenom: baseRecord.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:  baseRecord.Asset1Denom,
+					quoteDenom: baseRecord.Asset0Denom,
+					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+				},
+			},
+
+			expectedHistoricalRecords: []expectedResults{
+				// The original record at t.
+				{
+					spotPriceA: baseRecord.P0LastSpotPrice,
+					spotPriceB: baseRecord.P1LastSpotPrice,
+				},
+				// The new record added.
+				// TODO: it should not be possible to add a record between existing records.
+				// https://github.com/osmosis-labs/osmosis/issues/2686
+				{
+					spotPriceA:   sdk.OneDec(),
+					spotPriceB:   sdk.OneDec().Add(sdk.OneDec()),
+					isMostRecent: true,
+				},
+				// The original record at t + 1.
+				{
+					spotPriceA: tPlus10sp5Record.P0LastSpotPrice,
+					spotPriceB: tPlus10sp5Record.P1LastSpotPrice,
+				},
+			},
+		},
+		// TODO: complete multi-asset pool tests:
+		// "multi-asset pool; pre-set at t and t + 1; creates new records": {},
+		// "multi-asset pool; pre-set at t and t + 1; pre-existing records some with error and some with too large spot price, overwrites erorr time":                        {},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			twapKeeper := s.App.TwapKeeper
+			ctx := s.Ctx.WithBlockTime(tc.blockTime)
+
+			if len(tc.spOverrides) > 0 {
+				ammMock := twapmock.NewProgrammedAmmInterface(s.App.GAMMKeeper)
+
+				for _, sp := range tc.spOverrides {
+					ammMock.ProgramPoolSpotPriceOverride(tc.poolId, sp.baseDenom, sp.quoteDenom, sp.overrideSp, sp.overrideErr)
+					ammMock.ProgramPoolDenomsOverride(tc.poolId, []string{sp.baseDenom, sp.quoteDenom}, nil)
+				}
+
+				twapKeeper.SetAmmInterface(ammMock)
+			}
+
+			s.preSetRecords(tc.preSetRecords)
+
+			err := twapKeeper.UpdateRecords(ctx, tc.poolId)
+
+			if tc.expectError != nil {
+				s.Require().ErrorIs(err, tc.expectError)
+				return
+			}
+
+			s.Require().NoError(err)
+
+			poolMostRecentRecords, err := twapKeeper.GetAllMostRecentRecordsForPool(ctx, tc.poolId)
+			s.Require().NoError(err)
+
+			expectedMostRecentRecords := make([]expectedResults, 0)
+			for _, historical := range tc.expectedHistoricalRecords {
+				if historical.isMostRecent {
+					expectedMostRecentRecords = append(expectedMostRecentRecords, historical)
+				}
+			}
+
+			validateRecords(expectedMostRecentRecords, poolMostRecentRecords)
+
+			poolHistoricalRecords := s.getAllHistoricalRecordsForPool(tc.poolId)
+			s.Require().NoError(err)
+			validateRecords(tc.expectedHistoricalRecords, poolHistoricalRecords)
+		})
+	}
 }

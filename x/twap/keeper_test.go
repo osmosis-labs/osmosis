@@ -310,6 +310,19 @@ func (s *TestSuite) preSetRecords(records []types.TwapRecord) {
 	}
 }
 
+// getAllHistoricalRecordsForPool returns all historical records for a given pool.
+func (s *TestSuite) getAllHistoricalRecordsForPool(poolId uint64) []types.TwapRecord {
+	allRecords, err := s.twapkeeper.GetAllHistoricalPoolIndexedTWAPs(s.Ctx)
+	s.Require().NoError(err)
+	filteredRecords := make([]types.TwapRecord, 0)
+	for _, record := range allRecords {
+		if record.PoolId == poolId {
+			filteredRecords = append(filteredRecords, record)
+		}
+	}
+	return filteredRecords
+}
+
 // validateExpectedRecords validates that the twap keeper has the expected records.
 func (s *TestSuite) validateExpectedRecords(expectedRecords []types.TwapRecord) {
 	twapKeeper := s.twapkeeper

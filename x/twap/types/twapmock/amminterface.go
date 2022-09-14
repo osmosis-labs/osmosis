@@ -11,7 +11,7 @@ var _ types.AmmInterface = &ProgrammedAmmInterface{}
 type ProgrammedAmmInterface struct {
 	underlyingKeeper     types.AmmInterface
 	programmedSpotPrice  map[SpotPriceInput]SpotPriceResult
-	programmedPoolDenoms map[uint64]poolDenomResponse
+	programmedPoolDenoms map[uint64]poolDenomsResult
 }
 
 // TODO, generalize to do a sum type on denoms
@@ -24,21 +24,31 @@ type SpotPriceResult struct {
 	Sp  sdk.Dec
 	Err error
 }
-type poolDenomResponse struct {
-	denoms []string
-	err    error
+
+type poolDenomsResult struct {
+	poolDenoms map[string]struct{}
+	err        error
 }
 
 func NewProgrammedAmmInterface(underlyingKeeper types.AmmInterface) *ProgrammedAmmInterface {
 	return &ProgrammedAmmInterface{
 		underlyingKeeper:     underlyingKeeper,
 		programmedSpotPrice:  map[SpotPriceInput]SpotPriceResult{},
-		programmedPoolDenoms: map[uint64]poolDenomResponse{},
+		programmedPoolDenoms: map[uint64]poolDenomsResult{},
 	}
 }
 
 func (p *ProgrammedAmmInterface) ProgramPoolDenomsOverride(poolId uint64, overrideDenoms []string, overrideErr error) {
-	p.programmedPoolDenoms[poolId] = poolDenomResponse{overrideDenoms, overrideErr}
+	var poolDenoms map[string]struct{}
+	if existingForPool, ok := p.programmedPoolDenoms[poolId]; ok {
+		poolDenoms = existingForPool.poolDenoms
+	} else {
+		poolDenoms = map[string]struct{}{}
+	}
+	for _, denom := range overrideDenoms {
+		poolDenoms[denom] = struct{}{}
+	}
+	p.programmedPoolDenoms[poolId] = poolDenomsResult{poolDenoms, overrideErr}
 }
 
 func (p *ProgrammedAmmInterface) ProgramPoolSpotPriceOverride(poolId uint64,
@@ -49,7 +59,11 @@ func (p *ProgrammedAmmInterface) ProgramPoolSpotPriceOverride(poolId uint64,
 
 func (p *ProgrammedAmmInterface) GetPoolDenoms(ctx sdk.Context, poolId uint64) (denoms []string, err error) {
 	if res, ok := p.programmedPoolDenoms[poolId]; ok {
-		return res.denoms, res.err
+		result := make([]string, 0, len(res.poolDenoms))
+		for denom := range res.poolDenoms {
+			result = append(result, denom)
+		}
+		return result, res.err
 	}
 	return p.underlyingKeeper.GetPoolDenoms(ctx, poolId)
 }
