@@ -19,9 +19,11 @@ func (s *simLogger) Debug(msg string, keyvals ...interface{}) {
 	}
 	s.logger.Debug(msg, keyvals...)
 }
+
 func (s *simLogger) Info(msg string, keyvals ...interface{}) {
 	s.logger.Info(msg, keyvals)
 }
+
 func (s *simLogger) Error(msg string, keyvals ...interface{}) {
 	s.logger.Error(msg, keyvals)
 }

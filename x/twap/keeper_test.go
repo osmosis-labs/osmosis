@@ -152,6 +152,7 @@ func withSp0(twap types.TwapRecord, sp sdk.Dec) types.TwapRecord {
 	twap.P0LastSpotPrice = sp
 	return twap
 }
+
 func withSp1(twap types.TwapRecord, sp sdk.Dec) types.TwapRecord {
 	twap.P1LastSpotPrice = sp
 	return twap
@@ -371,7 +372,8 @@ func (s *TestSuite) createTestRecordsFromTime(t time.Time) (types.TwapRecord, ty
 // - 3 records t time t + 1 seconds
 // all returned records belong to the same pool with poolId
 func (s *TestSuite) createTestRecordsFromTimeInPool(t time.Time, poolId uint64) (types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord,
-	types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord) {
+	types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord,
+) {
 	baseRecordAB := newEmptyPriceRecord(poolId, t, denom0, denom1)
 	baseRecordAC := newEmptyPriceRecord(poolId, t, denom0, denom2)
 	baseRecordBC := newEmptyPriceRecord(poolId, t, denom1, denom2)

@@ -41,6 +41,7 @@ func (a weightedOperationAction) Name() string                     { return fmt.
 func (a weightedOperationAction) Frequency() Frequency {
 	return Frequency(mapFrequencyFromInt(a.op.Weight()))
 }
+
 func (a weightedOperationAction) Execute(sim *SimCtx, ctx sdk.Context) (
 	simulation.OperationMsg, []simulation.FutureOperation, []byte, error,
 ) {

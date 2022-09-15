@@ -322,10 +322,10 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 }
 
 // TestSuperfluidUnbondLock tests the following.
-// 		1. test SuperfluidUnbondLock does not work before undelegation
-// 		2. test SuperfluidUnbondLock makes underlying lock start unlocking
-// 		3. test that synthetic lockup being finished does not mean underlying lock is finished
-//      4. test after SuperfluidUnbondLock + lockup time, the underlying lock is finished
+//  1. test SuperfluidUnbondLock does not work before undelegation
+//  2. test SuperfluidUnbondLock makes underlying lock start unlocking
+//  3. test that synthetic lockup being finished does not mean underlying lock is finished
+//  4. test after SuperfluidUnbondLock + lockup time, the underlying lock is finished
 func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 	suite.SetupTest()
 
@@ -542,7 +542,6 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 				refreshed := suite.App.BankKeeper.GetBalance(suite.Ctx, intermediaryAcc.GetAccAddress(), sdk.DefaultBondDenom)
 				suite.Require().True(refreshed.IsZero())
 			}
-
 		})
 	}
 }
