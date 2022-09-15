@@ -143,7 +143,6 @@ func (s *TestSuite) TestNewTwapRecord() {
 				s.Require().Equal(sdk.ZeroDec(), twapRecord.P0ArithmeticTwapAccumulator)
 				s.Require().Equal(sdk.ZeroDec(), twapRecord.P1ArithmeticTwapAccumulator)
 			}
-
 		})
 	}
 }
@@ -414,15 +413,19 @@ func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
 			// A 10 spot price * 1000ms = 10000
 			// A 10 spot price * 1000ms = 10000
 			// B .1 spot price * 1000ms = 100
-			expectedP0Accumulator: []sdk.Dec{baseRecord[0].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(10000)),
+			expectedP0Accumulator: []sdk.Dec{
+				baseRecord[0].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(10000)),
 				baseRecord[1].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(10000)),
-				baseRecord[2].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(100))},
+				baseRecord[2].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(100)),
+			},
 			// B .1 spot price * 1000ms = 100
 			// C 20 spot price * 1000ms = 20000
 			// C 20 spot price * 1000ms = 20000
-			expectedP1Accumulator: []sdk.Dec{baseRecord[0].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(100)),
+			expectedP1Accumulator: []sdk.Dec{
+				baseRecord[0].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(100)),
 				baseRecord[1].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(20000)),
-				baseRecord[2].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(20000))},
+				baseRecord[2].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(20000)),
+			},
 		},
 		"call 1 second before existing record": {
 			recordsToPreSet: baseRecord,
@@ -663,15 +666,15 @@ func (s *TestSuite) TestPruneRecords() {
 
 	pool1OlderMin2MsRecord, // deleted
 		pool2OlderMin1MsRecordAB, pool2OlderMin1MsRecordAC, pool2OlderMin1MsRecordBC, // deleted
-		pool3OlderBaseRecord,    // kept as newest under keep period
+		pool3OlderBaseRecord, // kept as newest under keep period
 		pool4OlderPlus1Record := // kept as newest under keep period
-		s.createTestRecordsFromTime(baseTime.Add(2 * -recordHistoryKeepPeriod))
+	s.createTestRecordsFromTime(baseTime.Add(2 * -recordHistoryKeepPeriod))
 
 	pool1Min2MsRecord, // kept as newest under keep period
 		pool2Min1MsRecordAB, pool2Min1MsRecordAC, pool2Min1MsRecordBC, // kept as newest under keep period
-		pool3BaseRecord,    // kept as it is at the keep period boundary
+		pool3BaseRecord, // kept as it is at the keep period boundary
 		pool4Plus1Record := // kept as it is above the keep period boundary
-		s.createTestRecordsFromTime(baseTime.Add(-recordHistoryKeepPeriod))
+	s.createTestRecordsFromTime(baseTime.Add(-recordHistoryKeepPeriod))
 
 	// non-ascending insertion order.
 	recordsToPreSet := []types.TwapRecord{
@@ -736,7 +739,7 @@ func (s *TestSuite) TestUpdateRecords() {
 		isMostRecent  bool
 	}
 
-	var spError = errors.New("spot price error")
+	spError := errors.New("spot price error")
 
 	validateRecords := func(expectedRecords []expectedResults, actualRecords []types.TwapRecord) {
 		s.Require().Equal(len(expectedRecords), len(actualRecords))

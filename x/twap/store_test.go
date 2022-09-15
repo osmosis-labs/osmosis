@@ -92,7 +92,8 @@ func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
 				withPoolId(baseRecord, 2),
 				withPoolId(baseRecord, 10),
 				withPoolId(baseRecord, 11),
-				withPoolId(baseRecord, 20)},
+				withPoolId(baseRecord, 20),
+			},
 			poolId:          1,
 			expectedRecords: []types.TwapRecord{baseRecord},
 		},
@@ -102,7 +103,8 @@ func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
 				withPoolId(baseRecord, 10),
 				withPoolId(baseRecord, 11),
 				withPoolId(baseRecord, 19),
-				withPoolId(baseRecord, 90)},
+				withPoolId(baseRecord, 90),
+			},
 			poolId:          9,
 			expectedRecords: []types.TwapRecord{withPoolId(baseRecord, 9)},
 		},
@@ -110,23 +112,27 @@ func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
 			recordsToSet: []types.TwapRecord{
 				newEmptyPriceRecord(1, baseTime, denom0, denom1),
 				newEmptyPriceRecord(1, baseTime, denom0, denom2),
-				newEmptyPriceRecord(1, baseTime, denom1, denom2)},
+				newEmptyPriceRecord(1, baseTime, denom1, denom2),
+			},
 			poolId: 1,
 			expectedRecords: []types.TwapRecord{
 				newEmptyPriceRecord(1, baseTime, denom0, denom1),
 				newEmptyPriceRecord(1, baseTime, denom0, denom2),
-				newEmptyPriceRecord(1, baseTime, denom1, denom2)},
+				newEmptyPriceRecord(1, baseTime, denom1, denom2),
+			},
 		},
 		"set multi-asset pool record - reverse order": {
 			recordsToSet: []types.TwapRecord{
 				newEmptyPriceRecord(1, baseTime, denom0, denom2),
 				newEmptyPriceRecord(1, baseTime, denom1, denom2),
-				newEmptyPriceRecord(1, baseTime, denom0, denom1)},
+				newEmptyPriceRecord(1, baseTime, denom0, denom1),
+			},
 			poolId: 1,
 			expectedRecords: []types.TwapRecord{
 				newEmptyPriceRecord(1, baseTime, denom0, denom1),
 				newEmptyPriceRecord(1, baseTime, denom0, denom2),
-				newEmptyPriceRecord(1, baseTime, denom1, denom2)},
+				newEmptyPriceRecord(1, baseTime, denom1, denom2),
+			},
 		},
 	}
 
@@ -175,42 +181,53 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 		"rev at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultRevInputAt(baseTime), baseRecord, nil},
 
 		"get latest (exact) w/ past entries": {
-			[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(baseTime), baseRecord, nil},
+			[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(baseTime), baseRecord, nil,
+		},
 		"get entry (exact) w/ a subsequent entry": {
-			[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(tMin1), tMin1Record, nil},
+			[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(tMin1), tMin1Record, nil,
+		},
 		"get sandwitched entry (exact)": {
-			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultInputAt(baseTime), baseRecord, nil},
+			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultInputAt(baseTime), baseRecord, nil,
+		},
 		"rev sandwitched entry (exact)": {
-			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultRevInputAt(baseTime), baseRecord, nil},
+			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultRevInputAt(baseTime), baseRecord, nil,
+		},
 
 		"get future":                 {[]types.TwapRecord{baseRecord}, defaultInputAt(tPlus1), baseRecord, nil},
 		"get future w/ past entries": {[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(tPlus1), baseRecord, nil},
 
 		"get in between entries (2 entry)": {
 			[]types.TwapRecord{tMin1Record, baseRecord},
-			defaultInputAt(baseTime.Add(-time.Millisecond)), tMin1Record, nil},
+			defaultInputAt(baseTime.Add(-time.Millisecond)), tMin1Record, nil,
+		},
 		"get in between entries (3 entry)": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
-			defaultInputAt(baseTime.Add(-time.Millisecond)), tMin1Record, nil},
+			defaultInputAt(baseTime.Add(-time.Millisecond)), tMin1Record, nil,
+		},
 		"get in between entries (3 entry) #2": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
-			defaultInputAt(baseTime.Add(time.Millisecond)), baseRecord, nil},
+			defaultInputAt(baseTime.Add(time.Millisecond)), baseRecord, nil,
+		},
 
 		"query too old": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
 			defaultInputAt(baseTime.Add(-time.Second * 2)),
-			baseRecord, twap.TimeTooOldError{Time: baseTime.Add(-time.Second * 2)}},
+			baseRecord,
+			twap.TimeTooOldError{Time: baseTime.Add(-time.Second * 2)},
+		},
 
 		"non-existent pool ID": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
 			wrongPoolIdInputAt(baseTime), baseRecord, fmt.Errorf(
 				"getTwapRecord: querying for assets %s %s that are not in pool id %d",
-				baseRecord.Asset0Denom, baseRecord.Asset1Denom, 2)},
+				baseRecord.Asset0Denom, baseRecord.Asset1Denom, 2),
+		},
 		"pool2 record get": {
 			recordsToSet:   []types.TwapRecord{newEmptyPriceRecord(2, baseTime, denom0, denom1)},
 			input:          wrongPoolIdInputAt(baseTime),
 			expectedRecord: newEmptyPriceRecord(2, baseTime, denom0, denom1),
-			expErr:         nil},
+			expErr:         nil,
+		},
 	}
 	for name, test := range tests {
 		s.Run(name, func() {
