@@ -311,16 +311,6 @@ build-e2e-script:
 	mkdir -p $(BUILDDIR)
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./tests/e2e/initialization/$(E2E_SCRIPT_NAME)
 
-docker-build-debug:
-	@DOCKER_BUILDKIT=1 docker build -t osmosis:${COMMIT} --build-arg BASE_IMG_TAG=debug -f Dockerfile .
-	@DOCKER_BUILDKIT=1 docker tag osmosis:${COMMIT} osmosis:debug
-
-docker-build-e2e-init-chain:
-	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain -f tests/e2e/initialization/init.Dockerfile .
-
-docker-build-e2e-init-node:
-	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-node:debug --build-arg E2E_SCRIPT_NAME=node -f tests/e2e/initialization/init.Dockerfile .
-
 e2e-setup: e2e-check-image-sha e2e-remove-resources
 	@echo Finished e2e environment setup, ready to start the test
 
@@ -331,6 +321,29 @@ e2e-remove-resources:
 	tests/e2e/scripts/run/remove_stale_resources.sh
 
 .PHONY: test-mutation
+
+
+###############################################################################
+###                                 Docker Utils                            ###
+###############################################################################
+
+OSMOSIS_COMMON_VERSION=v1
+
+docker-build-setup:
+	@DOCKER_BUILDKIT=1 docker build -t osmosis-setup:${OSMOSIS_COMMON_VERSION} -f images/setup.Dockerfile .
+
+docker-build-builder:
+	@DOCKER_BUILDKIT=1 docker build -t osmosis-builder:${OSMOSIS_COMMON_VERSION} --build-arg SETUP_VERSION=${OSMOSIS_COMMON_VERSION} -f images/builder.Dockerfile .
+
+docker-build-debug:
+	@DOCKER_BUILDKIT=1 docker build -t osmosis:${COMMIT} --build-arg BASE_IMG_TAG=debug -f Dockerfile .
+	@DOCKER_BUILDKIT=1 docker tag osmosis:${COMMIT} osmosis:debug
+
+docker-build-e2e-init-chain:
+	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain --build-arg SETUP_VERSION=${OSMOSIS_COMMON_VERSION} --build-arg SETUP_VERSION=${OSMOSIS_COMMON_VERSION} -f tests/e2e/initialization/init.Dockerfile .
+
+docker-build-e2e-init-node:
+	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-node:debug --build-arg E2E_SCRIPT_NAME=node --build-arg SETUP_VERSION=${OSMOSIS_COMMON_VERSION} --build-arg SETUP_VERSION=${OSMOSIS_COMMON_VERSION} -f tests/e2e/initialization/init.Dockerfile .
 
 ###############################################################################
 ###                                Linting                                  ###
