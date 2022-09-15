@@ -4,7 +4,7 @@
 ARG BUILDER_VERSION="v1"
 ARG RUNNER_IMAGE="gcr.io/distroless/static"
 
-FROM osmosis-builder:${BUILDER_VERSION} as builder
+FROM osmolabs/osmosis-builder:${BUILDER_VERSION} as builder
 
 # --------------------------------------------------------
 # Runner

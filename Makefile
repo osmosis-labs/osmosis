@@ -330,10 +330,10 @@ e2e-remove-resources:
 OSMOSIS_COMMON_VERSION=v1
 
 docker-build-setup:
-	@DOCKER_BUILDKIT=1 docker build -t osmosis-setup:${OSMOSIS_COMMON_VERSION} -f images/setup.Dockerfile .
+	@DOCKER_BUILDKIT=1 docker build -t osmolabs/osmosis-setup:${OSMOSIS_COMMON_VERSION} -f images/setup.Dockerfile .
 
 docker-build-builder:
-	@DOCKER_BUILDKIT=1 docker build -t osmosis-builder:${OSMOSIS_COMMON_VERSION} --build-arg SETUP_VERSION=${OSMOSIS_COMMON_VERSION} -f images/builder.Dockerfile .
+	@DOCKER_BUILDKIT=1 docker build -t osmolabs/osmosis-builder:${OSMOSIS_COMMON_VERSION} --build-arg SETUP_VERSION=${OSMOSIS_COMMON_VERSION} -f images/builder.Dockerfile .
 
 docker-build-debug:
 	@DOCKER_BUILDKIT=1 docker build -t osmosis:${COMMIT} --build-arg BASE_IMG_TAG=debug -f Dockerfile .

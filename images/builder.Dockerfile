@@ -8,7 +8,7 @@ ARG SETUP_VERSION
 # Builder
 # --------------------------------------------------------
 
-FROM osmosis-setup:${SETUP_VERSION}
+FROM osmolabs/osmosis-setup:${SETUP_VERSION}
 
 # Copy the remaining files
 COPY . .
