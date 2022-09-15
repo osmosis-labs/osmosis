@@ -170,10 +170,11 @@ func (m MsgExtendLockup) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgForceUnlock{}
 
 // NewMsgBeginUnlockingAll creates a message to begin unlocking tokens.
-func NewMsgForceUnlock(owner sdk.AccAddress, id uint64) *MsgForceUnlock {
+func NewMsgForceUnlock(owner sdk.AccAddress, id uint64, coins sdk.Coins) *MsgForceUnlock {
 	return &MsgForceUnlock{
 		Owner: owner.String(),
 		ID:    id,
+		Coins: coins,
 	}
 }
 

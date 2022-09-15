@@ -207,8 +207,8 @@ func (server msgServer) ForceUnlock(goCtx context.Context, msg *types.MsgForceUn
 
 	// check that given lock is not superfluid staked
 	synthLocks := server.keeper.GetAllSyntheticLockupsByLockup(ctx, lock.ID)
-	if len(synthLocks) > 1 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	if len(synthLocks) > 0 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "superfluid delegation exists for lock")
 	}
 
 	// force unlock given lock
