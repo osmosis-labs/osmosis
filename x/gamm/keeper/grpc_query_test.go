@@ -332,7 +332,6 @@ func (suite *KeeperTestSuite) TestEstimateSwapExactAmountIn() {
 
 	for _, tc := range testCases {
 		tc := tc
-
 		suite.Run(tc.name, func() {
 			result, err := queryClient.EstimateSwapExactAmountIn(gocontext.Background(), tc.req)
 			if tc.expectErr {
@@ -359,11 +358,11 @@ func (suite *KeeperTestSuite) TestEstimateSwapExactAmountOut() {
 			name: "multi route",
 			req: &types.QuerySwapExactAmountOutRequest{
 				PoolId:   poolID,
-				TokenOut: "100000baz",
+				TokenOut: "100000foo",
 				Routes: types.SwapAmountOutRoutes{
 					types.SwapAmountOutRoute{
 						PoolId:       poolID,
-						TokenInDenom: "foo",
+						TokenInDenom: "baz",
 					},
 					types.SwapAmountOutRoute{
 						PoolId:       poolID,
@@ -372,22 +371,22 @@ func (suite *KeeperTestSuite) TestEstimateSwapExactAmountOut() {
 				},
 			},
 			expectErr: false,
-			result:    sdk.NewInt(322486),
+			result:    sdk.NewInt(34131),
 		},
 		{
 			name: "one route",
 			req: &types.QuerySwapExactAmountOutRequest{
 				PoolId:   poolID,
-				TokenOut: "100000baz",
+				TokenOut: "100000foo",
 				Routes: types.SwapAmountOutRoutes{
 					types.SwapAmountOutRoute{
 						PoolId:       poolID,
-						TokenInDenom: "foo",
+						TokenInDenom: "baz",
 					},
 				},
 			},
 			expectErr: false,
-			result:    sdk.NewInt(322486),
+			result:    sdk.NewInt(33785),
 		},
 	}
 

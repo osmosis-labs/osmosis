@@ -92,7 +92,6 @@ func (k Keeper) EstimateSwapExactAmountIn(
 	if err != nil {
 		return sdk.Int{}, err
 	}
-
 	swapFee := pool.GetSwapFee(ctx)
 	_, tokenOut, err := k.estimateSwapExactAmountIn(ctx, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
 	if err != nil {
@@ -133,12 +132,6 @@ func (k Keeper) estimateSwapExactAmountIn(
 		return pool, sdk.Coin{}, sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", tokenOutDenom)
 	}
 
-	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
-	// Also emits swap event and updates related liquidity metrics
-	if err := k.EstimateUpdatePoolForSwap(ctx, pool, tokenIn, tokenOutCoin); err != nil {
-		return pool, sdk.Coin{}, err
-	}
-
 	return pool, tokenOutCoin, nil
 }
 
@@ -153,6 +146,7 @@ func (k Keeper) EstimateSwapExactAmountOut(
 	if err != nil {
 		return sdk.Int{}, err
 	}
+
 	swapFee := pool.GetSwapFee(ctx)
 	_, tokenIn, err := k.estimateSwapExactAmountOut(ctx, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
 	if err != nil {
@@ -193,11 +187,6 @@ func (k Keeper) estimateSwapExactAmountOut(
 
 	if tokenInAmount.GT(tokenInMaxAmount) {
 		return pool, sdk.Coin{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "Swap requires %s, which is greater than the amount %s", tokenIn, tokenInMaxAmount)
-	}
-
-	err = k.EstimateUpdatePoolForSwap(ctx, pool, tokenIn, tokenOut)
-	if err != nil {
-		return pool, sdk.Coin{}, err
 	}
 
 	return pool, tokenIn, nil
