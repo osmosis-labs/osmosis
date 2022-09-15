@@ -183,8 +183,9 @@ func (server msgServer) ExtendLockup(goCtx context.Context, msg *types.MsgExtend
 	return &types.MsgExtendLockupResponse{}, nil
 }
 
-// ForceUnlock
-// checks owner = lock owner in validate basic
+// ForceUnlock ignores unlock duration and immediately unlocks the lock.
+// This message is only allowed for governance passed accounts that is kept as parameter in the lockup module.
+// Locks that has been superfluid delegated is not supported.
 func (server msgServer) ForceUnlock(goCtx context.Context, msg *types.MsgForceUnlock) (*types.MsgForceUnlockResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
