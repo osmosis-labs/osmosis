@@ -100,7 +100,8 @@ func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime ti
 		poolKey := uniqueTriplet{
 			poolId: twapToRemove.PoolId,
 			asset0: twapToRemove.Asset0Denom,
-			asset1: twapToRemove.Asset1Denom}
+			asset1: twapToRemove.Asset1Denom,
+		}
 		_, hasSeenPoolRecord := seenPoolAssetTriplets[poolKey]
 		if !hasSeenPoolRecord {
 			seenPoolAssetTriplets[poolKey] = struct{}{}

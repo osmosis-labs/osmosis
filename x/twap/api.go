@@ -62,7 +62,8 @@ func (k Keeper) GetArithmeticTwapToNow(
 	poolId uint64,
 	baseAssetDenom string,
 	quoteAssetDenom string,
-	startTime time.Time) (sdk.Dec, error) {
+	startTime time.Time,
+) (sdk.Dec, error) {
 	if startTime.After(ctx.BlockTime()) {
 		return sdk.Dec{}, types.StartTimeAfterEndTimeError{StartTime: startTime, EndTime: ctx.BlockTime()}
 	}

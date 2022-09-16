@@ -1329,12 +1329,12 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 			expectPass: false,
 		},
 		"attempt joining pool with no assets in it": {
-			tokensIn: sdk.Coins{sdk.NewCoin("foo", sdk.NewInt(1)), sdk.NewCoin("foo", sdk.NewInt(1))},
-			poolAssets: []balancer.PoolAsset{},
+			tokensIn:        sdk.Coins{sdk.NewCoin("foo", sdk.NewInt(1)), sdk.NewCoin("foo", sdk.NewInt(1))},
+			poolAssets:      []balancer.PoolAsset{},
 			expNumShare:     sdk.NewIntFromUint64(0),
 			expTokensJoined: sdk.Coins{},
-			expPoolAssets: []balancer.PoolAsset{},
-			expectPass: false,
+			expPoolAssets:   []balancer.PoolAsset{},
+			expectPass:      false,
 		},
 	}
 

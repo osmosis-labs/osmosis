@@ -36,8 +36,7 @@ type ProtoWrapperDescriptor struct {
 	Response      string
 }
 
-type CliDescriptor struct {
-}
+type CliDescriptor struct{}
 
 func ReadYmlFile(filepath string) (QueryYml, error) {
 	content, err := os.ReadFile(filepath) // the file is inside the local directory

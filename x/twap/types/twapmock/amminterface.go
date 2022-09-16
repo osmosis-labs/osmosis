@@ -52,7 +52,8 @@ func (p *ProgrammedAmmInterface) ProgramPoolDenomsOverride(poolId uint64, overri
 }
 
 func (p *ProgrammedAmmInterface) ProgramPoolSpotPriceOverride(poolId uint64,
-	baseDenom, quoteDenom string, overrideSp sdk.Dec, overrideErr error) {
+	baseDenom, quoteDenom string, overrideSp sdk.Dec, overrideErr error,
+) {
 	input := SpotPriceInput{poolId, baseDenom, quoteDenom}
 	p.programmedSpotPrice[input] = SpotPriceResult{overrideSp, overrideErr}
 }
@@ -71,7 +72,8 @@ func (p *ProgrammedAmmInterface) GetPoolDenoms(ctx sdk.Context, poolId uint64) (
 func (p *ProgrammedAmmInterface) CalculateSpotPrice(ctx sdk.Context,
 	poolId uint64,
 	baseDenom,
-	quoteDenom string) (price sdk.Dec, err error) {
+	quoteDenom string,
+) (price sdk.Dec, err error) {
 	input := SpotPriceInput{poolId, baseDenom, quoteDenom}
 	if res, ok := p.programmedSpotPrice[input]; ok {
 		return res.Sp, res.Err
