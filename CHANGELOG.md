@@ -94,6 +94,7 @@ which acts as a fuzz testing tool tailored for the SDK state machine.
 * [#2417](https://github.com/osmosis-labs/osmosis/pull/2417) x/mint unexport keeper `SetLastReductionEpochNum`, `getLastReductionEpochNum`, `CreateDeveloperVestingModuleAccount`, and `MintCoins`
 * [#2587](https://github.com/osmosis-labs/osmosis/pull/2587) remove encoding config argument from NewOsmosisApp
 * [#2454](https://github.com/osmosis-labs/osmosis/pull/2454) x/gamm Change `SwapExactAmountIn` and `SwapExactAmountOut` to take fee multiplier as addition input param.
+* [#2764](https://github.com/osmosis-labs/osmosis/pull/2764) Change `EstimateSwap` query to not require assets from sender
 
 ### Features
 

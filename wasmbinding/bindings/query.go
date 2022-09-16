@@ -46,7 +46,6 @@ type SpotPrice struct {
 }
 
 type EstimateSwap struct {
-	Sender string     `json:"sender"`
 	First  Swap       `json:"first"`
 	Route  []Step     `json:"route"`
 	Amount SwapAmount `json:"amount"`

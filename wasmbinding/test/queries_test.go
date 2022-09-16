@@ -344,7 +344,6 @@ func TestEstimateSwap(t *testing.T) {
 	}{
 		"valid estimate swap (exact in)": {
 			estimateSwap: &bindings.EstimateSwap{
-				Sender: actor.String(),
 				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "uosmo",
@@ -359,7 +358,6 @@ func TestEstimateSwap(t *testing.T) {
 		},
 		"non-existent pool id": {
 			estimateSwap: &bindings.EstimateSwap{
-				Sender: actor.String(),
 				First: bindings.Swap{
 					PoolId:   starPool + 3,
 					DenomIn:  "uosmo",
@@ -374,7 +372,6 @@ func TestEstimateSwap(t *testing.T) {
 		},
 		"zero pool id": {
 			estimateSwap: &bindings.EstimateSwap{
-				Sender: actor.String(),
 				First: bindings.Swap{
 					PoolId:   0,
 					DenomIn:  "uosmo",
@@ -389,7 +386,6 @@ func TestEstimateSwap(t *testing.T) {
 		},
 		"invalid denom in": {
 			estimateSwap: &bindings.EstimateSwap{
-				Sender: actor.String(),
 				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "invalid",
@@ -404,7 +400,6 @@ func TestEstimateSwap(t *testing.T) {
 		},
 		"empty denom in": {
 			estimateSwap: &bindings.EstimateSwap{
-				Sender: actor.String(),
 				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "",
@@ -419,7 +414,6 @@ func TestEstimateSwap(t *testing.T) {
 		},
 		"invalid denom out": {
 			estimateSwap: &bindings.EstimateSwap{
-				Sender: actor.String(),
 				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "ustar",
@@ -434,7 +428,6 @@ func TestEstimateSwap(t *testing.T) {
 		},
 		"empty denom out": {
 			estimateSwap: &bindings.EstimateSwap{
-				Sender: actor.String(),
 				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "ustar",
@@ -453,7 +446,6 @@ func TestEstimateSwap(t *testing.T) {
 		},
 		"empty swap amount": {
 			estimateSwap: &bindings.EstimateSwap{
-				Sender: actor.String(),
 				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "uosmo",
@@ -466,7 +458,6 @@ func TestEstimateSwap(t *testing.T) {
 		},
 		"zero amount in": {
 			estimateSwap: &bindings.EstimateSwap{
-				Sender: actor.String(),
 				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "uosmo",
@@ -481,7 +472,6 @@ func TestEstimateSwap(t *testing.T) {
 		},
 		"zero amount out": {
 			estimateSwap: &bindings.EstimateSwap{
-				Sender: actor.String(),
 				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "uosmo",
@@ -496,7 +486,6 @@ func TestEstimateSwap(t *testing.T) {
 		},
 		"negative amount in": {
 			estimateSwap: &bindings.EstimateSwap{
-				Sender: actor.String(),
 				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "uosmo",
@@ -511,7 +500,6 @@ func TestEstimateSwap(t *testing.T) {
 		},
 		"negative amount out": {
 			estimateSwap: &bindings.EstimateSwap{
-				Sender: actor.String(),
 				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "uosmo",
