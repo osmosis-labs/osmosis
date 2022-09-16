@@ -16,9 +16,7 @@ const (
 	DeveloperVestingAmount       = developerVestingAmount
 )
 
-var (
-	GetProportions = getProportions
-)
+var GetProportions = getProportions
 
 func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) error {
 	return k.createDeveloperVestingModuleAccount(ctx, amount)

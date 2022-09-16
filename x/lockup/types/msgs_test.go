@@ -167,12 +167,22 @@ func TestMsgBeginUnlocking(t *testing.T) {
 			},
 		},
 		{
-			name: "not positive coins amount",
+			name: "zero coins (same as nil)",
 			msg: types.MsgBeginUnlocking{
 				Owner: addr1,
 				ID:    1,
 				Coins: sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(0))),
 			},
+			expectPass: true,
+		},
+		{
+			name: "nil coins (unlock by ID)",
+			msg: types.MsgBeginUnlocking{
+				Owner: addr1,
+				ID:    1,
+				Coins: sdk.NewCoins(),
+			},
+			expectPass: true,
 		},
 	}
 

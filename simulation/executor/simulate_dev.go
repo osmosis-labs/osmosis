@@ -69,7 +69,8 @@ func newSimulatorState(simParams Params, initialHeader tmproto.Header, tb testin
 func (simState *simState) SimulateAllBlocks(
 	w io.Writer,
 	simCtx *simtypes.SimCtx,
-	blockSimulator blockSimFn) (stopEarly bool, err error) {
+	blockSimulator blockSimFn,
+) (stopEarly bool, err error) {
 	stopEarly = false
 	initialHeight := simState.config.InitializationConfig.InitialBlockHeight
 	numBlocks := simState.config.NumBlocks
