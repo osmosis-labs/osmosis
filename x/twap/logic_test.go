@@ -1274,7 +1274,6 @@ func (s *TestSuite) TestUpdateRecords() {
 			validateRecords(expectedMostRecentRecords, poolMostRecentRecords)
 
 			poolHistoricalRecords := s.getAllHistoricalRecordsForPool(tc.poolId)
-			fmt.Println(poolHistoricalRecords)
 			s.Require().NoError(err)
 			validateRecords(tc.expectedHistoricalRecords, poolHistoricalRecords)
 		})
