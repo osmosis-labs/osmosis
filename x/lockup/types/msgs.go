@@ -10,10 +10,10 @@ import (
 
 // constants.
 const (
-	TypeMsgLockTokens        = "lock_tokens"
-	TypeMsgBeginUnlockingAll = "begin_unlocking_all"
-	TypeMsgBeginUnlocking    = "begin_unlocking"
-	TypeMsgExtendLockup      = "edit_lockup"
+	TypeMsgLockTokens        = "lockup_lock_tokens"
+	TypeMsgBeginUnlockingAll = "lockup_begin_unlocking_all"
+	TypeMsgBeginUnlocking    = "lockup_begin_unlocking"
+	TypeMsgExtendLockup      = "lockup_edit_lockup"
 )
 
 var _ sdk.Msg = &MsgLockTokens{}

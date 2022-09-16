@@ -73,7 +73,7 @@ func TestMsgLockTokens(t *testing.T) {
 			if test.expectPass {
 				require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
 				require.Equal(t, test.msg.Route(), types.RouterKey)
-				require.Equal(t, test.msg.Type(), "lock_tokens")
+				require.Equal(t, test.msg.Type(), "lockup_lock_tokens")
 				signers := test.msg.GetSigners()
 				require.Equal(t, len(signers), 1)
 				require.Equal(t, signers[0].String(), addr1)
@@ -113,7 +113,7 @@ func TestMsgBeginUnlockingAll(t *testing.T) {
 			if test.expectPass {
 				require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
 				require.Equal(t, test.msg.Route(), types.RouterKey)
-				require.Equal(t, test.msg.Type(), "begin_unlocking_all")
+				require.Equal(t, test.msg.Type(), "lockup_begin_unlocking_all")
 				signers := test.msg.GetSigners()
 				require.Equal(t, len(signers), 1)
 				require.Equal(t, signers[0].String(), addr1)
@@ -191,7 +191,7 @@ func TestMsgBeginUnlocking(t *testing.T) {
 			if test.expectPass {
 				require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
 				require.Equal(t, test.msg.Route(), types.RouterKey)
-				require.Equal(t, test.msg.Type(), "begin_unlocking")
+				require.Equal(t, test.msg.Type(), "lockup_begin_unlocking")
 				signers := test.msg.GetSigners()
 				require.Equal(t, len(signers), 1)
 				require.Equal(t, signers[0].String(), addr1)
@@ -251,7 +251,7 @@ func TestMsgExtendLockup(t *testing.T) {
 			if test.expectPass {
 				require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
 				require.Equal(t, test.msg.Route(), types.RouterKey)
-				require.Equal(t, test.msg.Type(), "edit_lockup")
+				require.Equal(t, test.msg.Type(), "lockup_edit_lockup")
 				signers := test.msg.GetSigners()
 				require.Equal(t, len(signers), 1)
 				require.Equal(t, signers[0].String(), addr1)
