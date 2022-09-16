@@ -74,6 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#1857](https://github.com/osmosis-labs/osmosis/pull/1857) x/mint rename GetLastHalvenEpochNum to GetLastReductionEpochNum
 * [#2394](https://github.com/osmosis-labs/osmosis/pull/2394) Remove unused interface methods from expected keepers of each module
 * [#2390](https://github.com/osmosis-labs/osmosis/pull/2390) x/mint remove unused mintCoins parameter from AfterDistributeMintedCoin
+* [#2501](https://github.com/osmosis-labs/osmosis/pull/2501) Change `EstimateSwap` query to not require assets from sender
 
 ### Features
 

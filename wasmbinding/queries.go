@@ -105,6 +105,38 @@ func (qp QueryPlugin) EstimateSwap(ctx sdk.Context, estimateSwap *bindings.Estim
 	return estimate, err
 }
 
+// EstimatePerformSwap can be used to query
+func EstimatePerformSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, swap *bindings.SwapMsg) (*bindings.SwapAmount, error) {
+	if swap == nil {
+		return nil, wasmvmtypes.InvalidRequest{Err: "gamm perform swap null swap"}
+	}
+	if swap.Amount.ExactIn != nil {
+		routes, tokenIn, tokenOutMinAmount, err := getSwapExactAmountInParams(swap)
+		if err != nil {
+			return nil, err
+		}
+
+		tokenOutAmount, err := keeper.EstimateMultihopSwapExactAmountIn(ctx, routes, tokenIn, tokenOutMinAmount)
+		if err != nil {
+			return nil, sdkerrors.Wrap(err, "gamm perform swap exact amount in")
+		}
+		return &bindings.SwapAmount{Out: &tokenOutAmount}, nil
+	} else if swap.Amount.ExactOut != nil {
+		routes, tokenOut, tokenInMaxAmount, err := getSwapAmountOutParams(swap)
+		if err != nil {
+			return nil, err
+		}
+
+		tokenInAmount, err := keeper.EstimateMultihopSwapExactAmountOut(ctx, routes, tokenInMaxAmount, tokenOut)
+		if err != nil {
+			return nil, sdkerrors.Wrap(err, "gamm perform swap exact amount out")
+		}
+		return &bindings.SwapAmount{In: &tokenInAmount}, nil
+	} else {
+		return nil, wasmvmtypes.UnsupportedRequest{Kind: "must support either Swap.ExactIn or Swap.ExactOut"}
+	}
+}
+
 func (qp QueryPlugin) ArithmeticTwap(ctx sdk.Context, arithmeticTwap *bindings.ArithmeticTwap) (*sdk.Dec, error) {
 	if arithmeticTwap == nil {
 		return nil, wasmvmtypes.InvalidRequest{Err: "gamm arithmetic twap null"}
