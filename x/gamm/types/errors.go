@@ -1,6 +1,18 @@
 package types
 
-import sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+import (
+	fmt "fmt"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+)
+
+type PoolDoesNotExistError struct {
+	PoolId uint64
+}
+
+func (e PoolDoesNotExistError) Error() string {
+	return fmt.Sprintf("pool with ID %d does not exist", e.PoolId)
+}
 
 // x/gamm module sentinel errors.
 var (
@@ -28,6 +40,8 @@ var (
 	ErrNotPositiveCriteria      = sdkerrors.Register(ModuleName, 29, "min out amount or max in amount should be positive")
 	ErrNotPositiveRequireAmount = sdkerrors.Register(ModuleName, 30, "required amount should be positive")
 	ErrTooManyTokensOut         = sdkerrors.Register(ModuleName, 31, "tx is trying to get more tokens out of the pool than exist")
+	ErrSpotPriceOverflow        = sdkerrors.Register(ModuleName, 32, "invalid spot price (overflowed)")
+	ErrSpotPriceInternal        = sdkerrors.Register(ModuleName, 33, "internal spot price error")
 
 	ErrPoolParamsInvalidDenom     = sdkerrors.Register(ModuleName, 50, "pool params' LBP params has an invalid denomination")
 	ErrPoolParamsInvalidNumDenoms = sdkerrors.Register(ModuleName, 51, "pool params' LBP doesn't have same number of params as underlying pool")

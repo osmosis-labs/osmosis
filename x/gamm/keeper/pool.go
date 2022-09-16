@@ -8,9 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v11/osmoutils"
-	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
 func (k Keeper) MarshalPool(pool types.PoolI) ([]byte, error) {
@@ -29,7 +29,7 @@ func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.PoolI, err
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
 	if !store.Has(poolKey) {
-		return nil, fmt.Errorf("pool with ID %d does not exist", poolId)
+		return nil, types.PoolDoesNotExistError{PoolId: poolId}
 	}
 
 	bz := store.Get(poolKey)

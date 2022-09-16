@@ -3,7 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -11,10 +11,10 @@ import (
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v11/app/params"
-	"github.com/osmosis-labs/osmosis/v11/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
+	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
+	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -127,7 +127,7 @@ func getGenStateFromPath(genesisFilePath string) (map[string]json.RawMessage, er
 	}
 	defer genesisFile.Close()
 
-	byteValue, _ := ioutil.ReadAll(genesisFile)
+	byteValue, _ := io.ReadAll(genesisFile)
 
 	var doc tmtypes.GenesisDoc
 	err = tmjson.Unmarshal(byteValue, &doc)
@@ -293,7 +293,7 @@ Example:
 				return fmt.Errorf("failed to marshal snapshot: %w", err)
 			}
 
-			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0o644)
+			err = os.WriteFile(snapshotOutput, snapshotJSON, 0o644)
 			return err
 		},
 	}

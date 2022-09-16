@@ -15,6 +15,7 @@ The only way for us to build state machine states that we don't apriori anticipa
 is to randomly generate many state transitions.
 
 State transitions in the SDK come from:
+
 * txs
 * Beginning a block
 * Ending a block
@@ -63,6 +64,7 @@ assert outCoins <= inCoins
 ### Simple API
 
 Have minimal overhead for randomizing a message, e.g. Just having:
+
 ```golang
 func MakeRandomizedJoinPoolMsg(sim simulator.Helper) sdk.Msg {
     pool_id := sim.FuzzLessThan(k.GetNextPoolId(ctx))

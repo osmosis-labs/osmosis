@@ -16,7 +16,7 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	_ "github.com/gogo/protobuf/types"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
-	_ "github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	types1 "github.com/osmosis-labs/osmosis/v12/x/twap/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -39,7 +39,7 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type GetArithmeticTwapRequest struct {
+type ArithmeticTwapRequest struct {
 	PoolId     uint64     `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
 	BaseAsset  string     `protobuf:"bytes,2,opt,name=base_asset,json=baseAsset,proto3" json:"base_asset,omitempty"`
 	QuoteAsset string     `protobuf:"bytes,3,opt,name=quote_asset,json=quoteAsset,proto3" json:"quote_asset,omitempty"`
@@ -47,18 +47,18 @@ type GetArithmeticTwapRequest struct {
 	EndTime    *time.Time `protobuf:"bytes,5,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time,omitempty" yaml:"end_time"`
 }
 
-func (m *GetArithmeticTwapRequest) Reset()         { *m = GetArithmeticTwapRequest{} }
-func (m *GetArithmeticTwapRequest) String() string { return proto.CompactTextString(m) }
-func (*GetArithmeticTwapRequest) ProtoMessage()    {}
-func (*GetArithmeticTwapRequest) Descriptor() ([]byte, []int) {
+func (m *ArithmeticTwapRequest) Reset()         { *m = ArithmeticTwapRequest{} }
+func (m *ArithmeticTwapRequest) String() string { return proto.CompactTextString(m) }
+func (*ArithmeticTwapRequest) ProtoMessage()    {}
+func (*ArithmeticTwapRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_141a22dba58615af, []int{0}
 }
-func (m *GetArithmeticTwapRequest) XXX_Unmarshal(b []byte) error {
+func (m *ArithmeticTwapRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *GetArithmeticTwapRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ArithmeticTwapRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_GetArithmeticTwapRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_ArithmeticTwapRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -68,69 +68,69 @@ func (m *GetArithmeticTwapRequest) XXX_Marshal(b []byte, deterministic bool) ([]
 		return b[:n], nil
 	}
 }
-func (m *GetArithmeticTwapRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetArithmeticTwapRequest.Merge(m, src)
+func (m *ArithmeticTwapRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ArithmeticTwapRequest.Merge(m, src)
 }
-func (m *GetArithmeticTwapRequest) XXX_Size() int {
+func (m *ArithmeticTwapRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *GetArithmeticTwapRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_GetArithmeticTwapRequest.DiscardUnknown(m)
+func (m *ArithmeticTwapRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ArithmeticTwapRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GetArithmeticTwapRequest proto.InternalMessageInfo
+var xxx_messageInfo_ArithmeticTwapRequest proto.InternalMessageInfo
 
-func (m *GetArithmeticTwapRequest) GetPoolId() uint64 {
+func (m *ArithmeticTwapRequest) GetPoolId() uint64 {
 	if m != nil {
 		return m.PoolId
 	}
 	return 0
 }
 
-func (m *GetArithmeticTwapRequest) GetBaseAsset() string {
+func (m *ArithmeticTwapRequest) GetBaseAsset() string {
 	if m != nil {
 		return m.BaseAsset
 	}
 	return ""
 }
 
-func (m *GetArithmeticTwapRequest) GetQuoteAsset() string {
+func (m *ArithmeticTwapRequest) GetQuoteAsset() string {
 	if m != nil {
 		return m.QuoteAsset
 	}
 	return ""
 }
 
-func (m *GetArithmeticTwapRequest) GetStartTime() time.Time {
+func (m *ArithmeticTwapRequest) GetStartTime() time.Time {
 	if m != nil {
 		return m.StartTime
 	}
 	return time.Time{}
 }
 
-func (m *GetArithmeticTwapRequest) GetEndTime() *time.Time {
+func (m *ArithmeticTwapRequest) GetEndTime() *time.Time {
 	if m != nil {
 		return m.EndTime
 	}
 	return nil
 }
 
-type GetArithmeticTwapResponse struct {
+type ArithmeticTwapResponse struct {
 	ArithmeticTwap github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=arithmetic_twap,json=arithmeticTwap,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"arithmetic_twap" yaml:"arithmetic_twap"`
 }
 
-func (m *GetArithmeticTwapResponse) Reset()         { *m = GetArithmeticTwapResponse{} }
-func (m *GetArithmeticTwapResponse) String() string { return proto.CompactTextString(m) }
-func (*GetArithmeticTwapResponse) ProtoMessage()    {}
-func (*GetArithmeticTwapResponse) Descriptor() ([]byte, []int) {
+func (m *ArithmeticTwapResponse) Reset()         { *m = ArithmeticTwapResponse{} }
+func (m *ArithmeticTwapResponse) String() string { return proto.CompactTextString(m) }
+func (*ArithmeticTwapResponse) ProtoMessage()    {}
+func (*ArithmeticTwapResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_141a22dba58615af, []int{1}
 }
-func (m *GetArithmeticTwapResponse) XXX_Unmarshal(b []byte) error {
+func (m *ArithmeticTwapResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *GetArithmeticTwapResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ArithmeticTwapResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_GetArithmeticTwapResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_ArithmeticTwapResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -140,62 +140,258 @@ func (m *GetArithmeticTwapResponse) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *GetArithmeticTwapResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetArithmeticTwapResponse.Merge(m, src)
+func (m *ArithmeticTwapResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ArithmeticTwapResponse.Merge(m, src)
 }
-func (m *GetArithmeticTwapResponse) XXX_Size() int {
+func (m *ArithmeticTwapResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *GetArithmeticTwapResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_GetArithmeticTwapResponse.DiscardUnknown(m)
+func (m *ArithmeticTwapResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ArithmeticTwapResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GetArithmeticTwapResponse proto.InternalMessageInfo
+var xxx_messageInfo_ArithmeticTwapResponse proto.InternalMessageInfo
+
+type ArithmeticTwapToNowRequest struct {
+	PoolId     uint64    `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
+	BaseAsset  string    `protobuf:"bytes,2,opt,name=base_asset,json=baseAsset,proto3" json:"base_asset,omitempty"`
+	QuoteAsset string    `protobuf:"bytes,3,opt,name=quote_asset,json=quoteAsset,proto3" json:"quote_asset,omitempty"`
+	StartTime  time.Time `protobuf:"bytes,4,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time" yaml:"start_time"`
+}
+
+func (m *ArithmeticTwapToNowRequest) Reset()         { *m = ArithmeticTwapToNowRequest{} }
+func (m *ArithmeticTwapToNowRequest) String() string { return proto.CompactTextString(m) }
+func (*ArithmeticTwapToNowRequest) ProtoMessage()    {}
+func (*ArithmeticTwapToNowRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_141a22dba58615af, []int{2}
+}
+func (m *ArithmeticTwapToNowRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ArithmeticTwapToNowRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ArithmeticTwapToNowRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ArithmeticTwapToNowRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ArithmeticTwapToNowRequest.Merge(m, src)
+}
+func (m *ArithmeticTwapToNowRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *ArithmeticTwapToNowRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ArithmeticTwapToNowRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ArithmeticTwapToNowRequest proto.InternalMessageInfo
+
+func (m *ArithmeticTwapToNowRequest) GetPoolId() uint64 {
+	if m != nil {
+		return m.PoolId
+	}
+	return 0
+}
+
+func (m *ArithmeticTwapToNowRequest) GetBaseAsset() string {
+	if m != nil {
+		return m.BaseAsset
+	}
+	return ""
+}
+
+func (m *ArithmeticTwapToNowRequest) GetQuoteAsset() string {
+	if m != nil {
+		return m.QuoteAsset
+	}
+	return ""
+}
+
+func (m *ArithmeticTwapToNowRequest) GetStartTime() time.Time {
+	if m != nil {
+		return m.StartTime
+	}
+	return time.Time{}
+}
+
+type ArithmeticTwapToNowResponse struct {
+	ArithmeticTwap github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=arithmetic_twap,json=arithmeticTwap,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"arithmetic_twap" yaml:"arithmetic_twap"`
+}
+
+func (m *ArithmeticTwapToNowResponse) Reset()         { *m = ArithmeticTwapToNowResponse{} }
+func (m *ArithmeticTwapToNowResponse) String() string { return proto.CompactTextString(m) }
+func (*ArithmeticTwapToNowResponse) ProtoMessage()    {}
+func (*ArithmeticTwapToNowResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_141a22dba58615af, []int{3}
+}
+func (m *ArithmeticTwapToNowResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ArithmeticTwapToNowResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ArithmeticTwapToNowResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ArithmeticTwapToNowResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ArithmeticTwapToNowResponse.Merge(m, src)
+}
+func (m *ArithmeticTwapToNowResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *ArithmeticTwapToNowResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ArithmeticTwapToNowResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ArithmeticTwapToNowResponse proto.InternalMessageInfo
+
+type ParamsRequest struct {
+}
+
+func (m *ParamsRequest) Reset()         { *m = ParamsRequest{} }
+func (m *ParamsRequest) String() string { return proto.CompactTextString(m) }
+func (*ParamsRequest) ProtoMessage()    {}
+func (*ParamsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_141a22dba58615af, []int{4}
+}
+func (m *ParamsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ParamsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ParamsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ParamsRequest.Merge(m, src)
+}
+func (m *ParamsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *ParamsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ParamsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ParamsRequest proto.InternalMessageInfo
+
+type ParamsResponse struct {
+	Params types1.Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+}
+
+func (m *ParamsResponse) Reset()         { *m = ParamsResponse{} }
+func (m *ParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*ParamsResponse) ProtoMessage()    {}
+func (*ParamsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_141a22dba58615af, []int{5}
+}
+func (m *ParamsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ParamsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ParamsResponse.Merge(m, src)
+}
+func (m *ParamsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *ParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ParamsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ParamsResponse proto.InternalMessageInfo
+
+func (m *ParamsResponse) GetParams() types1.Params {
+	if m != nil {
+		return m.Params
+	}
+	return types1.Params{}
+}
 
 func init() {
-	proto.RegisterType((*GetArithmeticTwapRequest)(nil), "osmosis.gamm.twap.v1beta1.GetArithmeticTwapRequest")
-	proto.RegisterType((*GetArithmeticTwapResponse)(nil), "osmosis.gamm.twap.v1beta1.GetArithmeticTwapResponse")
+	proto.RegisterType((*ArithmeticTwapRequest)(nil), "osmosis.twap.v1beta1.ArithmeticTwapRequest")
+	proto.RegisterType((*ArithmeticTwapResponse)(nil), "osmosis.twap.v1beta1.ArithmeticTwapResponse")
+	proto.RegisterType((*ArithmeticTwapToNowRequest)(nil), "osmosis.twap.v1beta1.ArithmeticTwapToNowRequest")
+	proto.RegisterType((*ArithmeticTwapToNowResponse)(nil), "osmosis.twap.v1beta1.ArithmeticTwapToNowResponse")
+	proto.RegisterType((*ParamsRequest)(nil), "osmosis.twap.v1beta1.ParamsRequest")
+	proto.RegisterType((*ParamsResponse)(nil), "osmosis.twap.v1beta1.ParamsResponse")
 }
 
 func init() { proto.RegisterFile("osmosis/twap/v1beta1/query.proto", fileDescriptor_141a22dba58615af) }
 
 var fileDescriptor_141a22dba58615af = []byte{
-	// 549 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x53, 0xcf, 0x6e, 0xd3, 0x30,
-	0x18, 0xaf, 0xcb, 0xfe, 0x50, 0x4f, 0x62, 0x5a, 0x84, 0xa0, 0xed, 0x68, 0x52, 0x05, 0x69, 0xaa,
-	0x90, 0x66, 0xab, 0x1b, 0x27, 0xc4, 0x65, 0x15, 0x12, 0x70, 0x24, 0x9a, 0x10, 0xe2, 0x12, 0xb9,
-	0x89, 0xc9, 0x2c, 0x92, 0x38, 0x8d, 0xdd, 0x8d, 0x5e, 0x79, 0x00, 0x34, 0x89, 0x27, 0x40, 0x9c,
-	0x79, 0x8f, 0x1e, 0x27, 0x71, 0x41, 0x1c, 0x02, 0x6a, 0x79, 0x82, 0x3e, 0x01, 0x72, 0xec, 0x74,
-	0x63, 0x6c, 0x42, 0x9c, 0x92, 0xef, 0xfb, 0xfd, 0xf1, 0xcf, 0xf6, 0x67, 0xd8, 0xe5, 0x22, 0xe1,
-	0x82, 0x09, 0x2c, 0x4f, 0x48, 0x86, 0x8f, 0xfb, 0x43, 0x2a, 0x49, 0x1f, 0x8f, 0xc6, 0x34, 0x9f,
-	0xa0, 0x2c, 0xe7, 0x92, 0x5b, 0x2d, 0xc3, 0x40, 0x11, 0x49, 0x12, 0xa4, 0x68, 0xc8, 0xd0, 0xda,
-	0xb7, 0x23, 0x1e, 0xf1, 0x92, 0x85, 0xd5, 0x9f, 0x16, 0xb4, 0x77, 0xae, 0xb4, 0x54, 0x85, 0x9f,
-	0xd3, 0x80, 0xe7, 0xa1, 0xe1, 0xd9, 0x41, 0x49, 0xc4, 0x43, 0x22, 0xe8, 0x92, 0x16, 0x70, 0x96,
-	0x1a, 0xfc, 0xc1, 0x45, 0xbc, 0x4c, 0xb4, 0x64, 0x65, 0x24, 0x62, 0x29, 0x91, 0x8c, 0x57, 0xdc,
-	0x7b, 0x11, 0xe7, 0x51, 0x4c, 0x31, 0xc9, 0x18, 0x26, 0x69, 0xca, 0x65, 0x09, 0x0a, 0x83, 0xb6,
-	0x0c, 0x5a, 0x56, 0xc3, 0xf1, 0x1b, 0x4c, 0xd2, 0x49, 0x05, 0xe9, 0x45, 0x7c, 0xbd, 0x0b, 0x5d,
-	0x18, 0xc8, 0xb9, 0xac, 0x92, 0x2c, 0xa1, 0x42, 0x92, 0x24, 0xd3, 0x04, 0xf7, 0x53, 0x1d, 0x36,
-	0x9f, 0x52, 0x79, 0x90, 0x33, 0x79, 0x94, 0x50, 0xc9, 0x82, 0xc3, 0x13, 0x92, 0x79, 0x74, 0x34,
-	0xa6, 0x42, 0x5a, 0x77, 0xe1, 0x7a, 0xc6, 0x79, 0xec, 0xb3, 0xb0, 0x09, 0xba, 0xa0, 0xb7, 0xe2,
-	0xad, 0xa9, 0xf2, 0x79, 0x68, 0x75, 0x20, 0x54, 0x3b, 0xf2, 0x89, 0x10, 0x54, 0x36, 0xeb, 0x5d,
-	0xd0, 0x6b, 0x78, 0x0d, 0xd5, 0x39, 0x50, 0x0d, 0xcb, 0x81, 0x1b, 0xa3, 0x31, 0x97, 0x15, 0x7e,
-	0xa3, 0xc4, 0x61, 0xd9, 0xd2, 0x84, 0x57, 0x10, 0x0a, 0x49, 0x72, 0xe9, 0xab, 0x38, 0xcd, 0x95,
-	0x2e, 0xe8, 0x6d, 0xec, 0xb5, 0x91, 0xce, 0x8a, 0xaa, 0xac, 0xe8, 0xb0, 0xca, 0x3a, 0xe8, 0x4c,
-	0x0b, 0xa7, 0xb6, 0x28, 0x9c, 0xad, 0x09, 0x49, 0xe2, 0x47, 0xee, 0xb9, 0xd6, 0x3d, 0xfd, 0xe1,
-	0x00, 0xaf, 0x51, 0x36, 0x14, 0xdd, 0xf2, 0xe0, 0x4d, 0x9a, 0x86, 0xda, 0x77, 0xf5, 0x9f, 0xbe,
-	0xdb, 0xd3, 0xc2, 0x01, 0x8b, 0xc2, 0xd9, 0xd4, 0xbe, 0x95, 0x52, 0xbb, 0xae, 0xd3, 0x34, 0x54,
-	0x54, 0xf7, 0x03, 0x80, 0xad, 0x2b, 0xce, 0x48, 0x64, 0x3c, 0x15, 0xd4, 0x1a, 0xc1, 0x4d, 0xb2,
-	0x44, 0x7c, 0x35, 0x22, 0xe5, 0x61, 0x35, 0x06, 0xcf, 0x54, 0xe8, 0xef, 0x85, 0xb3, 0x13, 0x31,
-	0x79, 0x34, 0x1e, 0xa2, 0x80, 0x27, 0xe6, 0x72, 0xcc, 0x67, 0x57, 0x84, 0x6f, 0xb1, 0x9c, 0x64,
-	0x54, 0xa0, 0x27, 0x34, 0x58, 0x14, 0xce, 0x1d, 0x1d, 0xe3, 0x92, 0x9d, 0xeb, 0xdd, 0x22, 0x7f,
-	0x2c, 0xbd, 0xf7, 0x05, 0xc0, 0xd5, 0x17, 0x6a, 0x98, 0xac, 0xcf, 0x00, 0x6e, 0xfd, 0x15, 0xcd,
-	0xda, 0x47, 0xd7, 0xce, 0x3b, 0xba, 0xee, 0xb2, 0xdb, 0x0f, 0xff, 0x4f, 0xa4, 0x77, 0xef, 0xde,
-	0x7f, 0xff, 0xf5, 0xd7, 0xc7, 0x7a, 0xc7, 0xda, 0xc6, 0xd5, 0x8b, 0x51, 0xea, 0xf3, 0x21, 0xe7,
-	0x3c, 0x16, 0x83, 0x97, 0xd3, 0x99, 0x0d, 0xce, 0x66, 0x36, 0xf8, 0x39, 0xb3, 0xc1, 0xe9, 0xdc,
-	0xae, 0x9d, 0xcd, 0xed, 0xda, 0xb7, 0xb9, 0x5d, 0x7b, 0xfd, 0xf8, 0xc2, 0xd9, 0x18, 0x83, 0xdd,
-	0x98, 0x0c, 0xc5, 0xd2, 0xed, 0xb8, 0xdf, 0xc7, 0xef, 0xf4, 0x2b, 0x0c, 0x62, 0x46, 0x53, 0xa9,
-	0x5f, 0x91, 0xbe, 0xcb, 0xb5, 0xf2, 0xb3, 0xff, 0x3b, 0x00, 0x00, 0xff, 0xff, 0x7a, 0x42, 0x49,
-	0x69, 0x01, 0x04, 0x00, 0x00,
+	// 670 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x95, 0x3d, 0x6f, 0xd3, 0x40,
+	0x18, 0xc7, 0x73, 0x7d, 0x49, 0xc9, 0x55, 0xb4, 0xe2, 0x28, 0xa5, 0xb8, 0xad, 0x1d, 0x99, 0xaa,
+	0x2a, 0xb4, 0xb5, 0x49, 0xd8, 0x2a, 0x96, 0x46, 0x0c, 0x20, 0x21, 0x04, 0x56, 0x85, 0x10, 0x4b,
+	0x74, 0x71, 0x0e, 0xd7, 0x22, 0xf6, 0x39, 0xbe, 0x4b, 0x4b, 0x56, 0x56, 0x96, 0x4a, 0x4c, 0x2c,
+	0x7c, 0x03, 0xbe, 0x47, 0x27, 0xa8, 0xc4, 0x82, 0x18, 0x0c, 0x6a, 0xf9, 0x04, 0xfd, 0x04, 0xe8,
+	0x5e, 0x1c, 0xda, 0xc8, 0x2a, 0x61, 0x42, 0x4c, 0xce, 0x3d, 0xcf, 0xff, 0xf9, 0x3f, 0xbf, 0x7b,
+	0x7c, 0xbe, 0xc0, 0x2a, 0x65, 0x11, 0x65, 0x21, 0x73, 0xf9, 0x3e, 0x4e, 0xdc, 0xbd, 0x5a, 0x8b,
+	0x70, 0x5c, 0x73, 0xbb, 0x3d, 0x92, 0xf6, 0x9d, 0x24, 0xa5, 0x9c, 0xa2, 0x39, 0xad, 0x70, 0x84,
+	0xc2, 0xd1, 0x0a, 0x63, 0x2e, 0xa0, 0x01, 0x95, 0x02, 0x57, 0xfc, 0x52, 0x5a, 0x63, 0xb5, 0xd0,
+	0x4d, 0x2c, 0x9a, 0x29, 0xf1, 0x69, 0xda, 0xd6, 0x3a, 0xbb, 0x50, 0x17, 0x90, 0x98, 0x88, 0x46,
+	0x4a, 0x63, 0xfa, 0x52, 0xe4, 0xb6, 0x30, 0x23, 0x03, 0x89, 0x4f, 0xc3, 0x58, 0xe7, 0x6f, 0x9f,
+	0xcd, 0x4b, 0xe0, 0x81, 0x2a, 0xc1, 0x41, 0x18, 0x63, 0x1e, 0xd2, 0x5c, 0xbb, 0x14, 0x50, 0x1a,
+	0x74, 0x88, 0x8b, 0x93, 0xd0, 0xc5, 0x71, 0x4c, 0xb9, 0x4c, 0xe6, 0x9d, 0x6e, 0xe8, 0xac, 0x5c,
+	0xb5, 0x7a, 0x2f, 0x5d, 0x1c, 0xf7, 0xf3, 0x94, 0x6a, 0xd2, 0x54, 0x3b, 0x55, 0x0b, 0x9d, 0xb2,
+	0x86, 0xab, 0x78, 0x18, 0x11, 0xc6, 0x71, 0x94, 0x28, 0x81, 0xfd, 0x61, 0x0c, 0x5e, 0xdb, 0x4e,
+	0x43, 0xbe, 0x1b, 0x11, 0x1e, 0xfa, 0x3b, 0xfb, 0x38, 0xf1, 0x48, 0xb7, 0x47, 0x18, 0x47, 0xd7,
+	0xe1, 0x54, 0x42, 0x69, 0xa7, 0x19, 0xb6, 0x17, 0x40, 0x15, 0xac, 0x4d, 0x78, 0x65, 0xb1, 0x7c,
+	0xd8, 0x46, 0xcb, 0x10, 0x8a, 0xed, 0x34, 0x31, 0x63, 0x84, 0x2f, 0x8c, 0x55, 0xc1, 0x5a, 0xc5,
+	0xab, 0x88, 0xc8, 0xb6, 0x08, 0x20, 0x0b, 0x4e, 0x77, 0x7b, 0x94, 0xe7, 0xf9, 0x71, 0x99, 0x87,
+	0x32, 0xa4, 0x04, 0xcf, 0x21, 0x64, 0x1c, 0xa7, 0xbc, 0x29, 0x58, 0x16, 0x26, 0xaa, 0x60, 0x6d,
+	0xba, 0x6e, 0x38, 0x0a, 0xd4, 0xc9, 0x41, 0x9d, 0x9d, 0x1c, 0xb4, 0xb1, 0x7c, 0x98, 0x59, 0xa5,
+	0xd3, 0xcc, 0xba, 0xd2, 0xc7, 0x51, 0x67, 0xcb, 0xfe, 0x5d, 0x6b, 0x1f, 0x7c, 0xb7, 0x80, 0x57,
+	0x91, 0x01, 0x21, 0x47, 0x1e, 0xbc, 0x44, 0xe2, 0xb6, 0xf2, 0x9d, 0xfc, 0xa3, 0xef, 0xe2, 0x61,
+	0x66, 0x81, 0xd3, 0xcc, 0x9a, 0x55, 0xbe, 0x79, 0xa5, 0x72, 0x9d, 0x22, 0x71, 0x5b, 0x48, 0xed,
+	0xb7, 0x00, 0xce, 0x0f, 0x0f, 0x88, 0x25, 0x34, 0x66, 0x04, 0x75, 0xe1, 0x2c, 0x1e, 0x64, 0x9a,
+	0xe2, 0x94, 0xc8, 0x49, 0x55, 0x1a, 0x0f, 0x04, 0xf1, 0xb7, 0xcc, 0x5a, 0x0d, 0x42, 0xbe, 0xdb,
+	0x6b, 0x39, 0x3e, 0x8d, 0xf4, 0x6b, 0xd1, 0x8f, 0x4d, 0xd6, 0x7e, 0xe5, 0xf2, 0x7e, 0x42, 0x98,
+	0x73, 0x9f, 0xf8, 0xa7, 0x99, 0x35, 0xaf, 0x18, 0x86, 0xec, 0x6c, 0x6f, 0x06, 0x9f, 0x6b, 0x6d,
+	0x7f, 0x06, 0xd0, 0x38, 0x4f, 0xb3, 0x43, 0x1f, 0xd3, 0xfd, 0xff, 0xf7, 0x9d, 0xd9, 0x07, 0x00,
+	0x2e, 0x16, 0xee, 0xe8, 0xdf, 0x0d, 0x79, 0x16, 0x5e, 0x7e, 0x82, 0x53, 0x1c, 0x31, 0x3d, 0x56,
+	0xfb, 0x11, 0x9c, 0xc9, 0x03, 0x9a, 0x6a, 0x0b, 0x96, 0x13, 0x19, 0x91, 0x30, 0xd3, 0xf5, 0x25,
+	0xa7, 0xe8, 0x02, 0x72, 0x54, 0x55, 0x63, 0x42, 0xa0, 0x7a, 0xba, 0xa2, 0xfe, 0x69, 0x1c, 0x4e,
+	0x3e, 0x15, 0x57, 0x01, 0xea, 0xc3, 0xb2, 0x52, 0xa0, 0x9b, 0x17, 0xd5, 0x6b, 0x0c, 0x63, 0xe5,
+	0x62, 0x91, 0x42, 0xb3, 0x57, 0xde, 0x7c, 0xf9, 0xf9, 0x6e, 0xcc, 0x44, 0x4b, 0x6e, 0xe1, 0xfd,
+	0xa5, 0x1b, 0xbe, 0x07, 0x70, 0xe6, 0xfc, 0xd8, 0xd1, 0x7a, 0xb1, 0x7d, 0xe1, 0xed, 0x60, 0x6c,
+	0x8c, 0x26, 0xd6, 0x4c, 0x1b, 0x92, 0x69, 0x15, 0xad, 0x14, 0x33, 0x0d, 0x81, 0x7c, 0x04, 0xf0,
+	0x6a, 0xc1, 0x91, 0x40, 0x77, 0x46, 0xe9, 0x79, 0xf6, 0x7b, 0x30, 0x6a, 0x7f, 0x51, 0xa1, 0x51,
+	0x6b, 0x12, 0x75, 0x1d, 0xdd, 0x1a, 0x05, 0x55, 0x96, 0x36, 0x9e, 0x1d, 0x1e, 0x9b, 0xe0, 0xe8,
+	0xd8, 0x04, 0x3f, 0x8e, 0x4d, 0x70, 0x70, 0x62, 0x96, 0x8e, 0x4e, 0xcc, 0xd2, 0xd7, 0x13, 0xb3,
+	0xf4, 0xe2, 0xde, 0x99, 0xb3, 0xa9, 0xed, 0x36, 0x3b, 0xb8, 0xc5, 0x06, 0xde, 0x7b, 0xb5, 0xba,
+	0xfb, 0x5a, 0x75, 0xf0, 0x3b, 0x21, 0x89, 0xb9, 0xfa, 0x93, 0x50, 0x5f, 0x54, 0x59, 0x3e, 0xee,
+	0xfe, 0x0a, 0x00, 0x00, 0xff, 0xff, 0x32, 0xd5, 0x29, 0x3a, 0xff, 0x06, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -210,7 +406,9 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	GetArithmeticTwap(ctx context.Context, in *GetArithmeticTwapRequest, opts ...grpc.CallOption) (*GetArithmeticTwapResponse, error)
+	Params(ctx context.Context, in *ParamsRequest, opts ...grpc.CallOption) (*ParamsResponse, error)
+	ArithmeticTwap(ctx context.Context, in *ArithmeticTwapRequest, opts ...grpc.CallOption) (*ArithmeticTwapResponse, error)
+	ArithmeticTwapToNow(ctx context.Context, in *ArithmeticTwapToNowRequest, opts ...grpc.CallOption) (*ArithmeticTwapToNowResponse, error)
 }
 
 type queryClient struct {
@@ -221,9 +419,27 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
-func (c *queryClient) GetArithmeticTwap(ctx context.Context, in *GetArithmeticTwapRequest, opts ...grpc.CallOption) (*GetArithmeticTwapResponse, error) {
-	out := new(GetArithmeticTwapResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.gamm.twap.v1beta1.Query/GetArithmeticTwap", in, out, opts...)
+func (c *queryClient) Params(ctx context.Context, in *ParamsRequest, opts ...grpc.CallOption) (*ParamsResponse, error) {
+	out := new(ParamsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.twap.v1beta1.Query/Params", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ArithmeticTwap(ctx context.Context, in *ArithmeticTwapRequest, opts ...grpc.CallOption) (*ArithmeticTwapResponse, error) {
+	out := new(ArithmeticTwapResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.twap.v1beta1.Query/ArithmeticTwap", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ArithmeticTwapToNow(ctx context.Context, in *ArithmeticTwapToNowRequest, opts ...grpc.CallOption) (*ArithmeticTwapToNowResponse, error) {
+	out := new(ArithmeticTwapToNowResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.twap.v1beta1.Query/ArithmeticTwapToNow", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -232,53 +448,105 @@ func (c *queryClient) GetArithmeticTwap(ctx context.Context, in *GetArithmeticTw
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	GetArithmeticTwap(context.Context, *GetArithmeticTwapRequest) (*GetArithmeticTwapResponse, error)
+	Params(context.Context, *ParamsRequest) (*ParamsResponse, error)
+	ArithmeticTwap(context.Context, *ArithmeticTwapRequest) (*ArithmeticTwapResponse, error)
+	ArithmeticTwapToNow(context.Context, *ArithmeticTwapToNowRequest) (*ArithmeticTwapToNowResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
 type UnimplementedQueryServer struct {
 }
 
-func (*UnimplementedQueryServer) GetArithmeticTwap(ctx context.Context, req *GetArithmeticTwapRequest) (*GetArithmeticTwapResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetArithmeticTwap not implemented")
+func (*UnimplementedQueryServer) Params(ctx context.Context, req *ParamsRequest) (*ParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
+func (*UnimplementedQueryServer) ArithmeticTwap(ctx context.Context, req *ArithmeticTwapRequest) (*ArithmeticTwapResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ArithmeticTwap not implemented")
+}
+func (*UnimplementedQueryServer) ArithmeticTwapToNow(ctx context.Context, req *ArithmeticTwapToNowRequest) (*ArithmeticTwapToNowResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ArithmeticTwapToNow not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
-func _Query_GetArithmeticTwap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetArithmeticTwapRequest)
+func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ParamsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).GetArithmeticTwap(ctx, in)
+		return srv.(QueryServer).Params(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.gamm.twap.v1beta1.Query/GetArithmeticTwap",
+		FullMethod: "/osmosis.twap.v1beta1.Query/Params",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GetArithmeticTwap(ctx, req.(*GetArithmeticTwapRequest))
+		return srv.(QueryServer).Params(ctx, req.(*ParamsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ArithmeticTwap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ArithmeticTwapRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ArithmeticTwap(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.twap.v1beta1.Query/ArithmeticTwap",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ArithmeticTwap(ctx, req.(*ArithmeticTwapRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ArithmeticTwapToNow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ArithmeticTwapToNowRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ArithmeticTwapToNow(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.twap.v1beta1.Query/ArithmeticTwapToNow",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ArithmeticTwapToNow(ctx, req.(*ArithmeticTwapToNowRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 var _Query_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "osmosis.gamm.twap.v1beta1.Query",
+	ServiceName: "osmosis.twap.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetArithmeticTwap",
-			Handler:    _Query_GetArithmeticTwap_Handler,
+			MethodName: "Params",
+			Handler:    _Query_Params_Handler,
+		},
+		{
+			MethodName: "ArithmeticTwap",
+			Handler:    _Query_ArithmeticTwap_Handler,
+		},
+		{
+			MethodName: "ArithmeticTwapToNow",
+			Handler:    _Query_ArithmeticTwapToNow_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "osmosis/twap/v1beta1/query.proto",
 }
 
-func (m *GetArithmeticTwapRequest) Marshal() (dAtA []byte, err error) {
+func (m *ArithmeticTwapRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -288,12 +556,12 @@ func (m *GetArithmeticTwapRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *GetArithmeticTwapRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *ArithmeticTwapRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *GetArithmeticTwapRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ArithmeticTwapRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -338,7 +606,7 @@ func (m *GetArithmeticTwapRequest) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
-func (m *GetArithmeticTwapResponse) Marshal() (dAtA []byte, err error) {
+func (m *ArithmeticTwapResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -348,12 +616,12 @@ func (m *GetArithmeticTwapResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *GetArithmeticTwapResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *ArithmeticTwapResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *GetArithmeticTwapResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ArithmeticTwapResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -364,6 +632,145 @@ func (m *GetArithmeticTwapResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 		if _, err := m.ArithmeticTwap.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *ArithmeticTwapToNowRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ArithmeticTwapToNowRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ArithmeticTwapToNowRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	n3, err3 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime):])
+	if err3 != nil {
+		return 0, err3
+	}
+	i -= n3
+	i = encodeVarintQuery(dAtA, i, uint64(n3))
+	i--
+	dAtA[i] = 0x22
+	if len(m.QuoteAsset) > 0 {
+		i -= len(m.QuoteAsset)
+		copy(dAtA[i:], m.QuoteAsset)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.QuoteAsset)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.BaseAsset) > 0 {
+		i -= len(m.BaseAsset)
+		copy(dAtA[i:], m.BaseAsset)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.BaseAsset)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.PoolId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.PoolId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ArithmeticTwapToNowResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ArithmeticTwapToNowResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ArithmeticTwapToNowResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.ArithmeticTwap.Size()
+		i -= size
+		if _, err := m.ArithmeticTwap.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *ParamsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ParamsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *ParamsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
 		i = encodeVarintQuery(dAtA, i, uint64(size))
 	}
 	i--
@@ -382,7 +789,7 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *GetArithmeticTwapRequest) Size() (n int) {
+func (m *ArithmeticTwapRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -408,7 +815,7 @@ func (m *GetArithmeticTwapRequest) Size() (n int) {
 	return n
 }
 
-func (m *GetArithmeticTwapResponse) Size() (n int) {
+func (m *ArithmeticTwapResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -419,13 +826,66 @@ func (m *GetArithmeticTwapResponse) Size() (n int) {
 	return n
 }
 
+func (m *ArithmeticTwapToNowRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.PoolId != 0 {
+		n += 1 + sovQuery(uint64(m.PoolId))
+	}
+	l = len(m.BaseAsset)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.QuoteAsset)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime)
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *ArithmeticTwapToNowResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.ArithmeticTwap.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *ParamsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *ParamsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Params.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
 func sovQuery(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *GetArithmeticTwapRequest) Unmarshal(dAtA []byte) error {
+func (m *ArithmeticTwapRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -448,10 +908,10 @@ func (m *GetArithmeticTwapRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: GetArithmeticTwapRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: ArithmeticTwapRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: GetArithmeticTwapRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ArithmeticTwapRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -627,7 +1087,7 @@ func (m *GetArithmeticTwapRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *GetArithmeticTwapResponse) Unmarshal(dAtA []byte) error {
+func (m *ArithmeticTwapResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -650,10 +1110,10 @@ func (m *GetArithmeticTwapResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: GetArithmeticTwapResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: ArithmeticTwapResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: GetArithmeticTwapResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ArithmeticTwapResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -687,6 +1147,389 @@ func (m *GetArithmeticTwapResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.ArithmeticTwap.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ArithmeticTwapToNowRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ArithmeticTwapToNowRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ArithmeticTwapToNowRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+			}
+			m.PoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BaseAsset", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BaseAsset = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QuoteAsset", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.QuoteAsset = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ArithmeticTwapToNowResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ArithmeticTwapToNowResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ArithmeticTwapToNowResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ArithmeticTwap", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ArithmeticTwap.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ParamsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ParamsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ParamsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ParamsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

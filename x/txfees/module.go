@@ -25,9 +25,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v11/x/txfees/client/cli"
-	"github.com/osmosis-labs/osmosis/v11/x/txfees/keeper"
-	"github.com/osmosis-labs/osmosis/v11/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v12/x/txfees/client/cli"
+	"github.com/osmosis-labs/osmosis/v12/x/txfees/keeper"
+	"github.com/osmosis-labs/osmosis/v12/x/txfees/types"
 )
 
 var (
@@ -42,8 +42,7 @@ const ModuleName = types.ModuleName
 // ----------------------------------------------------------------------------
 
 // AppModuleBasic implements the AppModuleBasic interface for the txfees module.
-type AppModuleBasic struct {
-}
+type AppModuleBasic struct{}
 
 func NewAppModuleBasic() AppModuleBasic {
 	return AppModuleBasic{}

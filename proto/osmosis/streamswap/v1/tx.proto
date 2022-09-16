@@ -1,0 +1,141 @@
+syntax = "proto3";
+package osmosis.streamswap.v1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v12/x/streamswap/types";
+option (gogoproto.goproto_getters_all) = false;
+
+service Msg {
+  // CreateSale creates new token sale. Anyone can create a new sale.
+  // params.SaleBond OSMO will be charged as a bond (returned in FinalizeSale)
+  // to avoid spams.
+  // The sale follows the streamswap functionality explained in the
+  // x/launchapd/spec
+  rpc CreateSale(MsgCreateSale) returns (MsgCreateSaleResponse);
+
+  // Subscribe to a token sale. Any use at any time before the sale end can join
+  // the sale by sending `token_in` to the Sale through the Subscribe msg.
+  // During the sale, user `token_in` will be automatically charged every
+  // epoch to purchase `token_out`.
+  rpc Subscribe(MsgSubscribe) returns (google.protobuf.Empty);
+
+  // Withdraw sends back `amount` of unspent tokens_in to the user.
+  // If `amount` is empty, it will default to all unspent tokens.
+  // User can do it any time unless his deposit is empty.
+  rpc Withdraw(MsgWithdraw) returns (google.protobuf.Empty);
+
+  // ExitSale withdraws (by a user who subscribed to the sale) purchased
+  // tokens_out from the pool and remained tokens_in. Must be called before
+  // the sale end.
+  rpc ExitSale(MsgExitSale) returns (MsgExitSaleResponse);
+
+  // FinalizeSale clean ups the sale and sends income (earned tokens_in) to the
+  // Sale recipient. Returns error if called before the Sale end. Anyone can
+  // call this method.
+  rpc FinalizeSale(MsgFinalizeSale) returns (MsgFinalizeSaleResponse);
+}
+
+message MsgCreateSale {
+  // Sale creator and the account which provides token (token_out) to the sale.
+  // When processing this message, token_out
+  string creator = 1;
+  // token_in is a denom used to buy `token_out`. May be referred as a
+  // "quote currency".
+  string token_in = 2;
+  // token_out is a coin supply (denom + amount) to sell. May be referred as
+  // "base currency". The whole supply will be transferred from the creator
+  // to the module and will be sold during the sale.
+  cosmos.base.v1beta1.Coin token_out = 3 [ (gogoproto.nullable) = false ];
+
+  // Maximum fee the creator is going to pay for creating a sale. The creator
+  // will be charged params.SaleCreationFee. Transaction will fail if
+  // max_fee is smaller than params.SaleCreationFee. If empty, the creator
+  // doesn't accept any fee.
+  repeated cosmos.base.v1beta1.Coin max_fee = 4
+      [ (gogoproto.nullable) = false ];
+
+  // start time when the token sale starts.
+  google.protobuf.Timestamp start_time = 5
+      [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
+  // duration time that the sale takes place over
+  google.protobuf.Duration duration = 6
+      [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
+
+  // Recipient is the account which receives earned `token_in` from when the
+  // sale is finalized. If not defined (empty) the creator
+  // account will be used.
+  string recipient = 7;
+
+  // Name for the sale, max 40 characters, min 4. Required.
+  string name = 8;
+  // URL with sale and project details. Can be a link a link to IPFS,
+  // hackmd, project page, blog post... Max 120 characters. Must be
+  // valid agains Go url.ParseRequestURI. Required.
+  string url = 9;
+}
+
+message MsgCreateSaleResponse {
+  uint64 sale_id = 1 [ (gogoproto.moretags) = "yaml:\"sale_id\"" ];
+}
+
+message MsgSubscribe {
+  // sender is an account address adding a deposit
+  string sender = 1;
+  // ID of an existing sale.
+  uint64 sale_id = 2 [ (gogoproto.moretags) = "yaml:\"sale_id\"" ];
+  // number of sale.token_in staked by a user.
+  string amount = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgWithdraw {
+  // sender is an account address subscribed to the sale_id
+  string sender = 1;
+  // ID of a sale.
+  uint64 sale_id = 2 [ (gogoproto.moretags) = "yaml:\"sale_id\"" ];
+  // amount of tokens_in to withdraw. Must be at most the amount of not spent
+  // tokens, unless set to null - then all remaining balance will be withdrawn.
+  string amount = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = true
+  ];
+}
+
+message MsgExitSale {
+  // sender is an account address exiting a sale
+  string sender = 1;
+  // ID of an existing sale.
+  uint64 sale_id = 2 [ (gogoproto.moretags) = "yaml:\"sale_id\"" ];
+}
+
+message MsgExitSaleResponse {
+  // Purchased amount of "out" tokens withdrawn to the user.
+  string purchased = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgFinalizeSale {
+  // sender is an account signing the message and triggering the finalization.
+  string sender = 1;
+  // ID of an existing sale.
+  uint64 sale_id = 2 [ (gogoproto.moretags) = "yaml:\"sale_id\"" ];
+}
+
+message MsgFinalizeSaleResponse {
+  // Income amount of token_in sent to the sale recipient.
+  string income = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+}

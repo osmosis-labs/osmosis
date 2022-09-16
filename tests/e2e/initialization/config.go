@@ -18,14 +18,15 @@ import (
 	"github.com/gogo/protobuf/proto"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v11/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/v11/x/mint/types"
-	poolitypes "github.com/osmosis-labs/osmosis/v11/x/pool-incentives/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v11/x/txfees/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v12/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v12/x/mint/types"
+	poolitypes "github.com/osmosis-labs/osmosis/v12/x/pool-incentives/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v12/x/twap/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v12/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v11/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v12/tests/e2e/util"
 )
 
 // NodeConfig is a confiuration for the node supplied from the test runner
@@ -45,6 +46,7 @@ type NodeConfig struct {
 const (
 	// common
 	OsmoDenom           = "uosmo"
+	IonDenom            = "uion"
 	StakeDenom          = "stake"
 	OsmoIBCDenom        = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
 	StakeIBCDenom       = "ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B7787"
@@ -54,13 +56,18 @@ const (
 	// chainA
 	ChainAID      = "osmo-test-a"
 	OsmoBalanceA  = 200000000000
+	IonBalanceA   = 100000000000
 	StakeBalanceA = 110000000000
 	StakeAmountA  = 100000000000
 	// chainB
 	ChainBID      = "osmo-test-b"
 	OsmoBalanceB  = 500000000000
+	IonBalanceB   = 100000000000
 	StakeBalanceB = 440000000000
 	StakeAmountB  = 400000000000
+
+	EpochDuration         = time.Second * 60
+	TWAPPruningKeepPeriod = EpochDuration / 4
 )
 
 var (
@@ -69,8 +76,8 @@ var (
 	StakeAmountIntB  = sdk.NewInt(StakeAmountB)
 	StakeAmountCoinB = sdk.NewCoin(OsmoDenom, StakeAmountIntB)
 
-	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s", OsmoBalanceA, OsmoDenom, StakeBalanceA, StakeDenom)
-	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s", OsmoBalanceB, OsmoDenom, StakeBalanceB, StakeDenom)
+	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s,%d%s", OsmoBalanceA, OsmoDenom, StakeBalanceA, StakeDenom, IonBalanceA, IonDenom)
+	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s,%d%s", OsmoBalanceB, OsmoDenom, StakeBalanceB, StakeDenom, IonBalanceB, IonDenom)
 	OsmoToken       = sdk.NewInt64Coin(OsmoDenom, IbcSendAmount)  // 3,300uosmo
 	StakeToken      = sdk.NewInt64Coin(StakeDenom, IbcSendAmount) // 3,300ustake
 	tenOsmo         = sdk.Coins{sdk.NewInt64Coin(OsmoDenom, 10_000_000)}
@@ -245,6 +252,11 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 		return err
 	}
 
+	err = updateModuleGenesis(appGenState, twaptypes.ModuleName, &twaptypes.GenesisState{}, updateTWAPGenesis)
+	if err != nil {
+		return err
+	}
+
 	err = updateModuleGenesis(appGenState, crisistypes.ModuleName, &crisistypes.GenesisState{}, updateCrisisGenesis)
 	if err != nil {
 		return err
@@ -295,9 +307,6 @@ func updateBankGenesis(bankGenState *banktypes.GenesisState) {
 			},
 		},
 	})
-	if len(bankGenState.SupplyOffsets) == 0 {
-		bankGenState.SupplyOffsets = []banktypes.GenesisSupplyOffset{}
-	}
 }
 
 func updateStakeGenesis(stakeGenState *staketypes.GenesisState) {
@@ -353,6 +362,11 @@ func updateEpochGenesis(epochGenState *epochtypes.GenesisState) {
 		// override day epochs which are in default integrations, to be 1min
 		epochtypes.NewGenesisEpochInfo("day", time.Second*60),
 	}
+}
+
+func updateTWAPGenesis(twapGenState *twaptypes.GenesisState) {
+	// Lower keep period from defaults to allos us to test pruning.
+	twapGenState.Params.RecordHistoryKeepPeriod = time.Second * 15
 }
 
 func updateCrisisGenesis(crisisGenState *crisistypes.GenesisState) {

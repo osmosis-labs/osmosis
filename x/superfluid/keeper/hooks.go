@@ -1,11 +1,10 @@
 package keeper
 
 import (
-	"fmt"
 	"time"
 
-	epochstypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v12/x/superfluid/keeper/internal/events"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -24,11 +23,12 @@ func (k Keeper) Hooks() Hooks {
 
 // epochs hooks
 // Don't do anything pre epoch start.
-func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return nil
 }
 
-func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-	h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
+func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
 }
 
 // lockup hooks
@@ -43,11 +43,7 @@ func (h Hooks) AfterAddTokensToLock(ctx sdk.Context, address sdk.AccAddress, loc
 		if err != nil {
 			h.k.Logger(ctx).Error(err.Error())
 		} else {
-			ctx.EventManager().EmitEvent(sdk.NewEvent(
-				types.TypeEvtSuperfluidIncreaseDelegation,
-				sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", lockID)),
-				sdk.NewAttribute(types.AttributeAmount, amount.String()),
-			))
+			events.EmitSuperfluidIncreaseDelegationEvent(ctx, lockID, amount)
 		}
 	}
 }

@@ -1,12 +1,22 @@
 keeper: 
-  path: "github.com/osmosis-labs/osmosis/v11/x/twap"
+  path: "github.com/osmosis-labs/osmosis/v12/x/twap"
   struct: "Keeper"
-client_path: "github.com/osmosis-labs/osmosis/v11/x/twap/client"
+client_path: "github.com/osmosis-labs/osmosis/v12/x/twap/client"
 queries:
-  GetArithmeticTwap:
+  ArithmeticTwap:
     proto_wrapper:
       default_values:
-        Req.end_time: "time.Now()"
+        Req.end_time: "ctx.BlockTime()"
       query_func: "k.GetArithmeticTwap"
     cli:
-      cmd: "GetArithmeticTwap"
+      cmd: "ArithmeticTwap"
+  ArithmeticTwapToNow:
+    proto_wrapper:
+      query_func: "k.GetArithmeticTwapToNow"
+    cli:
+      cmd: "ArithmeticTwapToNow"
+  Params:
+    proto_wrapper:
+      query_func: "k.GetParams"
+    cli:
+      cmd: "GetArithmeticTwapToNow"

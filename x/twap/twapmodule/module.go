@@ -16,11 +16,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v11/x/twap"
-	twapclient "github.com/osmosis-labs/osmosis/v11/x/twap/client"
-	"github.com/osmosis-labs/osmosis/v11/x/twap/client/grpc"
-	"github.com/osmosis-labs/osmosis/v11/x/twap/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v12/x/twap"
+	twapclient "github.com/osmosis-labs/osmosis/v12/x/twap/client"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/client/grpc"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
 )
 
 var (
@@ -28,8 +28,7 @@ var (
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
-type AppModuleBasic struct {
-}
+type AppModuleBasic struct{}
 
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
@@ -37,7 +36,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(&types.GenesisState{})
+	return cdc.MustMarshalJSON(types.DefaultGenesis())
 }
 
 // ValidateGenesis performs genesis state validation for the gamm module.
@@ -49,7 +48,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 	return genState.Validate()
 }
 
-//---------------------------------------
+// ---------------------------------------
 // Interfaces.
 func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
@@ -106,16 +105,22 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 	}
 }
 
-// InitGenesis performs genesis initialization for the gamm module. It returns
+// InitGenesis performs genesis initialization for the twap module.
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
+	var genesisState types.GenesisState
+
+	cdc.MustUnmarshalJSON(gs, &genesisState)
+
+	am.k.InitGenesis(ctx, &genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the gamm
+// ExportGenesis returns the exported genesis state as raw bytes for the twap.
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	return json.RawMessage{}
+	genState := am.k.ExportGenesis(ctx)
+	return cdc.MustMarshalJSON(genState)
 }
 
 // BeginBlock performs a no-op.

@@ -1,43 +1,16 @@
 package types
 
 import (
-	fmt "fmt"
+	"fmt"
 	"sort"
-	time "time"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v11/osmoutils"
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 )
 
-func NewTwapRecord(k AmmInterface, ctx sdk.Context, poolId uint64, denom0 string, denom1 string) (TwapRecord, error) {
-	if !(denom0 > denom1) {
-		return TwapRecord{}, fmt.Errorf("precondition denom0 > denom1 not satisfied. denom0 %s | denom1 %s", denom0, denom1)
-	}
-	sp0 := MustGetSpotPrice(k, ctx, poolId, denom0, denom1)
-	sp1 := MustGetSpotPrice(k, ctx, poolId, denom1, denom0)
-	return TwapRecord{
-		PoolId:                      poolId,
-		Asset0Denom:                 denom0,
-		Asset1Denom:                 denom1,
-		Height:                      ctx.BlockHeight(),
-		Time:                        ctx.BlockTime(),
-		P0LastSpotPrice:             sp0,
-		P1LastSpotPrice:             sp1,
-		P0ArithmeticTwapAccumulator: sdk.ZeroDec(),
-		P1ArithmeticTwapAccumulator: sdk.ZeroDec(),
-	}, nil
-}
-
-// mustGetSpotPrice returns the spot price for the given pool id, and denom0 in terms of denom1.
-// Panics if the pool state is misconfigured, which will halt any tx that interacts with this.
-func MustGetSpotPrice(k AmmInterface, ctx sdk.Context, poolId uint64, baseAssetDenom string, quoteAssetDenom string) sdk.Dec {
-	sp, err := k.CalculateSpotPrice(ctx, poolId, baseAssetDenom, quoteAssetDenom)
-	if err != nil {
-		panic(err)
-	}
-	return sp
-}
+var MaxSpotPrice = sdk.NewDec(2).Power(128).Sub(sdk.OneDec())
 
 // GetAllUniqueDenomPairs returns all unique pairs of denoms, where for every pair
 // (X, Y), X >= Y.
@@ -68,15 +41,30 @@ func GetAllUniqueDenomPairs(denoms []string) ([]string, []string) {
 	return pairGT, pairLT
 }
 
-func SpotPriceTimesDuration(sp sdk.Dec, timeDelta time.Duration) sdk.Dec {
-	return sp.MulInt64(int64(timeDelta))
+// SpotPriceMulDuration returns the spot price multiplied by the time delta,
+// that is the spot price between the current and last TWAP record.
+// A single second accounts for 1_000_000_000 when converted to int64.
+func SpotPriceMulDuration(sp sdk.Dec, timeDelta time.Duration) sdk.Dec {
+	deltaMS := timeDelta.Milliseconds()
+	return sp.MulInt64(deltaMS)
 }
 
+// AccumDiffDivDuration returns the accumulated difference divided by the the
+// time delta, that is the spot price between the current and last TWAP record.
 func AccumDiffDivDuration(accumDiff sdk.Dec, timeDelta time.Duration) sdk.Dec {
-	return accumDiff.QuoInt64(int64(timeDelta))
+	deltaMS := timeDelta.Milliseconds()
+	return accumDiff.QuoInt64(deltaMS)
 }
 
-// TODO
-func (g *GenesisState) Validate() error {
-	return nil
+// LexicographicalOrderDenoms takes two denoms and returns them to be in lexicographically ascending order.
+// In other words, the first returned denom string will be the lexicographically smaller of the two denoms.
+// If the denoms are equal, an error will be returned.
+func LexicographicalOrderDenoms(denom0, denom1 string) (string, string, error) {
+	if denom0 == denom1 {
+		return "", "", fmt.Errorf("both assets cannot be of the same denom: assetA: %s, assetB: %s", denom0, denom1)
+	}
+	if denom0 > denom1 {
+		denom0, denom1 = denom1, denom0
+	}
+	return denom0, denom1, nil
 }

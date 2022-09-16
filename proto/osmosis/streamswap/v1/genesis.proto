@@ -1,0 +1,27 @@
+syntax = "proto3";
+package osmosis.streamswap.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "osmosis/streamswap/v1/state.proto";
+import "osmosis/streamswap/v1/params.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v12/x/streamswap/types";
+
+// GenesisState defines the streamswap module's genesis state.
+message GenesisState {
+  repeated Sale sales = 1 [ (gogoproto.nullable) = false ];
+  repeated UserPositionKV user_positions = 2 [ (gogoproto.nullable) = false ];
+  uint64 next_sale_id = 3;
+  Params params = 4 [ (gogoproto.nullable) = false ];
+}
+
+// UserPositionKV is a record in genesis representing acc_address user position
+// of a sale_id sale.
+message UserPositionKV {
+  // user account address
+  string acc_address = 1;
+  uint64 sale_id = 2;
+  UserPosition user_position = 3 [ (gogoproto.nullable) = false ];
+}

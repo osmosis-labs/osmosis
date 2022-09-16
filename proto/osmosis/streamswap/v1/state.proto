@@ -1,0 +1,114 @@
+syntax = "proto3";
+package osmosis.streamswap.v1;
+
+import "google/protobuf/timestamp.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v12/x/streamswap/types";
+option (gogoproto.goproto_getters_all) = false;
+
+message Sale {
+  // Destination for the earned token_in
+  string treasury = 1;
+  uint64 id = 2;
+
+  // token_out is a token denom to be bootstraped. May be referred as base
+  // currency, or a sale token.
+  string token_out = 3;
+  // token_in is a token denom used to buy sale tokens (`token_out`). May be
+  // referred as quote_currency or payment token.
+  string token_in = 4;
+
+  // total number of `tokens_out` to be sold during the continuous sale.
+  string token_out_supply = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+
+  // start time when the token emission starts.
+  google.protobuf.Timestamp start_time = 6
+      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
+  // end time when the token emission ends. Can't be bigger than start +
+  // 139years (to avoid round overflow)
+  google.protobuf.Timestamp end_time = 7
+      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
+
+  // Round number when the sale was last time updated.
+  int64 round = 8;
+
+  // Last round of the Sale;
+  int64 end_round = 9;
+
+  // amout of remaining token_out to sell
+  string out_remaining = 10 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+
+  // amount of token_out sold
+  string out_sold = 11 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+
+  // out token per share
+  string out_per_share = 12 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+
+  // total amount of currently staked coins (token_in) but not spent coins.
+  string staked = 13 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  // total amount of earned coins (token_in)
+  string income = 14 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+
+  // total amount of shares
+  string shares = 15 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+
+  // Name for the sale.
+  string name = 20;
+  // URL with sale and project details.
+  string url = 21;
+}
+
+// UserPosition represents user account in a sale
+message UserPosition {
+
+  string shares = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  // total number of currently staked tokens
+  string staked = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+
+  // last token/share ratio
+  string out_per_share = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+
+  // amount of token_in spent
+  string spent = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+
+  // Amount of accumulated, not withdrawn, purchased tokens (token_out)
+  string purchased = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+}

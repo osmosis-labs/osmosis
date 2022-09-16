@@ -12,8 +12,8 @@ import (
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/osmosis-labs/osmosis/v11/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v11/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v12/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v12/tests/e2e/initialization"
 )
 
 type NodeConfig struct {
@@ -58,13 +58,13 @@ func (n *NodeConfig) Run() error {
 		return err
 	}
 
+	n.rpcClient = rpcClient
+
 	require.Eventually(
 		n.t,
 		func() bool {
-			if _, err := rpcClient.Health(context.Background()); err != nil {
-				return false
-			}
-
+			// This fails if unsuccessful.
+			n.QueryCurrentHeight()
 			n.t.Logf("started node container: %s", n.Name)
 			return true
 		},
@@ -72,8 +72,6 @@ func (n *NodeConfig) Run() error {
 		time.Second,
 		"Osmosis node failed to produce blocks",
 	)
-
-	n.rpcClient = rpcClient
 
 	if err := n.extractOperatorAddressIfValidator(); err != nil {
 		return err
@@ -94,22 +92,20 @@ func (n *NodeConfig) Stop() error {
 
 // WaitUntil waits until node reaches doneCondition. Return nil
 // if reached, error otherwise.
-func (n *NodeConfig) WaitUntil(doneCondition func(syncInfo coretypes.SyncInfo) bool) error {
+func (n *NodeConfig) WaitUntil(doneCondition func(syncInfo coretypes.SyncInfo) bool) {
 	var latestBlockHeight int64
 	for i := 0; i < waitUntilrepeatMax; i++ {
 		status, err := n.rpcClient.Status(context.Background())
-		if err != nil {
-			return err
-		}
+		require.NoError(n.t, err)
 		latestBlockHeight = status.SyncInfo.LatestBlockHeight
 		// let the node produce a few blocks
 		if !doneCondition(status.SyncInfo) {
 			time.Sleep(waitUntilRepeatPauseTime)
 			continue
 		}
-		return nil
+		return
 	}
-	return fmt.Errorf("node %s timed out waiting for condition, latest block height was %d", n.Name, latestBlockHeight)
+	n.t.Errorf("node %s timed out waiting for condition, latest block height was %d", n.Name, latestBlockHeight)
 }
 
 func (n *NodeConfig) extractOperatorAddressIfValidator() error {

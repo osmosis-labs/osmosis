@@ -2,16 +2,16 @@ package simapp
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"log"
 	"math/rand"
+	"os"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v11/app"
-	osmosimtypes "github.com/osmosis-labs/osmosis/v11/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v12/app"
+	osmosim "github.com/osmosis-labs/osmosis/v12/simulation/executor"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdksimapp "github.com/cosmos/cosmos-sdk/simapp"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -24,13 +24,17 @@ import (
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
-func AppStateFn(cdc codec.JSONCodec, simManager *osmosimtypes.Manager) simtypes.AppStateFn {
-	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config,
+func AppStateFn() osmosim.AppStateFn {
+	cdc := app.MakeEncodingConfig().Marshaler
+	return func(simManager *osmosimtypes.Manager, r *rand.Rand, accs []simtypes.Account, config osmosim.InitializationConfig,
 	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
-		if sdksimapp.FlagGenesisTimeValue == 0 {
-			genesisTimestamp = simtypes.RandTimestamp(r)
+		if osmosim.FlagGenesisTimeValue == 0 {
+			// N.B.: wasmd has the following check in its simulator:
+			// https://github.com/osmosis-labs/wasmd/blob/c2ec9092d086b5ac6dd367f33ce8b5cce8e4c5f5/x/wasm/types/types.go#L261-L264
+			// As a result, it is easy to overflow and become negative if seconds are set too large.
+			genesisTimestamp = time.Unix(0, r.Int63())
 		} else {
-			genesisTimestamp = time.Unix(sdksimapp.FlagGenesisTimeValue, 0)
+			genesisTimestamp = time.Unix(osmosim.FlagGenesisTimeValue, 0)
 		}
 
 		chainID = config.ChainID
@@ -42,7 +46,7 @@ func AppStateFn(cdc codec.JSONCodec, simManager *osmosimtypes.Manager) simtypes.
 			// override the default chain-id from simapp to set it later to the config
 			genesisDoc, accounts := AppStateFromGenesisFileFn(r, cdc, config.GenesisFile)
 
-			if sdksimapp.FlagGenesisTimeValue == 0 {
+			if osmosim.FlagGenesisTimeValue == 0 {
 				// use genesis timestamp if no custom timestamp is provided (i.e no random timestamp)
 				genesisTimestamp = genesisDoc.GenesisTime
 			}
@@ -53,7 +57,7 @@ func AppStateFn(cdc codec.JSONCodec, simManager *osmosimtypes.Manager) simtypes.
 
 		case config.ParamsFile != "":
 			appParams := make(simtypes.AppParams)
-			bz, err := ioutil.ReadFile(config.ParamsFile)
+			bz, err := os.ReadFile(config.ParamsFile)
 			if err != nil {
 				panic(err)
 			}

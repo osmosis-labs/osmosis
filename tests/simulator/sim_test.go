@@ -10,17 +10,10 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v11/app"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	sdkSimapp "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/types/simulation"
 
-	osmosim "github.com/osmosis-labs/osmosis/v11/simulation/executor"
-	"github.com/osmosis-labs/osmosis/v11/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v11/simulation/simtypes/simlogger"
+	osmosim "github.com/osmosis-labs/osmosis/v12/simulation/executor"
+	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes/simlogger"
 )
 
 // Profile with:
@@ -28,81 +21,46 @@ import (
 func BenchmarkFullAppSimulation(b *testing.B) {
 	// -Enabled=true -NumBlocks=1000 -BlockSize=200 \
 	// -Period=1 -Commit=true -Seed=57 -v -timeout 24h
-	sdkSimapp.FlagEnabledValue = true
-	sdkSimapp.FlagNumBlocksValue = 1000
-	sdkSimapp.FlagBlockSizeValue = 200
-	sdkSimapp.FlagCommitValue = true
-	sdkSimapp.FlagVerboseValue = true
-	// sdkSimapp.FlagPeriodValue = 1000
+	osmosim.FlagEnabledValue = true
+	osmosim.FlagNumBlocksValue = 1000
+	osmosim.FlagBlockSizeValue = 200
+	osmosim.FlagCommitValue = true
+	osmosim.FlagVerboseValue = true
+	// osmosim.FlagPeriodValue = 1000
 	fullAppSimulation(b, false)
 }
 
 func TestFullAppSimulation(t *testing.T) {
 	// -Enabled=true -NumBlocks=1000 -BlockSize=200 \
 	// -Period=1 -Commit=true -Seed=57 -v -timeout 24h
-	sdkSimapp.FlagEnabledValue = true
-	sdkSimapp.FlagNumBlocksValue = 200
-	sdkSimapp.FlagBlockSizeValue = 25
-	sdkSimapp.FlagCommitValue = true
-	sdkSimapp.FlagVerboseValue = true
-	sdkSimapp.FlagPeriodValue = 10
-	sdkSimapp.FlagSeedValue = 11
+	osmosim.FlagEnabledValue = true
+	osmosim.FlagNumBlocksValue = 200
+	osmosim.FlagBlockSizeValue = 25
+	osmosim.FlagCommitValue = true
+	osmosim.FlagVerboseValue = true
+	osmosim.FlagPeriodValue = 10
+	osmosim.FlagSeedValue = 11
+	osmosim.FlagWriteStatsToDB = true
 	fullAppSimulation(t, true)
 }
 
 func fullAppSimulation(tb testing.TB, is_testing bool) {
-	config, db, dir, logger, _, err := sdkSimapp.SetupSimulation("goleveldb-app-sim", "Simulation")
+	config, db, logger, cleanup, err := osmosim.SetupSimulation("goleveldb-app-sim", "Simulation")
 	if err != nil {
 		tb.Fatalf("simulation setup failed: %s", err.Error())
 	}
-	logger = simlogger.NewSimLogger(logger)
+	defer cleanup()
 	// This file is needed to provide the correct path
 	// to reflect.wasm test file needed for wasmd simulation testing.
-	config.ParamsFile = "params.json"
-
-	defer func() {
-		db.Close()
-		err = os.RemoveAll(dir)
-		if err != nil {
-			tb.Fatal(err)
-		}
-	}()
-
-	// fauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
-	// an IAVLStore for faster simulation speed.
-	fauxMerkleModeOpt := func(bapp *baseapp.BaseApp) {
-		if is_testing {
-			bapp.SetFauxMerkleMode()
-		}
-	}
-
-	osmosis := app.NewOsmosisApp(
-		logger,
-		db,
-		nil,
-		true, // load latest
-		map[int64]bool{},
-		app.DefaultNodeHome,
-		sdkSimapp.FlagPeriodValue,
-		app.MakeEncodingConfig(),
-		sdkSimapp.EmptyAppOptions{},
-		app.GetWasmEnabledProposals(),
-		app.EmptyWasmOpts,
-		interBlockCacheOpt(),
-		fauxMerkleModeOpt)
-
-	initFns := simtypes.InitFunctions{
-		RandomAccountFn:   simtypes.WrapRandAccFnForResampling(simulation.RandomAccounts, osmosis.ModuleAccountAddrs()),
-		AppInitialStateFn: AppStateFn(osmosis.AppCodec(), osmosis.SimulationManager()),
-	}
+	config.InitializationConfig.ParamsFile = "params.json"
+	config.ExecutionDbConfig.UseMerkleTree = !is_testing
 
 	// Run randomized simulation:
-	_, simErr := osmosim.SimulateFromSeed(
+	_, _, simErr := osmosim.SimulateFromSeed(
 		tb,
 		os.Stdout,
-		osmosis,
-		initFns,
-		osmosis.SimulationManager().Actions(config.Seed, osmosis.AppCodec()), // Run all registered operations
+		OsmosisAppCreator(logger, db),
+		OsmosisInitFns,
 		config,
 	)
 
@@ -110,36 +68,29 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 		tb.Fatal(simErr)
 	}
 
-	if config.Commit {
-		sdkSimapp.PrintStats(db)
+	if config.ExecutionDbConfig.UseMerkleTree {
+		osmosim.PrintStats(db)
 	}
-}
-
-// interBlockCacheOpt returns a BaseApp option function that sets the persistent
-// inter-block write-through cache.
-func interBlockCacheOpt() func(*baseapp.BaseApp) {
-	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }
 
 // TODO: Make another test for the fuzzer itself, which just has noOp txs
 // and doesn't depend on the application.
 func TestAppStateDeterminism(t *testing.T) {
-	// if !sdkSimapp.FlagEnabledValue {
+	// if !osmosim.FlagEnabledValue {
 	// 	t.Skip("skipping application simulation")
 	// }
 
-	config := sdkSimapp.NewConfigFromFlags()
-	config.ExportParamsPath = ""
+	config := osmosim.NewConfigFromFlags()
+	config.ExportConfig.ExportParamsPath = ""
 	config.NumBlocks = 50
 	config.BlockSize = 5
 	config.OnOperation = false
 	config.AllInvariants = false
-	config.ChainID = helpers.SimAppChainID
-	config.Commit = true
+	config.InitializationConfig.ChainID = helpers.SimAppChainID
 
 	// This file is needed to provide the correct path
 	// to reflect.wasm test file needed for wasmd simulation testing.
-	config.ParamsFile = "params.json"
+	config.InitializationConfig.ParamsFile = "params.json"
 
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
@@ -149,52 +100,26 @@ func TestAppStateDeterminism(t *testing.T) {
 		config.Seed = rand.Int63()
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
-			var logger log.Logger
-			logger = simlogger.NewSimLogger(log.TestingLogger())
-			// if sdkSimapp.FlagVerboseValue {
-			// 	logger = log.TestingLogger()
-			// } else {
-			// 	logger = log.NewNopLogger()
-			// }
-
+			logger := simlogger.NewSimLogger(log.TestingLogger())
 			db := dbm.NewMemDB()
-			osmosis := app.NewOsmosisApp(
-				logger,
-				db,
-				nil,
-				true,
-				map[int64]bool{},
-				app.DefaultNodeHome,
-				sdkSimapp.FlagPeriodValue,
-				app.MakeEncodingConfig(),
-				sdkSimapp.EmptyAppOptions{},
-				app.GetWasmEnabledProposals(),
-				app.EmptyWasmOpts,
-				interBlockCacheOpt())
 
 			fmt.Printf(
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
 				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 			)
 
-			initFns := simtypes.InitFunctions{
-				RandomAccountFn:   simtypes.WrapRandAccFnForResampling(simulation.RandomAccounts, osmosis.ModuleAccountAddrs()),
-				AppInitialStateFn: AppStateFn(osmosis.AppCodec(), osmosis.SimulationManager()),
-			}
-
 			// Run randomized simulation:
-			_, simErr := osmosim.SimulateFromSeed(
+			lastCommitId, _, simErr := osmosim.SimulateFromSeed(
 				t,
 				os.Stdout,
-				osmosis,
-				initFns,
-				osmosis.SimulationManager().Actions(config.Seed, osmosis.AppCodec()), // Run all registered operations
+				OsmosisAppCreator(logger, db),
+				OsmosisInitFns,
 				config,
 			)
 
 			require.NoError(t, simErr)
 
-			appHash := osmosis.LastCommitID().Hash
+			appHash := lastCommitId.Hash
 			appHashList[j] = fmt.Sprintf("%X", appHash)
 
 			if j != 0 {

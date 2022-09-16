@@ -8,12 +8,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v11/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v11/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	appParams "github.com/osmosis-labs/osmosis/v11/app/params"
+	appParams "github.com/osmosis-labs/osmosis/v12/app/params"
 )
 
 func TestMsgLockTokens(t *testing.T) {
@@ -167,12 +167,22 @@ func TestMsgBeginUnlocking(t *testing.T) {
 			},
 		},
 		{
-			name: "not positive coins amount",
+			name: "zero coins (same as nil)",
 			msg: types.MsgBeginUnlocking{
 				Owner: addr1,
 				ID:    1,
 				Coins: sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(0))),
 			},
+			expectPass: true,
+		},
+		{
+			name: "nil coins (unlock by ID)",
+			msg: types.MsgBeginUnlocking{
+				Owner: addr1,
+				ID:    1,
+				Coins: sdk.NewCoins(),
+			},
+			expectPass: true,
 		},
 	}
 

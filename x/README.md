@@ -1,6 +1,7 @@
 # Osmosis modules
 
 Osmosis implements the following custom modules:
+
 * `epochs` - Makes on-chain timers which other modules can execute code during.
 * `gamm` - Generalized AMM infrastructure, which includes balancer and stableswap
 * `incentives` - Controls specification and distribution of rewards to lockups

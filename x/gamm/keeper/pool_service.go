@@ -8,25 +8,52 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v12/osmomath"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
 // CalculateSpotPrice returns the spot price of the quote asset in terms of the base asset,
 // using the specified pool.
-// E.g. if pool 1 traded 2 atom for 3 osmo, the quote asset was atom, and the base asset was osmo,
+// E.g. if pool 1 trades 2 atom for 3 osmo, the quote asset was atom, and the base asset was osmo,
 // this would return 1.5. (Meaning that 1 atom costs 1.5 osmo)
+//
+// This function is guaranteed to not panic, but may return an error if:
+// * An internal error within the pool occurs for calculating the spot price
+// * The returned spot price is greater than max spot price
 func (k Keeper) CalculateSpotPrice(
 	ctx sdk.Context,
 	poolID uint64,
 	baseAssetDenom string,
 	quoteAssetDenom string,
-) (sdk.Dec, error) {
+) (spotPrice sdk.Dec, err error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolID)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
 
-	return pool.SpotPrice(ctx, baseAssetDenom, quoteAssetDenom)
+	// defer to catch panics, in case something internal overflows.
+	defer func() {
+		if r := recover(); r != nil {
+			spotPrice = sdk.Dec{}
+			err = types.ErrSpotPriceInternal
+		}
+	}()
+
+	spotPrice, err = pool.SpotPrice(ctx, baseAssetDenom, quoteAssetDenom)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	// if spotPrice greater than max spot price, return an error
+	if spotPrice.GT(types.MaxSpotPrice) {
+		return types.MaxSpotPrice, types.ErrSpotPriceOverflow
+	} else if !spotPrice.IsPositive() {
+		return sdk.Dec{}, types.ErrSpotPriceInternal
+	}
+
+	// we want to round this to `SpotPriceSigFigs` of precision
+	spotPrice = osmomath.SigFigRound(spotPrice, types.SpotPriceSigFigs)
+	return spotPrice, err
 }
 
 func validateCreatePoolMsg(ctx sdk.Context, msg types.CreatePoolMsg) error {
@@ -209,7 +236,7 @@ func (k Keeper) JoinPoolNoSwap(
 		}
 	}
 
-	sharesOut, err = pool.JoinPool(ctx, neededLpLiquidity, pool.GetSwapFee(ctx))
+	sharesOut, err = pool.JoinPoolNoSwap(ctx, neededLpLiquidity, pool.GetSwapFee(ctx))
 	if err != nil {
 		return nil, sdk.ZeroInt(), err
 	}
@@ -225,9 +252,9 @@ func (k Keeper) JoinPoolNoSwap(
 
 // getMaximalNoSwapLPAmount returns the coins(lp liquidity) needed to get the specified amount of shares in the pool.
 // Steps to getting the needed lp liquidity coins needed for the share of the pools are
-// 		1. calculate how much percent of the pool does given share account for(# of input shares / # of current total shares)
-// 		2. since we know how much % of the pool we want, iterate through all pool liquidity to calculate how much coins we need for
-// 	  	   each pool asset.
+// 1. calculate how much percent of the pool does given share account for(# of input shares / # of current total shares)
+// 2. since we know how much % of the pool we want, iterate through all pool liquidity to calculate how much coins we need for
+// each pool asset.
 func getMaximalNoSwapLPAmount(ctx sdk.Context, pool types.PoolI, shareOutAmount sdk.Int) (neededLpLiquidity sdk.Coins, err error) {
 	totalSharesAmount := pool.GetTotalShares()
 	// shareRatio is the desired number of shares, divided by the total number of
