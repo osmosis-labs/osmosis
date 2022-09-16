@@ -11,14 +11,14 @@ import (
 
 // constants.
 const (
-	TypeMsgSwapExactAmountIn       = "swap_exact_amount_in"
-	TypeMsgSwapExactAmountOut      = "swap_exact_amount_out"
-	TypeMsgJoinPool                = "join_pool"
-	TypeMsgExitPool                = "exit_pool"
-	TypeMsgJoinSwapExternAmountIn  = "join_swap_extern_amount_in"
-	TypeMsgJoinSwapShareAmountOut  = "join_swap_share_amount_out"
-	TypeMsgExitSwapExternAmountOut = "exit_swap_extern_amount_out"
-	TypeMsgExitSwapShareAmountIn   = "exit_swap_share_amount_in"
+	TypeMsgSwapExactAmountIn       = "gamm_swap_exact_amount_in"
+	TypeMsgSwapExactAmountOut      = "gamm_swap_exact_amount_out"
+	TypeMsgJoinPool                = "gamm_join_pool"
+	TypeMsgExitPool                = "gamm_exit_pool"
+	TypeMsgJoinSwapExternAmountIn  = "gamm_join_swap_extern_amount_in"
+	TypeMsgJoinSwapShareAmountOut  = "gamm_join_swap_share_amount_out"
+	TypeMsgExitSwapExternAmountOut = "gamm_exit_swap_extern_amount_out"
+	TypeMsgExitSwapShareAmountIn   = "gamm_exit_swap_share_amount_in"
 )
 
 func ValidateFutureGovernor(governor string) error {

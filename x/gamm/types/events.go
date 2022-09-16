@@ -1,10 +1,10 @@
 package types
 
 const (
-	TypeEvtPoolJoined   = "pool_joined"
-	TypeEvtPoolExited   = "pool_exited"
-	TypeEvtPoolCreated  = "pool_created"
-	TypeEvtTokenSwapped = "token_swapped"
+	TypeEvtPoolJoined   = "gamm_pool_joined"
+	TypeEvtPoolExited   = "gamm_pool_exited"
+	TypeEvtPoolCreated  = "gamm_pool_created"
+	TypeEvtTokenSwapped = "gamm_token_swapped"
 
 	AttributeValueCategory = ModuleName
 	AttributeKeyPoolId     = "pool_id"

@@ -42,7 +42,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 	})
 
 	require.Equal(t, msg.Route(), gammtypes.RouterKey)
-	require.Equal(t, msg.Type(), "swap_exact_amount_in")
+	require.Equal(t, msg.Type(), "gamm_swap_exact_amount_in")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
 	require.Equal(t, signers[0].String(), addr1)
@@ -172,7 +172,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 	})
 
 	require.Equal(t, msg.Route(), gammtypes.RouterKey)
-	require.Equal(t, msg.Type(), "swap_exact_amount_out")
+	require.Equal(t, msg.Type(), "gamm_swap_exact_amount_out")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
 	require.Equal(t, signers[0].String(), addr1)
@@ -296,7 +296,7 @@ func TestMsgJoinPool(t *testing.T) {
 	})
 
 	require.Equal(t, msg.Route(), gammtypes.RouterKey)
-	require.Equal(t, msg.Type(), "join_pool")
+	require.Equal(t, msg.Type(), "gamm_join_pool")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
 	require.Equal(t, signers[0].String(), addr1)
@@ -395,7 +395,7 @@ func TestMsgExitPool(t *testing.T) {
 	})
 
 	require.Equal(t, msg.Route(), gammtypes.RouterKey)
-	require.Equal(t, msg.Type(), "exit_pool")
+	require.Equal(t, msg.Type(), "gamm_exit_pool")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
 	require.Equal(t, signers[0].String(), addr1)
@@ -494,7 +494,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 	})
 
 	require.Equal(t, msg.Route(), gammtypes.RouterKey)
-	require.Equal(t, msg.Type(), "join_swap_extern_amount_in")
+	require.Equal(t, msg.Type(), "gamm_join_swap_extern_amount_in")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
 	require.Equal(t, signers[0].String(), addr1)
@@ -594,7 +594,7 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 	})
 
 	require.Equal(t, msg.Route(), gammtypes.RouterKey)
-	require.Equal(t, msg.Type(), "join_swap_share_amount_out")
+	require.Equal(t, msg.Type(), "gamm_join_swap_share_amount_out")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
 	require.Equal(t, signers[0].String(), addr1)
@@ -693,7 +693,7 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 	})
 
 	require.Equal(t, msg.Route(), gammtypes.RouterKey)
-	require.Equal(t, msg.Type(), "exit_swap_extern_amount_out")
+	require.Equal(t, msg.Type(), "gamm_exit_swap_extern_amount_out")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
 	require.Equal(t, signers[0].String(), addr1)
@@ -793,7 +793,7 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 	})
 
 	require.Equal(t, msg.Route(), gammtypes.RouterKey)
-	require.Equal(t, msg.Type(), "exit_swap_share_amount_in")
+	require.Equal(t, msg.Type(), "gamm_exit_swap_share_amount_in")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
 	require.Equal(t, signers[0].String(), addr1)
