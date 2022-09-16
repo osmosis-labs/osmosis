@@ -8,12 +8,12 @@ import (
 
 // constants
 const (
-	TypeMsgCreateDenom      = "create_denom"
+	TypeMsgCreateDenom      = "tf_create_denom"
 	TypeMsgMint             = "tf_mint"
 	TypeMsgBurn             = "tf_burn"
-	TypeMsgForceTransfer    = "force_transfer"
-	TypeMsgChangeAdmin      = "change_admin"
-	TypeMsgSetDenomMetadata = "set_denom_metadata"
+	TypeMsgForceTransfer    = "tf_force_transfer"
+	TypeMsgChangeAdmin      = "tf_change_admin"
+	TypeMsgSetDenomMetadata = "tf_set_denom_metadata"
 )
 
 var _ sdk.Msg = &MsgCreateDenom{}

@@ -87,7 +87,7 @@ func TestMsgCreateDenom(t *testing.T) {
 		return msg
 	})
 	require.Equal(t, msg.Route(), types.RouterKey)
-	require.Equal(t, msg.Type(), "create_denom")
+	require.Equal(t, msg.Type(), "tf_create_denom")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
 	require.Equal(t, signers[0].String(), addr1.String())
@@ -292,7 +292,7 @@ func TestMsgChangeAdmin(t *testing.T) {
 
 	// validate changeAdmin message was created as intended
 	require.Equal(t, baseMsg.Route(), types.RouterKey)
-	require.Equal(t, baseMsg.Type(), "change_admin")
+	require.Equal(t, baseMsg.Type(), "tf_change_admin")
 	signers := baseMsg.GetSigners()
 	require.Equal(t, len(signers), 1)
 	require.Equal(t, signers[0].String(), addr1.String())
@@ -397,7 +397,7 @@ func TestMsgSetDenomMetadata(t *testing.T) {
 
 	// validate setDenomMetadata message was created as intended
 	require.Equal(t, baseMsg.Route(), types.RouterKey)
-	require.Equal(t, baseMsg.Type(), "set_denom_metadata")
+	require.Equal(t, baseMsg.Type(), "tf_set_denom_metadata")
 	signers := baseMsg.GetSigners()
 	require.Equal(t, len(signers), 1)
 	require.Equal(t, signers[0].String(), addr1.String())
