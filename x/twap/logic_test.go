@@ -1044,7 +1044,7 @@ func (s *TestSuite) TestUpdateRecords() {
 			},
 		},
 		"multi-asset pool; pre-set at t and t + 1; creates new records": {
-			preSetRecords: []types.TwapRecord{threeAssetRecordAB, tPlus10sp5ThreeAssetRecordAB},
+			preSetRecords: []types.TwapRecord{threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC, tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC},
 			poolId:        threeAssetRecordAB.PoolId,
 
 			blockTime: threeAssetRecordAB.Time.Add(time.Second * 11),
@@ -1060,29 +1060,81 @@ func (s *TestSuite) TestUpdateRecords() {
 					quoteDenom: threeAssetRecordAB.Asset0Denom,
 					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
 				},
+				{
+					baseDenom:  threeAssetRecordAC.Asset0Denom,
+					quoteDenom: threeAssetRecordAC.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:  threeAssetRecordAC.Asset1Denom,
+					quoteDenom: threeAssetRecordAC.Asset0Denom,
+					overrideSp: sdk.OneDec().Add(sdk.OneDec()).Add(sdk.OneDec()),
+				},
+				{
+					baseDenom:  threeAssetRecordBC.Asset0Denom,
+					quoteDenom: threeAssetRecordBC.Asset1Denom,
+					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+				},
+				{
+					baseDenom:  threeAssetRecordBC.Asset1Denom,
+					quoteDenom: threeAssetRecordBC.Asset0Denom,
+					overrideSp: sdk.OneDec(),
+				},
 			},
 
 			expectedHistoricalRecords: []expectedResults{
-				// The original record at t.
+				// The original record AB at t.
 				{
 					spotPriceA: threeAssetRecordAB.P0LastSpotPrice,
 					spotPriceB: threeAssetRecordAB.P1LastSpotPrice,
 				},
-				// The original record at t + 1.
+				// The original record AB at t + 1.
 				{
 					spotPriceA: tPlus10sp5ThreeAssetRecordAB.P0LastSpotPrice,
 					spotPriceB: tPlus10sp5ThreeAssetRecordAB.P1LastSpotPrice,
 				},
-				// The new record added.
+				// The new record AB added.
 				{
 					spotPriceA:   sdk.OneDec(),
 					spotPriceB:   sdk.OneDec().Add(sdk.OneDec()),
 					isMostRecent: true,
 				},
+				// The original record AC at t.
+				{
+					spotPriceA: threeAssetRecordAC.P0LastSpotPrice,
+					spotPriceB: threeAssetRecordAC.P1LastSpotPrice,
+				},
+				// The original record AC at t + 1.
+				{
+					spotPriceA: tPlus10sp5ThreeAssetRecordAC.P0LastSpotPrice,
+					spotPriceB: tPlus10sp5ThreeAssetRecordAC.P1LastSpotPrice,
+				},
+				// The new record AC added.
+				{
+					spotPriceA:   sdk.OneDec(),
+					spotPriceB:   sdk.OneDec().Add(sdk.OneDec()).Add(sdk.OneDec()),
+					isMostRecent: true,
+				},
+				// The original record BC at t.
+				{
+					spotPriceA: threeAssetRecordBC.P0LastSpotPrice,
+					spotPriceB: threeAssetRecordBC.P1LastSpotPrice,
+				},
+				// The original record BC at t + 1.
+				{
+					spotPriceA: tPlus10sp5ThreeAssetRecordBC.P0LastSpotPrice,
+					spotPriceB: tPlus10sp5ThreeAssetRecordBC.P1LastSpotPrice,
+				},
+				// The new record BC added.
+				{
+					spotPriceA:   sdk.OneDec().Add(sdk.OneDec()),
+					spotPriceB:   sdk.OneDec(),
+					isMostRecent: true,
+				},
 			},
 		},
 		"multi-asset pool; pre-set at t and t + 1 with err, large spot price, overwrites erorr time": {
-			preSetRecords: []types.TwapRecord{threeAssetRecordAB, withLastErrTime(tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAB.Time)},
+			preSetRecords: []types.TwapRecord{threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC, withLastErrTime(tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAB.Time), tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC},
 			poolId:        threeAssetRecordAB.PoolId,
 
 			blockTime: threeAssetRecordAB.Time.Add(time.Second * 11),
@@ -1096,28 +1148,81 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:   threeAssetRecordAB.Asset1Denom,
 					quoteDenom:  threeAssetRecordAB.Asset0Denom,
+					overrideSp:  sdk.OneDec().Add(sdk.OneDec()),
+ 				},
+				{
+					baseDenom:  threeAssetRecordAC.Asset0Denom,
+					quoteDenom: threeAssetRecordAC.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:   threeAssetRecordAC.Asset1Denom,
+					quoteDenom:  threeAssetRecordAC.Asset0Denom,
 					overrideSp:  types.MaxSpotPrice.Add(sdk.OneDec()),
 					overrideErr: nil, // twap logic should identify the large spot price and mark it as error.
+				},
+				{
+					baseDenom:  threeAssetRecordBC.Asset0Denom,
+					quoteDenom: threeAssetRecordBC.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:   threeAssetRecordBC.Asset1Denom,
+					quoteDenom:  threeAssetRecordBC.Asset0Denom,
+					overrideSp:  sdk.OneDec().Add(sdk.OneDec()),
 				},
 			},
 
 			expectedHistoricalRecords: []expectedResults{
-				// The original record at t.
+				// The original record AB at t.
 				{
 					spotPriceA: threeAssetRecordAB.P0LastSpotPrice,
 					spotPriceB: threeAssetRecordAB.P1LastSpotPrice,
 				},
-				// The original record at t + 1.
+				// The original record AB at t + 1.
 				{
-					spotPriceA:    tPlus10sp5Record.P0LastSpotPrice,
-					spotPriceB:    tPlus10sp5Record.P1LastSpotPrice,
-					lastErrorTime: tPlus10sp5Record.Time,
+					spotPriceA:    tPlus10sp5ThreeAssetRecordAB.P0LastSpotPrice,
+					spotPriceB:    tPlus10sp5ThreeAssetRecordAB.P1LastSpotPrice,
+					lastErrorTime: tPlus10sp5ThreeAssetRecordAB.Time,
 				},
-				// The new record added.
+				// The new record AB added.
+				{
+					spotPriceA:    sdk.OneDec(),
+					spotPriceB:    sdk.OneDec().Add(sdk.OneDec()),                            
+					lastErrorTime: tPlus10sp5ThreeAssetRecordAB.Time,
+					isMostRecent:  true,
+				},
+				// The original record AC at t.
+				{
+					spotPriceA: threeAssetRecordAC.P0LastSpotPrice,
+					spotPriceB: threeAssetRecordAC.P1LastSpotPrice,
+				},
+				// The original record AC at t + 1.
+				{
+					spotPriceA:    tPlus10sp5ThreeAssetRecordAC.P0LastSpotPrice,
+					spotPriceB:    tPlus10sp5ThreeAssetRecordAC.P1LastSpotPrice,
+				},
+				// The new record AC added.
 				{
 					spotPriceA:    sdk.OneDec(),
 					spotPriceB:    types.MaxSpotPrice,                            // Although the price returned from AMM was MaxSpotPrice + 1, it is reset to just MaxSpotPrice.
-					lastErrorTime: threeAssetRecordAB.Time.Add(time.Second * 11), // equals to block time
+					lastErrorTime: threeAssetRecordAC.Time.Add(time.Second * 11), // equals to block time
+					isMostRecent:  true,
+				},
+				// The original record BC at t.
+				{
+					spotPriceA: threeAssetRecordBC.P0LastSpotPrice,
+					spotPriceB: threeAssetRecordBC.P1LastSpotPrice,
+				},
+				// The original record BC at t + 1.
+				{
+					spotPriceA:    tPlus10sp5ThreeAssetRecordBC.P0LastSpotPrice,
+					spotPriceB:    tPlus10sp5ThreeAssetRecordBC.P1LastSpotPrice,
+				},
+				// The new record BC added.
+				{
+					spotPriceA:    sdk.OneDec(),
+					spotPriceB:    sdk.OneDec().Add(sdk.OneDec()),                            
 					isMostRecent:  true,
 				},
 			},
