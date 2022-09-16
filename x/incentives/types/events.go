@@ -2,9 +2,9 @@ package types
 
 // Incentive module event types.
 const (
-	TypeEvtCreateGauge  = "create_gauge"
-	TypeEvtAddToGauge   = "add_to_gauge"
-	TypeEvtDistribution = "distribution"
+	TypeEvtCreateGauge  = "incentives_create_gauge"
+	TypeEvtAddToGauge   = "incentives_add_to_gauge"
+	TypeEvtDistribution = "incentives_distribution"
 
 	AttributeGaugeID     = "gauge_id"
 	AttributeLockedDenom = "denom"

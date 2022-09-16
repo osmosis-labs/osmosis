@@ -48,7 +48,7 @@ func TestMsgCreatePool(t *testing.T) {
 		return msg
 	})
 	require.Equal(t, msg.Route(), incentivestypes.RouterKey)
-	require.Equal(t, msg.Type(), "create_gauge")
+	require.Equal(t, msg.Type(), "incentives_create_gauge")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
 	require.Equal(t, signers[0].String(), addr1.String())
@@ -172,7 +172,7 @@ func TestMsgAddToGauge(t *testing.T) {
 		return msg
 	})
 	require.Equal(t, msg.Route(), incentivestypes.RouterKey)
-	require.Equal(t, msg.Type(), "add_to_gauge")
+	require.Equal(t, msg.Type(), "incentives_add_to_gauge")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
 	require.Equal(t, signers[0].String(), addr1.String())

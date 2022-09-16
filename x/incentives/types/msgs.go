@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	TypeMsgCreateGauge = "create_gauge"
-	TypeMsgAddToGauge  = "add_to_gauge"
+	TypeMsgCreateGauge = "incentives_create_gauge"
+	TypeMsgAddToGauge  = "incentives_add_to_gauge"
 )
 
 var _ sdk.Msg = &MsgCreateGauge{}
