@@ -457,13 +457,13 @@ Disable multiple assets from being used for superfluid staking.
 
 There are 7 types of events that exist in Superfluid module:
 
-* `types.TypeEvtSetSuperfluidAsset` - "set_superfluid_asset"
-* `types.TypeEvtRemoveSuperfluidAsset` - "remove_superfluid_asset"
+* `types.TypeEvtSetSuperfluidAsset` - "superfluid_set_asset"
+* `types.TypeEvtRemoveSuperfluidAsset` - "superfluid_remove_asset"
 * `types.TypeEvtSuperfluidDelegate` - "superfluid_delegate"
 * `types.TypeEvtSuperfluidIncreaseDelegation` - "superfluid_increase_delegation"
 * `types.TypeEvtSuperfluidUndelegate` - "superfluid_undelegate"
 * `types.TypeEvtSuperfluidUnbondLock` - "superfluid_unbond_lock"
-* `types.TypeEvtUnpoolId` - "unpool_pool_id"
+* `types.TypeEvtUnpoolId` - "superfluid_unpool_pool_id"
 
 ### `types.TypeEvtSetSuperfluidAsset`
 
