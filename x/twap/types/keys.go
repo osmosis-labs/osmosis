@@ -24,9 +24,9 @@ const (
 )
 
 var (
-	mostRecentTWAPsNoSeparator         = "recent_twap"
-	historicalTWAPTimeIndexNoSeparator = "historical_time_index"
-	historicalTWAPPoolIndexNoSeparator = "historical_pool_index"
+	mostRecentTWAPsNoSeparator         = "RTwap"
+	historicalTWAPTimeIndexNoSeparator = "HTInd"
+	historicalTWAPPoolIndexNoSeparator = "HPInd"
 
 	// We do key management to let us easily meet the goals of (AKA minimal iteration):
 	// * Get most recent twap for a (pool id, asset 1, asset 2) with no iteration
@@ -77,9 +77,9 @@ func FormatHistoricalPoolIndexTimeSuffix(poolId uint64, denom1, denom2 string, a
 func GetAllMostRecentTwapsForPool(store sdk.KVStore, poolId uint64) ([]TwapRecord, error) {
 	poolIdS := osmoutils.FormatFixedLengthU64(poolId)
 	poolIdPlusOneS := osmoutils.FormatFixedLengthU64(poolId + 1)
-	startPrefix := fmt.Sprintf("%s%s%s", mostRecentTWAPsPrefix, poolIdS, KeySeparator)
-	endPrefix := fmt.Sprintf("%s%s%s", mostRecentTWAPsPrefix, poolIdPlusOneS, KeySeparator)
-	return osmoutils.GatherValuesFromStore(store, []byte(startPrefix), []byte(endPrefix), ParseTwapFromBz)
+	startPrefix := []byte(fmt.Sprintf("%s%s%s", mostRecentTWAPsPrefix, poolIdS, KeySeparator))
+	endPrefix := []byte(fmt.Sprintf("%s%s%s", mostRecentTWAPsPrefix, poolIdPlusOneS, KeySeparator))
+	return osmoutils.GatherValuesFromStore(store, startPrefix, endPrefix, ParseTwapFromBz)
 }
 
 func ParseTwapFromBz(bz []byte) (twap TwapRecord, err error) {
