@@ -18,9 +18,20 @@ type AccountKeeper interface {
 }
 
 // CanCreateModuleAccountAtAddr tells us if we can safely make a module account at
-// a given address. By collision resistance of the addr, we assume that
-// TODO: This is generally an SDK design flaw
+// a given address. By collision resistance of the address (given API safe construction),
+// the only way for an account to be already be at this address is if its claimed by the same
+// pre-image from the correct module,
+// or some SDK command breaks assumptions and creates an account at designated address.
+// This function checks if there is an account at that address, and runs some safety checks
+// to be extra-sure its not a user account (e.g. non-zero sequence, pubkey, of fore-seen account types).
+// If there is no account, or if we believe its not a user-spendable account, we allow module account
+// creation at the address.
+// else, we do not.
+//
+// TODO: This is generally from an SDK design flaw
 // code based off wasmd code: https://github.com/CosmWasm/wasmd/pull/996
+// Its _mandatory_ that the caller do the API safe construction to generate a module account addr,
+// namely, address.Module(ModuleName, {key})
 func CanCreateModuleAccountAtAddr(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress) error {
 	existingAcct := ak.GetAccount(ctx, addr)
 	if existingAcct == nil {

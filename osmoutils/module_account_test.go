@@ -1,6 +1,7 @@
 package osmoutils_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -15,9 +16,14 @@ func (s *TestSuite) TestCreateModuleAccount() {
 		acc.SetAddress(addr)
 		return acc
 	}
-	userAcc := func(addr sdk.AccAddress) authtypes.AccountI {
+	userAccViaSeqnum := func(addr sdk.AccAddress) authtypes.AccountI {
 		base := baseWithAddr(addr)
 		base.SetSequence(2)
+		return base
+	}
+	userAccViaPubkey := func(addr sdk.AccAddress) authtypes.AccountI {
+		base := baseWithAddr(addr)
+		base.SetPubKey(secp256k1.GenPrivKey().PubKey())
 		return base
 	}
 	defaultModuleAccAddr := address.Module("dummy module", []byte{1})
@@ -36,8 +42,13 @@ func (s *TestSuite) TestCreateModuleAccount() {
 			moduleAccAddr: defaultModuleAccAddr,
 			expErr:        false,
 		},
-		"prior user acc at addr": {
-			priorAccounts: []authtypes.AccountI{userAcc(defaultModuleAccAddr)},
+		"prior user acc at addr (sequence)": {
+			priorAccounts: []authtypes.AccountI{userAccViaSeqnum(defaultModuleAccAddr)},
+			moduleAccAddr: defaultModuleAccAddr,
+			expErr:        true,
+		},
+		"prior user acc at addr (pubkey)": {
+			priorAccounts: []authtypes.AccountI{userAccViaPubkey(defaultModuleAccAddr)},
 			moduleAccAddr: defaultModuleAccAddr,
 			expErr:        true,
 		},
