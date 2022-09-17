@@ -9,9 +9,9 @@ import (
 )
 
 // findIndex takes an array of IDs. Then return the index of a specific ID.
-func findIndex(IDs []uint64, ID uint64) int {
-	for index, id := range IDs {
-		if id == ID {
+func findIndex(iDs []uint64, iD uint64) int {
+	for index, id := range iDs {
+		if id == iD {
 			return index
 		}
 	}
@@ -19,13 +19,13 @@ func findIndex(IDs []uint64, ID uint64) int {
 }
 
 // removeValue takes an array of IDs. Then finds the index of the IDs and remove those IDs from the array.
-func removeValue(IDs []uint64, ID uint64) ([]uint64, int) {
-	index := findIndex(IDs, ID)
+func removeValue(iDs []uint64, iD uint64) ([]uint64, int) {
+	index := findIndex(iDs, iD)
 	if index < 0 {
-		return IDs, index
+		return iDs, index
 	}
-	IDs[index] = IDs[len(IDs)-1] // set last element to index
-	return IDs[:len(IDs)-1], index
+	iDs[index] = iDs[len(iDs)-1] // set last element to index
+	return iDs[:len(iDs)-1], index
 }
 
 // getTimeKey returns the time key used when getting a set of gauges.

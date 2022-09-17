@@ -21,9 +21,9 @@ import (
 
 const (
 	batchMaxSize      = 1000
-	kValidators       = "validatorsKey:"
-	kConsensusParams  = "consensusParamsKey:"
-	kABCIResponses    = "abciResponsesKey:"
+	Validators        = "validatorsKey:"
+	ConsensusParams   = "consensusParamsKey:"
+	ABCIResponses     = "abciResponsesKey:"
 	fullHeight        = "full_height"
 	minHeight         = "min_height"
 	defaultFullHeight = "188000"
@@ -102,15 +102,14 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 		DisableSeeksCompaction: true,
 	}
 
-	db_bs, err := tmdb.NewGoLevelDBWithOpts("blockstore", dbPath, &opts)
+	blockstore, err := tmdb.NewGoLevelDBWithOpts("blockstore", dbPath, &opts)
 	if err != nil {
 		return 0, 0, err
 	}
 
-	// nolint: staticcheck
-	defer db_bs.Close()
+	defer blockstore.Close()
 
-	bs := tmstore.NewBlockStore(db_bs)
+	bs := tmstore.NewBlockStore(blockstore)
 	startHeight = bs.Base()
 	currentHeight = bs.Height()
 
@@ -125,7 +124,7 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 	// the call in defer statement above to make sure that the resources
 	// are properly released and any potential error from Close()
 	// is handled. Close() should be idempotent so this is acceptable.
-	if err := db_bs.Close(); err != nil {
+	if err := blockstore.Close(); err != nil {
 		return 0, 0, err
 	}
 
@@ -165,13 +164,13 @@ func forcepruneStateStore(dbPath string, startHeight, currentHeight, minHeight, 
 	}
 	defer db.Close()
 
-	stateDBKeys := []string{kValidators, kConsensusParams, kABCIResponses}
+	stateDBKeys := []string{Validators, ConsensusParams, ABCIResponses}
 	fmt.Println("Pruning State Store ...")
 	for i, s := range stateDBKeys {
 		fmt.Println(i, s)
 
 		retain_height := int64(0)
-		if s == kABCIResponses {
+		if s == ABCIResponses {
 			retain_height = currentHeight - minHeight
 		} else {
 			retain_height = currentHeight - fullHeight

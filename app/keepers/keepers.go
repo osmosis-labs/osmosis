@@ -47,7 +47,7 @@ import (
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer"
 
-	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik"
+	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik" // Import statik for docs
 	owasm "github.com/osmosis-labs/osmosis/v12/wasmbinding"
 	epochskeeper "github.com/osmosis-labs/osmosis/v12/x/epochs/keeper"
 	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"

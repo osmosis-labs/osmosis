@@ -169,7 +169,7 @@ func (c *Config) EnableSuperfluidAsset(denom string) {
 	chain, err := c.GetDefaultNode()
 	require.NoError(c.t, err)
 	chain.SubmitSuperfluidProposal(denom, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
-	c.LatestProposalNumber += 1
+	c.LatestProposalNumber++
 	chain.DepositProposal(c.LatestProposalNumber, false)
 	for _, node := range c.NodeConfigs {
 		node.VoteYesProposal(initialization.ValidatorWalletName, c.LatestProposalNumber)
@@ -182,13 +182,13 @@ func (c *Config) LockAndAddToExistingLock(amount sdk.Int, denom, lockupWalletAdd
 
 	// lock tokens
 	chain.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletAddr)
-	c.LatestLockNumber += 1
+	c.LatestLockNumber++
 	// add to existing lock
 	chain.AddToExistingLock(amount, denom, "240s", lockupWalletAddr)
 
 	// superfluid lock tokens
 	chain.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletSuperfluidAddr)
-	c.LatestLockNumber += 1
+	c.LatestLockNumber++
 	chain.SuperfluidDelegate(c.LatestLockNumber, c.NodeConfigs[1].OperatorAddress, lockupWalletSuperfluidAddr)
 	// add to existing lock
 	chain.AddToExistingLock(amount, denom, "240s", lockupWalletSuperfluidAddr)

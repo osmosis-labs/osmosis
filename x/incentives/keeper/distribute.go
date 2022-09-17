@@ -180,7 +180,7 @@ func (d *distributionInfo) addLockRewards(owner string, rewards sdk.Coins) error
 		d.idToDistrCoins[id] = rewards.Add(oldDistrCoins...)
 	} else {
 		id := d.nextID
-		d.nextID += 1
+		d.nextID++
 		d.lockOwnerAddrToID[owner] = id
 		decodedOwnerAddr, err := sdk.AccAddressFromBech32(owner)
 		if err != nil {
@@ -243,7 +243,7 @@ func (k Keeper) distributeSyntheticInternal(
 	for _, lock := range locks {
 		if v, ok := qualifiedLocksMap[lock.ID]; ok {
 			qualifiedLocksMap[lock.ID] = lockIndexPair{v.lock, curIndex}
-			curIndex += 1
+			curIndex++
 		}
 	}
 
@@ -311,7 +311,7 @@ func (k Keeper) distributeInternal(
 // updateGaugePostDistribute increments the gauge's filled epochs field.
 // Also adds the coins that were just distributed to the gauge's distributed coins field.
 func (k Keeper) updateGaugePostDistribute(ctx sdk.Context, gauge types.Gauge, newlyDistributedCoins sdk.Coins) error {
-	gauge.FilledEpochs += 1
+	gauge.FilledEpochs++
 	gauge.DistributedCoins = gauge.DistributedCoins.Add(newlyDistributedCoins...)
 	if err := k.setGauge(ctx, &gauge); err != nil {
 		return err

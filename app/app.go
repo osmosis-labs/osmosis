@@ -51,7 +51,7 @@ import (
 	v7 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v7"
 	v8 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v8"
 	v9 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v9"
-	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik"
+	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik" // imports statik file system for swagger UI support
 	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
 )
 
