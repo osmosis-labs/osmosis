@@ -153,9 +153,8 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 				resPre := initialization.OsmoToken.Amount
 				resPost := tokenPost.Sub(tokenPre)
 				return resPost.Uint64() == resPre.Uint64()
-			} else {
-				return false
 			}
+			return false
 		},
 		5*time.Minute,
 		time.Second,

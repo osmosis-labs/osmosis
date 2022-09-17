@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	OpWeightSetSuperfluidAssetsProposal    = "op_weight_set_superfluid_assets_proposal"
-	OpWeightRemoveSuperfluidAssetsProposal = "op_weight_remove_superfluid_assets_proposal"
+	OpWeightSetSuperfluidAssetsProposal    = "op_weight_set_superfluid_assets_proposal"    //nolint:gosec
+	OpWeightRemoveSuperfluidAssetsProposal = "op_weight_remove_superfluid_assets_proposal" //nolint:gosec
 )
 
 // ProposalContents defines the module weighted proposals' contents.

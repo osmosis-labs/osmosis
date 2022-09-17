@@ -111,7 +111,7 @@ func New(t *testing.T, isIBCEnabled, isDebugLogEnabled bool, upgradeSettings Upg
 		return nil, err
 	}
 
-	if isIBCEnabled && upgradeSettings.IsEnabled {
+	if isIBCEnabled && upgradeSettings.IsEnabled { //nolint:gocritic // no reason to rewrite this to a switch statement.
 		// skip none - configure two chains via Docker
 		// to utilize the older version of osmosis to upgrade from
 		return NewUpgradeConfigurer(t,

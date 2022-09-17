@@ -9,9 +9,9 @@ import (
 )
 
 // NewPeriodLock returns a new instance of period lock.
-func NewPeriodLock(ID uint64, owner sdk.AccAddress, duration time.Duration, endTime time.Time, coins sdk.Coins) PeriodLock {
+func NewPeriodLock(id uint64, owner sdk.AccAddress, duration time.Duration, endTime time.Time, coins sdk.Coins) PeriodLock {
 	return PeriodLock{
-		ID:       ID,
+		ID:       id,
 		Owner:    owner.String(),
 		Duration: duration,
 		EndTime:  endTime,

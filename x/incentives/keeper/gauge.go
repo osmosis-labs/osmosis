@@ -78,7 +78,7 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 	timeKey := getTimeKey(gauge.StartTime)
 	activeOrUpcomingGauge := gauge.IsActiveGauge(curTime) || gauge.IsUpcomingGauge(curTime)
 
-	if gauge.IsUpcomingGauge(curTime) {
+	if gauge.IsUpcomingGauge(curTime) { //nolint:gocritic // no reason to rewrite to a switch statement.
 		combinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, timeKey)
 		return k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
 	} else if gauge.IsActiveGauge(curTime) {
