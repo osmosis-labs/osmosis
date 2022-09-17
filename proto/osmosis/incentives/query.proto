@@ -14,23 +14,13 @@ option go_package = "github.com/osmosis-labs/osmosis/v12/x/incentives/types";
 // Query defines the gRPC querier service
 service Query {
   // ModuleToDistributeCoins returns coins that are going to be distributed
-  rpc ModuleToDistributeCoins(ModuleToDistributeCoinsRequest)
-      returns (ModuleToDistributeCoinsResponse) {
-    option (google.api.http).get =
-        "/osmosis/incentives/v1beta1/module_to_distribute_coins";
-  }
-  // ModuleDistributedCoins returns coins that are distributed by the module so
-  // far
-  rpc ModuleDistributedCoins(ModuleDistributedCoinsRequest)
-      returns (ModuleDistributedCoinsResponse) {
-    option (google.api.http).get =
-        "/osmosis/incentives/v1beta1/module_distributed_coins";
+  rpc ModuleToDistributeCoins(ModuleToDistributeCoinsRequest) returns (ModuleToDistributeCoinsResponse) {
+    option (google.api.http).get = "/osmosis/incentives/v1beta1/module_to_distribute_coins";
   }
 
   // GaugeByID returns gauges by their respective ID
   rpc GaugeByID(GaugeByIDRequest) returns (GaugeByIDResponse) {
-    option (google.api.http).get =
-        "/osmosis/incentives/v1beta1/gauge_by_id/{id}";
+    option (google.api.http).get = "/osmosis/incentives/v1beta1/gauge_by_id/{id}";
   }
   // Gauges returns both upcoming and active gauges
   rpc Gauges(GaugesRequest) returns (GaugesResponse) {
@@ -41,56 +31,44 @@ service Query {
     option (google.api.http).get = "/osmosis/incentives/v1beta1/active_gauges";
   }
   // ActiveGaugesPerDenom returns active gauges by denom
-  rpc ActiveGaugesPerDenom(ActiveGaugesPerDenomRequest)
-      returns (ActiveGaugesPerDenomResponse) {
-    option (google.api.http).get =
-        "/osmosis/incentives/v1beta1/active_gauges_per_denom";
+  rpc ActiveGaugesPerDenom(ActiveGaugesPerDenomRequest) returns (ActiveGaugesPerDenomResponse) {
+    option (google.api.http).get = "/osmosis/incentives/v1beta1/active_gauges_per_denom";
   }
   // Returns scheduled gauges that have not yet occured
   rpc UpcomingGauges(UpcomingGaugesRequest) returns (UpcomingGaugesResponse) {
-    option (google.api.http).get =
-        "/osmosis/incentives/v1beta1/upcoming_gauges";
+    option (google.api.http).get = "/osmosis/incentives/v1beta1/upcoming_gauges";
   }
   // UpcomingGaugesPerDenom returns scheduled gauges that have not yet occured
   // by denom
-  rpc UpcomingGaugesPerDenom(UpcomingGaugesPerDenomRequest)
-      returns (UpcomingGaugesPerDenomResponse) {
-    option (google.api.http).get =
-        "/osmosis/incentives/v1beta1/upcoming_gauges_per_denom";
+  rpc UpcomingGaugesPerDenom(UpcomingGaugesPerDenomRequest) returns (UpcomingGaugesPerDenomResponse) {
+    option (google.api.http).get = "/osmosis/incentives/v1beta1/upcoming_gauges_per_denom";
   }
 
   // RewardsEst returns an estimate of the rewards from now until a specified
   // time in the future The querier either provides an address or a set of locks
   // for which they want to find the associated rewards
   rpc RewardsEst(RewardsEstRequest) returns (RewardsEstResponse) {
-    option (google.api.http).get =
-        "/osmosis/incentives/v1beta1/rewards_est/{owner}";
+    option (google.api.http).get = "/osmosis/incentives/v1beta1/rewards_est/{owner}";
   }
   // LockableDurations returns lockable durations that are valid to distribute
   // incentives for
-  rpc LockableDurations(QueryLockableDurationsRequest)
-      returns (QueryLockableDurationsResponse) {
-    option (google.api.http).get =
-        "/osmosis/incentives/v1beta1/lockable_durations";
+  rpc LockableDurations(QueryLockableDurationsRequest) returns (QueryLockableDurationsResponse) {
+    option (google.api.http).get = "/osmosis/incentives/v1beta1/lockable_durations";
   }
 }
 
 message ModuleToDistributeCoinsRequest {}
 message ModuleToDistributeCoinsResponse {
   // Coins that have yet to be distributed
-  repeated cosmos.base.v1beta1.Coin coins = 1 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  repeated cosmos.base.v1beta1.Coin coins = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
 message ModuleDistributedCoinsRequest {}
 message ModuleDistributedCoinsResponse {
   // Coins that have been distributed already
-  repeated cosmos.base.v1beta1.Coin coins = 1 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  repeated cosmos.base.v1beta1.Coin coins = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
 message GaugeByIDRequest {
@@ -108,7 +86,7 @@ message GaugesRequest {
 }
 message GaugesResponse {
   // Upcoming and active gauges
-  repeated Gauge data = 1 [ (gogoproto.nullable) = false ];
+  repeated Gauge data = 1 [(gogoproto.nullable) = false];
   // Pagination defines pagination for the response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
@@ -119,7 +97,7 @@ message ActiveGaugesRequest {
 }
 message ActiveGaugesResponse {
   // Active gagues only
-  repeated Gauge data = 1 [ (gogoproto.nullable) = false ];
+  repeated Gauge data = 1 [(gogoproto.nullable) = false];
   // Pagination defines pagination for the response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
@@ -132,7 +110,7 @@ message ActiveGaugesPerDenomRequest {
 }
 message ActiveGaugesPerDenomResponse {
   // Active gagues that match denom in query
-  repeated Gauge data = 1 [ (gogoproto.nullable) = false ];
+  repeated Gauge data = 1 [(gogoproto.nullable) = false];
   // Pagination defines pagination for the response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
@@ -143,7 +121,7 @@ message UpcomingGaugesRequest {
 }
 message UpcomingGaugesResponse {
   // Gauges whose distribution is upcoming
-  repeated Gauge data = 1 [ (gogoproto.nullable) = false ];
+  repeated Gauge data = 1 [(gogoproto.nullable) = false];
   // Pagination defines pagination for the response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
@@ -157,14 +135,14 @@ message UpcomingGaugesPerDenomRequest {
 
 message UpcomingGaugesPerDenomResponse {
   // Upcoming gagues that match denom in query
-  repeated Gauge upcoming_gauges = 1 [ (gogoproto.nullable) = false ];
+  repeated Gauge upcoming_gauges = 1 [(gogoproto.nullable) = false];
   // Pagination defines pagination for the response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message RewardsEstRequest {
   // Address that is being queried for future estimated rewards
-  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  string owner = 1 [(gogoproto.moretags) = "yaml:\"owner\""];
   // Lock IDs included in future reward estimation
   repeated uint64 lock_ids = 2;
   // Upper time limit of reward estimation
@@ -174,18 +152,16 @@ message RewardsEstRequest {
 message RewardsEstResponse {
   // Estimated coin rewards that will be recieved at provided address
   // from specified locks between current time and end epoch
-  repeated cosmos.base.v1beta1.Coin coins = 1 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  repeated cosmos.base.v1beta1.Coin coins = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
 message QueryLockableDurationsRequest {}
 message QueryLockableDurationsResponse {
   // Time durations that users can lock coins for in order to recieve rewards
   repeated google.protobuf.Duration lockable_durations = 1 [
-    (gogoproto.nullable) = false,
+    (gogoproto.nullable)    = false,
     (gogoproto.stdduration) = true,
-    (gogoproto.moretags) = "yaml:\"lockable_durations\""
+    (gogoproto.moretags)    = "yaml:\"lockable_durations\""
   ];
 }
