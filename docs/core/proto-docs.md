@@ -188,6 +188,8 @@
     - [DistrRecord](#osmosis.poolincentives.v1beta1.DistrRecord)
     - [LockableDurationsInfo](#osmosis.poolincentives.v1beta1.LockableDurationsInfo)
     - [Params](#osmosis.poolincentives.v1beta1.Params)
+    - [PoolToGauge](#osmosis.poolincentives.v1beta1.PoolToGauge)
+    - [PoolToGauges](#osmosis.poolincentives.v1beta1.PoolToGauges)
   
 - [osmosis/pool-incentives/v1beta1/genesis.proto](#osmosis/pool-incentives/v1beta1/genesis.proto)
     - [GenesisState](#osmosis.poolincentives.v1beta1.GenesisState)
@@ -2790,6 +2792,38 @@ Query provides defines the gRPC querier service.
 
 
 
+
+<a name="osmosis.poolincentives.v1beta1.PoolToGauge"></a>
+
+### PoolToGauge
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pool_id` | [uint64](#uint64) |  |  |
+| `gauge` | [uint64](#uint64) |  |  |
+| `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
+
+
+
+
+
+
+<a name="osmosis.poolincentives.v1beta1.PoolToGauges"></a>
+
+### PoolToGauges
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pool_to_gauge` | [PoolToGauge](#osmosis.poolincentives.v1beta1.PoolToGauge) | repeated |  |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -2818,6 +2852,7 @@ GenesisState defines the pool incentives module's genesis state.
 | `params` | [Params](#osmosis.poolincentives.v1beta1.Params) |  | params defines all the paramaters of the module. |
 | `lockable_durations` | [google.protobuf.Duration](#google.protobuf.Duration) | repeated |  |
 | `distr_info` | [DistrInfo](#osmosis.poolincentives.v1beta1.DistrInfo) |  |  |
+| `pool_to_gauges` | [PoolToGauges](#osmosis.poolincentives.v1beta1.PoolToGauges) |  |  |
 
 
 
