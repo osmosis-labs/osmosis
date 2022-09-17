@@ -6,6 +6,8 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 )
 
 var MaxSpotPrice = sdk.NewDec(2).Power(128).Sub(sdk.OneDec())
@@ -18,23 +20,23 @@ var MaxSpotPrice = sdk.NewDec(2).Power(128).Sub(sdk.OneDec())
 // NOTE: Sorts the input denoms slice.
 func GetAllUniqueDenomPairs(denoms []string) ([]string, []string) {
 	// get denoms in descending order
-	sort.Slice(denoms, func(i, j int) bool {
-		return denoms[i] > denoms[j]
-	})
+	sort.Strings(denoms)
+	reverseDenoms := osmoutils.ReverseSlice(denoms)
 
 	numPairs := len(denoms) * (len(denoms) - 1) / 2
 	pairGT := make([]string, 0, numPairs)
 	pairLT := make([]string, 0, numPairs)
 
-	for i := 0; i < len(denoms); i++ {
-		for j := i + 1; j < len(denoms); j++ {
-			pairGT = append(pairGT, denoms[i])
-			pairLT = append(pairLT, denoms[j])
-
-			// sanity check
-			if pairGT[i] == pairLT[i] {
-				panic("input had duplicated denom")
-			}
+	for i := 0; i < len(reverseDenoms); i++ {
+		for j := i + 1; j < len(reverseDenoms); j++ {
+			pairGT = append(pairGT, reverseDenoms[i])
+			pairLT = append(pairLT, reverseDenoms[j])
+		}
+	}
+	// sanity check
+	for i := 0; i < numPairs; i++ {
+		if pairGT[i] == pairLT[i] {
+			panic("input had duplicated denom")
 		}
 	}
 	return pairGT, pairLT
