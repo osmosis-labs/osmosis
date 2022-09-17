@@ -45,7 +45,7 @@ message DistrRecord {
 
 message PoolToGauge {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  uint64 gauge = 2 [ (gogoproto.moretags) = "yaml:\"gauge\"" ];
+  uint64 gauge_id = 2 [ (gogoproto.moretags) = "yaml:\"gauge\"" ];
   google.protobuf.Duration duration = 3 [
     (gogoproto.nullable) = false,
     (gogoproto.stdduration) = true,
