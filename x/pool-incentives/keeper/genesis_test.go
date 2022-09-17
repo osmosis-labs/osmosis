@@ -104,7 +104,7 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 		var poolToGauge types.PoolToGauge
 		poolToGauge.Duration = duration
 		poolToGauge.PoolId = poolId
-		poolToGauge.Gauge = gauge
+		poolToGauge.GaugeId = gauge
 		expectedPoolToGauges.PoolToGauge = append(expectedPoolToGauges.PoolToGauge, poolToGauge)
 	}
 

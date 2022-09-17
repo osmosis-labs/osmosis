@@ -19,7 +19,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	}
 	if genState.PoolToGauges != nil {
 		for _, record := range genState.PoolToGauges.PoolToGauge {
-			k.SetPoolGaugeId(ctx, record.PoolId, record.Duration, record.Gauge)
+			k.SetPoolGaugeId(ctx, record.PoolId, record.Duration, record.GaugeId)
 		}
 	}
 }
@@ -37,7 +37,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 			}
 			var poolToGauge types.PoolToGauge
 			poolToGauge.Duration = duration
-			poolToGauge.Gauge = gaugeID
+			poolToGauge.GaugeId = gaugeID
 			poolToGauge.PoolId = uint64(i)
 			poolToGauges.PoolToGauge = append(poolToGauges.PoolToGauge, poolToGauge)
 		}
