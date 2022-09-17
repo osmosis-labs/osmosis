@@ -64,13 +64,6 @@ message ModuleToDistributeCoinsResponse {
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
-message ModuleDistributedCoinsRequest {}
-message ModuleDistributedCoinsResponse {
-  // Coins that have been distributed already
-  repeated cosmos.base.v1beta1.Coin coins = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-}
-
 message GaugeByIDRequest {
   // Gague ID being queried
   uint64 id = 1;
