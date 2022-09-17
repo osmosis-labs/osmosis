@@ -1,7 +1,7 @@
 package templates
 
 import (
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -10,7 +10,7 @@ import (
 type QueryYml struct {
 	// Keeper struct descriptor
 	Keeper Keeper `yaml:"keeper"`
-	// Path to client folder e.g. "github.com/osmosis-labs/osmosis/v11/x/twap/client"
+	// Path to client folder e.g. "github.com/osmosis-labs/osmosis/v12/x/twap/client"
 	ClientPath string `yaml:"client_path"`
 	// list of all queries, key is the query name, e.g. `GetArithmeticTwap`
 	Queries map[string]YmlQueryDescriptor `yaml:"queries"`
@@ -19,7 +19,7 @@ type QueryYml struct {
 }
 
 type Keeper struct {
-	// e.g. github.com/osmosis-labs/osmosis/v11/x/twap
+	// e.g. github.com/osmosis-labs/osmosis/v12/x/twap
 	Path string `yaml:"path"`
 	// e.g. Keeper
 	Struct string `yaml:"struct"`
@@ -36,11 +36,10 @@ type ProtoWrapperDescriptor struct {
 	Response      string
 }
 
-type CliDescriptor struct {
-}
+type CliDescriptor struct{}
 
 func ReadYmlFile(filepath string) (QueryYml, error) {
-	content, err := ioutil.ReadFile(filepath) // the file is inside the local directory
+	content, err := os.ReadFile(filepath) // the file is inside the local directory
 	if err != nil {
 		return QueryYml{}, err
 	}

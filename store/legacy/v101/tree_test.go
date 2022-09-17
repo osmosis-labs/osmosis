@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -18,8 +18,8 @@ import (
 	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v11/store"
-	v101 "github.com/osmosis-labs/osmosis/v11/store/legacy/v101"
+	"github.com/osmosis-labs/osmosis/v12/store"
+	v101 "github.com/osmosis-labs/osmosis/v12/store/legacy/v101"
 )
 
 func setupStore() sdk.KVStore {
@@ -109,7 +109,7 @@ func extract(store sdk.KVStore) (res []kvPair) {
 }
 
 func readold() []kvPair {
-	bz, err := ioutil.ReadFile("./old_tree.json")
+	bz, err := os.ReadFile("./old_tree.json")
 	if err != nil {
 		panic(err)
 	}

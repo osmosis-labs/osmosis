@@ -189,8 +189,8 @@ docs:
 	@echo
 .PHONY: docs
 
-protoVer=v0.7
-protoImageName=tendermintdev/sdk-proto-gen:$(protoVer)
+protoVer=v0.8
+protoImageName=osmolabs/osmo-proto-gen:$(protoVer)
 containerProtoGen=cosmos-sdk-proto-gen-$(protoVer)
 containerProtoFmt=cosmos-sdk-proto-fmt-$(protoVer)
 
@@ -203,6 +203,12 @@ proto-format:
 	@echo "Formatting Protobuf files"
 	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then docker start -a $(containerProtoFmt); else docker run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
 		find ./ -not -path "./third_party/*" -name "*.proto" -exec clang-format -i {} \; ; fi
+
+proto-image-build:
+	@DOCKER_BUILDKIT=1 docker build -t $(protoImageName) -f ./proto/Dockerfile ./proto
+
+proto-image-push:
+	docker push $(protoImageName)
 
 ###############################################################################
 ###                                Querygen                                 ###
@@ -275,7 +281,12 @@ test-sim-bench:
 # In that case, run `make e2e-remove-resources`
 # manually.
 # Utilizes Go cache.
-test-e2e: e2e-setup
+test-e2e: e2e-setup test-e2e-ci
+
+# test-e2e-ci runs a full e2e test suite
+# does not do any validation about the state of the Docker environment
+# As a result, avoid using this locally.
+test-e2e-ci:
 	@VERSION=$(VERSION) OSMOSIS_E2E_DEBUG_LOG=True OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION)  go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 # test-e2e-debug runs a full e2e test suite but does
@@ -328,10 +339,19 @@ e2e-remove-resources:
 lint:
 	@echo "--> Running linter"
 	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --timeout=10m
+	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md"
 
 format:
 	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run ./... --fix
 	@go run mvdan.cc/gofumpt -l -w x/ app/ ante/ tests/
+	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md" --fix
+
+mdlint:
+	@echo "--> Running markdown linter"
+	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md"
+
+markdown:
+	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md" --fix
 
 ###############################################################################
 ###                                Localnet                                 ###
@@ -341,7 +361,7 @@ localnet-keys:
 	. tests/localosmosis/scripts/add_keys.sh
 
 localnet-build:
-	@docker-compose -f tests/localosmosis/docker-compose.yml build
+	@DOCKER_BUILDKIT=1 docker-compose -f tests/localosmosis/docker-compose.yml build
 
 localnet-build-state-export:
 	@docker build -t local:osmosis-se --build-arg ID=$(ID) -f tests/localosmosis/mainnet_state/Dockerfile-stateExport .

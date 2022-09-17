@@ -3,7 +3,6 @@ package simulation
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -13,7 +12,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v11/simulation/simtypes/simlogger"
+	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes/simlogger"
 )
 
 // List of available flags for the simulator
@@ -130,7 +129,7 @@ func SetupSimulation(dirPrefix, dbName string) (cfg Config, db dbm.DB, logger lo
 	}
 	logger = simlogger.NewSimLogger(logger)
 
-	dir, err := ioutil.TempDir("", dirPrefix)
+	dir, err := os.MkdirTemp("", dirPrefix)
 	if err != nil {
 		return Config{}, nil, nil, func() {}, err
 	}

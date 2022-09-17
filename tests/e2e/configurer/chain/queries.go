@@ -16,11 +16,17 @@ import (
 	"github.com/stretchr/testify/require"
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v11/tests/e2e/util"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v12/tests/e2e/util"
+	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
+	twapqueryproto "github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
 )
 
-func (n *NodeConfig) QueryGRPCGateway(path string) ([]byte, error) {
+func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte, error) {
+	if len(parameters)%2 != 0 {
+		return nil, fmt.Errorf("invalid number of parameters, must follow the format of key + value")
+	}
+
 	// add the URL for the given validator ID, and pre-pend to to path.
 	hostPort, err := n.containerManager.GetHostPort(n.Name, "1317/tcp")
 	require.NoError(n.t, err)
@@ -29,7 +35,20 @@ func (n *NodeConfig) QueryGRPCGateway(path string) ([]byte, error) {
 
 	var resp *http.Response
 	require.Eventually(n.t, func() bool {
-		resp, err = http.Get(fullQueryPath)
+		req, err := http.NewRequest("GET", fullQueryPath, nil)
+		if err != nil {
+			return false
+		}
+
+		if len(parameters) > 0 {
+			q := req.URL.Query()
+			for i := 0; i < len(parameters); i += 2 {
+				q.Add(parameters[i], parameters[i+1])
+			}
+			req.URL.RawQuery = q.Encode()
+		}
+
+		resp, err = http.DefaultClient.Do(req)
 		if err != nil {
 			n.t.Logf("error while executing HTTP request: %s", err.Error())
 			return false
@@ -43,6 +62,10 @@ func (n *NodeConfig) QueryGRPCGateway(path string) ([]byte, error) {
 	bz, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		n.t.Error(string(bz))
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(bz))
 	}
 	return bz, nil
 }
@@ -111,6 +134,59 @@ func (n *NodeConfig) QueryIntermediaryAccount(denom string, valAddr string) (int
 	return intAccountBalance, err
 }
 
+func (n *NodeConfig) QueryCurrentEpoch(identifier string) int64 {
+	path := "osmosis/epochs/v1beta1/current_epoch"
+
+	bz, err := n.QueryGRPCGateway(path, "identifier", identifier)
+	require.NoError(n.t, err)
+
+	var response epochstypes.QueryCurrentEpochResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err)
+	return response.CurrentEpoch
+}
+
+func (n *NodeConfig) QueryArithmeticTwapToNow(poolId uint64, baseAsset, quoteAsset string, startTime time.Time) (sdk.Dec, error) {
+	path := "osmosis/twap/v1beta1/ArithmeticTwapToNow"
+
+	bz, err := n.QueryGRPCGateway(
+		path,
+		"pool_id", strconv.FormatInt(int64(poolId), 10),
+		"base_asset", baseAsset,
+		"quote_asset", quoteAsset,
+		"start_time", startTime.Format(time.RFC3339Nano),
+	)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	var response twapqueryproto.ArithmeticTwapToNowResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err) // this error should not happen
+	return response.ArithmeticTwap, nil
+}
+
+func (n *NodeConfig) QueryArithmeticTwap(poolId uint64, baseAsset, quoteAsset string, startTime time.Time, endTime time.Time) (sdk.Dec, error) {
+	path := "osmosis/twap/v1beta1/ArithmeticTwap"
+
+	bz, err := n.QueryGRPCGateway(
+		path,
+		"pool_id", strconv.FormatInt(int64(poolId), 10),
+		"base_asset", baseAsset,
+		"quote_asset", quoteAsset,
+		"start_time", startTime.Format(time.RFC3339Nano),
+		"end_time", endTime.Format(time.RFC3339Nano),
+	)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	var response twapqueryproto.ArithmeticTwapResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err) // this error should not happen
+	return response.ArithmeticTwap, nil
+}
+
 // QueryHashFromBlock gets block hash at a specific height. Otherwise, error.
 func (n *NodeConfig) QueryHashFromBlock(height int64) (string, error) {
 	block, err := n.rpcClient.Block(context.Background(), &height)
@@ -121,12 +197,17 @@ func (n *NodeConfig) QueryHashFromBlock(height int64) (string, error) {
 }
 
 // QueryCurrentHeight returns the current block height of the node or error.
-func (n *NodeConfig) QueryCurrentHeight() (int64, error) {
+func (n *NodeConfig) QueryCurrentHeight() int64 {
 	status, err := n.rpcClient.Status(context.Background())
-	if err != nil {
-		return 0, err
-	}
-	return status.SyncInfo.LatestBlockHeight, nil
+	require.NoError(n.t, err)
+	return status.SyncInfo.LatestBlockHeight
+}
+
+// QueryLatestBlockTime returns the latest block time.
+func (n *NodeConfig) QueryLatestBlockTime() time.Time {
+	status, err := n.rpcClient.Status(context.Background())
+	require.NoError(n.t, err)
+	return status.SyncInfo.LatestBlockTime
 }
 
 // QueryListSnapshots gets all snapshots currently created for a node.

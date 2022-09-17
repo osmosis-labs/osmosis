@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
 )
 
 // GetArithmeticTwap returns an arithmetic time weighted average price.
@@ -34,7 +34,8 @@ func (k Keeper) GetArithmeticTwap(
 	baseAssetDenom string,
 	quoteAssetDenom string,
 	startTime time.Time,
-	endTime time.Time) (sdk.Dec, error) {
+	endTime time.Time,
+) (sdk.Dec, error) {
 	if startTime.After(endTime) {
 		return sdk.Dec{}, types.StartTimeAfterEndTimeError{StartTime: startTime, EndTime: endTime}
 	}
@@ -55,12 +56,18 @@ func (k Keeper) GetArithmeticTwap(
 }
 
 // GetArithmeticTwapToNow returns GetArithmeticTwap on the input, with endTime being fixed to ctx.BlockTime()
+// This function does not mutate records.
 func (k Keeper) GetArithmeticTwapToNow(
 	ctx sdk.Context,
 	poolId uint64,
 	baseAssetDenom string,
 	quoteAssetDenom string,
-	startTime time.Time) (sdk.Dec, error) {
+	startTime time.Time,
+) (sdk.Dec, error) {
+	if startTime.After(ctx.BlockTime()) {
+		return sdk.Dec{}, types.StartTimeAfterEndTimeError{StartTime: startTime, EndTime: ctx.BlockTime()}
+	}
+
 	startRecord, err := k.getInterpolatedRecord(ctx, poolId, startTime, baseAssetDenom, quoteAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err
@@ -72,7 +79,7 @@ func (k Keeper) GetArithmeticTwapToNow(
 	return computeArithmeticTwap(startRecord, endRecord, quoteAssetDenom)
 }
 
-// GetCurrentAccumulatorRecord returns a TwapRecord struct corresponding to the state of pool `poolId`
+// GetBeginBlockAccumulatorRecord returns a TwapRecord struct corresponding to the state of pool `poolId`
 // as of the beginning of the block this is called on.
 // This uses the state of the beginning of the block, as if there were swaps since the block has started,
 // these swaps have had no time to be arbitraged back.

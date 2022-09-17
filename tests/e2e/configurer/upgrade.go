@@ -9,11 +9,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v11/app/params"
-	"github.com/osmosis-labs/osmosis/v11/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v11/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v11/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v11/tests/e2e/initialization"
+	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
+	"github.com/osmosis-labs/osmosis/v12/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v12/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v12/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v12/tests/e2e/initialization"
 )
 
 type UpgradeSettings struct {
@@ -106,6 +106,9 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 }
 
 func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
+	const lockupWallet = "lockup-wallet"
+	const lockupWalletSuperfluid = "lockup-wallet-superfluid"
+
 	chainA := uc.chainConfigs[0]
 	chainANode, err := chainA.GetDefaultNode()
 	if err != nil {
@@ -124,6 +127,18 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	chainANode.CreatePool("pool1A.json", initialization.ValidatorWalletName)
 	chainBNode.CreatePool("pool1B.json", initialization.ValidatorWalletName)
+
+	// enable superfluid assets on chainA
+	chainA.EnableSuperfluidAsset("gamm/pool/1")
+
+	// setup wallets and send gamm tokens to these wallets (only chainA)
+	lockupWalletAddrA, lockupWalletSuperfluidAddrA := chainANode.CreateWallet(lockupWallet), chainANode.CreateWallet(lockupWalletSuperfluid)
+	chainANode.BankSend("10000000000000000000gamm/pool/1", chainA.NodeConfigs[0].PublicAddress, lockupWalletAddrA)
+	chainANode.BankSend("10000000000000000000gamm/pool/1", chainA.NodeConfigs[0].PublicAddress, lockupWalletSuperfluidAddrA)
+
+	// test lock and add to existing lock for both regular and superfluid lockups (only chainA)
+	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), "gamm/pool/1", lockupWalletAddrA, lockupWalletSuperfluidAddrA)
+
 	return nil
 }
 
@@ -144,10 +159,7 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 	for _, chainConfig := range uc.chainConfigs {
 		for validatorIdx, node := range chainConfig.NodeConfigs {
 			if validatorIdx == 0 {
-				currentHeight, err := node.QueryCurrentHeight()
-				if err != nil {
-					return err
-				}
+				currentHeight := node.QueryCurrentHeight()
 				chainConfig.UpgradePropHeight = currentHeight + int64(chainConfig.VotingPeriod) + int64(config.PropSubmitBlocks) + int64(config.PropBufferBlocks)
 				node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 				chainConfig.LatestProposalNumber += 1
@@ -160,9 +172,7 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 	// wait till all chains halt at upgrade height
 	for _, chainConfig := range uc.chainConfigs {
 		uc.t.Logf("waiting to reach upgrade height on chain %s", chainConfig.Id)
-		if err := chainConfig.WaitUntilHeight(chainConfig.UpgradePropHeight); err != nil {
-			return err
-		}
+		chainConfig.WaitUntilHeight(chainConfig.UpgradePropHeight)
 		uc.t.Logf("upgrade height reached on chain %s", chainConfig.Id)
 	}
 
@@ -188,9 +198,7 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 func (uc *UpgradeConfigurer) runForkUpgrade() error {
 	for _, chainConfig := range uc.chainConfigs {
 		uc.t.Logf("waiting to reach fork height on chain %s", chainConfig.Id)
-		if err := chainConfig.WaitUntilHeight(uc.forkHeight); err != nil {
-			return err
-		}
+		chainConfig.WaitUntilHeight(uc.forkHeight)
 		uc.t.Logf("fork height reached on chain %s", chainConfig.Id)
 	}
 	return nil
@@ -209,9 +217,7 @@ func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHe
 	}
 
 	uc.t.Logf("waiting to upgrade containers on chain %s", chainConfig.Id)
-	if err := chainConfig.WaitUntilHeight(propHeight); err != nil {
-		return err
-	}
+	chainConfig.WaitUntilHeight(propHeight)
 	uc.t.Logf("upgrade successful on chain %s", chainConfig.Id)
 	return nil
 }

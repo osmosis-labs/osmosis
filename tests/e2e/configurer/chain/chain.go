@@ -9,10 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/osmosis-labs/osmosis/v11/tests/e2e/configurer/config"
+	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
+	"github.com/osmosis-labs/osmosis/v12/tests/e2e/configurer/config"
 
-	"github.com/osmosis-labs/osmosis/v11/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v11/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v12/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v12/tests/e2e/initialization"
 )
 
 type Config struct {
@@ -79,9 +80,28 @@ func (c *Config) RemoveNode(nodeName string) error {
 	return fmt.Errorf("node %s not found", nodeName)
 }
 
+// WaitUntilEpoch waits for the chain to reach the specified epoch.
+func (c *Config) WaitUntilEpoch(epoch int64, epochIdentifier string) {
+	node, err := c.GetDefaultNode()
+	require.NoError(c.t, err)
+	node.WaitUntil(func(_ coretypes.SyncInfo) bool {
+		newEpochNumber := node.QueryCurrentEpoch(epochIdentifier)
+		c.t.Logf("current epoch number is (%d), waiting to reach (%d)", newEpochNumber, epoch)
+		return newEpochNumber >= epoch
+	})
+}
+
+// WaitForNumEpochs waits for the chain to to go through a given number of epochs.
+func (c *Config) WaitForNumEpochs(epochsToWait int64, epochIdentifier string) {
+	node, err := c.GetDefaultNode()
+	require.NoError(c.t, err)
+	oldEpochNumber := node.QueryCurrentEpoch(epochIdentifier)
+	c.WaitUntilEpoch(oldEpochNumber+epochsToWait, epochIdentifier)
+}
+
 // WaitUntilHeight waits for all validators to reach the specified height at the minimum.
 // returns error, if any.
-func (c *Config) WaitUntilHeight(height int64) error {
+func (c *Config) WaitUntilHeight(height int64) {
 	// Ensure the nodes are making progress.
 	doneCondition := func(syncInfo coretypes.SyncInfo) bool {
 		curHeight := syncInfo.LatestBlockHeight
@@ -96,11 +116,16 @@ func (c *Config) WaitUntilHeight(height int64) error {
 
 	for _, node := range c.NodeConfigs {
 		c.t.Logf("node container: %s, waiting to reach height %d", node.Name, height)
-		if err := node.WaitUntil(doneCondition); err != nil {
-			return err
-		}
+		node.WaitUntil(doneCondition)
 	}
-	return nil
+}
+
+// WaitForNumHeights waits for all nodes to go through a given number of heights.
+func (c *Config) WaitForNumHeights(heightsToWait int64) {
+	node, err := c.GetDefaultNode()
+	require.NoError(c.t, err)
+	currentHeight := node.QueryCurrentHeight()
+	c.WaitUntilHeight(currentHeight + heightsToWait)
 }
 
 func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
@@ -138,6 +163,35 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	)
 
 	c.t.Log("successfully sent IBC tokens")
+}
+
+func (c *Config) EnableSuperfluidAsset(denom string) {
+	chain, err := c.GetDefaultNode()
+	require.NoError(c.t, err)
+	chain.SubmitSuperfluidProposal(denom, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
+	c.LatestProposalNumber += 1
+	chain.DepositProposal(c.LatestProposalNumber, false)
+	for _, node := range c.NodeConfigs {
+		node.VoteYesProposal(initialization.ValidatorWalletName, c.LatestProposalNumber)
+	}
+}
+
+func (c *Config) LockAndAddToExistingLock(amount sdk.Int, denom, lockupWalletAddr, lockupWalletSuperfluidAddr string) {
+	chain, err := c.GetDefaultNode()
+	require.NoError(c.t, err)
+
+	// lock tokens
+	chain.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletAddr)
+	c.LatestLockNumber += 1
+	// add to existing lock
+	chain.AddToExistingLock(amount, denom, "240s", lockupWalletAddr)
+
+	// superfluid lock tokens
+	chain.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletSuperfluidAddr)
+	c.LatestLockNumber += 1
+	chain.SuperfluidDelegate(c.LatestLockNumber, c.NodeConfigs[1].OperatorAddress, lockupWalletSuperfluidAddr)
+	// add to existing lock
+	chain.AddToExistingLock(amount, denom, "240s", lockupWalletSuperfluidAddr)
 }
 
 // GetDefaultNode returns the default node of the chain.

@@ -26,4 +26,7 @@ var (
 	SpotPriceSigFigs = sdk.NewDec(10).Power(SigFigsExponent).TruncateInt()
 	// MaxSpotPrice is the maximum supported spot price. Anything greater than this will error.
 	MaxSpotPrice = sdk.NewDec(2).Power(128).Sub(sdk.OneDec())
+
+	// MultihopSwapFeeMultiplierForOsmoPools if a swap fees multiplier for trades consists of just two OSMO pools during a single transaction.
+	MultihopSwapFeeMultiplierForOsmoPools = sdk.NewDecWithPrec(5, 1) // 0.5
 )

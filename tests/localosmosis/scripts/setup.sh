@@ -5,7 +5,7 @@ OSMOSIS_HOME=$HOME/.osmosisd
 CONFIG_FOLDER=$OSMOSIS_HOME/config
 MONIKER=val
 
-MNEMONIC="satisfy adjust timber high purchase tuition stool faith fine install that you unaware feed domain license impose boss human eager hat rent enjoy dawn"
+MNEMONIC="bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort"
 
 install_prerequisites () {
     apk add dasel
@@ -40,7 +40,7 @@ edit_genesis () {
     dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[1]' "120s"
     dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[2]' "180s"
     dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[3]' "240s"
-    dasel put string -f $GENESIS '.app_state.incentives.params.distr_epoch_identifier' "day" 
+    dasel put string -f $GENESIS '.app_state.incentives.params.distr_epoch_identifier' "day"
 
     # Update mint module
     dasel put string -f $GENESIS '.app_state.mint.params.mint_denom' "uosmo"
@@ -51,11 +51,14 @@ edit_genesis () {
 
     # Update txfee basedenom
     dasel put string -f $GENESIS '.app_state.txfees.basedenom' "uosmo"
+
+    # Update wasm permission (Nobody or Everybody)
+    dasel put string -f $GENESIS '.app_state.wasm.params.code_upload_access.permission' "Nobody"
 }
 
 add_genesis_accounts () {
 
-    osmosisd add-genesis-account osmo1phaxpevm5wecex2jyaqty2a4v02qj7qmlmzk5a 100000000000uosmo,100000000000uion --home $OSMOSIS_HOME 
+    osmosisd add-genesis-account osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj 100000000000uosmo,100000000000uion --home $OSMOSIS_HOME 
     osmosisd add-genesis-account osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks 100000000000uosmo,100000000000uion --home $OSMOSIS_HOME
     osmosisd add-genesis-account osmo18s5lynnmx37hq4wlrw9gdn68sg2uxp5rgk26vv 100000000000uosmo,100000000000uion --home $OSMOSIS_HOME
     osmosisd add-genesis-account osmo1qwexv7c6sm95lwhzn9027vyu2ccneaqad4w8ka 100000000000uosmo,100000000000uion --home $OSMOSIS_HOME

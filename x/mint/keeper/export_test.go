@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v11/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v12/x/mint/types"
 )
 
 type (
@@ -16,9 +16,7 @@ const (
 	DeveloperVestingAmount       = developerVestingAmount
 )
 
-var (
-	GetProportions = getProportions
-)
+var GetProportions = getProportions
 
 func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) error {
 	return k.createDeveloperVestingModuleAccount(ctx, amount)

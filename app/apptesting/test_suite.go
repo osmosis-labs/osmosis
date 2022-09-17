@@ -29,12 +29,12 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v11/app"
-	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v11/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v11/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v12/app"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v12/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v12/x/mint/types"
 )
 
 type KeeperTestHelper struct {
@@ -215,9 +215,10 @@ func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, prop
 
 	fmt.Println("beginning block ", s.Ctx.BlockHeight())
 	s.App.BeginBlocker(s.Ctx, reqBeginBlock)
+	s.Ctx = s.App.NewContext(false, reqBeginBlock.Header)
 }
 
-// EndBlock ends the block.
+// EndBlock ends the block, and runs commit
 func (s *KeeperTestHelper) EndBlock() {
 	reqEndBlock := abci.RequestEndBlock{Height: s.Ctx.BlockHeight()}
 	s.App.EndBlocker(s.Ctx, reqEndBlock)

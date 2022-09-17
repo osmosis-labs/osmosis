@@ -29,9 +29,9 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 
-	"github.com/osmosis-labs/osmosis/v11/x/pool-incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/v11/x/pool-incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v11/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v12/x/pool-incentives/client/cli"
+	"github.com/osmosis-labs/osmosis/v12/x/pool-incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v12/x/pool-incentives/types"
 )
 
 var (
@@ -40,8 +40,7 @@ var (
 	_ module.AppModuleSimulation = AppModule{}
 )
 
-type AppModuleBasic struct {
-}
+type AppModuleBasic struct{}
 
 // Name returns the pool-incentives module's name.
 func (AppModuleBasic) Name() string { return types.ModuleName }

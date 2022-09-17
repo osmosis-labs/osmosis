@@ -9,12 +9,10 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/osmosis-labs/osmosis/v11/cmd/querygen/templates"
+	"github.com/osmosis-labs/osmosis/v12/cmd/querygen/templates"
 )
 
-var (
-	grpcTemplate template.Template
-)
+var grpcTemplate template.Template
 
 func main() {
 	err := parseTemplates()

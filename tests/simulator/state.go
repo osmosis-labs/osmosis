@@ -2,14 +2,14 @@ package simapp
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"log"
 	"math/rand"
+	"os"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v11/app"
-	osmosim "github.com/osmosis-labs/osmosis/v11/simulation/executor"
-	osmosimtypes "github.com/osmosis-labs/osmosis/v11/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v12/app"
+	osmosim "github.com/osmosis-labs/osmosis/v12/simulation/executor"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
@@ -29,7 +29,10 @@ func AppStateFn() osmosim.AppStateFn {
 	return func(simManager *osmosimtypes.Manager, r *rand.Rand, accs []simtypes.Account, config osmosim.InitializationConfig,
 	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
 		if osmosim.FlagGenesisTimeValue == 0 {
-			genesisTimestamp = simtypes.RandTimestamp(r)
+			// N.B.: wasmd has the following check in its simulator:
+			// https://github.com/osmosis-labs/wasmd/blob/c2ec9092d086b5ac6dd367f33ce8b5cce8e4c5f5/x/wasm/types/types.go#L261-L264
+			// As a result, it is easy to overflow and become negative if seconds are set too large.
+			genesisTimestamp = time.Unix(0, r.Int63())
 		} else {
 			genesisTimestamp = time.Unix(osmosim.FlagGenesisTimeValue, 0)
 		}
@@ -54,7 +57,7 @@ func AppStateFn() osmosim.AppStateFn {
 
 		case config.ParamsFile != "":
 			appParams := make(simtypes.AppParams)
-			bz, err := ioutil.ReadFile(config.ParamsFile)
+			bz, err := os.ReadFile(config.ParamsFile)
 			if err != nil {
 				panic(err)
 			}

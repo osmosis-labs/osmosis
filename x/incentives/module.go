@@ -27,11 +27,11 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v11/x/incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/v11/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v11/x/incentives/simulation"
-	"github.com/osmosis-labs/osmosis/v11/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v11/x/mint/client/rest"
+	"github.com/osmosis-labs/osmosis/v12/x/incentives/client/cli"
+	"github.com/osmosis-labs/osmosis/v12/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v12/x/incentives/simulation"
+	"github.com/osmosis-labs/osmosis/v12/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v12/x/mint/client/rest"
 )
 
 var (
@@ -44,8 +44,7 @@ var (
 // ----------------------------------------------------------------------------
 
 // Implements the AppModuleBasic interface for the module.
-type AppModuleBasic struct {
-}
+type AppModuleBasic struct{}
 
 // NewAppModuleBasic creates a new AppModuleBasic struct.
 func NewAppModuleBasic() AppModuleBasic {

@@ -42,19 +42,22 @@ func GetValuesUntilDerivedStop[T any](storeObj store.KVStore, keyStart []byte, s
 	return GetIterValuesWithStop(storeObj, keyStart, keyEnd, false, stopFn, parseValue)
 }
 
+func makeIterator(storeObj store.KVStore, keyStart []byte, keyEnd []byte, reverse bool) store.Iterator {
+	if reverse {
+		return storeObj.ReverseIterator(keyStart, keyEnd)
+	}
+	return storeObj.Iterator(keyStart, keyEnd)
+}
+
 func GetIterValuesWithStop[T any](
 	storeObj store.KVStore,
 	keyStart []byte,
 	keyEnd []byte,
 	reverse bool,
 	stopFn func([]byte) bool,
-	parseValue func([]byte) (T, error)) ([]T, error) {
-	var iter store.Iterator
-	if reverse {
-		iter = storeObj.ReverseIterator(keyStart, keyEnd)
-	} else {
-		iter = storeObj.Iterator(keyStart, keyEnd)
-	}
+	parseValue func([]byte) (T, error),
+) ([]T, error) {
+	iter := makeIterator(storeObj, keyStart, keyEnd, reverse)
 	defer iter.Close()
 
 	return gatherValuesFromIteratorWithStop(iter, parseValue, stopFn)
@@ -64,12 +67,16 @@ func GetFirstValueAfterPrefixInclusive[T any](storeObj store.KVStore, keyStart [
 	// SDK iterator is broken for nil end time, and non-nil start time
 	// https://github.com/cosmos/cosmos-sdk/issues/12661
 	// hence we use []byte{0xff}
-	iterator := storeObj.Iterator(keyStart, []byte{0xff})
+	return GetFirstValueInRange(storeObj, keyStart, []byte{0xff}, false, parseValue)
+}
+
+func GetFirstValueInRange[T any](storeObj store.KVStore, keyStart []byte, keyEnd []byte, reverseIterate bool, parseValue func([]byte) (T, error)) (T, error) {
+	iterator := makeIterator(storeObj, keyStart, keyEnd, reverseIterate)
 	defer iterator.Close()
 
 	if !iterator.Valid() {
 		var blankValue T
-		return blankValue, errors.New("No values in iterator")
+		return blankValue, errors.New("No values in range")
 	}
 
 	return parseValue(iterator.Value())

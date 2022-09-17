@@ -233,7 +233,7 @@ func (m *Manager) RunNodeResource(chainId string, containerName, valCondifDir st
 func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod, chainExpeditedVotingPeriod int, validatorConfigBytes []byte, mountDir string, forkHeight int) (*dockertest.Resource, error) {
 	votingPeriodDuration := time.Duration(chainVotingPeriod * 1000000000)
 	// TODO: Uncomment this after v12 release
-	//expeditedVotingPeriodDuration := time.Duration(chainExpeditedVotingPeriod * 1000000000)
+	// expeditedVotingPeriodDuration := time.Duration(chainExpeditedVotingPeriod * 1000000000)
 
 	initResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
@@ -247,7 +247,7 @@ func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod, chainE
 				fmt.Sprintf("--config=%s", validatorConfigBytes),
 				fmt.Sprintf("--voting-period=%v", votingPeriodDuration),
 				// TODO: Uncomment this after v12 release
-				//fmt.Sprintf("--expedited-voting-period=%v", expeditedVotingPeriodDuration),
+				// fmt.Sprintf("--expedited-voting-period=%v", expeditedVotingPeriodDuration),
 				fmt.Sprintf("--fork-height=%v", forkHeight),
 			},
 			User: "root:root",

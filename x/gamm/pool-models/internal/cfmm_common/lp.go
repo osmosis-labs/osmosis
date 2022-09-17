@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v11/osmoutils"
-	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
 const errMsgFormatSharesLargerThanMax = "%s resulted shares is larger than the max amount of %s"
