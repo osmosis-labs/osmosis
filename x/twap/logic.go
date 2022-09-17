@@ -116,8 +116,6 @@ func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 	if err != nil {
 		return err
 	}
-	// TODO: Add a safety assert, that # of records is as we expect, given # of denoms in the pool
-	// namely, that for `k` denoms in pool, there should be k * (k - 1) / 2 records
 
 	denoms, err := k.ammkeeper.GetPoolDenoms(ctx, poolId)
 	if err != nil {
