@@ -199,9 +199,8 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 			return types.TwapRecord{}, fmt.Errorf(
 				"getTwapRecord: querying for assets %s %s that are not in pool id %d",
 				asset0Denom, asset1Denom, poolId)
-		} else {
-			return types.TwapRecord{}, timeTooOldError{Time: t}
 		}
+		return types.TwapRecord{}, timeTooOldError{Time: t}
 	}
 	if twap.Asset0Denom != asset0Denom || twap.Asset1Denom != asset1Denom || twap.PoolId != poolId {
 		return types.TwapRecord{}, fmt.Errorf("internal error, got twap but its data is wrong")

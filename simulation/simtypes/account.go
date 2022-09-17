@@ -46,7 +46,7 @@ func (sim *SimCtx) RandomSimAccountWithMinCoins(ctx sdk.Context, coins sdk.Coins
 	}
 	acc, found := sim.RandomSimAccountWithConstraint(accHasMinCoins)
 	if !found {
-		return simulation.Account{}, errors.New("no address with min balance found.")
+		return simulation.Account{}, errors.New("no address with min balance found")
 	}
 	return acc, nil
 }
@@ -81,7 +81,7 @@ func (sim *SimCtx) RandomSimAccountWithBalance(ctx sdk.Context) (simulation.Acco
 	}
 	acc, found := sim.RandomSimAccountWithConstraint(accHasBal)
 	if !found {
-		return simulation.Account{}, errors.New("no address with balance found. Check simulator configuration, this should be very rare.")
+		return simulation.Account{}, errors.New("no address with balance found. Check simulator configuration, this should be very rare")
 	}
 	return acc, nil
 }

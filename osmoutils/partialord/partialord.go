@@ -35,16 +35,16 @@ func handleDAGErr(err error) {
 }
 
 // After marks that A should come after B
-func (ord *PartialOrdering) After(A string, B string) {
+func (ord *PartialOrdering) After(a string, b string) {
 	// Set that A depends on B / an edge from B -> A
-	err := ord.dag.AddEdge(B, A)
+	err := ord.dag.AddEdge(b, a)
 	handleDAGErr(err)
 }
 
 // After marks that A should come before B
-func (ord *PartialOrdering) Before(A string, B string) {
+func (ord *PartialOrdering) Before(a string, b string) {
 	// Set that B depends on A / an edge from A -> B
-	err := ord.dag.AddEdge(A, B)
+	err := ord.dag.AddEdge(a, b)
 	handleDAGErr(err)
 }
 

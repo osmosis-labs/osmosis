@@ -106,7 +106,7 @@ func (m Manager) legacyActions(seed int64, cdc codec.JSONCodec) []ActionsWithMet
 		Cdc:          cdc,
 	}
 
-	r := rand.New(rand.NewSource(seed))
+	r := rand.New(rand.NewSource(seed)) //nolint:gosec
 	// first pass generate randomized params + proposal contents
 	for _, moduleName := range m.moduleManager.OrderInitGenesis {
 		if simModule, ok := m.legacyModules[moduleName]; ok {

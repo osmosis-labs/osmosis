@@ -54,10 +54,10 @@ func (es EventStats) ExportJSON(path string) {
 	}
 }
 
-func (es EventStats) exportEvents(ExportStatsPath string, w io.Writer) {
-	if ExportStatsPath != "" {
-		fmt.Printf("Exporting simulation statistics to %s...", ExportStatsPath)
-		es.ExportJSON(ExportStatsPath)
+func (es EventStats) exportEvents(exportStatsPath string, w io.Writer) {
+	if exportStatsPath != "" {
+		fmt.Printf("Exporting simulation statistics to %s...", exportStatsPath)
+		es.ExportJSON(exportStatsPath)
 	} else {
 		// TODO: Don't print, also export to a file of timestamp'd path
 		es.Print(w)

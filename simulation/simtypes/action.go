@@ -28,7 +28,7 @@ type Action interface {
 	WithFrequency(w Frequency) Action
 }
 
-type selectActionFn func(r *rand.Rand) ActionsWithMetadata
+type SelectActionFn func(r *rand.Rand) ActionsWithMetadata
 
 type weightedOperationAction struct {
 	moduleName string
@@ -99,7 +99,7 @@ func (m msgBasedAction) WithFrequency(w Frequency) Action { m.frequency = w; ret
 func (m msgBasedAction) Name() string                     { return m.name }
 func (m msgBasedAction) Frequency() Frequency             { return m.frequency }
 func (m msgBasedAction) Execute(sim *SimCtx, ctx sdk.Context) (
-	OperationMsg simulation.OperationMsg, futureOps []simulation.FutureOperation, resultData []byte, err error,
+	operationMsg simulation.OperationMsg, futureOps []simulation.FutureOperation, resultData []byte, err error,
 ) {
 	msg, err := m.msgGenerator(sim, ctx)
 	if err != nil {
@@ -125,7 +125,7 @@ func totalFrequency(actions []ActionsWithMetadata) int {
 	return totalFrequency
 }
 
-func GetSelectActionFn(actions []ActionsWithMetadata) selectActionFn {
+func GetSelectActionFn(actions []ActionsWithMetadata) SelectActionFn {
 	totalOpFrequency := totalFrequency(actions)
 
 	return func(r *rand.Rand) ActionsWithMetadata {

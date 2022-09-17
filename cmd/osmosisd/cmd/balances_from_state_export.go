@@ -293,7 +293,7 @@ Example:
 				return fmt.Errorf("failed to marshal snapshot: %w", err)
 			}
 
-			err = os.WriteFile(snapshotOutput, snapshotJSON, 0o644)
+			err = os.WriteFile(snapshotOutput, snapshotJSON, 0o600)
 			return err
 		},
 	}

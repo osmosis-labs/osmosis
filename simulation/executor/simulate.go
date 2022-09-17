@@ -120,7 +120,7 @@ func cursedInitializationLogic(
 ) (*simtypes.SimCtx, *simState, Params, error) {
 	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with seed %d\n", int(config.Seed))
 
-	r := rand.New(rand.NewSource(config.Seed))
+	r := rand.New(rand.NewSource(config.Seed)) //nolint:gosec
 	simParams := RandomParams(r)
 	fmt.Fprintf(w, "Randomized simulation params: \n%s\n", mustMarshalJSONIndent(simParams))
 

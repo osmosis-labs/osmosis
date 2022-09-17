@@ -169,19 +169,19 @@ func forcepruneStateStore(dbPath string, startHeight, currentHeight, minHeight, 
 	for i, s := range stateDBKeys {
 		fmt.Println(i, s)
 
-		retain_height := int64(0)
+		retainHeight := int64(0)
 		if s == ABCIResponses {
-			retain_height = currentHeight - minHeight
+			retainHeight = currentHeight - minHeight
 		} else {
-			retain_height = currentHeight - fullHeight
+			retainHeight = currentHeight - fullHeight
 		}
 
 		batch := new(leveldb.Batch)
 		curBatchSize := uint64(0)
 
-		fmt.Println(startHeight, currentHeight, retain_height)
+		fmt.Println(startHeight, currentHeight, retainHeight)
 
-		for c := startHeight; c < retain_height; c++ {
+		for c := startHeight; c < retainHeight; c++ {
 			batch.Delete([]byte(s + strconv.FormatInt(c, 10)))
 			curBatchSize++
 

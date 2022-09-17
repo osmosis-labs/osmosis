@@ -67,7 +67,7 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 
 	forkHeight := uc.forkHeight
 	if forkHeight > 0 {
-		forkHeight = forkHeight - config.ForkHeightPreUpgradeOffset
+		forkHeight -= config.ForkHeightPreUpgradeOffset
 	}
 
 	chainInitResource, err := uc.containerManager.RunChainInitResource(chainConfig.Id, int(chainConfig.VotingPeriod), int(chainConfig.ExpeditedVotingPeriod), validatorConfigBytes, tmpDir, int(forkHeight))
@@ -162,7 +162,7 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 				currentHeight := node.QueryCurrentHeight()
 				chainConfig.UpgradePropHeight = currentHeight + int64(chainConfig.VotingPeriod) + int64(config.PropSubmitBlocks) + int64(config.PropBufferBlocks)
 				node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
-				chainConfig.LatestProposalNumber += 1
+				chainConfig.LatestProposalNumber++
 				node.DepositProposal(chainConfig.LatestProposalNumber, false)
 			}
 			node.VoteYesProposal(initialization.ValidatorWalletName, chainConfig.LatestProposalNumber)

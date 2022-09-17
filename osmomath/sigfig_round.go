@@ -15,7 +15,7 @@ func SigFigRound(d sdk.Dec, tenToSigFig sdk.Int) sdk.Dec {
 	// take note of floor div, vs normal div
 	k := uint64(0)
 	dTimesK := d
-	for ; dTimesK.LT(pointOne); k += 1 {
+	for ; dTimesK.LT(pointOne); k++ {
 		dTimesK.MulInt64Mut(10)
 	}
 	// d * 10^k * 10^sigfig

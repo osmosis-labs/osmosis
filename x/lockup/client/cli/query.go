@@ -785,7 +785,7 @@ $ %s query lockup output-all-locks <max lock ID>
 			if err != nil {
 				return err
 			}
-			err = os.WriteFile("lock_export.json", bz, 0o777)
+			err = os.WriteFile("lock_export.json", bz, 0o777) //nolint:gosec // if we're using 777, I figure there's a reason to do so.
 			if err != nil {
 				return err
 			}

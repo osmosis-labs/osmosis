@@ -73,7 +73,7 @@ func BinarySearch(f func(input sdk.Int) (sdk.Int, error),
 		return sdk.Int{}, err
 	}
 	curIteration := 0
-	for ; curIteration < maxIterations; curIteration += 1 {
+	for ; curIteration < maxIterations; curIteration++ {
 		compRes := errTolerance.Compare(curOutput, targetOutput)
 		if compRes > 0 {
 			upperbound = curEstimate

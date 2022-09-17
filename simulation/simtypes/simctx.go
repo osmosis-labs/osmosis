@@ -138,13 +138,13 @@ func (rm *randManager) WrapRand(domainSeparator string) randManager {
 
 	sepInt := stringToSeed(domainSeparator)
 	newSeed := rm.internalSeed + sepInt
-	r := rand.New(rand.NewSource(newSeed))
+	r := rand.New(rand.NewSource(newSeed)) //nolint:gosec
 	return newRandManager(r)
 }
 
 func (rm *randManager) GetRand() *rand.Rand {
-	rm.rCounter += 1
-	r := rand.New(rand.NewSource(rm.internalSeed + rm.rCounter))
+	rm.rCounter++
+	r := rand.New(rand.NewSource(rm.internalSeed + rm.rCounter)) //nolint:gosec
 	return r
 }
 
@@ -156,7 +156,7 @@ func (rm *randManager) GetSeededRand(seed string) *rand.Rand {
 	}
 	seedInt := stringToSeed(seed)
 	newSeed := rm.internalSeed + seedInt
-	r := rand.New(rand.NewSource(newSeed))
+	r := rand.New(rand.NewSource(newSeed)) //nolint:gosec
 	rm.seededMap[seed] = r
 	return r
 }

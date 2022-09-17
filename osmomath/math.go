@@ -15,9 +15,9 @@ var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
 var zero sdk.Dec = sdk.ZeroDec()
 
 var (
-	one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
-	one      sdk.Dec = sdk.OneDec()
-	two      sdk.Dec = sdk.MustNewDecFromStr("2")
+	oneHalf sdk.Dec = sdk.MustNewDecFromStr("0.5")
+	one     sdk.Dec = sdk.OneDec()
+	two     sdk.Dec = sdk.MustNewDecFromStr("2")
 )
 
 // Returns the internal "power precision".
@@ -37,9 +37,8 @@ func GetPowPrecision() sdk.Dec {
 func AbsDifferenceWithSign(a, b sdk.Dec) (sdk.Dec, bool) {
 	if a.GTE(b) {
 		return a.SubMut(b), false
-	} else {
-		return a.NegMut().AddMut(b), true
 	}
+	return a.NegMut().AddMut(b), true
 }
 
 // func largeBasePow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
@@ -94,7 +93,7 @@ func PowApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 
 	// Common case optimization
 	// Optimize for it being equal to one-half
-	if exp.Equal(one_half) {
+	if exp.Equal(oneHalf) {
 		output, err := base.ApproxSqrt()
 		if err != nil {
 			panic(err)

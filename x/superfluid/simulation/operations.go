@@ -27,9 +27,9 @@ const (
 	DefaultWeightSetSuperfluidAssetsProposal    int = 5
 	DefaultWeightRemoveSuperfluidAssetsProposal int = 2
 
-	OpWeightMsgSuperfluidDelegate   = "op_weight_msg_superfluid_delegate"
-	OpWeightMsgSuperfluidUndelegate = "op_weight_msg_superfluid_undelegate"
-	OpWeightMsgSuperfluidRedelegate = "op_weight_msg_superfluid_redelegate"
+	OpWeightMsgSuperfluidDelegate   = "op_weight_msg_superfluid_delegate"   //nolint:gosec
+	OpWeightMsgSuperfluidUndelegate = "op_weight_msg_superfluid_undelegate" //nolint:gosec
+	OpWeightMsgSuperfluidRedelegate = "op_weight_msg_superfluid_redelegate" //nolint:gosec
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights.

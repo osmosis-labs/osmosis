@@ -227,14 +227,13 @@ $ %s query gamm pool-params 1
 					return err
 				}
 				return writeOutputBoilerplate(clientCtx, out)
-			} else {
-				out, err := clientCtx.Codec.MarshalJSON(res)
-				if err != nil {
-					return err
-				}
-
-				return writeOutputBoilerplate(clientCtx, out)
 			}
+			out, err := clientCtx.Codec.MarshalJSON(res)
+			if err != nil {
+				return err
+			}
+
+			return writeOutputBoilerplate(clientCtx, out)
 		},
 	}
 

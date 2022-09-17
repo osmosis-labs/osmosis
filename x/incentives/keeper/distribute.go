@@ -146,7 +146,7 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge,
 	}
 
 	// increase filled epochs after distribution
-	gauge.FilledEpochs += 1
+	gauge.FilledEpochs++
 	gauge.DistributedCoins = gauge.DistributedCoins.Add(remainCoinsPerEpoch...)
 
 	return gauge, filteredDistrCoins, false, nil

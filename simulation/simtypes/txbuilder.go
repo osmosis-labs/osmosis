@@ -54,7 +54,7 @@ func (sim *SimCtx) defaultTxBuilder(
 }
 
 // TODO: Fix these args
-func (sim *SimCtx) deliverTx(tx sdk.Tx, msg sdk.Msg, msgName string) (simulation.OperationMsg, []simulation.FutureOperation, []byte, error) {
+func (sim *SimCtx) deliverTx(tx sdk.Tx, msg sdk.Msg, msgName string) (simulation.OperationMsg, []simulation.FutureOperation, []byte, error) { //nolint:unparam // this is a test
 	txConfig := params.MakeEncodingConfig().TxConfig // TODO: unhardcode
 	gasInfo, results, err := sim.BaseApp().Deliver(txConfig.TxEncoder(), tx)
 	if err != nil {

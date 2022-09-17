@@ -12,7 +12,7 @@ type internalChain struct {
 	nodes     []*internalNode
 }
 
-func new(id, dataDir string) (*internalChain, error) {
+func new(id, dataDir string) (*internalChain, error) { //nolint // this is a test and it is testing when error is nil
 	chainMeta := ChainMeta{
 		Id:      id,
 		DataDir: dataDir,

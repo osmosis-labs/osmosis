@@ -23,7 +23,7 @@ linters:
     - gomodguard
     - goprintffuncname
     - gosec
-    - gosimple # specializes in simplifying code, subset of staticcheck binary.
+    - gosimple
     - govet
     - importas
     - ineffassign
@@ -35,8 +35,8 @@ linters:
     - paralleltest
     - promlinter
     - revive
-    - staticcheck # set of rules from staticcheck, subset of staticcheck binary.
-    - stylecheck # replacement of golint, subset of staticcheck binary.
+    - staticcheck
+    - stylecheck
     - tenv
     - testpackage
     - typecheck
@@ -47,9 +47,18 @@ linters:
 
 issues:
   exclude:
+    - "var-naming"
     - "poolId should be poolID"
     - "lockId should be lockID"
     - "gaugeId should be gaugeID"
+    - "nodeNameToId should be nodeNameToID"
+    - "lastCommitId should be lastCommitID"
+    - "latestPoolId should be latestPoolID"
+    - "poolIDStr should be poolIDStr"
+    - "chainId should be chainID"
+    - "portId should be portID"
+    - "setNextPoolId should be setNextPoolID"
+    - "getNextPoolId should be getNextPoolID"
   exclude-rules:
     - path: bench_test\.go
       linters:
