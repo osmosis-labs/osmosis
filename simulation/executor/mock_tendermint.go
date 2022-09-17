@@ -215,7 +215,7 @@ func randomVoteInfos(r *rand.Rand, simParams Params, validators mockValidators,
 }
 
 func randomDoubleSignEvidence(r *rand.Rand, params Params,
-	validators mockValidators, pastTimes []time.Time,
+	validators mockValidators, pastTimes []time.Time, //nolint:unparam
 	pastVoteInfos [][]abci.VoteInfo,
 	event func(route, op, evResult string), header tmproto.Header, voteInfos []abci.VoteInfo,
 ) []abci.Evidence {

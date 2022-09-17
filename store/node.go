@@ -243,7 +243,7 @@ func (node *Node) setAcc(idx int, acc sdk.Int) *Node {
 }
 
 func (node *Node) insert(idx int, c *Child) *Node {
-	arr := append(node.Children[:idx], append([]*Child{c}, node.Children[idx:]...)...)
+	arr := append(node.Children[:idx], append([]*Child{c}, node.Children[idx:]...)...) //nolint:gocritic
 	return NewNode(arr...)
 }
 

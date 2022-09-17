@@ -8,7 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
 )
 
-func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B) {
+func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B) { //nolint:unparam
 	testingMode = false
 
 	if _t, ok := tb.(*testing.T); ok {

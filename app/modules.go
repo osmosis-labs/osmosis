@@ -217,7 +217,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 func createSimulationManager(
 	app *OsmosisApp,
 	encodingConfig appparams.EncodingConfig,
-	skipGenesisInvariants bool,
+	skipGenesisInvariants bool, //nolint:unparam
 ) *simtypes.Manager {
 	appCodec := encodingConfig.Marshaler
 

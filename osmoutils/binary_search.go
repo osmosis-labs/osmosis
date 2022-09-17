@@ -75,7 +75,7 @@ func BinarySearch(f func(input sdk.Int) (sdk.Int, error),
 	curIteration := 0
 	for ; curIteration < maxIterations; curIteration++ {
 		compRes := errTolerance.Compare(curOutput, targetOutput)
-		if compRes > 0 {
+		if compRes > 0 { //nolint:gocritic // no need to use switch here
 			upperbound = curEstimate
 		} else if compRes < 0 {
 			lowerbound = curEstimate

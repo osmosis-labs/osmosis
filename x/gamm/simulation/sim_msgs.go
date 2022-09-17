@@ -399,7 +399,7 @@ func deriveRealMinShareOutAmt(ctx sdk.Context, tokenIn sdk.Coins, pool types.Poo
 	return minShareOutAmt, nil
 }
 
-func createPoolRestriction(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) simtypes.SimAccountConstraint {
+func createPoolRestriction(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) simtypes.SimAccountConstraint { //nolint:unparam
 	return func(acc legacysimulationtype.Account) bool {
 		accCoins := sim.BankKeeper().SpendableCoins(ctx, acc.Address)
 		hasTwoCoins := len(accCoins) >= 2

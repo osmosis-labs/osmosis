@@ -217,7 +217,7 @@ func PerformSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.Ac
 	if swap == nil {
 		return nil, wasmvmtypes.InvalidRequest{Err: "gamm perform swap null swap"}
 	}
-	if swap.Amount.ExactIn != nil {
+	if swap.Amount.ExactIn != nil { //nolint:gocritic // no reason to rewrite into a switch statement
 		routes := []gammtypes.SwapAmountInRoute{{
 			PoolId:        swap.First.PoolId,
 			TokenOutDenom: swap.First.DenomOut,

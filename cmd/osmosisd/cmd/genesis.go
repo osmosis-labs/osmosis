@@ -65,7 +65,7 @@ Example:
 			// get genesis params
 			var genesisParams GenesisParams
 			network := args[0]
-			if network == "testnet" {
+			if network == "testnet" { //nolint:gocritic // no reason to rewrite this into a switch statement.
 				genesisParams = TestnetGenesisParams()
 			} else if network == "mainnet" {
 				genesisParams = MainnetGenesisParams()

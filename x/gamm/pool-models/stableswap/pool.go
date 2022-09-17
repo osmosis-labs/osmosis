@@ -94,7 +94,9 @@ func (p Pool) NumAssets() int {
 	return len(p.PoolLiquidity)
 }
 
-// returns pool liquidity of the provided denoms, in the same order the denoms were provided in
+// getPoolAmts returns pool liquidity of the provided denoms, in the same order the denoms were provided in
+//
+//nolint:unused
 func (p Pool) getPoolAmts(denoms ...string) ([]sdk.Int, error) {
 	result := make([]sdk.Int, len(denoms))
 	poolLiquidity := p.PoolLiquidity

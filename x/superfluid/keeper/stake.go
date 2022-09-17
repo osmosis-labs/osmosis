@@ -68,7 +68,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 
 		refreshedAmount := k.GetExpectedDelegationAmount(ctx, acc)
 
-		if refreshedAmount.GT(currentAmount) {
+		if refreshedAmount.GT(currentAmount) { //nolint:gocritic // no need to use switch here
 			adjustment := refreshedAmount.Sub(currentAmount)
 			err = k.mintOsmoTokensAndDelegate(ctx, adjustment, acc)
 			if err != nil {
@@ -119,7 +119,7 @@ func (k Keeper) IncreaseSuperfluidDelegation(ctx sdk.Context, lockID uint64, amo
 // basic validation for locks to be eligible for superfluid delegation. This includes checking
 // - that the sender is the owner of the lock
 // - that the lock is consisted of single coin
-func (k Keeper) validateLockForSF(ctx sdk.Context, lock *lockuptypes.PeriodLock, sender string) error {
+func (k Keeper) validateLockForSF(ctx sdk.Context, lock *lockuptypes.PeriodLock, sender string) error { //nolint:unparam
 	if lock.Owner != sender {
 		return lockuptypes.ErrNotLockOwner
 	}
