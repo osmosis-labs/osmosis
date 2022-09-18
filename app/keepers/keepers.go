@@ -307,7 +307,11 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.IncentivesKeeper,
 		appKeepers.DistrKeeper,
+<<<<<<< HEAD
 		distrtypes.ModuleName,
+=======
+		appKeepers.GAMMKeeper,
+>>>>>>> 877008eb (x/poolincentives: genesis import/export patch (#2769))
 	)
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
 
