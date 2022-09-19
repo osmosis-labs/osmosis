@@ -20,11 +20,11 @@ type BigDec struct {
 
 const (
 	// number of decimal places
-	Precision = 18
+	Precision = 36
 
 	// bytes required to represent the above precision
 	// Ceiling[Log2[999 999 999 999 999 999]]
-	DecimalPrecisionBits = 60
+	DecimalPrecisionBits = 120
 
 	maxDecBitLen = maxBitLen + DecimalPrecisionBits
 
@@ -514,7 +514,7 @@ func (d BigDec) SdkDec() sdk.Dec {
 // BigDecFromSdkDec returns the BigDec representation of an SdkDec.
 // Values in any additional decimal places are truncated.
 func BigDecFromSdkDec(d sdk.Dec) BigDec {
-	return NewDecFromBigIntWithPrec(d.BigInt(), Precision)
+	return NewDecFromBigIntWithPrec(d.BigInt(), sdk.Precision)
 }
 
 //     ____

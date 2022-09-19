@@ -278,7 +278,7 @@ func (s *decimalTestSuite) TestArithmetic() {
 
 		{
 			NewBigDec(3), NewBigDec(7), NewBigDec(21), NewBigDec(21),
-			NewDecWithPrec(428571428571428571, 18), NewDecWithPrec(428571428571428572, 18), NewDecWithPrec(428571428571428571, 18),
+			MustNewDecFromStr("0.428571428571428571428571428571428571"), MustNewDecFromStr("0.428571428571428571428571428571428572"), MustNewDecFromStr("0.428571428571428571428571428571428571"),
 			NewBigDec(10), NewBigDec(-4),
 		},
 		{
@@ -294,7 +294,7 @@ func (s *decimalTestSuite) TestArithmetic() {
 		},
 		{
 			NewDecWithPrec(3333, 4), NewDecWithPrec(333, 4), NewDecWithPrec(1109889, 8), NewDecWithPrec(1109889, 8),
-			MustNewDecFromStr("10.009009009009009009"), MustNewDecFromStr("10.009009009009009010"), MustNewDecFromStr("10.009009009009009009"),
+			MustNewDecFromStr("10.009009009009009009009009009009009009"), MustNewDecFromStr("10.009009009009009009009009009009009010"), MustNewDecFromStr("10.009009009009009009009009009009009009"),
 			NewDecWithPrec(3666, 4), NewDecWithPrec(3, 1),
 		},
 	}
@@ -461,11 +461,11 @@ func (s *decimalTestSuite) TestApproxRoot() {
 		{NewDecWithPrec(4, 2), 2, NewDecWithPrec(2, 1)},                                // 0.04 ^ (0.5) => 0.2
 		{NewDecFromInt(NewInt(27)), 3, NewDecFromInt(NewInt(3))},                       // 27 ^ (1/3) => 3
 		{NewDecFromInt(NewInt(-81)), 4, NewDecFromInt(NewInt(-3))},                     // -81 ^ (0.25) => -3
-		{NewDecFromInt(NewInt(2)), 2, NewDecWithPrec(1414213562373095049, 18)},         // 2 ^ (0.5) => 1.414213562373095049
-		{NewDecWithPrec(1005, 3), 31536000, MustNewDecFromStr("1.000000000158153904")}, // 1.005 ^ (1/31536000) ≈ 1.00000000016
-		{SmallestDec(), 2, NewDecWithPrec(1, 9)},                                       // 1e-18 ^ (0.5) => 1e-9
-		{SmallestDec(), 3, MustNewDecFromStr("0.000000999999999997")},                  // 1e-18 ^ (1/3) => 1e-6
-		{NewDecWithPrec(1, 8), 3, MustNewDecFromStr("0.002154434690031900")},           // 1e-8 ^ (1/3) ≈ 0.00215443469
+		{NewDecFromInt(NewInt(2)), 2, MustNewDecFromStr("1.414213562373095048801688724209698079")},         // 2 ^ (0.5) => 1.414213562373095048801688724209698079
+		{NewDecWithPrec(1005, 3), 31536000, MustNewDecFromStr("1.000000000158153903837946258002096839")}, // 1.005 ^ (1/31536000) ≈ 1.000000000158153903837946258002096839
+		{SmallestDec(), 2, NewDecWithPrec(1, 18)},                                       // 1e-36 ^ (0.5) => 1e-18
+		{SmallestDec(), 3, MustNewDecFromStr("0.000000000001000000000000000002431786")},                  // 1e-36 ^ (1/3) => 1e-12
+		{NewDecWithPrec(1, 8), 3, MustNewDecFromStr("0.002154434690031883721759293566519280")},           // 1e-8 ^ (1/3) ≈ 0.002154434690031883721759293566519
 	}
 
 	// In the case of 1e-8 ^ (1/3), the result repeats every 5 iterations starting from iteration 24
@@ -489,7 +489,7 @@ func (s *decimalTestSuite) TestApproxSqrt() {
 		{NewDecWithPrec(4, 2), NewDecWithPrec(2, 1)},                        // 0.09 => 0.3
 		{NewDecFromInt(NewInt(9)), NewDecFromInt(NewInt(3))},                // 9 => 3
 		{NewDecFromInt(NewInt(-9)), NewDecFromInt(NewInt(-3))},              // -9 => -3
-		{NewDecFromInt(NewInt(2)), NewDecWithPrec(1414213562373095049, 18)}, // 2 => 1.414213562373095049
+		{NewDecFromInt(NewInt(2)), MustNewDecFromStr("1.414213562373095048801688724209698079")}, // 2 => 1.414213562373095048801688724209698079
 	}
 
 	for i, tc := range testCases {
@@ -504,24 +504,24 @@ func (s *decimalTestSuite) TestDecSortableBytes() {
 		d    BigDec
 		want []byte
 	}{
-		{NewBigDec(0), []byte("000000000000000000.000000000000000000")},
-		{NewBigDec(1), []byte("000000000000000001.000000000000000000")},
-		{NewBigDec(10), []byte("000000000000000010.000000000000000000")},
-		{NewBigDec(12340), []byte("000000000000012340.000000000000000000")},
-		{NewDecWithPrec(12340, 4), []byte("000000000000000001.234000000000000000")},
-		{NewDecWithPrec(12340, 5), []byte("000000000000000000.123400000000000000")},
-		{NewDecWithPrec(12340, 8), []byte("000000000000000000.000123400000000000")},
-		{NewDecWithPrec(1009009009009009009, 17), []byte("000000000000000010.090090090090090090")},
-		{NewDecWithPrec(-1009009009009009009, 17), []byte("-000000000000000010.090090090090090090")},
-		{NewBigDec(1000000000000000000), []byte("max")},
-		{NewBigDec(-1000000000000000000), []byte("--")},
+		{NewBigDec(0), []byte("000000000000000000000000000000000000.000000000000000000000000000000000000")},
+		{NewBigDec(1), []byte("000000000000000000000000000000000001.000000000000000000000000000000000000")},
+		{NewBigDec(10), []byte("000000000000000000000000000000000010.000000000000000000000000000000000000")},
+		{NewBigDec(12340), []byte("000000000000000000000000000000012340.000000000000000000000000000000000000")},
+		{NewDecWithPrec(12340, 4), []byte("000000000000000000000000000000000001.234000000000000000000000000000000000")},
+		{NewDecWithPrec(12340, 5), []byte("000000000000000000000000000000000000.123400000000000000000000000000000000")},
+		{NewDecWithPrec(12340, 8), []byte("000000000000000000000000000000000000.000123400000000000000000000000000000")},
+		{NewDecWithPrec(1009009009009009009, 17), []byte("000000000000000000000000000000000010.090090090090090090000000000000000000")},
+		{NewDecWithPrec(-1009009009009009009, 17), []byte("-000000000000000000000000000000000010.090090090090090090000000000000000000")},
+		{MustNewDecFromStr("1000000000000000000000000000000000000"), []byte("max")},
+		{MustNewDecFromStr("-1000000000000000000000000000000000000"), []byte("--")},
 	}
 	for tcIndex, tc := range tests {
 		s.Require().Equal(tc.want, SortableDecBytes(tc.d), "bad String(), index: %v", tcIndex)
 	}
 
-	s.Require().Panics(func() { SortableDecBytes(NewBigDec(1000000000000000001)) })
-	s.Require().Panics(func() { SortableDecBytes(NewBigDec(-1000000000000000001)) })
+	s.Require().Panics(func() { SortableDecBytes(MustNewDecFromStr("1000000000000000000000000000000000001")) })
+	s.Require().Panics(func() { SortableDecBytes(MustNewDecFromStr("-1000000000000000000000000000000000001")) })
 }
 
 func (s *decimalTestSuite) TestDecEncoding() {
