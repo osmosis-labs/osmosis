@@ -20,6 +20,11 @@ type TestSuite struct {
 	store sdk.KVStore
 }
 
+func (suite *TestSuite) SetupTest() {
+	suite.Setup()
+
+}
+
 const (
 	keyA               = "a"
 	keyB               = "b"

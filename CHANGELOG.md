@@ -78,6 +78,7 @@ which acts as a fuzz testing tool tailored for the SDK state machine.
 * [#2405](https://github.com/osmosis-labs/osmosis/pull/2405) Make SpotPrice have a max value of 2^160, and no longer be able to panic
 * [#2473](https://github.com/osmosis-labs/osmosis/pull/2473) x/superfluid `AddNewSuperfluidAsset` now returns error, if any occurs instead of ignoring it.
 * [#2714](https://github.com/osmosis-labs/osmosis/pull/2714) Upgrade wasmd to v0.28.0.
+* [#2772](https://github.com/osmosis-labs/osmosis/pull/2772) Remove the ModuleListedCoins grpc query
 
 #### Golang API breaks
 
