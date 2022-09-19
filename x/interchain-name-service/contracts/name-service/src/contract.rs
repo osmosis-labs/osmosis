@@ -1,19 +1,13 @@
-#[cfg(not(feature = "library"))]
-use chrono::{Datelike, TimeZone, Utc};
+// use chrono::{Datelike, TimeZone, Utc};
 use cosmwasm_std::{
-    coin, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128,
+    coin, entry_point, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError,
+    StdResult, Uint128,
 };
-use cosmwasm_std::{entry_point, StdError};
-use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::helpers::assert_sent_sufficient_coin;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, ResolveRecordResponse};
 use crate::state::{config, config_read, resolver, resolver_read, Config, NameRecord};
-
-// version info for migration info
-const CONTRACT_NAME: &str = "crates.io:name-service";
-const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const MIN_NAME_LENGTH: u64 = 3;
 const MAX_NAME_LENGTH: u64 = 64;
@@ -25,8 +19,6 @@ pub fn instantiate(
     _info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, StdError> {
-    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-
     let config_state = Config {
         purchase_price: msg.purchase_price,
         transfer_price: msg.transfer_price,
@@ -53,7 +45,7 @@ pub fn execute(
 
 pub fn execute_register(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     name: String,
     years: Uint128,
@@ -71,18 +63,8 @@ pub fn execute_register(
     assert_sent_sufficient_coin(&info.funds, required)?;
 
     let key = name.as_bytes();
-    let now = Utc::now();
-    let current_day = now.day();
-    let current_month = now.month();
-    let current_year = now.year();
-    let expiry = Utc
-        .ymd(
-            current_year + years.u128() as i32,
-            current_month,
-            current_day,
-        )
-        .and_hms(0, 0, 0)
-        .timestamp();
+    let now = env.block.time.nanos() as u128;
+    let expiry = now + 31_536_000 * years.u128();
 
     let record = NameRecord {
         owner: info.sender,
@@ -91,8 +73,7 @@ pub fn execute_register(
 
     if let Some(existing_record) = resolver(deps.storage).may_load(key)? {
         // name is already taken and expiry still not past
-        // TODO: Normalize name
-        if existing_record.expiry > now.timestamp() {
+        if existing_record.expiry > now {
             return Err(ContractError::NameTaken { name });
         }
     }
@@ -138,12 +119,13 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-fn query_resolver(deps: Deps, _env: Env, name: String) -> StdResult<Binary> {
+fn query_resolver(deps: Deps, env: Env, name: String) -> StdResult<Binary> {
     let key = name.as_bytes();
+    let now = env.block.time.nanos() as u128;
 
     let address = match resolver_read(deps.storage).may_load(key)? {
         Some(record) => {
-            if Utc::now().timestamp() >= record.expiry {
+            if now >= record.expiry {
                 None
             } else {
                 Some(String::from(&record.owner))

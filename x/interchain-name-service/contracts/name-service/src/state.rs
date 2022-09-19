@@ -28,7 +28,7 @@ pub fn config_read(storage: &dyn Storage) -> ReadonlySingleton<Config> {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct NameRecord {
     pub owner: Addr,
-    pub expiry: i64,
+    pub expiry: u128,
 }
 
 pub fn resolver(storage: &mut dyn Storage) -> Bucket<NameRecord> {
