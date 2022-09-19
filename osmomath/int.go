@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-const maxBitLen = 512
+const maxBitLen = 1024
 
 func newIntegerFromString(s string) (*big.Int, bool) {
 	return new(big.Int).SetString(s, 0)

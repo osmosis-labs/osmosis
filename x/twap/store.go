@@ -20,6 +20,9 @@ func (e timeTooOldError) Error() string {
 		" Try storing the accumulator value. (requested time %s)", e.Time)
 }
 
+// just has to not be empty, for store to work / not register as a delete.
+var sentinelExistsValue = []byte{1}
+
 // trackChangedPool places an entry into a transient store,
 // to track that this pool changed this block.
 // This tracking is for use in EndBlock, to create new TWAP records.
@@ -27,8 +30,7 @@ func (k Keeper) trackChangedPool(ctx sdk.Context, poolId uint64) {
 	store := ctx.TransientStore(k.transientKey)
 	poolIdBz := make([]byte, 8)
 	binary.LittleEndian.PutUint64(poolIdBz, poolId)
-	// just has to not be empty, for store to work / not register as a delete.
-	sentinelExistsValue := []byte{1}
+
 	store.Set(poolIdBz, sentinelExistsValue)
 }
 
