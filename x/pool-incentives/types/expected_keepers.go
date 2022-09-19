@@ -25,7 +25,7 @@ type BankKeeper interface {
 }
 
 type GAMMKeeper interface {
-	GetPool(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
+	GetPoolAndPoke(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
 }
 
 type IncentivesKeeper interface {
