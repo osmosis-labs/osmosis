@@ -7,7 +7,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v12/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 )
@@ -25,7 +24,7 @@ type BankKeeper interface {
 
 // GAMMKeeper gets the pool interface from poolID.
 type GAMMKeeper interface {
-	GetPool(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
+	GetNextPoolId(ctx sdk.Context) uint64
 }
 
 // IncentivesKeeper creates and gets gauges, and also allows additions to gauge rewards.

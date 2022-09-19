@@ -1,4 +1,4 @@
-image: ghcr.io/faddat/cosmos
+image: ghcr.io/notional-labs/cosmos
 
 ports:
   - port: 1317

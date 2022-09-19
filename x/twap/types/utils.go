@@ -13,8 +13,9 @@ import (
 var MaxSpotPrice = sdk.NewDec(2).Power(128).Sub(sdk.OneDec())
 
 // GetAllUniqueDenomPairs returns all unique pairs of denoms, where for every pair
-// (X, Y), X >= Y.
+// (X, Y), X > Y.
 // The pair (X,Y) should only appear once in the list
+// Panics if finds duplicate pairs.
 //
 // NOTE: Sorts the input denoms slice.
 func GetAllUniqueDenomPairs(denoms []string) ([]string, []string) {
