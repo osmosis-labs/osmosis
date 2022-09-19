@@ -514,7 +514,7 @@ func (d BigDec) SdkDec() sdk.Dec {
 // BigDecFromSdkDec returns the BigDec representation of an SdkDec.
 // Values in any additional decimal places are truncated.
 func BigDecFromSdkDec(d sdk.Dec) BigDec {
-	return NewDecFromBigIntWithPrec(d.BigInt(), Precision)
+	return NewDecFromBigIntWithPrec(d.BigInt(), sdk.Precision)
 }
 
 //     ____
