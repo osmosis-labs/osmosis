@@ -47,11 +47,15 @@ pub fn execute_register(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    name: String,
+    raw_name: String,
     years: Uint128,
 ) -> Result<Response, ContractError> {
-    // TODO: Validate rent years
-    validate_name(&name)?;
+    if years.u128() <= 0 {
+        return Err(ContractError::YearsMustBePositive {});
+    }
+    validate_name(&raw_name)?;
+    // Convert to canonical form
+    let name = raw_name.to_lowercase();
     let config_state = config(deps.storage).load()?;
     let required = match config_state.purchase_price {
         Some(purchase_price) => {
@@ -116,6 +120,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::ResolveRecord { name } => query_resolver(deps, env, name),
         QueryMsg::Config {} => to_binary(&config_read(deps.storage).load()?),
+        // TODO: Reverse registrar query
     }
 }
 
