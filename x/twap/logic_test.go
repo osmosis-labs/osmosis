@@ -1102,35 +1102,35 @@ func (s *TestSuite) TestUpdateRecords() {
 
 func (s *TestSuite) TestAfterCreatePool() {
 	tests := map[string]struct {
-		poolId uint64
+		poolId    uint64
 		poolCoins sdk.Coins
 		// if this field is set true, we swap in the same block with pool creation
-		runSwap bool
+		runSwap     bool
 		expectedErr bool
 	}{
 		"Pool not existing": {
-			poolId: 2,
+			poolId:      2,
 			expectedErr: true,
 		},
 		"Default Pool, no swap on pool creation block": {
-			poolId: 1,
+			poolId:    1,
 			poolCoins: defaultTwoAssetCoins,
-			runSwap: false,
+			runSwap:   false,
 		},
 		"Default Pool, swap on pool creation block": {
-			poolId: 1,
+			poolId:    1,
 			poolCoins: defaultTwoAssetCoins,
-			runSwap: true,
+			runSwap:   true,
 		},
 		"Multi assets pool, no swap on pool creation block": {
-			poolId: 1,
+			poolId:    1,
 			poolCoins: defaultThreeAssetCoins,
-			runSwap: false,
+			runSwap:   false,
 		},
 		"Multi assets pool, swap on pool creation block": {
-			poolId: 1,
+			poolId:    1,
 			poolCoins: defaultThreeAssetCoins,
-			runSwap: true,
+			runSwap:   true,
 		},
 	}
 
@@ -1146,7 +1146,7 @@ func (s *TestSuite) TestAfterCreatePool() {
 					s.RunBasicSwap(poolId)
 				}
 			}
-		
+
 			err := s.twapkeeper.AfterCreatePool(s.Ctx, tc.poolId)
 			if tc.expectedErr {
 				s.Require().Error(err)
@@ -1163,13 +1163,13 @@ func (s *TestSuite) TestAfterCreatePool() {
 				s.Require().NoError(err)
 				expectedRecords = append(expectedRecords, expectedRecord)
 			}
-			
+
 			// consistency check that the number of records is exactly equal to the number of denompairs
 			allRecords, err := s.twapkeeper.GetAllMostRecentRecordsForPool(s.Ctx, poolId)
 			s.Require().NoError(err)
 			s.Require().Equal(len(denomPairs0), len(allRecords))
 			s.Require().Equal(len(expectedRecords), len(allRecords))
-			
+
 			// check on the correctness of all individual twap records
 			for i := 0; i < len(denomPairs0); i++ {
 				actualRecord, err := s.twapkeeper.GetMostRecentRecordStoreRepresentation(s.Ctx, poolId, denomPairs0[i], denomPairs1[i])
