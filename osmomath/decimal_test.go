@@ -167,9 +167,9 @@ func (s *decimalTestSuite) TestSdkDec() {
 	}
 	for tcIndex, tc := range tests {
 		if tc.expPanic {
-			s.Require().Panics(func() { tc.d.SdkDec() })
+			s.Require().Panics(func() { tc.d.SDKDec() })
 		} else {
-			value := tc.d.SdkDec()
+			value := tc.d.SDKDec()
 			s.Require().Equal(tc.want, value, "bad SdkDec(), index: %v", tcIndex)
 		}
 	}
@@ -192,9 +192,9 @@ func (s *decimalTestSuite) TestBigDecFromSdkDec() {
 	}
 	for tcIndex, tc := range tests {
 		if tc.expPanic {
-			s.Require().Panics(func() { BigDecFromSdkDec(tc.d) })
+			s.Require().Panics(func() { BigDecFromSDKDec(tc.d) })
 		} else {
-			value := BigDecFromSdkDec(tc.d)
+			value := BigDecFromSDKDec(tc.d)
 			s.Require().Equal(tc.want, value, "bad BigDecFromSdkDec(), index: %v", tcIndex)
 		}
 	}
