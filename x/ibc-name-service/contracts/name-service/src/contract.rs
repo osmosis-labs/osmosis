@@ -1,5 +1,7 @@
+use chrono::{Datelike, TimeZone, Utc};
 use cosmwasm_std::{
-    entry_point, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult,
+    coin, entry_point, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError,
+    StdResult, Uint128,
 };
 
 use crate::coin_helpers::assert_sent_sufficient_coin;
@@ -20,6 +22,7 @@ pub fn instantiate(
     let config_state = Config {
         purchase_price: msg.purchase_price,
         transfer_price: msg.transfer_price,
+        annual_rent_amount: msg.annual_rent_amount,
     };
 
     config(deps.storage).save(&config_state)?;
@@ -35,7 +38,7 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Register { name } => execute_register(deps, env, info, name),
+        ExecuteMsg::Register { name, years } => execute_register(deps, env, info, name, years),
         ExecuteMsg::Transfer { name, to } => execute_transfer(deps, env, info, name, to),
     }
 }
@@ -45,18 +48,44 @@ pub fn execute_register(
     _env: Env,
     info: MessageInfo,
     name: String,
+    years: Uint128,
 ) -> Result<Response, ContractError> {
-    // we only need to check here - at point of registration
+    // TODO: Validate rent years
     validate_name(&name)?;
     let config_state = config(deps.storage).load()?;
-    assert_sent_sufficient_coin(&info.funds, config_state.purchase_price)?;
+    let required = match config_state.purchase_price {
+        Some(purchase_price) => {
+            let amount = purchase_price.amount + config_state.annual_rent_amount * years;
+            Some(coin(amount.u128(), purchase_price.denom))
+        }
+        None => None,
+    };
+    assert_sent_sufficient_coin(&info.funds, required)?;
 
     let key = name.as_bytes();
-    let record = NameRecord { owner: info.sender };
+    let now = Utc::now();
+    let current_day = now.day();
+    let current_month = now.month();
+    let current_year = now.year();
+    let expiry = Utc
+        .ymd(
+            current_year + years.u128() as i32,
+            current_month,
+            current_day,
+        )
+        .and_hms(0, 0, 0)
+        .timestamp();
 
-    if (resolver(deps.storage).may_load(key)?).is_some() {
-        // name is already taken
-        return Err(ContractError::NameTaken { name });
+    let record = NameRecord {
+        owner: info.sender,
+        expiry,
+    };
+
+    if let Some(existing_record) = resolver(deps.storage).may_load(key)? {
+        // name is already taken and expiry still not past
+        if existing_record.expiry > now.timestamp() {
+            return Err(ContractError::NameTaken { name });
+        }
     }
 
     // name is available
@@ -104,7 +133,13 @@ fn query_resolver(deps: Deps, _env: Env, name: String) -> StdResult<Binary> {
     let key = name.as_bytes();
 
     let address = match resolver_read(deps.storage).may_load(key)? {
-        Some(record) => Some(String::from(&record.owner)),
+        Some(record) => {
+            if Utc::now().timestamp() >= record.expiry {
+                None
+            } else {
+                Some(String::from(&record.owner))
+            }
+        }
         None => None,
     };
     let resp = ResolveRecordResponse { address };

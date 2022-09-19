@@ -1,4 +1,4 @@
-use cosmwasm_std::Coin;
+use cosmwasm_std::{Coin, Uint128};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -6,12 +6,13 @@ use serde::{Deserialize, Serialize};
 pub struct InstantiateMsg {
     pub purchase_price: Option<Coin>,
     pub transfer_price: Option<Coin>,
+    pub annual_rent_amount: Uint128,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    Register { name: String },
+    Register { name: String, years: Uint128 },
     Transfer { name: String, to: String },
 }
 

@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cosmwasm_std::{coin, coins, from_binary, Coin, Deps, DepsMut};
+    use cosmwasm_std::{coin, coins, from_binary, Coin, Deps, DepsMut, Uint128};
 
     use crate::contract::{execute, instantiate, query};
     use crate::error::ContractError;
@@ -28,10 +28,16 @@ mod tests {
         assert_eq!(value, expected);
     }
 
-    fn mock_init_with_price(deps: DepsMut, purchase_price: Coin, transfer_price: Coin) {
+    fn mock_init_with_price(
+        deps: DepsMut,
+        purchase_price: Coin,
+        transfer_price: Coin,
+        annual_rent_bps: Uint128,
+    ) {
         let msg = InstantiateMsg {
             purchase_price: Some(purchase_price),
             transfer_price: Some(transfer_price),
+            annual_rent_amount: annual_rent_bps,
         };
 
         let info = mock_info("creator", &coins(2, "token"));
@@ -43,6 +49,7 @@ mod tests {
         let msg = InstantiateMsg {
             purchase_price: None,
             transfer_price: None,
+            annual_rent_amount: Uint128::from(0 as u128),
         };
 
         let info = mock_info("creator", &coins(2, "token"));
@@ -55,6 +62,7 @@ mod tests {
         let info = mock_info("alice_key", sent);
         let msg = ExecuteMsg::Register {
             name: "alice".to_string(),
+            years: Uint128::from(1 as u128),
         };
         let _res = execute(deps, mock_env(), info, msg)
             .expect("contract successfully handles Register message");
@@ -71,6 +79,7 @@ mod tests {
             Config {
                 purchase_price: None,
                 transfer_price: None,
+                annual_rent_amount: Uint128::from(0 as u128),
             },
         );
     }
@@ -79,13 +88,19 @@ mod tests {
     fn proper_init_with_fees() {
         let mut deps = mock_dependencies(&[]);
 
-        mock_init_with_price(deps.as_mut(), coin(3, "token"), coin(4, "token"));
+        mock_init_with_price(
+            deps.as_mut(),
+            coin(3, "token"),
+            coin(4, "token"),
+            Uint128::from(0 as u128),
+        );
 
         assert_config_state(
             deps.as_ref(),
             Config {
                 purchase_price: Some(coin(3, "token")),
                 transfer_price: Some(coin(4, "token")),
+                annual_rent_amount: Uint128::from(0 as u128),
             },
         );
     }
@@ -103,13 +118,20 @@ mod tests {
     #[test]
     fn register_available_name_and_query_works_with_fees() {
         let mut deps = mock_dependencies(&[]);
-        mock_init_with_price(deps.as_mut(), coin(2, "token"), coin(2, "token"));
+        mock_init_with_price(
+            deps.as_mut(),
+            coin(2, "token"),
+            coin(2, "token"),
+            Uint128::from(0 as u128),
+        );
+
         mock_alice_registers_name(deps.as_mut(), &coins(2, "token"));
 
         // anyone can register an available name with more fees than needed
         let info = mock_info("bob_key", &coins(5, "token"));
         let msg = ExecuteMsg::Register {
             name: "bob".to_string(),
+            years: Uint128::from(1 as u128),
         };
 
         let _res = execute(deps.as_mut(), mock_env(), info, msg)
@@ -130,6 +152,7 @@ mod tests {
         let info = mock_info("bob_key", &coins(2, "token"));
         let msg = ExecuteMsg::Register {
             name: "alice".to_string(),
+            years: Uint128::from(1 as u128),
         };
         let res = execute(deps.as_mut(), mock_env(), info, msg);
 
@@ -142,6 +165,7 @@ mod tests {
         let info = mock_info("alice_key", &coins(2, "token"));
         let msg = ExecuteMsg::Register {
             name: "alice".to_string(),
+            years: Uint128::from(1 as u128),
         };
         let res = execute(deps.as_mut(), mock_env(), info, msg);
 
@@ -161,6 +185,7 @@ mod tests {
         // hi is too short
         let msg = ExecuteMsg::Register {
             name: "hi".to_string(),
+            years: Uint128::from(1 as u128),
         };
         match execute(deps.as_mut(), mock_env(), info.clone(), msg) {
             Ok(_) => panic!("Must return error"),
@@ -170,6 +195,7 @@ mod tests {
 
         // 65 chars is too long
         let msg = ExecuteMsg::Register {
+            years: Uint128::from(1 as u128),
             name: "01234567890123456789012345678901234567890123456789012345678901234".to_string(),
         };
         match execute(deps.as_mut(), mock_env(), info.clone(), msg) {
@@ -181,6 +207,7 @@ mod tests {
         // no upper case...
         let msg = ExecuteMsg::Register {
             name: "LOUD".to_string(),
+            years: Uint128::from(1 as u128),
         };
         match execute(deps.as_mut(), mock_env(), info.clone(), msg) {
             Ok(_) => panic!("Must return error"),
@@ -190,6 +217,7 @@ mod tests {
         // ... or spaces
         let msg = ExecuteMsg::Register {
             name: "two words".to_string(),
+            years: Uint128::from(1 as u128),
         };
         match execute(deps.as_mut(), mock_env(), info, msg) {
             Ok(_) => panic!("Must return error"),
@@ -201,12 +229,18 @@ mod tests {
     #[test]
     fn fails_on_register_insufficient_fees() {
         let mut deps = mock_dependencies(&[]);
-        mock_init_with_price(deps.as_mut(), coin(2, "token"), coin(2, "token"));
+        mock_init_with_price(
+            deps.as_mut(),
+            coin(2, "token"),
+            coin(2, "token"),
+            Uint128::from(0 as u128),
+        );
 
         // anyone can register an available name with sufficient fees
         let info = mock_info("alice_key", &[]);
         let msg = ExecuteMsg::Register {
             name: "alice".to_string(),
+            years: Uint128::from(1 as u128),
         };
 
         let res = execute(deps.as_mut(), mock_env(), info, msg);
@@ -221,12 +255,18 @@ mod tests {
     #[test]
     fn fails_on_register_wrong_fee_denom() {
         let mut deps = mock_dependencies(&[]);
-        mock_init_with_price(deps.as_mut(), coin(2, "token"), coin(2, "token"));
+        mock_init_with_price(
+            deps.as_mut(),
+            coin(2, "token"),
+            coin(2, "token"),
+            Uint128::from(0 as u128),
+        );
 
         // anyone can register an available name with sufficient fees
         let info = mock_info("alice_key", &coins(2, "earth"));
         let msg = ExecuteMsg::Register {
             name: "alice".to_string(),
+            years: Uint128::from(1 as u128),
         };
 
         let res = execute(deps.as_mut(), mock_env(), info, msg);
@@ -260,7 +300,12 @@ mod tests {
     #[test]
     fn transfer_works_with_fees() {
         let mut deps = mock_dependencies(&[]);
-        mock_init_with_price(deps.as_mut(), coin(2, "token"), coin(2, "token"));
+        mock_init_with_price(
+            deps.as_mut(),
+            coin(2, "token"),
+            coin(2, "token"),
+            Uint128::from(0 as u128),
+        );
         mock_alice_registers_name(deps.as_mut(), &coins(2, "token"));
 
         // alice can transfer her name successfully to bob
@@ -329,7 +374,12 @@ mod tests {
     #[test]
     fn fails_on_transfer_insufficient_fees() {
         let mut deps = mock_dependencies(&[]);
-        mock_init_with_price(deps.as_mut(), coin(2, "token"), coin(5, "token"));
+        mock_init_with_price(
+            deps.as_mut(),
+            coin(2, "token"),
+            coin(5, "token"),
+            Uint128::from(0 as u128),
+        );
         mock_alice_registers_name(deps.as_mut(), &coins(2, "token"));
 
         // alice can transfer her name successfully to bob
@@ -369,4 +419,6 @@ mod tests {
         let value: ResolveRecordResponse = from_binary(&res).unwrap();
         assert_eq!(None, value.address);
     }
+
+    // TODO: Test rent amount
 }

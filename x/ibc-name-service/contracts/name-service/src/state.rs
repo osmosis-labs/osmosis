@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Addr, Coin, Storage};
+use cosmwasm_std::{Addr, Coin, Storage, Uint128};
 use cosmwasm_storage::{
     bucket, bucket_read, singleton, singleton_read, Bucket, ReadonlyBucket, ReadonlySingleton,
     Singleton,
@@ -14,6 +14,7 @@ pub static CONFIG_KEY: &[u8] = b"config";
 pub struct Config {
     pub purchase_price: Option<Coin>,
     pub transfer_price: Option<Coin>,
+    pub annual_rent_amount: Uint128,
 }
 
 pub fn config(storage: &mut dyn Storage) -> Singleton<Config> {
@@ -27,6 +28,7 @@ pub fn config_read(storage: &dyn Storage) -> ReadonlySingleton<Config> {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct NameRecord {
     pub owner: Addr,
+    pub expiry: i64,
 }
 
 pub fn resolver(storage: &mut dyn Storage) -> Bucket<NameRecord> {

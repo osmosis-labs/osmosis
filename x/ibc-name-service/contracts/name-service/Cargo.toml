@@ -34,6 +34,7 @@ cosmwasm-storage = "1.0.0-beta"
 thiserror = { version = "1.0.23" }
 schemars = "0.8.1"
 serde = { version = "1.0.125", default-features = false, features = ["derive"] }
+chrono = "0.4.22"
 
 [dev-dependencies]
 cosmwasm-schema = { version = "1.0.0-beta" }
