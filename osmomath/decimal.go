@@ -498,7 +498,7 @@ func (d BigDec) MustFloat64() float64 {
 
 // SdkDec returns the Sdk.Dec representation of a BigDec.
 // Values in any additional decimal places are truncated.
-func (d BigDec) SdkDec() sdk.Dec {
+func (d BigDec) SDKDec() sdk.Dec {
 	precisionDiff := Precision - sdk.Precision
 	precisionFactor := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(precisionDiff)), nil)
 
@@ -506,14 +506,19 @@ func (d BigDec) SdkDec() sdk.Dec {
 		panic("invalid decimal precision")
 	}
 
-	truncatedDec := sdk.NewDecFromBigIntWithPrec(new(big.Int).Quo(d.BigInt(), precisionFactor), sdk.Precision)
+	// Truncate any additional decimal values that exist due to BigDec's additional precision
+	// This relies on big.Int's Quo function doing floor division
+	intRepresentation := new(big.Int).Quo(d.BigInt(), precisionFactor)
+
+	// convert int representation back to SDK Dec precision
+	truncatedDec := sdk.NewDecFromBigIntWithPrec(intRepresentation, sdk.Precision)
 
 	return truncatedDec
 }
 
 // BigDecFromSdkDec returns the BigDec representation of an SdkDec.
 // Values in any additional decimal places are truncated.
-func BigDecFromSdkDec(d sdk.Dec) BigDec {
+func BigDecFromSDKDec(d sdk.Dec) BigDec {
 	return NewDecFromBigIntWithPrec(d.BigInt(), sdk.Precision)
 }
 
