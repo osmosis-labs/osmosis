@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/osmosis-labs/osmosis/v12/osmomath"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
@@ -128,7 +129,7 @@ func (p Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Dec, error) {
 }
 
 // getDescaledPoolAmts gets descaled amount of given denom and amount
-func (p Pool) getDescaledPoolAmt(denom string, amount sdk.Dec) sdk.Dec {
+func (p Pool) getDescaledPoolAmt(denom string, amount osmomath.BigDec) osmomath.BigDec {
 	liquidityIndexes := p.getLiquidityIndexMap()
 	liquidityIndex := liquidityIndexes[denom]
 
@@ -241,10 +242,12 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom 
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	scaledSpotPrice := spotPrice(reserves[0], reserves[1])
-	spotPrice := p.getDescaledPoolAmt(baseAssetDenom, scaledSpotPrice)
 
-	return spotPrice, nil
+	scaledSpotPrice := spotPrice(osmomath.BigDecFromSdkDec(reserves[0]), osmomath.BigDecFromSdkDec(reserves[1]))
+	spotPrice := p.getDescaledPoolAmt(baseAssetDenom, scaledSpotPrice)
+	spotPriceSdkDec := spotPrice.SdkDec()
+
+	return spotPriceSdkDec, nil
 }
 
 func (p Pool) Copy() Pool {

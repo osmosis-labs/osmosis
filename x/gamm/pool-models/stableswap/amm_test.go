@@ -1,13 +1,14 @@
 package stableswap
 
 import (
-	fmt "fmt"
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
+	"github.com/osmosis-labs/osmosis/v12/osmomath"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/test_helpers"
 )
 
@@ -16,24 +17,24 @@ type StableSwapTestSuite struct {
 }
 
 func TestCFMMInvariantTwoAssets(t *testing.T) {
-	kErrTolerance := sdk.OneDec()
+	kErrTolerance := osmomath.OneDec()
 
 	tests := map[string]struct {
-		xReserve    sdk.Dec
-		yReserve    sdk.Dec
-		yIn         sdk.Dec
+		xReserve    osmomath.BigDec
+		yReserve    osmomath.BigDec
+		yIn         osmomath.BigDec
 		expectPanic bool
 	}{
 		"small pool small input": {
-			sdk.NewDec(100),
-			sdk.NewDec(100),
-			sdk.NewDec(1),
+			osmomath.NewBigDec(100),
+			osmomath.NewBigDec(100),
+			osmomath.NewBigDec(1),
 			false,
 		},
 		"small pool large input": {
-			sdk.NewDec(100),
-			sdk.NewDec(100),
-			sdk.NewDec(1000),
+			osmomath.NewBigDec(100),
+			osmomath.NewBigDec(100),
+			osmomath.NewBigDec(1000),
 			false,
 		},
 		// This test fails due to a bug in our original solver
@@ -45,21 +46,21 @@ func TestCFMMInvariantTwoAssets(t *testing.T) {
 
 		// panic catching
 		"xReserve negative": {
-			sdk.NewDec(-100),
-			sdk.NewDec(100),
-			sdk.NewDec(1),
+			osmomath.NewBigDec(-100),
+			osmomath.NewBigDec(100),
+			osmomath.NewBigDec(1),
 			true,
 		},
 		"yReserve negative": {
-			sdk.NewDec(100),
-			sdk.NewDec(-100),
-			sdk.NewDec(1),
+			osmomath.NewBigDec(100),
+			osmomath.NewBigDec(-100),
+			osmomath.NewBigDec(1),
 			true,
 		},
 		"yIn negative": {
-			sdk.NewDec(100),
-			sdk.NewDec(100),
-			sdk.NewDec(-1),
+			osmomath.NewBigDec(100),
+			osmomath.NewBigDec(100),
+			osmomath.NewBigDec(-1),
 			true,
 		},
 	}
@@ -73,14 +74,14 @@ func TestCFMMInvariantTwoAssets(t *testing.T) {
 				xOut := solveCfmm(test.xReserve, test.yReserve, test.yIn)
 
 				k1 := cfmmConstant(test.xReserve.Sub(xOut), test.yReserve.Add(test.yIn))
-				osmoassert.DecApproxEq(t, k0, k1, kErrTolerance)
+				osmomath.DecApproxEq(t, k0, k1, kErrTolerance)
 
 				// using multi-asset cfmm (should be equivalent with u = 1, w = 0)
-				k2 := cfmmConstantMulti(test.xReserve, test.yReserve, sdk.OneDec(), sdk.ZeroDec())
-				osmoassert.DecApproxEq(t, k2, k0, kErrTolerance)
-				xOut2 := solveCfmmMulti(test.xReserve, test.yReserve, sdk.ZeroDec(), test.yIn)
-				k3 := cfmmConstantMulti(test.xReserve.Sub(xOut2), test.yReserve.Add(test.yIn), sdk.OneDec(), sdk.ZeroDec())
-				osmoassert.DecApproxEq(t, k2, k3, kErrTolerance)
+				k2 := cfmmConstantMulti(test.xReserve, test.yReserve, osmomath.OneDec(), osmomath.ZeroDec())
+				osmomath.DecApproxEq(t, k2, k0, kErrTolerance)
+				xOut2 := solveCfmmMulti(test.xReserve, test.yReserve, osmomath.ZeroDec(), test.yIn)
+				k3 := cfmmConstantMulti(test.xReserve.Sub(xOut2), test.yReserve.Add(test.yIn), osmomath.OneDec(), osmomath.ZeroDec())
+				osmomath.DecApproxEq(t, k2, k3, kErrTolerance)
 			}
 
 			osmoassert.ConditionalPanic(t, test.expectPanic, sut)
@@ -89,31 +90,31 @@ func TestCFMMInvariantTwoAssets(t *testing.T) {
 }
 
 func TestCFMMInvariantMultiAssets(t *testing.T) {
-	kErrTolerance := sdk.OneDec()
+	kErrTolerance := osmomath.OneDec()
 
 	tests := map[string]struct {
-		xReserve    sdk.Dec
-		yReserve    sdk.Dec
-		uReserve    sdk.Dec
-		wSumSquares sdk.Dec
-		yIn         sdk.Dec
+		xReserve    osmomath.BigDec
+		yReserve    osmomath.BigDec
+		uReserve    osmomath.BigDec
+		wSumSquares osmomath.BigDec
+		yIn         osmomath.BigDec
 		expectPanic bool
 	}{
 		"4-asset pool, small input": {
-			sdk.NewDec(100),
-			sdk.NewDec(100),
+			osmomath.NewBigDec(100),
+			osmomath.NewBigDec(100),
 			// represents a 4-asset pool with 100 in each reserve
-			sdk.NewDec(200),
-			sdk.NewDec(20000),
-			sdk.NewDec(1),
+			osmomath.NewBigDec(200),
+			osmomath.NewBigDec(20000),
+			osmomath.NewBigDec(1),
 			false,
 		},
 		"4-asset pool, large input": {
-			sdk.NewDec(100),
-			sdk.NewDec(100),
-			sdk.NewDec(200),
-			sdk.NewDec(20000),
-			sdk.NewDec(1000),
+			osmomath.NewBigDec(100),
+			osmomath.NewBigDec(100),
+			osmomath.NewBigDec(200),
+			osmomath.NewBigDec(20000),
+			osmomath.NewBigDec(1000),
 			false,
 		},
 		// This test fails due to a bug in our original solver
@@ -125,48 +126,48 @@ func TestCFMMInvariantMultiAssets(t *testing.T) {
 
 		// panic catching
 		"negative xReserve": {
-			sdk.NewDec(-100),
-			sdk.NewDec(100),
+			osmomath.NewBigDec(-100),
+			osmomath.NewBigDec(100),
 			// represents a 4-asset pool with 100 in each reserve
-			sdk.NewDec(200),
-			sdk.NewDec(20000),
-			sdk.NewDec(1),
+			osmomath.NewBigDec(200),
+			osmomath.NewBigDec(20000),
+			osmomath.NewBigDec(1),
 			true,
 		},
 		"negative yReserve": {
-			sdk.NewDec(100),
-			sdk.NewDec(-100),
+			osmomath.NewBigDec(100),
+			osmomath.NewBigDec(-100),
 			// represents a 4-asset pool with 100 in each reserve
-			sdk.NewDec(200),
-			sdk.NewDec(20000),
-			sdk.NewDec(1),
+			osmomath.NewBigDec(200),
+			osmomath.NewBigDec(20000),
+			osmomath.NewBigDec(1),
 			true,
 		},
 		"negative uReserve": {
-			sdk.NewDec(100),
-			sdk.NewDec(100),
+			osmomath.NewBigDec(100),
+			osmomath.NewBigDec(100),
 			// represents a 4-asset pool with 100 in each reserve
-			sdk.NewDec(-200),
-			sdk.NewDec(20000),
-			sdk.NewDec(1),
+			osmomath.NewBigDec(-200),
+			osmomath.NewBigDec(20000),
+			osmomath.NewBigDec(1),
 			true,
 		},
 		"negative sumSquares": {
-			sdk.NewDec(100),
-			sdk.NewDec(100),
+			osmomath.NewBigDec(100),
+			osmomath.NewBigDec(100),
 			// represents a 4-asset pool with 100 in each reserve
-			sdk.NewDec(200),
-			sdk.NewDec(-20000),
-			sdk.NewDec(1),
+			osmomath.NewBigDec(200),
+			osmomath.NewBigDec(-20000),
+			osmomath.NewBigDec(1),
 			true,
 		},
 		"negative yIn": {
-			sdk.NewDec(100),
-			sdk.NewDec(100),
+			osmomath.NewBigDec(100),
+			osmomath.NewBigDec(100),
 			// represents a 4-asset pool with 100 in each reserve
-			sdk.NewDec(200),
-			sdk.NewDec(-20000),
-			sdk.NewDec(1),
+			osmomath.NewBigDec(200),
+			osmomath.NewBigDec(-20000),
+			osmomath.NewBigDec(1),
 			true,
 		},
 	}
@@ -179,7 +180,7 @@ func TestCFMMInvariantMultiAssets(t *testing.T) {
 				k2 := cfmmConstantMulti(test.xReserve, test.yReserve, test.uReserve, test.wSumSquares)
 				xOut2 := solveCfmmMulti(test.xReserve, test.yReserve, test.wSumSquares, test.yIn)
 				k3 := cfmmConstantMulti(test.xReserve.Sub(xOut2), test.yReserve.Add(test.yIn), test.uReserve, test.wSumSquares)
-				osmoassert.DecApproxEq(t, k2, k3, kErrTolerance)
+				osmomath.DecApproxEq(t, k2, k3, kErrTolerance)
 			}
 
 			osmoassert.ConditionalPanic(t, test.expectPanic, sut)
