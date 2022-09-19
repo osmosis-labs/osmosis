@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NOTE: never use new(BigDec) or else we will panic unmarshalling into the
@@ -492,6 +494,27 @@ func (d BigDec) MustFloat64() float64 {
 	} else {
 		return value
 	}
+}
+
+// SdkDec returns the Sdk.Dec representation of a BigDec.
+// Values in any additional decimal places are truncated.
+func (d BigDec) SdkDec() sdk.Dec {
+	precisionDiff := Precision - sdk.Precision
+	precisionFactor := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(precisionDiff)), nil)
+
+	if precisionDiff < 0 {
+		panic("invalid decimal precision")
+	}
+
+	truncatedDec := sdk.NewDecFromBigIntWithPrec(new(big.Int).Quo(d.BigInt(), precisionFactor), sdk.Precision)
+
+	return truncatedDec
+}
+
+// BigDecFromSdkDec returns the BigDec representation of an SdkDec.
+// Values in any additional decimal places are truncated.
+func BigDecFromSdkDec(d sdk.Dec) BigDec {
+	return NewDecFromBigIntWithPrec(d.BigInt(), sdk.Precision)
 }
 
 //     ____

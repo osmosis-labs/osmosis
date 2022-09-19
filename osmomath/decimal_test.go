@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v2"
@@ -145,6 +146,56 @@ func (s *decimalTestSuite) TestDecFloat64() {
 		s.Require().Nil(err, "error getting Float64(), index: %v", tcIndex)
 		s.Require().Equal(tc.want, value, "bad Float64(), index: %v", tcIndex)
 		s.Require().Equal(tc.want, tc.d.MustFloat64(), "bad MustFloat64(), index: %v", tcIndex)
+	}
+}
+
+func (s *decimalTestSuite) TestSdkDec() {
+	tests := []struct {
+		d    BigDec
+		want sdk.Dec
+		expPanic bool
+	}{
+		{NewBigDec(0), sdk.MustNewDecFromStr("0.000000000000000000"), false},
+		{NewBigDec(1), sdk.MustNewDecFromStr("1.000000000000000000"), false},
+		{NewBigDec(10), sdk.MustNewDecFromStr("10.000000000000000000"), false},
+		{NewBigDec(12340), sdk.MustNewDecFromStr("12340.000000000000000000"), false},
+		{NewDecWithPrec(12340, 4), sdk.MustNewDecFromStr("1.234000000000000000"), false},
+		{NewDecWithPrec(12340, 5), sdk.MustNewDecFromStr("0.123400000000000000"), false},
+		{NewDecWithPrec(12340, 8), sdk.MustNewDecFromStr("0.000123400000000000"), false},
+		{NewDecWithPrec(1009009009009009009, 17), sdk.MustNewDecFromStr("10.090090090090090090"), false},
+	}
+	for tcIndex, tc := range tests {
+		if tc.expPanic {
+			s.Require().Panics(func() { tc.d.SdkDec() })
+		} else {
+			value := tc.d.SdkDec()
+			s.Require().Equal(tc.want, value, "bad SdkDec(), index: %v", tcIndex)
+		}
+	}
+}
+
+func (s *decimalTestSuite) TestBigDecFromSdkDec() {
+	tests := []struct {
+		d    sdk.Dec
+		want BigDec
+		expPanic bool
+	}{
+		{sdk.MustNewDecFromStr("0.000000000000000000"), NewBigDec(0), false},
+		{sdk.MustNewDecFromStr("1.000000000000000000"), NewBigDec(1), false},
+		{sdk.MustNewDecFromStr("10.000000000000000000"), NewBigDec(10), false},
+		{sdk.MustNewDecFromStr("12340.000000000000000000"), NewBigDec(12340), false},
+		{sdk.MustNewDecFromStr("1.234000000000000000"), NewDecWithPrec(12340, 4), false},
+		{sdk.MustNewDecFromStr("0.123400000000000000"), NewDecWithPrec(12340, 5), false},
+		{sdk.MustNewDecFromStr("0.000123400000000000"), NewDecWithPrec(12340, 8), false},
+		{sdk.MustNewDecFromStr("10.090090090090090090"), NewDecWithPrec(1009009009009009009, 17), false},
+	}
+	for tcIndex, tc := range tests {
+		if tc.expPanic {
+			s.Require().Panics(func() { BigDecFromSdkDec(tc.d) })
+		} else {
+			value := BigDecFromSdkDec(tc.d)
+			s.Require().Equal(tc.want, value, "bad BigDecFromSdkDec(), index: %v", tcIndex)
+		}
 	}
 }
 
