@@ -1,0 +1,30 @@
+# Unversioned files and folders.
+# References at https://git-scm.com/docs/gitignore.
+
+# Finder's configuration files (Mac).
+.DS_Store
+
+# Node.js modules.
+node_modules/
+
+# NPM's shrinkwrap.
+# We're using `package-lock.json` instead.
+npm-shrinkwrap.json
+
+# Yarn's lockfile, Plug'n'Play, folder and settings.
+# We're using npm, and it provides its lockfile and settings.
+yarn.lock
+.pnp.*
+.yarn/
+.yarnrc
+.yarnrc.yaml
+
+# pnpm's lockfile, workspace definitions and hooks.
+# We're using npm, and it provides its lockfile and settings.
+pnpm-lock.yaml
+pnpm-workspace.yaml
+pnpmfile.js
+
+# Log files.
+*.log
+*.log.*

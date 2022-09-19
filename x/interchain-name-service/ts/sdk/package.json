@@ -1,0 +1,61 @@
+{
+  "name": "interchain-name-service-sdk",
+  "version": " 0.0.1",
+  "description": "",
+  "cdn": "dist/index.umd.js",
+  "main": "dist/index.js",
+  "types": "types/index.d.ts",
+  "unpkg": "dist/index.umd.js",
+  "module": "dist/index.esm.js",
+  "jsdelivr": "dist/index.umd.js",
+  "umd:main": "dist/index.umd.js",
+  "exports": {
+    ".": [
+      {
+        "import": "./dist/index.mjs",
+        "require": "./dist/index.cjs",
+        "default": "./dist/index.js"
+      },
+      "./dist/index.js"
+    ]
+  },
+  "devDependencies": {
+    "@swc/core": "^1.2.198",
+    "@swc/helpers": "^0.3.17",
+    "@types/eslint": "^8.4.1",
+    "@types/jest": "^27.4.1",
+    "@types/prettier": "^2.6.0",
+    "@typescript-eslint/eslint-plugin": "^5.21.0",
+    "@typescript-eslint/parser": "^5.21.0",
+    "eslint": "^8.14.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "jest": "^27.5.1",
+    "prettier": "^2.6.2",
+    "regenerator-runtime": "^0.13.9",
+    "rollup": "^2.70.2",
+    "rollup-plugin-terser": "^7.0.2",
+    "rollup-plugin-typescript2": "^0.31.2",
+    "ts-jest": "^27.1.4",
+    "ts-jest-resolver": "^2.0.0",
+    "typedoc": "^0.22.15",
+    "typedoc-plugin-markdown": "^3.12.1",
+    "typescript": "^4.6.3"
+  },
+  "scripts": {
+    "doc": "typedoc src/index.ts",
+    "test": "jest --passWithNoTests",
+    "lint": "eslint \"*/**/*.{ts,js,json}\"",
+    "lint:fix": "eslint \"*/**/*.{ts,js,json}\" --fix",
+    "build": "rollup --config ./rollup.config.js",
+    "prepublishOnly": "npm run doc && npm run lint && npm run test && npm run build"
+  },
+  "keywords": [],
+  "author": {
+    "name": "Richard Liu <rliu@nightwatchapp.com>"
+  },
+  "license": "MIT OR Apache-2.0",
+  "dependencies": {
+    "@cosmjs/cosmwasm-stargate": "^0.28.11"
+  }
+}

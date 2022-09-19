@@ -1,0 +1,7 @@
+{
+  "out": "./docs",
+  "name": "interchain-name-service",
+  "theme": "markdown",
+  "readme": "none",
+  "tsconfig": "./tsconfig.bundle.json"
+}
