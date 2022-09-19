@@ -23,7 +23,7 @@ const (
 	Precision = 36
 
 	// bytes required to represent the above precision
-	// Ceiling[Log2[999 999 999 999 999 999]]
+	// Ceiling[Log2[10**Precision - 1]]
 	DecimalPrecisionBits = 120
 
 	maxDecBitLen = maxBitLen + DecimalPrecisionBits
