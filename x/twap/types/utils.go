@@ -6,31 +6,28 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 )
 
 var MaxSpotPrice = sdk.NewDec(2).Power(128).Sub(sdk.OneDec())
 
 // GetAllUniqueDenomPairs returns all unique pairs of denoms, where for every pair
-// (X, Y), X > Y.
+// (X, Y), X < Y.
 // The pair (X,Y) should only appear once in the list
 // Panics if finds duplicate pairs.
 //
 // NOTE: Sorts the input denoms slice.
 func GetAllUniqueDenomPairs(denoms []string) ([]string, []string) {
-	// get denoms in descending order
+	// get denoms in ascending order
 	sort.Strings(denoms)
-	reverseDenoms := osmoutils.ReverseSlice(denoms)
 
 	numPairs := len(denoms) * (len(denoms) - 1) / 2
 	pairGT := make([]string, 0, numPairs)
 	pairLT := make([]string, 0, numPairs)
 
-	for i := 0; i < len(reverseDenoms); i++ {
-		for j := i + 1; j < len(reverseDenoms); j++ {
-			pairGT = append(pairGT, reverseDenoms[i])
-			pairLT = append(pairLT, reverseDenoms[j])
+	for i := 0; i < len(denoms); i++ {
+		for j := i + 1; j < len(denoms); j++ {
+			pairGT = append(pairGT, denoms[i])
+			pairLT = append(pairLT, denoms[j])
 		}
 	}
 	// sanity check
