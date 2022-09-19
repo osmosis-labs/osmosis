@@ -302,8 +302,6 @@ In this section we describe the queries required on grpc server.
 service Query {
   // returns coins that is going to be distributed
   rpc ModuleToDistributeCoins(ModuleToDistributeCoinsRequest) returns (ModuleToDistributeCoinsResponse) {}
-  // returns coins that are distributed by module so far
-  rpc ModuleDistributedCoins(ModuleDistributedCoinsRequest) returns (ModuleDistributedCoinsResponse) {}
   // returns Gauge by id
   rpc GaugeByID(GaugeByIDRequest) returns (GaugeByIDResponse) {}
   // returns gauges both upcoming and active
