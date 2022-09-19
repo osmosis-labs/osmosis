@@ -7,15 +7,10 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-<<<<<<< HEAD
 	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v11/x/incentives/types"
 	types "github.com/osmosis-labs/osmosis/v11/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
-=======
-	incentivestypes "github.com/osmosis-labs/osmosis/v12/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
->>>>>>> 877008eb (x/poolincentives: genesis import/export patch (#2769))
 )
 
 type AccountKeeper interface {
@@ -30,7 +25,7 @@ type BankKeeper interface {
 }
 
 type GAMMKeeper interface {
-	GetNextPoolId(ctx sdk.Context) uint64
+	GetPoolAndPoke(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
 }
 
 type IncentivesKeeper interface {

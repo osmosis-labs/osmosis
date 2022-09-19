@@ -23,26 +23,15 @@ type Keeper struct {
 
 	paramSpace paramtypes.Subspace
 
-<<<<<<< HEAD
 	accountKeeper       types.AccountKeeper
 	bankKeeper          types.BankKeeper
 	incentivesKeeper    types.IncentivesKeeper
 	communityPoolKeeper types.CommunityPoolKeeper
-
-	communityPoolName string // name of the Community pool ModuleAccount (Maybe the distribution module)
+	gammKeeper          types.GAMMKeeper
+	communityPoolName   string // name of the Community pool ModuleAccount (Maybe the distribution module)
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, incentivesKeeper types.IncentivesKeeper, distrKeeper types.CommunityPoolKeeper, communityPoolName string) Keeper {
-=======
-	accountKeeper    types.AccountKeeper
-	bankKeeper       types.BankKeeper
-	incentivesKeeper types.IncentivesKeeper
-	distrKeeper      types.DistrKeeper
-	gammKeeper       types.GAMMKeeper
-}
-
-func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, incentivesKeeper types.IncentivesKeeper, distrKeeper types.DistrKeeper, gammKeeper types.GAMMKeeper) Keeper {
->>>>>>> 877008eb (x/poolincentives: genesis import/export patch (#2769))
+func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, incentivesKeeper types.IncentivesKeeper, distrKeeper types.CommunityPoolKeeper, communityPoolName string, gammKeeper types.GAMMKeeper) Keeper {
 	// ensure pool-incentives module account is set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -59,20 +48,13 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtyp
 
 		paramSpace: paramSpace,
 
-<<<<<<< HEAD
 		accountKeeper:       accountKeeper,
 		bankKeeper:          bankKeeper,
 		incentivesKeeper:    incentivesKeeper,
 		communityPoolKeeper: distrKeeper,
+		gammKeeper:          gammKeeper,
 
 		communityPoolName: communityPoolName,
-=======
-		accountKeeper:    accountKeeper,
-		bankKeeper:       bankKeeper,
-		incentivesKeeper: incentivesKeeper,
-		distrKeeper:      distrKeeper,
-		gammKeeper:       gammKeeper,
->>>>>>> 877008eb (x/poolincentives: genesis import/export patch (#2769))
 	}
 }
 

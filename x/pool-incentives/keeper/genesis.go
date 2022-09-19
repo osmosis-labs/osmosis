@@ -26,10 +26,15 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	distrInfo := k.GetDistrInfo(ctx)
-	lastPoolId := k.gammKeeper.GetNextPoolId(ctx)
+	var lastPoolId int
+	var err error
+	for err == nil {
+		lastPoolId++
+		_, err = k.gammKeeper.GetPoolAndPoke(ctx, uint64(lastPoolId))
+	}
 	lockableDurations := k.GetLockableDurations(ctx)
 	var poolToGauges types.PoolToGauges
-	for i := 1; i < int(lastPoolId); i++ {
+	for i := 1; i < lastPoolId; i++ {
 		for _, duration := range lockableDurations {
 			gaugeID, err := k.GetPoolGaugeId(ctx, uint64(i), duration)
 			if err != nil {
