@@ -288,8 +288,8 @@ func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn osmomath.BigDec) osmoma
 // we solve k = (x'y')(x'^2 + y^2) for x', using the following equation: https://www.wolframalpha.com/input?i2d=true&i=solve+for+y%5C%2844%29+x*y*%5C%2840%29Power%5Bx%2C2%5D%2BPower%5By%2C2%5D%5C%2841%29%3Dk
 // which we simplify to be the following: https://www.desmos.com/calculator/bx5m5wpind
 // Then we use that to derive the change in x as x_out = x' - x
-// 
-// Since original reserves, y' and k are known and remain constant throughout the calculation, 
+//
+// Since original reserves, y' and k are known and remain constant throughout the calculation,
 // deriving x' and then finding x_out is equivalent to finding x_out directly.
 func solveCfmmDirect(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
 	if !xReserve.IsPositive() || !yReserve.IsPositive() || !yIn.IsPositive() {
