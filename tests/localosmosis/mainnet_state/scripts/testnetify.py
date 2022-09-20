@@ -50,11 +50,20 @@ def replace_validator(genesis, old_validator, new_validator):
     
     replace(genesis, old_validator.hex_address, new_validator.hex_address)
     replace(genesis, old_validator.consensus_address, new_validator.consensus_address)
-    # replace(genesis, old_validator.moniker, new_validator.moniker)
-    replace(genesis, old_validator.pubkey, new_validator.pubkey)
-    replace(genesis, old_validator.operator_address, new_validator.operator_address)
+
+    # replace(genesis, old_validator.pubkey, new_validator.pubkey)
+    for validator in genesis["validators"]:
+        if validator['name'] == old_validator.moniker:
+            validator['pub_key']['value'] = new_validator.pubkey
+        
+    for validator in genesis['app_state']['staking']['validators']:
+        if validator['description']['moniker'] == old_validator.moniker:
+            validator['consensus_pubkey']['key'] = new_validator.pubkey
+
+    # This creates problems
+    # replace(genesis, old_validator.operator_address, new_validator.operator_address)
     
-    # Replacing operator_address in lockup > synthetic_locks
+    # replacing operator_address in lockup > synthetic_locks
     for synthetic_lock in genesis['app_state']['lockup']['synthetic_locks']:
         # {
         #   "duration": "1209600s",
@@ -207,13 +216,13 @@ def main():
 
     # Update gov module
     if args.verbose:
-        print("🗳️ Updating gov module")
+        print("🗳️ Update gov module")
         print("\tSetting governance_voting_period to", config["governance_voting_period"])
     genesis['app_state']['gov']['voting_params']['voting_period'] = config["governance_voting_period"]
 
     # Update epochs module
     if args.verbose:
-        print("⌛ Updating epochs module")
+        print("⌛ Update epochs module")
         print("\tSetting epoch_duration to", config["epoch_duration"])
         print("\tResetting current_epoch_start_time")
     genesis['app_state']['epochs']['epochs'][0]['duration'] = config["epoch_duration"]
@@ -256,7 +265,7 @@ def main():
         
     # Update staking module
     if args.verbose:
-        print("🥩 Updating staking module")
+        print("🥩 Update staking module")
 
     # Replace validator pub key in genesis['app_state']['staking']['validators']
     for validator in genesis['app_state']['staking']['validators']:
@@ -304,9 +313,9 @@ def main():
             break
 
     if args.verbose:
-        print("🔋 Updating validator power")
+        print("🔋 Update validator power")
 
-    # Updating power in genesis["validators"]
+    # Update power in genesis["validators"]
     for validator in genesis["validators"]:
         if validator['address'] == new_validator.hex_address:
             validator['power'] = str(int(validator['power']) + 1000000000)
@@ -327,11 +336,11 @@ def main():
     # Update total power
     genesis['app_state']['staking']['last_total_power'] = str(int(genesis['app_state']['staking']['last_total_power']) + 1000000000)
     if args.verbose:
-        print("\tUpdating last_total_power to {}".format(genesis['app_state']['staking']['last_total_power']))
+        print("\tUpdate last_total_power to {}".format(genesis['app_state']['staking']['last_total_power']))
 
     # Update bank module
     if args.verbose:
-        print("💵 Updating bank module")
+        print("💵 Update bank module")
 
     for balance in genesis['app_state']['bank']['balances']:
         # {
