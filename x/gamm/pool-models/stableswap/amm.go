@@ -360,9 +360,9 @@ func (p *Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee
 	}
 	tokenInSupply, tokenOutSupply := reserves[0], reserves[1]
 	// We are solving for the amount of token out, hence x = tokenOutSupply, y = tokenInSupply
-	cfmmOut := solveCfmm(osmomath.BigDecFromSdkDec(tokenOutSupply), osmomath.BigDecFromSdkDec(tokenInSupply), osmomath.BigDecFromSdkDec(tokenIn.Amount.ToDec()))
+	cfmmOut := solveCfmm(osmomath.BigDecFromSDKDec(tokenOutSupply), osmomath.BigDecFromSDKDec(tokenInSupply), osmomath.BigDecFromSDKDec(tokenIn.Amount.ToDec()))
 	outAmt := p.getDescaledPoolAmt(tokenOutDenom, cfmmOut)
-	return outAmt.SdkDec(), nil
+	return outAmt.SDKDec(), nil
 }
 
 // returns inAmt as a decimal
@@ -374,9 +374,9 @@ func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee
 	tokenInSupply, tokenOutSupply := reserves[0], reserves[1]
 	// We are solving for the amount of token in, cfmm(x,y) = cfmm(x + x_in, y - y_out)
 	// x = tokenInSupply, y = tokenOutSupply, yIn = -tokenOutAmount
-	cfmmIn := solveCfmm(osmomath.BigDecFromSdkDec(tokenInSupply), osmomath.BigDecFromSdkDec(tokenOutSupply), osmomath.BigDecFromSdkDec(tokenOut.Amount.ToDec().Neg()))
+	cfmmIn := solveCfmm(osmomath.BigDecFromSDKDec(tokenInSupply), osmomath.BigDecFromSDKDec(tokenOutSupply), osmomath.BigDecFromSDKDec(tokenOut.Amount.ToDec().Neg()))
 	inAmt := p.getDescaledPoolAmt(tokenInDenom, cfmmIn.Neg())
-	return inAmt.SdkDec(), nil
+	return inAmt.SDKDec(), nil
 }
 
 func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk.Int, error) {
