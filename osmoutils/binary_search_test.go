@@ -25,7 +25,7 @@ func TestBinarySearch(t *testing.T) {
 	testErrToleranceAdditive := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20)}
 	testErrToleranceMultiplicative := ErrTolerance{AdditiveTolerance: sdk.ZeroInt(), MultiplicativeTolerance: sdk.NewDec(10)}
 	testErrToleranceBoth := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20), MultiplicativeTolerance: sdk.NewDec(1 << 3)}
-	tests := []struct {
+	tests := map[string]struct {
 		f             func(sdk.Int) (sdk.Int, error)
 		lowerbound    sdk.Int
 		upperbound    sdk.Int
@@ -43,26 +43,28 @@ func TestBinarySearch(t *testing.T) {
 		// If it is, we return current output
 		// Additive error bounds are solid addition / subtraction bounds to error, while multiplicative bounds take effect after dividing by the minimum between the two compared numbers.
 	}{
-		{lineF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 51, sdk.NewInt(1 + (1 << 25)), false},
-		{lineF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 10, sdk.Int{}, true},
-		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 51, sdk.NewInt(322539792367616), false},
-		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 10, sdk.Int{}, true},
-		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 15)), testErrToleranceAdditive, 51, sdk.NewInt(1 << 46), false},
-		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 30)), testErrToleranceAdditive, 10, sdk.Int{}, true},
-		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), testErrToleranceMultiplicative, 51, sdk.NewInt(322539792367616), false},
-		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), testErrToleranceMultiplicative, 10, sdk.Int{}, true},
-		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 15)), testErrToleranceBoth, 51, sdk.NewInt(1 << 45), false},
-		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 30)), testErrToleranceBoth, 10, sdk.Int{}, true},
+		"linear f, no err tolerance, converges": {lineF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 51, sdk.NewInt(1 + (1 << 25)), false},
+		"linear f, no err tolerance, does not converge": {lineF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 10, sdk.Int{}, true},
+		"exponential f, no err tolerance, converges": {expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 51, sdk.NewInt(322539792367616), false},
+		"exponential f, no err tolerance, does not converge": {expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 10, sdk.Int{}, true},
+		"exponential f, large additive err tolerance, converges": {expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 15)), testErrToleranceAdditive, 51, sdk.NewInt(1 << 46), false},
+		"exponential f, large additive err tolerance, does not converge": {expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 30)), testErrToleranceAdditive, 10, sdk.Int{}, true},
+		"exponential f, large multiplicative err tolerance, converges": {expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), testErrToleranceMultiplicative, 51, sdk.NewInt(322539792367616), false},
+		"exponential f, large multiplicative err tolerance, does not converge": {expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), testErrToleranceMultiplicative, 10, sdk.Int{}, true},
+		"exponential f, both err tolerances, converges": {expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 15)), testErrToleranceBoth, 51, sdk.NewInt(1 << 45), false},
+		"exponential f, both err tolerances, does not converge": {expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 30)), testErrToleranceBoth, 10, sdk.Int{}, true},
 	}
 
-	for _, tc := range tests {
-		actualSolvedInput, err := BinarySearch(tc.f, tc.lowerbound, tc.upperbound, tc.targetOutput, tc.errTolerance, tc.maxIterations)
-		if tc.expectErr {
-			require.Error(t, err)
-		} else {
-			require.NoError(t, err)
-			require.True(sdk.IntEq(t, tc.expectedSolvedInput, actualSolvedInput))
-		}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			actualSolvedInput, err := BinarySearch(tc.f, tc.lowerbound, tc.upperbound, tc.targetOutput, tc.errTolerance, tc.maxIterations)
+			if tc.expectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.True(sdk.IntEq(t, tc.expectedSolvedInput, actualSolvedInput))
+			}
+		})
 	}
 }
 
@@ -84,7 +86,7 @@ func TestBinarySearchBigDec(t *testing.T) {
 	testErrToleranceAdditive := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20)}
 	testErrToleranceMultiplicative := ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.NewDec(10)}
 	testErrToleranceBoth := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20), MultiplicativeTolerance: sdk.NewDec(1 << 3)}
-	tests := []struct {
+	tests := map[string]struct {
 		f             func(osmomath.BigDec) (osmomath.BigDec, error)
 		lowerbound    osmomath.BigDec
 		upperbound    osmomath.BigDec
@@ -102,26 +104,28 @@ func TestBinarySearchBigDec(t *testing.T) {
 		// If it is, we return current output
 		// Additive error bounds are solid addition / subtraction bounds to error, while multiplicative bounds take effect after dividing by the minimum between the two compared numbers.
 	}{
-		{lineF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), lowErrTolerance, 51, osmomath.NewBigDec(1 + (1 << 25)), false},
-		{lineF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), lowErrTolerance, 10, osmomath.BigDec{}, true},
-		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), lowErrTolerance, 51, osmomath.NewBigDec(322539792367616), false},
-		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), lowErrTolerance, 10, osmomath.BigDec{}, true},
-		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 15)), testErrToleranceAdditive, 51, osmomath.NewBigDec(1 << 46), false},
-		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 30)), testErrToleranceAdditive, 10, osmomath.BigDec{}, true},
-		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), testErrToleranceMultiplicative, 51, osmomath.NewBigDec(322539792367616), false},
-		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), testErrToleranceMultiplicative, 10, osmomath.BigDec{}, true},
-		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 15)), testErrToleranceBoth, 51, osmomath.NewBigDec(1 << 45), false},
-		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 30)), testErrToleranceBoth, 10, osmomath.BigDec{}, true},
+		"linear f, no err tolerance, converges": {lineF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), lowErrTolerance, 51, osmomath.NewBigDec(1 + (1 << 25)), false},
+		"linear f, no err tolerance, does not converge": {lineF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), lowErrTolerance, 10, osmomath.BigDec{}, true},
+		"exponential f, no err tolerance, converges": {expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), lowErrTolerance, 51, osmomath.NewBigDec(322539792367616), false},
+		"exponential f, no err tolerance, does not converge": {expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), lowErrTolerance, 10, osmomath.BigDec{}, true},
+		"exponential f, large additive err tolerance, converges": {expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 15)), testErrToleranceAdditive, 51, osmomath.NewBigDec(1 << 46), false},
+		"exponential f, large additive err tolerance, does not converge": {expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 30)), testErrToleranceAdditive, 10, osmomath.BigDec{}, true},
+		"exponential f, large multiplicative err tolerance, converges": {expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), testErrToleranceMultiplicative, 51, osmomath.NewBigDec(322539792367616), false},
+		"exponential f, large multiplicative err tolerance, does not converge": {expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), testErrToleranceMultiplicative, 10, osmomath.BigDec{}, true},
+		"exponential f, both err tolerances, converges": {expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 15)), testErrToleranceBoth, 51, osmomath.NewBigDec(1 << 45), false},
+		"exponential f, both err tolerances, does not converge": {expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 30)), testErrToleranceBoth, 10, osmomath.BigDec{}, true},
 	}
 
-	for _, tc := range tests {
-		actualSolvedInput, err := BinarySearchBigDec(tc.f, tc.lowerbound, tc.upperbound, tc.targetOutput, tc.errTolerance, tc.maxIterations)
-		if tc.expectErr {
-			require.Error(t, err)
-		} else {
-			require.NoError(t, err)
-			require.True(osmomath.DecApproxEq(t, tc.expectedSolvedInput, actualSolvedInput, osmomath.OneDec()))
-		}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			actualSolvedInput, err := BinarySearchBigDec(tc.f, tc.lowerbound, tc.upperbound, tc.targetOutput, tc.errTolerance, tc.maxIterations)
+			if tc.expectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.True(osmomath.DecApproxEq(t, tc.expectedSolvedInput, actualSolvedInput, osmomath.OneDec()))
+			}
+		})
 	}
 }
 
