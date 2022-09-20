@@ -5,7 +5,6 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v12/x/lockup/types";
 
-// Params defines the parameters for the tokenfactory module.
 message Params {
   repeated string force_unlock_allowed_addresses = 1
       [ (gogoproto.moretags) = "yaml:\"force_unlock_allowed_address\"" ];
