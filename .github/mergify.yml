@@ -15,18 +15,19 @@ pull_request_rules:
       - "#approved-reviews-by>=2"
       - base=main
       - label=A:automerge
-      - check-success=check-proto #check-generated
-      - check-success=Add PR to chain dev project #add-pr-to-project
-      - check-success=Cosmwasm Lints #contracts
-      - check-success=Test Suite #contracts
-      - check-success=Run golangci-lint #lint
-      - check-success=Run super-linter #lint
-      - check-success=e2e #test
-      - check-success=go #test
-      - check-success=labeler #labeler
-      - check-success~=^osmosis\s[[:alnum:]]+\sfor\s[[:alnum:]]+/g # Build 
-      - check-success=should_run_go_test #test
-      - check-success=test #sim
+      - and:
+        - check-success=check-proto #check-generated
+        - check-success=Add PR to chain dev project #add-pr-to-project
+        - check-success=Cosmwasm Lints #contracts
+        - check-success=Test Suite #contracts
+        - check-success=Run golangci-lint #lint
+        - check-success=Run super-linter #lint
+        - check-success=e2e #test
+        - check-success=go #test
+        - check-success=labeler #labeler
+        - check-success~=^osmosis\s[[:alnum:]]+\sfor\s[[:alnum:]]+/g # Build 
+        - check-success=should_run_go_test #test
+        - check-success=test #sim
 
     actions:
       queue:
