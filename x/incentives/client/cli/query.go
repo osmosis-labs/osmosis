@@ -30,7 +30,6 @@ func GetQueryCmd() *cobra.Command {
 	cmd.AddCommand(
 		GetCmdGauges(),
 		GetCmdToDistributeCoins(),
-		GetCmdDistributedCoins(),
 		GetCmdGaugeByID(),
 		GetCmdActiveGauges(),
 		GetCmdActiveGaugesPerDenom(),
@@ -109,42 +108,6 @@ $ %s query incentives to-distribute-coins
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, err := queryClient.ModuleToDistributeCoins(cmd.Context(), &types.ModuleToDistributeCoinsRequest{})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// GetCmdDistributedCoins returns coins that have been distributed so far.
-func GetCmdDistributedCoins() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "distributed-coins",
-		Short: "Query coins distributed so far",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query coins distributed so far.
-
-Example:
-$ %s query incentives distributed-coins
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.ModuleDistributedCoins(cmd.Context(), &types.ModuleDistributedCoinsRequest{})
 			if err != nil {
 				return err
 			}

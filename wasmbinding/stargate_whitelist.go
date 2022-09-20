@@ -81,7 +81,6 @@ func init() {
 
 	// incentives
 	setWhitelistedQuery("/osmosis.incentives.Query/ModuleToDistributeCoins", &incentivestypes.ModuleToDistributeCoinsResponse{})
-	setWhitelistedQuery("/osmosis.incentives.Query/ModuleDistributedCoins", &incentivestypes.ModuleDistributedCoinsResponse{})
 	setWhitelistedQuery("/osmosis.incentives.Query/LockableDurations", &incentivestypes.QueryLockableDurationsResponse{})
 
 	// lockup
