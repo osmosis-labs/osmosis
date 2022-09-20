@@ -13,10 +13,13 @@ services:
     volumes:
       - ./scripts/start.sh:/osmosis/start.sh
       - ./scripts/testnetify.py:/osmosis/testnetify.py
-      # - ./.osmosisd/:/osmosis/.osmosisd/
       - ./state_export.json:/osmosis/genesis.json
+      - ./.osmosisd/:/osmosis/.osmosisd/
     entrypoint:
       - /osmosis/start.sh
+    environment:
+      - MONIKER=val
+      - CHAIN_ID=localosmosis
     ports:
       - 26657:26657
       - 1317:1317
