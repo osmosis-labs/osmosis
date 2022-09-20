@@ -212,13 +212,17 @@ def main():
     # Update gov module
     if args.verbose:
         print("🗳️ Update gov module")
-        print("\tSet governance_voting_period to", config["governance_voting_period"])
+        print("\tModify governance_voting_period from {} to {}".format(
+            genesis['app_state']['gov']['voting_params']['voting_period'],
+            config["governance_voting_period"]))
     genesis['app_state']['gov']['voting_params']['voting_period'] = config["governance_voting_period"]
 
     # Update epochs module
     if args.verbose:
         print("⌛ Update epochs module")
-        print("\tSet epoch_duration to", config["epoch_duration"])
+        print("\tModify epoch_duration from {} to {}".format(
+            genesis['app_state']['epochs']['epochs'][0]['duration'],
+            config["epoch_duration"]))
         print("\tReset current_epoch_start_time")
     genesis['app_state']['epochs']['epochs'][0]['duration'] = config["epoch_duration"]
     genesis['app_state']['epochs']['epochs'][0]['current_epoch_start_time'] = datetime.now().isoformat() + 'Z'

@@ -13,7 +13,7 @@ services:
     volumes:
       - ./scripts/start.sh:/osmosis/start.sh
       - ./scripts/testnetify.py:/osmosis/testnetify.py
-      - ./state_export.json:/osmosis/genesis.json
+      - ./state_export.json:/osmosis/state_export.json
       - ./.osmosisd/:/osmosis/.osmosisd/
     entrypoint:
       - /osmosis/start.sh
