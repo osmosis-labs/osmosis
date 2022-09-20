@@ -65,35 +65,12 @@ def replace_validator(genesis, old_validator, new_validator):
     
     # replacing operator_address in lockup > synthetic_locks
     for synthetic_lock in genesis['app_state']['lockup']['synthetic_locks']:
-        # {
-        #   "duration": "1209600s",
-        #   "end_time": "0001-01-01T00:00:00Z",
-        #   "synth_denom": "gamm/pool/704/superbonding/osmovaloper1pgl5usqpelz3a4c04g6t3yyvlrc9yseylmtcnt",
-        #   "underlying_lock_id": "1367816"
-        # }
-
         break # skip for now
         if synthetic_lock['synth_denom'].endswith(old_validator.operator_address):
             synthetic_lock['synth_denom'] = synthetic_lock['synth_denom'].replace(old_validator.operator_address, new_validator.operator_address)
 
     # Replacing operator_address in incentives > gauges
     for gauge in genesis['app_state']['incentives']['gauges']:
-        # {
-        #     "coins": [],
-        #     "distribute_to": {
-        #         "denom": "gamm/pool/3/superbonding/osmovaloper1969qjenvrjxrypynv36j9hjmlxrqgmy0xq3dg2",
-        #         "duration": "1209600s",
-        #         "lock_query_type": "ByDuration",
-        #         "timestamp": "0001-01-01T00:00:00Z"
-        #     },
-        #     "distributed_coins": [],
-        #     "filled_epochs": "0",
-        #     "id": "29620",
-        #     "is_perpetual": true,
-        #     "num_epochs_paid_over": "1",
-        #     "start_time": "2022-09-10T12:19:10.101498191Z"
-        # }
-
         break # skip for now
         if gauge['distribute_to']['denom'].endswith(old_validator.operator_address):
             gauge['distribute_to']['denom'] = gauge['distribute_to']['denom'].replace(old_validator.operator_address, new_validator.operator_address)
@@ -211,20 +188,20 @@ def main():
     
     # Replace chain-id
     if args.verbose:
-        print("🔗 Replacing chain-id {} with {}".format(genesis['chain_id'], args.chain_id))
+        print("🔗 Replace chain-id {} with {}".format(genesis['chain_id'], args.chain_id))
     genesis['chain_id'] = args.chain_id
 
     # Update gov module
     if args.verbose:
         print("🗳️ Update gov module")
-        print("\tSetting governance_voting_period to", config["governance_voting_period"])
+        print("\tSet governance_voting_period to", config["governance_voting_period"])
     genesis['app_state']['gov']['voting_params']['voting_period'] = config["governance_voting_period"]
 
     # Update epochs module
     if args.verbose:
         print("⌛ Update epochs module")
-        print("\tSetting epoch_duration to", config["epoch_duration"])
-        print("\tResetting current_epoch_start_time")
+        print("\tSet epoch_duration to", config["epoch_duration"])
+        print("\tReset current_epoch_start_time")
     genesis['app_state']['epochs']['epochs'][0]['duration'] = config["epoch_duration"]
     genesis['app_state']['epochs']['epochs'][0]['current_epoch_start_time'] = datetime.now().isoformat() + 'Z'
     
@@ -246,7 +223,7 @@ def main():
 
     # Impersonate validator
     if args.verbose:
-        print("🚀 Replacing validator")
+        print("🚀 Replace validator")
         # print("\t{:50} -> {}".format(old_validator.moniker, new_validator.moniker))
         print("\t{:50} -> {}".format(old_validator.pubkey, new_validator.pubkey))
         print("\t{:50} -> {}".format(old_validator.consensus_address, new_validator.consensus_address))
@@ -257,7 +234,7 @@ def main():
 
     # Impersonate account
     if args.verbose:
-        print("🧪 Replacing account")
+        print("🧪 Replace account")
         print("\t{:50} -> {}".format(old_account.address, new_account.address))
         print("\t{:50} -> {}".format(old_account.pubkey, new_account.pubkey))
     
@@ -269,28 +246,23 @@ def main():
 
     # Replace validator pub key in genesis['app_state']['staking']['validators']
     for validator in genesis['app_state']['staking']['validators']:
-
-        if validator['operator_address'] == new_validator.operator_address:
+        
+        if validator['description']['moniker'] == old_validator.moniker:
             
             # Update delegator shares
             validator['delegator_shares'] = str(int(float(validator['delegator_shares']) + 1000000000000000)) + ".000000000000000000"
-            print("\tUpdate {} delegated shares to {}".format(validator['operator_address'], validator['delegator_shares']))
+            print("\tUpdate delegator shares to {}".format(validator['delegator_shares']))
 
             # Update tokens
             validator['tokens'] = str(int(validator['tokens']) + 1000000000000000)
-            print("\tUpdate {} tokens to {}".format(validator['operator_address'], validator['tokens']))
+            print("\tUpdate tokens to {}".format(validator['tokens']))
             break
     
     # Update self delegation on operator address
     for delegation in genesis['app_state']['staking']['delegations']:
-        # {
-        #   "delegator_address": "osmo1qqq9txnw4c77sdvzx0tkedsafl5s3vk7f6y6ca",
-        #   "shares": "100000000.000000000000000000",
-        #   "validator_address": "osmovaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4ep88n0y4"
-        # }
         if delegation['delegator_address'] == new_account.address:
 
-            delegation['validator_address'] = new_validator.operator_address
+            # delegation['validator_address'] = new_validator.operator_address
             delegation['shares'] = str(int(float(delegation['shares'])) + 1000000000000000) + ".000000000000000000"
 
             print("\tUpdate {} delegation shares to {} to {}".format(new_account.address, delegation['validator_address'], delegation['shares']))
@@ -298,15 +270,6 @@ def main():
 
     # Update genesis['app_state']['distribution']['delegator_starting_infos'] on operator address
     for delegator_starting_info in genesis['app_state']['distribution']['delegator_starting_infos']:
-        # {
-        #   "delegator_address": "osmo10p27pypvmlp6njzy4vprpd0svtmqesascst59z",
-        #   "starting_info": {
-        #     "height": "3854640",
-        #     "previous_period": "2",
-        #     "stake": "10.000000000000000000"
-        #   },
-        #   "validator_address": "osmovaloper1qyksxgv03ngylanwzh2mx6k768frgjc0em6800"
-        # }
         if delegator_starting_info['delegator_address'] == new_account.address:
             delegator_starting_info['starting_info']['stake'] = str(int(float(delegator_starting_info['starting_info']['stake']) + 1000000000000000))+".000000000000000000"
             print("\tUpdate {} stake to {}".format(delegator_starting_info['delegator_address'], delegator_starting_info['starting_info']['stake']))
@@ -323,10 +286,6 @@ def main():
             break 
     
     for validator_power in genesis['app_state']['staking']['last_validator_powers']:
-        # {
-        #   "address": "osmovaloper19fec46jadzr4y6gd596kkf8sskm7eyq32kkwc7",
-        #   "power": "504451"
-        # }
         if validator_power['address'] == new_validator.operator_address:
             validator_power['power'] = str(int(validator_power['power']) + 1000000000)
             if args.verbose:
@@ -343,19 +302,6 @@ def main():
         print("💵 Update bank module")
 
     for balance in genesis['app_state']['bank']['balances']:
-        # {
-        #   "address": "osmo1qqq8fdsrcsz4jnlvrcqa6ds2ruflgrgej32k90",
-        #   "coins": [
-        #     {
-        #       "amount": "459000000",
-        #       "denom": "uosmo"
-        #     },
-        #     {
-        #       "amount": "43286104",
-        #       "denom": "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC"
-        #     }
-        #   ]
-        # }
         if balance['address'] == new_account.address:
             for coin in balance['coins']:
                 if coin['denom'] == "uosmo":

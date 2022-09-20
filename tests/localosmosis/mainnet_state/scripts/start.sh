@@ -10,8 +10,10 @@ MONIKER=val
 MNEMONIC="bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort"
 
 install_prerequisites () {
-    apk add --no-cache dasel
-    apk add --no-cache python3 py3-pip
+    apk add -q --no-cache \
+        dasel \
+        python3 \
+        py3-pip
 }
 
 edit_config () {
@@ -27,7 +29,7 @@ edit_config () {
 
 install_prerequisites
 
-echo $MNEMONIC | osmosisd init -o --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --recover $MONIKER 2>& /dev/null
+echo $MNEMONIC | osmosisd init -o --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --recover $MONIKER 2> /dev/null
 
 VALIDATOR_PUBKEY_JSON=$(osmosisd tendermint show-validator --home $OSMOSIS_HOME)
 VALIDATOR_PUBKEY=$(echo $VALIDATOR_PUBKEY_JSON | dasel -r json '.key' --plain)
@@ -44,7 +46,9 @@ python3 -u testnetify.py \
    --validator-operator-address $VALIDATOR_OPERATOR_ADDRESS \
    --validator-consensus-address $VALIDATOR_CONSENSUS_ADDRESS \
    --validator-pubkey $VALIDATOR_PUBKEY \
-   -v --pretty-output \
+   -v
+#  -v --pretty-output
+
 #    --account-pubkey $ACCOUNT_PUBKEY \
 #    --account-address $ACCOUNT_ADDRESS \
 
