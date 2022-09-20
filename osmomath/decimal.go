@@ -909,6 +909,8 @@ func (x BigDec) ApproxLog2() BigDec {
 		y = y + 1
 	}
 
+	// exponentiate to simplify truncation necessary for
+	// looking up values in the table.
 	lookupKey := x.MulInt64(10).TruncateInt()
 	if lookupKey.GTE(NewInt(20)) || lookupKey.LT(NewInt(10)) {
 		panic(fmt.Sprintf("invalid lookup key (%s), must be 10 <= lookup key < 2", lookupKey))
