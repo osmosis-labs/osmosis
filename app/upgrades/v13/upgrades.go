@@ -11,10 +11,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/app/upgrades"
 )
 
-// We set the app version to pre-upgrade because it will be incremented by one
-// after the upgrade is applied by the handler.
-const preUpgradeAppVersion = 1
-
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
