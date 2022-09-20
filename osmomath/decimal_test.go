@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v2"
+
+	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
 )
 
 type decimalTestSuite struct {
@@ -152,8 +154,8 @@ func (s *decimalTestSuite) TestDecFloat64() {
 
 func (s *decimalTestSuite) TestSdkDec() {
 	tests := []struct {
-		d    BigDec
-		want sdk.Dec
+		d        BigDec
+		want     sdk.Dec
 		expPanic bool
 	}{
 		{NewBigDec(0), sdk.MustNewDecFromStr("0.000000000000000000"), false},
@@ -177,8 +179,8 @@ func (s *decimalTestSuite) TestSdkDec() {
 
 func (s *decimalTestSuite) TestBigDecFromSdkDec() {
 	tests := []struct {
-		d    sdk.Dec
-		want BigDec
+		d        sdk.Dec
+		want     BigDec
 		expPanic bool
 	}{
 		{sdk.MustNewDecFromStr("0.000000000000000000"), NewBigDec(0), false},
@@ -441,14 +443,14 @@ func (s *decimalTestSuite) TestDecCeil() {
 		input    BigDec
 		expected BigDec
 	}{
-		{MustNewDecFromStr("0.001"), NewBigDec(1)}, // 0.001 => 1.0
-		{MustNewDecFromStr("-0.001"), ZeroDec()},   // -0.001 => 0.0
-		{ZeroDec(), ZeroDec()}, // 0.0 => 0.0
-		{MustNewDecFromStr("0.9"), NewBigDec(1)},    // 0.9 => 1.0
+		{MustNewDecFromStr("0.001"), NewBigDec(1)},   // 0.001 => 1.0
+		{MustNewDecFromStr("-0.001"), ZeroDec()},     // -0.001 => 0.0
+		{ZeroDec(), ZeroDec()},                       // 0.0 => 0.0
+		{MustNewDecFromStr("0.9"), NewBigDec(1)},     // 0.9 => 1.0
 		{MustNewDecFromStr("4.001"), NewBigDec(5)},   // 4.001 => 5.0
 		{MustNewDecFromStr("-4.001"), NewBigDec(-4)}, // -4.001 => -4.0
-		{MustNewDecFromStr("4.7"), NewBigDec(5)},   // 4.7 => 5.0
-		{MustNewDecFromStr("-4.7"), NewBigDec(-4)}, // -4.7 => -4.0
+		{MustNewDecFromStr("4.7"), NewBigDec(5)},     // 4.7 => 5.0
+		{MustNewDecFromStr("-4.7"), NewBigDec(-4)},   // -4.7 => -4.0
 	}
 
 	for i, tc := range testCases {
@@ -463,11 +465,11 @@ func (s *decimalTestSuite) TestPower() {
 		power    uint64
 		expected BigDec
 	}{
-		{OneDec(), 10, OneDec()},                                               // 1.0 ^ (10) => 1.0
-		{NewDecWithPrec(5, 1), 2, NewDecWithPrec(25, 2)},                       // 0.5 ^ 2 => 0.25
-		{NewDecWithPrec(2, 1), 2, NewDecWithPrec(4, 2)},                        // 0.2 ^ 2 => 0.04
-		{NewDecFromInt(NewInt(3)), 3, NewDecFromInt(NewInt(27))},               // 3 ^ 3 => 27
-		{NewDecFromInt(NewInt(-3)), 4, NewDecFromInt(NewInt(81))},              // -3 ^ 4 = 81
+		{OneDec(), 10, OneDec()},                                                                   // 1.0 ^ (10) => 1.0
+		{NewDecWithPrec(5, 1), 2, NewDecWithPrec(25, 2)},                                           // 0.5 ^ 2 => 0.25
+		{NewDecWithPrec(2, 1), 2, NewDecWithPrec(4, 2)},                                            // 0.2 ^ 2 => 0.04
+		{NewDecFromInt(NewInt(3)), 3, NewDecFromInt(NewInt(27))},                                   // 3 ^ 3 => 27
+		{NewDecFromInt(NewInt(-3)), 4, NewDecFromInt(NewInt(81))},                                  // -3 ^ 4 = 81
 		{MustNewDecFromStr("1.414213562373095048801688724209698079"), 2, NewDecFromInt(NewInt(2))}, // 1.414213562373095048801688724209698079 ^ 2 = 2
 	}
 
@@ -483,14 +485,14 @@ func (s *decimalTestSuite) TestApproxRoot() {
 		root     uint64
 		expected BigDec
 	}{
-		{OneDec(), 10, OneDec()},                                                       // 1.0 ^ (0.1) => 1.0
-		{NewDecWithPrec(25, 2), 2, NewDecWithPrec(5, 1)},                               // 0.25 ^ (0.5) => 0.5
-		{NewDecWithPrec(4, 2), 2, NewDecWithPrec(2, 1)},                                // 0.04 ^ (0.5) => 0.2
-		{NewDecFromInt(NewInt(27)), 3, NewDecFromInt(NewInt(3))},                       // 27 ^ (1/3) => 3
-		{NewDecFromInt(NewInt(-81)), 4, NewDecFromInt(NewInt(-3))},                     // -81 ^ (0.25) => -3
-		{NewDecFromInt(NewInt(2)), 2, MustNewDecFromStr("1.414213562373095048801688724209698079")},         // 2 ^ (0.5) => 1.414213562373095048801688724209698079
+		{OneDec(), 10, OneDec()},                                                                         // 1.0 ^ (0.1) => 1.0
+		{NewDecWithPrec(25, 2), 2, NewDecWithPrec(5, 1)},                                                 // 0.25 ^ (0.5) => 0.5
+		{NewDecWithPrec(4, 2), 2, NewDecWithPrec(2, 1)},                                                  // 0.04 ^ (0.5) => 0.2
+		{NewDecFromInt(NewInt(27)), 3, NewDecFromInt(NewInt(3))},                                         // 27 ^ (1/3) => 3
+		{NewDecFromInt(NewInt(-81)), 4, NewDecFromInt(NewInt(-3))},                                       // -81 ^ (0.25) => -3
+		{NewDecFromInt(NewInt(2)), 2, MustNewDecFromStr("1.414213562373095048801688724209698079")},       // 2 ^ (0.5) => 1.414213562373095048801688724209698079
 		{NewDecWithPrec(1005, 3), 31536000, MustNewDecFromStr("1.000000000158153903837946258002096839")}, // 1.005 ^ (1/31536000) ≈ 1.000000000158153903837946258002096839
-		{SmallestDec(), 2, NewDecWithPrec(1, 18)},                                       // 1e-36 ^ (0.5) => 1e-18
+		{SmallestDec(), 2, NewDecWithPrec(1, 18)},                                                        // 1e-36 ^ (0.5) => 1e-18
 		{SmallestDec(), 3, MustNewDecFromStr("0.000000000001000000000000000002431786")},                  // 1e-36 ^ (1/3) => 1e-12
 		{NewDecWithPrec(1, 8), 3, MustNewDecFromStr("0.002154434690031883721759293566519280")},           // 1e-8 ^ (1/3) ≈ 0.002154434690031883721759293566519
 	}
@@ -511,11 +513,11 @@ func (s *decimalTestSuite) TestApproxSqrt() {
 		input    BigDec
 		expected BigDec
 	}{
-		{OneDec(), OneDec()},                                                // 1.0 => 1.0
-		{NewDecWithPrec(25, 2), NewDecWithPrec(5, 1)},                       // 0.25 => 0.5
-		{NewDecWithPrec(4, 2), NewDecWithPrec(2, 1)},                        // 0.09 => 0.3
-		{NewDecFromInt(NewInt(9)), NewDecFromInt(NewInt(3))},                // 9 => 3
-		{NewDecFromInt(NewInt(-9)), NewDecFromInt(NewInt(-3))},              // -9 => -3
+		{OneDec(), OneDec()},                                                                    // 1.0 => 1.0
+		{NewDecWithPrec(25, 2), NewDecWithPrec(5, 1)},                                           // 0.25 => 0.5
+		{NewDecWithPrec(4, 2), NewDecWithPrec(2, 1)},                                            // 0.09 => 0.3
+		{NewDecFromInt(NewInt(9)), NewDecFromInt(NewInt(3))},                                    // 9 => 3
+		{NewDecFromInt(NewInt(-9)), NewDecFromInt(NewInt(-3))},                                  // -9 => -3
 		{NewDecFromInt(NewInt(2)), MustNewDecFromStr("1.414213562373095048801688724209698079")}, // 2 => 1.414213562373095048801688724209698079
 	}
 
@@ -648,5 +650,64 @@ func BenchmarkMarshalTo(b *testing.B) {
 				}
 			}
 		}
+	}
+}
+
+func (s *decimalTestSuite) TestLog2() {
+
+	tests := map[string]struct {
+		initialValue BigDec
+		expected     BigDec
+
+		expectedPanic bool
+	}{
+		"log_2{0.99}; not supported; panic": {
+			initialValue: NewDecWithPrec(99, 2),
+
+			expectedPanic: true,
+		},
+		"log_2{1} = 0": {
+			initialValue: NewBigDec(1),
+			expected:     NewBigDec(0),
+		},
+		"log_2{2} = 1": {
+			initialValue: NewBigDec(2),
+			expected:     NewBigDec(1),
+		},
+		"log_2{512} = 9": {
+			initialValue: NewBigDec(512),
+			expected:     NewBigDec(9),
+		},
+		"log_2{600} = 9": {
+			initialValue: NewBigDec(580),
+			// TODO: true value is: 9.179909090014934468590092754117374938
+			// Need better lookup table.
+			expected: MustNewDecFromStr("9.137503523749934908329043617236402782"),
+		},
+		"log_2{1024} = 10": {
+			initialValue: NewBigDec(1024),
+			expected:     NewBigDec(10),
+		},
+		"log_2{1024.987654321} = 10": {
+			initialValue: NewDecWithPrec(1024987654321, 9),
+			// TODO: true value is: 10.001390817654141324352719749259888355
+			// Need better lookup table
+			expected: MustNewDecFromStr("10.000000000000000000000000000000000000"),
+		},
+		"log_2{912648174127941279170121098210.92821920190204131121} = 99.525973560175362367047484597337715868": {
+			initialValue: MustNewDecFromStr("912648174127941279170121098210.92821920190204131121"),
+			// TODO: true value is: 99.525973560175362367047484597337715868
+			// Need better lookup table
+			expected: MustNewDecFromStr("99.485426827170241759571649887742440632"),
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			osmoassert.ConditionalPanic(s.T(), tc.expectedPanic, func() {
+				res := tc.initialValue.ApproxLog2()
+				s.Require().Equal(tc.expected, res)
+			})
+		})
 	}
 }
