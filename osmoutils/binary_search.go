@@ -120,7 +120,7 @@ func BinarySearch(f func(input sdk.Int) (sdk.Int, error),
 		} else if compRes < 0 {
 			lowerbound = curEstimate
 		} else {
-			break
+			return curEstimate, nil
 		}
 		curEstimate = lowerbound.Add(upperbound).QuoRaw(2)
 		curOutput, err = f(curEstimate)
@@ -128,10 +128,8 @@ func BinarySearch(f func(input sdk.Int) (sdk.Int, error),
 			return sdk.Int{}, err
 		}
 	}
-	if curIteration == maxIterations {
-		return sdk.Int{}, errors.New("hit maximum iterations, did not converge fast enough")
-	}
-	return curEstimate, nil
+
+	return sdk.Int{}, errors.New("hit maximum iterations, did not converge fast enough")
 }
 
 // Binary search BigDec inputs between [lowerbound, upperbound] to a monotonic increasing function f
@@ -158,7 +156,7 @@ func BinarySearchBigDec(f func(input osmomath.BigDec) (osmomath.BigDec, error),
 		} else if compRes < 0 {
 			lowerbound = curEstimate
 		} else {
-			break
+			return curEstimate, nil
 		}
 		curEstimate = lowerbound.Add(upperbound).Quo(osmomath.NewBigDec(2))
 		curOutput, err = f(curEstimate)
@@ -166,8 +164,6 @@ func BinarySearchBigDec(f func(input osmomath.BigDec) (osmomath.BigDec, error),
 			return osmomath.BigDec{}, err
 		}
 	}
-	if curIteration == maxIterations {
-		return osmomath.BigDec{}, errors.New("hit maximum iterations, did not converge fast enough")
-	}
-	return curEstimate, nil
+
+	return osmomath.BigDec{}, errors.New("hit maximum iterations, did not converge fast enough")
 }
