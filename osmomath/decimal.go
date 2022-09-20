@@ -234,7 +234,8 @@ func (d BigDec) GTE(d2 BigDec) bool   { return (d.i).Cmp(d2.i) >= 0 }          /
 func (d BigDec) LT(d2 BigDec) bool    { return (d.i).Cmp(d2.i) < 0 }           // less than
 func (d BigDec) LTE(d2 BigDec) bool   { return (d.i).Cmp(d2.i) <= 0 }          // less than or equal
 func (d BigDec) Neg() BigDec          { return BigDec{new(big.Int).Neg(d.i)} } // reverse the decimal sign
-func (d BigDec) Abs() BigDec          { return BigDec{new(big.Int).Abs(d.i)} } // absolute value
+// nolint: stylecheck
+func (d BigDec) Abs() BigDec { return BigDec{new(big.Int).Abs(d.i)} } // absolute value
 
 // BigInt returns a copy of the underlying big.Int.
 func (d BigDec) BigInt() *big.Int {
