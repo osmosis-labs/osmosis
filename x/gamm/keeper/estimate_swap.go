@@ -1,10 +1,7 @@
 package keeper
 
 import (
-	"errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
@@ -17,6 +14,8 @@ func (k Keeper) EstimateMultihopSwapExactAmountIn(
 	tokenIn sdk.Coin,
 	tokenOutMinAmount sdk.Int,
 ) (tokenOutAmount sdk.Int, err error) {
+	// use cache context so that pool state is not mutated after estimation
+	cacheCtx, _ := ctx.CacheContext()
 	for i, route := range routes {
 		swapFeeMultiplier := sdk.OneDec()
 		if types.SwapAmountInRoutes(routes).IsOsmoRoutedMultihop() {
@@ -31,15 +30,15 @@ func (k Keeper) EstimateMultihopSwapExactAmountIn(
 		}
 
 		// Execute the expected swap on the current routed pool
-		pool, poolErr := k.getPoolForSwap(ctx, route.PoolId)
+		pool, poolErr := k.getPoolForSwap(cacheCtx, route.PoolId)
 		if poolErr != nil {
 			return sdk.Int{}, poolErr
 		}
 
-		swapFee := pool.GetSwapFee(ctx).Mul(swapFeeMultiplier)
+		swapFee := pool.GetSwapFee(cacheCtx).Mul(swapFeeMultiplier)
 
 		// Execute the expected swap on the current routed pool
-		tokenOutAmount, err = k.EstimateSwapExactAmountIn(ctx, route.PoolId, tokenIn, route.TokenOutDenom, _outMinAmount, swapFee)
+		tokenOutAmount, err = k.EstimateSwapExactAmountIn(cacheCtx, route.PoolId, tokenIn, route.TokenOutDenom, _outMinAmount, swapFee)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -72,43 +71,8 @@ func (k Keeper) EstimateSwapExactAmountIn(
 		return tokenOut.Amount, err
 	}
 
-	err = k.estimateUpdatePoolForSwap(ctx, pool, tokenIn, tokenOut)
+	err = k.updatePoolForSwap(ctx, pool, tokenIn, tokenOut)
 	return tokenOut.Amount, err
-}
-
-// swapExactAmountInNoTokenSend performs `SwapOutAmtGivenIn` for the given inputs,
-// and potentially mutates state. It does not save the new pool struct, or do token transfers.
-func (k Keeper) swapExactAmountInNoTokenSend(
-	ctx sdk.Context,
-	pool types.PoolI,
-	tokenIn sdk.Coin,
-	tokenOutDenom string,
-	tokenOutMinAmount sdk.Int,
-	swapFee sdk.Dec,
-) (updatedPool types.PoolI, tokenOut sdk.Coin, err error) {
-	if tokenIn.Denom == tokenOutDenom {
-		return pool, sdk.Coin{}, errors.New("cannot trade same denomination in and out")
-	}
-	tokensIn := sdk.Coins{tokenIn}
-
-	// Executes the swap in the pool and stores the output. Updates pool assets but
-	// does not actually transfer any tokens to or from the pool.
-	tokenOutCoin, err := pool.SwapOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
-	if err != nil {
-		return pool, sdk.Coin{}, err
-	}
-
-	tokenOutAmount := tokenOutCoin.Amount
-
-	if !tokenOutAmount.IsPositive() {
-		return pool, sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
-	}
-
-	if tokenOutAmount.LT(tokenOutMinAmount) {
-		return pool, sdk.Coin{}, sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", tokenOutDenom)
-	}
-
-	return pool, tokenOutCoin, nil
 }
 
 // EstimateMultihopSwapExactAmountOut iterates `EstimateSwapExactAmountOut` and returns
@@ -119,6 +83,8 @@ func (k Keeper) EstimateMultihopSwapExactAmountOut(
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
 ) (tokenInAmount sdk.Int, err error) {
+	// use cache context so that pool state is not mutated after estimation
+	cacheCtx, _ := ctx.CacheContext()
 	swapFeeMultiplier := sdk.OneDec()
 
 	if types.SwapAmountOutRoutes(routes).IsOsmoRoutedMultihop() {
@@ -126,7 +92,7 @@ func (k Keeper) EstimateMultihopSwapExactAmountOut(
 	}
 
 	// Determine what the estimated input would be for each pool along the multihop route
-	insExpected, err := k.createMultihopExpectedSwapOuts(ctx, routes, tokenOut, swapFeeMultiplier)
+	insExpected, err := k.createMultihopExpectedSwapOuts(cacheCtx, routes, tokenOut, swapFeeMultiplier)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -149,13 +115,13 @@ func (k Keeper) EstimateMultihopSwapExactAmountOut(
 		}
 
 		// Execute the expected swap on the current routed pool
-		pool, poolErr := k.getPoolForSwap(ctx, route.PoolId)
+		pool, poolErr := k.getPoolForSwap(cacheCtx, route.PoolId)
 		if poolErr != nil {
 			return sdk.Int{}, poolErr
 		}
-		swapFee := pool.GetSwapFee(ctx).Mul(swapFeeMultiplier)
+		swapFee := pool.GetSwapFee(cacheCtx).Mul(swapFeeMultiplier)
 		// Execute the expected swap on the current routed pool
-		_tokenInAmount, err := k.EstimateSwapExactAmountOut(ctx, route.PoolId, route.TokenInDenom, insExpected[i], _tokenOut, swapFee)
+		_tokenInAmount, err := k.EstimateSwapExactAmountOut(cacheCtx, route.PoolId, route.TokenInDenom, insExpected[i], _tokenOut, swapFee)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -188,68 +154,11 @@ func (k Keeper) EstimateSwapExactAmountOut(
 		return sdk.Int{}, err
 	}
 
-	_, tokenIn, err := k.estimateSwapExactAmountOut(ctx, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
+	_, tokenIn, err := k.swapExactAmountOutNoTokenSend(ctx, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
 	if err != nil {
 		return tokenIn.Amount, err
 	}
 
-	err = k.estimateUpdatePoolForSwap(ctx, pool, tokenIn, tokenOut)
+	err = k.updatePoolForSwap(ctx, pool, tokenIn, tokenOut)
 	return tokenIn.Amount, err
-}
-
-func (k Keeper) estimateSwapExactAmountOut(
-	ctx sdk.Context,
-	pool types.PoolI,
-	tokenInDenom string,
-	tokenInMaxAmount sdk.Int,
-	tokenOut sdk.Coin,
-	swapFee sdk.Dec,
-) (updatedPool types.PoolI, tokenIn sdk.Coin, err error) {
-	if tokenInDenom == tokenOut.Denom {
-		return pool, sdk.Coin{}, errors.New("cannot trade same denomination in and out")
-	}
-
-	poolOutBal := pool.GetTotalPoolLiquidity(ctx).AmountOf(tokenOut.Denom)
-	if tokenOut.Amount.GTE(poolOutBal) {
-		return pool, sdk.Coin{}, sdkerrors.Wrapf(types.ErrTooManyTokensOut,
-			"can't get more tokens out than there are tokens in the pool")
-	}
-
-	tokenIn, err = pool.SwapInAmtGivenOut(ctx, sdk.Coins{tokenOut}, tokenInDenom, swapFee)
-	if err != nil {
-		return pool, sdk.Coin{}, err
-	}
-	tokenInAmount := tokenIn.Amount
-
-	if tokenInAmount.LTE(sdk.ZeroInt()) {
-		return pool, sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
-	}
-
-	if tokenInAmount.GT(tokenInMaxAmount) {
-		return pool, sdk.Coin{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "Swap requires %s, which is greater than the amount %s", tokenIn, tokenInMaxAmount)
-	}
-
-	return pool, tokenIn, nil
-}
-
-// estimateUpdatePoolForSwap updates the pool balance.
-// This method does not include emitting hooks or sending the actual asset from
-// the sender to the pool or vice versa, as this is designed to be used by query methods.
-func (k Keeper) estimateUpdatePoolForSwap(
-	ctx sdk.Context,
-	pool types.PoolI,
-	tokenIn sdk.Coin,
-	tokenOut sdk.Coin,
-) error {
-	tokensIn := sdk.Coins{tokenIn}
-	tokensOut := sdk.Coins{tokenOut}
-
-	err := k.setPool(ctx, pool)
-	if err != nil {
-		return err
-	}
-
-	k.RecordTotalLiquidityIncrease(ctx, tokensIn)
-	k.RecordTotalLiquidityDecrease(ctx, tokensOut)
-	return err
 }

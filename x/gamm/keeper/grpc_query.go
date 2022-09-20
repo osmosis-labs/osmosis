@@ -249,7 +249,7 @@ func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.Query
 		return nil, status.Errorf(codes.InvalidArgument, "invalid token: %s", err.Error())
 	}
 
-	sdkCtx, _ := sdk.UnwrapSDKContext(ctx).CacheContext()
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	tokenOutAmount, err := q.Keeper.EstimateMultihopSwapExactAmountIn(sdkCtx, req.Routes, tokenIn, sdk.NewInt(1))
 	if err != nil {
@@ -280,7 +280,7 @@ func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.Quer
 		return nil, status.Errorf(codes.InvalidArgument, "invalid token: %s", err.Error())
 	}
 
-	sdkCtx, _ := sdk.UnwrapSDKContext(ctx).CacheContext()
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	tokenInAmount, err := q.Keeper.EstimateMultihopSwapExactAmountOut(sdkCtx, req.Routes, sdkIntMaxValue, tokenOut)
 	if err != nil {
