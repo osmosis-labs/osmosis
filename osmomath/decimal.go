@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NOTE: never use new(BigDec) or else we will panic unmarshalling into the
@@ -18,11 +20,11 @@ type BigDec struct {
 
 const (
 	// number of decimal places
-	Precision = 18
+	Precision = 36
 
 	// bytes required to represent the above precision
-	// Ceiling[Log2[999 999 999 999 999 999]]
-	DecimalPrecisionBits = 60
+	// Ceiling[Log2[10**Precision - 1]]
+	DecimalPrecisionBits = 120
 
 	maxDecBitLen = maxBitLen + DecimalPrecisionBits
 
@@ -492,6 +494,32 @@ func (d BigDec) MustFloat64() float64 {
 	} else {
 		return value
 	}
+}
+
+// SdkDec returns the Sdk.Dec representation of a BigDec.
+// Values in any additional decimal places are truncated.
+func (d BigDec) SDKDec() sdk.Dec {
+	precisionDiff := Precision - sdk.Precision
+	precisionFactor := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(precisionDiff)), nil)
+
+	if precisionDiff < 0 {
+		panic("invalid decimal precision")
+	}
+
+	// Truncate any additional decimal values that exist due to BigDec's additional precision
+	// This relies on big.Int's Quo function doing floor division
+	intRepresentation := new(big.Int).Quo(d.BigInt(), precisionFactor)
+
+	// convert int representation back to SDK Dec precision
+	truncatedDec := sdk.NewDecFromBigIntWithPrec(intRepresentation, sdk.Precision)
+
+	return truncatedDec
+}
+
+// BigDecFromSdkDec returns the BigDec representation of an SdkDec.
+// Values in any additional decimal places are truncated.
+func BigDecFromSDKDec(d sdk.Dec) BigDec {
+	return NewDecFromBigIntWithPrec(d.BigInt(), sdk.Precision)
 }
 
 //     ____

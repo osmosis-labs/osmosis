@@ -20,4 +20,8 @@ message GenesisState {
     (gogoproto.nullable) = true,
     (gogoproto.moretags) = "yaml:\"distr_info\""
   ];
+  PoolToGauges pool_to_gauges = 4 [
+    (gogoproto.nullable) = true,
+    (gogoproto.moretags) = "yaml:\"pool_to_gauges\""
+  ];
 }

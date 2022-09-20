@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v12/osmomath"
 )
 
 func BenchmarkCFMM(b *testing.B) {
@@ -20,9 +20,9 @@ func BenchmarkBinarySearch(b *testing.B) {
 	}
 }
 
-func runCalc(solve func(sdk.Dec, sdk.Dec, sdk.Dec) sdk.Dec) {
-	xReserve := sdk.NewDec(rand.Int63n(100000) + 50000)
-	yReserve := sdk.NewDec(rand.Int63n(100000) + 50000)
-	yIn := sdk.NewDec(rand.Int63n(100000))
+func runCalc(solve func(osmomath.BigDec, osmomath.BigDec, osmomath.BigDec) osmomath.BigDec) {
+	xReserve := osmomath.NewBigDec(rand.Int63n(100000) + 50000)
+	yReserve := osmomath.NewBigDec(rand.Int63n(100000) + 50000)
+	yIn := osmomath.NewBigDec(rand.Int63n(100000))
 	solve(xReserve, yReserve, yIn)
 }

@@ -156,7 +156,6 @@ func (n *NodeConfig) QueryArithmeticTwapToNow(poolId uint64, baseAsset, quoteAss
 		"quote_asset", quoteAsset,
 		"start_time", startTime.Format(time.RFC3339Nano),
 	)
-
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -178,7 +177,6 @@ func (n *NodeConfig) QueryArithmeticTwap(poolId uint64, baseAsset, quoteAsset st
 		"start_time", startTime.Format(time.RFC3339Nano),
 		"end_time", endTime.Format(time.RFC3339Nano),
 	)
-
 	if err != nil {
 		return sdk.Dec{}, err
 	}
