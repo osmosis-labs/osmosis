@@ -185,6 +185,14 @@ func (m MsgForceUnlock) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
 	}
+
+	if m.ID <= 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "lock id should be bigger than 1 (%s)", err)
+	}
+
+	if !m.Coins.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.Coins.String())
+	}
 	return nil
 }
 

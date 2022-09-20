@@ -73,6 +73,8 @@ message MsgExtendLockup {
 
 message MsgExtendLockupResponse { bool success = 1; }
 
+// MsgForceUnlock unlocks locks immediately for
+// addresses registered via governance.
 message MsgForceUnlock {
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   uint64 ID = 2;

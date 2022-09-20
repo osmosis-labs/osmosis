@@ -25,7 +25,7 @@ func NewParams(forceUnlockAllowedAddresses []string) Params {
 	}
 }
 
-// default lockup module parameters.
+// DefaultParams returns default lockup module parameters.
 func DefaultParams() Params {
 	return Params{
 		ForceUnlockAllowedAddresses: []string{},

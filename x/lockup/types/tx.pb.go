@@ -439,6 +439,8 @@ func (m *MsgExtendLockupResponse) GetSuccess() bool {
 	return false
 }
 
+// MsgForceUnlock unlocks locks immediately for
+// addresses registered via governance.
 type MsgForceUnlock struct {
 	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
 	ID    uint64 `protobuf:"varint,2,opt,name=ID,proto3" json:"ID,omitempty"`
