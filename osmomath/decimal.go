@@ -63,7 +63,7 @@ func init() {
 // buildLog2LookupTable returns a lookup table for log values
 // ranging from [1, 2)
 // the keys are multiplied by 10 to simplify the rounding logic
-// in the log function.s
+// in the log function
 func buildLog2LookupTable() map[uint8]BigDec {
 	return map[uint8]BigDec{
 		10: ZeroDec(),
