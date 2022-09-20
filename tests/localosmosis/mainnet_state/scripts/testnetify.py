@@ -64,16 +64,16 @@ def replace_validator(genesis, old_validator, new_validator):
     # replace(genesis, old_validator.operator_address, new_validator.operator_address)
     
     # replacing operator_address in lockup > synthetic_locks
-    for synthetic_lock in genesis['app_state']['lockup']['synthetic_locks']:
-        break # skip for now
-        if synthetic_lock['synth_denom'].endswith(old_validator.operator_address):
-            synthetic_lock['synth_denom'] = synthetic_lock['synth_denom'].replace(old_validator.operator_address, new_validator.operator_address)
+    # for synthetic_lock in genesis['app_state']['lockup']['synthetic_locks']:ß
+    #     if synthetic_lock['synth_denom'].endswith(old_validator.operator_address):
+    #         synthetic_lock['synth_denom'] = synthetic_lock['synth_denom'].replace(
+    #             old_validator.operator_address, new_validator.operator_address)
 
     # Replacing operator_address in incentives > gauges
-    for gauge in genesis['app_state']['incentives']['gauges']:
-        break # skip for now
-        if gauge['distribute_to']['denom'].endswith(old_validator.operator_address):
-            gauge['distribute_to']['denom'] = gauge['distribute_to']['denom'].replace(old_validator.operator_address, new_validator.operator_address)
+    # for gauge in genesis['app_state']['incentives']['gauges']:
+    #     if gauge['distribute_to']['denom'].endswith(old_validator.operator_address):
+    #         gauge['distribute_to']['denom'] = gauge['distribute_to']['denom'].replace(
+    #             old_validator.operator_address, new_validator.operator_address)
 
 def replace_account(genesis, old_account, new_account):
 
@@ -137,6 +137,18 @@ def create_parser():
     )
 
     parser.add_argument(
+        '--account-pubkey',
+        type = str,
+        help='Account pubkey to replace'
+    )
+
+    parser.add_argument(
+        '--account-address',
+        type = str,
+        help='Account address to replace'
+    )
+
+    parser.add_argument(
         '-v',
         '--verbose',
         action='store_true',
@@ -173,8 +185,8 @@ def main():
     )
 
     new_account = Account(
-        pubkey = "A2MR6q+pOpLtdxh0tHHe2JrEY2KOcvRogtLxHDHzJvOh",
-        address = "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj"
+        pubkey = args.account_pubkey,
+        address = args.account_address
     )
 
     old_account = Account(
@@ -224,19 +236,20 @@ def main():
     # Impersonate validator
     if args.verbose:
         print("🚀 Replace validator")
+
         # print("\t{:50} -> {}".format(old_validator.moniker, new_validator.moniker))
-        print("\t{:50} -> {}".format(old_validator.pubkey, new_validator.pubkey))
-        print("\t{:50} -> {}".format(old_validator.consensus_address, new_validator.consensus_address))
-        print("\t{:50} -> {}".format(old_validator.operator_address, new_validator.operator_address))
-        print("\t{:50} -> {}".format(old_validator.hex_address, new_validator.hex_address))
+        print("\t{:20} {}".format("Pubkey", new_validator.pubkey))
+        print("\t{:20} {}".format("Consensus address", new_validator.consensus_address))
+        print("\t{:20} {}".format("Operator address", new_validator.operator_address))
+        print("\t{:20} {}".format("Hex address", new_validator.hex_address))
 
     replace_validator(genesis, old_validator, new_validator)
 
     # Impersonate account
     if args.verbose:
         print("🧪 Replace account")
-        print("\t{:50} -> {}".format(old_account.address, new_account.address))
-        print("\t{:50} -> {}".format(old_account.pubkey, new_account.pubkey))
+        print("\t{:20} {}".format("Pubkey", new_account.pubkey))
+        print("\t{:20} {}".format("Address", new_account.address))
     
     replace_account(genesis, old_account, new_account)
         
@@ -287,7 +300,7 @@ def main():
         if validator_power['address'] == old_validator.operator_address:
             validator_power['power'] = str(int(validator_power['power']) + 1000000000)
             if args.verbose:
-                print("\tUpdate {} last_validator_power to {}".format(new_validator.operator_address, validator_power['power']))
+                print("\tUpdate {} last_validator_power to {}".format(old_validator.operator_address, validator_power['power']))
             break
     
     # Update total power
@@ -303,8 +316,8 @@ def main():
         if balance['address'] == new_account.address:
             for coin in balance['coins']:
                 if coin['denom'] == "uosmo":
-                    print("\tUpdate {} uosmo balance from {} to {}".format(new_account.address, coin["amount"], str(int(coin["amount"]) + 1000000000000000)))
                     coin["amount"] = str(int(coin["amount"]) + 1000000000000000)
+                    print("\tUpdate {} uosmo balance to {}".format(new_account.address, coin["amount"]))
                     break
             break
     
@@ -314,8 +327,8 @@ def main():
             # Find uosmo
             for coin in balance['coins']:
                 if coin['denom'] == "uosmo":
-                    print("\tUpdate {} (bonded_tokens_pool_module) uosmo balance from {} to {}".format(BONDED_TOKENS_POOL_MODULE_ADDRESS, coin["amount"], str(int(coin["amount"]) + 1000000000000000)))
                     coin["amount"] = str(int(coin["amount"]) + 1000000000000000)
+                    print("\tUpdate {} (bonded_tokens_pool_module) uosmo balance to {}".format(BONDED_TOKENS_POOL_MODULE_ADDRESS, coin["amount"]))
                     break
             break
     
@@ -325,8 +338,8 @@ def main():
             # Find uosmo
             for coin in balance['coins']:
                 if coin['denom'] == "uosmo":
-                    print("\tUpdate {} (distribution_module) uosmo balance from {} to {}".format(DISTRIBUTION_MODULE_ADDRESS, coin["amount"], str(int(coin["amount"]) + 1000000000000000)))
                     coin["amount"] = str(int(coin["amount"]) - DISTRIBUTION_MODULE_OFFSET)
+                    print("\tUpdate {} (distribution_module) uosmo balance to {}".format(DISTRIBUTION_MODULE_ADDRESS, coin["amount"]))
                     break
             break
 

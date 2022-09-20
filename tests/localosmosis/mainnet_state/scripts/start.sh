@@ -30,6 +30,10 @@ edit_config () {
 install_prerequisites
 
 echo $MNEMONIC | osmosisd init -o --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --recover $MONIKER 2> /dev/null
+echo $MNEMONIC | osmosisd keys add my-key --recover --keyring-backend test > /dev/null 2>&1
+
+ACCOUNT_PUBKEY=$(osmosisd keys show --keyring-backend test my-key --pubkey | dasel -r json '.key' --plain)
+ACCOUNT_ADDRESS=$(osmosisd keys show -a --keyring-backend test my-key --bech acc)
 
 VALIDATOR_PUBKEY_JSON=$(osmosisd tendermint show-validator --home $OSMOSIS_HOME)
 VALIDATOR_PUBKEY=$(echo $VALIDATOR_PUBKEY_JSON | dasel -r json '.key' --plain)
@@ -46,10 +50,11 @@ python3 -u testnetify.py \
    --validator-operator-address $VALIDATOR_OPERATOR_ADDRESS \
    --validator-consensus-address $VALIDATOR_CONSENSUS_ADDRESS \
    --validator-pubkey $VALIDATOR_PUBKEY \
+   --account-pubkey $ACCOUNT_PUBKEY \
+   --account-address $ACCOUNT_ADDRESS \
    -v
 #  -v --pretty-output
-#    --account-pubkey $ACCOUNT_PUBKEY \
-#    --account-address $ACCOUNT_ADDRESS \
+
 
 edit_config
 osmosisd start --home $OSMOSIS_HOME --x-crisis-skip-assert-invariants
