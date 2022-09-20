@@ -58,7 +58,7 @@ func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int {
 	return 0
 }
 
-// Compare returns if actual is within errTolerance of expected.
+// CompareBigDec returns if actual is within errTolerance of expected.
 // returns 0 if it is
 // returns 1 if not, and expected > actual.
 // returns -1 if not, and expected < actual
@@ -134,7 +134,7 @@ func BinarySearch(f func(input sdk.Int) (sdk.Int, error),
 	return curEstimate, nil
 }
 
-// Binary search inputs between [lowerbound, upperbound] to a monotonic increasing function f.
+// Binary search BigDec inputs between [lowerbound, upperbound] to a monotonic increasing function f
 // We stop once f(found_input) meets the ErrTolerance constraints.
 // If we perform more than maxIterations (or equivalently lowerbound = upperbound), we return an error.
 func BinarySearchBigDec(f func(input osmomath.BigDec) (osmomath.BigDec, error),
