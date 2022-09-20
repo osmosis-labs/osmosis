@@ -73,14 +73,16 @@ func TestBinarySearchBigDec(t *testing.T) {
 		return a, nil
 	}
 	expF := func(a osmomath.BigDec) (osmomath.BigDec, error) {
-		calculation := osmomath.BigDec(a)
+		// these precision shifts are done implicitly in the int binary search tests
+		// we keep them here to maintain parity between test cases across implementations
+		calculation := a.Quo(osmomath.NewBigDec(10).Power(18))
 		result := calculation.Power(3)
-		output := osmomath.BigDec(result)
+		output := result.Mul(osmomath.NewBigDec(10).Power(18))
 		return output, nil
 	}
-	noErrTolerance := ErrTolerance{AdditiveTolerance: sdk.ZeroInt()}
+	lowErrTolerance := ErrTolerance{AdditiveTolerance: sdk.OneInt()}
 	testErrToleranceAdditive := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20)}
-	testErrToleranceMultiplicative := ErrTolerance{AdditiveTolerance: sdk.ZeroInt(), MultiplicativeTolerance: sdk.NewDec(10)}
+	testErrToleranceMultiplicative := ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.NewDec(10)}
 	testErrToleranceBoth := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20), MultiplicativeTolerance: sdk.NewDec(1 << 3)}
 	tests := []struct {
 		f             func(osmomath.BigDec) (osmomath.BigDec, error)
@@ -100,10 +102,10 @@ func TestBinarySearchBigDec(t *testing.T) {
 		// If it is, we return current output
 		// Additive error bounds are solid addition / subtraction bounds to error, while multiplicative bounds take effect after dividing by the minimum between the two compared numbers.
 	}{
-		{lineF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), noErrTolerance, 51, osmomath.NewBigDec(1 + (1 << 25)), false},
-		{lineF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), noErrTolerance, 10, osmomath.BigDec{}, true},
-		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), noErrTolerance, 51, osmomath.NewBigDec(322539792367616), false},
-		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), noErrTolerance, 10, osmomath.BigDec{}, true},
+		{lineF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), lowErrTolerance, 51, osmomath.NewBigDec(1 + (1 << 25)), false},
+		{lineF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), lowErrTolerance, 10, osmomath.BigDec{}, true},
+		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), lowErrTolerance, 51, osmomath.NewBigDec(322539792367616), false},
+		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), lowErrTolerance, 10, osmomath.BigDec{}, true},
 		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 15)), testErrToleranceAdditive, 51, osmomath.NewBigDec(1 << 46), false},
 		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 30)), testErrToleranceAdditive, 10, osmomath.BigDec{}, true},
 		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), testErrToleranceMultiplicative, 51, osmomath.NewBigDec(322539792367616), false},
@@ -118,7 +120,7 @@ func TestBinarySearchBigDec(t *testing.T) {
 			require.Error(t, err)
 		} else {
 			require.NoError(t, err)
-			require.True(osmomath.DecEq(t, tc.expectedSolvedInput, actualSolvedInput))
+			require.True(osmomath.DecApproxEq(t, tc.expectedSolvedInput, actualSolvedInput, osmomath.OneDec()))
 		}
 	}
 }
