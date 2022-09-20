@@ -471,11 +471,6 @@ func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 	suite.SetupTest()
 
-	// ensure initially querying distributed coins returns no coins
-	res, err := suite.querier.ModuleDistributedCoins(sdk.WrapSDKContext(suite.Ctx), &types.ModuleDistributedCoinsRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, sdk.Coins(nil))
-
 	// create two locks with different durations
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
@@ -483,16 +478,11 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 	suite.LockTokens(addr2, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, 2*time.Second)
 
 	// setup a non perpetual gauge
-	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	gaugeID, _, _, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 	gauge, err := suite.querier.GetGaugeByID(suite.Ctx, gaugeID)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(gauge)
 	gauges := []types.Gauge{*gauge}
-
-	// check that after gauge creation distributed coins still returns no coins
-	res, err = suite.querier.ModuleDistributedCoins(sdk.WrapSDKContext(suite.Ctx), &types.ModuleDistributedCoinsRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, sdk.Coins(nil))
 
 	// move gauge from upcoming to active
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime)
@@ -514,18 +504,8 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 	suite.Require().Equal(gauge.DistributedCoins, sdk.Coins{sdk.NewInt64Coin("stake", 4)})
 	gauges = []types.Gauge{*gauge}
 
-	// check after distribution that distributed coins query matches coins that were distributed
-	res, err = suite.querier.ModuleDistributedCoins(sdk.WrapSDKContext(suite.Ctx), &types.ModuleDistributedCoinsRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, distrCoins)
-
 	// distribute second round to stakers
 	distrCoins, err = suite.querier.Distribute(suite.Ctx, gauges)
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", 6)}, distrCoins)
-
-	// ensure distributed coins query equals coins balance of gauge now that it has been completed
-	res, err = suite.querier.ModuleDistributedCoins(sdk.WrapSDKContext(suite.Ctx), &types.ModuleDistributedCoinsRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, coins)
 }

@@ -8,7 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/test_helpers"
-  "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
 type BalancerTestSuite struct {

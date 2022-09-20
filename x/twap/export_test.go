@@ -48,6 +48,10 @@ func (k Keeper) UpdateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 	return k.updateRecord(ctx, record)
 }
 
+func (k Keeper) UpdateRecords(ctx sdk.Context, poolId uint64) error {
+	return k.updateRecords(ctx, poolId)
+}
+
 func (k Keeper) PruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime time.Time) error {
 	return k.pruneRecordsBeforeTimeButNewest(ctx, lastKeptTime)
 }
@@ -70,6 +74,16 @@ func RecordWithUpdatedAccumulators(record types.TwapRecord, t time.Time) types.T
 
 func NewTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
 	return newTwapRecord(k, ctx, poolId, denom0, denom1)
+}
+
+func GetSpotPrices(
+	ctx sdk.Context,
+	k types.AmmInterface,
+	poolId uint64,
+	denom0, denom1 string,
+	previousErrorTime time.Time,
+) (sp0 sdk.Dec, sp1 sdk.Dec, latestErrTime time.Time) {
+	return getSpotPrices(ctx, k, poolId, denom0, denom1, previousErrorTime)
 }
 
 func (k *Keeper) GetAmmInterface() types.AmmInterface {

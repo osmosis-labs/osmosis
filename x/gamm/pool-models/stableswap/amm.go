@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v12/osmomath"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/cfmm_common"
 	types "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
@@ -17,10 +18,9 @@ var (
 	cubeRootSixSquared, _ = (sdk.NewDec(6).MulInt64(6)).ApproxRoot(3)
 	twoCubeRootThree      = cubeRootThree.MulInt64(2)
 	twentySevenRootTwo, _ = sdk.NewDec(27).ApproxRoot(2)
-)
 
 // solidly CFMM is xy(x^2 + y^2) = k
-func cfmmConstant(xReserve, yReserve sdk.Dec) sdk.Dec {
+func cfmmConstant(xReserve, yReserve osmomath.BigDec) osmomath.BigDec {
 	if !xReserve.IsPositive() || !yReserve.IsPositive() {
 		panic("invalid input: reserves must be positive")
 	}
@@ -35,7 +35,7 @@ func cfmmConstant(xReserve, yReserve sdk.Dec) sdk.Dec {
 // outside of x and y (e.g. u = wz), and v is the sum
 // of their squares (e.g. v = w^2 + z^2).
 // When u = 1 and v = 0, this is equivalent to solidly's CFMM
-func cfmmConstantMulti(xReserve, yReserve, uReserve, vSumSquares sdk.Dec) sdk.Dec {
+func cfmmConstantMulti(xReserve, yReserve, uReserve, vSumSquares osmomath.BigDec) osmomath.BigDec {
 	if !xReserve.IsPositive() || !yReserve.IsPositive() || !uReserve.IsPositive() || vSumSquares.IsNegative() {
 		panic("invalid input: reserves must be positive")
 	}
@@ -51,7 +51,7 @@ func cfmmConstantMulti(xReserve, yReserve, uReserve, vSumSquares sdk.Dec) sdk.De
 // how many units `a` of x do we get out.
 // So we solve the following expression for `a`
 // xy(x^2 + y^2) = (x - a)(y + b)((x - a)^2 + (y + b)^2)
-func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
+func solveCfmm(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
 	if !xReserve.IsPositive() || !yReserve.IsPositive() || !yIn.IsPositive() {
 		panic("invalid input: reserves and input must be positive")
 	}
@@ -99,7 +99,7 @@ func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 	// and maybe in state.
 	x := xReserve
 	y := yReserve
-	x2py2 := x.Mul(x).AddMut(y.Mul(y))
+	x2py2 := x.Mul(x).Add(y.Mul(y))
 
 	xy := x.Mul(y)
 
@@ -133,19 +133,19 @@ func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 	e := xy.Mul(x2py2) // xy(x^2 + y^2)
 
 	// t1 = -27 (b + y)^2 e
-	t1 := e.Mul(bpy2).MulInt64Mut(-27)
+	t1 := e.Mul(bpy2).MulInt64(-27)
 
 	// compute d = (b + y)^2 sqrt(729 e^2 + 108 (b+y)^8)
 	bpy8 := bpy4.Mul(bpy4)
-	sqrt_inner := e.MulMut(e).MulInt64Mut(729).AddMut(bpy8.MulInt64Mut(108)) // 729 e^2 + 108 (b+y)^8
+	sqrt_inner := e.Mul(e).MulInt64(729).Add(bpy8.MulInt64(108)) // 729 e^2 + 108 (b+y)^8
 	sqrt, err := sqrt_inner.ApproxSqrt()
 	if err != nil {
 		panic(err)
 	}
-	d := sqrt.MulMut(bpy2)
+	d := sqrt.Mul(bpy2)
 
 	// foo = (t1 + d)^(1/3)
-	foo3 := t1.AddMut(d)
+	foo3 := t1.Add(d)
 	foo, _ := foo3.ApproxRoot(3)
 
 	// a = {foo / (3 2^(1/3) (b + y))}
@@ -176,7 +176,7 @@ func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 // how many units `a` of x do we get out.
 // So we solve the following expression for `a`
 // xyz(x^2 + y^2 + w) = (x - a)(y + b)z((x - a)^2 + (y + b)^2 + w)
-func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
+func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn osmomath.BigDec) osmomath.BigDec {
 	if !xReserve.IsPositive() || !yReserve.IsPositive() || !yIn.IsPositive() {
 		panic("invalid input: reserves and input must be positive")
 	}
@@ -329,23 +329,23 @@ func solveCfmmDirect(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 	return xOut
 }
 
-func approxDecEqual(a, b, tol sdk.Dec) bool {
+func approxDecEqual(a, b, tol osmomath.BigDec) bool {
 	diff := a.Sub(b).Abs()
 	return diff.Quo(a).LTE(tol) && diff.Quo(b).LTE(tol)
 }
 
 var (
-	twodec    = sdk.MustNewDecFromStr("2.0")
-	threshold = sdk.NewDecWithPrec(1, 10) // Correct within a factor of 1 * 10^{-10}
+	twodec    = osmomath.MustNewDecFromStr("2.0")
+	threshold = osmomath.NewDecWithPrec(1, 10) // Correct within a factor of 1 * 10^{-10}
 )
 
 // solveCFMMBinarySearch searches the correct dx using binary search over constant K.
 // added for future extension
-func solveCFMMBinarySearch(constantFunction func(sdk.Dec, sdk.Dec) sdk.Dec) func(sdk.Dec, sdk.Dec, sdk.Dec) sdk.Dec {
-	return func(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
+func solveCFMMBinarySearch(constantFunction func(osmomath.BigDec, osmomath.BigDec) osmomath.BigDec) func(osmomath.BigDec, osmomath.BigDec, osmomath.BigDec) osmomath.BigDec {
+	return func(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
 		k := constantFunction(xReserve, yReserve)
 		yf := yReserve.Add(yIn)
-		x_low_est := sdk.ZeroDec()
+		x_low_est := osmomath.ZeroDec()
 		x_high_est := xReserve
 		x_est := (x_high_est.Add(x_low_est)).Quo(twodec)
 		cur_k := constantFunction(x_est, yf)
@@ -364,11 +364,11 @@ func solveCFMMBinarySearch(constantFunction func(sdk.Dec, sdk.Dec) sdk.Dec) func
 
 // solveCFMMBinarySearch searches the correct dx using binary search over constant K.
 // added for future extension
-func solveCFMMBinarySearchMulti(constantFunction func(sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec) sdk.Dec) func(sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec) sdk.Dec {
-	return func(xReserve, yReserve, uReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
+func solveCFMMBinarySearchMulti(constantFunction func(osmomath.BigDec, osmomath.BigDec, osmomath.BigDec, osmomath.BigDec) osmomath.BigDec) func(osmomath.BigDec, osmomath.BigDec, osmomath.BigDec, osmomath.BigDec, osmomath.BigDec) osmomath.BigDec {
+	return func(xReserve, yReserve, uReserve, wSumSquares, yIn osmomath.BigDec) osmomath.BigDec {
 		k := constantFunction(xReserve, yReserve, uReserve, wSumSquares)
 		yf := yReserve.Add(yIn)
-		x_low_est := sdk.ZeroDec()
+		x_low_est := osmomath.ZeroDec()
 		x_high_est := xReserve
 		x_est := (x_high_est.Add(x_low_est)).Quo(twodec)
 		cur_k := constantFunction(x_est, yf, uReserve, wSumSquares)
@@ -385,7 +385,7 @@ func solveCFMMBinarySearchMulti(constantFunction func(sdk.Dec, sdk.Dec, sdk.Dec,
 	}
 }
 
-func spotPrice(baseReserve, quoteReserve sdk.Dec) sdk.Dec {
+func spotPrice(baseReserve, quoteReserve osmomath.BigDec) osmomath.BigDec {
 	// y = baseAsset, x = quoteAsset
 	// Define f_{y -> x}(a) as the function that outputs the amount of tokens X you'd get by
 	// trading "a" units of Y against the pool, assuming 0 swap fee, at the current liquidity.
@@ -400,7 +400,7 @@ func spotPrice(baseReserve, quoteReserve sdk.Dec) sdk.Dec {
 
 	// We arbitrarily choose a = 1, and anticipate that this is a small value at the scale of
 	// xReserve & yReserve.
-	a := sdk.OneDec()
+	a := osmomath.OneDec()
 	// no need to divide by a, since a = 1.
 	return solveCfmm(baseReserve, quoteReserve, a)
 }
@@ -413,9 +413,9 @@ func (p *Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee
 	}
 	tokenInSupply, tokenOutSupply := reserves[0], reserves[1]
 	// We are solving for the amount of token out, hence x = tokenOutSupply, y = tokenInSupply
-	cfmmOut := solveCfmm(tokenOutSupply, tokenInSupply, tokenIn.Amount.ToDec())
+	cfmmOut := solveCfmm(osmomath.BigDecFromSDKDec(tokenOutSupply), osmomath.BigDecFromSDKDec(tokenInSupply), osmomath.BigDecFromSDKDec(tokenIn.Amount.ToDec()))
 	outAmt := p.getDescaledPoolAmt(tokenOutDenom, cfmmOut)
-	return outAmt, nil
+	return outAmt.SDKDec(), nil
 }
 
 // returns inAmt as a decimal
@@ -427,9 +427,9 @@ func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee
 	tokenInSupply, tokenOutSupply := reserves[0], reserves[1]
 	// We are solving for the amount of token in, cfmm(x,y) = cfmm(x + x_in, y - y_out)
 	// x = tokenInSupply, y = tokenOutSupply, yIn = -tokenOutAmount
-	cfmmIn := solveCfmm(tokenInSupply, tokenOutSupply, tokenOut.Amount.ToDec().Neg())
-	inAmt := p.getDescaledPoolAmt(tokenInDenom, cfmmIn.NegMut())
-	return inAmt, nil
+	cfmmIn := solveCfmm(osmomath.BigDecFromSDKDec(tokenInSupply), osmomath.BigDecFromSDKDec(tokenOutSupply), osmomath.BigDecFromSDKDec(tokenOut.Amount.ToDec().Neg()))
+	inAmt := p.getDescaledPoolAmt(tokenInDenom, cfmmIn.Neg())
+	return inAmt.SDKDec(), nil
 }
 
 func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk.Int, error) {

@@ -25,5 +25,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		Params:            k.GetParams(ctx),
 		LockableDurations: k.GetLockableDurations(ctx),
 		Gauges:            k.GetNotFinishedGauges(ctx),
+		LastGaugeId:       k.GetLastGaugeID(ctx),
 	}
 }
