@@ -48,7 +48,6 @@ python3 -u testnetify.py \
    --validator-pubkey $VALIDATOR_PUBKEY \
    -v
 #  -v --pretty-output
-
 #    --account-pubkey $ACCOUNT_PUBKEY \
 #    --account-address $ACCOUNT_ADDRESS \
 

@@ -246,7 +246,6 @@ def main():
 
     # Replace validator pub key in genesis['app_state']['staking']['validators']
     for validator in genesis['app_state']['staking']['validators']:
-        
         if validator['description']['moniker'] == old_validator.moniker:
             
             # Update delegator shares
@@ -264,7 +263,6 @@ def main():
 
             # delegation['validator_address'] = new_validator.operator_address
             delegation['shares'] = str(int(float(delegation['shares'])) + 1000000000000000) + ".000000000000000000"
-
             print("\tUpdate {} delegation shares to {} to {}".format(new_account.address, delegation['validator_address'], delegation['shares']))
             break
 
@@ -280,13 +278,13 @@ def main():
 
     # Update power in genesis["validators"]
     for validator in genesis["validators"]:
-        if validator['address'] == new_validator.hex_address:
+        if validator['name'] == old_validator.moniker:
             validator['power'] = str(int(validator['power']) + 1000000000)
             print("\tUpdate {} validator power to {}".format(validator['address'], validator['power']))
             break 
     
     for validator_power in genesis['app_state']['staking']['last_validator_powers']:
-        if validator_power['address'] == new_validator.operator_address:
+        if validator_power['address'] == old_validator.operator_address:
             validator_power['power'] = str(int(validator_power['power']) + 1000000000)
             if args.verbose:
                 print("\tUpdate {} last_validator_power to {}".format(new_validator.operator_address, validator_power['power']))
