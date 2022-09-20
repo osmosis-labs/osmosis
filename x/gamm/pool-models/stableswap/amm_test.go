@@ -38,9 +38,9 @@ func TestCFMMInvariantTwoAssets(t *testing.T) {
 			false,
 		},
 		"large pool large input": {
-			sdk.NewDec(1000000000),
-			sdk.NewDec(1000000000),
-			sdk.NewDec(1000),
+			osmomath.NewBigDec(1000000000),
+			osmomath.NewBigDec(1000000000),
+			osmomath.NewBigDec(1000),
 			false,
 		},
 

@@ -281,8 +281,8 @@ func approxDecEqual(a, b, tol osmomath.BigDec) bool {
 }
 
 var (
-	twodec      = sdk.MustNewDecFromStr("2.0")
-	k_threshold = sdk.NewDecWithPrec(1, 1) // Correct within a factor of 1 * 10^{-1}
+	twodec      = osmomath.MustNewDecFromStr("2.0")
+	k_threshold = osmomath.NewDecWithPrec(1, 1) // Correct within a factor of 1 * 10^{-1}
 )
 
 // solveCFMMBinarySearch searches the correct dx using binary search over constant K.
