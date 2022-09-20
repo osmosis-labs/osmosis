@@ -889,7 +889,7 @@ func (x BigDec) ApproxLog2() BigDec {
 		panic(fmt.Sprintf("only supporting values >= 1, given (%s)", x))
 	}
 
-	// Normalize x to be 1 < x <= 2
+	// Normalize x to be 1 <= x < 2
 
 	// y is the exponent that results in a whole multiple of 2.
 	y := int64(0)
