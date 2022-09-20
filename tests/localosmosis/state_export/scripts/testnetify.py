@@ -98,7 +98,7 @@ def create_parser():
         '-i',
         '--input',
         type = str,
-        default="genesis.json",
+        default="state_export.json",
         dest='input_genesis',
         help='Path to input genesis'
     )
@@ -153,6 +153,12 @@ def create_parser():
         '--verbose',
         action='store_true',
         help='More verbose output'
+    )
+
+    parser.add_argument(
+        '--prune-ibc', 
+        action='store_true',
+        help='Prune the IBC module'
     )
 
     parser.add_argument(
@@ -218,20 +224,21 @@ def main():
     genesis['app_state']['epochs']['epochs'][0]['current_epoch_start_time'] = datetime.now().isoformat() + 'Z'
     
     # Prune IBC
-    if args.verbose:
-        print("🕸 Pruning IBC module")
+    if args.prune_ibc:
+        if args.verbose:
+            print("🕸 Pruning IBC module")
 
-    genesis['app_state']["ibc"]["channel_genesis"]["ack_sequences"] = []
-    genesis['app_state']["ibc"]["channel_genesis"]["acknowledgements"] = []
-    genesis['app_state']["ibc"]["channel_genesis"]["channels"] = []
-    genesis['app_state']["ibc"]["channel_genesis"]["commitments"] = []
-    genesis['app_state']["ibc"]["channel_genesis"]["receipts"] = []
-    genesis['app_state']["ibc"]["channel_genesis"]["recv_sequences"] = []
-    genesis['app_state']["ibc"]["channel_genesis"]["send_sequences"] = []
+        genesis['app_state']["ibc"]["channel_genesis"]["ack_sequences"] = []
+        genesis['app_state']["ibc"]["channel_genesis"]["acknowledgements"] = []
+        genesis['app_state']["ibc"]["channel_genesis"]["channels"] = []
+        genesis['app_state']["ibc"]["channel_genesis"]["commitments"] = []
+        genesis['app_state']["ibc"]["channel_genesis"]["receipts"] = []
+        genesis['app_state']["ibc"]["channel_genesis"]["recv_sequences"] = []
+        genesis['app_state']["ibc"]["channel_genesis"]["send_sequences"] = []
 
-    genesis['app_state']["ibc"]["client_genesis"]["clients"] = []
-    genesis['app_state']["ibc"]["client_genesis"]["clients_consensus"] = []
-    genesis['app_state']["ibc"]["client_genesis"]["clients_metadata"] = []
+        genesis['app_state']["ibc"]["client_genesis"]["clients"] = []
+        genesis['app_state']["ibc"]["client_genesis"]["clients_consensus"] = []
+        genesis['app_state']["ibc"]["client_genesis"]["clients_metadata"] = []
 
     # Impersonate validator
     if args.verbose:

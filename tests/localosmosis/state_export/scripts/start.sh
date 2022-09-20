@@ -64,6 +64,7 @@ then
     --validator-pubkey $VALIDATOR_PUBKEY \
     --account-pubkey $ACCOUNT_PUBKEY \
     --account-address $ACCOUNT_ADDRESS \
+    --prune-ibc \
     -v
     #  -v --pretty-output
 
