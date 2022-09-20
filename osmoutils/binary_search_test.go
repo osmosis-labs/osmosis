@@ -5,6 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/osmosis-labs/osmosis/v12/osmomath"
 )
 
 func TestBinarySearch(t *testing.T) {
@@ -64,6 +66,63 @@ func TestBinarySearch(t *testing.T) {
 	}
 }
 
+func TestBinarySearchBigDec(t *testing.T) {
+	// straight line function that returns input. Simplest to binary search on,
+	// binary search directly reveals one bit of the answer in each iteration with this function.
+	lineF := func(a osmomath.BigDec) (osmomath.BigDec, error) {
+		return a, nil
+	}
+	expF := func(a osmomath.BigDec) (osmomath.BigDec, error) {
+		calculation := osmomath.BigDec(a)
+		result := calculation.Power(3)
+		output := osmomath.BigDec(result)
+		return output, nil
+	}
+	noErrTolerance := ErrTolerance{AdditiveTolerance: sdk.ZeroInt()}
+	testErrToleranceAdditive := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20)}
+	testErrToleranceMultiplicative := ErrTolerance{AdditiveTolerance: sdk.ZeroInt(), MultiplicativeTolerance: sdk.NewDec(10)}
+	testErrToleranceBoth := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20), MultiplicativeTolerance: sdk.NewDec(1 << 3)}
+	tests := []struct {
+		f             func(osmomath.BigDec) (osmomath.BigDec, error)
+		lowerbound    osmomath.BigDec
+		upperbound    osmomath.BigDec
+		targetOutput  osmomath.BigDec
+		errTolerance  ErrTolerance
+		maxIterations int
+
+		expectedSolvedInput osmomath.BigDec
+		expectErr           bool
+		// This binary searches inputs to a monotonic increasing function F
+		// We stop when the answer is within error bounds stated by errTolerance
+		// First, (lowerbound + upperbound) / 2 becomes the current estimate.
+		// A current output is also defined as f(current estimate). In this case f is lineF
+		// We then compare the current output with the target output to see if it's within error tolerance bounds. If not, continue binary searching by iterating.
+		// If it is, we return current output
+		// Additive error bounds are solid addition / subtraction bounds to error, while multiplicative bounds take effect after dividing by the minimum between the two compared numbers.
+	}{
+		{lineF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), noErrTolerance, 51, osmomath.NewBigDec(1 + (1 << 25)), false},
+		{lineF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), noErrTolerance, 10, osmomath.BigDec{}, true},
+		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), noErrTolerance, 51, osmomath.NewBigDec(322539792367616), false},
+		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), noErrTolerance, 10, osmomath.BigDec{}, true},
+		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 15)), testErrToleranceAdditive, 51, osmomath.NewBigDec(1 << 46), false},
+		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 30)), testErrToleranceAdditive, 10, osmomath.BigDec{}, true},
+		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), testErrToleranceMultiplicative, 51, osmomath.NewBigDec(322539792367616), false},
+		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), testErrToleranceMultiplicative, 10, osmomath.BigDec{}, true},
+		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 15)), testErrToleranceBoth, 51, osmomath.NewBigDec(1 << 45), false},
+		{expF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 30)), testErrToleranceBoth, 10, osmomath.BigDec{}, true},
+	}
+
+	for _, tc := range tests {
+		actualSolvedInput, err := BinarySearchBigDec(tc.f, tc.lowerbound, tc.upperbound, tc.targetOutput, tc.errTolerance, tc.maxIterations)
+		if tc.expectErr {
+			require.Error(t, err)
+		} else {
+			require.NoError(t, err)
+			require.True(osmomath.DecEq(t, tc.expectedSolvedInput, actualSolvedInput))
+		}
+	}
+}
+
 func TestErrTolerance_Compare(t *testing.T) {
 	ZeroErrTolerance := ErrTolerance{AdditiveTolerance: sdk.ZeroInt(), MultiplicativeTolerance: sdk.Dec{}}
 	NonZeroErrAdditive := ErrTolerance{AdditiveTolerance: sdk.NewInt(10), MultiplicativeTolerance: sdk.Dec{}}
@@ -72,28 +131,34 @@ func TestErrTolerance_Compare(t *testing.T) {
 	tests := []struct {
 		name      string
 		tol       ErrTolerance
-		input     sdk.Int
-		reference sdk.Int
+		intInput     sdk.Int
+		intReference sdk.Int
+
+		bigDecInput     osmomath.BigDec
+		bigDecReference osmomath.BigDec
 
 		expectedCompareResult int
 	}{
-		{"0 tolerance: <", ZeroErrTolerance, sdk.NewInt(1000), sdk.NewInt(1001), -1},
-		{"0 tolerance: =", ZeroErrTolerance, sdk.NewInt(1001), sdk.NewInt(1001), 0},
-		{"0 tolerance: >", ZeroErrTolerance, sdk.NewInt(1002), sdk.NewInt(1001), 1},
-		{"Nonzero additive tolerance: <", NonZeroErrAdditive, sdk.NewInt(420), sdk.NewInt(1001), -1},
-		{"Nonzero additive tolerance: =", NonZeroErrAdditive, sdk.NewInt(1011), sdk.NewInt(1001), 0},
-		{"Nonzero additive tolerance: >", NonZeroErrAdditive, sdk.NewInt(1230), sdk.NewInt(1001), 1},
-		{"Nonzero multiplicative tolerance: <", NonZeroErrMultiplicative, sdk.NewInt(1000), sdk.NewInt(1001), -1},
-		{"Nonzero multiplicative tolerance: =", NonZeroErrMultiplicative, sdk.NewInt(1001), sdk.NewInt(1001), 0},
-		{"Nonzero multiplicative tolerance: >", NonZeroErrMultiplicative, sdk.NewInt(1002), sdk.NewInt(1001), 1},
-		{"Nonzero both tolerance: <", NonZeroErrBoth, sdk.NewInt(990), sdk.NewInt(1001), -1},
-		{"Nonzero both tolerance: =", NonZeroErrBoth, sdk.NewInt(1002), sdk.NewInt(1001), 0},
-		{"Nonzero both tolerance: >", NonZeroErrBoth, sdk.NewInt(1011), sdk.NewInt(1001), 1},
+		{"0 tolerance: <", ZeroErrTolerance, sdk.NewInt(1000), sdk.NewInt(1001), osmomath.NewBigDec(1000), osmomath.NewBigDec(1001), -1},
+		{"0 tolerance: =", ZeroErrTolerance, sdk.NewInt(1001), sdk.NewInt(1001), osmomath.NewBigDec(1001), osmomath.NewBigDec(1001), 0},
+		{"0 tolerance: >", ZeroErrTolerance, sdk.NewInt(1002), sdk.NewInt(1001), osmomath.NewBigDec(1002), osmomath.NewBigDec(1001), 1},
+		{"Nonzero additive tolerance: <", NonZeroErrAdditive, sdk.NewInt(420), sdk.NewInt(1001), osmomath.NewBigDec(420), osmomath.NewBigDec(1001), -1},
+		{"Nonzero additive tolerance: =", NonZeroErrAdditive, sdk.NewInt(1011), sdk.NewInt(1001), osmomath.NewBigDec(1011), osmomath.NewBigDec(1001), 0},
+		{"Nonzero additive tolerance: >", NonZeroErrAdditive, sdk.NewInt(1230), sdk.NewInt(1001), osmomath.NewBigDec(1230), osmomath.NewBigDec(1001), 1},
+		{"Nonzero multiplicative tolerance: <", NonZeroErrMultiplicative, sdk.NewInt(1000), sdk.NewInt(1001), osmomath.NewBigDec(1000), osmomath.NewBigDec(1001), -1},
+		{"Nonzero multiplicative tolerance: =", NonZeroErrMultiplicative, sdk.NewInt(1001), sdk.NewInt(1001), osmomath.NewBigDec(1001), osmomath.NewBigDec(1001), 0},
+		{"Nonzero multiplicative tolerance: >", NonZeroErrMultiplicative, sdk.NewInt(1002), sdk.NewInt(1001), osmomath.NewBigDec(1002), osmomath.NewBigDec(1001), 1},
+		{"Nonzero both tolerance: <", NonZeroErrBoth, sdk.NewInt(990), sdk.NewInt(1001), osmomath.NewBigDec(990), osmomath.NewBigDec(1001), -1},
+		{"Nonzero both tolerance: =", NonZeroErrBoth, sdk.NewInt(1002), sdk.NewInt(1001), osmomath.NewBigDec(1002), osmomath.NewBigDec(1001), 0},
+		{"Nonzero both tolerance: >", NonZeroErrBoth, sdk.NewInt(1011), sdk.NewInt(1001), osmomath.NewBigDec(1011), osmomath.NewBigDec(1001), 1},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.tol.Compare(tt.input, tt.reference); got != tt.expectedCompareResult {
+			if got := tt.tol.Compare(tt.intInput, tt.intReference); got != tt.expectedCompareResult {
 				t.Errorf("ErrTolerance.Compare() = %v, want %v", got, tt.expectedCompareResult)
+			}
+			if got := tt.tol.CompareBigDec(tt.bigDecInput, tt.bigDecReference); got != tt.expectedCompareResult {
+				t.Errorf("ErrTolerance.CompareBigDec() = %v, want %v", got, tt.expectedCompareResult)
 			}
 		})
 	}

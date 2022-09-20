@@ -2,6 +2,7 @@ package osmoutils
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -152,6 +153,10 @@ func BinarySearchBigDec(f func(input osmomath.BigDec) (osmomath.BigDec, error),
 	}
 	curIteration := 0
 	for ; curIteration < maxIterations; curIteration += 1 {
+		fmt.Println("target: ", targetOutput)
+		fmt.Println("current: ", curOutput)
+		fmt.Println("iteration: ", curIteration)
+		fmt.Println()
 		compRes := errTolerance.CompareBigDec(curOutput, targetOutput)
 		if compRes > 0 {
 			upperbound = curEstimate
