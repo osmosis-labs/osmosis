@@ -67,7 +67,7 @@ func (k Keeper) EstimateSwapExactAmountIn(
 		return sdk.Int{}, err
 	}
 
-	_, tokenOut, err := k.estimateSwapExactAmountIn(ctx, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
+	_, tokenOut, err := k.swapExactAmountInNoTokenSend(ctx, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
 	if err != nil {
 		return tokenOut.Amount, err
 	}
@@ -76,10 +76,9 @@ func (k Keeper) EstimateSwapExactAmountIn(
 	return tokenOut.Amount, err
 }
 
-// estimateSwapExactAmountIn performs `SwapOutAmtGivenIn` for the given inputs.
-// Note that this method does not include writing new state to the store, but only has the
-// logic for calculation for the swap.
-func (k Keeper) estimateSwapExactAmountIn(
+// swapExactAmountInNoTokenSend performs `SwapOutAmtGivenIn` for the given inputs,
+// and potentially mutates state. It does not save the new pool struct, or do token transfers.
+func (k Keeper) swapExactAmountInNoTokenSend(
 	ctx sdk.Context,
 	pool types.PoolI,
 	tokenIn sdk.Coin,
