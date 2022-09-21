@@ -284,7 +284,7 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestEstimateSwapExactAmountIn() {
+func (suite *KeeperTestSuite) TestQueryEstimateSwapExactAmountIn() {
 	queryClient := suite.queryClient
 	poolID := suite.PrepareBalancerPool()
 
@@ -344,7 +344,7 @@ func (suite *KeeperTestSuite) TestEstimateSwapExactAmountIn() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestEstimateSwapExactAmountOut() {
+func (suite *KeeperTestSuite) TestQueryEstimateSwapExactAmountOut() {
 	queryClient := suite.queryClient
 	poolID := suite.PrepareBalancerPool()
 

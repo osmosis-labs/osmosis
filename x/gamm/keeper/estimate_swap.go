@@ -6,7 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
-// EstimateMultihopSwapExactAmountIn iterates `EstimateSwapExactAmountIn` and returns
+// EstimateMultihopSwapExactAmountIn iterates `estimateSwapExactAmountIn` and returns
 // the total token out given route for multihop.
 func (k Keeper) EstimateMultihopSwapExactAmountIn(
 	ctx sdk.Context,
@@ -38,7 +38,9 @@ func (k Keeper) EstimateMultihopSwapExactAmountIn(
 		swapFee := pool.GetSwapFee(cacheCtx).Mul(swapFeeMultiplier)
 
 		// Execute the expected swap on the current routed pool
-		tokenOutAmount, err = k.EstimateSwapExactAmountIn(cacheCtx, route.PoolId, tokenIn, route.TokenOutDenom, _outMinAmount, swapFee)
+		// call internal method with useCacheCtx = false to prevent double caching,
+		// we need to save pool state for the next iteration of pool route
+		tokenOutAmount, err = k.estimateSwapExactAmountIn(cacheCtx, route.PoolId, tokenIn, route.TokenOutDenom, _outMinAmount, swapFee, false)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -50,9 +52,8 @@ func (k Keeper) EstimateMultihopSwapExactAmountIn(
 }
 
 // EstimateSwapExactAmountIn estimates the amount of token out given the exact amount of token in.
-// This method does not execute the full steps of an actaul swap,
-// but estimates the amount of token out by only manipulating the state of the pool.
-// This method should only be called by query methods.
+// This method does not execute the full steps of an actaul swap, nor does it change the state after estimation.
+// Returns the estimated amount of token out using cache context.
 func (k Keeper) EstimateSwapExactAmountIn(
 	ctx sdk.Context,
 	poolId uint64,
@@ -61,6 +62,23 @@ func (k Keeper) EstimateSwapExactAmountIn(
 	tokenOutMinAmount sdk.Int,
 	swapFee sdk.Dec,
 ) (sdk.Int, error) {
+	return k.estimateSwapExactAmountIn(ctx, poolId, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee, true)
+}
+
+// estimateSwapExactAmountIn returns the amount of token out given the amount of token in.
+// This method should only be called by estimate methods, as this method does not include full steps of an actual swap.
+func (k Keeper) estimateSwapExactAmountIn(
+	ctx sdk.Context,
+	poolId uint64,
+	tokenIn sdk.Coin,
+	tokenOutDenom string,
+	tokenOutMinAmount sdk.Int,
+	swapFee sdk.Dec,
+	useCacheCtx bool,
+) (sdk.Int, error) {
+	if useCacheCtx {
+		ctx, _ = ctx.CacheContext()
+	}
 	pool, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
@@ -75,7 +93,7 @@ func (k Keeper) EstimateSwapExactAmountIn(
 	return tokenOut.Amount, err
 }
 
-// EstimateMultihopSwapExactAmountOut iterates `EstimateSwapExactAmountOut` and returns
+// EstimateMultihopSwapExactAmountOut iterates `estimateSwapExactAmountOut` and returns
 // the total token in given route for multihop.
 func (k Keeper) EstimateMultihopSwapExactAmountOut(
 	ctx sdk.Context,
@@ -121,7 +139,9 @@ func (k Keeper) EstimateMultihopSwapExactAmountOut(
 		}
 		swapFee := pool.GetSwapFee(cacheCtx).Mul(swapFeeMultiplier)
 		// Execute the expected swap on the current routed pool
-		_tokenInAmount, err := k.EstimateSwapExactAmountOut(cacheCtx, route.PoolId, route.TokenInDenom, insExpected[i], _tokenOut, swapFee)
+		// call internal method with useCacheCtx = false to prevent double caching,
+		// we need to save pool state for the next iteration of pool route
+		_tokenInAmount, err := k.estimateSwapExactAmountOut(cacheCtx, route.PoolId, route.TokenInDenom, insExpected[i], _tokenOut, swapFee, false)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -137,10 +157,9 @@ func (k Keeper) EstimateMultihopSwapExactAmountOut(
 	return tokenInAmount, nil
 }
 
-// EstimateSwapExactAmountOut estimates the amount of token out given the exact amount of token in.
-// This method does not execute the full steps of an actaul swap,
-// but estimates the amount of token out by only manipulating the state of the pool.
-// This method should only be called by query methods.
+// EstimateSwapExactAmountOut estimates the amount of token in given the exact amount of token out.
+// This method does not execute the full steps of an actaul swap, nor does it change the state after estimation.
+// Returns the estimated amount of token out using cache context.
 func (k Keeper) EstimateSwapExactAmountOut(
 	ctx sdk.Context,
 	poolId uint64,
@@ -149,6 +168,23 @@ func (k Keeper) EstimateSwapExactAmountOut(
 	tokenOut sdk.Coin,
 	swapFee sdk.Dec,
 ) (tokenInAmount sdk.Int, err error) {
+	return k.estimateSwapExactAmountOut(ctx, poolId, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee, true)
+}
+
+// estimateSwapExactAmountOut returns the amount of token in given the amount of token out.
+// This method should only be called by estimate methods, as this method does not include full steps of an actual swap.
+func (k Keeper) estimateSwapExactAmountOut(
+	ctx sdk.Context,
+	poolId uint64,
+	tokenInDenom string,
+	tokenInMaxAmount sdk.Int,
+	tokenOut sdk.Coin,
+	swapFee sdk.Dec,
+	useCacheCtx bool,
+) (tokenInAmount sdk.Int, err error) {
+	if useCacheCtx {
+		ctx, _ = ctx.CacheContext()
+	}
 	pool, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err

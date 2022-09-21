@@ -102,14 +102,19 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 				ExitFee: sdk.NewDec(0),
 			})
 
-			suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
+			firstEstimatePoolId := suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 				SwapFee: poolDefaultSwapFee,
 				ExitFee: sdk.NewDec(0),
 			})
-			suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
+			secondEstimatePoolId := suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 				SwapFee: poolDefaultSwapFee,
 				ExitFee: sdk.NewDec(0),
 			})
+
+			firstEstimatePool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, firstEstimatePoolId)
+			suite.Require().NoError(err)
+			secondEstimatePool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, secondEstimatePoolId)
+			suite.Require().NoError(err)
 
 			// calculate token out amount using `MultihopSwapExactAmountIn`
 			multihopTokenOutAmount, err := keeper.MultihopSwapExactAmountIn(
@@ -130,6 +135,15 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 
 			// assure that the token out amount is same
 			suite.Require().Equal(multihopTokenOutAmount, estimateMultihopTokenOutAmount)
+
+			// ensure that pool state has not been altered after estimation
+			firstEstimatePoolAfterSwap, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, firstEstimatePoolId)
+			suite.Require().NoError(err)
+			secondEstimatePoolAfterSwap, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, secondEstimatePoolId)
+			suite.Require().NoError(err)
+
+			suite.Require().Equal(firstEstimatePool, firstEstimatePoolAfterSwap)
+			suite.Require().Equal(secondEstimatePool, secondEstimatePoolAfterSwap)
 		})
 	}
 }
@@ -228,14 +242,18 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 				SwapFee: poolDefaultSwapFee,
 				ExitFee: sdk.NewDec(0),
 			})
-			suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
+			firstEstimatePoolId := suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 				SwapFee: poolDefaultSwapFee, // 1%
 				ExitFee: sdk.NewDec(0),
 			})
-			suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
+			secondEstimatePoolId := suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 				SwapFee: poolDefaultSwapFee,
 				ExitFee: sdk.NewDec(0),
 			})
+			firstEstimatePool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, firstEstimatePoolId)
+			suite.Require().NoError(err)
+			secondEstimatePool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, secondEstimatePoolId)
+			suite.Require().NoError(err)
 
 			multihopTokenInAmount, err := keeper.MultihopSwapExactAmountOut(
 				suite.Ctx,
@@ -253,6 +271,75 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 			suite.Require().NoError(err, "test: %v", test.name)
 
 			suite.Require().Equal(multihopTokenInAmount, estimateMultihopTokenInAmount)
+
+			// ensure that pool state has not been altered after estimation
+			firstEstimatePoolAfterSwap, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, firstEstimatePoolId)
+			suite.Require().NoError(err)
+			secondEstimatePoolAfterSwap, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, secondEstimatePoolId)
+			suite.Require().NoError(err)
+
+			suite.Require().Equal(firstEstimatePool, firstEstimatePoolAfterSwap)
+			suite.Require().Equal(secondEstimatePool, secondEstimatePoolAfterSwap)
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestEstimateSwapExactAmountIn() {
+	suite.SetupTest()
+	keeper := suite.App.GAMMKeeper
+
+	// prepare two pools, one for actual swap one for estimate swap
+	firstPoolId := suite.PrepareBalancerPool()
+	secondPoolId := suite.PrepareBalancerPool()
+
+	tokenIn := sdk.NewCoin("foo", sdk.NewInt(100000))
+	tokenOutDenom := "bar"
+	tokenOutMinAmount := sdk.NewInt(1)
+
+	tokenOutAmount, err := keeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], firstPoolId, tokenIn, tokenOutDenom, tokenOutMinAmount)
+	suite.Require().NoError(err)
+
+	pool, err := keeper.GetPoolAndPoke(suite.Ctx, secondPoolId)
+	suite.Require().NoError(err)
+	swapFee := pool.GetSwapFee(suite.Ctx)
+	estimateTokenOutAmount, err := keeper.EstimateSwapExactAmountIn(suite.Ctx, secondPoolId, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
+
+	// ensure that the two results have the same amount of token out
+	suite.Require().Equal(tokenOutAmount, estimateTokenOutAmount)
+
+	poolAfterEstimateSwap, err := keeper.GetPoolAndPoke(suite.Ctx, secondPoolId)
+	suite.Require().NoError(err)
+
+	// ensure that pool has not changed after estimate swap
+	suite.Require().Equal(pool, poolAfterEstimateSwap)
+}
+
+func (suite *KeeperTestSuite) TestEstimateSwapExactAmountOut() {
+	suite.SetupTest()
+	keeper := suite.App.GAMMKeeper
+
+	// prepare two pools, one for actual swap one for estimate swap
+	firstPoolId := suite.PrepareBalancerPool()
+	secondPoolId := suite.PrepareBalancerPool()
+
+	tokenInDenom := "foo"
+	tokenInMaxAmount := sdk.NewInt(900000000)
+	tokenOut := sdk.NewCoin("bar", sdk.NewInt(100000))
+
+	tokenInAmount, err := keeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], firstPoolId, tokenInDenom, tokenInMaxAmount, tokenOut)
+	suite.Require().NoError(err)
+
+	pool, err := keeper.GetPoolAndPoke(suite.Ctx, secondPoolId)
+	suite.Require().NoError(err)
+	swapFee := pool.GetSwapFee(suite.Ctx)
+	estimateTokenInAmount, err := keeper.EstimateSwapExactAmountOut(suite.Ctx, secondPoolId, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
+
+	// ensure that the two results have the same amount of token out
+	suite.Require().Equal(tokenInAmount, estimateTokenInAmount)
+
+	poolAfterEstimateSwap, err := keeper.GetPoolAndPoke(suite.Ctx, secondPoolId)
+	suite.Require().NoError(err)
+
+	// ensure that pool has not changed after estimate swap
+	suite.Require().Equal(pool, poolAfterEstimateSwap)
 }
