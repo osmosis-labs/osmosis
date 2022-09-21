@@ -7,8 +7,13 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
 	github.com/cosmos/cosmos-sdk v0.46.1
 	github.com/cosmos/go-bip39 v1.0.0
+<<<<<<< HEAD
 	github.com/cosmos/iavl v0.19.0
 	github.com/cosmos/ibc-go/v3 v3.2.0
+=======
+	github.com/cosmos/iavl v0.19.1
+	github.com/cosmos/ibc-go/v3 v3.3.0
+>>>>>>> 72bec75f (bump IBC version (#2801))
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
@@ -293,8 +298,13 @@ require (
 replace (
 	// branch: v0.28.0x-osmo-v12, current tag: v0.28.0-osmo-v12.1
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.28.0-osmo-v12.1
+<<<<<<< HEAD
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk/tree/v0.45.0x-osmo-v12, Tag: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.45.0-osmo-v12
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.0-osmo-v12
+=======
+	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: osmosis-main. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/5c9a51c277d067e0ec5cf48df30a85fae95bcd14
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220921135931-3c4d30596acc
+>>>>>>> 72bec75f (bump IBC version (#2801))
 	// Use Osmosis fast iavl
 	github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-osmo-v7
 	// use cosmos-compatible protobufs
