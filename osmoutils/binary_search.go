@@ -58,7 +58,7 @@ func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int {
 	return 0
 }
 
-// CompareBigDec returns if actual is within errTolerance of expected.
+// CompareBigDec validates if actual is within errTolerance of expected.
 // returns 0 if it is
 // returns 1 if not, and expected > actual.
 // returns -1 if not, and expected < actual
