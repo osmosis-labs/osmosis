@@ -24,6 +24,17 @@ pub fn assert_sent_sufficient_coin(
     Ok(())
 }
 
+pub fn assert_matches_denom(sent: &[Coin], expected_denom: &String) -> Result<(), ContractError> {
+    for coin in sent {
+        let expected = expected_denom.to_string();
+        let actual = coin.denom.to_string();
+        if actual != expected {
+            return Err(ContractError::InvalidDenom { expected, actual });
+        }
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod test {
     use super::*;

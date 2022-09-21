@@ -1,11 +1,12 @@
-use cosmwasm_std::{Coin, Uint128};
+use cosmwasm_std::{Addr, Uint128};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
-    pub purchase_price: Option<Coin>,
-    pub transfer_price: Option<Coin>,
+    pub required_denom: String,
+    pub purchase_price: Uint128,
+    pub transfer_price: Uint128,
     pub annual_rent_amount: Uint128,
 }
 
@@ -14,6 +15,9 @@ pub struct InstantiateMsg {
 pub enum ExecuteMsg {
     Register { name: String, years: Uint128 },
     Transfer { name: String, to: String },
+    SetName { name: String },
+    AddBid { name: String },
+    // RemoveBid { name: String, amount: Uint128 },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -21,6 +25,7 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     // ResolveAddress returns the current address that the name resolves to
     ResolveRecord { name: String },
+    ReverseResolveRecord { address: Addr },
     Config {},
 }
 
@@ -28,4 +33,9 @@ pub enum QueryMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ResolveRecordResponse {
     pub address: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct ReverseResolveRecordResponse {
+    pub name: Option<String>,
 }

@@ -5,7 +5,9 @@ mod tests {
 
     use crate::contract::{execute, instantiate, query};
     use crate::error::ContractError;
-    use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, ResolveRecordResponse};
+    use crate::msg::{
+        ExecuteMsg, InstantiateMsg, QueryMsg, ResolveRecordResponse, ReverseResolveRecordResponse,
+    };
     use crate::state::Config;
 
     fn assert_name_owner(deps: Deps, name: &str, owner: &str) {
@@ -22,6 +24,20 @@ mod tests {
         assert_eq!(Some(owner.to_string()), value.address);
     }
 
+    fn assert_address_resolves_to(deps: Deps, name: &str, owner: &str) {
+        let res = query(
+            deps,
+            mock_env(),
+            QueryMsg::ReverseResolveRecord {
+                address: deps.api.addr_validate(owner).expect("Invalid address"),
+            },
+        )
+        .unwrap();
+
+        let value: ReverseResolveRecordResponse = from_binary(&res).unwrap();
+        assert_eq!(Some(name.to_string()), value.name);
+    }
+
     fn assert_config_state(deps: Deps, expected: Config) {
         let res = query(deps, mock_env(), QueryMsg::Config {}).unwrap();
         let value: Config = from_binary(&res).unwrap();
@@ -30,13 +46,15 @@ mod tests {
 
     fn mock_init_with_price(
         deps: DepsMut,
-        purchase_price: Coin,
-        transfer_price: Coin,
+        required_denom: impl Into<String>,
+        purchase_price: Uint128,
+        transfer_price: Uint128,
         annual_rent_bps: Uint128,
     ) {
         let msg = InstantiateMsg {
-            purchase_price: Some(purchase_price),
-            transfer_price: Some(transfer_price),
+            required_denom: required_denom.into(),
+            purchase_price: purchase_price,
+            transfer_price: transfer_price,
             annual_rent_amount: annual_rent_bps,
         };
 
@@ -47,8 +65,9 @@ mod tests {
 
     fn mock_init_no_price(deps: DepsMut) {
         let msg = InstantiateMsg {
-            purchase_price: None,
-            transfer_price: None,
+            required_denom: "token".to_string(),
+            purchase_price: Uint128::from(0 as u128),
+            transfer_price: Uint128::from(0 as u128),
             annual_rent_amount: Uint128::from(0 as u128),
         };
 
@@ -77,8 +96,9 @@ mod tests {
         assert_config_state(
             deps.as_ref(),
             Config {
-                purchase_price: None,
-                transfer_price: None,
+                required_denom: "token".to_string(),
+                purchase_price: Uint128::from(0 as u128),
+                transfer_price: Uint128::from(0 as u128),
                 annual_rent_amount: Uint128::from(0 as u128),
             },
         );
@@ -90,16 +110,18 @@ mod tests {
 
         mock_init_with_price(
             deps.as_mut(),
-            coin(3, "token"),
-            coin(4, "token"),
+            "token",
+            Uint128::from(3 as u128),
+            Uint128::from(4 as u128),
             Uint128::from(0 as u128),
         );
 
         assert_config_state(
             deps.as_ref(),
             Config {
-                purchase_price: Some(coin(3, "token")),
-                transfer_price: Some(coin(4, "token")),
+                required_denom: "token".to_string(),
+                purchase_price: Uint128::from(3 as u128),
+                transfer_price: Uint128::from(4 as u128),
                 annual_rent_amount: Uint128::from(0 as u128),
             },
         );
@@ -120,8 +142,9 @@ mod tests {
         let mut deps = mock_dependencies();
         mock_init_with_price(
             deps.as_mut(),
-            coin(2, "token"),
-            coin(2, "token"),
+            "token",
+            Uint128::from(2 as u128),
+            Uint128::from(2 as u128),
             Uint128::from(0 as u128),
         );
 
@@ -231,8 +254,9 @@ mod tests {
         let mut deps = mock_dependencies();
         mock_init_with_price(
             deps.as_mut(),
-            coin(2, "token"),
-            coin(2, "token"),
+            "token",
+            Uint128::from(2 as u128),
+            Uint128::from(2 as u128),
             Uint128::from(0 as u128),
         );
 
@@ -257,8 +281,9 @@ mod tests {
         let mut deps = mock_dependencies();
         mock_init_with_price(
             deps.as_mut(),
-            coin(2, "token"),
-            coin(2, "token"),
+            "token",
+            Uint128::from(2 as u128),
+            Uint128::from(2 as u128),
             Uint128::from(0 as u128),
         );
 
@@ -302,8 +327,9 @@ mod tests {
         let mut deps = mock_dependencies();
         mock_init_with_price(
             deps.as_mut(),
-            coin(2, "token"),
-            coin(2, "token"),
+            "token",
+            Uint128::from(2 as u128),
+            Uint128::from(2 as u128),
             Uint128::from(0 as u128),
         );
         mock_alice_registers_name(deps.as_mut(), &coins(2, "token"));
@@ -376,8 +402,9 @@ mod tests {
         let mut deps = mock_dependencies();
         mock_init_with_price(
             deps.as_mut(),
-            coin(2, "token"),
-            coin(5, "token"),
+            "token",
+            Uint128::from(2 as u128),
+            Uint128::from(5 as u128),
             Uint128::from(0 as u128),
         );
         mock_alice_registers_name(deps.as_mut(), &coins(2, "token"));
@@ -420,5 +447,21 @@ mod tests {
         assert_eq!(None, value.address);
     }
 
-    // TODO: Test rent amount
+    #[test]
+    fn set_name_works() {
+        let mut deps = mock_dependencies();
+        mock_init_no_price(deps.as_mut());
+        mock_alice_registers_name(deps.as_mut(), &[]);
+
+        // alice can successfully set her name
+        let info = mock_info("alice_key", &[]);
+        let msg = ExecuteMsg::SetName {
+            name: "alice".to_string(),
+        };
+
+        let _res = execute(deps.as_mut(), mock_env(), info, msg)
+            .expect("contract successfully handles SetName message");
+        // querying for address (alice_key) resolves to correct name (alice)
+        assert_address_resolves_to(deps.as_ref(), "alice", "alice_key");
+    }
 }

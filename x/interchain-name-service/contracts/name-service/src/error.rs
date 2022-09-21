@@ -12,6 +12,9 @@ pub enum ContractError {
     #[error("Insufficient funds sent")]
     InsufficientFundsSend {},
 
+    #[error("Invalid coin denomination, expected {expected} got {actual}")]
+    InvalidDenom { expected: String, actual: String },
+
     #[error("Name does not exist (name {name})")]
     NameNotExists { name: String },
 

@@ -27,11 +27,15 @@ cargo build
 3. Compile, deploy, and instantiate the `name-service` contract.
 
 ```
-beaker wasm deploy name-service --signer-account test1 --no-wasm-opt  --raw '{"purchase_price":{"amount":"100","denom":"uosmo"},"transfer_price":{"amount":"999","denom":"uosmo"},"annual_rent_amount":"20"}'
+beaker wasm deploy name-service --signer-account test1 --no-wasm-opt  --raw '{"required_denom":"uosmo","purchase_price":"100","transfer_price":"200","annual_rent_amount":"20"}'
 ```
 
-4. Execute an example transaction on localosmosis!
+4. Execute example transactions on localosmosis!
 
 ```
-beaker wasm execute name-service --raw '{"register":{"name":"johndoe","years":"1"}}' --signer-account test1 --funds 120uosmo
+beaker wasm execute name-service --raw '{"register":{"name":"alice.ibc","years":"1"}}' --signer-account test1 --funds 120uosmo
+```
+
+```
+beaker wasm query name-service --raw '{"resolve_record": {"name": "alice.ibc"}}'
 ```
