@@ -45,7 +45,7 @@ func (k Keeper) swapExactAmountIn(
 	tokenOutMinAmount sdk.Int,
 	swapFee sdk.Dec,
 ) (tokenOutAmount sdk.Int, err error) {
-	pool, tokenOut, err := k.swapExactAmountInNoTokenSend(ctx, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
+	tokenOut, err := k.swapExactAmountInNoTokenSend(ctx, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -74,9 +74,9 @@ func (k Keeper) swapExactAmountInNoTokenSend(
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
 	swapFee sdk.Dec,
-) (updatedPool types.PoolI, tokenOut sdk.Coin, err error) {
+) (tokenOut sdk.Coin, err error) {
 	if tokenIn.Denom == tokenOutDenom {
-		return pool, sdk.Coin{}, errors.New("cannot trade same denomination in and out")
+		return sdk.Coin{}, errors.New("cannot trade same denomination in and out")
 	}
 	tokensIn := sdk.Coins{tokenIn}
 
@@ -84,20 +84,20 @@ func (k Keeper) swapExactAmountInNoTokenSend(
 	// does not actually transfer any tokens to or from the pool.
 	tokenOutCoin, err := pool.SwapOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
 	if err != nil {
-		return pool, sdk.Coin{}, err
+		return sdk.Coin{}, err
 	}
 
 	tokenOutAmount := tokenOutCoin.Amount
 
 	if !tokenOutAmount.IsPositive() {
-		return pool, sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
+		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
 	}
 
 	if tokenOutAmount.LT(tokenOutMinAmount) {
-		return pool, sdk.Coin{}, sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", tokenOutDenom)
+		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", tokenOutDenom)
 	}
 
-	return pool, tokenOutCoin, nil
+	return tokenOutCoin, nil
 }
 
 func (k Keeper) SwapExactAmountOut(
@@ -129,7 +129,7 @@ func (k Keeper) swapExactAmountOut(
 	tokenOut sdk.Coin,
 	swapFee sdk.Dec,
 ) (tokenInAmount sdk.Int, err error) {
-	pool, tokenIn, err := k.swapExactAmountOutNoTokenSend(ctx, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
+	tokenIn, err := k.swapExactAmountOutNoTokenSend(ctx, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -157,32 +157,32 @@ func (k Keeper) swapExactAmountOutNoTokenSend(
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
 	swapFee sdk.Dec,
-) (updatedPool types.PoolI, tokenIn sdk.Coin, err error) {
+) (tokenIn sdk.Coin, err error) {
 	if tokenInDenom == tokenOut.Denom {
-		return pool, sdk.Coin{}, errors.New("cannot trade same denomination in and out")
+		return sdk.Coin{}, errors.New("cannot trade same denomination in and out")
 	}
 
 	poolOutBal := pool.GetTotalPoolLiquidity(ctx).AmountOf(tokenOut.Denom)
 	if tokenOut.Amount.GTE(poolOutBal) {
-		return pool, sdk.Coin{}, sdkerrors.Wrapf(types.ErrTooManyTokensOut,
+		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrTooManyTokensOut,
 			"can't get more tokens out than there are tokens in the pool")
 	}
 
 	tokenIn, err = pool.SwapInAmtGivenOut(ctx, sdk.Coins{tokenOut}, tokenInDenom, swapFee)
 	if err != nil {
-		return pool, sdk.Coin{}, err
+		return sdk.Coin{}, err
 	}
 	tokenInAmount := tokenIn.Amount
 
 	if tokenInAmount.LTE(sdk.ZeroInt()) {
-		return pool, sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
+		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
 	}
 
 	if tokenInAmount.GT(tokenInMaxAmount) {
-		return pool, sdk.Coin{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "Swap requires %s, which is greater than the amount %s", tokenIn, tokenInMaxAmount)
+		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "Swap requires %s, which is greater than the amount %s", tokenIn, tokenInMaxAmount)
 	}
 
-	return pool, tokenIn, nil
+	return tokenIn, nil
 }
 
 // updatePoolForSwap updates the pool balance and the pool state.

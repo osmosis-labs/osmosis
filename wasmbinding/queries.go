@@ -105,7 +105,8 @@ func (qp QueryPlugin) EstimateSwap(ctx sdk.Context, estimateSwap *bindings.Estim
 	return estimate, err
 }
 
-// EstimatePerformSwap can be used to query
+// EstimatePerformSwap can be used to either estimate a exact amount in swap, or an exact amount out swap.
+// This function requires requires either swap.Amount.ExactIn or swap.Amount.ExactOut to be non nil, or else it will error.
 func EstimatePerformSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, swap *bindings.SwapMsg) (*bindings.SwapAmount, error) {
 	if swap == nil {
 		return nil, wasmvmtypes.InvalidRequest{Err: "gamm perform swap null swap"}

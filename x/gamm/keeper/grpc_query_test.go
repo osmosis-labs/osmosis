@@ -328,6 +328,24 @@ func (suite *KeeperTestSuite) TestQueryEstimateSwapExactAmountIn() {
 			expectErr: false,
 			result:    sdk.NewInt(32895),
 		},
+		{
+			name:      "empty request",
+			req:       &types.QuerySwapExactAmountInRequest{},
+			expectErr: true,
+		},
+		{
+			name: "empty token in",
+			req: &types.QuerySwapExactAmountInRequest{
+				PoolId: poolID,
+				Routes: types.SwapAmountInRoutes{
+					types.SwapAmountInRoute{
+						PoolId:        poolID,
+						TokenOutDenom: "baz",
+					},
+				},
+			},
+			expectErr: true,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -387,6 +405,24 @@ func (suite *KeeperTestSuite) TestQueryEstimateSwapExactAmountOut() {
 			},
 			expectErr: false,
 			result:    sdk.NewInt(33785),
+		},
+		{
+			name:      "empty request",
+			req:       &types.QuerySwapExactAmountOutRequest{},
+			expectErr: true,
+		},
+		{
+			name: "empty token out",
+			req: &types.QuerySwapExactAmountOutRequest{
+				PoolId: poolID,
+				Routes: types.SwapAmountOutRoutes{
+					types.SwapAmountOutRoute{
+						PoolId:       poolID,
+						TokenInDenom: "baz",
+					},
+				},
+			},
+			expectErr: true,
 		},
 	}
 

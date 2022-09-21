@@ -84,7 +84,7 @@ func (k Keeper) estimateSwapExactAmountIn(
 		return sdk.Int{}, err
 	}
 
-	_, tokenOut, err := k.swapExactAmountInNoTokenSend(ctx, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
+	tokenOut, err := k.swapExactAmountInNoTokenSend(ctx, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
 	if err != nil {
 		return tokenOut.Amount, err
 	}
@@ -190,7 +190,7 @@ func (k Keeper) estimateSwapExactAmountOut(
 		return sdk.Int{}, err
 	}
 
-	_, tokenIn, err := k.swapExactAmountOutNoTokenSend(ctx, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
+	tokenIn, err := k.swapExactAmountOutNoTokenSend(ctx, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
 	if err != nil {
 		return tokenIn.Amount, err
 	}
