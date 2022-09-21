@@ -1179,6 +1179,13 @@ func (s *TestSuite) TestAfterCreatePool() {
 				s.Require().NoError(err)
 				s.Require().Equal(expectedRecords[i], actualRecord)
 			}
+
+			// test that after creating a pool 
+			// has triggered `trackChangedPool`, 
+			// and that we have the state of price impacted pools.
+			changedPools := s.twapkeeper.GetChangedPools(s.Ctx)
+			s.Require().Equal(1, len(changedPools))
+			s.Require().Equal(tc.poolId, changedPools[0])
 		})
 	}
 }
