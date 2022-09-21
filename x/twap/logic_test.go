@@ -961,7 +961,7 @@ func (s *TestSuite) TestUpdateRecords() {
 				// The new record added.
 				{
 					spotPriceA:    sdk.OneDec(),
-					spotPriceB:    baseRecord.P1LastSpotPrice,
+					spotPriceB:    baseRecord.P1LastSpotPrice,       // getSpotPrice failed, should equal to previous record LastSpotPrice
 					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
 					isMostRecent:  true,
 				},
