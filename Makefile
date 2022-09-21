@@ -367,16 +367,22 @@ localnet-build-state-export:
 	@docker build -t local:osmosis-se --build-arg ID=$(ID) -f tests/localosmosis/mainnet_state/Dockerfile-stateExport .
 
 localnet-start:
-	@docker-compose -f tests/localosmosis/docker-compose.yml up
+	@STATE="" docker-compose -f tests/localosmosis/docker-compose.yml up
+
+localnet-start-with-state:
+	@STATE=-s docker-compose -f tests/localosmosis/docker-compose.yml up
 
 localnet-startd:
-	@docker-compose -f tests/localosmosis/docker-compose.yml up -d
+	@STATE="" docker-compose -f tests/localosmosis/docker-compose.yml up -d
+
+localnet-startd-with-state:
+	@STATE=-s docker-compose -f tests/localosmosis/docker-compose.yml up -d
 
 localnet-start-state-export:
 	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml up
 
 localnet-stop:
-	@docker-compose -f tests/localosmosis/docker-compose.yml down
+	@STATE="" docker-compose -f tests/localosmosis/docker-compose.yml down
 
 localnet-remove: localnet-stop
 	rm -rf $(PWD)/tests/localosmosis/.osmosisd

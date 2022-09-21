@@ -4,8 +4,16 @@ CHAIN_ID=localosmosis
 OSMOSIS_HOME=$HOME/.osmosisd
 CONFIG_FOLDER=$OSMOSIS_HOME/config
 MONIKER=val
+STATE='false'
 
 MNEMONIC="bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort"
+
+while getopts s flag
+do
+    case "${flag}" in
+        s) STATE='true';;
+    esac
+done
 
 install_prerequisites () {
     apk add dasel
@@ -58,7 +66,7 @@ edit_genesis () {
 
 add_genesis_accounts () {
 
-    osmosisd add-genesis-account osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj 100000000000uosmo,100000000000uion,100000000000stake --home $OSMOSIS_HOME 
+    osmosisd add-genesis-account osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj 100000000000uosmo,100000000000uion,100000000000stake --home $OSMOSIS_HOME
     osmosisd add-genesis-account osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks 100000000000uosmo,100000000000uion,100000000000stake --home $OSMOSIS_HOME
     osmosisd add-genesis-account osmo18s5lynnmx37hq4wlrw9gdn68sg2uxp5rgk26vv 100000000000uosmo,100000000000uion,100000000000stake --home $OSMOSIS_HOME
     osmosisd add-genesis-account osmo1qwexv7c6sm95lwhzn9027vyu2ccneaqad4w8ka 100000000000uosmo,100000000000uion,100000000000stake --home $OSMOSIS_HOME
@@ -84,6 +92,28 @@ edit_config () {
     dasel put string -f $CONFIG_FOLDER/config.toml '.rpc.laddr' "tcp://0.0.0.0:26657"
 }
 
+create_two_asset_pool () {
+    # Create default pool
+    substring='code: 0'
+    string=$(osmosisd tx gamm create-pool --pool-file=nativeDenomPool.json --from $MONIKER --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --yes  2>&1)
+    if [ "$string" != "${string%"$substring"*}" ]; then
+        echo "create two asset pool: successful"
+    else
+        create_two_asset_pool
+    fi
+}
+
+create_three_asset_pool () {
+    # Create three asset pool
+    substring='code: 0'
+    string=$(osmosisd tx gamm create-pool --pool-file=nativeDenomThreeAssetPool.json --from $MONIKER --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --yes 2>&1)
+    if [ "$string" != "${string%"$substring"*}" ]; then
+        echo "create three asset pool: successful"
+    else
+        create_three_asset_pool
+    fi
+}
+
 if [[ ! -d $CONFIG_FOLDER ]]
 then
     echo $MNEMONIC | osmosisd init -o --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --recover $MONIKER
@@ -93,4 +123,11 @@ then
     edit_config
 fi
 
-osmosisd start --home $OSMOSIS_HOME
+osmosisd start --home $OSMOSIS_HOME &
+
+if [[ $STATE == 'true' ]]
+then
+    create_two_asset_pool
+    create_three_asset_pool
+fi
+wait
