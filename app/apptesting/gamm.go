@@ -94,7 +94,7 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer
 // PrepareBalancerPoolWithPoolAsset sets up a Balancer pool with an array of assets.
 func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolAsset(assets []balancer.PoolAsset) uint64 {
 	// Add coins for pool creation fee + coins needed to mint balances
-	fundCoins := sdk.Coins{sdk.NewCoin("uosmo", sdk.NewInt(10000000000))}
+	fundCoins := sdk.Coins{sdk.NewCoin("uosmo", sdk.NewInt(1000000000))}
 	for _, a := range assets {
 		fundCoins = fundCoins.Add(a.Token)
 	}

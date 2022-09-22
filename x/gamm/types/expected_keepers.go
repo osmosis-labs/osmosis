@@ -35,6 +35,8 @@ type BankKeeper interface {
 	// TODO: Look into golang syntax to make this "Everything in stakingtypes.bankkeeper + extra funcs"
 	// I think it has to do with listing another interface as the first line here?
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+
+	IterateAllBalances(ctx sdk.Context, cb func(sdk.AccAddress, sdk.Coin) bool)
 }
 
 // CommunityPoolKeeper defines the contract needed to be fulfilled for distribution keeper.
