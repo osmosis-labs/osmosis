@@ -27,9 +27,12 @@ You can now quickly test your changes to Osmosis with just a few commands:
 
 ## LocalOsmosis with Mainnet State
 
-Running LocalOsmosis with mainnet state is resource intensive and can take a bit of time. It is recommended to only use this method if you are testing a new feature that must be thoroughly tested before pushing to production.
+Running LocalOsmosis with mainnet state is resource intensive and can take a bit of time. 
+It is recommended to only use this method if you are testing a new feature that must be thoroughly tested before pushing to production.
 
-A few things to note before getting started. The below method will only work if you are using the same version as mainnet. In other words, if mainnet is on v8.0.0 and you try to do this on a v9.0.0 tag or on main, you will run into an error when initializing the genesis. (yes, it is possible to create a state exported testnet on a upcoming release, but that is out of the scope of this tutorial)
+A few things to note before getting started. The below method will only work if you are using the same version as mainnet. In other words, 
+if mainnet is on v8.0.0 and you try to do this on a v9.0.0 tag or on main, you will run into an error when initializing the genesis. 
+(yes, it is possible to create a state exported testnet on a upcoming release, but that is out of the scope of this tutorial)
 
 Additionally, this process requires 64GB of RAM. If you do not have 64GB of RAM, you will get an OOM error.
 
@@ -56,57 +59,61 @@ systemctl stop osmosisd.service
 
 ```sh
 cd $HOME
-osmosisd export 2> testnet_genesis.json
+osmosisd export 2> state_export.json
 ```
 
-After a while (~15 minutes), this will create a file called `testnet_genesis.json` which is a snapshot of the current mainnet state.
+After a while (~15 minutes), this will create a file called `state_export.json` which is a snapshot of the current mainnet state.
 
-5. Copy the `testnet_genesis.json` to the localosmosis folder within the osmosis repo
+5. Copy the `state_export.json` to the `localosmosis/state_export` folder within the osmosis repo
 
 ```sh
-cp -r $HOME/testnet_genesis.json $HOME/osmosis/tests/localosmosis
+cp $HOME/state_export.json $HOME/osmosis/tests/localosmosis/state_export/
 ```
 
-6. Ensure you have docker and docker compose installed/running:
-Docker
+6. Ensure you have docker and docker-compose installed:
+
 
 ```sh
+# Docker
 sudo apt-get remove docker docker-engine docker.io
 sudo apt-get update
 sudo apt install docker.io -y
-```
 
-Docker Compose
-
-```sh
+# Docker compose
 sudo apt install docker-compose -y
 ```
 
-7. Compile the local:osmosis-se docker image (~15 minutes, since this process modifies the testnet genesis you provided above). You may change the exported ID to whatever you want the chain-id to be. In this example, we will use the chain-id of localosmosis.
+7. Build the `local:osmosis` docker image:
 
-```sh
-cd $HOME/osmosis
-export ID=local
+```bash
 make localnet-build-state-export
 ```
 
-8. Start the local:osmosis-se docker image
+8. Run the `local:osmosis` docker image
 
 ```sh
 make localnet-start-state-export
 ```
 
-You will then go through the genesis intialization process. This will take ~15 minutes. You will then hit the first block (not block 1, but the block number after your snapshot was taken), and then you will just see a bunch of p2p error logs with some KV store logs. **This will happen for about 1 hour**, and then you will finally hit blocks at a normal pace.
+When running this command for the first time, `local:osmosis` will:
+
+- Modify the provided `state_export.json` to create a new state suitable for a testnet
+- Start the chain
+
+You will then go through the genesis initialization process. This will take ~15 minutes. 
+You will then hit the first block (not block 1, but the block number after your snapshot was taken), and then you will just see a bunch of p2p error logs with some KV store logs. 
+**This will happen for about 1 hour**, and then you will finally hit blocks at a normal pace.
 
 9. On your host machine, add this specific wallet which holds a large amount of osmo funds
 
 ```sh
-echo "bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort" | osmosisd keys add wallet --recover --keyring-backend test
+MNEMONIC="bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort"
+echo $MNEMONIC | osmosisd keys add wallet --recover --keyring-backend test
 ```
 
-You now are running a validator with a majority of the voting power with the same mainnet state as when you took the snapshot.
+You now are running a validator with a majority of the voting power with the same state as mainnet state (at the time you took the snapshot)
 
-10. On your host machine, you can now query the state export testnet like so:
+10. On your host machine, you can now query the state-exported testnet:
 
 ```sh
 osmosisd status
@@ -124,7 +131,9 @@ osmosisd tx bank send wallet osmo1nyphwl8p5yx6fxzevjwqunsfqpcxukmtk8t60m 1000000
 make localnet-remove-state-export
 ```
 
-Note: At some point, all the validators (except yours) will get jailed at the same block due to them being offline. When this happens, it make take a little bit of time to process. Once all validators are jailed, you will continue to hit blocks as you did before. If you are only running the validator for a short period of time (< 24 hours) you will not experience this.
+Note: At some point, all the validators (except yours) will get jailed at the same block due to them being offline.
+When this happens, it may take a little bit of time to process. Once all validators are jailed, you will continue to hit blocks as you did before. 
+If you are only running the validator for a short period of time (< 24 hours) you will not experience this.
 
 ## Accounts
 
