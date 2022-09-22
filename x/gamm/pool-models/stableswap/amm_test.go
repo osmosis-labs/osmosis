@@ -2,6 +2,7 @@ package stableswap
 
 import (
 	"fmt"
+	"math/big"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,50 +25,157 @@ type twoAssetCFMMTestCase struct {
 var twoAssetCFMMTestCases = map[string]twoAssetCFMMTestCase{
 	// sanity checks
 	"small pool small input": {
-		xReserve: osmomath.NewBigDec(100),
-		yReserve: osmomath.NewBigDec(100),
-		yIn: osmomath.NewBigDec(1),
+		xReserve:    osmomath.NewBigDec(100),
+		yReserve:    osmomath.NewBigDec(100),
+		yIn:         osmomath.NewBigDec(1),
 		expectPanic: false,
 	},
 	"small pool large input": {
-		xReserve: osmomath.NewBigDec(100),
-		yReserve: osmomath.NewBigDec(100),
-		yIn: osmomath.NewBigDec(1000),
+		xReserve:    osmomath.NewBigDec(100),
+		yReserve:    osmomath.NewBigDec(100),
+		yIn:         osmomath.NewBigDec(99),
 		expectPanic: false,
 	},
-	"medium pool large join": {
-		xReserve: osmomath.NewBigDec(100000),
-		yReserve: osmomath.NewBigDec(100000),
-		yIn: osmomath.NewBigDec(10000),
-	 	expectPanic: false,
+	"medium pool medium join": {
+		xReserve:    osmomath.NewBigDec(100000),
+		yReserve:    osmomath.NewBigDec(100000),
+		yIn:         osmomath.NewBigDec(10000),
+		expectPanic: false,
+	},
+	"large pool medium join": {
+		xReserve:    osmomath.NewBigDec(10000000),
+		yReserve:    osmomath.NewBigDec(10000000),
+		yIn:         osmomath.NewBigDec(10000),
+		expectPanic: false,
 	},
 	"large pool large join": {
-		xReserve: osmomath.NewBigDec(100000),
-		yReserve: osmomath.NewBigDec(100000),
-		yIn: osmomath.NewBigDec(10000),
-	 	expectPanic: false,
+		xReserve:    osmomath.NewBigDec(10000000),
+		yReserve:    osmomath.NewBigDec(10000000),
+		yIn:         osmomath.NewBigDec(1000000),
+		expectPanic: false,
+	},
+	"very large pool medium join": {
+		xReserve:    osmomath.NewBigDec(1000000000),
+		yReserve:    osmomath.NewBigDec(1000000000),
+		yIn:         osmomath.NewBigDec(100000),
+		expectPanic: false,
+	},
+	"trillion token pool billion token join": {
+		xReserve:    osmomath.NewBigDec(1000000000000),
+		yReserve:    osmomath.NewBigDec(1000000000000),
+		yIn:         osmomath.NewBigDec(1000000000),
+		expectPanic: false,
+	},
+
+	// uneven reserves
+	"xReserve double yReserve (small)": {
+		xReserve:    osmomath.NewBigDec(100),
+		yReserve:    osmomath.NewBigDec(50),
+		yIn:         osmomath.NewBigDec(1),
+		expectPanic: false,
+	},
+	"yReserve double xReserve (small)": {
+		xReserve:    osmomath.NewBigDec(50),
+		yReserve:    osmomath.NewBigDec(100),
+		yIn:         osmomath.NewBigDec(1),
+		expectPanic: false,
+	},
+	"xReserve double yReserve (large)": {
+		xReserve:    osmomath.NewBigDec(13789470),
+		yReserve:    osmomath.NewBigDec(59087324),
+		yIn:         osmomath.NewBigDec(1047829),
+		expectPanic: false,
+	},
+	"yReserve double xReserve (large)": {
+		xReserve:    osmomath.NewBigDec(50000000),
+		yReserve:    osmomath.NewBigDec(100000000),
+		yIn:         osmomath.NewBigDec(1000000),
+		expectPanic: false,
+	},
+	"uneven medium pool medium join": {
+		xReserve:    osmomath.NewBigDec(123456),
+		yReserve:    osmomath.NewBigDec(434245),
+		yIn:         osmomath.NewBigDec(23314),
+		expectPanic: false,
+	},
+	"uneven large pool medium join": {
+		xReserve:    osmomath.NewBigDec(11023432),
+		yReserve:    osmomath.NewBigDec(17432897),
+		yIn:         osmomath.NewBigDec(89734),
+		expectPanic: false,
+	},
+	"uneven large pool large join": {
+		xReserve:    osmomath.NewBigDec(38987364),
+		yReserve:    osmomath.NewBigDec(52893462),
+		yIn:         osmomath.NewBigDec(9819874),
+		expectPanic: false,
+	},
+	"uneven very large pool medium join": {
+		xReserve:    osmomath.NewBigDec(1473891748),
+		yReserve:    osmomath.NewBigDec(7438971234),
+		yIn:         osmomath.NewBigDec(100000),
+		expectPanic: false,
+	},
+	"uneven trillion token pool billion token join": {
+		xReserve:    osmomath.NewBigDec(2678234328934),
+		yReserve:    osmomath.NewBigDec(1573912437894),
+		yIn:         osmomath.NewBigDec(53789183748),
+		expectPanic: false,
 	},
 
 	// panic catching
+	"yIn greater than pool reserves": {
+		xReserve:    osmomath.NewBigDec(100),
+		yReserve:    osmomath.NewBigDec(100),
+		yIn:         osmomath.NewBigDec(1000),
+		expectPanic: true,
+	},
 	"xReserve negative": {
-		osmomath.NewBigDec(-100),
-		osmomath.NewBigDec(100),
-		osmomath.NewBigDec(1),
-		true,
+		xReserve:    osmomath.NewBigDec(-100),
+		yReserve:    osmomath.NewBigDec(100),
+		yIn:         osmomath.NewBigDec(1),
+		expectPanic: true,
 	},
 	"yReserve negative": {
-		osmomath.NewBigDec(100),
-		osmomath.NewBigDec(-100),
-		osmomath.NewBigDec(1),
-		true,
+		xReserve:    osmomath.NewBigDec(100),
+		yReserve:    osmomath.NewBigDec(-100),
+		yIn:         osmomath.NewBigDec(1),
+		expectPanic: true,
 	},
 	"yIn negative": {
-		osmomath.NewBigDec(100),
-		osmomath.NewBigDec(100),
-		osmomath.NewBigDec(-1),
-		true,
+		xReserve:    osmomath.NewBigDec(100),
+		yReserve:    osmomath.NewBigDec(100),
+		yIn:         osmomath.NewBigDec(-1),
+		expectPanic: true,
+	},
+
+	// overflows
+	"xReserve near max bitlen": {
+		xReserve:    osmomath.NewDecFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(1024), nil), big.NewInt(1))),
+		yReserve:    osmomath.NewBigDec(100),
+		yIn:         osmomath.NewBigDec(1),
+		expectPanic: true,
+	},
+	"yReserve near max bitlen": {
+		xReserve:    osmomath.NewBigDec(100),
+		yReserve:    osmomath.NewDecFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(1024), nil), big.NewInt(1))),
+		yIn:         osmomath.NewBigDec(1),
+		expectPanic: true,
+	},
+	"both assets near max bitlen": {
+		xReserve:    osmomath.NewDecFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(1024), nil), big.NewInt(1))),
+		yReserve:    osmomath.NewDecFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(1024), nil), big.NewInt(1))),
+		yIn:         osmomath.NewBigDec(1),
+		expectPanic: true,
+	},
+	"max power yReserve check (approx 2^73)": {
+		xReserve:    osmomath.NewBigDec(1),
+		yReserve:    osmomath.NewDecFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(1024/14), nil), big.NewInt(1))),
+		yIn:         osmomath.NewBigDec(1),
+		expectPanic: false,
 	},
 }
+
 type StableSwapTestSuite struct {
 	test_helpers.CfmmCommonTestSuite
 }
@@ -75,8 +183,37 @@ type StableSwapTestSuite struct {
 func TestCFMMInvariantTwoAssets(t *testing.T) {
 	kErrTolerance := osmomath.OneDec()
 
-	// TODO: switch solveCfmm to binary search and replace this with test case suite  
+	// TODO: switch solveCfmm to binary search and replace this with test case suite
 	tests := map[string]twoAssetCFMMTestCase{}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			// system under test
+			sut := func() {
+				// using two-asset cfmm
+				k0 := cfmmConstant(test.xReserve, test.yReserve)
+				xOut := solveCfmm(test.xReserve, test.yReserve, test.yIn)
+
+				k1 := cfmmConstant(test.xReserve.Sub(xOut), test.yReserve.Add(test.yIn))
+				osmomath.DecApproxEq(t, k0, k1, kErrTolerance)
+
+				// using multi-asset cfmm (should be equivalent with u = 1, w = 0)
+				k2 := cfmmConstantMulti(test.xReserve, test.yReserve, osmomath.OneDec(), osmomath.ZeroDec())
+				osmomath.DecApproxEq(t, k2, k0, kErrTolerance)
+				xOut2 := solveCfmmMulti(test.xReserve, test.yReserve, osmomath.ZeroDec(), test.yIn)
+				k3 := cfmmConstantMulti(test.xReserve.Sub(xOut2), test.yReserve.Add(test.yIn), osmomath.OneDec(), osmomath.ZeroDec())
+				osmomath.DecApproxEq(t, k2, k3, kErrTolerance)
+			}
+
+			osmoassert.ConditionalPanic(t, test.expectPanic, sut)
+		})
+	}
+}
+
+func TestCFMMInvariantTwoAssetsDirect(t *testing.T) {
+	kErrTolerance := osmomath.OneDec()
+
+	tests := twoAssetCFMMTestCases
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -88,13 +225,6 @@ func TestCFMMInvariantTwoAssets(t *testing.T) {
 
 				k1 := cfmmConstant(test.xReserve.Sub(xOut), test.yReserve.Add(test.yIn))
 				osmomath.DecApproxEq(t, k0, k1, kErrTolerance)
-
-				// using multi-asset cfmm (should be equivalent with u = 1, w = 0)
-				k2 := cfmmConstantMulti(test.xReserve, test.yReserve, osmomath.OneDec(), osmomath.ZeroDec())
-				osmomath.DecApproxEq(t, k2, k0, kErrTolerance)
-				xOut2 := solveCfmmMulti(test.xReserve, test.yReserve, osmomath.ZeroDec(), test.yIn)
-				k3 := cfmmConstantMulti(test.xReserve.Sub(xOut2), test.yReserve.Add(test.yIn), osmomath.OneDec(), osmomath.ZeroDec())
-				osmomath.DecApproxEq(t, k2, k3, kErrTolerance)
 			}
 
 			osmoassert.ConditionalPanic(t, test.expectPanic, sut)

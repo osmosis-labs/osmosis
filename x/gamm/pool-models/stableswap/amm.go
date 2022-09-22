@@ -292,6 +292,10 @@ func solveCfmmDirect(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
 		panic("invalid input: reserves and input must be positive")
 	}
 
+	if yIn.GT(yReserve) {
+		panic("invalid input: cannot trade greater than reserve amount into CFMM")
+	}
+
 	// find k using existing reserves
 	k := cfmmConstant(xReserve, yReserve)
 
