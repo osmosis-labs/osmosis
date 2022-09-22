@@ -334,7 +334,7 @@ func solveCFMMBinarySearchMulti(constantFunction func(osmomath.BigDec, osmomath.
 
 		// create single-input CFMM to pass into binary search
 		calc_x_est := func(xEst osmomath.BigDec) (osmomath.BigDec, error) {
-			return cfmmConstantMulti(xEst, yf, uReserve, wSumSquares), nil
+			return constantFunction(xEst, yf, uReserve, wSumSquares), nil
 		}
 
 		x_est, err := osmoutils.BinarySearchBigDec(calc_x_est, x_low_est, x_high_est, k, errTolerance, max_iterations)
