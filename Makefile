@@ -298,17 +298,11 @@ localnet-keys:
 localnet-build:
 	@docker-compose -f tests/localosmosis/docker-compose.yml build
 
-localnet-build-state-export:
-	@docker build -t local:osmosis-se --build-arg ID=$(ID) -f tests/localosmosis/mainnet_state/Dockerfile-stateExport .
-
 localnet-start:
 	@docker-compose -f tests/localosmosis/docker-compose.yml up
 
 localnet-startd:
 	@docker-compose -f tests/localosmosis/docker-compose.yml up -d
-
-localnet-start-state-export:
-	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml up
 
 localnet-stop:
 	@docker-compose -f tests/localosmosis/docker-compose.yml down
@@ -316,8 +310,20 @@ localnet-stop:
 localnet-remove: localnet-stop
 	rm -rf $(PWD)/tests/localosmosis/.osmosisd
 
+localnet-build-state-export:
+	@DOCKER_BUILDKIT=1 docker-compose -f tests/localosmosis/state_export/docker-compose.yml build
+
+localnet-start-state-export:
+	@docker-compose -f tests/localosmosis/state_export/docker-compose.yml up
+
+localnet-startd-state-export:
+	@docker-compose -f tests/localosmosis/state_export/docker-compose.yml up -d
+
+localnet-stop-state-export:
+	@docker-compose -f tests/localosmosis/docker-compose.yml down
+
 localnet-remove-state-export:
-	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml down
+	rm -rf $(PWD)/tests/localosmosis/state_export/.osmosisd
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \
