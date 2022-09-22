@@ -277,26 +277,28 @@ func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn osmomath.BigDec) osmoma
 }
 
 func approxDecEqual(a, b, tol osmomath.BigDec) bool {
-	diff := a.Sub(b).Abs()
-	return diff.Quo(a).LTE(tol) && diff.Quo(b).LTE(tol)
+	return (a.Sub(b).Abs()).LTE(tol)
 }
 
 var (
-	twodec    = osmomath.MustNewDecFromStr("2.0")
-	threshold = osmomath.NewDecWithPrec(1, 10) // Correct within a factor of 1 * 10^{-10}
+	twodec      = osmomath.MustNewDecFromStr("2.0")
+	k_threshold = osmomath.NewDecWithPrec(1, 1) // Correct within a factor of 1 * 10^{-1}
 )
 
 // solveCFMMBinarySearch searches the correct dx using binary search over constant K.
 // added for future extension
 func solveCFMMBinarySearch(constantFunction func(osmomath.BigDec, osmomath.BigDec) osmomath.BigDec) func(osmomath.BigDec, osmomath.BigDec, osmomath.BigDec) osmomath.BigDec {
 	return func(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
+		if !xReserve.IsPositive() || !yReserve.IsPositive() || !yIn.IsPositive() {
+			panic("invalid input: reserves and input must be positive")
+		}
 		k := constantFunction(xReserve, yReserve)
 		yf := yReserve.Add(yIn)
 		x_low_est := osmomath.ZeroDec()
 		x_high_est := xReserve
 		x_est := (x_high_est.Add(x_low_est)).Quo(twodec)
 		cur_k := constantFunction(x_est, yf)
-		for !approxDecEqual(cur_k, k, threshold) { // cap max iteration to 256
+		for i := 0; !approxDecEqual(cur_k, k, k_threshold) && i < 256; i++ {
 			if cur_k.GT(k) {
 				x_high_est = x_est
 			} else if cur_k.LT(k) {
@@ -305,7 +307,11 @@ func solveCFMMBinarySearch(constantFunction func(osmomath.BigDec, osmomath.BigDe
 			x_est = (x_high_est.Add(x_low_est)).Quo(twodec)
 			cur_k = constantFunction(x_est, yf)
 		}
-		return xReserve.Sub(x_est)
+		xOut := xReserve.Sub(x_est)
+		if xOut.GTE(xReserve) {
+			panic("invalid output: greater than full pool reserves")
+		}
+		return xOut
 	}
 }
 
@@ -313,13 +319,16 @@ func solveCFMMBinarySearch(constantFunction func(osmomath.BigDec, osmomath.BigDe
 // added for future extension
 func solveCFMMBinarySearchMulti(constantFunction func(osmomath.BigDec, osmomath.BigDec, osmomath.BigDec, osmomath.BigDec) osmomath.BigDec) func(osmomath.BigDec, osmomath.BigDec, osmomath.BigDec, osmomath.BigDec, osmomath.BigDec) osmomath.BigDec {
 	return func(xReserve, yReserve, uReserve, wSumSquares, yIn osmomath.BigDec) osmomath.BigDec {
+		if !xReserve.IsPositive() || !yReserve.IsPositive() || wSumSquares.IsNegative() || !yIn.IsPositive() {
+			panic("invalid input: reserves and input must be positive")
+		}
 		k := constantFunction(xReserve, yReserve, uReserve, wSumSquares)
 		yf := yReserve.Add(yIn)
 		x_low_est := osmomath.ZeroDec()
 		x_high_est := xReserve
 		x_est := (x_high_est.Add(x_low_est)).Quo(twodec)
 		cur_k := constantFunction(x_est, yf, uReserve, wSumSquares)
-		for !approxDecEqual(cur_k, k, threshold) { // cap max iteration to 256
+		for i := 0; !approxDecEqual(cur_k, k, k_threshold) && i < 256; i++ {
 			if cur_k.GT(k) {
 				x_high_est = x_est
 			} else if cur_k.LT(k) {
@@ -328,7 +337,11 @@ func solveCFMMBinarySearchMulti(constantFunction func(osmomath.BigDec, osmomath.
 			x_est = (x_high_est.Add(x_low_est)).Quo(twodec)
 			cur_k = constantFunction(x_est, yf, uReserve, wSumSquares)
 		}
-		return xReserve.Sub(x_est)
+		xOut := xReserve.Sub(x_est)
+		if xOut.GTE(xReserve) {
+			panic("invalid output: greater than full pool reserves")
+		}
+		return xOut
 	}
 }
 
