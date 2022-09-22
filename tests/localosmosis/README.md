@@ -57,49 +57,23 @@ systemctl stop osmosisd.service
 cd $HOME
 osmosisd export 2> state_export.json
 ```
-<<<<<<< HEAD
-After a while (~15 minutes), this will create a file called `testnet_genesis.json` which is a snapshot of the current mainnet state.
-
-=======
 
 After a while (~15 minutes), this will create a file called `state_export.json` which is a snapshot of the current mainnet state.
 
 5. Copy the `state_export.json` to the `localosmosis/state_export` folder within the osmosis repo
->>>>>>> 3fa5450e (Refactors testnetify and remove last localOsmosis Dockerfile (#2795))
 
-5. Copy the `testnet_genesis.json` to the localosmosis folder within the osmosis repo
 ```sh
 cp $HOME/state_export.json $HOME/osmosis/tests/localosmosis/state_export/
 ```
 
-<<<<<<< HEAD
-6. Ensure you have docker and docker compose installed/running:
-Docker
-=======
 6. Ensure you have docker and docker-compose installed:
 
-
->>>>>>> 3fa5450e (Refactors testnetify and remove last localOsmosis Dockerfile (#2795))
 ```sh
 # Docker
 sudo apt-get remove docker docker-engine docker.io
 sudo apt-get update
 sudo apt install docker.io -y
 
-<<<<<<< HEAD
-Docker Compose
-```sh
-sudo apt install docker-compose -y
-```
-
-7. Compile the local:osmosis-se docker image (~15 minutes, since this process modifies the testnet genesis you provided above). You may change the exported ID to whatever you want the chain-id to be. In this example, we will use the chain-id of localosmosis.
-```sh
-cd $HOME/osmosis
-export ID=local
-make localnet-build-state-export
-```
-
-=======
 # Docker compose
 sudo apt install docker-compose -y
 ```
@@ -111,9 +85,7 @@ make localnet-build-state-export
 ```
 
 8. Run the `local:osmosis` docker image
->>>>>>> 3fa5450e (Refactors testnetify and remove last localOsmosis Dockerfile (#2795))
 
-8. Start the local:osmosis-se docker image
 ```sh
 make localnet-start-state-export
 ```
@@ -128,6 +100,7 @@ You will then hit the first block (not block 1, but the block number after your 
 **This will happen for about 1 hour**, and then you will finally hit blocks at a normal pace.
 
 9. On your host machine, add this specific wallet which holds a large amount of osmo funds
+
 ```sh
 MNEMONIC="bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort"
 echo $MNEMONIC | osmosisd keys add wallet --recover --keyring-backend test
@@ -135,28 +108,26 @@ echo $MNEMONIC | osmosisd keys add wallet --recover --keyring-backend test
 
 You now are running a validator with a majority of the voting power with the same state as mainnet state (at the time you took the snapshot)
 
-<<<<<<< HEAD
-10. On your host machine, you can now query the state export testnet like so:
-=======
 10. On your host machine, you can now query the state-exported testnet:
 
->>>>>>> 3fa5450e (Refactors testnetify and remove last localOsmosis Dockerfile (#2795))
 ```sh
 osmosisd status
 ```
 
 11. Here is an example command to ensure complete understanding:
+
 ```sh
 osmosisd tx bank send wallet osmo1nyphwl8p5yx6fxzevjwqunsfqpcxukmtk8t60m 10000000uosmo --chain-id testing1 --keyring-backend test
 ```
 
 12. To stop the container and remove its data:
+
 ```sh
 make localnet-remove-state-export
 ```
 
 Note: At some point, all the validators (except yours) will get jailed at the same block due to them being offline.
-When this happens, it may take a little bit of time to process. Once all validators are jailed, you will continue to hit blocks as you did before. 
+When this happens, it may take a little bit of time to process. Once all validators are jailed, you will continue to hit blocks as you did before.
 If you are only running the validator for a short period of time (< 24 hours) you will not experience this.
 
 
