@@ -337,16 +337,16 @@ func solveCFMMBinarySearchMulti(constantFunction func(osmomath.BigDec, osmomath.
 		errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.Dec{}}
 
 		// create single-input CFMM to pass into binary search
-		calc_x_est := func(xEst osmomath.BigDec) (osmomath.BigDec, error) {
+		calcXEst := func(xEst osmomath.BigDec) (osmomath.BigDec, error) {
 			return constantFunction(xEst, yFinal, uReserve, wSumSquares), nil
 		}
 
-		x_est, err := osmoutils.BinarySearchBigDec(calc_x_est, xLowEst, xHighEst, k, errTolerance, maxIterations)
+		xEst, err := osmoutils.BinarySearchBigDec(calcXEst, xLowEst, xHighEst, k, errTolerance, maxIterations)
 		if err != nil {
 			panic(err)
 		}
 
-		xOut := xReserve.Sub(x_est)
+		xOut := xReserve.Sub(xEst)
 		if xOut.GTE(xReserve) {
 			panic("invalid output: greater than full pool reserves")
 		}
