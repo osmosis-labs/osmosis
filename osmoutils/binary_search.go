@@ -81,7 +81,7 @@ func (e ErrTolerance) CompareBigDec(expected osmomath.BigDec, actual osmomath.Bi
 			}
 		}
 
-		if diff.GT(osmomath.NewBigDec(e.AdditiveTolerance.Int64())) {
+		if diff.GT(osmomath.BigDecFromSDKDec(e.AdditiveTolerance.ToDec())) {
 			return comparisonSign
 		}
 	}
@@ -133,11 +133,11 @@ func BinarySearch(f func(input sdk.Int) (sdk.Int, error),
 }
 
 // BinarySearchBigDec takes as input:
-// * an input range [lowerbound, upperbound] 
+// * an input range [lowerbound, upperbound]
 // * an increasing function f
 // * a target output x
 // * max number of iterations (for gas control / handling does-not-converge cases)
-// 
+//
 // It binary searches on the input range, until it finds an input y s.t. f(y) meets the err tolerance constraints for how close it is to x.
 // If we perform more than maxIterations (or equivalently lowerbound = upperbound), we return an error.
 func BinarySearchBigDec(f func(input osmomath.BigDec) (osmomath.BigDec, error),
