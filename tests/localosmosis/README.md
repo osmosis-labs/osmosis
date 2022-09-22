@@ -72,7 +72,6 @@ cp $HOME/state_export.json $HOME/osmosis/tests/localosmosis/state_export/
 
 6. Ensure you have docker and docker-compose installed:
 
-
 ```sh
 # Docker
 sudo apt-get remove docker docker-engine docker.io
