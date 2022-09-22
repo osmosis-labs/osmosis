@@ -7,19 +7,22 @@ You can now quickly test your changes to Osmosis with just a few commands:
 1. Make any change to the osmosis code that you want to test
 
 2. From the Osmosis home folder, run `make localnet-build`
-    - This compiles all your changes to docker image called local:osmosis (~60 seconds)
+
+   - This compiles all your changes to docker image called local:osmosis (~60 seconds)
 
 3. Once complete, run `make localnet-start`
-    - You will now be running a local network with your changes!
-    - The files in `tests/e2e/localosmosis/.osmosisd` that are produced
-    by this command can only be removed by running `make localnet-remove`
-    - That will reset the chain to genesis
+
+   - You will now be running a local network with your changes!
+   - The files in `tests/e2e/localosmosis/.osmosisd` that are produced
+     by this command can only be removed by running `make localnet-remove`
+   - That will reset the chain to genesis
 
 4. To add your validator wallet and 9 other preloaded wallets automatically, run `make localnet-keys`
-    - These keys are added to your --keyring-backend test
-    - If the keys are already on your keyring, you will get an "Error: aborted"
-    - Ensure you use the name of the account as listed in the table below, as well as ensure you append the `--keyring-backend test` to your txs
-        - Example: `osmosisd tx bank send lo-test2 osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks --keyring-backend test --chain-id localosmosis`
+
+   - These keys are added to your --keyring-backend test
+   - If the keys are already on your keyring, you will get an "Error: aborted"
+   - Ensure you use the name of the account as listed in the table below, as well as ensure you append the `--keyring-backend test` to your txs
+     - Example: `osmosisd tx bank send lo-test2 osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks --keyring-backend test --chain-id localosmosis`
 
 5. To remove all block history and start from scratch, run `make localnet-remove`
 
@@ -27,11 +30,11 @@ You can now quickly test your changes to Osmosis with just a few commands:
 
 ## LocalOsmosis with Mainnet State
 
-Running LocalOsmosis with mainnet state is resource intensive and can take a bit of time. 
+Running LocalOsmosis with mainnet state is resource intensive and can take a bit of time.
 It is recommended to only use this method if you are testing a new feature that must be thoroughly tested before pushing to production.
 
-A few things to note before getting started. The below method will only work if you are using the same version as mainnet. In other words, 
-if mainnet is on v8.0.0 and you try to do this on a v9.0.0 tag or on main, you will run into an error when initializing the genesis. 
+A few things to note before getting started. The below method will only work if you are using the same version as mainnet. In other words,
+if mainnet is on v8.0.0 and you try to do this on a v9.0.0 tag or on main, you will run into an error when initializing the genesis.
 (yes, it is possible to create a state exported testnet on a upcoming release, but that is out of the scope of this tutorial)
 
 Additionally, this process requires 64GB of RAM. If you do not have 64GB of RAM, you will get an OOM error.
@@ -72,7 +75,6 @@ cp $HOME/state_export.json $HOME/osmosis/tests/localosmosis/state_export/
 
 6. Ensure you have docker and docker-compose installed:
 
-
 ```sh
 # Docker
 sudo apt-get remove docker docker-engine docker.io
@@ -100,8 +102,8 @@ When running this command for the first time, `local:osmosis` will:
 - Modify the provided `state_export.json` to create a new state suitable for a testnet
 - Start the chain
 
-You will then go through the genesis initialization process. This will take ~15 minutes. 
-You will then hit the first block (not block 1, but the block number after your snapshot was taken), and then you will just see a bunch of p2p error logs with some KV store logs. 
+You will then go through the genesis initialization process. This will take ~15 minutes.
+You will then hit the first block (not block 1, but the block number after your snapshot was taken), and then you will just see a bunch of p2p error logs with some KV store logs.
 **This will happen for about 1 hour**, and then you will finally hit blocks at a normal pace.
 
 9. On your host machine, add this specific wallet which holds a large amount of osmo funds
@@ -132,23 +134,23 @@ make localnet-remove-state-export
 ```
 
 Note: At some point, all the validators (except yours) will get jailed at the same block due to them being offline.
-When this happens, it may take a little bit of time to process. Once all validators are jailed, you will continue to hit blocks as you did before. 
+When this happens, it may take a little bit of time to process. Once all validators are jailed, you will continue to hit blocks as you did before.
 If you are only running the validator for a short period of time (< 24 hours) you will not experience this.
 
 ## Accounts
 
 LocalOsmosis is pre-configured with one validator and 9 accounts with ION and OSMO balances.
 
-| Account   | Address                                                                                                  | Mnemonic                                                                                                                                                                   |
-| --------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| lo-val | `osmo1phaxpevm5wecex2jyaqty2a4v02qj7qmlmzk5a`<br/>`osmovaloper1phaxpevm5wecex2jyaqty2a4v02qj7qm9v24r6` | `satisfy adjust timber high purchase tuition stool faith fine install that you unaware feed domain license impose boss human eager hat rent enjoy dawn`                    |
-| lo-test1     | `osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks`                                                           | `notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius`                       |
-| lo-test2     | `osmo18s5lynnmx37hq4wlrw9gdn68sg2uxp5rgk26vv`                                                           | `quality vacuum heart guard buzz spike sight swarm shove special gym robust assume sudden deposit grid alcohol choice devote leader tilt noodle tide penalty`              |
-| lo-test3     | `osmo1qwexv7c6sm95lwhzn9027vyu2ccneaqad4w8ka`                                                           | `symbol force gallery make bulk round subway violin worry mixture penalty kingdom boring survey tool fringe patrol sausage hard admit remember broken alien absorb`        |
-| lo-test4     | `osmo14hcxlnwlqtq75ttaxf674vk6mafspg8xwgnn53`                                                           | `bounce success option birth apple portion aunt rural episode solution hockey pencil lend session cause hedgehog slender journey system canvas decorate razor catch empty` |
-| lo-test5     | `osmo12rr534cer5c0vj53eq4y32lcwguyy7nndt0u2t`                                                           | `second render cat sing soup reward cluster island bench diet lumber grocery repeat balcony perfect diesel stumble piano distance caught occur example ozone loyal`        |
-| lo-test6     | `osmo1nt33cjd5auzh36syym6azgc8tve0jlvklnq7jq`                                                           | `spatial forest elevator battle also spoon fun skirt flight initial nasty transfer glory palm drama gossip remove fan joke shove label dune debate quick`                  |
-| lo-test7     | `osmo10qfrpash5g2vk3hppvu45x0g860czur8ff5yx0`                                                           | `noble width taxi input there patrol clown public spell aunt wish punch moment will misery eight excess arena pen turtle minimum grain vague inmate`                       |
-| lo-test8     | `osmo1f4tvsdukfwh6s9swrc24gkuz23tp8pd3e9r5fa`                                                           | `cream sport mango believe inhale text fish rely elegant below earth april wall rug ritual blossom cherry detail length blind digital proof identify ride`                 |
-| lo-test9     | `osmo1myv43sqgnj5sm4zl98ftl45af9cfzk7nhjxjqh`                                                           | `index light average senior silent limit usual local involve delay update rack cause inmate wall render magnet common feature laundry exact casual resource hundred`       |
-| lo-test10    | `osmo14gs9zqh8m49yy9kscjqu9h72exyf295afg6kgk`                                                           | `prefer forget visit mistake mixture feel eyebrow autumn shop pair address airport diesel street pass vague innocent poem method awful require hurry unhappy shoulder`     |
+| Account   | Address                                                                                                | Mnemonic                                                                                                                                                                   |
+| --------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| lo-val    | `osmo1phaxpevm5wecex2jyaqty2a4v02qj7qmlmzk5a`<br/>`osmovaloper1phaxpevm5wecex2jyaqty2a4v02qj7qm9v24r6` | `satisfy adjust timber high purchase tuition stool faith fine install that you unaware feed domain license impose boss human eager hat rent enjoy dawn`                    |
+| lo-test1  | `osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks`                                                          | `notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius`                       |
+| lo-test2  | `osmo18s5lynnmx37hq4wlrw9gdn68sg2uxp5rgk26vv`                                                          | `quality vacuum heart guard buzz spike sight swarm shove special gym robust assume sudden deposit grid alcohol choice devote leader tilt noodle tide penalty`              |
+| lo-test3  | `osmo1qwexv7c6sm95lwhzn9027vyu2ccneaqad4w8ka`                                                          | `symbol force gallery make bulk round subway violin worry mixture penalty kingdom boring survey tool fringe patrol sausage hard admit remember broken alien absorb`        |
+| lo-test4  | `osmo14hcxlnwlqtq75ttaxf674vk6mafspg8xwgnn53`                                                          | `bounce success option birth apple portion aunt rural episode solution hockey pencil lend session cause hedgehog slender journey system canvas decorate razor catch empty` |
+| lo-test5  | `osmo12rr534cer5c0vj53eq4y32lcwguyy7nndt0u2t`                                                          | `second render cat sing soup reward cluster island bench diet lumber grocery repeat balcony perfect diesel stumble piano distance caught occur example ozone loyal`        |
+| lo-test6  | `osmo1nt33cjd5auzh36syym6azgc8tve0jlvklnq7jq`                                                          | `spatial forest elevator battle also spoon fun skirt flight initial nasty transfer glory palm drama gossip remove fan joke shove label dune debate quick`                  |
+| lo-test7  | `osmo10qfrpash5g2vk3hppvu45x0g860czur8ff5yx0`                                                          | `noble width taxi input there patrol clown public spell aunt wish punch moment will misery eight excess arena pen turtle minimum grain vague inmate`                       |
+| lo-test8  | `osmo1f4tvsdukfwh6s9swrc24gkuz23tp8pd3e9r5fa`                                                          | `cream sport mango believe inhale text fish rely elegant below earth april wall rug ritual blossom cherry detail length blind digital proof identify ride`                 |
+| lo-test9  | `osmo1myv43sqgnj5sm4zl98ftl45af9cfzk7nhjxjqh`                                                          | `index light average senior silent limit usual local involve delay update rack cause inmate wall render magnet common feature laundry exact casual resource hundred`       |
+| lo-test10 | `osmo14gs9zqh8m49yy9kscjqu9h72exyf295afg6kgk`                                                          | `prefer forget visit mistake mixture feel eyebrow autumn shop pair address airport diesel street pass vague innocent poem method awful require hurry unhappy shoulder`     |
