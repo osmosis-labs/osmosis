@@ -868,7 +868,7 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 				if tc.expErr != nil {
 					require.Error(t, err)
 					require.ErrorAs(t, tc.expErr, &err)
-					require.Equal(t, sdk.Int{}, shares)
+					require.Equal(t, sdk.ZeroInt(), shares)
 					require.Equal(t, preJoinAssets, postJoinAssets)
 				} else {
 					require.NoError(t, err)

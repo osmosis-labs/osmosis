@@ -449,7 +449,7 @@ func (p *Pool) PokePool(blockTime time.Time) {
 func (p Pool) GetTokenWeight(denom string) (sdk.Int, error) {
 	PoolAsset, err := p.GetPoolAsset(denom)
 	if err != nil {
-		return sdk.Int{}, err
+		return sdk.ZeroInt(), err
 	}
 
 	return PoolAsset.Weight, nil
@@ -458,7 +458,7 @@ func (p Pool) GetTokenWeight(denom string) (sdk.Int, error) {
 func (p Pool) GetTokenBalance(denom string) (sdk.Int, error) {
 	PoolAsset, err := p.GetPoolAsset(denom)
 	if err != nil {
-		return sdk.Int{}, err
+		return sdk.ZeroInt(), err
 	}
 
 	return PoolAsset.Token.Amount, nil
@@ -653,7 +653,7 @@ func (p *Pool) calcSingleAssetJoin(tokenIn sdk.Coin, swapFee sdk.Dec, tokenInPoo
 func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
 	numShares, newLiquidity, err := p.CalcJoinPoolShares(ctx, tokensIn, swapFee)
 	if err != nil {
-		return sdk.Int{}, err
+		return sdk.ZeroInt(), err
 	}
 
 	// update pool with the calculated share and liquidity needed to join pool
@@ -666,7 +666,7 @@ func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (n
 func (p *Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
 	numShares, tokensJoined, err := p.CalcJoinPoolNoSwapShares(ctx, tokensIn, swapFee)
 	if err != nil {
-		return sdk.Int{}, err
+		return sdk.ZeroInt(), err
 	}
 
 	// update pool with the calculated share and liquidity needed to join pool
@@ -868,7 +868,7 @@ func (p *Pool) CalcTokenInShareAmountOut(
 ) (tokenInAmount sdk.Int, err error) {
 	_, poolAssetIn, err := p.getPoolAssetAndIndex(tokenInDenom)
 	if err != nil {
-		return sdk.Int{}, err
+		return sdk.ZeroInt(), err
 	}
 
 	normalizedWeight := poolAssetIn.Weight.ToDec().Quo(p.GetTotalWeight().ToDec())
@@ -884,7 +884,7 @@ func (p *Pool) CalcTokenInShareAmountOut(
 	).Ceil().TruncateInt()
 
 	if !tokenInAmount.IsPositive() {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount.Int64())
+		return sdk.ZeroInt(), sdkerrors.Wrapf(types.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount.Int64())
 	}
 
 	return tokenInAmount, nil
@@ -897,7 +897,7 @@ func (p *Pool) JoinPoolTokenInMaxShareAmountOut(
 ) (tokenInAmount sdk.Int, err error) {
 	_, poolAssetIn, err := p.getPoolAssetAndIndex(tokenInDenom)
 	if err != nil {
-		return sdk.Int{}, err
+		return sdk.ZeroInt(), err
 	}
 
 	normalizedWeight := poolAssetIn.Weight.ToDec().Quo(p.GetTotalWeight().ToDec())
@@ -911,13 +911,13 @@ func (p *Pool) JoinPoolTokenInMaxShareAmountOut(
 	).TruncateInt()
 
 	if !tokenInAmount.IsPositive() {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount.Int64())
+		return sdk.ZeroInt(), sdkerrors.Wrapf(types.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount.Int64())
 	}
 
 	poolAssetIn.Token.Amount = poolAssetIn.Token.Amount.Add(tokenInAmount)
 	err = p.UpdatePoolAssetBalance(poolAssetIn.Token)
 	if err != nil {
-		return sdk.Int{}, err
+		return sdk.ZeroInt(), err
 	}
 
 	return tokenInAmount, nil
@@ -930,7 +930,7 @@ func (p *Pool) ExitSwapExactAmountOut(
 ) (shareInAmount sdk.Int, err error) {
 	_, poolAssetOut, err := p.getPoolAssetAndIndex(tokenOut.Denom)
 	if err != nil {
-		return sdk.Int{}, err
+		return sdk.ZeroInt(), err
 	}
 
 	sharesIn := calcPoolSharesInGivenSingleAssetOut(
@@ -943,15 +943,15 @@ func (p *Pool) ExitSwapExactAmountOut(
 	).TruncateInt()
 
 	if !sharesIn.IsPositive() {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrNotPositiveRequireAmount, nonPostiveSharesAmountErrFormat, sharesIn.Int64())
+		return sdk.ZeroInt(), sdkerrors.Wrapf(types.ErrNotPositiveRequireAmount, nonPostiveSharesAmountErrFormat, sharesIn.Int64())
 	}
 
 	if sharesIn.GT(shareInMaxAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, sharesLargerThanMaxErrFormat, sharesIn.Int64(), shareInMaxAmount.Uint64())
+		return sdk.ZeroInt(), sdkerrors.Wrapf(types.ErrLimitMaxAmount, sharesLargerThanMaxErrFormat, sharesIn.Int64(), shareInMaxAmount.Uint64())
 	}
 
 	if err := p.exitPool(ctx, sdk.NewCoins(tokenOut), sharesIn); err != nil {
-		return sdk.Int{}, err
+		return sdk.ZeroInt(), err
 	}
 
 	return sharesIn, nil
