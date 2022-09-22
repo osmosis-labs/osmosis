@@ -149,10 +149,10 @@ def create_parser():
     )
 
     parser.add_argument(
-        '-v',
-        '--verbose',
-        action='store_true',
-        help='More verbose output'
+        '-q',
+        '--quiet',
+        action='store_false',
+        help='Less verbose output'
     )
 
     parser.add_argument(
