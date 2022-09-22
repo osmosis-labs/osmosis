@@ -30,7 +30,11 @@ echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 In depth swap setup instructions:
 <https://www.digitalocean.com/community/tutorials/how-to-add-swap-space-on-ubuntu-20-04>
 
-## Install and setup Cosmovisor
+## First Time Cosmovisor Setup
+
+If you have never setup Cosmovisor before, follow the following instructions.
+
+If you have already setup Cosmovisor, skip to the next section.
 
 We highly recommend validators use cosmovisor to run their nodes. This
 will make low-downtime upgrades smoother, as validators don't have to
@@ -85,7 +89,9 @@ echo "export UNSAFE_SKIP_BACKUP=true" >> ~/.profile
 source ~/.profile
 ```
 
-Now, create the v12 folder, make the build, and copy the daemon over to that folder
+## Cosmovisor Upgrade
+
+Create the v12 folder, make the build, and copy the daemon over to that folder
 
 ```{.sh}
 mkdir -p ~/.osmosisd/cosmovisor/upgrades/v12/bin
