@@ -132,8 +132,13 @@ func BinarySearch(f func(input sdk.Int) (sdk.Int, error),
 	return sdk.Int{}, errors.New("hit maximum iterations, did not converge fast enough")
 }
 
-// Binary search BigDec inputs between [lowerbound, upperbound] to a monotonic increasing function f
-// We stop once f(found_input) meets the ErrTolerance constraints.
+// BinarySearchBigDec takes as input:
+// * an input range [lowerbound, upperbound] 
+// * an increasing function f
+// * a target output x
+// * max number of iterations (for gas control / handling does-not-converge cases)
+// 
+// It binary searches on the input range, until it finds an input y s.t. f(y) meets the err tolerance constraints for how close it is to x.
 // If we perform more than maxIterations (or equivalently lowerbound = upperbound), we return an error.
 func BinarySearchBigDec(f func(input osmomath.BigDec) (osmomath.BigDec, error),
 	lowerbound osmomath.BigDec,
