@@ -95,23 +95,33 @@ edit_config () {
 create_two_asset_pool () {
     # Create default pool
     substring='code: 0'
-    string=$(osmosisd tx gamm create-pool --pool-file=nativeDenomPool.json --from $MONIKER --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --yes  2>&1)
-    if [ "$string" != "${string%"$substring"*}" ]; then
-        echo "create two asset pool: successful"
-    else
-        create_two_asset_pool
-    fi
+    COUNTER=0
+    while [ $COUNTER -lt 15 ]; do
+        string=$(osmosisd tx gamm create-pool --pool-file=nativeDenomPool.json --from $MONIKER --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --yes  2>&1)
+        if [ "$string" != "${string%"$substring"*}" ]; then
+            echo "create two asset pool: successful"
+            break
+        else
+            let COUNTER=COUNTER+1
+            sleep 0.5
+        fi
+    done
 }
 
 create_three_asset_pool () {
     # Create three asset pool
     substring='code: 0'
-    string=$(osmosisd tx gamm create-pool --pool-file=nativeDenomThreeAssetPool.json --from $MONIKER --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --yes 2>&1)
-    if [ "$string" != "${string%"$substring"*}" ]; then
-        echo "create three asset pool: successful"
-    else
-        create_three_asset_pool
-    fi
+    COUNTER=0
+    while [ $COUNTER -lt 15 ]; do
+        string=$(osmosisd tx gamm create-pool --pool-file=nativeDenomThreeAssetPool.json --from $MONIKER --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --yes 2>&1)
+        if [ "$string" != "${string%"$substring"*}" ]; then
+            echo "create three asset pool: successful"
+            break
+        else
+            let COUNTER=COUNTER+1
+            sleep 0.5
+        fi
+    done
 }
 
 if [[ ! -d $CONFIG_FOLDER ]]
