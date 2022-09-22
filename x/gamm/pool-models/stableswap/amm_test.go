@@ -371,7 +371,6 @@ var multiAssetCFMMTestCases = map[string]multiAssetCFMMTestCase{
 	"xReserve overflows in 4-asset pool": {
 		xReserve: osmomath.NewDecFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(1024), nil), big.NewInt(1))),
 		yReserve: osmomath.NewBigDec(100),
-		// represents a 4-asset pool with 100 in each reserve
 		uReserve:    osmomath.NewBigDec(200),
 		wSumSquares: osmomath.NewBigDec(20000),
 		yIn:         osmomath.NewBigDec(1),
@@ -380,7 +379,6 @@ var multiAssetCFMMTestCases = map[string]multiAssetCFMMTestCase{
 	"yReserve overflows in 4-asset pool": {
 		xReserve: osmomath.NewBigDec(100),
 		yReserve: osmomath.NewDecFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(1024), nil), big.NewInt(1))),
-		// represents a 4-asset pool with 100 in each reserve
 		uReserve:    osmomath.NewBigDec(200),
 		wSumSquares: osmomath.NewBigDec(20000),
 		yIn:         osmomath.NewBigDec(1),
@@ -389,7 +387,6 @@ var multiAssetCFMMTestCases = map[string]multiAssetCFMMTestCase{
 	"uReserve overflows in 4-asset pool": {
 		xReserve: osmomath.NewBigDec(100),
 		yReserve: osmomath.NewBigDec(100),
-		// represents a 4-asset pool with 100 in each reserve
 		uReserve:    osmomath.NewDecFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(1024), nil), big.NewInt(1))),
 		wSumSquares: osmomath.NewBigDec(20000),
 		yIn:         osmomath.NewBigDec(1),
@@ -398,7 +395,6 @@ var multiAssetCFMMTestCases = map[string]multiAssetCFMMTestCase{
 	"wSumSquares overflows in 4-asset pool": {
 		xReserve: osmomath.NewBigDec(100),
 		yReserve: osmomath.NewBigDec(100),
-		// represents a 4-asset pool with 100 in each reserve
 		uReserve:    osmomath.NewBigDec(200),
 		wSumSquares: osmomath.NewDecFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(1024), nil), big.NewInt(1))),
 		yIn:         osmomath.NewBigDec(1),
@@ -407,7 +403,6 @@ var multiAssetCFMMTestCases = map[string]multiAssetCFMMTestCase{
 	"yIn overflows in 4-asset pool": {
 		xReserve: osmomath.NewBigDec(100),
 		yReserve: osmomath.NewBigDec(100),
-		// represents a 4-asset pool with 100 in each reserve
 		uReserve:    osmomath.NewBigDec(200),
 		wSumSquares: osmomath.NewBigDec(20000),
 		yIn:         osmomath.NewDecFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(1024), nil), big.NewInt(1))),
