@@ -68,7 +68,7 @@ mkdir -p ~/.osmosisd/cosmovisor/upgrades/v11/bin
 cp $GOPATH/bin/osmosisd ~/.osmosisd/cosmovisor/upgrades/v11/bin
 ```
 
-Cosmovisor is now ready to be started. We will now set up Cosmovisor for the upgrade
+Cosmovisor is now ready to be set up for v12.
 
 Set these environment variables:
 
