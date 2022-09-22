@@ -55,7 +55,8 @@ func GetIterValuesWithStop[T any](
 	keyEnd []byte,
 	reverse bool,
 	stopFn func([]byte) bool,
-	parseValue func([]byte) (T, error)) ([]T, error) {
+	parseValue func([]byte) (T, error),
+) ([]T, error) {
 	iter := makeIterator(storeObj, keyStart, keyEnd, reverse)
 	defer iter.Close()
 

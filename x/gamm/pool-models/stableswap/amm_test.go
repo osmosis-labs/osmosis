@@ -75,51 +75,8 @@ type StableSwapTestSuite struct {
 func TestCFMMInvariantTwoAssets(t *testing.T) {
 	kErrTolerance := osmomath.OneDec()
 
-	tests := map[string]struct {
-		xReserve    osmomath.BigDec
-		yReserve    osmomath.BigDec
-		yIn         osmomath.BigDec
-		expectPanic bool
-	}{
-		"small pool small input": {
-			osmomath.NewBigDec(100),
-			osmomath.NewBigDec(100),
-			osmomath.NewBigDec(1),
-			false,
-		},
-		"small pool large input": {
-			osmomath.NewBigDec(100),
-			osmomath.NewBigDec(100),
-			osmomath.NewBigDec(1000),
-			false,
-		},
-		// This test fails due to a bug in our original solver
-		// {
-		// 	sdk.NewDec(100000),
-		// 	sdk.NewDec(100000),
-		// 	sdk.NewDec(10000),
-		// },
-
-		// panic catching
-		"xReserve negative": {
-			osmomath.NewBigDec(-100),
-			osmomath.NewBigDec(100),
-			osmomath.NewBigDec(1),
-			true,
-		},
-		"yReserve negative": {
-			osmomath.NewBigDec(100),
-			osmomath.NewBigDec(-100),
-			osmomath.NewBigDec(1),
-			true,
-		},
-		"yIn negative": {
-			osmomath.NewBigDec(100),
-			osmomath.NewBigDec(100),
-			osmomath.NewBigDec(-1),
-			true,
-		},
-	}
+	// TODO: switch solveCfmm to binary search and replace this with test case suite  
+	tests := map[string]twoAssetCFMMTestCase{}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {

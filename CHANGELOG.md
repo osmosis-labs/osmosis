@@ -77,6 +77,8 @@ which acts as a fuzz testing tool tailored for the SDK state machine.
 * [#2206](https://github.com/osmosis-labs/osmosis/pull/2283) Register all Amino interfaces and concrete types on the authz Amino codec. This will allow the authz module to properly serialize and de-serializes instances using Amino.
 * [#2405](https://github.com/osmosis-labs/osmosis/pull/2405) Make SpotPrice have a max value of 2^160, and no longer be able to panic
 * [#2473](https://github.com/osmosis-labs/osmosis/pull/2473) x/superfluid `AddNewSuperfluidAsset` now returns error, if any occurs instead of ignoring it.
+* [#2714](https://github.com/osmosis-labs/osmosis/pull/2714) Upgrade wasmd to v0.28.0.
+* [#2772](https://github.com/osmosis-labs/osmosis/pull/2772) Remove the ModuleListedCoins grpc query
 
 #### Golang API breaks
 
@@ -97,7 +99,6 @@ which acts as a fuzz testing tool tailored for the SDK state machine.
 ### Features
 
 * [#2387](https://github.com/osmosis-labs/osmosis/pull/2387) Upgrade to IBC v3.2.0, which allows for sending/receiving IBC tokens with slashes.
-* [#2057](https://github.com/osmosis-labs/osmosis/pull/2057) Reduce block times to about three seconds
 * [#1312] Stableswap: Createpool logic 
 * [#1230] Stableswap CFMM equations
 * [#1429] solver for multi-asset CFMM

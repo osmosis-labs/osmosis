@@ -355,7 +355,7 @@ func RandomExitSwapShareAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.
 		PoolId:            pool_id,
 		TokenOutDenom:     tokenOut.Denom,
 		ShareInAmount:     gammShares.Amount.Quo(sdk.NewInt(2)),
-		TokenOutMinAmount: tokenOut.Amount,
+		TokenOutMinAmount: tokenOut.Amount.Quo(sdk.NewInt(2)),
 	}, nil
 }
 
