@@ -127,6 +127,27 @@ func (q Querier) NumPools(ctx context.Context, _ *types.QueryNumPoolsRequest) (*
 	}, nil
 }
 
+func (q Querier) PoolType(ctx context.Context, req *types.QueryPoolTypeRequest) (*types.QueryPoolTypeResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	pool, err := q.Keeper.GetPoolAndPoke(sdkCtx, req.PoolId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	switch pool := pool.(type) {
+	case *balancer.Pool:
+		return &types.QueryPoolTypeResponse{PoolType: "Balancer"}, nil
+	default:
+		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
+	}
+}
+
 // PoolParams queries a specified pool for its params.
 func (q Querier) PoolParams(ctx context.Context, req *types.QueryPoolParamsRequest) (*types.QueryPoolParamsResponse, error) {
 	if req == nil {
