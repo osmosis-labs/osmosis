@@ -1139,7 +1139,6 @@ func (s *TestSuite) TestUpdateRecords() {
 			preSetRecords: []types.TwapRecord{threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC, withLastErrTime(tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAB.Time), tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC},
 			poolId:        threeAssetRecordAB.PoolId,
 			blockTime: threeAssetRecordAB.Time.Add(time.Second * 11),
-
 			spOverrides: []spOverride{
 				{
 					baseDenom:  threeAssetRecordAB.Asset0Denom,
