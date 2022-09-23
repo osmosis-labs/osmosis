@@ -59,6 +59,7 @@ This release includes several cosmwasm-developer and appchain-ecosystem affectin
 * Fixing State Sync
 * Remove x/Bech32IBC
 * Consistently makes authz work with ledger for all messages
+* Enabling expedited proposals
 
 This upgrade also adds a number of safety and API boundary improving changes to the codebase.
 While not state machine breaking, this release also includes the revamped Osmosis simulator,
@@ -119,6 +120,13 @@ which acts as a fuzz testing tool tailored for the SDK state machine.
 ### Improvements
 * [#2515](https://github.com/osmosis-labs/osmosis/pull/2515) Emit events from functions implementing epoch hooks' `panicCatchingEpochHook` cacheCtx
 * [#2526](https://github.com/osmosis-labs/osmosis/pull/2526) EpochHooks interface methods (and hence modules implementing the hooks) return error instead of panic
+
+### SDK Upgrade
+* [#2820](https://github.com/osmosis-labs/osmosis/pull/2810) Upgrade sdk fork to commit `3c4d30596acce8ca30cacbc173de2431a04b8a3b` on `v0.45.0x-osmo-v12` branch.
+
+#### Notable SDK Changes
+* [#265](https://github.com/osmosis-labs/cosmos-sdk/pull/265) Fix state-sync by appropriate app-version handling.
+* [#240](https://github.com/osmosis-labs/cosmos-sdk/pull/240) Expedited proposals.
 
 ## v11.0.1
 
