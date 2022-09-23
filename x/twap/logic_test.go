@@ -1138,7 +1138,6 @@ func (s *TestSuite) TestUpdateRecords() {
 		"multi-asset pool; pre-set at t and t + 1 with err, large spot price, overwrites error time": {
 			preSetRecords: []types.TwapRecord{threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC, withLastErrTime(tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAB.Time), tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC},
 			poolId:        threeAssetRecordAB.PoolId,
-
 			blockTime: threeAssetRecordAB.Time.Add(time.Second * 11),
 
 			spOverrides: []spOverride{
