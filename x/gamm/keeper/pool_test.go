@@ -38,7 +38,8 @@ func (suite *KeeperTestSuite) TestCleanupPool() {
 		suite.Run(test.name, func() {
 			joinPoolAcc1 := suite.TestAccs[1]
 			joinPoolAcc2 := suite.TestAccs[2]
-			// createPoolAcc gets funded and joins pool
+
+			// suite.TestAccs[0] gets funded and joins pool
 			poolId := suite.PrepareBalancerPoolWithCoins(test.createPoolFund...)
 
 			for _, acc := range []sdk.AccAddress{joinPoolAcc1, joinPoolAcc2} {
@@ -48,7 +49,7 @@ func (suite *KeeperTestSuite) TestCleanupPool() {
 				suite.NoError(err)
 			}
 
-			err := suite.App.GAMMKeeper.CleanupBalancerPool(suite.Ctx, []uint64{poolId})
+			err := suite.App.GAMMKeeper.CleanupPools(suite.Ctx, []uint64{poolId})
 			suite.Require().NoError(err)
 
 			// double check that pool is deleted

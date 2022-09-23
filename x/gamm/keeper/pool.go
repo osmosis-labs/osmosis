@@ -105,17 +105,21 @@ func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 	return nil
 }
 
-// CleanupBalancerPool destructs a pool and refunds all the assets according to
-// the shares held by the accounts. CleanupBalancerPool should not be called during
+// CleanupPools destructs a pool and refunds all the assets according to
+// the shares held by the accounts. CleanupPools should not be called during
 // the chain execution time, as it iterates the entire account balances.
 //
 // CONTRACT: All locks on this pool share must be unlocked prior to execution. Use LockupKeeper.ForceUnlock
 // on remaining locks before calling this function.
-func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolIds []uint64) (err error) {
+func (k Keeper) CleanupPools(ctx sdk.Context, poolIds []uint64) (err error) {
 	// we use maps here because we can't alter the state of pool directly
-	poolAddresses := make(map[string]sdk.AccAddress)
-	totalShares := make(map[string]sdk.Int)
-	poolLiquidity := make(map[string]sdk.Coins)
+	type poolInfo struct {
+		address     sdk.AccAddress
+		totalShares sdk.Int
+		liquidity   sdk.Coins
+	}
+
+	poolInfos := make(map[string]poolInfo)
 
 	for _, poolId := range poolIds {
 		pool, err := k.GetPoolAndPoke(ctx, poolId)
@@ -124,9 +128,11 @@ func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolIds []uint64) (err erro
 		}
 		shareDenom := types.GetPoolShareDenom(poolId)
 
-		poolAddresses[shareDenom] = pool.GetAddress()
-		totalShares[shareDenom] = pool.GetTotalShares()
-		poolLiquidity[shareDenom] = pool.GetTotalPoolLiquidity(ctx)
+		poolInfos[shareDenom] = poolInfo{
+			pool.GetAddress(),
+			pool.GetTotalShares(),
+			pool.GetTotalPoolLiquidity(ctx),
+		}
 	}
 
 	// first iterate through the share holders and burn them
@@ -137,13 +143,14 @@ func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolIds []uint64) (err erro
 		}
 
 		// skip to next iteration if this coin is not a pool share
-		_, ok := totalShares[coin.Denom]
+		pool, ok := poolInfos[coin.Denom]
 		if !ok {
 			return
 		}
 
-		// track remaining total share every iteration
-		shareDenom := coin.Denom
+		totalShares := pool.totalShares
+		poolLiquidity := pool.liquidity
+		poolAddress := pool.address
 
 		// Burn the share tokens
 		err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, addr, types.ModuleName, sdk.Coins{coin})
@@ -158,23 +165,30 @@ func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolIds []uint64) (err erro
 
 		// Refund assets
 		// lpShareEquivalentTokens = (amount in pool) * (your shares) / (total shares)
-		for _, asset := range poolLiquidity[shareDenom] {
-			lpShareEquivalentTokens := asset.Amount.Mul(coin.Amount).Quo(totalShares[shareDenom])
+		for _, asset := range poolLiquidity {
+			// should we just give the remaining liquidity to the pool address?
+			lpShareEquivalentTokens := asset.Amount.Mul(coin.Amount).Quo(totalShares)
 			if lpShareEquivalentTokens.IsZero() {
 				continue
 			}
-
 			poolAssetToReturn := sdk.NewCoin(asset.Denom, lpShareEquivalentTokens)
-			poolLiquidity[shareDenom] = poolLiquidity[shareDenom].Sub(sdk.Coins{poolAssetToReturn})
+			poolLiquidity = poolLiquidity.Sub(sdk.Coins{poolAssetToReturn})
 
 			err = k.bankKeeper.SendCoins(
-				ctx, poolAddresses[shareDenom], addr, sdk.Coins{poolAssetToReturn})
+				ctx, poolAddress, addr, sdk.Coins{poolAssetToReturn})
 			if err != nil {
 				return true
 			}
 		}
 
-		totalShares[shareDenom] = totalShares[shareDenom].Sub(coin.Amount)
+		totalShares = totalShares.Sub(coin.Amount)
+
+		// save updated state of pool in map for next iteration
+		poolInfos[coin.Denom] = poolInfo{
+			poolAddress,
+			totalShares,
+			poolLiquidity,
+		}
 		return false
 	})
 
@@ -188,16 +202,16 @@ func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolIds []uint64) (err erro
 			return err
 		}
 		shareDenom := types.GetPoolShareDenom(poolId)
-
+		poolInfo := poolInfos[shareDenom]
 		// sanity check that we have no remaining shares
-		if !poolLiquidity[shareDenom].IsZero() {
-			panic("pool total share should be zero after cleanup")
+		if !poolInfo.totalShares.IsZero() {
+			return fmt.Errorf("pool %d still has liquidity after cleanup", poolId)
 		}
 
 		// check that we have no remaining balances in the pool
 		coins := k.bankKeeper.GetAllBalances(ctx, pool.GetAddress())
 		if !coins.IsZero() {
-			panic("pool balance should be zero after cleanup")
+			return fmt.Errorf("pool %d still has remaining balance after cleanup", poolId)
 		}
 
 		// delete the pool once sanity check has been dones
