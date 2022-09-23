@@ -12,7 +12,7 @@ services:
         GO_VERSION: 1.18
     volumes:
       - ./scripts/setup.sh:/osmosis/setup.sh
-      - ./.osmosisd/:/osmosis/.osmosisd/
+      - $HOME/osmosisd/:/osmosis/.osmosisd/
     entrypoint:
       - /osmosis/setup.sh
     ports:
