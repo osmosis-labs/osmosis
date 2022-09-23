@@ -34,12 +34,6 @@ func (q Querier) ModuleToDistributeCoins(goCtx context.Context, _ *types.ModuleT
 	return &types.ModuleToDistributeCoinsResponse{Coins: q.Keeper.GetModuleToDistributeCoins(ctx)}, nil
 }
 
-// ModuleDistributedCoins returns coins that have been distributed by module already.
-func (q Querier) ModuleDistributedCoins(goCtx context.Context, _ *types.ModuleDistributedCoinsRequest) (*types.ModuleDistributedCoinsResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	return &types.ModuleDistributedCoinsResponse{Coins: q.Keeper.GetModuleDistributedCoins(ctx)}, nil
-}
-
 // GaugeByID takes a gaugeID and returns its respective gauge.
 func (q Querier) GaugeByID(goCtx context.Context, req *types.GaugeByIDRequest) (*types.GaugeByIDResponse, error) {
 	if req == nil {

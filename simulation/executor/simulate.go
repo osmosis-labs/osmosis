@@ -116,7 +116,8 @@ func cursedInitializationLogic(
 	w io.Writer,
 	app simtypes.App,
 	initFunctions InitFunctions,
-	config *Config) (*simtypes.SimCtx, *simState, Params, error) {
+	config *Config,
+) (*simtypes.SimCtx, *simState, Params, error) {
 	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with seed %d\n", int(config.Seed))
 
 	r := rand.New(rand.NewSource(config.Seed))
@@ -267,7 +268,8 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 // This is inheriting old functionality. We should break this as part of making logging be usable / make sense.
 func (simState *simState) logActionResult(
 	header tmproto.Header, actionIndex int,
-	opMsg simulation.OperationMsg, resultData []byte, stats statsDb, actionErr error) error {
+	opMsg simulation.OperationMsg, resultData []byte, stats statsDb, actionErr error,
+) error {
 	opMsg.LogEvent(simState.eventStats.Tally)
 	err := stats.logActionResult(header, opMsg, resultData)
 	if err != nil {

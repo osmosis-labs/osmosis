@@ -324,5 +324,4 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 			}
 		})
 	}
-
 }

@@ -217,7 +217,8 @@ func randomVoteInfos(r *rand.Rand, simParams Params, validators mockValidators,
 func randomDoubleSignEvidence(r *rand.Rand, params Params,
 	validators mockValidators, pastTimes []time.Time,
 	pastVoteInfos [][]abci.VoteInfo,
-	event func(route, op, evResult string), header tmproto.Header, voteInfos []abci.VoteInfo) []abci.Evidence {
+	event func(route, op, evResult string), header tmproto.Header, voteInfos []abci.VoteInfo,
+) []abci.Evidence {
 	evidence := []abci.Evidence{}
 	// return if no past times or if only 10 validators remaining in the active set
 	if len(pastTimes) == 0 {
