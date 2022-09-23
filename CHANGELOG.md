@@ -40,11 +40,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-<<<<<<< HEAD
-=======
-## Unreleased
-
->>>>>>> 39b32018 (minor changelog bump (#2839))
 ## v12.0.0
 
 This release includes several cosmwasm-developer and appchain-ecosystem affecting upgrades:
@@ -86,10 +81,7 @@ which acts as a fuzz testing tool tailored for the SDK state machine.
 * [#2405](https://github.com/osmosis-labs/osmosis/pull/2405) Make SpotPrice have a max value of 2^160, and no longer be able to panic
 * [#2473](https://github.com/osmosis-labs/osmosis/pull/2473) x/superfluid `AddNewSuperfluidAsset` now returns error, if any occurs instead of ignoring it.
 * [#2714](https://github.com/osmosis-labs/osmosis/pull/2714) Upgrade wasmd to v0.28.0.
-<<<<<<< HEAD
-=======
 * Remove x/Bech32IBC
->>>>>>> 39b32018 (minor changelog bump (#2839))
 
 #### Golang API breaks
 
@@ -105,10 +97,6 @@ which acts as a fuzz testing tool tailored for the SDK state machine.
 * [#2418](https://github.com/osmosis-labs/osmosis/pull/2418) x/mint remove SetInitialSupplyOffsetDuringMigration from keeper
 * [#2417](https://github.com/osmosis-labs/osmosis/pull/2417) x/mint unexport keeper `SetLastReductionEpochNum`, `getLastReductionEpochNum`, `CreateDeveloperVestingModuleAccount`, and `MintCoins`
 * [#2587](https://github.com/osmosis-labs/osmosis/pull/2587) remove encoding config argument from NewOsmosisApp
-<<<<<<< HEAD
-=======
-x
->>>>>>> 39b32018 (minor changelog bump (#2839))
 
 ### Features
 
