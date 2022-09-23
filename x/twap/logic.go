@@ -146,7 +146,9 @@ func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 // updateRecord returns a new record with updated accumulators and block time
 // for the current block time.
 func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) (types.TwapRecord, error) {
-	if record.Height >= ctx.BlockHeight() || record.Time.After(ctx.BlockTime()) || record.Time.Equal(ctx.BlockTime()) {
+	if (record.Height >= ctx.BlockHeight() || !record.Time.Before(ctx.BlockTime())) &&
+		!record.P1ArithmeticTwapAccumulator.Equal(sdk.ZeroDec()) &&
+		!record.P0ArithmeticTwapAccumulator.Equal(sdk.ZeroDec()) {
 		return types.TwapRecord{}, types.InvalidRecordTimeError{
 			RecordBlockHeight: record.Height,
 			RecordTime:        record.Time,
