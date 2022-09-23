@@ -42,9 +42,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-### Bug Fixes
-* [#2803](https://github.com/osmosis-labs/osmosis/pull/2803) Fix total pool liquidity CLI query.
-
 ## v12.0.0
 
 This release includes several cosmwasm-developer and appchain-ecosystem affecting upgrades:
@@ -55,10 +52,12 @@ This release includes several cosmwasm-developer and appchain-ecosystem affectin
   * Add message responses to gamm messages, to remove the neccessity of bindings
   * Allow specifying denom metadata from tokenfactory
 * Enabling Interchain accounts (for real this time)
-* Upgrading IBC to v3.2.0
-* Fixing State Sync
-* Remove x/Bech32IBC
+* Upgrading IBC to v3.3.0
 * Consistently makes authz work with ledger for all messages
+
+The release also contains the following changes affecting Osmosis users and node operators
+
+* Fixing State Sync
 * Enabling expedited proposals
 
 This upgrade also adds a number of safety and API boundary improving changes to the codebase.
@@ -84,7 +83,7 @@ which acts as a fuzz testing tool tailored for the SDK state machine.
 * [#2405](https://github.com/osmosis-labs/osmosis/pull/2405) Make SpotPrice have a max value of 2^160, and no longer be able to panic
 * [#2473](https://github.com/osmosis-labs/osmosis/pull/2473) x/superfluid `AddNewSuperfluidAsset` now returns error, if any occurs instead of ignoring it.
 * [#2714](https://github.com/osmosis-labs/osmosis/pull/2714) Upgrade wasmd to v0.28.0.
-* [#2772](https://github.com/osmosis-labs/osmosis/pull/2772) Remove the ModuleListedCoins grpc query
+* Remove x/Bech32IBC
 
 #### Golang API breaks
 
@@ -100,7 +99,7 @@ which acts as a fuzz testing tool tailored for the SDK state machine.
 * [#2418](https://github.com/osmosis-labs/osmosis/pull/2418) x/mint remove SetInitialSupplyOffsetDuringMigration from keeper
 * [#2417](https://github.com/osmosis-labs/osmosis/pull/2417) x/mint unexport keeper `SetLastReductionEpochNum`, `getLastReductionEpochNum`, `CreateDeveloperVestingModuleAccount`, and `MintCoins`
 * [#2587](https://github.com/osmosis-labs/osmosis/pull/2587) remove encoding config argument from NewOsmosisApp
-* [#2454](https://github.com/osmosis-labs/osmosis/pull/2454) x/gamm Change `SwapExactAmountIn` and `SwapExactAmountOut` to take fee multiplier as addition input param.
+x
 
 ### Features
 
@@ -120,13 +119,6 @@ which acts as a fuzz testing tool tailored for the SDK state machine.
 ### Improvements
 * [#2515](https://github.com/osmosis-labs/osmosis/pull/2515) Emit events from functions implementing epoch hooks' `panicCatchingEpochHook` cacheCtx
 * [#2526](https://github.com/osmosis-labs/osmosis/pull/2526) EpochHooks interface methods (and hence modules implementing the hooks) return error instead of panic
-
-### SDK Upgrade
-* [#2820](https://github.com/osmosis-labs/osmosis/pull/2810) Upgrade sdk fork to commit `3c4d30596acce8ca30cacbc173de2431a04b8a3b` on `v0.45.0x-osmo-v12` branch.
-
-#### Notable SDK Changes
-* [#265](https://github.com/osmosis-labs/cosmos-sdk/pull/265) Fix state-sync by appropriate app-version handling.
-* [#240](https://github.com/osmosis-labs/cosmos-sdk/pull/240) Expedited proposals.
 
 ## v11.0.1
 
