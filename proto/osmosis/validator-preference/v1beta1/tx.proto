@@ -13,42 +13,48 @@ service Msg {
   rpc CreateValidatorSetPreference(MsgCreateValidatorSetPreference)
       returns (MsgCreateValidatorSetPreferenceResponse);
 
-  // UpdateValidatorSetPreference updates an existing set of validator preference.
+  // UpdateValidatorSetPreference updates an existing set of validator
+  // preference.
   rpc UpdateValidatorSetPreference(MsgUpdateValidatorSetPreference)
-    returns (MsgUpdateValidatorSetPreferenceResponse); 
+      returns (MsgUpdateValidatorSetPreferenceResponse);
 
   // StakeToValidatorSet gets the owner, coins and stakes to a validator-set.
   rpc StakeToValidatorSet(MsgStakeToValidatorSet)
       returns (MsgStakeToValidatorSetResponse);
 
   // UnStakeFromValidatorSet gets the owner and coins and unstakes from
-  // validator-set. The unbonding logic will follow the `Undelegate` logic from the sdk.
+  // validator-set. The unbonding logic will follow the `Undelegate` logic from
+  // the sdk.
   rpc UnStakeFromValidatorSet(MsgUnStakeFromValidatorSet)
       returns (MsgUnStakeFromValidatorSetResponse);
-  
-  // WithdrawDelegationRewards allows users to claim rewards from the validator-set.
+
+  // WithdrawDelegationRewards allows users to claim rewards from the
+  // validator-set.
   rpc WithdrawDelegationRewards(MsgWithdrawDelegationRewards)
       returns (MsgWithdrawDelegationRewardsResponse);
 }
 
 // MsgCreateValidatorSetPreference is a list that holds validator-set.
 message MsgCreateValidatorSetPreference {
-    // delegator is the user who is trying to create a validator-set.
-    string delegator = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  // delegator is the user who is trying to create a validator-set.
+  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
 
-    // list of {valAddr, weight} to delegate to 
-    repeated ValidatorPreference preferences = 2 [
-      (gogoproto.moretags) = "yaml:\"preferences\"",
-      (gogoproto.nullable) = false
-    ];
+  // list of {valAddr, weight} to delegate to
+  repeated ValidatorPreference preferences = 2 [
+    (gogoproto.moretags) = "yaml:\"preferences\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message MsgCreateValidatorSetPreferenceResponse {}
 
-// MsgCreateValidatorSetPreference is a set of list that holds validator-preference.
+// MsgCreateValidatorSetPreference is a set of list that holds validator
+// preference. If a user changes their preferences list,
+// the unstaking logic will run from the old set and
+// restaking to a new set is going to happen behind the scenes.
 message MsgUpdateValidatorSetPreference {
   // delegator is the user who is trying to update a validator-set.
-  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
 
   // updated list of delegators validator-set {valAddr, weight}
   repeated ValidatorPreference preferences = 2 [
@@ -62,11 +68,12 @@ message MsgUpdateValidatorSetPreferenceResponse {}
 // MsgStakeToValidatorSet allows users to stake to an existing validator-set
 message MsgStakeToValidatorSet {
   // delegator is the user who is trying to stake.
-  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
 
   // the amount of tokens the user is trying to stake.
-  // For ex: UnStake 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
-  // our unstake logic would attempt to stake 5osmo to A , 3osmo to B, 2osmo to C.
+  // For ex: stake 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC ->
+  // 0.2} our staking logic would attempt to stake 5osmo to A , 3osmo to B,
+  // 2osmo to C.
   cosmos.base.v1beta1.Coin coin = 2 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
@@ -77,11 +84,12 @@ message MsgStakeToValidatorSetResponse {}
 
 message MsgUnStakeFromValidatorSet {
   // delegator is the user who is trying to unstake.
-  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
 
   // the amount the user wants to unstake
-  // For ex: UnStake 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
-  // our unstake logic would attempt to unstake 5osmo from A , 3osmo from B, 2osmo from C
+  // For ex: UnStake 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC
+  // -> 0.2} our unstake logic would attempt to unstake 5osmo from A , 3osmo
+  // from B, 2osmo from C
   cosmos.base.v1beta1.Coin coin = 3 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
@@ -90,11 +98,11 @@ message MsgUnStakeFromValidatorSet {
 
 message MsgUnStakeFromValidatorSetResponse {}
 
-// MsgWithdrawDelegationRewards allows user to claim staking rewards from the validator set.
-// This message 
+// MsgWithdrawDelegationRewards allows user to claim staking rewards from the
+// validator set.
 message MsgWithdrawDelegationRewards {
   // delegator is the user who is trying to claim staking rewards.
-  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
 }
 
 message MsgWithdrawDelegationRewardsResponse {}

@@ -1,11 +1,11 @@
-# Validator Set Preference 
+# validator-set Preference 
 
 ## Abstract 
 
 Validator-Set preference is a new module which gives users and contracts a 
 better UX for staking to a set of validators. For example: a one click button
 that stakes to multiple validators. Then the user can set (or realistically a frontend provides) 
-a list of recommended defaults (Ex: governoors, wosmongton, chain/stack contributors etc).
+a list of recommended defaults (Ex: governors, wosmongton, chain/stack contributors etc).
 Currently this can be done on-chain with frontends, but having a preference list stored locally 
 eases frontend code burden. 
 
@@ -13,11 +13,15 @@ eases frontend code burden.
 
 How does this module work? 
 
-- Allow an user to set a list of {val-addr, weight} in state, called their validator-set preference.
-- Give users a single message to stake {X} tokens, according to their validator set preference distribution.
-- Give users a single message to unstake {X} tokens, according to their validator set preference distribution.
+- Allow a user to set a list of {val-addr, weight} in the state, called their validator-set preference.
+- Allow a user to update a list of {val-addr, weight} in the state, then do the following; 
+  - Unstake the existing tokens (run the same unbond logic as cosmos-sdk staking).
+  - Update the validator distribution weights.
+  - Stake the tokens based on the new weights.
+- Give users a single message to stake {X} tokens, according to their validator-set preference distribution.
+- Give users a single message to unstake {X} tokens, according to their validator-set preference distribution.
 - Give users a single message to claim rewards from everyone on their preference list.
-- If a user does not have a validator set preference list set, and has staked do the following; 
+- If a user does not have a validator-set preference list set and has is attempting to stake do the following; 
   - Make their preference list default to their current staking distribution.
 - If a user has no preference list and no staking, then return error for messages.
 
@@ -26,7 +30,7 @@ How does this module work?
 Staking Calculation 
 
 - The user provides an amount to stake and our `MsgStakeToValidatorSet` divides the amount based on validator weight distribution.
-  For ex: Stake 100osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
+  For example: Stake 100osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
   our stake logic will attempt to stake (100 * 0.5) 50osmo for ValA , (100 * 0.3) 30osmo from ValB and (100 * 0.2) 20osmo from ValC.
 
 UnStaking Calculation 
@@ -44,11 +48,11 @@ UnStaking Calculation
 
 ### CreateValidatorSetPreference
 
-Creates a validator-set of `{valAddr, Weight}` given the delegator address
+Creates a validator-set of `{valAddr, Weight}` given the delegator address.
 and preferences. The weights are in decimal format from 0 to 1 and must add up to 1.
 
 ```go
-    string delegator = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+    string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
     repeated ValidatorPreference preferences = 2 [
       (gogoproto.moretags) = "yaml:\"preferences\"",
       (gogoproto.nullable) = false
@@ -61,15 +65,17 @@ and preferences. The weights are in decimal format from 0 to 1 and must add up t
   - check if the user already has a validator-set created. 
   - check if the validator exist and is valid.
   - check if the validator-set add up to 1.
-- Add owner address to the `KVStore`, where a state of validator-set is stored 
+- Add owner address to the `KVStore`, where a state of validator-set is stored. 
 
 ### UpdateValidatorSetPreference
 
 Updates a validator-set of `{valAddr, Weight}` given the delegator address
 and existing preferences. The weights calculations follow the same rule as `CreateValidatorSetPreference`.
+If a user changes their preferences list, the unstaking logic will run from the old set and 
+restaking to a new set is going to happen behind the scenes.
 
 ```go
-    string delegator = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+    string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
     repeated ValidatorPreference preferences = 2 [
       (gogoproto.moretags) = "yaml:\"preferences\"",
       (gogoproto.nullable) = false
@@ -78,8 +84,9 @@ and existing preferences. The weights calculations follow the same rule as `Crea
 
 **State Modifications:**
 
-- Follows the same rule as `CreateValidatorSetPreference` except for the following 
-- Update the `KVStore` value for the specific owner address key
+- Follows the same rule as `CreateValidatorSetPreference` for weights checks.
+- Update the `KVStore` value for the specific owner address key.
+- Run the unstake logic and restake the tokens with updated weights. 
 
 ### StakeToValidatorSet
 
@@ -87,7 +94,7 @@ Gets the existing validator-set of the delegator and stakes the given amount. Th
 will be divided based on the weights distributed to the validators. The weights will be unchanged! 
 
 ```go
-    string delegator = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+    string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
     repeated ValidatorPreference preferences = 2 [
       (gogoproto.moretags) = "yaml:\"preferences\"",
       (gogoproto.nullable) = false
@@ -96,11 +103,11 @@ will be divided based on the weights distributed to the validators. The weights 
 
 **State Modifications:**
 
-- Check if the user has a validator-set and if so, get the users validator-set from `KVStore` 
+- Check if the user has a validator-set and if so, get the users validator-set from `KVStore`. 
 - Safety Checks 
   - check if the user has enough funds to delegate.
-  - check overflow/underflow since `Delegate` method takes `sdk.Int` as tokenAmount
-- use the [Delegate](https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/keeper/delegation.go#L614) method from the cosmos-sdk to handle delegation 
+  - check overflow/underflow since `Delegate` method takes `sdk.Int` as tokenAmount.
+- use the [Delegate](https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/keeper/delegation.go#L614) method from the cosmos-sdk to handle delegation. 
 
 ### UnStakeFromValidatorSet
 
@@ -110,7 +117,7 @@ will be divided based on the weights distributed to the validators. The weights 
 The given amount will be divided based on the weights distributed to the validators.
 
 ```go
-    string delegator = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+    string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
     repeated ValidatorPreference preferences = 2 [
       (gogoproto.moretags) = "yaml:\"preferences\"",
       (gogoproto.nullable) = false
@@ -119,19 +126,19 @@ The given amount will be divided based on the weights distributed to the validat
 
 **State Modifications:**
 
-- Check if the user has a validator-set and if so, get the users validator-set from `KVStore` 
+- Check if the user has a validator-set and if so, get the users validator-set from `KVStore`. 
 - The unbonding logic will be follow the `UnDelegate` logic from the cosmos-sdk. 
 - Safety Checks 
   - check that the amount of funds to undelegate is <= to the funds the user has in the address.
-  - `UnDelegate` method takes `sdk.Dec` as tokenAmount, so check if overflow/underflow case is relevant
-- use the [UnDelegate](https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/keeper/delegation.go#L614) method from the cosmos-sdk to handle delegation 
+  - `UnDelegate` method takes `sdk.Dec` as tokenAmount, so check if overflow/underflow case is relevant.
+- use the [UnDelegate](https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/keeper/delegation.go#L614) method from the cosmos-sdk to handle delegation. 
 
 ### WithdrawDelegationRewards
 
 Allows the user to claim rewards based from the existing validator-set. The user can claim rewards from all the validators at once. 
 
 ```go
-    string delegator = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+    string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
 ```
 
 ## Code Layout 

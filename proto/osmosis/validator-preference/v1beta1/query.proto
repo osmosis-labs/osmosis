@@ -21,7 +21,7 @@ service Query {
 // Request type for UserValidatorPreferences.
 message QueryUserValidatorPreferences {
   // user account address
-  string user = 2;
+  string user = 1;
 }
 
 // Response type the QueryUserValidatorPreferences query request
