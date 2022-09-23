@@ -1195,6 +1195,9 @@ type QueryClient interface {
 	TotalLiquidity(ctx context.Context, in *QueryTotalLiquidityRequest, opts ...grpc.CallOption) (*QueryTotalLiquidityResponse, error)
 	// Per Pool gRPC Endpoints
 	Pool(ctx context.Context, in *QueryPoolRequest, opts ...grpc.CallOption) (*QueryPoolResponse, error)
+	// PoolType returns the type of the pool.
+	// Returns "Balancer" as a string literal when the pool is a balancer pool.
+	// Errors if the pool is failed to be type caseted.
 	PoolType(ctx context.Context, in *QueryPoolTypeRequest, opts ...grpc.CallOption) (*QueryPoolTypeResponse, error)
 	PoolParams(ctx context.Context, in *QueryPoolParamsRequest, opts ...grpc.CallOption) (*QueryPoolParamsResponse, error)
 	TotalPoolLiquidity(ctx context.Context, in *QueryTotalPoolLiquidityRequest, opts ...grpc.CallOption) (*QueryTotalPoolLiquidityResponse, error)
@@ -1321,6 +1324,9 @@ type QueryServer interface {
 	TotalLiquidity(context.Context, *QueryTotalLiquidityRequest) (*QueryTotalLiquidityResponse, error)
 	// Per Pool gRPC Endpoints
 	Pool(context.Context, *QueryPoolRequest) (*QueryPoolResponse, error)
+	// PoolType returns the type of the pool.
+	// Returns "Balancer" as a string literal when the pool is a balancer pool.
+	// Errors if the pool is failed to be type caseted.
 	PoolType(context.Context, *QueryPoolTypeRequest) (*QueryPoolTypeResponse, error)
 	PoolParams(context.Context, *QueryPoolParamsRequest) (*QueryPoolParamsResponse, error)
 	TotalPoolLiquidity(context.Context, *QueryTotalPoolLiquidityRequest) (*QueryTotalPoolLiquidityResponse, error)
