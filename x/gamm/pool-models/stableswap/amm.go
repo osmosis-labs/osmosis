@@ -326,23 +326,27 @@ func solveCFMMBinarySearchMulti(constantFunction func(osmomath.BigDec, osmomath.
 	return func(xReserve, yReserve, uReserve, wSumSquares, yIn osmomath.BigDec) osmomath.BigDec {
 		if !xReserve.IsPositive() || !yReserve.IsPositive() || wSumSquares.IsNegative() || !yIn.IsPositive() {
 			panic("invalid input: reserves and input must be positive")
+		} else if yIn.GTE(yReserve) {
+			panic("cannot input more than pool reserves")
 		}
 		k := constantFunction(xReserve, yReserve, uReserve, wSumSquares)
-		yf := yReserve.Add(yIn)
-		x_low_est := osmomath.ZeroDec()
-		x_high_est := xReserve
-		x_est := (x_high_est.Add(x_low_est)).Quo(twodec)
-		cur_k := constantFunction(x_est, yf, uReserve, wSumSquares)
-		for i := 0; !approxDecEqual(cur_k, k, k_threshold) && i < 256; i++ {
-			if cur_k.GT(k) {
-				x_high_est = x_est
-			} else if cur_k.LT(k) {
-				x_low_est = x_est
-			}
-			x_est = (x_high_est.Add(x_low_est)).Quo(twodec)
-			cur_k = constantFunction(x_est, yf, uReserve, wSumSquares)
+		yFinal := yReserve.Add(yIn)
+		xLowEst := osmomath.ZeroDec()
+		xHighEst := xReserve
+		maxIterations := 256
+		errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.Dec{}}
+
+		// create single-input CFMM to pass into binary search
+		calcXEst := func(xEst osmomath.BigDec) (osmomath.BigDec, error) {
+			return constantFunction(xEst, yFinal, uReserve, wSumSquares), nil
 		}
-		xOut := xReserve.Sub(x_est)
+
+		xEst, err := osmoutils.BinarySearchBigDec(calcXEst, xLowEst, xHighEst, k, errTolerance, maxIterations)
+		if err != nil {
+			panic(err)
+		}
+
+		xOut := xReserve.Sub(xEst)
 		if xOut.GTE(xReserve) {
 			panic("invalid output: greater than full pool reserves")
 		}
