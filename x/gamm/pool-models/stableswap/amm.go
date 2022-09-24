@@ -48,7 +48,7 @@ func cfmmConstantMulti(xReserve, yReserve, uReserve, vSumSquares osmomath.BigDec
 // how many units `a` of x do we get out.
 // So we solve the following expression for `a`
 // xy(x^2 + y^2) = (x - a)(y + b)((x - a)^2 + (y + b)^2)
-func solveCfmm(xReserve, yReserve, yIn osmomath.BigDec, remReserves []osmomath.BigDec) osmomath.BigDec {
+func solveCfmm(xReserve, yReserve osmomath.BigDec, remReserves []osmomath.BigDec, yIn osmomath.BigDec) osmomath.BigDec {
 	if len(remReserves) == 0 {
 		return solveCFMMBinarySearch(cfmmConstant)(xReserve, yReserve, yIn)
 	} else if len(remReserves) > 0 {
@@ -167,7 +167,7 @@ func spotPrice(baseReserve, quoteReserve osmomath.BigDec) osmomath.BigDec {
 	// xReserve & yReserve.
 	a := osmomath.OneDec()
 	// no need to divide by a, since a = 1.
-	return solveCfmm(baseReserve, quoteReserve, a, []osmomath.BigDec{})
+	return solveCfmm(baseReserve, quoteReserve, []osmomath.BigDec{}, a)
 }
 
 // returns outAmt as a decimal
@@ -179,7 +179,7 @@ func (p *Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee
 	tokenInSupply, tokenOutSupply := reserves[0], reserves[1]
 	remReserves := osmomath.BigDecFromSDKDecSlice(reserves[2:])
 	// We are solving for the amount of token out, hence x = tokenOutSupply, y = tokenInSupply
-	cfmmOut := solveCfmm(osmomath.BigDecFromSDKDec(tokenOutSupply), osmomath.BigDecFromSDKDec(tokenInSupply), osmomath.BigDecFromSDKDec(tokenIn.Amount.ToDec()), remReserves)
+	cfmmOut := solveCfmm(osmomath.BigDecFromSDKDec(tokenOutSupply), osmomath.BigDecFromSDKDec(tokenInSupply), remReserves, osmomath.BigDecFromSDKDec(tokenIn.Amount.ToDec()))
 	outAmt := p.getDescaledPoolAmt(tokenOutDenom, cfmmOut)
 	return outAmt.SDKDec(), nil
 }
@@ -194,7 +194,7 @@ func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee
 	remReserves := osmomath.BigDecFromSDKDecSlice(reserves[2:])
 	// We are solving for the amount of token in, cfmm(x,y) = cfmm(x + x_in, y - y_out)
 	// x = tokenInSupply, y = tokenOutSupply, yIn = -tokenOutAmount
-	cfmmIn := solveCfmm(osmomath.BigDecFromSDKDec(tokenInSupply), osmomath.BigDecFromSDKDec(tokenOutSupply), osmomath.BigDecFromSDKDec(tokenOut.Amount.ToDec().Neg()), remReserves)
+	cfmmIn := solveCfmm(osmomath.BigDecFromSDKDec(tokenInSupply), osmomath.BigDecFromSDKDec(tokenOutSupply), remReserves, osmomath.BigDecFromSDKDec(tokenOut.Amount.ToDec().Neg()))
 	inAmt := p.getDescaledPoolAmt(tokenInDenom, cfmmIn.Neg())
 	return inAmt.SDKDec(), nil
 }
