@@ -13,24 +13,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/test_helpers"
 )
 
-// twoAssetCFMMTestCase defines a testcase for two-asset pools
-type twoAssetCFMMTestCase struct {
-	xReserve    osmomath.BigDec
-	yReserve    osmomath.BigDec
-	yIn         osmomath.BigDec
-	expectPanic bool
-}
-
-// multiAssetCFMMTestCase defines a testcase for multi-asset pools
-type multiAssetCFMMTestCase struct {
-	xReserve    osmomath.BigDec
-	yReserve    osmomath.BigDec
-	uReserve    osmomath.BigDec
-	wSumSquares osmomath.BigDec
-	yIn         osmomath.BigDec
-	expectPanic bool
-}
-
 // CFMMTestCase defines a testcase for stableswap pools
 type CFMMTestCase struct {
 	xReserve    osmomath.BigDec
