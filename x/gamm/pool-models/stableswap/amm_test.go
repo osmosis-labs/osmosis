@@ -416,13 +416,6 @@ func TestCFMMInvariantTwoAssets(t *testing.T) {
 
 				k1 := cfmmConstant(test.xReserve.Sub(xOut), test.yReserve.Add(test.yIn))
 				osmomath.DecApproxEq(t, k0, k1, kErrTolerance)
-
-				// using multi-asset cfmm (should be equivalent with u = 1, w = 0)
-				k2 := cfmmConstantMulti(test.xReserve, test.yReserve, osmomath.OneDec(), osmomath.ZeroDec())
-				osmomath.DecApproxEq(t, k2, k0, kErrTolerance)
-				xOut2 := solveCfmmMulti(test.xReserve, test.yReserve, osmomath.OneDec(), osmomath.ZeroDec(), test.yIn)
-				k3 := cfmmConstantMulti(test.xReserve.Sub(xOut2), test.yReserve.Add(test.yIn), osmomath.OneDec(), osmomath.ZeroDec())
-				osmomath.DecApproxEq(t, k2, k3, kErrTolerance)
 			}
 
 			osmoassert.ConditionalPanic(t, test.expectPanic, sut)

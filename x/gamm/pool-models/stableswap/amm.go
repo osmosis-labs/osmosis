@@ -43,11 +43,13 @@ func cfmmConstantMulti(xReserve, yReserve, uReserve, vSumSquares osmomath.BigDec
 	return xyu.Mul(x2.Add(y2).Add(vSumSquares))
 }
 
-// solidly CFMM is xy(x^2 + y^2) = k
+// solidly CFMM is xy(x^2 + y^2) = k, and our multi-asset CFMM is xyz(x^2 + y^2 + w) = k
 // So we want to solve for a given addition of `b` units of y into the pool,
 // how many units `a` of x do we get out.
-// So we solve the following expression for `a`
+// So we solve the following expression for `a` in two-asset pools:
 // xy(x^2 + y^2) = (x - a)(y + b)((x - a)^2 + (y + b)^2)
+// and the following expression for `a` in multi-asset pools:
+// xyz(x^2 + y^2 + w) = (x - a)(y + b)z((x - a)^2 + (y + b)^2 + w)
 func solveCfmm(xReserve, yReserve osmomath.BigDec, remReserves []osmomath.BigDec, yIn osmomath.BigDec) osmomath.BigDec {
 	if len(remReserves) == 0 {
 		return solveCFMMBinarySearch(cfmmConstant)(xReserve, yReserve, yIn)
@@ -62,15 +64,6 @@ func solveCfmm(xReserve, yReserve osmomath.BigDec, remReserves []osmomath.BigDec
 	} else {
 		panic("invalid input reserves for CFMM solver")
 	}
-}
-
-// Our multi-asset CFMM is xyz(x^2 + y^2 + w) = k
-// So we want to solve for a given addition of `b` units of y into the pool,
-// how many units `a` of x do we get out.
-// So we solve the following expression for `a`
-// xyz(x^2 + y^2 + w) = (x - a)(y + b)z((x - a)^2 + (y + b)^2 + w)
-func solveCfmmMulti(xReserve, yReserve, uReserve, wSumSquares, yIn osmomath.BigDec) osmomath.BigDec {
-	return solveCFMMBinarySearchMulti(cfmmConstantMulti)(xReserve, yReserve, uReserve, wSumSquares, yIn)
 }
 
 func approxDecEqual(a, b, tol osmomath.BigDec) bool {
