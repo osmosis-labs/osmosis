@@ -104,7 +104,7 @@ build-reproducible-amd64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
 		--build-arg GO_VERSION=$(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2) \
-		--platform linux/arm64 \
+		--platform linux/amd64 \
 		-t osmosis-amd64 \
 		--load \
 		-f Dockerfile .
