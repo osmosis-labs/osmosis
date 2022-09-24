@@ -52,8 +52,13 @@ func solveCfmm(xReserve, yReserve, yIn osmomath.BigDec, remReserves []osmomath.B
 	if len(remReserves) == 0 {
 		return solveCFMMBinarySearch(cfmmConstant)(xReserve, yReserve, yIn)
 	} else if len(remReserves) > 0 {
-		// TODO: tie in multi asset solver here
-		return osmomath.ZeroDec()
+		uReserve := osmomath.OneDec()
+		wSumSquares := osmomath.ZeroDec()
+		for _, assetReserve := range remReserves {
+			uReserve = uReserve.Mul(assetReserve)
+			wSumSquares = wSumSquares.Add(assetReserve.Mul(assetReserve))
+		}
+		return solveCFMMBinarySearchMulti(cfmmConstantMulti)(xReserve, yReserve, uReserve, wSumSquares, yIn)
 	} else {
 		panic("invalid input reserves for CFMM solver")
 	}

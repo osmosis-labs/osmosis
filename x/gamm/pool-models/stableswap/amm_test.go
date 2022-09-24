@@ -471,7 +471,6 @@ func TestCFMMInvariantTwoAssetsBinarySearch(t *testing.T) {
 func TestCFMMInvariantMultiAssets(t *testing.T) {
 	kErrTolerance := osmomath.OneDec()
 
-	// TODO: switch solveCfmmMulti to binary search and replace this with test case suite
 	tests := multiAssetCFMMTestCases
 
 	for name, test := range tests {
