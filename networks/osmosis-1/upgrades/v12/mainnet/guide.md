@@ -1,8 +1,8 @@
 # v11 to v12 Mainnet Upgrade Guide
 
-Osmosis v12 Gov Prop: https://www.mintscan.io/osmosis/proposals/335
+Osmosis v12 Gov Prop: <https://www.mintscan.io/osmosis/proposals/335>
 
-Countdown: https://www.mintscan.io/osmosis/blocks/6246000
+Countdown: <https://www.mintscan.io/osmosis/blocks/6246000>
 
 Height: 6246000
 
