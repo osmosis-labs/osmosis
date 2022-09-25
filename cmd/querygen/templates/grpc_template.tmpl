@@ -19,8 +19,8 @@ type Querier struct {
 }
 
 var _ queryproto.QueryServer = Querier{}
-
 {{range .Queries -}} 
+
 func (q Querier) {{.QueryName}}(grpcCtx context.Context,
 	req *queryproto.{{.QueryName}}Request,
 ) (*queryproto.{{.QueryName}}Response, error) {

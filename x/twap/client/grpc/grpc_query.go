@@ -19,7 +19,6 @@ type Querier struct {
 }
 
 var _ queryproto.QueryServer = Querier{}
-
 func (q Querier) Params(grpcCtx context.Context,
 	req *queryproto.ParamsRequest,
 ) (*queryproto.ParamsResponse, error) {
