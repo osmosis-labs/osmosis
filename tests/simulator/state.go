@@ -37,25 +37,8 @@ func AppStateFn() osmosim.AppStateFn {
 		}
 
 		chainID = config.ChainID
-		switch {
-		case config.ParamsFile != "" && config.GenesisFile != "":
-			panic("cannot provide both a genesis file and a params file")
-
-		case config.GenesisFile != "":
-			// override the default chain-id from simapp to set it later to the config
-			genesisDoc, accounts := AppStateFromGenesisFileFn(r, cdc, config.GenesisFile)
-
-			if osmosim.FlagGenesisTimeValue == 0 {
-				// use genesis timestamp if no custom timestamp is provided (i.e no random timestamp)
-				genesisTimestamp = genesisDoc.GenesisTime
-			}
-
-			appState = genesisDoc.AppState
-			chainID = genesisDoc.ChainID
-			simAccs = accounts
-
-		case config.ParamsFile != "":
-			appParams := make(simtypes.AppParams)
+		appParams := make(simtypes.AppParams)
+		if config.ParamsFile != "" {
 			bz, err := os.ReadFile(config.ParamsFile)
 			if err != nil {
 				panic(err)
@@ -65,12 +48,8 @@ func AppStateFn() osmosim.AppStateFn {
 			if err != nil {
 				panic(err)
 			}
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
-
-		default:
-			appParams := make(simtypes.AppParams)
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 		}
+		appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 
 		rawState := make(map[string]json.RawMessage)
 		err := json.Unmarshal(appState, &rawState)
