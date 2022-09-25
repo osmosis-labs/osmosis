@@ -11,13 +11,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	sdklegacytypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	"github.com/osmosis-labs/osmosis/v12/x/gov/types"
 )
 
 // SubmitProposal create new proposal given a content
 func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content, isExpedited bool) (types.Proposal, error) {
 	if !keeper.router.HasRoute(content.ProposalRoute()) {
-		return types.Proposal{}, sdkerrors.Wrap(types.ErrNoProposalHandlerExists, content.ProposalRoute())
+		return types.Proposal{}, sdkerrors.Wrap(sdklegacytypes.ErrNoProposalHandlerExists, content.ProposalRoute())
 	}
 
 	// Execute the proposal content in a new context branch (with branched store)
@@ -26,7 +28,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content, isEx
 	cacheCtx, _ := ctx.CacheContext()
 	handler := keeper.router.GetRoute(content.ProposalRoute())
 	if err := handler(cacheCtx, content); err != nil {
-		return types.Proposal{}, sdkerrors.Wrap(types.ErrInvalidProposalContent, err.Error())
+		return types.Proposal{}, sdkerrors.Wrap(sdklegacytypes.ErrInvalidProposalContent, err.Error())
 	}
 
 	proposalID, err := keeper.GetProposalID(ctx)
@@ -175,7 +177,7 @@ func (keeper Keeper) GetProposalID(ctx sdk.Context) (proposalID uint64, err erro
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(types.ProposalIDKey)
 	if bz == nil {
-		return 0, sdkerrors.Wrap(types.ErrInvalidGenesis, "initial proposal ID hasn't been set")
+		return 0, sdkerrors.Wrap(sdklegacytypes.ErrInvalidGenesis, "initial proposal ID hasn't been set")
 	}
 
 	proposalID = types.GetProposalIDFromBytes(bz)

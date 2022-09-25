@@ -8,6 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	sdklegacytypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	"github.com/osmosis-labs/osmosis/v12/x/gov/types"
 )
 
@@ -83,7 +85,7 @@ func queryProposal(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 
 	proposal, ok := keeper.GetProposal(ctx, params.ProposalID)
 	if !ok {
-		return nil, sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", params.ProposalID)
+		return nil, sdkerrors.Wrapf(sdklegacytypes.ErrUnknownProposal, "%d", params.ProposalID)
 	}
 
 	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, proposal)
@@ -161,7 +163,7 @@ func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
-		return nil, sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", proposalID)
+		return nil, sdkerrors.Wrapf(sdklegacytypes.ErrUnknownProposal, "%d", proposalID)
 	}
 
 	var tallyResult types.TallyResult

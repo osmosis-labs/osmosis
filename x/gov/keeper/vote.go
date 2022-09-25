@@ -7,21 +7,23 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v12/x/gov/types"
+
+	sdklegacytypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // AddVote adds a vote on a specific proposal
 func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, options types.WeightedVoteOptions) error {
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
-		return sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", proposalID)
+		return sdkerrors.Wrapf(sdklegacytypes.ErrUnknownProposal, "%d", proposalID)
 	}
 	if proposal.Status != types.StatusVotingPeriod {
-		return sdkerrors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
+		return sdkerrors.Wrapf(sdklegacytypes.ErrInactiveProposal, "%d", proposalID)
 	}
 
 	for _, option := range options {
 		if !types.ValidWeightedVoteOption(option) {
-			return sdkerrors.Wrap(types.ErrInvalidVote, option.String())
+			return sdkerrors.Wrap(sdklegacytypes.ErrInvalidVote, option.String())
 		}
 	}
 
