@@ -2,7 +2,7 @@ package v3
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	// govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
 	"github.com/osmosis-labs/osmosis/v12/app/keepers"
@@ -14,17 +14,17 @@ func RunForkLogic(ctx sdk.Context, keepers *keepers.AppKeepers) {
 	ctx.Logger().Info("Applying Osmosis v3 upgrade." +
 		" Fixing governance deposit so proposals can be voted upon," +
 		" and fixing validator min commission rate.")
-	FixMinDepositDenom(ctx, keepers.GovKeeper)
+	// FixMinDepositDenom(ctx, keepers.GovKeeper)
 	FixMinCommisionRate(ctx, keepers.StakingKeeper)
 }
 
 // Fixes an error where minimum deposit was set to "500 osmo". This denom does
 // not exist, which makes it impossible for a proposal to go to a vote.
-func FixMinDepositDenom(ctx sdk.Context, gov *govkeeper.Keeper) {
-	params := gov.GetDepositParams(ctx)
-	params.MinDeposit = sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(500000000)))
-	gov.SetDepositParams(ctx, params)
-}
+// func FixMinDepositDenom(ctx sdk.Context, gov *govkeeper.Keeper) {
+// 	params := gov.GetDepositParams(ctx)
+// 	params.MinDeposit = sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(500000000)))
+// 	gov.SetDepositParams(ctx, params)
+// }
 
 // Fixes an error where validators can be created with a commission rate less
 // than the network minimum rate.

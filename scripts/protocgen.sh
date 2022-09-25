@@ -11,6 +11,7 @@ go get github.com/cosmos/cosmos-sdk 2>/dev/null
 echo "Generating gogo proto code"
 cd proto
 proto_dirs=$(find ./osmosis -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
+echo $proto_dirs
 for dir in $proto_dirs; do
   for file in $(find "${dir}" -maxdepth 1 -name '*.proto'); do
     if grep go_package $file &>/dev/null; then
@@ -18,6 +19,7 @@ for dir in $proto_dirs; do
     fi
   done
 done
+echo "buf gen complete"
 
 cd ..
 
