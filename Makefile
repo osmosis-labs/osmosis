@@ -364,13 +364,19 @@ localnet-build:
 	@DOCKER_BUILDKIT=1 docker-compose -f tests/localosmosis/docker-compose.yml build
 
 localnet-start:
-	@docker-compose -f tests/localosmosis/docker-compose.yml up
+	@STATE="" docker-compose -f tests/localosmosis/docker-compose.yml up
+
+localnet-start-with-state:
+	@STATE=-s docker-compose -f tests/localosmosis/docker-compose.yml up
 
 localnet-startd:
-	@docker-compose -f tests/localosmosis/docker-compose.yml up -d
+	@STATE="" docker-compose -f tests/localosmosis/docker-compose.yml up -d
+
+localnet-startd-with-state:
+	@STATE=-s docker-compose -f tests/localosmosis/docker-compose.yml up -d
 
 localnet-stop:
-	@docker-compose -f tests/localosmosis/docker-compose.yml down
+	@STATE="" docker-compose -f tests/localosmosis/docker-compose.yml down
 
 localnet-remove: localnet-stop
 	rm -rf $(PWD)/tests/localosmosis/.osmosisd
