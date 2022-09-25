@@ -61,3 +61,10 @@ func (chain *TestChain) RegisterRateLimitingContract(addr []byte) {
 	require.True(chain.T, ok)
 	paramSpace.SetParamSet(chain.GetContext(), &params)
 }
+
+func (chain *TestChain) ExecuteContract(contractAddress sdk.AccAddress, caller sdk.AccAddress, msg []byte, coins sdk.Coins) ([]byte, error) {
+	osmosisApp := chain.GetOsmosisApp()
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
+	result, err := contractKeeper.Execute(chain.GetContext(), contractAddress, caller, msg, coins)
+	return result, err
+}

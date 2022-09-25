@@ -1,6 +1,7 @@
 package osmosisibctesting
 
 import (
+	"github.com/cosmos/cosmos-sdk/simapp"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	"time"
 
@@ -26,6 +27,10 @@ func NewTransferPath(chainA, chainB *TestChain) *ibctesting.Path {
 	path.EndpointA.ChannelConfig.Version = transfertypes.Version
 	path.EndpointB.ChannelConfig.Version = transfertypes.Version
 	return path
+}
+
+func (chain *TestChain) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) error {
+	return simapp.FundAccount(chain.GetOsmosisApp().BankKeeper, chain.GetContext(), acc, amounts)
 }
 
 // SendMsgsNoCheck overrides ibctesting.TestChain.SendMsgs so that it doesn't check for errors. That should be handled by the caller

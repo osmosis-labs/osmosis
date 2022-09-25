@@ -12,6 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/app"
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/ibc-metadata/types"
 	"github.com/stretchr/testify/suite"
 	"testing"
@@ -39,7 +40,7 @@ func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 }
 
 func (suite *MiddlewareTestSuite) InstantiateSwapRouterContract(chain *osmosisibctesting.TestChain) sdk.AccAddress {
-	initMsgBz := []byte(fmt.Sprintf(`{"owner": "%v"}`, suite.TestAccs[0].String()))
+	initMsgBz := []byte(fmt.Sprintf(`{"owner": "%v"}`, suite.chainA.SenderAccount.GetAddress().String()))
 	addr, err := chain.InstantiateContract(1, initMsgBz, "swap router contract")
 	suite.Require().NoError(err)
 	return addr
@@ -91,6 +92,8 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithMetadata() {
 		Metadata: []byte(`{"callback": "something"}`),
 	}
 
+	// Todo: Check the type of metadata is the expected one inside the hook so this test passes
+	//    ...or just remove this test cause it should be part of the hooks PR
 	var packet = channeltypes.NewPacket(
 		packetData.GetBytes(),
 		1,
@@ -170,12 +173,68 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithMetadata() {
 	fmt.Println(ack)
 }
 
+func (suite *MiddlewareTestSuite) PrepareSimplePools() {
+	funds := sdk.NewCoins(
+		sdk.NewCoin("uosmo", sdk.NewInt(100000000000000)),
+		sdk.NewCoin("uatom", sdk.NewInt(100000000000000)),
+		sdk.NewCoin("uion", sdk.NewInt(100000000000000)),
+	)
+	err := suite.chainA.FundAcc(suite.chainA.SenderAccount.GetAddress(), funds)
+	suite.Require().NoError(err)
+
+	poolAssets := []balancer.PoolAsset{
+		{
+			Weight: sdk.NewInt(100),
+			Token:  sdk.NewCoin("uosmo", sdk.NewInt(5000000)),
+		},
+		{
+			Weight: sdk.NewInt(200),
+			Token:  sdk.NewCoin("uatom", sdk.NewInt(5000000)),
+		},
+	}
+	poolParams := balancer.PoolParams{
+		SwapFee: sdk.NewDec(0),
+		ExitFee: sdk.NewDec(0),
+	}
+	msg := balancer.NewMsgCreateBalancerPool(suite.chainA.SenderAccount.GetAddress(), poolParams, poolAssets, "")
+	_, err = suite.chainA.GetOsmosisApp().GAMMKeeper.CreatePool(suite.chainA.GetContext(), msg)
+	suite.Require().NoError(err)
+
+	poolAssets[0].Token.Denom = "uatom"
+	poolAssets[1].Token.Denom = "uion"
+	msg = balancer.NewMsgCreateBalancerPool(suite.chainA.SenderAccount.GetAddress(), poolParams, poolAssets, "")
+	_, err = suite.chainA.GetOsmosisApp().GAMMKeeper.CreatePool(suite.chainA.GetContext(), msg)
+
+	suite.Require().NoError(err)
+}
+
 func (suite *MiddlewareTestSuite) TestRecvTransferWithSwap() {
+	suite.PrepareSimplePools()
 	err := suite.chainA.StoreContractCode("./testdata/swaprouter.wasm")
+	//// Move forward one block
+	//suite.chainA.NextBlock()
+	//suite.chainA.SenderAccount.SetSequence(suite.chainA.SenderAccount.GetSequence() + 1)
+	//suite.chainA.Coordinator.IncrementTime()
+	//
+	//// Update both clients
+	//err = suite.path.EndpointA.UpdateClient()
+	//suite.Require().NoError(err)
+	//err = suite.path.EndpointB.UpdateClient()
+	//suite.Require().NoError(err)
+
 	suite.Require().NoError(err)
 	addr := suite.InstantiateSwapRouterContract(suite.chainA)
 	contractAddr, err := sdk.Bech32ifyAddressBytes("osmo", addr)
 	suite.Require().NoError(err)
+	// Define a route on the swaprouter
+	setRouteMsg := `{"set_route": {"input_denom": "uosmo", "output_denom": "uion",  "pool_route": [
+	    {"pool_id": 1, "token_out_denom": "uatom"},
+	    {"pool_id": 2, "token_out_denom": "uion"}
+	]}}`
+	response, err := suite.chainA.ExecuteContract(addr, suite.chainA.SenderAccount.GetAddress(), []byte(setRouteMsg), nil)
+	fmt.Println(response, err)
+	suite.Require().NoError(err)
+
 	ackBytes := suite.receivePacket([]byte(fmt.Sprintf(`{"callback": "%v"}`, contractAddr)))
 	fmt.Println(string(ackBytes))
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
