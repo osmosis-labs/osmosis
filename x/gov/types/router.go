@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkgovtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 var _ Router = (*router)(nil)
@@ -13,6 +14,7 @@ var _ Router = (*router)(nil)
 // TODO: Use generic router (ref #3976).
 type Router interface {
 	AddRoute(r string, h Handler) (rtr Router)
+	AddSdkRoute(r string, h sdkgovtypes.Handler) (rtr Router)
 	HasRoute(r string) bool
 	GetRoute(path string) (h Handler)
 	Seal()
@@ -55,6 +57,16 @@ func (rtr *router) AddRoute(path string, h Handler) Router {
 
 	rtr.routes[path] = h
 	return rtr
+}
+
+// AddRoute adds a governance handler for a given path. It returns the Router
+// so AddRoute calls can be linked. It will panic if the router is sealed.
+func (rtr *router) AddSdkRoute(path string, h sdkgovtypes.Handler) Router {
+	wrappedHandler := func(ctx sdk.Context, content Content) error {
+		var legacyContent sdkgovtypes.Content = content
+		return h(ctx, legacyContent)
+	}
+	return rtr.AddRoute(path, wrappedHandler)
 }
 
 // HasRoute returns true if the router has a path registered or false otherwise.
