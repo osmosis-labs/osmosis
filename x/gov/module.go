@@ -20,6 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
+	sdklegacygovclient "github.com/cosmos/cosmos-sdk/x/gov/client"
+
 	govclient "github.com/osmosis-labs/osmosis/v12/x/gov/client"
 
 	"github.com/osmosis-labs/osmosis/v12/x/gov/client/cli"
@@ -42,9 +44,19 @@ type AppModuleBasic struct {
 }
 
 // NewAppModuleBasic creates a new AppModuleBasic object
-func NewAppModuleBasic(proposalHandlers ...govclient.ProposalHandler) AppModuleBasic {
+func NewAppModuleBasic(proposalHandlers ...sdklegacygovclient.ProposalHandler) AppModuleBasic {
+	osmosisProposalHandlers := make([]govclient.ProposalHandler, len(proposalHandlers))
+	for i, proposalHandler := range proposalHandlers {
+		h := govclient.ProposalHandler{
+			CLIHandler: func() *cobra.Command { return proposalHandler.CLIHandler() },
+			RESTHandler: func(ctx client.Context) rest.ProposalRESTHandler {
+				return rest.ProposalRESTHandler(proposalHandler.RESTHandler(ctx))
+			},
+		}
+		osmosisProposalHandlers[i] = h
+	}
 	return AppModuleBasic{
-		proposalHandlers: proposalHandlers,
+		proposalHandlers: osmosisProposalHandlers,
 	}
 }
 

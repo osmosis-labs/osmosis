@@ -18,7 +18,6 @@ import (
 	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
-	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
@@ -26,6 +25,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
+
+	"github.com/osmosis-labs/osmosis/v12/x/gov"
 
 	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v12/x/epochs"
