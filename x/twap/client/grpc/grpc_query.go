@@ -29,6 +29,7 @@ func (q Querier) Params(grpcCtx context.Context,
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.Params(ctx, *req)
 }
+
 func (q Querier) ArithmeticTwapToNow(grpcCtx context.Context,
 	req *queryproto.ArithmeticTwapToNowRequest,
 ) (*queryproto.ArithmeticTwapToNowResponse, error) {
@@ -38,16 +39,10 @@ func (q Querier) ArithmeticTwapToNow(grpcCtx context.Context,
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.ArithmeticTwapToNow(ctx, *req)
 }
-<<<<<<< HEAD
-func (q Querier) Params(grpcCtx context.Context,
-	req *queryproto.ParamsRequest,
-) (*queryproto.ParamsResponse, error) {
-=======
 
 func (q Querier) ArithmeticTwap(grpcCtx context.Context,
 	req *queryproto.ArithmeticTwapRequest,
 ) (*queryproto.ArithmeticTwapResponse, error) {
->>>>>>> c9dea56c (Fix codegen inconsistency (#2849))
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
