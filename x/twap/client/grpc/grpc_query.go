@@ -1,4 +1,4 @@
-package grpc
+package grpc 
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
 // SOURCE AT `proto/osmosis/twap/v1beta1/query.yml`
@@ -20,16 +20,15 @@ type Querier struct {
 
 var _ queryproto.QueryServer = Querier{}
 
-func (q Querier) ArithmeticTwap(grpcCtx context.Context,
-	req *queryproto.ArithmeticTwapRequest,
-) (*queryproto.ArithmeticTwapResponse, error) {
+func (q Querier) Params(grpcCtx context.Context,
+	req *queryproto.ParamsRequest,
+) (*queryproto.ParamsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.ArithmeticTwap(ctx, *req)
+	return q.Q.Params(ctx, *req)
 }
-
 func (q Querier) ArithmeticTwapToNow(grpcCtx context.Context,
 	req *queryproto.ArithmeticTwapToNowRequest,
 ) (*queryproto.ArithmeticTwapToNowResponse, error) {
@@ -39,13 +38,12 @@ func (q Querier) ArithmeticTwapToNow(grpcCtx context.Context,
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.ArithmeticTwapToNow(ctx, *req)
 }
-
-func (q Querier) Params(grpcCtx context.Context,
-	req *queryproto.ParamsRequest,
-) (*queryproto.ParamsResponse, error) {
+func (q Querier) ArithmeticTwap(grpcCtx context.Context,
+	req *queryproto.ArithmeticTwapRequest,
+) (*queryproto.ArithmeticTwapResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.Params(ctx, *req)
+	return q.Q.ArithmeticTwap(ctx, *req)
 }
