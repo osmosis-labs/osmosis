@@ -1,10 +1,10 @@
 # v11 to v12 Mainnet Upgrade Guide
 
-Osmosis v12 Gov Prop: <"FILL THIS IN WITH GOV PROP URL">
+Osmosis v12 Gov Prop: https://www.mintscan.io/osmosis/proposals/335
 
-Countdown: <"FILL THIS IN WITH COUNTDOWN URL">
+Countdown: https://www.mintscan.io/osmosis/blocks/6246000
 
-Height: "FILL THIS IN WITH UPGRADE HEIGHT"
+Height: 6246000
 
 ## Memory Requirements
 
