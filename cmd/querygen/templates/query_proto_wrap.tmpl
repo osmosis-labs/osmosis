@@ -18,7 +18,8 @@ type Querier struct {
 	K {{.KeeperStruct}}
 }
 
-{{range .Queries -}} 
+{{- range .Queries }}
+
 func (q Querier) {{.QueryName}}(ctx sdk.Context,
 	req queryproto.{{.QueryName}}Request,
 ) (*queryproto.{{.QueryName}}Response, error) {
@@ -28,4 +29,5 @@ func (q Querier) {{.QueryName}}(ctx sdk.Context,
 
 	return &queryproto.GetArithmeticTwapResponse{ArithmeticTwap: twap}, nil
 }
-{{end -}} 
+
+{{- end }}
