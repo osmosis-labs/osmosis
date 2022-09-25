@@ -12,7 +12,6 @@ import (
 	osmosimtypes "github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -26,7 +25,7 @@ import (
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
 func AppStateFn() osmosim.AppStateFn {
 	cdc := app.MakeEncodingConfig().Marshaler
-	return func(simManager *osmosimtypes.Manager, r *rand.Rand, accs []simtypes.Account, config osmosim.InitializationConfig,
+	return func(simManager osmosimtypes.ModuleGenesisGenerator, r *rand.Rand, accs []simtypes.Account, config osmosim.InitializationConfig,
 	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
 		if osmosim.FlagGenesisTimeValue == 0 {
 			// N.B.: wasmd has the following check in its simulator:
@@ -142,7 +141,7 @@ func AppStateFn() osmosim.AppStateFn {
 // AppStateRandomizedFn creates calls each module's GenesisState generator function
 // and creates the simulation params.
 func AppStateRandomizedFn(
-	simManager *osmosimtypes.Manager, r *rand.Rand, cdc codec.JSONCodec,
+	simManager osmosimtypes.ModuleGenesisGenerator, r *rand.Rand, cdc codec.JSONCodec,
 	accs []simtypes.Account, genesisTimestamp time.Time, appParams simtypes.AppParams,
 ) (json.RawMessage, []simtypes.Account) {
 	numAccs := int64(len(accs))
@@ -150,15 +149,8 @@ func AppStateRandomizedFn(
 
 	// generate a random amount of initial stake coins and a random initial
 	// number of bonded accounts
-	var initialStake, numInitiallyBonded int64
-	appParams.GetOrGenerate(
-		cdc, simappparams.StakePerAccount, &initialStake, r,
-		func(r *rand.Rand) { initialStake = r.Int63n(1e12) },
-	)
-	appParams.GetOrGenerate(
-		cdc, simappparams.InitiallyBondedValidators, &numInitiallyBonded, r,
-		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(300)) },
-	)
+	initialStake := r.Int63n(1e12)
+	numInitiallyBonded := int64(r.Intn(300))
 
 	if numInitiallyBonded > numAccs {
 		numInitiallyBonded = numAccs

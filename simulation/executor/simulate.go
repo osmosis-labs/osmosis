@@ -21,6 +21,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 
+	"github.com/osmosis-labs/osmosis/v12/simulation/internal/executortypes"
 	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
 )
 
@@ -48,7 +49,8 @@ func SimulateFromSeed(
 
 	legacyInvariantPeriod := uint(10) // TODO: Make a better answer of what to do here, at minimum put into config
 	app := appCreator(simulationHomeDir(), legacyInvariantPeriod, baseappOptionsFromConfig(config)...)
-	actions := app.SimulationManager().Actions(config.Seed, app.AppCodec())
+	simManager := executortypes.CreateSimulationManager(app)
+	actions := simManager.Actions(config.Seed, app.AppCodec())
 
 	// Set up sql table
 	statsDb, err := setupStatsDb(config.ExportConfig)
@@ -58,7 +60,7 @@ func SimulateFromSeed(
 	defer statsDb.cleanup()
 
 	// Encapsulate the bizarre initialization logic that must be cleaned.
-	simCtx, simState, simParams, err := cursedInitializationLogic(tb, w, app, initFunctions, &config)
+	simCtx, simState, simParams, err := cursedInitializationLogic(tb, w, app, simManager, initFunctions, &config)
 	if err != nil {
 		return storetypes.CommitID{}, true, err
 	}
@@ -115,6 +117,7 @@ func cursedInitializationLogic(
 	tb testing.TB,
 	w io.Writer,
 	app simtypes.App,
+	simManager executortypes.Manager,
 	initFunctions InitFunctions,
 	config *Config,
 ) (*simtypes.SimCtx, *simState, Params, error) {
@@ -130,7 +133,7 @@ func cursedInitializationLogic(
 	}
 
 	validators, genesisTimestamp, accs, res := initChain(
-		app.SimulationManager(), r, simParams, accs, app, initFunctions.AppInitialStateFn, config)
+		simManager, r, simParams, accs, app, initFunctions.AppInitialStateFn, config)
 
 	fmt.Printf(
 		"Starting the simulation from time %v (unixtime %v)\n",
@@ -159,7 +162,7 @@ func cursedInitializationLogic(
 
 // initialize the chain for the simulation
 func initChain(
-	simManager *simtypes.Manager,
+	simManager executortypes.Manager,
 	r *rand.Rand,
 	params Params,
 	accounts []simulation.Account,
@@ -218,7 +221,7 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 ) blockSimFn {
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0
-	selectAction := simtypes.GetSelectActionFn(actions)
+	selectAction := executortypes.GetSelectActionFn(actions)
 
 	return func(
 		simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.Header,

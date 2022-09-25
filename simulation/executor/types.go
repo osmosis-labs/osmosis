@@ -11,7 +11,7 @@ import (
 )
 
 // AppStateFn returns the app state json bytes and the genesis accounts
-type AppStateFn func(simManager *simtypes.Manager, r *rand.Rand, accs []legacysim.Account, config InitializationConfig) (
+type AppStateFn func(simManager simtypes.ModuleGenesisGenerator, r *rand.Rand, accs []legacysim.Account, config InitializationConfig) (
 	appState json.RawMessage, accounts []legacysim.Account, chainId string, genesisTimestamp time.Time,
 )
 
