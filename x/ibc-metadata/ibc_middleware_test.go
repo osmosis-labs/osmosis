@@ -114,8 +114,8 @@ func (suite *MiddlewareTestSuite) receivePacket(metadata []byte) []byte {
 		suite.path.EndpointB.ChannelConfig.PortID,
 		suite.path.EndpointB.ChannelID)
 	packetData := types.FungibleTokenPacketData{
-		Denom:    sdk.DefaultBondDenom,
-		Amount:   "1",
+		Denom:    "uosmo",
+		Amount:   "100",
 		Sender:   suite.chainB.SenderAccount.GetAddress().String(),
 		Receiver: suite.chainA.SenderAccount.GetAddress().String(),
 		Metadata: metadata,
@@ -181,15 +181,17 @@ func (suite *MiddlewareTestSuite) PrepareSimplePools() {
 	)
 	err := suite.chainA.FundAcc(suite.chainA.SenderAccount.GetAddress(), funds)
 	suite.Require().NoError(err)
+	err = suite.chainB.FundAcc(suite.chainB.SenderAccount.GetAddress(), funds)
+	suite.Require().NoError(err)
 
 	poolAssets := []balancer.PoolAsset{
 		{
 			Weight: sdk.NewInt(100),
-			Token:  sdk.NewCoin("uosmo", sdk.NewInt(5000000)),
+			Token:  sdk.NewCoin("uosmo", sdk.NewInt(1_000_000_000)),
 		},
 		{
-			Weight: sdk.NewInt(200),
-			Token:  sdk.NewCoin("uatom", sdk.NewInt(5000000)),
+			Weight: sdk.NewInt(100),
+			Token:  sdk.NewCoin("uatom", sdk.NewInt(1_000_000_000)),
 		},
 	}
 	poolParams := balancer.PoolParams{
@@ -231,8 +233,8 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithSwap() {
 	    {"pool_id": 1, "token_out_denom": "uatom"},
 	    {"pool_id": 2, "token_out_denom": "uion"}
 	]}}`
-	response, err := suite.chainA.ExecuteContract(addr, suite.chainA.SenderAccount.GetAddress(), []byte(setRouteMsg), nil)
-	fmt.Println(response, err)
+
+	_, err = suite.chainA.ExecuteContract(addr, suite.chainA.SenderAccount.GetAddress(), []byte(setRouteMsg), nil)
 	suite.Require().NoError(err)
 
 	ackBytes := suite.receivePacket([]byte(fmt.Sprintf(`{"callback": "%v"}`, contractAddr)))
@@ -241,5 +243,8 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithSwap() {
 	err = json.Unmarshal(ackBytes, &ack)
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
+
+	// ToDo: Receive the packet on chainB and check that it contains the uion.
+
 	fmt.Println(ack)
 }

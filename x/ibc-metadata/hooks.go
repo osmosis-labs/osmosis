@@ -27,15 +27,14 @@ func ExecuteSwap(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
 		return sdk.ErrInvalidDecimalStr
 	}
 
-	fmt.Println(data)
 	_, err = contractKeeper.Execute(
 		ctx, contractAddr, caller,
 		[]byte(fmt.Sprintf(`
-{"swap": 
-  {"input_coin": {"amount": "1", "denom": "osmo"}, 
-   "output_denom": "uion", 
-   "slipage": {"min_output_amount": "1"}}
-}`)),
+	{"swap": 
+	  {"input_coin": {"amount": "%s", "denom": "uosmo"}, 
+	   "output_denom": "uion", 
+	   "slipage": {"max_price_impact_percentage": "10"}}
+    }`, amount)),
 		sdk.NewCoins(sdk.NewCoin(data.Denom, amount)),
 	)
 	if err != nil {
@@ -68,8 +67,8 @@ func SwapHook(im IBCModule, ctx sdk.Context, packet channeltypes.Packet, relayer
 	}
 	ack := im.app.OnRecvPacket(ctx, packet, relayer)
 
-	// Todo: Make sure the funds have been received before calling this
-	err = ExecuteSwap(ctx, im.ics4Middleware.ContractKeeper, metadata.Callback, relayer, data)
+	caller, _ := sdk.AccAddressFromBech32(data.Receiver)
+	err = ExecuteSwap(ctx, im.ics4Middleware.ContractKeeper, metadata.Callback, caller, data)
 	if err != nil {
 		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadExecutionMsg, err.Error()))
 	}
