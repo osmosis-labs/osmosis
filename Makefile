@@ -104,7 +104,7 @@ build-reproducible-amd64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
 		--build-arg GO_VERSION=$(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2) \
-		--platform linux/arm64 \
+		--platform linux/amd64 \
 		-t osmosis-amd64 \
 		--load \
 		-f Dockerfile .
@@ -216,28 +216,6 @@ proto-image-push:
 
 run-querygen:
 	@go run cmd/querygen/main.go
-
-###############################################################################
-###                                 Devdoc                                  ###
-###############################################################################
-
-build-docs:
-	@cd docs && \
-	while read p; do \
-		(git checkout $${p} && npm install && VUEPRESS_BASE="/$${p}/" npm run build) ; \
-		mkdir -p ~/output/$${p} ; \
-		cp -r .vuepress/dist/* ~/output/$${p}/ ; \
-		cp ~/output/$${p}/index.html ~/output ; \
-	done < versions ;
-
-sync-docs:
-	cd ~/output && \
-	echo "role_arn = ${DEPLOYMENT_ROLE_ARN}" >> /root/.aws/config ; \
-	echo "CI job = ${CIRCLE_BUILD_URL}" >> version.html ; \
-	aws s3 sync . s3://${WEBSITE_BUCKET} --profile terraform --delete ; \
-	aws cloudfront create-invalidation --distribution-id ${CF_DISTRIBUTION_ID} --profile terraform --path "/*" ;
-.PHONY: sync-docs
-
 
 ###############################################################################
 ###                           Tests & Simulation                            ###
@@ -363,26 +341,38 @@ localnet-keys:
 localnet-build:
 	@DOCKER_BUILDKIT=1 docker-compose -f tests/localosmosis/docker-compose.yml build
 
-localnet-build-state-export:
-	@docker build -t local:osmosis-se --build-arg ID=$(ID) -f tests/localosmosis/mainnet_state/Dockerfile-stateExport .
-
 localnet-start:
-	@docker-compose -f tests/localosmosis/docker-compose.yml up
+	@STATE="" docker-compose -f tests/localosmosis/docker-compose.yml up
+
+localnet-start-with-state:
+	@STATE=-s docker-compose -f tests/localosmosis/docker-compose.yml up
 
 localnet-startd:
-	@docker-compose -f tests/localosmosis/docker-compose.yml up -d
+	@STATE="" docker-compose -f tests/localosmosis/docker-compose.yml up -d
 
-localnet-start-state-export:
-	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml up
+localnet-startd-with-state:
+	@STATE=-s docker-compose -f tests/localosmosis/docker-compose.yml up -d
 
 localnet-stop:
-	@docker-compose -f tests/localosmosis/docker-compose.yml down
+	@STATE="" docker-compose -f tests/localosmosis/docker-compose.yml down
 
 localnet-remove: localnet-stop
 	rm -rf $(PWD)/tests/localosmosis/.osmosisd
 
+localnet-build-state-export:
+	@DOCKER_BUILDKIT=1 docker-compose -f tests/localosmosis/state_export/docker-compose.yml build
+
+localnet-start-state-export:
+	@docker-compose -f tests/localosmosis/state_export/docker-compose.yml up
+
+localnet-startd-state-export:
+	@docker-compose -f tests/localosmosis/state_export/docker-compose.yml up -d
+
+localnet-stop-state-export:
+	@docker-compose -f tests/localosmosis/docker-compose.yml down
+
 localnet-remove-state-export:
-	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml down
+	rm -rf $(PWD)/tests/localosmosis/state_export/.osmosisd
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \

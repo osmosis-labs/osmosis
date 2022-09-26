@@ -243,9 +243,9 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom 
 		return sdk.Dec{}, err
 	}
 
-	scaledSpotPrice := spotPrice(osmomath.BigDecFromSdkDec(reserves[0]), osmomath.BigDecFromSdkDec(reserves[1]))
+	scaledSpotPrice := spotPrice(osmomath.BigDecFromSDKDec(reserves[0]), osmomath.BigDecFromSDKDec(reserves[1]))
 	spotPrice := p.getDescaledPoolAmt(baseAssetDenom, scaledSpotPrice)
-	spotPriceSdkDec := spotPrice.SdkDec()
+	spotPriceSdkDec := spotPrice.SDKDec()
 
 	return spotPriceSdkDec, nil
 }
