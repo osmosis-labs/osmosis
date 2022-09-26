@@ -87,6 +87,18 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestPoolType() {
+	poolId := suite.PrepareBalancerPool()
+
+	// error when querying invalid pool ID
+	_, err := suite.queryClient.PoolType(gocontext.Background(), &types.QueryPoolTypeRequest{PoolId: poolId + 1})
+	suite.Require().Error(err)
+
+	res, err := suite.queryClient.PoolType(gocontext.Background(), &types.QueryPoolTypeRequest{PoolId: poolId})
+	suite.Require().NoError(err)
+	suite.Require().Equal("Balancer", res.PoolType)
+}
+
 func (suite *KeeperTestSuite) TestQueryNumPools1() {
 	res, err := suite.queryClient.NumPools(gocontext.Background(), &types.QueryNumPoolsRequest{})
 	suite.Require().NoError(err)
