@@ -445,6 +445,28 @@ func TestCFMMInvariantTwoAssetsBinarySearch(t *testing.T) {
 	}
 }
 
+func TestCFMMInvariantTwoAssetsDirect(t *testing.T) {
+	kErrTolerance := osmomath.OneDec()
+
+	tests := twoAssetCFMMTestCases
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			// system under test
+			sut := func() {
+				// using two-asset cfmm
+				k0 := cfmmConstant(test.xReserve, test.yReserve)
+				xOut := solveCfmmDirect(test.xReserve, test.yReserve, test.yIn)
+
+				k1 := cfmmConstant(test.xReserve.Sub(xOut), test.yReserve.Add(test.yIn))
+				osmomath.DecApproxEq(t, k0, k1, kErrTolerance)
+			}
+
+			osmoassert.ConditionalPanic(t, test.expectPanic, sut)
+		})
+	}
+}
+
 func TestCFMMInvariantMultiAssets(t *testing.T) {
 	kErrTolerance := osmomath.OneDec()
 
