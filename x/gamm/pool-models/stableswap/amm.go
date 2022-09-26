@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v12/osmomath"
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/cfmm_common"
 	types "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
@@ -291,22 +292,26 @@ func solveCFMMBinarySearch(constantFunction func(osmomath.BigDec, osmomath.BigDe
 	return func(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
 		if !xReserve.IsPositive() || !yReserve.IsPositive() || !yIn.IsPositive() {
 			panic("invalid input: reserves and input must be positive")
+		} else if yIn.GTE(yReserve) {
+			panic("cannot input more than pool reserves")
 		}
 		k := constantFunction(xReserve, yReserve)
-		yf := yReserve.Add(yIn)
-		x_low_est := osmomath.ZeroDec()
-		x_high_est := xReserve
-		x_est := (x_high_est.Add(x_low_est)).Quo(twodec)
-		cur_k := constantFunction(x_est, yf)
-		for i := 0; !approxDecEqual(cur_k, k, k_threshold) && i < 256; i++ {
-			if cur_k.GT(k) {
-				x_high_est = x_est
-			} else if cur_k.LT(k) {
-				x_low_est = x_est
-			}
-			x_est = (x_high_est.Add(x_low_est)).Quo(twodec)
-			cur_k = constantFunction(x_est, yf)
+		yFinal := yReserve.Add(yIn)
+		xLowEst := osmomath.ZeroDec()
+		xHighEst := xReserve
+		maxIterations := 256
+		errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.Dec{}}
+
+		// create single-input CFMM to pass into binary search
+		calc_x_est := func(xEst osmomath.BigDec) (osmomath.BigDec, error) {
+			return constantFunction(xEst, yFinal), nil
 		}
+
+		x_est, err := osmoutils.BinarySearchBigDec(calc_x_est, xLowEst, xHighEst, k, errTolerance, maxIterations)
+		if err != nil {
+			panic(err)
+		}
+
 		xOut := xReserve.Sub(x_est)
 		if xOut.GTE(xReserve) {
 			panic("invalid output: greater than full pool reserves")
