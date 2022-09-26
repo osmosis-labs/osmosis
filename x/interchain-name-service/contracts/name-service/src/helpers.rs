@@ -1,5 +1,5 @@
 use crate::error::ContractError;
-use cosmwasm_std::Coin;
+use cosmwasm_std::{Addr, BankMsg, Coin, Response};
 
 pub fn assert_sent_sufficient_coin(
     sent: &[Coin],
@@ -33,6 +33,16 @@ pub fn assert_matches_denom(sent: &[Coin], expected_denom: &String) -> Result<()
         }
     }
     Ok(())
+}
+
+pub fn send_tokens(to_address: Addr, amount: Vec<Coin>, action: &str) -> Response {
+    Response::new()
+        .add_message(BankMsg::Send {
+            to_address: to_address.clone().into(),
+            amount,
+        })
+        .add_attribute("action", action)
+        .add_attribute("to", to_address)
 }
 
 #[cfg(test)]

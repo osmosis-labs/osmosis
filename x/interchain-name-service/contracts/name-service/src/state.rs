@@ -1,5 +1,6 @@
 use std::collections::BinaryHeap;
 
+use cw_utils::Expiration;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -39,14 +40,14 @@ pub struct NameBid {
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 pub struct NameRecord {
     pub owner: Addr,
-    pub expiry: u128,
+    pub expiry: Expiration,
     pub bids: BinaryHeap<NameBid>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct AddressRecord {
     pub name: String,
-    pub expiry: u128,
+    pub expiry: Expiration,
 }
 
 pub fn resolver(storage: &mut dyn Storage) -> Bucket<NameRecord> {

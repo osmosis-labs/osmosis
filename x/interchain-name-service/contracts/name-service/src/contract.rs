@@ -3,8 +3,9 @@ use std::collections::BinaryHeap;
 // use chrono::{Datelike, TimeZone, Utc};
 use cosmwasm_std::{
     coin, entry_point, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response,
-    StdError, StdResult, Uint128,
+    StdError, StdResult, Timestamp, Uint128,
 };
+use cw_utils::Expiration;
 
 use crate::error::ContractError;
 use crate::helpers::{assert_matches_denom, assert_sent_sufficient_coin};
@@ -76,8 +77,12 @@ pub fn execute_register(
     assert_sent_sufficient_coin(&info.funds, required)?;
 
     let key = name.as_bytes();
-    let now = env.block.time.nanos() as u128;
-    let expiry = now + 31_536_000 * years.u128();
+    let expiry = {
+        let now_ts = Timestamp::from_nanos(env.block.time.nanos());
+        let expiry_ts = now_ts.plus_seconds(years.u128() as u64 * 31_540_000);
+
+        Expiration::AtTime(expiry_ts)
+    };
 
     let record = NameRecord {
         owner: info.sender,
@@ -87,7 +92,7 @@ pub fn execute_register(
 
     if let Some(existing_record) = resolver(deps.storage).may_load(key)? {
         // name is already taken and expiry still not past
-        if existing_record.expiry > now {
+        if !existing_record.expiry.is_expired(&env.block) {
             return Err(ContractError::NameTaken { name });
         }
     }
@@ -120,11 +125,10 @@ pub fn execute_set_name(
 
 fn resolve_name(deps: &DepsMut, env: Env, name: &String) -> Option<NameRecord> {
     let key = name.as_bytes();
-    let now = env.block.time.nanos() as u128;
 
     match resolver_read(deps.storage).may_load(key) {
         Ok(Some(record)) => {
-            if now >= record.expiry {
+            if record.expiry.is_expired(&env.block) {
                 None
             } else {
                 Some(record)
@@ -203,11 +207,10 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
 
 fn query_resolver(deps: Deps, env: Env, name: String) -> StdResult<Binary> {
     let key = name.as_bytes();
-    let now = env.block.time.nanos() as u128;
 
     let address = match resolver_read(deps.storage).may_load(key)? {
         Some(record) => {
-            if now >= record.expiry {
+            if record.expiry.is_expired(&env.block) {
                 None
             } else {
                 Some(String::from(&record.owner))
@@ -222,10 +225,9 @@ fn query_resolver(deps: Deps, env: Env, name: String) -> StdResult<Binary> {
 
 fn query_reverse_resolver(deps: Deps, env: Env, address: Addr) -> StdResult<Binary> {
     let key = address.as_bytes();
-    let now = env.block.time.nanos() as u128;
     let name = match reverse_resolver_read(deps.storage).may_load(key)? {
         Some(record) => {
-            if now >= record.expiry {
+            if record.expiry.is_expired(&env.block) {
                 None
             } else {
                 Some(String::from(&record.name))
