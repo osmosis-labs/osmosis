@@ -133,19 +133,11 @@ func (q Querier) PoolType(ctx context.Context, req *types.QueryPoolTypeRequest) 
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	poolType, err := q.Keeper.GetPoolType(sdkCtx, req.PoolId)
 
-	pool, err := q.Keeper.GetPoolAndPoke(sdkCtx, req.PoolId)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	switch pool := pool.(type) {
-	case *balancer.Pool:
-		return &types.QueryPoolTypeResponse{PoolType: "Balancer"}, nil
-	default:
-		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
-	}
+	return &types.QueryPoolTypeResponse{
+		PoolType: poolType,
+	}, err
 }
 
 // PoolParams queries a specified pool for its params.
