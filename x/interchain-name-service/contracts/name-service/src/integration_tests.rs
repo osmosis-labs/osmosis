@@ -54,7 +54,7 @@ mod tests {
     ) {
         let msg = InstantiateMsg {
             required_denom: required_denom.into(),
-            mint_price: purchase_price,
+            register_price: purchase_price,
             annual_tax_bps: annual_tax_bps,
             owner_grace_period: owner_grace_period,
         };
@@ -67,7 +67,7 @@ mod tests {
     fn mock_init_no_price(deps: DepsMut) {
         let msg = InstantiateMsg {
             required_denom: "token".to_string(),
-            mint_price: Uint128::from(0 as u128),
+            register_price: Uint128::from(0 as u128),
             annual_tax_bps: Uint128::from(0 as u128),
             owner_grace_period: Duration::Time(7_776_000),
         };
@@ -98,7 +98,7 @@ mod tests {
             deps.as_ref(),
             Config {
                 required_denom: "token".to_string(),
-                mint_price: Uint128::from(0 as u128),
+                register_price: Uint128::from(0 as u128),
                 annual_tax_bps: Uint128::from(0 as u128),
                 owner_grace_period: Duration::Time(7_776_000),
             },
@@ -121,7 +121,7 @@ mod tests {
             deps.as_ref(),
             Config {
                 required_denom: "token".to_string(),
-                mint_price: Uint128::from(3 as u128),
+                register_price: Uint128::from(3 as u128),
                 annual_tax_bps: Uint128::from(100 as u128),
                 owner_grace_period: Duration::Time(7_776_000),
             },

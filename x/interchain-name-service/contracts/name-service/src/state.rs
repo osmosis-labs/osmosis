@@ -19,7 +19,7 @@ pub struct Config {
     // Denom for all protocol transactions
     pub required_denom: String,
     // Price to intially purchase a name
-    pub mint_price: Uint128,
+    pub register_price: Uint128,
     // Amount of tax paid to protocol annually (as basis points of current price)
     pub annual_tax_bps: Uint128,
     // Amount of time annually where owner can match competing bids to keep the domain

@@ -28,7 +28,7 @@ pub fn instantiate(
 ) -> Result<Response, StdError> {
     let config_state = Config {
         required_denom: msg.required_denom,
-        mint_price: msg.mint_price,
+        register_price: msg.register_price,
         annual_tax_bps: msg.annual_tax_bps,
         owner_grace_period: msg.owner_grace_period,
     };
@@ -70,11 +70,11 @@ pub fn execute_register(
 
     let config_state = config(deps.storage).load()?;
     let tax_per_year =
-        config_state.annual_tax_bps * config_state.mint_price / Uint128::from(10_000 as u128);
+        config_state.annual_tax_bps * config_state.register_price / Uint128::from(10_000 as u128);
     // Calculate required payment including rent
     let required_amount = {
         let total_tax = tax_per_year * years;
-        config_state.mint_price + total_tax
+        config_state.register_price + total_tax
     };
     assert_sent_sufficient_coin(
         &info.funds,
@@ -89,7 +89,7 @@ pub fn execute_register(
         expiry,
         bids: BinaryHeap::new(),
         remaining_escrow: required_amount,
-        current_valuation: config_state.mint_price,
+        current_valuation: config_state.register_price,
     };
 
     if let Some(existing_record) = resolver(deps.storage).may_load(key)? {
