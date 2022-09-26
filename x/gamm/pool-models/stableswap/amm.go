@@ -53,17 +53,15 @@ func cfmmConstantMulti(xReserve, yReserve, uReserve, vSumSquares osmomath.BigDec
 func solveCfmm(xReserve, yReserve osmomath.BigDec, remReserves []osmomath.BigDec, yIn osmomath.BigDec) osmomath.BigDec {
 	if len(remReserves) == 0 {
 		return solveCFMMBinarySearch(cfmmConstant)(xReserve, yReserve, yIn)
-	} else if len(remReserves) > 0 {
-		uReserve := osmomath.OneDec()
-		wSumSquares := osmomath.ZeroDec()
-		for _, assetReserve := range remReserves {
-			uReserve = uReserve.Mul(assetReserve)
-			wSumSquares = wSumSquares.Add(assetReserve.Mul(assetReserve))
-		}
-		return solveCFMMBinarySearchMulti(cfmmConstantMulti)(xReserve, yReserve, uReserve, wSumSquares, yIn)
-	} else {
-		panic("invalid input reserves for CFMM solver")
 	}
+
+	uReserve := osmomath.OneDec()
+	wSumSquares := osmomath.ZeroDec()
+	for _, assetReserve := range remReserves {
+		uReserve = uReserve.Mul(assetReserve)
+		wSumSquares = wSumSquares.Add(assetReserve.Mul(assetReserve))
+	}
+	return solveCFMMBinarySearchMulti(cfmmConstantMulti)(xReserve, yReserve, uReserve, wSumSquares, yIn)
 }
 
 func approxDecEqual(a, b, tol osmomath.BigDec) bool {
