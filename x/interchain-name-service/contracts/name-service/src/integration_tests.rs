@@ -101,9 +101,9 @@ mod tests {
             deps.as_ref(),
             Config {
                 required_denom: "token".to_string(),
-                purchase_price: Uint128::from(0 as u128),
+                mint_price: Uint128::from(0 as u128),
                 transfer_price: Uint128::from(0 as u128),
-                annual_rent_bps: Uint128::from(0 as u128),
+                annual_tax_bps: Uint128::from(0 as u128),
                 owner_grace_period: Duration::Time(7_776_000),
             },
         );
@@ -126,9 +126,9 @@ mod tests {
             deps.as_ref(),
             Config {
                 required_denom: "token".to_string(),
-                purchase_price: Uint128::from(3 as u128),
+                mint_price: Uint128::from(3 as u128),
                 transfer_price: Uint128::from(4 as u128),
-                annual_rent_bps: Uint128::from(100 as u128),
+                annual_tax_bps: Uint128::from(100 as u128),
                 owner_grace_period: Duration::Time(7_776_000),
             },
         );
