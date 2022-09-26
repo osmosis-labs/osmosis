@@ -1,4 +1,5 @@
 use cosmwasm_std::{Addr, Uint128};
+use cw_utils::Duration;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -8,6 +9,7 @@ pub struct InstantiateMsg {
     pub purchase_price: Uint128,
     pub transfer_price: Uint128,
     pub annual_rent_bps: Uint128,
+    pub owner_grace_period: Duration,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

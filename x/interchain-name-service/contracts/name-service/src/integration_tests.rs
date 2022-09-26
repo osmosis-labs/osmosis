@@ -2,6 +2,7 @@
 mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cosmwasm_std::{coin, coins, from_binary, Coin, Deps, DepsMut, Uint128};
+    use cw_utils::Duration;
 
     use crate::contract::{execute, instantiate, query};
     use crate::error::ContractError;
@@ -50,12 +51,14 @@ mod tests {
         purchase_price: Uint128,
         transfer_price: Uint128,
         annual_rent_bps: Uint128,
+        owner_grace_period: Duration,
     ) {
         let msg = InstantiateMsg {
             required_denom: required_denom.into(),
             purchase_price: purchase_price,
             transfer_price: transfer_price,
             annual_rent_bps: annual_rent_bps,
+            owner_grace_period: owner_grace_period,
         };
 
         let info = mock_info("creator", &coins(2, "token"));
@@ -69,6 +72,7 @@ mod tests {
             purchase_price: Uint128::from(0 as u128),
             transfer_price: Uint128::from(0 as u128),
             annual_rent_bps: Uint128::from(0 as u128),
+            owner_grace_period: Duration::Time(7_776_000),
         };
 
         let info = mock_info("creator", &coins(2, "token"));
@@ -100,6 +104,7 @@ mod tests {
                 purchase_price: Uint128::from(0 as u128),
                 transfer_price: Uint128::from(0 as u128),
                 annual_rent_bps: Uint128::from(0 as u128),
+                owner_grace_period: Duration::Time(7_776_000),
             },
         );
     }
@@ -114,6 +119,7 @@ mod tests {
             Uint128::from(3 as u128),
             Uint128::from(4 as u128),
             Uint128::from(100 as u128),
+            Duration::Time(7_776_000),
         );
 
         assert_config_state(
@@ -123,6 +129,7 @@ mod tests {
                 purchase_price: Uint128::from(3 as u128),
                 transfer_price: Uint128::from(4 as u128),
                 annual_rent_bps: Uint128::from(100 as u128),
+                owner_grace_period: Duration::Time(7_776_000),
             },
         );
     }
@@ -146,6 +153,7 @@ mod tests {
             Uint128::from(2 as u128),
             Uint128::from(2 as u128),
             Uint128::from(0 as u128),
+            Duration::Time(7_776_000),
         );
 
         mock_alice_registers_name(deps.as_mut(), &coins(2, "token"));
@@ -174,6 +182,7 @@ mod tests {
             Uint128::from(200 as u128),
             Uint128::from(200 as u128),
             Uint128::from(100 as u128),
+            Duration::Time(7_776_000),
         );
 
         mock_alice_registers_name(deps.as_mut(), &coins(204, "token"));
@@ -309,6 +318,7 @@ mod tests {
             Uint128::from(2 as u128),
             Uint128::from(2 as u128),
             Uint128::from(0 as u128),
+            Duration::Time(7_776_000),
         );
 
         // anyone can register an available name with sufficient fees
@@ -336,6 +346,7 @@ mod tests {
             Uint128::from(2 as u128),
             Uint128::from(2 as u128),
             Uint128::from(0 as u128),
+            Duration::Time(7_776_000),
         );
 
         // anyone can register an available name with sufficient fees
@@ -382,6 +393,7 @@ mod tests {
             Uint128::from(2 as u128),
             Uint128::from(2 as u128),
             Uint128::from(0 as u128),
+            Duration::Time(7_776_000),
         );
         mock_alice_registers_name(deps.as_mut(), &coins(2, "token"));
 
@@ -457,6 +469,7 @@ mod tests {
             Uint128::from(2 as u128),
             Uint128::from(5 as u128),
             Uint128::from(0 as u128),
+            Duration::Time(7_776_000),
         );
         mock_alice_registers_name(deps.as_mut(), &coins(2, "token"));
 

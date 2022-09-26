@@ -14,7 +14,7 @@ use crate::msg::{
 };
 use crate::state::{
     config, config_read, resolver, resolver_read, reverse_resolver, reverse_resolver_read,
-    AddressRecord, Config, NameBid, NameRecord, IBC_SUFFIX,
+    AddressRecord, Config, NameBid, NameRecord, AVERAGE_SECONDS_PER_YEAR, IBC_SUFFIX,
 };
 
 const MIN_NAME_LENGTH: u64 = 3;
@@ -32,6 +32,7 @@ pub fn instantiate(
         purchase_price: msg.purchase_price,
         transfer_price: msg.transfer_price,
         annual_rent_bps: msg.annual_rent_bps,
+        owner_grace_period: msg.owner_grace_period,
     };
 
     config(deps.storage).save(&config_state)?;
@@ -67,11 +68,12 @@ pub fn execute_register(
     validate_name(&name)?;
 
     let config_state = config(deps.storage).load()?;
+    let rent_per_year =
+        config_state.annual_rent_bps * config_state.purchase_price / Uint128::from(10_000 as u128);
     // Calculate required payment including rent
     let required = {
-        let required_rent = config_state.annual_rent_bps * config_state.purchase_price * years
-            / Uint128::from(10_000 as u128);
-        let amount = config_state.purchase_price + required_rent;
+        let total_rent = rent_per_year * years;
+        let amount = config_state.purchase_price + total_rent;
         Some(coin(amount.u128(), config_state.required_denom))
     };
     assert_sent_sufficient_coin(&info.funds, required)?;
@@ -79,7 +81,7 @@ pub fn execute_register(
     let key = name.as_bytes();
     let expiry = {
         let now_ts = Timestamp::from_nanos(env.block.time.nanos());
-        let expiry_ts = now_ts.plus_seconds(years.u128() as u64 * 31_540_000);
+        let expiry_ts = now_ts.plus_seconds(years.u128() as u64 * AVERAGE_SECONDS_PER_YEAR);
 
         Expiration::AtTime(expiry_ts)
     };
@@ -88,6 +90,7 @@ pub fn execute_register(
         owner: info.sender,
         expiry,
         bids: BinaryHeap::new(),
+        current_rent: rent_per_year,
     };
 
     if let Some(existing_record) = resolver(deps.storage).may_load(key)? {

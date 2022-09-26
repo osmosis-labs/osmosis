@@ -1,6 +1,6 @@
 use std::collections::BinaryHeap;
 
-use cw_utils::Expiration;
+use cw_utils::{Duration, Expiration};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -14,13 +14,21 @@ pub static NAME_RESOLVER_KEY: &[u8] = b"nameresolver";
 pub static ADDRESS_RESOLVER_KEY: &[u8] = b"addressresolver";
 pub static CONFIG_KEY: &[u8] = b"config";
 pub static IBC_SUFFIX: &str = ".ibc";
+// There are 31,556,952 seconds in an average Gregoarian year due to
+// leap years, end-of-century common years, and leap century years.
+pub static AVERAGE_SECONDS_PER_YEAR: u64 = 31_556_952;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
+    // Denom for all protocol transactions
     pub required_denom: String,
+    // Price to intiially purchase a name
     pub purchase_price: Uint128,
     pub transfer_price: Uint128,
+    // Amount of rent paid to protocol annually (as basis points of current price)
     pub annual_rent_bps: Uint128,
+    // Amount of time annually where owner can match competing bids to keep the domain
+    pub owner_grace_period: Duration,
 }
 
 pub fn config(storage: &mut dyn Storage) -> Singleton<Config> {
@@ -42,6 +50,7 @@ pub struct NameRecord {
     pub owner: Addr,
     pub expiry: Expiration,
     pub bids: BinaryHeap<NameBid>,
+    pub current_rent: Uint128,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
