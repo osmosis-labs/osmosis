@@ -1,6 +1,7 @@
 # Simulator
 
 The simulator package aims to provide tooling that achieves:
+
 * Long running state machine runs on randomized input
 * The ability to assert relevant correctness properties hold for the state machine
 * An API that is compatible with fuzz testing individual messages
