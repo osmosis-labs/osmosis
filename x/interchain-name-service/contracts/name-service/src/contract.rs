@@ -3,20 +3,20 @@ use std::collections::BinaryHeap;
 // use chrono::{Datelike, TimeZone, Utc};
 use cosmwasm_std::{
     coin, entry_point, to_binary, Addr, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response,
-    StdError, StdResult, Timestamp, Uint128,
+    StdError, StdResult, Uint128,
 };
-use cw_utils::Expiration;
 
 use crate::error::ContractError;
 use crate::helpers::{
-    assert_sent_sufficient_coin, calculate_required_escrow, send_tokens, validate_name,
+    assert_sent_sufficient_coin, calculate_expiry, calculate_required_escrow, send_tokens,
+    validate_name,
 };
 use crate::msg::{
     ExecuteMsg, InstantiateMsg, QueryMsg, ResolveRecordResponse, ReverseResolveRecordResponse,
 };
 use crate::state::{
     config, config_read, resolver, resolver_read, reverse_resolver, reverse_resolver_read,
-    AddressRecord, Config, NameBid, NameRecord, AVERAGE_SECONDS_PER_YEAR,
+    AddressRecord, Config, NameBid, NameRecord,
 };
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -82,12 +82,7 @@ pub fn execute_register(
     )?;
 
     let key = name.as_bytes();
-    let expiry = {
-        let now_ts = Timestamp::from_nanos(env.block.time.nanos());
-        let expiry_ts = now_ts.plus_seconds(years.u128() as u64 * AVERAGE_SECONDS_PER_YEAR);
-
-        Expiration::AtTime(expiry_ts)
-    };
+    let expiry = calculate_expiry(env.block.time, years);
 
     let record = NameRecord {
         owner: info.sender,
@@ -151,6 +146,9 @@ pub fn execute_accept_bid(
     info: MessageInfo,
     name: String,
 ) -> Result<Response, ContractError> {
+    // TODO: Uncomment when accept bid logic is ready
+    return Err(ContractError::NotImplemented {});
+
     let config_state = config(deps.storage).load()?;
     let key = name.as_bytes();
     let mut balance: Vec<Coin> = Vec::new();
@@ -173,13 +171,7 @@ pub fn execute_accept_bid(
                     // Update record
                     record.owner = highest_bid.bidder.clone();
                     record.current_valuation = highest_bid.price;
-                    record.expiry = {
-                        let now_ts = Timestamp::from_nanos(env.block.time.nanos());
-                        let expiry_ts = now_ts.plus_seconds(
-                            AVERAGE_SECONDS_PER_YEAR * highest_bid.years.u128() as u64,
-                        );
-                        Expiration::AtTime(expiry_ts)
-                    };
+                    record.expiry = calculate_expiry(env.block.time, highest_bid.years);
                     record.remaining_escrow = calculate_required_escrow(
                         highest_bid.price,
                         config_state.annual_tax_bps,

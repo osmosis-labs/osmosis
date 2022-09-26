@@ -13,9 +13,6 @@ use cosmwasm_storage::{
 pub static NAME_RESOLVER_KEY: &[u8] = b"nameresolver";
 pub static ADDRESS_RESOLVER_KEY: &[u8] = b"addressresolver";
 pub static CONFIG_KEY: &[u8] = b"config";
-// There are 31,556,952 seconds in an average Gregoarian year due to
-// leap years, end-of-century common years, and leap century years.
-pub static AVERAGE_SECONDS_PER_YEAR: u64 = 31_556_952;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {

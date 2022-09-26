@@ -1,9 +1,13 @@
 use crate::error::ContractError;
-use cosmwasm_std::{Addr, BankMsg, Coin, Response, Uint128};
+use cosmwasm_std::{Addr, BankMsg, Coin, Response, Timestamp, Uint128};
+use cw_utils::Expiration;
 
 const IBC_SUFFIX: &str = ".ibc";
 const MIN_NAME_LENGTH: u64 = 3;
 const MAX_NAME_LENGTH: u64 = 64;
+// There are 31,556,952 seconds in an average Gregoarian year due to
+// leap years, end-of-century common years, and leap century years.
+const AVERAGE_SECONDS_PER_YEAR: u64 = 31_556_952;
 
 pub fn assert_sent_sufficient_coin(
     sent: &[Coin],
@@ -43,6 +47,11 @@ pub fn calculate_required_escrow(
 fn invalid_char(c: char) -> bool {
     let is_valid = c.is_digit(10) || c.is_ascii_lowercase() || (c == '-' || c == '_');
     !is_valid
+}
+
+pub fn calculate_expiry(now: Timestamp, years: Uint128) -> Expiration {
+    let expiry_ts = now.plus_seconds(AVERAGE_SECONDS_PER_YEAR * years.u128() as u64);
+    Expiration::AtTime(expiry_ts)
 }
 
 /// validate_name returns an error if the name is invalid
