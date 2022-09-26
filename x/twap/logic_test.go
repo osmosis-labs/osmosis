@@ -9,6 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v12/x/twap"
@@ -757,6 +759,7 @@ func (s *TestSuite) TestUpdateRecords() {
 		ammMock       twapmock.ProgrammedAmmInterface
 		spOverrides   []spOverride
 		blockTime     time.Time
+		blockHeight	  int64
 
 		expectedHistoricalRecords []expectedResults
 		expectError               error
@@ -1006,9 +1009,8 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 		},
-		// This case should never happen in-practice since ctx.BlockTime
 		// should always be greater than the last record's time.
-		"two-asset; pre-set at t and t + 1, new record inserted between existing": {
+		"new record can't be inserted before the last record's update time": {
 			preSetRecords: []types.TwapRecord{baseRecord, tPlus10sp5Record},
 			poolId:        baseRecord.PoolId,
 
@@ -1032,6 +1034,36 @@ func (s *TestSuite) TestUpdateRecords() {
 				RecordTime:        tPlus10sp5Record.Time,
 				ActualBlockHeight: (baseRecord.Height + 1),
 				ActualTime:        baseRecord.Time.Add(time.Second * 5),
+			},
+		},
+		// should always be greater than the last record's block.
+		"new record can't be inserted before the last record's update block": {
+			preSetRecords: []types.TwapRecord{mostRecentRecordPoolOne},
+			poolId:        baseRecord.PoolId,
+
+			// Even if lastRecord.Time < ctx.Time, 
+			// lastRecord.Height >= ctx.BlockHeight also throws error
+			blockTime: mostRecentRecordPoolOne.Time.Add(time.Second),
+			blockHeight: mostRecentRecordPoolOne.Height - 1,
+
+			spOverrides: []spOverride{
+				{
+					baseDenom:  mostRecentRecordPoolOne.Asset0Denom,
+					quoteDenom: mostRecentRecordPoolOne.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:  mostRecentRecordPoolOne.Asset1Denom,
+					quoteDenom: mostRecentRecordPoolOne.Asset0Denom,
+					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+				},
+			},
+
+			expectError: types.InvalidRecordTimeError{
+				RecordBlockHeight: mostRecentRecordPoolOne.Height,
+				RecordTime:        mostRecentRecordPoolOne.Time,
+				ActualBlockHeight: mostRecentRecordPoolOne.Height - 1,
+				ActualTime:        mostRecentRecordPoolOne.Time.Add(time.Second),
 			},
 		},
 		"multi-asset pool; pre-set at t and t + 1; creates new records": {
@@ -1221,6 +1253,9 @@ func (s *TestSuite) TestUpdateRecords() {
 			s.SetupTest()
 			twapKeeper := s.App.TwapKeeper
 			ctx := s.Ctx.WithBlockTime(tc.blockTime)
+			if tc.blockHeight != 0 {
+				ctx = s.Ctx.WithBlockHeader(tmproto.Header{Time: tc.blockTime, Height: tc.blockHeight})
+			}
 
 			if len(tc.spOverrides) > 0 {
 				ammMock := twapmock.NewProgrammedAmmInterface(s.App.GAMMKeeper)
