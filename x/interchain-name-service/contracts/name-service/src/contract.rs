@@ -13,7 +13,7 @@ use crate::msg::{
 };
 use crate::state::{
     config, config_read, resolver, resolver_read, reverse_resolver, reverse_resolver_read,
-    AddressRecord, Config, NameBid, NameRecord,
+    AddressRecord, Config, NameBid, NameRecord, IBC_SUFFIX,
 };
 
 const MIN_NAME_LENGTH: u64 = 3;
@@ -132,10 +132,6 @@ fn resolve_name(deps: &DepsMut, env: Env, name: &String) -> Option<NameRecord> {
     }
 }
 
-// fn update_name(deps: &DepsMut, env: Env, name: &String) -> Result<(), ContractError> {
-
-// }
-
 pub fn execute_transfer(
     deps: DepsMut,
     _env: Env,
@@ -180,11 +176,6 @@ pub fn execute_bid(
         None => return Err(ContractError::NameNotExists { name }),
     };
 
-    // If does not exceed highest active bid, reject and return funds
-    // let highest_bid = bids.peek();
-    // assert_sent_sufficient_coin(&info.funds, highest_bid)?;
-
-    // Else, add to top of bids
     let config_state = config(deps.storage).load()?;
     assert_matches_denom(&info.funds, &config_state.required_denom)?;
 
@@ -247,14 +238,26 @@ fn query_reverse_resolver(deps: Deps, env: Env, address: Addr) -> StdResult<Bina
 
 // let's not import a regexp library and just do these checks by hand
 fn invalid_char(c: char) -> bool {
-    let is_valid = c.is_digit(10) || c.is_ascii_lowercase() || (c == '.' || c == '-' || c == '_');
+    let is_valid = c.is_digit(10) || c.is_ascii_lowercase() || (c == '-' || c == '_');
     !is_valid
 }
 
 /// validate_name returns an error if the name is invalid
-/// (we require 3-64 lowercase ascii letters, numbers, or . - _)
-fn validate_name(name: &str) -> Result<(), ContractError> {
-    let length = name.len() as u64;
+/// (we require 3-64 lowercase ascii letters , numbers, or "-" "_")
+/// ends in `.ibc` suffix, no other periods are allowed
+fn validate_name(name_with_suffix: &str) -> Result<(), ContractError> {
+    let length = name_with_suffix.len() as u64;
+    let (name, suffix) = {
+        let full_length = name_with_suffix.len();
+        name_with_suffix.split_at(full_length - IBC_SUFFIX.len())
+    };
+
+    if suffix != IBC_SUFFIX {
+        return Err(ContractError::NameNeedsSuffix {
+            suffix: IBC_SUFFIX.to_string(),
+        });
+    }
+
     if (name.len() as u64) < MIN_NAME_LENGTH {
         Err(ContractError::NameTooShort {
             length,

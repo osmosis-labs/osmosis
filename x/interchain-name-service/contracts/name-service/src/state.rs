@@ -12,6 +12,7 @@ use cosmwasm_storage::{
 pub static NAME_RESOLVER_KEY: &[u8] = b"nameresolver";
 pub static ADDRESS_RESOLVER_KEY: &[u8] = b"addressresolver";
 pub static CONFIG_KEY: &[u8] = b"config";
+pub static IBC_SUFFIX: &str = ".ibc";
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {

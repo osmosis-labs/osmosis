@@ -80,7 +80,7 @@ mod tests {
         // alice can register an available name
         let info = mock_info("alice_key", sent);
         let msg = ExecuteMsg::Register {
-            name: "alice".to_string(),
+            name: "alice.ibc".to_string(),
             years: Uint128::from(1 as u128),
         };
         let _res = execute(deps, mock_env(), info, msg)
@@ -134,7 +134,7 @@ mod tests {
         mock_alice_registers_name(deps.as_mut(), &[]);
 
         // querying for name resolves to correct address
-        assert_name_owner(deps.as_ref(), "alice", "alice_key");
+        assert_name_owner(deps.as_ref(), "alice.ibc", "alice_key");
     }
 
     #[test]
@@ -153,7 +153,7 @@ mod tests {
         // anyone can register an available name with more fees than needed
         let info = mock_info("bob_key", &coins(5, "token"));
         let msg = ExecuteMsg::Register {
-            name: "bob".to_string(),
+            name: "bob.ibc".to_string(),
             years: Uint128::from(1 as u128),
         };
 
@@ -161,8 +161,8 @@ mod tests {
             .expect("contract successfully handles Register message");
 
         // querying for name resolves to correct address
-        assert_name_owner(deps.as_ref(), "alice", "alice_key");
-        assert_name_owner(deps.as_ref(), "bob", "bob_key");
+        assert_name_owner(deps.as_ref(), "alice.ibc", "alice_key");
+        assert_name_owner(deps.as_ref(), "bob.ibc", "bob_key");
     }
 
     #[test]
@@ -174,7 +174,7 @@ mod tests {
         // bob can't register the same name
         let info = mock_info("bob_key", &coins(2, "token"));
         let msg = ExecuteMsg::Register {
-            name: "alice".to_string(),
+            name: "alice.ibc".to_string(),
             years: Uint128::from(1 as u128),
         };
         let res = execute(deps.as_mut(), mock_env(), info, msg);
@@ -187,7 +187,7 @@ mod tests {
         // alice can't register the same name again
         let info = mock_info("alice_key", &coins(2, "token"));
         let msg = ExecuteMsg::Register {
-            name: "alice".to_string(),
+            name: "alice.ibc".to_string(),
             years: Uint128::from(1 as u128),
         };
         let res = execute(deps.as_mut(), mock_env(), info, msg);
@@ -205,9 +205,9 @@ mod tests {
         mock_init_no_price(deps.as_mut());
         let info = mock_info("bob_key", &coins(2, "token"));
 
-        // hi is too short
+        // hi is too short, only two characters
         let msg = ExecuteMsg::Register {
-            name: "hi".to_string(),
+            name: "hi.ibc".to_string(),
             years: Uint128::from(1 as u128),
         };
         match execute(deps.as_mut(), mock_env(), info.clone(), msg) {
@@ -216,10 +216,33 @@ mod tests {
             Err(_) => panic!("Unknown error"),
         }
 
+        // needs .ibc suffix
+        let msg = ExecuteMsg::Register {
+            name: "alice".to_string(),
+            years: Uint128::from(1 as u128),
+        };
+        match execute(deps.as_mut(), mock_env(), info.clone(), msg) {
+            Ok(_) => panic!("Must return error"),
+            Err(ContractError::NameNeedsSuffix { .. }) => {}
+            Err(_) => panic!("Unknown error"),
+        }
+
+        // no other suffix for now
+        let msg = ExecuteMsg::Register {
+            name: "alice.eth".to_string(),
+            years: Uint128::from(1 as u128),
+        };
+        match execute(deps.as_mut(), mock_env(), info.clone(), msg) {
+            Ok(_) => panic!("Must return error"),
+            Err(ContractError::NameNeedsSuffix { .. }) => {}
+            Err(_) => panic!("Unknown error"),
+        }
+
         // 65 chars is too long
         let msg = ExecuteMsg::Register {
             years: Uint128::from(1 as u128),
-            name: "01234567890123456789012345678901234567890123456789012345678901234".to_string(),
+            name: "01234567890123456789012345678901234567890123456789012345678901234.ibc"
+                .to_string(),
         };
         match execute(deps.as_mut(), mock_env(), info.clone(), msg) {
             Ok(_) => panic!("Must return error"),
@@ -229,7 +252,7 @@ mod tests {
 
         // no upper case...
         let msg = ExecuteMsg::Register {
-            name: "LOUD".to_string(),
+            name: "LOUD.ibc".to_string(),
             years: Uint128::from(1 as u128),
         };
         match execute(deps.as_mut(), mock_env(), info.clone(), msg) {
@@ -239,7 +262,7 @@ mod tests {
         }
         // ... or spaces
         let msg = ExecuteMsg::Register {
-            name: "two words".to_string(),
+            name: "two words.ibc".to_string(),
             years: Uint128::from(1 as u128),
         };
         match execute(deps.as_mut(), mock_env(), info, msg) {
@@ -263,7 +286,7 @@ mod tests {
         // anyone can register an available name with sufficient fees
         let info = mock_info("alice_key", &[]);
         let msg = ExecuteMsg::Register {
-            name: "alice".to_string(),
+            name: "alice.ibc".to_string(),
             years: Uint128::from(1 as u128),
         };
 
@@ -290,7 +313,7 @@ mod tests {
         // anyone can register an available name with sufficient fees
         let info = mock_info("alice_key", &coins(2, "earth"));
         let msg = ExecuteMsg::Register {
-            name: "alice".to_string(),
+            name: "alice.ibc".to_string(),
             years: Uint128::from(1 as u128),
         };
 
@@ -312,14 +335,14 @@ mod tests {
         // alice can transfer her name successfully to bob
         let info = mock_info("alice_key", &[]);
         let msg = ExecuteMsg::Transfer {
-            name: "alice".to_string(),
+            name: "alice.ibc".to_string(),
             to: "bob_key".to_string(),
         };
 
         let _res = execute(deps.as_mut(), mock_env(), info, msg)
             .expect("contract successfully handles Transfer message");
         // querying for name resolves to correct address (bob_key)
-        assert_name_owner(deps.as_ref(), "alice", "bob_key");
+        assert_name_owner(deps.as_ref(), "alice.ibc", "bob_key");
     }
 
     #[test]
@@ -337,14 +360,14 @@ mod tests {
         // alice can transfer her name successfully to bob
         let info = mock_info("alice_key", &[coin(1, "earth"), coin(2, "token")]);
         let msg = ExecuteMsg::Transfer {
-            name: "alice".to_string(),
+            name: "alice.ibc".to_string(),
             to: "bob_key".to_string(),
         };
 
         let _res = execute(deps.as_mut(), mock_env(), info, msg)
             .expect("contract successfully handles Transfer message");
         // querying for name resolves to correct address (bob_key)
-        assert_name_owner(deps.as_ref(), "alice", "bob_key");
+        assert_name_owner(deps.as_ref(), "alice.ibc", "bob_key");
     }
 
     #[test]
@@ -369,7 +392,7 @@ mod tests {
         }
 
         // querying for name resolves to correct address (alice_key)
-        assert_name_owner(deps.as_ref(), "alice", "alice_key");
+        assert_name_owner(deps.as_ref(), "alice.ibc", "alice_key");
     }
 
     #[test]
@@ -381,7 +404,7 @@ mod tests {
         // alice can transfer her name successfully to bob
         let info = mock_info("frank_key", &coins(2, "token"));
         let msg = ExecuteMsg::Transfer {
-            name: "alice".to_string(),
+            name: "alice.ibc".to_string(),
             to: "bob_key".to_string(),
         };
 
@@ -394,7 +417,7 @@ mod tests {
         }
 
         // querying for name resolves to correct address (alice_key)
-        assert_name_owner(deps.as_ref(), "alice", "alice_key");
+        assert_name_owner(deps.as_ref(), "alice.ibc", "alice_key");
     }
 
     #[test]
@@ -412,7 +435,7 @@ mod tests {
         // alice can transfer her name successfully to bob
         let info = mock_info("alice_key", &[coin(1, "earth"), coin(2, "token")]);
         let msg = ExecuteMsg::Transfer {
-            name: "alice".to_string(),
+            name: "alice.ibc".to_string(),
             to: "bob_key".to_string(),
         };
 
@@ -425,7 +448,7 @@ mod tests {
         }
 
         // querying for name resolves to correct address (bob_key)
-        assert_name_owner(deps.as_ref(), "alice", "alice_key");
+        assert_name_owner(deps.as_ref(), "alice.ibc", "alice_key");
     }
 
     #[test]
@@ -439,7 +462,7 @@ mod tests {
             deps.as_ref(),
             mock_env(),
             QueryMsg::ResolveRecord {
-                name: "alice".to_string(),
+                name: "alice.ibc".to_string(),
             },
         )
         .unwrap();
@@ -456,12 +479,12 @@ mod tests {
         // alice can successfully set her name
         let info = mock_info("alice_key", &[]);
         let msg = ExecuteMsg::SetName {
-            name: "alice".to_string(),
+            name: "alice.ibc".to_string(),
         };
 
         let _res = execute(deps.as_mut(), mock_env(), info, msg)
             .expect("contract successfully handles SetName message");
         // querying for address (alice_key) resolves to correct name (alice)
-        assert_address_resolves_to(deps.as_ref(), "alice", "alice_key");
+        assert_address_resolves_to(deps.as_ref(), "alice.ibc", "alice_key");
     }
 }
