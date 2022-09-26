@@ -1,1 +1,0 @@
-# interchain-name-service-sdk
