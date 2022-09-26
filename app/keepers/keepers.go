@@ -247,6 +247,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
+		// The transferIBC module is replaced by rateLimitingTransferModule
 		AddRoute(ibctransfertypes.ModuleName, &rateLimitingTransferModule)
 	// Note: the sealing is done after creating wasmd and wiring that up
 
