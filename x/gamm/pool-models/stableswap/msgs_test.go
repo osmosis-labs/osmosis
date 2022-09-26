@@ -104,6 +104,24 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 			expectPass: false,
 		},
 		{
+			name: "have assets in excess of cap",
+			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
+				msg.InitialPoolLiquidity = sdk.Coins{
+					sdk.NewCoin("osmo", sdk.NewInt(100)),
+					sdk.NewCoin("atom", sdk.NewInt(100)),
+					sdk.NewCoin("usdt", sdk.NewInt(100)),
+					sdk.NewCoin("usdc", sdk.NewInt(100)),
+					sdk.NewCoin("juno", sdk.NewInt(100)),
+					sdk.NewCoin("akt", sdk.NewInt(100)),
+					sdk.NewCoin("regen", sdk.NewInt(100)),
+					sdk.NewCoin("band", sdk.NewInt(100)),
+					sdk.NewCoin("evmos", sdk.NewInt(100)),
+				}
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
 			name: "negative swap fee with zero exit fee",
 			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.PoolParams = &stableswap.PoolParams{
@@ -185,6 +203,20 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 					ExitFee: sdk.NewDecWithPrec(0, 0),
 					SwapFee: sdk.NewDecWithPrec(0, 0),
 				}
+				return msg
+			}),
+			expectPass: true,
+		},
+		{
+			name: "multi assets pool",
+			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
+				msg.InitialPoolLiquidity = sdk.Coins{
+					sdk.NewCoin("osmo", sdk.NewInt(100)),
+					sdk.NewCoin("atom", sdk.NewInt(100)),
+					sdk.NewCoin("usdt", sdk.NewInt(100)),
+					sdk.NewCoin("usdc", sdk.NewInt(100)),
+				}
+				msg.ScalingFactors = []uint64{1, 1, 1, 1}
 				return msg
 			}),
 			expectPass: true,
