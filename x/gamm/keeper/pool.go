@@ -114,9 +114,10 @@ func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 func (k Keeper) CleanupPools(ctx sdk.Context, poolIds []uint64) (err error) {
 	// we use maps here because we can't alter the state of pool directly
 	type poolInfo struct {
-		address     sdk.AccAddress
-		totalShares sdk.Int
-		liquidity   sdk.Coins
+		address            sdk.AccAddress
+		totalShares        sdk.Int
+		poolLiquidity      sdk.Coins
+		remainingLiquidity sdk.Coins
 	}
 
 	poolInfos := make(map[string]poolInfo)
@@ -132,69 +133,62 @@ func (k Keeper) CleanupPools(ctx sdk.Context, poolIds []uint64) (err error) {
 			pool.GetAddress(),
 			pool.GetTotalShares(),
 			pool.GetTotalPoolLiquidity(ctx),
+			pool.GetTotalPoolLiquidity(ctx),
 		}
 	}
 
 	// first iterate through the share holders and burn them
-	k.bankKeeper.IterateAllBalances(ctx, func(addr sdk.AccAddress, coin sdk.Coin) (stop bool) {
+	k.bankKeeper.IterateAllBalances(ctx, func(addr sdk.AccAddress, poolShare sdk.Coin) (stop bool) {
 		// skip to next iteration if the coin amount is zero
-		if coin.Amount.IsZero() {
+		if poolShare.Amount.IsZero() {
 			return
 		}
 
 		// skip to next iteration if this coin is not a pool share
-		pool, ok := poolInfos[coin.Denom]
+		pool, ok := poolInfos[poolShare.Denom]
 		if !ok {
 			return
 		}
 
 		totalShares := pool.totalShares
-		poolLiquidity := pool.liquidity
+		poolLiquidity := pool.poolLiquidity
 		poolAddress := pool.address
+		remainingLiquidity := pool.remainingLiquidity
 
 		// Burn the share tokens
-		err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, addr, types.ModuleName, sdk.Coins{coin})
+		err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, addr, types.ModuleName, sdk.Coins{poolShare})
 		if err != nil {
 			return true
 		}
 
-		err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.Coins{coin})
+		err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.Coins{poolShare})
 		if err != nil {
 			return true
 		}
 
 		// Refund assets
-		// lpShareEquivalentTokens = (amount in pool) * (your shares) / (total shares)
-		for _, asset := range poolLiquidity {
-			// should we just give the remaining liquidity to the pool address?
-			lpShareEquivalentTokens := asset.Amount.Mul(coin.Amount).Quo(totalShares)
-			if lpShareEquivalentTokens.IsZero() {
-				continue
-			}
-			poolAssetToReturn := sdk.NewCoin(asset.Denom, lpShareEquivalentTokens)
-			poolLiquidity = poolLiquidity.Sub(sdk.Coins{poolAssetToReturn})
-
-			err = k.bankKeeper.SendCoins(
-				ctx, poolAddress, addr, sdk.Coins{poolAssetToReturn})
-			if err != nil {
-				return true
-			}
+		assetsToRefund := sdk.NewCoins()
+		for _, poolAsset := range poolLiquidity {
+			assetToRefund := poolAsset
+			assetToRefund.Amount = poolAsset.Amount.ToDec().Mul(poolShare.Amount.ToDec()).Quo(totalShares.ToDec()).RoundInt()
+			assetsToRefund = append(assetsToRefund, assetToRefund)
 		}
 
-		totalShares = totalShares.Sub(coin.Amount)
+		err = k.bankKeeper.SendCoins(
+			ctx, poolAddress, addr, assetsToRefund)
+		if err != nil {
+			return true
+		}
 
 		// save updated state of pool in map for next iteration
-		poolInfos[coin.Denom] = poolInfo{
+		poolInfos[poolShare.Denom] = poolInfo{
 			poolAddress,
 			totalShares,
 			poolLiquidity,
+			remainingLiquidity.Sub(assetsToRefund),
 		}
 		return false
 	})
-
-	if err != nil {
-		return err
-	}
 
 	for _, poolId := range poolIds {
 		pool, err := k.GetPoolAndPoke(ctx, poolId)
@@ -203,8 +197,9 @@ func (k Keeper) CleanupPools(ctx sdk.Context, poolIds []uint64) (err error) {
 		}
 		shareDenom := types.GetPoolShareDenom(poolId)
 		poolInfo := poolInfos[shareDenom]
+
 		// sanity check that we have no remaining shares
-		if !poolInfo.totalShares.IsZero() {
+		if !poolInfo.remainingLiquidity.IsZero() {
 			return fmt.Errorf("pool %d still has liquidity after cleanup", poolId)
 		}
 

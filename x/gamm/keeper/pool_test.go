@@ -15,20 +15,23 @@ func (suite *KeeperTestSuite) TestCleanupPool() {
 	)
 
 	tests := []struct {
-		name           string
-		createPoolFund sdk.Coins
-		joinPoolFund   sdk.Coins
-		expectedfail   bool
+		name                   string
+		createPoolFund         sdk.Coins
+		joinPoolFund           sdk.Coins
+		joinPoolShareOutAmount sdk.Int
+		expectedfail           bool
 	}{
 		{
-			name:           "create pool with default coins, join pool with default coins",
-			createPoolFund: defaultCoins,
-			joinPoolFund:   defaultCoins,
+			name:                   "create pool with default coins, join pool with default coins",
+			createPoolFund:         defaultCoins,
+			joinPoolFund:           defaultCoins,
+			joinPoolShareOutAmount: types.OneShare.MulRaw(100),
 		},
 		{
-			name:           "create pool with default coins, join pool larger coins",
-			createPoolFund: defaultCoins,
-			joinPoolFund:   defaultCoins.Add(defaultCoins...),
+			name:                   "create pool with default coins, join pool larger coins",
+			createPoolFund:         defaultCoins,
+			joinPoolFund:           defaultCoins.Add(defaultCoins...),
+			joinPoolShareOutAmount: types.OneShare.MulRaw(200),
 		},
 	}
 
@@ -45,7 +48,7 @@ func (suite *KeeperTestSuite) TestCleanupPool() {
 			for _, acc := range []sdk.AccAddress{joinPoolAcc1, joinPoolAcc2} {
 				suite.FundAcc(acc, test.joinPoolFund)
 
-				_, _, err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, acc, poolId, types.OneShare.MulRaw(100), test.joinPoolFund)
+				_, _, err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, acc, poolId, test.joinPoolShareOutAmount, test.joinPoolFund)
 				suite.NoError(err)
 			}
 
