@@ -127,11 +127,14 @@ func (p Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Dec, error) {
 			return []sdk.Dec{}, fmt.Errorf("denom %s does not exist in pool", denom)
 		}
 		scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndex)
+
+		// should not be possible after pool creation checks but we keep this here as a guardrail
 		if int64(scalingFactor) <= 0 {
 			panic("invalid scaling factor encountered when scaling pool assets")
 		}
 		result[i] = amt.ToDec().QuoInt64Mut(int64(scalingFactor))
 	}
+
 	return result, nil
 }
 
@@ -141,9 +144,12 @@ func (p Pool) getDescaledPoolAmt(denom string, amount osmomath.BigDec) osmomath.
 	liquidityIndex := liquidityIndexes[denom]
 
 	scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndex)
+
+	// should not be possible after pool creation checks but we keep this here as a guardrail
 	if int64(scalingFactor) <= 0 {
 		panic("invalid scaling factor encountered when scaling pool assets")
 	}
+
 	return amount.MulInt64(int64(scalingFactor))
 }
 
