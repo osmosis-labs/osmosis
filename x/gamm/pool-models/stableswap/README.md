@@ -66,7 +66,16 @@ $$
 
 ### Swaps
 
-First notice that for all swaps, we only deal with two assets at a time. 
+First notice that for all swaps, we only deal with two assets at a time, as swaps are given one asset in, and one asset out. For exposition, lets call the input asset $x$, the output asset $y$, and we can compute $v$ and $w$ given the other assets, whose reserves are untouched.
+
+First we note the direct way of solving this, its limitation, and then the binary search equations.
+
+#### Direct swap solution
+
+Suppose the existence of a function $\text{solve\_cfmm}(x, v, w, k) = y\text{ s.t. }g(x, y, v, w) = k$.
+Then we can solve swaps by first computing $k = g(x_0, y_0, v, w)$.
+Then suppose I want to swap $a$ units of $x$, and then want to find how many units $b$ of $y$ that we get out.
+We do this by computing $y_f = \text{solve\_cfmm}(x_0 + a, v, w, k)$, and then $b = y_0 - y_f$
 
 ### Spot Price
 
