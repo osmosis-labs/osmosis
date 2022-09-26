@@ -6,20 +6,33 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
     pub required_denom: String,
-    pub purchase_price: Uint128,
-    pub transfer_price: Uint128,
-    pub annual_rent_bps: Uint128,
+    pub mint_price: Uint128,
+    pub annual_tax_bps: Uint128,
     pub owner_grace_period: Duration,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    Register { name: String, years: Uint128 },
-    Transfer { name: String, to: String },
-    SetName { name: String },
-    AddBid { name: String },
-    // RemoveBid { name: String, amount: Uint128 },
+    Register {
+        name: String,
+        years: Uint128,
+    },
+    // Accept the highest bid for the name
+    AcceptBid {
+        name: String,
+    },
+    SetName {
+        name: String,
+    },
+    AddBid {
+        name: String,
+        price: Uint128,
+        years: Uint128,
+    },
+    RemoveBids {
+        name: String,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

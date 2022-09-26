@@ -1,5 +1,9 @@
 use crate::error::ContractError;
-use cosmwasm_std::{Addr, BankMsg, Coin, Response};
+use cosmwasm_std::{Addr, BankMsg, Coin, Response, Uint128};
+
+const IBC_SUFFIX: &str = ".ibc";
+const MIN_NAME_LENGTH: u64 = 3;
+const MAX_NAME_LENGTH: u64 = 64;
 
 pub fn assert_sent_sufficient_coin(
     sent: &[Coin],
@@ -24,15 +28,58 @@ pub fn assert_sent_sufficient_coin(
     Ok(())
 }
 
-pub fn assert_matches_denom(sent: &[Coin], expected_denom: &String) -> Result<(), ContractError> {
-    for coin in sent {
-        let expected = expected_denom.to_string();
-        let actual = coin.denom.to_string();
-        if actual != expected {
-            return Err(ContractError::InvalidDenom { expected, actual });
+// calculate escrow needed given a transaction price and taxes for a certain number of years
+pub fn calculate_required_escrow(
+    price: Uint128,
+    annual_tax_bps: Uint128,
+    years: Uint128,
+) -> Uint128 {
+    let tax_per_year = annual_tax_bps * price / Uint128::from(10_000 as u128);
+    let total_tax = tax_per_year * years;
+    price + total_tax
+}
+
+// let's not import a regexp library and just do these checks by hand
+fn invalid_char(c: char) -> bool {
+    let is_valid = c.is_digit(10) || c.is_ascii_lowercase() || (c == '-' || c == '_');
+    !is_valid
+}
+
+/// validate_name returns an error if the name is invalid
+/// (we require 3-64 lowercase ascii letters , numbers, or "-" "_")
+/// ends in `.ibc` suffix, no other periods are allowed
+pub fn validate_name(name_with_suffix: &str) -> Result<(), ContractError> {
+    let length = name_with_suffix.len() as u64;
+    let (name, suffix) = {
+        let full_length = name_with_suffix.len();
+        name_with_suffix.split_at(full_length - IBC_SUFFIX.len())
+    };
+
+    if suffix != IBC_SUFFIX {
+        return Err(ContractError::NameNeedsSuffix {
+            suffix: IBC_SUFFIX.to_string(),
+        });
+    }
+
+    if (name.len() as u64) < MIN_NAME_LENGTH {
+        Err(ContractError::NameTooShort {
+            length,
+            min_length: MIN_NAME_LENGTH,
+        })
+    } else if (name.len() as u64) > MAX_NAME_LENGTH {
+        Err(ContractError::NameTooLong {
+            length,
+            max_length: MAX_NAME_LENGTH,
+        })
+    } else {
+        match name.find(invalid_char) {
+            None => Ok(()),
+            Some(bytepos_invalid_char_start) => {
+                let c = name[bytepos_invalid_char_start..].chars().next().unwrap();
+                Err(ContractError::InvalidCharacter { c })
+            }
         }
     }
-    Ok(())
 }
 
 pub fn send_tokens(to_address: Addr, amount: Vec<Coin>, action: &str) -> Response {

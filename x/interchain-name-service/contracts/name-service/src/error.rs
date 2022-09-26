@@ -18,6 +18,9 @@ pub enum ContractError {
     #[error("Name does not exist (name {name})")]
     NameNotExists { name: String },
 
+    #[error("No bids for name")]
+    NameNoBids,
+
     #[error("Name has been taken (name {name})")]
     NameTaken { name: String },
 
@@ -35,4 +38,7 @@ pub enum ContractError {
 
     #[error("Years must be positive integer")]
     YearsMustBePositive {},
+
+    #[error("Not implemented yet")]
+    NotImplemented {},
 }

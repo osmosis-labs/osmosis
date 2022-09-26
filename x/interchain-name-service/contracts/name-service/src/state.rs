@@ -13,7 +13,6 @@ use cosmwasm_storage::{
 pub static NAME_RESOLVER_KEY: &[u8] = b"nameresolver";
 pub static ADDRESS_RESOLVER_KEY: &[u8] = b"addressresolver";
 pub static CONFIG_KEY: &[u8] = b"config";
-pub static IBC_SUFFIX: &str = ".ibc";
 // There are 31,556,952 seconds in an average Gregoarian year due to
 // leap years, end-of-century common years, and leap century years.
 pub static AVERAGE_SECONDS_PER_YEAR: u64 = 31_556_952;
@@ -24,7 +23,6 @@ pub struct Config {
     pub required_denom: String,
     // Price to intially purchase a name
     pub mint_price: Uint128,
-    pub transfer_price: Uint128,
     // Amount of tax paid to protocol annually (as basis points of current price)
     pub annual_tax_bps: Uint128,
     // Amount of time annually where owner can match competing bids to keep the domain
@@ -42,7 +40,8 @@ pub fn config_read(storage: &dyn Storage) -> ReadonlySingleton<Config> {
 #[derive(PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Clone, Debug, JsonSchema)]
 pub struct NameBid {
     pub bidder: Addr,
-    pub amount: Uint128,
+    pub price: Uint128,
+    pub years: Uint128,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
@@ -50,7 +49,8 @@ pub struct NameRecord {
     pub owner: Addr,
     pub expiry: Expiration,
     pub bids: BinaryHeap<NameBid>,
-    pub current_tax: Uint128,
+    pub remaining_escrow: Uint128,
+    pub current_valuation: Uint128,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

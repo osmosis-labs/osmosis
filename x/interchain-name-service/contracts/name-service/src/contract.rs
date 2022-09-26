@@ -2,23 +2,22 @@ use std::collections::BinaryHeap;
 
 // use chrono::{Datelike, TimeZone, Utc};
 use cosmwasm_std::{
-    coin, entry_point, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response,
+    coin, entry_point, to_binary, Addr, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response,
     StdError, StdResult, Timestamp, Uint128,
 };
 use cw_utils::Expiration;
 
 use crate::error::ContractError;
-use crate::helpers::{assert_matches_denom, assert_sent_sufficient_coin};
+use crate::helpers::{
+    assert_sent_sufficient_coin, calculate_required_escrow, send_tokens, validate_name,
+};
 use crate::msg::{
     ExecuteMsg, InstantiateMsg, QueryMsg, ResolveRecordResponse, ReverseResolveRecordResponse,
 };
 use crate::state::{
     config, config_read, resolver, resolver_read, reverse_resolver, reverse_resolver_read,
-    AddressRecord, Config, NameBid, NameRecord, AVERAGE_SECONDS_PER_YEAR, IBC_SUFFIX,
+    AddressRecord, Config, NameBid, NameRecord, AVERAGE_SECONDS_PER_YEAR,
 };
-
-const MIN_NAME_LENGTH: u64 = 3;
-const MAX_NAME_LENGTH: u64 = 64;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -29,9 +28,8 @@ pub fn instantiate(
 ) -> Result<Response, StdError> {
     let config_state = Config {
         required_denom: msg.required_denom,
-        mint_price: msg.purchase_price,
-        transfer_price: msg.transfer_price,
-        annual_tax_bps: msg.annual_rent_bps,
+        mint_price: msg.mint_price,
+        annual_tax_bps: msg.annual_tax_bps,
         owner_grace_period: msg.owner_grace_period,
     };
 
@@ -49,9 +47,12 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::Register { name, years } => execute_register(deps, env, info, name, years),
-        ExecuteMsg::Transfer { name, to } => execute_transfer(deps, env, info, name, to),
+        ExecuteMsg::AcceptBid { name } => execute_accept_bid(deps, env, info, name),
         ExecuteMsg::SetName { name } => execute_set_name(deps, env, info, name),
-        ExecuteMsg::AddBid { name } => execute_bid(deps, env, info, name),
+        ExecuteMsg::AddBid { name, price, years } => {
+            execute_add_bid(deps, env, info, name, price, years)
+        }
+        ExecuteMsg::RemoveBids { name } => execute_remove_bid(deps, env, info, name),
     }
 }
 
@@ -68,15 +69,17 @@ pub fn execute_register(
     validate_name(&name)?;
 
     let config_state = config(deps.storage).load()?;
-    let rent_per_year =
+    let tax_per_year =
         config_state.annual_tax_bps * config_state.mint_price / Uint128::from(10_000 as u128);
     // Calculate required payment including rent
-    let required = {
-        let total_rent = rent_per_year * years;
-        let amount = config_state.mint_price + total_rent;
-        Some(coin(amount.u128(), config_state.required_denom))
+    let required_amount = {
+        let total_tax = tax_per_year * years;
+        config_state.mint_price + total_tax
     };
-    assert_sent_sufficient_coin(&info.funds, required)?;
+    assert_sent_sufficient_coin(
+        &info.funds,
+        Some(coin(required_amount.u128(), config_state.required_denom)),
+    )?;
 
     let key = name.as_bytes();
     let expiry = {
@@ -90,7 +93,8 @@ pub fn execute_register(
         owner: info.sender,
         expiry,
         bids: BinaryHeap::new(),
-        current_tax: rent_per_year,
+        remaining_escrow: required_amount,
+        current_valuation: config_state.mint_price,
     };
 
     if let Some(existing_record) = resolver(deps.storage).may_load(key)? {
@@ -141,44 +145,69 @@ fn resolve_name(deps: &DepsMut, env: Env, name: &String) -> Option<NameRecord> {
     }
 }
 
-pub fn execute_transfer(
+pub fn execute_accept_bid(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     name: String,
-    to: String,
 ) -> Result<Response, ContractError> {
     let config_state = config(deps.storage).load()?;
-    assert_sent_sufficient_coin(
-        &info.funds,
-        Some(coin(
-            config_state.transfer_price.u128(),
-            config_state.required_denom,
-        )),
-    )?;
-
-    let new_owner = deps.api.addr_validate(&to)?;
     let key = name.as_bytes();
+    let mut balance: Vec<Coin> = Vec::new();
+
     resolver(deps.storage).update(key, |record| {
         if let Some(mut record) = record {
             if info.sender != record.owner {
                 return Err(ContractError::Unauthorized {});
             }
 
-            record.owner = new_owner.clone();
-            Ok(record)
+            match record.bids.pop() {
+                Some(highest_bid) => {
+                    // Track refund amount
+                    let total_amount = {
+                        let sale_amount = highest_bid.price;
+                        sale_amount + record.remaining_escrow
+                    };
+                    balance.push(coin(total_amount.u128(), config_state.required_denom));
+
+                    // Update record
+                    record.owner = highest_bid.bidder.clone();
+                    record.current_valuation = highest_bid.price;
+                    record.expiry = {
+                        let now_ts = Timestamp::from_nanos(env.block.time.nanos());
+                        let expiry_ts = now_ts.plus_seconds(
+                            AVERAGE_SECONDS_PER_YEAR * highest_bid.years.u128() as u64,
+                        );
+                        Expiration::AtTime(expiry_ts)
+                    };
+                    record.remaining_escrow = calculate_required_escrow(
+                        highest_bid.price,
+                        config_state.annual_tax_bps,
+                        highest_bid.years,
+                    );
+                    Ok(record)
+                }
+                None => Err(ContractError::NameNoBids),
+            }
         } else {
             Err(ContractError::NameNotExists { name: name.clone() })
         }
     })?;
-    Ok(Response::default())
+
+    Ok(send_tokens(
+        info.sender,
+        balance,
+        "Sale of name and refund of unpaid tax",
+    ))
 }
 
-pub fn execute_bid(
+pub fn execute_add_bid(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
     name: String,
+    price: Uint128,
+    years: Uint128,
 ) -> Result<Response, ContractError> {
     let mut bids = match resolve_name(&deps, env, &name) {
         Some(record) => record.bids,
@@ -186,17 +215,31 @@ pub fn execute_bid(
     };
 
     let config_state = config(deps.storage).load()?;
-    assert_matches_denom(&info.funds, &config_state.required_denom)?;
+    let required_amount = calculate_required_escrow(price, config_state.annual_tax_bps, years);
 
-    for coin in info.funds {
-        let name_bid = NameBid {
-            amount: coin.amount,
-            bidder: info.sender.clone(),
-        };
-        bids.push(name_bid);
-    }
+    assert_sent_sufficient_coin(
+        &info.funds,
+        Some(coin(required_amount.u128(), config_state.required_denom)),
+    )?;
+
+    let name_bid = NameBid {
+        price,
+        bidder: info.sender.clone(),
+        years,
+    };
+    bids.push(name_bid);
 
     Ok(Response::default())
+}
+
+// TODO: Implement RemoveBid
+pub fn execute_remove_bid(
+    _deps: DepsMut,
+    _env: Env,
+    _info: MessageInfo,
+    _name: String,
+) -> Result<Response, ContractError> {
+    Err(ContractError::NotImplemented {})
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -241,47 +284,4 @@ fn query_reverse_resolver(deps: Deps, env: Env, address: Addr) -> StdResult<Bina
     let resp = ReverseResolveRecordResponse { name };
 
     to_binary(&resp)
-}
-
-// let's not import a regexp library and just do these checks by hand
-fn invalid_char(c: char) -> bool {
-    let is_valid = c.is_digit(10) || c.is_ascii_lowercase() || (c == '-' || c == '_');
-    !is_valid
-}
-
-/// validate_name returns an error if the name is invalid
-/// (we require 3-64 lowercase ascii letters , numbers, or "-" "_")
-/// ends in `.ibc` suffix, no other periods are allowed
-fn validate_name(name_with_suffix: &str) -> Result<(), ContractError> {
-    let length = name_with_suffix.len() as u64;
-    let (name, suffix) = {
-        let full_length = name_with_suffix.len();
-        name_with_suffix.split_at(full_length - IBC_SUFFIX.len())
-    };
-
-    if suffix != IBC_SUFFIX {
-        return Err(ContractError::NameNeedsSuffix {
-            suffix: IBC_SUFFIX.to_string(),
-        });
-    }
-
-    if (name.len() as u64) < MIN_NAME_LENGTH {
-        Err(ContractError::NameTooShort {
-            length,
-            min_length: MIN_NAME_LENGTH,
-        })
-    } else if (name.len() as u64) > MAX_NAME_LENGTH {
-        Err(ContractError::NameTooLong {
-            length,
-            max_length: MAX_NAME_LENGTH,
-        })
-    } else {
-        match name.find(invalid_char) {
-            None => Ok(()),
-            Some(bytepos_invalid_char_start) => {
-                let c = name[bytepos_invalid_char_start..].chars().next().unwrap();
-                Err(ContractError::InvalidCharacter { c })
-            }
-        }
-    }
 }

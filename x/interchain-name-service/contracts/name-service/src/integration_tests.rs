@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cosmwasm_std::{coin, coins, from_binary, Coin, Deps, DepsMut, Uint128};
+    use cosmwasm_std::{coins, from_binary, Coin, Deps, DepsMut, Uint128};
     use cw_utils::Duration;
 
     use crate::contract::{execute, instantiate, query};
@@ -49,15 +49,13 @@ mod tests {
         deps: DepsMut,
         required_denom: impl Into<String>,
         purchase_price: Uint128,
-        transfer_price: Uint128,
-        annual_rent_bps: Uint128,
+        annual_tax_bps: Uint128,
         owner_grace_period: Duration,
     ) {
         let msg = InstantiateMsg {
             required_denom: required_denom.into(),
-            purchase_price: purchase_price,
-            transfer_price: transfer_price,
-            annual_rent_bps: annual_rent_bps,
+            mint_price: purchase_price,
+            annual_tax_bps: annual_tax_bps,
             owner_grace_period: owner_grace_period,
         };
 
@@ -69,9 +67,8 @@ mod tests {
     fn mock_init_no_price(deps: DepsMut) {
         let msg = InstantiateMsg {
             required_denom: "token".to_string(),
-            purchase_price: Uint128::from(0 as u128),
-            transfer_price: Uint128::from(0 as u128),
-            annual_rent_bps: Uint128::from(0 as u128),
+            mint_price: Uint128::from(0 as u128),
+            annual_tax_bps: Uint128::from(0 as u128),
             owner_grace_period: Duration::Time(7_776_000),
         };
 
@@ -102,7 +99,6 @@ mod tests {
             Config {
                 required_denom: "token".to_string(),
                 mint_price: Uint128::from(0 as u128),
-                transfer_price: Uint128::from(0 as u128),
                 annual_tax_bps: Uint128::from(0 as u128),
                 owner_grace_period: Duration::Time(7_776_000),
             },
@@ -117,7 +113,6 @@ mod tests {
             deps.as_mut(),
             "token",
             Uint128::from(3 as u128),
-            Uint128::from(4 as u128),
             Uint128::from(100 as u128),
             Duration::Time(7_776_000),
         );
@@ -127,7 +122,6 @@ mod tests {
             Config {
                 required_denom: "token".to_string(),
                 mint_price: Uint128::from(3 as u128),
-                transfer_price: Uint128::from(4 as u128),
                 annual_tax_bps: Uint128::from(100 as u128),
                 owner_grace_period: Duration::Time(7_776_000),
             },
@@ -145,12 +139,11 @@ mod tests {
     }
 
     #[test]
-    fn register_available_name_and_query_works_with_fees_no_rent() {
+    fn register_available_name_and_query_works_with_fees_no_tax() {
         let mut deps = mock_dependencies();
         mock_init_with_price(
             deps.as_mut(),
             "token",
-            Uint128::from(2 as u128),
             Uint128::from(2 as u128),
             Uint128::from(0 as u128),
             Duration::Time(7_776_000),
@@ -174,12 +167,11 @@ mod tests {
     }
 
     #[test]
-    fn register_available_name_and_query_works_with_fees_and_rent() {
+    fn register_available_name_and_query_works_with_fees_and_tax() {
         let mut deps = mock_dependencies();
         mock_init_with_price(
             deps.as_mut(),
             "token",
-            Uint128::from(200 as u128),
             Uint128::from(200 as u128),
             Uint128::from(100 as u128),
             Duration::Time(7_776_000),
@@ -316,7 +308,6 @@ mod tests {
             deps.as_mut(),
             "token",
             Uint128::from(2 as u128),
-            Uint128::from(2 as u128),
             Uint128::from(0 as u128),
             Duration::Time(7_776_000),
         );
@@ -344,7 +335,6 @@ mod tests {
             deps.as_mut(),
             "token",
             Uint128::from(2 as u128),
-            Uint128::from(2 as u128),
             Uint128::from(0 as u128),
             Duration::Time(7_776_000),
         );
@@ -366,130 +356,87 @@ mod tests {
     }
 
     #[test]
-    fn transfer_works() {
-        let mut deps = mock_dependencies();
-        mock_init_no_price(deps.as_mut());
-        mock_alice_registers_name(deps.as_mut(), &[]);
-
-        // alice can transfer her name successfully to bob
-        let info = mock_info("alice_key", &[]);
-        let msg = ExecuteMsg::Transfer {
-            name: "alice.ibc".to_string(),
-            to: "bob_key".to_string(),
-        };
-
-        let _res = execute(deps.as_mut(), mock_env(), info, msg)
-            .expect("contract successfully handles Transfer message");
-        // querying for name resolves to correct address (bob_key)
-        assert_name_owner(deps.as_ref(), "alice.ibc", "bob_key");
-    }
-
-    #[test]
-    fn transfer_works_with_fees() {
+    fn add_bid_works() {
         let mut deps = mock_dependencies();
         mock_init_with_price(
             deps.as_mut(),
             "token",
-            Uint128::from(2 as u128),
-            Uint128::from(2 as u128),
-            Uint128::from(0 as u128),
+            Uint128::from(200 as u128),
+            Uint128::from(100 as u128),
             Duration::Time(7_776_000),
         );
-        mock_alice_registers_name(deps.as_mut(), &coins(2, "token"));
+        mock_alice_registers_name(deps.as_mut(), &coins(204, "token"));
 
-        // alice can transfer her name successfully to bob
-        let info = mock_info("alice_key", &[coin(1, "earth"), coin(2, "token")]);
-        let msg = ExecuteMsg::Transfer {
-            name: "alice.ibc".to_string(),
-            to: "bob_key".to_string(),
+        let _res = {
+            // bob can bid on alice's item
+            let info = mock_info("bob_key", &coins(330, "token"));
+            let msg = ExecuteMsg::AddBid {
+                name: "alice.ibc".to_string(),
+                price: Uint128::from(300 as u128),
+                years: Uint128::from(10 as u128),
+            };
+            execute(deps.as_mut(), mock_env(), info, msg)
+                .expect("contract successfully adding a bid")
         };
 
-        let _res = execute(deps.as_mut(), mock_env(), info, msg)
-            .expect("contract successfully handles Transfer message");
-        // querying for name resolves to correct address (bob_key)
-        assert_name_owner(deps.as_ref(), "alice.ibc", "bob_key");
+        let _res = {
+            // alice can bid on her own item and send more than enough funds
+            let info = mock_info("alice_key", &coins(500, "token"));
+            let msg = ExecuteMsg::AddBid {
+                name: "alice.ibc".to_string(),
+                price: Uint128::from(400 as u128),
+                years: Uint128::from(20 as u128),
+            };
+            execute(deps.as_mut(), mock_env(), info, msg)
+                .expect("contract successfully adding a bid")
+        };
     }
 
     #[test]
-    fn fails_on_transfer_non_existent() {
-        let mut deps = mock_dependencies();
-        mock_init_no_price(deps.as_mut());
-        mock_alice_registers_name(deps.as_mut(), &[]);
-
-        // alice can transfer her name successfully to bob
-        let info = mock_info("frank_key", &coins(2, "token"));
-        let msg = ExecuteMsg::Transfer {
-            name: "alice42".to_string(),
-            to: "bob_key".to_string(),
-        };
-
-        let res = execute(deps.as_mut(), mock_env(), info, msg);
-
-        match res {
-            Ok(_) => panic!("Must return error"),
-            Err(ContractError::NameNotExists { name }) => assert_eq!(name, "alice42"),
-            Err(e) => panic!("Unexpected error: {:?}", e),
-        }
-
-        // querying for name resolves to correct address (alice_key)
-        assert_name_owner(deps.as_ref(), "alice.ibc", "alice_key");
-    }
-
-    #[test]
-    fn fails_on_transfer_from_nonowner() {
-        let mut deps = mock_dependencies();
-        mock_init_no_price(deps.as_mut());
-        mock_alice_registers_name(deps.as_mut(), &[]);
-
-        // alice can transfer her name successfully to bob
-        let info = mock_info("frank_key", &coins(2, "token"));
-        let msg = ExecuteMsg::Transfer {
-            name: "alice.ibc".to_string(),
-            to: "bob_key".to_string(),
-        };
-
-        let res = execute(deps.as_mut(), mock_env(), info, msg);
-
-        match res {
-            Ok(_) => panic!("Must return error"),
-            Err(ContractError::Unauthorized { .. }) => {}
-            Err(e) => panic!("Unexpected error: {:?}", e),
-        }
-
-        // querying for name resolves to correct address (alice_key)
-        assert_name_owner(deps.as_ref(), "alice.ibc", "alice_key");
-    }
-
-    #[test]
-    fn fails_on_transfer_insufficient_fees() {
+    fn add_bid_fails() {
         let mut deps = mock_dependencies();
         mock_init_with_price(
             deps.as_mut(),
             "token",
-            Uint128::from(2 as u128),
-            Uint128::from(5 as u128),
-            Uint128::from(0 as u128),
+            Uint128::from(200 as u128),
+            Uint128::from(100 as u128),
             Duration::Time(7_776_000),
         );
-        mock_alice_registers_name(deps.as_mut(), &coins(2, "token"));
+        mock_alice_registers_name(deps.as_mut(), &coins(204, "token"));
 
-        // alice can transfer her name successfully to bob
-        let info = mock_info("alice_key", &[coin(1, "earth"), coin(2, "token")]);
-        let msg = ExecuteMsg::Transfer {
-            name: "alice.ibc".to_string(),
-            to: "bob_key".to_string(),
+        let err1 = {
+            // must be >= 330 or higher
+            let info = mock_info("bob_key", &coins(329, "token"));
+            let msg = ExecuteMsg::AddBid {
+                name: "alice.ibc".to_string(),
+                price: Uint128::from(300 as u128),
+                years: Uint128::from(10 as u128),
+            };
+            execute(deps.as_mut(), mock_env(), info, msg)
         };
 
-        let res = execute(deps.as_mut(), mock_env(), info, msg);
-
-        match res {
-            Ok(_) => panic!("register call should fail with insufficient fees"),
+        match err1 {
+            Ok(_) => panic!("Must return error"),
             Err(ContractError::InsufficientFundsSent {}) => {}
             Err(e) => panic!("Unexpected error: {:?}", e),
         }
 
-        // querying for name resolves to correct address (bob_key)
-        assert_name_owner(deps.as_ref(), "alice.ibc", "alice_key");
+        let err2 = {
+            // must be >= 210 or higher
+            let info = mock_info("alice_key", &coins(209, "token"));
+            let msg = ExecuteMsg::AddBid {
+                name: "alice.ibc".to_string(),
+                price: Uint128::from(200 as u128),
+                years: Uint128::from(5 as u128),
+            };
+            execute(deps.as_mut(), mock_env(), info, msg)
+        };
+
+        match err2 {
+            Ok(_) => panic!("Must return error"),
+            Err(ContractError::InsufficientFundsSent {}) => {}
+            Err(e) => panic!("Unexpected error: {:?}", e),
+        }
     }
 
     #[test]
