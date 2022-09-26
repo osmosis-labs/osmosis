@@ -19,7 +19,7 @@ pub struct Config {
     pub required_denom: String,
     pub purchase_price: Uint128,
     pub transfer_price: Uint128,
-    pub annual_rent_amount: Uint128,
+    pub annual_rent_bps: Uint128,
 }
 
 pub fn config(storage: &mut dyn Storage) -> Singleton<Config> {

@@ -30,7 +30,7 @@ pub fn instantiate(
         required_denom: msg.required_denom,
         purchase_price: msg.purchase_price,
         transfer_price: msg.transfer_price,
-        annual_rent_amount: msg.annual_rent_amount,
+        annual_rent_bps: msg.annual_rent_bps,
     };
 
     config(deps.storage).save(&config_state)?;
@@ -57,18 +57,20 @@ pub fn execute_register(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    raw_name: String,
+    name: String,
     years: Uint128,
 ) -> Result<Response, ContractError> {
     if years.u128() <= 0 {
         return Err(ContractError::YearsMustBePositive {});
     }
-    validate_name(&raw_name)?;
-    // Convert to canonical form
-    let name = raw_name.to_lowercase();
+    validate_name(&name)?;
+
     let config_state = config(deps.storage).load()?;
+    // Calculate required payment including rent
     let required = {
-        let amount = config_state.purchase_price + config_state.annual_rent_amount * years;
+        let required_rent = config_state.annual_rent_bps * config_state.purchase_price * years
+            / Uint128::from(10_000 as u128);
+        let amount = config_state.purchase_price + required_rent;
         Some(coin(amount.u128(), config_state.required_denom))
     };
     assert_sent_sufficient_coin(&info.funds, required)?;

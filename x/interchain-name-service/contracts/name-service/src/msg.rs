@@ -7,7 +7,7 @@ pub struct InstantiateMsg {
     pub required_denom: String,
     pub purchase_price: Uint128,
     pub transfer_price: Uint128,
-    pub annual_rent_amount: Uint128,
+    pub annual_rent_bps: Uint128,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

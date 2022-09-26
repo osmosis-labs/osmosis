@@ -55,7 +55,7 @@ mod tests {
             required_denom: required_denom.into(),
             purchase_price: purchase_price,
             transfer_price: transfer_price,
-            annual_rent_amount: annual_rent_bps,
+            annual_rent_bps: annual_rent_bps,
         };
 
         let info = mock_info("creator", &coins(2, "token"));
@@ -68,7 +68,7 @@ mod tests {
             required_denom: "token".to_string(),
             purchase_price: Uint128::from(0 as u128),
             transfer_price: Uint128::from(0 as u128),
-            annual_rent_amount: Uint128::from(0 as u128),
+            annual_rent_bps: Uint128::from(0 as u128),
         };
 
         let info = mock_info("creator", &coins(2, "token"));
@@ -81,7 +81,7 @@ mod tests {
         let info = mock_info("alice_key", sent);
         let msg = ExecuteMsg::Register {
             name: "alice.ibc".to_string(),
-            years: Uint128::from(1 as u128),
+            years: Uint128::from(2 as u128),
         };
         let _res = execute(deps, mock_env(), info, msg)
             .expect("contract successfully handles Register message");
@@ -99,7 +99,7 @@ mod tests {
                 required_denom: "token".to_string(),
                 purchase_price: Uint128::from(0 as u128),
                 transfer_price: Uint128::from(0 as u128),
-                annual_rent_amount: Uint128::from(0 as u128),
+                annual_rent_bps: Uint128::from(0 as u128),
             },
         );
     }
@@ -113,7 +113,7 @@ mod tests {
             "token",
             Uint128::from(3 as u128),
             Uint128::from(4 as u128),
-            Uint128::from(0 as u128),
+            Uint128::from(100 as u128),
         );
 
         assert_config_state(
@@ -122,7 +122,7 @@ mod tests {
                 required_denom: "token".to_string(),
                 purchase_price: Uint128::from(3 as u128),
                 transfer_price: Uint128::from(4 as u128),
-                annual_rent_amount: Uint128::from(0 as u128),
+                annual_rent_bps: Uint128::from(100 as u128),
             },
         );
     }
@@ -138,7 +138,7 @@ mod tests {
     }
 
     #[test]
-    fn register_available_name_and_query_works_with_fees() {
+    fn register_available_name_and_query_works_with_fees_no_rent() {
         let mut deps = mock_dependencies();
         mock_init_with_price(
             deps.as_mut(),
@@ -155,6 +155,34 @@ mod tests {
         let msg = ExecuteMsg::Register {
             name: "bob.ibc".to_string(),
             years: Uint128::from(1 as u128),
+        };
+
+        let _res = execute(deps.as_mut(), mock_env(), info, msg)
+            .expect("contract successfully handles Register message");
+
+        // querying for name resolves to correct address
+        assert_name_owner(deps.as_ref(), "alice.ibc", "alice_key");
+        assert_name_owner(deps.as_ref(), "bob.ibc", "bob_key");
+    }
+
+    #[test]
+    fn register_available_name_and_query_works_with_fees_and_rent() {
+        let mut deps = mock_dependencies();
+        mock_init_with_price(
+            deps.as_mut(),
+            "token",
+            Uint128::from(200 as u128),
+            Uint128::from(200 as u128),
+            Uint128::from(100 as u128),
+        );
+
+        mock_alice_registers_name(deps.as_mut(), &coins(204, "token"));
+
+        // anyone can register an available name with more fees than needed
+        let info = mock_info("bob_key", &coins(500, "token"));
+        let msg = ExecuteMsg::Register {
+            name: "bob.ibc".to_string(),
+            years: Uint128::from(3 as u128),
         };
 
         let _res = execute(deps.as_mut(), mock_env(), info, msg)
@@ -294,7 +322,7 @@ mod tests {
 
         match res {
             Ok(_) => panic!("register call should fail with insufficient fees"),
-            Err(ContractError::InsufficientFundsSend {}) => {}
+            Err(ContractError::InsufficientFundsSent {}) => {}
             Err(e) => panic!("Unexpected error: {:?}", e),
         }
     }
@@ -321,7 +349,7 @@ mod tests {
 
         match res {
             Ok(_) => panic!("register call should fail with insufficient fees"),
-            Err(ContractError::InsufficientFundsSend {}) => {}
+            Err(ContractError::InsufficientFundsSent {}) => {}
             Err(e) => panic!("Unexpected error: {:?}", e),
         }
     }
@@ -443,7 +471,7 @@ mod tests {
 
         match res {
             Ok(_) => panic!("register call should fail with insufficient fees"),
-            Err(ContractError::InsufficientFundsSend {}) => {}
+            Err(ContractError::InsufficientFundsSent {}) => {}
             Err(e) => panic!("Unexpected error: {:?}", e),
         }
 

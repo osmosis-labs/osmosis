@@ -10,7 +10,7 @@ pub enum ContractError {
     Unauthorized {},
 
     #[error("Insufficient funds sent")]
-    InsufficientFundsSend {},
+    InsufficientFundsSent {},
 
     #[error("Invalid coin denomination, expected {expected} got {actual}")]
     InvalidDenom { expected: String, actual: String },
@@ -30,7 +30,7 @@ pub enum ContractError {
     #[error("Name needs suffix {suffix}")]
     NameNeedsSuffix { suffix: String },
 
-    #[error("Invalid character(char {c}")]
+    #[error("Invalid character (char {c})")]
     InvalidCharacter { c: char },
 
     #[error("Years must be positive integer")]
