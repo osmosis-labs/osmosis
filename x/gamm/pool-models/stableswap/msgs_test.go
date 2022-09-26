@@ -92,18 +92,6 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "has three coins in InitialPoolLiquidity",
-			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
-				msg.InitialPoolLiquidity = sdk.Coins{
-					sdk.NewCoin("osmo", sdk.NewInt(100)),
-					sdk.NewCoin("atom", sdk.NewInt(100)),
-					sdk.NewCoin("usdt", sdk.NewInt(100)),
-				}
-				return msg
-			}),
-			expectPass: false,
-		},
-		{
 			name: "have assets in excess of cap",
 			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.InitialPoolLiquidity = sdk.Coins{

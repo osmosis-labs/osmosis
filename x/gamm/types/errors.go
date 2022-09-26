@@ -28,7 +28,6 @@ var (
 	ErrInvalidPool               = sdkerrors.Register(ModuleName, 10, "attempting to create an invalid pool")
 	ErrDenomNotFoundInPool       = sdkerrors.Register(ModuleName, 11, "denom does not exist in pool")
 	ErrDenomAlreadyInPool        = sdkerrors.Register(ModuleName, 12, "denom already exists in the pool")
-	ErrDisallowedRangePoolAssets = sdkerrors.Register(ModuleName, 13, "the assets is in the disallowed range (4-8 per multi assets stableswap)")
 
 	ErrEmptyRoutes              = sdkerrors.Register(ModuleName, 21, "routes not defined")
 	ErrEmptyPoolAssets          = sdkerrors.Register(ModuleName, 22, "PoolAssets not defined")
