@@ -24,8 +24,12 @@ var _ types.PoolI = &Pool{}
 func NewStableswapPool(poolId uint64, stableswapPoolParams PoolParams, initialLiquidity sdk.Coins, scalingFactors []uint64, futureGovernor string) (Pool, error) {
 	if len(scalingFactors) == 0 {
 		scalingFactors = []uint64{1, 1}
-	} else if scalingFactors[0] == 0 || scalingFactors[1] == 0 {
-		return Pool{}, types.ErrInvalidStableswapScalingFactors
+	}
+
+	for _, scalingFactor := range scalingFactors {
+		if scalingFactor == 0 || int64(scalingFactor) <= 0 {
+			return Pool{}, types.ErrInvalidStableswapScalingFactors
+		}
 	}
 
 	pool := Pool{
@@ -123,6 +127,9 @@ func (p Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Dec, error) {
 			return []sdk.Dec{}, fmt.Errorf("denom %s does not exist in pool", denom)
 		}
 		scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndex)
+		if int64(scalingFactor) <= 0 {
+			panic("invalid scaling factor encountered when scaling pool assets")
+		}
 		result[i] = amt.ToDec().QuoInt64Mut(int64(scalingFactor))
 	}
 	return result, nil
@@ -134,6 +141,9 @@ func (p Pool) getDescaledPoolAmt(denom string, amount osmomath.BigDec) osmomath.
 	liquidityIndex := liquidityIndexes[denom]
 
 	scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndex)
+	if int64(scalingFactor) <= 0 {
+		panic("invalid scaling factor encountered when scaling pool assets")
+	}
 	return amount.MulInt64(int64(scalingFactor))
 }
 
@@ -299,15 +309,16 @@ func (p *Pool) PokePool(blockTime time.Time) {}
 // It should only be able to be successfully called by the pool's ScalingFactorGovernor
 // TODO: move commented test for this function from x/gamm/keeper/pool_service_test.go once a pool_test.go file has been created for stableswap
 func (p *Pool) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uint64, scalingFactorGovernor string) error {
-	if scalingFactorGovernor != p.ScalingFactorGovernor {
+	if scalingFactorGovernor != p.ScalingFactorGovernor || len(scalingFactors) != p.PoolLiquidity.Len() {
 		return types.ErrNotScalingFactorGovernor
 	}
 
-	if len(scalingFactors) != p.PoolLiquidity.Len() {
-		return types.ErrInvalidStableswapScalingFactors
+	for _, scalingFactor := range scalingFactors {
+		if int64(scalingFactor) <= 0 {
+			return types.ErrInvalidStableswapScalingFactors
+		}
 	}
 
 	p.ScalingFactor = scalingFactors
-
 	return nil
 }

@@ -58,6 +58,14 @@ func (msg MsgCreateStableswapPool) ValidateBasic() error {
 		return types.ErrInvalidScalingFactors
 	}
 
+	// iterates len(msg.InitialPoolLiquidity) < 10 times
+	for _, scalingFactor := range msg.ScalingFactors {
+		// we convert to int64 for core logic math
+		if scalingFactor == 0 || int64(scalingFactor) <= 0 {
+			return types.ErrInvalidScalingFactors
+		}
+	}
+
 	// validation for future owner
 	if err = types.ValidateFutureGovernor(msg.FuturePoolGovernor); err != nil {
 		return err
