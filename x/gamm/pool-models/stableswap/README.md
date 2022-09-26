@@ -77,6 +77,16 @@ Then we can solve swaps by first computing $k = g(x_0, y_0, v, w)$.
 Then suppose I want to swap $a$ units of $x$, and then want to find how many units $b$ of $y$ that we get out.
 We do this by computing $y_f = \text{solve\_cfmm}(x_0 + a, v, w, k)$, and then $b = y_0 - y_f$
 
+So all we need is an equation for $\text{solve\_cfmm}$! Its essentially inverting a multi-variate polynomial, and in this case is solvable: <https://www.wolframalpha.com/input?i=solve+for+y+in+x+*+y+*+v+*+%28x%5E2+%2B+y%5E2+%2B+w%29+%3D+k>
+
+Or if were clever with simplification in the two asset case, we can reduce it to: <https://www.desmos.com/calculator/ktdvu7tdxv>.
+
+These functions are a bit complex, which is fine as they are easy to prove correct. However, they are relatively expensive to compute, the latter needs precision on the order of x^4, and requires computing multiple cubic roots.
+
+Instead there is a more generic way to compute these, which we detail in the next subsection.
+
+#### Binary search solution
+
 ### Spot Price
 
 ### LP equations
@@ -88,5 +98,9 @@ We do this by computing $y_f = \text{solve\_cfmm}(x_0 + a, v, w, k)$, and then $
 ### Scaling factor handling
 
 Throughout
+
+## Code structure
+
+## Testing strategy
 
 ## Extensions
