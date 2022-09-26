@@ -5,20 +5,21 @@ services:
   osmosisd:
     image: local:osmosis
     build:
-      context: ../../
+      context: ../../../
       dockerfile: Dockerfile
       args:
         RUNNER_IMAGE: alpine:3.16
         GO_VERSION: 1.18
     volumes:
-      - ../e2e/scripts/nativeDenomPool.json:/osmosis/nativeDenomPool.json
-      - ../e2e/scripts/nativeDenomThreeAssetPool.json:/osmosis/nativeDenomThreeAssetPool.json
-      - ./scripts/setup.sh:/osmosis/setup.sh
+      - ./scripts/start.sh:/osmosis/start.sh
+      - ./scripts/testnetify.py:/osmosis/testnetify.py
+      - ./state_export.json:/osmosis/state_export.json
       - ./.osmosisd/:/osmosis/.osmosisd/
     entrypoint:
-      - /osmosis/setup.sh
-    command:
-      - $STATE
+      - /osmosis/start.sh
+    environment:
+      - MONIKER=val
+      - CHAIN_ID=localosmosis
     ports:
       - 26657:26657
       - 1317:1317
