@@ -93,14 +93,7 @@ func (p Pool) GetScalingFactors() []uint64 {
 
 // CONTRACT: scaling factors follow the same index with pool liquidity denoms
 func (p Pool) GetScalingFactorByLiquidityIndex(liquidityIndex int) uint64 {
-	scalingFactor := p.ScalingFactor[liquidityIndex]
-
-	// should not be possible after pool creation checks but we keep this here as a guardrail
-	if int64(scalingFactor) <= 0 {
-		panic("invalid scaling factor encountered when scaling pool assets")
-	}
-
-	return scalingFactor
+	return p.ScalingFactor[liquidityIndex]
 }
 
 func (p Pool) NumAssets() int {

@@ -126,14 +126,6 @@ func TestGetScaledPoolAmts(t *testing.T) {
 			expReserves:    []sdk.Dec{},
 			expPanic:       false,
 		},
-
-		// panic catching
-		"negative scaling factor upon int64 conversion": {
-			denoms:         []string{"foo", "bar"},
-			poolAssets:     twoEvenStablePoolAssets,
-			scalingFactors: []uint64{(1 << 63), (1 << 63)},
-			expPanic:       true,
-		},
 		"zero scaling factor": {
 			denoms:         []string{"foo", "bar"},
 			poolAssets:     twoEvenStablePoolAssets,
