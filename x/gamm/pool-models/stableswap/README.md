@@ -25,7 +25,7 @@ The AMM pool interfaces requires implementing the following stateful methods:
 	SwapOutAmtGivenIn(tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error)
 	SwapInAmtGivenOut(tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error)
 
-  SpotPrice(baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error)
+	SpotPrice(baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error)
 
 	JoinPool(tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error)
 	JoinPoolNoSwap(tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error)
@@ -47,6 +47,7 @@ Due to the CFMM equation $f$ being a symmetric function, we can wlog reorder the
 
 We then take a more convenient expression to work with, via variable substition.
 
+<!-- It took several very silly hacks to get github to compile this. Editors in the future, be aware of spacing in the equation wrt how it GH renders -->
 $$\begin{equation}
     v =
     \begin{cases}
@@ -59,7 +60,7 @@ $$\begin{equation}
     w =
     \begin{cases}
       0, & \text{if}\ n=2 \\
-      \sum\negthinspace \negthinspace \thinspace^{n}_{i=3} {a_i^2}, & \text{otherwise}
+      \sum\negthinspace \negthinspace \thinspace^{n}_{i=3} \space {a_i^2}, & \text{otherwise}
     \end{cases}
   \end{equation}$$
 
