@@ -64,6 +64,8 @@ $$ \begin{equation}
   \text{then } g(x,y,v,w) = xyv(x^2 + y^2 + w) = f(x,y, a_3, ... a_n) 
 $$
 
+As a corollary, notice that $g(x,y,v,w) = v * g(x,y,1,w)$, which will be useful when we have to compare before and after quantities. We will use $h(x,y,w) := g(x,y,1,w)$ as short-hand for this.
+
 ### Swaps
 
 First notice that for all swaps, we only deal with two assets at a time, as swaps are given one asset in, and one asset out. For exposition, lets call the input asset $x$, the output asset $y$, and we can compute $v$ and $w$ given the other assets, whose reserves are untouched.
@@ -72,20 +74,49 @@ First we note the direct way of solving this, its limitation, and then the binar
 
 #### Direct swap solution
 
-Suppose the existence of a function $\text{solve\_cfmm}(x, v, w, k) = y\text{ s.t. }g(x, y, v, w) = k$.
-Then we can solve swaps by first computing $k = g(x_0, y_0, v, w)$.
-Then suppose I want to swap $a$ units of $x$, and then want to find how many units $b$ of $y$ that we get out.
-We do this by computing $y_f = \text{solve\_cfmm}(x_0 + a, v, w, k)$, and then $b = y_0 - y_f$
+The question we need to answer for a swap is "suppose I want to swap $a$ units of $x$, and then want to find how many units $b$ of $y$ that we get out".
 
-So all we need is an equation for $\text{solve\_cfmm}$! Its essentially inverting a multi-variate polynomial, and in this case is solvable: <https://www.wolframalpha.com/input?i=solve+for+y+in+x+*+y+*+v+*+%28x%5E2+%2B+y%5E2+%2B+w%29+%3D+k>
+The method to compute this under 0 swap fee is implied by the CFMM equation itself, since the constant refers to:
+$g(x_0, y_0, v, w) = k = g(x_0 + a, y_0 - b, v, w)$. As $k$ is linearly related to $v$, and $v$ is unchanged throughout the swap, we can simplify the equation to be reasoning about $k' = \frac{k}{v}$ as the constant, and $h$ instead of $g$
 
-Or if were clever with simplification in the two asset case, we can reduce it to: <https://www.desmos.com/calculator/ktdvu7tdxv>.
+We then model the solution by finding a function $\text{solve\_cfmm}(x, w, k') = y\text{ s.t. }h(x, y, w) = k'$.
+Then we can solve the swap amount out by first computing $k'$ as $k' = h(x_0, y_0, w)$, and 
+computing $y_f := \text{solve\_cfmm}(x_0 + a, w, k')$. We then get that $b = y_0 - y_f$.
+
+So all we need is an equation for $\text{solve\_cfmm}$! Its essentially inverting a multi-variate polynomial, and in this case is solvable: [wolfram alpha link](https://www.wolframalpha.com/input?i=solve+for+y+in+x+*+y+*+%28x%5E2+%2B+y%5E2+%2B+w%29+%3D+k)
+
+Or if were clever with simplification in the two asset case, we can reduce it to: [desmos link](https://www.desmos.com/calculator/ktdvu7tdxv).
 
 These functions are a bit complex, which is fine as they are easy to prove correct. However, they are relatively expensive to compute, the latter needs precision on the order of x^4, and requires computing multiple cubic roots.
 
 Instead there is a more generic way to compute these, which we detail in the next subsection.
 
-#### Binary search solution
+#### Iterative search solution
+
+Instead of using the direct solution for $\text{solve\_cfmm}(x, w, k')$, instead notice that $h(x, y, w)$ is an increasing function in $y$. 
+So we can simply binary search for $y$ such that $h(x, y, w) = k'$, and we are guaranteed convergence within some error bound. 
+
+In order to do a binary search, we need bounds on $y$. The lowest lowerbound is $0$, and the largest upperbound is $\infty$. The maximal upperbound is obviously unworkable, and in general binary searching around wide ranges is unfortunate, as we expect most trades to be centered around $y_0$. This would suggest that we should do something smarter to iteratively approach the right value. Notice that $h$ is super-linearly related in $y$, and at most cubically related to $y$. So $2 * h(x,y,w) <= h(x,2*y,w) <= 8 * h(x,y,w)$. We can use this fact to get a pretty-good initial upperbound and lowerbound guess for $y$. As these bounds are relatively tight (only 3 binary search steps away from one another), we do not aim to optimize further.
+
+We detail how we use this below:
+<!--Let $k_{guess,0} := h(x_f, y_0, w)$. If $k_{guess,0} > k$, then $y_0$ is our upper bound --->s
+
+```python
+def iterative_search(x_f, y_0, w, k, err_tolerance):
+  k_0 = h(x_f, y_0, w)
+  lowerbound, upperbound = y_0, y_0
+  if k_0 > k:
+    # need to find a lowerbound, assume cubic relationship
+  elif k_0 < k:
+    # need to find an upperbound, assume linear relationship
+
+def binary_search(x_f, y_0, w, k, err_tolerance):
+  iter_count = 0
+  y_est = y_0
+  k_est = h(x_f, y_0, w)
+  lowerbound = 0
+  upperbound = 
+```
 
 ### Spot Price
 
