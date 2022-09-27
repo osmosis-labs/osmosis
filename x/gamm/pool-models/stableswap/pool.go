@@ -23,13 +23,14 @@ var _ types.PoolI = &Pool{}
 // * poolID doesn't already exist
 func NewStableswapPool(poolId uint64, stableswapPoolParams PoolParams, initialLiquidity sdk.Coins, scalingFactors []uint64, futureGovernor string) (Pool, error) {
 	if len(scalingFactors) == 0 {
-		scalingFactors = []uint64{1, 1}
+		scalingFactors = make([]uint64, len(initialLiquidity))
+		for i := range scalingFactors {
+			scalingFactors[i] = 1
+		}
 	}
 
-	for _, scalingFactor := range scalingFactors {
-		if scalingFactor == 0 || int64(scalingFactor) <= 0 {
-			return Pool{}, types.ErrInvalidStableswapScalingFactors
-		}
+	if err := validateScalingFactors(scalingFactors, len(initialLiquidity), false); err != nil {
+		return Pool{}, err
 	}
 
 	pool := Pool{
@@ -92,7 +93,14 @@ func (p Pool) GetScalingFactors() []uint64 {
 
 // CONTRACT: scaling factors follow the same index with pool liquidity denoms
 func (p Pool) GetScalingFactorByLiquidityIndex(liquidityIndex int) uint64 {
-	return p.ScalingFactor[liquidityIndex]
+	scalingFactor := p.ScalingFactor[liquidityIndex]
+
+	// should not be possible after pool creation checks but we keep this here as a guardrail
+	if int64(scalingFactor) <= 0 {
+		panic("invalid scaling factor encountered when scaling pool assets")
+	}
+
+	return scalingFactor
 }
 
 func (p Pool) NumAssets() int {
@@ -128,10 +136,6 @@ func (p Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Dec, error) {
 		}
 		scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndex)
 
-		// should not be possible after pool creation checks but we keep this here as a guardrail
-		if int64(scalingFactor) <= 0 {
-			panic("invalid scaling factor encountered when scaling pool assets")
-		}
 		result[i] = amt.ToDec().QuoInt64Mut(int64(scalingFactor))
 	}
 
@@ -144,11 +148,6 @@ func (p Pool) getDescaledPoolAmt(denom string, amount osmomath.BigDec) osmomath.
 	liquidityIndex := liquidityIndexes[denom]
 
 	scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndex)
-
-	// should not be possible after pool creation checks but we keep this here as a guardrail
-	if int64(scalingFactor) <= 0 {
-		panic("invalid scaling factor encountered when scaling pool assets")
-	}
 
 	return amount.MulInt64(int64(scalingFactor))
 }
@@ -315,16 +314,28 @@ func (p *Pool) PokePool(blockTime time.Time) {}
 // It should only be able to be successfully called by the pool's ScalingFactorGovernor
 // TODO: move commented test for this function from x/gamm/keeper/pool_service_test.go once a pool_test.go file has been created for stableswap
 func (p *Pool) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uint64, scalingFactorGovernor string) error {
-	if scalingFactorGovernor != p.ScalingFactorGovernor || len(scalingFactors) != p.PoolLiquidity.Len() {
+	if scalingFactorGovernor != p.ScalingFactorGovernor {
 		return types.ErrNotScalingFactorGovernor
 	}
 
+	if err := validateScalingFactors(scalingFactors, p.PoolLiquidity.Len(), false); err != nil {
+		return err
+	}
+
+	p.ScalingFactor = scalingFactors
+	return nil
+}
+
+func validateScalingFactors(scalingFactors []uint64, numAssets int, allowZeroLength bool) error {
+	if allowZeroLength && len(scalingFactors) == 0 {
+		return nil
+	}
+
 	for _, scalingFactor := range scalingFactors {
-		if int64(scalingFactor) <= 0 {
+		if scalingFactor == 0 || int64(scalingFactor) <= 0 || len(scalingFactors) != numAssets {
 			return types.ErrInvalidStableswapScalingFactors
 		}
 	}
 
-	p.ScalingFactor = scalingFactors
 	return nil
 }

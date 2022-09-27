@@ -327,20 +327,6 @@ func TestGetDescaledPoolAmts(t *testing.T) {
 			scalingFactors: []uint64{(1 << 62), (1 << 62)},
 			expPanic:       true,
 		},
-		"scaling factors large enough to flip signed bit upon int64 conversion": {
-			denom:          "foo",
-			amount:         osmomath.NewBigDec(10000000000000),
-			poolAssets:     twoEvenStablePoolAssets,
-			scalingFactors: []uint64{(1 << 63), (1 << 63)},
-			expPanic:       true,
-		},
-		"at least one zero scaling factor": {
-			denom:          "bar",
-			amount:         osmomath.NewBigDec(10000000000000),
-			poolAssets:     twoEvenStablePoolAssets,
-			scalingFactors: []uint64{0, 1},
-			expPanic:       true,
-		},
 	}
 
 	for name, tc := range tests {

@@ -53,17 +53,10 @@ func (msg MsgCreateStableswapPool) ValidateBasic() error {
 	} else if len(msg.InitialPoolLiquidity) > 2 {
 		return types.ErrTooManyPoolAssets
 	}
-	// valid scaling factor lengths are 0, or one factor for each asset
-	if len(msg.ScalingFactors) != 0 && len(msg.ScalingFactors) != len(msg.InitialPoolLiquidity) {
-		return types.ErrInvalidScalingFactors
-	}
 
-	// number of iterations capped at max number of pool assets
-	for _, scalingFactor := range msg.ScalingFactors {
-		// we convert to int64 for core logic math
-		if scalingFactor == 0 || int64(scalingFactor) <= 0 {
-			return types.ErrInvalidScalingFactors
-		}
+	// validation for scaling factors owner
+	if err = validateScalingFactors(msg.ScalingFactors, len(msg.InitialPoolLiquidity), true); err != nil {
+		return err
 	}
 
 	// validation for future owner
