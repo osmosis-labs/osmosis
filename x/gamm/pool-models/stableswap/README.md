@@ -93,7 +93,7 @@ Instead there is a more generic way to compute these, which we detail in the nex
 
 #### Iterative search solution
 
-Instead of using the direct solution for $\text{solve\_cfmm}(x, w, k')$, instead notice that $h(x, y, w)$ is an increasing function in $y$. 
+Instead of using the direct solution for $solve\_cfmm(x, w, k')$, instead notice that $h(x, y, w)$ is an increasing function in $y$. 
 So we can simply binary search for $y$ such that $h(x, y, w) = k'$, and we are guaranteed convergence within some error bound. 
 
 In order to do a binary search, we need bounds on $y$. 
@@ -110,7 +110,9 @@ def iterative_search(x_f, y_0, w, k, err_tolerance):
   lowerbound, upperbound = y_0, y_0
   k_ratio = k_0 / k
   if k_ratio < 1:
-    # k_0 < k. Need to find an upperbound. Worst case assume a linear relationship, gives the upperbound
+    # k_0 < k. Need to find an upperbound. Worst case assume a linear relationship, gives an upperbound
+    # TODO: In the future, we can derive better bounds via reasoning about coefficients in the cubic
+    # These are quite close when we are in the "stable" part of the curve though.
     upperbound = ceil(y_0 * k_ratio)
   elif k_ratio > 1:
     # need to find a lowerbound. We could use a cubic relation, but for now we just set it to 0.
@@ -146,6 +148,15 @@ Detail how we take the previously discussed solver, and build SwapExactAmountIn 
 
 ### Spot Price
 
+Spot price for an AMM pool is the derivative of its `CalculateOutAmountGivenIn` equation.
+However for the stableswap equation, this is painful: [wolfram alpha link](https://www.wolframalpha.com/input?i=dy%2Fdx+of+y+%3D+%28sqrt%28729+k%5E2+x%5E4+%2B+108+x%5E3+%28w+x+%2B+x%5E3%29%5E3%29+%2B+27+k+x%5E2%29%5E%281%2F3%29%2F%283+2%5E%281%2F3%29+x%29+-+%282%5E%281%2F3%29+%28w+x+%2B+x%5E3%29%29%2F%28sqrt%28729+k%5E2+x%5E4+%2B+108+x%5E3+%28w+x+%2B+x%5E3%29%5E3%29+%2B+27+k+x%5E2%29%5E%281%2F3%29+)
+
+So instead we compute the spot price by approximating the derivative via a small swap.
+
+Let $\eps$ be a sentinel very small swap in amount.
+
+Then $\text{spot price} = \frac{\text{CalculateOutAmountGivenIn}(\eps)}{\eps}$.
+
 ### LP equations
 
 We divide this section into two parts, `JoinPoolNoSwap & ExitPool`, and `JoinPool`.
@@ -169,4 +180,4 @@ Throughout
 
 ## Extensions
 
-* The astute observer may notice that the equation we are solving in $\text{solve_cfmm}$ is actually a cubic polynomial in $y$, with an always-positive derivatives. We should then be able to use newton's root finding algorithm to solve for the solution with quadratic convergence. We do not pursue this today, due to other engineering tradeoffs, and insufficient analysis being done.
+* The astute observer may notice that the equation we are solving in $\text{solve\_cfmm}$ is actually a cubic polynomial in $y$, with an always-positive derivative. We should then be able to use newton's root finding algorithm to solve for the solution with quadratic convergence. We do not pursue this today, due to other engineering tradeoffs, and insufficient analysis being done.
