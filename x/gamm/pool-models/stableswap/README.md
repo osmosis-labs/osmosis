@@ -79,11 +79,11 @@ The question we need to answer for a swap is "suppose I want to swap $a$ units o
 The method to compute this under 0 swap fee is implied by the CFMM equation itself, since the constant refers to:
 $g(x_0, y_0, v, w) = k = g(x_0 + a, y_0 - b, v, w)$. As $k$ is linearly related to $v$, and $v$ is unchanged throughout the swap, we can simplify the equation to be reasoning about $k' = \frac{k}{v}$ as the constant, and $h$ instead of $g$
 
-We then model the solution by finding a function $\text{solve\_cfmm}(x, w, k') = y\text{ s.t. }h(x, y, w) = k'$.
+We then model the solution by finding a function $\text{solve cfmm}(x, w, k') = y\text{ s.t. }h(x, y, w) = k'$.
 Then we can solve the swap amount out by first computing $k'$ as $k' = h(x_0, y_0, w)$, and 
-computing $y_f := \text{solve\_cfmm}(x_0 + a, w, k')$. We then get that $b = y_0 - y_f$.
+computing $y_f := \text{solve cfmm}(x_0 + a, w, k')$. We then get that $b = y_0 - y_f$.
 
-So all we need is an equation for $\text{solve\_cfmm}$! Its essentially inverting a multi-variate polynomial, and in this case is solvable: [wolfram alpha link](https://www.wolframalpha.com/input?i=solve+for+y+in+x+*+y+*+%28x%5E2+%2B+y%5E2+%2B+w%29+%3D+k)
+So all we need is an equation for $\text{solve cfmm}$! Its essentially inverting a multi-variate polynomial, and in this case is solvable: [wolfram alpha link](https://www.wolframalpha.com/input?i=solve+for+y+in+x+*+y+*+%28x%5E2+%2B+y%5E2+%2B+w%29+%3D+k)
 
 Or if were clever with simplification in the two asset case, we can reduce it to: [desmos link](https://www.desmos.com/calculator/ktdvu7tdxv).
 
@@ -93,7 +93,7 @@ Instead there is a more generic way to compute these, which we detail in the nex
 
 #### Iterative search solution
 
-Instead of using the direct solution for $solve\_cfmm(x, w, k')$, instead notice that $h(x, y, w)$ is an increasing function in $y$. 
+Instead of using the direct solution for $\text{solve cfmm}(x, w, k')$, instead notice that $h(x, y, w)$ is an increasing function in $y$. 
 So we can simply binary search for $y$ such that $h(x, y, w) = k'$, and we are guaranteed convergence within some error bound. 
 
 In order to do a binary search, we need bounds on $y$. 
@@ -180,4 +180,4 @@ Throughout
 
 ## Extensions
 
-* The astute observer may notice that the equation we are solving in $\text{solve\_cfmm}$ is actually a cubic polynomial in $y$, with an always-positive derivative. We should then be able to use newton's root finding algorithm to solve for the solution with quadratic convergence. We do not pursue this today, due to other engineering tradeoffs, and insufficient analysis being done.
+* The astute observer may notice that the equation we are solving in $\text{solve cfmm}$ is actually a cubic polynomial in $y$, with an always-positive derivative. We should then be able to use newton's root finding algorithm to solve for the solution with quadratic convergence. We do not pursue this today, due to other engineering tradeoffs, and insufficient analysis being done.
