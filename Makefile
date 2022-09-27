@@ -295,6 +295,8 @@ format:
 localnet-keys:
 	. tests/localosmosis/scripts/add_keys.sh
 
+localnet-init: localnet-clean localnet-build
+
 localnet-build:
 	@docker-compose -f tests/localosmosis/docker-compose.yml build
 
@@ -313,11 +315,29 @@ localnet-start-state-export:
 localnet-stop:
 	@docker-compose -f tests/localosmosis/docker-compose.yml down
 
-localnet-remove: localnet-stop
-	rm -rf $(PWD)/tests/localosmosis/.osmosisd
+localnet-clean:
+	@rm -rfI $(HOME)/.osmosisd/
 
+localnet-state-export-init: localnet-state-export-clean localnet-state-export-build 
+
+<<<<<<< HEAD
 localnet-remove-state-export:
 	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml down
+=======
+localnet-state-export-build:
+	@DOCKER_BUILDKIT=1 docker-compose -f tests/localosmosis/state_export/docker-compose.yml build
+
+localnet-state-export-start:
+	@docker-compose -f tests/localosmosis/state_export/docker-compose.yml up
+
+localnet-state-export-startd:
+	@docker-compose -f tests/localosmosis/state_export/docker-compose.yml up -d
+
+localnet-state-export-stop:
+	@docker-compose -f tests/localosmosis/docker-compose.yml down
+
+localnet-state-export-clean: localnet-clean
+>>>>>>> af437ff8 (feat: Use `~/.osmosisd` in LocalOsmosis  (#2833))
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \
