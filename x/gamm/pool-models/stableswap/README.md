@@ -103,7 +103,7 @@ The lowest lowerbound is $0$, and the largest upperbound is $\infty$.
 The maximal upperbound is obviously unworkable, and in general binary searching around wide ranges is unfortunate, as we expect most trades to be centered around $y_0$. 
 This would suggest that we should do something smarter to iteratively approach the right value for the upperbound at least. 
 Notice that $h$ is super-linearly related in $y$, and at most cubically related to $y$. 
-This means that $ \forall c \in \R^+, c * h(x,y,w) < h(x,c*y,w) < c^3 * h(x,y,w)$. 
+This means that $\forall c \in \mathbb{R}^+, c * h(x,y,w) < h(x,c*y,w) < c^3 * h(x,y,w)$. 
 We can use this fact to get a pretty-good initial upperbound guess for $y$ using the linear estimate. In the lowerbound case, we leave it as lower-bounded by $0$, otherwise we would need to take a cubed root to get a better estimate.
 
 ```python
