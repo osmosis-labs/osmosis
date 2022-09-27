@@ -9,7 +9,13 @@ ARG RUNNER_IMAGE="gcr.io/distroless/static"
 
 FROM golang:${GO_VERSION}-alpine as builder
 
-RUN set -eux; apk add --no-cache ca-certificates build-base; apk add git linux-headers
+ARG GIT_VERSION
+ARG GIT_COMMIT
+
+RUN apk add --no-cache \
+    ca-certificates \
+    build-base \
+    linux-headers
 
 # Download go dependencies
 WORKDIR /osmosis
@@ -32,20 +38,18 @@ COPY . .
 # Build osmosisd binary
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/root/go/pkg/mod \
-    VERSION=$(echo $(git describe --tags) | sed 's/^v//') && \
-    COMMIT=$(git log -1 --format='%H') && \
     go build \
       -mod=readonly \
       -tags "netgo,ledger,muslc" \
       -ldflags "-X github.com/cosmos/cosmos-sdk/version.Name="osmosis" \
               -X github.com/cosmos/cosmos-sdk/version.AppName="osmosisd" \
-              -X github.com/cosmos/cosmos-sdk/version.Version=$VERSION \
-              -X github.com/cosmos/cosmos-sdk/version.Commit=$COMMIT \
+              -X github.com/cosmos/cosmos-sdk/version.Version=${GIT_VERSION} \
+              -X github.com/cosmos/cosmos-sdk/version.Commit=${GIT_COMMIT} \
               -X github.com/cosmos/cosmos-sdk/version.BuildTags='netgo,ledger,muslc' \
               -w -s -linkmode=external -extldflags '-Wl,-z,muldefs -static'" \
       -trimpath \
-      -o /osmosis/build/ \
-      ./...
+      -o /osmosis/build/osmosisd \
+      /osmosis/cmd/osmosisd/main.go
 
 # --------------------------------------------------------
 # Runner

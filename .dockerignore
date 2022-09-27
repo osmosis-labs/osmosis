@@ -1,2 +1,9 @@
+assets/
 docs/
 networks/
+proto/
+scripts/
+tests/
+.github/
+.git/
+.vscode/
