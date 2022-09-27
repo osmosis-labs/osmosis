@@ -96,26 +96,44 @@ Instead there is a more generic way to compute these, which we detail in the nex
 Instead of using the direct solution for $\text{solve\_cfmm}(x, w, k')$, instead notice that $h(x, y, w)$ is an increasing function in $y$. 
 So we can simply binary search for $y$ such that $h(x, y, w) = k'$, and we are guaranteed convergence within some error bound. 
 
-In order to do a binary search, we need bounds on $y$. The lowest lowerbound is $0$, and the largest upperbound is $\infty$. The maximal upperbound is obviously unworkable, and in general binary searching around wide ranges is unfortunate, as we expect most trades to be centered around $y_0$. This would suggest that we should do something smarter to iteratively approach the right value. Notice that $h$ is super-linearly related in $y$, and at most cubically related to $y$. So $2 * h(x,y,w) <= h(x,2*y,w) <= 8 * h(x,y,w)$. We can use this fact to get a pretty-good initial upperbound and lowerbound guess for $y$. As these bounds are relatively tight (only 3 binary search steps away from one another), we do not aim to optimize further.
+In order to do a binary search, we need bounds on $y$. The lowest lowerbound is $0$, and the largest upperbound is $\infty$. The maximal upperbound is obviously unworkable, and in general binary searching around wide ranges is unfortunate, as we expect most trades to be centered around $y_0$. This would suggest that we should do something smarter to iteratively approach the right value for the upperbound at least. Notice that $h$ is super-linearly related in $y$, and at most cubically related to $y$. This means that $ \forall c \in \R^+, c * h(x,y,w) < h(x,c*y,w) < c^3 * h(x,y,w)$. We can use this fact to get a pretty-good initial upperbound guess for $y$. In the lowerbound case, we leave it as lower-bounded by $0$.
 
-We detail how we use this below:
-<!--Let $k_{guess,0} := h(x_f, y_0, w)$. If $k_{guess,0} > k$, then $y_0$ is our upper bound --->s
+The linear estimate for upperbound is used. For lower bounds, we would need to take a cubic root. We avoid this, and just use $lowerbound = 0$.
 
 ```python
 def iterative_search(x_f, y_0, w, k, err_tolerance):
   k_0 = h(x_f, y_0, w)
   lowerbound, upperbound = y_0, y_0
-  if k_0 > k:
-    # need to find a lowerbound, assume cubic relationship
-  elif k_0 < k:
-    # need to find an upperbound, assume linear relationship
+  k_ratio = k_0 / k
+  if k_ratio < 1:
+    # k_0 < k. Need to find an upperbound. Worst case assume a linear relationship, gives the upperbound
+    upperbound = ceil(y_0 * k_ratio)
+  elif k_ratio > 1:
+    # need to find a lowerbound. We could use a cubic relation, but for now we just set it to 0.
+    lowerbound = 0
+  else: 
+    return y_0 # means x_f = x_0
+  k_calculator = lambda y_est: h(x_f, y_est, w)
+  max_iteration_count = 100
+  return binary_search(lowerbound, upperbound, k_calculator, k, err_tolerance)
 
-def binary_search(x_f, y_0, w, k, err_tolerance):
+def binary_search(lowerbound, upperbound, approximation_fn, target, max_iteration_count, err_tolerance):
   iter_count = 0
-  y_est = y_0
-  k_est = h(x_f, y_0, w)
-  lowerbound = 0
-  upperbound = 
+  cur_k_guess = 0
+  while (not satisfies_bounds(cur_k_guess, target, err_tolerance)) and iter_count < max_iteration_count:
+    iter_count += 1
+    cur_y_guess = (lowerbound + upperbound) / 2
+    cur_k_guess = approximation_fn(cur_y_guess)
+
+    if cur_k_guess > target:
+      upperbound = cur_y_guess
+    else if cur_k_guess < target:
+      lowerbound = cur_y_guess
+    
+  if iter_count == max_iteration_count:
+    return Error("max iteration count reached")
+
+  return cur_y_guess
 ```
 
 ### Spot Price
@@ -135,3 +153,5 @@ Throughout
 ## Testing strategy
 
 ## Extensions
+
+* The astute observer may notice that the equation we are solving in $\text{solve_cfmm}$ is actually a cubic polynomial in $y$, with an always-positive derivatives. We should then be able to use newton's root finding algorithm to solve for the solution with quadratic convergence. We do not pursue this today, due to other engineering tradeoffs, and insufficient analysis being done.
