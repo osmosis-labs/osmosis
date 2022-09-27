@@ -46,23 +46,8 @@ We wish to have a simpler CFMM function to work with in these cases.
 Due to the CFMM equation $f$ being a symmetric function, we can wlog reorder the arguments to the function. Thus we put the assets of relevance at the beginning of the function. So if two assets $x, y$, we write: $f(x,y, a_3, ... a_n) = xy * a_3 * ... a_n (x^2 + y^2 + a_3^2 + ... + a_n^2)$.
 
 We then take a more convenient expression to work with, via variable substition.
-$$ \begin{equation}
-    v =
-    \begin{cases}
-      1, & \text{if}\ n=2 \\
-      \prod_{i=3}^n a_i, & \text{otherwise}
-    \end{cases}
-  \end{equation} \newline 
-  
-  \begin{equation}
-    w =
-    \begin{cases}
-      0, & \text{if}\ n=2 \\
-      \sum_{i=3}^n a_i^2, & \text{otherwise}
-    \end{cases}
-  \end{equation} \newline
-  \text{then } g(x,y,v,w) = xyv(x^2 + y^2 + w) = f(x,y, a_3, ... a_n) 
-$$
+
+$$ \begin{equation} v = \begin{cases} 1, & \text{if}\ n=2 \\ \prod_{i=3}^n a_i, & \text{otherwise} \end{cases} \end{equation} \newline \begin{equation} w = \begin{cases} 0, & \text{if}\ n=2 \\ \sum_{i=3}^n a_i^2, & \text{otherwise} \end{cases} \end{equation} \newline \text{then } g(x,y,v,w) = xyv(x^2 + y^2 + w) = f(x,y, a_3, ... a_n) $$
 
 As a corollary, notice that $g(x,y,v,w) = v * g(x,y,1,w)$, which will be useful when we have to compare before and after quantities. We will use $h(x,y,w) := g(x,y,1,w)$ as short-hand for this.
 
