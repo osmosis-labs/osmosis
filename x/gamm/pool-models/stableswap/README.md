@@ -47,7 +47,7 @@ Due to the CFMM equation $f$ being a symmetric function, we can wlog reorder the
 
 We then take a more convenient expression to work with, via variable substition.
 
-```math
+$$
 \begin{equation}
     v =
     \begin{cases}
@@ -64,7 +64,7 @@ We then take a more convenient expression to work with, via variable substition.
     \end{cases}
   \end{equation} \newline
   \text{then } g(x,y,v,w) = xyv(x^2 + y^2 + w) = f(x,y, a_3, ... a_n) 
-```
+$$
 
 As a corollary, notice that $g(x,y,v,w) = v * g(x,y,1,w)$, which will be useful when we have to compare before and after quantities. We will use $h(x,y,w) := g(x,y,1,w)$ as short-hand for this.
 
