@@ -47,16 +47,9 @@ Due to the CFMM equation $f$ being a symmetric function, we can wlog reorder the
 
 We then take a more convenient expression to work with, via variable substition.
 
-$$
-\begin{equation}
-    v =
-    \begin{cases}
-      1, & \text{if}\ n=2 \\
-      \prod_{i=3}^n a_i, & \text{otherwise}
-    \end{cases}
-  \end{equation} \newline 
+$$\begin{equation} v = \begin{cases} 1, & \text{if}\ n=2 \\ \prod_{i=3}^n a_i, & \text{otherwise} \end{cases}\end{equation}$$
   
-  \begin{equation}
+$$\begin{equation}
     w =
     \begin{cases}
       0, & \text{if}\ n=2 \\
