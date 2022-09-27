@@ -1,10 +1,7 @@
 package keeper_test
 
 import (
-	"testing"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
@@ -15,10 +12,6 @@ const (
 	// Max positive int64.
 	int64Max = int64(^uint64(0) >> 1)
 )
-
-func TestMsgServerTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
-}
 
 // TestSwapExactAmountIn_Events tests that events are correctly emitted
 // when calling SwapExactAmountIn.
