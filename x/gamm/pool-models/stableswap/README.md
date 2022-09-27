@@ -25,7 +25,7 @@ The AMM pool interfaces requires implementing the following stateful methods:
 	SwapOutAmtGivenIn(tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error)
 	SwapInAmtGivenOut(tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error)
 
-    SpotPrice(baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error)
+  SpotPrice(baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error)
 
 	JoinPool(tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error)
 	JoinPoolNoSwap(tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error)
@@ -96,9 +96,13 @@ Instead there is a more generic way to compute these, which we detail in the nex
 Instead of using the direct solution for $\text{solve\_cfmm}(x, w, k')$, instead notice that $h(x, y, w)$ is an increasing function in $y$. 
 So we can simply binary search for $y$ such that $h(x, y, w) = k'$, and we are guaranteed convergence within some error bound. 
 
-In order to do a binary search, we need bounds on $y$. The lowest lowerbound is $0$, and the largest upperbound is $\infty$. The maximal upperbound is obviously unworkable, and in general binary searching around wide ranges is unfortunate, as we expect most trades to be centered around $y_0$. This would suggest that we should do something smarter to iteratively approach the right value for the upperbound at least. Notice that $h$ is super-linearly related in $y$, and at most cubically related to $y$. This means that $ \forall c \in \R^+, c * h(x,y,w) < h(x,c*y,w) < c^3 * h(x,y,w)$. We can use this fact to get a pretty-good initial upperbound guess for $y$. In the lowerbound case, we leave it as lower-bounded by $0$.
-
-The linear estimate for upperbound is used. For lower bounds, we would need to take a cubic root. We avoid this, and just use $lowerbound = 0$.
+In order to do a binary search, we need bounds on $y$. 
+The lowest lowerbound is $0$, and the largest upperbound is $\infty$. 
+The maximal upperbound is obviously unworkable, and in general binary searching around wide ranges is unfortunate, as we expect most trades to be centered around $y_0$. 
+This would suggest that we should do something smarter to iteratively approach the right value for the upperbound at least. 
+Notice that $h$ is super-linearly related in $y$, and at most cubically related to $y$. 
+This means that $ \forall c \in \R^+, c * h(x,y,w) < h(x,c*y,w) < c^3 * h(x,y,w)$. 
+We can use this fact to get a pretty-good initial upperbound guess for $y$ using the linear estimate. In the lowerbound case, we leave it as lower-bounded by $0$, otherwise we would need to take a cubed root to get a better estimate.
 
 ```python
 def iterative_search(x_f, y_0, w, k, err_tolerance):
@@ -136,13 +140,24 @@ def binary_search(lowerbound, upperbound, approximation_fn, target, max_iteratio
   return cur_y_guess
 ```
 
+#### Using this in swap methods
+
+Detail how we take the previously discussed solver, and build SwapExactAmountIn and SwapExactAmountOut.
+
 ### Spot Price
 
 ### LP equations
 
-#### Single-asset
+We divide this section into two parts, `JoinPoolNoSwap & ExitPool`, and `JoinPool`.
 
-#### Non-perfect multi-ratio
+#### JoinPoolNoSwap and ExitPool
+
+Both of these methods can be implemented via generic AMM techniques.
+(Link to them or describe the idea)
+
+#### JoinPool
+
+The JoinPool API only supports JoinPoolNoSwap if 
 
 ### Scaling factor handling
 
