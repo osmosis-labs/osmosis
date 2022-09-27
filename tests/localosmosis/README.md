@@ -135,7 +135,7 @@ The command:
 
 3. Start LocalOsmosis:
 
-```
+```bash
 make localnet-state-export-start
 ```
 
