@@ -205,7 +205,7 @@ proto-format:
 		find ./ -not -path "./third_party/*" -name "*.proto" -exec clang-format -i {} \; ; fi
 
 proto-image-build:
-	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1docker build -t $(protoImageName) -f ./proto/Dockerfile ./proto
+	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker build -t $(protoImageName) -f ./proto/Dockerfile ./proto
 
 proto-image-push:
 	docker push $(protoImageName)
@@ -312,14 +312,14 @@ build-e2e-script:
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./tests/e2e/initialization/$(E2E_SCRIPT_NAME)
 
 docker-build-debug:
-	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1docker build -t osmosis:${COMMIT} --build-arg BASE_IMG_TAG=debug -f Dockerfile .
-	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1docker tag osmosis:${COMMIT} osmosis:debug
+	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker build -t osmosis:${COMMIT} --build-arg BASE_IMG_TAG=debug -f Dockerfile .
+	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker tag osmosis:${COMMIT} osmosis:debug
 
 docker-build-e2e-init-chain:
-	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1docker build -t osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain -f tests/e2e/initialization/init.Dockerfile .
+	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker build -t osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain -f tests/e2e/initialization/init.Dockerfile .
 
 docker-build-e2e-init-node:
-	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1docker build -t osmosis-e2e-init-node:debug --build-arg E2E_SCRIPT_NAME=node -f tests/e2e/initialization/init.Dockerfile .
+	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker build -t osmosis-e2e-init-node:debug --build-arg E2E_SCRIPT_NAME=node -f tests/e2e/initialization/init.Dockerfile .
 
 e2e-setup: e2e-check-image-sha e2e-remove-resources
 	@echo Finished e2e environment setup, ready to start the test
@@ -361,7 +361,7 @@ localnet-keys:
 	. tests/localosmosis/scripts/add_keys.sh
 
 localnet-build:
-	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1docker-compose -f tests/localosmosis/docker-compose.yml build
+	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose -f tests/localosmosis/docker-compose.yml build
 
 localnet-start:
 	@docker-compose -f tests/localosmosis/docker-compose.yml up
@@ -376,7 +376,7 @@ localnet-remove: localnet-stop
 	rm -rf $(PWD)/tests/localosmosis/.osmosisd
 
 localnet-build-state-export:
-	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1docker-compose -f tests/localosmosis/state_export/docker-compose.yml build
+	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose -f tests/localosmosis/state_export/docker-compose.yml build
 
 localnet-start-state-export:
 	@docker-compose -f tests/localosmosis/state_export/docker-compose.yml up
