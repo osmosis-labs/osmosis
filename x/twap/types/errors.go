@@ -71,5 +71,5 @@ type InvalidRecordTimeError struct {
 }
 
 func (e InvalidRecordTimeError) Error() string {
-	return fmt.Sprintf("Can not update the record, the context time must be greater than record time. Record: block %d at %s\n Actual: block %d at %s\n", e.RecordBlockHeight, e.RecordTime, e.ActualBlockHeight, e.ActualTime)
+	return fmt.Sprintf("failed to update the record, the context time must be greater than record time; record: block %d at %s, actual: block %d at %s", e.RecordBlockHeight, e.RecordTime, e.ActualBlockHeight, e.ActualTime)
 }
