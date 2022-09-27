@@ -12,8 +12,13 @@ import (
 )
 
 var (
-	cubeRootTwo, _   = osmomath.NewBigDec(2).ApproxRoot(3)
-	threeCubeRootTwo = cubeRootTwo.MulInt64(3)
+	cubeRootTwo, _        = osmomath.NewBigDec(2).ApproxRoot(3)
+	threeRootTwo, _       = osmomath.NewBigDec(3).ApproxRoot(2)
+	cubeRootThree, _      = osmomath.NewBigDec(3).ApproxRoot(3)
+	threeCubeRootTwo      = cubeRootTwo.MulInt64(3)
+	cubeRootSixSquared, _ = (osmomath.NewBigDec(6).MulInt64(6)).ApproxRoot(3)
+	twoCubeRootThree      = cubeRootThree.MulInt64(2)
+	twentySevenRootTwo, _ = osmomath.NewBigDec(27).ApproxRoot(2)
 )
 
 // solidly CFMM is xy(x^2 + y^2) = k
@@ -62,6 +67,84 @@ func solveCfmm(xReserve, yReserve osmomath.BigDec, remReserves []osmomath.BigDec
 		wSumSquares = wSumSquares.Add(assetReserve.Mul(assetReserve))
 	}
 	return solveCFMMBinarySearchMulti(cfmmConstantMulti)(xReserve, yReserve, uReserve, wSumSquares, yIn)
+}
+
+// solidly CFMM is xy(x^2 + y^2) = k
+// So we want to solve for a given addition of `b` units of y into the pool,
+// how many units `a` of x do we get out.
+// Let y' = y + b
+// we solve k = (x'y')(x'^2 + y^2) for x', using the following equation: https://www.wolframalpha.com/input?i2d=true&i=solve+for+y%5C%2844%29+x*y*%5C%2840%29Power%5Bx%2C2%5D%2BPower%5By%2C2%5D%5C%2841%29%3Dk
+// which we simplify to be the following: https://www.desmos.com/calculator/bx5m5wpind
+// Then we use that to derive the change in x as x_out = x' - x
+//
+// Since original reserves, y' and k are known and remain constant throughout the calculation,
+// deriving x' and then finding x_out is equivalent to finding x_out directly.
+func solveCfmmDirect(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
+	if !xReserve.IsPositive() || !yReserve.IsPositive() || !yIn.IsPositive() {
+		panic("invalid input: reserves and input must be positive")
+	}
+
+	if yIn.GT(yReserve) {
+		panic("invalid input: cannot trade greater than reserve amount into CFMM")
+	}
+
+	// find k using existing reserves
+	k := cfmmConstant(xReserve, yReserve)
+
+	// find new yReserve after join
+	y_new := yReserve.Add(yIn)
+
+	// store powers to simplify calculations
+	y2 := y_new.Mul(y_new)
+	y3 := y2.Mul(y_new)
+	y4 := y3.Mul(y_new)
+
+	// We then solve for new xReserve using new yReserve and old k using a solver derived from xy(x^2 + y^2) = k
+	// Full equation: x' = [((2^(1/3)) * ([y^2 * 9k) * ((sqrt(1 + ((2 / sqrt(27)) * (y^4 / k))^2)) + 1)]^(1/3)) / y')
+	// 													 	- (2 * (3^(1/3)) * y^3 / ([y^2 * 9k) * ((sqrt(1 + ((2 / sqrt(27)) * (y^4 / k))^2)) + 1)]^(1/3)))
+	// 						] / (6^(2/3))
+	//
+	// To simplify, we make the following abstractions:
+	// 1. scaled_y4_quo_k = (2 / sqrt(27)) * (y^4 / k)
+	// 2. sqrt_term = sqrt(1 + scaled_y4_quo_k2)
+	// 3. common_factor = [y^2 * 9k) * (sqrt_term + 1)]^(1/3)
+	// 4. term1 = (2^(1/3)) * common_factor / y'
+	// 5. term2 = 2 * (3^(1/3)) * y^3 / common_factor
+	//
+	// With these, the final equation becomes: x' = (term1 - term2) / (6^(2/3))
+
+	// let scaled_y4_quo_k = (2 / sqrt(27)) * (y^4 / k)
+	scaled_y4_quo_k := (y4.Quo(k)).Mul(osmomath.NewBigDec(2).Quo(twentySevenRootTwo))
+	scaled_y4_quo_k2 := scaled_y4_quo_k.Mul(scaled_y4_quo_k)
+
+	// let sqrt_term = sqrt(1 + scaled_y4_quo_k2)
+	sqrt_term, err := (osmomath.OneDec().Add(scaled_y4_quo_k2)).ApproxRoot(2)
+	if err != nil {
+		panic(err)
+	}
+
+	// let common_factor = [y^2 * 9k) * (sqrt_term + 1)]^(1/3)
+	common_factor, err := (y2.MulInt64(9).Mul(k).Mul((sqrt_term.Add(osmomath.OneDec())))).ApproxRoot(3)
+	if err != nil {
+		panic(err)
+	}
+
+	// term1 = (2^(1/3)) * common_factor / y'
+	term1 := cubeRootTwo.Mul(common_factor).Quo(y_new)
+	// term2 = 2 * (3^(1/3)) * y^3 / common_factor
+	term2 := twoCubeRootThree.Mul(y3).Quo(common_factor)
+
+	// finally, x' = (term1 - term2) / (6^(2/3))
+	x_new := (term1.Sub(term2)).Quo(cubeRootSixSquared)
+
+	// find amount of x to output using initial and final xReserve values
+	xOut := xReserve.Sub(x_new)
+
+	if xOut.GTE(xReserve) {
+		panic("invalid output: greater than full pool reserves")
+	}
+
+	return xOut
 }
 
 func approxDecEqual(a, b, tol osmomath.BigDec) bool {
