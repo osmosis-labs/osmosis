@@ -4,9 +4,11 @@ VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
+GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
 DOCKER := $(shell which docker)
 BUILDDIR ?= $(CURDIR)/build
 E2E_UPGRADE_VERSION := "v12"
+
 
 export GO111MODULE = on
 
@@ -103,7 +105,7 @@ build-reproducible-amd64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx create --name osmobuilder || true
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
-		--build-arg GO_VERSION=$(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2) \
+		--build-arg GO_VERSION=$(GO_VERSION) \
 		--platform linux/amd64 \
 		-t osmosis-amd64 \
 		--load \
@@ -117,7 +119,7 @@ build-reproducible-arm64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx create --name osmobuilder || true
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
-		--build-arg GO_VERSION=$(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2) \
+		--build-arg GO_VERSION=$(GO_VERSION) \
 		--platform linux/arm64 \
 		-t osmosis-arm64 \
 		--load \
@@ -309,6 +311,44 @@ e2e-remove-resources:
 	tests/e2e/scripts/run/remove_stale_resources.sh
 
 .PHONY: test-mutation
+
+###############################################################################
+###                                Docker                                  ###
+###############################################################################
+
+RUNNER_BASE_IMAGE_DISTROLESS := gcr.io/distroless/static
+RUNNER_BASE_IMAGE_ALPINE := alpine:3.16
+RUNNER_BASE_IMAGE_NONROOT := gcr.io/distroless/static:nonroot
+
+docker-build:
+	@DOCKER_BUILDKIT=1 docker build \
+		-t osmosis:local \
+		-t osmosis:local-distroless \
+		--build-arg GO_VERSION=$(GO_VERSION) \
+		--build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_DISTROLESS) \
+		--build-arg GIT_VERSION=$(VERSION) \
+		--build-arg GIT_COMMIT=$(COMMIT) \
+		-f Dockerfile .
+
+docker-build-distroless: docker-build
+
+docker-build-alpine:
+	@DOCKER_BUILDKIT=1 docker build \
+		-t osmosis:local-alpine \
+		--build-arg GO_VERSION=$(GO_VERSION) \
+		--build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_ALPINE) \
+		--build-arg GIT_VERSION=$(VERSION) \
+		--build-arg GIT_COMMIT=$(COMMIT) \
+		-f Dockerfile .
+
+docker-build-nonroot:
+	@DOCKER_BUILDKIT=1 docker build \
+		-t osmosis:local-nonroot \
+		--build-arg GO_VERSION=$(GO_VERSION) \
+		--build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_NONROOT) \
+		--build-arg GIT_VERSION=$(VERSION) \
+		--build-arg GIT_COMMIT=$(COMMIT) \
+		-f Dockerfile .
 
 ###############################################################################
 ###                                Linting                                  ###
