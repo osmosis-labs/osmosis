@@ -180,6 +180,13 @@ Throughout
 
 ## Testing strategy
 
+* Simulator integrations:
+  * Pool creation
+  * JoinPool + ExitPool gives a token amount out that is lte input
+  * SingleTokenIn + ExitPool + Swap to base token gives a token amount that is less than input
+* Fuzz test binary search algorithm, to see that it still works correctly across wide scale ranges
+* 
+
 ## Extensions
 
 * The astute observer may notice that the equation we are solving in $\text{solve cfmm}$ is actually a cubic polynomial in $y$, with an always-positive derivative. We should then be able to use newton's root finding algorithm to solve for the solution with quadratic convergence. We do not pursue this today, due to other engineering tradeoffs, and insufficient analysis being done.
