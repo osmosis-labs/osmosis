@@ -59,7 +59,6 @@ func solveCfmm(xReserve, yReserve osmomath.BigDec, remReserves []osmomath.BigDec
 	if len(remReserves) == 0 {
 		return solveCFMMBinarySearch(cfmmConstant)(xReserve, yReserve, yIn)
 	}
-
 	uReserve := osmomath.OneDec()
 	wSumSquares := osmomath.ZeroDec()
 	for _, assetReserve := range remReserves {

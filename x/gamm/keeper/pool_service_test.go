@@ -877,37 +877,3 @@ func (suite *KeeperTestSuite) TestGetPoolDenom() {
 		})
 	}
 }
-
-// func (suite *KeeperTestSuite) TestSetStableSwapScalingFactors() {
-// 	stableSwapPoolParams := stableswap.PoolParams{
-// 		SwapFee: defaultSwapFee,
-// 		ExitFee: defaultExitFee,
-// 	}
-
-// 	testPoolAsset := sdk.Coins{
-// 		sdk.NewCoin("foo", sdk.NewInt(10000)),
-// 		sdk.NewCoin("bar", sdk.NewInt(10000)),
-// 	}
-
-// 	suite.FundAcc(testAccount, defaultAcctFunds)
-
-// 	testScalingFactors := []uint64{1, 1}
-
-// 	msg := stableswap.NewMsgCreateStableswapPool(
-// 		testAccount, stableSwapPoolParams, testPoolAsset, defaultFutureGovernor)
-// 	poolID, err := gammKeeper.CreatePool(suite.Ctx, msg)
-// 	suite.Require().NoError(err)
-
-// 	err = gammKeeper.SetStableSwapScalingFactors(suite.Ctx, testScalingFactors, poolID, "")
-// 	suite.Require().NoError(err)
-
-// 	poolI, err := gammKeeper.GetPoolAndPoke(suite.Ctx, poolID)
-// 	suite.Require().NoError(err)
-
-// 	poolScalingFactors := poolI.(*stableswap.Pool).GetScalingFactors()
-
-// 	suite.Require().Equal(
-// 		poolScalingFactors,
-// 		testScalingFactors,
-// 	)
-// }
