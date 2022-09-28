@@ -11,8 +11,9 @@ services:
         RUNNER_IMAGE: alpine:3.16
         GO_VERSION: 1.18
     volumes:
-      - ../e2e/scripts/nativeDenomPool.json:/osmosis/nativeDenomPool.json
-      - ../e2e/scripts/nativeDenomThreeAssetPool.json:/osmosis/nativeDenomThreeAssetPool.json
+      - ./scripts/nativeDenomPoolA.json:/osmosis/nativeDenomPoolA.json
+      - ./scripts/nativeDenomPoolB.json:/osmosis/nativeDenomPoolB.json
+      - ./scripts/nativeDenomThreeAssetPool.json:/osmosis/nativeDenomThreeAssetPool.json
       - ./scripts/setup.sh:/osmosis/setup.sh
       - $HOME/.osmosisd/:/osmosis/.osmosisd/
     entrypoint:
