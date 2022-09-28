@@ -30,12 +30,12 @@ the use of AMMs within the Cosmos ecosystem beyond traditional token
 swap-type use cases. Bonding curves, while have found its primary use
 case in decentralized exchange mechanisms, its potential use case can be
 further extended through the customizability that Osmosis offers.
-Through the customizability offered by Osmosis such custom-curve AMMs,
+Through the customizability offered by Osmosis such as custom-curve AMMs,
 dynamic adjustments of swap fees, multi-token liquidity pools--the AMM
 can offer decentralized formation of token fundraisers, interchain
 staking, options market, and more for the Cosmos ecosystem.
 
-Whereas most Cosmos zones have focused the ir incentive scheme on the
+Whereas most Cosmos zones have focused their incentive scheme on the
 delegators, Osmosis attempts to align the interests of multiple
 stakeholders of the ecosystem such as LPs, DAO members, as well as
 delegators. One mechanism that is introduced is how staked liquidity
