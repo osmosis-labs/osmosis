@@ -15,4 +15,4 @@ jobs:
         with: #Require one of the following labels
           mode: exactly
           count: 1
-          labels: "V:State_Machine/breaking, V:State_Machine/compatible/no_backport, V:State_Machine/compatible/backport"
+          labels: "V:state/breaking, V:state/compatible/no_backport, V:state/compatible/backport"
