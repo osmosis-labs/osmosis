@@ -15,7 +15,16 @@ It is generalized to the multi-asset setting as $f(a_1, ..., a_n) = a_1 * ... * 
 
 ## Pool configuration
 
-{include details of scaling factors and how they imply price peg, scaling factor governors}
+One key concept, is that the pool has a native concept of 
+
+### Scaling factor handling
+
+An important concept thats up to now, not been mentioned is how do we set the expected price ratio.
+In the choice of curve section, we see that its the case that when `x_reserves ~= y_reserves`, that spot price is very close to `1`. However, there are a couple issues with just this in practice:
+
+* Precision of pegged coins may differ. e.g. 1 USDC = 10^18 base units, whereas 1 
+
+
 
 ## Algorithm details
 
@@ -70,13 +79,13 @@ As a corollary, notice that $g(x,y,v,w) = v * g(x,y,1,w)$, which will be useful 
 
 ### Swaps
 
-First notice that for all swaps, we only deal with two assets at a time, as swaps are given one asset in, and one asset out. For exposition, lets call the input asset $x$, the output asset $y$, and we can compute $v$ and $w$ given the other assets, whose reserves are untouched.
+The question we need to answer for a swap is "suppose I want to swap $a$ units of $x$, how many units $b$ of $y$ would I get out".
 
-First we note the direct way of solving this, its limitation, and then the binary search equations.
+Since we only deal with two assets at a time, we can then work with our prior definition of $g$. Let the input asset's reserves be $x$, the output asset's reserves be $y$, and we compute $v$ and $w$ given the other asset reserves, whose reserves are untouched throughout the swap.
+
+First we note the direct way of solving this, its limitation, and then an iterative approximation approach that we implement.
 
 #### Direct swap solution
-
-The question we need to answer for a swap is "suppose I want to swap $a$ units of $x$, and then want to find how many units $b$ of $y$ that we get out".
 
 The method to compute this under 0 swap fee is implied by the CFMM equation itself, since the constant refers to:
 $g(x_0, y_0, v, w) = k = g(x_0 + a, y_0 - b, v, w)$. As $k$ is linearly related to $v$, and $v$ is unchanged throughout the swap, we can simplify the equation to be reasoning about $k' = \frac{k}{v}$ as the constant, and $h$ instead of $g$
@@ -172,10 +181,6 @@ Both of these methods can be implemented via generic AMM techniques.
 
 The JoinPool API only supports JoinPoolNoSwap if 
 
-### Scaling factor handling
-
-Throughout
-
 ## Code structure
 
 ## Testing strategy
@@ -185,7 +190,7 @@ Throughout
   * JoinPool + ExitPool gives a token amount out that is lte input
   * SingleTokenIn + ExitPool + Swap to base token gives a token amount that is less than input
 * Fuzz test binary search algorithm, to see that it still works correctly across wide scale ranges
-* 
+* Fuzz test approximate equality of iterative approximation swap algorithm and direct equation swap.
 
 ## Extensions
 
