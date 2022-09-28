@@ -11,10 +11,14 @@ services:
         RUNNER_IMAGE: alpine:3.16
         GO_VERSION: 1.18
     volumes:
+      - ../e2e/scripts/nativeDenomPool.json:/osmosis/nativeDenomPool.json
+      - ../e2e/scripts/nativeDenomThreeAssetPool.json:/osmosis/nativeDenomThreeAssetPool.json
       - ./scripts/setup.sh:/osmosis/setup.sh
-      - ./.osmosisd/:/osmosis/.osmosisd/
+      - $HOME/osmosisd/:/osmosis/.osmosisd/
     entrypoint:
       - /osmosis/setup.sh
+    command:
+      - $STATE
     ports:
       - 26657:26657
       - 1317:1317

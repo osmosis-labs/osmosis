@@ -200,6 +200,32 @@ func (s *decimalTestSuite) TestBigDecFromSdkDec() {
 	}
 }
 
+func (s *decimalTestSuite) TestBigDecFromSdkDecSlice() {
+	tests := []struct {
+		d    []sdk.Dec
+		want []BigDec
+		expPanic bool
+	}{
+		{[]sdk.Dec{sdk.MustNewDecFromStr("0.000000000000000000")}, []BigDec{NewBigDec(0)}, false},
+		{[]sdk.Dec{sdk.MustNewDecFromStr("0.000000000000000000"), sdk.MustNewDecFromStr("1.000000000000000000")}, []BigDec{NewBigDec(0), NewBigDec(1)}, false},
+		{[]sdk.Dec{sdk.MustNewDecFromStr("1.000000000000000000"), sdk.MustNewDecFromStr("0.000000000000000000"), sdk.MustNewDecFromStr("0.000123400000000000")}, []BigDec{NewBigDec(1), NewBigDec(0), NewDecWithPrec(12340, 8)}, false},
+		{[]sdk.Dec{sdk.MustNewDecFromStr("10.000000000000000000")}, []BigDec{NewBigDec(10)}, false},
+		{[]sdk.Dec{sdk.MustNewDecFromStr("12340.000000000000000000")}, []BigDec{NewBigDec(12340)}, false},
+		{[]sdk.Dec{sdk.MustNewDecFromStr("1.234000000000000000"), sdk.MustNewDecFromStr("12340.000000000000000000")}, []BigDec{NewDecWithPrec(12340, 4), NewBigDec(12340)}, false},
+		{[]sdk.Dec{sdk.MustNewDecFromStr("0.123400000000000000"), sdk.MustNewDecFromStr("12340.000000000000000000")}, []BigDec{NewDecWithPrec(12340, 5), NewBigDec(12340)}, false},
+		{[]sdk.Dec{sdk.MustNewDecFromStr("0.000123400000000000"), sdk.MustNewDecFromStr("10.090090090090090090")}, []BigDec{NewDecWithPrec(12340, 8), NewDecWithPrec(1009009009009009009, 17)}, false},
+		{[]sdk.Dec{sdk.MustNewDecFromStr("10.090090090090090090"), sdk.MustNewDecFromStr("10.090090090090090090")}, []BigDec{NewDecWithPrec(1009009009009009009, 17), NewDecWithPrec(1009009009009009009, 17)}, false},
+	}
+	for tcIndex, tc := range tests {
+		if tc.expPanic {
+			s.Require().Panics(func() { BigDecFromSDKDecSlice(tc.d) })
+		} else {
+			value := BigDecFromSDKDecSlice(tc.d)
+			s.Require().Equal(tc.want, value, "bad BigDecFromSdkDec(), index: %v", tcIndex)
+		}
+	}
+}
+
 func (s *decimalTestSuite) TestEqualities() {
 	tests := []struct {
 		d1, d2     BigDec
