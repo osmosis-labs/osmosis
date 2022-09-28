@@ -5,7 +5,7 @@
 Validator-Set preference is a new module which gives users and contracts a 
 better UX for staking to a set of validators. For example: a one click button
 that delegates to multiple validators. Then the user can set (or realistically a frontend provides) 
-a list of recommended defaults (Ex: governors, wosmongton, chain/stack contributors etc).
+a list of recommended defaults (Ex: active governors, relayers, core stack contributors etc).
 Currently this can be done on-chain with frontends, but having a preference list stored locally 
 eases frontend code burden. 
 
@@ -18,12 +18,12 @@ How does this module work?
   - Unstake the existing tokens (run the same unbond logic as cosmos-sdk staking).
   - Update the validator distribution weights.
   - Stake the tokens based on the new weights.
+  - Redelegate their current delegation to the currently configured set.
 - Give users a single message to delegate {X} tokens, according to their validator-set preference distribution.
 - Give users a single message to undelegate {X} tokens, according to their validator-set preference distribution.
 - Give users a single message to claim rewards from everyone on their preference list.
-- If a user does not have a validator-set preference list set and has is attempting to delegate do the following; 
-  - Make their preference list default to their current staking distribution.
-- If a user has no preference list and no staking, then return error for messages.
+- If the delegator has not set a validator-set preference list then the validator set, then it defaults to their current validator set.
+- If a user has no preference list and has not staked, then these messages / queries return errors.
 
 ## Calculations
 
