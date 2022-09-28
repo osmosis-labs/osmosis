@@ -1,4 +1,5 @@
 # Default state for all rules
+<<<<<<< HEAD
 default: true
 MD003: 
   # Heading style
@@ -12,3 +13,28 @@ MD013:
   code_blocks: false
 MD024: false
 MD037: false # breaks on latex
+=======
+default: false
+MD003:
+  # Heading style
+  style: 'atx'
+MD001: true
+MD018: true
+MD026: true
+MD034: true
+MD040: true
+MD042: true
+MD048: true
+MD051: true
+# MD004: false
+# # Can't disable MD007 :/
+# MD007: false
+# MD009: false
+# MD010:
+#   code_blocks: false
+# MD013: false
+# MD024: false
+# MD029: false
+# MD033: false
+# MD037: false # breaks on latex
+>>>>>>> 309cc9a5 (Change markdownlinter to default rules to false, and we have to add more in (#2863))
