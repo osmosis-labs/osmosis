@@ -1,34 +1,79 @@
 # LocalOsmosis
 
-## Use LocalOsmosis to Test Local Changes
+LocalOsmosis is a complete Osmosis testnet containerized with Docker and orchestrated with a simple docker-compose file. LocalOsmosis comes preconfigured with opinionated, sensible defaults for a standard testing environment.
 
-You can now quickly test your changes to Osmosis with just a few commands:
+LocalOsmosis comes in two flavors:
+
+1. No initial state: brand new testnet with no initial state. 
+2. With mainnet state: creates a testnet from a mainnet state export
+
+## Prerequisites
+
+Ensure you have docker and docker-compose installed:
+
+```sh
+# Docker
+sudo apt-get remove docker docker-engine docker.io
+sudo apt-get update
+sudo apt install docker.io -y
+
+# Docker compose
+sudo apt install docker-compose -y
+```
+
+## 1. LocalOsmosis - No Initial State
+
+The following commands must be executed from the root folder of the Osmosis repository.
 
 1. Make any change to the osmosis code that you want to test
 
-2. From the Osmosis home folder, run `make localnet-build`
+2. Initialize LocalOsmosis:
 
-   - This compiles all your changes to docker image called local:osmosis (~60 seconds)
+```bash
+make localnet-init
+```
 
-3. Once complete, run `make localnet-start`
+The command:
 
-   - You will now be running a local network with your changes!
-   - The files in `tests/e2e/localosmosis/.osmosisd` that are produced
-     by this command can only be removed by running `make localnet-remove`
-   - That will reset the chain to genesis
+- Builds a local docker image with the latest changes
+- Cleans the `$HOME/.osmosisd` folder
 
-4. To add your validator wallet and 9 other preloaded wallets automatically, run `make localnet-keys`
+3. Start LocalOsmosis:
 
-   - These keys are added to your --keyring-backend test
-   - If the keys are already on your keyring, you will get an "Error: aborted"
-   - Ensure you use the name of the account as listed in the table below, as well as ensure you append the `--keyring-backend test` to your txs
-     - Example: `osmosisd tx bank send lo-test2 osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks --keyring-backend test --chain-id localosmosis`
+```bash
+make localnet-start
+```
 
-5. To remove all block history and start from scratch, run `make localnet-remove`
+> Note
+>
+> You can also start LocalOsmosis in detach mode with:
+>
+> `make localnet-startd`
 
-6. To stop the chain but keep the state, run `make localnet-stop`
+4. (optional) Add your validator wallet and 9 other preloaded wallets automatically:
 
-## LocalOsmosis with Mainnet State
+```bash
+make localnet-keys
+```
+
+- These keys are added to your `--keyring-backend test`
+- If the keys are already on your keyring, you will get an `"Error: aborted"`
+- Ensure you use the name of the account as listed in the table below, as well as ensure you append the `--keyring-backend test` to your txs
+- Example: `osmosisd tx bank send lo-test2 osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks --keyring-backend test --chain-id LocalOsmosis`
+
+5. You can stop chain, keeping the state with
+
+```bash
+make localnet-stop
+```
+
+6. When you are done you can clean up the environment with:
+
+```bash
+make localnet-clean
+```
+
+## 2. LocalOsmosis - With Mainnet State
 
 Running LocalOsmosis with mainnet state is resource intensive and can take a bit of time.
 It is recommended to only use this method if you are testing a new feature that must be thoroughly tested before pushing to production.
@@ -38,6 +83,8 @@ if mainnet is on v8.0.0 and you try to do this on a v9.0.0 tag or on main, you w
 (yes, it is possible to create a state exported testnet on a upcoming release, but that is out of the scope of this tutorial)
 
 Additionally, this process requires 64GB of RAM. If you do not have 64GB of RAM, you will get an OOM error.
+
+### Create a mainnet state export
 
 1. Set up a node on mainnet (easiest to use the [get.osmosis.zone](https://get.osmosis.zone) tool). This will be the node you use to run the state exported testnet, so ensure it has at least 64GB of RAM.
 
@@ -67,35 +114,36 @@ osmosisd export 2> state_export.json
 
 After a while (~15 minutes), this will create a file called `state_export.json` which is a snapshot of the current mainnet state.
 
-5. Copy the `state_export.json` to the `localosmosis/state_export` folder within the osmosis repo
+### Use the state export in LocalOsmosis
+
+1. Copy the `state_export.json` to the `LocalOsmosis/state_export` folder within the osmosis repo
 
 ```sh
-cp $HOME/state_export.json $HOME/osmosis/tests/localosmosis/state_export/
+cp $HOME/state_export.json $HOME/osmosis/tests/LocalOsmosis/state_export/
 ```
 
-6. Ensure you have docker and docker-compose installed:
-
-```sh
-# Docker
-sudo apt-get remove docker docker-engine docker.io
-sudo apt-get update
-sudo apt install docker.io -y
-
-# Docker compose
-sudo apt install docker-compose -y
-```
-
-7. Build the `local:osmosis` docker image:
+2. Initialize LocalOsmosis:
 
 ```bash
-make localnet-build-state-export
+make localnet-state-export-init
 ```
 
-8. Run the `local:osmosis` docker image
+The command:
 
-```sh
-make localnet-start-state-export
+- Builds a local docker image with the latest changes
+- Cleans the `$HOME/.osmosisd` folder
+
+3. Start LocalOsmosis:
+
+```bash
+make localnet-state-export-start
 ```
+
+> Note
+>
+> You can also start LocalOsmosis in detach mode with:
+>
+> `make localnet-state-export-startd`
 
 When running this command for the first time, `local:osmosis` will:
 
@@ -127,17 +175,24 @@ osmosisd status
 osmosisd tx bank send wallet osmo1nyphwl8p5yx6fxzevjwqunsfqpcxukmtk8t60m 10000000uosmo --chain-id testing1 --keyring-backend test
 ```
 
-12. To stop the container and remove its data:
+12. You can stop chain, keeping the state with
 
-```sh
-make localnet-remove-state-export
+```bash
+make localnet-state-export-stop
+```
+
+13. When you are done you can clean up the environment with:
+
+```bash
+make localnet-state-export-clean
 ```
 
 Note: At some point, all the validators (except yours) will get jailed at the same block due to them being offline.
-When this happens, it may take a little bit of time to process. Once all validators are jailed, you will continue to hit blocks as you did before.
-If you are only running the validator for a short period of time (< 24 hours) you will not experience this.
 
-## Accounts
+When this happens, it may take a little bit of time to process. Once all validators are jailed, you will continue to hit blocks as you did before.
+If you are only running the validator for a short time (< 24 hours) you will not experience this.
+
+## LocalOsmosis Accounts
 
 LocalOsmosis is pre-configured with one validator and 9 accounts with ION and OSMO balances.
 
