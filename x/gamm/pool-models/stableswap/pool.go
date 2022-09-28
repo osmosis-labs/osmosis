@@ -29,7 +29,7 @@ func NewStableswapPool(poolId uint64, stableswapPoolParams PoolParams, initialLi
 		}
 	}
 
-	if err := validateScalingFactors(scalingFactors, len(initialLiquidity), false); err != nil {
+	if err := validateScalingFactors(scalingFactors, len(initialLiquidity)); err != nil {
 		return Pool{}, err
 	}
 
@@ -311,7 +311,7 @@ func (p *Pool) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uin
 		return types.ErrNotScalingFactorGovernor
 	}
 
-	if err := validateScalingFactors(scalingFactors, p.PoolLiquidity.Len(), false); err != nil {
+	if err := validateScalingFactors(scalingFactors, p.PoolLiquidity.Len()); err != nil {
 		return err
 	}
 
@@ -319,13 +319,15 @@ func (p *Pool) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uin
 	return nil
 }
 
-func validateScalingFactors(scalingFactors []uint64, numAssets int, allowZeroLength bool) error {
-	if allowZeroLength && len(scalingFactors) == 0 {
-		return nil
+// func validateScalingFactorController(scalingFactorController )
+
+func validateScalingFactors(scalingFactors []uint64, numAssets int) error {
+	if len(scalingFactors) != numAssets {
+		return types.ErrInvalidStableswapScalingFactors
 	}
 
 	for _, scalingFactor := range scalingFactors {
-		if scalingFactor == 0 || int64(scalingFactor) <= 0 || len(scalingFactors) != numAssets {
+		if scalingFactor == 0 || int64(scalingFactor) <= 0 {
 			return types.ErrInvalidStableswapScalingFactors
 		}
 	}
