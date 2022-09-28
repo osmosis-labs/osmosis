@@ -97,7 +97,7 @@ create_two_asset_pool () {
     substring='code: 0'
     COUNTER=0
     while [ $COUNTER -lt 15 ]; do
-        string=$(osmosisd tx gamm create-pool --pool-file=nativeDenomPool.json --from $MONIKER --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --yes  2>&1)
+        string=$(osmosisd tx gamm create-pool --pool-file=$1 --from $MONIKER --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --yes  2>&1)
         if [ "$string" != "${string%"$substring"*}" ]; then
             echo "create two asset pool: successful"
             break
@@ -137,7 +137,8 @@ osmosisd start --home $OSMOSIS_HOME &
 
 if [[ $STATE == 'true' ]]
 then
-    create_two_asset_pool
+    create_two_asset_pool "nativeDenomPoolA.json"
+    create_two_asset_pool "nativeDenomPoolB.json"
     create_three_asset_pool
 fi
 wait
