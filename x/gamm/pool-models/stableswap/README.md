@@ -51,8 +51,8 @@ Then we show how these are used to give all of the swqp equations. --->
 ### CFMM function
 
 Most operations we do only need to reason about two of the assets in a pool, and sometimes only one.
-We wish to have a simpler CFMM function to work with in these cases.
-Due to the CFMM equation $f$ being a symmetric function, we can wlog reorder the arguments to the function. Thus we put the assets of relevance at the beginning of the function. So if two assets $x, y$, we write: $f(x,y, a_3, ... a_n) = xy * a_3 * ... a_n (x^2 + y^2 + a_3^2 + ... + a_n^2)$.
+We wish to have a simpler CFMM function to work within these cases.
+Due to the CFMM equation $f$ being a symmetric function, we can without loss of generality reorder the arguments to the function. Thus we put the assets of relevance at the beginning of the function. So if two assets $x, y$, we write: $f(x,y, a_3, ... a_n) = xy * a_3 * ... a_n (x^2 + y^2 + a_3^2 + ... + a_n^2)$.
 
 We then take a more convenient expression to work with, via variable substition.
 
