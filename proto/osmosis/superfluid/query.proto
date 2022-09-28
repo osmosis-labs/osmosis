@@ -53,8 +53,10 @@ service Query {
         "/osmosis/superfluid/v1beta1/connected_intermediary_account/{lock_id}";
   }
 
-  // Returns the total amount of osmo superfluidly staked.
-  // Response is denominated in uosmo.
+  rpc TotalDelegationByValidatorForAsset(
+      QueryTotalDelegationByValidatorForAssetRequest)
+      returns (QueryTotalDelegationByValidatorForAssetResponse) {}
+
   rpc TotalSuperfluidDelegations(TotalSuperfluidDelegationsRequest)
       returns (TotalSuperfluidDelegationsResponse) {
     option (google.api.http).get =
@@ -153,6 +155,18 @@ message ConnectedIntermediaryAccountResponse {
   SuperfluidIntermediaryAccountInfo account = 1;
 }
 
+message QueryTotalDelegationByValidatorForAssetRequest { string denom = 1; }
+message QueryTotalDelegationByValidatorForAssetResponse {
+  repeated Delegations asset_response = 1;
+}
+
+message Delegations {
+  string val_addr = 1;
+  string amount_sfsd = 2
+      [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int" ];
+  string osmo_equivalent = 3
+      [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int" ];
+}
 message TotalSuperfluidDelegationsRequest {}
 
 message TotalSuperfluidDelegationsResponse {

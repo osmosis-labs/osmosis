@@ -16,6 +16,58 @@ func (suite *KeeperTestSuite) TestGRPCParams() {
 	suite.Require().True(res.Params.MinimumRiskFactor.Equal(types.DefaultParams().MinimumRiskFactor))
 }
 
+func (suite *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
+	suite.SetupTest()
+	ctx := suite.Ctx
+	querier := suite.querier
+	delegation_amount := int64(1000000)
+
+	var denom string
+
+	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
+	test_multiplier := sdk.NewDec(20)
+	denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{test_multiplier, test_multiplier})
+
+	superfluidDelegations := []superfluidDelegation{
+		{0, 0, 0, delegation_amount},
+		{0, 1, 1, delegation_amount},
+		{1, 0, 1, delegation_amount},
+		{1, 1, 0, delegation_amount},
+	}
+
+	suite.setupSuperfluidDelegations(valAddrs, superfluidDelegations, denoms)
+
+	for _, denom = range denoms {
+		req, err := querier.TotalDelegationByValidatorForAsset(sdk.WrapSDKContext(ctx), &types.QueryTotalDelegationByValidatorForAssetRequest{Denom: denom})
+
+		suite.Require().NoError(err)
+		suite.Require().Equal(len(valAddrs), len(req.AssetResponse))
+
+		for res_ind, res := range req.AssetResponse {
+			// check osmo equivalent is correct
+			actual_response_osmo := *req.AssetResponse[res_ind].OsmoEquivalent
+			needed_response_osmo := suite.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(ctx, denom, sdk.NewInt(test_multiplier.TruncateInt64()*delegation_amount+100)) // + 100 due to initial stake on validators account
+
+			suite.Require().Equal(actual_response_osmo, needed_response_osmo)
+
+			// check sfs'd asset amount correct
+			actual_response_asset := *req.AssetResponse[res_ind].AmountSfsd
+			needed_response_asset := sdk.NewInt(test_multiplier.TruncateInt64()*delegation_amount + 100) // + 100 due to initial stake on validators account
+			suite.Require().Equal(actual_response_asset, needed_response_asset)
+
+			// check validator addresses correct
+			actual_val := res.ValAddr
+			checks := 0
+			for _, val := range valAddrs {
+				if val.String() == actual_val {
+					checks++
+					break
+				}
+			}
+			suite.Require().True(checks == 1)
+		}
+	}
+}
 func (suite *KeeperTestSuite) TestGRPCSuperfluidAsset() {
 	suite.SetupTest()
 
