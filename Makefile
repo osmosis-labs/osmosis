@@ -364,7 +364,7 @@ localnet-build:
 	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose -f tests/localosmosis/docker-compose.yml build
 
 localnet-start:
-	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose -f tests/localosmosis/docker-compose.yml up
+	@docker-compose -f tests/localosmosis/docker-compose.yml up
 
 localnet-startd:
 	@DOCKER_BUILDKIT=1 docker-compose -f tests/localosmosis/docker-compose.yml up -d
