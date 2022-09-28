@@ -13,8 +13,10 @@ service Msg {
   rpc Mint(MsgMint) returns (MsgMintResponse);
   rpc Burn(MsgBurn) returns (MsgBurnResponse);
   rpc ChangeAdmin(MsgChangeAdmin) returns (MsgChangeAdminResponse);
-  rpc SetDenomMetadata(MsgSetDenomMetadata) returns (MsgSetDenomMetadataResponse);
-  rpc SetBeforeSendHook(MsgSetBeforeSendHook) returns (MsgSetBeforeSendHookResponse);
+  rpc SetDenomMetadata(MsgSetDenomMetadata)
+      returns (MsgSetDenomMetadataResponse);
+  rpc SetBeforeSendListener(MsgSetBeforeSendListener)
+      returns (MsgSetBeforeSendListenerResponse);
   rpc ForceTransfer(MsgForceTransfer) returns (MsgForceTransferResponse);
 }
 
@@ -50,7 +52,6 @@ message MsgMint {
   ];
   string mintToAddress = 3
       [ (gogoproto.moretags) = "yaml:\"mint_to_address\"" ];
-  
 }
 
 message MsgMintResponse {}
@@ -64,7 +65,7 @@ message MsgBurn {
     (gogoproto.nullable) = false
   ];
   string burnFromAddress = 3
-  [ (gogoproto.moretags) = "yaml:\"burn_from_address\"" ];
+      [ (gogoproto.moretags) = "yaml:\"burn_from_address\"" ];
 }
 
 message MsgBurnResponse {}
@@ -81,17 +82,18 @@ message MsgChangeAdmin {
 // MsgChangeAdmin message.
 message MsgChangeAdminResponse {}
 
-// MsgSetBeforeSendHook is the sdk.Msg type for allowing an admin account to assign a
-// CosmWasm contract to call with a BeforeSend hook
-message MsgSetBeforeSendHook {
+// MsgSetBeforeSendListener is the sdk.Msg type for allowing an admin account to
+// assign a CosmWasm contract to call with a BeforeSend hook
+message MsgSetBeforeSendListener {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
-  string cosmwasm_address = 3 [ (gogoproto.moretags) = "yaml:\"cosmwasm_address\"" ];
+  string cosmwasm_address = 3
+      [ (gogoproto.moretags) = "yaml:\"cosmwasm_address\"" ];
 }
 
-// MsgSetBeforeSendHookResponse defines the response structure for an executed
-// MsgSetBeforeSendHook message.
-message MsgSetBeforeSendHookResponse {}
+// MsgSetBeforeSendListenerResponse defines the response structure for an
+// executed MsgSetBeforeSendHook message.
+message MsgSetBeforeSendListenerResponse {}
 
 // message MsgForceTransfer {
 //   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
@@ -111,7 +113,10 @@ message MsgSetBeforeSendHookResponse {}
 // the denom's bank metadata
 message MsgSetDenomMetadata {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  cosmos.bank.v1beta1.Metadata metadata = 2 [ (gogoproto.moretags) = "yaml:\"metadata\"", (gogoproto.nullable)   = false ];
+  cosmos.bank.v1beta1.Metadata metadata = 2 [
+    (gogoproto.moretags) = "yaml:\"metadata\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // MsgSetDenomMetadataResponse defines the response structure for an executed

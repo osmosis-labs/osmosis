@@ -33,12 +33,12 @@ service Query {
         "/osmosis/tokenfactory/v1beta1/denoms_from_creator/{creator}";
   }
 
-    // DenomsFromCreator defines a gRPC query method for fetching all
+  // DenomsFromCreator defines a gRPC query method for fetching all
   // denominations created by a specific admin/creator.
   rpc DenomBeforeSendHook(QueryDenomBeforeSendHookRequest)
       returns (QueryDenomBeforeSendHookResponse) {
     option (google.api.http).get =
-    "/osmosis/tokenfactory/v1beta1/denoms/{denom}/before_send_hook";
+        "/osmosis/tokenfactory/v1beta1/denoms/{denom}/before_send_hook";
   }
 }
 
@@ -87,6 +87,6 @@ message QueryDenomBeforeSendHookRequest {
 // QueryDenomBeforeSendHookResponse defines the response structure for the
 // DenomBeforeSendHook gRPC query.
 message QueryDenomBeforeSendHookResponse {
-  string cosmwasm_address = 1 [
-    (gogoproto.moretags) = "yaml:\"cosmwasm_address\"" ];
+  string cosmwasm_address = 1
+      [ (gogoproto.moretags) = "yaml:\"cosmwasm_address\"" ];
 }

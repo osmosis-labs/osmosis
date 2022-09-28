@@ -36,5 +36,6 @@ type DistrKeeper interface {
 
 // BankHooks event hooks
 type BankHooks interface {
-	BeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins) error // Must be called when a bank transfer happens
+	TrackBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins)       // Must be before any send is executed
+	BlockBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins) error // Must be before any send is executed
 }

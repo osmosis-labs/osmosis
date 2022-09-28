@@ -5,11 +5,18 @@ import (
 )
 
 type SudoMsg struct {
-	BeforeSend BeforeSendMsg `json:"before_send"`
+	TrackBeforeSend TrackBeforeSendMsg `json:"track_before_send"`
+	BlockBeforeSend BlockBeforeSendMsg `json:"block_before_send"`
 }
 
-type BeforeSendMsg struct {
-	From   string            `json:"from"`
-	To     string            `json:"to"`
-	Amount wasmvmtypes.Coins `json:"amount"`
+type TrackBeforeSendMsg struct {
+	From   string           `json:"from"`
+	To     string           `json:"to"`
+	Amount wasmvmtypes.Coin `json:"amount"`
+}
+
+type BlockBeforeSendMsg struct {
+	From   string           `json:"from"`
+	To     string           `json:"to"`
+	Amount wasmvmtypes.Coin `json:"amount"`
 }

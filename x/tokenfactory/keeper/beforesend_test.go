@@ -84,7 +84,7 @@ func (suite *KeeperTestSuite) TestBeforeSendHook() {
 			suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), types.NewMsgMint(suite.TestAccs[0].String(), sdk.NewInt64Coin(denom, 1000000000)))
 
 			// set beforesend hook to the new denom
-			_, err = suite.msgServer.SetBeforeSendHook(sdk.WrapSDKContext(suite.Ctx), types.NewMsgSetBeforeSendHook(suite.TestAccs[0].String(), denom, cosmwasmAddress.String()))
+			_, err = suite.msgServer.SetBeforeSendListener(sdk.WrapSDKContext(suite.Ctx), types.NewMsgSetBeforeSendHook(suite.TestAccs[0].String(), denom, cosmwasmAddress.String()))
 			suite.Require().NoError(err, "test: %v", tc.desc)
 
 			for _, sendTc := range tc.sendMsgs {

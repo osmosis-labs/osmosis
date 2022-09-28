@@ -264,20 +264,20 @@ func (m MsgSetDenomMetadata) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sender}
 }
 
-var _ sdk.Msg = &MsgSetBeforeSendHook{}
+var _ sdk.Msg = &MsgSetBeforeSendListener{}
 
 // NewMsgSetBeforeSendHook creates a message to set a new before send hook
-func NewMsgSetBeforeSendHook(sender string, denom string, cosmwasmAddress string) *MsgSetBeforeSendHook {
-	return &MsgSetBeforeSendHook{
+func NewMsgSetBeforeSendHook(sender string, denom string, cosmwasmAddress string) *MsgSetBeforeSendListener {
+	return &MsgSetBeforeSendListener{
 		Sender:          sender,
 		Denom:           denom,
 		CosmwasmAddress: cosmwasmAddress,
 	}
 }
 
-func (m MsgSetBeforeSendHook) Route() string { return RouterKey }
-func (m MsgSetBeforeSendHook) Type() string  { return TypeMsgBurn }
-func (m MsgSetBeforeSendHook) ValidateBasic() error {
+func (m MsgSetBeforeSendListener) Route() string { return RouterKey }
+func (m MsgSetBeforeSendListener) Type() string  { return TypeMsgBurn }
+func (m MsgSetBeforeSendListener) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Sender)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
@@ -298,11 +298,11 @@ func (m MsgSetBeforeSendHook) ValidateBasic() error {
 	return nil
 }
 
-func (m MsgSetBeforeSendHook) GetSignBytes() []byte {
+func (m MsgSetBeforeSendListener) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
-func (m MsgSetBeforeSendHook) GetSigners() []sdk.AccAddress {
+func (m MsgSetBeforeSendListener) GetSigners() []sdk.AccAddress {
 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
 	return []sdk.AccAddress{sender}
 }

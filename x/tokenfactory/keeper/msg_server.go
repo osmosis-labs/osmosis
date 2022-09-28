@@ -111,7 +111,7 @@ func (server msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.
 	return &types.MsgBurnResponse{}, nil
 }
 
-func (server msgServer) SetBeforeSendHook(goCtx context.Context, msg *types.MsgSetBeforeSendHook) (*types.MsgSetBeforeSendHookResponse, error) {
+func (server msgServer) SetBeforeSendListener(goCtx context.Context, msg *types.MsgSetBeforeSendListener) (*types.MsgSetBeforeSendListenerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	authorityMetadata, err := server.Keeper.GetAuthorityMetadata(ctx, msg.Denom)
@@ -123,7 +123,7 @@ func (server msgServer) SetBeforeSendHook(goCtx context.Context, msg *types.MsgS
 		return nil, types.ErrUnauthorized
 	}
 
-	err = server.Keeper.setBeforeSendHook(ctx, msg.Denom, msg.CosmwasmAddress)
+	err = server.Keeper.setBeforeSendListener(ctx, msg.Denom, msg.CosmwasmAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ func (server msgServer) SetBeforeSendHook(goCtx context.Context, msg *types.MsgS
 		),
 	})
 
-	return &types.MsgSetBeforeSendHookResponse{}, nil
+	return &types.MsgSetBeforeSendListenerResponse{}, nil
 }
 
 func (server msgServer) ForceTransfer(goCtx context.Context, msg *types.MsgForceTransfer) (*types.MsgForceTransferResponse, error) {
