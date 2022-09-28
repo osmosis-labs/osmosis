@@ -47,15 +47,15 @@ func (msg MsgCreateStableswapPool) ValidateBasic() error {
 	}
 
 	// validation for pool initial liquidity
-	// TO DO: expand this check to accommodate multi-asset pools for stableswap
 	if len(msg.InitialPoolLiquidity) < 2 {
 		return types.ErrTooFewPoolAssets
-	} else if len(msg.InitialPoolLiquidity) > 2 {
+	} else if len(msg.InitialPoolLiquidity) > 8 {
 		return types.ErrTooManyPoolAssets
 	}
-	// valid scaling factor lengths are 0, or one factor for each asset
-	if len(msg.ScalingFactors) != 0 && len(msg.ScalingFactors) != len(msg.InitialPoolLiquidity) {
-		return types.ErrInvalidScalingFactors
+
+	// validation for scaling factors owner
+	if err = validateScalingFactors(msg.ScalingFactors, len(msg.InitialPoolLiquidity), true); err != nil {
+		return err
 	}
 
 	// validation for future owner

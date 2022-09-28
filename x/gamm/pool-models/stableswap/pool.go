@@ -23,9 +23,14 @@ var _ types.PoolI = &Pool{}
 // * poolID doesn't already exist
 func NewStableswapPool(poolId uint64, stableswapPoolParams PoolParams, initialLiquidity sdk.Coins, scalingFactors []uint64, futureGovernor string) (Pool, error) {
 	if len(scalingFactors) == 0 {
-		scalingFactors = []uint64{1, 1}
-	} else if scalingFactors[0] == 0 || scalingFactors[1] == 0 {
-		return Pool{}, types.ErrInvalidStableswapScalingFactors
+		scalingFactors = make([]uint64, len(initialLiquidity))
+		for i := range scalingFactors {
+			scalingFactors[i] = 1
+		}
+	}
+
+	if err := validateScalingFactors(scalingFactors, len(initialLiquidity), false); err != nil {
+		return Pool{}, err
 	}
 
 	pool := Pool{
@@ -123,8 +128,10 @@ func (p Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Dec, error) {
 			return []sdk.Dec{}, fmt.Errorf("denom %s does not exist in pool", denom)
 		}
 		scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndex)
+
 		result[i] = amt.ToDec().QuoInt64Mut(int64(scalingFactor))
 	}
+
 	return result, nil
 }
 
@@ -134,6 +141,7 @@ func (p Pool) getDescaledPoolAmt(denom string, amount osmomath.BigDec) osmomath.
 	liquidityIndex := liquidityIndexes[denom]
 
 	scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndex)
+
 	return amount.MulInt64(int64(scalingFactor))
 }
 
@@ -303,11 +311,24 @@ func (p *Pool) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uin
 		return types.ErrNotScalingFactorGovernor
 	}
 
-	if len(scalingFactors) != p.PoolLiquidity.Len() {
-		return types.ErrInvalidStableswapScalingFactors
+	if err := validateScalingFactors(scalingFactors, p.PoolLiquidity.Len(), false); err != nil {
+		return err
 	}
 
 	p.ScalingFactor = scalingFactors
+	return nil
+}
+
+func validateScalingFactors(scalingFactors []uint64, numAssets int, allowZeroLength bool) error {
+	if allowZeroLength && len(scalingFactors) == 0 {
+		return nil
+	}
+
+	for _, scalingFactor := range scalingFactors {
+		if scalingFactor == 0 || int64(scalingFactor) <= 0 || len(scalingFactors) != numAssets {
+			return types.ErrInvalidStableswapScalingFactors
+		}
+	}
 
 	return nil
 }
