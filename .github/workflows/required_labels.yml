@@ -1,4 +1,4 @@
-name: State machine compatability labels
+name: required labels
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
     branches:
       - 'main'
 jobs:
-  label:
+  state_compatability_labels:
     runs-on: ubuntu-latest
     steps:
       - uses: mheap/github-action-required-labels@v2
