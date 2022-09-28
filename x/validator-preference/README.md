@@ -4,7 +4,7 @@
 
 Validator-Set preference is a new module which gives users and contracts a 
 better UX for staking to a set of validators. For example: a one click button
-that stakes to multiple validators. Then the user can set (or realistically a frontend provides) 
+that delegates to multiple validators. Then the user can set (or realistically a frontend provides) 
 a list of recommended defaults (Ex: governors, wosmongton, chain/stack contributors etc).
 Currently this can be done on-chain with frontends, but having a preference list stored locally 
 eases frontend code burden. 
@@ -18,10 +18,10 @@ How does this module work?
   - Unstake the existing tokens (run the same unbond logic as cosmos-sdk staking).
   - Update the validator distribution weights.
   - Stake the tokens based on the new weights.
-- Give users a single message to stake {X} tokens, according to their validator-set preference distribution.
-- Give users a single message to unstake {X} tokens, according to their validator-set preference distribution.
+- Give users a single message to delegate {X} tokens, according to their validator-set preference distribution.
+- Give users a single message to undelegate {X} tokens, according to their validator-set preference distribution.
 - Give users a single message to claim rewards from everyone on their preference list.
-- If a user does not have a validator-set preference list set and has is attempting to stake do the following; 
+- If a user does not have a validator-set preference list set and has is attempting to delegate do the following; 
   - Make their preference list default to their current staking distribution.
 - If a user has no preference list and no staking, then return error for messages.
 
@@ -29,18 +29,18 @@ How does this module work?
 
 Staking Calculation 
 
-- The user provides an amount to stake and our `MsgStakeToValidatorSet` divides the amount based on validator weight distribution.
+- The user provides an amount to delegate and our `MsgStakeToValidatorSet` divides the amount based on validator weight distribution.
   For example: Stake 100osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
-  our stake logic will attempt to stake (100 * 0.5) 50osmo for ValA , (100 * 0.3) 30osmo from ValB and (100 * 0.2) 20osmo from ValC.
+  our delegate logic will attempt to delegate (100 * 0.5) 50osmo for ValA , (100 * 0.3) 30osmo from ValB and (100 * 0.2) 20osmo from ValC.
 
 UnStaking Calculation 
 
-- The user provides an amount to unstake and our `MsgUnStakeFromValidatorSet` divides the amount based on validator weight distribution.
-- Here, the user can either unstake the entire amount or partial amount 
+- The user provides an amount to undelegate and our `MsgUnStakeFromValidatorSet` divides the amount based on validator weight distribution.
+- Here, the user can either undelegate the entire amount or partial amount 
   - Entire amount unstaking: UnStake 100osmo from validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2},
-    our unstake logic will attempt to unstake 50osmo from ValA , 30osmo from ValB, 20osmo from ValC
+    our undelegate logic will attempt to undelegate 50osmo from ValA , 30osmo from ValB, 20osmo from ValC
   - Partial amount unstaking: UnStake 27osmo from validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}, 
-    our unstake logic will attempt to unstake (27 * 0.5) 13.5osmos from ValA, (27 * 0.3), 8.1osmo from ValB, 
+    our undelegate logic will attempt to undelegate (27 * 0.5) 13.5osmos from ValA, (27 * 0.3), 8.1osmo from ValB, 
     and (50 * 0.2) 5.4smo from ValC where 13.5osmo + 8.1osmo + 5.4osmo = 27osmo
   - The user will then have 73osmo remaining with unchanged weights {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2},
 
@@ -86,11 +86,11 @@ restaking to a new set is going to happen behind the scenes.
 
 - Follows the same rule as `CreateValidatorSetPreference` for weights checks.
 - Update the `KVStore` value for the specific owner address key.
-- Run the unstake logic and restake the tokens with updated weights. 
+- Run the undelegate logic and restake the tokens with updated weights. 
 
 ### StakeToValidatorSet
 
-Gets the existing validator-set of the delegator and stakes the given amount. The given amount 
+Gets the existing validator-set of the delegator and delegates the given amount. The given amount 
 will be divided based on the weights distributed to the validators. The weights will be unchanged! 
 
 ```go
@@ -111,7 +111,7 @@ will be divided based on the weights distributed to the validators. The weights 
 
 ### UnStakeFromValidatorSet
 
-Gets the existing validator-set of the delegator and unstake the given amount. The amount to unstake will
+Gets the existing validator-set of the delegator and undelegate the given amount. The amount to undelegate will
 will be divided based on the weights distributed to the validators. The weights will be unchanged! 
 
 The given amount will be divided based on the weights distributed to the validators.

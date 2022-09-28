@@ -24,14 +24,11 @@ message ValidatorPreference {
   ];
 }
 
-// ValidatorSetPreferences is a wrapper that holds a list of {valAddr, weights}.
-// The weights are arranged in decimal notation from 0 to 1 and must add up
-// to 1. A delegator can only have one validator-set and they have the ability
-// to modify the weights and the validator.
+// ValidatorSetPreferences defines a delegator's validator set preference.
+// It contains a list of (validator, percent_allocation) pairs.
+// The percent allocation are arranged in decimal notation from 0 to 1 and must
+// add up to 1.
 message ValidatorSetPreferences {
-  // delegator is the address of the user who created the validator-set.
-  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
-
   // preference holds {valAddr, weight} for the user who created it.
   repeated ValidatorPreference preferences = 2 [
     (gogoproto.moretags) = "yaml:\"preferences\"",
