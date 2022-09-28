@@ -9,6 +9,7 @@ MD034: true
 MD040: true
 MD042: true
 MD048: true
+MD051: true
 # MD004: false
 # # Can't disable MD007 :/
 # MD007: false
