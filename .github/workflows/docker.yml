@@ -84,6 +84,8 @@ jobs:
           build-args: |
             GO_VERSION=${{ steps.find_go_version.outputs.go_version }}
             RUNNER_IMAGE=${{ env.RUNNER_BASE_IMAGE_DISTROLESS }}
+            GIT_VERSION=${GITHUB_REF_NAME#v}
+            GIT_COMMIT=${{ github.sha }}
           tags: ${{ steps.meta_distroless.outputs.tags }}
 
       # Distroless nonroot Docker image
@@ -112,6 +114,8 @@ jobs:
           build-args: |
             GO_VERSION=${{ steps.find_go_version.outputs.go_version }}
             RUNNER_IMAGE=${{ env.RUNNER_BASE_IMAGE_NONROOT }}
+            GIT_VERSION=${GITHUB_REF_NAME#v}
+            GIT_COMMIT=$GITHUB_SHA
           tags: ${{ steps.meta_nonroot.outputs.tags }}
       
       # Alpine Docker image
@@ -140,4 +144,6 @@ jobs:
           build-args: |
             GO_VERSION=${{ steps.find_go_version.outputs.go_version }}
             RUNNER_IMAGE=${{ env.RUNNER_BASE_IMAGE_ALPINE }}
+            GIT_VERSION=${GITHUB_REF_NAME#v}
+            GIT_COMMIT=$GITHUB_SHA
           tags: ${{ steps.meta_alpine.outputs.tags }}
