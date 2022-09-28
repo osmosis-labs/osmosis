@@ -1672,6 +1672,8 @@ type QueryClient interface {
 	// Returns intermediary account connected to a superfluid staked lock by id
 	ConnectedIntermediaryAccount(ctx context.Context, in *ConnectedIntermediaryAccountRequest, opts ...grpc.CallOption) (*ConnectedIntermediaryAccountResponse, error)
 	TotalDelegationByValidatorForAsset(ctx context.Context, in *QueryTotalDelegationByValidatorForAssetRequest, opts ...grpc.CallOption) (*QueryTotalDelegationByValidatorForAssetResponse, error)
+	// Returns the total amount of osmo superfluidly staked.
+	// Response is denominated in uosmo.
 	TotalSuperfluidDelegations(ctx context.Context, in *TotalSuperfluidDelegationsRequest, opts ...grpc.CallOption) (*TotalSuperfluidDelegationsResponse, error)
 	// Returns the coins superfluid delegated for the delegator, validator, denom
 	// triplet
@@ -1841,6 +1843,8 @@ type QueryServer interface {
 	// Returns intermediary account connected to a superfluid staked lock by id
 	ConnectedIntermediaryAccount(context.Context, *ConnectedIntermediaryAccountRequest) (*ConnectedIntermediaryAccountResponse, error)
 	TotalDelegationByValidatorForAsset(context.Context, *QueryTotalDelegationByValidatorForAssetRequest) (*QueryTotalDelegationByValidatorForAssetResponse, error)
+	// Returns the total amount of osmo superfluidly staked.
+	// Response is denominated in uosmo.
 	TotalSuperfluidDelegations(context.Context, *TotalSuperfluidDelegationsRequest) (*TotalSuperfluidDelegationsResponse, error)
 	// Returns the coins superfluid delegated for the delegator, validator, denom
 	// triplet
