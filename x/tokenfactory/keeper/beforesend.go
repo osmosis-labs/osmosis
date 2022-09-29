@@ -77,7 +77,7 @@ func (k Keeper) Hooks(wasmkeeper wasmKeeper.Keeper) Hooks {
 
 // TrackBeforeSend calls the before send listener contract surpresses any errors
 func (h Hooks) TrackBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins) {
-	h.k.callBeforeSendListener(ctx, h.wasmkeeper, from, to, amount, false)
+	_ = h.k.callBeforeSendListener(ctx, h.wasmkeeper, from, to, amount, false)
 }
 
 // TrackBeforeSend calls the before send listener contract returns any errors
