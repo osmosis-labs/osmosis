@@ -336,7 +336,7 @@ func TestBurn(t *testing.T) {
 				Amount:          mintAmount,
 				BurnFromAddress: lucky.String(),
 			},
-			expErr: true,
+			expErr: false,
 		},
 		"empty sub-denom": {
 			burn: &bindings.BurnTokens{
