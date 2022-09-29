@@ -102,6 +102,56 @@ make build
 cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v12/bin
 ```
 
+## Setup Cosmovisor.service
+
+Setup cosmovisor as a service:
+```{.sh}
+echo "[Unit]
+Description=Cosmovisor daemon
+After=network-online.target
+[Service]
+Environment="DAEMON_NAME=osmosisd"
+Environment="DAEMON_HOME=${HOME}/.osmosisd"
+Environment="DAEMON_RESTART_AFTER_UPGRADE=true"
+Environment="DAEMON_ALLOW_DOWNLOAD_BINARIES=false"
+Environment="DAEMON_LOG_BUFFER_SIZE=512"
+Environment="UNSAFE_SKIP_BACKUP=true"
+User=$USER
+ExecStart=${HOME}/go/bin/cosmovisor start
+Restart=always
+RestartSec=3
+LimitNOFILE=infinity
+LimitNPROC=infinity
+[Install]
+WantedBy=multi-user.target
+" >cosmovisor.service
+```
+
+```{.sh}
+sudo mv cosmovisor.service /lib/systemd/system/cosmovisor.service
+```
+
+Stop the osmosis.service, if running
+```{.sh}
+sudo systemctl stop osmosisd.service
+```
+
+Reload and start the service:
+```{.sh}
+sudo systemctl daemon-reload
+sudo systemctl restart systemd-journald
+sudo systemctl start cosmovisor
+```
+
+Check the status of the service:
+```{.sh}
+sudo systemctl status cosmovisor
+```
+To see live logs of the service:
+```{.sh}
+journalctl -u cosmovisor -f
+```
+
 Now, at the upgrade height, Cosmovisor will upgrade to the v12 binary
 
 ## Manual Option
