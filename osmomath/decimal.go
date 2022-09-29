@@ -516,10 +516,20 @@ func (d BigDec) SDKDec() sdk.Dec {
 	return truncatedDec
 }
 
-// BigDecFromSdkDec returns the BigDec representation of an SdkDec.
+// BigDecFromSdkDec returns the BigDec representation of an SDKDec.
 // Values in any additional decimal places are truncated.
 func BigDecFromSDKDec(d sdk.Dec) BigDec {
 	return NewDecFromBigIntWithPrec(d.BigInt(), sdk.Precision)
+}
+
+// BigDecFromSdkDecSlice returns the []BigDec representation of an []SDKDec.
+// Values in any additional decimal places are truncated.
+func BigDecFromSDKDecSlice(ds []sdk.Dec) []BigDec {
+	result := make([]BigDec, len(ds))
+	for i, d := range ds {
+		result[i] = NewDecFromBigIntWithPrec(d.BigInt(), sdk.Precision)
+	}
+	return result
 }
 
 //     ____

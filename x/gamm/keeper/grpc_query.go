@@ -127,6 +127,19 @@ func (q Querier) NumPools(ctx context.Context, _ *types.QueryNumPoolsRequest) (*
 	}, nil
 }
 
+func (q Querier) PoolType(ctx context.Context, req *types.QueryPoolTypeRequest) (*types.QueryPoolTypeResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	poolType, err := q.Keeper.GetPoolType(sdkCtx, req.PoolId)
+
+	return &types.QueryPoolTypeResponse{
+		PoolType: poolType,
+	}, err
+}
+
 // PoolParams queries a specified pool for its params.
 func (q Querier) PoolParams(ctx context.Context, req *types.QueryPoolParamsRequest) (*types.QueryPoolParamsResponse, error) {
 	if req == nil {
