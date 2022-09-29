@@ -21,7 +21,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/v12/simulation/internal/executortypes"
+	"github.com/osmosis-labs/osmosis/v12/simulation/executor/internal/executortypes"
+	"github.com/osmosis-labs/osmosis/v12/simulation/executor/internal/stats"
 	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
 )
 
@@ -53,11 +54,11 @@ func SimulateFromSeed(
 	actions := simManager.Actions(config.Seed, app.AppCodec())
 
 	// Set up sql table
-	statsDb, err := setupStatsDb(config.ExportConfig)
+	statsDb, err := stats.SetupStatsDb(config.ExportConfig)
 	if err != nil {
 		tb.Fatal(err)
 	}
-	defer statsDb.cleanup()
+	defer statsDb.Cleanup()
 
 	// Encapsulate the bizarre initialization logic that must be cleaned.
 	simCtx, simState, simParams, err := cursedInitializationLogic(tb, w, app, simManager, initFunctions, &config)
@@ -95,7 +96,7 @@ func SimulateFromSeed(
 
 	stopEarly, err = simState.SimulateAllBlocks(w, simCtx, blockSimulator)
 
-	simState.eventStats.exportEvents(config.ExportConfig.ExportStatsPath, w)
+	simState.eventStats.ExportEvents(config.ExportConfig.ExportStatsPath, w)
 	return storetypes.CommitID{}, stopEarly, err
 }
 
@@ -142,6 +143,8 @@ func cursedInitializationLogic(
 
 	simCtx := simtypes.NewSimCtx(r, app, accs, config.InitializationConfig.ChainID)
 
+	// TODO: Understand how this works better in Tendermint wrt
+	// genesis timestamp and proposer for first block
 	initialHeader := tmproto.Header{
 		ChainID:         config.InitializationConfig.ChainID,
 		Height:          int64(config.InitializationConfig.InitialBlockHeight),
@@ -210,7 +213,7 @@ type blockSimFn func(simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.He
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
 func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions []simtypes.ActionsWithMetadata,
-	simState *simState, config Config, stats statsDb,
+	simState *simState, config Config, stats stats.StatsDb,
 ) blockSimFn {
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0
@@ -264,10 +267,10 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 // This is inheriting old functionality. We should break this as part of making logging be usable / make sense.
 func (simState *simState) logActionResult(
 	header tmproto.Header, actionIndex int,
-	opMsg simulation.OperationMsg, resultData []byte, stats statsDb, actionErr error,
+	opMsg simulation.OperationMsg, resultData []byte, stats stats.StatsDb, actionErr error,
 ) error {
 	opMsg.LogEvent(simState.eventStats.Tally)
-	err := stats.logActionResult(header, opMsg, resultData)
+	err := stats.LogActionResult(header, opMsg, resultData)
 	if err != nil {
 		return err
 	}
