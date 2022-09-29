@@ -19,7 +19,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
 )
 
-// SimulationManager defines a simulation manager that provides the high level utility
+// Manager defines a simulation manager that provides the high level utility
 // for managing and executing simulation functionalities for a group of modules
 type Manager struct {
 	moduleManager module.Manager
