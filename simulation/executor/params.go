@@ -89,7 +89,7 @@ func RandomParams(r *rand.Rand) Params {
 	}
 }
 
-// randomConsensusParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.
+// DefaultRandomConsensusParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.
 func DefaultRandomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSONCodec) *abci.ConsensusParams {
 	var genesisState map[string]json.RawMessage
 	err := json.Unmarshal(appState, &genesisState)
