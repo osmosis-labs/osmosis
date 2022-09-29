@@ -32,9 +32,17 @@ var (
 		sdk.NewInt64Coin("foo", 2000000000),
 		sdk.NewInt64Coin("bar", 1000000000),
 	)
+	fiveUnevenStablePoolAssets = sdk.NewCoins(
+		sdk.NewInt64Coin("asset/a", 1000000000),
+		sdk.NewInt64Coin("asset/b", 2000000000),
+		sdk.NewInt64Coin("asset/c", 3000000000),
+		sdk.NewInt64Coin("asset/d", 4000000000),
+		sdk.NewInt64Coin("asset/e", 5000000000),
+	)
 )
 
 func TestScaledSortedPoolReserves(t *testing.T) {
+	baseEvenAmt := sdk.NewDec(1000000000)
 	tests := map[string]struct {
 		denoms         [2]string
 		poolAssets     sdk.Coins
@@ -43,29 +51,28 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 		expPanic       bool
 	}{
 		// sanity checks, default scaling factors
-		// TODO: higher pool asset checks
-		"get both pool assets, even two-asset pool with default scaling factors": {
+		"even two-asset pool with default scaling factors": {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expReserves:    []sdk.DecCoin{{"foo", sdk.NewDec(1000000000)}, {"bar", sdk.NewDec(1000000000)}},
+			expReserves:    []sdk.DecCoin{{"foo", baseEvenAmt}, {"bar", sdk.NewDec(1000000000)}},
 			expPanic:       false,
 		},
-		"get both pool assets, uneven two-asset pool with default scaling factors": {
+		"uneven two-asset pool with default scaling factors": {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
 			expReserves:    []sdk.DecCoin{{"foo", sdk.NewDec(2000000000)}, {"bar", sdk.NewDec(1000000000)}},
 			expPanic:       false,
 		},
-		"get both pool assets, even two-asset pool with even scaling factors greater than 1": {
+		"even two-asset pool with even scaling factors greater than 1": {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{10, 10},
 			expReserves:    []sdk.DecCoin{{"foo", sdk.NewDec(100000000)}, {"bar", sdk.NewDec(100000000)}},
 			expPanic:       false,
 		},
-		"get both pool assets, even two-asset pool with uneven scaling factors greater than 1": {
+		"even two-asset pool with uneven scaling factors greater than 1": {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10, 5},
@@ -73,12 +80,36 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 				sdk.NewInt64DecCoin("bar", 1000000000/10)},
 			expPanic: false,
 		},
-		"get both pool assets, even two-asset pool with even, massive scaling factors greater than 1": {
+		"even two-asset pool with even, massive scaling factors greater than 1": {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{10000000000, 10000000000},
 			expReserves:    []sdk.DecCoin{{"foo", sdk.NewDecWithPrec(1, 1)}, {"bar", sdk.NewDecWithPrec(1, 1)}},
 			expPanic:       false,
+		},
+		"five asset pool, scaling factors = 1": {
+			denoms:         [2]string{"asset/c", "asset/d"},
+			poolAssets:     fiveUnevenStablePoolAssets,
+			scalingFactors: []uint64{1, 1, 1, 1, 1},
+			expReserves: []sdk.DecCoin{
+				{"asset/c", baseEvenAmt.MulInt64(3)},
+				{"asset/d", baseEvenAmt.MulInt64(4)},
+				{"asset/a", baseEvenAmt},
+				{"asset/b", baseEvenAmt.MulInt64(2)},
+				{"asset/e", baseEvenAmt.MulInt64(5)}},
+			expPanic: false,
+		},
+		"five asset pool, scaling factors = 1,2,3,4,5": {
+			denoms:         [2]string{"asset/a", "asset/e"},
+			poolAssets:     fiveUnevenStablePoolAssets,
+			scalingFactors: []uint64{1, 2, 3, 4, 5},
+			expReserves: []sdk.DecCoin{
+				{"asset/a", baseEvenAmt},
+				{"asset/e", baseEvenAmt},
+				{"asset/b", baseEvenAmt},
+				{"asset/c", baseEvenAmt},
+				{"asset/d", baseEvenAmt}},
+			expPanic: false,
 		},
 		"max scaling factors": {
 			denoms:         [2]string{"foo", "bar"},
