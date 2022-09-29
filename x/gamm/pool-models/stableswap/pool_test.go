@@ -1,3 +1,4 @@
+//nolint:composites
 package stableswap
 
 import (
@@ -33,106 +34,69 @@ var (
 	)
 )
 
-func TestGetScaledPoolAmts(t *testing.T) {
+func TestScaledSortedPoolReserves(t *testing.T) {
 	tests := map[string]struct {
-		denoms         []string
+		denoms         [2]string
 		poolAssets     sdk.Coins
 		scalingFactors []uint64
-		expReserves    []sdk.Dec
+		expReserves    []sdk.DecCoin
 		expPanic       bool
 	}{
 		// sanity checks, default scaling factors
+		// TODO: higher pool asset checks
 		"get both pool assets, even two-asset pool with default scaling factors": {
-			denoms:         []string{"foo", "bar"},
+			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expReserves:    []sdk.Dec{sdk.NewDec(1000000000), sdk.NewDec(1000000000)},
-			expPanic:       false,
-		},
-		"get one pool asset, even two-asset pool with default scaling factors": {
-			denoms:         []string{"foo"},
-			poolAssets:     twoEvenStablePoolAssets,
-			scalingFactors: defaultTwoAssetScalingFactors,
-			expReserves:    []sdk.Dec{sdk.NewDec(1000000000)},
+			expReserves:    []sdk.DecCoin{{"foo", sdk.NewDec(1000000000)}, {"bar", sdk.NewDec(1000000000)}},
 			expPanic:       false,
 		},
 		"get both pool assets, uneven two-asset pool with default scaling factors": {
-			denoms:         []string{"foo", "bar"},
+			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expReserves:    []sdk.Dec{sdk.NewDec(2000000000), sdk.NewDec(1000000000)},
-			expPanic:       false,
-		},
-		"get first pool asset, uneven two-asset pool with default scaling factors": {
-			denoms:         []string{"foo"},
-			poolAssets:     twoUnevenStablePoolAssets,
-			scalingFactors: defaultTwoAssetScalingFactors,
-			expReserves:    []sdk.Dec{sdk.NewDec(2000000000)},
-			expPanic:       false,
-		},
-		"get second pool asset, uneven two-asset pool with default scaling factors": {
-			denoms:         []string{"bar"},
-			poolAssets:     twoUnevenStablePoolAssets,
-			scalingFactors: defaultTwoAssetScalingFactors,
-			expReserves:    []sdk.Dec{sdk.NewDec(1000000000)},
+			expReserves:    []sdk.DecCoin{{"foo", sdk.NewDec(2000000000)}, {"bar", sdk.NewDec(1000000000)}},
 			expPanic:       false,
 		},
 		"get both pool assets, even two-asset pool with even scaling factors greater than 1": {
-			denoms:         []string{"foo", "bar"},
+			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{10, 10},
-			expReserves:    []sdk.Dec{sdk.NewDec(100000000), sdk.NewDec(100000000)},
+			expReserves:    []sdk.DecCoin{{"foo", sdk.NewDec(100000000)}, {"bar", sdk.NewDec(100000000)}},
 			expPanic:       false,
 		},
 		"get both pool assets, even two-asset pool with uneven scaling factors greater than 1": {
-			denoms:         []string{"foo", "bar"},
+			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10, 5},
-			expReserves:    []sdk.Dec{sdk.NewDec(2000000000 / 5), sdk.NewDec(1000000000 / 10)},
-			expPanic:       false,
-		},
-		"get first pool asset, even two-asset pool with uneven scaling factors greater than 1": {
-			denoms:         []string{"foo"},
-			poolAssets:     twoUnevenStablePoolAssets,
-			scalingFactors: []uint64{10, 5},
-			expReserves:    []sdk.Dec{sdk.NewDec(2000000000 / 5)},
-			expPanic:       false,
-		},
-		"get second pool asset, even two-asset pool with uneven scaling factors greater than 1": {
-			denoms:         []string{"bar"},
-			poolAssets:     twoUnevenStablePoolAssets,
-			scalingFactors: []uint64{10, 5},
-			expReserves:    []sdk.Dec{sdk.NewDec(1000000000 / 10)},
-			expPanic:       false,
+			expReserves: []sdk.DecCoin{sdk.NewInt64DecCoin("foo", 2000000000/5),
+				sdk.NewInt64DecCoin("bar", 1000000000/10)},
+			expPanic: false,
 		},
 		"get both pool assets, even two-asset pool with even, massive scaling factors greater than 1": {
-			denoms:         []string{"foo", "bar"},
+			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{10000000000, 10000000000},
-			expReserves:    []sdk.Dec{sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1)},
+			expReserves:    []sdk.DecCoin{{"foo", sdk.NewDecWithPrec(1, 1)}, {"bar", sdk.NewDecWithPrec(1, 1)}},
 			expPanic:       false,
 		},
 		"max scaling factors": {
-			denoms:         []string{"foo", "bar"},
+			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{(1 << 62), (1 << 62)},
-			expReserves:    []sdk.Dec{sdk.NewDec(1000000000).QuoInt64(int64(1 << 62)), sdk.NewDec(1000000000).QuoInt64(int64(1 << 62))},
-			expPanic:       false,
-		},
-		"pass in no denoms": {
-			denoms:         []string{},
-			poolAssets:     twoEvenStablePoolAssets,
-			scalingFactors: defaultTwoAssetScalingFactors,
-			expReserves:    []sdk.Dec{},
-			expPanic:       false,
+			expReserves: []sdk.DecCoin{
+				{"foo", sdk.NewDec(1000000000).QuoInt64(int64(1 << 62))},
+				{"bar", sdk.NewDec(1000000000).QuoInt64(int64(1 << 62))}},
+			expPanic: false,
 		},
 		"zero scaling factor": {
-			denoms:         []string{"foo", "bar"},
+			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{0, 1},
 			expPanic:       true,
 		},
 	}
+	// TODO: Add for loop for trying to re-order test cases
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -149,7 +113,7 @@ func TestGetScaledPoolAmts(t *testing.T) {
 					FuturePoolGovernor: defaultFutureGovernor,
 				}
 
-				reserves, err := p.getScaledPoolAmts(tc.denoms...)
+				reserves, err := p.scaledSortedPoolReserves(tc.denoms[0], tc.denoms[1])
 
 				require.NoError(t, err, "test: %s", name)
 				require.Equal(t, tc.expReserves, reserves)
