@@ -18,25 +18,21 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
-func AppStateFn() osmosim.AppStateFn {
+func InitChainFn() osmosim.InitChainFn {
 	cdc := app.MakeEncodingConfig().Marshaler
 	return func(simManager osmosimtypes.ModuleGenesisGenerator, r *rand.Rand, accs []simtypes.Account, config osmosim.InitializationConfig,
-	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
-		if osmosim.FlagGenesisTimeValue == 0 {
-			// N.B.: wasmd has the following check in its simulator:
-			// https://github.com/osmosis-labs/wasmd/blob/c2ec9092d086b5ac6dd367f33ce8b5cce8e4c5f5/x/wasm/types/types.go#L261-L264
-			// As a result, it is easy to overflow and become negative if seconds are set too large.
-			genesisTimestamp = time.Unix(0, r.Int63())
-		} else {
-			genesisTimestamp = time.Unix(osmosim.FlagGenesisTimeValue, 0)
-		}
+	) (simAccs []simtypes.Account, req abci.RequestInitChain) {
+		// N.B.: wasmd has the following check in its simulator:
+		// https://github.com/osmosis-labs/wasmd/blob/c2ec9092d086b5ac6dd367f33ce8b5cce8e4c5f5/x/wasm/types/types.go#L261-L264
+		// As a result, it is easy to overflow and become negative if seconds are set too large.
+		genesisTime := time.Unix(0, r.Int63())
 
-		chainID = config.ChainID
 		appParams := make(simtypes.AppParams)
 		if config.ParamsFile != "" {
 			bz, err := os.ReadFile(config.ParamsFile)
@@ -49,72 +45,83 @@ func AppStateFn() osmosim.AppStateFn {
 				panic(err)
 			}
 		}
-		appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
+		appState, simAccs := AppStateRandomizedFn(simManager, r, cdc, accs, genesisTime, appParams)
+		appState = updateStakingAndBankState(appState, cdc)
 
-		rawState := make(map[string]json.RawMessage)
-		err := json.Unmarshal(appState, &rawState)
-		if err != nil {
-			panic(err)
+		req = abci.RequestInitChain{
+			Time:            genesisTime,
+			ChainId:         config.ChainID,
+			ConsensusParams: osmosim.DefaultRandomConsensusParams(r, appState, cdc),
+			// Validators: ...,
+			AppStateBytes: appState,
+			// InitialHeight: ...,
 		}
-
-		stakingStateBz, ok := rawState[stakingtypes.ModuleName]
-		if !ok {
-			panic("staking genesis state is missing")
-		}
-
-		stakingState := new(stakingtypes.GenesisState)
-		err = cdc.UnmarshalJSON(stakingStateBz, stakingState)
-		if err != nil {
-			panic(err)
-		}
-		// compute not bonded balance
-		notBondedTokens := sdk.ZeroInt()
-		for _, val := range stakingState.Validators {
-			if val.Status != stakingtypes.Unbonded {
-				continue
-			}
-			notBondedTokens = notBondedTokens.Add(val.GetTokens())
-		}
-		notBondedCoins := sdk.NewCoin(stakingState.Params.BondDenom, notBondedTokens)
-		// edit bank state to make it have the not bonded pool tokens
-		bankStateBz, ok := rawState[banktypes.ModuleName]
-		// TODO(fdymylja/jonathan): should we panic in this case
-		if !ok {
-			panic("bank genesis state is missing")
-		}
-		bankState := new(banktypes.GenesisState)
-		err = cdc.UnmarshalJSON(bankStateBz, bankState)
-		if err != nil {
-			panic(err)
-		}
-
-		stakingAddr := authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName).String()
-		var found bool
-		for _, balance := range bankState.Balances {
-			if balance.Address == stakingAddr {
-				found = true
-				break
-			}
-		}
-		if !found {
-			bankState.Balances = append(bankState.Balances, banktypes.Balance{
-				Address: stakingAddr,
-				Coins:   sdk.NewCoins(notBondedCoins),
-			})
-		}
-
-		// change appState back
-		rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
-		rawState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankState)
-
-		// replace appstate
-		appState, err = json.Marshal(rawState)
-		if err != nil {
-			panic(err)
-		}
-
-		return appState, simAccs, chainID, genesisTimestamp
+		return simAccs, req
 	}
+}
+
+func updateStakingAndBankState(appState json.RawMessage, cdc codec.JSONCodec) json.RawMessage {
+	rawState := make(map[string]json.RawMessage)
+	err := json.Unmarshal(appState, &rawState)
+	if err != nil {
+		panic(err)
+	}
+
+	stakingStateBz, ok := rawState[stakingtypes.ModuleName]
+	if !ok {
+		panic("staking genesis state is missing")
+	}
+
+	stakingState := new(stakingtypes.GenesisState)
+	err = cdc.UnmarshalJSON(stakingStateBz, stakingState)
+	if err != nil {
+		panic(err)
+	}
+	// compute not bonded balance
+	notBondedTokens := sdk.ZeroInt()
+	for _, val := range stakingState.Validators {
+		if val.Status != stakingtypes.Unbonded {
+			continue
+		}
+		notBondedTokens = notBondedTokens.Add(val.GetTokens())
+	}
+	notBondedCoins := sdk.NewCoin(stakingState.Params.BondDenom, notBondedTokens)
+	// edit bank state to make it have the not bonded pool tokens
+	bankStateBz, ok := rawState[banktypes.ModuleName]
+	if !ok {
+		panic("bank genesis state is missing")
+	}
+	bankState := new(banktypes.GenesisState)
+	err = cdc.UnmarshalJSON(bankStateBz, bankState)
+	if err != nil {
+		panic(err)
+	}
+
+	stakingAddr := authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName).String()
+	var found bool
+	for _, balance := range bankState.Balances {
+		if balance.Address == stakingAddr {
+			found = true
+			break
+		}
+	}
+	if !found {
+		bankState.Balances = append(bankState.Balances, banktypes.Balance{
+			Address: stakingAddr,
+			Coins:   sdk.NewCoins(notBondedCoins),
+		})
+	}
+
+	// change appState back
+	rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
+	rawState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankState)
+
+	// replace appstate
+	appState, err = json.Marshal(rawState)
+	if err != nil {
+		panic(err)
+	}
+	return appState
 }
 
 // AppStateRandomizedFn creates calls each module's GenesisState generator function

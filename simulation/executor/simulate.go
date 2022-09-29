@@ -133,7 +133,7 @@ func cursedInitializationLogic(
 	}
 
 	validators, genesisTimestamp, accs, res := initChain(
-		simManager, r, simParams, accs, app, initFunctions.AppInitialStateFn, config)
+		simManager, r, simParams, accs, app, initFunctions.InitChainFn, config)
 
 	fmt.Printf(
 		"Starting the simulation from time %v (unixtime %v)\n",
@@ -167,30 +167,23 @@ func initChain(
 	params Params,
 	accounts []simulation.Account,
 	app simtypes.App,
-	appStateFn AppStateFn,
+	initChainFn InitChainFn,
 	config *Config,
 ) (mockValidators, time.Time, []simulation.Account, abci.ResponseInitChain) {
 	// TODO: Cleanup the whole config dependency with appStateFn
-	appState, accounts, chainID, genesisTimestamp := appStateFn(simManager, r, accounts, config.InitializationConfig)
-	consensusParams := randomConsensusParams(r, appState, app.AppCodec())
-	req := abci.RequestInitChain{
-		AppStateBytes:   appState,
-		ChainId:         chainID,
-		ConsensusParams: consensusParams,
-		Time:            genesisTimestamp,
-	}
+	accounts, req := initChainFn(simManager, r, accounts, config.InitializationConfig)
 	// Valid app version can only be zero on app initialization.
 	req.ConsensusParams.Version.AppVersion = 0
 	res := app.GetBaseApp().InitChain(req)
 	validators := newMockValidators(r, res.Validators, params)
 
 	// update config
-	config.InitializationConfig.ChainID = chainID
+	config.InitializationConfig.ChainID = req.ChainId
 	if config.InitializationConfig.InitialBlockHeight == 0 {
 		config.InitializationConfig.InitialBlockHeight = 1
 	}
 
-	return validators, genesisTimestamp, accounts, res
+	return validators, req.Time, accounts, res
 }
 
 //nolint:deadcode,unused
