@@ -88,8 +88,6 @@ func (k Keeper) SetInitialSupplyOffsetDuringMigration(ctx sdk.Context) error {
 	}
 
 	moduleAccBalance := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), k.GetParams(ctx).MintDenom)
-	fmt.Println("=========module acc balance")
-	fmt.Println(moduleAccBalance.String())
 	k.bankKeeper.AddSupplyOffset(ctx, moduleAccBalance.Denom, moduleAccBalance.Amount.Neg())
 	return nil
 }
