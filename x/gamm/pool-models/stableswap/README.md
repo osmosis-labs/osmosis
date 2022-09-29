@@ -22,9 +22,17 @@ One key concept, is that the pool has a native concept of
 An important concept thats up to now, not been mentioned is how do we set the expected price ratio.
 In the choice of curve section, we see that its the case that when `x_reserves ~= y_reserves`, that spot price is very close to `1`. However, there are a couple issues with just this in practice:
 
-* Precision of pegged coins may differ. e.g. 1 USDC = 10^18 base units, whereas 1 
+* Precision of pegged coins may differ. e.g. 1 Foo = 10^12 base units, whereas 1 WrappedFoo = 10^6 base units, but  1 Foo should trade at around 1 Wrapped Foo.
+* Related, I could have a token called TwoFoo which should trade around 1 TwoFoo = 2 Foo
+* For staking derivatives, where value accrues within the token, the expected price to concentrate around dynamically changes (very slowly).
 
+To handle these cases, we introduce scaling factors. What we do is we have a scaling factor for every asset in the pool (defaulted to 1).
+Then we map from 'true coin reserves' to 'amm math reasoned about reserves', by doing:
+`amm_eq_asset_reserve = true_asset_reserve / asset_scaling_factor`.
+<!-- TODO, cc @alpin we need to think about rounding behavior -->
 
+Then we run the AMM equation around `amm_eq_asset_reserve`, to get an `amm_eq_asset_out`.
+Then we get the `true_asset_out = amm_eq_asset_out * asset_out_scaling_factor`
 
 ## Algorithm details
 
@@ -96,7 +104,7 @@ computing $y_f := \text{solve cfmm}(x_0 + a, w, k')$. We then get that $b = y_0 
 
 So all we need is an equation for $\text{solve cfmm}$! Its essentially inverting a multi-variate polynomial, and in this case is solvable: [wolfram alpha link](https://www.wolframalpha.com/input?i=solve+for+y+in+x+*+y+*+%28x%5E2+%2B+y%5E2+%2B+w%29+%3D+k)
 
-Or if were clever with simplification in the two asset case, we can reduce it to: [desmos link](https://www.desmos.com/calculator/ktdvu7tdxv).
+Or if were clever with simplification in the two asset case, we can reduce it to: [desmos link](https://www.desmos.com/calculator/hag1f0wieg).
 
 These functions are a bit complex, which is fine as they are easy to prove correct. However, they are relatively expensive to compute, the latter needs precision on the order of x^4, and requires computing multiple cubic roots.
 
@@ -189,8 +197,10 @@ The JoinPool API only supports JoinPoolNoSwap if
   * Pool creation
   * JoinPool + ExitPool gives a token amount out that is lte input
   * SingleTokenIn + ExitPool + Swap to base token gives a token amount that is less than input
+  * CFMM k adjusting in the correct direction after every action
 * Fuzz test binary search algorithm, to see that it still works correctly across wide scale ranges
 * Fuzz test approximate equality of iterative approximation swap algorithm and direct equation swap.
+* Flow testing the entire stableswap scaling factor update process
 
 ## Extensions
 
