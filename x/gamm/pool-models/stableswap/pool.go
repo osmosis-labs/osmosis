@@ -21,7 +21,10 @@ var _ types.PoolI = &Pool{}
 // * len(initialLiquidity) = 2
 // * FutureGovernor is valid
 // * poolID doesn't already exist
-func NewStableswapPool(poolId uint64, stableswapPoolParams PoolParams, initialLiquidity sdk.Coins, scalingFactors []uint64, futureGovernor string) (Pool, error) {
+func NewStableswapPool(poolId uint64,
+	stableswapPoolParams PoolParams, initialLiquidity sdk.Coins,
+	scalingFactors []uint64, scalingFactorController string,
+	futureGovernor string) (Pool, error) {
 	if len(scalingFactors) == 0 {
 		scalingFactors = make([]uint64, len(initialLiquidity))
 		for i := range scalingFactors {
@@ -29,18 +32,19 @@ func NewStableswapPool(poolId uint64, stableswapPoolParams PoolParams, initialLi
 		}
 	}
 
-	if err := validateScalingFactors(scalingFactors, len(initialLiquidity), false); err != nil {
+	if err := validateScalingFactors(scalingFactors, len(initialLiquidity)); err != nil {
 		return Pool{}, err
 	}
 
 	pool := Pool{
-		Address:            types.NewPoolAddress(poolId).String(),
-		Id:                 poolId,
-		PoolParams:         stableswapPoolParams,
-		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(poolId), types.InitPoolSharesSupply),
-		PoolLiquidity:      initialLiquidity,
-		ScalingFactor:      scalingFactors,
-		FuturePoolGovernor: futureGovernor,
+		Address:                 types.NewPoolAddress(poolId).String(),
+		Id:                      poolId,
+		PoolParams:              stableswapPoolParams,
+		TotalShares:             sdk.NewCoin(types.GetPoolShareDenom(poolId), types.InitPoolSharesSupply),
+		PoolLiquidity:           initialLiquidity,
+		ScalingFactor:           scalingFactors,
+		ScalingFactorController: scalingFactorController,
+		FuturePoolGovernor:      futureGovernor,
 	}
 
 	return pool, nil
@@ -306,12 +310,12 @@ func (p *Pool) PokePool(blockTime time.Time) {}
 // SetStableSwapScalingFactors sets scaling factors for pool to the given amount
 // It should only be able to be successfully called by the pool's ScalingFactorGovernor
 // TODO: move commented test for this function from x/gamm/keeper/pool_service_test.go once a pool_test.go file has been created for stableswap
-func (p *Pool) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uint64, scalingFactorGovernor string) error {
-	if scalingFactorGovernor != p.ScalingFactorGovernor {
+func (p *Pool) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uint64, sender string) error {
+	if sender != p.ScalingFactorController {
 		return types.ErrNotScalingFactorGovernor
 	}
 
-	if err := validateScalingFactors(scalingFactors, p.PoolLiquidity.Len(), false); err != nil {
+	if err := validateScalingFactors(scalingFactors, p.PoolLiquidity.Len()); err != nil {
 		return err
 	}
 
@@ -319,13 +323,21 @@ func (p *Pool) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uin
 	return nil
 }
 
-func validateScalingFactors(scalingFactors []uint64, numAssets int, allowZeroLength bool) error {
-	if allowZeroLength && len(scalingFactors) == 0 {
+func validateScalingFactorController(scalingFactorController string) error {
+	if len(scalingFactorController) == 0 {
 		return nil
+	}
+	_, err := sdk.AccAddressFromBech32(scalingFactorController)
+	return err
+}
+
+func validateScalingFactors(scalingFactors []uint64, numAssets int) error {
+	if len(scalingFactors) != numAssets {
+		return types.ErrInvalidStableswapScalingFactors
 	}
 
 	for _, scalingFactor := range scalingFactors {
-		if scalingFactor == 0 || int64(scalingFactor) <= 0 || len(scalingFactors) != numAssets {
+		if scalingFactor == 0 || int64(scalingFactor) <= 0 {
 			return types.ErrInvalidStableswapScalingFactors
 		}
 	}
