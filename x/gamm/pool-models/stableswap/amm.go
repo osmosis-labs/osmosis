@@ -223,7 +223,7 @@ func solveCFMMBinarySearchMulti(constantFunction func(osmomath.BigDec, osmomath.
 	}
 }
 
-func spotPrice(baseReserve, quoteReserve osmomath.BigDec) osmomath.BigDec {
+func spotPrice(baseReserve, quoteReserve osmomath.BigDec, remReserves []osmomath.BigDec) osmomath.BigDec {
 	// y = baseAsset, x = quoteAsset
 	// Define f_{y -> x}(a) as the function that outputs the amount of tokens X you'd get by
 	// trading "a" units of Y against the pool, assuming 0 swap fee, at the current liquidity.
@@ -240,34 +240,39 @@ func spotPrice(baseReserve, quoteReserve osmomath.BigDec) osmomath.BigDec {
 	// xReserve & yReserve.
 	a := osmomath.OneDec()
 	// no need to divide by a, since a = 1.
-	return solveCfmm(baseReserve, quoteReserve, []osmomath.BigDec{}, a)
+	return solveCfmm(baseReserve, quoteReserve, remReserves, a)
 }
 
 // returns outAmt as a decimal
 func (p *Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
-	reserves, err := p.getScaledPoolAmts(tokenIn.Denom, tokenOutDenom)
+	reserves, err := p.scaledSortedPoolReserves(tokenIn.Denom, tokenOutDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	tokenInSupply, tokenOutSupply := reserves[0], reserves[1]
-	remReserves := osmomath.BigDecFromSDKDecSlice(reserves[2:])
+	tokenInSupply := osmomath.BigDecFromSDKDec(reserves[0].Amount)
+	tokenOutSupply := osmomath.BigDecFromSDKDec(reserves[1].Amount)
+	remReserves := osmomath.BigDecFromSDKDecCoinSlice(reserves[2:])
+	tokenInDec := osmomath.BigDecFromSDKDec(tokenIn.Amount.ToDec())
 	// We are solving for the amount of token out, hence x = tokenOutSupply, y = tokenInSupply
-	cfmmOut := solveCfmm(osmomath.BigDecFromSDKDec(tokenOutSupply), osmomath.BigDecFromSDKDec(tokenInSupply), remReserves, osmomath.BigDecFromSDKDec(tokenIn.Amount.ToDec()))
+	cfmmOut := solveCfmm(tokenOutSupply, tokenInSupply, remReserves, tokenInDec)
 	outAmt := p.getDescaledPoolAmt(tokenOutDenom, cfmmOut)
 	return outAmt.SDKDec(), nil
 }
 
 // returns inAmt as a decimal
 func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
-	reserves, err := p.getScaledPoolAmts(tokenInDenom, tokenOut.Denom)
+	reserves, err := p.scaledSortedPoolReserves(tokenInDenom, tokenOut.Denom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	tokenInSupply, tokenOutSupply := reserves[0], reserves[1]
-	remReserves := osmomath.BigDecFromSDKDecSlice(reserves[2:])
+	tokenInSupply := osmomath.BigDecFromSDKDec(reserves[0].Amount)
+	tokenOutSupply := osmomath.BigDecFromSDKDec(reserves[1].Amount)
+	remReserves := osmomath.BigDecFromSDKDecCoinSlice(reserves[2:])
+	tokenOutAmount := osmomath.BigDecFromSDKDec(tokenOut.Amount.ToDec())
+
 	// We are solving for the amount of token in, cfmm(x,y) = cfmm(x + x_in, y - y_out)
 	// x = tokenInSupply, y = tokenOutSupply, yIn = -tokenOutAmount
-	cfmmIn := solveCfmm(osmomath.BigDecFromSDKDec(tokenInSupply), osmomath.BigDecFromSDKDec(tokenOutSupply), remReserves, osmomath.BigDecFromSDKDec(tokenOut.Amount.ToDec().Neg()))
+	cfmmIn := solveCfmm(tokenInSupply, tokenOutSupply, remReserves, tokenOutAmount.Neg())
 	inAmt := p.getDescaledPoolAmt(tokenInDenom, cfmmIn.Neg())
 	return inAmt.SDKDec(), nil
 }
