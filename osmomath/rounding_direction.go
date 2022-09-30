@@ -2,6 +2,7 @@ package osmomath
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -26,7 +27,7 @@ func DivIntByU64ToBigDec(i sdk.Int, u uint64, round RoundingDirection) (BigDec, 
 	} else if round == RoundBankers {
 		return d.Quo(NewBigDec(int64(u))), nil
 	}
-	return BigDec{}, errors.New("unimplemented")
+	return BigDec{}, fmt.Errorf("invalid rounding mode %d", int(round))
 }
 
 func DivCoinAmtsByU64ToBigDec(coins []sdk.Coin, scales []uint64, round RoundingDirection) ([]BigDec, error) {
