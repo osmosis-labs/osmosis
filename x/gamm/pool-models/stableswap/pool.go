@@ -106,19 +106,14 @@ func (p Pool) NumAssets() int {
 }
 
 // scaledInput returns scaled input tokens for usage in AMM equations
-func (p Pool) scaledInput(input sdk.Coin, roundingDirection osmomath.RoundingDirection) (sdk.DecCoin, error) {
+func (p Pool) scaleInputAmount(input sdk.Coin, roundingDirection osmomath.RoundingDirection) (osmomath.BigDec, error) {
 	liquidityIndexes := p.getLiquidityIndexMap()
 	scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndexes[input.Denom])
 	scaledAmount, err := osmomath.DivIntByU64ToBigDec(input.Amount, scalingFactor, roundingDirection)
 	if err != nil {
-		return sdk.DecCoin{}, err
+		return osmomath.BigDec{}, err
 	}
-	scaledInput := sdk.NewDecCoinFromDec(
-		input.Denom,
-		scaledAmount.SDKDec())
-
-	// TODO: correctly handle rounding
-	return scaledInput, nil
+	return scaledAmount, nil
 }
 
 // getDescaledPoolAmts gets descaled amount of given denom and amount
