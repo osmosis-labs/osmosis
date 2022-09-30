@@ -105,34 +105,6 @@ func (p Pool) NumAssets() int {
 	return len(p.PoolLiquidity)
 }
 
-// returns pool liquidity of the provided denoms, in the same order the denoms were provided in
-func (p Pool) getPoolAmts(denoms ...string) ([]sdk.Int, error) {
-	result := make([]sdk.Int, len(denoms))
-	poolLiquidity := p.PoolLiquidity
-	for i, d := range denoms {
-		amt := poolLiquidity.AmountOf(d)
-		if amt.IsZero() {
-			return []sdk.Int{}, fmt.Errorf("denom %s does not exist in pool", d)
-		}
-		result[i] = amt
-	}
-	return result, nil
-}
-
-// scaledPoolReserves returns scaled amount of pool liquidity for usage in AMM equations
-func (p Pool) scaledPoolReserves() ([]sdk.DecCoin, error) {
-	scaledReserves := make([]sdk.DecCoin, len(p.PoolLiquidity))
-
-	for i, poolReserve := range p.PoolLiquidity {
-		scalingFactor := p.GetScalingFactorByLiquidityIndex(i)
-		scaledReserves[i] = sdk.NewDecCoinFromDec(
-			poolReserve.Denom,
-			poolReserve.Amount.ToDec().QuoInt64Mut(int64(scalingFactor)))
-	}
-
-	return scaledReserves, nil
-}
-
 // scaledInput returns scaled input tokens for usage in AMM equations
 func (p Pool) scaledInput(input sdk.Coin, roundingDirection osmomath.RoundingDirection) (sdk.DecCoin, error) {
 	liquidityIndexes := p.getLiquidityIndexMap()
