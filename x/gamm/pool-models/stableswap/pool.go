@@ -134,12 +134,16 @@ func (p Pool) scaledPoolReserves() ([]sdk.DecCoin, error) {
 }
 
 // scaledInput returns scaled input tokens for usage in AMM equations
-func (p Pool) scaledInput(input sdk.Coin) (sdk.DecCoin, error) {
+func (p Pool) scaledInput(input sdk.Coin, roundingDirection osmomath.RoundingDirection) (sdk.DecCoin, error) {
 	liquidityIndexes := p.getLiquidityIndexMap()
 	scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndexes[input.Denom])
+	scaledAmount, err := osmomath.DivIntByU64ToBigDec(input.Amount, scalingFactor, roundingDirection)
+	if err != nil {
+		return sdk.DecCoin{}, err
+	}
 	scaledInput := sdk.NewDecCoinFromDec(
 		input.Denom,
-		input.Amount.ToDec().QuoInt64Mut(int64(scalingFactor))) // TODO: use new division method in #2908
+		scaledAmount.SDKDec())
 
 	// TODO: correctly handle rounding
 	return scaledInput, nil
