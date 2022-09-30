@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"runtime/debug"
 
+	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -14,15 +15,23 @@ import (
 // If there is no error, proceeds as normal (but with some slowdown due to SDK store weirdness)
 // Try to avoid usage of iterators in f.
 func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err error) {
+	// makes a new cache context, which all state changes get wrapped inside of.
+	cacheCtx, write := ctx.CacheContext()
+
 	// Add a panic safeguard
 	defer func() {
 		if recoveryError := recover(); recoveryError != nil {
-			PrintPanicRecoveryError(ctx, recoveryError)
-			err = errors.New("panic occurred during execution")
+			if isErr, descriptor := IsOutOfGasError(recoveryError); isErr {
+				err = errors.New("out of gas occurred during execution: " + descriptor)
+				newConsumed := cacheCtx.GasMeter().GasConsumed()
+				oldConsumed := ctx.GasMeter().GasConsumed()
+				ctx.GasMeter().ConsumeGas(newConsumed-oldConsumed, "apply func if no err: "+descriptor)
+			} else {
+				PrintPanicRecoveryError(ctx, recoveryError)
+				err = errors.New("panic occurred during execution")
+			}
 		}
 	}()
-	// makes a new cache context, which all state changes get wrapped inside of.
-	cacheCtx, write := ctx.CacheContext()
 	err = f(cacheCtx)
 	if err != nil {
 		ctx.Logger().Error(err.Error())
@@ -35,11 +44,25 @@ func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err err
 	return err
 }
 
+func IsOutOfGasError(err any) (bool, string) {
+	switch e := err.(type) {
+	case types.ErrorOutOfGas:
+		return true, e.Descriptor
+	case types.ErrorGasOverflow:
+		return true, e.Descriptor
+	default:
+		return false, ""
+	}
+}
+
 // PrintPanicRecoveryError error logs the recoveryError, along with the stacktrace, if it can be parsed.
 // If not emits them to stdout.
 func PrintPanicRecoveryError(ctx sdk.Context, recoveryError interface{}) {
 	errStackTrace := string(debug.Stack())
 	switch e := recoveryError.(type) {
+	case types.ErrorOutOfGas:
+		ctx.Logger().Debug("out of gas error inside panic recovery block: " + e.Descriptor)
+		return
 	case string:
 		ctx.Logger().Error("Recovering from (string) panic: " + e)
 	case runtime.Error:
