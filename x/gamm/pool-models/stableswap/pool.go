@@ -134,7 +134,7 @@ func (p Pool) scaledPoolReserves() ([]sdk.DecCoin, error) {
 }
 
 // scaledInput returns scaled input tokens for usage in AMM equations
-func (p Pool) scaledInput(input sdk.Coins) ([]sdk.DecCoin, error) {
+func (p Pool) scaledInput(input sdk.Coin) (sdk.DecCoin, error) {
 	scaledInput := make([]sdk.DecCoin, 0, len(input))
 	liquidityIndexes := p.getLiquidityIndexMap()
 
