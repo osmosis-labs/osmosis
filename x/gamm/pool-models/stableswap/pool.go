@@ -157,15 +157,14 @@ func (p Pool) reorderReservesAndScalingFactors(first string, second string) ([]s
 			reorderedReserves[1] = coin
 			reorderedScalingFactors[1] = scalingFactors[i]
 		} else {
+			// if we hit this case, then oneof first or second is not in pool liquidity
+			if curIndex == len(coins) {
+				return nil, nil, fmt.Errorf("one of denom (%s, %s) not found in pool liquidity", first, second)
+			}
 			reorderedReserves[curIndex] = coin
 			reorderedScalingFactors[curIndex] = scalingFactors[i]
 			curIndex += 1
 		}
-	}
-	if (reorderedReserves[0] == sdk.Coin{}) {
-		return nil, nil, fmt.Errorf("denom %s not found in pool liquidity", first)
-	} else if (reorderedReserves[1] == sdk.Coin{}) {
-		return nil, nil, fmt.Errorf("denom %s not found in pool liquidity", second)
 	}
 	return reorderedReserves, reorderedScalingFactors, nil
 }
