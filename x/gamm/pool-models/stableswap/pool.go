@@ -24,7 +24,8 @@ var _ types.PoolI = &Pool{}
 func NewStableswapPool(poolId uint64,
 	stableswapPoolParams PoolParams, initialLiquidity sdk.Coins,
 	scalingFactors []uint64, scalingFactorController string,
-	futureGovernor string) (Pool, error) {
+	futureGovernor string,
+) (Pool, error) {
 	if len(scalingFactors) == 0 {
 		scalingFactors = make([]uint64, len(initialLiquidity))
 		for i := range scalingFactors {

@@ -131,7 +131,7 @@ func BinarySearchSingleAssetJoin(
 	ctx := sdk.Context{}
 	// Need to get something that makes the result correct within 1 LP share
 	// If we fail to reach it within maxIterations, we return an error
-	correctnessThreshold := sdk.NewInt(2)
+	correctnessThreshold := sdk.NewInt(1)
 	maxIterations := 300
 	// upperbound of number of LP shares = existingShares * tokenIn.Amount / pool.totalLiquidity.AmountOf(tokenIn.Denom)
 	existingTokenLiquidity := pool.GetTotalPoolLiquidity(ctx).AmountOf(tokenIn.Denom)
@@ -152,18 +152,20 @@ func BinarySearchSingleAssetJoin(
 			return sdk.Int{}, err
 		}
 
-		return swapAllCoinsToSingleAsset(poolWithUpdatedLiquidity, ctx, exitedCoins, swapToDenom)
+		return SwapAllCoinsToSingleAsset(poolWithUpdatedLiquidity, ctx, exitedCoins, swapToDenom)
 	}
 	// TODO: Come back and revisit err tolerance
-	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: correctnessThreshold, MultiplicativeTolerance: sdk.Dec{}}
+	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: correctnessThreshold, MultiplicativeTolerance: sdk.OneDec()}
+
+	// we set the target at input amount minus additive tolerance so we never output more tokens than were passed in
 	numLPShares, err = osmoutils.BinarySearch(
 		estimateCoinOutGivenShares,
-		LPShareLowerBound, LPShareUpperBound, tokenIn.Amount, errTolerance, maxIterations)
+		LPShareLowerBound, LPShareUpperBound, tokenIn.Amount.Sub(correctnessThreshold), errTolerance, maxIterations)
 
 	return numLPShares, err
 }
 
-func swapAllCoinsToSingleAsset(pool types.PoolI, ctx sdk.Context, inTokens sdk.Coins, swapToDenom string) (sdk.Int, error) {
+func SwapAllCoinsToSingleAsset(pool types.PoolI, ctx sdk.Context, inTokens sdk.Coins, swapToDenom string) (sdk.Int, error) {
 	swapFee := sdk.ZeroDec()
 	tokenOutAmt := inTokens.AmountOfNoDenomValidation(swapToDenom)
 	for _, coin := range inTokens {

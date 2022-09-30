@@ -288,16 +288,10 @@ func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk
 		paCopy.updatePoolForJoin(sdk.NewCoins(tokenIn), newShares)
 		return &paCopy
 	}
-	// TODO: Correctly handle swap fee
-	tokenInAmtAfterFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
 
-	// Since we run operations on pool copies that can only deal with types sdk.Coin and sdk.Int,
-	// we convert tokenInAmtAfterFee to sdk.Int and scale up pool reserves accordingly
-	// TODO: Ensure overflows are prevented with input bounds (both for tokenIn and scaled pool reserves)
-	tokenInAmtAfterFeeInt := sdk.NewIntFromBigInt(tokenInAmtAfterFee.BigInt())
-	paddedPool := padPoolReserves(p)
+	tokenInAmtAfterFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee)).TruncateInt()
 
-	return cfmm_common.BinarySearchSingleAssetJoin(paddedPool, sdk.NewCoin(tokenIn.Denom, tokenInAmtAfterFeeInt), poolWithAddedLiquidityAndShares)
+	return cfmm_common.BinarySearchSingleAssetJoin(p, sdk.NewCoin(tokenIn.Denom, tokenInAmtAfterFee), poolWithAddedLiquidityAndShares)
 }
 
 // We can mutate pa here
@@ -330,14 +324,4 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 	}
 
 	return numShares, tokensIn, nil
-}
-
-func padPoolReserves(p *Pool) types.PoolI {
-	paCopy := p.Copy()
-	newLiquidity := sdk.Coins{}
-	for _, asset := range paCopy.PoolLiquidity {
-		newLiquidity = newLiquidity.Add(sdk.NewCoin(asset.Denom, asset.Amount.Mul(sdk.NewInt(1e18))))
-	}
-	paCopy.PoolLiquidity = newLiquidity
-	return &paCopy
 }

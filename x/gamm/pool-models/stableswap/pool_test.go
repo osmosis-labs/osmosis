@@ -21,9 +21,10 @@ var (
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}
-	defaultTwoAssetScalingFactors  = []uint64{1, 1}
-	defaultFiveAssetScalingFactors = []uint64{1, 1, 1, 1, 1}
-	defaultFutureGovernor          = ""
+	defaultTwoAssetScalingFactors   = []uint64{1, 1}
+	defaultThreeAssetScalingFactors = []uint64{1, 1, 1}
+	defaultFiveAssetScalingFactors  = []uint64{1, 1, 1, 1, 1}
+	defaultFutureGovernor           = ""
 
 	twoEvenStablePoolAssets = sdk.NewCoins(
 		sdk.NewInt64Coin("foo", 1000000000),
@@ -32,6 +33,16 @@ var (
 	twoUnevenStablePoolAssets = sdk.NewCoins(
 		sdk.NewInt64Coin("foo", 2000000000),
 		sdk.NewInt64Coin("bar", 1000000000),
+	)
+	threeEvenStablePoolAssets = sdk.NewCoins(
+		sdk.NewInt64Coin("asset/a", 1000000),
+		sdk.NewInt64Coin("asset/b", 1000000),
+		sdk.NewInt64Coin("asset/c", 1000000),
+	)
+	threeUnevenStablePoolAssets = sdk.NewCoins(
+		sdk.NewInt64Coin("asset/a", 1000000),
+		sdk.NewInt64Coin("asset/b", 2000000),
+		sdk.NewInt64Coin("asset/c", 3000000),
 	)
 	fiveEvenStablePoolAssets = sdk.NewCoins(
 		sdk.NewInt64Coin("asset/a", 1000000000),
@@ -81,7 +92,8 @@ func TestReorderReservesAndScalingFactors(t *testing.T) {
 				sdk.NewInt64Coin("asset/b", 2000000000),
 				sdk.NewInt64Coin("asset/a", 1000000000),
 				sdk.NewInt64Coin("asset/d", 4000000000),
-				sdk.NewInt64Coin("asset/e", 5000000000)},
+				sdk.NewInt64Coin("asset/e", 5000000000),
+			},
 			reordedScalingFactors: []uint64{3, 2, 1, 4, 5},
 		},
 		"two of 5 assets in pool v2": {
@@ -93,7 +105,8 @@ func TestReorderReservesAndScalingFactors(t *testing.T) {
 				sdk.NewInt64Coin("asset/b", 2000000000),
 				sdk.NewInt64Coin("asset/a", 1000000000),
 				sdk.NewInt64Coin("asset/c", 3000000000),
-				sdk.NewInt64Coin("asset/d", 4000000000)},
+				sdk.NewInt64Coin("asset/d", 4000000000),
+			},
 			reordedScalingFactors: []uint64{5, 2, 1, 3, 4},
 		},
 		"asset 1 doesn't exist": {
@@ -158,7 +171,8 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10, 5},
 			expReserves: []osmomath.BigDec{
-				osmomath.NewBigDec(2000000000 / 5), osmomath.NewBigDec(1000000000 / 10)},
+				osmomath.NewBigDec(2000000000 / 5), osmomath.NewBigDec(1000000000 / 10),
+			},
 		},
 		"even two-asset pool with even, massive scaling factors greater than 1": {
 			denoms:         [2]string{"foo", "bar"},
@@ -171,22 +185,24 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 			poolAssets:     fiveUnevenStablePoolAssets,
 			scalingFactors: []uint64{1, 1, 1, 1, 1},
 			expReserves: []osmomath.BigDec{
-				baseEvenAmt.MulInt64(3),  // {"asset/c", baseEvenAmt.MulInt64(3)},
-				baseEvenAmt.MulInt64(4),  // {"asset/d", baseEvenAmt.MulInt64(4)},
-				baseEvenAmt,              // {"asset/a", baseEvenAmt},
-				baseEvenAmt.MulInt64(2),  // {"asset/b", baseEvenAmt.MulInt64(2)},
-				baseEvenAmt.MulInt64(5)}, // {"asset/e", baseEvenAmt.MulInt64(5)}},
+				baseEvenAmt.MulInt64(3), // {"asset/c", baseEvenAmt.MulInt64(3)},
+				baseEvenAmt.MulInt64(4), // {"asset/d", baseEvenAmt.MulInt64(4)},
+				baseEvenAmt,             // {"asset/a", baseEvenAmt},
+				baseEvenAmt.MulInt64(2), // {"asset/b", baseEvenAmt.MulInt64(2)},
+				baseEvenAmt.MulInt64(5),
+			}, // {"asset/e", baseEvenAmt.MulInt64(5)}},
 		},
 		"five asset pool, scaling factors = 1,2,3,4,5": {
 			denoms:         [2]string{"asset/a", "asset/e"},
 			poolAssets:     fiveUnevenStablePoolAssets,
 			scalingFactors: []uint64{1, 2, 3, 4, 5},
 			expReserves: []osmomath.BigDec{
-				baseEvenAmt,  // {"asset/a", baseEvenAmt},
-				baseEvenAmt,  // {"asset/e", baseEvenAmt},
-				baseEvenAmt,  // {"asset/b", baseEvenAmt},
-				baseEvenAmt,  // {"asset/c", baseEvenAmt},
-				baseEvenAmt}, // {"asset/d", baseEvenAmt}},
+				baseEvenAmt, // {"asset/a", baseEvenAmt},
+				baseEvenAmt, // {"asset/e", baseEvenAmt},
+				baseEvenAmt, // {"asset/b", baseEvenAmt},
+				baseEvenAmt, // {"asset/c", baseEvenAmt},
+				baseEvenAmt,
+			}, // {"asset/d", baseEvenAmt}},
 		},
 		"max scaling factors": {
 			denoms:         [2]string{"foo", "bar"},
@@ -194,7 +210,8 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 			scalingFactors: []uint64{(1 << 62), (1 << 62)},
 			expReserves: []osmomath.BigDec{
 				osmomath.NewBigDec(1000000000).QuoInt64(int64(1 << 62)),
-				osmomath.NewBigDec(1000000000).QuoInt64(int64(1 << 62))},
+				osmomath.NewBigDec(1000000000).QuoInt64(int64(1 << 62)),
+			},
 		},
 		"zero scaling factor": {
 			denoms:         [2]string{"foo", "bar"},
