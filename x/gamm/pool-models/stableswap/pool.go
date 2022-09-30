@@ -24,7 +24,8 @@ var _ types.PoolI = &Pool{}
 func NewStableswapPool(poolId uint64,
 	stableswapPoolParams PoolParams, initialLiquidity sdk.Coins,
 	scalingFactors []uint64, scalingFactorController string,
-	futureGovernor string) (Pool, error) {
+	futureGovernor string,
+) (Pool, error) {
 	if len(scalingFactors) == 0 {
 		scalingFactors = make([]uint64, len(initialLiquidity))
 		for i := range scalingFactors {
@@ -102,6 +103,17 @@ func (p Pool) GetScalingFactorByLiquidityIndex(liquidityIndex int) uint64 {
 
 func (p Pool) NumAssets() int {
 	return len(p.PoolLiquidity)
+}
+
+// scaledInput returns scaled input tokens for usage in AMM equations
+func (p Pool) scaleInputAmount(input sdk.Coin, roundingDirection osmomath.RoundingDirection) (osmomath.BigDec, error) {
+	liquidityIndexes := p.getLiquidityIndexMap()
+	scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndexes[input.Denom])
+	scaledAmount, err := osmomath.DivIntByU64ToBigDec(input.Amount, scalingFactor, roundingDirection)
+	if err != nil {
+		return osmomath.BigDec{}, err
+	}
+	return scaledAmount, nil
 }
 
 // getDescaledPoolAmts gets descaled amount of given denom and amount
