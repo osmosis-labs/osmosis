@@ -13,6 +13,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/osmosis-labs/osmosis/v12/simulation/executor/internal/stats"
 	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
 )
 
@@ -43,7 +44,7 @@ type simState struct {
 	// work for us to clean up and architect well.
 	// We should be collecting this raw data, and able to stream it out into a database.
 	// Its fine to keep some basic aggregate statistics, but not where it should end.
-	eventStats EventStats
+	eventStats stats.EventStats
 	opCount    int
 
 	config Config
@@ -60,7 +61,7 @@ func newSimulatorState(simParams Params, initialHeader tmproto.Header, tb testin
 		pastVoteInfos:  [][]abci.VoteInfo{},
 		logWriter:      NewLogWriter(tb),
 		w:              w,
-		eventStats:     NewEventStats(),
+		eventStats:     stats.NewEventStats(),
 		opCount:        0,
 		config:         config,
 	}

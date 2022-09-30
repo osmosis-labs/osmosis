@@ -237,6 +237,21 @@ func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 	return nextPoolId
 }
 
+func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (string, error) {
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
+	if err != nil {
+		return "", err
+	}
+
+	switch pool := pool.(type) {
+	case *balancer.Pool:
+		return "Balancer", nil
+	default:
+		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
+		return "", sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
+	}
+}
+
 // getNextPoolIdAndIncrement returns the next pool Id, and increments the corresponding state entry.
 func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 	nextPoolId := k.GetNextPoolId(ctx)

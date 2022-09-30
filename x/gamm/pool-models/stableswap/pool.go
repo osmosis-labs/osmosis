@@ -21,21 +21,30 @@ var _ types.PoolI = &Pool{}
 // * len(initialLiquidity) = 2
 // * FutureGovernor is valid
 // * poolID doesn't already exist
-func NewStableswapPool(poolId uint64, stableswapPoolParams PoolParams, initialLiquidity sdk.Coins, scalingFactors []uint64, futureGovernor string) (Pool, error) {
+func NewStableswapPool(poolId uint64,
+	stableswapPoolParams PoolParams, initialLiquidity sdk.Coins,
+	scalingFactors []uint64, scalingFactorController string,
+	futureGovernor string) (Pool, error) {
 	if len(scalingFactors) == 0 {
-		scalingFactors = []uint64{1, 1}
-	} else if scalingFactors[0] == 0 || scalingFactors[1] == 0 {
-		return Pool{}, types.ErrInvalidStableswapScalingFactors
+		scalingFactors = make([]uint64, len(initialLiquidity))
+		for i := range scalingFactors {
+			scalingFactors[i] = 1
+		}
+	}
+
+	if err := validateScalingFactors(scalingFactors, len(initialLiquidity)); err != nil {
+		return Pool{}, err
 	}
 
 	pool := Pool{
-		Address:            types.NewPoolAddress(poolId).String(),
-		Id:                 poolId,
-		PoolParams:         stableswapPoolParams,
-		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(poolId), types.InitPoolSharesSupply),
-		PoolLiquidity:      initialLiquidity,
-		ScalingFactor:      scalingFactors,
-		FuturePoolGovernor: futureGovernor,
+		Address:                 types.NewPoolAddress(poolId).String(),
+		Id:                      poolId,
+		PoolParams:              stableswapPoolParams,
+		TotalShares:             sdk.NewCoin(types.GetPoolShareDenom(poolId), types.InitPoolSharesSupply),
+		PoolLiquidity:           initialLiquidity,
+		ScalingFactor:           scalingFactors,
+		ScalingFactorController: scalingFactorController,
+		FuturePoolGovernor:      futureGovernor,
 	}
 
 	return pool, nil
@@ -109,35 +118,33 @@ func (p Pool) getPoolAmts(denoms ...string) ([]sdk.Int, error) {
 	return result, nil
 }
 
-// getScaledPoolAmts returns scaled amount of pool liquidity based on each asset's precisions
-func (p Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Dec, error) {
-	result := make([]sdk.Dec, len(denoms))
-	poolLiquidity := p.PoolLiquidity
-	liquidityIndexes := p.getLiquidityIndexMap()
+// scaledPoolReserves returns scaled amount of pool liquidity for usage in AMM equations
+func (p Pool) scaledPoolReserves() ([]sdk.DecCoin, error) {
+	scaledReserves := make([]sdk.DecCoin, len(p.PoolLiquidity))
 
-	for i, denom := range denoms {
-		liquidityIndex := liquidityIndexes[denom]
-
-		amt := poolLiquidity.AmountOf(denom)
-		if amt.IsZero() {
-			return []sdk.Dec{}, fmt.Errorf("denom %s does not exist in pool", denom)
-		}
-		scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndex)
-		result[i] = amt.ToDec().QuoInt64Mut(int64(scalingFactor))
+	for i, poolReserve := range p.PoolLiquidity {
+		scalingFactor := p.GetScalingFactorByLiquidityIndex(i)
+		scaledReserves[i] = sdk.NewDecCoinFromDec(
+			poolReserve.Denom,
+			poolReserve.Amount.ToDec().QuoInt64Mut(int64(scalingFactor)))
 	}
-	return result, nil
+
+	return scaledReserves, nil
 }
 
 // getDescaledPoolAmts gets descaled amount of given denom and amount
+// TODO: Review rounding of this in all contexts
 func (p Pool) getDescaledPoolAmt(denom string, amount osmomath.BigDec) osmomath.BigDec {
 	liquidityIndexes := p.getLiquidityIndexMap()
 	liquidityIndex := liquidityIndexes[denom]
 
 	scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndex)
+
 	return amount.MulInt64(int64(scalingFactor))
 }
 
 // getLiquidityIndexMap creates a map of denoms to its index in pool liquidity
+// TODO: Review all uses of this
 func (p Pool) getLiquidityIndexMap() map[string]int {
 	poolLiquidity := p.PoolLiquidity
 	liquidityIndexMap := make(map[string]int, poolLiquidity.Len())
@@ -145,6 +152,39 @@ func (p Pool) getLiquidityIndexMap() map[string]int {
 		liquidityIndexMap[coin.Denom] = i
 	}
 	return liquidityIndexMap
+}
+
+func reorderDecCoinSliceByDenom(coins []sdk.DecCoin, first string, second string) ([]sdk.DecCoin, error) {
+	newCoins := make([]sdk.DecCoin, len(coins))
+	curIndex := 2
+	for _, coin := range coins {
+		if coin.Denom == first {
+			newCoins[0] = coin
+		} else if coin.Denom == second {
+			newCoins[1] = coin
+		} else {
+			newCoins[curIndex] = coin
+			curIndex += 1
+		}
+	}
+	if (newCoins[0] == sdk.DecCoin{}) {
+		return nil, fmt.Errorf("denom %s not found in pool liquidity", first)
+	} else if (newCoins[1] == sdk.DecCoin{}) {
+		return nil, fmt.Errorf("denom %s not found in pool liquidity", second)
+	}
+	return newCoins, nil
+}
+
+func (p Pool) scaledSortedPoolReserves(first string, second string) ([]sdk.DecCoin, error) {
+	scaledReserves, err := p.scaledPoolReserves()
+	if err != nil {
+		return nil, err
+	}
+	scaledReserves, err = reorderDecCoinSliceByDenom(scaledReserves, first, second)
+	if err != nil {
+		return nil, err
+	}
+	return scaledReserves, nil
 }
 
 // updatePoolLiquidityForSwap updates the pool liquidity.
@@ -238,12 +278,16 @@ func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDen
 }
 
 func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error) {
-	reserves, err := p.getScaledPoolAmts(baseAssetDenom, quoteAssetDenom)
+	scaledSortedReserves, err := p.scaledSortedPoolReserves(baseAssetDenom, quoteAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
 
-	scaledSpotPrice := spotPrice(osmomath.BigDecFromSDKDec(reserves[0]), osmomath.BigDecFromSDKDec(reserves[1]))
+	baseScaledAmount := osmomath.BigDecFromSDKDec(scaledSortedReserves[0].Amount)
+	quoteScaledAmount := osmomath.BigDecFromSDKDec(scaledSortedReserves[0].Amount)
+	remScaledAmounts := osmomath.BigDecFromSDKDecCoinSlice(scaledSortedReserves[2:])
+	scaledSpotPrice := spotPrice(baseScaledAmount, quoteScaledAmount, remScaledAmounts)
+	// TODO: I don't think this is right for descaling spot price
 	spotPrice := p.getDescaledPoolAmt(baseAssetDenom, scaledSpotPrice)
 	spotPriceSdkDec := spotPrice.SDKDec()
 
@@ -298,16 +342,37 @@ func (p *Pool) PokePool(blockTime time.Time) {}
 // SetStableSwapScalingFactors sets scaling factors for pool to the given amount
 // It should only be able to be successfully called by the pool's ScalingFactorGovernor
 // TODO: move commented test for this function from x/gamm/keeper/pool_service_test.go once a pool_test.go file has been created for stableswap
-func (p *Pool) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uint64, scalingFactorGovernor string) error {
-	if scalingFactorGovernor != p.ScalingFactorGovernor {
+func (p *Pool) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uint64, sender string) error {
+	if sender != p.ScalingFactorController {
 		return types.ErrNotScalingFactorGovernor
 	}
 
-	if len(scalingFactors) != p.PoolLiquidity.Len() {
-		return types.ErrInvalidStableswapScalingFactors
+	if err := validateScalingFactors(scalingFactors, p.PoolLiquidity.Len()); err != nil {
+		return err
 	}
 
 	p.ScalingFactor = scalingFactors
+	return nil
+}
+
+func validateScalingFactorController(scalingFactorController string) error {
+	if len(scalingFactorController) == 0 {
+		return nil
+	}
+	_, err := sdk.AccAddressFromBech32(scalingFactorController)
+	return err
+}
+
+func validateScalingFactors(scalingFactors []uint64, numAssets int) error {
+	if len(scalingFactors) != numAssets {
+		return types.ErrInvalidStableswapScalingFactors
+	}
+
+	for _, scalingFactor := range scalingFactors {
+		if scalingFactor == 0 || int64(scalingFactor) <= 0 {
+			return types.ErrInvalidStableswapScalingFactors
+		}
+	}
 
 	return nil
 }

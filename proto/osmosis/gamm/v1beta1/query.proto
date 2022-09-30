@@ -31,6 +31,13 @@ service Query {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/pools/{pool_id}";
   }
 
+  // PoolType returns the type of the pool.
+  // Returns "Balancer" as a string literal when the pool is a balancer pool.
+  // Errors if the pool is failed to be type caseted.
+  rpc PoolType(QueryPoolTypeRequest) returns (QueryPoolTypeResponse) {
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/pool_type/{pool_id}";
+  }
+
   rpc PoolParams(QueryPoolParamsRequest) returns (QueryPoolParamsResponse) {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{pool_id}/params";
@@ -93,6 +100,14 @@ message QueryPoolsResponse {
 message QueryNumPoolsRequest {}
 message QueryNumPoolsResponse {
   uint64 num_pools = 1 [ (gogoproto.moretags) = "yaml:\"num_pools\"" ];
+}
+
+//=============================== PoolType
+message QueryPoolTypeRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+message QueryPoolTypeResponse {
+  string pool_type = 1 [ (gogoproto.moretags) = "yaml:\"pool_type\"" ];
 }
 
 //=============================== PoolParams
