@@ -175,6 +175,19 @@ def binary_search(lowerbound, upperbound, approximation_fn, target, max_iteratio
 
 Detail how we take the previously discussed solver, and build SwapExactAmountIn and SwapExactAmountOut.
 
+##### SwapExactAmountIn
+
+<!-- TODO: Maybe we just use normal pseudocode syntax -->
+```python
+def SwapExactAmountIn(pool, in_coin, out_denom):
+  # Round down as lower reserves -> higher slippage
+  scaledReserves = pool.ScaledLiquidity(RoundingMode.RoundDown)
+  in_amt_scaled = pool.ScaleToken(in_coin)
+  in_reserve, out_reserve = scaledReserves[in_coin.Denom], scaledReserves[out_denom]
+  rem_reserves = { x for x in scaledReserves if (x != in_coin.Denom and x != out_denom) }
+  solveCfmm(out_reserve, in_reserve, remReserves, in_amt_scaled)
+```
+
 ### Spot Price
 
 Spot price for an AMM pool is the derivative of its `CalculateOutAmountGivenIn` equation.
