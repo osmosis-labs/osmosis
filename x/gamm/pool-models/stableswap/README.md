@@ -217,26 +217,28 @@ def CalcOutAmountGivenExactAmountIn(pool, in_coin, out_denom, swap_fee):
 
 ##### SwapExactAmountOut
 
-So now we need to put together the prior components.
+<!-- TODO: Explain overall context of this section -->
 When we scale liquidity, we round down, as lower reserves -> higher slippage.
-Similarly when we scale the exact token amount out, we round up as this will demand more input asset.
-These both ensure no risk of under-delivery of token in.
+Similarly when we scale the exact token out, we round up to increase required token in.
 
-The amount of tokens that we treat as going into the "0-swap fee" pool we defined equations off of is: `amm_in = in_amt_scaled * (1 - swapfee)`. (With `swapfee * in_amt_scaled` just being added to pool liquidity)
+We model the `solve_y` call as we are doing a known change to the `out_reserve`, and solving for the implied unknown change to `in_reserve`.
+To handle the swapfee, we apply the swapfee on the resultant needed input amount.
+We do this by having `token_in = amm_in / (1 - swapfee)`.
 
-Then we simply call `solve_y` with the input reserves, and `amm_in`.
 
 <!-- TODO: Maybe we just use normal pseudocode syntax -->
 ```python
 def CalcInAmountGivenExactAmountOut(pool, out_coin, in_denom, swap_fee):
-  in_reserve, out_reserve, rem_reserves = pool.ScaledLiquidity(in_coin, out_denom, RoundingMode.RoundDown)
-  in_amt_scaled = pool.ScaleToken(in_coin, RoundingMode.RoundDown)
-  amm_in = in_amt_scaled * (1 - swap_fee)
-  out_amt_scaled = solve_y(in_reserve, out_reserve, remReserves, in_amt_scaled)
-  out_amt = pool.DescaleToken(out_amt_scaled, out_denom)
-  return out_amt
+  in_reserve, out_reserve, rem_reserves = pool.ScaledLiquidity(in_denom, out_coin, RoundingMode.RoundDown)
+  out_amt_scaled = pool.ScaleToken(in_coin, RoundingMode.RoundUp)
+
+  amm_in_scaled = solve_y(out_reserve, in_reserve, remReserves, -out_amt_scaled)
+  swap_in_scaled = ceil(amm_in_scaled / (1 - swapfee))
+  in_amt = pool.DescaleToken(swap_in_scaled, in_denom)
+  return in_amt
 ```
 
+We see correctness of the swap fee, by imagining what happens if we took this resultant input amount, and ran `SwapExactAmountIn (seai)`. Namely, that `seai_amm_in = amm_in * (1 - swapfee) = amm_in`, as desired!
 
 #### Precision handling
 
