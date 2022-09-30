@@ -23,13 +23,14 @@ func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err err
 		if recoveryError := recover(); recoveryError != nil {
 			if isErr, descriptor := IsOutOfGasError(recoveryError); isErr {
 				err = errors.New("out of gas occurred during execution: " + descriptor)
-				newConsumed := cacheCtx.GasMeter().GasConsumed()
-				oldConsumed := ctx.GasMeter().GasConsumed()
-				ctx.GasMeter().ConsumeGas(newConsumed-oldConsumed, "apply func if no err: "+descriptor)
 			} else {
 				PrintPanicRecoveryError(ctx, recoveryError)
 				err = errors.New("panic occurred during execution")
 			}
+
+			newConsumed := cacheCtx.GasMeter().GasConsumed()
+			oldConsumed := ctx.GasMeter().GasConsumed()
+			ctx.GasMeter().ConsumeGas(newConsumed-oldConsumed, "apply func if no err: "+err.Error())
 		}
 	}()
 	err = f(cacheCtx)
