@@ -45,7 +45,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 
 * [#2739](https://github.com/osmosis-labs/osmosis/pull/2739) Add pool type query
+
+### Bug fixes
+
 * [#2803](https://github.com/osmosis-labs/osmosis/pull/2803) Fix total pool liquidity CLI query.
+
+### Misc Improvements
+
+* [#2804](https://github.com/osmosis-labs/osmosis/pull/2804) Improve error handling and messages when parsing pool assets.
 
 ## v12.0.0
 
