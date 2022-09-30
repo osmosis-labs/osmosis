@@ -245,14 +245,13 @@ func spotPrice(baseReserve, quoteReserve osmomath.BigDec, remReserves []osmomath
 
 // returns outAmt as a decimal
 func (p *Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
-	reserves, err := p.scaledSortedPoolReserves(tokenIn.Denom, tokenOutDenom)
+	roundMode := osmomath.RoundDown // TODO:
+	reserves, err := p.scaledSortedPoolReserves(tokenIn.Denom, tokenOutDenom, roundMode)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	tokenInSupply := osmomath.BigDecFromSDKDec(reserves[0].Amount)
-	tokenOutSupply := osmomath.BigDecFromSDKDec(reserves[1].Amount)
-	remReserves := osmomath.BigDecFromSDKDecCoinSlice(reserves[2:])
-	tokenInDec := osmomath.BigDecFromSDKDec(tokenIn.Amount.ToDec())
+	tokenInSupply, tokenOutSupply, remReserves := reserves[0], reserves[1], reserves[2:]
+	tokenInDec := osmomath.BigDecFromSDKDec(tokenIn.Amount.ToDec()) // TODO: Round mode
 	// We are solving for the amount of token out, hence x = tokenOutSupply, y = tokenInSupply
 	cfmmOut := solveCfmm(tokenOutSupply, tokenInSupply, remReserves, tokenInDec)
 	outAmt := p.getDescaledPoolAmt(tokenOutDenom, cfmmOut)
@@ -261,19 +260,18 @@ func (p *Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee
 
 // returns inAmt as a decimal
 func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
-	reserves, err := p.scaledSortedPoolReserves(tokenInDenom, tokenOut.Denom)
+	roundMode := osmomath.RoundDown // TODO:
+	reserves, err := p.scaledSortedPoolReserves(tokenInDenom, tokenOut.Denom, roundMode)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	tokenInSupply := osmomath.BigDecFromSDKDec(reserves[0].Amount)
-	tokenOutSupply := osmomath.BigDecFromSDKDec(reserves[1].Amount)
-	remReserves := osmomath.BigDecFromSDKDecCoinSlice(reserves[2:])
-	tokenOutAmount := osmomath.BigDecFromSDKDec(tokenOut.Amount.ToDec())
+	tokenInSupply, tokenOutSupply, remReserves := reserves[0], reserves[1], reserves[2:]
+	tokenOutAmount := osmomath.BigDecFromSDKDec(tokenOut.Amount.ToDec()) // TODO: round mode
 
 	// We are solving for the amount of token in, cfmm(x,y) = cfmm(x + x_in, y - y_out)
 	// x = tokenInSupply, y = tokenOutSupply, yIn = -tokenOutAmount
 	cfmmIn := solveCfmm(tokenInSupply, tokenOutSupply, remReserves, tokenOutAmount.Neg())
-	inAmt := p.getDescaledPoolAmt(tokenInDenom, cfmmIn.Neg())
+	inAmt := p.getDescaledPoolAmt(tokenInDenom, cfmmIn.Neg()) // TODO: round mode
 	return inAmt.SDKDec(), nil
 }
 

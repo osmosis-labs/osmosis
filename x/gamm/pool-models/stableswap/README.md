@@ -121,7 +121,8 @@ The maximal upperbound is obviously unworkable, and in general binary searching 
 This would suggest that we should do something smarter to iteratively approach the right value for the upperbound at least. 
 Notice that $h$ is super-linearly related in $y$, and at most cubically related to $y$. 
 This means that $\forall c \in \mathbb{R}^+, c * h(x,y,w) < h(x,c*y,w) < c^3 * h(x,y,w)$. 
-We can use this fact to get a pretty-good initial upperbound guess for $y$ using the linear estimate. In the lowerbound case, we leave it as lower-bounded by $0$, otherwise we would need to take a cubed root to get a better estimate.
+We can use this fact to get a pretty-good initial upperbound guess for $y$ using the linear estimate.
+In the lowerbound case, we leave it as lower-bounded by $0$, otherwise we would need to take a cubed root to get a better estimate.
 
 ```python
 def iterative_search(x_f, y_0, w, k, err_tolerance):
@@ -180,6 +181,9 @@ Then $\text{spot price} = \frac{\text{CalculateOutAmountGivenIn}(\epsilon)}{\eps
 
 We divide this section into two parts, `JoinPoolNoSwap & ExitPool`, and `JoinPool`.
 
+First we recap what are the properties that we'd expect from `JoinPoolNoSwap`, `ExitPool`, and LP shares.
+From this, we then derive what we'd expect for `JoinPool`.
+
 #### JoinPoolNoSwap and ExitPool
 
 Both of these methods can be implemented via generic AMM techniques.
@@ -188,6 +192,10 @@ Both of these methods can be implemented via generic AMM techniques.
 #### JoinPool
 
 The JoinPool API only supports JoinPoolNoSwap if 
+
+#### Join pool single asset in
+
+Couple ways to define JoinPool Exit Pool relation
 
 ## Code structure
 
