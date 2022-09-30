@@ -118,28 +118,22 @@ func (p Pool) getPoolAmts(denoms ...string) ([]sdk.Int, error) {
 	return result, nil
 }
 
-// getScaledPoolAmts returns scaled amount of pool liquidity based on each asset's precisions
-func (p Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Dec, error) {
-	result := make([]sdk.Dec, len(denoms))
-	poolLiquidity := p.PoolLiquidity
-	liquidityIndexes := p.getLiquidityIndexMap()
+// scaledPoolReserves returns scaled amount of pool liquidity for usage in AMM equations
+func (p Pool) scaledPoolReserves() ([]sdk.DecCoin, error) {
+	scaledReserves := make([]sdk.DecCoin, len(p.PoolLiquidity))
 
-	for i, denom := range denoms {
-		liquidityIndex := liquidityIndexes[denom]
-
-		amt := poolLiquidity.AmountOf(denom)
-		if amt.IsZero() {
-			return []sdk.Dec{}, fmt.Errorf("denom %s does not exist in pool", denom)
-		}
-		scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndex)
-
-		result[i] = amt.ToDec().QuoInt64Mut(int64(scalingFactor))
+	for i, poolReserve := range p.PoolLiquidity {
+		scalingFactor := p.GetScalingFactorByLiquidityIndex(i)
+		scaledReserves[i] = sdk.NewDecCoinFromDec(
+			poolReserve.Denom,
+			poolReserve.Amount.ToDec().QuoInt64Mut(int64(scalingFactor)))
 	}
 
-	return result, nil
+	return scaledReserves, nil
 }
 
 // getDescaledPoolAmts gets descaled amount of given denom and amount
+// TODO: Review rounding of this in all contexts
 func (p Pool) getDescaledPoolAmt(denom string, amount osmomath.BigDec) osmomath.BigDec {
 	liquidityIndexes := p.getLiquidityIndexMap()
 	liquidityIndex := liquidityIndexes[denom]
@@ -150,6 +144,7 @@ func (p Pool) getDescaledPoolAmt(denom string, amount osmomath.BigDec) osmomath.
 }
 
 // getLiquidityIndexMap creates a map of denoms to its index in pool liquidity
+// TODO: Review all uses of this
 func (p Pool) getLiquidityIndexMap() map[string]int {
 	poolLiquidity := p.PoolLiquidity
 	liquidityIndexMap := make(map[string]int, poolLiquidity.Len())
@@ -157,6 +152,39 @@ func (p Pool) getLiquidityIndexMap() map[string]int {
 		liquidityIndexMap[coin.Denom] = i
 	}
 	return liquidityIndexMap
+}
+
+func reorderDecCoinSliceByDenom(coins []sdk.DecCoin, first string, second string) ([]sdk.DecCoin, error) {
+	newCoins := make([]sdk.DecCoin, len(coins))
+	curIndex := 2
+	for _, coin := range coins {
+		if coin.Denom == first {
+			newCoins[0] = coin
+		} else if coin.Denom == second {
+			newCoins[1] = coin
+		} else {
+			newCoins[curIndex] = coin
+			curIndex += 1
+		}
+	}
+	if (newCoins[0] == sdk.DecCoin{}) {
+		return nil, fmt.Errorf("denom %s not found in pool liquidity", first)
+	} else if (newCoins[1] == sdk.DecCoin{}) {
+		return nil, fmt.Errorf("denom %s not found in pool liquidity", second)
+	}
+	return newCoins, nil
+}
+
+func (p Pool) scaledSortedPoolReserves(first string, second string) ([]sdk.DecCoin, error) {
+	scaledReserves, err := p.scaledPoolReserves()
+	if err != nil {
+		return nil, err
+	}
+	scaledReserves, err = reorderDecCoinSliceByDenom(scaledReserves, first, second)
+	if err != nil {
+		return nil, err
+	}
+	return scaledReserves, nil
 }
 
 // updatePoolLiquidityForSwap updates the pool liquidity.
@@ -250,12 +278,16 @@ func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDen
 }
 
 func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error) {
-	reserves, err := p.getScaledPoolAmts(baseAssetDenom, quoteAssetDenom)
+	scaledSortedReserves, err := p.scaledSortedPoolReserves(baseAssetDenom, quoteAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
 
-	scaledSpotPrice := spotPrice(osmomath.BigDecFromSDKDec(reserves[0]), osmomath.BigDecFromSDKDec(reserves[1]))
+	baseScaledAmount := osmomath.BigDecFromSDKDec(scaledSortedReserves[0].Amount)
+	quoteScaledAmount := osmomath.BigDecFromSDKDec(scaledSortedReserves[0].Amount)
+	remScaledAmounts := osmomath.BigDecFromSDKDecCoinSlice(scaledSortedReserves[2:])
+	scaledSpotPrice := spotPrice(baseScaledAmount, quoteScaledAmount, remScaledAmounts)
+	// TODO: I don't think this is right for descaling spot price
 	spotPrice := p.getDescaledPoolAmt(baseAssetDenom, scaledSpotPrice)
 	spotPriceSdkDec := spotPrice.SDKDec()
 
