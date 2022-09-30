@@ -223,7 +223,13 @@ func solveCFMMBinarySearchMulti(constantFunction func(osmomath.BigDec, osmomath.
 	}
 }
 
-func spotPrice(baseReserve, quoteReserve osmomath.BigDec, remReserves []osmomath.BigDec) osmomath.BigDec {
+func (p Pool) spotPrice(baseDenom, quoteDenom string) (sdk.Dec, error) {
+	roundMode := osmomath.RoundBankers // TODO:
+	reserves, err := p.scaledSortedPoolReserves(baseDenom, quoteDenom, roundMode)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+	baseReserve, quoteReserve, remReserves := reserves[0], reserves[1], reserves[2:]
 	// y = baseAsset, x = quoteAsset
 	// Define f_{y -> x}(a) as the function that outputs the amount of tokens X you'd get by
 	// trading "a" units of Y against the pool, assuming 0 swap fee, at the current liquidity.
@@ -240,11 +246,12 @@ func spotPrice(baseReserve, quoteReserve osmomath.BigDec, remReserves []osmomath
 	// xReserve & yReserve.
 	a := osmomath.OneDec()
 	// no need to divide by a, since a = 1.
-	return solveCfmm(baseReserve, quoteReserve, remReserves, a)
+	bigDec := solveCfmm(baseReserve, quoteReserve, remReserves, a)
+	return bigDec.SDKDec(), nil
 }
 
 // returns outAmt as a decimal
-func (p *Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
+func (p Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
 	roundMode := osmomath.RoundDown // TODO:
 	reserves, err := p.scaledSortedPoolReserves(tokenIn.Denom, tokenOutDenom, roundMode)
 	if err != nil {

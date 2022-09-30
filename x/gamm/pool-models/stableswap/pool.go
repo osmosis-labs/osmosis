@@ -155,40 +155,47 @@ func (p Pool) getLiquidityIndexMap() map[string]int {
 }
 
 func (p Pool) scaledSortedPoolReserves(first string, second string, round osmomath.RoundingDirection) ([]osmomath.BigDec, error) {
-	reorderedLiquidity, reorderedScalingFactors, err := p.reorderCoinsAndScalingFactor(first, second)
+	reorderedLiquidity, reorderedScalingFactors, err := p.reorderReservesAndScalingFactors(first, second)
 	if err != nil {
 		return nil, err
 	}
 	return osmomath.DivCoinAmtsByU64ToBigDec(reorderedLiquidity, reorderedScalingFactors, round)
 }
 
-// reorderCoinsAndScalingFactor takes the pool liquidity and scaling factors, and reorders them a list s.t.
+// reorderReservesAndScalingFactors takes the pool liquidity and scaling factors, and reorders them s.t.
+// reorderedReserves[0] = p.GetLiquidity().AmountOf(first)
+// reorderedScalingFactors[0] = p.ScalingFactors[p.getLiquidityIndexMap()[first]]
+// and the same for index 1, and second.
 //
-func (p Pool) reorderCoinsAndScalingFactor(first string, second string) ([]sdk.Coin, []uint64, error) {
+// The remainder of the lists includes every remaining (reserve asset, scaling factor) pair,
+// in a deterministic order.
+//
+// Returns an error if the pool does not contain either of first or second.
+func (p Pool) reorderReservesAndScalingFactors(first string, second string) ([]sdk.Coin, []uint64, error) {
 	coins := p.PoolLiquidity
 	scalingFactors := p.ScalingFactor
-	reorderedCoins := make([]sdk.Coin, len(coins))
+	reorderedReserves := make([]sdk.Coin, len(coins))
 	reorderedScalingFactors := make([]uint64, len(coins))
 	curIndex := 2
 	for i, coin := range coins {
 		if coin.Denom == first {
-			reorderedCoins[0] = coin
+			reorderedReserves[0] = coin
 			reorderedScalingFactors[0] = scalingFactors[i]
 		} else if coin.Denom == second {
-			reorderedCoins[1] = coin
+			reorderedReserves[1] = coin
 			reorderedScalingFactors[1] = scalingFactors[i]
 		} else {
-			reorderedCoins[curIndex] = coin
+			reorderedReserves[curIndex] = coin
 			reorderedScalingFactors[curIndex] = scalingFactors[i]
 			curIndex += 1
 		}
 	}
-	if (reorderedCoins[0] == sdk.Coin{}) {
+	if (reorderedReserves[0] == sdk.Coin{}) {
 		return nil, nil, fmt.Errorf("denom %s not found in pool liquidity", first)
-	} else if (reorderedCoins[1] == sdk.Coin{}) {
+	} else if (reorderedReserves[1] == sdk.Coin{}) {
 		return nil, nil, fmt.Errorf("denom %s not found in pool liquidity", second)
 	}
-	return reorderedCoins, reorderedScalingFactors, nil
+	return reorderedReserves, reorderedScalingFactors, nil
 }
 
 // updatePoolLiquidityForSwap updates the pool liquidity.
@@ -282,21 +289,7 @@ func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDen
 }
 
 func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error) {
-	// scaledSortedReserves, err := p.scaledSortedPoolReserves(baseAssetDenom, quoteAssetDenom, osmomath.RoundBakers)
-	// if err != nil {
-	// 	return sdk.Dec{}, err
-	// }
-
-	// baseScaledAmount := osmomath.BigDecFromSDKDec(scaledSortedReserves[0].Amount)
-	// quoteScaledAmount := osmomath.BigDecFromSDKDec(scaledSortedReserves[0].Amount)
-	// remScaledAmounts := osmomath.BigDecFromSDKDecCoinSlice(scaledSortedReserves[2:])
-	// scaledSpotPrice := spotPrice(baseScaledAmount, quoteScaledAmount, remScaledAmounts)
-	// // TODO: I don't think this is right for descaling spot price
-	// spotPrice := p.getDescaledPoolAmt(baseAssetDenom, scaledSpotPrice)
-	// spotPriceSdkDec := spotPrice.SDKDec()
-
-	// return spotPriceSdkDec, nil
-	return sdk.Dec{}, fmt.Errorf("Fix this code")
+	return p.spotPrice(baseAssetDenom, quoteAssetDenom)
 }
 
 func (p Pool) Copy() Pool {
