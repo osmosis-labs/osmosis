@@ -133,24 +133,21 @@ func (p Pool) scaledPoolReserves() ([]sdk.DecCoin, error) {
 	return scaledReserves, nil
 }
 
-// scaledPoolReserves returns scaled amount of pool liquidity for usage in AMM equations
+// scaledInput returns scaled input tokens for usage in AMM equations
 func (p Pool) scaledInput(input sdk.Coins) ([]sdk.DecCoin, error) {
 	if !input.DenomsSubsetOf(p.PoolLiquidity) {
 		return []sdk.DecCoin{}, fmt.Errorf("at least one input denom not in pool")
 	}
 
-	scaledInput := make([]sdk.DecCoin, len(input))
-	curInput := 0
+	scaledInput := make([]sdk.DecCoin, 0, len(input))
+	liquidityIndexes := p.getLiquidityIndexMap()
 
-	// we assume that denoms will appear in the same order in the input as in pool liquidity (lexicographic)
-	for i, poolReserve := range p.PoolLiquidity {
-		if sdk.NewCoins(poolReserve).DenomsSubsetOf(input) {
-			scalingFactor := p.GetScalingFactorByLiquidityIndex(i)
-			scaledInput[curInput] = sdk.NewDecCoinFromDec(
-				poolReserve.Denom,
-				input[curInput].Amount.ToDec().QuoInt64Mut(int64(scalingFactor)))
-			curInput += 1
-		}
+	for _, coin := range input {
+		liquidityIndex := liquidityIndexes[coin.Denom]
+		scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndex)
+		scaledInput = append(scaledInput, sdk.NewDecCoinFromDec(
+			coin.Denom,
+			coin.Amount.ToDec().QuoInt64Mut(int64(scalingFactor))))
 	}
 
 	// TODO: correctly handle rounding
