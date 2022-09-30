@@ -347,132 +347,70 @@ func TestGetDescaledPoolAmts(t *testing.T) {
 
 func TestScaledInput(t *testing.T) {
 	tests := map[string]struct {
-		input          sdk.Coins
+		input          sdk.Coin
 		poolAssets     sdk.Coins
 		scalingFactors []uint64
-		expOutput      []sdk.DecCoin
+		expOutput      sdk.DecCoin
 		expPanic       bool
 	}{
 		"even two-asset pool with default scaling factors": {
-			input: sdk.NewCoins(
-				sdk.NewCoin("foo", sdk.NewInt(100)),
-				sdk.NewCoin("bar", sdk.NewInt(100)),
-			),
+			input:          sdk.NewCoin("bar", sdk.NewInt(100)),
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expOutput:      []sdk.DecCoin{{"bar", sdk.NewDec(100)}, {"foo", sdk.NewDec(100)}},
+			expOutput:      sdk.DecCoin{"bar", sdk.NewDec(100)},
 			expPanic:       false,
 		},
 		"uneven two-asset pool with default scaling factors": {
-			input: sdk.NewCoins(
-				sdk.NewCoin("foo", sdk.NewInt(200)),
-				sdk.NewCoin("bar", sdk.NewInt(100)),
-			),
+			input:          sdk.NewCoin("foo", sdk.NewInt(200)),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expOutput:      []sdk.DecCoin{{"bar", sdk.NewDec(100)}, {"foo", sdk.NewDec(200)}},
+			expOutput:      sdk.DecCoin{"foo", sdk.NewDec(200)},
 			expPanic:       false,
 		},
 		"even two-asset pool with even scaling factors greater than 1": {
-			input: sdk.NewCoins(
-				sdk.NewCoin("foo", sdk.NewInt(100)),
-				sdk.NewCoin("bar", sdk.NewInt(100)),
-			),
+			input:          sdk.NewCoin("foo", sdk.NewInt(100)),
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{10, 10},
-			expOutput:      []sdk.DecCoin{{"bar", sdk.NewDec(10)}, {"foo", sdk.NewDec(10)}},
+			expOutput:      sdk.DecCoin{"foo", sdk.NewDec(10)},
 			expPanic:       false,
 		},
 		"even two-asset pool with uneven scaling factors greater than 1": {
-			input: sdk.NewCoins(
-				sdk.NewCoin("bar", sdk.NewInt(100)),
-				sdk.NewCoin("foo", sdk.NewInt(100)),
-			),
+			input:          sdk.NewCoin("bar", sdk.NewInt(100)),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10, 5},
-			expOutput:      []sdk.DecCoin{{"bar", sdk.NewDec(10)}, {"foo", sdk.NewDec(20)}},
+			expOutput:      sdk.DecCoin{"bar", sdk.NewDec(10)},
 			expPanic:       false,
 		},
 		"even two-asset pool with even, massive scaling factors greater than 1": {
-			input: sdk.NewCoins(
-				sdk.NewCoin("foo", sdk.NewInt(100)),
-				sdk.NewCoin("bar", sdk.NewInt(100)),
-			),
+			input:          sdk.NewCoin("foo", sdk.NewInt(100)),
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{10000000000, 10000000000},
-			expOutput:      []sdk.DecCoin{{"bar", sdk.NewDec(100).Quo(sdk.NewDec(10000000000))}, {"foo", sdk.NewDec(100).Quo(sdk.NewDec(10000000000))}},
+			expOutput:      sdk.DecCoin{"foo", sdk.NewDec(100).Quo(sdk.NewDec(10000000000))},
 			expPanic:       false,
 		},
-		"five asset pool, scaling factors = 1, single-asset input": {
-			input:          sdk.NewCoins(sdk.NewCoin("asset/c", sdk.NewInt(100))),
+		"five asset pool, scaling factors = 1": {
+			input:          sdk.NewCoin("asset/c", sdk.NewInt(100)),
 			poolAssets:     fiveUnevenStablePoolAssets,
 			scalingFactors: []uint64{1, 1, 1, 1, 1},
-			expOutput:      []sdk.DecCoin{{"asset/c", sdk.NewDec(100)}},
+			expOutput:      sdk.DecCoin{"asset/c", sdk.NewDec(100)},
 			expPanic:       false,
 		},
-		"five asset pool, scaling factors = 1, all-asset input": {
-			input: sdk.NewCoins(
-				sdk.NewCoin("asset/a", sdk.NewInt(100)),
-				sdk.NewCoin("asset/b", sdk.NewInt(100)),
-				sdk.NewCoin("asset/c", sdk.NewInt(100)),
-				sdk.NewCoin("asset/d", sdk.NewInt(100)),
-				sdk.NewCoin("asset/e", sdk.NewInt(100)),
-			),
-			poolAssets:     fiveUnevenStablePoolAssets,
-			scalingFactors: []uint64{1, 1, 1, 1, 1},
-			expOutput: []sdk.DecCoin{
-				{"asset/a", sdk.NewDec(100)},
-				{"asset/b", sdk.NewDec(100)},
-				{"asset/c", sdk.NewDec(100)},
-				{"asset/d", sdk.NewDec(100)},
-				{"asset/e", sdk.NewDec(100)},
-			},
-			expPanic: false,
-		},
-		"five asset pool, scaling factors = 1,2,3,4,5, single-asset in": {
-			input:          sdk.NewCoins(sdk.NewCoin("asset/d", sdk.NewInt(100))),
+		"five asset pool, scaling factors = 1,2,3,4,5": {
+			input:          sdk.NewCoin("asset/d", sdk.NewInt(100)),
 			poolAssets:     fiveUnevenStablePoolAssets,
 			scalingFactors: []uint64{1, 2, 3, 4, 5},
-			expOutput:      []sdk.DecCoin{{"asset/d", sdk.NewDec(100).Quo(sdk.NewDec(4))}},
+			expOutput:      sdk.DecCoin{"asset/d", sdk.NewDec(100).Quo(sdk.NewDec(4))},
 			expPanic:       false,
-		},
-		"five asset pool, scaling factors = 1,2,3,4,5, all-asset in": {
-			input: sdk.NewCoins(
-				sdk.NewCoin("asset/a", sdk.NewInt(100)),
-				sdk.NewCoin("asset/b", sdk.NewInt(100)),
-				sdk.NewCoin("asset/c", sdk.NewInt(100)),
-				sdk.NewCoin("asset/d", sdk.NewInt(100)),
-				sdk.NewCoin("asset/e", sdk.NewInt(100)),
-			),
-			poolAssets:     fiveUnevenStablePoolAssets,
-			scalingFactors: []uint64{1, 2, 3, 4, 5},
-			expOutput: []sdk.DecCoin{
-				{"asset/a", sdk.NewDec(100)},
-				{"asset/b", sdk.NewDec(100).Quo(sdk.NewDec(2))},
-				{"asset/c", sdk.NewDec(100).Quo(sdk.NewDec(3))},
-				{"asset/d", sdk.NewDec(100).Quo(sdk.NewDec(4))},
-				{"asset/e", sdk.NewDec(100).Quo(sdk.NewDec(5))},
-			},
-			expPanic: false,
 		},
 		"max scaling factors on min token inputs": {
-			input: sdk.NewCoins(
-				sdk.NewCoin("foo", sdk.NewInt(1)),
-				sdk.NewCoin("bar", sdk.NewInt(1)),
-			),
+			input:          sdk.NewCoin("foo", sdk.NewInt(1)),
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{(1 << 62), (1 << 62)},
-			expOutput: []sdk.DecCoin{
-				{"bar", sdk.NewDec(1).QuoInt64(int64(1 << 62))},
-				{"foo", sdk.NewDec(1).QuoInt64(int64(1 << 62))},
-			},
-			expPanic: false,
+			expOutput:      sdk.DecCoin{"foo", sdk.NewDec(1).QuoInt64(int64(1 << 62))},
+			expPanic:       false,
 		},
 		"zero scaling factor": {
-			input: sdk.NewCoins(
-				sdk.NewCoin("foo", sdk.NewInt(100)),
-				sdk.NewCoin("bar", sdk.NewInt(100)),
-			),
+			input:          sdk.NewCoin("bar", sdk.NewInt(100)),
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{0, 1},
 			expPanic:       true,
