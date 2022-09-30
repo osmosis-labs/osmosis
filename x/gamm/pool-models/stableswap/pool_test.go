@@ -21,8 +21,9 @@ var (
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}
-	defaultTwoAssetScalingFactors = []uint64{1, 1}
-	defaultFutureGovernor         = ""
+	defaultTwoAssetScalingFactors  = []uint64{1, 1}
+	defaultFiveAssetScalingFactors = []uint64{1, 1, 1, 1, 1}
+	defaultFutureGovernor          = ""
 
 	twoEvenStablePoolAssets = sdk.NewCoins(
 		sdk.NewInt64Coin("foo", 1000000000),
@@ -31,6 +32,13 @@ var (
 	twoUnevenStablePoolAssets = sdk.NewCoins(
 		sdk.NewInt64Coin("foo", 2000000000),
 		sdk.NewInt64Coin("bar", 1000000000),
+	)
+	fiveEvenStablePoolAssets = sdk.NewCoins(
+		sdk.NewInt64Coin("asset/a", 1000000000),
+		sdk.NewInt64Coin("asset/b", 1000000000),
+		sdk.NewInt64Coin("asset/c", 1000000000),
+		sdk.NewInt64Coin("asset/d", 1000000000),
+		sdk.NewInt64Coin("asset/e", 1000000000),
 	)
 	fiveUnevenStablePoolAssets = sdk.NewCoins(
 		sdk.NewInt64Coin("asset/a", 1000000000),
@@ -76,8 +84,10 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10, 5},
-			expReserves: []sdk.DecCoin{sdk.NewInt64DecCoin("foo", 2000000000/5),
-				sdk.NewInt64DecCoin("bar", 1000000000/10)},
+			expReserves: []sdk.DecCoin{
+				sdk.NewInt64DecCoin("foo", 2000000000/5),
+				sdk.NewInt64DecCoin("bar", 1000000000/10),
+			},
 			expPanic: false,
 		},
 		"even two-asset pool with even, massive scaling factors greater than 1": {
@@ -96,7 +106,8 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 				{"asset/d", baseEvenAmt.MulInt64(4)},
 				{"asset/a", baseEvenAmt},
 				{"asset/b", baseEvenAmt.MulInt64(2)},
-				{"asset/e", baseEvenAmt.MulInt64(5)}},
+				{"asset/e", baseEvenAmt.MulInt64(5)},
+			},
 			expPanic: false,
 		},
 		"five asset pool, scaling factors = 1,2,3,4,5": {
@@ -108,7 +119,8 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 				{"asset/e", baseEvenAmt},
 				{"asset/b", baseEvenAmt},
 				{"asset/c", baseEvenAmt},
-				{"asset/d", baseEvenAmt}},
+				{"asset/d", baseEvenAmt},
+			},
 			expPanic: false,
 		},
 		"max scaling factors": {
@@ -117,7 +129,8 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 			scalingFactors: []uint64{(1 << 62), (1 << 62)},
 			expReserves: []sdk.DecCoin{
 				{"foo", sdk.NewDec(1000000000).QuoInt64(int64(1 << 62))},
-				{"bar", sdk.NewDec(1000000000).QuoInt64(int64(1 << 62))}},
+				{"bar", sdk.NewDec(1000000000).QuoInt64(int64(1 << 62))},
+			},
 			expPanic: false,
 		},
 		"zero scaling factor": {

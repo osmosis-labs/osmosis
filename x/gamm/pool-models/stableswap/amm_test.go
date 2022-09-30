@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v12/osmomath"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/test_helpers"
+	types "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
 // CFMMTestCase defines a testcase for stableswap pools
@@ -630,4 +631,116 @@ func calcWSumSquares(remReserves []osmomath.BigDec) osmomath.BigDec {
 		wSumSquares = wSumSquares.Add(assetReserve.Mul(assetReserve))
 	}
 	return wSumSquares
+}
+
+func TestCalcSingleAssetJoinShares(t *testing.T) {
+	// create even pool (twoEvenStablePoolAssets)
+	// ... uneven (twoUnevenStablePoolAssets)
+	// ... even multi asset (fiveEvenStablePoolAssets)
+	// ... uneven multi asset (fiveUnevenStablePoolAssets)
+
+	type testcase struct {
+		tokenIn        sdk.Coin
+		poolAssets     sdk.Coins
+		scalingFactors []uint64
+		swapFee        sdk.Dec
+		expectedShares sdk.Int
+		expectPanic    bool
+	}
+
+	tests := map[string]testcase{
+		"even two asset pool, no swap fee": {
+			tokenIn:        sdk.NewCoin("foo", sdk.NewInt(100)),
+			poolAssets:     twoEvenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			swapFee:        sdk.ZeroDec(),
+			expectedShares: sdk.ZeroInt(),
+			expectPanic:    false,
+		},
+		"uneven two asset pool, no swap fee": {
+			tokenIn:        sdk.NewCoin("foo", sdk.NewInt(100)),
+			poolAssets:     twoUnevenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			swapFee:        sdk.ZeroDec(),
+			expectedShares: sdk.ZeroInt(),
+			expectPanic:    false,
+		},
+		"even 5-asset pool, no swap fee": {
+			tokenIn:        sdk.NewCoin("asset/a", sdk.NewInt(100)),
+			poolAssets:     fiveEvenStablePoolAssets,
+			scalingFactors: defaultFiveAssetScalingFactors,
+			swapFee:        sdk.ZeroDec(),
+			expectedShares: sdk.ZeroInt(),
+			expectPanic:    false,
+		},
+		"uneven 5-asset pool, no swap fee": {
+			tokenIn:        sdk.NewCoin("asset/a", sdk.NewInt(100)),
+			poolAssets:     fiveUnevenStablePoolAssets,
+			scalingFactors: defaultFiveAssetScalingFactors,
+			swapFee:        sdk.ZeroDec(),
+			expectedShares: sdk.ZeroInt(),
+			expectPanic:    false,
+		},
+		/* With swap fees
+		"even two asset pool, default swap fee": {
+			tokenIn: sdk.NewCoin("foo", sdk.NewInt(100)),
+			poolAssets: twoEvenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			swapFee: defaultSwapFee,
+			expectedShares: sdk.ZeroInt(),
+			expectPanic: false,
+		},
+		"uneven two asset pool, default swap fee": {
+			tokenIn: sdk.NewCoin("foo", sdk.NewInt(100)),
+			poolAssets: twoUnevenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			swapFee: defaultSwapFee,
+			expectedShares: sdk.ZeroInt(),
+			expectPanic: false,
+		},
+		"even 5-asset pool, default swap fee": {
+			tokenIn: sdk.NewCoin("asset/a", sdk.NewInt(100)),
+			poolAssets: fiveEvenStablePoolAssets,
+			scalingFactors: defaultFiveAssetScalingFactors,
+			swapFee: defaultSwapFee,
+			expectedShares: sdk.ZeroInt(),
+			expectPanic: false,
+		},
+		"uneven 5-asset pool, default swap fee": {
+			tokenIn: sdk.NewCoin("asset/a", sdk.NewInt(100)),
+			poolAssets: fiveUnevenStablePoolAssets,
+			scalingFactors: defaultFiveAssetScalingFactors,
+			swapFee: defaultSwapFee,
+			expectedShares: sdk.ZeroInt(),
+			expectPanic: false,
+		},
+		*/
+
+		// TODO: overflow tests
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// system under test
+			sut := func() {
+				// we create the pool directly to bypass checks in NewStableswapPool()
+				p := Pool{
+					Address:            types.NewPoolAddress(defaultPoolId).String(),
+					Id:                 defaultPoolId,
+					PoolParams:         defaultStableswapPoolParams,
+					TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),
+					PoolLiquidity:      tc.poolAssets,
+					ScalingFactor:      tc.scalingFactors,
+					FuturePoolGovernor: defaultFutureGovernor,
+				}
+
+				shares, err := p.calcSingleAssetJoinShares(tc.tokenIn, tc.swapFee)
+
+				require.NoError(t, err, "test: %s", name)
+				require.Equal(t, tc.expectedShares, shares)
+			}
+
+			osmoassert.ConditionalPanic(t, tc.expectPanic, sut)
+		})
+	}
 }
