@@ -41,116 +41,174 @@ var (
 	)
 )
 
+// we create a pool struct directly to bypass checks in NewStableswapPool()
+func poolStructFromAssets(assets sdk.Coins, scalingFactors []uint64) Pool {
+	p := Pool{
+		Address:            types.NewPoolAddress(defaultPoolId).String(),
+		Id:                 defaultPoolId,
+		PoolParams:         defaultStableswapPoolParams,
+		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),
+		PoolLiquidity:      assets,
+		ScalingFactor:      scalingFactors,
+		FuturePoolGovernor: defaultFutureGovernor,
+	}
+	return p
+}
+
+func TestReorderReservesAndScalingFactors(t *testing.T) {
+	tests := map[string]struct {
+		denoms                [2]string
+		poolAssets            sdk.Coins
+		scalingFactors        []uint64
+		reordedReserves       []sdk.Coin
+		reordedScalingFactors []uint64
+		expError              bool
+	}{
+		"two of 5 assets in pool": {
+			denoms:         [2]string{"asset/c", "asset/b"},
+			poolAssets:     fiveUnevenStablePoolAssets,
+			scalingFactors: []uint64{1, 2, 3, 4, 5},
+			reordedReserves: []sdk.Coin{
+				sdk.NewInt64Coin("asset/c", 3000000000),
+				sdk.NewInt64Coin("asset/b", 2000000000),
+				sdk.NewInt64Coin("asset/a", 1000000000),
+				sdk.NewInt64Coin("asset/d", 4000000000),
+				sdk.NewInt64Coin("asset/e", 5000000000)},
+			reordedScalingFactors: []uint64{3, 2, 1, 4, 5},
+		},
+		"two of 5 assets in pool v2": {
+			denoms:         [2]string{"asset/e", "asset/b"},
+			poolAssets:     fiveUnevenStablePoolAssets,
+			scalingFactors: []uint64{1, 2, 3, 4, 5},
+			reordedReserves: []sdk.Coin{
+				sdk.NewInt64Coin("asset/e", 5000000000),
+				sdk.NewInt64Coin("asset/b", 2000000000),
+				sdk.NewInt64Coin("asset/a", 1000000000),
+				sdk.NewInt64Coin("asset/c", 3000000000),
+				sdk.NewInt64Coin("asset/d", 4000000000)},
+			reordedScalingFactors: []uint64{5, 2, 1, 3, 4},
+		},
+		"asset 1 doesn't exist": {
+			denoms:         [2]string{"foo", "asset/b"},
+			poolAssets:     fiveUnevenStablePoolAssets,
+			scalingFactors: []uint64{1, 2, 3, 4, 5},
+			expError:       true,
+		},
+		"asset 2 doesn't exist": {
+			denoms:         [2]string{"asset/a", "foo"},
+			poolAssets:     fiveUnevenStablePoolAssets,
+			scalingFactors: []uint64{1, 2, 3, 4, 5},
+			expError:       true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
+
+			reserves, factors, err := p.reorderReservesAndScalingFactors(tc.denoms[0], tc.denoms[1])
+			if !tc.expError {
+				require.Equal(t, tc.reordedReserves, reserves)
+				require.Equal(t, tc.reordedScalingFactors, factors)
+			}
+			osmoassert.ConditionalError(t, tc.expError, err)
+		})
+	}
+}
+
 func TestScaledSortedPoolReserves(t *testing.T) {
-	baseEvenAmt := sdk.NewDec(1000000000)
+	baseEvenAmt := osmomath.NewBigDec(1000000000)
 	tests := map[string]struct {
 		denoms         [2]string
+		roundMode      osmomath.RoundingDirection
 		poolAssets     sdk.Coins
 		scalingFactors []uint64
-		expReserves    []sdk.DecCoin
-		expPanic       bool
+		expReserves    []osmomath.BigDec
+		expError       bool
 	}{
 		// sanity checks, default scaling factors
 		"even two-asset pool with default scaling factors": {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expReserves:    []sdk.DecCoin{{"foo", baseEvenAmt}, {"bar", sdk.NewDec(1000000000)}},
-			expPanic:       false,
+			expReserves:    []osmomath.BigDec{baseEvenAmt, baseEvenAmt},
 		},
 		"uneven two-asset pool with default scaling factors": {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expReserves:    []sdk.DecCoin{{"foo", sdk.NewDec(2000000000)}, {"bar", sdk.NewDec(1000000000)}},
-			expPanic:       false,
+			expReserves:    []osmomath.BigDec{baseEvenAmt.MulInt64(2), baseEvenAmt},
 		},
 		"even two-asset pool with even scaling factors greater than 1": {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{10, 10},
-			expReserves:    []sdk.DecCoin{{"foo", sdk.NewDec(100000000)}, {"bar", sdk.NewDec(100000000)}},
-			expPanic:       false,
+			expReserves:    []osmomath.BigDec{baseEvenAmt.QuoInt64(10), baseEvenAmt.QuoInt64(10)},
 		},
 		"even two-asset pool with uneven scaling factors greater than 1": {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10, 5},
-			expReserves: []sdk.DecCoin{sdk.NewInt64DecCoin("foo", 2000000000/5),
-				sdk.NewInt64DecCoin("bar", 1000000000/10)},
-			expPanic: false,
+			expReserves: []osmomath.BigDec{
+				osmomath.NewBigDec(2000000000 / 5), osmomath.NewBigDec(1000000000 / 10)},
 		},
 		"even two-asset pool with even, massive scaling factors greater than 1": {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{10000000000, 10000000000},
-			expReserves:    []sdk.DecCoin{{"foo", sdk.NewDecWithPrec(1, 1)}, {"bar", sdk.NewDecWithPrec(1, 1)}},
-			expPanic:       false,
+			expReserves:    []osmomath.BigDec{osmomath.NewDecWithPrec(1, 1), osmomath.NewDecWithPrec(1, 1)},
 		},
 		"five asset pool, scaling factors = 1": {
 			denoms:         [2]string{"asset/c", "asset/d"},
 			poolAssets:     fiveUnevenStablePoolAssets,
 			scalingFactors: []uint64{1, 1, 1, 1, 1},
-			expReserves: []sdk.DecCoin{
-				{"asset/c", baseEvenAmt.MulInt64(3)},
-				{"asset/d", baseEvenAmt.MulInt64(4)},
-				{"asset/a", baseEvenAmt},
-				{"asset/b", baseEvenAmt.MulInt64(2)},
-				{"asset/e", baseEvenAmt.MulInt64(5)}},
-			expPanic: false,
+			expReserves: []osmomath.BigDec{
+				baseEvenAmt.MulInt64(3),  // {"asset/c", baseEvenAmt.MulInt64(3)},
+				baseEvenAmt.MulInt64(4),  // {"asset/d", baseEvenAmt.MulInt64(4)},
+				baseEvenAmt,              // {"asset/a", baseEvenAmt},
+				baseEvenAmt.MulInt64(2),  // {"asset/b", baseEvenAmt.MulInt64(2)},
+				baseEvenAmt.MulInt64(5)}, // {"asset/e", baseEvenAmt.MulInt64(5)}},
 		},
 		"five asset pool, scaling factors = 1,2,3,4,5": {
 			denoms:         [2]string{"asset/a", "asset/e"},
 			poolAssets:     fiveUnevenStablePoolAssets,
 			scalingFactors: []uint64{1, 2, 3, 4, 5},
-			expReserves: []sdk.DecCoin{
-				{"asset/a", baseEvenAmt},
-				{"asset/e", baseEvenAmt},
-				{"asset/b", baseEvenAmt},
-				{"asset/c", baseEvenAmt},
-				{"asset/d", baseEvenAmt}},
-			expPanic: false,
+			expReserves: []osmomath.BigDec{
+				baseEvenAmt,  // {"asset/a", baseEvenAmt},
+				baseEvenAmt,  // {"asset/e", baseEvenAmt},
+				baseEvenAmt,  // {"asset/b", baseEvenAmt},
+				baseEvenAmt,  // {"asset/c", baseEvenAmt},
+				baseEvenAmt}, // {"asset/d", baseEvenAmt}},
 		},
 		"max scaling factors": {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{(1 << 62), (1 << 62)},
-			expReserves: []sdk.DecCoin{
-				{"foo", sdk.NewDec(1000000000).QuoInt64(int64(1 << 62))},
-				{"bar", sdk.NewDec(1000000000).QuoInt64(int64(1 << 62))}},
-			expPanic: false,
+			expReserves: []osmomath.BigDec{
+				osmomath.NewBigDec(1000000000).QuoInt64(int64(1 << 62)),
+				osmomath.NewBigDec(1000000000).QuoInt64(int64(1 << 62))},
 		},
 		"zero scaling factor": {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{0, 1},
-			expPanic:       true,
+			expError:       true,
 		},
 	}
 	// TODO: Add for loop for trying to re-order test cases
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			// system under test
-			sut := func() {
-				// we create the pool directly to bypass checks in NewStableswapPool()
-				p := Pool{
-					Address:            types.NewPoolAddress(defaultPoolId).String(),
-					Id:                 defaultPoolId,
-					PoolParams:         defaultStableswapPoolParams,
-					TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),
-					PoolLiquidity:      tc.poolAssets,
-					ScalingFactor:      tc.scalingFactors,
-					FuturePoolGovernor: defaultFutureGovernor,
-				}
+			if tc.roundMode == 0 {
+				tc.roundMode = osmomath.RoundBankers
+			}
+			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 
-				reserves, err := p.scaledSortedPoolReserves(tc.denoms[0], tc.denoms[1])
-
-				require.NoError(t, err, "test: %s", name)
+			reserves, err := p.scaledSortedPoolReserves(tc.denoms[0], tc.denoms[1], tc.roundMode)
+			if !tc.expError {
 				require.Equal(t, tc.expReserves, reserves)
 			}
-
-			osmoassert.ConditionalPanic(t, tc.expPanic, sut)
+			osmoassert.ConditionalError(t, tc.expError, err)
 		})
 	}
 }

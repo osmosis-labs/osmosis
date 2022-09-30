@@ -22,17 +22,26 @@ One key concept, is that the pool has a native concept of
 An important concept thats up to now, not been mentioned is how do we set the expected price ratio.
 In the choice of curve section, we see that its the case that when `x_reserves ~= y_reserves`, that spot price is very close to `1`. However, there are a couple issues with just this in practice:
 
-* Precision of pegged coins may differ. e.g. 1 Foo = 10^12 base units, whereas 1 WrappedFoo = 10^6 base units, but  1 Foo should trade at around 1 Wrapped Foo.
-* Related, I could have a token called TwoFoo which should trade around 1 TwoFoo = 2 Foo
-* For staking derivatives, where value accrues within the token, the expected price to concentrate around dynamically changes (very slowly).
+1) Precision of pegged coins may differ. Suppose `1 Foo = 10^12 base units`, whereas `1 WrappedFoo = 10^6 base units`, but `1 Foo` is expected to trade near the price of `1 Wrapped Foo`.
+2) Relatedly, suppose theres a token called `TwoFoo` which should trade around `1 TwoFoo = 2 Foo`
+3) For staking derivatives, where value accrues within the token, the expected price to concentrate around dynamically changes (very slowly).
 
-To handle these cases, we introduce scaling factors. What we do is we have a scaling factor for every asset in the pool (defaulted to 1).
-Then we map from 'true coin reserves' to 'amm math reasoned about reserves', by doing:
-`amm_eq_asset_reserve = true_asset_reserve / asset_scaling_factor`.
-<!-- TODO, cc @alpin we need to think about rounding behavior -->
+To handle these cases, we introduce scaling factors. A scaling factor maps from "base coin units" to "amm math reserve units", by dividing.
+To handle the first case, we would make `Foo` have a scaling factor of `10^6`, and `WrappedFoo` have a scaling factor of `1`.
+Then the reserves we pass into all AMM equations for this pool, would be computed based off the following reserves:
 
-Then we run the AMM equation around `amm_eq_asset_reserve`, to get an `amm_eq_asset_out`.
-Then we get the `true_asset_out = amm_eq_asset_out * asset_out_scaling_factor`
+```python
+Foo_reserves = round(pool.Foo_liquidity / 10^6, RoundingMode)
+WrappedFoo_reserves = round(pool.WrappedFoo_liquidity / 1, RoundingMode)
+```
+
+Similarly all token inputs would be scaled as such.
+The AMM equations need to each ensure that rounding happens correctly,
+for cases where the scaling factor doesn't perfectly divide into the liquidity.
+We detail rounding modes and scaling details as pseudocode in the relevant sections of the spec.
+(And rounding modes for 'descaling' from AMM eq output to real liquidity amounts, via multiplying by the respective scaling factor)
+
+<!-- TODO come back and revise the scaling factor section for clarity -->
 
 ## Algorithm details
 
@@ -121,7 +130,8 @@ The maximal upperbound is obviously unworkable, and in general binary searching 
 This would suggest that we should do something smarter to iteratively approach the right value for the upperbound at least. 
 Notice that $h$ is super-linearly related in $y$, and at most cubically related to $y$. 
 This means that $\forall c \in \mathbb{R}^+, c * h(x,y,w) < h(x,c*y,w) < c^3 * h(x,y,w)$. 
-We can use this fact to get a pretty-good initial upperbound guess for $y$ using the linear estimate. In the lowerbound case, we leave it as lower-bounded by $0$, otherwise we would need to take a cubed root to get a better estimate.
+We can use this fact to get a pretty-good initial upperbound guess for $y$ using the linear estimate.
+In the lowerbound case, we leave it as lower-bounded by $0$, otherwise we would need to take a cubed root to get a better estimate.
 
 ```python
 def iterative_search(x_f, y_0, w, k, err_tolerance):
@@ -165,6 +175,19 @@ def binary_search(lowerbound, upperbound, approximation_fn, target, max_iteratio
 
 Detail how we take the previously discussed solver, and build SwapExactAmountIn and SwapExactAmountOut.
 
+##### SwapExactAmountIn
+
+<!-- TODO: Maybe we just use normal pseudocode syntax -->
+```python
+def SwapExactAmountIn(pool, in_coin, out_denom):
+  # Round down as lower reserves -> higher slippage
+  scaledReserves = pool.ScaledLiquidity(RoundingMode.RoundDown)
+  in_amt_scaled = pool.ScaleToken(in_coin)
+  in_reserve, out_reserve = scaledReserves[in_coin.Denom], scaledReserves[out_denom]
+  rem_reserves = { x for x in scaledReserves if (x != in_coin.Denom and x != out_denom) }
+  solveCfmm(out_reserve, in_reserve, remReserves, in_amt_scaled)
+```
+
 ### Spot Price
 
 Spot price for an AMM pool is the derivative of its `CalculateOutAmountGivenIn` equation.
@@ -180,6 +203,9 @@ Then $\text{spot price} = \frac{\text{CalculateOutAmountGivenIn}(\epsilon)}{\eps
 
 We divide this section into two parts, `JoinPoolNoSwap & ExitPool`, and `JoinPool`.
 
+First we recap what are the properties that we'd expect from `JoinPoolNoSwap`, `ExitPool`, and LP shares.
+From this, we then derive what we'd expect for `JoinPool`.
+
 #### JoinPoolNoSwap and ExitPool
 
 Both of these methods can be implemented via generic AMM techniques.
@@ -188,6 +214,10 @@ Both of these methods can be implemented via generic AMM techniques.
 #### JoinPool
 
 The JoinPool API only supports JoinPoolNoSwap if 
+
+#### Join pool single asset in
+
+Couple ways to define JoinPool Exit Pool relation
 
 ## Code structure
 
