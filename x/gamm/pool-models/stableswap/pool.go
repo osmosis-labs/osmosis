@@ -135,10 +135,6 @@ func (p Pool) scaledPoolReserves() ([]sdk.DecCoin, error) {
 
 // scaledInput returns scaled input tokens for usage in AMM equations
 func (p Pool) scaledInput(input sdk.Coins) ([]sdk.DecCoin, error) {
-	if !input.DenomsSubsetOf(p.PoolLiquidity) {
-		return []sdk.DecCoin{}, fmt.Errorf("at least one input denom not in pool")
-	}
-
 	scaledInput := make([]sdk.DecCoin, 0, len(input))
 	liquidityIndexes := p.getLiquidityIndexMap()
 
