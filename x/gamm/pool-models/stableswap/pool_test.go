@@ -410,7 +410,7 @@ func TestScaledInput(t *testing.T) {
 		rounding       osmomath.RoundingDirection
 		poolAssets     sdk.Coins
 		scalingFactors []uint64
-		expOutput      sdk.DecCoin
+		expOutput      osmomath.BigDec
 		expError       bool
 	}{
 		"even two-asset pool with default scaling factors": {
@@ -418,7 +418,7 @@ func TestScaledInput(t *testing.T) {
 			rounding:       osmomath.RoundDown,
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expOutput:      sdk.DecCoin{"bar", sdk.NewDec(100)},
+			expOutput:      osmomath.NewBigDec(100),
 			expError:       false,
 		},
 		"uneven two-asset pool with default scaling factors": {
@@ -426,15 +426,7 @@ func TestScaledInput(t *testing.T) {
 			rounding:       osmomath.RoundDown,
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expOutput:      sdk.DecCoin{"foo", sdk.NewDec(200)},
-			expError:       false,
-		},
-		"even two-asset pool with even scaling factors greater than 1": {
-			input:          sdk.NewCoin("foo", sdk.NewInt(100)),
-			rounding:       osmomath.RoundDown,
-			poolAssets:     twoEvenStablePoolAssets,
-			scalingFactors: []uint64{10, 10},
-			expOutput:      sdk.DecCoin{"foo", sdk.NewDec(10)},
+			expOutput:      osmomath.NewBigDec(200),
 			expError:       false,
 		},
 		"even two-asset pool with uneven scaling factors greater than 1": {
@@ -442,31 +434,31 @@ func TestScaledInput(t *testing.T) {
 			rounding:       osmomath.RoundDown,
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10, 5},
-			expOutput:      sdk.DecCoin{"bar", sdk.NewDec(10)},
+			expOutput:      osmomath.NewBigDec(10),
 			expError:       false,
 		},
 		"even two-asset pool with even, massive scaling factors greater than 1": {
 			input:          sdk.NewCoin("foo", sdk.NewInt(100)),
 			rounding:       osmomath.RoundDown,
 			poolAssets:     twoEvenStablePoolAssets,
-			scalingFactors: []uint64{10000000000, 10000000000},
-			expOutput:      sdk.DecCoin{"foo", sdk.NewDec(100).Quo(sdk.NewDec(10000000000))},
+			scalingFactors: []uint64{10000000000, 10_000_000_000},
+			expOutput:      osmomath.NewDecWithPrec(100, 10),
 			expError:       false,
 		},
-		"five asset pool, scaling factors = 1": {
+		"five asset pool scaling factors = 1": {
 			input:          sdk.NewCoin("asset/c", sdk.NewInt(100)),
 			rounding:       osmomath.RoundDown,
 			poolAssets:     fiveUnevenStablePoolAssets,
 			scalingFactors: []uint64{1, 1, 1, 1, 1},
-			expOutput:      sdk.DecCoin{"asset/c", sdk.NewDec(100)},
+			expOutput:      osmomath.NewBigDec(100),
 			expError:       false,
 		},
-		"five asset pool, scaling factors = 1,2,3,4,5": {
+		"five asset pool scaling factors = 1,2,3,4,5": {
 			input:          sdk.NewCoin("asset/d", sdk.NewInt(100)),
 			rounding:       osmomath.RoundDown,
 			poolAssets:     fiveUnevenStablePoolAssets,
 			scalingFactors: []uint64{1, 2, 3, 4, 5},
-			expOutput:      sdk.DecCoin{"asset/d", sdk.NewDec(100).Quo(sdk.NewDec(4))},
+			expOutput:      osmomath.NewBigDec(25),
 			expError:       false,
 		},
 		"max scaling factors on small token inputs": {
@@ -474,7 +466,7 @@ func TestScaledInput(t *testing.T) {
 			rounding:       osmomath.RoundDown,
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{(1 << 62), (1 << 62)},
-			expOutput:      sdk.NewDecCoinFromDec("foo", sdk.NewDec(10).QuoInt64(1<<62)),
+			expOutput:      osmomath.NewBigDec(10).QuoInt64(1 << 62),
 			expError:       false,
 		},
 		"zero scaling factor": {
@@ -499,7 +491,7 @@ func TestScaledInput(t *testing.T) {
 				FuturePoolGovernor: defaultFutureGovernor,
 			}
 
-			scaledInput, err := p.scaledInput(tc.input, tc.rounding)
+			scaledInput, err := p.scaleInputAmount(tc.input, tc.rounding)
 
 			if !tc.expError {
 				require.NoError(t, err, "test: %s", name)
