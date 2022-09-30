@@ -1,63 +1,55 @@
-package simtypes
+package executortypes
 
 import (
-<<<<<<< HEAD
 	"encoding/json"
-	"io/ioutil"
 	"math/rand"
+	"os"
 	"sort"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-=======
->>>>>>> 3e6c8144 (Add a simulator executor types package (#2857))
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"golang.org/x/exp/maps"
+
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
+	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
 )
 
-// AppModuleSimulation defines the standard functions that every module should expose
-// for the SDK blockchain simulator
-type AppModuleSimulation interface {
-	module.AppModule
-
-	Actions() []Action
-}
-
-type AppModuleSimulationGenesis interface {
-	AppModuleSimulation
-	// TODO: Come back and improve SimulationState interface
-	SimulatorGenesisState(*module.SimulationState, *SimCtx)
-}
-
-type AppModuleSimulationPropertyCheck interface {
-	module.AppModule
-
-	PropertyChecks() []PropertyCheck
-}
-
-<<<<<<< HEAD
-type SimulatorManagerI interface {
-	Actions() []ActionsWithMetadata
-	PropertyCheck() []PropertyCheck
-}
-
-type ActionsWithMetadata struct {
-	Action
-	ModuleName string
-}
-
-// SimulationManager defines a simulation manager that provides the high level utility
+// Manager defines a simulation manager that provides the high level utility
 // for managing and executing simulation functionalities for a group of modules
 type Manager struct {
 	moduleManager module.Manager
-	Modules       map[string]AppModuleSimulation        // map of all non-legacy app modules;
-	legacyModules map[string]module.AppModuleSimulation // legacy app modules
+	Modules       map[string]simtypes.AppModuleSimulation // map of all non-legacy app modules;
+	legacyModules map[string]module.AppModuleSimulation   // legacy app modules
 }
 
-func NewSimulationManager(manager module.Manager, overrideModules map[string]module.AppModuleSimulation) Manager {
+// createSimulationManager returns a simulation manager
+// must be ran after modulemanager.SetInitGenesisOrder
+func CreateSimulationManager(
+	app simtypes.App,
+) Manager {
+	appCodec := app.AppCodec()
+	ak, ok := app.GetAccountKeeper().(*authkeeper.AccountKeeper)
+	if !ok {
+		panic("account keeper typecast fail")
+	}
+	overrideModules := map[string]module.AppModuleSimulation{
+		authtypes.ModuleName: auth.NewAppModule(appCodec, *ak, authsims.RandomGenesisAccounts),
+	}
+	simulationManager := newSimulationManager(app.ModuleManager(), overrideModules)
+	return simulationManager
+}
+
+func newSimulationManager(manager module.Manager, overrideModules map[string]module.AppModuleSimulation) Manager {
 	if manager.OrderInitGenesis == nil {
 		panic("manager.OrderInitGenesis is unset, needs to be set prior to creating simulation manager")
 	}
 
-	simModules := map[string]AppModuleSimulation{}
+	simModules := map[string]simtypes.AppModuleSimulation{}
 	legacySimModules := map[string]module.AppModuleSimulation{}
 	appModuleNamesSorted := maps.Keys(manager.Modules)
 	sort.Strings(appModuleNamesSorted)
@@ -70,7 +62,7 @@ func NewSimulationManager(manager module.Manager, overrideModules map[string]mod
 			legacySimModules[moduleName] = simModule
 		} else {
 			appModule := manager.Modules[moduleName]
-			if simModule, ok := appModule.(AppModuleSimulation); ok {
+			if simModule, ok := appModule.(simtypes.AppModuleSimulation); ok {
 				simModules[moduleName] = simModule
 			} else if simModule, ok := appModule.(module.AppModuleSimulation); ok {
 				legacySimModules[moduleName] = simModule
@@ -82,7 +74,7 @@ func NewSimulationManager(manager module.Manager, overrideModules map[string]mod
 }
 
 func loadAppParamsForWasm(path string) simulation.AppParams {
-	bz, err := ioutil.ReadFile(path)
+	bz, err := os.ReadFile(path)
 	if err != nil {
 		panic(err)
 	}
@@ -95,7 +87,7 @@ func loadAppParamsForWasm(path string) simulation.AppParams {
 	return appParams
 }
 
-func (m Manager) legacyActions(seed int64, cdc codec.JSONCodec) []ActionsWithMetadata {
+func (m Manager) legacyActions(seed int64, cdc codec.JSONCodec) []simtypes.ActionsWithMetadata {
 	// We do not support the legacy simulator config format, and just (unfortunately)
 	// hardcode this one filepath for wasm.
 	// TODO: Clean this up / make a better plan
@@ -115,12 +107,12 @@ func (m Manager) legacyActions(seed int64, cdc codec.JSONCodec) []ActionsWithMet
 		}
 	}
 	// second pass generate actions
-	actions := []ActionsWithMetadata{}
+	actions := []simtypes.ActionsWithMetadata{}
 	for _, moduleName := range m.moduleManager.OrderInitGenesis {
 		if simModule, ok := m.legacyModules[moduleName]; ok {
 			weightedOps := simModule.WeightedOperations(simState)
 			for _, action := range actionsFromWeightedOperations(moduleName, weightedOps) {
-				var actionWithMetaData ActionsWithMetadata
+				var actionWithMetaData simtypes.ActionsWithMetadata
 				actionWithMetaData.Action = action
 				actionWithMetaData.ModuleName = moduleName
 				actions = append(actions, actionWithMetaData)
@@ -131,13 +123,13 @@ func (m Manager) legacyActions(seed int64, cdc codec.JSONCodec) []ActionsWithMet
 }
 
 // TODO: Can we use sim here instead? Perhaps by passing in the simulation module manager to the simulator.
-func (m Manager) Actions(seed int64, cdc codec.JSONCodec) []ActionsWithMetadata {
+func (m Manager) Actions(seed int64, cdc codec.JSONCodec) []simtypes.ActionsWithMetadata {
 	actions := m.legacyActions(seed, cdc)
 	moduleKeys := maps.Keys(m.Modules)
 	osmoutils.SortSlice(moduleKeys)
 	for _, simModuleName := range moduleKeys {
 		for _, action := range m.Modules[simModuleName].Actions() {
-			var actionWithMetaData ActionsWithMetadata
+			var actionWithMetaData simtypes.ActionsWithMetadata
 			actionWithMetaData.Action = action
 			actionWithMetaData.ModuleName = simModuleName
 			actions = append(actions, actionWithMetaData)
@@ -161,11 +153,11 @@ func (m Manager) Actions(seed int64, cdc codec.JSONCodec) []ActionsWithMetadata 
 // * every module not just returning a genesis struct, and instead mutating things in place
 // The only error corrected in the genesis work over what was present in prior code is:
 // better rand handling (simCtx), and calling genesis in the InitGenesis ordering.
-func (m Manager) GenerateGenesisStates(simState *module.SimulationState, sim *SimCtx) {
+func (m Manager) GenerateGenesisStates(simState *module.SimulationState, sim *simtypes.SimCtx) {
 	for _, moduleName := range m.moduleManager.OrderInitGenesis {
 		if simModule, ok := m.Modules[moduleName]; ok {
 			// if we define a random genesis function use it, otherwise use default genesis
-			if mod, ok := simModule.(AppModuleSimulationGenesis); ok {
+			if mod, ok := simModule.(simtypes.AppModuleSimulationGenesis); ok {
 				mod.SimulatorGenesisState(simState, sim)
 			} else {
 				simState.GenState[simModule.Name()] = simModule.DefaultGenesis(simState.Cdc)
@@ -175,8 +167,4 @@ func (m Manager) GenerateGenesisStates(simState *module.SimulationState, sim *Si
 			simModule.GenerateGenesisState(simState)
 		}
 	}
-=======
-type ModuleGenesisGenerator interface {
-	GenerateGenesisStates(simState *module.SimulationState, sim *SimCtx)
->>>>>>> 3e6c8144 (Add a simulator executor types package (#2857))
 }
