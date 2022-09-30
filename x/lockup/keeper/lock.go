@@ -12,6 +12,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v10/store"
 	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
 )
 
 // WithdrawAllMaturedLocks withdraws every lock thats in the process of unlocking, and has finished unlocking by
@@ -97,7 +98,7 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.Ac
 
 // CreateLock creates a new lock with the specified duration for the owner.
 // Returns an error in the following conditions:
-//  - account does not have enough balance
+//   - account does not have enough balance
 func (k Keeper) CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
 	ID := k.GetLastLockID(ctx) + 1
 	// unlock time is initially set without a value, gets set as unlock start time + duration
@@ -328,9 +329,15 @@ func (k Keeper) unlockMaturedLockInternalLogic(ctx sdk.Context, lock types.Perio
 	if err != nil {
 		return err
 	}
-
 	// send coins back to owner
 	if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, lock.Coins); err != nil {
+		// check if token in lock is a token factory denom. If so, continue on error
+		for _, coin := range lock.Coins {
+			_, _, err = tokenfactorytypes.DeconstructDenom(coin.Denom)
+			if err == nil {
+				return nil
+			}
+		}
 		return err
 	}
 

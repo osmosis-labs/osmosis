@@ -8,6 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v10/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -203,6 +204,15 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 		distrs.idToDecodedAddr,
 		distrs.idToDistrCoins)
 	if err != nil {
+		// check if this is a token factory denom. If so, ignore error and exit function call
+		for _, coins := range distrs.idToDistrCoins {
+			for _, coin := range coins {
+				_, _, err = tokenfactorytypes.DeconstructDenom(coin.Denom)
+				if err == nil {
+					return nil
+				}
+			}
+		}
 		return err
 	}
 	ctx.Logger().Debug("Finished sending, now creating liquidity add events")
