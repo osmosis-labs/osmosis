@@ -159,15 +159,16 @@ var (
 // added for future extension
 func solveCFMMBinarySearch(constantFunction func(osmomath.BigDec, osmomath.BigDec) osmomath.BigDec) func(osmomath.BigDec, osmomath.BigDec, osmomath.BigDec) osmomath.BigDec {
 	return func(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
-		if !xReserve.IsPositive() || !yReserve.IsPositive() || !yIn.IsPositive() {
+		if !xReserve.IsPositive() || !yReserve.IsPositive() {
 			panic("invalid input: reserves and input must be positive")
-		} else if yIn.GTE(yReserve) {
+		} else if yIn.Abs().GTE(yReserve) {
 			panic("cannot input more than pool reserves")
 		}
 		k := constantFunction(xReserve, yReserve)
 		yFinal := yReserve.Add(yIn)
 		xLowEst := osmomath.ZeroDec()
-		xHighEst := xReserve
+		// we set upper bound at 2 * xReserve to accommodate negative yIns
+		xHighEst := xReserve.Mul(osmomath.NewBigDec(2))
 		maxIterations := 256
 		errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.Dec{}}
 
@@ -181,7 +182,7 @@ func solveCFMMBinarySearch(constantFunction func(osmomath.BigDec, osmomath.BigDe
 			panic(err)
 		}
 
-		xOut := xReserve.Sub(x_est)
+		xOut := xReserve.Sub(x_est).Abs()
 		if xOut.GTE(xReserve) {
 			panic("invalid output: greater than full pool reserves")
 		}
@@ -292,7 +293,7 @@ func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee
 	// x = tokenInSupply, y = tokenOutSupply, yIn = -tokenOutAmount
 	cfmmIn := solveCfmm(tokenInSupply, tokenOutSupply, remReserves, tokenOutAmount.Neg())
 	// handle swap fee
-	inAmt := cfmmIn.Neg().QuoRoundUp(oneMinus(swapFee))
+	inAmt := cfmmIn.QuoRoundUp(oneMinus(swapFee))
 	// divide by (1 - swapfee) to force a corresponding increase in input asset
 	inCoinAmt := p.getDescaledPoolAmt(tokenInDenom, inAmt)
 	return inCoinAmt, nil
