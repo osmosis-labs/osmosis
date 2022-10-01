@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"runtime/debug"
 
+	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -40,6 +41,9 @@ func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err err
 func PrintPanicRecoveryError(ctx sdk.Context, recoveryError interface{}) {
 	errStackTrace := string(debug.Stack())
 	switch e := recoveryError.(type) {
+	case types.ErrorOutOfGas:
+		ctx.Logger().Debug("out of gas error inside panic recovery block: " + e.Descriptor)
+		return
 	case string:
 		ctx.Logger().Error("Recovering from (string) panic: " + e)
 	case runtime.Error:
