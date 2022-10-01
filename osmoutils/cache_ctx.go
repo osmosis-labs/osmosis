@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -30,3 +31,29 @@ func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err err
 	}
 	return err
 }
+<<<<<<< HEAD
+=======
+
+// PrintPanicRecoveryError error logs the recoveryError, along with the stacktrace, if it can be parsed.
+// If not emits them to stdout.
+func PrintPanicRecoveryError(ctx sdk.Context, recoveryError interface{}) {
+	errStackTrace := string(debug.Stack())
+	switch e := recoveryError.(type) {
+	case types.ErrorOutOfGas:
+		ctx.Logger().Debug("out of gas error inside panic recovery block: " + e.Descriptor)
+		return
+	case string:
+		ctx.Logger().Error("Recovering from (string) panic: " + e)
+	case runtime.Error:
+		ctx.Logger().Error("recovered (runtime.Error) panic: " + e.Error())
+	case error:
+		ctx.Logger().Error("recovered (error) panic: " + e.Error())
+	default:
+		ctx.Logger().Error("recovered (default) panic. Could not capture logs in ctx, see stdout")
+		fmt.Println("Recovering from panic ", recoveryError)
+		debug.PrintStack()
+		return
+	}
+	ctx.Logger().Error("stack trace: " + errStackTrace)
+}
+>>>>>>> 1ec86587 (Stop returning error logs + stack trace when out of gas in ApplyFuncIfNoErr (#2914))
