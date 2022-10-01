@@ -16,12 +16,12 @@ func (e PoolDoesNotExistError) Error() string {
 	return fmt.Sprintf("pool with ID %d does not exist", e.PoolId)
 }
 
-type TokensJoinedDoesNotEqualTokensInNoSwapError struct {
+type TokensJoinedDoNotEqualTokensInNoSwapError struct {
 	NewLiquidity sdk.Coins
 	TokensIn     sdk.Coins
 }
 
-func (e TokensJoinedDoesNotEqualTokensInNoSwapError) Error() string {
+func (e TokensJoinedDoNotEqualTokensInNoSwapError) Error() string {
 	return fmt.Sprintf("new liquidity (%s) is not equal to tokens in (%s)", e.NewLiquidity, e.TokensIn)
 }
 

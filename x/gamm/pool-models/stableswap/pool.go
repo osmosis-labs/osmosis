@@ -301,7 +301,7 @@ func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swa
 	}
 	// Should never happen but we check anyway.
 	if !tokensJoined.IsEqual(tokensIn) {
-		return sdk.Int{}, sdk.Coins{}, types.TokensJoinedDoesNotEqualTokensInNoSwapError{NewLiquidity: tokensJoined, TokensIn: tokensIn}
+		return sdk.Int{}, sdk.Coins{}, types.TokensJoinedDoNotEqualTokensInNoSwapError{NewLiquidity: tokensJoined, TokensIn: tokensIn}
 	}
 	return numShares, tokensJoined, nil
 }
