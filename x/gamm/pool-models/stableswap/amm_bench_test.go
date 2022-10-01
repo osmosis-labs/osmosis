@@ -22,7 +22,7 @@ func BenchmarkBinarySearchTwoAsset(b *testing.B) {
 
 func BenchmarkBinarySearchMultiAsset(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		runCalcMultiAsset(solveCFMMBinarySearchMulti(cfmmConstantMulti))
+		runCalcMultiAsset(solveCFMMBinarySearchMulti)
 	}
 }
 
@@ -40,13 +40,12 @@ func runCalcTwoAsset(solve func(osmomath.BigDec, osmomath.BigDec, osmomath.BigDe
 	solve(xReserve, yReserve, yIn)
 }
 
-func runCalcMultiAsset(solve func(osmomath.BigDec, osmomath.BigDec, osmomath.BigDec, osmomath.BigDec, osmomath.BigDec) osmomath.BigDec) {
+func runCalcMultiAsset(solve func(osmomath.BigDec, osmomath.BigDec, osmomath.BigDec, osmomath.BigDec) osmomath.BigDec) {
 	xReserve := osmomath.NewBigDec(rand.Int63n(100000) + 50000)
 	yReserve := osmomath.NewBigDec(rand.Int63n(100000) + 50000)
 	mReserve := osmomath.NewBigDec(rand.Int63n(100000) + 50000)
 	nReserve := osmomath.NewBigDec(rand.Int63n(100000) + 50000)
-	u := mReserve.Mul(nReserve)
 	w := mReserve.Mul(mReserve).Add(nReserve.Mul(nReserve))
 	yIn := osmomath.NewBigDec(rand.Int63n(100000))
-	solve(xReserve, yReserve, u, w, yIn)
+	solve(xReserve, yReserve, w, yIn)
 }

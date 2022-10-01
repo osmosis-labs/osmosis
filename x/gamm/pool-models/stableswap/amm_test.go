@@ -326,14 +326,6 @@ var (
 			yIn:         osmomath.NewBigDec(1),
 			expectPanic: true,
 		},
-		"negative remReserve": {
-			xReserve: osmomath.NewBigDec(100),
-			yReserve: osmomath.NewBigDec(100),
-			// represents a 4-asset pool with 100 in each reserve
-			remReserves: []osmomath.BigDec{osmomath.NewBigDec(-100), osmomath.NewBigDec(100)},
-			yIn:         osmomath.NewBigDec(1),
-			expectPanic: true,
-		},
 		"input greater than pool reserves (even 4-asset pool)": {
 			xReserve:    osmomath.NewBigDec(100),
 			yReserve:    osmomath.NewBigDec(100),
@@ -491,13 +483,12 @@ func TestCFMMInvariantMultiAssetsBinarySearch(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// system under test
 			sut := func() {
-				uReserve := calcUReserve(test.remReserves)
 				wSumSquares := calcWSumSquares(test.remReserves)
 
 				// using multi-asset cfmm
-				k2 := cfmmConstantMulti(test.xReserve, test.yReserve, uReserve, wSumSquares)
-				xOut2 := solveCFMMBinarySearchMulti(cfmmConstantMulti)(test.xReserve, test.yReserve, uReserve, wSumSquares, test.yIn)
-				k3 := cfmmConstantMulti(test.xReserve.Sub(xOut2), test.yReserve.Add(test.yIn), uReserve, wSumSquares)
+				k2 := cfmmConstantMultiNoV(test.xReserve, test.yReserve, wSumSquares)
+				xOut2 := solveCFMMBinarySearchMulti(test.xReserve, test.yReserve, wSumSquares, test.yIn)
+				k3 := cfmmConstantMultiNoV(test.xReserve.Sub(xOut2), test.yReserve.Add(test.yIn), wSumSquares)
 				osmomath.DecApproxEq(t, k2, k3, kErrTolerance)
 			}
 
