@@ -45,7 +45,7 @@ func TestCalculateAmountOutAndIn_InverseRelationship(
 	actualTokenIn, err := pool.CalcInAmtGivenOut(ctx, initialOutCoins, assetInDenom, swapFee)
 	require.NoError(t, err)
 
-	// we expect that output less than 1 will always be rounded up
+	// we expect that any output less than 1 will always be rounded up
 	require.True(t, actualTokenIn.Amount.GTE(sdk.OneInt()))
 
 	inverseTokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(actualTokenIn), assetOutDenom, swapFee)
