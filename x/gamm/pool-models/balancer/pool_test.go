@@ -473,7 +473,6 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
 // TestCalculateAmountOutAndIn_InverseRelationship tests that the same amount of token is guaranteed upon
 // sequential operation of CalcInAmtGivenOut and CalcOutAmtGivenIn.
 func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelationship() {
-	fmt.Println("HERE")
 	type testcase struct {
 		denomOut         string
 		initialPoolOut   int64
