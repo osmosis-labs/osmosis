@@ -82,5 +82,5 @@ var (
 	ErrNotScalingFactorGovernor        = sdkerrors.Register(ModuleName, 63, "not scaling factor governor")
 	ErrInvalidScalingFactors           = sdkerrors.Register(ModuleName, 64, "invalid scaling factor")
 
-	StableSwapNoSwapJoinNeedsMultiAssetsIn = errors.New("no swap join needs multiple assets in, one was given")
+	ErrStableSwapNoSwapJoinNeedsMultiAssetsIn = errors.New("no swap join needs multiple assets in, one was given")
 )

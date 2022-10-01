@@ -328,7 +328,7 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 func (p *Pool) joinPoolNoSwapSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
 	poolLiquidity := p.GetTotalPoolLiquidity(ctx)
 	if tokensIn.Len() == 1 {
-		return sdk.Int{}, sdk.Coins{}, types.StableSwapNoSwapJoinNeedsMultiAssetsIn
+		return sdk.Int{}, sdk.Coins{}, types.ErrStableSwapNoSwapJoinNeedsMultiAssetsIn
 	}
 	if !(tokensIn.DenomsSubsetOf(poolLiquidity) && poolLiquidity.DenomsSubsetOf(tokensIn)) {
 		return sdk.Int{}, sdk.Coins{}, types.StableSwapPoolAssetsDoNotEqualTokensInJoinError{PoolAssets: poolLiquidity, TokensIn: tokensIn}

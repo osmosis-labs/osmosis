@@ -683,7 +683,7 @@ func (suite *StableSwapTestSuite) TestJoinPoolNoSwapSharesInternal() {
 
 			tokensIn: sdk.NewCoins(sdk.NewCoin(denomA, tenPercentOfBaseInt)),
 
-			expectError: types.StableSwapNoSwapJoinNeedsMultiAssetsIn,
+			expectError: types.ErrStableSwapNoSwapJoinNeedsMultiAssetsIn,
 		},
 		"token in denoms is not subset of pool asset denoms - error": {
 			initialPoolLiquidity: baseInitialPoolLiquidity,

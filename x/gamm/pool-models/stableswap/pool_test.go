@@ -532,7 +532,7 @@ func (suite *StableSwapTestSuite) TestCalcJoinPoolNoSwapShares() {
 
 			tokensIn: sdk.NewCoins(sdk.NewCoin(denomA, tenPercentOfBaseInt)),
 
-			expectError: types.StableSwapNoSwapJoinNeedsMultiAssetsIn,
+			expectError: types.ErrStableSwapNoSwapJoinNeedsMultiAssetsIn,
 		},
 	}
 
@@ -588,7 +588,7 @@ func (suite *StableSwapTestSuite) TestJoinPoolNoSwapShares() {
 
 			tokensIn: sdk.NewCoins(sdk.NewCoin(denomA, tenPercentOfBaseInt)),
 
-			expectError: types.StableSwapNoSwapJoinNeedsMultiAssetsIn,
+			expectError: types.ErrStableSwapNoSwapJoinNeedsMultiAssetsIn,
 		},
 	}
 
