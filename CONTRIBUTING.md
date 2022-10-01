@@ -8,7 +8,7 @@ Contributions come in the form of writing documentation, raising issues / PRs, a
 
 ## First steps
 
-The first step is to find an issue you want to fix. To identify issues we think are good for first-time contributors, we add the **good first issue** label.
+The first step is to find an issue you want to fix. To identify issues we think are good for first-time contributors, we add the **good first issue** label. [You can see a list of issues to contribute here](https://github.com/osmosis-labs/osmosis/contribute).
 
 We recommend setting up your IDE as per our [recommended IDE setup](https://docs.osmosis.zone/developing/osmosis-core/ide-guide.html) before proceeding.
 

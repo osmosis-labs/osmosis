@@ -52,7 +52,6 @@ import (
 	v8 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v8"
 	v9 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v9"
 	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
 )
 
 const appName = "OsmosisApp"
@@ -128,7 +127,6 @@ type OsmosisApp struct {
 	invCheckPeriod    uint
 
 	mm           *module.Manager
-	sm           *simtypes.Manager
 	configurator module.Configurator
 }
 
@@ -240,9 +238,6 @@ func NewOsmosisApp(
 	app.mm.RegisterServices(app.configurator)
 
 	app.setupUpgradeHandlers()
-
-	// create the simulation manager and define the order of the modules for deterministic simulations
-	app.sm = createSimulationManager(app, encodingConfig, skipGenesisInvariants)
 
 	// app.sm.RegisterStoreDecoders()
 
@@ -361,9 +356,8 @@ func (app *OsmosisApp) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
 }
 
-// SimulationManager implements the SimulationApp interface.
-func (app *OsmosisApp) SimulationManager() *simtypes.Manager {
-	return app.sm
+func (app *OsmosisApp) ModuleManager() module.Manager {
+	return *app.mm
 }
 
 // RegisterAPIRoutes registers all application module routes with the provided

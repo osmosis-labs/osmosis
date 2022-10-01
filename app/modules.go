@@ -11,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -210,22 +209,6 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		// wasm after ibc transfer
 		wasm.ModuleName,
 	}
-}
-
-// createSimulationManager returns a simulation manager
-// must be ran after modulemanager.SetInitGenesisOrder
-func createSimulationManager(
-	app *OsmosisApp,
-	encodingConfig appparams.EncodingConfig,
-	skipGenesisInvariants bool,
-) *simtypes.Manager {
-	appCodec := encodingConfig.Marshaler
-
-	overrideModules := map[string]module.AppModuleSimulation{
-		authtypes.ModuleName: auth.NewAppModule(appCodec, *app.AccountKeeper, authsims.RandomGenesisAccounts),
-	}
-	simulationManager := simtypes.NewSimulationManager(*app.mm, overrideModules)
-	return &simulationManager
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.
