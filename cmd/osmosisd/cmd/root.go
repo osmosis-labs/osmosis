@@ -288,7 +288,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 // createOsmosisAppAndExport creates and exports the new Osmosis app, returns the state of the new Osmosis app for a genesis file.
 func createOsmosisAppAndExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailWhiteList []string,
-	appOpts servertypes.AppOptions,
+	appOpts servertypes.AppOptions, modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
 	encCfg := osmosis.MakeEncodingConfig() // Ideally, we would reuse the one created by NewRootCmd.
 	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
@@ -303,5 +303,5 @@ func createOsmosisAppAndExport(
 		app = osmosis.NewOsmosisApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), appOpts, osmosis.GetWasmEnabledProposals(), osmosis.EmptyWasmOpts)
 	}
 
-	return app.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
+	return app.ExportAppStateAndValidators(forZeroHeight, jailWhiteList, modulesToExport)
 }
