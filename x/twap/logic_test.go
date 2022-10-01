@@ -77,7 +77,7 @@ func (s *TestSuite) TestGetSpotPrices() {
 			mockAMMI.ProgramPoolSpotPriceOverride(tc.poolID, denom0, denom1, tc.mockSp0, tc.mockSp0Err)
 			mockAMMI.ProgramPoolSpotPriceOverride(tc.poolID, denom1, denom0, tc.mockSp1, tc.mockSp1Err)
 
-			sp0, sp1, latestErrTime := twap.GetSpotPrices(ctx, mockAMMI, *s.App.TwapKeeper, tc.poolID, denom0, denom1, tc.prevErrTime)
+			sp0, sp1, latestErrTime := s.twapkeeper.GetSpotPrices(ctx, tc.poolID, denom0, denom1, tc.prevErrTime)
 			s.Require().Equal(tc.expectedSp0, sp0)
 			s.Require().Equal(tc.expectedSp1, sp1)
 			s.Require().Equal(tc.expectedLatestErrTime, latestErrTime)
@@ -127,7 +127,7 @@ func (s *TestSuite) TestNewTwapRecord() {
 	}
 	for name, test := range tests {
 		s.Run(name, func() {
-			twapRecord, err := twap.NewTwapRecord(s.App.GAMMKeeper, *s.App.TwapKeeper, s.Ctx, test.poolId, test.denom0, test.denom1)
+			twapRecord, err := s.twapkeeper.NewTwapRecord(s.Ctx, test.poolId, test.denom0, test.denom1)
 
 			if test.expectedPanic {
 				s.Require().Equal(twapRecord.LastErrorTime, s.Ctx.BlockTime())

@@ -10,13 +10,13 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
 )
 
-func newTwapRecord(k types.AmmInterface, keeper Keeper, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
+func(k Keeper) newTwapRecord(ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
 	denom0, denom1, err := types.LexicographicalOrderDenoms(denom0, denom1)
 	if err != nil {
 		return types.TwapRecord{}, err
 	}
 	previousErrorTime := time.Time{} // no previous error
-	sp0, sp1, lastErrorTime := getSpotPrices(ctx, k, keeper, poolId, denom0, denom1, previousErrorTime)
+	sp0, sp1, lastErrorTime := k.getSpotPrices(ctx, poolId, denom0, denom1, previousErrorTime)
 	return types.TwapRecord{
 		PoolId:                      poolId,
 		Asset0Denom:                 denom0,
@@ -36,19 +36,17 @@ func newTwapRecord(k types.AmmInterface, keeper Keeper, ctx sdk.Context, poolId 
 // returns spot prices for both pairs of assets, and the 'latest error time'.
 // The latest error time is the previous time if there is no error in getting spot prices.
 // if there is an error in getting spot prices, then the latest error time is ctx.Blocktime()
-func getSpotPrices(
+func(k Keeper) getSpotPrices(
 	ctx sdk.Context,
-	k types.AmmInterface,
-	keeper Keeper,
 	poolId uint64,
 	denom0, denom1 string,
 	previousErrorTime time.Time,
 ) (sp0 sdk.Dec, sp1 sdk.Dec, latestErrTime time.Time) {
 	latestErrTime = previousErrorTime
-	sp0, err0 := k.CalculateSpotPrice(ctx, poolId, denom0, denom1)
-	sp1, err1 := k.CalculateSpotPrice(ctx, poolId, denom1, denom0)
+	sp0, err0 := k.ammkeeper.CalculateSpotPrice(ctx, poolId, denom0, denom1)
+	sp1, err1 := k.ammkeeper.CalculateSpotPrice(ctx, poolId, denom1, denom0)
 	if err0 != nil || err1 != nil {
-		previousRecord, err := keeper.getRecordAtOrBeforeTime(ctx, poolId, previousErrorTime, denom0, denom1)
+		previousRecord, err := k.getRecordAtOrBeforeTime(ctx, poolId, previousErrorTime, denom0, denom1)
 		latestErrTime = ctx.BlockTime()
 		if (sp0 == sdk.Dec{}) {
 			if err != nil {
@@ -79,7 +77,7 @@ func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
 	denoms, err := k.ammkeeper.GetPoolDenoms(ctx, poolId)
 	denomPairs0, denomPairs1 := types.GetAllUniqueDenomPairs(denoms)
 	for i := 0; i < len(denomPairs0); i++ {
-		record, err := newTwapRecord(k.ammkeeper, k, ctx, poolId, denomPairs0[i], denomPairs1[i])
+		record, err := k.newTwapRecord(ctx, poolId, denomPairs0[i], denomPairs1[i])
 		// err should be impossible given GetAllUniqueDenomPairs guarantees
 		if err != nil {
 			return err
@@ -151,8 +149,8 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 	newRecord := recordWithUpdatedAccumulators(record, ctx.BlockTime())
 	newRecord.Height = ctx.BlockHeight()
 
-	newSp0, newSp1, lastErrorTime := getSpotPrices(
-		ctx, k.ammkeeper, k, record.PoolId, record.Asset0Denom, record.Asset1Denom, record.LastErrorTime)
+	newSp0, newSp1, lastErrorTime := k.getSpotPrices(
+		ctx, record.PoolId, record.Asset0Denom, record.Asset1Denom, record.LastErrorTime)
 
 	// set last spot price to be last price of this block. This is what will get used in interpolation.
 	newRecord.P0LastSpotPrice = newSp0

@@ -72,19 +72,17 @@ func RecordWithUpdatedAccumulators(record types.TwapRecord, t time.Time) types.T
 	return recordWithUpdatedAccumulators(record, t)
 }
 
-func NewTwapRecord(k types.AmmInterface, keeper Keeper, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
-	return newTwapRecord(k, keeper, ctx, poolId, denom0, denom1)
+func (k Keeper) NewTwapRecord(ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
+	return k.newTwapRecord(ctx, poolId, denom0, denom1)
 }
 
-func GetSpotPrices(
+func (k Keeper) GetSpotPrices(
 	ctx sdk.Context,
-	k types.AmmInterface,
-	keeper Keeper,
 	poolId uint64,
 	denom0, denom1 string,
 	previousErrorTime time.Time,
 ) (sp0 sdk.Dec, sp1 sdk.Dec, latestErrTime time.Time) {
-	return getSpotPrices(ctx, k, keeper, poolId, denom0, denom1, previousErrorTime)
+	return k.getSpotPrices(ctx, poolId, denom0, denom1, previousErrorTime)
 }
 
 func (k *Keeper) GetAmmInterface() types.AmmInterface {
