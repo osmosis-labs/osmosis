@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v12/osmomath"
@@ -161,13 +162,6 @@ var (
 			yReserve:    osmomath.NewBigDec(-100),
 			remReserves: []osmomath.BigDec{},
 			yIn:         osmomath.NewBigDec(1),
-			expectPanic: true,
-		},
-		"yIn negative": {
-			xReserve:    osmomath.NewBigDec(100),
-			yReserve:    osmomath.NewBigDec(100),
-			remReserves: []osmomath.BigDec{},
-			yIn:         osmomath.NewBigDec(-1),
 			expectPanic: true,
 		},
 
@@ -339,14 +333,6 @@ var (
 			yIn:         osmomath.NewBigDec(1),
 			expectPanic: true,
 		},
-		"negative yIn": {
-			xReserve: osmomath.NewBigDec(100),
-			yReserve: osmomath.NewBigDec(100),
-			// represents a 4-asset pool with 100 in each reserve
-			remReserves: []osmomath.BigDec{},
-			yIn:         osmomath.NewBigDec(-1),
-			expectPanic: true,
-		},
 		"input greater than pool reserves (even 4-asset pool)": {
 			xReserve:    osmomath.NewBigDec(100),
 			yReserve:    osmomath.NewBigDec(100),
@@ -396,6 +382,10 @@ var (
 
 type StableSwapTestSuite struct {
 	test_helpers.CfmmCommonTestSuite
+}
+
+func TestStableSwapTestSuite(t *testing.T) {
+	suite.Run(t, new(StableSwapTestSuite))
 }
 
 func TestCFMMInvariantTwoAssets(t *testing.T) {
@@ -515,69 +505,49 @@ func TestCFMMInvariantMultiAssetsBinarySearch(t *testing.T) {
 	}
 }
 
-func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
+func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_InverseRelationship() {
 	type testcase struct {
-		denomOut         string
-		initialPoolOut   int64
-		initialWeightOut int64
-		initialCalcOut   int64
+		denomOut       string
+		initialPoolOut int64
+		initialCalcOut int64
 
-		denomIn         string
-		initialPoolIn   int64
-		initialWeightIn int64
+		denomIn       string
+		initialPoolIn int64
 	}
 
 	// For every test case in testcases, apply a swap fee in swapFeeCases.
 	testcases := []testcase{
 		{
-			denomOut:         "uosmo",
-			initialPoolOut:   1_000_000_000_000,
-			initialWeightOut: 100,
-			initialCalcOut:   100,
+			denomOut:       "uosmo",
+			initialPoolOut: 1_000_000_000,
+			initialCalcOut: 100,
 
-			denomIn:         "ion",
-			initialPoolIn:   1_000_000_000_000,
-			initialWeightIn: 100,
+			denomIn:       "ion",
+			initialPoolIn: 1_000_000_000,
 		},
 		{
-			denomOut:         "uosmo",
-			initialPoolOut:   1_000,
-			initialWeightOut: 100,
-			initialCalcOut:   100,
+			denomOut:       "uosmo",
+			initialPoolOut: 500_000,
+			initialCalcOut: 100,
 
-			denomIn:         "ion",
-			initialPoolIn:   1_000_000,
-			initialWeightIn: 100,
+			denomIn:       "ion",
+			initialPoolIn: 1_000_000,
 		},
 		{
-			denomOut:         "uosmo",
-			initialPoolOut:   1_000,
-			initialWeightOut: 100,
-			initialCalcOut:   100,
+			denomOut:       "uosmo",
+			initialPoolOut: 1_000,
+			initialCalcOut: 100,
 
-			denomIn:         "ion",
-			initialPoolIn:   1_000_000,
-			initialWeightIn: 100,
+			denomIn:       "ion",
+			initialPoolIn: 1_000_000_000,
 		},
 		{
-			denomOut:         "uosmo",
-			initialPoolOut:   1_000,
-			initialWeightOut: 200,
-			initialCalcOut:   100,
+			denomOut:       "uosmo",
+			initialPoolOut: 1_000_000_000,
+			initialCalcOut: 100,
 
-			denomIn:         "ion",
-			initialPoolIn:   1_000_000,
-			initialWeightIn: 50,
-		},
-		{
-			denomOut:         "uosmo",
-			initialPoolOut:   1_000_000,
-			initialWeightOut: 200,
-			initialCalcOut:   100000,
-
-			denomIn:         "ion",
-			initialPoolIn:   1_000_000_000,
-			initialWeightIn: 50,
+			denomIn:       "ion",
+			initialPoolIn: 1_000,
 		},
 	}
 
@@ -594,7 +564,7 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 
 	for _, tc := range testcases {
 		for _, swapFee := range swapFeeCases {
-			t.Run(getTestCaseName(tc, swapFee), func(t *testing.T) {
+			suite.Run(getTestCaseName(tc, swapFee), func() {
 				ctx := suite.CreateTestContext()
 
 				poolLiquidityIn := sdk.NewInt64Coin(tc.denomOut, tc.initialPoolOut)
@@ -602,15 +572,15 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 				poolLiquidity := sdk.NewCoins(poolLiquidityIn, poolLiquidityOut)
 
 				swapFeeDec, err := sdk.NewDecFromStr(swapFee)
-				require.NoError(t, err)
+				suite.Require().NoError(err)
 
 				exitFeeDec, err := sdk.NewDecFromStr("0")
-				require.NoError(t, err)
+				suite.Require().NoError(err)
 
-				pool := createTestPool(t, poolLiquidity, swapFeeDec, exitFeeDec)
-				require.NotNil(t, pool)
-
-				suite.TestCalculateAmountOutAndIn_InverseRelationship(ctx, pool, poolLiquidityIn.Denom, poolLiquidityOut.Denom, tc.initialCalcOut, swapFeeDec)
+				// TODO: add scaling factors into inverse relationship tests
+				pool := createTestPool(suite.T(), poolLiquidity, swapFeeDec, exitFeeDec, []uint64{1, 1})
+				suite.Require().NotNil(pool)
+				test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, poolLiquidityIn.Denom, poolLiquidityOut.Denom, tc.initialCalcOut, swapFeeDec)
 			})
 		}
 	}
