@@ -1,4 +1,4 @@
-package simulation
+package stats
 
 import (
 	"encoding/json"
@@ -54,7 +54,7 @@ func (es EventStats) ExportJSON(path string) {
 	}
 }
 
-func (es EventStats) exportEvents(ExportStatsPath string, w io.Writer) {
+func (es EventStats) ExportEvents(ExportStatsPath string, w io.Writer) {
 	if ExportStatsPath != "" {
 		fmt.Printf("Exporting simulation statistics to %s...", ExportStatsPath)
 		es.ExportJSON(ExportStatsPath)
