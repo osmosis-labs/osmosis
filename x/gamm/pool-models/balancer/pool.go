@@ -248,8 +248,12 @@ func (p Pool) parsePoolAssetsByDenoms(tokenADenom, tokenBDenom string) (
 ) {
 	Aasset, found1 := getPoolAssetByDenom(p.PoolAssets, tokenADenom)
 	Basset, found2 := getPoolAssetByDenom(p.PoolAssets, tokenBDenom)
-	if !(found1 && found2) {
-		return Aasset, Basset, errors.New("one of the provided pool denoms does not exist in pool")
+
+	if !found1 {
+		return PoolAsset{}, PoolAsset{}, fmt.Errorf("(%s) does not exist in the pool", tokenADenom)
+	}
+	if !found2 {
+		return PoolAsset{}, PoolAsset{}, fmt.Errorf("(%s) does not exist in the pool", tokenBDenom)
 	}
 	return Aasset, Basset, nil
 }
@@ -261,7 +265,10 @@ func (p Pool) parsePoolAssets(tokensA sdk.Coins, tokenBDenom string) (
 		return tokenA, Aasset, Basset, errors.New("expected tokensB to be of length one")
 	}
 	Aasset, Basset, err = p.parsePoolAssetsByDenoms(tokensA[0].Denom, tokenBDenom)
-	return tokensA[0], Aasset, Basset, err
+	if err != nil {
+		return sdk.Coin{}, PoolAsset{}, PoolAsset{}, err
+	}
+	return tokensA[0], Aasset, Basset, nil
 }
 
 func (p Pool) parsePoolAssetsCoins(tokensA sdk.Coins, tokensB sdk.Coins) (
