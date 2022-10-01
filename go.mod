@@ -293,9 +293,14 @@ require (
 replace (
 	// branch: v0.28.0x-osmo-v12, current tag: v0.28.0-osmo-v12.1
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.28.0-osmo-v12.1
+<<<<<<< HEAD
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk/tree/v0.45.0x-osmo-v12
 	// last commit: https://github.com/osmosis-labs/cosmos-sdk/tree/3c4d30596acce8ca30cacbc173de2431a04b8a3b
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220921135931-3c4d30596acc
+=======
+	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: osmosis-main. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/6849de6cf9f5ecffef88996063cbd7c489e89986
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20221001190416-6849de6cf9f5
+>>>>>>> 94df7890 (feat: user defined modules to export (#2925))
 	// Use Osmosis fast iavl
 	github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-osmo-v7
 	// use cosmos-compatible protobufs
