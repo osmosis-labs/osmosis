@@ -422,3 +422,102 @@ func TestGetDescaledPoolAmts(t *testing.T) {
 		})
 	}
 }
+
+func TestScaledInput(t *testing.T) {
+	tests := map[string]struct {
+		input          sdk.Coin
+		rounding       osmomath.RoundingDirection
+		poolAssets     sdk.Coins
+		scalingFactors []uint64
+		expOutput      osmomath.BigDec
+		expError       bool
+	}{
+		"even two-asset pool with default scaling factors": {
+			input:          sdk.NewCoin("bar", sdk.NewInt(100)),
+			rounding:       osmomath.RoundDown,
+			poolAssets:     twoEvenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			expOutput:      osmomath.NewBigDec(100),
+			expError:       false,
+		},
+		"uneven two-asset pool with default scaling factors": {
+			input:          sdk.NewCoin("foo", sdk.NewInt(200)),
+			rounding:       osmomath.RoundDown,
+			poolAssets:     twoUnevenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			expOutput:      osmomath.NewBigDec(200),
+			expError:       false,
+		},
+		"even two-asset pool with uneven scaling factors greater than 1": {
+			input:          sdk.NewCoin("bar", sdk.NewInt(100)),
+			rounding:       osmomath.RoundDown,
+			poolAssets:     twoUnevenStablePoolAssets,
+			scalingFactors: []uint64{10, 5},
+			expOutput:      osmomath.NewBigDec(10),
+			expError:       false,
+		},
+		"even two-asset pool with even, massive scaling factors greater than 1": {
+			input:          sdk.NewCoin("foo", sdk.NewInt(100)),
+			rounding:       osmomath.RoundDown,
+			poolAssets:     twoEvenStablePoolAssets,
+			scalingFactors: []uint64{10000000000, 10_000_000_000},
+			expOutput:      osmomath.NewDecWithPrec(100, 10),
+			expError:       false,
+		},
+		"five asset pool scaling factors = 1": {
+			input:          sdk.NewCoin("asset/c", sdk.NewInt(100)),
+			rounding:       osmomath.RoundDown,
+			poolAssets:     fiveUnevenStablePoolAssets,
+			scalingFactors: []uint64{1, 1, 1, 1, 1},
+			expOutput:      osmomath.NewBigDec(100),
+			expError:       false,
+		},
+		"five asset pool scaling factors = 1,2,3,4,5": {
+			input:          sdk.NewCoin("asset/d", sdk.NewInt(100)),
+			rounding:       osmomath.RoundDown,
+			poolAssets:     fiveUnevenStablePoolAssets,
+			scalingFactors: []uint64{1, 2, 3, 4, 5},
+			expOutput:      osmomath.NewBigDec(25),
+			expError:       false,
+		},
+		"max scaling factors on small token inputs": {
+			input:          sdk.NewCoin("foo", sdk.NewInt(10)),
+			rounding:       osmomath.RoundDown,
+			poolAssets:     twoEvenStablePoolAssets,
+			scalingFactors: []uint64{(1 << 62), (1 << 62)},
+			expOutput:      osmomath.NewBigDec(10).QuoInt64(1 << 62),
+			expError:       false,
+		},
+		"zero scaling factor": {
+			input:          sdk.NewCoin("bar", sdk.NewInt(100)),
+			rounding:       osmomath.RoundDown,
+			poolAssets:     twoEvenStablePoolAssets,
+			scalingFactors: []uint64{0, 1},
+			expError:       true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// we create the pool directly to bypass checks in NewStableswapPool()
+			p := Pool{
+				Address:            types.NewPoolAddress(defaultPoolId).String(),
+				Id:                 defaultPoolId,
+				PoolParams:         defaultStableswapPoolParams,
+				TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),
+				PoolLiquidity:      tc.poolAssets,
+				ScalingFactor:      tc.scalingFactors,
+				FuturePoolGovernor: defaultFutureGovernor,
+			}
+
+			scaledInput, err := p.scaleInputAmount(tc.input, tc.rounding)
+
+			if !tc.expError {
+				require.NoError(t, err, "test: %s", name)
+				require.Equal(t, tc.expOutput, scaledInput)
+			}
+
+			osmoassert.ConditionalError(t, tc.expError, err)
+		})
+	}
+}
