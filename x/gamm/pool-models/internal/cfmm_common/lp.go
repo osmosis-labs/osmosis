@@ -155,7 +155,7 @@ func BinarySearchSingleAssetJoin(
 
 		return SwapAllCoinsToSingleAsset(poolWithUpdatedLiquidity, ctx, exitedCoins, swapToDenom)
 	}
-	// TODO: Come back and revisit err tolerance
+
 	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: correctnessThreshold, MultiplicativeTolerance: sdk.OneDec()}
 
 	// we set the target at input amount minus additive tolerance so we never output more tokens than were passed in
