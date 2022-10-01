@@ -291,6 +291,8 @@ func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk
 }
 
 // TODO: godoc
+// We can mutate pa here
+// TODO: some day switch this to a COW wrapped pa, for better perf
 func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (sdk.Int, sdk.Coins, error) {
 	if len(tokensIn) == 1 {
 		numShares, err := p.calcSingleAssetJoinShares(tokensIn[0], swapFee)
