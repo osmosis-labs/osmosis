@@ -12,8 +12,6 @@ import (
 
 const errMsgFormatSharesLargerThanMax = "%s resulted shares is larger than the max amount of %s"
 
-var correctnessThreshold = sdk.NewInt(1)
-
 // CalcExitPool returns how many tokens should come out, when exiting k LP shares against a "standard" CFMM
 func CalcExitPool(ctx sdk.Context, pool types.PoolI, exitingShares sdk.Int, exitFee sdk.Dec) (sdk.Coins, error) {
 	totalShares := pool.GetTotalShares()
@@ -116,6 +114,10 @@ func MaximalExactRatioJoin(p types.PoolI, ctx sdk.Context, tokensIn sdk.Coins) (
 	return numShares, remCoins, nil
 }
 
+// Need to get something that makes the result correct within 1 LP share.
+// If we fail to reach it within maxIterations, we return an error.
+var singleAssetJoinCorrectnessThreshold = sdk.NewInt(1)
+
 // We binary search a number of LP shares, s.t. if we exited the pool with the updated liquidity,
 // and swapped all the tokens back to the input denom, we'd get the same amount. (under 0 swap fee)
 // Thanks to CFMM path-independence, we can estimate slippage with these swaps to be sure to get the right numbers here.
@@ -131,8 +133,6 @@ func BinarySearchSingleAssetJoin(
 ) (numLPShares sdk.Int, err error) {
 	// use dummy context
 	ctx := sdk.Context{}
-	// Need to get something that makes the result correct within 1 LP share.
-	// If we fail to reach it within maxIterations, we return an error.
 	maxIterations := 300
 	// upperbound of number of LP shares = existingShares * tokenIn.Amount / pool.totalLiquidity.AmountOf(tokenIn.Denom)
 	existingTokenLiquidity := pool.GetTotalPoolLiquidity(ctx).AmountOf(tokenIn.Denom)
@@ -156,12 +156,12 @@ func BinarySearchSingleAssetJoin(
 		return SwapAllCoinsToSingleAsset(poolWithUpdatedLiquidity, ctx, exitedCoins, swapToDenom)
 	}
 
-	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: correctnessThreshold, MultiplicativeTolerance: sdk.OneDec()}
+	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: singleAssetJoinCorrectnessThreshold, MultiplicativeTolerance: sdk.OneDec()}
 
 	// we set the target at input amount minus additive tolerance so we never output more tokens than were passed in
 	numLPShares, err = osmoutils.BinarySearch(
 		estimateCoinOutGivenShares,
-		LPShareLowerBound, LPShareUpperBound, tokenIn.Amount.Sub(correctnessThreshold), errTolerance, maxIterations)
+		LPShareLowerBound, LPShareUpperBound, tokenIn.Amount.Sub(singleAssetJoinCorrectnessThreshold), errTolerance, maxIterations)
 
 	return numLPShares, err
 }
