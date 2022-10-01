@@ -507,7 +507,6 @@ func TestScaledInput(t *testing.T) {
 }
 
 func (suite *StableSwapTestSuite) TestCalcJoinPoolNoSwapShares() {
-
 	tests := map[string]struct {
 		initialPoolLiquidity sdk.Coins
 
