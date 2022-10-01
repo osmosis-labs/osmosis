@@ -56,10 +56,10 @@ func TestCalculateAmountOutAndIn_InverseRelationship(
 	expected := initialOut.Amount.ToDec()
 	actual := inverseTokenOut.Amount.ToDec()
 
-	// If the pool is extremely imbalanced, we expect there to be drastically
-	// amplified error that will fall outside our usual bounds. For these cases,
-	// especially for stableswap, all we really care about is that they are safe
-	// and were rounded correctly.
+	// If the pool is extremely imbalanced (specifically in the case of stableswap), 
+	// we expect there to be drastically amplified error that will fall outside our usual bounds.
+	// Since these cases are effectively unusable by design, we only really care about whether 
+	// they are safe i.e. round correctly.
 	preFeeTokenIn := actualTokenIn.Amount.ToDec().Mul((sdk.OneDec().Sub(swapFee))).Ceil().TruncateInt()
 	if preFeeTokenIn.Equal(sdk.OneInt()) {
 		require.True(t, actual.GT(expected))
