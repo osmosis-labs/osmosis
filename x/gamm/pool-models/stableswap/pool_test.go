@@ -225,7 +225,7 @@ func TestGetDescaledPoolAmts(t *testing.T) {
 		amount         osmomath.BigDec
 		poolAssets     sdk.Coins
 		scalingFactors []uint64
-		expResult      osmomath.BigDec
+		expResult      sdk.Dec
 		expPanic       bool
 	}{
 		"pass in no denoms": {
@@ -233,8 +233,7 @@ func TestGetDescaledPoolAmts(t *testing.T) {
 			amount:         osmomath.ZeroDec(),
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expResult:      osmomath.ZeroDec(),
-			expPanic:       false,
+			expResult:      sdk.ZeroDec(),
 		},
 		// sanity checks, default scaling factors
 		"get exact supply of one asset, even two-asset pool with default scaling factors": {
@@ -242,24 +241,21 @@ func TestGetDescaledPoolAmts(t *testing.T) {
 			amount:         osmomath.NewBigDec(1000000000),
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expResult:      osmomath.NewBigDec(1000000000),
-			expPanic:       false,
+			expResult:      sdk.NewDec(1000000000),
 		},
 		"get less than supply of one asset, even two-asset pool with default scaling factors": {
 			denom:          "foo",
 			amount:         osmomath.NewBigDec(500000000),
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expResult:      osmomath.NewBigDec(500000000),
-			expPanic:       false,
+			expResult:      sdk.NewDec(500000000),
 		},
 		"get more than supply of one asset, even two-asset pool with default scaling factors": {
 			denom:          "foo",
 			amount:         osmomath.NewBigDec(10000000000000),
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expResult:      osmomath.NewBigDec(10000000000000),
-			expPanic:       false,
+			expResult:      sdk.NewDec(10000000000000),
 		},
 
 		// uneven pools
@@ -268,48 +264,42 @@ func TestGetDescaledPoolAmts(t *testing.T) {
 			amount:         osmomath.NewBigDec(2000000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expResult:      osmomath.NewBigDec(2000000000),
-			expPanic:       false,
+			expResult:      sdk.NewDec(2000000000),
 		},
 		"get less than supply of first asset, uneven two-asset pool with default scaling factors": {
 			denom:          "foo",
 			amount:         osmomath.NewBigDec(500000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expResult:      osmomath.NewBigDec(500000000),
-			expPanic:       false,
+			expResult:      sdk.NewDec(500000000),
 		},
 		"get more than supply of first asset, uneven two-asset pool with default scaling factors": {
 			denom:          "foo",
 			amount:         osmomath.NewBigDec(10000000000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expResult:      osmomath.NewBigDec(10000000000000),
-			expPanic:       false,
+			expResult:      sdk.NewDec(10000000000000),
 		},
 		"get exact supply of second asset, uneven two-asset pool with default scaling factors": {
 			denom:          "bar",
 			amount:         osmomath.NewBigDec(1000000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expResult:      osmomath.NewBigDec(1000000000),
-			expPanic:       false,
+			expResult:      sdk.NewDec(1000000000),
 		},
 		"get less than supply of second asset, uneven two-asset pool with default scaling factors": {
 			denom:          "bar",
 			amount:         osmomath.NewBigDec(500000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expResult:      osmomath.NewBigDec(500000000),
-			expPanic:       false,
+			expResult:      sdk.NewDec(500000000),
 		},
 		"get more than supply of second asset, uneven two-asset pool with default scaling factors": {
 			denom:          "bar",
 			amount:         osmomath.NewBigDec(10000000000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expResult:      osmomath.NewBigDec(10000000000000),
-			expPanic:       false,
+			expResult:      sdk.NewDec(10000000000000),
 		},
 
 		// uneven scaling factors (note: denoms are ordered lexicographically, not by pool asset input)
@@ -318,48 +308,42 @@ func TestGetDescaledPoolAmts(t *testing.T) {
 			amount:         osmomath.NewBigDec(2000000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10, 5},
-			expResult:      osmomath.NewBigDec(2000000000 * 5),
-			expPanic:       false,
+			expResult:      sdk.NewDec(2000000000 * 5),
 		},
 		"get less than supply of first asset, uneven two-asset pool with uneven scaling factors": {
 			denom:          "foo",
 			amount:         osmomath.NewBigDec(500000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10, 5},
-			expResult:      osmomath.NewBigDec(500000000 * 5),
-			expPanic:       false,
+			expResult:      sdk.NewDec(500000000 * 5),
 		},
 		"get more than supply of first asset, uneven two-asset pool with uneven scaling factors": {
 			denom:          "foo",
 			amount:         osmomath.NewBigDec(10000000000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10, 5},
-			expResult:      osmomath.NewBigDec(10000000000000 * 5),
-			expPanic:       false,
+			expResult:      sdk.NewDec(10000000000000 * 5),
 		},
 		"get exact supply of second asset, uneven two-asset pool with uneven scaling factors": {
 			denom:          "bar",
 			amount:         osmomath.NewBigDec(2000000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10, 5},
-			expResult:      osmomath.NewBigDec(2000000000 * 10),
-			expPanic:       false,
+			expResult:      sdk.NewDec(2000000000 * 10),
 		},
 		"get less than supply of second asset, uneven two-asset pool with uneven scaling factors": {
 			denom:          "bar",
 			amount:         osmomath.NewBigDec(500000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10, 5},
-			expResult:      osmomath.NewBigDec(500000000 * 10),
-			expPanic:       false,
+			expResult:      sdk.NewDec(500000000 * 10),
 		},
 		"get more than supply of second asset, uneven two-asset pool with uneven scaling factors": {
 			denom:          "bar",
 			amount:         osmomath.NewBigDec(10000000000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10, 5},
-			expResult:      osmomath.NewBigDec(10000000000000 * 10),
-			expPanic:       false,
+			expResult:      sdk.NewDec(10000000000000 * 10),
 		},
 
 		// panic catching
@@ -404,7 +388,7 @@ func TestGetDescaledPoolAmts(t *testing.T) {
 	}
 }
 
-func TestScaledInput(t *testing.T) {
+func TestScaleCoin(t *testing.T) {
 	tests := map[string]struct {
 		input          sdk.Coin
 		rounding       osmomath.RoundingDirection
@@ -491,7 +475,7 @@ func TestScaledInput(t *testing.T) {
 				FuturePoolGovernor: defaultFutureGovernor,
 			}
 
-			scaledInput, err := p.scaleInputAmount(tc.input, tc.rounding)
+			scaledInput, err := p.scaleCoin(tc.input, tc.rounding)
 
 			if !tc.expError {
 				require.NoError(t, err, "test: %s", name)
