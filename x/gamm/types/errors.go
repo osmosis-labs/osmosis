@@ -1,8 +1,10 @@
 package types
 
 import (
+	"errors"
 	fmt "fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -12,6 +14,33 @@ type PoolDoesNotExistError struct {
 
 func (e PoolDoesNotExistError) Error() string {
 	return fmt.Sprintf("pool with ID %d does not exist", e.PoolId)
+}
+
+type TokensJoinedDoesNotEqualTokensInNoSwapError struct {
+	NewLiquidity sdk.Coins
+	TokensIn     sdk.Coins
+}
+
+func (e TokensJoinedDoesNotEqualTokensInNoSwapError) Error() string {
+	return fmt.Sprintf("new liquidity (%s) is not equal to tokens in (%s)", e.NewLiquidity, e.TokensIn)
+}
+
+type StableSwapPoolAssetsDoNotEqualTokensInJoinError struct {
+	PoolAssets sdk.Coins
+	TokensIn   sdk.Coins
+}
+
+func (e StableSwapPoolAssetsDoNotEqualTokensInJoinError) Error() string {
+	return fmt.Sprintf(`stableswap joins can only be done with one or all assets.
+	Pool assets (%s) do not equal to tokens in (%s).`, e.PoolAssets, e.TokensIn)
+}
+
+type RatioOfTokensInToExistingLiqExceededError struct {
+	ActualRatio sdk.Dec
+}
+
+func (e RatioOfTokensInToExistingLiqExceededError) Error() string {
+	return fmt.Sprintf("ratio of tokens in to existing liquidity (%s) exceeded limit of (%s)", e.ActualRatio, sdk.MaxSortableDec)
 }
 
 // x/gamm module sentinel errors.
@@ -52,4 +81,6 @@ var (
 	ErrInvalidStableswapScalingFactors = sdkerrors.Register(ModuleName, 62, "length between liquidity and scaling factors mismatch")
 	ErrNotScalingFactorGovernor        = sdkerrors.Register(ModuleName, 63, "not scaling factor governor")
 	ErrInvalidScalingFactors           = sdkerrors.Register(ModuleName, 64, "invalid scaling factor")
+
+	StableSwapNoSwapJoinNeedsMultiAssetsIn = errors.New("no swap join needs multiple assets in, one was given")
 )

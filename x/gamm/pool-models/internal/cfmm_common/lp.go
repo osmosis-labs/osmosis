@@ -84,8 +84,8 @@ func MaximalExactRatioJoin(p types.PoolI, ctx sdk.Context, tokensIn sdk.Coins) (
 		coinShareRatios[i] = shareRatio
 	}
 
-	if minShareRatio.Equal(sdk.MaxSortableDec) {
-		return numShares, remCoins, errors.New("unexpected error in MaximalExactRatioJoin")
+	if minShareRatio.GTE(sdk.MaxSortableDec) {
+		return numShares, remCoins, types.RatioOfTokensInToExistingLiqExceededError{ActualRatio: minShareRatio}
 	}
 
 	remCoins = sdk.Coins{}

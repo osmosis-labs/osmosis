@@ -573,7 +573,7 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 				require.NotNil(t, pool)
 
 				sut := func() {
-					suite.TestCalculateAmountOutAndIn_InverseRelationship(ctx, pool, poolAssetIn.Token.Denom, poolAssetOut.Token.Denom, tc.initialCalcOut, swapFeeDec)
+					suite.CalculateAmountOutAndIn_InverseRelationship(ctx, pool, poolAssetIn.Token.Denom, poolAssetOut.Token.Denom, tc.initialCalcOut, swapFeeDec)
 				}
 
 				balancerPool, ok := pool.(*balancer.Pool)

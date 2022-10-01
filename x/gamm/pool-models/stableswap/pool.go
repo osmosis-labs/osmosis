@@ -305,19 +305,46 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 	return pCopy.joinPoolSharesInternal(ctx, tokensIn, swapFee)
 }
 
-// TODO: implement this
-func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
-	return sdk.ZeroInt(), nil, err
+// CalcJoinPoolNoSwapShares creates and returns the number of shares
+// from joining and updating the pool with the given tokensIn and swapFee.
+// Only works more than one token in tokensIn and equal proportions
+// relative to existing liquidity of thereof. Does not mutate pool state.
+// implements Pool interface. See its defintion for more details.
+func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
+	// N.B. we simulate the calculation by attempting to join a copy of the original pool.
+	// The original pool is not modified.
+	pCopy := p.Copy()
+	numShares, tokensJoined, err = pCopy.joinPoolNoSwapSharesInternal(ctx, tokensIn, swapFee)
+	if err != nil {
+		return sdk.Int{}, sdk.Coins{}, err
+	}
+	// Should never happen but we check anyway.
+	if !tokensJoined.IsEqual(tokensIn) {
+		return sdk.Int{}, sdk.Coins{}, types.TokensJoinedDoesNotEqualTokensInNoSwapError{NewLiquidity: tokensJoined, TokensIn: tokensIn}
+	}
+	return numShares, tokensJoined, nil
 }
 
-func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
-	numShares, _, err = p.joinPoolSharesInternal(ctx, tokensIn, swapFee)
-	return numShares, err
+func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numSharesOut sdk.Int, err error) {
+	numSharesOut, tokensJoined, err := p.CalcJoinPoolNoSwapShares(ctx, tokensIn, swapFee)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+	p.updatePoolForJoin(tokensJoined, numSharesOut)
+	return numSharesOut, nil
 }
 
-// TODO: implement this
+// JoinPoolNoSwap returns the number of shares that would be created
+// if we were to join the pool with the given tokensIn and swapFee.
+// Only works more than one token in tokensIn and equal proportions
+// relative to existing liquidity of thereof. Mutates pool state.
+// implements Pool interface. See its defintion for more details.
 func (p *Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
-	return sdk.ZeroInt(), err
+	numShares, newLiquidity, err := p.joinPoolNoSwapSharesInternal(ctx, tokensIn, swapFee)
+	if !newLiquidity.IsEqual(tokensIn) {
+		return sdk.Int{}, types.TokensJoinedDoesNotEqualTokensInNoSwapError{NewLiquidity: newLiquidity, TokensIn: tokensIn}
+	}
+	return numShares, err
 }
 
 func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {

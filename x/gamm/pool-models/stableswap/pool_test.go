@@ -2,6 +2,7 @@
 package stableswap
 
 import (
+	"errors"
 	"math/big"
 	"testing"
 
@@ -39,6 +40,8 @@ var (
 		sdk.NewInt64Coin("asset/d", 4000000000),
 		sdk.NewInt64Coin("asset/e", 5000000000),
 	)
+
+	testError = errors.New("test error")
 )
 
 func TestScaledSortedPoolReserves(t *testing.T) {
@@ -336,6 +339,119 @@ func TestGetDescaledPoolAmts(t *testing.T) {
 			}
 
 			osmoassert.ConditionalPanic(t, tc.expPanic, sut)
+		})
+	}
+}
+
+func (suite *StableSwapTestSuite) TestCalcJoinPoolNoSwapShares() {
+
+	tests := map[string]struct {
+		initialPoolLiquidity sdk.Coins
+
+		tokensIn sdk.Coins
+		swapFee  sdk.Dec
+
+		expectedNumShares    sdk.Int
+		expectedTokensJoined sdk.Coins
+		expectError          error
+	}{
+		"happy path": {
+			initialPoolLiquidity: baseInitialPoolLiquidity,
+
+			// denomA = 10%;. denomB = 10% of initial pool liquidity
+			tokensIn: sdk.NewCoins(sdk.NewCoin(denomA, tenPercentOfBaseInt), sdk.NewCoin(denomB, tenPercentOfBaseInt)),
+			swapFee:  sdk.ZeroDec(),
+
+			expectedNumShares:    types.InitPoolSharesSupply.ToDec().Mul(sdk.NewDecWithPrec(1, 1)).TruncateInt(),
+			expectedTokensJoined: sdk.NewCoins(sdk.NewCoin(denomA, tenPercentOfBaseInt), sdk.NewCoin(denomB, tenPercentOfBaseInt)),
+		},
+		"one asset - error": {
+			initialPoolLiquidity: baseInitialPoolLiquidity,
+
+			tokensIn: sdk.NewCoins(sdk.NewCoin(denomA, tenPercentOfBaseInt)),
+
+			expectError: types.StableSwapNoSwapJoinNeedsMultiAssetsIn,
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			ctx := suite.CreateTestContext()
+
+			pool := createTestPool(suite.T(), tc.initialPoolLiquidity, tc.swapFee, sdk.ZeroDec())
+
+			numShares, tokensJoined, err := pool.CalcJoinPoolNoSwapShares(ctx, tc.tokensIn, tc.swapFee)
+
+			// validate pool is not updated
+			suite.validatePoolLiquidityAndShares(ctx, pool, tc.initialPoolLiquidity, types.InitPoolSharesSupply)
+
+			if tc.expectError != nil {
+				suite.Require().Error(err)
+				suite.Require().Equal(sdk.Int{}, numShares)
+				suite.Require().Equal(sdk.Coins{}, tokensJoined)
+				return
+			}
+
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.expectedNumShares, numShares)
+			suite.Require().Equal(tc.expectedTokensJoined, tokensJoined)
+		})
+	}
+}
+
+func (suite *StableSwapTestSuite) TestJoinPoolNoSwapShares() {
+
+	tests := map[string]struct {
+		initialPoolLiquidity sdk.Coins
+
+		tokensIn sdk.Coins
+		swapFee  sdk.Dec
+
+		expectedNumShares    sdk.Int
+		expectedTokensJoined sdk.Coins
+		expectError          error
+	}{
+		"happy path": {
+			initialPoolLiquidity: baseInitialPoolLiquidity,
+
+			// denomA = 10%;. denomB = 10% of initial pool liquidity
+			tokensIn: sdk.NewCoins(sdk.NewCoin(denomA, tenPercentOfBaseInt), sdk.NewCoin(denomB, tenPercentOfBaseInt)),
+			swapFee:  sdk.ZeroDec(),
+
+			expectedNumShares:    types.InitPoolSharesSupply.ToDec().Mul(sdk.NewDecWithPrec(1, 1)).TruncateInt(),
+			expectedTokensJoined: sdk.NewCoins(sdk.NewCoin(denomA, tenPercentOfBaseInt), sdk.NewCoin(denomB, tenPercentOfBaseInt)),
+		},
+		"one asset - error": {
+			initialPoolLiquidity: baseInitialPoolLiquidity,
+
+			tokensIn: sdk.NewCoins(sdk.NewCoin(denomA, tenPercentOfBaseInt)),
+
+			expectError: types.StableSwapNoSwapJoinNeedsMultiAssetsIn,
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			ctx := suite.CreateTestContext()
+
+			pool := createTestPool(suite.T(), tc.initialPoolLiquidity, tc.swapFee, sdk.ZeroDec())
+
+			numShares, err := pool.JoinPoolNoSwap(ctx, tc.tokensIn, tc.swapFee)
+
+			if tc.expectError != nil {
+				suite.Require().Error(err)
+				suite.Require().Equal(sdk.Int{}, numShares)
+
+				// validate pool is not updated
+				suite.validatePoolLiquidityAndShares(ctx, pool, tc.initialPoolLiquidity, types.InitPoolSharesSupply)
+				return
+			}
+
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.expectedNumShares, numShares)
+
+			// validate pool is updated
+			suite.validatePoolLiquidityAndShares(ctx, pool, tc.initialPoolLiquidity.Add(tc.expectedTokensJoined...), types.InitPoolSharesSupply.Add(tc.expectedNumShares))
 		})
 	}
 }

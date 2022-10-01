@@ -1,8 +1,6 @@
 package stableswap
 
 import (
-	"errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v12/osmomath"
@@ -287,24 +285,19 @@ func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk
 	return cfmm_common.BinarySearchSingleAssetJoin(p, tokenIn, poolWithAddedLiquidityAndShares)
 }
 
-// We can mutate pa here
-// TODO: some day switch this to a COW wrapped pa, for better perf
-func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
+// TODO: godoc
+func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (sdk.Int, sdk.Coins, error) {
 	if len(tokensIn) == 1 {
-		numShares, err = p.calcSingleAssetJoinShares(tokensIn[0], swapFee)
-		newLiquidity = tokensIn
-		return numShares, newLiquidity, err
-	} else if len(tokensIn) != p.NumAssets() || !tokensIn.DenomsSubsetOf(p.GetTotalPoolLiquidity(ctx)) {
-		return sdk.ZeroInt(), sdk.NewCoins(), errors.New(
-			"stableswap pool only supports LP'ing with one asset, or all assets in pool")
+		numShares, err := p.calcSingleAssetJoinShares(tokensIn[0], swapFee)
+		p.updatePoolForJoin(tokensIn, numShares)
+		return numShares, tokensIn, err
+	}
+	numShares, tokensJoined, err := p.joinPoolNoSwapSharesInternal(ctx, tokensIn, swapFee)
+	if err != nil {
+		return sdk.Int{}, sdk.Coins{}, err
 	}
 
-	// Add all exact coins we can (no swap). ctx arg doesn't matter for Stableswap
-	numShares, remCoins, err := cfmm_common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
-	if err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), err
-	}
-	p.updatePoolForJoin(tokensIn.Sub(remCoins), numShares)
+	remCoins := tokensIn.Sub(tokensJoined)
 
 	for _, coin := range remCoins {
 		// TODO: Perhaps add a method to skip if this is too small.
@@ -317,4 +310,32 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 	}
 
 	return numShares, tokensIn, nil
+}
+
+// joinPoolNoSwapSharesInternal joins the pool with the given amount of tokens in and swap fee.
+// On success, returns the number of shares and tokens joined.
+// Returns error if:
+// - one token in given
+// - tokens in assets do not match pool assets
+// - equal join fails internally
+func (p *Pool) joinPoolNoSwapSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
+	poolLiquidity := p.GetTotalPoolLiquidity(ctx)
+	if tokensIn.Len() == 1 {
+		return sdk.Int{}, sdk.Coins{}, types.StableSwapNoSwapJoinNeedsMultiAssetsIn
+	}
+	if !(tokensIn.DenomsSubsetOf(poolLiquidity) && poolLiquidity.DenomsSubsetOf(tokensIn)) {
+		return sdk.Int{}, sdk.Coins{}, types.StableSwapPoolAssetsDoNotEqualTokensInJoinError{PoolAssets: poolLiquidity, TokensIn: tokensIn}
+	}
+
+	// Add all exact coins we can (no swap). ctx arg doesn't matter for Stableswap
+	numShares, remCoins, err := cfmm_common.MaximalExactRatioJoin(p, ctx, tokensIn)
+	if err != nil {
+		return sdk.Int{}, sdk.Coins{}, err
+	}
+
+	tokensJoined = tokensIn.Sub(remCoins)
+
+	p.updatePoolForJoin(tokensJoined, numShares)
+
+	return numShares, tokensJoined, nil
 }
