@@ -702,6 +702,20 @@ func TestCalcSingleAssetJoinShares(t *testing.T) {
 			swapFee:        defaultSwapFee,
 			expectedOut:    sdk.NewInt(100 - 3),
 		},
+		"even 3-asset pool, 0.03 swap fee": {
+			tokenIn:        sdk.NewCoin("asset/a", sdk.NewInt(100)),
+			poolAssets:     threeEvenStablePoolAssets,
+			scalingFactors: defaultThreeAssetScalingFactors,
+			swapFee:        sdk.MustNewDecFromStr("0.03"),
+			expectedOut:    sdk.NewInt(100 - 3),
+		},
+		"uneven 3-asset pool, 0.03 swap fee": {
+			tokenIn:        sdk.NewCoin("asset/a", sdk.NewInt(100)),
+			poolAssets:     threeUnevenStablePoolAssets,
+			scalingFactors: defaultThreeAssetScalingFactors,
+			swapFee:        sdk.MustNewDecFromStr("0.03"),
+			expectedOut:    sdk.NewInt(100 - 3),
+		},
 
 		// TODO: increase BigDec precision further to be able to accommodate 5-asset pool tests
 	}

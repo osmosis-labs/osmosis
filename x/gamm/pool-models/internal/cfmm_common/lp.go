@@ -12,6 +12,8 @@ import (
 
 const errMsgFormatSharesLargerThanMax = "%s resulted shares is larger than the max amount of %s"
 
+var correctnessThreshold = sdk.NewInt(1)
+
 // CalcExitPool returns how many tokens should come out, when exiting k LP shares against a "standard" CFMM
 func CalcExitPool(ctx sdk.Context, pool types.PoolI, exitingShares sdk.Int, exitFee sdk.Dec) (sdk.Coins, error) {
 	totalShares := pool.GetTotalShares()
@@ -131,7 +133,6 @@ func BinarySearchSingleAssetJoin(
 	ctx := sdk.Context{}
 	// Need to get something that makes the result correct within 1 LP share
 	// If we fail to reach it within maxIterations, we return an error
-	correctnessThreshold := sdk.NewInt(1)
 	maxIterations := 300
 	// upperbound of number of LP shares = existingShares * tokenIn.Amount / pool.totalLiquidity.AmountOf(tokenIn.Denom)
 	existingTokenLiquidity := pool.GetTotalPoolLiquidity(ctx).AmountOf(tokenIn.Denom)
@@ -165,6 +166,7 @@ func BinarySearchSingleAssetJoin(
 	return numLPShares, err
 }
 
+// SwapAllCoinsToSingleAsset iterates through each token in the input set and trades it against the same pool sequentially
 func SwapAllCoinsToSingleAsset(pool types.PoolI, ctx sdk.Context, inTokens sdk.Coins, swapToDenom string) (sdk.Int, error) {
 	swapFee := sdk.ZeroDec()
 	tokenOutAmt := inTokens.AmountOfNoDenomValidation(swapToDenom)
