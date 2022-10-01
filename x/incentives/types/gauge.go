@@ -31,12 +31,12 @@ func NewGauge(id uint64, isPerpetual bool, distrTo lockuptypes.QueryCondition, c
 
 // IsUpcomingGauge returns true if the gauge's distribution start time is after the provided time.
 func (gauge Gauge) IsUpcomingGauge(curTime time.Time) bool {
-	return curTime.After(gauge.StartTime)
+	return curTime.Before(gauge.StartTime)
 }
 
 // IsActiveGauge returns true if the gauge is in an active state during the provided time.
 func (gauge Gauge) IsActiveGauge(curTime time.Time) bool {
-	if curTime.Before(gauge.StartTime) && (gauge.IsPerpetual || gauge.FilledEpochs < gauge.NumEpochsPaidOver) {
+	if curTime.After(gauge.StartTime) || curTime.Equal(gauge.StartTime) && (gauge.IsPerpetual || gauge.FilledEpochs < gauge.NumEpochsPaidOver) {
 		return true
 	}
 	return false
