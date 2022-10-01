@@ -307,11 +307,7 @@ func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swa
 }
 
 func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numSharesOut sdk.Int, err error) {
-	numSharesOut, tokensJoined, err := p.CalcJoinPoolNoSwapShares(ctx, tokensIn, swapFee)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-	p.updatePoolForJoin(tokensJoined, numSharesOut)
+	numSharesOut, _, err = p.joinPoolSharesInternal(ctx, tokensIn, swapFee)
 	return numSharesOut, nil
 }
 
@@ -321,11 +317,12 @@ func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (n
 // relative to existing liquidity of thereof. Mutates pool state.
 // implements Pool interface. See its defintion for more details.
 func (p *Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
-	numShares, newLiquidity, err := p.joinPoolNoSwapSharesInternal(ctx, tokensIn, swapFee)
-	if !newLiquidity.IsEqual(tokensIn) {
-		return sdk.Int{}, types.TokensJoinedDoesNotEqualTokensInNoSwapError{NewLiquidity: newLiquidity, TokensIn: tokensIn}
+	numSharesOut, tokensJoined, err := p.CalcJoinPoolNoSwapShares(ctx, tokensIn, swapFee)
+	if err != nil {
+		return sdk.Int{}, err
 	}
-	return numShares, err
+	p.updatePoolForJoin(tokensJoined, numSharesOut)
+	return numSharesOut, nil
 }
 
 func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
