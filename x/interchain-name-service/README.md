@@ -4,9 +4,9 @@ The `Interchain Name Service` module allows for the mapping of [interchain accou
 
 ## Fee Mechanism
 
-A property tax mechanism that starts out as fixed but adjusts annually based on market demand ensures ensure efficient allocation of interchain domains. This promotes healthy name-buying activity to bootstrap initial activity but prevents inefficent, rent-seeking squatting for high-demand names in the long term.
+A property tax mechanism that starts out as fixed but adjusts annually based on market demand ensures ensure efficient allocation of interchain domains. This promotes healthy, inexpensive name-buying activity to bootstrap activity while preventing inefficent, rent-seeking squatting for high-demand names in the long term.
 
-Note when we say **start of the year** or similar terminology below, we don't mean the start of the *calendar* year, i.e. 00:00 January 1st, rather the beginning the current year-long tax term. For example, if a name was registered on April 1st, 2022, the beginning of the next year would be April 1st, 2023, *not* January 1st, 2023.
+Note that **start of the year** (or similar terminology) does not mean the start of the calendar year, i.e. 00:00 January 1st; rather, it means the beginning the current year-long tax term. For example, if a name was registered on April 1st, 2022, the beginning of the next year would be April 1st, 2023, not January 1st, 2023.
 
 We start with definitions of relevant constants set during the instantiation of our contract.
 
@@ -24,7 +24,7 @@ When a user (Alice) first buys a domain $x_a$, she sends $p_{\text{register}}(1 
 
 At any year $i$ outside the grade period $\Delta t_g$, Bob (who we will denote with $b$) may bid $p^\circ_{i,b}$ for ownership of $x_a$, sending $p_{i,b}(1 + ry')$ in escrow to indicate his intention to own the domain for $y'$ years. At any point, Alice may **accept** a bid for $x_a$, receiving $p^\circ_{i,b}$ and all unpaid rent refunded from the contract.
 
-The name's annual tax is calculated as a percentage of its valuation, which is the maximum amount anyone is willing to bid to own it.
+The name's annual tax is calculated as a percentage of its **valuation**, which is the maximum amount anyone is willing to bid to own it.
 
 To formalize this a bit, let's call the year that the Alice buys the domain year $0$. At the beginning of any given year $i: i>0$, the valuation of $x_a$ is
 
@@ -44,8 +44,8 @@ The **challenge period** for a year will last from the start of the year $t = 0$
 
 Afterwards, the **grace period** will last from $t=\Delta t_\text{year} - \Delta t_g$ to $t=\Delta t_\text{year}$. During the grace period, only the owner can make bids on her name. If the property tax from the current valuation exceeds the tax she is currently paying, she can either
 
-1. Match (or even exceed) the current best bid, increasing her taxes for the next year or
-1. Sell, and the name will transfer to the user who made the highest bid. As mentioned above, she will be able to get back all "unpaid tax" in escrow and the user's bid.
+1. **Match** the current best bid, increasing her taxes for the next year to be in line with the current valuation, or
+1. **Sell**, and the name will transfer to the user who made the highest bid. As mentioned above, she will be able to claim all "unpaid tax" in escrow and the user's bid.
 
 Thanks to [Vitalik's article](https://vitalik.eth.limo/general/2022/09/09/ens.html) for the thought-provoking inspiration and to @AlpinYukseloglu + @ValarDragon for ironing out more of the details of the mechanism.
 
