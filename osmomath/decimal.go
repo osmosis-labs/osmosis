@@ -532,6 +532,16 @@ func BigDecFromSDKDecSlice(ds []sdk.Dec) []BigDec {
 	return result
 }
 
+// BigDecFromSdkDecSlice returns the []BigDec representation of an []SDKDec.
+// Values in any additional decimal places are truncated.
+func BigDecFromSDKDecCoinSlice(ds []sdk.DecCoin) []BigDec {
+	result := make([]BigDec, len(ds))
+	for i, d := range ds {
+		result[i] = NewDecFromBigIntWithPrec(d.Amount.BigInt(), sdk.Precision)
+	}
+	return result
+}
+
 //     ____
 //  __|    |__   "chop 'em
 //       ` \     round!"

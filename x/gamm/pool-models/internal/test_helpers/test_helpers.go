@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -29,7 +30,8 @@ func (suite *CfmmCommonTestSuite) CreateTestContext() sdk.Context {
 	return sdk.NewContext(ms, tmtypes.Header{}, false, logger)
 }
 
-func (suite *CfmmCommonTestSuite) TestCalculateAmountOutAndIn_InverseRelationship(
+func TestCalculateAmountOutAndIn_InverseRelationship(
+	t *testing.T,
 	ctx sdk.Context,
 	pool types.PoolI,
 	assetInDenom string,
@@ -41,19 +43,31 @@ func (suite *CfmmCommonTestSuite) TestCalculateAmountOutAndIn_InverseRelationshi
 	initialOutCoins := sdk.NewCoins(initialOut)
 
 	actualTokenIn, err := pool.CalcInAmtGivenOut(ctx, initialOutCoins, assetInDenom, swapFee)
-	suite.Require().NoError(err)
+	require.NoError(t, err)
+
+	// we expect that any output less than 1 will always be rounded up
+	require.True(t, actualTokenIn.Amount.GTE(sdk.OneInt()))
 
 	inverseTokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(actualTokenIn), assetOutDenom, swapFee)
-	suite.Require().NoError(err)
+	require.NoError(t, err)
 
-	suite.Require().Equal(initialOut.Denom, inverseTokenOut.Denom)
+	require.Equal(t, initialOut.Denom, inverseTokenOut.Denom)
 
 	expected := initialOut.Amount.ToDec()
 	actual := inverseTokenOut.Amount.ToDec()
 
-	// allow a rounding error of up to 1 for this relation
-	tol := sdk.NewDec(1)
-	osmoassert.DecApproxEq(suite.T(), expected, actual, tol)
+	// If the pool is extremely imbalanced (specifically in the case of stableswap),
+	// we expect there to be drastically amplified error that will fall outside our usual bounds.
+	// Since these cases are effectively unusable by design, we only really care about whether
+	// they are safe i.e. round correctly.
+	preFeeTokenIn := actualTokenIn.Amount.ToDec().Mul((sdk.OneDec().Sub(swapFee))).Ceil().TruncateInt()
+	if preFeeTokenIn.Equal(sdk.OneInt()) {
+		require.True(t, actual.GT(expected))
+	} else {
+		// allow a rounding error of up to 1 for this relation
+		tol := sdk.NewDec(1)
+		osmoassert.DecApproxEq(t, expected, actual, tol)
+	}
 }
 
 func TestCfmmCommonTestSuite(t *testing.T) {
