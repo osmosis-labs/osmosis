@@ -381,7 +381,7 @@ localnet-keys:
 localnet-init: localnet-clean localnet-build
 
 localnet-build:
-	@DOCKER_BUILDKIT=1 docker-compose -f tests/localosmosis/docker-compose.yml build
+	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose -f tests/localosmosis/docker-compose.yml build
 
 localnet-start:
 	@STATE="" docker-compose -f tests/localosmosis/docker-compose.yml up
@@ -404,7 +404,7 @@ localnet-clean:
 localnet-state-export-init: localnet-state-export-clean localnet-state-export-build 
 
 localnet-state-export-build:
-	@DOCKER_BUILDKIT=1 docker-compose -f tests/localosmosis/state_export/docker-compose.yml build
+	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose -f tests/localosmosis/state_export/docker-compose.yml build
 
 localnet-state-export-start:
 	@docker-compose -f tests/localosmosis/state_export/docker-compose.yml up
