@@ -46,7 +46,7 @@ func (s *TestSuite) TestGetSpotPrices() {
 		"use last spot price on err": {
 			poolID:                poolID,
 			prevErrTime:           currTime,
-			blockTime: 			   s.Ctx.BlockTime(),
+			blockTime:             s.Ctx.BlockTime(),
 			mockSp0:               sdk.ZeroDec(),
 			mockSp1:               sdk.ZeroDec(),
 			mockSp0Err:            fmt.Errorf("foo"),
@@ -58,7 +58,7 @@ func (s *TestSuite) TestGetSpotPrices() {
 		"sp zero, when err & no previous record": {
 			poolID:                poolID,
 			prevErrTime:           currTime,
-			blockTime: 			   currTime.Add(5 * time.Second),
+			blockTime:             currTime.Add(5 * time.Second),
 			mockSp0:               sdk.OneDec(),
 			mockSp1:               sdk.OneDec(),
 			mockSp0Err:            fmt.Errorf("foo"),
@@ -69,7 +69,7 @@ func (s *TestSuite) TestGetSpotPrices() {
 		"exceeds max spot price": {
 			poolID:                poolID,
 			prevErrTime:           currTime,
-			blockTime: 			   s.Ctx.BlockTime(),
+			blockTime:             s.Ctx.BlockTime(),
 			mockSp0:               types.MaxSpotPrice.Add(sdk.OneDec()),
 			mockSp1:               types.MaxSpotPrice.Add(sdk.OneDec()),
 			expectedSp0:           types.MaxSpotPrice,
@@ -79,7 +79,7 @@ func (s *TestSuite) TestGetSpotPrices() {
 		"valid spot prices": {
 			poolID:                poolID,
 			prevErrTime:           currTime,
-			blockTime: 			   s.Ctx.BlockTime(),
+			blockTime:             s.Ctx.BlockTime(),
 			mockSp0:               sdk.NewDecWithPrec(55, 2),
 			mockSp1:               sdk.NewDecWithPrec(6, 1),
 			expectedSp0:           sdk.NewDecWithPrec(55, 2),

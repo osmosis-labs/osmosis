@@ -10,7 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
 )
 
-func(k Keeper) newTwapRecord(ctx sdk.Context, ammI types.AmmInterface, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
+func (k Keeper) newTwapRecord(ctx sdk.Context, ammI types.AmmInterface, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
 	denom0, denom1, err := types.LexicographicalOrderDenoms(denom0, denom1)
 	if err != nil {
 		return types.TwapRecord{}, err
@@ -36,7 +36,7 @@ func(k Keeper) newTwapRecord(ctx sdk.Context, ammI types.AmmInterface, poolId ui
 // returns spot prices for both pairs of assets, and the 'latest error time'.
 // The latest error time is the previous time if there is no error in getting spot prices.
 // if there is an error in getting spot prices, then the latest error time is ctx.Blocktime()
-func(k Keeper) getSpotPrices(
+func (k Keeper) getSpotPrices(
 	ctx sdk.Context,
 	ammI types.AmmInterface,
 	poolId uint64,
