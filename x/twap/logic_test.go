@@ -24,16 +24,17 @@ var (
 )
 
 func (s *TestSuite) TestGetSpotPrices() {
-	currTime := time.Now()
+	currTime := time.Now().UTC()
+	// set up pool at block t + 2, test have previous record
+	s.Ctx = s.Ctx.WithBlockTime(currTime.Add(10 * time.Second))
 	poolID := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
 	mockAMMI := twapmock.NewProgrammedAmmInterface(s.App.TwapKeeper.GetAmmInterface())
 	s.App.TwapKeeper.SetAmmInterface(mockAMMI)
 
-	ctx := s.Ctx.WithBlockTime(currTime.Add(5 * time.Second))
-
 	testCases := map[string]struct {
 		poolID                uint64
 		prevErrTime           time.Time
+		blockTime             time.Time
 		mockSp0               sdk.Dec
 		mockSp1               sdk.Dec
 		mockSp0Err            error
@@ -42,28 +43,43 @@ func (s *TestSuite) TestGetSpotPrices() {
 		expectedSp1           sdk.Dec
 		expectedLatestErrTime time.Time
 	}{
-		"zero sp": {
+		"use last spot price on err": {
 			poolID:                poolID,
 			prevErrTime:           currTime,
+			blockTime: 			   s.Ctx.BlockTime(),
 			mockSp0:               sdk.ZeroDec(),
 			mockSp1:               sdk.ZeroDec(),
 			mockSp0Err:            fmt.Errorf("foo"),
-			expectedSp0:           sdk.ZeroDec(),
+			expectedSp0:           sdk.OneDec(),
 			expectedSp1:           sdk.ZeroDec(),
-			expectedLatestErrTime: ctx.BlockTime(),
+			expectedLatestErrTime: s.Ctx.BlockTime(),
+		},
+		// no pre records at block t + 1
+		"sp zero, when err & no previous record": {
+			poolID:                poolID,
+			prevErrTime:           currTime,
+			blockTime: 			   currTime.Add(5 * time.Second),
+			mockSp0:               sdk.OneDec(),
+			mockSp1:               sdk.OneDec(),
+			mockSp0Err:            fmt.Errorf("foo"),
+			expectedSp0:           sdk.ZeroDec(),
+			expectedSp1:           sdk.OneDec(),
+			expectedLatestErrTime: currTime.Add(5 * time.Second),
 		},
 		"exceeds max spot price": {
 			poolID:                poolID,
 			prevErrTime:           currTime,
+			blockTime: 			   s.Ctx.BlockTime(),
 			mockSp0:               types.MaxSpotPrice.Add(sdk.OneDec()),
 			mockSp1:               types.MaxSpotPrice.Add(sdk.OneDec()),
 			expectedSp0:           types.MaxSpotPrice,
 			expectedSp1:           types.MaxSpotPrice,
-			expectedLatestErrTime: ctx.BlockTime(),
+			expectedLatestErrTime: s.Ctx.BlockTime(),
 		},
 		"valid spot prices": {
 			poolID:                poolID,
 			prevErrTime:           currTime,
+			blockTime: 			   s.Ctx.BlockTime(),
 			mockSp0:               sdk.NewDecWithPrec(55, 2),
 			mockSp1:               sdk.NewDecWithPrec(6, 1),
 			expectedSp0:           sdk.NewDecWithPrec(55, 2),
@@ -74,10 +90,10 @@ func (s *TestSuite) TestGetSpotPrices() {
 
 	for name, tc := range testCases {
 		s.Run(name, func() {
+			ctx := s.Ctx.WithBlockTime(tc.blockTime)
 			mockAMMI.ProgramPoolSpotPriceOverride(tc.poolID, denom0, denom1, tc.mockSp0, tc.mockSp0Err)
 			mockAMMI.ProgramPoolSpotPriceOverride(tc.poolID, denom1, denom0, tc.mockSp1, tc.mockSp1Err)
-
-			sp0, sp1, latestErrTime := s.twapkeeper.GetSpotPrices(ctx, tc.poolID, denom0, denom1, tc.prevErrTime)
+			sp0, sp1, latestErrTime := s.twapkeeper.GetSpotPrices(ctx, mockAMMI, tc.poolID, denom0, denom1, tc.prevErrTime)
 			s.Require().Equal(tc.expectedSp0, sp0)
 			s.Require().Equal(tc.expectedSp1, sp1)
 			s.Require().Equal(tc.expectedLatestErrTime, latestErrTime)
@@ -127,7 +143,7 @@ func (s *TestSuite) TestNewTwapRecord() {
 	}
 	for name, test := range tests {
 		s.Run(name, func() {
-			twapRecord, err := s.twapkeeper.NewTwapRecord(s.Ctx, test.poolId, test.denom0, test.denom1)
+			twapRecord, err := s.twapkeeper.NewTwapRecord(s.Ctx, s.App.GAMMKeeper, test.poolId, test.denom0, test.denom1)
 
 			if test.expectedPanic {
 				s.Require().Equal(twapRecord.LastErrorTime, s.Ctx.BlockTime())
@@ -178,7 +194,7 @@ func (s *TestSuite) TestUpdateRecord() {
 			record:           zeroAccumNoErrSp10Record,
 			spotPriceResult0: spotPriceResOneErr,
 			spotPriceResult1: spotPriceResOne,
-			expRecord:        withLastErrTime(sp10OneTimeUnitAccumRecord, updateTime),
+			expRecord:        withLastErrTime(recordWithUpdatedSpotPrice(sp10OneTimeUnitAccumRecord, sdk.ZeroDec(), spotPriceResOneErr.Sp), updateTime),
 		},
 		"0 accum start, sp0 err at update with nil dec": {
 			record:           zeroAccumNoErrSp10Record,
@@ -202,7 +218,7 @@ func (s *TestSuite) TestUpdateRecord() {
 			record:           withLastErrTime(zeroAccumNoErrSp10Record, baseTimeMinusOne),
 			spotPriceResult0: spotPriceResOne,
 			spotPriceResult1: spotPriceResOneErr,
-			expRecord:        withLastErrTime(sp10OneTimeUnitAccumRecord, updateTime),
+			expRecord:        withLastErrTime(recordWithUpdatedSpotPrice(sp10OneTimeUnitAccumRecord, spotPriceResOne.Sp, sdk.ZeroDec()), updateTime),
 		},
 	}
 	for name, test := range tests {
@@ -858,8 +874,8 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				// The new record added.
 				{
-					spotPriceA:    sdk.ZeroDec(),
-					spotPriceB:    sdk.NewDecWithPrec(2, 1),
+					spotPriceA:    baseRecord.P0LastSpotPrice,
+					spotPriceB:    baseRecord.P1LastSpotPrice,
 					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
 					isMostRecent:  true,
 				},
