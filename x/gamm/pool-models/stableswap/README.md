@@ -26,13 +26,17 @@ In the choice of curve section, we see that its the case that when `x_reserves ~
 2) Relatedly, suppose theres a token called `TwoFoo` which should trade around `1 TwoFoo = 2 Foo`
 3) For staking derivatives, where value accrues within the token, the expected price to concentrate around dynamically changes (very slowly).
 
-To handle these cases, we introduce scaling factors. A scaling factor maps from "base coin units" to "amm math reserve units", by dividing.
+To handle these cases, we introduce scaling factors. A scaling factor maps from "raw coin units" to "amm math units", by dividing.
 To handle the first case, we would make `Foo` have a scaling factor of `10^6`, and `WrappedFoo` have a scaling factor of `1`.
-Then the reserves we pass into all AMM equations for this pool, would be computed based off the following reserves:
+This mapping is done via `raw coin units / scaling factor`. 
+We use a decimal object for amm math units, however we still have to be precise about how we round.
+We introduce an enum `rounding mode` for this, with three modes: `RoundUp`, `RoundDown`, `RoundBankers`.
+
+The reserve units we pass into all AMM equations would then be computed based off the following reserves:
 
 ```python
-Foo_reserves = round(pool.Foo_liquidity / 10^6, RoundingMode)
-WrappedFoo_reserves = round(pool.WrappedFoo_liquidity / 1, RoundingMode)
+scaled_Foo_reserves = decimal_round(pool.Foo_liquidity / 10^6, RoundingMode)
+descaled_Foo_reserves = scaled_Foo_reserves * 10^6
 ```
 
 Similarly all token inputs would be scaled as such.
@@ -171,22 +175,74 @@ def binary_search(lowerbound, upperbound, approximation_fn, target, max_iteratio
   return cur_y_guess
 ```
 
+As we changed API slightly, to have this "y_0" guess, we use the following as `solve_y` pseudocode here on out:
+```python
+# solve_cfmm returns y_f s.t. CFMM_eq(x_f, y_f, w) = k
+# for the no-v variant of CFMM_eq
+def solve_y(x_0, y_0, w, in_amt):
+  x_f = x_0 + in_amt
+  k = CFMM_eq(x_0, y_0, w)
+  err_tolerance = {"within .0001%"} # TODO: Detail what we choose / how we reason about choice
+  return iterative_search(x_f, y_0, w, k, err_tolerance):
+```
+
 #### Using this in swap methods
 
-Detail how we take the previously discussed solver, and build SwapExactAmountIn and SwapExactAmountOut.
+So now we put together the components discussed in prior sections to achieve pseudocode for the SwapExactAmountIn
+and SwapExactAmountOut functions.
+
+We assume existence of a function `pool.ScaledLiquidity(input, output, rounding_mode)` that returns `in_reserve, out_reserve, rem_reserves`, where each are scaled by their respective scaling factor using the provided rounding mode.
 
 ##### SwapExactAmountIn
 
+So now we need to put together the prior components.
+When we scale liquidity, we round down, as lower reserves -> higher slippage.
+Similarly when we scale the token in, we round down as well.
+These both ensure no risk of over payment.
+
+The amount of tokens that we treat as going into the "0-swap fee" pool we defined equations off of is: `amm_in = in_amt_scaled * (1 - swapfee)`. (With `swapfee * in_amt_scaled` just being added to pool liquidity)
+
+Then we simply call `solve_y` with the input reserves, and `amm_in`.
+
 <!-- TODO: Maybe we just use normal pseudocode syntax -->
 ```python
-def SwapExactAmountIn(pool, in_coin, out_denom):
-  # Round down as lower reserves -> higher slippage
-  scaledReserves = pool.ScaledLiquidity(RoundingMode.RoundDown)
-  in_amt_scaled = pool.ScaleToken(in_coin)
-  in_reserve, out_reserve = scaledReserves[in_coin.Denom], scaledReserves[out_denom]
-  rem_reserves = { x for x in scaledReserves if (x != in_coin.Denom and x != out_denom) }
-  solveCfmm(out_reserve, in_reserve, remReserves, in_amt_scaled)
+def CalcOutAmountGivenExactAmountIn(pool, in_coin, out_denom, swap_fee):
+  in_reserve, out_reserve, rem_reserves = pool.ScaledLiquidity(in_coin, out_denom, RoundingMode.RoundDown)
+  in_amt_scaled = pool.ScaleToken(in_coin, RoundingMode.RoundDown)
+  amm_in = in_amt_scaled * (1 - swap_fee)
+  out_amt_scaled = solve_y(in_reserve, out_reserve, remReserves, in_amt_scaled)
+  out_amt = pool.DescaleToken(out_amt_scaled, out_denom)
+  return out_amt
 ```
+
+##### SwapExactAmountOut
+
+<!-- TODO: Explain overall context of this section -->
+When we scale liquidity, we round down, as lower reserves -> higher slippage.
+Similarly when we scale the exact token out, we round up to increase required token in.
+
+We model the `solve_y` call as we are doing a known change to the `out_reserve`, and solving for the implied unknown change to `in_reserve`.
+To handle the swapfee, we apply the swapfee on the resultant needed input amount.
+We do this by having `token_in = amm_in / (1 - swapfee)`.
+
+
+<!-- TODO: Maybe we just use normal pseudocode syntax -->
+```python
+def CalcInAmountGivenExactAmountOut(pool, out_coin, in_denom, swap_fee):
+  in_reserve, out_reserve, rem_reserves = pool.ScaledLiquidity(in_denom, out_coin, RoundingMode.RoundDown)
+  out_amt_scaled = pool.ScaleToken(in_coin, RoundingMode.RoundUp)
+
+  amm_in_scaled = solve_y(out_reserve, in_reserve, remReserves, -out_amt_scaled)
+  swap_in_scaled = ceil(amm_in_scaled / (1 - swapfee))
+  in_amt = pool.DescaleToken(swap_in_scaled, in_denom)
+  return in_amt
+```
+
+We see correctness of the swap fee, by imagining what happens if we took this resultant input amount, and ran `SwapExactAmountIn (seai)`. Namely, that `seai_amm_in = amm_in * (1 - swapfee) = amm_in`, as desired!
+
+#### Precision handling
+
+{Something we have to be careful of is precision handling, notes on why and how we deal with it.}
 
 ### Spot Price
 
