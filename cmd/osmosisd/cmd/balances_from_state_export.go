@@ -306,7 +306,7 @@ Example:
 	return cmd
 }
 
-// BalancesToCSVCmd generates a airdrop.csv from a provided exported balances.json.
+// StakedToCSVCmd generates a airdrop.csv from a provided exported balances.json.
 func StakedToCSVCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "staked-to-csv [input-balances-file] [output-airdrop-csv]",
