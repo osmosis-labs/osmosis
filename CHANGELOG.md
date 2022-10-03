@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#2739](https://github.com/osmosis-labs/osmosis/pull/2739) Add pool type query
 * [#2803](https://github.com/osmosis-labs/osmosis/pull/2803) Fix total pool liquidity CLI query.
 * [#2914](https://github.com/osmosis-labs/osmosis/pull/2914) Remove out of gas panics from node logs
+* [#2937](https://github.com/osmosis-labs/osmosis/pull/2937) End block ordering - staking after gov and module sorting.
 
 ### Misc Improvements
 
