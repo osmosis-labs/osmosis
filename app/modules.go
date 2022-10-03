@@ -42,7 +42,6 @@ import (
 
 	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
 	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v12/osmoutils/partialord"
 	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v12/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
@@ -142,34 +141,72 @@ func appModules(
 	}
 }
 
-// orderBeginBlockers returns the order of BeginBlockers, by module name.
-func orderBeginBlockers(allModuleNames []string) []string {
-	ord := partialord.NewPartialOrdering(allModuleNames)
-	// Upgrades should be run VERY first
-	// Epochs is set to be next right now, this in principle could change to come later / be at the end.
-	// But would have to be a holistic change with other pipelines taken into account.
-	ord.FirstElements(upgradetypes.ModuleName, epochstypes.ModuleName, capabilitytypes.ModuleName)
-
-	// Staking ordering
-	// TODO: Perhaps this can be relaxed, left to future work to analyze.
-	ord.Sequence(distrtypes.ModuleName, slashingtypes.ModuleName, evidencetypes.ModuleName, stakingtypes.ModuleName)
-	// superfluid must come after distribution & epochs.
-	// TODO: we actually set it to come after staking, since thats what happened before, and want to minimize chance of break.
-	ord.After(superfluidtypes.ModuleName, stakingtypes.ModuleName)
-	// TODO: This can almost certainly be un-constrained, but we keep the constraint to match prior functionality.
-	// IBChost came after staking, before superfluid.
-	// TODO: Come back and delete this line after testing the base change.
-	ord.Sequence(stakingtypes.ModuleName, ibchost.ModuleName, superfluidtypes.ModuleName)
-	// every remaining module's begin block is a no-op.
-	return ord.TotalOrdering()
+func orderBeginBlockers() []string {
+	return []string{
+		// Upgrades should be run VERY first
+		upgradetypes.ModuleName,
+		// Note: epochs' begin should be "real" start of epochs, we keep epochs beginblock at the beginning
+		epochstypes.ModuleName,
+		capabilitytypes.ModuleName,
+		minttypes.ModuleName,
+		poolincentivestypes.ModuleName,
+		distrtypes.ModuleName,
+		slashingtypes.ModuleName,
+		evidencetypes.ModuleName,
+		stakingtypes.ModuleName,
+		ibchost.ModuleName,
+		ibctransfertypes.ModuleName,
+		icatypes.ModuleName,
+		authtypes.ModuleName,
+		banktypes.ModuleName,
+		govtypes.ModuleName,
+		crisistypes.ModuleName,
+		genutiltypes.ModuleName,
+		authz.ModuleName,
+		paramstypes.ModuleName,
+		vestingtypes.ModuleName,
+		gammtypes.ModuleName,
+		incentivestypes.ModuleName,
+		lockuptypes.ModuleName,
+		poolincentivestypes.ModuleName,
+		tokenfactorytypes.ModuleName,
+		// superfluid must come after distribution and epochs
+		superfluidtypes.ModuleName,
+		txfeestypes.ModuleName,
+		wasm.ModuleName,
+	}
 }
 
-// OrderEndBlockers returns EndBlockers (crisis, govtypes, staking) with no relative order.
-func OrderEndBlockers(allModuleNames []string) []string {
-	ord := partialord.NewPartialOrdering(allModuleNames)
-	// only Osmosis modules with endblock code are: twap, crisis, govtypes, staking
-	// we don't care about the relative ordering between them.
-	return ord.TotalOrdering()
+func orderEndBlockers() []string {
+	return []string{
+		lockuptypes.ModuleName,
+		crisistypes.ModuleName,
+		govtypes.ModuleName,
+		stakingtypes.ModuleName,
+		capabilitytypes.ModuleName,
+		authtypes.ModuleName,
+		banktypes.ModuleName,
+		distrtypes.ModuleName,
+		slashingtypes.ModuleName,
+		minttypes.ModuleName,
+		genutiltypes.ModuleName,
+		evidencetypes.ModuleName,
+		authz.ModuleName,
+		paramstypes.ModuleName,
+		upgradetypes.ModuleName,
+		vestingtypes.ModuleName,
+		ibchost.ModuleName,
+		ibctransfertypes.ModuleName,
+		gammtypes.ModuleName,
+		incentivestypes.ModuleName,
+		lockuptypes.ModuleName,
+		poolincentivestypes.ModuleName,
+		superfluidtypes.ModuleName,
+		txfeestypes.ModuleName,
+		// Note: epochs' endblock should be "real" end of epochs, we keep epochs endblock at the end
+		epochstypes.ModuleName,
+		wasm.ModuleName,
+	}
 }
 
 // OrderInitGenesis returns module names in order for init genesis calls.
