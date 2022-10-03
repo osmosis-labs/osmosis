@@ -184,7 +184,9 @@ Example:
 			snapshotAccs := make(map[string]DerivedAccount)
 
 			bankGenesis := banktypes.GenesisState{}
-			clientCtx.Codec.MustUnmarshalJSON(genState["bank"], &bankGenesis)
+			if len(genState["bank"]) > 0 {
+				clientCtx.Codec.MustUnmarshalJSON(genState["bank"], &bankGenesis)
+			}
 			for _, balance := range bankGenesis.Balances {
 				address := balance.Address
 				acc, ok := snapshotAccs[address]
@@ -197,7 +199,9 @@ Example:
 			}
 
 			stakingGenesis := stakingtypes.GenesisState{}
-			clientCtx.Codec.MustUnmarshalJSON(genState["staking"], &stakingGenesis)
+			if len(genState["staking"]) > 0 {
+				clientCtx.Codec.MustUnmarshalJSON(genState["staking"], &stakingGenesis)
+			}
 			for _, unbonding := range stakingGenesis.UnbondingDelegations {
 				address := unbonding.DelegatorAddress
 				acc, ok := snapshotAccs[address]
@@ -238,7 +242,9 @@ Example:
 			}
 
 			lockupGenesis := lockuptypes.GenesisState{}
-			clientCtx.Codec.MustUnmarshalJSON(genState["lockup"], &lockupGenesis)
+			if len(genState["lockup"]) > 0 {
+				clientCtx.Codec.MustUnmarshalJSON(genState["lockup"], &lockupGenesis)
+			}
 			for _, lock := range lockupGenesis.Locks {
 				address := lock.Owner
 
@@ -252,7 +258,9 @@ Example:
 			}
 
 			gammGenesis := gammtypes.GenesisState{}
-			clientCtx.Codec.MustUnmarshalJSON(genState["gamm"], &gammGenesis)
+			if len(genState["gamm"]) > 0 {
+				clientCtx.Codec.MustUnmarshalJSON(genState["gamm"], &gammGenesis)
+			}
 
 			// collect gamm pools
 			pools := make(map[string]gammtypes.PoolI)
