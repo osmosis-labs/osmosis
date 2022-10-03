@@ -392,7 +392,7 @@ func (q Querier) EstimateSuperfluidDelegatedAmountByValidatorDenom(goCtx context
 	}, nil
 }
 
-func (q Querier) TotalDelegationByValidatorForAsset(goCtx context.Context, req *types.QueryTotalDelegationByValidatorForAssetRequest) (*types.QueryTotalDelegationByValidatorForAssetResponse, error) {
+func (q Querier) TotalDelegationByValidatorForDenom(goCtx context.Context, req *types.QueryTotalDelegationByValidatorForDenomRequest) (*types.QueryTotalDelegationByValidatorForDenomResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	var delegationsByValidator = []*types.Delegations{}
@@ -412,7 +412,7 @@ func (q Querier) TotalDelegationByValidatorForAsset(goCtx context.Context, req *
 		if !found {
 			return nil, stakingtypes.ErrNoValidatorFound
 		}
-		equivalentAmountOSMO := q.Keeper.GetSuperfluidOSMOTokens(ctx, req.Denom, val.Tokens)
+		equivalentAmountOSMO := q.Keeper.GetSuperfluidOSMOTokens(ctx, req.Denom, val.DelegatorShares.RoundInt())
 		result := &types.Delegations{
 			ValAddr:        valAddr.String(),
 			AmountSfsd:     &val.Tokens,
@@ -422,7 +422,7 @@ func (q Querier) TotalDelegationByValidatorForAsset(goCtx context.Context, req *
 		delegationsByValidator = append(delegationsByValidator, result)
 	}
 
-	return &types.QueryTotalDelegationByValidatorForAssetResponse{
+	return &types.QueryTotalDelegationByValidatorForDenomResponse{
 		AssetResponse: delegationsByValidator,
 	}, nil
 }

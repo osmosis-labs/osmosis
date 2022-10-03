@@ -22,8 +22,6 @@ func (suite *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 	querier := suite.querier
 	delegation_amount := int64(1000000)
 
-	var denom string
-
 	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
 	test_multiplier := sdk.NewDec(20)
 	denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{test_multiplier, test_multiplier})
@@ -37,8 +35,8 @@ func (suite *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 
 	suite.setupSuperfluidDelegations(valAddrs, superfluidDelegations, denoms)
 
-	for _, denom = range denoms {
-		req, err := querier.TotalDelegationByValidatorForAsset(sdk.WrapSDKContext(ctx), &types.QueryTotalDelegationByValidatorForAssetRequest{Denom: denom})
+	for _, denom := range denoms {
+		req, err := querier.TotalDelegationByValidatorForDenom(sdk.WrapSDKContext(ctx), &types.QueryTotalDelegationByValidatorForDenomRequest{Denom: denom})
 
 		suite.Require().NoError(err)
 		suite.Require().Equal(len(valAddrs), len(req.AssetResponse))

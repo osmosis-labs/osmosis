@@ -53,9 +53,9 @@ service Query {
         "/osmosis/superfluid/v1beta1/connected_intermediary_account/{lock_id}";
   }
 
-  rpc TotalDelegationByValidatorForAsset(
-      QueryTotalDelegationByValidatorForAssetRequest)
-      returns (QueryTotalDelegationByValidatorForAssetResponse) {}
+  rpc TotalDelegationByValidatorForDenom(
+      QueryTotalDelegationByValidatorForDenomRequest)
+      returns (QueryTotalDelegationByValidatorForDenomResponse) {}
 
   // Returns the total amount of osmo superfluidly staked.
   // Response is denominated in uosmo.
@@ -157,8 +157,8 @@ message ConnectedIntermediaryAccountResponse {
   SuperfluidIntermediaryAccountInfo account = 1;
 }
 
-message QueryTotalDelegationByValidatorForAssetRequest { string denom = 1; }
-message QueryTotalDelegationByValidatorForAssetResponse {
+message QueryTotalDelegationByValidatorForDenomRequest { string denom = 1; }
+message QueryTotalDelegationByValidatorForDenomResponse {
   repeated Delegations asset_response = 1;
 }
 
