@@ -24,8 +24,9 @@ func (suite *KeeperTestSuite) TestBeforeSendListener() {
 		sendMsgs []SendMsgTestCase
 	}{
 		{
-			desc:     "should not allow sending 100 amount of *any* denom",
-			wasmFile: "./testdata/no100.wasm",
+			desc: "should not allow sending 100 amount of *any* denom",
+			// wasmFile: "./testdata/no100.wasm",
+			wasmFile: "./testdata/no100_2.wasm",
 			sendMsgs: []SendMsgTestCase{
 				{
 					desc: "sending 100 of factorydenom should not work",
