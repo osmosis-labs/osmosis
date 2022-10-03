@@ -30,7 +30,7 @@ func GetTxCmd() *cobra.Command {
 		NewBurnCmd(),
 		// NewForceTransferCmd(),
 		NewChangeAdminCmd(),
-		NewSetBeforeSendHookCmd(),
+		NewSetBeforeSendListenerCmd(),
 	)
 
 	return cmd
@@ -190,7 +190,7 @@ func NewChangeAdminCmd() *cobra.Command {
 }
 
 // NewChangeAdminCmd broadcast MsgChangeAdmin
-func NewSetBeforeSendHookCmd() *cobra.Command {
+func NewSetBeforeSendListenerCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-beforesend-hook [denom] [cosmwasm-address] [flags]",
 		Short: "Set a cosmwasm contract to be the beforesend hook for a factory-created denom. Must have admin authority to do so.",
@@ -203,7 +203,7 @@ func NewSetBeforeSendHookCmd() *cobra.Command {
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			msg := types.NewMsgSetBeforeSendHook(
+			msg := types.NewMsgSetBeforeSendListener(
 				clientCtx.GetFromAddress().String(),
 				args[0],
 				args[1],

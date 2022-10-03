@@ -130,9 +130,9 @@ func (server msgServer) SetBeforeSendListener(goCtx context.Context, msg *types.
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.TypeMsgSetBeforeSendHook,
+			types.TypeMsgSetBeforeSendListener,
 			sdk.NewAttribute(types.AttributeDenom, msg.GetDenom()),
-			sdk.NewAttribute(types.AttributeBeforeSendHookAddress, msg.GetCosmwasmAddress()),
+			sdk.NewAttribute(types.AttributeBeforeSendListenerAddress, msg.GetCosmwasmAddress()),
 		),
 	})
 

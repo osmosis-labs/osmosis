@@ -122,7 +122,7 @@ func GetCmdDenomsFromCreator() *cobra.Command {
 }
 
 // GetCmdDenomAuthorityMetadata returns the authority metadata for a queried denom
-func GetCmdDenomBeforeSendHook() *cobra.Command {
+func GetCmdDenomBeforeSendListner() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "denom-before-send-hook [denom] [flags]",
 		Short: "Get the BeforeSend hook for a specific denom",
@@ -134,7 +134,7 @@ func GetCmdDenomBeforeSendHook() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.DenomBeforeSendHook(cmd.Context(), &types.QueryDenomBeforeSendHookRequest{
+			res, err := queryClient.DenomBeforeSendListener(cmd.Context(), &types.QueryDenomBeforeSendListenerRequest{
 				Denom: args[0],
 			})
 			if err != nil {

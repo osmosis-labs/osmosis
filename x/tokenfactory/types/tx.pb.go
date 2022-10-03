@@ -497,7 +497,7 @@ func (m *MsgSetBeforeSendListener) GetCosmwasmAddress() string {
 }
 
 // MsgSetBeforeSendListenerResponse defines the response structure for an
-// executed MsgSetBeforeSendHook message.
+// executed MsgSetBeforeSendListener message.
 type MsgSetBeforeSendListenerResponse struct {
 }
 

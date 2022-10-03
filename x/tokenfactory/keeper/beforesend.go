@@ -22,7 +22,7 @@ func (k Keeper) setBeforeSendListener(ctx sdk.Context, denom string, cosmwasmAdd
 	store := k.GetDenomPrefixStore(ctx, denom)
 
 	if cosmwasmAddress == "" {
-		store.Delete([]byte(types.BeforeSendHookAddressPrefixKey))
+		store.Delete([]byte(types.BeforeSendListenerAddressPrefixKey))
 		return nil
 	}
 
@@ -31,7 +31,7 @@ func (k Keeper) setBeforeSendListener(ctx sdk.Context, denom string, cosmwasmAdd
 		return err
 	}
 
-	store.Set([]byte(types.BeforeSendHookAddressPrefixKey), []byte(cosmwasmAddress))
+	store.Set([]byte(types.BeforeSendListenerAddressPrefixKey), []byte(cosmwasmAddress))
 
 	return nil
 }
@@ -39,7 +39,7 @@ func (k Keeper) setBeforeSendListener(ctx sdk.Context, denom string, cosmwasmAdd
 func (k Keeper) GetBeforeSendListener(ctx sdk.Context, denom string) string {
 	store := k.GetDenomPrefixStore(ctx, denom)
 
-	bz := store.Get([]byte(types.BeforeSendHookAddressPrefixKey))
+	bz := store.Get([]byte(types.BeforeSendListenerAddressPrefixKey))
 	if bz == nil {
 		return ""
 	}
