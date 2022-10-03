@@ -5,6 +5,7 @@ import (
 	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v3/modules/core/exported"
 	"github.com/osmosis-labs/osmosis/v12/x/ibc-metadata/types"
@@ -27,7 +28,7 @@ func ExecuteSwap(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
 		return sdk.ErrInvalidDecimalStr
 	}
 
-	_, err = contractKeeper.Execute(
+	response, err := contractKeeper.Execute(
 		ctx, contractAddr, caller,
 		[]byte(fmt.Sprintf(`
 	{"swap": 
@@ -40,6 +41,8 @@ func ExecuteSwap(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
 	if err != nil {
 		return err
 	}
+	fmt.Println(response)
+
 	return nil
 }
 
@@ -72,6 +75,17 @@ func SwapHook(im IBCModule, ctx sdk.Context, packet channeltypes.Packet, relayer
 	if err != nil {
 		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadExecutionMsg, err.Error()))
 	}
+
+	im.TransferKeeper.SendTransfer(
+		ctx,
+		packet.GetSourcePort(),
+		packet.GetDestPort(),
+		sdk.NewCoin("uion", sdk.NewInt(1)),
+		sdk.AccAddress(data.Sender),
+		data.Receiver,
+		clienttypes.NewHeight(0, 100),
+		0,
+	)
 
 	return ack
 }

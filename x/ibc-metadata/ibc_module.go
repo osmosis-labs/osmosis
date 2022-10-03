@@ -3,6 +3,7 @@ package ibc_metadata
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v3/modules/apps/transfer/keeper"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v3/modules/core/exported"
@@ -17,15 +18,17 @@ type OnRecvPacketHookType func(IBCModule, sdk.Context, channeltypes.Packet, sdk.
 type IBCModule struct {
 	app            porttypes.IBCModule
 	ics4Middleware *ICS4Middleware
+	TransferKeeper *ibctransferkeeper.Keeper
 
 	// Hooks. TODO: Turn this into multi-hooks
 	OnRecvPacketHook OnRecvPacketHookType
 }
 
-func NewIBCModule(app porttypes.IBCModule, ics4 *ICS4Middleware) IBCModule {
+func NewIBCModule(app porttypes.IBCModule, ics4 *ICS4Middleware, transferKeeper *ibctransferkeeper.Keeper) IBCModule {
 	return IBCModule{
 		app:            app,
 		ics4Middleware: ics4,
+		TransferKeeper: transferKeeper,
 	}
 }
 

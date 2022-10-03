@@ -243,8 +243,14 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithSwap() {
 	err = json.Unmarshal(ackBytes, &ack)
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
-
-	// ToDo: Receive the packet on chainB and check that it contains the uion.
-
 	fmt.Println(ack)
+
+	// Update both clients
+	err = suite.path.EndpointA.UpdateClient()
+	suite.Require().NoError(err)
+	err = suite.path.EndpointB.UpdateClient()
+	suite.Require().NoError(err)
+
+	result := suite.chainB.GetOsmosisApp().BankKeeper.GetBalance(suite.chainB.GetContext(), suite.chainA.SenderAccount.GetAddress(), "uion")
+	fmt.Println(result)
 }

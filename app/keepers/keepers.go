@@ -235,7 +235,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	// RateLimiting IBC Middleware
 	metadataTransferModule := ibcmetadata.NewIBCModule(
-		transferIBCModule, appKeepers.MetadataICS4Wrapper,
+		transferIBCModule, appKeepers.MetadataICS4Wrapper, appKeepers.TransferKeeper,
 	).WithOnRecvPacketHook(
 		ibcmetadata.SwapHook,
 	)
@@ -511,7 +511,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.IncentivesKeeper.SetHooks(
 		incentivestypes.NewMultiIncentiveHooks(
-			// insert incentive hooks receivers here
+		// insert incentive hooks receivers here
 		),
 	)
 
@@ -535,7 +535,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.GovKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// insert governance hooks receivers here
+		// insert governance hooks receivers here
 		),
 	)
 }
