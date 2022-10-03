@@ -9,14 +9,13 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 	"gotest.tools/assert"
-	"pgregory.net/rapid"
 )
 
 func TestOrderEndBlockers_Determinism(t *testing.T) {
 	db := dbm.NewMemDB()
 	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, simapp.EmptyAppOptions{}, GetWasmEnabledProposals(), EmptyWasmOpts)
 
-	rapid.Check(t, func(t *rapid.T) {
+	for i := 0; i < 1000; i++ {
 		a := OrderEndBlockers(app.mm.ModuleNames())
 		b := OrderEndBlockers(app.mm.ModuleNames())
 
@@ -27,5 +26,5 @@ func TestOrderEndBlockers_Determinism(t *testing.T) {
 		fmt.Println("=================")
 
 		assert.DeepEqual(t, a, b)
-	})
+	}
 }
