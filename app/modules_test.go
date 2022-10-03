@@ -15,9 +15,10 @@ func TestOrderEndBlockers_Determinism(t *testing.T) {
 	db := dbm.NewMemDB()
 	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, simapp.EmptyAppOptions{}, GetWasmEnabledProposals(), EmptyWasmOpts)
 
+	mn := app.mm.ModuleNames()
 	for i := 0; i < 1000; i++ {
-		a := OrderEndBlockers(app.mm.ModuleNames())
-		b := OrderEndBlockers(app.mm.ModuleNames())
+		a := OrderEndBlockers(mn)
+		b := OrderEndBlockers(mn)
 
 		fmt.Println("=================")
 		fmt.Println("A EndBlockers:", a)
