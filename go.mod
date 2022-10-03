@@ -32,7 +32,9 @@ require (
 	google.golang.org/genproto v0.0.0-20220725144611-272f38e5d71b
 	google.golang.org/grpc v1.49.0
 	gopkg.in/yaml.v2 v2.4.0
+	gotest.tools v2.2.0+incompatible
 	mvdan.cc/gofumpt v0.3.1
+	pgregory.net/rapid v0.4.7
 )
 
 require (
