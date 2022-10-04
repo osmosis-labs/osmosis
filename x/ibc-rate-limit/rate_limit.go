@@ -2,6 +2,7 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
+
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
