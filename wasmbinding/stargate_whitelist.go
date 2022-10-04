@@ -66,7 +66,7 @@ func init() {
 
 	// osmosis queries
 
-	//epochs
+	// epochs
 	setWhitelistedQuery("/osmosis.epochs.v1beta1.Query/EpochInfos", &epochtypes.QueryEpochsInfoResponse{})
 	setWhitelistedQuery("/osmosis.epochs.v1beta1.Query/CurrentEpoch", &epochtypes.QueryCurrentEpochResponse{})
 
@@ -81,7 +81,6 @@ func init() {
 
 	// incentives
 	setWhitelistedQuery("/osmosis.incentives.Query/ModuleToDistributeCoins", &incentivestypes.ModuleToDistributeCoinsResponse{})
-	setWhitelistedQuery("/osmosis.incentives.Query/ModuleDistributedCoins", &incentivestypes.ModuleDistributedCoinsResponse{})
 	setWhitelistedQuery("/osmosis.incentives.Query/LockableDurations", &incentivestypes.QueryLockableDurationsResponse{})
 
 	// lockup

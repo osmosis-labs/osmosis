@@ -12,9 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/cmd/querygen/templates"
 )
 
-var (
-	grpcTemplate template.Template
-)
+var grpcTemplate template.Template
 
 func main() {
 	err := parseTemplates()

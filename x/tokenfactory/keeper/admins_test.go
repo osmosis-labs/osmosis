@@ -274,7 +274,6 @@ func (suite *KeeperTestSuite) TestChangeAdminDenom() {
 }
 
 func (suite *KeeperTestSuite) TestSetDenomMetaData() {
-
 	// setup test
 	suite.SetupTest()
 	suite.CreateDefaultDenom()

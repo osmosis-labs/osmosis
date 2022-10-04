@@ -1,4 +1,4 @@
-package simulation
+package stats
 
 import (
 	"database/sql"
@@ -15,41 +15,41 @@ import (
 var embedFs embed.FS
 
 // TODO: Setup an sql schema file instead of doing it in-line here
-type statsDb struct {
+type StatsDb struct {
 	enabled bool
 	db      *sql.DB
 }
 
-func setupStatsDb(config ExportConfig) (statsDb, error) {
+func SetupStatsDb(config ExportConfig) (StatsDb, error) {
 	if !config.WriteStatsToDB {
-		return statsDb{enabled: false}, nil
+		return StatsDb{enabled: false}, nil
 	}
 
 	setupSqlCmd, err := embedFs.ReadFile("schema.sql")
 	if err != nil {
-		return statsDb{}, fmt.Errorf("error in reading schema.sql: %w", err)
+		return StatsDb{}, fmt.Errorf("error in reading schema.sql: %w", err)
 	}
 
 	db, err := sql.Open("sqlite3", "./blocks.db")
 	if err != nil {
-		return statsDb{}, err
+		return StatsDb{}, err
 	}
 
 	if _, err := db.Exec(string(setupSqlCmd)); err != nil {
 		db.Close()
-		return statsDb{}, fmt.Errorf("error in init from schema.sql init: %w", err)
+		return StatsDb{}, fmt.Errorf("error in init from schema.sql init: %w", err)
 	}
 
-	return statsDb{enabled: true, db: db}, nil
+	return StatsDb{enabled: true, db: db}, nil
 }
 
-func (stats statsDb) cleanup() {
+func (stats StatsDb) Cleanup() {
 	if stats.db != nil {
 		stats.db.Close()
 	}
 }
 
-func (stats statsDb) logActionResult(header tmproto.Header, opMsg simulation.OperationMsg, resultData []byte) error {
+func (stats StatsDb) LogActionResult(header tmproto.Header, opMsg simulation.OperationMsg, resultData []byte) error {
 	if !stats.enabled {
 		return nil
 	}

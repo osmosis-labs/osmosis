@@ -18,6 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
+	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
 	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
 	"github.com/osmosis-labs/osmosis/v12/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v12/tests/e2e/initialization"
@@ -274,19 +275,21 @@ func (s *IntegrationTestSuite) TestAddToExistingLock() {
 // The records are guranteed to be pruned at the next epoch
 // because twap keep time = epoch time / 4 and we use a timer
 // to wait for at least the twap keep time.
-// TODO: implement querying for TWAP, once such queries are exposed:
-// https://github.com/osmosis-labs/osmosis/issues/2602
 func (s *IntegrationTestSuite) TestTWAP() {
 	const (
-		poolFile   = "nativeDenomPool.json"
+		poolFile   = "nativeDenomThreeAssetPool.json"
 		walletName = "swap-exact-amount-in-wallet"
 
-		coinIn       = "101stake"
-		minAmountOut = "99"
-		denomOut     = "uosmo"
+		denomA = "stake"
+		denomB = "uion"
+		denomC = "uosmo"
+
+		minAmountOut = "1"
 
 		epochIdentifier = "day"
 	)
+
+	coinAIn, coinBIn, coinCIn := fmt.Sprintf("2000000%s", denomA), fmt.Sprintf("2000000%s", denomB), fmt.Sprintf("2000000%s", denomC)
 
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
@@ -296,16 +299,103 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	poolId := chainANode.CreatePool(poolFile, initialization.ValidatorWalletName)
 	swapWalletAddr := chainANode.CreateWallet(walletName)
 
-	chainANode.BankSend(coinIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
-	heightBeforeSwap := chainANode.QueryCurrentHeight()
+	timeBeforeSwap := chainANode.QueryLatestBlockTime()
+	// Wait for the next height so that the requested twap
+	// start time (timeBeforeSwap) is not equal to the block time.
+	chainA.WaitForNumHeights(1)
 
-	// Triggers the creation of TWAP records.
-	chainANode.SwapExactAmountIn(coinIn, minAmountOut, fmt.Sprintf("%d", poolId), denomOut, swapWalletAddr)
+	s.T().Log("querying for the first TWAP to now before swap")
+	twapFromBeforeSwapToBeforeSwapOneAB, err := chainANode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap)
+	s.Require().NoError(err)
+	twapFromBeforeSwapToBeforeSwapOneBC, err := chainANode.QueryArithmeticTwapToNow(poolId, denomB, denomC, timeBeforeSwap)
+	s.Require().NoError(err)
+	twapFromBeforeSwapToBeforeSwapOneCA, err := chainANode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeBeforeSwap)
+	s.Require().NoError(err)
+
+	chainANode.BankSend(coinAIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
+	chainANode.BankSend(coinBIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
+	chainANode.BankSend(coinCIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
+
+	s.T().Log("querying for the second TWAP to now before swap, must equal to first")
+	twapFromBeforeSwapToBeforeSwapTwoAB, err := chainANode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap.Add(50*time.Millisecond))
+	s.Require().NoError(err)
+	twapFromBeforeSwapToBeforeSwapTwoBC, err := chainANode.QueryArithmeticTwapToNow(poolId, denomB, denomC, timeBeforeSwap.Add(50*time.Millisecond))
+	s.Require().NoError(err)
+	twapFromBeforeSwapToBeforeSwapTwoCA, err := chainANode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeBeforeSwap.Add(50*time.Millisecond))
+	s.Require().NoError(err)
+
+	// Since there were no swaps between the two queries, the TWAPs should be the same.
+	osmoassert.DecApproxEq(s.T(), twapFromBeforeSwapToBeforeSwapOneAB, twapFromBeforeSwapToBeforeSwapTwoAB, sdk.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapFromBeforeSwapToBeforeSwapOneBC, twapFromBeforeSwapToBeforeSwapTwoBC, sdk.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapFromBeforeSwapToBeforeSwapOneCA, twapFromBeforeSwapToBeforeSwapTwoCA, sdk.NewDecWithPrec(1, 3))
+
+	s.T().Log("performing swaps")
+	chainANode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", poolId), denomB, swapWalletAddr)
+	chainANode.SwapExactAmountIn(coinBIn, minAmountOut, fmt.Sprintf("%d", poolId), denomC, swapWalletAddr)
+	chainANode.SwapExactAmountIn(coinCIn, minAmountOut, fmt.Sprintf("%d", poolId), denomA, swapWalletAddr)
 
 	keepPeriodCountDown := time.NewTimer(initialization.TWAPPruningKeepPeriod)
 
-	// Make sure still producing blocks.
-	chainA.WaitUntilHeight(heightBeforeSwap + 3)
+	// Make sure that we are still producing blocks and move far enough for the swap TWAP record to be created
+	// so that we can measure start time post-swap (timeAfterSwap).
+	chainA.WaitForNumHeights(2)
+
+	// Measure time after swap and wait for a few blocks to be produced.
+	// This is needed to ensure that start time is before the block time
+	// when we query for TWAP.
+	timeAfterSwap := chainANode.QueryLatestBlockTime()
+	chainA.WaitForNumHeights(2)
+
+	// TWAP "from before to after swap" should be different from "from before to before swap"
+	// because swap introduces a new record with a different spot price.
+	s.T().Log("querying for the TWAP from before swap to now after swap")
+	twapFromBeforeSwapToAfterSwapAB, err := chainANode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap)
+	s.Require().NoError(err)
+	twapFromBeforeSwapToAfterSwapBC, err := chainANode.QueryArithmeticTwapToNow(poolId, denomB, denomC, timeBeforeSwap)
+	s.Require().NoError(err)
+	twapFromBeforeSwapToAfterSwapCA, err := chainANode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeBeforeSwap)
+	s.Require().NoError(err)
+	// We had a swap of 2000000stake for some amount of uion,
+	// 2000000uion for some amount of uosmo, and
+	// 2000000uosmo for some amount of stake
+	// Because we traded the same amount of all three assets, we expect the asset with the greatest
+	// initial value (B, or uion) to have a largest negative price impact,
+	// to the benefit (positive price impact) of the other two assets (A&C, or stake and uosmo)
+	s.Require().True(twapFromBeforeSwapToAfterSwapAB.GT(twapFromBeforeSwapToBeforeSwapOneAB))
+	s.Require().True(twapFromBeforeSwapToAfterSwapBC.LT(twapFromBeforeSwapToBeforeSwapOneBC))
+	s.Require().True(twapFromBeforeSwapToAfterSwapCA.GT(twapFromBeforeSwapToBeforeSwapOneCA))
+
+	s.T().Log("querying for the TWAP from after swap to now")
+	twapFromAfterToNowAB, err := chainANode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeAfterSwap)
+	s.Require().NoError(err)
+	twapFromAfterToNowBC, err := chainANode.QueryArithmeticTwapToNow(poolId, denomB, denomC, timeAfterSwap)
+	s.Require().NoError(err)
+	twapFromAfterToNowCA, err := chainANode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeAfterSwap)
+	s.Require().NoError(err)
+	// Because twapFromAfterToNow has a higher time weight for the after swap period,
+	// we expect the results to be flipped from the previous comparison to twapFromBeforeSwapToBeforeSwapOne
+	s.Require().True(twapFromBeforeSwapToAfterSwapAB.LT(twapFromAfterToNowAB))
+	s.Require().True(twapFromBeforeSwapToAfterSwapBC.GT(twapFromAfterToNowBC))
+	s.Require().True(twapFromBeforeSwapToAfterSwapCA.LT(twapFromAfterToNowCA))
+
+	s.T().Log("querying for the TWAP from after swap to after swap + 10ms")
+	twapAfterSwapBeforePruning10MsAB, err := chainANode.QueryArithmeticTwap(poolId, denomA, denomB, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
+	s.Require().NoError(err)
+	twapAfterSwapBeforePruning10MsBC, err := chainANode.QueryArithmeticTwap(poolId, denomB, denomC, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
+	s.Require().NoError(err)
+	twapAfterSwapBeforePruning10MsCA, err := chainANode.QueryArithmeticTwap(poolId, denomC, denomA, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
+	s.Require().NoError(err)
+	// Again, because twapAfterSwapBeforePruning10Ms has a higher time weight for the after swap period between the two,
+	// we expect no change in the inequality
+	s.Require().True(twapFromBeforeSwapToAfterSwapAB.LT(twapAfterSwapBeforePruning10MsAB))
+	s.Require().True(twapFromBeforeSwapToAfterSwapBC.GT(twapAfterSwapBeforePruning10MsBC))
+	s.Require().True(twapFromBeforeSwapToAfterSwapCA.LT(twapAfterSwapBeforePruning10MsCA))
+
+	// These must be equal because they are calculated over time ranges with the stable and equal spot price.
+	// There are potential rounding errors requiring us to approximate the comparison.
+	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsAB, twapFromAfterToNowAB, sdk.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsBC, twapFromAfterToNowBC, sdk.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsCA, twapFromAfterToNowCA, sdk.NewDecWithPrec(1, 3))
 
 	if !s.skipUpgrade {
 		// TODO: we should reduce the pruning time in the v11
@@ -320,13 +410,46 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	// Make sure that the pruning keep period has passed.
 	s.T().Logf("waiting for pruning keep period of (%.f) seconds to pass", initialization.TWAPPruningKeepPeriod.Seconds())
 	<-keepPeriodCountDown.C
-	oldEpochNumber := chainANode.QueryCurrentEpoch(epochIdentifier)
-	// The pruning should happen at the next epoch.
-	chainANode.WaitUntil(func(_ coretypes.SyncInfo) bool {
-		newEpochNumber := chainANode.QueryCurrentEpoch(epochIdentifier)
-		s.T().Logf("Current epoch number is (%d), waiting to reach (%d)", newEpochNumber, oldEpochNumber+1)
-		return newEpochNumber > oldEpochNumber
-	})
+
+	// Epoch end triggers the prunning of TWAP records.
+	// Records before swap should be pruned.
+	chainA.WaitForNumEpochs(1, epochIdentifier)
+
+	// We should not be able to get TWAP before swap since it should have been pruned.
+	s.T().Log("pruning is now complete, querying TWAP for period that should be pruned")
+	_, err = chainANode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap)
+	s.Require().ErrorContains(err, "too old")
+	_, err = chainANode.QueryArithmeticTwapToNow(poolId, denomB, denomC, timeBeforeSwap)
+	s.Require().ErrorContains(err, "too old")
+	_, err = chainANode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeBeforeSwap)
+	s.Require().ErrorContains(err, "too old")
+
+	// TWAPs for the same time range should be the same when we query for them before and after pruning.
+	s.T().Log("querying for TWAP for period before pruning took place but should not have been pruned")
+	twapAfterPruning10msAB, err := chainANode.QueryArithmeticTwap(poolId, denomA, denomB, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
+	s.Require().NoError(err)
+	twapAfterPruning10msBC, err := chainANode.QueryArithmeticTwap(poolId, denomB, denomC, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
+	s.Require().NoError(err)
+	twapAfterPruning10msCA, err := chainANode.QueryArithmeticTwap(poolId, denomC, denomA, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
+	s.Require().NoError(err)
+	s.Require().Equal(twapAfterSwapBeforePruning10MsAB, twapAfterPruning10msAB)
+	s.Require().Equal(twapAfterSwapBeforePruning10MsBC, twapAfterPruning10msBC)
+	s.Require().Equal(twapAfterSwapBeforePruning10MsCA, twapAfterPruning10msCA)
+
+	// TWAP "from after to after swap" should equal to "from after swap to after pruning"
+	// These must be equal because they are calculated over time ranges with the stable and equal spot price.
+	timeAfterPruning := chainANode.QueryLatestBlockTime()
+	s.T().Log("querying for TWAP from after swap to after pruning")
+	twapToNowPostPruningAB, err := chainANode.QueryArithmeticTwap(poolId, denomA, denomB, timeAfterSwap, timeAfterPruning)
+	s.Require().NoError(err)
+	twapToNowPostPruningBC, err := chainANode.QueryArithmeticTwap(poolId, denomB, denomC, timeAfterSwap, timeAfterPruning)
+	s.Require().NoError(err)
+	twapToNowPostPruningCA, err := chainANode.QueryArithmeticTwap(poolId, denomC, denomA, timeAfterSwap, timeAfterPruning)
+	s.Require().NoError(err)
+	// There are potential rounding errors requiring us to approximate the comparison.
+	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningAB, twapAfterSwapBeforePruning10MsAB, sdk.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningBC, twapAfterSwapBeforePruning10MsBC, sdk.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningCA, twapAfterSwapBeforePruning10MsCA, sdk.NewDecWithPrec(1, 3))
 }
 
 func (s *IntegrationTestSuite) TestStateSync() {

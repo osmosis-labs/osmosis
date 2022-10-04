@@ -40,6 +40,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Features
+
+* [#2739](https://github.com/osmosis-labs/osmosis/pull/2739) Add pool type query
+
+### Bug fixes
+
+* [#2803](https://github.com/osmosis-labs/osmosis/pull/2803) Fix total pool liquidity CLI query.
+* [#2914](https://github.com/osmosis-labs/osmosis/pull/2914) Remove out of gas panics from node logs
+* [#2937](https://github.com/osmosis-labs/osmosis/pull/2937) End block ordering - staking after gov and module sorting.
+
+### Misc Improvements
+
+* [#2804](https://github.com/osmosis-labs/osmosis/pull/2804) Improve error handling and messages when parsing pool assets.
+
 ## v12.0.0
 
 This release includes several cosmwasm-developer and appchain-ecosystem affecting upgrades:
@@ -50,10 +66,13 @@ This release includes several cosmwasm-developer and appchain-ecosystem affectin
   * Add message responses to gamm messages, to remove the neccessity of bindings
   * Allow specifying denom metadata from tokenfactory
 * Enabling Interchain accounts (for real this time)
-* Upgrading IBC to v3.2.0
-* Fixing State Sync
-* Remove x/Bech32IBC
+* Upgrading IBC to v3.3.0
 * Consistently makes authz work with ledger for all messages
+
+The release also contains the following changes affecting Osmosis users and node operators
+
+* Fixing State Sync
+* Enabling expedited proposals
 
 This upgrade also adds a number of safety and API boundary improving changes to the codebase.
 While not state machine breaking, this release also includes the revamped Osmosis simulator,
@@ -77,6 +96,8 @@ which acts as a fuzz testing tool tailored for the SDK state machine.
 * [#2206](https://github.com/osmosis-labs/osmosis/pull/2283) Register all Amino interfaces and concrete types on the authz Amino codec. This will allow the authz module to properly serialize and de-serializes instances using Amino.
 * [#2405](https://github.com/osmosis-labs/osmosis/pull/2405) Make SpotPrice have a max value of 2^160, and no longer be able to panic
 * [#2473](https://github.com/osmosis-labs/osmosis/pull/2473) x/superfluid `AddNewSuperfluidAsset` now returns error, if any occurs instead of ignoring it.
+* [#2714](https://github.com/osmosis-labs/osmosis/pull/2714) Upgrade wasmd to v0.28.0.
+* Remove x/Bech32IBC
 
 #### Golang API breaks
 
@@ -92,12 +113,11 @@ which acts as a fuzz testing tool tailored for the SDK state machine.
 * [#2418](https://github.com/osmosis-labs/osmosis/pull/2418) x/mint remove SetInitialSupplyOffsetDuringMigration from keeper
 * [#2417](https://github.com/osmosis-labs/osmosis/pull/2417) x/mint unexport keeper `SetLastReductionEpochNum`, `getLastReductionEpochNum`, `CreateDeveloperVestingModuleAccount`, and `MintCoins`
 * [#2587](https://github.com/osmosis-labs/osmosis/pull/2587) remove encoding config argument from NewOsmosisApp
-* [#2454](https://github.com/osmosis-labs/osmosis/pull/2454) x/gamm Change `SwapExactAmountIn` and `SwapExactAmountOut` to take fee multiplier as addition input param.
+x
 
 ### Features
 
 * [#2387](https://github.com/osmosis-labs/osmosis/pull/2387) Upgrade to IBC v3.2.0, which allows for sending/receiving IBC tokens with slashes.
-* [#2057](https://github.com/osmosis-labs/osmosis/pull/2057) Reduce block times to about three seconds
 * [#1312] Stableswap: Createpool logic 
 * [#1230] Stableswap CFMM equations
 * [#1429] solver for multi-asset CFMM

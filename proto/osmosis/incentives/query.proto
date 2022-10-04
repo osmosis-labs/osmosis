@@ -19,13 +19,6 @@ service Query {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/module_to_distribute_coins";
   }
-  // ModuleDistributedCoins returns coins that are distributed by the module so
-  // far
-  rpc ModuleDistributedCoins(ModuleDistributedCoinsRequest)
-      returns (ModuleDistributedCoinsResponse) {
-    option (google.api.http).get =
-        "/osmosis/incentives/v1beta1/module_distributed_coins";
-  }
 
   // GaugeByID returns gauges by their respective ID
   rpc GaugeByID(GaugeByIDRequest) returns (GaugeByIDResponse) {
@@ -78,15 +71,6 @@ service Query {
 message ModuleToDistributeCoinsRequest {}
 message ModuleToDistributeCoinsResponse {
   // Coins that have yet to be distributed
-  repeated cosmos.base.v1beta1.Coin coins = 1 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
-}
-
-message ModuleDistributedCoinsRequest {}
-message ModuleDistributedCoinsResponse {
-  // Coins that have been distributed already
   repeated cosmos.base.v1beta1.Coin coins = 1 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
