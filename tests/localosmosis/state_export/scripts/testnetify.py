@@ -369,6 +369,11 @@ def main():
                 print("\tUpdate total uosmo supply from {} to {}".format(supply["amount"], str(int(supply["amount"]) + 2000000000000000 - DISTRIBUTION_MODULE_OFFSET)))
             supply["amount"] = str(int(supply["amount"]) + 2000000000000000 - DISTRIBUTION_MODULE_OFFSET)
             break
+
+    # State export bug
+    INTERCHAIN_ACCOUNT_TYPE = "/ibc.applications.interchain_accounts.v1.InterchainAccount"
+    genesis['app_state']['auth']["accounts"] = [account for account in genesis['app_state']['auth']["accounts"] if account['@type'] != INTERCHAIN_ACCOUNT_TYPE]
+
     
     print("📝 Writing {}... (it may take a while)".format(args.output_genesis))
     with open(args.output_genesis, 'w') as f:
