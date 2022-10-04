@@ -1,9 +1,10 @@
 package cmd
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -24,6 +25,7 @@ import (
 )
 
 const FlagSelectPoolIds = "breakdown-by-pool-ids"
+const FlagMinimumStakeAmount = "minimum-stake-amount"
 
 type DeriveSnapshot struct {
 	NumberAccounts uint64                    `json:"num_accounts"`
@@ -127,7 +129,7 @@ func getGenStateFromPath(genesisFilePath string) (map[string]json.RawMessage, er
 	}
 	defer genesisFile.Close()
 
-	byteValue, _ := ioutil.ReadAll(genesisFile)
+	byteValue, _ := io.ReadAll(genesisFile)
 
 	var doc tmtypes.GenesisDoc
 	err = tmjson.Unmarshal(byteValue, &doc)
@@ -182,7 +184,9 @@ Example:
 			snapshotAccs := make(map[string]DerivedAccount)
 
 			bankGenesis := banktypes.GenesisState{}
-			clientCtx.Codec.MustUnmarshalJSON(genState["bank"], &bankGenesis)
+			if len(genState["bank"]) > 0 {
+				clientCtx.Codec.MustUnmarshalJSON(genState["bank"], &bankGenesis)
+			}
 			for _, balance := range bankGenesis.Balances {
 				address := balance.Address
 				acc, ok := snapshotAccs[address]
@@ -195,7 +199,9 @@ Example:
 			}
 
 			stakingGenesis := stakingtypes.GenesisState{}
-			clientCtx.Codec.MustUnmarshalJSON(genState["staking"], &stakingGenesis)
+			if len(genState["staking"]) > 0 {
+				clientCtx.Codec.MustUnmarshalJSON(genState["staking"], &stakingGenesis)
+			}
 			for _, unbonding := range stakingGenesis.UnbondingDelegations {
 				address := unbonding.DelegatorAddress
 				acc, ok := snapshotAccs[address]
@@ -236,7 +242,9 @@ Example:
 			}
 
 			lockupGenesis := lockuptypes.GenesisState{}
-			clientCtx.Codec.MustUnmarshalJSON(genState["lockup"], &lockupGenesis)
+			if len(genState["lockup"]) > 0 {
+				clientCtx.Codec.MustUnmarshalJSON(genState["lockup"], &lockupGenesis)
+			}
 			for _, lock := range lockupGenesis.Locks {
 				address := lock.Owner
 
@@ -250,7 +258,9 @@ Example:
 			}
 
 			gammGenesis := gammtypes.GenesisState{}
-			clientCtx.Codec.MustUnmarshalJSON(genState["gamm"], &gammGenesis)
+			if len(genState["gamm"]) > 0 {
+				clientCtx.Codec.MustUnmarshalJSON(genState["gamm"], &gammGenesis)
+			}
 
 			// collect gamm pools
 			pools := make(map[string]gammtypes.PoolI)
@@ -293,13 +303,85 @@ Example:
 				return fmt.Errorf("failed to marshal snapshot: %w", err)
 			}
 
-			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0o644)
+			err = os.WriteFile(snapshotOutput, snapshotJSON, 0o644)
 			return err
 		},
 	}
 
 	cmd.Flags().String(FlagSelectPoolIds, "",
 		"Output a special breakdown for amount LP'd to the provided pools. Usage --breakdown-by-pool-ids=1,2,605")
+
+	return cmd
+}
+
+// StakedToCSVCmd generates a airdrop.csv from a provided exported balances.json.
+func StakedToCSVCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "staked-to-csv [input-balances-file] [output-airdrop-csv]",
+		Short: "Export a airdrop csv from a provided balances export",
+		Long: `Export a airdrop csv from a provided balances export (from export-derive-balances)
+Example:
+	osmosisd staked-to-csv ../balances.json ../airdrop.csv
+`,
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			config := serverCtx.Config
+			config.SetRoot(clientCtx.HomeDir)
+
+			balancesFile := args[0]
+
+			snapshotOutput := args[1]
+
+			minStakeAmount, _ := cmd.Flags().GetInt64(FlagMinimumStakeAmount)
+
+			var deriveSnapshot DeriveSnapshot
+
+			sourceFile, err := os.Open(balancesFile)
+			if err != nil {
+				return err
+			}
+			// remember to close the file at the end of the function
+			defer sourceFile.Close()
+
+			// decode the balances json file into the struct array
+			if err := json.NewDecoder(sourceFile).Decode(&deriveSnapshot); err != nil {
+				return err
+			}
+
+			// create a new file to store CSV data
+			outputFile, err := os.Create(snapshotOutput)
+			if err != nil {
+				return err
+			}
+			defer outputFile.Close()
+
+			// write the header of the CSV file
+			writer := csv.NewWriter(outputFile)
+			defer writer.Flush()
+
+			header := []string{"address", "staked"}
+			if err := writer.Write(header); err != nil {
+				return err
+			}
+
+			// iterate through all accounts, leave out accounts that do not meet the user provided min stake amount
+			for _, r := range deriveSnapshot.Accounts {
+				var csvRow []string
+				if r.Staked.GT(sdk.NewInt(minStakeAmount)) {
+					csvRow = append(csvRow, r.Address, r.Staked.String())
+					if err := writer.Write(csvRow); err != nil {
+						return err
+					}
+				}
+			}
+
+			return nil
+		},
+	}
+
+	cmd.Flags().Int64(FlagMinimumStakeAmount, 0, "Specify minimum amount (non inclusive) accounts must stake to be included in airdrop (default: 0)")
 
 	return cmd
 }

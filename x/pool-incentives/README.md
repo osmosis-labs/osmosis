@@ -1,6 +1,7 @@
 # Pool Incentives
 
 ## Abstract
+
 The `pool-incentives` module is separate but related to the `incentives` module. When a pool is created using the `GAMM` module, the `pool-incentives` module automatically creates individual gauges in the `incentives` module for every lock duration that exists in that pool. 
 The `pool-incentives` module also takes the `pool_incentives` distributed from the `gov` module and distributes it to the various incentivized gauges.
 
@@ -110,7 +111,6 @@ gauge id 3, the following command can be used.
 osmosisd tx gov submit-proposal update-pool-incentives 2,3 100,200
 ```
 
-
 ## Transactions
 
 ### replace-pool-incentives 
@@ -150,10 +150,8 @@ The proposal.json would look as follows:
   ]
 }
 ```
+
 :::
-
-
-
 
 ### update-pool-incentives  
 
@@ -189,8 +187,8 @@ The proposal.json would look as follows:
   ]
 }
 ```
-:::
 
+:::
 
 ## Queries
 
@@ -223,8 +221,8 @@ An example output:
     weight: "579"
 ...
 ```
-:::
 
+:::
 
 ### external-incentivized-gauges 
 
@@ -277,6 +275,7 @@ An example output:
   start_time: "2021-10-14T16:00:00Z"
 ...
 ```
+
 :::
 
 ### gauge-ids                    
@@ -310,8 +309,6 @@ gauge_ids_with_duration:
 In this example, we see that gauge IDs 1,2, and 3 are for the one day, one week, and two week lockup periods respectively for the OSMO/ATOM pool.
 :::
 
-
-
 ### incentivized-pools           
 
 Query all incentivized pools with their respective gauge IDs and lockup durations
@@ -340,10 +337,8 @@ An example output:
   pool_id: "602"
 ...
 ```
+
 :::
-
-
-
 
 ### lockable-durations           
 
@@ -367,9 +362,8 @@ lockable_durations:
 - 604800s
 - 1209600s
 ```
+
 :::
-
-
 
 ### params                       
 
@@ -391,4 +385,5 @@ An example output:
 params:
   minted_denom: uosmo
 ```
+
 :::

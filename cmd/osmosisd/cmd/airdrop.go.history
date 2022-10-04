@@ -6,7 +6,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -99,7 +98,7 @@ Example:
 			}
 			defer genesisJson.Close()
 
-			byteValue, _ := ioutil.ReadAll(genesisJson)
+			byteValue, _ := os.ReadAll(genesisJson)
 
 			var genStateV036 GenesisStateV036
 
@@ -239,7 +238,7 @@ Example:
 				return fmt.Errorf("failed to marshal snapshot: %w", err)
 			}
 
-			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0644)
+			err = os.WriteFile(snapshotOutput, snapshotJSON, 0644)
 			return err
 		},
 	}

@@ -1,10 +1,10 @@
-package simulation
+package stats
 
 import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"os"
 )
 
 // EventStats defines an object that keeps a tally of each event that has occurred
@@ -48,13 +48,13 @@ func (es EventStats) ExportJSON(path string) {
 		panic(err)
 	}
 
-	err = ioutil.WriteFile(path, bz, 0o600)
+	err = os.WriteFile(path, bz, 0o600)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (es EventStats) exportEvents(ExportStatsPath string, w io.Writer) {
+func (es EventStats) ExportEvents(ExportStatsPath string, w io.Writer) {
 	if ExportStatsPath != "" {
 		fmt.Printf("Exporting simulation statistics to %s...", ExportStatsPath)
 		es.ExportJSON(ExportStatsPath)

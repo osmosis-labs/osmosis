@@ -20,6 +20,8 @@ import (
 	minttypes "github.com/osmosis-labs/osmosis/v12/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v12/x/pool-incentives/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v12/x/tokenfactory/types"
+	twapquerytypes "github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
 	txfeestypes "github.com/osmosis-labs/osmosis/v12/x/txfees/types"
 )
 
@@ -64,7 +66,7 @@ func init() {
 
 	// osmosis queries
 
-	//epochs
+	// epochs
 	setWhitelistedQuery("/osmosis.epochs.v1beta1.Query/EpochInfos", &epochtypes.QueryEpochsInfoResponse{})
 	setWhitelistedQuery("/osmosis.epochs.v1beta1.Query/CurrentEpoch", &epochtypes.QueryCurrentEpochResponse{})
 
@@ -79,7 +81,6 @@ func init() {
 
 	// incentives
 	setWhitelistedQuery("/osmosis.incentives.Query/ModuleToDistributeCoins", &incentivestypes.ModuleToDistributeCoinsResponse{})
-	setWhitelistedQuery("/osmosis.incentives.Query/ModuleDistributedCoins", &incentivestypes.ModuleDistributedCoinsResponse{})
 	setWhitelistedQuery("/osmosis.incentives.Query/LockableDurations", &incentivestypes.QueryLockableDurationsResponse{})
 
 	// lockup
@@ -107,6 +108,16 @@ func init() {
 	setWhitelistedQuery("/osmosis.txfees.v1beta1.Query/DenomSpotPrice", &txfeestypes.QueryDenomSpotPriceResponse{})
 	setWhitelistedQuery("/osmosis.txfees.v1beta1.Query/DenomPoolId", &txfeestypes.QueryDenomPoolIdResponse{})
 	setWhitelistedQuery("/osmosis.txfees.v1beta1.Query/BaseDenom", &txfeestypes.QueryBaseDenomResponse{})
+
+	// tokenfactory
+	setWhitelistedQuery("/osmosis.tokenfactory.v1beta1.Query/params", &tokenfactorytypes.QueryParamsResponse{})
+	setWhitelistedQuery("/osmosis.tokenfactory.v1beta1.Query/DenomAuthorityMetadata", &tokenfactorytypes.QueryDenomAuthorityMetadataResponse{})
+	// Does not include denoms_from_creator, TBD if this is the index we want contracts to use instead of admin
+
+	// twap
+	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/ArithmeticTwap", &twapquerytypes.ArithmeticTwapResponse{})
+	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/ArithmeticTwapToNow", &twapquerytypes.ArithmeticTwapToNowResponse{})
+	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/Params", &twapquerytypes.ParamsResponse{})
 }
 
 // GetWhitelistedQuery returns the whitelisted query at the provided path.

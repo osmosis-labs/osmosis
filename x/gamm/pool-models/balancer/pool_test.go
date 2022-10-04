@@ -11,6 +11,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/test_helpers"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
@@ -471,7 +472,7 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
 
 // TestCalculateAmountOutAndIn_InverseRelationship tests that the same amount of token is guaranteed upon
 // sequential operation of CalcInAmtGivenOut and CalcOutAmtGivenIn.
-func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
+func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelationship() {
 	type testcase struct {
 		denomOut         string
 		initialPoolOut   int64
@@ -550,7 +551,7 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 
 	for _, tc := range testcases {
 		for _, swapFee := range swapFeeCases {
-			t.Run(getTestCaseName(tc, swapFee), func(t *testing.T) {
+			suite.Run(getTestCaseName(tc, swapFee), func() {
 				ctx := suite.CreateTestContext()
 
 				poolAssetOut := balancer.PoolAsset{
@@ -564,22 +565,22 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 				}
 
 				swapFeeDec, err := sdk.NewDecFromStr(swapFee)
-				require.NoError(t, err)
+				suite.Require().NoError(err)
 
 				exitFeeDec, err := sdk.NewDecFromStr("0")
-				require.NoError(t, err)
+				suite.Require().NoError(err)
 
-				pool := createTestPool(t, swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn)
-				require.NotNil(t, pool)
+				pool := createTestPool(suite.T(), swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn)
+				suite.Require().NotNil(pool)
 
 				sut := func() {
-					suite.TestCalculateAmountOutAndIn_InverseRelationship(ctx, pool, poolAssetIn.Token.Denom, poolAssetOut.Token.Denom, tc.initialCalcOut, swapFeeDec)
+					test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, poolAssetIn.Token.Denom, poolAssetOut.Token.Denom, tc.initialCalcOut, swapFeeDec)
 				}
 
 				balancerPool, ok := pool.(*balancer.Pool)
-				require.True(t, ok)
+				suite.Require().True(ok)
 
-				assertPoolStateNotModified(t, balancerPool, sut)
+				assertPoolStateNotModified(suite.T(), balancerPool, sut)
 			})
 		}
 	}
@@ -1329,12 +1330,12 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 			expectPass: false,
 		},
 		"attempt joining pool with no assets in it": {
-			tokensIn: sdk.Coins{sdk.NewCoin("foo", sdk.NewInt(1)), sdk.NewCoin("foo", sdk.NewInt(1))},
-			poolAssets: []balancer.PoolAsset{},
+			tokensIn:        sdk.Coins{sdk.NewCoin("foo", sdk.NewInt(1)), sdk.NewCoin("foo", sdk.NewInt(1))},
+			poolAssets:      []balancer.PoolAsset{},
 			expNumShare:     sdk.NewIntFromUint64(0),
 			expTokensJoined: sdk.Coins{},
-			expPoolAssets: []balancer.PoolAsset{},
-			expectPass: false,
+			expPoolAssets:   []balancer.PoolAsset{},
+			expectPass:      false,
 		},
 	}
 

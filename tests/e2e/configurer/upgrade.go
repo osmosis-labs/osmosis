@@ -172,9 +172,7 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 	// wait till all chains halt at upgrade height
 	for _, chainConfig := range uc.chainConfigs {
 		uc.t.Logf("waiting to reach upgrade height on chain %s", chainConfig.Id)
-		if err := chainConfig.WaitUntilHeight(chainConfig.UpgradePropHeight); err != nil {
-			return err
-		}
+		chainConfig.WaitUntilHeight(chainConfig.UpgradePropHeight)
 		uc.t.Logf("upgrade height reached on chain %s", chainConfig.Id)
 	}
 
@@ -200,9 +198,7 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 func (uc *UpgradeConfigurer) runForkUpgrade() error {
 	for _, chainConfig := range uc.chainConfigs {
 		uc.t.Logf("waiting to reach fork height on chain %s", chainConfig.Id)
-		if err := chainConfig.WaitUntilHeight(uc.forkHeight); err != nil {
-			return err
-		}
+		chainConfig.WaitUntilHeight(uc.forkHeight)
 		uc.t.Logf("fork height reached on chain %s", chainConfig.Id)
 	}
 	return nil
@@ -221,9 +217,7 @@ func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHe
 	}
 
 	uc.t.Logf("waiting to upgrade containers on chain %s", chainConfig.Id)
-	if err := chainConfig.WaitUntilHeight(propHeight); err != nil {
-		return err
-	}
+	chainConfig.WaitUntilHeight(propHeight)
 	uc.t.Logf("upgrade successful on chain %s", chainConfig.Id)
 	return nil
 }

@@ -13,6 +13,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/osmosis-labs/osmosis/v12/simulation/executor/internal/stats"
 	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
 )
 
@@ -43,7 +44,7 @@ type simState struct {
 	// work for us to clean up and architect well.
 	// We should be collecting this raw data, and able to stream it out into a database.
 	// Its fine to keep some basic aggregate statistics, but not where it should end.
-	eventStats EventStats
+	eventStats stats.EventStats
 	opCount    int
 
 	config Config
@@ -60,7 +61,7 @@ func newSimulatorState(simParams Params, initialHeader tmproto.Header, tb testin
 		pastVoteInfos:  [][]abci.VoteInfo{},
 		logWriter:      NewLogWriter(tb),
 		w:              w,
-		eventStats:     NewEventStats(),
+		eventStats:     stats.NewEventStats(),
 		opCount:        0,
 		config:         config,
 	}
@@ -69,7 +70,8 @@ func newSimulatorState(simParams Params, initialHeader tmproto.Header, tb testin
 func (simState *simState) SimulateAllBlocks(
 	w io.Writer,
 	simCtx *simtypes.SimCtx,
-	blockSimulator blockSimFn) (stopEarly bool, err error) {
+	blockSimulator blockSimFn,
+) (stopEarly bool, err error) {
 	stopEarly = false
 	initialHeight := simState.config.InitializationConfig.InitialBlockHeight
 	numBlocks := simState.config.NumBlocks
@@ -101,7 +103,7 @@ func (simState *simState) SimulateBlock(simCtx *simtypes.SimCtx, blockSimulator 
 	}
 
 	requestBeginBlock := simState.beginBlock(simCtx)
-	ctx := simCtx.BaseApp().NewContext(false, simState.header)
+	ctx := simCtx.BaseApp().NewContext(false, simState.header).WithBlockTime(simState.header.Time)
 
 	// Run queued operations. Ignores blocksize if blocksize is too small
 	numQueuedOpsRan, err := simState.runQueuedOperations(simCtx, ctx)

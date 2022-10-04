@@ -77,7 +77,6 @@ func (hook *dummyEpochHook) BeforeEpochStart(ctx sdk.Context, epochIdentifier st
 	hook.successCounter += 1
 	ctx.EventManager().EmitEvent(dummyBeforeEpochStartEvent(epochIdentifier, epochNumber))
 	return nil
-
 }
 
 func (hook *dummyEpochHook) Clone() *dummyEpochHook {
@@ -91,7 +90,7 @@ func (suite *KeeperTestSuite) TestHooksPanicRecovery() {
 	panicHook := dummyEpochHook{shouldPanic: true}
 	noPanicHook := dummyEpochHook{shouldPanic: false}
 	errorHook := dummyEpochHook{shouldError: true}
-	noErrorHook := dummyEpochHook{shouldError: false} //same as nopanic
+	noErrorHook := dummyEpochHook{shouldError: false} // same as nopanic
 	simpleHooks := []dummyEpochHook{panicHook, noPanicHook, errorHook, noErrorHook}
 
 	tests := []struct {

@@ -3,7 +3,6 @@ package types
 import (
 	"errors"
 	fmt "fmt"
-	"strings"
 	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,14 +27,20 @@ var (
 	mostRecentTWAPsNoSeparator         = "recent_twap"
 	historicalTWAPTimeIndexNoSeparator = "historical_time_index"
 	historicalTWAPPoolIndexNoSeparator = "historical_pool_index"
-	expectedKeySeparatedParts          = 5
 
 	// We do key management to let us easily meet the goals of (AKA minimal iteration):
-	// Get most recent twap for a (pool id, asset 1, asset 2) with no iteration
-	// Get all records for all pools, within a given time range
-	// Get all records for a pool, within a given time range
-	mostRecentTWAPsPrefix         = mostRecentTWAPsNoSeparator + KeySeparator
+	// * Get most recent twap for a (pool id, asset 1, asset 2) with no iteration
+	// * Get all records for all pools, within a given time range
+	// * Get all records for a (pool id, asset 1, asset 2), within a given time range
+
+	// format is just pool id | denom1 | denom2
+	// made for getting most recent key
+	mostRecentTWAPsPrefix = mostRecentTWAPsNoSeparator + KeySeparator
+	// format is time | pool id | denom1 | denom2 | time
+	// made for efficiently deleting records by time in pruning
 	HistoricalTWAPTimeIndexPrefix = historicalTWAPTimeIndexNoSeparator + KeySeparator
+	// format is pool id | denom1 | denom2 | time
+	// made for efficiently getting records given (pool id, denom1, denom2) and time bounds
 	HistoricalTWAPPoolIndexPrefix = historicalTWAPPoolIndexNoSeparator + KeySeparator
 )
 
@@ -52,47 +57,19 @@ func FormatHistoricalTimeIndexTWAPKey(accumulatorWriteTime time.Time, poolId uin
 	return []byte(fmt.Sprintf("%s%s%s%d%s%s%s%s", HistoricalTWAPTimeIndexPrefix, timeS, KeySeparator, poolId, KeySeparator, denom1, KeySeparator, denom2))
 }
 
-func FormatHistoricalPoolIndexTWAPKey(poolId uint64, accumulatorWriteTime time.Time, denom1, denom2 string) []byte {
+func FormatHistoricalPoolIndexTWAPKey(poolId uint64, denom1, denom2 string, accumulatorWriteTime time.Time) []byte {
 	timeS := osmoutils.FormatTimeString(accumulatorWriteTime)
-	return []byte(fmt.Sprintf("%s%d%s%s%s%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, timeS, KeySeparator, denom1, KeySeparator, denom2))
+	return []byte(fmt.Sprintf("%s%d%s%s%s%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, denom1, KeySeparator, denom2, KeySeparator, timeS))
 }
 
-func FormatHistoricalPoolIndexTimePrefix(poolId uint64, accumulatorWriteTime time.Time) []byte {
+func FormatHistoricalPoolIndexTimePrefix(poolId uint64, denom1, denom2 string) []byte {
+	return []byte(fmt.Sprintf("%s%d%s%s%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, denom1, KeySeparator, denom2, KeySeparator))
+}
+
+func FormatHistoricalPoolIndexTimeSuffix(poolId uint64, denom1, denom2 string, accumulatorWriteTime time.Time) []byte {
 	timeS := osmoutils.FormatTimeString(accumulatorWriteTime)
-	return []byte(fmt.Sprintf("%s%d%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, timeS, KeySeparator))
-}
-
-func ParseTimeFromHistoricalTimeIndexKey(key []byte) (time.Time, error) {
-	keyS := string(key)
-	s := strings.Split(keyS, KeySeparator)
-	if len(s) != expectedKeySeparatedParts {
-		return time.Time{}, KeySeparatorLengthError{ExpectedLength: expectedKeySeparatedParts, ActualLength: len(s)}
-	}
-	if s[0] != historicalTWAPTimeIndexNoSeparator {
-		return time.Time{}, UnexpectedSeparatorError{ExpectedSeparator: historicalTWAPPoolIndexNoSeparator, ActualSeparator: s[0]}
-	}
-	t, err := osmoutils.ParseTimeString(s[1])
-	if err != nil {
-		return time.Time{}, TimeStringKeyFormatError{Key: keyS, Err: err}
-	}
-	return t, nil
-}
-
-func ParseTimeFromHistoricalPoolIndexKey(key []byte) (time.Time, error) {
-	keyS := string(key)
-	s := strings.Split(keyS, KeySeparator)
-	if len(s) != expectedKeySeparatedParts {
-		return time.Time{}, KeySeparatorLengthError{ExpectedLength: expectedKeySeparatedParts, ActualLength: len(s)}
-	}
-	if s[0] != historicalTWAPPoolIndexNoSeparator {
-		return time.Time{}, UnexpectedSeparatorError{ExpectedSeparator: historicalTWAPPoolIndexNoSeparator, ActualSeparator: s[0]}
-	}
-	// Time is always the third item in correctly formatted pool index keys (as opposed to the second item in time index keys)
-	t, err := osmoutils.ParseTimeString(s[2])
-	if err != nil {
-		return time.Time{}, TimeStringKeyFormatError{Key: keyS, Err: err}
-	}
-	return t, nil
+	// . acts as a suffix for lexicographical orderings
+	return []byte(fmt.Sprintf("%s%d%s%s%s%s%s%s.", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, denom1, KeySeparator, denom2, KeySeparator, timeS))
 }
 
 // GetAllMostRecentTwapsForPool returns all of the most recent twap records for a pool id.

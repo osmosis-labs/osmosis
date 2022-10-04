@@ -30,6 +30,9 @@ message MsgCreateStableswapPool {
 
   string future_pool_governor = 5
       [ (gogoproto.moretags) = "yaml:\"future_pool_governor\"" ];
+
+  string scaling_factor_controller = 6
+      [ (gogoproto.moretags) = "yaml:\"scaling_factor_controller\"" ];
 }
 
 // Returns a poolID with custom poolName.

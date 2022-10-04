@@ -29,7 +29,7 @@ func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.PoolI, err
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
 	if !store.Has(poolKey) {
-		return nil, fmt.Errorf("pool with ID %d does not exist", poolId)
+		return nil, types.PoolDoesNotExistError{PoolId: poolId}
 	}
 
 	bz := store.Get(poolKey)
@@ -235,6 +235,21 @@ func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 		nextPoolId = val.GetValue()
 	}
 	return nextPoolId
+}
+
+func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (string, error) {
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
+	if err != nil {
+		return "", err
+	}
+
+	switch pool := pool.(type) {
+	case *balancer.Pool:
+		return "Balancer", nil
+	default:
+		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
+		return "", sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
+	}
 }
 
 // getNextPoolIdAndIncrement returns the next pool Id, and increments the corresponding state entry.

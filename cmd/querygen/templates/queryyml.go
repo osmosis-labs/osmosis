@@ -1,7 +1,7 @@
 package templates
 
 import (
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -36,11 +36,10 @@ type ProtoWrapperDescriptor struct {
 	Response      string
 }
 
-type CliDescriptor struct {
-}
+type CliDescriptor struct{}
 
 func ReadYmlFile(filepath string) (QueryYml, error) {
-	content, err := ioutil.ReadFile(filepath) // the file is inside the local directory
+	content, err := os.ReadFile(filepath) // the file is inside the local directory
 	if err != nil {
 		return QueryYml{}, err
 	}

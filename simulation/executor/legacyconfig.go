@@ -3,7 +3,6 @@ package simulation
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -13,6 +12,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/osmosis-labs/osmosis/v12/simulation/executor/internal/stats"
 	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes/simlogger"
 )
 
@@ -130,7 +130,7 @@ func SetupSimulation(dirPrefix, dbName string) (cfg Config, db dbm.DB, logger lo
 	}
 	logger = simlogger.NewSimLogger(logger)
 
-	dir, err := ioutil.TempDir("", dirPrefix)
+	dir, err := os.MkdirTemp("", dirPrefix)
 	if err != nil {
 		return Config{}, nil, nil, func() {}, err
 	}
@@ -196,13 +196,7 @@ type InitializationConfig struct {
 	ChainID            string // chain-id used on the simulation
 }
 
-type ExportConfig struct {
-	ExportParamsPath   string // custom file path to save the exported params JSON
-	ExportParamsHeight int    // height to which export the randomly generated params
-	ExportStatePath    string // custom file path to save the exported app state JSON
-	ExportStatsPath    string // custom file path to save the exported simulation statistics JSON
-	WriteStatsToDB     bool
-}
+type ExportConfig = stats.ExportConfig
 
 type ExecutionDbConfig struct {
 	UseMerkleTree bool // Use merkle tree underneath, vs using a "fake" merkle tree
