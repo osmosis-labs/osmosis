@@ -240,11 +240,11 @@ func (app *OsmosisApp) GetBankKeeper() simtypes.BankKeeper {
 
 // Required for ibctesting
 func (app *OsmosisApp) GetStakingKeeper() stakingkeeper.Keeper {
-	return *app.AppKeepers.StakingKeeper
+	return *app.AppKeepers.StakingKeeper // Dereferencing the pointer
 }
 
 func (app *OsmosisApp) GetIBCKeeper() *ibckeeper.Keeper {
-	return app.AppKeepers.IBCKeeper
+	return app.AppKeepers.IBCKeeper // This is a *ibckeeper.Keeper
 }
 
 func (app *OsmosisApp) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
