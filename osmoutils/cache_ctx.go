@@ -3,6 +3,8 @@ package osmoutils
 import (
 	"errors"
 	"fmt"
+	"runtime"
+	"runtime/debug"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,9 +17,9 @@ import (
 func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err error) {
 	// Add a panic safeguard
 	defer func() {
-		if recovErr := recover(); recovErr != nil {
-			fmt.Println(recovErr)
-			err = errors.New("panic occured during execution")
+		if recoveryError := recover(); recoveryError != nil {
+			PrintPanicRecoveryError(ctx, recoveryError)
+			err = errors.New("panic occurred during execution")
 		}
 	}()
 	// makes a new cache context, which all state changes get wrapped inside of.
@@ -31,8 +33,6 @@ func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err err
 	}
 	return err
 }
-<<<<<<< HEAD
-=======
 
 // PrintPanicRecoveryError error logs the recoveryError, along with the stacktrace, if it can be parsed.
 // If not emits them to stdout.
@@ -56,4 +56,3 @@ func PrintPanicRecoveryError(ctx sdk.Context, recoveryError interface{}) {
 	}
 	ctx.Logger().Error("stack trace: " + errStackTrace)
 }
->>>>>>> 1ec86587 (Stop returning error logs + stack trace when out of gas in ApplyFuncIfNoErr (#2914))
