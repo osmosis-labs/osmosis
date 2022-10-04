@@ -121,9 +121,9 @@ func (suite *MiddlewareTestSuite) TestInvalidReceiver() {
 	)
 	ack, _ := suite.ExecuteReceive(msg)
 	suite.Require().Contains(string(ack), "error",
-		"acknoledgment is not an error")
+		"acknowledgment is not an error")
 	suite.Require().Contains(string(ack), sdkerrors.ErrInvalidAddress.Error(),
-		"acknoledgment error is not of the right type")
+		"acknowledgment error is not of the right type")
 }
 
 func (suite *MiddlewareTestSuite) ExecuteReceive(msg sdk.Msg) (string, error) {
@@ -148,12 +148,12 @@ func (suite *MiddlewareTestSuite) AssertReceive(success bool, msg sdk.Msg) (stri
 	if success {
 		suite.Require().NoError(err)
 		suite.Require().NotContains(string(ack), "error",
-			"acknoledgment is an error")
+			"acknowledgment is an error")
 	} else {
 		suite.Require().Contains(string(ack), "error",
-			"acknoledgment is not an error")
+			"acknowledgment is not an error")
 		suite.Require().Contains(string(ack), types.ErrRateLimitExceeded.Error(),
-			"acknoledgment error is not of the right type")
+			"acknowledgment error is not of the right type")
 	}
 	return ack, err
 }
