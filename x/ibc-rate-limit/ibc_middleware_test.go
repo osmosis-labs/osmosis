@@ -260,9 +260,9 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimiting() {
 	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
-	// Setup receiver chain's quota
 	osmosisApp := suite.chainA.GetOsmosisApp()
 
+	// Setup receiver chain's quota
 	// Each user has 10% of the supply
 	supply := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 	quota := supply.Amount.QuoRaw(20)
