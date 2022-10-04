@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
@@ -400,35 +399,28 @@ func (q Querier) TotalDelegationByValidatorForDenom(goCtx context.Context, req *
 	var intermediaryAccount types.SuperfluidIntermediaryAccount
 
 	intermediaryAccounts := q.Keeper.GetAllIntermediaryAccounts(ctx)
-	fmt.Println("intermediaryAccounts", intermediaryAccounts)
 	for _, intermediaryAccount = range intermediaryAccounts {
 		if intermediaryAccount.Denom != req.Denom {
 			continue
 		}
+
 		valAddr, err := sdk.ValAddressFromBech32(intermediaryAccount.ValAddr)
 		if err != nil {
 			return nil, err
 		}
 
-		val, found := q.Keeper.sk.GetValidator(ctx, valAddr)
-		if !found {
-			return nil, stakingtypes.ErrNoValidatorFound
+		delegation, _ := q.SuperfluidDelegationsByValidatorDenom(goCtx, &types.SuperfluidDelegationsByValidatorDenomRequest{ValidatorAddress: valAddr.String(), Denom: req.Denom})
+
+		amount := sdk.ZeroInt()
+		for _, record := range delegation.SuperfluidDelegationRecords {
+			amount = amount.Add(record.DelegationAmount.Amount)
 		}
 
-		delegations := q.Keeper.sk.GetValidatorDelegations(ctx, valAddr)
-		shares := sdk.ZeroDec()
-		for _, delegation := range delegations {
-			// addr := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress)
-			// fmt.Println("addr", addr, delegation.DelegatorAddress)
-			// sfsDelegation, err := q.SuperfluidUndelegationsByDelegator(goCtx, &types.SuperfluidUndelegationsByDelegatorRequest{DelegatorAddress: addr.String()})
-			// fmt.Println("sfsDelegation", sfsDelegation, err)
-			shares = shares.Add(delegation.Shares)
-		}
-		fmt.Println("val tokens", val.Tokens, shares)
-		equivalentAmountOSMO := q.Keeper.GetSuperfluidOSMOTokens(ctx, req.Denom, val.DelegatorShares.RoundInt())
+		equivalentAmountOSMO := q.Keeper.GetSuperfluidOSMOTokens(ctx, req.Denom, amount)
+
 		result := &types.Delegations{
 			ValAddr:        valAddr.String(),
-			AmountSfsd:     &shares,
+			AmountSfsd:     &amount,
 			OsmoEquivalent: &equivalentAmountOSMO,
 		}
 

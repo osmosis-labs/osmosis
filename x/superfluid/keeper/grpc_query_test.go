@@ -23,8 +23,7 @@ func (suite *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 	delegation_amount := int64(1000000)
 
 	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
-	test_multiplier := sdk.NewDec(20)
-	denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{test_multiplier, test_multiplier})
+	denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 	superfluidDelegations := []superfluidDelegation{
 		{0, 0, 0, delegation_amount},
@@ -44,13 +43,13 @@ func (suite *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 		for res_ind, res := range req.AssetResponse {
 			// check osmo equivalent is correct
 			actual_response_osmo := *req.AssetResponse[res_ind].OsmoEquivalent
-			needed_response_osmo := suite.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(ctx, denom, sdk.NewInt(test_multiplier.TruncateInt64()*delegation_amount+100)) // + 100 due to initial stake on validators account
+			needed_response_osmo := suite.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(ctx, denom, sdk.NewInt(delegation_amount))
 
 			suite.Require().Equal(actual_response_osmo, needed_response_osmo)
 
 			// check sfs'd asset amount correct
 			actual_response_asset := *req.AssetResponse[res_ind].AmountSfsd
-			needed_response_asset := sdk.NewInt(test_multiplier.TruncateInt64()*delegation_amount + 100) // + 100 due to initial stake on validators account
+			needed_response_asset := sdk.NewInt(delegation_amount)
 			suite.Require().Equal(actual_response_asset, needed_response_asset)
 
 			// check validator addresses correct

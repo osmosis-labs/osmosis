@@ -165,7 +165,7 @@ message QueryTotalDelegationByValidatorForDenomResponse {
 message Delegations {
   string val_addr = 1;
   string amount_sfsd = 2
-      [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec" ];
+      [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int" ];
   string osmo_equivalent = 3
       [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int" ];
 }
