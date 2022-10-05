@@ -1,0 +1,22 @@
+syntax = "proto3";
+package osmosis.nftfactory.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+
+option go_package = "github.com/osmosis-labs/osmosis/v12/x/nftfactory/types";
+
+service Msg {
+    rpc CreateDenom(MsgCreateDenom)
+        returns(MsgCreateDenomResponse);
+}
+
+message MsgCreateDenom {
+    string id = 1 [ (gogoproto.moretags) = "yaml:\"id\"" ];
+    string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+    string denom_name = 3 [ (gogoproto.moretags) = "yaml:\"denom_name\"" ];
+    string data = 4 [ (gogoproto.moretags) = "yaml:\"data\"" ];
+}
+
+message MsgCreateDenomResponse {}

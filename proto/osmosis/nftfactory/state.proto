@@ -1,0 +1,18 @@
+syntax = "proto3";
+package osmosis.nftfactory.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+
+option go_package = "github.com/osmosis-labs/osmosis/v12/x/nftfactory/types";
+
+// Denom defines a type of NFT
+message Denom {
+    option (gogoproto.equal) = true;
+
+    string id = 1;
+    string sender = 2;
+    string denom_name = 3;
+    string data = 4;
+}
