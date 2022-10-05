@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v12/x/nftfactory/types"
 )
 
@@ -21,7 +22,7 @@ var _ types.MsgServer = msgServer{}
 func (server msgServer) CreateDenom(goCtx context.Context, msg *types.MsgCreateDenom) (*types.MsgCreateDenomResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	denom, err := server.Keeper.CreateDenom(ctx, msg.Id, msg.Sender, msg.DenomName, msg.Data)
+	err := server.Keeper.CreateDenom(ctx, msg.Id, msg.Sender, msg.DenomName, msg.Data)
 	if err != nil {
 		return nil, err
 	}

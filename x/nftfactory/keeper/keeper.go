@@ -28,7 +28,7 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
-		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+		// paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
 	return Keeper{

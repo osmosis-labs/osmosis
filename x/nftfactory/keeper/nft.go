@@ -6,11 +6,11 @@ import (
 )
 
 // ConvertToBaseToken converts a fee amount in a whitelisted fee token to the base fee token amount
-func (k Keeper) CreateDenom(ctx sdk.Context, denomId, senderAddr, denomName, denomData string) {
+func (k Keeper) CreateDenom(ctx sdk.Context, denomId, senderAddr, denomName, denomData string) error {
 	return k.SetDenom(ctx, types.Denom{
 		Id:        denomId,
 		Sender:    senderAddr,
 		DenomName: denomName,
-		DenomData: denomData,
+		Data:      denomData,
 	})
 }
