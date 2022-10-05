@@ -63,7 +63,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-${{ matrix.go-version }}-
       -
-        name: Run all tests
+        name: Run unit tests
         run: make test-unit
   
   e2e:

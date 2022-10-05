@@ -106,7 +106,7 @@ func (p Pool) NumAssets() int {
 }
 
 // scaledInput returns scaled input tokens for usage in AMM equations
-func (p Pool) scaleInputAmount(input sdk.Coin, roundingDirection osmomath.RoundingDirection) (osmomath.BigDec, error) {
+func (p Pool) scaleCoin(input sdk.Coin, roundingDirection osmomath.RoundingDirection) (osmomath.BigDec, error) {
 	liquidityIndexes := p.getLiquidityIndexMap()
 	scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndexes[input.Denom])
 	scaledAmount, err := osmomath.DivIntByU64ToBigDec(input.Amount, scalingFactor, roundingDirection)
@@ -118,13 +118,13 @@ func (p Pool) scaleInputAmount(input sdk.Coin, roundingDirection osmomath.Roundi
 
 // getDescaledPoolAmts gets descaled amount of given denom and amount
 // TODO: Review rounding of this in all contexts
-func (p Pool) getDescaledPoolAmt(denom string, amount osmomath.BigDec) osmomath.BigDec {
+func (p Pool) getDescaledPoolAmt(denom string, amount osmomath.BigDec) sdk.Dec {
 	liquidityIndexes := p.getLiquidityIndexMap()
 	liquidityIndex := liquidityIndexes[denom]
 
 	scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndex)
 
-	return amount.MulInt64(int64(scalingFactor))
+	return amount.MulInt64(int64(scalingFactor)).SDKDec()
 }
 
 // getLiquidityIndexMap creates a map of denoms to its index in pool liquidity

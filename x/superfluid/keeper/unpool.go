@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 
@@ -154,24 +155,15 @@ func (k Keeper) unbondSuperfluidIfExists(ctx sdk.Context, sender sdk.AccAddress,
 
 func (k Keeper) GetUnpoolAllowedPools(ctx sdk.Context) []uint64 {
 	store := ctx.KVStore(k.storeKey)
-
-	bz := store.Get(types.KeyUnpoolAllowedPools)
-	if len(bz) == 0 {
-		return []uint64{}
-	}
-
 	allowedPools := types.UnpoolWhitelistedPools{}
-	k.cdc.MustUnmarshal(bz, &allowedPools)
+	osmoutils.MustGet(store, types.KeyUnpoolAllowedPools, &allowedPools)
 	return allowedPools.Ids
 }
 
 func (k Keeper) SetUnpoolAllowedPools(ctx sdk.Context, poolIds []uint64) {
 	store := ctx.KVStore(k.storeKey)
-
 	allowedPools := types.UnpoolWhitelistedPools{
 		Ids: poolIds,
 	}
-
-	bz := k.cdc.MustMarshal(&allowedPools)
-	store.Set(types.KeyUnpoolAllowedPools, bz)
+	osmoutils.MustSet(store, types.KeyUnpoolAllowedPools, &allowedPools)
 }

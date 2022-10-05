@@ -11,6 +11,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v12/osmomath"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/test_helpers"
 	types "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
@@ -172,13 +173,6 @@ var (
 			yIn:         osmomath.NewBigDec(1),
 			expectPanic: true,
 		},
-		"yIn negative": {
-			xReserve:    osmomath.NewBigDec(100),
-			yReserve:    osmomath.NewBigDec(100),
-			remReserves: []osmomath.BigDec{},
-			yIn:         osmomath.NewBigDec(-1),
-			expectPanic: true,
-		},
 
 		// overflows
 		"xReserve near max bitlen": {
@@ -338,22 +332,6 @@ var (
 			// represents a 4-asset pool with 100 in each reserve
 			remReserves: []osmomath.BigDec{osmomath.NewBigDec(100), osmomath.NewBigDec(100)},
 			yIn:         osmomath.NewBigDec(1),
-			expectPanic: true,
-		},
-		"negative remReserve": {
-			xReserve: osmomath.NewBigDec(100),
-			yReserve: osmomath.NewBigDec(100),
-			// represents a 4-asset pool with 100 in each reserve
-			remReserves: []osmomath.BigDec{osmomath.NewBigDec(-100), osmomath.NewBigDec(100)},
-			yIn:         osmomath.NewBigDec(1),
-			expectPanic: true,
-		},
-		"negative yIn": {
-			xReserve: osmomath.NewBigDec(100),
-			yReserve: osmomath.NewBigDec(100),
-			// represents a 4-asset pool with 100 in each reserve
-			remReserves: []osmomath.BigDec{},
-			yIn:         osmomath.NewBigDec(-1),
 			expectPanic: true,
 		},
 		"input greater than pool reserves (even 4-asset pool)": {
@@ -524,13 +502,12 @@ func TestCFMMInvariantMultiAssetsBinarySearch(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// system under test
 			sut := func() {
-				uReserve := calcUReserve(test.remReserves)
 				wSumSquares := calcWSumSquares(test.remReserves)
 
 				// using multi-asset cfmm
-				k2 := cfmmConstantMulti(test.xReserve, test.yReserve, uReserve, wSumSquares)
-				xOut2 := solveCFMMBinarySearchMulti(cfmmConstantMulti)(test.xReserve, test.yReserve, uReserve, wSumSquares, test.yIn)
-				k3 := cfmmConstantMulti(test.xReserve.Sub(xOut2), test.yReserve.Add(test.yIn), uReserve, wSumSquares)
+				k2 := cfmmConstantMultiNoV(test.xReserve, test.yReserve, wSumSquares)
+				xOut2 := solveCFMMBinarySearchMulti(test.xReserve, test.yReserve, wSumSquares, test.yIn)
+				k3 := cfmmConstantMultiNoV(test.xReserve.Sub(xOut2), test.yReserve.Add(test.yIn), wSumSquares)
 				osmomath.DecApproxEq(t, k2, k3, kErrTolerance)
 			}
 
@@ -540,71 +517,48 @@ func TestCFMMInvariantMultiAssetsBinarySearch(t *testing.T) {
 }
 
 func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_InverseRelationship() {
-	// TODO: fix me
-	suite.T().Skip("TODO: fix Test_StableSwap_CalculateAmountOutAndIn_InverseRelationship")
-
 	type testcase struct {
-		denomOut         string
-		initialPoolOut   int64
-		initialWeightOut int64
-		initialCalcOut   int64
+		denomOut       string
+		initialPoolOut int64
+		initialCalcOut int64
 
-		denomIn         string
-		initialPoolIn   int64
-		initialWeightIn int64
+		denomIn       string
+		initialPoolIn int64
 	}
 
 	// For every test case in testcases, apply a swap fee in swapFeeCases.
 	testcases := []testcase{
 		{
-			denomOut:         "uosmo",
-			initialPoolOut:   1_000_000_000_000,
-			initialWeightOut: 100,
-			initialCalcOut:   100,
+			denomOut:       "uosmo",
+			initialPoolOut: 1_000_000_000,
+			initialCalcOut: 100,
 
-			denomIn:         "ion",
-			initialPoolIn:   1_000_000_000_000,
-			initialWeightIn: 100,
+			denomIn:       "ion",
+			initialPoolIn: 1_000_000_000,
 		},
 		{
-			denomOut:         "uosmo",
-			initialPoolOut:   1_000,
-			initialWeightOut: 100,
-			initialCalcOut:   100,
+			denomOut:       "uosmo",
+			initialPoolOut: 500_000,
+			initialCalcOut: 100,
 
-			denomIn:         "ion",
-			initialPoolIn:   1_000_000,
-			initialWeightIn: 100,
+			denomIn:       "ion",
+			initialPoolIn: 1_000_000,
 		},
 		{
-			denomOut:         "uosmo",
-			initialPoolOut:   1_000,
-			initialWeightOut: 100,
-			initialCalcOut:   100,
+			denomOut:       "uosmo",
+			initialPoolOut: 1_000,
+			initialCalcOut: 100,
 
-			denomIn:         "ion",
-			initialPoolIn:   1_000_000,
-			initialWeightIn: 100,
+			denomIn:       "ion",
+			initialPoolIn: 1_000_000_000,
 		},
 		{
-			denomOut:         "uosmo",
-			initialPoolOut:   1_000,
-			initialWeightOut: 200,
-			initialCalcOut:   100,
+			denomOut:       "uosmo",
+			initialPoolOut: 1_000_000_000,
+			initialCalcOut: 100,
 
-			denomIn:         "ion",
-			initialPoolIn:   1_000_000,
-			initialWeightIn: 50,
-		},
-		{
-			denomOut:         "uosmo",
-			initialPoolOut:   1_000_000,
-			initialWeightOut: 200,
-			initialCalcOut:   100000,
-
-			denomIn:         "ion",
-			initialPoolIn:   1_000_000_000,
-			initialWeightIn: 50,
+			denomIn:       "ion",
+			initialPoolIn: 1_000,
 		},
 	}
 
@@ -621,7 +575,7 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 
 	for _, tc := range testcases {
 		for _, swapFee := range swapFeeCases {
-			suite.T().Run(getTestCaseName(tc, swapFee), func(t *testing.T) {
+			suite.Run(getTestCaseName(tc, swapFee), func() {
 				ctx := suite.CreateTestContext()
 
 				poolLiquidityIn := sdk.NewInt64Coin(tc.denomOut, tc.initialPoolOut)
@@ -629,15 +583,15 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 				poolLiquidity := sdk.NewCoins(poolLiquidityIn, poolLiquidityOut)
 
 				swapFeeDec, err := sdk.NewDecFromStr(swapFee)
-				require.NoError(t, err)
+				suite.Require().NoError(err)
 
 				exitFeeDec, err := sdk.NewDecFromStr("0")
-				require.NoError(t, err)
+				suite.Require().NoError(err)
 
-				pool := createTestPool(t, poolLiquidity, swapFeeDec, exitFeeDec)
-				require.NotNil(t, pool)
-
-				suite.CalculateAmountOutAndIn_InverseRelationship(ctx, pool, poolLiquidityIn.Denom, poolLiquidityOut.Denom, tc.initialCalcOut, swapFeeDec)
+				// TODO: add scaling factors into inverse relationship tests
+				pool := createTestPool(suite.T(), poolLiquidity, swapFeeDec, exitFeeDec)
+				suite.Require().NotNil(pool)
+				test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, poolLiquidityIn.Denom, poolLiquidityOut.Denom, tc.initialCalcOut, swapFeeDec)
 			})
 		}
 	}
@@ -767,4 +721,113 @@ func calcWSumSquares(remReserves []osmomath.BigDec) osmomath.BigDec {
 		wSumSquares = wSumSquares.Add(assetReserve.Mul(assetReserve))
 	}
 	return wSumSquares
+}
+
+func TestCalcSingleAssetJoinShares(t *testing.T) {
+	type testcase struct {
+		tokenIn        sdk.Coin
+		poolAssets     sdk.Coins
+		scalingFactors []uint64
+		swapFee        sdk.Dec
+		expectedOut    sdk.Int
+	}
+
+	tests := map[string]testcase{
+		// no swap fees
+		"even two asset pool, no swap fee": {
+			tokenIn:        sdk.NewCoin("foo", sdk.NewInt(100)),
+			poolAssets:     twoEvenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			swapFee:        sdk.ZeroDec(),
+			expectedOut:    sdk.NewInt(100),
+		},
+		"uneven two asset pool, no swap fee": {
+			tokenIn:        sdk.NewCoin("foo", sdk.NewInt(100)),
+			poolAssets:     twoUnevenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			swapFee:        sdk.ZeroDec(),
+			expectedOut:    sdk.NewInt(100),
+		},
+		"even 3-asset pool, no swap fee": {
+			tokenIn:        sdk.NewCoin("asset/a", sdk.NewInt(1000)),
+			poolAssets:     threeEvenStablePoolAssets,
+			scalingFactors: defaultThreeAssetScalingFactors,
+			swapFee:        sdk.ZeroDec(),
+			expectedOut:    sdk.NewInt(1000),
+		},
+		"uneven 3-asset pool, no swap fee": {
+			tokenIn:        sdk.NewCoin("asset/a", sdk.NewInt(100)),
+			poolAssets:     threeUnevenStablePoolAssets,
+			scalingFactors: defaultThreeAssetScalingFactors,
+			swapFee:        sdk.ZeroDec(),
+			expectedOut:    sdk.NewInt(100),
+		},
+
+		// with swap fees
+		"even two asset pool, default swap fee": {
+			tokenIn:        sdk.NewCoin("foo", sdk.NewInt(100)),
+			poolAssets:     twoEvenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			swapFee:        defaultSwapFee,
+			expectedOut:    sdk.NewInt(100 - 3),
+		},
+		"uneven two asset pool, default swap fee": {
+			tokenIn:        sdk.NewCoin("foo", sdk.NewInt(100)),
+			poolAssets:     twoUnevenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			swapFee:        defaultSwapFee,
+			expectedOut:    sdk.NewInt(100 - 3),
+		},
+		"even 3-asset pool, default swap fee": {
+			tokenIn:        sdk.NewCoin("asset/a", sdk.NewInt(100)),
+			poolAssets:     threeEvenStablePoolAssets,
+			scalingFactors: defaultThreeAssetScalingFactors,
+			swapFee:        defaultSwapFee,
+			expectedOut:    sdk.NewInt(100 - 3),
+		},
+		"uneven 3-asset pool, default swap fee": {
+			tokenIn:        sdk.NewCoin("asset/a", sdk.NewInt(100)),
+			poolAssets:     threeUnevenStablePoolAssets,
+			scalingFactors: defaultThreeAssetScalingFactors,
+			swapFee:        defaultSwapFee,
+			expectedOut:    sdk.NewInt(100 - 3),
+		},
+		"even 3-asset pool, 0.03 swap fee": {
+			tokenIn:        sdk.NewCoin("asset/a", sdk.NewInt(100)),
+			poolAssets:     threeEvenStablePoolAssets,
+			scalingFactors: defaultThreeAssetScalingFactors,
+			swapFee:        sdk.MustNewDecFromStr("0.03"),
+			expectedOut:    sdk.NewInt(100 - 3),
+		},
+		"uneven 3-asset pool, 0.03 swap fee": {
+			tokenIn:        sdk.NewCoin("asset/a", sdk.NewInt(100)),
+			poolAssets:     threeUnevenStablePoolAssets,
+			scalingFactors: defaultThreeAssetScalingFactors,
+			swapFee:        sdk.MustNewDecFromStr("0.03"),
+			expectedOut:    sdk.NewInt(100 - 3),
+		},
+
+		// TODO: increase BigDec precision further to be able to accommodate 5-asset pool tests
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := sdk.Context{}
+			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
+
+			shares, err := p.calcSingleAssetJoinShares(tc.tokenIn, tc.swapFee)
+			require.NoError(t, err, "test: %s", name)
+
+			p.updatePoolLiquidityForExit(sdk.Coins{tc.tokenIn})
+			exitTokens, err := p.ExitPool(ctx, shares, sdk.ZeroDec())
+			require.NoError(t, err, "test: %s", name)
+
+			// since each asset swap can have up to sdk.OneInt() error, our expected error bound is 1*numAssets
+			correctnessThreshold := sdk.OneInt().Mul(sdk.NewInt(int64(len(p.PoolLiquidity))))
+
+			tokenOutAmount, err := cfmm_common.SwapAllCoinsToSingleAsset(&p, ctx, exitTokens, tc.tokenIn.Denom)
+			require.True(t, tokenOutAmount.LTE(tc.tokenIn.Amount))
+			require.True(t, tc.expectedOut.Sub(tokenOutAmount).Abs().LTE(correctnessThreshold))
+		})
+	}
 }
