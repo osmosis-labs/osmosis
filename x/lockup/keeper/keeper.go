@@ -7,7 +7,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -23,7 +22,7 @@ type Keeper struct {
 }
 
 // NewKeeper returns an instance of Keeper.
-func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper, ck types.CommunityPoolKeeper) *Keeper {
+func NewKeeper(storeKey sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper, ck types.CommunityPoolKeeper) *Keeper {
 	return &Keeper{
 		storeKey: storeKey,
 		ak:       ak,
