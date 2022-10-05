@@ -4,9 +4,12 @@ import (
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 )
 
-type SudoMsg struct {
+type BlockBeforeSendSudoMsg struct {
+	BlockBeforeSend BlockBeforeSendMsg `json:"block_before_send,omitempty"`
+}
+
+type TrackBeforeSendSudoMsg struct {
 	TrackBeforeSend TrackBeforeSendMsg `json:"track_before_send"`
-	BlockBeforeSend BlockBeforeSendMsg `json:"block_before_send"`
 }
 
 type TrackBeforeSendMsg struct {

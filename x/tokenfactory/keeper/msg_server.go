@@ -5,6 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
 )
 
@@ -95,6 +97,12 @@ func (server msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.
 		msg.BurnFromAddress = msg.Sender
 	}
 
+	accountI := server.Keeper.accountKeeper.GetAccount(ctx, sdk.AccAddress(msg.BurnFromAddress))
+	_, ok := accountI.(authtypes.ModuleAccountI)
+	if ok {
+		return nil, types.ErrBurnFromModuleAccount
+	}
+
 	err = server.Keeper.burnFrom(ctx, msg.Amount, msg.BurnFromAddress)
 	if err != nil {
 		return nil, err
@@ -130,9 +138,9 @@ func (server msgServer) SetBeforeSendListener(goCtx context.Context, msg *types.
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.TypeMsgSetBeforeSendHook,
+			types.TypeMsgSetBeforeSendListener,
 			sdk.NewAttribute(types.AttributeDenom, msg.GetDenom()),
-			sdk.NewAttribute(types.AttributeBeforeSendHookAddress, msg.GetCosmwasmAddress()),
+			sdk.NewAttribute(types.AttributeBeforeSendListenerAddress, msg.GetCosmwasmAddress()),
 		),
 	})
 

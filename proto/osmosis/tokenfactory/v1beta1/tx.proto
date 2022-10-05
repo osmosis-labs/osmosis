@@ -92,7 +92,7 @@ message MsgSetBeforeSendListener {
 }
 
 // MsgSetBeforeSendListenerResponse defines the response structure for an
-// executed MsgSetBeforeSendHook message.
+// executed MsgSetBeforeSendListener message.
 message MsgSetBeforeSendListenerResponse {}
 
 // message MsgForceTransfer {

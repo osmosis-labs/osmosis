@@ -157,6 +157,9 @@ func (suite *KeeperTestSuite) TestBurnDenom() {
 		balances[acc.String()] = 1000
 	}
 
+	// save sample module account address for testing
+	moduleAdress := suite.App.AccountKeeper.GetModuleAddress("developer_vesting_unvested")
+
 	for _, tc := range []struct {
 		desc       string
 		burnMsg    types.MsgBurn
@@ -203,6 +206,15 @@ func (suite *KeeperTestSuite) TestBurnDenom() {
 				suite.TestAccs[1].String(),
 			),
 			expectPass: true,
+		},
+		{
+			desc: "fail case - burn from module account",
+			burnMsg: *types.NewMsgBurnFrom(
+				suite.TestAccs[0].String(),
+				sdk.NewInt64Coin(suite.defaultDenom, 10),
+				moduleAdress.String(),
+			),
+			expectPass: false,
 		},
 	} {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
