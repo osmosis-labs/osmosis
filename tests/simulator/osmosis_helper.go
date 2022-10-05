@@ -31,8 +31,8 @@ func OsmosisAppCreator(logger log.Logger, db db.DB) simtypes.AppCreator {
 }
 
 var OsmosisInitFns = simexec.InitFunctions{
-	RandomAccountFn:   simexec.WrapRandAccFnForResampling(simulation.RandomAccounts, app.ModuleAccountAddrs()),
-	AppInitialStateFn: AppStateFn(),
+	RandomAccountFn: simexec.WrapRandAccFnForResampling(simulation.RandomAccounts, app.ModuleAccountAddrs()),
+	InitChainFn:     InitChainFn(),
 }
 
 // EmptyAppOptions is a stub implementing AppOptions

@@ -11,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -168,6 +167,11 @@ func orderBeginBlockers(allModuleNames []string) []string {
 // OrderEndBlockers returns EndBlockers (crisis, govtypes, staking) with no relative order.
 func OrderEndBlockers(allModuleNames []string) []string {
 	ord := partialord.NewPartialOrdering(allModuleNames)
+
+	// Staking must be after gov.
+	ord.FirstElements(govtypes.ModuleName)
+	ord.LastElements(stakingtypes.ModuleName)
+
 	// only Osmosis modules with endblock code are: twap, crisis, govtypes, staking
 	// we don't care about the relative ordering between them.
 	return ord.TotalOrdering()
@@ -211,22 +215,6 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		// wasm after ibc transfer
 		wasm.ModuleName,
 	}
-}
-
-// createSimulationManager returns a simulation manager
-// must be ran after modulemanager.SetInitGenesisOrder
-func createSimulationManager(
-	app *OsmosisApp,
-	encodingConfig appparams.EncodingConfig,
-	skipGenesisInvariants bool,
-) *simtypes.Manager {
-	appCodec := encodingConfig.Marshaler
-
-	overrideModules := map[string]module.AppModuleSimulation{
-		authtypes.ModuleName: auth.NewAppModule(appCodec, *app.AccountKeeper, authsims.RandomGenesisAccounts),
-	}
-	simulationManager := simtypes.NewSimulationManager(*app.mm, overrideModules)
-	return &simulationManager
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.
