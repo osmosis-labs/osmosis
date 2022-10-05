@@ -29,7 +29,7 @@ var (
 	DenomsPrefixKey                    = "denoms"
 	CreatorPrefixKey                   = "creator"
 	AdminPrefixKey                     = "admin"
-	BeforeSendListenerAddressPrefixKey = "beforesendlistner"
+	BeforeSendListenerAddressPrefixKey = "beforesendlistener"
 )
 
 // GetDenomPrefixStore returns the store prefix where all the data associated with a specific denom

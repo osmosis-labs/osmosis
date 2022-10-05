@@ -96,26 +96,28 @@ func (k Keeper) callBeforeSendListener(ctx sdk.Context, wasmKeeper wasmKeeper.Ke
 				return err
 			}
 
-			var msg types.SudoMsg
+			var msgBz []byte
+
+			// get msgBz, either BlockBeforeSend or TrackBeforeSend
 			if blockBeforeSend {
-				msg = types.SudoMsg{
+				msg := types.BlockBeforeSendSudoMsg{
 					BlockBeforeSend: types.BlockBeforeSendMsg{
 						From:   from.String(),
 						To:     to.String(),
 						Amount: CWCoinFromSDKCoin(coin),
 					},
 				}
+				msgBz, err = json.Marshal(msg)
 			} else {
-				msg = types.SudoMsg{
+				msg := types.TrackBeforeSendSudoMsg{
 					TrackBeforeSend: types.TrackBeforeSendMsg{
 						From:   from.String(),
 						To:     to.String(),
 						Amount: CWCoinFromSDKCoin(coin),
 					},
 				}
+				msgBz, err = json.Marshal(msg)
 			}
-
-			msgBz, err := json.Marshal(msg)
 			if err != nil {
 				return err
 			}

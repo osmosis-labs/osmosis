@@ -13,5 +13,5 @@ const (
 	AttributeDenom                     = "denom"
 	AttributeNewAdmin                  = "new_admin"
 	AttributeDenomMetadata             = "denom_metadata"
-	AttributeBeforeSendListenerAddress = "before_send_listner_address"
+	AttributeBeforeSendListenerAddress = "before_send_listener_address"
 )

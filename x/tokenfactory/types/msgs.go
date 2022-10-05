@@ -14,7 +14,7 @@ const (
 	TypeMsgForceTransfer         = "force_transfer"
 	TypeMsgChangeAdmin           = "change_admin"
 	TypeMsgSetDenomMetadata      = "set_denom_metadata"
-	TypeMsgSetBeforeSendListener = "set_before_send_listner"
+	TypeMsgSetBeforeSendListener = "set_before_send_listener"
 )
 
 var _ sdk.Msg = &MsgCreateDenom{}
@@ -266,7 +266,7 @@ func (m MsgSetDenomMetadata) GetSigners() []sdk.AccAddress {
 
 var _ sdk.Msg = &MsgSetBeforeSendListener{}
 
-// NewMsgSetBeforeSendListner creates a message to set a new before send hook
+// NewMsgSetBeforeSendListener creates a message to set a new before send hook
 func NewMsgSetBeforeSendListener(sender string, denom string, cosmwasmAddress string) *MsgSetBeforeSendListener {
 	return &MsgSetBeforeSendListener{
 		Sender:          sender,

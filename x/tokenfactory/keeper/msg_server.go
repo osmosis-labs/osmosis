@@ -5,6 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
 )
 
@@ -93,6 +95,12 @@ func (server msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.
 
 	if msg.BurnFromAddress == "" {
 		msg.BurnFromAddress = msg.Sender
+	}
+
+	accountI := server.Keeper.accountKeeper.GetAccount(ctx, sdk.AccAddress(msg.BurnFromAddress))
+	_, ok := accountI.(authtypes.ModuleAccountI)
+	if ok {
+		return nil, types.ErrBurnFromModuleAccount
 	}
 
 	err = server.Keeper.burnFrom(ctx, msg.Amount, msg.BurnFromAddress)
