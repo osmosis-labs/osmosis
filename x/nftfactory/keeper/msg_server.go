@@ -8,13 +8,15 @@ import (
 )
 
 type msgServer struct {
-	Keeper
+	keeper *Keeper
 }
 
 // NewMsgServerImpl returns an implementation of the MsgServer interface
 // for the provided Keeper.
-func NewMsgServerImpl(keeper Keeper) types.MsgServer {
-	return &msgServer{Keeper: keeper}
+func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
+	return &msgServer{
+		keeper: keeper,
+	}
 }
 
 var _ types.MsgServer = msgServer{}
@@ -22,7 +24,7 @@ var _ types.MsgServer = msgServer{}
 func (server msgServer) CreateDenom(goCtx context.Context, msg *types.MsgCreateDenom) (*types.MsgCreateDenomResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	err := server.Keeper.CreateDenom(ctx, msg.Id, msg.Sender, msg.DenomName, msg.Data)
+	err := server.keeper.CreateDenom(ctx, msg.Id, msg.Sender, msg.DenomName, msg.Data)
 	if err != nil {
 		return nil, err
 	}

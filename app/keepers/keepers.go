@@ -59,6 +59,8 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 	mintkeeper "github.com/osmosis-labs/osmosis/v12/x/mint/keeper"
 	minttypes "github.com/osmosis-labs/osmosis/v12/x/mint/types"
+	nftfactorykeeper "github.com/osmosis-labs/osmosis/v12/x/nftfactory/keeper"
+	nftfactorytypes "github.com/osmosis-labs/osmosis/v12/x/nftfactory/types"
 	poolincentives "github.com/osmosis-labs/osmosis/v12/x/pool-incentives"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v12/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v12/x/pool-incentives/types"
@@ -111,6 +113,7 @@ type AppKeepers struct {
 	GovKeeper            *govkeeper.Keeper
 	WasmKeeper           *wasm.Keeper
 	TokenFactoryKeeper   *tokenfactorykeeper.Keeper
+	NftFactoryKeeper     *nftfactorykeeper.Keeper
 	// IBC modules
 	// transfer module
 	TransferModule transfer.AppModule
@@ -316,6 +319,14 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.TokenFactoryKeeper = &tokenFactoryKeeper
 
+	nftFactoryKeeper := nftfactorykeeper.NewKeeper(
+		appKeepers.keys[nftfactorytypes.StoreKey],
+		appKeepers.GetSubspace(nftfactorytypes.ModuleName),
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+	)
+	appKeepers.NftFactoryKeeper = &nftFactoryKeeper
+
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
 	supportedFeatures := "iterator,staking,stargate,osmosis"
@@ -435,6 +446,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
+	paramsKeeper.Subspace(nftfactorytypes.ModuleName)
 	paramsKeeper.Subspace(twaptypes.ModuleName)
 
 	return paramsKeeper
@@ -529,5 +541,6 @@ func KVStoreKeys() []string {
 		superfluidtypes.StoreKey,
 		wasm.StoreKey,
 		tokenfactorytypes.StoreKey,
+		nftfactorytypes.StoreKey,
 	}
 }

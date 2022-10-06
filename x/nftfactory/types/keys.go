@@ -2,7 +2,7 @@ package types
 
 const (
 	// ModuleName is the name of the module
-	ModuleName = "nft"
+	ModuleName = "nftfactory"
 
 	// StoreKey is the default store key for NFT
 	StoreKey = ModuleName
