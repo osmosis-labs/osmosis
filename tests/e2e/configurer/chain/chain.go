@@ -29,6 +29,8 @@ type Config struct {
 	LatestLockNumber     int
 	NodeConfigs          []*NodeConfig
 
+	LatestCodeId int
+
 	t                *testing.T
 	containerManager *containers.Manager
 }
@@ -150,7 +152,7 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 			if ibcCoin.Len() == 1 {
 				tokenPre := balancesDstPre.AmountOfNoDenomValidation(ibcCoin[0].Denom)
 				tokenPost := balancesDstPost.AmountOfNoDenomValidation(ibcCoin[0].Denom)
-				resPre := initialization.OsmoToken.Amount
+				resPre := token.Amount
 				resPost := tokenPost.Sub(tokenPre)
 				return resPost.Uint64() == resPre.Uint64()
 			} else {
