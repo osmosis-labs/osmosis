@@ -23,6 +23,8 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
 	"github.com/osmosis-labs/osmosis/v10/app"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
@@ -32,6 +34,8 @@ import (
 
 type KeeperTestHelper struct {
 	suite.Suite
+
+	contractKeeper wasmtypes.ContractOpsKeeper
 
 	App         *app.OsmosisApp
 	Ctx         sdk.Context

@@ -345,3 +345,56 @@ func (suite *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
 	suite.Require().Len(gauges, 1)
 	suite.Require().Equal(gauges[0].String(), expectedGauge.String())
 }
+
+// TestTokenFactoryHook tests if errors from the token factory listner are handled correctly.
+// Hooks in the token factory module are eligible to block sends of cretain token factory denoms.
+// Here we test that such constraints does not effect the Distribution logic.
+func (suite *KeeperTestSuite) TestTokenFactoryHookonDistribute() {
+	userLockFunc := func(denom string) []userLocks {
+		return []userLocks{
+			{
+				lockDurations: []time.Duration{time.Minute},
+				lockAmounts:   []sdk.Coins{{sdk.NewInt64Coin(denom, 100)}},
+			},
+		}
+	}
+
+	gaugeFunc := func(denom string) []perpGaugeDesc {
+		return []perpGaugeDesc{
+			{
+				lockDenom:    denom,
+				lockDuration: time.Second,
+				rewardAmount: sdk.Coins{sdk.NewInt64Coin(denom, 100)},
+			},
+		}
+	}
+
+	suite.SetupTest()
+
+	// fund some base denom
+	suite.FundAcc(suite.TestAccs[0], sdk.Coins{sdk.NewInt64Coin("uosmo", 100000000000)})
+	tokenFactoryDenom := "factory/" + suite.TestAccs[0].String() + "/tokenfactorydenom"
+
+	defaultGauges := gaugeFunc(tokenFactoryDenom)
+	deafultLocks := userLockFunc(tokenFactoryDenom)
+	gauges := suite.SetupGauges(defaultGauges, tokenFactoryDenom)
+	addrs := suite.SetupUserLocks(deafultLocks)
+
+	// set token factory listener hook for bank send
+	newDenom := suite.SetBasicTokenFactoryDenom()
+	suite.SetBasicTokenFacotryListener(newDenom)
+
+	// test and ensure that sending 100 amount of token factory denoms would error
+	err := suite.App.BankKeeper.SendCoins(suite.Ctx, suite.TestAccs[0], suite.TestAccs[1], sdk.Coins{sdk.NewInt64Coin(tokenFactoryDenom, 100)})
+	suite.Require().Error(err)
+
+	// now distribute tokenfactory denoms as gauge rewards
+	// errors should be surpressed, as we surpress errors from token factory denom sends in the distribution logic
+	_, err = suite.App.IncentivesKeeper.Distribute(suite.Ctx, gauges)
+	suite.Require().NoError(err)
+
+	for _, addr := range addrs {
+		bal := suite.App.BankKeeper.GetAllBalances(suite.Ctx, addr)
+		suite.Require().True(bal.IsZero())
+	}
+}

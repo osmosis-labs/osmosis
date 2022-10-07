@@ -218,6 +218,41 @@ func (suite *KeeperTestSuite) TestUnlock() {
 	}
 }
 
+// TestTokenFactoryHookOnUnlock tests that we correctly handle and surpress that could be caused from
+// token factory listner.
+func (suite *KeeperTestSuite) TestTokenFactoryHookOnUnlock() {
+	suite.SetupTest()
+
+	tokenFactoryDenom := suite.SetBasicTokenFactoryDenom()
+
+	nonTokenFactoryCoin := sdk.NewInt64Coin("foo", 1000)
+	suite.FundAcc(suite.TestAccs[0], sdk.Coins{nonTokenFactoryCoin})
+	initialLockCoins := sdk.Coins{sdk.NewInt64Coin(tokenFactoryDenom, 100), nonTokenFactoryCoin}
+
+	lock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, suite.TestAccs[0], initialLockCoins, time.Second)
+	suite.Require().NoError(err)
+
+	// set token factory hook, a listner that would error whenever sending 100 amount of token factory denom
+	suite.SetBasicTokenFacotryListener(tokenFactoryDenom)
+
+	// test and ensure that sending 100 amount of token factory denoms would error
+	err = suite.App.BankKeeper.SendCoins(suite.Ctx, suite.TestAccs[0], suite.TestAccs[1], sdk.Coins{sdk.NewInt64Coin(tokenFactoryDenom, 100)})
+	suite.Require().Error(err)
+
+	err = suite.App.LockupKeeper.BeginUnlock(suite.Ctx, lock.ID, initialLockCoins)
+	suite.Require().NoError(err)
+
+	suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(time.Second * 2))
+
+	// error for tokenfactory denoms are to be surpressed
+	err = suite.App.LockupKeeper.UnlockMaturedLock(suite.Ctx, lock.ID)
+	suite.Require().NoError(err)
+
+	// coins should not have been unlocked, they should remain as account unlockable coins
+	accountUnlockableCoins := suite.App.LockupKeeper.GetAccountUnlockableCoins(suite.Ctx, suite.TestAccs[0])
+	suite.Require().Equal(initialLockCoins, accountUnlockableCoins)
+}
+
 func (suite *KeeperTestSuite) TestModuleLockedCoins() {
 	suite.SetupTest()
 

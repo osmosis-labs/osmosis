@@ -6,9 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -20,30 +17,16 @@ import (
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
 
-	queryClient    types.QueryClient
-	msgServer      types.MsgServer
-	contractKeeper wasmtypes.ContractOpsKeeper
-	bankMsgServer  banktypes.MsgServer
+	queryClient types.QueryClient
+	msgServer   types.MsgServer
+	// contractKeeper wasmtypes.ContractOpsKeeper
+	bankMsgServer banktypes.MsgServer
 	// defaultDenom is on the suite, as it depends on the creator test address.
 	defaultDenom string
 }
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
-}
-
-type SudoAuthorizationPolicy struct{}
-
-func (p SudoAuthorizationPolicy) CanCreateCode(config wasmtypes.AccessConfig, actor sdk.AccAddress) bool {
-	return true
-}
-
-func (p SudoAuthorizationPolicy) CanInstantiateContract(config wasmtypes.AccessConfig, actor sdk.AccAddress) bool {
-	return true
-}
-
-func (p SudoAuthorizationPolicy) CanModifyContract(admin, actor sdk.AccAddress) bool {
-	return true
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -56,8 +39,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	}
 
 	suite.SetupTokenFactory()
-
-	suite.contractKeeper = wasmkeeper.NewPermissionedKeeper(suite.App.WasmKeeper, SudoAuthorizationPolicy{})
 
 	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
 	suite.msgServer = keeper.NewMsgServerImpl(*suite.App.TokenFactoryKeeper)

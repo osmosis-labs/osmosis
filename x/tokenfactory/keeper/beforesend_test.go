@@ -2,11 +2,8 @@ package keeper_test
 
 import (
 	"fmt"
-	"io/ioutil"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -24,8 +21,7 @@ func (suite *KeeperTestSuite) TestBeforeSendListener() {
 		sendMsgs []SendMsgTestCase
 	}{
 		{
-			desc:     "should not allow sending 100 amount of *any* denom",
-			wasmFile: "./testdata/no100.wasm",
+			desc: "should not allow sending 100 amount of *any* denom",
 			sendMsgs: []SendMsgTestCase{
 				{
 					desc: "sending 1 of factorydenom should not error",
@@ -61,7 +57,7 @@ func (suite *KeeperTestSuite) TestBeforeSendListener() {
 					expectPass: false,
 				},
 				{
-					desc: "sending 100 of factorydenom should not work",
+					desc: "sending 100 of factorydenom should work",
 					msg: func(factorydenom string) *banktypes.MsgSend {
 						return banktypes.NewMsgSend(
 							suite.TestAccs[0],
@@ -69,7 +65,7 @@ func (suite *KeeperTestSuite) TestBeforeSendListener() {
 							sdk.NewCoins(sdk.NewInt64Coin("foo", 100)),
 						)
 					},
-					expectPass: false,
+					expectPass: true,
 				},
 				{
 					desc: "having 100 coin within coins should not work",
@@ -89,31 +85,14 @@ func (suite *KeeperTestSuite) TestBeforeSendListener() {
 			// setup test
 			suite.SetupTest()
 
-			// upload and instantiate wasm code
-			wasmCode, err := ioutil.ReadFile(tc.wasmFile)
-			suite.Require().NoError(err, "test: %v", tc.desc)
-			codeID, err := suite.contractKeeper.Create(suite.Ctx, suite.TestAccs[0], wasmCode, nil)
-			suite.Require().NoError(err, "test: %v", tc.desc)
-			cosmwasmAddress, _, err := suite.contractKeeper.Instantiate(suite.Ctx, codeID, suite.TestAccs[0], suite.TestAccs[0], []byte("{}"), "", sdk.NewCoins())
-			suite.Require().NoError(err, "test: %v", tc.desc)
+			suite.FundAcc(suite.TestAccs[0], sdk.Coins{sdk.NewInt64Coin("foo", 100000000000)})
 
-			// create new denom
-			res, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
-			suite.Require().NoError(err, "test: %v", tc.desc)
-			denom := res.GetNewTokenDenom()
-
-			// mint enough coins to the creator
-			_, err = suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), types.NewMsgMint(suite.TestAccs[0].String(), sdk.NewInt64Coin(denom, 1000000000)))
-			suite.Require().NoError(err)
-			// mint some non token factory denom coins for testing
-			suite.FundAcc(sdk.AccAddress(suite.TestAccs[0].String()), sdk.Coins{sdk.NewInt64Coin("foo", 100000000000)})
-
-			// set beforesend hook to the new denom
-			_, err = suite.msgServer.SetBeforeSendListener(sdk.WrapSDKContext(suite.Ctx), types.NewMsgSetBeforeSendListener(suite.TestAccs[0].String(), denom, cosmwasmAddress.String()))
-			suite.Require().NoError(err, "test: %v", tc.desc)
+			// set basic token factory listener
+			tokenFactoryDenom := suite.SetBasicTokenFactoryDenom()
+			suite.SetBasicTokenFacotryListener(tokenFactoryDenom)
 
 			for _, sendTc := range tc.sendMsgs {
-				_, err := suite.bankMsgServer.Send(sdk.WrapSDKContext(suite.Ctx), sendTc.msg(denom))
+				_, err := suite.bankMsgServer.Send(sdk.WrapSDKContext(suite.Ctx), sendTc.msg(tokenFactoryDenom))
 				if sendTc.expectPass {
 					suite.Require().NoError(err, "test: %v", sendTc.desc)
 				} else {
