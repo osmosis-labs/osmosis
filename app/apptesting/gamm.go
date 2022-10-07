@@ -169,27 +169,3 @@ func (s *KeeperTestHelper) RunBasicJoin(poolId uint64) {
 	_, err = gammMsgServer.JoinPool(sdk.WrapSDKContext(s.Ctx), &msg)
 	s.Require().NoError(err)
 }
-
-func (s *KeeperTestHelper) RunCustomSwap(poolId uint64, tokenIn sdk.Coin) {
-	denoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, poolId)
-	s.Require().NoError(err)
-
-	var outDenom string
-	if denoms[0] != tokenIn.Denom {
-		outDenom = denoms[0]
-	} else {
-		outDenom = denoms[1]
-	}
-	s.FundAcc(s.TestAccs[0], sdk.Coins{tokenIn})
-
-	msg := gammtypes.MsgSwapExactAmountIn{
-		Sender:            s.TestAccs[0].String(),
-		Routes:            []gammtypes.SwapAmountInRoute{{PoolId: poolId, TokenOutDenom: outDenom}},
-		TokenIn:           tokenIn,
-		TokenOutMinAmount: sdk.ZeroInt(),
-	}
-
-	gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
-	_, err = gammMsgServer.SwapExactAmountIn(sdk.WrapSDKContext(s.Ctx), &msg)
-	s.Require().NoError(err)
-}
