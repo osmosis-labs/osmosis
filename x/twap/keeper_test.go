@@ -33,7 +33,7 @@ var (
 type TestSuite struct {
 	apptesting.KeeperTestHelper
 	twapkeeper *twap.Keeper
-	querier grpc.Querier
+	querier    grpc.Querier
 }
 
 func TestSuiteRun(t *testing.T) {

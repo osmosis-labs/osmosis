@@ -12,18 +12,18 @@ func (s *TestSuite) TestGetArithmeticTwap_Query() {
 	tests := map[string]struct {
 		recordsToSet []types.TwapRecord
 		ctxTime      time.Time
-		request 	 queryproto.ArithmeticTwapRequest
+		request      queryproto.ArithmeticTwapRequest
 		expResponse  queryproto.ArithmeticTwapResponse
-		expErr		 bool
+		expErr       bool
 	}{
 		"Start and end point to same record, no err": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      tPlusOneMin,
 			request: queryproto.ArithmeticTwapRequest{
-				PoolId: baseRecord.PoolId,
-				StartTime: baseTime,
-				EndTime: &tPlusOne,
-				BaseAsset: denom1,
+				PoolId:     baseRecord.PoolId,
+				StartTime:  baseTime,
+				EndTime:    &tPlusOne,
+				BaseAsset:  denom1,
 				QuoteAsset: denom0,
 			},
 			expResponse: queryproto.ArithmeticTwapResponse{ArithmeticTwap: sdk.NewDec(10)},
@@ -32,16 +32,15 @@ func (s *TestSuite) TestGetArithmeticTwap_Query() {
 			recordsToSet: []types.TwapRecord{withLastErrTime(baseRecord, tPlusOne)},
 			ctxTime:      tPlusOneMin,
 			request: queryproto.ArithmeticTwapRequest{
-				PoolId: baseRecord.PoolId,
-				StartTime: baseTime,
-				EndTime: &tPlusOne,
-				BaseAsset: denom1,
+				PoolId:     baseRecord.PoolId,
+				StartTime:  baseTime,
+				EndTime:    &tPlusOne,
+				BaseAsset:  denom1,
 				QuoteAsset: denom0,
 			},
 			expResponse: queryproto.ArithmeticTwapResponse{ArithmeticTwap: sdk.NewDec(10), IsResponseUnstable: true},
-			expErr: true,
+			expErr:      true,
 		},
-		
 	}
 	for name, test := range tests {
 		s.Run(name, func() {
@@ -61,17 +60,17 @@ func (s *TestSuite) TestGetArithmeticTwapToNow_Query() {
 	tests := map[string]struct {
 		recordsToSet []types.TwapRecord
 		ctxTime      time.Time
-		request 	 queryproto.ArithmeticTwapToNowRequest
+		request      queryproto.ArithmeticTwapToNowRequest
 		expResponse  queryproto.ArithmeticTwapToNowResponse
-		expErr		 bool
+		expErr       bool
 	}{
 		"Start time = record time, no err": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      tPlusOneMin,
 			request: queryproto.ArithmeticTwapToNowRequest{
-				PoolId: baseRecord.PoolId,
-				StartTime: baseTime,
-				BaseAsset: denom1,
+				PoolId:     baseRecord.PoolId,
+				StartTime:  baseTime,
+				BaseAsset:  denom1,
 				QuoteAsset: denom0,
 			},
 			expResponse: queryproto.ArithmeticTwapToNowResponse{ArithmeticTwap: sdk.NewDec(10)},
@@ -80,15 +79,14 @@ func (s *TestSuite) TestGetArithmeticTwapToNow_Query() {
 			recordsToSet: []types.TwapRecord{withLastErrTime(baseRecord, tPlusOne)},
 			ctxTime:      tPlusOneMin,
 			request: queryproto.ArithmeticTwapToNowRequest{
-				PoolId: baseRecord.PoolId,
-				StartTime: baseTime,
-				BaseAsset: denom1,
+				PoolId:     baseRecord.PoolId,
+				StartTime:  baseTime,
+				BaseAsset:  denom1,
 				QuoteAsset: denom0,
 			},
 			expResponse: queryproto.ArithmeticTwapToNowResponse{ArithmeticTwap: sdk.NewDec(10), IsResponseUnstable: true},
-			expErr: true,
+			expErr:      true,
 		},
-		
 	}
 	for name, test := range tests {
 		s.Run(name, func() {
@@ -103,4 +101,3 @@ func (s *TestSuite) TestGetArithmeticTwapToNow_Query() {
 		})
 	}
 }
-
