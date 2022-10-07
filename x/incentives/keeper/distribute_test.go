@@ -364,7 +364,7 @@ func (suite *KeeperTestSuite) TestTokenFactoryHookonDistribute() {
 			{
 				lockDenom:    denom,
 				lockDuration: time.Second,
-				rewardAmount: sdk.Coins{sdk.NewInt64Coin(denom, 100)},
+				rewardAmount: sdk.Coins{sdk.NewInt64Coin(denom, 100), sdk.NewInt64Coin("uosmo", 10000)},
 			},
 		}
 	}
@@ -373,7 +373,7 @@ func (suite *KeeperTestSuite) TestTokenFactoryHookonDistribute() {
 
 	// fund some base denom
 	suite.FundAcc(suite.TestAccs[0], sdk.Coins{sdk.NewInt64Coin("uosmo", 100000000000)})
-	tokenFactoryDenom := "factory/" + suite.TestAccs[0].String() + "/tokenfactorydenom"
+	tokenFactoryDenom := suite.SetBasicTokenFactoryDenom()
 
 	defaultGauges := gaugeFunc(tokenFactoryDenom)
 	deafultLocks := userLockFunc(tokenFactoryDenom)
@@ -381,8 +381,7 @@ func (suite *KeeperTestSuite) TestTokenFactoryHookonDistribute() {
 	addrs := suite.SetupUserLocks(deafultLocks)
 
 	// set token factory listener hook for bank send
-	newDenom := suite.SetBasicTokenFactoryDenom()
-	suite.SetBasicTokenFacotryListener(newDenom)
+	suite.SetBasicTokenFacotryListener(tokenFactoryDenom)
 
 	// test and ensure that sending 100 amount of token factory denoms would error
 	err := suite.App.BankKeeper.SendCoins(suite.Ctx, suite.TestAccs[0], suite.TestAccs[1], sdk.Coins{sdk.NewInt64Coin(tokenFactoryDenom, 100)})

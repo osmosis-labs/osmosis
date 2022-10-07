@@ -33,6 +33,13 @@ func GetTokenDenom(creator, subdenom string) (string, error) {
 	if strings.Contains(creator, "/") {
 		return "", ErrInvalidCreator
 	}
+	if strings.Contains(subdenom, "superbonding") {
+		return "", ErrSubdenomReserved
+	}
+	if strings.Contains(subdenom, "superunbonding") {
+		return "", ErrSubdenomReserved
+	}
+
 	denom := strings.Join([]string{ModuleDenomPrefix, creator, subdenom}, "/")
 	return denom, sdk.ValidateDenom(denom)
 }

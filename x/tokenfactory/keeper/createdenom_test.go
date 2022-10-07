@@ -69,6 +69,11 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 			valid:    false,
 		},
 		{
+			desc:     "reserved invalid subdenom",
+			subdenom: "superbonding",
+			valid:    false,
+		},
+		{
 			desc: "subdenom and creator pair already exists",
 			setup: func() {
 				_, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))

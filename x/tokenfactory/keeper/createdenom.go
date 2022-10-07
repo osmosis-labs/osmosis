@@ -11,12 +11,12 @@ import (
 
 // ConvertToBaseToken converts a fee amount in a whitelisted fee token to the base fee token amount
 func (k Keeper) CreateDenom(ctx sdk.Context, creatorAddr string, subdenom string) (newTokenDenom string, err error) {
-	err = k.chargeForCreateDenom(ctx, creatorAddr, subdenom)
+	denom, err := k.validateCreateDenom(ctx, creatorAddr, subdenom)
 	if err != nil {
 		return "", err
 	}
 
-	denom, err := k.validateCreateDenom(ctx, creatorAddr, subdenom)
+	err = k.chargeForCreateDenom(ctx, creatorAddr, subdenom)
 	if err != nil {
 		return "", err
 	}

@@ -20,4 +20,5 @@ var (
 	ErrCreatorTooLong           = sdkerrors.Register(ModuleName, 9, fmt.Sprintf("creator too long, max length is %d bytes", MaxCreatorLength))
 	ErrDenomDoesNotExist        = sdkerrors.Register(ModuleName, 10, "denom does not exist")
 	ErrBurnFromModuleAccount    = sdkerrors.Register(ModuleName, 11, "burning from Module Account is not allowed")
+	ErrSubdenomReserved         = sdkerrors.Register(ModuleName, 12, "sub denom reserved for internal usage")
 )
