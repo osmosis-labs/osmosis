@@ -11,6 +11,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v12/x/twap"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/client"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/client/grpc"
 	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
 )
 
@@ -31,6 +33,7 @@ var (
 type TestSuite struct {
 	apptesting.KeeperTestHelper
 	twapkeeper *twap.Keeper
+	querier grpc.Querier
 }
 
 func TestSuiteRun(t *testing.T) {
@@ -40,6 +43,7 @@ func TestSuiteRun(t *testing.T) {
 func (s *TestSuite) SetupTest() {
 	s.Setup()
 	s.twapkeeper = s.App.TwapKeeper
+	s.querier = grpc.Querier{Q: client.Querier{K: *s.twapkeeper}}
 	s.Ctx = s.Ctx.WithBlockTime(baseTime)
 }
 
