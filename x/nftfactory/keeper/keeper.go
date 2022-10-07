@@ -53,7 +53,7 @@ func (k Keeper) HasDenomID(ctx sdk.Context, id string) bool {
 // SetDenom is responsible for saving the definition of denom
 func (k Keeper) SetDenom(ctx sdk.Context, denom types.Denom) error {
 	if k.HasDenomID(ctx, denom.Id) {
-		return fmt.Errorf("denomID %s has already exists", denom.Id)
+		return fmt.Errorf("denomID %s already exists", denom.Id)
 	}
 
 	store := ctx.KVStore(k.storeKey)
@@ -66,3 +66,64 @@ func (k Keeper) SetDenom(ctx sdk.Context, denom types.Denom) error {
 	store.Set(types.KeyDenomName(denom.DenomName), []byte(denom.Id))
 	return nil
 }
+
+// GetDenom
+// Returns the denom of a certain id
+// GetDenomPrefixStore returns the substore for a specific denom
+func (k Keeper) GetDenom(ctx sdk.Context, denomId string) (types.Denom, bool) {
+	getDenom := types.Denom{}
+	store := ctx.KVStore(k.storeKey)
+
+	// Get the denom
+	b := store.Get(types.KeyDenomID(denomId))
+	if b == nil {
+		return types.Denom{}, false
+	}
+
+	err := proto.Unmarshal(b, &getDenom)
+	if err != nil {
+		return types.Denom{}, false
+	}
+
+	return getDenom, true
+}
+
+// HasNFT checks if the specified NFT exists
+func (k Keeper) HasNFT(ctx sdk.Context, denomID, tokenID string) bool {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(types.KeyNFT(denomID, tokenID))
+}
+
+/*
+
+Motivation for NFT Store
+
+// GetNFTs returns all NFTs by the specified denom ID
+func (k Keeper) GetNFTs(ctx sdk.Context, denom string) (nfts []exported.NFT) {
+	store := ctx.KVStore(k.storeKey)
+
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyNFT(denom, ""))
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var baseNFT types.BaseNFT
+		k.cdc.MustUnmarshal(iterator.Value(), &baseNFT)
+		nfts = append(nfts, baseNFT)
+	}
+
+	return nfts
+}
+
+// HasNFT checks if the specified NFT exists
+func (k Keeper) HasNFT(ctx sdk.Context, denomID, tokenID string) bool {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(types.KeyNFT(denomID, tokenID))
+}
+
+func (k Keeper) setNFT(ctx sdk.Context, denomID string, nft types.BaseNFT) {
+	store := ctx.KVStore(k.storeKey)
+
+	bz := k.cdc.MustMarshal(&nft)
+	store.Set(types.KeyNFT(denomID, nft.GetID()), bz)
+}
+
+*/

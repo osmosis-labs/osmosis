@@ -31,3 +31,14 @@ func (server msgServer) CreateDenom(goCtx context.Context, msg *types.MsgCreateD
 
 	return &types.MsgCreateDenomResponse{}, nil
 }
+
+func (server msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMintResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	err := server.keeper.Mint(ctx, msg.Id, msg.Sender, msg.Amount)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgMintResponse{}, nil
+}

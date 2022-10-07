@@ -9,7 +9,6 @@ import (
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCreateDenom{}, "", nil)
-
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {

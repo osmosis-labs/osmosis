@@ -23,6 +23,19 @@ var (
 
 	delimiter = []byte("/")
 )
+// KeyNFT gets the key of nft stored by an denom and id
+func KeyNFT(denomID, tokenID string) []byte {
+	key := append(PrefixNFT, delimiter...)
+	if len(denomID) > 0 {
+		key = append(key, []byte(denomID)...)
+		key = append(key, delimiter...)
+	}
+
+	if len(denomID) > 0 && len(tokenID) > 0 {
+		key = append(key, []byte(tokenID)...)
+	}
+	return key
+}
 
 // KeyDenomID gets the storeKey by the denom id
 func KeyDenomID(id string) []byte {
