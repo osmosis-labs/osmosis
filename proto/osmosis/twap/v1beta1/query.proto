@@ -48,6 +48,7 @@ message ArithmeticTwapResponse {
     (gogoproto.moretags) = "yaml:\"arithmetic_twap\"",
     (gogoproto.nullable) = false
   ];
+  bool is_response_unstable = 2;
 }
 
 message ArithmeticTwapToNowRequest {
@@ -66,6 +67,7 @@ message ArithmeticTwapToNowResponse {
     (gogoproto.moretags) = "yaml:\"arithmetic_twap\"",
     (gogoproto.nullable) = false
   ];
+  bool is_response_unstable = 2;
 }
 
 message ParamsRequest {}
