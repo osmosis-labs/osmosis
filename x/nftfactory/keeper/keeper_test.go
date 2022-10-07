@@ -25,8 +25,3 @@ func (suite *KeeperTestSuite) Cleanup() {
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
-
-// func (suite *KeeperTestSuite) CreateDefaultDenom() {
-// 	res, _ := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.MsgCreateDenom())
-// 	fmt.Println(res)
-// }
