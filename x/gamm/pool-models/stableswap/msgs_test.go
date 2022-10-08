@@ -56,8 +56,8 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 	require.Equal(t, signers[0].String(), addr1)
 
 	tests := []struct {
-		name       string
-		msg        stableswap.MsgCreateStableswapPool
+		name      string
+		msg       stableswap.MsgCreateStableswapPool
 		expectErr error
 	}{
 		{

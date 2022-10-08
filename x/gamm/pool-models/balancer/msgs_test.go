@@ -61,8 +61,8 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 	require.Equal(t, signers[0].String(), addr1)
 
 	tests := []struct {
-		name       string
-		msg        balancer.MsgCreateBalancerPool
+		name      string
+		msg       balancer.MsgCreateBalancerPool
 		expectErr error
 	}{
 		{
@@ -205,7 +205,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 				msg.PoolAssets[0].Weight = sdk.NewInt(1 << 21)
 				return msg
 			}),
-			expectErr: sdkerrors.Wrap(types.ErrWeightTooLarge, sdk.NewInt(1 << 21).String()),
+			expectErr: sdkerrors.Wrap(types.ErrWeightTooLarge, sdk.NewInt(1<<21).String()),
 		},
 		// {
 		// 	name: "Create an LBP",

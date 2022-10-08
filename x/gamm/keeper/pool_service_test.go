@@ -6,11 +6,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var (
@@ -65,7 +65,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name:        "create pool with no assets",
 			msg:         balancer.NewMsgCreateBalancerPool(testAccount, defaultPoolParams, defaultPoolAssets, defaultFutureGovernor),
 			emptySender: true,
-			expectErr:  sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", sdk.Coin{Denom: "uosmo", Amount: sdk.NewInt(0)}, sdk.Coin{Denom: "uosmo", Amount: sdk.NewInt(1000000000)}),
+			expectErr:   sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", sdk.Coin{Denom: "uosmo", Amount: sdk.NewInt(0)}, sdk.Coin{Denom: "uosmo", Amount: sdk.NewInt(1000000000)}),
 		}, {
 			name: "create a pool with negative swap fee",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
@@ -73,7 +73,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, defaultPoolAssets, defaultFutureGovernor),
 			emptySender: false,
-			expectErr:  types.ErrNegativeSwapFee,
+			expectErr:   types.ErrNegativeSwapFee,
 		}, {
 			name: "create a pool with negative exit fee",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
@@ -81,7 +81,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				ExitFee: sdk.NewDecWithPrec(-1, 2),
 			}, defaultPoolAssets, defaultFutureGovernor),
 			emptySender: false,
-			expectErr:  types.ErrNegativeExitFee,
+			expectErr:   types.ErrNegativeExitFee,
 		}, {
 			name: "create the pool with empty PoolAssets",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
@@ -89,7 +89,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []balancertypes.PoolAsset{}, defaultFutureGovernor),
 			emptySender: false,
-			expectErr:  types.ErrTooFewPoolAssets,
+			expectErr:   types.ErrTooFewPoolAssets,
 		}, {
 			name: "create the pool with 0 weighted PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
@@ -103,7 +103,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 			}}, defaultFutureGovernor),
 			emptySender: false,
-			expectErr:  sdkerrors.Wrap(types.ErrNotPositiveWeight, sdk.NewInt(0).String()),
+			expectErr:   sdkerrors.Wrap(types.ErrNotPositiveWeight, sdk.NewInt(0).String()),
 		}, {
 			name: "create the pool with negative weighted PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
@@ -117,7 +117,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 			}}, defaultFutureGovernor),
 			emptySender: false,
-			expectErr:  sdkerrors.Wrap(types.ErrNotPositiveWeight, sdk.NewInt(-1).String()),
+			expectErr:   sdkerrors.Wrap(types.ErrNotPositiveWeight, sdk.NewInt(-1).String()),
 		}, {
 			name: "create the pool with 0 balance PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
@@ -131,7 +131,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 			}}, defaultFutureGovernor),
 			emptySender: false,
-			expectErr:  sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, sdk.NewCoin("foo", sdk.NewInt(0)).String()),
+			expectErr:   sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, sdk.NewCoin("foo", sdk.NewInt(0)).String()),
 		}, {
 			name: "create the pool with negative balance PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
@@ -148,7 +148,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 			}}, defaultFutureGovernor),
 			emptySender: false,
-			expectErr:  sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, sdk.Coin{ Denom:"foo", Amount: sdk.NewInt(-1)}.String()),
+			expectErr:   sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, sdk.Coin{Denom: "foo", Amount: sdk.NewInt(-1)}.String()),
 		}, {
 			name: "create the pool with duplicated PoolAssets",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
@@ -162,7 +162,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}}, defaultFutureGovernor),
 			emptySender: false,
-			expectErr:  sdkerrors.Wrapf(types.ErrTooFewPoolAssets, "pool asset %s already exists", "foo"),
+			expectErr:   sdkerrors.Wrapf(types.ErrTooFewPoolAssets, "pool asset %s already exists", "foo"),
 		},
 	}
 
@@ -235,7 +235,7 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 		name            string
 		poolCreationFee sdk.Coins
 		msg             balancertypes.MsgCreateBalancerPool
-		expectErr      error
+		expectErr       error
 	}{
 		{
 			name:            "no pool creation fee for default asset pool",
@@ -389,7 +389,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 		txSender        sdk.AccAddress
 		sharesRequested sdk.Int
 		tokenInMaxs     sdk.Coins
-		expectErr      error
+		expectErr       error
 	}{
 		{
 			name:            "basic join no swap",
@@ -402,14 +402,14 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 			txSender:        suite.TestAccs[1],
 			sharesRequested: sdk.NewInt(0),
 			tokenInMaxs:     sdk.Coins{},
-			expectErr:      sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
+			expectErr:       sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
 		},
 		{
 			name:            "join no swap with negative shares requested",
 			txSender:        suite.TestAccs[1],
 			sharesRequested: sdk.NewInt(-1),
 			tokenInMaxs:     sdk.Coins{},
-			expectErr:      sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
+			expectErr:       sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
 		},
 		{
 			name:            "join no swap with insufficient funds",
@@ -418,7 +418,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 			tokenInMaxs: sdk.Coins{
 				sdk.NewCoin("bar", sdk.NewInt(4999)), sdk.NewCoin("foo", sdk.NewInt(4999)),
 			},
-			expectErr:      sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
+			expectErr: sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
 		},
 		{
 			name:            "join no swap with exact tokenInMaxs",
@@ -436,9 +436,9 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 				fiveKFooAndBar[0], fiveKFooAndBar[1], sdk.NewCoin("baz", sdk.NewInt(5000)),
 			},
 			expectErr: sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, "TokenInMaxs includes tokens that are not part of the target pool,"+
-			" input tokens: %v, pool tokens %v", 
-			sdk.Coins{fiveKFooAndBar[0], fiveKFooAndBar[1], sdk.NewCoin("baz", sdk.NewInt(5000))}, 
-			sdk.Coins{fiveKFooAndBar[0], fiveKFooAndBar[1]}),
+				" input tokens: %v, pool tokens %v",
+				sdk.Coins{fiveKFooAndBar[0], fiveKFooAndBar[1], sdk.NewCoin("baz", sdk.NewInt(5000))},
+				sdk.Coins{fiveKFooAndBar[0], fiveKFooAndBar[1]}),
 		},
 	}
 
@@ -496,7 +496,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 		sharesIn     sdk.Int
 		tokenOutMins sdk.Coins
 		emptySender  bool
-		expectErr   error
+		expectErr    error
 	}{
 		{
 			name:         "attempt exit pool with no pool share balance",
@@ -504,7 +504,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			sharesIn:     types.OneShare.MulRaw(50),
 			tokenOutMins: sdk.Coins{},
 			emptySender:  true,
-			expectErr:   sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", sdk.Coin{Denom: "gamm/pool/1", Amount: sdk.NewInt(0)}, sdk.Coin{Denom: "gamm/pool/1", Amount: types.OneShare.MulRaw(50)}),
+			expectErr:    sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", sdk.Coin{Denom: "gamm/pool/1", Amount: sdk.NewInt(0)}, sdk.Coin{Denom: "gamm/pool/1", Amount: types.OneShare.MulRaw(50)}),
 		},
 		{
 			name:         "exit half pool with correct pool share balance",
@@ -519,7 +519,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			sharesIn:     sdk.NewInt(0),
 			tokenOutMins: sdk.Coins{},
 			emptySender:  false,
-			expectErr:   sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
+			expectErr:    sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
 		},
 		{
 			name:         "attempt exit pool requesting negative share amount",
@@ -527,7 +527,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			sharesIn:     sdk.NewInt(-1),
 			tokenOutMins: sdk.Coins{},
 			emptySender:  false,
-			expectErr:   sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
+			expectErr:    sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
 		},
 		{
 			name:     "attempt exit pool with tokenOutMins above actual output",
@@ -537,9 +537,9 @@ func (suite *KeeperTestSuite) TestExitPool() {
 				sdk.NewCoin("foo", sdk.NewInt(5001)),
 			},
 			emptySender: false,
-			expectErr:  sdkerrors.Wrapf(types.ErrLimitMinAmount,
+			expectErr: sdkerrors.Wrapf(types.ErrLimitMinAmount,
 				"Exit pool returned %s , minimum tokens out specified as %s",
-				fiveKFooAndBar, 
+				fiveKFooAndBar,
 				sdk.Coins{sdk.NewCoin("foo", sdk.NewInt(5001))}),
 		},
 		{

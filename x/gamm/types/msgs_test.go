@@ -51,8 +51,8 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 	require.Equal(t, signers[0].String(), addr1)
 
 	tests := []struct {
-		name       string
-		msg        gammtypes.MsgSwapExactAmountIn
+		name      string
+		msg       gammtypes.MsgSwapExactAmountIn
 		expectErr error
 	}{
 		{
@@ -184,8 +184,8 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 	require.Equal(t, signers[0].String(), addr1)
 
 	tests := []struct {
-		name       string
-		msg        gammtypes.MsgSwapExactAmountOut
+		name      string
+		msg       gammtypes.MsgSwapExactAmountOut
 		expectErr error
 	}{
 		{
@@ -309,8 +309,8 @@ func TestMsgJoinPool(t *testing.T) {
 	require.Equal(t, signers[0].String(), addr1)
 
 	tests := []struct {
-		name       string
-		msg        gammtypes.MsgJoinPool
+		name      string
+		msg       gammtypes.MsgJoinPool
 		expectErr error
 	}{
 		{
@@ -407,8 +407,8 @@ func TestMsgExitPool(t *testing.T) {
 	require.Equal(t, signers[0].String(), addr1)
 
 	tests := []struct {
-		name       string
-		msg        gammtypes.MsgExitPool
+		name      string
+		msg       gammtypes.MsgExitPool
 		expectErr error
 	}{
 		{
@@ -505,8 +505,8 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 	require.Equal(t, signers[0].String(), addr1)
 
 	tests := []struct {
-		name       string
-		msg        gammtypes.MsgJoinSwapExternAmountIn
+		name      string
+		msg       gammtypes.MsgJoinSwapExternAmountIn
 		expectErr error
 	}{
 		{
@@ -606,8 +606,8 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 	require.Equal(t, signers[0].String(), addr1)
 
 	tests := []struct {
-		name       string
-		msg        gammtypes.MsgJoinSwapShareAmountOut
+		name      string
+		msg       gammtypes.MsgJoinSwapShareAmountOut
 		expectErr error
 	}{
 		{
@@ -706,8 +706,8 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 	require.Equal(t, signers[0].String(), addr1)
 
 	tests := []struct {
-		name       string
-		msg        gammtypes.MsgExitSwapExternAmountOut
+		name      string
+		msg       gammtypes.MsgExitSwapExternAmountOut
 		expectErr error
 	}{
 		{
@@ -807,8 +807,8 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 	require.Equal(t, signers[0].String(), addr1)
 
 	tests := []struct {
-		name       string
-		msg        gammtypes.MsgExitSwapShareAmountIn
+		name      string
+		msg       gammtypes.MsgExitSwapShareAmountIn
 		expectErr error
 	}{
 		{

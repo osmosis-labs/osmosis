@@ -1299,7 +1299,7 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 			expNumShare:     sdk.NewIntFromUint64(0),
 			expTokensJoined: sdk.Coins{},
 			expPoolAssets:   balancerThreePoolAssets,
-			expectErr:      sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, "input denoms must already exist in the pool (%s)", "qux"),
+			expectErr:       sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, "input denoms must already exist in the pool (%s)", "qux"),
 		},
 		"single asset pool, no-swap join attempt with one asset": {
 			tokensIn: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(sdk.MaxSortableDec.TruncateInt64()))),
@@ -1363,7 +1363,7 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 				require.Equal(t, test.expPoolAssets, balancerPool.PoolAssets)
 				require.Equal(t, test.expNumShare, numShare)
 				require.Equal(t, test.expTokensJoined, tokensJoined)
-				
+
 			}
 		})
 	}

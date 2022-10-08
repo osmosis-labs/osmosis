@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -8,11 +9,10 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/osmosis-labs/osmosis/v12/tests/mocks"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"errors"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -26,8 +26,8 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 	}
 
 	tests := []struct {
-		name       string
-		param      param
+		name      string
+		param     param
 		expectErr error
 	}{
 		{
@@ -132,8 +132,8 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 	}
 
 	tests := []struct {
-		name       string
-		param      param
+		name      string
+		param     param
 		expectErr error
 	}{
 		{
