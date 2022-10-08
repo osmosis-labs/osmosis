@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var (
@@ -54,18 +55,17 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 		name        string
 		msg         balancertypes.MsgCreateBalancerPool
 		emptySender bool
-		expectPass  bool
+		expectErr   error
 	}{
 		{
 			name:        "create pool with default assets",
 			msg:         balancer.NewMsgCreateBalancerPool(testAccount, defaultPoolParams, defaultPoolAssets, defaultFutureGovernor),
 			emptySender: false,
-			expectPass:  true,
 		}, {
 			name:        "create pool with no assets",
 			msg:         balancer.NewMsgCreateBalancerPool(testAccount, defaultPoolParams, defaultPoolAssets, defaultFutureGovernor),
 			emptySender: true,
-			expectPass:  false,
+			expectErr:  sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", sdk.Coin{Denom: "uosmo", Amount: sdk.NewInt(0)}, sdk.Coin{Denom: "uosmo", Amount: sdk.NewInt(1000000000)}),
 		}, {
 			name: "create a pool with negative swap fee",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
@@ -73,7 +73,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, defaultPoolAssets, defaultFutureGovernor),
 			emptySender: false,
-			expectPass:  false,
+			expectErr:  types.ErrNegativeSwapFee,
 		}, {
 			name: "create a pool with negative exit fee",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
@@ -81,7 +81,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				ExitFee: sdk.NewDecWithPrec(-1, 2),
 			}, defaultPoolAssets, defaultFutureGovernor),
 			emptySender: false,
-			expectPass:  false,
+			expectErr:  types.ErrNegativeExitFee,
 		}, {
 			name: "create the pool with empty PoolAssets",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
@@ -89,7 +89,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []balancertypes.PoolAsset{}, defaultFutureGovernor),
 			emptySender: false,
-			expectPass:  false,
+			expectErr:  types.ErrTooFewPoolAssets,
 		}, {
 			name: "create the pool with 0 weighted PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
@@ -103,7 +103,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 			}}, defaultFutureGovernor),
 			emptySender: false,
-			expectPass:  false,
+			expectErr:  sdkerrors.Wrap(types.ErrNotPositiveWeight, sdk.NewInt(0).String()),
 		}, {
 			name: "create the pool with negative weighted PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
@@ -117,7 +117,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 			}}, defaultFutureGovernor),
 			emptySender: false,
-			expectPass:  false,
+			expectErr:  sdkerrors.Wrap(types.ErrNotPositiveWeight, sdk.NewInt(-1).String()),
 		}, {
 			name: "create the pool with 0 balance PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
@@ -131,7 +131,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 			}}, defaultFutureGovernor),
 			emptySender: false,
-			expectPass:  false,
+			expectErr:  sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, sdk.NewCoin("foo", sdk.NewInt(0)).String()),
 		}, {
 			name: "create the pool with negative balance PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
@@ -148,7 +148,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 			}}, defaultFutureGovernor),
 			emptySender: false,
-			expectPass:  false,
+			expectErr:  sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, sdk.Coin{ Denom:"foo", Amount: sdk.NewInt(-1)}.String()),
 		}, {
 			name: "create the pool with duplicated PoolAssets",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
@@ -162,7 +162,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}}, defaultFutureGovernor),
 			emptySender: false,
-			expectPass:  false,
+			expectErr:  sdkerrors.Wrapf(types.ErrTooFewPoolAssets, "pool asset %s already exists", "foo"),
 		},
 	}
 
@@ -186,7 +186,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 		// attempt to create a pool with the given NewMsgCreateBalancerPool message
 		poolId, err := gammKeeper.CreatePool(suite.Ctx, test.msg)
 
-		if test.expectPass {
+		if test.expectErr == nil {
 			suite.Require().NoError(err, "test: %v", test.name)
 
 			// check to make sure new pool exists and has minted the correct number of pool shares
@@ -217,6 +217,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			suite.Require().Equal(expectedPoolTokens.String(), liquidity.String())
 		} else {
 			suite.Require().Error(err, "test: %v", test.name)
+			suite.Require().ErrorAs(test.expectErr, &err)
 		}
 	}
 }
@@ -234,7 +235,7 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 		name            string
 		poolCreationFee sdk.Coins
 		msg             balancertypes.MsgCreateBalancerPool
-		expectPass      bool
+		expectErr      error
 	}{
 		{
 			name:            "no pool creation fee for default asset pool",
@@ -243,7 +244,6 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, defaultPoolAssets, defaultFutureGovernor),
-			expectPass: true,
 		}, {
 			name:            "nil pool creation fee on basic pool",
 			poolCreationFee: nil,
@@ -251,7 +251,6 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, defaultPoolAssets, defaultFutureGovernor),
-			expectPass: true,
 		}, {
 			name:            "attempt pool creation without sufficient funds for fees",
 			poolCreationFee: sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(10000))},
@@ -259,7 +258,7 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, defaultPoolAssets, defaultFutureGovernor),
-			expectPass: false,
+			expectErr: sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", sdk.Coin{Denom: "atom", Amount: sdk.NewInt(0)}, sdk.Coin{Denom: "atom", Amount: sdk.NewInt(10000)}),
 		},
 	}
 
@@ -286,7 +285,7 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 		// attempt to create a pool with the given NewMsgCreateBalancerPool message
 		poolId, err := gammKeeper.CreatePool(suite.Ctx, test.msg)
 
-		if test.expectPass {
+		if test.expectErr == nil {
 			suite.Require().NoError(err, "test: %v", test.name)
 
 			// check to make sure new pool exists and has minted the correct number of pool shares
@@ -316,6 +315,7 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 			suite.Require().Equal(expectedPoolTokens.String(), liquidity.String())
 		} else {
 			suite.Require().Error(err, "test: %v", test.name)
+			suite.Require().ErrorAs(test.expectErr, &err)
 		}
 	}
 }
@@ -389,28 +389,27 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 		txSender        sdk.AccAddress
 		sharesRequested sdk.Int
 		tokenInMaxs     sdk.Coins
-		expectPass      bool
+		expectErr      error
 	}{
 		{
 			name:            "basic join no swap",
 			txSender:        suite.TestAccs[1],
 			sharesRequested: types.OneShare.MulRaw(50),
 			tokenInMaxs:     sdk.Coins{},
-			expectPass:      true,
 		},
 		{
 			name:            "join no swap with zero shares requested",
 			txSender:        suite.TestAccs[1],
 			sharesRequested: sdk.NewInt(0),
 			tokenInMaxs:     sdk.Coins{},
-			expectPass:      false,
+			expectErr:      sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
 		},
 		{
 			name:            "join no swap with negative shares requested",
 			txSender:        suite.TestAccs[1],
 			sharesRequested: sdk.NewInt(-1),
 			tokenInMaxs:     sdk.Coins{},
-			expectPass:      false,
+			expectErr:      sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
 		},
 		{
 			name:            "join no swap with insufficient funds",
@@ -419,7 +418,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 			tokenInMaxs: sdk.Coins{
 				sdk.NewCoin("bar", sdk.NewInt(4999)), sdk.NewCoin("foo", sdk.NewInt(4999)),
 			},
-			expectPass: false,
+			expectErr:      sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
 		},
 		{
 			name:            "join no swap with exact tokenInMaxs",
@@ -428,7 +427,6 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 			tokenInMaxs: sdk.Coins{
 				fiveKFooAndBar[0], fiveKFooAndBar[1],
 			},
-			expectPass: true,
 		},
 		{
 			name:            "join no swap with arbitrary extra token in tokenInMaxs",
@@ -437,7 +435,10 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 			tokenInMaxs: sdk.Coins{
 				fiveKFooAndBar[0], fiveKFooAndBar[1], sdk.NewCoin("baz", sdk.NewInt(5000)),
 			},
-			expectPass: false,
+			expectErr: sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, "TokenInMaxs includes tokens that are not part of the target pool,"+
+			" input tokens: %v, pool tokens %v", 
+			sdk.Coins{fiveKFooAndBar[0], fiveKFooAndBar[1], sdk.NewCoin("baz", sdk.NewInt(5000))}, 
+			sdk.Coins{fiveKFooAndBar[0], fiveKFooAndBar[1]}),
 		},
 	}
 
@@ -465,7 +466,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 		balancesBefore := bankKeeper.GetAllBalances(suite.Ctx, test.txSender)
 		_, _, err = gammKeeper.JoinPoolNoSwap(suite.Ctx, test.txSender, poolId, test.sharesRequested, test.tokenInMaxs)
 
-		if test.expectPass {
+		if test.expectErr == nil {
 			suite.Require().NoError(err, "test: %v", test.name)
 			suite.Require().Equal(test.sharesRequested.String(), bankKeeper.GetBalance(suite.Ctx, test.txSender, "gamm/pool/1").Amount.String())
 			balancesAfter := bankKeeper.GetAllBalances(suite.Ctx, test.txSender)
@@ -481,7 +482,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 			suite.AssertEventEmitted(ctx, types.TypeEvtPoolJoined, 1)
 		} else {
 			suite.Require().Error(err, "test: %v", test.name)
-
+			suite.Require().ErrorAs(test.expectErr, &err)
 			suite.AssertEventEmitted(ctx, types.TypeEvtPoolJoined, 0)
 		}
 	}
@@ -495,7 +496,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 		sharesIn     sdk.Int
 		tokenOutMins sdk.Coins
 		emptySender  bool
-		expectPass   bool
+		expectErr   error
 	}{
 		{
 			name:         "attempt exit pool with no pool share balance",
@@ -503,7 +504,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			sharesIn:     types.OneShare.MulRaw(50),
 			tokenOutMins: sdk.Coins{},
 			emptySender:  true,
-			expectPass:   false,
+			expectErr:   sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", sdk.Coin{Denom: "gamm/pool/1", Amount: sdk.NewInt(0)}, sdk.Coin{Denom: "gamm/pool/1", Amount: types.OneShare.MulRaw(50)}),
 		},
 		{
 			name:         "exit half pool with correct pool share balance",
@@ -511,7 +512,6 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			sharesIn:     types.OneShare.MulRaw(50),
 			tokenOutMins: sdk.Coins{},
 			emptySender:  false,
-			expectPass:   true,
 		},
 		{
 			name:         "attempt exit pool requesting 0 share amount",
@@ -519,7 +519,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			sharesIn:     sdk.NewInt(0),
 			tokenOutMins: sdk.Coins{},
 			emptySender:  false,
-			expectPass:   false,
+			expectErr:   sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
 		},
 		{
 			name:         "attempt exit pool requesting negative share amount",
@@ -527,7 +527,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			sharesIn:     sdk.NewInt(-1),
 			tokenOutMins: sdk.Coins{},
 			emptySender:  false,
-			expectPass:   false,
+			expectErr:   sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
 		},
 		{
 			name:     "attempt exit pool with tokenOutMins above actual output",
@@ -537,7 +537,10 @@ func (suite *KeeperTestSuite) TestExitPool() {
 				sdk.NewCoin("foo", sdk.NewInt(5001)),
 			},
 			emptySender: false,
-			expectPass:  false,
+			expectErr:  sdkerrors.Wrapf(types.ErrLimitMinAmount,
+				"Exit pool returned %s , minimum tokens out specified as %s",
+				fiveKFooAndBar, 
+				sdk.Coins{sdk.NewCoin("foo", sdk.NewInt(5001))}),
 		},
 		{
 			name:     "attempt exit pool requesting tokenOutMins at exactly the actual output",
@@ -547,7 +550,6 @@ func (suite *KeeperTestSuite) TestExitPool() {
 				fiveKFooAndBar[1],
 			},
 			emptySender: false,
-			expectPass:  true,
 		},
 	}
 
@@ -577,7 +579,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			balancesBefore := bankKeeper.GetAllBalances(suite.Ctx, test.txSender)
 			_, err = gammKeeper.ExitPool(ctx, test.txSender, poolId, test.sharesIn, test.tokenOutMins)
 
-			if test.expectPass {
+			if test.expectErr == nil {
 				suite.Require().NoError(err, "test: %v", test.name)
 				suite.Require().Equal(test.sharesIn.String(), bankKeeper.GetBalance(suite.Ctx, test.txSender, "gamm/pool/1").Amount.String())
 				balancesAfter := bankKeeper.GetAllBalances(suite.Ctx, test.txSender)
@@ -593,6 +595,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 				suite.AssertEventEmitted(ctx, types.TypeEvtPoolExited, 1)
 			} else {
 				suite.Require().Error(err, "test: %v", test.name)
+				suite.Require().ErrorAs(test.expectErr, &err)
 				suite.AssertEventEmitted(ctx, types.TypeEvtPoolExited, 0)
 			}
 		})

@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/keeper"
@@ -25,7 +27,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 		routes                []types.SwapAmountInRoute
 		tokenIn               sdk.Coin
 		tokenOutMinAmount     sdk.Int
-		expectError           bool
+		expectError           error
 		expectedSwapEvents    int
 		expectedMessageEvents int
 	}{
@@ -76,7 +78,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			},
 			tokenIn:           sdk.NewCoin(doesNotExistDenom, sdk.NewInt(tokenIn)),
 			tokenOutMinAmount: sdk.NewInt(tokenInMinAmount),
-			expectError:       true,
+			expectError:       fmt.Errorf("(%s) does not exist in the pool", doesNotExistDenom),
 		},
 	}
 
@@ -101,9 +103,12 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 				TokenOutMinAmount: tc.tokenOutMinAmount,
 			})
 
-			if !tc.expectError {
+			if tc.expectError == nil {
 				suite.NoError(err)
 				suite.NotNil(response)
+			} else {
+				suite.Error(err)
+				suite.Require().ErrorAs(tc.expectError, &err)
 			}
 
 			suite.AssertEventEmitted(ctx, types.TypeEvtTokenSwapped, tc.expectedSwapEvents)
@@ -124,7 +129,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 		routes                []types.SwapAmountOutRoute
 		tokenOut              sdk.Coin
 		tokenInMaxAmount      sdk.Int
-		expectError           bool
+		expectError           error
 		expectedSwapEvents    int
 		expectedMessageEvents int
 	}{
@@ -175,7 +180,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 			},
 			tokenOut:         sdk.NewCoin(doesNotExistDenom, sdk.NewInt(tokenOut)),
 			tokenInMaxAmount: sdk.NewInt(tokenInMaxAmount),
-			expectError:      true,
+			expectError:      fmt.Errorf("(%s) does not exist in the pool", doesNotExistDenom),
 		},
 	}
 
@@ -200,9 +205,12 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 				TokenInMaxAmount: tc.tokenInMaxAmount,
 			})
 
-			if !tc.expectError {
+			if tc.expectError == nil {
 				suite.NoError(err)
 				suite.NotNil(response)
+			} else {
+				suite.Error(err)
+				suite.Require().ErrorAs(tc.expectError, &err)
 			}
 
 			suite.AssertEventEmitted(ctx, types.TypeEvtTokenSwapped, tc.expectedSwapEvents)
@@ -223,7 +231,7 @@ func (suite *KeeperTestSuite) TestJoinPool_Events() {
 		poolId                     uint64
 		shareOutAmount             sdk.Int
 		tokenInMaxs                sdk.Coins
-		expectError                bool
+		expectError                error
 		expectedAddLiquidityEvents int
 		expectedMessageEvents      int
 	}{
@@ -243,7 +251,7 @@ func (suite *KeeperTestSuite) TestJoinPool_Events() {
 			poolId:         1,
 			shareOutAmount: sdk.NewInt(shareOut),
 			tokenInMaxs:    sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tokenInMaxAmount))),
-			expectError:    true,
+			expectError:    types.ErrLimitMaxAmount,
 		},
 	}
 
@@ -267,9 +275,12 @@ func (suite *KeeperTestSuite) TestJoinPool_Events() {
 				TokenInMaxs:    tc.tokenInMaxs,
 			})
 
-			if !tc.expectError {
+			if tc.expectError == nil {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(response)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().ErrorAs(tc.expectError, &err)
 			}
 
 			suite.AssertEventEmitted(ctx, types.TypeEvtPoolJoined, tc.expectedAddLiquidityEvents)
@@ -290,7 +301,7 @@ func (suite *KeeperTestSuite) TestExitPool_Events() {
 		poolId                        uint64
 		shareInAmount                 sdk.Int
 		tokenOutMins                  sdk.Coins
-		expectError                   bool
+		expectError                   error
 		expectedRemoveLiquidityEvents int
 		expectedMessageEvents         int
 	}{
@@ -305,7 +316,7 @@ func (suite *KeeperTestSuite) TestExitPool_Events() {
 			poolId:        1,
 			shareInAmount: sdk.NewInt(shareIn),
 			tokenOutMins:  sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tokenOutMinAmount))),
-			expectError:   true,
+			expectError:   types.ErrLimitMinAmount,
 		},
 	}
 
@@ -345,9 +356,12 @@ func (suite *KeeperTestSuite) TestExitPool_Events() {
 				TokenOutMins:  tc.tokenOutMins,
 			})
 
-			if !tc.expectError {
+			if tc.expectError == nil {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(response)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().ErrorAs(tc.expectError, &err)
 			}
 
 			suite.AssertEventEmitted(ctx, types.TypeEvtPoolExited, tc.expectedRemoveLiquidityEvents)

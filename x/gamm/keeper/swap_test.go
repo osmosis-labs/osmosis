@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,6 +11,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/tests/mocks"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"errors"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -25,7 +28,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 	tests := []struct {
 		name       string
 		param      param
-		expectPass bool
+		expectErr error
 	}{
 		{
 			name: "Proper swap",
@@ -35,7 +38,6 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				tokenOutMinAmount: sdk.NewInt(1),
 				expectedTokenOut:  sdk.NewInt(49262),
 			},
-			expectPass: true,
 		},
 		{
 			name: "Proper swap2",
@@ -45,7 +47,6 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				tokenOutMinAmount: sdk.NewInt(1),
 				expectedTokenOut:  sdk.NewInt(1167843),
 			},
-			expectPass: true,
 		},
 		{
 			name: "out is lesser than min amount",
@@ -54,7 +55,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				tokenOutDenom:     "baz",
 				tokenOutMinAmount: sdk.NewInt(9000000),
 			},
-			expectPass: false,
+			expectErr: sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", "baz"),
 		},
 		{
 			name: "in and out denom are same",
@@ -63,7 +64,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				tokenOutDenom:     "bar",
 				tokenOutMinAmount: sdk.NewInt(1),
 			},
-			expectPass: false,
+			expectErr: errors.New("cannot trade same denomination in and out"),
 		},
 		{
 			name: "unknown in denom",
@@ -72,7 +73,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				tokenOutDenom:     "bar",
 				tokenOutMinAmount: sdk.NewInt(1),
 			},
-			expectPass: false,
+			expectErr: fmt.Errorf("(%s) does not exist in the pool", "bara"),
 		},
 		{
 			name: "unknown out denom",
@@ -81,7 +82,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				tokenOutDenom:     "bara",
 				tokenOutMinAmount: sdk.NewInt(1),
 			},
-			expectPass: false,
+			expectErr: fmt.Errorf("(%s) does not exist in the pool", "bara"),
 		},
 	}
 
@@ -93,7 +94,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 			keeper := suite.App.GAMMKeeper
 			ctx := suite.Ctx
 
-			if test.expectPass {
+			if test.expectErr == nil {
 				spotPriceBefore, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
 				suite.NoError(err, "test: %v", test.name)
 
@@ -116,6 +117,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 			} else {
 				_, err := keeper.SwapExactAmountIn(ctx, suite.TestAccs[0], poolId, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount)
 				suite.Error(err, "test: %v", test.name)
+				suite.Require().Equal(test.expectErr.Error(), err.Error())
 			}
 		})
 	}
@@ -132,7 +134,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 	tests := []struct {
 		name       string
 		param      param
-		expectPass bool
+		expectErr error
 	}{
 		{
 			name: "Proper swap",
@@ -142,7 +144,6 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 				tokenOut:              sdk.NewCoin("bar", sdk.NewInt(100000)),
 				expectedTokenInAmount: sdk.NewInt(206165),
 			},
-			expectPass: true,
 		},
 		{
 			name: "Proper swap2",
@@ -152,7 +153,6 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 				tokenOut:              sdk.NewCoin("baz", sdk.NewInt(316721)),
 				expectedTokenInAmount: sdk.NewInt(1084571),
 			},
-			expectPass: true,
 		},
 		{
 			name: "in is greater than max",
@@ -161,7 +161,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 				tokenInMaxAmount: sdk.NewInt(100),
 				tokenOut:         sdk.NewCoin("baz", sdk.NewInt(316721)),
 			},
-			expectPass: false,
+			expectErr: sdkerrors.Wrapf(types.ErrLimitMaxAmount, "Swap requires %s, which is greater than the amount %s", sdk.NewCoin("foo", sdk.NewInt(1084571)), sdk.NewInt(100)),
 		},
 		{
 			name: "pool doesn't have enough token to out",
@@ -170,7 +170,8 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 				tokenInMaxAmount: sdk.NewInt(900000000),
 				tokenOut:         sdk.NewCoin("baz", sdk.NewInt(99316721)),
 			},
-			expectPass: false,
+			expectErr: sdkerrors.Wrapf(types.ErrTooManyTokensOut,
+				"can't get more tokens out than there are tokens in the pool"),
 		},
 		{
 			name: "unknown in denom",
@@ -179,8 +180,9 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 				tokenInMaxAmount: sdk.NewInt(900000000),
 				tokenOut:         sdk.NewCoin("bar", sdk.NewInt(100000)),
 			},
-			expectPass: false,
+			expectErr: fmt.Errorf("(%s) does not exist in the pool", "fooz"),
 		},
+		// should return "(barz) does not exist in the pool but not"
 		{
 			name: "unknown out denom",
 			param: param{
@@ -188,7 +190,8 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 				tokenInMaxAmount: sdk.NewInt(900000000),
 				tokenOut:         sdk.NewCoin("barz", sdk.NewInt(100000)),
 			},
-			expectPass: false,
+			expectErr: sdkerrors.Wrapf(types.ErrTooManyTokensOut,
+				"can't get more tokens out than there are tokens in the pool"),
 		},
 	}
 
@@ -201,7 +204,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 			keeper := suite.App.GAMMKeeper
 			ctx := suite.Ctx
 
-			if test.expectPass {
+			if test.expectErr == nil {
 				spotPriceBefore, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
 				suite.NoError(err, "test: %v", test.name)
 
@@ -226,6 +229,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 			} else {
 				_, err := keeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], poolId, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut)
 				suite.Error(err, "test: %v", test.name)
+				suite.Require().Equal(test.expectErr.Error(), err.Error())
 			}
 		})
 	}
