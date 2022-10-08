@@ -27,22 +27,22 @@ func TestBalancerPoolParams(t *testing.T) {
 	tests := []struct {
 		SwapFee   sdk.Dec
 		ExitFee   sdk.Dec
-		shouldErr bool
+		shouldErr error
 	}{
 		// Should work
-		{defaultSwapFee, defaultExitFee, noErr},
+		{defaultSwapFee, defaultExitFee, nil},
 		// Can't set the swap fee as negative
-		{sdk.NewDecWithPrec(-1, 2), defaultExitFee, wantErr},
+		{sdk.NewDecWithPrec(-1, 2), defaultExitFee, types.ErrNegativeSwapFee},
 		// Can't set the swap fee as 1
-		{sdk.NewDec(1), defaultExitFee, wantErr},
+		{sdk.NewDec(1), defaultExitFee, types.ErrTooMuchSwapFee},
 		// Can't set the swap fee above 1
-		{sdk.NewDecWithPrec(15, 1), defaultExitFee, wantErr},
+		{sdk.NewDecWithPrec(15, 1), defaultExitFee, types.ErrTooMuchSwapFee},
 		// Can't set the exit fee as negative
-		{defaultSwapFee, sdk.NewDecWithPrec(-1, 2), wantErr},
+		{defaultSwapFee, sdk.NewDecWithPrec(-1, 2), types.ErrNegativeExitFee},
 		// Can't set the exit fee as 1
-		{defaultSwapFee, sdk.NewDec(1), wantErr},
+		{defaultSwapFee, sdk.NewDec(1), types.ErrTooMuchExitFee},
 		// Can't set the exit fee above 1
-		{defaultSwapFee, sdk.NewDecWithPrec(15, 1), wantErr},
+		{defaultSwapFee, sdk.NewDecWithPrec(15, 1), types.ErrTooMuchExitFee},
 	}
 
 	for i, params := range tests {
@@ -51,11 +51,12 @@ func TestBalancerPoolParams(t *testing.T) {
 			ExitFee: params.ExitFee,
 		}
 		err := PoolParams.Validate(dummyPoolAssets)
-		if params.shouldErr {
+		if params.shouldErr != nil {
 			require.Error(t, err, "unexpected lack of error, tc %v", i)
 			// Check that these are also caught if passed to the underlying pool creation func
 			_, err = balancer.NewBalancerPool(1, PoolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
 			require.Error(t, err)
+			require.Equal(t, params.shouldErr.Error(), err.Error())
 		} else {
 			require.NoError(t, err, "unexpected error, tc %v", i)
 		}

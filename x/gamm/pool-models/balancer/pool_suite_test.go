@@ -629,49 +629,43 @@ func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
 		name                string
 		baseDenomPoolInput  sdk.Coin
 		quoteDenomPoolInput sdk.Coin
-		expectError         bool
+		expectError         error
 		expectedOutput      sdk.Dec
 	}{
 		{
 			name:                "equal value",
 			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
 			quoteDenomPoolInput: sdk.NewInt64Coin(quoteDenom, 100),
-			expectError:         false,
 			expectedOutput:      sdk.MustNewDecFromStr("1"),
 		},
 		{
 			name:                "1:2 ratio",
 			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
 			quoteDenomPoolInput: sdk.NewInt64Coin(quoteDenom, 200),
-			expectError:         false,
 			expectedOutput:      sdk.MustNewDecFromStr("0.500000000000000000"),
 		},
 		{
 			name:                "2:1 ratio",
 			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 200),
 			quoteDenomPoolInput: sdk.NewInt64Coin(quoteDenom, 100),
-			expectError:         false,
 			expectedOutput:      sdk.MustNewDecFromStr("2.000000000000000000"),
 		},
 		{
 			name:                "rounding after sigfig ratio",
 			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 220),
 			quoteDenomPoolInput: sdk.NewInt64Coin(quoteDenom, 115),
-			expectError:         false,
 			expectedOutput:      sdk.MustNewDecFromStr("1.913043480000000000"), // ans is 1.913043478260869565, rounded is 1.91304348
 		},
 		{
 			name:                "check number of sig figs",
 			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
 			quoteDenomPoolInput: sdk.NewInt64Coin(quoteDenom, 300),
-			expectError:         false,
 			expectedOutput:      sdk.MustNewDecFromStr("0.333333330000000000"),
 		},
 		{
 			name:                "check number of sig figs high sizes",
 			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 343569192534),
 			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, sdk.MustNewDecFromStr("186633424395479094888742").TruncateInt()),
-			expectError:         false,
 			expectedOutput:      sdk.MustNewDecFromStr("0.000000000001840877"),
 		},
 	}
@@ -690,8 +684,9 @@ func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
 				spotPrice, err := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx,
 					poolId, tc.baseDenomPoolInput.Denom, tc.quoteDenomPoolInput.Denom)
 
-				if tc.expectError {
+				if tc.expectError != nil {
 					suite.Require().Error(err, "test: %s", tc.name)
+					suite.Require().ErrorAs(tc.expectError, &err)
 				} else {
 					suite.Require().NoError(err, "test: %s", tc.name)
 					suite.Require().True(spotPrice.Equal(tc.expectedOutput),
@@ -717,7 +712,7 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 		baseDenomWeight     sdk.Int
 		quoteDenomPoolInput sdk.Coin
 		quoteDenomWeight    sdk.Int
-		expectError         bool
+		expectError         error
 		expectedOutput      sdk.Dec
 	}{
 		{
@@ -727,7 +722,6 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 			baseDenomWeight:     sdk.NewInt(100),
 			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, sdk.MustNewDecFromStr("100433627766186892221372630771322662657637687111424552206337").TruncateInt()),
 			quoteDenomWeight:    sdk.NewInt(100),
-			expectError:         false,
 			expectedOutput:      sdk.MustNewDecFromStr("1.000000000000000000"),
 		},
 		{
@@ -736,7 +730,6 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 			baseDenomWeight:     sdk.NewInt(100),
 			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, sdk.OneInt()),
 			quoteDenomWeight:    sdk.NewInt(100),
-			expectError:         false,
 			expectedOutput:      sdk.MustNewDecFromStr("1.000000000000000000"),
 		},
 		{
@@ -745,7 +738,6 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 			baseDenomWeight:     sdk.NewInt(100),
 			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, sdk.OneInt()),
 			quoteDenomWeight:    sdk.NewInt(100),
-			expectError:         false,
 			expectedOutput:      types.MaxSpotPrice,
 		},
 		{
@@ -755,7 +747,7 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 			baseDenomWeight:     sdk.OneInt(),
 			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, sdk.OneInt()),
 			quoteDenomWeight:    sdk.NewInt(1 << 19),
-			expectError:         true,
+			expectError:         types.ErrSpotPriceOverflow,
 		},
 		{
 			name: "greater than max spot price with equal weights",
@@ -764,7 +756,7 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 			baseDenomWeight:     sdk.NewInt(100),
 			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, sdk.OneInt()),
 			quoteDenomWeight:    sdk.NewInt(100),
-			expectError:         true,
+			expectError:         types.ErrSpotPriceOverflow,
 		},
 	}
 
@@ -791,8 +783,9 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 			sut := func() {
 				spotPrice, err := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx,
 					poolId, tc.baseDenomPoolInput.Denom, tc.quoteDenomPoolInput.Denom)
-				if tc.expectError {
+				if tc.expectError != nil {
 					suite.Require().Error(err, "test: %s", tc.name)
+					suite.Require().ErrorAs(tc.expectError, &err)
 				} else {
 					suite.Require().NoError(err, "test: %s", tc.name)
 					suite.Require().True(spotPrice.Equal(tc.expectedOutput),

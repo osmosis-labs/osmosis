@@ -1,12 +1,14 @@
 package balancer_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	appParams "github.com/osmosis-labs/osmosis/v12/app/params"
 	balancer "github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
@@ -18,6 +20,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
+	_, invalidAccErr := sdk.AccAddressFromBech32(invalidAddr.String())
 
 	createMsg := func(after func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 		testPoolAsset := []balancer.PoolAsset{
@@ -60,7 +63,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 	tests := []struct {
 		name       string
 		msg        balancer.MsgCreateBalancerPool
-		expectPass bool
+		expectErr error
 	}{
 		{
 			name: "proper msg",
@@ -68,7 +71,6 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 				// Do nothing
 				return msg
 			}),
-			expectPass: true,
 		},
 		{
 			name: "invalid sender",
@@ -76,7 +78,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", invalidAccErr),
 		},
 		{
 			name: "has no PoolAsset",
@@ -84,7 +86,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 				msg.PoolAssets = nil
 				return msg
 			}),
-			expectPass: false,
+			expectErr: types.ErrTooFewPoolAssets,
 		},
 		{
 			name: "has no PoolAsset2",
@@ -92,7 +94,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 				msg.PoolAssets = []balancer.PoolAsset{}
 				return msg
 			}),
-			expectPass: false,
+			expectErr: types.ErrTooFewPoolAssets,
 		},
 		{
 			name: "has one Pool Asset",
@@ -102,7 +104,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 				}
 				return msg
 			}),
-			expectPass: false,
+			expectErr: types.ErrTooFewPoolAssets,
 		},
 		{
 			name: "has the PoolAsset that includes 0 weight",
@@ -110,7 +112,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 				msg.PoolAssets[0].Weight = sdk.NewInt(0)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(types.ErrNotPositiveWeight, sdk.ZeroInt().String()),
 		},
 		{
 			name: "has a PoolAsset that includes a negative weight",
@@ -118,7 +120,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 				msg.PoolAssets[0].Weight = sdk.NewInt(-10)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(types.ErrNotPositiveWeight, sdk.NewInt(-10).String()),
 		},
 		{
 			name: "has a PoolAsset that includes a negative weight",
@@ -126,7 +128,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 				msg.PoolAssets[0].Weight = sdk.NewInt(-10)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(types.ErrNotPositiveWeight, sdk.NewInt(-10).String()),
 		},
 		{
 			name: "has a PoolAsset that includes a zero coin",
@@ -134,7 +136,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 				msg.PoolAssets[0].Token = sdk.NewCoin("test1", sdk.NewInt(0))
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, sdk.Coin{"test1", sdk.NewInt(0)}.String()),
 		},
 		{
 			name: "has a PoolAsset that includes a negative coin",
@@ -145,7 +147,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 				}
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, sdk.Coin{"test1", sdk.NewInt(-10)}.String()),
 		},
 		{
 			name: "negative swap fee with zero exit fee",
@@ -156,7 +158,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 				}
 				return msg
 			}),
-			expectPass: false,
+			expectErr: types.ErrNegativeSwapFee,
 		},
 		{
 			name: "invalid governor",
@@ -164,7 +166,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 				msg.FuturePoolGovernor = "invalid_cosmos_address"
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", "invalid_cosmos_address")),
 		},
 		{
 			name: "valid governor: lptoken and lock",
@@ -172,7 +174,6 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 				msg.FuturePoolGovernor = "lptoken,1000h"
 				return msg
 			}),
-			expectPass: true,
 		},
 		{
 			name: "valid governor: just lock duration for pool token",
@@ -180,7 +181,6 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 				msg.FuturePoolGovernor = "1000h"
 				return msg
 			}),
-			expectPass: true,
 		},
 		{
 			name: "valid governor: address",
@@ -188,7 +188,6 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 				msg.FuturePoolGovernor = "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
 				return msg
 			}),
-			expectPass: true,
 		},
 		{
 			name: "zero swap fee, zero exit fee",
@@ -199,7 +198,6 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 				}
 				return msg
 			}),
-			expectPass: true,
 		},
 		{
 			name: "too large of a weight",
@@ -207,7 +205,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 				msg.PoolAssets[0].Weight = sdk.NewInt(1 << 21)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(types.ErrWeightTooLarge, sdk.NewInt(1 << 21).String()),
 		},
 		// {
 		// 	name: "Create an LBP",
@@ -233,10 +231,12 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if test.expectPass {
-			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		err := test.msg.ValidateBasic()
+		if test.expectErr == nil {
+			require.NoError(t, err, "test: %v", test.name)
 		} else {
-			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			require.Error(t, err, "test: %v", test.name)
+			require.ErrorAs(t, test.expectErr, &err)
 		}
 	}
 }
