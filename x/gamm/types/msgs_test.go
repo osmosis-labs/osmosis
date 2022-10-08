@@ -1,10 +1,12 @@
 package types_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
@@ -18,6 +20,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
+	_, invalidAccErr := sdk.AccAddressFromBech32(invalidAddr.String())
 
 	createMsg := func(after func(msg gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn {
 		properMsg := gammtypes.MsgSwapExactAmountIn{
@@ -50,7 +53,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 	tests := []struct {
 		name       string
 		msg        gammtypes.MsgSwapExactAmountIn
-		expectPass bool
+		expectErr error
 	}{
 		{
 			name: "proper msg",
@@ -58,7 +61,6 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 				// Do nothing
 				return msg
 			}),
-			expectPass: true,
 		},
 		{
 			name: "invalid sender",
@@ -66,7 +68,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", invalidAccErr),
 		},
 		{
 			name: "empty routes",
@@ -74,7 +76,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 				msg.Routes = nil
 				return msg
 			}),
-			expectPass: false,
+			expectErr: gammtypes.ErrEmptyRoutes,
 		},
 		{
 			name: "empty routes2",
@@ -82,7 +84,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 				msg.Routes = []gammtypes.SwapAmountInRoute{}
 				return msg
 			}),
-			expectPass: false,
+			expectErr: gammtypes.ErrEmptyRoutes,
 		},
 		{
 			name: "invalid denom",
@@ -90,15 +92,16 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 				msg.Routes[1].TokenOutDenom = "1"
 				return msg
 			}),
-			expectPass: false,
+			expectErr: fmt.Errorf("invalid denom: %s", "1"),
 		},
+		// should err be "invalid denom"?
 		{
 			name: "invalid denom2",
 			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn {
 				msg.TokenIn.Denom = "1"
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenIn.String()),
 		},
 		{
 			name: "zero amount token",
@@ -106,7 +109,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 				msg.TokenIn.Amount = sdk.NewInt(0)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenIn.String()),
 		},
 		{
 			name: "negative amount token",
@@ -114,7 +117,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 				msg.TokenIn.Amount = sdk.NewInt(-10)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenIn.String()),
 		},
 		{
 			name: "zero amount criteria",
@@ -122,7 +125,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 				msg.TokenOutMinAmount = sdk.NewInt(0)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: gammtypes.ErrNotPositiveCriteria,
 		},
 		{
 			name: "negative amount criteria",
@@ -130,15 +133,17 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 				msg.TokenOutMinAmount = sdk.NewInt(-10)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: gammtypes.ErrNotPositiveCriteria,
 		},
 	}
 
 	for _, test := range tests {
-		if test.expectPass {
-			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		err := test.msg.ValidateBasic()
+		if test.expectErr == nil {
+			require.NoError(t, err, "test: %v", test.name)
 		} else {
-			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			require.Error(t, err, "test: %v", test.name)
+			require.ErrorAs(t, test.expectErr, &err)
 		}
 	}
 }
@@ -148,6 +153,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
+	_, invalidAccErr := sdk.AccAddressFromBech32(invalidAddr.String())
 
 	createMsg := func(after func(msg gammtypes.MsgSwapExactAmountOut) gammtypes.MsgSwapExactAmountOut) gammtypes.MsgSwapExactAmountOut {
 		properMsg := gammtypes.MsgSwapExactAmountOut{
@@ -180,7 +186,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 	tests := []struct {
 		name       string
 		msg        gammtypes.MsgSwapExactAmountOut
-		expectPass bool
+		expectErr error
 	}{
 		{
 			name: "proper msg",
@@ -188,7 +194,6 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 				// Do nothing
 				return msg
 			}),
-			expectPass: true,
 		},
 		{
 			name: "invalid sender",
@@ -196,7 +201,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", invalidAccErr),
 		},
 		{
 			name: "empty routes",
@@ -204,7 +209,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 				msg.Routes = nil
 				return msg
 			}),
-			expectPass: false,
+			expectErr: gammtypes.ErrEmptyRoutes,
 		},
 		{
 			name: "empty routes2",
@@ -212,7 +217,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 				msg.Routes = []gammtypes.SwapAmountOutRoute{}
 				return msg
 			}),
-			expectPass: false,
+			expectErr: gammtypes.ErrEmptyRoutes,
 		},
 		{
 			name: "invalid denom",
@@ -220,7 +225,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 				msg.Routes[1].TokenInDenom = "1"
 				return msg
 			}),
-			expectPass: false,
+			expectErr: fmt.Errorf("invalid denom: %s", "1"),
 		},
 		{
 			name: "invalid denom",
@@ -228,7 +233,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 				msg.TokenOut.Denom = "1"
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenOut.String()),
 		},
 		{
 			name: "zero amount token",
@@ -236,7 +241,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 				msg.TokenOut.Amount = sdk.NewInt(0)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenOut.String()),
 		},
 		{
 			name: "negative amount token",
@@ -244,7 +249,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 				msg.TokenOut.Amount = sdk.NewInt(-10)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenOut.String()),
 		},
 		{
 			name: "zero amount criteria",
@@ -252,7 +257,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 				msg.TokenInMaxAmount = sdk.NewInt(0)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: gammtypes.ErrNotPositiveCriteria,
 		},
 		{
 			name: "negative amount criteria",
@@ -260,15 +265,17 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 				msg.TokenInMaxAmount = sdk.NewInt(-10)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: gammtypes.ErrNotPositiveCriteria,
 		},
 	}
 
 	for _, test := range tests {
-		if test.expectPass {
-			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		err := test.msg.ValidateBasic()
+		if test.expectErr == nil {
+			require.NoError(t, err, "test: %v", test.name)
 		} else {
-			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			require.Error(t, err, "test: %v", test.name)
+			require.ErrorAs(t, test.expectErr, &err)
 		}
 	}
 }
@@ -304,7 +311,7 @@ func TestMsgJoinPool(t *testing.T) {
 	tests := []struct {
 		name       string
 		msg        gammtypes.MsgJoinPool
-		expectPass bool
+		expectErr error
 	}{
 		{
 			name: "proper msg",
@@ -312,7 +319,6 @@ func TestMsgJoinPool(t *testing.T) {
 				// Do nothing
 				return msg
 			}),
-			expectPass: true,
 		},
 		{
 			name: "invalid sender",
@@ -320,7 +326,7 @@ func TestMsgJoinPool(t *testing.T) {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "negative requirement",
@@ -328,7 +334,7 @@ func TestMsgJoinPool(t *testing.T) {
 				msg.ShareOutAmount = sdk.NewInt(-10)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(gammtypes.ErrNotPositiveRequireAmount, msg.ShareOutAmount.String()),
 		},
 		{
 			name: "zero amount",
@@ -336,7 +342,7 @@ func TestMsgJoinPool(t *testing.T) {
 				msg.TokenInMaxs[1].Amount = sdk.NewInt(0)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.ErrInvalidCoins,
 		},
 		{
 			name: "negative amount",
@@ -344,7 +350,7 @@ func TestMsgJoinPool(t *testing.T) {
 				msg.TokenInMaxs[1].Amount = sdk.NewInt(-10)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.ErrInvalidCoins,
 		},
 		{
 			name: "'empty token max in' can pass",
@@ -352,7 +358,6 @@ func TestMsgJoinPool(t *testing.T) {
 				msg.TokenInMaxs = nil
 				return msg
 			}),
-			expectPass: true,
 		},
 		{
 			name: "'empty token max in' can pass 2",
@@ -360,15 +365,16 @@ func TestMsgJoinPool(t *testing.T) {
 				msg.TokenInMaxs = sdk.Coins{}
 				return msg
 			}),
-			expectPass: true,
 		},
 	}
 
 	for _, test := range tests {
-		if test.expectPass {
-			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		err := test.msg.ValidateBasic()
+		if test.expectErr == nil {
+			require.NoError(t, err, "test: %v", test.name)
 		} else {
-			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			require.Error(t, err, "test: %v", test.name)
+			require.ErrorAs(t, test.expectErr, &err)
 		}
 	}
 }
@@ -403,7 +409,7 @@ func TestMsgExitPool(t *testing.T) {
 	tests := []struct {
 		name       string
 		msg        gammtypes.MsgExitPool
-		expectPass bool
+		expectErr error
 	}{
 		{
 			name: "proper msg",
@@ -411,7 +417,6 @@ func TestMsgExitPool(t *testing.T) {
 				// Do nothing
 				return msg
 			}),
-			expectPass: true,
 		},
 		{
 			name: "invalid sender",
@@ -419,7 +424,7 @@ func TestMsgExitPool(t *testing.T) {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "negative requirement",
@@ -427,7 +432,7 @@ func TestMsgExitPool(t *testing.T) {
 				msg.ShareInAmount = sdk.NewInt(-10)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(gammtypes.ErrNotPositiveRequireAmount, msg.ShareInAmount.String()),
 		},
 		{
 			name: "zero amount",
@@ -435,7 +440,7 @@ func TestMsgExitPool(t *testing.T) {
 				msg.TokenOutMins[1].Amount = sdk.NewInt(0)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.ErrInvalidCoins,
 		},
 		{
 			name: "negative amount",
@@ -443,7 +448,7 @@ func TestMsgExitPool(t *testing.T) {
 				msg.TokenOutMins[1].Amount = sdk.NewInt(-10)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.ErrInvalidCoins,
 		},
 		{
 			name: "'empty token min out' can pass",
@@ -451,7 +456,6 @@ func TestMsgExitPool(t *testing.T) {
 				msg.TokenOutMins = nil
 				return msg
 			}),
-			expectPass: true,
 		},
 		{
 			name: "'empty token min out' can pass 2",
@@ -459,15 +463,16 @@ func TestMsgExitPool(t *testing.T) {
 				msg.TokenOutMins = sdk.Coins{}
 				return msg
 			}),
-			expectPass: true,
 		},
 	}
 
 	for _, test := range tests {
-		if test.expectPass {
-			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		err := test.msg.ValidateBasic()
+		if test.expectErr == nil {
+			require.NoError(t, err, "test: %v", test.name)
 		} else {
-			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			require.Error(t, err, "test: %v", test.name)
+			require.ErrorAs(t, test.expectErr, &err)
 		}
 	}
 }
@@ -502,7 +507,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 	tests := []struct {
 		name       string
 		msg        gammtypes.MsgJoinSwapExternAmountIn
-		expectPass bool
+		expectErr error
 	}{
 		{
 			name: "proper msg",
@@ -510,7 +515,6 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 				// Do nothing
 				return msg
 			}),
-			expectPass: true,
 		},
 		{
 			name: "invalid sender",
@@ -518,7 +522,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid denom",
@@ -526,7 +530,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 				msg.TokenIn.Denom = "1"
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.ErrInvalidCoins,
 		},
 		{
 			name: "zero amount",
@@ -534,7 +538,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 				msg.TokenIn.Amount = sdk.NewInt(0)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.ErrInvalidCoins,
 		},
 		{
 			name: "negative amount",
@@ -542,7 +546,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 				msg.TokenIn.Amount = sdk.NewInt(-10)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.ErrInvalidCoins,
 		},
 		{
 			name: "zero criteria",
@@ -550,7 +554,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 				msg.ShareOutMinAmount = sdk.NewInt(0)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(gammtypes.ErrNotPositiveCriteria, msg.ShareOutMinAmount.String()),
 		},
 		{
 			name: "negative criteria",
@@ -558,15 +562,17 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 				msg.ShareOutMinAmount = sdk.NewInt(-10)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(gammtypes.ErrNotPositiveCriteria, msg.ShareOutMinAmount.String()),
 		},
 	}
 
 	for _, test := range tests {
-		if test.expectPass {
-			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		err := test.msg.ValidateBasic()
+		if test.expectErr == nil {
+			require.NoError(t, err, "test: %v", test.name)
 		} else {
-			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			require.Error(t, err, "test: %v", test.name)
+			require.ErrorAs(t, test.expectErr, &err)
 		}
 	}
 }
@@ -602,7 +608,7 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 	tests := []struct {
 		name       string
 		msg        gammtypes.MsgJoinSwapShareAmountOut
-		expectPass bool
+		expectErr error
 	}{
 		{
 			name: "proper msg",
@@ -610,7 +616,6 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 				// Do nothing
 				return msg
 			}),
-			expectPass: true,
 		},
 		{
 			name: "invalid sender",
@@ -618,7 +623,7 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid denom",
@@ -626,7 +631,7 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 				msg.TokenInDenom = "1"
 				return msg
 			}),
-			expectPass: false,
+			expectErr: fmt.Errorf("invalid denom: %s", msg.TokenInDenom),
 		},
 		{
 			name: "zero amount",
@@ -634,7 +639,7 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 				msg.ShareOutAmount = sdk.NewInt(0)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(gammtypes.ErrNotPositiveRequireAmount, msg.ShareOutAmount.String()),
 		},
 		{
 			name: "negative amount",
@@ -642,7 +647,7 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 				msg.ShareOutAmount = sdk.NewInt(-10)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(gammtypes.ErrNotPositiveRequireAmount, msg.ShareOutAmount.String()),
 		},
 		{
 			name: "zero criteria",
@@ -650,7 +655,7 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 				msg.TokenInMaxAmount = sdk.NewInt(0)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(gammtypes.ErrNotPositiveCriteria, msg.TokenInMaxAmount.String()),
 		},
 		{
 			name: "negative criteria",
@@ -658,15 +663,17 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 				msg.TokenInMaxAmount = sdk.NewInt(-10)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(gammtypes.ErrNotPositiveCriteria, msg.TokenInMaxAmount.String()),
 		},
 	}
 
 	for _, test := range tests {
-		if test.expectPass {
-			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		err := test.msg.ValidateBasic()
+		if test.expectErr == nil {
+			require.NoError(t, err, "test: %v", test.name)
 		} else {
-			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			require.Error(t, err, "test: %v", test.name)
+			require.ErrorAs(t, test.expectErr, &err)
 		}
 	}
 }
@@ -701,7 +708,7 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 	tests := []struct {
 		name       string
 		msg        gammtypes.MsgExitSwapExternAmountOut
-		expectPass bool
+		expectErr error
 	}{
 		{
 			name: "proper msg",
@@ -709,7 +716,6 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 				// Do nothing
 				return msg
 			}),
-			expectPass: true,
 		},
 		{
 			name: "invalid sender",
@@ -717,7 +723,7 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid denom",
@@ -725,7 +731,7 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 				msg.TokenOut.Denom = "1"
 				return msg
 			}),
-			expectPass: false,
+			expectErr: fmt.Errorf("invalid denom: %s", msg.TokenOut.Denom),
 		},
 		{
 			name: "zero amount",
@@ -733,7 +739,7 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 				msg.TokenOut.Amount = sdk.NewInt(0)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(gammtypes.ErrNotPositiveRequireAmount, msg.TokenOut.Amount.String()),
 		},
 		{
 			name: "negative amount",
@@ -741,7 +747,7 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 				msg.TokenOut.Amount = sdk.NewInt(-10)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(gammtypes.ErrNotPositiveRequireAmount, msg.TokenOut.Amount.String()),
 		},
 		{
 			name: "zero criteria",
@@ -749,7 +755,7 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 				msg.ShareInMaxAmount = sdk.NewInt(0)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(gammtypes.ErrNotPositiveCriteria, msg.ShareInMaxAmount.String()),
 		},
 		{
 			name: "negative criteria",
@@ -757,15 +763,17 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 				msg.ShareInMaxAmount = sdk.NewInt(-10)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(gammtypes.ErrNotPositiveCriteria, msg.ShareInMaxAmount.String()),
 		},
 	}
 
 	for _, test := range tests {
-		if test.expectPass {
-			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		err := test.msg.ValidateBasic()
+		if test.expectErr == nil {
+			require.NoError(t, err, "test: %v", test.name)
 		} else {
-			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			require.Error(t, err, "test: %v", test.name)
+			require.ErrorAs(t, test.expectErr, &err)
 		}
 	}
 }
@@ -801,7 +809,7 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 	tests := []struct {
 		name       string
 		msg        gammtypes.MsgExitSwapShareAmountIn
-		expectPass bool
+		expectErr error
 	}{
 		{
 			name: "proper msg",
@@ -809,7 +817,6 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 				// Do nothing
 				return msg
 			}),
-			expectPass: true,
 		},
 		{
 			name: "invalid sender",
@@ -817,7 +824,7 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid denom",
@@ -825,7 +832,7 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 				msg.TokenOutDenom = "1"
 				return msg
 			}),
-			expectPass: false,
+			expectErr: fmt.Errorf("invalid denom: %s", msg.TokenOutDenom),
 		},
 		{
 			name: "zero amount",
@@ -833,7 +840,7 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 				msg.ShareInAmount = sdk.NewInt(0)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(gammtypes.ErrNotPositiveRequireAmount, msg.ShareInAmount.String()),
 		},
 		{
 			name: "negative amount",
@@ -841,7 +848,7 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 				msg.ShareInAmount = sdk.NewInt(-10)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(gammtypes.ErrNotPositiveRequireAmount, msg.ShareInAmount.String()),
 		},
 		{
 			name: "zero criteria",
@@ -849,7 +856,7 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 				msg.TokenOutMinAmount = sdk.NewInt(0)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(gammtypes.ErrNotPositiveCriteria, msg.TokenOutMinAmount.String()),
 		},
 		{
 			name: "negative criteria",
@@ -857,15 +864,17 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 				msg.TokenOutMinAmount = sdk.NewInt(-10)
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(gammtypes.ErrNotPositiveCriteria, msg.TokenOutMinAmount.String()),
 		},
 	}
 
 	for _, test := range tests {
-		if test.expectPass {
-			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		err := test.msg.ValidateBasic()
+		if test.expectErr == nil {
+			require.NoError(t, err, "test: %v", test.name)
 		} else {
-			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			require.Error(t, err, "test: %v", test.name)
+			require.ErrorAs(t, test.expectErr, &err)
 		}
 	}
 }

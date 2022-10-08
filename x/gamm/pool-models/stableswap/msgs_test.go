@@ -1,12 +1,14 @@
 package stableswap_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	appParams "github.com/osmosis-labs/osmosis/v12/app/params"
 	stableswap "github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/stableswap"
@@ -18,6 +20,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
+	_, invalidAccErr := sdk.AccAddressFromBech32(invalidAddr.String())
 
 	createMsg := func(after func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 		testPoolAsset := sdk.Coins{
@@ -55,7 +58,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 	tests := []struct {
 		name       string
 		msg        stableswap.MsgCreateStableswapPool
-		expectPass bool
+		expectErr error
 	}{
 		{
 			name: "proper msg",
@@ -63,7 +66,6 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 				// Do nothing
 				return msg
 			}),
-			expectPass: true,
 		},
 		{
 			name: "invalid sender",
@@ -71,7 +73,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", invalidAccErr),
 		},
 		{
 			name: "has nil InitialPoolLiquidity ",
@@ -79,7 +81,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 				msg.InitialPoolLiquidity = nil
 				return msg
 			}),
-			expectPass: false,
+			expectErr: types.ErrTooFewPoolAssets,
 		},
 		{
 			name: "has one coin in InitialPoolLiquidity",
@@ -89,7 +91,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 				}
 				return msg
 			}),
-			expectPass: false,
+			expectErr: types.ErrTooFewPoolAssets,
 		},
 		{
 			name: "have assets in excess of cap",
@@ -107,7 +109,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 				}
 				return msg
 			}),
-			expectPass: false,
+			expectErr: types.ErrTooManyPoolAssets,
 		},
 		{
 			name: "negative swap fee with zero exit fee",
@@ -118,7 +120,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 				}
 				return msg
 			}),
-			expectPass: false,
+			expectErr: types.ErrNegativeSwapFee,
 		},
 		{
 			name: "scaling factors with invalid lenght",
@@ -126,7 +128,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 				msg.ScalingFactors = []uint64{1, 2, 3}
 				return msg
 			}),
-			expectPass: false,
+			expectErr: types.ErrInvalidStableswapScalingFactors,
 		},
 		{
 			name: "invalid governor",
@@ -134,7 +136,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 				msg.FuturePoolGovernor = "invalid_cosmos_address"
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", "invalid_cosmos_address")),
 		},
 		{
 			name: "invalid governor : len governor > 2",
@@ -142,7 +144,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 				msg.FuturePoolGovernor = "lptoken,1000h,invalid_cosmos_address"
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", "lptoken,1000h,invalid_cosmos_address")),
 		},
 		{
 			name: "invalid governor : len governor > 2",
@@ -150,7 +152,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 				msg.FuturePoolGovernor = "lptoken,1000h,invalid_cosmos_address"
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", "lptoken,1000h,invalid_cosmos_address")),
 		},
 		{
 			name: "valid governor: err when parse duration ",
@@ -158,7 +160,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 				msg.FuturePoolGovernor = "lptoken, invalid_duration"
 				return msg
 			}),
-			expectPass: false,
+			expectErr: sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", "lptoken, invalid_duration")),
 		},
 		{
 			name: "valid governor: just lock duration for pool token",
@@ -166,7 +168,6 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 				msg.FuturePoolGovernor = "1000h"
 				return msg
 			}),
-			expectPass: true,
 		},
 		{
 			name: "valid governor: address",
@@ -174,7 +175,6 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 				msg.FuturePoolGovernor = "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
 				return msg
 			}),
-			expectPass: true,
 		},
 		{
 			name: "valid governor: address",
@@ -182,7 +182,6 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 				msg.FuturePoolGovernor = ""
 				return msg
 			}),
-			expectPass: true,
 		},
 		{
 			name: "zero swap fee, zero exit fee",
@@ -193,7 +192,6 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 				}
 				return msg
 			}),
-			expectPass: true,
 		},
 		{
 			name: "multi assets pool",
@@ -207,15 +205,16 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 				msg.ScalingFactors = []uint64{1, 1, 1, 1}
 				return msg
 			}),
-			expectPass: true,
 		},
 	}
 
 	for _, test := range tests {
-		if test.expectPass {
-			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		err := test.msg.ValidateBasic()
+		if test.expectErr == nil {
+			require.NoError(t, err, "test: %v", test.name)
 		} else {
-			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			require.Error(t, err, "test: %v", test.name)
+			require.ErrorAs(t, test.expectErr, &err)
 		}
 	}
 }

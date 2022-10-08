@@ -2,6 +2,7 @@
 package stableswap
 
 import (
+	"fmt"
 	"math/big"
 	"testing"
 
@@ -81,7 +82,7 @@ func TestReorderReservesAndScalingFactors(t *testing.T) {
 		scalingFactors        []uint64
 		reordedReserves       []sdk.Coin
 		reordedScalingFactors []uint64
-		expError              bool
+		expError              error
 	}{
 		"two of 5 assets in pool": {
 			denoms:         [2]string{"asset/c", "asset/b"},
@@ -113,13 +114,13 @@ func TestReorderReservesAndScalingFactors(t *testing.T) {
 			denoms:         [2]string{"foo", "asset/b"},
 			poolAssets:     fiveUnevenStablePoolAssets,
 			scalingFactors: []uint64{1, 2, 3, 4, 5},
-			expError:       true,
+			expError:       fmt.Errorf("one of denom (%s, %s) not found in pool liquidity", "foo", "asset/b"),
 		},
 		"asset 2 doesn't exist": {
 			denoms:         [2]string{"asset/a", "foo"},
 			poolAssets:     fiveUnevenStablePoolAssets,
 			scalingFactors: []uint64{1, 2, 3, 4, 5},
-			expError:       true,
+			expError:       fmt.Errorf("one of denom (%s, %s) not found in pool liquidity", "asset/b", "foo"),
 		},
 	}
 
@@ -128,11 +129,13 @@ func TestReorderReservesAndScalingFactors(t *testing.T) {
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 
 			reserves, factors, err := p.reorderReservesAndScalingFactors(tc.denoms[0], tc.denoms[1])
-			if !tc.expError {
+			if tc.expError == nil {
 				require.Equal(t, tc.reordedReserves, reserves)
 				require.Equal(t, tc.reordedScalingFactors, factors)
+			} else {
+				require.ErrorAs(t, tc.expError, &err)
 			}
-			osmoassert.ConditionalError(t, tc.expError, err)
+			osmoassert.ConditionalError(t, tc.expError != nil, err)
 		})
 	}
 }
@@ -145,7 +148,7 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 		poolAssets     sdk.Coins
 		scalingFactors []uint64
 		expReserves    []osmomath.BigDec
-		expError       bool
+		expError       error
 	}{
 		// sanity checks, default scaling factors
 		"even two-asset pool with default scaling factors": {
@@ -217,7 +220,7 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{0, 1},
-			expError:       true,
+			expError:       fmt.Errorf("div by zero"),
 		},
 	}
 	// TODO: Add for loop for trying to re-order test cases
@@ -230,10 +233,12 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 
 			reserves, err := p.scaledSortedPoolReserves(tc.denoms[0], tc.denoms[1], tc.roundMode)
-			if !tc.expError {
+			if tc.expError == nil {
 				require.Equal(t, tc.expReserves, reserves)
+			} else {
+				require.ErrorAs(t, tc.expError, &err)
 			}
-			osmoassert.ConditionalError(t, tc.expError, err)
+			osmoassert.ConditionalError(t, tc.expError != nil, err)
 		})
 	}
 }
@@ -414,7 +419,7 @@ func TestScaleCoin(t *testing.T) {
 		poolAssets     sdk.Coins
 		scalingFactors []uint64
 		expOutput      osmomath.BigDec
-		expError       bool
+		expError       error
 	}{
 		"even two-asset pool with default scaling factors": {
 			input:          sdk.NewCoin("bar", sdk.NewInt(100)),
@@ -422,7 +427,6 @@ func TestScaleCoin(t *testing.T) {
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
 			expOutput:      osmomath.NewBigDec(100),
-			expError:       false,
 		},
 		"uneven two-asset pool with default scaling factors": {
 			input:          sdk.NewCoin("foo", sdk.NewInt(200)),
@@ -430,7 +434,6 @@ func TestScaleCoin(t *testing.T) {
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
 			expOutput:      osmomath.NewBigDec(200),
-			expError:       false,
 		},
 		"even two-asset pool with uneven scaling factors greater than 1": {
 			input:          sdk.NewCoin("bar", sdk.NewInt(100)),
@@ -438,7 +441,6 @@ func TestScaleCoin(t *testing.T) {
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10, 5},
 			expOutput:      osmomath.NewBigDec(10),
-			expError:       false,
 		},
 		"even two-asset pool with even, massive scaling factors greater than 1": {
 			input:          sdk.NewCoin("foo", sdk.NewInt(100)),
@@ -446,7 +448,6 @@ func TestScaleCoin(t *testing.T) {
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{10000000000, 10_000_000_000},
 			expOutput:      osmomath.NewDecWithPrec(100, 10),
-			expError:       false,
 		},
 		"five asset pool scaling factors = 1": {
 			input:          sdk.NewCoin("asset/c", sdk.NewInt(100)),
@@ -454,7 +455,6 @@ func TestScaleCoin(t *testing.T) {
 			poolAssets:     fiveUnevenStablePoolAssets,
 			scalingFactors: []uint64{1, 1, 1, 1, 1},
 			expOutput:      osmomath.NewBigDec(100),
-			expError:       false,
 		},
 		"five asset pool scaling factors = 1,2,3,4,5": {
 			input:          sdk.NewCoin("asset/d", sdk.NewInt(100)),
@@ -462,7 +462,6 @@ func TestScaleCoin(t *testing.T) {
 			poolAssets:     fiveUnevenStablePoolAssets,
 			scalingFactors: []uint64{1, 2, 3, 4, 5},
 			expOutput:      osmomath.NewBigDec(25),
-			expError:       false,
 		},
 		"max scaling factors on small token inputs": {
 			input:          sdk.NewCoin("foo", sdk.NewInt(10)),
@@ -470,14 +469,13 @@ func TestScaleCoin(t *testing.T) {
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{(1 << 62), (1 << 62)},
 			expOutput:      osmomath.NewBigDec(10).QuoInt64(1 << 62),
-			expError:       false,
 		},
 		"zero scaling factor": {
 			input:          sdk.NewCoin("bar", sdk.NewInt(100)),
 			rounding:       osmomath.RoundDown,
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{0, 1},
-			expError:       true,
+			expError:       fmt.Errorf("div by zero"),
 		},
 	}
 
@@ -496,12 +494,13 @@ func TestScaleCoin(t *testing.T) {
 
 			scaledInput, err := p.scaleCoin(tc.input, tc.rounding)
 
-			if !tc.expError {
+			if tc.expError == nil {
 				require.NoError(t, err, "test: %s", name)
 				require.Equal(t, tc.expOutput, scaledInput)
+			} else {
+				require.ErrorAs(t, tc.expError, &err)
 			}
-
-			osmoassert.ConditionalError(t, tc.expError, err)
+			osmoassert.ConditionalError(t, tc.expError != nil, err)
 		})
 	}
 }
