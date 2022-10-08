@@ -418,10 +418,6 @@ func (s *IntegrationTestSuite) TestStateSync() {
 }
 
 func (s *IntegrationTestSuite) TestExpeditedProposals() {
-	if !s.skipUpgrade {
-		s.T().Skip("this can be re-enabled post v12")
-	}
-
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
