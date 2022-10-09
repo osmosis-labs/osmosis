@@ -12,51 +12,29 @@ import (
 	osmosimtypes "github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-// AppStateFn returns the initial application state using a genesis or the simulation parameters.
+// InitChainFn returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
-func AppStateFn() osmosim.AppStateFn {
+func InitChainFn() osmosim.InitChainFn {
 	cdc := app.MakeEncodingConfig().Marshaler
-	return func(simManager *osmosimtypes.Manager, r *rand.Rand, accs []simtypes.Account, config osmosim.InitializationConfig,
-	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
-		if osmosim.FlagGenesisTimeValue == 0 {
-			// N.B.: wasmd has the following check in its simulator:
-			// https://github.com/osmosis-labs/wasmd/blob/c2ec9092d086b5ac6dd367f33ce8b5cce8e4c5f5/x/wasm/types/types.go#L261-L264
-			// As a result, it is easy to overflow and become negative if seconds are set too large.
-			genesisTimestamp = time.Unix(0, r.Int63())
-		} else {
-			genesisTimestamp = time.Unix(osmosim.FlagGenesisTimeValue, 0)
-		}
+	return func(simManager osmosimtypes.ModuleGenesisGenerator, r *rand.Rand, accs []simtypes.Account, config osmosim.InitializationConfig,
+	) (simAccs []simtypes.Account, req abci.RequestInitChain) {
+		// N.B.: wasmd has the following check in its simulator:
+		// https://github.com/osmosis-labs/wasmd/blob/c2ec9092d086b5ac6dd367f33ce8b5cce8e4c5f5/x/wasm/types/types.go#L261-L264
+		// As a result, it is easy to overflow and become negative if seconds are set too large.
+		genesisTime := time.Unix(0, r.Int63())
 
-		chainID = config.ChainID
-		switch {
-		case config.ParamsFile != "" && config.GenesisFile != "":
-			panic("cannot provide both a genesis file and a params file")
-
-		case config.GenesisFile != "":
-			// override the default chain-id from simapp to set it later to the config
-			genesisDoc, accounts := AppStateFromGenesisFileFn(r, cdc, config.GenesisFile)
-
-			if osmosim.FlagGenesisTimeValue == 0 {
-				// use genesis timestamp if no custom timestamp is provided (i.e no random timestamp)
-				genesisTimestamp = genesisDoc.GenesisTime
-			}
-
-			appState = genesisDoc.AppState
-			chainID = genesisDoc.ChainID
-			simAccs = accounts
-
-		case config.ParamsFile != "":
-			appParams := make(simtypes.AppParams)
+		appParams := make(simtypes.AppParams)
+		if config.ParamsFile != "" {
 			bz, err := os.ReadFile(config.ParamsFile)
 			if err != nil {
 				panic(err)
@@ -66,83 +44,90 @@ func AppStateFn() osmosim.AppStateFn {
 			if err != nil {
 				panic(err)
 			}
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
+		}
+		appState, simAccs := AppStateRandomizedFn(simManager, r, cdc, accs, genesisTime, appParams)
+		appState = updateStakingAndBankState(appState, cdc)
 
-		default:
-			appParams := make(simtypes.AppParams)
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
+		req = abci.RequestInitChain{
+			Time:            genesisTime,
+			ChainId:         config.ChainID,
+			ConsensusParams: osmosim.DefaultRandomConsensusParams(r, appState, cdc),
+			// Validators: ...,
+			AppStateBytes: appState,
+			// InitialHeight: ...,
 		}
-
-		rawState := make(map[string]json.RawMessage)
-		err := json.Unmarshal(appState, &rawState)
-		if err != nil {
-			panic(err)
-		}
-
-		stakingStateBz, ok := rawState[stakingtypes.ModuleName]
-		if !ok {
-			panic("staking genesis state is missing")
-		}
-
-		stakingState := new(stakingtypes.GenesisState)
-		err = cdc.UnmarshalJSON(stakingStateBz, stakingState)
-		if err != nil {
-			panic(err)
-		}
-		// compute not bonded balance
-		notBondedTokens := sdk.ZeroInt()
-		for _, val := range stakingState.Validators {
-			if val.Status != stakingtypes.Unbonded {
-				continue
-			}
-			notBondedTokens = notBondedTokens.Add(val.GetTokens())
-		}
-		notBondedCoins := sdk.NewCoin(stakingState.Params.BondDenom, notBondedTokens)
-		// edit bank state to make it have the not bonded pool tokens
-		bankStateBz, ok := rawState[banktypes.ModuleName]
-		// TODO(fdymylja/jonathan): should we panic in this case
-		if !ok {
-			panic("bank genesis state is missing")
-		}
-		bankState := new(banktypes.GenesisState)
-		err = cdc.UnmarshalJSON(bankStateBz, bankState)
-		if err != nil {
-			panic(err)
-		}
-
-		stakingAddr := authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName).String()
-		var found bool
-		for _, balance := range bankState.Balances {
-			if balance.Address == stakingAddr {
-				found = true
-				break
-			}
-		}
-		if !found {
-			bankState.Balances = append(bankState.Balances, banktypes.Balance{
-				Address: stakingAddr,
-				Coins:   sdk.NewCoins(notBondedCoins),
-			})
-		}
-
-		// change appState back
-		rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
-		rawState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankState)
-
-		// replace appstate
-		appState, err = json.Marshal(rawState)
-		if err != nil {
-			panic(err)
-		}
-
-		return appState, simAccs, chainID, genesisTimestamp
+		return simAccs, req
 	}
+}
+
+func updateStakingAndBankState(appState json.RawMessage, cdc codec.JSONCodec) json.RawMessage {
+	rawState := make(map[string]json.RawMessage)
+	err := json.Unmarshal(appState, &rawState)
+	if err != nil {
+		panic(err)
+	}
+
+	stakingStateBz, ok := rawState[stakingtypes.ModuleName]
+	if !ok {
+		panic("staking genesis state is missing")
+	}
+
+	stakingState := new(stakingtypes.GenesisState)
+	err = cdc.UnmarshalJSON(stakingStateBz, stakingState)
+	if err != nil {
+		panic(err)
+	}
+	// compute not bonded balance
+	notBondedTokens := sdk.ZeroInt()
+	for _, val := range stakingState.Validators {
+		if val.Status != stakingtypes.Unbonded {
+			continue
+		}
+		notBondedTokens = notBondedTokens.Add(val.GetTokens())
+	}
+	notBondedCoins := sdk.NewCoin(stakingState.Params.BondDenom, notBondedTokens)
+	// edit bank state to make it have the not bonded pool tokens
+	bankStateBz, ok := rawState[banktypes.ModuleName]
+	if !ok {
+		panic("bank genesis state is missing")
+	}
+	bankState := new(banktypes.GenesisState)
+	err = cdc.UnmarshalJSON(bankStateBz, bankState)
+	if err != nil {
+		panic(err)
+	}
+
+	stakingAddr := authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName).String()
+	var found bool
+	for _, balance := range bankState.Balances {
+		if balance.Address == stakingAddr {
+			found = true
+			break
+		}
+	}
+	if !found {
+		bankState.Balances = append(bankState.Balances, banktypes.Balance{
+			Address: stakingAddr,
+			Coins:   sdk.NewCoins(notBondedCoins),
+		})
+	}
+
+	// change appState back
+	rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
+	rawState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankState)
+
+	// replace appstate
+	appState, err = json.Marshal(rawState)
+	if err != nil {
+		panic(err)
+	}
+	return appState
 }
 
 // AppStateRandomizedFn creates calls each module's GenesisState generator function
 // and creates the simulation params.
 func AppStateRandomizedFn(
-	simManager *osmosimtypes.Manager, r *rand.Rand, cdc codec.JSONCodec,
+	simManager osmosimtypes.ModuleGenesisGenerator, r *rand.Rand, cdc codec.JSONCodec,
 	accs []simtypes.Account, genesisTimestamp time.Time, appParams simtypes.AppParams,
 ) (json.RawMessage, []simtypes.Account) {
 	numAccs := int64(len(accs))
@@ -150,15 +135,8 @@ func AppStateRandomizedFn(
 
 	// generate a random amount of initial stake coins and a random initial
 	// number of bonded accounts
-	var initialStake, numInitiallyBonded int64
-	appParams.GetOrGenerate(
-		cdc, simappparams.StakePerAccount, &initialStake, r,
-		func(r *rand.Rand) { initialStake = r.Int63n(1e12) },
-	)
-	appParams.GetOrGenerate(
-		cdc, simappparams.InitiallyBondedValidators, &numInitiallyBonded, r,
-		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(300)) },
-	)
+	initialStake := r.Int63n(1e12)
+	numInitiallyBonded := int64(r.Intn(300))
 
 	if numInitiallyBonded > numAccs {
 		numInitiallyBonded = numAccs

@@ -14,8 +14,8 @@ import (
 // TODO: Consider adding consensus parameters / simulator params / tendermint params to this.
 type InitFunctions struct {
 	// Why does this take in Numkeys / why isn't this part of the initial state function / config to decide?
-	RandomAccountFn   RandomAccountFn
-	AppInitialStateFn AppStateFn
+	RandomAccountFn RandomAccountFn
+	InitChainFn     InitChainFn
 }
 
 // TODO: cleanup args in the future, should ideally just be a slice.

@@ -251,17 +251,15 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GAMMKeeper)
 
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
-		appCodec,
 		appKeepers.keys[lockuptypes.StoreKey],
 		// TODO: Visit why this needs to be deref'd
 		*appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.DistrKeeper)
 
-	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appCodec, appKeepers.keys[epochstypes.StoreKey])
+	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appKeepers.keys[epochstypes.StoreKey])
 
 	txFeesKeeper := txfeeskeeper.NewKeeper(
-		appCodec,
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.keys[txfeestypes.StoreKey],
@@ -273,7 +271,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.TxFeesKeeper = &txFeesKeeper
 
 	appKeepers.IncentivesKeeper = incentiveskeeper.NewKeeper(
-		appCodec,
 		appKeepers.keys[incentivestypes.StoreKey],
 		appKeepers.GetSubspace(incentivestypes.ModuleName),
 		appKeepers.BankKeeper,
@@ -284,12 +281,11 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 
 	appKeepers.SuperfluidKeeper = superfluidkeeper.NewKeeper(
-		appCodec, appKeepers.keys[superfluidtypes.StoreKey], appKeepers.GetSubspace(superfluidtypes.ModuleName),
+		appKeepers.keys[superfluidtypes.StoreKey], appKeepers.GetSubspace(superfluidtypes.ModuleName),
 		*appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.StakingKeeper, appKeepers.DistrKeeper, appKeepers.EpochsKeeper, appKeepers.LockupKeeper, appKeepers.GAMMKeeper, appKeepers.IncentivesKeeper,
 		lockupkeeper.NewMsgServerImpl(appKeepers.LockupKeeper))
 
 	mintKeeper := mintkeeper.NewKeeper(
-		appCodec,
 		appKeepers.keys[minttypes.StoreKey],
 		appKeepers.GetSubspace(minttypes.ModuleName),
 		appKeepers.AccountKeeper,
@@ -301,7 +297,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.MintKeeper = &mintKeeper
 
 	poolIncentivesKeeper := poolincentiveskeeper.NewKeeper(
-		appCodec,
 		appKeepers.keys[poolincentivestypes.StoreKey],
 		appKeepers.GetSubspace(poolincentivestypes.ModuleName),
 		appKeepers.AccountKeeper,
