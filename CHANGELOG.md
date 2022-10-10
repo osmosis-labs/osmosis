@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 
 * [#2739](https://github.com/osmosis-labs/osmosis/pull/2739) Add pool type query
+* [#2974](https://github.com/osmosis-labs/osmosis/pull/2974) Add increase lockup duration tx
 
 ### Bug fixes
 
