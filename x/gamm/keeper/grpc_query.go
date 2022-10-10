@@ -196,7 +196,7 @@ func (q Querier) ExitSwapShareAmountIn(ctx context.Context, req *types.QueryExit
 			return &types.QueryExitSwapShareAmountInResponse{TokenOutAmount: coin.Amount.Uint64()}, nil
 		}
 	}
-	return nil, nil
+	return &types.QueryExitSwapShareAmountInResponse{}, nil
 }
 
 // PoolParams queries a specified pool for its params.
