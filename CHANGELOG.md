@@ -45,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 
 * [#2739](https://github.com/osmosis-labs/osmosis/pull/2739) Add pool type query
-* [#2956](https://github.com/osmosis-labs/osmosis/issues/2956) Add queries for calculating amount of tokens/shares by providing X shares/tokens when entering/exiting pool
+* [#2956](https://github.com/osmosis-labs/osmosis/issues/2956) Add queries for calculating amount of shares/tokens you get by providing X tokens/shares when entering/exiting a pool
 
 ### Bug fixes
 
