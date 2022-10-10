@@ -9,6 +9,17 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
+func (suite *KeeperTestSuite) TestJoinSwapExactAmountIn() {
+	queryClient := suite.queryClient
+
+	poolId := suite.PrepareBalancerPool()
+
+	_, err := queryClient.JoinSwapExactAmountIn(gocontext.Background(), &types.QueryJoinSwapExactAmountInRequest{
+		PoolId:   poolId,
+		TokensIn: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(500))),
+	})
+	suite.Require().NoError(err)
+}
 func (suite *KeeperTestSuite) TestQueryPool() {
 	queryClient := suite.queryClient
 

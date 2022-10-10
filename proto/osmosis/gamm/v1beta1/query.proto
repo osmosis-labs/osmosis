@@ -38,6 +38,9 @@ service Query {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/pool_type/{pool_id}";
   }
 
+  rpc JoinSwapExactAmountIn(QueryJoinSwapExactAmountInRequest)
+      returns (QueryJoinSwapExactAmountInResponse) {}
+
   rpc PoolParams(QueryPoolParamsRequest) returns (QueryPoolParamsResponse) {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{pool_id}/params";
@@ -108,6 +111,22 @@ message QueryPoolTypeRequest {
 }
 message QueryPoolTypeResponse {
   string pool_type = 1 [ (gogoproto.moretags) = "yaml:\"pool_type\"" ];
+}
+
+//=============================== JoinSwapExactAmountIn
+message QueryJoinSwapExactAmountInRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  repeated cosmos.base.v1beta1.Coin tokens_in = 3 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
+}
+message QueryJoinSwapExactAmountInResponse {
+  string share_out_amount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"share_out_amount\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 //=============================== PoolParams

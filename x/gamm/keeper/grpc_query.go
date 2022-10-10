@@ -140,6 +140,33 @@ func (q Querier) PoolType(ctx context.Context, req *types.QueryPoolTypeRequest) 
 	}, err
 }
 
+// JoinSwapExactAmountIn queries the amount of shares you get by providing specific amount of tokens
+func (q Querier) JoinSwapExactAmountIn(ctx context.Context, req *types.QueryJoinSwapExactAmountInRequest) (*types.QueryJoinSwapExactAmountInResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if req.PoolId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "negative pool id")
+	}
+	if req.TokensIn == nil {
+		return nil, status.Error(codes.InvalidArgument, "no tokens in")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	pool, err := q.Keeper.getPoolForSwap(sdkCtx, req.PoolId)
+	if err != nil {
+		return &types.QueryJoinSwapExactAmountInResponse{ShareOutAmount: sdk.Int{}}, err
+	}
+
+	numShares, _, err := pool.CalcJoinPoolShares(sdkCtx, req.TokensIn, pool.GetSwapFee(sdkCtx))
+	if err != nil {
+		return nil, err
+	}
+	return &types.QueryJoinSwapExactAmountInResponse{
+		ShareOutAmount: numShares,
+	}, nil
+}
+
 // PoolParams queries a specified pool for its params.
 func (q Querier) PoolParams(ctx context.Context, req *types.QueryPoolParamsRequest) (*types.QueryPoolParamsResponse, error) {
 	if req == nil {
