@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
+	// "github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
@@ -145,9 +146,6 @@ func (q Querier) JoinSwapExactAmountIn(ctx context.Context, req *types.QueryJoin
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-	if req.PoolId <= 0 {
-		return nil, status.Error(codes.InvalidArgument, "negative pool id")
-	}
 	if req.TokensIn == nil {
 		return nil, status.Error(codes.InvalidArgument, "no tokens in")
 	}
@@ -165,6 +163,41 @@ func (q Querier) JoinSwapExactAmountIn(ctx context.Context, req *types.QueryJoin
 	return &types.QueryJoinSwapExactAmountInResponse{
 		ShareOutAmount: numShares,
 	}, nil
+}
+
+func (q Querier) ExitSwapShareAmountIn(ctx context.Context, req *types.QueryExitSwapShareAmountInRequest) (*types.QueryExitSwapShareAmountInResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	pool, err := q.Keeper.GetPoolAndPoke(sdkCtx, req.PoolId)
+	if err != nil {
+		return &types.QueryExitSwapShareAmountInResponse{TokenOutAmount: 0}, err
+	}
+
+	denom_liquidity := q.Keeper.GetDenomLiquidity(sdkCtx, req.TokenOutDenom)
+	if denom_liquidity == sdk.NewInt(0) {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("no denom (%s) in pool", req.TokenOutDenom))
+	}
+
+	totalSharesAmount := pool.GetTotalShares()
+	if req.ShareInAmount.GTE(totalSharesAmount) || req.ShareInAmount.LTE(sdk.ZeroInt()) {
+		return &types.QueryExitSwapShareAmountInResponse{TokenOutAmount: 0}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
+	}
+	exitFee := pool.GetExitFee(sdkCtx)
+
+	exitCoins, err := pool.CalcExitPoolCoinsFromShares(sdkCtx, *req.ShareInAmount, exitFee)
+	if err != nil {
+		return &types.QueryExitSwapShareAmountInResponse{TokenOutAmount: 0}, err
+	}
+
+	for _, coin := range exitCoins {
+		if coin.Denom == req.TokenOutDenom {
+			return &types.QueryExitSwapShareAmountInResponse{TokenOutAmount: coin.Amount.Uint64()}, nil
+		}
+	}
+	return nil, nil
 }
 
 // PoolParams queries a specified pool for its params.

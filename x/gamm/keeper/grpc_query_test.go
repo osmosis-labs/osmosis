@@ -9,6 +9,20 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
+func (suite *KeeperTestSuite) TestExitSwapShareAmountIn() {
+	queryClient := suite.queryClient
+
+	poolId := suite.PrepareBalancerPool()
+	defaultShares := sdk.NewInt(50000000000000)
+
+	out, err := queryClient.ExitSwapShareAmountIn(gocontext.Background(), &types.QueryExitSwapShareAmountInRequest{
+		PoolId:        poolId,
+		TokenOutDenom: "foo",
+		ShareInAmount: &defaultShares,
+	})
+	suite.Require().NotNil(out)
+	suite.Require().NoError(err)
+}
 func (suite *KeeperTestSuite) TestJoinSwapExactAmountIn() {
 	queryClient := suite.queryClient
 
