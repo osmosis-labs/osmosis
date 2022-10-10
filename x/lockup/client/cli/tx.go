@@ -29,6 +29,7 @@ func GetTxCmd() *cobra.Command {
 		NewLockTokensCmd(),
 		NewBeginUnlockingCmd(),
 		NewBeginUnlockByIDCmd(),
+		NewExtendLockupByIDCmd(),
 	)
 
 	return cmd
@@ -152,5 +153,53 @@ func NewBeginUnlockByIDCmd() *cobra.Command {
 	cmd.Flags().AddFlagSet(FlagSetUnlockTokens())
 
 	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// NewExtendLockupByIDCmd extends a given id lock to a higher duration lock time.
+func NewExtendLockupByIDCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "extend-lockup-by-id [id]",
+		Short: "increase the lockup time for a given id",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			id, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+
+			durationStr, err := cmd.Flags().GetString(FlagDuration)
+			if err != nil {
+				return err
+			}
+
+			duration, err := time.ParseDuration(durationStr)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgExtendLockup(
+				clientCtx.GetFromAddress(),
+				uint64(id),
+				duration,
+			)
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(FlagSetLockTokens())
+	flags.AddTxFlagsToCmd(cmd)
+	err := cmd.MarkFlagRequired(FlagDuration)
+	if err != nil {
+		panic(err)
+	}
 	return cmd
 }
