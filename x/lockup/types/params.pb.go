@@ -23,7 +23,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Params defines the parameters for the tokenfactory module.
 type Params struct {
 	ForceUnlockAllowedAddresses []string `protobuf:"bytes,1,rep,name=force_unlock_allowed_addresses,json=forceUnlockAllowedAddresses,proto3" json:"force_unlock_allowed_addresses,omitempty" yaml:"force_unlock_allowed_address"`
 }
