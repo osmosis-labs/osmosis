@@ -28,10 +28,11 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountIn() {
 
 	poolId := suite.PrepareBalancerPool()
 
-	_, err := queryClient.JoinSwapExactAmountIn(gocontext.Background(), &types.QueryJoinSwapExactAmountInRequest{
+	out, err := queryClient.JoinSwapExactAmountIn(gocontext.Background(), &types.QueryJoinSwapExactAmountInRequest{
 		PoolId:   poolId,
 		TokensIn: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(500))),
 	})
+	suite.Require().NotNil(out)
 	suite.Require().NoError(err)
 }
 func (suite *KeeperTestSuite) TestQueryPool() {
