@@ -255,7 +255,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		// TODO: Visit why this needs to be deref'd
 		*appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
-		appKeepers.DistrKeeper)
+		appKeepers.DistrKeeper, appKeepers.GetSubspace(lockuptypes.ModuleName))
 
 	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appKeepers.keys[epochstypes.StoreKey])
 
@@ -430,6 +430,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
 	paramsKeeper.Subspace(incentivestypes.ModuleName)
+	paramsKeeper.Subspace(lockuptypes.ModuleName)
 	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
 	paramsKeeper.Subspace(superfluidtypes.ModuleName)
 	paramsKeeper.Subspace(gammtypes.ModuleName)
