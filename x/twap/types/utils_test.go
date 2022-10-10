@@ -21,11 +21,11 @@ func TestGetAllUniqueDenomPairs(t *testing.T) {
 		wantedPairLT []string
 		panics       bool
 	}{
-		"basic":    {[]string{"A", "B"}, []string{"B"}, []string{"A"}, false},
-		"basicRev": {[]string{"B", "A"}, []string{"B"}, []string{"A"}, false},
+		"basic":    {[]string{"A", "B"}, []string{"A"}, []string{"B"}, false},
+		"basicRev": {[]string{"B", "A"}, []string{"A"}, []string{"B"}, false},
 		// AB > A
-		"prefixed": {[]string{"A", "AB"}, []string{"AB"}, []string{"A"}, false},
-		"basic-3":  {[]string{"A", "B", "C"}, []string{"C", "C", "B"}, []string{"B", "A", "A"}, false},
+		"prefixed": {[]string{"A", "AB"}, []string{"A"}, []string{"AB"}, false},
+		"basic-3":  {[]string{"A", "B", "C"}, []string{"A", "A", "B"}, []string{"B", "C", "C"}, false},
 		"panics":   {[]string{"A", "A"}, []string{}, []string{}, true},
 	}
 	for name, tt := range tests {
@@ -49,8 +49,10 @@ func TestLexicographicalOrderDenoms(t *testing.T) {
 	}{
 		"basic":    {"A", "B", "A", "B", nil},
 		"basicRev": {"B", "A", "A", "B", nil},
-		"realDenoms": {"uosmo", "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
-			"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", "uosmo", nil},
+		"realDenoms": {
+			"uosmo", "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
+			"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", "uosmo", nil,
+		},
 		"sameDenom": {"A", "A", "", "", fmt.Errorf("both assets cannot be of the same denom: assetA: %s, assetB: %s", "A", "A")},
 	}
 	for name, tt := range tests {

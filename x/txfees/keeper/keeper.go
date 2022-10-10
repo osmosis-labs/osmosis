@@ -5,7 +5,6 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -26,7 +25,6 @@ type Keeper struct {
 var _ types.TxFeesKeeper = (*Keeper)(nil)
 
 func NewKeeper(
-	cdc codec.Codec,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	storeKey sdk.StoreKey,

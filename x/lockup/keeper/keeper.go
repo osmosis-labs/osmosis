@@ -7,7 +7,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -26,7 +25,7 @@ type Keeper struct {
 }
 
 // NewKeeper returns an instance of Keeper.
-func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper, ck types.CommunityPoolKeeper, paramSpace paramtypes.Subspace) *Keeper {
+func NewKeeper(storeKey sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper, ck types.CommunityPoolKeeper, paramSpace paramtypes.Subspace) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())

@@ -79,25 +79,38 @@ func TestInitGenesis(t *testing.T) {
 	require.Equal(t, distrInfo, *genesis.DistrInfo)
 }
 
-func TestExportGenesis(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+func (suite *KeeperTestSuite) TestExportGenesis() {
+	ctx := suite.App.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
-	app.PoolIncentivesKeeper.InitGenesis(ctx, &genesis)
+	suite.App.PoolIncentivesKeeper.InitGenesis(ctx, &genesis)
+
+	lockableDurations := suite.App.PoolIncentivesKeeper.GetLockableDurations(ctx)
+	suite.App.IncentivesKeeper.SetLockableDurations(ctx, lockableDurations)
+	poolId := suite.PrepareBalancerPool()
 
 	durations := []time.Duration{
 		time.Second,
 		time.Minute,
 		time.Hour,
-		time.Hour * 5,
 	}
-	app.PoolIncentivesKeeper.SetLockableDurations(ctx, durations)
-	savedDurations := app.PoolIncentivesKeeper.GetLockableDurations(ctx)
-	require.Equal(t, savedDurations, durations)
+	suite.App.PoolIncentivesKeeper.SetLockableDurations(ctx, durations)
+	savedDurations := suite.App.PoolIncentivesKeeper.GetLockableDurations(ctx)
+	suite.Equal(savedDurations, durations)
+	var expectedPoolToGauges types.PoolToGauges
+	var gauge uint64
+	for _, duration := range durations {
+		gauge++
+		var poolToGauge types.PoolToGauge
+		poolToGauge.Duration = duration
+		poolToGauge.PoolId = poolId
+		poolToGauge.GaugeId = gauge
+		expectedPoolToGauges.PoolToGauge = append(expectedPoolToGauges.PoolToGauge, poolToGauge)
+	}
 
-	genesisExported := app.PoolIncentivesKeeper.ExportGenesis(ctx)
-	require.Equal(t, genesisExported.Params, genesis.Params)
-	require.Equal(t, genesisExported.LockableDurations, durations)
-	require.Equal(t, genesisExported.DistrInfo, genesis.DistrInfo)
+	genesisExported := suite.App.PoolIncentivesKeeper.ExportGenesis(ctx)
+	suite.Equal(genesisExported.Params, genesis.Params)
+	suite.Equal(genesisExported.LockableDurations, durations)
+	suite.Equal(genesisExported.DistrInfo, genesis.DistrInfo)
+	suite.Equal(genesisExported.PoolToGauges, &expectedPoolToGauges)
 }

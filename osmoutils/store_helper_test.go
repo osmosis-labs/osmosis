@@ -20,6 +20,11 @@ type TestSuite struct {
 	store sdk.KVStore
 }
 
+func (suite *TestSuite) SetupTest() {
+	suite.Setup()
+
+}
+
 const (
 	keyA               = "a"
 	keyB               = "b"
@@ -69,7 +74,6 @@ func mockStop(b []byte) bool {
 }
 
 func (s *TestSuite) TestGatherAllKeysFromStore() {
-
 	testcases := map[string]struct {
 		preSetKeys     []string
 		expectedValues []string
@@ -315,7 +319,6 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 }
 
 func (s *TestSuite) TestGetFirstValueAfterPrefixInclusive() {
-
 	testcases := map[string]struct {
 		prefix     []byte
 		preSetKeys []string
@@ -420,7 +423,6 @@ func (s *TestSuite) TestGetFirstValueAfterPrefixInclusive() {
 }
 
 func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
-
 	testcases := map[string]struct {
 		// if prefix is set, startValue and endValue are ignored.
 		// we either create an iterator prefix or a range iterator.
@@ -549,7 +551,6 @@ func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
 }
 
 func (s *TestSuite) TestGetIterValuesWithStop() {
-
 	testcases := map[string]struct {
 		preSetKeys []string
 		keyStart   []byte
@@ -659,7 +660,6 @@ func (s *TestSuite) TestGetIterValuesWithStop() {
 }
 
 func (s *TestSuite) TestGetValuesUntilDerivedStop() {
-
 	testcases := map[string]struct {
 		preSetKeys []string
 		keyStart   []byte
@@ -735,7 +735,6 @@ func (s *TestSuite) TestNoStopFn_AlwaysFalse() {
 // TestMustGet tests that MustGet retrieves the correct
 // values from the store and panics if an error is encountered.
 func (s *TestSuite) TestMustGet() {
-
 	tests := map[string]struct {
 		// keys and values to preset
 		preSetKeyValues map[string]proto.Message
@@ -875,7 +874,6 @@ func (s *TestSuite) TestMustSet() {
 // TestMustGetDec tests that MustGetDec retrieves the correct
 // decimal values from the store and panics if an error is encountered.
 func (s *TestSuite) TestMustGetDec() {
-
 	tests := map[string]struct {
 		// keys and values to preset
 		preSetKeyValues map[string]sdk.Dec
