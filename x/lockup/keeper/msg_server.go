@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/utils"
 	"github.com/osmosis-labs/osmosis/v12/x/lockup/types"
@@ -171,12 +172,22 @@ func (server msgServer) ExtendLockup(goCtx context.Context, msg *types.MsgExtend
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
+	// cancels an unlock & updates the new time
+	if msg.CancelUnlocking {
+		// TODO: cancel unlock will cancel it & reset it to no EndTime unlock
+		err = server.keeper.CancelUnlock(ctx, lock.ID)
+		if err != nil {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		}
+	}
+
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.TypeEvtLockTokens,
 			sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(lock.ID)),
 			sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner),
 			sdk.NewAttribute(types.AttributePeriodLockDuration, lock.Duration.String()),
+			sdk.NewAttribute(types.AttributeCanceledUnlock, strconv.FormatBool(msg.CancelUnlocking)),
 		),
 	})
 

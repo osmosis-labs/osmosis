@@ -260,6 +260,7 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 		lockOwner         sdk.AccAddress
 		duration          time.Duration
 		newDuration       time.Duration
+		cancelUnlocking   bool
 	}
 
 	tests := []struct {
@@ -275,6 +276,7 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 				lockOwner:         sdk.AccAddress([]byte("addr1---------------")), // setup wallet
 				duration:          time.Second,
 				newDuration:       time.Second * 2,
+				cancelUnlocking:   false,
 			},
 			expectPass: true,
 		},
@@ -286,6 +288,7 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 				lockOwner:         sdk.AccAddress([]byte("addr1---------------")), // setup wallet
 				duration:          time.Second,
 				newDuration:       time.Second / 2,
+				cancelUnlocking:   false,
 			},
 			expectPass: false,
 		},
@@ -297,8 +300,21 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 				lockOwner:         sdk.AccAddress([]byte("addr1---------------")), // setup wallet
 				duration:          time.Second,
 				newDuration:       time.Second * 2,
+				cancelUnlocking:   false,
 			},
 			expectPass: false,
+		},
+		{
+			name: "cancel lockups currently unlocking",
+			param: param{
+				coinsToLock:       sdk.Coins{sdk.NewInt64Coin("stake", 10)}, // setup wallet
+				isSyntheticLockup: false,
+				lockOwner:         sdk.AccAddress([]byte("addr1---------------")), // setup wallet
+				duration:          time.Second,
+				newDuration:       time.Second * 2,
+				cancelUnlocking:   true,
+			},
+			expectPass: true,
 		},
 	}
 
@@ -319,6 +335,8 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 		}
 
 		_, err = msgServer.ExtendLockup(c, types.NewMsgExtendLockup(test.param.lockOwner, resp.ID, test.param.newDuration))
+
+		// suite.Require().NoError(err)
 
 		if test.expectPass {
 			suite.Require().NoError(err, test.name)

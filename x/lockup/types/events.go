@@ -13,4 +13,5 @@ const (
 	AttributePeriodLockDuration   = "duration"
 	AttributePeriodLockUnlockTime = "unlock_time"
 	AttributeUnlockedCoins        = "unlocked_coins"
+	AttributeCanceledUnlock       = "canceled_unlock"
 )

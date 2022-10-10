@@ -175,6 +175,55 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) err
 	return k.beginUnlock(ctx, *lock, coins)
 }
 
+// CancelUnlock is a utility to stop unlocking coins from NotUnlocking queue.
+// Returns an error if the lock has a synthetic lock.
+func (k Keeper) CancelUnlock(ctx sdk.Context, lockID uint64) error {
+	// prohibit CancelUnlock if synthetic locks are referring to this
+	// TODO: In the future, make synthetiCancelUnlockc locks only get partial restrictions on the main lock.
+	lock, err := k.GetLockByID(ctx, lockID)
+	if err != nil {
+		return err
+	}
+	if k.HasAnySyntheticLockups(ctx, lock.ID) {
+		return fmt.Errorf("cannot CancelUnlocking a lock with synthetic lockup")
+	}
+
+	return k.cancelUnlock(ctx, *lock)
+}
+
+// cancelUnlock stops unlocks specified tokens from the given lock.
+func (k Keeper) cancelUnlock(ctx sdk.Context, lock types.PeriodLock) error {
+	if !lock.IsUnlocking() {
+		return fmt.Errorf("trying to stop an active lock")
+	}
+
+	// remove existing lock refs from not unlocking queue
+	err := k.deleteLockRefs(ctx, types.KeyPrefixUnlocking, lock)
+	if err != nil {
+		return err
+	}
+
+	// store lock back to a default time so it is active
+	lock.EndTime = time.Time{}
+	err = k.setLock(ctx, lock)
+	if err != nil {
+		return err
+	}
+
+	// add lock refs into unlocking queue
+	err = k.addLockRefs(ctx, lock)
+	if err != nil {
+		return err
+	}
+
+	// since we are essentially resetting the lock, is this correct?
+	if k.hooks == nil {
+		k.hooks.AfterAddTokensToLock(ctx, lock.OwnerAddress(), lock.GetID(), sdk.NewCoins(lock.Coins...))
+	}
+
+	return nil
+}
+
 // BeginForceUnlock begins force unlock of the given lock.
 // This method should be called by the superfluid module ONLY, as it does not check whether
 // the lock has a synthetic lock or not before unlocking.
@@ -367,7 +416,7 @@ func (k Keeper) unlockMaturedLockInternalLogic(ctx sdk.Context, lock types.Perio
 // ExtendLockup changes the existing lock duration to the given lock duration.
 // Updating lock duration would fail on either of the following conditions.
 // 1. Only lock owner is able to change the duration of the lock.
-// 2. Locks that are unlokcing are not allowed to change duration.
+// //2. Locks that are unlocking are not allowed to change duration.
 // 3. Locks that have synthetic lockup are not allowed to change.
 // 4. Provided duration should be greater than the original duration.
 func (k Keeper) ExtendLockup(ctx sdk.Context, lockID uint64, owner sdk.AccAddress, newDuration time.Duration) error {
@@ -387,6 +436,14 @@ func (k Keeper) ExtendLockup(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 	// check synthetic lockup exists
 	if k.HasAnySyntheticLockups(ctx, lock.ID) {
 		return fmt.Errorf("cannot edit lockup with synthetic lock %d", lock.ID)
+	}
+
+	// if IsUnlocking(), cancel the unlocking & make it active again
+	if lock.IsUnlocking() {
+		err := k.CancelUnlock(ctx, lockID)
+		if err != nil {
+			return err
+		}
 	}
 
 	// completely delete existing lock refs

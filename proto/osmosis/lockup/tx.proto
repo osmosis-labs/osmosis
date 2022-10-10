@@ -66,8 +66,11 @@ message MsgExtendLockup {
     (gogoproto.jsontag) = "duration,omitempty",
     (gogoproto.moretags) = "yaml:\"duration\""
   ];
-
-  // extend for other edit, e.g. cancel unlocking
+  
+  // extension to allow a user to stop an unlock & can update the duration
+  // to a newer time. if false, the duration can only be added to a current
+  // lock.
+  bool cancel_unlocking = 4;
 }
 
 message MsgExtendLockupResponse { bool success = 1; }
