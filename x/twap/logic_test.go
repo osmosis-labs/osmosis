@@ -9,8 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v12/x/twap"
@@ -1010,7 +1008,7 @@ func (s *TestSuite) TestUpdateRecords() {
 			},
 		},
 		// should always be greater than the last record's time.
-		"new record can't be inserted before the last record's update time": {
+		"new record can't be inserted prior to the last record's update time": {
 			preSetRecords: []types.TwapRecord{baseRecord, tPlus10sp5Record},
 			poolId:        baseRecord.PoolId,
 
@@ -1029,7 +1027,7 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 
-			expectError: types.InvalidRecordTimeError{
+			expectError: types.InvalidUpdateRecordError{
 				RecordBlockHeight: tPlus10sp5Record.Height,
 				RecordTime:        tPlus10sp5Record.Time,
 				ActualBlockHeight: (baseRecord.Height + 1),
@@ -1059,7 +1057,7 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 
-			expectError: types.InvalidRecordTimeError{
+			expectError: types.InvalidUpdateRecordError{
 				RecordBlockHeight: mostRecentRecordPoolOne.Height,
 				RecordTime:        mostRecentRecordPoolOne.Time,
 				ActualBlockHeight: mostRecentRecordPoolOne.Height - 1,
@@ -1254,7 +1252,7 @@ func (s *TestSuite) TestUpdateRecords() {
 			twapKeeper := s.App.TwapKeeper
 			ctx := s.Ctx.WithBlockTime(tc.blockTime)
 			if tc.blockHeight != 0 {
-				ctx = s.Ctx.WithBlockHeader(tmproto.Header{Time: tc.blockTime, Height: tc.blockHeight})
+				ctx = s.Ctx.WithBlockTime(tc.blockTime).WithBlockHeight(tc.blockHeight)
 			}
 
 			if len(tc.spOverrides) > 0 {

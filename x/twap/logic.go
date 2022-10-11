@@ -150,7 +150,7 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) (types.Tw
 	if (record.Height >= ctx.BlockHeight() || !record.Time.Before(ctx.BlockTime())) &&
 		!record.P1ArithmeticTwapAccumulator.Equal(sdk.ZeroDec()) &&
 		!record.P0ArithmeticTwapAccumulator.Equal(sdk.ZeroDec()) {
-		return types.TwapRecord{}, types.InvalidRecordTimeError{
+		return types.TwapRecord{}, types.InvalidUpdateRecordError{
 			RecordBlockHeight: record.Height,
 			RecordTime:        record.Time,
 			ActualBlockHeight: ctx.BlockHeight(),
