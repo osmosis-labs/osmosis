@@ -59,7 +59,6 @@ func solveCfmm(xReserve, yReserve osmomath.BigDec, remReserves []osmomath.BigDec
 	if len(remReserves) == 0 {
 		return solveCFMMBinarySearch(cfmmConstant)(xReserve, yReserve, yIn)
 	}
-
 	uReserve := osmomath.OneDec()
 	wSumSquares := osmomath.ZeroDec()
 	for _, assetReserve := range remReserves {
@@ -160,15 +159,16 @@ var (
 // added for future extension
 func solveCFMMBinarySearch(constantFunction func(osmomath.BigDec, osmomath.BigDec) osmomath.BigDec) func(osmomath.BigDec, osmomath.BigDec, osmomath.BigDec) osmomath.BigDec {
 	return func(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
-		if !xReserve.IsPositive() || !yReserve.IsPositive() || !yIn.IsPositive() {
+		if !xReserve.IsPositive() || !yReserve.IsPositive() {
 			panic("invalid input: reserves and input must be positive")
-		} else if yIn.GTE(yReserve) {
+		} else if yIn.Abs().GTE(yReserve) {
 			panic("cannot input more than pool reserves")
 		}
 		k := constantFunction(xReserve, yReserve)
 		yFinal := yReserve.Add(yIn)
 		xLowEst := osmomath.ZeroDec()
-		xHighEst := xReserve
+		// we set upper bound at 2 * xReserve to accommodate negative yIns
+		xHighEst := xReserve.Mul(osmomath.NewBigDec(2))
 		maxIterations := 256
 		errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.Dec{}}
 
@@ -182,7 +182,7 @@ func solveCFMMBinarySearch(constantFunction func(osmomath.BigDec, osmomath.BigDe
 			panic(err)
 		}
 
-		xOut := xReserve.Sub(x_est)
+		xOut := xReserve.Sub(x_est).Abs()
 		if xOut.GTE(xReserve) {
 			panic("invalid output: greater than full pool reserves")
 		}
@@ -224,7 +224,13 @@ func solveCFMMBinarySearchMulti(constantFunction func(osmomath.BigDec, osmomath.
 	}
 }
 
-func spotPrice(baseReserve, quoteReserve osmomath.BigDec) osmomath.BigDec {
+func (p Pool) spotPrice(baseDenom, quoteDenom string) (sdk.Dec, error) {
+	roundMode := osmomath.RoundBankers // TODO:
+	reserves, err := p.scaledSortedPoolReserves(baseDenom, quoteDenom, roundMode)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+	baseReserve, quoteReserve, remReserves := reserves[0], reserves[1], reserves[2:]
 	// y = baseAsset, x = quoteAsset
 	// Define f_{y -> x}(a) as the function that outputs the amount of tokens X you'd get by
 	// trading "a" units of Y against the pool, assuming 0 swap fee, at the current liquidity.
@@ -241,36 +247,56 @@ func spotPrice(baseReserve, quoteReserve osmomath.BigDec) osmomath.BigDec {
 	// xReserve & yReserve.
 	a := osmomath.OneDec()
 	// no need to divide by a, since a = 1.
-	return solveCfmm(baseReserve, quoteReserve, []osmomath.BigDec{}, a)
+	bigDec := solveCfmm(baseReserve, quoteReserve, remReserves, a)
+	return bigDec.SDKDec(), nil
+}
+
+func oneMinus(swapFee sdk.Dec) osmomath.BigDec {
+	return osmomath.BigDecFromSDKDec(sdk.OneDec().Sub(swapFee))
 }
 
 // returns outAmt as a decimal
-func (p *Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
-	reserves, err := p.getScaledPoolAmts(tokenIn.Denom, tokenOutDenom)
+func (p Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
+	// round liquidity down, and round token in down
+	reserves, err := p.scaledSortedPoolReserves(tokenIn.Denom, tokenOutDenom, osmomath.RoundDown)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	tokenInSupply, tokenOutSupply := reserves[0], reserves[1]
-	remReserves := osmomath.BigDecFromSDKDecSlice(reserves[2:])
+	tokenInSupply, tokenOutSupply, remReserves := reserves[0], reserves[1], reserves[2:]
+	tokenInDec, err := p.scaleCoin(tokenIn, osmomath.RoundDown)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	// amm input = tokenIn * (1 - swap fee)
+	ammIn := tokenInDec.Mul(oneMinus(swapFee))
 	// We are solving for the amount of token out, hence x = tokenOutSupply, y = tokenInSupply
-	cfmmOut := solveCfmm(osmomath.BigDecFromSDKDec(tokenOutSupply), osmomath.BigDecFromSDKDec(tokenInSupply), remReserves, osmomath.BigDecFromSDKDec(tokenIn.Amount.ToDec()))
+	cfmmOut := solveCfmm(tokenOutSupply, tokenInSupply, remReserves, ammIn)
 	outAmt := p.getDescaledPoolAmt(tokenOutDenom, cfmmOut)
-	return outAmt.SDKDec(), nil
+	return outAmt, nil
 }
 
 // returns inAmt as a decimal
 func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
-	reserves, err := p.getScaledPoolAmts(tokenInDenom, tokenOut.Denom)
+	// round liquidity down, and round token out up
+	reserves, err := p.scaledSortedPoolReserves(tokenInDenom, tokenOut.Denom, osmomath.RoundDown)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	tokenInSupply, tokenOutSupply := reserves[0], reserves[1]
-	remReserves := osmomath.BigDecFromSDKDecSlice(reserves[2:])
+	tokenInSupply, tokenOutSupply, remReserves := reserves[0], reserves[1], reserves[2:]
+	tokenOutAmount, err := p.scaleCoin(tokenOut, osmomath.RoundUp)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
 	// We are solving for the amount of token in, cfmm(x,y) = cfmm(x + x_in, y - y_out)
 	// x = tokenInSupply, y = tokenOutSupply, yIn = -tokenOutAmount
-	cfmmIn := solveCfmm(osmomath.BigDecFromSDKDec(tokenInSupply), osmomath.BigDecFromSDKDec(tokenOutSupply), remReserves, osmomath.BigDecFromSDKDec(tokenOut.Amount.ToDec().Neg()))
-	inAmt := p.getDescaledPoolAmt(tokenInDenom, cfmmIn.Neg())
-	return inAmt.SDKDec(), nil
+	cfmmIn := solveCfmm(tokenInSupply, tokenOutSupply, remReserves, tokenOutAmount.Neg())
+	// handle swap fee
+	inAmt := cfmmIn.QuoRoundUp(oneMinus(swapFee))
+	// divide by (1 - swapfee) to force a corresponding increase in input asset
+	inCoinAmt := p.getDescaledPoolAmt(tokenInDenom, inAmt)
+	return inCoinAmt, nil
 }
 
 func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk.Int, error) {
@@ -279,8 +305,12 @@ func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk
 		paCopy.updatePoolForJoin(sdk.NewCoins(tokenIn), newShares)
 		return &paCopy
 	}
-	// TODO: Correctly handle swap fee
-	return cfmm_common.BinarySearchSingleAssetJoin(p, tokenIn, poolWithAddedLiquidityAndShares)
+
+	// We apply the swap fee by multiplying by (1 - swapFee) and then truncating to int
+	oneMinusSwapFee := sdk.OneDec().Sub(swapFee)
+	tokenInAmtAfterFee := tokenIn.Amount.ToDec().Mul(oneMinusSwapFee).TruncateInt()
+
+	return cfmm_common.BinarySearchSingleAssetJoin(p, sdk.NewCoin(tokenIn.Denom, tokenInAmtAfterFee), poolWithAddedLiquidityAndShares)
 }
 
 // We can mutate pa here

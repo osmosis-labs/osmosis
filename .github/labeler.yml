@@ -54,7 +54,6 @@
   - x/*/client/**/*
 # Add "C:docs" label to documented related files and directories. 
 "C:docs":
-  - CHANGELOG.md
   - bug.md
   - issue.md
   - proto-docs.md
