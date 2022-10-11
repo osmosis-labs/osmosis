@@ -54,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Misc Improvements
 
+* [#2975](https://github.com/osmosis-labs/osmosis/pull/2975) Use master branch of cosmos/ledger-cosmos-go in order to clean up ledger support
 * [#2804](https://github.com/osmosis-labs/osmosis/pull/2804) Improve error handling and messages when parsing pool assets.
 
 ## v12.0.0
