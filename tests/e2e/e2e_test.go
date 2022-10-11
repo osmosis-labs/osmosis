@@ -406,9 +406,13 @@ func (s *IntegrationTestSuite) TestStateSync() {
 	// ensure that the state synching node cathes up to the running node.
 	s.Require().Eventually(func() bool {
 		stateSyncNodeHeight, err := stateSynchingNode.QueryCurrentHeight()
-		s.Require().NoError(err)
+		if err != nil {
+			return false
+		}
 		runningNodeHeight, err := runningNode.QueryCurrentHeight()
-		s.Require().NoError(err)
+		if err != nil {
+			return false
+		}
 		return stateSyncNodeHeight == runningNodeHeight
 	},
 		3*time.Minute,
