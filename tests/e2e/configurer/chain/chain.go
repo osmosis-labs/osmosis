@@ -126,7 +126,8 @@ func (c *Config) WaitUntilHeight(height int64) {
 func (c *Config) WaitForNumHeights(heightsToWait int64) {
 	node, err := c.GetDefaultNode()
 	require.NoError(c.t, err)
-	currentHeight := node.QueryCurrentHeight()
+	currentHeight, err := node.QueryCurrentHeight()
+	require.NoError(c.t, err)
 	c.WaitUntilHeight(currentHeight + heightsToWait)
 }
 
