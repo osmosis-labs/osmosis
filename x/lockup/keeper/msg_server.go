@@ -182,3 +182,43 @@ func (server msgServer) ExtendLockup(goCtx context.Context, msg *types.MsgExtend
 
 	return &types.MsgExtendLockupResponse{}, nil
 }
+
+// ForceUnlock ignores unlock duration and immediately unlocks the lock.
+// This message is only allowed for governance-passed accounts that are kept as parameter in the lockup module.
+// Locks that has been superfluid delegated is not supported.
+func (server msgServer) ForceUnlock(goCtx context.Context, msg *types.MsgForceUnlock) (*types.MsgForceUnlockResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// check for chain parameter that the address is allowed to force unlock
+	forceUnlockAllowedAddresses := server.keeper.GetParams(ctx).ForceUnlockAllowedAddresses
+	found := false
+	for _, address := range forceUnlockAllowedAddresses {
+		if address == msg.Owner {
+			found = true
+		}
+	}
+	if !found {
+		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "Sender (%s) not allowed to force unlock", msg.Owner)
+	}
+
+	lock, err := server.keeper.GetLockByID(ctx, msg.ID)
+	if err != nil {
+		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	// check that given lock is not superfluid staked
+	synthLocks := server.keeper.GetAllSyntheticLockupsByLockup(ctx, lock.ID)
+	if len(synthLocks) > 0 {
+		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "superfluid delegation exists for lock")
+	}
+
+	// force unlock given lock
+	// This also supports the case of force unlocking lock as a whole when msg.Coins
+	// provided is empty.
+	err = server.keeper.PartialForceUnlock(ctx, *lock, msg.Coins)
+	if err != nil {
+		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	return &types.MsgForceUnlockResponse{Success: true}, nil
+}
