@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) TestAdminMsgs() {
 
 	// Make sure old admin can no longer do actions
 	_, err = suite.msgServer.Burn(sdk.WrapSDKContext(suite.Ctx), types.NewMsgBurn(suite.TestAccs[0].String(), sdk.NewInt64Coin(suite.defaultDenom, 5)))
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, types.ErrUnauthorized)
 
 	// Make sure the new admin works
 	_, err = suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), types.NewMsgMint(suite.TestAccs[1].String(), sdk.NewInt64Coin(suite.defaultDenom, 5)))
@@ -124,7 +124,7 @@ func (suite *KeeperTestSuite) TestMintDenom() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestBurnDenom() {
+func (suite *KeeperTestSuite) TestBurnDenom() { // TODO wrong error
 	var addr0bal int64
 
 	// Create a denom.
@@ -274,7 +274,7 @@ func (suite *KeeperTestSuite) TestChangeAdminDenom() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestSetDenomMetaData() {
+func (suite *KeeperTestSuite) TestSetDenomMetaData() { // TODO wrong error
 	// setup test
 	suite.SetupTest()
 	suite.CreateDefaultDenom()

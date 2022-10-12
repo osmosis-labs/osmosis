@@ -38,7 +38,7 @@ func (suite *KeeperTestSuite) TestMsgCreateDenom() {
 
 	// Make sure that a second version of the same denom can't be recreated
 	res, err = suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
-	suite.Require().Error(types.ErrDenomExists)
+	suite.Require().ErrorIs(err, types.ErrDenomExists)
 
 	// Creating a second denom should work
 	res, err = suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "litecoin"))
@@ -59,7 +59,7 @@ func (suite *KeeperTestSuite) TestMsgCreateDenom() {
 
 	// Make sure that an address with a "/" in it can't create denoms
 	res, err = suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom("osmosis.eth/creator", "bitcoin"))
-	suite.Require().Error(types.ErrInvalidCreator)
+	suite.Require().ErrorIs(err, types.ErrInvalidCreator)
 }
 
 func (suite *KeeperTestSuite) TestCreateDenom() {

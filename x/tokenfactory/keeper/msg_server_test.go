@@ -55,7 +55,7 @@ func (suite *KeeperTestSuite) TestMintDenomMsg() {
 }
 
 // TestBurnDenomMsg tests TypeMsgBurn message is emitted on a successful burn
-func (suite *KeeperTestSuite) TestBurnDenomMsg() {
+func (suite *KeeperTestSuite) TestBurnDenomMsg() { // TODO wrong error
 	// Create a denom.
 	suite.CreateDefaultDenom()
 	// mint 10 default token for testAcc[0]
@@ -91,7 +91,7 @@ func (suite *KeeperTestSuite) TestBurnDenomMsg() {
 			if tc.expectedErr == nil {
 				suite.Require().NoError(err)
 			} else {
-				fmt.Println(err) // TODO wrong error
+				fmt.Println(err)
 				suite.Require().ErrorIs(err, tc.expectedErr)
 			}
 			// Ensure current number and type of event is emitted
@@ -145,7 +145,7 @@ func (suite *KeeperTestSuite) TestCreateDenomMsg() {
 }
 
 // TestChangeAdminDenomMsg tests TypeMsgChangeAdmin message is emitted on a successful admin change
-func (suite *KeeperTestSuite) TestChangeAdminDenomMsg() {
+func (suite *KeeperTestSuite) TestChangeAdminDenomMsg() { // TODO wrong error
 	for _, tc := range []struct {
 		desc                   string
 		msgChangeAdmin         func(denom string) *types.MsgChangeAdmin
@@ -211,7 +211,7 @@ func (suite *KeeperTestSuite) TestChangeAdminDenomMsg() {
 }
 
 // TestSetDenomMetaDataMsg tests TypeMsgSetDenomMetadata message is emitted on a successful denom metadata change
-func (suite *KeeperTestSuite) TestSetDenomMetaDataMsg() {
+func (suite *KeeperTestSuite) TestSetDenomMetaDataMsg() { // TODO wrong error
 	// setup test
 	suite.SetupTest()
 	suite.CreateDefaultDenom()
@@ -270,7 +270,10 @@ func (suite *KeeperTestSuite) TestSetDenomMetaDataMsg() {
 			ctx := suite.Ctx.WithEventManager(sdk.NewEventManager())
 			suite.Require().Equal(0, len(ctx.EventManager().Events()))
 			// Test set denom metadata message
-			suite.msgServer.SetDenomMetadata(sdk.WrapSDKContext(ctx), &tc.msgSetDenomMetadata)
+			_, err := suite.msgServer.SetDenomMetadata(sdk.WrapSDKContext(ctx), &tc.msgSetDenomMetadata)
+			if !tc.expectedPass {
+				fmt.Println(err)
+			}
 			// Ensure current number and type of event is emitted
 			suite.AssertEventEmitted(ctx, types.TypeMsgSetDenomMetadata, tc.expectedMessageEvents)
 		})
