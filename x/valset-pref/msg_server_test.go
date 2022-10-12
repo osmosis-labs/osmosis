@@ -142,3 +142,59 @@ func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
+	tests := []struct {
+		name       string
+		delegator  sdk.AccAddress
+		coin       sdk.Coin
+		expectPass bool
+	}{
+		{
+			name:       "Stake to a valid validator!",
+			delegator:  sdk.AccAddress([]byte("addr1---------------")),
+			coin:       sdk.NewCoin("stake", sdk.NewInt(10)),
+			expectPass: true,
+		},
+		{
+			name:       "User doesnot have enough tokens to stake",
+			delegator:  sdk.AccAddress([]byte("addr2---------------")),
+			coin:       sdk.NewCoin("stake", sdk.NewInt(200)),
+			expectPass: false,
+		},
+	}
+
+	for _, test := range tests {
+		suite.Run(test.name, func() {
+			suite.SetupTest()
+
+			suite.FundAcc(test.delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100)})
+
+			// setup message server
+			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorPreferenceKeeper)
+			c := sdk.WrapSDKContext(suite.Ctx)
+
+			// call the create validator set preference
+			preferences := suite.PrepareDelegateToValidatorSet()
+
+			// set the creation fee
+			suite.App.ValidatorPreferenceKeeper.SetParams(suite.Ctx, types.Params{
+				ValsetCreationFee: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))),
+			})
+
+			_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
+			suite.Require().NoError(err)
+
+			// Fund the delegator address account
+			suite.FundAcc(test.delegator, sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(20))})
+
+			// call the create validator set preference
+			_, err = msgServer.DelegateToValidatorSet(c, types.NewMsgDelegateToValidatorSet(test.delegator, test.coin))
+			if test.expectPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}

@@ -36,7 +36,7 @@ func (k Keeper) SetupValidatorSetPreference(ctx sdk.Context, delegator string, p
 }
 
 // GetValAddrAndVal checks if the validator address is valid and the validator provided exists on chain.
-func (k Keeper) getValAddrAndVal(ctx sdk.Context, valOperAddress string) (sdk.ValAddress, stakingtypes.Validator, error) {
+func (k Keeper) GetValAddrAndVal(ctx sdk.Context, valOperAddress string) (sdk.ValAddress, stakingtypes.Validator, error) {
 	valAddr, err := sdk.ValAddressFromBech32(valOperAddress)
 	if err != nil {
 		return nil, stakingtypes.Validator{}, fmt.Errorf("validator address not formatted")
@@ -53,7 +53,7 @@ func (k Keeper) getValAddrAndVal(ctx sdk.Context, valOperAddress string) (sdk.Va
 // IsPreferenceValid loops through the validator preferences and checks its existence and validity.
 func (k Keeper) IsPreferenceValid(ctx sdk.Context, preferences []types.ValidatorPreference) bool {
 	for _, val := range preferences {
-		_, _, err := k.getValAddrAndVal(ctx, val.ValOperAddress)
+		_, _, err := k.GetValAddrAndVal(ctx, val.ValOperAddress)
 		if err != nil {
 			return false
 		}
