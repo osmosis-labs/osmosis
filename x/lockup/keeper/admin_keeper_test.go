@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/v12/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -49,5 +50,5 @@ func (suite *KeeperTestSuite) BreakLock() {
 	suite.Require().NoError(err)
 
 	_, err = suite.App.LockupKeeper.GetLockByID(suite.Ctx, lock.ID)
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, types.ErrLockupNotFound)
 }

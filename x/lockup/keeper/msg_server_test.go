@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"time"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v12/x/lockup/keeper"
 	"github.com/osmosis-labs/osmosis/v12/x/lockup/types"
@@ -20,9 +22,9 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 	}
 
 	tests := []struct {
-		name       string
-		param      param
-		expectPass bool
+		name         string
+		param        param
+		expectingErr error
 	}{
 		{
 			name: "creation of lock via lockTokens",
@@ -32,7 +34,7 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 				duration:            time.Second,
 				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
 			},
-			expectPass: true,
+			expectingErr: nil,
 		},
 		{
 			name: "locking more coins than are in the address",
@@ -42,7 +44,7 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 				duration:            time.Second,
 				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
 			},
-			expectPass: false,
+			expectingErr: sdkerrors.ErrInvalidRequest,
 		},
 	}
 
@@ -55,7 +57,7 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 		c := sdk.WrapSDKContext(suite.Ctx)
 		_, err := msgServer.LockTokens(c, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 
-		if test.expectPass {
+		if test.expectingErr == nil {
 			// creation of lock via LockTokens
 			msgServer := keeper.NewMsgServerImpl(suite.App.LockupKeeper)
 			_, err = msgServer.LockTokens(sdk.WrapSDKContext(suite.Ctx), types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
@@ -96,7 +98,7 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 
 		} else {
 			// Fail simple lock token
-			suite.Require().Error(err)
+			suite.Require().ErrorIs(err, test.expectingErr)
 		}
 	}
 }
@@ -112,9 +114,9 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 	}
 
 	tests := []struct {
-		name       string
-		param      param
-		expectPass bool
+		name         string
+		param        param
+		expectingErr error
 	}{
 		{
 			name: "unlock full amount of tokens via begin unlock",
@@ -126,7 +128,7 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 				duration:            time.Second,
 				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
 			},
-			expectPass: true,
+			expectingErr: nil,
 		},
 		{
 			name: "unlock partial amount of tokens via begin unlock",
@@ -138,7 +140,7 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 				duration:            time.Second,
 				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
 			},
-			expectPass: true,
+			expectingErr: nil,
 		},
 		{
 			name: "unlock zero amount of tokens via begin unlock",
@@ -150,7 +152,7 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 				duration:            time.Second,
 				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
 			},
-			expectPass: true,
+			expectingErr: nil,
 		},
 		{
 			name: "unlock partial amount of tokens via begin unlock for lockup with synthetic versions",
@@ -162,7 +164,7 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 				duration:            time.Second,
 				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
 			},
-			expectPass: false,
+			expectingErr: sdkerrors.ErrInvalidRequest,
 		},
 	}
 
@@ -183,10 +185,10 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 
 		_, err = msgServer.BeginUnlocking(c, types.NewMsgBeginUnlocking(test.param.lockOwner, resp.ID, test.param.coinsToUnlock))
 
-		if test.expectPass {
+		if test.expectingErr == nil {
 			suite.Require().NoError(err)
 		} else {
-			suite.Require().Error(err)
+			suite.Require().ErrorIs(err, test.expectingErr)
 		}
 	}
 }
@@ -201,9 +203,9 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlockingAll() {
 	}
 
 	tests := []struct {
-		name       string
-		param      param
-		expectPass bool
+		name         string
+		param        param
+		expectingErr error
 	}{
 		{
 			name: "unlock all lockups",
@@ -214,7 +216,7 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlockingAll() {
 				duration:            time.Second,
 				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
 			},
-			expectPass: true,
+			expectingErr: nil,
 		},
 		{
 			name: "unlock all when synthetic versions exists",
@@ -225,7 +227,7 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlockingAll() {
 				duration:            time.Second,
 				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
 			},
-			expectPass: false,
+			expectingErr: sdkerrors.ErrInvalidRequest,
 		},
 	}
 
@@ -246,10 +248,10 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlockingAll() {
 
 		_, err = msgServer.BeginUnlockingAll(c, types.NewMsgBeginUnlockingAll(test.param.lockOwner))
 
-		if test.expectPass {
+		if test.expectingErr == nil {
 			suite.Require().NoError(err)
 		} else {
-			suite.Require().Error(err)
+			suite.Require().ErrorIs(err, test.expectingErr)
 		}
 	}
 }
@@ -264,9 +266,9 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 	}
 
 	tests := []struct {
-		name       string
-		param      param
-		expectPass bool
+		name         string
+		param        param
+		expectingErr error
 	}{
 		{
 			name: "edit lockups by duration",
@@ -277,7 +279,7 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 				duration:          time.Second,
 				newDuration:       time.Second * 2,
 			},
-			expectPass: true,
+			expectingErr: nil,
 		},
 		{
 			name: "edit lockups by lesser duration",
@@ -288,7 +290,7 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 				duration:          time.Second,
 				newDuration:       time.Second / 2,
 			},
-			expectPass: false,
+			expectingErr: sdkerrors.ErrInvalidRequest,
 		},
 		{
 			name: "disallow edit when synthetic lockup exists",
@@ -299,7 +301,7 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 				duration:          time.Second,
 				newDuration:       time.Second * 2,
 			},
-			expectPass: false,
+			expectingErr: sdkerrors.ErrInvalidRequest,
 		},
 	}
 
@@ -321,10 +323,10 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 
 		_, err = msgServer.ExtendLockup(c, types.NewMsgExtendLockup(test.param.lockOwner, resp.ID, test.param.newDuration))
 
-		if test.expectPass {
+		if test.expectingErr == nil {
 			suite.Require().NoError(err, test.name)
 		} else {
-			suite.Require().Error(err, test.name)
+			suite.Require().ErrorIs(err, test.expectingErr)
 		}
 	}
 }
@@ -340,14 +342,14 @@ func (suite *KeeperTestSuite) TestMsgForceUnlock() {
 		forceUnlockAllowedAddress types.Params
 		postLockSetup             func()
 		forceUnlockAmount         sdk.Int
-		expectPass                bool
+		expectingErr              error
 	}{
 		{
 			"happy path",
 			types.Params{ForceUnlockAllowedAddresses: []string{addr1.String()}},
 			func() {},
 			defaultLockAmount,
-			true,
+			nil,
 		},
 		{
 			"force unlock superfluid delegated lock",
@@ -357,7 +359,7 @@ func (suite *KeeperTestSuite) TestMsgForceUnlock() {
 				suite.Require().NoError(err)
 			},
 			defaultLockAmount,
-			false,
+			sdkerrors.ErrInvalidRequest,
 		},
 		{
 			"superfluid undelegating lock",
@@ -370,7 +372,7 @@ func (suite *KeeperTestSuite) TestMsgForceUnlock() {
 				suite.Require().NoError(err)
 			},
 			defaultLockAmount,
-			false,
+			sdkerrors.ErrInvalidRequest,
 		},
 		{
 			"partial unlock",
@@ -378,7 +380,7 @@ func (suite *KeeperTestSuite) TestMsgForceUnlock() {
 			func() {},
 			// try force unlocking half of locked amount
 			defaultLockAmount.Quo(sdk.NewInt(2)),
-			true,
+			nil,
 		},
 		{
 			"force unlock more than what we have locked",
@@ -386,21 +388,21 @@ func (suite *KeeperTestSuite) TestMsgForceUnlock() {
 			func() {},
 			// try force more than the locked amount
 			defaultLockAmount.Add(sdk.NewInt(1)),
-			false,
+			sdkerrors.ErrInvalidRequest,
 		},
 		{
 			"params with different address",
 			types.Params{ForceUnlockAllowedAddresses: []string{addr2.String()}},
 			func() {},
 			defaultLockAmount,
-			false,
+			sdkerrors.ErrUnauthorized,
 		},
 		{
 			"param with multiple addresses ",
 			types.Params{ForceUnlockAllowedAddresses: []string{addr1.String(), addr2.String()}},
 			func() {},
 			defaultLockAmount,
-			true,
+			nil,
 		},
 	}
 
@@ -429,19 +431,18 @@ func (suite *KeeperTestSuite) TestMsgForceUnlock() {
 
 		// test force unlock
 		_, err = msgServer.ForceUnlock(c, types.NewMsgForceUnlock(addr1, resp.ID, sdk.Coins{sdk.NewCoin(poolDenom, test.forceUnlockAmount)}))
-		if test.expectPass {
+		if test.expectingErr == nil {
 			suite.Require().NoError(err)
 
 			// check that we have successfully force unlocked
 			balanceAfterForceUnlock := suite.App.BankKeeper.GetBalance(suite.Ctx, addr1, poolDenom)
 			suite.Require().Equal(test.forceUnlockAmount, balanceAfterForceUnlock.Amount)
 		} else {
-			suite.Require().Error(err)
+			suite.Require().ErrorIs(err, test.expectingErr)
 
 			// check that we have successfully force unlocked
 			balanceAfterForceUnlock := suite.App.BankKeeper.GetBalance(suite.Ctx, addr1, poolDenom)
 			suite.Require().NotEqual(test.forceUnlockAmount, balanceAfterForceUnlock.Amount)
-			return
 		}
 	}
 }

@@ -28,7 +28,7 @@ func (suite *KeeperTestSuite) TestSyntheticLockupCreation() {
 
 	// try creating same suffix synthetic lockup for a single lockup
 	err = suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, 1, "suffix1", time.Second, true)
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, types.ErrSyntheticLockupAlreadyExists)
 
 	// create unbonding synthetic lockup
 	err = suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, 1, "suffix2", time.Second, true)
@@ -36,7 +36,7 @@ func (suite *KeeperTestSuite) TestSyntheticLockupCreation() {
 
 	// try creating unbonding synthetic lockup that is long than native lockup unbonding duration
 	err = suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, 1, "suffix3", time.Second*2, true)
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, types.ErrSyntheticDurationLongerThanNative)
 }
 
 func (suite *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
@@ -190,14 +190,14 @@ func (suite *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 
 	// try creating synthetic lockup with same lock and suffix
 	err = suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, 1, "synthstakestakedtovalidator1", time.Second, false)
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, types.ErrSyntheticLockupAlreadyExists)
 
 	// delete synthetic lockup
 	err = suite.App.LockupKeeper.DeleteSyntheticLockup(suite.Ctx, 1, "synthstakestakedtovalidator1")
 	suite.Require().NoError(err)
 
 	synthLock, err = suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, 1, "synthstakestakedtovalidator1")
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, types.ErrSyntheticLockupNotExists)
 	suite.Require().Nil(synthLock)
 
 	// check accumulation store is correctly updated for synthetic lock
@@ -259,7 +259,7 @@ func (suite *KeeperTestSuite) TestSyntheticLockupDeleteAllMaturedSyntheticLocks(
 	_, err = suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, 1, "synthstakestakedtovalidator1")
 	suite.Require().NoError(err)
 	_, err = suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, 1, "synthstakestakedtovalidator2")
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, types.ErrSyntheticLockupNotExists)
 }
 
 func (suite *KeeperTestSuite) TestResetAllSyntheticLocks() {

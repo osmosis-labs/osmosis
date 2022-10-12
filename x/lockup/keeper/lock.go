@@ -194,7 +194,7 @@ func (k Keeper) BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins
 func (k Keeper) beginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins) error {
 	// sanity check
 	if !coins.IsAllLTE(lock.Coins) {
-		return fmt.Errorf("requested amount to unlock exceeds locked tokens")
+		return sdkerrors.Wrapf(types.ErrRequestedExceedsTokens, "requested amount to unlock exceeds locked tokens")
 	}
 
 	if lock.IsUnlocking() {
@@ -298,10 +298,10 @@ func (k Keeper) UnlockMaturedLock(ctx sdk.Context, lockID uint64) error {
 	// validation for current time and unlock time
 	curTime := ctx.BlockTime()
 	if !lock.IsUnlocking() {
-		return fmt.Errorf("lock hasn't started unlocking yet")
+		return sdkerrors.Wrapf(types.ErrNotStartedUnlocking, "lock hasn't started unlocking yet")
 	}
 	if curTime.Before(lock.EndTime) {
-		return fmt.Errorf("lock is not unlockable yet: %s >= %s", curTime.String(), lock.EndTime.String())
+		return sdkerrors.Wrapf(types.ErrNotUnlockableYet, "%s >= %s", curTime.String(), lock.EndTime.String())
 	}
 
 	return k.unlockMaturedLockInternalLogic(ctx, *lock)
@@ -313,7 +313,7 @@ func (k Keeper) UnlockMaturedLock(ctx sdk.Context, lockID uint64) error {
 func (k Keeper) PartialForceUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins) error {
 	// sanity check
 	if !coins.IsAllLTE(lock.Coins) {
-		return fmt.Errorf("requested amount to unlock exceeds locked tokens")
+		return sdkerrors.Wrapf(types.ErrRequestedExceedsTokens, "requested amount to unlock exceeds locked tokens")
 	}
 
 	// split lock to support partial force unlock.
@@ -420,7 +420,7 @@ func (k Keeper) ExtendLockup(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 	oldDuration := lock.GetDuration()
 	if newDuration != 0 {
 		if newDuration <= oldDuration {
-			return fmt.Errorf("new duration should be greater than the original")
+			return sdkerrors.Wrapf(types.ErrNewDurationNotGreater, "new duration should be greater than the original")
 		}
 
 		// update accumulation store

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 )
@@ -80,7 +81,7 @@ func (suite *KeeperTestSuite) TestAccountUnlockableCoins() {
 
 	// empty address unlockable coins check
 	_, err := suite.querier.AccountUnlockableCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockableCoinsRequest{Owner: ""})
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidRequest)
 
 	// initial check
 	res, err := suite.querier.AccountUnlockableCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockableCoinsRequest{Owner: addr1.String()})
@@ -121,7 +122,7 @@ func (suite *KeeperTestSuite) TestAccountUnlockingCoins() {
 
 	// empty address unlockable coins check
 	_, err := suite.querier.AccountUnlockingCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockingCoinsRequest{Owner: ""})
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidRequest)
 
 	// initial check
 	res, err := suite.querier.AccountUnlockingCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockingCoinsRequest{Owner: addr1.String()})
@@ -162,7 +163,7 @@ func (suite *KeeperTestSuite) TestAccountLockedCoins() {
 
 	// empty address locked coins check
 	_, err := suite.querier.AccountLockedCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedCoinsRequest{})
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidRequest)
 
 	// initial check
 	res, err := suite.querier.AccountLockedCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedCoinsRequest{Owner: addr1.String()})
@@ -198,7 +199,7 @@ func (suite *KeeperTestSuite) TestAccountLockedPastTime() {
 
 	// empty address locks check
 	_, err := suite.querier.AccountLockedPastTime(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedPastTimeRequest{Owner: "", Timestamp: now})
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidRequest)
 
 	// initial check
 	res, err := suite.querier.AccountLockedPastTime(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedPastTimeRequest{Owner: addr1.String(), Timestamp: now})
@@ -233,7 +234,7 @@ func (suite *KeeperTestSuite) TestAccountLockedPastTimeNotUnlockingOnly() {
 
 	// empty address locks check
 	_, err := suite.querier.AccountLockedPastTimeNotUnlockingOnly(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedPastTimeNotUnlockingOnlyRequest{Owner: "", Timestamp: now})
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidRequest)
 
 	// initial check
 	res, err := suite.querier.AccountLockedPastTimeNotUnlockingOnly(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedPastTimeNotUnlockingOnlyRequest{Owner: addr1.String(), Timestamp: now})
@@ -265,7 +266,7 @@ func (suite *KeeperTestSuite) TestAccountUnlockedBeforeTime() {
 
 	// empty address unlockables check
 	_, err := suite.querier.AccountUnlockedBeforeTime(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockedBeforeTimeRequest{Owner: "", Timestamp: now})
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidRequest)
 
 	// initial check
 	res, err := suite.querier.AccountUnlockedBeforeTime(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockedBeforeTimeRequest{Owner: addr1.String(), Timestamp: now})
@@ -300,7 +301,7 @@ func (suite *KeeperTestSuite) TestAccountLockedPastTimeDenom() {
 
 	// empty address locks by denom check
 	_, err := suite.querier.AccountLockedPastTimeDenom(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedPastTimeDenomRequest{Owner: "", Denom: "stake", Timestamp: now})
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidRequest)
 
 	// initial check
 	res, err := suite.querier.AccountLockedPastTimeDenom(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedPastTimeDenomRequest{Owner: addr1.String(), Denom: "stake", Timestamp: now})
@@ -344,7 +345,7 @@ func (suite *KeeperTestSuite) TestLockedByID() {
 
 	// lock by not available id check
 	res, err := suite.querier.LockedByID(sdk.WrapSDKContext(suite.Ctx), &types.LockedRequest{LockId: 0})
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, types.ErrLockupNotFound)
 
 	// lock coins
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
@@ -367,7 +368,7 @@ func (suite *KeeperTestSuite) TestAccountLockedLongerDuration() {
 
 	// empty address locks longer than duration check
 	res, err := suite.querier.AccountLockedLongerDuration(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationRequest{Owner: "", Duration: time.Second})
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidRequest)
 
 	// initial check
 	res, err = suite.querier.AccountLockedLongerDuration(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationRequest{Owner: addr1.String(), Duration: time.Second})
@@ -401,7 +402,7 @@ func (suite *KeeperTestSuite) TestAccountLockedLongerDurationNotUnlockingOnly() 
 
 	// empty address locks longer than duration check
 	res, err := suite.querier.AccountLockedLongerDurationNotUnlockingOnly(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: "", Duration: time.Second})
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidRequest)
 
 	// initial check
 	res, err = suite.querier.AccountLockedLongerDurationNotUnlockingOnly(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: addr1.String(), Duration: time.Second})
@@ -431,7 +432,7 @@ func (suite *KeeperTestSuite) TestAccountLockedLongerDurationDenom() {
 
 	// empty address locks longer than duration by denom check
 	res, err := suite.querier.AccountLockedLongerDurationDenom(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: "", Duration: time.Second, Denom: "stake"})
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidRequest)
 
 	// initial check
 	res, err = suite.querier.AccountLockedLongerDurationDenom(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: addr1.String(), Duration: time.Second, Denom: "stake"})

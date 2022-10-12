@@ -1,12 +1,12 @@
 package keeper
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 )
@@ -29,7 +29,7 @@ func (k Keeper) GetSyntheticLockup(ctx sdk.Context, lockID uint64, synthdenom st
 	store := ctx.KVStore(k.storeKey)
 	synthLockKey := syntheticLockStoreKey(lockID, synthdenom)
 	if !store.Has(synthLockKey) {
-		return nil, fmt.Errorf("synthetic lock with ID %d and synth denom %s does not exist", lockID, synthdenom)
+		return nil, sdkerrors.Wrapf(types.ErrSyntheticLockupNotExists, "synthetic lock with ID %d and synth denom %s", lockID, synthdenom)
 	}
 	bz := store.Get(synthLockKey)
 	err := proto.Unmarshal(bz, &synthLock)

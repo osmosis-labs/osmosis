@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -69,65 +71,68 @@ func (suite *KeeperTestSuite) TestUnlock() {
 	initialLockCoins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
 
 	testCases := []struct {
-		name                          string
-		unlockingCoins                sdk.Coins
-		expectedBeginUnlockPass       bool
-		passedTime                    time.Duration
-		expectedUnlockMaturedLockPass bool
-		balanceAfterUnlock            sdk.Coins
+		name                         string
+		unlockingCoins               sdk.Coins
+		expectedBeginUnlockErr       error
+		passedTime                   time.Duration
+		expectedUnlockMaturedLockErr error
+		balanceAfterUnlock           sdk.Coins
 	}{
 		{
-			name:                          "normal unlocking case",
-			unlockingCoins:                initialLockCoins,
-			expectedBeginUnlockPass:       true,
-			passedTime:                    time.Second,
-			expectedUnlockMaturedLockPass: true,
-			balanceAfterUnlock:            initialLockCoins,
+			name:                         "normal unlocking case",
+			unlockingCoins:               initialLockCoins,
+			expectedBeginUnlockErr:       nil,
+			passedTime:                   time.Second,
+			expectedUnlockMaturedLockErr: nil,
+			balanceAfterUnlock:           initialLockCoins,
 		},
 		{
-			name:                          "begin unlocking with nil as unlocking coins",
-			unlockingCoins:                nil,
-			expectedBeginUnlockPass:       true,
-			passedTime:                    time.Second,
-			expectedUnlockMaturedLockPass: true,
-			balanceAfterUnlock:            initialLockCoins,
+			name:                         "begin unlocking with nil as unlocking coins",
+			unlockingCoins:               nil,
+			expectedBeginUnlockErr:       nil,
+			passedTime:                   time.Second,
+			expectedUnlockMaturedLockErr: nil,
+			balanceAfterUnlock:           initialLockCoins,
 		},
 		{
-			name:                          "unlocking coins exceed what's in lock",
-			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin("stake", 20)},
-			passedTime:                    time.Second,
-			expectedUnlockMaturedLockPass: false,
-			balanceAfterUnlock:            sdk.Coins{},
+			name:                         "unlocking coins exceed what's in lock",
+			unlockingCoins:               sdk.Coins{sdk.NewInt64Coin("stake", 20)},
+			expectedBeginUnlockErr:       types.ErrRequestedExceedsTokens,
+			passedTime:                   time.Second,
+			expectedUnlockMaturedLockErr: types.ErrNotStartedUnlocking,
+			balanceAfterUnlock:           sdk.Coins{},
 		},
 		{
-			name:                          "unlocking unknown tokens",
-			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin("unknown", 10)},
-			passedTime:                    time.Second,
-			expectedUnlockMaturedLockPass: false,
-			balanceAfterUnlock:            sdk.Coins{},
+			name:                         "unlocking unknown tokens",
+			unlockingCoins:               sdk.Coins{sdk.NewInt64Coin("unknown", 10)},
+			expectedBeginUnlockErr:       types.ErrRequestedExceedsTokens,
+			passedTime:                   time.Second,
+			expectedUnlockMaturedLockErr: types.ErrNotStartedUnlocking,
+			balanceAfterUnlock:           sdk.Coins{},
 		},
 		{
-			name:                          "partial unlocking",
-			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin("stake", 5)},
-			expectedBeginUnlockPass:       true,
-			passedTime:                    time.Second,
-			expectedUnlockMaturedLockPass: true,
-			balanceAfterUnlock:            sdk.Coins{sdk.NewInt64Coin("stake", 5)},
+			name:                         "partial unlocking",
+			unlockingCoins:               sdk.Coins{sdk.NewInt64Coin("stake", 5)},
+			expectedBeginUnlockErr:       nil,
+			passedTime:                   time.Second,
+			expectedUnlockMaturedLockErr: nil,
+			balanceAfterUnlock:           sdk.Coins{sdk.NewInt64Coin("stake", 5)},
 		},
 		{
-			name:                          "partial unlocking unknown tokens",
-			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin("unknown", 5)},
-			passedTime:                    time.Second,
-			expectedUnlockMaturedLockPass: false,
-			balanceAfterUnlock:            sdk.Coins{},
+			name:                         "partial unlocking unknown tokens",
+			unlockingCoins:               sdk.Coins{sdk.NewInt64Coin("unknown", 5)},
+			expectedBeginUnlockErr:       types.ErrRequestedExceedsTokens,
+			passedTime:                   time.Second,
+			expectedUnlockMaturedLockErr: types.ErrNotStartedUnlocking,
+			balanceAfterUnlock:           sdk.Coins{},
 		},
 		{
-			name:                          "unlocking should not finish yet",
-			unlockingCoins:                initialLockCoins,
-			expectedBeginUnlockPass:       true,
-			passedTime:                    time.Millisecond,
-			expectedUnlockMaturedLockPass: false,
-			balanceAfterUnlock:            sdk.Coins{},
+			name:                         "unlocking should not finish yet",
+			unlockingCoins:               initialLockCoins,
+			expectedBeginUnlockErr:       nil,
+			passedTime:                   time.Millisecond,
+			expectedUnlockMaturedLockErr: types.ErrNotUnlockableYet,
+			balanceAfterUnlock:           sdk.Coins{},
 		},
 	}
 
@@ -151,7 +156,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		// begin unlocking
 		err = lockupKeeper.BeginUnlock(ctx, lock.ID, tc.unlockingCoins)
 
-		if tc.expectedBeginUnlockPass {
+		if tc.expectedBeginUnlockErr == nil {
 			suite.Require().NoError(err)
 
 			// check unlocking coins. When a lock is a partial lock
@@ -177,7 +182,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 			suite.Require().Equal(true, lock.IsUnlocking())
 
 		} else {
-			suite.Require().Error(err)
+			suite.Require().ErrorIs(err, tc.expectedBeginUnlockErr)
 
 			// check unlocking coins, should not be unlocking any coins
 			unlockingCoins := suite.App.LockupKeeper.GetAccountUnlockingCoins(suite.Ctx, addr1)
@@ -191,15 +196,15 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		ctx = ctx.WithBlockTime(ctx.BlockTime().Add(tc.passedTime))
 
 		err = lockupKeeper.UnlockMaturedLock(ctx, lock.ID)
-		if tc.expectedUnlockMaturedLockPass {
+		if tc.expectedUnlockMaturedLockErr == nil {
 			suite.Require().NoError(err)
 
 			unlockings := lockupKeeper.GetAccountUnlockingCoins(ctx, addr1)
 			suite.Require().Equal(len(unlockings), 0)
 		} else {
-			suite.Require().Error(err)
+			suite.Require().ErrorIs(err, tc.expectedUnlockMaturedLockErr)
 			// things to test if unlocking has started
-			if tc.expectedBeginUnlockPass {
+			if tc.expectedBeginUnlockErr == nil {
 				// should still be unlocking if `UnlockMaturedLock` failed
 				actualUnlockingCoins := suite.App.LockupKeeper.GetAccountUnlockingCoins(suite.Ctx, addr1)
 				suite.Require().Equal(len(actualUnlockingCoins), 1)
@@ -280,7 +285,7 @@ func (suite *KeeperTestSuite) TestCreateLock() {
 
 	// test locking without balance
 	_, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, addr1, coins, time.Second)
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, sdkerrors.ErrInsufficientFunds)
 
 	suite.FundAcc(addr1, coins)
 
@@ -337,42 +342,46 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
 
 	testCases := []struct {
-		name                         string
-		tokenToAdd                   sdk.Coin
-		duration                     time.Duration
-		lockingAddress               sdk.AccAddress
-		expectAddTokensToLockSuccess bool
+		name           string
+		tokenToAdd     sdk.Coin
+		duration       time.Duration
+		lockingAddress sdk.AccAddress
+		expectingErr   error
 	}{
 		{
-			name:                         "normal add tokens to lock case",
-			tokenToAdd:                   initialLockCoin,
-			duration:                     time.Second,
-			lockingAddress:               addr1,
-			expectAddTokensToLockSuccess: true,
+			name:           "normal add tokens to lock case",
+			tokenToAdd:     initialLockCoin,
+			duration:       time.Second,
+			lockingAddress: addr1,
+			expectingErr:   nil,
 		},
 		{
 			name:           "not the owner of the lock",
 			tokenToAdd:     initialLockCoin,
 			duration:       time.Second,
 			lockingAddress: addr2,
+			expectingErr:   types.ErrLockupNotFound,
 		},
 		{
 			name:           "lock with matching duration not existing",
 			tokenToAdd:     initialLockCoin,
 			duration:       time.Second * 2,
 			lockingAddress: addr1,
+			expectingErr:   types.ErrLockupNotFound,
 		},
 		{
 			name:           "lock invalid tokens",
 			tokenToAdd:     sdk.NewCoin("unknown", sdk.NewInt(10)),
 			duration:       time.Second,
 			lockingAddress: addr1,
+			expectingErr:   types.ErrLockupNotFound,
 		},
 		{
 			name:           "token to add exceeds balance",
 			tokenToAdd:     sdk.NewCoin("stake", sdk.NewInt(20)),
 			duration:       time.Second,
 			lockingAddress: addr1,
+			expectingErr:   sdkerrors.ErrInvalidRequest,
 		},
 	}
 
@@ -388,7 +397,7 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 
 		lockID, err := suite.App.LockupKeeper.AddToExistingLock(suite.Ctx, tc.lockingAddress, tc.tokenToAdd, tc.duration)
 
-		if tc.expectAddTokensToLockSuccess {
+		if tc.expectingErr == nil {
 			suite.Require().NoError(err)
 
 			// get updated lock
@@ -410,7 +419,7 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 			})
 			suite.Require().Equal(initialLockCoin.Amount.Add(tc.tokenToAdd.Amount), accum)
 		} else {
-			suite.Require().Error(err)
+			suite.Require().ErrorIs(err, tc.expectingErr)
 			suite.Require().Equal(uint64(0), lockID)
 
 			lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, originalLock.ID)
@@ -517,7 +526,7 @@ func (suite *KeeperTestSuite) TestLock() {
 
 	// test locking without balance
 	err := suite.App.LockupKeeper.Lock(suite.Ctx, lock, coins)
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, sdkerrors.ErrInsufficientFunds)
 
 	// check accumulation store
 	accum := suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
@@ -801,10 +810,10 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByID() {
 	suite.Require().Equal(lock.Coins.String(), "9stake")
 
 	_, err = suite.App.LockupKeeper.SlashTokensFromLockByID(suite.Ctx, 1, sdk.Coins{sdk.NewInt64Coin("stake", 11)})
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, sdkerrors.ErrInsufficientFunds)
 
 	_, err = suite.App.LockupKeeper.SlashTokensFromLockByID(suite.Ctx, 1, sdk.Coins{sdk.NewInt64Coin("stake1", 1)})
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, sdkerrors.ErrInsufficientFunds)
 }
 
 func (suite *KeeperTestSuite) TestEditLockup() {
@@ -833,10 +842,10 @@ func (suite *KeeperTestSuite) TestEditLockup() {
 
 	// duration decrease should fail
 	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, lock.ID, addr, time.Second/2)
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, types.ErrNewDurationNotGreater)
 	// extending lock with same duration should fail
 	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, lock.ID, addr, time.Second)
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, types.ErrNewDurationNotGreater)
 
 	// duration increase should success
 	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, lock.ID, addr, time.Second*2)
@@ -925,7 +934,7 @@ func (suite *KeeperTestSuite) TestForceUnlock() {
 
 		// check if lock is deleted by checking trying to get lock ID
 		_, err = suite.App.LockupKeeper.GetLockByID(suite.Ctx, lock.ID)
-		suite.Require().Error(err)
+		suite.Require().ErrorIs(err, types.ErrLockupNotFound)
 	}
 }
 
@@ -938,27 +947,27 @@ func (suite *KeeperTestSuite) TestPartialForceUnlock() {
 	testCases := []struct {
 		name               string
 		coinsToForceUnlock sdk.Coins
-		expectedPass       bool
+		expectedErr        error
 	}{
 		{
 			name:               "unlock full amount",
 			coinsToForceUnlock: sdk.Coins{sdk.NewCoin(defaultDenomToLock, defaultAmountToLock)},
-			expectedPass:       true,
+			expectedErr:        nil,
 		},
 		{
 			name:               "partial unlock",
 			coinsToForceUnlock: sdk.Coins{sdk.NewCoin(defaultDenomToLock, defaultAmountToLock.Quo(sdk.NewInt(2)))},
-			expectedPass:       true,
+			expectedErr:        nil,
 		},
 		{
 			name:               "unlock more than locked",
 			coinsToForceUnlock: sdk.Coins{sdk.NewCoin(defaultDenomToLock, defaultAmountToLock.Add(sdk.NewInt(2)))},
-			expectedPass:       false,
+			expectedErr:        types.ErrRequestedExceedsTokens,
 		},
 		{
 			name:               "try unlocking with empty coins",
 			coinsToForceUnlock: sdk.Coins{},
-			expectedPass:       true,
+			expectedErr:        nil,
 		},
 	}
 	for _, tc := range testCases {
@@ -972,7 +981,7 @@ func (suite *KeeperTestSuite) TestPartialForceUnlock() {
 
 		err = suite.App.LockupKeeper.PartialForceUnlock(suite.Ctx, lock, tc.coinsToForceUnlock)
 
-		if tc.expectedPass {
+		if tc.expectedErr == nil {
 			suite.Require().NoError(err)
 
 			// check balance
@@ -983,7 +992,8 @@ func (suite *KeeperTestSuite) TestPartialForceUnlock() {
 			}
 			suite.Require().Equal(tc.coinsToForceUnlock, sdk.Coins{balanceAfterForceUnlock})
 		} else {
-			suite.Require().Error(err)
+
+			suite.Require().ErrorIs(err, tc.expectedErr)
 
 			// check balance
 			balanceAfterForceUnlock := suite.App.BankKeeper.GetBalance(suite.Ctx, addr1, "stake")
