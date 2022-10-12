@@ -367,9 +367,10 @@ func (k Keeper) unlockMaturedLockInternalLogic(ctx sdk.Context, lock types.Perio
 // ExtendLockup changes the existing lock duration to the given lock duration.
 // Updating lock duration would fail on either of the following conditions.
 // 1. Only lock owner is able to change the duration of the lock.
-// //2. Locks that are unlocking are not allowed to change duration.
+// 2. Locks that are unlocking are not allowed to change duration.
 // 3. Locks that have synthetic lockup are not allowed to change.
 // 4. Provided duration should be greater than the original duration.
+// 5. An owner can cancel an Unlock and it will be set to the original duration.
 func (k Keeper) ExtendLockup(ctx sdk.Context, lockID uint64, owner sdk.AccAddress, newDuration time.Duration, cancelUnlock bool) error {
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {
@@ -406,7 +407,6 @@ func (k Keeper) ExtendLockup(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 
 	oldDuration := lock.GetDuration()
 	if newDuration != 0 {
-		// duration may be the same we cancel the unlock
 		if newDuration <= oldDuration && !cancelUnlock {
 			return fmt.Errorf("new duration should be greater than the original")
 		}
