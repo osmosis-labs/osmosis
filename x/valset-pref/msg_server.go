@@ -38,6 +38,10 @@ func (server msgServer) SetValidatorSetPreference(goCtx context.Context, msg *ty
 	return &types.MsgSetValidatorSetPreferenceResponse{}, nil
 }
 
+// TODO MAYBE: Check if there are any banned assets and ways to handle them
+// DelegateToValidatorSet delegates to a delegators existing validator-set.
+// For ex: delegate 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
+// our delegate logic would attempt to delegate 5osmo to A , 2osmo to B, 3osmo to C
 func (server msgServer) DelegateToValidatorSet(goCtx context.Context, msg *types.MsgDelegateToValidatorSet) (*types.MsgDelegateToValidatorSetResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
