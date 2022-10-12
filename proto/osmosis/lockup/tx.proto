@@ -67,8 +67,9 @@ message MsgExtendLockup {
     (gogoproto.jsontag) = "duration,omitempty",
     (gogoproto.moretags) = "yaml:\"duration\""
   ];
-  
-  // extension to allow a user to stop an unlock and goes back to the original state
+
+  // extension to allow a user to stop an unlock and goes back to the original
+  // state
   bool cancel_unlocking = 4;
 }
 
