@@ -46,6 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#2739](https://github.com/osmosis-labs/osmosis/pull/2739) Add pool type query
 
+## State Machine Breaking
+
+* [#2982](https://github.com/osmosis-labs/osmosis/pull/2982) Cancel in progress unlocks via MsgExtendLockup
+
 ### Bug fixes
 
 * [#2803](https://github.com/osmosis-labs/osmosis/pull/2803) Fix total pool liquidity CLI query.
