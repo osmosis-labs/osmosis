@@ -13,6 +13,7 @@ func (k Keeper) GetAuthorityMetadata(ctx sdk.Context, denom string) (types.Denom
 
 	metadata := types.DenomAuthorityMetadata{}
 	err := proto.Unmarshal(bz, &metadata)
+	// fmt.Println("METADATA: ", metadata)
 	if err != nil {
 		return types.DenomAuthorityMetadata{}, err
 	}

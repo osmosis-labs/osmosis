@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v12/x/tokenfactory/types"
@@ -37,7 +38,7 @@ func (suite *KeeperTestSuite) TestMsgCreateDenom() {
 
 	// Make sure that a second version of the same denom can't be recreated
 	res, err = suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
-	suite.Require().Error(err)
+	suite.Require().Error(types.ErrDenomExists)
 
 	// Creating a second denom should work
 	res, err = suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "litecoin"))
@@ -58,7 +59,7 @@ func (suite *KeeperTestSuite) TestMsgCreateDenom() {
 
 	// Make sure that an address with a "/" in it can't create denoms
 	res, err = suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom("osmosis.eth/creator", "bitcoin"))
-	suite.Require().Error(err)
+	suite.Require().Error(types.ErrInvalidCreator)
 }
 
 func (suite *KeeperTestSuite) TestCreateDenom() {
@@ -76,13 +77,13 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 		denomCreationFee types.Params
 		setup            func()
 		subdenom         string
-		valid            bool
+		expectedErr      error
 	}{
 		{
 			desc:             "subdenom too long",
 			denomCreationFee: defaultDenomCreationFee,
 			subdenom:         "assadsadsadasdasdsadsadsadsadsadsadsklkadaskkkdasdasedskhanhassyeunganassfnlksdflksafjlkasd",
-			valid:            false,
+			expectedErr:      types.ErrSubdenomTooLong,
 		},
 		{
 			desc:             "subdenom and creator pair already exists",
@@ -91,38 +92,38 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 				_, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
 				suite.Require().NoError(err)
 			},
-			subdenom: "bitcoin",
-			valid:    false,
+			subdenom:    "bitcoin",
+			expectedErr: types.ErrDenomExists,
 		},
 		{
 			desc:             "success case: defaultDenomCreationFee",
 			denomCreationFee: defaultDenomCreationFee,
 			subdenom:         "evmos",
-			valid:            true,
+			expectedErr:      nil,
 		},
 		{
 			desc:             "success case: twoDenomCreationFee",
 			denomCreationFee: twoDenomCreationFee,
 			subdenom:         "catcoin",
-			valid:            true,
+			expectedErr:      nil,
 		},
 		{
 			desc:             "success case: nilCreationFee",
 			denomCreationFee: nilCreationFee,
 			subdenom:         "czcoin",
-			valid:            true,
+			expectedErr:      nil,
 		},
 		{
 			desc:             "account doesn't have enough to pay for denom creation fee",
 			denomCreationFee: largeCreationFee,
 			subdenom:         "tooexpensive",
-			valid:            false,
+			expectedErr:      sdkerrors.ErrInsufficientFunds,
 		},
 		{
 			desc:             "subdenom having invalid characters",
 			denomCreationFee: defaultDenomCreationFee,
 			subdenom:         "bit/***///&&&/coin",
-			valid:            false,
+			expectedErr:      types.ErrInvalidDenom,
 		},
 	} {
 		suite.SetupTest()
@@ -141,7 +142,7 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 			preCreateBalance := bankKeeper.GetAllBalances(suite.Ctx, suite.TestAccs[0])
 			res, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), tc.subdenom))
 			postCreateBalance := bankKeeper.GetAllBalances(suite.Ctx, suite.TestAccs[0])
-			if tc.valid {
+			if tc.expectedErr == nil {
 				suite.Require().NoError(err)
 				suite.Require().True(preCreateBalance.Sub(postCreateBalance).IsEqual(denomCreationFee))
 
@@ -154,7 +155,7 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 				suite.Require().Equal(suite.TestAccs[0].String(), queryRes.AuthorityMetadata.Admin)
 
 			} else {
-				suite.Require().Error(err)
+				suite.Require().ErrorAs(tc.expectedErr, &err)
 				// Ensure we don't charge if we expect an error
 				suite.Require().True(preCreateBalance.IsEqual(postCreateBalance))
 			}

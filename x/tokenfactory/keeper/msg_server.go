@@ -172,7 +172,7 @@ func (server msgServer) SetDenomMetadata(goCtx context.Context, msg *types.MsgSe
 	if err != nil {
 		return nil, err
 	}
-
+	// fmt.Println("DEBUG: ", authorityMetadata.GetAdmin())
 	if msg.Sender != authorityMetadata.GetAdmin() {
 		return nil, types.ErrUnauthorized
 	}

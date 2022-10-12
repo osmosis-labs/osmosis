@@ -19,22 +19,22 @@ func (suite *KeeperTestSuite) TestMintDenomMsg() {
 		amount                int64
 		mintDenom             string
 		admin                 string
-		valid                 bool
+		expectedErr           error
 		expectedMessageEvents int
 	}{
 		{
-			desc:      "denom does not exist",
-			amount:    10,
-			mintDenom: "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos",
-			admin:     suite.TestAccs[0].String(),
-			valid:     false,
+			desc:        "denom does not exist",
+			amount:      10,
+			mintDenom:   "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos",
+			admin:       suite.TestAccs[0].String(),
+			expectedErr: types.ErrDenomDoesNotExist,
 		},
 		{
 			desc:                  "success case",
 			amount:                10,
 			mintDenom:             suite.defaultDenom,
 			admin:                 suite.TestAccs[0].String(),
-			valid:                 true,
+			expectedErr:           nil,
 			expectedMessageEvents: 1,
 		},
 	} {
@@ -42,7 +42,12 @@ func (suite *KeeperTestSuite) TestMintDenomMsg() {
 			ctx := suite.Ctx.WithEventManager(sdk.NewEventManager())
 			suite.Require().Equal(0, len(ctx.EventManager().Events()))
 			// Test mint message
-			suite.msgServer.Mint(sdk.WrapSDKContext(ctx), types.NewMsgMint(tc.admin, sdk.NewInt64Coin(tc.mintDenom, 10)))
+			_, err := suite.msgServer.Mint(sdk.WrapSDKContext(ctx), types.NewMsgMint(tc.admin, sdk.NewInt64Coin(tc.mintDenom, 10)))
+			if tc.expectedErr == nil {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().ErrorIs(err, tc.expectedErr)
+			}
 			// Ensure current number and type of event is emitted
 			suite.AssertEventEmitted(ctx, types.TypeMsgMint, tc.expectedMessageEvents)
 		})
@@ -61,20 +66,20 @@ func (suite *KeeperTestSuite) TestBurnDenomMsg() {
 		amount                int64
 		burnDenom             string
 		admin                 string
-		valid                 bool
+		expectedErr           error
 		expectedMessageEvents int
 	}{
 		{
-			desc:      "denom does not exist",
-			burnDenom: "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos",
-			admin:     suite.TestAccs[0].String(),
-			valid:     false,
+			desc:        "denom does not exist",
+			burnDenom:   "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos",
+			admin:       suite.TestAccs[0].String(),
+			expectedErr: types.ErrDenomDoesNotExist,
 		},
 		{
 			desc:                  "success case",
 			burnDenom:             suite.defaultDenom,
 			admin:                 suite.TestAccs[0].String(),
-			valid:                 true,
+			expectedErr:           nil,
 			expectedMessageEvents: 1,
 		},
 	} {
@@ -82,7 +87,13 @@ func (suite *KeeperTestSuite) TestBurnDenomMsg() {
 			ctx := suite.Ctx.WithEventManager(sdk.NewEventManager())
 			suite.Require().Equal(0, len(ctx.EventManager().Events()))
 			// Test burn message
-			suite.msgServer.Burn(sdk.WrapSDKContext(ctx), types.NewMsgBurn(tc.admin, sdk.NewInt64Coin(tc.burnDenom, 10)))
+			_, err := suite.msgServer.Burn(sdk.WrapSDKContext(ctx), types.NewMsgBurn(tc.admin, sdk.NewInt64Coin(tc.burnDenom, 10)))
+			if tc.expectedErr == nil {
+				suite.Require().NoError(err)
+			} else {
+				fmt.Println(err) // TODO wrong error
+				suite.Require().ErrorIs(err, tc.expectedErr)
+			}
 			// Ensure current number and type of event is emitted
 			suite.AssertEventEmitted(ctx, types.TypeMsgBurn, tc.expectedMessageEvents)
 		})
@@ -96,20 +107,20 @@ func (suite *KeeperTestSuite) TestCreateDenomMsg() {
 		desc                  string
 		denomCreationFee      types.Params
 		subdenom              string
-		valid                 bool
+		expectedErr           error
 		expectedMessageEvents int
 	}{
 		{
 			desc:             "subdenom too long",
 			denomCreationFee: defaultDenomCreationFee,
 			subdenom:         "assadsadsadasdasdsadsadsadsadsadsadsklkadaskkkdasdasedskhanhassyeunganassfnlksdflksafjlkasd",
-			valid:            false,
+			expectedErr:      types.ErrSubdenomTooLong,
 		},
 		{
 			desc:                  "success case: defaultDenomCreationFee",
 			denomCreationFee:      defaultDenomCreationFee,
 			subdenom:              "evmos",
-			valid:                 true,
+			expectedErr:           nil,
 			expectedMessageEvents: 1,
 		},
 	} {
@@ -121,7 +132,12 @@ func (suite *KeeperTestSuite) TestCreateDenomMsg() {
 			// Set denom creation fee in params
 			tokenFactoryKeeper.SetParams(suite.Ctx, tc.denomCreationFee)
 			// Test create denom message
-			suite.msgServer.CreateDenom(sdk.WrapSDKContext(ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), tc.subdenom))
+			_, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), tc.subdenom))
+			if tc.expectedErr == nil {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().ErrorIs(err, tc.expectedErr)
+			}
 			// Ensure current number and type of event is emitted
 			suite.AssertEventEmitted(ctx, types.TypeMsgCreateDenom, tc.expectedMessageEvents)
 		})
@@ -131,34 +147,34 @@ func (suite *KeeperTestSuite) TestCreateDenomMsg() {
 // TestChangeAdminDenomMsg tests TypeMsgChangeAdmin message is emitted on a successful admin change
 func (suite *KeeperTestSuite) TestChangeAdminDenomMsg() {
 	for _, tc := range []struct {
-		desc                    string
-		msgChangeAdmin          func(denom string) *types.MsgChangeAdmin
-		expectedChangeAdminPass bool
-		expectedAdminIndex      int
-		msgMint                 func(denom string) *types.MsgMint
-		expectedMintPass        bool
-		expectedMessageEvents   int
+		desc                   string
+		msgChangeAdmin         func(denom string) *types.MsgChangeAdmin
+		expectedChangeAdminErr error
+		expectedAdminIndex     int
+		msgMint                func(denom string) *types.MsgMint
+		expectedMintErr        error
+		expectedMessageEvents  int
 	}{
 		{
 			desc: "non-admins can't change the existing admin",
 			msgChangeAdmin: func(denom string) *types.MsgChangeAdmin {
 				return types.NewMsgChangeAdmin(suite.TestAccs[1].String(), denom, suite.TestAccs[2].String())
 			},
-			expectedChangeAdminPass: false,
-			expectedAdminIndex:      0,
+			expectedChangeAdminErr: types.ErrUnauthorized,
+			expectedAdminIndex:     0,
 		},
 		{
 			desc: "success change admin",
 			msgChangeAdmin: func(denom string) *types.MsgChangeAdmin {
 				return types.NewMsgChangeAdmin(suite.TestAccs[0].String(), denom, suite.TestAccs[1].String())
 			},
-			expectedAdminIndex:      1,
-			expectedChangeAdminPass: true,
-			expectedMessageEvents:   1,
+			expectedAdminIndex:     1,
+			expectedChangeAdminErr: nil,
+			expectedMessageEvents:  1,
 			msgMint: func(denom string) *types.MsgMint {
 				return types.NewMsgMint(suite.TestAccs[1].String(), sdk.NewInt64Coin(denom, 5))
 			},
-			expectedMintPass: true,
+			expectedMintErr: nil,
 		},
 	} {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
@@ -170,9 +186,24 @@ func (suite *KeeperTestSuite) TestChangeAdminDenomMsg() {
 			res, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
 			suite.Require().NoError(err)
 			testDenom := res.GetNewTokenDenom()
-			suite.msgServer.Mint(sdk.WrapSDKContext(ctx), types.NewMsgMint(suite.TestAccs[0].String(), sdk.NewInt64Coin(testDenom, 10)))
+			_, err = suite.msgServer.Mint(sdk.WrapSDKContext(ctx), types.NewMsgMint(suite.TestAccs[0].String(), sdk.NewInt64Coin(testDenom, 10)))
+
 			// Test change admin message
 			suite.msgServer.ChangeAdmin(sdk.WrapSDKContext(ctx), tc.msgChangeAdmin(testDenom))
+			if tc.expectedChangeAdminErr == nil {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().ErrorIs(err, tc.expectedChangeAdminErr)
+			}
+
+			if tc.msgMint != nil {
+				_, err := suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), tc.msgMint(testDenom))
+				if tc.expectedMintErr == nil {
+					suite.Require().NoError(err)
+				} else {
+					suite.Require().ErrorIs(err, tc.expectedMintErr)
+				}
+			}
 			// Ensure current number and type of event is emitted
 			suite.AssertEventEmitted(ctx, types.TypeMsgChangeAdmin, tc.expectedMessageEvents)
 		})

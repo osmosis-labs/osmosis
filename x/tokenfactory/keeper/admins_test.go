@@ -118,7 +118,7 @@ func (suite *KeeperTestSuite) TestMintDenom() {
 				suite.Require().NoError(err)
 				suite.Require().Equal(bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom).Amount.Int64(), addr0bal, bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom))
 			} else {
-				suite.Require().ErrorAs(tc.expectedErr, &err)
+				suite.Require().ErrorIs(err, tc.expectedErr)
 			}
 		})
 	}
@@ -179,8 +179,7 @@ func (suite *KeeperTestSuite) TestBurnDenom() {
 				suite.Require().NoError(err)
 				suite.Require().True(bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom).Amount.Int64() == addr0bal, bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom))
 			} else {
-				fmt.Println("DEBUG: ", tc.desc, "|", tc.expectedErr, "|", err)
-				suite.Require().ErrorAs(tc.expectedErr, &err)
+				suite.Require().ErrorIs(err, tc.expectedErr)
 				suite.Require().True(bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom).Amount.Int64() == addr0bal, bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom))
 			}
 		})
@@ -189,44 +188,44 @@ func (suite *KeeperTestSuite) TestBurnDenom() {
 
 func (suite *KeeperTestSuite) TestChangeAdminDenom() {
 	for _, tc := range []struct {
-		desc                    string
-		msgChangeAdmin          func(denom string) *types.MsgChangeAdmin
-		expectedChangeAdminPass bool
-		expectedAdminIndex      int
-		msgMint                 func(denom string) *types.MsgMint
-		expectedMintPass        bool
+		desc                   string
+		msgChangeAdmin         func(denom string) *types.MsgChangeAdmin
+		expectedChangeAdminErr error
+		expectedAdminIndex     int
+		msgMint                func(denom string) *types.MsgMint
+		expectedMintErr        error
 	}{
 		{
 			desc: "creator admin can't mint after setting to '' ",
 			msgChangeAdmin: func(denom string) *types.MsgChangeAdmin {
 				return types.NewMsgChangeAdmin(suite.TestAccs[0].String(), denom, "")
 			},
-			expectedChangeAdminPass: true,
-			expectedAdminIndex:      -1,
+			expectedChangeAdminErr: nil,
+			expectedAdminIndex:     -1,
 			msgMint: func(denom string) *types.MsgMint {
 				return types.NewMsgMint(suite.TestAccs[0].String(), sdk.NewInt64Coin(denom, 5))
 			},
-			expectedMintPass: false,
+			expectedMintErr: types.ErrUnauthorized,
 		},
 		{
 			desc: "non-admins can't change the existing admin",
 			msgChangeAdmin: func(denom string) *types.MsgChangeAdmin {
 				return types.NewMsgChangeAdmin(suite.TestAccs[1].String(), denom, suite.TestAccs[2].String())
 			},
-			expectedChangeAdminPass: false,
-			expectedAdminIndex:      0,
+			expectedChangeAdminErr: types.ErrUnauthorized,
+			expectedAdminIndex:     0,
 		},
 		{
 			desc: "success change admin",
 			msgChangeAdmin: func(denom string) *types.MsgChangeAdmin {
 				return types.NewMsgChangeAdmin(suite.TestAccs[0].String(), denom, suite.TestAccs[1].String())
 			},
-			expectedAdminIndex:      1,
-			expectedChangeAdminPass: true,
+			expectedAdminIndex:     1,
+			expectedChangeAdminErr: nil,
 			msgMint: func(denom string) *types.MsgMint {
 				return types.NewMsgMint(suite.TestAccs[1].String(), sdk.NewInt64Coin(denom, 5))
 			},
-			expectedMintPass: true,
+			expectedMintErr: nil,
 		},
 	} {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
@@ -243,10 +242,10 @@ func (suite *KeeperTestSuite) TestChangeAdminDenom() {
 			suite.Require().NoError(err)
 
 			_, err = suite.msgServer.ChangeAdmin(sdk.WrapSDKContext(suite.Ctx), tc.msgChangeAdmin(testDenom))
-			if tc.expectedChangeAdminPass {
+			if tc.expectedChangeAdminErr == nil {
 				suite.Require().NoError(err)
 			} else {
-				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, tc.expectedChangeAdminErr)
 			}
 
 			queryRes, err := suite.queryClient.DenomAuthorityMetadata(suite.Ctx.Context(), &types.QueryDenomAuthorityMetadataRequest{
@@ -265,10 +264,10 @@ func (suite *KeeperTestSuite) TestChangeAdminDenom() {
 			// we test mint to test if admin authority is performed properly after admin change.
 			if tc.msgMint != nil {
 				_, err := suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), tc.msgMint(testDenom))
-				if tc.expectedMintPass {
+				if tc.expectedMintErr == nil {
 					suite.Require().NoError(err)
 				} else {
-					suite.Require().Error(err)
+					suite.Require().ErrorIs(err, tc.expectedMintErr)
 				}
 			}
 		})
@@ -387,8 +386,9 @@ func (suite *KeeperTestSuite) TestSetDenomMetaData() {
 			expectedPass: false,
 		},
 	} {
-		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() { // TODO wrong
 			bankKeeper := suite.App.BankKeeper
+			fmt.Println("RUNNING ", tc.desc)
 			res, err := suite.msgServer.SetDenomMetadata(sdk.WrapSDKContext(suite.Ctx), &tc.msgSetDenomMetadata)
 			if tc.expectedPass {
 				suite.Require().NoError(err)
