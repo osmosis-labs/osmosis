@@ -162,7 +162,7 @@ func (server msgServer) ExtendLockup(goCtx context.Context, msg *types.MsgExtend
 		return nil, err
 	}
 
-	err = server.keeper.ExtendLockup(ctx, msg.ID, owner, msg.Duration)
+	err = server.keeper.ExtendLockup(ctx, msg.ID, owner, msg.Duration, msg.CancelUnlocking)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
 	}
@@ -170,15 +170,6 @@ func (server msgServer) ExtendLockup(goCtx context.Context, msg *types.MsgExtend
 	lock, err := server.keeper.GetLockByID(ctx, msg.ID)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-	}
-
-	// cancels an unlock & updates the new time
-	if msg.CancelUnlocking {
-		// TODO: cancel unlock will cancel it & reset it to no EndTime unlock
-		err = server.keeper.CancelUnlock(ctx, lock.ID)
-		if err != nil {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-		}
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{

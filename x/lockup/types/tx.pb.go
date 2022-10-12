@@ -339,7 +339,7 @@ type MsgExtendLockup struct {
 	// duration to be set. fails if lower than the current duration, or is
 	// unlocking
 	Duration time.Duration `protobuf:"bytes,3,opt,name=duration,proto3,stdduration" json:"duration,omitempty" yaml:"duration"`
-	// extend for other edit, e.g. cancel unlocking
+	// extension to allow a user to stop an unlock and goes back to the original state
 	CancelUnlocking bool `protobuf:"varint,4,opt,name=cancel_unlocking,json=cancelUnlocking,proto3" json:"cancel_unlocking,omitempty"`
 }
 

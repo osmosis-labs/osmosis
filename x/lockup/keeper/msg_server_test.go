@@ -305,7 +305,7 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 			expectPass: false,
 		},
 		{
-			name: "cancel lockups currently unlocking",
+			name: "cancel lockup currently unlocking",
 			param: param{
 				coinsToLock:       sdk.Coins{sdk.NewInt64Coin("stake", 10)}, // setup wallet
 				isSyntheticLockup: false,
@@ -315,6 +315,18 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 				cancelUnlocking:   true,
 			},
 			expectPass: true,
+		},
+		{
+			name: "disallow cancel when synthetic lockup exists",
+			param: param{
+				coinsToLock:       sdk.Coins{sdk.NewInt64Coin("stake", 10)}, // setup wallet
+				isSyntheticLockup: true,
+				lockOwner:         sdk.AccAddress([]byte("addr1---------------")), // setup wallet
+				duration:          time.Second,
+				newDuration:       time.Second,
+				cancelUnlocking:   true,
+			},
+			expectPass: false,
 		},
 	}
 
@@ -334,7 +346,8 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 			suite.Require().NoError(err)
 		}
 
-		_, err = msgServer.ExtendLockup(c, types.NewMsgExtendLockup(test.param.lockOwner, resp.ID, test.param.newDuration))
+		// TODO: add test for cancelUnlocking
+		_, err = msgServer.ExtendLockup(c, types.NewMsgExtendLockup(test.param.lockOwner, resp.ID, test.param.newDuration, test.param.cancelUnlocking))
 
 		// suite.Require().NoError(err)
 

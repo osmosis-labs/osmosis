@@ -133,11 +133,12 @@ func (m MsgBeginUnlocking) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgExtendLockup creates a message to edit the properties of existing locks
-func NewMsgExtendLockup(owner sdk.AccAddress, id uint64, duration time.Duration) *MsgExtendLockup {
+func NewMsgExtendLockup(owner sdk.AccAddress, id uint64, duration time.Duration, cancelUnlock bool) *MsgExtendLockup {
 	return &MsgExtendLockup{
-		Owner:    owner.String(),
-		ID:       id,
-		Duration: duration,
+		Owner:           owner.String(),
+		ID:              id,
+		Duration:        duration,
+		CancelUnlocking: cancelUnlock,
 	}
 }
 

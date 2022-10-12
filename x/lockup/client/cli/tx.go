@@ -30,6 +30,7 @@ func GetTxCmd() *cobra.Command {
 		NewBeginUnlockingCmd(),
 		NewBeginUnlockByIDCmd(),
 		NewExtendLockupByIDCmd(),
+		CancelUnlockByIdCmd(),
 	)
 
 	return cmd
@@ -190,6 +191,7 @@ func NewExtendLockupByIDCmd() *cobra.Command {
 				clientCtx.GetFromAddress(),
 				uint64(id),
 				duration,
+				false,
 			)
 
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
@@ -205,67 +207,46 @@ func NewExtendLockupByIDCmd() *cobra.Command {
 	return cmd
 }
 
-// // NewExtendLockupByIDCmd extends a given id lock to a higher duration lock time.
-// func NewRebondCurrentUnbondingTokensByIDCmd() *cobra.Command {
-// 	cmd := &cobra.Command{
-// 		Use:   "rebond-lockup-by-id [id]",
-// 		Short: "rebonds a given unbonding lockup to the same or a higher unbond time",
-// 		Args:  cobra.ExactArgs(1),
-// 		RunE: func(cmd *cobra.Command, args []string) error {
-// 			clientCtx, err := client.GetClientTxContext(cmd)
-// 			if err != nil {
-// 				return err
-// 			}
+func CancelUnlockByIdCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "cancel-unlock-by-id [id]",
+		Short: "stop the unlock process for a given id and sets it to the next highest lockup duration",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
 
-// 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-// 			id, err := strconv.Atoi(args[0])
-// 			if err != nil {
-// 				return err
-// 			}
+			id, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
 
-// 			durationStr, err := cmd.Flags().GetString(FlagDuration)
-// 			if err != nil {
-// 				return err
-// 			}
+			// check if the current id is unlocking
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.LockedByID(cmd.Context(), &types.LockedRequest{LockId: uint64(id)})
+			if err != nil {
+				return err
+			}
 
-// 			duration, err := time.ParseDuration(durationStr)
-// 			if err != nil {
-// 				return err
-// 			}
+			if res == nil {
+				return fmt.Errorf("lock with id %d not found", id)
+			}
 
-// 			// check if the current id is unbonding
-// 			// if not, return error
-// 			queryClient := types.NewQueryClient(clientCtx)
+			msg := types.NewMsgExtendLockup(
+				clientCtx.GetFromAddress(),
+				uint64(id),
+				res.Lock.Duration,
+				true,
+			)
 
-// 			res, err := queryClient.LockedByID(cmd.Context(), &types.LockedRequest{LockId: uint64(id)})
-// 			if err != nil {
-// 				return err
-// 			}
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
 
-// 			clientCtx.PrintProto(res)
-
-// 			// msg := types.NewMsgExtendLockup(
-// 			// 	clientCtx.GetFromAddress(),
-// 			// 	uint64(id),
-// 			// 	duration,
-// 			// )
-
-// 			msg := types.NewMsgRebondUnbondingLock(
-// 				clientCtx.GetFromAddress(),
-// 				uint64(id),
-// 				duration,
-// 			)
-
-// 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
-// 		},
-// 	}
-
-// 	cmd.Flags().AddFlagSet(FlagSetLockTokens())
-// 	flags.AddTxFlagsToCmd(cmd)
-// 	err := cmd.MarkFlagRequired(FlagDuration)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	return cmd
-// }
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}

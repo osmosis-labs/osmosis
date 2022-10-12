@@ -67,9 +67,7 @@ message MsgExtendLockup {
     (gogoproto.moretags) = "yaml:\"duration\""
   ];
   
-  // extension to allow a user to stop an unlock & can update the duration
-  // to a newer time. if false, the duration can only be added to a current
-  // lock.
+  // extension to allow a user to stop an unlock and goes back to the original state
   bool cancel_unlocking = 4;
 }
 

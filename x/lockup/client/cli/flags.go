@@ -7,6 +7,7 @@ import (
 // flags for lockup module tx commands.
 const (
 	FlagDuration    = "duration"
+	FlagCancel      = "cancel"
 	FlagMinDuration = "min-duration"
 	FlagAmount      = "amount"
 )
