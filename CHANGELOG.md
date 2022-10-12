@@ -42,46 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-<<<<<<< HEAD
 #### Bug Fixes
-=======
-### Features
-
-* [#2739](https://github.com/osmosis-labs/osmosis/pull/2739) Add pool type query
-
-### Bug fixes
-
-* [#2803](https://github.com/osmosis-labs/osmosis/pull/2803) Fix total pool liquidity CLI query.
-* [#2914](https://github.com/osmosis-labs/osmosis/pull/2914) Remove out of gas panics from node logs
-
-### Misc Improvements
-
-* [#2804](https://github.com/osmosis-labs/osmosis/pull/2804) Improve error handling and messages when parsing pool assets.
-
-## v12.0.0
-
-This release includes several cosmwasm-developer and appchain-ecosystem affecting upgrades:
-
-* TWAP - Time weighted average prices for all AMM pools
-* Cosmwasm contract developer facing features
-  * Enabling select queries for cosmwasm contracts
-  * Add message responses to gamm messages, to remove the neccessity of bindings
-  * Allow specifying denom metadata from tokenfactory
-* Enabling Interchain accounts (for real this time)
-* Upgrading IBC to v3.3.0
-* Consistently makes authz work with ledger for all messages
-
-The release also contains the following changes affecting Osmosis users and node operators
-
-* Fixing State Sync
-* Enabling expedited proposals
-
-This upgrade also adds a number of safety and API boundary improving changes to the codebase.
-While not state machine breaking, this release also includes the revamped Osmosis simulator,
-which acts as a fuzz testing tool tailored for the SDK state machine.
-
-### Breaking Changes
->>>>>>> 1ec86587 (Stop returning error logs + stack trace when out of gas in ApplyFuncIfNoErr (#2914))
 
 * [#2515](https://github.com/osmosis-labs/osmosis/pull/2515) Fix event emissions from epoch hooks. (Shoutout to @puneet2019 from persistence for the fix)
 
