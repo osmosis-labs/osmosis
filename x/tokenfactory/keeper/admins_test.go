@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/v12/x/tokenfactory/types"
@@ -80,44 +81,44 @@ func (suite *KeeperTestSuite) TestMintDenom() {
 	suite.CreateDefaultDenom()
 
 	for _, tc := range []struct {
-		desc      string
-		amount    int64
-		mintDenom string
-		admin     string
-		valid     bool
+		desc        string
+		amount      int64
+		mintDenom   string
+		admin       string
+		expectedErr error
 	}{
 		{
-			desc:      "denom does not exist",
-			amount:    10,
-			mintDenom: "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos",
-			admin:     suite.TestAccs[0].String(),
-			valid:     false,
+			desc:        "denom does not exist",
+			amount:      10,
+			mintDenom:   "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos",
+			admin:       suite.TestAccs[0].String(),
+			expectedErr: types.ErrDenomDoesNotExist,
 		},
 		{
-			desc:      "mint is not by the admin",
-			amount:    10,
-			mintDenom: suite.defaultDenom,
-			admin:     suite.TestAccs[1].String(),
-			valid:     false,
+			desc:        "mint is not by the admin",
+			amount:      10,
+			mintDenom:   suite.defaultDenom,
+			admin:       suite.TestAccs[1].String(),
+			expectedErr: types.ErrUnauthorized,
 		},
 		{
-			desc:      "success case",
-			amount:    10,
-			mintDenom: suite.defaultDenom,
-			admin:     suite.TestAccs[0].String(),
-			valid:     true,
+			desc:        "success case",
+			amount:      10,
+			mintDenom:   suite.defaultDenom,
+			admin:       suite.TestAccs[0].String(),
+			expectedErr: nil,
 		},
 	} {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			// Test minting to admins own account
 			bankKeeper := suite.App.BankKeeper
 			_, err := suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), types.NewMsgMint(tc.admin, sdk.NewInt64Coin(tc.mintDenom, 10)))
-			if tc.valid {
+			if tc.expectedErr == nil {
 				addr0bal += 10
 				suite.Require().NoError(err)
 				suite.Require().Equal(bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom).Amount.Int64(), addr0bal, bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom))
 			} else {
-				suite.Require().Error(err)
+				suite.Require().ErrorAs(tc.expectedErr, &err)
 			}
 		})
 	}
@@ -134,51 +135,52 @@ func (suite *KeeperTestSuite) TestBurnDenom() {
 	addr0bal += 10
 
 	for _, tc := range []struct {
-		desc      string
-		amount    int64
-		burnDenom string
-		admin     string
-		valid     bool
+		desc        string
+		amount      int64
+		burnDenom   string
+		admin       string
+		expectedErr error
 	}{
 		{
-			desc:      "denom does not exist",
-			amount:    10,
-			burnDenom: "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos",
-			admin:     suite.TestAccs[0].String(),
-			valid:     false,
+			desc:        "denom does not exist",
+			amount:      10,
+			burnDenom:   "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos",
+			admin:       suite.TestAccs[0].String(),
+			expectedErr: types.ErrDenomDoesNotExist,
 		},
 		{
-			desc:      "burn is not by the admin",
-			amount:    10,
-			burnDenom: suite.defaultDenom,
-			admin:     suite.TestAccs[1].String(),
-			valid:     false,
+			desc:        "burn is not by the admin",
+			amount:      10,
+			burnDenom:   suite.defaultDenom,
+			admin:       suite.TestAccs[1].String(),
+			expectedErr: types.ErrUnauthorized,
 		},
 		{
-			desc:      "burn amount is bigger than minted amount",
-			amount:    1000,
-			burnDenom: suite.defaultDenom,
-			admin:     suite.TestAccs[1].String(),
-			valid:     false,
+			desc:        "burn amount is bigger than minted amount",
+			amount:      1000,
+			burnDenom:   suite.defaultDenom,
+			admin:       suite.TestAccs[0].String(),
+			expectedErr: sdkerrors.ErrInsufficientFunds,
 		},
 		{
-			desc:      "success case",
-			amount:    10,
-			burnDenom: suite.defaultDenom,
-			admin:     suite.TestAccs[0].String(),
-			valid:     true,
+			desc:        "success case",
+			amount:      10,
+			burnDenom:   suite.defaultDenom,
+			admin:       suite.TestAccs[0].String(),
+			expectedErr: nil,
 		},
 	} {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			// Test minting to admins own account
 			bankKeeper := suite.App.BankKeeper
-			_, err := suite.msgServer.Burn(sdk.WrapSDKContext(suite.Ctx), types.NewMsgBurn(tc.admin, sdk.NewInt64Coin(tc.burnDenom, 10)))
-			if tc.valid {
+			_, err := suite.msgServer.Burn(sdk.WrapSDKContext(suite.Ctx), types.NewMsgBurn(tc.admin, sdk.NewInt64Coin(tc.burnDenom, tc.amount)))
+			if tc.expectedErr == nil {
 				addr0bal -= 10
 				suite.Require().NoError(err)
 				suite.Require().True(bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom).Amount.Int64() == addr0bal, bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom))
 			} else {
-				suite.Require().Error(err)
+				fmt.Println("DEBUG: ", tc.desc, "|", tc.expectedErr, "|", err)
+				suite.Require().ErrorAs(tc.expectedErr, &err)
 				suite.Require().True(bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom).Amount.Int64() == addr0bal, bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom))
 			}
 		})
