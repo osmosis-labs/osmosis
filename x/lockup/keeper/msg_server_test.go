@@ -346,10 +346,7 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 			suite.Require().NoError(err)
 		}
 
-		// TODO: add test for cancelUnlocking
 		_, err = msgServer.ExtendLockup(c, types.NewMsgExtendLockup(test.param.lockOwner, resp.ID, test.param.newDuration, test.param.cancelUnlocking))
-
-		// suite.Require().NoError(err)
 
 		if test.expectPass {
 			suite.Require().NoError(err, test.name)

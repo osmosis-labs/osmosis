@@ -186,7 +186,6 @@ func NewExtendLockupByIDCmd() *cobra.Command {
 				return err
 			}
 
-			// if the id is currently unbonding, we will cancel the unbond & update to new duration
 			msg := types.NewMsgExtendLockup(
 				clientCtx.GetFromAddress(),
 				uint64(id),

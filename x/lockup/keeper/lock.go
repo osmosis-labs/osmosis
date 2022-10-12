@@ -390,7 +390,6 @@ func (k Keeper) ExtendLockup(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 		return fmt.Errorf("cannot edit lockup with synthetic lock %d", lock.ID)
 	}
 
-	// Updates EndTime provided the token is unlocking and it is requested to cancel.
 	if lock.IsUnlocking() {
 		if cancelUnlock {
 			lock.EndTime = time.Time{}
