@@ -20,7 +20,6 @@ osmosisd keys add validator1 --keyring-backend=test --home=$HOME/.osmosisd/valid
 osmosisd keys add validator2 --keyring-backend=test --home=$HOME/.osmosisd/validator2
 osmosisd keys add validator3 --keyring-backend=test --home=$HOME/.osmosisd/validator3
 
-# Function updates the config based on a jq argument as a string
 update_genesis () {    
     cat $HOME/.osmosisd/validator1/config/genesis.json | jq "$1" > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
 }
