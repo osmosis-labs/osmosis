@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/osmosis-labs/osmosis/v12/x/incentives/keeper"
@@ -25,7 +26,7 @@ func (suite *KeeperTestSuite) TestCreateGauge_Fee() {
 		expectedEndBalance   sdk.Coins
 		isPerpetual          bool
 		isModuleAccount      bool
-		expectErr            bool
+		expectErr            error
 	}{
 		{
 			name:                 "user creates a non-perpetual gauge and fills gauge with all remaining tokens",
@@ -59,19 +60,19 @@ func (suite *KeeperTestSuite) TestCreateGauge_Fee() {
 			name:                 "user tries to create a non-perpetual gauge but does not have enough funds to pay for the create gauge fee",
 			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(40000000))),
 			gaugeAddition:        sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000))),
-			expectErr:            true,
+			expectErr:            sdkerrors.ErrInsufficientFunds,
 		},
 		{
 			name:                 "user tries to create a non-perpetual gauge but does not have the correct fee denom",
 			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(60000000))),
 			gaugeAddition:        sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10000000))),
-			expectErr:            true,
+			expectErr:            sdkerrors.ErrInsufficientFunds,
 		},
 		{
 			name:                 "one user tries to create a gauge, has enough funds to pay for the create gauge fee but not enough to fill the gauge",
 			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(60000000))),
 			gaugeAddition:        sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(30000000))),
-			expectErr:            true,
+			expectErr:            sdkerrors.ErrInsufficientFunds,
 		},
 	}
 
@@ -114,15 +115,15 @@ func (suite *KeeperTestSuite) TestCreateGauge_Fee() {
 		// System under test.
 		_, err := msgServer.CreateGauge(sdk.WrapSDKContext(ctx), msg)
 
-		if tc.expectErr {
-			suite.Require().Error(err)
+		if tc.expectErr != nil {
+			suite.Require().ErrorIs(err, tc.expectErr)
 		} else {
 			suite.Require().NoError(err)
 		}
 
 		balanceAmount := bankKeeper.GetAllBalances(ctx, testAccountAddress)
 
-		if tc.expectErr {
+		if tc.expectErr != nil {
 			suite.Require().Equal(tc.accountBalanceToFund.String(), balanceAmount.String(), "test: %v", tc.name)
 		} else {
 			fee := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, types.CreateGaugeFee))
@@ -141,7 +142,7 @@ func (suite *KeeperTestSuite) TestAddToGauge_Fee() {
 		nonexistentGauge     bool
 		isPerpetual          bool
 		isModuleAccount      bool
-		expectErr            bool
+		expectErr            error
 	}{
 		{
 			name:                 "user creates a non-perpetual gauge and fills gauge with all remaining tokens",
@@ -175,13 +176,13 @@ func (suite *KeeperTestSuite) TestAddToGauge_Fee() {
 			name:                 "user tries to create a non-perpetual gauge but does not have enough funds to pay for the create gauge fee",
 			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20000000))),
 			gaugeAddition:        sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000))),
-			expectErr:            true,
+			expectErr:            sdkerrors.ErrInsufficientFunds,
 		},
 		{
 			name:                 "user tries to add to a non-perpetual gauge but does not have the correct fee denom",
 			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(60000000))),
 			gaugeAddition:        sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10000000))),
-			expectErr:            true,
+			expectErr:            sdkerrors.ErrInsufficientFunds,
 		},
 	}
 
@@ -221,15 +222,15 @@ func (suite *KeeperTestSuite) TestAddToGauge_Fee() {
 
 		_, err := msgServer.AddToGauge(sdk.WrapSDKContext(ctx), msg)
 
-		if tc.expectErr {
-			suite.Require().Error(err)
+		if tc.expectErr != nil {
+			suite.Require().ErrorIs(err, tc.expectErr)
 		} else {
 			suite.Require().NoError(err)
 		}
 
 		bal := bankKeeper.GetAllBalances(ctx, testAccountAddress)
 
-		if tc.expectErr {
+		if tc.expectErr != nil {
 			suite.Require().Equal(tc.accountBalanceToFund.String(), bal.String(), "test: %v", tc.name)
 		} else {
 			fee := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, types.AddToGaugeFee))

@@ -90,13 +90,13 @@ func (s *IntegrationTestSuite) TestGetCmdGauges() {
 
 	testCases := []struct {
 		name      string
-		expectErr bool
+		expectErr error
 		args      []string
 		respType  proto.Message
 	}{
 		{
 			"query gauges",
-			false,
+			nil,
 			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			&types.GaugesResponse{},
 		},
@@ -110,8 +110,8 @@ func (s *IntegrationTestSuite) TestGetCmdGauges() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
+			if tc.expectErr != nil {
+				s.Require().ErrorIs(err, tc.expectErr)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
@@ -126,13 +126,13 @@ func (s *IntegrationTestSuite) TestGetCmdToDistributeCoins() {
 	testCases := []struct {
 		name      string
 		args      []string
-		expectErr bool
+		expectErr error
 		respType  proto.Message
 	}{
 		{
 			"query to distribute coins",
 			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			false,
+			nil,
 			&types.ModuleToDistributeCoinsResponse{},
 		},
 	}
@@ -145,8 +145,8 @@ func (s *IntegrationTestSuite) TestGetCmdToDistributeCoins() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
+			if tc.expectErr != nil {
+				s.Require().ErrorIs(err, tc.expectErr)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
@@ -161,13 +161,13 @@ func (s *IntegrationTestSuite) TestGetCmdGaugeByID() {
 	testCases := []struct {
 		name      string
 		args      []string
-		expectErr bool
+		expectErr error
 		respType  proto.Message
 	}{
 		{
 			"query gauge by id",
 			[]string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			false,
+			nil,
 			&types.GaugeByIDResponse{},
 		},
 	}
@@ -180,8 +180,8 @@ func (s *IntegrationTestSuite) TestGetCmdGaugeByID() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
+			if tc.expectErr != nil {
+				s.Require().ErrorIs(err, tc.expectErr)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
@@ -196,13 +196,13 @@ func (s *IntegrationTestSuite) TestGetCmdActiveGauges() {
 	testCases := []struct {
 		name      string
 		args      []string
-		expectErr bool
+		expectErr error
 		respType  proto.Message
 	}{
 		{
 			"query active gauges",
 			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			false,
+			nil,
 			&types.ActiveGaugesResponse{},
 		},
 	}
@@ -215,8 +215,8 @@ func (s *IntegrationTestSuite) TestGetCmdActiveGauges() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
+			if tc.expectErr != nil {
+				s.Require().ErrorIs(err, tc.expectErr)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
@@ -231,13 +231,13 @@ func (s *IntegrationTestSuite) TestGetCmdActiveGaugesPerDenom() {
 	testCases := []struct {
 		name      string
 		args      []string
-		expectErr bool
+		expectErr error
 		respType  proto.Message
 	}{
 		{
 			"query active gauges per denom",
 			[]string{s.cfg.BondDenom, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			false,
+			nil,
 			&types.ActiveGaugesPerDenomResponse{},
 		},
 	}
@@ -250,8 +250,8 @@ func (s *IntegrationTestSuite) TestGetCmdActiveGaugesPerDenom() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
+			if tc.expectErr != nil {
+				s.Require().ErrorIs(err, tc.expectErr)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
@@ -266,13 +266,13 @@ func (s *IntegrationTestSuite) TestGetCmdUpcomingGauges() {
 	testCases := []struct {
 		name      string
 		args      []string
-		expectErr bool
+		expectErr error
 		respType  proto.Message
 	}{
 		{
 			"query upcoming gauges",
 			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			false,
+			nil,
 			&types.UpcomingGaugesResponse{},
 		},
 	}
@@ -285,8 +285,8 @@ func (s *IntegrationTestSuite) TestGetCmdUpcomingGauges() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
+			if tc.expectErr != nil {
+				s.Require().ErrorIs(err, tc.expectErr)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
@@ -301,13 +301,13 @@ func (s *IntegrationTestSuite) TestGetCmdUpcomingGaugesPerDenom() {
 	testCases := []struct {
 		name      string
 		args      []string
-		expectErr bool
+		expectErr error
 		respType  proto.Message
 	}{
 		{
 			"query upcoming gauges per denom",
 			[]string{s.cfg.BondDenom, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			false,
+			nil,
 			&types.UpcomingGaugesPerDenomResponse{},
 		},
 	}
@@ -320,8 +320,8 @@ func (s *IntegrationTestSuite) TestGetCmdUpcomingGaugesPerDenom() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
+			if tc.expectErr != nil {
+				s.Require().ErrorIs(err, tc.expectErr)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
@@ -336,7 +336,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardsEst() {
 	testCases := []struct {
 		name      string
 		args      []string
-		expectErr bool
+		expectErr error
 		respType  proto.Message
 	}{
 		{
@@ -346,7 +346,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardsEst() {
 				fmt.Sprintf("--%s=100", cli.FlagEndEpoch),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			false,
+			nil,
 			&types.RewardsEstResponse{},
 		},
 		{
@@ -356,7 +356,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardsEst() {
 				fmt.Sprintf("--%s=100", cli.FlagEndEpoch),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			false,
+			nil,
 			&types.RewardsEstResponse{},
 		},
 		{
@@ -365,7 +365,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardsEst() {
 				fmt.Sprintf("--%s=1,2", cli.FlagLockIds),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			false,
+			nil,
 			&types.RewardsEstResponse{},
 		},
 	}
@@ -378,8 +378,8 @@ func (s *IntegrationTestSuite) TestGetCmdRewardsEst() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
+			if tc.expectErr != nil {
+				s.Require().ErrorIs(err, tc.expectErr)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())

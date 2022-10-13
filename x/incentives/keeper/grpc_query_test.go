@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,7 +25,7 @@ func (suite *KeeperTestSuite) TestGRPCGaugeByID() {
 
 	// ensure that querying for a gauge with an ID that doesn't exist returns an error.
 	res, err := suite.querier.GaugeByID(sdk.WrapSDKContext(suite.Ctx), &types.GaugeByIDRequest{Id: 1000})
-	suite.Require().Error(err)
+	suite.Require().EqualError(fmt.Errorf("gauge with ID 1000 does not exist"), err.Error())
 	suite.Require().Equal(res, (*types.GaugeByIDResponse)(nil))
 
 	// check that querying a gauge with an ID that exists returns the gauge.

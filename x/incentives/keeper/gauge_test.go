@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/stretchr/testify/suite"
@@ -9,6 +10,7 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -24,7 +26,7 @@ func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 		Duration:      defaultLockDuration / 2, // 0.5 second, invalid duration
 	}
 	_, err := suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
-	suite.Require().Error(err)
+	suite.Require().EqualError(fmt.Errorf("invalid duration: 500000000"), err.Error())
 
 	distrTo.Duration = defaultLockDuration
 	_, err = suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
@@ -43,7 +45,7 @@ func (suite *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
 		Duration:      defaultLockDuration,
 	}
 	_, err := suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, false, addrNoSupply, defaultLiquidTokens, distrTo, time.Time{}, 1)
-	suite.Require().Error(err)
+	suite.Require().ErrorIs(err, sdkerrors.ErrInsufficientFunds)
 
 	_, err = suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
 	suite.Require().NoError(err)
@@ -214,7 +216,7 @@ func (suite *KeeperTestSuite) TestGaugeOperations() {
 
 			// check invalid gauge ID
 			_, err = suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeID+1000)
-			suite.Require().Error(err)
+			suite.Require().EqualError(fmt.Errorf("gauge with ID %v does not exist", gaugeID+1000), err.Error())
 			rewardsEst = suite.App.IncentivesKeeper.GetRewardsEst(suite.Ctx, lockOwners[0], []lockuptypes.PeriodLock{}, 100)
 			suite.Require().Equal(sdk.Coins{}, rewardsEst)
 
@@ -246,7 +248,7 @@ func (suite *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 		feeToCharge          int64
 		gaugeCoins           sdk.Coins
 
-		expectError bool
+		expectingErr error
 	}{
 		"fee + base denom gauge coin == acount balance, success": {
 			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
@@ -263,7 +265,7 @@ func (suite *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 			feeToCharge:          baseFee/2 + 1,
 			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee/2))),
 
-			expectError: true,
+			expectingErr: sdkerrors.ErrInsufficientFunds,
 		},
 		"fee + base denom gauge coin < acount balance, custom values, success": {
 			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(11793193112)),
@@ -275,7 +277,7 @@ func (suite *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 			feeToCharge:          baseFee,
 			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee/2))),
 
-			expectError: true,
+			expectingErr: sdkerrors.ErrInsufficientFunds,
 		},
 		"fee == account balance, no gauge coins, success": {
 			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
@@ -317,8 +319,8 @@ func (suite *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 
 			// Assertions.
 			newBalanceAmount := bankKeeper.GetBalance(ctx, testAccount, sdk.DefaultBondDenom).Amount
-			if tc.expectError {
-				suite.Require().Error(err)
+			if tc.expectingErr != nil {
+				suite.Require().ErrorIs(err, tc.expectingErr)
 
 				// check account balance unchanged
 				suite.Require().Equal(oldBalanceAmount, newBalanceAmount)
