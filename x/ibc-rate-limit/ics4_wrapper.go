@@ -51,7 +51,7 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 		return i.channel.SendPacket(ctx, chanCap, packet)
 	}
 
-	amount, denom, err := GetFundsFromPacket(packet)
+	amount, denom, err := GetFundsFromPacket(packet, true)
 	if err != nil {
 		return sdkerrors.Wrap(err, "Rate limited SendPacket")
 	}

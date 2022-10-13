@@ -2,7 +2,6 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
-
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -124,11 +123,35 @@ func BuildWasmExecMsg(msgType, sourceChannel, denom string, channelValue sdk.Int
 	return asJson, nil
 }
 
-func GetFundsFromPacket(packet exported.PacketI) (string, string, error) {
+func GetLocalDenom(packet exported.PacketI, data transfertypes.FungibleTokenPacketData) string {
+	var denomTrace transfertypes.DenomTrace
+	if transfertypes.ReceiverChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data.Denom) {
+		voucherPrefix := transfertypes.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
+		unprefixedDenom := data.Denom[len(voucherPrefix):]
+		// The denomination used to send the coins is either the native denom or the hash of the path
+		// if the denomination is not native.
+		denomTrace = transfertypes.ParseDenomTrace(unprefixedDenom)
+	} else {
+		// since SendPacket did not prefix the denomination, we must prefix denomination here
+		sourcePrefix := transfertypes.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
+		// NOTE: sourcePrefix contains the trailing "/"
+		prefixedDenom := sourcePrefix + data.Denom
+
+		// construct the denomination trace from the full raw denomination
+		denomTrace = transfertypes.ParseDenomTrace(prefixedDenom)
+	}
+
+	return denomTrace.IBCDenom()
+}
+
+func GetFundsFromPacket(packet exported.PacketI, local bool) (string, string, error) {
 	var packetData transfertypes.FungibleTokenPacketData
 	err := json.Unmarshal(packet.GetData(), &packetData)
 	if err != nil {
 		return "", "", err
 	}
-	return packetData.Amount, packetData.Denom, nil
+	if local {
+		return packetData.Amount, packetData.Denom, nil
+	}
+	return packetData.Amount, GetLocalDenom(packet, packetData), nil
 }

@@ -2,7 +2,6 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -129,7 +128,7 @@ func (im *IBCModule) OnRecvPacket(
 		// The contract has not been configured. Continue as usual
 		return im.app.OnRecvPacket(ctx, packet, relayer)
 	}
-	amount, denom, err := GetFundsFromPacket(packet)
+	amount, denom, err := GetFundsFromPacket(packet, false)
 	if err != nil {
 		return channeltypes.NewErrorAcknowledgement("bad packet")
 	}

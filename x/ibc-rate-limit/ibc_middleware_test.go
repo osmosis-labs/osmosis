@@ -76,20 +76,19 @@ func (suite *MiddlewareTestSuite) NewValidMessage(forward bool, amount sdk.Int) 
 	var coins sdk.Coin
 	var port, channel, accountFrom, accountTo string
 
+	coins = sdk.NewCoin(sdk.DefaultBondDenom, amount)
 	if forward {
-		coins = sdk.NewCoin(sdk.DefaultBondDenom, amount)
 		port = suite.path.EndpointA.ChannelConfig.PortID
 		channel = suite.path.EndpointA.ChannelID
 		accountFrom = suite.chainA.SenderAccount.GetAddress().String()
 		accountTo = suite.chainB.SenderAccount.GetAddress().String()
 	} else {
-		coins = transfertypes.GetTransferCoin(
-			suite.path.EndpointB.ChannelConfig.PortID,
-			suite.path.EndpointB.ChannelID,
-			sdk.DefaultBondDenom,
-			sdk.NewInt(1),
-		)
-		coins = sdk.NewCoin(sdk.DefaultBondDenom, amount)
+		//coins = transfertypes.GetTransferCoin(
+		//	suite.path.EndpointB.ChannelConfig.PortID,
+		//	suite.path.EndpointB.ChannelID,
+		//	sdk.DefaultBondDenom,
+		//	sdk.NewInt(1),
+		//)
 		port = suite.path.EndpointB.ChannelConfig.PortID
 		channel = suite.path.EndpointB.ChannelID
 		accountFrom = suite.chainB.SenderAccount.GetAddress().String()
