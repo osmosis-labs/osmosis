@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/osmosis-labs/osmosis/v12/x/epochs/types"
@@ -13,7 +14,7 @@ func (suite *KeeperTestSuite) TestAddEpochInfo() {
 	startBlockTime := time.Unix(1656907200, 0).UTC()
 	tests := map[string]struct {
 		addedEpochInfo types.EpochInfo
-		expErr         bool
+		expErr         error
 		expEpochInfo   types.EpochInfo
 	}{
 		"simple_add": {
@@ -26,7 +27,6 @@ func (suite *KeeperTestSuite) TestAddEpochInfo() {
 				CurrentEpochStartTime:   time.Time{},
 				EpochCountingStarted:    false,
 			},
-			expErr: false,
 			expEpochInfo: types.EpochInfo{
 				Identifier:              defaultIdentifier,
 				StartTime:               startBlockTime,
@@ -47,7 +47,7 @@ func (suite *KeeperTestSuite) TestAddEpochInfo() {
 				CurrentEpochStartTime:   time.Time{},
 				EpochCountingStarted:    false,
 			},
-			expErr: true,
+			expErr: fmt.Errorf("epoch duration should NOT be 0"),
 		},
 	}
 	for name, test := range tests {
@@ -55,12 +55,12 @@ func (suite *KeeperTestSuite) TestAddEpochInfo() {
 			suite.SetupTest()
 			suite.Ctx = suite.Ctx.WithBlockHeight(startBlockHeight).WithBlockTime(startBlockTime)
 			err := suite.App.EpochsKeeper.AddEpochInfo(suite.Ctx, test.addedEpochInfo)
-			if !test.expErr {
+			if test.expErr == nil {
 				suite.Require().NoError(err)
 				actualEpochInfo := suite.App.EpochsKeeper.GetEpochInfo(suite.Ctx, test.addedEpochInfo.Identifier)
 				suite.Require().Equal(test.expEpochInfo, actualEpochInfo)
 			} else {
-				suite.Require().Error(err)
+				suite.Require().Error(err, test.expErr)
 			}
 		})
 	}

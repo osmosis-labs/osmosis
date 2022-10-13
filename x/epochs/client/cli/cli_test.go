@@ -41,18 +41,18 @@ func (s *IntegrationTestSuite) TestGetCmdCurrentEpoch() {
 	testCases := []struct {
 		name       string
 		identifier string
-		expectErr  bool
+		expectErr  error
 		respType   proto.Message
 	}{
 		{
 			"query weekly epoch number",
 			"weekly",
-			false, &types.QueryCurrentEpochResponse{},
+			nil, &types.QueryCurrentEpochResponse{},
 		},
 		{
 			"query unavailable epoch number",
 			"unavailable",
-			false, &types.QueryCurrentEpochResponse{},
+			nil, &types.QueryCurrentEpochResponse{},
 		},
 	}
 
@@ -68,8 +68,8 @@ func (s *IntegrationTestSuite) TestGetCmdCurrentEpoch() {
 			}
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-			if tc.expectErr {
-				s.Require().Error(err)
+			if tc.expectErr != nil {
+				s.Require().ErrorIs(err, tc.expectErr)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
@@ -83,12 +83,12 @@ func (s *IntegrationTestSuite) TestGetCmdEpochsInfos() {
 
 	testCases := []struct {
 		name      string
-		expectErr bool
+		expectErr error
 		respType  proto.Message
 	}{
 		{
 			"query epoch infos",
-			false, &types.QueryEpochsInfoResponse{},
+			nil, &types.QueryEpochsInfoResponse{},
 		},
 	}
 
@@ -102,8 +102,8 @@ func (s *IntegrationTestSuite) TestGetCmdEpochsInfos() {
 			args := []string{}
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-			if tc.expectErr {
-				s.Require().Error(err)
+			if tc.expectErr != nil {
+				s.Require().ErrorIs(err, tc.expectErr)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
