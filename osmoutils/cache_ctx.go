@@ -3,7 +3,10 @@ package osmoutils
 import (
 	"errors"
 	"fmt"
+	"runtime"
+	"runtime/debug"
 
+	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -14,9 +17,9 @@ import (
 func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err error) {
 	// Add a panic safeguard
 	defer func() {
-		if recovErr := recover(); recovErr != nil {
-			fmt.Println(recovErr)
-			err = errors.New("panic occured during execution")
+		if recoveryError := recover(); recoveryError != nil {
+			PrintPanicRecoveryError(ctx, recoveryError)
+			err = errors.New("panic occurred during execution")
 		}
 	}()
 	// makes a new cache context, which all state changes get wrapped inside of.
@@ -29,4 +32,27 @@ func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err err
 		write()
 	}
 	return err
+}
+
+// PrintPanicRecoveryError error logs the recoveryError, along with the stacktrace, if it can be parsed.
+// If not emits them to stdout.
+func PrintPanicRecoveryError(ctx sdk.Context, recoveryError interface{}) {
+	errStackTrace := string(debug.Stack())
+	switch e := recoveryError.(type) {
+	case types.ErrorOutOfGas:
+		ctx.Logger().Debug("out of gas error inside panic recovery block: " + e.Descriptor)
+		return
+	case string:
+		ctx.Logger().Error("Recovering from (string) panic: " + e)
+	case runtime.Error:
+		ctx.Logger().Error("recovered (runtime.Error) panic: " + e.Error())
+	case error:
+		ctx.Logger().Error("recovered (error) panic: " + e.Error())
+	default:
+		ctx.Logger().Error("recovered (default) panic. Could not capture logs in ctx, see stdout")
+		fmt.Println("Recovering from panic ", recoveryError)
+		debug.PrintStack()
+		return
+	}
+	ctx.Logger().Error("stack trace: " + errStackTrace)
 }
