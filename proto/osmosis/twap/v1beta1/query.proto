@@ -43,11 +43,8 @@ message ArithmeticTwapRequest {
   ];
 }
 message ArithmeticTwapResponse {
-  string arithmetic_twap = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"arithmetic_twap\"",
-    (gogoproto.nullable) = false
-  ];
+  string arithmetic_twap = 1
+      [ (gogoproto.moretags) = "yaml:\"arithmetic_twap\"" ];
 }
 
 message ArithmeticTwapToNowRequest {
@@ -61,11 +58,8 @@ message ArithmeticTwapToNowRequest {
   ];
 }
 message ArithmeticTwapToNowResponse {
-  string arithmetic_twap = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"arithmetic_twap\"",
-    (gogoproto.nullable) = false
-  ];
+  string arithmetic_twap = 1
+      [ (gogoproto.moretags) = "yaml:\"arithmetic_twap\"" ];
 }
 
 message ParamsRequest {}
