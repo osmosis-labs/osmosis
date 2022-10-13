@@ -412,18 +412,18 @@ func (k Keeper) ExtendLockup(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 		return fmt.Errorf("cannot edit lockup with synthetic lock %d", lock.ID)
 	}
 
+	// completely delete existing lock refs
+	err = k.deleteLockRefs(ctx, unlockingPrefix(lock.IsUnlocking()), *lock)
+	if err != nil {
+		return err
+	}
+
 	if lock.IsUnlocking() {
 		if cancelUnlock {
 			lock.EndTime = time.Time{}
 		} else {
 			return fmt.Errorf("cannot cancel unlock for lock %d", lock.ID)
 		}
-	}
-
-	// completely delete existing lock refs
-	err = k.deleteLockRefs(ctx, unlockingPrefix(lock.IsUnlocking()), *lock)
-	if err != nil {
-		return err
 	}
 
 	oldDuration := lock.GetDuration()
