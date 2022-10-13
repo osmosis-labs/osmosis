@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -10,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -154,7 +156,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 		validatorStats        []stakingtypes.BondStatus
 		superDelegations      []superfluidDelegation
 		superUnbondingLockIds []uint64
-		expSuperUnbondingErr  []bool
+		expSuperUnbondingErr  []error
 		// expected amount of delegation to intermediary account
 		expInterDelegation []sdk.Dec
 	}{
@@ -163,7 +165,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			[]uint64{1},
-			[]bool{false},
+			[]error{nil},
 			[]sdk.Dec{sdk.ZeroDec()},
 		},
 		// {
@@ -180,7 +182,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {0, 0, 0, 1000000}},
 			[]uint64{1},
-			[]bool{false},
+			[]error{nil},
 			[]sdk.Dec{sdk.ZeroDec()},
 		},
 		{
@@ -188,7 +190,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			[]uint64{1, 2},
-			[]bool{false, false},
+			[]error{nil, nil},
 			[]sdk.Dec{sdk.ZeroDec()},
 		},
 		{
@@ -196,7 +198,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonding},
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			[]uint64{1, 2},
-			[]bool{false, false},
+			[]error{nil, nil},
 			[]sdk.Dec{sdk.ZeroDec()},
 		},
 		{
@@ -204,7 +206,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			[]uint64{1, 2},
-			[]bool{false, false},
+			[]error{nil, nil},
 			[]sdk.Dec{sdk.ZeroDec()},
 		},
 		{
@@ -212,7 +214,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			[]uint64{2},
-			[]bool{true},
+			[]error{sdkerrors.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", 2))},
 			[]sdk.Dec{},
 		},
 		{
@@ -220,7 +222,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			[]uint64{1, 1},
-			[]bool{false, true},
+			[]error{nil, types.ErrNotSuperfluidUsedLockup},
 			[]sdk.Dec{sdk.ZeroDec()},
 		},
 	}
@@ -258,8 +260,9 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 
 				// superfluid undelegate
 				err = suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, lock.Owner, lockId)
-				if tc.expSuperUnbondingErr[index] {
+				if tc.expSuperUnbondingErr[index] != nil {
 					suite.Require().Error(err)
+					suite.Require().ErrorAs(tc.expSuperUnbondingErr[index], &err)
 					continue
 				}
 				suite.Require().NoError(err)
@@ -307,7 +310,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 
 			// try undelegating twice
 			for index, lockId := range tc.superUnbondingLockIds {
-				if tc.expSuperUnbondingErr[index] {
+				if tc.expSuperUnbondingErr[index] != nil {
 					continue
 				}
 
