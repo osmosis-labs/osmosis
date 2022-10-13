@@ -414,11 +414,9 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 		{
 			name:            "join no swap with insufficient funds",
 			txSender:        suite.TestAccs[1],
-			sharesRequested: sdk.NewInt(-1),
-			tokenInMaxs: sdk.Coins{
-				sdk.NewCoin("bar", sdk.NewInt(4999)), sdk.NewCoin("foo", sdk.NewInt(4999)),
-			},
-			expectErr: sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
+			sharesRequested: types.OneShare.MulRaw(100001),
+			tokenInMaxs: sdk.Coins{},
+			expectErr: sdkerrors.ErrInsufficientFunds,
 		},
 		{
 			name:            "join no swap with exact tokenInMaxs",
@@ -464,7 +462,8 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 		suite.FundAcc(test.txSender, defaultAcctFunds)
 
 		balancesBefore := bankKeeper.GetAllBalances(suite.Ctx, test.txSender)
-		_, _, err = gammKeeper.JoinPoolNoSwap(suite.Ctx, test.txSender, poolId, test.sharesRequested, test.tokenInMaxs)
+		tokenIns, shareOut, err := gammKeeper.JoinPoolNoSwap(suite.Ctx, test.txSender, poolId, test.sharesRequested, test.tokenInMaxs)
+		fmt.Println(tokenIns, shareOut)
 
 		if test.expectErr == nil {
 			suite.Require().NoError(err, "test: %v", test.name)
@@ -481,6 +480,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 
 			suite.AssertEventEmitted(ctx, types.TypeEvtPoolJoined, 1)
 		} else {
+			fmt.Println(err)
 			suite.Require().Error(err, "test: %v", test.name)
 			suite.Require().ErrorAs(test.expectErr, &err)
 			suite.AssertEventEmitted(ctx, types.TypeEvtPoolJoined, 0)
