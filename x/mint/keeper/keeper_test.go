@@ -324,7 +324,7 @@ func (suite *KeeperTestSuite) TestDistributeToModule() {
 		mintedCoin      sdk.Coin
 		proportion      sdk.Dec
 
-		expectedError bool
+		expectedError error
 		expectPanic   bool
 	}{
 		"pre-mint == distribute - poolincentives module - full amount - success": {
@@ -348,7 +348,7 @@ func (suite *KeeperTestSuite) TestDistributeToModule() {
 			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
 			proportion:      sdk.NewDecWithPrec(2, 1).Quo(sdk.NewDecWithPrec(3, 1)),
 
-			expectedError: true,
+			expectedError: sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("%s is smaller than %s", sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(66)))),
 		},
 		"denom does not exist - error": {
 			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
@@ -357,7 +357,7 @@ func (suite *KeeperTestSuite) TestDistributeToModule() {
 			mintedCoin:      sdk.NewCoin(denomDoesNotExist, sdk.NewInt(100)),
 			proportion:      sdk.NewDec(1),
 
-			expectedError: true,
+			expectedError: sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("%s is smaller than %s", sdk.NewCoin(denomDoesNotExist, sdk.NewInt(0)), sdk.NewCoin(denomDoesNotExist, sdk.NewInt(100)))),
 		},
 		"invalid module account -panic": {
 			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
@@ -375,7 +375,7 @@ func (suite *KeeperTestSuite) TestDistributeToModule() {
 			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
 			proportion:      sdk.NewDec(2),
 
-			expectedError: true,
+			expectedError: keeper.ErrInvalidRatio{ActualRatio: sdk.NewDec(2)},
 		},
 	}
 	for name, tc := range tests {
@@ -403,8 +403,9 @@ func (suite *KeeperTestSuite) TestDistributeToModule() {
 				actualMintModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), tc.mintedCoin.Denom).Amount
 				actualRecepientModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(tc.recepientModule), tc.mintedCoin.Denom).Amount
 
-				if tc.expectedError {
+				if tc.expectedError != nil {
 					suite.Require().Error(err)
+					suite.Require().Equal(tc.expectedError.Error(), err.Error())
 					suite.Require().Equal(actualDistributed, sdk.Int{})
 					// Old balances should not change.
 					suite.Require().Equal(oldMintModuleBalanceAmount.Int64(), actualMintModuleBalanceAmount.Int64())

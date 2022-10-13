@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -93,7 +94,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 		// Expected results.
 		expectedLastReductionEpochNum int64
 		expectedDistribution          sdk.Dec
-		expectedError                 bool
+		expectedError                 error
 	}{
 		"before start epoch - no distributions": {
 			hookArgEpochNum: defaultMintingRewardsDistributionStartEpoch - 1,
@@ -346,7 +347,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 
 			expectedDistribution:          sdk.ZeroDec(),
 			expectedLastReductionEpochNum: defaultMintingRewardsDistributionStartEpoch,
-			expectedError:                 true,
+			expectedError:                 fmt.Errorf("Error: InsufficientDevVestingBalance"),
 		},
 	}
 
@@ -382,7 +383,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 
 			developerAccountBalanceBeforeHook := app.BankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), sdk.DefaultBondDenom)
 
-			if tc.expectedError {
+			if tc.expectedError != nil {
 				// If panic is expected, burn developer module account balance so that it causes an error that leads to a
 				// panic in the hook.
 				suite.Require().NoError(distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(developerAccountBalanceBeforeHook), accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)))
@@ -393,14 +394,17 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			oldSupply := app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount
 			suite.Require().Equal(sdk.NewInt(keeper.DeveloperVestingAmount), oldSupply)
 
-			if tc.expectedError {
-				suite.Require().Error(mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, tc.hookArgEpochNum))
+			err := mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, tc.hookArgEpochNum)
+			if tc.expectedError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorAs(err, &tc.expectedError)
+				println(tc.expectedError.Error())
 			} else {
-				suite.Require().NoError(mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, tc.hookArgEpochNum))
+				suite.Require().NoError(err)
 			}
 
 			// If panics, the behavior is undefined.
-			if tc.expectedError {
+			if tc.expectedError != nil {
 				return
 			}
 
