@@ -23,8 +23,8 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 	}
 
 	tests := []struct {
-		name       string
-		param      param
+		name      string
+		param     param
 		expectErr error
 	}{
 		{
@@ -42,7 +42,7 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 				lockOwner: sdk.AccAddress([]byte("addr1---------------")), // setup wallet
 				duration:  time.Second,
 			},
-			expectErr: sdkerrors.Wrapf(types.ErrNotEnoughLockupDuration, "lock duration (%d) must be greater than unbonding time (%d)", time.Second, time.Hour * 504),
+			expectErr: sdkerrors.Wrapf(types.ErrNotEnoughLockupDuration, "lock duration (%d) must be greater than unbonding time (%d)", time.Second, time.Hour*504),
 		},
 		{
 			name: "happy case",
@@ -93,8 +93,8 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegate() {
 	}
 
 	tests := []struct {
-		name       string
-		param      param
+		name      string
+		param     param
 		expectErr error
 	}{
 		{
@@ -139,8 +139,8 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUnbondLock() {
 	}
 
 	tests := []struct {
-		name       string
-		param      param
+		name      string
+		param     param
 		expectErr error
 	}{
 		{
@@ -185,8 +185,8 @@ func (suite *KeeperTestSuite) TestMsgLockAndSuperfluidDelegate() {
 	}
 
 	tests := []struct {
-		name       string
-		param      param
+		name      string
+		param     param
 		expectErr error
 	}{
 		{
