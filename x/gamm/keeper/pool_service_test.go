@@ -415,8 +415,8 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 			name:            "join no swap with insufficient funds",
 			txSender:        suite.TestAccs[1],
 			sharesRequested: types.OneShare.MulRaw(100001),
-			tokenInMaxs: sdk.Coins{},
-			expectErr: sdkerrors.ErrInsufficientFunds,
+			tokenInMaxs:     sdk.Coins{},
+			expectErr:       sdkerrors.ErrInsufficientFunds,
 		},
 		{
 			name:            "join no swap with exact tokenInMaxs",

@@ -252,9 +252,9 @@ func (suite *KeeperTestSuite) TestJoinPool_Events() {
 			poolId:         1,
 			shareOutAmount: sdk.NewInt(shareOut),
 			tokenInMaxs:    sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tokenInMaxAmount))),
-			expectError:    sdkerrors.Wrapf(types.ErrLimitMaxAmount, "TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap,"+
-			" upperbound: %v, needed %v", sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tokenInMaxAmount))), 
-			sdk.NewCoins(sdk.NewCoin("bar", sdk.OneInt()), sdk.NewCoin("baz", sdk.OneInt()), sdk.NewCoin("foo", sdk.OneInt()), sdk.NewCoin("uosmo", sdk.OneInt()))),
+			expectError: sdkerrors.Wrapf(types.ErrLimitMaxAmount, "TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap,"+
+				" upperbound: %v, needed %v", sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tokenInMaxAmount))),
+				sdk.NewCoins(sdk.NewCoin("bar", sdk.OneInt()), sdk.NewCoin("baz", sdk.OneInt()), sdk.NewCoin("foo", sdk.OneInt()), sdk.NewCoin("uosmo", sdk.OneInt()))),
 		},
 	}
 
@@ -319,7 +319,7 @@ func (suite *KeeperTestSuite) TestExitPool_Events() {
 			poolId:        1,
 			shareInAmount: sdk.NewInt(shareIn),
 			tokenOutMins:  sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tokenOutMinAmount))),
-			expectError:   sdkerrors.Wrapf(types.ErrLimitMinAmount,
+			expectError: sdkerrors.Wrapf(types.ErrLimitMinAmount,
 				"Exit pool returned %s , minimum tokens out specified as %s",
 				sdk.Coins{}, sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tokenOutMinAmount)))),
 		},
