@@ -6,6 +6,9 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v12/x/pool-incentives/types"
@@ -20,26 +23,28 @@ func (suite *KeeperTestSuite) TestGaugeIds() {
 	for _, tc := range []struct {
 		desc    string
 		request *types.QueryGaugeIdsRequest
-		err     bool
+		err     error
 	}{
 		{
-			desc:    "Empty request",
-			request: &types.QueryGaugeIdsRequest{},
-			err:     true,
+			desc: "Empty request",
+			request: &types.QueryGaugeIdsRequest{
+				PoolId: 0,
+			},
+			err: status.Error(codes.Internal, sdkerrors.Wrapf(types.ErrNoGaugeIdExist, "gauge id for pool (%d) with duration (%s) not exist", 0, suite.App.PoolIncentivesKeeper.GetLockableDurations(suite.Ctx)[0]).Error()),
 		},
 		{
 			desc: "Nonexistent pool",
 			request: &types.QueryGaugeIdsRequest{
 				PoolId: 2,
 			},
-			err: true,
+			err: status.Error(codes.Internal, sdkerrors.Wrapf(types.ErrNoGaugeIdExist, "gauge id for pool (%d) with duration (%s) not exist", 2, suite.App.PoolIncentivesKeeper.GetLockableDurations(suite.Ctx)[0]).Error()),
 		},
 		{
 			desc: "Happy case",
 			request: &types.QueryGaugeIdsRequest{
 				PoolId: 1,
 			},
-			err: false,
+			err: nil,
 		},
 	} {
 		tc := tc
@@ -53,8 +58,9 @@ func (suite *KeeperTestSuite) TestGaugeIds() {
 			suite.Require().Equal(3, len(lockableDurations))
 
 			res, err := queryClient.GaugeIds(context.Background(), tc.request)
-			if tc.err {
+			if tc.err != nil {
 				suite.Require().Error(err)
+				suite.Require().EqualError(err, tc.err.Error())
 			} else {
 				suite.Require().NoError(err)
 				suite.Require().Equal(3, len(res.GaugeIdsWithDuration))

@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	"github.com/osmosis-labs/osmosis/v12/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -129,7 +131,7 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 		name               string
 		testingDistrRecord []types.DistrRecord
 		isPoolPrepared     bool
-		expectErr          bool
+		expectErr          error
 		expectTotalWeight  sdk.Int
 	}{
 		{
@@ -139,7 +141,7 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 				Weight:  sdk.NewInt(100),
 			}},
 			isPoolPrepared: false,
-			expectErr:      true,
+			expectErr:      fmt.Errorf("gauge with ID %d does not exist", 1),
 		},
 		{
 			name: "Adding two of the same gauge id at once should error",
@@ -154,7 +156,7 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 				},
 			},
 			isPoolPrepared: true,
-			expectErr:      true,
+			expectErr:      fmt.Errorf("Gauge ID #%d has duplications.: gauge was already registered", 1),
 		},
 		{
 			name: "Adding unsort gauges at once should error",
@@ -169,7 +171,7 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 				},
 			},
 			isPoolPrepared: true,
-			expectErr:      true,
+			expectErr:      fmt.Errorf("Gauge ID #%d came after Gauge ID #%d.: gauges are not sorted", 1, 2),
 		},
 		{
 			name: "Normal case with same weights",
@@ -184,7 +186,7 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 				},
 			},
 			isPoolPrepared:    true,
-			expectErr:         false,
+			expectErr:         nil,
 			expectTotalWeight: sdk.NewInt(200),
 		},
 		{
@@ -200,7 +202,7 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 				},
 			},
 			isPoolPrepared:    true,
-			expectErr:         false,
+			expectErr:         nil,
 			expectTotalWeight: sdk.NewInt(300),
 		},
 	}
@@ -215,8 +217,9 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 			}
 
 			err := keeper.ReplaceDistrRecords(suite.Ctx, test.testingDistrRecord...)
-			if test.expectErr {
+			if test.expectErr != nil {
 				suite.Require().Error(err)
+				suite.Require().EqualError(err, test.expectErr.Error())
 			} else {
 				suite.Require().NoError(err)
 
