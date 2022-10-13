@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
@@ -34,7 +35,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		minGasPrices sdk.DecCoins
 		gasRequested uint64
 		isCheckTx    bool
-		expectPass   bool
+		expectErr    error
 		baseDenomGas bool
 	}{
 		{
@@ -43,7 +44,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			minGasPrices: sdk.NewDecCoins(),
 			gasRequested: 10000,
 			isCheckTx:    true,
-			expectPass:   true,
+			expectErr:    nil,
 			baseDenomGas: true,
 		},
 		{
@@ -52,7 +53,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			minGasPrices: sdk.NewDecCoins(),
 			gasRequested: 10000,
 			isCheckTx:    false,
-			expectPass:   true,
+			expectErr:    nil,
 			baseDenomGas: true,
 		},
 		{
@@ -62,7 +63,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 				sdk.MustNewDecFromStr("0.1"))),
 			gasRequested: 10000,
 			isCheckTx:    true,
-			expectPass:   true,
+			expectErr:    nil,
 			baseDenomGas: true,
 		},
 		{
@@ -72,7 +73,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 				sdk.MustNewDecFromStr("0.1"))),
 			gasRequested: 10000,
 			isCheckTx:    true,
-			expectPass:   false,
+			expectErr:    sdkerrors.ErrInsufficientFee,
 			baseDenomGas: true,
 		},
 		{
@@ -82,7 +83,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 				sdk.MustNewDecFromStr("0.1"))),
 			gasRequested: 10000,
 			isCheckTx:    false,
-			expectPass:   true,
+			expectErr:    nil,
 			baseDenomGas: true,
 		},
 		{
@@ -92,7 +93,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 				sdk.MustNewDecFromStr("0.1"))),
 			gasRequested: 10000,
 			isCheckTx:    true,
-			expectPass:   true,
+			expectErr:    nil,
 			baseDenomGas: false,
 		},
 		{
@@ -102,7 +103,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 				sdk.MustNewDecFromStr("0.1"))),
 			gasRequested: 10000,
 			isCheckTx:    true,
-			expectPass:   false,
+			expectErr:    sdkerrors.ErrInsufficientFee,
 			baseDenomGas: false,
 		},
 		{
@@ -112,7 +113,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 				sdk.MustNewDecFromStr("0.1"))),
 			gasRequested: 10000,
 			isCheckTx:    false,
-			expectPass:   true,
+			expectErr:    nil,
 			baseDenomGas: false,
 		},
 		{
@@ -121,7 +122,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			minGasPrices: sdk.NewDecCoins(),
 			gasRequested: 10000,
 			isCheckTx:    true,
-			expectPass:   false,
+			expectErr:    types.ErrTooManyFeeCoins,
 			baseDenomGas: false,
 		},
 		{
@@ -130,7 +131,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			minGasPrices: sdk.NewDecCoins(),
 			gasRequested: 10000,
 			isCheckTx:    false,
-			expectPass:   false,
+			expectErr:    types.ErrTooManyFeeCoins,
 			baseDenomGas: false,
 		},
 		{
@@ -139,7 +140,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			minGasPrices: sdk.NewDecCoins(),
 			gasRequested: 10000,
 			isCheckTx:    false,
-			expectPass:   false,
+			expectErr:    types.ErrInvalidFeeToken,
 			baseDenomGas: false,
 		},
 		{
@@ -148,7 +149,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			minGasPrices: sdk.NewDecCoins(sdk.NewInt64DecCoin(uion, 1)),
 			gasRequested: 10000,
 			isCheckTx:    true,
-			expectPass:   true,
+			expectErr:    nil,
 			baseDenomGas: false,
 		},
 		{
@@ -157,7 +158,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			minGasPrices: sdk.NewDecCoins(sdk.NewInt64DecCoin(uion, 1)),
 			gasRequested: mempoolFeeOpts.MaxGasWantedPerTx + 1,
 			isCheckTx:    true,
-			expectPass:   false,
+			expectErr:    sdkerrors.ErrOutOfGas,
 			baseDenomGas: false,
 		},
 		{
@@ -166,7 +167,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			minGasPrices: sdk.NewDecCoins(sdk.NewInt64DecCoin(uion, 1)),
 			gasRequested: mempoolFeeOpts.HighGasTxThreshold,
 			isCheckTx:    true,
-			expectPass:   false,
+			expectErr:    sdkerrors.ErrInsufficientFee,
 			baseDenomGas: false,
 		},
 		{
@@ -175,7 +176,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			minGasPrices: sdk.NewDecCoins(sdk.NewInt64DecCoin(uion, 1)),
 			gasRequested: mempoolFeeOpts.HighGasTxThreshold,
 			isCheckTx:    true,
-			expectPass:   true,
+			expectErr:    nil,
 			baseDenomGas: false,
 		},
 	}
@@ -225,7 +226,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			antehandlerMFD := sdk.ChainAnteDecorators(mfd, dfd)
 			_, err := antehandlerMFD(suite.Ctx, tx, false)
 
-			if tc.expectPass {
+			if tc.expectErr == nil {
 				if tc.baseDenomGas && !tc.txFee.IsZero() {
 					moduleAddr := suite.App.AccountKeeper.GetModuleAddress(types.FeeCollectorName)
 					suite.Require().Equal(tc.txFee[0], suite.App.BankKeeper.GetBalance(suite.Ctx, moduleAddr, baseDenom), tc.name)
@@ -235,7 +236,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 				}
 				suite.Require().NoError(err, "test: %s", tc.name)
 			} else {
-				suite.Require().Error(err, "test: %s", tc.name)
+				suite.Require().ErrorIs(err, tc.expectErr)
 			}
 		})
 	}

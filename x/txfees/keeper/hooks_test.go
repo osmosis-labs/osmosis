@@ -38,13 +38,12 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 	_, ustPool := suite.preparePool(ust)
 
 	tests := []struct {
-		name       string
-		coins      sdk.Coins
-		baseDenom  string
-		denoms     []string
-		poolTypes  []gammtypes.PoolI
-		swapFee    sdk.Dec
-		expectPass bool
+		name      string
+		coins     sdk.Coins
+		baseDenom string
+		denoms    []string
+		poolTypes []gammtypes.PoolI
+		swapFee   sdk.Dec
 	}{
 		{
 			name:      "One non-osmo fee token (uion): TxFees AfterEpochEnd",
@@ -67,8 +66,6 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 	finalOutputAmount := sdk.NewInt(0)
 
 	for _, tc := range tests {
-		tc := tc
-
 		suite.Run(tc.name, func() {
 			for i, coin := range tc.coins {
 				// Get the output amount in osmo denom

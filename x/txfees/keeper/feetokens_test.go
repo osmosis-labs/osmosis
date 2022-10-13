@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	"github.com/osmosis-labs/osmosis/v12/x/txfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -45,58 +47,58 @@ func (suite *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 	)
 
 	tests := []struct {
-		name       string
-		feeToken   string
-		poolId     uint64
-		expectPass bool
+		name      string
+		feeToken  string
+		poolId    uint64
+		expectErr error
 	}{
 		{
-			name:       "uion pool",
-			feeToken:   "uion",
-			poolId:     uionPoolId,
-			expectPass: true,
+			name:      "uion pool",
+			feeToken:  "uion",
+			poolId:    uionPoolId,
+			expectErr: nil,
 		},
 		{
-			name:       "try with basedenom",
-			feeToken:   sdk.DefaultBondDenom,
-			poolId:     uionPoolId,
-			expectPass: false,
+			name:      "try with basedenom",
+			feeToken:  sdk.DefaultBondDenom,
+			poolId:    uionPoolId,
+			expectErr: types.ErrInvalidFeeToken,
 		},
 		{
-			name:       "proposal with non-existent pool",
-			feeToken:   "foo",
-			poolId:     100000000000,
-			expectPass: false,
+			name:      "proposal with non-existent pool",
+			feeToken:  "foo",
+			poolId:    100000000000,
+			expectErr: fmt.Errorf("pool with ID 100000000000 does not exist"),
 		},
 		{
-			name:       "proposal with wrong pool for fee token",
-			feeToken:   "foo",
-			poolId:     uionPoolId,
-			expectPass: false,
+			name:      "proposal with wrong pool for fee token",
+			feeToken:  "foo",
+			poolId:    uionPoolId,
+			expectErr: fmt.Errorf("(foo) does not exist in the pool"),
 		},
 		{
-			name:       "proposal with pool with no base denom",
-			feeToken:   "foo",
-			poolId:     noBasePoolId,
-			expectPass: false,
+			name:      "proposal with pool with no base denom",
+			feeToken:  "foo",
+			poolId:    noBasePoolId,
+			expectErr: fmt.Errorf("(stake) does not exist in the pool"),
 		},
 		{
-			name:       "proposal to add foo correctly",
-			feeToken:   "foo",
-			poolId:     fooPoolId,
-			expectPass: true,
+			name:      "proposal to add foo correctly",
+			feeToken:  "foo",
+			poolId:    fooPoolId,
+			expectErr: nil,
 		},
 		{
-			name:       "proposal to replace pool for fee token",
-			feeToken:   "uion",
-			poolId:     uionPoolId2,
-			expectPass: true,
+			name:      "proposal to replace pool for fee token",
+			feeToken:  "uion",
+			poolId:    uionPoolId2,
+			expectErr: nil,
 		},
 		{
-			name:       "proposal to replace uion as fee denom",
-			feeToken:   "uion",
-			poolId:     0,
-			expectPass: true,
+			name:      "proposal to replace uion as fee denom",
+			feeToken:  "uion",
+			poolId:    0,
+			expectErr: nil,
 		},
 	}
 
@@ -109,7 +111,7 @@ func (suite *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 
 			feeTokensAfter := suite.App.TxFeesKeeper.GetFeeTokens(suite.Ctx)
 
-			if tc.expectPass {
+			if tc.expectErr == nil {
 				// Make sure no error during setting of proposal
 				suite.Require().NoError(err, "test: %s", tc.name)
 
@@ -134,18 +136,18 @@ func (suite *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 					suite.Require().LessOrEqual(len(feeTokensAfter), len(feeTokensBefore), "test: %s", tc.name)
 					// Ensure that the fee token is not convertable to base token
 					_, err := suite.App.TxFeesKeeper.ConvertToBaseToken(suite.Ctx, sdk.NewInt64Coin(tc.feeToken, 10))
-					suite.Require().Error(err, "test: %s", tc.name)
+					suite.Require().ErrorIs(err, types.ErrInvalidFeeToken)
 					// make sure the queried poolId errors
 					_, err = suite.queryClient.DenomPoolId(suite.Ctx.Context(),
 						&types.QueryDenomPoolIdRequest{
 							Denom: tc.feeToken,
 						},
 					)
-					suite.Require().Error(err, "test: %s", tc.name)
+					suite.Require().ErrorIs(err, types.ErrInvalidFeeToken)
 				}
 			} else {
 				// Make sure errors during setting of proposal
-				suite.Require().Error(err, "test: %s", tc.name)
+				suite.Require().ErrorContains(err, tc.expectErr.Error())
 				// fee tokens should be the same
 				suite.Require().Equal(len(feeTokensAfter), len(feeTokensBefore), "test: %s", tc.name)
 			}
@@ -159,20 +161,20 @@ func (suite *KeeperTestSuite) TestFeeTokenConversions() {
 	baseDenom, _ := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)
 
 	tests := []struct {
-		name                string
-		baseDenomPoolInput  sdk.Coin
-		feeTokenPoolInput   sdk.Coin
-		inputFee            sdk.Coin
-		expectedConvertable bool
-		expectedOutput      sdk.Coin
+		name               string
+		baseDenomPoolInput sdk.Coin
+		feeTokenPoolInput  sdk.Coin
+		inputFee           sdk.Coin
+		expectedErr        error
+		expectedOutput     sdk.Coin
 	}{
 		{
-			name:                "equal value",
-			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
-			feeTokenPoolInput:   sdk.NewInt64Coin("uion", 100),
-			inputFee:            sdk.NewInt64Coin("uion", 10),
-			expectedOutput:      sdk.NewInt64Coin(baseDenom, 10),
-			expectedConvertable: true,
+			name:               "equal value",
+			baseDenomPoolInput: sdk.NewInt64Coin(baseDenom, 100),
+			feeTokenPoolInput:  sdk.NewInt64Coin("uion", 100),
+			inputFee:           sdk.NewInt64Coin("uion", 10),
+			expectedOutput:     sdk.NewInt64Coin(baseDenom, 10),
+			expectedErr:        nil,
 		},
 		{
 			name:               "unequal value",
@@ -180,24 +182,24 @@ func (suite *KeeperTestSuite) TestFeeTokenConversions() {
 			feeTokenPoolInput:  sdk.NewInt64Coin("foo", 200),
 			inputFee:           sdk.NewInt64Coin("foo", 10),
 			// expected to get 5.000000000005368710 baseDenom without rounding
-			expectedOutput:      sdk.NewInt64Coin(baseDenom, 5),
-			expectedConvertable: true,
+			expectedOutput: sdk.NewInt64Coin(baseDenom, 5),
+			expectedErr:    nil,
 		},
 		{
-			name:                "basedenom value",
-			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
-			feeTokenPoolInput:   sdk.NewInt64Coin("foo", 200),
-			inputFee:            sdk.NewInt64Coin(baseDenom, 10),
-			expectedOutput:      sdk.NewInt64Coin(baseDenom, 10),
-			expectedConvertable: true,
+			name:               "basedenom value",
+			baseDenomPoolInput: sdk.NewInt64Coin(baseDenom, 100),
+			feeTokenPoolInput:  sdk.NewInt64Coin("foo", 200),
+			inputFee:           sdk.NewInt64Coin(baseDenom, 10),
+			expectedOutput:     sdk.NewInt64Coin(baseDenom, 10),
+			expectedErr:        nil,
 		},
 		{
-			name:                "convert non-existent",
-			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
-			feeTokenPoolInput:   sdk.NewInt64Coin("uion", 200),
-			inputFee:            sdk.NewInt64Coin("foo", 10),
-			expectedOutput:      sdk.Coin{},
-			expectedConvertable: false,
+			name:               "convert non-existent",
+			baseDenomPoolInput: sdk.NewInt64Coin(baseDenom, 100),
+			feeTokenPoolInput:  sdk.NewInt64Coin("uion", 200),
+			inputFee:           sdk.NewInt64Coin("foo", 10),
+			expectedOutput:     sdk.Coin{},
+			expectedErr:        types.ErrInvalidFeeToken,
 		},
 	}
 
@@ -213,11 +215,11 @@ func (suite *KeeperTestSuite) TestFeeTokenConversions() {
 			suite.ExecuteUpgradeFeeTokenProposal(tc.feeTokenPoolInput.Denom, poolId)
 
 			converted, err := suite.App.TxFeesKeeper.ConvertToBaseToken(suite.Ctx, tc.inputFee)
-			if tc.expectedConvertable {
+			if tc.expectedErr == nil {
 				suite.Require().NoError(err, "test: %s", tc.name)
 				suite.Require().True(converted.IsEqual(tc.expectedOutput), "test: %s", tc.name)
 			} else {
-				suite.Require().Error(err, "test: %s", tc.name)
+				suite.Require().ErrorIs(err, tc.expectedErr)
 			}
 		})
 	}
