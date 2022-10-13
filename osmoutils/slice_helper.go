@@ -4,7 +4,6 @@ import (
 	"sort"
 
 	"golang.org/x/exp/constraints"
-
 )
 
 // SortSlice sorts a slice of type T elements that implement constraints.Ordered.
@@ -37,7 +36,7 @@ func ReverseSlice[T any](s []T) []T {
 	return s
 }
 
-// ContainsDuplicate checks if there are any duplicate 
+// ContainsDuplicate checks if there are any duplicate
 // elements in the slice.
 func ContainsDuplicate[T any](arr []T) bool {
 	visited := make(map[any]bool, 0)
@@ -50,4 +49,3 @@ func ContainsDuplicate[T any](arr []T) bool {
 	}
 	return false
 }
-

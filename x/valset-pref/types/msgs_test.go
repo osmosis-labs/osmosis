@@ -8,7 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
 	appParams "github.com/osmosis-labs/osmosis/v12/app/params"
-	"github.com/osmosis-labs/osmosis/v12/x/validator-preference/types"
+	"github.com/osmosis-labs/osmosis/v12/x/valset-pref/types"
 )
 
 func TestMsgSetValidatorSetPreference(t *testing.T) {
@@ -54,6 +54,10 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
 						Weight:         sdk.NewDecWithPrec(4, 1),
 					},
+					{
+						ValOperAddress: "osmovaloper1jcr68jghzm24zwe78zuhz7xahua8429erxk7vm",
+						Weight:         sdk.NewDecWithPrec(2, 1),
+					},
 				},
 			},
 			expectPass: false,
@@ -93,7 +97,7 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "weights != 1",
+			name: "weights > 1",
 			msg: types.MsgSetValidatorSetPreference{
 				Delegator: addr1,
 				Preferences: []types.ValidatorPreference{
@@ -108,6 +112,27 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 					{
 						ValOperAddress: "osmovaloper1gqsr38e4zteekwr6kq5se5jpadafqmcfyz8jds",
 						Weight:         sdk.NewDecWithPrec(3, 1),
+					},
+				},
+			},
+			expectPass: false,
+		},
+		{
+			name: "weights < 1",
+			msg: types.MsgSetValidatorSetPreference{
+				Delegator: addr1,
+				Preferences: []types.ValidatorPreference{
+					{
+						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
+						Weight:         sdk.NewDecWithPrec(2, 1),
+					},
+					{
+						ValOperAddress: "osmovaloper1jcr68jghzm24zwe78zuhz7xahua8429erxk7vm",
+						Weight:         sdk.NewDecWithPrec(2, 1),
+					},
+					{
+						ValOperAddress: "osmovaloper1gqsr38e4zteekwr6kq5se5jpadafqmcfyz8jds",
+						Weight:         sdk.NewDecWithPrec(2, 1),
 					},
 				},
 			},

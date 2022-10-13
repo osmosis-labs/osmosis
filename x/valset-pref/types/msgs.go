@@ -144,3 +144,37 @@ func (m MsgUndelegateFromValidatorSet) GetSigners() []sdk.AccAddress {
 	delegator, _ := sdk.AccAddressFromBech32(m.Delegator)
 	return []sdk.AccAddress{delegator}
 }
+
+// constants
+const (
+	TypeMsgWithdrawDelegationRewards = "withdraw_delegation_rewards"
+)
+
+var _ sdk.Msg = &MsgWithdrawDelegationRewards{}
+
+// NewMsgMsgStakeToValidatorSet creates a msg to stake to a validator.
+func NewMsgWithdrawDelegationRewards(delegator sdk.AccAddress) *MsgWithdrawDelegationRewards {
+	return &MsgWithdrawDelegationRewards{
+		Delegator: delegator.String(),
+	}
+}
+
+func (m MsgWithdrawDelegationRewards) Route() string { return RouterKey }
+func (m MsgWithdrawDelegationRewards) Type() string  { return TypeMsgWithdrawDelegationRewards }
+func (m MsgWithdrawDelegationRewards) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Delegator)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	return nil
+}
+
+func (m MsgWithdrawDelegationRewards) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+func (m MsgWithdrawDelegationRewards) GetSigners() []sdk.AccAddress {
+	delegator, _ := sdk.AccAddressFromBech32(m.Delegator)
+	return []sdk.AccAddress{delegator}
+}

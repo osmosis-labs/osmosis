@@ -9,33 +9,23 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	"github.com/osmosis-labs/osmosis/v12/x/validator-preference/types"
+	"github.com/osmosis-labs/osmosis/v12/x/valset-pref/types"
 )
 
 type Keeper struct {
 	storeKey      sdk.StoreKey
 	paramSpace    paramtypes.Subspace
 	stakingKeeper types.StakingInterface
-	bankKeeper    types.BankInterface
-	distrKeeper   types.DistrInterface
 }
 
 func NewKeeper(storeKey sdk.StoreKey,
 	paramSpace paramtypes.Subspace,
 	stakingKeeper types.StakingInterface,
-	bankKeeper types.BankInterface,
-	distrKeeper types.DistrInterface,
 ) Keeper {
-	if !paramSpace.HasKeyTable() {
-		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
-	}
-
 	return Keeper{
 		storeKey:      storeKey,
 		paramSpace:    paramSpace,
 		stakingKeeper: stakingKeeper,
-		bankKeeper:    bankKeeper,
-		distrKeeper:   distrKeeper,
 	}
 }
 
@@ -49,29 +39,15 @@ func (k Keeper) SetValidatorSetPreferences(ctx sdk.Context, delegator string, va
 }
 
 func (k Keeper) GetValidatorSetPreference(ctx sdk.Context, delegator string) (types.ValidatorSetPreferences, bool) {
-	validatorSet := types.ValidatorSetPreferences{}
-
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get([]byte(delegator))
-	if b == nil {
+	bz := store.Get([]byte(delegator))
+	if bz == nil {
+		return types.ValidatorSetPreferences{}, false
+	}
+	var valsetPref types.ValidatorSetPreferences
+	if err := proto.Unmarshal(bz, &valsetPref); err != nil {
 		return types.ValidatorSetPreferences{}, false
 	}
 
-	err := proto.Unmarshal(b, &validatorSet)
-	if err != nil {
-		return types.ValidatorSetPreferences{}, false
-	}
-
-	return validatorSet, true
-}
-
-// GetParams returns the total set params.
-func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	k.paramSpace.GetParamSet(ctx, &params)
-	return params
-}
-
-// SetParams sets the total set of params.
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramSpace.SetParamSet(ctx, &params)
+	return valsetPref, true
 }
