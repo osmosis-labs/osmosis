@@ -1,6 +1,7 @@
 package twap_test
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
@@ -62,5 +63,5 @@ func (s *TestSuite) TestMigrateExistingPoolsError() {
 	// should error when we try to migrate with pool ID that does not exist
 	latestPoolIdPlusOne := s.App.GAMMKeeper.GetNextPoolId(s.Ctx)
 	err := s.twapkeeper.MigrateExistingPools(s.Ctx, latestPoolIdPlusOne)
-	s.Require().Error(err)
+	s.Require().EqualError(fmt.Errorf("pool with ID %v does not exist", latestPoolIdPlusOne), err.Error())
 }
