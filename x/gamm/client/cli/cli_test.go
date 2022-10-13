@@ -87,7 +87,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 	testCases := []struct {
 		name         string
 		json         string
-		expectErr    bool
+		expectErr    error
 		respType     proto.Message
 		expectedCode uint32
 	}{
@@ -101,7 +101,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			  "%s": "0.001"
 			}
 			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
-			true, &sdk.TxResponse{}, 4,
+			types.ErrTooFewPoolAssets, &sdk.TxResponse{}, 4,
 		},
 		{
 			"two tokens pair pool",
@@ -113,7 +113,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			  "%s": "0.001"
 			}
 			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
-			false, &sdk.TxResponse{}, 0,
+			nil, &sdk.TxResponse{}, 0,
 		},
 		{
 			"change order of json fields",
@@ -125,7 +125,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			  "%s": "0.001"
 			}
 			`, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileWeights, cli.PoolFileExitFee),
-			false, &sdk.TxResponse{}, 0,
+			nil, &sdk.TxResponse{}, 0,
 		},
 		{ // --record-tokens=100.0stake2 --record-tokens=100.0stake --record-tokens-weight=5 --record-tokens-weight=5 --swap-fee=0.01 --exit-fee=0.01 --from=validator --keyring-backend=test --chain-id=testing --yes
 			"three tokens pair pool - insufficient balance check",
@@ -137,7 +137,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			  "%s": "0.001"
 			}
 			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
-			false, &sdk.TxResponse{}, 5,
+			nil, &sdk.TxResponse{}, 5,
 		},
 		{
 			"future governor address",
@@ -150,7 +150,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			  "%s": "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
 			}
 			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
-			false, &sdk.TxResponse{}, 0,
+			nil, &sdk.TxResponse{}, 0,
 		},
 		// Due to CI time concerns, we leave these CLI tests commented out, and instead guaranteed via
 		// the logic tests.
@@ -196,7 +196,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 		{
 			"not valid json",
 			"bad json",
-			true, &sdk.TxResponse{}, 0,
+			fmt.Errorf("failed to parse pool"), &sdk.TxResponse{}, 0,
 		},
 		{
 			"bad pool json - missing quotes around exit fee",
@@ -208,11 +208,11 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			  "%s": 0.001
 			}
 	`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
-			true, &sdk.TxResponse{}, 0,
+			fmt.Errorf("failed to parse pool"), &sdk.TxResponse{}, 0,
 		},
 		{
 			"empty pool json",
-			"", true, &sdk.TxResponse{}, 0,
+			"", fmt.Errorf("failed to parse pool"), &sdk.TxResponse{}, 0,
 		},
 		{
 			"smooth change params",
@@ -231,7 +231,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
 				cli.PoolFileSmoothWeightChangeParams, cli.PoolFileDuration, cli.PoolFileTargetPoolWeights, cli.PoolFileStartTime,
 			),
-			false, &sdk.TxResponse{}, 0,
+			nil, &sdk.TxResponse{}, 0,
 		},
 		{
 			"smooth change params - no start time",
@@ -249,7 +249,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
 				cli.PoolFileSmoothWeightChangeParams, cli.PoolFileDuration, cli.PoolFileTargetPoolWeights,
 			),
-			false, &sdk.TxResponse{}, 0,
+			nil, &sdk.TxResponse{}, 0,
 		},
 		{
 			"empty smooth change params",
@@ -264,7 +264,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
 				cli.PoolFileSmoothWeightChangeParams,
 			),
-			false, &sdk.TxResponse{}, 0,
+			nil, &sdk.TxResponse{}, 0,
 		},
 		{
 			"smooth change params wrong type",
@@ -279,7 +279,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
 				cli.PoolFileSmoothWeightChangeParams,
 			),
-			true, &sdk.TxResponse{}, 0,
+			fmt.Errorf("failed to parse pool"), &sdk.TxResponse{}, 0,
 		},
 		{
 			"smooth change params missing duration",
@@ -296,7 +296,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
 				cli.PoolFileSmoothWeightChangeParams, cli.PoolFileTargetPoolWeights,
 			),
-			true, &sdk.TxResponse{}, 0,
+			fmt.Errorf("could not parse duration"), &sdk.TxResponse{}, 0,
 		},
 		{
 			"unknown fields in json",
@@ -309,7 +309,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			  "unknown": true,
 			}
 			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
-			true, &sdk.TxResponse{}, 0,
+			fmt.Errorf("failed to parse pool"), &sdk.TxResponse{}, 0,
 		},
 	}
 
@@ -333,8 +333,9 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			}
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-			if tc.expectErr {
+			if tc.expectErr != nil {
 				s.Require().Error(err)
+				s.Require().ErrorAs(tc.expectErr, &err)
 			} else {
 				s.Require().NoError(err, out.String())
 				err = clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType)
@@ -368,7 +369,7 @@ func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 	testCases := []struct {
 		name         string
 		args         []string
-		expectErr    bool
+		expectErr    error
 		respType     proto.Message
 		expectedCode uint32
 	}{
@@ -384,7 +385,7 @@ func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 6,
+			nil, &sdk.TxResponse{}, 6,
 		},
 		{
 			"join pool with sufficient balance",
@@ -398,7 +399,7 @@ func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			nil, &sdk.TxResponse{}, 0,
 		},
 	}
 
@@ -410,8 +411,9 @@ func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
+			if tc.expectErr != nil {
 				s.Require().Error(err)
+				s.Require().ErrorAs(tc.expectErr, &err)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
@@ -429,7 +431,7 @@ func (s IntegrationTestSuite) TestNewExitPoolCmd() {
 	testCases := []struct {
 		name         string
 		args         []string
-		expectErr    bool
+		expectErr    error
 		respType     proto.Message
 		expectedCode uint32
 	}{
@@ -445,7 +447,7 @@ func (s IntegrationTestSuite) TestNewExitPoolCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 7,
+			nil, &sdk.TxResponse{}, 7,
 		},
 		{
 			"ask enough when exit",
@@ -459,7 +461,7 @@ func (s IntegrationTestSuite) TestNewExitPoolCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			nil, &sdk.TxResponse{}, 0,
 		},
 	}
 
@@ -471,8 +473,9 @@ func (s IntegrationTestSuite) TestNewExitPoolCmd() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
+			if tc.expectErr != nil {
 				s.Require().Error(err)
+				s.Require().ErrorAs(tc.expectErr, &err)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
@@ -507,7 +510,7 @@ func (s IntegrationTestSuite) TestNewSwapExactAmountOutCmd() {
 		name string
 		args []string
 
-		expectErr    bool
+		expectErr    error
 		respType     proto.Message
 		expectedCode uint32
 	}{
@@ -523,7 +526,7 @@ func (s IntegrationTestSuite) TestNewSwapExactAmountOutCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			nil, &sdk.TxResponse{}, 0,
 		},
 	}
 
@@ -535,8 +538,9 @@ func (s IntegrationTestSuite) TestNewSwapExactAmountOutCmd() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
+			if tc.expectErr != nil {
 				s.Require().Error(err)
+				s.Require().ErrorAs(tc.expectErr, &err)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
@@ -570,7 +574,7 @@ func (s IntegrationTestSuite) TestNewJoinSwapExternAmountInCmd() {
 	testCases := []struct {
 		name         string
 		args         []string
-		expectErr    bool
+		expectErr    error
 		respType     proto.Message
 		expectedCode uint32
 	}{
@@ -585,7 +589,7 @@ func (s IntegrationTestSuite) TestNewJoinSwapExternAmountInCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			nil, &sdk.TxResponse{}, 0,
 		},
 	}
 
@@ -597,8 +601,9 @@ func (s IntegrationTestSuite) TestNewJoinSwapExternAmountInCmd() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
+			if tc.expectErr != nil {
 				s.Require().Error(err)
+				s.Require().ErrorAs(tc.expectErr, &err)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
@@ -616,7 +621,7 @@ func (s IntegrationTestSuite) TestNewExitSwapExternAmountOutCmd() {
 	testCases := []struct {
 		name         string
 		args         []string
-		expectErr    bool
+		expectErr    error
 		respType     proto.Message
 		expectedCode uint32
 	}{
@@ -631,7 +636,7 @@ func (s IntegrationTestSuite) TestNewExitSwapExternAmountOutCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			nil, &sdk.TxResponse{}, 0,
 		},
 	}
 
@@ -643,8 +648,9 @@ func (s IntegrationTestSuite) TestNewExitSwapExternAmountOutCmd() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
+			if tc.expectErr != nil {
 				s.Require().Error(err)
+				s.Require().ErrorAs(tc.expectErr, &err)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
@@ -678,7 +684,7 @@ func (s IntegrationTestSuite) TestNewJoinSwapShareAmountOutCmd() {
 	testCases := []struct {
 		name         string
 		args         []string
-		expectErr    bool
+		expectErr    error
 		respType     proto.Message
 		expectedCode uint32
 	}{
@@ -693,7 +699,7 @@ func (s IntegrationTestSuite) TestNewJoinSwapShareAmountOutCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			nil, &sdk.TxResponse{}, 0,
 		},
 	}
 
@@ -705,8 +711,9 @@ func (s IntegrationTestSuite) TestNewJoinSwapShareAmountOutCmd() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
+			if tc.expectErr != nil {
 				s.Require().Error(err)
+				s.Require().ErrorAs(tc.expectErr, &err)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
@@ -724,7 +731,7 @@ func (s IntegrationTestSuite) TestNewExitSwapShareAmountInCmd() {
 	testCases := []struct {
 		name         string
 		args         []string
-		expectErr    bool
+		expectErr    error
 		respType     proto.Message
 		expectedCode uint32
 	}{
@@ -739,7 +746,7 @@ func (s IntegrationTestSuite) TestNewExitSwapShareAmountInCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			nil, &sdk.TxResponse{}, 0,
 		},
 	}
 
@@ -751,8 +758,9 @@ func (s IntegrationTestSuite) TestNewExitSwapShareAmountInCmd() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
+			if tc.expectErr != nil {
 				s.Require().Error(err)
+				s.Require().ErrorAs(tc.expectErr, &err)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
@@ -770,14 +778,14 @@ func (s *IntegrationTestSuite) TestGetCmdPools() {
 	testCases := []struct {
 		name      string
 		args      []string
-		expectErr bool
+		expectErr error
 	}{
 		{
 			"query pools",
 			[]string{
 				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
 			},
-			false,
+			nil,
 		},
 	}
 
@@ -789,8 +797,9 @@ func (s *IntegrationTestSuite) TestGetCmdPools() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
+			if tc.expectErr != nil {
 				s.Require().Error(err)
+				s.Require().ErrorAs(tc.expectErr, &err)
 			} else {
 				resp := types.QueryPoolsResponse{}
 				s.Require().NoError(err, out.String())
@@ -808,14 +817,14 @@ func (s *IntegrationTestSuite) TestGetCmdNumPools() {
 	testCases := []struct {
 		name      string
 		args      []string
-		expectErr bool
+		expectErr error
 	}{
 		{
 			"query num-pools",
 			[]string{
 				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
 			},
-			false,
+			nil,
 		},
 	}
 
@@ -827,8 +836,9 @@ func (s *IntegrationTestSuite) TestGetCmdNumPools() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
+			if tc.expectErr != nil {
 				s.Require().Error(err)
+				s.Require().ErrorAs(tc.expectErr, &err)
 			} else {
 				resp := types.QueryNumPoolsResponse{}
 				s.Require().NoError(err, out.String())
@@ -846,7 +856,7 @@ func (s *IntegrationTestSuite) TestGetCmdPool() {
 	testCases := []struct {
 		name      string
 		args      []string
-		expectErr bool
+		expectErr error
 	}{
 		{
 			"query pool by id", // osmosisd query gamm pool 1
@@ -854,7 +864,7 @@ func (s *IntegrationTestSuite) TestGetCmdPool() {
 				"1",
 				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
 			},
-			false,
+			nil,
 		},
 	}
 
@@ -866,8 +876,9 @@ func (s *IntegrationTestSuite) TestGetCmdPool() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
+			if tc.expectErr != nil {
 				s.Require().Error(err)
+				s.Require().ErrorAs(tc.expectErr, &err)
 			} else {
 				s.Require().NoError(err, out.String())
 
@@ -884,7 +895,7 @@ func (s *IntegrationTestSuite) TestGetCmdTotalShares() {
 	testCases := []struct {
 		name      string
 		args      []string
-		expectErr bool
+		expectErr error
 	}{
 		{
 			"query pool total share by id", // osmosisd query gamm total-share 1
@@ -892,7 +903,7 @@ func (s *IntegrationTestSuite) TestGetCmdTotalShares() {
 				"1",
 				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
 			},
-			false,
+			nil,
 		},
 	}
 
@@ -904,7 +915,7 @@ func (s *IntegrationTestSuite) TestGetCmdTotalShares() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
+			if tc.expectErr != nil {
 				s.Require().Error(err)
 			} else {
 				resp := types.QueryTotalSharesResponse{}
@@ -921,14 +932,14 @@ func (s *IntegrationTestSuite) TestGetCmdTotalLiquidity() {
 	testCases := []struct {
 		name      string
 		args      []string
-		expectErr bool
+		expectErr error
 	}{
 		{
 			"query total liquidity", // osmosisd query gamm total-liquidity
 			[]string{
 				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
 			},
-			false,
+			nil,
 		},
 	}
 
@@ -940,8 +951,9 @@ func (s *IntegrationTestSuite) TestGetCmdTotalLiquidity() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
+			if tc.expectErr != nil {
 				s.Require().Error(err)
+				s.Require().ErrorAs(tc.expectErr, &err)
 			} else {
 				resp := types.QueryTotalLiquidityResponse{}
 				s.Require().NoError(err, out.String())
@@ -957,7 +969,7 @@ func (s *IntegrationTestSuite) TestGetCmdSpotPrice() {
 	testCases := []struct {
 		name      string
 		args      []string
-		expectErr bool
+		expectErr error
 	}{
 		{
 			"query pool spot price", // osmosisd query gamm spot-price 1 stake node0token
@@ -965,7 +977,7 @@ func (s *IntegrationTestSuite) TestGetCmdSpotPrice() {
 				"1", "stake", "node0token",
 				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
 			},
-			false,
+			nil,
 		},
 	}
 
@@ -977,8 +989,9 @@ func (s *IntegrationTestSuite) TestGetCmdSpotPrice() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
+			if tc.expectErr != nil {
 				s.Require().Error(err)
+				s.Require().ErrorAs(tc.expectErr, &err)
 			} else {
 				resp := types.QuerySpotPriceResponse{}
 				s.Require().NoError(err, out.String())
