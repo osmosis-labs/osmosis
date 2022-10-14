@@ -26,7 +26,7 @@ func (s *TestSuite) TestGetArithmeticTwap_Query() {
 				BaseAsset:  denom1,
 				QuoteAsset: denom0,
 			},
-			expResponse: queryproto.ArithmeticTwapResponse{ArithmeticTwap: sdk.NewDec(10)},
+			expResponse: queryproto.ArithmeticTwapResponse{ArithmeticTwap: sdk.NewDec(10), Success: true},
 		},
 		"Spot price error exactly at end time, err return": {
 			recordsToSet: []types.TwapRecord{withLastErrTime(baseRecord, tPlusOne)},
@@ -38,7 +38,7 @@ func (s *TestSuite) TestGetArithmeticTwap_Query() {
 				BaseAsset:  denom1,
 				QuoteAsset: denom0,
 			},
-			expResponse: queryproto.ArithmeticTwapResponse{ArithmeticTwap: sdk.NewDec(10), IsResponseUnstable: true},
+			expResponse: queryproto.ArithmeticTwapResponse{ArithmeticTwap: sdk.NewDec(10), Success: false},
 			expErr:      true,
 		},
 	}
@@ -73,7 +73,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow_Query() {
 				BaseAsset:  denom1,
 				QuoteAsset: denom0,
 			},
-			expResponse: queryproto.ArithmeticTwapToNowResponse{ArithmeticTwap: sdk.NewDec(10)},
+			expResponse: queryproto.ArithmeticTwapToNowResponse{ArithmeticTwap: sdk.NewDec(10), Success: true},
 		},
 		"Spot price error": {
 			recordsToSet: []types.TwapRecord{withLastErrTime(baseRecord, tPlusOne)},
@@ -84,7 +84,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow_Query() {
 				BaseAsset:  denom1,
 				QuoteAsset: denom0,
 			},
-			expResponse: queryproto.ArithmeticTwapToNowResponse{ArithmeticTwap: sdk.NewDec(10), IsResponseUnstable: true},
+			expResponse: queryproto.ArithmeticTwapToNowResponse{ArithmeticTwap: sdk.NewDec(10), Success: false},
 			expErr:      true,
 		},
 	}

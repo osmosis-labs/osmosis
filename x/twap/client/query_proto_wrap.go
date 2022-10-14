@@ -23,22 +23,22 @@ func (q Querier) ArithmeticTwap(ctx sdk.Context,
 	}
 
 	twap, err := q.K.GetArithmeticTwap(ctx, req.PoolId, req.BaseAsset, req.QuoteAsset, req.StartTime, *req.EndTime)
-	var isResponseUnstable bool
+	success := true
 	if err != nil {
-		isResponseUnstable = true
+		success = false
 	}
-	return &queryproto.ArithmeticTwapResponse{ArithmeticTwap: twap, IsResponseUnstable: isResponseUnstable}, err
+	return &queryproto.ArithmeticTwapResponse{ArithmeticTwap: twap, Success: success}, err
 }
 
 func (q Querier) ArithmeticTwapToNow(ctx sdk.Context,
 	req queryproto.ArithmeticTwapToNowRequest,
 ) (*queryproto.ArithmeticTwapToNowResponse, error) {
 	twap, err := q.K.GetArithmeticTwapToNow(ctx, req.PoolId, req.BaseAsset, req.QuoteAsset, req.StartTime)
-	var isResponseUnstable bool
+	success := true
 	if err != nil {
-		isResponseUnstable = true
+		success = false
 	}
-	return &queryproto.ArithmeticTwapToNowResponse{ArithmeticTwap: twap, IsResponseUnstable: isResponseUnstable}, err
+	return &queryproto.ArithmeticTwapToNowResponse{ArithmeticTwap: twap, Success: success}, err
 }
 
 func (q Querier) Params(ctx sdk.Context,
