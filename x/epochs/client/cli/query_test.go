@@ -67,7 +67,6 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 			s.StateNotAltered()
 		})
 	}
-
 }
 
 func TestQueryTestSuite(t *testing.T) {

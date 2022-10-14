@@ -8,7 +8,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	// sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type QueryTestSuite struct {
@@ -110,7 +109,6 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 			s.StateNotAltered()
 		})
 	}
-
 }
 
 func TestQueryTestSuite(t *testing.T) {
