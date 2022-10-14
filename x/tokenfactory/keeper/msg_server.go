@@ -78,6 +78,11 @@ func (server msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.
 func (server msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.MsgBurnResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	_, denomExists := server.bankKeeper.GetDenomMetaData(ctx, msg.Amount.Denom)
+	if !denomExists {
+		return nil, types.ErrDenomDoesNotExist.Wrapf("denom: %s", msg.Amount.Denom)
+	}
+
 	authorityMetadata, err := server.Keeper.GetAuthorityMetadata(ctx, msg.Amount.GetDenom())
 	if err != nil {
 		return nil, err
