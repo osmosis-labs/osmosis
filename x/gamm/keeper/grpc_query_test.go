@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
@@ -84,15 +85,80 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 }
 func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 	queryClient := suite.queryClient
-
+	ctx := suite.Ctx
 	poolId := suite.PrepareBalancerPool()
+	swapFee := sdk.ZeroDec()
 
-	out, err := queryClient.CalcJoinPoolShares(gocontext.Background(), &types.QueryCalcJoinPoolSharesRequest{
-		PoolId:   poolId,
-		TokensIn: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(500))),
-	})
-	suite.Require().NotNil(out)
-	suite.Require().NoError(err)
+	testCases := []struct {
+		name        string
+		poolId      uint64
+		tokensIn    sdk.Coins
+		expectedErr error
+	}{
+		{
+			"valid uneven multi asset join test case",
+			poolId,
+			sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(5000000)), sdk.NewCoin("bar", sdk.NewInt(5000000)), sdk.NewCoin("baz", sdk.NewInt(5000000)), sdk.NewCoin("uosmo", sdk.NewInt(5000000))),
+			nil,
+		},
+		{
+			"valid even multi asset join test case",
+			poolId,
+			sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(500000)), sdk.NewCoin("bar", sdk.NewInt(1000000)), sdk.NewCoin("baz", sdk.NewInt(1500000)), sdk.NewCoin("uosmo", sdk.NewInt(2000000))),
+			nil,
+		},
+		{
+			"valid single asset join test case",
+			poolId,
+			sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000))),
+			nil,
+		},
+		{
+			"pool id does not exist",
+			poolId + 1,
+			sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000))),
+			types.PoolDoesNotExistError{PoolId: poolId + 1},
+		},
+		{
+			"token in denom does not exist",
+			poolId,
+			sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10000))),
+			sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, "input denoms must already exist in the pool (%s)", "random"),
+		},
+		{
+			"join pool with incorrect amount of assets",
+			poolId,
+			sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000)), sdk.NewCoin("bar", sdk.NewInt(10000))),
+			types.ErrInvalidNumberOfCoins,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			out, err := queryClient.CalcJoinPoolShares(gocontext.Background(), &types.QueryCalcJoinPoolSharesRequest{
+				PoolId:   tc.poolId,
+				TokensIn: tc.tokensIn,
+			})
+			if tc.expectedErr == nil {
+				poolRes, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
+					PoolId: tc.poolId,
+				})
+				suite.Require().NoError(err)
+
+				var pool types.PoolI
+				err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
+				suite.Require().NoError(err)
+
+				numShares, numLiquidity, err := pool.CalcJoinPoolShares(ctx, tc.tokensIn, swapFee)
+				suite.Require().NoError(err)
+				suite.Require().Equal(numShares, out.ShareOutAmount)
+				suite.Require().Equal(numLiquidity, out.TokensOut)
+			} else {
+				suite.Require().ErrorIs(err, tc.expectedErr)
+			}
+		})
+	}
+
 }
 func (suite *KeeperTestSuite) TestQueryPool() {
 	queryClient := suite.queryClient

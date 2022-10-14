@@ -159,10 +159,10 @@ func (q Querier) CalcJoinPoolShares(ctx context.Context, req *types.QueryCalcJoi
 	if err != nil {
 		return nil, err
 	}
-	tokensAdded := newLiquidity.Sub(req.TokensIn)
+
 	return &types.QueryCalcJoinPoolSharesResponse{
 		ShareOutAmount: numShares,
-		TokensOut:      tokensAdded,
+		TokensOut:      newLiquidity,
 	}, nil
 }
 
