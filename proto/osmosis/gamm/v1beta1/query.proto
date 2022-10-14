@@ -38,13 +38,13 @@ service Query {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/pool_type/{pool_id}";
   }
 
-  rpc JoinSwapExactAmountIn(QueryJoinSwapExactAmountInRequest)
-      returns (QueryJoinSwapExactAmountInResponse) {
+  rpc CalcJoinPoolShares(QueryCalcJoinPoolSharesRequest)
+      returns (QueryCalcJoinPoolSharesResponse) {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{pool_id}/join_swap_exact_in";
   }
-  rpc ExitSwapShareAmountIn(QueryExitSwapShareAmountInRequest)
-      returns (QueryExitSwapShareAmountInResponse) {
+  rpc CalcExitPoolCoinsFromShares(QueryCalcExitPoolCoinsFromSharesRequest)
+      returns (QueryCalcExitPoolCoinsFromSharesResponse) {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{pool_id}/exit_swap_share_amount_in";
   }
@@ -121,30 +121,38 @@ message QueryPoolTypeResponse {
   string pool_type = 1 [ (gogoproto.moretags) = "yaml:\"pool_type\"" ];
 }
 
-//=============================== JoinSwapExactAmountIn
-message QueryJoinSwapExactAmountInRequest {
+//=============================== CalcJoinPoolShares
+message QueryCalcJoinPoolSharesRequest {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   repeated cosmos.base.v1beta1.Coin tokens_in = 3 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false
   ];
 }
-message QueryJoinSwapExactAmountInResponse {
+message QueryCalcJoinPoolSharesResponse {
   string share_out_amount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"share_out_amount\"",
     (gogoproto.nullable) = false
   ];
+  repeated cosmos.base.v1beta1.Coin tokens_out = 3 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
 }
 
-//=============================== ExitSwapShareAmountIn
-message QueryExitSwapShareAmountInRequest {
+//=============================== QueryCalcExitPoolCoinsFromSharesRequest
+message QueryCalcExitPoolCoinsFromSharesRequest {
   uint64 pool_id = 1;
   string token_out_denom = 2;
-  string share_in_amount = 3
-      [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int" ];
+  string share_in_amount = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
 }
-message QueryExitSwapShareAmountInResponse { uint64 token_out_amount = 1; }
+message QueryCalcExitPoolCoinsFromSharesResponse {
+  uint64 token_out_amount = 1;
+}
 
 //=============================== PoolParams
 message QueryPoolParamsRequest {

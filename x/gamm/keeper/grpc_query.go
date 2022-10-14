@@ -140,8 +140,8 @@ func (q Querier) PoolType(ctx context.Context, req *types.QueryPoolTypeRequest) 
 	}, err
 }
 
-// JoinSwapExactAmountIn queries the amount of shares you get by providing specific amount of tokens
-func (q Querier) JoinSwapExactAmountIn(ctx context.Context, req *types.QueryJoinSwapExactAmountInRequest) (*types.QueryJoinSwapExactAmountInResponse, error) {
+// CalcJoinPoolShares queries the amount of shares you get by providing specific amount of tokens
+func (q Querier) CalcJoinPoolShares(ctx context.Context, req *types.QueryCalcJoinPoolSharesRequest) (*types.QueryCalcJoinPoolSharesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -152,19 +152,22 @@ func (q Querier) JoinSwapExactAmountIn(ctx context.Context, req *types.QueryJoin
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	pool, err := q.Keeper.getPoolForSwap(sdkCtx, req.PoolId)
 	if err != nil {
-		return &types.QueryJoinSwapExactAmountInResponse{ShareOutAmount: sdk.Int{}}, err
+		return nil, err
 	}
 
-	numShares, _, err := pool.CalcJoinPoolShares(sdkCtx, req.TokensIn, pool.GetSwapFee(sdkCtx))
+	numShares, newLiquidity, err := pool.CalcJoinPoolShares(sdkCtx, req.TokensIn, pool.GetSwapFee(sdkCtx))
 	if err != nil {
 		return nil, err
 	}
-	return &types.QueryJoinSwapExactAmountInResponse{
+	tokensAdded := newLiquidity.Sub(req.TokensIn)
+	return &types.QueryCalcJoinPoolSharesResponse{
 		ShareOutAmount: numShares,
+		TokensOut:      tokensAdded,
 	}, nil
 }
 
-func (q Querier) ExitSwapShareAmountIn(ctx context.Context, req *types.QueryExitSwapShareAmountInRequest) (*types.QueryExitSwapShareAmountInResponse, error) {
+// CalcExitPoolCoinsFromShares queries the amount of tokens you get by exiting specific amouint of shares
+func (q Querier) CalcExitPoolCoinsFromShares(ctx context.Context, req *types.QueryCalcExitPoolCoinsFromSharesRequest) (*types.QueryCalcExitPoolCoinsFromSharesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -172,31 +175,31 @@ func (q Querier) ExitSwapShareAmountIn(ctx context.Context, req *types.QueryExit
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	pool, err := q.Keeper.GetPoolAndPoke(sdkCtx, req.PoolId)
 	if err != nil {
-		return &types.QueryExitSwapShareAmountInResponse{TokenOutAmount: 0}, err
+		return nil, types.ErrPoolNotFound
 	}
 
 	denom_liquidity := q.Keeper.GetDenomLiquidity(sdkCtx, req.TokenOutDenom)
 	if denom_liquidity == sdk.NewInt(0) {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("no denom (%s) in pool", req.TokenOutDenom))
+		return nil, types.ErrDenomNotFoundInPool
 	}
 
 	totalSharesAmount := pool.GetTotalShares()
 	if req.ShareInAmount.GTE(totalSharesAmount) || req.ShareInAmount.LTE(sdk.ZeroInt()) {
-		return &types.QueryExitSwapShareAmountInResponse{TokenOutAmount: 0}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
+		return nil, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
 	}
 	exitFee := pool.GetExitFee(sdkCtx)
 
-	exitCoins, err := pool.CalcExitPoolCoinsFromShares(sdkCtx, *req.ShareInAmount, exitFee)
+	exitCoins, err := pool.CalcExitPoolCoinsFromShares(sdkCtx, req.ShareInAmount, exitFee)
 	if err != nil {
-		return &types.QueryExitSwapShareAmountInResponse{TokenOutAmount: 0}, err
+		return nil, err
 	}
 
 	for _, coin := range exitCoins {
 		if coin.Denom == req.TokenOutDenom {
-			return &types.QueryExitSwapShareAmountInResponse{TokenOutAmount: coin.Amount.Uint64()}, nil
+			return &types.QueryCalcExitPoolCoinsFromSharesResponse{TokenOutAmount: coin.Amount.Uint64()}, nil
 		}
 	}
-	return &types.QueryExitSwapShareAmountInResponse{}, nil
+	return nil, types.ErrDenomNotFoundInPool
 }
 
 // PoolParams queries a specified pool for its params.

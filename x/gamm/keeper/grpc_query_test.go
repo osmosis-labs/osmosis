@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	gocontext "context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -9,26 +10,84 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
-func (suite *KeeperTestSuite) TestExitSwapShareAmountIn() {
+func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 	queryClient := suite.queryClient
-
+	ctx := suite.Ctx
 	poolId := suite.PrepareBalancerPool()
-	defaultShares := sdk.NewInt(50000000000000)
+	exitFee := sdk.ZeroDec()
 
-	out, err := queryClient.ExitSwapShareAmountIn(gocontext.Background(), &types.QueryExitSwapShareAmountInRequest{
-		PoolId:        poolId,
-		TokenOutDenom: "foo",
-		ShareInAmount: &defaultShares,
-	})
-	suite.Require().NotNil(out)
-	suite.Require().NoError(err)
+	testCases := []struct {
+		name          string
+		poolId        uint64
+		tokenOut      string
+		shareInAmount sdk.Int
+		expectedErr   error
+	}{
+		{
+			"valid test case",
+			poolId,
+			"foo",
+			sdk.NewInt(1000000),
+			nil,
+		},
+		{
+			"pool id does not exist",
+			poolId + 1,
+			"foo",
+			sdk.NewInt(1000000),
+			types.ErrPoolNotFound,
+		},
+		{
+			"token in denom does not exist",
+			poolId,
+			"hello",
+			sdk.NewInt(1000000),
+			types.ErrDenomNotFoundInPool,
+		},
+		// {
+		// 	"check",
+		// 	poolId,
+		// 	"foo",
+		// 	sdk.NewInt(1),
+		// 	types.ErrDenomNotFoundInPool,
+		// },
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			out, err := queryClient.CalcExitPoolCoinsFromShares(gocontext.Background(), &types.QueryCalcExitPoolCoinsFromSharesRequest{
+				PoolId:        tc.poolId,
+				TokenOutDenom: tc.tokenOut,
+				ShareInAmount: tc.shareInAmount,
+			})
+			if tc.expectedErr == nil {
+				poolRes, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
+					PoolId: tc.poolId,
+				})
+				fmt.Println("DEBUG1: ", poolRes) // ERROR HERE somehow it does not return result
+
+				suite.Require().NoError(err)
+
+				var pool types.PoolI
+				err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
+				suite.Require().NoError(err)
+
+				exitCoins, err := pool.CalcExitPoolCoinsFromShares(ctx, tc.shareInAmount, exitFee)
+				suite.Require().NoError(err)
+				fmt.Println("DEBUG2: ", exitCoins, out.TokenOutAmount)
+				suite.Require().Equal(exitCoins.AmountOf(tc.tokenOut).Uint64(), out.TokenOutAmount)
+			} else {
+				suite.Require().ErrorIs(err, tc.expectedErr)
+			}
+		})
+	}
 }
-func (suite *KeeperTestSuite) TestJoinSwapExactAmountIn() {
+func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 	queryClient := suite.queryClient
 
 	poolId := suite.PrepareBalancerPool()
 
-	out, err := queryClient.JoinSwapExactAmountIn(gocontext.Background(), &types.QueryJoinSwapExactAmountInRequest{
+	out, err := queryClient.CalcJoinPoolShares(gocontext.Background(), &types.QueryCalcJoinPoolSharesRequest{
 		PoolId:   poolId,
 		TokensIn: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(500))),
 	})
