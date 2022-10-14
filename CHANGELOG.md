@@ -40,7 +40,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## v13.0.0
+## v12.2.0
+
+This is a security release for the Dragonberry security advisory.
+
+See <https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702>
+
+## v12.1.0
+
+Fixes non-determinism from SDK.Modules().ModuleManager()
 
 ## v12.0.0
 
