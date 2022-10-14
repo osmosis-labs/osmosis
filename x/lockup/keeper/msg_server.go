@@ -96,14 +96,7 @@ func (server msgServer) BeginUnlocking(goCtx context.Context, msg *types.MsgBegi
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	lock, err = server.keeper.GetLockByID(ctx, msg.ID)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-	}
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		createBeginUnlockEvent(lock),
-	})
+	// N.B. begin unlock event is emitted downstream in the keeper method.
 
 	return &types.MsgBeginUnlockingResponse{}, nil
 }

@@ -235,6 +235,10 @@ func (k Keeper) beginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Co
 		k.hooks.OnStartUnlock(ctx, lock.OwnerAddress(), lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	}
 
+	ctx.EventManager().EmitEvents(sdk.Events{
+		createBeginUnlockEvent(&lock),
+	})
+
 	return nil
 }
 
