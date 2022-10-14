@@ -616,8 +616,7 @@ func NewBuildJoinSwapExternAmountInMsg(clientCtx client.Context, tokenInStr, sha
 	}
 
 	tokenIn, err := sdk.ParseCoinNormalized(tokenInStr)
-	tokensIn := sdk.Coins{}
-	tokensIn = append(tokensIn, tokenIn)
+	tokensIn := sdk.NewCoins(tokenIn)
 	if err != nil {
 		return txf, nil, err
 	}
