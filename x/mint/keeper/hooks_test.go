@@ -398,7 +398,6 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorAs(err, &tc.expectedError)
-				println(tc.expectedError.Error())
 			} else {
 				suite.Require().NoError(err)
 			}
