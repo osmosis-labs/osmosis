@@ -22,6 +22,14 @@ type KeeperTestSuite struct {
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 	suite.querier = keeper.NewQuerier(*suite.App.LockupKeeper)
+	unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
+	suite.App.IncentivesKeeper.SetLockableDurations(suite.Ctx, []time.Duration{
+		time.Hour * 24 * 14,
+		time.Hour,
+		time.Hour * 3,
+		time.Hour * 7,
+		unbondingDuration,
+	})
 }
 
 func (suite *KeeperTestSuite) SetupTestWithLevelDb() {
