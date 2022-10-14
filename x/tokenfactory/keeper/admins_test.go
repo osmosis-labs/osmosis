@@ -92,7 +92,7 @@ func (suite *KeeperTestSuite) TestMintDenom() {
 			amount:      10,
 			mintDenom:   "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos",
 			admin:       suite.TestAccs[0].String(),
-			expectedErr: types.ErrDenomDoesNotExist,
+			expectedErr: types.ErrDenomDoesNotExist.Wrapf("denom: %s", "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos"),
 		},
 		{
 			desc:        "mint is not by the admin",
@@ -113,18 +113,19 @@ func (suite *KeeperTestSuite) TestMintDenom() {
 			// Test minting to admins own account
 			bankKeeper := suite.App.BankKeeper
 			_, err := suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), types.NewMsgMint(tc.admin, sdk.NewInt64Coin(tc.mintDenom, 10)))
+
 			if tc.expectedErr == nil {
 				addr0bal += 10
 				suite.Require().NoError(err)
 				suite.Require().Equal(bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom).Amount.Int64(), addr0bal, bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom))
 			} else {
-				suite.Require().ErrorIs(err, tc.expectedErr)
+				suite.Require().EqualError(err, tc.expectedErr.Error())
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestBurnDenom() { // TODO wrong error
+func (suite *KeeperTestSuite) TestBurnDenom() {
 	var addr0bal int64
 
 	// Create a denom.
@@ -146,7 +147,7 @@ func (suite *KeeperTestSuite) TestBurnDenom() { // TODO wrong error
 			amount:      10,
 			burnDenom:   "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos",
 			admin:       suite.TestAccs[0].String(),
-			expectedErr: types.ErrDenomDoesNotExist,
+			expectedErr: types.ErrDenomDoesNotExist.Wrapf("denom: %s", "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos"),
 		},
 		{
 			desc:        "burn is not by the admin",
@@ -160,7 +161,7 @@ func (suite *KeeperTestSuite) TestBurnDenom() { // TODO wrong error
 			amount:      1000,
 			burnDenom:   suite.defaultDenom,
 			admin:       suite.TestAccs[0].String(),
-			expectedErr: sdkerrors.ErrInsufficientFunds,
+			expectedErr: sdkerrors.ErrInsufficientFunds.Wrapf("10factory/%s/bitcoin is smaller than 1000factory/%s/bitcoin", suite.TestAccs[0].String(), suite.TestAccs[0].String()),
 		},
 		{
 			desc:        "success case",
@@ -174,12 +175,13 @@ func (suite *KeeperTestSuite) TestBurnDenom() { // TODO wrong error
 			// Test minting to admins own account
 			bankKeeper := suite.App.BankKeeper
 			_, err := suite.msgServer.Burn(sdk.WrapSDKContext(suite.Ctx), types.NewMsgBurn(tc.admin, sdk.NewInt64Coin(tc.burnDenom, tc.amount)))
+
 			if tc.expectedErr == nil {
 				addr0bal -= 10
 				suite.Require().NoError(err)
 				suite.Require().True(bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom).Amount.Int64() == addr0bal, bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom))
 			} else {
-				suite.Require().ErrorIs(err, tc.expectedErr)
+				suite.Require().EqualError(err, tc.expectedErr.Error())
 				suite.Require().True(bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom).Amount.Int64() == addr0bal, bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom))
 			}
 		})
@@ -274,7 +276,7 @@ func (suite *KeeperTestSuite) TestChangeAdminDenom() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestSetDenomMetaData() { // TODO wrong error
+func (suite *KeeperTestSuite) TestSetDenomMetaData() {
 	// setup test
 	suite.SetupTest()
 	suite.CreateDefaultDenom()
@@ -282,7 +284,7 @@ func (suite *KeeperTestSuite) TestSetDenomMetaData() { // TODO wrong error
 	for _, tc := range []struct {
 		desc                string
 		msgSetDenomMetadata types.MsgSetDenomMetadata
-		expectedPass        bool
+		expectedErr         error
 	}{
 		{
 			desc: "successful set denom metadata",
@@ -303,7 +305,7 @@ func (suite *KeeperTestSuite) TestSetDenomMetaData() { // TODO wrong error
 				Name:    "OSMO",
 				Symbol:  "OSMO",
 			}),
-			expectedPass: true,
+			expectedErr: nil,
 		},
 		{
 			desc: "non existent factory denom name",
@@ -324,7 +326,7 @@ func (suite *KeeperTestSuite) TestSetDenomMetaData() { // TODO wrong error
 				Name:    "OSMO",
 				Symbol:  "OSMO",
 			}),
-			expectedPass: false,
+			expectedErr: types.ErrDenomDoesNotExist.Wrapf("denom: factory/%s/litecoin", suite.TestAccs[0].String()),
 		},
 		{
 			desc: "non-factory denom",
@@ -345,7 +347,7 @@ func (suite *KeeperTestSuite) TestSetDenomMetaData() { // TODO wrong error
 				Name:    "OSMO",
 				Symbol:  "OSMO",
 			}),
-			expectedPass: false,
+			expectedErr: types.ErrInvalidDenom.Wrapf("denom %s", "uosmo"),
 		},
 		{
 			desc: "wrong admin",
@@ -366,7 +368,7 @@ func (suite *KeeperTestSuite) TestSetDenomMetaData() { // TODO wrong error
 				Name:    "OSMO",
 				Symbol:  "OSMO",
 			}),
-			expectedPass: false,
+			expectedErr: types.ErrUnauthorized,
 		},
 		{
 			desc: "invalid metadata (missing display denom unit)",
@@ -383,14 +385,14 @@ func (suite *KeeperTestSuite) TestSetDenomMetaData() { // TODO wrong error
 				Name:    "OSMO",
 				Symbol:  "OSMO",
 			}),
-			expectedPass: false,
+			expectedErr: types.ErrInvalidMetadata.Wrapf("metadata must contain a denomination unit with display denom '%s'", "uosmo"),
 		},
 	} {
-		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() { // TODO wrong
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			bankKeeper := suite.App.BankKeeper
 			fmt.Println("RUNNING ", tc.desc)
 			res, err := suite.msgServer.SetDenomMetadata(sdk.WrapSDKContext(suite.Ctx), &tc.msgSetDenomMetadata)
-			if tc.expectedPass {
+			if tc.expectedErr == nil {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
 
@@ -399,6 +401,7 @@ func (suite *KeeperTestSuite) TestSetDenomMetaData() { // TODO wrong error
 				suite.Require().Equal(tc.msgSetDenomMetadata.Metadata.Name, md.Name)
 			} else {
 				suite.Require().Error(err)
+				suite.Require().EqualError(err, tc.expectedErr.Error())
 			}
 		})
 	}

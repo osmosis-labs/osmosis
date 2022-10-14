@@ -38,7 +38,7 @@ func (suite *KeeperTestSuite) TestMsgCreateDenom() {
 
 	// Make sure that a second version of the same denom can't be recreated
 	res, err = suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
-	suite.Require().ErrorIs(err, types.ErrDenomExists)
+	suite.Require().EqualError(err, types.ErrDenomExists.Error())
 
 	// Creating a second denom should work
 	res, err = suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "litecoin"))
@@ -59,10 +59,11 @@ func (suite *KeeperTestSuite) TestMsgCreateDenom() {
 
 	// Make sure that an address with a "/" in it can't create denoms
 	res, err = suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom("osmosis.eth/creator", "bitcoin"))
-	suite.Require().ErrorIs(err, types.ErrInvalidCreator)
+	suite.Require().EqualError(err, types.ErrInvalidCreator.Error())
 }
 
 func (suite *KeeperTestSuite) TestCreateDenom() {
+	suite.SetupTest()
 	var (
 		primaryDenom            = types.DefaultParams().DenomCreationFee[0].Denom
 		secondaryDenom          = apptesting.SecondaryDenom
@@ -117,20 +118,20 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 			desc:             "account doesn't have enough to pay for denom creation fee",
 			denomCreationFee: largeCreationFee,
 			subdenom:         "tooexpensive",
-			expectedErr:      sdkerrors.ErrInsufficientFunds,
+			expectedErr:      sdkerrors.ErrInsufficientFunds.Wrapf("850000000uosmo is smaller than 5000000000uosmo"),
 		},
 		{
 			desc:             "subdenom having invalid characters",
 			denomCreationFee: defaultDenomCreationFee,
 			subdenom:         "bit/***///&&&/coin",
-			expectedErr:      types.ErrInvalidDenom,
+			expectedErr:      fmt.Errorf("invalid denom: factory/%s/bit/***///&&&/coin", suite.TestAccs[0].String()),
 		},
 	} {
-		suite.SetupTest()
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			if tc.setup != nil {
 				tc.setup()
 			}
+
 			tokenFactoryKeeper := suite.App.TokenFactoryKeeper
 			bankKeeper := suite.App.BankKeeper
 			// Set denom creation fee in params
@@ -155,7 +156,8 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 				suite.Require().Equal(suite.TestAccs[0].String(), queryRes.AuthorityMetadata.Admin)
 
 			} else {
-				suite.Require().ErrorAs(tc.expectedErr, &err)
+				suite.Require().EqualError(err, tc.expectedErr.Error())
+
 				// Ensure we don't charge if we expect an error
 				suite.Require().True(preCreateBalance.IsEqual(postCreateBalance))
 			}

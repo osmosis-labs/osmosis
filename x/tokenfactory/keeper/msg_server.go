@@ -170,14 +170,24 @@ func (server msgServer) SetDenomMetadata(goCtx context.Context, msg *types.MsgSe
 	// Defense in depth validation of metadata
 	err := msg.Metadata.Validate()
 	if err != nil {
-		return nil, err
+		return nil, types.ErrInvalidMetadata.Wrapf(err.Error())
+	}
+
+	_, _, err = types.DeconstructDenom(msg.Metadata.Base)
+	if err != nil {
+		return nil, types.ErrInvalidDenom.Wrapf("denom %s", msg.Metadata.Base)
+	}
+
+	_, denomExists := server.bankKeeper.GetDenomMetaData(ctx, msg.Metadata.Base)
+	if !denomExists {
+		return nil, types.ErrDenomDoesNotExist.Wrapf("denom: %s", msg.Metadata.Base)
 	}
 
 	authorityMetadata, err := server.Keeper.GetAuthorityMetadata(ctx, msg.Metadata.Base)
 	if err != nil {
 		return nil, err
 	}
-	// fmt.Println("DEBUG: ", authorityMetadata.GetAdmin())
+
 	if msg.Sender != authorityMetadata.GetAdmin() {
 		return nil, types.ErrUnauthorized
 	}
