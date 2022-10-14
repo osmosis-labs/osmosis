@@ -37,7 +37,6 @@ func (suite *KeeperTestSuite) measureAvgAndMaxLockGas(
 		runningTotal += lockGas
 		if lockGas > maxGas {
 			maxGas = lockGas
-			// fmt.Println(suite.Ctx.GasMeter().String())
 		}
 	}
 	avg = runningTotal / uint64(numIterations)

@@ -140,6 +140,7 @@ func TestQuerySpotPrice(t *testing.T) {
 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
 
 	price, err := strconv.ParseFloat(resp.Price, 64)
+	fmt.Println(price)
 	require.NoError(t, err)
 
 	uosmo, err := poolFunds[0].Amount.ToDec().Float64()

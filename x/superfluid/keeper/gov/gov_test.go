@@ -1,8 +1,6 @@
 package gov_test
 
 import (
-	"fmt"
-
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -147,7 +145,6 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 
 				// check assets
 				resp, err = suite.querier.AllAssets(sdk.WrapSDKContext(suite.ctx), &types.AllAssetsRequest{})
-				fmt.Println(resp)
 				suite.Require().NoError(err)
 				suite.Require().Equal(resp.Assets, action.expectedAssets)
 			}

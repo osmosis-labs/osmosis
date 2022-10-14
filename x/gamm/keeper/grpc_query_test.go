@@ -256,8 +256,8 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
 			name: "valid request for foo/bar",
 			req: &types.QuerySpotPriceRequest{
 				PoolId:          poolID,
-				BaseAssetDenom:  "foo",
-				QuoteAssetDenom: "bar",
+				BaseAssetDenom:  "bar",
+				QuoteAssetDenom: "foo",
 			},
 			result: sdk.NewDec(2).String(),
 		},
@@ -265,8 +265,8 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
 			name: "valid request for bar/baz",
 			req: &types.QuerySpotPriceRequest{
 				PoolId:          poolID,
-				BaseAssetDenom:  "bar",
-				QuoteAssetDenom: "baz",
+				BaseAssetDenom:  "baz",
+				QuoteAssetDenom: "bar",
 			},
 			result: sdk.NewDecWithPrec(15, 1).String(),
 		},
@@ -274,8 +274,8 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
 			name: "valid request for baz/foo",
 			req: &types.QuerySpotPriceRequest{
 				PoolId:          poolID,
-				BaseAssetDenom:  "baz",
-				QuoteAssetDenom: "foo",
+				BaseAssetDenom:  "foo",
+				QuoteAssetDenom: "baz",
 			},
 			result: sdk.MustNewDecFromStr("0.333333330000000000").String(),
 		},

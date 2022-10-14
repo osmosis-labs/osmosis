@@ -263,7 +263,6 @@ func (s *IntegrationTestSuite) TestNewBeginUnlockPeriodLockCmd() {
 			false, &sdk.TxResponse{}, 0,
 		},
 	}
-	fmt.Println(testCases[0].args)
 
 	for _, tc := range testCases {
 		tc := tc

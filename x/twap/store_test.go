@@ -2,7 +2,6 @@ package twap_test
 
 import (
 	"fmt"
-	"math"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -555,7 +554,6 @@ func (s *TestSuite) TestAccumulatorOverflow() {
 
 			var accumulatorVal sdk.Dec
 
-			fmt.Println(time.Duration(math.Pow(2, 128)))
 			if test.panics {
 				s.Require().Panics(func() {
 					// accumulator value is calculated via spot price * time delta
