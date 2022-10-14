@@ -295,8 +295,8 @@ replace (
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.28.0-osmo-v12.1
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk/tree/v12.x
-	// last commit: https://github.com/osmosis-labs/cosmos-sdk/tree/1a5ef2224647684eb7c3f1a4d5c7116331665fc0
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20221014163629-1a5ef2224647
+	// last commit: https://github.com/osmosis-labs/cosmos-sdk/tree/63f6778c9648aa01bd2a1c37d8914bdfe66f6cd0
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20221014170742-63f6778c9648
 	// Use Osmosis fast iavl
 	github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-osmo-v7
 	// use cosmos-compatible protobufs
