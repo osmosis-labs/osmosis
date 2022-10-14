@@ -215,9 +215,10 @@ func (msg MsgJoinSwapExternAmountIn) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
-
-	if !msg.TokenIn.IsValid() || !msg.TokenIn.IsPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenIn.String())
+	for _, coin := range msg.TokensIn {
+		if !coin.IsValid() || !coin.IsPositive() {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, coin.String())
+		}
 	}
 
 	if !msg.ShareOutMinAmount.IsPositive() {

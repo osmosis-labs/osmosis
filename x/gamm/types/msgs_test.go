@@ -482,7 +482,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 		properMsg := gammtypes.MsgJoinSwapExternAmountIn{
 			Sender:            addr1,
 			PoolId:            1,
-			TokenIn:           sdk.NewCoin("test", sdk.NewInt(100)),
+			TokensIn:          sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))),
 			ShareOutMinAmount: sdk.NewInt(100),
 		}
 		return after(properMsg)
@@ -523,7 +523,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 		{
 			name: "invalid denom",
 			msg: createMsg(func(msg gammtypes.MsgJoinSwapExternAmountIn) gammtypes.MsgJoinSwapExternAmountIn {
-				msg.TokenIn.Denom = "1"
+				msg.TokensIn[0].Denom = "1"
 				return msg
 			}),
 			expectPass: false,
@@ -531,7 +531,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 		{
 			name: "zero amount",
 			msg: createMsg(func(msg gammtypes.MsgJoinSwapExternAmountIn) gammtypes.MsgJoinSwapExternAmountIn {
-				msg.TokenIn.Amount = sdk.NewInt(0)
+				msg.TokensIn[0].Amount = sdk.NewInt(0)
 				return msg
 			}),
 			expectPass: false,
@@ -539,7 +539,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 		{
 			name: "negative amount",
 			msg: createMsg(func(msg gammtypes.MsgJoinSwapExternAmountIn) gammtypes.MsgJoinSwapExternAmountIn {
-				msg.TokenIn.Amount = sdk.NewInt(-10)
+				msg.TokensIn[0].Amount = sdk.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -922,7 +922,7 @@ func TestAuthzMsg(t *testing.T) {
 			gammMsg: &gammtypes.MsgJoinSwapExternAmountIn{
 				Sender:            addr1,
 				PoolId:            1,
-				TokenIn:           coin,
+				TokensIn:          sdk.NewCoins(coin),
 				ShareOutMinAmount: sdk.NewInt(1),
 			},
 		},

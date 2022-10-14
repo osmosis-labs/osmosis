@@ -216,7 +216,8 @@ func RandomJoinSwapExternAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk
 
 	// cap joining pool to the pool liquidity
 	newTokenIn := osmoutils.MinCoins(sdk.NewCoins(coinIn), sdk.NewCoins(tokenIn))
-
+	newTokensIn := sdk.Coins{}
+	newTokensIn = append(newTokensIn, newTokenIn...)
 	// calc shares out with tokenIn
 	minShareOutAmt, _, err := pool.CalcJoinPoolShares(ctx, newTokenIn, pool.GetSwapFee(ctx))
 	if err != nil {
@@ -226,7 +227,7 @@ func RandomJoinSwapExternAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk
 	return &types.MsgJoinSwapExternAmountIn{
 		Sender:            sender.Address.String(),
 		PoolId:            pool_id,
-		TokenIn:           newTokenIn[0],
+		TokensIn:          newTokensIn,
 		ShareOutMinAmount: minShareOutAmt,
 	}, nil
 }

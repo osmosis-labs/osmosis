@@ -616,6 +616,8 @@ func NewBuildJoinSwapExternAmountInMsg(clientCtx client.Context, tokenInStr, sha
 	}
 
 	tokenIn, err := sdk.ParseCoinNormalized(tokenInStr)
+	tokensIn := sdk.Coins{}
+	tokensIn = append(tokensIn, tokenIn)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -627,7 +629,7 @@ func NewBuildJoinSwapExternAmountInMsg(clientCtx client.Context, tokenInStr, sha
 	msg := &types.MsgJoinSwapExternAmountIn{
 		Sender:            clientCtx.GetFromAddress().String(),
 		PoolId:            poolID,
-		TokenIn:           tokenIn,
+		TokensIn:          tokensIn,
 		ShareOutMinAmount: shareOutMinAmount,
 	}
 
