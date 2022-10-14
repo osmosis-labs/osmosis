@@ -167,7 +167,7 @@ func (k Keeper) pruneRecords(ctx sdk.Context) error {
 	return k.pruneRecordsBeforeTimeButNewest(ctx, lastKeptTime)
 }
 
-// recordWithUpdatedAccumulators returns a record, with updated accumulator values and times for provided newTime,
+// recordWithUpdatedAccumulators returns a record, with updated accumulator values and time for provided newTime,
 // otherwise referred to as "interpolating the record" to the target time.
 // This does not mutate the passed in record.
 //
@@ -180,11 +180,6 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 	newRecord := record
 	timeDelta := newTime.Sub(record.Time)
 	newRecord.Time = newTime
-
-	// if there was an error in the record, the last error time is updated to match the updated time
-	if record.LastErrorTime.Equal(record.Time) {
-		newRecord.LastErrorTime = newRecord.Time
-	}
 
 	// record.LastSpotPrice is the last spot price from the block the record was created in,
 	// thus it is treated as the effective spot price until the new time.
