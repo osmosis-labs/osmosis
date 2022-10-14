@@ -8,9 +8,7 @@ import (
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgSetValidatorSetPreference{}, "", nil)
-	cdc.RegisterConcrete(&MsgDelegateToValidatorSet{}, "", nil)
-	cdc.RegisterConcrete(&MsgUndelegateFromValidatorSet{}, "", nil)
+	cdc.RegisterConcrete(&MsgSetValidatorSetPreference{}, "osmosis/validator-set-preference/set-validator-set-preference", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -18,6 +16,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgSetValidatorSetPreference{},
 		&MsgDelegateToValidatorSet{},
 		&MsgUndelegateFromValidatorSet{},
+		&MsgWithdrawDelegationRewards{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

@@ -67,6 +67,8 @@ import (
 	twaptypes "github.com/osmosis-labs/osmosis/v12/x/twap/types"
 	"github.com/osmosis-labs/osmosis/v12/x/txfees"
 	txfeestypes "github.com/osmosis-labs/osmosis/v12/x/txfees/types"
+	validatorpreferencetypes "github.com/osmosis-labs/osmosis/v12/x/validator-preference/types"
+	validatorpreferencemodule "github.com/osmosis-labs/osmosis/v12/x/validator-preference/valpref-module"
 )
 
 // moduleAccountPermissions defines module account permissions
@@ -90,6 +92,7 @@ var moduleAccountPermissions = map[string][]string{
 	txfeestypes.NonNativeFeeCollectorName:    nil,
 	wasm.ModuleName:                          {authtypes.Burner},
 	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
+	validatorpreferencetypes.ModuleName:      nil,
 }
 
 // appModules return modules to initialize module manager.
@@ -142,6 +145,7 @@ func appModules(
 			app.EpochsKeeper,
 		),
 		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
+		validatorpreferencemodule.NewAppModule(appCodec, *app.ValidatorPreferenceKeeper, app.AccountKeeper, app.BankKeeper),
 	}
 }
 
