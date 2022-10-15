@@ -350,7 +350,7 @@ func (s *KeeperTestHelper) BuildTx(
 	return txBuilder.GetTx()
 }
 
-// Check app state alter
+// StateNotAltered validates that app state is not altered. Fails if it is.
 func (s *KeeperTestHelper) StateNotAltered() {
 	oldState := s.App.ExportState(s.Ctx)
 	s.Commit()
