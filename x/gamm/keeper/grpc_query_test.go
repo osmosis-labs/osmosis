@@ -28,30 +28,23 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 			"valid test case",
 			poolId,
 			"foo",
-			sdk.NewInt(1000000),
+			sdk.NewInt(1000000000000000000),
 			nil,
 		},
 		{
 			"pool id does not exist",
 			poolId + 1,
 			"foo",
-			sdk.NewInt(1000000),
+			sdk.NewInt(1000000000000000000),
 			types.ErrPoolNotFound,
 		},
 		{
 			"token in denom does not exist",
 			poolId,
 			"hello",
-			sdk.NewInt(1000000),
+			sdk.NewInt(1000000000000000000),
 			types.ErrDenomNotFoundInPool,
 		},
-		// {
-		// 	"check",
-		// 	poolId,
-		// 	"foo",
-		// 	sdk.NewInt(1),
-		// 	types.ErrDenomNotFoundInPool,
-		// },
 	}
 
 	for _, tc := range testCases {
@@ -65,8 +58,6 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 				poolRes, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
 					PoolId: tc.poolId,
 				})
-				fmt.Println("DEBUG1: ", poolRes) // ERROR HERE somehow it does not return result
-
 				suite.Require().NoError(err)
 
 				var pool types.PoolI
@@ -75,7 +66,6 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 
 				exitCoins, err := pool.CalcExitPoolCoinsFromShares(ctx, tc.shareInAmount, exitFee)
 				suite.Require().NoError(err)
-				fmt.Println("DEBUG2: ", exitCoins, out.TokenOutAmount)
 				suite.Require().Equal(exitCoins.AmountOf(tc.tokenOut).Uint64(), out.TokenOutAmount)
 			} else {
 				suite.Require().ErrorIs(err, tc.expectedErr)
@@ -150,6 +140,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 				suite.Require().NoError(err)
 
 				numShares, numLiquidity, err := pool.CalcJoinPoolShares(ctx, tc.tokensIn, swapFee)
+				fmt.Println(numShares)
 				suite.Require().NoError(err)
 				suite.Require().Equal(numShares, out.ShareOutAmount)
 				suite.Require().Equal(numLiquidity, out.TokensOut)
