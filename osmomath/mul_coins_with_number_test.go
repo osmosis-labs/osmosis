@@ -27,7 +27,6 @@ func TestMulCoinAmtsByU64(t *testing.T) {
 	}
 
 	for name, tt := range tests {
-		fmt.Println("Start")
 		t.Run(name, func(t *testing.T) {
 			got := MulIntByU64(tt.i, tt.u)
 			require.Equal(t, tt.want, got)
