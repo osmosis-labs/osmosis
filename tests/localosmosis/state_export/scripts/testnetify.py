@@ -149,6 +149,12 @@ def create_parser():
     )
 
     parser.add_argument(
+        '--permissionless-wasm', 
+        action='store_true',
+        help='Enable permissionless wasm'
+    )
+
+    parser.add_argument(
         '-q',
         '--quiet',
         action='store_false',
@@ -369,6 +375,11 @@ def main():
                 print("\tUpdate total uosmo supply from {} to {}".format(supply["amount"], str(int(supply["amount"]) + 2000000000000000 - DISTRIBUTION_MODULE_OFFSET)))
             supply["amount"] = str(int(supply["amount"]) + 2000000000000000 - DISTRIBUTION_MODULE_OFFSET)
             break
+
+    if args.permissionless_wasm:
+        if not args.quiet:
+            print("🔧 Make wasm permissionless")
+        genesis['app_state']['wasm']['params']['code_upload_access']['permission'] = "Everybody"
     
     print("📝 Writing {}... (it may take a while)".format(args.output_genesis))
     with open(args.output_genesis, 'w') as f:
