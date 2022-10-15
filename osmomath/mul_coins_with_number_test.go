@@ -1,7 +1,6 @@
 package osmomath
 
 import (
-	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
