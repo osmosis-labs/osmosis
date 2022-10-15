@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	gocontext "context"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -140,7 +139,6 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 				suite.Require().NoError(err)
 
 				numShares, numLiquidity, err := pool.CalcJoinPoolShares(ctx, tc.tokensIn, swapFee)
-				fmt.Println(numShares)
 				suite.Require().NoError(err)
 				suite.Require().Equal(numShares, out.ShareOutAmount)
 				suite.Require().Equal(numLiquidity, out.TokensOut)
