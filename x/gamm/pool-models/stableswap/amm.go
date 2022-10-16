@@ -174,6 +174,7 @@ func solveCFMMBinarySearch(constantFunction func(osmomath.BigDec, osmomath.BigDe
 		yFinal := yReserve.Add(yIn)
 		xLowEst := osmomath.ZeroDec()
 		// we set upper bound at 2 * xReserve to accommodate negative yIns
+		// TODO: update this to be in accordance with spec (linear estimation)
 		xHighEst := xReserve.Mul(osmomath.NewBigDec(2))
 		maxIterations := 256
 		errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.Dec{}}
@@ -199,15 +200,17 @@ func solveCFMMBinarySearch(constantFunction func(osmomath.BigDec, osmomath.BigDe
 // solveCFMMBinarySearch searches the correct dx using binary search over constant K.
 // added for future extension
 func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.BigDec) osmomath.BigDec {
-	if !xReserve.IsPositive() || !yReserve.IsPositive() || wSumSquares.IsNegative() || !yIn.IsPositive() {
+	if !xReserve.IsPositive() || !yReserve.IsPositive() || wSumSquares.IsNegative() {
 		panic("invalid input: reserves and input must be positive")
-	} else if yIn.GTE(yReserve) {
+	} else if yIn.Abs().GTE(yReserve) {
 		panic("cannot input more than pool reserves")
 	}
 	k := cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares)
 	yFinal := yReserve.Add(yIn)
 	xLowEst := osmomath.ZeroDec()
-	xHighEst := xReserve
+	// we set upper bound at 2 * xReserve to accommodate negative yIns
+	// TODO: update this to be in accordance with spec (linear estimation)
+	xHighEst := xReserve.Mul(osmomath.NewBigDec(2))
 	maxIterations := 256
 	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.Dec{}}
 
@@ -221,7 +224,7 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 		panic(err)
 	}
 
-	xOut := xReserve.Sub(xEst)
+	xOut := xReserve.Sub(xEst).Abs()
 	if xOut.GTE(xReserve) {
 		panic("invalid output: greater than full pool reserves")
 	}
