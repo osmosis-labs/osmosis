@@ -224,8 +224,8 @@ var (
 			yIn:         osmomath.NewBigDec(1),
 			expectPanic: false,
 		},
-		/* TODO: increase BigDec precision (36 -> 72) to be able to accommodate this
-		"even 4-asset large pool, small input": {
+		// TODO: increase BigDec precision (36 -> 72) to be able to accommodate this
+		"even 4-asset large pool (100M each), small input": {
 			xReserve: osmomath.NewBigDec(100000000),
 			yReserve: osmomath.NewBigDec(100000000),
 			// represents a 4-asset pool with 100M in each reserve
@@ -233,7 +233,22 @@ var (
 			yIn: osmomath.NewBigDec(100),
 			expectPanic: false,
 		},
-		*/
+		"even 4-asset max pool (10B each), small input": {
+			xReserve: osmomath.NewBigDec(10000000000),
+			yReserve: osmomath.NewBigDec(10000000000),
+			// represents a 4-asset pool with 10B in each reserve
+			remReserves: []osmomath.BigDec{osmomath.NewBigDec(10000000000), osmomath.NewBigDec(10000000000)},
+			yIn: osmomath.NewBigDec(100000000),
+			expectPanic: false,
+		},
+		"even 10-asset max pool (10B each), small input": {
+			xReserve: osmomath.NewBigDec(10_000_000_000),
+			yReserve: osmomath.NewBigDec(10_000_000_000),
+			// represents a 10-asset pool with 10B in each reserve
+			remReserves: []osmomath.BigDec{osmomath.NewBigDec(10_000_000_000), osmomath.NewBigDec(10_000_000_000), osmomath.NewBigDec(10_000_000_000), osmomath.NewBigDec(10_000_000_000), osmomath.NewBigDec(10_000_000_000), osmomath.NewBigDec(10_000_000_000), osmomath.NewBigDec(10_000_000_000), osmomath.NewBigDec(10_000_000_000)},
+			yIn: osmomath.NewBigDec(100),
+			expectPanic: false,
+		},
 
 		// uneven pools
 		"uneven 3-asset pool, even swap assets as pool minority": {
