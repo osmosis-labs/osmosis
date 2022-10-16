@@ -85,6 +85,72 @@ func (s *TestSuite) TestGetSpotPrices() {
 	}
 }
 
+func (s *TestSuite) TestIntegrationForTwap() {
+	poolAssets := sdk.NewCoins(sdk.NewInt64Coin(denom0, 5), sdk.NewInt64Coin(denom1, 25))
+	poolId := s.PrepareBalancerPoolWithCoins(poolAssets...)
+
+	s.twapkeeper.EndBlock(s.Ctx)
+	s.Commit()
+
+	// we're going to use this for twap querying later on
+	oldTime := s.Ctx.BlockTime()
+	twapRecord, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denom0, denom1)
+	s.Require().NoError(err)
+
+	// this is wrong in the first place, p0 spot price should have been 2
+	// Justification for base asset and quote asset:
+	// Spot price = How much quote asset is needed for one base asset
+	// ex. in BTC / USDC pool, BTC is base currency, USDC is the quote currency
+	// check below link for the justification of base asset and quote asset
+	// https://mankenavenkatesh.medium.com/what-is-a-market-pair-base-vs-quote-currency-32f3193c36f6
+	s.Require().Equal(twapRecord.P0LastSpotPrice, sdk.MustNewDecFromStr("0.2"))
+	s.Require().Equal(twapRecord.P1LastSpotPrice, sdk.MustNewDecFromStr("5"))
+	// this should have been 5 as well
+	spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, denom0, denom1)
+	s.Require().Equal(spotPrice, sdk.MustNewDecFromStr("0.2"))
+
+	// now suppose 11 seconds has passed by
+	s.Ctx = s.Ctx.WithBlockTime(oldTime.Add(time.Second * 10))
+
+	// do a swap, we make the p0 spot price 1.3
+	tokenIn := sdk.NewCoin(denom0, sdk.NewIntFromUint64(5))
+	s.FundAcc(s.TestAccs[0], sdk.Coins{tokenIn})
+	_, err = s.App.GAMMKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], poolId, tokenIn, denom1, sdk.ZeroInt())
+	s.Require().NoError(err)
+	pool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
+	s.Require().NoError(err)
+	poolLiquidity := pool.GetTotalPoolLiquidity(s.Ctx)
+	denom0AmountInPool := poolLiquidity.FilterDenoms([]string{denom0})
+	denom1AmountInPool := poolLiquidity.FilterDenoms([]string{denom1})
+	s.Require().Equal(denom0AmountInPool.String(), "10token/A")
+	s.Require().Equal(denom1AmountInPool.String(), "13token/B")
+
+	s.twapkeeper.EndBlock(s.Ctx)
+	s.Commit()
+
+	// check the new twap records stored
+	twapRecord, err = s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denom0, denom1)
+	s.Require().NoError(err)
+
+	// this is wrong as well, with 10 denom0 token and 13 denom1 token, spot price of denom0 as base asset should have been 1.3
+	s.Require().Equal(twapRecord.P0LastSpotPrice.String(), "0.769230770000000000")
+	s.Require().Equal(twapRecord.P1LastSpotPrice.String(), "1.300000000000000000")
+	// the accumulators store accumulators based on incorrect spot prices as well, these should have been stored opposite
+	// 11000 milli-seconds(time since last record) * 0.2
+	s.Require().Equal(twapRecord.P0ArithmeticTwapAccumulator.String(), "2200.000000000000000000")
+	s.Require().Equal(twapRecord.P1ArithmeticTwapAccumulator.String(), "55000.000000000000000000")
+
+	// now check and test twap now
+	// We get the correct twap here even though we have been storing incorrect spot prices for each denom.
+	// this is because we use base asset accumulator as quote asset accumulator, and quote asset accumulator as base asset accumulator
+	// https://github.com/osmosis-labs/osmosis/blob/main/x/twap/logic.go#L247-L251
+
+	newTime := oldTime.Add(time.Second * 10)
+	twapDenom1, err := s.twapkeeper.GetArithmeticTwap(s.Ctx, poolId, denom0, denom1, oldTime, newTime)
+	s.Require().NoError(err)
+	s.Require().Equal(twapDenom1.String(), "5.000000000000000000")
+}
+
 func (s *TestSuite) TestNewTwapRecord() {
 	// prepare pool before test
 	poolId := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
@@ -666,15 +732,15 @@ func (s *TestSuite) TestPruneRecords() {
 
 	pool1OlderMin2MsRecord, // deleted
 		pool2OlderMin1MsRecordAB, pool2OlderMin1MsRecordAC, pool2OlderMin1MsRecordBC, // deleted
-		pool3OlderBaseRecord, // kept as newest under keep period
+		pool3OlderBaseRecord,    // kept as newest under keep period
 		pool4OlderPlus1Record := // kept as newest under keep period
-	s.createTestRecordsFromTime(baseTime.Add(2 * -recordHistoryKeepPeriod))
+		s.createTestRecordsFromTime(baseTime.Add(2 * -recordHistoryKeepPeriod))
 
 	pool1Min2MsRecord, // kept as newest under keep period
 		pool2Min1MsRecordAB, pool2Min1MsRecordAC, pool2Min1MsRecordBC, // kept as newest under keep period
-		pool3BaseRecord, // kept as it is at the keep period boundary
+		pool3BaseRecord,    // kept as it is at the keep period boundary
 		pool4Plus1Record := // kept as it is above the keep period boundary
-	s.createTestRecordsFromTime(baseTime.Add(-recordHistoryKeepPeriod))
+		s.createTestRecordsFromTime(baseTime.Add(-recordHistoryKeepPeriod))
 
 	// non-ascending insertion order.
 	recordsToPreSet := []types.TwapRecord{
@@ -1050,7 +1116,7 @@ func (s *TestSuite) TestUpdateRecords() {
 		"multi-asset pool; pre-set at t and t + 1; creates new records": {
 			preSetRecords: []types.TwapRecord{threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC, tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC},
 			poolId:        threeAssetRecordAB.PoolId,
-			blockTime: threeAssetRecordAB.Time.Add(time.Second * 11),
+			blockTime:     threeAssetRecordAB.Time.Add(time.Second * 11),
 			spOverrides: []spOverride{
 				{
 					baseDenom:  threeAssetRecordAB.Asset0Denom,
@@ -1138,7 +1204,7 @@ func (s *TestSuite) TestUpdateRecords() {
 		"multi-asset pool; pre-set at t and t + 1 with err, large spot price, overwrites error time": {
 			preSetRecords: []types.TwapRecord{threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC, withLastErrTime(tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAB.Time), tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC},
 			poolId:        threeAssetRecordAB.PoolId,
-			blockTime: threeAssetRecordAB.Time.Add(time.Second * 11),
+			blockTime:     threeAssetRecordAB.Time.Add(time.Second * 11),
 			spOverrides: []spOverride{
 				{
 					baseDenom:  threeAssetRecordAB.Asset0Denom,
@@ -1146,10 +1212,10 @@ func (s *TestSuite) TestUpdateRecords() {
 					overrideSp: sdk.OneDec(),
 				},
 				{
-					baseDenom:   threeAssetRecordAB.Asset1Denom,
-					quoteDenom:  threeAssetRecordAB.Asset0Denom,
-					overrideSp:  sdk.OneDec().Add(sdk.OneDec()),
- 				},
+					baseDenom:  threeAssetRecordAB.Asset1Denom,
+					quoteDenom: threeAssetRecordAB.Asset0Denom,
+					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+				},
 				{
 					baseDenom:  threeAssetRecordAC.Asset0Denom,
 					quoteDenom: threeAssetRecordAC.Asset1Denom,
@@ -1167,9 +1233,9 @@ func (s *TestSuite) TestUpdateRecords() {
 					overrideSp: sdk.OneDec(),
 				},
 				{
-					baseDenom:   threeAssetRecordBC.Asset1Denom,
-					quoteDenom:  threeAssetRecordBC.Asset0Denom,
-					overrideSp:  sdk.OneDec().Add(sdk.OneDec()),
+					baseDenom:  threeAssetRecordBC.Asset1Denom,
+					quoteDenom: threeAssetRecordBC.Asset0Denom,
+					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
 				},
 			},
 
@@ -1188,7 +1254,7 @@ func (s *TestSuite) TestUpdateRecords() {
 				// The new record AB added.
 				{
 					spotPriceA:    sdk.OneDec(),
-					spotPriceB:    sdk.OneDec().Add(sdk.OneDec()),                            
+					spotPriceB:    sdk.OneDec().Add(sdk.OneDec()),
 					lastErrorTime: tPlus10sp5ThreeAssetRecordAB.Time,
 					isMostRecent:  true,
 				},
@@ -1199,8 +1265,8 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				// The original record AC at t + 1.
 				{
-					spotPriceA:    tPlus10sp5ThreeAssetRecordAC.P0LastSpotPrice,
-					spotPriceB:    tPlus10sp5ThreeAssetRecordAC.P1LastSpotPrice,
+					spotPriceA: tPlus10sp5ThreeAssetRecordAC.P0LastSpotPrice,
+					spotPriceB: tPlus10sp5ThreeAssetRecordAC.P1LastSpotPrice,
 				},
 				// The new record AC added.
 				{
@@ -1216,14 +1282,14 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				// The original record BC at t + 1.
 				{
-					spotPriceA:    tPlus10sp5ThreeAssetRecordBC.P0LastSpotPrice,
-					spotPriceB:    tPlus10sp5ThreeAssetRecordBC.P1LastSpotPrice,
+					spotPriceA: tPlus10sp5ThreeAssetRecordBC.P0LastSpotPrice,
+					spotPriceB: tPlus10sp5ThreeAssetRecordBC.P1LastSpotPrice,
 				},
 				// The new record BC added.
 				{
-					spotPriceA:    sdk.OneDec(),
-					spotPriceB:    sdk.OneDec().Add(sdk.OneDec()),                            
-					isMostRecent:  true,
+					spotPriceA:   sdk.OneDec(),
+					spotPriceB:   sdk.OneDec().Add(sdk.OneDec()),
+					isMostRecent: true,
 				},
 			},
 		},
