@@ -143,6 +143,7 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 			for _, lock := range locks {
 				err := suite.App.SuperfluidKeeper.SuperfluidDelegate(suite.Ctx, lock.Owner, lock.ID, valAddrs[0].String())
 				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, types.ErrAlreadyUsedSuperfluidLockup)
 			}
 		})
 	}
@@ -154,7 +155,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 		validatorStats        []stakingtypes.BondStatus
 		superDelegations      []superfluidDelegation
 		superUnbondingLockIds []uint64
-		expSuperUnbondingErr  []bool
+		expSuperUnbondingErr  []error
 		// expected amount of delegation to intermediary account
 		expInterDelegation []sdk.Dec
 	}{
@@ -163,7 +164,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			[]uint64{1},
-			[]bool{false},
+			[]error{nil},
 			[]sdk.Dec{sdk.ZeroDec()},
 		},
 		// {
@@ -180,7 +181,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {0, 0, 0, 1000000}},
 			[]uint64{1},
-			[]bool{false},
+			[]error{nil},
 			[]sdk.Dec{sdk.ZeroDec()},
 		},
 		{
@@ -188,7 +189,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			[]uint64{1, 2},
-			[]bool{false, false},
+			[]error{nil, nil},
 			[]sdk.Dec{sdk.ZeroDec()},
 		},
 		{
@@ -196,7 +197,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonding},
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			[]uint64{1, 2},
-			[]bool{false, false},
+			[]error{nil, nil},
 			[]sdk.Dec{sdk.ZeroDec()},
 		},
 		{
@@ -204,7 +205,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			[]uint64{1, 2},
-			[]bool{false, false},
+			[]error{nil, nil},
 			[]sdk.Dec{sdk.ZeroDec()},
 		},
 		{
@@ -212,7 +213,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			[]uint64{2},
-			[]bool{true},
+			[]error{lockuptypes.ErrLockupNotFound},
 			[]sdk.Dec{},
 		},
 		{
@@ -220,7 +221,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			[]uint64{1, 1},
-			[]bool{false, true},
+			[]error{nil, types.ErrNotSuperfluidUsedLockup},
 			[]sdk.Dec{sdk.ZeroDec()},
 		},
 	}
@@ -258,8 +259,9 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 
 				// superfluid undelegate
 				err = suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, lock.Owner, lockId)
-				if tc.expSuperUnbondingErr[index] {
+				if tc.expSuperUnbondingErr[index] != nil {
 					suite.Require().Error(err)
+					suite.Require().ErrorIs(err, tc.expSuperUnbondingErr[index])
 					continue
 				}
 				suite.Require().NoError(err)
@@ -307,7 +309,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 
 			// try undelegating twice
 			for index, lockId := range tc.superUnbondingLockIds {
-				if tc.expSuperUnbondingErr[index] {
+				if tc.expSuperUnbondingErr[index] != nil {
 					continue
 				}
 
@@ -315,7 +317,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 				suite.Require().NoError(err)
 
 				err = suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, lock.Owner, lockId)
-				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, types.ErrNotSuperfluidUsedLockup)
 			}
 		})
 	}
@@ -347,7 +349,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 
 		// first we test that SuperfluidUnbondLock would cause error before undelegating
 		err := suite.App.SuperfluidKeeper.SuperfluidUnbondLock(suite.Ctx, lock.ID, lock.GetOwner())
-		suite.Require().Error(err)
+		suite.Require().ErrorIs(err, types.ErrBondingLockupNotSupported)
 
 		// undelegation needs to happen prior to SuperfluidUnbondLock
 		err = suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, lock.Owner, lock.ID)
@@ -394,7 +396,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		suite.Ctx = suite.Ctx.WithBlockTime(unbondLockStartTime.Add(unbondingDuration))
 		suite.App.LockupKeeper.WithdrawAllMaturedLocks(suite.Ctx)
 		_, err = suite.App.LockupKeeper.GetLockByID(suite.Ctx, lock.ID)
-		suite.Require().Error(err)
+		suite.Require().ErrorIs(err, lockuptypes.ErrLockupNotFound)
 
 		// check if finished unlocking successfully increased balance
 		balances = suite.App.BankKeeper.GetAllBalances(suite.Ctx, lock.OwnerAddress())

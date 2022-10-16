@@ -10,6 +10,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v12/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
 )
@@ -225,7 +226,7 @@ func (suite *KeeperTestSuite) TestUnpool() {
 
 			// check if old lock is deleted
 			_, err = lockupKeeper.GetLockByID(ctx, lockID)
-			suite.Require().Error(err)
+			suite.Require().ErrorIs(err, lockuptypes.ErrLockupNotFound)
 
 			// check for locks that were superfluid staked.
 			if tc.superfluidDelegated {

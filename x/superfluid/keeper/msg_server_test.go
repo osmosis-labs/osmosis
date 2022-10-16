@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	// "fmt"
+
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,9 +23,9 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 	}
 
 	tests := []struct {
-		name       string
-		param      param
-		expectPass bool
+		name      string
+		param     param
+		expectErr error
 	}{
 		{
 			name: "superfluid delegation for not allowed asset",
@@ -33,7 +34,7 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 				lockOwner:   sdk.AccAddress([]byte("addr1---------------")), // setup wallet
 				duration:    time.Hour * 504,
 			},
-			expectPass: false,
+			expectErr: types.ErrNonSuperfluidAsset,
 		},
 		{
 			name: "invalid duration",
@@ -41,7 +42,7 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 				lockOwner: sdk.AccAddress([]byte("addr1---------------")), // setup wallet
 				duration:  time.Second,
 			},
-			expectPass: false,
+			expectErr: types.ErrNotEnoughLockupDuration,
 		},
 		{
 			name: "happy case",
@@ -49,7 +50,7 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 				lockOwner: sdk.AccAddress([]byte("addr1---------------")), // setup wallet
 				duration:  time.Hour * 504,
 			},
-			expectPass: true,
+			expectErr: nil,
 		},
 	}
 
@@ -73,10 +74,11 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 			msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
 			_, err = msgServer.SuperfluidDelegate(c, types.NewMsgSuperfluidDelegate(test.param.lockOwner, resp.ID, valAddrs[0]))
 
-			if test.expectPass {
+			if test.expectErr == nil {
 				suite.Require().NoError(err)
 				suite.AssertEventEmitted(suite.Ctx, types.TypeEvtSuperfluidDelegate, 1)
 			} else {
+				suite.Require().ErrorIs(err, test.expectErr)
 				suite.Require().Error(err)
 			}
 		})
@@ -92,9 +94,9 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegate() {
 	}
 
 	tests := []struct {
-		name       string
-		param      param
-		expectPass bool
+		name      string
+		param     param
+		expectErr error
 	}{
 		{
 			name: "superfluid undelegation for not superfluid delegated lockup",
@@ -104,7 +106,7 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegate() {
 				duration:            time.Second,
 				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
 			},
-			expectPass: false,
+			expectErr: types.ErrNotSuperfluidUsedLockup,
 		},
 	}
 
@@ -120,10 +122,10 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegate() {
 		msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
 		_, err = msgServer.SuperfluidUndelegate(c, types.NewMsgSuperfluidUndelegate(test.param.lockOwner, resp.ID))
 
-		if test.expectPass {
+		if test.expectErr == nil {
 			suite.Require().NoError(err)
 		} else {
-			suite.Require().Error(err)
+			suite.Require().ErrorIs(err, test.expectErr)
 		}
 	}
 }
@@ -137,9 +139,9 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUnbondLock() {
 	}
 
 	tests := []struct {
-		name       string
-		param      param
-		expectPass bool
+		name      string
+		param     param
+		expectErr error
 	}{
 		{
 			name: "superfluid unbond lock that is not superfluid lockup",
@@ -149,7 +151,7 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUnbondLock() {
 				duration:            time.Second,
 				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
 			},
-			expectPass: false,
+			expectErr: types.ErrNotSuperfluidUsedLockup,
 		},
 	}
 
@@ -164,11 +166,10 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUnbondLock() {
 
 		msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
 		_, err = msgServer.SuperfluidUnbondLock(c, types.NewMsgSuperfluidUnbondLock(test.param.lockOwner, resp.ID))
-
-		if test.expectPass {
+		if test.expectErr == nil {
 			suite.Require().NoError(err)
 		} else {
-			suite.Require().Error(err)
+			suite.Require().ErrorIs(err, test.expectErr)
 		}
 	}
 }
@@ -182,9 +183,9 @@ func (suite *KeeperTestSuite) TestMsgLockAndSuperfluidDelegate() {
 	}
 
 	tests := []struct {
-		name       string
-		param      param
-		expectPass bool
+		name      string
+		param     param
+		expectErr error
 	}{
 		{
 			name: "superfluid lock and superfluid delegate for not allowed asset",
@@ -194,7 +195,7 @@ func (suite *KeeperTestSuite) TestMsgLockAndSuperfluidDelegate() {
 				duration:            time.Second,
 				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
 			},
-			expectPass: false,
+			expectErr: types.ErrNonSuperfluidAsset,
 		},
 	}
 
@@ -209,10 +210,10 @@ func (suite *KeeperTestSuite) TestMsgLockAndSuperfluidDelegate() {
 		msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
 		_, err := msgServer.LockAndSuperfluidDelegate(c, types.NewMsgLockAndSuperfluidDelegate(test.param.lockOwner, test.param.coinsToLock, valAddrs[0]))
 
-		if test.expectPass {
+		if test.expectErr == nil {
 			suite.Require().NoError(err)
 		} else {
-			suite.Require().Error(err)
+			suite.Require().ErrorIs(err, test.expectErr)
 		}
 	}
 }
@@ -225,7 +226,7 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegate_Event() {
 		validatorStats        []stakingtypes.BondStatus
 		superDelegations      []superfluidDelegation
 		superUnbondingLockIds []uint64
-		expSuperUnbondingErr  []bool
+		expSuperUnbondingErr  []error
 		// expected amount of delegation to intermediary account
 	}{
 		{
@@ -233,14 +234,14 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegate_Event() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			[]uint64{1},
-			[]bool{false},
+			[]error{nil},
 		},
 		{
 			"undelegating not available lock id",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			[]uint64{2},
-			[]bool{true},
+			[]error{lockuptypes.ErrLockupNotFound},
 		},
 	}
 
@@ -265,8 +266,9 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegate_Event() {
 			// superfluid undelegate
 			sender, _ := sdk.AccAddressFromBech32(lock.Owner)
 			_, err = msgServer.SuperfluidUndelegate(c, types.NewMsgSuperfluidUndelegate(sender, lockId))
-			if test.expSuperUnbondingErr[index] {
+			if test.expSuperUnbondingErr[index] != nil {
 				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, test.expSuperUnbondingErr[index])
 				continue
 			} else {
 				suite.Require().NoError(err)
@@ -296,7 +298,8 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUnbondLock_Event() {
 
 		// first we test that SuperfluidUnbondLock would cause error before undelegating
 		_, err := msgServer.SuperfluidUnbondLock(sdk.WrapSDKContext(suite.Ctx), types.NewMsgSuperfluidUnbondLock(sender, lock.ID))
-		suite.Require().Error(err)
+
+		suite.Require().ErrorIs(err, types.ErrBondingLockupNotSupported)
 
 		// undelegation needs to happen prior to SuperfluidUnbondLock
 		err = suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, lock.Owner, lock.ID)

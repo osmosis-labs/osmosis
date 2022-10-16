@@ -58,7 +58,7 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 		isAdd          bool
 		assets         []types.SuperfluidAsset
 		expectedAssets []types.SuperfluidAsset
-		expectErr      bool
+		expectErr      error
 	}
 	testCases := []struct {
 		name          string
@@ -69,10 +69,10 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 			"happy path flow",
 			[]Action{
 				{
-					true, []types.SuperfluidAsset{asset1}, []types.SuperfluidAsset{asset1}, false,
+					true, []types.SuperfluidAsset{asset1}, []types.SuperfluidAsset{asset1}, nil,
 				},
 				{
-					false, []types.SuperfluidAsset{asset1}, []types.SuperfluidAsset{}, false,
+					false, []types.SuperfluidAsset{asset1}, []types.SuperfluidAsset{}, nil,
 				},
 			},
 			[]string{types.TypeEvtSetSuperfluidAsset, types.TypeEvtRemoveSuperfluidAsset},
@@ -81,10 +81,10 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 			"token does not exist",
 			[]Action{
 				{
-					true, []types.SuperfluidAsset{asset1}, []types.SuperfluidAsset{asset1}, false,
+					true, []types.SuperfluidAsset{asset1}, []types.SuperfluidAsset{asset1}, nil,
 				},
 				{
-					false, []types.SuperfluidAsset{asset2}, []types.SuperfluidAsset{asset1}, true,
+					false, []types.SuperfluidAsset{asset2}, []types.SuperfluidAsset{asset1}, fmt.Errorf("superfluid asset %s doesn't exist", asset2.Denom),
 				},
 			},
 			[]string{types.TypeEvtSetSuperfluidAsset, types.TypeEvtRemoveSuperfluidAsset},
@@ -131,8 +131,10 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 						SuperfluidAssetDenoms: govDenoms,
 					})
 				}
-				if action.expectErr {
+
+				if action.expectErr != nil {
 					suite.Require().Error(err)
+					suite.Require().EqualError(err, action.expectErr.Error())
 				} else {
 					suite.Require().NoError(err)
 					suite.AssertEventEmitted(suite.ctx, tc.expectedEvent[i], 1)
@@ -147,7 +149,6 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 
 				// check assets
 				resp, err = suite.querier.AllAssets(sdk.WrapSDKContext(suite.ctx), &types.AllAssetsRequest{})
-				fmt.Println(resp)
 				suite.Require().NoError(err)
 				suite.Require().Equal(resp.Assets, action.expectedAssets)
 			}
