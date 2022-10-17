@@ -31,73 +31,65 @@ func (s *QueryTestSuite) SetupSuite() {
 }
 
 func (s *QueryTestSuite) TestQueriesNeverAlterState() {
-	s.SetupSuite()
 	testCases := []struct {
 		name  string
-		query func()
+		query string
+		input interface{}
+		output interface{}
 	}{
 		{
 			"Query active gauges",
-			func() {
-				_, err := s.queryClient.ActiveGauges(gocontext.Background(), &types.ActiveGaugesRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.incentives.Query/ActiveGauges",
+			&types.ActiveGaugesRequest{},
+			&types.ActiveGaugesResponse{},
 		},
 		{
 			"Query active gauges per denom",
-			func() {
-				_, err := s.queryClient.ActiveGaugesPerDenom(gocontext.Background(), &types.ActiveGaugesPerDenomRequest{Denom: "stake"})
-				s.Require().NoError(err)
-			},
+			"/osmosis.incentives.Query/ActiveGaugesPerDenom",
+			&types.ActiveGaugesPerDenomRequest{Denom: "stake"},
+			&types.ActiveGaugesPerDenomResponse{},
 		},
 		{
 			"Query gauge by id",
-			func() {
-				_, err := s.queryClient.GaugeByID(gocontext.Background(), &types.GaugeByIDRequest{Id: 1})
-				s.Require().NoError(err)
-			},
+			"/osmosis.incentives.Query/GaugeByID",
+			&types.GaugeByIDRequest{Id: 1},
+			&types.GaugeByIDResponse{},
 		},
 		{
 			"Query all gauges",
-			func() {
-				_, err := s.queryClient.Gauges(gocontext.Background(), &types.GaugesRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.incentives.Query/Gauges",
+			&types.GaugesRequest{},
+			&types.GaugesResponse{},
 		},
 		{
 			"Query lockable durations",
-			func() {
-				_, err := s.queryClient.LockableDurations(gocontext.Background(), &types.QueryLockableDurationsRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.incentives.Query/LockableDurations",
+			&types.QueryLockableDurationsRequest{},
+			&types.QueryLockableDurationsResponse{},
 		},
 		{
 			"Query module to distibute coins",
-			func() {
-				_, err := s.queryClient.ModuleToDistributeCoins(gocontext.Background(), &types.ModuleToDistributeCoinsRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.incentives.Query/ModuleToDistributeCoins",
+			&types.ModuleToDistributeCoinsRequest{},
+			&types.ModuleToDistributeCoinsResponse{},
 		},
 		{
 			"Query reward estimate",
-			func() {
-				_, err := s.queryClient.RewardsEst(gocontext.Background(), &types.RewardsEstRequest{Owner: s.TestAccs[0].String()})
-				s.Require().NoError(err)
-			},
+			"/osmosis.incentives.Query/RewardsEst",
+			&types.RewardsEstRequest{Owner: s.TestAccs[0].String()},
+			&types.RewardsEstResponse{},
 		},
 		{
 			"Query upcoming gauges",
-			func() {
-				_, err := s.queryClient.UpcomingGauges(gocontext.Background(), &types.UpcomingGaugesRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.incentives.Query/UpcomingGauges",
+			&types.UpcomingGaugesRequest{},
+			&types.UpcomingGaugesResponse{},
 		},
 		{
 			"Query upcoming gauges",
-			func() {
-				_, err := s.queryClient.UpcomingGaugesPerDenom(gocontext.Background(), &types.UpcomingGaugesPerDenomRequest{Denom: "stake"})
-				s.Require().NoError(err)
-			},
+			"/osmosis.incentives.Query/UpcomingGaugesPerDenom",
+			&types.UpcomingGaugesPerDenomRequest{Denom: "stake"},
+			&types.UpcomingGaugesPerDenomResponse{},
 		},
 	}
 
@@ -105,7 +97,9 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			tc.query()
+			s.SetupSuite()
+			err := s.QueryHelper.Invoke(gocontext.Background(), tc.query, tc.input, tc.output)
+			s.Require().NoError(err)
 			s.StateNotAltered()
 		})
 	}
