@@ -2,7 +2,6 @@ package cli_test
 
 import (
 	gocontext "context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -48,13 +47,13 @@ func (s *QueryTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	// set up sfs delegation
 	err = s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, s.TestAccs[0].String(), 1, s.val.String())
-	fmt.Println(err)
 	s.Require().NoError(err)
 
 	s.Commit()
 }
 
 func (s *QueryTestSuite) TestQueriesNeverAlterState() {
+	s.SetupSuite()
 	testCases := []struct {
 		name   string
 		query  string
@@ -145,7 +144,6 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			s.SetupSuite()
 			err := s.QueryHelper.Invoke(gocontext.Background(), tc.query, tc.input, tc.output)
 			s.Require().NoError(err)
 			s.StateNotAltered()
