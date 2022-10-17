@@ -44,45 +44,44 @@ func (s *QueryTestSuite) SetupSuite() {
 }
 
 func (s *QueryTestSuite) TestQueriesNeverAlterState() {
-	s.SetupSuite()
 	testCases := []struct {
 		name  string
-		query func()
+		query string
+		input interface{}
+		output interface{}
 	}{
 		{
 			"Query base denom",
-			func() {
-				_, err := s.queryClient.BaseDenom(gocontext.Background(), &types.QueryBaseDenomRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.txfees.v1beta1.Query/BaseDenom",
+			&types.QueryBaseDenomRequest{},
+			&types.QueryBaseDenomResponse{},
 		},
 		{
 			"Query poolID by denom",
-			func() {
-				_, err := s.queryClient.DenomPoolId(gocontext.Background(), &types.QueryDenomPoolIdRequest{Denom: "uosmo"})
-				s.Require().NoError(err)
-			},
+			"/osmosis.txfees.v1beta1.Query/DenomPoolId",
+			&types.QueryDenomPoolIdRequest{Denom: "uosmo"},
+			&types.QueryDenomPoolIdResponse{},
 		},
 		{
 			"Query spot price by denom",
-			func() {
-				_, err := s.queryClient.DenomSpotPrice(gocontext.Background(), &types.QueryDenomSpotPriceRequest{Denom: "uosmo"})
-				s.Require().NoError(err)
-			},
+			"/osmosis.txfees.v1beta1.Query/DenomSpotPrice",
+			&types.QueryDenomSpotPriceRequest{Denom: "uosmo"},
+			&types.QueryDenomSpotPriceResponse{},
 		},
 		{
 			"Query fee tokens",
-			func() {
-				_, err := s.queryClient.FeeTokens(gocontext.Background(), &types.QueryFeeTokensRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.txfees.v1beta1.Query/FeeTokens",
+			&types.QueryFeeTokensRequest{},
+			&types.QueryFeeTokensResponse{},
 		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			tc.query()
+			s.SetupSuite()
+			err := s.QueryHelper.Invoke(gocontext.Background(), tc.query, tc.input, tc.output)
+			s.Require().NoError(err)
 			s.StateNotAltered()
 		})
 	}

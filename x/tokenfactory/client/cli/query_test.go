@@ -32,7 +32,6 @@ func (s *QueryTestSuite) SetupSuite() {
 }
 
 func (s *QueryTestSuite) TestQueriesNeverAlterState() {
-	s.SetupSuite()
 	testCases := []struct {
 		name  string
 		query string
