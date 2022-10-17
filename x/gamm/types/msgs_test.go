@@ -927,6 +927,15 @@ func TestAuthzMsg(t *testing.T) {
 			},
 		},
 		{
+			name: "MsgJoinSwapExternAmountIn 2 coins",
+			gammMsg: &gammtypes.MsgJoinSwapExternAmountIn{
+				Sender:            addr1,
+				PoolId:            1,
+				TokensIn:          sdk.NewCoins(coin, sdk.NewCoin("foo", sdk.NewInt(1))),
+				ShareOutMinAmount: sdk.NewInt(1),
+			},
+		},
+		{
 			name: "MsgJoinSwapShareAmountOut",
 			gammMsg: &gammtypes.MsgSwapExactAmountIn{
 				Sender: addr1,

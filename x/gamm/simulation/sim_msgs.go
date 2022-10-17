@@ -214,11 +214,18 @@ func RandomJoinSwapExternAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk
 		return nil, fmt.Errorf("no sender with denoms %s exists", coinIn.Denom)
 	}
 
-	// cap joining pool to the pool liquidity
-	newTokenIn := osmoutils.MinCoins(sdk.NewCoins(coinIn), sdk.NewCoins(tokenIn))
-	newTokensIn := sdk.NewCoins(newTokenIn[0])
+	r := sim.GetSeededRand("select random seed")
+	one_or_multiple := r.Intn(2)
+	var newTokensIn sdk.Coins
+	if one_or_multiple == 0 {
+		// cap joining pool to the pool liquidity
+		newTokensIn = osmoutils.MinCoins(sdk.NewCoins(coinIn), sdk.NewCoins(tokenIn))
+	} else {
+		newTokensIn = sdk.NewCoins(coinIn, tokenIn)
+	}
+
 	// calc shares out with tokenIn
-	minShareOutAmt, _, err := pool.CalcJoinPoolShares(ctx, newTokenIn, pool.GetSwapFee(ctx))
+	minShareOutAmt, _, err := pool.CalcJoinPoolShares(ctx, newTokensIn, pool.GetSwapFee(ctx))
 	if err != nil {
 		return nil, err
 	}
