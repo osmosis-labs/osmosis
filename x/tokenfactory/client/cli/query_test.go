@@ -35,28 +35,27 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 	s.SetupSuite()
 	testCases := []struct {
 		name  string
-		query func()
+		query string
+		input interface{}
+		output interface{}
 	}{
 		{
 			"Query denom authority metadata",
-			func() {
-				_, err := s.queryClient.DenomAuthorityMetadata(gocontext.Background(), &types.QueryDenomAuthorityMetadataRequest{Denom: "tokenfactory"})
-				s.Require().NoError(err)
-			},
+			"/osmosis.tokenfactory.v1beta1.Query/DenomAuthorityMetadata",
+			&types.QueryDenomAuthorityMetadataRequest{Denom: "tokenfactory"},
+			&types.QueryDenomAuthorityMetadataResponse{},
 		},
 		{
 			"Query denoms by creator",
-			func() {
-				_, err := s.queryClient.DenomsFromCreator(gocontext.Background(), &types.QueryDenomsFromCreatorRequest{Creator: s.TestAccs[0].String()})
-				s.Require().NoError(err)
-			},
+			"/osmosis.tokenfactory.v1beta1.Query/DenomsFromCreator",
+			&types.QueryDenomsFromCreatorRequest{Creator: s.TestAccs[0].String()},
+			&types.QueryDenomsFromCreatorResponse{},
 		},
 		{
 			"Query params",
-			func() {
-				_, err := s.queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.tokenfactory.v1beta1.Query/Params",
+			&types.QueryParamsRequest{},
+			&types.QueryParamsResponse{},
 		},
 	}
 
@@ -64,7 +63,9 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			tc.query()
+			s.SetupSuite()
+			err := s.QueryHelper.Invoke(gocontext.Background(), tc.query, tc.input, tc.output)
+			s.Require().NoError(err)
 			s.StateNotAltered()
 		})
 	}
