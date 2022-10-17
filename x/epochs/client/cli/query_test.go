@@ -36,24 +36,24 @@ func (s *QueryTestSuite) SetupSuite() {
 }
 
 func (s *QueryTestSuite) TestQueriesNeverAlterState() {
-	s.SetupSuite()
 	testCases := []struct {
 		name  string
-		query func()
+		query string
+		input interface{}
+		output interface{}
 	}{
 		{
 			"Query current epoch",
-			func() {
-				_, err := s.queryClient.CurrentEpoch(gocontext.Background(), &types.QueryCurrentEpochRequest{Identifier: "weekly"})
-				s.Require().NoError(err)
-			},
+			"/osmosis.epochs.v1beta1.Query/CurrentEpoch",
+			&types.QueryCurrentEpochRequest{Identifier: "weekly"},
+			&types.QueryCurrentEpochResponse{},
+
 		},
 		{
 			"Query epochs info",
-			func() {
-				_, err := s.queryClient.EpochInfos(gocontext.Background(), &types.QueryEpochsInfoRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.epochs.v1beta1.Query/EpochInfos",
+			&types.QueryEpochsInfoRequest{},
+			&types.QueryEpochsInfoResponse{},
 		},
 	}
 
@@ -61,7 +61,9 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			tc.query()
+			s.SetupSuite()
+			err := s.QueryHelper.Invoke(gocontext.Background(), tc.query, tc.input, tc.output)
+			s.Require().NoError(err)
 			s.StateNotAltered()
 		})
 	}
