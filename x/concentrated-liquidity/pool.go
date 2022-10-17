@@ -1,15 +1,27 @@
-package concentrated
+package concentrated_liquidity
 
 import (
 	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
-var _ types.PoolI = &Pool{}
+func NewConcentratedPool(poolId uint64, firstDenom string, secondDenom string) (Pool, error) {
+	denom0 := firstDenom
+	denom1 := secondDenom
+
+	// we store token in lexiographical order
+	if denom0 < denom1 {
+		denom0, denom1 = secondDenom, firstDenom
+	}
+	pool := Pool{
+		// TODO: implement pool address method
+		// Address: types.NewPoolAddress(poolId).String(),
+		Id: poolId,
+	}
+	return pool, nil
+}
 
 // GetAddress returns the address of a pool.
 // If the pool address is not bech32 valid, it returns an empty address.
