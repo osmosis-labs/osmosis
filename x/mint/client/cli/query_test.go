@@ -23,24 +23,23 @@ func (s *QueryTestSuite) SetupSuite() {
 }
 
 func (s *QueryTestSuite) TestQueriesNeverAlterState() {
-	s.SetupSuite()
 	testCases := []struct {
 		name  string
-		query func()
+		query string
+		input interface{}
+		output interface{}
 	}{
 		{
 			"Query epoch provisions",
-			func() {
-				_, err := s.queryClient.EpochProvisions(gocontext.Background(), &types.QueryEpochProvisionsRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.mint.v1beta1.Query/EpochProvisions",
+			&types.QueryEpochProvisionsRequest{},
+			&types.QueryEpochProvisionsResponse{},
 		},
 		{
 			"Query params",
-			func() {
-				_, err := s.queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.mint.v1beta1.Query/Params",
+			&types.QueryParamsRequest{},
+			&types.QueryParamsResponse{},
 		},
 	}
 
@@ -48,7 +47,9 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			tc.query()
+			s.SetupSuite()
+			err := s.QueryHelper.Invoke(gocontext.Background(), tc.query, tc.input, tc.output)
+			s.Require().NoError(err)
 			s.StateNotAltered()
 		})
 	}
