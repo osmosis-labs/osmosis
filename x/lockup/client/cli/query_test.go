@@ -31,122 +31,107 @@ func (s *QueryTestSuite) SetupSuite() {
 }
 
 func (s *QueryTestSuite) TestQueriesNeverAlterState() {
-	s.SetupSuite()
 	testCases := []struct {
 		name  string
-		query func()
+		query string
+		input interface{}
+		output interface{}
 	}{
 		{
 			"Query account locked coins",
-			func() {
-				_, err := s.queryClient.AccountLockedCoins(gocontext.Background(), &types.AccountLockedCoinsRequest{Owner: s.TestAccs[0].String()})
-				s.Require().NoError(err)
-			},
+			"/osmosis.lockup.Query/AccountLockedCoins",
+			&types.AccountLockedCoinsRequest{Owner: s.TestAccs[0].String()},
+			&types.AccountLockedCoinsResponse{},
 		},
 		{
 			"Query account locked by duration",
-			func() {
-				_, err := s.queryClient.AccountLockedDuration(gocontext.Background(), &types.AccountLockedDurationRequest{Owner: s.TestAccs[0].String(), Duration: time.Hour * 24})
-				s.Require().NoError(err)
-			},
+			"/osmosis.lockup.Query/AccountLockedDuration",
+			&types.AccountLockedDurationRequest{Owner: s.TestAccs[0].String(), Duration: time.Hour * 24},
+			&types.AccountLockedDurationResponse{},
 		},
 		{
 			"Query account locked longer than given duration",
-			func() {
-				_, err := s.queryClient.AccountLockedLongerDuration(gocontext.Background(), &types.AccountLockedLongerDurationRequest{Owner: s.TestAccs[0].String(), Duration: time.Hour})
-				s.Require().NoError(err)
-			},
+			"/osmosis.lockup.Query/AccountLockedLongerDuration",
+			&types.AccountLockedLongerDurationRequest{Owner: s.TestAccs[0].String(), Duration: time.Hour},
+			&types.AccountLockedLongerDurationResponse{},
 		},
 		{
 			"Query account locked by denom that longer than given duration",
-			func() {
-				_, err := s.queryClient.AccountLockedLongerDurationDenom(gocontext.Background(), &types.AccountLockedLongerDurationDenomRequest{Owner: s.TestAccs[0].String(), Duration: time.Hour, Denom: "gamm/pool/1"})
-				s.Require().NoError(err)
-			},
+			"/osmosis.lockup.Query/AccountLockedLongerDurationDenom",
+			&types.AccountLockedLongerDurationDenomRequest{Owner: s.TestAccs[0].String(), Duration: time.Hour, Denom: "gamm/pool/1"},
+			&types.AccountLockedLongerDurationDenomResponse{},
 		},
 		{
 			"Query account locked longer than given duration not unlocking",
-			func() {
-				_, err := s.queryClient.AccountLockedLongerDurationNotUnlockingOnly(gocontext.Background(), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: s.TestAccs[0].String(), Duration: time.Hour})
-				s.Require().NoError(err)
-			},
+			"/osmosis.lockup.Query/AccountLockedLongerDurationNotUnlockingOnly",
+			&types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: s.TestAccs[0].String(), Duration: time.Hour},
+			&types.AccountLockedLongerDurationNotUnlockingOnlyResponse{},
 		},
 		{
 			"Query account locked in past time",
-			func() {
-				_, err := s.queryClient.AccountLockedPastTime(gocontext.Background(), &types.AccountLockedPastTimeRequest{Owner: s.TestAccs[0].String()})
-				s.Require().NoError(err)
-			},
+			"/osmosis.lockup.Query/AccountLockedPastTime",
+			&types.AccountLockedPastTimeRequest{Owner: s.TestAccs[0].String()},
+			&types.AccountLockedPastTimeResponse{},
 		},
 		{
 			"Query account locked in past time by denom",
-			func() {
-				_, err := s.queryClient.AccountLockedPastTimeDenom(gocontext.Background(), &types.AccountLockedPastTimeDenomRequest{Owner: s.TestAccs[0].String(), Denom: "gamm/pool/1"})
-				s.Require().NoError(err)
-			},
+			"/osmosis.lockup.Query/AccountLockedPastTimeDenom",
+			&types.AccountLockedPastTimeDenomRequest{Owner: s.TestAccs[0].String(), Denom: "gamm/pool/1"},
+			&types.AccountLockedPastTimeDenomResponse{},
 		},
 		{
 			" Query account locked in past time that not unlocking",
-			func() {
-				_, err := s.queryClient.AccountLockedPastTimeNotUnlockingOnly(gocontext.Background(), &types.AccountLockedPastTimeNotUnlockingOnlyRequest{Owner: s.TestAccs[0].String()})
-				s.Require().NoError(err)
-			},
+			"/osmosis.lockup.Query/AccountLockedPastTimeNotUnlockingOnly",
+			&types.AccountLockedPastTimeNotUnlockingOnlyRequest{Owner: s.TestAccs[0].String()},
+			&types.AccountLockedPastTimeNotUnlockingOnlyResponse{},
 		},
 		{
 			"Query account unlockable coins",
-			func() {
-				_, err := s.queryClient.AccountUnlockableCoins(gocontext.Background(), &types.AccountUnlockableCoinsRequest{Owner: s.TestAccs[0].String()})
-				s.Require().NoError(err)
-			},
+			"/osmosis.lockup.Query/AccountUnlockableCoins",
+			&types.AccountUnlockableCoinsRequest{Owner: s.TestAccs[0].String()},
+			&types.AccountUnlockableCoinsResponse{},
 		},
 		{
 			"Query account unlocked before given time",
-			func() {
-				_, err := s.queryClient.AccountUnlockedBeforeTime(gocontext.Background(), &types.AccountUnlockedBeforeTimeRequest{Owner: s.TestAccs[0].String()})
-				s.Require().NoError(err)
-			},
+			"/osmosis.lockup.Query/AccountUnlockedBeforeTime",
+			&types.AccountUnlockedBeforeTimeRequest{Owner: s.TestAccs[0].String()},
+			&types.AccountUnlockedBeforeTimeResponse{},
 		},
 		{
 			"Query account unlocking coins",
-			func() {
-				_, err := s.queryClient.AccountUnlockingCoins(gocontext.Background(), &types.AccountUnlockingCoinsRequest{Owner: s.TestAccs[0].String()})
-				s.Require().NoError(err)
-			},
+			"/osmosis.lockup.Query/AccountUnlockingCoins",
+			&types.AccountUnlockingCoinsRequest{Owner: s.TestAccs[0].String()},
+			&types.AccountUnlockingCoinsResponse{},
 		},
 		{
 			"Query lock by id",
-			func() {
-				_, err := s.queryClient.LockedByID(gocontext.Background(), &types.LockedRequest{LockId: 1})
-				s.Require().NoError(err)
-			},
+			"/osmosis.lockup.Query/LockedByID",
+			&types.LockedRequest{LockId: 1},
+			&types.LockedResponse{},
 		},
 		{
 			"Query lock by denom",
-			func() {
-				_, err := s.queryClient.LockedDenom(gocontext.Background(), &types.LockedDenomRequest{Duration: time.Hour * 24, Denom: "gamm/pool/1"})
-				s.Require().NoError(err)
-			},
+			"/osmosis.lockup.Query/LockedDenom",
+			&types.LockedDenomRequest{Duration: time.Hour * 24, Denom: "gamm/pool/1"},
+			&types.LockedDenomResponse{},
 		},
 		{
 			"Query module balances",
-			func() {
-				_, err := s.queryClient.ModuleBalance(gocontext.Background(), &types.ModuleBalanceRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.lockup.Query/ModuleBalance",
+			&types.ModuleBalanceRequest{},
+			&types.ModuleBalanceResponse{},
 		},
 		{
 			"Query module locked amount",
-			func() {
-				_, err := s.queryClient.ModuleLockedAmount(gocontext.Background(), &types.ModuleLockedAmountRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.lockup.Query/ModuleLockedAmount",
+			&types.ModuleLockedAmountRequest{},
+			&types.ModuleLockedAmountResponse{},
 		},
 		{
 			"Query synthetic lock by id",
-			func() {
-				_, err := s.queryClient.SyntheticLockupsByLockupID(gocontext.Background(), &types.SyntheticLockupsByLockupIDRequest{LockId: 1})
-				s.Require().NoError(err)
-			},
+			"/osmosis.lockup.Query/SyntheticLockupsByLockupID",
+			&types.SyntheticLockupsByLockupIDRequest{LockId: 1},
+			&types.SyntheticLockupsByLockupIDResponse{},
 		},
 	}
 
@@ -154,7 +139,9 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			tc.query()
+			s.SetupSuite()
+			err := s.QueryHelper.Invoke(gocontext.Background(), tc.query, tc.input, tc.output)
+			s.Require().NoError(err)
 			s.StateNotAltered()
 		})
 	}
