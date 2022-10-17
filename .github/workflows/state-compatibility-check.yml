@@ -36,6 +36,7 @@ on:
 env:
   GOLANG_VERSION: 1.18
   GENESIS_URL: https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
+  ADDRBOOK_URL: https://dl2.quicksync.io/json/addrbook.osmosis.json
   SNAPSHOT_BUCKET: https://osmosis-snapshot.sfo3.cdn.digitaloceanspaces.com
   RPC_ENDPOINT: https://rpc.osmosis.zone
   LCD_ENDPOINT: https://lcd.osmosis.zone
@@ -147,6 +148,9 @@ jobs:
           dasel put string -f $CONFIG_FOLDER/app.toml '.halt-height' $HALT_HEIGHT
           dasel put string -f $CONFIG_FOLDER/app.toml '.pruning' everything
           dasel put string -f $CONFIG_FOLDER/app.toml '.state-sync.snapshot-interval' 0
+
+          # Download addrbook
+          wget -O $CONFIG_FOLDER/addrbook.json ${{ env.ADDRBOOK_URL }}
       -
         name: 🧪 Start Osmosis Node
         run: build/osmosisd start
