@@ -871,3 +871,123 @@ func (suite *KeeperTestSuite) TestEditLockup() {
 	})
 	suite.Require().Equal(int64(0), acc.Int64())
 }
+
+func (suite *KeeperTestSuite) TestForceUnlock() {
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+
+	testCases := []struct {
+		name          string
+		postLockSetup func()
+	}{
+		{
+			name: "happy path",
+		},
+		{
+			name: "superfluid staked",
+			postLockSetup: func() {
+				err := suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, 1, "testDenom", time.Minute, true)
+				suite.Require().NoError(err)
+			},
+		},
+	}
+	for _, tc := range testCases {
+		// set up test and create default lock
+		suite.SetupTest()
+		coinsToLock := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10000000)))
+		suite.FundAcc(addr1, sdk.NewCoins(coinsToLock...))
+		lock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, addr1, coinsToLock, time.Minute)
+		suite.Require().NoError(err)
+
+		// post lock setup
+		if tc.postLockSetup != nil {
+			tc.postLockSetup()
+		}
+
+		err = suite.App.LockupKeeper.ForceUnlock(suite.Ctx, lock)
+		suite.Require().NoError(err)
+
+		// check that accumulation store has decreased
+		accum := suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
+			LockQueryType: types.ByDuration,
+			Denom:         "foo",
+			Duration:      time.Minute,
+		})
+		suite.Require().Equal(accum.String(), "0")
+
+		// check balance of lock account to confirm
+		balances := suite.App.BankKeeper.GetAllBalances(suite.Ctx, addr1)
+		suite.Require().Equal(balances, coinsToLock)
+
+		// if it was superfluid delegated lock,
+		//  confirm that we don't have associated synth locks
+		synthLocks := suite.App.LockupKeeper.GetAllSyntheticLockupsByLockup(suite.Ctx, lock.ID)
+		suite.Require().Equal(0, len(synthLocks))
+
+		// check if lock is deleted by checking trying to get lock ID
+		_, err = suite.App.LockupKeeper.GetLockByID(suite.Ctx, lock.ID)
+		suite.Require().Error(err)
+	}
+}
+
+func (suite *KeeperTestSuite) TestPartialForceUnlock() {
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+
+	defaultDenomToLock := "stake"
+	defaultAmountToLock := sdk.NewInt(10000000)
+
+	testCases := []struct {
+		name               string
+		coinsToForceUnlock sdk.Coins
+		expectedPass       bool
+	}{
+		{
+			name:               "unlock full amount",
+			coinsToForceUnlock: sdk.Coins{sdk.NewCoin(defaultDenomToLock, defaultAmountToLock)},
+			expectedPass:       true,
+		},
+		{
+			name:               "partial unlock",
+			coinsToForceUnlock: sdk.Coins{sdk.NewCoin(defaultDenomToLock, defaultAmountToLock.Quo(sdk.NewInt(2)))},
+			expectedPass:       true,
+		},
+		{
+			name:               "unlock more than locked",
+			coinsToForceUnlock: sdk.Coins{sdk.NewCoin(defaultDenomToLock, defaultAmountToLock.Add(sdk.NewInt(2)))},
+			expectedPass:       false,
+		},
+		{
+			name:               "try unlocking with empty coins",
+			coinsToForceUnlock: sdk.Coins{},
+			expectedPass:       true,
+		},
+	}
+	for _, tc := range testCases {
+		// set up test and create default lock
+		suite.SetupTest()
+		coinsToLock := sdk.NewCoins(sdk.NewCoin("stake", defaultAmountToLock))
+		suite.FundAcc(addr1, sdk.NewCoins(coinsToLock...))
+		// balanceBeforeLock := suite.App.BankKeeper.GetAllBalances(suite.Ctx, addr1)
+		lock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, addr1, coinsToLock, time.Minute)
+		suite.Require().NoError(err)
+
+		err = suite.App.LockupKeeper.PartialForceUnlock(suite.Ctx, lock, tc.coinsToForceUnlock)
+
+		if tc.expectedPass {
+			suite.Require().NoError(err)
+
+			// check balance
+			balanceAfterForceUnlock := suite.App.BankKeeper.GetBalance(suite.Ctx, addr1, "stake")
+
+			if tc.coinsToForceUnlock.Empty() {
+				tc.coinsToForceUnlock = coinsToLock
+			}
+			suite.Require().Equal(tc.coinsToForceUnlock, sdk.Coins{balanceAfterForceUnlock})
+		} else {
+			suite.Require().Error(err)
+
+			// check balance
+			balanceAfterForceUnlock := suite.App.BankKeeper.GetBalance(suite.Ctx, addr1, "stake")
+			suite.Require().Equal(sdk.NewInt(0), balanceAfterForceUnlock.Amount)
+		}
+	}
+}

@@ -159,7 +159,10 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 	for _, chainConfig := range uc.chainConfigs {
 		for validatorIdx, node := range chainConfig.NodeConfigs {
 			if validatorIdx == 0 {
-				currentHeight := node.QueryCurrentHeight()
+				currentHeight, err := node.QueryCurrentHeight()
+				if err != nil {
+					return err
+				}
 				chainConfig.UpgradePropHeight = currentHeight + int64(chainConfig.VotingPeriod) + int64(config.PropSubmitBlocks) + int64(config.PropBufferBlocks)
 				node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 				chainConfig.LatestProposalNumber += 1
