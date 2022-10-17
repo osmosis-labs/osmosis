@@ -24,88 +24,74 @@ func (s *QueryTestSuite) SetupSuite() {
 }
 
 func (s *QueryTestSuite) TestQueriesNeverAlterState() {
-	s.SetupSuite()
 	testCases := []struct {
 		name  string
-		query func()
+		query string
+		input interface{}
+		output interface{}
 	}{
 		{
 			"Query pools",
-			func() {
-				_, err := s.queryClient.Pools(gocontext.Background(), &types.QueryPoolsRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.gamm.v1beta1.Query/Pools",
+			&types.QueryPoolsRequest{},
+			&types.QueryPoolsResponse{},
 		},
 		{
 			"Query single pool",
-			func() {
-				_, err := s.queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{PoolId: 1})
-				s.Require().NoError(err)
-			},
-		},
-		{
-			"Query single pool",
-			func() {
-				_, err := s.queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{PoolId: 1})
-				s.Require().NoError(err)
-			},
+			"/osmosis.gamm.v1beta1.Query/Pool",
+			&types.QueryPoolRequest{PoolId: 1},
+			&types.QueryPoolsResponse{},
 		},
 		{
 			"Query num pools",
-			func() {
-				_, err := s.queryClient.NumPools(gocontext.Background(), &types.QueryNumPoolsRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.gamm.v1beta1.Query/NumPools",
+			&types.QueryNumPoolsRequest{},
+			&types.QueryNumPoolsResponse{},
 		},
 		{
 			"Query pool params",
-			func() {
-				_, err := s.queryClient.PoolParams(gocontext.Background(), &types.QueryPoolParamsRequest{PoolId: 1})
-				s.Require().NoError(err)
-			},
+			"/osmosis.gamm.v1beta1.Query/PoolParams",
+			&types.QueryPoolParamsRequest{PoolId: 1},
+			&types.QueryPoolParamsResponse{},
 		},
 		{
 			"Query pool type",
-			func() {
-				_, err := s.queryClient.PoolType(gocontext.Background(), &types.QueryPoolTypeRequest{PoolId: 1})
-				s.Require().NoError(err)
-			},
+			"/osmosis.gamm.v1beta1.Query/PoolType",
+			&types.QueryPoolTypeRequest{PoolId: 1},
+			&types.QueryPoolTypeResponse{},
 		},
 		{
 			"Query spot price",
-			func() {
-				_, err := s.queryClient.SpotPrice(gocontext.Background(), &types.QuerySpotPriceRequest{PoolId: 1, BaseAssetDenom: "foo", QuoteAssetDenom: "bar"})
-				s.Require().NoError(err)
-			},
+			"/osmosis.gamm.v1beta1.Query/SpotPrice",
+			&types.QuerySpotPriceRequest{PoolId: 1, BaseAssetDenom: "foo", QuoteAssetDenom: "bar"},
+			&types.QuerySpotPriceResponse{},
 		},
 		{
 			"Query total liquidity",
-			func() {
-				_, err := s.queryClient.TotalLiquidity(gocontext.Background(), &types.QueryTotalLiquidityRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.gamm.v1beta1.Query/TotalLiquidity",
+			&types.QueryTotalLiquidityRequest{},
+			&types.QueryTotalLiquidityResponse{},
 		},
 		{
 			"Query pool total liquidity",
-			func() {
-				_, err := s.queryClient.TotalPoolLiquidity(gocontext.Background(), &types.QueryTotalPoolLiquidityRequest{PoolId: 1})
-				s.Require().NoError(err)
-			},
+			"/osmosis.gamm.v1beta1.Query/TotalPoolLiquidity",
+			&types.QueryTotalPoolLiquidityRequest{PoolId: 1},
+			&types.QueryTotalPoolLiquidityResponse{},
 		},
 		{
-			"Query spot price",
-			func() {
-				_, err := s.queryClient.TotalShares(gocontext.Background(), &types.QueryTotalSharesRequest{PoolId: 1})
-				s.Require().NoError(err)
-			},
+			"Query total shares",
+			"/osmosis.gamm.v1beta1.Query/TotalShares",
+			&types.QueryTotalSharesRequest{PoolId: 1},
+			&types.QueryTotalSharesResponse{},
 		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
-
 		s.Run(tc.name, func() {
-			tc.query()
+			s.SetupSuite()
+			err := s.QueryHelper.Invoke(gocontext.Background(), tc.query, tc.input, tc.output)
+			s.Require().NoError(err)
 			s.StateNotAltered()
 		})
 	}
