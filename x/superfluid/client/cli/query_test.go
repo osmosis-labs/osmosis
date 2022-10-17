@@ -58,98 +58,87 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 	s.SetupSuite()
 	testCases := []struct {
 		name  string
-		query func()
+		query string
+		input interface{}
+		output interface{}
 	}{
 		{
 			"Query all superfluild assets",
-			func() {
-				_, err := s.queryClient.AllAssets(gocontext.Background(), &types.AllAssetsRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.superfluid.Query/AllAssets",
+			&types.AllAssetsRequest{},
+			&types.AllAssetsResponse{},
 		},
 		{
 			"Query all intermediary accounts",
-			func() {
-				_, err := s.queryClient.AllIntermediaryAccounts(gocontext.Background(), &types.AllIntermediaryAccountsRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.superfluid.Query/AllIntermediaryAccounts",
+			&types.AllIntermediaryAccountsRequest{},
+			&types.AllIntermediaryAccountsResponse{},
 		},
 		{
 			"Query osmo equivalent multiplier of an asset",
-			func() {
-				_, err := s.queryClient.AssetMultiplier(gocontext.Background(), &types.AssetMultiplierRequest{Denom: "gamm/pool/1"})
-				s.Require().NoError(err)
-			},
+			"/osmosis.superfluid.Query/AssetMultiplier",
+			&types.AssetMultiplierRequest{Denom: "gamm/pool/1"},
+			&types.AssetMultiplierResponse{},
 		},
 		{
 			"Query asset type",
-			func() {
-				_, err := s.queryClient.AssetType(gocontext.Background(), &types.AssetTypeRequest{Denom: "gamm/pool/1"})
-				s.Require().NoError(err)
-			},
+			"/osmosis.superfluid.Query/AssetType",
+			&types.AssetTypeRequest{Denom: "gamm/pool/1"},
+			&types.AssetTypeResponse{},
 		},
 		{
 			"Query connected intermediary account",
-			func() {
-				_, err := s.queryClient.ConnectedIntermediaryAccount(gocontext.Background(), &types.ConnectedIntermediaryAccountRequest{LockId: 1})
-				s.Require().NoError(err)
-			},
+			"/osmosis.superfluid.Query/ConnectedIntermediaryAccount",
+			&types.ConnectedIntermediaryAccountRequest{LockId: 1},
+			&types.ConnectedIntermediaryAccountResponse{},
 		},
 		{
 			"Query estimate sfs delegated amount by validator & denom",
-			func() {
-				_, err := s.queryClient.EstimateSuperfluidDelegatedAmountByValidatorDenom(gocontext.Background(), &types.EstimateSuperfluidDelegatedAmountByValidatorDenomRequest{ValidatorAddress: s.val.String(), Denom: "gamm/pool/1"})
-				s.Require().NoError(err)
-			},
+			"/osmosis.superfluid.Query/EstimateSuperfluidDelegatedAmountByValidatorDenom",
+			&types.EstimateSuperfluidDelegatedAmountByValidatorDenomRequest{ValidatorAddress: s.val.String(), Denom: "gamm/pool/1"},
+			&types.EstimateSuperfluidDelegatedAmountByValidatorDenomResponse{},
 		},
 		{
 			"Query params",
-			func() {
-				_, err := s.queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.superfluid.Query/Params",
+			&types.QueryParamsRequest{},
+			&types.QueryParamsResponse{},
 		},
 		{
 			"Query sfs delegation amount",
-			func() {
-				_, err := s.queryClient.SuperfluidDelegationAmount(gocontext.Background(), &types.SuperfluidDelegationAmountRequest{ValidatorAddress: s.val.String(), Denom: "gamm/pool/1", DelegatorAddress: s.TestAccs[0].String()})
-				s.Require().NoError(err)
-			},
+			"/osmosis.superfluid.Query/SuperfluidDelegationAmount",
+			&types.SuperfluidDelegationAmountRequest{ValidatorAddress: s.val.String(), Denom: "gamm/pool/1", DelegatorAddress: s.TestAccs[0].String()},
+			&types.SuperfluidDelegationAmountResponse{},
 		},
 		{
 			"Query sfs delegation by delegator",
-			func() {
-				_, err := s.queryClient.SuperfluidDelegationsByDelegator(gocontext.Background(), &types.SuperfluidDelegationsByDelegatorRequest{DelegatorAddress: s.TestAccs[0].String()})
-				s.Require().NoError(err)
-			},
+			"/osmosis.superfluid.Query/SuperfluidDelegationsByDelegator",
+			&types.SuperfluidDelegationsByDelegatorRequest{DelegatorAddress: s.TestAccs[0].String()},
+			&types.SuperfluidDelegationsByDelegatorResponse{},
 		},
 		{
 			"Query sfs delegation by validator & denom",
-			func() {
-				_, err := s.queryClient.SuperfluidDelegationsByValidatorDenom(gocontext.Background(), &types.SuperfluidDelegationsByValidatorDenomRequest{ValidatorAddress: s.val.String(), Denom: "gamm/pool/1"})
-				s.Require().NoError(err)
-			},
+			"/osmosis.superfluid.Query/SuperfluidDelegationsByValidatorDenom",
+			&types.SuperfluidDelegationsByValidatorDenomRequest{ValidatorAddress: s.val.String(), Denom: "gamm/pool/1"},
+			&types.SuperfluidDelegationsByValidatorDenomResponse{},
 		},
 		{
 			"Query sfs undelegation by delegator",
-			func() {
-				_, err := s.queryClient.SuperfluidUndelegationsByDelegator(gocontext.Background(), &types.SuperfluidUndelegationsByDelegatorRequest{DelegatorAddress: s.TestAccs[0].String(), Denom: "gamm/pool/1"})
-				s.Require().NoError(err)
-			},
+			"/osmosis.superfluid.Query/SuperfluidUndelegationsByDelegator",
+			&types.SuperfluidUndelegationsByDelegatorRequest{DelegatorAddress: s.TestAccs[0].String(), Denom: "gamm/pool/1"},
+			&types.SuperfluidUndelegationsByDelegatorResponse{},
 		},
 		{
 			"Query total sfs delegation by delegator",
-			func() {
-				_, err := s.queryClient.TotalDelegationByDelegator(gocontext.Background(), &types.QueryTotalDelegationByDelegatorRequest{DelegatorAddress: s.TestAccs[0].String()})
-				s.Require().NoError(err)
-			},
+			"/osmosis.superfluid.Query/TotalDelegationByDelegator",
+			&types.QueryTotalDelegationByDelegatorRequest{DelegatorAddress: s.TestAccs[0].String()},
+			&types.QueryTotalDelegationByDelegatorResponse{},
 		},
 		{
 			"Query total sfs delegations",
-			func() {
-				_, err := s.queryClient.TotalSuperfluidDelegations(gocontext.Background(), &types.TotalSuperfluidDelegationsRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.superfluid.Query/TotalSuperfluidDelegations",
+			&types.TotalSuperfluidDelegationsRequest{},
+			&types.TotalSuperfluidDelegationsResponse{},
 		},
 	}
 
@@ -157,7 +146,9 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			tc.query()
+			s.SetupSuite()
+			err := s.QueryHelper.Invoke(gocontext.Background(), tc.query, tc.input, tc.output)
+			s.Require().NoError(err)
 			s.StateNotAltered()
 		})
 	}
