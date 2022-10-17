@@ -25,52 +25,47 @@ func (s *QueryTestSuite) SetupSuite() {
 }
 
 func (s *QueryTestSuite) TestQueriesNeverAlterState() {
-	s.SetupSuite()
 	testCases := []struct {
 		name  string
-		query func()
+		query string
+		input interface{}
+		output interface{}
 	}{
 		{
 			"Query distribution info",
-			func() {
-				_, err := s.queryClient.DistrInfo(gocontext.Background(), &types.QueryDistrInfoRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.poolincentives.v1beta1.Query/DistrInfo",
+			&types.QueryDistrInfoRequest{},
+			&types.QueryDistrInfoResponse{},
 		},
 		{
 			"Query external incentive gauges",
-			func() {
-				_, err := s.queryClient.ExternalIncentiveGauges(gocontext.Background(), &types.QueryExternalIncentiveGaugesRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.poolincentives.v1beta1.Query/ExternalIncentiveGauges",
+			&types.QueryExternalIncentiveGaugesRequest{},
+			&types.QueryExternalIncentiveGaugesResponse{},
 		},
 		{
 			"Query all gauge ids",
-			func() {
-				_, err := s.queryClient.GaugeIds(gocontext.Background(), &types.QueryGaugeIdsRequest{PoolId: 1})
-				s.Require().NoError(err)
-			},
+			"/osmosis.poolincentives.v1beta1.Query/GaugeIds",
+			&types.QueryGaugeIdsRequest{PoolId: 1},
+			&types.QueryGaugeIdsResponse{},
 		},
 		{
 			"Query all incentivized pools",
-			func() {
-				_, err := s.queryClient.IncentivizedPools(gocontext.Background(), &types.QueryIncentivizedPoolsRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.poolincentives.v1beta1.Query/IncentivizedPools",
+			&types.QueryIncentivizedPoolsRequest{},
+			&types.QueryIncentivizedPoolsResponse{},
 		},
 		{
 			"Query lockable durations",
-			func() {
-				_, err := s.queryClient.LockableDurations(gocontext.Background(), &types.QueryLockableDurationsRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.poolincentives.v1beta1.Query/LockableDurations",
+			&types.QueryLockableDurationsRequest{},
+			&types.QueryLockableDurationsResponse{},
 		},
 		{
 			"Query params",
-			func() {
-				_, err := s.queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
-				s.Require().NoError(err)
-			},
+			"/osmosis.poolincentives.v1beta1.Query/Params",
+			&types.QueryParamsRequest{},
+			&types.QueryParamsResponse{},
 		},
 	}
 
@@ -78,7 +73,9 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			tc.query()
+			s.SetupSuite()
+			err := s.QueryHelper.Invoke(gocontext.Background(), tc.query, tc.input, tc.output)
+			s.Require().NoError(err)
 			s.StateNotAltered()
 		})
 	}
