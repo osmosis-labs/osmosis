@@ -2,7 +2,6 @@ package cli_test
 
 import (
 	gocontext "context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -45,8 +44,7 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 		{
 			"Query current epoch",
 			func() {
-				res, err := s.queryClient.CurrentEpoch(gocontext.Background(), &types.QueryCurrentEpochRequest{Identifier: "weekly"})
-				fmt.Println(res)
+				_, err := s.queryClient.CurrentEpoch(gocontext.Background(), &types.QueryCurrentEpochRequest{Identifier: "weekly"})
 				s.Require().NoError(err)
 			},
 		},
