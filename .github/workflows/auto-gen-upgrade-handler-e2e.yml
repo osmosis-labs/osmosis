@@ -1,0 +1,11 @@
+name: Create Update Handler 
+run-name: ${{ github.actor }} is updating version
+on: [push]
+jobs: 
+  Create-Pull-Request:
+    runs-on: ubuntu-latest
+    steps:
+      - runs: git add Makefile
+      - runs: git add app/upgrades
+      - runs: git commit -m "successfully initiated upgrade handler"
+      - runs: git push https://github.com/RusAkh/osmosis-fork/tree/main
