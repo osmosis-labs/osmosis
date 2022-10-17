@@ -32,9 +32,9 @@ func (s *QueryTestSuite) SetupSuite() {
 
 func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 	testCases := []struct {
-		name  string
-		query string
-		input interface{}
+		name   string
+		query  string
+		input  interface{}
 		output interface{}
 	}{
 		{
