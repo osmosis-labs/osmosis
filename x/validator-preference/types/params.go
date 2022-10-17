@@ -3,8 +3,6 @@ package types
 import (
 	"fmt"
 
-	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -28,7 +26,7 @@ func NewParams(valSetCreationFee sdk.Coins) Params {
 // default gamm module parameters.
 func DefaultParams() Params {
 	return Params{
-		ValsetCreationFee: sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 10_000_000)), // 10 OSMO
+		ValsetCreationFee: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10_000_000)), // 10 OSMO
 	}
 }
 

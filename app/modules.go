@@ -215,6 +215,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		poolincentivestypes.ModuleName,
 		superfluidtypes.ModuleName,
 		tokenfactorytypes.ModuleName,
+		validatorpreferencetypes.ModuleName,
 		incentivestypes.ModuleName,
 		epochstypes.ModuleName,
 		lockuptypes.ModuleName,
