@@ -172,8 +172,8 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 		suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
 		msgServer := keeper.NewMsgServerImpl(suite.App.LockupKeeper)
-		c := sdk.WrapSDKContext(suite.Ctx)
-		resp, err := msgServer.LockTokens(c, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
+		goCtx := sdk.WrapSDKContext(suite.Ctx)
+		resp, err := msgServer.LockTokens(goCtx, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 		suite.Require().NoError(err)
 
 		if test.param.isSyntheticLockup {
@@ -181,12 +181,14 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 			suite.Require().NoError(err)
 		}
 
-		_, err = msgServer.BeginUnlocking(c, types.NewMsgBeginUnlocking(test.param.lockOwner, resp.ID, test.param.coinsToUnlock))
+		_, err = msgServer.BeginUnlocking(goCtx, types.NewMsgBeginUnlocking(test.param.lockOwner, resp.ID, test.param.coinsToUnlock))
 
 		if test.expectPass {
 			suite.Require().NoError(err)
+			suite.AssertEventEmitted(suite.Ctx, types.TypeEvtBeginUnlock, 1)
 		} else {
 			suite.Require().Error(err)
+			suite.AssertEventEmitted(suite.Ctx, types.TypeEvtBeginUnlock, 0)
 		}
 	}
 }
