@@ -57,7 +57,7 @@ func newDerivedAccount(address string) DerivedAccount {
 }
 
 // underlyingCoins returns liquidity pool's underlying coin balances.
-func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sdk.Coins {
+func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.TraditionalAmmInterface) sdk.Coins {
 	balances := sdk.Coins{}
 	convertAgain := false
 	for _, coin := range originCoins {
@@ -85,7 +85,7 @@ func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sd
 // TODO: Make a separate type for this.
 func underlyingCoinsForSelectPools(
 	originCoins sdk.Coins,
-	pools map[string]gammtypes.PoolI,
+	pools map[string]gammtypes.TraditionalAmmInterface,
 	selectPoolIDs []uint64,
 ) map[uint64]sdk.Coins {
 	balancesByPool := make(map[uint64]sdk.Coins)
@@ -263,9 +263,9 @@ Example:
 			}
 
 			// collect gamm pools
-			pools := make(map[string]gammtypes.PoolI)
+			pools := make(map[string]gammtypes.TraditionalAmmInterface)
 			for _, any := range gammGenesis.Pools {
-				var pool gammtypes.PoolI
+				var pool gammtypes.TraditionalAmmInterface
 				err := clientCtx.InterfaceRegistry.UnpackAny(any, &pool)
 				if err != nil {
 					panic(err)

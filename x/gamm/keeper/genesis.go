@@ -17,7 +17,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState, unpack
 	// Also adds each genesis state pool to the x/gamm module's state
 	liquidity := sdk.Coins{}
 	for _, any := range genState.Pools {
-		var pool types.PoolI
+		var pool types.TraditionalAmmInterface
 		err := unpacker.UnpackAny(any, &pool)
 		if err != nil {
 			panic(err)

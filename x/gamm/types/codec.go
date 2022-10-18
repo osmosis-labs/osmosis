@@ -12,6 +12,7 @@ import (
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*PoolI)(nil), nil)
+	cdc.RegisterInterface((*TraditionalAmmInterface)(nil), nil)
 	cdc.RegisterConcrete(&MsgJoinPool{}, "osmosis/gamm/join-pool", nil)
 	cdc.RegisterConcrete(&MsgExitPool{}, "osmosis/gamm/exit-pool", nil)
 	cdc.RegisterConcrete(&MsgSwapExactAmountIn{}, "osmosis/gamm/swap-exact-amount-in", nil)
@@ -26,6 +27,10 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterInterface(
 		"osmosis.gamm.v1beta1.PoolI",
 		(*PoolI)(nil),
+	)
+	registry.RegisterInterface(
+		"osmosis.gamm.v1beta1.TraditionalAmmInterface",
+		(*TraditionalAmmInterface)(nil),
 	)
 
 	registry.RegisterImplementations(

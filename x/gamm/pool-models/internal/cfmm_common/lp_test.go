@@ -81,7 +81,7 @@ func TestCalcExitPool(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		pool          gammtypes.PoolI
+		pool          gammtypes.TraditionalAmmInterface
 		exitingShares sdk.Int
 		expError      bool
 	}{

@@ -13,7 +13,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
-var _ types.PoolI = &Pool{}
+var (
+	_ types.PoolI                   = &Pool{}
+	_ types.TraditionalAmmInterface = &Pool{}
+)
 
 // NewStableswapPool returns a stableswap pool
 // Invariants that are assumed to be satisfied and not checked:
