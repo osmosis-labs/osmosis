@@ -3,7 +3,7 @@ package concentrated_liquidity
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
 var (
