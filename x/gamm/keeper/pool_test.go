@@ -257,9 +257,8 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 	}
 
 	tests := map[string]struct {
-		isPokePool  bool
-		poolId      uint64
-		expectError bool
+		isPokePool bool
+		poolId     uint64
 	}{
 		"weighted pool - change weights": {
 			isPokePool: true,
@@ -292,11 +291,6 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 			ctx := suite.Ctx.WithBlockTime(time.Unix(blockTime, 0))
 
 			pool, err := k.GetPoolAndPoke(ctx, tc.poolId)
-
-			if tc.expectError {
-				suite.Require().Error(err)
-				return
-			}
 
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.poolId, pool.GetId())

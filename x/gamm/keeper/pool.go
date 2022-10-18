@@ -22,7 +22,7 @@ func (k Keeper) UnmarshalPool(bz []byte) (types.PoolI, error) {
 	return acc, k.cdc.UnmarshalInterface(bz, &acc)
 }
 
-// GetPool returns a PoolI based on it's identifier if one exists. If poolId corresponds
+// GetPoolAndPoke returns a PoolI based on it's identifier if one exists. If poolId corresponds
 // to a pool with weights (e.g. balancer), the weights of the pool are updated via PokePool prior to returning.
 // TODO: Consider rename to GetPool due to downstream API confusion.
 func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
