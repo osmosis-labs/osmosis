@@ -92,16 +92,13 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDeno
 	tokenAmountInAfterFee := tokenIn[0].Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
 
 	// TODO: Replace with spot price
-	priceLower := sdk.NewDec(4500)
-	priceCur := sdk.NewDec(5000)
-	priceUpper := sdk.NewDec(5500)
+	priceLower := sdk.NewDec(4500000000)
+	priceCur := sdk.NewDec(5000000000)
+	priceUpper := sdk.NewDec(5500000000)
 
 	sqrtpLow, _ := priceLower.ApproxSqrt()
-	sqrtpLow = sqrtpLow.Mul(sdk.NewDec(10).Power(6))
 	sqrtpCur, _ := priceCur.ApproxSqrt()
-	sqrtpCur = sqrtpCur.Mul(sdk.NewDec(10).Power(6))
 	sqrtpUpp, _ := priceUpper.ApproxSqrt()
-	sqrtpUpp = sqrtpUpp.Mul(sdk.NewDec(10).Power(6))
 
 	// TODO: Roman change out with query to pool to get this info
 	amountETH := int64(1000000)
@@ -117,7 +114,7 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDeno
 		liq = liq1
 	}
 
-	priceDiff := tokenAmountInAfterFee.QuoTruncateMut(liq).Mul(sdk.NewDec(10).Power(6))
+	priceDiff := tokenAmountInAfterFee.QuoTruncateMut(liq)
 	priceNext := sqrtpCur.Add(priceDiff)
 
 	// new amount in, will be needed later
@@ -135,16 +132,13 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDeno
 	tokenAmountInBeforeFee := tokenOut[0].Amount.ToDec().Quo(sdk.OneDec().Sub(swapFee))
 
 	// TODO: Replace with spot price
-	priceLower := sdk.NewDec(4500)
-	priceCur := sdk.NewDec(5000)
-	priceUpper := sdk.NewDec(5500)
+	priceLower := sdk.NewDec(4500000000)
+	priceCur := sdk.NewDec(5000000000)
+	priceUpper := sdk.NewDec(5500000000)
 
 	sqrtpLow, _ := priceLower.ApproxSqrt()
-	sqrtpLow = sqrtpLow.Mul(sdk.NewDec(10).Power(6))
 	sqrtpCur, _ := priceCur.ApproxSqrt()
-	sqrtpCur = sqrtpCur.Mul(sdk.NewDec(10).Power(6))
 	sqrtpUpp, _ := priceUpper.ApproxSqrt()
-	sqrtpUpp = sqrtpUpp.Mul(sdk.NewDec(10).Power(6))
 
 	// TODO: Roman change out with query to pool to get this info
 	amountETH := int64(1000000)
@@ -160,7 +154,7 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDeno
 		liq = liq1
 	}
 
-	priceDiff := tokenAmountInBeforeFee.QuoTruncateMut(liq).Mul(sdk.NewDec(10).Power(6))
+	priceDiff := tokenAmountInBeforeFee.QuoTruncateMut(liq)
 	priceNext := sqrtpCur.Add(priceDiff)
 
 	// new amount in, will be needed later
