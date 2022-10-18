@@ -68,12 +68,15 @@ func (k Keeper) JoinPool(ctx sdk.Context, tokenIn sdk.Coin, lowerTick sdk.Int, u
 		return sdk.Int{}, fmt.Errorf("validation fail")
 	}
 
-	if tokenIn.Amount.IsZero() {
+	if tokenIn.IsZero() {
 		return sdk.Int{}, fmt.Errorf("token in amount is zero")
 	}
 
+	k.UpdateTickWithNewLiquidity(ctx, poolId, lowerTick, tokenIn)
+	k.UpdateTickWithNewLiquidity(ctx, poolId, upperTick, tokenIn)
+
 	// update tick with new liquidity
-	// k.
+	k.UpdatePositionWithLiquidity(ctx, poolId, owner.String(), lowerTick, upperTick, tokenIn)
 
 	return sdk.Int{}, nil
 }

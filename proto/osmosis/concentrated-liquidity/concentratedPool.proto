@@ -23,6 +23,17 @@ message Pool {
 
   string token0 = 4;
   string token1 = 5;
+
+  string spot_price = 6 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"spot_price\"",
+    (gogoproto.nullable) = false
+  ];
+  string current_tick = 7 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"current_tick\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message TickInfo {
@@ -44,7 +55,7 @@ message Position {
 }
 
 message CurrentTick {
-  string spotPrice = 1 [
+  string spot_price = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"spot_price\"",
     (gogoproto.nullable) = false
