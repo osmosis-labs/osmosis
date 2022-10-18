@@ -215,8 +215,7 @@ func (server msgServer) JoinSwapExternAmountIn(goCtx context.Context, msg *types
 		return nil, err
 	}
 
-	tokensIn := sdk.NewCoins(msg.TokensIn...)
-	shareOutAmount, err := server.keeper.JoinSwapExactAmountIn(ctx, sender, msg.PoolId, tokensIn, msg.ShareOutMinAmount)
+	shareOutAmount, err := server.keeper.JoinSwapExactAmountIn(ctx, sender, msg.PoolId, msg.TokensIn, msg.ShareOutMinAmount)
 	if err != nil {
 		return nil, err
 	}

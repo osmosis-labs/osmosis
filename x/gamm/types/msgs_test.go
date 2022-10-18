@@ -545,6 +545,14 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 			expectPass: false,
 		},
 		{
+			name: "2 coins",
+			msg: createMsg(func(msg gammtypes.MsgJoinSwapExternAmountIn) gammtypes.MsgJoinSwapExternAmountIn {
+				msg.TokensIn = sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(150)))
+				return msg
+			}),
+			expectPass: true,
+		},
+		{
 			name: "zero criteria",
 			msg: createMsg(func(msg gammtypes.MsgJoinSwapExternAmountIn) gammtypes.MsgJoinSwapExternAmountIn {
 				msg.ShareOutMinAmount = sdk.NewInt(0)
@@ -923,15 +931,6 @@ func TestAuthzMsg(t *testing.T) {
 				Sender:            addr1,
 				PoolId:            1,
 				TokensIn:          sdk.NewCoins(coin),
-				ShareOutMinAmount: sdk.NewInt(1),
-			},
-		},
-		{
-			name: "MsgJoinSwapExternAmountIn 2 coins",
-			gammMsg: &gammtypes.MsgJoinSwapExternAmountIn{
-				Sender:            addr1,
-				PoolId:            1,
-				TokensIn:          sdk.NewCoins(coin, sdk.NewCoin("foo", sdk.NewInt(1))),
 				ShareOutMinAmount: sdk.NewInt(1),
 			},
 		},
