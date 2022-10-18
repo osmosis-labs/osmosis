@@ -1,6 +1,7 @@
 package validator_preference
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -20,6 +21,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	validatorprefclient "github.com/osmosis-labs/osmosis/v12/x/validator-preference/client"
+	"github.com/osmosis-labs/osmosis/v12/x/validator-preference/client/queryproto"
 )
 
 var (
@@ -78,6 +81,7 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rout
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	queryproto.RegisterQueryHandlerClient(context.Background(), mux, queryproto.NewQueryClient(clientCtx)) //nolint:errcheck
 }
 
 // GetTxCmd returns the capability module's root tx command.
@@ -138,6 +142,9 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
+	queryproto.RegisterQueryServer(cfg.QueryServer(), validatorprefclient.NewQuerier(am.keeper))
+
 }
 
 // RegisterInvariants registers the capability module's invariants.
