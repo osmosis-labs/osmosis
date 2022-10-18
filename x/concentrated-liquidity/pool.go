@@ -2,14 +2,24 @@ package concentrated_liquidity
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
+)
+
+var (
+	_ types.PoolI = &Pool{}
 )
 
 func (p Pool) GetAddress() sdk.AccAddress {
 	return sdk.AccAddress{}
 }
 
-func (p Pool) GetId() sdk.AccAddress {
-	return sdk.AccAddress{}
+func (p Pool) String() string {
+	return ""
+}
+
+func (p Pool) GetId() uint64 {
+	return 0
 }
 func (p Pool) GetSwapFee(ctx sdk.Context) sdk.Dec {
 	return sdk.Dec{}

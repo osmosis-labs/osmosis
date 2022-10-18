@@ -10,4 +10,11 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity";
 
-message Pool {}
+message Pool {
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (cosmos_proto.implements_interface) = "PoolI";
+
+  string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+  uint64 id = 2;
+}
