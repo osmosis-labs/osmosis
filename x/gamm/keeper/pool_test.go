@@ -241,7 +241,7 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 	)
 
 	// N.B.: We make a copy because SmoothWeightChangeParams get mutated.
-	// We would like to avoid mutating global params
+	// We would like to avoid mutating global pool assets that are used in other tests.
 	defaultPoolAssetsCopy := make([]balancertypes.PoolAsset, 2)
 	copy(defaultPoolAssetsCopy, defaultPoolAssets)
 
