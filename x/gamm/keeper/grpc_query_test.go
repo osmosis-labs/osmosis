@@ -44,6 +44,20 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 			sdk.NewInt(1000000000000000000),
 			types.ErrDenomNotFoundInPool,
 		},
+		{
+			"zero share in amount",
+			poolId,
+			"foo",
+			sdk.ZeroInt(),
+			sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
+		},
+		{
+			"negative share in amount",
+			poolId,
+			"foo",
+			sdk.NewInt(-10000),
+			sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
+		},
 	}
 
 	for _, tc := range testCases {

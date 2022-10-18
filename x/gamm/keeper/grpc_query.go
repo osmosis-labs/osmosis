@@ -177,8 +177,8 @@ func (q Querier) CalcExitPoolCoinsFromShares(ctx context.Context, req *types.Que
 	if err != nil {
 		return nil, types.ErrPoolNotFound
 	}
-	denom_liquidity := q.Keeper.GetDenomLiquidity(sdkCtx, req.TokenOutDenom)
-	if denom_liquidity == sdk.NewInt(0) {
+	denomLiquidity := q.Keeper.GetDenomLiquidity(sdkCtx, req.TokenOutDenom)
+	if denomLiquidity == sdk.ZeroInt() {
 		return nil, types.ErrDenomNotFoundInPool
 	}
 
