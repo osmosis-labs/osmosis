@@ -7,8 +7,8 @@ import (
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
-func (k Keeper) UpdateTickWithNewLiquidity(ctx sdk.Context, poolId uint64, liquidityDelta sdk.Int) {
-	tickInfo := k.getTickInfoByPoolID(ctx, poolId)
+func (k Keeper) UpdateTickWithNewLiquidity(ctx sdk.Context, poolId uint64, tickIndex sdk.Int, liquidityDelta sdk.Int) {
+	tickInfo := k.getTickInfo(ctx, poolId, tickIndex)
 
 	liquidityBefore := tickInfo.Liquidity
 	liquidityAfter := liquidityBefore.Add(liquidityDelta)
@@ -19,19 +19,19 @@ func (k Keeper) UpdateTickWithNewLiquidity(ctx sdk.Context, poolId uint64, liqui
 		tickInfo.Initialized = true
 	}
 
-	k.setTickInfoByPoolID(ctx, poolId, tickInfo)
+	k.setTickInfo(ctx, poolId, tickIndex, tickInfo)
 }
 
-func (k Keeper) getTickInfoByPoolID(ctx sdk.Context, poolId uint64) types.TickInfo {
+func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex sdk.Int) types.TickInfo {
 	store := ctx.KVStore(k.storeKey)
 	tickInfo := types.TickInfo{}
-	key := types.KeyTickByPool(poolId)
+	key := types.KeyTick(poolId, tickIndex)
 	osmoutils.MustGet(store, key, &tickInfo)
 	return tickInfo
 }
 
-func (k Keeper) setTickInfoByPoolID(ctx sdk.Context, poolId uint64, tickInfo types.TickInfo) {
+func (k Keeper) setTickInfo(ctx sdk.Context, poolId uint64, tickIndex sdk.Int, tickInfo types.TickInfo) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.KeyTickByPool(poolId)
+	key := types.KeyTick(poolId, tickIndex)
 	osmoutils.MustSet(store, key, &tickInfo)
 }
