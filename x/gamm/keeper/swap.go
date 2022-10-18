@@ -99,7 +99,7 @@ func (k Keeper) SwapExactAmountOut(
 func (k Keeper) swapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	pool types.PoolI,
+	pool types.TraditionalAmmInterface,
 	tokenInDenom string,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,

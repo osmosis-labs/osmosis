@@ -27,8 +27,6 @@ type PoolI interface {
 	GetExitFee(ctx sdk.Context) sdk.Dec
 	// Returns whether the pool has swaps enabled at the moment
 	IsActive(ctx sdk.Context) bool
-	// GetTotalPoolLiquidity returns the coins in the pool owned by all LPs
-	GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins
 	// GetTotalShares returns the total number of LP shares in the pool
 	GetTotalShares() sdk.Int
 
@@ -51,6 +49,14 @@ type PoolI interface {
 	// For example, if this was a UniV2 50-50 pool, with 2 ETH, and 8000 UST
 	// pool.SpotPrice(ctx, "eth", "ust") = 4000.00
 	SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error)
+}
+
+// TraditionalAmmInterface defines an interface for pools representing traditional AMM.
+type TraditionalAmmInterface interface {
+	PoolI
+
+	// GetTotalPoolLiquidity returns the coins in the pool owned by all LPs
+	GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins
 
 	// JoinPool joins the pool using all of the tokensIn provided.
 	// The AMM swaps to the correct internal ratio should be and returns the number of shares created.
@@ -88,7 +94,7 @@ type PoolI interface {
 // amount of coins to get out.
 // See definitions below.
 type PoolAmountOutExtension interface {
-	PoolI
+	TraditionalAmmInterface
 
 	// CalcTokenInShareAmountOut returns the number of tokenInDenom tokens
 	// that would be returned if swapped for an exact number of shares (shareOutAmount).
@@ -125,7 +131,7 @@ type PoolAmountOutExtension interface {
 // WeightedPoolExtension is an extension of the PoolI interface
 // That defines an additional API for handling the pool's weights.
 type WeightedPoolExtension interface {
-	PoolI
+	TraditionalAmmInterface
 
 	// PokePool determines if a pool's weights need to be updated and updates
 	// them if so.
