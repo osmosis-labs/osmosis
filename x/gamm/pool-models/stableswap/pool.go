@@ -293,7 +293,7 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 // If an all-asset join is not possible, returns an error.
 func (p Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
 	// ensure that there aren't too many or too few assets in `tokensIn`
-	if tokensIn.Len() != p.NumAssets() {
+	if tokensIn.Len() != p.NumAssets() || !tokensIn.DenomsSubsetOf(p.GetTotalPoolLiquidity(ctx)) {
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("no-swap joins require LP'ing with all assets in pool")
 	}
 
