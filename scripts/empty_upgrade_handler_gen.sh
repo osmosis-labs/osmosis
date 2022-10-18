@@ -39,5 +39,4 @@
  sed -i '' "s|.*/x/lockup/types.*|\tlockuptypes $module/x/lockup/types$bracks|" $new_file/upgrades.go
 
  # change e2e version in makefile
- echo E2E_UPGRADE_VERSION := ${bracks}v$latest_version$bracks
  sed -i '' "s/E2E_UPGRADE_VERSION := ${bracks}v$latest_version$bracks/E2E_UPGRADE_VERSION := ${bracks}v$version_create$bracks/" ./Makefile
