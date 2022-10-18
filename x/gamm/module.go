@@ -29,6 +29,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/client/cli"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/stableswap"
 	simulation "github.com/osmosis-labs/osmosis/v12/x/gamm/simulation"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
@@ -88,7 +89,7 @@ func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 	balancer.RegisterInterfaces(registry)
-	// stableswap.RegisterInterfaces(registry)
+	stableswap.RegisterInterfaces(registry)
 }
 
 type AppModule struct {
