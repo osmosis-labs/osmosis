@@ -86,23 +86,22 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, priceUpper,
 	tokenAmountInAfterFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
 
 	//price_low := sdk.NewDec(4545)
-	price_cur := sdk.NewDec(5000)
-	price_upp := sdk.NewDec(5500)
+	priceCur := sdk.NewDec(5000)
+	//price_upp := sdk.NewDec(5500)
 
-	sqrtp_low, _ := priceLower.ApproxSqrt()
-	sqrtp_low = sqrtp_low.Mul(sdk.NewDec(10).Power(6))
-	sqrtp_cur, _ := price_cur.ApproxSqrt()
-	sqrtp_cur = sqrtp_cur.Mul(sdk.NewDec(10).Power(6))
-	sqrtp_upp, _ := price_upp.ApproxSqrt()
-	sqrtp_upp = sqrtp_upp.Mul(sdk.NewDec(10).Power(6))
+	sqrtpLow, _ := priceLower.ApproxSqrt()
+	sqrtpLow = sqrtpLow.Mul(sdk.NewDec(10).Power(6))
+	sqrtpCur, _ := priceCur.ApproxSqrt()
+	sqrtpCur = sqrtpCur.Mul(sdk.NewDec(10).Power(6))
+	sqrtpUpp, _ := priceUpper.ApproxSqrt()
+	sqrtpUpp = sqrtpUpp.Mul(sdk.NewDec(10).Power(6))
 
 	amountETH := int64(1000000)
 	amountUSDC := int64(5000000000)
 
-	liq0 := Liquidity0(amountETH, sqrtp_cur, sqrtp_upp)
-	fmt.Printf("liq0 %v \n", liq0)
-	liq1 := Liquidity1(amountUSDC, sqrtp_cur, sqrtp_low)
-	fmt.Printf("liq1 %v \n", liq1)
+	liq0 := Liquidity0(amountETH, sqrtpCur, sqrtpUpp)
+	liq1 := Liquidity1(amountUSDC, sqrtpCur, sqrtpLow)
+
 	var liq sdk.Dec
 	if liq0.LT(liq1) {
 		liq = liq0
@@ -110,12 +109,10 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, priceUpper,
 		liq = liq1
 	}
 
-	price_diff := tokenAmountInAfterFee.QuoTruncateMut(liq).Mul(sdk.NewDec(10).Power(6))
-	fmt.Printf("price_diff %v \n", price_diff)
+	priceDiff := tokenAmountInAfterFee.QuoTruncateMut(liq).Mul(sdk.NewDec(10).Power(6))
+	priceNext := sqrtpCur.Add(priceDiff)
 
-	price_next := sqrtp_cur.Add(price_diff)
-
-	amountOut := CalcAmount0(liq, price_next, sqrtp_cur)
+	amountOut := CalcAmount0(liq, priceNext, sqrtpCur)
 	fmt.Printf("amount_out %v \n", amountOut.Quo(sdk.NewDec(10).Power(6)))
 	return sdk.Coin{}, nil
 }
