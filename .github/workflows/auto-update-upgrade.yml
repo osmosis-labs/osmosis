@@ -6,7 +6,23 @@ on:
 
 jobs:
   build:
-    name: Creating new upgrade handler and updating e2e in makefile
     runs-on: ubuntu-latest
     steps:
-      run: ./scripts/empty_upgrade_handler_gen.sh
+      - uses: actions/checkout@v3
+      # - run: git checkout HEAD^
+      - run: bash ./scripts/empty_upgrade_handler_gen.sh 
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          token: https://github.com/RusAkh/osmosis-fork
+          commit-message: Auto post release updgrade
+          delete-branch: true
+          branch: main
+          body: |
+            Update report
+            - Created a new empty upgrade handler
+            - Increased E2E_UPGRADE_VERSION in Makefile by 1
+          labels: |
+            auto
+            e2e
+            app-wiring
