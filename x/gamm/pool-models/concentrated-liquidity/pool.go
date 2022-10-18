@@ -23,6 +23,9 @@ func NewConcentratedLiquidityPool(poolId uint64) (Pool, error) {
 	return *pool, nil
 }
 
+// Liquidity0 takes an amount of asset0 in the pool as well as the sqrtpCur and the nextPrice
+// pa is the smaller of sqrtpCur and the nextPrice
+// pb is the larger of sqrtpCur and the nextPrice
 func Liquidity0(amount int64, pa, pb sdk.Dec) sdk.Dec {
 	if pa.GT(pb) {
 		pa, pb = pb, pa
@@ -33,6 +36,9 @@ func Liquidity0(amount int64, pa, pb sdk.Dec) sdk.Dec {
 	return amt.Mul(product.Quo(diff))
 }
 
+// Liquidity1 takes an amount of asset1 in the pool as well as the sqrtpCur and the nextPrice
+// pa is the smaller of sqrtpCur and the nextPrice
+// pb is the larger of sqrtpCur and the nextPrice
 func Liquidity1(amount int64, pa, pb sdk.Dec) sdk.Dec {
 	if pa.GT(pb) {
 		pa, pb = pb, pa
@@ -42,6 +48,9 @@ func Liquidity1(amount int64, pa, pb sdk.Dec) sdk.Dec {
 	return amt.Quo(diff).Mul(sdk.NewDec(10).Power(6))
 }
 
+// CalcAmount0 takes the asset with the smaller liqudity in the pool as well as the sqrtpCur and the nextPrice
+// pa is the smaller of sqrtpCur and the nextPrice
+// pb is the larger of sqrtpCur and the nextPrice
 func CalcAmount0(liq, pa, pb sdk.Dec) sdk.Dec {
 	if pa.GT(pb) {
 		pa, pb = pb, pa
@@ -51,6 +60,9 @@ func CalcAmount0(liq, pa, pb sdk.Dec) sdk.Dec {
 	return (mult.Mul(diff)).Quo(pb).Quo(pa)
 }
 
+// CalcAmount1 takes the asset with the smaller liqudity in the pool as well as the sqrtpCur and the nextPrice
+// pa is the smaller of sqrtpCur and the nextPrice
+// pb is the larger of sqrtpCur and the nextPrice
 func CalcAmount1(liq, pa, pb sdk.Dec) sdk.Dec {
 	if pa.GT(pb) {
 		pa, pb = pb, pa
