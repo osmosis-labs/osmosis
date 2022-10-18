@@ -23,10 +23,10 @@ func NewConcentratedLiquidityPool(poolId uint64) (Pool, error) {
 	return *pool, nil
 }
 
-// Liquidity0 takes an amount of asset0 in the pool as well as the sqrtpCur and the nextPrice
+// liquidity0 takes an amount of asset0 in the pool as well as the sqrtpCur and the nextPrice
 // pa is the smaller of sqrtpCur and the nextPrice
 // pb is the larger of sqrtpCur and the nextPrice
-func Liquidity0(amount int64, pa, pb sdk.Dec) sdk.Dec {
+func liquidity0(amount int64, pa, pb sdk.Dec) sdk.Dec {
 	if pa.GT(pb) {
 		pa, pb = pb, pa
 	}
@@ -36,10 +36,10 @@ func Liquidity0(amount int64, pa, pb sdk.Dec) sdk.Dec {
 	return amt.Mul(product.Quo(diff))
 }
 
-// Liquidity1 takes an amount of asset1 in the pool as well as the sqrtpCur and the nextPrice
+// liquidity1 takes an amount of asset1 in the pool as well as the sqrtpCur and the nextPrice
 // pa is the smaller of sqrtpCur and the nextPrice
 // pb is the larger of sqrtpCur and the nextPrice
-func Liquidity1(amount int64, pa, pb sdk.Dec) sdk.Dec {
+func liquidity1(amount int64, pa, pb sdk.Dec) sdk.Dec {
 	if pa.GT(pb) {
 		pa, pb = pb, pa
 	}
@@ -48,10 +48,10 @@ func Liquidity1(amount int64, pa, pb sdk.Dec) sdk.Dec {
 	return amt.Quo(diff).Mul(sdk.NewDec(10).Power(6))
 }
 
-// CalcAmount0 takes the asset with the smaller liqudity in the pool as well as the sqrtpCur and the nextPrice
+// calcAmount0 takes the asset with the smaller liqudity in the pool as well as the sqrtpCur and the nextPrice
 // pa is the smaller of sqrtpCur and the nextPrice
 // pb is the larger of sqrtpCur and the nextPrice
-func CalcAmount0(liq, pa, pb sdk.Dec) sdk.Dec {
+func calcAmount0(liq, pa, pb sdk.Dec) sdk.Dec {
 	if pa.GT(pb) {
 		pa, pb = pb, pa
 	}
@@ -60,10 +60,10 @@ func CalcAmount0(liq, pa, pb sdk.Dec) sdk.Dec {
 	return (mult.Mul(diff)).Quo(pb).Quo(pa)
 }
 
-// CalcAmount1 takes the asset with the smaller liqudity in the pool as well as the sqrtpCur and the nextPrice
+// calcAmount1 takes the asset with the smaller liqudity in the pool as well as the sqrtpCur and the nextPrice
 // pa is the smaller of sqrtpCur and the nextPrice
 // pb is the larger of sqrtpCur and the nextPrice
-func CalcAmount1(liq, pa, pb sdk.Dec) sdk.Dec {
+func calcAmount1(liq, pa, pb sdk.Dec) sdk.Dec {
 	if pa.GT(pb) {
 		pa, pb = pb, pa
 	}
@@ -116,22 +116,17 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDeno
 	amountETH := int64(1000000)
 	amountUSDC := int64(5000000000)
 
-	liq0 := Liquidity0(amountETH, sqrtpCur, sqrtpUpp)
-	liq1 := Liquidity1(amountUSDC, sqrtpCur, sqrtpLow)
+	liq0 := liquidity0(amountETH, sqrtpCur, sqrtpUpp)
+	liq1 := liquidity1(amountUSDC, sqrtpCur, sqrtpLow)
 
-	var liq sdk.Dec
-	if liq0.LT(liq1) {
-		liq = liq0
-	} else {
-		liq = liq1
-	}
+	liq := sdk.MinDec(liq0, liq1)
 
 	priceDiff := tokenAmountInAfterFee.QuoTruncateMut(liq)
 	priceNext := sqrtpCur.Add(priceDiff)
 
 	// new amount in, will be needed later
-	//amountIn = CalcAmount1(liq, priceNext, sqrtpCur)
-	amountOut := CalcAmount0(liq, priceNext, sqrtpCur)
+	//amountIn = calcAmount1(liq, priceNext, sqrtpCur)
+	amountOut := calcAmount0(liq, priceNext, sqrtpCur)
 	coinOut := sdk.NewCoin(tokenOutDenom, amountOut.TruncateInt())
 	return coinOut, nil
 }
@@ -156,22 +151,17 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDeno
 	amountETH := int64(1000000)
 	amountUSDC := int64(5000000000)
 
-	liq0 := Liquidity0(amountETH, sqrtpCur, sqrtpUpp)
-	liq1 := Liquidity1(amountUSDC, sqrtpCur, sqrtpLow)
+	liq0 := liquidity0(amountETH, sqrtpCur, sqrtpUpp)
+	liq1 := liquidity1(amountUSDC, sqrtpCur, sqrtpLow)
 
-	var liq sdk.Dec
-	if liq0.LT(liq1) {
-		liq = liq0
-	} else {
-		liq = liq1
-	}
+	liq := sdk.MinDec(liq0, liq1)
 
 	priceDiff := tokenAmountInBeforeFee.QuoTruncateMut(liq)
 	priceNext := sqrtpCur.Add(priceDiff)
 
 	// new amount in, will be needed later
-	//amountIn := CalcAmount1(liq, priceNext, sqrtpCur)
-	amountIn := CalcAmount0(liq, priceNext, sqrtpCur)
+	//amountIn := calcAmount1(liq, priceNext, sqrtpCur)
+	amountIn := calcAmount0(liq, priceNext, sqrtpCur)
 	coinIn := sdk.NewCoin(tokenInDenom, amountIn.TruncateInt())
 	return coinIn, nil
 }
