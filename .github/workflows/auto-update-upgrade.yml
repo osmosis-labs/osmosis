@@ -1,0 +1,12 @@
+name: On release auto upgrade
+
+on:
+  release: 
+    types: [created]
+
+jobs:
+  build:
+    name: Creating new upgrade handler and updating e2e in makefile
+    runs-on: ubuntu-latest
+    steps:
+      run: ./scripts/empty_upgrade_handler_gen.sh
