@@ -48,7 +48,7 @@ func liquidity1(amount int64, pa, pb sdk.Dec) sdk.Dec {
 	return amt.Quo(diff).Mul(sdk.NewDec(10).Power(6))
 }
 
-// calcAmount0 takes the asset with the smaller liqudity in the pool as well as the sqrtpCur and the nextPrice
+// calcAmount0 takes the asset with the smaller liqudity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 0
 // pa is the smaller of sqrtpCur and the nextPrice
 // pb is the larger of sqrtpCur and the nextPrice
 func calcAmount0(liq, pa, pb sdk.Dec) sdk.Dec {
@@ -60,7 +60,7 @@ func calcAmount0(liq, pa, pb sdk.Dec) sdk.Dec {
 	return (mult.Mul(diff)).Quo(pb).Quo(pa)
 }
 
-// calcAmount1 takes the asset with the smaller liqudity in the pool as well as the sqrtpCur and the nextPrice
+// calcAmount1 takes the asset with the smaller liqudity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 1
 // pa is the smaller of sqrtpCur and the nextPrice
 // pb is the larger of sqrtpCur and the nextPrice
 func calcAmount1(liq, pa, pb sdk.Dec) sdk.Dec {
