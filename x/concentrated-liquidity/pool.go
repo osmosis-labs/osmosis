@@ -8,22 +8,6 @@ import (
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
-func NewConcentratedPool(poolId uint64, firstDenom string, secondDenom string) (types.Pool, error) {
-	denom0 := firstDenom
-	denom1 := secondDenom
-
-	// we store token in lexiographical order
-	if denom0 < denom1 {
-		denom0, denom1 = secondDenom, firstDenom
-	}
-	pool := types.Pool{
-		// TODO: implement pool address method
-		// Address: types.NewPoolAddress(poolId).String(),
-		Id: poolId,
-	}
-	return pool, nil
-}
-
 func Liquidity0(amount int64, pa, pb sdk.Dec) sdk.Dec {
 	if pa.GT(pb) {
 		pa, pb = pb, pa
@@ -60,7 +44,7 @@ func CalcAmount1(liq, pa, pb sdk.Dec) sdk.Dec {
 	return liq.Mul(diff).Quo(sdk.NewDec(10).Power(6))
 }
 
-func (k Keeper) JoinPool(ctx sdk.Context, tokenIn sdk.Coin, lowerTick sdk.Int, upperTick sdk.Int) (numShares sdk.Int, err error) {
+func (k Keeper) JoinPool(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokenIn sdk.Int, lowerTick sdk.Int, upperTick sdk.Int) (numShares sdk.Int, err error) {
 	// first check and validate arguments
 	if lowerTick.GTE(types.MaxTick) || lowerTick.LT(types.MinTick) || upperTick.GT(types.MaxTick) {
 		// TODO: come back to errors

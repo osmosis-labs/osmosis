@@ -24,7 +24,7 @@ message Pool {
   string token0 = 4;
   string token1 = 5;
 
-  string spot_price = 6 [
+  string current_sqrt_price = 6 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"spot_price\"",
     (gogoproto.nullable) = false
