@@ -240,6 +240,11 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 		blockTime = startTime + 100
 	)
 
+	// N.B.: We make a copy because SmoothWeightChangeParams get mutated.
+	// We would like to avoid mutating global params
+	defaultPoolAssetsCopy := make([]balancertypes.PoolAsset, 2)
+	copy(defaultPoolAssetsCopy, defaultPoolAssets)
+
 	startPoolWeightAssets := []balancertypes.PoolAsset{
 		{
 			Weight: defaultPoolAssets[0].Weight.Quo(sdk.NewInt(2)),
@@ -258,14 +263,14 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 	}{
 		"weighted pool - change weights": {
 			isPokePool: true,
-			poolId: suite.prepareCustomBalancerPool(defaultAcctFunds, defaultPoolAssets, balancer.PoolParams{
+			poolId: suite.prepareCustomBalancerPool(defaultAcctFunds, startPoolWeightAssets, balancer.PoolParams{
 				SwapFee: defaultSwapFee,
 				ExitFee: defaultExitFee,
 				SmoothWeightChangeParams: &balancer.SmoothWeightChangeParams{
 					StartTime:          time.Unix(startTime, 0), // start time is before block time so the weights should change
 					Duration:           time.Hour,
 					InitialPoolWeights: startPoolWeightAssets,
-					TargetPoolWeights:  defaultPoolAssets,
+					TargetPoolWeights:  defaultPoolAssetsCopy,
 				},
 			}),
 		},
@@ -283,8 +288,6 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 
 	for name, tc := range tests {
 		suite.Run(name, func() {
-			// suite.SetupTest()
-
 			k := suite.App.GAMMKeeper
 			ctx := suite.Ctx.WithBlockTime(time.Unix(blockTime, 0))
 
@@ -303,16 +306,14 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 				pokePool, ok := pool.(types.WeightedPoolExtension)
 				suite.Require().True(ok)
 
-				poolAssetWeight0, err := pokePool.GetTokenWeight(defaultPoolAssets[0].Token.Denom)
+				poolAssetWeight0, err := pokePool.GetTokenWeight(startPoolWeightAssets[0].Token.Denom)
 				suite.Require().NoError(err)
 
-				poolAssetWeight1, err := pokePool.GetTokenWeight(defaultPoolAssets[1].Token.Denom)
+				poolAssetWeight1, err := pokePool.GetTokenWeight(startPoolWeightAssets[1].Token.Denom)
 				suite.Require().NoError(err)
 
-				expectedWeight0 := defaultPoolAssets[0].Weight
-				expectedWeight1 := defaultPoolAssets[1].Weight
-				suite.Require().Equal(expectedWeight0, poolAssetWeight0)
-				suite.Require().Equal(expectedWeight1, poolAssetWeight1)
+				suite.Require().NotEqual(startPoolWeightAssets[0].Weight, poolAssetWeight0)
+				suite.Require().NotEqual(startPoolWeightAssets[1].Weight, poolAssetWeight1)
 				return
 			}
 
