@@ -299,7 +299,6 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 			}
 
 			suite.Require().NoError(err)
-
 			suite.Require().Equal(tc.poolId, pool.GetId())
 
 			if tc.isPokePool {
