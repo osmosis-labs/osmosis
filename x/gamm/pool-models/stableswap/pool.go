@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -316,9 +315,6 @@ func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec)
 func (p Pool) CalcExitPoolCoinsFromShares(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
 	return cfmm_common.CalcExitPool(ctx, &p, exitingShares, exitFee)
 }
-
-// no-op for stableswap
-func (p *Pool) PokePool(blockTime time.Time) {}
 
 // SetStableSwapScalingFactors sets scaling factors for pool to the given amount
 // It should only be able to be successfully called by the pool's ScalingFactorGovernor
