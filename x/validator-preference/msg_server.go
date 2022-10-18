@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v12/x/validator-preference/types"
@@ -25,27 +24,7 @@ var _ types.MsgServer = msgServer{}
 func (server msgServer) SetValidatorSetPreference(goCtx context.Context, msg *types.MsgSetValidatorSetPreference) (*types.MsgSetValidatorSetPreferenceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// new user preference
-	preferences := msg.Preferences
-
-	// check if a user already has a validator-set created
-	existingValidators, found := server.keeper.GetValidatorSetPreference(ctx, msg.Delegator)
-	if found {
-		// check if the new preferences is the same as the existing preferences
-		isEqual := server.keeper.SortAndCompareValidatorSet(preferences, existingValidators.Preferences)
-		if isEqual {
-			return nil, fmt.Errorf("The preferences (validator and weights) are the same")
-		}
-	}
-
-	// checks that all the validators exist on chain
-	err := server.keeper.ValidatePreferences(ctx, preferences)
-	if err != nil {
-		return nil, err
-	}
-
-	// charge fee to execute this message
-	err = server.keeper.ChargeForCreateValSet(ctx, msg.Delegator)
+	err := server.keeper.SetupValidatorSetPreference(ctx, msg.Delegator, msg.Preferences)
 	if err != nil {
 		return nil, err
 	}
