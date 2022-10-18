@@ -48,9 +48,8 @@ func CalcAmount0(liq, pa, pb sdk.Dec) sdk.Dec {
 		pa, pb = pb, pa
 	}
 	diff := pb.Sub(pa)
-	quotient := pb.Quo(pa)
 	mult := liq.Mul(sdk.NewDec(10).Power(6))
-	return (mult.Mul(diff)).Quo(quotient)
+	return (mult.Mul(diff)).Quo(pb).Quo(pa)
 }
 
 func CalcAmount1(liq, pa, pb sdk.Dec) sdk.Dec {
@@ -81,13 +80,15 @@ func (k Keeper) JoinPool(ctx sdk.Context, tokenIn sdk.Coin, lowerTick sdk.Int, u
 func (k Keeper) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
 	return sdk.Coin{}, nil
 }
-func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, priceUpper, priceLower sdk.Dec, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
-	//amount_in := sdk.NewDec(42000000)
-	tokenAmountInAfterFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
 
-	//price_low := sdk.NewDec(4545)
+// this only works on a single directional trade, will implement bi directional trade in next milestone
+func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
+	tokenAmountInAfterFee := tokenIn[0].Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
+
+	// TODO: Replace with spot price
+	priceLower := sdk.NewDec(4500)
 	priceCur := sdk.NewDec(5000)
-	//price_upp := sdk.NewDec(5500)
+	priceUpper := sdk.NewDec(5500)
 
 	sqrtpLow, _ := priceLower.ApproxSqrt()
 	sqrtpLow = sqrtpLow.Mul(sdk.NewDec(10).Power(6))
@@ -96,6 +97,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, priceUpper,
 	sqrtpUpp, _ := priceUpper.ApproxSqrt()
 	sqrtpUpp = sqrtpUpp.Mul(sdk.NewDec(10).Power(6))
 
+	// TODO: Roman change out with query to pool to get this info
 	amountETH := int64(1000000)
 	amountUSDC := int64(5000000000)
 
@@ -112,9 +114,11 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, priceUpper,
 	priceDiff := tokenAmountInAfterFee.QuoTruncateMut(liq).Mul(sdk.NewDec(10).Power(6))
 	priceNext := sqrtpCur.Add(priceDiff)
 
+	// new amount in, will be needed later
+	//amountIn = CalcAmount1(liq, priceNext, sqrtpCur)
 	amountOut := CalcAmount0(liq, priceNext, sqrtpCur)
-	fmt.Printf("amount_out %v \n", amountOut.Quo(sdk.NewDec(10).Power(6)))
-	return sdk.Coin{}, nil
+	coinOut := sdk.NewCoin(tokenOutDenom, amountOut.TruncateInt())
+	return coinOut, nil
 }
 func (k Keeper) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
 	return sdk.Coin{}, nil
