@@ -7,21 +7,6 @@ import (
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
-// func (k Keeper) UpdateTickWithNewLiquidity(ctx sdk.Context, poolId uint64, tickIndex sdk.Int, liquidityDelta sdk.Int) {
-// 	tickInfo := k.getTickInfoByPoolIDAndTickIndex(ctx, poolId, tickIndex)
-
-// 	liquidityBefore := tickInfo.Liquidity
-// 	liquidityAfter := liquidityBefore.Add(liquidityDelta)
-
-// 	tickInfo.Liquidity = liquidityAfter
-
-// 	if liquidityBefore == sdk.ZeroInt() {
-// 		tickInfo.Initialized = true
-// 	}
-
-// 	k.setTickInfoByPoolIDAndTickIndex(ctx, poolId, tickIndex, tickInfo)
-// }
-
 func (k Keeper) UpdatePositionWithLiquidity(ctx sdk.Context,
 	poolId uint64,
 	owner string,
