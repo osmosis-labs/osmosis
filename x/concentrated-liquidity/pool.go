@@ -1,6 +1,8 @@
 package concentrated_liquidity
 
 import (
+	fmt "fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
@@ -104,8 +106,11 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom 
 }
 
 // this only works on a single directional trade, will implement bi directional trade in next milestone
-func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
-	tokenAmountInAfterFee := tokenIn[0].Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
+func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokensIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
+	tokenIn := tokensIn[0]
+	asset0 := "eth"
+	asset1 := "usdc"
+	tokenAmountInAfterFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
 
 	// TODO: Replace with spot price
 	priceLower := sdk.NewDec(4500000000)
@@ -124,14 +129,28 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDeno
 	liq1 := liquidity1(amountUSDC, sqrtpCur, sqrtpLow)
 
 	liq := sdk.MinDec(liq0, liq1)
+	var coinOut sdk.Coin
+	if tokenIn.Denom == asset1 {
+		priceDiff := tokenAmountInAfterFee.Quo(liq)
+		priceNext := sqrtpCur.Add(priceDiff)
 
-	priceDiff := tokenAmountInAfterFee.QuoTruncateMut(liq)
-	priceNext := sqrtpCur.Add(priceDiff)
+		// new amount in, will be needed later
+		//amountIn = calcAmount1(liq, priceNext, sqrtpCur)
+		amountOut := calcAmount0(liq, priceNext, sqrtpCur)
+		coinOut = sdk.NewCoin(tokenOutDenom, amountOut.TruncateInt())
+	} else if tokenIn.Denom == asset0 {
+		priceNextTop := liq.Mul(sdk.NewDec(10).Power(6).Mul(sqrtpCur))
+		priceNextBot := liq.Mul(sdk.NewDec(10).Power(6)).Add(tokenAmountInAfterFee.Mul(sqrtpCur))
+		priceNext := priceNextTop.Quo(priceNextBot)
 
-	// new amount in, will be needed later
-	//amountIn = calcAmount1(liq, priceNext, sqrtpCur)
-	amountOut := calcAmount0(liq, priceNext, sqrtpCur)
-	coinOut := sdk.NewCoin(tokenOutDenom, amountOut.TruncateInt())
+		// new amount in, will be needed later
+		//amountIn = calcAmount1(liq, priceNext, sqrtpCur)
+		amountOut := calcAmount1(liq, priceNext, sqrtpCur)
+		amountOut = amountOut.Mul(sdk.NewDec(10).Power(6))
+		coinOut = sdk.NewCoin(tokenOutDenom, amountOut.TruncateInt())
+	} else {
+		return sdk.Coin{}, fmt.Errorf("tokenIn does not match any asset in pool")
+	}
 	return coinOut, nil
 }
 
@@ -139,8 +158,11 @@ func (p Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDeno
 	return sdk.Coin{}, nil
 }
 
-func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
-	tokenAmountInBeforeFee := tokenOut[0].Amount.ToDec().Quo(sdk.OneDec().Sub(swapFee))
+func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokensOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
+	tokenOut := tokensOut[0]
+	tokenOutAmt := tokenOut.Amount.ToDec()
+	asset0 := "eth"
+	asset1 := "usdc"
 
 	// TODO: Replace with spot price
 	priceLower := sdk.NewDec(4500000000)
@@ -160,12 +182,31 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDeno
 
 	liq := sdk.MinDec(liq0, liq1)
 
-	priceDiff := tokenAmountInBeforeFee.QuoTruncateMut(liq)
-	priceNext := sqrtpCur.Add(priceDiff)
+	var coinIn sdk.Coin
+	if tokenOut.Denom == asset1 {
+		priceDiff := tokenOutAmt.Quo(liq)
+		priceNext := sqrtpCur.Add(priceDiff)
 
-	// new amount in, will be needed later
-	//amountIn := calcAmount1(liq, priceNext, sqrtpCur)
-	amountIn := calcAmount0(liq, priceNext, sqrtpCur)
-	coinIn := sdk.NewCoin(tokenInDenom, amountIn.TruncateInt())
+		// new amount in, will be needed later
+		// amountIn = calcAmount1(liq, priceNext, sqrtpCur)
+		amountIn := calcAmount0(liq, priceNext, sqrtpCur)
+		// fee logic
+		amountIn = amountIn.Quo(sdk.OneDec().Sub(swapFee))
+		coinIn = sdk.NewCoin(tokenInDenom, amountIn.TruncateInt())
+	} else if tokenOut.Denom == asset0 {
+		priceNextTop := liq.Mul(sdk.NewDec(10).Power(6).Mul(sqrtpCur))
+		priceNextBot := liq.Mul(sdk.NewDec(10).Power(6)).Add(tokenOutAmt.Mul(sqrtpCur))
+		priceNext := priceNextTop.Quo(priceNextBot)
+
+		// new amount in, will be needed later
+		// amountIn = calcAmount1(liq, priceNext, sqrtpCur)
+		amountIn := calcAmount1(liq, priceNext, sqrtpCur)
+		amountIn = amountIn.Mul(sdk.NewDec(10).Power(6))
+		// fee logic
+		amountIn = amountIn.Quo(sdk.OneDec().Sub(swapFee))
+		coinIn = sdk.NewCoin(tokenInDenom, amountIn.TruncateInt())
+	} else {
+		return sdk.Coin{}, fmt.Errorf("tokenIn does not match any asset in pool")
+	}
 	return coinIn, nil
 }
