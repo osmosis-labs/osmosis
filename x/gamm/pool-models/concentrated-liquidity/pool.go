@@ -186,7 +186,8 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokensOut sdk.Coins, tokenInDen
 		//amountIn = calcAmount1(liq, priceNext, sqrtpCur)
 		amountOut := calcAmount0(liq, priceNext, sqrtpCur)
 		coinIn = sdk.NewCoin(tokenInDenom, amountOut.TruncateInt())
-		coinIn.Amount = (coinIn.Amount.ToDec().Quo(sdk.OneDec().Sub(swapFee))).TruncateInt()
+		//need to figure out fee logic here
+		//coinIn.Amount = (coinIn.Amount.ToDec().Quo(sdk.OneDec().Sub(swapFee))).TruncateInt()
 	} else if tokenIn.Denom == asset0 {
 		priceNextTop := liq.Mul(sdk.NewDec(10).Power(6).Mul(sqrtpCur))
 		priceNextBot := liq.Mul(sdk.NewDec(10).Power(6)).Add(tokenOutAmt.Mul(sqrtpCur))
@@ -195,9 +196,9 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokensOut sdk.Coins, tokenInDen
 		// new amount in, will be needed later
 		//amountIn = calcAmount1(liq, priceNext, sqrtpCur)
 		amountOut := calcAmount1(liq, priceNext, sqrtpCur)
-		fmt.Printf("ADAM %v \n", amountOut)
 		coinIn = sdk.NewCoin(tokenInDenom, amountOut.TruncateInt())
-		coinIn.Amount = (coinIn.Amount.ToDec().Quo(sdk.OneDec().Sub(swapFee))).TruncateInt()
+		//need to figure out fee logic here
+		//coinIn.Amount = (coinIn.Amount.ToDec().Quo(sdk.OneDec().Sub(swapFee))).TruncateInt()
 	} else {
 		return sdk.Coin{}, fmt.Errorf("tokenIn does not match any asset in pool")
 	}

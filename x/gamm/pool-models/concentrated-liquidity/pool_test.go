@@ -49,11 +49,5 @@ func TestCalcInAmtGivenOut(t *testing.T) {
 	fmt.Printf("%v", amountIn)
 	require.Equal(t, sdk.NewDec(66), amountIn.Amount.ToDec())
 
-	tokensOut = sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(13370)))
-	tokenInDenom = "usdc"
-	swapFee = sdk.NewDecWithPrec(2, 2)
-
-	amountIn, _ = pool.CalcOutAmtGivenIn(ctx, tokensOut, tokenInDenom, swapFee)
-	fmt.Printf("%v", amountIn)
-	require.Equal(t, sdk.NewDec(65), amountIn.Amount.ToDec())
+	// TODO: Once figure out fee logic, add test here with non zero fee
 }
