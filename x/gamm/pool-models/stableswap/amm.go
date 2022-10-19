@@ -179,8 +179,8 @@ func solveCFMMBinarySearch(constantFunction func(osmomath.BigDec, osmomath.BigDe
 
 		if kRatio.LT(osmomath.OneDec()) {
 			// k_0 < k. Need to find an upperbound. Worst case assume a linear relationship, gives an upperbound
-    		// TODO: In the future, we can derive better bounds via reasoning about coefficients in the cubic
-    		// These are quite close when we are in the "stable" part of the curve though.
+			// TODO: In the future, we can derive better bounds via reasoning about coefficients in the cubic
+			// These are quite close when we are in the "stable" part of the curve though.
 			xHighEst = xReserve.Quo(kRatio).Ceil()
 		} else if kRatio.GT(osmomath.OneDec()) {
 			// need to find a lowerbound. We could use a cubic relation, but for now we just set it to 0.
