@@ -12,7 +12,7 @@ jobs:
         # with:
         #   ref: ${{ inputs.target-branch }}
       - name: CHECKS
-        run: echo ${{ env.GITHUB_WORKSPACE }}
+        run: echo ${{ github.event.repository.default_branch }}
 
       - name: Running script
         run: bash ./scripts/empty_upgrade_handler_gen.sh 
@@ -20,7 +20,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         with:
-          base: main
+          base: ${{ github.event.repository.default_branch }}
           body: |
             Update report
             - Created a new empty upgrade handler
