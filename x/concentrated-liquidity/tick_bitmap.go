@@ -1,6 +1,10 @@
 package concentrated_liquidity
 
-import fmt "fmt"
+import (
+	fmt "fmt"
+	"math"
+	"math/bits"
+)
 
 // TickBitmap defines a bitmap used to represent price ticks. It contains a
 // mapping of 64-bit words, where each bit in a word corresponds to a unique
@@ -27,6 +31,68 @@ func (tb *TickBitmap) FlipTick(tickIndex, tickSpacing int32) error {
 	tb.bitmap[wordPos] ^= bitMask
 
 	return nil
+}
+
+// NextInitializedTickWithinOneWord returns the next initialized tick contained
+// in the same word (or adjacent word) as the tick that is either
+// to the left (less than or equal to) or right (greater than) of the given tick.
+//
+// In other words, it returns the next initialized or uninitialized tick up to
+// 64 ticks away from the current tick and whether that next tick is initialized,
+// as the function only searches within up to 64 ticks.
+func (tb *TickBitmap) NextInitializedTickWithinOneWord(tickIndex, tickSpacing int32, lte bool) (next int32, initialized bool) {
+	compressed := tickIndex / tickSpacing
+
+	// round towards negative infinity
+	if tickIndex < 0 && tickIndex%tickSpacing != 0 {
+		compressed--
+	}
+
+	if lte {
+		wordPos, bitPos := tickPosition(compressed)
+
+		// all the 1s at or to the right of the current bitPos
+		bitMask := uint64((1 << bitPos) - 1 + (1 << bitPos))
+		masked := tb.bitmap[wordPos] & bitMask
+
+		// If there are no initialized ticks to the right of or at the current tick,
+		// return rightmost in the word.
+		initialized = masked != 0
+
+		// Note, overflow/underflow is possible, but prevented externally by
+		// limiting both tickSpacing and tick.
+		if initialized {
+			msbIndex := uint8(64 - bits.LeadingZeros64(masked) - 1)
+			next = (compressed - int32(uint32(bitPos-msbIndex))) * tickSpacing
+		} else {
+			next = (compressed - int32(uint32(bitPos))) * tickSpacing
+		}
+
+		return next, initialized
+	}
+
+	// Start from the word of the next tick, since the current tick state doesn't
+	// matter.
+	wordPos, bitPos := tickPosition(compressed + 1)
+
+	// all the 1s at or to the left of the bitPos
+	bitMask := uint64(^((1 << bitPos) - 1))
+	masked := tb.bitmap[wordPos] & bitMask
+
+	// If there are no initialized ticks to the left of the current tick, return
+	// leftmost in the word.
+	initialized = masked != 0
+
+	// Note, overflow/underflow is possible, but prevented externally by limiting
+	// both tickSpacing and tick.
+	if initialized {
+		lsbIndex := uint8(bits.TrailingZeros64(masked))
+		next = (compressed + 1 + int32(uint32((lsbIndex - bitPos)))) * tickSpacing
+	} else {
+		next = (compressed + 1 + int32(uint32(math.MaxUint8-bitPos))) * tickSpacing
+	}
+
+	return next, initialized
 }
 
 // tickPosition returns the word and bit position in the tick bitmap given a
