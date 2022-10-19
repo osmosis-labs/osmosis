@@ -224,29 +224,36 @@ var (
 			yIn:         osmomath.NewBigDec(1),
 			expectPanic: false,
 		},
-		// TODO: increase BigDec precision (36 -> 72) to be able to accommodate this
 		"even 4-asset large pool (100M each), small input": {
 			xReserve: osmomath.NewBigDec(100000000),
 			yReserve: osmomath.NewBigDec(100000000),
 			// represents a 4-asset pool with 100M in each reserve
 			remReserves: []osmomath.BigDec{osmomath.NewBigDec(100000000), osmomath.NewBigDec(100000000)},
-			yIn: osmomath.NewBigDec(100),
+			yIn:         osmomath.NewBigDec(100),
 			expectPanic: false,
 		},
-		"even 4-asset max pool (10B each), small input": {
+		"even 4-asset pool (10B each post-scaled), small input": {
 			xReserve: osmomath.NewBigDec(10000000000),
 			yReserve: osmomath.NewBigDec(10000000000),
 			// represents a 4-asset pool with 10B in each reserve
 			remReserves: []osmomath.BigDec{osmomath.NewBigDec(10000000000), osmomath.NewBigDec(10000000000)},
-			yIn: osmomath.NewBigDec(100000000),
+			yIn:         osmomath.NewBigDec(100000000),
 			expectPanic: false,
 		},
-		"even 10-asset max pool (10B each), small input": {
+		"even 10-asset pool (10B each post-scaled), small input": {
 			xReserve: osmomath.NewBigDec(10_000_000_000),
 			yReserve: osmomath.NewBigDec(10_000_000_000),
 			// represents a 10-asset pool with 10B in each reserve
 			remReserves: []osmomath.BigDec{osmomath.NewBigDec(10_000_000_000), osmomath.NewBigDec(10_000_000_000), osmomath.NewBigDec(10_000_000_000), osmomath.NewBigDec(10_000_000_000), osmomath.NewBigDec(10_000_000_000), osmomath.NewBigDec(10_000_000_000), osmomath.NewBigDec(10_000_000_000), osmomath.NewBigDec(10_000_000_000)},
-			yIn: osmomath.NewBigDec(100),
+			yIn:         osmomath.NewBigDec(100),
+			expectPanic: false,
+		},
+		"even 10-asset pool (100B each post-scaled), large input": {
+			xReserve: osmomath.NewBigDec(100_000_000_000),
+			yReserve: osmomath.NewBigDec(100_000_000_000),
+			// represents a 10-asset pool with 100B in each reserve
+			remReserves: []osmomath.BigDec{osmomath.NewBigDec(100_000_000_000), osmomath.NewBigDec(100_000_000_000), osmomath.NewBigDec(100_000_000_000), osmomath.NewBigDec(100_000_000_000), osmomath.NewBigDec(100_000_000_000), osmomath.NewBigDec(100_000_000_000), osmomath.NewBigDec(100_000_000_000), osmomath.NewBigDec(100_000_000_000)},
+			yIn:         osmomath.NewBigDec(10_000_000_000),
 			expectPanic: false,
 		},
 
@@ -692,8 +699,6 @@ func TestCalcSingleAssetJoinShares(t *testing.T) {
 			swapFee:        sdk.MustNewDecFromStr("0.03"),
 			expectedOut:    sdk.NewInt(100 - 3),
 		},
-
-		// TODO: increase BigDec precision further to be able to accommodate 5-asset pool tests
 	}
 
 	for name, tc := range tests {

@@ -346,5 +346,9 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 		numShares = numShares.Add(newShare)
 	}
 
+	if err = validatePoolAssets(p.PoolLiquidity, p.ScalingFactor); err != nil {
+		return sdk.ZeroInt(), sdk.NewCoins(), err
+	}
+
 	return numShares, tokensIn, nil
 }
