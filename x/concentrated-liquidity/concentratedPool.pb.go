@@ -11,6 +11,7 @@ package concentrated_liquidity
 import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
@@ -32,6 +33,12 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type Pool struct {
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty" yaml:"address"`
 	Id      uint64 `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	// Amount of total liquidity
+	Liquidity        github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=liquidity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"liquidity" yaml:"liquidity"`
+	Token0           string                                 `protobuf:"bytes,4,opt,name=token0,proto3" json:"token0,omitempty"`
+	Token1           string                                 `protobuf:"bytes,5,opt,name=token1,proto3" json:"token1,omitempty"`
+	CurrentSqrtPrice github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,6,opt,name=current_sqrt_price,json=currentSqrtPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"current_sqrt_price" yaml:"spot_price"`
+	CurrentTick      github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,7,opt,name=current_tick,json=currentTick,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"current_tick" yaml:"current_tick"`
 }
 
 func (m *Pool) Reset()      { *m = Pool{} }
@@ -66,8 +73,132 @@ func (m *Pool) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Pool proto.InternalMessageInfo
 
+type TickInfo struct {
+	Initialized bool `protobuf:"varint,1,opt,name=initialized,proto3" json:"initialized,omitempty"`
+	// sum of all non-normalized pool weights
+	Liquidity github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=liquidity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"liquidity" yaml:"liquidity"`
+}
+
+func (m *TickInfo) Reset()         { *m = TickInfo{} }
+func (m *TickInfo) String() string { return proto.CompactTextString(m) }
+func (*TickInfo) ProtoMessage()    {}
+func (*TickInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_b144264ce94bcf63, []int{1}
+}
+func (m *TickInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TickInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TickInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TickInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TickInfo.Merge(m, src)
+}
+func (m *TickInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *TickInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_TickInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TickInfo proto.InternalMessageInfo
+
+func (m *TickInfo) GetInitialized() bool {
+	if m != nil {
+		return m.Initialized
+	}
+	return false
+}
+
+type Position struct {
+	Liquidity github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=liquidity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"liquidity" yaml:"liquidity"`
+}
+
+func (m *Position) Reset()         { *m = Position{} }
+func (m *Position) String() string { return proto.CompactTextString(m) }
+func (*Position) ProtoMessage()    {}
+func (*Position) Descriptor() ([]byte, []int) {
+	return fileDescriptor_b144264ce94bcf63, []int{2}
+}
+func (m *Position) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Position) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Position.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Position) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Position.Merge(m, src)
+}
+func (m *Position) XXX_Size() int {
+	return m.Size()
+}
+func (m *Position) XXX_DiscardUnknown() {
+	xxx_messageInfo_Position.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Position proto.InternalMessageInfo
+
+type CurrentTick struct {
+	SpotPrice github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=spot_price,json=spotPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"spot_price" yaml:"spot_price"`
+	Tick      github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=tick,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"tick" yaml:"spot_price"`
+}
+
+func (m *CurrentTick) Reset()         { *m = CurrentTick{} }
+func (m *CurrentTick) String() string { return proto.CompactTextString(m) }
+func (*CurrentTick) ProtoMessage()    {}
+func (*CurrentTick) Descriptor() ([]byte, []int) {
+	return fileDescriptor_b144264ce94bcf63, []int{3}
+}
+func (m *CurrentTick) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CurrentTick) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CurrentTick.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CurrentTick) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CurrentTick.Merge(m, src)
+}
+func (m *CurrentTick) XXX_Size() int {
+	return m.Size()
+}
+func (m *CurrentTick) XXX_DiscardUnknown() {
+	xxx_messageInfo_CurrentTick.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CurrentTick proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*Pool)(nil), "osmosis.concentratedliquidity.v1beta1.Pool")
+	proto.RegisterType((*TickInfo)(nil), "osmosis.concentratedliquidity.v1beta1.TickInfo")
+	proto.RegisterType((*Position)(nil), "osmosis.concentratedliquidity.v1beta1.Position")
+	proto.RegisterType((*CurrentTick)(nil), "osmosis.concentratedliquidity.v1beta1.CurrentTick")
 }
 
 func init() {
@@ -75,23 +206,38 @@ func init() {
 }
 
 var fileDescriptor_b144264ce94bcf63 = []byte{
-	// 248 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x32, 0xcd, 0x2f, 0xce, 0xcd,
-	0x2f, 0xce, 0x2c, 0xd6, 0x4f, 0xce, 0xcf, 0x4b, 0x4e, 0xcd, 0x2b, 0x29, 0x4a, 0x2c, 0x49, 0x4d,
-	0xd1, 0xcd, 0xc9, 0x2c, 0x2c, 0xcd, 0x4c, 0xc9, 0x2c, 0xa9, 0x44, 0x11, 0x0e, 0xc8, 0xcf, 0xcf,
-	0xd1, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x52, 0x85, 0x6a, 0xd3, 0x43, 0x96, 0x87, 0xeb, 0xd2,
-	0x2b, 0x33, 0x4c, 0x4a, 0x2d, 0x49, 0x34, 0x94, 0x92, 0x4c, 0x06, 0xab, 0x8b, 0x07, 0x6b, 0xd2,
-	0x87, 0x70, 0x20, 0x26, 0x48, 0x89, 0xa4, 0xe7, 0xa7, 0xe7, 0x43, 0xc4, 0x41, 0x2c, 0x88, 0xa8,
-	0x52, 0x38, 0x17, 0x0b, 0xc8, 0x16, 0x21, 0x1d, 0x2e, 0xf6, 0xc4, 0x94, 0x94, 0xa2, 0xd4, 0xe2,
-	0x62, 0x09, 0x46, 0x05, 0x46, 0x0d, 0x4e, 0x27, 0xa1, 0x4f, 0xf7, 0xe4, 0xf9, 0x2a, 0x13, 0x73,
-	0x73, 0xac, 0x94, 0xa0, 0x12, 0x4a, 0x41, 0x30, 0x25, 0x42, 0x7c, 0x5c, 0x4c, 0x99, 0x29, 0x12,
-	0x4c, 0x0a, 0x8c, 0x1a, 0x2c, 0x41, 0x4c, 0x99, 0x29, 0x56, 0x82, 0x1d, 0x0b, 0xe4, 0x19, 0x66,
-	0x2c, 0x90, 0x67, 0x38, 0xb5, 0x45, 0x97, 0x15, 0x64, 0x9e, 0xa7, 0x53, 0xd8, 0x89, 0x47, 0x72,
-	0x8c, 0x17, 0x1e, 0xc9, 0x31, 0x3e, 0x78, 0x24, 0xc7, 0x38, 0xe1, 0xb1, 0x1c, 0xc3, 0x85, 0xc7,
-	0x72, 0x0c, 0x37, 0x1e, 0xcb, 0x31, 0x44, 0xd9, 0xa4, 0x67, 0x96, 0x64, 0x94, 0x26, 0xe9, 0x25,
-	0xe7, 0xe7, 0xea, 0x43, 0x7d, 0xa5, 0x9b, 0x93, 0x98, 0x54, 0x0c, 0xe3, 0xe8, 0x97, 0x19, 0x1a,
-	0xe9, 0x57, 0xe0, 0x08, 0x9f, 0x24, 0x36, 0xb0, 0xbb, 0x8d, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff,
-	0x06, 0xb2, 0x0a, 0x2c, 0x48, 0x01, 0x00, 0x00,
+	// 492 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x94, 0x3f, 0x6f, 0xd3, 0x40,
+	0x18, 0xc6, 0x7d, 0x6e, 0x9a, 0x26, 0x17, 0x54, 0xb5, 0x07, 0x42, 0xa6, 0x83, 0x1d, 0x59, 0x02,
+	0x75, 0x20, 0x36, 0x06, 0xb1, 0x54, 0x4c, 0xa9, 0x18, 0xb2, 0x45, 0x06, 0x81, 0xc4, 0x12, 0xfc,
+	0xe7, 0x48, 0x5f, 0xc5, 0xf1, 0x25, 0xbe, 0x4b, 0x45, 0xf8, 0x04, 0x4c, 0x88, 0x91, 0xb1, 0x1f,
+	0x82, 0xcf, 0x80, 0xaa, 0x4e, 0x1d, 0x11, 0x43, 0x84, 0x92, 0x6f, 0xd0, 0x4f, 0x80, 0x7c, 0xbe,
+	0x24, 0xce, 0xc0, 0x50, 0xa9, 0x99, 0xec, 0xf7, 0x79, 0xef, 0xfd, 0x3d, 0xaf, 0xfc, 0xc8, 0x87,
+	0x5f, 0x32, 0x3e, 0x64, 0x1c, 0xb8, 0x1b, 0xb1, 0x34, 0xa2, 0xa9, 0xc8, 0x02, 0x41, 0xe3, 0x56,
+	0x02, 0xe3, 0x09, 0xc4, 0x20, 0xa6, 0x1b, 0x72, 0x97, 0xb1, 0xc4, 0x19, 0x65, 0x4c, 0x30, 0xf2,
+	0x58, 0x8d, 0x39, 0xe5, 0xfe, 0x6a, 0xca, 0x39, 0xf7, 0x42, 0x2a, 0x02, 0xef, 0xe8, 0x51, 0x24,
+	0xcf, 0xf5, 0xe4, 0x90, 0x5b, 0x14, 0x05, 0xe1, 0xe8, 0x41, 0x9f, 0xf5, 0x59, 0xa1, 0xe7, 0x6f,
+	0x85, 0x6a, 0xff, 0xda, 0xc1, 0x95, 0xdc, 0x86, 0x3c, 0xc5, 0x7b, 0x41, 0x1c, 0x67, 0x94, 0x73,
+	0x03, 0x35, 0xd1, 0x71, 0xbd, 0x4d, 0x6e, 0x66, 0xd6, 0xfe, 0x34, 0x18, 0x26, 0x27, 0xb6, 0x6a,
+	0xd8, 0xfe, 0xf2, 0x08, 0xd9, 0xc7, 0x3a, 0xc4, 0x86, 0xde, 0x44, 0xc7, 0x15, 0x5f, 0x87, 0x98,
+	0x7c, 0xc4, 0xf5, 0xd5, 0x32, 0xc6, 0x8e, 0x9c, 0x6f, 0x5f, 0xce, 0x2c, 0xed, 0xcf, 0xcc, 0x7a,
+	0xd2, 0x07, 0x71, 0x36, 0x09, 0x9d, 0x88, 0x0d, 0xd5, 0x42, 0xea, 0xd1, 0xe2, 0xf1, 0xc0, 0x15,
+	0xd3, 0x11, 0xe5, 0x4e, 0x27, 0x15, 0x37, 0x33, 0xeb, 0xa0, 0x70, 0x5b, 0x81, 0x6c, 0x7f, 0x0d,
+	0x25, 0x0f, 0x71, 0x55, 0xb0, 0x01, 0x4d, 0x9f, 0x19, 0x95, 0x1c, 0xef, 0xab, 0x6a, 0xa5, 0x7b,
+	0xc6, 0x6e, 0x49, 0xf7, 0xc8, 0x18, 0x93, 0x68, 0x92, 0x65, 0x34, 0x15, 0x3d, 0x3e, 0xce, 0x44,
+	0x6f, 0x94, 0x41, 0x44, 0x8d, 0xaa, 0x5c, 0xed, 0xf4, 0xd6, 0xab, 0x1d, 0x16, 0xab, 0xf1, 0x11,
+	0x53, 0x24, 0xdb, 0x3f, 0x50, 0xf8, 0x37, 0xe3, 0x4c, 0x74, 0x73, 0x89, 0x9c, 0xe1, 0x7b, 0x4b,
+	0x4b, 0x01, 0xd1, 0xc0, 0xd8, 0x93, 0x66, 0xaf, 0x6f, 0x6d, 0x76, 0xbf, 0x30, 0x2b, 0xb3, 0x6c,
+	0xbf, 0xa1, 0xca, 0xb7, 0x10, 0x0d, 0x4e, 0x0e, 0xbf, 0x5e, 0x58, 0xda, 0x8f, 0x0b, 0x4b, 0xbb,
+	0xfa, 0xd9, 0xda, 0xcd, 0xe3, 0xeb, 0xd8, 0xdf, 0x10, 0xae, 0xe5, 0xbd, 0x4e, 0xfa, 0x89, 0x91,
+	0x26, 0x6e, 0x40, 0x0a, 0x02, 0x82, 0x04, 0xbe, 0xd0, 0x58, 0x06, 0x5a, 0xf3, 0xcb, 0xd2, 0x66,
+	0x60, 0xfa, 0x16, 0x02, 0xb3, 0x13, 0x5c, 0xeb, 0x32, 0x0e, 0x02, 0x58, 0xba, 0xe9, 0x86, 0xb6,
+	0xe1, 0x76, 0x85, 0x70, 0xe3, 0x74, 0xfd, 0x85, 0x48, 0x88, 0xf1, 0x3a, 0x2c, 0x65, 0x79, 0x27,
+	0xb1, 0xd7, 0xf3, 0xa2, 0xc8, 0xfb, 0x3d, 0xae, 0xc8, 0x9c, 0xf5, 0xbb, 0xa3, 0x4b, 0x60, 0xfb,
+	0xdd, 0xe5, 0xdc, 0x44, 0xd7, 0x73, 0x13, 0xfd, 0x9d, 0x9b, 0xe8, 0xfb, 0xc2, 0xd4, 0xae, 0x17,
+	0xa6, 0xf6, 0x7b, 0x61, 0x6a, 0x1f, 0x5e, 0x95, 0xe0, 0xea, 0x46, 0x68, 0x25, 0x41, 0xc8, 0x97,
+	0x85, 0x7b, 0xee, 0x3d, 0x77, 0x3f, 0xff, 0xe7, 0x6e, 0x09, 0xab, 0xf2, 0x9f, 0x7f, 0xf1, 0x2f,
+	0x00, 0x00, 0xff, 0xff, 0x28, 0x32, 0xae, 0x96, 0x84, 0x04, 0x00, 0x00,
 }
 
 func (m *Pool) Marshal() (dAtA []byte, err error) {
@@ -114,6 +260,50 @@ func (m *Pool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	{
+		size := m.CurrentTick.Size()
+		i -= size
+		if _, err := m.CurrentTick.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintConcentratedPool(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x3a
+	{
+		size := m.CurrentSqrtPrice.Size()
+		i -= size
+		if _, err := m.CurrentSqrtPrice.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintConcentratedPool(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x32
+	if len(m.Token1) > 0 {
+		i -= len(m.Token1)
+		copy(dAtA[i:], m.Token1)
+		i = encodeVarintConcentratedPool(dAtA, i, uint64(len(m.Token1)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.Token0) > 0 {
+		i -= len(m.Token0)
+		copy(dAtA[i:], m.Token0)
+		i = encodeVarintConcentratedPool(dAtA, i, uint64(len(m.Token0)))
+		i--
+		dAtA[i] = 0x22
+	}
+	{
+		size := m.Liquidity.Size()
+		i -= size
+		if _, err := m.Liquidity.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintConcentratedPool(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
 	if m.Id != 0 {
 		i = encodeVarintConcentratedPool(dAtA, i, uint64(m.Id))
 		i--
@@ -126,6 +316,125 @@ func (m *Pool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0xa
 	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TickInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TickInfo) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TickInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.Liquidity.Size()
+		i -= size
+		if _, err := m.Liquidity.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintConcentratedPool(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if m.Initialized {
+		i--
+		if m.Initialized {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *Position) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Position) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Position) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.Liquidity.Size()
+		i -= size
+		if _, err := m.Liquidity.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintConcentratedPool(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *CurrentTick) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CurrentTick) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CurrentTick) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.Tick.Size()
+		i -= size
+		if _, err := m.Tick.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintConcentratedPool(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	{
+		size := m.SpotPrice.Size()
+		i -= size
+		if _, err := m.SpotPrice.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintConcentratedPool(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -153,6 +462,58 @@ func (m *Pool) Size() (n int) {
 	if m.Id != 0 {
 		n += 1 + sovConcentratedPool(uint64(m.Id))
 	}
+	l = m.Liquidity.Size()
+	n += 1 + l + sovConcentratedPool(uint64(l))
+	l = len(m.Token0)
+	if l > 0 {
+		n += 1 + l + sovConcentratedPool(uint64(l))
+	}
+	l = len(m.Token1)
+	if l > 0 {
+		n += 1 + l + sovConcentratedPool(uint64(l))
+	}
+	l = m.CurrentSqrtPrice.Size()
+	n += 1 + l + sovConcentratedPool(uint64(l))
+	l = m.CurrentTick.Size()
+	n += 1 + l + sovConcentratedPool(uint64(l))
+	return n
+}
+
+func (m *TickInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Initialized {
+		n += 2
+	}
+	l = m.Liquidity.Size()
+	n += 1 + l + sovConcentratedPool(uint64(l))
+	return n
+}
+
+func (m *Position) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Liquidity.Size()
+	n += 1 + l + sovConcentratedPool(uint64(l))
+	return n
+}
+
+func (m *CurrentTick) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.SpotPrice.Size()
+	n += 1 + l + sovConcentratedPool(uint64(l))
+	l = m.Tick.Size()
+	n += 1 + l + sovConcentratedPool(uint64(l))
 	return n
 }
 
@@ -242,6 +603,478 @@ func (m *Pool) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Liquidity", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConcentratedPool
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthConcentratedPool
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthConcentratedPool
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Liquidity.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Token0", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConcentratedPool
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthConcentratedPool
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthConcentratedPool
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Token0 = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Token1", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConcentratedPool
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthConcentratedPool
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthConcentratedPool
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Token1 = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CurrentSqrtPrice", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConcentratedPool
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthConcentratedPool
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthConcentratedPool
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.CurrentSqrtPrice.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CurrentTick", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConcentratedPool
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthConcentratedPool
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthConcentratedPool
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.CurrentTick.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipConcentratedPool(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthConcentratedPool
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TickInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowConcentratedPool
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TickInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TickInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Initialized", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConcentratedPool
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Initialized = bool(v != 0)
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Liquidity", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConcentratedPool
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthConcentratedPool
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthConcentratedPool
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Liquidity.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipConcentratedPool(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthConcentratedPool
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Position) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowConcentratedPool
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Position: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Position: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Liquidity", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConcentratedPool
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthConcentratedPool
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthConcentratedPool
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Liquidity.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipConcentratedPool(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthConcentratedPool
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CurrentTick) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowConcentratedPool
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CurrentTick: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CurrentTick: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SpotPrice", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConcentratedPool
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthConcentratedPool
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthConcentratedPool
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.SpotPrice.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tick", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConcentratedPool
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthConcentratedPool
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthConcentratedPool
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Tick.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipConcentratedPool(dAtA[iNdEx:])
