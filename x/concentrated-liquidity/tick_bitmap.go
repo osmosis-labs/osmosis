@@ -18,6 +18,12 @@ type TickBitmap struct {
 	bitmap map[int16]uint64
 }
 
+func NewTickBitmap() *TickBitmap {
+	return &TickBitmap{
+		bitmap: make(map[int16]uint64),
+	}
+}
+
 // FlipTick flips the tick for the given tick index from false (no liquidity) to
 // true (liquidity) or vice versa. The tickSpacing parameter defines the spacing
 // between usable ticks and must be a multiple of the tick index.
