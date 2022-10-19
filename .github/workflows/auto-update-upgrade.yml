@@ -12,7 +12,7 @@ jobs:
       - name: CHECK
         run: |
           echo CHECKIG LSs
-          echo ${{ github.RusAkh/osmosis-fork }}
+          echo ${{ github.repository }}
           echo ${{ github.token }}
           ls -la
       - run: bash ./scripts/empty_upgrade_handler_gen.sh 
@@ -31,4 +31,4 @@ jobs:
             auto
             e2e
             app-wiring
-          base: ${{ github.RusAkh/osmosis-fork }}
+          base: ${{ github.repository }}
