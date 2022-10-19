@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	cl "github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/concentrated-liquidity"
+	cl "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity"
 )
 
 func TestCalcOutAmtGivenIn(t *testing.T) {

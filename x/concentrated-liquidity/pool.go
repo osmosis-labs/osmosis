@@ -101,6 +101,10 @@ func (p Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDeno
 	return sdk.Coin{}, nil
 }
 
+func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error) {
+	return sdk.Dec{}, nil
+}
+
 // this only works on a single directional trade, will implement bi directional trade in next milestone
 func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokensIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
 	tokenIn := tokensIn[0]
@@ -197,8 +201,4 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokensOut sdk.Coins, tokenInDen
 		return sdk.NewCoin(tokenInDenom, amountIn.TruncateInt()), nil
 	}
 	return sdk.Coin{}, fmt.Errorf("tokenIn does not match any asset in pool")
-}
-
-func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error) {
-	return sdk.Dec{}, nil
 }
