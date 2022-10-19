@@ -206,6 +206,7 @@ func (k Keeper) getInterpolatedRecord(ctx sdk.Context, poolId uint64, t time.Tim
 	if err != nil {
 		return types.TwapRecord{}, err
 	}
+        // if it had errored on the last record, make this record inherit the error
 	if record.Time.Equal(record.LastErrorTime) {
 		record.LastErrorTime = t
 	}
