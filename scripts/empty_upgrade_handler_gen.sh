@@ -24,10 +24,7 @@
 
  cp ./app/upgrades/v${latest_version}/constants.go $new_file/constants.go
  cp ./app/upgrades/v${latest_version}/upgrades.go $new_file/upgrades.go
-#  SEDBRACKETS=
-# if [[ "$OSTYPE" == "darwin"* ]]; then
-#     SEDBRACKETS=''
-# fi
+
  sed -i "s/v$latest_version/v$version_create/g" $new_file/constants.go
  sed -i "s/v$latest_version/v$version_create/g" $new_file/upgrades.go
 

@@ -1,9 +1,8 @@
 name: On Release Auto Upgrade
 
-# on:
-#   release: 
-#     types: [deleted]
-on: [push]
+on:
+  release: 
+    types: [created]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,11 +16,6 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         with:
-        #   token: ${{ secrets.GITHUB_TOKEN }}
-        #   base: ${{ github.repository }}
-        #   commit-message: Auto post release updgrade
-        #   delete-branch: true
-        #   branch: main
           body: |
             Update report
             - Created a new empty upgrade handler
