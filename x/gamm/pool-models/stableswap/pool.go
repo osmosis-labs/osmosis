@@ -375,15 +375,14 @@ func validateScalingFactors(scalingFactors []uint64, numAssets int) error {
 }
 
 func validatePoolAssets(initialAssets sdk.Coins, scalingFactors []uint64) error {
-	if len(initialAssets) < 2 {
+	if len(initialAssets) < types.MinPoolAssets {
 		return types.ErrTooFewPoolAssets
-	} else if len(initialAssets) > 8 {
+	} else if len(initialAssets) > types.MaxPoolAssets {
 		return types.ErrTooManyPoolAssets
 	}
 
-	maxScaledAmount := sdk.NewInt(10_000_000_000)
 	for i, asset := range initialAssets {
-		if asset.Amount.Quo(sdk.NewInt(int64(scalingFactors[i]))).GT(maxScaledAmount) {
+		if asset.Amount.Quo(sdk.NewInt(int64(scalingFactors[i]))).GT(sdk.NewInt(types.StableswapMaxScaledAmtPerAsset)) {
 			return types.ErrHitMaxScaledAssets
 		}
 	}
