@@ -16,6 +16,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         with:
+          base: ${{ github.head_ref }}
           body: |
             Update report
             - Created a new empty upgrade handler
