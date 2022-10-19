@@ -34,7 +34,6 @@ func (k Keeper) setPosition(ctx sdk.Context,
 	owner string,
 	lowerTick, upperTick sdk.Int,
 	position Position) {
-
 	store := ctx.KVStore(k.storeKey)
 
 	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
