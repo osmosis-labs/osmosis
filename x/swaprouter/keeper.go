@@ -9,8 +9,12 @@ import (
 )
 
 type Keeper struct {
-	storeKey           sdk.StoreKey
-	gammKeeper         types.SwapI
+	storeKey sdk.StoreKey
+	// TODO: remove nolint
+	// nolint: unused
+	gammKeeper types.SwapI
+	// TODO: remove nolint
+	// nolint: unused
 	concentratedKeeper types.SwapI
 
 	paramSpace paramtypes.Subspace
