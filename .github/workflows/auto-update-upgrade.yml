@@ -1,8 +1,8 @@
-name: On release auto upgrade
+name: On Release Auto Upgrade
 
 on:
   release: 
-    types: [created]
+    types: [published]
 
 jobs:
   build:
