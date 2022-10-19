@@ -14,21 +14,10 @@ type TickBitmap struct {
 	bitmap map[int16]uint64
 }
 
+// FlipTick flips the tick for the given tick index from false (no liquidity) to
+// true (liquidity) or vice versa. The tickSpacing parameter defines the spacing
+// between usable ticks and must be a multiple of the tick index.
 func (tb *TickBitmap) FlipTick(tickIndex, tickSpacing int32) error {
-	//   /// @notice Flips the initialized state for a given tick from false to true, or vice versa
-	//   /// @param self The mapping in which to flip the tick
-	//   /// @param tick The tick to flip
-	//   /// @param tickSpacing The spacing between usable ticks
-	//   function flipTick(
-	// 		mapping(int16 => uint256) storage self,
-	// 		int24 tick,
-	// 		int24 tickSpacing
-	// ) internal {
-	// 		require(tick % tickSpacing == 0); // ensure that the tick is spaced
-	// 		(int16 wordPos, uint8 bitPos) = position(tick / tickSpacing);
-	// 		uint256 mask = 1 << bitPos;
-	// 		self[wordPos] ^= mask;
-	// }
 	if tickIndex%tickSpacing != 0 {
 		return fmt.Errorf("tickIndex %d is not a multiple of tickSpacing %d", tickIndex, tickSpacing)
 	}
