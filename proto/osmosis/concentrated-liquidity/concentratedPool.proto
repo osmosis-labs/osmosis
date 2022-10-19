@@ -57,16 +57,3 @@ message Position {
     (gogoproto.nullable) = false
   ];
 }
-
-message CurrentTick {
-  string spot_price = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"spot_price\"",
-    (gogoproto.nullable) = false
-  ];
-  string tick = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"spot_price\"",
-    (gogoproto.nullable) = false
-  ];
-}

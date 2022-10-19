@@ -7,7 +7,7 @@ import (
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
-func (k Keeper) UpdatePositionWithLiquidity(ctx sdk.Context,
+func (k Keeper) updatePositionWithLiquidity(ctx sdk.Context,
 	poolId uint64,
 	owner string,
 	lowerTick, upperTick sdk.Int,
