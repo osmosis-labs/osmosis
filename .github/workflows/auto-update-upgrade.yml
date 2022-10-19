@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: CHECK
         run: |
-          echo CHECKIG LSss
+          echo CHECKIG LSssa
           echo ${{ github.repository }}
           echo ${{ github.token }}
           ls -la
