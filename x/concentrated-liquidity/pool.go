@@ -32,7 +32,7 @@ func liquidity0(amount int64, pa, pb sdk.Dec) sdk.Dec {
 	if pa.GT(pb) {
 		pa, pb = pb, pa
 	}
-	product := pa.Mul(pb).Quo(sdk.NewDec(10).Power(6))
+	product := pa.Mul(pb)
 	diff := pb.Sub(pa)
 	amt := sdk.NewDec(amount)
 	return amt.Mul(product.Quo(diff))
@@ -47,7 +47,7 @@ func liquidity1(amount int64, pa, pb sdk.Dec) sdk.Dec {
 	}
 	diff := pb.Sub(pa)
 	amt := sdk.NewDec(amount)
-	return amt.Quo(diff).Mul(sdk.NewDec(10).Power(6))
+	return amt.Quo(diff)
 }
 
 // calcAmount0 takes the asset with the smaller liqudity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 0
@@ -58,7 +58,7 @@ func calcAmount0(liq, pa, pb sdk.Dec) sdk.Dec {
 		pa, pb = pb, pa
 	}
 	diff := pb.Sub(pa)
-	mult := liq.Mul(sdk.NewDec(10).Power(6))
+	mult := liq
 	return (mult.Mul(diff)).Quo(pb).Quo(pa)
 }
 
@@ -70,7 +70,7 @@ func calcAmount1(liq, pa, pb sdk.Dec) sdk.Dec {
 		pa, pb = pb, pa
 	}
 	diff := pb.Sub(pa)
-	return liq.Mul(diff).Quo(sdk.NewDec(10).Power(6))
+	return liq.Mul(diff)
 }
 
 func (p Pool) GetAddress() sdk.AccAddress {
@@ -113,9 +113,9 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokensIn sdk.Coins, tokenOutDen
 	tokenAmountInAfterFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
 
 	// TODO: Replace with spot price
-	priceLower := sdk.NewDec(4500000000)
-	priceCur := sdk.NewDec(5000000000)
-	priceUpper := sdk.NewDec(5500000000)
+	priceLower := sdk.NewDec(4500)
+	priceCur := sdk.NewDec(5000)
+	priceUpper := sdk.NewDec(5500)
 
 	sqrtPLowerTick, _ := priceLower.ApproxSqrt()
 	sqrtPCurTick, _ := priceCur.ApproxSqrt()
@@ -137,13 +137,12 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokensIn sdk.Coins, tokenOutDen
 		amountOut := calcAmount0(liq, priceNext, sqrtPCurTick)
 		return sdk.NewCoin(tokenOutDenom, amountOut.TruncateInt()), nil
 	} else if tokenIn.Denom == asset0 {
-		priceNextTop := liq.Mul(sdk.NewDec(10).Power(6).Mul(sqrtPCurTick))
-		priceNextBot := liq.Mul(sdk.NewDec(10).Power(6)).Add(tokenAmountInAfterFee.Mul(sqrtPCurTick))
+		priceNextTop := liq.Mul(sqrtPCurTick)
+		priceNextBot := liq.Add(tokenAmountInAfterFee.Mul(sqrtPCurTick))
 		priceNext := priceNextTop.Quo(priceNextBot)
 		// new amount in, will be needed later
 		//amountIn = calcAmount1(liq, priceNext, sqrtPCurTick)
 		amountOut := calcAmount1(liq, priceNext, sqrtPCurTick)
-		amountOut = amountOut.Mul(sdk.NewDec(10).Power(6))
 		return sdk.NewCoin(tokenOutDenom, amountOut.TruncateInt()), nil
 	}
 	return sdk.Coin{}, fmt.Errorf("tokenIn does not match any asset in pool")
@@ -160,9 +159,9 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokensOut sdk.Coins, tokenInDen
 	asset1 := "usdc"
 
 	// TODO: Replace with spot price
-	priceLower := sdk.NewDec(4500000000)
-	priceCur := sdk.NewDec(5000000000)
-	priceUpper := sdk.NewDec(5500000000)
+	priceLower := sdk.NewDec(4500)
+	priceCur := sdk.NewDec(5000)
+	priceUpper := sdk.NewDec(5500)
 
 	sqrtPLowerTick, _ := priceLower.ApproxSqrt()
 	sqrtPCurTick, _ := priceCur.ApproxSqrt()
@@ -188,14 +187,13 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokensOut sdk.Coins, tokenInDen
 		amountIn = amountIn.Quo(sdk.OneDec().Sub(swapFee))
 		return sdk.NewCoin(tokenInDenom, amountIn.TruncateInt()), nil
 	} else if tokenOut.Denom == asset0 {
-		priceNextTop := liq.Mul(sdk.NewDec(10).Power(6).Mul(sqrtPCurTick))
-		priceNextBot := liq.Mul(sdk.NewDec(10).Power(6)).Add(tokenOutAmt.Mul(sqrtPCurTick))
+		priceNextTop := liq.Mul(sqrtPCurTick)
+		priceNextBot := liq.Add(tokenOutAmt.Mul(sqrtPCurTick))
 		priceNext := priceNextTop.Quo(priceNextBot)
 
 		// new amount in, will be needed later
 		// amountIn = calcAmount1(liq, priceNext, sqrtPCurTick)
 		amountIn := calcAmount1(liq, priceNext, sqrtPCurTick)
-		amountIn = amountIn.Mul(sdk.NewDec(10).Power(6))
 		// fee logic
 		amountIn = amountIn.Quo(sdk.OneDec().Sub(swapFee))
 		return sdk.NewCoin(tokenInDenom, amountIn.TruncateInt()), nil
