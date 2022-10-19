@@ -47,8 +47,11 @@ import (
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer"
 
+	"github.com/osmosis-labs/osmosis/v12/x/swaprouter"
+
 	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v12/wasmbinding"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity"
 	epochskeeper "github.com/osmosis-labs/osmosis/v12/x/epochs/keeper"
 	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v12/x/gamm/keeper"
@@ -65,6 +68,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/superfluid"
 	superfluidkeeper "github.com/osmosis-labs/osmosis/v12/x/superfluid/keeper"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v12/x/tokenfactory/keeper"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v12/x/tokenfactory/types"
 	"github.com/osmosis-labs/osmosis/v12/x/twap"
@@ -89,28 +93,30 @@ type AppKeepers struct {
 	ScopedWasmKeeper     capabilitykeeper.ScopedKeeper
 
 	// "Normal" keepers
-	AccountKeeper        *authkeeper.AccountKeeper
-	BankKeeper           *bankkeeper.BaseKeeper
-	AuthzKeeper          *authzkeeper.Keeper
-	StakingKeeper        *stakingkeeper.Keeper
-	DistrKeeper          *distrkeeper.Keeper
-	SlashingKeeper       *slashingkeeper.Keeper
-	IBCKeeper            *ibckeeper.Keeper
-	ICAHostKeeper        *icahostkeeper.Keeper
-	TransferKeeper       *ibctransferkeeper.Keeper
-	EvidenceKeeper       *evidencekeeper.Keeper
-	GAMMKeeper           *gammkeeper.Keeper
-	TwapKeeper           *twap.Keeper
-	LockupKeeper         *lockupkeeper.Keeper
-	EpochsKeeper         *epochskeeper.Keeper
-	IncentivesKeeper     *incentiveskeeper.Keeper
-	MintKeeper           *mintkeeper.Keeper
-	PoolIncentivesKeeper *poolincentiveskeeper.Keeper
-	TxFeesKeeper         *txfeeskeeper.Keeper
-	SuperfluidKeeper     *superfluidkeeper.Keeper
-	GovKeeper            *govkeeper.Keeper
-	WasmKeeper           *wasm.Keeper
-	TokenFactoryKeeper   *tokenfactorykeeper.Keeper
+	AccountKeeper               *authkeeper.AccountKeeper
+	BankKeeper                  *bankkeeper.BaseKeeper
+	AuthzKeeper                 *authzkeeper.Keeper
+	StakingKeeper               *stakingkeeper.Keeper
+	DistrKeeper                 *distrkeeper.Keeper
+	SlashingKeeper              *slashingkeeper.Keeper
+	IBCKeeper                   *ibckeeper.Keeper
+	ICAHostKeeper               *icahostkeeper.Keeper
+	TransferKeeper              *ibctransferkeeper.Keeper
+	EvidenceKeeper              *evidencekeeper.Keeper
+	GAMMKeeper                  *gammkeeper.Keeper
+	TwapKeeper                  *twap.Keeper
+	LockupKeeper                *lockupkeeper.Keeper
+	EpochsKeeper                *epochskeeper.Keeper
+	IncentivesKeeper            *incentiveskeeper.Keeper
+	MintKeeper                  *mintkeeper.Keeper
+	PoolIncentivesKeeper        *poolincentiveskeeper.Keeper
+	TxFeesKeeper                *txfeeskeeper.Keeper
+	SuperfluidKeeper            *superfluidkeeper.Keeper
+	GovKeeper                   *govkeeper.Keeper
+	WasmKeeper                  *wasm.Keeper
+	TokenFactoryKeeper          *tokenfactorykeeper.Keeper
+	SwapRouterKeeper            *swaprouter.Keeper
+	ConcentratedLiquidityKeeper *concentratedliquidity.Keeper
 	// IBC modules
 	// transfer module
 	TransferModule transfer.AppModule
@@ -249,6 +255,13 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.tkeys[twaptypes.TransientStoreKey],
 		appKeepers.GetSubspace(twaptypes.ModuleName),
 		appKeepers.GAMMKeeper)
+
+	appKeepers.SwapRouterKeeper = swaprouter.NewKeeper(
+		appKeepers.keys[swaproutertypes.StoreKey],
+		appKeepers.GetSubspace(swaproutertypes.ModuleName),
+		appKeepers.GAMMKeeper,
+		appKeepers.ConcentratedLiquidityKeeper,
+	)
 
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
 		appKeepers.keys[lockuptypes.StoreKey],
@@ -437,6 +450,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
 	paramsKeeper.Subspace(twaptypes.ModuleName)
+	paramsKeeper.Subspace(swaproutertypes.ModuleName)
 
 	return paramsKeeper
 }
