@@ -1,7 +1,5 @@
 #!/bin/bash
 
- echo "Creating a new empty upgrade handler"
-
  latest_version=0
  for f in app/upgrades/*; do 
      s_f=(${f//// })
