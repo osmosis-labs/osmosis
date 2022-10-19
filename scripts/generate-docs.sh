@@ -40,6 +40,10 @@ yarn install
 yarn combine
 yarn convert
 yarn build
+
+#Add public servers to spec file for Osmosis testnet and mainnet
+yq -i '."servers"+=[{"url":"https://lcd.osmosis.zone","description":"Osmosis mainnet node"},{"url":"https://lcd-test.osmosis.zone","description":"Osmosis testnet node"}]' static/openapi/openapi.yaml
+
 cd ../../
 
 # clean swagger files
