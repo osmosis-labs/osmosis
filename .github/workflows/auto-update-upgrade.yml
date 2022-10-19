@@ -29,3 +29,4 @@ jobs:
             auto
             e2e
             app-wiring
+          base: ${{ github.head_ref }}
