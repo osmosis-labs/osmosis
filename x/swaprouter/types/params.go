@@ -15,7 +15,7 @@ func NewParams(pruneEpochIdentifier string, recordHistoryKeepPeriod time.Duratio
 	return Params{}
 }
 
-// default twap module parameters.
+// DefaultParams returns default swaprouter module parameters.
 func DefaultParams() Params {
 	return Params{}
 }
