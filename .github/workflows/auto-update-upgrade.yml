@@ -12,6 +12,8 @@ jobs:
       - name: CHECK
         run: |
           echo CHECKIG LSs
+          echo ${{ github.head_ref }}
+          echo ${{ github.token }}
           ls -la
       - run: bash ./scripts/empty_upgrade_handler_gen.sh 
       - name: Create Pull Request
