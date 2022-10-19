@@ -1,0 +1,187 @@
+# Concentrated Liquidity
+
+## Background
+
+Concentrated liquidity is a novel AMM desing that allows for a more efficient use of capital.
+The improvement is achieved by providing liquidity in specific ranges chosen by user.
+
+A naive example is a pool with stable pairs such as USDC/USDT, where the price should always be near 1.
+As a result, LPs can focus their capital in a small range around 1 as opposed to full range, leading
+to an average of 200-300x higher capital efficiency.
+
+At the same time, traders enjoy lower slippage as greater depth is incentived to occur around the
+current price.
+
+This desing also allows for a new "range order" type that is similar to a limit order with order-books.
+
+With the introduction of concentrated liquidity, new opportunities for providing liquidity rewards is created.
+For example, it is possible to incentivize LPs based on the closeness to the current price and the time spent
+within a position.
+
+This document desribes the final version of the desired product. However, the work is split into multiple phases (milestones).
+See "Milestones" section for more details.
+
+## Architecture
+
+TODO: understand how much detail is wanted in this section
+
+Our traditional balancer AMM relies on the following curve that tracks current reserves:
+$$xy = k$$
+
+It allows for distributing the liquidity along the above curve and across the entire price
+range (0, \infinity). TODO: format correctly
+
+With the new architecute, we introduce a concept of a `position` that allows to
+concentrate liquidity withi a fixed range. A position only needs to maintain
+enough reseseves to satisfy trading within this range. As a result, it functions
+as the traditional `xy = k` within that range. 
+
+With the new architecture, the real reserves are described by the following formula:
+$$(x + L / \sqrt P_u)(y + L \sqrt P_l) = L^2$$
+- `l` is the lower tickl
+- `u` is the upper tick
+
+where L is the amount of liquidity provided $$L = \sqrt k$$
+
+This formula is stemming from the original $$xy = k$$ with range limited.
+
+In the traditional desing, pool's tokens `x` and `y` are tracked directly. With the concentrated desing, we only
+track `L` and `\sqrt P` that can be calculated with:
+
+$$L = \sqrt (xy)$$
+
+$$\sqrt P = y / x$$
+
+By re-arranging the above, we get the following to track the virtual reserves:
+
+$$x = L / \sqrt P$$
+
+$$y = L \sqrt P$$
+
+Note the square root around price. By tracking it this way, we can utilize
+the following property that is the core of the architecture:
+
+$$L = \Delta Y / \Delta \sqrt P$$
+
+Since only one of the following change at a time:
+- $$L$$
+   * when LP adds liquidity
+- $$\sqrt P$$
+   * when trader swaps 
+
+we can use the above relationship for calculating the outcome of swaps and pool joins that mint shares.
+
+Conversely for the other token, we can 
+
+### Terminology
+
+We will use the following terms throughout the document:
+
+- `Virtual Reserves` - TODO
+
+- `Real Reserves` - TODO
+
+- `Tick` - TODO
+
+- `Position` - TODO
+
+- `Range` - TODO
+
+
+### User Stories
+
+The feature can be summarized in the following user stories:
+
+#### Liquidity Provision
+
+> As an LP, I want to provide liquidity in ranges so that I can achieve greater capital efficiency
+
+This a basic function that should allow LPs to provide liquidity in specific ranges.
+The range is to be split into thousands of discrete ticks, each representing a price point.
+
+$$p(i) = 1.0001^i$$
+
+where `p(i)` is the price at tick `i`. Taking powers of 1.0001 has a property of two ticks being 0.01% apart (1 basis point).
+
+Therefore, we get values like:
+
+...
+
+$$\sqrt{p(-1)} = 1.0001^{-1/2} \approx 0.99995$$
+
+$$\sqrt{p(0)} = 1.0001^{0/2} = 1$$
+
+$$\sqrt{p(1)} = \sqrt{1.0001} = 1.0001^{1/2} \approx 1.00005$$
+
+...
+
+
+TODO: tick bounds.
+
+#### Swapping
+
+> As a trader, I want to be able to swap over a concentrated liquidity pool so that my trades incur lower slippage
+
+TODO
+
+#### Range Orders
+
+> As a trader, I want to be able to execute ranger orders so that I have better control of the price at which I trade
+
+TODO
+
+#### Fees
+
+> As a an LP, I want to earn fees on my capital so that I am incentivized to participate in the market making actively.
+
+TODO
+
+#### Liquidity Rewards
+
+> As an LP, I want to earn liquidity rewards so that I am more incentivized to provide liquidity in the ranges closer to the price.
+
+TODO
+
+#### Concentrated Liquidity Module
+
+> As an engineer, I would like the concentrated liquidity logic to exist in its own module so that I can easily reason about the concentrated liquidity abstraction that is different from the existing pools.
+
+TODO
+
+##### State
+
+- global (per-pool)
+
+- per-tick
+
+- per-position
+
+#### Pool Router Module
+
+> As a user, I would like to have a unified entrypoint for my swaps regardless of the underlying pool implementation so that I don't need to reason about API complexity
+
+> As a user, I would like the pool management to be unified so that I don't have to reason about additional complexity stemming from divergent pool sources.
+
+TODO
+
+### Additional Requirements
+
+#### GAMM Refactor
+
+TODO
+
+### Risks
+
+TODO
+
+### Milestones
+
+#### Milestone 1 - Swap Within a Single Tick
+
+TODO
+
+####
+
+
+
+
