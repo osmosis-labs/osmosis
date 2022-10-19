@@ -35,9 +35,9 @@
 
  # change imports in case go mod changed
  sed -i "s|.*/app/upgrades.*|\t$module/app/upgrades$bracks|" $new_file/constants.go
- sed -iS "s|.*/app/upgrades.*|\t$module/app/upgrades$bracks|" $new_file/upgrades.go
- sed -iS "s|.*/app/keepers.*|\t$module/app/keepers$bracks|" $new_file/upgrades.go
- sed -iS "s|.*/x/lockup/types.*|\tlockuptypes $module/x/lockup/types$bracks|" $new_file/upgrades.go
+ sed -i "s|.*/app/upgrades.*|\t$module/app/upgrades$bracks|" $new_file/upgrades.go
+ sed -i "s|.*/app/keepers.*|\t$module/app/keepers$bracks|" $new_file/upgrades.go
+ sed -i "s|.*/x/lockup/types.*|\tlockuptypes $module/x/lockup/types$bracks|" $new_file/upgrades.go
 
  # change e2e version in makefile
- sed -iS "s/E2E_UPGRADE_VERSION := ${bracks}v$latest_version$bracks/E2E_UPGRADE_VERSION := ${bracks}v$version_create$bracks/" ./Makefile
+ sed -i "s/E2E_UPGRADE_VERSION := ${bracks}v$latest_version$bracks/E2E_UPGRADE_VERSION := ${bracks}v$version_create$bracks/" ./Makefile
