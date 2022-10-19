@@ -52,7 +52,8 @@ service Query {
     option (google.api.http).get =
         "/osmosis/superfluid/v1beta1/connected_intermediary_account/{lock_id}";
   }
-
+  
+  // Returns the amount of delegations of specific denom for all validators
   rpc TotalDelegationByValidatorForDenom(
       QueryTotalDelegationByValidatorForDenomRequest)
       returns (QueryTotalDelegationByValidatorForDenomResponse) {}
