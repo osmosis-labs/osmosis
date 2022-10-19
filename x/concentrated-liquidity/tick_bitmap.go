@@ -16,7 +16,7 @@ func (tb *TickBitmap) Position(tickIndex int64) (wordPos uint16, bitPos uint8) {
 	wordPos = uint16(tickIndex >> 6)
 
 	// find the bit position in the word that corresponds to the tick.
-	bitPos = uint8(tickIndex % 64)
+	bitPos = uint8(uint64(tickIndex % 64))
 
 	return wordPos, bitPos
 }
