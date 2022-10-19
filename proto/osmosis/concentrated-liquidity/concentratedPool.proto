@@ -17,4 +17,43 @@ message Pool {
 
   string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
   uint64 id = 2;
+
+  // Amount of total liquidity
+  string liquidity = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"liquidity\"",
+    (gogoproto.nullable) = false
+  ];
+
+  string token0 = 4;
+  string token1 = 5;
+
+  string current_sqrt_price = 6 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"spot_price\"",
+    (gogoproto.nullable) = false
+  ];
+  string current_tick = 7 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"current_tick\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message TickInfo {
+  bool initialized = 1;
+  // sum of all non-normalized pool weights
+  string liquidity = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"liquidity\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message Position {
+  string liquidity = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"liquidity\"",
+    (gogoproto.nullable) = false
+  ];
 }
