@@ -1,7 +1,7 @@
 package concentrated_liquidity
 
 import (
-	fmt "fmt"
+	"fmt"
 	"math"
 	"math/bits"
 )
