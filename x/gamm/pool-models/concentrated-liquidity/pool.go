@@ -142,6 +142,7 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokensIn sdk.Coins, tokenOutDen
 		// new amount in, will be needed later
 		//amountIn = calcAmount1(liq, priceNext, sqrtpCur)
 		amountOut := calcAmount1(liq, priceNext, sqrtpCur)
+		amountOut = amountOut.Mul(sdk.NewDec(10).Power(6))
 		coinOut = sdk.NewCoin(tokenOutDenom, amountOut.TruncateInt())
 	} else {
 		return sdk.Coin{}, fmt.Errorf("tokenIn does not match any asset in pool")
@@ -183,22 +184,23 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokensOut sdk.Coins, tokenInDen
 		priceNext := sqrtpCur.Add(priceDiff)
 
 		// new amount in, will be needed later
-		//amountIn = calcAmount1(liq, priceNext, sqrtpCur)
-		amountOut := calcAmount0(liq, priceNext, sqrtpCur)
-		coinIn = sdk.NewCoin(tokenInDenom, amountOut.TruncateInt())
-		//need to figure out fee logic here
-		//coinIn.Amount = (coinIn.Amount.ToDec().Quo(sdk.OneDec().Sub(swapFee))).TruncateInt()
-	} else if tokenIn.Denom == asset0 {
+		// amountIn = calcAmount1(liq, priceNext, sqrtpCur)
+		amountIn := calcAmount0(liq, priceNext, sqrtpCur)
+		// fee logic
+		amountIn = amountIn.Quo(sdk.OneDec().Sub(swapFee))
+		coinIn = sdk.NewCoin(tokenInDenom, amountIn.TruncateInt())
+	} else if tokenOut.Denom == asset0 {
 		priceNextTop := liq.Mul(sdk.NewDec(10).Power(6).Mul(sqrtpCur))
 		priceNextBot := liq.Mul(sdk.NewDec(10).Power(6)).Add(tokenOutAmt.Mul(sqrtpCur))
 		priceNext := priceNextTop.Quo(priceNextBot)
 
 		// new amount in, will be needed later
-		//amountIn = calcAmount1(liq, priceNext, sqrtpCur)
-		amountOut := calcAmount1(liq, priceNext, sqrtpCur)
-		coinIn = sdk.NewCoin(tokenInDenom, amountOut.TruncateInt())
-		//need to figure out fee logic here
-		//coinIn.Amount = (coinIn.Amount.ToDec().Quo(sdk.OneDec().Sub(swapFee))).TruncateInt()
+		// amountIn = calcAmount1(liq, priceNext, sqrtpCur)
+		amountIn := calcAmount1(liq, priceNext, sqrtpCur)
+		amountIn = amountIn.Mul(sdk.NewDec(10).Power(6))
+		// fee logic
+		amountIn = amountIn.Quo(sdk.OneDec().Sub(swapFee))
+		coinIn = sdk.NewCoin(tokenInDenom, amountIn.TruncateInt())
 	} else {
 		return sdk.Coin{}, fmt.Errorf("tokenIn does not match any asset in pool")
 	}
