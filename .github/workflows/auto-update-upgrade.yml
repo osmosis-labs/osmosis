@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: CHECK
         run: |
-          echo CHECKIG LS
+          echo CHECKIG LSs
           ls -la
       - run: bash ./scripts/empty_upgrade_handler_gen.sh 
       - name: Create Pull Request
