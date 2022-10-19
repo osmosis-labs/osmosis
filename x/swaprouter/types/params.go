@@ -6,19 +6,6 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-// Parameter store keys.
-var (
-	KeyPruneEpochIdentifier    = []byte("PruneEpochIdentifier")
-	KeyRecordHistoryKeepPeriod = []byte("RecordHistoryKeepPeriod")
-
-	_ paramtypes.ParamSet = &Params{}
-)
-
-const (
-	defaultPruneEpochIdentifier    = "day"
-	defaultRecordHistoryKeepPeriod = 48 * time.Hour
-)
-
 // ParamTable for twap module.
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
