@@ -28,6 +28,15 @@ func TestCalcOutAmtGivenIn(t *testing.T) {
 	amountOut, _ = pool.CalcOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
 	fmt.Printf("%v", amountOut)
 	require.Equal(t, sdk.NewDec(8396), amountOut.Amount.ToDec())
+
+	// test with swap fee
+	tokensIn = sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(41999999)))
+	tokenOutDenom = "eth"
+	swapFee = sdk.NewDecWithPrec(2, 2)
+
+	amountOut, _ = pool.CalcOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
+	fmt.Printf("%v", amountOut)
+	require.Equal(t, sdk.NewDec(8228), amountOut.Amount.ToDec())
 }
 
 func TestCalcInAmtGivenOut(t *testing.T) {
