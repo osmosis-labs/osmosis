@@ -10,7 +10,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2.3.4
       - name: CHECKS
-        run: echo ${{ github.head_ref }}
+        run: echo ${{ github.ref }}
 
       - name: Running script
         run: bash ./scripts/empty_upgrade_handler_gen.sh 
@@ -18,7 +18,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         with:
-          base: ${{ github.head_ref }}
+          base: ${{ github.ref }}
           body: |
             Update report
             - Created a new empty upgrade handler
