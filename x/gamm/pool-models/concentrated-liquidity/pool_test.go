@@ -11,7 +11,7 @@ import (
 
 func TestCalcOutAmtGivenIn(t *testing.T) {
 	ctx := sdk.Context{}
-	pool, _ := cl.NewConcentratedLiquidityPool(1)
+	pool := cl.NewConcentratedLiquidityPool(1)
 
 	// test asset a to b logic
 	tokensIn := sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(133700)))
@@ -40,7 +40,7 @@ func TestCalcOutAmtGivenIn(t *testing.T) {
 
 func TestCalcInAmtGivenOut(t *testing.T) {
 	ctx := sdk.Context{}
-	pool, _ := cl.NewConcentratedLiquidityPool(1)
+	pool := cl.NewConcentratedLiquidityPool(1)
 
 	// test asset a to b logic
 	tokensOut := sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(4199999999)))
