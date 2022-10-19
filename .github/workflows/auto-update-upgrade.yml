@@ -14,22 +14,19 @@ jobs:
       - name: Running script
         run: bash ./scripts/empty_upgrade_handler_gen.sh 
 
-      - name: CHECK
-        run: echo ${{ secrets.GITHUB_TOKEN }}
-
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
-        # with:
+        with:
         #   token: ${{ secrets.GITHUB_TOKEN }}
         #   base: ${{ github.repository }}
         #   commit-message: Auto post release updgrade
         #   delete-branch: true
         #   branch: main
-        #   body: |
-        #     Update report
-        #     - Created a new empty upgrade handler
-        #     - Increased E2E_UPGRADE_VERSION in Makefile by 1
-        #   labels: |
-        #     auto
-        #     e2e
-        #     app-wiring
+          body: |
+            Update report
+            - Created a new empty upgrade handler
+            - Increased E2E_UPGRADE_VERSION in Makefile by 1
+          labels: |
+            auto
+            e2e
+            app-wiring
