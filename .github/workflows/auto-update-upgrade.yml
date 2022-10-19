@@ -2,7 +2,7 @@ name: On Release Auto Upgrade
 
 on:
   release: 
-    types: [created]
+    types: [deleted]
 
 jobs:
   build:
