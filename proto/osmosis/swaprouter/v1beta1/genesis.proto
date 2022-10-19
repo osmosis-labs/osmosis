@@ -14,5 +14,5 @@ message Params {}
 // GenesisState defines the swaprouter module's genesis state.
 message GenesisState {
   // params is the container of swaprouter parameters.
-  Params params = 2 [ (gogoproto.nullable) = false ];
+  Params params = 1 [ (gogoproto.nullable) = false ];
 }
