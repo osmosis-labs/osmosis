@@ -722,3 +722,117 @@ func TestCalcSingleAssetJoinShares(t *testing.T) {
 		})
 	}
 }
+
+func TestJoinPoolSharesInternal(t *testing.T) {
+	tenPercentOfTwoPoolRaw := int64(1000000000 / 10)
+	tenPercentOfTwoPoolCoins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(int64(1000000000/10))), sdk.NewCoin("bar", sdk.NewInt(int64(1000000000/10))))
+	twoAssetPlusTenPercent := twoEvenStablePoolAssets.Add(tenPercentOfTwoPoolCoins...)
+	type testcase struct {
+		tokensIn        sdk.Coins
+		poolAssets      sdk.Coins
+		scalingFactors  []uint64
+		swapFee         sdk.Dec
+		expNumShare     sdk.Int
+		expTokensJoined sdk.Coins
+		expPoolAssets   sdk.Coins
+		expectPass      bool
+	}
+
+	tests := map[string]testcase{
+		"even two asset pool, same tokenIn ratio": {
+			tokensIn:        tenPercentOfTwoPoolCoins,
+			poolAssets:      twoEvenStablePoolAssets,
+			scalingFactors:  defaultTwoAssetScalingFactors,
+			swapFee:         sdk.ZeroDec(),
+			expNumShare:     sdk.NewIntFromUint64(10000000000000000000),
+			expTokensJoined: tenPercentOfTwoPoolCoins,
+			expPoolAssets:   twoAssetPlusTenPercent,
+			expectPass:      true,
+		},
+		"even two asset pool, different tokenIn ratio with pool": {
+			tokensIn:        sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tenPercentOfTwoPoolRaw)), sdk.NewCoin("bar", sdk.NewInt(10+tenPercentOfTwoPoolRaw))),
+			poolAssets:      twoEvenStablePoolAssets,
+			scalingFactors:  defaultTwoAssetScalingFactors,
+			swapFee:         sdk.ZeroDec(),
+			expNumShare:     sdk.NewIntFromUint64(10000000500000000000),
+			expTokensJoined: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tenPercentOfTwoPoolRaw)), sdk.NewCoin("bar", sdk.NewInt(10+tenPercentOfTwoPoolRaw))),
+			expPoolAssets:   twoAssetPlusTenPercent.Add(sdk.NewCoin("bar", sdk.NewInt(10))),
+			expectPass:      true,
+		},
+		"all-asset pool join attempt exceeds max scaled asset amount": {
+			tokensIn: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 1),
+				sdk.NewInt64Coin("bar", 1),
+			),
+			poolAssets: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 10_000_000_000),
+				sdk.NewInt64Coin("bar", 10_000_000_000),
+			),
+			scalingFactors:  defaultTwoAssetScalingFactors,
+			swapFee:         sdk.ZeroDec(),
+			expNumShare:     sdk.ZeroInt(),
+			expTokensJoined: sdk.Coins{},
+			expPoolAssets: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 10_000_000_000),
+				sdk.NewInt64Coin("bar", 10_000_000_000),
+			),
+			expectPass: false,
+		},
+		"single-asset pool join exceeds hits max scaled asset amount": {
+			tokensIn: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 1),
+			),
+			poolAssets: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 10_000_000_000),
+				sdk.NewInt64Coin("bar", 10_000_000_000),
+			),
+			scalingFactors:  defaultTwoAssetScalingFactors,
+			swapFee:         sdk.ZeroDec(),
+			expNumShare:     sdk.ZeroInt(),
+			expTokensJoined: sdk.Coins{},
+			expPoolAssets: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 10_000_000_000),
+				sdk.NewInt64Coin("bar", 10_000_000_000),
+			),
+			expectPass: false,
+		},
+		"all-asset pool join attempt exactly hits max scaled asset amount": {
+			tokensIn: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 1),
+				sdk.NewInt64Coin("bar", 1),
+			),
+			poolAssets: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 9_999_999_999),
+				sdk.NewInt64Coin("bar", 9_999_999_999),
+			),
+			scalingFactors: defaultTwoAssetScalingFactors,
+			swapFee:        sdk.ZeroDec(),
+			expNumShare:    sdk.NewInt(10000000000),
+			expTokensJoined: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 1),
+				sdk.NewInt64Coin("bar", 1),
+			),
+			expPoolAssets: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 10_000_000_000),
+				sdk.NewInt64Coin("bar", 10_000_000_000),
+			),
+			expectPass: true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := sdk.Context{}
+			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
+
+			shares, joinedLiquidity, err := p.joinPoolSharesInternal(ctx, tc.tokensIn, tc.swapFee)
+
+			if tc.expectPass {
+				require.Equal(t, tc.expNumShare, shares)
+				require.Equal(t, tc.expTokensJoined, joinedLiquidity)
+				require.Equal(t, tc.expPoolAssets, p.PoolLiquidity)
+			}
+			osmoassert.ConditionalError(t, !tc.expectPass, err)
+		})
+	}
+}
