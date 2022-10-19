@@ -1,9 +1,9 @@
 name: On Release Auto Upgrade
 
-on:
-  release: 
-    types: [deleted]
-
+# on:
+#   release: 
+#     types: [deleted]
+on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: CHECK
         run: |
-          echo CHECKIG LSs
+          echo CHECKIG LSss
           echo ${{ github.repository }}
           echo ${{ github.token }}
           ls -la
