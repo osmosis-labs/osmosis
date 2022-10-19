@@ -170,11 +170,25 @@ func solveCFMMBinarySearch(constantFunction func(osmomath.BigDec, osmomath.BigDe
 		} else if yIn.Abs().GTE(yReserve) {
 			panic("cannot input more than pool reserves")
 		}
-		k := constantFunction(xReserve, yReserve)
+		xLowEst, xHighEst := xReserve, xReserve
 		yFinal := yReserve.Add(yIn)
-		xLowEst := osmomath.ZeroDec()
-		// we set upper bound at 2 * xReserve to accommodate negative yIns
-		xHighEst := xReserve.Mul(osmomath.NewBigDec(2))
+
+		k0 := constantFunction(xReserve, yFinal)
+		k := constantFunction(xReserve, yReserve)
+		kRatio := k0.Quo(k)
+
+		if kRatio.LT(osmomath.OneDec()) {
+			// k_0 < k. Need to find an upperbound. Worst case assume a linear relationship, gives an upperbound
+    		// TODO: In the future, we can derive better bounds via reasoning about coefficients in the cubic
+    		// These are quite close when we are in the "stable" part of the curve though.
+			xHighEst = xReserve.Quo(kRatio).Ceil()
+		} else if kRatio.GT(osmomath.OneDec()) {
+			// need to find a lowerbound. We could use a cubic relation, but for now we just set it to 0.
+			xLowEst = osmomath.ZeroDec()
+		} else {
+			// k remains unchanged, so xOut = 0
+			return osmomath.ZeroDec()
+		}
 		maxIterations := 256
 		errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.Dec{}}
 
