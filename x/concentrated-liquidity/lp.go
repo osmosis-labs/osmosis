@@ -8,7 +8,7 @@ import (
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
-func (k Keeper) JoinPool(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokenIn sdk.Int, lowerTick sdk.Int, upperTick sdk.Int) (numShares sdk.Int, err error) {
+func (k Keeper) Mint(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokenIn sdk.Int, lowerTick sdk.Int, upperTick sdk.Int) (numShares sdk.Int, err error) {
 	// first check and validate arguments
 	if lowerTick.GTE(types.MaxTick) || lowerTick.LT(types.MinTick) || upperTick.GT(types.MaxTick) {
 		// TODO: come back to errors
@@ -23,7 +23,7 @@ func (k Keeper) JoinPool(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, t
 	k.UpdateTickWithNewLiquidity(ctx, poolId, upperTick, tokenIn)
 
 	// update tick with new liquidity
-	k.UpdatePositionWithLiquidity(ctx, poolId, owner.String(), lowerTick, upperTick, tokenIn)
+	k.updatePositionWithLiquidity(ctx, poolId, owner.String(), lowerTick, upperTick, tokenIn)
 
 	return sdk.Int{}, nil
 }

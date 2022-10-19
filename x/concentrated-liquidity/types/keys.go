@@ -23,12 +23,12 @@ var (
 	PositionPrefix = "position_prefix" + KeySeparator
 )
 
-// uses pool Id and tick index
+// KeyTick uses pool Id and tick index
 func KeyTick(poolId uint64, tickIndex sdk.Int) []byte {
 	return []byte(fmt.Sprintf("%s%d%s", TickPrefix, poolId, tickIndex.String()))
 }
 
-// uses pool Id, owner, lower tick and upper tick for keys
+// KeyPosition uses pool Id, owner, lower tick and upper tick for keys
 func KeyPosition(poolId uint64, address string, lowerTick, upperTick sdk.Int) []byte {
 	return []byte(fmt.Sprintf("%s%d%s%s%s", PositionPrefix, poolId, address, lowerTick.String(), upperTick.String()))
 }
