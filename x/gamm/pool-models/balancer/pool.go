@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/osmosis-labs/osmosis/v12/osmomath"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
@@ -631,6 +632,29 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (spotPric
 	spotPrice = supplyRatio.Mul(invWeightRatio)
 
 	return spotPrice, err
+}
+
+func (p *Pool) CalcAmoutOfTokenToGetTargetPrice(ctx sdk.Context, targetSpotPrice sdk.Dec, baseAsset, quoteAsset string) (amountTrade sdk.Dec, err error) {
+	quote, base, err := p.parsePoolAssetsByDenoms(quoteAsset, quoteAsset)
+	if err != nil {
+		return sdk.ZeroDec(), err
+	}
+	if base.Weight.IsZero() || quote.Weight.IsZero() {
+		return sdk.ZeroDec(), errors.New("pool is misconfigured, got 0 weight")
+	}
+	spotPriceNow, err := p.SpotPrice(ctx, baseAsset, quoteAsset)
+	if err != nil {
+		return sdk.ZeroDec(), errors.New("Can not get spot price from pool")
+	}
+	// Amount of base token need to trade to get target spot price
+	// AmoutBaseTokenNeedToTrade = AmoutBaseTokenNow * ((targetSpotPrice/spotPriceNow)^((weight_quote/(weight_quote + weight_base))) -1 )
+
+	ratioPrice := targetSpotPrice.Quo(spotPriceNow)
+	ratioWeight := (quote.Weight.ToDec()).Quo(quote.Weight.ToDec().Add(base.Weight.ToDec()))
+
+	amountTrade = base.Token.Amount.ToDec().Mul(osmomath.Pow(ratioPrice, ratioWeight).Sub(sdk.OneDec()))
+
+	return amountTrade, nil
 }
 
 // calcPoolOutGivenSingleIn - balance pAo.

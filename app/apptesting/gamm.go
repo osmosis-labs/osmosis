@@ -110,6 +110,22 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolAsset(assets []balancer.Po
 	return poolId
 }
 
+func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice sdk.Dec, baseDenom string) {
+	var quoteDenom string
+
+	pool, _ := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolID)
+	denoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, poolID)
+	s.Require().NoError(err)
+
+	if denoms[0] == baseDenom {
+		quoteDenom = denoms[1]
+	} else {
+		quoteDenom = denoms[0]
+	}
+	amountTrade, err := pool.CalcAmoutOfTokenToGetTargetPrice(s.Ctx, targetSpotPrice, baseDenom, quoteDenom)
+	amountTrade = amountTrade.RoundInt().ToDec()
+
+}
 func (s *KeeperTestHelper) RunBasicSwap(poolId uint64) {
 	denoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, poolId)
 	s.Require().NoError(err)
