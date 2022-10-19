@@ -25,21 +25,16 @@
  cp ./app/upgrades/v${latest_version}/constants.go $new_file/constants.go
  cp ./app/upgrades/v${latest_version}/upgrades.go $new_file/upgrades.go
 
-SEDOPTION=
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  SEDOPTION="-i ''"
-fi
-
- sed $SEDOPTION "s/v$latest_version/v$version_create/g" $new_file/constants.go
- sed $SEDOPTION "s/v$latest_version/v$version_create/g" $new_file/upgrades.go
+ sed -i '' "s/v$latest_version/v$version_create/g" $new_file/constants.go
+ sed -i '' "s/v$latest_version/v$version_create/g" $new_file/upgrades.go
 
  bracks='"'
 
  # change imports in case go mod changed
- sed $SEDOPTION "s|.*/app/upgrades.*|\t$module/app/upgrades$bracks|" $new_file/constants.go
- sed $SEDOPTION "s|.*/app/upgrades.*|\t$module/app/upgrades$bracks|" $new_file/upgrades.go
- sed $SEDOPTION "s|.*/app/keepers.*|\t$module/app/keepers$bracks|" $new_file/upgrades.go
- sed $SEDOPTION "s|.*/x/lockup/types.*|\tlockuptypes $module/x/lockup/types$bracks|" $new_file/upgrades.go
+ sed -i '' "s|.*/app/upgrades.*|\t$module/app/upgrades$bracks|" $new_file/constants.go
+ sed -i '' "s|.*/app/upgrades.*|\t$module/app/upgrades$bracks|" $new_file/upgrades.go
+ sed -i '' "s|.*/app/keepers.*|\t$module/app/keepers$bracks|" $new_file/upgrades.go
+ sed -i '' "s|.*/x/lockup/types.*|\tlockuptypes $module/x/lockup/types$bracks|" $new_file/upgrades.go
 
  # change e2e version in makefile
- sed $SEDOPTION "s/E2E_UPGRADE_VERSION := ${bracks}v$latest_version$bracks/E2E_UPGRADE_VERSION := ${bracks}v$version_create$bracks/" ./Makefile
+ sed -i '' "s/E2E_UPGRADE_VERSION := ${bracks}v$latest_version$bracks/E2E_UPGRADE_VERSION := ${bracks}v$version_create$bracks/" ./Makefile
