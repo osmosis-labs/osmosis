@@ -152,6 +152,18 @@ func solveCfmmDirect(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
 	return xOut
 }
 
+// multi-asset CFMM is xyu(x^2 + y^2 + w) = k
+// As described in our spec, we can ignore the u term and simply solve within the bounds of k' = k / u
+// since u remains constant throughout any independent operation this solver would be used for.
+// We want to solve for a given addition of `b` units of y into the pool,
+// how many units `a` of x do we get out.
+// Let y' = y + b
+// we solve k = (x'y')(x'^2 + y^2 + w) for x', using the following equation: https://www.wolframalpha.com/input?i2d=true&i=solve+for+y%5C%2844%29+x*y*%5C%2840%29Power%5Bx%2C2%5D+%2B+Power%5By%2C2%5D+%2B+w%5C%2841%29%3Dk
+// which we simplify to be the following: https://www.desmos.com/calculator/zx2qslqndl
+// Then we use that to derive the change in x as x_out = x' - x
+//
+// Since original reserves, y' and k are known and remain constant throughout the calculation,
+// deriving x' and then finding x_out is equivalent to finding x_out directly.
 func solveCFMMMultiDirect(xReserve, yReserve, wSumSquares, yIn osmomath.BigDec) osmomath.BigDec {
 	if !xReserve.IsPositive() || !yReserve.IsPositive() || wSumSquares.IsNegative() || !yIn.IsPositive() {
 		panic("invalid input: reserves and input must be positive")
