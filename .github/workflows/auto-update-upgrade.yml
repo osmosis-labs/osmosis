@@ -9,8 +9,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2.3.4
-        with:
-          ref: ${{ inputs.target-branch }}
+        # with:
+        #   ref: ${{ inputs.target-branch }}
       - name: CHECKS
         run: echo ${{ env.GITHUB_WORKSPACE }}
 
@@ -20,7 +20,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         with:
-          base: ${{ inputs.target-branch }}
+          base: main
           body: |
             Update report
             - Created a new empty upgrade handler
