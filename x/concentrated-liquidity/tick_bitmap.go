@@ -40,6 +40,8 @@ func (tb *TickBitmap) FlipTick(tickIndex, tickSpacing int32) error {
 // In other words, it returns the next initialized or uninitialized tick up to
 // 64 ticks away from the current tick and whether that next tick is initialized,
 // as the function only searches within up to 64 ticks.
+//
+// Ref: https://github.com/Jeiwan/uniswapv3-code/blob/c8777c6462fb5d0f1d681c74f732174ff76880d6/src/lib/TickBitmap.sol#L38-L89
 func (tb *TickBitmap) NextInitializedTickWithinOneWord(tickIndex, tickSpacing int32, lte bool) (next int32, initialized bool) {
 	compressed := tickIndex / tickSpacing
 
