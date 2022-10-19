@@ -67,8 +67,8 @@ mod tests {
     fn mock_init_no_price(deps: DepsMut) {
         let msg = InstantiateMsg {
             required_denom: "token".to_string(),
-            register_price: Uint128::from(0 as u128),
-            annual_tax_bps: Uint128::from(0 as u128),
+            register_price: Uint128::from(0u128),
+            annual_tax_bps: Uint128::from(0u128),
             owner_grace_period: Duration::Time(7_776_000),
         };
 
@@ -82,7 +82,7 @@ mod tests {
         let info = mock_info("alice_key", sent);
         let msg = ExecuteMsg::Register {
             name: "alice.ibc".to_string(),
-            years: Uint128::from(2 as u128),
+            years: Uint128::from(2u128),
         };
         let _res = execute(deps, mock_env(), info, msg)
             .expect("contract successfully handles Register message");
@@ -98,8 +98,8 @@ mod tests {
             deps.as_ref(),
             Config {
                 required_denom: "token".to_string(),
-                register_price: Uint128::from(0 as u128),
-                annual_tax_bps: Uint128::from(0 as u128),
+                register_price: Uint128::from(0u128),
+                annual_tax_bps: Uint128::from(0u128),
                 owner_grace_period: Duration::Time(7_776_000),
             },
         );
@@ -112,8 +112,8 @@ mod tests {
         mock_init_with_price(
             deps.as_mut(),
             "token",
-            Uint128::from(3 as u128),
-            Uint128::from(100 as u128),
+            Uint128::from(3u128),
+            Uint128::from(100u128),
             Duration::Time(7_776_000),
         );
 
@@ -121,8 +121,8 @@ mod tests {
             deps.as_ref(),
             Config {
                 required_denom: "token".to_string(),
-                register_price: Uint128::from(3 as u128),
-                annual_tax_bps: Uint128::from(100 as u128),
+                register_price: Uint128::from(3u128),
+                annual_tax_bps: Uint128::from(100u128),
                 owner_grace_period: Duration::Time(7_776_000),
             },
         );
@@ -144,8 +144,8 @@ mod tests {
         mock_init_with_price(
             deps.as_mut(),
             "token",
-            Uint128::from(2 as u128),
-            Uint128::from(0 as u128),
+            Uint128::from(2u128),
+            Uint128::from(0u128),
             Duration::Time(7_776_000),
         );
 
@@ -155,7 +155,7 @@ mod tests {
         let info = mock_info("bob_key", &coins(5, "token"));
         let msg = ExecuteMsg::Register {
             name: "bob.ibc".to_string(),
-            years: Uint128::from(1 as u128),
+            years: Uint128::from(1u128),
         };
 
         let _res = execute(deps.as_mut(), mock_env(), info, msg)
@@ -172,8 +172,8 @@ mod tests {
         mock_init_with_price(
             deps.as_mut(),
             "token",
-            Uint128::from(200 as u128),
-            Uint128::from(100 as u128),
+            Uint128::from(200u128),
+            Uint128::from(100u128),
             Duration::Time(7_776_000),
         );
 
@@ -183,7 +183,7 @@ mod tests {
         let info = mock_info("bob_key", &coins(500, "token"));
         let msg = ExecuteMsg::Register {
             name: "bob.ibc".to_string(),
-            years: Uint128::from(3 as u128),
+            years: Uint128::from(3u128),
         };
 
         let _res = execute(deps.as_mut(), mock_env(), info, msg)
@@ -204,7 +204,7 @@ mod tests {
         let info = mock_info("bob_key", &coins(2, "token"));
         let msg = ExecuteMsg::Register {
             name: "alice.ibc".to_string(),
-            years: Uint128::from(1 as u128),
+            years: Uint128::from(1u128),
         };
         let res = execute(deps.as_mut(), mock_env(), info, msg);
 
@@ -217,7 +217,7 @@ mod tests {
         let info = mock_info("alice_key", &coins(2, "token"));
         let msg = ExecuteMsg::Register {
             name: "alice.ibc".to_string(),
-            years: Uint128::from(1 as u128),
+            years: Uint128::from(1u128),
         };
         let res = execute(deps.as_mut(), mock_env(), info, msg);
 
@@ -237,7 +237,7 @@ mod tests {
         // hi is too short, only two characters
         let msg = ExecuteMsg::Register {
             name: "hi.ibc".to_string(),
-            years: Uint128::from(1 as u128),
+            years: Uint128::from(1u128),
         };
         match execute(deps.as_mut(), mock_env(), info.clone(), msg) {
             Ok(_) => panic!("Must return error"),
@@ -248,7 +248,7 @@ mod tests {
         // needs .ibc suffix
         let msg = ExecuteMsg::Register {
             name: "alice".to_string(),
-            years: Uint128::from(1 as u128),
+            years: Uint128::from(1u128),
         };
         match execute(deps.as_mut(), mock_env(), info.clone(), msg) {
             Ok(_) => panic!("Must return error"),
@@ -259,7 +259,7 @@ mod tests {
         // no other suffix for now
         let msg = ExecuteMsg::Register {
             name: "alice.eth".to_string(),
-            years: Uint128::from(1 as u128),
+            years: Uint128::from(1u128),
         };
         match execute(deps.as_mut(), mock_env(), info.clone(), msg) {
             Ok(_) => panic!("Must return error"),
@@ -269,7 +269,7 @@ mod tests {
 
         // 65 chars is too long
         let msg = ExecuteMsg::Register {
-            years: Uint128::from(1 as u128),
+            years: Uint128::from(1u128),
             name: "01234567890123456789012345678901234567890123456789012345678901234.ibc"
                 .to_string(),
         };
@@ -282,7 +282,7 @@ mod tests {
         // no upper case...
         let msg = ExecuteMsg::Register {
             name: "LOUD.ibc".to_string(),
-            years: Uint128::from(1 as u128),
+            years: Uint128::from(1u128),
         };
         match execute(deps.as_mut(), mock_env(), info.clone(), msg) {
             Ok(_) => panic!("Must return error"),
@@ -292,7 +292,7 @@ mod tests {
         // ... or spaces
         let msg = ExecuteMsg::Register {
             name: "two words.ibc".to_string(),
-            years: Uint128::from(1 as u128),
+            years: Uint128::from(1u128),
         };
         match execute(deps.as_mut(), mock_env(), info, msg) {
             Ok(_) => panic!("Must return error"),
@@ -307,8 +307,8 @@ mod tests {
         mock_init_with_price(
             deps.as_mut(),
             "token",
-            Uint128::from(2 as u128),
-            Uint128::from(0 as u128),
+            Uint128::from(2u128),
+            Uint128::from(0u128),
             Duration::Time(7_776_000),
         );
 
@@ -316,7 +316,7 @@ mod tests {
         let info = mock_info("alice_key", &[]);
         let msg = ExecuteMsg::Register {
             name: "alice.ibc".to_string(),
-            years: Uint128::from(1 as u128),
+            years: Uint128::from(1u128),
         };
 
         let res = execute(deps.as_mut(), mock_env(), info, msg);
@@ -334,8 +334,8 @@ mod tests {
         mock_init_with_price(
             deps.as_mut(),
             "token",
-            Uint128::from(2 as u128),
-            Uint128::from(0 as u128),
+            Uint128::from(2u128),
+            Uint128::from(0u128),
             Duration::Time(7_776_000),
         );
 
@@ -343,7 +343,7 @@ mod tests {
         let info = mock_info("alice_key", &coins(2, "earth"));
         let msg = ExecuteMsg::Register {
             name: "alice.ibc".to_string(),
-            years: Uint128::from(1 as u128),
+            years: Uint128::from(1u128),
         };
 
         let res = execute(deps.as_mut(), mock_env(), info, msg);
@@ -361,8 +361,8 @@ mod tests {
         mock_init_with_price(
             deps.as_mut(),
             "token",
-            Uint128::from(200 as u128),
-            Uint128::from(100 as u128),
+            Uint128::from(200u128),
+            Uint128::from(100u128),
             Duration::Time(7_776_000),
         );
         mock_alice_registers_name(deps.as_mut(), &coins(204, "token"));
@@ -372,8 +372,8 @@ mod tests {
             let info = mock_info("bob_key", &coins(330, "token"));
             let msg = ExecuteMsg::AddBid {
                 name: "alice.ibc".to_string(),
-                price: Uint128::from(300 as u128),
-                years: Uint128::from(10 as u128),
+                price: Uint128::from(300u128),
+                years: Uint128::from(10u128),
             };
             execute(deps.as_mut(), mock_env(), info, msg)
                 .expect("contract successfully adding a bid")
@@ -384,8 +384,8 @@ mod tests {
             let info = mock_info("alice_key", &coins(500, "token"));
             let msg = ExecuteMsg::AddBid {
                 name: "alice.ibc".to_string(),
-                price: Uint128::from(400 as u128),
-                years: Uint128::from(20 as u128),
+                price: Uint128::from(400u128),
+                years: Uint128::from(20u128),
             };
             execute(deps.as_mut(), mock_env(), info, msg)
                 .expect("contract successfully adding a bid")
@@ -398,8 +398,8 @@ mod tests {
         mock_init_with_price(
             deps.as_mut(),
             "token",
-            Uint128::from(200 as u128),
-            Uint128::from(100 as u128),
+            Uint128::from(200u128),
+            Uint128::from(100u128),
             Duration::Time(7_776_000),
         );
         mock_alice_registers_name(deps.as_mut(), &coins(204, "token"));
@@ -409,8 +409,8 @@ mod tests {
             let info = mock_info("bob_key", &coins(329, "token"));
             let msg = ExecuteMsg::AddBid {
                 name: "alice.ibc".to_string(),
-                price: Uint128::from(300 as u128),
-                years: Uint128::from(10 as u128),
+                price: Uint128::from(300u128),
+                years: Uint128::from(10u128),
             };
             execute(deps.as_mut(), mock_env(), info, msg)
         };
@@ -426,8 +426,8 @@ mod tests {
             let info = mock_info("alice_key", &coins(209, "token"));
             let msg = ExecuteMsg::AddBid {
                 name: "alice.ibc".to_string(),
-                price: Uint128::from(200 as u128),
-                years: Uint128::from(5 as u128),
+                price: Uint128::from(200u128),
+                years: Uint128::from(5u128),
             };
             execute(deps.as_mut(), mock_env(), info, msg)
         };

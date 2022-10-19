@@ -69,7 +69,7 @@ pub fn execute_register(
 
     let config_state = config(deps.storage).load()?;
     let tax_per_year =
-        config_state.annual_tax_bps * config_state.register_price / Uint128::from(10_000 as u128);
+        config_state.annual_tax_bps * config_state.register_price / Uint128::from(10_000u128);
     // Calculate required payment including rent
     let required_amount = {
         let total_tax = tax_per_year * years;

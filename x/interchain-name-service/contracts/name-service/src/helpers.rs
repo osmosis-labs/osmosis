@@ -38,7 +38,7 @@ pub fn calculate_required_escrow(
     annual_tax_bps: Uint128,
     years: Uint128,
 ) -> Uint128 {
-    let tax_per_year = annual_tax_bps * price / Uint128::from(10_000 as u128);
+    let tax_per_year = annual_tax_bps * price / Uint128::from(10_000u128);
     let total_tax = tax_per_year * years;
     price + total_tax
 }
