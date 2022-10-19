@@ -8,9 +8,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - run: echo CHECKING LS
-      - run: ls -la
+      - uses: actions/checkout@v2
+      - name: CHECK
+        run: |
+          echo CHECKIG LS
+          ls -la
       - run: bash ./scripts/empty_upgrade_handler_gen.sh 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
