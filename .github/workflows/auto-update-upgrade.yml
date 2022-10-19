@@ -8,20 +8,20 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
-        # with:
-        #   token: ${{ secrets.ACCESS_TOKEN }}
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+
+      - name: Running script
+        run: bash ./scripts/empty_upgrade_handler_gen.sh 
+
       - name: CHECK
-        run: |
-          echo CHECKIG LSssa
-          echo ${{ github.repository }}
-          echo ${{ github.token }}
-          ls -la
-      - run: bash ./scripts/empty_upgrade_handler_gen.sh 
+        run: echo ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         with:
-          token: https://github.com/RusAkh/osmosis-fork
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: ${{ github.repository }}
           commit-message: Auto post release updgrade
           delete-branch: true
           branch: main
@@ -33,4 +33,3 @@ jobs:
             auto
             e2e
             app-wiring
-          base: ${{ github.repository }}
