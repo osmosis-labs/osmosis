@@ -49,6 +49,8 @@ import (
 
 	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v12/wasmbinding"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 	epochskeeper "github.com/osmosis-labs/osmosis/v12/x/epochs/keeper"
 	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v12/x/gamm/keeper"
@@ -89,28 +91,29 @@ type AppKeepers struct {
 	ScopedWasmKeeper     capabilitykeeper.ScopedKeeper
 
 	// "Normal" keepers
-	AccountKeeper        *authkeeper.AccountKeeper
-	BankKeeper           *bankkeeper.BaseKeeper
-	AuthzKeeper          *authzkeeper.Keeper
-	StakingKeeper        *stakingkeeper.Keeper
-	DistrKeeper          *distrkeeper.Keeper
-	SlashingKeeper       *slashingkeeper.Keeper
-	IBCKeeper            *ibckeeper.Keeper
-	ICAHostKeeper        *icahostkeeper.Keeper
-	TransferKeeper       *ibctransferkeeper.Keeper
-	EvidenceKeeper       *evidencekeeper.Keeper
-	GAMMKeeper           *gammkeeper.Keeper
-	TwapKeeper           *twap.Keeper
-	LockupKeeper         *lockupkeeper.Keeper
-	EpochsKeeper         *epochskeeper.Keeper
-	IncentivesKeeper     *incentiveskeeper.Keeper
-	MintKeeper           *mintkeeper.Keeper
-	PoolIncentivesKeeper *poolincentiveskeeper.Keeper
-	TxFeesKeeper         *txfeeskeeper.Keeper
-	SuperfluidKeeper     *superfluidkeeper.Keeper
-	GovKeeper            *govkeeper.Keeper
-	WasmKeeper           *wasm.Keeper
-	TokenFactoryKeeper   *tokenfactorykeeper.Keeper
+	AccountKeeper               *authkeeper.AccountKeeper
+	BankKeeper                  *bankkeeper.BaseKeeper
+	AuthzKeeper                 *authzkeeper.Keeper
+	StakingKeeper               *stakingkeeper.Keeper
+	DistrKeeper                 *distrkeeper.Keeper
+	SlashingKeeper              *slashingkeeper.Keeper
+	IBCKeeper                   *ibckeeper.Keeper
+	ICAHostKeeper               *icahostkeeper.Keeper
+	TransferKeeper              *ibctransferkeeper.Keeper
+	EvidenceKeeper              *evidencekeeper.Keeper
+	GAMMKeeper                  *gammkeeper.Keeper
+	TwapKeeper                  *twap.Keeper
+	LockupKeeper                *lockupkeeper.Keeper
+	EpochsKeeper                *epochskeeper.Keeper
+	IncentivesKeeper            *incentiveskeeper.Keeper
+	MintKeeper                  *mintkeeper.Keeper
+	PoolIncentivesKeeper        *poolincentiveskeeper.Keeper
+	TxFeesKeeper                *txfeeskeeper.Keeper
+	SuperfluidKeeper            *superfluidkeeper.Keeper
+	GovKeeper                   *govkeeper.Keeper
+	WasmKeeper                  *wasm.Keeper
+	TokenFactoryKeeper          *tokenfactorykeeper.Keeper
+	ConcentratedLiquidityKeeper *concentratedliquidity.Keeper
 	// IBC modules
 	// transfer module
 	TransferModule transfer.AppModule
@@ -249,6 +252,10 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.tkeys[twaptypes.TransientStoreKey],
 		appKeepers.GetSubspace(twaptypes.ModuleName),
 		appKeepers.GAMMKeeper)
+
+	concentratedLiquidityKeeper := concentratedliquidity.NewKeeper(
+		appKeepers.keys[concentratedliquiditytypes.StoreKey])
+	appKeepers.ConcentratedLiquidityKeeper = concentratedLiquidityKeeper
 
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
 		appKeepers.keys[lockuptypes.StoreKey],
