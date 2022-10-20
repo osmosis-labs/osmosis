@@ -48,7 +48,10 @@ func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex in
 		// key is the BigEndianToUint64 encoding of a tick index.
 		tick := int64(sdk.BigEndianToUint64(iter.Key()))
 
-		if tick > tickIndex {
+		if !lte && tick > tickIndex {
+			return tick, true
+		}
+		if lte && tick <= tickIndex {
 			return tick, true
 		}
 
