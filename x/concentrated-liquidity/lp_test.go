@@ -1,8 +1,6 @@
 package concentrated_liquidity_test
 
 import (
-	fmt "fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -28,12 +26,8 @@ func (s *KeeperTestSuite) TestMint() {
 
 	s.SetupTest()
 
-	s.clkeeper.CreateNewConcentratedLiquidityPool(s.Ctx, poolId, denom0, denom1, currentSqrtP, currentTick)
+	s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, poolId, denom0, denom1, currentSqrtP, currentTick)
 
-	amtDenom0, amtDenom1, err := s.clkeeper.Mint(s.Ctx, poolId, s.TestAccs[0], liquidity, lowerTick, upperTick)
+	_, _, err := s.App.ConcentratedLiquidityKeeper.Mint(s.Ctx, poolId, s.TestAccs[0], liquidity, lowerTick, upperTick)
 	s.Require().NoError(err)
-
-	fmt.Println("======")
-	fmt.Println(amtDenom0.String())
-	fmt.Println(amtDenom1.String())
 }

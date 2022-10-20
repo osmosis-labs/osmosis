@@ -16,6 +16,7 @@ func (k Keeper) getSqrtRatioAtTick(tickIndex sdk.Int) (sdk.Dec, error) {
 	return sqrtRatio, nil
 }
 
+// TODO: implement this
 // func (k Keeper) getTickAtSqrtRatio(sqrtPrice sdk.Dec) sdk.Int {
 // 	return sdk.Int{}
 // }

@@ -14,19 +14,15 @@ var (
 )
 
 func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint64, denom0, denom1 string, currSqrtPrice, currTick sdk.Int) Pool {
-	fmt.Println("===0")
 	poolAddr := types.NewPoolAddress(poolId)
-	fmt.Println("===1")
 	pool := Pool{
 		Address:          poolAddr.String(),
 		Id:               poolId,
 		CurrentSqrtPrice: currSqrtPrice,
 		CurrentTick:      currTick,
 	}
-	fmt.Println("===2")
 
 	k.setPoolById(ctx, poolId, pool)
-	fmt.Println("===3")
 
 	return pool
 }
