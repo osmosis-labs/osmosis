@@ -47,6 +47,8 @@ import (
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer"
 
+	"github.com/osmosis-labs/osmosis/v12/x/swaprouter"
+
 	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v12/wasmbinding"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity"
@@ -67,6 +69,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/superfluid"
 	superfluidkeeper "github.com/osmosis-labs/osmosis/v12/x/superfluid/keeper"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v12/x/tokenfactory/keeper"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v12/x/tokenfactory/types"
 	"github.com/osmosis-labs/osmosis/v12/x/twap"
@@ -113,6 +116,7 @@ type AppKeepers struct {
 	GovKeeper                   *govkeeper.Keeper
 	WasmKeeper                  *wasm.Keeper
 	TokenFactoryKeeper          *tokenfactorykeeper.Keeper
+	SwapRouterKeeper            *swaprouter.Keeper
 	ConcentratedLiquidityKeeper *concentratedliquidity.Keeper
 	// IBC modules
 	// transfer module
@@ -253,9 +257,17 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GetSubspace(twaptypes.ModuleName),
 		appKeepers.GAMMKeeper)
 
+
 	concentratedLiquidityKeeper := concentratedliquidity.NewKeeper(
 		appKeepers.keys[concentratedliquiditytypes.StoreKey])
 	appKeepers.ConcentratedLiquidityKeeper = concentratedLiquidityKeeper
+
+	appKeepers.SwapRouterKeeper = swaprouter.NewKeeper(
+		appKeepers.keys[swaproutertypes.StoreKey],
+		appKeepers.GetSubspace(swaproutertypes.ModuleName),
+		appKeepers.GAMMKeeper,
+		appKeepers.ConcentratedLiquidityKeeper,
+	)
 
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
 		appKeepers.keys[lockuptypes.StoreKey],
@@ -444,6 +456,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
 	paramsKeeper.Subspace(twaptypes.ModuleName)
+	paramsKeeper.Subspace(swaproutertypes.ModuleName)
 
 	return paramsKeeper
 }
