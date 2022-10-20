@@ -74,6 +74,8 @@ func calcAmount1(liq, pa, pb sdk.Dec) sdk.Dec {
 	return liq.Mul(diff)
 }
 
+// TODO: remove nolint
+// nolint: unused
 func priceToTick(price sdk.Dec) sdk.Int {
 	logOfPrice := osmomath.BigDecFromSDKDec(price).ApproxLog2()
 	logInt := osmomath.NewDecWithPrec(10001, 4)
@@ -81,6 +83,8 @@ func priceToTick(price sdk.Dec) sdk.Int {
 	return tick.SDKDec().TruncateInt()
 }
 
+// TODO: remove nolint
+// nolint: unused
 func tickToPrice(tick sdk.Int) sdk.Dec {
 	price := sdk.NewDecWithPrec(10001, 4).Power(tick.Uint64())
 	return price
