@@ -35,7 +35,7 @@ func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex in
 
 	var iter db.Iterator
 	if lte {
-		iter = prefixStore.ReverseIterator(startKey, nil)
+		iter = prefixStore.ReverseIterator(nil, startKey)
 	} else {
 		iter = prefixStore.Iterator(startKey, nil)
 	}
