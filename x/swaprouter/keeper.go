@@ -9,19 +9,24 @@ import (
 )
 
 type Keeper struct {
-	storeKey     sdk.StoreKey
-	transientKey *sdk.TransientStoreKey
+	storeKey sdk.StoreKey
+	// TODO: remove nolint
+	// nolint: unused
+	gammKeeper types.SwapI
+	// TODO: remove nolint
+	// nolint: unused
+	concentratedKeeper types.SwapI
 
 	paramSpace paramtypes.Subspace
 }
 
-func NewKeeper(storeKey sdk.StoreKey, transientKey *sdk.TransientStoreKey, paramSpace paramtypes.Subspace) *Keeper {
+func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.SwapI, concentratedKeeper types.SwapI) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
-	return &Keeper{storeKey: storeKey, transientKey: transientKey, paramSpace: paramSpace}
+	return &Keeper{storeKey: storeKey, paramSpace: paramSpace}
 }
 
 // GetParams returns the total set of swaprouter parameters.
