@@ -47,6 +47,7 @@ import (
 	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v12/osmoutils/partialord"
 	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v12/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm"
@@ -127,6 +128,7 @@ func appModules(
 		app.TransferModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		twapmodule.NewAppModule(*app.TwapKeeper),
+		concentratedliquidity.NewAppModule(*app.ConcentratedLiquidityKeeper),
 		txfees.NewAppModule(*app.TxFeesKeeper),
 		incentives.NewAppModule(*app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
 		lockup.NewAppModule(*app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
