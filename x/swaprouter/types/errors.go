@@ -5,11 +5,11 @@ import (
 	"fmt"
 )
 
-type nonPositiveAmountErr struct {
+type nonPositiveAmountError struct {
 	Amount string
 }
 
-func (e nonPositiveAmountErr) Error() string {
+func (e nonPositiveAmountError) Error() string {
 	return fmt.Sprintf("min out amount or max in amount should be positive, was (%s)", e.Amount)
 }
 

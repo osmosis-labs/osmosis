@@ -32,7 +32,7 @@ func (msg MsgSwapExactAmountIn) ValidateBasic() error {
 	}
 
 	if !msg.TokenOutMinAmount.IsPositive() {
-		return nonPositiveAmountErr{msg.TokenOutMinAmount.String()}
+		return nonPositiveAmountError{msg.TokenOutMinAmount.String()}
 	}
 
 	return nil
@@ -70,7 +70,7 @@ func (msg MsgSwapExactAmountOut) ValidateBasic() error {
 	}
 
 	if !msg.TokenInMaxAmount.IsPositive() {
-		return nonPositiveAmountErr{msg.TokenInMaxAmount.String()}
+		return nonPositiveAmountError{msg.TokenInMaxAmount.String()}
 	}
 
 	return nil

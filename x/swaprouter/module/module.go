@@ -14,11 +14,11 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v12/x/swaprouter"
 	swaprouterclient "github.com/osmosis-labs/osmosis/v12/x/swaprouter/client"
 	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/grpc"
 	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 )
 
 var (
@@ -34,7 +34,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesis())
+	return json.RawMessage{}
 }
 
 // ValidateGenesis performs genesis state validation for the swaprouter module.
@@ -74,6 +74,7 @@ type AppModule struct {
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), swaprouter.NewMsgServerImpl(&am.k))
 	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: swaprouterclient.Querier{K: am.k}})
 }
 

@@ -13,7 +13,6 @@ func (k Keeper) RouteExactAmountIn(
 	routes []types.SwapAmountInRoute,
 	tokenIn sdk.Coin,
 	tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error) {
-
 	isGamm := true
 
 	if isGamm {
