@@ -9,6 +9,7 @@ import (
 )
 
 func (k Keeper) Mint(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityIn sdk.Int, lowerTick sdk.Int, upperTick sdk.Int) (amtDenom0, amtDenom1 sdk.Int, err error) {
+	// ensure that lower tick is always smaller than upper tick
 	if lowerTick.GTE(types.MaxTick) || lowerTick.LT(types.MinTick) || upperTick.GT(types.MaxTick) {
 		return sdk.Int{}, sdk.Int{}, fmt.Errorf("validation fail")
 	}
