@@ -2,9 +2,9 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "codebase":{
     "git_repo": "https://github.com/osmosis-labs/osmosis",
-    "recommended_version": "12.1.0",
+    "recommended_version": "12.2.0",
     "compatible_versions": [
-      "12.1.0"
+      "12.2.0"
     ],
     "binaries": {
       "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v12.1.0/osmosisd-12.1.0-linux-amd64?checksum=sha256:44433f93946338b8cb167d9030ebbcfe924294d95d745026ada5dbe8f50d5010",
@@ -14,7 +14,7 @@
     "tendermint_version": "0.34",
     "cosmwasm_version": "0.28",
     "cosmwasm_enabled": true,
-    "ibc_go_version": "3.0.0",
+    "ibc_go_version": "3.3.0",
     "ics_enabled": [
       "ics20-1"
     ],
