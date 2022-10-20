@@ -24,7 +24,9 @@ func TestTickBitmap_NextInitializedTickWithinOneWord(t *testing.T) {
 		require.NoError(t, tb.FlipTick(tick, 1))
 	}
 
-	next, initd := tb.NextInitializedTickWithinOneWord(78, 1, false)
-	require.Equal(t, 84, next)
-	require.True(t, initd)
+	t.Run("lte = false; returns tick to right if at initialized tick", func(t *testing.T) {
+		next, initd := tb.NextInitializedTickWithinOneWord(78, 1, false)
+		require.Equal(t, int32(84), next)
+		require.True(t, initd)
+	})
 }
