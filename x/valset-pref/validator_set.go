@@ -35,6 +35,44 @@ func (k Keeper) SetupValidatorSetPreference(ctx sdk.Context, delegator string, p
 	return nil
 }
 
+// TODO MAYBE: Check if there are any banned assets and ways to handle them
+// DelegateToValidatorSet delegates to a delegators existing validator-set.
+// For ex: delegate 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
+// our delegate logic would attempt to delegate 5osmo to A , 2osmo to B, 3osmo to C
+func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
+	// get the existing validator set preference from store
+	existingSet, found := k.GetValidatorSetPreference(ctx, delegatorAddr)
+	if !found {
+		return fmt.Errorf("user %s doesn't have validator set", delegatorAddr)
+	}
+
+	delegator, err := sdk.AccAddressFromBech32(delegatorAddr)
+	if err != nil {
+		return err
+	}
+
+	tokenAmt := sdk.NewDec(coin.Amount.Int64())
+
+	// loop through the validatorSetPreference and delegate the proportion of the tokens based on weights
+	for _, val := range existingSet.Preferences {
+		_, validator, err := k.GetValAddrAndVal(ctx, val.ValOperAddress)
+		if err != nil {
+			return err
+		}
+
+		// amount to delegate, calculated by {val_distribution_weight * tokenAmt}
+		// NOTE: it'd be nice if this value was decimal
+		amountToStake := val.Weight.Mul(tokenAmt).RoundInt()
+
+		_, err = k.stakingKeeper.Delegate(ctx, delegator, amountToStake, stakingtypes.Unbonded, validator, true)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // GetValAddrAndVal checks if the validator address is valid and the validator provided exists on chain.
 func (k Keeper) GetValAddrAndVal(ctx sdk.Context, valOperAddress string) (sdk.ValAddress, stakingtypes.Validator, error) {
 	valAddr, err := sdk.ValAddressFromBech32(valOperAddress)
