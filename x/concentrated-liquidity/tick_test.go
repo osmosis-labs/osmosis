@@ -20,10 +20,29 @@ func Test(t *testing.T) {
 		k.setTickInfo(ctx, 1, t, TickInfo{})
 	}
 
-	t.Run("lte = false; returns tick to right if at initialized tick", func(t *testing.T) {
-		n, initd := k.NextInitializedTick(ctx, 1, 78, false)
-		require.Equal(t, int64(84), n)
-		require.True(t, initd)
+	t.Run("lte=false", func(t *testing.T) {
+		t.Run("returns tick to right if at initialized tick", func(t *testing.T) {
+			n, initd := k.NextInitializedTick(ctx, 1, 78, false)
+			require.Equal(t, int64(84), n)
+			require.True(t, initd)
+		})
+		t.Run("returns tick to right if at initialized tick", func(t *testing.T) {
+			n, initd := k.NextInitializedTick(ctx, 1, -55, false)
+			require.Equal(t, int64(-4), n)
+			require.True(t, initd)
+		})
 	})
 
+	t.Run("lte=true", func(t *testing.T) {
+		t.Run("returns tick directly to the left of input tick if not initialized", func(t *testing.T) {
+			n, initd := k.NextInitializedTick(ctx, 1, 79, true)
+			require.Equal(t, int64(78), n)
+			require.True(t, initd)
+		})
+		t.Run("returns same tick if initialized", func(t *testing.T) {
+			n, initd := k.NextInitializedTick(ctx, 1, 78, true)
+			require.Equal(t, int64(78), n)
+			require.True(t, initd)
+		})
+	})
 }
