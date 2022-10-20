@@ -1,7 +1,6 @@
 package concentrated_liquidity
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
@@ -16,8 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
 var (
@@ -38,7 +36,11 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 
 // ValidateGenesis performs genesis state validation for the gamm module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
-	return nil
+	var genState types.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+	}
+	return genState.Validate()
 }
 
 // ---------------------------------------
@@ -46,9 +48,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
 
-func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	queryproto.RegisterQueryHandlerClient(context.Background(), mux, queryproto.NewQueryClient(clientCtx)) //nolint:errcheck
-}
+func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {}
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
 	return nil
@@ -74,7 +74,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 func NewAppModule(concentratedLiquidityKeeper Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
-		k:              Keeper{},
+		k:              concentratedLiquidityKeeper,
 	}
 }
 
@@ -98,13 +98,20 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // InitGenesis performs genesis initialization for the twap module.
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
+	var genState types.GenesisState
+	// Initialize global index to index in genesis state
+	cdc.MustUnmarshalJSON(gs, &genState)
+
+	am.k.InitGenesis(ctx, genState)
+
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the twap.
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	return []byte{}
+	genState := am.k.ExportGenesis(ctx)
+	return cdc.MustMarshalJSON(genState)
 }
 
 // BeginBlock performs a no-op.

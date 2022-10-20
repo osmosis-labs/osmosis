@@ -48,6 +48,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/osmoutils/partialord"
 	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v12/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm"
@@ -217,6 +218,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		epochstypes.ModuleName,
 		lockuptypes.ModuleName,
 		authz.ModuleName,
+		concentratedliquiditytypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
 	}
