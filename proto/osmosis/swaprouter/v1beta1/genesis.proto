@@ -1,0 +1,18 @@
+syntax = "proto3";
+package osmosis.swaprouter.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types";
+
+// Params holds parameters for the swaprouter module
+message Params {}
+
+// GenesisState defines the swaprouter module's genesis state.
+message GenesisState {
+  // params is the container of swaprouter parameters.
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}

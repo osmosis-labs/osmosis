@@ -7,11 +7,10 @@ import (
 )
 
 const (
-	ModuleName = "twap"
+	ModuleName = "concentrated-liquidity"
 
-	StoreKey          = ModuleName
-	TransientStoreKey = "transient_" + ModuleName // this is silly we have to do this
-	RouterKey         = ModuleName
+	StoreKey  = ModuleName
+	RouterKey = ModuleName
 
 	QuerierRoute = ModuleName
 	// Contract: Coin denoms cannot contain this character

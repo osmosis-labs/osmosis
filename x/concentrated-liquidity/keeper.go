@@ -5,10 +5,9 @@ import (
 )
 
 type Keeper struct {
-	storeKey     sdk.StoreKey
-	transientKey *sdk.TransientStoreKey
+	storeKey sdk.StoreKey
 }
 
-func NewKeeper(storeKey sdk.StoreKey, transientKey *sdk.TransientStoreKey) *Keeper {
-	return &Keeper{storeKey: storeKey, transientKey: transientKey}
+func NewKeeper(storeKey sdk.StoreKey) *Keeper {
+	return &Keeper{storeKey: storeKey}
 }
