@@ -29,12 +29,13 @@ func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex in
 	// us to retrieve the next initialized tick without having to scan all ticks.
 	prefixBz := types.KeyTickPrefix(poolId)
 	prefixStore := prefix.NewStore(store, prefixBz)
+	startKey := sdk.Uint64ToBigEndian(uint64(tickIndex))
 
 	var iter db.Iterator
 	if lte {
-		iter = prefixStore.ReverseIterator(sdk.Uint64ToBigEndian(uint64(tickIndex)), nil)
+		iter = prefixStore.ReverseIterator(startKey, nil)
 	} else {
-		iter = prefixStore.Iterator(sdk.Uint64ToBigEndian(uint64(tickIndex)), nil)
+		iter = prefixStore.Iterator(startKey, nil)
 	}
 
 	defer iter.Close()
