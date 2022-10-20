@@ -12,65 +12,22 @@ var (
 	_ types.PoolI = &Pool{}
 )
 
-func NewConcentratedLiquidityPool(poolId uint64) Pool {
+func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint64, denom0, denom1 string, currSqrtPrice, currTick sdk.Int) Pool {
+	fmt.Println("===0")
 	poolAddr := types.NewPoolAddress(poolId)
-
-	// pool thats created up to ensuring the assets and params are valid.
-	// We assume that FuturePoolGovernor is valid.
-	pool := &Pool{
-		Address: poolAddr.String(),
-		Id:      poolId,
+	fmt.Println("===1")
+	pool := Pool{
+		Address:          poolAddr.String(),
+		Id:               poolId,
+		CurrentSqrtPrice: currSqrtPrice,
+		CurrentTick:      currTick,
 	}
+	fmt.Println("===2")
 
-	return *pool
-}
+	k.setPoolById(ctx, poolId, pool)
+	fmt.Println("===3")
 
-// liquidity0 takes an amount of asset0 in the pool as well as the sqrtpCur and the nextPrice
-// pa is the smaller of sqrtpCur and the nextPrice
-// pb is the larger of sqrtpCur and the nextPrice
-func liquidity0(amount int64, pa, pb sdk.Dec) sdk.Dec {
-	if pa.GT(pb) {
-		pa, pb = pb, pa
-	}
-	product := pa.Mul(pb)
-	diff := pb.Sub(pa)
-	amt := sdk.NewDec(amount)
-	return amt.Mul(product.Quo(diff))
-}
-
-// liquidity1 takes an amount of asset1 in the pool as well as the sqrtpCur and the nextPrice
-// pa is the smaller of sqrtpCur and the nextPrice
-// pb is the larger of sqrtpCur and the nextPrice
-func liquidity1(amount int64, pa, pb sdk.Dec) sdk.Dec {
-	if pa.GT(pb) {
-		pa, pb = pb, pa
-	}
-	diff := pb.Sub(pa)
-	amt := sdk.NewDec(amount)
-	return amt.Quo(diff)
-}
-
-// calcAmount0 takes the asset with the smaller liqudity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 0
-// pa is the smaller of sqrtpCur and the nextPrice
-// pb is the larger of sqrtpCur and the nextPrice
-func calcAmount0(liq, pa, pb sdk.Dec) sdk.Dec {
-	if pa.GT(pb) {
-		pa, pb = pb, pa
-	}
-	diff := pb.Sub(pa)
-	mult := liq
-	return (mult.Mul(diff)).Quo(pb).Quo(pa)
-}
-
-// calcAmount1 takes the asset with the smaller liqudity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 1
-// pa is the smaller of sqrtpCur and the nextPrice
-// pb is the larger of sqrtpCur and the nextPrice
-func calcAmount1(liq, pa, pb sdk.Dec) sdk.Dec {
-	if pa.GT(pb) {
-		pa, pb = pb, pa
-	}
-	diff := pb.Sub(pa)
-	return liq.Mul(diff)
+	return pool
 }
 
 func (p Pool) GetAddress() sdk.AccAddress {
@@ -134,7 +91,7 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokensIn sdk.Coins, tokenOutDen
 		priceNext := sqrtPCurTick.Add(priceDiff)
 		// new amount in, will be needed later
 		//amountIn = calcAmount1(liq, priceNext, sqrtPCurTick)
-		amountOut := calcAmount0(liq, priceNext, sqrtPCurTick)
+		amountOut := calcAmount0Delta(liq, priceNext, sqrtPCurTick)
 		return sdk.NewCoin(tokenOutDenom, amountOut.TruncateInt()), nil
 	} else if tokenIn.Denom == asset0 {
 		priceNextTop := liq.Mul(sqrtPCurTick)
@@ -142,7 +99,7 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokensIn sdk.Coins, tokenOutDen
 		priceNext := priceNextTop.Quo(priceNextBot)
 		// new amount in, will be needed later
 		//amountIn = calcAmount1(liq, priceNext, sqrtPCurTick)
-		amountOut := calcAmount1(liq, priceNext, sqrtPCurTick)
+		amountOut := calcAmount1Delta(liq, priceNext, sqrtPCurTick)
 		return sdk.NewCoin(tokenOutDenom, amountOut.TruncateInt()), nil
 	}
 	return sdk.Coin{}, fmt.Errorf("tokenIn does not match any asset in pool")
@@ -182,10 +139,10 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokensOut sdk.Coins, tokenInDen
 
 		// new amount in, will be needed later
 		// amountIn = calcAmount1(liq, priceNext, sqrtPCurTick)
-		amountIn := calcAmount0(liq, priceNext, sqrtPCurTick)
+		amountIn := calcAmount0Delta(liq, priceNext, sqrtPCurTick)
 		// fee logic
 		amountIn = amountIn.Quo(sdk.OneDec().Sub(swapFee))
-		return sdk.NewCoin(tokenInDenom, amountIn.TruncateInt()), nil
+		return sdk.NewCoin(tokenInDenom, amountIn.RoundInt()), nil
 	} else if tokenOut.Denom == asset0 {
 		priceNextTop := liq.Mul(sqrtPCurTick)
 		priceNextBot := liq.Add(tokenOutAmt.Mul(sqrtPCurTick))
@@ -193,10 +150,10 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokensOut sdk.Coins, tokenInDen
 
 		// new amount in, will be needed later
 		// amountIn = calcAmount1(liq, priceNext, sqrtPCurTick)
-		amountIn := calcAmount1(liq, priceNext, sqrtPCurTick)
+		amountIn := calcAmount1Delta(liq, priceNext, sqrtPCurTick)
 		// fee logic
 		amountIn = amountIn.Quo(sdk.OneDec().Sub(swapFee))
-		return sdk.NewCoin(tokenInDenom, amountIn.TruncateInt()), nil
+		return sdk.NewCoin(tokenInDenom, amountIn.RoundInt()), nil
 	}
 	return sdk.Coin{}, fmt.Errorf("tokenIn does not match any asset in pool")
 }
