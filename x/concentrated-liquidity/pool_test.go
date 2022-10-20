@@ -76,3 +76,36 @@ func TestCalcInAmtGivenOut(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewDec(821721), amountIn.Amount.ToDec())
 }
+
+func TestSetInitialPoolDenoms(t *testing.T) {
+	poolDenoms := []string{"eth", "usdc"}
+	pool, err := cl.NewConcentratedLiquidityPool(1, poolDenoms)
+	require.NoError(t, err)
+	require.Equal(t, pool.Token0, poolDenoms[0])
+	require.Equal(t, pool.Token1, poolDenoms[1])
+
+	newPoolDenoms := []string{"axel", "osmo"}
+	err = pool.SetInitialPoolDenoms(newPoolDenoms)
+	require.NoError(t, err)
+	require.Equal(t, pool.Token0, newPoolDenoms[0])
+	require.Equal(t, pool.Token1, newPoolDenoms[1])
+
+	unorderedPoolDenoms := []string{"usdc", "eth"}
+	err = pool.SetInitialPoolDenoms(unorderedPoolDenoms)
+	require.NoError(t, err)
+	require.Equal(t, pool.Token0, unorderedPoolDenoms[1])
+	require.Equal(t, pool.Token1, unorderedPoolDenoms[0])
+
+	tooManyPoolDenoms := []string{"usdc", "eth", "osmo"}
+	err = pool.SetInitialPoolDenoms(tooManyPoolDenoms)
+	require.Error(t, err)
+
+	tooFewPoolDenoms := []string{"usdc"}
+	err = pool.SetInitialPoolDenoms(tooFewPoolDenoms)
+	require.Error(t, err)
+
+	sameDenoms := []string{"usdc", "usdc"}
+	err = pool.SetInitialPoolDenoms(sameDenoms)
+	require.Error(t, err)
+
+}
