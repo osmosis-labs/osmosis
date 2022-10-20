@@ -1,13 +1,17 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
+)
 
 // TODO: godoc
 type SwapI interface {
 	MultihopSwapExactAmountIn(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
-		routes SwapAmountInRoute,
+		routes []SwapAmountInRoute,
 		tokenIn sdk.Coin,
 		tokenOutMinAmount sdk.Int,
 	) (tokenOutAmount sdk.Int, err error)
@@ -15,7 +19,7 @@ type SwapI interface {
 	MultihopSwapExactAmountOut(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
-		routes SwapAmountOutRoute,
+		routes []SwapAmountOutRoute,
 		tokenInMaxAmount sdk.Int,
 		tokenOut sdk.Coin,
 	) (tokenInAmount sdk.Int, err error)
