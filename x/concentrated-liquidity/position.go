@@ -7,11 +7,13 @@ import (
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
-func (k Keeper) updatePositionWithLiquidity(ctx sdk.Context,
+func (k Keeper) updatePositionWithLiquidity(
+	ctx sdk.Context,
 	poolId uint64,
-	owner string,
-	lowerTick, upperTick sdk.Int,
-	liquidityDelta sdk.Int) {
+	owner sdk.AccAddress,
+	lowerTick, upperTick int64,
+	liquidityDelta sdk.Int,
+) {
 	position := k.getPosition(ctx, poolId, owner, lowerTick, upperTick)
 
 	liquidityBefore := position.Liquidity
@@ -21,21 +23,24 @@ func (k Keeper) updatePositionWithLiquidity(ctx sdk.Context,
 	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, position)
 }
 
-func (k Keeper) getPosition(ctx sdk.Context, poolId uint64, owner string, lowerTick, upperTick sdk.Int) Position {
+func (k Keeper) getPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) Position {
 	store := ctx.KVStore(k.storeKey)
-	position := Position{}
+
+	var position Position
 	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
 	osmoutils.MustGet(store, key, &position)
+
 	return position
 }
 
-func (k Keeper) setPosition(ctx sdk.Context,
+func (k Keeper) setPosition(
+	ctx sdk.Context,
 	poolId uint64,
-	owner string,
-	lowerTick, upperTick sdk.Int,
-	position Position) {
+	owner sdk.AccAddress,
+	lowerTick, upperTick int64,
+	position Position,
+) {
 	store := ctx.KVStore(k.storeKey)
-
 	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
 	osmoutils.MustSet(store, key, &position)
 }
