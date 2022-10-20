@@ -52,6 +52,7 @@ import (
 	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v12/wasmbinding"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 	epochskeeper "github.com/osmosis-labs/osmosis/v12/x/epochs/keeper"
 	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v12/x/gamm/keeper"
@@ -255,6 +256,9 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.tkeys[twaptypes.TransientStoreKey],
 		appKeepers.GetSubspace(twaptypes.ModuleName),
 		appKeepers.GAMMKeeper)
+
+	appKeepers.ConcentratedLiquidityKeeper = concentratedliquidity.NewKeeper(
+		appKeepers.keys[concentratedliquiditytypes.StoreKey])
 
 	appKeepers.SwapRouterKeeper = swaprouter.NewKeeper(
 		appKeepers.keys[swaproutertypes.StoreKey],
