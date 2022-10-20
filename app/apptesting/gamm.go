@@ -6,6 +6,8 @@ import (
 	gammkeeper "github.com/osmosis-labs/osmosis/v12/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	swaprouterkeeper "github.com/osmosis-labs/osmosis/v12/x/swaprouter"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 )
 
 var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
@@ -117,15 +119,15 @@ func (s *KeeperTestHelper) RunBasicSwap(poolId uint64) {
 	swapIn := sdk.NewCoins(sdk.NewCoin(denoms[0], sdk.NewInt(1000)))
 	s.FundAcc(s.TestAccs[0], swapIn)
 
-	msg := gammtypes.MsgSwapExactAmountIn{
+	msg := swaproutertypes.MsgSwapExactAmountIn{
 		Sender:            s.TestAccs[0].String(),
-		Routes:            []gammtypes.SwapAmountInRoute{{PoolId: poolId, TokenOutDenom: denoms[1]}},
+		Routes:            []swaproutertypes.SwapAmountInRoute{{PoolId: poolId, TokenOutDenom: denoms[1]}},
 		TokenIn:           swapIn[0],
 		TokenOutMinAmount: sdk.ZeroInt(),
 	}
 
-	gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
-	_, err = gammMsgServer.SwapExactAmountIn(sdk.WrapSDKContext(s.Ctx), &msg)
+	swaprouterMsgServer := swaprouterkeeper.NewMsgServerImpl(s.App.SwapRouterKeeper)
+	_, err = swaprouterMsgServer.SwapExactAmountIn(sdk.WrapSDKContext(s.Ctx), &msg)
 	s.Require().NoError(err)
 }
 
