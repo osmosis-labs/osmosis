@@ -174,7 +174,6 @@ func solveCFMMBinarySearch(constantFunction func(osmomath.BigDec, osmomath.BigDe
 		yFinal := yReserve.Add(yIn)
 		xLowEst := osmomath.ZeroDec()
 		// we set upper bound at 2 * xReserve to accommodate negative yIns
-		// TODO: update this to be in accordance with spec (linear estimation)
 		xHighEst := xReserve.Mul(osmomath.NewBigDec(2))
 		maxIterations := 256
 		errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.Dec{}}
