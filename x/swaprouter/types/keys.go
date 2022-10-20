@@ -1,7 +1,9 @@
 package types
 
 const (
+	ModuleName = "swaprouter"
+
 	StoreKey = ModuleName
 
-	ModuleName = "swaprouter"
+	RouterKey = ModuleName
 )

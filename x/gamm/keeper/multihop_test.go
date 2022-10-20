@@ -4,14 +4,14 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 )
 
 func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() {
 	type param struct {
-		routes            []types.SwapAmountInRoute
+		routes            []swaproutertypes.SwapAmountInRoute
 		tokenIn           sdk.Coin
 		tokenOutMinAmount sdk.Int
 	}
@@ -25,7 +25,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 		{
 			name: "Proper swap - foo -> bar(pool 1) - bar(pool 2) -> baz",
 			param: param{
-				routes: []types.SwapAmountInRoute{
+				routes: []swaproutertypes.SwapAmountInRoute{
 					{
 						PoolId:        1,
 						TokenOutDenom: "bar",
@@ -43,7 +43,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 		{
 			name: "Swap - foo -> uosmo(pool 1) - uosmo(pool 2) -> baz with a half fee applied",
 			param: param{
-				routes: []types.SwapAmountInRoute{
+				routes: []swaproutertypes.SwapAmountInRoute{
 					{
 						PoolId:        1,
 						TokenOutDenom: "uosmo",
@@ -160,7 +160,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 
 func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut() {
 	type param struct {
-		routes           []types.SwapAmountOutRoute
+		routes           []swaproutertypes.SwapAmountOutRoute
 		tokenInMaxAmount sdk.Int
 		tokenOut         sdk.Coin
 	}
@@ -174,7 +174,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 		{
 			name: "Proper swap: foo -> bar (pool 1), bar -> baz (pool 2)",
 			param: param{
-				routes: []types.SwapAmountOutRoute{
+				routes: []swaproutertypes.SwapAmountOutRoute{
 					{
 						PoolId:       1,
 						TokenInDenom: "foo",
@@ -192,7 +192,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 		{
 			name: "Swap - foo -> uosmo(pool 1) - uosmo(pool 2) -> baz with a half fee applied",
 			param: param{
-				routes: []types.SwapAmountOutRoute{
+				routes: []swaproutertypes.SwapAmountOutRoute{
 					{
 						PoolId:       1,
 						TokenInDenom: "foo",

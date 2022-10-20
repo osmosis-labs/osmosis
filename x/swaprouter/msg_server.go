@@ -22,13 +22,12 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgSwapExactAmountIn) (*types.MsgSwapExactAmountInResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// TODO: will be propagated to actual swaps
-	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return nil, err
 	}
 
-	tokenOutAmount, err := server.keeper.RouteExactAmountIn(ctx)
+	tokenOutAmount, err := server.keeper.RouteExactAmountIn(ctx, sender, msg.Routes, msg.TokenIn, msg.TokenOutMinAmount)
 	if err != nil {
 		return nil, err
 	}
@@ -49,12 +48,12 @@ func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgS
 func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.MsgSwapExactAmountOut) (*types.MsgSwapExactAmountOutResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return nil, err
 	}
 
-	tokenInAmount, err := server.keeper.RouteExactAmountOut(ctx)
+	tokenInAmount, err := server.keeper.RouteExactAmountOut(ctx, sender, msg.Routes, msg.TokenInMaxAmount, msg.TokenOut)
 	if err != nil {
 		return nil, err
 	}
