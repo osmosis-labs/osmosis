@@ -60,19 +60,6 @@ service Query {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{pool_id}/prices";
   }
-
-  // Estimate the swap.
-  rpc EstimateSwapExactAmountIn(QuerySwapExactAmountInRequest)
-      returns (QuerySwapExactAmountInResponse) {
-    option (google.api.http).get =
-        "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_in";
-  }
-
-  rpc EstimateSwapExactAmountOut(QuerySwapExactAmountOutRequest)
-      returns (QuerySwapExactAmountOutResponse) {
-    option (google.api.http).get =
-        "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_out";
-  }
 }
 
 //=============================== Pool
@@ -157,44 +144,6 @@ message QuerySpotPriceRequest {
 message QuerySpotPriceResponse {
   // String of the Dec. Ex) 10.203uatom
   string spot_price = 1 [ (gogoproto.moretags) = "yaml:\"spot_price\"" ];
-}
-
-//=============================== EstimateSwapExactAmountIn
-message QuerySwapExactAmountInRequest {
-  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  string token_in = 3 [ (gogoproto.moretags) = "yaml:\"token_in\"" ];
-  repeated SwapAmountInRoute routes = 4 [
-    (gogoproto.moretags) = "yaml:\"routes\"",
-    (gogoproto.nullable) = false
-  ];
-}
-
-message QuerySwapExactAmountInResponse {
-  string token_out_amount = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"token_out_amount\"",
-    (gogoproto.nullable) = false
-  ];
-}
-
-//=============================== EstimateSwapExactAmountOut
-message QuerySwapExactAmountOutRequest {
-  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  repeated SwapAmountOutRoute routes = 3 [
-    (gogoproto.moretags) = "yaml:\"routes\"",
-    (gogoproto.nullable) = false
-  ];
-  string token_out = 4 [ (gogoproto.moretags) = "yaml:\"token_out\"" ];
-}
-
-message QuerySwapExactAmountOutResponse {
-  string token_in_amount = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"token_in_amount\"",
-    (gogoproto.nullable) = false
-  ];
 }
 
 message QueryTotalLiquidityRequest {}
