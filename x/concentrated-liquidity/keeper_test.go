@@ -6,12 +6,10 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
-	concentrated_liquidity "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity"
 )
 
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
-	clkeeper *concentrated_liquidity.Keeper
 }
 
 func TestKeeperTestSuite(t *testing.T) {

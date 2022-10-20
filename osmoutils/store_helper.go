@@ -106,7 +106,6 @@ func noStopFn([]byte) bool {
 func MustSet(storeObj store.KVStore, key []byte, value proto.Message) {
 	bz, err := proto.Marshal(value)
 	if err != nil {
-		fmt.Println(err.Error())
 		panic(err)
 	}
 
