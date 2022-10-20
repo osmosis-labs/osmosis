@@ -31,6 +31,28 @@ func Test(t *testing.T) {
 			require.Equal(t, int64(-4), n)
 			require.True(t, initd)
 		})
+		t.Run("returns the tick directly to the right", func(t *testing.T) {
+			n, initd := k.NextInitializedTick(ctx, 1, 77, false)
+			require.Equal(t, int64(78), n)
+			require.True(t, initd)
+		})
+		t.Run("returns the tick directly to the right", func(t *testing.T) {
+			n, initd := k.NextInitializedTick(ctx, 1, -56, false)
+			require.Equal(t, int64(-55), n)
+			require.True(t, initd)
+		})
+		t.Run("returns the next words initialized tick if on the right boundary", func(t *testing.T) {
+			n, initd := k.NextInitializedTick(ctx, 1, -257, false)
+			require.Equal(t, int64(-200), n)
+			require.True(t, initd)
+		})
+		t.Run("returns the next initialized tick from the next word", func(t *testing.T) {
+			k.setTickInfo(ctx, 1, 340, TickInfo{})
+
+			n, initd := k.NextInitializedTick(ctx, 1, 328, false)
+			require.Equal(t, int64(340), n)
+			require.True(t, initd)
+		})
 	})
 
 	t.Run("lte=true", func(t *testing.T) {
