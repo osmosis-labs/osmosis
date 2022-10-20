@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	ModuleName = "concentrated-liquidity"
+	ModuleName = "concentratedliquidity"
 
 	StoreKey  = ModuleName
 	RouterKey = ModuleName
