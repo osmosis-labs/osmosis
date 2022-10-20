@@ -49,7 +49,17 @@ func (server msgServer) DelegateToValidatorSet(goCtx context.Context, msg *types
 	return &types.MsgDelegateToValidatorSetResponse{}, nil
 }
 
+// UnStakeFromValidatorSet unstakes all the tokens from the validator set.
+// For ex: undelegate 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
+// our undelegate logic would attempt to undelegate 5osmo from A , 2osmo from B, 3osmo from C
 func (server msgServer) UndelegateFromValidatorSet(goCtx context.Context, msg *types.MsgUndelegateFromValidatorSet) (*types.MsgUndelegateFromValidatorSetResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	err := server.keeper.UndelegateFromValidatorSet(ctx, msg.Delegator, msg.Coin)
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.MsgUndelegateFromValidatorSetResponse{}, nil
 }
 

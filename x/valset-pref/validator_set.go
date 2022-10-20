@@ -73,6 +73,51 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 	return nil
 }
 
+// UndelegateFromValidatorSet undelegates {coin} amount from the validator set.
+// For ex: userA has staked 10tokens with weight {Val->0.5, ValB->0.3, ValC->0.2}
+// undelegate 6osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
+// our undelegate logic would attempt to undelegate 3osmo from A , 1.8osmo from B, 1.2osmo from C
+func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
+	// get the existing validator set preference
+	existingSet, found := k.GetValidatorSetPreference(ctx, delegatorAddr)
+	if !found {
+		return fmt.Errorf("user %s doesn't have validator set", delegatorAddr)
+	}
+
+	delegator, err := sdk.AccAddressFromBech32(delegatorAddr)
+	if err != nil {
+		return err
+	}
+
+	// the total amount the user wants to undelegate
+	tokenAmt := sdk.NewDec(coin.Amount.Int64())
+
+	totalAmountFromWeights := sdk.NewDec(0)
+	for _, val := range existingSet.Preferences {
+		// Calculate the amount to undelegate based on the existing weights
+		amountToUnDelegate := val.Weight.Mul(tokenAmt)
+
+		// ValidateValidator gurantees that this exist
+		valAddr, err := sdk.ValAddressFromBech32(val.ValOperAddress)
+		if err != nil {
+			return err
+		}
+
+		_, err = k.stakingKeeper.Undelegate(ctx, delegator, valAddr, amountToUnDelegate)
+		if err != nil {
+			return err
+		}
+
+		totalAmountFromWeights = totalAmountFromWeights.Add(amountToUnDelegate)
+	}
+
+	if !totalAmountFromWeights.Equal(tokenAmt) {
+		return fmt.Errorf("The undelegate total donot add up with the amount calculated from weights expected %s got %s", tokenAmt, totalAmountFromWeights)
+	}
+
+	return nil
+}
+
 // GetValAddrAndVal checks if the validator address is valid and the validator provided exists on chain.
 func (k Keeper) GetValAddrAndVal(ctx sdk.Context, valOperAddress string) (sdk.ValAddress, stakingtypes.Validator, error) {
 	valAddr, err := sdk.ValAddressFromBech32(valOperAddress)
