@@ -16,5 +16,15 @@ func TestTickBitmap_FlipTick(t *testing.T) {
 }
 
 func TestTickBitmap_NextInitializedTickWithinOneWord(t *testing.T) {
+	tb := cl.NewTickBitmap()
 
+	// word boundaries are at 64 bits
+	ticks := []int32{-200, -55, -4, 70, 78, 84, 139, 240, 535}
+	for _, tick := range ticks {
+		require.NoError(t, tb.FlipTick(tick, 1))
+	}
+
+	next, initd := tb.NextInitializedTickWithinOneWord(78, 1, false)
+	require.Equal(t, 84, next)
+	require.True(t, initd)
 }

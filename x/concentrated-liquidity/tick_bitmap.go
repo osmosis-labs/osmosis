@@ -28,6 +28,9 @@ func NewTickBitmap() *TickBitmap {
 // true (liquidity) or vice versa. The tickSpacing parameter defines the spacing
 // between usable ticks and must be a multiple of the tick index.
 func (tb *TickBitmap) FlipTick(tickIndex, tickSpacing int32) error {
+	if tickSpacing == 0 {
+		return fmt.Errorf("tick spacing cannot be 0")
+	}
 	if tickIndex%tickSpacing != 0 {
 		return fmt.Errorf("tickIndex %d is not a multiple of tickSpacing %d", tickIndex, tickSpacing)
 	}
