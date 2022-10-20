@@ -9,11 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
-var (
-	_ types.PoolI = &Pool{}
-)
-
-func NewConcentratedLiquidityPool(poolId uint64) Pool {
+func NewConcentratedLiquidityPool(poolId uint64, denoms []string) (Pool, error) {
 	poolAddr := types.NewPoolAddress(poolId)
 
 	// pool thats created up to ensuring the assets and params are valid.
@@ -23,7 +19,12 @@ func NewConcentratedLiquidityPool(poolId uint64) Pool {
 		Id:      poolId,
 	}
 
-	return *pool
+	err := pool.setInitialPoolDenoms(denoms)
+	if err != nil {
+		return Pool{}, err
+	}
+
+	return *pool, nil
 }
 
 // liquidity0 takes an amount of asset0 in the pool as well as the sqrtpCur and the nextPrice
@@ -123,10 +124,18 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom 
 }
 
 // this only works on a single directional trade, will implement bi directional trade in next milestone
-func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokensIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
-	tokenIn := tokensIn[0]
-	asset0 := "eth"
-	asset1 := "usdc"
+func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
+	asset0 := p.Token0
+	asset1 := p.Token1
+	if tokenIn.Denom != asset0 && tokenIn.Denom != asset1 {
+		return sdk.Coin{}, fmt.Errorf("tokenIn (%s) does not match any asset in pool", tokenIn.Denom)
+	}
+	if tokenOutDenom != asset0 && tokenOutDenom != asset1 {
+		return sdk.Coin{}, fmt.Errorf("tokenOutDenom (%s) does not match any asset in pool", tokenOutDenom)
+	}
+	if tokenIn.Denom == tokenOutDenom {
+		return sdk.Coin{}, fmt.Errorf("tokenIn (%s) cannot be the same as tokenOut (%s)", tokenIn.Denom, tokenOutDenom)
+	}
 	tokenAmountInAfterFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
 
 	// TODO: Replace with spot price
@@ -162,18 +171,26 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokensIn sdk.Coins, tokenOutDen
 		amountOut := calcAmount1(liq, priceNext, sqrtPCurTick)
 		return sdk.NewCoin(tokenOutDenom, amountOut.TruncateInt()), nil
 	}
-	return sdk.Coin{}, fmt.Errorf("tokenIn does not match any asset in pool")
+	return sdk.Coin{}, fmt.Errorf("tokenIn (%s) does not match any asset in pool", tokenIn.Denom)
 }
 
 func (p Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
 	return sdk.Coin{}, nil
 }
 
-func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokensOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
-	tokenOut := tokensOut[0]
+func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
 	tokenOutAmt := tokenOut.Amount.ToDec()
-	asset0 := "eth"
-	asset1 := "usdc"
+	asset0 := p.Token0
+	asset1 := p.Token1
+	if tokenOut.Denom != asset0 && tokenOut.Denom != asset1 {
+		return sdk.Coin{}, fmt.Errorf("tokenOut denom (%s) does not match any asset in pool", tokenOut.Denom)
+	}
+	if tokenInDenom != asset0 && tokenInDenom != asset1 {
+		return sdk.Coin{}, fmt.Errorf("tokenInDenom (%s) does not match any asset in pool", tokenInDenom)
+	}
+	if tokenOut.Denom == tokenInDenom {
+		return sdk.Coin{}, fmt.Errorf("tokenOut (%s) cannot be the same as tokenIn (%s)", tokenOut.Denom, tokenInDenom)
+	}
 
 	// TODO: Replace with spot price
 	priceLower := sdk.NewDec(4500)
@@ -198,7 +215,7 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokensOut sdk.Coins, tokenInDen
 		priceNext := sqrtPCurTick.Add(priceDiff)
 
 		// new amount in, will be needed later
-		// amountIn = calcAmount1(liq, priceNext, sqrtPCurTick)
+		// amountOut = calcAmount1(liq, priceNext, sqrtPCurTick)
 		amountIn := calcAmount0(liq, priceNext, sqrtPCurTick)
 		// fee logic
 		amountIn = amountIn.Quo(sdk.OneDec().Sub(swapFee))
@@ -209,11 +226,28 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokensOut sdk.Coins, tokenInDen
 		priceNext := priceNextTop.Quo(priceNextBot)
 
 		// new amount in, will be needed later
-		// amountIn = calcAmount1(liq, priceNext, sqrtPCurTick)
+		// amountOut = calcAmount1(liq, priceNext, sqrtPCurTick)
 		amountIn := calcAmount1(liq, priceNext, sqrtPCurTick)
 		// fee logic
 		amountIn = amountIn.Quo(sdk.OneDec().Sub(swapFee))
 		return sdk.NewCoin(tokenInDenom, amountIn.TruncateInt()), nil
 	}
-	return sdk.Coin{}, fmt.Errorf("tokenIn does not match any asset in pool")
+	return sdk.Coin{}, fmt.Errorf("tokenOut (%s) does not match any asset in pool", tokenOut.Denom)
+}
+
+func (p *Pool) setInitialPoolDenoms(poolDenoms []string) error {
+	if len(poolDenoms) != 2 {
+		return fmt.Errorf("pool must contain exactly two assets, received %v", len(poolDenoms))
+	}
+	if poolDenoms[0] == poolDenoms[1] {
+		return fmt.Errorf("cannot have the same asset in a single pool")
+	}
+	if poolDenoms[0] > poolDenoms[1] {
+		poolDenoms[1] = poolDenoms[0]
+	}
+
+	p.Token0 = poolDenoms[0]
+	p.Token1 = poolDenoms[1]
+
+	return nil
 }
