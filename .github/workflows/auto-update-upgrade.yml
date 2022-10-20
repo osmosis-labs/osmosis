@@ -1,3 +1,8 @@
+# When new release is created this workflow will be triggered and will do 3 things:
+# 1) it will create a directory with an empty upgrade handler in app/upgrades folder
+# 2) will increase an E2E_UPGRADE_VERSION variable in Makefile
+# 3) create a pull request with these changes to main 
+
 name: On Release Auto Upgrade
 
 on:

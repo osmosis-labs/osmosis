@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# this script creates an empty directory in app/upgrades called "vX" where X is a previous version + 1 and
+# copies upgrade handler from the previous release with increased version where needed. Also insures that all the imports 
+# make use of a current module version from go mod (see: 
+
+# module=$(go mod edit -json | jq ".Module.Path") in this script
+
+# )
+# Github workflow which calls this script can be found here: osmosis/.github/workflows/auto-update-upgrade.yml
+
  latest_version=0
  for f in app/upgrades/*; do 
      s_f=(${f//// })
