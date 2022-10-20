@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	valPref "github.com/osmosis-labs/osmosis/v12/x/validator-preference"
 	"github.com/osmosis-labs/osmosis/v12/x/validator-preference/types"
 )
@@ -201,7 +202,75 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 					del, _ := suite.App.StakingKeeper.GetDelegation(suite.Ctx, test.delegator, valAddr)
 					suite.Require().Equal(del.Shares, test.expectedShares[i])
 				}
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
 
+func (suite *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
+	tests := []struct {
+		name          string
+		delegator     sdk.AccAddress
+		coinToStake   sdk.Coin
+		coinToUnStake sdk.Coin
+		expectPass    bool
+	}{
+		{
+			name:          "Unstake from a validator Set",
+			delegator:     sdk.AccAddress([]byte("addr1---------------")),
+			coinToStake:   sdk.NewCoin("stake", sdk.NewInt(20)),
+			coinToUnStake: sdk.NewCoin("stake", sdk.NewInt(10)),
+			expectPass:    true,
+		},
+		{
+			name:          "Unstake everything",
+			delegator:     sdk.AccAddress([]byte("addr2---------------")),
+			coinToStake:   sdk.NewCoin("stake", sdk.NewInt(20)),
+			coinToUnStake: sdk.NewCoin("stake", sdk.NewInt(20)),
+			expectPass:    true,
+		},
+		{
+			name:          "Unstake more amount than the staked amount",
+			delegator:     sdk.AccAddress([]byte("addr3---------------")),
+			coinToStake:   sdk.NewCoin("stake", sdk.NewInt(20)),
+			coinToUnStake: sdk.NewCoin("stake", sdk.NewInt(40)),
+			expectPass:    false,
+		},
+	}
+
+	for _, test := range tests {
+		suite.Run(test.name, func() {
+			suite.SetupTest()
+
+			suite.FundAcc(test.delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100)})
+
+			// setup message server
+			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorPreferenceKeeper)
+			c := sdk.WrapSDKContext(suite.Ctx)
+
+			// call the create validator set preference
+			preferences := suite.PrepareDelegateToValidatorSet()
+
+			// set the creation fee
+			suite.App.ValidatorPreferenceKeeper.SetParams(suite.Ctx, types.Params{
+				ValsetCreationFee: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))),
+			})
+
+			_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
+			suite.Require().NoError(err)
+
+			// Fund the delegator address account
+			suite.FundAcc(test.delegator, sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100))})
+
+			// call the create validator set preference
+			_, err = msgServer.DelegateToValidatorSet(c, types.NewMsgDelegateToValidatorSet(test.delegator, test.coinToStake))
+			suite.Require().NoError(err)
+
+			_, err = msgServer.UndelegateFromValidatorSet(c, types.NewMsgUndelegateFromValidatorSet(test.delegator, test.coinToUnStake))
+			if test.expectPass {
+				suite.Require().NoError(err)
 			} else {
 				suite.Require().Error(err)
 			}
