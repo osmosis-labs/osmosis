@@ -395,7 +395,7 @@ func (q Querier) EstimateSuperfluidDelegatedAmountByValidatorDenom(goCtx context
 func (q Querier) TotalDelegationByValidatorForDenom(goCtx context.Context, req *types.QueryTotalDelegationByValidatorForDenomRequest) (*types.QueryTotalDelegationByValidatorForDenomResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	var delegationsByValidator = []*types.Delegations{}
+	var delegationsByValidator = []types.Delegations{}
 	var intermediaryAccount types.SuperfluidIntermediaryAccount
 
 	intermediaryAccounts := q.Keeper.GetAllIntermediaryAccounts(ctx)
@@ -418,10 +418,10 @@ func (q Querier) TotalDelegationByValidatorForDenom(goCtx context.Context, req *
 
 		equivalentAmountOSMO := q.Keeper.GetSuperfluidOSMOTokens(ctx, req.Denom, amount)
 
-		result := &types.Delegations{
+		result := types.Delegations{
 			ValAddr:        valAddr.String(),
-			AmountSfsd:     &amount,
-			OsmoEquivalent: &equivalentAmountOSMO,
+			AmountSfsd:     amount,
+			OsmoEquivalent: equivalentAmountOSMO,
 		}
 
 		delegationsByValidator = append(delegationsByValidator, result)
