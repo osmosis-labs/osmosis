@@ -257,9 +257,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GetSubspace(twaptypes.ModuleName),
 		appKeepers.GAMMKeeper)
 
-	concentratedLiquidityKeeper := concentratedliquidity.NewKeeper(
+	appKeepers.ConcentratedLiquidityKeeper = concentratedliquidity.NewKeeper(
 		appKeepers.keys[concentratedliquiditytypes.StoreKey])
-	appKeepers.ConcentratedLiquidityKeeper = concentratedLiquidityKeeper
 
 	appKeepers.SwapRouterKeeper = swaprouter.NewKeeper(
 		appKeepers.keys[swaproutertypes.StoreKey],
