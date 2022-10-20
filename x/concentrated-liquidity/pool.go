@@ -192,7 +192,7 @@ func (p *Pool) orderInitialPoolDenoms(denom0, denom1 string) error {
 		return fmt.Errorf("cannot have the same asset in a single pool")
 	}
 	if denom0 > denom1 {
-		denom1 = denom0
+		denom1, denom0 = denom0, denom1
 	}
 
 	p.Token0 = denom0

@@ -72,34 +72,23 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
 	s.Require().Equal(sdk.NewDec(821722), amountIn.Amount.ToDec())
 }
 
-// func (s *KeeperTestSuite)TestOrderInitialPoolDenoms(t *testing.T) {
-// 	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", sdk.NewInt(0), sdk.NewInt(0))
-// 	require.NoError(t, err)
-// 	require.Equal(t, pool.Token0, poolDenoms[0])
-// 	require.Equal(t, pool.Token1, poolDenoms[1])
+func (s *KeeperTestSuite) TestOrderInitialPoolDenoms() {
+	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", sdk.NewInt(0), sdk.NewInt(0))
+	s.Require().NoError(err)
+	s.Require().Equal(pool.Token0, "eth")
+	s.Require().Equal(pool.Token1, "usdc")
 
-// 	newPoolDenoms := []string{"axel", "osmo"}
-// 	err = pool.SetInitialPoolDenoms(newPoolDenoms)
-// 	require.NoError(t, err)
-// 	require.Equal(t, pool.Token0, newPoolDenoms[0])
-// 	require.Equal(t, pool.Token1, newPoolDenoms[1])
+	err = pool.OrderInitialPoolDenoms("axel", "osmo")
+	s.Require().NoError(err)
+	s.Require().Equal(pool.Token0, "axel")
+	s.Require().Equal(pool.Token1, "osmo")
 
-// 	unorderedPoolDenoms := []string{"usdc", "eth"}
-// 	err = pool.SetInitialPoolDenoms(unorderedPoolDenoms)
-// 	require.NoError(t, err)
-// 	require.Equal(t, pool.Token0, unorderedPoolDenoms[1])
-// 	require.Equal(t, pool.Token1, unorderedPoolDenoms[0])
+	err = pool.OrderInitialPoolDenoms("usdc", "eth")
+	s.Require().NoError(err)
+	s.Require().Equal(pool.Token0, "eth")
+	s.Require().Equal(pool.Token1, "usdc")
 
-// 	tooManyPoolDenoms := []string{"usdc", "eth", "osmo"}
-// 	err = pool.SetInitialPoolDenoms(tooManyPoolDenoms)
-// 	require.Error(t, err)
+	err = pool.OrderInitialPoolDenoms("usdc", "usdc")
+	s.Require().Error(err)
 
-// 	tooFewPoolDenoms := []string{"usdc"}
-// 	err = pool.SetInitialPoolDenoms(tooFewPoolDenoms)
-// 	require.Error(t, err)
-
-// 	sameDenoms := []string{"usdc", "usdc"}
-// 	err = pool.SetInitialPoolDenoms(sameDenoms)
-// 	require.Error(t, err)
-
-// }
+}
