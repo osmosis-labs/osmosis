@@ -9,11 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
-var (
-	_ types.PoolI = &Pool{}
-)
-
-func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint64, denom0, denom1 string, currSqrtPrice, currTick sdk.Int) Pool {
+func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint64, denom0, denom1 string, currSqrtPrice, currTick sdk.Int) (Pool, error) {
 	poolAddr := types.NewPoolAddress(poolId)
 	pool := Pool{
 		Address:          poolAddr.String(),
@@ -23,8 +19,12 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint6
 	}
 
 	k.setPoolById(ctx, poolId, pool)
+	err := pool.orderInitialPoolDenoms(denom0, denom1)
+	if err != nil {
+		return Pool{}, err
+	}
 
-	return pool
+	return pool, nil
 }
 
 // TODO: remove nolint
@@ -76,10 +76,18 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom 
 }
 
 // this only works on a single directional trade, will implement bi directional trade in next milestone
-func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokensIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
-	tokenIn := tokensIn[0]
-	asset0 := "eth"
-	asset1 := "usdc"
+func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
+	asset0 := p.Token0
+	asset1 := p.Token1
+	if tokenIn.Denom != asset0 && tokenIn.Denom != asset1 {
+		return sdk.Coin{}, fmt.Errorf("tokenIn (%s) does not match any asset in pool", tokenIn.Denom)
+	}
+	if tokenOutDenom != asset0 && tokenOutDenom != asset1 {
+		return sdk.Coin{}, fmt.Errorf("tokenOutDenom (%s) does not match any asset in pool", tokenOutDenom)
+	}
+	if tokenIn.Denom == tokenOutDenom {
+		return sdk.Coin{}, fmt.Errorf("tokenIn (%s) cannot be the same as tokenOut (%s)", tokenIn.Denom, tokenOutDenom)
+	}
 	tokenAmountInAfterFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
 
 	// TODO: Replace with spot price
@@ -115,18 +123,26 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokensIn sdk.Coins, tokenOutDen
 		amountOut := calcAmount1Delta(liq, priceNext, sqrtPCurTick)
 		return sdk.NewCoin(tokenOutDenom, amountOut.TruncateInt()), nil
 	}
-	return sdk.Coin{}, fmt.Errorf("tokenIn does not match any asset in pool")
+	return sdk.Coin{}, fmt.Errorf("tokenIn (%s) does not match any asset in pool", tokenIn.Denom)
 }
 
 func (p Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
 	return sdk.Coin{}, nil
 }
 
-func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokensOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
-	tokenOut := tokensOut[0]
+func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
 	tokenOutAmt := tokenOut.Amount.ToDec()
-	asset0 := "eth"
-	asset1 := "usdc"
+	asset0 := p.Token0
+	asset1 := p.Token1
+	if tokenOut.Denom != asset0 && tokenOut.Denom != asset1 {
+		return sdk.Coin{}, fmt.Errorf("tokenOut denom (%s) does not match any asset in pool", tokenOut.Denom)
+	}
+	if tokenInDenom != asset0 && tokenInDenom != asset1 {
+		return sdk.Coin{}, fmt.Errorf("tokenInDenom (%s) does not match any asset in pool", tokenInDenom)
+	}
+	if tokenOut.Denom == tokenInDenom {
+		return sdk.Coin{}, fmt.Errorf("tokenOut (%s) cannot be the same as tokenIn (%s)", tokenOut.Denom, tokenInDenom)
+	}
 
 	// TODO: Replace with spot price
 	priceLower := sdk.NewDec(4500)
@@ -168,5 +184,19 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokensOut sdk.Coins, tokenInDen
 		amountIn = amountIn.Quo(sdk.OneDec().Sub(swapFee))
 		return sdk.NewCoin(tokenInDenom, amountIn.RoundInt()), nil
 	}
-	return sdk.Coin{}, fmt.Errorf("tokenIn does not match any asset in pool")
+	return sdk.Coin{}, fmt.Errorf("tokenOut (%s) does not match any asset in pool", tokenOut.Denom)
+}
+
+func (p *Pool) orderInitialPoolDenoms(denom0, denom1 string) error {
+	if denom0 == denom1 {
+		return fmt.Errorf("cannot have the same asset in a single pool")
+	}
+	if denom0 > denom1 {
+		denom1 = denom0
+	}
+
+	p.Token0 = denom0
+	p.Token1 = denom1
+
+	return nil
 }
