@@ -145,21 +145,23 @@ func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
 
 func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 	tests := []struct {
-		name       string
-		delegator  sdk.AccAddress
-		coin       sdk.Coin
-		expectPass bool
+		name           string
+		delegator      sdk.AccAddress
+		coin           sdk.Coin
+		expectedShares []sdk.Dec
+		expectPass     bool
 	}{
 		{
-			name:       "Stake to a valid validator!",
-			delegator:  sdk.AccAddress([]byte("addr1---------------")),
-			coin:       sdk.NewCoin("stake", sdk.NewInt(10)),
-			expectPass: true,
+			name:           "Delegate to valid validators!",
+			delegator:      sdk.AccAddress([]byte("addr1---------------")),
+			coin:           sdk.NewCoin("stake", sdk.NewInt(10)),                   // amount to delegate
+			expectedShares: []sdk.Dec{sdk.NewDec(5), sdk.NewDec(3), sdk.NewDec(2)}, // expected shares after delegation
+			expectPass:     true,
 		},
 		{
 			name:       "User doesnot have enough tokens to stake",
 			delegator:  sdk.AccAddress([]byte("addr2---------------")),
-			coin:       sdk.NewCoin("stake", sdk.NewInt(200)),
+			coin:       sdk.NewCoin("stake", sdk.NewInt(200)), // amount to delegate
 			expectPass: false,
 		},
 	}
@@ -185,13 +187,21 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 			_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
 			suite.Require().NoError(err)
 
-			// Fund the delegator address account
-			suite.FundAcc(test.delegator, sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(20))})
-
 			// call the create validator set preference
 			_, err = msgServer.DelegateToValidatorSet(c, types.NewMsgDelegateToValidatorSet(test.delegator, test.coin))
 			if test.expectPass {
 				suite.Require().NoError(err)
+
+				// check if the expectedShares matches after delegation
+				for i, val := range preferences {
+					valAddr, err := sdk.ValAddressFromBech32(val.ValOperAddress)
+					suite.Require().NoError(err)
+
+					// gurantees that the delegator exist because we check it in DelegateToValidatorSet
+					del, _ := suite.App.StakingKeeper.GetDelegation(suite.Ctx, test.delegator, valAddr)
+					suite.Require().Equal(del.Shares, test.expectedShares[i])
+				}
+
 			} else {
 				suite.Require().Error(err)
 			}
