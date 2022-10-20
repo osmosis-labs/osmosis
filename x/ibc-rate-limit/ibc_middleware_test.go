@@ -253,12 +253,6 @@ func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 
 // Test rate limiting on receives
 func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimiting() {
-	// Setup contract
-	suite.chainA.StoreContractCode(&suite.Suite)
-	quotas := suite.BuildChannelQuota("weekly", 604800, 5, 5)
-	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
-	suite.chainA.RegisterRateLimitingContract(addr)
-
 	osmosisApp := suite.chainA.GetOsmosisApp()
 
 	// Setup receiver chain's quota
@@ -266,6 +260,15 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimiting() {
 	supply := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 	quota := supply.Amount.QuoRaw(20)
 	half := quota.QuoRaw(2)
+
+	// Move some funds from chainB to chainA
+	suite.AssertReceive(true, suite.NewValidMessage(false, quota))
+
+	// Setup contract
+	suite.chainA.StoreContractCode(&suite.Suite)
+	quotas := suite.BuildChannelQuota("weekly", 604800, 5, 5)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
+	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// receive 2.5% (quota is 5%)
 	suite.AssertReceive(true, suite.NewValidMessage(false, half))
@@ -289,7 +292,7 @@ func (suite *MiddlewareTestSuite) TestSendTransferNoQuota() {
 	suite.AssertSend(true, suite.NewValidMessage(true, sdk.NewInt(1)))
 }
 
-// Test rate limits are reverted if a "send" fails
+// Test rate limits are revertedgi if a "send" fails
 func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)

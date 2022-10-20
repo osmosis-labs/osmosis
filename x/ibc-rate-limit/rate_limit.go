@@ -2,11 +2,10 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
-	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
 	"github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 )
@@ -33,6 +32,7 @@ func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.Permis
 		channelValue,
 		amount,
 	)
+
 	if err != nil {
 		return err
 	}
@@ -154,4 +154,13 @@ func GetFundsFromPacket(packet exported.PacketI, local bool) (string, string, er
 		return packetData.Amount, packetData.Denom, nil
 	}
 	return packetData.Amount, GetLocalDenom(packet, packetData), nil
+}
+
+func GetDenoms(packet exported.PacketI) (string, string, error) {
+	var packetData transfertypes.FungibleTokenPacketData
+	err := json.Unmarshal(packet.GetData(), &packetData)
+	if err != nil {
+		return "", "", err
+	}
+	return packetData.Denom, GetLocalDenom(packet, packetData), nil
 }

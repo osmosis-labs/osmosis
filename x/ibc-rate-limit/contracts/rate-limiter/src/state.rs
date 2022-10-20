@@ -237,6 +237,8 @@ impl RateLimit {
             true => Err(ContractError::RateLimitExceded {
                 channel: path.channel.to_string(),
                 denom: path.denom.to_string(),
+                amount: funds,
+                channel_value,
                 reset: self.flow.period_end,
             }),
             false => Ok(RateLimit {
