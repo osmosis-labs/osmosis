@@ -17,12 +17,18 @@ var (
 	PositionPrefix = []byte{0x02}
 )
 
-// KeyTick uses pool Id and tick index
+// KeyTick returns a key for storing a TickInfo object.
 func KeyTick(poolId uint64, tickIndex int64) []byte {
+	key := KeyTickPrefix(poolId)
+	key = append(key, sdk.Uint64ToBigEndian(uint64(tickIndex))...)
+	return key
+}
+
+// KeyTickPrefix constructs a key prefix for storing a TickInfo object.
+func KeyTickPrefix(poolId uint64) []byte {
 	var key []byte
 	key = append(key, TickPrefix...)
 	key = append(key, sdk.Uint64ToBigEndian(poolId)...)
-	key = append(key, sdk.Uint64ToBigEndian(uint64(tickIndex))...)
 	return key
 }
 

@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v12/osmoutils"
@@ -15,6 +16,36 @@ func (k Keeper) UpdateTickWithNewLiquidity(ctx sdk.Context, poolId uint64, tickI
 	tickInfo.Liquidity = liquidityAfter
 
 	k.setTickInfo(ctx, poolId, tickIndex, tickInfo)
+}
+
+// NextInitializedTick returns the next initialized tick index based on the
+// current or provided tick index. If no initialized tick exists, <0, false>
+// will be returned.
+func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64) (next int64, initialized bool) {
+	store := ctx.KVStore(k.storeKey)
+
+	// Construct a prefix store with a prefix of <TickPrefix | poolID>, allowing
+	// us to retrieve the next initialized tick without having to scan all ticks.
+	prefixBz := types.KeyTickPrefix(poolId)
+	prefixStore := prefix.NewStore(store, prefixBz)
+
+	iter := prefixStore.Iterator(sdk.Uint64ToBigEndian(uint64(tickIndex)), nil)
+	defer iter.Close()
+
+	i := 0
+	for ; iter.Valid() && i < 2; iter.Next() {
+		// Since, we constructed our prefix store with <TickPrefix | poolID>, the
+		// key is the BigEndianToUint64 encoding of a tick index.
+		tick := int64(sdk.BigEndianToUint64(iter.Key()))
+
+		if tick > tickIndex {
+			return tick, true
+		}
+
+		i++
+	}
+
+	return 0, false
 }
 
 func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) TickInfo {
