@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v12/osmomath"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
@@ -71,6 +72,22 @@ func calcAmount1(liq, pa, pb sdk.Dec) sdk.Dec {
 	}
 	diff := pb.Sub(pa)
 	return liq.Mul(diff)
+}
+
+// TODO: remove nolint
+// nolint: unused
+func priceToTick(price sdk.Dec) sdk.Int {
+	logOfPrice := osmomath.BigDecFromSDKDec(price).ApproxLog2()
+	logInt := osmomath.NewDecWithPrec(10001, 4)
+	tick := logOfPrice.Quo(logInt.ApproxLog2())
+	return tick.SDKDec().TruncateInt()
+}
+
+// TODO: remove nolint
+// nolint: unused
+func tickToPrice(tick sdk.Int) sdk.Dec {
+	price := sdk.NewDecWithPrec(10001, 4).Power(tick.Uint64())
+	return price
 }
 
 func (p Pool) GetAddress() sdk.AccAddress {
