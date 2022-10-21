@@ -24,7 +24,7 @@ func (k Keeper) UpdateTickWithNewLiquidity(ctx sdk.Context, poolId uint64, tickI
 // will be returned. The lte argument indicates if we need to find the next
 // initialized tick to the left or right of the current tick index, where true
 // indicates searching to the left.
-func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64, lte bool) (next int64, initialized bool) {
+func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64, reverse bool) (next int64, initialized bool) {
 	store := ctx.KVStore(k.storeKey)
 
 	// Construct a prefix store with a prefix of <TickPrefix | poolID>, allowing
