@@ -26,7 +26,7 @@ func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
-	return &Keeper{storeKey: storeKey, paramSpace: paramSpace}
+	return &Keeper{storeKey: storeKey, paramSpace: paramSpace, concentratedKeeper: concentratedKeeper, gammKeeper: gammKeeper}
 }
 
 // GetParams returns the total set of swaprouter parameters.
