@@ -35,25 +35,25 @@ func (suite *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 	suite.setupSuperfluidDelegations(valAddrs, superfluidDelegations, denoms)
 
 	for _, denom := range denoms {
-		req, err := querier.TotalDelegationByValidatorForDenom(sdk.WrapSDKContext(ctx), &types.QueryTotalDelegationByValidatorForDenomRequest{Denom: denom})
+		res, err := querier.TotalDelegationByValidatorForDenom(sdk.WrapSDKContext(ctx), &types.QueryTotalDelegationByValidatorForDenomRequest{Denom: denom})
 
 		suite.Require().NoError(err)
-		suite.Require().Equal(len(valAddrs), len(req.AssetResponse))
+		suite.Require().Equal(len(valAddrs), len(res.AssetResponse))
 
-		for res_ind, res := range req.AssetResponse {
+		for _, result := range res.AssetResponse {
 			// check osmo equivalent is correct
-			actual_response_osmo := req.AssetResponse[res_ind].OsmoEquivalent
+			actual_response_osmo := result.OsmoEquivalent
 			needed_response_osmo := suite.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(ctx, denom, sdk.NewInt(delegation_amount))
 
 			suite.Require().Equal(actual_response_osmo, needed_response_osmo)
 
 			// check sfs'd asset amount correct
-			actual_response_asset := req.AssetResponse[res_ind].AmountSfsd
+			actual_response_asset := result.AmountSfsd
 			needed_response_asset := sdk.NewInt(delegation_amount)
 			suite.Require().Equal(actual_response_asset, needed_response_asset)
 
 			// check validator addresses correct
-			actual_val := res.ValAddr
+			actual_val := result.ValAddr
 			checks := 0
 			for _, val := range valAddrs {
 				if val.String() == actual_val {
