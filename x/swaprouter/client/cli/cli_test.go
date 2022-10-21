@@ -88,7 +88,7 @@ func (s IntegrationTestSuite) TestNewSwapExactAmountOutCmd() {
 		expectedCode uint32
 	}{
 		{
-			"swap exact amount out", // osmosisd tx gamm swap-exact-amount-out 10stake 20 --swap-route-pool-ids=1 --swap-route-denoms=node0token --from=validator --keyring-backend=test --chain-id=testing --yes
+			"swap exact amount out", // osmosisd tx swaprouter swap-exact-amount-out 10stake 20 --swap-route-pool-ids=1 --swap-route-denoms=node0token --from=validator --keyring-backend=test --chain-id=testing --yes
 			[]string{
 				"10stake", "20",
 				fmt.Sprintf("--%s=%d", cli.FlagSwapRoutePoolIds, 1),
@@ -234,7 +234,7 @@ func (s IntegrationTestSuite) TestNewSwapExactAmountInCmd() {
 		expectedCode uint32
 	}{
 		{
-			"swap exact amount in", // osmosisd tx gamm swap-exact-amount-in 10stake 3 --swap-route-pool-ids=1 --swap-route-denoms=node0token --from=validator --keyring-backend=test --chain-id=testing --yes
+			"swap exact amount in", // osmosisd tx swaprouter swap-exact-amount-in 10stake 3 --swap-route-pool-ids=1 --swap-route-denoms=node0token --from=validator --keyring-backend=test --chain-id=testing --yes
 			[]string{
 				"10stake", "3",
 				fmt.Sprintf("--%s=%d", cli.FlagSwapRoutePoolIds, 1),
