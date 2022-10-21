@@ -21,7 +21,8 @@ var (
 
 // TickIndexToBytes converts a tick index to a byte slice. Negative tick indexes
 // are prefixed with 0x00 a byte and positive tick indexes are prefixed with a
-// 0x01 byte.
+// 0x01 byte. We do this because big endian byte encoding does not give us in
+// order iteration in state due to the tick index values being signed integers.
 func TickIndexToBytes(tickIndex int64) []byte {
 	key := make([]byte, 9)
 	if tickIndex < 0 {
