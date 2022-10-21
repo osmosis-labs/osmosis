@@ -406,8 +406,9 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
 	Params(ctx context.Context, in *ParamsRequest, opts ...grpc.CallOption) (*ParamsResponse, error)
-	// Estimate the swap.
+	// Estimates swap amount out given in.
 	EstimateSwapExactAmountIn(ctx context.Context, in *EstimateSwapExactAmountInRequest, opts ...grpc.CallOption) (*EstimateSwapExactAmountInResponse, error)
+	// Estimates swap amount in given out.
 	EstimateSwapExactAmountOut(ctx context.Context, in *EstimateSwapExactAmountOutRequest, opts ...grpc.CallOption) (*EstimateSwapExactAmountOutResponse, error)
 }
 
@@ -449,8 +450,9 @@ func (c *queryClient) EstimateSwapExactAmountOut(ctx context.Context, in *Estima
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	Params(context.Context, *ParamsRequest) (*ParamsResponse, error)
-	// Estimate the swap.
+	// Estimates swap amount out given in.
 	EstimateSwapExactAmountIn(context.Context, *EstimateSwapExactAmountInRequest) (*EstimateSwapExactAmountInResponse, error)
+	// Estimates swap amount in given out.
 	EstimateSwapExactAmountOut(context.Context, *EstimateSwapExactAmountOutRequest) (*EstimateSwapExactAmountOutResponse, error)
 }
 

@@ -19,13 +19,14 @@ service Query {
     option (google.api.http).get = "/osmosis/swaprouter/v1beta1/Params";
   }
 
-  // Estimate the swap.
+  // Estimates swap amount out given in.
   rpc EstimateSwapExactAmountIn(EstimateSwapExactAmountInRequest)
       returns (EstimateSwapExactAmountInResponse) {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_in";
   }
 
+  // Estimates swap amount in given out.
   rpc EstimateSwapExactAmountOut(EstimateSwapExactAmountOutRequest)
       returns (EstimateSwapExactAmountOutResponse) {
     option (google.api.http).get =
