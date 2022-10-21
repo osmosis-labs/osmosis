@@ -2,6 +2,7 @@ package wasmbinding
 
 import (
 	"fmt"
+	"reflect"
 	"sync"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
@@ -12,6 +13,8 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	grpc "google.golang.org/grpc"
 
 	epochtypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
@@ -32,63 +35,73 @@ import (
 // thread safe sync.Map.
 var stargateWhitelist sync.Map
 
+// This is
+type GRPCQueriesInfo struct {
+	QueryPaths    []string
+	QueryReponses []codec.ProtoMarshaler
+}
+
+func (g GRPCQueriesInfo) RegisterQueryReponse(queryServer interface{}) {
+	handlers := reflect.TypeOf(queryServer).Elem()
+
+	// adds a top-level query handler based on the gRPC service name
+	for i := 0; i < handlers.NumMethod(); i++ {
+		qResponse := reflect.New(handlers.Method(i).Type.Out(0).Elem())
+
+		fmt.Println(qResponse.CanInterface(), "can interface")
+		fmt.Println(qResponse.Interface())
+		qResponseType, ok := qResponse.Interface().(codec.ProtoMarshaler)
+		if !ok {
+			panic("can't")
+		}
+		g.QueryReponses = append(g.QueryReponses, qResponseType)
+	}
+}
+
+//
+func (g GRPCQueriesInfo) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
+	for _, method := range sd.Methods {
+		fqName := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
+		g.QueryPaths = append(g.QueryPaths, fqName)
+	}
+}
+
 func init() {
 	// cosmos-sdk queries
+	g := GRPCQueriesInfo{}
 
 	// auth
-	setWhitelistedQuery("/cosmos.auth.v1beta1.Query/Account", &authtypes.QueryAccountResponse{})
-	setWhitelistedQuery("/cosmos.auth.v1beta1.Query/Params", &authtypes.QueryParamsResponse{})
+	authtypes.RegisterQueryServer(g, nil)
+	g.RegisterQueryReponse((*authtypes.QueryServer)(nil))
 
 	// bank
-	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/Balance", &banktypes.QueryBalanceResponse{})
-	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/DenomMetadata", &banktypes.QueryDenomsMetadataResponse{})
-	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/Params", &banktypes.QueryParamsResponse{})
-	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/SupplyOf", &banktypes.QuerySupplyOfResponse{})
+	banktypes.RegisterQueryServer(g, nil)
 
 	// distribution
-	setWhitelistedQuery("/cosmos.distribution.v1beta1.Query/Params", &distributiontypes.QueryParamsResponse{})
-	setWhitelistedQuery("/cosmos.distribution.v1beta1.Query/DelegatorWithdrawAddress", &distributiontypes.QueryDelegatorWithdrawAddressResponse{})
-	setWhitelistedQuery("/cosmos.distribution.v1beta1.Query/ValidatorCommission", &distributiontypes.QueryValidatorCommissionResponse{})
+	distributiontypes.RegisterQueryServer(g, nil)
 
 	// gov
-	setWhitelistedQuery("/cosmos.gov.v1beta1.Query/Deposit", &govtypes.QueryDepositResponse{})
-	setWhitelistedQuery("/cosmos.gov.v1beta1.Query/Params", &govtypes.QueryParamsResponse{})
-	setWhitelistedQuery("/cosmos.gov.v1beta1.Query/Vote", &govtypes.QueryVoteResponse{})
+	govtypes.RegisterQueryServer(g, nil)
 
 	// slashing
-	setWhitelistedQuery("/cosmos.slashing.v1beta1.Query/Params", &slashingtypes.QueryParamsResponse{})
-	setWhitelistedQuery("/cosmos.slashing.v1beta1.Query/SigningInfo", &slashingtypes.QuerySigningInfoResponse{})
+	slashingtypes.RegisterQueryServer(g, nil)
 
 	// staking
-	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/Delegation", &stakingtypes.QueryDelegationResponse{})
-	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/Params", &stakingtypes.QueryParamsResponse{})
-	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/Validator", &stakingtypes.QueryValidatorResponse{})
+	stakingtypes.RegisterQueryServer(g, nil)
 
 	// osmosis queries
 
 	// epochs
-	setWhitelistedQuery("/osmosis.epochs.v1beta1.Query/EpochInfos", &epochtypes.QueryEpochsInfoResponse{})
-	setWhitelistedQuery("/osmosis.epochs.v1beta1.Query/CurrentEpoch", &epochtypes.QueryCurrentEpochResponse{})
+	epochtypes.RegisterQueryServer(g, nil)
 
 	// gamm
-	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/NumPools", &gammtypes.QueryNumPoolsResponse{})
-	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/TotalLiquidity", &gammtypes.QueryTotalLiquidityResponse{})
-	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/Pool", &gammtypes.QueryPoolResponse{})
-	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/PoolParams", &gammtypes.QueryPoolParamsResponse{})
-	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/TotalPoolLiquidity", &gammtypes.QueryTotalPoolLiquidityResponse{})
-	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/TotalShares", &gammtypes.QueryTotalSharesResponse{})
-	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/SpotPrice", &gammtypes.QuerySpotPriceResponse{})
+	gammtypes.RegisterQueryServer(g, nil)
 
 	// incentives
-	setWhitelistedQuery("/osmosis.incentives.Query/ModuleToDistributeCoins", &incentivestypes.ModuleToDistributeCoinsResponse{})
-	setWhitelistedQuery("/osmosis.incentives.Query/LockableDurations", &incentivestypes.QueryLockableDurationsResponse{})
+	incentivestypes.RegisterQueryServer(g, nil)
 
 	// lockup
-	setWhitelistedQuery("/osmosis.lockup.Query/ModuleBalance", &lockuptypes.ModuleBalanceResponse{})
-	setWhitelistedQuery("/osmosis.lockup.Query/ModuleLockedAmount", &lockuptypes.ModuleLockedAmountResponse{})
-	setWhitelistedQuery("/osmosis.lockup.Query/AccountUnlockableCoins", &lockuptypes.AccountUnlockableCoinsResponse{})
-	setWhitelistedQuery("/osmosis.lockup.Query/AccountUnlockingCoins", &lockuptypes.AccountUnlockingCoinsResponse{})
-	setWhitelistedQuery("/osmosis.lockup.Query/LockedDenom", &lockuptypes.LockedDenomResponse{})
+	lockuptypes.RegisterQueryServer(g, nil)
 
 	// mint
 	setWhitelistedQuery("/osmosis.mint.v1beta1.Query/EpochProvisions", &minttypes.QueryEpochProvisionsResponse{})
@@ -118,6 +131,7 @@ func init() {
 	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/ArithmeticTwap", &twapquerytypes.ArithmeticTwapResponse{})
 	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/ArithmeticTwapToNow", &twapquerytypes.ArithmeticTwapToNowResponse{})
 	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/Params", &twapquerytypes.ParamsResponse{})
+
 }
 
 // GetWhitelistedQuery returns the whitelisted query at the provided path.
