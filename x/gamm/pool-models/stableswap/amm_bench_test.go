@@ -14,12 +14,6 @@ func BenchmarkCFMM(b *testing.B) {
 	}
 }
 
-func BenchmarkBinarySearchTwoAsset(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		runCalcTwoAsset(solveCFMMBinarySearch(cfmmConstant))
-	}
-}
-
 func BenchmarkBinarySearchMultiAsset(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		runCalcMultiAsset(solveCFMMBinarySearchMulti)
