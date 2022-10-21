@@ -7,8 +7,8 @@ import (
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
-func (k Keeper) updatePositionWithLiquidity(
-	ctx sdk.Context,
+// nolint: unused
+func (k Keeper) updatePositionWithLiquidity(ctx sdk.Context,
 	poolId uint64,
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
@@ -23,6 +23,7 @@ func (k Keeper) updatePositionWithLiquidity(
 	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, position)
 }
 
+// nolint: unused
 func (k Keeper) getPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) Position {
 	store := ctx.KVStore(k.storeKey)
 
@@ -33,8 +34,8 @@ func (k Keeper) getPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	return position
 }
 
-func (k Keeper) setPosition(
-	ctx sdk.Context,
+// nolint: unused
+func (k Keeper) setPosition(ctx sdk.Context,
 	poolId uint64,
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,

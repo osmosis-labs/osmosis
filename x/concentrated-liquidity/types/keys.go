@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	ModuleName = "concentrated-liquidity"
+	ModuleName = "concentratedliquidity"
+	RouterKey  = ModuleName
 
 	StoreKey = ModuleName
 )
@@ -17,6 +18,7 @@ const (
 var (
 	TickPrefix     = []byte{0x01}
 	PositionPrefix = []byte{0x02}
+	PoolPrefix     = []byte{0x03}
 )
 
 // TickIndexToBytes converts a tick index to a byte slice. Negative tick indexes
@@ -68,4 +70,8 @@ func KeyPosition(poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64)
 	key = append(key, sdk.Uint64ToBigEndian(uint64(lowerTick))...)
 	key = append(key, sdk.Uint64ToBigEndian(uint64(upperTick))...)
 	return key
+}
+
+func KeyPool(poolId uint64) []byte {
+	return []byte(fmt.Sprintf("%s%d", PoolPrefix, poolId))
 }

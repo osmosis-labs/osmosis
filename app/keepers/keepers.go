@@ -539,6 +539,7 @@ func KVStoreKeys() []string {
 		capabilitytypes.StoreKey,
 		gammtypes.StoreKey,
 		twaptypes.StoreKey,
+		concentratedliquiditytypes.StoreKey,
 		lockuptypes.StoreKey,
 		incentivestypes.StoreKey,
 		epochstypes.StoreKey,

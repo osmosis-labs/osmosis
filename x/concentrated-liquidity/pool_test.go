@@ -1,70 +1,94 @@
 package concentrated_liquidity_test
 
 import (
-	"testing"
+	fmt "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-
-	cl "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity"
 )
 
-func TestCalcOutAmtGivenIn(t *testing.T) {
-	ctx := sdk.Context{}
-	pool := cl.NewConcentratedLiquidityPool(1)
+func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
+	ctx := s.Ctx
+	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", sdk.NewInt(0), sdk.NewInt(0))
+	s.Require().NoError(err)
 
 	// test asset a to b logic
-	tokensIn := sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(133700)))
+	tokenIn := sdk.NewCoin("eth", sdk.NewInt(133700))
 	tokenOutDenom := "usdc"
 	swapFee := sdk.NewDec(0)
 
-	amountOut, _ := pool.CalcOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
-	require.Equal(t, sdk.NewDec(663944647).String(), amountOut.Amount.ToDec().String())
+	amountOut, err := pool.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewDec(663944647).String(), amountOut.Amount.ToDec().String())
 
 	// test asset b to a logic
-	tokensIn = sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(4199999999)))
+	tokenIn = sdk.NewCoin("usdc", sdk.NewInt(4199999999))
 	tokenOutDenom = "eth"
 	swapFee = sdk.NewDec(0)
 
-	amountOut, _ = pool.CalcOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
-	require.Equal(t, sdk.NewDec(805287), amountOut.Amount.ToDec())
+	amountOut, err = pool.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewDec(805287), amountOut.Amount.ToDec())
 
 	// test with swap fee
-	tokensIn = sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(4199999999)))
+	tokenIn = sdk.NewCoin("usdc", sdk.NewInt(4199999999))
 	tokenOutDenom = "eth"
 	swapFee = sdk.NewDecWithPrec(2, 2)
 
-	amountOut, _ = pool.CalcOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
-	require.Equal(t, sdk.NewDec(789834), amountOut.Amount.ToDec())
+	amountOut, err = pool.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewDec(789834), amountOut.Amount.ToDec())
 }
 
-func TestCalcInAmtGivenOut(t *testing.T) {
-	ctx := sdk.Context{}
-	pool := cl.NewConcentratedLiquidityPool(1)
-
+func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
+	ctx := s.Ctx
+	fmt.Println("===0")
+	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", sdk.NewInt(0), sdk.NewInt(0))
+	s.Require().NoError(err)
 	// test asset a to b logic
-	tokensOut := sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(4199999999)))
+	tokensOut := sdk.NewCoin("usdc", sdk.NewInt(4199999999))
 	tokenInDenom := "eth"
 	swapFee := sdk.NewDec(0)
 
 	amountIn, err := pool.CalcInAmtGivenOut(ctx, tokensOut, tokenInDenom, swapFee)
-	require.NoError(t, err)
-	require.Equal(t, sdk.NewDec(805287), amountIn.Amount.ToDec())
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewDec(805287), amountIn.Amount.ToDec())
 
 	// test asset b to a logic
-	tokensOut = sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(133700)))
+	tokensOut = sdk.NewCoin("eth", sdk.NewInt(133700))
 	tokenInDenom = "usdc"
 	swapFee = sdk.NewDec(0)
 
 	amountIn, err = pool.CalcInAmtGivenOut(ctx, tokensOut, tokenInDenom, swapFee)
-	require.NoError(t, err)
-	require.Equal(t, sdk.NewDec(663944647), amountIn.Amount.ToDec())
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewDec(663944647), amountIn.Amount.ToDec())
 
 	// test asset a to b logic
-	tokensOut = sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(4199999999)))
+	tokensOut = sdk.NewCoin("usdc", sdk.NewInt(4199999999))
 	tokenInDenom = "eth"
 	swapFee = sdk.NewDecWithPrec(2, 2)
 
-	amountIn, _ = pool.CalcInAmtGivenOut(ctx, tokensOut, tokenInDenom, swapFee)
-	require.Equal(t, sdk.NewDec(821721), amountIn.Amount.ToDec())
+	amountIn, err = pool.CalcInAmtGivenOut(ctx, tokensOut, tokenInDenom, swapFee)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewDec(821722), amountIn.Amount.ToDec())
+}
+
+func (s *KeeperTestSuite) TestOrderInitialPoolDenoms() {
+	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", sdk.NewInt(0), sdk.NewInt(0))
+	s.Require().NoError(err)
+	s.Require().Equal(pool.Token0, "eth")
+	s.Require().Equal(pool.Token1, "usdc")
+
+	err = pool.OrderInitialPoolDenoms("axel", "osmo")
+	s.Require().NoError(err)
+	s.Require().Equal(pool.Token0, "axel")
+	s.Require().Equal(pool.Token1, "osmo")
+
+	err = pool.OrderInitialPoolDenoms("usdc", "eth")
+	s.Require().NoError(err)
+	s.Require().Equal(pool.Token0, "eth")
+	s.Require().Equal(pool.Token1, "usdc")
+
+	err = pool.OrderInitialPoolDenoms("usdc", "usdc")
+	s.Require().Error(err)
+
 }
