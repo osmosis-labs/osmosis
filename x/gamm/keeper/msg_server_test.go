@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	doesNotExistDenom = "nodenom"
 	// Max positive int64.
 	int64Max = int64(^uint64(0) >> 1)
 )
