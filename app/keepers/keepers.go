@@ -47,8 +47,6 @@ import (
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer"
 
-	"github.com/osmosis-labs/osmosis/v12/x/swaprouter"
-
 	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v12/wasmbinding"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity"
@@ -116,7 +114,6 @@ type AppKeepers struct {
 	GovKeeper                   *govkeeper.Keeper
 	WasmKeeper                  *wasm.Keeper
 	TokenFactoryKeeper          *tokenfactorykeeper.Keeper
-	SwapRouterKeeper            *swaprouter.Keeper
 	ConcentratedLiquidityKeeper *concentratedliquidity.Keeper
 	// IBC modules
 	// transfer module
@@ -259,13 +256,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	appKeepers.ConcentratedLiquidityKeeper = concentratedliquidity.NewKeeper(
 		appKeepers.keys[concentratedliquiditytypes.StoreKey])
-
-	appKeepers.SwapRouterKeeper = swaprouter.NewKeeper(
-		appKeepers.keys[swaproutertypes.StoreKey],
-		appKeepers.GetSubspace(swaproutertypes.ModuleName),
-		appKeepers.GAMMKeeper,
-		appKeepers.ConcentratedLiquidityKeeper,
-	)
 
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
 		appKeepers.keys[lockuptypes.StoreKey],
