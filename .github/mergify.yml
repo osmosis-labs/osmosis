@@ -113,7 +113,7 @@ pull_request_rules:
   - name: backport patches to concentrated-liquidity-main
     conditions:
       - base=main
-      - label=A:backport/concenntrated-liquidity-main
+      - label=A:backport/concentrated-liquidity-main
     actions:
       backport:
         branches:
