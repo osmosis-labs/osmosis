@@ -45,5 +45,7 @@
  sed -i "s|.*/app/keepers.*|\t$module/app/keepers$bracks|" $new_file/upgrades.go
  sed -i "s|.*/x/lockup/types.*|\tlockuptypes $module/x/lockup/types$bracks|" $new_file/upgrades.go
 
+app_file=./app/app.go
+sed -i "s|.*Upgrades = []upgrades.Upgrade{.*|hello|" $app_file
  # change e2e version in makefile
  sed -i "s/E2E_UPGRADE_VERSION := ${bracks}v$latest_version$bracks/E2E_UPGRADE_VERSION := ${bracks}v$version_create$bracks/" ./Makefile
