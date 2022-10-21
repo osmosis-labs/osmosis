@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"golang.org/x/exp/constraints"
 )
 
 // Don't EVER change after initializing
@@ -170,4 +171,13 @@ func PowApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 		}
 	}
 	return sum
+}
+
+// Max returns the maximum value between two Ordered types.
+func Max[T constraints.Ordered](x, y T) T {
+	if x < y {
+		return y
+	}
+
+	return x
 }

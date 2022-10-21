@@ -33,7 +33,6 @@ func TestFoo(t *testing.T) {
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {
-		// tick := int64(sdk.BigEndianToUint64(iter.Key()))
 		tick, err := types.TickIndexFromBytes(iter.Key())
 		require.NoError(t, err)
 		fmt.Println("TICK:", tick)
