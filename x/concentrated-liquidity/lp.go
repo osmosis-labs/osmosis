@@ -10,11 +10,13 @@ import (
 
 func (k Keeper) Mint(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokenIn sdk.Int, lowerTick, upperTick int64) (numShares sdk.Int, err error) {
 	// ensure types.MinTick <= lowerTick < types.MaxTick
+	// TODO (bez): Add unit tests.
 	if lowerTick < types.MinTick || lowerTick >= types.MaxTick {
 		return sdk.Int{}, fmt.Errorf("invalid lower tick: %d", lowerTick)
 	}
 
 	// ensure types.MaxTick < upperTick <= types.MinTick
+	// TODO (bez): Add unit tests.
 	if upperTick > types.MaxTick || upperTick <= types.MinTick {
 		return sdk.Int{}, fmt.Errorf("invalid upper tick: %d", upperTick)
 	}
