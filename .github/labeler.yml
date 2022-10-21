@@ -20,6 +20,8 @@
   - app/wasm/**/*
 "C:x/claim":
   - x/claim/**/*
+"C:x/concentrated-liquidity":
+  - x/concentrated-liquidity/**/*
 "C:x/epochs":
   - x/epochs/**/*
 "C:x/gamm":
@@ -34,6 +36,8 @@
   - x/pool-incentives/**/*
 "C:x/superfluid":
   - x/superfluid/**/*
+"C:x/swaprouter":
+  - x/swaprouter/**/*
 "C:x/txfees":
   - x/txfees/**/*
 "C:x/tokenfactory":
@@ -52,7 +56,7 @@
 "C:CLI":
   - client/**/*
   - x/*/client/**/*
-# Add "C:docs" label to documented related files and directories. 
+# Add "C:docs" label to documented related files and directories.
 "C:docs":
   - bug.md
   - issue.md
@@ -61,4 +65,3 @@
   - x/**/*.md
   - x/**/*/*.md
   - tests/**/*.md
-  
