@@ -188,7 +188,7 @@ func solveCFMMBinarySearch(constantFunction func(osmomath.BigDec, osmomath.BigDe
 			panic(err)
 		}
 
-		xOut := xReserve.Sub(x_est).Abs()
+		xOut := xReserve.Sub(x_est)
 		if xOut.GTE(xReserve) {
 			panic("invalid output: greater than full pool reserves")
 		}
@@ -236,7 +236,7 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 		panic(err)
 	}
 
-	xOut := xReserve.Sub(xEst).Abs()
+	xOut := xReserve.Sub(xEst)
 	if xOut.GTE(xReserve) {
 		panic("invalid output: greater than full pool reserves")
 	}
@@ -311,6 +311,9 @@ func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee
 	// We are solving for the amount of token in, cfmm(x,y) = cfmm(x + x_in, y - y_out)
 	// x = tokenInSupply, y = tokenOutSupply, yIn = -tokenOutAmount
 	cfmmIn := solveCfmm(tokenInSupply, tokenOutSupply, remReserves, tokenOutAmount.Neg())
+	// returned cfmmIn is negative, representing we need to add this many tokens to pool.
+	// We invert that negative here.
+	cfmmIn = cfmmIn.Neg()
 	// handle swap fee
 	inAmt := cfmmIn.QuoRoundUp(oneMinus(swapFee))
 	// divide by (1 - swapfee) to force a corresponding increase in input asset
