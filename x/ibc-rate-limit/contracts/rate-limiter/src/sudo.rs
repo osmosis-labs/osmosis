@@ -19,7 +19,6 @@ pub fn try_transfer(
     direction: FlowType,
     now: Timestamp,
 ) -> Result<Response, ContractError> {
-    deps.api.debug("HERE!");
     // Sudo call. Only go modules should be allowed to access this
     let trackers = RATE_LIMIT_TRACKERS.may_load(deps.storage, path.into())?;
 
@@ -39,7 +38,6 @@ pub fn try_transfer(
     }
 
     let mut rate_limits = trackers.unwrap();
-    deps.api.debug(&format!("{:?}", rate_limits));
 
     // If any of the RateLimits fails, allow_transfer() will return
     // ContractError::RateLimitExceded, which we'll propagate out
