@@ -8,3 +8,13 @@ queries:
       query_func: "k.GetParams"
     cli:
       cmd: "GetParams"
+  EstimateSwapExactAmountIn:
+    proto_wrapper:
+      query_func: "k.EstimateSwapExactAmountIn"
+    cli:
+      cmd: "EstimateSwapExactAmountIn"
+  EstimateSwapExactAmountOut:
+    proto_wrapper:
+      query_func: "k.EstimateSwapExactAmountOut"
+    cli:
+      cmd: "EstimateSwapExactAmountOut"

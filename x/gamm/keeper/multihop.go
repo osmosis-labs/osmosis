@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 )
 
 // MultihopSwapExactAmountIn defines the input denom and input amount for the first pool,
@@ -12,13 +13,13 @@ import (
 func (k Keeper) MultihopSwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	routes []types.SwapAmountInRoute,
+	routes []swaproutertypes.SwapAmountInRoute,
 	tokenIn sdk.Coin,
 	tokenOutMinAmount sdk.Int,
 ) (tokenOutAmount sdk.Int, err error) {
 	for i, route := range routes {
 		swapFeeMultiplier := sdk.OneDec()
-		if types.SwapAmountInRoutes(routes).IsOsmoRoutedMultihop() {
+		if swaproutertypes.SwapAmountInRoutes(routes).IsOsmoRoutedMultihop() {
 			swapFeeMultiplier = types.MultihopSwapFeeMultiplierForOsmoPools.Clone()
 		}
 
@@ -54,13 +55,13 @@ func (k Keeper) MultihopSwapExactAmountIn(
 func (k Keeper) MultihopSwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	routes []types.SwapAmountOutRoute,
+	routes []swaproutertypes.SwapAmountOutRoute,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
 ) (tokenInAmount sdk.Int, err error) {
 	swapFeeMultiplier := sdk.OneDec()
 
-	if types.SwapAmountOutRoutes(routes).IsOsmoRoutedMultihop() {
+	if swaproutertypes.SwapAmountOutRoutes(routes).IsOsmoRoutedMultihop() {
 		swapFeeMultiplier = types.MultihopSwapFeeMultiplierForOsmoPools.Clone()
 	}
 
@@ -116,7 +117,7 @@ func (k Keeper) MultihopSwapExactAmountOut(
 // route of pools for the original multihop transaction.
 func (k Keeper) createMultihopExpectedSwapOuts(
 	ctx sdk.Context,
-	routes []types.SwapAmountOutRoute,
+	routes []swaproutertypes.SwapAmountOutRoute,
 	tokenOut sdk.Coin, swapFeeMultiplier sdk.Dec,
 ) ([]sdk.Int, error) {
 	insExpected := make([]sdk.Int, len(routes))

@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"math/big"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -17,20 +16,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
-
-var sdkIntMaxValue = sdk.NewInt(0)
-
-func init() {
-	maxInt := big.NewInt(2)
-	maxInt = maxInt.Exp(maxInt, big.NewInt(256), nil)
-
-	_sdkIntMaxValue, ok := sdk.NewIntFromString(maxInt.Sub(maxInt, big.NewInt(1)).String())
-	if !ok {
-		panic("Failed to calculate the max value of sdk.Int")
-	}
-
-	sdkIntMaxValue = _sdkIntMaxValue
-}
 
 var _ types.QueryServer = Querier{}
 
@@ -240,85 +225,5 @@ func (q Querier) TotalLiquidity(ctx context.Context, _ *types.QueryTotalLiquidit
 
 	return &types.QueryTotalLiquidityResponse{
 		Liquidity: q.Keeper.GetTotalLiquidity(sdkCtx),
-	}, nil
-}
-
-// EstimateSwapExactAmountIn estimates input token amount for a swap.
-func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.QuerySwapExactAmountInRequest) (*types.QuerySwapExactAmountInResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	if req.Sender == "" {
-		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
-	}
-
-	if req.TokenIn == "" {
-		return nil, status.Error(codes.InvalidArgument, "invalid token")
-	}
-
-	if err := types.SwapAmountInRoutes(req.Routes).Validate(); err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	sender, err := sdk.AccAddressFromBech32(req.Sender)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
-	}
-
-	tokenIn, err := sdk.ParseCoinNormalized(req.TokenIn)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid token: %s", err.Error())
-	}
-
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	tokenOutAmount, err := q.Keeper.MultihopSwapExactAmountIn(sdkCtx, sender, req.Routes, tokenIn, sdk.NewInt(1))
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	return &types.QuerySwapExactAmountInResponse{
-		TokenOutAmount: tokenOutAmount,
-	}, nil
-}
-
-// EstimateSwapExactAmountOut estimates token output amount for a swap.
-func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.QuerySwapExactAmountOutRequest) (*types.QuerySwapExactAmountOutResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	if req.Sender == "" {
-		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
-	}
-
-	if req.TokenOut == "" {
-		return nil, status.Error(codes.InvalidArgument, "invalid token")
-	}
-
-	if err := types.SwapAmountOutRoutes(req.Routes).Validate(); err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	sender, err := sdk.AccAddressFromBech32(req.Sender)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
-	}
-
-	tokenOut, err := sdk.ParseCoinNormalized(req.TokenOut)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid token: %s", err.Error())
-	}
-
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	tokenInAmount, err := q.Keeper.MultihopSwapExactAmountOut(sdkCtx, sender, req.Routes, sdkIntMaxValue, tokenOut)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	return &types.QuerySwapExactAmountOutResponse{
-		TokenInAmount: tokenInAmount,
 	}, nil
 }

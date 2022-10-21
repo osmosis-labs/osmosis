@@ -123,20 +123,6 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 
 			return bz, nil
 
-		case contractQuery.EstimateSwap != nil:
-			swapAmount, err := qp.EstimateSwap(ctx, contractQuery.EstimateSwap)
-			if err != nil {
-				return nil, sdkerrors.Wrap(err, "osmo estimate swap query")
-			}
-
-			res := bindings.EstimatePriceResponse{Amount: *swapAmount}
-			bz, err := json.Marshal(res)
-			if err != nil {
-				return nil, sdkerrors.Wrap(err, "osmo estimate swap query response")
-			}
-
-			return bz, nil
-
 		default:
 			return nil, wasmvmtypes.UnsupportedRequest{Kind: "unknown osmosis query variant"}
 		}
