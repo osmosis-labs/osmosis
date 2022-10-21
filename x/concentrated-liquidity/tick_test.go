@@ -97,5 +97,10 @@ func TestNextInitializedTick(t *testing.T) {
 			require.Equal(t, int64(78), n)
 			require.True(t, initd)
 		})
+		t.Run("returns next initialized tick far away", func(t *testing.T) {
+			n, initd := k.NextInitializedTick(ctx, 1, 100, true)
+			require.Equal(t, int64(84), n)
+			require.True(t, initd)
+		})
 	})
 }
