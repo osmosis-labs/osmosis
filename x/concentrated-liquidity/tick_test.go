@@ -1,7 +1,6 @@
 package concentrated_liquidity
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -12,7 +11,7 @@ import (
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
-func TestFoo(t *testing.T) {
+func TestKeeper_TickOrdering(t *testing.T) {
 	storeKey := sdk.NewKVStoreKey("concentrated_liquidity")
 	tKey := sdk.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
@@ -28,18 +27,40 @@ func TestFoo(t *testing.T) {
 	prefixBz := types.KeyTickPrefix(1)
 	prefixStore := prefix.NewStore(store, prefixBz)
 
-	startKey := types.TickIndexToBytes(int64(78 + 1))
-	iter := prefixStore.ReverseIterator(nil, startKey)
+	// Pick a value and ensure ordering is correct for lte=false, i.e. increasing
+	// ticks.
+	startKey := types.TickIndexToBytes(-4)
+	iter := prefixStore.Iterator(startKey, nil)
 	defer iter.Close()
 
+	var vals []int64
 	for ; iter.Valid(); iter.Next() {
 		tick, err := types.TickIndexFromBytes(iter.Key())
 		require.NoError(t, err)
-		fmt.Println("TICK:", tick)
+
+		vals = append(vals, tick)
 	}
+
+	require.Equal(t, []int64{-4, 70, 78, 84, 139, 240, 535}, vals)
+
+	// Pick a value and ensure ordering is correct for lte=true, i.e. decreasing
+	// ticks.
+	startKey = types.TickIndexToBytes(84)
+	revIter := prefixStore.ReverseIterator(nil, startKey)
+	defer revIter.Close()
+
+	vals = nil
+	for ; revIter.Valid(); revIter.Next() {
+		tick, err := types.TickIndexFromBytes(revIter.Key())
+		require.NoError(t, err)
+
+		vals = append(vals, tick)
+	}
+
+	require.Equal(t, []int64{78, 70, -4, -55, -200}, vals)
 }
 
-func TestNextInitializedTick(t *testing.T) {
+func TestKeeper_NextInitializedTick(t *testing.T) {
 	storeKey := sdk.NewKVStoreKey("concentrated_liquidity")
 	tKey := sdk.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
