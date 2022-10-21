@@ -67,7 +67,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/superfluid"
 	superfluidkeeper "github.com/osmosis-labs/osmosis/v12/x/superfluid/keeper"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v12/x/tokenfactory/keeper"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v12/x/tokenfactory/types"
 	"github.com/osmosis-labs/osmosis/v12/x/twap"
@@ -444,7 +443,6 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
 	paramsKeeper.Subspace(twaptypes.ModuleName)
-	paramsKeeper.Subspace(swaproutertypes.ModuleName)
 
 	return paramsKeeper
 }
