@@ -15,37 +15,45 @@
      version=${s_f[2]}
      num_version=${version//[!0-9]/}
      if [[ $num_version -gt $latest_version ]]; then
-         latest_version=$num_version
+        LATEST_FILE=$f
+        latest_version=$num_version
      fi
  done
+ VERSION_CREATE=$((latest_version+1))
+ NEW_FILE=./app/upgrades/v${VERSION_CREATE}
 
- version_create=$((latest_version+1))
- new_file=./app/upgrades/v${version_create}
+ mkdir $NEW_FILE
 
- mkdir $new_file
-
- touch $new_file/constants.go
- touch $new_file/upgrades.go
+ touch $NEW_FILE/constants.go
+ touch $NEW_FILE/upgrades.go
 
  module=$(go mod edit -json | jq ".Module.Path")
  module=${module%?}
  path=${module%???}
 
- cp ./app/upgrades/v${latest_version}/constants.go $new_file/constants.go
- cp ./app/upgrades/v${latest_version}/upgrades.go $new_file/upgrades.go
+ cp ./app/upgrades/v${latest_version}/constants.go $NEW_FILE/constants.go
+ cp ./app/upgrades/v${latest_version}/upgrades.go $NEW_FILE/upgrades.go
 
- sed -i "s/v$latest_version/v$version_create/g" $new_file/constants.go
- sed -i "s/v$latest_version/v$version_create/g" $new_file/upgrades.go
+ sed -i "s/v$latest_version/v$VERSION_CREATE/g" $NEW_FILE/constants.go
+ sed -i "s/v$latest_version/v$VERSION_CREATE/g" $NEW_FILE/upgrades.go
 
  bracks='"'
 
  # change imports in case go mod changed
- sed -i "s|.*/app/upgrades.*|\t$module/app/upgrades$bracks|" $new_file/constants.go
- sed -i "s|.*/app/upgrades.*|\t$module/app/upgrades$bracks|" $new_file/upgrades.go
- sed -i "s|.*/app/keepers.*|\t$module/app/keepers$bracks|" $new_file/upgrades.go
- sed -i "s|.*/x/lockup/types.*|\tlockuptypes $module/x/lockup/types$bracks|" $new_file/upgrades.go
+ sed -i "s|.*/app/upgrades.*|\t$module/app/upgrades$bracks|" $NEW_FILE/constants.go
+ sed -i "s|.*/app/upgrades.*|\t$module/app/upgrades$bracks|" $NEW_FILE/upgrades.go
+ sed -i "s|.*/app/keepers.*|\t$module/app/keepers$bracks|" $NEW_FILE/upgrades.go
+ sed -i "s|.*/x/lockup/types.*|\tlockuptypes $module/x/lockup/types$bracks|" $NEW_FILE/upgrades.go
 
-app_file=./app/app.go
-sed -i "s|.*Upgrades = []upgrades.Upgrade{.*|hello|" $app_file
+ # change app/app.go file
+ app_file=./app/app.go
+ UPGRADES_LINE=$(grep -F upgrades.Upgrade{ $app_file)
+ UPGRADES_LINE="${UPGRADES_LINE%?}, v${VERSION_CREATE}.Upgrade}"
+ sed -i "s|.*upgrades.Upgrade{.*|$UPGRADES_LINE|" $app_file 
+
+ PREV_IMPORT="v$latest_version $module/app/upgrades/v$latest_version$bracks"
+ NEW_IMPORT="v$VERSION_CREATE $module/app/upgrades/v$VERSION_CREATE$bracks"
+ sed -i"s|.*$PREV_IMPORT.*|\t$PREV_IMPORT\n\t$NEW_IMPORT|" $app_file
+ 
  # change e2e version in makefile
- sed -i "s/E2E_UPGRADE_VERSION := ${bracks}v$latest_version$bracks/E2E_UPGRADE_VERSION := ${bracks}v$version_create$bracks/" ./Makefile
+ sed -i "s/E2E_UPGRADE_VERSION := ${bracks}v$latest_version$bracks/E2E_UPGRADE_VERSION := ${bracks}v$VERSION_CREATE$bracks/" ./Makefile
