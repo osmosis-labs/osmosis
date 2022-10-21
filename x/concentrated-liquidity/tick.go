@@ -7,6 +7,20 @@ import (
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
+func (k Keeper) getSqrtRatioAtTick(tickIndex sdk.Int) (sdk.Dec, error) {
+	sqrtRatio, err := sdk.NewDecWithPrec(10001, 4).Power(tickIndex.Uint64()).ApproxSqrt()
+	if err != nil {
+		return sdk.Dec{}, nil
+	}
+
+	return sqrtRatio, nil
+}
+
+// TODO: implement this
+// func (k Keeper) getTickAtSqrtRatio(sqrtPrice sdk.Dec) sdk.Int {
+// 	return sdk.Int{}
+// }
+
 func (k Keeper) UpdateTickWithNewLiquidity(ctx sdk.Context, poolId uint64, tickIndex sdk.Int, liquidityDelta sdk.Int) {
 	tickInfo := k.getTickInfo(ctx, poolId, tickIndex)
 
