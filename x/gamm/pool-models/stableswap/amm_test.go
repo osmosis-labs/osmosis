@@ -505,41 +505,153 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 
 		denomIn       string
 		initialPoolIn int64
+
+		poolLiquidity  sdk.Coins
+		scalingFactors []uint64
 	}
 
 	// For every test case in testcases, apply a swap fee in swapFeeCases.
-	testcases := []testcase{
-		{
+	testcases := map[string]testcase{
+		// two-asset pools
+		"even pool": {
+			denomIn:        "ion",
 			denomOut:       "uosmo",
-			initialPoolOut: 1_000_000_000,
 			initialCalcOut: 100,
 
-			denomIn:       "ion",
-			initialPoolIn: 1_000_000_000,
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000_000_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(1_000_000_000)),
+			),
+			scalingFactors: []uint64{1, 1},
 		},
-		{
+		"uneven pool (2:1)": {
+			denomIn:        "ion",
 			denomOut:       "uosmo",
-			initialPoolOut: 500_000,
 			initialCalcOut: 100,
 
-			denomIn:       "ion",
-			initialPoolIn: 1_000_000,
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(500_000)),
+			),
+			scalingFactors: []uint64{1, 1},
 		},
-		{
+		"uneven pool (1_000_000:1)": {
+			denomIn:        "ion",
 			denomOut:       "uosmo",
-			initialPoolOut: 1_000,
 			initialCalcOut: 100,
 
-			denomIn:       "ion",
-			initialPoolIn: 1_000_000_000,
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000_000_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(1_000)),
+			),
+			scalingFactors: []uint64{1, 1},
 		},
-		{
+		"uneven pool (1:1_000_000)": {
+			denomIn:        "ion",
 			denomOut:       "uosmo",
-			initialPoolOut: 1_000_000_000,
 			initialCalcOut: 100,
 
-			denomIn:       "ion",
-			initialPoolIn: 1_000,
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(1_000_000_000)),
+			),
+			scalingFactors: []uint64{1, 1},
+		},
+		"even pool, uneven scaling factors": {
+			denomIn:        "ion",
+			denomOut:       "uosmo",
+			initialCalcOut: 100,
+
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000_000_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(1_000_000_000)),
+			),
+			scalingFactors: []uint64{1, 8},
+		},
+		"uneven pool, uneven scaling factors": {
+			denomIn:        "ion",
+			denomOut:       "uosmo",
+			initialCalcOut: 100,
+
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(500_000)),
+			),
+			scalingFactors: []uint64{1, 9},
+		},
+
+		// multi asset pools
+		"even multi-asset pool": {
+			denomIn:        "ion",
+			denomOut:       "uosmo",
+			initialCalcOut: 100,
+
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("foo", sdk.NewInt(1_000_000)),
+			),
+			scalingFactors: []uint64{1, 1, 1},
+		},
+		"uneven multi-asset pool (2:1:2)": {
+			denomIn:        "ion",
+			denomOut:       "uosmo",
+			initialCalcOut: 100,
+
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(500_000)),
+				sdk.NewCoin("foo", sdk.NewInt(1_000_000)),
+			),
+			scalingFactors: []uint64{1, 1, 1},
+		},
+		"uneven multi-asset pool (1_000_000:1:1_000_000)": {
+			denomIn:        "ion",
+			denomOut:       "uosmo",
+			initialCalcOut: 100,
+
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(1_000)),
+				sdk.NewCoin("foo", sdk.NewInt(1_000_000)),
+			),
+			scalingFactors: []uint64{1, 1, 1},
+		},
+		"uneven multi-asset pool (1:1_000_000:1_000_000)": {
+			denomIn:        "ion",
+			denomOut:       "uosmo",
+			initialCalcOut: 100,
+
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("foo", sdk.NewInt(1_000_000)),
+			),
+			scalingFactors: []uint64{1, 1, 1},
+		},
+		"even multi-asset pool, uneven scaling factors": {
+			denomIn:        "ion",
+			denomOut:       "uosmo",
+			initialCalcOut: 100,
+
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("foo", sdk.NewInt(1_000_000)),
+			),
+			scalingFactors: []uint64{5, 3, 9},
+		},
+		"uneven multi-asset pool (2:1:2), uneven scaling factors": {
+			denomIn:        "ion",
+			denomOut:       "uosmo",
+			initialCalcOut: 100,
+
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(500_000)),
+				sdk.NewCoin("foo", sdk.NewInt(1_000_000)),
+			),
+			scalingFactors: []uint64{100, 76, 33},
 		},
 	}
 
@@ -559,9 +671,8 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 			suite.Run(getTestCaseName(tc, swapFee), func() {
 				ctx := suite.CreateTestContext()
 
-				poolLiquidityIn := sdk.NewInt64Coin(tc.denomOut, tc.initialPoolOut)
-				poolLiquidityOut := sdk.NewInt64Coin(tc.denomIn, tc.initialPoolIn)
-				poolLiquidity := sdk.NewCoins(poolLiquidityIn, poolLiquidityOut)
+				poolLiquidityIn := sdk.NewInt64Coin(tc.denomIn, tc.initialPoolIn)
+				poolLiquidityOut := sdk.NewInt64Coin(tc.denomOut, tc.initialPoolOut)
 
 				swapFeeDec, err := sdk.NewDecFromStr(swapFee)
 				suite.Require().NoError(err)
@@ -570,7 +681,7 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 				suite.Require().NoError(err)
 
 				// TODO: add scaling factors into inverse relationship tests
-				pool := createTestPool(suite.T(), poolLiquidity, swapFeeDec, exitFeeDec, []uint64{1, 1})
+				pool := createTestPool(suite.T(), tc.poolLiquidity, swapFeeDec, exitFeeDec, tc.scalingFactors)
 				suite.Require().NotNil(pool)
 				test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, poolLiquidityIn.Denom, poolLiquidityOut.Denom, tc.initialCalcOut, swapFeeDec)
 			})
