@@ -15,11 +15,13 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v12/x/swaprouter"
 	swaprouterclient "github.com/osmosis-labs/osmosis/v12/x/swaprouter/client"
 	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/cli"
 	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/grpc"
 	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/queryproto"
+	swaproutersimulation "github.com/osmosis-labs/osmosis/v12/x/swaprouter/simulation"
 	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 )
 
@@ -134,3 +136,13 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+// **** simulation implementation ****
+// GenerateGenesisState creates a randomized GenState of the gamm module.
+func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(types.DefaultGenesis())
+}
+
+func (am AppModule) Actions() []simtypes.Action {
+	return swaproutersimulation.DefaultActions(am.k)
+}
