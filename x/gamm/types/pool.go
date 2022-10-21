@@ -52,10 +52,6 @@ type PoolI interface {
 	// pool.SpotPrice(ctx, "eth", "ust") = 4000.00
 	SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error)
 
-	// Returns the amount of token of base asset need to trade to get the target spot price
-	// This does not mutate the pool, or state.
-	CalcAmoutOfTokenToGetTargetPrice(ctx sdk.Context, targetSpotPrice sdk.Dec, baseAsset, quoteAsset string) (amountTrade sdk.Dec, err error)
-
 	// JoinPool joins the pool using all of the tokensIn provided.
 	// The AMM swaps to the correct internal ratio should be and returns the number of shares created.
 	// This function is mutative and updates the pool's internal state if there is no error.

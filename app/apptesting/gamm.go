@@ -3,6 +3,7 @@ package apptesting
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v12/osmomath"
 	gammkeeper "github.com/osmosis-labs/osmosis/v12/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
@@ -116,16 +117,18 @@ func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice sdk.De
 	pool, _ := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolID)
 	denoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, poolID)
 	s.Require().NoError(err)
-
+	// test, ok := pool.(*balancer.Pool)
 	if denoms[0] == baseDenom {
 		quoteDenom = denoms[1]
 	} else {
 		quoteDenom = denoms[0]
 	}
-	amountTrade, err := pool.CalcAmoutOfTokenToGetTargetPrice(s.Ctx, targetSpotPrice, baseDenom, quoteDenom)
+
+	amountTrade := s.CalcAmoutOfTokenToGetTargetPrice(s.Ctx, pool, targetSpotPrice, baseDenom, quoteDenom)
 	amountTrade = amountTrade.RoundInt().ToDec()
 
 }
+
 func (s *KeeperTestHelper) RunBasicSwap(poolId uint64) {
 	denoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, poolId)
 	s.Require().NoError(err)
@@ -184,4 +187,28 @@ func (s *KeeperTestHelper) RunBasicJoin(poolId uint64) {
 	gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
 	_, err = gammMsgServer.JoinPool(sdk.WrapSDKContext(s.Ctx), &msg)
 	s.Require().NoError(err)
+}
+
+func (s *KeeperTestHelper) CalcAmoutOfTokenToGetTargetPrice(ctx sdk.Context, pool gammtypes.PoolI, targetSpotPrice sdk.Dec, baseDenom, quoteDenom string) (amountTrade sdk.Dec) {
+	blPool, ok := pool.(*balancer.Pool)
+	s.Require().True(ok)
+	quoteAsset, _ := blPool.GetPoolAsset(quoteDenom)
+	baseAsset, err := blPool.GetPoolAsset(baseDenom)
+	s.Require().NoError(err)
+
+	s.Require().NotEqual(baseAsset.Weight, sdk.ZeroInt())
+	s.Require().NotEqual(quoteAsset.Weight, sdk.ZeroInt())
+
+	spotPriceNow, err := blPool.SpotPrice(ctx, baseDenom, quoteDenom)
+	s.Require().NoError(err)
+
+	// Amount of base token need to trade to get target spot price
+	// AmoutBaseTokenNeedToTrade = AmoutBaseTokenNow * ((targetSpotPrice/spotPriceNow)^((weight_quote/(weight_quote + weight_base))) -1 )
+
+	ratioPrice := targetSpotPrice.Quo(spotPriceNow)
+	ratioWeight := (quoteAsset.Weight.ToDec()).Quo(quoteAsset.Weight.ToDec().Add(baseAsset.Weight.ToDec()))
+
+	amountTrade = baseAsset.Token.Amount.ToDec().Mul(osmomath.Pow(ratioPrice, ratioWeight).Sub(sdk.OneDec()))
+
+	return amountTrade
 }
