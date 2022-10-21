@@ -14,11 +14,11 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v12/x/swaprouter"
 	swaprouterclient "github.com/osmosis-labs/osmosis/v12/x/swaprouter/client"
 	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/grpc"
 	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 )
 
 var (

@@ -63,6 +63,8 @@ import (
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v12/x/pool-incentives/types"
 	superfluid "github.com/osmosis-labs/osmosis/v12/x/superfluid"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
+	swaproutermodule "github.com/osmosis-labs/osmosis/v12/x/swaprouter/module"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 	"github.com/osmosis-labs/osmosis/v12/x/tokenfactory"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v12/x/tokenfactory/types"
 	"github.com/osmosis-labs/osmosis/v12/x/twap/twapmodule"
@@ -130,6 +132,7 @@ func appModules(
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		twapmodule.NewAppModule(*app.TwapKeeper),
 		concentratedliquidity.NewAppModule(*app.ConcentratedLiquidityKeeper),
+		swaproutermodule.NewAppModule(*app.SwapRouterKeeper),
 		txfees.NewAppModule(*app.TxFeesKeeper),
 		incentives.NewAppModule(*app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
 		lockup.NewAppModule(*app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
@@ -219,6 +222,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		lockuptypes.ModuleName,
 		authz.ModuleName,
 		concentratedliquiditytypes.ModuleName,
+		swaproutertypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
 	}

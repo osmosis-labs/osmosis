@@ -29,8 +29,3 @@ func (p Params) Validate() error {
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{}
 }
-
-// Validate validate genesis state.
-func (g GenesisState) Validate() error {
-	return g.Params.Validate()
-}
