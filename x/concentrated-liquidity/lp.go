@@ -8,24 +8,37 @@ import (
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
-func (k Keeper) Mint(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokenIn sdk.Int, lowerTick sdk.Int, upperTick sdk.Int) (numShares sdk.Int, err error) {
-	// first check and validate arguments
+func (k Keeper) Mint(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityIn sdk.Int, lowerTick sdk.Int, upperTick sdk.Int) (amtDenom0, amtDenom1 sdk.Int, err error) {
+	// ensure that lower tick is always smaller than upper tick
 	if lowerTick.GTE(types.MaxTick) || lowerTick.LT(types.MinTick) || upperTick.GT(types.MaxTick) {
-		// TODO: come back to errors
-		return sdk.Int{}, fmt.Errorf("validation fail")
+		return sdk.Int{}, sdk.Int{}, fmt.Errorf("validation fail")
 	}
 
-	if tokenIn.IsZero() {
-		return sdk.Int{}, fmt.Errorf("token in amount is zero")
+	if liquidityIn.IsZero() {
+		return sdk.Int{}, sdk.Int{}, fmt.Errorf("token in amount is zero")
 	}
 
-	k.UpdateTickWithNewLiquidity(ctx, poolId, lowerTick, tokenIn)
-	k.UpdateTickWithNewLiquidity(ctx, poolId, upperTick, tokenIn)
+	// k.UpdateTickWithNewLiquidity(ctx, poolId, lowerTick, liquidityIn)
+	// k.UpdateTickWithNewLiquidity(ctx, poolId, upperTick, liquidityIn)
 
-	// update tick with new liquidity
-	k.updatePositionWithLiquidity(ctx, poolId, owner.String(), lowerTick, upperTick, tokenIn)
+	// k.updatePositionWithLiquidity(ctx, poolId, owner.String(), lowerTick, upperTick, liquidityIn)
 
-	return sdk.Int{}, nil
+	pool := k.getPoolbyId(ctx, poolId)
+
+	currentSqrtPrice := pool.CurrentSqrtPrice
+	sqrtRatioUpperTick, err := k.getSqrtRatioAtTick(upperTick)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+	sqrtRatioLowerTick, err := k.getSqrtRatioAtTick(lowerTick)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	amtDenom0 = calcAmount0Delta(currentSqrtPrice.ToDec(), sqrtRatioUpperTick, liquidityIn.ToDec()).RoundInt()
+	amtDenom1 = calcAmount1Delta(currentSqrtPrice.ToDec(), sqrtRatioLowerTick, liquidityIn.ToDec()).RoundInt()
+
+	return amtDenom0, amtDenom1, nil
 }
 
 func (k Keeper) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
