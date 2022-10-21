@@ -85,6 +85,5 @@ func (i *ICS4Wrapper) GetParams(ctx sdk.Context) (contract string) {
 // CalculateChannelValue The value of an IBC channel. This is calculated using the denom supplied by the sender.
 // if the denom is not correct, the transfer should fail somewhere else on the call chain
 func (i *ICS4Wrapper) CalculateChannelValue(ctx sdk.Context, denom string) sdk.Int {
-	//return i.bankKeeper.GetSupplyWithOffset(ctx, baseDenom).Amount.Add(i.bankKeeper.GetSupplyWithOffset(ctx, localDenom).Amount)
 	return i.bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
 }
