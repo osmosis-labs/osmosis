@@ -51,12 +51,11 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 		return i.channel.SendPacket(ctx, chanCap, packet)
 	}
 
-	baseDenom, localDenom, _ := GetDenoms(packet)
-	amount, _, err := GetFundsFromPacket(packet, true)
+	amount, denom, _, err := GetFundsFromPacket(packet)
 	if err != nil {
 		return sdkerrors.Wrap(err, "Rate limited SendPacket")
 	}
-	channelValue := i.CalculateChannelValue(ctx, baseDenom, localDenom)
+	channelValue := i.CalculateChannelValue(ctx, denom)
 	err = CheckAndUpdateRateLimits(
 		ctx,
 		i.ContractKeeper,
@@ -64,7 +63,7 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 		contract,
 		channelValue,
 		packet.GetSourceChannel(),
-		baseDenom,
+		denom,
 		amount,
 	)
 	if err != nil {
@@ -85,7 +84,7 @@ func (i *ICS4Wrapper) GetParams(ctx sdk.Context) (contract string) {
 
 // CalculateChannelValue The value of an IBC channel. This is calculated using the denom supplied by the sender.
 // if the denom is not correct, the transfer should fail somewhere else on the call chain
-func (i *ICS4Wrapper) CalculateChannelValue(ctx sdk.Context, baseDenom, localDenom string) sdk.Int {
+func (i *ICS4Wrapper) CalculateChannelValue(ctx sdk.Context, denom string) sdk.Int {
 	//return i.bankKeeper.GetSupplyWithOffset(ctx, baseDenom).Amount.Add(i.bankKeeper.GetSupplyWithOffset(ctx, localDenom).Amount)
-	return i.bankKeeper.GetSupplyWithOffset(ctx, baseDenom).Amount
+	return i.bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
 }

@@ -83,12 +83,6 @@ func (suite *MiddlewareTestSuite) NewValidMessage(forward bool, amount sdk.Int) 
 		accountFrom = suite.chainA.SenderAccount.GetAddress().String()
 		accountTo = suite.chainB.SenderAccount.GetAddress().String()
 	} else {
-		//coins = transfertypes.GetTransferCoin(
-		//	suite.path.EndpointB.ChannelConfig.PortID,
-		//	suite.path.EndpointB.ChannelID,
-		//	sdk.DefaultBondDenom,
-		//	sdk.NewInt(1),
-		//)
 		port = suite.path.EndpointB.ChannelConfig.PortID
 		channel = suite.path.EndpointB.ChannelID
 		accountFrom = suite.chainB.SenderAccount.GetAddress().String()
@@ -253,16 +247,14 @@ func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 
 // Test rate limiting on receives
 func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimiting() {
-	osmosisApp := suite.chainA.GetOsmosisApp()
+	osmosisApp := suite.chainB.GetOsmosisApp()
 
-	// Setup receiver chain's quota
-	// Each user has 10% of the supply
-	supply := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
-	quota := supply.Amount.QuoRaw(20)
-	half := quota.QuoRaw(2)
+	supply := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainB.GetContext(), sdk.DefaultBondDenom)
 
 	// Move some funds from chainB to chainA
-	suite.AssertReceive(true, suite.NewValidMessage(false, quota))
+	// Each user has 10% of the supply, so we send most of the funds from one user to chainA
+	transferAmount := supply.Amount.QuoRaw(11)
+	suite.AssertReceive(true, suite.NewValidMessage(false, transferAmount))
 
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
@@ -270,13 +262,16 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimiting() {
 	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
+	// Setup receiver chain's quota
+	quota := transferAmount.QuoRaw(20)
+	half := quota.QuoRaw(2)
 	// receive 2.5% (quota is 5%)
 	suite.AssertReceive(true, suite.NewValidMessage(false, half))
 
 	// receive 2.5% (quota is 5%)
 	suite.AssertReceive(true, suite.NewValidMessage(false, half))
 
-	// Sending above the quota should fail. Adding some extra here because the cap is increasing. See test bellow.
+	// Sending above the quota should fail.
 	suite.AssertReceive(false, suite.NewValidMessage(false, sdk.NewInt(1)))
 }
 

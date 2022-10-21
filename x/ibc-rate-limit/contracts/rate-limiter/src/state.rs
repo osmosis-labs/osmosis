@@ -103,6 +103,15 @@ impl Flow {
         }
     }
 
+    /// returns the balance in a direction. This is used for displaying cleaner errors
+    pub fn balance_on(&self, direction: &FlowType) -> u128 {
+        let (balance_in, balance_out) = self.balance();
+        match direction {
+            FlowType::In => balance_in,
+            FlowType::Out => balance_out,
+        }
+    }
+
     /// If now is greater than the period_end, the Flow is considered expired.
     pub fn is_expired(&self, now: Timestamp) -> bool {
         self.period_end < now
@@ -183,6 +192,15 @@ impl Quota {
             None => (0, 0), // This should never happen, but ig the channel value is not set, we disallow any transfer
         }
     }
+
+    /// returns the capacity in a direction. This is used for displaying cleaner errors
+    pub fn capacity_on(&self, direction: &FlowType) -> u128 {
+        let (max_in, max_out) = self.capacity();
+        match direction {
+            FlowType::In => max_in,
+            FlowType::Out => max_out,
+        }
+    }
 }
 
 impl From<&QuotaMsg> for Quota {
@@ -225,6 +243,13 @@ impl RateLimit {
         channel_value: u128,
         now: Timestamp,
     ) -> Result<Self, ContractError> {
+        // Flow used before this transaction is applied.
+        // This is used to make error messages more informative
+        let initial_flow = self.flow.balance_on(direction);
+
+        // Apply the transfer. From here on, we will updated the flow with the new transfer
+        // and check if  it exceeds the quota at the current time
+
         let expired = self.flow.apply_transfer(direction, funds, now, &self.quota);
         // Cache the channel value if it has never been set or it has expired.
         if self.quota.channel_value.is_none() || expired {
@@ -238,7 +263,9 @@ impl RateLimit {
                 channel: path.channel.to_string(),
                 denom: path.denom.to_string(),
                 amount: funds,
-                channel_value,
+                quota_name: self.quota.name.to_string(),
+                used: initial_flow,
+                max: self.quota.capacity_on(direction),
                 reset: self.flow.period_end,
             }),
             false => Ok(RateLimit {

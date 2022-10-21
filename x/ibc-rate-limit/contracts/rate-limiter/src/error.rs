@@ -9,12 +9,14 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
-    #[error("IBC Rate Limit exceded for channel {channel:?} and denom {denom:?}. Tried to transfer {amount} and at most {channel_value} is allowed.Try again after {reset:?}")]
+    #[error("IBC Rate Limit exceeded for {channel}/{denom}. Tried to transfer {amount} which exceeds capacity on the '{quota_name}' quota ({used}/{max}). Try again after {reset:?}")]
     RateLimitExceded {
         channel: String,
         denom: String,
         amount: u128,
-        channel_value: u128,
+        quota_name: String,
+        used: u128,
+        max: u128,
         reset: Timestamp,
     },
 

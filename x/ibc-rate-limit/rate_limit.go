@@ -123,7 +123,7 @@ func BuildWasmExecMsg(msgType, sourceChannel, denom string, channelValue sdk.Int
 	return asJson, nil
 }
 
-func GetLocalDenom(packet exported.PacketI, data transfertypes.FungibleTokenPacketData) string {
+func GetIBCDenom(packet exported.PacketI, data transfertypes.FungibleTokenPacketData) string {
 	var denomTrace transfertypes.DenomTrace
 	if transfertypes.ReceiverChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data.Denom) {
 		voucherPrefix := transfertypes.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
@@ -144,23 +144,11 @@ func GetLocalDenom(packet exported.PacketI, data transfertypes.FungibleTokenPack
 	return denomTrace.IBCDenom()
 }
 
-func GetFundsFromPacket(packet exported.PacketI, local bool) (string, string, error) {
+func GetFundsFromPacket(packet exported.PacketI) (string, string, string, error) {
 	var packetData transfertypes.FungibleTokenPacketData
 	err := json.Unmarshal(packet.GetData(), &packetData)
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
-	if local {
-		return packetData.Amount, packetData.Denom, nil
-	}
-	return packetData.Amount, GetLocalDenom(packet, packetData), nil
-}
-
-func GetDenoms(packet exported.PacketI) (string, string, error) {
-	var packetData transfertypes.FungibleTokenPacketData
-	err := json.Unmarshal(packet.GetData(), &packetData)
-	if err != nil {
-		return "", "", err
-	}
-	return packetData.Denom, GetLocalDenom(packet, packetData), nil
+	return packetData.Amount, packetData.Denom, GetIBCDenom(packet, packetData), nil
 }
