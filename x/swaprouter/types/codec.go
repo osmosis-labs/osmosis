@@ -8,11 +8,11 @@ import (
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 )
 
-// RegisterLegacyAminoCodec registers the necessary x/gamm interfaces and concrete types
+// RegisterLegacyAminoCodec registers the necessary x/swaprouter interfaces and concrete types
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgSwapExactAmountIn{}, "osmosis/gamm/swap-exact-amount-in", nil)
-	cdc.RegisterConcrete(&MsgSwapExactAmountOut{}, "osmosis/gamm/swap-exact-amount-out", nil)
+	cdc.RegisterConcrete(&MsgSwapExactAmountIn{}, "osmosis/swaprouter/swap-exact-amount-in", nil)
+	cdc.RegisterConcrete(&MsgSwapExactAmountOut{}, "osmosis/swaprouter/swap-exact-amount-out", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
