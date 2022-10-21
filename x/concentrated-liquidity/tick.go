@@ -54,10 +54,9 @@ func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex in
 
 	defer iter.Close()
 
-	i := 0
-	for ; iter.Valid() && i < 2; iter.Next() {
+	for ; iter.Valid(); iter.Next() {
 		// Since, we constructed our prefix store with <TickPrefix | poolID>, the
-		// key is the BigEndianToUint64 encoding of a tick index.
+		// key is the encoding of a tick index.
 		tick, err := types.TickIndexFromBytes(iter.Key())
 		if err != nil {
 			panic(fmt.Errorf("invalid tick index (%s): %v", string(iter.Key()), err))
@@ -69,8 +68,6 @@ func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex in
 		if lte && tick <= tickIndex {
 			return tick, true
 		}
-
-		i++
 	}
 
 	return 0, false
