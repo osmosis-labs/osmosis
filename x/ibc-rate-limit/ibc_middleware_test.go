@@ -76,20 +76,13 @@ func (suite *MiddlewareTestSuite) NewValidMessage(forward bool, amount sdk.Int) 
 	var coins sdk.Coin
 	var port, channel, accountFrom, accountTo string
 
+	coins = sdk.NewCoin(sdk.DefaultBondDenom, amount)
 	if forward {
-		coins = sdk.NewCoin(sdk.DefaultBondDenom, amount)
 		port = suite.path.EndpointA.ChannelConfig.PortID
 		channel = suite.path.EndpointA.ChannelID
 		accountFrom = suite.chainA.SenderAccount.GetAddress().String()
 		accountTo = suite.chainB.SenderAccount.GetAddress().String()
 	} else {
-		coins = transfertypes.GetTransferCoin(
-			suite.path.EndpointB.ChannelConfig.PortID,
-			suite.path.EndpointB.ChannelID,
-			sdk.DefaultBondDenom,
-			sdk.NewInt(1),
-		)
-		coins = sdk.NewCoin(sdk.DefaultBondDenom, amount)
 		port = suite.path.EndpointB.ChannelConfig.PortID
 		channel = suite.path.EndpointB.ChannelID
 		accountFrom = suite.chainB.SenderAccount.GetAddress().String()
@@ -254,27 +247,31 @@ func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 
 // Test rate limiting on receives
 func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimiting() {
+	osmosisApp := suite.chainB.GetOsmosisApp()
+
+	supply := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainB.GetContext(), sdk.DefaultBondDenom)
+
+	// Move some funds from chainB to chainA
+	// Each user has 10% of the supply, so we send most of the funds from one user to chainA
+	transferAmount := supply.Amount.QuoRaw(11)
+	suite.AssertReceive(true, suite.NewValidMessage(false, transferAmount))
+
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
 	quotas := suite.BuildChannelQuota("weekly", 604800, 5, 5)
 	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
-	osmosisApp := suite.chainA.GetOsmosisApp()
-
 	// Setup receiver chain's quota
-	// Each user has 10% of the supply
-	supply := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
-	quota := supply.Amount.QuoRaw(20)
+	quota := transferAmount.QuoRaw(20)
 	half := quota.QuoRaw(2)
-
 	// receive 2.5% (quota is 5%)
 	suite.AssertReceive(true, suite.NewValidMessage(false, half))
 
 	// receive 2.5% (quota is 5%)
 	suite.AssertReceive(true, suite.NewValidMessage(false, half))
 
-	// Sending above the quota should fail. Adding some extra here because the cap is increasing. See test bellow.
+	// Sending above the quota should fail.
 	suite.AssertReceive(false, suite.NewValidMessage(false, sdk.NewInt(1)))
 }
 
@@ -290,7 +287,7 @@ func (suite *MiddlewareTestSuite) TestSendTransferNoQuota() {
 	suite.AssertSend(true, suite.NewValidMessage(true, sdk.NewInt(1)))
 }
 
-// Test rate limits are reverted if a "send" fails
+// Test rate limits are revertedgi if a "send" fails
 func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
