@@ -64,9 +64,6 @@ func cfmmConstantMulti(xReserve, yReserve, u, v osmomath.BigDec) osmomath.BigDec
 // and the following expression for `a` in multi-asset pools:
 // xyz(x^2 + y^2 + w) = (x - a)(y + b)z((x - a)^2 + (y + b)^2 + w)
 func solveCfmm(xReserve, yReserve osmomath.BigDec, remReserves []osmomath.BigDec, yIn osmomath.BigDec) osmomath.BigDec {
-	if len(remReserves) == 0 {
-		return solveCFMMBinarySearch(cfmmConstant)(xReserve, yReserve, yIn)
-	}
 	wSumSquares := osmomath.ZeroDec()
 	for _, assetReserve := range remReserves {
 		wSumSquares = wSumSquares.Add(assetReserve.Mul(assetReserve))
@@ -160,41 +157,6 @@ var (
 	twodec      = osmomath.MustNewDecFromStr("2.0")
 	k_threshold = osmomath.NewDecWithPrec(1, 1) // Correct within a factor of 1 * 10^{-1}
 )
-
-// solveCFMMBinarySearch searches the correct dx using binary search over constant K.
-// added for future extension
-func solveCFMMBinarySearch(constantFunction func(osmomath.BigDec, osmomath.BigDec) osmomath.BigDec) func(osmomath.BigDec, osmomath.BigDec, osmomath.BigDec) osmomath.BigDec {
-	return func(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
-		if !xReserve.IsPositive() || !yReserve.IsPositive() {
-			panic("invalid input: reserves and input must be positive")
-		} else if yIn.Abs().GTE(yReserve) {
-			panic("cannot input more than pool reserves")
-		}
-		k := constantFunction(xReserve, yReserve)
-		yFinal := yReserve.Add(yIn)
-		xLowEst := osmomath.ZeroDec()
-		// we set upper bound at 2 * xReserve to accommodate negative yIns
-		xHighEst := xReserve.Mul(osmomath.NewBigDec(2))
-		maxIterations := 256
-		errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.Dec{}}
-
-		// create single-input CFMM to pass into binary search
-		calc_x_est := func(xEst osmomath.BigDec) (osmomath.BigDec, error) {
-			return constantFunction(xEst, yFinal), nil
-		}
-
-		x_est, err := osmoutils.BinarySearchBigDec(calc_x_est, xLowEst, xHighEst, k, errTolerance, maxIterations)
-		if err != nil {
-			panic(err)
-		}
-
-		xOut := xReserve.Sub(x_est)
-		if xOut.GTE(xReserve) {
-			panic("invalid output: greater than full pool reserves")
-		}
-		return xOut
-	}
-}
 
 // solveCFMMBinarySearch searches the correct dx using binary search over constant K.
 // added for future extension
