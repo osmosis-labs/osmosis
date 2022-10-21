@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
@@ -17,10 +19,35 @@ var (
 	PositionPrefix = []byte{0x02}
 )
 
+// TickIndexToBytes converts a tick index to a byte slice. Negative tick indexes
+// are prefixed with 0x00 a byte and positive tick indexes are prefixed with a
+// 0x01 byte.
+func TickIndexToBytes(tickIndex int64) []byte {
+	key := make([]byte, 9)
+	if tickIndex < 0 {
+		copy(key[1:], sdk.Uint64ToBigEndian(uint64(tickIndex)))
+	} else {
+		copy(key[:1], []byte{0x01})
+		copy(key[1:], sdk.Uint64ToBigEndian(uint64(tickIndex)))
+	}
+
+	return key
+}
+
+// TickIndexFromBytes converts an encoded tick index to an int64 value. It returns
+// an error if the encoded tick has invalid length.
+func TickIndexFromBytes(bz []byte) (int64, error) {
+	if len(bz) != 9 {
+		return 0, fmt.Errorf("invalid encoded tick index length; expected: 9, got: %d", len(bz))
+	}
+
+	return int64(sdk.BigEndianToUint64(bz[1:])), nil
+}
+
 // KeyTick returns a key for storing a TickInfo object.
 func KeyTick(poolId uint64, tickIndex int64) []byte {
 	key := KeyTickPrefix(poolId)
-	key = append(key, sdk.Uint64ToBigEndian(uint64(tickIndex))...)
+	key = append(key, TickIndexToBytes(tickIndex)...)
 	return key
 }
 

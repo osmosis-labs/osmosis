@@ -1,6 +1,8 @@
 package concentrated_liquidity
 
 import (
+	fmt "fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	db "github.com/tendermint/tm-db"
@@ -21,7 +23,7 @@ func (k Keeper) UpdateTickWithNewLiquidity(ctx sdk.Context, poolId uint64, tickI
 
 // NextInitializedTick returns the next initialized tick index based on the
 // current or provided tick index. If no initialized tick exists, <0, false>
-// will be returned. The lte argument indicates if we need to find the next
+// will be returned. The reverse argument indicates if we need to find the next
 // initialized tick to the left or right of the current tick index, where true
 // indicates searching to the left.
 func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64, reverse bool) (next int64, initialized bool) {
@@ -31,10 +33,10 @@ func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex in
 	// us to retrieve the next initialized tick without having to scan all ticks.
 	prefixBz := types.KeyTickPrefix(poolId)
 	prefixStore := prefix.NewStore(store, prefixBz)
-	startKey := sdk.Uint64ToBigEndian(uint64(tickIndex))
+	startKey := types.TickIndexToBytes(tickIndex)
 
 	var iter db.Iterator
-	if lte {
+	if reverse {
 		iter = prefixStore.ReverseIterator(nil, startKey)
 	} else {
 		iter = prefixStore.Iterator(startKey, nil)
@@ -46,12 +48,15 @@ func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex in
 	for ; iter.Valid() && i < 2; iter.Next() {
 		// Since, we constructed our prefix store with <TickPrefix | poolID>, the
 		// key is the BigEndianToUint64 encoding of a tick index.
-		tick := int64(sdk.BigEndianToUint64(iter.Key()))
+		tick, err := types.TickIndexFromBytes(iter.Key())
+		if err != nil {
+			panic(fmt.Errorf("invalid tick index (%s): %v", string(iter.Key()), err))
+		}
 
-		if !lte && tick > tickIndex {
+		if !reverse && tick > tickIndex {
 			return tick, true
 		}
-		if lte && tick <= tickIndex {
+		if reverse && tick <= tickIndex {
 			return tick, true
 		}
 

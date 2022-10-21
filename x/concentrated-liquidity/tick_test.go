@@ -1,12 +1,44 @@
 package concentrated_liquidity
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
+
+func TestFoo(t *testing.T) {
+	storeKey := sdk.NewKVStoreKey("concentrated_liquidity")
+	tKey := sdk.NewTransientStoreKey("transient_test")
+	ctx := testutil.DefaultContext(storeKey, tKey)
+
+	k := Keeper{storeKey: storeKey}
+
+	liquidityTicks := []int64{-200, -55, -4, 70, 78, 84, 139, 240, 535}
+	for _, t := range liquidityTicks {
+		k.setTickInfo(ctx, 1, t, TickInfo{})
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	prefixBz := types.KeyTickPrefix(1)
+	prefixStore := prefix.NewStore(store, prefixBz)
+
+	startKey := types.TickIndexToBytes(int64(78 + 1))
+	iter := prefixStore.ReverseIterator(nil, startKey)
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		// tick := int64(sdk.BigEndianToUint64(iter.Key()))
+		tick, err := types.TickIndexFromBytes(iter.Key())
+		require.NoError(t, err)
+		fmt.Println("TICK:", tick)
+	}
+}
 
 func TestNextInitializedTick(t *testing.T) {
 	storeKey := sdk.NewKVStoreKey("concentrated_liquidity")
