@@ -237,7 +237,19 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithSwap() {
 	_, err = suite.chainA.ExecuteContract(addr, suite.chainA.SenderAccount.GetAddress(), []byte(setRouteMsg), nil)
 	suite.Require().NoError(err)
 
-	ackBytes := suite.receivePacket([]byte(fmt.Sprintf(`{"callback": "%v"}`, contractAddr)))
+	metadata := fmt.Sprintf(`{
+"wasm": {
+    "contract": "%s",
+    "execute": {"swap": 
+	  {"input_coin": {"amount": "%d", "denom": "uosmo"}, 
+	   "output_denom": "uion", 
+	   "slipage": {"max_price_impact_percentage": "10"}}
+    }
+  }
+}`, contractAddr, 10)
+
+	ackBytes := suite.receivePacket([]byte(metadata))
+
 	fmt.Println(string(ackBytes))
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err = json.Unmarshal(ackBytes, &ack)

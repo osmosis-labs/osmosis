@@ -11,13 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/ibc-metadata/types"
 )
 
-// ToDo: Split this into its own package
-
-type Metadata struct {
-	Callback string `json:"callback"`
-}
-
-func ExecuteSwap(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper, contract string, caller sdk.AccAddress, data types.FungibleTokenPacketData) error {
+func execute(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper, contract string, msg []byte, caller sdk.AccAddress, data types.FungibleTokenPacketData) error {
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
 		return err
@@ -30,12 +24,7 @@ func ExecuteSwap(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
 
 	response, err := contractKeeper.Execute(
 		ctx, contractAddr, caller,
-		[]byte(fmt.Sprintf(`
-	{"swap": 
-	  {"input_coin": {"amount": "%s", "denom": "uosmo"}, 
-	   "output_denom": "uion", 
-	   "slipage": {"max_price_impact_percentage": "10"}}
-    }`, amount)),
+		[]byte(msg),
 		sdk.NewCoins(sdk.NewCoin(data.Denom, amount)),
 	)
 	if err != nil {
@@ -46,7 +35,7 @@ func ExecuteSwap(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
 	return nil
 }
 
-func SwapHook(im IBCModule, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
+func WasmHook(im IBCModule, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
 	var data types.FungibleTokenPacketData
 	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
 		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf("cannot unmarshal sent packet data: %s", err.Error()))
@@ -57,25 +46,55 @@ func SwapHook(im IBCModule, ctx sdk.Context, packet channeltypes.Packet, relayer
 		return im.app.OnRecvPacket(ctx, packet, relayer)
 	}
 
-	var metadata Metadata
-	err := json.Unmarshal(metadataBytes, &metadata)
+	var metadata map[string]interface{}
+	err := json.Unmarshal(metadataBytes, &metadata) // ToDo: Be more flexible here? maybe just continue on invalid metadata
 	if err != nil {
 		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadPacketMetadataMsg, metadata, err.Error()))
 	}
 
+	// Check for the wasm key. If it doesn't exist. We continue.
+	wasmRaw, ok := metadata["wasm"]
+	if !ok {
+		return im.app.OnRecvPacket(ctx, packet, relayer)
+	}
+
+	wasm, ok := wasmRaw.(map[string]interface{})
+	if !ok {
+		return im.app.OnRecvPacket(ctx, packet, relayer)
+	}
+
+	// Get the message
+	contract, ok := wasm["contract"].(string)
+	if !ok {
+		// The tokens will be returned
+		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadPacketMetadataMsg, metadata, err.Error()))
+	}
+
+	// Get the message
+	msg, err := json.Marshal(wasm["execute"])
+	if err != nil {
+		// The tokens will be returned
+		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadPacketMetadataMsg, metadata, err.Error()))
+	}
+
+	// Set the receiver to the contract. That way it will be able to manage the funds sent in the packet
+	data.Receiver = contract
+	// Revert the metadata so that the underlying implementation can handle it. This won't be necessary once IBC is upgraded to contain metadata
 	data.Metadata = nil
 	packet.Data, err = json.Marshal(data)
 	if err != nil {
 		return channeltypes.NewErrorAcknowledgement(types.ErrPacketCreationMsg)
 	}
+
 	ack := im.app.OnRecvPacket(ctx, packet, relayer)
 
 	caller, _ := sdk.AccAddressFromBech32(data.Receiver)
-	err = ExecuteSwap(ctx, im.ics4Middleware.ContractKeeper, metadata.Callback, caller, data)
+	err = execute(ctx, im.ics4Middleware.ContractKeeper, contract, msg, caller, data)
 	if err != nil {
 		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadExecutionMsg, err.Error()))
 	}
 
+	// This should actually be done inside the contract
 	im.TransferKeeper.SendTransfer(
 		ctx,
 		packet.GetSourcePort(),
