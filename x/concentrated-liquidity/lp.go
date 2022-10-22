@@ -28,22 +28,19 @@ func (k Keeper) Mint(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liqui
 	// k.UpdateTickWithNewLiquidity(ctx, poolId, lowerTick, liquidityIn)
 	// k.UpdateTickWithNewLiquidity(ctx, poolId, upperTick, liquidityIn)
 
-	// k.updatePositionWithLiquidity(ctx, poolId, owner.String(), lowerTick, upperTick, liquidityIn)
+	// k.updatePositionWithLiquidity(ctx, poolId, owner, lowerTick, upperTick, liquidityIn)
 
 	pool := k.getPoolbyId(ctx, poolId)
 
-	currentSqrtPrice := pool.CurrentSqrtPrice
-	sqrtRatioUpperTick, err := k.getSqrtRatioAtTick(upperTick)
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, err
-	}
-	sqrtRatioLowerTick, err := k.getSqrtRatioAtTick(lowerTick)
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, err
-	}
+	currentSqrtPrice := sdk.NewDecWithPrec(int64(pool.CurrentSqrtPrice.Uint64()), 6)
+	fmt.Printf("%v CURRSQRTPRICE \n", currentSqrtPrice)
+	sqrtRatioUpperTick, _ := k.tickToPrice(sdk.NewInt(upperTick)).ApproxSqrt()
+	fmt.Printf("%v UPPER \n", sqrtRatioUpperTick)
+	sqrtRatioLowerTick, _ := k.tickToPrice(sdk.NewInt(lowerTick)).ApproxSqrt()
+	fmt.Printf("%v LOWER \n", sqrtRatioLowerTick)
 
-	amtDenom0 = calcAmount0Delta(currentSqrtPrice.ToDec(), sqrtRatioUpperTick, liquidityIn.ToDec()).RoundInt()
-	amtDenom1 = calcAmount1Delta(currentSqrtPrice.ToDec(), sqrtRatioLowerTick, liquidityIn.ToDec()).RoundInt()
+	amtDenom0 = calcAmount0Delta(liquidityIn.ToDec(), currentSqrtPrice, sqrtRatioUpperTick).RoundInt()
+	amtDenom1 = calcAmount1Delta(liquidityIn.ToDec(), currentSqrtPrice, sqrtRatioLowerTick).RoundInt()
 
 	return amtDenom0, amtDenom1, nil
 }

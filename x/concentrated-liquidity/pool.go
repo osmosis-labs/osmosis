@@ -76,9 +76,16 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom 
 }
 
 // this only works on a single directional trade, will implement bi directional trade in next milestone
-func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
+func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec, minPrice, maxPrice sdk.Dec) (tokenOut sdk.Coin, err error) {
 	asset0 := p.Token0
 	asset1 := p.Token1
+	tokenAmountInAfterFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
+
+	// get current sqrt price from pool
+	curSqrtPrice := sdk.NewDecWithPrec(int64(p.CurrentSqrtPrice.Uint64()), 6)
+	fmt.Printf("%v curSqrtPrice \n", curSqrtPrice)
+
+	// validation
 	if tokenIn.Denom != asset0 && tokenIn.Denom != asset1 {
 		return sdk.Coin{}, fmt.Errorf("tokenIn (%s) does not match any asset in pool", tokenIn.Denom)
 	}
@@ -88,24 +95,33 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom
 	if tokenIn.Denom == tokenOutDenom {
 		return sdk.Coin{}, fmt.Errorf("tokenIn (%s) cannot be the same as tokenOut (%s)", tokenIn.Denom, tokenOutDenom)
 	}
-	tokenAmountInAfterFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
+	if minPrice.GTE(curSqrtPrice.Power(2)) {
+		return sdk.Coin{}, fmt.Errorf("minPrice (%s) must be less than current price (%s)", minPrice, curSqrtPrice.Power(2))
+	}
+	if maxPrice.LTE(curSqrtPrice.Power(2)) {
+		return sdk.Coin{}, fmt.Errorf("maxPrice (%s) must be greater than current price (%s)", maxPrice, curSqrtPrice.Power(2))
+	}
 
-	// TODO: Replace with spot price
-	priceLower := sdk.NewDec(4500)
-	priceCur := sdk.NewDec(5000)
-	priceUpper := sdk.NewDec(5500)
+	// sqrtPrice of upper and lower user defined price range
+	sqrtPLowerTick, err := minPrice.ApproxSqrt()
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("issue calculating square root of minPrice")
+	}
+	sqrtPCurTick := curSqrtPrice
+	sqrtPUpperTick, err := maxPrice.ApproxSqrt()
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("issue calculating square root of maxPrice")
+	}
 
-	sqrtPLowerTick, _ := priceLower.ApproxSqrt()
-	sqrtPCurTick, _ := priceCur.ApproxSqrt()
-	sqrtPUpperTick, _ := priceUpper.ApproxSqrt()
-
-	// TODO: Roman change out with query to pool to get this info
+	// TODO: How do we remove/generalize this? I am stumped.
 	amountETH := int64(1000000)
 	amountUSDC := int64(5000000000)
 
+	// find liquidity of assetA and assetB
 	liq0 := liquidity0(amountETH, sqrtPCurTick, sqrtPUpperTick)
 	liq1 := liquidity1(amountUSDC, sqrtPCurTick, sqrtPLowerTick)
 
+	// utilize the smaller liquidity between assetA and assetB when performing the swap calculation
 	liq := sdk.MinDec(liq0, liq1)
 	if tokenIn.Denom == asset1 {
 		priceDiff := tokenAmountInAfterFee.Quo(liq)
@@ -130,10 +146,16 @@ func (p Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDeno
 	return sdk.Coin{}, nil
 }
 
-func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
+func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec, minPrice, maxPrice sdk.Dec) (tokenIn sdk.Coin, err error) {
 	tokenOutAmt := tokenOut.Amount.ToDec()
 	asset0 := p.Token0
 	asset1 := p.Token1
+
+	// get current sqrt price from pool
+	curSqrtPrice := sdk.NewDecWithPrec(int64(p.CurrentSqrtPrice.Uint64()), 6)
+	fmt.Printf("%v curSqrtPrice \n", curSqrtPrice)
+
+	// validation
 	if tokenOut.Denom != asset0 && tokenOut.Denom != asset1 {
 		return sdk.Coin{}, fmt.Errorf("tokenOut denom (%s) does not match any asset in pool", tokenOut.Denom)
 	}
@@ -143,25 +165,34 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom
 	if tokenOut.Denom == tokenInDenom {
 		return sdk.Coin{}, fmt.Errorf("tokenOut (%s) cannot be the same as tokenIn (%s)", tokenOut.Denom, tokenInDenom)
 	}
+	if minPrice.GTE(curSqrtPrice.Power(2)) {
+		return sdk.Coin{}, fmt.Errorf("minPrice (%s) must be less than current price (%s)", minPrice, curSqrtPrice.Power(2))
+	}
+	if maxPrice.LTE(curSqrtPrice.Power(2)) {
+		return sdk.Coin{}, fmt.Errorf("maxPrice (%s) must be greater than current price (%s)", maxPrice, curSqrtPrice.Power(2))
+	}
 
-	// TODO: Replace with spot price
-	priceLower := sdk.NewDec(4500)
-	priceCur := sdk.NewDec(5000)
-	priceUpper := sdk.NewDec(5500)
+	// sqrtPrice of upper and lower user defined price range
+	sqrtPLowerTick, err := minPrice.ApproxSqrt()
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("issue calculating square root of minPrice")
+	}
+	sqrtPCurTick := curSqrtPrice
+	sqrtPUpperTick, err := maxPrice.ApproxSqrt()
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("issue calculating square root of maxPrice")
+	}
 
-	sqrtPLowerTick, _ := priceLower.ApproxSqrt()
-	sqrtPCurTick, _ := priceCur.ApproxSqrt()
-	sqrtPUpperTick, _ := priceUpper.ApproxSqrt()
-
-	// TODO: Roman change out with query to pool to get this info
+	// TODO: How do we remove/generalize this? I am stumped.
 	amountETH := int64(1000000)
 	amountUSDC := int64(5000000000)
 
+	// find liquidity of assetA and assetB
 	liq0 := liquidity0(amountETH, sqrtPCurTick, sqrtPUpperTick)
 	liq1 := liquidity1(amountUSDC, sqrtPCurTick, sqrtPLowerTick)
 
+	// utilize the smaller liquidity between assetA and assetB when performing the swap calculation
 	liq := sdk.MinDec(liq0, liq1)
-
 	if tokenOut.Denom == asset1 {
 		priceDiff := tokenOutAmt.Quo(liq)
 		priceNext := sqrtPCurTick.Add(priceDiff)
