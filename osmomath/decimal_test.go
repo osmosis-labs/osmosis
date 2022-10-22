@@ -204,8 +204,8 @@ func (s *decimalTestSuite) TestBigDecFromSdkDec() {
 
 func (s *decimalTestSuite) TestBigDecFromSdkDecSlice() {
 	tests := []struct {
-		d    []sdk.Dec
-		want []BigDec
+		d        []sdk.Dec
+		want     []BigDec
 		expPanic bool
 	}{
 		{[]sdk.Dec{sdk.MustNewDecFromStr("0.000000000000000000")}, []BigDec{NewBigDec(0)}, false},
@@ -674,15 +674,19 @@ func (s *decimalTestSuite) TestLog2() {
 			initialValue: NewBigDec(2),
 			expected:     NewBigDec(1),
 		},
+		"log_2{4} = 1": {
+			initialValue: NewBigDec(7),
+			// TODO: need taylor expansion. True value: 2.80735492205760410744196931723183080
+			expected: MustNewDecFromStr("2.807331780165036836432756721656406796"),
+		},
 		"log_2{512} = 9": {
 			initialValue: NewBigDec(512),
 			expected:     NewBigDec(9),
 		},
 		"log_2{600} = 9": {
 			initialValue: NewBigDec(580),
-			// TODO: true value is: 9.179909090014934468590092754117374938
-			// Need better lookup table.
-			expected: MustNewDecFromStr("9.137503523749934908329043617236402782"),
+			// TODO: need taylor expansion. True value is: 9.179909090014934468590092754117374938
+			expected: MustNewDecFromStr("9.179895076994889373665412371677187147"),
 		},
 		"log_2{1024} = 10": {
 			initialValue: NewBigDec(1024),
@@ -690,15 +694,13 @@ func (s *decimalTestSuite) TestLog2() {
 		},
 		"log_2{1024.987654321} = 10": {
 			initialValue: NewDecWithPrec(1024987654321, 9),
-			// TODO: true value is: 10.001390817654141324352719749259888355
-			// Need better lookup table
-			expected: MustNewDecFromStr("10.000000000000000000000000000000000000"),
+			// TODO: need taylor expansion. True value is: 10.001390817654141324352719749259888355
+			expected: MustNewDecFromStr("10.001358358819850845519638100517317309"),
 		},
 		"log_2{912648174127941279170121098210.92821920190204131121} = 99.525973560175362367047484597337715868": {
 			initialValue: MustNewDecFromStr("912648174127941279170121098210.92821920190204131121"),
-			// TODO: true value is: 99.525973560175362367047484597337715868
-			// Need better lookup table
-			expected: MustNewDecFromStr("99.485426827170241759571649887742440632"),
+			// TODO: need taylor expansion. True value is: 99.525973560175362367047484597337715868
+			expected: MustNewDecFromStr("99.525926047039592435453430709513510145"),
 		},
 	}
 

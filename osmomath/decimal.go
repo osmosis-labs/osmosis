@@ -40,7 +40,8 @@ var (
 	oneInt               = big.NewInt(1)
 	tenInt               = big.NewInt(10)
 
-	log2LookupTable map[uint8]BigDec
+	log2LookupTable map[uint32]BigDec
+	upperBoundLog   = MustNewDecFromStr("0.000144262291094538391070900057479701")
 )
 
 // Decimal errors
@@ -64,18 +65,18 @@ func init() {
 // ranging from [1, 2)
 // the keys are multiplied by 10 to simplify the rounding logic
 // in the log function
-func buildLog2LookupTable() map[uint8]BigDec {
-	return map[uint8]BigDec{
-		10: ZeroDec(),
-		11: MustNewDecFromStr("0.137503523749934908329043617236402782"),
-		12: MustNewDecFromStr("0.263034405833793833583419514458426332"),
-		13: MustNewDecFromStr("0.378511623253729812526493224767304557"),
-		14: MustNewDecFromStr("0.485426827170241759571649887742440632"),
-		15: MustNewDecFromStr("0.584962500721156181453738943947816508"),
-		16: MustNewDecFromStr("0.678071905112637652129680570510609824"),
-		17: MustNewDecFromStr("0.765534746362977060383746581321014178"),
-		18: MustNewDecFromStr("0.847996906554950015037158458406242841"),
-		19: MustNewDecFromStr("0.925999418556223145923199993417444246"),
+func buildLog2LookupTable() map[uint32]BigDec {
+	return map[uint32]BigDec{
+		100000: ZeroDec(),
+		100001: MustNewDecFromStr("0.000014426878274461848365683118054200"),
+		100002: MustNewDecFromStr("0.000019999800000000000000000000000000"),
+		100003: MustNewDecFromStr("0.000029999600000000000000000000000000"),
+		100004: MustNewDecFromStr("0.000039999200000000000000000000000000"),
+		100005: MustNewDecFromStr("0.000049998800000000000000000000000000"),
+		100006: MustNewDecFromStr("0.000059998200000000000000000000000000"),
+		100007: MustNewDecFromStr("0.000069997600000000000000000000000000"),
+		100008: MustNewDecFromStr("0.000079996800000000000000000000000000"),
+		100009: MustNewDecFromStr("0.000089996000000000000000000000000000"),
 	}
 }
 
@@ -882,8 +883,7 @@ func DecApproxEq(t *testing.T, d1 BigDec, d2 BigDec, tol BigDec) (*testing.T, bo
 }
 
 // ApproxLog2 returns the approximation of log_2 {x}.
-// Rounds down by truncating and right shifting during
-// calculations.
+// Rounds down by truncations during division and right shifting.
 func (x BigDec) ApproxLog2() BigDec {
 	if x.LT(OneDec()) {
 		panic(fmt.Sprintf("only supporting values >= 1, given (%s)", x))
@@ -909,16 +909,25 @@ func (x BigDec) ApproxLog2() BigDec {
 		y = y + 1
 	}
 
-	// exponentiate to simplify truncation necessary for
-	// looking up values in the table.
-	lookupKey := x.MulInt64(10).TruncateInt()
-	if lookupKey.GTE(NewInt(20)) || lookupKey.LT(NewInt(10)) {
-		panic(fmt.Sprintf("invalid lookup key (%s), must be 10 <= lookup key < 2", lookupKey))
+	// invariant: x < 1.0001
+	// while x >= 1.0001
+	z := int64(0)
+	upperBound := NewDecWithPrec(10001, 4)
+	for x.GTE(upperBound) {
+		z = z + 1
+		x = x.Quo(upperBound)
 	}
 
-	tableValue, found := log2LookupTable[uint8(lookupKey.Int64())]
+	// exponentiate to simplify truncation necessary for
+	// looking up values in the table.
+	lookupKey := x.MulInt64(100000).TruncateInt()
+	if lookupKey.GTE(NewInt(100010)) || lookupKey.LT(NewInt(100000)) {
+		panic(fmt.Sprintf("invalid lookup key (%s), must be 100000 <= lookup key < 100001", lookupKey))
+	}
+
+	tableValue, found := log2LookupTable[uint32(lookupKey.Int64())]
 	if !found {
 		panic(fmt.Sprintf("no matching value for key (%s) in the lookup table", lookupKey))
 	}
-	return NewBigDec(y).Add(tableValue)
+	return NewBigDec(y).Add(upperBoundLog.MulInt64(z)).Add(tableValue)
 }

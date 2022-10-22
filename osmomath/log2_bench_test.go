@@ -4,6 +4,8 @@ import (
 	"testing"
 )
 
+// Benchmark that scales x between 1 <= x < 2 -      417597  ns/op
+// Benchmark that scales x between 1 <= x < 1.0001 - 3372629 ns/op
 func BenchmarkLog2(b *testing.B) {
 	tests := []struct {
 		value BigDec
