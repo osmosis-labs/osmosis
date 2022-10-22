@@ -909,6 +909,8 @@ func (x BigDec) ApproxLog2() BigDec {
 		y = y + 1
 	}
 
+	// Normalize x to be 1 <= x < 1.0001
+
 	// invariant: x < 1.0001
 	// while x >= 1.0001
 	z := int64(0)
