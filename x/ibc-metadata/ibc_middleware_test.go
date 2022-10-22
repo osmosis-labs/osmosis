@@ -114,8 +114,8 @@ func (suite *MiddlewareTestSuite) receivePacket(metadata []byte) []byte {
 		suite.path.EndpointB.ChannelConfig.PortID,
 		suite.path.EndpointB.ChannelID)
 	packetData := types.FungibleTokenPacketData{
-		Denom:    "uosmo",
-		Amount:   "100",
+		Denom:    "ujuno",
+		Amount:   "10",
 		Sender:   suite.chainB.SenderAccount.GetAddress().String(),
 		Receiver: suite.chainA.SenderAccount.GetAddress().String(),
 		Metadata: metadata,
@@ -131,6 +131,7 @@ func (suite *MiddlewareTestSuite) receivePacket(metadata []byte) []byte {
 		clienttypes.NewHeight(0, 100),
 		0,
 	)
+
 	err := suite.chainB.GetOsmosisApp().MetadataICS4Wrapper.SendPacket(
 		suite.chainB.GetContext(), channelCap, packet)
 	suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
@@ -174,24 +175,28 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithMetadata() {
 }
 
 func (suite *MiddlewareTestSuite) PrepareSimplePools() {
+	fundsChainB := sdk.NewCoins(
+		sdk.NewCoin("ujuno", sdk.NewInt(100000000000000)),
+	)
+	err := suite.chainB.FundAcc(suite.chainB.SenderAccount.GetAddress(), fundsChainB)
+	suite.Require().NoError(err)
+
 	funds := sdk.NewCoins(
+		sdk.NewCoin("ibc/04F5F501207C3626A2C14BFEF654D51C2E0B8F7CA578AB8ED272A66FE4E48097", sdk.NewInt(100000000000000)),
 		sdk.NewCoin("uosmo", sdk.NewInt(100000000000000)),
-		sdk.NewCoin("uatom", sdk.NewInt(100000000000000)),
 		sdk.NewCoin("uion", sdk.NewInt(100000000000000)),
 	)
-	err := suite.chainA.FundAcc(suite.chainA.SenderAccount.GetAddress(), funds)
-	suite.Require().NoError(err)
-	err = suite.chainB.FundAcc(suite.chainB.SenderAccount.GetAddress(), funds)
+	err = suite.chainA.FundAcc(suite.chainA.SenderAccount.GetAddress(), funds)
 	suite.Require().NoError(err)
 
 	poolAssets := []balancer.PoolAsset{
 		{
 			Weight: sdk.NewInt(100),
-			Token:  sdk.NewCoin("uosmo", sdk.NewInt(1_000_000_000)),
+			Token:  sdk.NewCoin("ibc/04F5F501207C3626A2C14BFEF654D51C2E0B8F7CA578AB8ED272A66FE4E48097", sdk.NewInt(100_000_000_000)),
 		},
 		{
 			Weight: sdk.NewInt(100),
-			Token:  sdk.NewCoin("uatom", sdk.NewInt(1_000_000_000)),
+			Token:  sdk.NewCoin("uosmo", sdk.NewInt(100_000_000_000)),
 		},
 	}
 	poolParams := balancer.PoolParams{
@@ -202,7 +207,7 @@ func (suite *MiddlewareTestSuite) PrepareSimplePools() {
 	_, err = suite.chainA.GetOsmosisApp().GAMMKeeper.CreatePool(suite.chainA.GetContext(), msg)
 	suite.Require().NoError(err)
 
-	poolAssets[0].Token.Denom = "uatom"
+	poolAssets[0].Token.Denom = "uosmo"
 	poolAssets[1].Token.Denom = "uion"
 	msg = balancer.NewMsgCreateBalancerPool(suite.chainA.SenderAccount.GetAddress(), poolParams, poolAssets, "")
 	_, err = suite.chainA.GetOsmosisApp().GAMMKeeper.CreatePool(suite.chainA.GetContext(), msg)
@@ -229,8 +234,8 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithSwap() {
 	contractAddr, err := sdk.Bech32ifyAddressBytes("osmo", addr)
 	suite.Require().NoError(err)
 	// Define a route on the swaprouter
-	setRouteMsg := `{"set_route": {"input_denom": "uosmo", "output_denom": "uion",  "pool_route": [
-	    {"pool_id": 1, "token_out_denom": "uatom"},
+	setRouteMsg := `{"set_route": {"input_denom": "ibc/04F5F501207C3626A2C14BFEF654D51C2E0B8F7CA578AB8ED272A66FE4E48097", "output_denom": "uion",  "pool_route": [
+	    {"pool_id": 1, "token_out_denom": "uosmo"},
 	    {"pool_id": 2, "token_out_denom": "uion"}
 	]}}`
 
@@ -241,28 +246,39 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithSwap() {
 "wasm": {
     "contract": "%s",
     "execute": {"swap": 
-	  {"input_coin": {"amount": "%d", "denom": "uosmo"}, 
+	  {"input_coin": {"amount": "%d", "denom": "ibc/04F5F501207C3626A2C14BFEF654D51C2E0B8F7CA578AB8ED272A66FE4E48097"}, 
 	   "output_denom": "uion", 
-	   "slipage": {"max_price_impact_percentage": "10"}}
+	   "slipage": {"max_price_impact_percentage": "3"}}
     }
   }
 }`, contractAddr, 10)
 
-	ackBytes := suite.receivePacket([]byte(metadata))
+	before := suite.chainB.GetOsmosisApp().BankKeeper.GetAllBalances(suite.chainB.GetContext(), suite.chainB.SenderAccount.GetAddress())
+	fmt.Println(before)
 
-	fmt.Println(string(ackBytes))
+	ackBytes := suite.receivePacket([]byte(metadata))
+	contractBalances := suite.chainA.GetOsmosisApp().BankKeeper.GetAllBalances(suite.chainA.GetContext(), sdk.AccAddress(contractAddr))
+	fmt.Println("contract", contractBalances)
+
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err = json.Unmarshal(ackBytes, &ack)
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
-	fmt.Println(ack)
+
+	// Move forward one block
+	suite.chainA.NextBlock()
+	suite.chainA.Coordinator.IncrementTime()
+	suite.chainB.NextBlock()
+	suite.chainB.Coordinator.IncrementTime()
+
+	//suite.chainA.SendMsgs()
 
 	// Update both clients
-	err = suite.path.EndpointA.UpdateClient()
-	suite.Require().NoError(err)
+	//err = suite.path.EndpointA.UpdateClient()
+	//suite.Require().NoError(err)
 	err = suite.path.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
 
-	result := suite.chainB.GetOsmosisApp().BankKeeper.GetBalance(suite.chainB.GetContext(), suite.chainA.SenderAccount.GetAddress(), "uion")
+	result := suite.chainB.GetOsmosisApp().BankKeeper.GetAllBalances(suite.chainB.GetContext(), suite.chainB.SenderAccount.GetAddress())
 	fmt.Println(result)
 }

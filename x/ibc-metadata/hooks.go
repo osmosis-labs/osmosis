@@ -22,15 +22,18 @@ func execute(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper, con
 		return sdk.ErrInvalidDecimalStr
 	}
 
+	// ToDo: Either unwrap the denom, or get it from the metadata
+	localDenom := "ibc/04F5F501207C3626A2C14BFEF654D51C2E0B8F7CA578AB8ED272A66FE4E48097"
+
 	response, err := contractKeeper.Execute(
 		ctx, contractAddr, caller,
 		[]byte(msg),
-		sdk.NewCoins(sdk.NewCoin(data.Denom, amount)),
+		sdk.NewCoins(sdk.NewCoin(localDenom, amount)),
 	)
 	if err != nil {
 		return err
 	}
-	fmt.Println(response)
+	fmt.Println("response", response)
 
 	return nil
 }
@@ -87,6 +90,9 @@ func WasmHook(im IBCModule, ctx sdk.Context, packet channeltypes.Packet, relayer
 	}
 
 	ack := im.app.OnRecvPacket(ctx, packet, relayer)
+	if !ack.Success() {
+		return ack
+	}
 
 	caller, _ := sdk.AccAddressFromBech32(data.Receiver)
 	err = execute(ctx, im.ics4Middleware.ContractKeeper, contract, msg, caller, data)
@@ -95,16 +101,20 @@ func WasmHook(im IBCModule, ctx sdk.Context, packet channeltypes.Packet, relayer
 	}
 
 	// This should actually be done inside the contract
-	im.TransferKeeper.SendTransfer(
+	err = im.TransferKeeper.SendTransfer(
 		ctx,
 		packet.GetSourcePort(),
-		packet.GetDestPort(),
+		packet.GetSourceChannel(),
 		sdk.NewCoin("uion", sdk.NewInt(1)),
-		sdk.AccAddress(data.Sender),
-		data.Receiver,
+		sdk.AccAddress(data.Receiver), // Send from the contract
+		data.Sender,                   // The initiator is the receiver
 		clienttypes.NewHeight(0, 100),
 		0,
 	)
+	if err != nil {
+		// ToDo: undo?
+		//return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadExecutionMsg, err.Error()))
+	}
 
 	return ack
 }
