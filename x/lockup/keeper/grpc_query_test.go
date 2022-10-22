@@ -513,3 +513,10 @@ func (suite *KeeperTestSuite) TestLockedDenom() {
 	testTotalLockedDuration("2h", 0)
 	testTotalLockedDuration("1h", 10)
 }
+
+func (suite *KeeperTestSuite) TestParams() {
+	suite.SetupTest()
+	res, err := suite.querier.Params(sdk.WrapSDKContext(suite.Ctx), &types.QueryParamsRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal([]string(nil), res.Params.ForceUnlockAllowedAddresses)
+}
