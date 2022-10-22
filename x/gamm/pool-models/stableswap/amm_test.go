@@ -7,9 +7,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v12/osmomath"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/test_helpers"
 )
 
@@ -161,13 +163,6 @@ var (
 			yReserve:    osmomath.NewBigDec(-100),
 			remReserves: []osmomath.BigDec{},
 			yIn:         osmomath.NewBigDec(1),
-			expectPanic: true,
-		},
-		"yIn negative": {
-			xReserve:    osmomath.NewBigDec(100),
-			yReserve:    osmomath.NewBigDec(100),
-			remReserves: []osmomath.BigDec{},
-			yIn:         osmomath.NewBigDec(-1),
 			expectPanic: true,
 		},
 
@@ -331,22 +326,6 @@ var (
 			yIn:         osmomath.NewBigDec(1),
 			expectPanic: true,
 		},
-		"negative remReserve": {
-			xReserve: osmomath.NewBigDec(100),
-			yReserve: osmomath.NewBigDec(100),
-			// represents a 4-asset pool with 100 in each reserve
-			remReserves: []osmomath.BigDec{osmomath.NewBigDec(-100), osmomath.NewBigDec(100)},
-			yIn:         osmomath.NewBigDec(1),
-			expectPanic: true,
-		},
-		"negative yIn": {
-			xReserve: osmomath.NewBigDec(100),
-			yReserve: osmomath.NewBigDec(100),
-			// represents a 4-asset pool with 100 in each reserve
-			remReserves: []osmomath.BigDec{},
-			yIn:         osmomath.NewBigDec(-1),
-			expectPanic: true,
-		},
 		"input greater than pool reserves (even 4-asset pool)": {
 			xReserve:    osmomath.NewBigDec(100),
 			yReserve:    osmomath.NewBigDec(100),
@@ -398,6 +377,10 @@ type StableSwapTestSuite struct {
 	test_helpers.CfmmCommonTestSuite
 }
 
+func TestStableSwapTestSuite(t *testing.T) {
+	suite.Run(t, new(StableSwapTestSuite))
+}
+
 func TestCFMMInvariantTwoAssets(t *testing.T) {
 	kErrTolerance := osmomath.OneDec()
 
@@ -413,28 +396,6 @@ func TestCFMMInvariantTwoAssets(t *testing.T) {
 				// using two-asset cfmm
 				k0 := cfmmConstant(test.xReserve, test.yReserve)
 				xOut := solveCfmm(test.xReserve, test.yReserve, test.remReserves, test.yIn)
-
-				k1 := cfmmConstant(test.xReserve.Sub(xOut), test.yReserve.Add(test.yIn))
-				osmomath.DecApproxEq(t, k0, k1, kErrTolerance)
-			}
-
-			osmoassert.ConditionalPanic(t, test.expectPanic, sut)
-		})
-	}
-}
-
-func TestCFMMInvariantTwoAssetsBinarySearch(t *testing.T) {
-	kErrTolerance := osmomath.OneDec()
-
-	tests := twoAssetCFMMTestCases
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			// system under test
-			sut := func() {
-				// using two-asset binary search cfmm solver
-				k0 := cfmmConstant(test.xReserve, test.yReserve)
-				xOut := solveCFMMBinarySearch(cfmmConstant)(test.xReserve, test.yReserve, test.yIn)
 
 				k1 := cfmmConstant(test.xReserve.Sub(xOut), test.yReserve.Add(test.yIn))
 				osmomath.DecApproxEq(t, k0, k1, kErrTolerance)
@@ -491,7 +452,7 @@ func TestCFMMInvariantMultiAssets(t *testing.T) {
 	}
 }
 
-func TestCFMMInvariantMultiAssetsBinarySearch(t *testing.T) {
+func TestCFMMInvariantMultiAssetsDirect(t *testing.T) {
 	kErrTolerance := osmomath.OneDec()
 
 	tests := multiAssetCFMMTestCases
@@ -505,7 +466,7 @@ func TestCFMMInvariantMultiAssetsBinarySearch(t *testing.T) {
 
 				// using multi-asset cfmm
 				k2 := cfmmConstantMulti(test.xReserve, test.yReserve, uReserve, wSumSquares)
-				xOut2 := solveCFMMBinarySearchMulti(cfmmConstantMulti)(test.xReserve, test.yReserve, uReserve, wSumSquares, test.yIn)
+				xOut2 := solveCFMMMultiDirect(test.xReserve, test.yReserve, wSumSquares, test.yIn)
 				k3 := cfmmConstantMulti(test.xReserve.Sub(xOut2), test.yReserve.Add(test.yIn), uReserve, wSumSquares)
 				osmomath.DecApproxEq(t, k2, k3, kErrTolerance)
 			}
@@ -515,69 +476,184 @@ func TestCFMMInvariantMultiAssetsBinarySearch(t *testing.T) {
 	}
 }
 
-func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
-	type testcase struct {
-		denomOut         string
-		initialPoolOut   int64
-		initialWeightOut int64
-		initialCalcOut   int64
+func TestCFMMInvariantMultiAssetsBinarySearch(t *testing.T) {
+	kErrTolerance := osmomath.OneDec()
 
-		denomIn         string
-		initialPoolIn   int64
-		initialWeightIn int64
+	tests := multiAssetCFMMTestCases
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			// system under test
+			sut := func() {
+				wSumSquares := calcWSumSquares(test.remReserves)
+
+				// using multi-asset cfmm
+				k2 := cfmmConstantMultiNoV(test.xReserve, test.yReserve, wSumSquares)
+				xOut2 := solveCFMMBinarySearchMulti(test.xReserve, test.yReserve, wSumSquares, test.yIn)
+				k3 := cfmmConstantMultiNoV(test.xReserve.Sub(xOut2), test.yReserve.Add(test.yIn), wSumSquares)
+				osmomath.DecApproxEq(t, k2, k3, kErrTolerance)
+			}
+
+			osmoassert.ConditionalPanic(t, test.expectPanic, sut)
+		})
+	}
+}
+
+func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_InverseRelationship() {
+	type testcase struct {
+		denomOut       string
+		initialPoolOut int64
+		initialCalcOut int64
+
+		denomIn       string
+		initialPoolIn int64
+
+		poolLiquidity  sdk.Coins
+		scalingFactors []uint64
 	}
 
 	// For every test case in testcases, apply a swap fee in swapFeeCases.
-	testcases := []testcase{
-		{
-			denomOut:         "uosmo",
-			initialPoolOut:   1_000_000_000_000,
-			initialWeightOut: 100,
-			initialCalcOut:   100,
+	testcases := map[string]testcase{
+		// two-asset pools
+		"even pool": {
+			denomIn:        "ion",
+			denomOut:       "uosmo",
+			initialCalcOut: 100,
 
-			denomIn:         "ion",
-			initialPoolIn:   1_000_000_000_000,
-			initialWeightIn: 100,
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000_000_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(1_000_000_000)),
+			),
+			scalingFactors: []uint64{1, 1},
 		},
-		{
-			denomOut:         "uosmo",
-			initialPoolOut:   1_000,
-			initialWeightOut: 100,
-			initialCalcOut:   100,
+		"uneven pool (2:1)": {
+			denomIn:        "ion",
+			denomOut:       "uosmo",
+			initialCalcOut: 100,
 
-			denomIn:         "ion",
-			initialPoolIn:   1_000_000,
-			initialWeightIn: 100,
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(500_000)),
+			),
+			scalingFactors: []uint64{1, 1},
 		},
-		{
-			denomOut:         "uosmo",
-			initialPoolOut:   1_000,
-			initialWeightOut: 100,
-			initialCalcOut:   100,
+		"uneven pool (1_000_000:1)": {
+			denomIn:        "ion",
+			denomOut:       "uosmo",
+			initialCalcOut: 100,
 
-			denomIn:         "ion",
-			initialPoolIn:   1_000_000,
-			initialWeightIn: 100,
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000_000_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(1_000)),
+			),
+			scalingFactors: []uint64{1, 1},
 		},
-		{
-			denomOut:         "uosmo",
-			initialPoolOut:   1_000,
-			initialWeightOut: 200,
-			initialCalcOut:   100,
+		"uneven pool (1:1_000_000)": {
+			denomIn:        "ion",
+			denomOut:       "uosmo",
+			initialCalcOut: 100,
 
-			denomIn:         "ion",
-			initialPoolIn:   1_000_000,
-			initialWeightIn: 50,
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(1_000_000_000)),
+			),
+			scalingFactors: []uint64{1, 1},
 		},
-		{
-			denomOut:         "uosmo",
-			initialPoolOut:   1_000_000,
-			initialWeightOut: 200,
-			initialCalcOut:   100000,
+		"even pool, uneven scaling factors": {
+			denomIn:        "ion",
+			denomOut:       "uosmo",
+			initialCalcOut: 100,
 
-			denomIn:         "ion",
-			initialPoolIn:   1_000_000_000,
-			initialWeightIn: 50,
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000_000_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(1_000_000_000)),
+			),
+			scalingFactors: []uint64{1, 8},
+		},
+		"uneven pool, uneven scaling factors": {
+			denomIn:        "ion",
+			denomOut:       "uosmo",
+			initialCalcOut: 100,
+
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(500_000)),
+			),
+			scalingFactors: []uint64{1, 9},
+		},
+
+		// multi asset pools
+		"even multi-asset pool": {
+			denomIn:        "ion",
+			denomOut:       "uosmo",
+			initialCalcOut: 100,
+
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("foo", sdk.NewInt(1_000_000)),
+			),
+			scalingFactors: []uint64{1, 1, 1},
+		},
+		"uneven multi-asset pool (2:1:2)": {
+			denomIn:        "ion",
+			denomOut:       "uosmo",
+			initialCalcOut: 100,
+
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(500_000)),
+				sdk.NewCoin("foo", sdk.NewInt(1_000_000)),
+			),
+			scalingFactors: []uint64{1, 1, 1},
+		},
+		"uneven multi-asset pool (1_000_000:1:1_000_000)": {
+			denomIn:        "ion",
+			denomOut:       "uosmo",
+			initialCalcOut: 100,
+
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(1_000)),
+				sdk.NewCoin("foo", sdk.NewInt(1_000_000)),
+			),
+			scalingFactors: []uint64{1, 1, 1},
+		},
+		"uneven multi-asset pool (1:1_000_000:1_000_000)": {
+			denomIn:        "ion",
+			denomOut:       "uosmo",
+			initialCalcOut: 100,
+
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("foo", sdk.NewInt(1_000_000)),
+			),
+			scalingFactors: []uint64{1, 1, 1},
+		},
+		"even multi-asset pool, uneven scaling factors": {
+			denomIn:        "ion",
+			denomOut:       "uosmo",
+			initialCalcOut: 100,
+
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("foo", sdk.NewInt(1_000_000)),
+			),
+			scalingFactors: []uint64{5, 3, 9},
+		},
+		"uneven multi-asset pool (2:1:2), uneven scaling factors": {
+			denomIn:        "ion",
+			denomOut:       "uosmo",
+			initialCalcOut: 100,
+
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("ion", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(500_000)),
+				sdk.NewCoin("foo", sdk.NewInt(1_000_000)),
+			),
+			scalingFactors: []uint64{100, 76, 33},
 		},
 	}
 
@@ -594,23 +670,22 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 
 	for _, tc := range testcases {
 		for _, swapFee := range swapFeeCases {
-			t.Run(getTestCaseName(tc, swapFee), func(t *testing.T) {
+			suite.Run(getTestCaseName(tc, swapFee), func() {
 				ctx := suite.CreateTestContext()
 
-				poolLiquidityIn := sdk.NewInt64Coin(tc.denomOut, tc.initialPoolOut)
-				poolLiquidityOut := sdk.NewInt64Coin(tc.denomIn, tc.initialPoolIn)
-				poolLiquidity := sdk.NewCoins(poolLiquidityIn, poolLiquidityOut)
+				poolLiquidityIn := sdk.NewInt64Coin(tc.denomIn, tc.initialPoolIn)
+				poolLiquidityOut := sdk.NewInt64Coin(tc.denomOut, tc.initialPoolOut)
 
 				swapFeeDec, err := sdk.NewDecFromStr(swapFee)
-				require.NoError(t, err)
+				suite.Require().NoError(err)
 
 				exitFeeDec, err := sdk.NewDecFromStr("0")
-				require.NoError(t, err)
+				suite.Require().NoError(err)
 
-				pool := createTestPool(t, poolLiquidity, swapFeeDec, exitFeeDec)
-				require.NotNil(t, pool)
-
-				suite.TestCalculateAmountOutAndIn_InverseRelationship(ctx, pool, poolLiquidityIn.Denom, poolLiquidityOut.Denom, tc.initialCalcOut, swapFeeDec)
+				// TODO: add scaling factors into inverse relationship tests
+				pool := createTestPool(suite.T(), tc.poolLiquidity, swapFeeDec, exitFeeDec, tc.scalingFactors)
+				suite.Require().NotNil(pool)
+				test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, poolLiquidityIn.Denom, poolLiquidityOut.Denom, tc.initialCalcOut, swapFeeDec)
 			})
 		}
 	}
@@ -630,4 +705,113 @@ func calcWSumSquares(remReserves []osmomath.BigDec) osmomath.BigDec {
 		wSumSquares = wSumSquares.Add(assetReserve.Mul(assetReserve))
 	}
 	return wSumSquares
+}
+
+func TestCalcSingleAssetJoinShares(t *testing.T) {
+	type testcase struct {
+		tokenIn        sdk.Coin
+		poolAssets     sdk.Coins
+		scalingFactors []uint64
+		swapFee        sdk.Dec
+		expectedOut    sdk.Int
+	}
+
+	tests := map[string]testcase{
+		// no swap fees
+		"even two asset pool, no swap fee": {
+			tokenIn:        sdk.NewCoin("foo", sdk.NewInt(100)),
+			poolAssets:     twoEvenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			swapFee:        sdk.ZeroDec(),
+			expectedOut:    sdk.NewInt(100),
+		},
+		"uneven two asset pool, no swap fee": {
+			tokenIn:        sdk.NewCoin("foo", sdk.NewInt(100)),
+			poolAssets:     twoUnevenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			swapFee:        sdk.ZeroDec(),
+			expectedOut:    sdk.NewInt(100),
+		},
+		"even 3-asset pool, no swap fee": {
+			tokenIn:        sdk.NewCoin("asset/a", sdk.NewInt(1000)),
+			poolAssets:     threeEvenStablePoolAssets,
+			scalingFactors: defaultThreeAssetScalingFactors,
+			swapFee:        sdk.ZeroDec(),
+			expectedOut:    sdk.NewInt(1000),
+		},
+		"uneven 3-asset pool, no swap fee": {
+			tokenIn:        sdk.NewCoin("asset/a", sdk.NewInt(100)),
+			poolAssets:     threeUnevenStablePoolAssets,
+			scalingFactors: defaultThreeAssetScalingFactors,
+			swapFee:        sdk.ZeroDec(),
+			expectedOut:    sdk.NewInt(100),
+		},
+
+		// with swap fees
+		"even two asset pool, default swap fee": {
+			tokenIn:        sdk.NewCoin("foo", sdk.NewInt(100)),
+			poolAssets:     twoEvenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			swapFee:        defaultSwapFee,
+			expectedOut:    sdk.NewInt(100 - 3),
+		},
+		"uneven two asset pool, default swap fee": {
+			tokenIn:        sdk.NewCoin("foo", sdk.NewInt(100)),
+			poolAssets:     twoUnevenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			swapFee:        defaultSwapFee,
+			expectedOut:    sdk.NewInt(100 - 3),
+		},
+		"even 3-asset pool, default swap fee": {
+			tokenIn:        sdk.NewCoin("asset/a", sdk.NewInt(100)),
+			poolAssets:     threeEvenStablePoolAssets,
+			scalingFactors: defaultThreeAssetScalingFactors,
+			swapFee:        defaultSwapFee,
+			expectedOut:    sdk.NewInt(100 - 3),
+		},
+		"uneven 3-asset pool, default swap fee": {
+			tokenIn:        sdk.NewCoin("asset/a", sdk.NewInt(100)),
+			poolAssets:     threeUnevenStablePoolAssets,
+			scalingFactors: defaultThreeAssetScalingFactors,
+			swapFee:        defaultSwapFee,
+			expectedOut:    sdk.NewInt(100 - 3),
+		},
+		"even 3-asset pool, 0.03 swap fee": {
+			tokenIn:        sdk.NewCoin("asset/a", sdk.NewInt(100)),
+			poolAssets:     threeEvenStablePoolAssets,
+			scalingFactors: defaultThreeAssetScalingFactors,
+			swapFee:        sdk.MustNewDecFromStr("0.03"),
+			expectedOut:    sdk.NewInt(100 - 3),
+		},
+		"uneven 3-asset pool, 0.03 swap fee": {
+			tokenIn:        sdk.NewCoin("asset/a", sdk.NewInt(100)),
+			poolAssets:     threeUnevenStablePoolAssets,
+			scalingFactors: defaultThreeAssetScalingFactors,
+			swapFee:        sdk.MustNewDecFromStr("0.03"),
+			expectedOut:    sdk.NewInt(100 - 3),
+		},
+
+		// TODO: increase BigDec precision further to be able to accommodate 5-asset pool tests
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := sdk.Context{}
+			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
+
+			shares, err := p.calcSingleAssetJoinShares(tc.tokenIn, tc.swapFee)
+			require.NoError(t, err, "test: %s", name)
+
+			p.updatePoolLiquidityForExit(sdk.Coins{tc.tokenIn})
+			exitTokens, err := p.ExitPool(ctx, shares, sdk.ZeroDec())
+			require.NoError(t, err, "test: %s", name)
+
+			// since each asset swap can have up to sdk.OneInt() error, our expected error bound is 1*numAssets
+			correctnessThreshold := sdk.OneInt().Mul(sdk.NewInt(int64(len(p.PoolLiquidity))))
+
+			tokenOutAmount, err := cfmm_common.SwapAllCoinsToSingleAsset(&p, ctx, exitTokens, tc.tokenIn.Denom)
+			require.True(t, tokenOutAmount.LTE(tc.tokenIn.Amount))
+			require.True(t, tc.expectedOut.Sub(tokenOutAmount).Abs().LTE(correctnessThreshold))
+		})
+	}
 }
