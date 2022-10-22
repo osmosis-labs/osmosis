@@ -467,7 +467,8 @@ func (s *IntegrationTestSuite) TestStateSync() {
 	stateSyncRPCServers := []string{stateSyncHostPort, stateSyncHostPort}
 
 	// get trust height and trust hash.
-	trustHeight := runningNode.QueryCurrentHeight()
+	trustHeight, err := runningNode.QueryCurrentHeight()
+	s.Require().NoError(err)
 
 	trustHash, err := runningNode.QueryHashFromBlock(trustHeight)
 	s.Require().NoError(err)
@@ -529,8 +530,10 @@ func (s *IntegrationTestSuite) TestStateSync() {
 
 	// ensure that the state synching node cathes up to the running node.
 	s.Require().Eventually(func() bool {
-		stateSyncNodeHeight := stateSynchingNode.QueryCurrentHeight()
-		runningNodeHeight := runningNode.QueryCurrentHeight()
+		stateSyncNodeHeight, err := stateSynchingNode.QueryCurrentHeight()
+		s.Require().NoError(err)
+		runningNodeHeight, err := runningNode.QueryCurrentHeight()
+		s.Require().NoError(err)
 		return stateSyncNodeHeight == runningNodeHeight
 	},
 		3*time.Minute,
@@ -543,10 +546,6 @@ func (s *IntegrationTestSuite) TestStateSync() {
 }
 
 func (s *IntegrationTestSuite) TestExpeditedProposals() {
-	if !s.skipUpgrade {
-		s.T().Skip("this can be re-enabled post v12")
-	}
-
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)

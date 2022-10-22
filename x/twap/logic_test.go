@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v12/x/twap"
 	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
@@ -1272,6 +1273,96 @@ func (s *TestSuite) TestUpdateRecords() {
 			poolHistoricalRecords := s.getAllHistoricalRecordsForPool(tc.poolId)
 			s.Require().NoError(err)
 			validateRecords(tc.expectedHistoricalRecords, poolHistoricalRecords)
+		})
+	}
+}
+
+func (s *TestSuite) TestAfterCreatePool() {
+	tests := map[string]struct {
+		poolId    uint64
+		poolCoins sdk.Coins
+		// if this field is set true, we swap in the same block with pool creation
+		runSwap     bool
+		expectedErr bool
+	}{
+		"Pool not existing": {
+			poolId:      2,
+			expectedErr: true,
+		},
+		"Default Pool, no swap on pool creation block": {
+			poolId:    1,
+			poolCoins: defaultTwoAssetCoins,
+			runSwap:   false,
+		},
+		"Default Pool, swap on pool creation block": {
+			poolId:    1,
+			poolCoins: defaultTwoAssetCoins,
+			runSwap:   true,
+		},
+		"Multi assets pool, no swap on pool creation block": {
+			poolId:    1,
+			poolCoins: defaultThreeAssetCoins,
+			runSwap:   false,
+		},
+		"Multi assets pool, swap on pool creation block": {
+			poolId:    1,
+			poolCoins: defaultThreeAssetCoins,
+			runSwap:   true,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			var poolId uint64
+
+			// set up pool with input coins
+			if tc.poolCoins != nil {
+				poolId = s.PrepareBalancerPoolWithCoins(tc.poolCoins...)
+				if tc.runSwap {
+					s.RunBasicSwap(poolId)
+				}
+			}
+
+			err := s.twapkeeper.AfterCreatePool(s.Ctx, tc.poolId)
+			if tc.expectedErr {
+				s.Require().Error(err)
+				return
+			}
+			s.Require().Equal(tc.poolId, poolId)
+			s.Require().NoError(err)
+
+			denoms := osmoutils.CoinsDenoms(tc.poolCoins)
+			denomPairs0, denomPairs1 := types.GetAllUniqueDenomPairs(denoms)
+			expectedRecords := []types.TwapRecord{}
+			for i := 0; i < len(denomPairs0); i++ {
+				expectedRecord, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denomPairs0[i], denomPairs1[i])
+				s.Require().NoError(err)
+				expectedRecords = append(expectedRecords, expectedRecord)
+			}
+
+			// consistency check that the number of records is exactly equal to the number of denompairs
+			allRecords, err := s.twapkeeper.GetAllMostRecentRecordsForPool(s.Ctx, poolId)
+			s.Require().NoError(err)
+			s.Require().Equal(len(denomPairs0), len(allRecords))
+			s.Require().Equal(len(expectedRecords), len(allRecords))
+
+			// check on the correctness of all individual twap records
+			for i := 0; i < len(denomPairs0); i++ {
+				actualRecord, err := s.twapkeeper.GetMostRecentRecordStoreRepresentation(s.Ctx, poolId, denomPairs0[i], denomPairs1[i])
+				s.Require().NoError(err)
+				s.Require().Equal(expectedRecords[i], actualRecord)
+				actualRecord, err = s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denomPairs0[i], denomPairs1[i])
+				s.Require().NoError(err)
+				s.Require().Equal(expectedRecords[i], actualRecord)
+			}
+
+			// test that after creating a pool 
+			// has triggered `trackChangedPool`, 
+			// and that we have the state of price impacted pools.
+			changedPools := s.twapkeeper.GetChangedPools(s.Ctx)
+			s.Require().Equal(1, len(changedPools))
+			s.Require().Equal(tc.poolId, changedPools[0])
 		})
 	}
 }

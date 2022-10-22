@@ -224,10 +224,12 @@ func (n *NodeConfig) QueryHashFromBlock(height int64) (string, error) {
 }
 
 // QueryCurrentHeight returns the current block height of the node or error.
-func (n *NodeConfig) QueryCurrentHeight() int64 {
+func (n *NodeConfig) QueryCurrentHeight() (int64, error) {
 	status, err := n.rpcClient.Status(context.Background())
-	require.NoError(n.t, err)
-	return status.SyncInfo.LatestBlockHeight
+	if err != nil {
+		return 0, err
+	}
+	return status.SyncInfo.LatestBlockHeight, nil
 }
 
 // QueryLatestBlockTime returns the latest block time.
