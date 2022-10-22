@@ -395,11 +395,9 @@ func (q Querier) EstimateSuperfluidDelegatedAmountByValidatorDenom(goCtx context
 func (q Querier) TotalDelegationByValidatorForDenom(goCtx context.Context, req *types.QueryTotalDelegationByValidatorForDenomRequest) (*types.QueryTotalDelegationByValidatorForDenomResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	var (
-		delegationsByValidator = []types.Delegations{}
-		intermediaryAccount    types.SuperfluidIntermediaryAccount
-	)
+	var intermediaryAccount types.SuperfluidIntermediaryAccount
 
+	delegationsByValidator := []types.Delegations{}
 	intermediaryAccounts := q.Keeper.GetAllIntermediaryAccounts(ctx)
 	for _, intermediaryAccount = range intermediaryAccounts {
 		if intermediaryAccount.Denom != req.Denom {
