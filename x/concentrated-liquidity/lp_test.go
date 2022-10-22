@@ -15,8 +15,8 @@ func (s *KeeperTestSuite) TestMint() {
 	// denom1: usdc
 	poolId := uint64(1)
 	currentTick := sdk.NewInt(85176)
-	lowerTick := sdk.NewInt(84222)
-	upperTick := sdk.NewInt(86129)
+	lowerTick := int64(84222)
+	upperTick := int64(86129)
 	liquidity, ok := sdk.NewIntFromString("1517882343751509868544")
 	s.Require().True(ok)
 	currentSqrtP, ok := sdk.NewIntFromString("5602277097478614198912276234240")
