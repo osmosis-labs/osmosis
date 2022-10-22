@@ -7,7 +7,7 @@ SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
 DOCKER := $(shell which docker)
 BUILDDIR ?= $(CURDIR)/build
-E2E_UPGRADE_VERSION := "v13"
+E2E_UPGRADE_VERSION := "v14"
 
 
 export GO111MODULE = on
