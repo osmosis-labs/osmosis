@@ -182,33 +182,56 @@ func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 	suite.AssertReceive(true, suite.NewValidMessage(false, one))
 }
 
+func (suite *MiddlewareTestSuite) initializeEscrow() sdk.Int {
+	osmosisApp := suite.chainA.GetOsmosisApp()
+	supply := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+
+	// Move some funds from chainA to chainB so that there is something in escrow
+	// Each user has 10% of the supply, so we send most of the funds from one user to chainA
+	transferAmount := supply.Amount.QuoRaw(20)
+
+	// When sending, the amount we're sending goes into escrow before we enter the middleware and thus
+	// it's used as part of the channel value in the rate limiting contract
+	// To account for that, we subtract the amount we'll send first (2.5% of transferAmount) here
+	sendAmount := transferAmount.QuoRaw(40)
+	suite.AssertSend(true, suite.NewValidMessage(true, transferAmount.Sub(sendAmount)))
+
+	return sendAmount
+}
+
 func (suite *MiddlewareTestSuite) fullSendTest() map[string]string {
+	sendAmount := suite.initializeEscrow()
+
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
 	quotas := suite.BuildChannelQuota("weekly", 604800, 5, 5)
 	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
-	// Setup sender chain's quota
-	osmosisApp := suite.chainA.GetOsmosisApp()
-
-	// Each user has 10% of the supply
-	supply := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
-	quota := supply.Amount.QuoRaw(20)
-	half := quota.QuoRaw(2)
+	//// Each user has 10% of the supply
+	//escrowAddress := transfertypes.GetEscrowAddress("transfer", "channel-0")
+	//escrowed := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)
+	//
+	////supply := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+	//quota := escrowed.Amount.QuoRaw(20)
+	//half := quota.QuoRaw(2)
+	//
+	//fmt.Println("escrowed", escrowed)
+	//fmt.Println("quota", quota)
+	//fmt.Println("half", half)
 
 	// send 2.5% (quota is 5%)
-	suite.AssertSend(true, suite.NewValidMessage(true, half))
+	suite.AssertSend(true, suite.NewValidMessage(true, sendAmount))
 
 	// send 2.5% (quota is 5%)
-	r, _ := suite.AssertSend(true, suite.NewValidMessage(true, half))
+	r, _ := suite.AssertSend(true, suite.NewValidMessage(true, sendAmount))
 
 	// Calculate remaining allowance in the quota
 	attrs := suite.ExtractAttributes(suite.FindEvent(r.GetEvents(), "wasm"))
 	used, ok := sdk.NewIntFromString(attrs["weekly_used_out"])
 	suite.Require().True(ok)
 
-	suite.Require().Equal(used, quota)
+	suite.Require().Equal(used, sendAmount.MulRaw(2))
 
 	// Sending above the quota should fail.
 	suite.AssertSend(false, suite.NewValidMessage(true, sdk.NewInt(1)))
@@ -287,20 +310,21 @@ func (suite *MiddlewareTestSuite) TestSendTransferNoQuota() {
 	suite.AssertSend(true, suite.NewValidMessage(true, sdk.NewInt(1)))
 }
 
-// Test rate limits are revertedgi if a "send" fails
+// Test rate limits are reverted if a "send" fails
 func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
+	suite.initializeEscrow()
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
 	quotas := suite.BuildChannelQuota("weekly", 604800, 1, 1)
 	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
-	// Setup sender chain's quota
+	// Get the escrowed amount
 	osmosisApp := suite.chainA.GetOsmosisApp()
+	escrowAddress := transfertypes.GetEscrowAddress("transfer", "channel-0")
+	escrowed := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)
 
-	// Each user has 10% of the supply
-	supply := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
-	quota := supply.Amount.QuoRaw(100) // 1% of the supply
+	quota := escrowed.Amount.QuoRaw(100) // 1% of the escrowed amount
 
 	// Use the whole quota
 	coins := sdk.NewCoin(sdk.DefaultBondDenom, quota)

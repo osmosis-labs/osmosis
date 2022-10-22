@@ -8,8 +8,10 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
+	"strings"
 )
 
 var (
@@ -53,9 +55,13 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 
 	amount, denom, _, err := GetFundsFromPacket(packet)
 	if err != nil {
-		return sdkerrors.Wrap(err, "Rate limited SendPacket")
+		return sdkerrors.Wrap(err, "Rate limit SendPacket")
 	}
-	channelValue := i.CalculateChannelValue(ctx, denom)
+
+	// Calculate the channel value using the denom from the packet.
+	// This will be the denom for native tokens, and "ibc/..." for foreign ones being sent back
+	channelValue := i.CalculateChannelValue(ctx, denom, packet)
+
 	err = CheckAndUpdateRateLimits(
 		ctx,
 		i.ContractKeeper,
@@ -63,11 +69,11 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 		contract,
 		channelValue,
 		packet.GetSourceChannel(),
-		denom,
+		denom, // We always use the packet's denom here, as we want the limits to be the same on both directions
 		amount,
 	)
 	if err != nil {
-		return sdkerrors.Wrap(err, "Rate limited SendPacket")
+		return sdkerrors.Wrap(err, "bad packet in rate limit's SendPacket")
 	}
 
 	return i.channel.SendPacket(ctx, chanCap, packet)
@@ -84,6 +90,12 @@ func (i *ICS4Wrapper) GetParams(ctx sdk.Context) (contract string) {
 
 // CalculateChannelValue The value of an IBC channel. This is calculated using the denom supplied by the sender.
 // if the denom is not correct, the transfer should fail somewhere else on the call chain
-func (i *ICS4Wrapper) CalculateChannelValue(ctx sdk.Context, denom string) sdk.Int {
-	return i.bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
+func (i *ICS4Wrapper) CalculateChannelValue(ctx sdk.Context, denom string, packet exported.PacketI) sdk.Int {
+	// If the source is the counterparty chain, this should be
+	if strings.HasPrefix(denom, "ibc/") {
+		return i.bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
+	}
+
+	escrowAddress := transfertypes.GetEscrowAddress(packet.GetSourcePort(), packet.GetSourceChannel())
+	return i.bankKeeper.GetBalance(ctx, escrowAddress, denom).Amount
 }

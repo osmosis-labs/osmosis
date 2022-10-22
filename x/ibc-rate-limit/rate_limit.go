@@ -2,7 +2,6 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -123,6 +122,7 @@ func BuildWasmExecMsg(msgType, sourceChannel, denom string, channelValue sdk.Int
 	return asJson, nil
 }
 
+// GetIBCDenom This is extracted from ibc/transfer and mostly unmodified
 func GetIBCDenom(packet exported.PacketI, data transfertypes.FungibleTokenPacketData) string {
 	var denomTrace transfertypes.DenomTrace
 	if transfertypes.ReceiverChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data.Denom) {
