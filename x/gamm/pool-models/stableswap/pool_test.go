@@ -746,7 +746,7 @@ func TestInverseJoinPoolExitPool(t *testing.T) {
 			tokensIn:       sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tenPercentOfTwoPoolRaw)), sdk.NewCoin("bar", sdk.NewInt(10+tenPercentOfTwoPoolRaw))),
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			swapFee:        sdk.ZeroDec(),
+			swapFee:        defaultSwapFee,
 			expectPass:     true,
 		},
 		"[all asset join] even two asset pool, no tokens in": {
