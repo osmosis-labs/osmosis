@@ -16,7 +16,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	minPrice := sdk.NewDec(4500)
 	maxPrice := sdk.NewDec(5500)
 
-	amountOut, err := pool.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, minPrice, maxPrice)
+	_, amountOut, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, minPrice, maxPrice, pool.Id)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewDec(663944645).String(), amountOut.Amount.ToDec().String())
 
@@ -25,7 +25,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	tokenOutDenom = "eth"
 	swapFee = sdk.NewDec(0)
 
-	amountOut, err = pool.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, minPrice, maxPrice)
+	_, amountOut, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, minPrice, maxPrice, pool.Id)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewDec(805287), amountOut.Amount.ToDec())
 
@@ -34,7 +34,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	tokenOutDenom = "eth"
 	swapFee = sdk.NewDec(0)
 
-	amountOut, err = pool.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, minPrice, maxPrice)
+	_, amountOut, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, minPrice, maxPrice, pool.Id)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewDec(8396), amountOut.Amount.ToDec())
 
@@ -43,7 +43,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	tokenOutDenom = "eth"
 	swapFee = sdk.NewDecWithPrec(2, 2)
 
-	amountOut, err = pool.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, minPrice, maxPrice)
+	_, amountOut, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, minPrice, maxPrice, pool.Id)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewDec(789834), amountOut.Amount.ToDec())
 }
@@ -52,6 +52,7 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
 	ctx := s.Ctx
 	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", sdk.NewInt(70710678), sdk.NewInt(85176))
 	s.Require().NoError(err)
+
 	// test asset a to b logic
 	tokenOut := sdk.NewCoin("usdc", sdk.NewInt(4199999999))
 	tokenInDenom := "eth"
@@ -59,7 +60,7 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
 	minPrice := sdk.NewDec(4500)
 	maxPrice := sdk.NewDec(5500)
 
-	amountIn, err := pool.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice)
+	amountIn, _, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewDec(805287), amountIn.Amount.ToDec())
 
@@ -68,7 +69,7 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
 	tokenInDenom = "usdc"
 	swapFee = sdk.NewDec(0)
 
-	amountIn, err = pool.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice)
+	amountIn, _, err = s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewDec(663944645), amountIn.Amount.ToDec())
 
@@ -77,28 +78,23 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
 	tokenInDenom = "eth"
 	swapFee = sdk.NewDecWithPrec(2, 2)
 
-	amountIn, err = pool.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice)
+	amountIn, _, err = s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewDec(821722), amountIn.Amount.ToDec())
 }
 
 func (s *KeeperTestSuite) TestOrderInitialPoolDenoms() {
-	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", sdk.NewInt(0), sdk.NewInt(0))
+	denom0, denom1, err := s.App.ConcentratedLiquidityKeeper.OrderInitialPoolDenoms("axel", "osmo")
 	s.Require().NoError(err)
-	s.Require().Equal(pool.Token0, "eth")
-	s.Require().Equal(pool.Token1, "usdc")
+	s.Require().Equal(denom0, "axel")
+	s.Require().Equal(denom1, "osmo")
 
-	err = pool.OrderInitialPoolDenoms("axel", "osmo")
+	denom0, denom1, err = s.App.ConcentratedLiquidityKeeper.OrderInitialPoolDenoms("usdc", "eth")
 	s.Require().NoError(err)
-	s.Require().Equal(pool.Token0, "axel")
-	s.Require().Equal(pool.Token1, "osmo")
+	s.Require().Equal(denom0, "eth")
+	s.Require().Equal(denom1, "usdc")
 
-	err = pool.OrderInitialPoolDenoms("usdc", "eth")
-	s.Require().NoError(err)
-	s.Require().Equal(pool.Token0, "eth")
-	s.Require().Equal(pool.Token1, "usdc")
-
-	err = pool.OrderInitialPoolDenoms("usdc", "usdc")
+	denom0, denom1, err = s.App.ConcentratedLiquidityKeeper.OrderInitialPoolDenoms("usdc", "usdc")
 	s.Require().Error(err)
 
 }

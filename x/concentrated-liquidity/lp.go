@@ -24,20 +24,19 @@ func (k Keeper) Mint(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liqui
 	if liquidityIn.IsZero() {
 		return sdk.Int{}, sdk.Int{}, fmt.Errorf("token in amount is zero")
 	}
-
+	// TODO: we need to check if TickInfo is initialized on a specific tick before updating, otherwise get wont work
+	// k.setTickInfo(ctx, poolId, lowerTick, TickInfo{})
 	// k.UpdateTickWithNewLiquidity(ctx, poolId, lowerTick, liquidityIn)
+	// k.setTickInfo(ctx, poolId, upperTick, TickInfo{})
 	// k.UpdateTickWithNewLiquidity(ctx, poolId, upperTick, liquidityIn)
-
+	// k.setPosition(ctx, poolId, owner, lowerTick, upperTick, Position{})
 	// k.updatePositionWithLiquidity(ctx, poolId, owner, lowerTick, upperTick, liquidityIn)
 
 	pool := k.getPoolbyId(ctx, poolId)
 
 	currentSqrtPrice := sdk.NewDecWithPrec(int64(pool.CurrentSqrtPrice.Uint64()), 6)
-	fmt.Printf("%v CURRSQRTPRICE \n", currentSqrtPrice)
 	sqrtRatioUpperTick, _ := k.tickToPrice(sdk.NewInt(upperTick)).ApproxSqrt()
-	fmt.Printf("%v UPPER \n", sqrtRatioUpperTick)
 	sqrtRatioLowerTick, _ := k.tickToPrice(sdk.NewInt(lowerTick)).ApproxSqrt()
-	fmt.Printf("%v LOWER \n", sqrtRatioLowerTick)
 
 	amtDenom0 = calcAmount0Delta(liquidityIn.ToDec(), currentSqrtPrice, sqrtRatioUpperTick).RoundInt()
 	amtDenom1 = calcAmount1Delta(liquidityIn.ToDec(), currentSqrtPrice, sqrtRatioLowerTick).RoundInt()

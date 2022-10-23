@@ -1,6 +1,8 @@
 package concentrated_liquidity
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 // liquidity0 takes an amount of asset0 in the pool as well as the sqrtpCur and the nextPrice
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
@@ -51,4 +53,21 @@ func calcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	}
 	diff := sqrtPriceB.Sub(sqrtPriceA)
 	return liq.Mul(diff)
+}
+
+func computeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec, lte bool) (sqrtPriceNext sdk.Dec, amountIn sdk.Dec, amountOut sdk.Dec) {
+	if lte {
+		priceDiff := amountRemaining.Quo(liquidity)
+		priceNext := sqrtPriceCurrent.Add(priceDiff)
+		amountIn := calcAmount1Delta(liquidity, priceNext, sqrtPriceCurrent)
+		amountOut := calcAmount0Delta(liquidity, priceNext, sqrtPriceCurrent)
+		return priceNext, amountIn, amountOut
+	} else {
+		priceNextTop := liquidity.Mul(sqrtPriceCurrent)
+		priceNextBot := liquidity.Add(amountRemaining.Mul(sqrtPriceCurrent))
+		priceNext := priceNextTop.Quo(priceNextBot)
+		amountIn := calcAmount0Delta(liquidity, priceNext, sqrtPriceCurrent)
+		amountOut := calcAmount1Delta(liquidity, priceNext, sqrtPriceCurrent)
+		return priceNext, amountIn, amountOut
+	}
 }
