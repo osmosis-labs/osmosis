@@ -325,8 +325,18 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 	}
 	if len(tokensIn) == 1 && tokensIn[0].Amount.GT(sdk.OneInt()) {
 		numShares, err = p.calcSingleAssetJoinShares(tokensIn[0], swapFee)
+		if err != nil {
+			return sdk.ZeroInt(), sdk.NewCoins(), err
+		}
+
 		newLiquidity = tokensIn
+
 		p.updatePoolForJoin(newLiquidity, numShares)
+
+		if err = validatePoolAssets(p.PoolLiquidity, p.ScalingFactor); err != nil {
+			return sdk.ZeroInt(), sdk.NewCoins(), err
+		}
+
 		return numShares, newLiquidity, err
 	} else if len(tokensIn) != p.NumAssets() {
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New(
