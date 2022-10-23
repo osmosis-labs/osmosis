@@ -19,6 +19,6 @@ func BenchmarkLog2(b *testing.B) {
 		b.StopTimer()
 		test := tests[rand.Int63n(int64(len(tests)))]
 		b.StartTimer()
-		test.LogBase2()
+		_ = test.LogBase2()
 	}
 }
