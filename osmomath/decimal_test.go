@@ -654,6 +654,7 @@ func BenchmarkMarshalTo(b *testing.B) {
 }
 
 func (s *decimalTestSuite) TestLog2() {
+	var expectedErrTolerance = MustNewDecFromStr("0.000000000000000000000000000000000100")
 
 	tests := map[string]struct {
 		initialValue BigDec
@@ -674,41 +675,41 @@ func (s *decimalTestSuite) TestLog2() {
 			initialValue: NewBigDec(2),
 			expected:     NewBigDec(1),
 		},
-		"log_2{4} = 1": {
+		"log_2{7} = 2.807354922057604107441969317231830809": {
 			initialValue: NewBigDec(7),
-			// TODO: need taylor expansion. True value: 2.80735492205760410744196931723183080
-			expected: MustNewDecFromStr("2.807331780165036836432756721656406796"),
+			// From: https://www.wolframalpha.com/input?i=log+base+2+of+7+37+digits
+			expected: MustNewDecFromStr("2.807354922057604107441969317231830809"),
 		},
 		"log_2{512} = 9": {
 			initialValue: NewBigDec(512),
 			expected:     NewBigDec(9),
 		},
-		"log_2{600} = 9": {
+		"log_2{580} = 9.179909090014934468590092754117374938": {
 			initialValue: NewBigDec(580),
-			// TODO: need taylor expansion. True value is: 9.179909090014934468590092754117374938
-			expected: MustNewDecFromStr("9.179895076994889373665412371677187147"),
+			// From: https://www.wolframalpha.com/input?i=log+base+2+of+600+37+digits
+			expected: MustNewDecFromStr("9.179909090014934468590092754117374938"),
 		},
 		"log_2{1024} = 10": {
 			initialValue: NewBigDec(1024),
 			expected:     NewBigDec(10),
 		},
-		"log_2{1024.987654321} = 10": {
+		"log_2{1024.987654321} = 10.001390817654141324352719749259888355": {
 			initialValue: NewDecWithPrec(1024987654321, 9),
-			// TODO: need taylor expansion. True value is: 10.001390817654141324352719749259888355
-			expected: MustNewDecFromStr("10.001358358819850845519638100517317309"),
+			// From: https://www.wolframalpha.com/input?i=log+base+2+of+1024.987654321+38+digits
+			expected: MustNewDecFromStr("10.001390817654141324352719749259888355"),
 		},
 		"log_2{912648174127941279170121098210.92821920190204131121} = 99.525973560175362367047484597337715868": {
 			initialValue: MustNewDecFromStr("912648174127941279170121098210.92821920190204131121"),
-			// TODO: need taylor expansion. True value is: 99.525973560175362367047484597337715868
-			expected: MustNewDecFromStr("99.525926047039592435453430709513510145"),
+			// From: https://www.wolframalpha.com/input?i=log+base+2+of+912648174127941279170121098210.92821920190204131121+38+digits
+			expected: MustNewDecFromStr("99.525973560175362367047484597337715868"),
 		},
 	}
 
 	for name, tc := range tests {
 		s.Run(name, func() {
 			osmoassert.ConditionalPanic(s.T(), tc.expectedPanic, func() {
-				res := tc.initialValue.ApproxLog2()
-				s.Require().Equal(tc.expected, res)
+				res := tc.initialValue.LogBase2()
+				DecApproxEq(s.T(), tc.expected, res, expectedErrTolerance)
 			})
 		})
 	}

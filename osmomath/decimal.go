@@ -30,6 +30,9 @@ const (
 
 	// max number of iterations in ApproxRoot function
 	maxApproxRootIterations = 100
+
+	// max number of iterations in Log2 function
+	maxLog2Iterations = 50
 )
 
 var (
@@ -40,8 +43,9 @@ var (
 	oneInt               = big.NewInt(1)
 	tenInt               = big.NewInt(10)
 
-	log2LookupTable map[uint32]BigDec
-	upperBoundLog   = MustNewDecFromStr("0.000144262291094538391070900057479701")
+	// initialized in init() since requires
+	// precision to be defined.
+	twoBigDec BigDec
 )
 
 // Decimal errors
@@ -58,26 +62,7 @@ func init() {
 		precisionMultipliers[i] = calcPrecisionMultiplier(int64(i))
 	}
 
-	log2LookupTable = buildLog2LookupTable()
-}
-
-// buildLog2LookupTable returns a lookup table for log values
-// ranging from [1, 2)
-// the keys are multiplied by 10 to simplify the rounding logic
-// in the log function
-func buildLog2LookupTable() map[uint32]BigDec {
-	return map[uint32]BigDec{
-		100000: ZeroDec(),
-		100001: MustNewDecFromStr("0.000014426878274461848365683118054200"),
-		100002: MustNewDecFromStr("0.000019999800000000000000000000000000"),
-		100003: MustNewDecFromStr("0.000029999600000000000000000000000000"),
-		100004: MustNewDecFromStr("0.000039999200000000000000000000000000"),
-		100005: MustNewDecFromStr("0.000049998800000000000000000000000000"),
-		100006: MustNewDecFromStr("0.000059998200000000000000000000000000"),
-		100007: MustNewDecFromStr("0.000069997600000000000000000000000000"),
-		100008: MustNewDecFromStr("0.000079996800000000000000000000000000"),
-		100009: MustNewDecFromStr("0.000089996000000000000000000000000000"),
-	}
+	twoBigDec = NewBigDec(2)
 }
 
 func precisionInt() *big.Int {
@@ -882,9 +867,12 @@ func DecApproxEq(t *testing.T, d1 BigDec, d2 BigDec, tol BigDec) (*testing.T, bo
 	return t, diff.LTE(tol), "expected |d1 - d2| <:\t%v\ngot |d1 - d2| = \t\t%v", tol.String(), diff.String()
 }
 
-// ApproxLog2 returns the approximation of log_2 {x}.
+// LogBase2 returns log_2 {x}.
 // Rounds down by truncations during division and right shifting.
-func (x BigDec) ApproxLog2() BigDec {
+// Accurate up to 32 precision digits.
+// Implementation is based on:
+// https://stm32duinoforum.com/forum/dsp/BinaryLogarithm.pdf
+func (x BigDec) LogBase2() BigDec {
 	if x.LT(OneDec()) {
 		panic(fmt.Sprintf("only supporting values >= 1, given (%s)", x))
 	}
@@ -892,44 +880,38 @@ func (x BigDec) ApproxLog2() BigDec {
 	// Normalize x to be 1 <= x < 2
 
 	// y is the exponent that results in a whole multiple of 2.
-	y := int64(0)
+	y := ZeroDec()
 
 	// invariant: x >= 1
 	// while x < 1
 	for x.LT(OneDec()) {
 		x.i = x.i.Lsh(x.i, 1)
-		y = y - 1
+		y = y.Sub(OneDec())
 	}
 
 	// invariant: x < 2
 	// while x >= 2
-	twoDec := NewBigDec(2)
-	for x.GTE(twoDec) {
+	for x.GTE(twoBigDec) {
 		x.i = x.i.Rsh(x.i, 1)
-		y = y + 1
+		y = y.Add(OneDec())
 	}
 
-	// Normalize x to be 1 <= x < 1.0001
+	b := OneDec().Quo(twoBigDec)
 
-	// invariant: x < 1.0001
-	// while x >= 1.0001
-	z := int64(0)
-	upperBound := NewDecWithPrec(10001, 4)
-	for x.GTE(upperBound) {
-		z = z + 1
-		x = x.Quo(upperBound)
+	// N.B. At this point x is a positive real number representing
+	// mantissa of the log. We estimate it using the following
+	// algorithm:
+	// https://stm32duinoforum.com/forum/dsp/BinaryLogarithm.pdf
+	// This has shown precision of 32 digits relative
+	// to Wolfram Alpha in tests
+	for i := 0; i < maxLog2Iterations; i++ {
+		x = x.Mul(x)
+		if x.GTE(twoBigDec) {
+			x.i = x.i.Rsh(x.i, 1)
+			y = y.Add(b)
+		}
+		b.i = b.i.Rsh(b.i, 1)
 	}
 
-	// exponentiate to simplify truncation necessary for
-	// looking up values in the table.
-	lookupKey := x.MulInt64(100000).TruncateInt()
-	if lookupKey.GTE(NewInt(100010)) || lookupKey.LT(NewInt(100000)) {
-		panic(fmt.Sprintf("invalid lookup key (%s), must be 100000 <= lookup key < 100001", lookupKey))
-	}
-
-	tableValue, found := log2LookupTable[uint32(lookupKey.Int64())]
-	if !found {
-		panic(fmt.Sprintf("no matching value for key (%s) in the lookup table", lookupKey))
-	}
-	return NewBigDec(y).Add(upperBoundLog.MulInt64(z)).Add(tableValue)
+	return y
 }

@@ -4,8 +4,9 @@ import (
 	"testing"
 )
 
-// Benchmark that scales x between 1 <= x < 2 -      417597  ns/op
-// Benchmark that scales x between 1 <= x < 1.0001 - 3372629 ns/op
+// Benchmark that scales x between 1 <= x < 2 + lookup table - 417597  ns/op
+// Benchmark that scales x between 1 <= x < 1.0001 + lookup table - 3372629 ns/op
+// Benchmark that sscales x between 1 <= x < 2 + mantissa calcuation - 75088 ns/op
 func BenchmarkLog2(b *testing.B) {
 	tests := []struct {
 		value BigDec
@@ -30,7 +31,7 @@ func BenchmarkLog2(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		for _, test := range tests {
-			test.value.ApproxLog2()
+			test.value.LogBase2()
 		}
 	}
 }
