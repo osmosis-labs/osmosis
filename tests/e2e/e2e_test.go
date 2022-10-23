@@ -5,15 +5,15 @@ package e2e
 
 import (
 	"encoding/json"
-
 	"fmt"
-	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 	"io"
 	"os"
 	"path/filepath"
 	"strconv"
 	"time"
+
+	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -135,7 +135,6 @@ func copyFile(a, b string) error {
 }
 
 func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
-
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
@@ -149,8 +148,8 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	s.NoError(err)
 	osmoSupply := supply.AmountOf("uosmo")
 
-	//balance, err := node.QueryBalances(chainA.NodeConfigs[1].PublicAddress)
-	//s.NoError(err)
+	// balance, err := node.QueryBalances(chainA.NodeConfigs[1].PublicAddress)
+	// s.NoError(err)
 
 	f, err := osmoSupply.ToDec().Float64()
 	s.NoError(err)
@@ -232,7 +231,6 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 
 	// Removing the rate limit so it doesn't affect other tests
 	node.WasmExecute(contracts[0], `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
-
 }
 
 // TestAddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.
@@ -467,7 +465,8 @@ func (s *IntegrationTestSuite) TestStateSync() {
 	stateSyncRPCServers := []string{stateSyncHostPort, stateSyncHostPort}
 
 	// get trust height and trust hash.
-	trustHeight := runningNode.QueryCurrentHeight()
+	trustHeight, err := runningNode.QueryCurrentHeight()
+	s.Require().NoError(err)
 
 	trustHash, err := runningNode.QueryHashFromBlock(trustHeight)
 	s.Require().NoError(err)
@@ -529,8 +528,10 @@ func (s *IntegrationTestSuite) TestStateSync() {
 
 	// ensure that the state synching node cathes up to the running node.
 	s.Require().Eventually(func() bool {
-		stateSyncNodeHeight := stateSynchingNode.QueryCurrentHeight()
-		runningNodeHeight := runningNode.QueryCurrentHeight()
+		stateSyncNodeHeight, err := stateSynchingNode.QueryCurrentHeight()
+		s.Require().NoError(err)
+		runningNodeHeight, err := runningNode.QueryCurrentHeight()
+		s.Require().NoError(err)
 		return stateSyncNodeHeight == runningNodeHeight
 	},
 		3*time.Minute,
@@ -543,10 +544,6 @@ func (s *IntegrationTestSuite) TestStateSync() {
 }
 
 func (s *IntegrationTestSuite) TestExpeditedProposals() {
-	if !s.skipUpgrade {
-		s.T().Skip("this can be re-enabled post v12")
-	}
-
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
