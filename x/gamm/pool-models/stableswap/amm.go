@@ -326,6 +326,7 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 	if len(tokensIn) == 1 && tokensIn[0].Amount.GT(sdk.OneInt()) {
 		numShares, err = p.calcSingleAssetJoinShares(tokensIn[0], swapFee)
 		newLiquidity = tokensIn
+		p.updatePoolForJoin(newLiquidity, numShares)
 		return numShares, newLiquidity, err
 	} else if len(tokensIn) != p.NumAssets() {
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New(
@@ -339,20 +340,7 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 	}
 	p.updatePoolForJoin(tokensIn.Sub(remCoins), numShares)
 
-	tokensJoined := tokensIn
-	for _, coin := range remCoins {
-		// TODO: Perhaps add a method to skip if this is too small.
-		if coin.Amount.GT(sdk.OneInt()) {
-			newShare, err := p.calcSingleAssetJoinShares(coin, swapFee)
-			if err != nil {
-				return sdk.ZeroInt(), sdk.NewCoins(), err
-			}
-			p.updatePoolForJoin(sdk.NewCoins(coin), newShare)
-			numShares = numShares.Add(newShare)
-		} else {
-			tokensJoined = tokensJoined.Sub(sdk.NewCoins(coin))
-		}
-	}
+	tokensJoined := tokensIn.Sub(remCoins)
 
 	if err = validatePoolAssets(p.PoolLiquidity, p.ScalingFactor); err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err
