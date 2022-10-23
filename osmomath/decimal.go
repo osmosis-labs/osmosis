@@ -873,8 +873,12 @@ func DecApproxEq(t *testing.T, d1 BigDec, d2 BigDec, tol BigDec) (*testing.T, bo
 // Implementation is based on:
 // https://stm32duinoforum.com/forum/dsp/BinaryLogarithm.pdf
 func (x BigDec) LogBase2() BigDec {
-	if x.LTE(ZeroDec()) {
-		panic(fmt.Sprintf("log is not defined at <= 0, given (%s)", x))
+	// create a new decimal to avoid mutating
+	// the receiver's int buffer.
+	xCopy := ZeroDec()
+	xCopy.i = new(big.Int).Set(x.i)
+	if xCopy.LTE(ZeroDec()) {
+		panic(fmt.Sprintf("log is not defined at <= 0, given (%s)", xCopy))
 	}
 
 	// Normalize x to be 1 <= x < 2
@@ -884,15 +888,15 @@ func (x BigDec) LogBase2() BigDec {
 
 	// invariant: x >= 1
 	// while x < 1
-	for x.LT(OneDec()) {
-		x.i = x.i.Lsh(x.i, 1)
+	for xCopy.LT(OneDec()) {
+		xCopy.i = xCopy.i.Lsh(xCopy.i, 1)
 		y = y.Sub(OneDec())
 	}
 
 	// invariant: x < 2
 	// while x >= 2
-	for x.GTE(twoBigDec) {
-		x.i = x.i.Rsh(x.i, 1)
+	for xCopy.GTE(twoBigDec) {
+		xCopy.i = xCopy.i.Rsh(xCopy.i, 1)
 		y = y.Add(OneDec())
 	}
 
@@ -905,9 +909,9 @@ func (x BigDec) LogBase2() BigDec {
 	// This has shown precision of 32 digits relative
 	// to Wolfram Alpha in tests
 	for i := 0; i < maxLog2Iterations; i++ {
-		x = x.Mul(x)
-		if x.GTE(twoBigDec) {
-			x.i = x.i.Rsh(x.i, 1)
+		xCopy = xCopy.Mul(xCopy)
+		if xCopy.GTE(twoBigDec) {
+			xCopy.i = xCopy.i.Rsh(xCopy.i, 1)
 			y = y.Add(b)
 		}
 		b.i = b.i.Rsh(b.i, 1)

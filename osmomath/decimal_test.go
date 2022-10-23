@@ -726,8 +726,15 @@ func (s *decimalTestSuite) TestLog2() {
 	for name, tc := range tests {
 		s.Run(name, func() {
 			osmoassert.ConditionalPanic(s.T(), tc.expectedPanic, func() {
+				// Create a copy to test that the original was not modified.
+				// That is, that LogbBase2() is non-mutative.
+				initialCopy := ZeroDec()
+				initialCopy.i.Set(tc.initialValue.i)
+
+				// system under test.
 				res := tc.initialValue.LogBase2()
 				require.True(DecApproxEq(s.T(), tc.expected, res, expectedErrTolerance))
+				require.Equal(s.T(), initialCopy, tc.initialValue)
 			})
 		})
 	}
