@@ -25,6 +25,11 @@ service Msg {
   rpc UndelegateFromValidatorSet(MsgUndelegateFromValidatorSet)
       returns (MsgUndelegateFromValidatorSetResponse);
 
+  // RedelegateValidatorSet takes the existing validator set and redelegates to
+  // a new set.
+  rpc RedelegateValidatorSet(MsgRedelegateValidatorSet)
+      returns (MsgRedelegateValidatorSetResponse);
+
   // WithdrawDelegationRewards allows users to claim rewards from the
   // validator-set.
   rpc WithdrawDelegationRewards(MsgWithdrawDelegationRewards)
@@ -79,6 +84,19 @@ message MsgUndelegateFromValidatorSet {
 }
 
 message MsgUndelegateFromValidatorSetResponse {}
+
+message MsgRedelegateValidatorSet {
+  // delegator is the user who is trying to create a validator-set.
+  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
+
+  // list of {valAddr, weight} to delegate to
+  repeated ValidatorPreference preferences = 2 [
+    (gogoproto.moretags) = "yaml:\"preferences\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgRedelegateValidatorSetResponse {}
 
 // MsgWithdrawDelegationRewards allows user to claim staking rewards from the
 // validator set.

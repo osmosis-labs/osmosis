@@ -277,3 +277,78 @@ func (suite *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestReDelegateValidatorSet() {
+	suite.SetupTest()
+
+	// setup 3 validators
+	valAddrs := suite.SetupMultipleValidators(3)
+
+	tests := []struct {
+		name           string
+		delegator      sdk.AccAddress
+		coinToStake    sdk.Coin
+		newPreferences []types.ValidatorPreference
+		expectPass     bool
+	}{
+		{
+			name:        "Update existing validator Set with delegated tokens",
+			delegator:   sdk.AccAddress([]byte("addr1---------------")),
+			coinToStake: sdk.NewCoin("stake", sdk.NewInt(20)),
+			newPreferences: []types.ValidatorPreference{
+				{
+					ValOperAddress: valAddrs[0],
+					Weight:         sdk.NewDecWithPrec(1, 1),
+				},
+				{
+					ValOperAddress: valAddrs[1],
+					Weight:         sdk.NewDecWithPrec(1, 1),
+				},
+				{
+					ValOperAddress: valAddrs[2],
+					Weight:         sdk.NewDecWithPrec(9, 1),
+				},
+			},
+			expectPass: true,
+		},
+	}
+
+	for _, test := range tests {
+		suite.Run(test.name, func() {
+			suite.FundAcc(test.delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100)})
+
+			// setup message server
+			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorPreferenceKeeper)
+			c := sdk.WrapSDKContext(suite.Ctx)
+
+			// call the create validator set preference
+			preferences := suite.PrepareDelegateToValidatorSet()
+
+			// set the creation fee to 10stake
+			suite.App.ValidatorPreferenceKeeper.SetParams(suite.Ctx, types.Params{
+				ValsetCreationFee: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))),
+			})
+
+			_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
+			suite.Require().NoError(err)
+
+			// Fund the delegator address account
+			suite.FundAcc(test.delegator, sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100))})
+
+			// call the create validator set preference
+			_, err = msgServer.DelegateToValidatorSet(c, types.NewMsgDelegateToValidatorSet(test.delegator, test.coinToStake))
+			suite.Require().NoError(err)
+
+			// Call the redelegation logic
+			_, err = msgServer.RedelegateValidatorSet(c, types.NewMsgRedelegateValidatorSet(test.delegator, test.newPreferences))
+			if test.expectPass {
+				suite.Require().NoError(err)
+
+			} else {
+				// error while updating the weights
+				suite.Require().Error(err)
+			}
+
+		})
+	}
+}

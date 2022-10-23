@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v12/x/valset-pref/types"
@@ -61,6 +62,102 @@ func (server msgServer) UndelegateFromValidatorSet(goCtx context.Context, msg *t
 	}
 
 	return &types.MsgUndelegateFromValidatorSetResponse{}, nil
+}
+
+func (server msgServer) RedelegateValidatorSet(goCtx context.Context, msg *types.MsgRedelegateValidatorSet) (*types.MsgRedelegateValidatorSetResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// get the existing validator set preference from store
+	existingSet, found := server.keeper.GetValidatorSetPreference(ctx, msg.Delegator)
+	if !found {
+		return nil, fmt.Errorf("user %s doesn't have validator set", msg.Delegator)
+	}
+
+	// Message 1: override the validator set preference set entry
+	delegator, err := sdk.AccAddressFromBech32(msg.Delegator)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = server.SetValidatorSetPreference(goCtx, &types.MsgSetValidatorSetPreference{
+		Delegator:   msg.Delegator,
+		Preferences: msg.Preferences,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Message 2: Redelegate to valSet Prefereence
+	// Get the sum of users delegated amount
+	totalTokenAmount := sdk.NewDec(0)
+	for _, existingVals := range existingSet.Preferences {
+		valAddr, validator, err := server.keeper.GetValAddrAndVal(ctx, existingVals.ValOperAddress)
+		if err != nil {
+			return nil, err
+		}
+
+		newSetFirstValidator, err := sdk.ValAddressFromBech32(msg.Preferences[0].ValOperAddress)
+		if err != nil {
+			return nil, err
+		}
+
+		delegation, found := server.keeper.stakingKeeper.GetDelegation(ctx, delegator, valAddr)
+		if !found {
+			return nil, fmt.Errorf("No delegation found")
+		}
+
+		server.keeper.stakingKeeper.BeginRedelegation(ctx, delegator, valAddr, newSetFirstValidator, delegation.Shares)
+
+		// we want to get the amount not shares so what we can get the sum of total amount
+		amountFromShares := validator.TokensFromShares(delegation.Shares).RoundInt()
+		totalTokenAmount = totalTokenAmount.Add(amountFromShares.ToDec())
+	}
+
+	// Calculate Amount from shares for new set
+	for _, newVals := range msg.Preferences {
+		amountToStake := newVals.Weight.Mul(totalTokenAmount).RoundInt()
+
+		valAddr, validator, err := server.keeper.GetValAddrAndVal(ctx, newVals.ValOperAddress)
+		if err != nil {
+			return nil, err
+		}
+
+		newSetFirstValidator, err := sdk.ValAddressFromBech32(msg.Preferences[0].ValOperAddress)
+		if err != nil {
+			return nil, err
+		}
+
+		// to make sure that we donot redelegate to the same delegator
+		if msg.Preferences[0].ValOperAddress != newVals.ValOperAddress {
+			sharesFromAmount, err := validator.SharesFromTokens(amountToStake)
+			if err != nil {
+				return nil, err
+			}
+
+			server.keeper.stakingKeeper.BeginRedelegation(ctx, delegator, newSetFirstValidator, valAddr, sharesFromAmount)
+		}
+	}
+
+	for _, oldVals := range existingSet.Preferences {
+		_, validator, err := server.keeper.GetValAddrAndVal(ctx, oldVals.ValOperAddress)
+		if err != nil {
+			return nil, err
+		}
+
+		fmt.Println("EXISTING. TOKENS: ", validator.Tokens, "SHARES: ", validator.DelegatorShares)
+
+	}
+
+	for _, newVals := range msg.Preferences {
+		_, validator, err := server.keeper.GetValAddrAndVal(ctx, newVals.ValOperAddress)
+		if err != nil {
+			return nil, err
+		}
+
+		fmt.Println("NEW. TOKENS: ", validator.Tokens, "SHARES: ", validator.DelegatorShares)
+	}
+
+	return &types.MsgRedelegateValidatorSetResponse{}, nil
 }
 
 func (server msgServer) WithdrawDelegationRewards(goCtx context.Context, msg *types.MsgWithdrawDelegationRewards) (*types.MsgWithdrawDelegationRewardsResponse, error) {

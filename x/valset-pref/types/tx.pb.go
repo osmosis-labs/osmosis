@@ -309,6 +309,96 @@ func (m *MsgUndelegateFromValidatorSetResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUndelegateFromValidatorSetResponse proto.InternalMessageInfo
 
+type MsgRedelegateValidatorSet struct {
+	// delegator is the user who is trying to create a validator-set.
+	Delegator string `protobuf:"bytes,1,opt,name=delegator,proto3" json:"delegator,omitempty" yaml:"delegator"`
+	// list of {valAddr, weight} to delegate to
+	Preferences []ValidatorPreference `protobuf:"bytes,2,rep,name=preferences,proto3" json:"preferences" yaml:"preferences"`
+}
+
+func (m *MsgRedelegateValidatorSet) Reset()         { *m = MsgRedelegateValidatorSet{} }
+func (m *MsgRedelegateValidatorSet) String() string { return proto.CompactTextString(m) }
+func (*MsgRedelegateValidatorSet) ProtoMessage()    {}
+func (*MsgRedelegateValidatorSet) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fa9fa79f914b826d, []int{6}
+}
+func (m *MsgRedelegateValidatorSet) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRedelegateValidatorSet) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRedelegateValidatorSet.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRedelegateValidatorSet) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRedelegateValidatorSet.Merge(m, src)
+}
+func (m *MsgRedelegateValidatorSet) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRedelegateValidatorSet) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRedelegateValidatorSet.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRedelegateValidatorSet proto.InternalMessageInfo
+
+func (m *MsgRedelegateValidatorSet) GetDelegator() string {
+	if m != nil {
+		return m.Delegator
+	}
+	return ""
+}
+
+func (m *MsgRedelegateValidatorSet) GetPreferences() []ValidatorPreference {
+	if m != nil {
+		return m.Preferences
+	}
+	return nil
+}
+
+type MsgRedelegateValidatorSetResponse struct {
+}
+
+func (m *MsgRedelegateValidatorSetResponse) Reset()         { *m = MsgRedelegateValidatorSetResponse{} }
+func (m *MsgRedelegateValidatorSetResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgRedelegateValidatorSetResponse) ProtoMessage()    {}
+func (*MsgRedelegateValidatorSetResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fa9fa79f914b826d, []int{7}
+}
+func (m *MsgRedelegateValidatorSetResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRedelegateValidatorSetResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRedelegateValidatorSetResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRedelegateValidatorSetResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRedelegateValidatorSetResponse.Merge(m, src)
+}
+func (m *MsgRedelegateValidatorSetResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRedelegateValidatorSetResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRedelegateValidatorSetResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRedelegateValidatorSetResponse proto.InternalMessageInfo
+
 // MsgWithdrawDelegationRewards allows user to claim staking rewards from the
 // validator set.
 type MsgWithdrawDelegationRewards struct {
@@ -363,7 +453,11 @@ func (m *MsgWithdrawDelegationRewardsResponse) Reset()         { *m = MsgWithdra
 func (m *MsgWithdrawDelegationRewardsResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgWithdrawDelegationRewardsResponse) ProtoMessage()    {}
 func (*MsgWithdrawDelegationRewardsResponse) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD:x/valset-pref/types/tx.pb.go
 	return fileDescriptor_daa95be02b2fc560, []int{7}
+=======
+	return fileDescriptor_fa9fa79f914b826d, []int{9}
+>>>>>>> f22fe41bf (joe v1 implemented):x/validator-preference/types/tx.pb.go
 }
 func (m *MsgWithdrawDelegationRewardsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -399,6 +493,8 @@ func init() {
 	proto.RegisterType((*MsgDelegateToValidatorSetResponse)(nil), "osmosis.validatorpreference.v1beta1.MsgDelegateToValidatorSetResponse")
 	proto.RegisterType((*MsgUndelegateFromValidatorSet)(nil), "osmosis.validatorpreference.v1beta1.MsgUndelegateFromValidatorSet")
 	proto.RegisterType((*MsgUndelegateFromValidatorSetResponse)(nil), "osmosis.validatorpreference.v1beta1.MsgUndelegateFromValidatorSetResponse")
+	proto.RegisterType((*MsgRedelegateValidatorSet)(nil), "osmosis.validatorpreference.v1beta1.MsgRedelegateValidatorSet")
+	proto.RegisterType((*MsgRedelegateValidatorSetResponse)(nil), "osmosis.validatorpreference.v1beta1.MsgRedelegateValidatorSetResponse")
 	proto.RegisterType((*MsgWithdrawDelegationRewards)(nil), "osmosis.validatorpreference.v1beta1.MsgWithdrawDelegationRewards")
 	proto.RegisterType((*MsgWithdrawDelegationRewardsResponse)(nil), "osmosis.validatorpreference.v1beta1.MsgWithdrawDelegationRewardsResponse")
 }
@@ -407,6 +503,7 @@ func init() {
 	proto.RegisterFile("osmosis/valset-pref/v1beta1/tx.proto", fileDescriptor_daa95be02b2fc560)
 }
 
+<<<<<<< HEAD:x/valset-pref/types/tx.pb.go
 var fileDescriptor_daa95be02b2fc560 = []byte{
 	// 533 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x55, 0x4d, 0x8b, 0xd3, 0x40,
@@ -443,6 +540,46 @@ var fileDescriptor_daa95be02b2fc560 = []byte{
 	0xcf, 0xac, 0x5d, 0x3f, 0xa0, 0x0e, 0x27, 0x72, 0x67, 0x0c, 0x4c, 0x72, 0xf8, 0xc7, 0xe6, 0x48,
 	0x1e, 0xad, 0x73, 0x25, 0x59, 0x19, 0x77, 0x7e, 0x07, 0x00, 0x00, 0xff, 0xff, 0xc2, 0x1e, 0x52,
 	0x73, 0xde, 0x06, 0x00, 0x00,
+=======
+var fileDescriptor_fa9fa79f914b826d = []byte{
+	// 564 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x55, 0x4d, 0x8b, 0xd3, 0x40,
+	0x18, 0xee, 0x6c, 0x65, 0x61, 0xa7, 0x17, 0x09, 0x8b, 0xb4, 0x41, 0xd3, 0x9a, 0x55, 0xb7, 0x97,
+	0x66, 0x6c, 0xbc, 0x88, 0x07, 0xd1, 0x28, 0x0b, 0x0a, 0x05, 0xc9, 0xfa, 0x01, 0x7b, 0x10, 0x92,
+	0xe6, 0x35, 0x1b, 0x6c, 0x33, 0x25, 0x33, 0x76, 0x77, 0xff, 0x85, 0x3f, 0xc1, 0xab, 0x22, 0x78,
+	0xf0, 0x47, 0xb8, 0x78, 0x5a, 0x3c, 0x79, 0xaa, 0xd2, 0xfe, 0x83, 0xfd, 0x05, 0x92, 0x8f, 0x4e,
+	0x2a, 0x34, 0x71, 0x68, 0x15, 0x4f, 0x09, 0xcc, 0xfb, 0x3c, 0xef, 0xf3, 0xcc, 0x3b, 0xcf, 0x0c,
+	0xee, 0x50, 0x36, 0xa4, 0x2c, 0x60, 0x64, 0xec, 0x0c, 0x02, 0xcf, 0xe1, 0x34, 0xea, 0x8c, 0x22,
+	0x78, 0x05, 0x11, 0x84, 0x7d, 0x20, 0xe3, 0xae, 0x0b, 0xdc, 0xe9, 0x12, 0x7e, 0x6c, 0x8c, 0x22,
+	0xca, 0xa9, 0xb2, 0x93, 0x95, 0x1b, 0xa2, 0x3c, 0xaf, 0x36, 0xb2, 0x6a, 0x75, 0xdb, 0xa7, 0x3e,
+	0x4d, 0xea, 0x49, 0xfc, 0x97, 0x42, 0x55, 0xad, 0x9f, 0x60, 0x89, 0xeb, 0xb0, 0x9c, 0xb8, 0x4f,
+	0x83, 0x30, 0x5b, 0xbf, 0x29, 0xa5, 0x84, 0x71, 0x87, 0x43, 0x8a, 0xd0, 0xbf, 0x22, 0x7c, 0xb9,
+	0xc7, 0xfc, 0x7d, 0xe0, 0xcf, 0xe7, 0x90, 0x7d, 0xe0, 0x4f, 0x04, 0x48, 0x31, 0xf1, 0x96, 0x07,
+	0x03, 0xf0, 0xe3, 0x95, 0x3a, 0x6a, 0xa1, 0xf6, 0x96, 0xb5, 0x7d, 0x3e, 0x69, 0x5e, 0x3c, 0x71,
+	0x86, 0x83, 0x3b, 0xba, 0x58, 0xd2, 0xed, 0xbc, 0x4c, 0x19, 0xe3, 0x5a, 0xde, 0x96, 0xd5, 0x37,
+	0x5a, 0xd5, 0x76, 0xcd, 0xbc, 0x6d, 0x48, 0xf8, 0x36, 0x84, 0x8a, 0x5c, 0x82, 0xa5, 0x9e, 0x4e,
+	0x9a, 0x95, 0xf3, 0x49, 0x53, 0x49, 0x7b, 0x2e, 0x50, 0xeb, 0xf6, 0x62, 0x23, 0xfd, 0x06, 0xbe,
+	0x56, 0xe6, 0xc5, 0x06, 0x36, 0xa2, 0x21, 0x03, 0xfd, 0x13, 0xc2, 0x8d, 0x1e, 0xf3, 0x1f, 0xa6,
+	0x82, 0xe1, 0x29, 0x5d, 0xac, 0x5f, 0xc9, 0xf1, 0x4b, 0x7c, 0x21, 0x1e, 0x43, 0x7d, 0xa3, 0x85,
+	0xda, 0x35, 0xb3, 0x61, 0xa4, 0x73, 0x32, 0xe2, 0x39, 0x09, 0x6b, 0x0f, 0x68, 0x10, 0x5a, 0x24,
+	0xf6, 0xf2, 0xe1, 0x47, 0x73, 0xd7, 0x0f, 0xf8, 0xe1, 0x1b, 0xd7, 0xe8, 0xd3, 0x21, 0xc9, 0x86,
+	0x9a, 0x7e, 0x3a, 0xcc, 0x7b, 0x4d, 0xf8, 0xc9, 0x08, 0x58, 0x02, 0xb0, 0x13, 0x5e, 0x7d, 0x07,
+	0x5f, 0x2d, 0x14, 0x2c, 0x6c, 0x7d, 0x46, 0xf8, 0x4a, 0x8f, 0xf9, 0xcf, 0xc2, 0x4c, 0x17, 0xec,
+	0x45, 0x74, 0xf8, 0xd7, 0xac, 0x55, 0xff, 0x91, 0xb5, 0x5d, 0x7c, 0xbd, 0x54, 0xb4, 0xb0, 0xf7,
+	0x25, 0x9d, 0x9a, 0x0d, 0xf3, 0xca, 0xb5, 0xad, 0xfd, 0xaf, 0x73, 0x9a, 0x4e, 0x73, 0xb9, 0x11,
+	0x61, 0xd7, 0x4e, 0x82, 0xf9, 0x22, 0xe0, 0x87, 0x5e, 0xe4, 0x1c, 0x65, 0xa3, 0x0f, 0x68, 0x68,
+	0xc3, 0x91, 0x13, 0x79, 0x6c, 0x15, 0xc3, 0x59, 0x40, 0x0a, 0x39, 0xe7, 0xbd, 0xcd, 0x6f, 0x9b,
+	0xb8, 0xda, 0x63, 0xbe, 0xf2, 0x1e, 0xe1, 0x46, 0xf1, 0xd5, 0x70, 0x5f, 0x6a, 0xa7, 0xca, 0x12,
+	0xa9, 0x3e, 0x5a, 0x9b, 0x62, 0xae, 0x59, 0x79, 0x87, 0xf0, 0xa5, 0x82, 0x44, 0xdf, 0x95, 0xed,
+	0xb2, 0x1c, 0xaf, 0xee, 0xad, 0x87, 0x17, 0x12, 0x3f, 0x22, 0xac, 0x96, 0xa4, 0xd3, 0x92, 0x6d,
+	0x53, 0xcc, 0xa1, 0x3e, 0x5e, 0x9f, 0xe3, 0xb7, 0x1d, 0x2d, 0x48, 0x9b, 0xf4, 0x8e, 0x2e, 0xc7,
+	0xcb, 0xef, 0x68, 0x79, 0x48, 0x92, 0x03, 0x5a, 0x1c, 0x11, 0xe9, 0x03, 0x5a, 0x48, 0x21, 0x7f,
+	0x40, 0xff, 0x18, 0x2a, 0xeb, 0xe0, 0x74, 0xaa, 0xa1, 0xb3, 0xa9, 0x86, 0x7e, 0x4e, 0x35, 0xf4,
+	0x76, 0xa6, 0x55, 0xce, 0x66, 0x5a, 0xe5, 0xfb, 0x4c, 0xab, 0x1c, 0xdc, 0x5b, 0xb8, 0x31, 0xb3,
+	0x76, 0x9d, 0x81, 0xe3, 0x32, 0x22, 0x9e, 0xf3, 0xae, 0x49, 0x8e, 0x97, 0x3f, 0xea, 0xc9, 0x7d,
+	0xea, 0x6e, 0x26, 0xaf, 0xf9, 0xad, 0x5f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xb0, 0x65, 0xee, 0x14,
+	0x8b, 0x08, 0x00, 0x00,
+>>>>>>> f22fe41bf (joe v1 implemented):x/validator-preference/types/tx.pb.go
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -467,6 +604,9 @@ type MsgClient interface {
 	// validator-set. The unbonding logic will follow the `Undelegate` logic from
 	// the sdk.
 	UndelegateFromValidatorSet(ctx context.Context, in *MsgUndelegateFromValidatorSet, opts ...grpc.CallOption) (*MsgUndelegateFromValidatorSetResponse, error)
+	// RedelegateValidatorSet takes the existing validator set and redelegates to
+	// a new set.
+	RedelegateValidatorSet(ctx context.Context, in *MsgRedelegateValidatorSet, opts ...grpc.CallOption) (*MsgRedelegateValidatorSetResponse, error)
 	// WithdrawDelegationRewards allows users to claim rewards from the
 	// validator-set.
 	WithdrawDelegationRewards(ctx context.Context, in *MsgWithdrawDelegationRewards, opts ...grpc.CallOption) (*MsgWithdrawDelegationRewardsResponse, error)
@@ -507,6 +647,15 @@ func (c *msgClient) UndelegateFromValidatorSet(ctx context.Context, in *MsgUndel
 	return out, nil
 }
 
+func (c *msgClient) RedelegateValidatorSet(ctx context.Context, in *MsgRedelegateValidatorSet, opts ...grpc.CallOption) (*MsgRedelegateValidatorSetResponse, error) {
+	out := new(MsgRedelegateValidatorSetResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.validatorpreference.v1beta1.Msg/RedelegateValidatorSet", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) WithdrawDelegationRewards(ctx context.Context, in *MsgWithdrawDelegationRewards, opts ...grpc.CallOption) (*MsgWithdrawDelegationRewardsResponse, error) {
 	out := new(MsgWithdrawDelegationRewardsResponse)
 	err := c.cc.Invoke(ctx, "/osmosis.validatorpreference.v1beta1.Msg/WithdrawDelegationRewards", in, out, opts...)
@@ -528,6 +677,9 @@ type MsgServer interface {
 	// validator-set. The unbonding logic will follow the `Undelegate` logic from
 	// the sdk.
 	UndelegateFromValidatorSet(context.Context, *MsgUndelegateFromValidatorSet) (*MsgUndelegateFromValidatorSetResponse, error)
+	// RedelegateValidatorSet takes the existing validator set and redelegates to
+	// a new set.
+	RedelegateValidatorSet(context.Context, *MsgRedelegateValidatorSet) (*MsgRedelegateValidatorSetResponse, error)
 	// WithdrawDelegationRewards allows users to claim rewards from the
 	// validator-set.
 	WithdrawDelegationRewards(context.Context, *MsgWithdrawDelegationRewards) (*MsgWithdrawDelegationRewardsResponse, error)
@@ -545,6 +697,9 @@ func (*UnimplementedMsgServer) DelegateToValidatorSet(ctx context.Context, req *
 }
 func (*UnimplementedMsgServer) UndelegateFromValidatorSet(ctx context.Context, req *MsgUndelegateFromValidatorSet) (*MsgUndelegateFromValidatorSetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UndelegateFromValidatorSet not implemented")
+}
+func (*UnimplementedMsgServer) RedelegateValidatorSet(ctx context.Context, req *MsgRedelegateValidatorSet) (*MsgRedelegateValidatorSetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RedelegateValidatorSet not implemented")
 }
 func (*UnimplementedMsgServer) WithdrawDelegationRewards(ctx context.Context, req *MsgWithdrawDelegationRewards) (*MsgWithdrawDelegationRewardsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WithdrawDelegationRewards not implemented")
@@ -608,6 +763,24 @@ func _Msg_UndelegateFromValidatorSet_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_RedelegateValidatorSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRedelegateValidatorSet)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RedelegateValidatorSet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.validatorpreference.v1beta1.Msg/RedelegateValidatorSet",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RedelegateValidatorSet(ctx, req.(*MsgRedelegateValidatorSet))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Msg_WithdrawDelegationRewards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgWithdrawDelegationRewards)
 	if err := dec(in); err != nil {
@@ -641,6 +814,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UndelegateFromValidatorSet",
 			Handler:    _Msg_UndelegateFromValidatorSet_Handler,
+		},
+		{
+			MethodName: "RedelegateValidatorSet",
+			Handler:    _Msg_RedelegateValidatorSet_Handler,
 		},
 		{
 			MethodName: "WithdrawDelegationRewards",
@@ -844,6 +1021,73 @@ func (m *MsgUndelegateFromValidatorSetResponse) MarshalToSizedBuffer(dAtA []byte
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgRedelegateValidatorSet) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRedelegateValidatorSet) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRedelegateValidatorSet) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Preferences) > 0 {
+		for iNdEx := len(m.Preferences) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Preferences[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.Delegator) > 0 {
+		i -= len(m.Delegator)
+		copy(dAtA[i:], m.Delegator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Delegator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRedelegateValidatorSetResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRedelegateValidatorSetResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRedelegateValidatorSetResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func (m *MsgWithdrawDelegationRewards) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -976,6 +1220,34 @@ func (m *MsgUndelegateFromValidatorSet) Size() (n int) {
 }
 
 func (m *MsgUndelegateFromValidatorSetResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgRedelegateValidatorSet) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Delegator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.Preferences) > 0 {
+		for _, e := range m.Preferences {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgRedelegateValidatorSetResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1485,6 +1757,172 @@ func (m *MsgUndelegateFromValidatorSetResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgUndelegateFromValidatorSetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRedelegateValidatorSet) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRedelegateValidatorSet: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRedelegateValidatorSet: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Delegator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Delegator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Preferences", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Preferences = append(m.Preferences, ValidatorPreference{})
+			if err := m.Preferences[len(m.Preferences)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRedelegateValidatorSetResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRedelegateValidatorSetResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRedelegateValidatorSetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
