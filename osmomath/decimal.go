@@ -32,7 +32,7 @@ const (
 	maxApproxRootIterations = 100
 
 	// max number of iterations in Log2 function
-	maxLog2Iterations = 50
+	maxLog2Iterations = 300
 )
 
 var (
@@ -873,8 +873,8 @@ func DecApproxEq(t *testing.T, d1 BigDec, d2 BigDec, tol BigDec) (*testing.T, bo
 // Implementation is based on:
 // https://stm32duinoforum.com/forum/dsp/BinaryLogarithm.pdf
 func (x BigDec) LogBase2() BigDec {
-	if x.LT(OneDec()) {
-		panic(fmt.Sprintf("only supporting values >= 1, given (%s)", x))
+	if x.LTE(ZeroDec()) {
+		panic(fmt.Sprintf("log is not defined at <= 0, given (%s)", x))
 	}
 
 	// Normalize x to be 1 <= x < 2

@@ -662,10 +662,28 @@ func (s *decimalTestSuite) TestLog2() {
 
 		expectedPanic bool
 	}{
-		"log_2{0.99}; not supported; panic": {
-			initialValue: NewDecWithPrec(99, 2),
-
+		"log_2{-1}; invalid; panic": {
+			initialValue:  OneDec().Neg(),
 			expectedPanic: true,
+		},
+		"log_2{0}; invalid; panic": {
+			initialValue:  ZeroDec(),
+			expectedPanic: true,
+		},
+		"log_2{0.001} = -9.965784284662087043610958288468170528": {
+			initialValue: MustNewDecFromStr("0.001"),
+			// From: https://www.wolframalpha.com/input?i=log+base+2+of+0.999912345+with+33+digits
+			expected: MustNewDecFromStr("-9.965784284662087043610958288468170528"),
+		},
+		"log_2{0.56171821941421412902170941} = -0.832081497183140708984033250637831402": {
+			initialValue: MustNewDecFromStr("0.56171821941421412902170941"),
+			// From: https://www.wolframalpha.com/input?i=log+base+2+of+0.56171821941421412902170941+with+36+digits
+			expected: MustNewDecFromStr("-0.832081497183140708984033250637831402"),
+		},
+		"log_2{0.999912345} = -0.000126464976533858080645902722235833": {
+			initialValue: MustNewDecFromStr("0.999912345"),
+			// From: https://www.wolframalpha.com/input?i=log+base+2+of+0.999912345+with+37+digits
+			expected: MustNewDecFromStr("-0.000126464976533858080645902722235833"),
 		},
 		"log_2{1} = 0": {
 			initialValue: NewBigDec(1),
@@ -709,7 +727,7 @@ func (s *decimalTestSuite) TestLog2() {
 		s.Run(name, func() {
 			osmoassert.ConditionalPanic(s.T(), tc.expectedPanic, func() {
 				res := tc.initialValue.LogBase2()
-				DecApproxEq(s.T(), tc.expected, res, expectedErrTolerance)
+				require.True(DecApproxEq(s.T(), tc.expected, res, expectedErrTolerance))
 			})
 		})
 	}
