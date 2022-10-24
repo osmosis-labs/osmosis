@@ -77,6 +77,13 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom 
 	return sdk.Dec{}, nil
 }
 
+type SwapState struct {
+	amountSpecifiedRemaining sdk.Dec // remaining amount of tokens that need to be bought by the pool
+	amountCalculated         sdk.Dec // amount out
+	sqrtPrice                sdk.Dec // new current price when swap is done
+	tick                     sdk.Int // new tick when swap is done
+}
+
 // this only works on a single directional trade, will implement bi directional trade in next milestone
 func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec, minPrice, maxPrice sdk.Dec, poolId uint64) (newTokenIn, tokenOut sdk.Coin, err error) {
 	p := k.getPoolbyId(ctx, poolId)
@@ -126,32 +133,34 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 	// utilize the smaller liquidity between assetA and assetB when performing the swap calculation
 	liq := sdk.MinDec(liq0, liq1)
 
-	amountSpecifiedRemaining := tokenAmountInAfterFee
-	amountCalculated := sdk.ZeroDec()
-	sqrtPrice := curSqrtPrice
-	tick := priceToTick(curSqrtPrice.Power(2))
+	swapState := SwapState{
+		amountSpecifiedRemaining: tokenAmountInAfterFee,
+		amountCalculated:         sdk.ZeroDec(),
+		sqrtPrice:                curSqrtPrice,
+		tick:                     priceToTick(curSqrtPrice.Power(2)),
+	}
 
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
-	for amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 6)) {
+	for swapState.amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 6)) {
 		lte := tokenIn.Denom == asset1
-		nextTick, _ := k.NextInitializedTick(ctx, poolId, tick.Int64(), lte)
+		nextTick, _ := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), lte)
 		nextSqrtPrice, _ := k.tickToPrice(sdk.NewInt(nextTick))
 
 		sqrtPrice, amountIn, amountOut := computeSwapStep(
-			sqrtPrice,
+			swapState.sqrtPrice,
 			nextSqrtPrice,
 			liq,
-			amountSpecifiedRemaining,
+			swapState.amountSpecifiedRemaining,
 			lte,
 		)
-		amountSpecifiedRemaining = amountSpecifiedRemaining.Sub(amountIn)
-		amountCalculated = amountCalculated.Add(amountOut)
-		tick = priceToTick(sqrtPrice.Power(2))
+		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn)
+		swapState.amountCalculated = swapState.amountCalculated.Add(amountOut)
+		swapState.tick = priceToTick(sqrtPrice.Power(2))
 	}
 
-	newTokenIn.Amount = tokenIn.Amount.Sub(amountSpecifiedRemaining.RoundInt())
-	return sdk.NewCoin(tokenIn.Denom, newTokenIn.Amount), sdk.NewCoin(tokenOutDenom, amountCalculated.RoundInt()), nil
+	newTokenIn.Amount = tokenIn.Amount.Sub(swapState.amountSpecifiedRemaining.RoundInt())
+	return sdk.NewCoin(tokenIn.Denom, newTokenIn.Amount), sdk.NewCoin(tokenOutDenom, swapState.amountCalculated.RoundInt()), nil
 }
 
 func (p Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
@@ -207,16 +216,18 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 	// utilize the smaller liquidity between assetA and assetB when performing the swap calculation
 	liq := sdk.MinDec(liq0, liq1)
 
-	amountSpecifiedRemaining := tokenOutAmt
-	amountCalculated := sdk.ZeroDec()
-	sqrtPrice := curSqrtPrice
-	tick := priceToTick(curSqrtPrice.Power(2))
+	swapState := SwapState{
+		amountSpecifiedRemaining: tokenOutAmt,
+		amountCalculated:         sdk.ZeroDec(),
+		sqrtPrice:                curSqrtPrice,
+		tick:                     priceToTick(curSqrtPrice.Power(2)),
+	}
 
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
-	for amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 6)) {
+	for swapState.amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 6)) {
 		lte := tokenOut.Denom == asset1
-		nextTick, _ := k.NextInitializedTick(ctx, poolId, tick.Int64(), lte)
+		nextTick, _ := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), lte)
 		nextSqrtPrice, err := k.tickToPrice(sdk.NewInt(nextTick))
 		if err != nil {
 			return sdk.Coin{}, sdk.Coin{}, err
@@ -224,18 +235,18 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 
 		// TODO: In and out get flipped based on if we are calculating for in or out, need to fix this
 		sqrtPrice, amountIn, amountOut := computeSwapStep(
-			sqrtPrice,
+			swapState.sqrtPrice,
 			nextSqrtPrice,
 			liq,
-			amountSpecifiedRemaining,
+			swapState.amountSpecifiedRemaining,
 			lte,
 		)
 
-		amountSpecifiedRemaining = amountSpecifiedRemaining.Sub(amountIn)
-		amountCalculated = amountCalculated.Add(amountOut.Quo(sdk.OneDec().Sub(swapFee)))
-		tick = priceToTick(sqrtPrice.Power(2))
+		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn)
+		swapState.amountCalculated = swapState.amountCalculated.Add(amountOut.Quo(sdk.OneDec().Sub(swapFee)))
+		swapState.tick = priceToTick(sqrtPrice.Power(2))
 	}
-	return sdk.NewCoin(tokenInDenom, amountCalculated.RoundInt()), sdk.NewCoin(tokenOut.Denom, tokenOut.Amount), nil
+	return sdk.NewCoin(tokenInDenom, swapState.amountCalculated.RoundInt()), sdk.NewCoin(tokenOut.Denom, tokenOut.Amount), nil
 }
 
 func (k Keeper) orderInitialPoolDenoms(denom0, denom1 string) (string, string, error) {
