@@ -59,11 +59,11 @@ func calcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 // lte is reference to "less than or equal", which determines if we are moving left or right of the current price to find the next initialized tick with liquidity
 func computeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec, lte bool) (sqrtPriceNext sdk.Dec, amountIn sdk.Dec, amountOut sdk.Dec) {
 	if lte {
-		sqrtPriceNext := getNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemaining)
+		sqrtPriceNext = getNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemaining)
 		amountIn = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
 		amountOut = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
 	} else {
-		sqrtPriceNext := getNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining)
+		sqrtPriceNext = getNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining)
 		amountIn = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
 		amountOut = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
 	}
