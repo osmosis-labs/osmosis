@@ -157,7 +157,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 		lte := tokenIn.Denom == asset1
 		nextTick, _ := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), lte)
 		stepState.nextTick = sdk.NewInt(nextTick)
-		nextSqrtPrice, _ := k.tickToPrice(stepState.nextTick).ApproxSqrt()
+		nextSqrtPrice, _ := k.tickToPrice(stepState.nextTick)
 		stepState.sqrtPriceNext = nextSqrtPrice
 
 		swapState.sqrtPrice, stepState.amountIn, stepState.amountOut = computeSwapStep(
@@ -241,7 +241,7 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 		lte := tokenOut.Denom == asset1
 		nextTick, _ := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), lte)
 		stepState.nextTick = sdk.NewInt(nextTick)
-		nextSqrtPrice, _ := k.tickToPrice(stepState.nextTick).ApproxSqrt()
+		nextSqrtPrice, _ := k.tickToPrice(stepState.nextTick)
 		stepState.sqrtPriceNext = nextSqrtPrice
 		// TODO: In and out get flipped based on if we are calculating for in or out, need to fix this
 		swapState.sqrtPrice, stepState.amountIn, stepState.amountOut = computeSwapStep(

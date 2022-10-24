@@ -12,9 +12,13 @@ import (
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
-func (k Keeper) tickToPrice(tickIndex sdk.Int) sdk.Dec {
-	price := sdk.NewDecWithPrec(10001, 4).Power(tickIndex.Uint64())
-	return price
+func (k Keeper) tickToPrice(tickIndex sdk.Int) (sdk.Dec, error) {
+	price, err := sdk.NewDecWithPrec(10001, 4).Power(tickIndex.Uint64()).ApproxSqrt()
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	return price, nil
 }
 
 // TODO: implement this
