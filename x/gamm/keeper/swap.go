@@ -15,7 +15,8 @@ import (
 // tokenOutMinAmount must be returned in the resulting asset returning an error
 // upon failure. Upon success, the resulting tokens swapped for are returned. A
 // swap fee is applied determined by the pool's parameters.
-// TODO: decide the future of this method. Should we remove it?
+// TODO: remove this method:
+// https://github.com/osmosis-labs/osmosis/issues/3129
 func (k Keeper) SwapExactAmountInDefaultSwapFee(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -37,8 +38,8 @@ func (k Keeper) SwapExactAmountInDefaultSwapFee(
 // as input to a pool, using the provided swapFee. This is intended to allow
 // different swap fees as determined by multi-hops, or when recovering from
 // chain liveness failures.
-// TODO: investigate if we can only export this method for the swap-router module
-// to mitigate the security risk from swapFee being taken in.
+// TODO: investigate if swapFee can be unexported
+// https://github.com/osmosis-labs/osmosis/issues/3130
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
