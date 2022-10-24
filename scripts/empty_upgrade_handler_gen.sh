@@ -23,37 +23,73 @@
  new_file=./app/upgrades/v${version_create}
 
  mkdir $new_file
-
- touch $new_file/constants.go
- touch $new_file/upgrades.go
+ CONSTANTS_FILE=$new_file/constants.go
+ UPGRADES_FILE=$new_file/upgrades.go
+ touch $CONSTANTS_FILE
+ touch $UPGRADES_FILE
+ 
 
  module=$(go mod edit -json | jq ".Module.Path")
  module=${module%?}
  path=${module%???}
 
- cp ./app/upgrades/v${latest_version}/constants.go $new_file/constants.go
- cp ./app/upgrades/v${latest_version}/upgrades.go $new_file/upgrades.go
-
- sed -i "s/v$latest_version/v$version_create/g" $new_file/constants.go
- sed -i "s/v$latest_version/v$version_create/g" $new_file/upgrades.go
-
  bracks='"'
+ # set packages
+ echo -e "package v${version_create}\n" >> $CONSTANTS_FILE
+ echo -e "package v${version_create}\n" >> $UPGRADES_FILE
 
- # change imports in case go mod changed
- sed -i "s|.*/app/upgrades.*|\t$module/app/upgrades$bracks|" $new_file/constants.go
- sed -i "s|.*/app/upgrades.*|\t$module/app/upgrades$bracks|" $new_file/upgrades.go
- sed -i "s|.*/app/keepers.*|\t$module/app/keepers$bracks|" $new_file/upgrades.go
- sed -i "s|.*/x/lockup/types.*|\tlockuptypes $module/x/lockup/types$bracks|" $new_file/upgrades.go
+ # imports
+ echo "import (" >> $CONSTANTS_FILE
+ echo "import (" >> $UPGRADES_FILE
+
+ # set imports for constants.go
+ echo -e "\t$module/app/upgrades$bracks\n" >> $CONSTANTS_FILE
+ echo -e '\tstore "github.com/cosmos/cosmos-sdk/store/types"' >> $CONSTANTS_FILE
+
+ # set imports for upgrades.go
+ echo -e '\tsdk "github.com/cosmos/cosmos-sdk/types"' >> $UPGRADES_FILE
+ echo -e '\t"github.com/cosmos/cosmos-sdk/types/module"' >> $UPGRADES_FILE
+ echo -e '\tupgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"\n' >> $UPGRADES_FILE
+ echo -e "\t$module/app/keepers$bracks" >> $UPGRADES_FILE
+ echo -e "\t$module/app/upgrades$bracks" >> $UPGRADES_FILE
+ echo -e "\tlockuptypes $module/x/lockup/types$bracks" >> UPGRADES_FILE
+
+ # close import
+ echo ")" >> $UPGRADES_FILE
+ echo -e ")\n" >> $CONSTANTS_FILE
  
+ # constants.go logic
+ echo "// UpgradeName defines the on-chain upgrade name for the Osmosis v$version_create upgrade." >> $CONSTANTS_FILE
+ echo "const UpgradeName = ${bracks}v$version_create$bracks" >> $CONSTANTS_FILE
+ echo "
+var Upgrade = upgrades.Upgrade{
+	UpgradeName:          UpgradeName,
+	CreateUpgradeHandler: CreateUpgradeHandler,
+	StoreUpgrades:        store.StoreUpgrades{},
+}" >> $CONSTANTS_FILE
+ 
+ # upgrades.go logic
+ echo "
+func CreateUpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	bpm upgrades.BaseAppParamManager,
+	keepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}" >> $UPGRADES_FILE
+
   # change app/app.go file
  app_file=./app/app.go
  UPGRADES_LINE=$(grep -F upgrades.Upgrade{ $app_file)
  UPGRADES_LINE="${UPGRADES_LINE%?}, v${version_create}.Upgrade}"
- sed -i "s|.*upgrades.Upgrade{.*|$UPGRADES_LINE|" $app_file 
+ sed -i '' "s|.*upgrades.Upgrade{.*|$UPGRADES_LINE|" $app_file 
 
  PREV_IMPORT="v$latest_version $module/app/upgrades/v$latest_version$bracks"
  NEW_IMPORT="v$version_create $module/app/upgrades/v$version_create$bracks"
- sed -i "s|.*$PREV_IMPORT.*|\t$PREV_IMPORT\n\t$NEW_IMPORT|" $app_file
+ sed -i '' "s|.*$PREV_IMPORT.*|\t$PREV_IMPORT\n\t$NEW_IMPORT|" $app_file
 
  # change e2e version in makefile
- sed -i "s/E2E_UPGRADE_VERSION := ${bracks}v$latest_version$bracks/E2E_UPGRADE_VERSION := ${bracks}v$version_create$bracks/" ./Makefile
+ sed -i '' "s/E2E_UPGRADE_VERSION := ${bracks}v$latest_version$bracks/E2E_UPGRADE_VERSION := ${bracks}v$version_create$bracks/" ./Makefile
