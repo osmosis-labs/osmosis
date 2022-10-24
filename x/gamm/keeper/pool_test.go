@@ -282,7 +282,8 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 				},
 				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[0].Denom, defaultAcctFunds[0].Amount.QuoRaw(2)), sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount.QuoRaw(2))),
 				[]uint64{1, 1},
-			)},
+			),
+		},
 	}
 
 	for name, tc := range tests {

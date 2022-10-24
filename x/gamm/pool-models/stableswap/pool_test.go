@@ -675,7 +675,7 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 				require.Equal(t, test.expNumShare, numShare)
 				require.Equal(t, test.expTokensJoined, tokensJoined)
 			}
-     })
+		})
 	}
 }
 
