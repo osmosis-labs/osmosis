@@ -8,7 +8,7 @@ import (
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
-func (k Keeper) Mint(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityIn sdk.Int, lowerTick, upperTick int64) (amtDenom0, amtDenom1 sdk.Int, err error) {
+func (k Keeper) Mint(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityIn sdk.Dec, lowerTick, upperTick int64) (amtDenom0, amtDenom1 sdk.Int, err error) {
 	// ensure types.MinTick <= lowerTick < types.MaxTick
 	// TODO (bez): Add unit tests.
 	if lowerTick < types.MinTick || lowerTick >= types.MaxTick {
@@ -24,26 +24,22 @@ func (k Keeper) Mint(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liqui
 	if liquidityIn.IsZero() {
 		return sdk.Int{}, sdk.Int{}, fmt.Errorf("token in amount is zero")
 	}
-
+	// TODO: we need to check if TickInfo is initialized on a specific tick before updating, otherwise get wont work
+	// k.setTickInfo(ctx, poolId, lowerTick, TickInfo{})
 	// k.UpdateTickWithNewLiquidity(ctx, poolId, lowerTick, liquidityIn)
+	// k.setTickInfo(ctx, poolId, upperTick, TickInfo{})
 	// k.UpdateTickWithNewLiquidity(ctx, poolId, upperTick, liquidityIn)
-
-	// k.updatePositionWithLiquidity(ctx, poolId, owner.String(), lowerTick, upperTick, liquidityIn)
+	// k.setPosition(ctx, poolId, owner, lowerTick, upperTick, Position{})
+	// k.updatePositionWithLiquidity(ctx, poolId, owner, lowerTick, upperTick, liquidityIn)
 
 	pool := k.getPoolbyId(ctx, poolId)
 
 	currentSqrtPrice := pool.CurrentSqrtPrice
-	sqrtRatioUpperTick, err := k.getSqrtRatioAtTick(upperTick)
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, err
-	}
-	sqrtRatioLowerTick, err := k.getSqrtRatioAtTick(lowerTick)
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, err
-	}
+	sqrtRatioUpperTick, _ := k.tickToSqrtPrice(sdk.NewInt(upperTick))
+	sqrtRatioLowerTick, _ := k.tickToSqrtPrice(sdk.NewInt(lowerTick))
 
-	amtDenom0 = calcAmount0Delta(currentSqrtPrice.ToDec(), sqrtRatioUpperTick, liquidityIn.ToDec()).RoundInt()
-	amtDenom1 = calcAmount1Delta(currentSqrtPrice.ToDec(), sqrtRatioLowerTick, liquidityIn.ToDec()).RoundInt()
+	amtDenom0 = calcAmount0Delta(liquidityIn, currentSqrtPrice, sqrtRatioUpperTick).RoundInt()
+	amtDenom1 = calcAmount1Delta(liquidityIn, currentSqrtPrice, sqrtRatioLowerTick).RoundInt()
 
 	return amtDenom0, amtDenom1, nil
 }
