@@ -34,7 +34,6 @@ func (k Keeper) Mint(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liqui
 
 	pool := k.getPoolbyId(ctx, poolId)
 
-	// currentSqrtPrice := sdk.NewDecWithPrec(int64(pool.CurrentSqrtPrice.Uint64()), 6)
 	currentSqrtPrice := pool.CurrentSqrtPrice
 	sqrtRatioUpperTick, _ := k.tickToPrice(sdk.NewInt(upperTick))
 	sqrtRatioLowerTick, _ := k.tickToPrice(sdk.NewInt(lowerTick))
