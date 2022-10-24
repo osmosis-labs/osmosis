@@ -96,7 +96,7 @@ func (k Keeper) SwapExactAmountOutDefaultSwapFee(
 	return k.SwapExactAmountOut(ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
 }
 
-// swapExactAmountIn is an internal method for swapping to get an exact number of tokens out of a pool,
+// swapExactAmountIn is a method for swapping to get an exact number of tokens out of a pool,
 // using the provided swapFee.
 // This is intended to allow different swap fees as determined by multi-hops,
 // or when recovering from chain liveness failures.
