@@ -646,7 +646,6 @@ func TestInverseJoinPoolExitPool(t *testing.T) {
 	thousandAssetA := sdk.NewCoins(sdk.NewCoin("asset/a", sdk.NewInt(1000)))
 	tenPercentOfTwoPoolRaw := int64(1000000000 / 10)
 	tenPercentOfTwoPoolCoins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(int64(1000000000/10))), sdk.NewCoin("bar", sdk.NewInt(int64(1000000000/10))))
-	// twoAssetPlusTenPercent := twoEvenStablePoolAssets.Add(tenPercentOfTwoPoolCoins...)
 	type testcase struct {
 		tokensIn           sdk.Coins
 		poolAssets         sdk.Coins
