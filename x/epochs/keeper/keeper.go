@@ -7,7 +7,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v12/x/epochs/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -19,7 +18,7 @@ type (
 )
 
 // NewKeeper returns a new keeper by codec and storeKey inputs.
-func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey) *Keeper {
+func NewKeeper(storeKey sdk.StoreKey) *Keeper {
 	return &Keeper{
 		storeKey: storeKey,
 	}

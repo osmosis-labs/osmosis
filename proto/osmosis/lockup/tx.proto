@@ -19,6 +19,7 @@ service Msg {
   rpc BeginUnlocking(MsgBeginUnlocking) returns (MsgBeginUnlockingResponse);
   // MsgEditLockup edits the existing lockups by lock ID
   rpc ExtendLockup(MsgExtendLockup) returns (MsgExtendLockupResponse);
+  rpc ForceUnlock(MsgForceUnlock) returns (MsgForceUnlockResponse);
 }
 
 message MsgLockTokens {
@@ -71,3 +72,17 @@ message MsgExtendLockup {
 }
 
 message MsgExtendLockupResponse { bool success = 1; }
+
+// MsgForceUnlock unlocks locks immediately for
+// addresses registered via governance.
+message MsgForceUnlock {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  uint64 ID = 2;
+  // Amount of unlocking coins. Unlock all if not set.
+  repeated cosmos.base.v1beta1.Coin coins = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+message MsgForceUnlockResponse { bool success = 1; }

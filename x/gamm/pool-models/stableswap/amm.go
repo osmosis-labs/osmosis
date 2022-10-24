@@ -64,9 +64,6 @@ func cfmmConstantMulti(xReserve, yReserve, u, v osmomath.BigDec) osmomath.BigDec
 // and the following expression for `a` in multi-asset pools:
 // xyz(x^2 + y^2 + w) = (x - a)(y + b)z((x - a)^2 + (y + b)^2 + w)
 func solveCfmm(xReserve, yReserve osmomath.BigDec, remReserves []osmomath.BigDec, yIn osmomath.BigDec) osmomath.BigDec {
-	if len(remReserves) == 0 {
-		return solveCFMMBinarySearch(cfmmConstant)(xReserve, yReserve, yIn)
-	}
 	wSumSquares := osmomath.ZeroDec()
 	for _, assetReserve := range remReserves {
 		wSumSquares = wSumSquares.Add(assetReserve.Mul(assetReserve))
@@ -152,6 +149,84 @@ func solveCfmmDirect(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
 	return xOut
 }
 
+// multi-asset CFMM is xyu(x^2 + y^2 + w) = k
+// As described in our spec, we can ignore the u term and simply solve within the bounds of k' = k / u
+// since u remains constant throughout any independent operation this solver would be used for.
+// We want to solve for a given addition of `b` units of y into the pool,
+// how many units `a` of x do we get out.
+// Let y' = y + b
+// we solve k = (x'y')(x'^2 + y^2 + w) for x', using the following equation: https://www.wolframalpha.com/input?i2d=true&i=solve+for+y%5C%2844%29+x*y*%5C%2840%29Power%5Bx%2C2%5D+%2B+Power%5By%2C2%5D+%2B+w%5C%2841%29%3Dk
+// which we simplify to be the following: https://www.desmos.com/calculator/zx2qslqndl
+// Then we use that to derive the change in x as x_out = x' - x
+//
+// Since original reserves, y' and k are known and remain constant throughout the calculation,
+// deriving x' and then finding x_out is equivalent to finding x_out directly.
+func solveCFMMMultiDirect(xReserve, yReserve, wSumSquares, yIn osmomath.BigDec) osmomath.BigDec {
+	if !xReserve.IsPositive() || !yReserve.IsPositive() || wSumSquares.IsNegative() || !yIn.IsPositive() {
+		panic("invalid input: reserves and input must be positive")
+	} else if yIn.GTE(yReserve) {
+		panic("cannot input more than pool reserves")
+	}
+
+	// find k' using existing reserves (k' = k / v term)
+	k := cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares)
+	k2 := k.Mul(k)
+
+	// find new yReserve after join
+	y_new := yReserve.Add(yIn)
+
+	// store powers to simplify calculations
+	y2 := y_new.Mul(y_new)
+	y3 := y2.Mul(y_new)
+	y4 := y3.Mul(y_new)
+
+	// We then solve for new xReserve using new yReserve and old k using a solver derived from xy(x^2 + y^2 + w) = k
+	// Full equation: x' = (sqrt(729 k^2 y^4 + 108 y^3 (w y + y^3)^3) + 27 k y^2)^(1/3) / (3 2^(1/3) y)
+	// 								- (2^(1/3) (w y + y^3))/(sqrt(729 k^2 y^4 + 108 y^3 (w y + y^3)^3) + 27 k y^2)^(1/3)
+	//
+	//
+	// To simplify, we make the following abstractions:
+	// 1. sqrt_term = sqrt(729 k^2 y^4 + 108 y^3 (w y + y^3)^3)
+	// 2. cube_root_term = (sqrt_term + 27 k y^2)^(1/3)
+	// 3. term1 = cube_root_term / (3 2^(1/3) y)
+	// 4. term2 = (2^(1/3) (w y + y^3)) / cube_root_term
+	//
+	// With these, the final equation becomes: x' = term1 - term2
+
+	// let sqrt_term = sqrt(729 k^2 y^4 + 108 y^3 (w y + y^3)^3)
+	wypy3 := (wSumSquares.Mul(y_new)).Add(y3)
+	wypy3pow3 := wypy3.Mul(wypy3).Mul(wypy3)
+
+	sqrt_term, err := ((k2.Mul(y4).MulInt64(729)).Add(y3.MulInt64(108).Mul(wypy3pow3))).ApproxRoot(2)
+	if err != nil {
+		panic(err)
+	}
+
+	// let cube_root_term = (sqrt_term + 27 k y^2)^(1/3)
+	cube_root_term, err := (sqrt_term.Add(k.Mul(y2).MulInt64(27))).ApproxRoot(3)
+	if err != nil {
+		panic(err)
+	}
+
+	// let term1 = cube_root_term / (3 2^(1/3) y)
+	term1 := cube_root_term.Quo(cubeRootTwo.MulInt64(3).Mul(y_new))
+
+	// let term2 = cube_root_term * (2^(1/3) (w y + y^3))
+	term2 := (cubeRootTwo.Mul(wypy3)).Quo(cube_root_term)
+
+	// finally, let x' = term1 - term2
+	x_new := term1.Sub(term2)
+
+	// find amount of x to output using initial and final xReserve values
+	xOut := xReserve.Sub(x_new)
+
+	if xOut.GTE(xReserve) {
+		panic("invalid output: greater than full pool reserves")
+	}
+
+	return xOut
+}
+
 func approxDecEqual(a, b, tol osmomath.BigDec) bool {
 	return (a.Sub(b).Abs()).LTE(tol)
 }
@@ -162,52 +237,31 @@ var (
 )
 
 // solveCFMMBinarySearch searches the correct dx using binary search over constant K.
-// added for future extension
-func solveCFMMBinarySearch(constantFunction func(osmomath.BigDec, osmomath.BigDec) osmomath.BigDec) func(osmomath.BigDec, osmomath.BigDec, osmomath.BigDec) osmomath.BigDec {
-	return func(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
-		if !xReserve.IsPositive() || !yReserve.IsPositive() {
-			panic("invalid input: reserves and input must be positive")
-		} else if yIn.Abs().GTE(yReserve) {
-			panic("cannot input more than pool reserves")
-		}
-		k := constantFunction(xReserve, yReserve)
-		yFinal := yReserve.Add(yIn)
-		xLowEst := osmomath.ZeroDec()
-		// we set upper bound at 2 * xReserve to accommodate negative yIns
-		xHighEst := xReserve.Mul(osmomath.NewBigDec(2))
-		maxIterations := 256
-		errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.Dec{}}
-
-		// create single-input CFMM to pass into binary search
-		calc_x_est := func(xEst osmomath.BigDec) (osmomath.BigDec, error) {
-			return constantFunction(xEst, yFinal), nil
-		}
-
-		x_est, err := osmoutils.BinarySearchBigDec(calc_x_est, xLowEst, xHighEst, k, errTolerance, maxIterations)
-		if err != nil {
-			panic(err)
-		}
-
-		xOut := xReserve.Sub(x_est).Abs()
-		if xOut.GTE(xReserve) {
-			panic("invalid output: greater than full pool reserves")
-		}
-		return xOut
-	}
-}
-
-// solveCFMMBinarySearch searches the correct dx using binary search over constant K.
-// added for future extension
 func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.BigDec) osmomath.BigDec {
-	if !xReserve.IsPositive() || !yReserve.IsPositive() || wSumSquares.IsNegative() || !yIn.IsPositive() {
+	if !xReserve.IsPositive() || !yReserve.IsPositive() || wSumSquares.IsNegative() {
 		panic("invalid input: reserves and input must be positive")
-	} else if yIn.GTE(yReserve) {
+	} else if yIn.Abs().GTE(yReserve) {
 		panic("cannot input more than pool reserves")
 	}
-	k := cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares)
 	yFinal := yReserve.Add(yIn)
-	xLowEst := osmomath.ZeroDec()
-	xHighEst := xReserve
+	xLowEst, xHighEst := xReserve, xReserve
+	k0 := cfmmConstantMultiNoV(xReserve, yFinal, wSumSquares)
+	k := cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares)
+	kRatio := k0.Quo(k)
+
+	if kRatio.LT(osmomath.OneDec()) {
+		// k_0 < k. Need to find an upperbound. Worst case assume a linear relationship, gives an upperbound
+		// TODO: In the future, we can derive better bounds via reasoning about coefficients in the cubic
+		// These are quite close when we are in the "stable" part of the curve though.
+		xHighEst = xReserve.Quo(kRatio).Ceil()
+	} else if kRatio.GT(osmomath.OneDec()) {
+		// need to find a lowerbound. We could use a cubic relation, but for now we just set it to 0.
+		xLowEst = osmomath.ZeroDec()
+	} else {
+		// k remains unchanged, so xOut = 0
+		return osmomath.ZeroDec()
+	}
+
 	maxIterations := 256
 	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.Dec{}}
 
@@ -296,6 +350,9 @@ func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee
 	// We are solving for the amount of token in, cfmm(x,y) = cfmm(x + x_in, y - y_out)
 	// x = tokenInSupply, y = tokenOutSupply, yIn = -tokenOutAmount
 	cfmmIn := solveCfmm(tokenInSupply, tokenOutSupply, remReserves, tokenOutAmount.Neg())
+	// returned cfmmIn is negative, representing we need to add this many tokens to pool.
+	// We invert that negative here.
+	cfmmIn = cfmmIn.Neg()
 	// handle swap fee
 	inAmt := cfmmIn.QuoRoundUp(oneMinus(swapFee))
 	// divide by (1 - swapfee) to force a corresponding increase in input asset
@@ -320,11 +377,25 @@ func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk
 // We can mutate pa here
 // TODO: some day switch this to a COW wrapped pa, for better perf
 func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
-	if len(tokensIn) == 1 {
+	if !tokensIn.DenomsSubsetOf(p.GetTotalPoolLiquidity(ctx)) {
+		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("attempted joining pool with assets that do not exist in pool")
+	}
+	if len(tokensIn) == 1 && tokensIn[0].Amount.GT(sdk.OneInt()) {
 		numShares, err = p.calcSingleAssetJoinShares(tokensIn[0], swapFee)
+		if err != nil {
+			return sdk.ZeroInt(), sdk.NewCoins(), err
+		}
+
 		newLiquidity = tokensIn
+
+		p.updatePoolForJoin(newLiquidity, numShares)
+
+		if err = validatePoolAssets(p.PoolLiquidity, p.ScalingFactor); err != nil {
+			return sdk.ZeroInt(), sdk.NewCoins(), err
+		}
+
 		return numShares, newLiquidity, err
-	} else if len(tokensIn) != p.NumAssets() || !tokensIn.DenomsSubsetOf(p.GetTotalPoolLiquidity(ctx)) {
+	} else if len(tokensIn) != p.NumAssets() {
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New(
 			"stableswap pool only supports LP'ing with one asset, or all assets in pool")
 	}
@@ -336,15 +407,11 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 	}
 	p.updatePoolForJoin(tokensIn.Sub(remCoins), numShares)
 
-	for _, coin := range remCoins {
-		// TODO: Perhaps add a method to skip if this is too small.
-		newShare, err := p.calcSingleAssetJoinShares(coin, swapFee)
-		if err != nil {
-			return sdk.ZeroInt(), sdk.NewCoins(), err
-		}
-		p.updatePoolForJoin(sdk.NewCoins(coin), newShare)
-		numShares = numShares.Add(newShare)
+	tokensJoined := tokensIn.Sub(remCoins)
+
+	if err = validatePoolAssets(p.PoolLiquidity, p.ScalingFactor); err != nil {
+		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
 
-	return numShares, tokensIn, nil
+	return numShares, tokensJoined, nil
 }

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -34,6 +33,10 @@ func NewStableswapPool(poolId uint64,
 	}
 
 	if err := validateScalingFactors(scalingFactors, len(initialLiquidity)); err != nil {
+		return Pool{}, err
+	}
+
+	if err := validatePoolAssets(initialLiquidity, scalingFactors); err != nil {
 		return Pool{}, err
 	}
 
@@ -230,6 +233,10 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDeno
 }
 
 func (p *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
+	if err = validatePoolAssets(p.PoolLiquidity.Add(tokenIn...), p.ScalingFactor); err != nil {
+		return sdk.Coin{}, err
+	}
+
 	tokenOut, err = p.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee)
 	if err != nil {
 		return sdk.Coin{}, err
@@ -263,6 +270,10 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDeno
 func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
 	tokenIn, err = p.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee)
 	if err != nil {
+		return sdk.Coin{}, err
+	}
+
+	if err = validatePoolAssets(p.PoolLiquidity.Add(tokenIn), p.ScalingFactor); err != nil {
 		return sdk.Coin{}, err
 	}
 
@@ -346,9 +357,6 @@ func (p Pool) CalcExitPoolCoinsFromShares(ctx sdk.Context, exitingShares sdk.Int
 	return cfmm_common.CalcExitPool(ctx, &p, exitingShares, exitFee)
 }
 
-// no-op for stableswap
-func (p *Pool) PokePool(blockTime time.Time) {}
-
 // SetStableSwapScalingFactors sets scaling factors for pool to the given amount
 // It should only be able to be successfully called by the pool's ScalingFactorGovernor
 // TODO: move commented test for this function from x/gamm/keeper/pool_service_test.go once a pool_test.go file has been created for stableswap
@@ -358,6 +366,10 @@ func (p *Pool) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uin
 	}
 
 	if err := validateScalingFactors(scalingFactors, p.PoolLiquidity.Len()); err != nil {
+		return err
+	}
+
+	if err := validatePoolAssets(p.PoolLiquidity, scalingFactors); err != nil {
 		return err
 	}
 
@@ -381,6 +393,22 @@ func validateScalingFactors(scalingFactors []uint64, numAssets int) error {
 	for _, scalingFactor := range scalingFactors {
 		if scalingFactor == 0 || int64(scalingFactor) <= 0 {
 			return types.ErrInvalidStableswapScalingFactors
+		}
+	}
+
+	return nil
+}
+
+func validatePoolAssets(initialAssets sdk.Coins, scalingFactors []uint64) error {
+	if len(initialAssets) < types.MinPoolAssets {
+		return types.ErrTooFewPoolAssets
+	} else if len(initialAssets) > types.MaxPoolAssets {
+		return types.ErrTooManyPoolAssets
+	}
+
+	for i, asset := range initialAssets {
+		if asset.Amount.Quo(sdk.NewInt(int64(scalingFactors[i]))).GT(sdk.NewInt(types.StableswapMaxScaledAmtPerAsset)) {
+			return types.ErrHitMaxScaledAssets
 		}
 	}
 

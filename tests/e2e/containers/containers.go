@@ -53,13 +53,17 @@ func NewManager(isUpgrade bool, isFork bool, isDebugLogEnabled bool) (docker *Ma
 	return docker, nil
 }
 
-// ExecTxCmd Runs ExecCmd, with flags for txs added.
-// namely adding flags `--chain-id={chain-id} -b=block --yes --keyring-backend=test "--log_format=json"`,
-// and searching for `code: 0`
+// ExecTxCmd Runs ExecTxCmdWithSuccessString searching for `code: 0`
 func (m *Manager) ExecTxCmd(t *testing.T, chainId string, containerName string, command []string) (bytes.Buffer, bytes.Buffer, error) {
+	return m.ExecTxCmdWithSuccessString(t, chainId, containerName, command, "code: 0")
+}
+
+// ExecTxCmdWithSuccessString Runs ExecCmd, with flags for txs added.
+// namely adding flags `--chain-id={chain-id} -b=block --yes --keyring-backend=test "--log_format=json"`,
+// and searching for `successStr`
+func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainId string, containerName string, command []string, successStr string) (bytes.Buffer, bytes.Buffer, error) {
 	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainId), "-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
 	txCommand := append(command, allTxArgs...)
-	successStr := "code: 0"
 	return m.ExecCmd(t, containerName, txCommand, successStr)
 }
 
@@ -232,8 +236,7 @@ func (m *Manager) RunNodeResource(chainId string, containerName, valCondifDir st
 // must deal with removing the resource.
 func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod, chainExpeditedVotingPeriod int, validatorConfigBytes []byte, mountDir string, forkHeight int) (*dockertest.Resource, error) {
 	votingPeriodDuration := time.Duration(chainVotingPeriod * 1000000000)
-	// TODO: Uncomment this after v12 release
-	// expeditedVotingPeriodDuration := time.Duration(chainExpeditedVotingPeriod * 1000000000)
+	expeditedVotingPeriodDuration := time.Duration(chainExpeditedVotingPeriod * 1000000000)
 
 	initResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
@@ -246,8 +249,7 @@ func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod, chainE
 				fmt.Sprintf("--chain-id=%s", chainId),
 				fmt.Sprintf("--config=%s", validatorConfigBytes),
 				fmt.Sprintf("--voting-period=%v", votingPeriodDuration),
-				// TODO: Uncomment this after v12 release
-				// fmt.Sprintf("--expedited-voting-period=%v", expeditedVotingPeriodDuration),
+				fmt.Sprintf("--expedited-voting-period=%v", expeditedVotingPeriodDuration),
 				fmt.Sprintf("--fork-height=%v", forkHeight),
 			},
 			User: "root:root",
