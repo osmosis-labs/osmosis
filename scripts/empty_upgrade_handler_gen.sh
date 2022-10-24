@@ -85,11 +85,11 @@ func CreateUpgradeHandler(
  app_file=./app/app.go
  UPGRADES_LINE=$(grep -F upgrades.Upgrade{ $app_file)
  UPGRADES_LINE="${UPGRADES_LINE%?}, v${version_create}.Upgrade}"
- sed -i '' "s|.*upgrades.Upgrade{.*|$UPGRADES_LINE|" $app_file 
+ sed -i "s|.*upgrades.Upgrade{.*|$UPGRADES_LINE|" $app_file 
 
  PREV_IMPORT="v$latest_version $module/app/upgrades/v$latest_version$bracks"
  NEW_IMPORT="v$version_create $module/app/upgrades/v$version_create$bracks"
- sed -i '' "s|.*$PREV_IMPORT.*|\t$PREV_IMPORT\n\t$NEW_IMPORT|" $app_file
+ sed -i "s|.*$PREV_IMPORT.*|\t$PREV_IMPORT\n\t$NEW_IMPORT|" $app_file
 
  # change e2e version in makefile
- sed -i '' "s/E2E_UPGRADE_VERSION := ${bracks}v$latest_version$bracks/E2E_UPGRADE_VERSION := ${bracks}v$version_create$bracks/" ./Makefile
+ sed -i "s/E2E_UPGRADE_VERSION := ${bracks}v$latest_version$bracks/E2E_UPGRADE_VERSION := ${bracks}v$version_create$bracks/" ./Makefile
