@@ -102,3 +102,22 @@ pull_request_rules:
       backport:
         branches:
           - v12.x
+<<<<<<< HEAD
+=======
+  - name: backport patches to v13.x branch
+    conditions:
+      - base=main
+      - label=A:backport/v13.x
+    actions:
+      backport:
+        branches:
+          - v13.x
+  - name: backport patches to concentrated-liquidity-main
+    conditions:
+      - base=main
+      - label=A:backport/cl
+    actions:
+      backport:
+        branches:
+          - concentrated-liquidity-main
+>>>>>>> 71194191 (chore: update concentrated liquidity backport label (#3115))
