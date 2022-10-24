@@ -2,8 +2,40 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
+	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
+
+// TODO: godoc
+type SwapI interface {
+	MultihopSwapExactAmountIn(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		routes []SwapAmountInRoute,
+		tokenIn sdk.Coin,
+		tokenOutMinAmount sdk.Int,
+	) (tokenOutAmount sdk.Int, err error)
+
+	MultihopSwapExactAmountOut(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		routes []SwapAmountOutRoute,
+		tokenInMaxAmount sdk.Int,
+		tokenOut sdk.Coin,
+	) (tokenInAmount sdk.Int, err error)
+}
+
+// SimulationExtension defines the swap simulation extension.
+// TODO: refactor simulator setup logic to avoid having to define these
+// extra methods just for the simulation.
+type SimulationExtension interface {
+	SwapI
+
+	GetPoolAndPoke(ctx sdk.Context, poolId uint64) (gammtypes.TraditionalAmmInterface, error)
+
+	GetNextPoolId(ctx sdk.Context) uint64
+}
 
 type SwapAmountInRoutes []SwapAmountInRoute
 

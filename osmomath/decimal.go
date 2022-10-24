@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"math/big"
 	"strconv"
 	"strings"
@@ -39,6 +40,8 @@ var (
 	zeroInt              = big.NewInt(0)
 	oneInt               = big.NewInt(1)
 	tenInt               = big.NewInt(10)
+
+	log2LookupTable map[uint16]BigDec
 )
 
 // Decimal errors
@@ -53,6 +56,28 @@ func init() {
 	precisionMultipliers = make([]*big.Int, Precision+1)
 	for i := 0; i <= Precision; i++ {
 		precisionMultipliers[i] = calcPrecisionMultiplier(int64(i))
+	}
+
+	log2LookupTable = buildLog2LookupTable()
+}
+
+// buildLog2LookupTable returns a lookup table for log values
+// ranging from [1, 2)
+// the keys are multiplied by 10 to simplify the rounding logic
+// in the log function
+func buildLog2LookupTable() map[uint16]BigDec {
+	return map[uint16]BigDec{
+		10000: ZeroDec(),
+		10001: MustNewDecFromStr("0.000144262291094554178391070900057479"),
+		11000: MustNewDecFromStr("0.137503523749934908329043617236402782"),
+		12000: MustNewDecFromStr("0.263034405833793833583419514458426332"),
+		13000: MustNewDecFromStr("0.378511623253729812526493224767304557"),
+		14000: MustNewDecFromStr("0.485426827170241759571649887742440632"),
+		15000: MustNewDecFromStr("0.584962500721156181453738943947816508"),
+		16000: MustNewDecFromStr("0.678071905112637652129680570510609824"),
+		17000: MustNewDecFromStr("0.765534746362977060383746581321014178"),
+		18000: MustNewDecFromStr("0.847996906554950015037158458406242841"),
+		19000: MustNewDecFromStr("0.925999418556223145923199993417444246"),
 	}
 }
 
@@ -211,7 +236,8 @@ func (d BigDec) GTE(d2 BigDec) bool   { return (d.i).Cmp(d2.i) >= 0 }          /
 func (d BigDec) LT(d2 BigDec) bool    { return (d.i).Cmp(d2.i) < 0 }           // less than
 func (d BigDec) LTE(d2 BigDec) bool   { return (d.i).Cmp(d2.i) <= 0 }          // less than or equal
 func (d BigDec) Neg() BigDec          { return BigDec{new(big.Int).Neg(d.i)} } // reverse the decimal sign
-func (d BigDec) Abs() BigDec          { return BigDec{new(big.Int).Abs(d.i)} } // absolute value
+// nolint: stylecheck
+func (d BigDec) Abs() BigDec { return BigDec{new(big.Int).Abs(d.i)} } // absolute value
 
 // BigInt returns a copy of the underlying big.Int.
 func (d BigDec) BigInt() *big.Int {
@@ -855,4 +881,56 @@ func DecEq(t *testing.T, exp, got BigDec) (*testing.T, bool, string, string, str
 func DecApproxEq(t *testing.T, d1 BigDec, d2 BigDec, tol BigDec) (*testing.T, bool, string, string, string) {
 	diff := d1.Sub(d2).Abs()
 	return t, diff.LTE(tol), "expected |d1 - d2| <:\t%v\ngot |d1 - d2| = \t\t%v", tol.String(), diff.String()
+}
+
+// ApproxLog2 returns the approximation of log_2 {x}.
+// Rounds down by truncating and right shifting during
+// calculations.
+func (x BigDec) ApproxLog2() BigDec {
+	if x.LT(OneDec()) {
+		panic(fmt.Sprintf("only supporting values >= 1, given (%s)", x))
+	}
+
+	// Normalize x to be 1 <= x < 2
+
+	// y is the exponent that results in a whole multiple of 2.
+	y := int64(0)
+
+	// invariant: x >= 1
+	// while x < 1
+	for x.LT(OneDec()) {
+		x.i = x.i.Lsh(x.i, 1)
+		y = y - 1
+	}
+
+	// invariant: x < 2
+	// while x >= 2
+	twoDec := NewBigDec(2)
+	for x.GTE(twoDec) {
+		x.i = x.i.Rsh(x.i, 1)
+		y = y + 1
+	}
+
+	// exponentiate to simplify truncation necessary for
+	// looking up values in the table.
+	lookupKey := x.MulInt64(10000).TruncateInt()
+	if lookupKey.Equal(NewInt(10001)) {
+		tableValue, found := log2LookupTable[uint16(lookupKey.Int64())]
+		if !found {
+			panic(fmt.Sprintf("no matching value for key (%s) in the lookup table", lookupKey))
+		}
+		return NewBigDec(y).Add(tableValue)
+	}
+	lookupKeyInt := lookupKey.ToDec().MustFloat64()
+	roundedLookup := math.Round(lookupKeyInt/1000) * 1000
+	lookupKey, _ = NewIntFromString(fmt.Sprintf("%v", roundedLookup))
+	if lookupKey.GTE(NewInt(20000)) || lookupKey.LT(NewInt(10000)) {
+		panic(fmt.Sprintf("invalid lookup key (%s), must be 10 <= lookup key < 2", lookupKey))
+	}
+
+	tableValue, found := log2LookupTable[uint16(lookupKey.Int64())]
+	if !found {
+		panic(fmt.Sprintf("no matching value for key (%s) in the lookup table", lookupKey))
+	}
+	return NewBigDec(y).Add(tableValue)
 }

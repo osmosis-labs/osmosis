@@ -47,6 +47,8 @@ import (
 	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v12/osmoutils/partialord"
 	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v12/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm"
@@ -61,6 +63,8 @@ import (
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v12/x/pool-incentives/types"
 	superfluid "github.com/osmosis-labs/osmosis/v12/x/superfluid"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
+	swaproutermodule "github.com/osmosis-labs/osmosis/v12/x/swaprouter/module"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 	"github.com/osmosis-labs/osmosis/v12/x/tokenfactory"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v12/x/tokenfactory/types"
 	"github.com/osmosis-labs/osmosis/v12/x/twap/twapmodule"
@@ -127,6 +131,7 @@ func appModules(
 		app.TransferModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		twapmodule.NewAppModule(*app.TwapKeeper),
+		concentratedliquidity.NewAppModule(*app.ConcentratedLiquidityKeeper),
 		txfees.NewAppModule(*app.TxFeesKeeper),
 		incentives.NewAppModule(*app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
 		lockup.NewAppModule(*app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
@@ -142,6 +147,7 @@ func appModules(
 			app.EpochsKeeper,
 		),
 		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
+		swaproutermodule.NewAppModule(*app.SwapRouterKeeper),
 	}
 }
 
@@ -201,6 +207,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		icatypes.ModuleName,
 		gammtypes.ModuleName,
 		twaptypes.ModuleName,
+		swaproutertypes.ModuleName,
 		txfeestypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
@@ -215,6 +222,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		epochstypes.ModuleName,
 		lockuptypes.ModuleName,
 		authz.ModuleName,
+		concentratedliquiditytypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
 	}

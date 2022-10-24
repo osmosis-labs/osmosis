@@ -2,6 +2,8 @@ package v13
 
 import (
 	"github.com/osmosis-labs/osmosis/v12/app/upgrades"
+	concentratedliquidtytypes "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -12,5 +14,7 @@ const UpgradeName = "v13"
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
 	CreateUpgradeHandler: CreateUpgradeHandler,
-	StoreUpgrades:        store.StoreUpgrades{},
+	StoreUpgrades: store.StoreUpgrades{
+		Added: []string{swaproutertypes.StoreKey, concentratedliquidtytypes.StoreKey},
+	},
 }
