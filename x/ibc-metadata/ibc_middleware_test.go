@@ -231,6 +231,7 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithSwap() {
 
 	suite.Require().NoError(err)
 	addr := suite.InstantiateSwapRouterContract(suite.chainA)
+
 	contractAddr, err := sdk.Bech32ifyAddressBytes("osmo", addr)
 	suite.Require().NoError(err)
 	// Define a route on the swaprouter
@@ -271,13 +272,25 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithSwap() {
 	suite.chainB.NextBlock()
 	suite.chainB.Coordinator.IncrementTime()
 
-	//suite.chainA.SendMsgs()
+	msg := suite.NewMessage(suite.path.EndpointA, suite.chainA.SenderAccount, suite.chainB.SenderAccount, sdk.NewInt(1))
+	_, err = suite.chainA.SendMsgsNoCheck(msg)
+	suite.Require().NoError(err)
 
 	// Update both clients
-	//err = suite.path.EndpointA.UpdateClient()
-	//suite.Require().NoError(err)
+	err = suite.path.EndpointA.UpdateClient()
+	suite.Require().NoError(err)
 	err = suite.path.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
+
+	hardAddr, err := sdk.AccAddressFromBech32("osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9")
+	suite.Require().NoError(err)
+	// THIS IS WHERE THE FUNDS ARE!!!
+	hardCodedBalances := suite.chainA.GetOsmosisApp().BankKeeper.GetAllBalances(suite.chainA.GetContext(), hardAddr)
+	fmt.Println("hard: ", hardCodedBalances)
+	// This is where the funds should end up
+	hardAddrSender, err := sdk.AccAddressFromBech32("osmo1hxzqjehtpfrs36cwk0gfsh2neqpn0y29j8ew36")
+	hardAfterTransfer := suite.chainB.GetOsmosisApp().BankKeeper.GetAllBalances(suite.chainB.GetContext(), hardAddrSender)
+	fmt.Println("hard2: ", hardAfterTransfer)
 
 	result := suite.chainB.GetOsmosisApp().BankKeeper.GetAllBalances(suite.chainB.GetContext(), suite.chainB.SenderAccount.GetAddress())
 	fmt.Println(result)

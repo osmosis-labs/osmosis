@@ -25,7 +25,7 @@ func execute(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper, con
 	// ToDo: Either unwrap the denom, or get it from the metadata
 	localDenom := "ibc/04F5F501207C3626A2C14BFEF654D51C2E0B8F7CA578AB8ED272A66FE4E48097"
 
-	response, err := contractKeeper.Execute(
+	_, err = contractKeeper.Execute(
 		ctx, contractAddr, caller,
 		[]byte(msg),
 		sdk.NewCoins(sdk.NewCoin(localDenom, amount)),
@@ -33,7 +33,6 @@ func execute(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper, con
 	if err != nil {
 		return err
 	}
-	fmt.Println("response", response)
 
 	return nil
 }
