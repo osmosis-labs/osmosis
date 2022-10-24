@@ -78,7 +78,8 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 type AppModule struct {
 	AppModuleBasic
 
-	k swaprouter.Keeper
+	k          swaprouter.Keeper
+	gammKeeper types.GammKeeper
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
@@ -146,5 +147,9 @@ func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *s
 }
 
 func (am AppModule) Actions() []simtypes.Action {
-	return swaproutersimulation.DefaultActions(am.k)
+	simKeeper := swaproutersimulation.SimulationKeeper{
+		Keeper:     am.k,
+		GammKeeper: am.gammKeeper,
+	}
+	return swaproutersimulation.DefaultActions(simKeeper)
 }
