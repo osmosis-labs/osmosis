@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"errors"
 	fmt "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,6 +29,11 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint6
 	k.setPoolById(ctx, poolId, pool)
 
 	return pool, nil
+}
+
+// GetPool returns a pool with a given id.
+func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
+	return nil, errors.New("not implemented")
 }
 
 func priceToTick(price sdk.Dec) sdk.Int {
