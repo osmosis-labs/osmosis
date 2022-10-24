@@ -36,8 +36,6 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 	return nil, errors.New("not implemented")
 }
 
-// TODO: remove nolint
-// nolint: unused
 func priceToTick(price sdk.Dec) sdk.Int {
 	logOfPrice := osmomath.BigDecFromSDKDec(price).ApproxLog2()
 	logInt := osmomath.NewDecWithPrec(10001, 4)
