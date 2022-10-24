@@ -9,7 +9,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	"github.com/osmosis-labs/osmosis/v12/x/validator-preference/types"
+	"github.com/osmosis-labs/osmosis/v12/x/valset-pref/types"
 )
 
 type Keeper struct {

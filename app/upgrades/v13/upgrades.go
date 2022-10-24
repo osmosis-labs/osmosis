@@ -8,7 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/app/keepers"
 	"github.com/osmosis-labs/osmosis/v12/app/upgrades"
 	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
-	validatorpreferencetypes "github.com/osmosis-labs/osmosis/v12/x/validator-preference/types"
+	validatorpreferencetypes "github.com/osmosis-labs/osmosis/v12/x/valset-pref/types"
 )
 
 func CreateUpgradeHandler(

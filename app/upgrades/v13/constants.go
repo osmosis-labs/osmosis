@@ -3,7 +3,7 @@ package v13
 import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/osmosis-labs/osmosis/v12/app/upgrades"
-	validatorpreferencetypes "github.com/osmosis-labs/osmosis/v12/x/validator-preference/types"
+	validatorpreferencetypes "github.com/osmosis-labs/osmosis/v12/x/valset-pref/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v9 upgrade.

@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/osmosis-labs/osmosis/v12/x/validator-preference/types"
+	"github.com/osmosis-labs/osmosis/v12/x/valset-pref/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

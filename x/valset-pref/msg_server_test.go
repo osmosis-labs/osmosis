@@ -2,8 +2,8 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	valPref "github.com/osmosis-labs/osmosis/v12/x/validator-preference"
-	"github.com/osmosis-labs/osmosis/v12/x/validator-preference/types"
+	valPref "github.com/osmosis-labs/osmosis/v12/x/valset-pref"
+	"github.com/osmosis-labs/osmosis/v12/x/valset-pref/types"
 )
 
 func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {

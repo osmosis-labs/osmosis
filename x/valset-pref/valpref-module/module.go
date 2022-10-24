@@ -9,8 +9,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
-	keeper "github.com/osmosis-labs/osmosis/v12/x/validator-preference"
-	"github.com/osmosis-labs/osmosis/v12/x/validator-preference/types"
+	keeper "github.com/osmosis-labs/osmosis/v12/x/valset-pref"
+	"github.com/osmosis-labs/osmosis/v12/x/valset-pref/types"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -21,8 +21,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	validatorprefclient "github.com/osmosis-labs/osmosis/v12/x/validator-preference/client"
-	"github.com/osmosis-labs/osmosis/v12/x/validator-preference/client/queryproto"
+	validatorprefclient "github.com/osmosis-labs/osmosis/v12/x/valset-pref/client"
+	"github.com/osmosis-labs/osmosis/v12/x/valset-pref/client/queryproto"
 )
 
 var (
@@ -133,7 +133,7 @@ func (am AppModule) Route() sdk.Route {
 // QuerierRoute returns the capability module's query routing key.
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
-// LegacyQuerierHandler returns the x/validator-preference module's Querier.
+// LegacyQuerierHandler returns the x/valset-pref module's Querier.
 func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
 		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)

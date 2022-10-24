@@ -72,8 +72,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/txfees"
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v12/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v12/x/txfees/types"
-	validatorpreference "github.com/osmosis-labs/osmosis/v12/x/validator-preference"
-	validatorpreferencetypes "github.com/osmosis-labs/osmosis/v12/x/validator-preference/types"
+	validatorpreference "github.com/osmosis-labs/osmosis/v12/x/valset-pref"
+	validatorpreferencetypes "github.com/osmosis-labs/osmosis/v12/x/valset-pref/types"
 )
 
 type AppKeepers struct {

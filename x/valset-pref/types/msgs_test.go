@@ -8,7 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
 	appParams "github.com/osmosis-labs/osmosis/v12/app/params"
-	"github.com/osmosis-labs/osmosis/v12/x/validator-preference/types"
+	"github.com/osmosis-labs/osmosis/v12/x/valset-pref/types"
 )
 
 func TestMsgSetValidatorSetPreference(t *testing.T) {

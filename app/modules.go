@@ -67,8 +67,8 @@ import (
 	twaptypes "github.com/osmosis-labs/osmosis/v12/x/twap/types"
 	"github.com/osmosis-labs/osmosis/v12/x/txfees"
 	txfeestypes "github.com/osmosis-labs/osmosis/v12/x/txfees/types"
-	validatorpreferencetypes "github.com/osmosis-labs/osmosis/v12/x/validator-preference/types"
-	validatorpreferencemodule "github.com/osmosis-labs/osmosis/v12/x/validator-preference/valpref-module"
+	validatorpreferencetypes "github.com/osmosis-labs/osmosis/v12/x/valset-pref/types"
+	validatorpreferencemodule "github.com/osmosis-labs/osmosis/v12/x/valset-pref/valpref-module"
 )
 
 // moduleAccountPermissions defines module account permissions
