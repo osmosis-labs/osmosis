@@ -866,9 +866,9 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 			poolAssets:      twoEvenStablePoolAssets,
 			scalingFactors:  defaultTwoAssetScalingFactors,
 			swapFee:         sdk.ZeroDec(),
-			expNumShare:     sdk.NewIntFromUint64(10000000500000000000),
-			expTokensJoined: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tenPercentOfTwoPoolRaw)), sdk.NewCoin("bar", sdk.NewInt(10+tenPercentOfTwoPoolRaw))),
-			expPoolAssets:   twoAssetPlusTenPercent.Add(sdk.NewCoin("bar", sdk.NewInt(10))),
+			expNumShare:     sdk.NewIntFromUint64(10000000000000000000),
+			expTokensJoined: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tenPercentOfTwoPoolRaw)), sdk.NewCoin("bar", sdk.NewInt(tenPercentOfTwoPoolRaw))),
+			expPoolAssets:   twoAssetPlusTenPercent,
 			expectPass:      true,
 		},
 		"all-asset pool join attempt exceeds max scaled asset amount": {
