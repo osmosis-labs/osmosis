@@ -123,6 +123,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 	}
 
 	// TODO: How do we remove/generalize this? I am stumped.
+	// the following coins represent the virtual amounts in the current price bucket
 	amountETH := int64(1000000)
 	amountUSDC := int64(5000000000)
 
@@ -144,8 +145,14 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 	// need to look into fixing this
 	for swapState.amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 6)) {
 		lte := tokenIn.Denom == asset1
-		nextTick, _ := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), lte)
-		nextSqrtPrice, _ := k.tickToPrice(sdk.NewInt(nextTick))
+		nextTick, ok := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), lte)
+		if !ok {
+			return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("there are no more ticks initialized to fill the swap")
+		}
+		nextSqrtPrice, err := k.tickToPrice(sdk.NewInt(nextTick))
+		if err != nil {
+			return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", sdk.NewInt(nextTick))
+		}
 
 		sqrtPrice, amountIn, amountOut := computeSwapStep(
 			swapState.sqrtPrice,
