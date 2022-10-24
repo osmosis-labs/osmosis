@@ -25,12 +25,12 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.13.0
 	github.com/stretchr/testify v1.8.0
-	github.com/tendermint/tendermint v0.34.21
+	github.com/tendermint/tendermint v0.34.22
 	github.com/tendermint/tm-db v0.6.8-0.20220506192307-f628bb5dc95b
 	go.uber.org/multierr v1.8.0
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
 	google.golang.org/genproto v0.0.0-20220725144611-272f38e5d71b
-	google.golang.org/grpc v1.49.0
+	google.golang.org/grpc v1.50.0
 	gopkg.in/yaml.v2 v2.4.0
 	mvdan.cc/gofumpt v0.4.0
 )
@@ -51,8 +51,8 @@ require (
 	github.com/sivchari/nosnakecase v1.7.0 // indirect
 	github.com/timonwong/loggercheck v0.9.3 // indirect
 	github.com/zimmski/go-mutesting v0.0.0-20210610104036-6d9217011a00 // indirect
-	go.uber.org/atomic v1.9.0 // indirect
-	go.uber.org/zap v1.21.0 // indirect
+	go.uber.org/atomic v1.10.0 // indirect
+	go.uber.org/zap v1.22.0 // indirect
 )
 
 require (
@@ -199,11 +199,11 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/mbilski/exhaustivestruct v1.2.0 // indirect
 	github.com/mgechev/revive v1.2.4 // indirect
-	github.com/mimoo/StrobeGo v0.0.0-20181016162300-f8f6d4d2b643 // indirect
+	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 // indirect
+	github.com/moby/term v0.0.0-20220808134915-39b0c02b01ae // indirect
 	github.com/moricho/tparallel v0.2.1 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/nakabonne/nestif v0.3.1 // indirect
@@ -228,14 +228,14 @@ require (
 	github.com/quasilyte/gogrep v0.0.0-20220828223005-86e4605de09f // indirect
 	github.com/quasilyte/regex/syntax v0.0.0-20200407221936-30656e2c4a95 // indirect
 	github.com/quasilyte/stdinfo v0.0.0-20220114132959-f7386bf02567 // indirect
-	github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0 // indirect
+	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/rs/cors v1.8.2 // indirect
 	github.com/rs/zerolog v1.27.0 // indirect
 	github.com/ryancurrah/gomodguard v1.2.4 // indirect
 	github.com/ryanrolds/sqlclosecheck v0.3.0 // indirect
 	github.com/sanposhiho/wastedassign/v2 v2.0.6 // indirect
-	github.com/sasha-s/go-deadlock v0.2.1-0.20190427202633-1595213edefa // indirect
+	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/securego/gosec/v2 v2.13.1 // indirect
 	github.com/shazow/go-diff v0.0.0-20160112020656-b6b7b6733b8c // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
@@ -275,7 +275,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
 	golang.org/x/exp/typeparams v0.0.0-20220827204233-334a2380cb91 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
-	golang.org/x/net v0.0.0-20220726230323-06994584191e // indirect
+	golang.org/x/net v0.0.0-20220812174116-3211cb980234 // indirect
 	golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde // indirect
 	golang.org/x/sys v0.0.0-20220915200043-7b5979e65e41 // indirect
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
