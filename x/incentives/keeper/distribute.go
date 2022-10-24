@@ -386,7 +386,7 @@ func (k Keeper) checkFinishDistribution(ctx sdk.Context, gauges []types.Gauge) {
 // GetModuleToDistributeCoins returns sum of coins yet to be distributed for all of the module.
 func (k Keeper) GetModuleToDistributeCoins(ctx sdk.Context) sdk.Coins {
 	activeGaugesDistr := k.getToDistributeCoinsFromIterator(ctx, k.ActiveGaugesIterator(ctx))
-	upcomingGaugesDistr := k.getToDistributeCoinsFromIterator(ctx, k.UpcomingGaugesIteratorAfterTime(ctx, ctx.BlockTime()))
+	upcomingGaugesDistr := k.getToDistributeCoinsFromIterator(ctx, k.UpcomingGaugesIterator(ctx))
 	return activeGaugesDistr.Add(upcomingGaugesDistr...)
 }
 
