@@ -36,6 +36,10 @@ func NewStableswapPool(poolId uint64,
 		return Pool{}, err
 	}
 
+	if err := validatePoolAssets(initialLiquidity, scalingFactors); err != nil {
+		return Pool{}, err
+	}
+
 	pool := Pool{
 		Address:                 types.NewPoolAddress(poolId).String(),
 		Id:                      poolId,
@@ -229,6 +233,10 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDeno
 }
 
 func (p *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
+	if err = validatePoolAssets(p.PoolLiquidity.Add(tokenIn...), p.ScalingFactor); err != nil {
+		return sdk.Coin{}, err
+	}
+
 	tokenOut, err = p.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee)
 	if err != nil {
 		return sdk.Coin{}, err
@@ -262,6 +270,10 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDeno
 func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
 	tokenIn, err = p.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee)
 	if err != nil {
+		return sdk.Coin{}, err
+	}
+
+	if err = validatePoolAssets(p.PoolLiquidity.Add(tokenIn), p.ScalingFactor); err != nil {
 		return sdk.Coin{}, err
 	}
 
@@ -328,6 +340,10 @@ func (p *Pool) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uin
 		return err
 	}
 
+	if err := validatePoolAssets(p.PoolLiquidity, scalingFactors); err != nil {
+		return err
+	}
+
 	p.ScalingFactor = scalingFactors
 	return nil
 }
@@ -348,6 +364,22 @@ func validateScalingFactors(scalingFactors []uint64, numAssets int) error {
 	for _, scalingFactor := range scalingFactors {
 		if scalingFactor == 0 || int64(scalingFactor) <= 0 {
 			return types.ErrInvalidStableswapScalingFactors
+		}
+	}
+
+	return nil
+}
+
+func validatePoolAssets(initialAssets sdk.Coins, scalingFactors []uint64) error {
+	if len(initialAssets) < types.MinPoolAssets {
+		return types.ErrTooFewPoolAssets
+	} else if len(initialAssets) > types.MaxPoolAssets {
+		return types.ErrTooManyPoolAssets
+	}
+
+	for i, asset := range initialAssets {
+		if asset.Amount.Quo(sdk.NewInt(int64(scalingFactors[i]))).GT(sdk.NewInt(types.StableswapMaxScaledAmtPerAsset)) {
+			return types.ErrHitMaxScaledAssets
 		}
 	}
 

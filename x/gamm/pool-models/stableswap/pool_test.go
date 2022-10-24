@@ -505,3 +505,137 @@ func TestScaleCoin(t *testing.T) {
 		})
 	}
 }
+
+func TestSwapOutAmtGivenIn(t *testing.T) {
+	tests := map[string]struct {
+		poolAssets            sdk.Coins
+		scalingFactors        []uint64
+		tokenIn               sdk.Coins
+		expectedTokenOut      sdk.Coin
+		expectedPoolLiquidity sdk.Coins
+		swapFee               sdk.Dec
+		expError              bool
+	}{
+		"even pool basic trade": {
+			poolAssets:     twoEvenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			tokenIn:        sdk.NewCoins(sdk.NewInt64Coin("foo", 100)),
+			// we expect at least a 1 token difference since output is truncated
+			expectedTokenOut:      sdk.NewInt64Coin("bar", 99),
+			expectedPoolLiquidity: twoEvenStablePoolAssets.Add(sdk.NewInt64Coin("foo", 100)).Sub(sdk.NewCoins(sdk.NewInt64Coin("bar", 99))),
+			swapFee:               sdk.ZeroDec(),
+			expError:              false,
+		},
+		"trade hits max pool capacity for asset": {
+			poolAssets: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 9_999_999_998),
+				sdk.NewInt64Coin("bar", 9_999_999_999),
+			),
+			scalingFactors:   defaultTwoAssetScalingFactors,
+			tokenIn:          sdk.NewCoins(sdk.NewInt64Coin("foo", 1)),
+			expectedTokenOut: sdk.NewInt64Coin("bar", 1),
+			expectedPoolLiquidity: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 9_999_999_999),
+				sdk.NewInt64Coin("bar", 9_999_999_998),
+			),
+			swapFee:  sdk.ZeroDec(),
+			expError: false,
+		},
+		"trade exceeds max pool capacity for asset": {
+			poolAssets: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 10_000_000_000),
+				sdk.NewInt64Coin("bar", 10_000_000_000),
+			),
+			scalingFactors:   defaultTwoAssetScalingFactors,
+			tokenIn:          sdk.NewCoins(sdk.NewInt64Coin("foo", 1)),
+			expectedTokenOut: sdk.Coin{},
+			expectedPoolLiquidity: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 10_000_000_000),
+				sdk.NewInt64Coin("bar", 10_000_000_000),
+			),
+			swapFee:  sdk.ZeroDec(),
+			expError: true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := sdk.Context{}
+			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
+
+			tokenOut, err := p.SwapOutAmtGivenIn(ctx, tc.tokenIn, tc.expectedTokenOut.Denom, tc.swapFee)
+			if !tc.expError {
+				require.Equal(t, tc.expectedTokenOut, tokenOut)
+				require.Equal(t, tc.expectedPoolLiquidity, p.PoolLiquidity)
+			}
+			osmoassert.ConditionalError(t, tc.expError, err)
+		})
+	}
+}
+
+func TestSwapInAmtGivenOut(t *testing.T) {
+	tests := map[string]struct {
+		poolAssets            sdk.Coins
+		scalingFactors        []uint64
+		tokenOut              sdk.Coins
+		expectedTokenIn       sdk.Coin
+		expectedPoolLiquidity sdk.Coins
+		swapFee               sdk.Dec
+		expError              bool
+	}{
+		"even pool basic trade": {
+			poolAssets:     twoEvenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			tokenOut:       sdk.NewCoins(sdk.NewInt64Coin("bar", 99)),
+			// we expect at least a 1 token difference from our true expected output since it is truncated
+			expectedTokenIn:       sdk.NewInt64Coin("foo", 99),
+			expectedPoolLiquidity: twoEvenStablePoolAssets.Add(sdk.NewInt64Coin("foo", 99)).Sub(sdk.NewCoins(sdk.NewInt64Coin("bar", 99))),
+			swapFee:               sdk.ZeroDec(),
+			expError:              false,
+		},
+		"trade hits max pool capacity for asset": {
+			poolAssets: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 9_999_999_998),
+				sdk.NewInt64Coin("bar", 9_999_999_999),
+			),
+			scalingFactors:  defaultTwoAssetScalingFactors,
+			tokenOut:        sdk.NewCoins(sdk.NewInt64Coin("bar", 1)),
+			expectedTokenIn: sdk.NewInt64Coin("foo", 1),
+			expectedPoolLiquidity: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 9_999_999_999),
+				sdk.NewInt64Coin("bar", 9_999_999_998),
+			),
+			swapFee:  sdk.ZeroDec(),
+			expError: false,
+		},
+		"trade exceeds max pool capacity for asset": {
+			poolAssets: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 10_000_000_000),
+				sdk.NewInt64Coin("bar", 10_000_000_000),
+			),
+			scalingFactors:  defaultTwoAssetScalingFactors,
+			tokenOut:        sdk.NewCoins(sdk.NewInt64Coin("bar", 1)),
+			expectedTokenIn: sdk.Coin{},
+			expectedPoolLiquidity: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 10_000_000_000),
+				sdk.NewInt64Coin("bar", 10_000_000_000),
+			),
+			swapFee:  sdk.ZeroDec(),
+			expError: true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := sdk.Context{}
+			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
+
+			tokenIn, err := p.SwapInAmtGivenOut(ctx, tc.tokenOut, tc.expectedTokenIn.Denom, tc.swapFee)
+			if !tc.expError {
+				require.Equal(t, tc.expectedTokenIn, tokenIn)
+				require.Equal(t, tc.expectedPoolLiquidity, p.PoolLiquidity)
+			}
+			osmoassert.ConditionalError(t, tc.expError, err)
+		})
+	}
+}
