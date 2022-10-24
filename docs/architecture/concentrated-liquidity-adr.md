@@ -32,7 +32,7 @@ It allows for distributing the liquidity along the above curve and across the en
 range (0, \infinity). TODO: format correctly
 
 With the new architecute, we introduce a concept of a `position` that allows to
-concentrate liquidity withi a fixed range. A position only needs to maintain
+concentrate liquidity within a fixed range. A position only needs to maintain
 enough reseseves to satisfy trading within this range. As a result, it functions
 as the traditional `xy = k` within that range. 
 
@@ -65,47 +65,26 @@ $$L = \Delta Y / \Delta \sqrt P$$
 
 Since only one of the following change at a time:
 - $$L$$
-   * when LP adds liquidity
+   * when LP adds liquidity or removes
 - $$\sqrt P$$
    * when trader swaps 
 
 we can use the above relationship for calculating the outcome of swaps and pool joins that mint shares.
 
-Conversely for the other token, we can 
+Conversely, we calculate liquidity from the other token in the pool:
 
-### Terminology
+$$\Delta x = \Delta \frac {1}{\sqrt P}  L$$
 
-We will use the following terms throughout the document:
+## Ticks
 
-- `Virtual Reserves` - TODO
-
-- `Real Reserves` - TODO
-
-- `Tick` - TODO
-
-- `Position` - TODO
-
-- `Range` - TODO
-
-
-### User Stories
-
-The feature can be summarized in the following user stories:
-
-#### Liquidity Provision
-
-> As an LP, I want to provide liquidity in ranges so that I can achieve greater capital efficiency
-
-This a basic function that should allow LPs to provide liquidity in specific ranges.
-The range is to be split into thousands of discrete ticks, each representing a price point.
+To allow for providing liquidity within certain price ranges, we will introduce a concept of `tick`. Each tick is a function of price, allowing to partition the price
+range into discrete ticks:
 
 $$p(i) = 1.0001^i$$
 
-where `p(i)` is the price at tick `i`. Taking powers of 1.0001 has a property of two ticks being 0.01% apart (1 basis point).
+where `p(i)` is the price at tick `i`. Taking powers of 1.0001 has a property of two ticks being 0.01% apart (1 basis point away).
 
 Therefore, we get values like:
-
-...
 
 $$\sqrt{p(-1)} = 1.0001^{-1/2} \approx 0.99995$$
 
@@ -113,10 +92,71 @@ $$\sqrt{p(0)} = 1.0001^{0/2} = 1$$
 
 $$\sqrt{p(1)} = \sqrt{1.0001} = 1.0001^{1/2} \approx 1.00005$$
 
-...
+TODO: tick range bounds
 
+### User Stories
 
-TODO: tick bounds.
+We define the feature in terms of user stories.
+Each story, will be trackes as a discrete piece of work with
+its own set of tasks.
+
+The following is the list of user stories:
+
+#### Concentrated Liquidity Module
+
+> As an engineer, I would like the concentrated liquidity logic to exist in its own module so that I can easily reason about the concentrated liquidity abstraction that is different from the existing pools.
+
+Therefore, we create a new module `concentrated-liquidity`. It will include all low-level
+logic that is specific to minting, burning liquidity and swapping within concentrated liquidity pools.
+
+Under the "Liquidity Provision" user story, we will track tasks specific to defining
+foundations, boilerplate, module wiring and their respective tests.
+
+Providing, burning liquidity and swapping functions are to be tracked in their own stories.
+
+#### Swap Router Module
+
+> As a user, I would like to have a unified entrypoint for my swaps regardless of the underlying pool implementation so that I don't need to reason about API complexity
+
+> As a user, I would like the pool management to be unified so that I don't have to reason about additional complexity stemming from divergent pool sources.
+
+With the new `concentrated-liquidity` module, we now have a new entrypoint for swaps that is
+the same with the existing `gamm` module.
+
+To avoid fragmenting swap entrypoints and duplicating boilerplate logic, we would like to define
+a new `swap-router` module. Its only purpose is to receive swap messages and propagate them
+either to `gamm` or `concentrated-liquidity` modules.
+
+Therefore, we should move the existing `gamm` swap messages and tests to the new `swap-router` module, connecting to the `swap-router` keeper that simply propagates swaps to `gamm` or `concentrated-liquidity` modules.
+
+The messages to move are:
+- `MsgSwapExactAmountIn`
+- `MsgSwapExactAmountOut`
+
+TODO: figure out routing logic:
+- should we use an id?
+- should have a new pool type field?
+
+#### Liquidity Provision
+
+> As an LP, I want to provide liquidity in ranges so that I can achieve greater capital efficiency
+
+This a basic function that should allow LPs to provide liquidity in specific ranges
+to a pool. We will disucss each of these functions in more detail in the following sections.
+
+### Msg
+
+```go
+func Mint(
+    ctx sdk.Context,
+    poolId uint64,
+    owner sdk.AccAddress,
+    liquidityIn sdk.Int,
+    lowerTick,
+    upperTick int64) {
+        ...
+}
+```
 
 #### Swapping
 
@@ -142,11 +182,7 @@ TODO
 
 TODO
 
-#### Concentrated Liquidity Module
 
-> As an engineer, I would like the concentrated liquidity logic to exist in its own module so that I can easily reason about the concentrated liquidity abstraction that is different from the existing pools.
-
-TODO
 
 ##### State
 
@@ -155,14 +191,6 @@ TODO
 - per-tick
 
 - per-position
-
-#### Pool Router Module
-
-> As a user, I would like to have a unified entrypoint for my swaps regardless of the underlying pool implementation so that I don't need to reason about API complexity
-
-> As a user, I would like the pool management to be unified so that I don't have to reason about additional complexity stemming from divergent pool sources.
-
-TODO
 
 ### Additional Requirements
 
@@ -182,6 +210,17 @@ TODO
 
 ####
 
+### Terminology
 
+We will use the following terms throughout the document:
 
+- `Virtual Reserves` - TODO
+
+- `Real Reserves` - TODO
+
+- `Tick` - TODO
+
+- `Position` - TODO
+
+- `Range` - TODO
 
