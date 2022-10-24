@@ -194,16 +194,30 @@ func (k Keeper) IsValidatorSetEqual(newPreferences, existingPreferences []types.
 	return true
 }
 
-func (k Keeper) GetValidatorInfo(ctx sdk.Context, existingValAddr, newValAddr string) (sdk.ValAddress, stakingtypes.Validator, sdk.ValAddress, error) {
+func (k Keeper) GetValidatorInfo(ctx sdk.Context, existingValAddr string) (sdk.ValAddress, stakingtypes.Validator, error) {
 	valAddr, validator, err := k.GetValAddrAndVal(ctx, existingValAddr)
 	if err != nil {
-		return nil, stakingtypes.Validator{}, nil, err
+		return nil, stakingtypes.Validator{}, err
 	}
+	return valAddr, validator, nil
+}
 
-	newSetFirstValidator, err := sdk.ValAddressFromBech32(newValAddr)
-	if err != nil {
-		return nil, stakingtypes.Validator{}, nil, err
+func (k Keeper) FindMin(valPrefs []valSet) (min valSet) {
+	min = valPrefs[0]
+	for _, val := range valPrefs {
+		if val.amount.LT(min.amount) {
+			min = val
+		}
 	}
+	return min
+}
 
-	return valAddr, validator, newSetFirstValidator, nil
+func (k Keeper) FindMax(valPrefs []valSet) (max valSet) {
+	max = valPrefs[0]
+	for _, val := range valPrefs {
+		if val.amount.GT(max.amount) {
+			max = val
+		}
+	}
+	return max
 }
