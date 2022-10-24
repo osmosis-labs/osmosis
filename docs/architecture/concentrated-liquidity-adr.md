@@ -2,23 +2,23 @@
 
 ## Background
 
-Concentrated liquidity is a novel AMM desing that allows for a more efficient use of capital.
+Concentrated liquidity is a novel AMM design that allows for a more efficient use of capital.
 The improvement is achieved by providing liquidity in specific ranges chosen by user.
 
 A naive example is a pool with stable pairs such as USDC/USDT, where the price should always be near 1.
 As a result, LPs can focus their capital in a small range around 1 as opposed to full range, leading
 to an average of 200-300x higher capital efficiency.
 
-At the same time, traders enjoy lower slippage as greater depth is incentived to occur around the
+At the same time, traders enjoy lower slippage as greater depth is incentives to occur around the
 current price.
 
-This desing also allows for a new "range order" type that is similar to a limit order with order-books.
+This design also allows for a new "range order" type that is similar to a limit order with order-books.
 
-With the introduction of concentrated liquidity, new opportunities for providing liquidity rewards is created.
+The introduction of concentrated liquidity creates new opportunities for providing liquidity rewards to desired strategies.
 For example, it is possible to incentivize LPs based on the closeness to the current price and the time spent
 within a position.
 
-This document desribes the final version of the desired product. However, the work is split into multiple phases (milestones).
+This document describes the final version of the desired product. However, the work is split into multiple phases (milestones).
 See "Milestones" section for more details.
 
 ## Architecture
@@ -28,25 +28,25 @@ TODO: understand how much detail is wanted in this section
 Our traditional balancer AMM relies on the following curve that tracks current reserves:
 $$xy = k$$
 
-It allows for distributing the liquidity along the above curve and across the entire price
+It allows for distributing the liquidity along the xy=k curve and across the entire price
 range (0, \infinity). TODO: format correctly
 
-With the new architecute, we introduce a concept of a `position` that allows to
+With the new architecture, we introduce a concept of a `position` that allows a user to
 concentrate liquidity within a fixed range. A position only needs to maintain
-enough reseseves to satisfy trading within this range. As a result, it functions
-as the traditional `xy = k` within that range. 
+enough reserves to satisfy trading within this range. As a result, it functions
+as the traditional `xy = k` within that range.
 
 With the new architecture, the real reserves are described by the following formula:
 $$(x + L / \sqrt P_u)(y + L \sqrt P_l) = L^2$$
-- `l` is the lower tickl
-- `u` is the upper tick
+- `P_l` is the lower tick
+- `P_u` is the upper tick
 
 where L is the amount of liquidity provided $$L = \sqrt k$$
 
-This formula is stemming from the original $$xy = k$$ with range limited.
+This formula is stemming from the original $$xy = k$$ with the range being limited.
 
-In the traditional desing, pool's tokens `x` and `y` are tracked directly. With the concentrated desing, we only
-track `L` and `\sqrt P` that can be calculated with:
+In the traditional design, a pool's tokens `x` and `y` are tracked directly. With the concentrated design, we only
+track `L` and `\sqrt P` which can be calculated with:
 
 $$L = \sqrt (xy)$$
 
@@ -65,11 +65,11 @@ $$L = \Delta Y / \Delta \sqrt P$$
 
 Since only one of the following change at a time:
 - $$L$$
-   * when LP adds liquidity or removes
+   * when a LP adds or removes liquidity
 - $$\sqrt P$$
-   * when trader swaps 
+   * when a trader swaps
 
-we can use the above relationship for calculating the outcome of swaps and pool joins that mint shares.
+We can use the above relationship for calculating the outcome of swaps and pool joins that mint shares.
 
 Conversely, we calculate liquidity from the other token in the pool:
 
@@ -77,8 +77,8 @@ $$\Delta x = \Delta \frac {1}{\sqrt P}  L$$
 
 ## Ticks
 
-To allow for providing liquidity within certain price ranges, we will introduce a concept of `tick`. Each tick is a function of price, allowing to partition the price
-range into discrete ticks:
+To allow for providing liquidity within certain price ranges, we will introduce the concept of a `tick`. Each tick is a function of price, allowing to partition the price
+range into discrete segments (which we refer to here as ticks):
 
 $$p(i) = 1.0001^i$$
 
@@ -97,7 +97,7 @@ TODO: tick range bounds
 ### User Stories
 
 We define the feature in terms of user stories.
-Each story, will be trackes as a discrete piece of work with
+Each story, will be tracked as a discrete piece of work with
 its own set of tasks.
 
 The following is the list of user stories:
@@ -107,12 +107,12 @@ The following is the list of user stories:
 > As an engineer, I would like the concentrated liquidity logic to exist in its own module so that I can easily reason about the concentrated liquidity abstraction that is different from the existing pools.
 
 Therefore, we create a new module `concentrated-liquidity`. It will include all low-level
-logic that is specific to minting, burning liquidity and swapping within concentrated liquidity pools.
+logic that is specific to minting, burning liquidity, and swapping within concentrated liquidity pools.
 
 Under the "Liquidity Provision" user story, we will track tasks specific to defining
 foundations, boilerplate, module wiring and their respective tests.
 
-Providing, burning liquidity and swapping functions are to be tracked in their own stories.
+Providing, burning liquidity, and swapping functions are to be tracked in their own stories.
 
 #### Swap Router Module
 
@@ -124,8 +124,8 @@ With the new `concentrated-liquidity` module, we now have a new entrypoint for s
 the same with the existing `gamm` module.
 
 To avoid fragmenting swap entrypoints and duplicating boilerplate logic, we would like to define
-a new `swap-router` module. Its only purpose is to receive swap messages and propagate them
-either to `gamm` or `concentrated-liquidity` modules.
+a new `swap-router` module. For now, its only purpose is to receive swap messages and propagate them
+either to the `gamm` or `concentrated-liquidity` modules.
 
 Therefore, we should move the existing `gamm` swap messages and tests to the new `swap-router` module, connecting to the `swap-router` keeper that simply propagates swaps to `gamm` or `concentrated-liquidity` modules.
 
