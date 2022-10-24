@@ -19,7 +19,7 @@ var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
 
 // RandomJoinPoolMsg pseudo-randomly selects an existing pool ID, attempts to find an account with the
 // respective underlying token denoms, and attempts to execute a join pool transaction
-func RandomJoinPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgJoinPool, error) {
+func RandomJoinPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context, keepers ...struct{}) (*types.MsgJoinPool, error) {
 	// get random pool
 	pool_id, pool, _, _, poolDenoms, _, err := getRandPool(k, sim, ctx)
 	if err != nil {
@@ -54,7 +54,7 @@ func RandomJoinPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (
 
 // RandomExitPoolMsg pseudo-randomly selects an existing pool ID, attempts to find an account with the
 // respective unbonded gamm shares, and attempts to execute an exit pool transaction
-func RandomExitPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgExitPool, error) {
+func RandomExitPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context, keepers ...struct{}) (*types.MsgExitPool, error) {
 	// get random pool
 	pool_id, pool, _, _, _, gammDenom, err := getRandPool(k, sim, ctx)
 	if err != nil {
@@ -83,7 +83,7 @@ func RandomExitPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (
 
 // RandomCreatePoolMsg attempts to find an account with two or more distinct denoms and attempts to send a
 // create pool message composed of those denoms
-func RandomCreateUniV2Msg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*balancertypes.MsgCreateBalancerPool, error) {
+func RandomCreateUniV2Msg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context, keepers ...struct{}) (*balancertypes.MsgCreateBalancerPool, error) {
 	var poolAssets []balancertypes.PoolAsset
 	// find an address with two or more distinct denoms in their wallet
 	sender, senderExists := sim.RandomSimAccountWithConstraint(createPoolRestriction(k, sim, ctx))
@@ -121,7 +121,7 @@ func RandomCreateUniV2Msg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context
 
 // RandomJoinSwapExternAmountIn utilizes a random pool and with a random account does a single asset join with an exact
 // amount of an asset for a minimum number of LP shares
-func RandomJoinSwapExternAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgJoinSwapExternAmountIn, error) {
+func RandomJoinSwapExternAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context, keepers ...struct{}) (*types.MsgJoinSwapExternAmountIn, error) {
 	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
 	pool_id, pool, coinIn, _, _, _, err := getRandPool(k, sim, ctx)
 	if err != nil {
@@ -153,7 +153,7 @@ func RandomJoinSwapExternAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk
 
 // RandomJoinSwapShareAmountOut utilizes a random pool and with a random account and swaps a maximum of a specified token
 // for an exact amount of LP shares
-func RandomJoinSwapShareAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgJoinSwapShareAmountOut, error) {
+func RandomJoinSwapShareAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context, keepers ...struct{}) (*types.MsgJoinSwapShareAmountOut, error) {
 	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
 	pool_id, pool, coinIn, _, _, _, err := getRandPool(k, sim, ctx)
 	if err != nil {
@@ -196,7 +196,7 @@ func RandomJoinSwapShareAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk
 
 // RandomExitSwapExternAmountOut utilizes a random pool and with a random account and swaps a maximum number of LP shares
 // for an exact amount of one of the token pairs
-func RandomExitSwapExternAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgExitSwapExternAmountOut, error) {
+func RandomExitSwapExternAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context, keepers ...struct{}) (*types.MsgExitSwapExternAmountOut, error) {
 	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
 	pool_id, pool, coinIn, coinOut, _, gammDenom, err := getRandPool(k, sim, ctx)
 	if err != nil {
@@ -238,7 +238,7 @@ func RandomExitSwapExternAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sd
 
 // RandomExitSwapShareAmountIn utilizes a random pool and with a random account and swaps an number of LP shares
 // for a minimum amount of one of the token pairs
-func RandomExitSwapShareAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgExitSwapShareAmountIn, error) {
+func RandomExitSwapShareAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context, keepers ...struct{}) (*types.MsgExitSwapShareAmountIn, error) {
 	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
 	pool_id, pool, coinIn, coinOut, _, gammDenom, err := getRandPool(k, sim, ctx)
 	if err != nil {

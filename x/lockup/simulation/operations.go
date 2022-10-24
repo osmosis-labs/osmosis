@@ -14,7 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func RandomMsgLockTokens(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgLockTokens, error) {
+func RandomMsgLockTokens(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context, keepers ...struct{}) (*types.MsgLockTokens, error) {
 	sender, err := sim.RandomSimAccountWithBalance(ctx)
 	if err != nil {
 		return nil, err
@@ -28,14 +28,14 @@ func RandomMsgLockTokens(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context)
 	}, nil
 }
 
-func RandomMsgBeginUnlockingAll(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgBeginUnlockingAll, error) {
+func RandomMsgBeginUnlockingAll(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context, keepers ...struct{}) (*types.MsgBeginUnlockingAll, error) {
 	sender := sim.RandomSimAccount()
 	return &types.MsgBeginUnlockingAll{
 		Owner: sender.Address.String(),
 	}, nil
 }
 
-func RandomMsgBeginUnlocking(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgBeginUnlocking, error) {
+func RandomMsgBeginUnlocking(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context, keepers ...struct{}) (*types.MsgBeginUnlocking, error) {
 	sender, senderExists := sim.RandomSimAccountWithConstraint(accountHasLockConstraint(k, ctx))
 	if !senderExists {
 		return nil, errors.New("no addr has created a lock")

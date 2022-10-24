@@ -14,7 +14,7 @@ import (
 )
 
 // RandomMsgCreateDenom creates a random tokenfactory denom that is no greater than 44 alphanumeric characters
-func RandomMsgCreateDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgCreateDenom, error) {
+func RandomMsgCreateDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context, keepers ...struct{}) (*types.MsgCreateDenom, error) {
 	minCoins := k.GetParams(ctx).DenomCreationFee
 	acc, err := sim.RandomSimAccountWithMinCoins(ctx, minCoins)
 	if err != nil {
@@ -28,7 +28,7 @@ func RandomMsgCreateDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context
 }
 
 // RandomMsgMintDenom takes a random denom that has been created and uses the denom's admin to mint a random amount
-func RandomMsgMintDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgMint, error) {
+func RandomMsgMintDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context, keepers ...struct{}) (*types.MsgMint, error) {
 	acc, senderExists := sim.RandomSimAccountWithConstraint(accountCreatedTokenFactoryDenom(k, ctx))
 	if !senderExists {
 		return nil, errors.New("no addr has created a tokenfactory coin")
@@ -51,7 +51,7 @@ func RandomMsgMintDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) 
 }
 
 // RandomMsgBurnDenom takes a random denom that has been created and uses the denom's admin to burn a random amount
-func RandomMsgBurnDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgBurn, error) {
+func RandomMsgBurnDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context, keepers ...struct{}) (*types.MsgBurn, error) {
 	acc, senderExists := sim.RandomSimAccountWithConstraint(accountCreatedTokenFactoryDenom(k, ctx))
 	if !senderExists {
 		return nil, errors.New("no addr has created a tokenfactory coin")
@@ -79,7 +79,7 @@ func RandomMsgBurnDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) 
 }
 
 // RandomMsgChangeAdmin takes a random denom that has been created and changes the admin to another random account
-func RandomMsgChangeAdmin(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgChangeAdmin, error) {
+func RandomMsgChangeAdmin(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context, keepers ...struct{}) (*types.MsgChangeAdmin, error) {
 	acc, senderExists := sim.RandomSimAccountWithConstraint(accountCreatedTokenFactoryDenom(k, ctx))
 	if !senderExists {
 		return nil, errors.New("no addr has created a tokenfactory coin")
