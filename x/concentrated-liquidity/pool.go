@@ -103,6 +103,12 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("maxPrice (%s) must be greater than current price (%s)", maxPrice, curSqrtPrice.Power(2))
 	}
 
+	// store which token is the input token so that we can collect fees in that token
+	firstTokenIsInput := true
+	if tokenIn.Denom != asset0 {
+		firstTokenIsInput = false
+	}
+
 	// sqrtPrice of upper and lower user defined price range
 	sqrtPLowerTick, err := minPrice.ApproxSqrt()
 	if err != nil {
@@ -133,6 +139,8 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 		tick:                     priceToTick(curSqrtPrice.Power(2)),
 	}
 
+	stepFee := sdk.ZeroDec()
+
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
 	for swapState.amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 6)) {
@@ -154,12 +162,17 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 			swapState.amountSpecifiedRemaining,
 			lte,
 		)
+		// compute fees for the ratio of the tokens that have been swapped in this step
+		stepFee = stepFee.Add(ComputeStepFee(swapFee, amountIn.Quo(tokenAmountInAfterFee))) // invariant: stepFee <= swapFee
+		k.UpdateFeesForTick(ctx, poolId, nextTick, stepFee, firstTokenIsInput)
+
 		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn)
 		swapState.amountCalculated = swapState.amountCalculated.Add(amountOut)
 		swapState.tick = priceToTick(sqrtPrice.Power(2))
 	}
 
 	newTokenIn.Amount = tokenIn.Amount.Sub(swapState.amountSpecifiedRemaining.RoundInt())
+	p.GlobalFees.Add(firstTokenIsInput, swapFee)
 	return sdk.NewCoin(tokenIn.Denom, newTokenIn.Amount), sdk.NewCoin(tokenOutDenom, swapState.amountCalculated.RoundInt()), nil
 }
 

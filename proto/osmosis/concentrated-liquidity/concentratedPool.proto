@@ -47,7 +47,7 @@ message TickInfo {
     (gogoproto.moretags) = "yaml:\"liquidity\"",
     (gogoproto.nullable) = false
   ];
-  Fee feesAccruedBellowTick = 2;
+  Fee feesAccruedAboveTick = 2;
 }
 
 message Position {
@@ -61,12 +61,12 @@ message Position {
 
 message Fee {
   string token0 = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"token0\"",
     (gogoproto.nullable) = false
   ];
   string token1 = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"token1\"",
     (gogoproto.nullable) = false
   ];

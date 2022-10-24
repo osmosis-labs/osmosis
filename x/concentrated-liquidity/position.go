@@ -19,7 +19,7 @@ func (k Keeper) updatePositionWithLiquidity(ctx sdk.Context,
 	liquidityBefore := position.Liquidity
 	liquidityAfter := liquidityBefore.Add(liquidityDelta)
 	position.Liquidity = liquidityAfter
-
+	
 	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, position)
 }
 
