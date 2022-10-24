@@ -38,6 +38,7 @@ message Pool {
     (gogoproto.moretags) = "yaml:\"current_tick\"",
     (gogoproto.nullable) = false
   ];
+  Fee globalFees = 8;
 }
 
 message TickInfo {
@@ -46,12 +47,27 @@ message TickInfo {
     (gogoproto.moretags) = "yaml:\"liquidity\"",
     (gogoproto.nullable) = false
   ];
+  Fee feesAccruedBellowTick = 2;
 }
 
 message Position {
   string liquidity = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"liquidity\"",
+    (gogoproto.nullable) = false
+  ];
+  Fee feesAtCreation = 2;
+}
+
+message Fee {
+  string token0 = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token0\"",
+    (gogoproto.nullable) = false
+  ];
+  string token1 = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token1\"",
     (gogoproto.nullable) = false
   ];
 }
