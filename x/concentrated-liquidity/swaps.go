@@ -3,27 +3,31 @@ package concentrated_liquidity
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
-// TODO: godoc
-func (k Keeper) MultihopSwapExactAmountIn(
+// TODO: spec here and in gamm
+func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	routes []swaproutertypes.SwapAmountInRoute,
+	pool gammtypes.PoolI,
 	tokenIn sdk.Coin,
+	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
+	swapFee sdk.Dec,
 ) (tokenOutAmount sdk.Int, err error) {
-	return sdk.Int{}, nil
+	panic("not implemented")
 }
 
-// TODO: godoc
-func (k Keeper) MultihopSwapExactAmountOut(
+// TODO: spec here and in gamm
+func (k Keeper) SwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	routes []swaproutertypes.SwapAmountOutRoute,
+	poolI gammtypes.PoolI,
+	tokenInDenom string,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
+	swapFee sdk.Dec,
 ) (tokenInAmount sdk.Int, err error) {
-	return sdk.Int{}, nil
+	panic("not implemented")
 }
