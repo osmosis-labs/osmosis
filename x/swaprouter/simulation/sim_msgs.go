@@ -12,6 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 )
 
+// SimulationKeeper is a wrapper around swaprouter's keeper which makes it easy to wire new keepers
 type SimulationKeeper struct {
 	swaprouter.Keeper
 
