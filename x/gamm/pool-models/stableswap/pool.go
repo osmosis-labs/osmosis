@@ -297,19 +297,48 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 	return pCopy.joinPoolSharesInternal(ctx, tokensIn, swapFee)
 }
 
-// TODO: implement this
-func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
-	return sdk.ZeroInt(), nil, err
+// CalcJoinPoolNoSwapShares calculates the number of shares created to execute an all-asset pool join with the provided amount of `tokensIn`.
+// The input tokens must contain the same tokens as in the pool.
+//
+// Returns the number of shares created, the amount of coins actually joined into the pool as not all may tokens may be joinable.
+// If an all-asset join is not possible, returns an error.
+func (p Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
+	// ensure that there aren't too many or too few assets in `tokensIn`
+	if tokensIn.Len() != p.NumAssets() || !tokensIn.DenomsSubsetOf(p.GetTotalPoolLiquidity(ctx)) {
+		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("no-swap joins require LP'ing with all assets in pool")
+	}
+
+	// execute a no-swap join with as many tokens as possible given a perfect ratio:
+	// * numShares is how many shares are perfectly matched.
+	// * remainingTokensIn is how many coins we have left to join that have not already been used.
+	numShares, remainingTokensIn, err := cfmm_common.MaximalExactRatioJoin(&p, ctx, tokensIn)
+	if err != nil {
+		return sdk.ZeroInt(), sdk.NewCoins(), err
+	}
+
+	// ensure that no more tokens have been joined than is possible with the given `tokensIn`
+	tokensJoined = tokensIn.Sub(remainingTokensIn)
+	if tokensJoined.IsAnyGT(tokensIn) {
+		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("an error has occurred, more coins joined than token In")
+	}
+
+	return numShares, tokensJoined, nil
 }
 
-func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
-	numShares, _, err = p.joinPoolSharesInternal(ctx, tokensIn, swapFee)
+func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (sdk.Int, error) {
+	numShares, _, err := p.joinPoolSharesInternal(ctx, tokensIn, swapFee)
 	return numShares, err
 }
 
-// TODO: implement this
-func (p *Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
-	return sdk.ZeroInt(), err
+func (p *Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (sdk.Int, error) {
+	newShares, tokensJoined, err := p.CalcJoinPoolNoSwapShares(ctx, tokensIn, swapFee)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	// update pool with the calculated share and liquidity needed to join pool
+	p.updatePoolForJoin(tokensJoined, newShares)
+	return newShares, nil
 }
 
 func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
