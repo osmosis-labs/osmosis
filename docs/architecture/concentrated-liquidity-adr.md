@@ -142,18 +142,41 @@ TODO: figure out routing logic:
 > As an LP, I want to provide liquidity in ranges so that I can achieve greater capital efficiency
 
 This a basic function that should allow LPs to provide liquidity in specific ranges
-to a pool. We will disucss each of these functions in more detail in the following sections.
+to a pool. 
 
-### Msg
+The liquidity of the pool is consisted of both asset0 and asset1. The bucket that includes the current price is what we so call the "liquidity of the pool". Any other liquidity below or above the current price is consisted only of a single asset.
+
+Therefore in `Mint`, we can either provide liquidity above or below the current price, which would act as limit orders, or decide to provide liquidity at current price. 
+
+As declared in the API for mint, users are to provide the upper tick and the lower tick they want to provide the liquidity in. The users are also prompted to provide the amount of token0 and token1 they desire to receive. The liquidity that needs to be provided for the token0 and token1 amount provided would be then calculated by the following methods. 
+
+Liquidity needed for token0:
+$$L = \frac{\Delta x \sqrt{P_u} \sqrt{P_l}}{\sqrt{P_u} - \sqrt{P_l}}$$
+
+Liquidity needed for token1:
+$$L = \frac{\Delta y}{\sqrt{P_u}-\sqrt{P_l}}$$
+
+With the larger liquidity including the smaller liquidity, we take the smaller liquidity calculated for both token0 and token1 and use that as the liquidity throughout the rest of the joining process. Note that the liquidity used here does not represent an amount of a specific token, but the liquidity of the pool itself, represented in sdk.Int.
+
+Using the provided liquidity, now we calculate the delta amount of both token0 and token1, using the following equations, where L is the liquidity calculated above:
+
+$$\Delta x = \frac{L(\sqrt{p(i_u)} - \sqrt{p(i_c)})}{\sqrt{p(i_u)}\sqrt{p(i_c)}}$$
+$$\Delta y = L(\sqrt{p(i_c)} - \sqrt{p(i_l)})$$
+
+
+The deltaX and the deltaY would be the actual amount of tokens joined for the requested position. 
+
+Given the parameters needed for calculating the tokens needed for creating a position for a given tick, the API in the msg server layer would look like the following:
 
 ```go
-func Mint(
+func CreatePosition(
     ctx sdk.Context,
     poolId uint64,
     owner sdk.AccAddress,
-    liquidityIn sdk.Int,
+    minAmountToken0,
+    minAmountToken1 sdk.Int,
     lowerTick,
-    upperTick int64) {
+    upperTick int64) (amount0, amount1 sdk.Int, error) {
         ...
 }
 ```
