@@ -6,12 +6,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v12/osmomath"
+	cltypes "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
 func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint64, denom0, denom1 string, currSqrtPrice sdk.Dec, currTick sdk.Int) (Pool, error) {
 	poolAddr := types.NewPoolAddress(poolId)
-	denom0, denom1, err := k.orderInitialPoolDenoms(denom0, denom1)
+	denom0, denom1, err := cltypes.OrderInitialPoolDenoms(denom0, denom1)
 	if err != nil {
 		return Pool{}, err
 	}
@@ -150,7 +151,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 		// if !ok {
 		// 	return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("there are no more ticks initialized to fill the swap")
 		// }
-		nextSqrtPrice, err := k.tickToPrice(sdk.NewInt(nextTick))
+		nextSqrtPrice, err := k.tickToSqrtPrice(sdk.NewInt(nextTick))
 		if err != nil {
 			return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", sdk.NewInt(nextTick))
 		}
@@ -240,7 +241,7 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 		// if !ok {
 		// 	return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("there are no more ticks initialized to fill the swap")
 		// }
-		nextSqrtPrice, err := k.tickToPrice(sdk.NewInt(nextTick))
+		nextSqrtPrice, err := k.tickToSqrtPrice(sdk.NewInt(nextTick))
 		if err != nil {
 			return sdk.Coin{}, sdk.Coin{}, err
 		}
@@ -259,15 +260,4 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 		swapState.tick = priceToTick(sqrtPrice.Power(2))
 	}
 	return sdk.NewCoin(tokenInDenom, swapState.amountCalculated.RoundInt()), sdk.NewCoin(tokenOut.Denom, tokenOut.Amount), nil
-}
-
-func (k Keeper) orderInitialPoolDenoms(denom0, denom1 string) (string, string, error) {
-	if denom0 == denom1 {
-		return "", "", fmt.Errorf("cannot have the same asset in a single pool")
-	}
-	if denom0 > denom1 {
-		denom1, denom0 = denom0, denom1
-	}
-
-	return denom0, denom1, nil
 }

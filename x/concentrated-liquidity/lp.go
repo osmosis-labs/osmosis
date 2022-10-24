@@ -35,8 +35,8 @@ func (k Keeper) Mint(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liqui
 	pool := k.getPoolbyId(ctx, poolId)
 
 	currentSqrtPrice := pool.CurrentSqrtPrice
-	sqrtRatioUpperTick, _ := k.tickToPrice(sdk.NewInt(upperTick))
-	sqrtRatioLowerTick, _ := k.tickToPrice(sdk.NewInt(lowerTick))
+	sqrtRatioUpperTick, _ := k.tickToSqrtPrice(sdk.NewInt(upperTick))
+	sqrtRatioLowerTick, _ := k.tickToSqrtPrice(sdk.NewInt(lowerTick))
 
 	amtDenom0 = calcAmount0Delta(liquidityIn, currentSqrtPrice, sqrtRatioUpperTick).RoundInt()
 	amtDenom1 = calcAmount1Delta(liquidityIn, currentSqrtPrice, sqrtRatioLowerTick).RoundInt()
