@@ -16,6 +16,7 @@ func (k Keeper) RouteExactAmountIn(
 	routes []types.SwapAmountInRoute,
 	tokenIn sdk.Coin,
 	tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error) {
+	// TODO: fix this once proper pool id routing exists
 	isGamm := true
 
 	swapModule := k.withSwapModule(isGamm)
@@ -57,6 +58,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	routes []types.SwapAmountOutRoute,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin) (tokenInAmount sdk.Int, err error) {
+	// TODO: fix this once proper pool id routing exists
 	isGamm := true
 
 	swapModule := k.withSwapModule(isGamm)
