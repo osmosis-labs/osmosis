@@ -103,7 +103,7 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 // That is:
 // - to the correct module (concentrated-liquidity or gamm)
 // - over the right routes (hops)
-// This test does not actuall validate the math behind the swaps.
+// This test does not actually validate the math behind the swaps.
 func (suite *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 
 	tests := []struct {
