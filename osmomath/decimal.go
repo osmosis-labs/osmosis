@@ -889,14 +889,14 @@ func (x BigDec) LogBase2() BigDec {
 	// invariant: x >= 1
 	// while x < 1
 	for xCopy.LT(OneDec()) {
-		xCopy.i = xCopy.i.Lsh(xCopy.i, 1)
+		xCopy.i.Lsh(xCopy.i, 1)
 		y = y.Sub(OneDec())
 	}
 
 	// invariant: x < 2
 	// while x >= 2
 	for xCopy.GTE(twoBigDec) {
-		xCopy.i = xCopy.i.Rsh(xCopy.i, 1)
+		xCopy.i.Rsh(xCopy.i, 1)
 		y = y.Add(OneDec())
 	}
 
@@ -911,10 +911,10 @@ func (x BigDec) LogBase2() BigDec {
 	for i := 0; i < maxLog2Iterations; i++ {
 		xCopy = xCopy.Mul(xCopy)
 		if xCopy.GTE(twoBigDec) {
-			xCopy.i = xCopy.i.Rsh(xCopy.i, 1)
+			xCopy.i.Rsh(xCopy.i, 1)
 			y = y.Add(b)
 		}
-		b.i = b.i.Rsh(b.i, 1)
+		b.i.Rsh(b.i, 1)
 	}
 
 	return y
