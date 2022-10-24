@@ -91,12 +91,7 @@ func (server msgServer) RedelegateValidatorSet(goCtx context.Context, msg *types
 	// Get the sum of users delegated amount
 	totalTokenAmount := sdk.NewDec(0)
 	for _, existingVals := range existingSet.Preferences {
-		valAddr, validator, err := server.keeper.GetValAddrAndVal(ctx, existingVals.ValOperAddress)
-		if err != nil {
-			return nil, err
-		}
-
-		newSetFirstValidator, err := sdk.ValAddressFromBech32(msg.Preferences[0].ValOperAddress)
+		valAddr, validator, newSetFirstValidator, err := server.keeper.GetValidatorInfo(ctx, existingVals.ValOperAddress, msg.Preferences[0].ValOperAddress)
 		if err != nil {
 			return nil, err
 		}
@@ -117,12 +112,7 @@ func (server msgServer) RedelegateValidatorSet(goCtx context.Context, msg *types
 	for _, newVals := range msg.Preferences {
 		amountToStake := newVals.Weight.Mul(totalTokenAmount).RoundInt()
 
-		valAddr, validator, err := server.keeper.GetValAddrAndVal(ctx, newVals.ValOperAddress)
-		if err != nil {
-			return nil, err
-		}
-
-		newSetFirstValidator, err := sdk.ValAddressFromBech32(msg.Preferences[0].ValOperAddress)
+		valAddr, validator, newSetFirstValidator, err := server.keeper.GetValidatorInfo(ctx, newVals.ValOperAddress, msg.Preferences[0].ValOperAddress)
 		if err != nil {
 			return nil, err
 		}

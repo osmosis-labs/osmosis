@@ -193,3 +193,17 @@ func (k Keeper) IsValidatorSetEqual(newPreferences, existingPreferences []types.
 
 	return true
 }
+
+func (k Keeper) GetValidatorInfo(ctx sdk.Context, existingValAddr, newValAddr string) (sdk.ValAddress, stakingtypes.Validator, sdk.ValAddress, error) {
+	valAddr, validator, err := k.GetValAddrAndVal(ctx, existingValAddr)
+	if err != nil {
+		return nil, stakingtypes.Validator{}, nil, err
+	}
+
+	newSetFirstValidator, err := sdk.ValAddressFromBech32(newValAddr)
+	if err != nil {
+		return nil, stakingtypes.Validator{}, nil, err
+	}
+
+	return valAddr, validator, newSetFirstValidator, nil
+}
