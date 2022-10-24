@@ -52,7 +52,10 @@ func (k Keeper) RouteExactAmountIn(
 	return tokenOutAmount, err
 }
 
-// TODO: spec and tests
+// RouteExactAmountOut defines the output denom and output amount for the last pool.
+// Calculation starts by providing the tokenOutAmount of the final pool to calculate the required tokenInAmount
+// the calculated tokenInAmount is used as defined tokenOutAmount of the previous pool, calculating in reverse order of the swap
+// Transaction succeeds if the calculated tokenInAmount of the first pool is less than the defined tokenInMaxAmount defined.
 func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	sender sdk.AccAddress,
 	routes []types.SwapAmountOutRoute,
