@@ -59,17 +59,35 @@ func calcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 // lte is reference to "less than or equal", which determines if we are moving left or right of the current price to find the next initialized tick with liquidity
 func computeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec, lte bool) (sqrtPriceNext sdk.Dec, amountIn sdk.Dec, amountOut sdk.Dec) {
 	if lte {
-		priceDiff := amountRemaining.Quo(liquidity)
-		priceNext := sqrtPriceCurrent.Add(priceDiff)
-		amountIn := calcAmount1Delta(liquidity, priceNext, sqrtPriceCurrent)
-		amountOut := calcAmount0Delta(liquidity, priceNext, sqrtPriceCurrent)
-		return priceNext, amountIn, amountOut
+		sqrtPriceNext := getNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemaining)
+		amountIn := calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
+		amountOut := calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
+		return sqrtPriceNext, amountIn, amountOut
 	} else {
-		priceNextTop := liquidity.Mul(sqrtPriceCurrent)
-		priceNextBot := liquidity.Add(amountRemaining.Mul(sqrtPriceCurrent))
-		priceNext := priceNextTop.Quo(priceNextBot)
-		amountIn := calcAmount0Delta(liquidity, priceNext, sqrtPriceCurrent)
-		amountOut := calcAmount1Delta(liquidity, priceNext, sqrtPriceCurrent)
-		return priceNext, amountIn, amountOut
+		sqrtPriceNext := getNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining)
+		amountIn := calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
+		amountOut := calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
+		return sqrtPriceNext, amountIn, amountOut
 	}
+}
+
+func getNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
+	numerator := liquidity.Mul(sdk.NewDec(2))
+	product := amountRemaining.Mul(sqrtPriceCurrent)
+
+	if product.Quo(amountRemaining).Equal(sqrtPriceCurrent) {
+		denominator := numerator.Add(product)
+		if denominator.GTE(numerator) {
+			numerator = numerator.Mul(sqrtPriceCurrent)
+			sqrtPriceNext = numerator.QuoRoundUp(denominator)
+			return sqrtPriceNext
+		}
+	}
+	denominator := numerator.Quo(sqrtPriceCurrent).Add(amountRemaining)
+	sqrtPriceNext = numerator.QuoRoundUp(denominator)
+	return sqrtPriceNext
+}
+
+func getNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
+	return sqrtPriceCurrent.Add(amountRemaining.Quo(liquidity))
 }

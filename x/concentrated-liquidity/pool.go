@@ -145,10 +145,11 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 	// need to look into fixing this
 	for swapState.amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 6)) {
 		lte := tokenIn.Denom == asset1
-		nextTick, ok := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), lte)
-		if !ok {
-			return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("there are no more ticks initialized to fill the swap")
-		}
+		nextTick, _ := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), lte)
+		// TODO: we can enable this error checking once we fix tick initialization
+		// if !ok {
+		// 	return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("there are no more ticks initialized to fill the swap")
+		// }
 		nextSqrtPrice, err := k.tickToPrice(sdk.NewInt(nextTick))
 		if err != nil {
 			return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", sdk.NewInt(nextTick))
@@ -235,6 +236,10 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 	for swapState.amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 6)) {
 		lte := tokenOut.Denom == asset1
 		nextTick, _ := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), lte)
+		// TODO: we can enable this error checking once we fix tick initialization
+		// if !ok {
+		// 	return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("there are no more ticks initialized to fill the swap")
+		// }
 		nextSqrtPrice, err := k.tickToPrice(sdk.NewInt(nextTick))
 		if err != nil {
 			return sdk.Coin{}, sdk.Coin{}, err

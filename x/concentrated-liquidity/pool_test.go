@@ -18,7 +18,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 
 	_, amountOut, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, minPrice, maxPrice, pool.Id)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewDec(663944645).String(), amountOut.Amount.ToDec().String())
+	s.Require().Equal(sdk.NewDec(666975610).String(), amountOut.Amount.ToDec().String())
 
 	// test asset b to a logic
 	tokenIn = sdk.NewCoin("usdc", sdk.NewInt(4199999999))
@@ -71,7 +71,7 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
 
 	amountIn, _, err = s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewDec(663944645), amountIn.Amount.ToDec())
+	s.Require().Equal(sdk.NewDec(666975610), amountIn.Amount.ToDec())
 
 	// test asset a to b logic
 	tokenOut = sdk.NewCoin("usdc", sdk.NewInt(4199999999))
