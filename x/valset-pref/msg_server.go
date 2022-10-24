@@ -138,25 +138,6 @@ func (server msgServer) RedelegateValidatorSet(goCtx context.Context, msg *types
 		}
 	}
 
-	for _, oldVals := range existingSet.Preferences {
-		_, validator, err := server.keeper.GetValAddrAndVal(ctx, oldVals.ValOperAddress)
-		if err != nil {
-			return nil, err
-		}
-
-		fmt.Println("EXISTING. TOKENS: ", validator.Tokens, "SHARES: ", validator.DelegatorShares)
-
-	}
-
-	for _, newVals := range msg.Preferences {
-		_, validator, err := server.keeper.GetValAddrAndVal(ctx, newVals.ValOperAddress)
-		if err != nil {
-			return nil, err
-		}
-
-		fmt.Println("NEW. TOKENS: ", validator.Tokens, "SHARES: ", validator.DelegatorShares)
-	}
-
 	return &types.MsgRedelegateValidatorSetResponse{}, nil
 }
 

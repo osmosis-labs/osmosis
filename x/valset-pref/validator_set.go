@@ -61,13 +61,18 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 		}
 
 		// amount to delegate, calculated by {val_distribution_weight * tokenAmt}
-		// NOTE: it'd be nice if this value was decimal
 		amountToStake := val.Weight.Mul(tokenAmt).RoundInt()
-
 		_, err = k.stakingKeeper.Delegate(ctx, delegator, amountToStake, stakingtypes.Unbonded, validator, true)
 		if err != nil {
 			return err
 		}
+
+		// _, newVal, err := k.GetValAddrAndVal(ctx, val.ValOperAddress)
+		// if err != nil {
+		// 	return err
+		// }
+
+		// fmt.Println("DELEGATE.", newVal.OperatorAddress, "TOKENS: ", newVal.Tokens, "SHARES: ", newVal.DelegatorShares)
 	}
 
 	return nil

@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	valPref "github.com/osmosis-labs/osmosis/v12/x/validator-preference"
@@ -311,6 +313,26 @@ func (suite *KeeperTestSuite) TestReDelegateValidatorSet() {
 			},
 			expectPass: true,
 		},
+		// {
+		// 	name:        "Update existing validator Set with delegated tokens V2",
+		// 	delegator:   sdk.AccAddress([]byte("addr1---------------")),
+		// 	coinToStake: sdk.NewCoin("stake", sdk.NewInt(20)),
+		// 	newPreferences: []types.ValidatorPreference{
+		// 		{
+		// 			ValOperAddress: valAddrs[0],
+		// 			Weight:         sdk.NewDecWithPrec(2, 1),
+		// 		},
+		// 		{
+		// 			ValOperAddress: valAddrs[1],
+		// 			Weight:         sdk.NewDecWithPrec(5, 1),
+		// 		},
+		// 		{
+		// 			ValOperAddress: valAddrs[2],
+		// 			Weight:         sdk.NewDecWithPrec(3, 1),
+		// 		},
+		// 	},
+		// 	expectPass: true,
+		// },
 	}
 
 	for _, test := range tests {
@@ -332,9 +354,6 @@ func (suite *KeeperTestSuite) TestReDelegateValidatorSet() {
 			_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
 			suite.Require().NoError(err)
 
-			// Fund the delegator address account
-			suite.FundAcc(test.delegator, sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100))})
-
 			// call the create validator set preference
 			_, err = msgServer.DelegateToValidatorSet(c, types.NewMsgDelegateToValidatorSet(test.delegator, test.coinToStake))
 			suite.Require().NoError(err)
@@ -343,6 +362,16 @@ func (suite *KeeperTestSuite) TestReDelegateValidatorSet() {
 			_, err = msgServer.RedelegateValidatorSet(c, types.NewMsgRedelegateValidatorSet(test.delegator, test.newPreferences))
 			if test.expectPass {
 				suite.Require().NoError(err)
+
+				// check if the expectedShares matches after delegation
+				for _, val := range test.newPreferences {
+					valAddr, err := sdk.ValAddressFromBech32(val.ValOperAddress)
+					suite.Require().NoError(err)
+
+					// gurantees that the delegator exist because we check it in DelegateToValidatorSet
+					del, _ := suite.App.StakingKeeper.GetDelegation(suite.Ctx, test.delegator, valAddr)
+					fmt.Println(del.Shares)
+				}
 
 			} else {
 				// error while updating the weights
