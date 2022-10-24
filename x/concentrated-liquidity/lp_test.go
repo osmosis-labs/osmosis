@@ -17,10 +17,11 @@ func (s *KeeperTestSuite) TestMint() {
 	currentTick := sdk.NewInt(85176)
 	lowerTick := int64(84222)
 	upperTick := int64(86129)
-	liquidity, ok := sdk.NewIntFromString("1517882323")
-	s.Require().True(ok)
-	currentSqrtP, ok := sdk.NewIntFromString("70710678")
-	s.Require().True(ok)
+	liquidity, err := sdk.NewDecFromStr("1517.882323")
+	s.Require().NoError(err)
+	// currentSqrtP, ok := sdk.NewIntFromString("70710678")
+	currentSqrtP, err := sdk.NewDecFromStr("70.710678")
+	s.Require().NoError(err)
 	denom0 := "eth"
 	denom1 := "usdc"
 
@@ -30,6 +31,7 @@ func (s *KeeperTestSuite) TestMint() {
 
 	asset0, asset1, err := s.App.ConcentratedLiquidityKeeper.Mint(s.Ctx, poolId, s.TestAccs[0], liquidity, lowerTick, upperTick)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewInt(998629), asset0)     // .998629 ETH
-	s.Require().Equal(sdk.NewInt(5000208942), asset1) // 5000.20 USDC
+
+	s.Require().Equal(sdk.NewInt(1), asset0)
+	s.Require().Equal(sdk.NewInt(5000), asset1)
 }

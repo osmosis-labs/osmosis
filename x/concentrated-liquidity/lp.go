@@ -8,7 +8,7 @@ import (
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
-func (k Keeper) Mint(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityIn sdk.Int, lowerTick, upperTick int64) (amtDenom0, amtDenom1 sdk.Int, err error) {
+func (k Keeper) Mint(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityIn sdk.Dec, lowerTick, upperTick int64) (amtDenom0, amtDenom1 sdk.Int, err error) {
 	// ensure types.MinTick <= lowerTick < types.MaxTick
 	// TODO (bez): Add unit tests.
 	if lowerTick < types.MinTick || lowerTick >= types.MaxTick {
@@ -34,12 +34,12 @@ func (k Keeper) Mint(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liqui
 
 	pool := k.getPoolbyId(ctx, poolId)
 
-	currentSqrtPrice := sdk.NewDecWithPrec(int64(pool.CurrentSqrtPrice.Uint64()), 6)
-	sqrtRatioUpperTick, _ := k.tickToPrice(sdk.NewInt(upperTick)).ApproxSqrt()
-	sqrtRatioLowerTick, _ := k.tickToPrice(sdk.NewInt(lowerTick)).ApproxSqrt()
+	currentSqrtPrice := pool.CurrentSqrtPrice
+	sqrtRatioUpperTick, _ := k.tickToPrice(sdk.NewInt(upperTick))
+	sqrtRatioLowerTick, _ := k.tickToPrice(sdk.NewInt(lowerTick))
 
-	amtDenom0 = calcAmount0Delta(liquidityIn.ToDec(), currentSqrtPrice, sqrtRatioUpperTick).RoundInt()
-	amtDenom1 = calcAmount1Delta(liquidityIn.ToDec(), currentSqrtPrice, sqrtRatioLowerTick).RoundInt()
+	amtDenom0 = calcAmount0Delta(liquidityIn, currentSqrtPrice, sqrtRatioUpperTick).RoundInt()
+	amtDenom1 = calcAmount1Delta(liquidityIn, currentSqrtPrice, sqrtRatioLowerTick).RoundInt()
 
 	return amtDenom0, amtDenom1, nil
 }

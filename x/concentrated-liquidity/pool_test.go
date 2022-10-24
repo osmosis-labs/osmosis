@@ -6,7 +6,7 @@ import (
 
 func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	ctx := s.Ctx
-	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, "eth", "usdc", sdk.NewInt(70710678), sdk.NewInt(85176))
+	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, "eth", "usdc", sdk.MustNewDecFromStr("70.710678"), sdk.NewInt(85176))
 	s.Require().NoError(err)
 
 	// test asset a to b logic
@@ -50,7 +50,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 
 func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
 	ctx := s.Ctx
-	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", sdk.NewInt(70710678), sdk.NewInt(85176))
+	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", sdk.MustNewDecFromStr("70.710678"), sdk.NewInt(85176))
 	s.Require().NoError(err)
 
 	// test asset a to b logic
