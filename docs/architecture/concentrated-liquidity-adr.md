@@ -144,7 +144,7 @@ TODO: figure out routing logic:
 This a basic function that should allow LPs to provide liquidity in specific ranges
 to a pool. 
 
-The liquidity of the pool is consisted of both asset0 and asset1. The bucket that includes the current price is what we so call the "liquidity of the pool". Any other liquidity below or above the current price is consisted only of a single asset.
+A pool's liquidity is consisted of two assets: asset0 and asset1. In all pools, asset0 will be the lexicographically smaller of the two assets. At the current price tick, the bucket at this tick consists of a mix of both asset0 and asset1 and is called the virtual liquidity of the pool (or "L" for short). Any positions set below the current price are consisted solely of asset0 while positions above the current price only contain asset1.
 
 Therefore in `Mint`, we can either provide liquidity above or below the current price, which would act as limit orders, or decide to provide liquidity at current price. 
 
