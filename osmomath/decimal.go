@@ -881,20 +881,18 @@ func (x BigDec) LogBase2() BigDec {
 		panic(fmt.Sprintf("log is not defined at <= 0, given (%s)", xCopy))
 	}
 
-	// Normalize x to be 1 <= x < 2
+	// Normalize x to be 1 <= x < 2.
 
 	// y is the exponent that results in a whole multiple of 2.
 	y := ZeroDec()
 
-	// invariant: x >= 1
-	// while x < 1
+	// repeat until: x >= 1.
 	for xCopy.LT(OneDec()) {
 		xCopy.i.Lsh(xCopy.i, 1)
 		y = y.Sub(OneDec())
 	}
 
-	// invariant: x < 2
-	// while x >= 2
+	// repeat until: x < 2.
 	for xCopy.GTE(twoBigDec) {
 		xCopy.i.Rsh(xCopy.i, 1)
 		y = y.Add(OneDec())
@@ -907,7 +905,7 @@ func (x BigDec) LogBase2() BigDec {
 	// algorithm:
 	// https://stm32duinoforum.com/forum/dsp/BinaryLogarithm.pdf
 	// This has shown precision of 32 digits relative
-	// to Wolfram Alpha in tests
+	// to Wolfram Alpha in tests.
 	for i := 0; i < maxLog2Iterations; i++ {
 		xCopy = xCopy.Mul(xCopy)
 		if xCopy.GTE(twoBigDec) {
