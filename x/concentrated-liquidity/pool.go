@@ -26,7 +26,7 @@ type StepState struct {
 	amountOut      sdk.Dec
 }
 
-func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint64, denom0, denom1 string, currSqrtPrice, currTick sdk.Int) (Pool, error) {
+func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint64, denom0, denom1 string, currSqrtPrice sdk.Dec, currTick sdk.Int) (Pool, error) {
 	poolAddr := types.NewPoolAddress(poolId)
 	denom0, denom1, err := k.orderInitialPoolDenoms(denom0, denom1)
 	if err != nil {
@@ -102,7 +102,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 	tokenAmountInAfterFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
 
 	// get current sqrt price from pool
-	curSqrtPrice := sdk.NewDecWithPrec(int64(p.CurrentSqrtPrice.Uint64()), 6)
+	curSqrtPrice := p.CurrentSqrtPrice
 
 	// validation
 	if tokenIn.Denom != asset0 && tokenIn.Denom != asset1 {
@@ -186,7 +186,8 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 	asset1 := p.Token1
 
 	// get current sqrt price from pool
-	curSqrtPrice := sdk.NewDecWithPrec(int64(p.CurrentSqrtPrice.Uint64()), 6)
+	// curSqrtPrice := sdk.NewDecWithPrec(int64(p.CurrentSqrtPrice.Uint64()), 6)
+	curSqrtPrice := p.CurrentSqrtPrice
 
 	// validation
 	if tokenOut.Denom != asset0 && tokenOut.Denom != asset1 {

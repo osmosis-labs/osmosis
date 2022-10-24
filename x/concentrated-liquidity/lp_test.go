@@ -19,8 +19,9 @@ func (s *KeeperTestSuite) TestMint() {
 	upperTick := int64(86129)
 	liquidity, err := sdk.NewDecFromStr("1517.882323")
 	s.Require().NoError(err)
-	currentSqrtP, ok := sdk.NewIntFromString("70710678")
-	s.Require().True(ok)
+	// currentSqrtP, ok := sdk.NewIntFromString("70710678")
+	currentSqrtP, err := sdk.NewDecFromStr("70.710678")
+	s.Require().NoError(err)
 	denom0 := "eth"
 	denom1 := "usdc"
 
