@@ -22,6 +22,11 @@ func (k Keeper) UnmarshalPool(bz []byte) (types.TraditionalAmmInterface, error) 
 	return acc, k.cdc.UnmarshalInterface(bz, &acc)
 }
 
+// GetPool returns a pool with a given id.
+func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
+	return k.getPoolForSwap(ctx, poolId)
+}
+
 // GetPoolAndPoke returns a PoolI based on it's identifier if one exists. If poolId corresponds
 // to a pool with weights (e.g. balancer), the weights of the pool are updated via PokePool prior to returning.
 // TODO: Consider rename to GetPool due to downstream API confusion.

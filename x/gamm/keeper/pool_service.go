@@ -403,7 +403,7 @@ func (k Keeper) ExitSwapShareAmountIn(
 		if coin.Denom == tokenOutDenom {
 			continue
 		}
-		swapOut, err := k.SwapExactAmountIn(ctx, sender, poolId, coin, tokenOutDenom, sdk.ZeroInt())
+		swapOut, err := k.SwapExactAmountInDefaultSwapFee(ctx, sender, poolId, coin, tokenOutDenom, sdk.ZeroInt())
 		if err != nil {
 			return sdk.Int{}, err
 		}
