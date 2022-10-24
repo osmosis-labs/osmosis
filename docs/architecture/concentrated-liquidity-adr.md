@@ -156,6 +156,7 @@ $$L = \frac{\Delta x \sqrt{P_u} \sqrt{P_l}}{\sqrt{P_u} - \sqrt{P_l}}$$
 Liquidity needed for token1:
 $$L = \frac{\Delta y}{\sqrt{P_u}-\sqrt{P_l}}$$
 
+//TODO: what does this mean
 With the larger liquidity including the smaller liquidity, we take the smaller liquidity calculated for both token0 and token1 and use that as the liquidity throughout the rest of the joining process. Note that the liquidity used here does not represent an amount of a specific token, but the liquidity of the pool itself, represented in sdk.Int.
 
 Using the provided liquidity, now we calculate the delta amount of both token0 and token1, using the following equations, where L is the liquidity calculated above:
