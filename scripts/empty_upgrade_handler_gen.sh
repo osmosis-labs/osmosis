@@ -52,7 +52,6 @@
  echo -e '\tupgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"\n' >> $UPGRADES_FILE
  echo -e "\t$module/app/keepers$bracks" >> $UPGRADES_FILE
  echo -e "\t$module/app/upgrades$bracks" >> $UPGRADES_FILE
- echo -e "\tlockuptypes $module/x/lockup/types$bracks" >> $UPGRADES_FILE
 
  # close import
  echo ")" >> $UPGRADES_FILE
