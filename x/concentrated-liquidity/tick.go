@@ -7,6 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	db "github.com/tendermint/tm-db"
 
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/osmosis-labs/osmosis/v12/osmomath"
 	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
@@ -26,15 +28,57 @@ func (k Keeper) tickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
 // 	return sdk.Int{}
 // }
 
-func (k Keeper) UpdateTickWithNewLiquidity(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityDelta sdk.Int) {
-	tickInfo := k.getTickInfo(ctx, poolId, tickIndex)
+func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Int, upper bool) (err error) {
+	tickInfo, err := k.getTickInfo(ctx, poolId, tickIndex)
+	if err != nil {
+		return err
+	}
 
-	liquidityBefore := tickInfo.Liquidity
-	liquidityAfter := liquidityBefore.Add(liquidityDelta)
-	tickInfo.Liquidity = liquidityAfter
+	// calculate liquidityGross, which does not care about whether liquidityIn is positive or negative
+	liquidityBefore := tickInfo.LiquidityGross
+	var liquidityAfter sdk.Int
+	if liquidityIn.IsNegative() {
+		liquidityAfter = liquidityBefore.Sub(liquidityIn)
+	} else {
+		liquidityAfter = liquidityBefore.Add(liquidityIn)
+	}
+	tickInfo.LiquidityGross = liquidityAfter
+
+	// calculate liquidityNet, which we take into account and track depending on whether liquidityIn is positive or negative
+	if upper {
+		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Sub(liquidityIn)
+	} else {
+		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Add(liquidityIn)
+	}
 
 	k.setTickInfo(ctx, poolId, tickIndex, tickInfo)
+
+	return nil
 }
+
+func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Int, err error) {
+	tickInfo, err := k.getTickInfo(ctx, poolId, tickIndex)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	return tickInfo.LiquidityNet, nil
+}
+
+// UpdateTickWithNewLiquidity adds the given liquidityDelta to the liquidity of the given tickIndex.
+// func (k Keeper) UpdateTickWithNewLiquidity(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityDelta sdk.Int) (err error) {
+// 	tickInfo, exists, err := k.getTickInfo(ctx, poolId, tickIndex)
+// 	if err != nil || !exists {
+// 		return fmt.Errorf("Tick info must be initialized to update")
+// 	}
+
+// 	liquidityBefore := tickInfo.Liquidity
+// 	liquidityAfter := liquidityBefore.Add(liquidityDelta)
+// 	tickInfo.Liquidity = liquidityAfter
+
+// 	k.setTickInfo(ctx, poolId, tickIndex, tickInfo)
+// 	return err
+// }
 
 // NextInitializedTick returns the next initialized tick index based on the
 // current or provided tick index. If no initialized tick exists, <0, false>
@@ -87,12 +131,23 @@ func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex in
 	return 0, false
 }
 
-func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) TickInfo {
+// getTickInfo gets tickInfo given poolId and tickIndex. Returns a boolean field that returns true if value is found for given key.
+func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickInfo TickInfo, err error) {
 	store := ctx.KVStore(k.storeKey)
-	tickInfo := TickInfo{}
+	tickStruct := TickInfo{}
 	key := types.KeyTick(poolId, tickIndex)
-	osmoutils.MustGet(store, key, &tickInfo)
-	return tickInfo
+
+	bz := store.Get(key)
+	if bz == nil {
+		return TickInfo{LiquidityGross: sdk.ZeroInt(), LiquidityNet: sdk.ZeroInt()}, err
+	}
+
+	err = proto.Unmarshal(bz, &tickStruct)
+	if err != nil {
+		return tickStruct, err
+	}
+
+	return tickStruct, nil
 }
 
 func (k Keeper) setTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo TickInfo) {
@@ -100,3 +155,11 @@ func (k Keeper) setTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tic
 	key := types.KeyTick(poolId, tickIndex)
 	osmoutils.MustSet(store, key, &tickInfo)
 }
+
+// func (k Keeper) newTickInfo(liquidity sdk.Int) TickInfo {
+// 	tickInfo := TickInfo{
+// 		Liquidity: liquidity,
+// 	}
+
+// 	return tickInfo
+// }
