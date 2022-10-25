@@ -10,30 +10,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
-// SwapExactAmountInDefaultSwapFee attempts to swap one asset, tokenIn, for another asset
-// denominated via tokenOutDenom through a pool denoted by poolId specifying that
-// tokenOutMinAmount must be returned in the resulting asset returning an error
-// upon failure. Upon success, the resulting tokens swapped for are returned. A
-// swap fee is applied determined by the pool's parameters.
-// TODO: remove this method:
-// https://github.com/osmosis-labs/osmosis/issues/3129
-func (k Keeper) SwapExactAmountInDefaultSwapFee(
-	ctx sdk.Context,
-	sender sdk.AccAddress,
-	poolId uint64,
-	tokenIn sdk.Coin,
-	tokenOutDenom string,
-	tokenOutMinAmount sdk.Int,
-) (sdk.Int, error) {
-	pool, err := k.getPoolForSwap(ctx, poolId)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-
-	swapFee := pool.GetSwapFee(ctx)
-	return k.SwapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
-}
-
 // swapExactAmountIn is an internal method for swapping an exact amount of tokens
 // as input to a pool, using the provided swapFee. This is intended to allow
 // different swap fees as determined by multi-hops, or when recovering from
@@ -78,22 +54,6 @@ func (k Keeper) SwapExactAmountIn(
 	}
 
 	return tokenOutAmount, nil
-}
-
-func (k Keeper) SwapExactAmountOutDefaultSwapFee(
-	ctx sdk.Context,
-	sender sdk.AccAddress,
-	poolId uint64,
-	tokenInDenom string,
-	tokenInMaxAmount sdk.Int,
-	tokenOut sdk.Coin,
-) (tokenInAmount sdk.Int, err error) {
-	pool, err := k.getPoolForSwap(ctx, poolId)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-	swapFee := pool.GetSwapFee(ctx)
-	return k.SwapExactAmountOut(ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
 }
 
 // swapExactAmountIn is a method for swapping to get an exact number of tokens out of a pool,

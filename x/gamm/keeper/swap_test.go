@@ -4,10 +4,8 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v12/tests/mocks"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
@@ -92,13 +90,16 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 			poolId := suite.PrepareBalancerPool()
 			keeper := suite.App.GAMMKeeper
 			ctx := suite.Ctx
+			pool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
+			suite.NoError(err)
+			swapFee := pool.GetSwapFee(suite.Ctx)
 
 			if test.expectPass {
 				spotPriceBefore, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
 				suite.NoError(err, "test: %v", test.name)
 
 				prevGasConsumed := suite.Ctx.GasMeter().GasConsumed()
-				tokenOutAmount, err := keeper.SwapExactAmountInDefaultSwapFee(ctx, suite.TestAccs[0], poolId, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount)
+				tokenOutAmount, err := keeper.SwapExactAmountIn(ctx, suite.TestAccs[0], pool, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, swapFee)
 				suite.NoError(err, "test: %v", test.name)
 				suite.True(tokenOutAmount.Equal(test.param.expectedTokenOut), "test: %v", test.name)
 				gasConsumedForSwap := suite.Ctx.GasMeter().GasConsumed() - prevGasConsumed
@@ -114,7 +115,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				tradeAvgPrice := test.param.tokenIn.Amount.ToDec().Quo(tokenOutAmount.ToDec())
 				suite.True(tradeAvgPrice.GT(spotPriceBefore) && tradeAvgPrice.LT(spotPriceAfter), "test: %v", test.name)
 			} else {
-				_, err := keeper.SwapExactAmountInDefaultSwapFee(ctx, suite.TestAccs[0], poolId, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount)
+				_, err := keeper.SwapExactAmountIn(ctx, suite.TestAccs[0], pool, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, swapFee)
 				suite.Error(err, "test: %v", test.name)
 			}
 		})
@@ -200,13 +201,17 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 
 			keeper := suite.App.GAMMKeeper
 			ctx := suite.Ctx
+			pool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
+			suite.Require().NoError(err)
+			swapFee := pool.GetSwapFee(suite.Ctx)
 
 			if test.expectPass {
 				spotPriceBefore, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
 				suite.NoError(err, "test: %v", test.name)
 
 				prevGasConsumed := suite.Ctx.GasMeter().GasConsumed()
-				tokenInAmount, err := keeper.SwapExactAmountOutDefaultSwapFee(ctx, suite.TestAccs[0], poolId, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut)
+
+				tokenInAmount, err := keeper.SwapExactAmountOut(ctx, suite.TestAccs[0], pool, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut, swapFee)
 				suite.NoError(err, "test: %v", test.name)
 				suite.True(tokenInAmount.Equal(test.param.expectedTokenInAmount),
 					"test: %v\n expect_eq actual: %s, expected: %s",
@@ -224,7 +229,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 				tradeAvgPrice := tokenInAmount.ToDec().Quo(test.param.tokenOut.Amount.ToDec())
 				suite.True(tradeAvgPrice.GT(spotPriceBefore) && tradeAvgPrice.LT(spotPriceAfter), "test: %v", test.name)
 			} else {
-				_, err := keeper.SwapExactAmountOutDefaultSwapFee(suite.Ctx, suite.TestAccs[0], poolId, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut)
+				_, err := keeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], pool, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut, swapFee)
 				suite.Error(err, "test: %v", test.name)
 			}
 		})
@@ -255,73 +260,23 @@ func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 			})
 
 			suite.Ctx = suite.Ctx.WithBlockTime(tc.blockTime)
+			pool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
+			suite.Require().NoError(err)
+			swapFee := pool.GetSwapFee(suite.Ctx)
 
 			foocoin := sdk.NewCoin("foo", sdk.NewInt(10))
 
 			if tc.expectPass {
-				_, err := suite.App.GAMMKeeper.SwapExactAmountInDefaultSwapFee(suite.Ctx, suite.TestAccs[0], poolId, foocoin, "bar", sdk.ZeroInt())
+				_, err := suite.App.GAMMKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], pool, foocoin, "bar", sdk.ZeroInt(), swapFee)
 				suite.Require().NoError(err)
-				_, err = suite.App.GAMMKeeper.SwapExactAmountOutDefaultSwapFee(suite.Ctx, suite.TestAccs[0], poolId, "bar", sdk.NewInt(1000000000000000000), foocoin)
+				_, err = suite.App.GAMMKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], pool, "bar", sdk.NewInt(1000000000000000000), foocoin, swapFee)
 				suite.Require().NoError(err)
 			} else {
-				_, err := suite.App.GAMMKeeper.SwapExactAmountInDefaultSwapFee(suite.Ctx, suite.TestAccs[0], poolId, foocoin, "bar", sdk.ZeroInt())
+				_, err := suite.App.GAMMKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], pool, foocoin, "bar", sdk.ZeroInt(), swapFee)
 				suite.Require().Error(err)
-				_, err = suite.App.GAMMKeeper.SwapExactAmountOutDefaultSwapFee(suite.Ctx, suite.TestAccs[0], poolId, "bar", sdk.NewInt(1000000000000000000), foocoin)
+				_, err = suite.App.GAMMKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], pool, "bar", sdk.NewInt(1000000000000000000), foocoin, swapFee)
 				suite.Require().Error(err)
 			}
 		}
-	}
-}
-
-// Test two pools -- one is active and should have swaps allowed,
-// while the other is inactive and should have swaps frozen.
-// As shown in the following test, we can mock a pool by calling
-// `mocks.NewMockPool()`, then adding `EXPECT` statements to
-// match argument calls, add return values, and more.
-// More info at https://github.com/golang/mock
-func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
-	// Setup test
-	suite.SetupTest()
-	testCoin := sdk.NewCoin("foo", sdk.NewInt(10))
-	suite.FundAcc(suite.TestAccs[0], defaultAcctFunds)
-
-	// Setup active pool
-	activePoolId := suite.PrepareBalancerPool()
-
-	// Setup mock inactive pool
-	gammKeeper := suite.App.GAMMKeeper
-	ctrl := gomock.NewController(suite.T())
-	defer ctrl.Finish()
-	inactivePool := mocks.NewMockPoolI(ctrl)
-	inactivePoolId := gammKeeper.GetNextPoolIdAndIncrement(suite.Ctx)
-	// Add mock return values for pool -- we need to do this because
-	// mock objects don't have interface functions implemented by default.
-	inactivePool.EXPECT().IsActive(suite.Ctx).Return(false).AnyTimes()
-	inactivePool.EXPECT().GetId().Return(inactivePoolId).AnyTimes()
-	gammKeeper.SetPool(suite.Ctx, inactivePool)
-
-	type testCase struct {
-		poolId     uint64
-		expectPass bool
-		name       string
-	}
-	testCases := []testCase{
-		{activePoolId, true, "swap succeeds on active pool"},
-		{inactivePoolId, false, "swap fails on inactive pool"},
-	}
-
-	for _, test := range testCases {
-		suite.Run(test.name, func() {
-			// Check swaps
-			_, swapInErr := gammKeeper.SwapExactAmountInDefaultSwapFee(suite.Ctx, suite.TestAccs[0], test.poolId, testCoin, "bar", sdk.ZeroInt())
-			_, swapOutErr := gammKeeper.SwapExactAmountOutDefaultSwapFee(suite.Ctx, suite.TestAccs[0], test.poolId, "bar", sdk.NewInt(1000000000000000000), testCoin)
-			if test.expectPass {
-				suite.Require().NoError(swapInErr)
-				suite.Require().NoError(swapOutErr)
-			} else {
-				suite.Require().Error(swapInErr)
-				suite.Require().Error(swapOutErr)
-			}
-		})
 	}
 }
