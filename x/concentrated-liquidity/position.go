@@ -23,6 +23,7 @@ func (k Keeper) initOrUpdatePosition(ctx sdk.Context,
 	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, position)
 }
 
+// nolint: unused
 func (k Keeper) getPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) Position {
 	store := ctx.KVStore(k.storeKey)
 

@@ -56,13 +56,13 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 	return nil
 }
 
-func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Int, err error) {
+func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Dec, err error) {
 	tickInfo, err := k.getTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
-		return sdk.Int{}, err
+		return sdk.Dec{}, err
 	}
 
-	return tickInfo.LiquidityNet, nil
+	return tickInfo.LiquidityNet.ToDec(), nil
 }
 
 // UpdateTickWithNewLiquidity adds the given liquidityDelta to the liquidity of the given tickIndex.

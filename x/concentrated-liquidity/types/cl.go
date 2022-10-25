@@ -1,6 +1,10 @@
 package types
 
-import fmt "fmt"
+import (
+	fmt "fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 func OrderInitialPoolDenoms(denom0, denom1 string) (string, string, error) {
 	if denom0 == denom1 {
@@ -11,4 +15,14 @@ func OrderInitialPoolDenoms(denom0, denom1 string) (string, string, error) {
 	}
 
 	return denom0, denom1, nil
+}
+
+func AddLiquidity(x, y sdk.Dec) (z sdk.Dec) {
+	if y.LT(sdk.ZeroDec()) {
+		z = x.Sub(y.Neg())
+		return z
+	} else {
+		z = x.Add(y)
+		return z
+	}
 }
