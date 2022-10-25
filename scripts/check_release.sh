@@ -1,7 +1,6 @@
 #!/bin/bash
 
 VERSION=$1
-echo $VERSION ÆAAAAAAAAAAA
 latest_version=0
 for f in app/upgrades/*; do 
     s_f=(${f//// })
