@@ -741,7 +741,7 @@ func (s *decimalTestSuite) TestLog2() {
 }
 
 func (s *decimalTestSuite) TestLn() {
-	var expectedErrTolerance = MustNewDecFromStr("0.000000000000000000000000000000000140")
+	var expectedErrTolerance = MustNewDecFromStr("0.000000000000000000000000000000000100")
 
 	tests := map[string]struct {
 		initialValue BigDec
@@ -803,7 +803,7 @@ func (s *decimalTestSuite) TestLn() {
 		},
 		"log_e{912648174127941279170121098210.92821920190204131121} = 68.986147965719214790400745338243805015": {
 			initialValue: MustNewDecFromStr("912648174127941279170121098210.92821920190204131121"),
-			// From: https://www.wolframalpha.com/input?i=68.986147965719214790400745338243805015&assumption=%22ClashPrefs%22+-%3E+%7B%22Math%22%7D
+			// From: https://www.wolframalpha.com/input?i=log912648174127941279170121098210.92821920190204131121+to+38+digits
 			expected: MustNewDecFromStr("68.986147965719214790400745338243805015"),
 		},
 	}
@@ -818,6 +818,77 @@ func (s *decimalTestSuite) TestLn() {
 
 				// system under test.
 				res := tc.initialValue.Ln()
+				require.True(DecApproxEq(s.T(), tc.expected, res, expectedErrTolerance))
+				require.Equal(s.T(), initialCopy, tc.initialValue)
+			})
+		})
+	}
+}
+
+func (s *decimalTestSuite) TestTickLogOf2() {
+	var expectedErrTolerance = MustNewDecFromStr("0.0000000000000000000000000015000000")
+
+	tests := map[string]struct {
+		initialValue BigDec
+		expected     BigDec
+
+		expectedPanic bool
+	}{
+		"log_1.0001{-1}; invalid; panic": {
+			initialValue:  OneDec().Neg(),
+			expectedPanic: true,
+		},
+		"log_1.0001{0}; invalid; panic": {
+			initialValue:  ZeroDec(),
+			expectedPanic: true,
+		},
+		"log_1.0001{0.001} = -69081.006609899112313305835611219486392199": {
+			initialValue: MustNewDecFromStr("0.001"),
+			// From: https://www.wolframalpha.com/input?i=log_1.0001%280.001%29+to+41+digits
+			expected: MustNewDecFromStr("-69081.006609899112313305835611219486392199"),
+		},
+		"log_1.0001{0.999912345} = -0.876632247930741919880461740717176538": {
+			initialValue: MustNewDecFromStr("0.999912345"),
+			// From: https://www.wolframalpha.com/input?i=log_1.0001%280.999912345%29+to+36+digits
+			expected: MustNewDecFromStr("-0.876632247930741919880461740717176538"),
+		},
+		"log_1.0001{1} = 0": {
+			initialValue: NewBigDec(1),
+			expected:     NewBigDec(0),
+		},
+		"log_1.0001{1.0001} = 1": {
+			initialValue: MustNewDecFromStr("1.0001"),
+			// From: https://www.wolframalpha.com/input?i=e+with+36+decimals
+			expected: NewBigDec(1),
+		},
+		"log_1.0001{512} = 62386.365360724158196763710649998441051753": {
+			initialValue: NewBigDec(512),
+			// From: https://www.wolframalpha.com/input?i=log_1.0001%28512%29+to+41+digits
+			expected: MustNewDecFromStr("62386.365360724158196763710649998441051753"),
+		},
+		"log_1.0001{1024.987654321} = 69327.824629506998657531621822514042777198": {
+			initialValue: NewDecWithPrec(1024987654321, 9),
+			// From: https://www.wolframalpha.com/input?i=log_1.0001%281024.987654321%29+to+41+digits
+			expected: MustNewDecFromStr("69327.824629506998657531621822514042777198"),
+		},
+		"log_1.0001{912648174127941279170121098210.92821920190204131121} = 689895.972156319183538389792485913311778672": {
+			initialValue: MustNewDecFromStr("912648174127941279170121098210.92821920190204131121"),
+			// From: https://www.wolframalpha.com/input?i=log_1.0001%28912648174127941279170121098210.92821920190204131121%29+to+42+digits
+			expected: MustNewDecFromStr("689895.972156319183538389792485913311778672"),
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			osmoassert.ConditionalPanic(s.T(), tc.expectedPanic, func() {
+				// Create a copy to test that the original was not modified.
+				// That is, that Ln() is non-mutative.
+				initialCopy := ZeroDec()
+				initialCopy.i.Set(tc.initialValue.i)
+
+				// system under test.
+				res := tc.initialValue.TickLog()
+				fmt.Println(tc.expected.Sub(res).Abs())
 				require.True(DecApproxEq(s.T(), tc.expected, res, expectedErrTolerance))
 				require.Equal(s.T(), initialCopy, tc.initialValue)
 			})

@@ -45,7 +45,11 @@ var (
 
 	// ln2
 	// From: https://www.wolframalpha.com/input?i=log2+with+36+digits
-	naturalLogOf2 = MustNewDecFromStr("1.44269504088896340735992468100189214")
+	logEover2 = MustNewDecFromStr("1.442695040888963407359924681001892137")
+
+	// log_2(1.0001)
+	// From: https://www.wolframalpha.com/input?i=log_2%281.0001%29+to+33+digits
+	tickLogOf2 = MustNewDecFromStr("0.000144262291094554178391070900057480")
 	// initialized in init() since requires
 	// precision to be defined.
 	twoBigDec BigDec
@@ -930,7 +934,19 @@ func (x BigDec) Ln() BigDec {
 
 	log2x := xCopy.LogBase2()
 
-	y := log2x.Quo(naturalLogOf2)
+	y := log2x.Quo(logEover2)
+
+	return y
+}
+
+func (x BigDec) TickLog() BigDec {
+	// insure does not mutate original value
+	xCopy := ZeroDec()
+	xCopy.i.Set(x.i)
+
+	log2x := xCopy.LogBase2()
+
+	y := log2x.Quo(tickLogOf2)
 
 	return y
 }
