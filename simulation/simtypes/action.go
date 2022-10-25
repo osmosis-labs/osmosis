@@ -43,13 +43,13 @@ func NewKeeperlessMsgBasedAction[M sdk.Msg](actionName string, msgGenerator func
 	return msgBasedAction{name: actionName, frequency: Common, msgGenerator: wrappedMsgGen}
 }
 
-func CurryMsgGenerator[K interface{}, M sdk.Msg](k K, f func(K, *SimCtx, sdk.Context, ...struct{}) (M, error)) func(*SimCtx, sdk.Context) (M, error) {
+func CurryMsgGenerator[K interface{}, M sdk.Msg](k K, f func(K, *SimCtx, sdk.Context) (M, error)) func(*SimCtx, sdk.Context) (M, error) {
 	return func(sim *SimCtx, ctx sdk.Context) (M, error) {
 		return f(k, sim, ctx)
 	}
 }
 
-func NewMsgBasedAction[K interface{}, M sdk.Msg](actionName string, k K, f func(K, *SimCtx, sdk.Context, ...struct{}) (M, error)) Action {
+func NewMsgBasedAction[K interface{}, M sdk.Msg](actionName string, k K, f func(K, *SimCtx, sdk.Context) (M, error)) Action {
 	msgGenerator := CurryMsgGenerator(k, f)
 	return NewKeeperlessMsgBasedAction(actionName, msgGenerator)
 }

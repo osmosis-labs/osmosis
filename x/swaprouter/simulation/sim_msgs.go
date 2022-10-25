@@ -21,7 +21,7 @@ type SimulationKeeper struct {
 
 // RandomSwapExactAmountIn utilizes a random pool and swaps and exact amount in for minimum of the secondary pool token
 // TODO: Improve this to swap through multiple pools
-func RandomSwapExactAmountIn(k SimulationKeeper, sim *simtypes.SimCtx, ctx sdk.Context, keepers ...struct{}) (*types.MsgSwapExactAmountIn, error) {
+func RandomSwapExactAmountIn(k SimulationKeeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgSwapExactAmountIn, error) {
 	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
 	pool_id, pool, coinIn, coinOut, _, _, err := getRandPool(k, sim, ctx)
 	if err != nil {
@@ -59,7 +59,7 @@ func RandomSwapExactAmountIn(k SimulationKeeper, sim *simtypes.SimCtx, ctx sdk.C
 
 // RandomSwapExactAmountOut utilizes a random pool and swaps a max amount amount in for an exact amount of the secondary pool token
 // TODO: Improve this to swap through multiple pools
-func RandomSwapExactAmountOut(k SimulationKeeper, sim *simtypes.SimCtx, ctx sdk.Context, keepers ...struct{}) (*types.MsgSwapExactAmountOut, error) {
+func RandomSwapExactAmountOut(k SimulationKeeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgSwapExactAmountOut, error) {
 	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
 	pool_id, pool, coinIn, coinOut, _, _, err := getRandPool(k, sim, ctx)
 	if err != nil {
