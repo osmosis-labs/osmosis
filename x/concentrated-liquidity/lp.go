@@ -26,18 +26,24 @@ func (k Keeper) Mint(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liqui
 	}
 
 	// update tickInfo state
-	err = k.initOrUpdateTick(ctx, poolId, lowerTick, liquidityIn.RoundInt(), false)
+	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
+	err = k.initOrUpdateTick(ctx, poolId, lowerTick, liquidityIn.TruncateInt(), false)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, nil
 	}
 
-	err = k.initOrUpdateTick(ctx, poolId, lowerTick, liquidityIn.RoundInt(), true)
+	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
+	err = k.initOrUpdateTick(ctx, poolId, upperTick, liquidityIn.TruncateInt(), true)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, nil
 	}
 
 	// update position state
-	// err = k.setPosition()
+	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
+	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityIn.TruncateInt())
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, nil
+	}
 
 	// now calculate amount for token0 and token1
 	pool := k.getPoolbyId(ctx, poolId)

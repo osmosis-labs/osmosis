@@ -29,7 +29,7 @@ func (k Keeper) tickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
 // }
 
 func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Int, upper bool) (err error) {
-	tickInfo, err := k.getTickInfo(ctx, poolId, tickIndex)
+	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
 		return err
 	}
@@ -56,29 +56,15 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 	return nil
 }
 
+// nolint: unused
 func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Int, err error) {
-	tickInfo, err := k.getTickInfo(ctx, poolId, tickIndex)
+	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
 	return tickInfo.LiquidityNet, nil
 }
-
-// UpdateTickWithNewLiquidity adds the given liquidityDelta to the liquidity of the given tickIndex.
-// func (k Keeper) UpdateTickWithNewLiquidity(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityDelta sdk.Int) (err error) {
-// 	tickInfo, exists, err := k.getTickInfo(ctx, poolId, tickIndex)
-// 	if err != nil || !exists {
-// 		return fmt.Errorf("Tick info must be initialized to update")
-// 	}
-
-// 	liquidityBefore := tickInfo.Liquidity
-// 	liquidityAfter := liquidityBefore.Add(liquidityDelta)
-// 	tickInfo.Liquidity = liquidityAfter
-
-// 	k.setTickInfo(ctx, poolId, tickIndex, tickInfo)
-// 	return err
-// }
 
 // NextInitializedTick returns the next initialized tick index based on the
 // current or provided tick index. If no initialized tick exists, <0, false>
@@ -132,7 +118,7 @@ func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex in
 }
 
 // getTickInfo gets tickInfo given poolId and tickIndex. Returns a boolean field that returns true if value is found for given key.
-func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickInfo TickInfo, err error) {
+func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickInfo TickInfo, err error) {
 	store := ctx.KVStore(k.storeKey)
 	tickStruct := TickInfo{}
 	key := types.KeyTick(poolId, tickIndex)
@@ -155,11 +141,3 @@ func (k Keeper) setTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tic
 	key := types.KeyTick(poolId, tickIndex)
 	osmoutils.MustSet(store, key, &tickInfo)
 }
-
-// func (k Keeper) newTickInfo(liquidity sdk.Int) TickInfo {
-// 	tickInfo := TickInfo{
-// 		Liquidity: liquidity,
-// 	}
-
-// 	return tickInfo
-// }
