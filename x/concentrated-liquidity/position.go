@@ -36,7 +36,7 @@ func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
 
 	found, err := osmoutils.GetIfFound(store, key, &positionStruct)
-	// return 0 values iuf key has not been initialized
+	// return 0 values if key has not been initialized
 	if !found {
 		return Position{Liquidity: sdk.ZeroInt()}, nil
 	}
