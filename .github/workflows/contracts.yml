@@ -87,37 +87,3 @@ jobs:
 #        if: ${{ matrix.contract.output != null }}
 #        run: >
 #          diff ${{ matrix.contract.output }} ${{ matrix.contract.build }}
-  
-
-  lints:
-    name: Cosmwasm Lints
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        workdir: [./x/ibc-rate-limit]
-
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.rs
-      - name: Install toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          override: true
-          components: rustfmt, clippy
-
-      - name: Format
-        working-directory: ${{ matrix.workdir }}
-        run: >
-          cargo fmt --all -- --check
-
-      - name: run cargo clippy
-        working-directory: ${{ matrix.workdir }}
-        run: >
-          cargo clippy -- -D warnings
-
