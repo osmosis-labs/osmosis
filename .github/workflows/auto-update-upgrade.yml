@@ -10,7 +10,9 @@ on:
     types: [created]
 jobs:
   post_release:
-    if: ${{ bash ./scripts/check_release.sh ${{ github.event.release.tag_name }} }} == 1
+    env:
+      major_release: $(head -n 1 ./temp.txt)
+    if: ${{ env.major_release }} == 1
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
