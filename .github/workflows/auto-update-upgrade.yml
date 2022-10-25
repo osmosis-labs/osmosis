@@ -30,10 +30,30 @@ jobs:
           msg: ${{ steps.slice.outputs.result }}
           separator: .
 
-      - name: CHECKS
-        run: echo ${{ steps.split.outputs._0 }}
+      - name: Get previous tag
+        uses: WyriHaximus/github-action-get-previous-tag@v1
+        id: pr_tag
+        with:
+          fallback: 1.0.0
+      
+      - name: Remove "v" from pr_tag
+        uses: web3j/slice-action@v1.3
+        id: pr_slice
+        with:
+          value: ${{ steps.pr_tag.outputs.tag }}
+          start: 1
 
-      # - if: $GITHUB_ENV.is_major == 1
+      - name: Get major version of pr_tag
+        uses: JungWinter/split@v2
+        id: pr_split
+        with:
+          msg: ${{ steps.pr_slice.outputs.result }}
+          separator: .
+
+      - name: CHECKS
+        run: echo ${{ steps.pr_split.outputs._0 }}
+
+      - if:  ${{ steps.split.outputs._0 }} == 1
       - run: bash ./scripts/empty_upgrade_handler_gen.sh 
 
       - name: Create PR
