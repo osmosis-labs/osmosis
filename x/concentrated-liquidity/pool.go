@@ -172,7 +172,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 			if lte {
 				liquidityDelta = liquidityDelta.Neg()
 			}
-			swapState.liquidity = cltypes.AddLiquidity(swapState.liquidity, liquidityDelta)
+			swapState.liquidity = cltypes.AddLiquidity(swapState.liquidity, liquidityDelta.ToDec())
 			if swapState.liquidity.LTE(sdk.ZeroDec()) || swapState.liquidity.IsNil() {
 				return sdk.Coin{}, sdk.Coin{}, err
 			}
@@ -284,7 +284,7 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 			if lte {
 				liquidityDelta = liquidityDelta.Neg()
 			}
-			swapState.liquidity = cltypes.AddLiquidity(swapState.liquidity, liquidityDelta)
+			swapState.liquidity = cltypes.AddLiquidity(swapState.liquidity, liquidityDelta.ToDec())
 			if swapState.liquidity.LTE(sdk.ZeroDec()) || swapState.liquidity.IsNil() {
 				return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("no liquidity available, cannot swap")
 			}
