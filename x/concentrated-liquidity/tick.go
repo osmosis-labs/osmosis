@@ -7,8 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	db "github.com/tendermint/tm-db"
 
-	"github.com/gogo/protobuf/proto"
-
 	"github.com/osmosis-labs/osmosis/v12/osmomath"
 	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
@@ -122,12 +120,11 @@ func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 	tickStruct := TickInfo{}
 	key := types.KeyTick(poolId, tickIndex)
 
-	bz := store.Get(key)
-	if bz == nil {
+	found, err := osmoutils.GetIfFound(store, key, &tickStruct)
+	// return 0 values if key has not been initialized
+	if !found {
 		return TickInfo{LiquidityGross: sdk.ZeroInt(), LiquidityNet: sdk.ZeroInt()}, err
 	}
-
-	err = proto.Unmarshal(bz, &tickStruct)
 	if err != nil {
 		return tickStruct, err
 	}
