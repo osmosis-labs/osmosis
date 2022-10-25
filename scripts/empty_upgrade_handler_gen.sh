@@ -27,7 +27,6 @@
  touch $CONSTANTS_FILE
  touch $UPGRADES_FILE
  
-
  module=$(go mod edit -json | jq ".Module.Path")
  module=${module%?}
  path=${module%???}

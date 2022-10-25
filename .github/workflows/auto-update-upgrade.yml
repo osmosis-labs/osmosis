@@ -9,14 +9,24 @@ on:
   release: 
     types: [created]
 jobs:
-  build:
+  check_release_version:
+    runs-on: ubuntu-latest
+    # this script will create a new temp.txt file and write 1 to it if a new version is major (major == in version vX.Y.Z changed X)
+    steps:
+      - name: Check is release is major
+        run: bash ./scripts/check_release.sh ${{ github.event.release.tag_name }}
+
+  post_release:
+    if: $(head -n 1 ./temp) == 1
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2.3.4
-
+      
       - name: Running script
-        run: bash ./scripts/empty_upgrade_handler_gen.sh 
+        run: |
+          bash ./scripts/empty_upgrade_handler_gen.sh 
+          rm -rf ./temp
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
