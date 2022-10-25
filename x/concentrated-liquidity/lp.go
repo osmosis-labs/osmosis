@@ -13,6 +13,7 @@ import (
 // liquiduty proportional to the existing reserves, the actual amount of tokens used might differ from requested.
 // As a result, LPs may also provide the minimum amount of each token to be used so that the system fails
 // to create position if the desired amounts cannot be satisfied.
+// On success, returns an actual amount of each token used and liquidity created.
 // Returns error if:
 // TODO: list error cases
 // TODO: table-driven tests
@@ -70,6 +71,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 }
 
 // withdrawPosition withdraws a concentrated liquidity position from the given pool id in the given tick range and liquidityAmount.
+// On success, returns an amount of each token withdrawn.
 // Returns error if
 // - there is no position in the given tick ranges
 // - if tick ranges are invalid
