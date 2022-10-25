@@ -19,7 +19,7 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	}
 }
 
-// TODO: spec and tests, including events
+// TODO: tests, including events
 func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCreatePosition) (*types.MsgCreatePositionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -28,7 +28,7 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 		return nil, err
 	}
 
-	actualAmount0, actualAmount1, err := server.keeper.createPosition(ctx, msg.PoolId, sender, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick)
+	actualAmount0, actualAmount1, liquidityCreated, err := server.keeper.createPosition(ctx, msg.PoolId, sender, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick)
 	if err != nil {
 		return nil, err
 	}
@@ -46,6 +46,7 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
 			sdk.NewAttribute(types.AttributeAmount0, actualAmount0.String()),
 			sdk.NewAttribute(types.AttributeAmount1, actualAmount1.String()),
+			sdk.NewAttribute(types.AttributeLiquidity, liquidityCreated.String()),
 			sdk.NewAttribute(types.AttributeLowerTick, strconv.FormatInt(msg.LowerTick, 10)),
 			sdk.NewAttribute(types.AttributeUpperTick, strconv.FormatInt(msg.UpperTick, 10)),
 		),
@@ -54,7 +55,7 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 	return &types.MsgCreatePositionResponse{Amount0: actualAmount0, Amount1: actualAmount1}, nil
 }
 
-// TODO: spec and tests, including events
+// TODO: tests, including events
 func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWithdrawPosition) (*types.MsgWithdrawPositionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
