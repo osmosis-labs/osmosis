@@ -16,14 +16,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2.3.4
 
-      - name: Run version script
-        run: bash ./scripts/check_release.sh {{ github.event.release.tag_name }}
+      - name: Check for major version
+        uses: jungwinter/split@v2
+        id: split
+        with:
+          msg: ${{ github.event.release.tag_name }}
+          separator: v
+          maxsplit: 2
 
       - name: CHECKS
-        run: echo maj $GITHUB_ENV.is_major
+        run: echo ${{ steps.split.outputs._1 }}
 
-      - if: $GITHUB_ENV.is_major == 1
-        run: bash ./scripts/empty_upgrade_handler_gen.sh 
+      # - if: $GITHUB_ENV.is_major == 1
+      - run: bash ./scripts/empty_upgrade_handler_gen.sh 
 
       - name: Create PR
         uses: peter-evans/create-pull-request@v4
