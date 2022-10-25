@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"errors"
 	fmt "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,10 +31,15 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint6
 	return pool, nil
 }
 
+// GetPool returns a pool with a given id.
+func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
+	return nil, errors.New("not implemented")
+}
+
 func priceToTick(price sdk.Dec) sdk.Int {
-	logOfPrice := osmomath.BigDecFromSDKDec(price).ApproxLog2()
+	logOfPrice := osmomath.BigDecFromSDKDec(price).LogBase2()
 	logInt := osmomath.NewDecWithPrec(10001, 4)
-	tick := logOfPrice.Quo(logInt.ApproxLog2())
+	tick := logOfPrice.Quo(logInt.LogBase2())
 	return tick.SDKDec().TruncateInt()
 }
 

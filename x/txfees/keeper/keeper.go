@@ -16,7 +16,7 @@ type Keeper struct {
 
 	accountKeeper             types.AccountKeeper
 	bankKeeper                types.BankKeeper
-	gammKeeper                types.GammKeeper
+	gammKeeper                types.SwapRouterKeeper
 	spotPriceCalculator       types.SpotPriceCalculator
 	feeCollectorName          string
 	nonNativeFeeCollectorName string
@@ -28,7 +28,7 @@ func NewKeeper(
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	storeKey sdk.StoreKey,
-	gammKeeper types.GammKeeper,
+	swaprouterKeeper types.SwapRouterKeeper,
 	spotPriceCalculator types.SpotPriceCalculator,
 	feeCollectorName string,
 	nonNativeFeeCollectorName string,
@@ -37,7 +37,7 @@ func NewKeeper(
 		accountKeeper:             accountKeeper,
 		bankKeeper:                bankKeeper,
 		storeKey:                  storeKey,
-		gammKeeper:                gammKeeper,
+		gammKeeper:                swaprouterKeeper,
 		spotPriceCalculator:       spotPriceCalculator,
 		feeCollectorName:          feeCollectorName,
 		nonNativeFeeCollectorName: nonNativeFeeCollectorName,
