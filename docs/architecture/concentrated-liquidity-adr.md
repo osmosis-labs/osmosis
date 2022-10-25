@@ -121,7 +121,7 @@ all messages here.
 
 This message allows LPs to provide liquidity between `LowerTick` and `UpperTick` in a given `PoolId.
 The user provides the amount of each token desired. Since LPs are only allowed to provide
-liquiduty proportional to the existing reserves, the actual amount of tokens used might differ from requested.
+liquidity proportional to the existing reserves, the actual amount of tokens used might differ from requested.
 As a result, LPs may also provide the minimum amount of each token to be used so that the system fails
 to create position if the desired amounts cannot be satisfied.
 
