@@ -19,7 +19,7 @@ jobs:
       - name: Run version script
         run: echo "major=$(bash ./scripts/check_release.sh ${{ github.event.release.tag_name }})" >> $GITHUB_ENV
   post_release:
-    # if:  ${{ env.major }} == 1
+    if: env.major == 1
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
