@@ -2,7 +2,6 @@ package concentrated_liquidity
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
@@ -20,12 +19,10 @@ func (k Keeper) initOrUpdatePosition(ctx sdk.Context,
 	}
 
 	liquidityBefore := position.Liquidity
-	var liquidityAfter sdk.Int
-	if liquidityDelta.IsNegative() {
-		liquidityAfter = liquidityBefore.Sub(liquidityDelta)
-	} else {
-		liquidityAfter = liquidityBefore.Add(liquidityDelta)
-	}
+
+	// note that liquidityIn can be either positive or negative.
+	// If negative, this would work as a subtraction from liquidityBefore
+	liquidityAfter := liquidityBefore.Add(liquidityDelta)
 
 	position.Liquidity = liquidityAfter
 
@@ -38,12 +35,11 @@ func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	positionStruct := Position{}
 	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
 
-	bz := store.Get(key)
-	if bz == nil {
+	found, err := osmoutils.GetIfFound(store, key, &positionStruct)
+	// return 0 values if key has not been initialized
+	if !found {
 		return Position{Liquidity: sdk.ZeroInt()}, nil
 	}
-
-	err = proto.Unmarshal(bz, &positionStruct)
 	if err != nil {
 		return positionStruct, err
 	}

@@ -7,8 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	db "github.com/tendermint/tm-db"
 
-	"github.com/gogo/protobuf/proto"
-
 	"github.com/osmosis-labs/osmosis/v12/osmomath"
 	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
@@ -36,12 +34,11 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 
 	// calculate liquidityGross, which does not care about whether liquidityIn is positive or negative
 	liquidityBefore := tickInfo.LiquidityGross
-	var liquidityAfter sdk.Int
-	if liquidityIn.IsNegative() {
-		liquidityAfter = liquidityBefore.Sub(liquidityIn)
-	} else {
-		liquidityAfter = liquidityBefore.Add(liquidityIn)
-	}
+
+	// note that liquidityIn can be either positive or negative.
+	// If negative, this would work as a subtraction from liquidityBefore
+	liquidityAfter := liquidityBefore.Add(liquidityIn)
+
 	tickInfo.LiquidityGross = liquidityAfter
 
 	// calculate liquidityNet, which we take into account and track depending on whether liquidityIn is positive or negative
@@ -56,13 +53,14 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 	return nil
 }
 
-func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Dec, err error) {
+// nolint: unused
+func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Int, err error) {
 	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
-		return sdk.Dec{}, err
+		return sdk.Int{}, err
 	}
 
-	return tickInfo.LiquidityNet.ToDec(), nil
+	return tickInfo.LiquidityNet, nil
 }
 
 // NextInitializedTick returns the next initialized tick index based on the
@@ -122,12 +120,11 @@ func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 	tickStruct := TickInfo{}
 	key := types.KeyTick(poolId, tickIndex)
 
-	bz := store.Get(key)
-	if bz == nil {
+	found, err := osmoutils.GetIfFound(store, key, &tickStruct)
+	// return 0 values if key has not been initialized
+	if !found {
 		return TickInfo{LiquidityGross: sdk.ZeroInt(), LiquidityNet: sdk.ZeroInt()}, err
 	}
-
-	err = proto.Unmarshal(bz, &tickStruct)
 	if err != nil {
 		return tickStruct, err
 	}
