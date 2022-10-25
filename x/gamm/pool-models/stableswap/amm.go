@@ -377,11 +377,25 @@ func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk
 // We can mutate pa here
 // TODO: some day switch this to a COW wrapped pa, for better perf
 func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
-	if len(tokensIn) == 1 {
+	if !tokensIn.DenomsSubsetOf(p.GetTotalPoolLiquidity(ctx)) {
+		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("attempted joining pool with assets that do not exist in pool")
+	}
+	if len(tokensIn) == 1 && tokensIn[0].Amount.GT(sdk.OneInt()) {
 		numShares, err = p.calcSingleAssetJoinShares(tokensIn[0], swapFee)
+		if err != nil {
+			return sdk.ZeroInt(), sdk.NewCoins(), err
+		}
+
 		newLiquidity = tokensIn
+
+		p.updatePoolForJoin(newLiquidity, numShares)
+
+		if err = validatePoolAssets(p.PoolLiquidity, p.ScalingFactor); err != nil {
+			return sdk.ZeroInt(), sdk.NewCoins(), err
+		}
+
 		return numShares, newLiquidity, err
-	} else if len(tokensIn) != p.NumAssets() || !tokensIn.DenomsSubsetOf(p.GetTotalPoolLiquidity(ctx)) {
+	} else if len(tokensIn) != p.NumAssets() {
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New(
 			"stableswap pool only supports LP'ing with one asset, or all assets in pool")
 	}
@@ -393,15 +407,11 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 	}
 	p.updatePoolForJoin(tokensIn.Sub(remCoins), numShares)
 
-	for _, coin := range remCoins {
-		// TODO: Perhaps add a method to skip if this is too small.
-		newShare, err := p.calcSingleAssetJoinShares(coin, swapFee)
-		if err != nil {
-			return sdk.ZeroInt(), sdk.NewCoins(), err
-		}
-		p.updatePoolForJoin(sdk.NewCoins(coin), newShare)
-		numShares = numShares.Add(newShare)
+	tokensJoined := tokensIn.Sub(remCoins)
+
+	if err = validatePoolAssets(p.PoolLiquidity, p.ScalingFactor); err != nil {
+		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
 
-	return numShares, tokensIn, nil
+	return numShares, tokensJoined, nil
 }
