@@ -49,6 +49,11 @@ message MsgCreatePositionResponse {
     (gogoproto.moretags) = "yaml:\"amount1\"",
     (gogoproto.nullable) = false
   ];
+  string liquidity_created = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"liquidity_created\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // ===================== MsgWithdrawPosition
