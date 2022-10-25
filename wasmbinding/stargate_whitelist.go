@@ -66,6 +66,12 @@ func (g GRPCQueriesInfo) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
 	}
 }
 
+func (g GRPCQueriesInfo) GRPCQueriesInfo2StargateWhitelist() {
+	for id := range g.QueryPaths {
+		setWhitelistedQuery(g.QueryPaths[id], g.QueryReponses[id])
+	}
+}
+
 func init() {
 	// cosmos-sdk queries
 	g := GRPCQueriesInfo{}
@@ -76,62 +82,68 @@ func init() {
 
 	// bank
 	banktypes.RegisterQueryServer(g, nil)
+	g.RegisterQueryReponse((*banktypes.QueryServer)(nil))
 
 	// distribution
 	distributiontypes.RegisterQueryServer(g, nil)
+	g.RegisterQueryReponse((*distributiontypes.QueryServer)(nil))
 
 	// gov
 	govtypes.RegisterQueryServer(g, nil)
+	g.RegisterQueryReponse((*govtypes.QueryServer)(nil))
 
 	// slashing
 	slashingtypes.RegisterQueryServer(g, nil)
+	g.RegisterQueryReponse((*slashingtypes.QueryServer)(nil))
 
 	// staking
 	stakingtypes.RegisterQueryServer(g, nil)
+	g.RegisterQueryReponse((*stakingtypes.QueryServer)(nil))
 
 	// osmosis queries
 
 	// epochs
 	epochtypes.RegisterQueryServer(g, nil)
+	g.RegisterQueryReponse((*epochtypes.QueryServer)(nil))
 
 	// gamm
 	gammtypes.RegisterQueryServer(g, nil)
+	g.RegisterQueryReponse((*gammtypes.QueryServer)(nil))
 
 	// incentives
 	incentivestypes.RegisterQueryServer(g, nil)
+	g.RegisterQueryReponse((*incentivestypes.QueryServer)(nil))
 
 	// lockup
 	lockuptypes.RegisterQueryServer(g, nil)
+	g.RegisterQueryReponse((*lockuptypes.QueryServer)(nil))
 
 	// mint
-	setWhitelistedQuery("/osmosis.mint.v1beta1.Query/EpochProvisions", &minttypes.QueryEpochProvisionsResponse{})
-	setWhitelistedQuery("/osmosis.mint.v1beta1.Query/Params", &minttypes.QueryParamsResponse{})
+	minttypes.RegisterQueryServer(g, nil)
+	g.RegisterQueryReponse((*minttypes.QueryServer)(nil))
 
 	// pool-incentives
-	setWhitelistedQuery("/osmosis.poolincentives.v1beta1.Query/GaugeIds", &poolincentivestypes.QueryGaugeIdsResponse{})
+	poolincentivestypes.RegisterQueryServer(g, nil)
+	g.RegisterQueryReponse((*poolincentivestypes.QueryServer)(nil))
 
 	// superfluid
-	setWhitelistedQuery("/osmosis.superfluid.Query/Params", &superfluidtypes.QueryParamsResponse{})
-	setWhitelistedQuery("/osmosis.superfluid.Query/AssetType", &superfluidtypes.AssetTypeResponse{})
-	setWhitelistedQuery("/osmosis.superfluid.Query/AllAssets", &superfluidtypes.AllAssetsResponse{})
-	setWhitelistedQuery("/osmosis.superfluid.Query/AssetMultiplier", &superfluidtypes.AssetMultiplierResponse{})
+	superfluidtypes.RegisterQueryServer(g, nil)
+	g.RegisterQueryReponse((*superfluidtypes.QueryServer)(nil))
 
 	// txfees
-	setWhitelistedQuery("/osmosis.txfees.v1beta1.Query/FeeTokens", &txfeestypes.QueryFeeTokensResponse{})
-	setWhitelistedQuery("/osmosis.txfees.v1beta1.Query/DenomSpotPrice", &txfeestypes.QueryDenomSpotPriceResponse{})
-	setWhitelistedQuery("/osmosis.txfees.v1beta1.Query/DenomPoolId", &txfeestypes.QueryDenomPoolIdResponse{})
-	setWhitelistedQuery("/osmosis.txfees.v1beta1.Query/BaseDenom", &txfeestypes.QueryBaseDenomResponse{})
+	txfeestypes.RegisterQueryServer(g, nil)
+	g.RegisterQueryReponse((*txfeestypes.QueryServer)(nil))
 
 	// tokenfactory
-	setWhitelistedQuery("/osmosis.tokenfactory.v1beta1.Query/params", &tokenfactorytypes.QueryParamsResponse{})
-	setWhitelistedQuery("/osmosis.tokenfactory.v1beta1.Query/DenomAuthorityMetadata", &tokenfactorytypes.QueryDenomAuthorityMetadataResponse{})
+	tokenfactorytypes.RegisterQueryServer(g, nil)
+	g.RegisterQueryReponse((*tokenfactorytypes.QueryServer)(nil))
 	// Does not include denoms_from_creator, TBD if this is the index we want contracts to use instead of admin
 
 	// twap
-	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/ArithmeticTwap", &twapquerytypes.ArithmeticTwapResponse{})
-	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/ArithmeticTwapToNow", &twapquerytypes.ArithmeticTwapToNowResponse{})
-	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/Params", &twapquerytypes.ParamsResponse{})
+	twapquerytypes.RegisterQueryServer(g, nil)
+	g.RegisterQueryReponse((*twapquerytypes.QueryServer)(nil))
 
+	g.GRPCQueriesInfo2StargateWhitelist()
 }
 
 // GetWhitelistedQuery returns the whitelisted query at the provided path.
