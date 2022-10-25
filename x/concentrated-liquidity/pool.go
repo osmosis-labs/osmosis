@@ -170,7 +170,10 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 		)
 		// compute fees for the ratio of the tokens that have been swapped in this step
 		stepFee = stepFee.Add(ComputeStepFee(swapFee, amountIn.Quo(tokenAmountInAfterFee))) // invariant: stepFee <= swapFee
-		k.UpdateFeesForTick(ctx, poolId, nextTick, stepFee, firstTokenIsInput)
+		err = k.UpdateFeesForTick(ctx, poolId, nextTick, stepFee, firstTokenIsInput)
+		if err != nil {
+			return sdk.Coin{}, sdk.Coin{}, err
+		}
 
 		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn)
 		swapState.amountCalculated = swapState.amountCalculated.Add(amountOut)

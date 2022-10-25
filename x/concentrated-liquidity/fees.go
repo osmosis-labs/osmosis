@@ -23,20 +23,34 @@ func (f *Fee) Sub(fee *Fee) *Fee {
 
 // UpdateFeesForTick updates all initialized ticks below the current tick with the fees accrued in the current tick
 // ToDo: Does it matter that we skip uninitialized ticks?
-func (k Keeper) UpdateFeesForTick(ctx sdk.Context, poolId uint64, tickIndex int64, fee sdk.Dec, firstToken bool) {
+func (k Keeper) UpdateFeesForTick(ctx sdk.Context, poolId uint64, tickIndex int64, fee sdk.Dec, firstToken bool) error {
 	tick, initialized := k.NextInitializedTick(ctx, poolId, tickIndex, true)
 	for initialized {
-		tickInfo := k.getTickInfo(ctx, poolId, tick)
+		tickInfo, err := k.GetTickInfo(ctx, poolId, tick)
+		if err != nil {
+			return err
+		}
+
 		tickInfo.FeesAccruedAboveTick.Add(firstToken, fee)
 		k.setTickInfo(ctx, poolId, tickIndex, tickInfo)
 	}
+	return nil
 }
 
-func (k Keeper) ClaimFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) *Fee {
+func (k Keeper) ClaimFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) (*Fee, error) {
 	pool := k.getPoolbyId(ctx, poolId)
-	position := k.getPosition(ctx, poolId, owner, lowerTick, upperTick)
-	upperTickInfo := k.getTickInfo(ctx, poolId, upperTick)
-	lowerTickInfo := k.getTickInfo(ctx, poolId, lowerTick)
+	position, err := k.GetPosition(ctx, poolId, owner, lowerTick, upperTick)
+	if err != nil {
+		return nil, err
+	}
+	upperTickInfo, err := k.GetTickInfo(ctx, poolId, upperTick)
+	if err != nil {
+		return nil, err
+	}
+	lowerTickInfo, err := k.GetTickInfo(ctx, poolId, lowerTick)
+	if err != nil {
+		return nil, err
+	}
 
 	totalFees := upperTickInfo.FeesAccruedAboveTick.Sub(lowerTickInfo.FeesAccruedAboveTick).Sub(position.FeesAtCreation)
 
@@ -45,10 +59,16 @@ func (k Keeper) ClaimFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, 
 	feeShares := totalFees // ToDo: .Quo(owner.shares)
 
 	// ToDo: Check for tick overflow? is upperTick+1 correct?
-	k.UpdateFeesForTick(ctx, poolId, upperTick+1, feeShares.Token0.Neg(), true)
-	k.UpdateFeesForTick(ctx, poolId, upperTick+1, feeShares.Token1.Neg(), false)
+	err = k.UpdateFeesForTick(ctx, poolId, upperTick+1, feeShares.Token0.Neg(), true)
+	if err != nil {
+		return nil, err
+	}
+	err = k.UpdateFeesForTick(ctx, poolId, upperTick+1, feeShares.Token1.Neg(), false)
+	if err != nil {
+		return nil, err
+	}
 
-	return feeShares
+	return feeShares, nil
 }
 
 func ComputeStepFee(totalFee sdk.Dec, ratio sdk.Dec) sdk.Dec {
