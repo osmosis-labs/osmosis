@@ -204,8 +204,8 @@ func (s *decimalTestSuite) TestBigDecFromSdkDec() {
 
 func (s *decimalTestSuite) TestBigDecFromSdkDecSlice() {
 	tests := []struct {
-		d    []sdk.Dec
-		want []BigDec
+		d        []sdk.Dec
+		want     []BigDec
 		expPanic bool
 	}{
 		{[]sdk.Dec{sdk.MustNewDecFromStr("0.000000000000000000")}, []BigDec{NewBigDec(0)}, false},
@@ -654,6 +654,7 @@ func BenchmarkMarshalTo(b *testing.B) {
 }
 
 func (s *decimalTestSuite) TestLog2() {
+	var expectedErrTolerance = MustNewDecFromStr("0.000000000000000000000000000000000100")
 
 	tests := map[string]struct {
 		initialValue BigDec
@@ -661,10 +662,28 @@ func (s *decimalTestSuite) TestLog2() {
 
 		expectedPanic bool
 	}{
-		"log_2{0.99}; not supported; panic": {
-			initialValue: NewDecWithPrec(99, 2),
-
+		"log_2{-1}; invalid; panic": {
+			initialValue:  OneDec().Neg(),
 			expectedPanic: true,
+		},
+		"log_2{0}; invalid; panic": {
+			initialValue:  ZeroDec(),
+			expectedPanic: true,
+		},
+		"log_2{0.001} = -9.965784284662087043610958288468170528": {
+			initialValue: MustNewDecFromStr("0.001"),
+			// From: https://www.wolframalpha.com/input?i=log+base+2+of+0.999912345+with+33+digits
+			expected: MustNewDecFromStr("-9.965784284662087043610958288468170528"),
+		},
+		"log_2{0.56171821941421412902170941} = -0.832081497183140708984033250637831402": {
+			initialValue: MustNewDecFromStr("0.56171821941421412902170941"),
+			// From: https://www.wolframalpha.com/input?i=log+base+2+of+0.56171821941421412902170941+with+36+digits
+			expected: MustNewDecFromStr("-0.832081497183140708984033250637831402"),
+		},
+		"log_2{0.999912345} = -0.000126464976533858080645902722235833": {
+			initialValue: MustNewDecFromStr("0.999912345"),
+			// From: https://www.wolframalpha.com/input?i=log+base+2+of+0.999912345+with+37+digits
+			expected: MustNewDecFromStr("-0.000126464976533858080645902722235833"),
 		},
 		"log_2{1} = 0": {
 			initialValue: NewBigDec(1),
@@ -674,39 +693,48 @@ func (s *decimalTestSuite) TestLog2() {
 			initialValue: NewBigDec(2),
 			expected:     NewBigDec(1),
 		},
+		"log_2{7} = 2.807354922057604107441969317231830809": {
+			initialValue: NewBigDec(7),
+			// From: https://www.wolframalpha.com/input?i=log+base+2+of+7+37+digits
+			expected: MustNewDecFromStr("2.807354922057604107441969317231830809"),
+		},
 		"log_2{512} = 9": {
 			initialValue: NewBigDec(512),
 			expected:     NewBigDec(9),
 		},
-		"log_2{600} = 9": {
+		"log_2{580} = 9.179909090014934468590092754117374938": {
 			initialValue: NewBigDec(580),
-			// TODO: true value is: 9.179909090014934468590092754117374938
-			// Need better lookup table.
-			expected: MustNewDecFromStr("9.137503523749934908329043617236402782"),
+			// From: https://www.wolframalpha.com/input?i=log+base+2+of+600+37+digits
+			expected: MustNewDecFromStr("9.179909090014934468590092754117374938"),
 		},
 		"log_2{1024} = 10": {
 			initialValue: NewBigDec(1024),
 			expected:     NewBigDec(10),
 		},
-		"log_2{1024.987654321} = 10": {
+		"log_2{1024.987654321} = 10.001390817654141324352719749259888355": {
 			initialValue: NewDecWithPrec(1024987654321, 9),
-			// TODO: true value is: 10.001390817654141324352719749259888355
-			// Need better lookup table
-			expected: MustNewDecFromStr("10.000000000000000000000000000000000000"),
+			// From: https://www.wolframalpha.com/input?i=log+base+2+of+1024.987654321+38+digits
+			expected: MustNewDecFromStr("10.001390817654141324352719749259888355"),
 		},
 		"log_2{912648174127941279170121098210.92821920190204131121} = 99.525973560175362367047484597337715868": {
 			initialValue: MustNewDecFromStr("912648174127941279170121098210.92821920190204131121"),
-			// TODO: true value is: 99.525973560175362367047484597337715868
-			// Need better lookup table
-			expected: MustNewDecFromStr("99.485426827170241759571649887742440632"),
+			// From: https://www.wolframalpha.com/input?i=log+base+2+of+912648174127941279170121098210.92821920190204131121+38+digits
+			expected: MustNewDecFromStr("99.525973560175362367047484597337715868"),
 		},
 	}
 
 	for name, tc := range tests {
 		s.Run(name, func() {
 			osmoassert.ConditionalPanic(s.T(), tc.expectedPanic, func() {
-				res := tc.initialValue.ApproxLog2()
-				s.Require().Equal(tc.expected, res)
+				// Create a copy to test that the original was not modified.
+				// That is, that LogbBase2() is non-mutative.
+				initialCopy := ZeroDec()
+				initialCopy.i.Set(tc.initialValue.i)
+
+				// system under test.
+				res := tc.initialValue.LogBase2()
+				require.True(DecApproxEq(s.T(), tc.expected, res, expectedErrTolerance))
+				require.Equal(s.T(), initialCopy, tc.initialValue)
 			})
 		})
 	}

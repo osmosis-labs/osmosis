@@ -280,7 +280,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.keys[txfeestypes.StoreKey],
-		appKeepers.GAMMKeeper,
+		appKeepers.SwapRouterKeeper,
 		appKeepers.GAMMKeeper,
 		txfeestypes.FeeCollectorName,
 		txfeestypes.NonNativeFeeCollectorName,

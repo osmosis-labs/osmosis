@@ -7,6 +7,7 @@ import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "osmosis/lockup/lock.proto";
+import "osmosis/lockup/params.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v12/x/lockup/types";
 
@@ -117,6 +118,10 @@ service Query {
       returns (AccountLockedLongerDurationDenomResponse) {
     option (google.api.http).get =
         "/osmosis/lockup/v1beta1/account_locked_longer_duration_denom/{owner}";
+  }
+  // Params returns lockup params.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/osmosis/lockup/v1beta1/params";
   }
 }
 
@@ -287,3 +292,8 @@ message AccountLockedLongerDurationDenomRequest {
 message AccountLockedLongerDurationDenomResponse {
   repeated PeriodLock locks = 1 [ (gogoproto.nullable) = false ];
 };
+
+message QueryParamsRequest {}
+message QueryParamsResponse {
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}

@@ -8,7 +8,10 @@ import (
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
-func (k Keeper) Mint(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityIn sdk.Int, lowerTick, upperTick int64) (amtDenom0, amtDenom1 sdk.Int, err error) {
+func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (amtDenom0, amtDenom1 sdk.Int, err error) {
+	// TODO: calculate from amounts given
+	liquidityIn := sdk.MustNewDecFromStr("1517.882323")
+
 	// ensure types.MinTick <= lowerTick < types.MaxTick
 	// TODO (bez): Add unit tests.
 	if lowerTick < types.MinTick || lowerTick >= types.MaxTick {
@@ -25,45 +28,39 @@ func (k Keeper) Mint(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liqui
 		return sdk.Int{}, sdk.Int{}, fmt.Errorf("token in amount is zero")
 	}
 
-	// k.UpdateTickWithNewLiquidity(ctx, poolId, lowerTick, liquidityIn)
-	// k.UpdateTickWithNewLiquidity(ctx, poolId, upperTick, liquidityIn)
+	// update tickInfo state
+	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
+	err = k.initOrUpdateTick(ctx, poolId, lowerTick, liquidityIn.TruncateInt(), false)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
 
-	// k.updatePositionWithLiquidity(ctx, poolId, owner.String(), lowerTick, upperTick, liquidityIn)
+	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
+	err = k.initOrUpdateTick(ctx, poolId, upperTick, liquidityIn.TruncateInt(), true)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
 
+	// update position state
+	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
+	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityIn.TruncateInt())
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	// now calculate amount for token0 and token1
 	pool := k.getPoolbyId(ctx, poolId)
 
 	currentSqrtPrice := pool.CurrentSqrtPrice
-	sqrtRatioUpperTick, err := k.getSqrtRatioAtTick(upperTick)
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, err
-	}
-	sqrtRatioLowerTick, err := k.getSqrtRatioAtTick(lowerTick)
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, err
-	}
+	sqrtRatioUpperTick, _ := k.tickToSqrtPrice(sdk.NewInt(upperTick))
+	sqrtRatioLowerTick, _ := k.tickToSqrtPrice(sdk.NewInt(lowerTick))
 
-	amtDenom0 = calcAmount0Delta(currentSqrtPrice.ToDec(), sqrtRatioUpperTick, liquidityIn.ToDec()).RoundInt()
-	amtDenom1 = calcAmount1Delta(currentSqrtPrice.ToDec(), sqrtRatioLowerTick, liquidityIn.ToDec()).RoundInt()
+	amtDenom0 = calcAmount0Delta(liquidityIn, currentSqrtPrice, sqrtRatioUpperTick).RoundInt()
+	amtDenom1 = calcAmount1Delta(liquidityIn, currentSqrtPrice, sqrtRatioLowerTick).RoundInt()
 
 	return amtDenom0, amtDenom1, nil
 }
 
-func (k Keeper) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
-	return sdk.Int{}, nil
-}
-
-func (k Keeper) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
-	return sdk.Int{}, sdk.Coins{}, nil
-}
-
-func (k Keeper) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
-	return sdk.Int{}, sdk.Coins{}, nil
-}
-
-func (k Keeper) ExitPool(ctx sdk.Context, numShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error) {
-	return sdk.Coins{}, nil
-}
-
-func (k Keeper) CalcExitPoolCoinsFromShares(ctx sdk.Context, numShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error) {
-	return sdk.Coins{}, nil
+func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityAmount sdk.Int) (amtDenom0, amtDenom1 sdk.Int, err error) {
+	panic("not implemented")
 }

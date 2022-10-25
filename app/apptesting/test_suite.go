@@ -302,7 +302,7 @@ func (s *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset sdk.Coin
 	coins := sdk.Coins{sdk.NewInt64Coin(fromAsset.Denom, 100000000000000)}
 	s.FundAcc(acc1, coins)
 
-	_, err := s.App.GAMMKeeper.SwapExactAmountOut(
+	_, err := s.App.GAMMKeeper.SwapExactAmountOutDefaultSwapFee(
 		s.Ctx,
 		acc1,
 		poolId,
@@ -348,6 +348,14 @@ func (s *KeeperTestHelper) BuildTx(
 	txBuilder.SetGasLimit(gasLimit)
 
 	return txBuilder.GetTx()
+}
+
+// StateNotAltered validates that app state is not altered. Fails if it is.
+func (s *KeeperTestHelper) StateNotAltered() {
+	oldState := s.App.ExportState(s.Ctx)
+	s.Commit()
+	newState := s.App.ExportState(s.Ctx)
+	s.Require().Equal(oldState, newState)
 }
 
 // CreateRandomAccounts is a function return a list of randomly generated AccAddresses
