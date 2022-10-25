@@ -35,7 +35,7 @@ func (k Keeper) Mint(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liqui
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
 	err = k.initOrUpdateTick(ctx, poolId, upperTick, liquidityIn.TruncateInt(), true)
 	if err != nil {
-		return sdk.Int{}, sdk.Int{}, nil
+		return sdk.Int{}, sdk.Int{}, err
 	}
 
 	// update position state
