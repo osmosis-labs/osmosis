@@ -24,14 +24,22 @@ func (k Keeper) Mint(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liqui
 	if liquidityIn.IsZero() {
 		return sdk.Int{}, sdk.Int{}, fmt.Errorf("token in amount is zero")
 	}
-	// TODO: we need to check if TickInfo is initialized on a specific tick before updating, otherwise get wont work
-	// k.setTickInfo(ctx, poolId, lowerTick, TickInfo{})
-	// k.UpdateTickWithNewLiquidity(ctx, poolId, lowerTick, liquidityIn)
-	// k.setTickInfo(ctx, poolId, upperTick, TickInfo{})
-	// k.UpdateTickWithNewLiquidity(ctx, poolId, upperTick, liquidityIn)
-	// k.setPosition(ctx, poolId, owner, lowerTick, upperTick, Position{})
-	// k.updatePositionWithLiquidity(ctx, poolId, owner, lowerTick, upperTick, liquidityIn)
 
+	// update tickInfo state
+	err = k.initOrUpdateTick(ctx, poolId, lowerTick, liquidityIn.RoundInt(), false)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, nil
+	}
+
+	err = k.initOrUpdateTick(ctx, poolId, lowerTick, liquidityIn.RoundInt(), true)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, nil
+	}
+
+	// update position state
+	// err = k.setPosition()
+
+	// now calculate amount for token0 and token1
 	pool := k.getPoolbyId(ctx, poolId)
 
 	currentSqrtPrice := pool.CurrentSqrtPrice
