@@ -124,7 +124,7 @@ func MustGet(store store.KVStore, key []byte, result proto.Message) {
 	}
 }
 
-// GetIfFound gets ket from store by mutating result.
+// GetIfFound gets key from store
 // returns a boolean indicating whether value exists for the given key and error
 func GetIfFound(store store.KVStore, key []byte, result proto.Message) (found bool, err error) {
 	b := store.Get(key)
