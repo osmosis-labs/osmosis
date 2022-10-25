@@ -9,6 +9,7 @@ import (
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
+	k.SetParams(ctx, types.DefaultParams())
 	k.SetLastLockID(ctx, genState.LastLockId)
 	if err := k.InitializeAllLocks(ctx, genState.Locks); err != nil {
 		return
