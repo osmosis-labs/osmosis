@@ -20,6 +20,9 @@ func (k Keeper) initOrUpdatePosition(ctx sdk.Context,
 	}
 
 	liquidityBefore := position.Liquidity
+
+	// note that liquidityIn can be either positive or negative.
+	// If negative, this would work as a subtraction from liquidityBefore
 	liquidityAfter := liquidityBefore.Add(liquidityDelta)
 
 	position.Liquidity = liquidityAfter
