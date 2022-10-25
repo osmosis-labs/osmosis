@@ -19,14 +19,14 @@ jobs:
       - name: Run version script
         run: echo "major=$(bash ./scripts/check_release.sh ${{ github.event.release.tag_name }})" >> $GITHUB_ENV
   post_release:
-    if:  $GITHUB_ENV.major == 1
+    if:  $env.major == 1
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2.3.4
 
       - name: CHECK
-        run: echo $GITHUB_ENV.major
+        run: echo $env.major
       - run: bash ./scripts/empty_upgrade_handler_gen.sh 
 
       - name: Create PR
