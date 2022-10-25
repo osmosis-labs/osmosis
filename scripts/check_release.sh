@@ -1,3 +1,5 @@
+# this script checks if existing upgrade handler's version is not smaller than current release 
+
 #!/bin/bash
 
 VERSION=$1
