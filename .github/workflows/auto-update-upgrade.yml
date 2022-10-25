@@ -20,7 +20,7 @@ jobs:
         run: bash ./scripts/check_release.sh ${{ github.event.release.tag_name }})
 
       - name: CHECK
-        run: echo ${{ env.major }}
+        run: echo ${{ env.MAJOR }}
   post_release:
     needs: version_check
     runs-on: ubuntu-latest
@@ -32,7 +32,7 @@ jobs:
         run: echo ${{ env.major }}
 
       - name: Run post release script
-        if: env.major == 1
+        if: env.MAJOR == 1
         run: bash ./scripts/empty_upgrade_handler_gen.sh 
 
 
