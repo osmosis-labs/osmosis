@@ -89,6 +89,8 @@ func getNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amount
 	return sqrtPriceCurrent.Add(amountRemaining.Quo(liquidity))
 }
 
+// getLiquidityFromAmounts takes the current sqrtPrice and the sqrtPrice for the upper and lower ticks as well as the amounts of asset0 and asset1
+// in return, liquidity is calculated from these inputs
 func getLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0, amount1 sdk.Int) (liquidity sdk.Dec) {
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
