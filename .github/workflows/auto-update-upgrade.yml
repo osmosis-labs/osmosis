@@ -8,11 +8,11 @@ name: On Release Auto Upgrade
 on:
   release: 
     types: [published]
-    
+
 jobs:
   post_release:
     env:
-      major_release: $(head -n 1 ./temp.txt)
+      major_release: $(bash ./scripts/check_release.sh ${{ github.event.release.tag_name }})
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
