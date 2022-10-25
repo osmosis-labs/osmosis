@@ -18,9 +18,6 @@ import (
 // TODO: list error cases
 // TODO: table-driven tests
 func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (amtDenom0, amtDenom1 sdk.Int, liquidityCreated sdk.Dec, err error) {
-	// TODO: calculate from amounts given
-	liquidityIn := sdk.MustNewDecFromStr("1517.882323")
-
 	// ensure types.MinTick <= lowerTick < types.MaxTick
 	// TODO (bez): Add unit tests.
 	if lowerTick < types.MinTick || lowerTick >= types.MaxTick {
@@ -33,30 +30,6 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, fmt.Errorf("invalid upper tick: %d", upperTick)
 	}
 
-	if liquidityIn.IsZero() {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, fmt.Errorf("token in amount is zero")
-	}
-
-	// update tickInfo state
-	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
-	err = k.initOrUpdateTick(ctx, poolId, lowerTick, liquidityIn.TruncateInt(), false)
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
-	}
-
-	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
-	err = k.initOrUpdateTick(ctx, poolId, upperTick, liquidityIn.TruncateInt(), true)
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
-	}
-
-	// update position state
-	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
-	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityIn.TruncateInt())
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
-	}
-
 	// now calculate amount for token0 and token1
 	pool := k.getPoolbyId(ctx, poolId)
 
@@ -64,11 +37,35 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	sqrtRatioUpperTick, _ := k.tickToSqrtPrice(sdk.NewInt(upperTick))
 	sqrtRatioLowerTick, _ := k.tickToSqrtPrice(sdk.NewInt(lowerTick))
 
-	amtDenom0 = calcAmount0Delta(liquidityIn, currentSqrtPrice, sqrtRatioUpperTick).RoundInt()
-	amtDenom1 = calcAmount1Delta(liquidityIn, currentSqrtPrice, sqrtRatioLowerTick).RoundInt()
+	liquidity := getLiquidityFromAmounts(currentSqrtPrice, sqrtRatioLowerTick, sqrtRatioUpperTick, amount0Desired, amount1Desired)
+	if liquidity.IsZero() {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, fmt.Errorf("token in amount is zero")
+	}
 
-	// TODO: calculate from final amounts
-	liquidityCreated = sdk.MustNewDecFromStr("1517.882323")
+	// update tickInfo state
+	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
+	err = k.initOrUpdateTick(ctx, poolId, lowerTick, liquidity.TruncateInt(), false)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+	}
+
+	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
+	err = k.initOrUpdateTick(ctx, poolId, upperTick, liquidity.TruncateInt(), true)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+	}
+
+	// update position state
+	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
+	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity.TruncateInt())
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+	}
+
+	amtDenom0 = calcAmount0Delta(liquidity, currentSqrtPrice, sqrtRatioUpperTick).RoundInt()
+	amtDenom1 = calcAmount1Delta(liquidity, currentSqrtPrice, sqrtRatioLowerTick).RoundInt()
+
+	liquidityCreated = getLiquidityFromAmounts(currentSqrtPrice, sqrtRatioUpperTick, sqrtRatioLowerTick, amtDenom0, amtDenom1)
 
 	return amtDenom0, amtDenom1, liquidityCreated, nil
 }
