@@ -285,3 +285,9 @@ func (q Querier) LockedDenom(goCtx context.Context, req *types.LockedDenomReques
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	return &types.LockedDenomResponse{Amount: q.Keeper.GetLockedDenom(ctx, req.Denom, req.Duration)}, nil
 }
+
+// Params returns module params
+func (q Querier) Params(goCtx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	return &types.QueryParamsResponse{Params: q.Keeper.GetParams(ctx)}, nil
+}

@@ -735,6 +735,38 @@ func (s IntegrationTestSuite) TestCmdAccountLockedLongerDurationDenom() {
 	}
 }
 
+// TestGetCmdParams tests module params CLI query commands
+func (s IntegrationTestSuite) TestGetCmdParams() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name string
+		args []string
+	}{
+		{
+			"query module params",
+			[]string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdParams()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+
+			var result types.QueryParamsResponse
+			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
+		})
+	}
+}
+
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }
