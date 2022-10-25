@@ -16,16 +16,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2.3.4
 
-      - name: Check for major version
-        uses: jungwinter/split@v2
+      - name: Remove "v" from tag
+        uses: web3j/slice-action@v1.3
+        id: slice
+        with:
+          value: ${{ github.event.release.tag_name }}
+          start: 1
+
+      - name: Get major version
+        uses: JungWinter/split@v2
         id: split
         with:
-          msg: ${{ github.event.release.tag_name }}
-          separator: v
-          maxsplit: 2
+          msg: ${{ steps.slice.output.result }}
+          separator: .
 
       - name: CHECKS
-        run: echo ${{ steps.split.outputs._1 }}
+        run: echo ${{ steps.split.outputs._0 }}
 
       # - if: $GITHUB_ENV.is_major == 1
       - run: bash ./scripts/empty_upgrade_handler_gen.sh 
