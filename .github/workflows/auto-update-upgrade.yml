@@ -12,7 +12,7 @@ on:
 jobs:
   post_release:
     env:
-      major_release: ($(bash ./scripts/check_release.sh ${{ github.event.release.tag_name }}))
+      major_release: ${{ GITHUB_ENV.major }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

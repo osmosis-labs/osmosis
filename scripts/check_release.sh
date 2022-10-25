@@ -15,6 +15,6 @@ VERSION=${VERSION[@]:1}
 VERSION_MAJOR=(${VERSION//./ })
 VERSION_MAJOR=${VERSION_MAJOR[0]}
 if [[ $VERSION_MAJOR -gt $latest_version ]]; then
-    exit 1
+    echo "major=1" >> $GITHUB_ENV
 fi
-exit 0
+echo "major=0" >> $GITHUB_ENV
