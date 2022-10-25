@@ -18,9 +18,6 @@ import (
 // TODO: list error cases
 // TODO: table-driven tests
 func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (amtDenom0, amtDenom1 sdk.Int, liquidityCreated sdk.Dec, err error) {
-	// TODO: calculate from amounts given
-	liquidityIn := sdk.MustNewDecFromStr("1517.882323")
-
 	// ensure types.MinTick <= lowerTick < types.MaxTick
 	// TODO (bez): Add unit tests.
 	if lowerTick < types.MinTick || lowerTick >= types.MaxTick {
@@ -42,7 +39,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	liquidity := getLiquidityFromAmounts(currentSqrtPrice, sqrtRatioUpperTick, sqrtRatioLowerTick, amount0Desired, amount1Desired)
 	if liquidity.IsZero() {
-		return sdk.Int{}, sdk.Int{}, fmt.Errorf("token in amount is zero")
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, fmt.Errorf("token in amount is zero")
 	}
 
 	// update tickInfo state
