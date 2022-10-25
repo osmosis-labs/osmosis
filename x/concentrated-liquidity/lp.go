@@ -8,9 +8,9 @@ import (
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
-// createPosition creates a concentrated liquidity positon in range between lowerTick and upperTick
+// createPosition creates a concentrated liquidity position in range between lowerTick and upperTick
 // in a given `PoolId with the desired amount of each token. Since LPs are only allowed to provide
-// liquiduty proportional to the existing reserves, the actual amount of tokens used might differ from requested.
+// liquidity proportional to the existing reserves, the actual amount of tokens used might differ from requested.
 // As a result, LPs may also provide the minimum amount of each token to be used so that the system fails
 // to create position if the desired amounts cannot be satisfied.
 // On success, returns an actual amount of each token used and liquidity created.

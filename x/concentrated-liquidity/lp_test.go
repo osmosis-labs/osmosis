@@ -36,7 +36,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 	s.Require().NoError(err)
 	s.Require().Equal(amount0Desired, asset0)
 	s.Require().Equal(amount1Desired, asset1)
-	s.Require().Equal(liquidityCreated, expectedLiquidityCreated)
+	s.Require().Equal(expectedLiquidityCreated, liquidityCreated)
 
 	// check position state
 	// 1517 is from the liquidity originally provided
