@@ -46,7 +46,7 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
 			sdk.NewAttribute(types.AttributeAmount0, actualAmount0.String()),
 			sdk.NewAttribute(types.AttributeAmount1, actualAmount1.String()),
-			sdk.NewAttribute(types.AttributeLiquidity, liquidityCeated.String()),
+			sdk.NewAttribute(types.AttributeLiquidity, liquidityCreated.String()),
 			sdk.NewAttribute(types.AttributeLowerTick, strconv.FormatInt(msg.LowerTick, 10)),
 			sdk.NewAttribute(types.AttributeUpperTick, strconv.FormatInt(msg.UpperTick, 10)),
 		),
