@@ -7,27 +7,25 @@ import (
 // liquidity0 takes an amount of asset0 in the pool as well as the sqrtpCur and the nextPrice
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
-func liquidity0(amount int64, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
+func liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
 	product := sqrtPriceA.Mul(sqrtPriceB)
 	diff := sqrtPriceB.Sub(sqrtPriceA)
-	amt := sdk.NewDec(amount)
-	return amt.Mul(product.Quo(diff))
+	return amount.ToDec().Mul(product.Quo(diff))
 }
 
 // liquidity1 takes an amount of asset1 in the pool as well as the sqrtpCur and the nextPrice
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // liquidity1 = amount / (sqrtPriceB - sqrtPriceA)
-func liquidity1(amount int64, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
+func liquidity1(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
 	diff := sqrtPriceB.Sub(sqrtPriceA)
-	amt := sdk.NewDec(amount)
-	return amt.Quo(diff)
+	return amount.ToDec().Quo(diff)
 }
 
 // calcAmount0 takes the asset with the smaller liqudity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 0
@@ -109,4 +107,22 @@ func getNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRe
 
 func getNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
 	return sqrtPriceCurrent.Add(amountRemaining.Quo(liquidity))
+}
+
+// getLiquidityFromAmounts takes the current sqrtPrice and the sqrtPrice for the upper and lower ticks as well as the amounts of asset0 and asset1
+// in return, liquidity is calculated from these inputs
+func getLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0, amount1 sdk.Int) (liquidity sdk.Dec) {
+	if sqrtPriceA.GT(sqrtPriceB) {
+		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
+	}
+	if sqrtPrice.LTE(sqrtPriceA) {
+		liquidity = liquidity0(amount0, sqrtPrice, sqrtPriceB)
+	} else if sqrtPrice.LTE(sqrtPriceB) {
+		liquidity0 := liquidity0(amount0, sqrtPrice, sqrtPriceB)
+		liquidity1 := liquidity1(amount1, sqrtPrice, sqrtPriceA)
+		liquidity = sdk.MinDec(liquidity0, liquidity1)
+	} else {
+		liquidity = liquidity1(amount1, sqrtPrice, sqrtPriceA)
+	}
+	return liquidity
 }

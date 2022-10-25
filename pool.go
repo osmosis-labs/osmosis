@@ -123,8 +123,8 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 
 	// TODO: How do we remove/generalize this? I am stumped.
 	// the following coins represent the virtual amounts in the current price bucket
-	amountETH := int64(1000000)
-	amountUSDC := int64(5000000000)
+	amountETH := sdk.NewInt(1000000)
+	amountUSDC := sdk.NewInt(5000000000)
 
 	// find liquidity of assetA and assetB
 	liq0 := liquidity0(amountETH, curSqrtPrice, sqrtPUpperTick)
@@ -233,8 +233,8 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 	}
 
 	// TODO: How do we remove/generalize this? I am stumped.
-	amountETH := int64(1000000)
-	amountUSDC := int64(5000000000)
+	amountETH := sdk.NewInt(1000000)
+	amountUSDC := sdk.NewInt(5000000000)
 
 	// find liquidity of assetA and assetB
 	liq0 := liquidity0(amountETH, curSqrtPrice, sqrtPUpperTick)
