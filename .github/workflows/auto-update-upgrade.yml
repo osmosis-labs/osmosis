@@ -12,12 +12,13 @@ jobs:
   post_release:
     env:
       major_release: $(head -n 1 ./temp.txt)
-    if: ${{ env.major_release }} == 1
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2.3.4
-      
+
+        if: ${{ env.major_release }} == 1
+        
       - name: Running script
         run: |
           bash ./scripts/empty_upgrade_handler_gen.sh 
