@@ -26,12 +26,9 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	currentSqrtPrice := pool.CurrentSqrtPrice
 	sqrtRatioUpperTick, _ := k.tickToSqrtPrice(sdk.NewInt(upperTick))
-	fmt.Printf("sqrtRatioUpperTick %v \n", sqrtRatioUpperTick)
 	sqrtRatioLowerTick, _ := k.tickToSqrtPrice(sdk.NewInt(lowerTick))
-	fmt.Printf("sqrtRatioLowerTick %v \n", sqrtRatioLowerTick)
 
 	liquidity := getLiquidityFromAmounts(currentSqrtPrice, sqrtRatioUpperTick, sqrtRatioLowerTick, amount0Desired, amount1Desired)
-	fmt.Printf("AAAAAA %v \n", liquidity)
 	if liquidity.IsZero() {
 		return sdk.Int{}, sdk.Int{}, fmt.Errorf("token in amount is zero")
 	}
