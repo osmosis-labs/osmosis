@@ -27,7 +27,7 @@ jobs:
         uses: JungWinter/split@v2
         id: split
         with:
-          msg: ${{ steps.slice.output.result }}
+          msg: ${{ steps.slice.outputs.result }}
           separator: .
 
       - name: CHECKS
