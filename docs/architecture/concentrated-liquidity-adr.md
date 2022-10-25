@@ -112,7 +112,122 @@ logic that is specific to minting, burning liquidity, and swapping within concen
 Under the "Liquidity Provision" user story, we will track tasks specific to defining
 foundations, boilerplate, module wiring and their respective tests.
 
-Providing, burning liquidity, and swapping functions are to be tracked in their own stories.
+While low-level details for providing, burning liquidity, and swapping functions are to be tracked in their own user stories, we define
+all messages here.
+
+##### `MsgCreatePosition`
+
+- **Request**
+
+This message allows LPs to provide liquidity between `LowerTick` and `UpperTick` in a given `PoolId.
+The user provides the amount of each token desired. Since LPs are only allowed to provide
+liquidity proportional to the existing reserves, the actual amount of tokens used might differ from requested.
+As a result, LPs may also provide the minimum amount of each token to be used so that the system fails
+to create position if the desired amounts cannot be satisfied.
+
+```go
+type MsgCreatePosition struct {
+	PoolId          uint64
+	Sender          string
+	LowerTick       int64
+	UpperTick       int64
+	TokenDesired0   types.Coin
+	TokenDesired1   types.Coin
+	TokenMinAmount0 github_com_cosmos_cosmos_sdk_types.Int
+	TokenMinAmount1 github_com_cosmos_cosmos_sdk_types.Int
+}
+```
+
+- **Response**
+
+On succesful response, we receive the actual amounts of each token used to create the
+liquidityCreated number of shares in the given range.
+
+```go
+type MsgCreatePositionResponse struct {
+	Amount0 github_com_cosmos_cosmos_sdk_types.Int
+	Amount1 github_com_cosmos_cosmos_sdk_types.Int
+    LiquidityCreated github_com_cosmos_cosmos_sdk_types.Int
+}
+```
+
+This message should call the `createPosition` keeper method that is introduced in the `"Liquidity Provision"` section of this document.
+
+##### `MsgWithdrawPosition`
+
+- **Request**
+
+This message allows LPs to withdraw their position in a given pool and range (given by ticks), potentially in partial
+amount of liquidity. It should fail if there is no position in the given tick ranges, if tick ranges are invalid,
+or if attempting to withdraw an amount higher than originally provided.
+
+```go
+type MsgWithdrawPosition struct {
+	PoolId          uint64
+	Sender          string
+	LowerTick       int64
+	UpperTick       int64
+	LiquidityAmount github_com_cosmos_cosmos_sdk_types.Int
+}
+```
+
+- **Response**
+
+On succesful response, we receive the amounts of each token withdrawn
+for the provided share liquidity amount.
+
+```go
+type MsgWithdrawPositionResponse struct {
+	Amount0 github_com_cosmos_cosmos_sdk_types.Int
+	Amount1 github_com_cosmos_cosmos_sdk_types.Int
+}
+```
+
+This message should call the `withdrawPosition` keeper method that is introduced in the `"Liquidity Provision"` section of this document.
+
+##### `SwapExactAmountIn` Keeper Method
+
+This method has the same interface as the pre-existing `SwapExactAmountIn` in the `x/gamm` module.
+It takes an exact amount of coins of one denom in to return a minimum amount of tokenOutDenom.
+
+```go
+func (k Keeper) SwapExactAmountIn(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	pool gammtypes.PoolI,
+	tokenIn sdk.Coin,
+	tokenOutDenom string,
+	tokenOutMinAmount sdk.Int,
+	swapFee sdk.Dec,
+) (tokenOutAmount sdk.Int, err error) {
+    ...
+}
+```
+
+This method should be called from the new `swap-router` module's `RouteExactAmountIn` initiated by the `MsgSwapExactAmountIn`.
+See the next `"Swap Router Module"` section of this document for more details.
+
+##### `SwapExactAmountOut` Keeper Method
+
+This method is comparable to `SwapExactAmountIn`. It has the same interface as the pre-existing `SwapExactAmountOut` in the `x/gamm` module.
+It takes an exact amount of coins of one denom out to return a maximum amount of tokenInDenom.
+
+```go
+func (k Keeper) SwapExactAmountOut(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	poolI gammtypes.PoolI,
+	tokenInDenom string,
+	tokenInMaxAmount sdk.Int,
+	tokenOut sdk.Coin,
+	swapFee sdk.Dec,
+) (tokenInAmount sdk.Int, err error) {
+	...
+}
+```
+
+This method should be called from the new `swap-router` module's `RouteExactAmountOut` initiated by the `MsgSwapExactAmountOut`.
+See the next `"Swap Router Module"` section of this document for more details.
 
 #### Swap Router Module
 
@@ -127,7 +242,7 @@ To avoid fragmenting swap entrypoints and duplicating boilerplate logic, we woul
 a new `swap-router` module. For now, its only purpose is to receive swap messages and propagate them
 either to the `gamm` or `concentrated-liquidity` modules.
 
-Therefore, we should move the existing `gamm` swap messages and tests to the new `swap-router` module, connecting to the `swap-router` keeper that simply propagates swaps to `gamm` or `concentrated-liquidity` modules.
+Therefore, we move the existing `gamm` swap messages and tests to the new `swap-router` module, connecting to the `swap-router` keeper that simply propagates swaps to `gamm` or `concentrated-liquidity` modules.
 
 The messages to move are:
 - `MsgSwapExactAmountIn`
@@ -170,7 +285,7 @@ The deltaX and the deltaY would be the actual amount of tokens joined for the re
 Given the parameters needed for calculating the tokens needed for creating a position for a given tick, the API in the msg server layer would look like the following:
 
 ```go
-func CreatePosition(
+func createPosition(
     ctx sdk.Context,
     poolId uint64,
     owner sdk.AccAddress,
