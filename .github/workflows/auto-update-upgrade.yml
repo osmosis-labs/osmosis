@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: bash ./scripts/check_release.sh
-      
+
   post_release:
     runs-on: ubuntu-latest
     steps:
@@ -30,6 +30,8 @@ jobs:
         run: |
           bash ./scripts/empty_upgrade_handler_gen.sh 
           rm -rf ./temp
+          
+      - name: Create PR
         uses: peter-evans/create-pull-request@v4
         with:
           base: ${{ github.event.repository.default_branch }}
