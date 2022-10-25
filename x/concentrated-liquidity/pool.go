@@ -80,6 +80,7 @@ type SwapState struct {
 	amountCalculated         sdk.Dec // amount out
 	sqrtPrice                sdk.Dec // new current price when swap is done
 	tick                     sdk.Int // new tick when swap is done
+	liquidity                sdk.Dec
 }
 
 // this only works on a single directional trade, will implement bi directional trade in next milestone
@@ -162,7 +163,27 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 		)
 		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn)
 		swapState.amountCalculated = swapState.amountCalculated.Add(amountOut)
-		swapState.tick = priceToTick(sqrtPrice.Power(2))
+
+		if nextSqrtPrice.Equal(sqrtPrice) {
+			liquidityDelta, err := k.crossTick(ctx, p.Id, nextTick)
+			if err != nil {
+				return sdk.Coin{}, sdk.Coin{}, err
+			}
+			if !lte {
+				liquidityDelta = liquidityDelta.Neg()
+			}
+			swapState.liquidity = swapState.liquidity.Add(liquidityDelta.ToDec())
+			if swapState.liquidity.LTE(sdk.ZeroDec()) || swapState.liquidity.IsNil() {
+				return sdk.Coin{}, sdk.Coin{}, err
+			}
+			if !lte {
+				swapState.tick = sdk.NewInt(nextTick - 1)
+			} else {
+				swapState.tick = sdk.NewInt(nextTick)
+			}
+		} else {
+			swapState.tick = priceToTick(sqrtPrice.Power(2))
+		}
 	}
 
 	newTokenIn.Amount = tokenIn.Amount.Sub(swapState.amountSpecifiedRemaining.RoundInt())
@@ -254,7 +275,27 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 
 		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn)
 		swapState.amountCalculated = swapState.amountCalculated.Add(amountOut.Quo(sdk.OneDec().Sub(swapFee)))
-		swapState.tick = priceToTick(sqrtPrice.Power(2))
+
+		if swapState.sqrtPrice.Equal(sqrtPrice) {
+			liquidityDelta, err := k.crossTick(ctx, p.Id, nextTick)
+			if err != nil {
+				return sdk.Coin{}, sdk.Coin{}, err
+			}
+			if !lte {
+				liquidityDelta = liquidityDelta.Neg()
+			}
+			swapState.liquidity = swapState.liquidity.Add(liquidityDelta.ToDec())
+			if swapState.liquidity.LTE(sdk.ZeroDec()) || swapState.liquidity.IsNil() {
+				return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("no liquidity available, cannot swap")
+			}
+			if !lte {
+				swapState.tick = sdk.NewInt(nextTick - 1)
+			} else {
+				swapState.tick = sdk.NewInt(nextTick)
+			}
+		} else {
+			swapState.tick = priceToTick(sqrtPrice.Power(2))
+		}
 	}
 	return sdk.NewCoin(tokenInDenom, swapState.amountCalculated.RoundInt()), sdk.NewCoin(tokenOut.Denom, tokenOut.Amount), nil
 }
