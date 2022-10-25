@@ -16,6 +16,6 @@ VERSION=${VERSION[@]:1}
 VERSION_MAJOR=(${VERSION//./ })
 VERSION_MAJOR=${VERSION_MAJOR[0]}
 if [[ $VERSION_MAJOR -gt $latest_version ]]; then
-    touch ./temp.txt 
-    echo 1 >> ./temp.txt
+    exit 1
 fi
+exit 0
