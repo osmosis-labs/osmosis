@@ -26,14 +26,41 @@ func (k Keeper) tickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
 // 	return sdk.Int{}
 // }
 
-func (k Keeper) UpdateTickWithNewLiquidity(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityDelta sdk.Int) {
-	tickInfo := k.getTickInfo(ctx, poolId, tickIndex)
+func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Int, upper bool) (err error) {
+	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
+	if err != nil {
+		return err
+	}
 
-	liquidityBefore := tickInfo.Liquidity
-	liquidityAfter := liquidityBefore.Add(liquidityDelta)
-	tickInfo.Liquidity = liquidityAfter
+	// calculate liquidityGross, which does not care about whether liquidityIn is positive or negative
+	liquidityBefore := tickInfo.LiquidityGross
+
+	// note that liquidityIn can be either positive or negative.
+	// If negative, this would work as a subtraction from liquidityBefore
+	liquidityAfter := liquidityBefore.Add(liquidityIn)
+
+	tickInfo.LiquidityGross = liquidityAfter
+
+	// calculate liquidityNet, which we take into account and track depending on whether liquidityIn is positive or negative
+	if upper {
+		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Sub(liquidityIn)
+	} else {
+		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Add(liquidityIn)
+	}
 
 	k.setTickInfo(ctx, poolId, tickIndex, tickInfo)
+
+	return nil
+}
+
+// nolint: unused
+func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Int, err error) {
+	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	return tickInfo.LiquidityNet, nil
 }
 
 // NextInitializedTick returns the next initialized tick index based on the
@@ -87,12 +114,22 @@ func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex in
 	return 0, false
 }
 
-func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) TickInfo {
+// getTickInfo gets tickInfo given poolId and tickIndex. Returns a boolean field that returns true if value is found for given key.
+func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickInfo TickInfo, err error) {
 	store := ctx.KVStore(k.storeKey)
-	tickInfo := TickInfo{}
+	tickStruct := TickInfo{}
 	key := types.KeyTick(poolId, tickIndex)
-	osmoutils.MustGet(store, key, &tickInfo)
-	return tickInfo
+
+	found, err := osmoutils.GetIfFound(store, key, &tickStruct)
+	// return 0 values if key has not been initialized
+	if !found {
+		return TickInfo{LiquidityGross: sdk.ZeroInt(), LiquidityNet: sdk.ZeroInt()}, err
+	}
+	if err != nil {
+		return tickStruct, err
+	}
+
+	return tickStruct, nil
 }
 
 func (k Keeper) setTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo TickInfo) {
