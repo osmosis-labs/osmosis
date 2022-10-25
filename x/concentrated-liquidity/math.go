@@ -67,18 +67,27 @@ func computeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaini
 	if amountRemaining.GTE(amountIn) {
 		sqrtPriceNext = sqrtPriceTarget
 	} else {
-		if lte {
-			sqrtPriceNext = getNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemaining)
-			amountIn = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
-			amountOut = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
-		} else {
-			sqrtPriceNext = getNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining)
-			amountIn = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
-			amountOut = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
-		}
+		sqrtPriceNext = getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining, lte)
+	}
+
+	if lte {
+		amountIn = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
+		amountOut = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
+	} else {
+		amountIn = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
+		amountOut = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
 	}
 
 	return sqrtPriceNext, amountIn, amountOut
+}
+
+func getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec, lte bool) (sqrtPriceNext sdk.Dec) {
+	if lte {
+		sqrtPriceNext = getNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemaining)
+	} else {
+		sqrtPriceNext = getNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining)
+	}
+	return sqrtPriceNext
 }
 
 func getNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
