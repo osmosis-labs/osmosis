@@ -893,7 +893,9 @@ func (s *TestSuite) TestGetIfFound() {
 				s.Require().Equal(found, tc.expectFound)
 				if tc.expectErr {
 					s.Require().Error(err)
-				} else {
+				} 
+				// make sure found by key & Unmarshal successfully
+				if !tc.expectErr && tc.expectFound {
 					s.Require().Equal(expectedValue.String(), tc.actualResultProto.String())
 				}
 			}
