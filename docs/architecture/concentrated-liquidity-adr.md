@@ -157,7 +157,7 @@ This message should call the `createPosition` keeper method that is introduced i
 
 - **Request**
 
-This message allows LPs to withraw their position in a given pool and range (given by ticks), potentially in partial
+This message allows LPs to withdraw their position in a given pool and range (given by ticks), potentially in partial
 amount of liquidity. It should fail if there is no position in the given tick ranges, if tick ranges are invalid,
 or if attemps to withdraw an amount higher than originally provided.
 
