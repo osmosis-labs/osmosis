@@ -24,17 +24,17 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 	denom0 := "eth"
 	denom1 := "usdc"
 
-	amount0Desired := sdk.NewInt(1000000)
-	amount1Desired := sdk.NewInt(5000000000)
+	amount0Desired := sdk.NewInt(1)
+	amount1Desired := sdk.NewInt(5000)
 
 	s.SetupTest()
 
 	s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, poolId, denom0, denom1, currentSqrtP, currentTick)
 
-	asset0, asset1, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], amount0Desired, amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
+	asset0, asset1, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], amount0Desired, amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
 	s.Require().NoError(err)
-	s.Require().Equal(amount0Desired, asset0.Int64())
-	s.Require().Equal(amount1Desired, asset1.Int64())
+	s.Require().Equal(amount0Desired.String(), asset0.String())
+	s.Require().Equal(amount1Desired.String(), asset1.String())
 
 	// check position state
 	// 1517 is from the liquidity originally provided
