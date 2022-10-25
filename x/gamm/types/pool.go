@@ -135,6 +135,15 @@ type WeightedPoolExtension interface {
 	GetTokenWeight(denom string) (sdk.Int, error)
 }
 
+// TraditionalAmmInterface is an extension of the PoolI interface
+// That defines an additional API for handling the pool's calculation.
+type TraditionalAmmInterface interface {
+	PoolI
+
+	// GetMaximalNoSwapLPAmount returns the coins(lp liquidity) needed to get the specified amount of shares in the pool.
+	GetMaximalNoSwapLPAmount(ctx sdk.Context, shareOutAmount sdk.Int) (neededLpLiquidity sdk.Coins, err error)
+}
+
 func NewPoolAddress(poolId uint64) sdk.AccAddress {
 	key := append([]byte("pool"), sdk.Uint64ToBigEndian(poolId)...)
 	return address.Module(ModuleName, key)

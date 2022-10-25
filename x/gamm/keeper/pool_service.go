@@ -210,7 +210,11 @@ func (k Keeper) JoinPoolNoSwap(
 
 	// we do an abstract calculation on the lp liquidity coins needed to have
 	// the designated amount of given shares of the pool without performing swap
-	neededLpLiquidity, err := getMaximalNoSwapLPAmount(ctx, pool, shareOutAmount)
+	calPool, ok := pool.(types.TraditionalAmmInterface)
+	if !ok {
+		return nil, sdk.ZeroInt(), fmt.Errorf("pool with id %d does not support this kind of join", poolId)
+	}
+	neededLpLiquidity, err := calPool.GetMaximalNoSwapLPAmount(ctx, shareOutAmount)
 	if err != nil {
 		return nil, sdk.ZeroInt(), err
 	}
@@ -239,35 +243,6 @@ func (k Keeper) JoinPoolNoSwap(
 
 	err = k.applyJoinPoolStateChange(ctx, pool, sender, sharesOut, neededLpLiquidity)
 	return neededLpLiquidity, sharesOut, err
-}
-
-// getMaximalNoSwapLPAmount returns the coins(lp liquidity) needed to get the specified amount of shares in the pool.
-// Steps to getting the needed lp liquidity coins needed for the share of the pools are
-// 1. calculate how much percent of the pool does given share account for(# of input shares / # of current total shares)
-// 2. since we know how much % of the pool we want, iterate through all pool liquidity to calculate how much coins we need for
-// each pool asset.
-func getMaximalNoSwapLPAmount(ctx sdk.Context, pool types.PoolI, shareOutAmount sdk.Int) (neededLpLiquidity sdk.Coins, err error) {
-	totalSharesAmount := pool.GetTotalShares()
-	// shareRatio is the desired number of shares, divided by the total number of
-	// shares currently in the pool. It is intended to be used in scenarios where you want
-	shareRatio := shareOutAmount.ToDec().QuoInt(totalSharesAmount)
-	if shareRatio.LTE(sdk.ZeroDec()) {
-		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
-	}
-
-	poolLiquidity := pool.GetTotalPoolLiquidity(ctx)
-	neededLpLiquidity = sdk.Coins{}
-
-	for _, coin := range poolLiquidity {
-		// (coin.Amt * shareRatio).Ceil()
-		neededAmt := coin.Amount.ToDec().Mul(shareRatio).Ceil().RoundInt()
-		if neededAmt.LTE(sdk.ZeroInt()) {
-			return sdk.Coins{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "Too few shares out wanted")
-		}
-		neededCoin := sdk.Coin{Denom: coin.Denom, Amount: neededAmt}
-		neededLpLiquidity = neededLpLiquidity.Add(neededCoin)
-	}
-	return neededLpLiquidity, nil
 }
 
 // JoinSwapExactAmountIn is an LP transaction, that will LP all of the provided
