@@ -53,7 +53,7 @@ jobs:
       - name: CHECKS
         run: echo ${{ steps.pr_split.outputs._0 }}
 
-      - if:  ${{ steps.split.outputs._0 }} == 1
+      # - if:  ${{ steps.pr_split.outputs._0 }} == 1
       - run: bash ./scripts/empty_upgrade_handler_gen.sh 
 
       - name: Create PR
