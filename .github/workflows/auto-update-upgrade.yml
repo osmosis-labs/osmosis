@@ -20,18 +20,11 @@ jobs:
         run: bash ./scripts/check_release.sh {{ github.event.release.tag_name }}
 
       - name: CHECKS
-        run: echo maj ${GITHUB_ENV.major}
+        run: echo maj $GITHUB_ENV.is_major
 
-      - if: ${{ env.major_release }} == 1
-        run: |
-          bash ./scripts/empty_upgrade_handler_gen.sh 
-          rm -rf ./temp
+      - if: $GITHUB_ENV.is_major == 1
+        run: bash ./scripts/empty_upgrade_handler_gen.sh 
 
-      # - name: Running script + create PR
-      #   run: |
-      #     bash ./scripts/empty_upgrade_handler_gen.sh 
-      #     rm -rf ./temp
-          
       - name: Create PR
         uses: peter-evans/create-pull-request@v4
         with:
