@@ -12,7 +12,7 @@ on:
 jobs:
   post_release:
     env:
-      major_release: ${{ GITHUB_ENV.major }}
+      major_release: $GITHUB_ENV.major
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
