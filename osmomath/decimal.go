@@ -43,6 +43,9 @@ var (
 	oneInt               = big.NewInt(1)
 	tenInt               = big.NewInt(10)
 
+	// ln2
+	// From: https://www.wolframalpha.com/input?i=log2+with+36+digits
+	naturalLogOf2 = MustNewDecFromStr("1.44269504088896340735992468100189214")
 	// initialized in init() since requires
 	// precision to be defined.
 	twoBigDec BigDec
@@ -914,6 +917,20 @@ func (x BigDec) LogBase2() BigDec {
 		}
 		b.i.Rsh(b.i, 1)
 	}
+
+	return y
+}
+
+// Natural logarithm of x.
+// ln(x) = log_2(x) / log_2(e)
+func (x BigDec) Ln() BigDec {
+	// insure does not mutate original value
+	xCopy := ZeroDec()
+	xCopy.i.Set(x.i)
+
+	log2x := xCopy.LogBase2()
+
+	y := log2x.Quo(naturalLogOf2)
 
 	return y
 }
