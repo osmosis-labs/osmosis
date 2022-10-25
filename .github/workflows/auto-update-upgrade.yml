@@ -18,6 +18,9 @@ jobs:
 
       - name: Run version script
         run: echo "major=$(bash ./scripts/check_release.sh ${{ github.event.release.tag_name }})" >> $GITHUB_ENV
+
+      - name: CHECK
+        run: echo ${{ env.major }}
   post_release:
     needs: version_check
     runs-on: ubuntu-latest
