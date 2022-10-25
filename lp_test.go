@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (s *KeeperTestSuite) TestMint() {
+func (s *KeeperTestSuite) TestCreatePosition() {
 	// testing params
 	// current tick: 85176
 	// lower tick: 84222
@@ -17,22 +17,24 @@ func (s *KeeperTestSuite) TestMint() {
 	currentTick := sdk.NewInt(85176)
 	lowerTick := int64(84222)
 	upperTick := int64(86129)
-	liquidity, err := sdk.NewDecFromStr("1517.882323")
-	s.Require().NoError(err)
+
 	// currentSqrtP, ok := sdk.NewIntFromString("70710678")
 	currentSqrtP, err := sdk.NewDecFromStr("70.710678")
 	s.Require().NoError(err)
 	denom0 := "eth"
 	denom1 := "usdc"
 
+	amount0Desired := sdk.OneInt()
+	amount1Desired := sdk.NewInt(5000)
+
 	s.SetupTest()
 
 	s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, poolId, denom0, denom1, currentSqrtP, currentTick)
 
-	asset0, asset1, err := s.App.ConcentratedLiquidityKeeper.Mint(s.Ctx, poolId, s.TestAccs[0], liquidity, lowerTick, upperTick)
+	asset0, asset1, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], amount0Desired, amount1Desired, sdk.OneInt(), sdk.OneInt(), lowerTick, upperTick)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewInt(1), asset0)
-	s.Require().Equal(sdk.NewInt(5000), asset1)
+	s.Require().Equal(amount0Desired, asset0)
+	s.Require().Equal(amount1Desired, asset1)
 
 	// check position state
 	// 1517 is from the liquidity originally provided
