@@ -2,7 +2,7 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
-
+	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -16,6 +16,28 @@ var (
 	msgRecv = "recv_packet"
 )
 
+func CheckAndUpdateRateLimits2(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
+	msgType, contract string, packet exported.PacketI,
+) error {
+	contractAddr, err := sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return err
+	}
+
+	sendPacketMsg, err := json.Marshal(packet)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(sendPacketMsg))
+
+	_, err = contractKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
+	if err != nil {
+		return sdkerrors.Wrap(types.ErrRateLimitExceeded, err.Error())
+	}
+
+	return nil
+
+}
 func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
 	msgType, contract string,
 	channelValue sdk.Int, sourceChannel, denom string,
@@ -124,19 +146,19 @@ func BuildWasmExecMsg(msgType, sourceChannel, denom string, channelValue sdk.Int
 }
 
 // GetIBCDenom This is extracted from ibc/transfer and mostly unmodified
-func GetIBCDenom(packet exported.PacketI, data transfertypes.FungibleTokenPacketData) string {
+func GetIBCDenom(sourceChannel, destChannel, denom string) string {
 	var denomTrace transfertypes.DenomTrace
-	if transfertypes.ReceiverChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data.Denom) {
-		voucherPrefix := transfertypes.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
-		unprefixedDenom := data.Denom[len(voucherPrefix):]
+	if transfertypes.ReceiverChainIsSource("transfer", sourceChannel, denom) {
+		voucherPrefix := transfertypes.GetDenomPrefix("transfer", sourceChannel)
+		unprefixedDenom := denom[len(voucherPrefix):]
 		// The denomination used to send the coins is either the native denom or the hash of the path
 		// if the denomination is not native.
 		denomTrace = transfertypes.ParseDenomTrace(unprefixedDenom)
 	} else {
 		// since SendPacket did not prefix the denomination, we must prefix denomination here
-		sourcePrefix := transfertypes.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
+		sourcePrefix := transfertypes.GetDenomPrefix("transfer", destChannel)
 		// NOTE: sourcePrefix contains the trailing "/"
-		prefixedDenom := sourcePrefix + data.Denom
+		prefixedDenom := sourcePrefix + denom
 
 		// construct the denomination trace from the full raw denomination
 		denomTrace = transfertypes.ParseDenomTrace(prefixedDenom)
@@ -145,11 +167,12 @@ func GetIBCDenom(packet exported.PacketI, data transfertypes.FungibleTokenPacket
 	return denomTrace.IBCDenom()
 }
 
-func GetFundsFromPacket(packet exported.PacketI) (string, string, string, error) {
+func GetFundsFromPacket(packet exported.PacketI) (amount, packetDenom, localDenom, ibcDenom string, error error) {
 	var packetData transfertypes.FungibleTokenPacketData
 	err := json.Unmarshal(packet.GetData(), &packetData)
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", "", err
 	}
-	return packetData.Amount, packetData.Denom, GetIBCDenom(packet, packetData), nil
+	ibcDenom = GetIBCDenom(packet.GetSourceChannel(), packet.GetDestChannel(), packetData.Denom)
+	return packetData.Amount, packetData.Denom, "", ibcDenom, nil
 }

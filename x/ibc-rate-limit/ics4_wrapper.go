@@ -54,25 +54,33 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 		return i.channel.SendPacket(ctx, chanCap, packet)
 	}
 
-	amount, denom, _, err := GetFundsFromPacket(packet)
-	if err != nil {
-		return sdkerrors.Wrap(err, "Rate limit SendPacket")
-	}
+	//amount, denom, _, _, err := GetFundsFromPacket(packet)
+	//if err != nil {
+	//	return sdkerrors.Wrap(err, "Rate limit SendPacket")
+	//}
+	//
+	//// Calculate the channel value using the denom from the packet.
+	//// This will be the denom for native tokens, and "ibc/..." for foreign ones being sent back
+	//channelValue := i.CalculateChannelValue(ctx, denom, packet)
 
-	// Calculate the channel value using the denom from the packet.
-	// This will be the denom for native tokens, and "ibc/..." for foreign ones being sent back
-	channelValue := i.CalculateChannelValue(ctx, denom, packet)
-
-	err = CheckAndUpdateRateLimits(
+	err := CheckAndUpdateRateLimits2(
 		ctx,
 		i.ContractKeeper,
 		"send_packet",
 		contract,
-		channelValue,
-		packet.GetSourceChannel(),
-		denom, // We always use the packet's denom here, as we want the limits to be the same on both directions
-		amount,
+		packet,
 	)
+
+	//err = CheckAndUpdateRateLimits(
+	//	ctx,
+	//	i.ContractKeeper,
+	//	"send_packet",
+	//	contract,
+	//	channelValue,
+	//	packet.GetSourceChannel(),
+	//	denom, // We always use the packet's denom here, as we want the limits to be the same on both directions
+	//	amount,
+	//)
 	if err != nil {
 		return sdkerrors.Wrap(err, "bad packet in rate limit's SendPacket")
 	}

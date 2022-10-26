@@ -1,5 +1,8 @@
 #![allow(clippy::result_large_err)]
 
+// Data structures
+pub mod packet;
+
 // Contract
 pub mod contract;
 mod error;

@@ -5,7 +5,7 @@ use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg, SudoMsg};
-use crate::state::{FlowType, Path, GOVMODULE, IBCMODULE};
+use crate::state::{FlowType, GOVMODULE, IBCMODULE};
 use crate::{execute, query, sudo};
 
 // version info for migration info
@@ -65,37 +65,13 @@ pub fn execute(
 #[entry_point]
 pub fn sudo(deps: DepsMut, env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
     match msg {
-        SudoMsg::SendPacket {
-            channel_id,
-            channel_value,
-            funds,
-            denom,
-        } => sudo::try_transfer(
-            deps,
-            &Path::new(&channel_id, &denom),
-            channel_value,
-            funds,
-            FlowType::Out,
-            env.block.time,
-        ),
-        SudoMsg::RecvPacket {
-            channel_id,
-            channel_value,
-            funds,
-            denom,
-        } => sudo::try_transfer(
-            deps,
-            &Path::new(&channel_id, &denom),
-            channel_value,
-            funds,
-            FlowType::In,
-            env.block.time,
-        ),
-        SudoMsg::UndoSend {
-            channel_id,
-            denom,
-            funds,
-        } => sudo::undo_send(deps, &Path::new(&channel_id, &denom), funds),
+        SudoMsg::SendPacket { packet } => {
+            sudo::process_packet(deps, packet, FlowType::Out, env.block.time)
+        }
+        SudoMsg::RecvPacket { packet } => {
+            sudo::process_packet(deps, packet, FlowType::In, env.block.time)
+        }
+        SudoMsg::UndoSend { packet } => sudo::undo_send(deps, packet),
     }
 }
 
