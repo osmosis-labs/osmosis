@@ -1,6 +1,8 @@
 package types
 
-import fmt "fmt"
+import (
+	fmt "fmt"
+)
 
 func OrderInitialPoolDenoms(denom0, denom1 string) (string, string, error) {
 	if denom0 == denom1 {
