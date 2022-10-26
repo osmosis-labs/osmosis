@@ -1,4 +1,4 @@
-package concentrated_liquidity
+package concentrated_liquidity_test
 
 import (
 	"testing"
@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	cl "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity"
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
@@ -16,14 +17,14 @@ func TestKeeper_TickOrdering(t *testing.T) {
 	tKey := sdk.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 
-	k := Keeper{storeKey: storeKey}
+	k := cl.NewKeeper(storeKey)
 
 	liquidityTicks := []int64{-200, -55, -4, 70, 78, 84, 139, 240, 535}
 	for _, t := range liquidityTicks {
-		k.setTickInfo(ctx, 1, t, TickInfo{})
+		k.SetTickInfo(ctx, 1, t, cl.TickInfo{})
 	}
 
-	store := ctx.KVStore(k.storeKey)
+	store := ctx.KVStore(storeKey)
 	prefixBz := types.KeyTickPrefix(1)
 	prefixStore := prefix.NewStore(store, prefixBz)
 
@@ -65,11 +66,11 @@ func TestKeeper_NextInitializedTick(t *testing.T) {
 	tKey := sdk.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 
-	k := Keeper{storeKey: storeKey}
+	k := cl.NewKeeper(storeKey)
 
 	liquidityTicks := []int64{-200, -55, -4, 70, 78, 84, 139, 240, 535}
 	for _, t := range liquidityTicks {
-		k.setTickInfo(ctx, 1, t, TickInfo{})
+		k.SetTickInfo(ctx, 1, t, cl.TickInfo{})
 	}
 
 	t.Run("lte=true", func(t *testing.T) {
@@ -99,7 +100,7 @@ func TestKeeper_NextInitializedTick(t *testing.T) {
 			require.True(t, initd)
 		})
 		t.Run("returns the next initialized tick from the next word", func(t *testing.T) {
-			k.setTickInfo(ctx, 1, 340, TickInfo{})
+			k.SetTickInfo(ctx, 1, 340, cl.TickInfo{})
 
 			n, initd := k.NextInitializedTick(ctx, 1, 328, true)
 			require.Equal(t, int64(340), n)
@@ -124,4 +125,33 @@ func TestKeeper_NextInitializedTick(t *testing.T) {
 			require.True(t, initd)
 		})
 	})
+}
+
+func (suite *KeeperTestSuite) TestTickToSqrtPrice() {
+	testCases := []struct {
+		name              string
+		tickIndex         sdk.Int
+		sqrtPriceExpected string
+		expectErr         bool
+	}{
+		{
+			"happy path",
+			sdk.NewInt(85176),
+			"70.710004849206351867",
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			sqrtPrice, err := suite.App.ConcentratedLiquidityKeeper.TickToSqrtPrice(tc.tickIndex)
+			if tc.expectErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().Equal(tc.sqrtPriceExpected, sqrtPrice.String())
+			}
+		})
+	}
 }
