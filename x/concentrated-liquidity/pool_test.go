@@ -16,9 +16,9 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	tokenOutDenom := "usdc"
 	swapFee := sdk.NewDec(0)
 	minPrice := sdk.NewDec(4500)
-	maxPrice := sdk.NewDec(5500)
+	// maxPrice := sdk.NewDec(5500)
 
-	_, amountOut, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, minPrice, maxPrice, pool.Id)
+	_, amountOut, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, minPrice, pool.Id)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewDec(666975610).String(), amountOut.Amount.ToDec().String())
 
@@ -27,7 +27,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	tokenOutDenom = "eth"
 	swapFee = sdk.NewDec(0)
 
-	_, amountOut, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, minPrice, maxPrice, pool.Id)
+	_, amountOut, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, minPrice, pool.Id)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewDec(805287), amountOut.Amount.ToDec())
 
@@ -36,7 +36,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	tokenOutDenom = "eth"
 	swapFee = sdk.NewDec(0)
 
-	_, amountOut, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, minPrice, maxPrice, pool.Id)
+	_, amountOut, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, minPrice, pool.Id)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewDec(8396), amountOut.Amount.ToDec())
 
@@ -45,7 +45,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	tokenOutDenom = "eth"
 	swapFee = sdk.NewDecWithPrec(2, 2)
 
-	_, amountOut, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, minPrice, maxPrice, pool.Id)
+	_, amountOut, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, minPrice, pool.Id)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewDec(789834), amountOut.Amount.ToDec())
 }
@@ -60,9 +60,9 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
 	tokenInDenom := "eth"
 	swapFee := sdk.NewDec(0)
 	minPrice := sdk.NewDec(4500)
-	maxPrice := sdk.NewDec(5500)
+	// maxPrice := sdk.NewDec(5500)
 
-	amountIn, _, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
+	amountIn, _, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, pool.Id)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewDec(805287), amountIn.Amount.ToDec())
 
@@ -71,7 +71,7 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
 	tokenInDenom = "usdc"
 	swapFee = sdk.NewDec(0)
 
-	amountIn, _, err = s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
+	amountIn, _, err = s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, pool.Id)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewDec(666975610), amountIn.Amount.ToDec())
 
@@ -80,7 +80,7 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
 	tokenInDenom = "eth"
 	swapFee = sdk.NewDecWithPrec(2, 2)
 
-	amountIn, _, err = s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
+	amountIn, _, err = s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, pool.Id)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewDec(821722), amountIn.Amount.ToDec())
 }

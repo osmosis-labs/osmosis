@@ -84,13 +84,21 @@ type SwapState struct {
 }
 
 // this only works on a single directional trade, will implement bi directional trade in next milestone
-func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec, minPrice, maxPrice sdk.Dec, poolId uint64) (newTokenIn, tokenOut sdk.Coin, err error) {
+func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec, priceLimit sdk.Dec, poolId uint64) (newTokenIn, tokenOut sdk.Coin, err error) {
 	p := k.getPoolbyId(ctx, poolId)
 	asset0 := p.Token0
 	asset1 := p.Token1
 	tokenAmountInAfterFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
 
 	zeroForOne := tokenIn.Denom == asset0
+	sqrtPriceLimit, err := priceLimit.ApproxSqrt()
+	if err != nil {
+		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("issue calculating square root of price limit")
+	}
+	if (zeroForOne && (sqrtPriceLimit.GT(p.CurrentSqrtPrice) || sqrtPriceLimit.LT(cltypes.MinSqrtRatio))) ||
+		(!zeroForOne && (sqrtPriceLimit.LT(p.CurrentSqrtPrice) || sqrtPriceLimit.GT(cltypes.MaxSqrtRatio))) {
+		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("invlaid price limit (%s)", priceLimit.String())
+	}
 
 	// get current sqrt price from pool
 	curSqrtPrice := p.CurrentSqrtPrice
@@ -105,46 +113,19 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 	if tokenIn.Denom == tokenOutDenom {
 		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("tokenIn (%s) cannot be the same as tokenOut (%s)", tokenIn.Denom, tokenOutDenom)
 	}
-	if minPrice.GTE(curSqrtPrice.Power(2)) {
-		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("minPrice (%s) must be less than current price (%s)", minPrice, curSqrtPrice.Power(2))
-	}
-	if maxPrice.LTE(curSqrtPrice.Power(2)) {
-		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("maxPrice (%s) must be greater than current price (%s)", maxPrice, curSqrtPrice.Power(2))
-	}
-
-	// sqrtPrice of upper and lower user defined price range
-	sqrtPLowerTick, err := minPrice.ApproxSqrt()
-	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("issue calculating square root of minPrice")
-	}
-
-	sqrtPUpperTick, err := maxPrice.ApproxSqrt()
-	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("issue calculating square root of maxPrice")
-	}
-
-	// TODO: How do we remove/generalize this? I am stumped.
-	// the following coins represent the virtual amounts in the current price bucket
-	amountETH := sdk.NewInt(1000000)
-	amountUSDC := sdk.NewInt(5000000000)
-
-	// find liquidity of assetA and assetB
-	liq0 := liquidity0(amountETH, curSqrtPrice, sqrtPUpperTick)
-	liq1 := liquidity1(amountUSDC, curSqrtPrice, sqrtPLowerTick)
-
-	// utilize the smaller liquidity between assetA and assetB when performing the swap calculation
-	liq := sdk.MinDec(liq0, liq1)
 
 	swapState := SwapState{
 		amountSpecifiedRemaining: tokenAmountInAfterFee,
 		amountCalculated:         sdk.ZeroDec(),
 		sqrtPrice:                curSqrtPrice,
 		tick:                     priceToTick(curSqrtPrice.Power(2)),
+		// at first, we use the pool liquidity
+		liquidity: p.Liquidity.ToDec(),
 	}
 
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
-	for swapState.amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 6)) {
+	for swapState.amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 6)) && !swapState.sqrtPrice.Equal(priceLimit) {
 		nextTick, _ := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), zeroForOne)
 		// TODO: we can enable this error checking once we fix tick initialization
 		// if !ok {
@@ -158,7 +139,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 		sqrtPrice, amountIn, amountOut := computeSwapStep(
 			swapState.sqrtPrice,
 			nextSqrtPrice,
-			liq,
+			swapState.liquidity,
 			swapState.amountSpecifiedRemaining,
 			zeroForOne,
 		)
@@ -195,15 +176,23 @@ func (p Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDeno
 	return sdk.Coin{}, nil
 }
 
-func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec, minPrice, maxPrice sdk.Dec, poolId uint64) (tokenIn, newTokenOut sdk.Coin, err error) {
+func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec, priceLimit sdk.Dec, poolId uint64) (tokenIn, newTokenOut sdk.Coin, err error) {
 	tokenOutAmt := tokenOut.Amount.ToDec()
 	p := k.getPoolbyId(ctx, poolId)
 	asset0 := p.Token0
 	asset1 := p.Token1
 	zeroForOne := tokenOut.Denom == asset0
 
+	sqrtPriceLimit, err := priceLimit.ApproxSqrt()
+	if err != nil {
+		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("issue calculating square root of price limit")
+	}
+	if (zeroForOne && (sqrtPriceLimit.GT(p.CurrentSqrtPrice) || sqrtPriceLimit.LT(cltypes.MinSqrtRatio))) ||
+		(!zeroForOne && (sqrtPriceLimit.LT(p.CurrentSqrtPrice) || sqrtPriceLimit.GT(cltypes.MaxSqrtRatio))) {
+		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("invlaid price limit (%s)", priceLimit.String())
+	}
+
 	// get current sqrt price from pool
-	// curSqrtPrice := sdk.NewDecWithPrec(int64(p.CurrentSqrtPrice.Uint64()), 6)
 	curSqrtPrice := p.CurrentSqrtPrice
 
 	// validation
@@ -216,45 +205,19 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 	if tokenOut.Denom == tokenInDenom {
 		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("tokenOut (%s) cannot be the same as tokenIn (%s)", tokenOut.Denom, tokenInDenom)
 	}
-	if minPrice.GTE(curSqrtPrice.Power(2)) {
-		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("minPrice (%s) must be less than current price (%s)", minPrice, curSqrtPrice.Power(2))
-	}
-	if maxPrice.LTE(curSqrtPrice.Power(2)) {
-		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("maxPrice (%s) must be greater than current price (%s)", maxPrice, curSqrtPrice.Power(2))
-	}
-
-	// sqrtPrice of upper and lower user defined price range
-	sqrtPLowerTick, err := minPrice.ApproxSqrt()
-	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("issue calculating square root of minPrice")
-	}
-
-	sqrtPUpperTick, err := maxPrice.ApproxSqrt()
-	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("issue calculating square root of maxPrice")
-	}
-
-	// TODO: How do we remove/generalize this? I am stumped.
-	amountETH := sdk.NewInt(1000000)
-	amountUSDC := sdk.NewInt(5000000000)
-
-	// find liquidity of assetA and assetB
-	liq0 := liquidity0(amountETH, curSqrtPrice, sqrtPUpperTick)
-	liq1 := liquidity1(amountUSDC, curSqrtPrice, sqrtPLowerTick)
-
-	// utilize the smaller liquidity between assetA and assetB when performing the swap calculation
-	liq := sdk.MinDec(liq0, liq1)
 
 	swapState := SwapState{
 		amountSpecifiedRemaining: tokenOutAmt,
 		amountCalculated:         sdk.ZeroDec(),
 		sqrtPrice:                curSqrtPrice,
 		tick:                     priceToTick(curSqrtPrice.Power(2)),
+		// at first, we use the pool liquidity
+		liquidity: p.Liquidity.ToDec(),
 	}
 
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
-	for swapState.amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 6)) {
+	for swapState.amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 6)) && !swapState.sqrtPrice.Equal(priceLimit) {
 		nextTick, _ := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), zeroForOne)
 		// TODO: we can enable this error checking once we fix tick initialization
 		// if !ok {
@@ -269,7 +232,7 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 		sqrtPrice, amountIn, amountOut := computeSwapStep(
 			swapState.sqrtPrice,
 			nextSqrtPrice,
-			liq,
+			swapState.liquidity,
 			swapState.amountSpecifiedRemaining,
 			zeroForOne,
 		)
