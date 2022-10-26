@@ -1,4 +1,3 @@
-use crate::packet::Packet;
 use cosmwasm_std::Addr;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -79,22 +78,25 @@ pub enum QueryMsg {
     GetQuotas { channel_id: String, denom: String },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum SudoMsg {
     SendPacket {
-        packet: Packet,
-        local_denom: Option<String>,
-        channel_value_hint: Option<u128>,
+        channel_id: String,
+        denom: String,
+        channel_value: u128,
+        funds: u128,
     },
     RecvPacket {
-        packet: Packet,
-        local_denom: Option<String>,
-        channel_value_hint: Option<u128>,
+        channel_id: String,
+        denom: String,
+        channel_value: u128,
+        funds: u128,
     },
     UndoSend {
-        packet: Packet,
-        local_denom: Option<String>,
+        channel_id: String,
+        denom: String,
+        funds: u128,
     },
 }
 

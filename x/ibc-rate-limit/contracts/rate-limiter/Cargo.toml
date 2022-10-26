@@ -39,9 +39,7 @@ cw2 = "0.13.2"
 schemars = "0.8.8"
 serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
-getrandom = { version = "0.2", features = ["js"] }
 
 [dev-dependencies]
 cosmwasm-schema = "1.0.0"
 cw-multi-test = "0.13.2"
-serde-json-wasm = "0.4.1"
