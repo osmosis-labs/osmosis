@@ -95,3 +95,51 @@ func (suite *KeeperTestSuite) TestLiquidity0() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestComputeSwapState() {
+	testCases := []struct {
+		name                  string
+		sqrtPCurrent          sdk.Dec
+		sqrtPTarget           sdk.Dec
+		liquidity             sdk.Dec
+		amountRemaining       sdk.Dec
+		zeroForOne            bool
+		expectedSqrtPriceNext string
+		expectedAmountIn      string
+		expectedAmountOut     string
+	}{
+		{
+			"happy path: trade asset0 for asset1",
+			sdk.NewDecWithPrec(70710678, 6),
+			sdk.OneDec(),
+			sdk.NewDec(1377927219),
+			sdk.NewDec(133700),
+			true,
+			"70.468932817327539027",
+			"66849.999999999999897227",
+			"333107267.266511136411924087",
+		},
+		{
+			"happy path: trade asset1 for asset0",
+			sdk.NewDecWithPrec(70710678, 6),
+			sdk.OneDec(),
+			sdk.NewDec(1377927219),
+			sdk.NewDec(4199999999),
+			false,
+			"73.758734487372429211",
+			"4199999998.999999999987594209",
+			"805287.266898087447354318",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			sqrtPriceNext, amountIn, amountOut := cl.ComputeSwapStep(tc.sqrtPCurrent, tc.sqrtPTarget, tc.liquidity, tc.amountRemaining, tc.zeroForOne)
+			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext.String())
+			suite.Require().Equal(tc.expectedAmountIn, amountIn.String())
+			suite.Require().Equal(tc.expectedAmountOut, amountOut.String())
+		})
+	}
+}
