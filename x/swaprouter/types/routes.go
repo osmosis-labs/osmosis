@@ -7,7 +7,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
@@ -33,7 +32,7 @@ type CommunityPoolI interface {
 
 // TODO: godoc
 type SwapI interface {
-	InitializePool(ctx sdk.Context, pool types.PoolI, creatorAddress sdk.AccAddress) error
+	InitializePool(ctx sdk.Context, pool gammtypes.PoolI, creatorAddress sdk.AccAddress) error
 
 	GetPool(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
 
@@ -64,7 +63,7 @@ type GammExtension interface {
 
 	RecordTotalLiquidityIncrease(ctx sdk.Context, coins sdk.Coins)
 
-	MintPoolShareToAccount(ctx sdk.Context, pool types.PoolI, addr sdk.AccAddress, amount sdk.Int) error
+	MintPoolShareToAccount(ctx sdk.Context, pool gammtypes.PoolI, addr sdk.AccAddress, amount sdk.Int) error
 }
 
 // SimulationExtension defines the swap simulation extension.

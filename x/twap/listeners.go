@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	_ gammtypes.GammHooks       = &gammhook{}
-	_ epochtypes.EpochHooks = &epochhook{}
+	_ gammtypes.GammHooks                  = &gammhook{}
+	_ epochtypes.EpochHooks                = &epochhook{}
 	_ swaproutertypes.PoolCreationListener = &gammhook{}
 )
 

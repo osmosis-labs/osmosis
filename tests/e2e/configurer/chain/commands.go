@@ -12,8 +12,8 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
 	"github.com/osmosis-labs/osmosis/v12/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v12/tests/e2e/util"
-	swaprouterqueryproto "github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/queryproto"
 	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
+	swaprouterqueryproto "github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/queryproto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
