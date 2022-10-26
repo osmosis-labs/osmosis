@@ -25,7 +25,7 @@ func NewParams(poolCreationFee sdk.Coins) Params {
 	}
 }
 
-// default gamm module parameters.
+// default swaprouter module parameters.
 func DefaultParams() Params {
 	return Params{
 		PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)}, // 1000 OSMO
