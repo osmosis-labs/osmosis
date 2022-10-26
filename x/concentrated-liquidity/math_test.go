@@ -20,3 +20,57 @@ func (s *KeeperTestSuite) TestGetLiquidityFromAmounts() {
 	liquidity := cl.GetLiquidityFromAmounts(currentSqrtP, sqrtPLow, sqrtPHigh, amount0Desired, amount1Desired)
 	s.Require().Equal("1377.927096082029653542", liquidity.String())
 }
+
+func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount0RoundingUp() {
+	testCases := []struct {
+		name                  string
+		liquidity             sdk.Dec
+		sqrtPCurrent          sdk.Dec
+		amount0Remaining      sdk.Dec
+		sqrtPriceNextExpected string
+	}{
+		{
+			"happy path",
+			sdk.NewDec(1377927219),
+			sdk.NewDecWithPrec(70710678, 6),
+			sdk.NewDec(133700),
+			"70.468932817413918583",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			sqrtPriceNext := cl.GetNextSqrtPriceFromAmount0RoundingUp(tc.sqrtPCurrent, tc.liquidity, tc.amount0Remaining)
+			suite.Require().Equal(tc.sqrtPriceNextExpected, sqrtPriceNext.String())
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount1RoundingDown() {
+	testCases := []struct {
+		name                  string
+		liquidity             sdk.Dec
+		sqrtPCurrent          sdk.Dec
+		amount1Remaining      sdk.Dec
+		sqrtPriceNextExpected string
+	}{
+		{
+			"happy path",
+			sdk.NewDec(1377927219),
+			sdk.NewDecWithPrec(70710678, 6),
+			sdk.NewDec(42000000),
+			"70.741158564870052996",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			sqrtPriceNext := cl.GetNextSqrtPriceFromAmount1RoundingDown(tc.sqrtPCurrent, tc.liquidity, tc.amount1Remaining)
+			suite.Require().Equal(tc.sqrtPriceNextExpected, sqrtPriceNext.String())
+		})
+	}
+}

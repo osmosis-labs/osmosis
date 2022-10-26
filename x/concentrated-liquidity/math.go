@@ -88,6 +88,8 @@ func getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining sdk.
 	return sqrtPriceNext
 }
 
+// getNextSqrtPriceFromAmount0RoundingUp utilizes the current squareRootPrice, liquidity of denom0, and amount of denom0 that still needs
+// to be swapped in order to determine the next squareRootPrice
 func getNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
 	numerator := liquidity.Mul(sdk.NewDec(2))
 	product := amountRemaining.Mul(sqrtPriceCurrent)
@@ -105,6 +107,8 @@ func getNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRe
 	return sqrtPriceNext
 }
 
+// getNextSqrtPriceFromAmount1RoundingDown utilizes the current squareRootPrice, liquidity of denom1, and amount of denom1 that still needs
+// to be swapped in order to determine the next squareRootPrice
 func getNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
 	return sqrtPriceCurrent.Add(amountRemaining.Quo(liquidity))
 }
