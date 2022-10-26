@@ -887,7 +887,6 @@ func (s *decimalTestSuite) TestTickLog() {
 
 				// system under test.
 				res := tc.initialValue.TickLog()
-				fmt.Println(tc.expected.Sub(res).Abs())
 				require.True(DecApproxEq(s.T(), tc.expected, res, expectedErrTolerance))
 				require.Equal(s.T(), initialCopy, tc.initialValue)
 			})
@@ -896,7 +895,7 @@ func (s *decimalTestSuite) TestTickLog() {
 }
 
 func (s *decimalTestSuite) TestCustomBaseLog() {
-	var expectedErrTolerance = MustNewDecFromStr("0.000000000000000000000000000000000100")
+	var expectedErrTolerance = MustNewDecFromStr("0.000000000000000000000000000000080000")
 
 	tests := map[string]struct {
 		initialValue BigDec
@@ -994,7 +993,6 @@ func (s *decimalTestSuite) TestCustomBaseLog() {
 
 				// system under test.
 				res := tc.initialValue.CustomBaseLog(tc.base)
-				fmt.Println(tc.expected.Sub(res).Abs(), tc.initialValue)
 				require.True(DecApproxEq(s.T(), tc.expected, res, expectedErrTolerance))
 				require.Equal(s.T(), initialCopy, tc.initialValue)
 			})
