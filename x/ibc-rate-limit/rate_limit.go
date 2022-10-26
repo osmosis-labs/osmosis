@@ -7,6 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
 	"github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 )
@@ -16,32 +18,8 @@ var (
 	msgRecv = "recv_packet"
 )
 
-func CheckAndUpdateRateLimits2(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
-	msgType, contract string, packet exported.PacketI,
-) error {
-	contractAddr, err := sdk.AccAddressFromBech32(contract)
-	if err != nil {
-		return err
-	}
-
-	sendPacketMsg, err := json.Marshal(packet)
-	if err != nil {
-		return err
-	}
-	fmt.Println(string(sendPacketMsg))
-
-	_, err = contractKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
-	if err != nil {
-		return sdkerrors.Wrap(types.ErrRateLimitExceeded, err.Error())
-	}
-
-	return nil
-
-}
 func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
-	msgType, contract string,
-	channelValue sdk.Int, sourceChannel, denom string,
-	amount string,
+	msgType, contract string, packet channeltypes.Packet,
 ) error {
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
@@ -50,22 +28,50 @@ func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.Permis
 
 	sendPacketMsg, err := BuildWasmExecMsg(
 		msgType,
-		sourceChannel,
-		denom,
-		channelValue,
-		amount,
+		packet,
 	)
 	if err != nil {
 		return err
 	}
 
-	_, err = contractKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
+	fmt.Println(string(sendPacketMsg))
+
+	r, err := contractKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
+	fmt.Println(r)
 	if err != nil {
 		return sdkerrors.Wrap(types.ErrRateLimitExceeded, err.Error())
 	}
-
 	return nil
 }
+
+//func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
+//	msgType, contract string,
+//	channelValue sdk.Int, sourceChannel, denom string,
+//	amount string,
+//) error {
+//	contractAddr, err := sdk.AccAddressFromBech32(contract)
+//	if err != nil {
+//		return err
+//	}
+//
+//	sendPacketMsg, err := BuildWasmExecMsg(
+//		msgType,
+//		sourceChannel,
+//		denom,
+//		channelValue,
+//		amount,
+//	)
+//	if err != nil {
+//		return err
+//	}
+//
+//	_, err = contractKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
+//	if err != nil {
+//		return sdkerrors.Wrap(types.ErrRateLimitExceeded, err.Error())
+//	}
+//
+//	return nil
+//}
 
 type UndoSendMsg struct {
 	UndoSend UndoSendMsgContent `json:"undo_send"`
@@ -101,38 +107,54 @@ func UndoSendRateLimit(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedK
 }
 
 type SendPacketMsg struct {
-	SendPacket RateLimitExecMsg `json:"send_packet"`
+	SendPacket PacketMsg `json:"send_packet"`
 }
 
 type RecvPacketMsg struct {
-	RecvPacket RateLimitExecMsg `json:"recv_packet"`
+	RecvPacket PacketMsg `json:"recv_packet"`
 }
 
-type RateLimitExecMsg struct {
-	ChannelId    string  `json:"channel_id"`
-	Denom        string  `json:"denom"`
-	ChannelValue sdk.Int `json:"channel_value"`
-	Funds        string  `json:"funds"`
+type PacketMsg struct {
+	Packet UnwrappedPacket `json:"packet"`
 }
 
-func BuildWasmExecMsg(msgType, sourceChannel, denom string, channelValue sdk.Int, amount string) ([]byte, error) {
-	content := RateLimitExecMsg{
-		ChannelId:    sourceChannel,
-		Denom:        denom,
-		ChannelValue: channelValue,
-		Funds:        amount,
+type UnwrappedPacket struct {
+	Sequence           uint64                                `json:"sequence"`
+	SourcePort         string                                `json:"source_port"`
+	SourceChannel      string                                `json:"source_channel"`
+	DestinationPort    string                                `json:"destination_port"`
+	DestinationChannel string                                `json:"destination_channel"`
+	Data               transfertypes.FungibleTokenPacketData `json:"data"`
+	TimeoutHeight      clienttypes.Height                    `json:"timeout_height"`
+	TimeoutTimestamp   uint64                                `json:"timeout_timestamp,omitempty"`
+}
+
+func BuildWasmExecMsg(msgType string, packet channeltypes.Packet) ([]byte, error) {
+
+	var packetData transfertypes.FungibleTokenPacketData
+	err := json.Unmarshal(packet.GetData(), &packetData)
+	if err != nil {
+		return nil, err
 	}
 
-	var (
-		asJson []byte
-		err    error
-	)
+	unwrapped := UnwrappedPacket{
+		Sequence:           packet.Sequence,
+		SourcePort:         packet.SourcePort,
+		SourceChannel:      packet.SourceChannel,
+		DestinationPort:    packet.DestinationPort,
+		DestinationChannel: packet.DestinationChannel,
+		Data:               packetData,
+		TimeoutHeight:      packet.TimeoutHeight,
+		TimeoutTimestamp:   packet.TimeoutTimestamp,
+	}
+
+	var asJson []byte
 	switch {
 	case msgType == msgSend:
-		msg := SendPacketMsg{SendPacket: content}
+		msg := SendPacketMsg{SendPacket: PacketMsg{unwrapped}}
 		asJson, err = json.Marshal(msg)
 	case msgType == msgRecv:
-		msg := RecvPacketMsg{RecvPacket: content}
+		msg := RecvPacketMsg{RecvPacket: PacketMsg{unwrapped}}
 		asJson, err = json.Marshal(msg)
 	default:
 		return []byte{}, types.ErrBadMessage

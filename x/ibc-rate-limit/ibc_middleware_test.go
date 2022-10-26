@@ -208,6 +208,8 @@ func (suite *MiddlewareTestSuite) fullSendTest() map[string]string {
 	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
+	fmt.Println(sendAmount)
+
 	//// Each user has 10% of the supply
 	//escrowAddress := transfertypes.GetEscrowAddress("transfer", "channel-0")
 	//escrowed := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)

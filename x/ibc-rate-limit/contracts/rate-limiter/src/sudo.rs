@@ -15,7 +15,8 @@ pub fn process_packet(
     let (channel_id, denom) = packet.path_data();
     let path = &Path::new(&channel_id, &denom);
     let funds = packet.get_funds();
-    try_transfer(deps, path, packet.channel_value(), funds, direction, now)
+    let channel_value = packet.channel_value(deps.as_ref());
+    try_transfer(deps, path, channel_value, funds, direction, now)
 }
 
 /// This function checks the rate limit and, if successful, stores the updated data about the value

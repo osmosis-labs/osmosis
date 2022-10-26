@@ -1,6 +1,7 @@
 package ibc_rate_limit
 
 import (
+	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	"strings"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -63,24 +64,19 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 	//// This will be the denom for native tokens, and "ibc/..." for foreign ones being sent back
 	//channelValue := i.CalculateChannelValue(ctx, denom, packet)
 
-	err := CheckAndUpdateRateLimits2(
+	fullPacket, ok := packet.(channeltypes.Packet)
+	if !ok {
+		return sdkerrors.ErrInvalidRequest
+	}
+
+	err := CheckAndUpdateRateLimits(
 		ctx,
 		i.ContractKeeper,
 		"send_packet",
 		contract,
-		packet,
+		fullPacket,
 	)
 
-	//err = CheckAndUpdateRateLimits(
-	//	ctx,
-	//	i.ContractKeeper,
-	//	"send_packet",
-	//	contract,
-	//	channelValue,
-	//	packet.GetSourceChannel(),
-	//	denom, // We always use the packet's denom here, as we want the limits to be the same on both directions
-	//	amount,
-	//)
 	if err != nil {
 		return sdkerrors.Wrap(err, "bad packet in rate limit's SendPacket")
 	}
