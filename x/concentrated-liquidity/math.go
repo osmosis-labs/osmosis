@@ -79,8 +79,8 @@ func computeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaini
 	return sqrtPriceNext, amountIn, amountOut
 }
 
-func getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec, lte bool) (sqrtPriceNext sdk.Dec) {
-	if lte {
+func getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec, zeroForOne bool) (sqrtPriceNext sdk.Dec) {
+	if zeroForOne {
 		sqrtPriceNext = getNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining)
 	} else {
 		sqrtPriceNext = getNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemaining)
