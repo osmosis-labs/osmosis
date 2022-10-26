@@ -62,8 +62,16 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
-	amtDenom0 = calcAmount0Delta(liquidity, currentSqrtPrice, sqrtRatioUpperTick).RoundInt()
-	amtDenom1 = calcAmount1Delta(liquidity, currentSqrtPrice, sqrtRatioLowerTick).RoundInt()
+	if pool.CurrentTick.LT(sdk.NewInt(lowerTick)) {
+		amtDenom0 = calcAmount0Delta(liquidity, sqrtRatioLowerTick, sqrtRatioUpperTick).RoundInt()
+		amtDenom1 = sdk.ZeroInt()
+	} else if pool.CurrentTick.LT(sdk.NewInt(upperTick)) {
+		amtDenom0 = calcAmount0Delta(liquidity, currentSqrtPrice, sqrtRatioUpperTick).RoundInt()
+		amtDenom1 = calcAmount1Delta(liquidity, currentSqrtPrice, sqrtRatioLowerTick).RoundInt()
+	} else {
+		amtDenom0 = sdk.ZeroInt()
+		amtDenom1 = calcAmount1Delta(liquidity, sqrtRatioLowerTick, sqrtRatioUpperTick).RoundInt()
+	}
 
 	liquidityCreated = getLiquidityFromAmounts(currentSqrtPrice, sqrtRatioUpperTick, sqrtRatioLowerTick, amtDenom0, amtDenom1)
 
