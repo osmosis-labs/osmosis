@@ -1,7 +1,6 @@
 package ibc_rate_limit
 
 import (
-	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	"strings"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -55,28 +54,23 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 		return i.channel.SendPacket(ctx, chanCap, packet)
 	}
 
-	//amount, denom, _, _, err := GetFundsFromPacket(packet)
-	//if err != nil {
-	//	return sdkerrors.Wrap(err, "Rate limit SendPacket")
-	//}
-	//
-	//// Calculate the channel value using the denom from the packet.
-	//// This will be the denom for native tokens, and "ibc/..." for foreign ones being sent back
-	//channelValue := i.CalculateChannelValue(ctx, denom, packet)
-
-	fullPacket, ok := packet.(channeltypes.Packet)
-	if !ok {
-		return sdkerrors.ErrInvalidRequest
+	amount, denom, err := GetFundsFromPacket(packet)
+	if err != nil {
+		return sdkerrors.Wrap(err, "Rate limit SendPacket")
 	}
 
-	err := CheckAndUpdateRateLimits(
+	channelValue := i.CalculateChannelValue(ctx, denom, packet)
+
+	err = CheckAndUpdateRateLimits(
 		ctx,
 		i.ContractKeeper,
 		"send_packet",
 		contract,
-		fullPacket,
+		channelValue,
+		packet.GetSourceChannel(),
+		denom, // We always use the packet's denom here, as we want the limits to be the same on both directions
+		amount,
 	)
-
 	if err != nil {
 		return sdkerrors.Wrap(err, "bad packet in rate limit's SendPacket")
 	}
@@ -97,11 +91,11 @@ func (i *ICS4Wrapper) GetParams(ctx sdk.Context) (contract string) {
 // if the denom is not correct, the transfer should fail somewhere else on the call chain
 func (i *ICS4Wrapper) CalculateChannelValue(ctx sdk.Context, denom string, packet exported.PacketI) sdk.Int {
 	// If the source is the counterparty chain, this should be
-	if strings.HasPrefix(denom, "ibc/") {
+	if strings.HasPrefix(denom, "transfer/") {
 		return i.bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
 	}
 
-	// ToDo: Get value across all channels
+	// ToDo: Get all channels and sum the escrow addr value over all the channels
 	escrowAddress := transfertypes.GetEscrowAddress(packet.GetSourcePort(), packet.GetSourceChannel())
 	return i.bankKeeper.GetBalance(ctx, escrowAddress, denom).Amount
 }

@@ -2,6 +2,7 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -129,21 +130,24 @@ func (im *IBCModule) OnRecvPacket(
 		// The contract has not been configured. Continue as usual
 		return im.app.OnRecvPacket(ctx, packet, relayer)
 	}
-	//amount, denom, localDenom, ibcDenom, err := GetFundsFromPacket(packet)
-	//if err != nil {
-	//	return channeltypes.NewErrorAcknowledgement("bad packet in rate limit's OnRecvPacket")
-	//}
-	//
-	//// Calculate the channel value using the IBC denom, which is the one that exists on Osmosis.
-	//// This will be "ibc/..." for foreign tokens, and the local denom for native ones
-	//channelValue := im.ics4Middleware.CalculateChannelValue(ctx, localDenom, packet)
+	amount, denom, err := GetFundsFromPacket(packet)
 
-	err := CheckAndUpdateRateLimits(
+	if err != nil {
+		return channeltypes.NewErrorAcknowledgement("bad packet in rate limit's OnRecvPacket")
+	}
+
+	channelValue := im.ics4Middleware.CalculateChannelValue(ctx, denom, packet)
+	fmt.Println(channelValue)
+
+	err = CheckAndUpdateRateLimits(
 		ctx,
 		im.ics4Middleware.ContractKeeper,
 		"recv_packet",
 		contract,
-		packet,
+		channelValue,
+		packet.GetDestChannel(),
+		denom, // We always use the packet's denom here, as we want the limits to be the same on both directions
+		amount,
 	)
 	if err != nil {
 		return channeltypes.NewErrorAcknowledgement(types.ErrRateLimitExceeded.Error())

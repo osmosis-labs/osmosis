@@ -2,13 +2,13 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
-	"fmt"
+	"strings"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
+	"github.com/cosmos/ibc-go/v3/modules/core/exported"
 	"github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 )
 
@@ -18,7 +18,9 @@ var (
 )
 
 func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
-	msgType, contract string, packet channeltypes.Packet,
+	msgType, contract string,
+	channelValue sdk.Int, sourceChannel, denom string,
+	amount string,
 ) error {
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
@@ -27,19 +29,20 @@ func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.Permis
 
 	sendPacketMsg, err := BuildWasmExecMsg(
 		msgType,
-		packet,
+		sourceChannel,
+		denom,
+		channelValue,
+		amount,
 	)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(string(sendPacketMsg))
-
-	r, err := contractKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
-	fmt.Println(r)
+	_, err = contractKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
 	if err != nil {
 		return sdkerrors.Wrap(types.ErrRateLimitExceeded, err.Error())
 	}
+
 	return nil
 }
 
@@ -77,64 +80,38 @@ func UndoSendRateLimit(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedK
 }
 
 type SendPacketMsg struct {
-	SendPacket PacketMsg `json:"send_packet"`
+	SendPacket RateLimitExecMsg `json:"send_packet"`
 }
 
 type RecvPacketMsg struct {
-	RecvPacket PacketMsg `json:"recv_packet"`
+	RecvPacket RateLimitExecMsg `json:"recv_packet"`
 }
 
-type PacketMsg struct {
-	Packet           UnwrappedPacket `json:"packet"`
-	LocalDenom       string          `json:"local_denom"`
-	ChannelValueHint sdk.Int         `json:"channel_value"`
+type RateLimitExecMsg struct {
+	ChannelId    string  `json:"channel_id"`
+	Denom        string  `json:"denom"`
+	ChannelValue sdk.Int `json:"channel_value"`
+	Funds        string  `json:"funds"`
 }
 
-type UnwrappedPacket struct {
-	Sequence           uint64                                `json:"sequence"`
-	SourcePort         string                                `json:"source_port"`
-	SourceChannel      string                                `json:"source_channel"`
-	DestinationPort    string                                `json:"destination_port"`
-	DestinationChannel string                                `json:"destination_channel"`
-	Data               transfertypes.FungibleTokenPacketData `json:"data"`
-	TimeoutHeight      clienttypes.Height                    `json:"timeout_height"`
-	TimeoutTimestamp   uint64                                `json:"timeout_timestamp,omitempty"`
-}
-
-func BuildWasmExecMsg(msgType string, packet channeltypes.Packet) ([]byte, error) {
-
-	var packetData transfertypes.FungibleTokenPacketData
-	err := json.Unmarshal(packet.GetData(), &packetData)
-	if err != nil {
-		return nil, err
+func BuildWasmExecMsg(msgType, sourceChannel, denom string, channelValue sdk.Int, amount string) ([]byte, error) {
+	content := RateLimitExecMsg{
+		ChannelId:    sourceChannel,
+		Denom:        denom,
+		ChannelValue: channelValue,
+		Funds:        amount,
 	}
 
-	unwrapped := UnwrappedPacket{
-		Sequence:           packet.Sequence,
-		SourcePort:         packet.SourcePort,
-		SourceChannel:      packet.SourceChannel,
-		DestinationPort:    packet.DestinationPort,
-		DestinationChannel: packet.DestinationChannel,
-		Data:               packetData,
-		TimeoutHeight:      packet.TimeoutHeight,
-		TimeoutTimestamp:   packet.TimeoutTimestamp,
-	}
-
-	var asJson []byte
+	var (
+		asJson []byte
+		err    error
+	)
 	switch {
 	case msgType == msgSend:
-		msg := SendPacketMsg{SendPacket: PacketMsg{
-			Packet:           unwrapped,
-			LocalDenom:       "",
-			ChannelValueHint: sdk.NewInt(1),
-		}}
+		msg := SendPacketMsg{SendPacket: content}
 		asJson, err = json.Marshal(msg)
 	case msgType == msgRecv:
-		msg := RecvPacketMsg{RecvPacket: PacketMsg{
-			Packet:           unwrapped,
-			LocalDenom:       "",
-			ChannelValueHint: sdk.NewInt(1),
-		}}
+		msg := RecvPacketMsg{RecvPacket: content}
 		asJson, err = json.Marshal(msg)
 	default:
 		return []byte{}, types.ErrBadMessage
@@ -147,29 +124,27 @@ func BuildWasmExecMsg(msgType string, packet channeltypes.Packet) ([]byte, error
 	return asJson, nil
 }
 
-// GetIBCDenom This is extracted from ibc/transfer and mostly unmodified
-func GetIBCDenom(sourceChannel, destChannel, denom string) string {
-	var denomTrace transfertypes.DenomTrace
-	if transfertypes.ReceiverChainIsSource("transfer", sourceChannel, denom) {
-		voucherPrefix := transfertypes.GetDenomPrefix("transfer", sourceChannel)
-		unprefixedDenom := denom[len(voucherPrefix):]
-		// The denomination used to send the coins is either the native denom or the hash of the path
-		// if the denomination is not native.
-		denomTrace = transfertypes.ParseDenomTrace(unprefixedDenom)
-	} else {
-		// since SendPacket did not prefix the denomination, we must prefix denomination here
-		sourcePrefix := transfertypes.GetDenomPrefix("transfer", destChannel)
-		// NOTE: sourcePrefix contains the trailing "/"
-		prefixedDenom := sourcePrefix + denom
-
-		// construct the denomination trace from the full raw denomination
-		denomTrace = transfertypes.ParseDenomTrace(prefixedDenom)
+func GetFundsFromPacket(packet exported.PacketI) (string, string, error) {
+	var packetData transfertypes.FungibleTokenPacketData
+	err := json.Unmarshal(packet.GetData(), &packetData)
+	if err != nil {
+		return "", "", err
 	}
-
-	return denomTrace.IBCDenom()
+	return packetData.Amount, GetLocalDenom(packetData.Denom), nil
 }
 
-func GetDenoms(packet UnwrappedPacket) (packetDenom, localDenom, ibcDenom string, error error) {
-	ibcDenom = GetIBCDenom(packet.SourceChannel, packet.DestinationChannel, packet.Data.Denom)
-	return packet.Data.Denom, "", ibcDenom, nil
+func GetLocalDenom(denom string) string {
+	// Expected denoms in the following cases:
+	//
+	// send non-native: transfer/channel-0/denom
+	// send native: denom
+	// recv (B)non-native: denom
+	// recv (B)native: transfer/channel-0/denom
+	//
+	if strings.HasPrefix(denom, "transfer/") {
+		denomTrace := transfertypes.ParseDenomTrace(denom)
+		return denomTrace.IBCDenom()
+	} else {
+		return denom
+	}
 }
