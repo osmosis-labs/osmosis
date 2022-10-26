@@ -145,11 +145,10 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
 	for swapState.amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 6)) {
-		nextTick, _ := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), zeroForOne)
-		// TODO: we can enable this error checking once we fix tick initialization
-		// if !ok {
-		// 	return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("there are no more ticks initialized to fill the swap")
-		// }
+		nextTick, ok := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), zeroForOne)
+		if !ok {
+			return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("there are no more ticks initialized to fill the swap")
+		}
 		nextSqrtPrice, err := k.tickToSqrtPrice(sdk.NewInt(nextTick))
 		if err != nil {
 			return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", sdk.NewInt(nextTick))
