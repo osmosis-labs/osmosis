@@ -10,6 +10,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	ctx := s.Ctx
 	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, "eth", "usdc", sdk.MustNewDecFromStr("70.710678"), sdk.NewInt(85176))
 	s.Require().NoError(err)
+	s.SetupPosition(pool.Id)
 
 	// test asset a to b logic
 	tokenIn := sdk.NewCoin("eth", sdk.NewInt(133700))
@@ -54,6 +55,7 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
 	ctx := s.Ctx
 	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", sdk.MustNewDecFromStr("70.710678"), sdk.NewInt(85176))
 	s.Require().NoError(err)
+	s.SetupPosition(pool.Id)
 
 	// test asset a to b logic
 	tokenOut := sdk.NewCoin("usdc", sdk.NewInt(4199999999))
