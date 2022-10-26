@@ -91,8 +91,10 @@ func (i *ICS4Wrapper) GetParams(ctx sdk.Context) (contract string) {
 // if the denom is not correct, the transfer should fail somewhere else on the call chain
 func (i *ICS4Wrapper) CalculateChannelValue(ctx sdk.Context, denom string, packet exported.PacketI) sdk.Int {
 	// If the source is the counterparty chain, this should be
+	// ToDo: This works for send, but not for receive. On receive, we're getting ibc/xxx
 	if strings.HasPrefix(denom, "transfer/") {
-		return i.bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
+		ibcDenom := transfertypes.ParseDenomTrace(denom).IBCDenom()
+		return i.bankKeeper.GetSupplyWithOffset(ctx, ibcDenom).Amount
 	}
 
 	// ToDo: Get all channels and sum the escrow addr value over all the channels

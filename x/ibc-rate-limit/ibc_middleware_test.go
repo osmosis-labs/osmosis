@@ -3,7 +3,6 @@ package ibc_rate_limit_test
 import (
 	"encoding/json"
 	"fmt"
-	ibc_rate_limit "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit"
 	"strconv"
 	"strings"
 	"testing"
@@ -253,12 +252,16 @@ func (suite *MiddlewareTestSuite) initializeEscrow() (totalEscrow, expectedSed s
 }
 
 func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
-	_, sendAmount := suite.initializeEscrow()
+	_, escrowAmount := suite.initializeEscrow()
 
-	// Get the denom to send
+	sendAmount := escrowAmount
+	// Get the denom and amount to send
 	denom := sdk.DefaultBondDenom
 	if !native {
-		denom = ibc_rate_limit.GetLocalDenom("transfer/channel-0/" + sdk.DefaultBondDenom)
+		denom = "transfer/channel-0/" + sdk.DefaultBondDenom
+		osmosisApp := suite.chainA.GetOsmosisApp()
+
+		sendAmount = osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), transfertypes.ParseDenomTrace(denom).IBCDenom()).Amount
 	}
 
 	// Setup contract
@@ -334,12 +337,16 @@ func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 
 // Test rate limiting on receives
 func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
-	_, transferAmount := suite.initializeEscrow()
-	fmt.Println("transferAmount", transferAmount)
-	// Get the denom to send
+	_, escrowAmount := suite.initializeEscrow()
+
+	transferAmount := escrowAmount
+	// Get the denom and amount to send
 	denom := sdk.DefaultBondDenom
 	if !native {
-		denom = ibc_rate_limit.GetLocalDenom("transfer/channel-0/" + sdk.DefaultBondDenom)
+		denom = "transfer/channel-0/" + sdk.DefaultBondDenom
+		osmosisApp := suite.chainA.GetOsmosisApp()
+
+		transferAmount = osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), transfertypes.ParseDenomTrace(denom).IBCDenom()).Amount
 	}
 
 	// Setup contract
@@ -358,7 +365,7 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	suite.AssertReceive(true, suite.MessageFromBToA(sdk.DefaultBondDenom, half, !native))
 
 	// Sending above the quota should fail.
-	suite.AssertReceive(false, suite.MessageFromBToA(sdk.DefaultBondDenom, sdk.NewInt(1), !native))
+	suite.AssertReceive(false, suite.MessageFromBToA(sdk.DefaultBondDenom, half, !native))
 }
 
 func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimitingNative() {
