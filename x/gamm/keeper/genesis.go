@@ -25,6 +25,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState, unpack
 			panic(err)
 		}
 
+		k.incrementPoolCount(ctx)
+
 		poolAssets := pool.GetTotalPoolLiquidity(ctx)
 		for _, asset := range poolAssets {
 			liquidity = liquidity.Add(asset)

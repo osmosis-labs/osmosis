@@ -62,7 +62,6 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 		return 0, err
 	}
 
-	// TODO:
 	k.poolCreationListeners.AfterPoolCreated(ctx, sender, pool.GetId())
 
 	return pool.GetId(), nil

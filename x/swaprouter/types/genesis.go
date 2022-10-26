@@ -3,7 +3,8 @@ package types
 // DefaultGenesis returns the default swaprouter genesis state.
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		Params: DefaultParams(),
+		Params:     DefaultParams(),
+		NextPoolId: 1,
 	}
 }
 

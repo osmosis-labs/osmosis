@@ -53,6 +53,8 @@ func (k Keeper) InitializePool(ctx sdk.Context, pool types.PoolI, creatorAddress
 
 	k.RecordTotalLiquidityIncrease(ctx, traditionalPool.GetTotalPoolLiquidity(ctx))
 
+	k.incrementPoolCount(ctx)
+
 	return k.setPool(ctx, pool)
 }
 
@@ -142,8 +144,6 @@ func (k Keeper) setPool(ctx sdk.Context, pool types.PoolI) error {
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(pool.GetId())
 	store.Set(poolKey, bz)
-
-	k.incrementPoolCount(ctx)
 
 	return nil
 }
