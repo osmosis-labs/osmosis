@@ -31,6 +31,14 @@ func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tic
 	k.setTickInfo(ctx, poolId, tickIndex, tickInfo)
 }
 
+func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
+	return calcAmount0Delta(liq, sqrtPriceA, sqrtPriceB)
+}
+
+func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
+	return calcAmount1Delta(liq, sqrtPriceA, sqrtPriceB)
+}
+
 func ComputeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec, zeroForOne bool) (sqrtPriceNext, amountIn, amountOut sdk.Dec) {
 	return computeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining, zeroForOne)
 }
