@@ -19,6 +19,14 @@ func GetLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0,
 	return getLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB, amount0, amount1)
 }
 
+func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
+	return calcAmount0Delta(liq, sqrtPriceA, sqrtPriceB)
+}
+
+func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
+	return calcAmount1Delta(liq, sqrtPriceA, sqrtPriceB)
+}
+
 func ComputeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec, zeroForOne bool) (sqrtPriceNext, amountIn, amountOut sdk.Dec) {
 	return computeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining, zeroForOne)
 }
