@@ -34,7 +34,7 @@ func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount0RoundingUp() {
 			sdk.NewDec(1377927219),
 			sdk.NewDecWithPrec(70710678, 6),
 			sdk.NewDec(133700),
-			"70.468932817413918583",
+			"70.468932817327539027",
 		},
 	}
 
@@ -61,7 +61,7 @@ func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount1RoundingDown() {
 			sdk.NewDec(1377927219),
 			sdk.NewDecWithPrec(70710678, 6),
 			sdk.NewDec(42000000),
-			"70.741158564870052996",
+			"70.741158564880981569",
 		},
 	}
 
