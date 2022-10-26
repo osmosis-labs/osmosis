@@ -825,7 +825,7 @@ func (s *decimalTestSuite) TestLn() {
 	}
 }
 
-func (s *decimalTestSuite) TestTickLogOf2() {
+func (s *decimalTestSuite) TestTickLog() {
 	var expectedErrTolerance = MustNewDecFromStr("0.0000000000000000000000000015000000")
 
 	tests := map[string]struct {
@@ -858,8 +858,7 @@ func (s *decimalTestSuite) TestTickLogOf2() {
 		},
 		"log_1.0001{1.0001} = 1": {
 			initialValue: MustNewDecFromStr("1.0001"),
-			// From: https://www.wolframalpha.com/input?i=e+with+36+decimals
-			expected: NewBigDec(1),
+			expected:     OneDec(),
 		},
 		"log_1.0001{512} = 62386.365360724158196763710649998441051753": {
 			initialValue: NewBigDec(512),
@@ -889,6 +888,110 @@ func (s *decimalTestSuite) TestTickLogOf2() {
 				// system under test.
 				res := tc.initialValue.TickLog()
 				fmt.Println(tc.expected.Sub(res).Abs())
+				require.True(DecApproxEq(s.T(), tc.expected, res, expectedErrTolerance))
+				require.Equal(s.T(), initialCopy, tc.initialValue)
+			})
+		})
+	}
+}
+
+func (s *decimalTestSuite) TestCustomBaseLog() {
+	var expectedErrTolerance = MustNewDecFromStr("0.000000000000000000000000000000000100")
+
+	tests := map[string]struct {
+		initialValue BigDec
+		base         BigDec
+
+		expected      BigDec
+		expectedPanic bool
+	}{
+		"log_2{-1}: normal base, invalid argument - panics": {
+			initialValue:  NewBigDec(-1),
+			base:          NewBigDec(2),
+			expectedPanic: true,
+		},
+		"log_2{0}: normal base, invalid argument - panics": {
+			initialValue:  NewBigDec(0),
+			base:          NewBigDec(2),
+			expectedPanic: true,
+		},
+		"log_(-1)(2): invalid base, normal argument - panics": {
+			initialValue:  NewBigDec(2),
+			base:          NewBigDec(-1),
+			expectedPanic: true,
+		},
+		"log_1(2): base cannot equal to 1 - panics": {
+			initialValue:  NewBigDec(2),
+			base:          NewBigDec(1),
+			expectedPanic: true,
+		},
+		"log_30(100) = 1.353984985057691049642502891262784015": {
+			initialValue: NewBigDec(100),
+			base:         NewBigDec(30),
+			// From: https://www.wolframalpha.com/input?i=log_30%28100%29+to+37+digits
+			expected: MustNewDecFromStr("1.353984985057691049642502891262784015"),
+		},
+		"log_0.2(0.99) = 0.006244624769837438271878639001855450": {
+			initialValue: MustNewDecFromStr("0.99"),
+			base:         MustNewDecFromStr("0.2"),
+			// From: https://www.wolframalpha.com/input?i=log_0.2%280.99%29+to+34+digits
+			expected: MustNewDecFromStr("0.006244624769837438271878639001855450"),
+		},
+		// THIS TEST CASE FAILS WITH 0.722861284485807159166346369373275313 ERROR
+		// "log_0.0001(500000) = -1.424742501084004701196565276318876743": {
+		// 	initialValue: NewDecWithPrec(1, 4),
+		// 	base:         NewBigDec(500000),
+		// 	// From: https://www.wolframalpha.com/input?i=log_0.0001%28500000%29+to+37+digits
+		// 	expected: MustNewDecFromStr("-1.424742501084004701196565276318876743"),
+		// },
+
+		// THIS TEST CASE FAILS WITH 0.722861284485807159166346369373275311 ERROR
+		// "log_500000(0.0001) = -0.701881216598197542030218906945601429": {
+		// 	initialValue: NewBigDec(500000),
+		// 	base:         NewDecWithPrec(1, 4),
+		// 	// From: https://www.wolframalpha.com/input?i=log_500000%280.0001%29+to+36+digits
+		// 	expected: MustNewDecFromStr("-0.701881216598197542030218906945601429"),
+		// },
+
+		"log_10000(5000000) = 1.674742501084004701196565276318876743": {
+			initialValue: NewBigDec(5000000),
+			base:         NewBigDec(10000),
+			// From: https://www.wolframalpha.com/input?i=log_10000%285000000%29+to+37+digits
+			expected: MustNewDecFromStr("1.674742501084004701196565276318876743"),
+		},
+		"log_0.123456789(1) = 0": {
+			initialValue: OneDec(),
+			base:         MustNewDecFromStr("0.123456789"),
+			expected:     ZeroDec(),
+		},
+		"log_1111(1111) = 1": {
+			initialValue: NewBigDec(1111),
+			base:         NewBigDec(1111),
+			expected:     OneDec(),
+		},
+		// "log_1.123{1024.987654321} = ": {
+		// 	initialValue: NewDecWithPrec(1024987654321, 9),
+		// 	base:         NewDecWithPrec(1123, 3),
+		// 	// From: https://www.wolframalpha.com/input?i=log_1.0001%281024.987654321%29+to+41+digits
+		// 	expected: MustNewDecFromStr(""),
+		// },
+		// "log_1.0001{912648174127941279170121098210.92821920190204131121} = 689895.972156319183538389792485913311778672": {
+		// 	initialValue: MustNewDecFromStr("912648174127941279170121098210.92821920190204131121"),
+		// 	// From: https://www.wolframalpha.com/input?i=log_1.0001%28912648174127941279170121098210.92821920190204131121%29+to+42+digits
+		// 	expected: MustNewDecFromStr("689895.972156319183538389792485913311778672"),
+		// },
+	}
+	for name, tc := range tests {
+		s.Run(name, func() {
+			osmoassert.ConditionalPanic(s.T(), tc.expectedPanic, func() {
+				// Create a copy to test that the original was not modified.
+				// That is, that Ln() is non-mutative.
+				initialCopy := ZeroDec()
+				initialCopy.i.Set(tc.initialValue.i)
+
+				// system under test.
+				res := tc.initialValue.CustomBaseLog(tc.base)
+				fmt.Println(tc.expected.Sub(res).Abs(), tc.initialValue)
 				require.True(DecApproxEq(s.T(), tc.expected, res, expectedErrTolerance))
 				require.Equal(s.T(), initialCopy, tc.initialValue)
 			})

@@ -43,9 +43,9 @@ var (
 	oneInt               = big.NewInt(1)
 	tenInt               = big.NewInt(10)
 
-	// ln2
-	// From: https://www.wolframalpha.com/input?i=log2+with+36+digits
-	logEover2 = MustNewDecFromStr("1.442695040888963407359924681001892137")
+	// log_2(e)
+	// From: https://www.wolframalpha.com/input?i=log_2%28e%29+with+37+digits
+	logOfEbase2 = MustNewDecFromStr("1.442695040888963407359924681001892137")
 
 	// log_2(1.0001)
 	// From: https://www.wolframalpha.com/input?i=log_2%281.0001%29+to+33+digits
@@ -926,27 +926,36 @@ func (x BigDec) LogBase2() BigDec {
 }
 
 // Natural logarithm of x.
-// ln(x) = log_2(x) / log_2(e)
+// Formula: ln(x) = log_2(x) / log_2(e)
 func (x BigDec) Ln() BigDec {
-	// insure does not mutate original value
-	xCopy := ZeroDec()
-	xCopy.i.Set(x.i)
+	log2x := x.LogBase2()
 
-	log2x := xCopy.LogBase2()
-
-	y := log2x.Quo(logEover2)
+	y := log2x.Quo(logOfEbase2)
 
 	return y
 }
 
+// log_1.0001(x) "tick" base logarithm
+// Formula: log_1.0001(b) = log_2(b) / log_2(1.0001)
 func (x BigDec) TickLog() BigDec {
-	// insure does not mutate original value
-	xCopy := ZeroDec()
-	xCopy.i.Set(x.i)
-
-	log2x := xCopy.LogBase2()
+	log2x := x.LogBase2()
 
 	y := log2x.Quo(tickLogOf2)
+
+	return y
+}
+
+// log_a(x) custom base logarithm
+// Formula: log_a(b) = log_2(b) / log_2(a)
+func (x BigDec) CustomBaseLog(base BigDec) BigDec {
+	if base.LTE(ZeroDec()) || base.Equal(OneDec()) {
+		panic(fmt.Sprintf("log is not defined at base <= 0 or base == 1, base given (%s)", base))
+	}
+
+	log2x_argument := x.LogBase2()
+	log2x_base := base.LogBase2()
+
+	y := log2x_argument.Quo(log2x_base)
 
 	return y
 }
