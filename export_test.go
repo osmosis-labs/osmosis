@@ -18,3 +18,11 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 func GetLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0, amount1 sdk.Int) (liquidity sdk.Dec) {
 	return getLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB, amount0, amount1)
 }
+
+func Liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
+	return liquidity0(amount, sqrtPriceA, sqrtPriceB)
+}
+
+func Liquidity1(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
+	return liquidity1(amount, sqrtPriceA, sqrtPriceB)
+}
