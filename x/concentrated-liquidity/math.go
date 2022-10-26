@@ -55,35 +55,35 @@ func calcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 
 // computeSwapStep calculates the amountIn, amountOut, and the next sqrtPrice given current price, price target, tick liquidity, and amount available to swap
 // lte is reference to "less than or equal", which determines if we are moving left or right of the current price to find the next initialized tick with liquidity
-func computeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec, lte bool) (sqrtPriceNext, amountIn, amountOut sdk.Dec) {
-	if lte {
-		amountIn = calcAmount1Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent)
-	} else {
+func computeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec, zeroForOne bool) (sqrtPriceNext, amountIn, amountOut sdk.Dec) {
+	if zeroForOne {
 		amountIn = calcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent)
+	} else {
+		amountIn = calcAmount1Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent)
 	}
 
 	if amountRemaining.GTE(amountIn) {
 		sqrtPriceNext = sqrtPriceTarget
 	} else {
-		sqrtPriceNext = getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining, lte)
+		sqrtPriceNext = getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining, zeroForOne)
 	}
 
-	if lte {
-		amountIn = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
-		amountOut = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
-	} else {
+	if zeroForOne {
 		amountIn = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
 		amountOut = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
+	} else {
+		amountIn = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
+		amountOut = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
 	}
 
 	return sqrtPriceNext, amountIn, amountOut
 }
 
-func getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec, lte bool) (sqrtPriceNext sdk.Dec) {
-	if lte {
-		sqrtPriceNext = getNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemaining)
-	} else {
+func getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec, zeroForOne bool) (sqrtPriceNext sdk.Dec) {
+	if zeroForOne {
 		sqrtPriceNext = getNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining)
+	} else {
+		sqrtPriceNext = getNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemaining)
 	}
 	return sqrtPriceNext
 }
