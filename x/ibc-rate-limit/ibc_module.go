@@ -129,14 +129,14 @@ func (im *IBCModule) OnRecvPacket(
 		// The contract has not been configured. Continue as usual
 		return im.app.OnRecvPacket(ctx, packet, relayer)
 	}
-	//amount, denom, _, ibcDenom, err := GetFundsFromPacket(packet)
+	//amount, denom, localDenom, ibcDenom, err := GetFundsFromPacket(packet)
 	//if err != nil {
 	//	return channeltypes.NewErrorAcknowledgement("bad packet in rate limit's OnRecvPacket")
 	//}
 	//
 	//// Calculate the channel value using the IBC denom, which is the one that exists on Osmosis.
 	//// This will be "ibc/..." for foreign tokens, and the local denom for native ones
-	//channelValue := im.ics4Middleware.CalculateChannelValue(ctx, ibcDenom, packet)
+	//channelValue := im.ics4Middleware.CalculateChannelValue(ctx, localDenom, packet)
 
 	err := CheckAndUpdateRateLimits(
 		ctx,

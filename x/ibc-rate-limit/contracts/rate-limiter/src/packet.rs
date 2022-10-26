@@ -52,6 +52,13 @@ impl Packet {
     }
 
     pub fn path_data(&self) -> (String, String) {
-        return (self.local_channel(), self.local_demom());
+        let denom = self.local_demom();
+        let channel = if denom.starts_with("ibc/") {
+            self.local_channel()
+        } else {
+            "any".to_string() // native tokens are rate limited globally
+        };
+
+        return (channel, denom);
     }
 }

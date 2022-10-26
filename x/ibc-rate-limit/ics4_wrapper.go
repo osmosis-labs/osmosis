@@ -101,6 +101,7 @@ func (i *ICS4Wrapper) CalculateChannelValue(ctx sdk.Context, denom string, packe
 		return i.bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
 	}
 
+	// ToDo: Get value across all channels
 	escrowAddress := transfertypes.GetEscrowAddress(packet.GetSourcePort(), packet.GetSourceChannel())
 	return i.bankKeeper.GetBalance(ctx, escrowAddress, denom).Amount
 }

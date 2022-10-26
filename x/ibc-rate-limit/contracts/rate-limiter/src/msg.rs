@@ -82,9 +82,20 @@ pub enum QueryMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum SudoMsg {
-    SendPacket { packet: Packet },
-    RecvPacket { packet: Packet },
-    UndoSend { packet: Packet },
+    SendPacket {
+        packet: Packet,
+        local_denom: Option<String>,
+        channel_value_hint: Option<u128>,
+    },
+    RecvPacket {
+        packet: Packet,
+        local_denom: Option<String>,
+        channel_value_hint: Option<u128>,
+    },
+    UndoSend {
+        packet: Packet,
+        local_denom: Option<String>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]

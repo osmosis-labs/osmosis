@@ -9,7 +9,6 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
-	"github.com/cosmos/ibc-go/v3/modules/core/exported"
 	"github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 )
 
@@ -43,35 +42,6 @@ func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.Permis
 	}
 	return nil
 }
-
-//func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
-//	msgType, contract string,
-//	channelValue sdk.Int, sourceChannel, denom string,
-//	amount string,
-//) error {
-//	contractAddr, err := sdk.AccAddressFromBech32(contract)
-//	if err != nil {
-//		return err
-//	}
-//
-//	sendPacketMsg, err := BuildWasmExecMsg(
-//		msgType,
-//		sourceChannel,
-//		denom,
-//		channelValue,
-//		amount,
-//	)
-//	if err != nil {
-//		return err
-//	}
-//
-//	_, err = contractKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
-//	if err != nil {
-//		return sdkerrors.Wrap(types.ErrRateLimitExceeded, err.Error())
-//	}
-//
-//	return nil
-//}
 
 type UndoSendMsg struct {
 	UndoSend UndoSendMsgContent `json:"undo_send"`
@@ -115,7 +85,9 @@ type RecvPacketMsg struct {
 }
 
 type PacketMsg struct {
-	Packet UnwrappedPacket `json:"packet"`
+	Packet           UnwrappedPacket `json:"packet"`
+	LocalDenom       string          `json:"local_denom"`
+	ChannelValueHint sdk.Int         `json:"channel_value"`
 }
 
 type UnwrappedPacket struct {
@@ -151,10 +123,18 @@ func BuildWasmExecMsg(msgType string, packet channeltypes.Packet) ([]byte, error
 	var asJson []byte
 	switch {
 	case msgType == msgSend:
-		msg := SendPacketMsg{SendPacket: PacketMsg{unwrapped}}
+		msg := SendPacketMsg{SendPacket: PacketMsg{
+			Packet:           unwrapped,
+			LocalDenom:       "",
+			ChannelValueHint: sdk.NewInt(1),
+		}}
 		asJson, err = json.Marshal(msg)
 	case msgType == msgRecv:
-		msg := RecvPacketMsg{RecvPacket: PacketMsg{unwrapped}}
+		msg := RecvPacketMsg{RecvPacket: PacketMsg{
+			Packet:           unwrapped,
+			LocalDenom:       "",
+			ChannelValueHint: sdk.NewInt(1),
+		}}
 		asJson, err = json.Marshal(msg)
 	default:
 		return []byte{}, types.ErrBadMessage
@@ -189,12 +169,7 @@ func GetIBCDenom(sourceChannel, destChannel, denom string) string {
 	return denomTrace.IBCDenom()
 }
 
-func GetFundsFromPacket(packet exported.PacketI) (amount, packetDenom, localDenom, ibcDenom string, error error) {
-	var packetData transfertypes.FungibleTokenPacketData
-	err := json.Unmarshal(packet.GetData(), &packetData)
-	if err != nil {
-		return "", "", "", "", err
-	}
-	ibcDenom = GetIBCDenom(packet.GetSourceChannel(), packet.GetDestChannel(), packetData.Denom)
-	return packetData.Amount, packetData.Denom, "", ibcDenom, nil
+func GetDenoms(packet UnwrappedPacket) (packetDenom, localDenom, ibcDenom string, error error) {
+	ibcDenom = GetIBCDenom(packet.SourceChannel, packet.DestinationChannel, packet.Data.Denom)
+	return packet.Data.Denom, "", ibcDenom, nil
 }

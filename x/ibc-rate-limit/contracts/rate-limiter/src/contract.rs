@@ -65,13 +65,34 @@ pub fn execute(
 #[entry_point]
 pub fn sudo(deps: DepsMut, env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
     match msg {
-        SudoMsg::SendPacket { packet } => {
-            sudo::process_packet(deps, packet, FlowType::Out, env.block.time)
-        }
-        SudoMsg::RecvPacket { packet } => {
-            sudo::process_packet(deps, packet, FlowType::In, env.block.time)
-        }
-        SudoMsg::UndoSend { packet } => sudo::undo_send(deps, packet),
+        SudoMsg::SendPacket {
+            packet,
+            local_denom,
+            channel_value_hint,
+        } => sudo::process_packet(
+            deps,
+            packet,
+            FlowType::Out,
+            env.block.time,
+            local_denom,
+            channel_value_hint,
+        ),
+        SudoMsg::RecvPacket {
+            packet,
+            local_denom,
+            channel_value_hint,
+        } => sudo::process_packet(
+            deps,
+            packet,
+            FlowType::In,
+            env.block.time,
+            local_denom,
+            channel_value_hint,
+        ),
+        SudoMsg::UndoSend {
+            packet,
+            local_denom,
+        } => sudo::undo_send(deps, packet, local_denom),
     }
 }
 

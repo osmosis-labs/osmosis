@@ -6,16 +6,32 @@ use crate::{
     ContractError,
 };
 
+// This function will process a packet and extract the paths information, funds,
+// and channel value from it. This is will have to interact with the chain via grpc queries to properly
+// obtain this information.
+//
+// For backwards compatibility, we're teporarily letting the chain override the
+// denom and channel value, but these should go away in favour of the contract
+// extracting these from the packet
 pub fn process_packet(
     deps: DepsMut,
     packet: Packet,
     direction: FlowType,
     now: Timestamp,
+    local_denom: Option<String>,
+    channel_value_hint: Option<u128>,
 ) -> Result<Response, ContractError> {
-    let (channel_id, denom) = packet.path_data();
+    let (channel_id, extracted_denom) = packet.path_data();
+    let denom = match local_denom {
+        Some(denom) => denom,
+        None => extracted_denom,
+    };
     let path = &Path::new(&channel_id, &denom);
     let funds = packet.get_funds();
-    let channel_value = packet.channel_value(deps.as_ref());
+    let channel_value = match channel_value_hint {
+        Some(channel_value) => channel_value,
+        None => packet.channel_value(deps.as_ref()),
+    };
     try_transfer(deps, path, channel_value, funds, direction, now)
 }
 
@@ -110,11 +126,22 @@ fn add_rate_limit_attributes(response: Response, result: &RateLimit) -> Response
 
 // This function manually injects an inflow. This is used when reverting a
 // packet that failed ack or timed-out.
-pub fn undo_send(deps: DepsMut, packet: Packet) -> Result<Response, ContractError> {
-    //path: &Path, funds: u128
-    let (channel_id, denom) = packet.path_data();
+pub fn undo_send(
+    deps: DepsMut,
+    packet: Packet,
+    local_denom: Option<String>,
+) -> Result<Response, ContractError> {
+    let (channel_id, extracted_denom) = packet.path_data();
+    let denom = match local_denom {
+        Some(denom) => denom,
+        None => extracted_denom,
+    };
     let path = &Path::new(&channel_id, &denom);
     let funds = packet.get_funds();
+
+    // let (channel_id, denom) = packet.path_data();
+    // let path = &Path::new(&channel_id, &denom);
+    // let funds = packet.get_funds();
 
     // Sudo call. Only go modules should be allowed to access this
     let trackers = RATE_LIMIT_TRACKERS.may_load(deps.storage, path.into())?;

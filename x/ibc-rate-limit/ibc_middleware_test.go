@@ -68,6 +68,50 @@ func (suite *MiddlewareTestSuite) SetupTest() {
 }
 
 // Helpers
+func (suite *MiddlewareTestSuite) MessageFromAToB(denom string, amount sdk.Int, wrapDenom bool) sdk.Msg {
+	var coins sdk.Coin
+	var port, channel, accountFrom, accountTo string
+
+	coins = sdk.NewCoin(denom, amount)
+	if wrapDenom {
+		coins = transfertypes.GetTransferCoin("transfer", "channel-0", denom, amount)
+	}
+	port = suite.path.EndpointA.ChannelConfig.PortID
+	channel = suite.path.EndpointA.ChannelID
+	accountFrom = suite.chainA.SenderAccount.GetAddress().String()
+	accountTo = suite.chainB.SenderAccount.GetAddress().String()
+	timeoutHeight := clienttypes.NewHeight(0, 100)
+	return transfertypes.NewMsgTransfer(
+		port,
+		channel,
+		coins,
+		accountFrom,
+		accountTo,
+		timeoutHeight,
+		0,
+	)
+}
+
+func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount sdk.Int, wrapDenom bool) sdk.Msg {
+	coins := sdk.NewCoin(denom, amount)
+	if wrapDenom {
+		coins = transfertypes.GetTransferCoin("transfer", "channel-0", denom, amount)
+	}
+	port := suite.path.EndpointB.ChannelConfig.PortID
+	channel := suite.path.EndpointB.ChannelID
+	accountFrom := suite.chainB.SenderAccount.GetAddress().String()
+	accountTo := suite.chainA.SenderAccount.GetAddress().String()
+	timeoutHeight := clienttypes.NewHeight(0, 100)
+	return transfertypes.NewMsgTransfer(
+		port,
+		channel,
+		coins,
+		accountFrom,
+		accountTo,
+		timeoutHeight,
+		0,
+	)
+}
 
 // NewValidMessage generates a new sdk.Msg of type MsgTransfer.
 // forward=true means that the message will be a "send" message, while forward=false is for  a "receive" message.
@@ -77,6 +121,7 @@ func (suite *MiddlewareTestSuite) NewValidMessage(forward bool, amount sdk.Int) 
 	var port, channel, accountFrom, accountTo string
 
 	coins = sdk.NewCoin(sdk.DefaultBondDenom, amount)
+	//coins = transfertypes.GetTransferCoin("transfer", "channel-0", sdk.DefaultBondDenom, amount)
 	if forward {
 		port = suite.path.EndpointA.ChannelConfig.PortID
 		channel = suite.path.EndpointA.ChannelID
@@ -117,6 +162,40 @@ func (suite *MiddlewareTestSuite) TestInvalidReceiver() {
 		"acknowledgment is not an error")
 	suite.Require().Contains(string(ack), sdkerrors.ErrInvalidAddress.Error(),
 		"acknowledgment error is not of the right type")
+}
+
+func (suite *MiddlewareTestSuite) FullSendBToA(msg sdk.Msg) (string, error) {
+	res, err := suite.chainB.SendMsgsNoCheck(msg)
+	suite.Require().NoError(err)
+
+	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
+	suite.Require().NoError(err)
+
+	err = suite.path.EndpointA.UpdateClient()
+	suite.Require().NoError(err)
+
+	res, err = suite.path.EndpointA.RecvPacketWithResult(packet)
+	suite.Require().NoError(err)
+
+	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
+	return string(ack), err
+}
+
+func (suite *MiddlewareTestSuite) FullSendAToB(msg sdk.Msg) (string, error) {
+	res, err := suite.chainA.SendMsgsNoCheck(msg)
+	suite.Require().NoError(err)
+
+	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
+	suite.Require().NoError(err)
+
+	err = suite.path.EndpointB.UpdateClient()
+	suite.Require().NoError(err)
+
+	res, err = suite.path.EndpointB.RecvPacketWithResult(packet)
+	suite.Require().NoError(err)
+
+	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
+	return string(ack), err
 }
 
 func (suite *MiddlewareTestSuite) ExecuteReceive(msg sdk.Msg) (string, error) {
@@ -194,12 +273,18 @@ func (suite *MiddlewareTestSuite) initializeEscrow() sdk.Int {
 	// it's used as part of the channel value in the rate limiting contract
 	// To account for that, we subtract the amount we'll send first (2.5% of transferAmount) here
 	sendAmount := transferAmount.QuoRaw(40)
-	suite.AssertSend(true, suite.NewValidMessage(true, transferAmount.Sub(sendAmount)))
+
+	// Send from A to B
+	_, err := suite.FullSendAToB(suite.MessageFromAToB(sdk.DefaultBondDenom, transferAmount.Sub(sendAmount), false))
+	suite.Require().NoError(err)
+	// Send from A to B
+	_, err = suite.FullSendBToA(suite.MessageFromBToA(sdk.DefaultBondDenom, transferAmount.Sub(sendAmount), false))
+	suite.Require().NoError(err)
 
 	return sendAmount
 }
 
-func (suite *MiddlewareTestSuite) fullSendTest() map[string]string {
+func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	sendAmount := suite.initializeEscrow()
 
 	// Setup contract
@@ -207,8 +292,6 @@ func (suite *MiddlewareTestSuite) fullSendTest() map[string]string {
 	quotas := suite.BuildChannelQuota("weekly", 604800, 5, 5)
 	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
-
-	fmt.Println(sendAmount)
 
 	//// Each user has 10% of the supply
 	//escrowAddress := transfertypes.GetEscrowAddress("transfer", "channel-0")
@@ -223,10 +306,10 @@ func (suite *MiddlewareTestSuite) fullSendTest() map[string]string {
 	//fmt.Println("half", half)
 
 	// send 2.5% (quota is 5%)
-	suite.AssertSend(true, suite.NewValidMessage(true, sendAmount))
+	suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sendAmount, !native))
 
 	// send 2.5% (quota is 5%)
-	r, _ := suite.AssertSend(true, suite.NewValidMessage(true, sendAmount))
+	r, _ := suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sendAmount, !native))
 
 	// Calculate remaining allowance in the quota
 	attrs := suite.ExtractAttributes(suite.FindEvent(r.GetEvents(), "wasm"))
@@ -236,19 +319,24 @@ func (suite *MiddlewareTestSuite) fullSendTest() map[string]string {
 	suite.Require().Equal(used, sendAmount.MulRaw(2))
 
 	// Sending above the quota should fail.
-	suite.AssertSend(false, suite.NewValidMessage(true, sdk.NewInt(1)))
+	suite.AssertSend(false, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1), !native))
 	return attrs
 }
 
 // Test rate limiting on sends
-func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimiting() {
-	suite.fullSendTest()
+func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimitingNative() {
+	suite.fullSendTest(true)
+}
+
+// Test rate limiting on sends
+func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimitingNonNative() {
+	suite.fullSendTest(false)
 }
 
 // Test rate limits are reset when the specified time period has passed
 func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 	// Same test as above, but the quotas get reset after time passes
-	attrs := suite.fullSendTest()
+	attrs := suite.fullSendTest(true)
 	parts := strings.Split(attrs["weekly_period_end"], ".") // Splitting timestamp into secs and nanos
 	secs, err := strconv.ParseInt(parts[0], 10, 64)
 	suite.Require().NoError(err)
