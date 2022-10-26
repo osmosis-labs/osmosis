@@ -18,9 +18,9 @@ func (suite *KeeperTestSuite) TestGetLiquidityFromAmounts() {
 	}{
 		{
 			"happy path",
-			sdk.NewDecWithPrec(70710678, 6),
-			sdk.NewDecWithPrec(74161984, 6),
-			sdk.NewDecWithPrec(67082039, 6),
+			sdk.MustNewDecFromStr("70.710678"),
+			sdk.MustNewDecFromStr("74.161984"),
+			sdk.MustNewDecFromStr("67.082039"),
 			sdk.NewInt(1),
 			sdk.NewInt(5000),
 			"1377.927096082029653542",
@@ -33,6 +33,11 @@ func (suite *KeeperTestSuite) TestGetLiquidityFromAmounts() {
 		suite.Run(tc.name, func() {
 			liquidity := cl.GetLiquidityFromAmounts(tc.currentSqrtP, tc.sqrtPLow, tc.sqrtPHigh, tc.amount0Desired, tc.amount1Desired)
 			suite.Require().Equal(tc.expectedLiquidity, liquidity.String())
+			liq0 := cl.Liquidity0(tc.amount0Desired, tc.currentSqrtP, tc.sqrtPHigh)
+			liq1 := cl.Liquidity1(tc.amount1Desired, tc.currentSqrtP, tc.sqrtPLow)
+			liq := sdk.MinDec(liq0, liq1)
+			suite.Require().Equal(liq.String(), liquidity.String())
+
 		})
 	}
 }
@@ -74,8 +79,8 @@ func (suite *KeeperTestSuite) TestLiquidity0() {
 	}{
 		{
 			"happy path",
-			sdk.NewDecWithPrec(70710678, 6),
-			sdk.NewDecWithPrec(74161984, 6),
+			sdk.MustNewDecFromStr("70.710678"),
+			sdk.MustNewDecFromStr("74.161984"),
 			sdk.NewInt(1),
 			"1519.437618821730672389",
 		},
