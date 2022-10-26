@@ -90,6 +90,8 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 	asset1 := p.Token1
 	tokenAmountInAfterFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
 
+	zeroForOne := tokenIn.Denom == asset0
+
 	// get current sqrt price from pool
 	curSqrtPrice := p.CurrentSqrtPrice
 
@@ -143,8 +145,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
 	for swapState.amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 6)) {
-		lte := tokenIn.Denom == asset1
-		nextTick, _ := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), lte)
+		nextTick, _ := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), zeroForOne)
 		// TODO: we can enable this error checking once we fix tick initialization
 		// if !ok {
 		// 	return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("there are no more ticks initialized to fill the swap")
@@ -159,7 +160,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 			nextSqrtPrice,
 			liq,
 			swapState.amountSpecifiedRemaining,
-			lte,
+			zeroForOne,
 		)
 		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn)
 		swapState.amountCalculated = swapState.amountCalculated.Add(amountOut)
@@ -169,14 +170,14 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, err
 			}
-			if !lte {
+			if zeroForOne {
 				liquidityDelta = liquidityDelta.Neg()
 			}
 			swapState.liquidity = swapState.liquidity.Add(liquidityDelta.ToDec())
 			if swapState.liquidity.LTE(sdk.ZeroDec()) || swapState.liquidity.IsNil() {
 				return sdk.Coin{}, sdk.Coin{}, err
 			}
-			if !lte {
+			if zeroForOne {
 				swapState.tick = sdk.NewInt(nextTick - 1)
 			} else {
 				swapState.tick = sdk.NewInt(nextTick)
@@ -199,6 +200,7 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 	p := k.getPoolbyId(ctx, poolId)
 	asset0 := p.Token0
 	asset1 := p.Token1
+	zeroForOne := tokenOut.Denom == asset0
 
 	// get current sqrt price from pool
 	// curSqrtPrice := sdk.NewDecWithPrec(int64(p.CurrentSqrtPrice.Uint64()), 6)
@@ -253,8 +255,7 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
 	for swapState.amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 6)) {
-		lte := tokenOut.Denom == asset1
-		nextTick, _ := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), lte)
+		nextTick, _ := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), zeroForOne)
 		// TODO: we can enable this error checking once we fix tick initialization
 		// if !ok {
 		// 	return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("there are no more ticks initialized to fill the swap")
@@ -270,7 +271,7 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 			nextSqrtPrice,
 			liq,
 			swapState.amountSpecifiedRemaining,
-			lte,
+			zeroForOne,
 		)
 
 		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn)
@@ -281,14 +282,14 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, err
 			}
-			if !lte {
+			if !zeroForOne {
 				liquidityDelta = liquidityDelta.Neg()
 			}
 			swapState.liquidity = swapState.liquidity.Add(liquidityDelta.ToDec())
 			if swapState.liquidity.LTE(sdk.ZeroDec()) || swapState.liquidity.IsNil() {
 				return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("no liquidity available, cannot swap")
 			}
-			if !lte {
+			if !zeroForOne {
 				swapState.tick = sdk.NewInt(nextTick - 1)
 			} else {
 				swapState.tick = sdk.NewInt(nextTick)

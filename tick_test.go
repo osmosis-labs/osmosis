@@ -72,54 +72,54 @@ func TestKeeper_NextInitializedTick(t *testing.T) {
 		k.setTickInfo(ctx, 1, t, TickInfo{})
 	}
 
-	t.Run("lte=false", func(t *testing.T) {
+	t.Run("lte=true", func(t *testing.T) {
 		t.Run("returns tick to right if at initialized tick", func(t *testing.T) {
-			n, initd := k.NextInitializedTick(ctx, 1, 78, false)
+			n, initd := k.NextInitializedTick(ctx, 1, 78, true)
 			require.Equal(t, int64(84), n)
 			require.True(t, initd)
 		})
 		t.Run("returns tick to right if at initialized tick", func(t *testing.T) {
-			n, initd := k.NextInitializedTick(ctx, 1, -55, false)
+			n, initd := k.NextInitializedTick(ctx, 1, -55, true)
 			require.Equal(t, int64(-4), n)
 			require.True(t, initd)
 		})
 		t.Run("returns the tick directly to the right", func(t *testing.T) {
-			n, initd := k.NextInitializedTick(ctx, 1, 77, false)
+			n, initd := k.NextInitializedTick(ctx, 1, 77, true)
 			require.Equal(t, int64(78), n)
 			require.True(t, initd)
 		})
 		t.Run("returns the tick directly to the right", func(t *testing.T) {
-			n, initd := k.NextInitializedTick(ctx, 1, -56, false)
+			n, initd := k.NextInitializedTick(ctx, 1, -56, true)
 			require.Equal(t, int64(-55), n)
 			require.True(t, initd)
 		})
 		t.Run("returns the next words initialized tick if on the right boundary", func(t *testing.T) {
-			n, initd := k.NextInitializedTick(ctx, 1, -257, false)
+			n, initd := k.NextInitializedTick(ctx, 1, -257, true)
 			require.Equal(t, int64(-200), n)
 			require.True(t, initd)
 		})
 		t.Run("returns the next initialized tick from the next word", func(t *testing.T) {
 			k.setTickInfo(ctx, 1, 340, TickInfo{})
 
-			n, initd := k.NextInitializedTick(ctx, 1, 328, false)
+			n, initd := k.NextInitializedTick(ctx, 1, 328, true)
 			require.Equal(t, int64(340), n)
 			require.True(t, initd)
 		})
 	})
 
-	t.Run("lte=true", func(t *testing.T) {
+	t.Run("lte=false", func(t *testing.T) {
 		t.Run("returns tick directly to the left of input tick if not initialized", func(t *testing.T) {
-			n, initd := k.NextInitializedTick(ctx, 1, 79, true)
+			n, initd := k.NextInitializedTick(ctx, 1, 79, false)
 			require.Equal(t, int64(78), n)
 			require.True(t, initd)
 		})
 		t.Run("returns same tick if initialized", func(t *testing.T) {
-			n, initd := k.NextInitializedTick(ctx, 1, 78, true)
+			n, initd := k.NextInitializedTick(ctx, 1, 78, false)
 			require.Equal(t, int64(78), n)
 			require.True(t, initd)
 		})
 		t.Run("returns next initialized tick far away", func(t *testing.T) {
-			n, initd := k.NextInitializedTick(ctx, 1, 100, true)
+			n, initd := k.NextInitializedTick(ctx, 1, 100, false)
 			require.Equal(t, int64(84), n)
 			require.True(t, initd)
 		})
