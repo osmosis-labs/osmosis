@@ -65,10 +65,10 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liqu
 
 // NextInitializedTick returns the next initialized tick index based on the
 // current or provided tick index. If no initialized tick exists, <0, false>
-// will be returned. The lte argument indicates if we need to find the next
+// will be returned. The zeroForOne argument indicates if we need to find the next
 // initialized tick to the left or right of the current tick index, where true
 // indicates searching to the left.
-func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64, lte bool) (next int64, initialized bool) {
+func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64, zeroForOne bool) (next int64, initialized bool) {
 	store := ctx.KVStore(k.storeKey)
 
 	// Construct a prefix store with a prefix of <TickPrefix | poolID>, allowing
@@ -77,20 +77,20 @@ func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex in
 	prefixStore := prefix.NewStore(store, prefixBz)
 
 	var startKey []byte
-	if lte {
+	if zeroForOne {
+		startKey = types.TickIndexToBytes(tickIndex)
+	} else {
 		// When looking to the left of the current tick, we need to evaluate the
 		// current tick as well. The end cursor for reverse iteration is non-inclusive
 		// so must add one and handle overflow.
 		startKey = types.TickIndexToBytes(osmomath.Max(tickIndex, tickIndex+1))
-	} else {
-		startKey = types.TickIndexToBytes(tickIndex)
 	}
 
 	var iter db.Iterator
-	if lte {
-		iter = prefixStore.ReverseIterator(nil, startKey)
-	} else {
+	if zeroForOne {
 		iter = prefixStore.Iterator(startKey, nil)
+	} else {
+		iter = prefixStore.ReverseIterator(nil, startKey)
 	}
 
 	defer iter.Close()
@@ -103,10 +103,10 @@ func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex in
 			panic(fmt.Errorf("invalid tick index (%s): %v", string(iter.Key()), err))
 		}
 
-		if !lte && tick > tickIndex {
+		if zeroForOne && tick > tickIndex {
 			return tick, true
 		}
-		if lte && tick <= tickIndex {
+		if !zeroForOne && tick <= tickIndex {
 			return tick, true
 		}
 	}
