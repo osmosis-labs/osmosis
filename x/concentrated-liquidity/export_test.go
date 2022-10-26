@@ -25,6 +25,7 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 
 func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	return calcAmount1Delta(liq, sqrtPriceA, sqrtPriceB)
+}
 
 func Liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	return liquidity0(amount, sqrtPriceA, sqrtPriceB)
