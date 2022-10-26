@@ -143,12 +143,25 @@ func (k Keeper) setPool(ctx sdk.Context, pool types.PoolI) error {
 	poolKey := types.GetKeyPrefixPools(pool.GetId())
 	store.Set(poolKey, bz)
 
+	k.incrementPoolCount(ctx)
+
+	return nil
+}
+
+// incrementPoolCount incrementes pool count by 1.
+func (k Keeper) incrementPoolCount(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
 	poolCount := &gogotypes.UInt64Value{}
 	osmoutils.MustGet(store, types.KeyGammPoolCount, poolCount)
 	poolCount.Value = poolCount.Value + 1
 	osmoutils.MustSet(store, types.KeyGammPoolCount, poolCount)
+}
 
-	return nil
+// initializePoolCount initializes pool count to 0.
+func (k Keeper) initializePoolCount(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	poolCount := &gogotypes.UInt64Value{Value: 0}
+	osmoutils.MustSet(store, types.KeyGammPoolCount, poolCount)
 }
 
 func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
@@ -266,8 +279,8 @@ func (k Keeper) GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error) 
 	return denoms, err
 }
 
-// GetGammPoolCount returns the next pool Id.
-func (k Keeper) GetGammPoolCount(ctx sdk.Context) uint64 {
+// GetPoolCount returns the next pool Id.
+func (k Keeper) GetPoolCount(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	nextPoolId := gogotypes.UInt64Value{}
 	osmoutils.MustGet(store, types.KeyNextGlobalPoolId, &nextPoolId)
