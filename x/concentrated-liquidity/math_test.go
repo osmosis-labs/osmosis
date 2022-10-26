@@ -32,8 +32,8 @@ func (suite *KeeperTestSuite) TestCalcAmount0Delta() {
 		{
 			"happy path",
 			sdk.NewDec(1377927219),
-			sdk.NewDecWithPrec(70710678, 6),
-			sdk.NewDecWithPrec(74161984, 6),
+			sdk.MustNewDecFromStr("70.710678"),
+			sdk.MustNewDecFromStr("74.161984"),
 			"906866",
 		},
 	}
