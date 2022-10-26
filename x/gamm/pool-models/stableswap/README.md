@@ -281,7 +281,7 @@ Couple ways to define JoinPool Exit Pool relation
 
 * Simulator integrations:
   * Pool creation
-  * JoinPool + ExitPool gives a token amount out that is lte input
+  * JoinPool + ExitPool gives a token amount out that is zeroForOne input
   * SingleTokenIn + ExitPool + Swap to base token gives a token amount that is less than input
   * CFMM k adjusting in the correct direction after every action
 * Fuzz test binary search algorithm, to see that it still works correctly across wide scale ranges
