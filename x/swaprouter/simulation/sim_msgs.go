@@ -12,16 +12,16 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 )
 
-// SimulationKeeper is a wrapper around swaprouter's keeper which makes it easy to wire new keepers
-type SimulationKeeper struct {
-	swaprouter.Keeper
+// simulationKeeper is a wrapper around swaprouter's keeper which makes it easy to wire new keepers
+type simulationKeeper struct {
+	keeper swaprouter.Keeper
 
-	GammKeeper types.GammKeeper
+	gammKeeper types.GammKeeper
 }
 
 // RandomSwapExactAmountIn utilizes a random pool and swaps and exact amount in for minimum of the secondary pool token
 // TODO: Improve this to swap through multiple pools
-func RandomSwapExactAmountIn(k SimulationKeeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgSwapExactAmountIn, error) {
+func RandomSwapExactAmountIn(k simulationKeeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgSwapExactAmountIn, error) {
 	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
 	pool_id, pool, coinIn, coinOut, _, _, err := getRandPool(k, sim, ctx)
 	if err != nil {
@@ -59,7 +59,7 @@ func RandomSwapExactAmountIn(k SimulationKeeper, sim *simtypes.SimCtx, ctx sdk.C
 
 // RandomSwapExactAmountOut utilizes a random pool and swaps a max amount amount in for an exact amount of the secondary pool token
 // TODO: Improve this to swap through multiple pools
-func RandomSwapExactAmountOut(k SimulationKeeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgSwapExactAmountOut, error) {
+func RandomSwapExactAmountOut(k simulationKeeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgSwapExactAmountOut, error) {
 	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
 	pool_id, pool, coinIn, coinOut, _, _, err := getRandPool(k, sim, ctx)
 	if err != nil {
@@ -99,10 +99,10 @@ func RandomSwapExactAmountOut(k SimulationKeeper, sim *simtypes.SimCtx, ctx sdk.
 	}, nil
 }
 
-func getRandPool(k SimulationKeeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64, gammtypes.TraditionalAmmInterface, sdk.Coin, sdk.Coin, []string, string, error) {
+func getRandPool(k simulationKeeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64, gammtypes.TraditionalAmmInterface, sdk.Coin, sdk.Coin, []string, string, error) {
 	// select a pseudo-random pool ID, max bound by the upcoming pool ID
-	pool_id := simtypes.RandLTBound(sim, k.GammKeeper.GetNextPoolId(ctx))
-	pool, err := k.GammKeeper.GetPoolAndPoke(ctx, pool_id)
+	pool_id := simtypes.RandLTBound(sim, k.gammKeeper.GetNextPoolId(ctx))
+	pool, err := k.gammKeeper.GetPoolAndPoke(ctx, pool_id)
 	if err != nil {
 		return 0, nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), []string{}, "", err
 	}

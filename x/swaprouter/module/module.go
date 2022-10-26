@@ -147,9 +147,5 @@ func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *s
 }
 
 func (am AppModule) Actions() []simtypes.Action {
-	simKeeper := swaproutersimulation.SimulationKeeper{
-		Keeper:     am.k,
-		GammKeeper: am.gammKeeper,
-	}
-	return swaproutersimulation.DefaultActions(simKeeper)
+	return swaproutersimulation.DefaultActions(am.k, am.gammKeeper)
 }
