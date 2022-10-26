@@ -277,9 +277,7 @@ func deriveRealMinShareOutAmt(ctx sdk.Context, tokenIn sdk.Coins, pool types.Tra
 
 func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64, types.TraditionalAmmInterface, sdk.Coin, sdk.Coin, []string, string, error) {
 	// select a pseudo-random pool ID, max bound by the upcoming pool ID
-	// pool_id := simtypes.RandLTBound(sim, k.GetNextPoolId(ctx))
-	// TODO: SIMULATOR figure out how to approach this. Idea: keep pool count index in state
-	pool_id := uint64(0)
+	pool_id := simtypes.RandLTBound(sim, k.GetPoolCount(ctx))
 	pool, err := k.GetPoolAndPoke(ctx, pool_id)
 	if err != nil {
 		return 0, nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), []string{}, "", err
