@@ -3,6 +3,7 @@ package concentrated_liquidity_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	cl "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
@@ -101,4 +102,27 @@ func (s *KeeperTestSuite) TestOrderInitialPoolDenoms() {
 	denom0, denom1, err = cltypes.OrderInitialPoolDenoms("usdc", "usdc")
 	s.Require().Error(err)
 
+}
+
+func (suite *KeeperTestSuite) TestPriceToTick() {
+	testCases := []struct {
+		name         string
+		price        sdk.Dec
+		tickExpected string
+	}{
+		{
+			"happy path",
+			sdk.NewDec(5000),
+			"85176",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			tick := cl.PriceToTick(tc.price)
+			suite.Require().Equal(tc.tickExpected, tick.String())
+		})
+	}
 }

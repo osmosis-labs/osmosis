@@ -36,6 +36,7 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 	return nil, errors.New("not implemented")
 }
 
+// priceToTick takes a price and returns the corresponding tick index
 func priceToTick(price sdk.Dec) sdk.Int {
 	logOfPrice := osmomath.BigDecFromSDKDec(price).LogBase2()
 	logInt := osmomath.NewDecWithPrec(10001, 4)
