@@ -19,6 +19,18 @@ func GetLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0,
 	return getLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB, amount0, amount1)
 }
 
+func PriceToTick(price sdk.Dec) sdk.Int {
+	return priceToTick(price)
+}
+
+func (k Keeper) TickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
+	return k.tickToSqrtPrice(tickIndex)
+}
+
+func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo TickInfo) {
+	k.setTickInfo(ctx, poolId, tickIndex, tickInfo)
+}
+
 func GetNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
 	return getNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining)
 }

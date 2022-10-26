@@ -12,6 +12,7 @@ import (
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
+// tickToSqrtPrice takes the tick index and returns the corresponding sqrt of the price
 func (k Keeper) tickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
 	price, err := sdk.NewDecWithPrec(10001, 4).Power(tickIndex.Uint64()).ApproxSqrt()
 	if err != nil {
