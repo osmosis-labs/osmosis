@@ -969,17 +969,20 @@ func (s *decimalTestSuite) TestCustomBaseLog() {
 			base:         NewBigDec(1111),
 			expected:     OneDec(),
 		},
-		// "log_1.123{1024.987654321} = ": {
-		// 	initialValue: NewDecWithPrec(1024987654321, 9),
-		// 	base:         NewDecWithPrec(1123, 3),
-		// 	// From: https://www.wolframalpha.com/input?i=log_1.0001%281024.987654321%29+to+41+digits
-		// 	expected: MustNewDecFromStr(""),
-		// },
-		// "log_1.0001{912648174127941279170121098210.92821920190204131121} = 689895.972156319183538389792485913311778672": {
-		// 	initialValue: MustNewDecFromStr("912648174127941279170121098210.92821920190204131121"),
-		// 	// From: https://www.wolframalpha.com/input?i=log_1.0001%28912648174127941279170121098210.92821920190204131121%29+to+42+digits
-		// 	expected: MustNewDecFromStr("689895.972156319183538389792485913311778672"),
-		// },
+		// Fails with 0.000000000000000000000000000000007686!!!!!
+		"log_1.123{1024.987654321} = 59.760484327223888489694630378785099461": {
+			initialValue: NewDecWithPrec(1024987654321, 9),
+			base:         NewDecWithPrec(1123, 3),
+			// From: https://www.wolframalpha.com/input?i=log_1.123%281024.987654321%29+to+38+digits
+			expected: MustNewDecFromStr("59.760484327223888489694630378785099461"),
+		},
+		// Fails with 0.000000000000000000000000000000077705!!!!!
+		"log_1.123{912648174127941279170121098210.92821920190204131121} = 594.689327867863079177915648832621538986": {
+			initialValue: MustNewDecFromStr("912648174127941279170121098210.92821920190204131121"),
+			base:         NewDecWithPrec(1123, 3),
+			// From: https://www.wolframalpha.com/input?i=log_1.123%28912648174127941279170121098210.92821920190204131121%29+to+39+digits
+			expected: MustNewDecFromStr("594.689327867863079177915648832621538986"),
+		},
 	}
 	for name, tc := range tests {
 		s.Run(name, func() {
