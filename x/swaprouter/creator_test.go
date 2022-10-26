@@ -54,7 +54,7 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 				suite.Require().Error(err)
 			} else {
 				suite.Require().NoError(err)
-				suite.Require().Equal(uint64(0), poolId)
+				suite.Require().Equal(uint64(1), poolId)
 			}
 		})
 	}
