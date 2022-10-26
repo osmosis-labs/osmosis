@@ -30,3 +30,11 @@ func (k Keeper) TickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
 func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo TickInfo) {
 	k.setTickInfo(ctx, poolId, tickIndex, tickInfo)
 }
+
+func Liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
+	return liquidity0(amount, sqrtPriceA, sqrtPriceB)
+}
+
+func Liquidity1(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
+	return liquidity1(amount, sqrtPriceA, sqrtPriceB)
+}
