@@ -3,12 +3,38 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
+// AccountKeeper defines the account contract that must be fulfilled when
+// creating a x/gamm keeper.
+type AccountI interface {
+	NewAccount(sdk.Context, authtypes.AccountI) authtypes.AccountI
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
+	SetAccount(ctx sdk.Context, acc authtypes.AccountI)
+}
+
+// BankKeeper defines the banking contract that must be fulfilled when
+// creating a x/gamm keeper.
+type BankI interface {
+	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
+	SetDenomMetaData(ctx sdk.Context, denomMetaData banktypes.Metadata)
+}
+
+// CommunityPoolKeeper defines the contract needed to be fulfilled for distribution keeper.
+type CommunityPoolI interface {
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
+}
+
 // TODO: godoc
 type SwapI interface {
+	InitializePool(ctx sdk.Context, pool types.PoolI, creatorAddress sdk.AccAddress) error
+
 	GetPool(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
 
 	SwapExactAmountIn(
@@ -32,15 +58,22 @@ type SwapI interface {
 	) (tokenInAmount sdk.Int, err error)
 }
 
+// GammExtension defines gamm-specific API.
+type GammExtension interface {
+	SwapI
+
+	RecordTotalLiquidityIncrease(ctx sdk.Context, coins sdk.Coins)
+
+	MintPoolShareToAccount(ctx sdk.Context, pool types.PoolI, addr sdk.AccAddress, amount sdk.Int) error
+}
+
 // SimulationExtension defines the swap simulation extension.
 // TODO: refactor simulator setup logic to avoid having to define these
 // extra methods just for the simulation.
 type SimulationExtension interface {
-	SwapI
+	GammExtension
 
 	GetPoolAndPoke(ctx sdk.Context, poolId uint64) (gammtypes.TraditionalAmmInterface, error)
-
-	GetNextPoolId(ctx sdk.Context) uint64
 }
 
 type SwapAmountInRoutes []SwapAmountInRoute

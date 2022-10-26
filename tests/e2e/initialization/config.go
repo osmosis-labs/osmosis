@@ -353,7 +353,8 @@ func updateTxfeesGenesis(txfeesGenState *txfeestypes.GenesisState) {
 }
 
 func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
-	gammGenState.Params.PoolCreationFee = tenOsmo
+	// TODO:
+	// gammGenState.Params.PoolCreationFee = tenOsmo
 }
 
 func updateEpochGenesis(epochGenState *epochtypes.GenesisState) {

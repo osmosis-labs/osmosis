@@ -12,7 +12,7 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
 	"github.com/osmosis-labs/osmosis/v12/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v12/tests/e2e/util"
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	swaprouterqueryproto "github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/queryproto"
 	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,7 +30,7 @@ func (n *NodeConfig) CreatePool(poolFile, from string) uint64 {
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
-	var numPools gammtypes.QueryNumPoolsResponse
+	var numPools swaprouterqueryproto.NumPoolsResponse
 	err = util.Cdc.UnmarshalJSON(bz, &numPools)
 	require.NoError(n.t, err)
 	poolID := numPools.NumPools

@@ -265,6 +265,9 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GetSubspace(swaproutertypes.ModuleName),
 		appKeepers.GAMMKeeper,
 		appKeepers.ConcentratedLiquidityKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.AccountKeeper,
+		appKeepers.DistrKeeper,
 	)
 
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
@@ -320,7 +323,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.IncentivesKeeper,
 		appKeepers.DistrKeeper,
-		appKeepers.GAMMKeeper,
+		appKeepers.SwapRouterKeeper,
 	)
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
 
@@ -479,6 +482,14 @@ func (appKeepers *AppKeepers) SetupHooks() {
 			// insert gamm hooks receivers here
 			appKeepers.PoolIncentivesKeeper.Hooks(),
 			appKeepers.TwapKeeper.GammHooks(),
+		),
+	)
+
+	appKeepers.SwapRouterKeeper.SetPoolCreationListeners(
+		swaproutertypes.NewPoolCreationListeners(
+			// insert gamm hooks receivers here
+			appKeepers.PoolIncentivesKeeper.Hooks(),
+			appKeepers.TwapKeeper.PoolCreationListeners(),
 		),
 	)
 

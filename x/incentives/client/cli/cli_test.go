@@ -10,6 +10,7 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -38,9 +39,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// modification to pay pool creation fee with test bond denom "stake"
 	// marshal result into genesis json
 	genesisState := app.ModuleBasics.DefaultGenesis(s.cfg.Codec)
-	gammGen := gammtypes.DefaultGenesis()
-	gammGen.Params.PoolCreationFee = sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 1000000)}
-	gammGenJson := s.cfg.Codec.MustMarshalJSON(gammGen)
+	swaprouterGen := swaproutertypes.DefaultGenesis()
+	swaprouterGen.Params.PoolCreationFee = sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 1000000)}
+	gammGenJson := s.cfg.Codec.MustMarshalJSON(swaprouterGen)
 	genesisState[gammtypes.ModuleName] = gammGenJson
 	s.cfg.GenesisState = genesisState
 

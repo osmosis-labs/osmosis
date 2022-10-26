@@ -281,6 +281,9 @@ func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 // More info at https://github.com/golang/mock
 func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	// Setup test
+	// N.B.: the choice is arbitrary.
+	const inactivePoolId = 100
+
 	suite.SetupTest()
 	testCoin := sdk.NewCoin("foo", sdk.NewInt(10))
 	suite.FundAcc(suite.TestAccs[0], defaultAcctFunds)
@@ -293,7 +296,6 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	ctrl := gomock.NewController(suite.T())
 	defer ctrl.Finish()
 	inactivePool := mocks.NewMockPoolI(ctrl)
-	inactivePoolId := gammKeeper.GetNextPoolIdAndIncrement(suite.Ctx)
 	// Add mock return values for pool -- we need to do this because
 	// mock objects don't have interface functions implemented by default.
 	inactivePool.EXPECT().IsActive(suite.Ctx).Return(false).AnyTimes()

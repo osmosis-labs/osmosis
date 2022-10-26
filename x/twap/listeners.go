@@ -4,12 +4,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	epochtypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 )
 
 var (
-	_ types.GammHooks       = &gammhook{}
+	_ gammtypes.GammHooks       = &gammhook{}
 	_ epochtypes.EpochHooks = &epochhook{}
+	_ swaproutertypes.PoolCreationListener = &gammhook{}
 )
 
 type epochhook struct {
@@ -37,7 +39,11 @@ type gammhook struct {
 	k Keeper
 }
 
-func (k Keeper) GammHooks() types.GammHooks {
+func (k Keeper) GammHooks() gammtypes.GammHooks {
+	return &gammhook{k}
+}
+
+func (k Keeper) PoolCreationListeners() swaproutertypes.PoolCreationListener {
 	return &gammhook{k}
 }
 

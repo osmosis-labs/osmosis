@@ -7,7 +7,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v12/app"
 	gammcli "github.com/osmosis-labs/osmosis/v12/x/gamm/client/cli"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -105,9 +105,9 @@ func MsgExitPool(clientCtx client.Context, owner fmt.Stringer, poolID uint64, sh
 func UpdateTxFeeDenom(cdc codec.Codec, denom string) map[string]json.RawMessage {
 	// modification to pay fee with test bond denom "stake"
 	genesisState := app.ModuleBasics.DefaultGenesis(cdc)
-	gammGen := types.DefaultGenesis()
-	gammGen.Params.PoolCreationFee = sdk.Coins{sdk.NewInt64Coin(denom, 1000000)}
-	gammGenJson := cdc.MustMarshalJSON(gammGen)
-	genesisState[types.ModuleName] = gammGenJson
+	swaprouterGen := swaproutertypes.DefaultGenesis()
+	swaprouterGen.Params.PoolCreationFee = sdk.Coins{sdk.NewInt64Coin(denom, 1000000)}
+	swaprouterGenJson := cdc.MustMarshalJSON(swaprouterGen)
+	genesisState[swaproutertypes.ModuleName] = swaprouterGenJson
 	return genesisState
 }

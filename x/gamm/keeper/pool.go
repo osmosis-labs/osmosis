@@ -3,15 +3,58 @@ package keeper
 import (
 	"fmt"
 
-	gogotypes "github.com/gogo/protobuf/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	gogotypes "github.com/gogo/protobuf/types"
 
 	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
+
+// TODO spec and tests
+func (k Keeper) InitializePool(ctx sdk.Context, pool types.PoolI, creatorAddress sdk.AccAddress) error {
+	poolId := pool.GetId()
+
+	// Finally, add the share token's meta data to the bank keeper.
+	poolShareBaseDenom := types.GetPoolShareDenom(poolId)
+	poolShareDisplayDenom := fmt.Sprintf("GAMM-%d", poolId)
+	k.bankKeeper.SetDenomMetaData(ctx, banktypes.Metadata{
+		Description: fmt.Sprintf("The share token of the gamm pool %d", poolId),
+		DenomUnits: []*banktypes.DenomUnit{
+			{
+				Denom:    poolShareBaseDenom,
+				Exponent: 0,
+				Aliases: []string{
+					"attopoolshare",
+				},
+			},
+			{
+				Denom:    poolShareDisplayDenom,
+				Exponent: types.OneShareExponent,
+				Aliases:  nil,
+			},
+		},
+		Base:    poolShareBaseDenom,
+		Display: poolShareDisplayDenom,
+	})
+
+	// Mint the initial pool shares share token to the sender
+	err := k.MintPoolShareToAccount(ctx, pool, creatorAddress, pool.GetTotalShares())
+	if err != nil {
+		return err
+	}
+
+	traditionalPool, ok := pool.(types.TraditionalAmmInterface)
+	if !ok {
+		return fmt.Errorf("failed to create gamm pool. c+Could not cast to TraditionalAmmInterface")
+	}
+
+	k.RecordTotalLiquidityIncrease(ctx, traditionalPool.GetTotalPoolLiquidity(ctx))
+
+	return k.setPool(ctx, pool)
+}
 
 func (k Keeper) MarshalPool(pool types.PoolI) ([]byte, error) {
 	return k.cdc.MarshalInterface(pool)
@@ -99,6 +142,11 @@ func (k Keeper) setPool(ctx sdk.Context, pool types.PoolI) error {
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(pool.GetId())
 	store.Set(poolKey, bz)
+
+	poolCount := &gogotypes.UInt64Value{}
+	osmoutils.MustGet(store, types.KeyGammPoolCount, poolCount)
+	poolCount.Value = poolCount.Value + 1
+	osmoutils.MustSet(store, types.KeyGammPoolCount, poolCount)
 
 	return nil
 }
@@ -218,32 +266,12 @@ func (k Keeper) GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error) 
 	return denoms, err
 }
 
-// setNextPoolId sets next pool Id.
-func (k Keeper) setNextPoolId(ctx sdk.Context, poolId uint64) {
+// GetGammPoolCount returns the next pool Id.
+func (k Keeper) GetGammPoolCount(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: poolId})
-	store.Set(types.KeyNextGlobalPoolId, bz)
-}
-
-// GetNextPoolId returns the next pool Id.
-func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
-	var nextPoolId uint64
-	store := ctx.KVStore(k.storeKey)
-
-	bz := store.Get(types.KeyNextGlobalPoolId)
-	if bz == nil {
-		panic(fmt.Errorf("pool has not been initialized -- Should have been done in InitGenesis"))
-	} else {
-		val := gogotypes.UInt64Value{}
-
-		err := k.cdc.Unmarshal(bz, &val)
-		if err != nil {
-			panic(err)
-		}
-
-		nextPoolId = val.GetValue()
-	}
-	return nextPoolId
+	nextPoolId := gogotypes.UInt64Value{}
+	osmoutils.MustGet(store, types.KeyNextGlobalPoolId, &nextPoolId)
+	return nextPoolId.Value
 }
 
 func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (string, error) {
@@ -259,11 +287,4 @@ func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (string, error) {
 		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
 		return "", sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
 	}
-}
-
-// getNextPoolIdAndIncrement returns the next pool Id, and increments the corresponding state entry.
-func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
-	nextPoolId := k.GetNextPoolId(ctx)
-	k.setNextPoolId(ctx, nextPoolId+1)
-	return nextPoolId
 }

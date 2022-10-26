@@ -25,8 +25,7 @@ type Keeper struct {
 	storeKey sdk.StoreKey
 	cdc      codec.BinaryCodec
 
-	paramSpace paramtypes.Subspace
-	hooks      types.GammHooks
+	hooks types.GammHooks
 
 	// keepers
 	accountKeeper       types.AccountKeeper
@@ -46,13 +45,9 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtyp
 	if !permContains(perms, authtypes.Burner) {
 		panic(fmt.Sprintf("%s module account should have the burner permission", types.ModuleName))
 	}
-	if !paramSpace.HasKeyTable() {
-		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
-	}
 	return Keeper{
-		storeKey:   storeKey,
-		cdc:        cdc,
-		paramSpace: paramSpace,
+		storeKey: storeKey,
+		cdc:      cdc,
 		// keepers
 		accountKeeper:       accountKeeper,
 		bankKeeper:          bankKeeper,
@@ -69,15 +64,4 @@ func (k *Keeper) SetHooks(gh types.GammHooks) *Keeper {
 	k.hooks = gh
 
 	return k
-}
-
-// GetParams returns the total set params.
-func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	k.paramSpace.GetParamSet(ctx, &params)
-	return params
-}
-
-// SetParams sets the total set of params.
-func (k Keeper) setParams(ctx sdk.Context, params types.Params) {
-	k.paramSpace.SetParamSet(ctx, &params)
 }
