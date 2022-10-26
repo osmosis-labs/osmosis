@@ -293,15 +293,15 @@ func (suite *KeeperTestSuite) TestRedelegateValidatorSet() {
 			newPreferences: []types.ValidatorPreference{
 				{
 					ValOperAddress: valAddrs[0],
-					Weight:         sdk.NewDecWithPrec(1, 1),
+					Weight:         sdk.NewDecWithPrec(2, 1),
 				},
 				{
 					ValOperAddress: valAddrs[1],
-					Weight:         sdk.NewDecWithPrec(1, 1),
+					Weight:         sdk.NewDecWithPrec(2, 1),
 				},
 				{
 					ValOperAddress: valAddrs[2],
-					Weight:         sdk.NewDecWithPrec(9, 1),
+					Weight:         sdk.NewDecWithPrec(6, 1),
 				},
 			},
 			coinToStake: sdk.NewCoin("stake", sdk.NewInt(20)),

@@ -92,6 +92,7 @@ func (server msgServer) RedelegateValidatorSet(goCtx context.Context, msg *types
 		return nil, err
 	}
 
+	// Message 2: Work on redelegation
 	var existingvalSet []valSet
 	var newValSet []valSet
 	totalTokenAmount := sdk.NewDec(0)
@@ -107,86 +108,128 @@ func (server msgServer) RedelegateValidatorSet(goCtx context.Context, msg *types
 		}
 
 		amountFromShares := validator.TokensFromShares(delegation.Shares)
-		fmt.Println("SHARE AMOUNT, ", amountFromShares)
+
 		existing_val := valSet{
 			valAddr: existingVals.ValOperAddress,
 			weight:  existingVals.Weight,
 			amount:  amountFromShares,
 		}
+		existing_val_test := valSet{
+			valAddr: existingVals.ValOperAddress,
+			weight:  existingVals.Weight,
+			amount:  sdk.NewDec(0),
+		}
 
 		existingvalSet = append(existingvalSet, existing_val)
-		totalTokenAmount = totalTokenAmount.Add(amountFromShares)
-	}
+		newValSet = append(newValSet, existing_val_test)
 
-	fmt.Println(existingvalSet)
+		totalTokenAmount = totalTokenAmount.Add(amountFromShares)
+		fmt.Println("EXISTING VAL: ", existingVals.ValOperAddress, amountFromShares)
+	}
 
 	// The total delegated sum by the user (totalTokenAmount)
 	for _, newVals := range msg.Preferences {
 		amountToStake := newVals.Weight.Mul(totalTokenAmount)
-		fmt.Println("STAKE AMOUNT, ", amountToStake)
 		new_val := valSet{
 			valAddr: newVals.ValOperAddress,
 			weight:  newVals.Weight,
 			amount:  amountToStake,
 		}
-		newValSet = append(newValSet, new_val)
-	}
+		new_val_test := valSet{
+			valAddr: newVals.ValOperAddress,
+			weight:  newVals.Weight,
+			amount:  sdk.NewDec(0),
+		}
 
-	fmt.Println(newValSet)
+		newValSet = append(newValSet, new_val)
+		existingvalSet = append(existingvalSet, new_val_test)
+
+		fmt.Println("NEW VAL: ", newVals.ValOperAddress, amountToStake)
+	}
 
 	// calculate the difference
 	var diffValSet []valSet
-	for i, newVals := range msg.Preferences {
-		diffAmount := existingvalSet[i].amount.Sub(newValSet[i].amount)
-		fmt.Println("DIFF AMOUNT, ", diffAmount)
+	for i, newVals := range existingvalSet {
+		diffAmount := newVals.amount.Sub(newValSet[i].amount)
+
+		fmt.Println("Internal DIFF AMOUNT", newVals.valAddr, diffAmount)
 		diff_val := valSet{
-			valAddr: newVals.ValOperAddress,
-			weight:  newVals.Weight,
+			valAddr: newVals.valAddr,
+			weight:  newVals.amount,
 			amount:  diffAmount,
 		}
-		diffValSet = append(newValSet, diff_val)
+		diffValSet = append(diffValSet, diff_val)
 	}
 
-	fmt.Println(diffValSet)
-
 	// Algorithm starts here
-	for i, diff_val := range diffValSet {
+	for _, diff_val := range diffValSet {
 		if diff_val.amount.GT(sdk.NewDec(0)) {
-			source_large := diff_val.valAddr
-			target_large := server.keeper.FindMin(diffValSet)
+			for diff_val.amount.GT(sdk.NewDec(0)) {
+				source_large := diff_val.valAddr
+				target_large, idx := server.keeper.FindMin(diffValSet)
 
-			valAddrSrc_large, err := sdk.ValAddressFromBech32(source_large)
-			if err != nil {
-				return nil, fmt.Errorf("validator address not formatted")
+				valAddrSrc_large, err := sdk.ValAddressFromBech32(source_large)
+				if err != nil {
+					return nil, fmt.Errorf("validator address not formatted")
+				}
+
+				valAddrTarget_large, err := sdk.ValAddressFromBech32(target_large.valAddr)
+				if err != nil {
+					return nil, fmt.Errorf("validator address not formatted")
+				}
+
+				amount := sdk.MinDec(target_large.amount.Abs(), diff_val.amount)
+				server.keeper.stakingKeeper.BeginRedelegation(ctx, delegator, valAddrSrc_large, valAddrTarget_large, amount)
+
+				// Find target value in diffValSet and set that to (sourceAmt - targetAmt)
+				diffValSet[idx].amount = target_large.amount.Add(amount) // set the target to (sourceAmt - targetAmt)
+				diff_val.amount = diff_val.amount.Sub(amount)            // set the source to 0
+
+				fmt.Println("FIRST", idx, source_large, target_large.valAddr, amount)
 			}
-
-			valAddrTarget_large, err := sdk.ValAddressFromBech32(target_large.valAddr)
-			if err != nil {
-				return nil, fmt.Errorf("validator address not formatted")
-			}
-
-			server.keeper.stakingKeeper.BeginRedelegation(ctx, delegator, valAddrSrc_large, valAddrTarget_large, diff_val.amount)
-			diffValSet[i].amount = sdk.NewDec(0)
 		}
 
 		if diff_val.amount.LT(sdk.NewDec(0)) {
-			source_small := diff_val.valAddr
-			target_small := server.keeper.FindMax(diffValSet)
+			for diff_val.amount.LT(sdk.NewDec(0)) {
+				source_small := diff_val.valAddr
+				target_small, idx := server.keeper.FindMax(diffValSet)
 
-			valAddrSrc_small, err := sdk.ValAddressFromBech32(source_small)
-			if err != nil {
-				return nil, fmt.Errorf("validator address not formatted")
+				valAddrSrc_small, err := sdk.ValAddressFromBech32(source_small)
+				if err != nil {
+					return nil, fmt.Errorf("validator address not formatted")
+				}
+
+				valAddrTarget_small, err := sdk.ValAddressFromBech32(target_small.valAddr)
+				if err != nil {
+					return nil, fmt.Errorf("validator address not formatted")
+				}
+
+				amount := sdk.MinDec(target_small.amount, diff_val.amount.Abs())
+
+				server.keeper.stakingKeeper.BeginRedelegation(ctx, delegator, valAddrTarget_small, valAddrSrc_small, amount)
+
+				diffValSet[idx].amount = target_small.amount.Sub(amount) // Subtract from target value
+				diff_val.amount = diff_val.amount.Add(amount)
+
+				fmt.Println("SECOND", idx, source_small, target_small.valAddr, amount)
 			}
-
-			valAddrTarget_small, err := sdk.ValAddressFromBech32(target_small.valAddr)
-			if err != nil {
-				return nil, fmt.Errorf("validator address not formatted")
-			}
-
-			server.keeper.stakingKeeper.BeginRedelegation(ctx, delegator, valAddrSrc_small, valAddrTarget_small, diff_val.amount.Abs())
-			diffValSet[i].amount = diffValSet[i].amount.Add(diff_val.amount.Abs())
 		}
 	}
+
+	// for _, val := range diffValSet {
+	// 	valAddrSrc_small, err := sdk.ValAddressFromBech32(val.valAddr)
+	// 	if err != nil {
+	// 		return nil, fmt.Errorf("validator address not formatted")
+	// 	}
+
+	// 	validator, found := server.keeper.stakingKeeper.GetValidator(ctx, valAddrSrc_small)
+	// 	if !found {
+	// 		return nil, fmt.Errorf("validator not found %s", validator)
+	// 	}
+
+	// 	fmt.Println("JOE", validator.OperatorAddress, validator.DelegatorShares)
+
+	// }
 
 	return &types.MsgRedelegateValidatorSetResponse{}, nil
 }

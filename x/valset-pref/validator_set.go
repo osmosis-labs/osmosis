@@ -202,22 +202,26 @@ func (k Keeper) GetValidatorInfo(ctx sdk.Context, existingValAddr string) (sdk.V
 	return valAddr, validator, nil
 }
 
-func (k Keeper) FindMin(valPrefs []valSet) (min valSet) {
+func (k Keeper) FindMin(valPrefs []valSet) (min valSet, idx int) {
 	min = valPrefs[0]
-	for _, val := range valPrefs {
+	idx = 0
+	for i, val := range valPrefs {
 		if val.amount.LT(min.amount) {
 			min = val
+			idx = i
 		}
 	}
-	return min
+	return min, idx
 }
 
-func (k Keeper) FindMax(valPrefs []valSet) (max valSet) {
+func (k Keeper) FindMax(valPrefs []valSet) (max valSet, idx int) {
 	max = valPrefs[0]
-	for _, val := range valPrefs {
+	idx = 0
+	for i, val := range valPrefs {
 		if val.amount.GT(max.amount) {
 			max = val
+			idx = i
 		}
 	}
-	return max
+	return max, idx
 }
