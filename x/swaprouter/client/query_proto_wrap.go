@@ -110,6 +110,6 @@ func (q Querier) EstimateSwapExactAmountOut(ctx sdk.Context, req queryproto.Esti
 // NumPools returns total number of pools.
 func (q Querier) NumPools(ctx sdk.Context, _ queryproto.NumPoolsRequest) (*queryproto.NumPoolsResponse, error) {
 	return &queryproto.NumPoolsResponse{
-		NumPools: q.K.GetNextPoolId(ctx) - 1,
+		NumPools: q.K.GetNextPoolId(ctx),
 	}, nil
 }

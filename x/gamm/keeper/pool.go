@@ -282,9 +282,9 @@ func (k Keeper) GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error) 
 // GetPoolCount returns the next pool Id.
 func (k Keeper) GetPoolCount(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
-	nextPoolId := gogotypes.UInt64Value{}
-	osmoutils.MustGet(store, types.KeyNextGlobalPoolId, &nextPoolId)
-	return nextPoolId.Value
+	poolCount := gogotypes.UInt64Value{}
+	osmoutils.MustGet(store, types.KeyGammPoolCount, &poolCount)
+	return poolCount.Value
 }
 
 func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (string, error) {

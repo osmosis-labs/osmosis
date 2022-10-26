@@ -9,6 +9,21 @@ import (
 	"github.com/spf13/pflag"
 )
 
+type createPoolInputs struct {
+	Weights                  string                         `json:"weights"`
+	InitialDeposit           string                         `json:"initial-deposit"`
+	SwapFee                  string                         `json:"swap-fee"`
+	ExitFee                  string                         `json:"exit-fee"`
+	FutureGovernor           string                         `json:"future-governor"`
+	SmoothWeightChangeParams smoothWeightChangeParamsInputs `json:"lbp-params"`
+}
+
+type smoothWeightChangeParamsInputs struct {
+	StartTime         string `json:"start-time"`
+	Duration          string `json:"duration"`
+	TargetPoolWeights string `json:"target-pool-weights"`
+}
+
 type XCreatePoolInputs createPoolInputs
 
 type XCreatePoolInputsExceptions struct {
