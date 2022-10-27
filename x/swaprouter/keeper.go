@@ -57,7 +57,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 // state.
 // TODO: test this
 func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
-	k.setNextPoolId(ctx, genState.NextPoolId)
+	k.SetNextPoolId(ctx, genState.NextPoolId)
 	if err := genState.Validate(); err != nil {
 		panic(err)
 	}
@@ -103,8 +103,8 @@ func (k *Keeper) SetPoolCreationListeners(listeners types.PoolCreationListeners)
 	return k
 }
 
-// setNextPoolId sets next pool Id.
-func (k Keeper) setNextPoolId(ctx sdk.Context, poolId uint64) {
+// SetNextPoolId sets next pool Id.
+func (k Keeper) SetNextPoolId(ctx sdk.Context, poolId uint64) {
 	store := ctx.KVStore(k.storeKey)
 	osmoutils.MustSet(store, types.KeyNextGlobalPoolId, &gogotypes.UInt64Value{Value: poolId})
 }

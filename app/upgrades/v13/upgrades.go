@@ -20,6 +20,10 @@ func CreateUpgradeHandler(
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		keepers.LockupKeeper.SetParams(ctx, lockuptypes.DefaultParams())
 		keepers.SwapRouterKeeper.SetParams(ctx, swaproutertypes.DefaultParams())
+
+		poolsCount := keepers.GAMMKeeper.GetPoolCount(ctx)
+		keepers.SwapRouterKeeper.SetNextPoolId(ctx, uint64(poolsCount))
+
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }
