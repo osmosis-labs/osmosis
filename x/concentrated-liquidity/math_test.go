@@ -42,6 +42,10 @@ func (suite *KeeperTestSuite) TestGetLiquidityFromAmounts() {
 	}
 }
 
+// liquidity1 takes an amount of asset1 in the pool as well as the sqrtpCur and the nextPrice
+// sqrtPriceA is the smaller of sqrtpCur and the nextPrice
+// sqrtPriceB is the larger of sqrtpCur and the nextPrice
+// liquidity1 = amount1 / (sqrtPriceB - sqrtPriceA)
 func (suite *KeeperTestSuite) TestLiquidity1() {
 	testCases := []struct {
 		name              string
@@ -56,6 +60,7 @@ func (suite *KeeperTestSuite) TestLiquidity1() {
 			sdk.NewDecWithPrec(67082039, 6),
 			sdk.NewInt(5000),
 			"1377.927096082029653542",
+			// https://www.wolframalpha.com/input?i=5000+%2F+%2870.710678+-+67.082039%29
 		},
 	}
 
@@ -69,6 +74,10 @@ func (suite *KeeperTestSuite) TestLiquidity1() {
 	}
 }
 
+// TestLiquidity0 tests that liquidity0 takes an amount of asset0 in the pool as well as the sqrtpCur and the nextPrice
+// sqrtPriceA is the smaller of sqrtpCur and the nextPrice
+// sqrtPriceB is the larger of sqrtpCur and the nextPrice
+// liquidity0 = amount0 * (sqrtPriceA * sqrtPriceB) / (sqrtPriceB - sqrtPriceA)
 func (suite *KeeperTestSuite) TestLiquidity0() {
 	testCases := []struct {
 		name              string
@@ -83,6 +92,7 @@ func (suite *KeeperTestSuite) TestLiquidity0() {
 			sdk.MustNewDecFromStr("74.161984"),
 			sdk.NewInt(1),
 			"1519.437618821730672389",
+			// https://www.wolframalpha.com/input?i=1+*+%2870.710678+*+74.161984%29+%2F+%2874.161984+-+70.710678%29
 		},
 	}
 
@@ -96,6 +106,15 @@ func (suite *KeeperTestSuite) TestLiquidity0() {
 	}
 }
 
+// TestGetNextSqrtPriceFromAmount0RoundingUp tests that getNextSqrtPriceFromAmount0RoundingUp utilizes
+// the current squareRootPrice, liquidity of denom0, and amount of denom0 that still needs
+// to be swapped in order to determine the next squareRootPrice
+// PATH 1
+// if (amountRemaining * sqrtPriceCurrent) / amountRemaining  == sqrtPriceCurrent AND (liquidity * 2) + (amountRemaining * sqrtPriceCurrent) >= (liquidity * 2)
+// sqrtPriceNext = (liquidity * 2 * sqrtPriceCurrent) / ((liquidity * 2) + (amountRemaining * sqrtPriceCurrent))
+// PATH 2
+// else
+// sqrtPriceNext = ((liquidity * 2)) / (((liquidity * 2) / (sqrtPriceCurrent)) + (amountRemaining))
 func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount0RoundingUp() {
 	testCases := []struct {
 		name                  string
@@ -105,11 +124,12 @@ func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount0RoundingUp() {
 		sqrtPriceNextExpected string
 	}{
 		{
-			"happy path",
+			"happy path 1",
 			sdk.NewDec(1377927219),
 			sdk.NewDecWithPrec(70710678, 6),
 			sdk.NewDec(133700),
 			"70.468932817327539027",
+			// https://www.wolframalpha.com/input?i=%281377927219+*+2+*+70.710678%29+%2F+%28%281377927219+*+2%29+%2B+%28133700+*+70.710678%29%29
 		},
 	}
 
@@ -123,6 +143,10 @@ func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount0RoundingUp() {
 	}
 }
 
+// TestGetNextSqrtPriceFromAmount1RoundingDown tests that getNextSqrtPriceFromAmount1RoundingDown
+// utilizes the current squareRootPrice, liquidity of denom1, and amount of denom1 that still needs
+// to be swapped in order to determine the next squareRootPrice
+// sqrtPriceNext = sqrtPriceCurrent + (amount1Remaining / liquidity1)
 func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount1RoundingDown() {
 	testCases := []struct {
 		name                  string
@@ -137,6 +161,7 @@ func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount1RoundingDown() {
 			sdk.NewDecWithPrec(70710678, 6),
 			sdk.NewDec(42000000),
 			"70.741158564880981569",
+			// https://www.wolframalpha.com/input?i=70.710678+%2B+%2842000000+%2F+1377927219%29
 		},
 	}
 
@@ -150,6 +175,10 @@ func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount1RoundingDown() {
 	}
 }
 
+// TestCalcAmount0Delta tests that calcAmount0 takes the asset with the smaller liquidity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 0
+// sqrtPriceA is the smaller of sqrtpCur and the nextPrice
+// sqrtPriceB is the larger of sqrtpCur and the nextPrice
+// calcAmount0Delta = (liquidity * (sqrtPriceB - sqrtPriceA)) / (sqrtPriceB * sqrtPriceA)
 func (suite *KeeperTestSuite) TestCalcAmount0Delta() {
 	testCases := []struct {
 		name            string
@@ -164,6 +193,7 @@ func (suite *KeeperTestSuite) TestCalcAmount0Delta() {
 			sdk.MustNewDecFromStr("70.710678"),
 			sdk.MustNewDecFromStr("74.161984"),
 			"906866",
+			// https://www.wolframalpha.com/input?i=%281377927219+*+%2874.161984+-+70.710678+%29%29+%2F+%2870.710678+*+74.161984%29
 		},
 	}
 
@@ -177,6 +207,10 @@ func (suite *KeeperTestSuite) TestCalcAmount0Delta() {
 	}
 }
 
+// TestCalcAmount1Delta tests that calcAmount1 takes the asset with the smaller liquidity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 1
+// sqrtPriceA is the smaller of sqrtpCur and the nextPrice
+// sqrtPriceB is the larger of sqrtpCur and the nextPrice
+// calcAmount1Delta = liq * (sqrtPriceB - sqrtPriceA)
 func (suite *KeeperTestSuite) TestCalcAmount1Delta() {
 	testCases := []struct {
 		name            string
@@ -191,6 +225,7 @@ func (suite *KeeperTestSuite) TestCalcAmount1Delta() {
 			sdk.NewDecWithPrec(70710678, 6),
 			sdk.NewDecWithPrec(67082039, 6),
 			"5000000446",
+			// https://www.wolframalpha.com/input?i=1377927219+*+%2870.710678+-+67.082039%29
 		},
 	}
 
