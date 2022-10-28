@@ -142,6 +142,10 @@ func init() {
 	g.RegisterQueryReponse((*twapquerytypes.QueryServer)(nil))
 
 	g.GRPCQueriesInfo2StargateWhitelist()
+	stargateWhitelist.Range(func(key, value any) bool {
+		fmt.Println(key, reflect.TypeOf(value.(codec.ProtoMarshaler)).String())
+		return true
+	})
 }
 
 // GetWhitelistedQuery returns the whitelisted query at the provided path.
