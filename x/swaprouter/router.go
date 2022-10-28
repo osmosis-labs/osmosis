@@ -18,7 +18,7 @@ func (k Keeper) RouteExactAmountIn(
 	tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error) {
 	// TODO: fix this once proper pool id routing exists
 	// https: //github.com/osmosis-labs/osmosis/issues/3097
-	isGamm := false
+	isGamm := true
 
 	swapModule := k.withSwapModule(isGamm)
 

@@ -173,7 +173,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 	pool = s.App.ConcentratedLiquidityKeeper.GetPoolbyId(ctx, pool.Id)
 
 	// calculation for this is tested in TestCalcOutAmtGivenInt
-	s.Require().Equal(sdk.NewInt(27), amountIn.Amount)
+	s.Require().Equal(sdk.NewInt(666975610), amountIn.Amount)
 
 	s.Require().Equal(sdk.MustNewDecFromStr("1517.818895638265328110"), pool.Liquidity)
 	// curr sqrt price and tick remains the same

@@ -75,8 +75,6 @@ func (k Keeper) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 		return sdk.Coin{}, err
 	}
 
-	fmt.Println("=====")
-
 	k.applySwap(ctx, tokenInCoin, tokenOut, poolId, newLiquidity, newCurrentTick, newCurrentSqrtPrice)
 
 	return tokenInCoin, nil
@@ -159,9 +157,6 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 		liquidity:                p.Liquidity,
 	}
 
-	fmt.Println("====cur sqrt price")
-	fmt.Println(curSqrtPrice.String())
-
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
 	for swapState.amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 6)) {
@@ -191,7 +186,6 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 
 		// if we have moved to the next tick,
 		if nextSqrtPrice.Equal(sqrtPrice) {
-			fmt.Println("this is inside m=== == = = ")
 			liquidityDelta, err := k.crossTick(ctx, p.Id, nextTick)
 
 			if err != nil {
@@ -287,16 +281,13 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
-	iteration := 0
 	for swapState.amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 6)) {
-		iteration++
-		nextTick, _ := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), zeroForOne)
-		// fmt.Println("---next tick")
-		// fmt.Println(nextTick)
+		nextTick, ok := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), zeroForOne)
+
 		// TODO: we can enable this error checking once we fix tick initialization
-		// if !ok {
-		// 	return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("there are no more ticks initialized to fill the swap")
-		// }
+		if !ok {
+			return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("there are no more ticks initialized to fill the swap")
+		}
 		nextSqrtPrice, err := k.tickToSqrtPrice(sdk.NewInt(nextTick))
 		if err != nil {
 			return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), err
@@ -335,8 +326,7 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 			swapState.tick = priceToTick(sqrtPrice.Power(2))
 		}
 	}
-	fmt.Println("==num of iteration")
-	fmt.Println(iteration)
+
 	return sdk.NewCoin(tokenInDenom, swapState.amountCalculated.RoundInt()), swapState.liquidity, swapState.tick, swapState.sqrtPrice, nil
 }
 
