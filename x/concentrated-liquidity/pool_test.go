@@ -3,6 +3,7 @@ package concentrated_liquidity_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	cl "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
@@ -10,6 +11,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	ctx := s.Ctx
 	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, "eth", "usdc", sdk.MustNewDecFromStr("70.710678"), sdk.NewInt(85176))
 	s.Require().NoError(err)
+	s.SetupPosition(pool.Id)
 
 	// test asset a to b logic
 	tokenIn := sdk.NewCoin("eth", sdk.NewInt(133700))
@@ -54,6 +56,7 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
 	ctx := s.Ctx
 	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", sdk.MustNewDecFromStr("70.710678"), sdk.NewInt(85176))
 	s.Require().NoError(err)
+	s.SetupPosition(pool.Id)
 
 	// test asset a to b logic
 	tokenOut := sdk.NewCoin("usdc", sdk.NewInt(4199999999))
@@ -99,4 +102,27 @@ func (s *KeeperTestSuite) TestOrderInitialPoolDenoms() {
 	denom0, denom1, err = cltypes.OrderInitialPoolDenoms("usdc", "usdc")
 	s.Require().Error(err)
 
+}
+
+func (suite *KeeperTestSuite) TestPriceToTick() {
+	testCases := []struct {
+		name         string
+		price        sdk.Dec
+		tickExpected string
+	}{
+		{
+			"happy path",
+			sdk.NewDec(5000),
+			"85176",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			tick := cl.PriceToTick(tc.price)
+			suite.Require().Equal(tc.tickExpected, tick.String())
+		})
+	}
 }
