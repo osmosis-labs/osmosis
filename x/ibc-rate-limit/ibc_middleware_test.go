@@ -3,6 +3,7 @@ package ibc_rate_limit_test
 import (
 	"encoding/json"
 	"fmt"
+	ibc_rate_limit "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit"
 	"strconv"
 	"strings"
 	"testing"
@@ -124,66 +125,62 @@ func (suite *MiddlewareTestSuite) TestInvalidReceiver() {
 		clienttypes.NewHeight(0, 100),
 		0,
 	)
-	ack, _ := suite.ExecuteReceive(msg)
+	_, ack, _ := suite.FullSendBToA(msg)
 	suite.Require().Contains(string(ack), "error",
 		"acknowledgment is not an error")
 	suite.Require().Contains(string(ack), sdkerrors.ErrInvalidAddress.Error(),
 		"acknowledgment error is not of the right type")
 }
 
-func (suite *MiddlewareTestSuite) FullSendBToA(msg sdk.Msg) (string, error) {
-	res, err := suite.chainB.SendMsgsNoCheck(msg)
+func (suite *MiddlewareTestSuite) FullSendBToA(msg sdk.Msg) (*sdk.Result, string, error) {
+	sendResult, err := suite.chainB.SendMsgsNoCheck(msg)
 	suite.Require().NoError(err)
 
-	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
+	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents())
 	suite.Require().NoError(err)
 
 	err = suite.path.EndpointA.UpdateClient()
 	suite.Require().NoError(err)
 
-	res, err = suite.path.EndpointA.RecvPacketWithResult(packet)
+	res, err := suite.path.EndpointA.RecvPacketWithResult(packet)
 	suite.Require().NoError(err)
 
 	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
-	return string(ack), err
-}
 
-func (suite *MiddlewareTestSuite) FullSendAToB(msg sdk.Msg) (string, error) {
-	res, err := suite.chainA.SendMsgsNoCheck(msg)
+	err = suite.path.EndpointA.UpdateClient()
+	suite.Require().NoError(err)
+	err = suite.path.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
 
-	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
+	return sendResult, string(ack), err
+
+}
+
+func (suite *MiddlewareTestSuite) FullSendAToB(msg sdk.Msg) (*sdk.Result, string, error) {
+	sendResult, err := suite.chainA.SendMsgsNoCheck(msg)
+	suite.Require().NoError(err)
+
+	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents())
 	suite.Require().NoError(err)
 
 	err = suite.path.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
 
-	res, err = suite.path.EndpointB.RecvPacketWithResult(packet)
+	res, err := suite.path.EndpointB.RecvPacketWithResult(packet)
 	suite.Require().NoError(err)
 
 	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
-	return string(ack), err
-}
-
-func (suite *MiddlewareTestSuite) ExecuteReceive(msg sdk.Msg) (string, error) {
-	res, err := suite.chainB.SendMsgsNoCheck(msg)
-	suite.Require().NoError(err)
-
-	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
-	suite.Require().NoError(err)
 
 	err = suite.path.EndpointA.UpdateClient()
 	suite.Require().NoError(err)
-
-	res, err = suite.path.EndpointA.RecvPacketWithResult(packet)
+	err = suite.path.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
 
-	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
-	return string(ack), err
+	return sendResult, string(ack), err
 }
 
 func (suite *MiddlewareTestSuite) AssertReceive(success bool, msg sdk.Msg) (string, error) {
-	ack, err := suite.ExecuteReceive(msg)
+	_, ack, err := suite.FullSendBToA(msg)
 	if success {
 		suite.Require().NoError(err)
 		suite.Require().NotContains(string(ack), "error",
@@ -198,7 +195,7 @@ func (suite *MiddlewareTestSuite) AssertReceive(success bool, msg sdk.Msg) (stri
 }
 
 func (suite *MiddlewareTestSuite) AssertSend(success bool, msg sdk.Msg) (*sdk.Result, error) {
-	r, err := suite.chainA.SendMsgsNoCheck(msg)
+	r, _, err := suite.FullSendAToB(msg)
 	if success {
 		suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
 	} else {
@@ -242,27 +239,34 @@ func (suite *MiddlewareTestSuite) initializeEscrow() (totalEscrow, expectedSed s
 	sendAmount := transferAmount.QuoRaw(40)
 
 	// Send from A to B
-	_, err := suite.FullSendAToB(suite.MessageFromAToB(sdk.DefaultBondDenom, transferAmount.Sub(sendAmount), false))
+	_, _, err := suite.FullSendAToB(suite.MessageFromAToB(sdk.DefaultBondDenom, transferAmount.Sub(sendAmount), false))
 	suite.Require().NoError(err)
 	// Send from A to B
-	_, err = suite.FullSendBToA(suite.MessageFromBToA(sdk.DefaultBondDenom, transferAmount.Sub(sendAmount), false))
+	_, _, err = suite.FullSendBToA(suite.MessageFromBToA(sdk.DefaultBondDenom, transferAmount.Sub(sendAmount), false))
 	suite.Require().NoError(err)
 
 	return transferAmount, sendAmount
 }
 
 func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
-	_, escrowAmount := suite.initializeEscrow()
-
-	sendAmount := escrowAmount
+	quotaPercentage := 5
+	suite.initializeEscrow()
 	// Get the denom and amount to send
 	denom := sdk.DefaultBondDenom
-	if !native {
-		denom = "transfer/channel-0/" + sdk.DefaultBondDenom
-		osmosisApp := suite.chainA.GetOsmosisApp()
 
-		sendAmount = osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), transfertypes.ParseDenomTrace(denom).IBCDenom()).Amount
-	}
+	osmosisApp := suite.chainA.GetOsmosisApp()
+
+	// This is the first one. Inside the tests. It works as expected.
+	channelValue :=
+		ibc_rate_limit.CalculateChannelValue(suite.chainA.GetContext(), denom, "transfer", "channel-0", osmosisApp.BankKeeper)
+
+	// The amount to be sent is send 2.5% (quota is 5%)
+	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))
+	sendAmount := channelValue.QuoRaw(2)
+	// Sending
+	sendAmount = channelValue.Add(sendAmount).QuoRaw(2)
+
+	fmt.Printf("Testing send rate limiting for denom=%s, channelValue=%s, quota=%s, sendAmount=%s\n", denom, channelValue, quota, sendAmount)
 
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
@@ -270,26 +274,17 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
-	//// Each user has 10% of the supply
-	//escrowAddress := transfertypes.GetEscrowAddress("transfer", "channel-0")
-	//escrowed := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)
-	//
-	////supply := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
-	//quota := escrowed.Amount.QuoRaw(20)
-	//half := quota.QuoRaw(2)
-	//
-	//fmt.Println("escrowed", escrowed)
-	//fmt.Println("quota", quota)
-	//fmt.Println("half", half)
-
 	// send 2.5% (quota is 5%)
+	fmt.Println("trying to send ", sendAmount)
 	suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sendAmount, !native))
 
 	// send 2.5% (quota is 5%)
+	fmt.Println("trying to send ", sendAmount)
 	r, _ := suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sendAmount, !native))
 
 	// Calculate remaining allowance in the quota
 	attrs := suite.ExtractAttributes(suite.FindEvent(r.GetEvents(), "wasm"))
+	fmt.Println(attrs)
 	used, ok := sdk.NewIntFromString(attrs["weekly_used_out"])
 	suite.Require().True(ok)
 
@@ -343,7 +338,7 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	// Get the denom and amount to send
 	denom := sdk.DefaultBondDenom
 	if !native {
-		denom = "transfer/channel-0/" + sdk.DefaultBondDenom
+		denom = transfertypes.ParseDenomTrace("transfer/channel-0/" + sdk.DefaultBondDenom).IBCDenom()
 		osmosisApp := suite.chainA.GetOsmosisApp()
 
 		transferAmount = osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), transfertypes.ParseDenomTrace(denom).IBCDenom()).Amount

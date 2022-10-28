@@ -2,13 +2,14 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
-	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
 	"github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
+	"strings"
 )
 
 var (
@@ -37,8 +38,8 @@ func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.Permis
 		return err
 	}
 
-	r, err := contractKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
-	fmt.Println(r)
+	_, err = contractKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
+
 	if err != nil {
 		return sdkerrors.Wrap(types.ErrRateLimitExceeded, err.Error())
 	}
@@ -130,21 +131,36 @@ func GetFundsFromPacket(packet exported.PacketI) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-	return packetData.Amount, packetData.Denom, nil
+	return packetData.Amount, GetLocalDenom(packetData.Denom), nil
 }
 
-//func GetLocalDenom(denom string) string {
-//	// Expected denoms in the following cases:
-//	//
-//	// send non-native: transfer/channel-0/denom
-//	// send native: denom
-//	// recv (B)non-native: denom
-//	// recv (B)native: transfer/channel-0/denom
-//	//
-//	if strings.HasPrefix(denom, "transfer/") {
-//		denomTrace := transfertypes.ParseDenomTrace(denom)
-//		return denomTrace.GetFullDenomPath()
-//	} else {
-//		return denom
-//	}
-//}
+func GetLocalDenom(denom string) string {
+	// Expected denoms in the following cases:
+	//
+	// send non-native: transfer/channel-0/denom -> ibc/xxx
+	// send native: denom -> denom
+	// recv (B)non-native: denom
+	// recv (B)native: transfer/channel-0/denom
+	//
+	if strings.HasPrefix(denom, "transfer/") {
+		denomTrace := transfertypes.ParseDenomTrace(denom)
+		return denomTrace.IBCDenom()
+	} else {
+		return denom
+	}
+}
+
+func CalculateChannelValue(ctx sdk.Context, denom string, port, channel string, bankKeeper bankkeeper.Keeper) sdk.Int {
+	if strings.HasPrefix(denom, "ibc/") {
+		return bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
+	}
+
+	if channel == "any" {
+		// ToDo: Get all channels and sum the escrow addr value over all the channels
+		escrowAddress := transfertypes.GetEscrowAddress(port, channel)
+		return bankKeeper.GetBalance(ctx, escrowAddress, denom).Amount
+	} else {
+		escrowAddress := transfertypes.GetEscrowAddress(port, channel)
+		return bankKeeper.GetBalance(ctx, escrowAddress, denom).Amount
+	}
+}

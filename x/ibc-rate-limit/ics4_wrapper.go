@@ -1,8 +1,7 @@
 package ibc_rate_limit
 
 import (
-	"strings"
-
+	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -10,7 +9,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
 )
@@ -59,7 +57,9 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 		return sdkerrors.Wrap(err, "Rate limit SendPacket")
 	}
 
+	// tHis is the second one.
 	channelValue := i.CalculateChannelValue(ctx, denom, packet)
+	fmt.Println("Send", channelValue)
 
 	err = CheckAndUpdateRateLimits(
 		ctx,
@@ -90,14 +90,6 @@ func (i *ICS4Wrapper) GetParams(ctx sdk.Context) (contract string) {
 // CalculateChannelValue The value of an IBC channel. This is calculated using the denom supplied by the sender.
 // if the denom is not correct, the transfer should fail somewhere else on the call chain
 func (i *ICS4Wrapper) CalculateChannelValue(ctx sdk.Context, denom string, packet exported.PacketI) sdk.Int {
-	// If the source is the counterparty chain, this should be
-	// ToDo: This works for send, but not for receive. On receive, we're getting ibc/xxx
-	if strings.HasPrefix(denom, "transfer/") {
-		ibcDenom := transfertypes.ParseDenomTrace(denom).IBCDenom()
-		return i.bankKeeper.GetSupplyWithOffset(ctx, ibcDenom).Amount
-	}
-
-	// ToDo: Get all channels and sum the escrow addr value over all the channels
-	escrowAddress := transfertypes.GetEscrowAddress(packet.GetSourcePort(), packet.GetSourceChannel())
-	return i.bankKeeper.GetBalance(ctx, escrowAddress, denom).Amount
+	// The logic is etracted into a function here so that it can be used within the tests
+	return CalculateChannelValue(ctx, denom, packet.GetSourcePort(), packet.GetSourceChannel(), i.bankKeeper)
 }
