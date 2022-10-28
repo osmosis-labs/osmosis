@@ -52,6 +52,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#2804](https://github.com/osmosis-labs/osmosis/pull/2804) Improve error handling and messages when parsing pool assets.
 
+## v12.2.0
+
+This is a security release for the Dragonberry security advisory.
+
+See <https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702>
+
+## v12.1.0
+
+Fixes non-determinism from SDK.Modules().ModuleManager()
+
 ## v12.0.0
 
 This release includes several cosmwasm-developer and appchain-ecosystem affecting upgrades:
