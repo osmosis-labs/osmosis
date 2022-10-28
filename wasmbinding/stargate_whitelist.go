@@ -41,15 +41,14 @@ type GRPCQueriesInfo struct {
 	QueryReponses []codec.ProtoMarshaler
 }
 
-func (g GRPCQueriesInfo) RegisterQueryReponse(queryServer interface{}) {
+func (g *GRPCQueriesInfo) RegisterQueryReponse(queryServer interface{}) {
 	handlers := reflect.TypeOf(queryServer).Elem()
 
 	// adds a top-level query handler based on the gRPC service name
 	for i := 0; i < handlers.NumMethod(); i++ {
 		qResponse := reflect.New(handlers.Method(i).Type.Out(0).Elem())
-
-		fmt.Println(qResponse.CanInterface(), "can interface")
-		fmt.Println(qResponse.Interface())
+		// fmt.Println(qResponse.CanInterface(), "can interface")
+		// fmt.Println(qResponse.Interface())
 		qResponseType, ok := qResponse.Interface().(codec.ProtoMarshaler)
 		if !ok {
 			panic("can't")
@@ -59,7 +58,7 @@ func (g GRPCQueriesInfo) RegisterQueryReponse(queryServer interface{}) {
 }
 
 //
-func (g GRPCQueriesInfo) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
+func (g *GRPCQueriesInfo) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
 	for _, method := range sd.Methods {
 		fqName := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
 		g.QueryPaths = append(g.QueryPaths, fqName)
@@ -74,8 +73,7 @@ func (g GRPCQueriesInfo) GRPCQueriesInfo2StargateWhitelist() {
 
 func init() {
 	// cosmos-sdk queries
-	g := GRPCQueriesInfo{}
-
+	g := &GRPCQueriesInfo{}
 	// auth
 	authtypes.RegisterQueryServer(g, nil)
 	g.RegisterQueryReponse((*authtypes.QueryServer)(nil))
