@@ -58,3 +58,7 @@ func Liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 func Liquidity1(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	return liquidity1(amount, sqrtPriceA, sqrtPriceB)
 }
+
+func (k Keeper) GetPoolbyId(ctx sdk.Context, poolId uint64) Pool {
+	return k.getPoolbyId(ctx, poolId)
+}
