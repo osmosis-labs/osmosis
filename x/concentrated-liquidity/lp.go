@@ -74,6 +74,10 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	liquidityCreated = getLiquidityFromAmounts(currentSqrtPrice, sqrtRatioUpperTick, sqrtRatioLowerTick, amtDenom0, amtDenom1)
+	fmt.Printf("%v liq created \n", liquidityCreated)
+	pool.Liquidity = pool.Liquidity.Add(liquidityCreated)
+	fmt.Printf("%v pool.Liquidity \n", pool.Liquidity)
+	k.setPoolById(ctx, pool.Id, pool)
 
 	return amtDenom0, amtDenom1, liquidityCreated, nil
 }

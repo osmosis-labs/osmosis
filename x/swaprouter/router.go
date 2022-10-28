@@ -18,7 +18,7 @@ func (k Keeper) RouteExactAmountIn(
 	tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error) {
 	// TODO: fix this once proper pool id routing exists
 	// https: //github.com/osmosis-labs/osmosis/issues/3097
-	isGamm := true
+	isGamm := false
 
 	swapModule := k.withSwapModule(isGamm)
 
@@ -50,7 +50,7 @@ func (k Keeper) RouteExactAmountIn(
 		// Chain output of current pool as the input for the next routed pool
 		tokenIn = sdk.NewCoin(route.TokenOutDenom, tokenOutAmount)
 	}
-	return tokenOutAmount, err
+	return tokenOutAmount, nil
 }
 
 // RouteExactAmountOut defines the output denom and output amount for the last pool.

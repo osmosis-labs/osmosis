@@ -22,6 +22,7 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint6
 		Id:               poolId,
 		CurrentSqrtPrice: currSqrtPrice,
 		CurrentTick:      currTick,
+		Liquidity:        sdk.ZeroDec(),
 		Token0:           denom0,
 		Token1:           denom1,
 	}
@@ -68,8 +69,15 @@ func (p Pool) GetTotalShares() sdk.Int {
 	return sdk.Int{}
 }
 
-func (p Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
-	return sdk.Coin{}, nil
+func (k Keeper) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec, minPrice, maxPrice sdk.Dec, poolId uint64) (tokenOut sdk.Coin, err error) {
+	tokenInCoin, newLiquidity, newCurrentTick, newCurrentSqrtPrice, err := k.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, minPrice, maxPrice, poolId)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+
+	k.applySwap(ctx, tokenInCoin, tokenOut, poolId, newLiquidity, newCurrentTick, newCurrentSqrtPrice)
+
+	return tokenInCoin, nil
 }
 
 func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error) {
@@ -85,7 +93,7 @@ type SwapState struct {
 }
 
 // this only works on a single directional trade, will implement bi directional trade in next milestone
-func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec, minPrice, maxPrice sdk.Dec, poolId uint64) (newTokenIn, tokenOut sdk.Coin, err error) {
+func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec, minPrice, maxPrice sdk.Dec, poolId uint64) (sdk.Coin, sdk.Dec, sdk.Int, sdk.Dec, error) {
 	p := k.getPoolbyId(ctx, poolId)
 	asset0 := p.Token0
 	asset1 := p.Token1
@@ -98,30 +106,30 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 
 	// validation
 	if tokenIn.Denom != asset0 && tokenIn.Denom != asset1 {
-		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("tokenIn (%s) does not match any asset in pool", tokenIn.Denom)
+		return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("tokenIn (%s) does not match any asset in pool", tokenIn.Denom)
 	}
 	if tokenOutDenom != asset0 && tokenOutDenom != asset1 {
-		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("tokenOutDenom (%s) does not match any asset in pool", tokenOutDenom)
+		return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("tokenOutDenom (%s) does not match any asset in pool", tokenOutDenom)
 	}
 	if tokenIn.Denom == tokenOutDenom {
-		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("tokenIn (%s) cannot be the same as tokenOut (%s)", tokenIn.Denom, tokenOutDenom)
+		return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("tokenIn (%s) cannot be the same as tokenOut (%s)", tokenIn.Denom, tokenOutDenom)
 	}
 	if minPrice.GTE(curSqrtPrice.Power(2)) {
-		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("minPrice (%s) must be less than current price (%s)", minPrice, curSqrtPrice.Power(2))
+		return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("minPrice (%s) must be less than current price (%s)", minPrice, curSqrtPrice.Power(2))
 	}
 	if maxPrice.LTE(curSqrtPrice.Power(2)) {
-		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("maxPrice (%s) must be greater than current price (%s)", maxPrice, curSqrtPrice.Power(2))
+		return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("maxPrice (%s) must be greater than current price (%s)", maxPrice, curSqrtPrice.Power(2))
 	}
 
 	// sqrtPrice of upper and lower user defined price range
 	sqrtPLowerTick, err := minPrice.ApproxSqrt()
 	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("issue calculating square root of minPrice")
+		return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("issue calculating square root of minPrice")
 	}
 
 	sqrtPUpperTick, err := maxPrice.ApproxSqrt()
 	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("issue calculating square root of maxPrice")
+		return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("issue calculating square root of maxPrice")
 	}
 
 	// TODO: How do we remove/generalize this? I am stumped.
@@ -141,41 +149,47 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 		amountCalculated:         sdk.ZeroDec(),
 		sqrtPrice:                curSqrtPrice,
 		tick:                     priceToTick(curSqrtPrice.Power(2)),
+		liquidity:                sdk.ZeroDec(),
 	}
+	fmt.Printf("%v swapState liq PRE \n", swapState.liquidity)
 
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
 	for swapState.amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 6)) {
 		nextTick, ok := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), zeroForOne)
 		if !ok {
-			return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("there are no more ticks initialized to fill the swap")
+			return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("there are no more ticks initialized to fill the swap")
 		}
+		fmt.Printf("%v nextTick \n", nextTick)
 		nextSqrtPrice, err := k.tickToSqrtPrice(sdk.NewInt(nextTick))
 		if err != nil {
-			return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", sdk.NewInt(nextTick))
+			return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", sdk.NewInt(nextTick))
 		}
+		fmt.Printf("%v nextSqrtPrice \n", nextSqrtPrice)
 
 		sqrtPrice, amountIn, amountOut := computeSwapStep(
 			swapState.sqrtPrice,
 			nextSqrtPrice,
 			liq,
 			swapState.amountSpecifiedRemaining,
-			zeroForOne,
 		)
 		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn)
 		swapState.amountCalculated = swapState.amountCalculated.Add(amountOut)
+		fmt.Printf("%v nextSqrtPrice \n", nextSqrtPrice)
+		fmt.Printf("%v sqrtPrice \n", sqrtPrice)
 
 		if nextSqrtPrice.Equal(sqrtPrice) {
 			liquidityDelta, err := k.crossTick(ctx, p.Id, nextTick)
+			fmt.Printf("%v LIQDELTA \n", liquidityDelta)
 			if err != nil {
-				return sdk.Coin{}, sdk.Coin{}, err
+				return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), err
 			}
 			if zeroForOne {
 				liquidityDelta = liquidityDelta.Neg()
 			}
 			swapState.liquidity = swapState.liquidity.Add(liquidityDelta.ToDec())
 			if swapState.liquidity.LTE(sdk.ZeroDec()) || swapState.liquidity.IsNil() {
-				return sdk.Coin{}, sdk.Coin{}, err
+				return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), err
 			}
 			if zeroForOne {
 				swapState.tick = sdk.NewInt(nextTick - 1)
@@ -186,16 +200,24 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 			swapState.tick = priceToTick(sqrtPrice.Power(2))
 		}
 	}
+	fmt.Printf("%v swapState liq POST \n", swapState.liquidity)
 
-	newTokenIn.Amount = tokenIn.Amount.Sub(swapState.amountSpecifiedRemaining.RoundInt())
-	return sdk.NewCoin(tokenIn.Denom, newTokenIn.Amount), sdk.NewCoin(tokenOutDenom, swapState.amountCalculated.RoundInt()), nil
+	//newTokenIn.Amount = tokenIn.Amount.Sub(swapState.amountSpecifiedRemaining.RoundInt())
+	return sdk.NewCoin(tokenOutDenom, swapState.amountCalculated.RoundInt()), swapState.liquidity, swapState.tick, swapState.sqrtPrice, nil
 }
 
-func (p Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
-	return sdk.Coin{}, nil
+func (k *Keeper) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec, minPrice, maxPrice sdk.Dec, poolId uint64) (tokenIn sdk.Coin, err error) {
+	tokenInCoin, newLiquidity, newCurrentTick, newCurrentSqrtPrice, err := k.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, sdk.ZeroDec(), sdk.NewDec(9999999999), poolId)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+
+	k.applySwap(ctx, tokenInCoin, tokenOut, poolId, newLiquidity, newCurrentTick, newCurrentSqrtPrice)
+
+	return tokenInCoin, nil
 }
 
-func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec, minPrice, maxPrice sdk.Dec, poolId uint64) (tokenIn, newTokenOut sdk.Coin, err error) {
+func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec, minPrice, maxPrice sdk.Dec, poolId uint64) (sdk.Coin, sdk.Dec, sdk.Int, sdk.Dec, error) {
 	tokenOutAmt := tokenOut.Amount.ToDec()
 	p := k.getPoolbyId(ctx, poolId)
 	asset0 := p.Token0
@@ -203,35 +225,34 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 	zeroForOne := tokenOut.Denom == asset0
 
 	// get current sqrt price from pool
-	// curSqrtPrice := sdk.NewDecWithPrec(int64(p.CurrentSqrtPrice.Uint64()), 6)
 	curSqrtPrice := p.CurrentSqrtPrice
 
 	// validation
 	if tokenOut.Denom != asset0 && tokenOut.Denom != asset1 {
-		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("tokenOut denom (%s) does not match any asset in pool", tokenOut.Denom)
+		return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("tokenOut denom (%s) does not match any asset in pool", tokenOut.Denom)
 	}
 	if tokenInDenom != asset0 && tokenInDenom != asset1 {
-		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("tokenInDenom (%s) does not match any asset in pool", tokenInDenom)
+		return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("tokenInDenom (%s) does not match any asset in pool", tokenInDenom)
 	}
 	if tokenOut.Denom == tokenInDenom {
-		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("tokenOut (%s) cannot be the same as tokenIn (%s)", tokenOut.Denom, tokenInDenom)
+		return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("tokenOut (%s) cannot be the same as tokenIn (%s)", tokenOut.Denom, tokenInDenom)
 	}
 	if minPrice.GTE(curSqrtPrice.Power(2)) {
-		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("minPrice (%s) must be less than current price (%s)", minPrice, curSqrtPrice.Power(2))
+		return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("minPrice (%s) must be less than current price (%s)", minPrice, curSqrtPrice.Power(2))
 	}
 	if maxPrice.LTE(curSqrtPrice.Power(2)) {
-		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("maxPrice (%s) must be greater than current price (%s)", maxPrice, curSqrtPrice.Power(2))
+		return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("maxPrice (%s) must be greater than current price (%s)", maxPrice, curSqrtPrice.Power(2))
 	}
 
 	// sqrtPrice of upper and lower user defined price range
 	sqrtPLowerTick, err := minPrice.ApproxSqrt()
 	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("issue calculating square root of minPrice")
+		return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("issue calculating square root of minPrice")
 	}
 
 	sqrtPUpperTick, err := maxPrice.ApproxSqrt()
 	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("issue calculating square root of maxPrice")
+		return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("issue calculating square root of maxPrice")
 	}
 
 	// TODO: How do we remove/generalize this? I am stumped.
@@ -262,7 +283,7 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 		// }
 		nextSqrtPrice, err := k.tickToSqrtPrice(sdk.NewInt(nextTick))
 		if err != nil {
-			return sdk.Coin{}, sdk.Coin{}, err
+			return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), err
 		}
 
 		// TODO: In and out get flipped based on if we are calculating for in or out, need to fix this
@@ -271,7 +292,6 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 			nextSqrtPrice,
 			liq,
 			swapState.amountSpecifiedRemaining,
-			zeroForOne,
 		)
 
 		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn)
@@ -280,14 +300,14 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 		if swapState.sqrtPrice.Equal(sqrtPrice) {
 			liquidityDelta, err := k.crossTick(ctx, p.Id, nextTick)
 			if err != nil {
-				return sdk.Coin{}, sdk.Coin{}, err
+				return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), err
 			}
 			if !zeroForOne {
 				liquidityDelta = liquidityDelta.Neg()
 			}
 			swapState.liquidity = swapState.liquidity.Add(liquidityDelta.ToDec())
 			if swapState.liquidity.LTE(sdk.ZeroDec()) || swapState.liquidity.IsNil() {
-				return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("no liquidity available, cannot swap")
+				return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("no liquidity available, cannot swap")
 			}
 			if !zeroForOne {
 				swapState.tick = sdk.NewInt(nextTick - 1)
@@ -298,5 +318,17 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 			swapState.tick = priceToTick(sqrtPrice.Power(2))
 		}
 	}
-	return sdk.NewCoin(tokenInDenom, swapState.amountCalculated.RoundInt()), sdk.NewCoin(tokenOut.Denom, tokenOut.Amount), nil
+	return sdk.NewCoin(tokenInDenom, swapState.amountCalculated.RoundInt()), swapState.liquidity, swapState.tick, swapState.sqrtPrice, nil
+}
+
+// ApplySwap.
+func (k *Keeper) applySwap(ctx sdk.Context, tokenIn sdk.Coin, tokenOut sdk.Coin, poolId uint64, newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurrentSqrtPrice sdk.Dec) {
+	// Fixed gas consumption per swap to prevent spam
+	ctx.GasMeter().ConsumeGas(types.BalancerGasFeeForSwap, "cl pool swap computation")
+	pool := k.getPoolbyId(ctx, poolId)
+
+	pool.Liquidity = newLiquidity
+	pool.CurrentTick = newCurrentTick
+	pool.CurrentSqrtPrice = newCurrentSqrtPrice
+	k.setPoolById(ctx, pool.Id, pool)
 }
