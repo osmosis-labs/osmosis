@@ -200,7 +200,7 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 	p := k.getPoolbyId(ctx, poolId)
 	asset0 := p.Token0
 	asset1 := p.Token1
-	zeroForOne := tokenOut.Denom == asset0
+	zeroForOne := tokenIn.Denom == asset0
 
 	// get current sqrt price from pool
 	// curSqrtPrice := sdk.NewDecWithPrec(int64(p.CurrentSqrtPrice.Uint64()), 6)
@@ -255,6 +255,7 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
 	for swapState.amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 6)) {
+		// amountRemaining := sdk.NewDec(99999999999)
 		nextTick, _ := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), zeroForOne)
 		// TODO: we can enable this error checking once we fix tick initialization
 		// if !ok {
@@ -266,6 +267,7 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 		}
 
 		// TODO: In and out get flipped based on if we are calculating for in or out, need to fix this
+		// Matt thinks we should use a different equation here
 		sqrtPrice, amountIn, amountOut := computeSwapStep(
 			swapState.sqrtPrice,
 			nextSqrtPrice,
@@ -274,22 +276,22 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 			zeroForOne,
 		)
 
-		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn)
-		swapState.amountCalculated = swapState.amountCalculated.Add(amountOut.Quo(sdk.OneDec().Sub(swapFee)))
+		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountOut)
+		swapState.amountCalculated = swapState.amountCalculated.Add(amountIn.Quo(sdk.OneDec().Sub(swapFee)))
 
-		if swapState.sqrtPrice.Equal(sqrtPrice) {
+		if nextSqrtPrice.Equal(sqrtPrice) {
 			liquidityDelta, err := k.crossTick(ctx, p.Id, nextTick)
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, err
 			}
-			if !zeroForOne {
+			if zeroForOne {
 				liquidityDelta = liquidityDelta.Neg()
 			}
 			swapState.liquidity = swapState.liquidity.Add(liquidityDelta.ToDec())
 			if swapState.liquidity.LTE(sdk.ZeroDec()) || swapState.liquidity.IsNil() {
 				return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("no liquidity available, cannot swap")
 			}
-			if !zeroForOne {
+			if zeroForOne {
 				swapState.tick = sdk.NewInt(nextTick - 1)
 			} else {
 				swapState.tick = sdk.NewInt(nextTick)
