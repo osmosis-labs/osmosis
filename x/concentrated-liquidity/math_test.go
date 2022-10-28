@@ -246,6 +246,7 @@ func (suite *KeeperTestSuite) TestComputeSwapState() {
 		sqrtPTarget           sdk.Dec
 		liquidity             sdk.Dec
 		amountRemaining       sdk.Dec
+		zeroForOne            bool
 		expectedSqrtPriceNext string
 		expectedAmountIn      string
 		expectedAmountOut     string
@@ -256,6 +257,7 @@ func (suite *KeeperTestSuite) TestComputeSwapState() {
 			sdk.OneDec(),
 			sdk.NewDec(1377927219),
 			sdk.NewDec(133700),
+			true,
 			"70.468932817327539027",
 			"66849.999999999999897227",
 			"333107267.266511136411924087",
@@ -266,6 +268,7 @@ func (suite *KeeperTestSuite) TestComputeSwapState() {
 			sdk.OneDec(),
 			sdk.NewDec(1377927219),
 			sdk.NewDec(4199999999),
+			false,
 			"73.758734487372429211",
 			"4199999998.999999999987594209",
 			"805287.266898087447354318",
@@ -276,7 +279,7 @@ func (suite *KeeperTestSuite) TestComputeSwapState() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			sqrtPriceNext, amountIn, amountOut := cl.ComputeSwapStep(tc.sqrtPCurrent, tc.sqrtPTarget, tc.liquidity, tc.amountRemaining)
+			sqrtPriceNext, amountIn, amountOut := cl.ComputeSwapStep(tc.sqrtPCurrent, tc.sqrtPTarget, tc.liquidity, tc.amountRemaining, tc.zeroForOne)
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext.String())
 			suite.Require().Equal(tc.expectedAmountIn, amountIn.String())
 			suite.Require().Equal(tc.expectedAmountOut, amountOut.String())

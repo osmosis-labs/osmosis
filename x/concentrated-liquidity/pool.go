@@ -180,6 +180,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 			nextSqrtPrice,
 			liq,
 			swapState.amountSpecifiedRemaining,
+			zeroForOne,
 		)
 		fmt.Println("===sqrt price")
 		fmt.Println(sqrtPrice.String())
@@ -307,6 +308,7 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 			nextSqrtPrice,
 			liq,
 			swapState.amountSpecifiedRemaining,
+			zeroForOne,
 		)
 
 		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn)
