@@ -103,7 +103,7 @@ impl Flow {
     }
 
     /// returns the balance in a direction. This is used for displaying cleaner errors
-    pub fn balance_on(&self, direction: &FlowType) -> u128 {
+    pub fn balance_on(&self, direction: &FlowType) -> Uint256 {
         let (balance_in, balance_out) = self.balance();
         match direction {
             FlowType::In => balance_in,
@@ -193,7 +193,7 @@ impl Quota {
     }
 
     /// returns the capacity in a direction. This is used for displaying cleaner errors
-    pub fn capacity_on(&self, direction: &FlowType) -> u128 {
+    pub fn capacity_on(&self, direction: &FlowType) -> Uint256 {
         let (max_in, max_out) = self.capacity();
         match direction {
             FlowType::In => max_in,
@@ -227,6 +227,20 @@ pub struct RateLimit {
     pub flow: Flow,
 }
 
+// The channel value on send depends on the amount on escrow. The ibc transfer
+// module increments the escrow amount by "funds" before calling the contract,
+// so it needs to be subtracted here
+fn calculate_channel_value(
+    channel_value: Uint256,
+    funds: Uint256,
+    direction: &FlowType,
+) -> Uint256 {
+    match direction {
+        FlowType::Out => channel_value - funds,
+        _ => channel_value,
+    }
+}
+
 impl RateLimit {
     /// Checks if a transfer is allowed and updates the data structures
     /// accordingly.
@@ -252,7 +266,8 @@ impl RateLimit {
         let expired = self.flow.apply_transfer(direction, funds, now, &self.quota);
         // Cache the channel value if it has never been set or it has expired.
         if self.quota.channel_value.is_none() || expired {
-            self.quota.channel_value = Some(channel_value)
+            self.quota.channel_value =
+                Some(calculate_channel_value(channel_value, funds, direction))
         }
 
         let (max_in, max_out) = self.quota.capacity();

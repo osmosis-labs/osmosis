@@ -158,25 +158,40 @@ func (suite *MiddlewareTestSuite) FullSendBToA(msg sdk.Msg) (*sdk.Result, string
 
 func (suite *MiddlewareTestSuite) FullSendAToB(msg sdk.Msg) (*sdk.Result, string, error) {
 	sendResult, err := suite.chainA.SendMsgsNoCheck(msg)
-	suite.Require().NoError(err)
+	if err != nil {
+		return nil, "", err
+	}
 
 	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents())
-	suite.Require().NoError(err)
+	if err != nil {
+		return nil, "", err
+	}
 
 	err = suite.path.EndpointB.UpdateClient()
-	suite.Require().NoError(err)
+	if err != nil {
+		return nil, "", err
+	}
 
 	res, err := suite.path.EndpointB.RecvPacketWithResult(packet)
-	suite.Require().NoError(err)
+	if err != nil {
+		return nil, "", err
+	}
 
 	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
+	if err != nil {
+		return nil, "", err
+	}
 
 	err = suite.path.EndpointA.UpdateClient()
-	suite.Require().NoError(err)
+	if err != nil {
+		return nil, "", err
+	}
 	err = suite.path.EndpointB.UpdateClient()
-	suite.Require().NoError(err)
+	if err != nil {
+		return nil, "", err
+	}
 
-	return sendResult, string(ack), err
+	return sendResult, string(ack), nil
 }
 
 func (suite *MiddlewareTestSuite) AssertReceive(success bool, msg sdk.Msg) (string, error) {
@@ -253,6 +268,10 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	suite.initializeEscrow()
 	// Get the denom and amount to send
 	denom := sdk.DefaultBondDenom
+	if !native {
+		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", denom))
+		denom = denomTrace.IBCDenom()
+	}
 
 	osmosisApp := suite.chainA.GetOsmosisApp()
 
@@ -262,25 +281,26 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 
 	// The amount to be sent is send 2.5% (quota is 5%)
 	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))
-	sendAmount := channelValue.QuoRaw(2)
-	// Sending
-	sendAmount = channelValue.Add(sendAmount).QuoRaw(2)
+	sendAmount := quota.QuoRaw(2)
 
 	fmt.Printf("Testing send rate limiting for denom=%s, channelValue=%s, quota=%s, sendAmount=%s\n", denom, channelValue, quota, sendAmount)
 
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
 	quotas := suite.BuildChannelQuota("weekly", denom, 604800, 5, 5)
+	fmt.Println(quotas)
 	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
+	// TODO: Remove native from MessafeFrom calls
 	// send 2.5% (quota is 5%)
 	fmt.Println("trying to send ", sendAmount)
-	suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sendAmount, !native))
+	r0, _ := suite.AssertSend(true, suite.MessageFromAToB(denom, sendAmount, native))
+	fmt.Println(r0)
 
 	// send 2.5% (quota is 5%)
 	fmt.Println("trying to send ", sendAmount)
-	r, _ := suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sendAmount, !native))
+	r, _ := suite.AssertSend(true, suite.MessageFromAToB(denom, sendAmount, native))
 
 	// Calculate remaining allowance in the quota
 	attrs := suite.ExtractAttributes(suite.FindEvent(r.GetEvents(), "wasm"))
@@ -290,8 +310,8 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 
 	suite.Require().Equal(used, sendAmount.MulRaw(2))
 
-	// Sending above the quota should fail.
-	suite.AssertSend(false, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1), !native))
+	// Sending above the quota should fail. We use 2 instead of 1 here to avoid rounding issues
+	suite.AssertSend(false, suite.MessageFromAToB(denom, sdk.NewInt(2), native))
 	return attrs
 }
 

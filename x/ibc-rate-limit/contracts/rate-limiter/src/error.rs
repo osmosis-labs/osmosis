@@ -1,4 +1,4 @@
-use cosmwasm_std::{StdError, Timestamp};
+use cosmwasm_std::{StdError, Timestamp, Uint256};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -13,10 +13,10 @@ pub enum ContractError {
     RateLimitExceded {
         channel: String,
         denom: String,
-        amount: u128,
+        amount: Uint256,
         quota_name: String,
-        used: u128,
-        max: u128,
+        used: Uint256,
+        max: Uint256,
         reset: Timestamp,
     },
 
