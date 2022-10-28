@@ -353,7 +353,11 @@ func (s *KeeperTestHelper) BuildTx(
 // StateNotAltered validates that app state is not altered. Fails if it is.
 func (s *KeeperTestHelper) StateNotAltered() {
 	oldState := s.App.ExportState(s.Ctx)
+	oldHash := s.App.LastCommitID().Hash
 	s.Commit()
+	newHash := s.App.LastCommitID().Hash
+	fmt.Println("oldHash", oldHash)
+	fmt.Println("newHash", newHash)
 	newState := s.App.ExportState(s.Ctx)
 	s.Require().Equal(oldState, newState)
 }
