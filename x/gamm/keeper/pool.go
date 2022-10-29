@@ -23,7 +23,7 @@ func (k Keeper) UnmarshalPool(bz []byte) (types.TraditionalAmmInterface, error) 
 }
 
 // GetPool returns a pool with a given id.
-func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
+func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.TraditionalAmmInterface, error) {
 	return k.getPoolForSwap(ctx, poolId)
 }
 
@@ -38,8 +38,9 @@ func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.Traditiona
 	}
 
 	bz := store.Get(poolKey)
-
+	fmt.Println(bz)
 	pool, err := k.UnmarshalPool(bz)
+	fmt.Println(pool)
 	if err != nil {
 		return nil, err
 	}

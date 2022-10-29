@@ -33,7 +33,7 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint6
 }
 
 // GetPool returns a pool with a given id.
-func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
+func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.TraditionalAmmInterface, error) {
 	return nil, errors.New("not implemented")
 }
 

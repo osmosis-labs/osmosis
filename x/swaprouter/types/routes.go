@@ -9,7 +9,7 @@ import (
 
 // TODO: godoc
 type SwapI interface {
-	GetPool(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
+	GetPool(ctx sdk.Context, poolId uint64) (gammtypes.TraditionalAmmInterface, error)
 
 	SwapExactAmountIn(
 		ctx sdk.Context,

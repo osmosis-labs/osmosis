@@ -1,11 +1,14 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/v12/tests/mocks"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
@@ -278,5 +281,61 @@ func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 				suite.Require().Error(err)
 			}
 		}
+	}
+}
+
+// Test two pools -- one is active and should have swaps allowed,
+// while the other is inactive and should have swaps frozen.
+// As shown in the following test, we can mock a pool by calling
+// `mocks.NewMockPool()`, then adding `EXPECT` statements to
+// match argument calls, add return values, and more.
+// More info at https://github.com/golang/mock
+func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
+	// Setup test
+	suite.SetupTest()
+	testCoin := sdk.NewCoin("foo", sdk.NewInt(10))
+	suite.FundAcc(suite.TestAccs[0], defaultAcctFunds)
+
+	// Setup active pool
+	// activePoolId := suite.PrepareBalancerPool()
+
+	// Setup mock inactive pool
+	gammKeeper := suite.App.GAMMKeeper
+	ctrl := gomock.NewController(suite.T())
+	defer ctrl.Finish()
+	inactivePool := mocks.NewMockPoolI(ctrl)
+	fmt.Println(inactivePool.GetAddress())
+	inactivePoolId := gammKeeper.GetNextPoolIdAndIncrement(suite.Ctx)
+	// Add mock return values for pool -- we need to do this because
+	// mock objects don't have interface functions implemented by default.
+	inactivePool.EXPECT().IsActive(suite.Ctx).Return(false).AnyTimes()
+	inactivePool.EXPECT().GetId().Return(inactivePoolId).AnyTimes()
+	gammKeeper.SetPool(suite.Ctx, inactivePool)
+
+	type testCase struct {
+		poolId     uint64
+		expectPass bool
+		name       string
+	}
+	testCases := []testCase{
+		// {activePoolId, true, "swap succeeds on active pool"},
+		{inactivePoolId, false, "swap fails on inactive pool"},
+	}
+
+	for _, test := range testCases {
+		suite.Run(test.name, func() {
+			pool, _ := gammKeeper.GetPool(suite.Ctx, test.poolId)
+			fmt.Println("POOL: ", pool)
+			// Check swaps
+			_, swapInErr := gammKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], pool, testCoin, "bar", sdk.ZeroInt(), sdk.ZeroDec())
+			_, swapOutErr := gammKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], pool, "bar", sdk.NewInt(1000000000000000000), testCoin, sdk.ZeroDec())
+			if test.expectPass {
+				suite.Require().NoError(swapInErr)
+				suite.Require().NoError(swapOutErr)
+			} else {
+				suite.Require().Error(swapInErr)
+				suite.Require().Error(swapOutErr)
+			}
+		})
 	}
 }
