@@ -38,9 +38,7 @@ func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.Traditiona
 	}
 
 	bz := store.Get(poolKey)
-	fmt.Println(bz)
 	pool, err := k.UnmarshalPool(bz)
-	fmt.Println(pool)
 	if err != nil {
 		return nil, err
 	}

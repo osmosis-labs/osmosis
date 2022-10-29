@@ -241,13 +241,12 @@ func (mr *MockPoolIMockRecorder) JoinPool(ctx, tokensIn, swapFee interface{}) *g
 }
 
 // JoinPoolNoSwap mocks base method.
-func (m *MockPoolI) JoinPoolNoSwap(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, types.Coins, error) {
+func (m *MockPoolI) JoinPoolNoSwap(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "JoinPoolNoSwap", ctx, tokensIn, swapFee)
 	ret0, _ := ret[0].(types.Int)
-	ret1, _ := ret[1].(types.Coins)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // JoinPoolNoSwap indicates an expected call of JoinPoolNoSwap.

@@ -6,6 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
+
+	"github.com/osmosis-labs/osmosis/v12/tests/mocks"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/gamm interfaces and concrete types
@@ -40,6 +42,12 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgExitSwapExternAmountOut{},
 		&MsgExitSwapShareAmountIn{},
 	)
+
+	registry.RegisterImplementations(
+		(*TraditionalAmmInterface)(nil),
+		&mocks.MockPoolI{},
+	)
+
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 

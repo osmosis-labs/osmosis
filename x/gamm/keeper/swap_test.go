@@ -304,8 +304,8 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	ctrl := gomock.NewController(suite.T())
 	defer ctrl.Finish()
 	inactivePool := mocks.NewMockPoolI(ctrl)
-	fmt.Println(inactivePool.GetAddress())
 	inactivePoolId := gammKeeper.GetNextPoolIdAndIncrement(suite.Ctx)
+
 	// Add mock return values for pool -- we need to do this because
 	// mock objects don't have interface functions implemented by default.
 	inactivePool.EXPECT().IsActive(suite.Ctx).Return(false).AnyTimes()
@@ -324,7 +324,8 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 
 	for _, test := range testCases {
 		suite.Run(test.name, func() {
-			pool, _ := gammKeeper.GetPool(suite.Ctx, test.poolId)
+			pool, err := gammKeeper.GetPool(suite.Ctx, test.poolId)
+			suite.Require().NoError(err)
 			fmt.Println("POOL: ", pool)
 			// Check swaps
 			_, swapInErr := gammKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], pool, testCoin, "bar", sdk.ZeroInt(), sdk.ZeroDec())
