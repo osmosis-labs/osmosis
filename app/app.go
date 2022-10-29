@@ -44,6 +44,7 @@ import (
 	v10 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v10"
 	v11 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v11"
 	v12 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v12"
+	v13 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v13"
 	v3 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v3"
 	v4 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v4"
 	v5 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v5"
@@ -52,7 +53,6 @@ import (
 	v8 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v8"
 	v9 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v9"
 	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
 )
 
 const appName = "OsmosisApp"
@@ -89,7 +89,7 @@ var (
 
 	// _ sdksimapp.App = (*OsmosisApp)(nil)
 
-	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade}
+	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 )
 
@@ -128,7 +128,6 @@ type OsmosisApp struct {
 	invCheckPeriod    uint
 
 	mm           *module.Manager
-	sm           *simtypes.Manager
 	configurator module.Configurator
 }
 
@@ -240,9 +239,6 @@ func NewOsmosisApp(
 	app.mm.RegisterServices(app.configurator)
 
 	app.setupUpgradeHandlers()
-
-	// create the simulation manager and define the order of the modules for deterministic simulations
-	app.sm = createSimulationManager(app, encodingConfig, skipGenesisInvariants)
 
 	// app.sm.RegisterStoreDecoders()
 
@@ -361,9 +357,8 @@ func (app *OsmosisApp) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
 }
 
-// SimulationManager implements the SimulationApp interface.
-func (app *OsmosisApp) SimulationManager() *simtypes.Manager {
-	return app.sm
+func (app *OsmosisApp) ModuleManager() module.Manager {
+	return *app.mm
 }
 
 // RegisterAPIRoutes registers all application module routes with the provided

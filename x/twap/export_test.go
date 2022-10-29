@@ -93,3 +93,7 @@ func (k *Keeper) GetAmmInterface() types.AmmInterface {
 func (k *Keeper) SetAmmInterface(ammInterface types.AmmInterface) {
 	k.ammkeeper = ammInterface
 }
+
+func (k *Keeper) AfterCreatePool(ctx sdk.Context, poolId uint64) error {
+	return k.afterCreatePool(ctx, poolId)
+}

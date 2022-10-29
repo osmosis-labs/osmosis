@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v12/x/twap"
 	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
@@ -1047,9 +1048,186 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 		},
-		// TODO: complete multi-asset pool tests:
-		// "multi-asset pool; pre-set at t and t + 1; creates new records": {},
-		// "multi-asset pool; pre-set at t and t + 1; pre-existing records some with error and some with too large spot price, overwrites erorr time":                        {},
+		"multi-asset pool; pre-set at t and t + 1; creates new records": {
+			preSetRecords: []types.TwapRecord{threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC, tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC},
+			poolId:        threeAssetRecordAB.PoolId,
+			blockTime: threeAssetRecordAB.Time.Add(time.Second * 11),
+			spOverrides: []spOverride{
+				{
+					baseDenom:  threeAssetRecordAB.Asset0Denom,
+					quoteDenom: threeAssetRecordAB.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:  threeAssetRecordAB.Asset1Denom,
+					quoteDenom: threeAssetRecordAB.Asset0Denom,
+					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+				},
+				{
+					baseDenom:  threeAssetRecordAC.Asset0Denom,
+					quoteDenom: threeAssetRecordAC.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:  threeAssetRecordAC.Asset1Denom,
+					quoteDenom: threeAssetRecordAC.Asset0Denom,
+					overrideSp: sdk.OneDec().Add(sdk.OneDec()).Add(sdk.OneDec()),
+				},
+				{
+					baseDenom:  threeAssetRecordBC.Asset0Denom,
+					quoteDenom: threeAssetRecordBC.Asset1Denom,
+					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+				},
+				{
+					baseDenom:  threeAssetRecordBC.Asset1Denom,
+					quoteDenom: threeAssetRecordBC.Asset0Denom,
+					overrideSp: sdk.OneDec(),
+				},
+			},
+
+			expectedHistoricalRecords: []expectedResults{
+				// The original record AB at t.
+				{
+					spotPriceA: threeAssetRecordAB.P0LastSpotPrice,
+					spotPriceB: threeAssetRecordAB.P1LastSpotPrice,
+				},
+				// The original record AB at t + 1.
+				{
+					spotPriceA: tPlus10sp5ThreeAssetRecordAB.P0LastSpotPrice,
+					spotPriceB: tPlus10sp5ThreeAssetRecordAB.P1LastSpotPrice,
+				},
+				// The new record AB added.
+				{
+					spotPriceA:   sdk.OneDec(),
+					spotPriceB:   sdk.OneDec().Add(sdk.OneDec()),
+					isMostRecent: true,
+				},
+				// The original record AC at t.
+				{
+					spotPriceA: threeAssetRecordAC.P0LastSpotPrice,
+					spotPriceB: threeAssetRecordAC.P1LastSpotPrice,
+				},
+				// The original record AC at t + 1.
+				{
+					spotPriceA: tPlus10sp5ThreeAssetRecordAC.P0LastSpotPrice,
+					spotPriceB: tPlus10sp5ThreeAssetRecordAC.P1LastSpotPrice,
+				},
+				// The new record AC added.
+				{
+					spotPriceA:   sdk.OneDec(),
+					spotPriceB:   sdk.OneDec().Add(sdk.OneDec()).Add(sdk.OneDec()),
+					isMostRecent: true,
+				},
+				// The original record BC at t.
+				{
+					spotPriceA: threeAssetRecordBC.P0LastSpotPrice,
+					spotPriceB: threeAssetRecordBC.P1LastSpotPrice,
+				},
+				// The original record BC at t + 1.
+				{
+					spotPriceA: tPlus10sp5ThreeAssetRecordBC.P0LastSpotPrice,
+					spotPriceB: tPlus10sp5ThreeAssetRecordBC.P1LastSpotPrice,
+				},
+				// The new record BC added.
+				{
+					spotPriceA:   sdk.OneDec().Add(sdk.OneDec()),
+					spotPriceB:   sdk.OneDec(),
+					isMostRecent: true,
+				},
+			},
+		},
+		"multi-asset pool; pre-set at t and t + 1 with err, large spot price, overwrites error time": {
+			preSetRecords: []types.TwapRecord{threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC, withLastErrTime(tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAB.Time), tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC},
+			poolId:        threeAssetRecordAB.PoolId,
+			blockTime: threeAssetRecordAB.Time.Add(time.Second * 11),
+			spOverrides: []spOverride{
+				{
+					baseDenom:  threeAssetRecordAB.Asset0Denom,
+					quoteDenom: threeAssetRecordAB.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:   threeAssetRecordAB.Asset1Denom,
+					quoteDenom:  threeAssetRecordAB.Asset0Denom,
+					overrideSp:  sdk.OneDec().Add(sdk.OneDec()),
+ 				},
+				{
+					baseDenom:  threeAssetRecordAC.Asset0Denom,
+					quoteDenom: threeAssetRecordAC.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:   threeAssetRecordAC.Asset1Denom,
+					quoteDenom:  threeAssetRecordAC.Asset0Denom,
+					overrideSp:  types.MaxSpotPrice.Add(sdk.OneDec()),
+					overrideErr: nil, // twap logic should identify the large spot price and mark it as error.
+				},
+				{
+					baseDenom:  threeAssetRecordBC.Asset0Denom,
+					quoteDenom: threeAssetRecordBC.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:   threeAssetRecordBC.Asset1Denom,
+					quoteDenom:  threeAssetRecordBC.Asset0Denom,
+					overrideSp:  sdk.OneDec().Add(sdk.OneDec()),
+				},
+			},
+
+			expectedHistoricalRecords: []expectedResults{
+				// The original record AB at t.
+				{
+					spotPriceA: threeAssetRecordAB.P0LastSpotPrice,
+					spotPriceB: threeAssetRecordAB.P1LastSpotPrice,
+				},
+				// The original record AB at t + 1.
+				{
+					spotPriceA:    tPlus10sp5ThreeAssetRecordAB.P0LastSpotPrice,
+					spotPriceB:    tPlus10sp5ThreeAssetRecordAB.P1LastSpotPrice,
+					lastErrorTime: tPlus10sp5ThreeAssetRecordAB.Time,
+				},
+				// The new record AB added.
+				{
+					spotPriceA:    sdk.OneDec(),
+					spotPriceB:    sdk.OneDec().Add(sdk.OneDec()),                            
+					lastErrorTime: tPlus10sp5ThreeAssetRecordAB.Time,
+					isMostRecent:  true,
+				},
+				// The original record AC at t.
+				{
+					spotPriceA: threeAssetRecordAC.P0LastSpotPrice,
+					spotPriceB: threeAssetRecordAC.P1LastSpotPrice,
+				},
+				// The original record AC at t + 1.
+				{
+					spotPriceA:    tPlus10sp5ThreeAssetRecordAC.P0LastSpotPrice,
+					spotPriceB:    tPlus10sp5ThreeAssetRecordAC.P1LastSpotPrice,
+				},
+				// The new record AC added.
+				{
+					spotPriceA:    sdk.OneDec(),
+					spotPriceB:    types.MaxSpotPrice,                            // Although the price returned from AMM was MaxSpotPrice + 1, it is reset to just MaxSpotPrice.
+					lastErrorTime: threeAssetRecordAC.Time.Add(time.Second * 11), // equals to block time
+					isMostRecent:  true,
+				},
+				// The original record BC at t.
+				{
+					spotPriceA: threeAssetRecordBC.P0LastSpotPrice,
+					spotPriceB: threeAssetRecordBC.P1LastSpotPrice,
+				},
+				// The original record BC at t + 1.
+				{
+					spotPriceA:    tPlus10sp5ThreeAssetRecordBC.P0LastSpotPrice,
+					spotPriceB:    tPlus10sp5ThreeAssetRecordBC.P1LastSpotPrice,
+				},
+				// The new record BC added.
+				{
+					spotPriceA:    sdk.OneDec(),
+					spotPriceB:    sdk.OneDec().Add(sdk.OneDec()),                            
+					isMostRecent:  true,
+				},
+			},
+		},
 	}
 
 	for name, tc := range tests {
@@ -1095,6 +1273,96 @@ func (s *TestSuite) TestUpdateRecords() {
 			poolHistoricalRecords := s.getAllHistoricalRecordsForPool(tc.poolId)
 			s.Require().NoError(err)
 			validateRecords(tc.expectedHistoricalRecords, poolHistoricalRecords)
+		})
+	}
+}
+
+func (s *TestSuite) TestAfterCreatePool() {
+	tests := map[string]struct {
+		poolId    uint64
+		poolCoins sdk.Coins
+		// if this field is set true, we swap in the same block with pool creation
+		runSwap     bool
+		expectedErr bool
+	}{
+		"Pool not existing": {
+			poolId:      2,
+			expectedErr: true,
+		},
+		"Default Pool, no swap on pool creation block": {
+			poolId:    1,
+			poolCoins: defaultTwoAssetCoins,
+			runSwap:   false,
+		},
+		"Default Pool, swap on pool creation block": {
+			poolId:    1,
+			poolCoins: defaultTwoAssetCoins,
+			runSwap:   true,
+		},
+		"Multi assets pool, no swap on pool creation block": {
+			poolId:    1,
+			poolCoins: defaultThreeAssetCoins,
+			runSwap:   false,
+		},
+		"Multi assets pool, swap on pool creation block": {
+			poolId:    1,
+			poolCoins: defaultThreeAssetCoins,
+			runSwap:   true,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			var poolId uint64
+
+			// set up pool with input coins
+			if tc.poolCoins != nil {
+				poolId = s.PrepareBalancerPoolWithCoins(tc.poolCoins...)
+				if tc.runSwap {
+					s.RunBasicSwap(poolId)
+				}
+			}
+
+			err := s.twapkeeper.AfterCreatePool(s.Ctx, tc.poolId)
+			if tc.expectedErr {
+				s.Require().Error(err)
+				return
+			}
+			s.Require().Equal(tc.poolId, poolId)
+			s.Require().NoError(err)
+
+			denoms := osmoutils.CoinsDenoms(tc.poolCoins)
+			denomPairs0, denomPairs1 := types.GetAllUniqueDenomPairs(denoms)
+			expectedRecords := []types.TwapRecord{}
+			for i := 0; i < len(denomPairs0); i++ {
+				expectedRecord, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denomPairs0[i], denomPairs1[i])
+				s.Require().NoError(err)
+				expectedRecords = append(expectedRecords, expectedRecord)
+			}
+
+			// consistency check that the number of records is exactly equal to the number of denompairs
+			allRecords, err := s.twapkeeper.GetAllMostRecentRecordsForPool(s.Ctx, poolId)
+			s.Require().NoError(err)
+			s.Require().Equal(len(denomPairs0), len(allRecords))
+			s.Require().Equal(len(expectedRecords), len(allRecords))
+
+			// check on the correctness of all individual twap records
+			for i := 0; i < len(denomPairs0); i++ {
+				actualRecord, err := s.twapkeeper.GetMostRecentRecordStoreRepresentation(s.Ctx, poolId, denomPairs0[i], denomPairs1[i])
+				s.Require().NoError(err)
+				s.Require().Equal(expectedRecords[i], actualRecord)
+				actualRecord, err = s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denomPairs0[i], denomPairs1[i])
+				s.Require().NoError(err)
+				s.Require().Equal(expectedRecords[i], actualRecord)
+			}
+
+			// test that after creating a pool 
+			// has triggered `trackChangedPool`, 
+			// and that we have the state of price impacted pools.
+			changedPools := s.twapkeeper.GetChangedPools(s.Ctx)
+			s.Require().Equal(1, len(changedPools))
+			s.Require().Equal(tc.poolId, changedPools[0])
 		})
 	}
 }

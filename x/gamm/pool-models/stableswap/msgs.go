@@ -46,19 +46,26 @@ func (msg MsgCreateStableswapPool) ValidateBasic() error {
 		return err
 	}
 
-	// validation for pool initial liquidity
-	// TO DO: expand this check to accommodate multi-asset pools for stableswap
-	if len(msg.InitialPoolLiquidity) < 2 {
-		return types.ErrTooFewPoolAssets
-	} else if len(msg.InitialPoolLiquidity) > 2 {
-		return types.ErrTooManyPoolAssets
-	}
-	// valid scaling factor lengths are 0, or one factor for each asset
-	if len(msg.ScalingFactors) != 0 && len(msg.ScalingFactors) != len(msg.InitialPoolLiquidity) {
-		return types.ErrInvalidScalingFactors
+	// validation for scaling factors
+	// The message's scaling factors must be empty or a valid set of scaling factors
+	if len(msg.ScalingFactors) != 0 {
+		if err = validateScalingFactors(msg.ScalingFactors, len(msg.InitialPoolLiquidity)); err != nil {
+			return err
+		}
 	}
 
-	// validation for future owner
+	// validation for pool initial liquidity
+	// The message's pool liquidity must have between 2 and 8 assets with at most 10B post-scaled units in each
+	if err = validatePoolAssets(msg.InitialPoolLiquidity, msg.ScalingFactors); err != nil {
+		return err
+	}
+
+	// validation for scaling factor owner
+	if err = validateScalingFactorController(msg.ScalingFactorController); err != nil {
+		return err
+	}
+
+	// validation for future governor
 	if err = types.ValidateFutureGovernor(msg.FuturePoolGovernor); err != nil {
 		return err
 	}
@@ -97,7 +104,8 @@ func (msg MsgCreateStableswapPool) InitialLiquidity() sdk.Coins {
 }
 
 func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
-	stableswapPool, err := NewStableswapPool(poolId, *msg.PoolParams, msg.InitialPoolLiquidity, msg.ScalingFactors, msg.FuturePoolGovernor)
+	stableswapPool, err := NewStableswapPool(poolId, *msg.PoolParams, msg.InitialPoolLiquidity,
+		msg.ScalingFactors, msg.ScalingFactorController, msg.FuturePoolGovernor)
 	if err != nil {
 		return nil, err
 	}

@@ -22,8 +22,8 @@ func (k Keeper) UnmarshalPool(bz []byte) (types.PoolI, error) {
 	return acc, k.cdc.UnmarshalInterface(bz, &acc)
 }
 
-// GetPoolAndPoke returns a PoolI based on it's identifier if one exists. Prior
-// to returning the pool, the weights of the pool are updated via PokePool.
+// GetPoolAndPoke returns a PoolI based on it's identifier if one exists. If poolId corresponds
+// to a pool with weights (e.g. balancer), the weights of the pool are updated via PokePool prior to returning.
 // TODO: Consider rename to GetPool due to downstream API confusion.
 func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 	store := ctx.KVStore(k.storeKey)
@@ -39,7 +39,9 @@ func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.PoolI, err
 		return nil, err
 	}
 
-	pool.PokePool(ctx.BlockTime())
+	if pokePool, ok := pool.(types.WeightedPoolExtension); ok {
+		pokePool.PokePool(ctx.BlockTime())
+	}
 
 	return pool, nil
 }
@@ -74,7 +76,9 @@ func (k Keeper) GetPoolsAndPoke(ctx sdk.Context) (res []types.PoolI, err error) 
 			return nil, err
 		}
 
-		pool.PokePool(ctx.BlockTime())
+		if pokePool, ok := pool.(types.WeightedPoolExtension); ok {
+			pokePool.PokePool(ctx.BlockTime())
+		}
 		res = append(res, pool)
 	}
 
@@ -235,6 +239,21 @@ func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 		nextPoolId = val.GetValue()
 	}
 	return nextPoolId
+}
+
+func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (string, error) {
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
+	if err != nil {
+		return "", err
+	}
+
+	switch pool := pool.(type) {
+	case *balancer.Pool:
+		return "Balancer", nil
+	default:
+		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
+		return "", sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
+	}
 }
 
 // getNextPoolIdAndIncrement returns the next pool Id, and increments the corresponding state entry.
