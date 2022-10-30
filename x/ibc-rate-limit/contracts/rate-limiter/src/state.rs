@@ -238,17 +238,28 @@ fn calculate_channel_value(
     funds: Uint256,
     direction: &FlowType,
 ) -> Uint256 {
-    if denom.contains("ibc") {
-        match direction {
-            FlowType::Out => channel_value + funds, // Non-Native tokens get removed from the supply on send. Add that amount back
-            FlowType::In => channel_value + funds,  // TODO
+    match direction {
+        FlowType::Out => {
+            if denom.contains("ibc") {
+                channel_value + funds // Non-Native tokens get removed from the supply on send. Add that amount back
+            } else {
+                channel_value - funds // Native tokens increase escrow amount on send. Remove that amount here
+            }
         }
-    } else {
-        match direction {
-            FlowType::Out => channel_value - funds, // Native tokens increase escrow amount on send. Remove that amount here
-            FlowType::In => channel_value + funds,  // TODO
-        }
+        FlowType::In => channel_value,
     }
+
+    // if denom.contains("ibc") {
+    //     match direction {
+    //         FlowType::Out => channel_value + funds, // Non-Native tokens get removed from the supply on send. Add that amount back
+    //         FlowType::In => channel_value,
+    //     }
+    // } else {
+    //     match direction {
+    //         FlowType::Out => channel_value - funds, // Native tokens increase escrow amount on send. Remove that amount here
+    //         FlowType::In => channel_value,
+    //     }
+    // }
 }
 
 impl RateLimit {

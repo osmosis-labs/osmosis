@@ -351,17 +351,38 @@ func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 
 // Test rate limiting on receives
 func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
-	_, escrowAmount := suite.initializeEscrow()
-
-	transferAmount := escrowAmount
+	quotaPercentage := 5
+	suite.initializeEscrow()
 	// Get the denom and amount to send
 	denom := sdk.DefaultBondDenom
 	if !native {
-		denom = transfertypes.ParseDenomTrace("transfer/channel-0/" + sdk.DefaultBondDenom).IBCDenom()
-		osmosisApp := suite.chainA.GetOsmosisApp()
-
-		transferAmount = osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), transfertypes.ParseDenomTrace(denom).IBCDenom()).Amount
+		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", denom))
+		denom = denomTrace.IBCDenom()
 	}
+
+	osmosisApp := suite.chainA.GetOsmosisApp()
+
+	// This is the first one. Inside the tests. It works as expected.
+	channelValue :=
+		ibc_rate_limit.CalculateChannelValue(suite.chainA.GetContext(), denom, "transfer", "channel-0", osmosisApp.BankKeeper)
+
+	// The amount to be sent is send 2.5% (quota is 5%)
+	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))
+	sendAmount := quota.QuoRaw(2)
+
+	//_, escrowAmount := suite.initializeEscrow()
+	//
+	//transferAmount := escrowAmount
+	//// Get the denom and amount to send
+	//denom := sdk.DefaultBondDenom
+	//if !native {
+	//	denom = transfertypes.ParseDenomTrace("transfer/channel-0/" + sdk.DefaultBondDenom).IBCDenom()
+	//	osmosisApp := suite.chainA.GetOsmosisApp()
+	//
+	//	transferAmount = osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), transfertypes.ParseDenomTrace(denom).IBCDenom()).Amount
+	//}
+
+	fmt.Printf("Testing recv rate limiting for denom=%s, channelValue=%s, quota=%s, sendAmount=%s\n", denom, channelValue, quota, sendAmount)
 
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
@@ -369,17 +390,14 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
-	// Setup receiver chain's quota
-	quota := transferAmount.QuoRaw(20)
-	half := quota.QuoRaw(2)
 	// receive 2.5% (quota is 5%)
-	suite.AssertReceive(true, suite.MessageFromBToA(sdk.DefaultBondDenom, half, !native))
+	suite.AssertReceive(true, suite.MessageFromBToA(sdk.DefaultBondDenom, sendAmount, !native))
 
 	// receive 2.5% (quota is 5%)
-	suite.AssertReceive(true, suite.MessageFromBToA(sdk.DefaultBondDenom, half, !native))
+	suite.AssertReceive(true, suite.MessageFromBToA(sdk.DefaultBondDenom, sendAmount, !native))
 
-	// Sending above the quota should fail.
-	suite.AssertReceive(false, suite.MessageFromBToA(sdk.DefaultBondDenom, half, !native))
+	// Sending above the quota should fail. We send 2 instead of 1 to account for rounding errors
+	suite.AssertReceive(false, suite.MessageFromBToA(sdk.DefaultBondDenom, sdk.NewInt(2), !native))
 }
 
 func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimitingNative() {

@@ -1,7 +1,6 @@
 package ibc_rate_limit
 
 import (
-	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -58,7 +57,6 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 	}
 
 	channelValue := i.CalculateChannelValue(ctx, denom, packet)
-	fmt.Println("Send", channelValue)
 
 	err = CheckAndUpdateRateLimits(
 		ctx,
