@@ -4,8 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var testAddressOne = sdk.AccAddress([]byte("addr1---------------"))
-
 func (s *KeeperTestSuite) TestCreatePosition() {
 	// testing params
 	// current tick: 85176
@@ -31,7 +29,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 
 	s.SetupTest()
 
-	s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, poolId, testAddressOne, denom0, denom1, currentSqrtP, currentTick)
+	s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, poolId, s.TestAccs[0], denom0, denom1, currentSqrtP, currentTick)
 
 	asset0, asset1, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], amount0Desired, amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
 	s.Require().NoError(err)
