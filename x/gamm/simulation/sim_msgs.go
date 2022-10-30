@@ -1,6 +1,7 @@
 package gammsimulation
 
 import (
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -276,8 +277,12 @@ func deriveRealMinShareOutAmt(ctx sdk.Context, tokenIn sdk.Coins, pool types.Tra
 }
 
 func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64, types.TraditionalAmmInterface, sdk.Coin, sdk.Coin, []string, string, error) {
+	poolCount := k.GetPoolCount(ctx)
+	if poolCount == 0 {
+		return 0, nil, sdk.Coin{}, sdk.Coin{}, []string{}, "", errors.New("pool count is zero")
+	}
 	// select a pseudo-random pool ID, max bound by the upcoming pool ID
-	pool_id := simtypes.RandLTBound(sim, k.GetPoolCount(ctx))
+	pool_id := simtypes.RandLTBound(sim, poolCount)
 	pool, err := k.GetPoolAndPoke(ctx, pool_id)
 	if err != nil {
 		return 0, nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), []string{}, "", err
