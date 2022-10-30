@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -326,7 +325,6 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 		suite.Run(test.name, func() {
 			pool, err := gammKeeper.GetPool(suite.Ctx, test.poolId)
 			suite.Require().NoError(err)
-			fmt.Println("POOL: ", pool)
 			// Check swaps
 			_, swapInErr := gammKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], pool, testCoin, "bar", sdk.ZeroInt(), sdk.ZeroDec())
 			_, swapOutErr := gammKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], pool, "bar", sdk.NewInt(1000000000000000000), testCoin, sdk.ZeroDec())
