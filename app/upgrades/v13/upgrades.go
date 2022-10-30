@@ -22,7 +22,7 @@ func CreateUpgradeHandler(
 		keepers.SwapRouterKeeper.SetParams(ctx, swaproutertypes.DefaultParams())
 
 		poolsCount := keepers.GAMMKeeper.GetPoolCount(ctx)
-		keepers.SwapRouterKeeper.SetNextPoolId(ctx, uint64(poolsCount))
+		keepers.SwapRouterKeeper.SetNextPoolId(ctx, poolsCount)
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
