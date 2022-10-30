@@ -57,7 +57,6 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 		return sdkerrors.Wrap(err, "Rate limit SendPacket")
 	}
 
-	// tHis is the second one.
 	channelValue := i.CalculateChannelValue(ctx, denom, packet)
 	fmt.Println("Send", channelValue)
 

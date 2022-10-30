@@ -228,16 +228,26 @@ pub struct RateLimit {
 }
 
 // The channel value on send depends on the amount on escrow. The ibc transfer
-// module increments the escrow amount by "funds" before calling the contract,
-// so it needs to be subtracted here
+// module modifies the escrow amount by "funds" on sends before calling the
+// contract. This function takes that into account so that the channel value
+// that we track matches the channel value at the moment when the ibc
+// transaction started executing
 fn calculate_channel_value(
     channel_value: Uint256,
+    denom: &str,
     funds: Uint256,
     direction: &FlowType,
 ) -> Uint256 {
-    match direction {
-        FlowType::Out => channel_value - funds,
-        _ => channel_value,
+    if denom.contains("ibc") {
+        match direction {
+            FlowType::Out => channel_value + funds, // Non-Native tokens get removed from the supply on send. Add that amount back
+            FlowType::In => channel_value + funds,  // TODO
+        }
+    } else {
+        match direction {
+            FlowType::Out => channel_value - funds, // Native tokens increase escrow amount on send. Remove that amount here
+            FlowType::In => channel_value + funds,  // TODO
+        }
     }
 }
 
@@ -266,8 +276,12 @@ impl RateLimit {
         let expired = self.flow.apply_transfer(direction, funds, now, &self.quota);
         // Cache the channel value if it has never been set or it has expired.
         if self.quota.channel_value.is_none() || expired {
-            self.quota.channel_value =
-                Some(calculate_channel_value(channel_value, funds, direction))
+            self.quota.channel_value = Some(calculate_channel_value(
+                channel_value,
+                &path.denom,
+                funds,
+                direction,
+            ))
         }
 
         let (max_in, max_out) = self.quota.capacity();

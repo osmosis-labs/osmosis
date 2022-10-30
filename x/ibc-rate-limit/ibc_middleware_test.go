@@ -295,8 +295,7 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	// TODO: Remove native from MessafeFrom calls
 	// send 2.5% (quota is 5%)
 	fmt.Println("trying to send ", sendAmount)
-	r0, _ := suite.AssertSend(true, suite.MessageFromAToB(denom, sendAmount, native))
-	fmt.Println(r0)
+	suite.AssertSend(true, suite.MessageFromAToB(denom, sendAmount, native))
 
 	// send 2.5% (quota is 5%)
 	fmt.Println("trying to send ", sendAmount)
@@ -304,7 +303,7 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 
 	// Calculate remaining allowance in the quota
 	attrs := suite.ExtractAttributes(suite.FindEvent(r.GetEvents(), "wasm"))
-	fmt.Println(attrs)
+
 	used, ok := sdk.NewIntFromString(attrs["weekly_used_out"])
 	suite.Require().True(ok)
 
