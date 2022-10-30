@@ -43,7 +43,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgExitSwapShareAmountIn{},
 	)
 
-	registry.RegisterImplementations(
+	registry.RegisterInterface(
+		"osmosis.gamm.v1beta1.TraditionalAmmInterface",
 		(*TraditionalAmmInterface)(nil),
 		&mocks.MockPoolI{},
 	)

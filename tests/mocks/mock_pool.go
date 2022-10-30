@@ -269,8 +269,7 @@ func (mr *MockPoolIMockRecorder) ProtoMessage() *gomock.Call {
 
 // Reset mocks base method.
 func (m *MockPoolI) Reset() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Reset")
+	*m = MockPoolI{}
 }
 
 // Reset indicates an expected call of Reset.
