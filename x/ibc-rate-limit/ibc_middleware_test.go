@@ -326,11 +326,9 @@ func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 	suite.Require().NoError(err)
 	resetTime := time.Unix(secs, nanos)
 
-	// Move both chains one block
+	// Move chainA forward one block
 	suite.chainA.NextBlock()
 	suite.chainA.SenderAccount.SetSequence(suite.chainA.SenderAccount.GetSequence() + 1)
-	suite.chainB.NextBlock()
-	suite.chainB.SenderAccount.SetSequence(suite.chainB.SenderAccount.GetSequence() + 1)
 
 	// Reset time + one second
 	oneSecAfterReset := resetTime.Add(time.Second)
