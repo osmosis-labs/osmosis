@@ -70,22 +70,16 @@ func (suite *MiddlewareTestSuite) SetupTest() {
 
 // Helpers
 func (suite *MiddlewareTestSuite) MessageFromAToB(denom string, amount sdk.Int) sdk.Msg {
-	var coins sdk.Coin
-	var port, channel, accountFrom, accountTo string
-
-	coins = sdk.NewCoin(denom, amount)
-	//if wrapDenom {
-	//	coins = transfertypes.GetTransferCoin("transfer", "channel-0", denom, amount)
-	//}
-	port = suite.path.EndpointA.ChannelConfig.PortID
-	channel = suite.path.EndpointA.ChannelID
-	accountFrom = suite.chainA.SenderAccount.GetAddress().String()
-	accountTo = suite.chainB.SenderAccount.GetAddress().String()
+	coin := sdk.NewCoin(denom, amount)
+	port := suite.path.EndpointA.ChannelConfig.PortID
+	channel := suite.path.EndpointA.ChannelID
+	accountFrom := suite.chainA.SenderAccount.GetAddress().String()
+	accountTo := suite.chainB.SenderAccount.GetAddress().String()
 	timeoutHeight := clienttypes.NewHeight(0, 100)
 	return transfertypes.NewMsgTransfer(
 		port,
 		channel,
-		coins,
+		coin,
 		accountFrom,
 		accountTo,
 		timeoutHeight,
@@ -94,10 +88,7 @@ func (suite *MiddlewareTestSuite) MessageFromAToB(denom string, amount sdk.Int) 
 }
 
 func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount sdk.Int) sdk.Msg {
-	coins := sdk.NewCoin(denom, amount)
-	//if wrapDenom {
-	//	coins = transfertypes.GetTransferCoin("transfer", "channel-0", denom, amount)
-	//}
+	coin := sdk.NewCoin(denom, amount)
 	port := suite.path.EndpointB.ChannelConfig.PortID
 	channel := suite.path.EndpointB.ChannelID
 	accountFrom := suite.chainB.SenderAccount.GetAddress().String()
@@ -106,7 +97,7 @@ func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount sdk.Int) 
 	return transfertypes.NewMsgTransfer(
 		port,
 		channel,
-		coins,
+		coin,
 		accountFrom,
 		accountTo,
 		timeoutHeight,
@@ -432,7 +423,12 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	timeoutHeight := clienttypes.NewHeight(0, 100)
 	msg := transfertypes.NewMsgTransfer(port, channel, coins, accountFrom, "INVALID", timeoutHeight, 0)
 
-	res, _ := suite.AssertSend(true, msg)
+	// Sending the message manually because AssertSend updates both clients. We need to update the clients manually
+	// for this test so that the failure to receive on chain B happens after the second packet is sent from chain A.
+	// That way we validate that chain A is blocking as expected, but the flow is reverted after the receive failure is
+	// acknowledged on chain A
+	res, err := suite.chainA.SendMsgsNoCheck(msg)
+	suite.Require().NoError(err)
 
 	// Sending again fails as the quota is filled
 	suite.AssertSend(false, suite.MessageFromAToB(sdk.DefaultBondDenom, quota))
@@ -443,7 +439,7 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	suite.chainA.Coordinator.IncrementTime()
 
 	// Update both clients
-	err := suite.path.EndpointA.UpdateClient()
+	err = suite.path.EndpointA.UpdateClient()
 	suite.Require().NoError(err)
 	err = suite.path.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
