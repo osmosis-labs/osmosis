@@ -69,14 +69,14 @@ func (suite *MiddlewareTestSuite) SetupTest() {
 }
 
 // Helpers
-func (suite *MiddlewareTestSuite) MessageFromAToB(denom string, amount sdk.Int, wrapDenom bool) sdk.Msg {
+func (suite *MiddlewareTestSuite) MessageFromAToB(denom string, amount sdk.Int) sdk.Msg {
 	var coins sdk.Coin
 	var port, channel, accountFrom, accountTo string
 
 	coins = sdk.NewCoin(denom, amount)
-	if wrapDenom {
-		coins = transfertypes.GetTransferCoin("transfer", "channel-0", denom, amount)
-	}
+	//if wrapDenom {
+	//	coins = transfertypes.GetTransferCoin("transfer", "channel-0", denom, amount)
+	//}
 	port = suite.path.EndpointA.ChannelConfig.PortID
 	channel = suite.path.EndpointA.ChannelID
 	accountFrom = suite.chainA.SenderAccount.GetAddress().String()
@@ -93,11 +93,11 @@ func (suite *MiddlewareTestSuite) MessageFromAToB(denom string, amount sdk.Int, 
 	)
 }
 
-func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount sdk.Int, wrapDenom bool) sdk.Msg {
+func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount sdk.Int) sdk.Msg {
 	coins := sdk.NewCoin(denom, amount)
-	if wrapDenom {
-		coins = transfertypes.GetTransferCoin("transfer", "channel-0", denom, amount)
-	}
+	//if wrapDenom {
+	//	coins = transfertypes.GetTransferCoin("transfer", "channel-0", denom, amount)
+	//}
 	port := suite.path.EndpointB.ChannelConfig.PortID
 	channel := suite.path.EndpointB.ChannelID
 	accountFrom := suite.chainB.SenderAccount.GetAddress().String()
@@ -231,13 +231,13 @@ func (suite *MiddlewareTestSuite) BuildChannelQuota(name, denom string, duration
 // Test that Sending IBC messages works when the middleware isn't configured
 func (suite *MiddlewareTestSuite) TestSendTransferNoContract() {
 	one := sdk.NewInt(1)
-	suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, one, false))
+	suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, one))
 }
 
 // Test that Receiving IBC messages works when the middleware isn't configured
 func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 	one := sdk.NewInt(1)
-	suite.AssertReceive(true, suite.MessageFromBToA(sdk.DefaultBondDenom, one, false))
+	suite.AssertReceive(true, suite.MessageFromBToA(sdk.DefaultBondDenom, one))
 }
 
 func (suite *MiddlewareTestSuite) initializeEscrow() (totalEscrow, expectedSed sdk.Int) {
@@ -254,10 +254,10 @@ func (suite *MiddlewareTestSuite) initializeEscrow() (totalEscrow, expectedSed s
 	sendAmount := transferAmount.QuoRaw(40)
 
 	// Send from A to B
-	_, _, err := suite.FullSendAToB(suite.MessageFromAToB(sdk.DefaultBondDenom, transferAmount.Sub(sendAmount), false))
+	_, _, err := suite.FullSendAToB(suite.MessageFromAToB(sdk.DefaultBondDenom, transferAmount.Sub(sendAmount)))
 	suite.Require().NoError(err)
 	// Send from A to B
-	_, _, err = suite.FullSendBToA(suite.MessageFromBToA(sdk.DefaultBondDenom, transferAmount.Sub(sendAmount), false))
+	_, _, err = suite.FullSendBToA(suite.MessageFromBToA(sdk.DefaultBondDenom, transferAmount.Sub(sendAmount)))
 	suite.Require().NoError(err)
 
 	return transferAmount, sendAmount
@@ -295,11 +295,11 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	// TODO: Remove native from MessafeFrom calls
 	// send 2.5% (quota is 5%)
 	fmt.Println("trying to send ", sendAmount)
-	suite.AssertSend(true, suite.MessageFromAToB(denom, sendAmount, native))
+	suite.AssertSend(true, suite.MessageFromAToB(denom, sendAmount))
 
 	// send 2.5% (quota is 5%)
 	fmt.Println("trying to send ", sendAmount)
-	r, _ := suite.AssertSend(true, suite.MessageFromAToB(denom, sendAmount, native))
+	r, _ := suite.AssertSend(true, suite.MessageFromAToB(denom, sendAmount))
 
 	// Calculate remaining allowance in the quota
 	attrs := suite.ExtractAttributes(suite.FindEvent(r.GetEvents(), "wasm"))
@@ -310,7 +310,7 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	suite.Require().Equal(used, sendAmount.MulRaw(2))
 
 	// Sending above the quota should fail. We use 2 instead of 1 here to avoid rounding issues
-	suite.AssertSend(false, suite.MessageFromAToB(denom, sdk.NewInt(2), native))
+	suite.AssertSend(false, suite.MessageFromAToB(denom, sdk.NewInt(2)))
 	return attrs
 }
 
@@ -346,7 +346,7 @@ func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 	suite.coordinator.IncrementTimeBy(oneSecAfterReset.Sub(suite.coordinator.CurrentTime))
 
 	// Sending should succeed again
-	suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1), false))
+	suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1)))
 }
 
 // Test rate limiting on receives
@@ -370,18 +370,6 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))
 	sendAmount := quota.QuoRaw(2)
 
-	//_, escrowAmount := suite.initializeEscrow()
-	//
-	//transferAmount := escrowAmount
-	//// Get the denom and amount to send
-	//denom := sdk.DefaultBondDenom
-	//if !native {
-	//	denom = transfertypes.ParseDenomTrace("transfer/channel-0/" + sdk.DefaultBondDenom).IBCDenom()
-	//	osmosisApp := suite.chainA.GetOsmosisApp()
-	//
-	//	transferAmount = osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), transfertypes.ParseDenomTrace(denom).IBCDenom()).Amount
-	//}
-
 	fmt.Printf("Testing recv rate limiting for denom=%s, channelValue=%s, quota=%s, sendAmount=%s\n", denom, channelValue, quota, sendAmount)
 
 	// Setup contract
@@ -391,13 +379,13 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// receive 2.5% (quota is 5%)
-	suite.AssertReceive(true, suite.MessageFromBToA(sdk.DefaultBondDenom, sendAmount, !native))
+	suite.AssertReceive(true, suite.MessageFromBToA(denom, sendAmount))
 
 	// receive 2.5% (quota is 5%)
-	suite.AssertReceive(true, suite.MessageFromBToA(sdk.DefaultBondDenom, sendAmount, !native))
+	suite.AssertReceive(true, suite.MessageFromBToA(denom, sendAmount))
 
 	// Sending above the quota should fail. We send 2 instead of 1 to account for rounding errors
-	suite.AssertReceive(false, suite.MessageFromBToA(sdk.DefaultBondDenom, sdk.NewInt(2), !native))
+	suite.AssertReceive(false, suite.MessageFromBToA(denom, sdk.NewInt(2)))
 }
 
 func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimitingNative() {
@@ -417,7 +405,7 @@ func (suite *MiddlewareTestSuite) TestSendTransferNoQuota() {
 
 	// send 1 token.
 	// If the contract doesn't have a quota for the current channel, all transfers are allowed
-	suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1), false))
+	suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1)))
 }
 
 // Test rate limits are reverted if a "send" fails
@@ -447,7 +435,7 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	res, _ := suite.AssertSend(true, msg)
 
 	// Sending again fails as the quota is filled
-	suite.AssertSend(false, suite.MessageFromAToB(sdk.DefaultBondDenom, quota, false))
+	suite.AssertSend(false, suite.MessageFromAToB(sdk.DefaultBondDenom, quota))
 
 	// Move forward one block
 	suite.chainA.NextBlock()
@@ -478,5 +466,5 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	suite.Require().NoError(err)
 
 	// We should be able to send again because the packet that exceeded the quota failed and has been reverted
-	suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1), false))
+	suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1)))
 }
