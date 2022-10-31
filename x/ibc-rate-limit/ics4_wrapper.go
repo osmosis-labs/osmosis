@@ -53,9 +53,11 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 
 	amount, denom, err := GetFundsFromPacket(packet)
 	if err != nil {
-		return sdkerrors.Wrap(err, "Rate limited SendPacket")
+		return sdkerrors.Wrap(err, "Rate limit SendPacket")
 	}
-	channelValue := i.CalculateChannelValue(ctx, denom)
+
+	channelValue := i.CalculateChannelValue(ctx, denom, packet)
+
 	err = CheckAndUpdateRateLimits(
 		ctx,
 		i.ContractKeeper,
@@ -63,11 +65,11 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 		contract,
 		channelValue,
 		packet.GetSourceChannel(),
-		denom,
+		denom, // We always use the packet's denom here, as we want the limits to be the same on both directions
 		amount,
 	)
 	if err != nil {
-		return sdkerrors.Wrap(err, "Rate limited SendPacket")
+		return sdkerrors.Wrap(err, "bad packet in rate limit's SendPacket")
 	}
 
 	return i.channel.SendPacket(ctx, chanCap, packet)
@@ -84,6 +86,7 @@ func (i *ICS4Wrapper) GetParams(ctx sdk.Context) (contract string) {
 
 // CalculateChannelValue The value of an IBC channel. This is calculated using the denom supplied by the sender.
 // if the denom is not correct, the transfer should fail somewhere else on the call chain
-func (i *ICS4Wrapper) CalculateChannelValue(ctx sdk.Context, denom string) sdk.Int {
-	return i.bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
+func (i *ICS4Wrapper) CalculateChannelValue(ctx sdk.Context, denom string, packet exported.PacketI) sdk.Int {
+	// The logic is etracted into a function here so that it can be used within the tests
+	return CalculateChannelValue(ctx, denom, packet.GetSourcePort(), packet.GetSourceChannel(), i.bankKeeper)
 }
