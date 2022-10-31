@@ -25,6 +25,14 @@ func (msg MsgCreatePosition) ValidateBasic() error {
 		return ErrInvalidLowerUpperTick
 	}
 
+	if msg.LowerTick < MinTick || msg.LowerTick > MaxTick {
+		return ErrInvalidLowerTick
+	}
+
+	if msg.UpperTick < MinTick || msg.UpperTick > MaxTick {
+		return ErrLimitUpperTick
+	}
+
 	if !msg.TokenDesired0.IsValid() || msg.TokenDesired0.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenDesired0.String())
 	}
@@ -68,6 +76,14 @@ func (msg MsgWithdrawPosition) ValidateBasic() error {
 
 	if msg.LowerTick >= msg.UpperTick {
 		return ErrInvalidLowerUpperTick
+	}
+
+	if msg.LowerTick < MinTick || msg.LowerTick > MaxTick {
+		return ErrInvalidLowerTick
+	}
+
+	if msg.UpperTick < MinTick || msg.UpperTick > MaxTick {
+		return ErrLimitUpperTick
 	}
 
 	if !msg.LiquidityAmount.IsPositive() {
