@@ -50,7 +50,7 @@ func (k Keeper) RouteExactAmountIn(
 		// Chain output of current pool as the input for the next routed pool
 		tokenIn = sdk.NewCoin(route.TokenOutDenom, tokenOutAmount)
 	}
-	return tokenOutAmount, err
+	return tokenOutAmount, nil
 }
 
 // RouteExactAmountOut defines the output denom and output amount for the last pool.

@@ -17,6 +17,7 @@ func (k Keeper) SwapExactAmountIn(
 	swapFee sdk.Dec,
 ) (tokenOutAmount sdk.Int, err error) {
 	panic("not implemented")
+	//newTokenIn, tokenOut, err := k.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, sdk.ZeroDec(), sdk.NewDec(999999999999), pool.GetId())
 }
 
 // TODO: spec here and in gamm
