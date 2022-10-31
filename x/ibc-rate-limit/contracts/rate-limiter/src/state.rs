@@ -102,6 +102,15 @@ impl Flow {
         }
     }
 
+    /// returns the balance in a direction. This is used for displaying cleaner errors
+    pub fn balance_on(&self, direction: &FlowType) -> Uint256 {
+        let (balance_in, balance_out) = self.balance();
+        match direction {
+            FlowType::In => balance_in,
+            FlowType::Out => balance_out,
+        }
+    }
+
     /// If now is greater than the period_end, the Flow is considered expired.
     pub fn is_expired(&self, now: Timestamp) -> bool {
         self.period_end < now
@@ -182,6 +191,15 @@ impl Quota {
             None => (0_u32.into(), 0_u32.into()), // This should never happen, but ig the channel value is not set, we disallow any transfer
         }
     }
+
+    /// returns the capacity in a direction. This is used for displaying cleaner errors
+    pub fn capacity_on(&self, direction: &FlowType) -> Uint256 {
+        let (max_in, max_out) = self.capacity();
+        match direction {
+            FlowType::In => max_in,
+            FlowType::Out => max_out,
+        }
+    }
 }
 
 impl From<&QuotaMsg> for Quota {
@@ -209,6 +227,29 @@ pub struct RateLimit {
     pub flow: Flow,
 }
 
+// The channel value on send depends on the amount on escrow. The ibc transfer
+// module modifies the escrow amount by "funds" on sends before calling the
+// contract. This function takes that into account so that the channel value
+// that we track matches the channel value at the moment when the ibc
+// transaction started executing
+fn calculate_channel_value(
+    channel_value: Uint256,
+    denom: &str,
+    funds: Uint256,
+    direction: &FlowType,
+) -> Uint256 {
+    match direction {
+        FlowType::Out => {
+            if denom.contains("ibc") {
+                channel_value + funds // Non-Native tokens get removed from the supply on send. Add that amount back
+            } else {
+                channel_value - funds // Native tokens increase escrow amount on send. Remove that amount here
+            }
+        }
+        FlowType::In => channel_value,
+    }
+}
+
 impl RateLimit {
     /// Checks if a transfer is allowed and updates the data structures
     /// accordingly.
@@ -224,10 +265,22 @@ impl RateLimit {
         channel_value: Uint256,
         now: Timestamp,
     ) -> Result<Self, ContractError> {
+        // Flow used before this transaction is applied.
+        // This is used to make error messages more informative
+        let initial_flow = self.flow.balance_on(direction);
+
+        // Apply the transfer. From here on, we will updated the flow with the new transfer
+        // and check if  it exceeds the quota at the current time
+
         let expired = self.flow.apply_transfer(direction, funds, now, &self.quota);
         // Cache the channel value if it has never been set or it has expired.
         if self.quota.channel_value.is_none() || expired {
-            self.quota.channel_value = Some(channel_value)
+            self.quota.channel_value = Some(calculate_channel_value(
+                channel_value,
+                &path.denom,
+                funds,
+                direction,
+            ))
         }
 
         let (max_in, max_out) = self.quota.capacity();
@@ -236,6 +289,10 @@ impl RateLimit {
             true => Err(ContractError::RateLimitExceded {
                 channel: path.channel.to_string(),
                 denom: path.denom.to_string(),
+                amount: funds,
+                quota_name: self.quota.name.to_string(),
+                used: initial_flow,
+                max: self.quota.capacity_on(direction),
                 reset: self.flow.period_end,
             }),
             false => Ok(RateLimit {

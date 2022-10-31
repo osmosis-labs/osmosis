@@ -52,7 +52,7 @@ fn consume_allowance() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000_u32.into(),
+        channel_value: 3_300_u32.into(),
         funds: 300_u32.into(),
     };
     let res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
@@ -64,7 +64,7 @@ fn consume_allowance() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000_u32.into(),
+        channel_value: 3_300_u32.into(),
         funds: 300_u32.into(),
     };
     let err = sudo(deps.as_mut(), mock_env(), msg).unwrap_err();
@@ -91,7 +91,7 @@ fn symetric_flows_dont_consume_allowance() {
     let send_msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000_u32.into(),
+        channel_value: 3_300_u32.into(),
         funds: 300_u32.into(),
     };
     let recv_msg = SudoMsg::RecvPacket {
@@ -154,7 +154,7 @@ fn asymetric_quotas() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000_u32.into(),
+        channel_value: 3_060_u32.into(),
         funds: 60_u32.into(),
     };
     let res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
@@ -166,7 +166,7 @@ fn asymetric_quotas() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000_u32.into(),
+        channel_value: 3_060_u32.into(),
         funds: 60_u32.into(),
     };
 
@@ -195,7 +195,7 @@ fn asymetric_quotas() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000_u32.into(),
+        channel_value: 3_060_u32.into(),
         funds: 60_u32.into(),
     };
     let err = sudo(deps.as_mut(), mock_env(), msg.clone()).unwrap_err();
@@ -205,7 +205,7 @@ fn asymetric_quotas() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000_u32.into(),
+        channel_value: 3_060_u32.into(),
         funds: 30_u32.into(),
     };
     let res = sudo(deps.as_mut(), mock_env(), msg.clone()).unwrap();
@@ -256,7 +256,7 @@ fn query_state() {
     let send_msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000_u32.into(),
+        channel_value: 3_300_u32.into(),
         funds: 300_u32.into(),
     };
     sudo(deps.as_mut(), mock_env(), send_msg.clone()).unwrap();
@@ -343,7 +343,7 @@ fn undo_send() {
     let send_msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000_u32.into(),
+        channel_value: 3_300_u32.into(),
         funds: 300_u32.into(),
     };
     let undo_msg = SudoMsg::UndoSend {
