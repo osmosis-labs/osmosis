@@ -236,9 +236,9 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	// Because we traded the same amount of all three assets, we expect the asset with the greatest
 	// initial value (B, or uion) to have a largest negative price impact,
 	// to the benefit (positive price impact) of the other two assets (A&C, or stake and uosmo)
-	s.Require().True(twapFromBeforeSwapToAfterSwapAB.GT(twapFromBeforeSwapToBeforeSwapOneAB))
-	s.Require().True(twapFromBeforeSwapToAfterSwapBC.LT(twapFromBeforeSwapToBeforeSwapOneBC))
-	s.Require().True(twapFromBeforeSwapToAfterSwapCA.GT(twapFromBeforeSwapToBeforeSwapOneCA))
+	s.Require().True(twapFromBeforeSwapToAfterSwapAB.LT(twapFromBeforeSwapToBeforeSwapOneAB))
+	s.Require().True(twapFromBeforeSwapToAfterSwapBC.GT(twapFromBeforeSwapToBeforeSwapOneBC))
+	s.Require().True(twapFromBeforeSwapToAfterSwapCA.LT(twapFromBeforeSwapToBeforeSwapOneCA))
 
 	s.T().Log("querying for the TWAP from after swap to now")
 	twapFromAfterToNowAB, err := chainANode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeAfterSwap)
@@ -249,9 +249,9 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	s.Require().NoError(err)
 	// Because twapFromAfterToNow has a higher time weight for the after swap period,
 	// we expect the results to be flipped from the previous comparison to twapFromBeforeSwapToBeforeSwapOne
-	s.Require().True(twapFromBeforeSwapToAfterSwapAB.LT(twapFromAfterToNowAB))
-	s.Require().True(twapFromBeforeSwapToAfterSwapBC.GT(twapFromAfterToNowBC))
-	s.Require().True(twapFromBeforeSwapToAfterSwapCA.LT(twapFromAfterToNowCA))
+	s.Require().True(twapFromBeforeSwapToAfterSwapAB.GT(twapFromAfterToNowAB))
+	s.Require().True(twapFromBeforeSwapToAfterSwapBC.LT(twapFromAfterToNowBC))
+	s.Require().True(twapFromBeforeSwapToAfterSwapCA.GT(twapFromAfterToNowCA))
 
 	s.T().Log("querying for the TWAP from after swap to after swap + 10ms")
 	twapAfterSwapBeforePruning10MsAB, err := chainANode.QueryArithmeticTwap(poolId, denomA, denomB, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
@@ -262,9 +262,9 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	s.Require().NoError(err)
 	// Again, because twapAfterSwapBeforePruning10Ms has a higher time weight for the after swap period between the two,
 	// we expect no change in the inequality
-	s.Require().True(twapFromBeforeSwapToAfterSwapAB.LT(twapAfterSwapBeforePruning10MsAB))
-	s.Require().True(twapFromBeforeSwapToAfterSwapBC.GT(twapAfterSwapBeforePruning10MsBC))
-	s.Require().True(twapFromBeforeSwapToAfterSwapCA.LT(twapAfterSwapBeforePruning10MsCA))
+	s.Require().True(twapFromBeforeSwapToAfterSwapAB.GT(twapAfterSwapBeforePruning10MsAB))
+	s.Require().True(twapFromBeforeSwapToAfterSwapBC.LT(twapAfterSwapBeforePruning10MsBC))
+	s.Require().True(twapFromBeforeSwapToAfterSwapCA.GT(twapAfterSwapBeforePruning10MsCA))
 
 	// These must be equal because they are calculated over time ranges with the stable and equal spot price.
 	// There are potential rounding errors requiring us to approximate the comparison.
