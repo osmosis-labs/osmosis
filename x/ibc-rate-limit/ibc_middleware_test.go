@@ -3,11 +3,12 @@ package ibc_rate_limit_test
 import (
 	"encoding/json"
 	"fmt"
-	ibc_rate_limit "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	ibc_rate_limit "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -144,7 +145,6 @@ func (suite *MiddlewareTestSuite) FullSendBToA(msg sdk.Msg) (*sdk.Result, string
 	suite.Require().NoError(err)
 
 	return sendResult, string(ack), err
-
 }
 
 func (suite *MiddlewareTestSuite) FullSendAToB(msg sdk.Msg) (*sdk.Result, string, error) {
@@ -267,8 +267,7 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	osmosisApp := suite.chainA.GetOsmosisApp()
 
 	// This is the first one. Inside the tests. It works as expected.
-	channelValue :=
-		ibc_rate_limit.CalculateChannelValue(suite.chainA.GetContext(), denom, "transfer", "channel-0", osmosisApp.BankKeeper)
+	channelValue := ibc_rate_limit.CalculateChannelValue(suite.chainA.GetContext(), denom, "transfer", "channel-0", osmosisApp.BankKeeper)
 
 	// The amount to be sent is send 2.5% (quota is 5%)
 	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))
@@ -352,8 +351,7 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	osmosisApp := suite.chainA.GetOsmosisApp()
 
 	// This is the first one. Inside the tests. It works as expected.
-	channelValue :=
-		ibc_rate_limit.CalculateChannelValue(suite.chainA.GetContext(), denom, "transfer", "channel-0", osmosisApp.BankKeeper)
+	channelValue := ibc_rate_limit.CalculateChannelValue(suite.chainA.GetContext(), denom, "transfer", "channel-0", osmosisApp.BankKeeper)
 
 	// The amount to be sent is send 2.5% (quota is 5%)
 	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))

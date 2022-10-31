@@ -2,6 +2,8 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
+	"strings"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -9,7 +11,6 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
 	"github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
-	"strings"
 )
 
 var (
