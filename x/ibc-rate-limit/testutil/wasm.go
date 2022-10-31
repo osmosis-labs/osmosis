@@ -19,7 +19,7 @@ func (chain *TestChain) StoreContractCode(suite *suite.Suite) {
 	osmosisApp := chain.GetOsmosisApp()
 
 	govKeeper := osmosisApp.GovKeeper
-	wasmCode, err := ioutil.ReadFile("./testdata/rate_limiter.wasm")
+	wasmCode, err := ioutil.ReadFile("./bytecode/rate_limiter.wasm")
 	suite.Require().NoError(err)
 
 	addr := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)

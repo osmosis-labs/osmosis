@@ -1,26 +1,63 @@
-# # IBC Rate Limit
+# IBC Rate Limit
 
-The ``IBC Rate Limit`` middleware implements an [IBC Middleware](https://github.com/cosmos/ibc-go/blob/f57170b1d4dd202a3c6c1c61dcf302b6a9546405/docs/ibc/middleware/develop.md) 
-that wraps a [transfer](https://ibc.cosmos.network/main/apps/transfer/overview.html) app to regulate how much value can
-flow in and out of the chain for a specific denom and channel.
+The IBC Rate Limit module is responsible for adding a governance-configurable rate limit to IBC transfers.
+This is a safety control, intended to protect assets on osmosis in event of:
 
-## Contents
+* a bug/hack on osmosis
+* a bug/hack on the counter-party chain
+* a bug/hack in IBC itself
 
-1. **[Concepts](#concepts)**
-2. **[Parameters](#parameters)**
-3. **[Contract](#contract)**
-4. **[Integration](#integration)**
+This is done in exchange for a potential (one-way) bridge liveness tradeoff, in periods of high deposits or withdrawals.
 
-## Concepts
+The architecture of this package is a minimal go package which implements an [IBC Middleware](https://github.com/cosmos/ibc-go/blob/f57170b1d4dd202a3c6c1c61dcf302b6a9546405/docs/ibc/middleware/develop.md) that wraps the [ICS20 transfer](https://ibc.cosmos.network/main/apps/transfer/overview.html) app, and calls into a cosmwasm contract. The cosmwasm contract then has all of the actual IBC rate limiting logic. The Cosmwasm code can be found in the [`contracts`](./contracts/) package, with bytecode findable in the [`bytecode`](./bytecode/) folder. The cosmwasm VM usage allows Osmosis chain governance to choose to change this safety control with no hard forks, via a parameter change proposal, a great mitigation for faster threat adaptavity.
 
-### Overview
+## Motivation
 
-The `x/ibc-rate-limit` module implements an IBC middleware and a transfer app wrapper. The middleware checks if the 
-amount of value of a specific denom transferred through a channel has exceeded a quota defined by governance for 
-that channel/denom. These checks are handled through a CosmWasm contract. The contract to be used for this is 
-configured via a parameter.
+The motivation of IBC-rate-limit comes from the empirical observations of blockchain bridge hacks that a rate limit would have massively reduced the stolen amount of assets in:
 
-### Middleware
+- [Polynetwork Bridge Hack ($611 million)](https://rekt.news/polynetwork-rekt/)
+- [BNB Bridge Hack ($586 million)](https://rekt.news/bnb-bridge-rekt/)
+- [Wormhole Bridge Hack ($326 million)](https://rekt.news/wormhole-rekt/)
+- [Nomad Bridge Hack ($190 million)](https://rekt.news/nomad-rekt/)
+- [Harmony Bridge Hack ($100 million)](https://rekt.news/harmony-rekt/) - (Would require rate limit + monitoring)
+- [Dragonberry IBC bug](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702) (can't yet disclose amount at risk, but was saved due to being found first by altruistic Osmosis core developers)
+
+In the presence of a software bug on Osmosis, IBC itself, or on a counterparty chain, we would like to prevent the bridge from being fully depegged. This stems from the idea that a 30% asset depeg is ~infinitely better than a 100% depeg. Its _crazy_ that today these complex bridged assets can instantly go to 0 in event of bug. The goal of a rate limit is to raise an alert that something has gone wrong, allowing validators and developers to have time to react and protect larger portions of user funds.
+
+The thesis of this is that, it is worthwile to sacrifice liveness in the case of legitimate demand to send extreme amounts of funds, to prevent the terrible long-tail full fund risks. Rate limits aren't the end-all of safety controls, they're merely the simplest automated one. More should be explored and added onto IBC!
+
+## Rate limit types
+
+We express rate limits in time-based periods. This means, we set rate limits for (say) hourly, daily, and weekly intervals. The rate limit for a given time period stores the relevant amount of assets at the start of the rate limit. Rate limits are then defined on percentage terms of the asset. The time windows for rate limits are _not_ rolling, they have discrete start/end times.
+
+We allow setting separate rate limits for the inflow and outflow of assets.
+We do all of our rate limits based on the _net flow_ of assets on a channel pair. This prevents DOS issues, of someone repeatedly sending assets back and forth, to trigger rate limits and break liveness.
+
+We currently envision creating two kinds of rate limits:
+
+* Per denomination rate limits
+   - allows safety statements like "Only 30% of Stars on Osmosis can flow out in one day" or "The amount of Atom on Osmosis can at most double per day".
+* Per channel rate limits
+   - Limit the total inflow and outflow on a given IBC channel, based on "USDC" equivalent, using Osmosis as the price oracle.
+
+We currently only implement per denomination rate limits for non-native assets. We do not yet implement channel based rate limits.
+
+## Instantiating rate limits
+
+Today all rate limit quotas must be set manually by governance. In the future, we should design towards some conservative rate limit to add as a safety-backstop automatically for channels. Ideas for how this could look:
+
+* One month after a channel has been created, automatically add in some USDC-based rate limit
+* One month after governance incentivizes an asset, add on a per-denomination rate limit.
+
+Definitely needs far more ideation and iteration!
+
+### Handling rate limit boundaries
+
+We want to be safe against the case where say we have a daily rate limit ending at a given time, and an adversary 
+
+## Code structure
+
+### Go Middleware
 
 To achieve this, the middleware  needs to implement  the `porttypes.Middleware` interface and the
 `porttypes.ICS4Wrapper` interface. This allows the middleware to send and receive IBC messages by wrapping 

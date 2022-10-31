@@ -162,7 +162,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	// co up two levels
 	projectDir := filepath.Dir(filepath.Dir(wd))
 	fmt.Println(wd, projectDir)
-	err = copyFile(projectDir+"/x/ibc-rate-limit/testdata/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
+	err = copyFile(projectDir+"/x/ibc-rate-limit/bytecode/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
 	s.NoError(err)
 	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
 	chainA.LatestCodeId += 1
