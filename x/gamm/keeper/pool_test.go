@@ -1,5 +1,16 @@
 package keeper_test
 
+import (
+	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
+	balancertypes "github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+)
+
 // import (
 // 	"math/rand"
 // 	"time"
@@ -220,3 +231,88 @@ package keeper_test
 // 			"Expected equal %s: %d, %d", amt.Denom, amt.Amount.Int64(), sdk.NewInt(1000).Int64())
 // 	}
 // }
+
+// TestGetPoolAndPoke tests that the right pools is returned from GetPoolAndPoke.
+// For the pools implementing the weighted extension, asserts that PokePool is called.
+func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
+	const (
+		startTime = 1000
+		blockTime = startTime + 100
+	)
+
+	// N.B.: We make a copy because SmoothWeightChangeParams get mutated.
+	// We would like to avoid mutating global pool assets that are used in other tests.
+	defaultPoolAssetsCopy := make([]balancertypes.PoolAsset, 2)
+	copy(defaultPoolAssetsCopy, defaultPoolAssets)
+
+	startPoolWeightAssets := []balancertypes.PoolAsset{
+		{
+			Weight: defaultPoolAssets[0].Weight.Quo(sdk.NewInt(2)),
+			Token:  defaultPoolAssets[0].Token,
+		},
+		{
+			Weight: defaultPoolAssets[1].Weight.Mul(sdk.NewInt(3)),
+			Token:  defaultPoolAssets[1].Token,
+		},
+	}
+
+	tests := map[string]struct {
+		isPokePool bool
+		poolId     uint64
+	}{
+		"weighted pool - change weights": {
+			isPokePool: true,
+			poolId: suite.prepareCustomBalancerPool(defaultAcctFunds, startPoolWeightAssets, balancer.PoolParams{
+				SwapFee: defaultSwapFee,
+				ExitFee: defaultExitFee,
+				SmoothWeightChangeParams: &balancer.SmoothWeightChangeParams{
+					StartTime:          time.Unix(startTime, 0), // start time is before block time so the weights should change
+					Duration:           time.Hour,
+					InitialPoolWeights: startPoolWeightAssets,
+					TargetPoolWeights:  defaultPoolAssetsCopy,
+				},
+			}),
+		},
+		"non weighted pool": {
+			poolId: suite.prepareCustomStableswapPool(
+				defaultAcctFunds,
+				stableswap.PoolParams{
+					SwapFee: defaultSwapFee,
+					ExitFee: defaultExitFee,
+				},
+				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[0].Denom, defaultAcctFunds[0].Amount.QuoRaw(2)), sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount.QuoRaw(2))),
+				[]uint64{1, 1},
+			),
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			k := suite.App.GAMMKeeper
+			ctx := suite.Ctx.WithBlockTime(time.Unix(blockTime, 0))
+
+			pool, err := k.GetPoolAndPoke(ctx, tc.poolId)
+
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.poolId, pool.GetId())
+
+			if tc.isPokePool {
+				pokePool, ok := pool.(types.WeightedPoolExtension)
+				suite.Require().True(ok)
+
+				poolAssetWeight0, err := pokePool.GetTokenWeight(startPoolWeightAssets[0].Token.Denom)
+				suite.Require().NoError(err)
+
+				poolAssetWeight1, err := pokePool.GetTokenWeight(startPoolWeightAssets[1].Token.Denom)
+				suite.Require().NoError(err)
+
+				suite.Require().NotEqual(startPoolWeightAssets[0].Weight, poolAssetWeight0)
+				suite.Require().NotEqual(startPoolWeightAssets[1].Weight, poolAssetWeight1)
+				return
+			}
+
+			_, ok := pool.(types.WeightedPoolExtension)
+			suite.Require().False(ok)
+		})
+	}
+}

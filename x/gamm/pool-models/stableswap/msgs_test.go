@@ -209,6 +209,60 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 			}),
 			expectPass: true,
 		},
+		{
+			name: "max asset amounts",
+			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
+				msg.InitialPoolLiquidity = sdk.Coins{
+					sdk.NewCoin("osmo", sdk.NewInt(10_000_000_000)),
+					sdk.NewCoin("atom", sdk.NewInt(10_000_000_000)),
+					sdk.NewCoin("usdt", sdk.NewInt(10_000_000_000)),
+					sdk.NewCoin("usdc", sdk.NewInt(10_000_000_000)),
+					sdk.NewCoin("juno", sdk.NewInt(10_000_000_000)),
+					sdk.NewCoin("akt", sdk.NewInt(10_000_000_000)),
+					sdk.NewCoin("regen", sdk.NewInt(10_000_000_000)),
+					sdk.NewCoin("band", sdk.NewInt(10_000_000_000)),
+				}
+				msg.ScalingFactors = []uint64{1, 1, 1, 1, 1, 1, 1, 1}
+				return msg
+			}),
+			expectPass: true,
+		},
+		{
+			name: "greater than max post-scaled amount with regular scaling factors",
+			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
+				msg.InitialPoolLiquidity = sdk.Coins{
+					sdk.NewCoin("osmo", sdk.NewInt(1+10_000_000_000)),
+					sdk.NewCoin("atom", sdk.NewInt(10_000_000_000)),
+					sdk.NewCoin("usdt", sdk.NewInt(10_000_000_000)),
+					sdk.NewCoin("usdc", sdk.NewInt(10_000_000_000)),
+					sdk.NewCoin("juno", sdk.NewInt(10_000_000_000)),
+					sdk.NewCoin("akt", sdk.NewInt(10_000_000_000)),
+					sdk.NewCoin("regen", sdk.NewInt(10_000_000_000)),
+					sdk.NewCoin("band", sdk.NewInt(10_000_000_000)),
+				}
+				msg.ScalingFactors = []uint64{1, 1, 1, 1, 1, 1, 1, 1}
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "100B token 8-asset pool using large scaling factors",
+			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
+				msg.InitialPoolLiquidity = sdk.Coins{
+					sdk.NewCoin("osmo", sdk.NewInt(100_000_000_000_000_000)),
+					sdk.NewCoin("atom", sdk.NewInt(100_000_000_000_000_000)),
+					sdk.NewCoin("usdt", sdk.NewInt(100_000_000_000_000_000)),
+					sdk.NewCoin("usdc", sdk.NewInt(100_000_000_000_000_000)),
+					sdk.NewCoin("juno", sdk.NewInt(100_000_000_000_000_000)),
+					sdk.NewCoin("akt", sdk.NewInt(100_000_000_000_000_000)),
+					sdk.NewCoin("regen", sdk.NewInt(100_000_000_000_000_000)),
+					sdk.NewCoin("band", sdk.NewInt(100_000_000_000_000_000)),
+				}
+				msg.ScalingFactors = []uint64{10000000, 10000000, 10000000, 10000000, 10000000, 10000000, 10000000, 10000000}
+				return msg
+			}),
+			expectPass: true,
+		},
 	}
 
 	for _, test := range tests {

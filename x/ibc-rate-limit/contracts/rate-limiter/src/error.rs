@@ -1,4 +1,4 @@
-use cosmwasm_std::{StdError, Timestamp};
+use cosmwasm_std::{StdError, Timestamp, Uint256};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -9,10 +9,14 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
-    #[error("IBC Rate Limit exceded for channel {channel:?} and denom {denom:?}. Try again after {reset:?}")]
+    #[error("IBC Rate Limit exceeded for {channel}/{denom}. Tried to transfer {amount} which exceeds capacity on the '{quota_name}' quota ({used}/{max}). Try again after {reset:?}")]
     RateLimitExceded {
         channel: String,
         denom: String,
+        amount: Uint256,
+        quota_name: String,
+        used: Uint256,
+        max: Uint256,
         reset: Timestamp,
     },
 

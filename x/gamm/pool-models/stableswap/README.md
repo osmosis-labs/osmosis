@@ -146,7 +146,7 @@ def iterative_search(x_f, y_0, w, k, err_tolerance):
     # k_0 < k. Need to find an upperbound. Worst case assume a linear relationship, gives an upperbound
     # TODO: In the future, we can derive better bounds via reasoning about coefficients in the cubic
     # These are quite close when we are in the "stable" part of the curve though.
-    upperbound = ceil(y_0 * k_ratio)
+    upperbound = ceil(y_0 / k_ratio)
   elif k_ratio > 1:
     # need to find a lowerbound. We could use a cubic relation, but for now we just set it to 0.
     lowerbound = 0

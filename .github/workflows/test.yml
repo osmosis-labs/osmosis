@@ -7,31 +7,12 @@ on:
   push:
     branches:
       - "main"
+      - "concentrated-liquidity-main"
       - "v[0-9]**"
   workflow_dispatch:
 
 jobs:
-  should_run_go_test:
-    runs-on: ubuntu-latest
-    outputs:
-      should_skip: ${{ steps.skip_check.outputs.should_skip }}
-    steps:
-      -
-        id: skip_check
-        uses: fkirc/skip-duplicate-actions@master
-        with:
-          cancel_others: "true" # workflow-runs from outdated commits will be cancelled.
-          concurrent_skipping: "same_content"
-          skip_after_successful_duplicate: "true"
-          paths: '["**/*.go", "**/*.mod", "**/*.sum"]'
-          do_not_skip: '["pull_request", "workflow_dispatch", "schedule"]'
-      -
-        name: Skipping test
-        run: echo Should I skip tests? ${{ steps.skip_check.outputs.should_skip }}
-
   go:
-    needs: should_run_go_test
-    if: ${{ needs.should_run_test.outputs.should_skip != 'true' }}
     runs-on: ubuntu-latest
     steps:
       -
