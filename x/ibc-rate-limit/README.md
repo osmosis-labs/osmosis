@@ -9,7 +9,9 @@ This is a safety control, intended to protect assets on osmosis in event of:
 
 This is done in exchange for a potential (one-way) bridge liveness tradeoff, in periods of high deposits or withdrawals.
 
-The architecture of this package is a minimal go package which implements an [IBC Middleware](https://github.com/cosmos/ibc-go/blob/f57170b1d4dd202a3c6c1c61dcf302b6a9546405/docs/ibc/middleware/develop.md) that wraps the [ICS20 transfer](https://ibc.cosmos.network/main/apps/transfer/overview.html) app, and calls into a cosmwasm contract. The cosmwasm contract then has all of the actual IBC rate limiting logic. The Cosmwasm code can be found in the [`contracts`](./contracts/) package, with bytecode findable in the [`bytecode`](./bytecode/) folder. The cosmwasm VM usage allows Osmosis chain governance to choose to change this safety control with no hard forks, via a parameter change proposal, a great mitigation for faster threat adaptavity.
+The architecture of this package is a minimal go package which implements an [IBC Middleware](https://github.com/cosmos/ibc-go/blob/f57170b1d4dd202a3c6c1c61dcf302b6a9546405/docs/ibc/middleware/develop.md) that wraps the [ICS20 transfer](https://ibc.cosmos.network/main/apps/transfer/overview.html) app, and calls into a cosmwasm contract.
+The cosmwasm contract then has all of the actual IBC rate limiting logic.
+The Cosmwasm code can be found in the [`contracts`](./contracts/) package, with bytecode findable in the [`bytecode`](./bytecode/) folder. The cosmwasm VM usage allows Osmosis chain governance to choose to change this safety control with no hard forks, via a parameter change proposal, a great mitigation for faster threat adaptavity.
 
 The status of the module is being in a state suitable for some initial governance settable rate limits for high value bridged assets.
 Its not in its long term / end state for all channels by any means, but does act as a strong protection we
@@ -26,13 +28,21 @@ The motivation of IBC-rate-limit comes from the empirical observations of blockc
 - [Harmony Bridge Hack ($100 million)](https://rekt.news/harmony-rekt/) - (Would require rate limit + monitoring)
 - [Dragonberry IBC bug](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702) (can't yet disclose amount at risk, but was saved due to being found first by altruistic Osmosis core developers)
 
-In the presence of a software bug on Osmosis, IBC itself, or on a counterparty chain, we would like to prevent the bridge from being fully depegged. This stems from the idea that a 30% asset depeg is ~infinitely better than a 100% depeg. Its _crazy_ that today these complex bridged assets can instantly go to 0 in event of bug. The goal of a rate limit is to raise an alert that something has gone wrong, allowing validators and developers to have time to react and protect larger portions of user funds.
+In the presence of a software bug on Osmosis, IBC itself, or on a counterparty chain, we would like to prevent the bridge from being fully depegged.
+This stems from the idea that a 30% asset depeg is ~infinitely better than a 100% depeg.
+Its _crazy_ that today these complex bridged assets can instantly go to 0 in event of bug.
+The goal of a rate limit is to raise an alert that something has gone wrong, allowing validators and developers to have time to react and protect larger portions of user funds.
 
-The thesis of this is that, it is worthwile to sacrifice liveness in the case of legitimate demand to send extreme amounts of funds, to prevent the terrible long-tail full fund risks. Rate limits aren't the end-all of safety controls, they're merely the simplest automated one. More should be explored and added onto IBC!
+The thesis of this is that, it is worthwile to sacrifice liveness in the case of legitimate demand to send extreme amounts of funds, to prevent the terrible long-tail full fund risks.
+Rate limits aren't the end-all of safety controls, they're merely the simplest automated one. More should be explored and added onto IBC!
 
 ## Rate limit types
 
-We express rate limits in time-based periods. This means, we set rate limits for (say) hourly, daily, and weekly intervals. The rate limit for a given time period stores the relevant amount of assets at the start of the rate limit. Rate limits are then defined on percentage terms of the asset. The time windows for rate limits are _not_ rolling, they have discrete start/end times.
+We express rate limits in time-based periods.
+This means, we set rate limits for (say) hourly, daily, and weekly intervals.
+The rate limit for a given time period stores the relevant amount of assets at the start of the rate limit.
+Rate limits are then defined on percentage terms of the asset.
+The time windows for rate limits are _not_ rolling, they have discrete start/end times.
 
 We allow setting separate rate limits for the inflow and outflow of assets.
 We do all of our rate limits based on the _net flow_ of assets on a channel pair. This prevents DOS issues, of someone repeatedly sending assets back and forth, to trigger rate limits and break liveness.
@@ -48,7 +58,9 @@ We currently only implement per denomination rate limits for non-native assets. 
 
 ## Instantiating rate limits
 
-Today all rate limit quotas must be set manually by governance. In the future, we should design towards some conservative rate limit to add as a safety-backstop automatically for channels. Ideas for how this could look:
+Today all rate limit quotas must be set manually by governance.
+In the future, we should design towards some conservative rate limit to add as a safety-backstop automatically for channels.
+Ideas for how this could look:
 
 * One month after a channel has been created, automatically add in some USDC-based rate limit
 * One month after governance incentivizes an asset, add on a per-denomination rate limit.
@@ -59,11 +71,25 @@ Definitely needs far more ideation and iteration!
 
 ### Handling rate limit boundaries
 
-We want to be safe against the case where say we have a daily rate limit ending at a given time, and an adversary attempts to attack near the boundary window. We would not like them to be able to "double extract funds" by timing their extraction near a window boundary.
+We want to be safe against the case where say we have a daily rate limit ending at a given time, and an adversary attempts to attack near the boundary window.
+We would not like them to be able to "double extract funds" by timing their extraction near a window boundary.
 
-Admittedly, not a lot of thought has been put into how to deal with this well. Right now we envision simply handling this by saying if you want a quota of duration D actually include two quotas of duration D, but offset by `D/2` from each other.
+Admittedly, not a lot of thought has been put into how to deal with this well.
+Right now we envision simply handling this by saying if you want a quota of duration D, instead include two quotas of duration D, but offset by `D/2` from each other.
 
-### Inflow / Outflow parameterization
+### Inflow parameterization
+
+The "Inflow" side of a rate limit is essentially protection against unforeseen bug on a counterparty chain.
+This can be quite conservative (e.g. bridged amount doubling in one week). This covers a few cases:
+* In a counter-party chain B
+
+It does get more complex when the counterparty chain is itself a DEX, but this is still much more protection than nothing.
+
+### Outflow parameterization
+
+The "Outflow" side of a rate limit is protection against a bug on Osmosis OR 
+
+This has potential for much more user-frustrating issues, if set too low.
 
 ### Example suggested parameterization
 
@@ -85,7 +111,7 @@ Of those interfaces, just the following methods have custom logic:
 
 All other methods from those interfaces are passthroughs to the underlying implementations.
 
-### Contract Concepts
+### Cosmwasm Contract Concepts
 
 The tracking contract uses the following concepts
 
