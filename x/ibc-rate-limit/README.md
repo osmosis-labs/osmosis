@@ -81,7 +81,13 @@ Right now we envision simply handling this by saying if you want a quota of dura
 
 The "Inflow" side of a rate limit is essentially protection against unforeseen bug on a counterparty chain.
 This can be quite conservative (e.g. bridged amount doubling in one week). This covers a few cases:
-* In a counter-party chain B
+
+* Counter-party chain B having a token theft attack
+   - TODO: description of how this looks
+* Counter-party chain B runaway mint
+   - TODO: description of how this looks
+* IBC theft
+   - TODO: description of how this looks
 
 It does get more complex when the counterparty chain is itself a DEX, but this is still much more protection than nothing.
 
@@ -91,7 +97,10 @@ The "Outflow" side of a rate limit is protection against a bug on Osmosis OR
 
 This has potential for much more user-frustrating issues, if set too low.
 
+TODO: Better fill out
+
 ### Example suggested parameterization
+
 
 
 ## Code structure
@@ -163,3 +172,28 @@ The module is also provided to the underlying `transferIBCModule` as its `ICS4Wr
 pointed to a channel, which also implements the `ICS4Wrapper` interface.
 
 This integration can be seen in [osmosis/app/keepers/keepers.go](https://github.com/osmosis-labs/osmosis/blob/main/app/keepers/keepers.go)
+
+## Testing strategy
+
+TODO: Fill this out
+
+## Known Future work
+
+Items that've been highlighted above:
+
+* Making automated rate limits get added for channels, instead of manual configuration only
+* Improving parameterization strategies / data analysis
+* Adding the USDC based rate limits
+
+Not yet highlighted
+
+* Making monitoring tooling to know when approaching rate limiting and when they're hit
+* Making tooling to easily give us summaries we can use, to reason about "bug or not bug" in event of rate limit being hit
+* Enabling ways to pre-declare large transfers so as to not hit rate limits.
+   * Perhaps you can on-chain declare intent to send these assets with a large delay, that raises monitoring but bypasses rate limits?
+   * Maybe contract-based tooling to split up the transfer suffices?
+* Strategies to account for high volatility periods without hitting rate limits
+   * Can imagine "Hop network" style markets emerging
+   * Could imagine tieng it into looking at AMM volatility, or off-chain oracles
+      * but these are both things we should be wary of security bugs in.
+      * Maybe [constraint based programming with tracking of provenance](https://youtu.be/HB5TrK7A4pI?t=2852) as a solution
