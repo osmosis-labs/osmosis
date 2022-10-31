@@ -56,6 +56,8 @@ We currently envision creating two kinds of rate limits:
 
 We currently only implement per denomination rate limits for non-native assets. We do not yet implement channel based rate limits.
 
+Currently these rate limits automatically "expire" at the end of the quota duration. TODO: Think of better designs here. E.g. can we have a constant number of subsequent quotas start filled? Or perhaps harmonically decreasing amounts of next few quotas pre-filled? Halted until DAO override seems not-great.
+
 ## Instantiating rate limits
 
 Today all rate limit quotas must be set manually by governance.
@@ -197,6 +199,7 @@ Items that've been highlighted above:
 * Making automated rate limits get added for channels, instead of manual configuration only
 * Improving parameterization strategies / data analysis
 * Adding the USDC based rate limits
+* We need better strategies for how rate limits "expire".
 
 Not yet highlighted
 
