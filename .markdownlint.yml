@@ -4,9 +4,6 @@ MD003:
   # Heading style
   style: 'atx'
 MD001: true
-# MD007 wont stay disabled :/
-MD007: false
-MD013: false
 MD018: true
 MD026: true
 MD034: true

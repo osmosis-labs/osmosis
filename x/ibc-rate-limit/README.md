@@ -101,9 +101,19 @@ TODO: Better fill out
 
 ### Example suggested parameterization
 
-
+#
 
 ## Code structure
+
+Something to keep in mind with all of the code, is that we have to reason separately about every item in the following matrix:
+
+|     Native Token     |     Non-Native Token     |
+|----------------------|--------------------------|
+| Send Native Token    | Send Non-Native Token    |
+| Receive Native Token | Receive Non-Native Token |
+| Timeout Native Send  | Timeout Non-native Send  |
+
+(Error ACK can reuse the same code as timeout)
 
 ### Go Middleware
 
@@ -113,10 +123,10 @@ any IBC module, and be used as an ICS4 wrapper by a transfer module (for sending
 
 Of those interfaces, just the following methods have custom logic:
 
-* `ICS4Wrapper.SendPacket` adds tracking of value sent via an ibc channel 
-* `Middleware.OnRecvPacket` adds tracking of value received via an ibc channel 
-* `Middleware.OnAcknowledgementPacket` undos the tracking of a sent packet if the acknowledgment is not a success
-* `OnTimeoutPacket` undos the tracking of a sent packet if the packet times out (is not relayed)
+* `ICS4Wrapper.SendPacket` forwards to contract, with intent of tracking of value sent via an ibc channel 
+* `Middleware.OnRecvPacket` forwards to contract, with intent of tracking of value received via an ibc channel 
+* `Middleware.OnAcknowledgementPacket` forwards to contract, with intent of undoing the tracking of a sent packet if the acknowledgment is not a success
+* `OnTimeoutPacket` forwards to contract, with intent of undoing the tracking of a sent packet if the packet times out (is not relayed)
 
 All other methods from those interfaces are passthroughs to the underlying implementations.
 
