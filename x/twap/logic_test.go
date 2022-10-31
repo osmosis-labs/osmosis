@@ -97,17 +97,11 @@ func (s *TestSuite) TestIntegrationForTwap() {
 	twapRecord, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denom0, denom1)
 	s.Require().NoError(err)
 
-	// this is wrong in the first place, p0 spot price should have been 2
-	// Justification for base asset and quote asset:
-	// Spot price = How much quote asset is needed for one base asset
-	// ex. in BTC / USDC pool, BTC is base currency, USDC is the quote currency
-	// check below link for the justification of base asset and quote asset
-	// https://mankenavenkatesh.medium.com/what-is-a-market-pair-base-vs-quote-currency-32f3193c36f6
-	s.Require().Equal(twapRecord.P0LastSpotPrice, sdk.MustNewDecFromStr("0.2"))
-	s.Require().Equal(twapRecord.P1LastSpotPrice, sdk.MustNewDecFromStr("5"))
-	// this should have been 5 as well
+	s.Require().Equal(twapRecord.P0LastSpotPrice, sdk.MustNewDecFromStr("5"))
+	s.Require().Equal(twapRecord.P1LastSpotPrice, sdk.MustNewDecFromStr("0.2"))
+
 	spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, denom0, denom1)
-	s.Require().Equal(spotPrice, sdk.MustNewDecFromStr("0.2"))
+	s.Require().Equal(spotPrice, sdk.MustNewDecFromStr("5"))
 
 	// now suppose 11 seconds has passed by
 	s.Ctx = s.Ctx.WithBlockTime(oldTime.Add(time.Second * 10))
@@ -133,12 +127,12 @@ func (s *TestSuite) TestIntegrationForTwap() {
 	s.Require().NoError(err)
 
 	// this is wrong as well, with 10 denom0 token and 13 denom1 token, spot price of denom0 as base asset should have been 1.3
-	s.Require().Equal(twapRecord.P0LastSpotPrice.String(), "0.769230770000000000")
-	s.Require().Equal(twapRecord.P1LastSpotPrice.String(), "1.300000000000000000")
+	s.Require().Equal(twapRecord.P0LastSpotPrice.String(), "1.300000000000000000")
+	s.Require().Equal(twapRecord.P1LastSpotPrice.String(), "0.769230770000000000")
 	// the accumulators store accumulators based on incorrect spot prices as well, these should have been stored opposite
 	// 11000 milli-seconds(time since last record) * 0.2
-	s.Require().Equal(twapRecord.P0ArithmeticTwapAccumulator.String(), "2200.000000000000000000")
-	s.Require().Equal(twapRecord.P1ArithmeticTwapAccumulator.String(), "55000.000000000000000000")
+	s.Require().Equal(twapRecord.P0ArithmeticTwapAccumulator.String(), "55000.000000000000000000")
+	s.Require().Equal(twapRecord.P1ArithmeticTwapAccumulator.String(), "2200.000000000000000000")
 
 	// now check and test twap now
 	// We get the correct twap here even though we have been storing incorrect spot prices for each denom.
@@ -148,7 +142,7 @@ func (s *TestSuite) TestIntegrationForTwap() {
 	newTime := oldTime.Add(time.Second * 10)
 	twapDenom1, err := s.twapkeeper.GetArithmeticTwap(s.Ctx, poolId, denom0, denom1, oldTime, newTime)
 	s.Require().NoError(err)
-	s.Require().Equal(twapDenom1.String(), "5.000000000000000000")
+	s.Require().Equal(twapDenom1.String(), "0.200000000000000000")
 }
 
 func (s *TestSuite) TestNewTwapRecord() {

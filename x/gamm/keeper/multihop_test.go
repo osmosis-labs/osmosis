@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
@@ -91,7 +92,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 					pool, err := keeper.GetPoolAndPoke(suite.Ctx, route.PoolId)
 					suite.NoError(err, "test: %v", test.name)
 
-					sp, err := pool.SpotPrice(suite.Ctx, tokenInDenom, route.TokenOutDenom)
+					sp, err := pool.SpotPrice(suite.Ctx, route.TokenOutDenom, tokenInDenom)
 					suite.NoError(err, "test: %v", test.name)
 					dec = dec.Mul(sp)
 				}
@@ -241,7 +242,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 					pool, err := keeper.GetPoolAndPoke(suite.Ctx, route.PoolId)
 					suite.NoError(err, "test: %v", test.name)
 
-					sp, err := pool.SpotPrice(suite.Ctx, route.TokenInDenom, tokenOutDenom)
+					sp, err := pool.SpotPrice(suite.Ctx, tokenOutDenom, route.TokenInDenom)
 					suite.NoError(err, "test: %v", test.name)
 					dec = dec.Mul(sp)
 				}

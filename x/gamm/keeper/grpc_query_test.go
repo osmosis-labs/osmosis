@@ -253,20 +253,20 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
 			expectErr: true,
 		},
 		{
-			name: "valid request for foo/bar",
+			name: "valid request for bar/foo",
 			req: &types.QuerySpotPriceRequest{
 				PoolId:          poolID,
-				BaseAssetDenom:  "foo",
-				QuoteAssetDenom: "bar",
+				BaseAssetDenom:  "bar",
+				QuoteAssetDenom: "foo",
 			},
 			result: sdk.NewDec(2).String(),
 		},
 		{
-			name: "valid request for bar/baz",
+			name: "valid request for baz/bar",
 			req: &types.QuerySpotPriceRequest{
 				PoolId:          poolID,
-				BaseAssetDenom:  "bar",
-				QuoteAssetDenom: "baz",
+				BaseAssetDenom:  "baz",
+				QuoteAssetDenom: "bar",
 			},
 			result: sdk.NewDecWithPrec(15, 1).String(),
 		},
@@ -274,8 +274,8 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
 			name: "valid request for baz/foo",
 			req: &types.QuerySpotPriceRequest{
 				PoolId:          poolID,
-				BaseAssetDenom:  "baz",
-				QuoteAssetDenom: "foo",
+				BaseAssetDenom:  "foo",
+				QuoteAssetDenom: "baz",
 			},
 			result: sdk.MustNewDecFromStr("0.333333330000000000").String(),
 		},
@@ -294,22 +294,4 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
 			}
 		})
 	}
-}
-
-// how do we justify base asset and quote asset
-// the spot price for the base asset is how muuch quote asset we can get for 1 base asset.
-// e.g) BTC / USDC pool, base asset is BTC and quote asset is USDC
-func (s *KeeperTestSuite) TestSpotPrice2() {
-	a := sdk.NewCoins(sdk.NewInt64Coin("usdc", 20), sdk.NewInt64Coin("btc", 10))
-	poolid := s.PrepareBalancerPoolWithCoins(a...)
-	queryClient := s.queryClient
-
-	res, err := queryClient.SpotPrice(sdk.WrapSDKContext(s.Ctx), &types.QuerySpotPriceRequest{
-		PoolId:          poolid,
-		BaseAssetDenom:  "btc",
-		QuoteAssetDenom: "usdc",
-	})
-	s.Require().NoError(err)
-	// spot price should be 2
-	s.Require().Equal(res.SpotPrice, "0.500000000000000000")
 }

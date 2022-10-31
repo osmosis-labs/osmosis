@@ -188,7 +188,7 @@ func TestSpotPrice(t *testing.T) {
 	uosmo := poolFunds[0].Amount.ToDec().MustFloat64()
 	ustar := poolFunds[1].Amount.ToDec().MustFloat64()
 
-	starPrice := sdk.MustNewDecFromStr(fmt.Sprintf("%f", uosmo/ustar))
+	starPrice := sdk.MustNewDecFromStr(fmt.Sprintf("%f", ustar/uosmo))
 	starFee := sdk.MustNewDecFromStr(fmt.Sprintf("%f", swapFee))
 	starPriceWithFee := starPrice.Add(starFee)
 

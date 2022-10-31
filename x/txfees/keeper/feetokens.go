@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"github.com/gogo/protobuf/proto"
+
 	"github.com/osmosis-labs/osmosis/v12/x/txfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -47,7 +48,7 @@ func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (sdk.Dec, e
 		return sdk.Dec{}, err
 	}
 
-	spotPrice, err := k.spotPriceCalculator.CalculateSpotPrice(ctx, feeToken.PoolID, baseDenom, feeToken.Denom)
+	spotPrice, err := k.spotPriceCalculator.CalculateSpotPrice(ctx, feeToken.PoolID, feeToken.Denom, baseDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -99,7 +100,7 @@ func (k Keeper) ValidateFeeToken(ctx sdk.Context, feeToken types.FeeToken) error
 	// - feeToken.Denom exists
 	// - feeToken.PoolID exists
 	// - feeToken.PoolID has both feeToken.Denom and baseDenom
-	_, err = k.spotPriceCalculator.CalculateSpotPrice(ctx, feeToken.PoolID, feeToken.Denom, baseDenom)
+	_, err = k.spotPriceCalculator.CalculateSpotPrice(ctx, feeToken.PoolID, baseDenom, feeToken.Denom)
 
 	return err
 }

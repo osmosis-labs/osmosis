@@ -94,7 +94,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 			ctx := suite.Ctx
 
 			if test.expectPass {
-				spotPriceBefore, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
+				spotPriceBefore, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenOutDenom, test.param.tokenIn.Denom)
 				suite.NoError(err, "test: %v", test.name)
 
 				prevGasConsumed := suite.Ctx.GasMeter().GasConsumed()
@@ -107,7 +107,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 
 				suite.AssertEventEmitted(ctx, types.TypeEvtTokenSwapped, 1)
 
-				spotPriceAfter, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
+				spotPriceAfter, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenOutDenom, test.param.tokenIn.Denom)
 				suite.NoError(err, "test: %v", test.name)
 
 				// Ratio of the token out should be between the before spot price and after spot price.
@@ -202,7 +202,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 			ctx := suite.Ctx
 
 			if test.expectPass {
-				spotPriceBefore, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
+				spotPriceBefore, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenOut.Denom, test.param.tokenInDenom)
 				suite.NoError(err, "test: %v", test.name)
 
 				prevGasConsumed := suite.Ctx.GasMeter().GasConsumed()
@@ -217,7 +217,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 
 				suite.AssertEventEmitted(ctx, types.TypeEvtTokenSwapped, 1)
 
-				spotPriceAfter, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
+				spotPriceAfter, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenOut.Denom, test.param.tokenInDenom)
 				suite.NoError(err, "test: %v", test.name)
 
 				// Ratio of the token out should be between the before spot price and after spot price.

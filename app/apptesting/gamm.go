@@ -48,13 +48,13 @@ func (s *KeeperTestHelper) PrepareBalancerPool() uint64 {
 		ExitFee: sdk.NewDec(0),
 	})
 
-	spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, "foo", "bar")
+	spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, "bar", "foo")
 	s.NoError(err)
 	s.Equal(sdk.NewDec(2).String(), spotPrice.String())
-	spotPrice, err = s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, "bar", "baz")
+	spotPrice, err = s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, "baz", "bar")
 	s.NoError(err)
 	s.Equal(sdk.NewDecWithPrec(15, 1).String(), spotPrice.String())
-	spotPrice, err = s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, "baz", "foo")
+	spotPrice, err = s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, "foo", "baz")
 	s.NoError(err)
 	oneThird := sdk.NewDec(1).Quo(sdk.NewDec(3))
 	sp := oneThird.MulInt(gammtypes.SpotPriceSigFigs).RoundInt().ToDec().QuoInt(gammtypes.SpotPriceSigFigs)

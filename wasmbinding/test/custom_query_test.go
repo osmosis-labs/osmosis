@@ -147,7 +147,7 @@ func TestQuerySpotPrice(t *testing.T) {
 	ustar, err := poolFunds[1].Amount.ToDec().Float64()
 	require.NoError(t, err)
 
-	expected := ustar / uosmo
+	expected := uosmo / ustar
 	require.InEpsilonf(t, expected, price, epsilon, fmt.Sprintf("Outside of tolerance (%f)", epsilon))
 
 	// and the reverse conversion (with swap fee)
