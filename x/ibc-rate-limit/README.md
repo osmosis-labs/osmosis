@@ -101,19 +101,9 @@ TODO: Better fill out
 
 ### Example suggested parameterization
 
-#
-
 ## Code structure
 
-Something to keep in mind with all of the code, is that we have to reason separately about every item in the following matrix:
-
-|     Native Token     |     Non-Native Token     |
-|----------------------|--------------------------|
-| Send Native Token    | Send Non-Native Token    |
-| Receive Native Token | Receive Non-Native Token |
-| Timeout Native Send  | Timeout Non-native Send  |
-
-(Error ACK can reuse the same code as timeout)
+As mentioned at the beginning of the README, the go code is a relatively minimal ICS 20 wrapper, that dispatches relevant calls to a cosmwasm contract that implements the rate limiting functionality.
 
 ### Go Middleware
 
@@ -130,16 +120,7 @@ Of those interfaces, just the following methods have custom logic:
 
 All other methods from those interfaces are passthroughs to the underlying implementations.
 
-### Cosmwasm Contract Concepts
-
-The tracking contract uses the following concepts
-
-1. **RateLimit** - tracks the value flow transferred and the quota for a path.
-2. **Path** - is a (denom, channel) pair.
-3. **Flow** - tracks the value that has moved through a path during the current time window.
-4. **Quota** - is the percentage of the denom's total value that can be transferred through the path in a given period of time (duration)
-
-## Parameters
+#### Parameters
 
 The middleware uses the following parameters:
 
@@ -150,23 +131,45 @@ The middleware uses the following parameters:
 1. **ContractAddress** -
    The contract address is the address of an instantiated version of the contract provided under `./contracts/`
 
-## Contract
+### Cosmwasm Contract Concepts
 
-### Messages
+Something to keep in mind with all of the code, is that we have to reason separately about every item in the following matrix:
+
+|     Native Token     |     Non-Native Token     |
+|----------------------|--------------------------|
+| Send Native Token    | Send Non-Native Token    |
+| Receive Native Token | Receive Non-Native Token |
+| Timeout Native Send  | Timeout Non-native Send  |
+
+(Error ACK can reuse the same code as timeout)
+
+TODO: Spend more time on sudo messages in the following description. We need to better describe how we map the quota concepts onto the code.
+Need to describe how we get the quota beginning balance, and that its different for sends and receives.
+Explain intracacies of tracking that a timeout and/or ErrorAck must appear from the same quota, else we ignore its update to the quotas.
+
+
+The tracking contract uses the following concepts
+
+1. **RateLimit** - tracks the value flow transferred and the quota for a path.
+2. **Path** - is a (denom, channel) pair.
+3. **Flow** - tracks the value that has moved through a path during the current time window.
+4. **Quota** - is the percentage of the denom's total value that can be transferred through the path in a given period of time (duration)
+
+#### Messages
 
 The contract specifies the following messages:
 
-#### Query
+##### Query
 
 * GetQuotas - Returns the quotas for a path
 
-#### Exec
+##### Exec
 
 * AddPath - Adds a list of quotas for a path
 * RemovePath - Removes a path
 * ResetPathQuota - If a rate limit has been reached, the contract's governance address can reset the quota so that transfers are allowed again
 
-#### Sudo
+##### Sudo
 
 Sudo messages can only be executed by the chain.
 
@@ -174,7 +177,7 @@ Sudo messages can only be executed by the chain.
 * RecvPacket - Increments the amount used out of the receive quota and checks that the receive is allowed. If it isn't, it will return a RateLimitExceeded error
 * UndoSend - If a send has failed, the undo message is used to remove its cost from the send quota
 
-## Integration
+### Integration
 
 The rate limit middleware wraps the `transferIBCModule` and is added as the entry route for IBC transfers.
 
