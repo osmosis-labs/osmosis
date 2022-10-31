@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	
+
 	appParams "github.com/osmosis-labs/osmosis/v12/app/params"
 	"github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
@@ -25,12 +25,12 @@ func TestMsgCreatePosition(t *testing.T) {
 		{
 			name: "proper msg",
 			msg: types.MsgCreatePosition{
-				PoolId: 1,
-				Sender: addr1,
-				LowerTick: 1,
-				UpperTick: 10,
-				TokenDesired0: sdk.NewCoin("stake", sdk.OneInt()),
-				TokenDesired1: sdk.NewCoin("osmo", sdk.OneInt()),
+				PoolId:          1,
+				Sender:          addr1,
+				LowerTick:       1,
+				UpperTick:       10,
+				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
+				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
 				TokenMinAmount0: sdk.OneInt(),
 				TokenMinAmount1: sdk.OneInt(),
 			},
@@ -39,12 +39,12 @@ func TestMsgCreatePosition(t *testing.T) {
 		{
 			name: "invalid sender",
 			msg: types.MsgCreatePosition{
-				PoolId: 1,
-				Sender: invalidAddr.String(),
-				LowerTick: 1,
-				UpperTick: 10,
-				TokenDesired0: sdk.NewCoin("stake", sdk.OneInt()),
-				TokenDesired1: sdk.NewCoin("osmo", sdk.OneInt()),
+				PoolId:          1,
+				Sender:          invalidAddr.String(),
+				LowerTick:       1,
+				UpperTick:       10,
+				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
+				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
 				TokenMinAmount0: sdk.OneInt(),
 				TokenMinAmount1: sdk.OneInt(),
 			},
@@ -53,12 +53,12 @@ func TestMsgCreatePosition(t *testing.T) {
 		{
 			name: "invalid price range, lower tick > upper",
 			msg: types.MsgCreatePosition{
-				PoolId: 1,
-				Sender: addr1,
-				LowerTick: 10,
-				UpperTick: 1,
-				TokenDesired0: sdk.NewCoin("stake", sdk.OneInt()),
-				TokenDesired1: sdk.NewCoin("osmo", sdk.OneInt()),
+				PoolId:          1,
+				Sender:          addr1,
+				LowerTick:       10,
+				UpperTick:       1,
+				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
+				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
 				TokenMinAmount0: sdk.OneInt(),
 				TokenMinAmount1: sdk.OneInt(),
 			},
@@ -67,12 +67,12 @@ func TestMsgCreatePosition(t *testing.T) {
 		{
 			name: "negative token 0 desire",
 			msg: types.MsgCreatePosition{
-				PoolId: 1,
-				Sender: addr1,
-				LowerTick: 1,
-				UpperTick: 10,
-				TokenDesired0: sdk.Coin{Denom: "stake", Amount: sdk.NewInt(-10)},
-				TokenDesired1: sdk.NewCoin("osmo", sdk.OneInt()),
+				PoolId:          1,
+				Sender:          addr1,
+				LowerTick:       1,
+				UpperTick:       10,
+				TokenDesired0:   sdk.Coin{Denom: "stake", Amount: sdk.NewInt(-10)},
+				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
 				TokenMinAmount0: sdk.OneInt(),
 				TokenMinAmount1: sdk.OneInt(),
 			},
@@ -81,12 +81,12 @@ func TestMsgCreatePosition(t *testing.T) {
 		{
 			name: "negative token 1 desire",
 			msg: types.MsgCreatePosition{
-				PoolId: 1,
-				Sender: addr1,
-				LowerTick: 1,
-				UpperTick: 10,
-				TokenDesired0: sdk.NewCoin("stake", sdk.OneInt()),
-				TokenDesired1: sdk.Coin{Denom: "osmo", Amount: sdk.NewInt(-10)},
+				PoolId:          1,
+				Sender:          addr1,
+				LowerTick:       1,
+				UpperTick:       10,
+				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
+				TokenDesired1:   sdk.Coin{Denom: "osmo", Amount: sdk.NewInt(-10)},
 				TokenMinAmount0: sdk.OneInt(),
 				TokenMinAmount1: sdk.OneInt(),
 			},
@@ -95,12 +95,12 @@ func TestMsgCreatePosition(t *testing.T) {
 		{
 			name: "zero desire",
 			msg: types.MsgCreatePosition{
-				PoolId: 1,
-				Sender: addr1,
-				LowerTick: 1,
-				UpperTick: 10,
-				TokenDesired0: sdk.NewCoin("stake", sdk.ZeroInt()),
-				TokenDesired1: sdk.NewCoin("osmo", sdk.ZeroInt()),
+				PoolId:          1,
+				Sender:          addr1,
+				LowerTick:       1,
+				UpperTick:       10,
+				TokenDesired0:   sdk.NewCoin("stake", sdk.ZeroInt()),
+				TokenDesired1:   sdk.NewCoin("osmo", sdk.ZeroInt()),
 				TokenMinAmount0: sdk.OneInt(),
 				TokenMinAmount1: sdk.OneInt(),
 			},
@@ -109,12 +109,12 @@ func TestMsgCreatePosition(t *testing.T) {
 		{
 			name: "negative amount",
 			msg: types.MsgCreatePosition{
-				PoolId: 1,
-				Sender: addr1,
-				LowerTick: 1,
-				UpperTick: 10,
-				TokenDesired0: sdk.NewCoin("stake", sdk.OneInt()),
-				TokenDesired1: sdk.NewCoin("osmo", sdk.OneInt()),
+				PoolId:          1,
+				Sender:          addr1,
+				LowerTick:       1,
+				UpperTick:       10,
+				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
+				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
 				TokenMinAmount0: sdk.NewInt(-1),
 				TokenMinAmount1: sdk.NewInt(-1),
 			},
@@ -123,12 +123,12 @@ func TestMsgCreatePosition(t *testing.T) {
 		{
 			name: "zero amount",
 			msg: types.MsgCreatePosition{
-				PoolId: 1,
-				Sender: addr1,
-				LowerTick: 1,
-				UpperTick: 10,
-				TokenDesired0: sdk.NewCoin("stake", sdk.OneInt()),
-				TokenDesired1: sdk.NewCoin("osmo", sdk.OneInt()),
+				PoolId:          1,
+				Sender:          addr1,
+				LowerTick:       1,
+				UpperTick:       10,
+				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
+				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
 				TokenMinAmount0: sdk.ZeroInt(),
 				TokenMinAmount1: sdk.ZeroInt(),
 			},
@@ -166,10 +166,10 @@ func TestMsgWithdrawPosition(t *testing.T) {
 		{
 			name: "proper msg",
 			msg: types.MsgWithdrawPosition{
-				PoolId: 1,
-				Sender: addr1,
-				LowerTick: 1,
-				UpperTick: 10,
+				PoolId:          1,
+				Sender:          addr1,
+				LowerTick:       1,
+				UpperTick:       10,
 				LiquidityAmount: sdk.OneInt(),
 			},
 			expectPass: true,
@@ -177,10 +177,10 @@ func TestMsgWithdrawPosition(t *testing.T) {
 		{
 			name: "invalid sender",
 			msg: types.MsgWithdrawPosition{
-				PoolId: 1,
-				Sender: invalidAddr.String(),
-				LowerTick: 1,
-				UpperTick: 10,
+				PoolId:          1,
+				Sender:          invalidAddr.String(),
+				LowerTick:       1,
+				UpperTick:       10,
 				LiquidityAmount: sdk.OneInt(),
 			},
 			expectPass: false,
@@ -188,10 +188,10 @@ func TestMsgWithdrawPosition(t *testing.T) {
 		{
 			name: "invalid price range, lower tick > upper",
 			msg: types.MsgWithdrawPosition{
-				PoolId: 1,
-				Sender: addr1,
-				LowerTick: 10,
-				UpperTick: 1,
+				PoolId:          1,
+				Sender:          addr1,
+				LowerTick:       10,
+				UpperTick:       1,
 				LiquidityAmount: sdk.OneInt(),
 			},
 			expectPass: false,
@@ -199,10 +199,10 @@ func TestMsgWithdrawPosition(t *testing.T) {
 		{
 			name: "negative amount",
 			msg: types.MsgWithdrawPosition{
-				PoolId: 1,
-				Sender: addr1,
-				LowerTick: 1,
-				UpperTick: 10,
+				PoolId:          1,
+				Sender:          addr1,
+				LowerTick:       1,
+				UpperTick:       10,
 				LiquidityAmount: sdk.NewInt(-10),
 			},
 			expectPass: false,
@@ -210,10 +210,10 @@ func TestMsgWithdrawPosition(t *testing.T) {
 		{
 			name: "zero amount",
 			msg: types.MsgWithdrawPosition{
-				PoolId: 1,
-				Sender: addr1,
-				LowerTick: 1,
-				UpperTick: 10,
+				PoolId:          1,
+				Sender:          addr1,
+				LowerTick:       1,
+				UpperTick:       10,
 				LiquidityAmount: sdk.ZeroInt(),
 			},
 			expectPass: false,
@@ -235,4 +235,3 @@ func TestMsgWithdrawPosition(t *testing.T) {
 		}
 	}
 }
-

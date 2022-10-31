@@ -7,8 +7,8 @@ import (
 
 // constants.
 const (
-	TypeMsgCreatePosition                = "create-position"
-	TypeMsgWithdrawPosition                = "withdraw-position"
+	TypeMsgCreatePosition   = "create-position"
+	TypeMsgWithdrawPosition = "withdraw-position"
 )
 
 var _ sdk.Msg = &MsgCreatePosition{}
@@ -25,14 +25,12 @@ func (msg MsgCreatePosition) ValidateBasic() error {
 		return ErrInvalidLowerUpperTick
 	}
 
-	tokenDesired0 := sdk.Coin(msg.TokenDesired0)
-	if !tokenDesired0.IsValid() || tokenDesired0.IsZero() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, tokenDesired0.String())
+	if !msg.TokenDesired0.IsValid() || msg.TokenDesired0.IsZero() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenDesired0.String())
 	}
 
-	tokenDesired1 := sdk.Coin(msg.TokenDesired1)
-	if !tokenDesired1.IsValid() || tokenDesired1.IsZero() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, tokenDesired1.String())
+	if !msg.TokenDesired1.IsValid() || msg.TokenDesired1.IsZero() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenDesired1.String())
 	}
 
 	if msg.TokenMinAmount0.IsNegative() {
@@ -90,4 +88,3 @@ func (msg MsgWithdrawPosition) GetSigners() []sdk.AccAddress {
 	}
 	return []sdk.AccAddress{sender}
 }
-
