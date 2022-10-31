@@ -167,10 +167,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 			swapState.amountSpecifiedRemaining,
 			zeroForOne,
 		)
-		fmt.Println("===sqrt price")
-		fmt.Println(sqrtPrice.String())
-		fmt.Println("===next sqrt price")
-		fmt.Println(nextSqrtPrice.String())
+
 		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn)
 		swapState.amountCalculated = swapState.amountCalculated.Add(amountOut)
 
@@ -197,7 +194,6 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 			swapState.tick = priceToTick(sqrtPrice.Power(2))
 		}
 	}
-	tokenOut = sdk.NewCoin(tokenOutDenom, swapState.amountCalculated.RoundInt())
 
 	amt0 := tokenAmountInAfterFee.Add(swapState.amountSpecifiedRemaining.Abs()).TruncateInt()
 	amt1 := swapState.amountCalculated.TruncateInt()

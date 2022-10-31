@@ -55,7 +55,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	upperSqrtPrice, err := upperPrice.ApproxSqrt()
 	s.Require().NoError(err)
 	expectedLiquidity := cl.GetLiquidityFromAmounts(currSqrtPrice, lowerSqrtPrice, upperSqrtPrice, amount0, amount1)
-	s.Require().True(updatedLiquidity.Equal(expectedLiquidity.TruncateDec()))
+	s.Require().True(updatedLiquidity.TruncateDec().Equal(expectedLiquidity.TruncateDec()))
 }
 
 // func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
