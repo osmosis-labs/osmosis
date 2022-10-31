@@ -248,18 +248,6 @@ fn calculate_channel_value(
         }
         FlowType::In => channel_value,
     }
-
-    // if denom.contains("ibc") {
-    //     match direction {
-    //         FlowType::Out => channel_value + funds, // Non-Native tokens get removed from the supply on send. Add that amount back
-    //         FlowType::In => channel_value,
-    //     }
-    // } else {
-    //     match direction {
-    //         FlowType::Out => channel_value - funds, // Native tokens increase escrow amount on send. Remove that amount here
-    //         FlowType::In => channel_value,
-    //     }
-    // }
 }
 
 impl RateLimit {
