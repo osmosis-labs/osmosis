@@ -82,11 +82,11 @@ jobs:
           path: ${{ matrix.contract.workdir }}${{ matrix.contract.build }}
           retention-days: 1
 
-#      - name: Check Test Data
-#        working-directory: ${{ matrix.contract.workdir }}
-#        if: ${{ matrix.contract.output != null }}
-#        run: >
-#          diff ${{ matrix.contract.output }} ${{ matrix.contract.build }}
+      - name: Check Test Data
+        working-directory: ${{ matrix.contract.workdir }}
+        if: ${{ matrix.contract.output != null }}
+        run: >
+          diff ${{ matrix.contract.output }} ${{ matrix.contract.build }}
   
 
   lints:
@@ -107,7 +107,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly
+          toolchain: stable
           override: true
           components: rustfmt, clippy
 

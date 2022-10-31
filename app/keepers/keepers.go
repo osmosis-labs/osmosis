@@ -2,6 +2,7 @@ package keepers
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,6 +33,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	ibcratelimit "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 
 	icahost "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/keeper"
@@ -110,10 +113,13 @@ type AppKeepers struct {
 	SuperfluidKeeper     *superfluidkeeper.Keeper
 	GovKeeper            *govkeeper.Keeper
 	WasmKeeper           *wasm.Keeper
+	ContractKeeper       *wasmkeeper.PermissionedKeeper
 	TokenFactoryKeeper   *tokenfactorykeeper.Keeper
+
 	// IBC modules
 	// transfer module
-	TransferModule transfer.AppModule
+	TransferModule          transfer.AppModule
+	RateLimitingICS4Wrapper *ibcratelimit.ICS4Wrapper
 
 	// keys to access the substores
 	keys    map[string]*sdk.KVStoreKey
@@ -195,12 +201,24 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.ScopedIBCKeeper,
 	)
 
+	// ChannelKeeper wrapper for rate limiting SendPacket(). The wasmKeeper needs to be added after it's created
+	rateLimitingParams := appKeepers.GetSubspace(ibcratelimittypes.ModuleName)
+	rateLimitingParams = rateLimitingParams.WithKeyTable(ibcratelimittypes.ParamKeyTable())
+	rateLimitingICS4Wrapper := ibcratelimit.NewICS4Middleware(
+		appKeepers.IBCKeeper.ChannelKeeper,
+		appKeepers.AccountKeeper,
+		nil,
+		appKeepers.BankKeeper,
+		rateLimitingParams,
+	)
+	appKeepers.RateLimitingICS4Wrapper = &rateLimitingICS4Wrapper
+
 	// Create Transfer Keepers
 	transferKeeper := ibctransferkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[ibctransfertypes.StoreKey],
 		appKeepers.GetSubspace(ibctransfertypes.ModuleName),
-		appKeepers.IBCKeeper.ChannelKeeper,
+		appKeepers.RateLimitingICS4Wrapper, // The ICS4Wrapper is replaced by the rateLimitingICS4Wrapper instead of the channel
 		appKeepers.IBCKeeper.ChannelKeeper,
 		&appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.AccountKeeper,
@@ -210,6 +228,9 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.TransferKeeper = &transferKeeper
 	appKeepers.TransferModule = transfer.NewAppModule(*appKeepers.TransferKeeper)
 	transferIBCModule := transfer.NewIBCModule(*appKeepers.TransferKeeper)
+
+	// RateLimiting IBC Middleware
+	rateLimitingTransferModule := ibcratelimit.NewIBCModule(transferIBCModule, appKeepers.RateLimitingICS4Wrapper)
 
 	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, appKeepers.keys[icahosttypes.StoreKey],
@@ -226,7 +247,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
-		AddRoute(ibctransfertypes.ModuleName, transferIBCModule)
+		// The transferIBC module is replaced by rateLimitingTransferModule
+		AddRoute(ibctransfertypes.ModuleName, &rateLimitingTransferModule)
 	// Note: the sealing is done after creating wasmd and wiring that up
 
 	// create evidence keeper with router
@@ -343,6 +365,9 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		wasmOpts...,
 	)
 	appKeepers.WasmKeeper = &wasmKeeper
+	// Update the ICS4Wrapper with the proper contractKeeper
+	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
+	appKeepers.RateLimitingICS4Wrapper.ContractKeeper = appKeepers.ContractKeeper
 
 	// wire up x/wasm to IBC
 	ibcRouter.AddRoute(wasm.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper))
@@ -437,6 +462,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
 	paramsKeeper.Subspace(twaptypes.ModuleName)
+	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
 
 	return paramsKeeper
 }
