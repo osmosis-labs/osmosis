@@ -489,8 +489,7 @@ func (mr *MockTraditionalAmmInterfaceMockRecorder) ProtoMessage() *gomock.Call {
 
 // Reset mocks base method.
 func (m *MockTraditionalAmmInterface) Reset() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Reset")
+	*m = MockTraditionalAmmInterface{ctrl: m.ctrl}
 }
 
 // Reset indicates an expected call of Reset.

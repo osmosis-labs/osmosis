@@ -46,7 +46,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterInterface(
 		"osmosis.gamm.v1beta1.TraditionalAmmInterface",
 		(*TraditionalAmmInterface)(nil),
-		&mocks.MockPoolI{},
+		&mocks.MockTraditionalAmmInterface{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
