@@ -40,7 +40,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	swapFee := sdk.ZeroDec()
 	priceLimit := sdk.NewDec(5004)
 	tokenIn, tokenOut, updatedTick, updatedLiquidity, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(s.Ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, pool.Id)
-	expectedTokenIn := sdk.NewCoin("usdc", sdk.NewInt(0))
+	expectedTokenIn := sdk.NewCoin("usdc", sdk.NewInt(42))
 	expectedTokenOut := sdk.NewCoin("eth", sdk.NewInt(42))
 
 	s.Require().NoError(err)

@@ -122,12 +122,16 @@ func getNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amount
 // getLiquidityFromAmounts takes the current sqrtPrice and the sqrtPrice for the upper and lower ticks as well as the amounts of asset0 and asset1
 // in return, liquidity is calculated from these inputs
 func getLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0, amount1 sdk.Int) (liquidity sdk.Dec) {
+	// we set sqrtPrice A as the smaller sqrt price and sqrtPrice B as the higher sqrt price
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
+
+	// if the given curr sqrt price is smaller than both given sqrt price,
 	if sqrtPrice.LTE(sqrtPriceA) {
 		liquidity = liquidity0(amount0, sqrtPrice, sqrtPriceB)
-	} else if sqrtPrice.LTE(sqrtPriceB) {
+	} else if sqrtPrice.LTE(sqrtPriceB) { // if given sqrt price is in between sqrt price A and sqrt price B,
+		// we calculate liquidity from both sides and take the smaller liquidity
 		liquidity0 := liquidity0(amount0, sqrtPrice, sqrtPriceB)
 		liquidity1 := liquidity1(amount1, sqrtPrice, sqrtPriceA)
 		liquidity = sdk.MinDec(liquidity0, liquidity1)

@@ -133,7 +133,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 	// at first, we use the pool liquidity
 	swapState := SwapState{
 		amountSpecifiedRemaining: tokenAmountInAfterFee,
-		amountCalculated:         sdk.ZeroDec(),
+		amountCalculated:         tokenAmountInAfterFee,
 		sqrtPrice:                curSqrtPrice,
 		tick:                     priceToTick(curSqrtPrice.Power(2)),
 		liquidity:                p.Liquidity,
