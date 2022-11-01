@@ -38,14 +38,6 @@ pull_request_rules:
       backport:
         branches:
           - v4.x
-  - name: backport patches to v5.x branch
-    conditions:
-      - base=main
-      - label=A:backport/v5.x
-    actions:
-      backport:
-        branches:
-          - v5.x
   - name: backport patches to v6.x branch
     conditions:
       - base=main
@@ -54,14 +46,6 @@ pull_request_rules:
       backport:
         branches:
           - v6.x
-  - name: backport patches to v7.x branch
-    conditions:
-      - base=main
-      - label=A:backport/v7.x
-    actions:
-      backport:
-        branches:
-          - v7.x
   - name: backport patches to v8.x branch
     conditions:
       - base=main
@@ -70,14 +54,6 @@ pull_request_rules:
       backport:
         branches:
           - v8.x
-  - name: backport patches to v9.x branch
-    conditions:
-      - base=main
-      - label=A:backport/v9.x
-    actions:
-      backport:
-        branches:
-          - v9.x
   - name: backport patches to v10.x branch
     conditions:
       - base=main
@@ -110,3 +86,11 @@ pull_request_rules:
       backport:
         branches:
           - v13.x
+  - name: backport patches to concentrated-liquidity-main
+    conditions:
+      - base=main
+      - label=A:backport/cl
+    actions:
+      backport:
+        branches:
+          - concentrated-liquidity-main

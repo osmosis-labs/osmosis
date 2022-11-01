@@ -12,7 +12,7 @@ import (
 
 const poolBalanceInvariantName = "pool-account-balance-equals-expected"
 
-// RegisterInvariants registers all governance invariants.
+// RegisterInvariants registers all gamm invariants.
 func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper, bk types.BankKeeper) {
 	ir.RegisterRoute(types.ModuleName, poolBalanceInvariantName, PoolAccountInvariant(keeper, bk))
 }

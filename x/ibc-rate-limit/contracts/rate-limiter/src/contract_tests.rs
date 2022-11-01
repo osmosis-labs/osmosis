@@ -2,7 +2,7 @@
 
 use crate::{contract::*, ContractError};
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-use cosmwasm_std::{from_binary, Addr, Attribute};
+use cosmwasm_std::{from_binary, Addr, Attribute, Uint256};
 
 use crate::helpers::tests::verify_query_response;
 use crate::msg::{InstantiateMsg, PathMsg, QueryMsg, QuotaMsg, SudoMsg};
@@ -52,8 +52,8 @@ fn consume_allowance() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 300,
+        channel_value: 3_300_u32.into(),
+        funds: 300_u32.into(),
     };
     let res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
 
@@ -64,8 +64,8 @@ fn consume_allowance() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 300,
+        channel_value: 3_300_u32.into(),
+        funds: 300_u32.into(),
     };
     let err = sudo(deps.as_mut(), mock_env(), msg).unwrap_err();
     assert!(matches!(err, ContractError::RateLimitExceded { .. }));
@@ -91,14 +91,14 @@ fn symetric_flows_dont_consume_allowance() {
     let send_msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 300,
+        channel_value: 3_300_u32.into(),
+        funds: 300_u32.into(),
     };
     let recv_msg = SudoMsg::RecvPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 300,
+        channel_value: 3_000_u32.into(),
+        funds: 300_u32.into(),
     };
 
     let res = sudo(deps.as_mut(), mock_env(), send_msg.clone()).unwrap();
@@ -154,8 +154,8 @@ fn asymetric_quotas() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 60,
+        channel_value: 3_060_u32.into(),
+        funds: 60_u32.into(),
     };
     let res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
     let Attribute { key, value } = &res.attributes[4];
@@ -166,8 +166,8 @@ fn asymetric_quotas() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 60,
+        channel_value: 3_060_u32.into(),
+        funds: 60_u32.into(),
     };
 
     let res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
@@ -180,8 +180,8 @@ fn asymetric_quotas() {
     let recv_msg = SudoMsg::RecvPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 30,
+        channel_value: 3_000_u32.into(),
+        funds: 30_u32.into(),
     };
     let res = sudo(deps.as_mut(), mock_env(), recv_msg).unwrap();
     let Attribute { key, value } = &res.attributes[3];
@@ -195,8 +195,8 @@ fn asymetric_quotas() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 60,
+        channel_value: 3_060_u32.into(),
+        funds: 60_u32.into(),
     };
     let err = sudo(deps.as_mut(), mock_env(), msg.clone()).unwrap_err();
     assert!(matches!(err, ContractError::RateLimitExceded { .. }));
@@ -205,8 +205,8 @@ fn asymetric_quotas() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 30,
+        channel_value: 3_060_u32.into(),
+        funds: 30_u32.into(),
     };
     let res = sudo(deps.as_mut(), mock_env(), msg.clone()).unwrap();
     let Attribute { key, value } = &res.attributes[3];
@@ -246,8 +246,8 @@ fn query_state() {
     assert_eq!(value[0].quota.max_percentage_send, 10);
     assert_eq!(value[0].quota.max_percentage_recv, 10);
     assert_eq!(value[0].quota.duration, RESET_TIME_WEEKLY);
-    assert_eq!(value[0].flow.inflow, 0);
-    assert_eq!(value[0].flow.outflow, 0);
+    assert_eq!(value[0].flow.inflow, Uint256::from(0_u32));
+    assert_eq!(value[0].flow.outflow, Uint256::from(0_u32));
     assert_eq!(
         value[0].flow.period_end,
         env.block.time.plus_seconds(RESET_TIME_WEEKLY)
@@ -256,16 +256,16 @@ fn query_state() {
     let send_msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 300,
+        channel_value: 3_300_u32.into(),
+        funds: 300_u32.into(),
     };
     sudo(deps.as_mut(), mock_env(), send_msg.clone()).unwrap();
 
     let recv_msg = SudoMsg::RecvPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 30,
+        channel_value: 3_000_u32.into(),
+        funds: 30_u32.into(),
     };
     sudo(deps.as_mut(), mock_env(), recv_msg.clone()).unwrap();
 
@@ -277,8 +277,8 @@ fn query_state() {
         "weekly",
         (10, 10),
         RESET_TIME_WEEKLY,
-        30,
-        300,
+        30_u32.into(),
+        300_u32.into(),
         env.block.time.plus_seconds(RESET_TIME_WEEKLY),
     );
 }
@@ -317,8 +317,8 @@ fn bad_quotas() {
         "bad_quota",
         (100, 100),
         200,
-        0,
-        0,
+        0_u32.into(),
+        0_u32.into(),
         env.block.time.plus_seconds(200),
     );
 }
@@ -343,13 +343,13 @@ fn undo_send() {
     let send_msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 300,
+        channel_value: 3_300_u32.into(),
+        funds: 300_u32.into(),
     };
     let undo_msg = SudoMsg::UndoSend {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        funds: 300,
+        funds: 300_u32.into(),
     };
 
     sudo(deps.as_mut(), mock_env(), send_msg.clone()).unwrap();
@@ -357,7 +357,10 @@ fn undo_send() {
     let trackers = RATE_LIMIT_TRACKERS
         .load(&deps.storage, ("channel".to_string(), "denom".to_string()))
         .unwrap();
-    assert_eq!(trackers.first().unwrap().flow.outflow, 300);
+    assert_eq!(
+        trackers.first().unwrap().flow.outflow,
+        Uint256::from(300_u32)
+    );
     let period_end = trackers.first().unwrap().flow.period_end;
     let channel_value = trackers.first().unwrap().quota.channel_value;
 
@@ -366,7 +369,7 @@ fn undo_send() {
     let trackers = RATE_LIMIT_TRACKERS
         .load(&deps.storage, ("channel".to_string(), "denom".to_string()))
         .unwrap();
-    assert_eq!(trackers.first().unwrap().flow.outflow, 0);
+    assert_eq!(trackers.first().unwrap().flow.outflow, Uint256::from(0_u32));
     assert_eq!(trackers.first().unwrap().flow.period_end, period_end);
     assert_eq!(trackers.first().unwrap().quota.channel_value, channel_value);
 }

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -34,6 +33,10 @@ func NewStableswapPool(poolId uint64,
 	}
 
 	if err := validateScalingFactors(scalingFactors, len(initialLiquidity)); err != nil {
+		return Pool{}, err
+	}
+
+	if err := validatePoolAssets(initialLiquidity, scalingFactors); err != nil {
 		return Pool{}, err
 	}
 
@@ -230,6 +233,10 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDeno
 }
 
 func (p *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
+	if err = validatePoolAssets(p.PoolLiquidity.Add(tokenIn...), p.ScalingFactor); err != nil {
+		return sdk.Coin{}, err
+	}
+
 	tokenOut, err = p.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee)
 	if err != nil {
 		return sdk.Coin{}, err
@@ -266,6 +273,10 @@ func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDen
 		return sdk.Coin{}, err
 	}
 
+	if err = validatePoolAssets(p.PoolLiquidity.Add(tokenIn), p.ScalingFactor); err != nil {
+		return sdk.Coin{}, err
+	}
+
 	p.updatePoolLiquidityForSwap(sdk.NewCoins(tokenIn), tokenOut)
 
 	return tokenIn, nil
@@ -286,19 +297,48 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 	return pCopy.joinPoolSharesInternal(ctx, tokensIn, swapFee)
 }
 
-// TODO: implement this
-func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
-	return sdk.ZeroInt(), nil, err
+// CalcJoinPoolNoSwapShares calculates the number of shares created to execute an all-asset pool join with the provided amount of `tokensIn`.
+// The input tokens must contain the same tokens as in the pool.
+//
+// Returns the number of shares created, the amount of coins actually joined into the pool as not all may tokens may be joinable.
+// If an all-asset join is not possible, returns an error.
+func (p Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
+	// ensure that there aren't too many or too few assets in `tokensIn`
+	if tokensIn.Len() != p.NumAssets() || !tokensIn.DenomsSubsetOf(p.GetTotalPoolLiquidity(ctx)) {
+		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("no-swap joins require LP'ing with all assets in pool")
+	}
+
+	// execute a no-swap join with as many tokens as possible given a perfect ratio:
+	// * numShares is how many shares are perfectly matched.
+	// * remainingTokensIn is how many coins we have left to join that have not already been used.
+	numShares, remainingTokensIn, err := cfmm_common.MaximalExactRatioJoin(&p, ctx, tokensIn)
+	if err != nil {
+		return sdk.ZeroInt(), sdk.NewCoins(), err
+	}
+
+	// ensure that no more tokens have been joined than is possible with the given `tokensIn`
+	tokensJoined = tokensIn.Sub(remainingTokensIn)
+	if tokensJoined.IsAnyGT(tokensIn) {
+		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("an error has occurred, more coins joined than token In")
+	}
+
+	return numShares, tokensJoined, nil
 }
 
-func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
-	numShares, _, err = p.joinPoolSharesInternal(ctx, tokensIn, swapFee)
+func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (sdk.Int, error) {
+	numShares, _, err := p.joinPoolSharesInternal(ctx, tokensIn, swapFee)
 	return numShares, err
 }
 
-// TODO: implement this
-func (p *Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
-	return sdk.ZeroInt(), err
+func (p *Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (sdk.Int, error) {
+	newShares, tokensJoined, err := p.CalcJoinPoolNoSwapShares(ctx, tokensIn, swapFee)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	// update pool with the calculated share and liquidity needed to join pool
+	p.updatePoolForJoin(tokensJoined, newShares)
+	return newShares, nil
 }
 
 func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
@@ -317,9 +357,6 @@ func (p Pool) CalcExitPoolCoinsFromShares(ctx sdk.Context, exitingShares sdk.Int
 	return cfmm_common.CalcExitPool(ctx, &p, exitingShares, exitFee)
 }
 
-// no-op for stableswap
-func (p *Pool) PokePool(blockTime time.Time) {}
-
 // SetStableSwapScalingFactors sets scaling factors for pool to the given amount
 // It should only be able to be successfully called by the pool's ScalingFactorGovernor
 // TODO: move commented test for this function from x/gamm/keeper/pool_service_test.go once a pool_test.go file has been created for stableswap
@@ -329,6 +366,10 @@ func (p *Pool) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uin
 	}
 
 	if err := validateScalingFactors(scalingFactors, p.PoolLiquidity.Len()); err != nil {
+		return err
+	}
+
+	if err := validatePoolAssets(p.PoolLiquidity, scalingFactors); err != nil {
 		return err
 	}
 
@@ -352,6 +393,22 @@ func validateScalingFactors(scalingFactors []uint64, numAssets int) error {
 	for _, scalingFactor := range scalingFactors {
 		if scalingFactor == 0 || int64(scalingFactor) <= 0 {
 			return types.ErrInvalidStableswapScalingFactors
+		}
+	}
+
+	return nil
+}
+
+func validatePoolAssets(initialAssets sdk.Coins, scalingFactors []uint64) error {
+	if len(initialAssets) < types.MinPoolAssets {
+		return types.ErrTooFewPoolAssets
+	} else if len(initialAssets) > types.MaxPoolAssets {
+		return types.ErrTooManyPoolAssets
+	}
+
+	for i, asset := range initialAssets {
+		if asset.Amount.Quo(sdk.NewInt(int64(scalingFactors[i]))).GT(sdk.NewInt(types.StableswapMaxScaledAmtPerAsset)) {
+			return types.ErrHitMaxScaledAssets
 		}
 	}
 

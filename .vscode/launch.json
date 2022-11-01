@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "E2E: (make test-e2e-short)",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/tests/e2e",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "IntegrationTestSuite",
+                "-test.v"
+            ],
+            "buildFlags": "-tags e2e",
+            "env": {
+                "OSMOSIS_E2E": "True",
+                "OSMOSIS_E2E_SKIP_IBC": "true",
+                "OSMOSIS_E2E_SKIP_UPGRADE": "true",
+                "OSMOSIS_E2E_SKIP_CLEANUP": "true",
+                "OSMOSIS_E2E_SKIP_STATE_SYNC": "true",
+                "OSMOSIS_E2E_UPGRADE_VERSION": "v13",
+                "OSMOSIS_E2E_DEBUG_LOG": "true",
+            },
+            "preLaunchTask": "e2e-setup"
+        }
+    ]
+}
