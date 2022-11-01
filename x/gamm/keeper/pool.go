@@ -302,11 +302,20 @@ func (k Keeper) GetPoolCount(ctx sdk.Context) uint64 {
 }
 
 // GetNextPoolId returns the next pool Id.
+// TODO: remove after concentrated-liquidity upgrade.
 func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
-	poolCount := gogotypes.UInt64Value{}
-	osmoutils.MustGet(store, types.KeyNextGlobalPoolId, &poolCount)
-	return poolCount.Value
+	nextPoolId := gogotypes.UInt64Value{}
+	osmoutils.MustGet(store, types.KeyNextGlobalPoolId, &nextPoolId)
+	return nextPoolId.Value
+}
+
+// SetNextPoolId sets the next pool Id.
+// TODO: remove after concentrated-liquidity upgrade.
+func (k Keeper) SetNextPoolId(ctx sdk.Context, nextPoolId uint64) {
+	store := ctx.KVStore(k.storeKey)
+	nextPoolIdState := gogotypes.UInt64Value{Value: nextPoolId}
+	osmoutils.MustSet(store, types.KeyNextGlobalPoolId, &nextPoolIdState)
 }
 
 func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (string, error) {

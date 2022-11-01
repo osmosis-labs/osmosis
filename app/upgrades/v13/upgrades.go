@@ -7,7 +7,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v12/app/keepers"
 	"github.com/osmosis-labs/osmosis/v12/app/upgrades"
+	gammkeeper "github.com/osmosis-labs/osmosis/v12/x/gamm/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
+	swaprouterkeeper "github.com/osmosis-labs/osmosis/v12/x/swaprouter"
 	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 )
 
@@ -23,10 +25,16 @@ func CreateUpgradeHandler(
 
 		// N.B: pool id in gamm is to be deprecated in the future
 		// Instead,it is moved to swaprouter.
-		nextPoolId := keepers.GAMMKeeper.GetNextPoolId(ctx)
-		keepers.GAMMKeeper.SetPoolCount(ctx, nextPoolId-1)
-		keepers.SwapRouterKeeper.SetNextPoolId(ctx, nextPoolId)
+		migrateNextPoolId(ctx, keepers.GAMMKeeper, keepers.SwapRouterKeeper)
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
+}
+
+func migrateNextPoolId(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, swaprouterKeeper *swaprouterkeeper.Keeper) {
+	// N.B: pool id in gamm is to be deprecated in the future
+	// Instead,it is moved to swaprouter.
+	nextPoolId := gammKeeper.GetNextPoolId(ctx)
+	gammKeeper.SetPoolCount(ctx, nextPoolId-1)
+	swaprouterKeeper.SetNextPoolId(ctx, nextPoolId)
 }
