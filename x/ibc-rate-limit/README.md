@@ -39,10 +39,10 @@ Rate limits aren't the end-all of safety controls, they're merely the simplest a
 ## Rate limit types
 
 We express rate limits in time-based periods.
-This means, we set rate limits for (say) hourly, daily, and weekly intervals.
+This means, we set rate limits for (say) 6-hour, daily, and weekly intervals.
 The rate limit for a given time period stores the relevant amount of assets at the start of the rate limit.
 Rate limits are then defined on percentage terms of the asset.
-The time windows for rate limits are _not_ rolling, they have discrete start/end times.
+The time windows for rate limits are currently _not_ rolling, they have discrete start/end times.
 
 We allow setting separate rate limits for the inflow and outflow of assets.
 We do all of our rate limits based on the _net flow_ of assets on a channel pair. This prevents DOS issues, of someone repeatedly sending assets back and forth, to trigger rate limits and break liveness.
@@ -71,6 +71,8 @@ Definitely needs far more ideation and iteration!
 
 ## Parameterizing the rate limit
 
+One element is we don't want any rate limit timespan thats too short, e.g. not enough time for humans to react to. So we wouldn't want a 1 hour rate limit, unless we think that if its hit, it could be assessed within an hour.
+
 ### Handling rate limit boundaries
 
 We want to be safe against the case where say we have a daily rate limit ending at a given time, and an adversary attempts to attack near the boundary window.
@@ -78,6 +80,8 @@ We would not like them to be able to "double extract funds" by timing their extr
 
 Admittedly, not a lot of thought has been put into how to deal with this well.
 Right now we envision simply handling this by saying if you want a quota of duration D, instead include two quotas of duration D, but offset by `D/2` from each other.
+
+Ideally we can change windows to be more 'rolling' in the future, to avoid this overhead and more cleanly handle the problem. (Perhaps rolling ~1 hour at a time)
 
 ### Inflow parameterization
 
@@ -95,9 +99,11 @@ It does get more complex when the counterparty chain is itself a DEX, but this i
 
 ### Outflow parameterization
 
-The "Outflow" side of a rate limit is protection against a bug on Osmosis OR 
-
+The "Outflow" side of a rate limit is protection against a bug on Osmosis OR IBC.
 This has potential for much more user-frustrating issues, if set too low.
+E.g. if theres some event that causes many people to suddenly withdraw many STARS or many USDC.
+
+So this parameterization has to contend with being a tradeoff of withdrawal liveness in high volatility periods vs being a crucial safety rail, in event of on-Osmosis bug.
 
 TODO: Better fill out
 
@@ -213,3 +219,4 @@ Not yet highlighted
    * Could imagine tieng it into looking at AMM volatility, or off-chain oracles
       * but these are both things we should be wary of security bugs in.
       * Maybe [constraint based programming with tracking of provenance](https://youtu.be/HB5TrK7A4pI?t=2852) as a solution
+* Analyze changing denom-based rate limits, to just overall withdrawal amount for Osmosis
