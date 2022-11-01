@@ -126,7 +126,6 @@ func (s *TestSuite) TestIntegrationForTwap() {
 	twapRecord, err = s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denom0, denom1)
 	s.Require().NoError(err)
 
-	// this is wrong as well, with 10 denom0 token and 13 denom1 token, spot price of denom0 as base asset should have been 1.3
 	s.Require().Equal(twapRecord.P0LastSpotPrice.String(), "1.300000000000000000")
 	s.Require().Equal(twapRecord.P1LastSpotPrice.String(), "0.769230770000000000")
 	// the accumulators store accumulators based on incorrect spot prices as well, these should have been stored opposite
