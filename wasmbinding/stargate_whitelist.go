@@ -57,7 +57,7 @@ func (g *GRPCQueriesInfo) RegisterQueryReponse(queryServer interface{}) {
 	}
 }
 
-//
+// RegisterService collects all the query path of a module query service
 func (g *GRPCQueriesInfo) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
 	for _, method := range sd.Methods {
 		fqName := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
