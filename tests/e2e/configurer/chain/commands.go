@@ -19,9 +19,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func (n *NodeConfig) CreatePool(poolFile, from string) uint64 {
+// TODO: deprecate isLegacy after concentrated-liquidity is released.
+// It is needed because pool creation module is different before and after
+// concentrated-liquidity upgrade.
+func (n *NodeConfig) CreatePool(poolFile, from string, isLegacy bool) uint64 {
 	n.LogActionF("creating pool from file %s", poolFile)
-	cmd := []string{"osmosisd", "tx", "swaprouter", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--from=%s", from)}
+
+	moduleName := "swaprouter"
+	if isLegacy {
+		moduleName = "gamm"
+	}
+
+	cmd := []string{"osmosisd", "tx", moduleName, "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 

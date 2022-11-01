@@ -13,7 +13,7 @@ import (
 
 // TODO: spec, tests, implementation
 func (k Keeper) InitializePool(ctx sdk.Context, pool gammtypes.PoolI, creatorAddress sdk.AccAddress) error {
-	return nil
+	panic("not implemented")
 }
 
 func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint64, poolAddress sdk.AccAddress, denom0, denom1 string, currSqrtPrice sdk.Dec, currTick sdk.Int) (Pool, error) {
