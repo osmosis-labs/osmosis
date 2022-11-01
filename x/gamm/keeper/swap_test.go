@@ -296,7 +296,7 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	suite.FundAcc(suite.TestAccs[0], defaultAcctFunds)
 
 	// Setup active pool
-	// activePoolId := suite.PrepareBalancerPool()
+	activePoolId := suite.PrepareBalancerPool()
 
 	// Setup mock inactive pool
 	gammKeeper := suite.App.GAMMKeeper
@@ -317,7 +317,7 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 		name       string
 	}
 	testCases := []testCase{
-		// {activePoolId, true, "swap succeeds on active pool"},
+		{activePoolId, true, "swap succeeds on active pool"},
 		{inactivePoolId, false, "swap fails on inactive pool"},
 	}
 
