@@ -151,7 +151,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 		}
 
 		var sqrtPriceTarget sdk.Dec
-		if zeroForOne && nextSqrtPrice.LT(sqrtPriceLimit) {
+		if zeroForOne && nextSqrtPrice.LT(sqrtPriceLimit) || !zeroForOne && nextSqrtPrice.GT(sqrtPriceLimit) {
 			sqrtPriceTarget = sqrtPriceLimit
 		} else {
 			sqrtPriceTarget = nextSqrtPrice
