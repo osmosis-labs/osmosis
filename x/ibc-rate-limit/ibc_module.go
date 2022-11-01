@@ -103,12 +103,27 @@ func (im *IBCModule) OnChanCloseConfirm(
 	return im.app.OnChanCloseConfirm(ctx, portID, channelID)
 }
 
+func ValidateReceiverAddress(packet channeltypes.Packet) error {
+	var packetData transfertypes.FungibleTokenPacketData
+	if err := json.Unmarshal(packet.GetData(), &packetData); err != nil {
+		return err
+	}
+	if len(packetData.Receiver) >= 4096 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "IBC Receiver address too long. Max supported length is %d", 4096)
+	}
+	return nil
+}
+
 // OnRecvPacket implements the IBCModule interface
 func (im *IBCModule) OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) exported.Acknowledgement {
+	if err := ValidateReceiverAddress(packet); err != nil {
+		return channeltypes.NewErrorAcknowledgement(err.Error())
+	}
+
 	contract := im.ics4Middleware.GetParams(ctx)
 	if contract == "" {
 		// The contract has not been configured. Continue as usual
@@ -116,9 +131,10 @@ func (im *IBCModule) OnRecvPacket(
 	}
 	amount, denom, err := GetFundsFromPacket(packet)
 	if err != nil {
-		return channeltypes.NewErrorAcknowledgement("bad packet")
+		return channeltypes.NewErrorAcknowledgement("bad packet in rate limit's OnRecvPacket")
 	}
-	channelValue := im.ics4Middleware.CalculateChannelValue(ctx, denom)
+
+	channelValue := im.ics4Middleware.CalculateChannelValue(ctx, denom, packet)
 
 	err = CheckAndUpdateRateLimits(
 		ctx,
@@ -127,11 +143,11 @@ func (im *IBCModule) OnRecvPacket(
 		contract,
 		channelValue,
 		packet.GetDestChannel(),
-		denom,
+		denom, // We always use the packet's denom here, as we want the limits to be the same on both directions
 		amount,
 	)
 	if err != nil {
-		return channeltypes.NewErrorAcknowledgement(types.RateLimitExceededMsg)
+		return channeltypes.NewErrorAcknowledgement(types.ErrRateLimitExceeded.Error())
 	}
 
 	// if this returns an Acknowledgement that isn't successful, all state changes are discarded

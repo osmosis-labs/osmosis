@@ -1,4 +1,4 @@
-use cosmwasm_std::{DepsMut, Response, Timestamp};
+use cosmwasm_std::{DepsMut, Response, Timestamp, Uint256};
 
 use crate::{
     state::{FlowType, Path, RateLimit, RATE_LIMIT_TRACKERS},
@@ -14,8 +14,8 @@ use crate::{
 pub fn try_transfer(
     deps: DepsMut,
     path: &Path,
-    channel_value: u128,
-    funds: u128,
+    channel_value: Uint256,
+    funds: Uint256,
     direction: FlowType,
     now: Timestamp,
 ) -> Result<Response, ContractError> {
@@ -96,7 +96,7 @@ fn add_rate_limit_attributes(response: Response, result: &RateLimit) -> Response
 
 // This function manually injects an inflow. This is used when reverting a
 // packet that failed ack or timed-out.
-pub fn undo_send(deps: DepsMut, path: &Path, funds: u128) -> Result<Response, ContractError> {
+pub fn undo_send(deps: DepsMut, path: &Path, funds: Uint256) -> Result<Response, ContractError> {
     // Sudo call. Only go modules should be allowed to access this
     let trackers = RATE_LIMIT_TRACKERS.may_load(deps.storage, path.into())?;
 
