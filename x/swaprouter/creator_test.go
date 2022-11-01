@@ -10,36 +10,39 @@ import (
 // TestCreatePool tests that all possible pools are created correctly.
 func (suite *KeeperTestSuite) TestCreatePool() {
 
+	validBalancerPoolMsg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.NewPoolParams(sdk.ZeroDec(), sdk.ZeroDec(), nil), []balancer.PoolAsset{
+		{
+			Token:  sdk.NewCoin(denomA, defaultInitPoolAmount),
+			Weight: sdk.NewInt(1),
+		},
+		{
+			Token:  sdk.NewCoin(denomB, defaultInitPoolAmount),
+			Weight: sdk.NewInt(1),
+		},
+	}, "")
+
 	tests := []struct {
 		name              string
 		creatorFundAmount sdk.Coins
 		msg               types.CreatePoolMsg
-
-		expectedPoolId uint64
-		expectError    bool
+		expectError       bool
 	}{
 		{
-			name:              "balancer pool - success",
+			name:              "first balancer pool - success",
 			creatorFundAmount: sdk.NewCoins(sdk.NewCoin(denomA, defaultInitPoolAmount.Mul(sdk.NewInt(2))), sdk.NewCoin(denomB, defaultInitPoolAmount.Mul(sdk.NewInt(2)))),
-			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.NewPoolParams(sdk.ZeroDec(), sdk.ZeroDec(), nil), []balancer.PoolAsset{
-				{
-					Token:  sdk.NewCoin(denomA, defaultInitPoolAmount),
-					Weight: sdk.NewInt(1),
-				},
-				{
-					Token:  sdk.NewCoin(denomB, defaultInitPoolAmount),
-					Weight: sdk.NewInt(1),
-				},
-			}, ""),
-
-			expectedPoolId: 0,
+			msg:               validBalancerPoolMsg,
+		},
+		{
+			name:              "second balancer pool - success",
+			creatorFundAmount: sdk.NewCoins(sdk.NewCoin(denomA, defaultInitPoolAmount.Mul(sdk.NewInt(2))), sdk.NewCoin(denomB, defaultInitPoolAmount.Mul(sdk.NewInt(2)))),
+			msg:               validBalancerPoolMsg,
 		},
 		// TODO: add stableswap test
 		// TODO: add concentrated-liquidity rest
 		// TODO: cover errors and edge cases
 	}
 
-	for _, tc := range tests {
+	for i, tc := range tests {
 		suite.Run(tc.name, func() {
 			tc := tc
 
@@ -54,7 +57,7 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 				suite.Require().Error(err)
 			} else {
 				suite.Require().NoError(err)
-				suite.Require().Equal(uint64(1), poolId)
+				suite.Require().Equal(uint64(i+1), poolId)
 			}
 		})
 	}
