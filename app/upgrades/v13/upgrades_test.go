@@ -33,8 +33,11 @@ func (suite *UpgradeTestSuite) TestMigrateNextPoolIdAndCreatePool() {
 	gammKeeper := suite.App.GAMMKeeper
 	swaprouterKeeper := suite.App.SwapRouterKeeper
 
-	// prepate two pools
+	// Set next pool id to given constant, because creating pools doesn't
+	// increment id on current version
 	gammKeeper.SetNextPoolId(ctx, expectedNextPoolId)
+	nextPoolId := gammKeeper.GetNextPoolId(ctx)
+	suite.Require().Equal(expectedNextPoolId, nextPoolId)
 
 	// system under test.
 	v13.MigrateNextPoolId(ctx, gammKeeper, swaprouterKeeper)
