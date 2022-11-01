@@ -82,10 +82,10 @@ func validateCreatePoolMsg(ctx sdk.Context, msg types.CreatePoolMsg) error {
 
 	initialPoolLiquidity := msg.InitialLiquidity()
 	numAssets := initialPoolLiquidity.Len()
-	if numAssets < gammtypes.MinPoolAssets {
+	if numAssets < types.MinPoolAssets {
 		return types.ErrTooFewPoolAssets
 	}
-	if numAssets > gammtypes.MaxPoolAssets {
+	if numAssets > types.MaxPoolAssets {
 		return errors.Wrapf(
 			types.ErrTooManyPoolAssets,
 			"pool has too many PoolAssets (%d)", numAssets,
