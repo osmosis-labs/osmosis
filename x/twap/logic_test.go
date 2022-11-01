@@ -133,9 +133,6 @@ func (s *TestSuite) TestIntegrationForTwap() {
 	s.Require().Equal(twapRecord.P1ArithmeticTwapAccumulator.String(), "2200.000000000000000000")
 
 	// now check and test twap now
-	// We get the correct twap here even though we have been storing incorrect spot prices for each denom.
-	// this is because we use base asset accumulator as quote asset accumulator, and quote asset accumulator as base asset accumulator
-	// https://github.com/osmosis-labs/osmosis/blob/main/x/twap/logic.go#L247-L251
 
 	newTime := oldTime.Add(time.Second * 10)
 	twapDenom1, err := s.twapkeeper.GetArithmeticTwap(s.Ctx, poolId, denom0, denom1, oldTime, newTime)
