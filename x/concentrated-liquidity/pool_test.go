@@ -161,8 +161,6 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 	s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, pool.Id, s.TestAccs[0], amount0Desired, amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
 	pool = s.App.ConcentratedLiquidityKeeper.GetPoolbyId(ctx, pool.Id)
 	fmt.Printf("%v pool liq post 1 \n", pool.Liquidity)
-	fmt.Printf("%v pool.CurrentSqrtPrice post 1 \n", pool.CurrentSqrtPrice)
-	fmt.Printf("%v pool.CurrentTick post 1 \n", pool.CurrentTick)
 
 	// tokenIn := sdk.NewCoin("eth", sdk.NewInt(133700))
 	// tokenOutDenom := "usdc"
