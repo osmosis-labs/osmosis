@@ -12,50 +12,182 @@ import (
 func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	ctx := s.Ctx
 
+	//
+	// TEST 1: two overlapping price ranges
+	//
+
 	currPrice := sdk.NewDec(5000)
-	currSqrtPrice, err := currPrice.ApproxSqrt()
+	currSqrtPrice, err := currPrice.ApproxSqrt() // 70.710678118654752440
 	s.Require().NoError(err)
-	currTick := cl.PriceToTick(currPrice)
+	currTick := cl.PriceToTick(currPrice) // 85176
 	lowerPrice := sdk.NewDec(4545)
 	s.Require().NoError(err)
-	lowerTick := cl.PriceToTick(lowerPrice)
+	lowerTick := cl.PriceToTick(lowerPrice) // 84222
 	upperPrice := sdk.NewDec(5500)
 	s.Require().NoError(err)
-	upperTick := cl.PriceToTick(upperPrice)
+	upperTick := cl.PriceToTick(upperPrice) // 86129
 
-	amount0 := sdk.NewInt(1)
-	amount1 := sdk.NewInt(5000)
+	// 1 eth 5000 usdc position
+	amount0 := sdk.NewInt(1000000)
+	amount1 := sdk.NewInt(5000000000)
 
 	// create pool
 	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, "eth", "usdc", currSqrtPrice, currTick)
 	s.Require().NoError(err)
 
+	// add first position
+	_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, pool.Id, s.TestAccs[0], amount0, amount1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+	s.Require().NoError(err)
+
+	// add second position
+	_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, pool.Id, s.TestAccs[1], amount0, amount1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+	s.Require().NoError(err)
+	pool = s.App.ConcentratedLiquidityKeeper.GetPoolbyId(ctx, 1)
+
+	// swapping parameters used for test
+	// swap in 42 usdc for some amount of eth
+	tokenIn := sdk.NewCoin("usdc", sdk.NewInt(42000000))
+	tokenOutDenom := "eth"
+	// set no swap fee
+	swapFee := sdk.ZeroDec()
+	// limit max price impact to 5002 usdc per eth
+	priceLimit := sdk.NewDec(5002)
+
+	// run calculation
+	tokenInDelta, tokenOutDelta, updatedTick, updatedLiquidity, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, pool.Id)
+	s.Require().NoError(err)
+
+	// we expect to put 42 usdc in and in return get .008398 eth back
+	expectedTokenInDelta := sdk.NewInt(42000000)
+	expectedTokenOutDelta := sdk.NewInt(8398)
+
+	// ensure tokenIn and tokenOut meet our expected values
+	s.Require().Equal(expectedTokenInDelta.String(), tokenInDelta.String())
+	s.Require().Equal(expectedTokenOutDelta.String(), tokenOutDelta.String())
+
+	// check the new tick is at the expected value
+	s.Require().Equal(sdk.NewInt(85180).String(), updatedTick.String())
+
+	// check pool liquidity
+	lowerSqrtPrice, err := s.App.ConcentratedLiquidityKeeper.TickToSqrtPrice(lowerTick)
+	s.Require().NoError(err)
+	upperSqrtPrice, err := s.App.ConcentratedLiquidityKeeper.TickToSqrtPrice(upperTick)
+	s.Require().NoError(err)
+	expectedLiquidity := cl.GetLiquidityFromAmounts(currSqrtPrice, lowerSqrtPrice, upperSqrtPrice, amount0.Mul(sdk.NewInt(2)), amount1.Mul(sdk.NewInt(2)))
+	s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
+
+	//
+	// TEST 2: one price range
+	//
+
+	// we use the same price range as above, but just with a single position instead of two
+
+	// 1 eth 5000 usdc position
+	amount0 = sdk.NewInt(1000000)
+	amount1 = sdk.NewInt(5000000000)
+
+	// create pool
+	pool, err = s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 2, "eth", "usdc", currSqrtPrice, currTick)
+	s.Require().NoError(err)
+
 	// add position
-	_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.Id, s.TestAccs[0], amount0, amount1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+	_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, pool.Id, s.TestAccs[1], amount0, amount1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
 	s.Require().NoError(err)
 
 	// swapping parameters used for test
-	tokenIn := sdk.NewCoin("usdc", sdk.NewInt(42))
-	tokenOutDenom := "eth"
-	swapFee := sdk.ZeroDec()
-	priceLimit := sdk.NewDec(5004)
-	tokenIn, tokenOut, updatedTick, updatedLiquidity, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(s.Ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, pool.Id)
-	expectedTokenIn := sdk.NewCoin("usdc", sdk.NewInt(0))
-	expectedTokenOut := sdk.NewCoin("eth", sdk.NewInt(42))
+	// swap in 42 usdc for some amount of eth
+	tokenIn = sdk.NewCoin("usdc", sdk.NewInt(42000000))
+	tokenOutDenom = "eth"
+	// set no swap fee
+	swapFee = sdk.ZeroDec()
+	// limit max price impact to 5004 usdc per eth
+	priceLimit = sdk.NewDec(5004)
 
+	// run calculation
+	tokenInDelta, tokenOutDelta, updatedTick, updatedLiquidity, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, pool.Id)
 	s.Require().NoError(err)
-	s.Require().True(expectedTokenIn.Equal(tokenIn))
-	s.Require().True(expectedTokenOut.Equal(tokenOut))
-	// TODO: come back to tick calc: shouldn't this be 85183?
-	s.Require().Equal(sdk.NewInt(85184), updatedTick)
+
+	// we expect to put 41999999 usdc in and in return get .008396 eth back
+	expectedTokenInDelta = sdk.NewInt(41999999)
+	expectedTokenOutDelta = sdk.NewInt(8396)
+
+	// ensure tokenIn and tokenOut meet our expected values
+	s.Require().Equal(expectedTokenInDelta.String(), tokenInDelta.String())
+	s.Require().Equal(expectedTokenOutDelta.String(), tokenOutDelta.String())
+
+	// this is off by one (too large), I think it is the priceToTick func, try using ln PR from main
+	s.Require().Equal(sdk.NewInt(85184).String(), updatedTick.String())
 
 	// check pool liquidity
-	lowerSqrtPrice, err := lowerPrice.ApproxSqrt()
+	lowerSqrtPrice, err = s.App.ConcentratedLiquidityKeeper.TickToSqrtPrice(lowerTick)
 	s.Require().NoError(err)
-	upperSqrtPrice, err := upperPrice.ApproxSqrt()
+	upperSqrtPrice, err = s.App.ConcentratedLiquidityKeeper.TickToSqrtPrice(upperTick)
 	s.Require().NoError(err)
-	expectedLiquidity := cl.GetLiquidityFromAmounts(currSqrtPrice, lowerSqrtPrice, upperSqrtPrice, amount0, amount1)
-	s.Require().True(updatedLiquidity.TruncateDec().Equal(expectedLiquidity.TruncateDec()))
+	expectedLiquidity = cl.GetLiquidityFromAmounts(currSqrtPrice, lowerSqrtPrice, upperSqrtPrice, amount0, amount1)
+	s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
+
+	//
+	// TEST 3: two consecutive price ranges
+	//
+
+	// we use the same price range as above, but for the first position
+	// then for the second position, we use a new price range
+
+	// both are 1 eth 5000 usdc positions
+	amount0 = sdk.NewInt(1000000)
+	amount1 = sdk.NewInt(5000000000)
+
+	// create pool
+	pool, err = s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 3, "eth", "usdc", currSqrtPrice, currTick)
+	s.Require().NoError(err)
+
+	// add position one (utilizing old price range)
+	_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, pool.Id, s.TestAccs[0], amount0, amount1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+	s.Require().NoError(err)
+
+	// create second position parameters
+	lowerPrice = sdk.NewDec(5501)
+	s.Require().NoError(err)
+	lowerTick = cl.PriceToTick(lowerPrice) // 84222
+	upperPrice = sdk.NewDec(6250)
+	s.Require().NoError(err)
+	upperTick = cl.PriceToTick(upperPrice) // 87407
+
+	// add position two with the new price range above
+	_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, pool.Id, s.TestAccs[2], amount0, amount1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+	s.Require().NoError(err)
+
+	// swapping parameters used for test
+	// swap in 10000000 usdc for some amount of eth
+	tokenIn = sdk.NewCoin("usdc", sdk.NewInt(10000000000))
+	tokenOutDenom = "eth"
+	// set no swap fee
+	swapFee = sdk.ZeroDec()
+	// limit max price impact to 6106 usdc per eth
+	priceLimit = sdk.NewDec(6106)
+
+	// run calculation
+	tokenInDelta, tokenOutDelta, updatedTick, updatedLiquidity, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, pool.Id)
+	s.Require().NoError(err)
+
+	// we expect to put 999.99 usdc in and in return get 1.820536 eth back
+	expectedTokenInDelta = sdk.NewInt(9999999999)
+	expectedTokenOutDelta = sdk.NewInt(1820536)
+
+	// ensure tokenIn and tokenOut meet our expected values
+	s.Require().Equal(expectedTokenInDelta.String(), tokenInDelta.String())
+	s.Require().Equal(expectedTokenOutDelta.String(), tokenOutDelta.String())
+
+	// this is off by one (too large), I think it is the priceToTick func, try using ln PR from main
+	s.Require().Equal(sdk.NewInt(87173).String(), updatedTick.String())
+
+	// check pool liquidity
+	lowerSqrtPrice, err = s.App.ConcentratedLiquidityKeeper.TickToSqrtPrice(lowerTick)
+	s.Require().NoError(err)
+	upperSqrtPrice, err = s.App.ConcentratedLiquidityKeeper.TickToSqrtPrice(upperTick)
+	s.Require().NoError(err)
+	expectedLiquidity = cl.GetLiquidityFromAmounts(currSqrtPrice, lowerSqrtPrice, upperSqrtPrice, amount0, amount1)
+	s.Require().Equal(expectedLiquidity.TruncateInt().String(), updatedLiquidity.TruncateInt().String())
 }
 
 // func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {

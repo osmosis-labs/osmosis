@@ -64,15 +64,15 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	// update pool state as well only if we're injecting liquidity at the current tick of the pool
 	if pool.CurrentTick.LT(sdk.NewInt(lowerTick)) {
-		amtDenom0 = calcAmount0Delta(liquidity, sqrtRatioLowerTick, sqrtRatioUpperTick).RoundInt()
+		amtDenom0 = calcAmount0Delta(liquidity, sqrtRatioLowerTick, sqrtRatioUpperTick, false).RoundInt()
 		amtDenom1 = sdk.ZeroInt()
 	} else if pool.CurrentTick.LT(sdk.NewInt(upperTick)) {
-		amtDenom0 = calcAmount0Delta(liquidity, currentSqrtPrice, sqrtRatioUpperTick).RoundInt()
-		amtDenom1 = calcAmount1Delta(liquidity, currentSqrtPrice, sqrtRatioLowerTick).RoundInt()
+		amtDenom0 = calcAmount0Delta(liquidity, currentSqrtPrice, sqrtRatioUpperTick, false).RoundInt()
+		amtDenom1 = calcAmount1Delta(liquidity, currentSqrtPrice, sqrtRatioLowerTick, false).RoundInt()
 		pool.Liquidity = pool.Liquidity.Add(liquidity)
 	} else {
 		amtDenom0 = sdk.ZeroInt()
-		amtDenom1 = calcAmount1Delta(liquidity, sqrtRatioLowerTick, sqrtRatioUpperTick).RoundInt()
+		amtDenom1 = calcAmount1Delta(liquidity, sqrtRatioLowerTick, sqrtRatioUpperTick, false).RoundInt()
 	}
 
 	k.setPoolById(ctx, pool.Id, pool)

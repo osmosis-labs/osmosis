@@ -33,12 +33,15 @@ func liquidity1(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // calcAmount0Delta = (liquidity * (sqrtPriceB - sqrtPriceA)) / (sqrtPriceB * sqrtPriceA)
-func calcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
+func calcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec {
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
 	diff := sqrtPriceB.Sub(sqrtPriceA)
 	mult := liq
+	if roundUp {
+		return ((mult.Mul(diff)).QuoRoundUp(sqrtPriceB).QuoRoundUp(sqrtPriceA)).Ceil()
+	}
 	return (mult.Mul(diff)).Quo(sqrtPriceB).Quo(sqrtPriceA)
 }
 
@@ -46,11 +49,14 @@ func calcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // calcAmount1Delta = liq * (sqrtPriceB - sqrtPriceA)
-func calcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
+func calcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec {
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
 	diff := sqrtPriceB.Sub(sqrtPriceA)
+	if roundUp {
+		return liq.Mul(diff).Ceil()
+	}
 	return liq.Mul(diff)
 }
 
@@ -58,23 +64,28 @@ func calcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 // lte is reference to "less than or equal", which determines if we are moving left or right of the current price to find the next initialized tick with liquidity
 func computeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec, zeroForOne bool) (sqrtPriceNext, amountIn, amountOut sdk.Dec) {
 	if zeroForOne {
-		amountIn = calcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent)
+		amountIn = calcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, true)
 	} else {
-		amountIn = calcAmount1Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent)
+		amountIn = calcAmount1Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, true)
 	}
-
 	if amountRemaining.GTE(amountIn) {
 		sqrtPriceNext = sqrtPriceTarget
 	} else {
 		sqrtPriceNext = getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining, zeroForOne)
 	}
 
+	max := sqrtPriceNext.Equal(sqrtPriceTarget)
+
 	if zeroForOne {
-		amountIn = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
-		amountOut = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
+		if !max {
+			amountIn = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, true)
+		}
+		amountOut = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
 	} else {
-		amountIn = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
-		amountOut = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent)
+		if !max {
+			amountIn = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, true)
+		}
+		amountOut = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
 	}
 
 	return sqrtPriceNext, amountIn, amountOut
@@ -126,13 +137,13 @@ func getLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0,
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
 	if sqrtPrice.LTE(sqrtPriceA) {
-		liquidity = liquidity0(amount0, sqrtPrice, sqrtPriceB)
+		liquidity = liquidity0(amount0, sqrtPriceA, sqrtPriceB)
 	} else if sqrtPrice.LTE(sqrtPriceB) {
 		liquidity0 := liquidity0(amount0, sqrtPrice, sqrtPriceB)
 		liquidity1 := liquidity1(amount1, sqrtPrice, sqrtPriceA)
 		liquidity = sdk.MinDec(liquidity0, liquidity1)
 	} else {
-		liquidity = liquidity1(amount1, sqrtPrice, sqrtPriceA)
+		liquidity = liquidity1(amount1, sqrtPriceB, sqrtPriceA)
 	}
 	return liquidity
 }
