@@ -15,6 +15,11 @@ import (
 
 // TODO spec and tests
 func (k Keeper) InitializePool(ctx sdk.Context, pool types.PoolI, creatorAddress sdk.AccAddress) error {
+	traditionalPool, ok := pool.(types.TraditionalAmmInterface)
+	if !ok {
+		return fmt.Errorf("failed to create gamm pool. Could not cast to TraditionalAmmInterface")
+	}
+
 	poolId := pool.GetId()
 
 	// Add the share token's meta data to the bank keeper.
@@ -44,11 +49,6 @@ func (k Keeper) InitializePool(ctx sdk.Context, pool types.PoolI, creatorAddress
 	err := k.MintPoolShareToAccount(ctx, pool, creatorAddress, pool.GetTotalShares())
 	if err != nil {
 		return err
-	}
-
-	traditionalPool, ok := pool.(types.TraditionalAmmInterface)
-	if !ok {
-		return fmt.Errorf("failed to create gamm pool. c+Could not cast to TraditionalAmmInterface")
 	}
 
 	k.RecordTotalLiquidityIncrease(ctx, traditionalPool.GetTotalPoolLiquidity(ctx))
