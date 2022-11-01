@@ -2,7 +2,7 @@
 // Source: x/gamm/types/pool.go
 
 // Package mock_types is a generated GoMock package.
-package mocks
+package mock_types
 
 import (
 	reflect "reflect"
@@ -35,21 +35,6 @@ func (m *MockPoolI) EXPECT() *MockPoolIMockRecorder {
 	return m.recorder
 }
 
-// CalcExitPoolCoinsFromShares mocks base method.
-func (m *MockPoolI) CalcExitPoolCoinsFromShares(ctx types.Context, numShares types.Int, exitFee types.Dec) (types.Coins, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CalcExitPoolCoinsFromShares", ctx, numShares, exitFee)
-	ret0, _ := ret[0].(types.Coins)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CalcExitPoolCoinsFromShares indicates an expected call of CalcExitPoolCoinsFromShares.
-func (mr *MockPoolIMockRecorder) CalcExitPoolCoinsFromShares(ctx, numShares, exitFee interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcExitPoolCoinsFromShares", reflect.TypeOf((*MockPoolI)(nil).CalcExitPoolCoinsFromShares), ctx, numShares, exitFee)
-}
-
 // CalcInAmtGivenOut mocks base method.
 func (m *MockPoolI) CalcInAmtGivenOut(ctx types.Context, tokenOut types.Coins, tokenInDenom string, swapFee types.Dec) (types.Coin, error) {
 	m.ctrl.T.Helper()
@@ -65,38 +50,6 @@ func (mr *MockPoolIMockRecorder) CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcInAmtGivenOut", reflect.TypeOf((*MockPoolI)(nil).CalcInAmtGivenOut), ctx, tokenOut, tokenInDenom, swapFee)
 }
 
-// CalcJoinPoolNoSwapShares mocks base method.
-func (m *MockPoolI) CalcJoinPoolNoSwapShares(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, types.Coins, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CalcJoinPoolNoSwapShares", ctx, tokensIn, swapFee)
-	ret0, _ := ret[0].(types.Int)
-	ret1, _ := ret[1].(types.Coins)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// CalcJoinPoolNoSwapShares indicates an expected call of CalcJoinPoolNoSwapShares.
-func (mr *MockPoolIMockRecorder) CalcJoinPoolNoSwapShares(ctx, tokensIn, swapFee interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcJoinPoolNoSwapShares", reflect.TypeOf((*MockPoolI)(nil).CalcJoinPoolNoSwapShares), ctx, tokensIn, swapFee)
-}
-
-// CalcJoinPoolShares mocks base method.
-func (m *MockPoolI) CalcJoinPoolShares(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, types.Coins, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CalcJoinPoolShares", ctx, tokensIn, swapFee)
-	ret0, _ := ret[0].(types.Int)
-	ret1, _ := ret[1].(types.Coins)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// CalcJoinPoolShares indicates an expected call of CalcJoinPoolShares.
-func (mr *MockPoolIMockRecorder) CalcJoinPoolShares(ctx, tokensIn, swapFee interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcJoinPoolShares", reflect.TypeOf((*MockPoolI)(nil).CalcJoinPoolShares), ctx, tokensIn, swapFee)
-}
-
 // CalcOutAmtGivenIn mocks base method.
 func (m *MockPoolI) CalcOutAmtGivenIn(ctx types.Context, tokenIn types.Coins, tokenOutDenom string, swapFee types.Dec) (types.Coin, error) {
 	m.ctrl.T.Helper()
@@ -110,21 +63,6 @@ func (m *MockPoolI) CalcOutAmtGivenIn(ctx types.Context, tokenIn types.Coins, to
 func (mr *MockPoolIMockRecorder) CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcOutAmtGivenIn", reflect.TypeOf((*MockPoolI)(nil).CalcOutAmtGivenIn), ctx, tokenIn, tokenOutDenom, swapFee)
-}
-
-// ExitPool mocks base method.
-func (m *MockPoolI) ExitPool(ctx types.Context, numShares types.Int, exitFee types.Dec) (types.Coins, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ExitPool", ctx, numShares, exitFee)
-	ret0, _ := ret[0].(types.Coins)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ExitPool indicates an expected call of ExitPool.
-func (mr *MockPoolIMockRecorder) ExitPool(ctx, numShares, exitFee interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExitPool", reflect.TypeOf((*MockPoolI)(nil).ExitPool), ctx, numShares, exitFee)
 }
 
 // GetAddress mocks base method.
@@ -183,20 +121,6 @@ func (mr *MockPoolIMockRecorder) GetSwapFee(ctx interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSwapFee", reflect.TypeOf((*MockPoolI)(nil).GetSwapFee), ctx)
 }
 
-// GetTotalPoolLiquidity mocks base method.
-func (m *MockPoolI) GetTotalPoolLiquidity(ctx types.Context) types.Coins {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTotalPoolLiquidity", ctx)
-	ret0, _ := ret[0].(types.Coins)
-	return ret0
-}
-
-// GetTotalPoolLiquidity indicates an expected call of GetTotalPoolLiquidity.
-func (mr *MockPoolIMockRecorder) GetTotalPoolLiquidity(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalPoolLiquidity", reflect.TypeOf((*MockPoolI)(nil).GetTotalPoolLiquidity), ctx)
-}
-
 // GetTotalShares mocks base method.
 func (m *MockPoolI) GetTotalShares() types.Int {
 	m.ctrl.T.Helper()
@@ -225,36 +149,6 @@ func (mr *MockPoolIMockRecorder) IsActive(ctx interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsActive", reflect.TypeOf((*MockPoolI)(nil).IsActive), ctx)
 }
 
-// JoinPool mocks base method.
-func (m *MockPoolI) JoinPool(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "JoinPool", ctx, tokensIn, swapFee)
-	ret0, _ := ret[0].(types.Int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// JoinPool indicates an expected call of JoinPool.
-func (mr *MockPoolIMockRecorder) JoinPool(ctx, tokensIn, swapFee interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JoinPool", reflect.TypeOf((*MockPoolI)(nil).JoinPool), ctx, tokensIn, swapFee)
-}
-
-// JoinPoolNoSwap mocks base method.
-func (m *MockPoolI) JoinPoolNoSwap(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "JoinPoolNoSwap", ctx, tokensIn, swapFee)
-	ret0, _ := ret[0].(types.Int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// JoinPoolNoSwap indicates an expected call of JoinPoolNoSwap.
-func (mr *MockPoolIMockRecorder) JoinPoolNoSwap(ctx, tokensIn, swapFee interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JoinPoolNoSwap", reflect.TypeOf((*MockPoolI)(nil).JoinPoolNoSwap), ctx, tokensIn, swapFee)
-}
-
 // ProtoMessage mocks base method.
 func (m *MockPoolI) ProtoMessage() {
 	m.ctrl.T.Helper()
@@ -269,7 +163,8 @@ func (mr *MockPoolIMockRecorder) ProtoMessage() *gomock.Call {
 
 // Reset mocks base method.
 func (m *MockPoolI) Reset() {
-	*m = MockPoolI{}
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Reset")
 }
 
 // Reset indicates an expected call of Reset.
@@ -335,6 +230,332 @@ func (m *MockPoolI) SwapOutAmtGivenIn(ctx types.Context, tokenIn types.Coins, to
 func (mr *MockPoolIMockRecorder) SwapOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SwapOutAmtGivenIn", reflect.TypeOf((*MockPoolI)(nil).SwapOutAmtGivenIn), ctx, tokenIn, tokenOutDenom, swapFee)
+}
+
+// MockTraditionalAmmInterface is a mock of TraditionalAmmInterface interface.
+type MockTraditionalAmmInterface struct {
+	ctrl     *gomock.Controller
+	recorder *MockTraditionalAmmInterfaceMockRecorder
+}
+
+// MockTraditionalAmmInterfaceMockRecorder is the mock recorder for MockTraditionalAmmInterface.
+type MockTraditionalAmmInterfaceMockRecorder struct {
+	mock *MockTraditionalAmmInterface
+}
+
+// NewMockTraditionalAmmInterface creates a new mock instance.
+func NewMockTraditionalAmmInterface(ctrl *gomock.Controller) *MockTraditionalAmmInterface {
+	mock := &MockTraditionalAmmInterface{ctrl: ctrl}
+	mock.recorder = &MockTraditionalAmmInterfaceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockTraditionalAmmInterface) EXPECT() *MockTraditionalAmmInterfaceMockRecorder {
+	return m.recorder
+}
+
+// CalcExitPoolCoinsFromShares mocks base method.
+func (m *MockTraditionalAmmInterface) CalcExitPoolCoinsFromShares(ctx types.Context, numShares types.Int, exitFee types.Dec) (types.Coins, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CalcExitPoolCoinsFromShares", ctx, numShares, exitFee)
+	ret0, _ := ret[0].(types.Coins)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CalcExitPoolCoinsFromShares indicates an expected call of CalcExitPoolCoinsFromShares.
+func (mr *MockTraditionalAmmInterfaceMockRecorder) CalcExitPoolCoinsFromShares(ctx, numShares, exitFee interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcExitPoolCoinsFromShares", reflect.TypeOf((*MockTraditionalAmmInterface)(nil).CalcExitPoolCoinsFromShares), ctx, numShares, exitFee)
+}
+
+// CalcInAmtGivenOut mocks base method.
+func (m *MockTraditionalAmmInterface) CalcInAmtGivenOut(ctx types.Context, tokenOut types.Coins, tokenInDenom string, swapFee types.Dec) (types.Coin, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CalcInAmtGivenOut", ctx, tokenOut, tokenInDenom, swapFee)
+	ret0, _ := ret[0].(types.Coin)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CalcInAmtGivenOut indicates an expected call of CalcInAmtGivenOut.
+func (mr *MockTraditionalAmmInterfaceMockRecorder) CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcInAmtGivenOut", reflect.TypeOf((*MockTraditionalAmmInterface)(nil).CalcInAmtGivenOut), ctx, tokenOut, tokenInDenom, swapFee)
+}
+
+// CalcJoinPoolNoSwapShares mocks base method.
+func (m *MockTraditionalAmmInterface) CalcJoinPoolNoSwapShares(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, types.Coins, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CalcJoinPoolNoSwapShares", ctx, tokensIn, swapFee)
+	ret0, _ := ret[0].(types.Int)
+	ret1, _ := ret[1].(types.Coins)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// CalcJoinPoolNoSwapShares indicates an expected call of CalcJoinPoolNoSwapShares.
+func (mr *MockTraditionalAmmInterfaceMockRecorder) CalcJoinPoolNoSwapShares(ctx, tokensIn, swapFee interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcJoinPoolNoSwapShares", reflect.TypeOf((*MockTraditionalAmmInterface)(nil).CalcJoinPoolNoSwapShares), ctx, tokensIn, swapFee)
+}
+
+// CalcJoinPoolShares mocks base method.
+func (m *MockTraditionalAmmInterface) CalcJoinPoolShares(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, types.Coins, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CalcJoinPoolShares", ctx, tokensIn, swapFee)
+	ret0, _ := ret[0].(types.Int)
+	ret1, _ := ret[1].(types.Coins)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// CalcJoinPoolShares indicates an expected call of CalcJoinPoolShares.
+func (mr *MockTraditionalAmmInterfaceMockRecorder) CalcJoinPoolShares(ctx, tokensIn, swapFee interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcJoinPoolShares", reflect.TypeOf((*MockTraditionalAmmInterface)(nil).CalcJoinPoolShares), ctx, tokensIn, swapFee)
+}
+
+// CalcOutAmtGivenIn mocks base method.
+func (m *MockTraditionalAmmInterface) CalcOutAmtGivenIn(ctx types.Context, tokenIn types.Coins, tokenOutDenom string, swapFee types.Dec) (types.Coin, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CalcOutAmtGivenIn", ctx, tokenIn, tokenOutDenom, swapFee)
+	ret0, _ := ret[0].(types.Coin)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CalcOutAmtGivenIn indicates an expected call of CalcOutAmtGivenIn.
+func (mr *MockTraditionalAmmInterfaceMockRecorder) CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcOutAmtGivenIn", reflect.TypeOf((*MockTraditionalAmmInterface)(nil).CalcOutAmtGivenIn), ctx, tokenIn, tokenOutDenom, swapFee)
+}
+
+// ExitPool mocks base method.
+func (m *MockTraditionalAmmInterface) ExitPool(ctx types.Context, numShares types.Int, exitFee types.Dec) (types.Coins, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExitPool", ctx, numShares, exitFee)
+	ret0, _ := ret[0].(types.Coins)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ExitPool indicates an expected call of ExitPool.
+func (mr *MockTraditionalAmmInterfaceMockRecorder) ExitPool(ctx, numShares, exitFee interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExitPool", reflect.TypeOf((*MockTraditionalAmmInterface)(nil).ExitPool), ctx, numShares, exitFee)
+}
+
+// GetAddress mocks base method.
+func (m *MockTraditionalAmmInterface) GetAddress() types.AccAddress {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAddress")
+	ret0, _ := ret[0].(types.AccAddress)
+	return ret0
+}
+
+// GetAddress indicates an expected call of GetAddress.
+func (mr *MockTraditionalAmmInterfaceMockRecorder) GetAddress() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAddress", reflect.TypeOf((*MockTraditionalAmmInterface)(nil).GetAddress))
+}
+
+// GetExitFee mocks base method.
+func (m *MockTraditionalAmmInterface) GetExitFee(ctx types.Context) types.Dec {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetExitFee", ctx)
+	ret0, _ := ret[0].(types.Dec)
+	return ret0
+}
+
+// GetExitFee indicates an expected call of GetExitFee.
+func (mr *MockTraditionalAmmInterfaceMockRecorder) GetExitFee(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExitFee", reflect.TypeOf((*MockTraditionalAmmInterface)(nil).GetExitFee), ctx)
+}
+
+// GetId mocks base method.
+func (m *MockTraditionalAmmInterface) GetId() uint64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetId")
+	ret0, _ := ret[0].(uint64)
+	return ret0
+}
+
+// GetId indicates an expected call of GetId.
+func (mr *MockTraditionalAmmInterfaceMockRecorder) GetId() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetId", reflect.TypeOf((*MockTraditionalAmmInterface)(nil).GetId))
+}
+
+// GetSwapFee mocks base method.
+func (m *MockTraditionalAmmInterface) GetSwapFee(ctx types.Context) types.Dec {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSwapFee", ctx)
+	ret0, _ := ret[0].(types.Dec)
+	return ret0
+}
+
+// GetSwapFee indicates an expected call of GetSwapFee.
+func (mr *MockTraditionalAmmInterfaceMockRecorder) GetSwapFee(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSwapFee", reflect.TypeOf((*MockTraditionalAmmInterface)(nil).GetSwapFee), ctx)
+}
+
+// GetTotalPoolLiquidity mocks base method.
+func (m *MockTraditionalAmmInterface) GetTotalPoolLiquidity(ctx types.Context) types.Coins {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTotalPoolLiquidity", ctx)
+	ret0, _ := ret[0].(types.Coins)
+	return ret0
+}
+
+// GetTotalPoolLiquidity indicates an expected call of GetTotalPoolLiquidity.
+func (mr *MockTraditionalAmmInterfaceMockRecorder) GetTotalPoolLiquidity(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalPoolLiquidity", reflect.TypeOf((*MockTraditionalAmmInterface)(nil).GetTotalPoolLiquidity), ctx)
+}
+
+// GetTotalShares mocks base method.
+func (m *MockTraditionalAmmInterface) GetTotalShares() types.Int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTotalShares")
+	ret0, _ := ret[0].(types.Int)
+	return ret0
+}
+
+// GetTotalShares indicates an expected call of GetTotalShares.
+func (mr *MockTraditionalAmmInterfaceMockRecorder) GetTotalShares() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalShares", reflect.TypeOf((*MockTraditionalAmmInterface)(nil).GetTotalShares))
+}
+
+// IsActive mocks base method.
+func (m *MockTraditionalAmmInterface) IsActive(ctx types.Context) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsActive", ctx)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsActive indicates an expected call of IsActive.
+func (mr *MockTraditionalAmmInterfaceMockRecorder) IsActive(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsActive", reflect.TypeOf((*MockTraditionalAmmInterface)(nil).IsActive), ctx)
+}
+
+// JoinPool mocks base method.
+func (m *MockTraditionalAmmInterface) JoinPool(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "JoinPool", ctx, tokensIn, swapFee)
+	ret0, _ := ret[0].(types.Int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// JoinPool indicates an expected call of JoinPool.
+func (mr *MockTraditionalAmmInterfaceMockRecorder) JoinPool(ctx, tokensIn, swapFee interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JoinPool", reflect.TypeOf((*MockTraditionalAmmInterface)(nil).JoinPool), ctx, tokensIn, swapFee)
+}
+
+// JoinPoolNoSwap mocks base method.
+func (m *MockTraditionalAmmInterface) JoinPoolNoSwap(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "JoinPoolNoSwap", ctx, tokensIn, swapFee)
+	ret0, _ := ret[0].(types.Int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// JoinPoolNoSwap indicates an expected call of JoinPoolNoSwap.
+func (mr *MockTraditionalAmmInterfaceMockRecorder) JoinPoolNoSwap(ctx, tokensIn, swapFee interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JoinPoolNoSwap", reflect.TypeOf((*MockTraditionalAmmInterface)(nil).JoinPoolNoSwap), ctx, tokensIn, swapFee)
+}
+
+// ProtoMessage mocks base method.
+func (m *MockTraditionalAmmInterface) ProtoMessage() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "ProtoMessage")
+}
+
+// ProtoMessage indicates an expected call of ProtoMessage.
+func (mr *MockTraditionalAmmInterfaceMockRecorder) ProtoMessage() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProtoMessage", reflect.TypeOf((*MockTraditionalAmmInterface)(nil).ProtoMessage))
+}
+
+// Reset mocks base method.
+func (m *MockTraditionalAmmInterface) Reset() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Reset")
+}
+
+// Reset indicates an expected call of Reset.
+func (mr *MockTraditionalAmmInterfaceMockRecorder) Reset() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Reset", reflect.TypeOf((*MockTraditionalAmmInterface)(nil).Reset))
+}
+
+// SpotPrice mocks base method.
+func (m *MockTraditionalAmmInterface) SpotPrice(ctx types.Context, baseAssetDenom, quoteAssetDenom string) (types.Dec, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SpotPrice", ctx, baseAssetDenom, quoteAssetDenom)
+	ret0, _ := ret[0].(types.Dec)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SpotPrice indicates an expected call of SpotPrice.
+func (mr *MockTraditionalAmmInterfaceMockRecorder) SpotPrice(ctx, baseAssetDenom, quoteAssetDenom interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpotPrice", reflect.TypeOf((*MockTraditionalAmmInterface)(nil).SpotPrice), ctx, baseAssetDenom, quoteAssetDenom)
+}
+
+// String mocks base method.
+func (m *MockTraditionalAmmInterface) String() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "String")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// String indicates an expected call of String.
+func (mr *MockTraditionalAmmInterfaceMockRecorder) String() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "String", reflect.TypeOf((*MockTraditionalAmmInterface)(nil).String))
+}
+
+// SwapInAmtGivenOut mocks base method.
+func (m *MockTraditionalAmmInterface) SwapInAmtGivenOut(ctx types.Context, tokenOut types.Coins, tokenInDenom string, swapFee types.Dec) (types.Coin, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SwapInAmtGivenOut", ctx, tokenOut, tokenInDenom, swapFee)
+	ret0, _ := ret[0].(types.Coin)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SwapInAmtGivenOut indicates an expected call of SwapInAmtGivenOut.
+func (mr *MockTraditionalAmmInterfaceMockRecorder) SwapInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SwapInAmtGivenOut", reflect.TypeOf((*MockTraditionalAmmInterface)(nil).SwapInAmtGivenOut), ctx, tokenOut, tokenInDenom, swapFee)
+}
+
+// SwapOutAmtGivenIn mocks base method.
+func (m *MockTraditionalAmmInterface) SwapOutAmtGivenIn(ctx types.Context, tokenIn types.Coins, tokenOutDenom string, swapFee types.Dec) (types.Coin, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SwapOutAmtGivenIn", ctx, tokenIn, tokenOutDenom, swapFee)
+	ret0, _ := ret[0].(types.Coin)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SwapOutAmtGivenIn indicates an expected call of SwapOutAmtGivenIn.
+func (mr *MockTraditionalAmmInterfaceMockRecorder) SwapOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SwapOutAmtGivenIn", reflect.TypeOf((*MockTraditionalAmmInterface)(nil).SwapOutAmtGivenIn), ctx, tokenIn, tokenOutDenom, swapFee)
 }
 
 // MockPoolAmountOutExtension is a mock of PoolAmountOutExtension interface.
@@ -720,31 +941,31 @@ func (mr *MockPoolAmountOutExtensionMockRecorder) SwapOutAmtGivenIn(ctx, tokenIn
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SwapOutAmtGivenIn", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).SwapOutAmtGivenIn), ctx, tokenIn, tokenOutDenom, swapFee)
 }
 
-// MockPokePoolExtension is a mock of PokePoolExtension interface.
-type MockPokePoolExtension struct {
+// MockWeightedPoolExtension is a mock of WeightedPoolExtension interface.
+type MockWeightedPoolExtension struct {
 	ctrl     *gomock.Controller
-	recorder *MockPokePoolExtensionMockRecorder
+	recorder *MockWeightedPoolExtensionMockRecorder
 }
 
-// MockPokePoolExtensionMockRecorder is the mock recorder for MockPokePoolExtension.
-type MockPokePoolExtensionMockRecorder struct {
-	mock *MockPokePoolExtension
+// MockWeightedPoolExtensionMockRecorder is the mock recorder for MockWeightedPoolExtension.
+type MockWeightedPoolExtensionMockRecorder struct {
+	mock *MockWeightedPoolExtension
 }
 
-// NewMockPokePoolExtension creates a new mock instance.
-func NewMockPokePoolExtension(ctrl *gomock.Controller) *MockPokePoolExtension {
-	mock := &MockPokePoolExtension{ctrl: ctrl}
-	mock.recorder = &MockPokePoolExtensionMockRecorder{mock}
+// NewMockWeightedPoolExtension creates a new mock instance.
+func NewMockWeightedPoolExtension(ctrl *gomock.Controller) *MockWeightedPoolExtension {
+	mock := &MockWeightedPoolExtension{ctrl: ctrl}
+	mock.recorder = &MockWeightedPoolExtensionMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockPokePoolExtension) EXPECT() *MockPokePoolExtensionMockRecorder {
+func (m *MockWeightedPoolExtension) EXPECT() *MockWeightedPoolExtensionMockRecorder {
 	return m.recorder
 }
 
 // CalcExitPoolCoinsFromShares mocks base method.
-func (m *MockPokePoolExtension) CalcExitPoolCoinsFromShares(ctx types.Context, numShares types.Int, exitFee types.Dec) (types.Coins, error) {
+func (m *MockWeightedPoolExtension) CalcExitPoolCoinsFromShares(ctx types.Context, numShares types.Int, exitFee types.Dec) (types.Coins, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CalcExitPoolCoinsFromShares", ctx, numShares, exitFee)
 	ret0, _ := ret[0].(types.Coins)
@@ -753,13 +974,13 @@ func (m *MockPokePoolExtension) CalcExitPoolCoinsFromShares(ctx types.Context, n
 }
 
 // CalcExitPoolCoinsFromShares indicates an expected call of CalcExitPoolCoinsFromShares.
-func (mr *MockPokePoolExtensionMockRecorder) CalcExitPoolCoinsFromShares(ctx, numShares, exitFee interface{}) *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) CalcExitPoolCoinsFromShares(ctx, numShares, exitFee interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcExitPoolCoinsFromShares", reflect.TypeOf((*MockPokePoolExtension)(nil).CalcExitPoolCoinsFromShares), ctx, numShares, exitFee)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcExitPoolCoinsFromShares", reflect.TypeOf((*MockWeightedPoolExtension)(nil).CalcExitPoolCoinsFromShares), ctx, numShares, exitFee)
 }
 
 // CalcInAmtGivenOut mocks base method.
-func (m *MockPokePoolExtension) CalcInAmtGivenOut(ctx types.Context, tokenOut types.Coins, tokenInDenom string, swapFee types.Dec) (types.Coin, error) {
+func (m *MockWeightedPoolExtension) CalcInAmtGivenOut(ctx types.Context, tokenOut types.Coins, tokenInDenom string, swapFee types.Dec) (types.Coin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CalcInAmtGivenOut", ctx, tokenOut, tokenInDenom, swapFee)
 	ret0, _ := ret[0].(types.Coin)
@@ -768,13 +989,13 @@ func (m *MockPokePoolExtension) CalcInAmtGivenOut(ctx types.Context, tokenOut ty
 }
 
 // CalcInAmtGivenOut indicates an expected call of CalcInAmtGivenOut.
-func (mr *MockPokePoolExtensionMockRecorder) CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee interface{}) *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcInAmtGivenOut", reflect.TypeOf((*MockPokePoolExtension)(nil).CalcInAmtGivenOut), ctx, tokenOut, tokenInDenom, swapFee)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcInAmtGivenOut", reflect.TypeOf((*MockWeightedPoolExtension)(nil).CalcInAmtGivenOut), ctx, tokenOut, tokenInDenom, swapFee)
 }
 
 // CalcJoinPoolNoSwapShares mocks base method.
-func (m *MockPokePoolExtension) CalcJoinPoolNoSwapShares(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, types.Coins, error) {
+func (m *MockWeightedPoolExtension) CalcJoinPoolNoSwapShares(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, types.Coins, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CalcJoinPoolNoSwapShares", ctx, tokensIn, swapFee)
 	ret0, _ := ret[0].(types.Int)
@@ -784,13 +1005,13 @@ func (m *MockPokePoolExtension) CalcJoinPoolNoSwapShares(ctx types.Context, toke
 }
 
 // CalcJoinPoolNoSwapShares indicates an expected call of CalcJoinPoolNoSwapShares.
-func (mr *MockPokePoolExtensionMockRecorder) CalcJoinPoolNoSwapShares(ctx, tokensIn, swapFee interface{}) *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) CalcJoinPoolNoSwapShares(ctx, tokensIn, swapFee interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcJoinPoolNoSwapShares", reflect.TypeOf((*MockPokePoolExtension)(nil).CalcJoinPoolNoSwapShares), ctx, tokensIn, swapFee)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcJoinPoolNoSwapShares", reflect.TypeOf((*MockWeightedPoolExtension)(nil).CalcJoinPoolNoSwapShares), ctx, tokensIn, swapFee)
 }
 
 // CalcJoinPoolShares mocks base method.
-func (m *MockPokePoolExtension) CalcJoinPoolShares(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, types.Coins, error) {
+func (m *MockWeightedPoolExtension) CalcJoinPoolShares(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, types.Coins, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CalcJoinPoolShares", ctx, tokensIn, swapFee)
 	ret0, _ := ret[0].(types.Int)
@@ -800,13 +1021,13 @@ func (m *MockPokePoolExtension) CalcJoinPoolShares(ctx types.Context, tokensIn t
 }
 
 // CalcJoinPoolShares indicates an expected call of CalcJoinPoolShares.
-func (mr *MockPokePoolExtensionMockRecorder) CalcJoinPoolShares(ctx, tokensIn, swapFee interface{}) *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) CalcJoinPoolShares(ctx, tokensIn, swapFee interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcJoinPoolShares", reflect.TypeOf((*MockPokePoolExtension)(nil).CalcJoinPoolShares), ctx, tokensIn, swapFee)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcJoinPoolShares", reflect.TypeOf((*MockWeightedPoolExtension)(nil).CalcJoinPoolShares), ctx, tokensIn, swapFee)
 }
 
 // CalcOutAmtGivenIn mocks base method.
-func (m *MockPokePoolExtension) CalcOutAmtGivenIn(ctx types.Context, tokenIn types.Coins, tokenOutDenom string, swapFee types.Dec) (types.Coin, error) {
+func (m *MockWeightedPoolExtension) CalcOutAmtGivenIn(ctx types.Context, tokenIn types.Coins, tokenOutDenom string, swapFee types.Dec) (types.Coin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CalcOutAmtGivenIn", ctx, tokenIn, tokenOutDenom, swapFee)
 	ret0, _ := ret[0].(types.Coin)
@@ -815,13 +1036,13 @@ func (m *MockPokePoolExtension) CalcOutAmtGivenIn(ctx types.Context, tokenIn typ
 }
 
 // CalcOutAmtGivenIn indicates an expected call of CalcOutAmtGivenIn.
-func (mr *MockPokePoolExtensionMockRecorder) CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee interface{}) *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcOutAmtGivenIn", reflect.TypeOf((*MockPokePoolExtension)(nil).CalcOutAmtGivenIn), ctx, tokenIn, tokenOutDenom, swapFee)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcOutAmtGivenIn", reflect.TypeOf((*MockWeightedPoolExtension)(nil).CalcOutAmtGivenIn), ctx, tokenIn, tokenOutDenom, swapFee)
 }
 
 // ExitPool mocks base method.
-func (m *MockPokePoolExtension) ExitPool(ctx types.Context, numShares types.Int, exitFee types.Dec) (types.Coins, error) {
+func (m *MockWeightedPoolExtension) ExitPool(ctx types.Context, numShares types.Int, exitFee types.Dec) (types.Coins, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExitPool", ctx, numShares, exitFee)
 	ret0, _ := ret[0].(types.Coins)
@@ -830,13 +1051,13 @@ func (m *MockPokePoolExtension) ExitPool(ctx types.Context, numShares types.Int,
 }
 
 // ExitPool indicates an expected call of ExitPool.
-func (mr *MockPokePoolExtensionMockRecorder) ExitPool(ctx, numShares, exitFee interface{}) *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) ExitPool(ctx, numShares, exitFee interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExitPool", reflect.TypeOf((*MockPokePoolExtension)(nil).ExitPool), ctx, numShares, exitFee)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExitPool", reflect.TypeOf((*MockWeightedPoolExtension)(nil).ExitPool), ctx, numShares, exitFee)
 }
 
 // GetAddress mocks base method.
-func (m *MockPokePoolExtension) GetAddress() types.AccAddress {
+func (m *MockWeightedPoolExtension) GetAddress() types.AccAddress {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAddress")
 	ret0, _ := ret[0].(types.AccAddress)
@@ -844,13 +1065,13 @@ func (m *MockPokePoolExtension) GetAddress() types.AccAddress {
 }
 
 // GetAddress indicates an expected call of GetAddress.
-func (mr *MockPokePoolExtensionMockRecorder) GetAddress() *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) GetAddress() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAddress", reflect.TypeOf((*MockPokePoolExtension)(nil).GetAddress))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAddress", reflect.TypeOf((*MockWeightedPoolExtension)(nil).GetAddress))
 }
 
 // GetExitFee mocks base method.
-func (m *MockPokePoolExtension) GetExitFee(ctx types.Context) types.Dec {
+func (m *MockWeightedPoolExtension) GetExitFee(ctx types.Context) types.Dec {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetExitFee", ctx)
 	ret0, _ := ret[0].(types.Dec)
@@ -858,13 +1079,13 @@ func (m *MockPokePoolExtension) GetExitFee(ctx types.Context) types.Dec {
 }
 
 // GetExitFee indicates an expected call of GetExitFee.
-func (mr *MockPokePoolExtensionMockRecorder) GetExitFee(ctx interface{}) *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) GetExitFee(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExitFee", reflect.TypeOf((*MockPokePoolExtension)(nil).GetExitFee), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExitFee", reflect.TypeOf((*MockWeightedPoolExtension)(nil).GetExitFee), ctx)
 }
 
 // GetId mocks base method.
-func (m *MockPokePoolExtension) GetId() uint64 {
+func (m *MockWeightedPoolExtension) GetId() uint64 {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetId")
 	ret0, _ := ret[0].(uint64)
@@ -872,13 +1093,13 @@ func (m *MockPokePoolExtension) GetId() uint64 {
 }
 
 // GetId indicates an expected call of GetId.
-func (mr *MockPokePoolExtensionMockRecorder) GetId() *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) GetId() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetId", reflect.TypeOf((*MockPokePoolExtension)(nil).GetId))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetId", reflect.TypeOf((*MockWeightedPoolExtension)(nil).GetId))
 }
 
 // GetSwapFee mocks base method.
-func (m *MockPokePoolExtension) GetSwapFee(ctx types.Context) types.Dec {
+func (m *MockWeightedPoolExtension) GetSwapFee(ctx types.Context) types.Dec {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSwapFee", ctx)
 	ret0, _ := ret[0].(types.Dec)
@@ -886,13 +1107,28 @@ func (m *MockPokePoolExtension) GetSwapFee(ctx types.Context) types.Dec {
 }
 
 // GetSwapFee indicates an expected call of GetSwapFee.
-func (mr *MockPokePoolExtensionMockRecorder) GetSwapFee(ctx interface{}) *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) GetSwapFee(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSwapFee", reflect.TypeOf((*MockPokePoolExtension)(nil).GetSwapFee), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSwapFee", reflect.TypeOf((*MockWeightedPoolExtension)(nil).GetSwapFee), ctx)
+}
+
+// GetTokenWeight mocks base method.
+func (m *MockWeightedPoolExtension) GetTokenWeight(denom string) (types.Int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTokenWeight", denom)
+	ret0, _ := ret[0].(types.Int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTokenWeight indicates an expected call of GetTokenWeight.
+func (mr *MockWeightedPoolExtensionMockRecorder) GetTokenWeight(denom interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTokenWeight", reflect.TypeOf((*MockWeightedPoolExtension)(nil).GetTokenWeight), denom)
 }
 
 // GetTotalPoolLiquidity mocks base method.
-func (m *MockPokePoolExtension) GetTotalPoolLiquidity(ctx types.Context) types.Coins {
+func (m *MockWeightedPoolExtension) GetTotalPoolLiquidity(ctx types.Context) types.Coins {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTotalPoolLiquidity", ctx)
 	ret0, _ := ret[0].(types.Coins)
@@ -900,13 +1136,13 @@ func (m *MockPokePoolExtension) GetTotalPoolLiquidity(ctx types.Context) types.C
 }
 
 // GetTotalPoolLiquidity indicates an expected call of GetTotalPoolLiquidity.
-func (mr *MockPokePoolExtensionMockRecorder) GetTotalPoolLiquidity(ctx interface{}) *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) GetTotalPoolLiquidity(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalPoolLiquidity", reflect.TypeOf((*MockPokePoolExtension)(nil).GetTotalPoolLiquidity), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalPoolLiquidity", reflect.TypeOf((*MockWeightedPoolExtension)(nil).GetTotalPoolLiquidity), ctx)
 }
 
 // GetTotalShares mocks base method.
-func (m *MockPokePoolExtension) GetTotalShares() types.Int {
+func (m *MockWeightedPoolExtension) GetTotalShares() types.Int {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTotalShares")
 	ret0, _ := ret[0].(types.Int)
@@ -914,13 +1150,13 @@ func (m *MockPokePoolExtension) GetTotalShares() types.Int {
 }
 
 // GetTotalShares indicates an expected call of GetTotalShares.
-func (mr *MockPokePoolExtensionMockRecorder) GetTotalShares() *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) GetTotalShares() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalShares", reflect.TypeOf((*MockPokePoolExtension)(nil).GetTotalShares))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalShares", reflect.TypeOf((*MockWeightedPoolExtension)(nil).GetTotalShares))
 }
 
 // IsActive mocks base method.
-func (m *MockPokePoolExtension) IsActive(ctx types.Context) bool {
+func (m *MockWeightedPoolExtension) IsActive(ctx types.Context) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsActive", ctx)
 	ret0, _ := ret[0].(bool)
@@ -928,13 +1164,13 @@ func (m *MockPokePoolExtension) IsActive(ctx types.Context) bool {
 }
 
 // IsActive indicates an expected call of IsActive.
-func (mr *MockPokePoolExtensionMockRecorder) IsActive(ctx interface{}) *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) IsActive(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsActive", reflect.TypeOf((*MockPokePoolExtension)(nil).IsActive), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsActive", reflect.TypeOf((*MockWeightedPoolExtension)(nil).IsActive), ctx)
 }
 
 // JoinPool mocks base method.
-func (m *MockPokePoolExtension) JoinPool(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, error) {
+func (m *MockWeightedPoolExtension) JoinPool(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "JoinPool", ctx, tokensIn, swapFee)
 	ret0, _ := ret[0].(types.Int)
@@ -943,13 +1179,13 @@ func (m *MockPokePoolExtension) JoinPool(ctx types.Context, tokensIn types.Coins
 }
 
 // JoinPool indicates an expected call of JoinPool.
-func (mr *MockPokePoolExtensionMockRecorder) JoinPool(ctx, tokensIn, swapFee interface{}) *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) JoinPool(ctx, tokensIn, swapFee interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JoinPool", reflect.TypeOf((*MockPokePoolExtension)(nil).JoinPool), ctx, tokensIn, swapFee)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JoinPool", reflect.TypeOf((*MockWeightedPoolExtension)(nil).JoinPool), ctx, tokensIn, swapFee)
 }
 
 // JoinPoolNoSwap mocks base method.
-func (m *MockPokePoolExtension) JoinPoolNoSwap(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, error) {
+func (m *MockWeightedPoolExtension) JoinPoolNoSwap(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "JoinPoolNoSwap", ctx, tokensIn, swapFee)
 	ret0, _ := ret[0].(types.Int)
@@ -958,49 +1194,49 @@ func (m *MockPokePoolExtension) JoinPoolNoSwap(ctx types.Context, tokensIn types
 }
 
 // JoinPoolNoSwap indicates an expected call of JoinPoolNoSwap.
-func (mr *MockPokePoolExtensionMockRecorder) JoinPoolNoSwap(ctx, tokensIn, swapFee interface{}) *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) JoinPoolNoSwap(ctx, tokensIn, swapFee interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JoinPoolNoSwap", reflect.TypeOf((*MockPokePoolExtension)(nil).JoinPoolNoSwap), ctx, tokensIn, swapFee)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JoinPoolNoSwap", reflect.TypeOf((*MockWeightedPoolExtension)(nil).JoinPoolNoSwap), ctx, tokensIn, swapFee)
 }
 
 // PokePool mocks base method.
-func (m *MockPokePoolExtension) PokePool(blockTime time.Time) {
+func (m *MockWeightedPoolExtension) PokePool(blockTime time.Time) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "PokePool", blockTime)
 }
 
 // PokePool indicates an expected call of PokePool.
-func (mr *MockPokePoolExtensionMockRecorder) PokePool(blockTime interface{}) *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) PokePool(blockTime interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PokePool", reflect.TypeOf((*MockPokePoolExtension)(nil).PokePool), blockTime)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PokePool", reflect.TypeOf((*MockWeightedPoolExtension)(nil).PokePool), blockTime)
 }
 
 // ProtoMessage mocks base method.
-func (m *MockPokePoolExtension) ProtoMessage() {
+func (m *MockWeightedPoolExtension) ProtoMessage() {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "ProtoMessage")
 }
 
 // ProtoMessage indicates an expected call of ProtoMessage.
-func (mr *MockPokePoolExtensionMockRecorder) ProtoMessage() *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) ProtoMessage() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProtoMessage", reflect.TypeOf((*MockPokePoolExtension)(nil).ProtoMessage))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProtoMessage", reflect.TypeOf((*MockWeightedPoolExtension)(nil).ProtoMessage))
 }
 
 // Reset mocks base method.
-func (m *MockPokePoolExtension) Reset() {
+func (m *MockWeightedPoolExtension) Reset() {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "Reset")
 }
 
 // Reset indicates an expected call of Reset.
-func (mr *MockPokePoolExtensionMockRecorder) Reset() *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) Reset() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Reset", reflect.TypeOf((*MockPokePoolExtension)(nil).Reset))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Reset", reflect.TypeOf((*MockWeightedPoolExtension)(nil).Reset))
 }
 
 // SpotPrice mocks base method.
-func (m *MockPokePoolExtension) SpotPrice(ctx types.Context, baseAssetDenom, quoteAssetDenom string) (types.Dec, error) {
+func (m *MockWeightedPoolExtension) SpotPrice(ctx types.Context, baseAssetDenom, quoteAssetDenom string) (types.Dec, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SpotPrice", ctx, baseAssetDenom, quoteAssetDenom)
 	ret0, _ := ret[0].(types.Dec)
@@ -1009,13 +1245,13 @@ func (m *MockPokePoolExtension) SpotPrice(ctx types.Context, baseAssetDenom, quo
 }
 
 // SpotPrice indicates an expected call of SpotPrice.
-func (mr *MockPokePoolExtensionMockRecorder) SpotPrice(ctx, baseAssetDenom, quoteAssetDenom interface{}) *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) SpotPrice(ctx, baseAssetDenom, quoteAssetDenom interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpotPrice", reflect.TypeOf((*MockPokePoolExtension)(nil).SpotPrice), ctx, baseAssetDenom, quoteAssetDenom)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpotPrice", reflect.TypeOf((*MockWeightedPoolExtension)(nil).SpotPrice), ctx, baseAssetDenom, quoteAssetDenom)
 }
 
 // String mocks base method.
-func (m *MockPokePoolExtension) String() string {
+func (m *MockWeightedPoolExtension) String() string {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "String")
 	ret0, _ := ret[0].(string)
@@ -1023,13 +1259,13 @@ func (m *MockPokePoolExtension) String() string {
 }
 
 // String indicates an expected call of String.
-func (mr *MockPokePoolExtensionMockRecorder) String() *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) String() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "String", reflect.TypeOf((*MockPokePoolExtension)(nil).String))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "String", reflect.TypeOf((*MockWeightedPoolExtension)(nil).String))
 }
 
 // SwapInAmtGivenOut mocks base method.
-func (m *MockPokePoolExtension) SwapInAmtGivenOut(ctx types.Context, tokenOut types.Coins, tokenInDenom string, swapFee types.Dec) (types.Coin, error) {
+func (m *MockWeightedPoolExtension) SwapInAmtGivenOut(ctx types.Context, tokenOut types.Coins, tokenInDenom string, swapFee types.Dec) (types.Coin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SwapInAmtGivenOut", ctx, tokenOut, tokenInDenom, swapFee)
 	ret0, _ := ret[0].(types.Coin)
@@ -1038,13 +1274,13 @@ func (m *MockPokePoolExtension) SwapInAmtGivenOut(ctx types.Context, tokenOut ty
 }
 
 // SwapInAmtGivenOut indicates an expected call of SwapInAmtGivenOut.
-func (mr *MockPokePoolExtensionMockRecorder) SwapInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee interface{}) *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) SwapInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SwapInAmtGivenOut", reflect.TypeOf((*MockPokePoolExtension)(nil).SwapInAmtGivenOut), ctx, tokenOut, tokenInDenom, swapFee)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SwapInAmtGivenOut", reflect.TypeOf((*MockWeightedPoolExtension)(nil).SwapInAmtGivenOut), ctx, tokenOut, tokenInDenom, swapFee)
 }
 
 // SwapOutAmtGivenIn mocks base method.
-func (m *MockPokePoolExtension) SwapOutAmtGivenIn(ctx types.Context, tokenIn types.Coins, tokenOutDenom string, swapFee types.Dec) (types.Coin, error) {
+func (m *MockWeightedPoolExtension) SwapOutAmtGivenIn(ctx types.Context, tokenIn types.Coins, tokenOutDenom string, swapFee types.Dec) (types.Coin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SwapOutAmtGivenIn", ctx, tokenIn, tokenOutDenom, swapFee)
 	ret0, _ := ret[0].(types.Coin)
@@ -1053,7 +1289,7 @@ func (m *MockPokePoolExtension) SwapOutAmtGivenIn(ctx types.Context, tokenIn typ
 }
 
 // SwapOutAmtGivenIn indicates an expected call of SwapOutAmtGivenIn.
-func (mr *MockPokePoolExtensionMockRecorder) SwapOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee interface{}) *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) SwapOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SwapOutAmtGivenIn", reflect.TypeOf((*MockPokePoolExtension)(nil).SwapOutAmtGivenIn), ctx, tokenIn, tokenOutDenom, swapFee)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SwapOutAmtGivenIn", reflect.TypeOf((*MockWeightedPoolExtension)(nil).SwapOutAmtGivenIn), ctx, tokenIn, tokenOutDenom, swapFee)
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 
-	"github.com/osmosis-labs/osmosis/v12/tests/mocks"
+	mocks "github.com/osmosis-labs/osmosis/v12/tests/mocks"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/gamm interfaces and concrete types
