@@ -111,6 +111,7 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolAsset(assets []balancer.Po
 	return poolId
 }
 
+// Modify spotprice of a pool to target spotprice
 func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice sdk.Dec, baseDenom string) {
 	var quoteDenom string
 	var int64Max = int64(^uint64(0) >> 1)
@@ -128,11 +129,11 @@ func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice sdk.De
 
 	amountTrade := s.CalcAmoutOfTokenToGetTargetPrice(s.Ctx, pool, targetSpotPrice, baseDenom, quoteDenom)
 	if amountTrade.IsPositive() {
-		swapIn := sdk.NewCoins(sdk.NewCoin(baseDenom, sdk.NewInt(amountTrade.RoundInt64())))
+		swapIn := sdk.NewCoins(sdk.NewCoin(quoteDenom, sdk.NewInt(amountTrade.RoundInt64())))
 		s.FundAcc(s.TestAccs[0], swapIn)
 		msg := gammtypes.MsgSwapExactAmountIn{
 			Sender:            s.TestAccs[0].String(),
-			Routes:            []gammtypes.SwapAmountInRoute{{PoolId: poolID, TokenOutDenom: quoteDenom}},
+			Routes:            []gammtypes.SwapAmountInRoute{{PoolId: poolID, TokenOutDenom: baseDenom}},
 			TokenIn:           swapIn[0],
 			TokenOutMinAmount: sdk.ZeroInt(),
 		}
@@ -141,14 +142,14 @@ func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice sdk.De
 		_, err = gammMsgServer.SwapExactAmountIn(sdk.WrapSDKContext(s.Ctx), &msg)
 		s.Require().NoError(err)
 	} else {
-		swapOut := sdk.NewCoins(sdk.NewCoin(baseDenom, sdk.NewInt(amountTrade.RoundInt64()).Abs()))
+		swapOut := sdk.NewCoins(sdk.NewCoin(quoteDenom, sdk.NewInt(amountTrade.RoundInt64()).Abs()))
 		swapFee := pool.GetSwapFee(s.Ctx)
-		tokenIn, err := pool.CalcInAmtGivenOut(s.Ctx, swapOut, quoteDenom, swapFee)
+		tokenIn, err := pool.CalcInAmtGivenOut(s.Ctx, swapOut, baseDenom, swapFee)
 		s.Require().NoError(err)
 		s.FundAcc(s.TestAccs[0], sdk.NewCoins(tokenIn))
 		msg := gammtypes.MsgSwapExactAmountOut{
 			Sender:           s.TestAccs[0].String(),
-			Routes:           []gammtypes.SwapAmountOutRoute{{PoolId: poolID, TokenInDenom: quoteDenom}},
+			Routes:           []gammtypes.SwapAmountOutRoute{{PoolId: poolID, TokenInDenom: baseDenom}},
 			TokenInMaxAmount: sdk.NewInt(int64Max),
 			TokenOut:         swapOut[0],
 		}
@@ -232,13 +233,13 @@ func (s *KeeperTestHelper) CalcAmoutOfTokenToGetTargetPrice(ctx sdk.Context, poo
 	spotPriceNow, err := blPool.SpotPrice(ctx, baseDenom, quoteDenom)
 	s.Require().NoError(err)
 
-	// Amount of base token need to trade to get target spot price
-	// AmoutBaseTokenNeedToTrade = AmoutBaseTokenNow * ((targetSpotPrice/spotPriceNow)^((weight_quote/(weight_quote + weight_base))) -1 )
+	// Amount of quote token need to trade to get target spot price
+	// AmoutQuoteTokenNeedToTrade = AmoutQuoTokenNow * ((targetSpotPrice/spotPriceNow)^((weight_base/(weight_base + weight_quote))) -1 )
 
 	ratioPrice := targetSpotPrice.Quo(spotPriceNow)
-	ratioWeight := (quoteAsset.Weight.ToDec()).Quo(quoteAsset.Weight.ToDec().Add(baseAsset.Weight.ToDec()))
+	ratioWeight := (baseAsset.Weight.ToDec()).Quo(baseAsset.Weight.ToDec().Add(quoteAsset.Weight.ToDec()))
 
-	amountTrade = baseAsset.Token.Amount.ToDec().Mul(osmomath.Pow(ratioPrice, ratioWeight).Sub(sdk.OneDec()))
+	amountTrade = quoteAsset.Token.Amount.ToDec().Mul(osmomath.Pow(ratioPrice, ratioWeight).Sub(sdk.OneDec()))
 
 	return amountTrade
 }
