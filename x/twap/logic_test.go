@@ -128,7 +128,6 @@ func (s *TestSuite) TestIntegrationForTwap() {
 
 	s.Require().Equal(twapRecord.P0LastSpotPrice.String(), "1.300000000000000000")
 	s.Require().Equal(twapRecord.P1LastSpotPrice.String(), "0.769230770000000000")
-	// the accumulators store accumulators based on incorrect spot prices as well, these should have been stored opposite
 	// 11000 milli-seconds(time since last record) * 0.2
 	s.Require().Equal(twapRecord.P0ArithmeticTwapAccumulator.String(), "55000.000000000000000000")
 	s.Require().Equal(twapRecord.P1ArithmeticTwapAccumulator.String(), "2200.000000000000000000")
