@@ -85,6 +85,8 @@ func (s *TestSuite) TestGetSpotPrices() {
 	}
 }
 
+// TestIntegrationForTwap serves the purpose of testing a full integration flow for twap.
+// This includes the flow of creating a pool -> end block -> twap record query -> swap -> end block -> twap record query
 func (s *TestSuite) TestIntegrationForTwap() {
 	poolAssets := sdk.NewCoins(sdk.NewInt64Coin(denom0, 5), sdk.NewInt64Coin(denom1, 25))
 	poolId := s.PrepareBalancerPoolWithCoins(poolAssets...)
@@ -97,11 +99,14 @@ func (s *TestSuite) TestIntegrationForTwap() {
 	twapRecord, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denom0, denom1)
 	s.Require().NoError(err)
 
-	s.Require().Equal(twapRecord.P0LastSpotPrice, sdk.MustNewDecFromStr("5"))
-	s.Require().Equal(twapRecord.P1LastSpotPrice, sdk.MustNewDecFromStr("0.2"))
+	p0InitialSpotPrice := poolAssets.AmountOf(denom1).ToDec().Quo(poolAssets.AmountOf(denom0).ToDec())
+	p1InitialSpotPrice := poolAssets.AmountOf(denom0).ToDec().Quo(poolAssets.AmountOf(denom1).ToDec())
+
+	s.Require().Equal(twapRecord.P0LastSpotPrice, p0InitialSpotPrice)
+	s.Require().Equal(twapRecord.P1LastSpotPrice, p1InitialSpotPrice)
 
 	spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, denom0, denom1)
-	s.Require().Equal(spotPrice, sdk.MustNewDecFromStr("5"))
+	s.Require().Equal(spotPrice, p0InitialSpotPrice)
 
 	// now suppose 11 seconds has passed by
 	s.Ctx = s.Ctx.WithBlockTime(oldTime.Add(time.Second * 10))
@@ -721,7 +726,7 @@ func (s *TestSuite) TestPruneRecords() {
 
 	pool1OlderMin2MsRecord, // deleted
 		pool2OlderMin1MsRecordAB, pool2OlderMin1MsRecordAC, pool2OlderMin1MsRecordBC, // deleted
-		pool3OlderBaseRecord,    // kept as newest under keep period
+		pool3OlderBaseRecord,    // kept as it is at the keep period boundary
 		pool4OlderPlus1Record := // kept as newest under keep period
 		s.createTestRecordsFromTime(baseTime.Add(2 * -recordHistoryKeepPeriod))
 
