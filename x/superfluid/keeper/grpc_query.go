@@ -428,7 +428,7 @@ func (q Querier) TotalDelegationByValidatorForDenom(goCtx context.Context, req *
 	}
 
 	return &types.QueryTotalDelegationByValidatorForDenomResponse{
-		AssetResponse: delegationsByValidator,
+		Assets: delegationsByValidator,
 	}, nil
 }
 

@@ -38,9 +38,9 @@ func (suite *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 		res, err := querier.TotalDelegationByValidatorForDenom(sdk.WrapSDKContext(ctx), &types.QueryTotalDelegationByValidatorForDenomRequest{Denom: denom})
 
 		suite.Require().NoError(err)
-		suite.Require().Equal(len(valAddrs), len(res.AssetResponse))
+		suite.Require().Equal(len(valAddrs), len(res.Assets))
 
-		for _, result := range res.AssetResponse {
+		for _, result := range res.Assets {
 			// check osmo equivalent is correct
 			actual_response_osmo := result.OsmoEquivalent
 			needed_response_osmo := suite.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(ctx, denom, sdk.NewInt(delegation_amount))

@@ -160,7 +160,7 @@ message ConnectedIntermediaryAccountResponse {
 
 message QueryTotalDelegationByValidatorForDenomRequest { string denom = 1; }
 message QueryTotalDelegationByValidatorForDenomResponse {
-  repeated Delegations asset_response = 1 [ (gogoproto.nullable) = false ];
+  repeated Delegations assets = 1 [ (gogoproto.nullable) = false ];
 }
 
 message Delegations {
