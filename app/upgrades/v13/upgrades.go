@@ -21,7 +21,10 @@ func CreateUpgradeHandler(
 		keepers.LockupKeeper.SetParams(ctx, lockuptypes.DefaultParams())
 		keepers.SwapRouterKeeper.SetParams(ctx, swaproutertypes.DefaultParams())
 
-		poolsCount := keepers.GAMMKeeper.GetPoolCount(ctx)
+		// N.B: pool id in gamm is to be deprecated in the future
+		// Instead,it is moved to swaprouter.
+		poolsCount := keepers.GAMMKeeper.GetNextPoolId(ctx) - 1
+		keepers.GAMMKeeper.SetPoolCount(ctx, poolsCount)
 		keepers.SwapRouterKeeper.SetNextPoolId(ctx, poolsCount)
 
 		return mm.RunMigrations(ctx, configurator, fromVM)

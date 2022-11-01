@@ -164,6 +164,20 @@ func (k Keeper) initializePoolCount(ctx sdk.Context) {
 	osmoutils.MustSet(store, types.KeyGammPoolCount, poolCount)
 }
 
+// initializePoolId initializes pool id to 0.
+func (k Keeper) initializePoolId(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	poolId := &gogotypes.UInt64Value{Value: 0}
+	osmoutils.MustSet(store, types.KeyNextGlobalPoolId, poolId)
+}
+
+// SetPoolCount sets pool id to 0.
+func (k Keeper) SetPoolCount(ctx sdk.Context, count uint64) {
+	store := ctx.KVStore(k.storeKey)
+	poolCount := &gogotypes.UInt64Value{Value: count}
+	osmoutils.MustSet(store, types.KeyGammPoolCount, poolCount)
+}
+
 func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
@@ -279,11 +293,19 @@ func (k Keeper) GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error) 
 	return denoms, err
 }
 
-// GetPoolCount returns the next pool Id.
+// GetPoolCount returns the current pool count.
 func (k Keeper) GetPoolCount(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	poolCount := gogotypes.UInt64Value{}
 	osmoutils.MustGet(store, types.KeyGammPoolCount, &poolCount)
+	return poolCount.Value
+}
+
+// GetNextPoolId returns the next pool Id.
+func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
+	store := ctx.KVStore(k.storeKey)
+	poolCount := gogotypes.UInt64Value{}
+	osmoutils.MustGet(store, types.KeyNextGlobalPoolId, &poolCount)
 	return poolCount.Value
 }
 

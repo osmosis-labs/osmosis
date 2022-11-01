@@ -11,6 +11,8 @@ option go_package = "github.com/osmosis-labs/osmosis/v12/x/gamm/types";
 message GenesisState {
   repeated google.protobuf.Any pools = 1
       [ (cosmos_proto.accepts_interface) = "PoolI" ];
+  // next poold_id = 2. TODO: deprecate  by adding: reserved 7;
+  uint64 next_pool_number = 2;
   // gamm pool count
-  uint64 pool_count = 2;
+  uint64 pool_count = 3;
 }
