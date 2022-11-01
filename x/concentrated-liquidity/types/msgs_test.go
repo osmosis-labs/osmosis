@@ -69,7 +69,7 @@ func TestMsgCreatePosition(t *testing.T) {
 			msg: types.MsgCreatePosition{
 				PoolId:          1,
 				Sender:          addr1,
-				LowerTick:       types.MinTick -1,
+				LowerTick:       types.MinTick - 1,
 				UpperTick:       1,
 				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
 				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
