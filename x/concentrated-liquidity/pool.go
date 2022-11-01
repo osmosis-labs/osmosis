@@ -93,7 +93,6 @@ type SwapState struct {
 	liquidity                sdk.Dec
 }
 
-// this only works on a single directional trade, will implement bi directional trade in next milestone
 // TODO: revisit tokenIn that is getting returned. Right now if we swapped 40eth -> 40 usdc, the return value for tokenIn would be 0,
 // since we're returning the delta amount, not the actual amounut of token in
 func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
