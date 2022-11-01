@@ -843,6 +843,81 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 		})
 	}
 }
+func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
+	type testcase struct {
+		name           string
+		shareOutAmount sdk.Int
+		swapFee        sdk.Dec
+		poolAssets     []balancer.PoolAsset
+		err            error
+	}
+
+	testcases := []testcase{
+		{
+			name:           "Share ratio is zero",
+			shareOutAmount: sdk.ZeroInt(),
+			swapFee:        sdk.ZeroDec(),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 10),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 10),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			err: types.ErrInvalidMathApprox,
+		},
+		{
+			name:           "Share ratio is negative",
+			shareOutAmount: sdk.NewInt(-1),
+			swapFee:        sdk.ZeroDec(),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 10),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 10),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			err: types.ErrInvalidMathApprox,
+		},
+		{
+			name:           "Pass",
+			shareOutAmount: sdk.NewInt(8_000_000_000_000_000_000),
+			swapFee:        sdk.ZeroDec(),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 10),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 10),
+					Weight: sdk.NewInt(100),
+				},
+			},
+		},
+	}
+	for _, tc := range testcases {
+		tc := tc
+
+		suite.T().Run(tc.name, func(t *testing.T) {
+			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
+			calPool, ok := pool.(types.TraditionalAmmInterface)
+			suite.Require().Equal(ok, true)
+			_, err := calPool.GetMaximalNoSwapLPAmount(suite.Ctx, tc.shareOutAmount)
+			if tc.err != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorAs(tc.err, &err)
+			} else {
+				suite.Require().NoError(err)
+			}
+		})
+	}
+}
 
 func (suite *KeeperTestSuite) TestJoinPool() {
 	// We append shared calcSingleAssetJoinTestCases with multi-asset and edge
