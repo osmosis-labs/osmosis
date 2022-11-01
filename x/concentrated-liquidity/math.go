@@ -127,7 +127,7 @@ func getLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0,
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
 	if sqrtPrice.LTE(sqrtPriceA) {
-		liquidity = liquidity0(amount0, sqrtPrice, sqrtPriceB)
+		liquidity = liquidity0(amount0, sqrtPriceA, sqrtPriceB)
 	} else if sqrtPrice.LTE(sqrtPriceB) {
 		liquidity0 := liquidity0(amount0, sqrtPrice, sqrtPriceB)
 		liquidity1 := liquidity1(amount1, sqrtPrice, sqrtPriceA)
