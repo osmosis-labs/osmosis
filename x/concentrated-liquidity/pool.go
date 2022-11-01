@@ -139,8 +139,6 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 		liquidity:                p.Liquidity,
 	}
 
-	// TODO: This should be GT 0 but some instances have very small remainder
-	// need to look into fixing this
 	for swapState.amountSpecifiedRemaining.GT(sdk.ZeroDec()) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
 		nextTick, ok := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), zeroForOne)
 		if !ok {
