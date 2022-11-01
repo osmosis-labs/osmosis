@@ -31,7 +31,7 @@ The motivation of IBC-rate-limit comes from the empirical observations of blockc
 In the presence of a software bug on Osmosis, IBC itself, or on a counterparty chain, we would like to prevent the bridge from being fully depegged.
 This stems from the idea that a 30% asset depeg is ~infinitely better than a 100% depeg.
 Its _crazy_ that today these complex bridged assets can instantly go to 0 in event of bug.
-The goal of a rate limit is to raise an alert that something has gone wrong, allowing validators and developers to have time to react and protect larger portions of user funds.
+The goal of a rate limit is to raise an alert that something has potentially gone wrong, allowing validators and developers to have time to analyze, react, and protect larger portions of user funds.
 
 The thesis of this is that, it is worthwile to sacrifice liveness in the case of legitimate demand to send extreme amounts of funds, to prevent the terrible long-tail full fund risks.
 Rate limits aren't the end-all of safety controls, they're merely the simplest automated one. More should be explored and added onto IBC!
