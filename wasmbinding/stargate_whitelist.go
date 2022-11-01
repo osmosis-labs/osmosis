@@ -3,6 +3,7 @@ package wasmbinding
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"sync"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
@@ -43,7 +44,6 @@ type GRPCQueriesInfo struct {
 
 func (g *GRPCQueriesInfo) RegisterQueryReponse(queryServer interface{}) {
 	handlers := reflect.TypeOf(queryServer).Elem()
-
 	// adds a top-level query handler based on the gRPC service name
 	for i := 0; i < handlers.NumMethod(); i++ {
 		qResponse := reflect.New(handlers.Method(i).Type.Out(0).Elem())
@@ -63,9 +63,10 @@ func (g *GRPCQueriesInfo) RegisterService(sd *grpc.ServiceDesc, ss interface{}) 
 		fqName := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
 		g.QueryPaths = append(g.QueryPaths, fqName)
 	}
+	sort.Strings(g.QueryPaths)
 }
 
-func (g GRPCQueriesInfo) GRPCQueriesInfo2StargateWhitelist() {
+func (g *GRPCQueriesInfo) GRPCQueriesInfo2StargateWhitelist() {
 	for id := range g.QueryPaths {
 		setWhitelistedQuery(g.QueryPaths[id], g.QueryReponses[id])
 	}
