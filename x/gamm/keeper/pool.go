@@ -17,7 +17,7 @@ import (
 func (k Keeper) InitializePool(ctx sdk.Context, pool types.PoolI, creatorAddress sdk.AccAddress) error {
 	poolId := pool.GetId()
 
-	// Finally, add the share token's meta data to the bank keeper.
+	// Add the share token's meta data to the bank keeper.
 	poolShareBaseDenom := types.GetPoolShareDenom(poolId)
 	poolShareDisplayDenom := fmt.Sprintf("GAMM-%d", poolId)
 	k.bankKeeper.SetDenomMetaData(ctx, banktypes.Metadata{
