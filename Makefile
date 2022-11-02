@@ -272,7 +272,7 @@ test-e2e-ci:
 # test-e2e-debug runs a full e2e test suite but does
 # not attempt to delete Docker resources at the end.
 test-e2e-debug: e2e-setup
-	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION) OSMOSIS_E2E_SKIP_CLEANUP=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -count=1
+	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=True OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION) OSMOSIS_E2E_SKIP_CLEANUP=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -count=1
 
 # test-e2e-short runs the e2e test with only short tests.
 # Does not delete any of the containers after running.
@@ -296,10 +296,10 @@ docker-build-debug:
 	@DOCKER_BUILDKIT=1 docker tag osmosis:${COMMIT} osmosis:debug
 
 docker-build-e2e-init-chain:
-	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain -f tests/e2e/initialization/init.Dockerfile .
+	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain --platform=linux/x86_64 -f tests/e2e/initialization/init.Dockerfile .
 
 docker-build-e2e-init-node:
-	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-node:debug --build-arg E2E_SCRIPT_NAME=node -f tests/e2e/initialization/init.Dockerfile .
+	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-node:debug --build-arg E2E_SCRIPT_NAME=node --platform=linux/x86_64 -f tests/e2e/initialization/init.Dockerfile .
 
 e2e-setup: e2e-check-image-sha e2e-remove-resources
 	@echo Finished e2e environment setup, ready to start the test
