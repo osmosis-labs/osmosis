@@ -10,6 +10,7 @@ import (
 	"time"
 
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
+
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -521,7 +522,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 
 	// start the state synchin node.
 	err = stateSynchingNode.Run()
-	s.NoError(err)
+	s.Require().NoError(err)
 
 	// ensure that the state synching node cathes up to the running node.
 	s.Require().Eventually(func() bool {
@@ -537,7 +538,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 
 	// stop the state synching node.
 	err = chainA.RemoveNode(stateSynchingNode.Name)
-	s.NoError(err)
+	s.Require().NoError(err)
 }
 
 func (s *IntegrationTestSuite) TestExpeditedProposals() {
