@@ -28,7 +28,7 @@ func NewStableswapPool(poolId uint64,
 	if len(scalingFactors) == 0 {
 		scalingFactors = make([]uint64, len(initialLiquidity))
 		for i := range scalingFactors {
-			scalingFactors[i] = types.DefaultScalingFactorMultiplier
+			scalingFactors[i] = types.ScalingFactorMultiplier
 		}
 	} else {
 		scalingFactors = applyScalingFactorMultiplier(scalingFactors)
@@ -395,7 +395,7 @@ func validateScalingFactors(scalingFactors []uint64, numAssets int) error {
 	}
 
 	for _, scalingFactor := range scalingFactors {
-		if scalingFactor == 0 || int64(scalingFactor) <= 0 || scalingFactor < types.DefaultScalingFactorMultiplier {
+		if scalingFactor == 0 || int64(scalingFactor) <= 0 || scalingFactor < types.ScalingFactorMultiplier {
 			return types.ErrInvalidStableswapScalingFactors
 		}
 	}
@@ -421,7 +421,7 @@ func validatePoolAssets(initialAssets sdk.Coins, scalingFactors []uint64) error 
 
 func applyScalingFactorMultiplier(scalingFactors []uint64) []uint64 {
 	for i := range scalingFactors {
-		scalingFactors[i] = scalingFactors[i] * types.DefaultScalingFactorMultiplier
+		scalingFactors[i] = scalingFactors[i] * types.ScalingFactorMultiplier
 	}
 
 	return scalingFactors
