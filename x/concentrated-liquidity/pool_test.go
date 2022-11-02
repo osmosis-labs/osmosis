@@ -27,25 +27,25 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	swapFee := sdk.ZeroDec()
 
 	tests := map[string]struct {
-		positionAmount0       sdk.Int
-		positionAmount1       sdk.Int
-		addPositions          func(ctx sdk.Context, poolId uint64)
-		tokenIn               sdk.Coin
-		tokenOutDenom         string
-		priceLimit            sdk.Dec
-		expectedTokenInDelta  sdk.Int
-		expectedTokenOutDelta sdk.Int
-		expectedTick          sdk.Int
-		newLowerPrice         sdk.Dec
-		newUpperPrice         sdk.Dec
-		poolLiqAmount0        sdk.Int
-		poolLiqAmount1        sdk.Int
+		positionAmount0  sdk.Int
+		positionAmount1  sdk.Int
+		addPositions     func(ctx sdk.Context, poolId uint64)
+		tokenIn          sdk.Coin
+		tokenOutDenom    string
+		priceLimit       sdk.Dec
+		expectedTokenIn  sdk.Coin
+		expectedTokenOut sdk.Coin
+		expectedTick     sdk.Int
+		newLowerPrice    sdk.Dec
+		newUpperPrice    sdk.Dec
+		poolLiqAmount0   sdk.Int
+		poolLiqAmount1   sdk.Int
 	}{
 		//  One price range
 		//
 		//          5000
 		//  4545 -----|----- 5500
-		"single position within one tick: eth -> usdc": {
+		"single position within one tick: usdc -> eth": {
 			addPositions: func(ctx sdk.Context, poolId uint64) {
 				// add first position
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
@@ -55,11 +55,12 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			tokenOutDenom: "eth",
 			priceLimit:    sdk.NewDec(5004),
 			// we expect to put 42 usdc in and in return get .008398 eth back
-			expectedTokenInDelta:  sdk.NewInt(41999999),
-			expectedTokenOutDelta: sdk.NewInt(8396),
-			expectedTick:          sdk.NewInt(85184),
+			// due to limited liquidity, we actually put in 41.99 usdc and in return get .008396 eth back
+			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(41999999)),
+			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(8396)),
+			expectedTick:     sdk.NewInt(85184),
 		},
-		"single position within one tick: usdc -> eth": {
+		"single position within one tick: eth -> usdc": {
 			addPositions: func(ctx sdk.Context, poolId uint64) {
 				// add first position
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
@@ -68,10 +69,10 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(13370)),
 			tokenOutDenom: "usdc",
 			priceLimit:    sdk.NewDec(4993),
-			// we expect to put 42 usdc in and in return get .008398 eth back
-			expectedTokenInDelta:  sdk.NewInt(66790908),
-			expectedTokenOutDelta: sdk.NewInt(13370),
-			expectedTick:          sdk.NewInt(85163),
+			// we expect to put .01337 eth in and in return get 66.79 usdc back
+			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(13370)),
+			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(66790908)),
+			expectedTick:     sdk.NewInt(85163),
 		},
 		//  Two equal price ranges
 		//
@@ -92,9 +93,9 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			tokenOutDenom: "eth",
 			priceLimit:    sdk.NewDec(5002),
 			// we expect to put 42 usdc in and in return get .008398 eth back
-			expectedTokenInDelta:  sdk.NewInt(42000000),
-			expectedTokenOutDelta: sdk.NewInt(8398),
-			expectedTick:          sdk.NewInt(85180),
+			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(42000000)),
+			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(8398)),
+			expectedTick:     sdk.NewInt(85180),
 			// two positions with same liquidity entered
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
 			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
@@ -112,10 +113,12 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(13370)),
 			tokenOutDenom: "usdc",
 			priceLimit:    sdk.NewDec(4996),
-			// we expect to put 42 usdc in and in return get .008398 eth back
-			expectedTokenInDelta:  sdk.NewInt(66811697),
-			expectedTokenOutDelta: sdk.NewInt(13370),
-			expectedTick:          sdk.NewInt(85169),
+			// we expect to put .01337 eth in and in return get 66.79 eth back
+			// TODO: look into why we are returning 66.81 instead of 66.79 like the inverse of this test above
+			// sure, the above test only has 1 position while this has two positions, but shouldn't that effect the tokenIn as well?
+			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(13370)),
+			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(66811697)),
+			expectedTick:     sdk.NewInt(85169),
 			// two positions with same liquidity entered
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
 			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
@@ -144,14 +147,15 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
 				s.Require().NoError(err)
 			},
-			tokenIn:               sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			tokenOutDenom:         "eth",
-			priceLimit:            sdk.NewDec(6106),
-			expectedTokenInDelta:  sdk.NewInt(9999999999),
-			expectedTokenOutDelta: sdk.NewInt(1820536),
-			expectedTick:          sdk.NewInt(87173),
-			newLowerPrice:         sdk.NewDec(5501),
-			newUpperPrice:         sdk.NewDec(6250),
+			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenOutDenom: "eth",
+			priceLimit:    sdk.NewDec(6106),
+			// we expect to put 10000 usdc in and in return get 1.820536 eth back
+			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(9999999999)),
+			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1820536)),
+			expectedTick:     sdk.NewInt(87173),
+			newLowerPrice:    sdk.NewDec(5501),
+			newUpperPrice:    sdk.NewDec(6250),
 		},
 	}
 
@@ -165,19 +169,15 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			// add positions
 			test.addPositions(s.Ctx, pool.Id)
 
-			tokenInDelta, tokenOutDelta, updatedTick, updatedLiquidity, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(
+			tokenIn, tokenOut, updatedTick, updatedLiquidity, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(
 				s.Ctx,
 				test.tokenIn, test.tokenOutDenom,
 				swapFee, test.priceLimit, pool.Id)
 			s.Require().NoError(err)
 
-			fmt.Println("tokenInDelta", tokenInDelta)
-			fmt.Println("tokenOutDelta", tokenOutDelta)
-			fmt.Println("updatedTick", updatedTick)
-
-			s.Require().Equal(test.expectedTokenInDelta, tokenInDelta)
-			s.Require().Equal(test.expectedTokenOutDelta, tokenOutDelta)
-			s.Require().Equal(test.expectedTick, updatedTick)
+			s.Require().Equal(test.expectedTokenIn.String(), tokenIn.String())
+			s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
+			s.Require().Equal(test.expectedTick.String(), updatedTick.String())
 
 			if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
 				test.newLowerPrice = lowerPrice

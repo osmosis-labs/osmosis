@@ -200,13 +200,9 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 	// we truncate at last step to retain as much precision as possible
 	amt0 := tokenAmountInAfterFee.Add(swapState.amountSpecifiedRemaining).TruncateInt()
 	amt1 := swapState.amountCalculated.TruncateInt()
-	if zeroForOne {
-		tokenIn = sdk.NewCoin(tokenInMin.Denom, amt1)
-		tokenOut = sdk.NewCoin(tokenOutDenom, amt0)
-	} else {
-		tokenIn = sdk.NewCoin(tokenInMin.Denom, amt0)
-		tokenOut = sdk.NewCoin(tokenOutDenom, amt1)
-	}
+
+	tokenIn = sdk.NewCoin(tokenInMin.Denom, amt0)
+	tokenOut = sdk.NewCoin(tokenOutDenom, amt1)
 
 	return tokenIn, tokenOut, swapState.tick, swapState.liquidity, nil
 }
