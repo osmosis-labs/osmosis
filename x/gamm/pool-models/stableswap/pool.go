@@ -132,8 +132,8 @@ func (p Pool) getDescaledPoolAmt(denom string, amount osmomath.BigDec) sdk.Dec {
 	return amount.MulInt64(int64(scalingFactor)).SDKDec()
 }
 
-// getLiquidityIndexMap creates a map of denoms to its index in pool liquidity
-// TODO: Review all uses of this
+// getLiquidityIndexMap creates a map of denoms to its index in pool liquidity.
+// As always, the caller must not iterate over the map.
 func (p Pool) getLiquidityIndexMap() map[string]int {
 	poolLiquidity := p.PoolLiquidity
 	liquidityIndexMap := make(map[string]int, poolLiquidity.Len())
@@ -154,10 +154,10 @@ func (p Pool) scaledSortedPoolReserves(first string, second string, round osmoma
 // reorderReservesAndScalingFactors takes the pool liquidity and scaling factors, and reorders them s.t.
 // reorderedReserves[0] = p.GetLiquidity().AmountOf(first)
 // reorderedScalingFactors[0] = p.ScalingFactors[p.getLiquidityIndexMap()[first]]
-// and the same for index 1, and second.
+// and the same for index 1.
 //
 // The remainder of the lists includes every remaining (reserve asset, scaling factor) pair,
-// in a deterministic order.
+// in a deterministic but unspecified order.
 //
 // Returns an error if the pool does not contain either of first or second.
 func (p Pool) reorderReservesAndScalingFactors(first string, second string) ([]sdk.Coin, []uint64, error) {
