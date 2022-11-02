@@ -151,6 +151,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			tokenOutDenom: "eth",
 			priceLimit:    sdk.NewDec(6106),
 			// we expect to put 10000 usdc in and in return get 1.820536 eth back
+			// TODO: see why we don't get 9938.148 usdc and 1.80615 eth
 			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(9999999999)),
 			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1820536)),
 			expectedTick:     sdk.NewInt(87173),
