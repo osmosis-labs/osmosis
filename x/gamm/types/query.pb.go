@@ -490,7 +490,7 @@ func (m *QueryCalcJoinPoolSharesResponse) GetTokensOut() github_com_cosmos_cosmo
 	return nil
 }
 
-// =============================== QueryCalcExitPoolCoinsFromSharesRequest
+// =============================== CalcExitPoolCoinsFromShares
 type QueryCalcExitPoolCoinsFromSharesRequest struct {
 	PoolId          uint64                                 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
 	TokensOutDenoms []string                               `protobuf:"bytes,2,rep,name=tokens_out_denoms,json=tokensOutDenoms,proto3" json:"tokens_out_denoms,omitempty"`
