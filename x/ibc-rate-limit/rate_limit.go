@@ -2,9 +2,9 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
-	channelkeeper "github.com/cosmos/ibc-go/v3/modules/core/04-channel/keeper"
 	"strings"
 
+	channelkeeper "github.com/cosmos/ibc-go/v3/modules/core/04-channel/keeper"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

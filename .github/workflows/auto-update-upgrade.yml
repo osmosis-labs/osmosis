@@ -1,0 +1,38 @@
+# When new major release is created this workflow will be triggered and will do 3 things:
+# 1) it will create a directory with an empty upgrade handler in app/upgrades folder
+# 2) will increase an E2E_UPGRADE_VERSION variable in Makefile
+# 3) create a pull request with these changes to main 
+
+name: On Release Auto Upgrade
+
+on:
+  release: 
+    types: [published]
+
+jobs:
+  post_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+
+      - name: Run version script
+        run: bash ./scripts/check_release.sh ${{ github.event.release.tag_name }}
+
+      - name: Run post release script
+        if: env.MAJOR == 1    # 1 means vX of existing upgrade handler is smaller than A in tag vA.B.C 
+        run: bash ./scripts/empty_upgrade_handler_gen.sh 
+
+      - name: Create PR
+        if: env.MAJOR == 1
+        uses: peter-evans/create-pull-request@v4
+        with:
+          base: ${{ github.event.repository.default_branch }}
+          body: |
+            Update report
+            - Created a new empty upgrade handler
+            - Increased E2E_UPGRADE_VERSION in Makefile by 1
+          labels: |
+            T:auto
+            C:e2e
+            C:app-wiring
