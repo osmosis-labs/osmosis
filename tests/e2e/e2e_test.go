@@ -10,6 +10,7 @@ import (
 	"time"
 
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
+
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -162,7 +163,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	// co up two levels
 	projectDir := filepath.Dir(filepath.Dir(wd))
 	fmt.Println(wd, projectDir)
-	err = copyFile(projectDir+"/x/ibc-rate-limit/testdata/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
+	err = copyFile(projectDir+"/x/ibc-rate-limit/bytecode/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
 	s.NoError(err)
 	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
 	chainA.LatestCodeId += 1
@@ -521,7 +522,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 
 	// start the state synchin node.
 	err = stateSynchingNode.Run()
-	s.NoError(err)
+	s.Require().NoError(err)
 
 	// ensure that the state synching node cathes up to the running node.
 	s.Require().Eventually(func() bool {
@@ -537,7 +538,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 
 	// stop the state synching node.
 	err = chainA.RemoveNode(stateSynchingNode.Name)
-	s.NoError(err)
+	s.Require().NoError(err)
 }
 
 func (s *IntegrationTestSuite) TestExpeditedProposals() {
