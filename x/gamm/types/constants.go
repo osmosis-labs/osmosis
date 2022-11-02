@@ -16,7 +16,7 @@ const (
 
 	StableswapMaxScaledAmtPerAsset = 10_000_000_000
 	// Allows default pools to accommodate up to 100B of each asset (assuming 6 decimal places precision)
-	DefaultScalingFactorMultiplier = 10_000_000_000
+	ScalingFactorMultiplier = 10_000_000_000
 )
 
 var (
