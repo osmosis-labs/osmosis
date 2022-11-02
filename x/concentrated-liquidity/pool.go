@@ -93,8 +93,6 @@ type SwapState struct {
 	liquidity                sdk.Dec
 }
 
-// TODO: revisit tokenIn that is getting returned. Right now if we swapped 40eth -> 40 usdc, the return value for tokenIn would be 0,
-// since we're returning the delta amount, not the actual amounut of token in
 func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 	tokenInMin sdk.Coin,
 	tokenOutDenom string,
