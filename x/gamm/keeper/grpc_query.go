@@ -187,8 +187,8 @@ func (q Querier) CalcExitPoolCoinsFromShares(ctx context.Context, req *types.Que
 	if req.ShareInAmount.GTE(totalSharesAmount) || req.ShareInAmount.LTE(sdk.ZeroInt()) {
 		return nil, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
 	}
-	exitFee := pool.GetExitFee(sdkCtx)
 
+	exitFee := pool.GetExitFee(sdkCtx)
 	exitCoins, err := pool.CalcExitPoolCoinsFromShares(sdkCtx, req.ShareInAmount, exitFee)
 	if err != nil {
 		return nil, err
