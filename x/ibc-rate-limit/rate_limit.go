@@ -2,6 +2,7 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
+	channelkeeper "github.com/cosmos/ibc-go/v3/modules/core/04-channel/keeper"
 	"strings"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -151,17 +152,19 @@ func GetLocalDenom(denom string) string {
 	}
 }
 
-func CalculateChannelValue(ctx sdk.Context, denom string, port, channel string, bankKeeper bankkeeper.Keeper) sdk.Int {
+func CalculateChannelValue(ctx sdk.Context, denom string, bankKeeper bankkeeper.Keeper, channelKeeper channelkeeper.Keeper) sdk.Int {
+	// For non-native (ibc) tokens, return the supply if the token in osmosis
 	if strings.HasPrefix(denom, "ibc/") {
 		return bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
 	}
 
-	if channel == "any" {
-		// ToDo: Get all channels and sum the escrow addr value over all the channels
-		escrowAddress := transfertypes.GetEscrowAddress(port, channel)
-		return bankKeeper.GetBalance(ctx, escrowAddress, denom).Amount
-	} else {
-		escrowAddress := transfertypes.GetEscrowAddress(port, channel)
-		return bankKeeper.GetBalance(ctx, escrowAddress, denom).Amount
+	// For native tokens, obtain the balance held in escrow for all potential channels
+	channels := channelKeeper.GetAllChannels(ctx)
+	balance := sdk.NewInt(0)
+	for _, channel := range channels {
+		escrowAddress := transfertypes.GetEscrowAddress("transfer", channel.ChannelId)
+		balance = balance.Add(bankKeeper.GetBalance(ctx, escrowAddress, denom).Amount)
+
 	}
+	return balance
 }

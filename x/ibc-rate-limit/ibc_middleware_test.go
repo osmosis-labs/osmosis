@@ -267,7 +267,7 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	osmosisApp := suite.chainA.GetOsmosisApp()
 
 	// This is the first one. Inside the tests. It works as expected.
-	channelValue := ibc_rate_limit.CalculateChannelValue(suite.chainA.GetContext(), denom, "transfer", "channel-0", osmosisApp.BankKeeper)
+	channelValue := ibc_rate_limit.CalculateChannelValue(suite.chainA.GetContext(), denom, osmosisApp.BankKeeper, osmosisApp.IBCKeeper.ChannelKeeper)
 
 	// The amount to be sent is send 2.5% (quota is 5%)
 	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))
@@ -351,7 +351,7 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	osmosisApp := suite.chainA.GetOsmosisApp()
 
 	// This is the first one. Inside the tests. It works as expected.
-	channelValue := ibc_rate_limit.CalculateChannelValue(suite.chainA.GetContext(), denom, "transfer", "channel-0", osmosisApp.BankKeeper)
+	channelValue := ibc_rate_limit.CalculateChannelValue(suite.chainA.GetContext(), denom, osmosisApp.BankKeeper, osmosisApp.IBCKeeper.ChannelKeeper)
 
 	// The amount to be sent is send 2.5% (quota is 5%)
 	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))
