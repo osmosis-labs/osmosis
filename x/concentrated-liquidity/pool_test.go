@@ -54,16 +54,16 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	priceLimit := sdk.NewDec(5002)
 
 	// run calculation
-	tokenInDelta, tokenOutDelta, updatedTick, updatedLiquidity, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, pool.Id)
+	tokenIn, tokenOut, updatedTick, updatedLiquidity, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, pool.Id)
 	s.Require().NoError(err)
 
 	// we expect to put 42 usdc in and in return get .008398 eth back
-	expectedTokenIn := sdk.NewInt(42000000)
-	expectedTokenOut := sdk.NewInt(8398)
+	expectedTokenIn := sdk.NewCoin("usdc", sdk.NewInt(42000000))
+	expectedTokenOut := sdk.NewCoin("eth", sdk.NewInt(8398))
 
 	// ensure tokenIn and tokenOut meet our expected values
-	s.Require().Equal(expectedTokenIn.String(), tokenInDelta.String())
-	s.Require().Equal(expectedTokenOut.String(), tokenOutDelta.String())
+	s.Require().Equal(expectedTokenIn.String(), tokenIn.String())
+	s.Require().Equal(expectedTokenOut.String(), tokenOut.String())
 
 	// check the new tick is at the expected value
 	s.Require().Equal(sdk.NewInt(85180).String(), updatedTick.String())
@@ -104,16 +104,16 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	priceLimit = sdk.NewDec(5004)
 
 	// run calculation
-	tokenInDelta, tokenOutDelta, updatedTick, updatedLiquidity, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, pool.Id)
+	tokenIn, tokenOut, updatedTick, updatedLiquidity, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, pool.Id)
 	s.Require().NoError(err)
 
 	// we expect to put 41999999 usdc in and in return get .008396 eth back
-	expectedTokenIn = sdk.NewInt(41999999)
-	expectedTokenOut = sdk.NewInt(8396)
+	expectedTokenIn = sdk.NewCoin("usdc", sdk.NewInt(41999999))
+	expectedTokenOut = sdk.NewCoin("eth", sdk.NewInt(8396))
 
 	// ensure tokenIn and tokenOut meet our expected values
-	s.Require().Equal(expectedTokenIn.String(), tokenInDelta.String())
-	s.Require().Equal(expectedTokenOut.String(), tokenOutDelta.String())
+	s.Require().Equal(expectedTokenIn.String(), tokenIn.String())
+	s.Require().Equal(expectedTokenOut.String(), tokenOut.String())
 
 	// this is off by one (too large), I think it is the priceToTick func, try using ln PR from main
 	s.Require().Equal(sdk.NewInt(85184).String(), updatedTick.String())
@@ -167,16 +167,16 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	priceLimit = sdk.NewDec(6106)
 
 	// run calculation
-	tokenInDelta, tokenOutDelta, updatedTick, updatedLiquidity, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, pool.Id)
+	tokenIn, tokenOut, updatedTick, updatedLiquidity, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, pool.Id)
 	s.Require().NoError(err)
 
 	// we expect to put 999.99 usdc in and in return get 1.820536 eth back
-	expectedTokenIn = sdk.NewInt(9999999999)
-	expectedTokenOut = sdk.NewInt(1820536)
+	expectedTokenIn = sdk.NewCoin("usdc", sdk.NewInt(9999999999))
+	expectedTokenOut = sdk.NewCoin("eth", sdk.NewInt(1820536))
 
 	// ensure tokenIn and tokenOut meet our expected values
-	s.Require().Equal(expectedTokenIn.String(), tokenInDelta.String())
-	s.Require().Equal(expectedTokenOut.String(), tokenOutDelta.String())
+	s.Require().Equal(expectedTokenIn.String(), tokenIn.String())
+	s.Require().Equal(expectedTokenOut.String(), tokenOut.String())
 
 	// this is off by one (too large), I think it is the priceToTick func, try using ln PR from main
 	s.Require().Equal(sdk.NewInt(87173).String(), updatedTick.String())
