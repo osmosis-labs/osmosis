@@ -158,13 +158,19 @@ func CalculateChannelValue(ctx sdk.Context, denom string, bankKeeper bankkeeper.
 		return bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
 	}
 
-	// For native tokens, obtain the balance held in escrow for all potential channels
-	channels := channelKeeper.GetAllChannels(ctx)
-	balance := sdk.NewInt(0)
-	for _, channel := range channels {
-		escrowAddress := transfertypes.GetEscrowAddress("transfer", channel.ChannelId)
-		balance = balance.Add(bankKeeper.GetBalance(ctx, escrowAddress, denom).Amount)
+	return bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
 
-	}
-	return balance
+	// ToDo: The commented-out code bellow is what we want to happen, but we're temporarily
+	//  using the whole supply for efficiency until there's a solution for
+	//  https://github.com/cosmos/ibc-go/issues/2664
+
+	// For native tokens, obtain the balance held in escrow for all potential channels
+	//channels := channelKeeper.GetAllChannels(ctx)
+	//balance := sdk.NewInt(0)
+	//for _, channel := range channels {
+	//	escrowAddress := transfertypes.GetEscrowAddress("transfer", channel.ChannelId)
+	//	balance = balance.Add(bankKeeper.GetBalance(ctx, escrowAddress, denom).Amount)
+	//
+	//}
+	//return balance
 }
