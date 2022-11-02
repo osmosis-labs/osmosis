@@ -272,7 +272,7 @@ test-e2e-ci:
 # test-e2e-debug runs a full e2e test suite but does
 # not attempt to delete Docker resources at the end.
 test-e2e-debug: e2e-setup
-	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION) OSMOSIS_E2E_SKIP_CLEANUP=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -count=1
+	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=True OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION) OSMOSIS_E2E_SKIP_CLEANUP=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -count=1
 
 # test-e2e-short runs the e2e test with only short tests.
 # Does not delete any of the containers after running.
