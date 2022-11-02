@@ -17,7 +17,6 @@ var _ types.PoolI = &Pool{}
 
 // NewStableswapPool returns a stableswap pool
 // Invariants that are assumed to be satisfied and not checked:
-// * len(initialLiquidity) = 2
 // * FutureGovernor is valid
 // * poolID doesn't already exist
 func NewStableswapPool(poolId uint64,
@@ -36,7 +35,7 @@ func NewStableswapPool(poolId uint64,
 		return Pool{}, err
 	}
 
-	if err := validatePoolAssets(initialLiquidity, scalingFactors); err != nil {
+	if err := validatePoolLiquidity(initialLiquidity, scalingFactors); err != nil {
 		return Pool{}, err
 	}
 
@@ -46,7 +45,7 @@ func NewStableswapPool(poolId uint64,
 		PoolParams:              stableswapPoolParams,
 		TotalShares:             sdk.NewCoin(types.GetPoolShareDenom(poolId), types.InitPoolSharesSupply),
 		PoolLiquidity:           initialLiquidity,
-		ScalingFactor:           scalingFactors,
+		ScalingFactors:          scalingFactors,
 		ScalingFactorController: scalingFactorController,
 		FuturePoolGovernor:      futureGovernor,
 	}
@@ -96,12 +95,12 @@ func (p Pool) GetTotalShares() sdk.Int {
 }
 
 func (p Pool) GetScalingFactors() []uint64 {
-	return p.ScalingFactor
+	return p.ScalingFactors
 }
 
 // CONTRACT: scaling factors follow the same index with pool liquidity denoms
 func (p Pool) GetScalingFactorByLiquidityIndex(liquidityIndex int) uint64 {
-	return p.ScalingFactor[liquidityIndex]
+	return p.ScalingFactors[liquidityIndex]
 }
 
 func (p Pool) NumAssets() int {
@@ -160,7 +159,7 @@ func (p Pool) scaledSortedPoolReserves(first string, second string, round osmoma
 // Returns an error if the pool does not contain either of first or second.
 func (p Pool) reorderReservesAndScalingFactors(first string, second string) ([]sdk.Coin, []uint64, error) {
 	coins := p.PoolLiquidity
-	scalingFactors := p.ScalingFactor
+	scalingFactors := p.ScalingFactors
 	reorderedReserves := make([]sdk.Coin, len(coins))
 	reorderedScalingFactors := make([]uint64, len(coins))
 	curIndex := 2
@@ -233,7 +232,7 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDeno
 }
 
 func (p *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
-	if err = validatePoolAssets(p.PoolLiquidity.Add(tokenIn...), p.ScalingFactor); err != nil {
+	if err = validatePoolLiquidity(p.PoolLiquidity.Add(tokenIn...), p.ScalingFactors); err != nil {
 		return sdk.Coin{}, err
 	}
 
@@ -273,7 +272,7 @@ func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDen
 		return sdk.Coin{}, err
 	}
 
-	if err = validatePoolAssets(p.PoolLiquidity.Add(tokenIn), p.ScalingFactor); err != nil {
+	if err = validatePoolLiquidity(p.PoolLiquidity.Add(tokenIn), p.ScalingFactors); err != nil {
 		return sdk.Coin{}, err
 	}
 
@@ -369,11 +368,11 @@ func (p *Pool) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uin
 		return err
 	}
 
-	if err := validatePoolAssets(p.PoolLiquidity, scalingFactors); err != nil {
+	if err := validatePoolLiquidity(p.PoolLiquidity, scalingFactors); err != nil {
 		return err
 	}
 
-	p.ScalingFactor = scalingFactors
+	p.ScalingFactors = scalingFactors
 	return nil
 }
 
@@ -399,7 +398,7 @@ func validateScalingFactors(scalingFactors []uint64, numAssets int) error {
 	return nil
 }
 
-func validatePoolAssets(initialAssets sdk.Coins, scalingFactors []uint64) error {
+func validatePoolLiquidity(initialAssets sdk.Coins, scalingFactors []uint64) error {
 	if len(initialAssets) < types.MinPoolAssets {
 		return types.ErrTooFewPoolAssets
 	} else if len(initialAssets) > types.MaxPoolAssets {
