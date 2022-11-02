@@ -91,9 +91,7 @@ Because Osmosis supports multi-asset pools, a complicating factor is that we hav
 For every pool, at a given point in time, we make one twap record entry per unique pair of denoms in the pool. If a pool has `k` denoms, the number of unique pairs is `k * (k - 1) / 2`.
 All public API's for the module will sort the input denoms to the canonical representation, so the caller does not need to worry about this. (The canonical representation is the denoms in lexicographical order)
 
-<<<<<<< HEAD
-Each twap record stores [(source)](https://github.com/osmosis-labs/osmosis/tree/main/proto/osmosis/gamm/twap):
-=======
+
 Example of historical TWAP time index records for a pool containing 3 assets.
 * Number of records per time: `3 * (3 - 1) / 2 = 3`
 * Records are in a format:
@@ -110,7 +108,6 @@ Example of historical TWAP time index records for a pool containing 3 assets.
 
 Each twap record stores [(source)](../../proto/osmosis/twap/v1beta1/twap_record.proto):
 
->>>>>>> ebba5f55 (TWAP spec and code comments improvements (#3216))
 * last spot price of base asset A in terms of quote asset B
 * last spot price of base asset B in terms of quote asset A
 * Accumulation value of base asset A in terms of quote asset B
