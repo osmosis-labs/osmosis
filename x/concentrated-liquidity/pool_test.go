@@ -9,7 +9,7 @@ import (
 	cltypes "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
-func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
+func (s *KeeperTestSuite) TestCalcOutAmtGivenInA() {
 	ctx := s.Ctx
 
 	//
@@ -188,6 +188,139 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	s.Require().NoError(err)
 	expectedLiquidity = cl.GetLiquidityFromAmounts(currSqrtPrice, lowerSqrtPrice, upperSqrtPrice, amount0, amount1)
 	s.Require().Equal(expectedLiquidity.TruncateInt().String(), updatedLiquidity.TruncateInt().String())
+}
+
+func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
+	currPrice := sdk.NewDec(5000)
+	currSqrtPrice, err := currPrice.ApproxSqrt() // 70.710678118654752440
+	s.Require().NoError(err)
+	currTick := cl.PriceToTick(currPrice) // 85176
+	lowerPrice := sdk.NewDec(4545)
+	s.Require().NoError(err)
+	lowerTick := cl.PriceToTick(lowerPrice) // 84222
+	upperPrice := sdk.NewDec(5500)
+	s.Require().NoError(err)
+	upperTick := cl.PriceToTick(upperPrice) // 86129
+	defaultAmt0 := sdk.NewInt(1000000)
+	defaultAmt1 := sdk.NewInt(5000000000)
+
+	swapFee := sdk.ZeroDec()
+
+	tests := map[string]struct {
+		positionAmount0       sdk.Int
+		positionAmount1       sdk.Int
+		addPositions          func(ctx sdk.Context, poolId uint64)
+		tokenIn               sdk.Coin
+		tokenOutDenom         string
+		priceLimit            sdk.Dec
+		expectedTokenInDelta  sdk.Int
+		expectedTokenOutDelta sdk.Int
+		expectedTick          sdk.Int
+		poolLiqAmount0        sdk.Int
+		poolLiqAmount1        sdk.Int
+	}{
+		"single position within one tick": {
+			// 1 eth 5000 usdc position
+			// positionAmount0: sdk.NewInt(1000000),
+			// positionAmount1: sdk.NewInt(5000000000),
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
+			},
+			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(42000000)),
+			tokenOutDenom: "eth",
+			priceLimit:    sdk.NewDec(5004),
+			// we expect to put 42 usdc in and in return get .008398 eth back
+			expectedTokenInDelta:  sdk.NewInt(41999999),
+			expectedTokenOutDelta: sdk.NewInt(8396),
+			expectedTick:          sdk.NewInt(85184),
+		},
+		"two positions within one tick": {
+			// 1 eth 5000 usdc position
+			// positionAmount0: sdk.NewInt(1000000),
+			// positionAmount1: sdk.NewInt(5000000000),
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
+
+				// add second position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
+			},
+			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(42000000)),
+			tokenOutDenom: "eth",
+			priceLimit:    sdk.NewDec(5002),
+			// we expect to put 42 usdc in and in return get .008398 eth back
+			expectedTokenInDelta:  sdk.NewInt(42000000),
+			expectedTokenOutDelta: sdk.NewInt(8398),
+			expectedTick:          sdk.NewInt(85180),
+			// two positions with same liquidity entered
+			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
+			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
+		},
+		"two positions with different price ranges": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
+
+				// create second position parameters
+				lowerPrice = sdk.NewDec(5501)
+				s.Require().NoError(err)
+				lowerTick = cl.PriceToTick(lowerPrice) // 84222
+				upperPrice = sdk.NewDec(6250)
+				s.Require().NoError(err)
+				upperTick = cl.PriceToTick(upperPrice) // 87407
+
+				// add position two with the new price range above
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
+			},
+			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenOutDenom: "eth",
+			priceLimit:    sdk.NewDec(6106),
+			// we expect to put 42 usdc in and in return get .008398 eth back
+			expectedTokenInDelta:  sdk.NewInt(9999999999),
+			expectedTokenOutDelta: sdk.NewInt(1820536),
+			expectedTick:          sdk.NewInt(87173),
+		},
+	}
+
+	for name, test := range tests {
+		s.Run(name, func() {
+			// create pool
+			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", currSqrtPrice, currTick)
+			s.Require().NoError(err)
+
+			// add positions
+			test.addPositions(s.Ctx, pool.Id)
+
+			tokenInDelta, tokenOutDelta, updatedTick, updatedLiquidity, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(
+				s.Ctx,
+				test.tokenIn, test.tokenOutDenom,
+				swapFee, test.priceLimit, pool.Id)
+			s.Require().NoError(err)
+
+			s.Require().Equal(test.expectedTokenInDelta, tokenInDelta)
+			s.Require().Equal(test.expectedTokenOutDelta, tokenOutDelta)
+			s.Require().Equal(test.expectedTick, updatedTick)
+
+			lowerSqrtPrice, err := s.App.ConcentratedLiquidityKeeper.TickToSqrtPrice(lowerTick)
+			s.Require().NoError(err)
+			upperSqrtPrice, err := s.App.ConcentratedLiquidityKeeper.TickToSqrtPrice(upperTick)
+			s.Require().NoError(err)
+
+			if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
+				test.poolLiqAmount0 = defaultAmt0
+				test.poolLiqAmount1 = defaultAmt1
+			}
+			expectedLiquidity := cl.GetLiquidityFromAmounts(currSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
+			s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
+		})
+
+	}
 }
 
 // func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
