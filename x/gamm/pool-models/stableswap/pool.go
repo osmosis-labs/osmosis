@@ -17,7 +17,6 @@ var _ types.PoolI = &Pool{}
 
 // NewStableswapPool returns a stableswap pool
 // Invariants that are assumed to be satisfied and not checked:
-// * FutureGovernor is valid
 // * poolID doesn't already exist
 func NewStableswapPool(poolId uint64,
 	stableswapPoolParams PoolParams, initialLiquidity sdk.Coins,
@@ -36,6 +35,10 @@ func NewStableswapPool(poolId uint64,
 	}
 
 	if err := validatePoolLiquidity(initialLiquidity, scalingFactors); err != nil {
+		return Pool{}, err
+	}
+
+	if err := types.ValidateFutureGovernor(futureGovernor); err != nil {
 		return Pool{}, err
 	}
 
@@ -398,15 +401,17 @@ func validateScalingFactors(scalingFactors []uint64, numAssets int) error {
 	return nil
 }
 
-func validatePoolLiquidity(initialAssets sdk.Coins, scalingFactors []uint64) error {
-	if len(initialAssets) < types.MinPoolAssets {
+// assumes liquidity is all pool liquidity, in correct sorted order
+func validatePoolLiquidity(liquidity sdk.Coins, scalingFactors []uint64) error {
+	if len(liquidity) < types.MinPoolAssets {
 		return types.ErrTooFewPoolAssets
-	} else if len(initialAssets) > types.MaxPoolAssets {
+	} else if len(liquidity) > types.MaxPoolAssets {
 		return types.ErrTooManyPoolAssets
 	}
 
-	for i, asset := range initialAssets {
-		if asset.Amount.Quo(sdk.NewInt(int64(scalingFactors[i]))).GT(sdk.NewInt(types.StableswapMaxScaledAmtPerAsset)) {
+	for i, asset := range liquidity {
+		scaledAmount := asset.Amount.Quo(sdk.NewInt(int64(scalingFactors[i])))
+		if scaledAmount.GT(sdk.NewInt(types.StableswapMaxScaledAmtPerAsset)) {
 			return types.ErrHitMaxScaledAssets
 		}
 	}
