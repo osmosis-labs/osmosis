@@ -68,7 +68,7 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 				exitCoins, err := pool.CalcExitPoolCoinsFromShares(ctx, tc.shareInAmount, exitFee)
 				suite.Require().NoError(err)
 
-				// For each coin in exitCoins we are looking for a match in out response
+				// For each coin in exitCoins we are looking for a match in our response
 				// We need to find exactly len(out) such matches
 				coins_checked := 0
 				for _, coin := range exitCoins {
