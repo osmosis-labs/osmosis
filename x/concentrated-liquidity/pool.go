@@ -140,7 +140,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 	}
 
 	// had to reintroduce the dust check, we need to figure out a cleaner way to do this
-	for swapState.amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 8)) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
+	for swapState.amountSpecifiedRemaining.GT(sdk.ZeroDec()) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
 		sqrtPriceStart := swapState.sqrtPrice
 		nextTick, ok := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), zeroForOne)
 		if !ok {
