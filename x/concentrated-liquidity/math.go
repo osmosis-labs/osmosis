@@ -39,6 +39,9 @@ func calcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 	}
 	diff := sqrtPriceB.Sub(sqrtPriceA)
 	mult := liq
+	// if calculating for amountIn, we round up
+	// if calculating for amountOut, we don't round
+	// this is to prevent removing more from the pool than expected due to rounding
 	if roundUp {
 		return ((mult.Mul(diff)).QuoRoundUp(sqrtPriceB).QuoRoundUp(sqrtPriceA)).Ceil()
 	}
@@ -54,6 +57,9 @@ func calcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
 	diff := sqrtPriceB.Sub(sqrtPriceA)
+	// if calculating for amountIn, we round up
+	// if calculating for amountOut, we don't round
+	// this is to prevent removing more from the pool than expected due to rounding
 	if roundUp {
 		return liq.Mul(diff).Ceil()
 	}
@@ -74,17 +80,11 @@ func computeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaini
 		sqrtPriceNext = getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining, zeroForOne)
 	}
 
-	max := sqrtPriceNext.Equal(sqrtPriceTarget)
-
 	if zeroForOne {
-		if !max {
-			amountIn = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, true)
-		}
+		amountIn = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, true)
 		amountOut = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
 	} else {
-		if !max {
-			amountIn = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, true)
-		}
+		amountIn = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, true)
 		amountOut = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
 	}
 
