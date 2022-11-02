@@ -89,7 +89,7 @@ func (i *ICS4Wrapper) GetParams(ctx sdk.Context) (contract string) {
 // if the denom is not correct, the transfer should fail somewhere else on the call chain
 func (i *ICS4Wrapper) CalculateChannelValue(ctx sdk.Context, denom string) sdk.Int {
 	// This assumes that the porttypes.ICS4Wrapper is a channelKeeper. We could enforce the type above, but since this
-	//check is going to move to the contract we can keep it as is for now.
+	// check is going to move to the contract we can keep it as is for now.
 	channelKeeper, ok := i.channel.(channelkeeper.Keeper)
 	if !ok {
 		panic("Improperly configured. The ics4 wrapper must be a channel")
