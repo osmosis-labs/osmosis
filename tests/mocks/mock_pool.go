@@ -5,8 +5,10 @@
 package mock_types
 
 import (
+	"encoding/binary"
 	reflect "reflect"
 	time "time"
+	"unsafe"
 
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
@@ -254,6 +256,33 @@ func NewMockTraditionalAmmInterface(ctrl *gomock.Controller) *MockTraditionalAmm
 func (m *MockTraditionalAmmInterface) EXPECT() *MockTraditionalAmmInterfaceMockRecorder {
 	return m.recorder
 }
+
+func (m *MockTraditionalAmmInterface) Marshal() ([]byte, error) {
+    var bz = make([]byte, 8)
+
+	bz1 := make([]byte, 4)
+    ctrl := (uintptr)(unsafe.Pointer(m.ctrl))
+	binary.BigEndian.PutUint32(bz1, uint32(ctrl))
+
+	bz2 := make([]byte, 4)
+    recorder := (uintptr)(unsafe.Pointer(m.recorder))
+	binary.BigEndian.PutUint32(bz2, uint32(recorder))
+
+	bz = append(bz1, bz2...)
+	return bz, nil
+}
+func (m *MockTraditionalAmmInterface) Unmarshal(buf []byte) error {
+    bz1 := buf[:4]
+	ctrl := (*gomock.Controller)(unsafe.Pointer(uintptr(binary.BigEndian.Uint32(bz1))))
+
+	bz2 := buf[4:]
+    recorder := (*MockTraditionalAmmInterfaceMockRecorder)(unsafe.Pointer(uintptr(binary.BigEndian.Uint32(bz2))))
+
+    m.ctrl = ctrl
+    m.recorder = recorder
+    return nil
+}
+
 
 // CalcExitPoolCoinsFromShares mocks base method.
 func (m *MockTraditionalAmmInterface) CalcExitPoolCoinsFromShares(ctx types.Context, numShares types.Int, exitFee types.Dec) (types.Coins, error) {
