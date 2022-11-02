@@ -20,6 +20,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	upperPrice := sdk.NewDec(5500)
 	s.Require().NoError(err)
 	upperTick := cl.PriceToTick(upperPrice) // 86129
+
 	defaultAmt0 := sdk.NewInt(1000000)
 	defaultAmt1 := sdk.NewInt(5000000000)
 
@@ -35,6 +36,8 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 		expectedTokenInDelta  sdk.Int
 		expectedTokenOutDelta sdk.Int
 		expectedTick          sdk.Int
+		newLowerPrice         sdk.Dec
+		newUpperPrice         sdk.Dec
 		poolLiqAmount0        sdk.Int
 		poolLiqAmount1        sdk.Int
 	}{
@@ -86,15 +89,15 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				s.Require().NoError(err)
 
 				// create second position parameters
-				lowerPrice = sdk.NewDec(5501)
+				newLowerPrice := sdk.NewDec(5501)
 				s.Require().NoError(err)
-				lowerTick = cl.PriceToTick(lowerPrice) // 84222
-				upperPrice = sdk.NewDec(6250)
+				newLowerTick := cl.PriceToTick(newLowerPrice) // 84222
+				newUpperPrice := sdk.NewDec(6250)
 				s.Require().NoError(err)
-				upperTick = cl.PriceToTick(upperPrice) // 87407
+				newUpperTick := cl.PriceToTick(newUpperPrice) // 87407
 
 				// add position two with the new price range above
-				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
 				s.Require().NoError(err)
 			},
 			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
@@ -104,11 +107,14 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			expectedTokenInDelta:  sdk.NewInt(9999999999),
 			expectedTokenOutDelta: sdk.NewInt(1820536),
 			expectedTick:          sdk.NewInt(87173),
+			newLowerPrice:         sdk.NewDec(5501),
+			newUpperPrice:         sdk.NewDec(6250),
 		},
 	}
 
 	for name, test := range tests {
 		s.Run(name, func() {
+			s.Setup()
 			// create pool
 			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", currSqrtPrice, currTick)
 			s.Require().NoError(err)
@@ -126,9 +132,17 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			s.Require().Equal(test.expectedTokenOutDelta, tokenOutDelta)
 			s.Require().Equal(test.expectedTick, updatedTick)
 
-			lowerSqrtPrice, err := s.App.ConcentratedLiquidityKeeper.TickToSqrtPrice(lowerTick)
+			if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
+				test.newLowerPrice = lowerPrice
+				test.newUpperPrice = upperPrice
+			}
+
+			newLowerTick := cl.PriceToTick(test.newLowerPrice)
+			newUpperTick := cl.PriceToTick(test.newUpperPrice)
+
+			lowerSqrtPrice, err := s.App.ConcentratedLiquidityKeeper.TickToSqrtPrice(newLowerTick)
 			s.Require().NoError(err)
-			upperSqrtPrice, err := s.App.ConcentratedLiquidityKeeper.TickToSqrtPrice(upperTick)
+			upperSqrtPrice, err := s.App.ConcentratedLiquidityKeeper.TickToSqrtPrice(newUpperTick)
 			s.Require().NoError(err)
 
 			if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {

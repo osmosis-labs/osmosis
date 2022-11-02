@@ -100,7 +100,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 	tokenOutDenom string,
 	swapFee sdk.Dec,
 	priceLimit sdk.Dec,
-	poolId uint64) (tokenInDelta, tokenOutDelta sdk.Int, updatedTick sdk.Int, updatedLiquidity sdk.Dec, err error) {
+	poolId uint64) (tokenIn, tokenOut sdk.Int, updatedTick sdk.Int, updatedLiquidity sdk.Dec, err error) {
 	p := k.getPoolbyId(ctx, poolId)
 	asset0 := p.Token0
 	asset1 := p.Token1
@@ -140,7 +140,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 	}
 
 	// had to reintroduce the dust check, we need to figure out a cleaner way to do this
-	for swapState.amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 8)) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
+	for swapState.amountSpecifiedRemaining.GT(sdk.ZeroDec()) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
 		sqrtPriceStart := swapState.sqrtPrice
 		nextTick, ok := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), zeroForOne)
 		if !ok {
@@ -198,14 +198,14 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 	}
 
 	if zeroForOne {
-		tokenInDelta = (swapState.amountCalculated).TruncateInt()
-		tokenOutDelta = tokenAmountInAfterFee.Add(swapState.amountSpecifiedRemaining).TruncateInt()
+		tokenIn = (swapState.amountCalculated).TruncateInt()
+		tokenOut = tokenAmountInAfterFee.Add(swapState.amountSpecifiedRemaining).TruncateInt()
 	} else {
-		tokenInDelta = tokenAmountInAfterFee.Add(swapState.amountSpecifiedRemaining).TruncateInt()
-		tokenOutDelta = swapState.amountCalculated.TruncateInt()
+		tokenIn = tokenAmountInAfterFee.Add(swapState.amountSpecifiedRemaining).TruncateInt()
+		tokenOut = swapState.amountCalculated.TruncateInt()
 	}
 
-	return tokenInDelta, tokenOutDelta, swapState.tick, swapState.liquidity, nil
+	return tokenIn, tokenOut, swapState.tick, swapState.liquidity, nil
 }
 
 func (k *Keeper) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec, minPrice, maxPrice sdk.Dec, poolId uint64) (tokenIn sdk.Coin, err error) {
