@@ -66,6 +66,7 @@ $ %s q twap 1 uosmo 1667088000 1667174400
 			}
 
 			// END TIME PARSE: ONEOF {<UNIX TIME PARSE>, <DURATION>}
+			// try parsing in unix time, if failed try parsing in duration  
 			endTime, err := parseUnixTime(args[3], "end time")
 			if err != nil {
 				// TODO if we don't use protoreflect:
