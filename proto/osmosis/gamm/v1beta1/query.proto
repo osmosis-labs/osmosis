@@ -141,7 +141,7 @@ message QueryCalcJoinPoolSharesResponse {
   ];
 }
 
-//=============================== QueryCalcExitPoolCoinsFromSharesRequest
+//=============================== CalcExitPoolCoinsFromShares
 message QueryCalcExitPoolCoinsFromSharesRequest {
   uint64 pool_id = 1;
   repeated string tokens_out_denoms = 2;
