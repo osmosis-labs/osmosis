@@ -67,7 +67,6 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		// this means position is solely made up of asset0
 		amtDenom0 = calcAmount0Delta(liquidity, sqrtRatioLowerTick, sqrtRatioUpperTick, false).RoundInt()
 		amtDenom1 = sdk.ZeroInt()
-
 	} else if pool.CurrentTick.LT(sdk.NewInt(upperTick)) {
 		// outcome two: the current price falls within the position
 		// if this is the case, we attempt to provide liquidity evenly between asset0 and asset1
@@ -75,7 +74,6 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		amtDenom0 = calcAmount0Delta(liquidity, currentSqrtPrice, sqrtRatioUpperTick, false).RoundInt()
 		amtDenom1 = calcAmount1Delta(liquidity, currentSqrtPrice, sqrtRatioLowerTick, false).RoundInt()
 		pool.Liquidity = pool.Liquidity.Add(liquidity)
-
 	} else {
 		// outcome three: position is above current price
 		// this means position is solely made up of asset1
