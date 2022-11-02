@@ -87,10 +87,11 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: swaprouterclient.Querier{K: am.k}})
 }
 
-func NewAppModule(swaprouterKeeper swaprouter.Keeper) AppModule {
+func NewAppModule(swaprouterKeeper swaprouter.Keeper, gammKeeper types.GammKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		k:              swaprouterKeeper,
+		gammKeeper:     gammKeeper,
 	}
 }
 
