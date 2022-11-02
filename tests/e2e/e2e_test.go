@@ -398,7 +398,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 
 	// start the state synchin node.
 	err = stateSynchingNode.Run()
-	s.NoError(err)
+	s.Require().NoError(err)
 
 	// ensure that the state synching node cathes up to the running node.
 	s.Require().Eventually(func() bool {
@@ -414,7 +414,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 
 	// stop the state synching node.
 	err = chainA.RemoveNode(stateSynchingNode.Name)
-	s.NoError(err)
+	s.Require().NoError(err)
 }
 
 func (s *IntegrationTestSuite) TestExpeditedProposals() {
