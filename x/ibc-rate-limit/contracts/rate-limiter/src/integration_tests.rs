@@ -42,7 +42,7 @@ fn mock_app() -> App {
 // Instantiate the contract
 fn proper_instantiate(paths: Vec<PathMsg>) -> (App, RateLimitingContract) {
     let mut app = mock_app();
-    let cw_template_id = app.store_code(contract_template());
+    let cw_code_id = app.store_code(contract_template());
 
     let msg = InstantiateMsg {
         gov_module: Addr::unchecked(GOV_ADDR),
@@ -52,7 +52,7 @@ fn proper_instantiate(paths: Vec<PathMsg>) -> (App, RateLimitingContract) {
 
     let cw_rate_limit_contract_addr = app
         .instantiate_contract(
-            cw_template_id,
+            cw_code_id,
             Addr::unchecked(GOV_ADDR),
             &msg,
             &[],
@@ -82,8 +82,8 @@ fn expiration() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 300,
+        channel_value: 3_300_u32.into(),
+        funds: 300_u32.into(),
     };
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     let res = app.sudo(cosmos_msg).unwrap();
@@ -105,8 +105,8 @@ fn expiration() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 300,
+        channel_value: 3_300_u32.into(),
+        funds: 300_u32.into(),
     };
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     let _err = app.sudo(cosmos_msg).unwrap_err();
@@ -123,8 +123,8 @@ fn expiration() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 300,
+        channel_value: 3_300_u32.into(),
+        funds: 300_u32.into(),
     };
 
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
@@ -162,8 +162,8 @@ fn multiple_quotas() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 100,
-        funds: 1,
+        channel_value: 101_u32.into(),
+        funds: 1_u32.into(),
     };
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap();
@@ -172,8 +172,8 @@ fn multiple_quotas() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 100,
-        funds: 1,
+        channel_value: 101_u32.into(),
+        funds: 1_u32.into(),
     };
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap_err();
@@ -188,8 +188,8 @@ fn multiple_quotas() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 100,
-        funds: 1,
+        channel_value: 101_u32.into(),
+        funds: 1_u32.into(),
     };
 
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
@@ -207,8 +207,8 @@ fn multiple_quotas() {
         let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
-            channel_value: 100,
-            funds: 1,
+            channel_value: 101_u32.into(),
+            funds: 1_u32.into(),
         };
         let cosmos_msg = cw_rate_limit_contract.sudo(msg);
         app.sudo(cosmos_msg).unwrap();
@@ -224,8 +224,8 @@ fn multiple_quotas() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 100,
-        funds: 1,
+        channel_value: 101_u32.into(),
+        funds: 1_u32.into(),
     };
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap_err();
@@ -240,8 +240,8 @@ fn multiple_quotas() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 100,
-        funds: 1,
+        channel_value: 101_u32.into(),
+        funds: 1_u32.into(),
     };
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap_err();
@@ -257,8 +257,8 @@ fn multiple_quotas() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 100,
-        funds: 1,
+        channel_value: 101_u32.into(),
+        funds: 1_u32.into(),
     };
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap_err();
@@ -272,8 +272,8 @@ fn multiple_quotas() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 100,
-        funds: 1,
+        channel_value: 101_u32.into(),
+        funds: 1_u32.into(),
     };
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap();
@@ -296,8 +296,8 @@ fn channel_value_cached() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 100,
-        funds: 1,
+        channel_value: 100_u32.into(),
+        funds: 1_u32.into(),
     };
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap();
@@ -306,8 +306,8 @@ fn channel_value_cached() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 100,
-        funds: 3,
+        channel_value: 100_u32.into(),
+        funds: 3_u32.into(),
     };
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap_err();
@@ -316,8 +316,8 @@ fn channel_value_cached() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 100000,
-        funds: 3,
+        channel_value: 100000_u32.into(),
+        funds: 3_u32.into(),
     };
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap_err();
@@ -336,8 +336,8 @@ fn channel_value_cached() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 10_000,
-        funds: 100,
+        channel_value: 10_000_u32.into(),
+        funds: 100_u32.into(),
     };
 
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
@@ -353,8 +353,8 @@ fn channel_value_cached() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 10_000,
-        funds: 100,
+        channel_value: 10_000_u32.into(),
+        funds: 100_u32.into(),
     };
 
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
@@ -364,8 +364,8 @@ fn channel_value_cached() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 1,
-        funds: 75,
+        channel_value: 1_u32.into(),
+        funds: 75_u32.into(),
     };
 
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
@@ -380,8 +380,8 @@ fn add_paths_later() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 300,
+        channel_value: 3_000_u32.into(),
+        funds: 300_u32.into(),
     };
     let cosmos_msg = cw_rate_limit_contract.sudo(msg.clone());
     let res = app.sudo(cosmos_msg).unwrap();
