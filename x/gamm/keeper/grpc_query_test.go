@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	gocontext "context"
+	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -19,42 +20,63 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 	testCases := []struct {
 		name          string
 		poolId        uint64
-		tokenOut      string
+		tokensOut     []string
 		shareInAmount sdk.Int
 		expectedErr   error
 	}{
 		{
-			"valid test case",
+			"valid test case / 1 denom",
 			poolId,
-			"foo",
+			[]string{"foo"},
+			sdk.NewInt(1000000000000000000),
+			nil,
+		},
+		{
+			"valid test case / 2 denoms",
+			poolId,
+			[]string{"foo", "bar"},
+			sdk.NewInt(1000000000000000000),
+			nil,
+		},
+		{
+			"valid test case / 3 denoms",
+			poolId,
+			[]string{"foo", "bar", "baz"},
+			sdk.NewInt(1000000000000000000),
+			nil,
+		},
+		{
+			"valid test case / 4 denoms",
+			poolId,
+			[]string{"foo", "bar", "baz", "uosmo"},
 			sdk.NewInt(1000000000000000000),
 			nil,
 		},
 		{
 			"pool id does not exist",
 			poolId + 1,
-			"foo",
+			[]string{"foo"},
 			sdk.NewInt(1000000000000000000),
 			types.ErrPoolNotFound,
 		},
 		{
 			"token in denom does not exist",
 			poolId,
-			"hello",
+			[]string{"hello"},
 			sdk.NewInt(1000000000000000000),
 			types.ErrDenomNotFoundInPool,
 		},
 		{
 			"zero share in amount",
 			poolId,
-			"foo",
+			[]string{"foo"},
 			sdk.ZeroInt(),
 			sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
 		},
 		{
 			"negative share in amount",
 			poolId,
-			"foo",
+			[]string{"foo"},
 			sdk.NewInt(-10000),
 			sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
 		},
@@ -63,9 +85,9 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
 			out, err := queryClient.CalcExitPoolCoinsFromShares(gocontext.Background(), &types.QueryCalcExitPoolCoinsFromSharesRequest{
-				PoolId:        tc.poolId,
-				TokenOutDenom: tc.tokenOut,
-				ShareInAmount: tc.shareInAmount,
+				PoolId:          tc.poolId,
+				TokensOutDenoms: tc.tokensOut,
+				ShareInAmount:   tc.shareInAmount,
 			})
 			if tc.expectedErr == nil {
 				poolRes, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
@@ -79,7 +101,19 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 
 				exitCoins, err := pool.CalcExitPoolCoinsFromShares(ctx, tc.shareInAmount, exitFee)
 				suite.Require().NoError(err)
-				suite.Require().Equal(exitCoins.AmountOf(tc.tokenOut).Uint64(), out.TokenOutAmount)
+
+				// For each coin in exitCoins we are looking for a match in out response
+				// We need to find exactly len(out) such matches
+				coins_checked := 0
+				for _, coin := range exitCoins {
+					for _, actual_coin := range out.TokensOut {
+						if coin.Denom == actual_coin.Denom {
+							suite.Require().Equal(coin.Amount, actual_coin.Amount)
+							coins_checked++
+						}
+					}
+				}
+				suite.Require().Equal(len(tc.tokensOut), coins_checked)
 			} else {
 				suite.Require().ErrorIs(err, tc.expectedErr)
 			}
@@ -132,7 +166,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 			"join pool with incorrect amount of assets",
 			poolId,
 			sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000)), sdk.NewCoin("bar", sdk.NewInt(10000))),
-			types.ErrInvalidNumberOfCoins,
+			errors.New("balancer pool only supports LP'ing with one asset or all assets in pool"),
 		},
 	}
 
@@ -157,7 +191,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 				suite.Require().Equal(numShares, out.ShareOutAmount)
 				suite.Require().Equal(numLiquidity, out.TokensOut)
 			} else {
-				suite.Require().ErrorIs(err, tc.expectedErr)
+				suite.Require().EqualError(err, tc.expectedErr.Error())
 			}
 		})
 	}

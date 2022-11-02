@@ -178,29 +178,32 @@ func (q Querier) CalcExitPoolCoinsFromShares(ctx context.Context, req *types.Que
 		return nil, types.ErrPoolNotFound
 	}
 
-	denomLiquidity := q.Keeper.GetDenomLiquidity(sdkCtx, req.TokenOutDenom)
-	if denomLiquidity == sdk.ZeroInt() {
-		return nil, types.ErrDenomNotFoundInPool
-	}
+	exitFee := pool.GetExitFee(sdkCtx)
 
 	totalSharesAmount := pool.GetTotalShares()
 	if req.ShareInAmount.GTE(totalSharesAmount) || req.ShareInAmount.LTE(sdk.ZeroInt()) {
 		return nil, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
 	}
 
-	exitFee := pool.GetExitFee(sdkCtx)
 	exitCoins, err := pool.CalcExitPoolCoinsFromShares(sdkCtx, req.ShareInAmount, exitFee)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, coin := range exitCoins {
-		if coin.Denom == req.TokenOutDenom {
-			return &types.QueryCalcExitPoolCoinsFromSharesResponse{TokenOutAmount: coin.Amount.Uint64()}, nil
+	coinsOut := sdk.NewCoins()
+	for _, req_denom := range req.TokensOutDenoms {
+		for _, coin := range exitCoins {
+			if coin.Denom == req_denom {
+				coinsOut = append(coinsOut, coin)
+			}
 		}
 	}
 
-	return nil, types.ErrDenomNotFoundInPool
+	if len(coinsOut) == 0 {
+		return nil, types.ErrDenomNotFoundInPool
+	}
+
+	return &types.QueryCalcExitPoolCoinsFromSharesResponse{TokensOut: coinsOut}, nil
 }
 
 // PoolParams queries a specified pool for its params.

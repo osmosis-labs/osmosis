@@ -144,14 +144,17 @@ message QueryCalcJoinPoolSharesResponse {
 //=============================== QueryCalcExitPoolCoinsFromSharesRequest
 message QueryCalcExitPoolCoinsFromSharesRequest {
   uint64 pool_id = 1;
-  string token_out_denom = 2;
+  repeated string tokens_out_denoms = 2;
   string share_in_amount = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
 }
 message QueryCalcExitPoolCoinsFromSharesResponse {
-  uint64 token_out_amount = 1;
+  repeated cosmos.base.v1beta1.Coin tokens_out = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
 }
 
 //=============================== PoolParams
