@@ -199,6 +199,7 @@ func (q Querier) CalcExitPoolCoinsFromShares(ctx context.Context, req *types.Que
 			return &types.QueryCalcExitPoolCoinsFromSharesResponse{TokenOutAmount: coin.Amount.Uint64()}, nil
 		}
 	}
+
 	return nil, types.ErrDenomNotFoundInPool
 }
 
