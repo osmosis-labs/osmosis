@@ -197,14 +197,12 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 		}
 	}
 
-	amt0 := tokenAmountInAfterFee.Add(swapState.amountSpecifiedRemaining.Abs()).TruncateInt()
-	amt1 := swapState.amountCalculated.TruncateInt()
 	if zeroForOne {
-		tokenInDelta = amt1
-		tokenOutDelta = amt0
+		tokenInDelta = (swapState.amountCalculated).TruncateInt()
+		tokenOutDelta = tokenAmountInAfterFee.Add(swapState.amountSpecifiedRemaining).TruncateInt()
 	} else {
-		tokenInDelta = amt0
-		tokenOutDelta = amt1
+		tokenInDelta = tokenAmountInAfterFee.Add(swapState.amountSpecifiedRemaining).TruncateInt()
+		tokenOutDelta = swapState.amountCalculated.TruncateInt()
 	}
 
 	return tokenInDelta, tokenOutDelta, swapState.tick, swapState.liquidity, nil
