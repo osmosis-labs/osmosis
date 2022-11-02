@@ -12,6 +12,8 @@ import (
 )
 
 const (
+	// Environment variable signifying whether to run e2e tests.
+	e2eEnabledEnv = "OSMOSIS_E2E"
 	// Environment variable name to skip the upgrade tests
 	skipUpgradeEnv = "OSMOSIS_E2E_SKIP_UPGRADE"
 	// Environment variable name to skip the IBC tests
@@ -37,6 +39,10 @@ type IntegrationTestSuite struct {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
+	isEnabled := os.Getenv(e2eEnabledEnv)
+	if isEnabled != "True" {
+		t.Skip(fmt.Sprintf("e2e test is disabled. To run, set %s to True", e2eEnabledEnv))
+	}
 	suite.Run(t, new(IntegrationTestSuite))
 }
 
