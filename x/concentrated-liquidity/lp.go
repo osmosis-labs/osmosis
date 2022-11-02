@@ -77,7 +77,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		pool.Liquidity = pool.Liquidity.Add(liquidity)
 
 		// outcome three: position is above current price
-		// tis means position is solely made up of asset1
+		// this means position is solely made up of asset1
 	} else {
 		amtDenom0 = sdk.ZeroInt()
 		amtDenom1 = calcAmount1Delta(liquidity, sqrtRatioLowerTick, sqrtRatioUpperTick, false).RoundInt()
