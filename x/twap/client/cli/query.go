@@ -123,7 +123,7 @@ $ %s q twap 1 uosmo 1667088000 1667174400
 func parseUint(arg string, fieldName string) (uint64, error) {
 	v, err := strconv.ParseUint(arg, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("could not parse %s as %s uint: %w", arg, fieldName, err)
+		return 0, fmt.Errorf("could not parse %s as uint for field %s: %w", arg, fieldName, err)
 	}
 	return v, nil
 }
