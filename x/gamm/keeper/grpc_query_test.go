@@ -20,63 +20,30 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 	testCases := []struct {
 		name          string
 		poolId        uint64
-		tokensOut     []string
 		shareInAmount sdk.Int
 		expectedErr   error
 	}{
 		{
-			"valid test case / 1 denom",
+			"valid test case",
 			poolId,
-			[]string{"foo"},
-			sdk.NewInt(1000000000000000000),
-			nil,
-		},
-		{
-			"valid test case / 2 denoms",
-			poolId,
-			[]string{"foo", "bar"},
-			sdk.NewInt(1000000000000000000),
-			nil,
-		},
-		{
-			"valid test case / 3 denoms",
-			poolId,
-			[]string{"foo", "bar", "baz"},
-			sdk.NewInt(1000000000000000000),
-			nil,
-		},
-		{
-			"valid test case / 4 denoms",
-			poolId,
-			[]string{"foo", "bar", "baz", "uosmo"},
 			sdk.NewInt(1000000000000000000),
 			nil,
 		},
 		{
 			"pool id does not exist",
 			poolId + 1,
-			[]string{"foo"},
 			sdk.NewInt(1000000000000000000),
 			types.ErrPoolNotFound,
 		},
 		{
-			"token in denom does not exist",
-			poolId,
-			[]string{"hello"},
-			sdk.NewInt(1000000000000000000),
-			types.ErrDenomNotFoundInPool,
-		},
-		{
 			"zero share in amount",
 			poolId,
-			[]string{"foo"},
 			sdk.ZeroInt(),
 			sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
 		},
 		{
 			"negative share in amount",
 			poolId,
-			[]string{"foo"},
 			sdk.NewInt(-10000),
 			sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
 		},
@@ -85,9 +52,8 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
 			out, err := queryClient.CalcExitPoolCoinsFromShares(gocontext.Background(), &types.QueryCalcExitPoolCoinsFromSharesRequest{
-				PoolId:          tc.poolId,
-				TokensOutDenoms: tc.tokensOut,
-				ShareInAmount:   tc.shareInAmount,
+				PoolId:        tc.poolId,
+				ShareInAmount: tc.shareInAmount,
 			})
 			if tc.expectedErr == nil {
 				poolRes, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
@@ -113,7 +79,7 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 						}
 					}
 				}
-				suite.Require().Equal(len(tc.tokensOut), coins_checked)
+				suite.Require().Equal(out.TokensOut, exitCoins)
 			} else {
 				suite.Require().ErrorIs(err, tc.expectedErr)
 			}

@@ -144,8 +144,7 @@ message QueryCalcJoinPoolSharesResponse {
 //=============================== CalcExitPoolCoinsFromShares
 message QueryCalcExitPoolCoinsFromSharesRequest {
   uint64 pool_id = 1;
-  repeated string tokens_out_denoms = 2;
-  string share_in_amount = 3 [
+  string share_in_amount = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
