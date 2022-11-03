@@ -42,13 +42,20 @@ type GRPCQueriesInfo struct {
 	QueryReponses []codec.ProtoMarshaler
 }
 
+func Contains(sl []codec.ProtoMarshaler, ele codec.ProtoMarshaler) bool {
+	for _, value := range sl {
+		if reflect.DeepEqual(value, ele) {
+		   return true
+		}
+	}
+	return false
+}
+
 func (g *GRPCQueriesInfo) RegisterQueryReponse(queryServer interface{}) {
 	handlers := reflect.TypeOf(queryServer).Elem()
 	// adds a top-level query handler based on the gRPC service name
 	for i := 0; i < handlers.NumMethod(); i++ {
 		qResponse := reflect.New(handlers.Method(i).Type.Out(0).Elem())
-		// fmt.Println(qResponse.CanInterface(), "can interface")
-		// fmt.Println(qResponse.Interface())
 		qResponseType, ok := qResponse.Interface().(codec.ProtoMarshaler)
 		if !ok {
 			panic("can't")
@@ -68,7 +75,9 @@ func (g *GRPCQueriesInfo) RegisterService(sd *grpc.ServiceDesc, ss interface{}) 
 
 func (g *GRPCQueriesInfo) GRPCQueriesInfo2StargateWhitelist() {
 	for id := range g.QueryPaths {
-		setWhitelistedQuery(g.QueryPaths[id], g.QueryReponses[id])
+		if Contains(QueriesList, g.QueryReponses[id]) {
+			setWhitelistedQuery(g.QueryPaths[id], g.QueryReponses[id])
+		}
 	}
 }
 
