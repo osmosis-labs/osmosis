@@ -29,6 +29,9 @@ import (
 // - pool ids are migrated from gamm to swaprouter by querying for the pool count.
 // TODO: test that pool creation fee param has been migrated
 func (s *IntegrationTestSuite) TestAConcentratedLiquidityUpgradeMigration() {
+	if s.skipUpgrade {
+		s.T().Skip("Skipping concentrated liquidity upgrade migration test")
+	}
 
 	// N.B.: This number is stemming from creating pre-upgrade state
 	// in the upgrade configurer. We only create two pools.
