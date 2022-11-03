@@ -70,9 +70,9 @@ func getSpotPrices(
 // afterCreatePool creates new twap records of all the unique pairs of denoms within a pool.
 func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
 	denoms, err := k.ammkeeper.GetPoolDenoms(ctx, poolId)
-	denomPairs0, denomPairs1 := types.GetAllUniqueDenomPairs(denoms)
-	for i := 0; i < len(denomPairs0); i++ {
-		record, err := newTwapRecord(k.ammkeeper, ctx, poolId, denomPairs0[i], denomPairs1[i])
+	denomPairs := types.GetAllUniqueDenomPairs(denoms)
+	for _, denomPair := range denomPairs {
+		record, err := newTwapRecord(k.ammkeeper, ctx, poolId, denomPair.Denom0, denomPair.Denom1)
 		// err should be impossible given GetAllUniqueDenomPairs guarantees
 		if err != nil {
 			return err
