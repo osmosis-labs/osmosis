@@ -1350,6 +1350,9 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 				FuturePoolGovernor: defaultFutureGovernor,
 				TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),
 			}
+			fmt.Println(balancerPool.TotalShares)
+			fmt.Println(types.InitPoolSharesSupply)
+			fmt.Println("10000000000000000000")
 
 			numShare, tokensJoined, err := balancerPool.CalcJoinPoolNoSwapShares(ctx, test.tokensIn, balancerPool.GetSwapFee(ctx))
 

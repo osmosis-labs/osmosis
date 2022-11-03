@@ -8,6 +8,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
@@ -86,6 +87,60 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestCalcJoinPoolNoSwapShares() {
+	queryClient := suite.queryClient
+	ctx := suite.Ctx
+	poolId := suite.PrepareBalancerPool()
+	swapFee := sdk.ZeroDec()
+	var (
+		defaultBalancer4Assets = []balancer.PoolAsset{
+			{Token: sdk.NewInt64Coin("foo", 100), Weight: sdk.NewIntFromUint64(5)},
+			{Token: sdk.NewInt64Coin("bar", 100), Weight: sdk.NewIntFromUint64(5)},
+			{Token: sdk.NewInt64Coin("baz", 100), Weight: sdk.NewIntFromUint64(5)},
+			{Token: sdk.NewInt64Coin("uosmo", 100), Weight: sdk.NewIntFromUint64(5)},
+		}
+
+		default4TokensIn = sdk.NewCoins(
+			sdk.NewCoin("foo", sdk.NewInt(100)),
+			sdk.NewCoin("bar", sdk.NewInt(100)),
+			sdk.NewCoin("baz", sdk.NewInt(100)),
+			sdk.NewCoin("uosmo", sdk.NewInt(100)),
+		)
+	)
+	testCases := []struct {
+		name       string
+		poolId     uint64
+		tokensIn   sdk.Coins
+		poolAssets []balancer.PoolAsset
+
+		expectedShares sdk.Int
+		expectedErr    error
+	}{
+		{
+			name:           "valid 4 tokens test",
+			poolId:         poolId,
+			tokensIn:       default4TokensIn,
+			poolAssets:     defaultBalancer4Assets,
+			expectedShares: sdk.NewIntFromUint64(10000000000000000000),
+			expectedErr:    nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			balancerPool := balancer.Pool{
+				Address:            types.NewPoolAddress(tc.poolId).String(),
+				Id:                 tc.poolId,
+				PoolParams:         balancer.PoolParams{SwapFee: defaultSwapFee, ExitFee: defaultExitFee},
+				PoolAssets:         tc.poolAssets,
+				FuturePoolGovernor: defaultFutureGovernor,
+				TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 	queryClient := suite.queryClient
 	ctx := suite.Ctx
