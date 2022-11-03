@@ -171,6 +171,7 @@ func (q Querier) CalcJoinPoolShares(ctx context.Context, req *types.QueryCalcJoi
 	}, nil
 }
 
+<<<<<<< HEAD
 // PoolsWithFilter query allows to query pools with specific parameters
 func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithFilterRequest) (*types.QueryPoolsWithFilterResponse, error) {
 	res, err := q.Pools(ctx, &types.QueryPoolsRequest{
@@ -261,6 +262,8 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 	}, nil
 }
 
+=======
+>>>>>>> 94534da0 (feat(gamm): CalcJoinPoolShares and CalcExitPoolCoinsFromShares queries (#2972))
 // CalcExitPoolCoinsFromShares queries the amount of tokens you get by exiting a specific amount of shares
 func (q Querier) CalcExitPoolCoinsFromShares(ctx context.Context, req *types.QueryCalcExitPoolCoinsFromSharesRequest) (*types.QueryCalcExitPoolCoinsFromSharesResponse, error) {
 	if req == nil {

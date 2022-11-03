@@ -90,6 +90,7 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 		})
 	}
 }
+<<<<<<< HEAD
 
 func (suite *KeeperTestSuite) TestPoolsWithFilter() {
 	var (
@@ -261,6 +262,8 @@ func (suite *KeeperTestSuite) TestPoolsWithFilter() {
 
 }
 
+=======
+>>>>>>> 94534da0 (feat(gamm): CalcJoinPoolShares and CalcExitPoolCoinsFromShares queries (#2972))
 func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 	queryClient := suite.queryClient
 	ctx := suite.Ctx
