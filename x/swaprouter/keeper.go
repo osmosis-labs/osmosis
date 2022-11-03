@@ -81,7 +81,7 @@ func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 	return nextPoolId.Value
 }
 
-// Set the pool creation listeners.
+// SetPoolCreationListeners sets the pool creation listeners.
 func (k *Keeper) SetPoolCreationListeners(listeners types.PoolCreationListeners) *Keeper {
 	if k.poolCreationListeners != nil {
 		panic("cannot set pool creation listeners twice")
