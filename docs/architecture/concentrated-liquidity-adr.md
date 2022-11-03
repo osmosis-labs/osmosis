@@ -328,7 +328,7 @@ Let's begin by considering the execution flow of the pool creation message.
 //
 // After the initial liquidity is sent to the pool's account, shares are minted
 // and sent to the pool creator. The shares are created using a denomination in
-// the form of gamm/pool/{poolID}. In addition, the x/bank metadata is updated
+// the form of < swap module name >/pool/{poolID}. In addition, the x/bank metadata is updated
 // to reflect the newly created GAMM share denomination.
 func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, error) {
     ...
