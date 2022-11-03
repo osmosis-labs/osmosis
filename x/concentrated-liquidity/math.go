@@ -5,21 +5,22 @@ import (
 )
 
 type swapStrategy interface {
-    getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec)
+	getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec)
 }
 
 type zeroForOneStrategy struct{}
+
 var _ swapStrategy = (*zeroForOneStrategy)(nil)
 
 type oneForZeroStrategy struct{}
+
 var _ swapStrategy = (*oneForZeroStrategy)(nil)
 
-
 func newSwapStrategy(zeroForOne bool) swapStrategy {
-    if zeroForOne {
-        return &zeroForOneStrategy{}
-    }
-    return &oneForZeroStrategy{}
+	if zeroForOne {
+		return &zeroForOneStrategy{}
+	}
+	return &oneForZeroStrategy{}
 }
 
 // liquidity0 takes an amount of asset0 in the pool as well as the sqrtpCur and the nextPrice
