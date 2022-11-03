@@ -56,7 +56,7 @@ func (msg MsgCreateStableswapPool) ValidateBasic() error {
 
 	// validation for pool initial liquidity
 	// The message's pool liquidity must have between 2 and 8 assets with at most 10B post-scaled units in each
-	if err = validatePoolAssets(msg.InitialPoolLiquidity, msg.ScalingFactors); err != nil {
+	if err = validatePoolLiquidity(msg.InitialPoolLiquidity, msg.ScalingFactors); err != nil {
 		return err
 	}
 
