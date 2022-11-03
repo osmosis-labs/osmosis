@@ -423,7 +423,7 @@ There are 2 swap messages:
 - `MsgSwapExactAmountIn`
 - `MsgSwapExactAmountOut`
 
-Their implementation is routing is similar. As a result, we only focus on `MsgSwapExactAmountIn`.
+Their implementation of routing is similar. As a result, we only focus on `MsgSwapExactAmountIn`.
 
 Once the message is received, it calls `RouteExactAmountIn`
 
