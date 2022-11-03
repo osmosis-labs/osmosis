@@ -23,7 +23,7 @@ func PriceToTick(price sdk.Dec) sdk.Int {
 	return priceToTick(price)
 }
 
-func TickToSqrtPrice(tickIndex sdk.Int) sdk.Dec {
+func TickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
 	return tickToSqrtPrice(tickIndex)
 }
 

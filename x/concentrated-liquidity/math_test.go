@@ -180,6 +180,8 @@ func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount1RoundingDown() {
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // calcAmount0Delta = (liquidity * (sqrtPriceB - sqrtPriceA)) / (sqrtPriceB * sqrtPriceA)
 func (suite *KeeperTestSuite) TestCalcAmount0Delta() {
+	sqrtPrice85176, _ := cl.TickToSqrtPrice(sdk.NewInt(85176))
+	sqrtPrice86129, _ := cl.TickToSqrtPrice(sdk.NewInt(86129))
 	testCases := []struct {
 		name            string
 		liquidity       sdk.Dec
@@ -190,17 +192,17 @@ func (suite *KeeperTestSuite) TestCalcAmount0Delta() {
 		{
 			"happy path positive",
 			sdk.MustNewDecFromStr("1517.882343751509868544"),
-			cl.TickToSqrtPrice(sdk.NewInt(85176)),
-			cl.TickToSqrtPrice(sdk.NewInt(86129)),
-			"0.997809844947825961", // TODO: should be 0.998833192822975409
+			sqrtPrice85176,
+			sqrtPrice86129,
+			"0.998833192822972889", // TODO: should be 0.998833192822975409
 			// https://www.wolframalpha.com/input?i2d=true&i=1517.882343751509868544+*+%5C%2840%29Divide%5BPower%5B1.0001%2CDivide%5B86129%2C2%5D%5D-Power%5B1.0001%2CDivide%5B85176%2C2%5D%5D%2CPower%5B1.0001%2CDivide%5B85176%2C2%5D%5D*Power%5B1.0001%2CDivide%5B86129%2C2%5D%5D%5D%5C%2841%29
 		},
 		{
 			"happy path negative",
 			sdk.MustNewDecFromStr("-1517.882343751509868544"),
-			cl.TickToSqrtPrice(sdk.NewInt(85176)),
-			cl.TickToSqrtPrice(sdk.NewInt(86129)),
-			"-0.997809844947825961", // TODO: should be 0.998833192822975408
+			sqrtPrice85176,
+			sqrtPrice86129,
+			"-0.998833192822972889", // TODO: should be 0.998833192822975408
 			// https://www.wolframalpha.com/input?i2d=true&i=1517.882343751509868544+*+%5C%2840%29Divide%5BPower%5B1.0001%2CDivide%5B86129%2C2%5D%5D-Power%5B1.0001%2CDivide%5B85176%2C2%5D%5D%2CPower%5B1.0001%2CDivide%5B85176%2C2%5D%5D*Power%5B1.0001%2CDivide%5B86129%2C2%5D%5D%5D%5C%2841%29
 		},
 	}
@@ -220,6 +222,8 @@ func (suite *KeeperTestSuite) TestCalcAmount0Delta() {
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // calcAmount1Delta = liq * (sqrtPriceB - sqrtPriceA)
 func (suite *KeeperTestSuite) TestCalcAmount1Delta() {
+	sqrtPrice85176, _ := cl.TickToSqrtPrice(sdk.NewInt(85176))
+	sqrtPrice84222, _ := cl.TickToSqrtPrice(sdk.NewInt(84222))
 	testCases := []struct {
 		name            string
 		liquidity       sdk.Dec
@@ -230,17 +234,17 @@ func (suite *KeeperTestSuite) TestCalcAmount1Delta() {
 		{
 			"happy path positive",
 			sdk.MustNewDecFromStr("1517.882343751509868544"),
-			cl.TickToSqrtPrice(sdk.NewInt(85176)),
-			cl.TickToSqrtPrice(sdk.NewInt(84222)),
-			"4999.187247111840200792", // TODO: should be 4999.187247111820044641
+			sqrtPrice85176,
+			sqrtPrice84222,
+			"4999.187247111840214453", // TODO: should be 4999.187247111820044641
 			// https://www.wolframalpha.com/input?i2d=true&i=1517.882343751509868544+*+%5C%2840%29Power%5B1.0001%2CDivide%5B85176%2C2%5D%5D+-Power%5B1.0001%2CDivide%5B84222%2C2%5D%5D%5C%2841%29
 		},
 		{
 			"happy path positive",
 			sdk.MustNewDecFromStr("-1517.882343751509868544"),
-			cl.TickToSqrtPrice(sdk.NewInt(85176)),
-			cl.TickToSqrtPrice(sdk.NewInt(84222)),
-			"-4999.187247111840200792", // TODO: should be -4999.187247111820044640
+			sqrtPrice85176,
+			sqrtPrice84222,
+			"-4999.187247111840214453", // TODO: should be -4999.187247111820044640
 			// https://www.wolframalpha.com/input?i2d=true&i=-1517.882343751509868544+*+%5C%2840%29Power%5B1.0001%2CDivide%5B85176%2C2%5D%5D+-Power%5B1.0001%2CDivide%5B84222%2C2%5D%5D%5C%2841%29
 		},
 	}

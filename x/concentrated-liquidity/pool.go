@@ -144,7 +144,10 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 			return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, fmt.Errorf("there are no more ticks initialized to fill the swap")
 		}
 
-		nextSqrtPrice := tickToSqrtPrice(sdk.NewInt(nextTick))
+		nextSqrtPrice, err := tickToSqrtPrice(sdk.NewInt(nextTick))
+		if err != nil {
+			return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, err
+		}
 
 		var sqrtPriceTarget sdk.Dec
 		if zeroForOne && nextSqrtPrice.LT(sqrtPriceLimit) || !zeroForOne && nextSqrtPrice.GT(sqrtPriceLimit) {
@@ -278,7 +281,10 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 		if !ok {
 			return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("there are no more ticks initialized to fill the swap")
 		}
-		nextSqrtPrice := tickToSqrtPrice(sdk.NewInt(nextTick))
+		nextSqrtPrice, err := tickToSqrtPrice(sdk.NewInt(nextTick))
+		if err != nil {
+			return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), err
+		}
 
 		// TODO: In and out get flipped based on if we are calculating for in or out, need to fix this
 		sqrtPrice, amountIn, amountOut := computeSwapStep(

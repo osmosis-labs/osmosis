@@ -151,7 +151,8 @@ func (suite *KeeperTestSuite) TestTickToSqrtPrice() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			sqrtPrice := cl.TickToSqrtPrice(tc.tickIndex)
+			sqrtPrice, err := cl.TickToSqrtPrice(tc.tickIndex)
+			suite.Require().NoError(err)
 			suite.Require().Equal(tc.sqrtPriceExpected, sqrtPrice.String())
 
 		})

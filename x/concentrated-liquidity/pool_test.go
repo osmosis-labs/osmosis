@@ -149,11 +149,11 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
 			tokenOutDenom: "eth",
 			priceLimit:    sdk.NewDec(6106),
-			// we expect to put 10000 usdc in and in return get 1.820512 eth back
+			// we expect to put 10000 usdc in and in return get 1.820536 eth back
 			// TODO: see why we don't get 9938.148 usdc and 1.80615 eth
-			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(10000000000)), // TODO: should be 9938.146841864722991247
-			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1820512)),      // TODO: should be 1.806151062659754714
-			expectedTick:     sdk.NewInt(87174),
+			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(9999999999)), // TODO: should be 9938.146841864722991247
+			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1820536)),     // TODO: should be 1.806151062659754714
+			expectedTick:     sdk.NewInt(87173),                           // TODO: should be 87174
 			newLowerPrice:    sdk.NewDec(5501),
 			newUpperPrice:    sdk.NewDec(6250),
 		},
@@ -187,8 +187,10 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			newLowerTick := cl.PriceToTick(test.newLowerPrice)
 			newUpperTick := cl.PriceToTick(test.newUpperPrice)
 
-			lowerSqrtPrice := cl.TickToSqrtPrice(newLowerTick)
-			upperSqrtPrice := cl.TickToSqrtPrice(newUpperTick)
+			lowerSqrtPrice, err := cl.TickToSqrtPrice(newLowerTick)
+			s.Require().NoError(err)
+			upperSqrtPrice, err := cl.TickToSqrtPrice(newUpperTick)
+			s.Require().NoError(err)
 
 			if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
 				test.poolLiqAmount0 = defaultAmt0

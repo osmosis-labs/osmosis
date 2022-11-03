@@ -13,10 +13,13 @@ import (
 )
 
 // tickToSqrtPrice takes the tick index and returns the corresponding sqrt of the price
-func tickToSqrtPrice(tickIndex sdk.Int) sdk.Dec {
-	sqrtPrice := sdk.NewDecWithPrec(10001, 4).Power(tickIndex.Uint64() / 2)
+func tickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
+	sqrtPrice, err := sdk.NewDecWithPrec(10001, 4).Power(tickIndex.Uint64()).ApproxSqrt()
+	if err != nil {
+		return sdk.Dec{}, err
+	}
 
-	return sqrtPrice
+	return sqrtPrice, nil
 }
 
 // TODO: implement this
