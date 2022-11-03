@@ -43,3 +43,4 @@ thiserror = { version = "1.0.31" }
 
 [dev-dependencies]
 cw-multi-test = "0.13.2"
+serde-json-wasm = "0.4.1"

@@ -1,7 +1,8 @@
-use cosmwasm_std::{Addr, Deps, Timestamp};
+use cosmwasm_std::{Addr, Deps, Timestamp, Uint256};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Height {
     /// Previously known as "epoch"
     revision_number: Option<u64>,
@@ -10,15 +11,15 @@ pub struct Height {
     revision_height: Option<u64>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct FungibleTokenData {
     denom: String,
-    amount: u128,
+    amount: Uint256,
     sender: Addr,
     receiver: Addr,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Packet {
     pub sequence: u64,
     pub source_port: String,
@@ -31,13 +32,34 @@ pub struct Packet {
 }
 
 impl Packet {
-    pub fn channel_value(&self, _deps: Deps) -> u128 {
-        // let balance = deps.querier.query_all_balances("address", self.data.denom);
-        // deps.querier.sup
-        return 125000000000011250 * 2;
+    pub fn mock(channel_id: String, denom: String, funds: Uint256) -> Packet {
+        Packet {
+            sequence: 0,
+            source_port: "transfer".to_string(),
+            source_channel: channel_id.clone(),
+            destination_port: "transfer".to_string(),
+            destination_channel: channel_id,
+            data: crate::packet::FungibleTokenData {
+                denom,
+                amount: funds,
+                sender: Addr::unchecked("sender"),
+                receiver: Addr::unchecked("receiver"),
+            },
+            timeout_height: crate::packet::Height {
+                revision_number: None,
+                revision_height: None,
+            },
+            timeout_timestamp: None,
+        }
     }
 
-    pub fn get_funds(&self) -> u128 {
+    pub fn channel_value(&self, _deps: Deps) -> Uint256 {
+        // let balance = deps.querier.query_all_balances("address", self.data.denom);
+        // deps.querier.sup
+        return Uint256::from(125000000000011250_u128 * 2);
+    }
+
+    pub fn get_funds(&self) -> Uint256 {
         return self.data.amount;
     }
 
@@ -61,4 +83,29 @@ impl Packet {
 
         return (channel, denom);
     }
+}
+
+// Helpers
+
+// Create a new packet for testing
+#[macro_export]
+macro_rules! test_msg_send {
+    (channel_id: $channel_id:expr, denom: $denom:expr, channel_value: $channel_value:expr, funds: $funds:expr) => {
+        crate::msg::SudoMsg::SendPacket {
+            packet: crate::packet::Packet::mock($channel_id, $denom, $funds),
+            local_denom: Some($denom),
+            channel_value_hint: Some($channel_value),
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! test_msg_recv {
+    (channel_id: $channel_id:expr, denom: $denom:expr, channel_value: $channel_value:expr, funds: $funds:expr) => {
+        crate::msg::SudoMsg::RecvPacket {
+            packet: crate::packet::Packet::mock($channel_id, $denom, $funds),
+            local_denom: Some($denom),
+            channel_value_hint: Some($channel_value),
+        }
+    };
 }

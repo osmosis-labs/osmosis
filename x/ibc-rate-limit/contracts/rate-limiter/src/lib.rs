@@ -4,6 +4,8 @@ mod error;
 pub mod msg;
 mod state;
 
+pub mod packet;
+
 // Functions
 mod execute;
 mod query;

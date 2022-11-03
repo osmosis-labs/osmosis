@@ -50,6 +50,7 @@ pub mod tests {
         outflow: Uint256,
         period_end: Timestamp,
     ) {
+        dbg!(value);
         assert_eq!(value.quota.name, quota_name);
         assert_eq!(value.quota.max_percentage_send, send_recv.0);
         assert_eq!(value.quota.max_percentage_recv, send_recv.1);
