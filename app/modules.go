@@ -147,7 +147,7 @@ func appModules(
 			app.EpochsKeeper,
 		),
 		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
-		swaproutermodule.NewAppModule(*app.SwapRouterKeeper),
+		swaproutermodule.NewAppModule(*app.SwapRouterKeeper, app.GAMMKeeper),
 	}
 }
 

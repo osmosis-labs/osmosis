@@ -5,7 +5,6 @@ import (
 	gogotypes "github.com/gogo/protobuf/types"
 
 	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -14,7 +13,7 @@ import (
 type Keeper struct {
 	storeKey sdk.StoreKey
 
-	gammKeeper          types.SimulationExtension
+	gammKeeper          types.SwapI
 	concentratedKeeper  types.SwapI
 	bankKeeper          types.BankI
 	accountKeeper       types.AccountI
@@ -27,7 +26,7 @@ type Keeper struct {
 	paramSpace paramtypes.Subspace
 }
 
-func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.SimulationExtension, concentratedKeeper types.SwapI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI) *Keeper {
+func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.SwapI, concentratedKeeper types.SwapI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -74,17 +73,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	}
 }
 
-// GetPoolAndPoke gets a pool with the given pool id.
-// This method is used for simulation only.
-// TODO: remove it after refactoring simulation logic.
-func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (gammtypes.TraditionalAmmInterface, error) {
-	return k.gammKeeper.GetPoolAndPoke(ctx, poolId)
-}
-
 // GetNextPoolId returns the next pool id.
-// This method is used for simulation only.
-// TODO: remove it after refactoring simulation logic.
-// GetNextPoolId returns the next pool Id.
 func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	nextPoolId := gogotypes.UInt64Value{}

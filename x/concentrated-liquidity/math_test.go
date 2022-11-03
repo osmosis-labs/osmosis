@@ -18,11 +18,11 @@ func (suite *KeeperTestSuite) TestGetLiquidityFromAmounts() {
 	}{
 		{
 			"happy path",
-			sdk.MustNewDecFromStr("70.710678"),
-			sdk.MustNewDecFromStr("74.161984"),
-			sdk.MustNewDecFromStr("67.082039"),
-			sdk.NewInt(1),
-			sdk.NewInt(5000),
+			sdk.MustNewDecFromStr("70710678"),
+			sdk.MustNewDecFromStr("74161984"),
+			sdk.MustNewDecFromStr("67082039"),
+			sdk.NewInt(1000000),
+			sdk.NewInt(5000000000),
 			"1377.927096082029653542",
 		},
 	}
@@ -201,7 +201,7 @@ func (suite *KeeperTestSuite) TestCalcAmount0Delta() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			amount0 := cl.CalcAmount0Delta(tc.liquidity, tc.sqrtPCurrent, tc.sqrtPUpper)
+			amount0 := cl.CalcAmount0Delta(tc.liquidity, tc.sqrtPCurrent, tc.sqrtPUpper, false)
 			suite.Require().Equal(tc.amount0Expected, amount0.TruncateInt().String())
 		})
 	}
@@ -233,7 +233,7 @@ func (suite *KeeperTestSuite) TestCalcAmount1Delta() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			amount1 := cl.CalcAmount1Delta(tc.liquidity, tc.sqrtPCurrent, tc.sqrtPLower)
+			amount1 := cl.CalcAmount1Delta(tc.liquidity, tc.sqrtPCurrent, tc.sqrtPLower, false)
 			suite.Require().Equal(tc.amount1Expected, amount1.TruncateInt().String())
 		})
 	}
@@ -259,7 +259,7 @@ func (suite *KeeperTestSuite) TestComputeSwapState() {
 			sdk.NewDec(133700),
 			true,
 			"70.468932817327539027",
-			"66849.999999999999897227",
+			"66850.000000000000000000",
 			"333107267.266511136411924087",
 		},
 		{
@@ -270,7 +270,7 @@ func (suite *KeeperTestSuite) TestComputeSwapState() {
 			sdk.NewDec(4199999999),
 			false,
 			"73.758734487372429211",
-			"4199999998.999999999987594209",
+			"4199999999.000000000000000000",
 			"805287.266898087447354318",
 		},
 	}

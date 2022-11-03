@@ -57,24 +57,6 @@ type SwapI interface {
 	) (tokenInAmount sdk.Int, err error)
 }
 
-// GammExtension defines gamm-specific API.
-type GammExtension interface {
-	SwapI
-
-	RecordTotalLiquidityIncrease(ctx sdk.Context, coins sdk.Coins)
-
-	MintPoolShareToAccount(ctx sdk.Context, pool gammtypes.PoolI, addr sdk.AccAddress, amount sdk.Int) error
-}
-
-// SimulationExtension defines the swap simulation extension.
-// TODO: refactor simulator setup logic to avoid having to define these
-// extra methods just for the simulation.
-type SimulationExtension interface {
-	GammExtension
-
-	GetPoolAndPoke(ctx sdk.Context, poolId uint64) (gammtypes.TraditionalAmmInterface, error)
-}
-
 type SwapAmountInRoutes []SwapAmountInRoute
 
 func (routes SwapAmountInRoutes) IsOsmoRoutedMultihop() bool {
