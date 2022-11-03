@@ -2,8 +2,6 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
-	"strings"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -130,29 +128,28 @@ func (im *IBCModule) OnRecvPacket(
 		// The contract has not been configured. Continue as usual
 		return im.app.OnRecvPacket(ctx, packet, relayer)
 	}
-	amount, denom, err := GetFundsFromPacket(packet)
+	_, denom, err := GetFundsFromPacket(packet)
 	if err != nil {
 		return channeltypes.NewErrorAcknowledgement("bad packet in rate limit's OnRecvPacket")
 	}
 
 	channelValue := im.ics4Middleware.CalculateChannelValue(ctx, denom)
 
-	channel := packet.GetSourceChannel()
-	if !strings.HasPrefix(denom, "ibc/") {
-		// For native channels, we want to have only one limit across all channels. We can use a quota for
-		//channel "any" for this
-		channel = "any"
-	}
+	//channel := packet.GetSourceChannel()
+	//if !strings.HasPrefix(denom, "ibc/") {
+	//	// For native channels, we want to have only one limit across all channels. We can use a quota for
+	//	//channel "any" for this
+	//	channel = "any"
+	//}
 
 	err = CheckAndUpdateRateLimits(
 		ctx,
 		im.ics4Middleware.ContractKeeper,
 		"recv_packet",
 		contract,
+		packet,
 		channelValue,
-		channel,
-		denom, // We always use the packet's denom here, as we want the limits to be the same on both directions
-		amount,
+		denom,
 	)
 	if err != nil {
 		return channeltypes.NewErrorAcknowledgement(types.ErrRateLimitExceeded.Error())
@@ -217,30 +214,23 @@ func (im *IBCModule) RevertSentPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 ) error {
-	var data transfertypes.FungibleTokenPacketData
-	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
-	}
 	contract := im.ics4Middleware.GetParams(ctx)
 	if contract == "" {
 		// The contract has not been configured. Continue as usual
 		return nil
 	}
 
-	channel := packet.GetSourceChannel()
-	if !strings.HasPrefix(data.Denom, "ibc/") {
-		// For native channels, we want to have only one limit across all channels. We can use a quota for
-		//channel "any" for this
-		channel = "any"
+	_, denom, err := GetFundsFromPacket(packet)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
 
 	if err := UndoSendRateLimit(
 		ctx,
 		im.ics4Middleware.ContractKeeper,
 		contract,
-		channel,
-		data.Denom,
-		data.Amount,
+		packet,
+		denom,
 	); err != nil {
 		return err
 	}

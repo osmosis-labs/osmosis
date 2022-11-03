@@ -284,9 +284,7 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
-	// TODO: Remove native from MessafeFrom calls
 	// send 2.5% (quota is 5%)
-	fmt.Println("trying to send ", sendAmount)
 	suite.AssertSend(true, suite.MessageFromAToB(denom, sendAmount))
 
 	// send 2.5% (quota is 5%)

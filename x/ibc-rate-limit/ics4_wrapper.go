@@ -9,9 +9,9 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	channelkeeper "github.com/cosmos/ibc-go/v3/modules/core/04-channel/keeper"
+	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
-	"strings"
 )
 
 var (
@@ -53,18 +53,19 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 		return i.channel.SendPacket(ctx, chanCap, packet)
 	}
 
-	amount, denom, err := GetFundsFromPacket(packet)
+	_, denom, err := GetFundsFromPacket(packet)
 	if err != nil {
 		return sdkerrors.Wrap(err, "Rate limit SendPacket")
 	}
 
 	channelValue := i.CalculateChannelValue(ctx, denom)
 
-	channel := packet.GetSourceChannel()
-	if !strings.HasPrefix(denom, "ibc/") {
-		// For native channels, we want to have only one limit across all channels. We can use a quota for
-		//channel "any" for this
-		channel = "any"
+	// We need the full packet so the contract can process it. If it can't be cast to a channeltypes.Packet, this
+	// should fail. The only reason that would happen is if another middleware is modifying the packet, though. In
+	// that case we can modify the middleware order or change this cast so we have all the data we need.
+	fullPacket, ok := packet.(channeltypes.Packet)
+	if !ok {
+		return sdkerrors.ErrInvalidRequest
 	}
 
 	err = CheckAndUpdateRateLimits(
@@ -72,11 +73,11 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 		i.ContractKeeper,
 		"send_packet",
 		contract,
+		fullPacket,
 		channelValue,
-		channel,
-		denom, // We always use the packet's denom here, as we want the limits to be the same on both directions
-		amount,
+		denom,
 	)
+
 	if err != nil {
 		return sdkerrors.Wrap(err, "bad packet in rate limit's SendPacket")
 	}

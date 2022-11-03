@@ -21,7 +21,7 @@ pub fn process_packet(
     local_denom: Option<String>,
     channel_value_hint: Option<Uint256>,
 ) -> Result<Response, ContractError> {
-    let (channel_id, extracted_denom) = packet.path_data();
+    let (channel_id, extracted_denom) = packet.path_data(&direction);
     let denom = match local_denom {
         Some(denom) => denom,
         None => extracted_denom,
@@ -132,7 +132,7 @@ pub fn undo_send(
     local_denom: Option<String>,
 ) -> Result<Response, ContractError> {
     // Sudo call. Only go modules should be allowed to access this
-    let (channel_id, extracted_denom) = packet.path_data();
+    let (channel_id, extracted_denom) = packet.path_data(&FlowType::Out); // Sends have direction out.
     let denom = match local_denom {
         Some(denom) => denom,
         None => extracted_denom,

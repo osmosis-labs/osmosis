@@ -2,6 +2,8 @@ use cosmwasm_std::{Addr, Deps, Timestamp, Uint256};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::state::FlowType;
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Height {
     /// Previously known as "epoch"
@@ -63,9 +65,12 @@ impl Packet {
         return self.data.amount;
     }
 
-    fn local_channel(&self) -> String {
+    fn local_channel(&self, direction: &FlowType) -> String {
         // Pick the appropriate channel depending on whether this is a send or a recv
-        return self.destination_channel.clone();
+        match direction {
+            FlowType::In => self.destination_channel.clone(),
+            FlowType::Out => self.source_channel.clone(),
+        }
     }
 
     fn local_demom(&self) -> String {
@@ -73,10 +78,11 @@ impl Packet {
         return self.data.denom.clone();
     }
 
-    pub fn path_data(&self) -> (String, String) {
+    pub fn path_data(&self, direction: &FlowType) -> (String, String) {
         let denom = self.local_demom();
-        let channel = if denom.starts_with("ibc/") {
-            self.local_channel()
+        let channel = if denom.starts_with("transfer/") {
+            // We should probably use the hash here, but need to figure out how to do that in cosmwasm
+            self.local_channel(direction)
         } else {
             "any".to_string() // native tokens are rate limited globally
         };
