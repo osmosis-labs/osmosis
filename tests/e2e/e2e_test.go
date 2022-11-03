@@ -22,6 +22,26 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/tests/e2e/initialization"
 )
 
+// TestAConcentratedLiquidityUpgradeMigration tests the migrations performed by the concentrated-liquidity upgrade.
+// Note that the name is prefixed by "A" so that this test is run first.
+// We should remove this test once concentrated liquidity is released.
+// It tests:
+// - pool ids are migrated from gamm to swaprouter by querying for the pool count.
+// TODO: test that pool creation fee param has been migrated
+func (s *IntegrationTestSuite) TestAConcentratedLiquidityUpgradeMigration() {
+
+	// N.B.: This number is stemming from creating pre-upgrade state
+	// in the upgrade configurer. We only create two pools.
+	const expectedNumberOfPoolsCreated uint64 = 2
+
+	chainA := s.configurer.GetChainConfig(0)
+	node, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
+
+	poolCount := node.QueryTotalPools()
+	s.Require().Equal(expectedNumberOfPoolsCreated, poolCount)
+}
+
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.
 // Additionally, it attempst to create a pool with IBC denoms.
 func (s *IntegrationTestSuite) TestIBCTokenTransferAndCreatePool() {
@@ -36,7 +56,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferAndCreatePool() {
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 
 	chainANode, err := chainA.GetDefaultNode()
-	s.NoError(err)
+	s.Require().NoError(err)
 	chainANode.CreatePool("ibcDenomPool.json", initialization.ValidatorWalletName, false)
 }
 
@@ -50,7 +70,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferAndCreatePool() {
 func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
-	s.NoError(err)
+	s.Require().NoError(err)
 
 	poolId := chainANode.CreatePool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress, false)
 
