@@ -146,7 +146,7 @@ def iterative_search(x_f, y_0, w, k, err_tolerance):
     # k_0 < k. Need to find an upperbound. Worst case assume a linear relationship, gives an upperbound
     # TODO: In the future, we can derive better bounds via reasoning about coefficients in the cubic
     # These are quite close when we are in the "stable" part of the curve though.
-    upperbound = ceil(y_0 * k_ratio)
+    upperbound = ceil(y_0 / k_ratio)
   elif k_ratio > 1:
     # need to find a lowerbound. We could use a cubic relation, but for now we just set it to 0.
     lowerbound = 0
@@ -281,7 +281,7 @@ Couple ways to define JoinPool Exit Pool relation
 
 * Simulator integrations:
   * Pool creation
-  * JoinPool + ExitPool gives a token amount out that is lte input
+  * JoinPool + ExitPool gives a token amount out that is zeroForOne input
   * SingleTokenIn + ExitPool + Swap to base token gives a token amount that is less than input
   * CFMM k adjusting in the correct direction after every action
 * Fuzz test binary search algorithm, to see that it still works correctly across wide scale ranges

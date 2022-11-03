@@ -9,32 +9,27 @@ import (
 
 // TODO: godoc
 type SwapI interface {
-	MultihopSwapExactAmountIn(
-		ctx sdk.Context,
-		sender sdk.AccAddress,
-		routes []SwapAmountInRoute,
-		tokenIn sdk.Coin,
-		tokenOutMinAmount sdk.Int,
-	) (tokenOutAmount sdk.Int, err error)
+	GetPool(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
 
-	MultihopSwapExactAmountOut(
+	SwapExactAmountIn(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
-		routes []SwapAmountOutRoute,
+		poolId gammtypes.PoolI,
+		tokenIn sdk.Coin,
+		tokenOutDenom string,
+		tokenOutMinAmount sdk.Int,
+		swapFee sdk.Dec,
+	) (sdk.Int, error)
+
+	SwapExactAmountOut(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		poolId gammtypes.PoolI,
+		tokenInDenom string,
 		tokenInMaxAmount sdk.Int,
 		tokenOut sdk.Coin,
+		swapFee sdk.Dec,
 	) (tokenInAmount sdk.Int, err error)
-}
-
-// SimulationExtension defines the swap simulation extension.
-// TODO: refactor simulator setup logic to avoid having to define these
-// extra methods just for the simulation.
-type SimulationExtension interface {
-	SwapI
-
-	GetPoolAndPoke(ctx sdk.Context, poolId uint64) (gammtypes.TraditionalAmmInterface, error)
-
-	GetNextPoolId(ctx sdk.Context) uint64
 }
 
 type SwapAmountInRoutes []SwapAmountInRoute

@@ -78,7 +78,8 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 type AppModule struct {
 	AppModuleBasic
 
-	k swaprouter.Keeper
+	k          swaprouter.Keeper
+	gammKeeper types.GammKeeper
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
@@ -86,10 +87,11 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: swaprouterclient.Querier{K: am.k}})
 }
 
-func NewAppModule(swaprouterKeeper swaprouter.Keeper) AppModule {
+func NewAppModule(swaprouterKeeper swaprouter.Keeper, gammKeeper types.GammKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		k:              swaprouterKeeper,
+		gammKeeper:     gammKeeper,
 	}
 }
 
@@ -146,5 +148,5 @@ func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *s
 }
 
 func (am AppModule) Actions() []simtypes.Action {
-	return swaproutersimulation.DefaultActions(am.k)
+	return swaproutersimulation.DefaultActions(am.k, am.gammKeeper)
 }
