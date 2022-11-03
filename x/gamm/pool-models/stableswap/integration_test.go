@@ -1,7 +1,7 @@
 // This file contains integration tests, using "true" messages.
 // We expect tests for:
 // * MsgCreatePool creating correct pool as expected
-// * MsgSetStableswapScalingFactors works as expected
+// * MsgStableSwapAdjustScalingFactors works as expected
 //
 package stableswap_test
 
