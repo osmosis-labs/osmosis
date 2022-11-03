@@ -11,6 +11,7 @@ import (
 	channelkeeper "github.com/cosmos/ibc-go/v3/modules/core/04-channel/keeper"
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
+	"strings"
 )
 
 var (
@@ -59,13 +60,20 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 
 	channelValue := i.CalculateChannelValue(ctx, denom)
 
+	channel := packet.GetSourceChannel()
+	if !strings.HasPrefix(denom, "ibc/") {
+		// For native channels, we want to have only one limit across all channels. We can use a quota for
+		//channel "any" for this
+		channel = "any"
+	}
+
 	err = CheckAndUpdateRateLimits(
 		ctx,
 		i.ContractKeeper,
 		"send_packet",
 		contract,
 		channelValue,
-		packet.GetSourceChannel(),
+		channel,
 		denom, // We always use the packet's denom here, as we want the limits to be the same on both directions
 		amount,
 	)

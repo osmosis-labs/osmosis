@@ -211,10 +211,10 @@ func (suite *MiddlewareTestSuite) AssertSend(success bool, msg sdk.Msg) (*sdk.Re
 	return r, err
 }
 
-func (suite *MiddlewareTestSuite) BuildChannelQuota(name, denom string, duration, send_precentage, recv_percentage uint32) string {
+func (suite *MiddlewareTestSuite) BuildChannelQuota(name, channel, denom string, duration, send_precentage, recv_percentage uint32) string {
 	return fmt.Sprintf(`
-          {"channel_id": "channel-0", "denom": "%s", "quotas": [{"name":"%s", "duration": %d, "send_recv":[%d, %d]}] }
-    `, denom, name, duration, send_precentage, recv_percentage)
+          {"channel_id": "%s", "denom": "%s", "quotas": [{"name":"%s", "duration": %d, "send_recv":[%d, %d]}] }
+    `, channel, denom, name, duration, send_precentage, recv_percentage)
 }
 
 // Tests
@@ -259,9 +259,11 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	suite.initializeEscrow()
 	// Get the denom and amount to send
 	denom := sdk.DefaultBondDenom
+	channel := "any"
 	if !native {
 		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", denom))
 		denom = denomTrace.IBCDenom()
+		channel = "channel-0"
 	}
 
 	osmosisApp := suite.chainA.GetOsmosisApp()
@@ -277,7 +279,7 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
-	quotas := suite.BuildChannelQuota("weekly", denom, 604800, 5, 5)
+	quotas := suite.BuildChannelQuota("weekly", channel, denom, 604800, 5, 5)
 	fmt.Println(quotas)
 	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
@@ -343,9 +345,11 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	suite.initializeEscrow()
 	// Get the denom and amount to send
 	denom := sdk.DefaultBondDenom
+	channel := "any"
 	if !native {
 		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", denom))
 		denom = denomTrace.IBCDenom()
+		channel = "channel-0"
 	}
 
 	osmosisApp := suite.chainA.GetOsmosisApp()
@@ -361,7 +365,7 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
-	quotas := suite.BuildChannelQuota("weekly", denom, 604800, 5, 5)
+	quotas := suite.BuildChannelQuota("weekly", channel, denom, 604800, 5, 5)
 	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
@@ -400,7 +404,7 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	suite.initializeEscrow()
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
-	quotas := suite.BuildChannelQuota("weekly", sdk.DefaultBondDenom, 604800, 1, 1)
+	quotas := suite.BuildChannelQuota("weekly", "any", sdk.DefaultBondDenom, 604800, 1, 1)
 	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 

@@ -2,6 +2,7 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -136,13 +137,20 @@ func (im *IBCModule) OnRecvPacket(
 
 	channelValue := im.ics4Middleware.CalculateChannelValue(ctx, denom)
 
+	channel := packet.GetSourceChannel()
+	if !strings.HasPrefix(denom, "ibc/") {
+		// For native channels, we want to have only one limit across all channels. We can use a quota for
+		//channel "any" for this
+		channel = "any"
+	}
+
 	err = CheckAndUpdateRateLimits(
 		ctx,
 		im.ics4Middleware.ContractKeeper,
 		"recv_packet",
 		contract,
 		channelValue,
-		packet.GetDestChannel(),
+		channel,
 		denom, // We always use the packet's denom here, as we want the limits to be the same on both directions
 		amount,
 	)
@@ -219,11 +227,18 @@ func (im *IBCModule) RevertSentPacket(
 		return nil
 	}
 
+	channel := packet.GetSourceChannel()
+	if !strings.HasPrefix(data.Denom, "ibc/") {
+		// For native channels, we want to have only one limit across all channels. We can use a quota for
+		//channel "any" for this
+		channel = "any"
+	}
+
 	if err := UndoSendRateLimit(
 		ctx,
 		im.ics4Middleware.ContractKeeper,
 		contract,
-		packet.GetSourceChannel(),
+		channel,
 		data.Denom,
 		data.Amount,
 	); err != nil {
