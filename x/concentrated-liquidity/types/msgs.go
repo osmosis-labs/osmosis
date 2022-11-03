@@ -22,7 +22,7 @@ func (msg MsgCreatePosition) ValidateBasic() error {
 	}
 
 	if msg.LowerTick >= msg.UpperTick {
-		return ErrInvalidLowerUpperTick{LowerTick: msg.LowerTick, UpperTick: msg.UpperTick}
+		return InvalidLowerUpperTickError{LowerTick: msg.LowerTick, UpperTick: msg.UpperTick}
 	}
 
 	if msg.LowerTick < MinTick || msg.LowerTick > MaxTick {
@@ -75,7 +75,7 @@ func (msg MsgWithdrawPosition) ValidateBasic() error {
 	}
 
 	if msg.LowerTick >= msg.UpperTick {
-		return ErrInvalidLowerUpperTick{LowerTick: msg.LowerTick, UpperTick: msg.UpperTick}
+		return InvalidLowerUpperTickError{LowerTick: msg.LowerTick, UpperTick: msg.UpperTick}
 	}
 
 	if msg.LowerTick < MinTick || msg.LowerTick > MaxTick {
