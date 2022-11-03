@@ -510,7 +510,7 @@ to avoid repetition.
 ##### Swaps
 
 We rely on the pre-existing swap methods located in `x/gamm/keeper/pool.go`:
-- ` SwapExactAmountIn`
+- `SwapExactAmountIn`
 - `SwapExactAmountOut`
 
 Similarly to `concentrated-liquidity` module, these methods now implement the `swaprouter` `SwapI` interface.
