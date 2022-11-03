@@ -192,7 +192,7 @@ func (suite *KeeperTestSuite) TestCalcAmount0Delta() {
 			sdk.MustNewDecFromStr("1517.882343751509868544"),
 			cl.TickToSqrtPrice(sdk.NewInt(85176)),
 			cl.TickToSqrtPrice(sdk.NewInt(86129)),
-			"0.997809844947825961", // 0.998833192822975409
+			"0.997809844947825961", // TODO: should be 0.998833192822975409
 			// https://www.wolframalpha.com/input?i2d=true&i=1517.882343751509868544+*+%5C%2840%29Divide%5BPower%5B1.0001%2CDivide%5B86129%2C2%5D%5D-Power%5B1.0001%2CDivide%5B85176%2C2%5D%5D%2CPower%5B1.0001%2CDivide%5B85176%2C2%5D%5D*Power%5B1.0001%2CDivide%5B86129%2C2%5D%5D%5D%5C%2841%29
 		},
 		{
@@ -200,7 +200,7 @@ func (suite *KeeperTestSuite) TestCalcAmount0Delta() {
 			sdk.MustNewDecFromStr("-1517.882343751509868544"),
 			cl.TickToSqrtPrice(sdk.NewInt(85176)),
 			cl.TickToSqrtPrice(sdk.NewInt(86129)),
-			"-0.997809844947825961", // 0.998833192822975408
+			"-0.997809844947825961", // TODO: should be 0.998833192822975408
 			// https://www.wolframalpha.com/input?i2d=true&i=1517.882343751509868544+*+%5C%2840%29Divide%5BPower%5B1.0001%2CDivide%5B86129%2C2%5D%5D-Power%5B1.0001%2CDivide%5B85176%2C2%5D%5D%2CPower%5B1.0001%2CDivide%5B85176%2C2%5D%5D*Power%5B1.0001%2CDivide%5B86129%2C2%5D%5D%5D%5C%2841%29
 		},
 	}
@@ -232,7 +232,7 @@ func (suite *KeeperTestSuite) TestCalcAmount1Delta() {
 			sdk.MustNewDecFromStr("1517.882343751509868544"),
 			cl.TickToSqrtPrice(sdk.NewInt(85176)),
 			cl.TickToSqrtPrice(sdk.NewInt(84222)),
-			"4999.187247111840200792", // 4999.187247111820044641
+			"4999.187247111840200792", // TODO: should be 4999.187247111820044641
 			// https://www.wolframalpha.com/input?i2d=true&i=1517.882343751509868544+*+%5C%2840%29Power%5B1.0001%2CDivide%5B85176%2C2%5D%5D+-Power%5B1.0001%2CDivide%5B84222%2C2%5D%5D%5C%2841%29
 		},
 		{
@@ -240,7 +240,7 @@ func (suite *KeeperTestSuite) TestCalcAmount1Delta() {
 			sdk.MustNewDecFromStr("-1517.882343751509868544"),
 			cl.TickToSqrtPrice(sdk.NewInt(85176)),
 			cl.TickToSqrtPrice(sdk.NewInt(84222)),
-			"-4999.187247111840200792", // -4999.187247111820044640
+			"-4999.187247111840200792", // TODO: should be -4999.187247111820044640
 			// https://www.wolframalpha.com/input?i2d=true&i=-1517.882343751509868544+*+%5C%2840%29Power%5B1.0001%2CDivide%5B85176%2C2%5D%5D+-Power%5B1.0001%2CDivide%5B84222%2C2%5D%5D%5C%2841%29
 		},
 	}
