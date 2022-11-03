@@ -32,17 +32,6 @@ type SwapI interface {
 	) (tokenInAmount sdk.Int, err error)
 }
 
-// SimulationExtension defines the swap simulation extension.
-// TODO: refactor simulator setup logic to avoid having to define these
-// extra methods just for the simulation.
-type SimulationExtension interface {
-	SwapI
-
-	GetPoolAndPoke(ctx sdk.Context, poolId uint64) (gammtypes.TraditionalAmmInterface, error)
-
-	GetNextPoolId(ctx sdk.Context) uint64
-}
-
 type SwapAmountInRoutes []SwapAmountInRoute
 
 func (routes SwapAmountInRoutes) IsOsmoRoutedMultihop() bool {

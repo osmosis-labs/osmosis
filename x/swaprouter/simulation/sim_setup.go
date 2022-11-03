@@ -3,11 +3,16 @@ package swaproutersimulation
 import (
 	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v12/x/swaprouter"
+	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 )
 
-func DefaultActions(keeper swaprouter.Keeper) []simtypes.Action {
+func DefaultActions(keeper swaprouter.Keeper, gammKeeper types.GammKeeper) []simtypes.Action {
+	simKeeper := simulationKeeper{
+		keeper:     keeper,
+		gammKeeper: gammKeeper,
+	}
 	return []simtypes.Action{
-		simtypes.NewMsgBasedAction("SwapExactAmountIn", keeper, RandomSwapExactAmountIn),
-		simtypes.NewMsgBasedAction("SwapExactAmountOut", keeper, RandomSwapExactAmountOut),
+		simtypes.NewMsgBasedAction("SwapExactAmountIn", simKeeper, RandomSwapExactAmountIn),
+		simtypes.NewMsgBasedAction("SwapExactAmountOut", simKeeper, RandomSwapExactAmountOut),
 	}
 }
