@@ -18,6 +18,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v12/x/twap"
 	twapclient "github.com/osmosis-labs/osmosis/v12/x/twap/client"
+	twapcli "github.com/osmosis-labs/osmosis/v12/x/twap/client/cli"
 	"github.com/osmosis-labs/osmosis/v12/x/twap/client/grpc"
 	"github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
@@ -63,8 +64,7 @@ func (b AppModuleBasic) GetTxCmd() *cobra.Command {
 }
 
 func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
-	// return cli.GetQueryCmd()
+	return twapcli.GetQueryCmd()
 }
 
 // RegisterInterfaces registers interfaces and implementations of the gamm module.

@@ -34,7 +34,7 @@ The primary intended API is `GetArithmeticTwap`, which is documented below, and 
 
 ```go
 // GetArithmeticTwap returns an arithmetic time weighted average price.
-// The returned twap is the time weighted average price (TWAP), using the arithmetic mean, of:
+// The returned twap is the time weighted average price (TWAP), using the arithmetic mean of:
 // * the base asset, in units of the quote asset (1 unit of base = x units of quote)
 // * from (startTime, endTime),
 // * as determined by prices from AMM pool `poolId`.
@@ -46,12 +46,18 @@ The primary intended API is `GetArithmeticTwap`, which is documented below, and 
 // startTime must be within 48 hours of ctx.BlockTime(), if you need older TWAPs,
 // you will have to maintain the accumulator yourself.
 //
+// endTime will be set in the function ArithmeticTwap() to ctx.BlockTime() which calls GetArithmeticTwap function if:
+// * it is not provided externally
+// * it is set to current time
+//
 // This function will error if:
 // * startTime > endTime
 // * endTime in the future
 // * startTime older than 48 hours OR pool creation
 // * pool with id poolId does not exist, or does not contain quoteAssetDenom, baseAssetDenom
-//
+// * there were some computational errors during computing arithmetic twap within the time range of  
+//   startRecord, endRecord - including the exact record times, which indicates that the result returned could be faulty
+
 // N.B. If there is a notable use case, the state machine could maintain more historical records, e.g. at one per hour.
 func (k Keeper) GetArithmeticTwap(ctx sdk.Context,
 	poolId uint64,
@@ -85,12 +91,31 @@ Because Osmosis supports multi-asset pools, a complicating factor is that we hav
 For every pool, at a given point in time, we make one twap record entry per unique pair of denoms in the pool. If a pool has `k` denoms, the number of unique pairs is `k * (k - 1) / 2`.
 All public API's for the module will sort the input denoms to the canonical representation, so the caller does not need to worry about this. (The canonical representation is the denoms in lexicographical order)
 
-Each twap record stores [(source)](https://github.com/osmosis-labs/osmosis/tree/main/proto/osmosis/gamm/twap):
+Example of historical TWAP time index records for a pool containing 3 assets.
+* Number of records per time: `3 * (3 - 1) / 2 = 3`
+* Records are in a format:
+  HistoricalTWAPTimeIndexPrefix | time | pool id | denom1 | denom2
+
+  For our pool with Id = 1 and 3 assets: denomA, denomB and denomC:
+
+  historical_time_index|2009-11-10T23:00:00.000000000|1|denomA|denomB  
+  historical_time_index|2009-11-10T23:00:00.000000000|1|denomA|denomC  
+  historical_time_index|2009-11-10T23:00:00.000000000|1|denomB|denomC  
+
+
+
+
+Each twap record stores [(source)](../../proto/osmosis/twap/v1beta1/twap_record.proto):
 
 * last spot price of base asset A in terms of quote asset B
 * last spot price of base asset B in terms of quote asset A
 * Accumulation value of base asset A in terms of quote asset B
 * Accumulation value of base asset B in terms of quote asset A
+
+important for calculation of arthmetic twap. 
+
+Besides those values, TWAP records currently hold:  poolId, Asset0Denom, Asset1Denom, Height (for debugging purposes), Time and  
+Last error time - time in which the last spot price error occured. This will allert the caller if they are getting a potentially erroneous TWAP.
 
 All TWAP records are indexed in state by the time of write.
 
@@ -108,6 +133,10 @@ During `EndBlock`, new records are created, with:
 
 In the event that a pool is created, and has a swap in the same block, the record entries are over written with the end block price.
 
+Error handling during records creation/updating: 
+* If there are issues with creating a record after pool creation, the creation of a pool will be aborted. 
+* Whereas, if there is an issue with updating records for a pool with potentially price changing events, existing errors will be ignored and the records will not be updated.
+
 ### Tracking spot-price changing events in a block
 
 The flow by which we currently track spot price changing events in a block is as follows:
@@ -115,7 +144,7 @@ The flow by which we currently track spot price changing events in a block is as
 * AMM hook triggers for Swapping, LPing or Exiting a pool
 * TWAP listens for this hook, and adds this pool ID to a local tracker
 * In end block, TWAP iterates over every changed pool in that block, based on the local tracker, and updates their TWAP records
-* In end block, TWAP clears the changed pool list, so it is blank by the next block.
+* After execution in end block, when the block is committed, `Transient Store` that will hold the changed pool "list" within - will be cleared. This guarantees us that there are no changed pool IDs remaining by for processing in the next block.
 
 The mechanism by which we maintain this changed pool list, is the SDK `Transient Store`.
 The transient store is a KV store in the SDK, that stores entries in memory, for the duration of a block,
@@ -124,8 +153,22 @@ and then clears on the block committing. This is done to save on gas (and I/O fo
 ## Pruning
 
 To avoid infinite growth of the state with the TWAP records, we attempt to delete some old records after every epoch.
-Essentially, records younger than a configurable parameter are pruned away. Currently, this parameter is set to 48 hours.
-Therefore, at the end of an epoch records younger than 48 hours before the current block time are pruned away.
+Essentially, records older than a configurable parameter `RecordHistoryKeepPeriod` are pruned away. Currently, this parameter is set to 48 hours.
+Therefore, at the end of an epoch, records older than 48 hours before the current block time are pruned away.  
+This could potentially leave the store with only one record - or no records at all within the "keep" period, so the pruning mechanism keeps the newest record that is older than the pruning time. This record is necessary to enable us interpolating from and getting TWAPs from the "keep" period.
+Such record is preserved for each pool.
+
+
+## TWAP - storing records and pruning process flow
+<br/>
+
+<p style="text-align:center;">
+
+<img src="TWAP module - process flow.png" height="700"/>
+
+</p>
+
+</br>
 
 ## Testing Methodology
 
