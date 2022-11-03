@@ -171,7 +171,7 @@ func (k Keeper) initializePoolId(ctx sdk.Context) {
 	osmoutils.MustSet(store, types.KeyNextGlobalPoolId, poolId)
 }
 
-// SetPoolCount sets pool id to 0.
+// SetPoolCount sets pool id to the given value.
 func (k Keeper) SetPoolCount(ctx sdk.Context, count uint64) {
 	store := ctx.KVStore(k.storeKey)
 	poolCount := &gogotypes.UInt64Value{Value: count}
