@@ -392,7 +392,7 @@ As a result, the `swaprouter` module propagates core execution to the appropriat
 Lastly, the `swaprouter` keeper stores a mapping from the pool id to the pool type .
 This mapping is going to be neccessary for knowing where to route the swap messages.
 
-To achive this, we create the following store index:
+To achieve this, we create the following store index:
 
 ```go
 // x/swaprouter/types/keys.go
