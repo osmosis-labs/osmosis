@@ -13,6 +13,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/osmomath"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/test_helpers"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
 // CFMMTestCase defines a testcase for stableswap pools
@@ -877,16 +878,16 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 				sdk.NewInt64Coin("bar", 1),
 			),
 			poolAssets: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 10_000_000_000),
-				sdk.NewInt64Coin("bar", 10_000_000_000),
+				sdk.NewInt64Coin("foo", 10 * types.ScalingFactorMultiplier),
+				sdk.NewInt64Coin("bar", 10 * types.ScalingFactorMultiplier),
 			),
 			scalingFactors:  defaultTwoAssetScalingFactors,
 			swapFee:         sdk.ZeroDec(),
 			expNumShare:     sdk.ZeroInt(),
 			expTokensJoined: sdk.Coins{},
 			expPoolAssets: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 10_000_000_000),
-				sdk.NewInt64Coin("bar", 10_000_000_000),
+				sdk.NewInt64Coin("foo", 10 * types.ScalingFactorMultiplier),
+				sdk.NewInt64Coin("bar", 10 * types.ScalingFactorMultiplier),
 			),
 			expectPass: false,
 		},

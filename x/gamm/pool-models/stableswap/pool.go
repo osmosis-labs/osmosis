@@ -28,11 +28,11 @@ func NewStableswapPool(poolId uint64,
 	if len(scalingFactors) == 0 {
 		scalingFactors = make([]uint64, len(initialLiquidity))
 		for i := range scalingFactors {
-			scalingFactors[i] = types.ScalingFactorMultiplier
+			scalingFactors[i] = 1
 		}
-	} else {
-		scalingFactors = applyScalingFactorMultiplier(scalingFactors)
 	}
+
+	scalingFactors = applyScalingFactorMultiplier(scalingFactors)
 
 	if err := validateScalingFactors(scalingFactors, len(initialLiquidity)); err != nil {
 		return Pool{}, err
@@ -148,6 +148,11 @@ func (p Pool) scaledSortedPoolReserves(first string, second string, round osmoma
 	if err != nil {
 		return nil, err
 	}
+	
+	if err := validateScalingFactors(reorderedScalingFactors, len(reorderedLiquidity)); err != nil {
+		return nil, err
+	}
+
 	return osmomath.DivCoinAmtsByU64ToBigDec(reorderedLiquidity, reorderedScalingFactors, round)
 }
 
@@ -253,7 +258,7 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDeno
 	if tokenOut.Len() != 1 {
 		return sdk.Coin{}, errors.New("stableswap CalcInAmtGivenOut: tokenOut is of wrong length")
 	}
-	// TODO: Refactor this later to handle scaling factors
+
 	amt, err := p.calcInAmtGivenOut(tokenOut[0], tokenInDenom, swapFee)
 	if err != nil {
 		return sdk.Coin{}, err
@@ -395,7 +400,7 @@ func validateScalingFactors(scalingFactors []uint64, numAssets int) error {
 	}
 
 	for _, scalingFactor := range scalingFactors {
-		if scalingFactor == 0 || int64(scalingFactor) <= 0 || scalingFactor < types.ScalingFactorMultiplier {
+		if scalingFactor == 0 || int64(scalingFactor) <= 0 {
 			return types.ErrInvalidStableswapScalingFactors
 		}
 	}
@@ -420,9 +425,10 @@ func validatePoolAssets(initialAssets sdk.Coins, scalingFactors []uint64) error 
 }
 
 func applyScalingFactorMultiplier(scalingFactors []uint64) []uint64 {
+	newScalingFactors := make([]uint64, len(scalingFactors))
 	for i := range scalingFactors {
-		scalingFactors[i] = scalingFactors[i] * types.ScalingFactorMultiplier
+		newScalingFactors[i] = scalingFactors[i] * types.ScalingFactorMultiplier
 	}
 
-	return scalingFactors
+	return newScalingFactors
 }

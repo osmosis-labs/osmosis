@@ -82,16 +82,16 @@ func TestBinarySearchBigDec(t *testing.T) {
 		output := result.Mul(osmomath.NewBigDec(10).Power(18))
 		return output, nil
 	}
-	lowErrTolerance := ErrTolerance{AdditiveTolerance: sdk.OneInt()}
-	testErrToleranceAdditive := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20)}
-	testErrToleranceMultiplicative := ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.NewDec(10)}
-	testErrToleranceBoth := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20), MultiplicativeTolerance: sdk.NewDec(1 << 3)}
+	lowErrTolerance := BigDecErrTolerance{AdditiveTolerance: osmomath.OneDec()}
+	testErrToleranceAdditive := BigDecErrTolerance{AdditiveTolerance: osmomath.NewBigDec(1 << 20)}
+	testErrToleranceMultiplicative := BigDecErrTolerance{AdditiveTolerance: osmomath.OneDec(), MultiplicativeTolerance: osmomath.NewBigDec(10)}
+	testErrToleranceBoth := BigDecErrTolerance{AdditiveTolerance: osmomath.NewBigDec(1 << 20), MultiplicativeTolerance: osmomath.NewBigDec(1 << 3)}
 	tests := map[string]struct {
 		f             func(osmomath.BigDec) (osmomath.BigDec, error)
 		lowerbound    osmomath.BigDec
 		upperbound    osmomath.BigDec
 		targetOutput  osmomath.BigDec
-		errTolerance  ErrTolerance
+		errTolerance  BigDecErrTolerance
 		maxIterations int
 
 		expectedSolvedInput osmomath.BigDec

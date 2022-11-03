@@ -2,6 +2,7 @@ package osmoutils
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -18,6 +19,18 @@ import (
 type ErrTolerance struct {
 	AdditiveTolerance       sdk.Int
 	MultiplicativeTolerance sdk.Dec
+}
+
+// ErrTolerance is used to define a compare function, which checks if two
+// ints are within a certain error tolerance of one another.
+// ErrTolerance.Compare(a, b) returns true iff:
+// |a - b| <= AdditiveTolerance
+// |a - b| / min(a, b) <= MultiplicativeTolerance
+// Each check is respectively ignored if the entry is nil (sdk.Dec{}, sdk.Int{})
+// Note that if AdditiveTolerance == 0, then this is equivalent to a standard compare.
+type BigDecErrTolerance struct {
+	AdditiveTolerance       osmomath.BigDec
+	MultiplicativeTolerance osmomath.BigDec
 }
 
 // Compare returns if actual is within errTolerance of expected.
@@ -96,6 +109,40 @@ func (e ErrTolerance) CompareBigDec(expected osmomath.BigDec, actual osmomath.Bi
 	return 0
 }
 
+func (e BigDecErrTolerance) CompareBigDec(expected osmomath.BigDec, actual osmomath.BigDec) int {
+	diff := expected.Sub(actual).Abs()
+
+	comparisonSign := 0
+	if expected.GT(actual) {
+		comparisonSign = 1
+	} else {
+		comparisonSign = -1
+	}
+
+	// Check additive tolerance equations
+	if !e.AdditiveTolerance.IsNil() {
+		// if no error accepted, do a direct compare.
+		if e.AdditiveTolerance.IsZero() {
+			if expected.Equal(actual) {
+				return 0
+			}
+		}
+
+		if diff.GT(e.AdditiveTolerance) {
+			return comparisonSign
+		}
+	}
+	// Check multiplicative tolerance equations
+	if !e.MultiplicativeTolerance.IsNil() && !e.MultiplicativeTolerance.IsZero() {
+		errTerm := diff.Quo(osmomath.MinDec(expected, actual))
+		if errTerm.GT(e.MultiplicativeTolerance) {
+			return comparisonSign
+		}
+	}
+
+	return 0
+}
+
 // Binary search inputs between [lowerbound, upperbound] to a monotonic increasing function f.
 // We stop once f(found_input) meets the ErrTolerance constraints.
 // If we perform more than maxIterations (or equivalently lowerbound = upperbound), we return an error.
@@ -144,7 +191,7 @@ func BinarySearchBigDec(f func(input osmomath.BigDec) (osmomath.BigDec, error),
 	lowerbound osmomath.BigDec,
 	upperbound osmomath.BigDec,
 	targetOutput osmomath.BigDec,
-	errTolerance ErrTolerance,
+	errTolerance BigDecErrTolerance,
 	maxIterations int,
 ) (osmomath.BigDec, error) {
 	// Setup base case of loop
@@ -161,6 +208,9 @@ func BinarySearchBigDec(f func(input osmomath.BigDec) (osmomath.BigDec, error),
 		} else if compRes < 0 {
 			lowerbound = curEstimate
 		} else {
+			fmt.Println("target: ", targetOutput)
+			fmt.Println("err tol: ", errTolerance.AdditiveTolerance)
+			fmt.Println("num binary search iterations: ", curIteration)
 			return curEstimate, nil
 		}
 		curEstimate = lowerbound.Add(upperbound).Quo(osmomath.NewBigDec(2))
