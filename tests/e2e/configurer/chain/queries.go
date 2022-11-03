@@ -257,7 +257,7 @@ func (n *NodeConfig) QueryListSnapshots() ([]*tmabcitypes.Snapshot, error) {
 
 // QueryTotalPools returns the total number of pools existing.
 func (n *NodeConfig) QueryTotalPools() uint64 {
-	path := "/osmosis/gamm/v1beta1/num_pools"
+	path := "/osmosis/swaprouter/v1beta1/num_pools"
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
