@@ -238,14 +238,18 @@ See the next `"Swap Router Module"` section of this document for more details.
 With the new `concentrated-liquidity` module, we now have a new entrypoint for swaps that is
 the same with the existing `gamm` module.
 
-To avoid fragmenting swap entrypoints and duplicating boilerplate logic, we would like to define
-a new `swaprouter` module. Its purpose is twofold:
-1. To receive pool creation messages, assign ids to pool and propagate the execution to `gamm` or
-`concentrated-liquidity` modules, depending on the pool type being created.
-2. To receive swap messages and propagate them
-either to the `gamm` or `concentrated-liquidity` modules.
+To avoid fragmenting swap and pool creation entrypoints and duplicating their boilerplate logic,
+we would like to define a new `swaprouter` module. Its purpose is twofold:
+1. Handle pool creation messages
+   * Assign ids to pools
+   * Store the mapping from pool id to one of the swap modules (`gamm` or `concentrated-liquidity`)
+   * Propagate the execution the appropriate module depending on the pool type.
+2. Handle swap messages
+   * Cover & share multihop logic
+   * Propagate intra-pool swaps to the appropriate module depending on the pool type.
 
-Therefore, we move several existing `gamm` messages and tests to the new `swap-router` module, connecting to the `swaprouter` keeper that simply propagates execution to `gamm` or `concentrated-liquidity` modules.
+Therefore, we move several existing `gamm` messages and tests to the new `swap-router` module,
+connecting them to the `swaprouter` keeper that propagates execution to the appropriate swap module.
 
 The messages to move from `gamm` to `swaprouter` are:
 - `CreatePoolMsg`
@@ -283,15 +287,17 @@ type CreatePoolMsg interface {
 }
 ```
 
-For each of `balancer`, `stableswap` and `concentrated-liquidity` pools, we have their own implemntations.
+For each of `balancer`, `stableswap` and `concentrated-liquidity` pools, we have their own implementations.
 
 Let's begin by considering the execution flow of the pool creation message.
 
-1. `CreatePoolMsg` is received by the `swaprouter` module.
+1. `CreatePoolMsg` is received by the `swaprouter` message server.
 
 2. `CreatePool` `swaprouter` keeper method is called.
 
 ```go
+// x/swaprouter/creator.go CreatePool(...)
+
 // CreatePool attempts to create a pool returning the newly created pool ID or
 // an error upon failure. The pool creation fee is used to fund the community
 // pool. It will create a dedicated module account for the pool and sends the
@@ -314,6 +320,8 @@ to each pool type.
 The propagation to the desired module is ensured by the routing table stored in memory in the `swaprouter` keeper.
 
 ```go
+// x/swaprouter/keeper.go NewKeeper(...)
+
 func NewKeeper(...) *Keeper {
     ...
 
@@ -333,6 +341,8 @@ As a result, `swaprouterkeeper.CreatePool` can route the execution to the approp
 the following way:
 
 ```go
+// x/swaprouter/creator.go CreatePool(...)
+
 swapModule := k.routes[msg.GetPoolType()]
 
 if err := swapModule.InitializePool(ctx, pool, sender); err != nil {
@@ -345,6 +355,8 @@ Where swapmodule is either `gamm` or `concentrated-liquidity` keeper.
 Both of these modules implement the `SwapI` interface:
 
 ```go
+// x/swaprouter/types/routes.go SwapI interface
+
 type SwapI interface {
     ...
 
@@ -393,6 +405,8 @@ Their implementation is routing is similar. As a result, we only focus on `MsgSw
 Once the message is received, it calls `RouteExactAmountIn`
 
 ```go
+// x/swaprouter/router.go RouteExactAmountIn(...)
+
 // RouteExactAmountIn defines the input denom and input amount for the first pool,
 // the output of the first pool is chained as the input for the next routed pool
 // transaction succeeds when final amount out is greater than tokenOutMinAmount defined.
@@ -414,7 +428,7 @@ searching up the `swaprouterkeeper.router` mapping, and callig
 the appropriate `SwapExactAmountIn` method.
 
 ```go
-// x/swaprouter/router.go RouteExactAmountIn method
+// x/swaprouter/router.go RouteExactAmountIn(...)
 
 moduleRouteBytes := osmoutils.MustGet(swaproutertypes.FormatModuleRouteIndex(poolId))
 moduleRoute, _ := swaproutertypes.ModuleRouteFromBytes(moduleRouteBytes)
@@ -429,6 +443,8 @@ Similar to pool creation logic, we are able to call `SwapExactAmountIn` on any o
 modules by implementing the `SwapI` interface:
 
 ```go
+// x/swaprouter/types/routes.go SwapI interface
+
 type SwapI interface {
     ...
 
