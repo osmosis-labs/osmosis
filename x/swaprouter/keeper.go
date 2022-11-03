@@ -54,7 +54,6 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 
 // InitGenesis initializes the swaprouter module's state from a provided genesis
 // state.
-// TODO: test this
 func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	k.SetNextPoolId(ctx, genState.NextPoolId)
 	if err := genState.Validate(); err != nil {
@@ -65,7 +64,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 }
 
 // ExportGenesis returns the swaprouter module's exported genesis.
-// TODO: test this
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	return &types.GenesisState{
 		Params:     k.GetParams(ctx),
