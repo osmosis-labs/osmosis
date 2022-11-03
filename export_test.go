@@ -39,12 +39,12 @@ func GetNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amount
 	return getNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemaining)
 }
 
-func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
-	return calcAmount0Delta(liq, sqrtPriceA, sqrtPriceB)
+func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec {
+	return calcAmount0Delta(liq, sqrtPriceA, sqrtPriceB, roundUp)
 }
 
-func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
-	return calcAmount1Delta(liq, sqrtPriceA, sqrtPriceB)
+func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec {
+	return calcAmount1Delta(liq, sqrtPriceA, sqrtPriceB, roundUp)
 }
 
 func ComputeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec, zeroForOne bool) (sqrtPriceNext, amountIn, amountOut sdk.Dec) {

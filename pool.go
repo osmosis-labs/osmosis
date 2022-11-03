@@ -93,8 +93,6 @@ type SwapState struct {
 	liquidity                sdk.Dec
 }
 
-// TODO: revisit tokenIn that is getting returned. Right now if we swapped 40eth -> 40 usdc, the return value for tokenIn would be 0,
-// since we're returning the delta amount, not the actual amounut of token in
 func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 	tokenInMin sdk.Coin,
 	tokenOutDenom string,
@@ -140,6 +138,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 	}
 
 	for swapState.amountSpecifiedRemaining.GT(sdk.ZeroDec()) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
+		sqrtPriceStart := swapState.sqrtPrice
 		nextTick, ok := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), zeroForOne)
 		if !ok {
 			return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, fmt.Errorf("there are no more ticks initialized to fill the swap")
@@ -164,6 +163,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 			swapState.amountSpecifiedRemaining,
 			zeroForOne,
 		)
+		swapState.sqrtPrice = sqrtPrice
 
 		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn)
 		swapState.amountCalculated = swapState.amountCalculated.Add(amountOut)
@@ -178,7 +178,9 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 			if zeroForOne {
 				liquidityDelta = liquidityDelta.Neg()
 			}
+
 			swapState.liquidity = swapState.liquidity.Add(liquidityDelta.ToDec())
+
 			if swapState.liquidity.LTE(sdk.ZeroDec()) || swapState.liquidity.IsNil() {
 				return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, err
 			}
@@ -187,20 +189,18 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 			} else {
 				swapState.tick = sdk.NewInt(nextTick)
 			}
-		} else {
+		} else if !sqrtPriceStart.Equal(sqrtPrice) {
 			swapState.tick = priceToTick(sqrtPrice.Power(2))
 		}
 	}
 
-	amt0 := tokenAmountInAfterFee.Add(swapState.amountSpecifiedRemaining.Abs()).TruncateInt()
+	// coin amounts require int values
+	// we truncate at last step to retain as much precision as possible
+	amt0 := tokenAmountInAfterFee.Add(swapState.amountSpecifiedRemaining).TruncateInt()
 	amt1 := swapState.amountCalculated.TruncateInt()
-	if zeroForOne {
-		tokenIn = sdk.NewCoin(tokenInMin.Denom, amt0)
-		tokenOut = sdk.NewCoin(tokenOutDenom, amt1)
-	} else {
-		tokenIn = sdk.NewCoin(tokenInMin.Denom, amt1)
-		tokenOut = sdk.NewCoin(tokenOutDenom, amt0)
-	}
+
+	tokenIn = sdk.NewCoin(tokenInMin.Denom, amt0)
+	tokenOut = sdk.NewCoin(tokenOutDenom, amt1)
 
 	return tokenIn, tokenOut, swapState.tick, swapState.liquidity, nil
 }

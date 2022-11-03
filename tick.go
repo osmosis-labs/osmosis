@@ -77,7 +77,7 @@ func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex in
 	prefixStore := prefix.NewStore(store, prefixBz)
 
 	var startKey []byte
-	if zeroForOne {
+	if !zeroForOne {
 		startKey = types.TickIndexToBytes(tickIndex)
 	} else {
 		// When looking to the left of the current tick, we need to evaluate the
@@ -87,7 +87,7 @@ func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex in
 	}
 
 	var iter db.Iterator
-	if zeroForOne {
+	if !zeroForOne {
 		iter = prefixStore.Iterator(startKey, nil)
 	} else {
 		iter = prefixStore.ReverseIterator(nil, startKey)
@@ -103,10 +103,10 @@ func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex in
 			panic(fmt.Errorf("invalid tick index (%s): %v", string(iter.Key()), err))
 		}
 
-		if zeroForOne && tick > tickIndex {
+		if !zeroForOne && tick > tickIndex {
 			return tick, true
 		}
-		if !zeroForOne && tick <= tickIndex {
+		if zeroForOne && tick <= tickIndex {
 			return tick, true
 		}
 	}

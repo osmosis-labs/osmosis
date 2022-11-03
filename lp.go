@@ -62,17 +62,23 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
-	// update pool state as well only if we're injecting liquidity at the current tick of the pool
 	if pool.CurrentTick.LT(sdk.NewInt(lowerTick)) {
-		amtDenom0 = calcAmount0Delta(liquidity, sqrtRatioLowerTick, sqrtRatioUpperTick).RoundInt()
+		// outcome one: position is below current price
+		// this means position is solely made up of asset0
+		amtDenom0 = calcAmount0Delta(liquidity, sqrtRatioLowerTick, sqrtRatioUpperTick, false).RoundInt()
 		amtDenom1 = sdk.ZeroInt()
 	} else if pool.CurrentTick.LT(sdk.NewInt(upperTick)) {
-		amtDenom0 = calcAmount0Delta(liquidity, currentSqrtPrice, sqrtRatioUpperTick).RoundInt()
-		amtDenom1 = calcAmount1Delta(liquidity, currentSqrtPrice, sqrtRatioLowerTick).RoundInt()
+		// outcome two: the current price falls within the position
+		// if this is the case, we attempt to provide liquidity evenly between asset0 and asset1
+		// we also update the pool liquidity since the virtual liquidity is modified by this position's creation
+		amtDenom0 = calcAmount0Delta(liquidity, currentSqrtPrice, sqrtRatioUpperTick, false).RoundInt()
+		amtDenom1 = calcAmount1Delta(liquidity, currentSqrtPrice, sqrtRatioLowerTick, false).RoundInt()
 		pool.Liquidity = pool.Liquidity.Add(liquidity)
 	} else {
+		// outcome three: position is above current price
+		// this means position is solely made up of asset1
 		amtDenom0 = sdk.ZeroInt()
-		amtDenom1 = calcAmount1Delta(liquidity, sqrtRatioLowerTick, sqrtRatioUpperTick).RoundInt()
+		amtDenom1 = calcAmount1Delta(liquidity, sqrtRatioLowerTick, sqrtRatioUpperTick, false).RoundInt()
 	}
 
 	k.setPoolById(ctx, pool.Id, pool)
