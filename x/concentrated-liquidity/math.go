@@ -76,7 +76,7 @@ func calcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 
 // computeSwapStep calculates the amountIn, amountOut, and the next sqrtPrice given current price, price target, tick liquidity, and amount available to swap
 // lte is reference to "less than or equal", which determines if we are moving left or right of the current price to find the next initialized tick with liquidity
-func computeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec, zeroForOne bool) (sqrtPriceNext, amountIn, amountOut sdk.Dec) {
+func computeSwapStepGivenIn(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec, zeroForOne bool) (sqrtPriceNext, amountIn, amountOut sdk.Dec) {
 	if zeroForOne {
 		amountIn = calcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, true)
 	} else {
@@ -95,6 +95,21 @@ func computeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaini
 		amountIn = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, true)
 		amountOut = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
 	}
+
+	return sqrtPriceNext, amountIn, amountOut
+}
+
+func computeSwapStepGivenOut(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec, zeroForOne bool) (sqrtPriceNext, amountIn, amountOut sdk.Dec) {
+	amountOut = calcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, true)
+
+	if amountRemaining.GTE(amountOut) {
+		sqrtPriceNext = getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining, zeroForOne)
+	} else {
+		sqrtPriceNext = sqrtPriceTarget
+	}
+
+	amountIn = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, true)
+	amountOut = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
 
 	return sqrtPriceNext, amountIn, amountOut
 }

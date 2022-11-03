@@ -279,7 +279,7 @@ func (suite *KeeperTestSuite) TestComputeSwapState() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			sqrtPriceNext, amountIn, amountOut := cl.ComputeSwapStep(tc.sqrtPCurrent, tc.sqrtPTarget, tc.liquidity, tc.amountRemaining, tc.zeroForOne)
+			sqrtPriceNext, amountIn, amountOut := cl.ComputeSwapStepGivenIn(tc.sqrtPCurrent, tc.sqrtPTarget, tc.liquidity, tc.amountRemaining, tc.zeroForOne)
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext.String())
 			suite.Require().Equal(tc.expectedAmountIn, amountIn.String())
 			suite.Require().Equal(tc.expectedAmountOut, amountOut.String())

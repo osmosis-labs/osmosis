@@ -51,7 +51,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
 				s.Require().NoError(err)
 			},
-			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(42000000)),
+			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(42_000_000)),
 			tokenOutDenom: "eth",
 			priceLimit:    sdk.NewDec(5004),
 			// we expect to put 42 usdc in and in return get .008398 eth back
@@ -205,41 +205,43 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	}
 }
 
-// func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
-// 	ctx := s.Ctx
-// 	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", sdk.MustNewDecFromStr("70.710678"), sdk.NewInt(85176))
-// 	s.Require().NoError(err)
-// 	s.SetupPosition(pool.Id)
+// TODO: Change this to table driven tests once we add more test cases
+func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
+	ctx := s.Ctx
+	currPrice := sdk.NewDec(5000)
+	currSqrtPrice, err := currPrice.ApproxSqrt() // 70.710678118654752440
+	s.Require().NoError(err)
+	currTick := cl.PriceToTick(currPrice) // 85176
 
-// 	// test asset a to b logic
-// 	tokenOut := sdk.NewCoin("usdc", sdk.NewInt(4199999999))
-// 	tokenInDenom := "eth"
-// 	swapFee := sdk.NewDec(0)
-// 	minPrice := sdk.NewDec(4500)
-// 	maxPrice := sdk.NewDec(5500)
+	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", currSqrtPrice, currTick)
+	s.Require().NoError(err)
+	s.SetupPosition(pool.Id)
 
-// 	amountIn, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
-// 	s.Require().NoError(err)
-// 	s.Require().Equal(sdk.NewDec(805287), amountIn.Amount.ToDec())
+	// add position
+	lowerPrice := sdk.NewDec(4545)
+	s.Require().NoError(err)
+	lowerTick := cl.PriceToTick(lowerPrice) // 84222
+	upperPrice := sdk.NewDec(5500)
+	s.Require().NoError(err)
+	upperTick := cl.PriceToTick(upperPrice) // 86129
+	defaultAmt0 := sdk.NewInt(1000000)
+	defaultAmt1 := sdk.NewInt(5000000000)
 
-// 	// test asset b to a logic
-// 	tokenOut = sdk.NewCoin("eth", sdk.NewInt(133700))
-// 	tokenInDenom = "usdc"
-// 	swapFee = sdk.NewDec(0)
+	_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, pool.Id, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
 
-// 	amountIn, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
-// 	s.Require().NoError(err)
-// 	s.Require().Equal(sdk.NewDec(666975610), amountIn.Amount.ToDec())
+	// test asset a to b logic
+	tokenOut := sdk.NewCoin("eth", sdk.NewInt(8396))
+	tokenInDenom := "usdc"
+	swapFee := sdk.NewDec(0)
+	priceLimit := sdk.NewDec(5004)
 
-// 	// test asset a to b logic
-// 	tokenOut = sdk.NewCoin("usdc", sdk.NewInt(4199999999))
-// 	tokenInDenom = "eth"
-// 	swapFee = sdk.NewDecWithPrec(2, 2)
-
-// 	amountIn, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
-// 	s.Require().NoError(err)
-// 	s.Require().Equal(sdk.NewDec(821722), amountIn.Amount.ToDec())
-// }
+	amountIn, amountOut, updatedTick, poolLiquidity, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, priceLimit, pool.Id)
+	s.Require().NoError(err)
+	s.Require().True(amountIn.Equal(sdk.NewCoin("usdc", sdk.NewInt(42_921_861))))
+	s.Require().True(amountOut.Equal(sdk.NewCoin("eth", sdk.NewInt(8211))))
+	s.Require().True(updatedTick.Equal(sdk.NewInt(85184)))
+	s.Require().True(poolLiquidity.TruncateInt().Equal(sdk.NewInt(1_517_820_358)))
+}
 
 // func (s *KeeperTestSuite) TestSwapInAmtGivenOut() {
 // 	ctx := s.Ctx
