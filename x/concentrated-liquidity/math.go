@@ -4,6 +4,24 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+type swapStrategy interface {
+    getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec)
+}
+
+type zeroForOneStrategy struct{}
+var _ swapStrategy = (*zeroForOneStrategy)(nil)
+
+type oneForZeroStrategy struct{}
+var _ swapStrategy = (*oneForZeroStrategy)(nil)
+
+
+func newSwapStrategy(zeroForOne bool) swapStrategy {
+    if zeroForOne {
+        return &zeroForOneStrategy{}
+    }
+    return &oneForZeroStrategy{}
+}
+
 // liquidity0 takes an amount of asset0 in the pool as well as the sqrtpCur and the nextPrice
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
@@ -85,7 +103,8 @@ func computeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaini
 	if amountRemaining.GTE(amountIn) {
 		sqrtPriceNext = sqrtPriceTarget
 	} else {
-		sqrtPriceNext = getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining, zeroForOne)
+		swapStrategy := newSwapStrategy(zeroForOne)
+		sqrtPriceNext = swapStrategy.getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining)
 	}
 
 	if zeroForOne {
@@ -99,13 +118,12 @@ func computeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaini
 	return sqrtPriceNext, amountIn, amountOut
 }
 
-func getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec, zeroForOne bool) (sqrtPriceNext sdk.Dec) {
-	if zeroForOne {
-		sqrtPriceNext = getNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining)
-	} else {
-		sqrtPriceNext = getNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemaining)
-	}
-	return sqrtPriceNext
+func (s *zeroForOneStrategy) getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
+	return getNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining)
+}
+
+func (s *oneForZeroStrategy) getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
+	return getNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemaining)
 }
 
 // getNextSqrtPriceFromAmount0RoundingUp utilizes the current squareRootPrice, liquidity of denom0, and amount of denom0 that still needs
