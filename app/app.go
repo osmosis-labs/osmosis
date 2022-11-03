@@ -414,25 +414,16 @@ func (app *OsmosisApp) setupUpgradeStoreLoaders() {
 	}
 }
 
-func wrapUpgradeHandler(u upgradetypes.UpgradeHandler) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		for i := 0; i < 100; i++ {
-			fmt.Println("running upgrade")
-		}
-		return u(ctx, plan, fromVM)
-	}
-}
-
 func (app *OsmosisApp) setupUpgradeHandlers() {
 	for _, upgrade := range Upgrades {
 		app.UpgradeKeeper.SetUpgradeHandler(
 			upgrade.UpgradeName,
-			wrapUpgradeHandler(upgrade.CreateUpgradeHandler(
+			upgrade.CreateUpgradeHandler(
 				app.mm,
 				app.configurator,
 				app.BaseApp,
 				&app.AppKeepers,
-			)),
+			),
 		)
 	}
 }
