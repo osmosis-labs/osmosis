@@ -45,7 +45,7 @@ type GRPCQueriesInfo struct {
 func Contains(sl []codec.ProtoMarshaler, ele codec.ProtoMarshaler) bool {
 	for _, value := range sl {
 		if reflect.DeepEqual(value, ele) {
-		   return true
+			return true
 		}
 	}
 	return false
