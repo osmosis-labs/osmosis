@@ -460,6 +460,21 @@ type SwapI interface {
 }
 ```
 
+##### GAMM Migrations
+
+Previously we managed and stored "next pool id" and "pool creation fee" in gamm. Now, these values
+are stored in the `swaprouter` module. As a result, we perform store migration in the
+upgrade handler.
+
+Some of the queries such as `x/gamm` `NumPools depended on the "next pool id" being present in `x/gamm`.
+Since it is now moved, we introduce a new "pool count" index in `x/gamm` to keep track of the number
+of pools. TODO: do we even need this? Consider removing before release. Path forward TBD.
+
+In summary, we perform the following store migrations in the upgrade handler:
+- migrate "next pool id` from `x/gamm` to `x/swaprouter`
+- migrate "pool creation fee" from `x/gamm` to `x/swaprouter`
+- create "pool count" index in `x/gamm` TODO: do we even need this? Consider removing before release. Path forward TBD.
+
 #### Liquidity Provision
 
 > As an LP, I want to provide liquidity in ranges so that I can achieve greater capital efficiency
