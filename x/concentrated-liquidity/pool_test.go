@@ -188,10 +188,8 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			newLowerTick := cl.PriceToTick(test.newLowerPrice)
 			newUpperTick := cl.PriceToTick(test.newUpperPrice)
 
-			lowerSqrtPrice, err := s.App.ConcentratedLiquidityKeeper.TickToSqrtPrice(newLowerTick)
-			s.Require().NoError(err)
-			upperSqrtPrice, err := s.App.ConcentratedLiquidityKeeper.TickToSqrtPrice(newUpperTick)
-			s.Require().NoError(err)
+			lowerSqrtPrice := cl.TickToSqrtPrice(newLowerTick)
+			upperSqrtPrice := cl.TickToSqrtPrice(newUpperTick)
 
 			if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
 				test.poolLiqAmount0 = defaultAmt0

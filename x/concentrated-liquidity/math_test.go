@@ -124,7 +124,7 @@ func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount0RoundingUp() {
 		sqrtPriceNextExpected string
 	}{
 		{
-			"happy path 1",
+			"happy path",
 			sdk.NewDec(1377927219),
 			sdk.NewDecWithPrec(70710678, 6),
 			sdk.NewDec(133700),
@@ -188,12 +188,20 @@ func (suite *KeeperTestSuite) TestCalcAmount0Delta() {
 		amount0Expected string
 	}{
 		{
-			"happy path",
-			sdk.NewDec(1377927219),
-			sdk.MustNewDecFromStr("70.710678"),
-			sdk.MustNewDecFromStr("74.161984"),
-			"906866",
-			// https://www.wolframalpha.com/input?i=%281377927219+*+%2874.161984+-+70.710678+%29%29+%2F+%2870.710678+*+74.161984%29
+			"happy path positive",
+			sdk.MustNewDecFromStr("1517.882343751509868544"),
+			cl.TickToSqrtPrice(sdk.NewInt(85176)),
+			cl.TickToSqrtPrice(sdk.NewInt(86129)),
+			"0.997809844947825961", // 0.998833192822975409
+			// https://www.wolframalpha.com/input?i2d=true&i=1517.882343751509868544+*+%5C%2840%29Divide%5BPower%5B1.0001%2CDivide%5B86129%2C2%5D%5D-Power%5B1.0001%2CDivide%5B85176%2C2%5D%5D%2CPower%5B1.0001%2CDivide%5B85176%2C2%5D%5D*Power%5B1.0001%2CDivide%5B86129%2C2%5D%5D%5D%5C%2841%29
+		},
+		{
+			"happy path negative",
+			sdk.MustNewDecFromStr("-1517.882343751509868544"),
+			cl.TickToSqrtPrice(sdk.NewInt(85176)),
+			cl.TickToSqrtPrice(sdk.NewInt(86129)),
+			"-0.997809844947825961", // 0.998833192822975408
+			// https://www.wolframalpha.com/input?i2d=true&i=1517.882343751509868544+*+%5C%2840%29Divide%5BPower%5B1.0001%2CDivide%5B86129%2C2%5D%5D-Power%5B1.0001%2CDivide%5B85176%2C2%5D%5D%2CPower%5B1.0001%2CDivide%5B85176%2C2%5D%5D*Power%5B1.0001%2CDivide%5B86129%2C2%5D%5D%5D%5C%2841%29
 		},
 	}
 
@@ -202,7 +210,7 @@ func (suite *KeeperTestSuite) TestCalcAmount0Delta() {
 
 		suite.Run(tc.name, func() {
 			amount0 := cl.CalcAmount0Delta(tc.liquidity, tc.sqrtPCurrent, tc.sqrtPUpper, false)
-			suite.Require().Equal(tc.amount0Expected, amount0.TruncateInt().String())
+			suite.Require().Equal(tc.amount0Expected, amount0.String())
 		})
 	}
 }
@@ -220,12 +228,20 @@ func (suite *KeeperTestSuite) TestCalcAmount1Delta() {
 		amount1Expected string
 	}{
 		{
-			"happy path",
-			sdk.NewDec(1377927219),
-			sdk.NewDecWithPrec(70710678, 6),
-			sdk.NewDecWithPrec(67082039, 6),
-			"5000000446",
-			// https://www.wolframalpha.com/input?i=1377927219+*+%2870.710678+-+67.082039%29
+			"happy path positive",
+			sdk.MustNewDecFromStr("1517.882343751509868544"),
+			cl.TickToSqrtPrice(sdk.NewInt(85176)),
+			cl.TickToSqrtPrice(sdk.NewInt(84222)),
+			"4999.187247111840200792", // 4999.187247111820044641
+			// https://www.wolframalpha.com/input?i2d=true&i=1517.882343751509868544+*+%5C%2840%29Power%5B1.0001%2CDivide%5B85176%2C2%5D%5D+-Power%5B1.0001%2CDivide%5B84222%2C2%5D%5D%5C%2841%29
+		},
+		{
+			"happy path positive",
+			sdk.MustNewDecFromStr("-1517.882343751509868544"),
+			cl.TickToSqrtPrice(sdk.NewInt(85176)),
+			cl.TickToSqrtPrice(sdk.NewInt(84222)),
+			"-4999.187247111840200792", // -4999.187247111820044640
+			// https://www.wolframalpha.com/input?i2d=true&i=-1517.882343751509868544+*+%5C%2840%29Power%5B1.0001%2CDivide%5B85176%2C2%5D%5D+-Power%5B1.0001%2CDivide%5B84222%2C2%5D%5D%5C%2841%29
 		},
 	}
 
@@ -234,7 +250,7 @@ func (suite *KeeperTestSuite) TestCalcAmount1Delta() {
 
 		suite.Run(tc.name, func() {
 			amount1 := cl.CalcAmount1Delta(tc.liquidity, tc.sqrtPCurrent, tc.sqrtPLower, false)
-			suite.Require().Equal(tc.amount1Expected, amount1.TruncateInt().String())
+			suite.Require().Equal(tc.amount1Expected, amount1.String())
 		})
 	}
 }

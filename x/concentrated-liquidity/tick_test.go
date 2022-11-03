@@ -132,13 +132,18 @@ func (suite *KeeperTestSuite) TestTickToSqrtPrice() {
 		name              string
 		tickIndex         sdk.Int
 		sqrtPriceExpected string
-		expectErr         bool
 	}{
 		{
-			"happy path",
+			"happy path 1",
 			sdk.NewInt(85176),
-			"70.710004849206351867",
-			false,
+			"70.710004849206351861", // 70.710004849206120647
+			// https://www.wolframalpha.com/input?i2d=true&i=Power%5B1.0001%2CDivide%5B85176%2C2%5D%5D
+		},
+		{
+			"happy path 2",
+			sdk.NewInt(86129),
+			"74.157016832801088770", // 74.160724590950847046
+			// https://www.wolframalpha.com/input?i2d=true&i=Power%5B1.0001%2CDivide%5B86129%2C2%5D%5D
 		},
 	}
 
@@ -146,12 +151,9 @@ func (suite *KeeperTestSuite) TestTickToSqrtPrice() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			sqrtPrice, err := suite.App.ConcentratedLiquidityKeeper.TickToSqrtPrice(tc.tickIndex)
-			if tc.expectErr {
-				suite.Require().Error(err)
-			} else {
-				suite.Require().Equal(tc.sqrtPriceExpected, sqrtPrice.String())
-			}
+			sqrtPrice := cl.TickToSqrtPrice(tc.tickIndex)
+			suite.Require().Equal(tc.sqrtPriceExpected, sqrtPrice.String())
+
 		})
 	}
 }

@@ -34,8 +34,8 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	pool := k.getPoolbyId(ctx, poolId)
 
 	currentSqrtPrice := pool.CurrentSqrtPrice
-	sqrtRatioUpperTick, _ := k.tickToSqrtPrice(sdk.NewInt(upperTick))
-	sqrtRatioLowerTick, _ := k.tickToSqrtPrice(sdk.NewInt(lowerTick))
+	sqrtRatioUpperTick := tickToSqrtPrice(sdk.NewInt(upperTick))
+	sqrtRatioLowerTick := tickToSqrtPrice(sdk.NewInt(lowerTick))
 
 	liquidity := getLiquidityFromAmounts(currentSqrtPrice, sqrtRatioLowerTick, sqrtRatioUpperTick, amount0Desired, amount1Desired)
 	if liquidity.IsZero() {

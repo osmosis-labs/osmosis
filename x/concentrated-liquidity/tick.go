@@ -13,13 +13,10 @@ import (
 )
 
 // tickToSqrtPrice takes the tick index and returns the corresponding sqrt of the price
-func (k Keeper) tickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
-	price, err := sdk.NewDecWithPrec(10001, 4).Power(tickIndex.Uint64()).ApproxSqrt()
-	if err != nil {
-		return sdk.Dec{}, err
-	}
+func tickToSqrtPrice(tickIndex sdk.Int) sdk.Dec {
+	sqrtPrice := sdk.NewDecWithPrec(10001, 4).Power(tickIndex.Uint64() / 2)
 
-	return price, nil
+	return sqrtPrice
 }
 
 // TODO: implement this
