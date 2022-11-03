@@ -191,6 +191,8 @@ This method has the same interface as the pre-existing `SwapExactAmountIn` in th
 It takes an exact amount of coins of one denom in to return a minimum amount of tokenOutDenom.
 
 ```go
+// x/concentrated-liquidity/pool.go SwapExactAmountIn(...)
+
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -213,6 +215,8 @@ This method is comparable to `SwapExactAmountIn`. It has the same interface as t
 It takes an exact amount of coins of one denom out to return a maximum amount of tokenInDenom.
 
 ```go
+// x/concentrated-liquidity/pool.go SwapExactAmountOut(...)
+
 func (k Keeper) SwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -227,6 +231,25 @@ func (k Keeper) SwapExactAmountOut(
 ```
 
 This method should be called from the new `swap-router` module's `RouteExactAmountOut` initiated by the `MsgSwapExactAmountOut`.
+See the next `"Swap Router Module"` section of this document for more details.
+
+##### `InitializePool` Keeper Method
+
+This method is part of the implementation of the `SwapI` interface in `swaprouter`
+module. "Swap Router Module" section discussed the interface in more detail.
+
+```go
+// x/concentrated-liquidity/pool.go InitializePool(...)
+
+func (k Keeper) InitializePool(
+    ctx sdk.Context,
+    pool types.PoolI,
+    creatorAddress sdk.AccAddress) error {
+    ...
+}
+```
+
+This method should be called from the new `swap-router` module's `CreatePool` initiated by the `MsgCreatePool`.
 See the next `"Swap Router Module"` section of this document for more details.
 
 #### Swap Router Module
@@ -474,6 +497,56 @@ In summary, we perform the following store migrations in the upgrade handler:
 - migrate "next pool id` from `x/gamm` to `x/swaprouter`
 - migrate "pool creation fee" from `x/gamm` to `x/swaprouter`
 - create "pool count" index in `x/gamm` TODO: do we even need this? Consider removing before release. Path forward TBD.
+
+#### GAMM Refactor
+
+> As an engineer, I would like the gamm module to be cohesive and only focus on the logic
+related to the `TraditionalAmmInterface` pool implementations.
+
+TODO: describe and document all the changes in the gamm module in more detail.
+- refer to previous sections ("Swap Router Module" and "Concentrated Liquidity Module")
+to avoid repetition.
+
+##### Swaps
+
+We rely on the pre-existing swap methods located in `x/gamm/keeper/pool.go`:
+- ` SwapExactAmountIn`
+- `SwapExactAmountOut`
+
+Similarly to `concentrated-liquidity` module, these methods now implement the `swaprouter` `SwapI` interface.
+However, the concrete implementations of the methods are unchanged from before the refactor.
+
+##### New Functionality
+
+##### `InitializePool` Keeper Method
+
+This method is part of the implementation of the `SwapI` interface in `swaprouter`
+module. "Swap Router Module" section discussed the interface in more detail.
+
+This is the second implementation of the interface, the first being in the `concentrated-liquidity` module.
+
+```go
+// x/gamm/keeper/pool.go InitializePool(...)
+
+func (k Keeper) InitializePool(
+    ctx sdk.Context,
+    pool types.PoolI,
+    creatorAddress sdk.AccAddress) error {
+    ...
+}
+```
+
+This method should be called from the new `swap-router` module's `CreatePool` initiated by the `MsgCreatePool`.
+See the next `"Swap Router Module"` section of this document for more details.
+
+##### Removed Functionality
+
+TODO:
+- reiterate swap messages moved
+- reiterate create pool messages moved
+- reiterate state migrated and moved
+- queries and CLI commands removed or ported
+- any important tests removed or ported
 
 #### Liquidity Provision
 
