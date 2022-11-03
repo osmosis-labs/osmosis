@@ -319,7 +319,6 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 		priceLimit       sdk.Dec
 		expectedTokenOut sdk.Coin
 		expectedTick     sdk.Int
-		zeroForOne       bool
 		newLowerPrice    sdk.Dec
 		newUpperPrice    sdk.Dec
 		poolLiqAmount0   sdk.Int
@@ -342,7 +341,6 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 			// due to limited liquidity, we actually put in 41.99 usdc and in return get .008396 eth back
 			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(8396)),
 			expectedTick:     sdk.NewInt(85184),
-			zeroForOne:       false,
 		},
 		"single position within one tick: eth -> usdc": {
 			addPositions: func(ctx sdk.Context, poolId uint64) {
@@ -356,7 +354,6 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 			// we expect to put .01337 eth in and in return get 66.79 usdc back
 			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(66790908)),
 			expectedTick:     sdk.NewInt(85163),
-			zeroForOne:       true,
 		},
 		//  Two equal price ranges
 		//
@@ -379,7 +376,6 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 			// we expect to put 42 usdc in and in return get .008398 eth back
 			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(8398)),
 			expectedTick:     sdk.NewInt(85180),
-			zeroForOne:       false,
 			// two positions with same liquidity entered
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
 			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
@@ -402,7 +398,6 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 			// sure, the above test only has 1 position while this has two positions, but shouldn't that effect the tokenIn as well?
 			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(66811697)),
 			expectedTick:     sdk.NewInt(85169),
-			zeroForOne:       true,
 			// two positions with same liquidity entered
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
 			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
@@ -438,7 +433,6 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 			// TODO: see why we don't get 9938.148 usdc and 1.80615 eth
 			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1820536)),
 			expectedTick:     sdk.NewInt(87173),
-			zeroForOne:       false,
 			newLowerPrice:    sdk.NewDec(5501),
 			newUpperPrice:    sdk.NewDec(6250),
 		},
