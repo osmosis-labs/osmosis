@@ -166,7 +166,7 @@ func (q Querier) CalcJoinPoolShares(ctx context.Context, req *types.QueryCalcJoi
 	}, nil
 }
 
-// CalcExitPoolCoinsFromShares queries the amount of tokens you get by exiting specific amouint of shares
+// CalcExitPoolCoinsFromShares queries the amount of tokens you get by exiting a specific amount of shares
 func (q Querier) CalcExitPoolCoinsFromShares(ctx context.Context, req *types.QueryCalcExitPoolCoinsFromSharesRequest) (*types.QueryCalcExitPoolCoinsFromSharesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -190,20 +190,7 @@ func (q Querier) CalcExitPoolCoinsFromShares(ctx context.Context, req *types.Que
 		return nil, err
 	}
 
-	coinsOut := sdk.NewCoins()
-	for _, req_denom := range req.TokensOutDenoms {
-		for _, coin := range exitCoins {
-			if coin.Denom == req_denom {
-				coinsOut = append(coinsOut, coin)
-			}
-		}
-	}
-
-	if len(coinsOut) == 0 {
-		return nil, types.ErrDenomNotFoundInPool
-	}
-
-	return &types.QueryCalcExitPoolCoinsFromSharesResponse{TokensOut: coinsOut}, nil
+	return &types.QueryCalcExitPoolCoinsFromSharesResponse{TokensOut: exitCoins}, nil
 }
 
 // PoolParams queries a specified pool for its params.
