@@ -16,13 +16,14 @@ func (k Keeper) InitializePool(ctx sdk.Context, pool gammtypes.PoolI, creatorAdd
 	panic("not implemented")
 }
 
-func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint64, poolAddress sdk.AccAddress, denom0, denom1 string, currSqrtPrice sdk.Dec, currTick sdk.Int) (Pool, error) {
+func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint64, denom0, denom1 string, currSqrtPrice sdk.Dec, currTick sdk.Int) (Pool, error) {
 	denom0, denom1, err := cltypes.OrderInitialPoolDenoms(denom0, denom1)
 	if err != nil {
 		return Pool{}, err
 	}
 	pool := Pool{
-		Address:          poolAddress.String(),
+		// TODO: move gammtypes.NewPoolAddress(poolId) to swaproutertypes
+		Address:          gammtypes.NewPoolAddress(poolId).String(),
 		Id:               poolId,
 		CurrentSqrtPrice: currSqrtPrice,
 		CurrentTick:      currTick,

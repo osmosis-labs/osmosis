@@ -164,7 +164,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 		s.Run(name, func() {
 			s.Setup()
 			// create pool
-			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, s.TestAccs[0], "eth", "usdc", currSqrtPrice, currTick)
+			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", currSqrtPrice, currTick)
 			s.Require().NoError(err)
 
 			// add positions
@@ -297,7 +297,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 
 func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 	ctx := s.Ctx
-	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, s.TestAccs[0], "eth", "usdc", sdk.MustNewDecFromStr("70.710678"), sdk.NewInt(85176))
+	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, "eth", "usdc", sdk.MustNewDecFromStr("70.710678"), sdk.NewInt(85176))
 	s.Require().NoError(err)
 	fmt.Printf("%v pool liq pre \n", pool.Liquidity)
 	lowerTick := int64(84222)
