@@ -27,6 +27,11 @@ func CreateUpgradeHandler(
 		// Instead,it is moved to swaprouter.
 		migrateNextPoolId(ctx, keepers.GAMMKeeper, keepers.SwapRouterKeeper)
 
+		//  N.B.: this is done to avoid initializing genesis for swaprouter module.
+		// Otherwise, it would overwrite migrations with InitGenesis().
+		// See RunMigrations() for details.
+		fromVM[swaproutertypes.ModuleName] = 0
+
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }
