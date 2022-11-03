@@ -23,18 +23,18 @@ service Query {
   rpc EstimateSwapExactAmountIn(EstimateSwapExactAmountInRequest)
       returns (EstimateSwapExactAmountInResponse) {
     option (google.api.http).get =
-        "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_in";
+        "/osmosis/swaprouter/v1beta1/{pool_id}/estimate/swap_exact_amount_in";
   }
 
   // Estimates swap amount in given out.
   rpc EstimateSwapExactAmountOut(EstimateSwapExactAmountOutRequest)
       returns (EstimateSwapExactAmountOutResponse) {
     option (google.api.http).get =
-        "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_out";
+        "/osmosis/swaprouter/v1beta1/{pool_id}/estimate/swap_exact_amount_out";
   }
 
   rpc NumPools(NumPoolsRequest) returns (NumPoolsResponse) {
-    option (google.api.http).get = "/osmosis/gamm/v1beta1/num_pools";
+    option (google.api.http).get = "/osmosis/swaprouter/v1beta1/num_pools";
   }
 }
 
