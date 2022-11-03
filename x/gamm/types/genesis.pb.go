@@ -28,7 +28,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // GenesisState defines the gamm module's genesis state.
 type GenesisState struct {
 	Pools []*types.Any `protobuf:"bytes,1,rep,name=pools,proto3" json:"pools,omitempty"`
-	// TODO: deprecate  by adding: reserved 7;
+	// TODO: deprecate  by adding: reserved 2;
 	NextPoolNumber uint64 `protobuf:"varint,2,opt,name=next_pool_number,json=nextPoolNumber,proto3" json:"next_pool_number,omitempty"`
 	// gamm pool count
 	PoolCount uint64 `protobuf:"varint,3,opt,name=pool_count,json=poolCount,proto3" json:"pool_count,omitempty"`
