@@ -196,6 +196,7 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 // getInterpolatedRecord returns a record for this pool, representing its accumulator state at time `t`.
 // This is achieved by getting the record `r` that is at, or immediately preceding in state time `t`.
 // To be clear: the record r s.t. `t - r.Time` is minimized AND `t >= r.Time`
+// If for the record obtained, r.Time == r.LastErrorTime, this will also hold for the interpolated record.
 func (k Keeper) getInterpolatedRecord(ctx sdk.Context, poolId uint64, t time.Time, assetA, assetB string) (types.TwapRecord, error) {
 	assetA, assetB, err := types.LexicographicalOrderDenoms(assetA, assetB)
 	if err != nil {
@@ -204,6 +205,10 @@ func (k Keeper) getInterpolatedRecord(ctx sdk.Context, poolId uint64, t time.Tim
 	record, err := k.getRecordAtOrBeforeTime(ctx, poolId, t, assetA, assetB)
 	if err != nil {
 		return types.TwapRecord{}, err
+	}
+	// if it had errored on the last record, make this record inherit the error
+	if record.Time.Equal(record.LastErrorTime) {
+		record.LastErrorTime = t
 	}
 	record = recordWithUpdatedAccumulators(record, t)
 	return record, nil
@@ -225,14 +230,17 @@ func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA, asse
 // computeArithmeticTwap computes and returns an arithmetic TWAP between
 // two records given the quote asset.
 // precondition: endRecord.Time >= startRecord.Time
-// if endRecord.LastErrorTime is after startRecord.Time, return an error at end + result
+// if (endRecord.LastErrorTime >= startRecord.Time) returns an error at end + result
+// if (startRecord.LastErrorTime == startRecord.Time) returns an error at end + result
 // if (endRecord.Time == startRecord.Time) returns endRecord.LastSpotPrice
 // else returns
 // (endRecord.Accumulator - startRecord.Accumulator) / (endRecord.Time - startRecord.Time)
 func computeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) (sdk.Dec, error) {
 	// see if we need to return an error, due to spot price issues
 	var err error = nil
-	if endRecord.LastErrorTime.After(startRecord.Time) || endRecord.LastErrorTime.Equal(startRecord.Time) {
+	if endRecord.LastErrorTime.After(startRecord.Time) ||
+		endRecord.LastErrorTime.Equal(startRecord.Time) ||
+		startRecord.LastErrorTime.Equal(startRecord.Time) {
 		err = errors.New("twap: error in pool spot price occurred between start and end time, twap result may be faulty")
 	}
 	timeDelta := endRecord.Time.Sub(startRecord.Time)
