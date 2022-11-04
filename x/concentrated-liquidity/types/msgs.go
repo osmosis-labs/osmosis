@@ -26,11 +26,11 @@ func (msg MsgCreatePosition) ValidateBasic() error {
 	}
 
 	if msg.LowerTick < MinTick || msg.LowerTick > MaxTick {
-		return ErrInvalidLowerTick
+		return InvalidLowerTickError{LowerTick: msg.LowerTick}
 	}
 
 	if msg.UpperTick < MinTick || msg.UpperTick > MaxTick {
-		return ErrLimitUpperTick
+		return InvalidUpperTickError{UpperTick: msg.UpperTick}
 	}
 
 	if !msg.TokenDesired0.IsValid() || msg.TokenDesired0.IsZero() {
@@ -42,11 +42,11 @@ func (msg MsgCreatePosition) ValidateBasic() error {
 	}
 
 	if msg.TokenMinAmount0.IsNegative() {
-		return sdkerrors.Wrap(ErrNotPositiveRequireAmount, msg.TokenMinAmount0.String())
+		return NotPositiveRequireAmountError{Amount: msg.TokenMinAmount0.String()}
 	}
 
 	if msg.TokenMinAmount1.IsNegative() {
-		return sdkerrors.Wrap(ErrNotPositiveRequireAmount, msg.TokenMinAmount1.String())
+		return NotPositiveRequireAmountError{Amount: msg.TokenMinAmount1.String()}
 	}
 
 	return nil
@@ -79,15 +79,15 @@ func (msg MsgWithdrawPosition) ValidateBasic() error {
 	}
 
 	if msg.LowerTick < MinTick || msg.LowerTick > MaxTick {
-		return ErrInvalidLowerTick
+		return InvalidLowerTickError{LowerTick: msg.LowerTick}
 	}
 
 	if msg.UpperTick < MinTick || msg.UpperTick > MaxTick {
-		return ErrLimitUpperTick
+		return InvalidUpperTickError{UpperTick: msg.UpperTick}
 	}
 
 	if !msg.LiquidityAmount.IsPositive() {
-		return sdkerrors.Wrap(ErrNotPositiveRequireAmount, msg.LiquidityAmount.String())
+		return NotPositiveRequireAmountError{Amount: msg.LiquidityAmount.String()}
 	}
 
 	return nil
