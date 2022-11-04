@@ -68,7 +68,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			priceLimit:    sdk.NewDec(4993),
 			// we expect to put .01337 eth in and in return get 66.76 usdc back
 			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(13370)),
-			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(66790908)), // TODO: should be 66.608848079558229697
+			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(66758449)), // TODO: should be 66.608848079558229697
 			expectedTick:     sdk.NewInt(85163),                         // TODO: should be 85164
 		},
 		//  Two equal price ranges
@@ -114,7 +114,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			// TODO: look into why we are returning 66.78 instead of 66.76 like the inverse of this test above
 			// sure, the above test only has 1 position while this has two positions, but shouldn't that effect the tokenIn as well?
 			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(13370)),
-			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(66811697)), // TODO: should be 66.629142854363394712
+			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(66779218)), // TODO: should be 66.629142854363394712
 			expectedTick:     sdk.NewInt(85169),                         // TODO: should be 85170
 			// two positions with same liquidity entered
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
@@ -201,96 +201,6 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 
 	}
 }
-
-// func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
-// 	ctx := s.Ctx
-// 	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", sdk.MustNewDecFromStr("70.710678"), sdk.NewInt(85176))
-// 	s.Require().NoError(err)
-// 	s.SetupPosition(pool.Id)
-
-// 	// test asset a to b logic
-// 	tokenOut := sdk.NewCoin("usdc", sdk.NewInt(4199999999))
-// 	tokenInDenom := "eth"
-// 	swapFee := sdk.NewDec(0)
-// 	minPrice := sdk.NewDec(4500)
-// 	maxPrice := sdk.NewDec(5500)
-
-// 	amountIn, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
-// 	s.Require().NoError(err)
-// 	s.Require().Equal(sdk.NewDec(805287), amountIn.Amount.ToDec())
-
-// 	// test asset b to a logic
-// 	tokenOut = sdk.NewCoin("eth", sdk.NewInt(133700))
-// 	tokenInDenom = "usdc"
-// 	swapFee = sdk.NewDec(0)
-
-// 	amountIn, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
-// 	s.Require().NoError(err)
-// 	s.Require().Equal(sdk.NewDec(666975610), amountIn.Amount.ToDec())
-
-// 	// test asset a to b logic
-// 	tokenOut = sdk.NewCoin("usdc", sdk.NewInt(4199999999))
-// 	tokenInDenom = "eth"
-// 	swapFee = sdk.NewDecWithPrec(2, 2)
-
-// 	amountIn, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
-// 	s.Require().NoError(err)
-// 	s.Require().Equal(sdk.NewDec(821722), amountIn.Amount.ToDec())
-// }
-
-// func (s *KeeperTestSuite) TestSwapInAmtGivenOut() {
-// 	ctx := s.Ctx
-// 	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, "eth", "usdc", sdk.MustNewDecFromStr("70.710678"), sdk.NewInt(85176))
-// 	s.Require().NoError(err)
-// 	fmt.Printf("%v pool liq pre \n", pool.Liquidity)
-// 	lowerTick := int64(84222)
-// 	upperTick := int64(86129)
-// 	amount0Desired := sdk.NewInt(1)
-// 	amount1Desired := sdk.NewInt(5000)
-
-// 	s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, pool.Id, s.TestAccs[0], amount0Desired, amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
-
-// 	// test asset a to b logic
-// 	tokenOut := sdk.NewCoin("usdc", sdk.NewInt(4199999999))
-// 	tokenInDenom := "eth"
-// 	swapFee := sdk.NewDec(0)
-// 	minPrice := sdk.NewDec(4500)
-// 	maxPrice := sdk.NewDec(5500)
-
-// 	amountIn, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
-// 	s.Require().NoError(err)
-// 	fmt.Printf("%v amountIn \n", amountIn)
-// 	pool = s.App.ConcentratedLiquidityKeeper.GetPoolbyId(ctx, pool.Id)
-
-// // test asset a to b logic
-// tokenOut := sdk.NewCoin("usdc", sdk.NewInt(4199999999))
-// tokenInDenom := "eth"
-// swapFee := sdk.NewDec(0)
-// minPrice := sdk.NewDec(4500)
-// maxPrice := sdk.NewDec(5500)
-
-// amountIn, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
-// s.Require().NoError(err)
-// s.Require().Equal(sdk.NewDec(805287), amountIn.Amount.ToDec())
-
-// // test asset b to a logic
-// tokenOut = sdk.NewCoin("eth", sdk.NewInt(133700))
-// tokenInDenom = "usdc"
-// swapFee = sdk.NewDec(0)
-
-// amountIn, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
-// s.Require().NoError(err)
-// s.Require().Equal(sdk.NewDec(666975610), amountIn.Amount.ToDec())
-
-// // test asset a to b logic
-// tokenOut = sdk.NewCoin("usdc", sdk.NewInt(4199999999))
-// tokenInDenom = "eth"
-// swapFee = sdk.NewDecWithPrec(2, 2)
-
-// amountIn, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
-// s.Require().NoError(err)
-// s.Require().Equal(sdk.NewDec(821722), amountIn.Amount.ToDec())
-// }
 
 func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 	currPrice := sdk.NewDec(5000)
@@ -395,7 +305,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 			// we expect to put .01337 eth in and in return get 66.79 eth back
 			// TODO: look into why we are returning 66.81 instead of 66.79 like the inverse of this test above
 			// sure, the above test only has 1 position while this has two positions, but shouldn't that effect the tokenIn as well?
-			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(66811697)),
+			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(66779218)),
 			expectedTick:     sdk.NewInt(85169),
 			// two positions with same liquidity entered
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),

@@ -128,7 +128,7 @@ func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount0RoundingUp() {
 			sdk.MustNewDecFromStr("1517882343.751510418088349649"), // liquidity0 calculated above
 			sdk.MustNewDecFromStr("70.710678118654752440"),
 			sdk.NewDec(133700),
-			"70.491377616533396954", // TODO: should be 70.4911536559731031262414713275
+			"70.491153655973103127",
 			// https://www.wolframalpha.com/input?i=%281517882343.751510418088349649+*+2+*+70.710678118654752440%29+%2F+%28%281517882343.751510418088349649+*+2%29+%2B+%28133700+*+70.710678118654752440%29%29
 		},
 	}
