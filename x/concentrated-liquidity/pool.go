@@ -105,6 +105,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 	tokenAmountInAfterFee := tokenInMin.Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
 
 	zeroForOne := tokenInMin.Denom == asset0
+	swapStrategy := newSwapStrategy(zeroForOne)
 
 	// get current sqrt price from pool
 	curSqrtPrice := p.CurrentSqrtPrice
@@ -156,12 +157,11 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 			sqrtPriceTarget = nextSqrtPrice
 		}
 
-		sqrtPrice, amountIn, amountOut := computeSwapStep(
+		sqrtPrice, amountIn, amountOut := swapStrategy.computeSwapStep(
 			swapState.sqrtPrice,
 			sqrtPriceTarget,
 			swapState.liquidity,
 			swapState.amountSpecifiedRemaining,
-			zeroForOne,
 		)
 		swapState.sqrtPrice = sqrtPrice
 
@@ -222,6 +222,7 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 	asset0 := p.Token0
 	asset1 := p.Token1
 	zeroForOne := tokenOut.Denom == asset0
+	swapStrategy := newSwapStrategy(zeroForOne)
 
 	// get current sqrt price from pool
 	curSqrtPrice := p.CurrentSqrtPrice
@@ -287,12 +288,11 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 		}
 
 		// TODO: In and out get flipped based on if we are calculating for in or out, need to fix this
-		sqrtPrice, amountIn, amountOut := computeSwapStep(
+		sqrtPrice, amountIn, amountOut := swapStrategy.computeSwapStep(
 			swapState.sqrtPrice,
 			nextSqrtPrice,
 			liq,
 			swapState.amountSpecifiedRemaining,
-			zeroForOne,
 		)
 
 		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn)
