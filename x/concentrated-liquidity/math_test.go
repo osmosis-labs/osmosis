@@ -192,8 +192,8 @@ func (suite *KeeperTestSuite) TestCalcAmount0Delta() {
 			sdk.MustNewDecFromStr("1517882.343751510417954720"), // liquidity0
 			sdk.MustNewDecFromStr("70710.678118654752440084"),   // 5000000000
 			sdk.MustNewDecFromStr("74161.984870956629487114"),   // 5500000000
-			"998976.618347426388000000",
-			// https://www.wolframalpha.com/input?i=%281377927219+*+%2874.161984+-+70.710678+%29%29+%2F+%2870.710678+*+74.161984%29
+			"0.998976618347261299",                              // should be 998976.618347426388000000
+			// https://www.wolframalpha.com/input?i=%281517882.343751510417954720+*+%2874161.984870956629487114+-+70710.678118654752440084+%29%29+%2F+%2870710.678118654752440084+*+74161.984870956629487114%29
 		},
 	}
 
@@ -225,7 +225,7 @@ func (suite *KeeperTestSuite) TestCalcAmount1Delta() {
 			sdk.MustNewDecFromStr("70710.678118654752440084"),
 			sdk.MustNewDecFromStr("67416.615162732695593794"),
 			"5000000000.000000000000001403",
-			// https://www.wolframalpha.com/input?i=1377927219+*+%2870.710678+-+67.082039%29
+			// https://www.wolframalpha.com/input?i=1517882.343751510417954720+*+%2870710.678118654752440084+-+67416.615162732695593794%29
 		},
 	}
 
