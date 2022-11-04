@@ -1,8 +1,9 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // constants.
@@ -18,7 +19,7 @@ func (msg MsgCreatePosition) Type() string  { return TypeMsgCreatePosition }
 func (msg MsgCreatePosition) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return fmt.Errorf("Invalid sender address (%s)", err)
 	}
 
 	if msg.LowerTick >= msg.UpperTick {
@@ -34,11 +35,11 @@ func (msg MsgCreatePosition) ValidateBasic() error {
 	}
 
 	if !msg.TokenDesired0.IsValid() || msg.TokenDesired0.IsZero() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenDesired0.String())
+		return fmt.Errorf("Invalid coins (%s)", msg.TokenDesired0.String())
 	}
 
 	if !msg.TokenDesired1.IsValid() || msg.TokenDesired1.IsZero() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenDesired1.String())
+		return fmt.Errorf("Invalid coins (%s)", msg.TokenDesired1.String())
 	}
 
 	if msg.TokenMinAmount0.IsNegative() {
@@ -71,7 +72,7 @@ func (msg MsgWithdrawPosition) Type() string  { return TypeMsgWithdrawPosition }
 func (msg MsgWithdrawPosition) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return fmt.Errorf("Invalid sender address (%s)", err)
 	}
 
 	if msg.LowerTick >= msg.UpperTick {
