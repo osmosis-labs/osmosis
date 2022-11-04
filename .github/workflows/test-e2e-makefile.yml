@@ -55,5 +55,16 @@ jobs:
         name: Build e2e init chain image
         run: make docker-build-e2e-init-chain
       -
+        name: Build e2e image
+        uses: docker/build-push-action@v3
+        with:
+          load: true
+          context: .
+          tags: osmosis:debug
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BASE_IMG_TAG=debug
+      -
         name: Test e2e short
         run: make test-e2e-short
