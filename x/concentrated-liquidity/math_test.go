@@ -189,7 +189,7 @@ func (suite *KeeperTestSuite) TestCalcAmount0Delta() {
 	}{
 		{
 			"happy path",
-			sdk.MustNewDecFromStr("1517882.343751510417954720"), // liquidity0
+			sdk.MustNewDecFromStr("1517882.343751510417954720"), // we use the smaller liquidity between liq0 and liq1
 			sdk.MustNewDecFromStr("70710.678118654752440084"),   // 5000000000
 			sdk.MustNewDecFromStr("74161.984870956629487114"),   // 5500000000
 			"0.998976618347261299",                              // should be 998976.618347426388000000
@@ -221,9 +221,9 @@ func (suite *KeeperTestSuite) TestCalcAmount1Delta() {
 	}{
 		{
 			"happy path",
-			sdk.MustNewDecFromStr("1517882.343751510417954720"),
-			sdk.MustNewDecFromStr("70710.678118654752440084"),
-			sdk.MustNewDecFromStr("67416.615162732695593794"),
+			sdk.MustNewDecFromStr("1517882.343751510417954720"), // we use the smaller liquidity between liq0 and liq1
+			sdk.MustNewDecFromStr("70710.678118654752440084"),   // 5000000000
+			sdk.MustNewDecFromStr("67416.615162732695593794"),   // 4545000000
 			"5000000000.000000000000001403",
 			// https://www.wolframalpha.com/input?i=1517882.343751510417954720+*+%2870710.678118654752440084+-+67416.615162732695593794%29
 		},
