@@ -66,7 +66,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(13370)),
 			tokenOutDenom: "usdc",
 			priceLimit:    sdk.NewDec(4993),
-			// we expect to put .01337 eth in and in return get 66.79 usdc back
+			// we expect to put .01337 eth in and in return get 66.76 usdc back
 			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(13370)),
 			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(66790908)), // TODO: should be 66.608848079558229697
 			expectedTick:     sdk.NewInt(85163),                         // TODO: should be 85164
@@ -110,8 +110,8 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(13370)),
 			tokenOutDenom: "usdc",
 			priceLimit:    sdk.NewDec(4996),
-			// we expect to put .01337 eth in and in return get 66.79 eth back
-			// TODO: look into why we are returning 66.81 instead of 66.79 like the inverse of this test above
+			// we expect to put .01337 eth in and in return get 66.76 eth back
+			// TODO: look into why we are returning 66.78 instead of 66.76 like the inverse of this test above
 			// sure, the above test only has 1 position while this has two positions, but shouldn't that effect the tokenIn as well?
 			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(13370)),
 			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(66811697)), // TODO: should be 66.629142854363394712
@@ -350,8 +350,8 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(13370)),
 			tokenOutDenom: "usdc",
 			priceLimit:    sdk.NewDec(4993),
-			// we expect to put .01337 eth in and in return get 66.79 usdc back
-			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(66790908)),
+			// we expect to put .01337 eth in and in return get 66.76 usdc back
+			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(66758449)),
 			expectedTick:     sdk.NewInt(85163),
 		},
 		//  Two equal price ranges
@@ -472,9 +472,9 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 			newLowerTick := cl.PriceToTick(test.newLowerPrice)
 			newUpperTick := cl.PriceToTick(test.newUpperPrice)
 
-			lowerSqrtPrice, err := s.App.ConcentratedLiquidityKeeper.TickToSqrtPrice(newLowerTick)
+			lowerSqrtPrice, err := cl.TickToSqrtPrice(newLowerTick)
 			s.Require().NoError(err)
-			upperSqrtPrice, err := s.App.ConcentratedLiquidityKeeper.TickToSqrtPrice(newUpperTick)
+			upperSqrtPrice, err := cl.TickToSqrtPrice(newUpperTick)
 			s.Require().NoError(err)
 
 			if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
