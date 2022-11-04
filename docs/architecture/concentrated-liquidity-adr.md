@@ -389,7 +389,7 @@ type SwapI interface {
 
 As a result, the `swaprouter` module propagates core execution to the appropriate swap module.
 
-Lastly, the `swaprouter` keeper stores a mapping from the pool id to the pool type .
+Lastly, the `swaprouter` keeper stores a mapping from the pool id to the pool type.
 This mapping is going to be neccessary for knowing where to route the swap messages.
 
 To achieve this, we create the following store index:
