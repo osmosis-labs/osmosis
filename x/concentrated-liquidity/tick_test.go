@@ -136,13 +136,13 @@ func (suite *KeeperTestSuite) TestTickToSqrtPrice() {
 		{
 			"happy path 1",
 			sdk.NewInt(85176),
-			"70.710004849206351861", // 70.710004849206120647
+			"70.710004849206351867", // 70.710004849206120647
 			// https://www.wolframalpha.com/input?i2d=true&i=Power%5B1.0001%2CDivide%5B85176%2C2%5D%5D
 		},
 		{
 			"happy path 2",
 			sdk.NewInt(86129),
-			"74.157016832801088770", // 74.160724590950847046
+			"74.160724590951092256", // 74.160724590950847046
 			// https://www.wolframalpha.com/input?i2d=true&i=Power%5B1.0001%2CDivide%5B86129%2C2%5D%5D
 		},
 	}
