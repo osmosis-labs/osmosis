@@ -19,3 +19,7 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
 func (k Keeper) GetNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 	return k.getNextPoolIdAndIncrement(ctx)
 }
+
+func (_ Keeper) GetMaximalNoSwapLPAmount(ctx sdk.Context, pool types.PoolI, numShares sdk.Int) (sdk.Coins, error) {
+	return getMaximalNoSwapLPAmount(ctx, pool, numShares)
+}

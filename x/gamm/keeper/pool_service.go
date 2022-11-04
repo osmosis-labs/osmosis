@@ -259,7 +259,7 @@ func getMaximalNoSwapLPAmount(ctx sdk.Context, pool types.PoolI, shareOutAmount 
 	// shareRatio is the desired number of shares, divided by the total number of
 	// shares currently in the pool. It is intended to be used in scenarios where you want
 	shareRatio := shareOutAmount.ToDec().QuoInt(totalSharesAmount)
-	if shareRatio.LTE(sdk.ZeroDec()) {
+	if shareRatio.LTE(sdk.ZeroDec()) || shareRatio.GT(sdk.OneDec()) {
 		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
 	}
 

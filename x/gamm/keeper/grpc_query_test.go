@@ -8,7 +8,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
@@ -88,59 +87,95 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestCalcJoinPoolNoSwapShares() {
+func (suite *KeeperTestSuite) TestSimJoinPoolNoSwap() {
 	queryClient := suite.queryClient
-	ctx := suite.Ctx
 	poolId := suite.PrepareBalancerPool()
-	swapFee := sdk.ZeroDec()
-	var (
-		defaultBalancer4Assets = []balancer.PoolAsset{
-			{Token: sdk.NewInt64Coin("foo", 100), Weight: sdk.NewIntFromUint64(5)},
-			{Token: sdk.NewInt64Coin("bar", 100), Weight: sdk.NewIntFromUint64(5)},
-			{Token: sdk.NewInt64Coin("baz", 100), Weight: sdk.NewIntFromUint64(5)},
-			{Token: sdk.NewInt64Coin("uosmo", 100), Weight: sdk.NewIntFromUint64(5)},
-		}
+	ctx := suite.Ctx
 
-		default4TokensIn = sdk.NewCoins(
-			sdk.NewCoin("foo", sdk.NewInt(100)),
-			sdk.NewCoin("bar", sdk.NewInt(100)),
-			sdk.NewCoin("baz", sdk.NewInt(100)),
-			sdk.NewCoin("uosmo", sdk.NewInt(100)),
-		)
-	)
 	testCases := []struct {
-		name       string
-		poolId     uint64
-		tokensIn   sdk.Coins
-		poolAssets []balancer.PoolAsset
-
-		expectedShares sdk.Int
-		expectedErr    error
+		name            string
+		sharesOutAmount sdk.Int
+		poolId          uint64
+		expectingErr    bool
 	}{
 		{
-			name:           "valid 4 tokens test",
-			poolId:         poolId,
-			tokensIn:       default4TokensIn,
-			poolAssets:     defaultBalancer4Assets,
-			expectedShares: sdk.NewIntFromUint64(10000000000000000000),
-			expectedErr:    nil,
+			name:            "valid test case",
+			sharesOutAmount: types.OneShare.MulRaw(50),
+			poolId:          poolId,
+
+			expectingErr: false,
+		},
+		{
+			name:            "too much shares required",
+			sharesOutAmount: types.InitPoolSharesSupply.Mul(sdk.NewInt(2)),
+			poolId:          poolId,
+
+			expectingErr: true,
+		},
+		{
+			name:            "invalid pool id",
+			sharesOutAmount: types.OneShare.MulRaw(50),
+			poolId:          poolId + 1,
+
+			expectingErr: true,
+		},
+		{
+			name:            "negative shares out",
+			sharesOutAmount: sdk.NewInt(-1),
+			poolId:          poolId,
+
+			expectingErr: true,
+		},
+		{
+			name:            "no pool id",
+			sharesOutAmount: sdk.NewInt(-1),
+
+			expectingErr: true,
+		},
+		{
+			name:            "zero shares",
+			sharesOutAmount: sdk.ZeroInt(),
+			poolId:          poolId,
+
+			expectingErr: true,
 		},
 	}
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			balancerPool := balancer.Pool{
-				Address:            types.NewPoolAddress(tc.poolId).String(),
-				Id:                 tc.poolId,
-				PoolParams:         balancer.PoolParams{SwapFee: defaultSwapFee, ExitFee: defaultExitFee},
-				PoolAssets:         tc.poolAssets,
-				FuturePoolGovernor: defaultFutureGovernor,
-				TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),
+			out, err := queryClient.SimJoinPoolNoSwap(gocontext.Background(), &types.QueryJoinPoolNoSwapRequest{
+				PoolId:          tc.poolId,
+				SharesOutAmount: tc.sharesOutAmount,
+			})
+
+			if !tc.expectingErr {
+				suite.Require().NoError(err)
+
+				poolRes, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
+					PoolId: tc.poolId,
+				})
+				suite.Require().NoError(err)
+
+				var pool types.PoolI
+				err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
+				suite.Require().NoError(err)
+
+				liquidityBefore := pool.GetTotalPoolLiquidity(ctx)
+
+				neededLpLiquidity, err := suite.App.GAMMKeeper.GetMaximalNoSwapLPAmount(ctx, pool, tc.sharesOutAmount)
+				suite.Require().NoError(err)
+				expectedShares, _, err := pool.CalcJoinPoolNoSwapShares(ctx, neededLpLiquidity, pool.GetSwapFee(ctx))
+				suite.Require().NoError(err)
+
+				suite.Require().Equal(out.SharesOut, expectedShares)
+				suite.Require().Equal(out.TokensIn, neededLpLiquidity)
+				suite.Require().Equal(liquidityBefore, pool.GetTotalPoolLiquidity(ctx))
+			} else {
+				suite.Require().Error(err)
 			}
 		})
 	}
 }
-
 func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 	queryClient := suite.queryClient
 	ctx := suite.Ctx

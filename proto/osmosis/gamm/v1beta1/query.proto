@@ -38,8 +38,8 @@ service Query {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/pool_type/{pool_id}";
   }
 
-  rpc CalcJoinPoolNoSwapShares(QueryCalcJoinPoolNoSwapSharesRequest)
-      returns (QueryCalcJoinPoolNoSwapSharesResponse) {}
+  rpc SimJoinPoolNoSwap(QueryJoinPoolNoSwapRequest)
+      returns (QueryJoinPoolNoSwapResponse) {}
 
   rpc CalcJoinPoolShares(QueryCalcJoinPoolSharesRequest)
       returns (QueryCalcJoinPoolSharesResponse) {
@@ -188,17 +188,21 @@ message QueryTotalSharesResponse {
     (gogoproto.nullable) = false
   ];
 }
-//=============================== CalcJoinPoolNoSwapShares
-message QueryCalcJoinPoolNoSwapSharesRequest {
+//=============================== SimJoinPoolNoSwap
+message QueryJoinPoolNoSwapRequest {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  repeated cosmos.base.v1beta1.Coin tokens_in = 2 [
+  string shares_out_amount = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+message QueryJoinPoolNoSwapResponse {
+  repeated cosmos.base.v1beta1.Coin tokens_in = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"tokens_in\"",
     (gogoproto.nullable) = false
   ];
-}
-message QueryCalcJoinPoolNoSwapSharesResponse {
-  string num_shares = 1 [
+  string shares_out = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
