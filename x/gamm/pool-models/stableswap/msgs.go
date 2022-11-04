@@ -119,10 +119,12 @@ var _ sdk.Msg = &MsgStableSwapAdjustScalingFactors{}
 func NewMsgStableSwapAdjustScalingFactors(
 	sender string,
 	poolID uint64,
+	scalingFactors []uint64,
 ) MsgStableSwapAdjustScalingFactors {
 	return MsgStableSwapAdjustScalingFactors{
-		Sender: sender,
-		PoolID: poolID,
+		Sender:         sender,
+		PoolID:         poolID,
+		ScalingFactors: scalingFactors,
 	}
 }
 

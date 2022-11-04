@@ -359,10 +359,10 @@ func (p Pool) CalcExitPoolCoinsFromShares(ctx sdk.Context, exitingShares sdk.Int
 	return cfmm_common.CalcExitPool(ctx, &p, exitingShares, exitFee)
 }
 
-// SetStableSwapScalingFactors sets scaling factors for pool to the given amount
+// SetScalingFactors sets scaling factors for pool to the given amount
 // It should only be able to be successfully called by the pool's ScalingFactorGovernor
 // TODO: move commented test for this function from x/gamm/keeper/pool_service_test.go once a pool_test.go file has been created for stableswap
-func (p *Pool) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uint64, sender string) error {
+func (p *Pool) SetScalingFactors(ctx sdk.Context, scalingFactors []uint64, sender string) error {
 	if sender != p.ScalingFactorController {
 		return types.ErrNotScalingFactorGovernor
 	}
