@@ -270,7 +270,17 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 		return cfmmConstantMultiNoV(xEst, yFinal, wSumSquares), nil
 	}
 
-	xEst, err := osmoutils.BinarySearchBigDec(computeFromEst, xLowEst, xHighEst, k, errTolerance, maxIterations)
+	// if yIn is positive, we want to under-estimate the amount of xOut.
+	// This means, we want x_out to be rounded down, as x_out = x_init - x_final, for x_init > x_final.
+	// Thus we round-up x_final, to make it greater (and therefore ) x_out smaller.
+	// If yIn is negative, the amount of xOut will also be negative (representing that we must add tokens into the pool)
+	// this means x_out = x_init - x_final, for x_init < x_final.
+	// we want to over_estimate |x_out|, which means rounding x_out down as its a negative quantity.
+	// This means rounding x_final up, to give us a larger negative.
+	// Therefore we always round up.
+	roundingDirection := osmomath.RoundUp
+
+	xEst, err := osmoutils.BinarySearchBigDec(computeFromEst, xLowEst, xHighEst, k, errTolerance, roundingDirection, maxIterations)
 	if err != nil {
 		panic(err)
 	}
