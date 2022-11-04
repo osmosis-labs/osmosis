@@ -18,3 +18,8 @@ queries:
       query_func: "k.EstimateSwapExactAmountOut"
     cli:
       cmd: "EstimateSwapExactAmountOut"
+  NumPools:
+    proto_wrapper:
+      query_func: "k.NumPools"
+    cli:
+      cmd: "NumPools"

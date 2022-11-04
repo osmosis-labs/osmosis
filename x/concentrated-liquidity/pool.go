@@ -8,17 +8,22 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v12/osmomath"
 	cltypes "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
+// TODO: spec, tests, implementation
+func (k Keeper) InitializePool(ctx sdk.Context, pool gammtypes.PoolI, creatorAddress sdk.AccAddress) error {
+	panic("not implemented")
+}
+
 func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint64, denom0, denom1 string, currSqrtPrice sdk.Dec, currTick sdk.Int) (Pool, error) {
-	poolAddr := types.NewPoolAddress(poolId)
 	denom0, denom1, err := cltypes.OrderInitialPoolDenoms(denom0, denom1)
 	if err != nil {
 		return Pool{}, err
 	}
 	pool := Pool{
-		Address:          poolAddr.String(),
+		// TODO: move gammtypes.NewPoolAddress(poolId) to swaproutertypes
+		Address:          gammtypes.NewPoolAddress(poolId).String(),
 		Id:               poolId,
 		CurrentSqrtPrice: currSqrtPrice,
 		CurrentTick:      currTick,
@@ -33,7 +38,7 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint6
 }
 
 // GetPool returns a pool with a given id.
-func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
+func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error) {
 	return nil, errors.New("not implemented")
 }
 
@@ -326,7 +331,7 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 // ApplySwap.
 func (k *Keeper) applySwap(ctx sdk.Context, tokenIn sdk.Coin, tokenOut sdk.Coin, poolId uint64, newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurrentSqrtPrice sdk.Dec) {
 	// Fixed gas consumption per swap to prevent spam
-	ctx.GasMeter().ConsumeGas(types.BalancerGasFeeForSwap, "cl pool swap computation")
+	ctx.GasMeter().ConsumeGas(gammtypes.BalancerGasFeeForSwap, "cl pool swap computation")
 	pool := k.getPoolbyId(ctx, poolId)
 
 	pool.Liquidity = newLiquidity

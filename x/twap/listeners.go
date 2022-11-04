@@ -4,12 +4,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	epochtypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 )
 
 var (
-	_ types.GammHooks       = &gammhook{}
-	_ epochtypes.EpochHooks = &epochhook{}
+	_ gammtypes.GammHooks                  = &swaprouterhook{}
+	_ epochtypes.EpochHooks                = &epochhook{}
+	_ swaproutertypes.PoolCreationListener = &swaprouterhook{}
 )
 
 type epochhook struct {
@@ -33,16 +35,20 @@ func (hook *epochhook) BeforeEpochStart(ctx sdk.Context, epochIdentifier string,
 	return nil
 }
 
-type gammhook struct {
+type swaprouterhook struct {
 	k Keeper
 }
 
-func (k Keeper) GammHooks() types.GammHooks {
-	return &gammhook{k}
+func (k Keeper) GammHooks() gammtypes.GammHooks {
+	return &swaprouterhook{k}
+}
+
+func (k Keeper) PoolCreationListeners() swaproutertypes.PoolCreationListener {
+	return &swaprouterhook{k}
 }
 
 // AfterPoolCreated is called after CreatePool
-func (hook *gammhook) AfterPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+func (hook *swaprouterhook) AfterPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
 	err := hook.k.afterCreatePool(ctx, poolId)
 	// Will halt pool creation
 	if err != nil {
@@ -50,14 +56,14 @@ func (hook *gammhook) AfterPoolCreated(ctx sdk.Context, sender sdk.AccAddress, p
 	}
 }
 
-func (hook *gammhook) AfterSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
+func (hook *swaprouterhook) AfterSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
 	hook.k.trackChangedPool(ctx, poolId)
 }
 
-func (hook *gammhook) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, enterCoins sdk.Coins, shareOutAmount sdk.Int) {
+func (hook *swaprouterhook) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, enterCoins sdk.Coins, shareOutAmount sdk.Int) {
 	hook.k.trackChangedPool(ctx, poolId)
 }
 
-func (hook *gammhook) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, exitCoins sdk.Coins) {
+func (hook *swaprouterhook) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, exitCoins sdk.Coins) {
 	hook.k.trackChangedPool(ctx, poolId)
 }

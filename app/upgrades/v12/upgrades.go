@@ -77,7 +77,7 @@ func CreateUpgradeHandler(
 		keepers.ICAHostKeeper.SetParams(ctx, hostParams)
 
 		// Initialize TWAP state
-		latestPoolId := keepers.GAMMKeeper.GetNextPoolId(ctx) - 1
+		latestPoolId := keepers.SwapRouterKeeper.GetNextPoolId(ctx) - 1
 		err := keepers.TwapKeeper.MigrateExistingPools(ctx, latestPoolId)
 		if err != nil {
 			return nil, err

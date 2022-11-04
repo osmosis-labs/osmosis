@@ -14,5 +14,6 @@ func DefaultActions(keeper swaprouter.Keeper, gammKeeper types.GammKeeper) []sim
 	return []simtypes.Action{
 		simtypes.NewMsgBasedAction("SwapExactAmountIn", simKeeper, RandomSwapExactAmountIn),
 		simtypes.NewMsgBasedAction("SwapExactAmountOut", simKeeper, RandomSwapExactAmountOut),
+		simtypes.NewMsgBasedAction("CreateUniV2Msg", keeper, RandomCreateUniV2Msg).WithFrequency(simtypes.Frequent),
 	}
 }
