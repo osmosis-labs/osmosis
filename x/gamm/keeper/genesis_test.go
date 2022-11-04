@@ -15,9 +15,12 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/gamm"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 )
 
 func TestGammInitGenesis(t *testing.T) {
+	const poolCount uint64 = 1
+
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -40,16 +43,18 @@ func TestGammInitGenesis(t *testing.T) {
 	require.NoError(t, err)
 
 	app.GAMMKeeper.InitGenesis(ctx, types.GenesisState{
-		Pools:          []*codectypes.Any{any},
-		NextPoolNumber: 2,
-		Params: types.Params{
+		Pools:     []*codectypes.Any{any},
+		PoolCount: poolCount,
+	}, app.AppCodec())
+	app.SwapRouterKeeper.InitGenesis(ctx, &swaproutertypes.GenesisState{
+		Params: swaproutertypes.Params{
 			PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000_000_000)},
 		},
-	}, app.AppCodec())
+	})
 
-	require.Equal(t, app.GAMMKeeper.GetNextPoolIdAndIncrement(ctx), uint64(2))
 	poolStored, err := app.GAMMKeeper.GetPoolAndPoke(ctx, 1)
 	require.NoError(t, err)
+	require.Equal(t, poolCount, app.GAMMKeeper.GetPoolCount(ctx))
 	require.Equal(t, balancerPool.GetId(), poolStored.GetId())
 	require.Equal(t, balancerPool.GetAddress(), poolStored.GetAddress())
 	require.Equal(t, balancerPool.GetSwapFee(ctx), poolStored.GetSwapFee(ctx))
@@ -88,7 +93,7 @@ func TestGammExportGenesis(t *testing.T) {
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 	}}, "")
-	_, err = app.GAMMKeeper.CreatePool(ctx, msg)
+	_, err = app.SwapRouterKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
 
 	msg = balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
@@ -101,12 +106,12 @@ func TestGammExportGenesis(t *testing.T) {
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 	}}, "")
-	_, err = app.GAMMKeeper.CreatePool(ctx, msg)
+	_, err = app.SwapRouterKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
 
 	genesis := app.GAMMKeeper.ExportGenesis(ctx)
-	require.Equal(t, genesis.NextPoolNumber, uint64(3))
 	require.Len(t, genesis.Pools, 2)
+	require.Equal(t, genesis.PoolCount, uint64(2))
 }
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
@@ -134,7 +139,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 	}}, "")
-	_, err = app.GAMMKeeper.CreatePool(ctx, msg)
+	_, err = app.SwapRouterKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
 
 	genesis := am.ExportGenesis(ctx, appCodec)

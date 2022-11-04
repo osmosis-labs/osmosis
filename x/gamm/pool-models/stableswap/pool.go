@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/osmomath"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 )
 
 var (
@@ -403,9 +404,9 @@ func validateScalingFactors(scalingFactors []uint64, numAssets int) error {
 }
 
 func validatePoolAssets(initialAssets sdk.Coins, scalingFactors []uint64) error {
-	if len(initialAssets) < types.MinPoolAssets {
+	if len(initialAssets) < swaproutertypes.MinPoolAssets {
 		return types.ErrTooFewPoolAssets
-	} else if len(initialAssets) > types.MaxPoolAssets {
+	} else if len(initialAssets) > swaproutertypes.MaxPoolAssets {
 		return types.ErrTooManyPoolAssets
 	}
 
