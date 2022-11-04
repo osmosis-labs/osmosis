@@ -1,6 +1,7 @@
 package osmoutils
 
 import (
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -83,49 +84,63 @@ func cubicF(a osmomath.BigDec) (osmomath.BigDec, error) {
 	return output, nil
 }
 
-func TestBinarySearchBigDec(t *testing.T) {
-	lowErrTolerance := ErrTolerance{AdditiveTolerance: sdk.OneInt()}
-	testErrToleranceAdditive := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20)}
-	testErrToleranceMultiplicative := ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.NewDec(10)}
-	testErrToleranceBoth := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20), MultiplicativeTolerance: sdk.NewDec(1 << 3)}
-	tests := map[string]struct {
-		f             func(osmomath.BigDec) (osmomath.BigDec, error)
-		lowerbound    osmomath.BigDec
-		upperbound    osmomath.BigDec
-		targetOutput  osmomath.BigDec
-		errTolerance  ErrTolerance
-		maxIterations int
+type binarySearchTestCase struct {
+	f             func(osmomath.BigDec) (osmomath.BigDec, error)
+	lowerbound    osmomath.BigDec
+	upperbound    osmomath.BigDec
+	targetOutput  osmomath.BigDec
+	errTolerance  ErrTolerance
+	maxIterations int
 
-		expectedSolvedInput osmomath.BigDec
-		expectErr           bool
-		// This binary searches inputs to a monotonic increasing function F
-		// We stop when the answer is within error bounds stated by errTolerance
-		// First, (lowerbound + upperbound) / 2 becomes the current estimate.
-		// A current output is also defined as f(current estimate). In this case f is lineF
-		// We then compare the current output with the target output to see if it's within error tolerance bounds. If not, continue binary searching by iterating.
-		// If it is, we return current output
-		// Additive error bounds are solid addition / subtraction bounds to error, while multiplicative bounds take effect after dividing by the minimum between the two compared numbers.
-	}{
-		"linear f, no err tolerance, converges": {
-			f:                   lineF,
-			lowerbound:          osmomath.ZeroDec(),
-			upperbound:          osmomath.NewBigDec(1 << 50),
-			targetOutput:        osmomath.NewBigDec(1 + (1 << 25)),
-			errTolerance:        lowErrTolerance,
-			maxIterations:       51,
-			expectedSolvedInput: osmomath.NewBigDec(1 + (1 << 25)),
-			expectErr:           false},
-		"linear f, no err tolerance, does not converge":                  {lineF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), lowErrTolerance, 10, osmomath.BigDec{}, true},
-		"cubic f, no err tolerance, converges":                           {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), lowErrTolerance, 51, osmomath.NewBigDec(322539792367616), false},
-		"cubic f, no err tolerance, does not converge":                   {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), lowErrTolerance, 10, osmomath.BigDec{}, true},
-		"cubic f, large additive err tolerance, converges":               {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 15)), testErrToleranceAdditive, 51, osmomath.NewBigDec(1 << 46), false},
-		"cubic f, large additive err tolerance, does not converge":       {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 30)), testErrToleranceAdditive, 10, osmomath.BigDec{}, true},
-		"cubic f, large multiplicative err tolerance, converges":         {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), testErrToleranceMultiplicative, 51, osmomath.NewBigDec(322539792367616), false},
-		"cubic f, large multiplicative err tolerance, does not converge": {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), testErrToleranceMultiplicative, 10, osmomath.BigDec{}, true},
-		"cubic f, both err tolerances, converges":                        {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 15)), testErrToleranceBoth, 51, osmomath.NewBigDec(1 << 45), false},
-		"cubic f, both err tolerances, does not converge":                {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 30)), testErrToleranceBoth, 10, osmomath.BigDec{}, true},
+	expectedSolvedInput osmomath.BigDec
+	expectErr           bool
+	// This binary searches inputs to a monotonic increasing function F
+	// We stop when the answer is within error bounds stated by errTolerance
+	// First, (lowerbound + upperbound) / 2 becomes the current estimate.
+	// A current output is also defined as f(current estimate). In this case f is lineF
+	// We then compare the current output with the target output to see if it's within error tolerance bounds. If not, continue binary searching by iterating.
+	// If it is, we return current output
+	// Additive error bounds are solid addition / subtraction bounds to error, while multiplicative bounds take effect after dividing by the minimum between the two compared numbers.
+}
+
+// This test ensures that we use exactly the expected number of iterations (one bit of x at a time)
+// to find the answer to binary search on a line.
+func TestBinarySearchLineIterationCounts(t *testing.T) {
+	tests := map[string]binarySearchTestCase{}
+
+	withinOne := ErrTolerance{AdditiveTolerance: sdk.OneInt()}
+
+	generateExactTestCases := func(lowerbound, upperbound osmomath.BigDec,
+		errTolerance ErrTolerance, maxNumIters int) {
+		tcSetName := fmt.Sprintf("simple linear case: lower %s, upper %s", lowerbound.String(), upperbound.String())
+		// first pass get it working with no err tolerance or rounding direction
+		target := lowerbound.Add(upperbound).QuoRaw(2)
+		for expectedItersToTarget := 1; expectedItersToTarget < maxNumIters; expectedItersToTarget++ {
+			for j := 0; j < 2; j++ {
+				testCase := binarySearchTestCase{
+					f:          lineF,
+					lowerbound: lowerbound, upperbound: upperbound, targetOutput: target,
+					errTolerance:        errTolerance,
+					maxIterations:       expectedItersToTarget - j,
+					expectedSolvedInput: target,
+					expectErr:           j != 0,
+				}
+				tcName := fmt.Sprintf("%s, target %s, iters %d, expError %v",
+					tcSetName, target.String(), expectedItersToTarget, testCase.expectErr)
+				tests[tcName] = testCase
+			}
+			target = lowerbound.Add(target).QuoRaw(2)
+		}
+
 	}
 
+	generateExactTestCases(osmomath.ZeroDec(), osmomath.NewBigDec(1<<20), withinOne, 20)
+	// we can go further than 50, if we could specify non-integer additive err tolerance. TODO: Add this.
+	generateExactTestCases(osmomath.NewBigDec(1<<20), osmomath.NewBigDec(1<<50), withinOne, 50)
+	runBinarySearchTestCases(t, tests)
+}
+
+func runBinarySearchTestCases(t *testing.T, tests map[string]binarySearchTestCase) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			roundUp := osmomath.RoundUp
@@ -138,6 +153,25 @@ func TestBinarySearchBigDec(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestBinarySearchBigDec(t *testing.T) {
+	lowErrTolerance := ErrTolerance{AdditiveTolerance: sdk.OneInt()}
+	testErrToleranceAdditive := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20)}
+	testErrToleranceMultiplicative := ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.NewDec(10)}
+	testErrToleranceBoth := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20), MultiplicativeTolerance: sdk.NewDec(1 << 3)}
+	tests := map[string]binarySearchTestCase{
+		"cubic f, no err tolerance, converges":                           {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), lowErrTolerance, 51, osmomath.NewBigDec(322539792367616), false},
+		"cubic f, no err tolerance, does not converge":                   {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), lowErrTolerance, 10, osmomath.BigDec{}, true},
+		"cubic f, large additive err tolerance, converges":               {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 15)), testErrToleranceAdditive, 51, osmomath.NewBigDec(1 << 46), false},
+		"cubic f, large additive err tolerance, does not converge":       {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 30)), testErrToleranceAdditive, 10, osmomath.BigDec{}, true},
+		"cubic f, large multiplicative err tolerance, converges":         {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), testErrToleranceMultiplicative, 51, osmomath.NewBigDec(322539792367616), false},
+		"cubic f, large multiplicative err tolerance, does not converge": {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), testErrToleranceMultiplicative, 10, osmomath.BigDec{}, true},
+		"cubic f, both err tolerances, converges":                        {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 15)), testErrToleranceBoth, 51, osmomath.NewBigDec(1 << 45), false},
+		"cubic f, both err tolerances, does not converge":                {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 30)), testErrToleranceBoth, 10, osmomath.BigDec{}, true},
+	}
+
+	runBinarySearchTestCases(t, tests)
 }
 
 func TestErrTolerance_Compare(t *testing.T) {
