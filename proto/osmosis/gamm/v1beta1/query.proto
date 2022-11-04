@@ -38,6 +38,8 @@ service Query {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/pool_type/{pool_id}";
   }
 
+  // Simulates joining pool without a swap. Returns the amount of shares you'd get
+  // and tokens needed to provide
   rpc SimJoinPoolNoSwap(QueryJoinPoolNoSwapRequest)
       returns (QueryJoinPoolNoSwapResponse) {}
 
