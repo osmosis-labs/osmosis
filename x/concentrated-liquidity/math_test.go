@@ -18,12 +18,12 @@ func (suite *KeeperTestSuite) TestGetLiquidityFromAmounts() {
 	}{
 		{
 			"happy path",
-			sdk.MustNewDecFromStr("70710678"),
-			sdk.MustNewDecFromStr("74161984"),
-			sdk.MustNewDecFromStr("67082039"),
+			sdk.MustNewDecFromStr("70710.678118654752440084"), // 5000000000
+			sdk.MustNewDecFromStr("74161.984870956629487114"), // 5500000000
+			sdk.MustNewDecFromStr("67416.615162732695593794"), // 4545000000
 			sdk.NewInt(1000000),
 			sdk.NewInt(5000000000),
-			"1377.927096082029653542",
+			"1517882.343751510417954720",
 		},
 	}
 
@@ -56,11 +56,11 @@ func (suite *KeeperTestSuite) TestLiquidity1() {
 	}{
 		{
 			"happy path",
-			sdk.NewDecWithPrec(70710678, 6),
-			sdk.NewDecWithPrec(67082039, 6),
-			sdk.NewInt(5000),
-			"1377.927096082029653542",
-			// https://www.wolframalpha.com/input?i=5000+%2F+%2870.710678+-+67.082039%29
+			sdk.MustNewDecFromStr("70710.678118654752440084"), // 5000000000
+			sdk.MustNewDecFromStr("67416.615162732695593794"), // 4545000000
+			sdk.NewInt(5000000000),
+			"1517882.343751510417954720",
+			// https://www.wolframalpha.com/input?i=5000000000+%2F+%2870710.678118654752440084+-+67416.615162732695593794%29
 		},
 	}
 
@@ -88,11 +88,11 @@ func (suite *KeeperTestSuite) TestLiquidity0() {
 	}{
 		{
 			"happy path",
-			sdk.MustNewDecFromStr("70.710678"),
-			sdk.MustNewDecFromStr("74.161984"),
-			sdk.NewInt(1),
-			"1519.437618821730672389",
-			// https://www.wolframalpha.com/input?i=1+*+%2870.710678+*+74.161984%29+%2F+%2874.161984+-+70.710678%29
+			sdk.MustNewDecFromStr("70710.678118654752440084"), // 5000000000
+			sdk.MustNewDecFromStr("74161.984870956629487114"), // 5500000000
+			sdk.NewInt(1000000),
+			"1519437308014.768571711856000000",
+			// https://www.wolframalpha.com/input?i=1000000+*+%2870710.678118654752440084+*+74161.984870956629487114%29+%2F+%2874161.984870956629487114+-+70710.678118654752440084%29
 		},
 	}
 
@@ -125,11 +125,11 @@ func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount0RoundingUp() {
 	}{
 		{
 			"happy path 1",
-			sdk.NewDec(1377927219),
-			sdk.NewDecWithPrec(70710678, 6),
+			sdk.MustNewDecFromStr("1519437308014.768571711856000000"), // liquidity0 calculated above
+			sdk.MustNewDecFromStr("70710.678118654752440084"),
 			sdk.NewDec(133700),
-			"70.468932817327539027",
-			// https://www.wolframalpha.com/input?i=%281377927219+*+2+*+70.710678%29+%2F+%28%281377927219+*+2%29+%2B+%28133700+*+70.710678%29%29
+			"70491.377616533396953678",
+			// https://www.wolframalpha.com/input?i=%28%281519437308014.768571711856000000+*+2%29%29+%2F+%28%28%281519437308014.768571711856000000+*+2%29+%2F+%2870710.678118654752440084%29%29+%2B+%28133700%29%29
 		},
 	}
 
@@ -157,11 +157,11 @@ func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount1RoundingDown() {
 	}{
 		{
 			"happy path",
-			sdk.NewDec(1377927219),
-			sdk.NewDecWithPrec(70710678, 6),
+			sdk.MustNewDecFromStr("1517882.343751510417954720"), // liquidity1 calculated above
+			sdk.MustNewDecFromStr("70710.678118654752440084"),   // 5000000000
 			sdk.NewDec(42000000),
-			"70.741158564880981569",
-			// https://www.wolframalpha.com/input?i=70.710678+%2B+%2842000000+%2F+1377927219%29
+			"70738.348247484497717593",
+			// https://www.wolframalpha.com/input?i=70710.678118654752440084+%2B++%2842000000+%2F+1517882.343751510417954720%29
 		},
 	}
 
@@ -189,10 +189,10 @@ func (suite *KeeperTestSuite) TestCalcAmount0Delta() {
 	}{
 		{
 			"happy path",
-			sdk.NewDec(1377927219),
-			sdk.MustNewDecFromStr("70.710678"),
-			sdk.MustNewDecFromStr("74.161984"),
-			"906866",
+			sdk.MustNewDecFromStr("1517882.343751510417954720"), // liquidity0
+			sdk.MustNewDecFromStr("70710.678118654752440084"),   // 5000000000
+			sdk.MustNewDecFromStr("74161.984870956629487114"),   // 5500000000
+			"998976.618347426388000000",
 			// https://www.wolframalpha.com/input?i=%281377927219+*+%2874.161984+-+70.710678+%29%29+%2F+%2870.710678+*+74.161984%29
 		},
 	}
@@ -202,7 +202,7 @@ func (suite *KeeperTestSuite) TestCalcAmount0Delta() {
 
 		suite.Run(tc.name, func() {
 			amount0 := cl.CalcAmount0Delta(tc.liquidity, tc.sqrtPCurrent, tc.sqrtPUpper, false)
-			suite.Require().Equal(tc.amount0Expected, amount0.TruncateInt().String())
+			suite.Require().Equal(tc.amount0Expected, amount0.String())
 		})
 	}
 }
@@ -221,10 +221,10 @@ func (suite *KeeperTestSuite) TestCalcAmount1Delta() {
 	}{
 		{
 			"happy path",
-			sdk.NewDec(1377927219),
-			sdk.NewDecWithPrec(70710678, 6),
-			sdk.NewDecWithPrec(67082039, 6),
-			"5000000446",
+			sdk.MustNewDecFromStr("1517882.343751510417954720"),
+			sdk.MustNewDecFromStr("70710.678118654752440084"),
+			sdk.MustNewDecFromStr("67416.615162732695593794"),
+			"5000000000.000000000000001403",
 			// https://www.wolframalpha.com/input?i=1377927219+*+%2870.710678+-+67.082039%29
 		},
 	}
@@ -234,7 +234,7 @@ func (suite *KeeperTestSuite) TestCalcAmount1Delta() {
 
 		suite.Run(tc.name, func() {
 			amount1 := cl.CalcAmount1Delta(tc.liquidity, tc.sqrtPCurrent, tc.sqrtPLower, false)
-			suite.Require().Equal(tc.amount1Expected, amount1.TruncateInt().String())
+			suite.Require().Equal(tc.amount1Expected, amount1.String())
 		})
 	}
 }
