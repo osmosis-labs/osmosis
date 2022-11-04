@@ -150,6 +150,13 @@ func BinarySearch(f func(input sdk.Int) (sdk.Int, error),
 	return sdk.Int{}, errors.New("hit maximum iterations, did not converge fast enough")
 }
 
+// SdkDec
+type SdkDec[D any] interface {
+	Add(SdkDec[D]) SdkDec[D]
+	Quo(SdkDec[D]) SdkDec[D]
+	QuoRaw(int64) SdkDec[D]
+}
+
 // BinarySearchBigDec takes as input:
 // * an input range [lowerbound, upperbound]
 // * an increasing function f

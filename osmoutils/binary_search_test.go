@@ -116,14 +116,16 @@ func TestBinarySearchLineIterationCounts(t *testing.T) {
 		// first pass get it working with no err tolerance or rounding direction
 		target := lowerbound.Add(upperbound).QuoRaw(2)
 		for expectedItersToTarget := 1; expectedItersToTarget < maxNumIters; expectedItersToTarget++ {
-			for j := 0; j < 2; j++ {
+			// make two test cases, one at expected iter count, one at one below expected
+			// to guarantee were getting error as expected.
+			for subFromIter := 0; subFromIter < 2; subFromIter++ {
 				testCase := binarySearchTestCase{
 					f:          lineF,
-					lowerbound: lowerbound, upperbound: upperbound, targetOutput: target,
-					errTolerance:        errTolerance,
-					maxIterations:       expectedItersToTarget - j,
-					expectedSolvedInput: target,
-					expectErr:           j != 0,
+					lowerbound: lowerbound, upperbound: upperbound,
+					targetOutput: target, expectedSolvedInput: target,
+					errTolerance:  errTolerance,
+					maxIterations: expectedItersToTarget - subFromIter,
+					expectErr:     subFromIter != 0,
 				}
 				tcName := fmt.Sprintf("%s, target %s, iters %d, expError %v",
 					tcSetName, target.String(), expectedItersToTarget, testCase.expectErr)
