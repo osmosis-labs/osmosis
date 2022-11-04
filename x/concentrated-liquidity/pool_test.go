@@ -53,7 +53,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			tokenOutDenom: "eth",
 			priceLimit:    sdk.NewDec(5004),
 			// we expect to put 42 usdc in and in return get .008398 eth back
-			// due to limited liquidity, we actually put in 41.99 usdc and in return get .008396 eth back
+			// due to truncations and precision loss, we actually put in 41.99 usdc and in return get .008396 eth back
 			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(41999999)),
 			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(8396)),
 			expectedTick:     sdk.NewInt(85184),
@@ -338,7 +338,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 			tokenOutDenom: "eth",
 			priceLimit:    sdk.NewDec(5004),
 			// we expect to put 42 usdc in and in return get .008398 eth back
-			// due to limited liquidity, we actually put in 41.99 usdc and in return get .008396 eth back
+			// due to truncations and precision loss, we actually put in 41.99 usdc and in return get .008396 eth back
 			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(8396)),
 			expectedTick:     sdk.NewInt(85184),
 		},
