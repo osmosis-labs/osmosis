@@ -267,7 +267,7 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 
 	maxIterations := 256
 
-	// scale error tolerance by output asset's scaling factor
+	// we use a geometric error tolerance that guarantees approximately 10^-8 precision on outputs
 	errTolerance := osmoutils.BigDecErrTolerance{AdditiveTolerance: osmomath.BigDec{}, MultiplicativeTolerance: osmomath.NewDecWithPrec(1, 24)}
 
 	// create single-input CFMM to pass into binary search
@@ -358,7 +358,7 @@ func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee
 	// returned cfmmIn is negative, representing we need to add this many tokens to pool.
 	// We invert that negative here.
 	cfmmIn = cfmmIn.Neg()
-	// handle swap fee (divide by (1 - swapfee) to force a corresponding increase in input asset)
+	// divide by (1 - swapfee) to force a corresponding increase in input asset
 	inAmt := cfmmIn.QuoRoundUp(oneMinus(swapFee))
 	inCoinAmt := p.getDescaledPoolAmt(tokenInDenom, inAmt)
 	return inCoinAmt, nil
