@@ -50,15 +50,20 @@ pub fn try_transfer(
     now: Timestamp,
 ) -> Result<Response, ContractError> {
     // Sudo call. Only go modules should be allowed to access this
-    let trackers = RATE_LIMIT_TRACKERS.may_load(deps.storage, path.into())?;
 
-    let configured = match trackers {
-        None => false,
-        Some(ref x) if x.is_empty() => false,
-        _ => true,
-    };
+    // Fetch potential trackers for "any" channel of the required token
+    let any_path = Path::new("any", path.denom.clone());
+    let mut any_trackers = RATE_LIMIT_TRACKERS
+        .may_load(deps.storage, any_path.clone().into())?
+        .unwrap_or(vec![]);
+    // Fetch trackers for the requested path
+    let mut trackers = RATE_LIMIT_TRACKERS
+        .may_load(deps.storage, path.into())?
+        .unwrap_or(vec![]);
 
-    if !configured {
+    let not_configured = trackers.is_empty() && any_trackers.is_empty();
+
+    if not_configured {
         // No Quota configured for the current path. Allowing all messages.
         return Ok(Response::new()
             .add_attribute("method", "try_transfer")
@@ -67,16 +72,20 @@ pub fn try_transfer(
             .add_attribute("quota", "none"));
     }
 
-    let mut rate_limits = trackers.unwrap();
-
     // If any of the RateLimits fails, allow_transfer() will return
     // ContractError::RateLimitExceded, which we'll propagate out
-    let results: Vec<RateLimit> = rate_limits
+    let results: Vec<RateLimit> = trackers
+        .iter_mut()
+        .map(|limit| limit.allow_transfer(path, &direction, funds, channel_value, now))
+        .collect::<Result<_, ContractError>>()?;
+
+    let any_results: Vec<RateLimit> = any_trackers
         .iter_mut()
         .map(|limit| limit.allow_transfer(path, &direction, funds, channel_value, now))
         .collect::<Result<_, ContractError>>()?;
 
     RATE_LIMIT_TRACKERS.save(deps.storage, path.into(), &results)?;
+    RATE_LIMIT_TRACKERS.save(deps.storage, any_path.into(), &any_results)?;
 
     let response = Response::new()
         .add_attribute("method", "try_transfer")
@@ -85,7 +94,11 @@ pub fn try_transfer(
 
     // Adds the attributes for each path to the response. In prod, the
     // addtribute add_rate_limit_attributes is a noop
-    results.iter().fold(Ok(response), |acc, result| {
+    let response: Result<Response, ContractError> =
+        any_results.iter().fold(Ok(response), |acc, result| {
+            Ok(add_rate_limit_attributes(acc?, result))
+        });
+    results.iter().fold(Ok(response?), |acc, result| {
         Ok(add_rate_limit_attributes(acc?, result))
     })
 }
@@ -138,17 +151,19 @@ pub fn undo_send(
         None => extracted_denom,
     };
     let path = &Path::new(&channel_id, &denom);
+    let any_path = Path::new("any", &denom);
     let funds = packet.get_funds();
 
-    let trackers = RATE_LIMIT_TRACKERS.may_load(deps.storage, path.into())?;
+    let mut any_trackers = RATE_LIMIT_TRACKERS
+        .may_load(deps.storage, any_path.clone().into())?
+        .unwrap_or(vec![]);
+    let mut trackers = RATE_LIMIT_TRACKERS
+        .may_load(deps.storage, path.into())?
+        .unwrap_or(vec![]);
 
-    let configured = match trackers {
-        None => false,
-        Some(ref x) if x.is_empty() => false,
-        _ => true,
-    };
+    let not_configured = trackers.is_empty() && any_trackers.is_empty();
 
-    if !configured {
+    if not_configured {
         // No Quota configured for the current path. Allowing all messages.
         return Ok(Response::new()
             .add_attribute("method", "try_transfer")
@@ -157,10 +172,15 @@ pub fn undo_send(
             .add_attribute("quota", "none"));
     }
 
-    let mut rate_limits = trackers.unwrap();
-
     // We force update the flow to remove a failed send
-    let results: Vec<RateLimit> = rate_limits
+    let results: Vec<RateLimit> = trackers
+        .iter_mut()
+        .map(|limit| {
+            limit.flow.undo_flow(FlowType::Out, funds);
+            limit.to_owned()
+        })
+        .collect();
+    let any_results: Vec<RateLimit> = any_trackers
         .iter_mut()
         .map(|limit| {
             limit.flow.undo_flow(FlowType::Out, funds);
@@ -169,9 +189,11 @@ pub fn undo_send(
         .collect();
 
     RATE_LIMIT_TRACKERS.save(deps.storage, path.into(), &results)?;
+    RATE_LIMIT_TRACKERS.save(deps.storage, any_path.into(), &any_results)?;
 
     Ok(Response::new()
         .add_attribute("method", "undo_send")
         .add_attribute("channel_id", path.channel.to_string())
-        .add_attribute("denom", path.denom.to_string()))
+        .add_attribute("denom", path.denom.to_string())
+        .add_attribute("any_channel", (!any_trackers.is_empty()).to_string()))
 }

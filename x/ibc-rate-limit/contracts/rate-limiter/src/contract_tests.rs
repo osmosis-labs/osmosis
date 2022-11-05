@@ -58,7 +58,6 @@ fn consume_allowance() {
     );
     let res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
 
-    dbg!(&res);
     let Attribute { key, value } = &res.attributes[4];
     assert_eq!(key, "weekly_used_out");
     assert_eq!(value, "300");

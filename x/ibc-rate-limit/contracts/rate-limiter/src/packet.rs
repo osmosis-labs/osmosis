@@ -79,15 +79,7 @@ impl Packet {
     }
 
     pub fn path_data(&self, direction: &FlowType) -> (String, String) {
-        let denom = self.local_demom();
-        let channel = if denom.starts_with("transfer/") {
-            // We should probably use the hash here, but need to figure out how to do that in cosmwasm
-            self.local_channel(direction)
-        } else {
-            "any".to_string() // native tokens are rate limited globally
-        };
-
-        (channel, denom)
+        (self.local_channel(direction), self.local_demom())
     }
 }
 

@@ -385,6 +385,7 @@ fn add_paths_later() {
     );
     let cosmos_msg = cw_rate_limit_contract.sudo(msg.clone());
     let res = app.sudo(cosmos_msg).unwrap();
+    dbg!(&res);
     let Attribute { key, value } = &res.custom_attrs(1)[3];
     assert_eq!(key, "quota");
     assert_eq!(value, "none");
@@ -397,7 +398,8 @@ fn add_paths_later() {
     };
 
     let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
-    app.execute(Addr::unchecked(GOV_ADDR), cosmos_msg).unwrap();
+    let res = app.execute(Addr::unchecked(GOV_ADDR), cosmos_msg).unwrap();
+    dbg!(&res);
 
     // Executing the same message again should fail, as it is now rate limited
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
