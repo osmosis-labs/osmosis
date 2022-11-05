@@ -7,7 +7,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
 	github.com/cosmos/cosmos-sdk v0.46.1
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/iavl v0.19.1
+	github.com/cosmos/iavl v0.19.4
 	github.com/cosmos/ibc-go/v3 v3.3.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/mock v1.6.0
@@ -296,9 +296,7 @@ replace (
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk/tree/v12.x
 	// last commit: https://github.com/osmosis-labs/cosmos-sdk/tree/63f6778c9648aa01bd2a1c37d8914bdfe66f6cd0
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20221014170742-63f6778c9648
-	// Use Osmosis fast iavl
-	github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-osmo-v7
+	github.com/cosmos/cosmos-sdk => github.com/notional-labs/cosmos-sdk v0.45.1-0.20221105195056-51dd388a37a6
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// use grpc compatible with cosmos protobufs
