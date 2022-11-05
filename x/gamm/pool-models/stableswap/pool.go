@@ -148,7 +148,7 @@ func (p Pool) scaledSortedPoolReserves(first string, second string, round osmoma
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if err := validateScalingFactors(reorderedScalingFactors, len(reorderedLiquidity)); err != nil {
 		return nil, err
 	}
@@ -354,6 +354,11 @@ func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec)
 		return sdk.Coins{}, err
 	}
 
+	postExitLiquidity := p.PoolLiquidity.Sub(exitingCoins)
+	if err := validatePoolAssets(postExitLiquidity, p.ScalingFactor); err != nil {
+		return sdk.Coins{}, err
+	}
+
 	p.TotalShares.Amount = p.TotalShares.Amount.Sub(exitingShares)
 	p.updatePoolLiquidityForExit(exitingCoins)
 
@@ -418,6 +423,8 @@ func validatePoolAssets(initialAssets sdk.Coins, scalingFactors []uint64) error 
 	for i, asset := range initialAssets {
 		if asset.Amount.Quo(sdk.NewInt(int64(scalingFactors[i]))).GT(sdk.NewInt(types.StableswapMaxScaledAmtPerAsset)) {
 			return types.ErrHitMaxScaledAssets
+		} else if asset.Amount.Quo(sdk.NewInt(int64(scalingFactors[i]))).LT(sdk.NewInt(types.StableswapMinScaledAmtPerAsset)) {
+			return types.ErrHitMinScaledAssets
 		}
 	}
 

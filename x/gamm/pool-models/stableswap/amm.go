@@ -247,6 +247,9 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	xLowEst, xHighEst := xReserve, xReserve
 	k0 := cfmmConstantMultiNoV(xReserve, yFinal, wSumSquares)
 	k := cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares)
+	if k0.Equal(osmomath.ZeroDec()) || k.Equal(osmomath.ZeroDec()) {
+		panic("k should never be zero")
+	}
 	kRatio := k0.Quo(k)
 
 	if kRatio.LT(osmomath.OneDec()) {
@@ -265,7 +268,7 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	maxIterations := 256
 
 	// scale error tolerance by output asset's scaling factor
-	errTolerance := osmoutils.BigDecErrTolerance{AdditiveTolerance: osmomath.OneDec().Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier)), MultiplicativeTolerance: osmomath.NewDecWithPrec(1, 10)}
+	errTolerance := osmoutils.BigDecErrTolerance{AdditiveTolerance: osmomath.BigDec{}, MultiplicativeTolerance: osmomath.NewDecWithPrec(1, 24)}
 
 	// create single-input CFMM to pass into binary search
 	computeFromEst := func(xEst osmomath.BigDec) (osmomath.BigDec, error) {

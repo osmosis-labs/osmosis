@@ -15,8 +15,9 @@ const (
 	BalancerGasFeeForSwap = 10_000
 
 	StableswapMaxScaledAmtPerAsset = 10_000_000_000
-	// Allows default pools to accommodate up to 100B of each asset (assuming 6 decimal places precision)
-	ScalingFactorMultiplier = 10_000_000
+	StableswapMinScaledAmtPerAsset = 1
+	// TODO: increase this to 1_000_000 (aligned with 6 decimal place tokens) and update tests accordingly
+	ScalingFactorMultiplier = 1
 )
 
 var (

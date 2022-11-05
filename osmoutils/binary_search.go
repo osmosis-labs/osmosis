@@ -2,7 +2,6 @@ package osmoutils
 
 import (
 	"errors"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -208,9 +207,6 @@ func BinarySearchBigDec(f func(input osmomath.BigDec) (osmomath.BigDec, error),
 		} else if compRes < 0 {
 			lowerbound = curEstimate
 		} else {
-			fmt.Println("target: ", targetOutput)
-			fmt.Println("err tol: ", errTolerance.AdditiveTolerance)
-			fmt.Println("num binary search iterations: ", curIteration)
 			return curEstimate, nil
 		}
 		curEstimate = lowerbound.Add(upperbound).Quo(osmomath.NewBigDec(2))

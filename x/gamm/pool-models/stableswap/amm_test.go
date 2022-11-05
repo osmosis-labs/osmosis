@@ -13,7 +13,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/osmomath"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/test_helpers"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
 // CFMMTestCase defines a testcase for stableswap pools
@@ -871,25 +870,6 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 			expTokensJoined: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tenPercentOfTwoPoolRaw)), sdk.NewCoin("bar", sdk.NewInt(tenPercentOfTwoPoolRaw))),
 			expPoolAssets:   twoAssetPlusTenPercent,
 			expectPass:      true,
-		},
-		"all-asset pool join attempt exceeds max scaled asset amount": {
-			tokensIn: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 1),
-				sdk.NewInt64Coin("bar", 1),
-			),
-			poolAssets: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 10 * types.ScalingFactorMultiplier),
-				sdk.NewInt64Coin("bar", 10 * types.ScalingFactorMultiplier),
-			),
-			scalingFactors:  defaultTwoAssetScalingFactors,
-			swapFee:         sdk.ZeroDec(),
-			expNumShare:     sdk.ZeroInt(),
-			expTokensJoined: sdk.Coins{},
-			expPoolAssets: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 10 * types.ScalingFactorMultiplier),
-				sdk.NewInt64Coin("bar", 10 * types.ScalingFactorMultiplier),
-			),
-			expectPass: false,
 		},
 		"single-asset pool join exceeds hits max scaled asset amount": {
 			tokensIn: sdk.NewCoins(
