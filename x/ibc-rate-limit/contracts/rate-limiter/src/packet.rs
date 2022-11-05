@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Deps, Timestamp, Uint256};
+use cosmwasm_std::{Addr, Deps, StdError, Timestamp, Uint256};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -55,14 +55,14 @@ impl Packet {
         }
     }
 
-    pub fn channel_value(&self, _deps: Deps) -> Uint256 {
-        // let balance = deps.querier.query_all_balances("address", self.data.denom);
-        // deps.querier.sup
-        return Uint256::from(125000000000011250_u128 * 2);
+    pub fn channel_value(&self, deps: Deps) -> Result<Uint256, StdError> {
+        deps.querier
+            .query_supply(self.local_demom())
+            .map(|c| c.amount.into())
     }
 
     pub fn get_funds(&self) -> Uint256 {
-        return self.data.amount;
+        self.data.amount
     }
 
     fn local_channel(&self, direction: &FlowType) -> String {
@@ -75,7 +75,7 @@ impl Packet {
 
     fn local_demom(&self) -> String {
         // This should actually convert the denom from the packet to the osmosis denom, but for now, just returning this
-        return self.data.denom.clone();
+        self.data.denom.clone()
     }
 
     pub fn path_data(&self, direction: &FlowType) -> (String, String) {
@@ -87,7 +87,7 @@ impl Packet {
             "any".to_string() // native tokens are rate limited globally
         };
 
-        return (channel, denom);
+        (channel, denom)
     }
 }
 
