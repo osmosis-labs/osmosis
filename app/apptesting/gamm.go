@@ -48,6 +48,7 @@ func (s *KeeperTestHelper) PrepareBalancerPool() uint64 {
 		ExitFee: sdk.NewDec(0),
 	})
 
+	// note to reviewers: please double check if these are correct
 	spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, "foo", "bar")
 	s.NoError(err)
 	s.Equal(sdk.NewDec(2).String(), spotPrice.String())
