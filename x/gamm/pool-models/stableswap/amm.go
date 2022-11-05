@@ -394,7 +394,7 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 
 		p.updatePoolForJoin(newLiquidity, numShares)
 
-		if err = validatePoolAssets(p.PoolLiquidity, p.ScalingFactor); err != nil {
+		if err = validatePoolLiquidity(p.PoolLiquidity, p.ScalingFactors); err != nil {
 			return sdk.ZeroInt(), sdk.NewCoins(), err
 		}
 
@@ -413,7 +413,7 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 
 	tokensJoined := tokensIn.Sub(remCoins)
 
-	if err = validatePoolAssets(p.PoolLiquidity, p.ScalingFactor); err != nil {
+	if err = validatePoolLiquidity(p.PoolLiquidity, p.ScalingFactors); err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
 

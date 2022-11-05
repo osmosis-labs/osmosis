@@ -68,7 +68,7 @@ func poolStructFromAssets(assets sdk.Coins, scalingFactors []uint64) Pool {
 		PoolParams:         defaultStableswapPoolParams,
 		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),
 		PoolLiquidity:      assets,
-		ScalingFactor:      applyScalingFactorMultiplier(scalingFactors),
+		ScalingFactors:      applyScalingFactorMultiplier(scalingFactors),
 		FuturePoolGovernor: defaultFutureGovernor,
 	}
 	return p
