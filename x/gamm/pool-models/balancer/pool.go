@@ -625,10 +625,12 @@ func (p Pool) SpotPrice(ctx sdk.Context, quoteAsset, baseAsset string) (spotPric
 		return sdk.Dec{}, errors.New("pool is misconfigured, got 0 weight")
 	}
 
-	// spot_price = (Base_supply / Weight_base) / (Quote_supply / Weight_quote)
-	// spot_price = (weight_quote / weight_base) * (base_supply / quote_supply)
+	// spot_price = (Quote_supply / Weight_quote) / (base_supply / Weight_base)
+	// spot_price = (weight_base / weight_quote) * (quote_supply / base_supply)
 	invWeightRatio := base.Weight.ToDec().Quo(quote.Weight.ToDec())
 	supplyRatio := quote.Token.Amount.ToDec().Quo(base.Token.Amount.ToDec())
+	fmt.Println("invWeightRatio", invWeightRatio)
+	fmt.Println("supplyRatio", supplyRatio)
 	spotPrice = supplyRatio.Mul(invWeightRatio)
 
 	return spotPrice, err
