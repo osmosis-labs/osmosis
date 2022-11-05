@@ -164,7 +164,7 @@ func (s *TestSuite) TestEndBlock() {
 			}
 
 			// check if spot price has been correctly updated in twap record
-			asset0sp, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, twapAfterBlock1.Asset0Denom, twapAfterBlock1.Asset1Denom)
+			asset0sp, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, twapAfterBlock1.Asset1Denom, twapAfterBlock1.Asset0Denom)
 			s.Require().NoError(err)
 			s.Require().Equal(asset0sp, twapAfterBlock1.P0LastSpotPrice)
 
@@ -192,7 +192,7 @@ func (s *TestSuite) TestEndBlock() {
 			}
 
 			// check if spot price has been correctly updated in twap record
-			asset0sp, err = s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, twapAfterBlock1.Asset0Denom, twapAfterBlock2.Asset1Denom)
+			asset0sp, err = s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, twapAfterBlock2.Asset1Denom, twapAfterBlock1.Asset0Denom)
 			s.Require().NoError(err)
 			s.Require().Equal(asset0sp, twapAfterBlock2.P0LastSpotPrice)
 		})

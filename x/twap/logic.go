@@ -44,8 +44,8 @@ func getSpotPrices(
 	previousErrorTime time.Time,
 ) (sp0 sdk.Dec, sp1 sdk.Dec, latestErrTime time.Time) {
 	latestErrTime = previousErrorTime
-	sp0, err0 := k.CalculateSpotPrice(ctx, poolId, denom0, denom1)
-	sp1, err1 := k.CalculateSpotPrice(ctx, poolId, denom1, denom0)
+	sp0, err0 := k.CalculateSpotPrice(ctx, poolId, denom1, denom0)
+	sp1, err1 := k.CalculateSpotPrice(ctx, poolId, denom0, denom1)
 	if err0 != nil || err1 != nil {
 		latestErrTime = ctx.BlockTime()
 		// In the event of an error, we just sanity replace empty values with zero values

@@ -71,8 +71,8 @@ func (p *ProgrammedAmmInterface) GetPoolDenoms(ctx sdk.Context, poolId uint64) (
 
 func (p *ProgrammedAmmInterface) CalculateSpotPrice(ctx sdk.Context,
 	poolId uint64,
-	baseDenom,
-	quoteDenom string,
+	quoteDenom,
+	baseDenom string,
 ) (price sdk.Dec, err error) {
 	input := SpotPriceInput{poolId, baseDenom, quoteDenom}
 	if res, ok := p.programmedSpotPrice[input]; ok {
