@@ -144,7 +144,6 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			if test.expectPass {
 				require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
-				require.Equal(t, test.msg.Route(), types.RouterKey)
 				require.Equal(t, test.msg.Type(), "set_validator_set_preference")
 				signers := test.msg.GetSigners()
 				require.Equal(t, len(signers), 1)

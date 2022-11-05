@@ -8,13 +8,13 @@ import (
 )
 
 type Querier struct {
-	K validatorprefkeeper.Keeper
+	validatorprefkeeper.Keeper
 }
 
 var _ queryproto.QueryServer = Querier{}
 
 func NewQuerier(k validatorprefkeeper.Keeper) Querier {
-	return Querier{K: k}
+	return Querier{k}
 }
 
 func (q Querier) UserValidatorPreferences(ctx context.Context, req *queryproto.QueryUserValidatorPreferences) (*queryproto.QueryUserValidatorPreferenceResponse, error) {

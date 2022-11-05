@@ -23,15 +23,14 @@ func NewMsgSetValidatorSetPreference(delegator sdk.AccAddress, preferences []Val
 	}
 }
 
-func (m MsgSetValidatorSetPreference) Route() string { return RouterKey }
-func (m MsgSetValidatorSetPreference) Type() string  { return TypeMsgSetValidatorSetPreference }
+func (m MsgSetValidatorSetPreference) Type() string { return TypeMsgSetValidatorSetPreference }
 func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Delegator)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid delegator address (%s)", err)
 	}
 
-	total_weight := sdk.NewDec(0)
+	totalWeight := sdk.ZeroDec()
 	validatorAddrs := []string{}
 	for _, validator := range m.Preferences {
 		_, err := sdk.ValAddressFromBech32(validator.ValOperAddress)
@@ -39,7 +38,7 @@ func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid validator address (%s)", err)
 		}
 
-		total_weight = total_weight.Add(validator.Weight)
+		totalWeight = totalWeight.Add(validator.Weight)
 		validatorAddrs = append(validatorAddrs, validator.ValOperAddress)
 	}
 
@@ -50,8 +49,8 @@ func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 	}
 
 	// check if the total validator distribution weights equal 1
-	if !total_weight.Equal(sdk.NewDec(1)) {
-		return fmt.Errorf("The weights allocated to the validators do not add up to 1, Got: %d", total_weight)
+	if !totalWeight.Equal(sdk.OneDec()) {
+		return fmt.Errorf("The weights allocated to the validators do not add up to 1, Got: %d", totalWeight)
 	}
 
 	return nil
@@ -82,8 +81,7 @@ func NewMsgMsgStakeToValidatorSet(delegator sdk.AccAddress, coin sdk.Coin) *MsgD
 	}
 }
 
-func (m MsgDelegateToValidatorSet) Route() string { return RouterKey }
-func (m MsgDelegateToValidatorSet) Type() string  { return TypeMsgDelegateToValidatorSet }
+func (m MsgDelegateToValidatorSet) Type() string { return TypeMsgDelegateToValidatorSet }
 func (m MsgDelegateToValidatorSet) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Delegator)
 	if err != nil {
@@ -121,8 +119,7 @@ func NewMsgUndelegateFromValidatorSet(delegator sdk.AccAddress, coin sdk.Coin) *
 	}
 }
 
-func (m MsgUndelegateFromValidatorSet) Route() string { return RouterKey }
-func (m MsgUndelegateFromValidatorSet) Type() string  { return TypeMsgUndelegateFromValidatorSet }
+func (m MsgUndelegateFromValidatorSet) Type() string { return TypeMsgUndelegateFromValidatorSet }
 func (m MsgUndelegateFromValidatorSet) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Delegator)
 	if err != nil {
@@ -159,8 +156,7 @@ func NewMsgWithdrawDelegationRewards(delegator sdk.AccAddress) *MsgWithdrawDeleg
 	}
 }
 
-func (m MsgWithdrawDelegationRewards) Route() string { return RouterKey }
-func (m MsgWithdrawDelegationRewards) Type() string  { return TypeMsgWithdrawDelegationRewards }
+func (m MsgWithdrawDelegationRewards) Type() string { return TypeMsgWithdrawDelegationRewards }
 func (m MsgWithdrawDelegationRewards) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Delegator)
 	if err != nil {
