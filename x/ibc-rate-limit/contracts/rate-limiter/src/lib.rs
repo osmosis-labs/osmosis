@@ -1,3 +1,5 @@
+#![allow(clippy::result_large_err)]
+
 // Contract
 pub mod contract;
 mod error;
