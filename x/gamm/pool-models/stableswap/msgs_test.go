@@ -122,7 +122,7 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "scaling factors with invalid lenght",
+			name: "scaling factors with invalid length",
 			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.ScalingFactors = []uint64{1, 2, 3}
 				return msg
@@ -209,6 +209,20 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 				return msg
 			}),
 			expectPass: true,
+		},
+		{
+			name: "post-scaled asset amount less than 1",
+			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
+				msg.InitialPoolLiquidity = sdk.Coins{
+					sdk.NewCoin("osmo", sdk.NewInt(100)),
+					sdk.NewCoin("atom", sdk.NewInt(100)),
+					sdk.NewCoin("usdt", sdk.NewInt(100)),
+					sdk.NewCoin("usdc", sdk.NewInt(100)),
+				}
+				msg.ScalingFactors = []uint64{1000, 1, 1, 1}
+				return msg
+			}),
+			expectPass: false,
 		},
 		{
 			name: "max asset amounts",

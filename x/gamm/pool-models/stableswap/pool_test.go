@@ -68,7 +68,7 @@ func poolStructFromAssets(assets sdk.Coins, scalingFactors []uint64) Pool {
 		PoolParams:         defaultStableswapPoolParams,
 		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),
 		PoolLiquidity:      assets,
-		ScalingFactors:      applyScalingFactorMultiplier(scalingFactors),
+		ScalingFactors:     applyScalingFactorMultiplier(scalingFactors),
 		FuturePoolGovernor: defaultFutureGovernor,
 	}
 	return p
@@ -210,8 +210,8 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{(1 << 62) / types.ScalingFactorMultiplier, (1 << 62) / types.ScalingFactorMultiplier},
 			expReserves: []osmomath.BigDec{
-				(osmomath.NewBigDec(1000000000).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier))).Quo(osmomath.NewBigDec(int64(1 << 62) / types.ScalingFactorMultiplier)),
-				(osmomath.NewBigDec(1000000000).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier))).Quo(osmomath.NewBigDec(int64(1 << 62) / types.ScalingFactorMultiplier)),
+				(osmomath.NewBigDec(1000000000).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier))).Quo(osmomath.NewBigDec(int64(1<<62) / types.ScalingFactorMultiplier)),
+				(osmomath.NewBigDec(1000000000).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier))).Quo(osmomath.NewBigDec(int64(1<<62) / types.ScalingFactorMultiplier)),
 			},
 		},
 		"zero scaling factor": {
@@ -655,9 +655,9 @@ func TestSwapOutAmtGivenIn(t *testing.T) {
 		expError              bool
 	}{
 		"even pool basic trade": {
-			poolAssets:     twoEvenStablePoolAssets,
-			scalingFactors: defaultTwoAssetScalingFactors,
-			tokenIn:        sdk.NewCoins(sdk.NewInt64Coin("foo", 100)),
+			poolAssets:            twoEvenStablePoolAssets,
+			scalingFactors:        defaultTwoAssetScalingFactors,
+			tokenIn:               sdk.NewCoins(sdk.NewInt64Coin("foo", 100)),
 			expectedTokenOut:      sdk.NewInt64Coin("bar", 100),
 			expectedPoolLiquidity: twoEvenStablePoolAssets.Add(sdk.NewInt64Coin("foo", 100)).Sub(sdk.NewCoins(sdk.NewInt64Coin("bar", 100))),
 			swapFee:               sdk.ZeroDec(),
@@ -721,9 +721,9 @@ func TestSwapInAmtGivenOut(t *testing.T) {
 		expError              bool
 	}{
 		"even pool basic trade": {
-			poolAssets:     twoEvenStablePoolAssets,
-			scalingFactors: defaultTwoAssetScalingFactors,
-			tokenOut:       sdk.NewCoins(sdk.NewInt64Coin("bar", 100)),
+			poolAssets:            twoEvenStablePoolAssets,
+			scalingFactors:        defaultTwoAssetScalingFactors,
+			tokenOut:              sdk.NewCoins(sdk.NewInt64Coin("bar", 100)),
 			expectedTokenIn:       sdk.NewInt64Coin("foo", 100),
 			expectedPoolLiquidity: twoEvenStablePoolAssets.Add(sdk.NewInt64Coin("foo", 100)).Sub(sdk.NewCoins(sdk.NewInt64Coin("bar", 100))),
 			swapFee:               sdk.ZeroDec(),
@@ -731,30 +731,30 @@ func TestSwapInAmtGivenOut(t *testing.T) {
 		},
 		"trade hits max pool capacity for asset": {
 			poolAssets: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 9_999_999_997 * types.ScalingFactorMultiplier),
-				sdk.NewInt64Coin("bar", 9_999_999_997 * types.ScalingFactorMultiplier),
+				sdk.NewInt64Coin("foo", 9_999_999_997*types.ScalingFactorMultiplier),
+				sdk.NewInt64Coin("bar", 9_999_999_997*types.ScalingFactorMultiplier),
 			),
 			scalingFactors:  defaultTwoAssetScalingFactors,
-			tokenOut:        sdk.NewCoins(sdk.NewInt64Coin("bar", 1 * types.ScalingFactorMultiplier)),
-			expectedTokenIn: sdk.NewInt64Coin("foo", 1 * types.ScalingFactorMultiplier),
+			tokenOut:        sdk.NewCoins(sdk.NewInt64Coin("bar", 1*types.ScalingFactorMultiplier)),
+			expectedTokenIn: sdk.NewInt64Coin("foo", 1*types.ScalingFactorMultiplier),
 			expectedPoolLiquidity: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 9_999_999_998 * types.ScalingFactorMultiplier),
-				sdk.NewInt64Coin("bar", 9_999_999_996 * types.ScalingFactorMultiplier),
+				sdk.NewInt64Coin("foo", 9_999_999_998*types.ScalingFactorMultiplier),
+				sdk.NewInt64Coin("bar", 9_999_999_996*types.ScalingFactorMultiplier),
 			),
 			swapFee:  sdk.ZeroDec(),
 			expError: false,
 		},
 		"trade exceeds max pool capacity for asset": {
 			poolAssets: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 10_000_000_000 * types.ScalingFactorMultiplier),
-				sdk.NewInt64Coin("bar", 10_000_000_000 * types.ScalingFactorMultiplier),
+				sdk.NewInt64Coin("foo", 10_000_000_000*types.ScalingFactorMultiplier),
+				sdk.NewInt64Coin("bar", 10_000_000_000*types.ScalingFactorMultiplier),
 			),
 			scalingFactors:  defaultTwoAssetScalingFactors,
 			tokenOut:        sdk.NewCoins(sdk.NewInt64Coin("bar", 1)),
 			expectedTokenIn: sdk.Coin{},
 			expectedPoolLiquidity: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 10_000_000_000 * types.ScalingFactorMultiplier),
-				sdk.NewInt64Coin("bar", 10_000_000_000 * types.ScalingFactorMultiplier),
+				sdk.NewInt64Coin("foo", 10_000_000_000*types.ScalingFactorMultiplier),
+				sdk.NewInt64Coin("bar", 10_000_000_000*types.ScalingFactorMultiplier),
 			),
 			swapFee:  sdk.ZeroDec(),
 			expError: true,
@@ -921,6 +921,70 @@ func TestInverseJoinPoolExitPool(t *testing.T) {
 				finalPoolLiquidity := p.GetTotalPoolLiquidity(ctx)
 				require.True(t, tokenOut.IsAllLTE(expectedTokenOut))
 				require.True(t, finalPoolLiquidity.IsAllGTE(tc.poolAssets))
+			}
+			osmoassert.ConditionalError(t, !tc.expectPass, err)
+		})
+	}
+}
+
+func TestExitPool(t *testing.T) {
+	tenPercentOfTwoPoolCoins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(int64(1000000000/10))), sdk.NewCoin("bar", sdk.NewInt(int64(1000000000/10))))
+	tenPercentOfThreePoolCoins := sdk.NewCoins(sdk.NewCoin("asset/a", sdk.NewInt(1000000/10)), sdk.NewCoin("asset/b", sdk.NewInt(1000000/10)), sdk.NewCoin("asset/c", sdk.NewInt(1000000/10)))
+	tenPercentOfUnevenThreePoolCoins := sdk.NewCoins(sdk.NewCoin("asset/a", sdk.NewInt(1000000/10)), sdk.NewCoin("asset/b", sdk.NewInt(2000000/10)), sdk.NewCoin("asset/c", sdk.NewInt(3000000/10)))
+	type testcase struct {
+		sharesIn              sdk.Int
+		initialPoolLiquidity  sdk.Coins
+		scalingFactors        []uint64
+		expectedPoolLiquidity sdk.Coins
+		expectedTokenOut      sdk.Coins
+		expectPass            bool
+	}
+	tests := map[string]testcase{
+		"basic two-asset pool exit on even pool": {
+			sharesIn:              types.InitPoolSharesSupply.Quo(sdk.NewInt(10)),
+			initialPoolLiquidity:  twoEvenStablePoolAssets,
+			scalingFactors:        defaultTwoAssetScalingFactors,
+			expectedPoolLiquidity: twoEvenStablePoolAssets.Sub(tenPercentOfTwoPoolCoins),
+			expectedTokenOut:      tenPercentOfTwoPoolCoins,
+			expectPass:            true,
+		},
+		"basic three-asset pool exit on even pool": {
+			sharesIn:              types.InitPoolSharesSupply.Quo(sdk.NewInt(10)),
+			initialPoolLiquidity:  threeEvenStablePoolAssets,
+			scalingFactors:        defaultThreeAssetScalingFactors,
+			expectedPoolLiquidity: threeEvenStablePoolAssets.Sub(tenPercentOfThreePoolCoins),
+			expectedTokenOut:      tenPercentOfThreePoolCoins,
+			expectPass:            true,
+		},
+		"basic three-asset pool exit on uneven pool": {
+			sharesIn:              types.InitPoolSharesSupply.Quo(sdk.NewInt(10)),
+			initialPoolLiquidity:  threeUnevenStablePoolAssets,
+			scalingFactors:        defaultThreeAssetScalingFactors,
+			expectedPoolLiquidity: threeUnevenStablePoolAssets.Sub(tenPercentOfUnevenThreePoolCoins),
+			expectedTokenOut:      tenPercentOfUnevenThreePoolCoins,
+			expectPass:            true,
+		},
+		"pool exit pushes post-scaled asset below 1": {
+			// attempt to exit one token when post-scaled amount is already 1 for each asset
+			sharesIn:              types.InitPoolSharesSupply.Quo(sdk.NewInt(1000000)),
+			initialPoolLiquidity:  threeEvenStablePoolAssets,
+			scalingFactors:        []uint64{1000000 / types.ScalingFactorMultiplier, 100000 / types.ScalingFactorMultiplier, 100000 / types.ScalingFactorMultiplier},
+			expectedPoolLiquidity: threeEvenStablePoolAssets,
+			expectedTokenOut:      sdk.Coins{},
+			expectPass:            false,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := sdk.Context{}
+			p := poolStructFromAssets(tc.initialPoolLiquidity, tc.scalingFactors)
+			tokenOut, err := p.ExitPool(ctx, tc.sharesIn, defaultExitFee)
+
+			if tc.expectPass {
+				finalPoolLiquidity := p.GetTotalPoolLiquidity(ctx)
+				require.True(t, tokenOut.IsAllLTE(tc.expectedTokenOut))
+				require.True(t, finalPoolLiquidity.IsAllGTE(tc.expectedPoolLiquidity))
 			}
 			osmoassert.ConditionalError(t, !tc.expectPass, err)
 		})
