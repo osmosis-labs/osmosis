@@ -49,7 +49,7 @@ func calcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 	if roundUp {
 		return liq.Mul(diff.QuoRoundUp(denom)).Ceil()
 	}
-	return liq.Mul((diff.Quo(denom)))
+	return liq.Mul(diff.Quo(denom))
 }
 
 // calcAmount1 takes the asset with the smaller liquidity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 1
