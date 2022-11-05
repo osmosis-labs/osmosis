@@ -40,7 +40,7 @@ service Query {
 
   // Simulates joining pool without a swap. Returns the amount of shares you'd get
   // and tokens needed to provide
-  rpc SimJoinPoolNoSwap(QueryJoinPoolNoSwapRequest)
+  rpc CalcJoinPoolNoSwap(QueryJoinPoolNoSwapRequest)
       returns (QueryJoinPoolNoSwapResponse) {}
 
   rpc CalcJoinPoolShares(QueryCalcJoinPoolSharesRequest)

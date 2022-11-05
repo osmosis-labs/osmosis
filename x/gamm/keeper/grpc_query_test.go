@@ -87,7 +87,7 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestSimJoinPoolNoSwap() {
+func (suite *KeeperTestSuite) TestCalcJoinPoolNoSwap() {
 	queryClient := suite.queryClient
 	poolId := suite.PrepareBalancerPool()
 	ctx := suite.Ctx
@@ -104,13 +104,6 @@ func (suite *KeeperTestSuite) TestSimJoinPoolNoSwap() {
 			poolId:          poolId,
 
 			expectingErr: false,
-		},
-		{
-			name:            "too much shares required",
-			sharesOutAmount: types.InitPoolSharesSupply.Mul(sdk.NewInt(2)),
-			poolId:          poolId,
-
-			expectingErr: true,
 		},
 		{
 			name:            "invalid pool id",
@@ -143,7 +136,7 @@ func (suite *KeeperTestSuite) TestSimJoinPoolNoSwap() {
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			out, err := queryClient.SimJoinPoolNoSwap(gocontext.Background(), &types.QueryJoinPoolNoSwapRequest{
+			out, err := queryClient.CalcJoinPoolNoSwap(gocontext.Background(), &types.QueryJoinPoolNoSwapRequest{
 				PoolId:          tc.poolId,
 				SharesOutAmount: tc.sharesOutAmount,
 			})
