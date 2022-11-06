@@ -2,6 +2,7 @@ package osmoutils
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -75,17 +76,13 @@ func lineF(a osmomath.BigDec) (osmomath.BigDec, error) {
 	return a, nil
 }
 func cubicF(a osmomath.BigDec) (osmomath.BigDec, error) {
-	// these precision shifts are done implicitly in the int binary search tests
-	// we keep them here to maintain parity between test cases across implementations
-	// TODO: What does the above comment mean???
-	calculation := a.Quo(osmomath.NewBigDec(10).Power(18))
-	result := calculation.Power(3)
-	output := result.Mul(osmomath.NewBigDec(10).Power(18))
-	return output, nil
+	return a.Power(3), nil
 }
 
+type searchFn func(osmomath.BigDec) (osmomath.BigDec, error)
+
 type binarySearchTestCase struct {
-	f             func(osmomath.BigDec) (osmomath.BigDec, error)
+	f             searchFn
 	lowerbound    osmomath.BigDec
 	upperbound    osmomath.BigDec
 	targetOutput  osmomath.BigDec
@@ -107,7 +104,6 @@ type binarySearchTestCase struct {
 // to find the answer to binary search on a line.
 func TestBinarySearchLineIterationCounts(t *testing.T) {
 	tests := map[string]binarySearchTestCase{}
-
 	withinOne := ErrTolerance{AdditiveTolerance: sdk.OneInt()}
 
 	generateExactTestCases := func(lowerbound, upperbound osmomath.BigDec,
@@ -133,16 +129,60 @@ func TestBinarySearchLineIterationCounts(t *testing.T) {
 			}
 			target = lowerbound.Add(target).QuoRaw(2)
 		}
-
 	}
 
 	generateExactTestCases(osmomath.ZeroDec(), osmomath.NewBigDec(1<<20), withinOne, 20)
 	// we can go further than 50, if we could specify non-integer additive err tolerance. TODO: Add this.
 	generateExactTestCases(osmomath.NewBigDec(1<<20), osmomath.NewBigDec(1<<50), withinOne, 50)
-	runBinarySearchTestCases(t, tests)
+	runBinarySearchTestCases(t, tests, exactlyEqual)
 }
 
-func runBinarySearchTestCases(t *testing.T, tests map[string]binarySearchTestCase) {
+var fnMap = map[string]searchFn{"line": lineF, "cubic": cubicF}
+
+// This function tests that any value in a given range can be reached within expected num iterations.
+func TestIterationDepthRandValue(t *testing.T) {
+	tests := map[string]binarySearchTestCase{}
+	exactEqual := ErrTolerance{AdditiveTolerance: sdk.ZeroInt()}
+	withinOne := ErrTolerance{AdditiveTolerance: sdk.OneInt()}
+	within32 := ErrTolerance{AdditiveTolerance: sdk.OneInt().MulRaw(32)}
+
+	createRandInput := func(fnName string, lowerbound, upperbound int64,
+		errTolerance ErrTolerance, maxNumIters int, errToleranceName string) {
+		targetF := fnMap[fnName]
+		targetX := int64(rand.Intn(int(upperbound-lowerbound-1))) + lowerbound + 1
+		target, _ := targetF(osmomath.NewBigDec(targetX))
+		testCase := binarySearchTestCase{
+			f:          lineF,
+			lowerbound: osmomath.NewBigDec(lowerbound), upperbound: osmomath.NewBigDec(upperbound),
+			targetOutput: target, expectedSolvedInput: target,
+			errTolerance:  errTolerance,
+			maxIterations: maxNumIters,
+			expectErr:     false,
+		}
+		tcname := fmt.Sprintf("%s: lower %d, upper %d, in %d iter of %s, rand target %d",
+			fnName, lowerbound, upperbound, maxNumIters, errToleranceName, target)
+		tests[tcname] = testCase
+	}
+	for i := 0; i < 1000; i++ {
+		// Takes a 21st iteration to guaranteeably get 0
+		createRandInput("line", 0, 1<<20, exactEqual, 21, "exactly equal")
+		// Takes 20 iterations to guaranteeably get 1 within 0.
+		createRandInput("line", 0, 1<<20, withinOne, 20, "within one")
+		// Takes 15 iterations to guaranteeably get to 32. Needed to reach any number in [0, 31]
+		createRandInput("line", 0, 1<<20, within32, 15, "within 32")
+	}
+	runBinarySearchTestCases(t, tests, errToleranceEqual)
+}
+
+type equalityMode int
+
+const (
+	exactlyEqual      equalityMode = iota
+	errToleranceEqual equalityMode = iota
+	equalWithinOne    equalityMode = iota
+)
+
+func runBinarySearchTestCases(t *testing.T, tests map[string]binarySearchTestCase, equality equalityMode) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			roundUp := osmomath.RoundUp
@@ -151,29 +191,56 @@ func runBinarySearchTestCases(t *testing.T, tests map[string]binarySearchTestCas
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.True(osmomath.DecApproxEq(t, tc.expectedSolvedInput, actualSolvedInput, osmomath.OneDec()))
+				if equality == exactlyEqual {
+					require.True(osmomath.DecEq(t, tc.expectedSolvedInput, actualSolvedInput))
+				} else if equality == errToleranceEqual {
+					require.True(t, tc.errTolerance.CompareBigDec(tc.expectedSolvedInput, actualSolvedInput) == 0)
+				} else {
+					_, valid, msg, dec1, dec2 := osmomath.DecApproxEq(t, tc.expectedSolvedInput, actualSolvedInput, osmomath.OneDec())
+					require.True(t, valid, msg+" \n d1 = %s, d2 = %s", dec1, dec2,
+						tc.expectedSolvedInput, actualSolvedInput)
+				}
 			}
 		})
 	}
 }
 
 func TestBinarySearchBigDec(t *testing.T) {
-	lowErrTolerance := ErrTolerance{AdditiveTolerance: sdk.OneInt()}
-	testErrToleranceAdditive := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20)}
-	testErrToleranceMultiplicative := ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.NewDec(10)}
-	testErrToleranceBoth := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20), MultiplicativeTolerance: sdk.NewDec(1 << 3)}
+	withinOne := ErrTolerance{AdditiveTolerance: sdk.OneInt()}
+	testErrToleranceAdditive := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 30)}
+	withinFactor8 := ErrTolerance{MultiplicativeTolerance: sdk.NewDec(8)}
+	errToleranceBoth := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 30), MultiplicativeTolerance: sdk.NewDec(1 << 3)}
+
+	zero := osmomath.ZeroDec()
+	twoTo50 := osmomath.NewBigDec(1 << 50)
+	twoTo25PlusOne := osmomath.NewBigDec(1 + (1 << 25))
+	twoTo25PlusOneCubed := twoTo25PlusOne.Power(3)
+
 	tests := map[string]binarySearchTestCase{
-		"cubic f, no err tolerance, converges":                           {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), lowErrTolerance, 51, osmomath.NewBigDec(322539792367616), false},
-		"cubic f, no err tolerance, does not converge":                   {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), lowErrTolerance, 10, osmomath.BigDec{}, true},
-		"cubic f, large additive err tolerance, converges":               {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 15)), testErrToleranceAdditive, 51, osmomath.NewBigDec(1 << 46), false},
-		"cubic f, large additive err tolerance, does not converge":       {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 30)), testErrToleranceAdditive, 10, osmomath.BigDec{}, true},
-		"cubic f, large multiplicative err tolerance, converges":         {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), testErrToleranceMultiplicative, 51, osmomath.NewBigDec(322539792367616), false},
-		"cubic f, large multiplicative err tolerance, does not converge": {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec(1 + (1 << 25)), testErrToleranceMultiplicative, 10, osmomath.BigDec{}, true},
-		"cubic f, both err tolerances, converges":                        {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 15)), testErrToleranceBoth, 51, osmomath.NewBigDec(1 << 45), false},
-		"cubic f, both err tolerances, does not converge":                {cubicF, osmomath.ZeroDec(), osmomath.NewBigDec(1 << 50), osmomath.NewBigDec((1 << 30)), testErrToleranceBoth, 10, osmomath.BigDec{}, true},
+		"cubic f, no err tolerance, converges":     {cubicF, zero, twoTo50, twoTo25PlusOneCubed, withinOne, 51, twoTo25PlusOne, false},
+		"cubic f, no err tolerance, not converges": {cubicF, zero, twoTo50, twoTo25PlusOneCubed, withinOne, 10, twoTo25PlusOne, true},
+		// Target = 2^33 + 2^29, so correct input is 2^11 + e, for e < 2^10.
+		// additive error tolerance is 2^30. So we converge at first value
+		// whose cube is within 2^30 of answer. As were in binary search with power of two bounds
+		// we go through powers of two first.
+		// hence we hit at 2^11 first, since (2^11)^3 - target is 2^29, which is within additive err tolerance.
+		"cubic f, large additive err tolerance, converges": {
+			cubicF,
+			zero, twoTo50,
+			osmomath.NewBigDec((1 << 33) + (1 << 29)),
+			testErrToleranceAdditive, 51, osmomath.NewBigDec(1 << 11), false},
+		"cubic f, large multiplicative err tolerance, converges": {
+			cubicF,
+			zero, twoTo50,
+			osmomath.NewBigDec(1 << 30), withinFactor8, 51, osmomath.NewBigDec(1 << 11), false},
+		"cubic f, both err tolerances, converges": {
+			cubicF,
+			zero, twoTo50,
+			osmomath.NewBigDec((1 << 33) + (1 << 29)),
+			errToleranceBoth, 51, osmomath.NewBigDec(1 << 11), false},
 	}
 
-	runBinarySearchTestCases(t, tests)
+	runBinarySearchTestCases(t, tests, equalWithinOne)
 }
 
 func TestErrTolerance_Compare(t *testing.T) {
