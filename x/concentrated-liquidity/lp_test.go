@@ -26,10 +26,10 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			lowerTick:         int64(84222),
 			upperTick:         int64(86129),
 			currentSqrtP:      sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
-			amount0Desired:    sdk.NewInt(1000000),
-			amount0Expected:   sdk.NewInt(998587),
-			amount1Desired:    sdk.NewInt(5000000000),
-			amount1Expected:   sdk.NewInt(5000000000),
+			amount0Desired:    sdk.NewInt(1000000),                            // 1 eth
+			amount0Expected:   sdk.NewInt(998587),                             // 0.998587 eth
+			amount1Desired:    sdk.NewInt(5000000000),                         // 5000 usdc
+			amount1Expected:   sdk.NewInt(5000000000),                         // 5000 usdc
 			expectedLiquidity: sdk.NewInt(1517818840),
 		},
 	}
