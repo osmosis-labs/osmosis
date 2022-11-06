@@ -40,10 +40,11 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 
 			s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, tc.poolId, denom0, denom1, tc.currentSqrtP, tc.currentTick)
 
-			asset0, asset1, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.amount0Desired, tc.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), tc.lowerTick, tc.upperTick)
+			asset0, asset1, liquidityCreated, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.amount0Desired, tc.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), tc.lowerTick, tc.upperTick)
 			s.Require().NoError(err)
 			s.Require().Equal(tc.amount0Expected.String(), asset0.String())
 			s.Require().Equal(tc.amount1Expected.String(), asset1.String())
+			s.Require().Equal(tc.expectedLiquidity.String(), liquidityCreated.TruncateInt().String())
 
 			// check position state
 			position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick)

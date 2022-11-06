@@ -89,7 +89,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	k.setPoolById(ctx, pool.Id, pool)
 
-	return amtDenom0, amtDenom1, liquidityCreated, nil
+	return amtDenom0, amtDenom1, liquidity, nil
 }
 
 // withdrawPosition withdraws a concentrated liquidity position from the given pool id in the given tick range and liquidityAmount.
