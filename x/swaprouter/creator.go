@@ -126,7 +126,7 @@ func (k Keeper) validateCreatedPool(
 }
 
 // SetModuleRoute stores the mapping from poolId to the given pool type.
-// TODO: unexport after concentrated-liqudity upfrade. Currently, it is exported
+// TODO: unexport after concentrated-liqudity upgrade. Currently, it is exported
 // for the upgrade handler logic and tests.
 func (k Keeper) SetModuleRoute(ctx sdk.Context, poolId uint64, poolType types.PoolType) {
 	store := ctx.KVStore(k.storeKey)
