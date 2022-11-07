@@ -38,5 +38,5 @@ var (
 
 	// Maximum amount per asset after the application of scaling factors should be 10e34.
 	// Since this number cannot fit into int64, we use raw big.Int to calculate 10^34 and then convert to sdk.Int
-	StableswapMaxScaledAmtPerAsset = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(34), nil))
+	StableswapMaxScaledAmtPerAsset = sdk.NewInt(10).Pow(34)
 )
