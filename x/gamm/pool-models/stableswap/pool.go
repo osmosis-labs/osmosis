@@ -428,7 +428,7 @@ func validatePoolLiquidity(liquidity sdk.Coins, scalingFactors []uint64) error {
 		scaledAmount := asset.Amount.Quo(sdk.NewInt(int64(scalingFactors[i])))
 		if scaledAmount.GT(sdk.NewInt(types.StableswapMaxScaledAmtPerAsset)) {
 			return types.ErrHitMaxScaledAssets
-		} else if asset.Amount.Quo(sdk.NewInt(int64(scalingFactors[i]))).LT(sdk.NewInt(types.StableswapMinScaledAmtPerAsset)) {
+		} else if scaledAmount.LT(sdk.NewInt(types.StableswapMinScaledAmtPerAsset)) {
 			return types.ErrHitMinScaledAssets
 		}
 	}

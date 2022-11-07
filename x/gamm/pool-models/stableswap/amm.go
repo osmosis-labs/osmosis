@@ -267,7 +267,7 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 
 	maxIterations := 256
 
-	// we use a geometric error tolerance that guarantees approximately 10^-8 precision on outputs
+	// we use a geometric error tolerance that guarantees approximately 10^-12 precision on outputs
 	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.Int{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12)}
 
 	// create single-input CFMM to pass into binary search
@@ -292,6 +292,7 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	}
 
 	xOut := xReserve.Sub(xEst)
+        // We check the absolute value of the output against the xReserve amount to ensure that a swap cannot output more than the output token's pool supply and cannot more than double the input token's pool supply
 	if xOut.Abs().GTE(xReserve) {
 		panic("invalid output: greater than full pool reserves")
 	}

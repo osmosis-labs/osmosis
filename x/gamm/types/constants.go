@@ -16,7 +16,7 @@ const (
 
 	StableswapMaxScaledAmtPerAsset = 10_000_000_000
 	StableswapMinScaledAmtPerAsset = 1
-	// TODO: increase this to 1_000_000 (aligned with 6 decimal place tokens) and update tests accordingly
+	// We keep this multiplier at 1, but can increase if needed in the unlikely scenario where default scaling factors of 1 cannot accommodate enough assets
 	ScalingFactorMultiplier = 1
 )
 
