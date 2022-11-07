@@ -292,7 +292,9 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	}
 
 	xOut := xReserve.Sub(xEst)
-        // We check the absolute value of the output against the xReserve amount to ensure that a swap cannot output more than the output token's pool supply and cannot more than double the input token's pool supply
+	// We check the absolute value of the output against the xReserve amount to ensure that:
+	// 1. Swaps cannot more than double the input token's pool supply
+	// 2. Swaps cannot output more than the output token's pool supply
 	if xOut.Abs().GTE(xReserve) {
 		panic("invalid output: greater than full pool reserves")
 	}
