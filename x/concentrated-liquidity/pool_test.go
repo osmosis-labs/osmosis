@@ -46,7 +46,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 		"single position within one tick: usdc -> eth": {
 			addPositions: func(ctx sdk.Context, poolId uint64) {
 				// add first position
-				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
 				s.Require().NoError(err)
 			},
 			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(42000000)),
@@ -66,7 +66,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 		"single position within one tick: eth -> usdc": {
 			addPositions: func(ctx sdk.Context, poolId uint64) {
 				// add first position
-				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
 				s.Require().NoError(err)
 			},
 			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(13370)),
@@ -91,7 +91,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 		"two positions within one tick: usdc -> eth": {
 			addPositions: func(ctx sdk.Context, poolId uint64) {
 				// add first position
-				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
 				s.Require().NoError(err)
 
 				// add second position
