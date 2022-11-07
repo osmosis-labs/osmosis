@@ -41,6 +41,8 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 		return 0, err
 	}
 
+	k.setModuleRoute(ctx, poolId, msg.GetPoolType())
+
 	if err := k.validateCreatedPool(ctx, initialPoolLiquidity, poolId, pool); err != nil {
 		return 0, err
 	}
@@ -121,4 +123,9 @@ func (k Keeper) validateCreatedPool(
 			"Pool was attempted to be created with incorrect number of initial shares.")
 	}
 	return nil
+}
+
+func (k Keeper) setModuleRoute(ctx sdk.Context, poolId uint64, poolType types.PoolType) {
+	store := ctx.KVStore(k.storeKey)
+	osmoutils.MustSet(store, types.FormatModuleRouteKey(poolId), &types.ModuleRoute{PoolType: poolType})
 }
