@@ -21,11 +21,3 @@ type CreatePoolMsg interface {
 	// CreatePool creates a pool implementing PoolI, using data from the message.
 	CreatePool(ctx sdk.Context, poolID uint64) (gammtypes.TraditionalAmmInterface, error)
 }
-
-type PoolType uint8
-
-const (
-	Balancer     PoolType = 0
-	Stableswap   PoolType = 1
-	Concentrated PoolType = 2
-)

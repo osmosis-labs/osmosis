@@ -3,8 +3,13 @@ package swaprouter
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
+)
+
+var (
+	swapFeeMultiplier = sdk.OneDec()
 )
 
 // RouteExactAmountIn defines the input denom and input amount for the first pool,
@@ -16,14 +21,12 @@ func (k Keeper) RouteExactAmountIn(
 	routes []types.SwapAmountInRoute,
 	tokenIn sdk.Coin,
 	tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error) {
-	// TODO: fix this once proper pool id routing exists
-	// https: //github.com/osmosis-labs/osmosis/issues/3097
-	isGamm := true
-
-	swapModule := k.withSwapModule(isGamm)
-
 	for i, route := range routes {
-		swapFeeMultiplier := sdk.OneDec()
+		swapModule, err := k.GetSwapModule(ctx, route.PoolId)
+		if err != nil {
+			return sdk.Int{}, err
+		}
+
 		if types.SwapAmountInRoutes(routes).IsOsmoRoutedMultihop() {
 			swapFeeMultiplier = gammtypes.MultihopSwapFeeMultiplierForOsmoPools.Clone()
 		}
@@ -62,20 +65,12 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	routes []types.SwapAmountOutRoute,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin) (tokenInAmount sdk.Int, err error) {
-	// TODO: fix this once proper pool id routing exists
-	// https://github.com/osmosis-labs/osmosis/issues/3097
-	isGamm := true
-
-	swapModule := k.withSwapModule(isGamm)
-
-	swapFeeMultiplier := sdk.OneDec()
-
 	if types.SwapAmountOutRoutes(routes).IsOsmoRoutedMultihop() {
 		swapFeeMultiplier = gammtypes.MultihopSwapFeeMultiplierForOsmoPools.Clone()
 	}
 
 	// Determine what the estimated input would be for each pool along the multihop route
-	insExpected, err := createMultihopExpectedSwapOuts(ctx, swapModule, routes, tokenOut, swapFeeMultiplier)
+	insExpected, err := k.createMultihopExpectedSwapOuts(ctx, routes, tokenOut, swapFeeMultiplier)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -89,6 +84,11 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	// value of this method is done when we calculate insExpected – this for loop primarily serves to execute the actual
 	// swaps on each pool.
 	for i, route := range routes {
+		swapModule, err := k.GetSwapModule(ctx, route.PoolId)
+		if err != nil {
+			return sdk.Int{}, err
+		}
+
 		_tokenOut := tokenOut
 
 		// If there is one pool left in the route, set the expected output of the current swap
@@ -125,15 +125,19 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 // until the first pool is reached. It returns an array of inputs, each of which correspond to a pool ID in the
 // route of pools for the original multihop transaction.
 // TODO: test this.
-func createMultihopExpectedSwapOuts(
+func (k Keeper) createMultihopExpectedSwapOuts(
 	ctx sdk.Context,
-	swapModule types.SwapI,
 	routes []types.SwapAmountOutRoute,
 	tokenOut sdk.Coin, swapFeeMultiplier sdk.Dec,
 ) ([]sdk.Int, error) {
 	insExpected := make([]sdk.Int, len(routes))
 	for i := len(routes) - 1; i >= 0; i-- {
 		route := routes[i]
+
+		swapModule, err := k.GetSwapModule(ctx, route.PoolId)
+		if err != nil {
+			return nil, err
+		}
 
 		pool, err := swapModule.GetPool(ctx, route.PoolId)
 		if err != nil {
@@ -152,9 +156,30 @@ func createMultihopExpectedSwapOuts(
 	return insExpected, nil
 }
 
-func (k Keeper) withSwapModule(isGamm bool) types.SwapI {
-	if isGamm {
-		return k.gammKeeper
+// GetSwapModule returns the swap module for the given pool ID.
+// Returns error if:
+// - any database error occurs.
+// - fails to find a pool with the given id.
+// - the swap module of the type corresponding to the pool id is not registered
+// in swaprouter's keeper constructor.
+// TODO: unexport after concentrated-liqudity upgrade. Currently, it is exported
+// for the upgrade handler logic and tests.
+func (k Keeper) GetSwapModule(ctx sdk.Context, poolId uint64) (types.SwapI, error) {
+	store := ctx.KVStore(k.storeKey)
+
+	moduleRoute := &types.ModuleRoute{}
+	found, err := osmoutils.GetIfFound(store, types.FormatModuleRouteKey(poolId), moduleRoute)
+	if err != nil {
+		return nil, err
 	}
-	return k.concentratedKeeper
+	if !found {
+		return nil, types.FailedToFindRouteError{PoolId: poolId}
+	}
+
+	swapModule, routeExists := k.routes[moduleRoute.PoolType]
+	if !routeExists {
+		return nil, types.UndefinedRouteError{PoolType: moduleRoute.PoolType, PoolId: poolId}
+	}
+
+	return swapModule, nil
 }
