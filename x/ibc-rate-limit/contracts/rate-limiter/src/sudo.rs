@@ -56,11 +56,11 @@ pub fn try_transfer(
     let any_path = Path::new("any", path.denom.clone());
     let mut any_trackers = RATE_LIMIT_TRACKERS
         .may_load(deps.storage, any_path.clone().into())?
-        .unwrap_or(vec![]);
+        .unwrap_or_default();
     // Fetch trackers for the requested path
     let mut trackers = RATE_LIMIT_TRACKERS
         .may_load(deps.storage, path.into())?
-        .unwrap_or(vec![]);
+        .unwrap_or_default();
 
     let not_configured = trackers.is_empty() && any_trackers.is_empty();
 
@@ -157,10 +157,10 @@ pub fn undo_send(
 
     let mut any_trackers = RATE_LIMIT_TRACKERS
         .may_load(deps.storage, any_path.clone().into())?
-        .unwrap_or(vec![]);
+        .unwrap_or_default();
     let mut trackers = RATE_LIMIT_TRACKERS
         .may_load(deps.storage, path.into())?
-        .unwrap_or(vec![]);
+        .unwrap_or_default();
 
     let not_configured = trackers.is_empty() && any_trackers.is_empty();
 

@@ -104,7 +104,7 @@ impl Packet {
             denom: self.local_denom(),
         }
         .query(&deps.querier)?;
-        Ok(Uint256::from_str(&res.amount.unwrap_or_default().amount)?)
+        Uint256::from_str(&res.amount.unwrap_or_default().amount)
     }
 
     pub fn get_funds(&self) -> Uint256 {
@@ -143,8 +143,8 @@ impl Packet {
 #[macro_export]
 macro_rules! test_msg_send {
     (channel_id: $channel_id:expr, denom: $denom:expr, channel_value: $channel_value:expr, funds: $funds:expr) => {
-        crate::msg::SudoMsg::SendPacket {
-            packet: crate::packet::Packet::mock($channel_id, $denom, $funds),
+        $crate::msg::SudoMsg::SendPacket {
+            packet: $crate::packet::Packet::mock($channel_id, $denom, $funds),
             local_denom: Some($denom),
             channel_value_hint: Some($channel_value),
         }
@@ -154,8 +154,8 @@ macro_rules! test_msg_send {
 #[macro_export]
 macro_rules! test_msg_recv {
     (channel_id: $channel_id:expr, denom: $denom:expr, channel_value: $channel_value:expr, funds: $funds:expr) => {
-        crate::msg::SudoMsg::RecvPacket {
-            packet: crate::packet::Packet::mock($channel_id, $denom, $funds),
+        $crate::msg::SudoMsg::RecvPacket {
+            packet: $crate::packet::Packet::mock($channel_id, $denom, $funds),
             local_denom: Some($denom),
             channel_value_hint: Some($channel_value),
         }
