@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	withinOne     = ErrTolerance{AdditiveTolerance: sdk.OneInt()}
-	withinFactor8 = ErrTolerance{MultiplicativeTolerance: sdk.NewDec(8)}
+	withinOne     = BigDecErrTolerance{AdditiveTolerance: osmomath.OneDec()}
+	withinFactor8 = BigDecErrTolerance{MultiplicativeTolerance: osmomath.NewBigDec(8)}
 	zero          = osmomath.ZeroDec()
 )
 
@@ -92,7 +92,7 @@ type binarySearchTestCase struct {
 	lowerbound    osmomath.BigDec
 	upperbound    osmomath.BigDec
 	targetOutput  osmomath.BigDec
-	errTolerance  ErrTolerance
+	errTolerance  BigDecErrTolerance
 	maxIterations int
 
 	expectedSolvedInput osmomath.BigDec
@@ -112,7 +112,7 @@ func TestBinarySearchLineIterationCounts(t *testing.T) {
 	tests := map[string]binarySearchTestCase{}
 
 	generateExactTestCases := func(lowerbound, upperbound osmomath.BigDec,
-		errTolerance ErrTolerance, maxNumIters int) {
+		errTolerance BigDecErrTolerance, maxNumIters int) {
 		tcSetName := fmt.Sprintf("simple linear case: lower %s, upper %s", lowerbound.String(), upperbound.String())
 		// first pass get it working with no err tolerance or rounding direction
 		target := lowerbound.Add(upperbound).QuoRaw(2)
@@ -147,12 +147,12 @@ var fnMap = map[string]searchFn{"line": lineF, "cubic": cubicF}
 // This function tests that any value in a given range can be reached within expected num iterations.
 func TestIterationDepthRandValue(t *testing.T) {
 	tests := map[string]binarySearchTestCase{}
-	exactEqual := ErrTolerance{AdditiveTolerance: sdk.ZeroInt()}
-	withinOne := ErrTolerance{AdditiveTolerance: sdk.OneInt()}
-	within32 := ErrTolerance{AdditiveTolerance: sdk.OneInt().MulRaw(32)}
+	exactEqual := BigDecErrTolerance{AdditiveTolerance: osmomath.ZeroDec()}
+	withinOne := BigDecErrTolerance{AdditiveTolerance: osmomath.OneDec()}
+	within32 := BigDecErrTolerance{AdditiveTolerance: osmomath.OneDec().MulInt64(32)}
 
 	createRandInput := func(fnName string, lowerbound, upperbound int64,
-		errTolerance ErrTolerance, maxNumIters int, errToleranceName string) {
+		errTolerance BigDecErrTolerance, maxNumIters int, errToleranceName string) {
 		targetF := fnMap[fnName]
 		targetX := int64(rand.Intn(int(upperbound-lowerbound-1))) + lowerbound + 1
 		target, _ := targetF(osmomath.NewBigDec(targetX))
@@ -188,8 +188,8 @@ const (
 	equalWithinOne    equalityMode = iota
 )
 
-func withRoundingDir(e ErrTolerance, r osmomath.RoundingDirection) ErrTolerance {
-	return ErrTolerance{
+func withRoundingDir(e BigDecErrTolerance, r osmomath.RoundingDirection) BigDecErrTolerance {
+	return BigDecErrTolerance{
 		AdditiveTolerance:       e.AdditiveTolerance,
 		MultiplicativeTolerance: e.MultiplicativeTolerance,
 		RoundingDir:             r,
@@ -221,8 +221,8 @@ func runBinarySearchTestCases(t *testing.T, tests map[string]binarySearchTestCas
 }
 
 func TestBinarySearchBigDec(t *testing.T) {
-	testErrToleranceAdditive := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 30)}
-	errToleranceBoth := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 30), MultiplicativeTolerance: sdk.NewDec(1 << 3)}
+	testErrToleranceAdditive := BigDecErrTolerance{AdditiveTolerance: osmomath.NewBigDec(1 << 30)}
+	errToleranceBoth := BigDecErrTolerance{AdditiveTolerance: osmomath.NewBigDec(1 << 30), MultiplicativeTolerance: osmomath.NewBigDec(1 << 3)}
 
 	twoTo50 := osmomath.NewBigDec(1 << 50)
 	twoTo25PlusOne := osmomath.NewBigDec(1 + (1 << 25))
@@ -266,7 +266,7 @@ func TestBinarySearchBigDec(t *testing.T) {
 }
 
 func TestBinarySearchRoundingBehavior(t *testing.T) {
-	withinTwoTo30 := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 30)}
+	withinTwoTo30 := BigDecErrTolerance{AdditiveTolerance: osmomath.NewBigDec(1 << 30)}
 
 	twoTo50 := osmomath.NewBigDec(1 << 50)
 	// twoTo25PlusOne := osmomath.NewBigDec(1 + (1 << 25))
