@@ -100,6 +100,30 @@ func computeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaini
 	return sqrtPriceNext, amountIn, amountOut
 }
 
+func computeSwapStepGivenOut(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec, zeroForOne bool) (sqrtPriceNext, amountIn, amountOut sdk.Dec) {
+	if zeroForOne {
+		amountOut = calcAmount1Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, false)
+	} else {
+		amountOut = calcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, false)
+	}
+
+	if amountRemaining.GTE(amountOut) {
+		sqrtPriceNext = getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining, zeroForOne)
+	} else {
+		sqrtPriceNext = sqrtPriceTarget
+	}
+
+	if zeroForOne {
+		amountIn = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
+		amountOut = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
+	} else {
+		amountIn = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
+		amountOut = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
+	}
+
+	return sqrtPriceNext, amountIn, amountOut
+}
+
 func getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec, zeroForOne bool) (sqrtPriceNext sdk.Dec) {
 	if zeroForOne {
 		sqrtPriceNext = getNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining)
