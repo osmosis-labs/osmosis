@@ -9,15 +9,23 @@ import (
 )
 
 // ErrTolerance is used to define a compare function, which checks if two
-// ints are within a certain error tolerance of one another.
+// ints are within a certain error tolerance of one another,
+// and (optionally) that they are rounding in the correct direction.
 // ErrTolerance.Compare(a, b) returns true iff:
-// |a - b| <= AdditiveTolerance
-// |a - b| / min(a, b) <= MultiplicativeTolerance
-// Each check is respectively ignored if the entry is nil (sdk.Dec{}, sdk.Int{})
+// * RoundingMode = RoundUp, then b >= a
+// * RoundingMode = RoundDown, then b <= a
+// * |a - b| <= AdditiveTolerance
+// * |a - b| / min(a, b) <= MultiplicativeTolerance
+//
+// Each check is respectively ignored if the entry is nil.
+// So AdditiveTolerance = sdk.Int{} or sdk.ZeroInt()
+// MultiplicativeTolerance = sdk.Dec{}
+// RoundingDir = RoundUnconstrained.
 // Note that if AdditiveTolerance == 0, then this is equivalent to a standard compare.
 type ErrTolerance struct {
 	AdditiveTolerance       sdk.Int
 	MultiplicativeTolerance sdk.Dec
+	RoundingDir             osmomath.RoundingDirection
 }
 
 // Compare returns if actual is within errTolerance of expected.
@@ -72,6 +80,20 @@ func (e ErrTolerance) CompareBigDec(expected osmomath.BigDec, actual osmomath.Bi
 		comparisonSign = -1
 	}
 
+	// Ensure that even if expected is within tolerance of actual, we don't count it as equal if its in the wrong direction.
+	// so if were supposed to round down, it must be that `expected >= actual`.
+	// likewise if were supposed to round up, it must be that `expected <= actual`.
+	// If neither of the above, then rounding direction does not enforce a constraint.
+	if e.RoundingDir == osmomath.RoundDown {
+		if expected.LT(actual) {
+			return -1
+		}
+	} else if e.RoundingDir == osmomath.RoundUp {
+		if expected.GT(actual) {
+			return 1
+		}
+	}
+
 	// Check additive tolerance equations
 	if !e.AdditiveTolerance.IsNil() {
 		// if no error accepted, do a direct compare.
@@ -94,24 +116,6 @@ func (e ErrTolerance) CompareBigDec(expected osmomath.BigDec, actual osmomath.Bi
 	}
 
 	return 0
-}
-
-// Compares big decimal's, using the error tolerance for defining equality in one direction.
-func (e ErrTolerance) CompareBigDecWithRoundingDirection(expected osmomath.BigDec, actual osmomath.BigDec,
-	dir osmomath.RoundingDirection) int {
-	// Ensure that even if expected is within tolerance of actual, we don't count it as equal if its in the wrong direction.
-	// so if were supposed to round down, it must be that `expected >= actual`.
-	// likewise if were supposed to round up, it must be that `expected <= actual`
-	if dir == osmomath.RoundDown {
-		if expected.LT(actual) {
-			return -1
-		}
-	} else if dir == osmomath.RoundUp {
-		if expected.GT(actual) {
-			return 1
-		}
-	}
-	return e.CompareBigDec(expected, actual)
 }
 
 // Binary search inputs between [lowerbound, upperbound] to a monotonic increasing function f.
@@ -170,7 +174,6 @@ func BinarySearchBigDec(f func(input osmomath.BigDec) (osmomath.BigDec, error),
 	upperbound osmomath.BigDec,
 	targetOutput osmomath.BigDec,
 	errTolerance ErrTolerance,
-	roundingDirection osmomath.RoundingDirection,
 	maxIterations int,
 ) (osmomath.BigDec, error) {
 	// Setup base case of loop
@@ -182,7 +185,7 @@ func BinarySearchBigDec(f func(input osmomath.BigDec) (osmomath.BigDec, error),
 	curIteration := 0
 	for ; curIteration < maxIterations; curIteration += 1 {
 		// fmt.Println(targetOutput, curOutput)
-		compRes := errTolerance.CompareBigDecWithRoundingDirection(targetOutput, curOutput, roundingDirection)
+		compRes := errTolerance.CompareBigDec(targetOutput, curOutput)
 		if compRes < 0 {
 			upperbound = curEstimate
 		} else if compRes > 0 {
