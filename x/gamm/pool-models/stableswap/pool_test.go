@@ -69,7 +69,7 @@ func poolStructFromAssets(assets sdk.Coins, scalingFactors []uint64) Pool {
 		PoolParams:         defaultStableswapPoolParams,
 		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),
 		PoolLiquidity:      assets,
-		ScalingFactor:      scalingFactors,
+		ScalingFactors:     scalingFactors,
 		FuturePoolGovernor: defaultFutureGovernor,
 	}
 	return p
@@ -395,7 +395,7 @@ func TestGetDescaledPoolAmts(t *testing.T) {
 					PoolParams:         defaultStableswapPoolParams,
 					TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),
 					PoolLiquidity:      tc.poolAssets,
-					ScalingFactor:      tc.scalingFactors,
+					ScalingFactors:     tc.scalingFactors,
 					FuturePoolGovernor: defaultFutureGovernor,
 				}
 
@@ -491,7 +491,7 @@ func TestScaleCoin(t *testing.T) {
 				PoolParams:         defaultStableswapPoolParams,
 				TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),
 				PoolLiquidity:      tc.poolAssets,
-				ScalingFactor:      tc.scalingFactors,
+				ScalingFactors:     tc.scalingFactors,
 				FuturePoolGovernor: defaultFutureGovernor,
 			}
 

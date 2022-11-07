@@ -224,6 +224,17 @@ func (s *KeeperTestHelper) EndBlock() {
 	s.App.EndBlocker(s.Ctx, reqEndBlock)
 }
 
+func (s *KeeperTestHelper) RunMsg(msg sdk.Msg) (*sdk.Result, error) {
+	// cursed that we have to copy this internal logic from SDK
+	router := s.App.GetBaseApp().MsgServiceRouter()
+	if handler := router.Handler(msg); handler != nil {
+		// ADR 031 request type routing
+		return handler(s.Ctx, msg)
+	}
+	s.FailNow("msg %v could not be ran", msg)
+	return nil, fmt.Errorf("msg %v could not be ran", msg)
+}
+
 // AllocateRewardsToValidator allocates reward tokens to a distribution module then allocates rewards to the validator address.
 func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, rewardAmt sdk.Int) {
 	validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)

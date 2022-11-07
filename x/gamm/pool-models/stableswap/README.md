@@ -279,6 +279,10 @@ Couple ways to define JoinPool Exit Pool relation
 
 ## Testing strategy
 
+* Unit tests for every pool interface method
+* Msg tests for custom messages
+  * CreatePool
+  * SetScalingFactors
 * Simulator integrations:
   * Pool creation
   * JoinPool + ExitPool gives a token amount out that is lte input

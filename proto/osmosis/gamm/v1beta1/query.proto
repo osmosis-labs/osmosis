@@ -38,6 +38,17 @@ service Query {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/pool_type/{pool_id}";
   }
 
+  rpc CalcJoinPoolShares(QueryCalcJoinPoolSharesRequest)
+      returns (QueryCalcJoinPoolSharesResponse) {
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/pools/{pool_id}/join_swap_exact_in";
+  }
+  rpc CalcExitPoolCoinsFromShares(QueryCalcExitPoolCoinsFromSharesRequest)
+      returns (QueryCalcExitPoolCoinsFromSharesResponse) {
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/pools/{pool_id}/exit_swap_share_amount_in";
+  }
+
   rpc PoolParams(QueryPoolParamsRequest) returns (QueryPoolParamsResponse) {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{pool_id}/params";
@@ -108,6 +119,41 @@ message QueryPoolTypeRequest {
 }
 message QueryPoolTypeResponse {
   string pool_type = 1 [ (gogoproto.moretags) = "yaml:\"pool_type\"" ];
+}
+
+//=============================== CalcJoinPoolShares
+message QueryCalcJoinPoolSharesRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  repeated cosmos.base.v1beta1.Coin tokens_in = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
+}
+message QueryCalcJoinPoolSharesResponse {
+  string share_out_amount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"share_out_amount\"",
+    (gogoproto.nullable) = false
+  ];
+  repeated cosmos.base.v1beta1.Coin tokens_out = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
+}
+
+//=============================== CalcExitPoolCoinsFromShares
+message QueryCalcExitPoolCoinsFromSharesRequest {
+  uint64 pool_id = 1;
+  string share_in_amount = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+message QueryCalcExitPoolCoinsFromSharesResponse {
+  repeated cosmos.base.v1beta1.Coin tokens_out = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
 }
 
 //=============================== PoolParams
