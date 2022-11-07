@@ -149,7 +149,7 @@ func TestIterationDepthRandValue(t *testing.T) {
 	tests := map[string]binarySearchTestCase{}
 	exactEqual := ErrTolerance{AdditiveTolerance: sdk.ZeroInt()}
 	withinOne := ErrTolerance{AdditiveTolerance: sdk.OneInt()}
-	within32 := ErrTolerance{AdditiveTolerance: sdk.OneInt().MulRaw(32)}
+	within32 := ErrTolerance{AdditiveTolerance:  sdk.OneInt().MulRaw(32)}
 
 	createRandInput := func(fnName string, lowerbound, upperbound int64,
 		errTolerance ErrTolerance, maxNumIters int, errToleranceName string) {
@@ -168,6 +168,7 @@ func TestIterationDepthRandValue(t *testing.T) {
 			fnName, lowerbound, upperbound, maxNumIters, errToleranceName, target)
 		tests[tcname] = testCase
 	}
+
 	for i := 0; i < 1000; i++ {
 		// Takes a 21st iteration to guaranteeably get 0
 		createRandInput("line", 0, 1<<20, exactEqual, 21, "exactly equal")

@@ -30,6 +30,8 @@ func NewStableswapPool(poolId uint64,
 		}
 	}
 
+	scalingFactors = applyScalingFactorMultiplier(scalingFactors)
+
 	if err := validateScalingFactors(scalingFactors, len(initialLiquidity)); err != nil {
 		return Pool{}, err
 	}
@@ -148,6 +150,11 @@ func (p Pool) scaledSortedPoolReserves(first string, second string, round osmoma
 	if err != nil {
 		return nil, err
 	}
+
+	if err := validateScalingFactors(reorderedScalingFactors, len(reorderedLiquidity)); err != nil {
+		return nil, err
+	}
+
 	return osmomath.DivCoinAmtsByU64ToBigDec(reorderedLiquidity, reorderedScalingFactors, round)
 }
 
@@ -254,7 +261,7 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDeno
 	if tokenOut.Len() != 1 {
 		return sdk.Coin{}, errors.New("stableswap CalcInAmtGivenOut: tokenOut is of wrong length")
 	}
-	// TODO: Refactor this later to handle scaling factors
+
 	amt, err := p.calcInAmtGivenOut(tokenOut[0], tokenInDenom, swapFee)
 	if err != nil {
 		return sdk.Coin{}, err
@@ -350,6 +357,11 @@ func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec)
 		return sdk.Coins{}, err
 	}
 
+	postExitLiquidity := p.PoolLiquidity.Sub(exitingCoins)
+	if err := validatePoolLiquidity(postExitLiquidity, p.ScalingFactors); err != nil {
+		return sdk.Coins{}, err
+	}
+
 	p.TotalShares.Amount = p.TotalShares.Amount.Sub(exitingShares)
 	p.updatePoolLiquidityForExit(exitingCoins)
 
@@ -367,6 +379,8 @@ func (p *Pool) SetScalingFactors(ctx sdk.Context, scalingFactors []uint64, sende
 	if sender != p.ScalingFactorController {
 		return types.ErrNotScalingFactorGovernor
 	}
+
+	scalingFactors = applyScalingFactorMultiplier(scalingFactors)
 
 	if err := validateScalingFactors(scalingFactors, p.PoolLiquidity.Len()); err != nil {
 		return err
@@ -414,8 +428,19 @@ func validatePoolLiquidity(liquidity sdk.Coins, scalingFactors []uint64) error {
 		scaledAmount := asset.Amount.Quo(sdk.NewInt(int64(scalingFactors[i])))
 		if scaledAmount.GT(sdk.NewInt(types.StableswapMaxScaledAmtPerAsset)) {
 			return types.ErrHitMaxScaledAssets
+		} else if scaledAmount.LT(sdk.NewInt(types.StableswapMinScaledAmtPerAsset)) {
+			return types.ErrHitMinScaledAssets
 		}
 	}
 
 	return nil
+}
+
+func applyScalingFactorMultiplier(scalingFactors []uint64) []uint64 {
+	newScalingFactors := make([]uint64, len(scalingFactors))
+	for i := range scalingFactors {
+		newScalingFactors[i] = scalingFactors[i] * types.ScalingFactorMultiplier
+	}
+
+	return newScalingFactors
 }

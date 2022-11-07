@@ -2,7 +2,6 @@
 package stableswap
 
 import (
-	"math/big"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -69,7 +68,7 @@ func poolStructFromAssets(assets sdk.Coins, scalingFactors []uint64) Pool {
 		PoolParams:         defaultStableswapPoolParams,
 		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),
 		PoolLiquidity:      assets,
-		ScalingFactors:     scalingFactors,
+		ScalingFactors:     applyScalingFactorMultiplier(scalingFactors),
 		FuturePoolGovernor: defaultFutureGovernor,
 	}
 	return p
@@ -95,7 +94,7 @@ func TestReorderReservesAndScalingFactors(t *testing.T) {
 				sdk.NewInt64Coin("asset/d", 4000000000),
 				sdk.NewInt64Coin("asset/e", 5000000000),
 			},
-			reordedScalingFactors: []uint64{3, 2, 1, 4, 5},
+			reordedScalingFactors: []uint64{3 * types.ScalingFactorMultiplier, 2 * types.ScalingFactorMultiplier, 1 * types.ScalingFactorMultiplier, 4 * types.ScalingFactorMultiplier, 5 * types.ScalingFactorMultiplier},
 		},
 		"two of 5 assets in pool v2": {
 			denoms:         [2]string{"asset/e", "asset/b"},
@@ -108,7 +107,7 @@ func TestReorderReservesAndScalingFactors(t *testing.T) {
 				sdk.NewInt64Coin("asset/c", 3000000000),
 				sdk.NewInt64Coin("asset/d", 4000000000),
 			},
-			reordedScalingFactors: []uint64{5, 2, 1, 3, 4},
+			reordedScalingFactors: []uint64{5 * types.ScalingFactorMultiplier, 2 * types.ScalingFactorMultiplier, 1 * types.ScalingFactorMultiplier, 3 * types.ScalingFactorMultiplier, 4 * types.ScalingFactorMultiplier},
 		},
 		"asset 1 doesn't exist": {
 			denoms:         [2]string{"foo", "asset/b"},
@@ -140,6 +139,7 @@ func TestReorderReservesAndScalingFactors(t *testing.T) {
 
 func TestScaledSortedPoolReserves(t *testing.T) {
 	baseEvenAmt := osmomath.NewBigDec(1000000000)
+	bigDecScalingMultiplier := osmomath.NewBigDec(types.ScalingFactorMultiplier)
 	tests := map[string]struct {
 		denoms         [2]string
 		roundMode      osmomath.RoundingDirection
@@ -153,44 +153,44 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expReserves:    []osmomath.BigDec{baseEvenAmt, baseEvenAmt},
+			expReserves:    []osmomath.BigDec{baseEvenAmt.Quo(bigDecScalingMultiplier), baseEvenAmt.Quo(bigDecScalingMultiplier)},
 		},
 		"uneven two-asset pool with default scaling factors": {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expReserves:    []osmomath.BigDec{baseEvenAmt.MulInt64(2), baseEvenAmt},
+			expReserves:    []osmomath.BigDec{baseEvenAmt.MulInt64(2).Quo(bigDecScalingMultiplier), baseEvenAmt.Quo(bigDecScalingMultiplier)},
 		},
 		"even two-asset pool with even scaling factors greater than 1": {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{10, 10},
-			expReserves:    []osmomath.BigDec{baseEvenAmt.QuoInt64(10), baseEvenAmt.QuoInt64(10)},
+			expReserves:    []osmomath.BigDec{(baseEvenAmt.Quo(bigDecScalingMultiplier)).QuoInt64(10), (baseEvenAmt.Quo(bigDecScalingMultiplier)).QuoInt64(10)},
 		},
 		"even two-asset pool with uneven scaling factors greater than 1": {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10, 5},
 			expReserves: []osmomath.BigDec{
-				osmomath.NewBigDec(2000000000 / 5), osmomath.NewBigDec(1000000000 / 10),
+				osmomath.NewBigDec(2000000000 / 5).Quo(bigDecScalingMultiplier), osmomath.NewBigDec(1000000000 / 10).Quo(bigDecScalingMultiplier),
 			},
 		},
 		"even two-asset pool with even, massive scaling factors greater than 1": {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{10000000000, 10000000000},
-			expReserves:    []osmomath.BigDec{osmomath.NewDecWithPrec(1, 1), osmomath.NewDecWithPrec(1, 1)},
+			expReserves:    []osmomath.BigDec{osmomath.NewDecWithPrec(1, 1).Quo(bigDecScalingMultiplier), osmomath.NewDecWithPrec(1, 1).Quo(bigDecScalingMultiplier)},
 		},
 		"five asset pool, scaling factors = 1": {
 			denoms:         [2]string{"asset/c", "asset/d"},
 			poolAssets:     fiveUnevenStablePoolAssets,
 			scalingFactors: []uint64{1, 1, 1, 1, 1},
 			expReserves: []osmomath.BigDec{
-				baseEvenAmt.MulInt64(3),
-				baseEvenAmt.MulInt64(4),
-				baseEvenAmt,
-				baseEvenAmt.MulInt64(2),
-				baseEvenAmt.MulInt64(5),
+				baseEvenAmt.MulInt64(3).Quo(bigDecScalingMultiplier),
+				baseEvenAmt.MulInt64(4).Quo(bigDecScalingMultiplier),
+				baseEvenAmt.Quo(bigDecScalingMultiplier),
+				baseEvenAmt.MulInt64(2).Quo(bigDecScalingMultiplier),
+				baseEvenAmt.MulInt64(5).Quo(bigDecScalingMultiplier),
 			},
 		},
 		"five asset pool, scaling factors = 1,2,3,4,5": {
@@ -198,20 +198,20 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 			poolAssets:     fiveUnevenStablePoolAssets,
 			scalingFactors: []uint64{1, 2, 3, 4, 5},
 			expReserves: []osmomath.BigDec{
-				baseEvenAmt,
-				baseEvenAmt,
-				baseEvenAmt,
-				baseEvenAmt,
-				baseEvenAmt,
+				baseEvenAmt.Quo(bigDecScalingMultiplier),
+				baseEvenAmt.Quo(bigDecScalingMultiplier),
+				baseEvenAmt.Quo(bigDecScalingMultiplier),
+				baseEvenAmt.Quo(bigDecScalingMultiplier),
+				baseEvenAmt.Quo(bigDecScalingMultiplier),
 			},
 		},
 		"max scaling factors": {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoEvenStablePoolAssets,
-			scalingFactors: []uint64{(1 << 62), (1 << 62)},
+			scalingFactors: []uint64{(1 << 62) / types.ScalingFactorMultiplier, (1 << 62) / types.ScalingFactorMultiplier},
 			expReserves: []osmomath.BigDec{
-				osmomath.NewBigDec(1000000000).QuoInt64(int64(1 << 62)),
-				osmomath.NewBigDec(1000000000).QuoInt64(int64(1 << 62)),
+				(osmomath.NewBigDec(1000000000).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier))).Quo(osmomath.NewBigDec(int64(1<<62) / types.ScalingFactorMultiplier)),
+				(osmomath.NewBigDec(1000000000).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier))).Quo(osmomath.NewBigDec(int64(1<<62) / types.ScalingFactorMultiplier)),
 			},
 		},
 		"zero scaling factor": {
@@ -258,129 +258,112 @@ func TestGetDescaledPoolAmts(t *testing.T) {
 		// sanity checks, default scaling factors
 		"get exact supply of one asset, even two-asset pool with default scaling factors": {
 			denom:          "foo",
-			amount:         osmomath.NewBigDec(1000000000),
+			amount:         osmomath.NewBigDec(100000000),
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expResult:      sdk.NewDec(1000000000),
+			expResult:      sdk.NewDec(100000000 * types.ScalingFactorMultiplier),
 		},
 		"get less than supply of one asset, even two-asset pool with default scaling factors": {
 			denom:          "foo",
 			amount:         osmomath.NewBigDec(500000000),
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expResult:      sdk.NewDec(500000000),
+			expResult:      sdk.NewDec(500000000 * types.ScalingFactorMultiplier),
 		},
 		"get more than supply of one asset, even two-asset pool with default scaling factors": {
 			denom:          "foo",
-			amount:         osmomath.NewBigDec(10000000000000),
+			amount:         osmomath.NewBigDec(100000000),
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expResult:      sdk.NewDec(10000000000000),
+			expResult:      sdk.NewDec(100000000 * types.ScalingFactorMultiplier),
 		},
 
 		// uneven pools
 		"get exact supply of first asset, uneven two-asset pool with default scaling factors": {
 			denom:          "foo",
-			amount:         osmomath.NewBigDec(2000000000),
+			amount:         osmomath.NewBigDec(200000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expResult:      sdk.NewDec(2000000000),
+			expResult:      sdk.NewDec(200000000 * types.ScalingFactorMultiplier),
 		},
 		"get less than supply of first asset, uneven two-asset pool with default scaling factors": {
 			denom:          "foo",
 			amount:         osmomath.NewBigDec(500000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expResult:      sdk.NewDec(500000000),
+			expResult:      sdk.NewDec(500000000 * types.ScalingFactorMultiplier),
 		},
 		"get more than supply of first asset, uneven two-asset pool with default scaling factors": {
 			denom:          "foo",
-			amount:         osmomath.NewBigDec(10000000000000),
+			amount:         osmomath.NewBigDec(100000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expResult:      sdk.NewDec(10000000000000),
+			expResult:      sdk.NewDec(100000000 * types.ScalingFactorMultiplier),
 		},
 		"get exact supply of second asset, uneven two-asset pool with default scaling factors": {
 			denom:          "bar",
-			amount:         osmomath.NewBigDec(1000000000),
+			amount:         osmomath.NewBigDec(100000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expResult:      sdk.NewDec(1000000000),
+			expResult:      sdk.NewDec(100000000 * types.ScalingFactorMultiplier),
 		},
 		"get less than supply of second asset, uneven two-asset pool with default scaling factors": {
 			denom:          "bar",
 			amount:         osmomath.NewBigDec(500000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expResult:      sdk.NewDec(500000000),
+			expResult:      sdk.NewDec(500000000 * types.ScalingFactorMultiplier),
 		},
 		"get more than supply of second asset, uneven two-asset pool with default scaling factors": {
 			denom:          "bar",
-			amount:         osmomath.NewBigDec(10000000000000),
+			amount:         osmomath.NewBigDec(100000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expResult:      sdk.NewDec(10000000000000),
+			expResult:      sdk.NewDec(100000000 * types.ScalingFactorMultiplier),
 		},
 
 		// uneven scaling factors (note: denoms are ordered lexicographically, not by pool asset input)
 		"get exact supply of first asset, uneven two-asset pool with uneven scaling factors": {
 			denom:          "foo",
-			amount:         osmomath.NewBigDec(2000000000),
+			amount:         osmomath.NewBigDec(20000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10, 5},
-			expResult:      sdk.NewDec(2000000000 * 5),
+			expResult:      sdk.NewDec(20000000 * 5 * types.ScalingFactorMultiplier),
 		},
 		"get less than supply of first asset, uneven two-asset pool with uneven scaling factors": {
 			denom:          "foo",
-			amount:         osmomath.NewBigDec(500000000),
+			amount:         osmomath.NewBigDec(50000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10, 5},
-			expResult:      sdk.NewDec(500000000 * 5),
+			expResult:      sdk.NewDec(50000000 * 5 * types.ScalingFactorMultiplier),
 		},
 		"get more than supply of first asset, uneven two-asset pool with uneven scaling factors": {
 			denom:          "foo",
-			amount:         osmomath.NewBigDec(10000000000000),
+			amount:         osmomath.NewBigDec(100000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10, 5},
-			expResult:      sdk.NewDec(10000000000000 * 5),
+			expResult:      sdk.NewDec(100000000 * 5 * types.ScalingFactorMultiplier),
 		},
 		"get exact supply of second asset, uneven two-asset pool with uneven scaling factors": {
 			denom:          "bar",
-			amount:         osmomath.NewBigDec(2000000000),
+			amount:         osmomath.NewBigDec(20000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10, 5},
-			expResult:      sdk.NewDec(2000000000 * 10),
+			expResult:      sdk.NewDec(20000000 * 10 * types.ScalingFactorMultiplier),
 		},
 		"get less than supply of second asset, uneven two-asset pool with uneven scaling factors": {
 			denom:          "bar",
-			amount:         osmomath.NewBigDec(500000000),
+			amount:         osmomath.NewBigDec(50000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10, 5},
-			expResult:      sdk.NewDec(500000000 * 10),
+			expResult:      sdk.NewDec(50000000 * 10 * types.ScalingFactorMultiplier),
 		},
 		"get more than supply of second asset, uneven two-asset pool with uneven scaling factors": {
 			denom:          "bar",
-			amount:         osmomath.NewBigDec(10000000000000),
+			amount:         osmomath.NewBigDec(10000000),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10, 5},
-			expResult:      sdk.NewDec(10000000000000 * 10),
-		},
-
-		// panic catching
-		"scaled asset overflows": {
-			denom:          "foo",
-			amount:         overflowDec,
-			poolAssets:     twoEvenStablePoolAssets,
-			scalingFactors: []uint64{(1 << 62), (1 << 62)},
-			expPanic:       true,
-		},
-		"descaled asset overflows": {
-			denom: "foo",
-			// 2^1000, should not overflow until descaled
-			amount:         osmomath.NewDecFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(1000), nil), big.NewInt(1))),
-			poolAssets:     twoEvenStablePoolAssets,
-			scalingFactors: []uint64{(1 << 62), (1 << 62)},
-			expPanic:       true,
+			expResult:      sdk.NewDec(10000000 * 10 * types.ScalingFactorMultiplier),
 		},
 	}
 
@@ -388,16 +371,7 @@ func TestGetDescaledPoolAmts(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// system under test
 			sut := func() {
-				// we create the pool directly to bypass checks in NewStableswapPool()
-				p := Pool{
-					Address:            types.NewPoolAddress(defaultPoolId).String(),
-					Id:                 defaultPoolId,
-					PoolParams:         defaultStableswapPoolParams,
-					TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),
-					PoolLiquidity:      tc.poolAssets,
-					ScalingFactors:     tc.scalingFactors,
-					FuturePoolGovernor: defaultFutureGovernor,
-				}
+				p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 
 				result := p.getDescaledPoolAmt(tc.denom, tc.amount)
 				require.Equal(t, tc.expResult, result)
@@ -422,7 +396,7 @@ func TestScaleCoin(t *testing.T) {
 			rounding:       osmomath.RoundDown,
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expOutput:      osmomath.NewBigDec(100),
+			expOutput:      osmomath.NewBigDec(100).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier)),
 			expError:       false,
 		},
 		"uneven two-asset pool with default scaling factors": {
@@ -430,7 +404,7 @@ func TestScaleCoin(t *testing.T) {
 			rounding:       osmomath.RoundDown,
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			expOutput:      osmomath.NewBigDec(200),
+			expOutput:      osmomath.NewBigDec(200).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier)),
 			expError:       false,
 		},
 		"even two-asset pool with uneven scaling factors greater than 1": {
@@ -438,7 +412,7 @@ func TestScaleCoin(t *testing.T) {
 			rounding:       osmomath.RoundDown,
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10, 5},
-			expOutput:      osmomath.NewBigDec(10),
+			expOutput:      osmomath.NewBigDec(10).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier)),
 			expError:       false,
 		},
 		"even two-asset pool with even, massive scaling factors greater than 1": {
@@ -446,7 +420,7 @@ func TestScaleCoin(t *testing.T) {
 			rounding:       osmomath.RoundDown,
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{10000000000, 10_000_000_000},
-			expOutput:      osmomath.NewDecWithPrec(100, 10),
+			expOutput:      osmomath.NewDecWithPrec(100, 10).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier)),
 			expError:       false,
 		},
 		"five asset pool scaling factors = 1": {
@@ -454,7 +428,7 @@ func TestScaleCoin(t *testing.T) {
 			rounding:       osmomath.RoundDown,
 			poolAssets:     fiveUnevenStablePoolAssets,
 			scalingFactors: []uint64{1, 1, 1, 1, 1},
-			expOutput:      osmomath.NewBigDec(100),
+			expOutput:      osmomath.NewBigDec(100).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier)),
 			expError:       false,
 		},
 		"five asset pool scaling factors = 1,2,3,4,5": {
@@ -462,15 +436,15 @@ func TestScaleCoin(t *testing.T) {
 			rounding:       osmomath.RoundDown,
 			poolAssets:     fiveUnevenStablePoolAssets,
 			scalingFactors: []uint64{1, 2, 3, 4, 5},
-			expOutput:      osmomath.NewBigDec(25),
+			expOutput:      osmomath.NewBigDec(25).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier)),
 			expError:       false,
 		},
 		"max scaling factors on small token inputs": {
 			input:          sdk.NewCoin("foo", sdk.NewInt(10)),
 			rounding:       osmomath.RoundDown,
 			poolAssets:     twoEvenStablePoolAssets,
-			scalingFactors: []uint64{(1 << 62), (1 << 62)},
-			expOutput:      osmomath.NewBigDec(10).QuoInt64(1 << 62),
+			scalingFactors: []uint64{(1 << 62) / types.ScalingFactorMultiplier, (1 << 62) / types.ScalingFactorMultiplier},
+			expOutput:      (osmomath.NewBigDec(10).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier))).Quo(osmomath.NewBigDec((1 << 62) / types.ScalingFactorMultiplier)),
 			expError:       false,
 		},
 		"zero scaling factor": {
@@ -484,16 +458,7 @@ func TestScaleCoin(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			// we create the pool directly to bypass checks in NewStableswapPool()
-			p := Pool{
-				Address:            types.NewPoolAddress(defaultPoolId).String(),
-				Id:                 defaultPoolId,
-				PoolParams:         defaultStableswapPoolParams,
-				TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),
-				PoolLiquidity:      tc.poolAssets,
-				ScalingFactors:     tc.scalingFactors,
-				FuturePoolGovernor: defaultFutureGovernor,
-			}
+			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 
 			scaledInput, err := p.scaleCoin(tc.input, tc.rounding)
 
@@ -690,10 +655,9 @@ func TestSwapOutAmtGivenIn(t *testing.T) {
 		expError              bool
 	}{
 		"even pool basic trade": {
-			poolAssets:     twoEvenStablePoolAssets,
-			scalingFactors: defaultTwoAssetScalingFactors,
-			tokenIn:        sdk.NewCoins(sdk.NewInt64Coin("foo", 100)),
-			// we expect at least a 1 token difference since output is truncated
+			poolAssets:            twoEvenStablePoolAssets,
+			scalingFactors:        defaultTwoAssetScalingFactors,
+			tokenIn:               sdk.NewCoins(sdk.NewInt64Coin("foo", 100)),
 			expectedTokenOut:      sdk.NewInt64Coin("bar", 99),
 			expectedPoolLiquidity: twoEvenStablePoolAssets.Add(sdk.NewInt64Coin("foo", 100)).Sub(sdk.NewCoins(sdk.NewInt64Coin("bar", 99))),
 			swapFee:               sdk.ZeroDec(),
@@ -703,14 +667,14 @@ func TestSwapOutAmtGivenIn(t *testing.T) {
 		"trade hits max pool capacity for asset": {
 			poolAssets: sdk.NewCoins(
 				sdk.NewInt64Coin("foo", 9_999_999_998),
-				sdk.NewInt64Coin("bar", 9_999_999_999),
+				sdk.NewInt64Coin("bar", 9_999_999_998),
 			),
 			scalingFactors:   defaultTwoAssetScalingFactors,
 			tokenIn:          sdk.NewCoins(sdk.NewInt64Coin("foo", 1)),
 			expectedTokenOut: sdk.Coin{},
 			expectedPoolLiquidity: sdk.NewCoins(
 				sdk.NewInt64Coin("foo", 9_999_999_999),
-				sdk.NewInt64Coin("bar", 9_999_999_998),
+				sdk.NewInt64Coin("bar", 9_999_999_997),
 			),
 			swapFee:  sdk.ZeroDec(),
 			expError: true,
@@ -740,8 +704,8 @@ func TestSwapOutAmtGivenIn(t *testing.T) {
 			tokenOut, err := p.SwapOutAmtGivenIn(ctx, tc.tokenIn, tc.expectedTokenOut.Denom, tc.swapFee)
 			osmoassert.ConditionalError(t, tc.expError, err)
 			if !tc.expError {
-				require.Equal(t, tc.expectedTokenOut, tokenOut)
-				require.Equal(t, tc.expectedPoolLiquidity, p.PoolLiquidity)
+				require.True(t, tokenOut.Amount.GTE(tc.expectedTokenOut.Amount))
+				require.True(t, p.PoolLiquidity.IsAllGTE(tc.expectedPoolLiquidity))
 			}
 		})
 	}
@@ -758,41 +722,40 @@ func TestSwapInAmtGivenOut(t *testing.T) {
 		expError              bool
 	}{
 		"even pool basic trade": {
-			poolAssets:     twoEvenStablePoolAssets,
-			scalingFactors: defaultTwoAssetScalingFactors,
-			tokenOut:       sdk.NewCoins(sdk.NewInt64Coin("bar", 99)),
-			// we expect at least a 1 token difference from our true expected output since it is truncated
-			expectedTokenIn:       sdk.NewInt64Coin("foo", 99),
-			expectedPoolLiquidity: twoEvenStablePoolAssets.Add(sdk.NewInt64Coin("foo", 99)).Sub(sdk.NewCoins(sdk.NewInt64Coin("bar", 99))),
+			poolAssets:            twoEvenStablePoolAssets,
+			scalingFactors:        defaultTwoAssetScalingFactors,
+			tokenOut:              sdk.NewCoins(sdk.NewInt64Coin("bar", 100)),
+			expectedTokenIn:       sdk.NewInt64Coin("foo", 100),
+			expectedPoolLiquidity: twoEvenStablePoolAssets.Add(sdk.NewInt64Coin("foo", 100)).Sub(sdk.NewCoins(sdk.NewInt64Coin("bar", 100))),
 			swapFee:               sdk.ZeroDec(),
 			expError:              false,
 		},
 		"trade hits max pool capacity for asset": {
 			poolAssets: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 9_999_999_998),
-				sdk.NewInt64Coin("bar", 9_999_999_999),
+				sdk.NewInt64Coin("foo", 9_999_999_997*types.ScalingFactorMultiplier),
+				sdk.NewInt64Coin("bar", 9_999_999_997*types.ScalingFactorMultiplier),
 			),
 			scalingFactors:  defaultTwoAssetScalingFactors,
-			tokenOut:        sdk.NewCoins(sdk.NewInt64Coin("bar", 1)),
-			expectedTokenIn: sdk.NewInt64Coin("foo", 1),
+			tokenOut:        sdk.NewCoins(sdk.NewInt64Coin("bar", 1*types.ScalingFactorMultiplier)),
+			expectedTokenIn: sdk.NewInt64Coin("foo", 1*types.ScalingFactorMultiplier),
 			expectedPoolLiquidity: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 9_999_999_999),
-				sdk.NewInt64Coin("bar", 9_999_999_998),
+				sdk.NewInt64Coin("foo", 9_999_999_998*types.ScalingFactorMultiplier),
+				sdk.NewInt64Coin("bar", 9_999_999_996*types.ScalingFactorMultiplier),
 			),
 			swapFee:  sdk.ZeroDec(),
 			expError: false,
 		},
 		"trade exceeds max pool capacity for asset": {
 			poolAssets: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 10_000_000_000),
-				sdk.NewInt64Coin("bar", 10_000_000_000),
+				sdk.NewInt64Coin("foo", 10_000_000_000*types.ScalingFactorMultiplier),
+				sdk.NewInt64Coin("bar", 10_000_000_000*types.ScalingFactorMultiplier),
 			),
 			scalingFactors:  defaultTwoAssetScalingFactors,
 			tokenOut:        sdk.NewCoins(sdk.NewInt64Coin("bar", 1)),
 			expectedTokenIn: sdk.Coin{},
 			expectedPoolLiquidity: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 10_000_000_000),
-				sdk.NewInt64Coin("bar", 10_000_000_000),
+				sdk.NewInt64Coin("foo", 10_000_000_000*types.ScalingFactorMultiplier),
+				sdk.NewInt64Coin("bar", 10_000_000_000*types.ScalingFactorMultiplier),
 			),
 			swapFee:  sdk.ZeroDec(),
 			expError: true,
@@ -806,8 +769,8 @@ func TestSwapInAmtGivenOut(t *testing.T) {
 
 			tokenIn, err := p.SwapInAmtGivenOut(ctx, tc.tokenOut, tc.expectedTokenIn.Denom, tc.swapFee)
 			if !tc.expError {
-				require.Equal(t, tc.expectedTokenIn, tokenIn)
-				require.Equal(t, tc.expectedPoolLiquidity, p.PoolLiquidity)
+				require.True(t, tokenIn.Amount.GTE(tc.expectedTokenIn.Amount))
+				require.True(t, p.PoolLiquidity.IsAllGTE(tc.expectedPoolLiquidity))
 			}
 			osmoassert.ConditionalError(t, tc.expError, err)
 		})
@@ -959,6 +922,70 @@ func TestInverseJoinPoolExitPool(t *testing.T) {
 				finalPoolLiquidity := p.GetTotalPoolLiquidity(ctx)
 				require.True(t, tokenOut.IsAllLTE(expectedTokenOut))
 				require.True(t, finalPoolLiquidity.IsAllGTE(tc.poolAssets))
+			}
+			osmoassert.ConditionalError(t, !tc.expectPass, err)
+		})
+	}
+}
+
+func TestExitPool(t *testing.T) {
+	tenPercentOfTwoPoolCoins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(int64(1000000000/10))), sdk.NewCoin("bar", sdk.NewInt(int64(1000000000/10))))
+	tenPercentOfThreePoolCoins := sdk.NewCoins(sdk.NewCoin("asset/a", sdk.NewInt(1000000/10)), sdk.NewCoin("asset/b", sdk.NewInt(1000000/10)), sdk.NewCoin("asset/c", sdk.NewInt(1000000/10)))
+	tenPercentOfUnevenThreePoolCoins := sdk.NewCoins(sdk.NewCoin("asset/a", sdk.NewInt(1000000/10)), sdk.NewCoin("asset/b", sdk.NewInt(2000000/10)), sdk.NewCoin("asset/c", sdk.NewInt(3000000/10)))
+	type testcase struct {
+		sharesIn              sdk.Int
+		initialPoolLiquidity  sdk.Coins
+		scalingFactors        []uint64
+		expectedPoolLiquidity sdk.Coins
+		expectedTokenOut      sdk.Coins
+		expectPass            bool
+	}
+	tests := map[string]testcase{
+		"basic two-asset pool exit on even pool": {
+			sharesIn:              types.InitPoolSharesSupply.Quo(sdk.NewInt(10)),
+			initialPoolLiquidity:  twoEvenStablePoolAssets,
+			scalingFactors:        defaultTwoAssetScalingFactors,
+			expectedPoolLiquidity: twoEvenStablePoolAssets.Sub(tenPercentOfTwoPoolCoins),
+			expectedTokenOut:      tenPercentOfTwoPoolCoins,
+			expectPass:            true,
+		},
+		"basic three-asset pool exit on even pool": {
+			sharesIn:              types.InitPoolSharesSupply.Quo(sdk.NewInt(10)),
+			initialPoolLiquidity:  threeEvenStablePoolAssets,
+			scalingFactors:        defaultThreeAssetScalingFactors,
+			expectedPoolLiquidity: threeEvenStablePoolAssets.Sub(tenPercentOfThreePoolCoins),
+			expectedTokenOut:      tenPercentOfThreePoolCoins,
+			expectPass:            true,
+		},
+		"basic three-asset pool exit on uneven pool": {
+			sharesIn:              types.InitPoolSharesSupply.Quo(sdk.NewInt(10)),
+			initialPoolLiquidity:  threeUnevenStablePoolAssets,
+			scalingFactors:        defaultThreeAssetScalingFactors,
+			expectedPoolLiquidity: threeUnevenStablePoolAssets.Sub(tenPercentOfUnevenThreePoolCoins),
+			expectedTokenOut:      tenPercentOfUnevenThreePoolCoins,
+			expectPass:            true,
+		},
+		"pool exit pushes post-scaled asset below 1": {
+			// attempt to exit one token when post-scaled amount is already 1 for each asset
+			sharesIn:              types.InitPoolSharesSupply.Quo(sdk.NewInt(1000000)),
+			initialPoolLiquidity:  threeEvenStablePoolAssets,
+			scalingFactors:        []uint64{1000000 / types.ScalingFactorMultiplier, 100000 / types.ScalingFactorMultiplier, 100000 / types.ScalingFactorMultiplier},
+			expectedPoolLiquidity: threeEvenStablePoolAssets,
+			expectedTokenOut:      sdk.Coins{},
+			expectPass:            false,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := sdk.Context{}
+			p := poolStructFromAssets(tc.initialPoolLiquidity, tc.scalingFactors)
+			tokenOut, err := p.ExitPool(ctx, tc.sharesIn, defaultExitFee)
+
+			if tc.expectPass {
+				finalPoolLiquidity := p.GetTotalPoolLiquidity(ctx)
+				require.True(t, tokenOut.IsAllLTE(tc.expectedTokenOut))
+				require.True(t, finalPoolLiquidity.IsAllGTE(tc.expectedPoolLiquidity))
 			}
 			osmoassert.ConditionalError(t, !tc.expectPass, err)
 		})

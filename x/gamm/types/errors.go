@@ -53,4 +53,5 @@ var (
 	ErrNotScalingFactorGovernor        = sdkerrors.Register(ModuleName, 63, "not scaling factor governor")
 	ErrInvalidScalingFactors           = sdkerrors.Register(ModuleName, 64, "invalid scaling factor")
 	ErrHitMaxScaledAssets              = sdkerrors.Register(ModuleName, 65, "post-scaled pool assets can not exceed 10B")
+	ErrHitMinScaledAssets              = sdkerrors.Register(ModuleName, 66, "post-scaled pool assets can not be less than 1")
 )
