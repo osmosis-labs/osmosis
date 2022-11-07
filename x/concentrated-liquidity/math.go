@@ -7,6 +7,8 @@ import (
 type swapStrategy interface {
 	getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec)
 	computeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext, amountIn, amountOut sdk.Dec)
+	setLiquidityDeltaSign(sdk.Int, bool) sdk.Int
+	setNextTick(int64, bool) sdk.Int
 }
 
 type zeroForOneStrategy struct{}
@@ -128,6 +130,34 @@ func (s *zeroForOneStrategy) getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidi
 
 func (s *oneForZeroStrategy) getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
 	return getNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemaining)
+}
+
+func (s *zeroForOneStrategy) setLiquidityDeltaSign(deltaLiquidity sdk.Int, swapIn bool) sdk.Int {
+	if swapIn {
+		return deltaLiquidity.Neg()
+	}
+	return deltaLiquidity
+}
+
+func (s *oneForZeroStrategy) setLiquidityDeltaSign(deltaLiquidity sdk.Int, swapIn bool) sdk.Int {
+	if !swapIn {
+		return deltaLiquidity.Neg()
+	}
+	return deltaLiquidity
+}
+
+func (s *zeroForOneStrategy) setNextTick(nextTick int64, swapIn bool) sdk.Int {
+	if swapIn {
+		return sdk.NewInt(nextTick - 1)
+	}
+	return sdk.NewInt(nextTick)
+}
+
+func (s *oneForZeroStrategy) setNextTick(nextTick int64, swapIn bool) sdk.Int {
+	if swapIn {
+		return sdk.NewInt(nextTick)
+	}
+	return sdk.NewInt(nextTick - 1)
 }
 
 // getNextSqrtPriceFromAmount0RoundingUp utilizes the current squareRootPrice, liquidity of denom0, and amount of denom0 that still needs

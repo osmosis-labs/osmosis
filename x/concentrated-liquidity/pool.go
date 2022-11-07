@@ -175,20 +175,14 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, err
 			}
-			if zeroForOne {
-				liquidityDelta = liquidityDelta.Neg()
-			}
+			liquidityDelta = swapStrategy.setLiquidityDeltaSign(liquidityDelta, true)
 
 			swapState.liquidity = swapState.liquidity.Add(liquidityDelta.ToDec())
 
 			if swapState.liquidity.LTE(sdk.ZeroDec()) || swapState.liquidity.IsNil() {
 				return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, err
 			}
-			if zeroForOne {
-				swapState.tick = sdk.NewInt(nextTick - 1)
-			} else {
-				swapState.tick = sdk.NewInt(nextTick)
-			}
+			swapState.tick = swapStrategy.setNextTick(nextTick, true)
 		} else if !sqrtPriceStart.Equal(sqrtPrice) {
 			swapState.tick = priceToTick(sqrtPrice.Power(2))
 		}
@@ -303,18 +297,13 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 			if err != nil {
 				return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), err
 			}
-			if !zeroForOne {
-				liquidityDelta = liquidityDelta.Neg()
-			}
+			liquidityDelta = swapStrategy.setLiquidityDeltaSign(liquidityDelta, false)
+
 			swapState.liquidity = swapState.liquidity.Add(liquidityDelta.ToDec())
 			if swapState.liquidity.LTE(sdk.ZeroDec()) || swapState.liquidity.IsNil() {
 				return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("no liquidity available, cannot swap")
 			}
-			if !zeroForOne {
-				swapState.tick = sdk.NewInt(nextTick - 1)
-			} else {
-				swapState.tick = sdk.NewInt(nextTick)
-			}
+			swapState.tick = swapStrategy.setNextTick(nextTick, false)
 		} else {
 			swapState.tick = priceToTick(sqrtPrice.Power(2))
 		}
