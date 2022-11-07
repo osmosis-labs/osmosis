@@ -182,7 +182,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 		}
 
 		// utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn
-		// we also calculate the pool's new sqrtPrice after this trade
+		// we also calculate the swap state's new sqrtPrice after this swap
 		sqrtPrice, amountIn, amountOut := computeSwapStep(
 			swapState.sqrtPrice,
 			sqrtPriceTarget,
@@ -193,9 +193,9 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 
 		// update the swapState with the new sqrtPrice from the above swap
 		swapState.sqrtPrice = sqrtPrice
-		// we deduct the amount of tokens we input in the computeSwapStep above from the amount the user defined tokenIn
+		// we deduct the amount of tokens we input in the computeSwapStep above from the user's defined tokenIn amount
 		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn)
-		// we add the amount of tokens we received from the computeSwapStep above to the amountCalculated accumulator
+		// we add the amount of tokens we received (amountOut) from the computeSwapStep above to the amountCalculated accumulator
 		swapState.amountCalculated = swapState.amountCalculated.Add(amountOut)
 
 		// if the computeSwapStep calculated a sqrtPrice that is equal to the nextSqrtPrice, this means all liquidity in the current
