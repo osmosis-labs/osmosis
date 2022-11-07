@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
+	"github.com/stretchr/testify/suite"
 )
 
 type KeeperTestSuite struct {
@@ -15,9 +15,7 @@ type KeeperTestSuite struct {
 
 const testExpectedPoolId = 3
 
-var (
-	testPoolCreationFee = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000_000_000)}
-)
+var testPoolCreationFee = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000_000_000)}
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
