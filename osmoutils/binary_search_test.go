@@ -17,65 +17,6 @@ var (
 	zero          = osmomath.ZeroDec()
 )
 
-func TestBinarySearch(t *testing.T) {
-	// straight line function that returns input. Simplest to binary search on,
-	// binary search directly reveals one bit of the answer in each iteration with this function.
-	lineF := func(a sdk.Int) (sdk.Int, error) {
-		return a, nil
-	}
-	cubicF := func(a sdk.Int) (sdk.Int, error) {
-		calculation := sdk.Dec(a)
-		result := calculation.Power(3)
-		output := sdk.Int(result)
-		return output, nil
-	}
-	noErrTolerance := ErrTolerance{AdditiveTolerance: sdk.ZeroInt()}
-	testErrToleranceAdditive := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20)}
-	testErrToleranceMultiplicative := ErrTolerance{AdditiveTolerance: sdk.ZeroInt(), MultiplicativeTolerance: sdk.NewDec(10)}
-	testErrToleranceBoth := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20), MultiplicativeTolerance: sdk.NewDec(1 << 3)}
-	tests := map[string]struct {
-		f             func(sdk.Int) (sdk.Int, error)
-		lowerbound    sdk.Int
-		upperbound    sdk.Int
-		targetOutput  sdk.Int
-		errTolerance  ErrTolerance
-		maxIterations int
-
-		expectedSolvedInput sdk.Int
-		expectErr           bool
-		// This binary searches inputs to a monotonic increasing function F
-		// We stop when the answer is within error bounds stated by errTolerance
-		// First, (lowerbound + upperbound) / 2 becomes the current estimate.
-		// A current output is also defined as f(current estimate). In this case f is lineF
-		// We then compare the current output with the target output to see if it's within error tolerance bounds. If not, continue binary searching by iterating.
-		// If it is, we return current output
-		// Additive error bounds are solid addition / subtraction bounds to error, while multiplicative bounds take effect after dividing by the minimum between the two compared numbers.
-	}{
-		"linear f, no err tolerance, converges":                          {lineF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 51, sdk.NewInt(1 + (1 << 25)), false},
-		"linear f, no err tolerance, does not converge":                  {lineF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 10, sdk.Int{}, true},
-		"cubic f, no err tolerance, converges":                           {cubicF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 51, sdk.NewInt(322539792367616), false},
-		"cubic f, no err tolerance, does not converge":                   {cubicF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 10, sdk.Int{}, true},
-		"cubic f, large additive err tolerance, converges":               {cubicF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 15)), testErrToleranceAdditive, 51, sdk.NewInt(1 << 46), false},
-		"cubic f, large additive err tolerance, does not converge":       {cubicF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 30)), testErrToleranceAdditive, 10, sdk.Int{}, true},
-		"cubic f, large multiplicative err tolerance, converges":         {cubicF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), testErrToleranceMultiplicative, 51, sdk.NewInt(322539792367616), false},
-		"cubic f, large multiplicative err tolerance, does not converge": {cubicF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), testErrToleranceMultiplicative, 10, sdk.Int{}, true},
-		"cubic f, both err tolerances, converges":                        {cubicF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 15)), testErrToleranceBoth, 51, sdk.NewInt(1 << 45), false},
-		"cubic f, both err tolerances, does not converge":                {cubicF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 30)), testErrToleranceBoth, 10, sdk.Int{}, true},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			actualSolvedInput, err := BinarySearch(tc.f, tc.lowerbound, tc.upperbound, tc.targetOutput, tc.errTolerance, tc.maxIterations)
-			if tc.expectErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-				require.True(sdk.IntEq(t, tc.expectedSolvedInput, actualSolvedInput))
-			}
-		})
-	}
-}
-
 // straight line function that returns input. Simplest to binary search on,
 // binary search directly reveals one bit of the answer in each iteration with this function.
 func lineF(a osmomath.BigDec) (osmomath.BigDec, error) {
