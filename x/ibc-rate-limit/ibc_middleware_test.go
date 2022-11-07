@@ -3,12 +3,11 @@ package ibc_rate_limit_test
 import (
 	"encoding/json"
 	"fmt"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
-
-	ibc_rate_limit "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -104,6 +103,29 @@ func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount sdk.Int) 
 		timeoutHeight,
 		0,
 	)
+}
+
+func CalculateChannelValue(ctx sdk.Context, denom string, bankKeeper bankkeeper.Keeper) sdk.Int {
+	return bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
+
+	// ToDo: The commented-out code bellow is what we want to happen, but we're temporarily
+	//  using the whole supply for efficiency until there's a solution for
+	//  https://github.com/cosmos/ibc-go/issues/2664
+
+	// For non-native (ibc) tokens, return the supply if the token in osmosis
+	//if strings.HasPrefix(denom, "ibc/") {
+	//	return bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
+	//}
+	//
+	// For native tokens, obtain the balance held in escrow for all potential channels
+	//channels := channelKeeper.GetAllChannels(ctx)
+	//balance := sdk.NewInt(0)
+	//for _, channel := range channels {
+	//	escrowAddress := transfertypes.GetEscrowAddress("transfer", channel.ChannelId)
+	//	balance = balance.Add(bankKeeper.GetBalance(ctx, escrowAddress, denom).Amount)
+	//
+	//}
+	//return balance
 }
 
 // Tests that a receiver address longer than 4096 is not accepted
@@ -269,7 +291,7 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	osmosisApp := suite.chainA.GetOsmosisApp()
 
 	// This is the first one. Inside the tests. It works as expected.
-	channelValue := ibc_rate_limit.CalculateChannelValue(suite.chainA.GetContext(), denom, osmosisApp.BankKeeper, osmosisApp.IBCKeeper.ChannelKeeper)
+	channelValue := CalculateChannelValue(suite.chainA.GetContext(), denom, osmosisApp.BankKeeper)
 
 	// The amount to be sent is send 2.5% (quota is 5%)
 	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))
@@ -352,7 +374,7 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	osmosisApp := suite.chainA.GetOsmosisApp()
 
 	// This is the first one. Inside the tests. It works as expected.
-	channelValue := ibc_rate_limit.CalculateChannelValue(suite.chainA.GetContext(), denom, osmosisApp.BankKeeper, osmosisApp.IBCKeeper.ChannelKeeper)
+	channelValue := CalculateChannelValue(suite.chainA.GetContext(), denom, osmosisApp.BankKeeper)
 
 	// The amount to be sent is send 2.5% (quota is 5%)
 	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))

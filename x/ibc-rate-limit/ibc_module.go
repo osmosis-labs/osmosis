@@ -128,12 +128,6 @@ func (im *IBCModule) OnRecvPacket(
 		// The contract has not been configured. Continue as usual
 		return im.app.OnRecvPacket(ctx, packet, relayer)
 	}
-	//_, denom, err := GetFundsFromPacket(packet)
-	//if err != nil {
-	//	return channeltypes.NewErrorAcknowledgement("bad packet in rate limit's OnRecvPacket")
-	//}
-
-	//channelValue := im.ics4Middleware.CalculateChannelValue(ctx, denom)
 
 	err := CheckAndUpdateRateLimits(ctx, im.ics4Middleware.ContractKeeper, "recv_packet", contract, packet)
 	if err != nil {
