@@ -1,8 +1,6 @@
 package types
 
 import (
-	"math/big"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -38,5 +36,5 @@ var (
 
 	// Maximum amount per asset after the application of scaling factors should be 10e34.
 	// Since this number cannot fit into int64, we use raw big.Int to calculate 10^34 and then convert to sdk.Int
-	StableswapMaxScaledAmtPerAsset = sdk.NewInt(10).Pow(34)
+	StableswapMaxScaledAmtPerAsset = sdk.NewDec(10).Power(34).TruncateInt()
 )
