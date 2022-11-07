@@ -111,12 +111,12 @@ func getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining sdk.
 
 // getNextSqrtPriceFromAmount0RoundingUp utilizes the current squareRootPrice, liquidity of denom0, and amount of denom0 that still needs
 // to be swapped in order to determine the next squareRootPrice
-// if (amountRemaining * sqrtPriceCurrent) / amountRemaining  == sqrtPriceCurrent AND (liquidity * 2) + (amountRemaining * sqrtPriceCurrent) >= (liquidity * 2)
-// sqrtPriceNext = (liquidity * 2 * sqrtPriceCurrent) / ((liquidity * 2) + (amountRemaining * sqrtPriceCurrent))
+// if (amountRemaining * sqrtPriceCurrent) / amountRemaining  == sqrtPriceCurrent AND (liquidity) + (amountRemaining * sqrtPriceCurrent) >= (liquidity)
+// sqrtPriceNext = (liquidity * sqrtPriceCurrent) / ((liquidity) + (amountRemaining * sqrtPriceCurrent))
 // else
-// sqrtPriceNext = ((liquidity * 2)) / (((liquidity * 2) / (sqrtPriceCurrent)) + (amountRemaining))
+// sqrtPriceNext = ((liquidity)) / (((liquidity) / (sqrtPriceCurrent)) + (amountRemaining))
 func getNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
-	numerator := liquidity.Mul(sdk.NewDec(2))
+	numerator := liquidity
 	product := amountRemaining.Mul(sqrtPriceCurrent)
 
 	if product.Quo(amountRemaining).Equal(sqrtPriceCurrent) {

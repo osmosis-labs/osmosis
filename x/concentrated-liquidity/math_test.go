@@ -248,13 +248,13 @@ func (suite *KeeperTestSuite) TestComputeSwapState() {
 		},
 		"happy path: trade asset1 for asset0": {
 			sqrtPCurrent:          sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
-			sqrtPTarget:           sdk.MustNewDecFromStr("70.738349405152439867"), // 5003.914076565430543175
-			liquidity:             sdk.MustNewDecFromStr("1517882343.751510418088349649"),
+			sqrtPTarget:           sdk.MustNewDecFromStr("70.738349405152439867"), // 5003.91407656543054317
+			liquidity:             sdk.MustNewDecFromStr("1517818840.967515822610790519"),
 			amountRemaining:       sdk.NewDec(42000000),
 			zeroForOne:            false,
-			expectedSqrtPriceNext: "70.738348247484497718",
-			expectedAmountIn:      "42000000.000000000749226725",
-			expectedAmountOut:     "8396.714242162306260206",
+			expectedSqrtPriceNext: "70.738349405152439867",
+			expectedAmountIn:      "42000000.000000000650233591",
+			expectedAmountOut:     "8396.714104746015980302",
 		},
 	}
 
