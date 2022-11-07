@@ -267,7 +267,7 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	osmosisApp := suite.chainA.GetOsmosisApp()
 
 	// This is the first one. Inside the tests. It works as expected.
-	channelValue := ibc_rate_limit.CalculateChannelValue(suite.chainA.GetContext(), denom, "transfer", "channel-0", osmosisApp.BankKeeper)
+	channelValue := ibc_rate_limit.CalculateChannelValue(suite.chainA.GetContext(), denom, osmosisApp.BankKeeper, osmosisApp.IBCKeeper.ChannelKeeper)
 
 	// The amount to be sent is send 2.5% (quota is 5%)
 	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))
@@ -351,7 +351,7 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	osmosisApp := suite.chainA.GetOsmosisApp()
 
 	// This is the first one. Inside the tests. It works as expected.
-	channelValue := ibc_rate_limit.CalculateChannelValue(suite.chainA.GetContext(), denom, "transfer", "channel-0", osmosisApp.BankKeeper)
+	channelValue := ibc_rate_limit.CalculateChannelValue(suite.chainA.GetContext(), denom, osmosisApp.BankKeeper, osmosisApp.IBCKeeper.ChannelKeeper)
 
 	// The amount to be sent is send 2.5% (quota is 5%)
 	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))
@@ -406,9 +406,10 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 
 	// Get the escrowed amount
 	osmosisApp := suite.chainA.GetOsmosisApp()
-	escrowAddress := transfertypes.GetEscrowAddress("transfer", "channel-0")
-	escrowed := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)
-
+	// ToDo: This is what we eventually want here, but using the full supply temporarily for performance reasons. See CalculateChannelValue
+	//escrowAddress := transfertypes.GetEscrowAddress("transfer", "channel-0")
+	//escrowed := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)
+	escrowed := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 	quota := escrowed.Amount.QuoRaw(100) // 1% of the escrowed amount
 
 	// Use the whole quota
