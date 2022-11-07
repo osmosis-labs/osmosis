@@ -16,6 +16,55 @@ func (suite *KeeperTestSuite) TestGRPCParams() {
 	suite.Require().True(res.Params.MinimumRiskFactor.Equal(types.DefaultParams().MinimumRiskFactor))
 }
 
+func (suite *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
+	suite.SetupTest()
+	ctx := suite.Ctx
+	querier := suite.querier
+	delegation_amount := int64(1000000)
+
+	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
+	denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+
+	superfluidDelegations := []superfluidDelegation{
+		{0, 0, 0, delegation_amount},
+		{0, 1, 1, delegation_amount},
+		{1, 0, 1, delegation_amount},
+		{1, 1, 0, delegation_amount},
+	}
+
+	suite.setupSuperfluidDelegations(valAddrs, superfluidDelegations, denoms)
+
+	for _, denom := range denoms {
+		res, err := querier.TotalDelegationByValidatorForDenom(sdk.WrapSDKContext(ctx), &types.QueryTotalDelegationByValidatorForDenomRequest{Denom: denom})
+
+		suite.Require().NoError(err)
+		suite.Require().Equal(len(valAddrs), len(res.Assets))
+
+		for _, result := range res.Assets {
+			// check osmo equivalent is correct
+			actual_response_osmo := result.OsmoEquivalent
+			needed_response_osmo := suite.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(ctx, denom, sdk.NewInt(delegation_amount))
+
+			suite.Require().Equal(actual_response_osmo, needed_response_osmo)
+
+			// check sfs'd asset amount correct
+			actual_response_asset := result.AmountSfsd
+			needed_response_asset := sdk.NewInt(delegation_amount)
+			suite.Require().Equal(actual_response_asset, needed_response_asset)
+
+			// check validator addresses correct
+			actual_val := result.ValAddr
+			checks := 0
+			for _, val := range valAddrs {
+				if val.String() == actual_val {
+					checks++
+					break
+				}
+			}
+			suite.Require().True(checks == 1)
+		}
+	}
+}
 func (suite *KeeperTestSuite) TestGRPCSuperfluidAsset() {
 	suite.SetupTest()
 
