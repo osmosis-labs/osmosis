@@ -268,7 +268,7 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	maxIterations := 256
 
 	// we use a geometric error tolerance that guarantees approximately 10^-8 precision on outputs
-	errTolerance := osmoutils.BigDecErrTolerance{AdditiveTolerance: osmomath.BigDec{}, MultiplicativeTolerance: osmomath.NewDecWithPrec(1, 24)}
+	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.Int{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12)}
 
 	// create single-input CFMM to pass into binary search
 	computeFromEst := func(xEst osmomath.BigDec) (osmomath.BigDec, error) {
