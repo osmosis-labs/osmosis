@@ -96,6 +96,24 @@ func (e ErrTolerance) CompareBigDec(expected osmomath.BigDec, actual osmomath.Bi
 	return 0
 }
 
+// Compares big decimal's, using the error tolerance for defining equality in one direction.
+func (e ErrTolerance) CompareBigDecWithRoundingDirection(expected osmomath.BigDec, actual osmomath.BigDec,
+	dir osmomath.RoundingDirection) int {
+	// Ensure that even if expected is within tolerance of actual, we don't count it as equal if its in the wrong direction.
+	// so if were supposed to round down, it must be that `expected >= actual`.
+	// likewise if were supposed to round up, it must be that `expected <= actual`
+	if dir == osmomath.RoundDown {
+		if expected.LT(actual) {
+			return -1
+		}
+	} else if dir == osmomath.RoundUp {
+		if expected.GT(actual) {
+			return 1
+		}
+	}
+	return e.CompareBigDec(expected, actual)
+}
+
 // Binary search inputs between [lowerbound, upperbound] to a monotonic increasing function f.
 // We stop once f(found_input) meets the ErrTolerance constraints.
 // If we perform more than maxIterations (or equivalently lowerbound = upperbound), we return an error.
@@ -132,6 +150,13 @@ func BinarySearch(f func(input sdk.Int) (sdk.Int, error),
 	return sdk.Int{}, errors.New("hit maximum iterations, did not converge fast enough")
 }
 
+// SdkDec
+type SdkDec[D any] interface {
+	Add(SdkDec[D]) SdkDec[D]
+	Quo(SdkDec[D]) SdkDec[D]
+	QuoRaw(int64) SdkDec[D]
+}
+
 // BinarySearchBigDec takes as input:
 // * an input range [lowerbound, upperbound]
 // * an increasing function f
@@ -145,6 +170,7 @@ func BinarySearchBigDec(f func(input osmomath.BigDec) (osmomath.BigDec, error),
 	upperbound osmomath.BigDec,
 	targetOutput osmomath.BigDec,
 	errTolerance ErrTolerance,
+	roundingDirection osmomath.RoundingDirection,
 	maxIterations int,
 ) (osmomath.BigDec, error) {
 	// Setup base case of loop
@@ -155,10 +181,11 @@ func BinarySearchBigDec(f func(input osmomath.BigDec) (osmomath.BigDec, error),
 	}
 	curIteration := 0
 	for ; curIteration < maxIterations; curIteration += 1 {
-		compRes := errTolerance.CompareBigDec(curOutput, targetOutput)
-		if compRes > 0 {
+		// fmt.Println(targetOutput, curOutput)
+		compRes := errTolerance.CompareBigDecWithRoundingDirection(targetOutput, curOutput, roundingDirection)
+		if compRes < 0 {
 			upperbound = curEstimate
-		} else if compRes < 0 {
+		} else if compRes > 0 {
 			lowerbound = curEstimate
 		} else {
 			return curEstimate, nil

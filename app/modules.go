@@ -67,6 +67,8 @@ import (
 	twaptypes "github.com/osmosis-labs/osmosis/v12/x/twap/types"
 	"github.com/osmosis-labs/osmosis/v12/x/txfees"
 	txfeestypes "github.com/osmosis-labs/osmosis/v12/x/txfees/types"
+	valsetpreftypes "github.com/osmosis-labs/osmosis/v12/x/valset-pref/types"
+	valsetprefmodule "github.com/osmosis-labs/osmosis/v12/x/valset-pref/valpref-module"
 )
 
 // moduleAccountPermissions defines module account permissions
@@ -90,6 +92,7 @@ var moduleAccountPermissions = map[string][]string{
 	txfeestypes.NonNativeFeeCollectorName:    nil,
 	wasm.ModuleName:                          {authtypes.Burner},
 	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
+	valsetpreftypes.ModuleName:               {authtypes.Staking},
 }
 
 // appModules return modules to initialize module manager.
@@ -142,6 +145,7 @@ func appModules(
 			app.EpochsKeeper,
 		),
 		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
+		valsetprefmodule.NewAppModule(appCodec, *app.ValidatorSetPreferenceKeeper),
 	}
 }
 
@@ -211,6 +215,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		poolincentivestypes.ModuleName,
 		superfluidtypes.ModuleName,
 		tokenfactorytypes.ModuleName,
+		valsetpreftypes.ModuleName,
 		incentivestypes.ModuleName,
 		epochstypes.ModuleName,
 		lockuptypes.ModuleName,
