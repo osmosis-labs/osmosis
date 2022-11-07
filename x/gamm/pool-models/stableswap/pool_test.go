@@ -69,7 +69,7 @@ func poolStructFromAssets(assets sdk.Coins, scalingFactors []uint64) Pool {
 		PoolParams:         defaultStableswapPoolParams,
 		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),
 		PoolLiquidity:      assets,
-		ScalingFactor:      scalingFactors,
+		ScalingFactors:     scalingFactors,
 		FuturePoolGovernor: defaultFutureGovernor,
 	}
 	return p
@@ -395,7 +395,7 @@ func TestGetDescaledPoolAmts(t *testing.T) {
 					PoolParams:         defaultStableswapPoolParams,
 					TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),
 					PoolLiquidity:      tc.poolAssets,
-					ScalingFactor:      tc.scalingFactors,
+					ScalingFactors:     tc.scalingFactors,
 					FuturePoolGovernor: defaultFutureGovernor,
 				}
 
@@ -491,7 +491,7 @@ func TestScaleCoin(t *testing.T) {
 				PoolParams:         defaultStableswapPoolParams,
 				TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),
 				PoolLiquidity:      tc.poolAssets,
-				ScalingFactor:      tc.scalingFactors,
+				ScalingFactors:     tc.scalingFactors,
 				FuturePoolGovernor: defaultFutureGovernor,
 			}
 
@@ -699,6 +699,7 @@ func TestSwapOutAmtGivenIn(t *testing.T) {
 			swapFee:               sdk.ZeroDec(),
 			expError:              false,
 		},
+		// looks like its really an error due to slippage at limit
 		"trade hits max pool capacity for asset": {
 			poolAssets: sdk.NewCoins(
 				sdk.NewInt64Coin("foo", 9_999_999_998),
@@ -706,13 +707,13 @@ func TestSwapOutAmtGivenIn(t *testing.T) {
 			),
 			scalingFactors:   defaultTwoAssetScalingFactors,
 			tokenIn:          sdk.NewCoins(sdk.NewInt64Coin("foo", 1)),
-			expectedTokenOut: sdk.NewInt64Coin("bar", 1),
+			expectedTokenOut: sdk.Coin{},
 			expectedPoolLiquidity: sdk.NewCoins(
 				sdk.NewInt64Coin("foo", 9_999_999_999),
 				sdk.NewInt64Coin("bar", 9_999_999_998),
 			),
 			swapFee:  sdk.ZeroDec(),
-			expError: false,
+			expError: true,
 		},
 		"trade exceeds max pool capacity for asset": {
 			poolAssets: sdk.NewCoins(
@@ -737,11 +738,11 @@ func TestSwapOutAmtGivenIn(t *testing.T) {
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 
 			tokenOut, err := p.SwapOutAmtGivenIn(ctx, tc.tokenIn, tc.expectedTokenOut.Denom, tc.swapFee)
+			osmoassert.ConditionalError(t, tc.expError, err)
 			if !tc.expError {
 				require.Equal(t, tc.expectedTokenOut, tokenOut)
 				require.Equal(t, tc.expectedPoolLiquidity, p.PoolLiquidity)
 			}
-			osmoassert.ConditionalError(t, tc.expError, err)
 		})
 	}
 }
