@@ -243,7 +243,9 @@ fn calculate_channel_value(
             if denom.contains("ibc") {
                 channel_value + funds // Non-Native tokens get removed from the supply on send. Add that amount back
             } else {
-                channel_value - funds // Native tokens increase escrow amount on send. Remove that amount here
+                // The commented-out code in the golang calculate channel value is what we want, but we're currently using the whole supply temporarily for efficiency. see rate_limit.go/CalculateChannelValue(..)
+                //channel_value - funds // Native tokens increase escrow amount on send. Remove that amount here
+                channel_value
             }
         }
         FlowType::In => channel_value,
