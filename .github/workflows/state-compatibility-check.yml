@@ -36,12 +36,8 @@ on:
 env:
   GOLANG_VERSION: 1.18
   GENESIS_URL: https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
-<<<<<<< HEAD
-  SNAPSHOT_BUCKET: https://osmosis-snapshot.sfo3.cdn.digitaloceanspaces.com
-=======
   ADDRBOOK_URL: https://dl2.quicksync.io/json/addrbook.osmosis.json
   SNAPSHOT_BUCKET: https://snapshots.osmosis.zone
->>>>>>> 5a3e33cd (Update snapshot service (#3256))
   RPC_ENDPOINT: https://rpc.osmosis.zone
   LCD_ENDPOINT: https://lcd.osmosis.zone
   DELTA_HALT_HEIGHT: 50
@@ -123,7 +119,7 @@ jobs:
 
             SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/v$REPO_MAJOR_VERSION/snapshots.json
             SNAPSHOT_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" $SNAPSHOT_INFO_URL)
-            SNAPSHOT_BLOCK_HEIGHT=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).height')
+            SNAPSHOT_BLOCK_HEIGHT=$(echo $SNAPSHOT_INFO | jq -r '.[] | select(.type == "pre-epoch").height')
             LAST_EPOCH_BLOCK_HEIGHT=$(($SNAPSHOT_BLOCK_HEIGHT + 100))
           fi
 
@@ -140,12 +136,9 @@ jobs:
           dasel put string -f $CONFIG_FOLDER/app.toml '.halt-height' $HALT_HEIGHT
           dasel put string -f $CONFIG_FOLDER/app.toml '.pruning' everything
           dasel put string -f $CONFIG_FOLDER/app.toml '.state-sync.snapshot-interval' 0
-<<<<<<< HEAD
-=======
 
           # Download addrbook
           wget -q -O $CONFIG_FOLDER/addrbook.json ${{ env.ADDRBOOK_URL }}
->>>>>>> 5a3e33cd (Update snapshot service (#3256))
       -
         name: 🧪 Start Osmosis Node
         run: build/osmosisd start
