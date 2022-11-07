@@ -97,7 +97,17 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 			return err
 		}
 
-		_, err = k.stakingKeeper.Undelegate(ctx, delegator, valAddr, amountToUnDelegate)
+		validator, found := k.stakingKeeper.GetValidator(ctx, valAddr)
+		if !found {
+			return fmt.Errorf("validator %s not found", valAddr)
+		}
+
+		sharesAmt, err := validator.SharesFromTokens(amountToUnDelegate.RoundInt())
+		if err != nil {
+			return err
+		}
+
+		_, err = k.stakingKeeper.Undelegate(ctx, delegator, valAddr, sharesAmt) // this has to be shares amount
 		if err != nil {
 			return err
 		}
