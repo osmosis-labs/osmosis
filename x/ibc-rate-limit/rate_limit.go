@@ -2,6 +2,7 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -120,7 +121,6 @@ func unwrapPacket(packet exported.PacketI) (UnwrappedPacket, error) {
 		TimeoutHeight:      height,
 		TimeoutTimestamp:   packet.GetTimeoutTimestamp(),
 	}, nil
-
 }
 
 func BuildWasmExecMsg(msgType string, packet exported.PacketI) ([]byte, error) {

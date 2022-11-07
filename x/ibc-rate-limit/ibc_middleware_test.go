@@ -3,11 +3,12 @@ package ibc_rate_limit_test
 import (
 	"encoding/json"
 	"fmt"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -430,8 +431,8 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	// Get the escrowed amount
 	osmosisApp := suite.chainA.GetOsmosisApp()
 	// ToDo: This is what we eventually want here, but using the full supply temporarily for performance reasons. See CalculateChannelValue
-	//escrowAddress := transfertypes.GetEscrowAddress("transfer", "channel-0")
-	//escrowed := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)
+	// escrowAddress := transfertypes.GetEscrowAddress("transfer", "channel-0")
+	// escrowed := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)
 	escrowed := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 	quota := escrowed.Amount.QuoRaw(100) // 1% of the escrowed amount
 
