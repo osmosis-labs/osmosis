@@ -128,31 +128,18 @@ func (im *IBCModule) OnRecvPacket(
 		// The contract has not been configured. Continue as usual
 		return im.app.OnRecvPacket(ctx, packet, relayer)
 	}
-	_, denom, err := GetFundsFromPacket(packet)
-	if err != nil {
-		return channeltypes.NewErrorAcknowledgement("bad packet in rate limit's OnRecvPacket")
-	}
-
-	channelValue := im.ics4Middleware.CalculateChannelValue(ctx, denom)
-
-	//channel := packet.GetSourceChannel()
-	//if !strings.HasPrefix(denom, "ibc/") {
-	//	// For native channels, we want to have only one limit across all channels. We can use a quota for
-	//	//channel "any" for this
-	//	channel = "any"
+	//_, denom, err := GetFundsFromPacket(packet)
+	//if err != nil {
+	//	return channeltypes.NewErrorAcknowledgement("bad packet in rate limit's OnRecvPacket")
 	//}
 
-	err = CheckAndUpdateRateLimits(
-		ctx,
-		im.ics4Middleware.ContractKeeper,
-		"recv_packet",
-		contract,
-		packet,
-		channelValue,
-		denom,
-	)
+	//channelValue := im.ics4Middleware.CalculateChannelValue(ctx, denom)
+
+	err := CheckAndUpdateRateLimits(ctx, im.ics4Middleware.ContractKeeper, "recv_packet", contract, packet)
 	if err != nil {
-		return channeltypes.NewErrorAcknowledgement(types.ErrRateLimitExceeded.Error())
+		// ToDo: add the full error as an event instead?
+		fullError := sdkerrors.Wrap(types.ErrRateLimitExceeded, err.Error())
+		return channeltypes.NewErrorAcknowledgement(fullError.Error())
 	}
 
 	// if this returns an Acknowledgement that isn't successful, all state changes are discarded
@@ -220,17 +207,11 @@ func (im *IBCModule) RevertSentPacket(
 		return nil
 	}
 
-	_, denom, err := GetFundsFromPacket(packet)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
-	}
-
 	if err := UndoSendRateLimit(
 		ctx,
 		im.ics4Middleware.ContractKeeper,
 		contract,
 		packet,
-		denom,
 	); err != nil {
 		return err
 	}

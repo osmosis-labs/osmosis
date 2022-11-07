@@ -259,11 +259,11 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	suite.initializeEscrow()
 	// Get the denom and amount to send
 	denom := sdk.DefaultBondDenom
-	channel := "any"
+	channel := "channel-0"
 	if !native {
 		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", denom))
+		fmt.Println(denomTrace)
 		denom = denomTrace.IBCDenom()
-		channel = "channel-0"
 	}
 
 	osmosisApp := suite.chainA.GetOsmosisApp()
@@ -343,11 +343,10 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	suite.initializeEscrow()
 	// Get the denom and amount to send
 	denom := sdk.DefaultBondDenom
-	channel := "any"
+	channel := "channel-0"
 	if !native {
 		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", denom))
 		denom = denomTrace.IBCDenom()
-		channel = "channel-0"
 	}
 
 	osmosisApp := suite.chainA.GetOsmosisApp()
@@ -402,7 +401,7 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	suite.initializeEscrow()
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
-	quotas := suite.BuildChannelQuota("weekly", "any", sdk.DefaultBondDenom, 604800, 1, 1)
+	quotas := suite.BuildChannelQuota("weekly", "channel-0", sdk.DefaultBondDenom, 604800, 1, 1)
 	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 

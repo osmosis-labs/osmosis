@@ -22,7 +22,7 @@ var (
 )
 
 func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
-	msgType, contract string, packet channeltypes.Packet, channelValue sdk.Int, localDenom string,
+	msgType, contract string, packet channeltypes.Packet,
 ) error {
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
@@ -32,8 +32,6 @@ func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.Permis
 	sendPacketMsg, err := BuildWasmExecMsg(
 		msgType,
 		packet,
-		channelValue,
-		localDenom,
 	)
 	if err != nil {
 		return err
@@ -53,13 +51,12 @@ type UndoSendMsg struct {
 }
 
 type UndoPacketMsg struct {
-	Packet     UnwrappedPacket `json:"packet"`
-	LocalDenom string          `json:"local_denom"`
+	Packet UnwrappedPacket `json:"packet"`
 }
 
 func UndoSendRateLimit(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
 	contract string,
-	packet channeltypes.Packet, denom string,
+	packet channeltypes.Packet,
 ) error {
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
@@ -71,7 +68,7 @@ func UndoSendRateLimit(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedK
 		return err
 	}
 
-	msg := UndoSendMsg{UndoSend: UndoPacketMsg{Packet: unwrapped, LocalDenom: denom}}
+	msg := UndoSendMsg{UndoSend: UndoPacketMsg{Packet: unwrapped}}
 	asJson, err := json.Marshal(msg)
 	if err != nil {
 		return err
@@ -94,9 +91,7 @@ type RecvPacketMsg struct {
 }
 
 type PacketMsg struct {
-	Packet           UnwrappedPacket `json:"packet"`
-	LocalDenom       string          `json:"local_denom"`
-	ChannelValueHint sdk.Int         `json:"channel_value_hint"`
+	Packet UnwrappedPacket `json:"packet"`
 }
 
 type UnwrappedPacket struct {
@@ -129,7 +124,7 @@ func unwrapPacket(packet channeltypes.Packet) (UnwrappedPacket, error) {
 
 }
 
-func BuildWasmExecMsg(msgType string, packet channeltypes.Packet, channelValue sdk.Int, localDenom string) ([]byte, error) {
+func BuildWasmExecMsg(msgType string, packet channeltypes.Packet) ([]byte, error) {
 	unwrapped, err := unwrapPacket(packet)
 	if err != nil {
 		return []byte{}, err
@@ -139,16 +134,12 @@ func BuildWasmExecMsg(msgType string, packet channeltypes.Packet, channelValue s
 	switch {
 	case msgType == msgSend:
 		msg := SendPacketMsg{SendPacket: PacketMsg{
-			Packet:           unwrapped,
-			LocalDenom:       localDenom,
-			ChannelValueHint: channelValue,
+			Packet: unwrapped,
 		}}
 		asJson, err = json.Marshal(msg)
 	case msgType == msgRecv:
 		msg := RecvPacketMsg{RecvPacket: PacketMsg{
-			Packet:           unwrapped,
-			LocalDenom:       localDenom,
-			ChannelValueHint: channelValue,
+			Packet: unwrapped,
 		}}
 		asJson, err = json.Marshal(msg)
 	default:

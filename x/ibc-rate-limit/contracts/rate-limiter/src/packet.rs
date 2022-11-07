@@ -1,8 +1,9 @@
+use crate::state::FlowType;
 use cosmwasm_std::{Addr, Deps, StdError, Timestamp, Uint256};
+use osmosis_std_derive::CosmwasmExt;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-
-use crate::state::FlowType;
+use sha2::{Digest, Sha256};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Height {
@@ -13,14 +14,16 @@ pub struct Height {
     revision_height: Option<u64>,
 }
 
+// IBC transfer data
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct FungibleTokenData {
-    denom: String,
+    pub denom: String,
     amount: Uint256,
     sender: Addr,
     receiver: Addr,
 }
 
+// An IBC packet
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Packet {
     pub sequence: u64,
@@ -32,6 +35,47 @@ pub struct Packet {
     pub timeout_height: Height,
     pub timeout_timestamp: Option<Timestamp>,
 }
+
+// SupplyOf query message definition.
+// osmosis-std doesn't currently support the SupplyOf query, so I'm defining it localy so it can be used to obtain the channel value
+#[derive(
+    Clone,
+    PartialEq,
+    Eq,
+    ::prost::Message,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+    CosmwasmExt,
+)]
+#[proto_message(type_url = "/cosmos.bank.v1beta1.QuerySupplyOfRequest")]
+#[proto_query(
+    path = "/cosmos.bank.v1beta1.Query/SupplyOf",
+    response_type = QuerySupplyOfResponse
+)]
+pub struct QuerySupplyOfRequest {
+    #[prost(string, tag = "1")]
+    pub denom: ::prost::alloc::string::String,
+}
+
+#[derive(
+    Clone,
+    PartialEq,
+    Eq,
+    ::prost::Message,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+    CosmwasmExt,
+)]
+#[proto_message(type_url = "/cosmos.bank.v1beta1.QuerySupplyOf")]
+pub struct QuerySupplyOfResponse {
+    #[prost(message, optional, tag = "1")]
+    pub amount: ::core::option::Option<osmosis_std::types::cosmos::base::v1beta1::Coin>,
+}
+// End of SupplyOf query message definition
+
+use std::str::FromStr; // Needed to parse the coin's String as Uint256
 
 impl Packet {
     pub fn mock(channel_id: String, denom: String, funds: Uint256) -> Packet {
@@ -56,9 +100,11 @@ impl Packet {
     }
 
     pub fn channel_value(&self, deps: Deps) -> Result<Uint256, StdError> {
-        deps.querier
-            .query_supply(self.local_demom())
-            .map(|c| c.amount.into())
+        let res = QuerySupplyOfRequest {
+            denom: self.local_denom(),
+        }
+        .query(&deps.querier)?;
+        Ok(Uint256::from_str(&res.amount.unwrap_or_default().amount)?)
     }
 
     pub fn get_funds(&self) -> Uint256 {
@@ -73,13 +119,21 @@ impl Packet {
         }
     }
 
-    fn local_demom(&self) -> String {
-        // This should actually convert the denom from the packet to the osmosis denom, but for now, just returning this
-        self.data.denom.clone()
+    fn local_denom(&self) -> String {
+        if !self.data.denom.starts_with("transfer/") {
+            // For native tokens we just use what's on the packet
+            return self.data.denom.clone();
+        }
+        // For non-native tokens, we need to generate the IBCDenom
+        let mut hasher = Sha256::new();
+        hasher.update(self.data.denom.as_bytes());
+        let result = hasher.finalize();
+        let hash = hex::encode(result);
+        format!("ibc/{}", hash.to_uppercase())
     }
 
     pub fn path_data(&self, direction: &FlowType) -> (String, String) {
-        (self.local_channel(direction), self.local_demom())
+        (self.local_channel(direction), self.local_denom())
     }
 }
 

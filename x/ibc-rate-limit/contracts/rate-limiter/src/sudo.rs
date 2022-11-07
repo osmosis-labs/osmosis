@@ -26,6 +26,7 @@ pub fn process_packet(
         Some(denom) => denom,
         None => extracted_denom,
     };
+
     let path = &Path::new(&channel_id, &denom);
     let funds = packet.get_funds();
     let channel_value = match channel_value_hint {
