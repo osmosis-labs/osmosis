@@ -35,7 +35,7 @@ func (suite *KeeperTestSuite) CreateBalancerPoolsFromCoins(poolCoins []sdk.Coins
 	}
 }
 
-func (suite *KeeperTestSuite) InitGenesis() {
+func (suite *KeeperTestSuite) TestInitGenesis() {
 	suite.Setup()
 
 	suite.App.SwapRouterKeeper.InitGenesis(suite.Ctx, &types.GenesisState{
