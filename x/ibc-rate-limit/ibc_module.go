@@ -102,7 +102,7 @@ func (im *IBCModule) OnChanCloseConfirm(
 	return im.app.OnChanCloseConfirm(ctx, portID, channelID)
 }
 
-func ValidateReceiverAddress(packet channeltypes.Packet) error {
+func ValidateReceiverAddress(packet exported.PacketI) error {
 	var packetData transfertypes.FungibleTokenPacketData
 	if err := json.Unmarshal(packet.GetData(), &packetData); err != nil {
 		return err
@@ -193,7 +193,7 @@ func (im *IBCModule) OnTimeoutPacket(
 // RevertSentPacket Notifies the contract that a sent packet wasn't properly received
 func (im *IBCModule) RevertSentPacket(
 	ctx sdk.Context,
-	packet channeltypes.Packet,
+	packet exported.PacketI,
 ) error {
 	contract := im.ics4Middleware.GetParams(ctx)
 	if contract == "" {

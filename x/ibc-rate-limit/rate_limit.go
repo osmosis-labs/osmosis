@@ -7,7 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
+	"github.com/cosmos/ibc-go/v3/modules/core/exported"
 	"github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 )
 
@@ -17,7 +17,7 @@ var (
 )
 
 func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
-	msgType, contract string, packet channeltypes.Packet,
+	msgType, contract string, packet exported.PacketI,
 ) error {
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
@@ -51,7 +51,7 @@ type UndoPacketMsg struct {
 
 func UndoSendRateLimit(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
 	contract string,
-	packet channeltypes.Packet,
+	packet exported.PacketI,
 ) error {
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
@@ -100,26 +100,30 @@ type UnwrappedPacket struct {
 	TimeoutTimestamp   uint64                                `json:"timeout_timestamp,omitempty"`
 }
 
-func unwrapPacket(packet channeltypes.Packet) (UnwrappedPacket, error) {
+func unwrapPacket(packet exported.PacketI) (UnwrappedPacket, error) {
 	var packetData transfertypes.FungibleTokenPacketData
 	err := json.Unmarshal(packet.GetData(), &packetData)
 	if err != nil {
 		return UnwrappedPacket{}, err
 	}
+	height, ok := packet.GetTimeoutHeight().(clienttypes.Height)
+	if !ok {
+		return UnwrappedPacket{}, types.ErrBadMessage
+	}
 	return UnwrappedPacket{
-		Sequence:           packet.Sequence,
-		SourcePort:         packet.SourcePort,
-		SourceChannel:      packet.SourceChannel,
-		DestinationPort:    packet.DestinationPort,
-		DestinationChannel: packet.DestinationChannel,
+		Sequence:           packet.GetSequence(),
+		SourcePort:         packet.GetSourcePort(),
+		SourceChannel:      packet.GetSourceChannel(),
+		DestinationPort:    packet.GetDestPort(),
+		DestinationChannel: packet.GetDestChannel(),
 		Data:               packetData,
-		TimeoutHeight:      packet.TimeoutHeight,
-		TimeoutTimestamp:   packet.TimeoutTimestamp,
+		TimeoutHeight:      height,
+		TimeoutTimestamp:   packet.GetTimeoutTimestamp(),
 	}, nil
 
 }
 
-func BuildWasmExecMsg(msgType string, packet channeltypes.Packet) ([]byte, error) {
+func BuildWasmExecMsg(msgType string, packet exported.PacketI) ([]byte, error) {
 	unwrapped, err := unwrapPacket(packet)
 	if err != nil {
 		return []byte{}, err
