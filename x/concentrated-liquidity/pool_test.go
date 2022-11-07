@@ -468,3 +468,93 @@ func (suite *KeeperTestSuite) TestPriceToTick() {
 		})
 	}
 }
+
+// func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
+// 	ctx := s.Ctx
+// 	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", sdk.MustNewDecFromStr("70.710678"), sdk.NewInt(85176))
+// 	s.Require().NoError(err)
+// 	s.SetupPosition(pool.Id)
+
+// 	// test asset a to b logic
+// 	tokenOut := sdk.NewCoin("usdc", sdk.NewInt(4199999999))
+// 	tokenInDenom := "eth"
+// 	swapFee := sdk.NewDec(0)
+// 	minPrice := sdk.NewDec(4500)
+// 	maxPrice := sdk.NewDec(5500)
+
+// 	amountIn, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
+// 	s.Require().NoError(err)
+// 	s.Require().Equal(sdk.NewDec(805287), amountIn.Amount.ToDec())
+
+// 	// test asset b to a logic
+// 	tokenOut = sdk.NewCoin("eth", sdk.NewInt(133700))
+// 	tokenInDenom = "usdc"
+// 	swapFee = sdk.NewDec(0)
+
+// 	amountIn, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
+// 	s.Require().NoError(err)
+// 	s.Require().Equal(sdk.NewDec(666975610), amountIn.Amount.ToDec())
+
+// 	// test asset a to b logic
+// 	tokenOut = sdk.NewCoin("usdc", sdk.NewInt(4199999999))
+// 	tokenInDenom = "eth"
+// 	swapFee = sdk.NewDecWithPrec(2, 2)
+
+// 	amountIn, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
+// 	s.Require().NoError(err)
+// 	s.Require().Equal(sdk.NewDec(821722), amountIn.Amount.ToDec())
+// }
+
+// func (s *KeeperTestSuite) TestSwapInAmtGivenOut() {
+// 	ctx := s.Ctx
+// 	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, "eth", "usdc", sdk.MustNewDecFromStr("70.710678"), sdk.NewInt(85176))
+// 	s.Require().NoError(err)
+// 	fmt.Printf("%v pool liq pre \n", pool.Liquidity)
+// 	lowerTick := int64(84222)
+// 	upperTick := int64(86129)
+// 	amount0Desired := sdk.NewInt(1)
+// 	amount1Desired := sdk.NewInt(5000)
+
+// 	s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, pool.Id, s.TestAccs[0], amount0Desired, amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
+
+// 	// test asset a to b logic
+// 	tokenOut := sdk.NewCoin("usdc", sdk.NewInt(4199999999))
+// 	tokenInDenom := "eth"
+// 	swapFee := sdk.NewDec(0)
+// 	minPrice := sdk.NewDec(4500)
+// 	maxPrice := sdk.NewDec(5500)
+
+// 	amountIn, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
+// 	s.Require().NoError(err)
+// 	fmt.Printf("%v amountIn \n", amountIn)
+// 	pool = s.App.ConcentratedLiquidityKeeper.GetPoolbyId(ctx, pool.Id)
+
+// // test asset a to b logic
+// tokenOut := sdk.NewCoin("usdc", sdk.NewInt(4199999999))
+// tokenInDenom := "eth"
+// swapFee := sdk.NewDec(0)
+// minPrice := sdk.NewDec(4500)
+// maxPrice := sdk.NewDec(5500)
+
+// amountIn, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
+// s.Require().NoError(err)
+// s.Require().Equal(sdk.NewDec(805287), amountIn.Amount.ToDec())
+
+// // test asset b to a logic
+// tokenOut = sdk.NewCoin("eth", sdk.NewInt(133700))
+// tokenInDenom = "usdc"
+// swapFee = sdk.NewDec(0)
+
+// amountIn, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
+// s.Require().NoError(err)
+// s.Require().Equal(sdk.NewDec(666975610), amountIn.Amount.ToDec())
+
+// // test asset a to b logic
+// tokenOut = sdk.NewCoin("usdc", sdk.NewInt(4199999999))
+// tokenInDenom = "eth"
+// swapFee = sdk.NewDecWithPrec(2, 2)
+
+// amountIn, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
+// s.Require().NoError(err)
+// s.Require().Equal(sdk.NewDec(821722), amountIn.Amount.ToDec())
+// }
