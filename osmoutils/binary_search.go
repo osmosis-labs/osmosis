@@ -9,11 +9,18 @@ import (
 )
 
 // ErrTolerance is used to define a compare function, which checks if two
-// ints are within a certain error tolerance of one another.
+// ints are within a certain error tolerance of one another,
+// and (optionally) that they are rounding in the correct direction.
 // ErrTolerance.Compare(a, b) returns true iff:
-// |a - b| <= AdditiveTolerance
-// |a - b| / min(a, b) <= MultiplicativeTolerance
-// Each check is respectively ignored if the entry is nil (sdk.Dec{}, sdk.Int{})
+// * RoundingMode = RoundUp, then b >= a
+// * RoundingMode = RoundDown, then b <= a
+// * |a - b| <= AdditiveTolerance
+// * |a - b| / min(a, b) <= MultiplicativeTolerance
+//
+// Each check is respectively ignored if the entry is nil.
+// So AdditiveTolerance = sdk.Int{} or sdk.ZeroInt()
+// MultiplicativeTolerance = sdk.Dec{}
+// RoundingDir = RoundUnconstrained.
 // Note that if AdditiveTolerance == 0, then this is equivalent to a standard compare.
 type ErrTolerance struct {
 	AdditiveTolerance       sdk.Int
