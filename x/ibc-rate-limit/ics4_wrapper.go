@@ -8,7 +8,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	channelkeeper "github.com/cosmos/ibc-go/v3/modules/core/04-channel/keeper"
+	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
 )
@@ -52,25 +52,17 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 		return i.channel.SendPacket(ctx, chanCap, packet)
 	}
 
-	amount, denom, err := GetFundsFromPacket(packet)
-	if err != nil {
-		return sdkerrors.Wrap(err, "Rate limit SendPacket")
+	// We need the full packet so the contract can process it. If it can't be cast to a channeltypes.Packet, this
+	// should fail. The only reason that would happen is if another middleware is modifying the packet, though. In
+	// that case we can modify the middleware order or change this cast so we have all the data we need.
+	fullPacket, ok := packet.(channeltypes.Packet)
+	if !ok {
+		return sdkerrors.ErrInvalidRequest
 	}
 
-	channelValue := i.CalculateChannelValue(ctx, denom)
-
-	err = CheckAndUpdateRateLimits(
-		ctx,
-		i.ContractKeeper,
-		"send_packet",
-		contract,
-		channelValue,
-		packet.GetSourceChannel(),
-		denom, // We always use the packet's denom here, as we want the limits to be the same on both directions
-		amount,
-	)
+	err := CheckAndUpdateRateLimits(ctx, i.ContractKeeper, "send_packet", contract, fullPacket)
 	if err != nil {
-		return sdkerrors.Wrap(err, "bad packet in rate limit's SendPacket")
+		return sdkerrors.Wrap(err, "rate limit SendPacket failed to authorize transfer")
 	}
 
 	return i.channel.SendPacket(ctx, chanCap, packet)
@@ -83,17 +75,4 @@ func (i *ICS4Wrapper) WriteAcknowledgement(ctx sdk.Context, chanCap *capabilityt
 func (i *ICS4Wrapper) GetParams(ctx sdk.Context) (contract string) {
 	i.paramSpace.GetIfExists(ctx, []byte("contract"), &contract)
 	return contract
-}
-
-// CalculateChannelValue The value of an IBC channel. This is calculated using the denom supplied by the sender.
-// if the denom is not correct, the transfer should fail somewhere else on the call chain
-func (i *ICS4Wrapper) CalculateChannelValue(ctx sdk.Context, denom string) sdk.Int {
-	// This assumes that the porttypes.ICS4Wrapper is a channelKeeper. We could enforce the type above, but since this
-	// check is going to move to the contract we can keep it as is for now.
-	channelKeeper, ok := i.channel.(channelkeeper.Keeper)
-	if !ok {
-		panic("Improperly configured. The ics4 wrapper must be a channel")
-	}
-	// The logic is extracted into a function here so that it can be used within the tests
-	return CalculateChannelValue(ctx, denom, i.bankKeeper, channelKeeper)
 }

@@ -85,15 +85,16 @@ func (n *NodeConfig) QueryBalances(address string) (sdk.Coins, error) {
 	return balancesResp.GetBalances(), nil
 }
 
-func (n *NodeConfig) QueryTotalSupply() (sdk.Coins, error) {
-	bz, err := n.QueryGRPCGateway("cosmos/bank/v1beta1/supply")
+func (n *NodeConfig) QuerySupplyOf(denom string) (sdk.Int, error) {
+	path := fmt.Sprintf("cosmos/bank/v1beta1/supply/%s", denom)
+	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
-	var supplyResp banktypes.QueryTotalSupplyResponse
+	var supplyResp banktypes.QuerySupplyOfResponse
 	if err := util.Cdc.UnmarshalJSON(bz, &supplyResp); err != nil {
-		return sdk.Coins{}, err
+		return sdk.NewInt(0), err
 	}
-	return supplyResp.GetSupply(), nil
+	return supplyResp.Amount.Amount, nil
 }
 
 func (n *NodeConfig) QueryContractsFromId(codeId int) ([]string, error) {
