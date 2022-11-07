@@ -22,7 +22,7 @@ func (k Keeper) RouteExactAmountIn(
 	tokenIn sdk.Coin,
 	tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error) {
 	for i, route := range routes {
-		swapModule, err := k.getSwapModule(ctx, route.PoolId)
+		swapModule, err := k.GetSwapModule(ctx, route.PoolId)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -84,7 +84,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	// value of this method is done when we calculate insExpected – this for loop primarily serves to execute the actual
 	// swaps on each pool.
 	for i, route := range routes {
-		swapModule, err := k.getSwapModule(ctx, route.PoolId)
+		swapModule, err := k.GetSwapModule(ctx, route.PoolId)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -134,7 +134,7 @@ func (k Keeper) createMultihopExpectedSwapOuts(
 	for i := len(routes) - 1; i >= 0; i-- {
 		route := routes[i]
 
-		swapModule, err := k.getSwapModule(ctx, route.PoolId)
+		swapModule, err := k.GetSwapModule(ctx, route.PoolId)
 		if err != nil {
 			return nil, err
 		}
@@ -162,7 +162,9 @@ func (k Keeper) createMultihopExpectedSwapOuts(
 // - fails to find a pool with the given id.
 // - the swap module of the type corresponding to the pool id is not registered
 // in swaprouter's keeper constructor.
-func (k Keeper) getSwapModule(ctx sdk.Context, poolId uint64) (types.SwapI, error) {
+// TODO: unexport after concentrated-liqudity upfrade. Currently, it is exported
+// for the upgrade handler logic and tests.
+func (k Keeper) GetSwapModule(ctx sdk.Context, poolId uint64) (types.SwapI, error) {
 	store := ctx.KVStore(k.storeKey)
 
 	moduleRoute := &types.ModuleRoute{}

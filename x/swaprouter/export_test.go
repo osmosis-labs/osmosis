@@ -10,10 +10,6 @@ func (k Keeper) GetNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 	return k.getNextPoolIdAndIncrement(ctx)
 }
 
-func (k Keeper) GetSwapModule(ctx sdk.Context, poolId uint64) (types.SwapI, error) {
-	return k.getSwapModule(ctx, poolId)
-}
-
 // SetPoolRoutesUnsafe sets the given routes to the swaprouter keeper
 // to allow routing from a pool type to a certain swap module.
 // For example, balancer -> gamm.
