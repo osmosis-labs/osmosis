@@ -128,9 +128,6 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(13370)),
 			tokenOutDenom: "usdc",
 			priceLimit:    sdk.NewDec(4996),
-			// we expect to put .01337 eth in and in return get 66.76 eth back
-			// TODO: look into why we are returning 66.78 instead of 66.76 like the inverse of this test above
-			// sure, the above test only has 1 position while this has two positions, but shouldn't that effect the tokenIn as well?
 			// params
 			// liquidity: 		 3035637681.935031645221581038
 			// sqrtPriceNext:    70.688663242671855280 which is 4996.887111035867053835
@@ -236,9 +233,6 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 
 			expectedLiquidity := cl.GetLiquidityFromAmounts(currSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
 			s.Require().Equal(expectedLiquidity.TruncateInt(), updatedLiquidity.TruncateInt())
-
-			//poolNew := s.App.ConcentratedLiquidityKeeper.GetPoolbyId(s.Ctx, pool.Id)
-			//fmt.Printf("%v pool price \n", poolNew.CurrentSqrtPrice.Power(2))
 		})
 
 	}
@@ -285,11 +279,9 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
 				s.Require().NoError(err)
 			},
-			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(42000000)),
-			tokenOutDenom: "eth",
-			priceLimit:    sdk.NewDec(5004),
-			// we expect to put 42 usdc in and in return get .008398 eth back
-			// due to truncations and precision loss, we actually put in 41.99 usdc and in return get .008396 eth back
+			tokenIn:          sdk.NewCoin("usdc", sdk.NewInt(42000000)),
+			tokenOutDenom:    "eth",
+			priceLimit:       sdk.NewDec(5004),
 			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(8396)),
 			expectedTick:     sdk.NewInt(85184),
 		},
@@ -320,10 +312,9 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
 				s.Require().NoError(err)
 			},
-			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(42000000)),
-			tokenOutDenom: "eth",
-			priceLimit:    sdk.NewDec(5002),
-			// we expect to put 42 usdc in and in return get .008398 eth back
+			tokenIn:          sdk.NewCoin("usdc", sdk.NewInt(42000000)),
+			tokenOutDenom:    "eth",
+			priceLimit:       sdk.NewDec(5002),
 			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(8398)),
 			expectedTick:     sdk.NewInt(85180),
 			// two positions with same liquidity entered
