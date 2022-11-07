@@ -874,8 +874,8 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 		},
 		"all-asset pool join attempt exceeds max scaled asset amount": {
 			tokensIn: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 10),
-				sdk.NewInt64Coin("bar", 10),
+				sdk.NewInt64Coin("foo", 1),
+				sdk.NewInt64Coin("bar", 1),
 			),
 			poolAssets: sdk.NewCoins(
 				sdk.NewCoin("foo", types.StableswapMaxScaledAmtPerAsset),
@@ -893,7 +893,7 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 		},
 		"single-asset pool join exceeds hits max scaled asset amount": {
 			tokensIn: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 10),
+				sdk.NewInt64Coin("foo", 2),
 			),
 			poolAssets: sdk.NewCoins(
 				sdk.NewCoin("foo", types.StableswapMaxScaledAmtPerAsset),
@@ -911,19 +911,19 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 		},
 		"all-asset pool join attempt exactly hits max scaled asset amount": {
 			tokensIn: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 10),
-				sdk.NewInt64Coin("bar", 10),
+				sdk.NewInt64Coin("foo", 1),
+				sdk.NewInt64Coin("bar", 1),
 			),
 			poolAssets: sdk.NewCoins(
-				sdk.NewCoin("foo", types.StableswapMaxScaledAmtPerAsset.Sub(sdk.NewInt(10))),
-				sdk.NewCoin("bar", types.StableswapMaxScaledAmtPerAsset.Sub(sdk.NewInt(10))),
+				sdk.NewCoin("foo", types.StableswapMaxScaledAmtPerAsset.Sub(sdk.NewInt(1))),
+				sdk.NewCoin("bar", types.StableswapMaxScaledAmtPerAsset.Sub(sdk.NewInt(1))),
 			),
 			scalingFactors: defaultTwoAssetScalingFactors,
 			swapFee:        sdk.ZeroDec(),
 			expNumShare:    types.InitPoolSharesSupply.Quo(types.StableswapMaxScaledAmtPerAsset),
 			expTokensJoined: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 10),
-				sdk.NewInt64Coin("bar", 10),
+				sdk.NewInt64Coin("foo", 1),
+				sdk.NewInt64Coin("bar", 1),
 			),
 			expPoolAssets: sdk.NewCoins(
 				sdk.NewCoin("foo", types.StableswapMaxScaledAmtPerAsset),
