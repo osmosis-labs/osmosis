@@ -432,7 +432,7 @@ type ModuleRoute struct {
     PoolType PoolType
 }
 
-// ModuleRouteToBytes serializes moduleRoute to bytes.
+// FormatModuleRouteKey serializes pool id with appropriate prefix into bytes.
 func FormatModuleRouteKey(poolId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%d", SwapModuleRouterPrefix, poolId))
 }
