@@ -25,5 +25,5 @@ enum PoolType {
 // pool id.
 message ModuleRoute {
   // pool_type specifies the type of the pool
-  PoolType pool_type = 2;
+  PoolType pool_type = 1;
 }

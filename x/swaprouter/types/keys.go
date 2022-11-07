@@ -24,15 +24,6 @@ var (
 )
 
 // ModuleRouteToBytes serializes moduleRoute to bytes.
-func ModuleRouteToBytes(moduleRoute ModuleRoute) []byte {
-	bz, err := proto.Marshal(&moduleRoute)
-	if err != nil {
-		panic(err)
-	}
-	return bz
-}
-
-// ModuleRouteToBytes serializes moduleRoute to bytes.
 func FormatModuleRouteKey(poolId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%d", SwapModuleRouterPrefix, poolId))
 }
