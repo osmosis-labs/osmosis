@@ -53,13 +53,12 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 		}
 
 		// tokenAmt takes the amount to delegate, calculated by {val_distribution_weight * tokenAmt}
-		// amountToDelegate tokenAmt takes the smallest denom so, 1 usmo = 10^6 osmo
-		tokenAmt := val.Weight.Mul(coin.Amount.ToDec())
-		amountToDelegate := tokenAmt.Mul(sdk.NewDec(1000000)).RoundInt()
+		// expect tokenAmt to be in the smallest denom for ex, 1 usmo = 10^6 osmo
+		tokenAmt := val.Weight.Mul(coin.Amount.ToDec()).RoundInt()
 
 		// TODO: What happens here if validator is jailed, tombstoned, or unbonding
 		// Delegate the unbonded tokens
-		_, err = k.stakingKeeper.Delegate(ctx, delegator, amountToDelegate, stakingtypes.Unbonded, validator, true)
+		_, err = k.stakingKeeper.Delegate(ctx, delegator, tokenAmt, stakingtypes.Unbonded, validator, true)
 		if err != nil {
 			return err
 		}
