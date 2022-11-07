@@ -134,7 +134,7 @@ func (im *IBCModule) OnRecvPacket(
 		return channeltypes.NewErrorAcknowledgement("bad packet in rate limit's OnRecvPacket")
 	}
 
-	channelValue := im.ics4Middleware.CalculateChannelValue(ctx, denom, packet)
+	channelValue := im.ics4Middleware.CalculateChannelValue(ctx, denom)
 
 	err = CheckAndUpdateRateLimits(
 		ctx,

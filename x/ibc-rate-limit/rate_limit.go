@@ -9,6 +9,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
+	channelkeeper "github.com/cosmos/ibc-go/v3/modules/core/04-channel/keeper"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
 	"github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 )
@@ -151,17 +152,25 @@ func GetLocalDenom(denom string) string {
 	}
 }
 
-func CalculateChannelValue(ctx sdk.Context, denom string, port, channel string, bankKeeper bankkeeper.Keeper) sdk.Int {
+func CalculateChannelValue(ctx sdk.Context, denom string, bankKeeper bankkeeper.Keeper, channelKeeper channelkeeper.Keeper) sdk.Int {
+	// For non-native (ibc) tokens, return the supply if the token in osmosis
 	if strings.HasPrefix(denom, "ibc/") {
 		return bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
 	}
 
-	if channel == "any" {
-		// ToDo: Get all channels and sum the escrow addr value over all the channels
-		escrowAddress := transfertypes.GetEscrowAddress(port, channel)
-		return bankKeeper.GetBalance(ctx, escrowAddress, denom).Amount
-	} else {
-		escrowAddress := transfertypes.GetEscrowAddress(port, channel)
-		return bankKeeper.GetBalance(ctx, escrowAddress, denom).Amount
-	}
+	return bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
+
+	// ToDo: The commented-out code bellow is what we want to happen, but we're temporarily
+	//  using the whole supply for efficiency until there's a solution for
+	//  https://github.com/cosmos/ibc-go/issues/2664
+
+	// For native tokens, obtain the balance held in escrow for all potential channels
+	//channels := channelKeeper.GetAllChannels(ctx)
+	//balance := sdk.NewInt(0)
+	//for _, channel := range channels {
+	//	escrowAddress := transfertypes.GetEscrowAddress("transfer", channel.ChannelId)
+	//	balance = balance.Add(bankKeeper.GetBalance(ctx, escrowAddress, denom).Amount)
+	//
+	//}
+	//return balance
 }

@@ -8,6 +8,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	channelkeeper "github.com/cosmos/ibc-go/v3/modules/core/04-channel/keeper"
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
 )
@@ -56,7 +57,7 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 		return sdkerrors.Wrap(err, "Rate limit SendPacket")
 	}
 
-	channelValue := i.CalculateChannelValue(ctx, denom, packet)
+	channelValue := i.CalculateChannelValue(ctx, denom)
 
 	err = CheckAndUpdateRateLimits(
 		ctx,
@@ -86,7 +87,13 @@ func (i *ICS4Wrapper) GetParams(ctx sdk.Context) (contract string) {
 
 // CalculateChannelValue The value of an IBC channel. This is calculated using the denom supplied by the sender.
 // if the denom is not correct, the transfer should fail somewhere else on the call chain
-func (i *ICS4Wrapper) CalculateChannelValue(ctx sdk.Context, denom string, packet exported.PacketI) sdk.Int {
-	// The logic is etracted into a function here so that it can be used within the tests
-	return CalculateChannelValue(ctx, denom, packet.GetSourcePort(), packet.GetSourceChannel(), i.bankKeeper)
+func (i *ICS4Wrapper) CalculateChannelValue(ctx sdk.Context, denom string) sdk.Int {
+	// This assumes that the porttypes.ICS4Wrapper is a channelKeeper. We could enforce the type above, but since this
+	// check is going to move to the contract we can keep it as is for now.
+	channelKeeper, ok := i.channel.(channelkeeper.Keeper)
+	if !ok {
+		panic("Improperly configured. The ics4 wrapper must be a channel")
+	}
+	// The logic is extracted into a function here so that it can be used within the tests
+	return CalculateChannelValue(ctx, denom, i.bankKeeper, channelKeeper)
 }

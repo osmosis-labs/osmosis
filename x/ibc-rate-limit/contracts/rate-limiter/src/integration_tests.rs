@@ -82,7 +82,7 @@ fn expiration() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_300_u32.into(),
+        channel_value: 3_000_u32.into(),
         funds: 300_u32.into(),
     };
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
@@ -105,7 +105,7 @@ fn expiration() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_300_u32.into(),
+        channel_value: 3_000_u32.into(),
         funds: 300_u32.into(),
     };
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
@@ -123,7 +123,7 @@ fn expiration() {
     let msg = SudoMsg::SendPacket {
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_300_u32.into(),
+        channel_value: 3_000_u32.into(),
         funds: 300_u32.into(),
     };
 
