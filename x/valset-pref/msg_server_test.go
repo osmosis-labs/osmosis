@@ -213,23 +213,23 @@ func (suite *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 		expectPass    bool
 	}{
 		{
-			name:          "Unstake from a validator Set",
+			name:          "Unstake x amount from a validator Set",
 			delegator:     sdk.AccAddress([]byte("addr1---------------")),
-			coinToStake:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20)),
+			coinToStake:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),
 			coinToUnStake: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
 			expectPass:    true,
 		},
 		{
 			name:          "Unstake everything",
 			delegator:     sdk.AccAddress([]byte("addr2---------------")),
-			coinToStake:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20)),
+			coinToStake:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),
 			coinToUnStake: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),
 			expectPass:    true,
 		},
 		{
 			name:          "Unstake more amount than the staked amount",
 			delegator:     sdk.AccAddress([]byte("addr3---------------")),
-			coinToStake:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20)),
+			coinToStake:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),
 			coinToUnStake: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(40_000_000)),
 			expectPass:    false,
 		},
