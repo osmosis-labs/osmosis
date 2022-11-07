@@ -44,9 +44,7 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
 
 // priceToTick takes a price and returns the corresponding tick index
 func priceToTick(price sdk.Dec) sdk.Int {
-	logOfPrice := osmomath.BigDecFromSDKDec(price).LogBase2()
-	logInt := osmomath.NewDecWithPrec(10001, 4)
-	tick := logOfPrice.Quo(logInt.LogBase2())
+	tick := osmomath.BigDecFromSDKDec(price).CustomBaseLog(osmomath.NewDecWithPrec(10001, 4))
 	return tick.SDKDec().TruncateInt()
 }
 
@@ -141,7 +139,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 		liquidity:                p.Liquidity,
 	}
 
-	for swapState.amountSpecifiedRemaining.GT(sdk.ZeroDec()) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
+	for swapState.amountSpecifiedRemaining.GT(sdk.MustNewDecFromStr("0.0000001")) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
 		sqrtPriceStart := swapState.sqrtPrice
 		nextTick, ok := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), zeroForOne)
 		if !ok {
@@ -200,7 +198,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 
 	// coin amounts require int values
 	// we truncate at last step to retain as much precision as possible
-	amt0 := tokenAmountInAfterFee.Add(swapState.amountSpecifiedRemaining).TruncateInt()
+	amt0 := tokenAmountInAfterFee.Sub(swapState.amountSpecifiedRemaining).RoundInt()
 	amt1 := swapState.amountCalculated.TruncateInt()
 
 	tokenIn = sdk.NewCoin(tokenInMin.Denom, amt0)

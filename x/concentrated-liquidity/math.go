@@ -47,7 +47,7 @@ func calcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 	// additionally, without rounding, there exists cases where the swapState.amountSpecifiedRemaining.GT(sdk.ZeroDec()) for loop within
 	// the CalcOut/In functions never actually reach zero due to dust that would have never gotten counted towards the amount (numbers after the 10^6 place)
 	if roundUp {
-		return liq.Mul(diff.QuoRoundUp(denom)).Ceil()
+		return liq.Mul(diff.Quo(denom)).Ceil()
 	}
 	return liq.Mul(diff.Quo(denom))
 }
@@ -77,10 +77,11 @@ func calcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 // computeSwapStep calculates the amountIn, amountOut, and the next sqrtPrice given current price, price target, tick liquidity, and amount available to swap
 // lte is reference to "less than or equal", which determines if we are moving left or right of the current price to find the next initialized tick with liquidity
 func computeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec, zeroForOne bool) (sqrtPriceNext, amountIn, amountOut sdk.Dec) {
+	zeroForOne = sqrtPriceCurrent.GTE(sqrtPriceTarget)
 	if zeroForOne {
-		amountIn = calcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, true)
+		amountIn = calcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, false)
 	} else {
-		amountIn = calcAmount1Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, true)
+		amountIn = calcAmount1Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, false)
 	}
 	if amountRemaining.GTE(amountIn) {
 		sqrtPriceNext = sqrtPriceTarget
@@ -89,10 +90,10 @@ func computeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaini
 	}
 
 	if zeroForOne {
-		amountIn = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, true)
+		amountIn = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
 		amountOut = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
 	} else {
-		amountIn = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, true)
+		amountIn = calcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
 		amountOut = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
 	}
 
