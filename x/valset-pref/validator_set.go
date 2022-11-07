@@ -9,7 +9,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/valset-pref/types"
 )
 
-// TODO: If a user has delegated and wants to change the weights. Currently, the state weight changes. We should restrict that
 func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, preferences []types.ValidatorPreference) error {
 	// check if a user already has a validator-set created
 	existingValidators, found := k.GetValidatorSetPreference(ctx, delegator)
