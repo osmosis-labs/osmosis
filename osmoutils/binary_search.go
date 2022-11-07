@@ -100,15 +100,15 @@ func (e ErrTolerance) CompareBigDec(expected osmomath.BigDec, actual osmomath.Bi
 func (e ErrTolerance) CompareBigDecWithRoundingDirection(expected osmomath.BigDec, actual osmomath.BigDec,
 	dir osmomath.RoundingDirection) int {
 	// Ensure that even if expected is within tolerance of actual, we don't count it as equal if its in the wrong direction.
-	// so if were supposed to round down, it must be that `expected <= actual`.
-	// likewise if were supposed to round up, it must be that `expected >= actual`
+	// so if were supposed to round down, it must be that `expected >= actual`.
+	// likewise if were supposed to round up, it must be that `expected <= actual`
 	if dir == osmomath.RoundDown {
-		if expected.GT(actual) {
-			return 1
-		}
-	} else if dir == osmomath.RoundUp {
 		if expected.LT(actual) {
 			return -1
+		}
+	} else if dir == osmomath.RoundUp {
+		if expected.GT(actual) {
+			return 1
 		}
 	}
 	return e.CompareBigDec(expected, actual)
@@ -182,7 +182,7 @@ func BinarySearchBigDec(f func(input osmomath.BigDec) (osmomath.BigDec, error),
 	curIteration := 0
 	for ; curIteration < maxIterations; curIteration += 1 {
 		// fmt.Println(targetOutput, curOutput)
-		compRes := errTolerance.CompareBigDec(targetOutput, curOutput)
+		compRes := errTolerance.CompareBigDecWithRoundingDirection(targetOutput, curOutput, roundingDirection)
 		if compRes < 0 {
 			upperbound = curEstimate
 		} else if compRes > 0 {
