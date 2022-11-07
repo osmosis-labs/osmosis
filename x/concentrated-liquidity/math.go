@@ -77,7 +77,7 @@ func calcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 // computeSwapStep calculates the amountIn, amountOut, and the next sqrtPrice given current price, price target, tick liquidity, and amount available to swap
 // lte is reference to "less than or equal", which determines if we are moving left or right of the current price to find the next initialized tick with liquidity
 func computeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec, zeroForOne bool) (sqrtPriceNext, amountIn, amountOut sdk.Dec) {
-	zeroForOne = sqrtPriceCurrent.GTE(sqrtPriceTarget)
+	// zeroForOne = sqrtPriceCurrent.GTE(sqrtPriceTarget)
 	if zeroForOne {
 		amountIn = calcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, false)
 	} else {
