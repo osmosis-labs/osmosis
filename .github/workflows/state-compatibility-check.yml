@@ -131,6 +131,8 @@ jobs:
 
           # Edit config.toml
           dasel put string -f $CONFIG_FOLDER/config.toml '.tx_index.indexer' null
+          dasel put string -f $CONFIG_FOLDER/config.toml '.p2p.persistent_peers' 'b59016320a74525f92dbc3348521c64f2bf3f006@p2p.archive.osmosis.zone:26656'
+          dasel put string -f $CONFIG_FOLDER/config.toml 'seeds' ''
 
           # Edit app.toml
           dasel put string -f $CONFIG_FOLDER/app.toml '.halt-height' $HALT_HEIGHT
