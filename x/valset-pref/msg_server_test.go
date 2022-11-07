@@ -142,14 +142,14 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 		{
 			name:           "Delegate to valid validators!",
 			delegator:      sdk.AccAddress([]byte("addr1---------------")),
-			coin:           sdk.NewCoin("stake", sdk.NewInt(10)),                                           // amount to delegate
+			coin:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),                      // amount to delegate
 			expectedShares: []sdk.Dec{sdk.NewDec(5_000_000), sdk.NewDec(3_000_000), sdk.NewDec(2_000_000)}, // expected shares after delegation
 			expectPass:     true,
 		},
 		{
 			name:           "Delegate more tokens to existing validator-set",
 			delegator:      sdk.AccAddress([]byte("addr1---------------")),
-			coin:           sdk.NewCoin("stake", sdk.NewInt(10)),                                            // amount to delegate
+			coin:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),                       // amount to delegate
 			expectedShares: []sdk.Dec{sdk.NewDec(10_000_000), sdk.NewDec(6_000_000), sdk.NewDec(4_000_000)}, // expected shares after delegation
 			expectPass:     true,
 			valSetExists:   true,
@@ -157,14 +157,14 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 		{
 			name:           "Delegate Decimal Amounts",
 			delegator:      sdk.AccAddress([]byte("addr2---------------")),
-			coin:           sdk.NewCoin("stake", sdk.NewInt(25)),                                            // amount to delegate
+			coin:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(25_000_000)),                       // amount to delegate
 			expectedShares: []sdk.Dec{sdk.NewDec(12_500_000), sdk.NewDec(7_500_000), sdk.NewDec(5_000_000)}, // expected shares after delegation
 			expectPass:     true,
 		},
 		{
 			name:       "User doesnot have enough tokens to stake",
 			delegator:  sdk.AccAddress([]byte("addr3---------------")),
-			coin:       sdk.NewCoin("stake", sdk.NewInt(200)), // amount to delegate
+			coin:       sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(200_000_000)), // amount to delegate
 			expectPass: false,
 		},
 	}
