@@ -119,7 +119,7 @@ jobs:
 
             SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/v$REPO_MAJOR_VERSION/snapshots.json
             SNAPSHOT_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" $SNAPSHOT_INFO_URL)
-            SNAPSHOT_BLOCK_HEIGHT=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).height')
+            SNAPSHOT_BLOCK_HEIGHT=$(echo $SNAPSHOT_INFO | jq -r '.[] | select(.type == "pre-epoch").height')
             LAST_EPOCH_BLOCK_HEIGHT=$(($SNAPSHOT_BLOCK_HEIGHT + 100))
           fi
 
