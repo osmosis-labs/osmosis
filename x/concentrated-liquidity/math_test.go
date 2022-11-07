@@ -105,10 +105,10 @@ func (suite *KeeperTestSuite) TestLiquidity0() {
 // to be swapped in order to determine the next squareRootPrice
 // PATH 1
 // if (amountRemaining * sqrtPriceCurrent) / amountRemaining  == sqrtPriceCurrent AND (liquidity * 2) + (amountRemaining * sqrtPriceCurrent) >= (liquidity * 2)
-// sqrtPriceNext = (liquidity * 2 * sqrtPriceCurrent) / ((liquidity * 2) + (amountRemaining * sqrtPriceCurrent))
+// sqrtPriceNext = (liquidity * sqrtPriceCurrent) / ((liquidity) + (amountRemaining * sqrtPriceCurrent))
 // PATH 2
 // else
-// sqrtPriceNext = ((liquidity * 2)) / (((liquidity * 2) / (sqrtPriceCurrent)) + (amountRemaining))
+// sqrtPriceNext = ((liquidity)) / (((liquidity) / (sqrtPriceCurrent)) + (amountRemaining))
 func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount0RoundingUp() {
 	testCases := map[string]struct {
 		liquidity             sdk.Dec
@@ -119,9 +119,9 @@ func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount0RoundingUp() {
 		"happy path": {
 			liquidity:             sdk.MustNewDecFromStr("1517882343.751510418088349649"), // liquidity0 calculated above
 			sqrtPCurrent:          sdk.MustNewDecFromStr("70.710678118654752440"),
-			amount0Remaining:      sdk.NewDec(133700),
-			sqrtPriceNextExpected: "70.491153655973103127",
-			// https://www.wolframalpha.com/input?i=%281517882343.751510418088349649+*+2+*+70.710678118654752440%29+%2F+%28%281517882343.751510418088349649+*+2%29+%2B+%28133700+*+70.710678118654752440%29%29
+			amount0Remaining:      sdk.NewDec(13370),
+			sqrtPriceNextExpected: "70.666663910857144332",
+			// https://www.wolframalpha.com/input?i=%28%281517882343.751510418088349649%29%29+%2F+%28%28%281517882343.751510418088349649%29+%2F+%2870.710678118654752440%29%29+%2B+%2813370%29%29
 		},
 	}
 
