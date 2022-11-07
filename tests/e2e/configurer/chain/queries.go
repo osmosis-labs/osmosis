@@ -86,7 +86,7 @@ func (n *NodeConfig) QueryBalances(address string) (sdk.Coins, error) {
 }
 
 func (n *NodeConfig) QuerySupplyOf(denom string) (sdk.Int, error) {
-	path := fmt.Sprintf("cosmos/bank/v1beta1/query/supply/%s", denom)
+	path := fmt.Sprintf("cosmos/bank/v1beta1/supply/%s", denom)
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
