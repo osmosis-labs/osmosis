@@ -156,7 +156,7 @@ func (k Keeper) createMultihopExpectedSwapOuts(
 	return insExpected, nil
 }
 
-// getSwapModule returns the swap module for the given pool ID.
+// GetSwapModule returns the swap module for the given pool ID.
 // Returns error if:
 // - any database error occurs.
 // - fails to find a pool with the given id.
