@@ -9,7 +9,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/valset-pref/types"
 )
 
-func (k Keeper) SetupValidatorSetPreference(ctx sdk.Context, delegator string, preferences []types.ValidatorPreference) error {
+// TODO: If a user has delegated and wants to change the weights. Currently, the state weight changes. We should restrict that
+func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, preferences []types.ValidatorPreference) error {
 	// check if a user already has a validator-set created
 	existingValidators, found := k.GetValidatorSetPreference(ctx, delegator)
 	if found {
@@ -45,8 +46,6 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 		return err
 	}
 
-	tokenAmt := sdk.NewDec(coin.Amount.Int64())
-
 	// loop through the validatorSetPreference and delegate the proportion of the tokens based on weights
 	for _, val := range existingSet.Preferences {
 		_, validator, err := k.getValAddrAndVal(ctx, val.ValOperAddress)
@@ -54,10 +53,14 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 			return err
 		}
 
-		// amount to delegate, calculated by {val_distribution_weight * tokenAmt}
-		amountToStake := val.Weight.Mul(tokenAmt).RoundInt()
+		// tokenAmt takes the amount to delegate, calculated by {val_distribution_weight * tokenAmt}
+		// amountToDelegate tokenAmt takes the smallest denom so, 1 usmo = 10^6 osmo
+		tokenAmt := val.Weight.Mul(coin.Amount.ToDec())
+		amountToDelegate := tokenAmt.Mul(sdk.NewDec(1000000)).RoundInt()
 
-		_, err = k.stakingKeeper.Delegate(ctx, delegator, amountToStake, stakingtypes.Unbonded, validator, true)
+		// TODO: What happens here if validator is jailed, tombstoned, or unbonding
+		// Delegate the unbonded tokens
+		_, err = k.stakingKeeper.Delegate(ctx, delegator, amountToDelegate, stakingtypes.Unbonded, validator, true)
 		if err != nil {
 			return err
 		}
