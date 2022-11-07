@@ -310,7 +310,30 @@ type CreatePoolMsg interface {
 }
 ```
 
-For each of `balancer`, `stableswap` and `concentrated-liquidity` pools, we have their own implementations.
+For each of `balancer`, `stableswap` and `concentrated-liquidity` pools, we have their
+own implementation of `CreatePoolMsg`.
+
+Note the `PoolType` type. This is an enumeration of all supported pool types.
+We proto-generate this enumeration:
+
+```go
+// proto/osmosis/swaprouter/v1beta1/module_route.proto
+// generates to x/swaprouter/types/module_route.pb.go
+
+// PoolType is an enumeration of all supported pool types.
+enum PoolType {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // Balancer is the standard xy=k curve. Its pool model is defined in x/gamm.
+  Balancer = 0;
+  // Stableswap is the Solidly cfmm stable swap curve. Its pool model is defined
+  // in x/gamm.
+  StableSwap = 1;
+  // Concentrated is the pool model specific to concentrated liquidity. It is
+  // defined in x/concentrated-liquidity.
+  Concentrated = 2;
+}
+```
 
 Let's begin by considering the execution flow of the pool creation message.
 
@@ -397,22 +420,27 @@ To achieve this, we create the following store index:
 ```go
 // x/swaprouter/types/keys.go
 
-var	SwapModuleRouterPrefix     = []byte{0x01}
+var	(
+    ...
 
+    SwapModuleRouterPrefix     = []byte{0x02}
+)
+
+// N.B.: we proto-generate this struct. However, the proto
+// definition is omitted for brevity.
 type ModuleRoute struct {
-    PoolId uint64
     PoolType PoolType
 }
 
-// ModuleRouteToBytes serializes moduleRoute to bytes.
-func ModuleRouteToBytes(moduleRoute ModuleRoute) []byte {
-    ...
+// FormatModuleRouteKey serializes pool id with appropriate prefix into bytes.
+func FormatModuleRouteKey(poolId uint64) []byte {
+	return []byte(fmt.Sprintf("%s%d", SwapModuleRouterPrefix, poolId))
 }
 
-// ModuleRouteFromBytes deserializes an encoded module route. It returns
-// an error if decoding fails.
-func ModuleRouteFromBytes(bz []byte) (ModuleRoute, error) {
-    ...
+// ParseModuleRouteFromBz parses the raw bytes into ModuleRoute.
+// Returns error if fails to parse or if the bytes are empty.
+func ParseModuleRouteFromBz(bz []byte) (ModuleRoute, error) {
+    // parsing logic
 }
 ```
 
