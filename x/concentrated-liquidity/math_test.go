@@ -238,23 +238,23 @@ func (suite *KeeperTestSuite) TestComputeSwapState() {
 	}{
 		"happy path: trade asset0 for asset1": {
 			sqrtPCurrent:          sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
-			sqrtPTarget:           sdk.OneDec(),
-			liquidity:             sdk.MustNewDecFromStr("1517882343.751510418088349649"),
-			amountRemaining:       sdk.NewDec(133700),
+			sqrtPTarget:           sdk.MustNewDecFromStr("70.666662070529219856"), // 4993.777128190373086350
+			liquidity:             sdk.MustNewDecFromStr("1517818840.967515822610790519"),
+			amountRemaining:       sdk.NewDec(13370),
 			zeroForOne:            true,
-			expectedSqrtPriceNext: "70.491153655973103127",
-			expectedAmountIn:      "66851.000000000000000000",
-			expectedAmountOut:     "333212305.926012843051286944",
+			expectedSqrtPriceNext: "70.666662070529219856",
+			expectedAmountIn:      "13369.999999903622360944",
+			expectedAmountOut:     "66808387.149866264039333362",
 		},
 		"happy path: trade asset1 for asset0": {
 			sqrtPCurrent:          sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
-			sqrtPTarget:           sdk.OneDec(),
+			sqrtPTarget:           sdk.MustNewDecFromStr("70.738349405152439867"), // 5003.914076565430543175
 			liquidity:             sdk.MustNewDecFromStr("1517882343.751510418088349649"),
-			amountRemaining:       sdk.NewDec(4199999999),
+			amountRemaining:       sdk.NewDec(42000000),
 			zeroForOne:            false,
-			expectedSqrtPriceNext: "73.477691000970467599",
-			expectedAmountIn:      "4199999999.000000000000000000",
-			expectedAmountOut:     "808367.394189663964726576",
+			expectedSqrtPriceNext: "70.738348247484497718",
+			expectedAmountIn:      "42000000.000000000749226725",
+			expectedAmountOut:     "8396.714242162306260206",
 		},
 	}
 

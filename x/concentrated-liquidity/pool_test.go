@@ -188,9 +188,9 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			priceLimit:    sdk.NewDec(6106),
 			// expectedTokenIn:  5236545538 + 4763454461 = 9999999999 rounded up = 1000000000 = 100000 usdc
 			// expectedTokenOut: 998587 + 821949 = 1820536 = 1.820536 eth
-			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(10000000000)), // TODO: should be 9938.146841864722991247
-			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1820536)),      // TODO: should be 1.806151062659754714
-			expectedTick:     sdk.NewInt(87173),                            // TODO: should be 87174
+			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1820536)),
+			expectedTick:     sdk.NewInt(87173),
 			newLowerPrice:    sdk.NewDec(5501),
 			newUpperPrice:    sdk.NewDec(6250),
 		},
@@ -299,11 +299,10 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
 				s.Require().NoError(err)
 			},
-			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(13370)),
-			tokenOutDenom: "usdc",
-			priceLimit:    sdk.NewDec(4993),
-			// we expect to put .01337 eth in and in return get 66.76 usdc back
-			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(66758449)),
+			tokenIn:          sdk.NewCoin("eth", sdk.NewInt(13370)),
+			tokenOutDenom:    "usdc",
+			priceLimit:       sdk.NewDec(4993),
+			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(66808387)),
 			expectedTick:     sdk.NewInt(85163),
 		},
 		//  Two equal price ranges
@@ -341,13 +340,10 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
 				s.Require().NoError(err)
 			},
-			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(13370)),
-			tokenOutDenom: "usdc",
-			priceLimit:    sdk.NewDec(4996),
-			// we expect to put .01337 eth in and in return get 66.79 eth back
-			// TODO: look into why we are returning 66.81 instead of 66.79 like the inverse of this test above
-			// sure, the above test only has 1 position while this has two positions, but shouldn't that effect the tokenIn as well?
-			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(66779218)),
+			tokenIn:          sdk.NewCoin("eth", sdk.NewInt(13370)),
+			tokenOutDenom:    "usdc",
+			priceLimit:       sdk.NewDec(4996),
+			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(66829187)),
 			expectedTick:     sdk.NewInt(85169),
 			// two positions with same liquidity entered
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
@@ -377,11 +373,9 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
 				s.Require().NoError(err)
 			},
-			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			tokenOutDenom: "eth",
-			priceLimit:    sdk.NewDec(6106),
-			// we expect to put 10000 usdc in and in return get 1.820536 eth back
-			// TODO: see why we don't get 9938.148 usdc and 1.80615 eth
+			tokenIn:          sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenOutDenom:    "eth",
+			priceLimit:       sdk.NewDec(6106),
 			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1820536)),
 			expectedTick:     sdk.NewInt(87173),
 			newLowerPrice:    sdk.NewDec(5501),
