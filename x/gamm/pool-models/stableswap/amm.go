@@ -279,8 +279,9 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	// This means rounding x_final up, to give us a larger negative.
 	// Therefore we always round up.
 	roundingDirection := osmomath.RoundUp
+	errTolerance.RoundingDir = roundingDirection
 
-	xEst, err := osmoutils.BinarySearchBigDec(computeFromEst, xLowEst, xHighEst, k, errTolerance, roundingDirection, maxIterations)
+	xEst, err := osmoutils.BinarySearchBigDec(computeFromEst, xLowEst, xHighEst, k, errTolerance, maxIterations)
 	if err != nil {
 		panic(err)
 	}

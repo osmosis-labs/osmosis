@@ -139,7 +139,7 @@ func TestBinarySearchLineIterationCounts(t *testing.T) {
 	generateExactTestCases(osmomath.ZeroDec(), osmomath.NewBigDec(1<<20), withinOne, 20)
 	// we can go further than 50, if we could specify non-integer additive err tolerance. TODO: Add this.
 	generateExactTestCases(osmomath.NewBigDec(1<<20), osmomath.NewBigDec(1<<50), withinOne, 50)
-	runBinarySearchTestCases(t, tests, exactlyEqual, osmomath.RoundUp)
+	runBinarySearchTestCases(t, tests, exactlyEqual)
 }
 
 var fnMap = map[string]searchFn{"line": lineF, "cubic": cubicF}
@@ -176,7 +176,7 @@ func TestIterationDepthRandValue(t *testing.T) {
 		// Takes 15 iterations to guaranteeably get to 32. Needed to reach any number in [0, 31]
 		createRandInput("line", 0, 1<<20, within32, 15, "within 32")
 	}
-	runBinarySearchTestCases(t, tests, errToleranceEqual, osmomath.RoundUp)
+	runBinarySearchTestCases(t, tests, errToleranceEqual)
 }
 
 type equalityMode int
@@ -187,13 +187,20 @@ const (
 	equalWithinOne    equalityMode = iota
 )
 
+func withRoundingDir(e ErrTolerance, r osmomath.RoundingDirection) ErrTolerance {
+	return ErrTolerance{
+		AdditiveTolerance:       e.AdditiveTolerance,
+		MultiplicativeTolerance: e.MultiplicativeTolerance,
+		RoundingDir:             r,
+	}
+}
+
 func runBinarySearchTestCases(t *testing.T, tests map[string]binarySearchTestCase,
-	equality equalityMode, roundingMode osmomath.RoundingDirection) {
+	equality equalityMode) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			actualSolvedInput, err := BinarySearchBigDec(
-				tc.f, tc.lowerbound, tc.upperbound, tc.targetOutput, tc.errTolerance,
-				roundingMode, tc.maxIterations)
+				tc.f, tc.lowerbound, tc.upperbound, tc.targetOutput, tc.errTolerance, tc.maxIterations)
 			if tc.expectErr {
 				require.Error(t, err)
 			} else {
@@ -237,11 +244,12 @@ func TestBinarySearchBigDec(t *testing.T) {
 		// We try (1<<11 + 1<<10)^3 which is way too large.
 		// notice by trial, that (1 << 11 + 1<<7)^3 - target > 2^30, but that
 		// (1 << 11 + 1<<6)^3 - target < 2^30, so that is the answer.
-		"cubic f, within 2^30, target 2^33 + 2^29": {
+		"cubic f, within 2^30, roundup, target 2^33 + 2^29": {
 			cubicF,
 			zero, twoTo50,
 			osmomath.NewBigDec((1 << 33) + (1 << 29)),
-			testErrToleranceAdditive, 51, osmomath.NewBigDec(1<<11 + 1<<6), false},
+			withRoundingDir(testErrToleranceAdditive, osmomath.RoundUp),
+			51, osmomath.NewBigDec(1<<11 + 1<<6), false},
 		"cubic f, large multiplicative err tolerance, converges": {
 			cubicF,
 			zero, twoTo50,
@@ -253,7 +261,7 @@ func TestBinarySearchBigDec(t *testing.T) {
 			errToleranceBoth, 51, osmomath.NewBigDec(1 << 11), false},
 	}
 
-	runBinarySearchTestCases(t, tests, equalWithinOne, osmomath.RoundUp)
+	runBinarySearchTestCases(t, tests, equalWithinOne)
 }
 
 func TestBinarySearchRoundingBehavior(t *testing.T) {
@@ -263,43 +271,36 @@ func TestBinarySearchRoundingBehavior(t *testing.T) {
 	// twoTo25PlusOne := osmomath.NewBigDec(1 + (1 << 25))
 	// twoTo25PlusOneCubed := twoTo25PlusOne.Power(3)
 
-	type testcase struct {
-		bin      binarySearchTestCase
-		rounding osmomath.RoundingDirection
-	}
-
-	tests := map[string]testcase{
-		"lineF, roundup within 2^30, target 2^32 + 2^30 + 1, expected=2^32 + 2^31": {bin: binarySearchTestCase{f: lineF,
+	tests := map[string]binarySearchTestCase{
+		"lineF, roundup within 2^30, target 2^32 + 2^30 + 1, expected=2^32 + 2^31": {f: lineF,
 			lowerbound: zero, upperbound: twoTo50,
 			targetOutput:        osmomath.NewBigDec((1 << 32) + (1 << 30) + 1),
-			errTolerance:        withinTwoTo30,
+			errTolerance:        withRoundingDir(withinTwoTo30, osmomath.RoundUp),
 			maxIterations:       51,
-			expectedSolvedInput: osmomath.NewBigDec(1<<32 + 1<<31)}, rounding: osmomath.RoundUp},
-		"lineF, roundup within 2^30, target 2^32 + 2^30 - 1, expected=2^32 + 2^30": {bin: binarySearchTestCase{f: lineF,
+			expectedSolvedInput: osmomath.NewBigDec(1<<32 + 1<<31)},
+		"lineF, roundup within 2^30, target 2^32 + 2^30 - 1, expected=2^32 + 2^30": {f: lineF,
 			lowerbound: zero, upperbound: twoTo50,
 			targetOutput:        osmomath.NewBigDec((1 << 32) + (1 << 30) - 1),
-			errTolerance:        withinTwoTo30,
+			errTolerance:        withRoundingDir(withinTwoTo30, osmomath.RoundUp),
 			maxIterations:       51,
-			expectedSolvedInput: osmomath.NewBigDec(1<<32 + 1<<30)}, rounding: osmomath.RoundUp},
-		"lineF, rounddown within 2^30, target 2^32 + 2^30 + 1, expected=2^32 + 2^31": {bin: binarySearchTestCase{f: lineF,
+			expectedSolvedInput: osmomath.NewBigDec(1<<32 + 1<<30)},
+		"lineF, rounddown within 2^30, target 2^32 + 2^30 + 1, expected=2^32 + 2^31": {f: lineF,
 			lowerbound: zero, upperbound: twoTo50,
 			targetOutput:        osmomath.NewBigDec((1 << 32) + (1 << 30) + 1),
-			errTolerance:        withinTwoTo30,
+			errTolerance:        withRoundingDir(withinTwoTo30, osmomath.RoundDown),
 			maxIterations:       51,
-			expectedSolvedInput: osmomath.NewBigDec(1<<32 + 1<<30)}, rounding: osmomath.RoundDown},
-		"lineF, rounddown within 2^30, target 2^32 + 2^30 - 1, expected=2^32 + 2^30": {bin: binarySearchTestCase{f: lineF,
+			expectedSolvedInput: osmomath.NewBigDec(1<<32 + 1<<30)},
+		"lineF, rounddown within 2^30, target 2^32 + 2^30 - 1, expected=2^32 + 2^30": {f: lineF,
 			lowerbound: zero, upperbound: twoTo50,
 			targetOutput:        osmomath.NewBigDec((1 << 32) + (1 << 30) - 1),
-			errTolerance:        withinTwoTo30,
+			errTolerance:        withRoundingDir(withinTwoTo30, osmomath.RoundDown),
 			maxIterations:       51,
-			expectedSolvedInput: osmomath.NewBigDec(1 << 32)}, rounding: osmomath.RoundDown},
+			expectedSolvedInput: osmomath.NewBigDec(1 << 32)},
 	}
 
-	for k, tc := range tests {
-		runBinarySearchTestCases(t,
-			map[string]binarySearchTestCase{k: tc.bin},
-			equalWithinOne, tc.rounding)
-	}
+	runBinarySearchTestCases(t,
+		tests,
+		equalWithinOne)
 }
 
 func TestErrTolerance_Compare(t *testing.T) {
