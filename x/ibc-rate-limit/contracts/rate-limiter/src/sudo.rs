@@ -31,7 +31,7 @@ pub fn process_packet(
     let funds = packet.get_funds();
     let channel_value = match channel_value_hint {
         Some(channel_value) => channel_value,
-        None => packet.channel_value(deps.as_ref())?,
+        None => packet.channel_value(deps.as_ref(), &direction)?,
     };
     try_transfer(deps, path, channel_value, funds, direction, now)
 }
