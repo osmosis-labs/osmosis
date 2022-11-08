@@ -424,8 +424,12 @@ func (s *TestSuite) TestGetFirstValueAfterPrefixInclusive() {
 	}
 }
 
+<<<<<<< HEAD
 func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
 
+=======
+func (s *TestSuite) TestGatherValuesFromIterator() {
+>>>>>>> b703f471 (TWAP code improvements (#3231))
 	testcases := map[string]struct {
 		// if prefix is set, startValue and endValue are ignored.
 		// we either create an iterator prefix or a range iterator.
@@ -538,7 +542,7 @@ func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
 				mockParseValueFn = mockParseValueWithError
 			}
 
-			actualValues, err := osmoutils.GatherValuesFromIteratorWithStop(iterator, mockParseValueFn, mockStop)
+			actualValues, err := osmoutils.GatherValuesFromIterator(iterator, mockParseValueFn, mockStop)
 
 			if tc.expectedErr != nil {
 				s.Require().ErrorContains(err, tc.expectedErr.Error())
