@@ -170,7 +170,6 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 
 		// if we have moved to the next tick,
 		if nextSqrtPrice.Equal(sqrtPrice) {
-			swapStrategy = newSwapStrategy(zeroForOne)
 			liquidityDelta, err := k.crossTick(ctx, p.Id, nextTick)
 
 			if err != nil {
