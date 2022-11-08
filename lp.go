@@ -34,8 +34,14 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	pool := k.getPoolbyId(ctx, poolId)
 
 	currentSqrtPrice := pool.CurrentSqrtPrice
-	sqrtRatioUpperTick, _ := k.tickToSqrtPrice(sdk.NewInt(upperTick))
-	sqrtRatioLowerTick, _ := k.tickToSqrtPrice(sdk.NewInt(lowerTick))
+	sqrtRatioUpperTick, err := tickToSqrtPrice(sdk.NewInt(upperTick))
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+	}
+	sqrtRatioLowerTick, err := tickToSqrtPrice(sdk.NewInt(lowerTick))
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+	}
 
 	liquidity := getLiquidityFromAmounts(currentSqrtPrice, sqrtRatioLowerTick, sqrtRatioUpperTick, amount0Desired, amount1Desired)
 	if liquidity.IsZero() {
@@ -44,20 +50,20 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	// update tickInfo state
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
-	err = k.initOrUpdateTick(ctx, poolId, lowerTick, liquidity.TruncateInt(), false)
+	err = k.initOrUpdateTick(ctx, poolId, lowerTick, liquidity, false)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
-	err = k.initOrUpdateTick(ctx, poolId, upperTick, liquidity.TruncateInt(), true)
+	err = k.initOrUpdateTick(ctx, poolId, upperTick, liquidity, true)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
 	// update position state
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
-	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity.TruncateInt())
+	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
@@ -83,7 +89,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	k.setPoolById(ctx, pool.Id, pool)
 
-	return amtDenom0, amtDenom1, liquidityCreated, nil
+	return amtDenom0, amtDenom1, liquidity, nil
 }
 
 // withdrawPosition withdraws a concentrated liquidity position from the given pool id in the given tick range and liquidityAmount.
