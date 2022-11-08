@@ -7,8 +7,7 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestGetLiquidityFromAmounts() {
-	testCases := []struct {
-		name              string
+	testCases := map[string]struct {
 		currentSqrtP      sdk.Dec
 		sqrtPHigh         sdk.Dec
 		sqrtPLow          sdk.Dec
@@ -16,23 +15,27 @@ func (suite *KeeperTestSuite) TestGetLiquidityFromAmounts() {
 		amount1Desired    sdk.Int
 		expectedLiquidity string
 	}{
-		{
-			"happy path",
-			sdk.MustNewDecFromStr("70710678"),
-			sdk.MustNewDecFromStr("74161984"),
-			sdk.MustNewDecFromStr("67082039"),
-			sdk.NewInt(1000000),
-			sdk.NewInt(5000000000),
-			"1377.927096082029653542",
+		"happy path": {
+			currentSqrtP:      sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			sqrtPHigh:         sdk.MustNewDecFromStr("74.161984870956629487"), // 5500
+			sqrtPLow:          sdk.MustNewDecFromStr("67.416615162732695594"), // 4545
+			amount0Desired:    sdk.NewInt(1000000),
+			amount1Desired:    sdk.NewInt(5000000000),
+			expectedLiquidity: "1517882343.751510418088349649",
 		},
 	}
 
-	for _, tc := range testCases {
+	for name, tc := range testCases {
 		tc := tc
 
-		suite.Run(tc.name, func() {
+		suite.Run(name, func() {
+			// CASE A: if the currentSqrtP is less than the sqrtPLow, all the liquidity is in asset0, so GetLiquidityFromAmounts returns the liquidity of asset0
+			// CASE B: if the currentSqrtP is less than the sqrtPHigh but greater than sqrtPLow, the liquidity is split between asset0 and asset1,
+			// so GetLiquidityFromAmounts returns the smaller liquidity of asset0 and asset1
+			// CASE C: if the currentSqrtP is greater than the sqrtPHigh, all the liquidity is in asset1, so GetLiquidityFromAmounts returns the liquidity of asset1
 			liquidity := cl.GetLiquidityFromAmounts(tc.currentSqrtP, tc.sqrtPLow, tc.sqrtPHigh, tc.amount0Desired, tc.amount1Desired)
 			suite.Require().Equal(tc.expectedLiquidity, liquidity.String())
+			// TODO: this check works for CASE B but needs to get reworked when CASE A and CASE C are tested
 			liq0 := cl.Liquidity0(tc.amount0Desired, tc.currentSqrtP, tc.sqrtPHigh)
 			liq1 := cl.Liquidity1(tc.amount1Desired, tc.currentSqrtP, tc.sqrtPLow)
 			liq := sdk.MinDec(liq0, liq1)
@@ -47,27 +50,25 @@ func (suite *KeeperTestSuite) TestGetLiquidityFromAmounts() {
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // liquidity1 = amount1 / (sqrtPriceB - sqrtPriceA)
 func (suite *KeeperTestSuite) TestLiquidity1() {
-	testCases := []struct {
-		name              string
+	testCases := map[string]struct {
 		currentSqrtP      sdk.Dec
 		sqrtPLow          sdk.Dec
 		amount1Desired    sdk.Int
 		expectedLiquidity string
 	}{
-		{
-			"happy path",
-			sdk.NewDecWithPrec(70710678, 6),
-			sdk.NewDecWithPrec(67082039, 6),
-			sdk.NewInt(5000),
-			"1377.927096082029653542",
-			// https://www.wolframalpha.com/input?i=5000+%2F+%2870.710678+-+67.082039%29
+		"happy path": {
+			currentSqrtP:      sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			sqrtPLow:          sdk.MustNewDecFromStr("67.416615162732695594"), // 4545
+			amount1Desired:    sdk.NewInt(5000000000),
+			expectedLiquidity: "1517882343.751510418088349649",
+			// https://www.wolframalpha.com/input?i=5000000000+%2F+%2870.710678118654752440+-+67.416615162732695594%29
 		},
 	}
 
-	for _, tc := range testCases {
+	for name, tc := range testCases {
 		tc := tc
 
-		suite.Run(tc.name, func() {
+		suite.Run(name, func() {
 			liquidity := cl.Liquidity1(tc.amount1Desired, tc.currentSqrtP, tc.sqrtPLow)
 			suite.Require().Equal(tc.expectedLiquidity, liquidity.String())
 		})
@@ -79,27 +80,25 @@ func (suite *KeeperTestSuite) TestLiquidity1() {
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // liquidity0 = amount0 * (sqrtPriceA * sqrtPriceB) / (sqrtPriceB - sqrtPriceA)
 func (suite *KeeperTestSuite) TestLiquidity0() {
-	testCases := []struct {
-		name              string
+	testCases := map[string]struct {
 		currentSqrtP      sdk.Dec
 		sqrtPHigh         sdk.Dec
 		amount0Desired    sdk.Int
 		expectedLiquidity string
 	}{
-		{
-			"happy path",
-			sdk.MustNewDecFromStr("70.710678"),
-			sdk.MustNewDecFromStr("74.161984"),
-			sdk.NewInt(1),
-			"1519.437618821730672389",
-			// https://www.wolframalpha.com/input?i=1+*+%2870.710678+*+74.161984%29+%2F+%2874.161984+-+70.710678%29
+		"happy path": {
+			currentSqrtP:      sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			sqrtPHigh:         sdk.MustNewDecFromStr("74.161984870956629487"), // 5500
+			amount0Desired:    sdk.NewInt(1000000),
+			expectedLiquidity: "1519437308.014768571720938768",
+			// https://www.wolframalpha.com/input?i=1000000+*+%2870.710678118654752440*+74.161984870956629487%29+%2F+%2874.161984870956629487+-+70.710678118654752440%29
 		},
 	}
 
-	for _, tc := range testCases {
+	for name, tc := range testCases {
 		tc := tc
 
-		suite.Run(tc.name, func() {
+		suite.Run(name, func() {
 			liquidity := cl.Liquidity0(tc.amount0Desired, tc.currentSqrtP, tc.sqrtPHigh)
 			suite.Require().Equal(tc.expectedLiquidity, liquidity.String())
 		})
@@ -110,33 +109,31 @@ func (suite *KeeperTestSuite) TestLiquidity0() {
 // the current squareRootPrice, liquidity of denom0, and amount of denom0 that still needs
 // to be swapped in order to determine the next squareRootPrice
 // PATH 1
-// if (amountRemaining * sqrtPriceCurrent) / amountRemaining  == sqrtPriceCurrent AND (liquidity * 2) + (amountRemaining * sqrtPriceCurrent) >= (liquidity * 2)
-// sqrtPriceNext = (liquidity * 2 * sqrtPriceCurrent) / ((liquidity * 2) + (amountRemaining * sqrtPriceCurrent))
+// if (amountRemaining * sqrtPriceCurrent) / amountRemaining  == sqrtPriceCurrent AND (liquidity) + (amountRemaining * sqrtPriceCurrent) >= (liquidity)
+// sqrtPriceNext = (liquidity * sqrtPriceCurrent) / ((liquidity) + (amountRemaining * sqrtPriceCurrent))
 // PATH 2
 // else
-// sqrtPriceNext = ((liquidity * 2)) / (((liquidity * 2) / (sqrtPriceCurrent)) + (amountRemaining))
+// sqrtPriceNext = ((liquidity)) / (((liquidity) / (sqrtPriceCurrent)) + (amountRemaining))
 func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount0RoundingUp() {
-	testCases := []struct {
-		name                  string
+	testCases := map[string]struct {
 		liquidity             sdk.Dec
 		sqrtPCurrent          sdk.Dec
 		amount0Remaining      sdk.Dec
 		sqrtPriceNextExpected string
 	}{
-		{
-			"happy path 1",
-			sdk.NewDec(1377927219),
-			sdk.NewDecWithPrec(70710678, 6),
-			sdk.NewDec(133700),
-			"70.468932817327539027",
-			// https://www.wolframalpha.com/input?i=%281377927219+*+2+*+70.710678%29+%2F+%28%281377927219+*+2%29+%2B+%28133700+*+70.710678%29%29
+		"happy path": {
+			liquidity:             sdk.MustNewDecFromStr("1517882343.751510418088349649"), // liquidity0 calculated above
+			sqrtPCurrent:          sdk.MustNewDecFromStr("70.710678118654752440"),
+			amount0Remaining:      sdk.NewDec(13370),
+			sqrtPriceNextExpected: "70.666663910857144332",
+			// https://www.wolframalpha.com/input?i=%28%281517882343.751510418088349649%29%29+%2F+%28%28%281517882343.751510418088349649%29+%2F+%2870.710678118654752440%29%29+%2B+%2813370%29%29
 		},
 	}
 
-	for _, tc := range testCases {
+	for name, tc := range testCases {
 		tc := tc
 
-		suite.Run(tc.name, func() {
+		suite.Run(name, func() {
 			sqrtPriceNext := cl.GetNextSqrtPriceFromAmount0RoundingUp(tc.sqrtPCurrent, tc.liquidity, tc.amount0Remaining)
 			suite.Require().Equal(tc.sqrtPriceNextExpected, sqrtPriceNext.String())
 		})
@@ -148,27 +145,25 @@ func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount0RoundingUp() {
 // to be swapped in order to determine the next squareRootPrice
 // sqrtPriceNext = sqrtPriceCurrent + (amount1Remaining / liquidity1)
 func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount1RoundingDown() {
-	testCases := []struct {
-		name                  string
+	testCases := map[string]struct {
 		liquidity             sdk.Dec
 		sqrtPCurrent          sdk.Dec
 		amount1Remaining      sdk.Dec
 		sqrtPriceNextExpected string
 	}{
-		{
-			"happy path",
-			sdk.NewDec(1377927219),
-			sdk.NewDecWithPrec(70710678, 6),
-			sdk.NewDec(42000000),
-			"70.741158564880981569",
-			// https://www.wolframalpha.com/input?i=70.710678+%2B+%2842000000+%2F+1377927219%29
+		"happy path": {
+			liquidity:             sdk.MustNewDecFromStr("1519437308.014768571721000000"), // liquidity1 calculated above
+			sqrtPCurrent:          sdk.MustNewDecFromStr("70.710678118654752440"),         // 5000000000
+			amount1Remaining:      sdk.NewDec(42000000),
+			sqrtPriceNextExpected: "70.738319930382329008",
+			// https://www.wolframalpha.com/input?i=70.710678118654752440+%2B++++%2842000000+%2F+1519437308.014768571721000000%29
 		},
 	}
 
-	for _, tc := range testCases {
+	for name, tc := range testCases {
 		tc := tc
 
-		suite.Run(tc.name, func() {
+		suite.Run(name, func() {
 			sqrtPriceNext := cl.GetNextSqrtPriceFromAmount1RoundingDown(tc.sqrtPCurrent, tc.liquidity, tc.amount1Remaining)
 			suite.Require().Equal(tc.sqrtPriceNextExpected, sqrtPriceNext.String())
 		})
@@ -180,29 +175,27 @@ func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount1RoundingDown() {
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // calcAmount0Delta = (liquidity * (sqrtPriceB - sqrtPriceA)) / (sqrtPriceB * sqrtPriceA)
 func (suite *KeeperTestSuite) TestCalcAmount0Delta() {
-	testCases := []struct {
-		name            string
+	testCases := map[string]struct {
 		liquidity       sdk.Dec
 		sqrtPCurrent    sdk.Dec
 		sqrtPUpper      sdk.Dec
 		amount0Expected string
 	}{
-		{
-			"happy path",
-			sdk.NewDec(1377927219),
-			sdk.MustNewDecFromStr("70.710678"),
-			sdk.MustNewDecFromStr("74.161984"),
-			"906866",
-			// https://www.wolframalpha.com/input?i=%281377927219+*+%2874.161984+-+70.710678+%29%29+%2F+%2870.710678+*+74.161984%29
+		"happy path": {
+			liquidity:       sdk.MustNewDecFromStr("1517882343.751510418088349649"), // we use the smaller liquidity between liq0 and liq1
+			sqrtPCurrent:    sdk.MustNewDecFromStr("70.710678118654752440"),         // 5000
+			sqrtPUpper:      sdk.MustNewDecFromStr("74.161984870956629487"),         // 5500
+			amount0Expected: "998976.618347426747968399",                            // TODO: should be 998976.618347426388356630
+			// https://www.wolframalpha.com/input?i=%281517882343.751510418088349649+*+%2874.161984870956629487+-+70.710678118654752440+%29%29+%2F+%2870.710678118654752440+*+74.161984870956629487%29
 		},
 	}
 
-	for _, tc := range testCases {
+	for name, tc := range testCases {
 		tc := tc
 
-		suite.Run(tc.name, func() {
+		suite.Run(name, func() {
 			amount0 := cl.CalcAmount0Delta(tc.liquidity, tc.sqrtPCurrent, tc.sqrtPUpper, false)
-			suite.Require().Equal(tc.amount0Expected, amount0.TruncateInt().String())
+			suite.Require().Equal(tc.amount0Expected, amount0.String())
 		})
 	}
 }
@@ -212,36 +205,33 @@ func (suite *KeeperTestSuite) TestCalcAmount0Delta() {
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // calcAmount1Delta = liq * (sqrtPriceB - sqrtPriceA)
 func (suite *KeeperTestSuite) TestCalcAmount1Delta() {
-	testCases := []struct {
-		name            string
+	testCases := map[string]struct {
 		liquidity       sdk.Dec
 		sqrtPCurrent    sdk.Dec
 		sqrtPLower      sdk.Dec
 		amount1Expected string
 	}{
-		{
-			"happy path",
-			sdk.NewDec(1377927219),
-			sdk.NewDecWithPrec(70710678, 6),
-			sdk.NewDecWithPrec(67082039, 6),
-			"5000000446",
-			// https://www.wolframalpha.com/input?i=1377927219+*+%2870.710678+-+67.082039%29
+		"happy path": {
+			liquidity:       sdk.MustNewDecFromStr("1517882343.751510418088349649"), // we use the smaller liquidity between liq0 and liq1
+			sqrtPCurrent:    sdk.MustNewDecFromStr("70.710678118654752440"),         // 5000
+			sqrtPLower:      sdk.MustNewDecFromStr("67.416615162732695594"),         // 4545
+			amount1Expected: "5000000000.000000000000000000",
+			// https://www.wolframalpha.com/input?i=1517882343.751510418088349649+*+%2870.710678118654752440+-+67.416615162732695594%29
 		},
 	}
 
-	for _, tc := range testCases {
+	for name, tc := range testCases {
 		tc := tc
 
-		suite.Run(tc.name, func() {
+		suite.Run(name, func() {
 			amount1 := cl.CalcAmount1Delta(tc.liquidity, tc.sqrtPCurrent, tc.sqrtPLower, false)
-			suite.Require().Equal(tc.amount1Expected, amount1.TruncateInt().String())
+			suite.Require().Equal(tc.amount1Expected, amount1.String())
 		})
 	}
 }
 
 func (suite *KeeperTestSuite) TestComputeSwapState() {
-	testCases := []struct {
-		name                  string
+	testCases := map[string]struct {
 		sqrtPCurrent          sdk.Dec
 		sqrtPTarget           sdk.Dec
 		liquidity             sdk.Dec
@@ -251,34 +241,32 @@ func (suite *KeeperTestSuite) TestComputeSwapState() {
 		expectedAmountIn      string
 		expectedAmountOut     string
 	}{
-		{
-			"happy path: trade asset0 for asset1",
-			sdk.NewDecWithPrec(70710678, 6),
-			sdk.OneDec(),
-			sdk.NewDec(1377927219),
-			sdk.NewDec(133700),
-			true,
-			"70.468932817327539027",
-			"66850.000000000000000000",
-			"333107267.266511136411924087",
+		"happy path: trade asset0 for asset1": {
+			sqrtPCurrent:          sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			sqrtPTarget:           sdk.MustNewDecFromStr("70.666662070529219856"), // 4993.777128190373086350
+			liquidity:             sdk.MustNewDecFromStr("1517818840.967515822610790519"),
+			amountRemaining:       sdk.NewDec(13370),
+			zeroForOne:            true,
+			expectedSqrtPriceNext: "70.666662070529219856",
+			expectedAmountIn:      "13369.999999903622360944",
+			expectedAmountOut:     "66808387.149866264039333362",
 		},
-		{
-			"happy path: trade asset1 for asset0",
-			sdk.NewDecWithPrec(70710678, 6),
-			sdk.OneDec(),
-			sdk.NewDec(1377927219),
-			sdk.NewDec(4199999999),
-			false,
-			"73.758734487372429211",
-			"4199999999.000000000000000000",
-			"805287.266898087447354318",
+		"happy path: trade asset1 for asset0": {
+			sqrtPCurrent:          sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			sqrtPTarget:           sdk.MustNewDecFromStr("70.738349405152439867"), // 5003.91407656543054317
+			liquidity:             sdk.MustNewDecFromStr("1517818840.967515822610790519"),
+			amountRemaining:       sdk.NewDec(42000000),
+			zeroForOne:            false,
+			expectedSqrtPriceNext: "70.738349405152439867",
+			expectedAmountIn:      "42000000.000000000650233591",
+			expectedAmountOut:     "8396.714104746015980302",
 		},
 	}
 
-	for _, tc := range testCases {
+	for name, tc := range testCases {
 		tc := tc
 
-		suite.Run(tc.name, func() {
+		suite.Run(name, func() {
 			sqrtPriceNext, amountIn, amountOut := cl.ComputeSwapStep(tc.sqrtPCurrent, tc.sqrtPTarget, tc.liquidity, tc.amountRemaining, tc.zeroForOne)
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext.String())
 			suite.Require().Equal(tc.expectedAmountIn, amountIn.String())
