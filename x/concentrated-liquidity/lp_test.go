@@ -18,7 +18,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 		amount0Expected   sdk.Int
 		amount1Desired    sdk.Int
 		amount1Expected   sdk.Int
-		expectedLiquidity sdk.Int
+		expectedLiquidity sdk.Dec
 	}{
 		"happy path": {
 			poolId:            1,
@@ -30,7 +30,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			amount0Expected:   sdk.NewInt(998587),                             // 0.998587 eth
 			amount1Desired:    sdk.NewInt(5000000000),                         // 5000 usdc
 			amount1Expected:   sdk.NewInt(5000000000),                         // 5000 usdc
-			expectedLiquidity: sdk.NewInt(1517818840),
+			expectedLiquidity: sdk.MustNewDecFromStr("1517818840.967515822610790519"),
 		},
 	}
 
@@ -44,7 +44,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			s.Require().NoError(err)
 			s.Require().Equal(tc.amount0Expected.String(), asset0.String())
 			s.Require().Equal(tc.amount1Expected.String(), asset1.String())
-			s.Require().Equal(tc.expectedLiquidity.String(), liquidityCreated.TruncateInt().String())
+			s.Require().Equal(tc.expectedLiquidity.String(), liquidityCreated.String())
 
 			// check position state
 			position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick)

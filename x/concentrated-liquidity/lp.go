@@ -50,20 +50,20 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	// update tickInfo state
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
-	err = k.initOrUpdateTick(ctx, poolId, lowerTick, liquidity.TruncateInt(), false)
+	err = k.initOrUpdateTick(ctx, poolId, lowerTick, liquidity, false)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
-	err = k.initOrUpdateTick(ctx, poolId, upperTick, liquidity.TruncateInt(), true)
+	err = k.initOrUpdateTick(ctx, poolId, upperTick, liquidity, true)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
 	// update position state
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
-	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity.TruncateInt())
+	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
