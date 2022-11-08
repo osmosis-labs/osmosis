@@ -238,8 +238,9 @@ beneficial as we assume the majority of native tokens exist on the native chain 
 proportional to the tokens that have left the chain. 
 
 This strategy cannot be implemented at the moment because IBC does not track the amount of tokens in escrow across 
-all channels (https://github.com/cosmos/ibc-go/issues/2664). Instead, we use the current supply on Osmosis for all 
-denoms (i.e.: treat native and non-native tokens the same way). Once that ticket is fixed, we will update this strategy.
+all channels ([github issue](https://github.com/cosmos/ibc-go/issues/2664)). Instead, we use the current supply on 
+Osmosis for all denoms (i.e.: treat native and non-native tokens the same way). Once that ticket is fixed, we will 
+update this strategy.
 
 ##### Caching
 

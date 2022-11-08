@@ -150,7 +150,7 @@ impl Packet {
                 .denom
                 .strip_prefix(&format!("transfer/{}/", self.source_channel))
                 .unwrap_or_default();
-            let split: Vec<&str> = unprefixed.split("/").collect();
+            let split: Vec<&str> = unprefixed.split('/').collect();
             if split[0] == unprefixed {
                 // This is a native token. Return the unprefixed token
                 unprefixed.to_string()
