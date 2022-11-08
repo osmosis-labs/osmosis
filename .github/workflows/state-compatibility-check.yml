@@ -29,19 +29,15 @@ name: Check state compatibility
 # ******************************************************************************
 
 on:
-  workflow_dispatch:
-    inputs:
-      # Enter ref to checkout (commit / branch / tags) in main repository
-      osmosis-ref:
-        required: true
-  schedule:
-      - cron: '01 23 * * *' # Runs at 01:23 UTC every day
+  pull_request:
+    branches:
+      - 'v[0-9]+.x'
 
 env:
   GOLANG_VERSION: 1.18
   GENESIS_URL: https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
   ADDRBOOK_URL: https://dl2.quicksync.io/json/addrbook.osmosis.json
-  SNAPSHOT_BUCKET: https://snapshots.osmosis.zone
+  SNAPSHOT_BUCKET: https://osmosis-snapshot.sfo3.cdn.digitaloceanspaces.com
   RPC_ENDPOINT: https://rpc.osmosis.zone
   LCD_ENDPOINT: https://lcd.osmosis.zone
   DELTA_HALT_HEIGHT: 50
@@ -49,27 +45,16 @@ env:
 jobs:
 
   check_state_compatibility:
+    # DO NOT CHANGE THIS: please read the note above
+    if: ${{ github.event.pull_request.head.repo.full_name == 'osmosis-labs/osmosis' }}
     runs-on: self-hosted
     steps:
+      - 
+        name: Checkout branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       -
-        # If workflow was triggered by a schedule, explicitly checkout the latest branch
-        # otherwise checkout the release branch were targetting
-        name: Checkout v12.x branch
-        if: ${{ github.event_name == 'schedule' }}
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          ref: v12.x
-          repository: osmosis-labs/osmosis
-      - 
-        name: Checkout ref
-        uses: actions/checkout@v3
-        if: ${{ github.event_name != 'schedule' }}
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event.inputs.osmosis-ref }}                 
-          repository: osmosis-labs/osmosis
-      - 
         name: 🐿 Setup Golang
         uses: actions/setup-go@v3
         with:
@@ -88,7 +73,7 @@ jobs:
           # Download genesis file if not present
           mkdir -p /mnt/data/genesis/osmosis-1/
           if [ ! -f "/mnt/data/genesis/osmosis-1/genesis.json" ]; then
-            wget -q -O /mnt/data/genesis/osmosis-1/genesis.json ${{ env.GENESIS_URL }}
+            wget -O /mnt/data/genesis/osmosis-1/genesis.json ${{ env.GENESIS_URL }}
           fi
 
           # Copy genesis to config folder
@@ -97,13 +82,23 @@ jobs:
         name: ⏬ Download last pre-epoch snapshot
         run:  |
           REPO_MAJOR_VERSION=$(echo $(git describe --tags) | cut -f 1 -d '.') # with v prefix
-          SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/$REPO_MAJOR_VERSION/snapshots.json
-          
+
+          # Find current major version via rpc.osmosis.zone/abci_info
+          RPC_ABCI_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" ${{ env.RPC_ENDPOINT }}/abci_info)
+          CHAIN_MAJOR_VERSION=$(echo $RPC_ABCI_INFO | dasel --plain -r json  'result.response.version' | cut -f 1 -d '.') # no v prefix
+
+          # Get correct url to fetch snapshot comparing versions
+          if [ $REPO_MAJOR_VERSION == v$CHAIN_MAJOR_VERSION ]; then
+            # I'm in the latest major
+            SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/osmosis.json
+          else
+            SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/$REPO_MAJOR_VERSION/osmosis.json
+          fi
 
           # Get the latest pre-epoch snapshot information from bucket
           SNAPSHOT_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" $SNAPSHOT_INFO_URL)
-          SNAPSHOT_URL=$(echo $SNAPSHOT_INFO | jq -r '.[] | select(.type == "pre-epoch").url')
-          SNAPSHOT_ID=$(echo $SNAPSHOT_INFO |  jq -r '.[] | select(.type == "pre-epoch").filename' | cut -f 1 -d '.')
+          SNAPSHOT_URL=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).url')
+          SNAPSHOT_ID=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).filename' | cut -f 1 -d '.')
 
           # Download snapshot if not already present
           mkdir -p /mnt/data/snapshots/$REPO_MAJOR_VERSION/
@@ -134,9 +129,9 @@ jobs:
             # I'm in a previous major, calculate the epoch height from the snapshot height
             # (Snapshot is taken 100 blocks before epoch)
 
-            SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/v$REPO_MAJOR_VERSION/snapshots.json
+            SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/v$REPO_MAJOR_VERSION/osmosis.json
             SNAPSHOT_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" $SNAPSHOT_INFO_URL)
-            SNAPSHOT_BLOCK_HEIGHT=$(echo $SNAPSHOT_INFO | jq -r '.[] | select(.type == "pre-epoch").height')
+            SNAPSHOT_BLOCK_HEIGHT=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).height')
             LAST_EPOCH_BLOCK_HEIGHT=$(($SNAPSHOT_BLOCK_HEIGHT + 100))
           fi
 
@@ -156,8 +151,8 @@ jobs:
           dasel put string -f $CONFIG_FOLDER/app.toml '.pruning' everything
           dasel put string -f $CONFIG_FOLDER/app.toml '.state-sync.snapshot-interval' 0
 
-          # Download chainlayer addrbook
-          wget -q -O $CONFIG_FOLDER/addrbook.json ${{ env.ADDRBOOK_URL }}
+          # Download addrbook
+          wget -O $CONFIG_FOLDER/addrbook.json ${{ env.ADDRBOOK_URL }}
       -
         name: 🧪 Start Osmosis Node
         run: build/osmosisd start
