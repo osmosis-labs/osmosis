@@ -9,19 +9,20 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
-	keeper "github.com/osmosis-labs/osmosis/v12/x/valset-pref"
-	"github.com/osmosis-labs/osmosis/v12/x/valset-pref/types"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
-
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
+
+	keeper "github.com/osmosis-labs/osmosis/v12/x/valset-pref"
 	validatorprefclient "github.com/osmosis-labs/osmosis/v12/x/valset-pref/client"
 	"github.com/osmosis-labs/osmosis/v12/x/valset-pref/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v12/x/valset-pref/types"
 )
 
 var (
@@ -158,6 +159,22 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 }
 
 // ___________________________________________________________________________
+
+// AutoCLI functions
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface. OnePerModuleType marks a type which can have up to one value per module.
+// TODO: maybe remove because we do not want to use depinject
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface. It provides no functionality itself, but is the
+// type that all valid app modules should provide so that they can be identified
+// by other modules (usually via depinject) as app modules.
+func (am AppModule) IsAppModule() {}
+
+// AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
+func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
+	return types.AutoCLIOptions
+}
 
 // AppModuleSimulation functions
 
