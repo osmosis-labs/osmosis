@@ -77,6 +77,14 @@ pub struct QuerySupplyOfResponse {
 
 use std::str::FromStr; // Needed to parse the coin's String as Uint256
 
+fn hash_denom(denom: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(denom.as_bytes());
+    let result = hasher.finalize();
+    let hash = hex::encode(result);
+    format!("ibc/{}", hash.to_uppercase())
+}
+
 impl Packet {
     pub fn mock(channel_id: String, denom: String, funds: Uint256) -> Packet {
         Packet {
@@ -99,9 +107,9 @@ impl Packet {
         }
     }
 
-    pub fn channel_value(&self, deps: Deps) -> Result<Uint256, StdError> {
+    pub fn channel_value(&self, deps: Deps, direction: &FlowType) -> Result<Uint256, StdError> {
         let res = QuerySupplyOfRequest {
-            denom: self.local_denom(),
+            denom: self.local_denom(direction),
         }
         .query(&deps.querier)?;
         Uint256::from_str(&res.amount.unwrap_or_default().amount)
@@ -119,27 +127,64 @@ impl Packet {
         }
     }
 
-    fn local_denom(&self) -> String {
+    fn receiver_chain_is_source(&self) -> bool {
+        self.data
+            .denom
+            .starts_with(&format!("transfer/{}", self.source_channel))
+    }
+
+    fn handle_denom_for_sends(&self) -> String {
         if !self.data.denom.starts_with("transfer/") {
             // For native tokens we just use what's on the packet
             return self.data.denom.clone();
         }
         // For non-native tokens, we need to generate the IBCDenom
-        let mut hasher = Sha256::new();
-        hasher.update(self.data.denom.as_bytes());
-        let result = hasher.finalize();
-        let hash = hex::encode(result);
-        format!("ibc/{}", hash.to_uppercase())
+        hash_denom(&self.data.denom)
+    }
+
+    fn handle_denom_for_recvs(&self) -> String {
+        if self.receiver_chain_is_source() {
+            // These are tokens that have been sent to the counterparty and are returning
+            let unprefixed = self
+                .data
+                .denom
+                .strip_prefix(&format!("transfer/{}/", self.source_channel))
+                .unwrap_or_default();
+            let split: Vec<&str> = unprefixed.split('/').collect();
+            if split[0] == unprefixed {
+                // This is a native token. Return the unprefixed token
+                unprefixed.to_string()
+            } else {
+                // This is a non-native that was sent to the counterparty.
+                // We need to hash it.
+                // The ibc-go implementation checks that the denom has been built correctly. We
+                // don't need to do that here because if it hasn't, the transfer module will catch it.
+                hash_denom(unprefixed)
+            }
+        } else {
+            // Tokens that come directly from the counterparty.
+            // Since the sender didn't prefix them, we need to do it here.
+            let prefixed = format!("transfer/{}/", self.destination_channel) + &self.data.denom;
+            hash_denom(&prefixed)
+        }
+    }
+
+    fn local_denom(&self, direction: &FlowType) -> String {
+        match direction {
+            FlowType::In => self.handle_denom_for_recvs(),
+            FlowType::Out => self.handle_denom_for_sends(),
+        }
     }
 
     pub fn path_data(&self, direction: &FlowType) -> (String, String) {
-        (self.local_channel(direction), self.local_denom())
+        (self.local_channel(direction), self.local_denom(direction))
     }
 }
 
 // Helpers
 
 // Create a new packet for testing
+#[cfg(test)]
 #[macro_export]
 macro_rules! test_msg_send {
     (channel_id: $channel_id:expr, denom: $denom:expr, channel_value: $channel_value:expr, funds: $funds:expr) => {
@@ -151,6 +196,7 @@ macro_rules! test_msg_send {
     };
 }
 
+#[cfg(test)]
 #[macro_export]
 macro_rules! test_msg_recv {
     (channel_id: $channel_id:expr, denom: $denom:expr, channel_value: $channel_value:expr, funds: $funds:expr) => {
