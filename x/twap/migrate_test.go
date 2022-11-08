@@ -31,7 +31,7 @@ func (s *TestSuite) TestMigrateExistingPools() {
 		recentTwapRecords, err := s.twapkeeper.GetAllMostRecentRecordsForPool(s.Ctx, uint64(poolId))
 		poolDenoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, uint64(poolId))
 		s.Require().NoError(err)
-		denomPairs, _ := types.GetAllUniqueDenomPairs(poolDenoms)
+		denomPairs := types.GetAllUniqueDenomPairs(poolDenoms)
 		s.Require().NoError(err)
 		s.Require().Equal(len(denomPairs), len(recentTwapRecords))
 
