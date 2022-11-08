@@ -231,7 +231,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			}
 
 			expectedLiquidity := cl.GetLiquidityFromAmounts(currSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
-			s.Require().Equal(expectedLiquidity.TruncateInt().String(), updatedLiquidity.TruncateInt().String())
+			s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
 		})
 
 	}
@@ -352,7 +352,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 				s.Require().NoError(err)
 
 				// create second position parameters
-				newLowerPrice := sdk.NewDec(5501)
+				newLowerPrice := sdk.NewDec(5500)
 				s.Require().NoError(err)
 				newLowerTick := cl.PriceToTick(newLowerPrice) // 84222
 				newUpperPrice := sdk.NewDec(6250)
@@ -366,9 +366,9 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 			tokenIn:          sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
 			tokenOutDenom:    "eth",
 			priceLimit:       sdk.NewDec(6106),
-			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1820536)),
+			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1820628)),
 			expectedTick:     sdk.NewInt(87173),
-			newLowerPrice:    sdk.NewDec(5501),
+			newLowerPrice:    sdk.NewDec(5500),
 			newUpperPrice:    sdk.NewDec(6250),
 		},
 	}
@@ -420,7 +420,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 
 			expectedLiquidity := cl.GetLiquidityFromAmounts(currSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
 			// check that the pools liquidity was updated correctly
-			s.Require().Equal(expectedLiquidity.TruncateInt(), pool.Liquidity.TruncateInt())
+			s.Require().Equal(expectedLiquidity.String(), pool.Liquidity.String())
 
 			// TODO: need to figure out a good way to test that the currentSqrtPrice that the pool is set to makes sense
 			// right now we calculate this value through iterations, so unsure how to do this here / if its needed
