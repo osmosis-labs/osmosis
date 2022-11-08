@@ -164,10 +164,6 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 
 // AutoCLI functions
 
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface. OnePerModuleType marks a type which can have up to one value per module.
-// TODO: maybe remove because we do not want to use depinject
-func (am AppModule) IsOnePerModuleType() {}
-
 // IsAppModule implements the appmodule.AppModule interface. It provides no functionality itself, but is the
 // type that all valid app modules should provide so that they can be identified
 // by other modules (usually via depinject) as app modules.
