@@ -58,13 +58,13 @@ func NewCreatePoolCmd() *cobra.Command {
 	"future-governor": "168h"
 }
 
-For stableswap
+For stableswap (demonstrating need for a 1:1000 scaling factor, see doc)
 {
-	"weights": "4uatom,4osmo,2uakt",
-	"initial-deposit": "100uatom,5osmo,20uakt",
+	"initial-deposit": "1000000uusdc,1000miliusdc",
 	"swap-fee": "0.01",
 	"exit-fee": "0.01",
-	"future-governor": "168h"
+	"future-governor": "168h",
+	"scaling-factors": "1000,1"
 }
 `,
 		Args: cobra.ExactArgs(0),
@@ -90,7 +90,10 @@ For stableswap
 					return err
 				}
 			} else if poolType == "stableswap" {
-
+				txf, msg, err = NewBuildCreateStableswapPoolMsg(clientCtx, txf, cmd.Flags())
+				if err != nil {
+					return err
+				}
 			}
 
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
