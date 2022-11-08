@@ -3,7 +3,7 @@ package concentrated_liquidity_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cl "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity"
+	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
 func (suite *KeeperTestSuite) TestGetLiquidityFromAmounts() {
@@ -31,10 +31,10 @@ func (suite *KeeperTestSuite) TestGetLiquidityFromAmounts() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			liquidity := cl.GetLiquidityFromAmounts(tc.currentSqrtP, tc.sqrtPLow, tc.sqrtPHigh, tc.amount0Desired, tc.amount1Desired)
+			liquidity := types.GetLiquidityFromAmounts(tc.currentSqrtP, tc.sqrtPLow, tc.sqrtPHigh, tc.amount0Desired, tc.amount1Desired)
 			suite.Require().Equal(tc.expectedLiquidity, liquidity.String())
-			liq0 := cl.Liquidity0(tc.amount0Desired, tc.currentSqrtP, tc.sqrtPHigh)
-			liq1 := cl.Liquidity1(tc.amount1Desired, tc.currentSqrtP, tc.sqrtPLow)
+			liq0 := types.Liquidity0(tc.amount0Desired, tc.currentSqrtP, tc.sqrtPHigh)
+			liq1 := types.Liquidity1(tc.amount1Desired, tc.currentSqrtP, tc.sqrtPLow)
 			liq := sdk.MinDec(liq0, liq1)
 			suite.Require().Equal(liq.String(), liquidity.String())
 
@@ -68,7 +68,7 @@ func (suite *KeeperTestSuite) TestLiquidity1() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			liquidity := cl.Liquidity1(tc.amount1Desired, tc.currentSqrtP, tc.sqrtPLow)
+			liquidity := types.Liquidity1(tc.amount1Desired, tc.currentSqrtP, tc.sqrtPLow)
 			suite.Require().Equal(tc.expectedLiquidity, liquidity.String())
 		})
 	}
@@ -100,7 +100,7 @@ func (suite *KeeperTestSuite) TestLiquidity0() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			liquidity := cl.Liquidity0(tc.amount0Desired, tc.currentSqrtP, tc.sqrtPHigh)
+			liquidity := types.Liquidity0(tc.amount0Desired, tc.currentSqrtP, tc.sqrtPHigh)
 			suite.Require().Equal(tc.expectedLiquidity, liquidity.String())
 		})
 	}
@@ -137,7 +137,7 @@ func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount0RoundingUp() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			sqrtPriceNext := cl.GetNextSqrtPriceFromAmount0RoundingUp(tc.sqrtPCurrent, tc.liquidity, tc.amount0Remaining)
+			sqrtPriceNext := types.GetNextSqrtPriceFromAmount0RoundingUp(tc.sqrtPCurrent, tc.liquidity, tc.amount0Remaining)
 			suite.Require().Equal(tc.sqrtPriceNextExpected, sqrtPriceNext.String())
 		})
 	}
@@ -169,7 +169,7 @@ func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount1RoundingDown() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			sqrtPriceNext := cl.GetNextSqrtPriceFromAmount1RoundingDown(tc.sqrtPCurrent, tc.liquidity, tc.amount1Remaining)
+			sqrtPriceNext := types.GetNextSqrtPriceFromAmount1RoundingDown(tc.sqrtPCurrent, tc.liquidity, tc.amount1Remaining)
 			suite.Require().Equal(tc.sqrtPriceNextExpected, sqrtPriceNext.String())
 		})
 	}
@@ -201,7 +201,7 @@ func (suite *KeeperTestSuite) TestCalcAmount0Delta() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			amount0 := cl.CalcAmount0Delta(tc.liquidity, tc.sqrtPCurrent, tc.sqrtPUpper, false)
+			amount0 := types.CalcAmount0Delta(tc.liquidity, tc.sqrtPCurrent, tc.sqrtPUpper, false)
 			suite.Require().Equal(tc.amount0Expected, amount0.TruncateInt().String())
 		})
 	}
@@ -233,7 +233,7 @@ func (suite *KeeperTestSuite) TestCalcAmount1Delta() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			amount1 := cl.CalcAmount1Delta(tc.liquidity, tc.sqrtPCurrent, tc.sqrtPLower, false)
+			amount1 := types.CalcAmount1Delta(tc.liquidity, tc.sqrtPCurrent, tc.sqrtPLower, false)
 			suite.Require().Equal(tc.amount1Expected, amount1.TruncateInt().String())
 		})
 	}
@@ -279,7 +279,7 @@ func (suite *KeeperTestSuite) TestComputeSwapState() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			sqrtPriceNext, amountIn, amountOut := cl.ComputeSwapStep(tc.sqrtPCurrent, tc.sqrtPTarget, tc.liquidity, tc.amountRemaining, tc.zeroForOne)
+			sqrtPriceNext, amountIn, amountOut := types.ComputeSwapStep(tc.sqrtPCurrent, tc.sqrtPTarget, tc.liquidity, tc.amountRemaining, tc.zeroForOne)
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext.String())
 			suite.Require().Equal(tc.expectedAmountIn, amountIn.String())
 			suite.Require().Equal(tc.expectedAmountOut, amountOut.String())

@@ -9,11 +9,16 @@ import (
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
+	cdc.RegisterInterface((*PoolI)(nil), nil)
 	cdc.RegisterConcrete(&MsgCreatePosition{}, "osmosis/cl-create-position", nil)
 	cdc.RegisterConcrete(&MsgWithdrawPosition{}, "osmosis/cl-withdraw-position", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+	registry.RegisterInterface(
+		"osmosis.concentratedliquidity.v1beta1.PoolI",
+		(*PoolI)(nil),
+	)
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgCreatePosition{},

@@ -9,23 +9,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v12/osmomath"
 	"github.com/osmosis-labs/osmosis/v12/osmoutils"
+	pooltypes "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/concentrated-pool"
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
-
-// tickToSqrtPrice takes the tick index and returns the corresponding sqrt of the price
-func (k Keeper) tickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
-	price, err := sdk.NewDecWithPrec(10001, 4).Power(tickIndex.Uint64()).ApproxSqrt()
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-
-	return price, nil
-}
-
-// TODO: implement this
-// func (k Keeper) getTickAtSqrtRatio(sqrtPrice sdk.Dec) sdk.Int {
-// 	return sdk.Int{}
-// }
 
 func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Int, upper bool) (err error) {
 	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
@@ -115,15 +101,15 @@ func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex in
 }
 
 // getTickInfo gets tickInfo given poolId and tickIndex. Returns a boolean field that returns true if value is found for given key.
-func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickInfo TickInfo, err error) {
+func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickInfo pooltypes.TickInfo, err error) {
 	store := ctx.KVStore(k.storeKey)
-	tickStruct := TickInfo{}
+	tickStruct := pooltypes.TickInfo{}
 	key := types.KeyTick(poolId, tickIndex)
 
 	found, err := osmoutils.GetIfFound(store, key, &tickStruct)
 	// return 0 values if key has not been initialized
 	if !found {
-		return TickInfo{LiquidityGross: sdk.ZeroInt(), LiquidityNet: sdk.ZeroInt()}, err
+		return pooltypes.TickInfo{LiquidityGross: sdk.ZeroInt(), LiquidityNet: sdk.ZeroInt()}, err
 	}
 	if err != nil {
 		return tickStruct, err
@@ -132,7 +118,7 @@ func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 	return tickStruct, nil
 }
 
-func (k Keeper) setTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo TickInfo) {
+func (k Keeper) setTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo pooltypes.TickInfo) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyTick(poolId, tickIndex)
 	osmoutils.MustSet(store, key, &tickInfo)

@@ -15,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
+	concentrated_pool "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/concentrated-pool"
 	"github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
@@ -23,11 +24,15 @@ var (
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	cdc codec.Codec
+}
 
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	concentrated_pool.RegisterLegacyAminoCodec(cdc)
+	types.RegisterCodec(cdc)
 }
 
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
@@ -60,6 +65,8 @@ func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
 
 // RegisterInterfaces registers interfaces and implementations of the gamm module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
+	concentrated_pool.RegisterInterfaces(registry)
 }
 
 type AppModule struct {
@@ -71,9 +78,9 @@ type AppModule struct {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
-func NewAppModule(concentratedLiquidityKeeper Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, concentratedLiquidityKeeper Keeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		k:              concentratedLiquidityKeeper,
 	}
 }
