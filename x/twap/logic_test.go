@@ -1391,10 +1391,10 @@ func (s *TestSuite) TestAfterCreatePool() {
 			s.Require().NoError(err)
 
 			denoms := osmoutils.CoinsDenoms(tc.poolCoins)
-			denomPairs0, denomPairs1 := types.GetAllUniqueDenomPairs(denoms)
+			denomPairs := types.GetAllUniqueDenomPairs(denoms)
 			expectedRecords := []types.TwapRecord{}
-			for i := 0; i < len(denomPairs0); i++ {
-				expectedRecord, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denomPairs0[i], denomPairs1[i])
+			for _, denomPair := range denomPairs {
+				expectedRecord, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denomPair.Denom0, denomPair.Denom1)
 				s.Require().NoError(err)
 				expectedRecords = append(expectedRecords, expectedRecord)
 			}
@@ -1402,21 +1402,21 @@ func (s *TestSuite) TestAfterCreatePool() {
 			// consistency check that the number of records is exactly equal to the number of denompairs
 			allRecords, err := s.twapkeeper.GetAllMostRecentRecordsForPool(s.Ctx, poolId)
 			s.Require().NoError(err)
-			s.Require().Equal(len(denomPairs0), len(allRecords))
+			s.Require().Equal(len(denomPairs), len(allRecords))
 			s.Require().Equal(len(expectedRecords), len(allRecords))
 
 			// check on the correctness of all individual twap records
-			for i := 0; i < len(denomPairs0); i++ {
-				actualRecord, err := s.twapkeeper.GetMostRecentRecordStoreRepresentation(s.Ctx, poolId, denomPairs0[i], denomPairs1[i])
+			for i, denomPair := range denomPairs {
+				actualRecord, err := s.twapkeeper.GetMostRecentRecordStoreRepresentation(s.Ctx, poolId, denomPair.Denom0, denomPair.Denom1)
 				s.Require().NoError(err)
 				s.Require().Equal(expectedRecords[i], actualRecord)
-				actualRecord, err = s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denomPairs0[i], denomPairs1[i])
+				actualRecord, err = s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denomPair.Denom0, denomPair.Denom1)
 				s.Require().NoError(err)
 				s.Require().Equal(expectedRecords[i], actualRecord)
 			}
 
-			// test that after creating a pool 
-			// has triggered `trackChangedPool`, 
+			// test that after creating a pool
+			// has triggered `trackChangedPool`,
 			// and that we have the state of price impacted pools.
 			changedPools := s.twapkeeper.GetChangedPools(s.Ctx)
 			s.Require().Equal(1, len(changedPools))
