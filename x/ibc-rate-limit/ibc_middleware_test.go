@@ -308,6 +308,7 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// send 2.5% (quota is 5%)
+	fmt.Printf("Sending %s from A to B. Represented in chain A as wrapped? %v\n", denom, !native)
 	suite.AssertSend(true, suite.MessageFromAToB(denom, sendAmount))
 
 	// send 2.5% (quota is 5%)
@@ -329,11 +330,15 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 
 // Test rate limiting on sends
 func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimitingNative() {
+	// Sends denom=stake from A->B. Rate limit receives "stake" in the packet. Nothing to do in the contract
 	suite.fullSendTest(true)
 }
 
 // Test rate limiting on sends
 func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimitingNonNative() {
+	// Sends denom=ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B77878 from A->B.
+	// Rate limit receives "transfer/channel-0/stake" in the packet (because transfer.relay.SendTransfer is called before the middleware)
+	// and should hash it before calculating the value
 	suite.fullSendTest(false)
 }
 
@@ -362,48 +367,58 @@ func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 
 // Test rate limiting on receives
 func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
-	quotaPercentage := 5
+	quotaPercentage := 4
 	suite.initializeEscrow()
 	// Get the denom and amount to send
-	denom := sdk.DefaultBondDenom
+	sendDenom := sdk.DefaultBondDenom
+	localDenom := sdk.DefaultBondDenom
 	channel := "channel-0"
-	if !native {
-		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", denom))
-		denom = denomTrace.IBCDenom()
+	if native {
+		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", localDenom))
+		localDenom = denomTrace.IBCDenom()
+	} else {
+		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", sendDenom))
+		sendDenom = denomTrace.IBCDenom()
 	}
 
 	osmosisApp := suite.chainA.GetOsmosisApp()
 
-	// This is the first one. Inside the tests. It works as expected.
-	channelValue := CalculateChannelValue(suite.chainA.GetContext(), denom, osmosisApp.BankKeeper)
+	channelValue := CalculateChannelValue(suite.chainA.GetContext(), localDenom, osmosisApp.BankKeeper)
 
-	// The amount to be sent is send 2.5% (quota is 5%)
+	// The amount to be sent is 2% (quota is 4%)
 	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))
 	sendAmount := quota.QuoRaw(2)
 
-	fmt.Printf("Testing recv rate limiting for denom=%s, channelValue=%s, quota=%s, sendAmount=%s\n", denom, channelValue, quota, sendAmount)
+	fmt.Printf("Testing recv rate limiting for denom=%s, channelValue=%s, quota=%s, sendAmount=%s\n", localDenom, channelValue, quota, sendAmount)
 
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
-	quotas := suite.BuildChannelQuota("weekly", channel, denom, 604800, 5, 5)
+	quotas := suite.BuildChannelQuota("weekly", channel, localDenom, 604800, 4, 4)
 	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// receive 2.5% (quota is 5%)
-	suite.AssertReceive(true, suite.MessageFromBToA(denom, sendAmount))
+	fmt.Printf("Sending %s from B to A. Represented in chain A as wrapped? %v\n", sendDenom, native)
+	suite.AssertReceive(true, suite.MessageFromBToA(sendDenom, sendAmount))
 
 	// receive 2.5% (quota is 5%)
-	suite.AssertReceive(true, suite.MessageFromBToA(denom, sendAmount))
+	suite.AssertReceive(true, suite.MessageFromBToA(sendDenom, sendAmount))
 
 	// Sending above the quota should fail. We send 2 instead of 1 to account for rounding errors
-	suite.AssertReceive(false, suite.MessageFromBToA(denom, sdk.NewInt(2)))
+	suite.AssertReceive(false, suite.MessageFromBToA(sendDenom, sdk.NewInt(2)))
 }
 
 func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimitingNative() {
+	// Sends denom=stake from B->A.
+	// Rate limit receives "stake" in the packet and should wrap it before calculating the value
+	// types.ReceiverChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data.Denom) should return false => Wrap the token
 	suite.fullRecvTest(true)
 }
 
 func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimitingNonNative() {
+	// Sends denom=ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B77878 from B->A.
+	// Rate limit receives "transfer/channel-0/stake" in the packet and should turn it into "stake"
+	// types.ReceiverChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data.Denom) should return true => unprefix. If unprefixed is not local, hash.
 	suite.fullRecvTest(false)
 }
 
