@@ -182,7 +182,7 @@ What remains is setting the error tolerance. We need two properties:
 * The returned value to be rounded correctly (always ending with the user having fewer funds to avoid pool drain attacks). Mitigated by swap fees for normal swaps, but needed for 0-fee to be safe.
 
 The error tolerance we set is defined in terms of error in `k`, which itself implies some error in `y`.
-An error of `e_k` in `k`, implies an error `e_y` in `y` that is less than `e_k`. We prove this later (and show that `e_y` is actually much less than the error in `e_k`, but for simplicity ignore this fact). We want `y` to be within a factor of `10^(-12)` of its true value.
+An error of `e_k` in `k`, implies an error `e_y` in `y` that is less than `e_k`. We prove this [here](#err_proof) (and show that `e_y` is actually much less than the error in `e_k`, but for simplicity ignore this fact). We want `y` to be within a factor of `10^(-12)` of its true value.
 To ensure the returned value is always rounded correctly, we define the rounding behavior expected.
 * If `x_in` is positive, then we take `y_out` units of `y` out of the pool. `y_out` should be rounded down. Note that `y_f < y_0` here. Therefore to round `y_out = y_0 - y_f` down, given fixed `y_0`, we want to round `y_f` up.
 * If `x_in` is negative, then `y_out` is also negative. The reason is that this is called in CalcInAmtGivenOut, so confusingly `x_in` is the known amount out, as a negative quantity. `y_out` is negative as well, to express that we get that many tokens out. (Since negative, `-y_out` is how many we add into the pool). We want `y_out` to be a larger negative, which means we want to round it down. Note that `y_f > y_0` here. Therefore `y_out = y_0 - y_f` is more negative, the higher `y_f` is. Thus we want to round `y_f` up.
@@ -259,6 +259,34 @@ We see correctness of the swap fee, by imagining what happens if we took this re
 #### Precision handling
 
 {Something we have to be careful of is precision handling, notes on why and how we deal with it.}
+
+<a name="err_proof">
+
+#### Proof that |e_y| < |e_k| 
+
+</a>
+
+In the binary search code, we are going to find a `k'` that is 'close' to `k`. We define and bound this error term as `e_k`, namely `e_k = k - k'`. We then find an implied value of `y'`, but this has an error term off of the true value of `y`, that would lead to exactly `k`. We call this term `y'`, and similarly `e_y = y - y'`.
+
+Recall we compute `k` as `k = xy(x^2 + y^2 + w)`. So `k' = xy'(x^2 + (y')^2 + w)`. We seek to relate the error terms, so:
+
+```
+k - k' = xy(x^2 + y^2 + w) - xy'(x^2 + (y')^2 + w)
+e_k = (y - y')(x^3 + xw) + x(y^3 - (y')^3)
+e_k = e_y(x^3 + xw) + x(y^3 - (y')^3)
+```
+
+Notice that $(y')^3 = (y - e_y)^3 = y^3 - 3y^2e_y + 3ye_y^2 - e_y^3$.
+We assume that `e_y` is sufficiently small, that $e_y^2$ is approximately `0`.
+So we say $(y')^3 \approx y^3 - 3y^2e_y$.
+
+Thus $e_k \approx e_y(x^3 + xw) + x(y^3 - y^3 + 3y^2e_y) = e_y(x^3 + xw) + 3xy^2e_y = e_y(x^3 + xw + 3xy^2)$.
+Therefore
+$$e_y = \frac{e_k}{x^3 + xw + 3xy^2}$$
+
+Since `x` and `y` must be greater than 1, and `w` must be non-negative, we have that `x^3 + xw + 3xy^2 >= 1`. 
+Therefore $|e_y| < |e_k|$.
+In fact, `e_y` is much lower than `e_k`.
 
 ### Spot Price
 
