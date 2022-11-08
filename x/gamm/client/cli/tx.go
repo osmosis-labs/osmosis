@@ -4,12 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -47,13 +49,22 @@ func NewCreatePoolCmd() *cobra.Command {
 		Use:   "create-pool [flags]",
 		Short: "create a new pool and provide the liquidity to it",
 		Long:  `Must provide path to a pool JSON file (--pool-file) describing the pool to be created`,
-		Example: `Sample pool JSON file contents:
+		Example: `Sample pool JSON file contents for balancer:
 {
 	"weights": "4uatom,4osmo,2uakt",
 	"initial-deposit": "100uatom,5osmo,20uakt",
 	"swap-fee": "0.01",
 	"exit-fee": "0.01",
 	"future-governor": "168h"
+}
+
+For stableswap (demonstrating need for a 1:1000 scaling factor, see doc)
+{
+	"initial-deposit": "1000000uusdc,1000miliusdc",
+	"swap-fee": "0.01",
+	"exit-fee": "0.01",
+	"future-governor": "168h",
+	"scaling-factors": "1000,1"
 }
 `,
 		Args: cobra.ExactArgs(0),
@@ -63,11 +74,26 @@ func NewCreatePoolCmd() *cobra.Command {
 				return err
 			}
 
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).
+				WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			txf, msg, err := NewBuildCreateBalancerPoolMsg(clientCtx, txf, cmd.Flags())
+			poolType, err := cmd.Flags().GetString(FlagPoolType)
 			if err != nil {
 				return err
+			}
+			poolType = strings.ToLower(poolType)
+
+			var msg sdk.Msg
+			if poolType == "balancer" || poolType == "uniswap" {
+				txf, msg, err = NewBuildCreateBalancerPoolMsg(clientCtx, txf, cmd.Flags())
+				if err != nil {
+					return err
+				}
+			} else if poolType == "stableswap" {
+				txf, msg, err = NewBuildCreateStableswapPoolMsg(clientCtx, txf, cmd.Flags())
+				if err != nil {
+					return err
+				}
 			}
 
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
@@ -323,7 +349,7 @@ func NewExitSwapShareAmountIn() *cobra.Command {
 }
 
 func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	pool, err := parseCreatePoolFlags(fs)
+	pool, err := parseCreateBalancerPoolFlags(fs)
 	if err != nil {
 		return txf, nil, fmt.Errorf("failed to parse pool: %w", err)
 	}
@@ -416,6 +442,61 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 		}
 
 		msg.PoolParams.SmoothWeightChangeParams = &smoothWeightParams
+	}
+
+	return txf, msg, nil
+}
+
+// Apologies to whoever has to touch this next, this code is horrendous
+func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	pool, err := parseCreateStableswapPoolFlags(fs)
+	if err != nil {
+		return txf, nil, fmt.Errorf("failed to parse pool: %w", err)
+	}
+
+	deposit, err := sdk.ParseCoinsNormalized(pool.InitialDeposit)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	swapFee, err := sdk.NewDecFromStr(pool.SwapFee)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	exitFee, err := sdk.NewDecFromStr(pool.ExitFee)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	poolParams := &stableswap.PoolParams{
+		SwapFee: swapFee,
+		ExitFee: exitFee,
+	}
+
+	scalingFactors := []uint64{}
+	trimmedSfString := strings.Trim(pool.ScalingFactors, "[] {}")
+	if len(trimmedSfString) > 0 {
+		ints := strings.Split(trimmedSfString, ",")
+		for _, i := range ints {
+			u, err := strconv.ParseUint(i, 10, 64)
+			if err != nil {
+				return txf, nil, err
+			}
+			scalingFactors = append(scalingFactors, u)
+		}
+		if len(scalingFactors) != len(deposit) {
+			return txf, nil, fmt.Errorf("number of scaling factors doesn't match number of assets")
+		}
+	}
+
+	msg := &stableswap.MsgCreateStableswapPool{
+		Sender:                  clientCtx.GetFromAddress().String(),
+		PoolParams:              poolParams,
+		InitialPoolLiquidity:    deposit,
+		ScalingFactors:          scalingFactors,
+		ScalingFactorController: pool.ScalingFactorController,
+		FuturePoolGovernor:      pool.FutureGovernor,
 	}
 
 	return txf, msg, nil
