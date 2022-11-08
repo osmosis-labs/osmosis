@@ -40,15 +40,6 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 	return nil
 }
 
-func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Int, err error) {
-	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-
-	return tickInfo.LiquidityNet, nil
-}
-
 // NextInitializedTick returns the next initialized tick index based on the
 // current or provided tick index. If no initialized tick exists, <0, false>
 // will be returned. The zeroForOne argument indicates if we need to find the next
