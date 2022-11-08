@@ -29,9 +29,13 @@ name: Check state compatibility
 # ******************************************************************************
 
 on:
-  pull_request:
-    branches:
-      - 'v[0-9]+.x'
+  workflow_dispatch:
+    inputs:
+      # Enter ref to checkout (commit / branch / tags) in main repository
+      osmosis-ref:
+        required: true
+  schedule:
+      - cron: '01 23 * * *' # Runs at 01:23 UTC every day
 
 env:
   GOLANG_VERSION: 1.18
@@ -41,19 +45,31 @@ env:
   RPC_ENDPOINT: https://rpc.osmosis.zone
   LCD_ENDPOINT: https://lcd.osmosis.zone
   DELTA_HALT_HEIGHT: 50
-
+ 
 jobs:
+
   check_state_compatibility:
-    # DO NOT CHANGE THIS: please read the note above
-    if: ${{ github.event.pull_request.head.repo.full_name == 'osmosis-labs/osmosis' }}
     runs-on: self-hosted
     steps:
-      - 
-        name: Checkout branch
+      -
+        # If workflow was triggered by a schedule, explicitly checkout the latest branch
+        # otherwise checkout the release branch were targetting
+        name: Checkout v12.x branch
+        if: ${{ github.event_name == 'schedule' }}
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      -
+          ref: v12.x
+          repository: osmosis-labs/osmosis
+      - 
+        name: Checkout ref
+        uses: actions/checkout@v3
+        if: ${{ github.event_name != 'schedule' }}
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.osmosis-ref }}                 
+          repository: osmosis-labs/osmosis
+      - 
         name: 🐿 Setup Golang
         uses: actions/setup-go@v3
         with:
@@ -82,6 +98,7 @@ jobs:
         run:  |
           REPO_MAJOR_VERSION=$(echo $(git describe --tags) | cut -f 1 -d '.') # with v prefix
           SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/$REPO_MAJOR_VERSION/snapshots.json
+          
 
           # Get the latest pre-epoch snapshot information from bucket
           SNAPSHOT_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" $SNAPSHOT_INFO_URL)
@@ -119,7 +136,7 @@ jobs:
 
             SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/v$REPO_MAJOR_VERSION/snapshots.json
             SNAPSHOT_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" $SNAPSHOT_INFO_URL)
-            SNAPSHOT_BLOCK_HEIGHT=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).height')
+            SNAPSHOT_BLOCK_HEIGHT=$(echo $SNAPSHOT_INFO | jq -r '.[] | select(.type == "pre-epoch").height')
             LAST_EPOCH_BLOCK_HEIGHT=$(($SNAPSHOT_BLOCK_HEIGHT + 100))
           fi
 
@@ -139,7 +156,7 @@ jobs:
           dasel put string -f $CONFIG_FOLDER/app.toml '.pruning' everything
           dasel put string -f $CONFIG_FOLDER/app.toml '.state-sync.snapshot-interval' 0
 
-          # Download addrbook
+          # Download chainlayer addrbook
           wget -q -O $CONFIG_FOLDER/addrbook.json ${{ env.ADDRBOOK_URL }}
       -
         name: 🧪 Start Osmosis Node
