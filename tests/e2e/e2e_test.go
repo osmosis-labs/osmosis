@@ -345,11 +345,11 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	// TWAP "from before to after swap" should be different from "from before to before swap"
 	// because swap introduces a new record with a different spot price.
 	s.T().Log("querying for the TWAP from before swap to now after swap")
-	twapFromBeforeSwapToAfterSwapAB, err := chainANode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap)
+	twapFromBeforeSwapToAfterSwapAB, err := chainANode.QueryArithmeticTwapToNow(poolId, denomB, denomA, timeBeforeSwap)
 	s.Require().NoError(err)
-	twapFromBeforeSwapToAfterSwapBC, err := chainANode.QueryArithmeticTwapToNow(poolId, denomB, denomC, timeBeforeSwap)
+	twapFromBeforeSwapToAfterSwapBC, err := chainANode.QueryArithmeticTwapToNow(poolId, denomC, denomB, timeBeforeSwap)
 	s.Require().NoError(err)
-	twapFromBeforeSwapToAfterSwapCA, err := chainANode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeBeforeSwap)
+	twapFromBeforeSwapToAfterSwapCA, err := chainANode.QueryArithmeticTwapToNow(poolId, denomA, denomC, timeBeforeSwap)
 	s.Require().NoError(err)
 	// We had a swap of 2000000stake for some amount of uion,
 	// 2000000uion for some amount of uosmo, and
