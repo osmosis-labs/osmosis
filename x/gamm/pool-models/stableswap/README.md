@@ -9,26 +9,26 @@ invariant: $f(x, y) = xy(x^2 + y^2) = k$
 
 It is generalized to the multi-asset setting as $f(a_1, ..., a_n) = a_1 * ... * a_n (a_1^2 + ... + a_n^2)$
 
-## Choice of curve 
+## Choice of curve
 
 {TODO: Include some high level summary of the curve}
 
 ## Pool configuration
 
-One key concept, is that the pool has a native concept of 
+One key concept, is that the pool has a native concept of
 
 ### Scaling factor handling
 
 An important concept thats up to now, not been mentioned is how do we set the expected price ratio.
 In the choice of curve section, we see that its the case that when `x_reserves ~= y_reserves`, that spot price is very close to `1`. However, there are a couple issues with just this in practice:
 
-1) Precision of pegged coins may differ. Suppose `1 Foo = 10^12 base units`, whereas `1 WrappedFoo = 10^6 base units`, but `1 Foo` is expected to trade near the price of `1 Wrapped Foo`.
-2) Relatedly, suppose theres a token called `TwoFoo` which should trade around `1 TwoFoo = 2 Foo`
-3) For staking derivatives, where value accrues within the token, the expected price to concentrate around dynamically changes (very slowly).
+1. Precision of pegged coins may differ. Suppose `1 Foo = 10^12 base units`, whereas `1 WrappedFoo = 10^6 base units`, but `1 Foo` is expected to trade near the price of `1 Wrapped Foo`.
+2. Relatedly, suppose theres a token called `TwoFoo` which should trade around `1 TwoFoo = 2 Foo`
+3. For staking derivatives, where value accrues within the token, the expected price to concentrate around dynamically changes (very slowly).
 
 To handle these cases, we introduce scaling factors. A scaling factor maps from "raw coin units" to "amm math units", by dividing.
 To handle the first case, we would make `Foo` have a scaling factor of `10^6`, and `WrappedFoo` have a scaling factor of `1`.
-This mapping is done via `raw coin units / scaling factor`. 
+This mapping is done via `raw coin units / scaling factor`.
 We use a decimal object for amm math units, however we still have to be precise about how we round.
 We introduce an enum `rounding mode` for this, with three modes: `RoundUp`, `RoundDown`, `RoundBankers`.
 
@@ -78,21 +78,26 @@ Due to the CFMM equation $f$ being a symmetric function, we can without loss of 
 We then take a more convenient expression to work with, via variable substition.
 
 <!-- It took several very silly hacks to get github to compile this. Editors in the future, be aware of spacing in the equation wrt how it GH renders -->
-$$\begin{equation}
+
+$$
+\begin{equation}
     v =
     \begin{cases}
       1, & \text{if } n=2 \\
       \prod\negthinspace \negthinspace \thinspace^{n}_{i=3} \space a_i, & \text{otherwise}
     \end{cases}
-  \end{equation}$$
+  \end{equation}
+$$
 
-$$\begin{equation}
+$$
+\begin{equation}
     w =
     \begin{cases}
       0, & \text{if}\ n=2 \\
       \sum\negthinspace \negthinspace \thinspace^{n}_{i=3} \space {a_i^2}, & \text{otherwise}
     \end{cases}
-  \end{equation}$$
+  \end{equation}
+$$
 
 $$\text{then } g(x,y,v,w) = xyv(x^2 + y^2 + w) = f(x,y, a_3, ... a_n)$$
 
@@ -112,7 +117,7 @@ The method to compute this under 0 swap fee is implied by the CFMM equation itse
 $g(x_0, y_0, v, w) = k = g(x_0 + a, y_0 - b, v, w)$. As $k$ is linearly related to $v$, and $v$ is unchanged throughout the swap, we can simplify the equation to be reasoning about $k' = \frac{k}{v}$ as the constant, and $h$ instead of $g$
 
 We then model the solution by finding a function $\text{solve cfmm}(x, w, k') = y\text{ s.t. }h(x, y, w) = k'$.
-Then we can solve the swap amount out by first computing $k'$ as $k' = h(x_0, y_0, w)$, and 
+Then we can solve the swap amount out by first computing $k'$ as $k' = h(x_0, y_0, w)$, and
 computing $y_f := \text{solve cfmm}(x_0 + a, w, k')$. We then get that $b = y_0 - y_f$.
 
 So all we need is an equation for $\text{solve cfmm}$! Its essentially inverting a multi-variate polynomial, and in this case is solvable: [wolfram alpha link](https://www.wolframalpha.com/input?i=solve+for+y+in+x+*+y+*+%28x%5E2+%2B+y%5E2+%2B+w%29+%3D+k)
@@ -125,15 +130,15 @@ Instead there is a more generic way to compute these, which we detail in the nex
 
 #### Iterative search solution
 
-Instead of using the direct solution for $\text{solve cfmm}(x, w, k')$, instead notice that $h(x, y, w)$ is an increasing function in $y$. 
-So we can simply binary search for $y$ such that $h(x, y, w) = k'$, and we are guaranteed convergence within some error bound. 
+Instead of using the direct solution for $\text{solve cfmm}(x, w, k')$, instead notice that $h(x, y, w)$ is an increasing function in $y$.
+So we can simply binary search for $y$ such that $h(x, y, w) = k'$, and we are guaranteed convergence within some error bound.
 
-In order to do a binary search, we need bounds on $y$. 
-The lowest lowerbound is $0$, and the largest upperbound is $\infty$. 
-The maximal upperbound is obviously unworkable, and in general binary searching around wide ranges is unfortunate, as we expect most trades to be centered around $y_0$. 
-This would suggest that we should do something smarter to iteratively approach the right value for the upperbound at least. 
-Notice that $h$ is super-linearly related in $y$, and at most cubically related to $y$. 
-This means that $\forall c \in \mathbb{R}^+, c * h(x,y,w) < h(x,c*y,w) < c^3 * h(x,y,w)$. 
+In order to do a binary search, we need bounds on $y$.
+The lowest lowerbound is $0$, and the largest upperbound is $\infty$.
+The maximal upperbound is obviously unworkable, and in general binary searching around wide ranges is unfortunate, as we expect most trades to be centered around $y_0$.
+This would suggest that we should do something smarter to iteratively approach the right value for the upperbound at least.
+Notice that $h$ is super-linearly related in $y$, and at most cubically related to $y$.
+This means that $\forall c \in \mathbb{R}^+, c * h(x,y,w) < h(x,c*y,w) < c^3 * h(x,y,w)$.
 We can use this fact to get a pretty-good initial upperbound guess for $y$ using the linear estimate.
 In the lowerbound case, we leave it as lower-bounded by $0$, otherwise we would need to take a cubed root to get a better estimate.
 
@@ -144,13 +149,14 @@ def iterative_search(x_f, y_0, w, k, err_tolerance):
   k_ratio = k_0 / k
   if k_ratio < 1:
     # k_0 < k. Need to find an upperbound. Worst case assume a linear relationship, gives an upperbound
-    # TODO: In the future, we can derive better bounds via reasoning about coefficients in the cubic
-    # These are quite close when we are in the "stable" part of the curve though.
+    # We could derive better bounds via reasoning about coefficients in the cubic,
+    # however this is deemed as not worth it, since the solution is quite close
+    # when we are in the "stable" part of the curve.
     upperbound = ceil(y_0 / k_ratio)
   elif k_ratio > 1:
     # need to find a lowerbound. We could use a cubic relation, but for now we just set it to 0.
     lowerbound = 0
-  else: 
+  else:
     return y_0 # means x_f = x_0
   k_calculator = lambda y_est: h(x_f, y_est, w)
   max_iteration_count = 100
@@ -168,22 +174,40 @@ def binary_search(lowerbound, upperbound, approximation_fn, target, max_iteratio
       upperbound = cur_y_guess
     else if cur_k_guess < target:
       lowerbound = cur_y_guess
-    
+
   if iter_count == max_iteration_count:
     return Error("max iteration count reached")
 
   return cur_y_guess
 ```
 
-As we changed API slightly, to have this "y_0" guess, we use the following as `solve_y` pseudocode here on out:
+Now we want to wrap this binary search into `solve_y`. We changed the API slightly, from what was previously denoted, to have this "y_0" term, in order to derive initial bounds.
+What remains is setting the error tolerance. We need two properties:
+
+- The returned value to be within some correctness threshold of the true value
+- The returned value to be rounded correctly (always ending with the user having fewer funds to avoid pool drain attacks). Mitigated by swap fees for normal swaps, but needed for 0-fee to be safe.
+
+The error tolerance we set is defined in terms of error in `k`, which itself implies some error in `y`.
+An error of `e_k` in `k`, implies an error `e_y` in `y` that is less than `e_k`. We prove this [here](#err_proof) (and show that `e_y` is actually much less than the error in `e_k`, but for simplicity ignore this fact). We want `y` to be within a factor of `10^(-12)` of its true value.
+To ensure the returned value is always rounded correctly, we define the rounding behavior expected.
+
+- If `x_in` is positive, then we take `y_out` units of `y` out of the pool. `y_out` should be rounded down. Note that `y_f < y_0` here. Therefore to round `y_out = y_0 - y_f` down, given fixed `y_0`, we want to round `y_f` up.
+- If `x_in` is negative, then `y_out` is also negative. The reason is that this is called in CalcInAmtGivenOut, so confusingly `x_in` is the known amount out, as a negative quantity. `y_out` is negative as well, to express that we get that many tokens out. (Since negative, `-y_out` is how many we add into the pool). We want `y_out` to be a larger negative, which means we want to round it down. Note that `y_f > y_0` here. Therefore `y_out = y_0 - y_f` is more negative, the higher `y_f` is. Thus we want to round `y_f` up.
+
+And therefore we round up in both cases.
+
+We capture all of this, in the following `solve_y` pseudocode:
+
 ```python
 # solve_cfmm returns y_f s.t. CFMM_eq(x_f, y_f, w) = k
 # for the no-v variant of CFMM_eq
-def solve_y(x_0, y_0, w, in_amt):
-  x_f = x_0 + in_amt
+def solve_y(x_0, y_0, w, x_in):
+  x_f = x_0 + x_in
   k = CFMM_eq(x_0, y_0, w)
-  err_tolerance = {"within .0001%"} # TODO: Detail what we choose / how we reason about choice
-  return iterative_search(x_f, y_0, w, k, err_tolerance):
+  err_tolerance = {"within factor of 10^-12", RoundUp}
+  y_f = iterative_search(x_f, y_0, w, k, err_tolerance):
+  y_out = y_0 - y_f
+  return y_out
 ```
 
 #### Using this in swap methods
@@ -205,6 +229,7 @@ The amount of tokens that we treat as going into the "0-swap fee" pool we define
 Then we simply call `solve_y` with the input reserves, and `amm_in`.
 
 <!-- TODO: Maybe we just use normal pseudocode syntax -->
+
 ```python
 def CalcOutAmountGivenExactAmountIn(pool, in_coin, out_denom, swap_fee):
   in_reserve, out_reserve, rem_reserves = pool.ScaledLiquidity(in_coin, out_denom, RoundingMode.RoundDown)
@@ -218,6 +243,7 @@ def CalcOutAmountGivenExactAmountIn(pool, in_coin, out_denom, swap_fee):
 ##### SwapExactAmountOut
 
 <!-- TODO: Explain overall context of this section -->
+
 When we scale liquidity, we round down, as lower reserves -> higher slippage.
 Similarly when we scale the exact token out, we round up to increase required token in.
 
@@ -225,8 +251,8 @@ We model the `solve_y` call as we are doing a known change to the `out_reserve`,
 To handle the swapfee, we apply the swapfee on the resultant needed input amount.
 We do this by having `token_in = amm_in / (1 - swapfee)`.
 
-
 <!-- TODO: Maybe we just use normal pseudocode syntax -->
+
 ```python
 def CalcInAmountGivenExactAmountOut(pool, out_coin, in_denom, swap_fee):
   in_reserve, out_reserve, rem_reserves = pool.ScaledLiquidity(in_denom, out_coin, RoundingMode.RoundDown)
@@ -243,6 +269,34 @@ We see correctness of the swap fee, by imagining what happens if we took this re
 #### Precision handling
 
 {Something we have to be careful of is precision handling, notes on why and how we deal with it.}
+
+<a name="err_proof">
+
+#### Proof that |e_y| < |e_k|
+
+</a>
+
+In the binary search code, we are going to find a `k'` that is 'close' to `k`. We define and bound this error term as `e_k`, namely `e_k = k - k'`. We then find an implied value of `y'`, but this has an error term off of the true value of `y`, that would lead to exactly `k`. We call this term `y'`, and similarly `e_y = y - y'`.
+
+Recall we compute `k` as `k = xy(x^2 + y^2 + w)`. So `k' = xy'(x^2 + (y')^2 + w)`. We seek to relate the error terms, so:
+
+```tex
+k - k' = xy(x^2 + y^2 + w) - xy'(x^2 + (y')^2 + w)
+e_k = (y - y')(x^3 + xw) + x(y^3 - (y')^3)
+e_k = e_y(x^3 + xw) + x(y^3 - (y')^3)
+```
+
+Notice that $(y')^3 = (y - e_y)^3 = y^3 - 3y^2e_y + 3ye_y^2 - e_y^3$.
+We assume that `e_y` is sufficiently small, that $e_y^2$ is approximately `0`.
+So we say $(y')^3 \approx y^3 - 3y^2e_y$.
+
+Thus $e_k \approx e_y(x^3 + xw) + x(y^3 - y^3 + 3y^2e_y) = e_y(x^3 + xw) + 3xy^2e_y = e_y(x^3 + xw + 3xy^2)$.
+Therefore
+$$e_y = \frac{e_k}{x^3 + xw + 3xy^2}$$
+
+Since `x` and `y` must be greater than 1, and `w` must be non-negative, we have that `x^3 + xw + 3xy^2 >= 1`.
+Therefore $|e_y| < |e_k|$.
+In fact, `e_y` is much lower than `e_k`.
 
 ### Spot Price
 
@@ -269,7 +323,7 @@ Both of these methods can be implemented via generic AMM techniques.
 
 #### JoinPool
 
-The JoinPool API only supports JoinPoolNoSwap if 
+The JoinPool API only supports JoinPoolNoSwap if
 
 #### Join pool single asset in
 
@@ -279,19 +333,19 @@ Couple ways to define JoinPool Exit Pool relation
 
 ## Testing strategy
 
-* Unit tests for every pool interface method
-* Msg tests for custom messages
-  * CreatePool
-  * SetScalingFactors
-* Simulator integrations:
-  * Pool creation
-  * JoinPool + ExitPool gives a token amount out that is lte input
-  * SingleTokenIn + ExitPool + Swap to base token gives a token amount that is less than input
-  * CFMM k adjusting in the correct direction after every action
-* Fuzz test binary search algorithm, to see that it still works correctly across wide scale ranges
-* Fuzz test approximate equality of iterative approximation swap algorithm and direct equation swap.
-* Flow testing the entire stableswap scaling factor update process
+- Unit tests for every pool interface method
+- Msg tests for custom messages
+  - CreatePool
+  - SetScalingFactors
+- Simulator integrations:
+  - Pool creation
+  - JoinPool + ExitPool gives a token amount out that is lte input
+  - SingleTokenIn + ExitPool + Swap to base token gives a token amount that is less than input
+  - CFMM k adjusting in the correct direction after every action
+- Fuzz test binary search algorithm, to see that it still works correctly across wide scale ranges
+- Fuzz test approximate equality of iterative approximation swap algorithm and direct equation swap.
+- Flow testing the entire stableswap scaling factor update process
 
 ## Extensions
 
-* The astute observer may notice that the equation we are solving in $\text{solve cfmm}$ is actually a cubic polynomial in $y$, with an always-positive derivative. We should then be able to use newton's root finding algorithm to solve for the solution with quadratic convergence. We do not pursue this today, due to other engineering tradeoffs, and insufficient analysis being done.
+- The astute observer may notice that the equation we are solving in $\text{solve cfmm}$ is actually a cubic polynomial in $y$, with an always-positive derivative. We should then be able to use newton's root finding algorithm to solve for the solution with quadratic convergence. We do not pursue this today, due to other engineering tradeoffs, and insufficient analysis being done.
