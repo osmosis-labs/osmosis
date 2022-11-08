@@ -2,7 +2,6 @@
 // We expect tests for:
 // * MsgCreatePool creating correct pool as expected
 // * MsgStableSwapAdjustScalingFactors works as expected
-//
 package stableswap_test
 
 import (

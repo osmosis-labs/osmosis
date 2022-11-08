@@ -247,6 +247,9 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	xLowEst, xHighEst := xReserve, xReserve
 	k0 := cfmmConstantMultiNoV(xReserve, yFinal, wSumSquares)
 	k := cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares)
+	if k0.Equal(osmomath.ZeroDec()) || k.Equal(osmomath.ZeroDec()) {
+		panic("k should never be zero")
+	}
 	kRatio := k0.Quo(k)
 
 	if kRatio.LT(osmomath.OneDec()) {
@@ -263,12 +266,25 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	}
 
 	maxIterations := 256
-	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.Dec{}}
+
+	// we use a geometric error tolerance that guarantees approximately 10^-12 precision on outputs
+	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.Int{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12)}
 
 	// create single-input CFMM to pass into binary search
 	computeFromEst := func(xEst osmomath.BigDec) (osmomath.BigDec, error) {
 		return cfmmConstantMultiNoV(xEst, yFinal, wSumSquares), nil
 	}
+
+	// if yIn is positive, we want to under-estimate the amount of xOut.
+	// This means, we want x_out to be rounded down, as x_out = x_init - x_final, for x_init > x_final.
+	// Thus we round-up x_final, to make it greater (and therefore ) x_out smaller.
+	// If yIn is negative, the amount of xOut will also be negative (representing that we must add tokens into the pool)
+	// this means x_out = x_init - x_final, for x_init < x_final.
+	// we want to over_estimate |x_out|, which means rounding x_out down as its a negative quantity.
+	// This means rounding x_final up, to give us a larger negative.
+	// Therefore we always round up.
+	roundingDirection := osmomath.RoundUp
+	errTolerance.RoundingDir = roundingDirection
 
 	xEst, err := osmoutils.BinarySearchBigDec(computeFromEst, xLowEst, xHighEst, k, errTolerance, maxIterations)
 	if err != nil {
@@ -276,7 +292,10 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	}
 
 	xOut := xReserve.Sub(xEst)
-	if xOut.GTE(xReserve) {
+	// We check the absolute value of the output against the xReserve amount to ensure that:
+	// 1. Swaps cannot more than double the input token's pool supply
+	// 2. Swaps cannot output more than the output token's pool supply
+	if xOut.Abs().GTE(xReserve) {
 		panic("invalid output: greater than full pool reserves")
 	}
 	return xOut
@@ -353,9 +372,8 @@ func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee
 	// returned cfmmIn is negative, representing we need to add this many tokens to pool.
 	// We invert that negative here.
 	cfmmIn = cfmmIn.Neg()
-	// handle swap fee
-	inAmt := cfmmIn.QuoRoundUp(oneMinus(swapFee))
 	// divide by (1 - swapfee) to force a corresponding increase in input asset
+	inAmt := cfmmIn.QuoRoundUp(oneMinus(swapFee))
 	inCoinAmt := p.getDescaledPoolAmt(tokenInDenom, inAmt)
 	return inCoinAmt, nil
 }
