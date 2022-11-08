@@ -144,8 +144,9 @@ def iterative_search(x_f, y_0, w, k, err_tolerance):
   k_ratio = k_0 / k
   if k_ratio < 1:
     # k_0 < k. Need to find an upperbound. Worst case assume a linear relationship, gives an upperbound
-    # TODO: In the future, we can derive better bounds via reasoning about coefficients in the cubic
-    # These are quite close when we are in the "stable" part of the curve though.
+    # We could derive better bounds via reasoning about coefficients in the cubic,
+    # however this is deemed as not worth it, since the solution is quite close
+    # when we are in the "stable" part of the curve.
     upperbound = ceil(y_0 / k_ratio)
   elif k_ratio > 1:
     # need to find a lowerbound. We could use a cubic relation, but for now we just set it to 0.
@@ -175,15 +176,30 @@ def binary_search(lowerbound, upperbound, approximation_fn, target, max_iteratio
   return cur_y_guess
 ```
 
-As we changed API slightly, to have this "y_0" guess, we use the following as `solve_y` pseudocode here on out:
+Now we want to wrap this binary search into `solve_y`. We changed the API slightly, from what was previously denoted, to have this "y_0" term, in order to derive initial bounds.
+What remains is setting the error tolerance. We need two properties:
+* The returned value to be within some correctness threshold of the true value
+* The returned value to be rounded correctly (always ending with the user having fewer funds to avoid pool drain attacks). Mitigated by swap fees for normal swaps, but needed for 0-fee to be safe.
+
+The error tolerance we set is defined in terms of error in `k`, which itself implies some error in `y`.
+An error of `e_k` in `k`, implies an error `e_y` in `y` that is less than `e_k`. We prove this later (and show that `e_y` is actually much less than the error in `e_k`, but for simplicity ignore this fact). We want `y` to be within a factor of `10^(-12)` of its true value.
+To ensure the returned value is always rounded correctly, we define the rounding behavior expected.
+* If `x_in` is positive, then we take `y_out` units of `y` out of the pool. `y_out` should be rounded down. Note that `y_f < y_0` here. Therefore to round `y_out = y_0 - y_f` down, given fixed `y_0`, we want to round `y_f` up.
+* If `x_in` is negative, then `y_out` is also negative. The reason is that this is called in CalcInAmtGivenOut, so confusingly `x_in` is the known amount out, as a negative quantity. `y_out` is negative as well, to express that we get that many tokens out. (Since negative, `-y_out` is how many we add into the pool). We want `y_out` to be a larger negative, which means we want to round it down. Note that `y_f > y_0` here. Therefore `y_out = y_0 - y_f` is more negative, the higher `y_f` is. Thus we want to round `y_f` up.
+
+And therefore we round up in both cases.
+
+We capture all of this, in the following `solve_y` pseudocode:
 ```python
 # solve_cfmm returns y_f s.t. CFMM_eq(x_f, y_f, w) = k
 # for the no-v variant of CFMM_eq
-def solve_y(x_0, y_0, w, in_amt):
-  x_f = x_0 + in_amt
+def solve_y(x_0, y_0, w, x_in):
+  x_f = x_0 + x_in
   k = CFMM_eq(x_0, y_0, w)
-  err_tolerance = {"within .0001%"} # TODO: Detail what we choose / how we reason about choice
-  return iterative_search(x_f, y_0, w, k, err_tolerance):
+  err_tolerance = {"within factor of 10^-12", RoundUp}
+  y_f = iterative_search(x_f, y_0, w, k, err_tolerance):
+  y_out = y_0 - y_f
+  return y_out
 ```
 
 #### Using this in swap methods
