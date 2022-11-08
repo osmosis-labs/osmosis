@@ -213,7 +213,8 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 				liquidityDelta = liquidityDelta.Neg()
 			}
 			// update the swapState's liquidity with the new tick's liquidity
-			swapState.liquidity = swapState.liquidity.Add(liquidityDelta)
+			newLiquidity := addLiquidity(swapState.liquidity, liquidityDelta)
+			swapState.liquidity = newLiquidity
 			if swapState.liquidity.LTE(sdk.ZeroDec()) || swapState.liquidity.IsNil() {
 				return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 			}

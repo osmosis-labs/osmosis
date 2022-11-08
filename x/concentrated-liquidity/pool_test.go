@@ -161,7 +161,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				// expectedTick:     86129.0 rounded down https://www.wolframalpha.com/input?i2d=true&i=Log%5B1.0001%2C5499.813071854898049815%5D
 
 				// create second position parameters
-				newLowerPrice := sdk.NewDec(5501)
+				newLowerPrice := sdk.NewDec(5500)
 				s.Require().NoError(err)
 				newLowerTick := cl.PriceToTick(newLowerPrice) // 84222
 				newUpperPrice := sdk.NewDec(6250)
@@ -169,25 +169,25 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				newUpperTick := cl.PriceToTick(newUpperPrice) // 87407
 
 				// add position two with the new price range above
-				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
 				s.Require().NoError(err)
 				// params
-				// liquidity (2nd):  1200046517.432645168444000000
-				// sqrtPriceNext:    78.137532175162292735 which is 6105.473934424522538231 https://www.wolframalpha.com/input?i=74.168140663410187419%2B%284763454461+%2F+1200046517.432645168444000000%29
-				// sqrtPriceCurrent: 74.168140663410187419 which is 5500.913089467399755950
-				// expectedTokenIn:  4763454460.005 rounded up https://www.wolframalpha.com/input?i=1200046517.432645168444000000+*+%2878.137532175162292735+-+74.168140663410187419%29
-				// expectedTokenOut: 821949.1205 rounded down https://www.wolframalpha.com/input?i=%281200046517.432645168444000000+*+%2878.137532175162292735+-+74.168140663410187419+%29%29+%2F+%2874.168140663410187419+*+78.137532175162292735%29
+				// liquidity (2nd):  1198107969.043944887658592210
+				// sqrtPriceNext:    78.136538612066568296 which is 6105.473934424522538231 https://www.wolframalpha.com/input?i=74.160724590951092256+%2B+4763454462.135+%2F+1198107969.043944887658592210
+				// sqrtPriceCurrent: 74.160724590951092256 which is 5499.813071854898049815
+				// expectedTokenIn:  4763454462.135 rounded up https://www.wolframalpha.com/input?i=1198107969.043944887658592210+*+%2878.136538612066568296+-+74.160724590951092256%29
+				// expectedTokenOut: 822041.769 rounded down https://www.wolframalpha.com/input?i=%281198107969.043944887658592210+*+%2878.136538612066568296+-+74.160724590951092256+%29%29+%2F+%2874.160724590951092256+*+78.136538612066568296%29
 				// expectedTick:     87173.8 rounded down https://www.wolframalpha.com/input?i2d=true&i=Log%5B1.0001%2C6105.473934424522538231%5D
 			},
 			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
 			tokenOutDenom: "eth",
 			priceLimit:    sdk.NewDec(6106),
-			// expectedTokenIn:  5236545538 + 4763454461 = 9999999999 rounded up = 1000000000 = 100000 usdc
-			// expectedTokenOut: 998587 + 821949 = 1820536 = 1.820536 eth
+			// expectedTokenIn:  5236545537.865 + 4763454462.135 = 1000000000 usdc
+			// expectedTokenOut: 998587.023 + 822041.769 = 1820628.792 round down = 1.820628 eth
 			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1820536)),
+			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1820628)),
 			expectedTick:     sdk.NewInt(87173),
-			newLowerPrice:    sdk.NewDec(5501),
+			newLowerPrice:    sdk.NewDec(5500),
 			newUpperPrice:    sdk.NewDec(6250),
 		},
 	}
@@ -231,7 +231,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			}
 
 			expectedLiquidity := cl.GetLiquidityFromAmounts(currSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
-			s.Require().Equal(expectedLiquidity.TruncateInt(), updatedLiquidity.TruncateInt())
+			s.Require().Equal(expectedLiquidity.TruncateInt().String(), updatedLiquidity.TruncateInt().String())
 		})
 
 	}

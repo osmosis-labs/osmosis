@@ -1,6 +1,8 @@
 package concentrated_liquidity
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -88,6 +90,8 @@ func computeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaini
 	} else {
 		sqrtPriceNext = getNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining, zeroForOne)
 	}
+	fmt.Printf("%v sqrtPriceNext \n", sqrtPriceNext)
+	fmt.Printf("%v sqrtPriceCurrent \n", sqrtPriceCurrent)
 
 	if zeroForOne {
 		amountIn = calcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
@@ -155,4 +159,11 @@ func getLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0,
 		liquidity = liquidity1(amount1, sqrtPriceB, sqrtPriceA)
 	}
 	return liquidity
+}
+
+func addLiquidity(liquidityA, liquidityB sdk.Dec) (finalLiquidity sdk.Dec) {
+	if liquidityB.LT(sdk.ZeroDec()) {
+		return liquidityA.Sub(liquidityB.Abs())
+	}
+	return liquidityA.Add(liquidityB)
 }
