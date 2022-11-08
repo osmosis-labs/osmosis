@@ -28,7 +28,6 @@ func (k Keeper) SwapOutAmtGivenIn(ctx sdk.Context,
 	}
 	poolTickKVStore := k.GetPoolTickKVStore(ctx, poolId)
 	return pool.SwapOutAmtGivenIn(ctx, poolTickKVStore, tokenIn, tokenOutDenom, swapFee, priceLimit, poolId)
-
 }
 
 // TODO: spec here and in gamm
