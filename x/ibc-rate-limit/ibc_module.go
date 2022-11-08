@@ -2,6 +2,7 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -132,8 +133,10 @@ func (im *IBCModule) OnRecvPacket(
 
 	err := CheckAndUpdateRateLimits(ctx, im.ics4Middleware.ContractKeeper, "recv_packet", contract, packet)
 	if err != nil {
-		// ToDo: add the full error as an event instead?
-		fullError := sdkerrors.Wrap(types.ErrRateLimitExceeded, err.Error())
+		if strings.Contains(err.Error(), "rate limit exceeded") {
+			return channeltypes.NewErrorAcknowledgement(types.ErrRateLimitExceeded.Error())
+		}
+		fullError := sdkerrors.Wrap(types.ErrContractError, err.Error())
 		return channeltypes.NewErrorAcknowledgement(fullError.Error())
 	}
 
