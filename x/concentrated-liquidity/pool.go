@@ -153,6 +153,9 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 	}
 
 	// iterate and update swapState until we swap all tokenIn or we reach the specific sqrtPriceLimit
+	// TODO: for now, we check if amountSpecifiedRemaining is GT 0.0000001. This is because there are times when the remaining
+	// amount may be extremely small, and that small amount cannot generate and amountIn/amountOut and we are therefore left
+	// in an infinite loop.
 	for swapState.amountSpecifiedRemaining.GT(sdk.MustNewDecFromStr("0.0000001")) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
 		// log the sqrtPrice we start the iteration with
 		sqrtPriceStart := swapState.sqrtPrice

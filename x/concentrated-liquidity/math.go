@@ -14,7 +14,7 @@ func liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	}
 	product := sqrtPriceA.Mul(sqrtPriceB)
 	diff := sqrtPriceB.Sub(sqrtPriceA)
-	return amount.ToDec().Mul(product.Quo(diff))
+	return amount.ToDec().Mul(product).Quo(diff)
 }
 
 // liquidity1 takes an amount of asset1 in the pool as well as the sqrtpCur and the nextPrice

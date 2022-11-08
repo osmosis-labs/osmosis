@@ -29,8 +29,13 @@ func (suite *KeeperTestSuite) TestGetLiquidityFromAmounts() {
 		tc := tc
 
 		suite.Run(name, func() {
+			// CASE A: if the currentSqrtP is less than the sqrtPLow, all the liquidity is in asset0, so GetLiquidityFromAmounts returns the liquidity of asset0
+			// CASE B: if the currentSqrtP is less than the sqrtPHigh but greater than sqrtPLow, the liquidity is split between asset0 and asset1,
+			// so GetLiquidityFromAmounts returns the smaller liquidity of asset0 and asset1
+			// CASE C: if the currentSqrtP is greater than the sqrtPHigh, all the liquidity is in asset1, so GetLiquidityFromAmounts returns the liquidity of asset1
 			liquidity := cl.GetLiquidityFromAmounts(tc.currentSqrtP, tc.sqrtPLow, tc.sqrtPHigh, tc.amount0Desired, tc.amount1Desired)
 			suite.Require().Equal(tc.expectedLiquidity, liquidity.String())
+			// TODO: this check works for CASE B but needs to get reworked when CASE A and CASE C are tested
 			liq0 := cl.Liquidity0(tc.amount0Desired, tc.currentSqrtP, tc.sqrtPHigh)
 			liq1 := cl.Liquidity1(tc.amount1Desired, tc.currentSqrtP, tc.sqrtPLow)
 			liq := sdk.MinDec(liq0, liq1)
@@ -85,7 +90,7 @@ func (suite *KeeperTestSuite) TestLiquidity0() {
 			currentSqrtP:      sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
 			sqrtPHigh:         sdk.MustNewDecFromStr("74.161984870956629487"), // 5500
 			amount0Desired:    sdk.NewInt(1000000),
-			expectedLiquidity: "1519437308.014768571721000000", // TODO: should be 1519437308.014768571720923239
+			expectedLiquidity: "1519437308.014768571720938768",
 			// https://www.wolframalpha.com/input?i=1000000+*+%2870.710678118654752440*+74.161984870956629487%29+%2F+%2874.161984870956629487+-+70.710678118654752440%29
 		},
 	}
