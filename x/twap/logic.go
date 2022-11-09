@@ -70,9 +70,9 @@ func getSpotPrices(
 // afterCreatePool creates new twap records of all the unique pairs of denoms within a pool.
 func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
 	denoms, err := k.ammkeeper.GetPoolDenoms(ctx, poolId)
-	denomPairs0, denomPairs1 := types.GetAllUniqueDenomPairs(denoms)
-	for i := 0; i < len(denomPairs0); i++ {
-		record, err := newTwapRecord(k.ammkeeper, ctx, poolId, denomPairs0[i], denomPairs1[i])
+	denomPairs := types.GetAllUniqueDenomPairs(denoms)
+	for _, denomPair := range denomPairs {
+		record, err := newTwapRecord(k.ammkeeper, ctx, poolId, denomPair.Denom0, denomPair.Denom1)
 		// err should be impossible given GetAllUniqueDenomPairs guarantees
 		if err != nil {
 			return err
@@ -198,10 +198,6 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 // To be clear: the record r s.t. `t - r.Time` is minimized AND `t >= r.Time`
 // If for the record obtained, r.Time == r.LastErrorTime, this will also hold for the interpolated record.
 func (k Keeper) getInterpolatedRecord(ctx sdk.Context, poolId uint64, t time.Time, assetA, assetB string) (types.TwapRecord, error) {
-	assetA, assetB, err := types.LexicographicalOrderDenoms(assetA, assetB)
-	if err != nil {
-		return types.TwapRecord{}, err
-	}
 	record, err := k.getRecordAtOrBeforeTime(ctx, poolId, t, assetA, assetB)
 	if err != nil {
 		return types.TwapRecord{}, err
@@ -215,10 +211,6 @@ func (k Keeper) getInterpolatedRecord(ctx sdk.Context, poolId uint64, t time.Tim
 }
 
 func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA, assetB string) (types.TwapRecord, error) {
-	assetA, assetB, err := types.LexicographicalOrderDenoms(assetA, assetB)
-	if err != nil {
-		return types.TwapRecord{}, err
-	}
 	record, err := k.getMostRecentRecordStoreRepresentation(ctx, poolId, assetA, assetB)
 	if err != nil {
 		return types.TwapRecord{}, err

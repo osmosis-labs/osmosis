@@ -7,6 +7,7 @@ import (
 const (
 	// Will be parsed to string.
 	FlagPoolFile = "pool-file"
+	FlagPoolType = "pool-type"
 
 	// Names of fields in pool json file.
 	PoolFileWeights        = "weights"
@@ -39,13 +40,22 @@ const (
 	FlagSwapRouteDenoms = "swap-route-denoms"
 )
 
-type createPoolInputs struct {
+type createBalancerPoolInputs struct {
 	Weights                  string                         `json:"weights"`
 	InitialDeposit           string                         `json:"initial-deposit"`
 	SwapFee                  string                         `json:"swap-fee"`
 	ExitFee                  string                         `json:"exit-fee"`
 	FutureGovernor           string                         `json:"future-governor"`
 	SmoothWeightChangeParams smoothWeightChangeParamsInputs `json:"lbp-params"`
+}
+
+type createStableswapPoolInputs struct {
+	InitialDeposit          string `json:"initial-deposit"`
+	SwapFee                 string `json:"swap-fee"`
+	ExitFee                 string `json:"exit-fee"`
+	FutureGovernor          string `json:"future-governor"`
+	ScalingFactorController string `json:"scaling-factor-controller"`
+	ScalingFactors          string `json:"scaling-factors"`
 }
 
 type smoothWeightChangeParamsInputs struct {
@@ -74,6 +84,8 @@ func FlagSetCreatePool() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
 	fs.String(FlagPoolFile, "", "Pool json file path (if this path is given, other create pool flags should not be used)")
+	fs.String(FlagPoolType, "uniswap", "Pool type (either \"balancer\", \"uniswap\", or \"stableswap\"")
+
 	return fs
 }
 
