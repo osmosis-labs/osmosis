@@ -41,6 +41,8 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 		return 0, err
 	}
 
+	k.SetModuleRoute(ctx, poolId, msg.GetPoolType())
+
 	if err := k.validateCreatedPool(ctx, initialPoolLiquidity, poolId, pool); err != nil {
 		return 0, err
 	}
@@ -121,4 +123,12 @@ func (k Keeper) validateCreatedPool(
 			"Pool was attempted to be created with incorrect number of initial shares.")
 	}
 	return nil
+}
+
+// SetModuleRoute stores the mapping from poolId to the given pool type.
+// TODO: unexport after concentrated-liqudity upgrade. Currently, it is exported
+// for the upgrade handler logic and tests.
+func (k Keeper) SetModuleRoute(ctx sdk.Context, poolId uint64, poolType types.PoolType) {
+	store := ctx.KVStore(k.storeKey)
+	osmoutils.MustSet(store, types.FormatModuleRouteKey(poolId), &types.ModuleRoute{PoolType: poolType})
 }

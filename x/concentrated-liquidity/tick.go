@@ -12,7 +12,7 @@ import (
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
-func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Int, upper bool) (err error) {
+func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
 	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
 		return err
@@ -90,10 +90,10 @@ func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex in
 	return 0, false
 }
 
-func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Int, err error) {
+func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Dec, err error) {
 	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
-		return sdk.Int{}, err
+		return sdk.Dec{}, err
 	}
 
 	return tickInfo.LiquidityNet, nil
@@ -108,7 +108,7 @@ func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 	found, err := osmoutils.GetIfFound(store, key, &tickStruct)
 	// return 0 values if key has not been initialized
 	if !found {
-		return types.TickInfo{LiquidityGross: sdk.ZeroInt(), LiquidityNet: sdk.ZeroInt()}, err
+		return types.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec()}, err
 	}
 	if err != nil {
 		return tickStruct, err

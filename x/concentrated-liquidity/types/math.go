@@ -40,7 +40,7 @@ func Liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	}
 	product := sqrtPriceA.Mul(sqrtPriceB)
 	diff := sqrtPriceB.Sub(sqrtPriceA)
-	return amount.ToDec().Mul(product.Quo(diff))
+	return amount.ToDec().Mul(product).Quo(diff)
 }
 
 // liquidity1 takes an amount of asset1 in the pool as well as the sqrtpCur and the nextPrice
@@ -64,7 +64,7 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
 	diff := sqrtPriceB.Sub(sqrtPriceA)
-	mult := liq
+	denom := sqrtPriceA.Mul(sqrtPriceB)
 	// if calculating for amountIn, we round up
 	// if calculating for amountOut, we don't round at all
 	// this is to prevent removing more from the pool than expected due to rounding
@@ -73,9 +73,9 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 	// additionally, without rounding, there exists cases where the swapState.amountSpecifiedRemaining.GT(sdk.ZeroDec()) for loop within
 	// the CalcOut/In functions never actually reach zero due to dust that would have never gotten counted towards the amount (numbers after the 10^6 place)
 	if roundUp {
-		return ((mult.Mul(diff)).QuoRoundUp(sqrtPriceB).QuoRoundUp(sqrtPriceA)).Ceil()
+		return liq.Mul(diff.Quo(denom)).Ceil()
 	}
-	return (mult.Mul(diff)).Quo(sqrtPriceB).Quo(sqrtPriceA)
+	return liq.Mul(diff.Quo(denom))
 }
 
 // calcAmount1 takes the asset with the smaller liquidity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 1
@@ -103,10 +103,11 @@ func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 // computeSwapStep calculates the amountIn, amountOut, and the next sqrtPrice given current price, price target, tick liquidity, and amount available to swap
 // lte is reference to "less than or equal", which determines if we are moving left or right of the current price to find the next initialized tick with liquidity
 func ComputeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec, zeroForOne bool) (sqrtPriceNext, amountIn, amountOut sdk.Dec) {
+	// zeroForOne = sqrtPriceCurrent.GTE(sqrtPriceTarget)
 	if zeroForOne {
-		amountIn = CalcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, true)
+		amountIn = CalcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, false)
 	} else {
-		amountIn = CalcAmount1Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, true)
+		amountIn = CalcAmount1Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, false)
 	}
 	if amountRemaining.GTE(amountIn) {
 		sqrtPriceNext = sqrtPriceTarget
@@ -115,10 +116,10 @@ func ComputeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaini
 	}
 
 	if zeroForOne {
-		amountIn = CalcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, true)
+		amountIn = CalcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
 		amountOut = CalcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
 	} else {
-		amountIn = CalcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, true)
+		amountIn = CalcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
 		amountOut = CalcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
 	}
 
@@ -136,12 +137,12 @@ func GetNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining sdk.
 
 // getNextSqrtPriceFromAmount0RoundingUp utilizes the current squareRootPrice, liquidity of denom0, and amount of denom0 that still needs
 // to be swapped in order to determine the next squareRootPrice
-// if (amountRemaining * sqrtPriceCurrent) / amountRemaining  == sqrtPriceCurrent AND (liquidity * 2) + (amountRemaining * sqrtPriceCurrent) >= (liquidity * 2)
-// sqrtPriceNext = (liquidity * 2 * sqrtPriceCurrent) / ((liquidity * 2) + (amountRemaining * sqrtPriceCurrent))
+// if (amountRemaining * sqrtPriceCurrent) / amountRemaining  == sqrtPriceCurrent AND (liquidity) + (amountRemaining * sqrtPriceCurrent) >= (liquidity)
+// sqrtPriceNext = (liquidity * sqrtPriceCurrent) / ((liquidity) + (amountRemaining * sqrtPriceCurrent))
 // else
-// sqrtPriceNext = ((liquidity * 2)) / (((liquidity * 2) / (sqrtPriceCurrent)) + (amountRemaining))
+// sqrtPriceNext = ((liquidity)) / (((liquidity) / (sqrtPriceCurrent)) + (amountRemaining))
 func GetNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
-	numerator := liquidity.Mul(sdk.NewDec(2))
+	numerator := liquidity
 	product := amountRemaining.Mul(sqrtPriceCurrent)
 
 	if product.Quo(amountRemaining).Equal(sqrtPriceCurrent) {
@@ -180,4 +181,11 @@ func GetLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0,
 		liquidity = Liquidity1(amount1, sqrtPriceB, sqrtPriceA)
 	}
 	return liquidity
+}
+
+func addLiquidity(liquidityA, liquidityB sdk.Dec) (finalLiquidity sdk.Dec) {
+	if liquidityB.LT(sdk.ZeroDec()) {
+		return liquidityA.Sub(liquidityB.Abs())
+	}
+	return liquidityA.Add(liquidityB)
 }

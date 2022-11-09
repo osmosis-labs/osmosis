@@ -42,4 +42,8 @@ func migrateNextPoolId(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, swaproute
 	nextPoolId := gammKeeper.GetNextPoolId(ctx)
 	gammKeeper.SetPoolCount(ctx, nextPoolId-1)
 	swaprouterKeeper.SetNextPoolId(ctx, nextPoolId)
+
+	for poolId := uint64(1); poolId < nextPoolId; poolId++ {
+		swaprouterKeeper.SetModuleRoute(ctx, poolId, swaproutertypes.Balancer)
+	}
 }

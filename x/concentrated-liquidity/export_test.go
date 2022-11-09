@@ -17,7 +17,7 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 }
 
 func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo types.TickInfo) {
-	k.setTickInfo(ctx, poolId, tickIndex, tickInfo)
+	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
 }
 
 func (k Keeper) GetPoolbyId(ctx sdk.Context, poolId uint64) (cltypes.PoolI, error) {
