@@ -349,7 +349,6 @@ fn undo_send() {
     );
     let undo_msg = SudoMsg::UndoSend {
         packet: Packet::mock(format!("channel"), format!("denom"), 300_u32.into()),
-        local_denom: Some(format!("denom")),
     };
 
     sudo(deps.as_mut(), mock_env(), send_msg.clone()).unwrap();

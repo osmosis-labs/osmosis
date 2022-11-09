@@ -18,15 +18,9 @@ pub fn process_packet(
     packet: Packet,
     direction: FlowType,
     now: Timestamp,
-    local_denom: Option<String>,
     channel_value_hint: Option<Uint256>,
 ) -> Result<Response, ContractError> {
-    let (channel_id, extracted_denom) = packet.path_data(&direction);
-    let denom = match local_denom {
-        Some(denom) => denom,
-        None => extracted_denom,
-    };
-
+    let (channel_id, denom) = packet.path_data(&direction);
     let path = &Path::new(&channel_id, &denom);
     let funds = packet.get_funds();
     let channel_value = match channel_value_hint {
@@ -140,17 +134,9 @@ fn add_rate_limit_attributes(response: Response, result: &RateLimit) -> Response
 
 // This function manually injects an inflow. This is used when reverting a
 // packet that failed ack or timed-out.
-pub fn undo_send(
-    deps: DepsMut,
-    packet: Packet,
-    local_denom: Option<String>,
-) -> Result<Response, ContractError> {
+pub fn undo_send(deps: DepsMut, packet: Packet) -> Result<Response, ContractError> {
     // Sudo call. Only go modules should be allowed to access this
-    let (channel_id, extracted_denom) = packet.path_data(&FlowType::Out); // Sends have direction out.
-    let denom = match local_denom {
-        Some(denom) => denom,
-        None => extracted_denom,
-    };
+    let (channel_id, denom) = packet.path_data(&FlowType::Out); // Sends have direction out.
     let path = &Path::new(&channel_id, &denom);
     let any_path = Path::new("any", &denom);
     let funds = packet.get_funds();

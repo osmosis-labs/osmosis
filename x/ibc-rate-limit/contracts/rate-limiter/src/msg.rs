@@ -85,17 +85,14 @@ pub enum QueryMsg {
 pub enum SudoMsg {
     SendPacket {
         packet: Packet,
-        local_denom: Option<String>,
         channel_value_hint: Option<Uint256>,
     },
     RecvPacket {
         packet: Packet,
-        local_denom: Option<String>,
         channel_value_hint: Option<Uint256>,
     },
     UndoSend {
         packet: Packet,
-        local_denom: Option<String>,
     },
 }
 
