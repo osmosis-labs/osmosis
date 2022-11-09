@@ -215,9 +215,12 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 			// update the swapState's liquidity with the new tick's liquidity
 			newLiquidity := addLiquidity(swapState.liquidity, liquidityDelta)
 			swapState.liquidity = newLiquidity
-			if swapState.liquidity.LTE(sdk.ZeroDec()) || swapState.liquidity.IsNil() {
-				return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
-			}
+
+			// TODO: Investigate proper break of loop given the following conditions
+			// if swapState.liquidity.LTE(sdk.ZeroDec()) || swapState.liquidity.IsNil() {
+			// 	return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
+			// }
+
 			// update the swapState's tick with the tick we retrieved liquidity from
 			if zeroForOne {
 				swapState.tick = sdk.NewInt(nextTick - 1)

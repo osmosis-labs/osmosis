@@ -163,7 +163,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(5500)
 				s.Require().NoError(err)
-				newLowerTick := cl.PriceToTick(newLowerPrice) // 84222
+				newLowerTick := cl.PriceToTick(newLowerPrice) // 86129
 				newUpperPrice := sdk.NewDec(6250)
 				s.Require().NoError(err)
 				newUpperTick := cl.PriceToTick(newUpperPrice) // 87407
@@ -188,6 +188,55 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1820628)),
 			expectedTick:     sdk.NewInt(87173),
 			newLowerPrice:    sdk.NewDec(5500),
+			newUpperPrice:    sdk.NewDec(6250),
+		},
+		//  Partially overlapping price ranges
+		//
+		//          5000
+		//  4545 -----|----- 5500
+		//        5001 ----------- 6250
+		//
+		"two positions with partially overlapping price ranges": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
+				// params
+				// liquidity (1st):  1517818840.967515822610790519
+				// sqrtPriceNext:    74.160724590951092256 which is 5499.813071854898049815 (this is calculated by finding the closest tick LTE the upper range of the first range) https://www.wolframalpha.com/input?i2d=true&i=Power%5B1.0001%2CDivide%5B86129%2C2%5D%5D
+				// sqrtPriceCurrent: 70.710678118654752440 which is 5000
+				// expectedTokenIn:  5236545537.864897 rounded up https://www.wolframalpha.com/input?i=1517818840.967515822610790519+*+%2874.160724590951092256+-+70.710678118654752440%29
+				// expectedTokenOut: 998934.824728 rounded down https://www.wolframalpha.com/input?i=%281517818840.967515822610790519+*+%2874.161984870956629487+-+70.710678118654752440+%29%29+%2F+%2870.710678118654752440+*+74.161984870956629487%29
+				// expectedTick:     86129.0 rounded down https://www.wolframalpha.com/input?i2d=true&i=Log%5B1.0001%2C5499.813071854898049815%5D
+
+				// create second position parameters
+				newLowerPrice := sdk.NewDec(5501)
+				s.Require().NoError(err)
+				newLowerTick := cl.PriceToTick(newLowerPrice) // 86131
+				newUpperPrice := sdk.NewDec(6250)
+				s.Require().NoError(err)
+				newUpperTick := cl.PriceToTick(newUpperPrice) // 87407
+
+				// add position two with the new price range above
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				s.Require().NoError(err)
+				// params
+				// liquidity (2nd):  1200046517.432645168443803695
+				// sqrtPriceNext:    78.137532176937376749 which is 6105.473934701923906716 https://www.wolframalpha.com/input?i=74.168140663410187419++%2B++4763454462.135+%2F+1200046517.432645168443803695
+				// sqrtPriceCurrent: 74.168140663410187419 which is 5500.913089467399755950
+				// expectedTokenIn:  4763454462.135 rounded up https://www.wolframalpha.com/input?i=1200046517.432645168443803695+*+%2878.137532176937376749+-+74.168140663410187419%29
+				// expectedTokenOut: 821949.120898 rounded down https://www.wolframalpha.com/input?i=%281200046517.432645168443803695+*+%2878.137532176937376749+-+74.168140663410187419+%29%29+%2F+%2874.168140663410187419+*+78.137532176937376749%29
+				// expectedTick:     87173.8 rounded down https://www.wolframalpha.com/input?i2d=true&i=Log%5B1.0001%2C6105.473934424522538231%5D
+			},
+			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenOutDenom: "eth",
+			priceLimit:    sdk.NewDec(6106),
+			// expectedTokenIn:  5236545537.865 + 4763454462.135 = 1000000000 usdc
+			// expectedTokenOut: 998587.023 + 821949.120898 = 1820536.143 round down = 1.820536 eth
+			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1820536)),
+			expectedTick:     sdk.NewInt(87173),
+			newLowerPrice:    sdk.NewDec(5501),
 			newUpperPrice:    sdk.NewDec(6250),
 		},
 	}
@@ -369,6 +418,38 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1820628)),
 			expectedTick:     sdk.NewInt(87173),
 			newLowerPrice:    sdk.NewDec(5500),
+			newUpperPrice:    sdk.NewDec(6250),
+		},
+		//  Partially overlapping price ranges
+		//
+		//          5000
+		//  4545 -----|----- 5500
+		//        5001 ----------- 6250
+		//
+		"two positions with partially overlapping price ranges": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
+
+				// create second position parameters
+				newLowerPrice := sdk.NewDec(5501)
+				s.Require().NoError(err)
+				newLowerTick := cl.PriceToTick(newLowerPrice) // 86131
+				newUpperPrice := sdk.NewDec(6250)
+				s.Require().NoError(err)
+				newUpperTick := cl.PriceToTick(newUpperPrice) // 87407
+
+				// add position two with the new price range above
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				s.Require().NoError(err)
+			},
+			tokenIn:          sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenOutDenom:    "eth",
+			priceLimit:       sdk.NewDec(6106),
+			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1820536)),
+			expectedTick:     sdk.NewInt(87173),
+			newLowerPrice:    sdk.NewDec(5501),
 			newUpperPrice:    sdk.NewDec(6250),
 		},
 	}
