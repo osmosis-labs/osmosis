@@ -1,5 +1,5 @@
 use crate::state::FlowType;
-use cosmwasm_std::{Addr, Deps, StdError, Timestamp, Uint256};
+use cosmwasm_std::{Addr, Deps, StdError, Uint256};
 use osmosis_std_derive::CosmwasmExt;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -33,7 +33,7 @@ pub struct Packet {
     pub destination_channel: String,
     pub data: FungibleTokenData,
     pub timeout_height: Height,
-    pub timeout_timestamp: Option<Timestamp>,
+    pub timeout_timestamp: Option<u64>,
 }
 
 // SupplyOf query message definition.
@@ -218,6 +218,8 @@ macro_rules! test_msg_recv {
 
 #[cfg(test)]
 pub mod tests {
+    use crate::msg::SudoMsg;
+
     use super::*;
 
     #[test]
@@ -449,7 +451,24 @@ pub mod tests {
         );
         assert_eq!(
             packet.local_denom(&FlowType::In),
-            WRAPPED_ATOM_ON_OSMOSIS_HASH // Is this ok?
+            WRAPPED_ATOM_ON_OSMOSIS_HASH
         );
+    }
+
+    #[test]
+    fn tokenfactory_packet() {
+        let json = r#"{"send_packet":{"packet":{"sequence":4,"source_port":"transfer","source_channel":"channel-0","destination_port":"transfer","destination_channel":"channel-1491","data":{"denom":"transfer/channel-0/factory/osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj/czar","amount":"100000000000000000","sender":"osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks","receiver":"osmo1c584m4lq25h83yp6ag8hh4htjr92d954vklzja"},"timeout_height":{},"timeout_timestamp":1668024476848430980}}}"#;
+        let parsed: SudoMsg = serde_json_wasm::from_str(json).unwrap();
+        //println!("{parsed:?}");
+
+        match parsed {
+            SudoMsg::SendPacket { packet, .. } => {
+                assert_eq!(
+                    packet.local_denom(&FlowType::Out),
+                    "ibc/07A1508F49D0753EDF95FA18CA38C0D6974867D793EB36F13A2AF1A5BB148B22"
+                );
+            }
+            _ => panic!("parsed into wrong variant"),
+        }
     }
 }
