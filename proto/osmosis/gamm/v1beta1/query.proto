@@ -26,6 +26,13 @@ service Query {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/total_liquidity";
   }
 
+  // PoolsWithFilter allows you to query specific pools with requested
+  // parameters
+  rpc PoolsWithFilter(QueryPoolsWithFilterRequest)
+      returns (QueryPoolsWithFilterResponse) {
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/filtered_pools";
+  }
+
   // Per Pool gRPC Endpoints
   rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/pools/{pool_id}";
@@ -196,6 +203,22 @@ message QuerySpotPriceRequest {
       [ (gogoproto.moretags) = "yaml:\"quote_asset_denom\"" ];
   reserved 4;
   reserved "withSwapFee";
+}
+
+//=============================== PoolsWithFilter
+
+message QueryPoolsWithFilterRequest {
+  repeated cosmos.base.v1beta1.Coin min_liquidity = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags) = "yaml:\"min_liquidity\"",
+    (gogoproto.nullable) = false
+  ];
+  string pool_type = 2;
+}
+
+message QueryPoolsWithFilterResponse {
+  repeated google.protobuf.Any pools = 1
+      [ (cosmos_proto.accepts_interface) = "PoolI" ];
 }
 
 // QuerySpotPriceResponse defines the gRPC response structure for a SpotPrice
