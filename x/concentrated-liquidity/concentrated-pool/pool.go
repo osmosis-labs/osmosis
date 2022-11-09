@@ -11,7 +11,6 @@ import (
 )
 
 var (
-	// TODO: remove this check, currently commented out since its blocked on further `PoolI` generalization
 	_ types.PoolI = &Pool{}
 )
 
