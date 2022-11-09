@@ -202,6 +202,14 @@ func (k Keeper) JoinPoolNoSwap(
 	shareOutAmount sdk.Int,
 	tokenInMaxs sdk.Coins,
 ) (tokenIn sdk.Coins, sharesOut sdk.Int, err error) {
+	// defer to catch panics, in case something internal overflows.
+	defer func() {
+		if r := recover(); r != nil {
+			tokenIn = sdk.Coins{}
+			sharesOut = sdk.Int{}
+			err = fmt.Errorf("function JoinPoolNoSwap failed due to internal reason: %v", r)
+		}
+	}()
 	// all pools handled within this method are pointer references, `JoinPool` directly updates the pools
 	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
@@ -281,13 +289,21 @@ func (k Keeper) JoinSwapExactAmountIn(
 	poolId uint64,
 	tokensIn sdk.Coins,
 	shareOutMinAmount sdk.Int,
-) (sdk.Int, error) {
+) (sharesOut sdk.Int, err error) {
+	// defer to catch panics, in case something internal overflows.
+	defer func() {
+		if r := recover(); r != nil {
+			sharesOut = sdk.Int{}
+			err = fmt.Errorf("function JoinSwapExactAmountIn failed due to internal reason: %v", r)
+		}
+	}()
+
 	pool, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	sharesOut, err := pool.JoinPool(ctx, tokensIn, pool.GetSwapFee(ctx))
+	sharesOut, err = pool.JoinPool(ctx, tokensIn, pool.GetSwapFee(ctx))
 	switch {
 	case err != nil:
 		return sdk.ZeroInt(), err
@@ -318,6 +334,14 @@ func (k Keeper) JoinSwapShareAmountOut(
 	shareOutAmount sdk.Int,
 	tokenInMaxAmount sdk.Int,
 ) (tokenInAmount sdk.Int, err error) {
+	// defer to catch panics, in case something internal overflows.
+	defer func() {
+		if r := recover(); r != nil {
+			tokenInAmount = sdk.Int{}
+			err = fmt.Errorf("function JoinSwapShareAmountOut failed due to internal reason: %v", r)
+		}
+	}()
+
 	pool, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
