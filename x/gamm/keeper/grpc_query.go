@@ -140,6 +140,59 @@ func (q Querier) PoolType(ctx context.Context, req *types.QueryPoolTypeRequest) 
 	}, err
 }
 
+// CalcJoinPoolShares queries the amount of shares you get by providing specific amount of tokens
+func (q Querier) CalcJoinPoolShares(ctx context.Context, req *types.QueryCalcJoinPoolSharesRequest) (*types.QueryCalcJoinPoolSharesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if req.TokensIn == nil {
+		return nil, status.Error(codes.InvalidArgument, "no tokens in")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	pool, err := q.Keeper.getPoolForSwap(sdkCtx, req.PoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	numShares, newLiquidity, err := pool.CalcJoinPoolShares(sdkCtx, req.TokensIn, pool.GetSwapFee(sdkCtx))
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryCalcJoinPoolSharesResponse{
+		ShareOutAmount: numShares,
+		TokensOut:      newLiquidity,
+	}, nil
+}
+
+// CalcExitPoolCoinsFromShares queries the amount of tokens you get by exiting a specific amount of shares
+func (q Querier) CalcExitPoolCoinsFromShares(ctx context.Context, req *types.QueryCalcExitPoolCoinsFromSharesRequest) (*types.QueryCalcExitPoolCoinsFromSharesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	pool, err := q.Keeper.GetPoolAndPoke(sdkCtx, req.PoolId)
+	if err != nil {
+		return nil, types.ErrPoolNotFound
+	}
+
+	exitFee := pool.GetExitFee(sdkCtx)
+
+	totalSharesAmount := pool.GetTotalShares()
+	if req.ShareInAmount.GTE(totalSharesAmount) || req.ShareInAmount.LTE(sdk.ZeroInt()) {
+		return nil, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
+	}
+
+	exitCoins, err := pool.CalcExitPoolCoinsFromShares(sdkCtx, req.ShareInAmount, exitFee)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryCalcExitPoolCoinsFromSharesResponse{TokensOut: exitCoins}, nil
+}
+
 // PoolParams queries a specified pool for its params.
 func (q Querier) PoolParams(ctx context.Context, req *types.QueryPoolParamsRequest) (*types.QueryPoolParamsResponse, error) {
 	if req == nil {

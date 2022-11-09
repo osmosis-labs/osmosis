@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	ibc_rate_limit "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -104,6 +104,29 @@ func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount sdk.Int) 
 		timeoutHeight,
 		0,
 	)
+}
+
+func CalculateChannelValue(ctx sdk.Context, denom string, bankKeeper bankkeeper.Keeper) sdk.Int {
+	return bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
+
+	// ToDo: The commented-out code bellow is what we want to happen, but we're temporarily
+	//  using the whole supply for efficiency until there's a solution for
+	//  https://github.com/cosmos/ibc-go/issues/2664
+
+	// For non-native (ibc) tokens, return the supply if the token in osmosis
+	//if strings.HasPrefix(denom, "ibc/") {
+	//	return bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
+	//}
+	//
+	// For native tokens, obtain the balance held in escrow for all potential channels
+	//channels := channelKeeper.GetAllChannels(ctx)
+	//balance := sdk.NewInt(0)
+	//for _, channel := range channels {
+	//	escrowAddress := transfertypes.GetEscrowAddress("transfer", channel.ChannelId)
+	//	balance = balance.Add(bankKeeper.GetBalance(ctx, escrowAddress, denom).Amount)
+	//
+	//}
+	//return balance
 }
 
 // Tests that a receiver address longer than 4096 is not accepted
@@ -211,10 +234,10 @@ func (suite *MiddlewareTestSuite) AssertSend(success bool, msg sdk.Msg) (*sdk.Re
 	return r, err
 }
 
-func (suite *MiddlewareTestSuite) BuildChannelQuota(name, denom string, duration, send_precentage, recv_percentage uint32) string {
+func (suite *MiddlewareTestSuite) BuildChannelQuota(name, channel, denom string, duration, send_precentage, recv_percentage uint32) string {
 	return fmt.Sprintf(`
-          {"channel_id": "channel-0", "denom": "%s", "quotas": [{"name":"%s", "duration": %d, "send_recv":[%d, %d]}] }
-    `, denom, name, duration, send_precentage, recv_percentage)
+          {"channel_id": "%s", "denom": "%s", "quotas": [{"name":"%s", "duration": %d, "send_recv":[%d, %d]}] }
+    `, channel, denom, name, duration, send_precentage, recv_percentage)
 }
 
 // Tests
@@ -259,15 +282,17 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	suite.initializeEscrow()
 	// Get the denom and amount to send
 	denom := sdk.DefaultBondDenom
+	channel := "channel-0"
 	if !native {
 		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", denom))
+		fmt.Println(denomTrace)
 		denom = denomTrace.IBCDenom()
 	}
 
 	osmosisApp := suite.chainA.GetOsmosisApp()
 
 	// This is the first one. Inside the tests. It works as expected.
-	channelValue := ibc_rate_limit.CalculateChannelValue(suite.chainA.GetContext(), denom, "transfer", "channel-0", osmosisApp.BankKeeper)
+	channelValue := CalculateChannelValue(suite.chainA.GetContext(), denom, osmosisApp.BankKeeper)
 
 	// The amount to be sent is send 2.5% (quota is 5%)
 	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))
@@ -277,14 +302,13 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
-	quotas := suite.BuildChannelQuota("weekly", denom, 604800, 5, 5)
+	quotas := suite.BuildChannelQuota("weekly", channel, denom, 604800, 5, 5)
 	fmt.Println(quotas)
 	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
-	// TODO: Remove native from MessafeFrom calls
 	// send 2.5% (quota is 5%)
-	fmt.Println("trying to send ", sendAmount)
+	fmt.Printf("Sending %s from A to B. Represented in chain A as wrapped? %v\n", denom, !native)
 	suite.AssertSend(true, suite.MessageFromAToB(denom, sendAmount))
 
 	// send 2.5% (quota is 5%)
@@ -306,11 +330,15 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 
 // Test rate limiting on sends
 func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimitingNative() {
+	// Sends denom=stake from A->B. Rate limit receives "stake" in the packet. Nothing to do in the contract
 	suite.fullSendTest(true)
 }
 
 // Test rate limiting on sends
 func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimitingNonNative() {
+	// Sends denom=ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B77878 from A->B.
+	// Rate limit receives "transfer/channel-0/stake" in the packet (because transfer.relay.SendTransfer is called before the middleware)
+	// and should hash it before calculating the value
 	suite.fullSendTest(false)
 }
 
@@ -339,47 +367,58 @@ func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 
 // Test rate limiting on receives
 func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
-	quotaPercentage := 5
+	quotaPercentage := 4
 	suite.initializeEscrow()
 	// Get the denom and amount to send
-	denom := sdk.DefaultBondDenom
-	if !native {
-		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", denom))
-		denom = denomTrace.IBCDenom()
+	sendDenom := sdk.DefaultBondDenom
+	localDenom := sdk.DefaultBondDenom
+	channel := "channel-0"
+	if native {
+		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", localDenom))
+		localDenom = denomTrace.IBCDenom()
+	} else {
+		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", sendDenom))
+		sendDenom = denomTrace.IBCDenom()
 	}
 
 	osmosisApp := suite.chainA.GetOsmosisApp()
 
-	// This is the first one. Inside the tests. It works as expected.
-	channelValue := ibc_rate_limit.CalculateChannelValue(suite.chainA.GetContext(), denom, "transfer", "channel-0", osmosisApp.BankKeeper)
+	channelValue := CalculateChannelValue(suite.chainA.GetContext(), localDenom, osmosisApp.BankKeeper)
 
-	// The amount to be sent is send 2.5% (quota is 5%)
+	// The amount to be sent is 2% (quota is 4%)
 	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))
 	sendAmount := quota.QuoRaw(2)
 
-	fmt.Printf("Testing recv rate limiting for denom=%s, channelValue=%s, quota=%s, sendAmount=%s\n", denom, channelValue, quota, sendAmount)
+	fmt.Printf("Testing recv rate limiting for denom=%s, channelValue=%s, quota=%s, sendAmount=%s\n", localDenom, channelValue, quota, sendAmount)
 
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
-	quotas := suite.BuildChannelQuota("weekly", denom, 604800, 5, 5)
+	quotas := suite.BuildChannelQuota("weekly", channel, localDenom, 604800, 4, 4)
 	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// receive 2.5% (quota is 5%)
-	suite.AssertReceive(true, suite.MessageFromBToA(denom, sendAmount))
+	fmt.Printf("Sending %s from B to A. Represented in chain A as wrapped? %v\n", sendDenom, native)
+	suite.AssertReceive(true, suite.MessageFromBToA(sendDenom, sendAmount))
 
 	// receive 2.5% (quota is 5%)
-	suite.AssertReceive(true, suite.MessageFromBToA(denom, sendAmount))
+	suite.AssertReceive(true, suite.MessageFromBToA(sendDenom, sendAmount))
 
 	// Sending above the quota should fail. We send 2 instead of 1 to account for rounding errors
-	suite.AssertReceive(false, suite.MessageFromBToA(denom, sdk.NewInt(2)))
+	suite.AssertReceive(false, suite.MessageFromBToA(sendDenom, sdk.NewInt(2)))
 }
 
 func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimitingNative() {
+	// Sends denom=stake from B->A.
+	// Rate limit receives "stake" in the packet and should wrap it before calculating the value
+	// types.ReceiverChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data.Denom) should return false => Wrap the token
 	suite.fullRecvTest(true)
 }
 
 func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimitingNonNative() {
+	// Sends denom=ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B77878 from B->A.
+	// Rate limit receives "transfer/channel-0/stake" in the packet and should turn it into "stake"
+	// types.ReceiverChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data.Denom) should return true => unprefix. If unprefixed is not local, hash.
 	suite.fullRecvTest(false)
 }
 
@@ -400,15 +439,16 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	suite.initializeEscrow()
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
-	quotas := suite.BuildChannelQuota("weekly", sdk.DefaultBondDenom, 604800, 1, 1)
+	quotas := suite.BuildChannelQuota("weekly", "channel-0", sdk.DefaultBondDenom, 604800, 1, 1)
 	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// Get the escrowed amount
 	osmosisApp := suite.chainA.GetOsmosisApp()
-	escrowAddress := transfertypes.GetEscrowAddress("transfer", "channel-0")
-	escrowed := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)
-
+	// ToDo: This is what we eventually want here, but using the full supply temporarily for performance reasons. See CalculateChannelValue
+	// escrowAddress := transfertypes.GetEscrowAddress("transfer", "channel-0")
+	// escrowed := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)
+	escrowed := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 	quota := escrowed.Amount.QuoRaw(100) // 1% of the escrowed amount
 
 	// Use the whole quota
