@@ -62,28 +62,32 @@ pub fn execute(
     }
 }
 
-#[entry_point]
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn sudo(deps: DepsMut, env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
     match msg {
         SudoMsg::SendPacket {
             packet,
-            channel_value_hint,
+            #[cfg(test)]
+            channel_value_mock,
         } => sudo::process_packet(
             deps,
             packet,
             FlowType::Out,
             env.block.time,
-            channel_value_hint,
+            #[cfg(test)]
+            channel_value_mock,
         ),
         SudoMsg::RecvPacket {
             packet,
-            channel_value_hint,
+            #[cfg(test)]
+            channel_value_mock,
         } => sudo::process_packet(
             deps,
             packet,
             FlowType::In,
             env.block.time,
-            channel_value_hint,
+            #[cfg(test)]
+            channel_value_mock,
         ),
         SudoMsg::UndoSend { packet } => sudo::undo_send(deps, packet),
     }

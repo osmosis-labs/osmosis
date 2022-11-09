@@ -18,15 +18,22 @@ pub fn process_packet(
     packet: Packet,
     direction: FlowType,
     now: Timestamp,
-    channel_value_hint: Option<Uint256>,
+    #[cfg(test)] channel_value_mock: Option<Uint256>,
 ) -> Result<Response, ContractError> {
     let (channel_id, denom) = packet.path_data(&direction);
     let path = &Path::new(&channel_id, &denom);
     let funds = packet.get_funds();
-    let channel_value = match channel_value_hint {
+
+    #[cfg(test)]
+    // When testing we override the channel value with the mock since we can't get it from the chain
+    let channel_value = match channel_value_mock {
         Some(channel_value) => channel_value,
-        None => packet.channel_value(deps.as_ref(), &direction)?,
+        None => packet.channel_value(deps.as_ref(), &direction)?, // This should almost never be used, but left for completeness in case we want to send an empty channel_value from the test
     };
+
+    #[cfg(not(test))]
+    let channel_value = packet.channel_value(deps.as_ref(), &direction)?;
+
     try_transfer(deps, path, channel_value, funds, direction, now)
 }
 

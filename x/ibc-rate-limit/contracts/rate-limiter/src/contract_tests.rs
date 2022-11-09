@@ -172,7 +172,6 @@ fn asymetric_quotas() {
     );
 
     let res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
-    println!("{res:?}");
     let Attribute { key, value } = &res.attributes[4];
     assert_eq!(key, "weekly_used_out");
     assert_eq!(value, "120");
@@ -376,6 +375,6 @@ fn undo_send() {
 #[test]
 fn test_basic_message() {
     let json = r#"{"send_packet":{"packet":{"sequence":2,"source_port":"transfer","source_channel":"channel-0","destination_port":"transfer","destination_channel":"channel-0","data":{"denom":"stake","amount":"125000000000011250","sender":"osmo1dwtagd6xzl4eutwtyv6mewra627lkg3n3w26h6","receiver":"osmo1yvjkt8lnpxucjmspaj5ss4aa8562gx0a3rks8s"},"timeout_height":{"revision_height":100}}}}"#;
-    let parsed: SudoMsg = serde_json_wasm::from_str(json).unwrap();
-    println!("{parsed:?}");
+    let _parsed: SudoMsg = serde_json_wasm::from_str(json).unwrap();
+    //println!("{parsed:?}");
 }

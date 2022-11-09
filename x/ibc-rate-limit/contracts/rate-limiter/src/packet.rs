@@ -190,7 +190,7 @@ macro_rules! test_msg_send {
     (channel_id: $channel_id:expr, denom: $denom:expr, channel_value: $channel_value:expr, funds: $funds:expr) => {
         $crate::msg::SudoMsg::SendPacket {
             packet: $crate::packet::Packet::mock($channel_id, $denom, $funds),
-            channel_value_hint: Some($channel_value),
+            channel_value_mock: Some($channel_value),
         }
     };
 }
@@ -205,7 +205,7 @@ macro_rules! test_msg_recv {
                 format!("transfer/{}/{}", $channel_id, $denom),
                 $funds,
             ),
-            channel_value_hint: Some($channel_value),
+            channel_value_mock: Some($channel_value),
         }
     };
 }
