@@ -482,6 +482,38 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 				s.Require().NoError(err)
 
 				// create second position parameters
+				newLowerPrice := sdk.NewDec(5001)
+				s.Require().NoError(err)
+				newLowerTick := cl.PriceToTick(newLowerPrice) // 85178
+				newUpperPrice := sdk.NewDec(6250)
+				s.Require().NoError(err)
+				newUpperTick := cl.PriceToTick(newUpperPrice) // 87407
+
+				// add position two with the new price range above
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				s.Require().NoError(err)
+			},
+			tokenIn:          sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenOutDenom:    "eth",
+			priceLimit:       sdk.NewDec(6056),
+			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1864112)),
+			expectedTick:     sdk.NewInt(87092),
+			newLowerPrice:    sdk.NewDec(5001),
+			newUpperPrice:    sdk.NewDec(6250),
+		},
+		//  Sequential price ranges with a gap
+		//
+		//          5000
+		//  4545 -----|----- 5500
+		//              5501 ----------- 6250
+		//
+		"two sequential positions with a gap": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
+
+				// create second position parameters
 				newLowerPrice := sdk.NewDec(5501)
 				s.Require().NoError(err)
 				newLowerTick := cl.PriceToTick(newLowerPrice) // 86131
