@@ -210,6 +210,55 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				// expectedTick:     86129.0 rounded down https://www.wolframalpha.com/input?i2d=true&i=Log%5B1.0001%2C5499.813071854898049815%5D
 
 				// create second position parameters
+				newLowerPrice := sdk.NewDec(5001)
+				s.Require().NoError(err)
+				newLowerTick := cl.PriceToTick(newLowerPrice) // 85178
+				newUpperPrice := sdk.NewDec(6250)
+				s.Require().NoError(err)
+				newUpperTick := cl.PriceToTick(newUpperPrice) // 87407
+
+				// add position two with the new price range above
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				s.Require().NoError(err)
+				// params
+				// liquidity (2nd):  670565280.937711183763565748
+				// sqrtPriceNext:    77.820305833374877582 which is 6056.0000000000000000 we hit the price limit here, so we just use the user defined max (6056)
+				// sqrtPriceCurrent: 70.717075849691272487 which is 5000.9048167309886086
+				// expectedTokenIn:  4763179409.57397 rounded up https://www.wolframalpha.com/input?i=670565280.937711183763565748+*+%2877.820305833374877582+-+70.717075849691272487%29
+				// expectedTokenOut: 865525.190 rounded down https://www.wolframalpha.com/input?i=%28670565280.937711183763565748+*+%2877.820305833374877582+-+70.717075849691272487+%29%29+%2F+%2870.717075849691272487+*+77.820305833374877582%29
+				// expectedTick:     87092.4 rounded down https://www.wolframalpha.com/input?i2d=true&i=Log%5B1.0001%2C6056.0000000000000000%5D
+			},
+			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenOutDenom: "eth",
+			priceLimit:    sdk.NewDec(6056),
+			// expectedTokenIn:  5236545537.865 + 4763179409.57397 = 9999724947.43897 = 999972.49 usdc
+			// expectedTokenOut: 998587.023 + 865525.190 = 1864112.213 round down = 1.864112 eth
+			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(9999724947)),
+			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1864112)),
+			expectedTick:     sdk.NewInt(87092),
+			newLowerPrice:    sdk.NewDec(5001),
+			newUpperPrice:    sdk.NewDec(6250),
+		},
+		//  Sequential price ranges with a gap
+		//
+		//          5000
+		//  4545 -----|----- 5500
+		//              5501 ----------- 6250
+		//
+		"two sequential positions with a gap": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
+				// params
+				// liquidity (1st):  1517818840.967515822610790519
+				// sqrtPriceNext:    74.160724590951092256 which is 5499.813071854898049815 (this is calculated by finding the closest tick LTE the upper range of the first range) https://www.wolframalpha.com/input?i2d=true&i=Power%5B1.0001%2CDivide%5B86129%2C2%5D%5D
+				// sqrtPriceCurrent: 70.710678118654752440 which is 5000
+				// expectedTokenIn:  5236545537.864897 rounded up https://www.wolframalpha.com/input?i=1517818840.967515822610790519+*+%2874.160724590951092256+-+70.710678118654752440%29
+				// expectedTokenOut: 998934.824728 rounded down https://www.wolframalpha.com/input?i=%281517818840.967515822610790519+*+%2874.161984870956629487+-+70.710678118654752440+%29%29+%2F+%2870.710678118654752440+*+74.161984870956629487%29
+				// expectedTick:     86129.0 rounded down https://www.wolframalpha.com/input?i2d=true&i=Log%5B1.0001%2C5499.813071854898049815%5D
+
+				// create second position parameters
 				newLowerPrice := sdk.NewDec(5501)
 				s.Require().NoError(err)
 				newLowerTick := cl.PriceToTick(newLowerPrice) // 86131
