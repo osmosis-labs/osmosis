@@ -88,7 +88,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 		liquidity:                p.GetLiquidity(),
 	}
 
-	for swapState.amountSpecifiedRemaining.GT(sdk.ZeroDec()) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
+	for swapState.amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 6)) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
 		sqrtPriceStart := swapState.sqrtPrice
 		nextTick, ok := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), zeroForOne)
 		if !ok {
