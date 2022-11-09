@@ -98,9 +98,5 @@ func (p Pool) GetLiquidity() sdk.Dec {
 }
 
 func (p *Pool) UpdateLiquidity(newLiquidity sdk.Dec) {
-	p.updateLiquidity(newLiquidity)
-}
-
-func (p *Pool) updateLiquidity(newLiquidity sdk.Dec) {
 	p.Liquidity = p.Liquidity.Add(newLiquidity)
 }

@@ -3,8 +3,8 @@ package concentrated_liquidity
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	pooltypes "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/concentrated-pool"
 	cltypes "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
+	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
 // OrderInitialPoolDenoms sets the pool denoms of a cl pool
@@ -16,7 +16,7 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	return k.createPosition(ctx, poolId, owner, amount0Desired, amount1Desired, amount0Min, amount1Min, lowerTick, upperTick)
 }
 
-func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo pooltypes.TickInfo) {
+func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo types.TickInfo) {
 	k.setTickInfo(ctx, poolId, tickIndex, tickInfo)
 }
 

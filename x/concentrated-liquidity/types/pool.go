@@ -3,7 +3,6 @@ package types
 import (
 	proto "github.com/gogo/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -35,29 +34,6 @@ type PoolI interface {
 	GetCurrentTick() sdk.Int
 	GetLiquidity() sdk.Dec
 
-	// TODO: move these to separate interfaces
-	CalcOutAmtGivenIn(ctx sdk.Context,
-		poolTickKVStore types.KVStore,
-		tokenInMin sdk.Coin, tokenOutDenom string,
-		swapFee sdk.Dec, priceLimit sdk.Dec,
-		poolId uint64) (tokenIn, tokenOut sdk.Coin, updatedTick sdk.Int, updatedLiquidity, updatedSqrtPrice sdk.Dec, err error)
-	SwapOutAmtGivenIn(ctx sdk.Context,
-		poolTickKVStore types.KVStore,
-		tokenIn sdk.Coin, tokenOutDenom string,
-		swapFee sdk.Dec, priceLimit sdk.Dec,
-		poolId uint64) (tokenOut sdk.Coin, err error)
-
-	CalcInAmtGivenOut(ctx sdk.Context,
-		poolTickKVStore types.KVStore,
-		tokenOutMin sdk.Coin, tokenInDenom string,
-		swapFee sdk.Dec, priceLimit sdk.Dec,
-		poolId uint64) (tokenIn, tokenOut sdk.Coin, updatedTick sdk.Int, updatedLiquidity, updatedSqrtPrice sdk.Dec, err error)
-	SwapInAmtGivenOut(ctx sdk.Context,
-		poolTickKVStore types.KVStore,
-		tokenOut sdk.Coin, tokenInDenom string,
-		swapFee sdk.Dec, priceLimit sdk.Dec,
-		poolId uint64) (tokenIn sdk.Coin, err error)
-
-	// TODO: move these to separate interfaces
 	UpdateLiquidity(newLiquidity sdk.Dec)
+	ApplySwap(ctx sdk.Context, tokenIn sdk.Coin, tokenOut sdk.Coin, poolId uint64, newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurrentSqrtPrice sdk.Dec) error
 }

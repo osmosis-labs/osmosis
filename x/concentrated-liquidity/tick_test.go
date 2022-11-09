@@ -1,27 +1,35 @@
 package concentrated_liquidity_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	pooltypes "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/concentrated-pool"
-
+	cl "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity"
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
 func (s *KeeperTestSuite) TestTickOrdering() {
 	s.SetupTest()
 
+	storeKey := sdk.NewKVStoreKey("concentrated_liquidity")
+	tKey := sdk.NewTransientStoreKey("transient_test")
+	s.Ctx = testutil.DefaultContext(storeKey, tKey)
+	s.App.ConcentratedLiquidityKeeper = cl.NewKeeper(s.App.AppCodec(), storeKey)
+
 	liquidityTicks := []int64{-200, -55, -4, 70, 78, 84, 139, 240, 535}
 	for _, t := range liquidityTicks {
-		s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, 1, t, pooltypes.TickInfo{})
+		s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, 1, t, types.TickInfo{})
 	}
 
-	poolStore := s.App.ConcentratedLiquidityKeeper.GetPoolTickKVStore(s.Ctx, 1)
+	store := s.Ctx.KVStore(storeKey)
+	prefixBz := types.KeyTickPrefix(1)
+	prefixStore := prefix.NewStore(store, prefixBz)
 
 	// Pick a value and ensure ordering is correct for lte=false, i.e. increasing
 	// ticks.
 	startKey := types.TickIndexToBytes(-4)
-	iter := poolStore.Iterator(startKey, nil)
+	iter := prefixStore.Iterator(startKey, nil)
 	defer iter.Close()
 
 	var vals []int64
@@ -37,7 +45,7 @@ func (s *KeeperTestSuite) TestTickOrdering() {
 	// Pick a value and ensure ordering is correct for lte=true, i.e. decreasing
 	// ticks.
 	startKey = types.TickIndexToBytes(84)
-	revIter := poolStore.ReverseIterator(nil, startKey)
+	revIter := prefixStore.ReverseIterator(nil, startKey)
 	defer revIter.Close()
 
 	vals = nil
@@ -56,7 +64,7 @@ func (s *KeeperTestSuite) TestNextInitializedTick() {
 
 	liquidityTicks := []int64{-200, -55, -4, 70, 78, 84, 139, 240, 535}
 	for _, t := range liquidityTicks {
-		s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, 1, t, pooltypes.TickInfo{})
+		s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, 1, t, types.TickInfo{})
 	}
 
 	s.Run("lte=true", func() {
@@ -86,7 +94,7 @@ func (s *KeeperTestSuite) TestNextInitializedTick() {
 			s.Require().True(initd)
 		})
 		s.Run("returns the next initialized tick from the next word", func() {
-			s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, 1, 340, pooltypes.TickInfo{})
+			s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, 1, 340, types.TickInfo{})
 
 			n, initd := s.App.ConcentratedLiquidityKeeper.NextInitializedTick(s.Ctx, 1, 328, false)
 			s.Require().Equal(int64(340), n)

@@ -9,7 +9,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v12/osmomath"
 	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	pooltypes "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/concentrated-pool"
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
@@ -91,16 +90,25 @@ func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex in
 	return 0, false
 }
 
+func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Int, err error) {
+	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	return tickInfo.LiquidityNet, nil
+}
+
 // getTickInfo gets tickInfo given poolId and tickIndex. Returns a boolean field that returns true if value is found for given key.
-func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickInfo pooltypes.TickInfo, err error) {
+func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickInfo types.TickInfo, err error) {
 	store := ctx.KVStore(k.storeKey)
-	tickStruct := pooltypes.TickInfo{}
+	tickStruct := types.TickInfo{}
 	key := types.KeyTick(poolId, tickIndex)
 
 	found, err := osmoutils.GetIfFound(store, key, &tickStruct)
 	// return 0 values if key has not been initialized
 	if !found {
-		return pooltypes.TickInfo{LiquidityGross: sdk.ZeroInt(), LiquidityNet: sdk.ZeroInt()}, err
+		return types.TickInfo{LiquidityGross: sdk.ZeroInt(), LiquidityNet: sdk.ZeroInt()}, err
 	}
 	if err != nil {
 		return tickStruct, err
@@ -109,7 +117,7 @@ func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 	return tickStruct, nil
 }
 
-func (k Keeper) setTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo pooltypes.TickInfo) {
+func (k Keeper) setTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo types.TickInfo) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyTick(poolId, tickIndex)
 	osmoutils.MustSet(store, key, &tickInfo)
