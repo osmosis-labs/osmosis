@@ -217,6 +217,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 			swapState.liquidity = newLiquidity
 
 			// TODO: Investigate proper break of loop given the following conditions
+			// SEE https://github.com/osmosis-labs/osmosis/pull/3311/files/93c4bd0590278ef6d901f39bab73b123ddfc0da2#r1017566233
 			// if swapState.liquidity.LTE(sdk.ZeroDec()) || swapState.liquidity.IsNil() {
 			// 	return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 			// }
