@@ -53,6 +53,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#2804](https://github.com/osmosis-labs/osmosis/pull/2804) Improve error messages when parsing pool assets.
 * [#3214](https://github.com/osmosis-labs/osmosis/pull/3214) Add basic CLI query support for TWAP.
 
+## v12.3.0
+
+Use mainline iavl v0.19.4 instead of our fork of iavl
+
 ## v12.2.0
 
 This is a security release for the Dragonberry security advisory.
