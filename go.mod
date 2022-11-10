@@ -297,8 +297,6 @@ replace (
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.28.0-osmo-v12.1
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: osmosis-main. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/c1eb80426bbcbd691c4522128840264a5c695e42
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20221109193459-c1eb80426bbc
-	// Use Osmosis fast iavl
-	github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-osmo-v7
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// use grpc compatible with cosmos protobufs
