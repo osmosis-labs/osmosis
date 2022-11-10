@@ -20,6 +20,10 @@ func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tic
 	k.setTickInfo(ctx, poolId, tickIndex, tickInfo)
 }
 
-func (k Keeper) GetPoolbyId(ctx sdk.Context, poolId uint64) (cltypes.PoolI, error) {
-	return k.getPoolbyId(ctx, poolId)
+func (k Keeper) GetPoolById(ctx sdk.Context, poolId uint64) (cltypes.ConcentratedPoolExtension, error) {
+	return k.getPoolById(ctx, poolId)
+}
+
+func (k Keeper) SetPool(ctx sdk.Context, pool cltypes.ConcentratedPoolExtension) error {
+	return k.setPool(ctx, pool)
 }

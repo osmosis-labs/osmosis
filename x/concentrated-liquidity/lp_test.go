@@ -62,7 +62,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			s.Require().Equal(tc.expectedLiquidity.String(), upperTickInfo.LiquidityGross.String())
 			s.Require().Equal(tc.expectedLiquidity.Neg().String(), upperTickInfo.LiquidityNet.String())
 
-			pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolbyId(s.Ctx, tc.poolId)
+			pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, tc.poolId)
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedLiquidity.String(), pool.GetLiquidity().String())
 			s.Require().Equal(pool.GetCurrentTick(), sdk.NewInt(85176))

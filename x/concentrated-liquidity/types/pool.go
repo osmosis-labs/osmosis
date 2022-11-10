@@ -1,12 +1,12 @@
 package types
 
 import (
-	proto "github.com/gogo/protobuf/proto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	proto "github.com/gogo/protobuf/proto"
 )
 
-type PoolI interface {
+type ConcentratedPoolExtension interface {
+	// gammtypes.PoolI
 	proto.Message
 
 	GetAddress() sdk.AccAddress
@@ -35,5 +35,5 @@ type PoolI interface {
 	GetLiquidity() sdk.Dec
 
 	UpdateLiquidity(newLiquidity sdk.Dec)
-	ApplySwap(ctx sdk.Context, tokenIn sdk.Coin, tokenOut sdk.Coin, poolId uint64, newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurrentSqrtPrice sdk.Dec) error
+	ApplySwap(ctx sdk.Context, poolId uint64, newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurrentSqrtPrice sdk.Dec) error
 }

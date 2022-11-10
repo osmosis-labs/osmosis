@@ -15,7 +15,7 @@ func (k Keeper) InitializePool(ctx sdk.Context, pool gammtypes.PoolI, creatorAdd
 	panic("not implemented")
 }
 
-func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint64, denom0, denom1 string, currSqrtPrice sdk.Dec, currTick sdk.Int) (types.PoolI, error) {
+func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint64, denom0, denom1 string, currSqrtPrice sdk.Dec, currTick sdk.Int) (types.ConcentratedPoolExtension, error) {
 	denom0, denom1, err := types.OrderInitialPoolDenoms(denom0, denom1)
 	if err != nil {
 		return &pooltypes.Pool{}, err

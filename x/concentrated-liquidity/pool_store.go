@@ -8,16 +8,16 @@ import (
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
-func (k Keeper) MarshalPool(pool types.PoolI) ([]byte, error) {
+func (k Keeper) marshalPool(pool types.ConcentratedPoolExtension) ([]byte, error) {
 	return k.cdc.MarshalInterface(pool)
 }
 
-func (k Keeper) UnmarshalPool(bz []byte) (types.PoolI, error) {
-	var acc types.PoolI
+func (k Keeper) unmarshalPool(bz []byte) (types.ConcentratedPoolExtension, error) {
+	var acc types.ConcentratedPoolExtension
 	return acc, k.cdc.UnmarshalInterface(bz, &acc)
 }
 
-func (k Keeper) getPoolbyId(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
+func (k Keeper) getPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedPoolExtension, error) {
 	store := ctx.KVStore(k.storeKey)
 
 	key := types.KeyPool(poolId)
@@ -26,7 +26,7 @@ func (k Keeper) getPoolbyId(ctx sdk.Context, poolId uint64) (types.PoolI, error)
 	}
 
 	bz := store.Get(key)
-	pool, err := k.UnmarshalPool(bz)
+	pool, err := k.unmarshalPool(bz)
 	if err != nil {
 		return nil, err
 	}
@@ -34,8 +34,8 @@ func (k Keeper) getPoolbyId(ctx sdk.Context, poolId uint64) (types.PoolI, error)
 	return pool, nil
 }
 
-func (k Keeper) setPool(ctx sdk.Context, pool types.PoolI) error {
-	bz, err := k.MarshalPool(pool)
+func (k Keeper) setPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) error {
+	bz, err := k.marshalPool(pool)
 	if err != nil {
 		return err
 	}

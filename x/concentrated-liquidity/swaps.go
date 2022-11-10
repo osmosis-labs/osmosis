@@ -47,7 +47,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 	swapFee sdk.Dec,
 	priceLimit sdk.Dec,
 	poolId uint64) (tokenIn, tokenOut sdk.Coin, updatedTick sdk.Int, updatedLiquidity, updatedSqrtPrice sdk.Dec, err error) {
-	p, err := k.getPoolbyId(ctx, poolId)
+	p, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 	}
@@ -163,12 +163,12 @@ func (k Keeper) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 		return sdk.Coin{}, err
 	}
 
-	pool, err := k.getPoolbyId(ctx, poolId)
+	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
 
-	err = pool.ApplySwap(ctx, tokenIn, tokenOut, poolId, newLiquidity, newCurrentTick, newSqrtPrice)
+	err = pool.ApplySwap(ctx, poolId, newLiquidity, newCurrentTick, newSqrtPrice)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -183,7 +183,7 @@ func (k Keeper) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 
 func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec, minPrice, maxPrice sdk.Dec, poolId uint64) (sdk.Coin, sdk.Dec, sdk.Int, sdk.Dec, error) {
 	tokenOutAmt := tokenOut.Amount.ToDec()
-	p, err := k.getPoolbyId(ctx, poolId)
+	p, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Coin{}, sdk.ZeroDec(), sdk.ZeroInt(), sdk.ZeroDec(), err
 	}
@@ -298,12 +298,12 @@ func (k *Keeper) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDe
 		return sdk.Coin{}, err
 	}
 
-	pool, err := k.getPoolbyId(ctx, poolId)
+	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
 
-	err = pool.ApplySwap(ctx, tokenIn, tokenOut, poolId, newLiquidity, newCurrentTick, newCurrentSqrtPrice)
+	err = pool.ApplySwap(ctx, poolId, newLiquidity, newCurrentTick, newCurrentSqrtPrice)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
