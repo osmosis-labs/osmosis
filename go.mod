@@ -295,9 +295,8 @@ replace (
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.28.0-osmo-v12.1
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk/tree/v12.x
-	// last commit: https://github.com/osmosis-labs/cosmos-sdk/tree/63f6778c9648aa01bd2a1c37d8914bdfe66f6cd0
-	github.com/cosmos/cosmos-sdk => github.com/notional-labs/cosmos-sdk v0.45.1-0.20221105195056-51dd388a37a6
-	// use cosmos-compatible protobufs
+	// last commit: https://github.com/osmosis-labs/cosmos-sdk/commit/32fd2420e2f0958a0d2a41af18e8f5661f69a114
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20221109234646-32fd2420e2f0 // use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// use grpc compatible with cosmos protobufs
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
