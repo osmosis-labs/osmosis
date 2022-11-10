@@ -193,9 +193,8 @@ message QueryTotalSharesResponse {
 //=============================== CalcJoinPoolNoSwapShares
 message QueryCalcJoinPoolNoSwapSharesRequest {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  string tokens_in = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags) = "yaml:\"tokens_in\"",
+  repeated cosmos.base.v1beta1.Coin tokens_in = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false
   ];
 }
