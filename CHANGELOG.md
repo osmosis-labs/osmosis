@@ -40,6 +40,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v12.3.0
+
+* [#3325](https://github.com/osmosis-labs/osmosis/pull/3325) Use mainline iavl v0.19.4 instead of our iavl fork
+
 ## v12.2.1
 
 ### Features
