@@ -293,8 +293,8 @@ require (
 )
 
 replace (
-	// branch: v0.28.0x-osmo-v12, current tag: v0.28.0-osmo-v12.1
-	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.28.0-osmo-v12.1
+	// current tag: v0.28.0-osmo-v13
+	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.28.0-osmo-v13
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: osmosis-main. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/c1eb80426bbcbd691c4522128840264a5c695e42
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20221109193459-c1eb80426bbc
 	// use cosmos-compatible protobufs
