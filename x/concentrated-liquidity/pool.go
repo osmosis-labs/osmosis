@@ -148,7 +148,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 		amountSpecifiedRemaining: tokenAmountInAfterFee, // tokenIn
 		amountCalculated:         sdk.ZeroDec(),         // tokenOut
 		sqrtPrice:                curSqrtPrice,
-		tick:                     priceToTick(curSqrtPrice.Power(2)),
+		tick:                     p.CurrentTick,
 		liquidity:                p.Liquidity,
 	}
 
@@ -306,7 +306,7 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 		amountSpecifiedRemaining: tokenOutAmt,
 		amountCalculated:         sdk.ZeroDec(),
 		sqrtPrice:                curSqrtPrice,
-		tick:                     priceToTick(curSqrtPrice.Power(2)),
+		tick:                     p.CurrentTick,
 	}
 
 	// TODO: This should be GT 0 but some instances have very small remainder
