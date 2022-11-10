@@ -838,7 +838,7 @@ func NewStableSwapAdjustScalingFactorsMsg(clientCtx client.Context, txf tx.Facto
 
 	scalingFactorsStrSlice := strings.Split(scalingFactorsStr, ",")
 
-	var scalingFactors []uint64 = make([]uint64, len(scalingFactorsStrSlice))
+	scalingFactors := make([]uint64, len(scalingFactorsStrSlice))
 	for i, scalingFactorStr := range scalingFactorsStrSlice {
 		scalingFactor, err := strconv.ParseUint(scalingFactorStr, 10, 64)
 		if err != nil {
