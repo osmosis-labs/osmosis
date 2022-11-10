@@ -33,6 +33,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	ibchooks "github.com/osmosis-labs/osmosis/v12/x/ibc-hooks"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 
@@ -123,6 +124,8 @@ type AppKeepers struct {
 	// transfer module
 	TransferModule          transfer.AppModule
 	RateLimitingICS4Wrapper *ibcratelimit.ICS4Wrapper
+	HooksMiddleware         *ibchooks.IBCMiddleware
+	HooksICS4Wrapper        ibchooks.ICS4Middleware
 
 	// keys to access the substores
 	keys    map[string]*sdk.KVStoreKey
@@ -204,11 +207,22 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.ScopedIBCKeeper,
 	)
 
+	// Create the IBC Transfer Stack from bottom to top:
+
+	// SendPacket. Originates from the transferKeeper and and goes up the stack:
+	// transferKeeper.SendPacket -> ibc_rate_limit.SendPacket -> ibc_hooks.SendPacket -> channel.SendPacket
+
+	// RecvPacket, message that originates from core IBC and goes down to app, the flow is the other way
+	// channel.RecvPacket -> ibc_hooks.OnRecvPacket -> ibc_rate_limit.OnRecvPacket -> transfer.OnRecvPacket
+
+	// The ICS4Wrapper used by the hooks middleware
+	appKeepers.HooksICS4Wrapper = ibchooks.NewICS4Middleware(appKeepers.IBCKeeper.ChannelKeeper, nil)
+
 	// ChannelKeeper wrapper for rate limiting SendPacket(). The wasmKeeper needs to be added after it's created
 	rateLimitingParams := appKeepers.GetSubspace(ibcratelimittypes.ModuleName)
 	rateLimitingParams = rateLimitingParams.WithKeyTable(ibcratelimittypes.ParamKeyTable())
 	rateLimitingICS4Wrapper := ibcratelimit.NewICS4Middleware(
-		appKeepers.IBCKeeper.ChannelKeeper,
+		appKeepers.HooksICS4Wrapper,
 		appKeepers.AccountKeeper,
 		nil,
 		appKeepers.BankKeeper,
@@ -234,6 +248,9 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	// RateLimiting IBC Middleware
 	rateLimitingTransferModule := ibcratelimit.NewIBCModule(transferIBCModule, appKeepers.RateLimitingICS4Wrapper)
+	// Hooks Middleware
+	hooksTransferModule := ibchooks.NewIBCMiddleware(&rateLimitingTransferModule, &appKeepers.HooksICS4Wrapper, nil) // We can add hooks here when there is an app using them
+	appKeepers.HooksMiddleware = &hooksTransferModule
 
 	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, appKeepers.keys[icahosttypes.StoreKey],
@@ -251,7 +268,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
 		// The transferIBC module is replaced by rateLimitingTransferModule
-		AddRoute(ibctransfertypes.ModuleName, &rateLimitingTransferModule)
+		AddRoute(ibctransfertypes.ModuleName, appKeepers.HooksMiddleware)
 	// Note: the sealing is done after creating wasmd and wiring that up
 
 	// create evidence keeper with router

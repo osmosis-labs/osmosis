@@ -1,7 +1,6 @@
 package ibc_rate_limit_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -16,7 +15,6 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
-	"github.com/osmosis-labs/osmosis/v12/app"
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/testutil"
 	"github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
@@ -39,11 +37,6 @@ func TestMiddlewareTestSuite(t *testing.T) {
 	suite.Run(t, new(MiddlewareTestSuite))
 }
 
-func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
-	osmosisApp := app.Setup(false)
-	return osmosisApp, app.NewDefaultGenesisState()
-}
-
 func NewTransferPath(chainA, chainB *osmosisibctesting.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(chainA.TestChain, chainB.TestChain)
 	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
@@ -55,7 +48,7 @@ func NewTransferPath(chainA, chainB *osmosisibctesting.TestChain) *ibctesting.Pa
 
 func (suite *MiddlewareTestSuite) SetupTest() {
 	suite.Setup()
-	ibctesting.DefaultTestingAppInit = SetupTestingApp
+	ibctesting.DefaultTestingAppInit = osmosisibctesting.SetupTestingApp
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
 	suite.chainA = &osmosisibctesting.TestChain{
 		TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(1)),
