@@ -8,6 +8,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
+	balancertypes "github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
@@ -86,6 +88,177 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestPoolsWithFilter() {
+	var (
+		defaultAcctFunds sdk.Coins = sdk.NewCoins(
+			sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
+			sdk.NewCoin("foo", sdk.NewInt(10000000)),
+			sdk.NewCoin("bar", sdk.NewInt(10000000)),
+			sdk.NewCoin("baz", sdk.NewInt(10000000)),
+		)
+		defaultPoolParams = balancer.PoolParams{
+			SwapFee: sdk.ZeroDec(),
+			ExitFee: sdk.ZeroDec(),
+		}
+	)
+
+	testCases := []struct {
+		name                        string
+		num_pools                   int
+		expected_num_pools_response int
+		min_liquidity               sdk.Coins
+		pool_type                   string
+		poolAssets                  []balancertypes.PoolAsset
+		expectedErr                 error
+	}{
+		{
+			name:                        "valid tc with both filters for min liquidity and pool type",
+			num_pools:                   1,
+			expected_num_pools_response: 1,
+			min_liquidity:               sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(50000)), sdk.NewCoin("bar", sdk.NewInt(50000))),
+			pool_type:                   "Balancer",
+			poolAssets: []balancertypes.PoolAsset{
+				{
+					Weight: sdk.NewInt(100),
+					Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
+				},
+				{
+					Weight: sdk.NewInt(200),
+					Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name:                        "only min liquidity specified (too high for pools - return 0 pools)",
+			num_pools:                   1,
+			expected_num_pools_response: 0,
+			min_liquidity:               sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(500000000)), sdk.NewCoin("bar", sdk.NewInt(500000000))),
+			poolAssets: []balancertypes.PoolAsset{
+				{
+					Weight: sdk.NewInt(100),
+					Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
+				},
+				{
+					Weight: sdk.NewInt(200),
+					Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name:                        "wrong pool type specified",
+			num_pools:                   1,
+			expected_num_pools_response: 0,
+			min_liquidity:               nil,
+			pool_type:                   "balaswap",
+			poolAssets: []balancertypes.PoolAsset{
+				{
+					Weight: sdk.NewInt(100),
+					Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
+				},
+				{
+					Weight: sdk.NewInt(200),
+					Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name:                        "2 parameters specified + single-token min liquidity",
+			num_pools:                   1,
+			expected_num_pools_response: 4,
+			min_liquidity:               sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(500))),
+			pool_type:                   "Balancer",
+			poolAssets: []balancertypes.PoolAsset{
+				{
+					Weight: sdk.NewInt(100),
+					Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
+				},
+				{
+					Weight: sdk.NewInt(200),
+					Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name:                        "min_liquidity denom not present in pool",
+			num_pools:                   1,
+			expected_num_pools_response: 0,
+			min_liquidity:               sdk.NewCoins(sdk.NewCoin("whoami", sdk.NewInt(500))),
+			poolAssets: []balancertypes.PoolAsset{
+				{
+					Weight: sdk.NewInt(100),
+					Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
+				},
+				{
+					Weight: sdk.NewInt(200),
+					Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name:                        "only min liquidity specified - valid",
+			num_pools:                   1,
+			expected_num_pools_response: 6,
+			min_liquidity:               sdk.NewCoins(sdk.NewCoin("foo", sdk.ZeroInt()), sdk.NewCoin("bar", sdk.ZeroInt())),
+			poolAssets: []balancertypes.PoolAsset{
+				{
+					Weight: sdk.NewInt(100),
+					Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
+				},
+				{
+					Weight: sdk.NewInt(200),
+					Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name:                        "only valid pool type specified",
+			num_pools:                   1,
+			expected_num_pools_response: 7,
+			pool_type:                   "Balancer",
+			poolAssets: []balancertypes.PoolAsset{
+				{
+					Weight: sdk.NewInt(100),
+					Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
+				},
+				{
+					Weight: sdk.NewInt(200),
+					Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
+				},
+			},
+			expectedErr: nil,
+		},
+	}
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			for i := 0; i < tc.num_pools; i++ {
+				suite.prepareCustomBalancerPool(
+					defaultAcctFunds,
+					tc.poolAssets,
+					defaultPoolParams,
+				)
+			}
+			res, err := suite.queryClient.PoolsWithFilter(suite.Ctx.Context(), &types.QueryPoolsWithFilterRequest{
+				MinLiquidity: tc.min_liquidity,
+				PoolType:     tc.pool_type,
+			})
+			if tc.expectedErr == nil {
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.expected_num_pools_response, len(res.Pools))
+			} else {
+				suite.Require().ErrorIs(err, tc.expectedErr)
+			}
+		})
+	}
+
+}
+
 func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 	queryClient := suite.queryClient
 	ctx := suite.Ctx
