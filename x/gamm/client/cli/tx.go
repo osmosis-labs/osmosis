@@ -39,6 +39,7 @@ func NewTxCmd() *cobra.Command {
 		NewJoinSwapShareAmountOut(),
 		NewExitSwapExternAmountOut(),
 		NewExitSwapShareAmountIn(),
+		NewStableSwapAdjustScalingFactorsCmd(),
 	)
 
 	return txCmd
@@ -342,6 +343,35 @@ func NewExitSwapShareAmountIn() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(FlagSetJoinSwapExternAmount())
+	flags.AddTxFlagsToCmd(cmd)
+	_ = cmd.MarkFlagRequired(FlagPoolId)
+
+	return cmd
+}
+
+func NewStableSwapAdjustScalingFactorsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "adjust-scaling-factors --pool-id=[pool-id] --scaling-factors=[scaling-factors]",
+		Short:   "adjust scaling factors",
+		Example: "osmosisd adjust-scaling-factors --pool-id=1 --scaling-factors=\"100, 100\"",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			txf, msg, err := NewStableSwapAdjustScalingFactorsMsg(clientCtx, txf, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(FlagSetAdjustScalingFactors())
 	flags.AddTxFlagsToCmd(cmd)
 	_ = cmd.MarkFlagRequired(FlagPoolId)
 
@@ -790,6 +820,37 @@ func NewBuildExitSwapShareAmountInMsg(clientCtx client.Context, tokenOutDenom, s
 		TokenOutDenom:     tokenOutDenom,
 		ShareInAmount:     shareInAmt,
 		TokenOutMinAmount: tokenOutMinAmount,
+	}
+
+	return txf, msg, nil
+}
+
+func NewStableSwapAdjustScalingFactorsMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	poolID, err := fs.GetUint64(FlagPoolId)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	scalingFactorsStr, err := fs.GetString(FlagScalingFactors)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	scalingFactorsStrSlice := strings.Split(scalingFactorsStr, ",")
+
+	scalingFactors := make([]uint64, len(scalingFactorsStrSlice))
+	for i, scalingFactorStr := range scalingFactorsStrSlice {
+		scalingFactor, err := strconv.ParseUint(scalingFactorStr, 10, 64)
+		if err != nil {
+			return txf, nil, err
+		}
+		scalingFactors[i] = scalingFactor
+	}
+
+	msg := &stableswap.MsgStableSwapAdjustScalingFactors{
+		Sender:         clientCtx.GetFromAddress().String(),
+		PoolID:         poolID,
+		ScalingFactors: scalingFactors,
 	}
 
 	return txf, msg, nil

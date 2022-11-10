@@ -94,13 +94,7 @@ func (q Querier) Pools(
 			return err
 		}
 
-		// TODO: pools query should not be balancer specific
-		pool, ok := poolI.(*balancer.Pool)
-		if !ok {
-			return fmt.Errorf("pool (%d) is not basic pool", pool.GetId())
-		}
-
-		any, err := codectypes.NewAnyWithValue(pool)
+		any, err := codectypes.NewAnyWithValue(poolI)
 		if err != nil {
 			return err
 		}
