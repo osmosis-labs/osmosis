@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v12.3.0
 
-Use mainline iavl v0.19.4 instead of our iavl fork
+* [#3325](https://github.com/osmosis-labs/osmosis/pull/3325) Use mainline iavl v0.19.4 instead of our iavl fork
 
 ## v12.2.1
 
