@@ -166,6 +166,96 @@ func (q Querier) CalcJoinPoolShares(ctx context.Context, req *types.QueryCalcJoi
 	}, nil
 }
 
+// PoolsWithFilter query allows to query pools with specific parameters
+func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithFilterRequest) (*types.QueryPoolsWithFilterResponse, error) {
+	res, err := q.Pools(ctx, &types.QueryPoolsRequest{
+		Pagination: &query.PageRequest{},
+	})
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	pools := res.Pools
+
+	var response = []*codectypes.Any{}
+
+	// set filters
+	min_liquidity := req.MinLiquidity
+	pool_type := req.PoolType
+	checks_needed := 0
+	// increase amount of needed checks for each filter by 1
+	if min_liquidity != nil {
+		checks_needed++
+	}
+
+	if pool_type != "" {
+		checks_needed++
+	}
+
+	for _, p := range pools {
+		var checks = 0
+		var pool types.PoolI
+
+		err := q.cdc.UnpackAny(p, &pool)
+		if err != nil {
+			return nil, sdkerrors.ErrUnpackAny
+		}
+		poolId := pool.GetId()
+
+		// if liquidity specified in request
+		if min_liquidity != nil {
+			poolLiquidity := pool.GetTotalPoolLiquidity(sdkCtx)
+			amount_of_denoms := 0
+			check_amount := false
+			check_denoms := false
+
+			if poolLiquidity.IsAllGTE(min_liquidity) {
+				check_amount = true
+			}
+
+			for _, req_coin := range min_liquidity {
+				for _, coin := range poolLiquidity {
+					if req_coin.Denom == coin.Denom {
+						amount_of_denoms++
+					}
+				}
+			}
+
+			if amount_of_denoms == len(min_liquidity) {
+				check_denoms = true
+			}
+
+			if check_amount && check_denoms {
+				checks++
+			}
+		}
+
+		// if pool type specified in request
+		if pool_type != "" {
+			poolType, err := q.GetPoolType(sdkCtx, poolId)
+			if err != nil {
+				return nil, types.ErrPoolNotFound
+			}
+
+			if poolType == pool_type {
+				checks++
+			} else {
+				continue
+			}
+		}
+
+		if checks == checks_needed {
+			response = append(response, p)
+		}
+	}
+
+	return &types.QueryPoolsWithFilterResponse{
+		Pools: response,
+	}, nil
+}
+
 // CalcExitPoolCoinsFromShares queries the amount of tokens you get by exiting a specific amount of shares
 func (q Querier) CalcExitPoolCoinsFromShares(ctx context.Context, req *types.QueryCalcExitPoolCoinsFromSharesRequest) (*types.QueryCalcExitPoolCoinsFromSharesResponse, error) {
 	if req == nil {
