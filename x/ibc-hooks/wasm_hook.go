@@ -5,7 +5,6 @@ import (
 	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v3/modules/core/exported"
@@ -32,12 +31,7 @@ func (h WasmHooks) ExecuteContract(ctx sdk.Context, contract string, msg []byte,
 		return nil, err
 	}
 
-	amount, ok := sdk.NewIntFromString(data.Amount)
-	if !ok {
-		return nil, sdkerrors.New("WasmHooks", 10, fmt.Sprintf("Invalid amount provided in packet: %v", data.Amount))
-	}
-	coins := sdk.NewCoins(sdk.NewCoin(data.Denom, amount))
-	result, err := h.ContractKeeper.Execute(ctx, contractAddr, caller, msg, coins)
+	result, err := h.ContractKeeper.Execute(ctx, contractAddr, caller, msg, sdk.NewCoins())
 
 	if err != nil {
 		return nil, err

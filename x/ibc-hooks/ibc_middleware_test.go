@@ -142,7 +142,7 @@ func (suite *HooksTestSuite) TestOnRecvPacketHooks() {
 	}
 }
 
-func (suite *HooksTestSuite) receivePacket(memo string) []byte {
+func (suite *HooksTestSuite) receivePacket(receiver, memo string) []byte {
 	channelCap := suite.chainB.GetChannelCapability(
 		suite.path.EndpointB.ChannelConfig.PortID,
 		suite.path.EndpointB.ChannelID)
@@ -150,7 +150,7 @@ func (suite *HooksTestSuite) receivePacket(memo string) []byte {
 		Denom:    sdk.DefaultBondDenom,
 		Amount:   "1",
 		Sender:   suite.chainB.SenderAccount.GetAddress().String(),
-		Receiver: suite.chainA.SenderAccount.GetAddress().String(),
+		Receiver: receiver,
 		Memo:     memo,
 	}
 
@@ -189,7 +189,7 @@ func (suite *HooksTestSuite) receivePacket(memo string) []byte {
 }
 
 func (suite *HooksTestSuite) TestRecvTransferWithBadMetadata() {
-	ackBytes := suite.receivePacket(`{"wasm": {"execute": "test"}}`)
+	ackBytes := suite.receivePacket(suite.chainB.SenderAccount.GetAddress().String(), `{"wasm": {"execute": "test"}}`)
 	fmt.Println(string(ackBytes))
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err := json.Unmarshal(ackBytes, &ack)
@@ -201,15 +201,9 @@ func (suite *HooksTestSuite) TestRecvTransferWithBadMetadata() {
 func (suite *HooksTestSuite) TestRecvTransferWithMetadata() {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/echo.wasm")
-	//accAddr := suite.chainA.SenderAccount.GetAddress().String()
 	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}")
 
-	bankKeeper := suite.chainA.GetOsmosisApp().BankKeeper
-	amounts := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)))
-	bankKeeper.MintCoins(suite.chainA.GetContext(), "mint", amounts)
-	bankKeeper.SendCoinsFromModuleToAccount(suite.chainA.GetContext(), "mint", suite.chainB.SenderAccount.GetAddress(), amounts)
-
-	ackBytes := suite.receivePacket(fmt.Sprintf(`{"wasm": {"contract": "%s", "execute": {"echo": {"msg": "test"} } } }`, addr))
+	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"wasm": {"contract": "%s", "execute": {"echo": {"msg": "test"} } } }`, addr))
 	fmt.Println(string(ackBytes))
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err := json.Unmarshal(ackBytes, &ack)
