@@ -583,12 +583,14 @@ func NewBuildExitPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 }
 
 func swapAmountInRoutes(fs *flag.FlagSet) ([]types.SwapAmountInRoute, error) {
-	swapRoutePoolIds, err := fs.GetStringArray(FlagSwapRoutePoolIds)
+	swapRoutePoolIds, err := fs.GetString(FlagSwapRoutePoolIds)
+	swapRoutePoolIdsArray := strings.Split(swapRoutePoolIds, ",")
 	if err != nil {
 		return nil, err
 	}
 
-	swapRouteDenoms, err := fs.GetStringArray(FlagSwapRouteDenoms)
+	swapRouteDenoms, err := fs.GetString(FlagSwapRouteDenoms)
+	swapRouteDenomsArray := strings.Split(swapRouteDenoms, ",")
 	if err != nil {
 		return nil, err
 	}
@@ -598,14 +600,14 @@ func swapAmountInRoutes(fs *flag.FlagSet) ([]types.SwapAmountInRoute, error) {
 	}
 
 	routes := []types.SwapAmountInRoute{}
-	for index, poolIDStr := range swapRoutePoolIds {
+	for index, poolIDStr := range swapRoutePoolIdsArray {
 		pID, err := strconv.Atoi(poolIDStr)
 		if err != nil {
 			return nil, err
 		}
 		routes = append(routes, types.SwapAmountInRoute{
 			PoolId:        uint64(pID),
-			TokenOutDenom: swapRouteDenoms[index],
+			TokenOutDenom: swapRouteDenomsArray[index],
 		})
 	}
 	return routes, nil
