@@ -79,7 +79,7 @@ type OnChanCloseConfirmAfterHooks interface {
 
 // OnRecvPacket Hooks
 type OnRecvPacketOverrideHooks interface {
-	OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement
+	bzOnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement
 }
 type OnRecvPacketBeforeHooks interface {
 	OnRecvPacketBeforeHook(ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress)
