@@ -194,7 +194,7 @@ func (q Querier) CalcExitPoolCoinsFromShares(ctx context.Context, req *types.Que
 }
 
 // SimJoinPoolNoSwap returns the amount of shares you'd get if joined a pool without a swap and tokens which need to be provided
-func (q Querier) CalcJoinPoolNoSwap(ctx context.Context, req *types.QueryCalcJoinPoolNoSwapRequest) (*types.QueryCalcJoinPoolNoSwapResponse, error) {
+func (q Querier) CalcJoinPoolNoSwapShares(ctx context.Context, req *types.QueryCalcJoinPoolNoSwapSharesRequest) (*types.QueryCalcJoinPoolNoSwapSharesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -210,7 +210,7 @@ func (q Querier) CalcJoinPoolNoSwap(ctx context.Context, req *types.QueryCalcJoi
 		return nil, err
 	}
 
-	return &types.QueryCalcJoinPoolNoSwapResponse{
+	return &types.QueryCalcJoinPoolNoSwapSharesResponse{
 		TokensOut: tokensJoined,
 		SharesOut: sharesOut,
 	}, nil

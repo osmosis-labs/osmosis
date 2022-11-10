@@ -139,7 +139,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolNoSwapShares() {
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			out, err := queryClient.CalcJoinPoolNoSwap(gocontext.Background(), &types.QueryCalcJoinPoolNoSwapRequest{
+			out, err := queryClient.CalcJoinPoolNoSwapShares(gocontext.Background(), &types.QueryCalcJoinPoolNoSwapSharesRequest{
 				PoolId:   tc.poolId,
 				TokensIn: tc.tokensIn,
 			})

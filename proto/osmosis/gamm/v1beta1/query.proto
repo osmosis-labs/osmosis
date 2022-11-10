@@ -40,8 +40,8 @@ service Query {
 
   // Simulates joining pool without a swap. Returns the amount of shares you'd
   // get and tokens needed to provide
-  rpc CalcJoinPoolNoSwap(QueryCalcJoinPoolNoSwapRequest)
-      returns (QueryCalcJoinPoolNoSwapResponse) {}
+  rpc CalcJoinPoolNoSwapShares(QueryCalcJoinPoolNoSwapSharesRequest)
+      returns (QueryCalcJoinPoolNoSwapSharesResponse) {}
 
   rpc CalcJoinPoolShares(QueryCalcJoinPoolSharesRequest)
       returns (QueryCalcJoinPoolSharesResponse) {
@@ -190,8 +190,8 @@ message QueryTotalSharesResponse {
     (gogoproto.nullable) = false
   ];
 }
-//=============================== SimJoinPoolNoSwap
-message QueryCalcJoinPoolNoSwapRequest {
+//=============================== CalcJoinPoolNoSwapShares
+message QueryCalcJoinPoolNoSwapSharesRequest {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string tokens_in = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coins",
@@ -199,7 +199,7 @@ message QueryCalcJoinPoolNoSwapRequest {
     (gogoproto.nullable) = false
   ];
 }
-message QueryCalcJoinPoolNoSwapResponse {
+message QueryCalcJoinPoolNoSwapSharesResponse {
   repeated cosmos.base.v1beta1.Coin tokens_out = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"tokens_out\"",
