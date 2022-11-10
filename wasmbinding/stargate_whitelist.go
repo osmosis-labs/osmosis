@@ -15,6 +15,7 @@ import (
 
 	epochtypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	gammv2types "github.com/osmosis-labs/osmosis/v12/x/gamm/v2types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v12/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v12/x/mint/types"
@@ -78,6 +79,7 @@ func init() {
 	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/TotalPoolLiquidity", &gammtypes.QueryTotalPoolLiquidityResponse{})
 	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/TotalShares", &gammtypes.QueryTotalSharesResponse{})
 	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/SpotPrice", &gammtypes.QuerySpotPriceResponse{})
+	setWhitelistedQuery("/osmosis.gamm.v2.Query/SpotPrice", &gammv2types.QuerySpotPriceResponse{})
 
 	// incentives
 	setWhitelistedQuery("/osmosis.incentives.Query/ModuleToDistributeCoins", &incentivestypes.ModuleToDistributeCoinsResponse{})
