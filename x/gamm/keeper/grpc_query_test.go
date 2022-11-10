@@ -87,63 +87,63 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestCalcJoinPoolNoSwap() {
+func (suite *KeeperTestSuite) TestCalcJoinPoolNoSwapShares() {
 	queryClient := suite.queryClient
-	poolId := suite.PrepareBalancerPool()
 	ctx := suite.Ctx
+	poolId := suite.PrepareBalancerPool()
+	swapFee := sdk.ZeroDec()
 
 	testCases := []struct {
-		name            string
-		sharesOutAmount sdk.Int
-		poolId          uint64
-		expectingErr    bool
+		name        string
+		poolId      uint64
+		tokensIn    sdk.Coins
+		expectedErr error
 	}{
 		{
-			name:            "valid test case",
-			sharesOutAmount: types.OneShare.MulRaw(50),
-			poolId:          poolId,
-
-			expectingErr: false,
+			"valid uneven multi asset join test case",
+			poolId,
+			sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(5000000)), sdk.NewCoin("bar", sdk.NewInt(5000000)), sdk.NewCoin("baz", sdk.NewInt(5000000)), sdk.NewCoin("uosmo", sdk.NewInt(5000000))),
+			nil,
 		},
 		{
-			name:            "invalid pool id",
-			sharesOutAmount: types.OneShare.MulRaw(50),
-			poolId:          poolId + 1,
-
-			expectingErr: true,
+			"valid even multi asset join test case",
+			poolId,
+			sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(500000)), sdk.NewCoin("bar", sdk.NewInt(1000000)), sdk.NewCoin("baz", sdk.NewInt(1500000)), sdk.NewCoin("uosmo", sdk.NewInt(2000000))),
+			nil,
 		},
 		{
-			name:            "negative shares out",
-			sharesOutAmount: sdk.NewInt(-1),
-			poolId:          poolId,
-
-			expectingErr: true,
+			"valid single asset join test case",
+			poolId,
+			sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000))),
+			nil,
 		},
 		{
-			name:            "no pool id",
-			sharesOutAmount: sdk.NewInt(-1),
-
-			expectingErr: true,
+			"pool id does not exist",
+			poolId + 1,
+			sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000))),
+			types.PoolDoesNotExistError{PoolId: poolId + 1},
 		},
 		{
-			name:            "zero shares",
-			sharesOutAmount: sdk.ZeroInt(),
-			poolId:          poolId,
-
-			expectingErr: true,
+			"token in denom does not exist",
+			poolId,
+			sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10000))),
+			sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, "input denoms must already exist in the pool (%s)", "random"),
+		},
+		{
+			"join pool with incorrect amount of assets",
+			poolId,
+			sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000)), sdk.NewCoin("bar", sdk.NewInt(10000))),
+			errors.New("balancer pool only supports LP'ing with one asset or all assets in pool"),
 		},
 	}
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			out, err := queryClient.CalcJoinPoolNoSwap(gocontext.Background(), &types.QueryJoinPoolNoSwapRequest{
-				PoolId:          tc.poolId,
-				SharesOutAmount: tc.sharesOutAmount,
+			out, err := queryClient.CalcJoinPoolNoSwap(gocontext.Background(), &types.QueryCalcJoinPoolNoSwapRequest{
+				PoolId:   tc.poolId,
+				TokensIn: tc.tokensIn,
 			})
-
-			if !tc.expectingErr {
-				suite.Require().NoError(err)
-
+			if tc.expectedErr == nil {
 				poolRes, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
 					PoolId: tc.poolId,
 				})
@@ -153,21 +153,16 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolNoSwap() {
 				err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 				suite.Require().NoError(err)
 
-				liquidityBefore := pool.GetTotalPoolLiquidity(ctx)
-
-				neededLpLiquidity, err := suite.App.GAMMKeeper.GetMaximalNoSwapLPAmount(ctx, pool, tc.sharesOutAmount)
+				numShares, numLiquidity, err := pool.CalcJoinPoolNoSwapShares(ctx, tc.tokensIn, swapFee)
 				suite.Require().NoError(err)
-				expectedShares, _, err := pool.CalcJoinPoolNoSwapShares(ctx, neededLpLiquidity, pool.GetSwapFee(ctx))
-				suite.Require().NoError(err)
-
-				suite.Require().Equal(out.SharesOut, expectedShares)
-				suite.Require().Equal(out.TokensIn, neededLpLiquidity)
-				suite.Require().Equal(liquidityBefore, pool.GetTotalPoolLiquidity(ctx))
+				suite.Require().Equal(numShares, out.SharesOut)
+				suite.Require().Equal(numLiquidity, out.TokensOut)
 			} else {
-				suite.Require().Error(err)
+				suite.Require().EqualError(err, tc.expectedErr.Error())
 			}
 		})
 	}
+
 }
 func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 	queryClient := suite.queryClient

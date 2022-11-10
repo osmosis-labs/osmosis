@@ -194,7 +194,7 @@ func (q Querier) CalcExitPoolCoinsFromShares(ctx context.Context, req *types.Que
 }
 
 // SimJoinPoolNoSwap returns the amount of shares you'd get if joined a pool without a swap and tokens which need to be provided
-func (q Querier) CalcJoinPoolNoSwap(ctx context.Context, req *types.QueryJoinPoolNoSwapRequest) (*types.QueryJoinPoolNoSwapResponse, error) {
+func (q Querier) CalcJoinPoolNoSwap(ctx context.Context, req *types.QueryCalcJoinPoolNoSwapRequest) (*types.QueryCalcJoinPoolNoSwapResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -205,24 +205,13 @@ func (q Querier) CalcJoinPoolNoSwap(ctx context.Context, req *types.QueryJoinPoo
 		return nil, err
 	}
 
-	neededLpLiquidity, err := getMaximalNoSwapLPAmount(sdkCtx, pool, req.SharesOutAmount)
+	sharesOut, tokensJoined, err := pool.CalcJoinPoolNoSwapShares(sdkCtx, req.TokensIn, pool.GetSwapFee(sdkCtx))
 	if err != nil {
 		return nil, err
 	}
 
-	sharesOut, _, err := pool.CalcJoinPoolNoSwapShares(sdkCtx, neededLpLiquidity, pool.GetSwapFee(sdkCtx))
-	if err != nil {
-		return nil, err
-	}
-
-	// sanity check
-	if sharesOut.LT(req.SharesOutAmount) {
-		return nil, fmt.Errorf("Expected to JoinPoolNoSwap >= %s shares, actually did %s shares",
-			req.SharesOutAmount, sharesOut)
-	}
-
-	return &types.QueryJoinPoolNoSwapResponse{
-		TokensIn:  neededLpLiquidity,
+	return &types.QueryCalcJoinPoolNoSwapResponse{
+		TokensOut: tokensJoined,
 		SharesOut: sharesOut,
 	}, nil
 }
