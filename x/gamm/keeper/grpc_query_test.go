@@ -112,10 +112,10 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolNoSwapShares() {
 			nil,
 		},
 		{
-			"valid single asset join test case",
+			"invalid single asset join test case",
 			poolId,
 			sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000))),
-			nil,
+			errors.New("no-swap joins require LP'ing with all assets in pool"),
 		},
 		{
 			"pool id does not exist",
@@ -133,7 +133,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolNoSwapShares() {
 			"join pool with incorrect amount of assets",
 			poolId,
 			sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000)), sdk.NewCoin("bar", sdk.NewInt(10000))),
-			errors.New("balancer pool only supports LP'ing with one asset or all assets in pool"),
+			errors.New("no-swap joins require LP'ing with all assets in pool"),
 		},
 	}
 
