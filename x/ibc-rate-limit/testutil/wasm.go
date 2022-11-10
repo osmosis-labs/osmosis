@@ -15,11 +15,11 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-func (chain *TestChain) StoreContractCode(suite *suite.Suite) {
+func (chain *TestChain) StoreContractCode(suite *suite.Suite, path string) {
 	osmosisApp := chain.GetOsmosisApp()
 
 	govKeeper := osmosisApp.GovKeeper
-	wasmCode, err := ioutil.ReadFile("./bytecode/rate_limiter.wasm")
+	wasmCode, err := ioutil.ReadFile(path)
 	suite.Require().NoError(err)
 
 	addr := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
@@ -38,7 +38,7 @@ func (chain *TestChain) StoreContractCode(suite *suite.Suite) {
 	suite.Require().NoError(err)
 }
 
-func (chain *TestChain) InstantiateContract(suite *suite.Suite, quotas string) sdk.AccAddress {
+func (chain *TestChain) InstantiateRLContract(suite *suite.Suite, quotas string) sdk.AccAddress {
 	osmosisApp := chain.GetOsmosisApp()
 	transferModule := osmosisApp.AccountKeeper.GetModuleAddress(transfertypes.ModuleName)
 	govModule := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
@@ -54,6 +54,16 @@ func (chain *TestChain) InstantiateContract(suite *suite.Suite, quotas string) s
 	codeID := uint64(1)
 	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
 	addr, _, err := contractKeeper.Instantiate(chain.GetContext(), codeID, creator, creator, initMsgBz, "rate limiting contract", nil)
+	suite.Require().NoError(err)
+	return addr
+}
+
+func (chain *TestChain) InstantiateContract(suite *suite.Suite, msg string) sdk.AccAddress {
+	osmosisApp := chain.GetOsmosisApp()
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
+	codeID := uint64(1)
+	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+	addr, _, err := contractKeeper.Instantiate(chain.GetContext(), codeID, creator, creator, []byte(msg), "contract", nil)
 	suite.Require().NoError(err)
 	return addr
 }

@@ -14,12 +14,16 @@ import (
 )
 
 type ContractAck struct {
-	contractResult []byte
-	ibcAck         []byte
+	ContractResult []byte `json:"contract_result"`
+	IbcAck         []byte `json:"ibc_ack"`
 }
 
 type WasmHooks struct {
-	contractKeeper *wasmkeeper.PermissionedKeeper
+	ContractKeeper *wasmkeeper.PermissionedKeeper
+}
+
+func NewWasmHooks(contractKeeper *wasmkeeper.PermissionedKeeper) WasmHooks {
+	return WasmHooks{ContractKeeper: contractKeeper}
 }
 
 func (h WasmHooks) ExecuteContract(ctx sdk.Context, contract string, msg []byte, caller sdk.AccAddress, data transfertypes.FungibleTokenPacketData) ([]byte, error) {
@@ -33,7 +37,7 @@ func (h WasmHooks) ExecuteContract(ctx sdk.Context, contract string, msg []byte,
 		return nil, sdkerrors.New("WasmHooks", 10, fmt.Sprintf("Invalid amount provided in packet: %v", data.Amount))
 	}
 	coins := sdk.NewCoins(sdk.NewCoin(data.Denom, amount))
-	result, err := h.contractKeeper.Execute(ctx, contractAddr, caller, msg, coins)
+	result, err := h.ContractKeeper.Execute(ctx, contractAddr, caller, msg, coins)
 
 	if err != nil {
 		return nil, err
@@ -42,6 +46,10 @@ func (h WasmHooks) ExecuteContract(ctx sdk.Context, contract string, msg []byte,
 }
 
 func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
+	if h.ContractKeeper == nil {
+		// Not configured
+		return im.App.OnRecvPacket(ctx, packet, relayer)
+	}
 
 	var data transfertypes.FungibleTokenPacketData
 	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
@@ -75,14 +83,14 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	contract, ok := wasm["contract"].(string)
 	if !ok {
 		// The tokens will be returned
-		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadPacketMetadataMsg, metadata, err.Error()))
+		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadMetadataFormatMsg, memo, `Could not find key "contract"`))
 	}
 
 	// Get the message
 	msg, err := json.Marshal(wasm["execute"])
 	if err != nil {
 		// The tokens will be returned
-		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadPacketMetadataMsg, metadata, err.Error()))
+		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadMetadataFormatMsg, memo, err.Error()))
 	}
 
 	// Execute the receive
@@ -90,14 +98,13 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	if !ack.Success() { // ToDO: Fix this with the proper ack handling
 		return ack
 	}
-
 	caller, _ := sdk.AccAddressFromBech32(data.Sender)
 	result, err := h.ExecuteContract(ctx, contract, msg, caller, data)
 	if err != nil {
 		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadExecutionMsg, err.Error()))
 	}
 
-	fullAck := ContractAck{contractResult: result, ibcAck: ack.Acknowledgement()}
+	fullAck := ContractAck{ContractResult: result, IbcAck: ack.Acknowledgement()}
 	bz, err := json.Marshal(fullAck)
 	if err != nil {
 		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadResponse, err.Error()))

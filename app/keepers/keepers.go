@@ -125,6 +125,7 @@ type AppKeepers struct {
 	TransferModule          transfer.AppModule
 	RateLimitingICS4Wrapper *ibcratelimit.ICS4Wrapper
 	HooksMiddleware         *ibchooks.IBCMiddleware
+	WasmHooks               *ibchooks.WasmHooks
 	HooksICS4Wrapper        ibchooks.ICS4Middleware
 
 	// keys to access the substores
@@ -215,8 +216,13 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// RecvPacket, message that originates from core IBC and goes down to app, the flow is the other way
 	// channel.RecvPacket -> ibc_hooks.OnRecvPacket -> ibc_rate_limit.OnRecvPacket -> transfer.OnRecvPacket
 
-	// The ICS4Wrapper used by the hooks middleware
-	appKeepers.HooksICS4Wrapper = ibchooks.NewICS4Middleware(appKeepers.IBCKeeper.ChannelKeeper, nil)
+	// Setup the ICS4Wrapper used by the hooks middleware
+	wasmHooks := ibchooks.NewWasmHooks(nil) // The contract keeper needs to be set later
+	appKeepers.WasmHooks = &wasmHooks
+	appKeepers.HooksICS4Wrapper = ibchooks.NewICS4Middleware(
+		appKeepers.IBCKeeper.ChannelKeeper,
+		appKeepers.WasmHooks,
+	)
 
 	// ChannelKeeper wrapper for rate limiting SendPacket(). The wasmKeeper needs to be added after it's created
 	rateLimitingParams := appKeepers.GetSubspace(ibcratelimittypes.ModuleName)
@@ -249,7 +255,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// RateLimiting IBC Middleware
 	rateLimitingTransferModule := ibcratelimit.NewIBCModule(transferIBCModule, appKeepers.RateLimitingICS4Wrapper)
 	// Hooks Middleware
-	hooksTransferModule := ibchooks.NewIBCMiddleware(&rateLimitingTransferModule, &appKeepers.HooksICS4Wrapper, nil) // We can add hooks here when there is an app using them
+	hooksTransferModule := ibchooks.NewIBCMiddleware(&rateLimitingTransferModule, &appKeepers.HooksICS4Wrapper) // We can add hooks here when there is an app using them
 	appKeepers.HooksMiddleware = &hooksTransferModule
 
 	icaHostKeeper := icahostkeeper.NewKeeper(
@@ -393,9 +399,11 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		wasmOpts...,
 	)
 	appKeepers.WasmKeeper = &wasmKeeper
-	// Update the ICS4Wrapper with the proper contractKeeper
+
+	// Pass the contract keeper to all the structs (generally ICS4Wrappers for ibc middlewares) that need it
 	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
 	appKeepers.RateLimitingICS4Wrapper.ContractKeeper = appKeepers.ContractKeeper
+	appKeepers.WasmHooks.ContractKeeper = appKeepers.ContractKeeper
 
 	// wire up x/wasm to IBC
 	ibcRouter.AddRoute(wasm.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper))
@@ -527,7 +535,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.IncentivesKeeper.SetHooks(
 		incentivestypes.NewMultiIncentiveHooks(
-		// insert incentive hooks receivers here
+			// insert incentive hooks receivers here
 		),
 	)
 
@@ -551,7 +559,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.GovKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// insert governance hooks receivers here
+			// insert governance hooks receivers here
 		),
 	)
 }

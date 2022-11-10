@@ -1,6 +1,8 @@
 package ibc_hooks_test
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
 	"testing"
 
@@ -39,6 +41,8 @@ func (suite *HooksTestSuite) SetupTest() {
 	suite.chainB = &osmosisibctesting.TestChain{
 		TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(2)),
 	}
+	suite.path = NewTransferPath(suite.chainA, suite.chainB)
+	suite.coordinator.Setup(suite.path)
 }
 
 func TestIBCHooksTestSuite(t *testing.T) {
@@ -58,6 +62,7 @@ func (suite *HooksTestSuite) CreateMockPacket() channeltypes.Packet {
 	)
 }
 
+// ToDo: Move this to osmosistesting to avoid repetition
 func NewTransferPath(chainA, chainB *osmosisibctesting.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(chainA.TestChain, chainB.TestChain)
 	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
@@ -82,10 +87,10 @@ func (suite *HooksTestSuite) TestOnRecvPacketHooks() {
 		expPass  bool
 	}{
 		{"override", func(status *testutils.Status) {
-			suite.chainB.GetOsmosisApp().HooksMiddleware.Hooks = testutils.TestRecvOverrideHooks{Status: status}
+			suite.chainB.GetOsmosisApp().HooksMiddleware.ICS4Middleware.Hooks = testutils.TestRecvOverrideHooks{Status: status}
 		}, true},
 		{"before and after", func(status *testutils.Status) {
-			suite.chainB.GetOsmosisApp().HooksMiddleware.Hooks = testutils.TestRecvBeforeAfterHooks{Status: status}
+			suite.chainB.GetOsmosisApp().HooksMiddleware.ICS4Middleware.Hooks = testutils.TestRecvBeforeAfterHooks{Status: status}
 		}, true},
 	}
 
@@ -122,17 +127,93 @@ func (suite *HooksTestSuite) TestOnRecvPacketHooks() {
 				suite.Require().False(ack.Success())
 			}
 
-			if _, ok := suite.chainB.GetOsmosisApp().HooksMiddleware.Hooks.(testutils.TestRecvOverrideHooks); ok {
+			if _, ok := suite.chainB.GetOsmosisApp().HooksMiddleware.ICS4Middleware.Hooks.(testutils.TestRecvOverrideHooks); ok {
 				suite.Require().True(status.OverrideRan)
 				suite.Require().False(status.BeforeRan)
 				suite.Require().False(status.AfterRan)
 			}
 
-			if _, ok := suite.chainB.GetOsmosisApp().HooksMiddleware.Hooks.(testutils.TestRecvBeforeAfterHooks); ok {
+			if _, ok := suite.chainB.GetOsmosisApp().HooksMiddleware.ICS4Middleware.Hooks.(testutils.TestRecvBeforeAfterHooks); ok {
 				suite.Require().False(status.OverrideRan)
 				suite.Require().True(status.BeforeRan)
 				suite.Require().True(status.AfterRan)
 			}
 		})
 	}
+}
+
+func (suite *HooksTestSuite) receivePacket(memo string) []byte {
+	channelCap := suite.chainB.GetChannelCapability(
+		suite.path.EndpointB.ChannelConfig.PortID,
+		suite.path.EndpointB.ChannelID)
+	packetData := transfertypes.FungibleTokenPacketData{
+		Denom:    sdk.DefaultBondDenom,
+		Amount:   "1",
+		Sender:   suite.chainB.SenderAccount.GetAddress().String(),
+		Receiver: suite.chainA.SenderAccount.GetAddress().String(),
+		Memo:     memo,
+	}
+
+	var packet = channeltypes.NewPacket(
+		packetData.GetBytes(),
+		1,
+		suite.path.EndpointB.ChannelConfig.PortID,
+		suite.path.EndpointB.ChannelID,
+		suite.path.EndpointA.ChannelConfig.PortID,
+		suite.path.EndpointA.ChannelID,
+		clienttypes.NewHeight(0, 100),
+		0,
+	)
+
+	err := suite.chainB.GetOsmosisApp().HooksICS4Wrapper.SendPacket(
+		suite.chainB.GetContext(), channelCap, packet)
+	suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
+
+	// Update both clients
+	err = suite.path.EndpointB.UpdateClient()
+	suite.Require().NoError(err)
+	err = suite.path.EndpointA.UpdateClient()
+	suite.Require().NoError(err)
+
+	// recv in chain a
+	res, err := suite.path.EndpointA.RecvPacketWithResult(packet)
+
+	// get the ack from the chain a's response
+	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
+	suite.Require().NoError(err)
+
+	// manually send the acknowledgement to chain b
+	err = suite.path.EndpointA.AcknowledgePacket(packet, ack)
+	suite.Require().NoError(err)
+	return ack
+}
+
+func (suite *HooksTestSuite) TestRecvTransferWithBadMetadata() {
+	ackBytes := suite.receivePacket(`{"wasm": {"execute": "test"}}`)
+	fmt.Println(string(ackBytes))
+	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
+	err := json.Unmarshal(ackBytes, &ack)
+	suite.Require().Error(err)
+	suite.Require().Contains(ack, "contract")
+	fmt.Println(ack)
+}
+
+func (suite *HooksTestSuite) TestRecvTransferWithMetadata() {
+	// Setup contract
+	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/echo.wasm")
+	//accAddr := suite.chainA.SenderAccount.GetAddress().String()
+	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}")
+
+	bankKeeper := suite.chainA.GetOsmosisApp().BankKeeper
+	amounts := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)))
+	bankKeeper.MintCoins(suite.chainA.GetContext(), "mint", amounts)
+	bankKeeper.SendCoinsFromModuleToAccount(suite.chainA.GetContext(), "mint", suite.chainB.SenderAccount.GetAddress(), amounts)
+
+	ackBytes := suite.receivePacket(fmt.Sprintf(`{"wasm": {"contract": "%s", "execute": {"echo": {"msg": "test"} } } }`, addr))
+	fmt.Println(string(ackBytes))
+	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
+	err := json.Unmarshal(ackBytes, &ack)
+	suite.Require().NoError(err)
+	suite.Require().NotContains(ack, "error")
+	suite.Require().Equal(ack["result"], "eyJjb250cmFjdF9yZXN1bHQiOiJkR2hwY3lCemFHOTFiR1FnWldOb2J3PT0iLCJpYmNfYWNrIjoiZXlKeVpYTjFiSFFpT2lKQlVUMDlJbjA9In0=")
 }

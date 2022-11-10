@@ -294,10 +294,10 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	fmt.Printf("Testing send rate limiting for denom=%s, channelValue=%s, quota=%s, sendAmount=%s\n", denom, channelValue, quota, sendAmount)
 
 	// Setup contract
-	suite.chainA.StoreContractCode(&suite.Suite)
+	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/rate_limiter.wasm")
 	quotas := suite.BuildChannelQuota("weekly", channel, denom, 604800, 5, 5)
 	fmt.Println(quotas)
-	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
+	addr := suite.chainA.InstantiateRLContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// send 2.5% (quota is 5%)
@@ -385,9 +385,9 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	fmt.Printf("Testing recv rate limiting for denom=%s, channelValue=%s, quota=%s, sendAmount=%s\n", localDenom, channelValue, quota, sendAmount)
 
 	// Setup contract
-	suite.chainA.StoreContractCode(&suite.Suite)
+	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/rate_limiter.wasm")
 	quotas := suite.BuildChannelQuota("weekly", channel, localDenom, 604800, 4, 4)
-	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
+	addr := suite.chainA.InstantiateRLContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// receive 2.5% (quota is 5%)
@@ -418,8 +418,8 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimitingNonNative() {
 // Test no rate limiting occurs when the contract is set, but not quotas are condifured for the path
 func (suite *MiddlewareTestSuite) TestSendTransferNoQuota() {
 	// Setup contract
-	suite.chainA.StoreContractCode(&suite.Suite)
-	addr := suite.chainA.InstantiateContract(&suite.Suite, ``)
+	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/rate_limiter.wasm")
+	addr := suite.chainA.InstantiateRLContract(&suite.Suite, ``)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// send 1 token.
@@ -431,9 +431,9 @@ func (suite *MiddlewareTestSuite) TestSendTransferNoQuota() {
 func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	suite.initializeEscrow()
 	// Setup contract
-	suite.chainA.StoreContractCode(&suite.Suite)
+	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/rate_limiter.wasm")
 	quotas := suite.BuildChannelQuota("weekly", "channel-0", sdk.DefaultBondDenom, 604800, 1, 1)
-	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
+	addr := suite.chainA.InstantiateRLContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// Get the escrowed amount
