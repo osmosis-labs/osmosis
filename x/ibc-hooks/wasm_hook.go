@@ -3,6 +3,7 @@ package ibc_hooks
 import (
 	"encoding/json"
 	"fmt"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
@@ -32,7 +33,6 @@ func (h WasmHooks) ExecuteContract(ctx sdk.Context, contract string, msg []byte,
 	}
 
 	result, err := h.ContractKeeper.Execute(ctx, contractAddr, caller, msg, sdk.NewCoins())
-
 	if err != nil {
 		return nil, err
 	}

@@ -3,8 +3,9 @@ package ibc_hooks_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
 	"testing"
+
+	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
 
 	"github.com/stretchr/testify/suite"
 
@@ -154,7 +155,7 @@ func (suite *HooksTestSuite) receivePacket(receiver, memo string) []byte {
 		Memo:     memo,
 	}
 
-	var packet = channeltypes.NewPacket(
+	packet := channeltypes.NewPacket(
 		packetData.GetBytes(),
 		1,
 		suite.path.EndpointB.ChannelConfig.PortID,
