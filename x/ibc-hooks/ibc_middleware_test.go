@@ -3,8 +3,9 @@ package ibc_hooks_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 	"testing"
+
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
 
@@ -149,7 +150,6 @@ func (suite *HooksTestSuite) makeMockPacket(receiver, memo string, prevSequence 
 		clienttypes.NewHeight(0, 100),
 		0,
 	)
-
 }
 
 func (suite *HooksTestSuite) receivePacket(receiver, memo string) []byte {

@@ -3,6 +3,7 @@ package ibc_hooks
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -51,7 +52,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	}
 
 	// The funds sent on this packet need to be transferred to the wasm hooks module address/
-	// For this, we override the ICS20 packet's Receiver (essencially hijacking the funds for the module)
+	// For this, we override the ICS20 packet's Receiver (essentially hijacking the funds for the module)
 	// and execute the underlying OnRecvPacket() call (which should eventually land on the transfer app's
 	// relay.go and send the sunds to the module.
 	//
