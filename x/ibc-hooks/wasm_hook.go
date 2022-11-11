@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,11 +25,6 @@ type WasmHooks struct {
 	ContractKeeper *wasmkeeper.PermissionedKeeper
 }
 
-func ProcessDenom(denom string) string {
-	// ToDo: This is a noop for now. Extract the denom from the ibc packet.
-	return denom
-}
-
 func NewWasmHooks(accountKeeper *authkeeper.AccountKeeper, contractKeeper *wasmkeeper.PermissionedKeeper) WasmHooks {
 	return WasmHooks{accountKeeper: accountKeeper, ContractKeeper: contractKeeper}
 }
@@ -38,9 +34,6 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 		// Not configured
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
-
-	// ToDo: is this the proper way to do this? Do we even need the account keeper or can we just use the data from genesis?
-	moduleAddr := h.accountKeeper.GetModuleAccount(ctx, ModuleName).GetAddress()
 
 	var data transfertypes.FungibleTokenPacketData
 	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
@@ -65,7 +58,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	// relay.go and send the sunds to the module.
 	//
 	// If that succeeds, we make the contract call
-	data.Receiver = moduleAddr.String()
+	data.Receiver = WasmHookModuleAccountAddr.String()
 	bz, err := json.Marshal(data)
 	if err != nil {
 		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf("cannot marshal the ICS20 packet: %s", err.Error()))
@@ -74,7 +67,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 
 	// Execute the receive
 	ack := im.App.OnRecvPacket(ctx, packet, relayer)
-	if !ack.Success() { // ToDO: Fix this with the proper ack handling
+	if !ack.Success() {
 		return ack
 	}
 
@@ -82,14 +75,14 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	if !ok {
 		// This should never happen, as it should've been caught in the underlaying call to OnRecvPacket,
 		// but returning here for completeness
-		return channeltypes.NewErrorAcknowledgement("Invalid packet data: Amount not an int")
+		return channeltypes.NewErrorAcknowledgement("Invalid packet data: Amount is not an int")
 	}
 
-	// The packet's denom is the denom in the sender chain. This needs to be converted to the local denom
-	denom := ProcessDenom(data.GetDenom())
+	// The packet's denom is the denom in the sender chain. This needs to be converted to the local denom.
+	denom := osmoutils.MustExtractDenomFromPacketOnRecv(packet)
 	funds := sdk.NewCoins(sdk.NewCoin(denom, amount))
 
-	result, err := h.ContractKeeper.Execute(ctx, contractAddr, moduleAddr, msgBytes, funds)
+	result, err := h.ContractKeeper.Execute(ctx, contractAddr, WasmHookModuleAccountAddr, msgBytes, funds)
 	if err != nil {
 		// ToDo: Add a test to make sure that if we fail here the tx fails and the funds are properly returned
 		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadExecutionMsg, err.Error()))
