@@ -19,8 +19,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-type Ibcmodule struct {
-}
+type Ibcmodule struct{}
 
 var (
 	_          module.AppModule      = AppModule{}
@@ -60,9 +59,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the mint module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	return
-}
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {}
 
 // GetTxCmd returns no root tx command for the mint module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
