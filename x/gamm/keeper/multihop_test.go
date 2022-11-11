@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
@@ -79,6 +80,9 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 				SwapFee: poolDefaultSwapFee,
 				ExitFee: sdk.NewDec(0),
 			})
+			//suite.App.PoolIncentivesKeeper.SetPoolGaugeId(suite.Ctx, 1, 1, 1)
+			// poolincentivestypes.DistrInfo
+			// suite.App.PoolIncentivesKeeper.SetDistrInfo()
 
 			// Calculate the chained spot price.
 			calcSpotPrice := func() sdk.Dec {

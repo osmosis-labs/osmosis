@@ -136,3 +136,34 @@ func (k Keeper) GetAllGauges(ctx sdk.Context) []incentivestypes.Gauge {
 	gauges := k.incentivesKeeper.GetGauges(ctx)
 	return gauges
 }
+
+func (k Keeper) GetAllIncentivizedPools(ctx sdk.Context) []types.IncentivizedPool {
+	fmt.Println("TEST1")
+	lockableDurations := k.GetLockableDurations(ctx)
+	fmt.Println("TEST2")
+	distrInfo := k.GetDistrInfo(ctx)
+	fmt.Println("TEST3")
+	// While there are exceptions, typically the number of incentivizedPools
+	// equals to the number of incentivized gauges / number of lockable durations.
+	incentivizedPools := make([]types.IncentivizedPool, 0, len(distrInfo.Records)/len(lockableDurations))
+	fmt.Println("TEST4")
+	for _, record := range distrInfo.Records {
+		fmt.Println("TEST5")
+		for _, lockableDuration := range lockableDurations {
+			fmt.Println("TEST6")
+			poolId, err := k.GetPoolIdFromGaugeId(ctx, record.GaugeId, lockableDuration)
+			if err == nil {
+				fmt.Println("TEST7")
+				incentivizedPool := types.IncentivizedPool{
+					PoolId:           poolId,
+					LockableDuration: lockableDuration,
+					GaugeId:          record.GaugeId,
+				}
+				fmt.Println("TEST8")
+				incentivizedPools = append(incentivizedPools, incentivizedPool)
+			}
+		}
+	}
+
+	return incentivizedPools
+}

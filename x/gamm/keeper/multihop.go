@@ -18,8 +18,16 @@ func (k Keeper) MultihopSwapExactAmountIn(
 ) (tokenOutAmount sdk.Int, err error) {
 	for i, route := range routes {
 		swapFeeMultiplier := sdk.OneDec()
+		incentivizedPools := k.poolIncentivesKeeper.GetAllIncentivizedPools(ctx)
+
 		if types.SwapAmountInRoutes(routes).IsOsmoRoutedMultihop() {
-			swapFeeMultiplier = types.MultihopSwapFeeMultiplierForOsmoPools.Clone()
+			// ensure the swap is occurring via an osmo incentivized pool to prevent abuse
+			for _, pool := range incentivizedPools {
+				if routes[0].PoolId == pool.PoolId {
+					swapFeeMultiplier = types.MultihopSwapFeeMultiplierForOsmoPools.Clone()
+					break
+				}
+			}
 		}
 
 		// To prevent the multihop swap from being interrupted prematurely, we keep

@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
 )
 

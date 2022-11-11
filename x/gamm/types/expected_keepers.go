@@ -4,6 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v12/x/pool-incentives/types"
 )
 
 // AccountKeeper defines the account contract that must be fulfilled when
@@ -40,4 +42,8 @@ type BankKeeper interface {
 // CommunityPoolKeeper defines the contract needed to be fulfilled for distribution keeper.
 type CommunityPoolKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
+}
+
+type PoolIncentivesKeeper interface {
+	GetAllIncentivizedPools(ctx sdk.Context) []poolincentivestypes.IncentivizedPool
 }
