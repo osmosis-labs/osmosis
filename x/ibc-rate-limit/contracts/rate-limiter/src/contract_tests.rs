@@ -172,7 +172,6 @@ fn asymetric_quotas() {
     );
 
     let res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
-    println!("{res:?}");
     let Attribute { key, value } = &res.attributes[4];
     assert_eq!(key, "weekly_used_out");
     assert_eq!(value, "120");
@@ -348,8 +347,12 @@ fn undo_send() {
         funds: 300_u32.into()
     );
     let undo_msg = SudoMsg::UndoSend {
-        packet: Packet::mock(format!("channel"), format!("denom"), 300_u32.into()),
-        local_denom: Some(format!("denom")),
+        packet: Packet::mock(
+            format!("channel"),
+            format!("channel"),
+            format!("denom"),
+            300_u32.into(),
+        ),
     };
 
     sudo(deps.as_mut(), mock_env(), send_msg.clone()).unwrap();
@@ -377,6 +380,20 @@ fn undo_send() {
 #[test]
 fn test_basic_message() {
     let json = r#"{"send_packet":{"packet":{"sequence":2,"source_port":"transfer","source_channel":"channel-0","destination_port":"transfer","destination_channel":"channel-0","data":{"denom":"stake","amount":"125000000000011250","sender":"osmo1dwtagd6xzl4eutwtyv6mewra627lkg3n3w26h6","receiver":"osmo1yvjkt8lnpxucjmspaj5ss4aa8562gx0a3rks8s"},"timeout_height":{"revision_height":100}}}}"#;
-    let parsed: SudoMsg = serde_json_wasm::from_str(json).unwrap();
-    println!("{parsed:?}");
+    let _parsed: SudoMsg = serde_json_wasm::from_str(json).unwrap();
+    //println!("{parsed:?}");
+}
+
+#[test]
+fn test_testnet_message() {
+    let json = r#"{"send_packet":{"packet":{"sequence":4,"source_port":"transfer","source_channel":"channel-0","destination_port":"transfer","destination_channel":"channel-1491","data":{"denom":"uosmo","amount":"100","sender":"osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks","receiver":"osmo1c584m4lq25h83yp6ag8hh4htjr92d954vklzja"},"timeout_height":{},"timeout_timestamp":1668024637477293371}}}"#;
+    let _parsed: SudoMsg = serde_json_wasm::from_str(json).unwrap();
+    //println!("{parsed:?}");
+}
+
+#[test]
+fn test_tokenfactory_message() {
+    let json = r#"{"send_packet":{"packet":{"sequence":4,"source_port":"transfer","source_channel":"channel-0","destination_port":"transfer","destination_channel":"channel-1491","data":{"denom":"transfer/channel-0/factory/osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj/czar","amount":"100000000000000000","sender":"osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks","receiver":"osmo1c584m4lq25h83yp6ag8hh4htjr92d954vklzja"},"timeout_height":{},"timeout_timestamp":1668024476848430980}}}"#;
+    let _parsed: SudoMsg = serde_json_wasm::from_str(json).unwrap();
+    //println!("{parsed:?}");
 }

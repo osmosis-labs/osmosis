@@ -182,21 +182,28 @@ func (server msgServer) ExtendLockup(goCtx context.Context, msg *types.MsgExtend
 func (server msgServer) ForceUnlock(goCtx context.Context, msg *types.MsgForceUnlock) (*types.MsgForceUnlockResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// check for chain parameter that the address is allowed to force unlock
-	forceUnlockAllowedAddresses := server.keeper.GetParams(ctx).ForceUnlockAllowedAddresses
-	found := false
-	for _, address := range forceUnlockAllowedAddresses {
-		if address == msg.Owner {
-			found = true
-		}
-	}
-	if !found {
-		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "Sender (%s) not allowed to force unlock", msg.Owner)
-	}
-
 	lock, err := server.keeper.GetLockByID(ctx, msg.ID)
 	if err != nil {
 		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	// check if message sender matches lock owner
+	if lock.Owner != msg.Owner {
+		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "Sender (%s) does not match lock owner (%s)", msg.Owner, lock.Owner)
+	}
+
+	// check for chain parameter that the address is allowed to force unlock
+	forceUnlockAllowedAddresses := server.keeper.GetParams(ctx).ForceUnlockAllowedAddresses
+	found := false
+	for _, addr := range forceUnlockAllowedAddresses {
+		// defense in depth, double checking the message owner and lock owner are both the same and is one of the allowed force unlock addresses
+		if addr == lock.Owner && addr == msg.Owner {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "Sender (%s) not allowed to force unlock", lock.Owner)
 	}
 
 	// check that given lock is not superfluid staked
