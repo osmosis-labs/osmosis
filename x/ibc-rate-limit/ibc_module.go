@@ -13,6 +13,7 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
+
 	"github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 )
 
@@ -144,14 +145,6 @@ func (im *IBCModule) OnRecvPacket(
 
 	// if this returns an Acknowledgement that isn't successful, all state changes are discarded
 	return im.app.OnRecvPacket(ctx, packet, relayer)
-}
-
-func isAckError(acknowledgement []byte) bool {
-	var ackErr channeltypes.Acknowledgement_Error
-	if err := json.Unmarshal(acknowledgement, &ackErr); err == nil && len(ackErr.Error) > 0 {
-		return true
-	}
-	return false
 }
 
 // OnAcknowledgementPacket implements the IBCModule interface
