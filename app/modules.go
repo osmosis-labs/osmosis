@@ -13,6 +13,8 @@ import (
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 
+	ibc_hooks "github.com/osmosis-labs/osmosis/v12/x/ibc-hooks"
+
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -74,6 +76,7 @@ import (
 var moduleAccountPermissions = map[string][]string{
 	authtypes.FeeCollectorName:               nil,
 	distrtypes.ModuleName:                    nil,
+	ibc_hooks.ModuleName:                     nil,
 	icatypes.ModuleName:                      nil,
 	minttypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
 	minttypes.DeveloperVestingModuleAcctName: nil,
@@ -142,6 +145,7 @@ func appModules(
 			app.EpochsKeeper,
 		),
 		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
+		ibc_hooks.NewAppModule(app.AccountKeeper),
 	}
 }
 
@@ -217,6 +221,8 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		authz.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
+		// ibc_hooks after auth keeper
+		ibc_hooks.ModuleName,
 	}
 }
 
