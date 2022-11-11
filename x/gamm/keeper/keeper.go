@@ -35,7 +35,7 @@ type Keeper struct {
 	poolIncentivesKeeper types.PoolIncentivesKeeper
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, communityPoolKeeper types.CommunityPoolKeeper, poolIncentivesKeeper types.PoolIncentivesKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, communityPoolKeeper types.CommunityPoolKeeper) Keeper {
 	// Ensure that the module account are set.
 	moduleAddr, perms := accountKeeper.GetModuleAddressAndPermissions(types.ModuleName)
 	if moduleAddr == nil {
@@ -55,10 +55,9 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtyp
 		cdc:        cdc,
 		paramSpace: paramSpace,
 		// keepers
-		accountKeeper:        accountKeeper,
-		bankKeeper:           bankKeeper,
-		communityPoolKeeper:  communityPoolKeeper,
-		poolIncentivesKeeper: poolIncentivesKeeper,
+		accountKeeper:       accountKeeper,
+		bankKeeper:          bankKeeper,
+		communityPoolKeeper: communityPoolKeeper,
 	}
 }
 
@@ -71,6 +70,10 @@ func (k *Keeper) SetHooks(gh types.GammHooks) *Keeper {
 	k.hooks = gh
 
 	return k
+}
+
+func (k *Keeper) SetPoolIncentivesKeeper(poolIncentivesKeeper types.PoolIncentivesKeeper) {
+	k.poolIncentivesKeeper = poolIncentivesKeeper
 }
 
 // GetParams returns the total set params.

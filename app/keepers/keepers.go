@@ -267,7 +267,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	gammKeeper := gammkeeper.NewKeeper(
 		appCodec, appKeepers.keys[gammtypes.StoreKey],
 		appKeepers.GetSubspace(gammtypes.ModuleName),
-		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.DistrKeeper, appKeepers.PoolIncentivesKeeper)
+		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.DistrKeeper)
 	appKeepers.GAMMKeeper = &gammKeeper
 
 	appKeepers.TwapKeeper = twap.NewKeeper(
@@ -332,6 +332,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GAMMKeeper,
 	)
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
+	appKeepers.GAMMKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
 
 	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
 		appKeepers.keys[tokenfactorytypes.StoreKey],

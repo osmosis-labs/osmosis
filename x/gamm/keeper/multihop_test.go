@@ -8,6 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v12/x/pool-incentives/types"
 )
 
 func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() {
@@ -80,7 +81,16 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 				SwapFee: poolDefaultSwapFee,
 				ExitFee: sdk.NewDec(0),
 			})
-			//suite.App.PoolIncentivesKeeper.SetPoolGaugeId(suite.Ctx, 1, 1, 1)
+
+			// if we expect a reduced fee to apply, we set the uosmo pool in DistrInfo to replicate it being a pool with internal incentives
+			if test.reducedFeeApplied {
+				test := poolincentivestypes.DistrInfo{
+					TotalWeight: sdk.NewInt(2),
+					Records:     []poolincentivestypes.DistrRecord{{GaugeId: 1, Weight: sdk.OneInt()}, {GaugeId: 4, Weight: sdk.OneInt()}},
+				}
+				suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, test)
+			}
+
 			// poolincentivestypes.DistrInfo
 			// suite.App.PoolIncentivesKeeper.SetDistrInfo()
 
@@ -232,6 +242,15 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 				SwapFee: poolDefaultSwapFee,
 				ExitFee: sdk.NewDec(0),
 			})
+
+			// if we expect a reduced fee to apply, we set the uosmo pool in DistrInfo to replicate it being a pool with internal incentives
+			if test.reducedFeeApplied {
+				test := poolincentivestypes.DistrInfo{
+					TotalWeight: sdk.NewInt(2),
+					Records:     []poolincentivestypes.DistrRecord{{GaugeId: 1, Weight: sdk.OneInt()}, {GaugeId: 4, Weight: sdk.OneInt()}},
+				}
+				suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, test)
+			}
 
 			// Calculate the chained spot price.
 			calcSpotPrice := func() sdk.Dec {

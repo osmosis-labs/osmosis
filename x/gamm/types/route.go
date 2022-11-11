@@ -9,7 +9,7 @@ import (
 type SwapAmountInRoutes []SwapAmountInRoute
 
 func (routes SwapAmountInRoutes) IsOsmoRoutedMultihop() bool {
-	return len(routes) == 2 && (routes[0].TokenOutDenom == appparams.BaseCoinUnit)
+	return len(routes) == 2 && (routes[0].TokenOutDenom == appparams.BaseCoinUnit) && (routes[0].PoolId != routes[1].PoolId)
 }
 
 func (routes SwapAmountInRoutes) Validate() error {
