@@ -176,6 +176,10 @@ func NewOsmosisApp(
 
 	wasmDir := filepath.Join(homePath, "wasm")
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
+
+	// Uncomment this for debugging contracts. In the future this could be made into a param passed by the tests
+	//wasmConfig.ContractDebugMode = true
+
 	if err != nil {
 		panic(fmt.Sprintf("error while reading wasm config: %s", err))
 	}

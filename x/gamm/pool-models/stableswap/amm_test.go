@@ -13,6 +13,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/osmomath"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/test_helpers"
+	types "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
 // CFMMTestCase defines a testcase for stableswap pools
@@ -877,34 +878,34 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 				sdk.NewInt64Coin("bar", 1),
 			),
 			poolAssets: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 10_000_000_000),
-				sdk.NewInt64Coin("bar", 10_000_000_000),
+				sdk.NewCoin("foo", types.StableswapMaxScaledAmtPerAsset),
+				sdk.NewCoin("bar", types.StableswapMaxScaledAmtPerAsset),
 			),
 			scalingFactors:  defaultTwoAssetScalingFactors,
 			swapFee:         sdk.ZeroDec(),
 			expNumShare:     sdk.ZeroInt(),
 			expTokensJoined: sdk.Coins{},
 			expPoolAssets: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 10_000_000_000),
-				sdk.NewInt64Coin("bar", 10_000_000_000),
+				sdk.NewCoin("foo", types.StableswapMaxScaledAmtPerAsset),
+				sdk.NewCoin("bar", types.StableswapMaxScaledAmtPerAsset),
 			),
 			expectPass: false,
 		},
 		"single-asset pool join exceeds hits max scaled asset amount": {
 			tokensIn: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 1),
+				sdk.NewInt64Coin("foo", 2),
 			),
 			poolAssets: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 10_000_000_000),
-				sdk.NewInt64Coin("bar", 10_000_000_000),
+				sdk.NewCoin("foo", types.StableswapMaxScaledAmtPerAsset),
+				sdk.NewCoin("bar", types.StableswapMaxScaledAmtPerAsset),
 			),
 			scalingFactors:  defaultTwoAssetScalingFactors,
 			swapFee:         sdk.ZeroDec(),
 			expNumShare:     sdk.ZeroInt(),
 			expTokensJoined: sdk.Coins{},
 			expPoolAssets: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 10_000_000_000),
-				sdk.NewInt64Coin("bar", 10_000_000_000),
+				sdk.NewCoin("foo", types.StableswapMaxScaledAmtPerAsset),
+				sdk.NewCoin("bar", types.StableswapMaxScaledAmtPerAsset),
 			),
 			expectPass: false,
 		},
@@ -914,19 +915,19 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 				sdk.NewInt64Coin("bar", 1),
 			),
 			poolAssets: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 9_999_999_999),
-				sdk.NewInt64Coin("bar", 9_999_999_999),
+				sdk.NewCoin("foo", types.StableswapMaxScaledAmtPerAsset.Sub(sdk.NewInt(1))),
+				sdk.NewCoin("bar", types.StableswapMaxScaledAmtPerAsset.Sub(sdk.NewInt(1))),
 			),
 			scalingFactors: defaultTwoAssetScalingFactors,
 			swapFee:        sdk.ZeroDec(),
-			expNumShare:    sdk.NewInt(10000000000),
+			expNumShare:    types.InitPoolSharesSupply.Quo(types.StableswapMaxScaledAmtPerAsset),
 			expTokensJoined: sdk.NewCoins(
 				sdk.NewInt64Coin("foo", 1),
 				sdk.NewInt64Coin("bar", 1),
 			),
 			expPoolAssets: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 10_000_000_000),
-				sdk.NewInt64Coin("bar", 10_000_000_000),
+				sdk.NewCoin("foo", types.StableswapMaxScaledAmtPerAsset),
+				sdk.NewCoin("bar", types.StableswapMaxScaledAmtPerAsset),
 			),
 			expectPass: true,
 		},

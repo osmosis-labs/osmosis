@@ -1,11 +1,11 @@
 syntax = "proto3";
-package osmosis.validatorpreference.v1beta1;
+package osmosis.valsetpref.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "osmosis/validator-preference/v1beta1/state.proto";
+import "osmosis/valset-pref/v1beta1/state.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v12/x/validator-preference/client/queryproto";
+option go_package = "github.com/osmosis-labs/osmosis/v12/x/valset-pref/client/queryproto";
 option (gogoproto.goproto_getters_all) = false;
 
 // Query defines the gRPC querier service.
@@ -13,15 +13,14 @@ service Query {
   // Returns the list of ValidatorPreferences for the user.
   rpc UserValidatorPreferences(QueryUserValidatorPreferences)
       returns (QueryUserValidatorPreferenceResponse) {
-    option (google.api.http).get =
-        "/osmosis/validator-preference/v1beta1/{user}";
+    option (google.api.http).get = "/osmosis/valset-pref/v1beta1/{address}";
   }
 }
 
 // Request type for UserValidatorPreferences.
 message QueryUserValidatorPreferences {
   // user account address
-  string user = 1;
+  string address = 1;
 }
 
 // Response type the QueryUserValidatorPreferences query request
