@@ -595,7 +595,7 @@ func swapAmountInRoutes(fs *flag.FlagSet) ([]types.SwapAmountInRoute, error) {
 		return nil, err
 	}
 
-	if len(swapRoutePoolIds) != len(swapRouteDenoms) {
+	if len(swapRoutePoolIdsArray) != len(swapRouteDenomsArray) {
 		return nil, errors.New("swap route pool ids and denoms mismatch")
 	}
 
