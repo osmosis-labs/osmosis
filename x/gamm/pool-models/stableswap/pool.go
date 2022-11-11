@@ -418,6 +418,10 @@ func validateScalingFactors(scalingFactors []uint64, numAssets int) error {
 
 // assumes liquidity is all pool liquidity, in correct sorted order
 func validatePoolLiquidity(liquidity sdk.Coins, scalingFactors []uint64) error {
+	liquidityCopy := make(sdk.Coins, len(liquidity))
+	copy(liquidityCopy, liquidity)
+	liquidityCopy.Sort()
+
 	if len(liquidity) < types.MinPoolAssets {
 		return types.ErrTooFewPoolAssets
 	} else if len(liquidity) > types.MaxPoolAssets {
@@ -425,6 +429,11 @@ func validatePoolLiquidity(liquidity sdk.Coins, scalingFactors []uint64) error {
 	}
 
 	for i, asset := range liquidity {
+		if asset != liquidityCopy[i] {
+			return fmt.Errorf(`unsorted initial pool liquidity: %s. 
+			Please sort and make sure scaling factor order matches initial liquidity coin order`, liquidity)
+		}
+
 		scaledAmount := asset.Amount.Quo(sdk.NewInt(int64(scalingFactors[i])))
 		if scaledAmount.GT(types.StableswapMaxScaledAmtPerAsset) {
 			return types.ErrHitMaxScaledAssets
