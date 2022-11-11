@@ -64,6 +64,3 @@ message ArithmeticTwapToNowResponse {
     (gogoproto.nullable) = false
   ];
 }
-
-message ParamsRequest {}
-message ParamsResponse { Params params = 1 [ (gogoproto.nullable) = false ]; }
