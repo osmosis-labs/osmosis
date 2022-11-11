@@ -1011,6 +1011,102 @@ func (m *QuerySpotPriceRequest) GetQuoteAssetDenom() string {
 	return ""
 }
 
+type QueryPoolsWithFilterRequest struct {
+	MinLiquidity github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=min_liquidity,json=minLiquidity,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"min_liquidity" yaml:"min_liquidity"`
+	PoolType     string                                   `protobuf:"bytes,2,opt,name=pool_type,json=poolType,proto3" json:"pool_type,omitempty"`
+}
+
+func (m *QueryPoolsWithFilterRequest) Reset()         { *m = QueryPoolsWithFilterRequest{} }
+func (m *QueryPoolsWithFilterRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryPoolsWithFilterRequest) ProtoMessage()    {}
+func (*QueryPoolsWithFilterRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d9a717df9ca609ef, []int{19}
+}
+func (m *QueryPoolsWithFilterRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryPoolsWithFilterRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryPoolsWithFilterRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryPoolsWithFilterRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryPoolsWithFilterRequest.Merge(m, src)
+}
+func (m *QueryPoolsWithFilterRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryPoolsWithFilterRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryPoolsWithFilterRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryPoolsWithFilterRequest proto.InternalMessageInfo
+
+func (m *QueryPoolsWithFilterRequest) GetMinLiquidity() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.MinLiquidity
+	}
+	return nil
+}
+
+func (m *QueryPoolsWithFilterRequest) GetPoolType() string {
+	if m != nil {
+		return m.PoolType
+	}
+	return ""
+}
+
+type QueryPoolsWithFilterResponse struct {
+	Pools []*types.Any `protobuf:"bytes,1,rep,name=pools,proto3" json:"pools,omitempty"`
+}
+
+func (m *QueryPoolsWithFilterResponse) Reset()         { *m = QueryPoolsWithFilterResponse{} }
+func (m *QueryPoolsWithFilterResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryPoolsWithFilterResponse) ProtoMessage()    {}
+func (*QueryPoolsWithFilterResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d9a717df9ca609ef, []int{20}
+}
+func (m *QueryPoolsWithFilterResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryPoolsWithFilterResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryPoolsWithFilterResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryPoolsWithFilterResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryPoolsWithFilterResponse.Merge(m, src)
+}
+func (m *QueryPoolsWithFilterResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryPoolsWithFilterResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryPoolsWithFilterResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryPoolsWithFilterResponse proto.InternalMessageInfo
+
+func (m *QueryPoolsWithFilterResponse) GetPools() []*types.Any {
+	if m != nil {
+		return m.Pools
+	}
+	return nil
+}
+
 // QuerySpotPriceResponse defines the gRPC response structure for a SpotPrice
 // query.
 type QuerySpotPriceResponse struct {
@@ -1372,6 +1468,8 @@ func init() {
 	proto.RegisterType((*QueryCalcJoinPoolNoSwapSharesRequest)(nil), "osmosis.gamm.v1beta1.QueryCalcJoinPoolNoSwapSharesRequest")
 	proto.RegisterType((*QueryCalcJoinPoolNoSwapSharesResponse)(nil), "osmosis.gamm.v1beta1.QueryCalcJoinPoolNoSwapSharesResponse")
 	proto.RegisterType((*QuerySpotPriceRequest)(nil), "osmosis.gamm.v1beta1.QuerySpotPriceRequest")
+	proto.RegisterType((*QueryPoolsWithFilterRequest)(nil), "osmosis.gamm.v1beta1.QueryPoolsWithFilterRequest")
+	proto.RegisterType((*QueryPoolsWithFilterResponse)(nil), "osmosis.gamm.v1beta1.QueryPoolsWithFilterResponse")
 	proto.RegisterType((*QuerySpotPriceResponse)(nil), "osmosis.gamm.v1beta1.QuerySpotPriceResponse")
 	proto.RegisterType((*QuerySwapExactAmountInRequest)(nil), "osmosis.gamm.v1beta1.QuerySwapExactAmountInRequest")
 	proto.RegisterType((*QuerySwapExactAmountInResponse)(nil), "osmosis.gamm.v1beta1.QuerySwapExactAmountInResponse")
@@ -1507,6 +1605,9 @@ type QueryClient interface {
 	Pools(ctx context.Context, in *QueryPoolsRequest, opts ...grpc.CallOption) (*QueryPoolsResponse, error)
 	NumPools(ctx context.Context, in *QueryNumPoolsRequest, opts ...grpc.CallOption) (*QueryNumPoolsResponse, error)
 	TotalLiquidity(ctx context.Context, in *QueryTotalLiquidityRequest, opts ...grpc.CallOption) (*QueryTotalLiquidityResponse, error)
+	// PoolsWithFilter allows you to query specific pools with requested
+	// parameters
+	PoolsWithFilter(ctx context.Context, in *QueryPoolsWithFilterRequest, opts ...grpc.CallOption) (*QueryPoolsWithFilterResponse, error)
 	// Per Pool gRPC Endpoints
 	Pool(ctx context.Context, in *QueryPoolRequest, opts ...grpc.CallOption) (*QueryPoolResponse, error)
 	// PoolType returns the type of the pool.
@@ -1558,6 +1659,15 @@ func (c *queryClient) NumPools(ctx context.Context, in *QueryNumPoolsRequest, op
 func (c *queryClient) TotalLiquidity(ctx context.Context, in *QueryTotalLiquidityRequest, opts ...grpc.CallOption) (*QueryTotalLiquidityResponse, error) {
 	out := new(QueryTotalLiquidityResponse)
 	err := c.cc.Invoke(ctx, "/osmosis.gamm.v1beta1.Query/TotalLiquidity", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) PoolsWithFilter(ctx context.Context, in *QueryPoolsWithFilterRequest, opts ...grpc.CallOption) (*QueryPoolsWithFilterResponse, error) {
+	out := new(QueryPoolsWithFilterResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.gamm.v1beta1.Query/PoolsWithFilter", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1668,6 +1778,9 @@ type QueryServer interface {
 	Pools(context.Context, *QueryPoolsRequest) (*QueryPoolsResponse, error)
 	NumPools(context.Context, *QueryNumPoolsRequest) (*QueryNumPoolsResponse, error)
 	TotalLiquidity(context.Context, *QueryTotalLiquidityRequest) (*QueryTotalLiquidityResponse, error)
+	// PoolsWithFilter allows you to query specific pools with requested
+	// parameters
+	PoolsWithFilter(context.Context, *QueryPoolsWithFilterRequest) (*QueryPoolsWithFilterResponse, error)
 	// Per Pool gRPC Endpoints
 	Pool(context.Context, *QueryPoolRequest) (*QueryPoolResponse, error)
 	// PoolType returns the type of the pool.
@@ -1702,6 +1815,9 @@ func (*UnimplementedQueryServer) NumPools(ctx context.Context, req *QueryNumPool
 }
 func (*UnimplementedQueryServer) TotalLiquidity(ctx context.Context, req *QueryTotalLiquidityRequest) (*QueryTotalLiquidityResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TotalLiquidity not implemented")
+}
+func (*UnimplementedQueryServer) PoolsWithFilter(ctx context.Context, req *QueryPoolsWithFilterRequest) (*QueryPoolsWithFilterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PoolsWithFilter not implemented")
 }
 func (*UnimplementedQueryServer) Pool(ctx context.Context, req *QueryPoolRequest) (*QueryPoolResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Pool not implemented")
@@ -1791,6 +1907,24 @@ func _Query_TotalLiquidity_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).TotalLiquidity(ctx, req.(*QueryTotalLiquidityRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_PoolsWithFilter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryPoolsWithFilterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).PoolsWithFilter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.gamm.v1beta1.Query/PoolsWithFilter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).PoolsWithFilter(ctx, req.(*QueryPoolsWithFilterRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2008,6 +2142,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TotalLiquidity",
 			Handler:    _Query_TotalLiquidity_Handler,
+		},
+		{
+			MethodName: "PoolsWithFilter",
+			Handler:    _Query_PoolsWithFilter_Handler,
 		},
 		{
 			MethodName: "Pool",
@@ -2798,6 +2936,87 @@ func (m *QuerySpotPriceRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryPoolsWithFilterRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryPoolsWithFilterRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryPoolsWithFilterRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.PoolType) > 0 {
+		i -= len(m.PoolType)
+		copy(dAtA[i:], m.PoolType)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.PoolType)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.MinLiquidity) > 0 {
+		for iNdEx := len(m.MinLiquidity) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.MinLiquidity[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryPoolsWithFilterResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryPoolsWithFilterResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryPoolsWithFilterResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Pools) > 0 {
+		for iNdEx := len(m.Pools) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Pools[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *QuerySpotPriceResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -3370,6 +3589,40 @@ func (m *QuerySpotPriceRequest) Size() (n int) {
 	l = len(m.QuoteAssetDenom)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryPoolsWithFilterRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.MinLiquidity) > 0 {
+		for _, e := range m.MinLiquidity {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	l = len(m.PoolType)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryPoolsWithFilterResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Pools) > 0 {
+		for _, e := range m.Pools {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
 	}
 	return n
 }
@@ -5322,6 +5575,206 @@ func (m *QuerySpotPriceRequest) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.QuoteAssetDenom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryPoolsWithFilterRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryPoolsWithFilterRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryPoolsWithFilterRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MinLiquidity", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MinLiquidity = append(m.MinLiquidity, types1.Coin{})
+			if err := m.MinLiquidity[len(m.MinLiquidity)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolType", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PoolType = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryPoolsWithFilterResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryPoolsWithFilterResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryPoolsWithFilterResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pools", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Pools = append(m.Pools, &types.Any{})
+			if err := m.Pools[len(m.Pools)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

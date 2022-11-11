@@ -15,6 +15,7 @@ import (
 
 	epochtypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	gammv2types "github.com/osmosis-labs/osmosis/v12/x/gamm/v2types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v12/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v12/x/mint/types"
@@ -22,6 +23,7 @@ import (
 	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v12/x/tokenfactory/types"
 	twapquerytypes "github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
+	twapv2querytypes "github.com/osmosis-labs/osmosis/v12/x/twap/client/v2queryproto"
 	txfeestypes "github.com/osmosis-labs/osmosis/v12/x/txfees/types"
 )
 
@@ -81,6 +83,7 @@ func init() {
 	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/CalcJoinPoolShares", &gammtypes.QueryCalcJoinPoolSharesResponse{})
 	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/CalcExitPoolCoinsFromShares", &gammtypes.QueryCalcExitPoolCoinsFromSharesResponse{})
 	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/CalcJoinPoolNoSwapShares", &gammtypes.QueryCalcJoinPoolNoSwapSharesResponse{})
+	setWhitelistedQuery("/osmosis.gamm.v2.Query/SpotPrice", &gammv2types.QuerySpotPriceResponse{})
 
 	// incentives
 	setWhitelistedQuery("/osmosis.incentives.Query/ModuleToDistributeCoins", &incentivestypes.ModuleToDistributeCoinsResponse{})
@@ -118,8 +121,8 @@ func init() {
 	// Does not include denoms_from_creator, TBD if this is the index we want contracts to use instead of admin
 
 	// twap
-	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/ArithmeticTwap", &twapquerytypes.ArithmeticTwapResponse{})
-	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/ArithmeticTwapToNow", &twapquerytypes.ArithmeticTwapToNowResponse{})
+	setWhitelistedQuery("/osmosis.twap.v2.Query/ArithmeticTwap", &twapv2querytypes.ArithmeticTwapResponse{})
+	setWhitelistedQuery("/osmosis.twap.v2.Query/ArithmeticTwapToNow", &twapv2querytypes.ArithmeticTwapToNowResponse{})
 	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/Params", &twapquerytypes.ParamsResponse{})
 }
 

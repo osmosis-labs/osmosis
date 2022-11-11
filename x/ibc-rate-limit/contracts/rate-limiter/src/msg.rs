@@ -1,7 +1,10 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Addr, Uint256};
+use cosmwasm_std::Addr;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+#[cfg(test)]
+use cosmwasm_std::Uint256;
 
 use crate::packet::Packet;
 
@@ -85,17 +88,16 @@ pub enum QueryMsg {
 pub enum SudoMsg {
     SendPacket {
         packet: Packet,
-        local_denom: Option<String>,
-        channel_value_hint: Option<Uint256>,
+        #[cfg(test)]
+        channel_value_mock: Option<Uint256>,
     },
     RecvPacket {
         packet: Packet,
-        local_denom: Option<String>,
-        channel_value_hint: Option<Uint256>,
+        #[cfg(test)]
+        channel_value_mock: Option<Uint256>,
     },
     UndoSend {
         packet: Packet,
-        local_denom: Option<String>,
     },
 }
 
