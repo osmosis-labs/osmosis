@@ -44,10 +44,11 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
 // RegisterInterfaces registers the module's interface types.
 func (b AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
 
-// DefaultGenesis returns default genesis state as raw bytes for the mint
+// DefaultGenesis returns default genesis state as raw bytes for the
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return json.RawMessage{}
+	emptyString := "{}"
+	return []byte(emptyString)
 }
 
 // ValidateGenesis performs genesis state validation for the mint module.
