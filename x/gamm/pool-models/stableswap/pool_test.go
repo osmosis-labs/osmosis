@@ -991,3 +991,80 @@ func TestExitPool(t *testing.T) {
 		})
 	}
 }
+
+func TestValidatePoolLiquidity(t *testing.T) {
+	const (
+		a = "aaa"
+		b = "bbb"
+		c = "ccc"
+		d = "ddd"
+	)
+
+	var (
+		ten = sdk.NewInt(10)
+
+		coinA = sdk.NewCoin(a, ten)
+		coinB = sdk.NewCoin(b, ten)
+		coinC = sdk.NewCoin(c, ten)
+		coinD = sdk.NewCoin(d, ten)
+	)
+
+	tests := map[string]struct {
+		liquidity      sdk.Coins
+		scalingFactors []uint64
+		expectError    error
+	}{
+		"sorted": {
+			liquidity: sdk.Coins{
+				coinA,
+				coinB,
+				coinC,
+				coinD,
+			},
+			scalingFactors: []uint64{10, 10, 10, 10},
+		},
+		"unsorted - error": {
+			liquidity: sdk.Coins{
+				coinD,
+				coinA,
+				coinC,
+				coinB,
+			},
+			scalingFactors: []uint64{10, 10, 10, 10},
+			expectError: unsortedPoolLiqError{ActualLiquidity: sdk.Coins{
+				coinD,
+				coinA,
+				coinC,
+				coinB,
+			}},
+		},
+		"denoms don't match scaling factors": {
+			liquidity: sdk.Coins{
+				coinA,
+				coinB,
+				coinC,
+				coinD,
+			},
+			scalingFactors: []uint64{10, 10},
+			expectError: liquidityAndScalingFactorCountMismatchError{
+				LiquidityCount:     4,
+				ScalingFactorCount: 2,
+			},
+		},
+		// TODO: cover remaining edge cases by referring to the function implementation.
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+
+			err := validatePoolLiquidity(tc.liquidity, tc.scalingFactors)
+
+			if tc.expectError != nil {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+		})
+	}
+}
