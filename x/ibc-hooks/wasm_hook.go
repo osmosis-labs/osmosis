@@ -3,7 +3,6 @@ package ibc_hooks
 import (
 	"encoding/json"
 	"fmt"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -21,12 +20,11 @@ type ContractAck struct {
 }
 
 type WasmHooks struct {
-	accountKeeper  *authkeeper.AccountKeeper
 	ContractKeeper *wasmkeeper.PermissionedKeeper
 }
 
-func NewWasmHooks(accountKeeper *authkeeper.AccountKeeper, contractKeeper *wasmkeeper.PermissionedKeeper) WasmHooks {
-	return WasmHooks{accountKeeper: accountKeeper, ContractKeeper: contractKeeper}
+func NewWasmHooks(contractKeeper *wasmkeeper.PermissionedKeeper) WasmHooks {
+	return WasmHooks{ContractKeeper: contractKeeper}
 }
 
 func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
