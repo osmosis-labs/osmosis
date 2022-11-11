@@ -17,6 +17,7 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
+
 	osmosisibctesting "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/testutil"
 
 	"github.com/osmosis-labs/osmosis/v12/x/ibc-hooks/testutils"
@@ -262,12 +263,14 @@ func (suite *HooksTestSuite) TestPacketsThatShouldBeSkipped() {
 		expPassthrough bool
 	}{
 		{"", true},
-		{"{01]", false}, // bad json
+		{"{01]", true}, // bad json
 		{"{}", true},
 		{`{"something": ""}`, true},
-		{`{"wasm": "test"}`, true},
-		{`{"wasm": []`, false},
-		{`{"wasm": {}`, false},
+		{`{"wasm": "test"}`, false},
+		{`{"wasm": []`, true}, // invalid top level JSON
+		{`{"wasm": {}`, true}, // invalid top level JSON
+		{`{"wasm": []}`, false},
+		{`{"wasm": {}}`, false},
 		{`{"wasm": {"contract": "something"}}`, false},
 		{`{"wasm": {"contract": "osmo1clpqr4nrk4khgkxj78fcwwh6dl3uw4epasmvnj"}}`, false},
 		{`{"wasm": {"msg": "something"}}`, false},
@@ -285,9 +288,9 @@ func (suite *HooksTestSuite) TestPacketsThatShouldBeSkipped() {
 		err := json.Unmarshal(ackBytes, &ack)
 		suite.Require().NoError(err)
 		if tc.expPassthrough {
-			suite.Require().Equal("AQ==", ack["result"])
+			suite.Require().Equal("AQ==", ack["result"], tc.memo)
 		} else {
-			suite.Require().Contains(ackStr, "error")
+			suite.Require().Contains(ackStr, "error", tc.memo)
 		}
 		sequence += 1
 	}

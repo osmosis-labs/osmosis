@@ -42,12 +42,12 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	}
 
 	// Validate the memo
-	shouldBreak, errStr, contractAddr, msgBytes := ValidateMemo(data.GetMemo(), data.Receiver)
-	if shouldBreak {
+	isWasmRouted, err, contractAddr, msgBytes := ValidateAndParseMemo(data.GetMemo(), data.Receiver)
+	if !isWasmRouted {
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
-	if errStr != "" {
-		return channeltypes.NewErrorAcknowledgement(errStr)
+	if err != nil {
+		return channeltypes.NewErrorAcknowledgement(err.Error())
 	}
 	if msgBytes == nil || contractAddr == nil { // This should never happen
 		return channeltypes.NewErrorAcknowledgement("error in wasmhook message validation")
@@ -107,67 +107,79 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	return channeltypes.NewResultAcknowledgement(bz)
 }
 
-func ValidateMemo(memo string, receiver string) (shouldBreak bool, errStr string, contractAddr sdk.AccAddress, msgBytes []byte) {
+func isMemoWasmRouted(memo string) (isWasmRouted bool, metadata map[string]interface{}) {
+	metadata = make(map[string]interface{})
+
 	// If there is no memo, the packet was either sent with an earlier version of IBC, or the memo was
 	// intentionally left blank. Nothing to do here. Ignore the packet and pass it down the stack.
 	if len(memo) == 0 {
-		return true, "", nil, nil
+		return false, metadata
 	}
 
 	// the metadata must be a valid JSON object
-	var metadata map[string]interface{}
 	err := json.Unmarshal([]byte(memo), &metadata)
 	if err != nil {
-		return false, fmt.Sprintf(types.ErrBadPacketMetadataMsg, metadata, err.Error()), nil, nil
+		return false, metadata
 	}
 
-	// If the key "wasm"  doesn't exist, there's nothing to do on this hook. Continue by passing the packet
+	// If the key "wasm" doesn't exist, there's nothing to do on this hook. Continue by passing the packet
 	// down the stack
-	wasmRaw, ok := metadata["wasm"]
+	_, ok := metadata["wasm"]
 	if !ok {
-		return true, "", nil, nil
+		return false, metadata
 	}
+
+	return true, metadata
+}
+
+func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, err error, contractAddr sdk.AccAddress, msgBytes []byte) {
+	isWasmRouted, metadata := isMemoWasmRouted(memo)
+	if !isWasmRouted {
+		return isWasmRouted, nil, sdk.AccAddress{}, nil
+	}
+
+	wasmRaw := metadata["wasm"]
 
 	// Make sure the wasm key is a map. If it isn't, ignore this packet
 	wasm, ok := wasmRaw.(map[string]interface{})
 	if !ok {
-		return true, "", nil, nil
+		return isWasmRouted, fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, "wasm metadata is not a valid JSON map object"), sdk.AccAddress{}, nil
 	}
 
 	// Get the contract
 	contract, ok := wasm["contract"].(string)
 	if !ok {
 		// The tokens will be returned
-		return false, fmt.Sprintf(types.ErrBadMetadataFormatMsg, memo, `Could not find key wasm["contract"]`), nil, nil
+		return isWasmRouted, fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `Could not find key wasm["contract"]`), nil, nil
 	}
 
 	contractAddr, err = sdk.AccAddressFromBech32(contract)
 	if err != nil {
-		return false, fmt.Sprintf(types.ErrBadMetadataFormatMsg, memo, `wasm["contract"] is not a valid bech32 address`), nil, nil
+		return isWasmRouted, fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `wasm["contract"] is not a valid bech32 address`), nil, nil
 	}
 
 	// The contract and the receiver should be the same for the packet to be valid
 	if contract != receiver {
-		return false, fmt.Sprintf(types.ErrBadMetadataFormatMsg, memo, `wasm["contract"] should be the same as the receiver of the packet`), nil, nil
+		return isWasmRouted, fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `wasm["contract"] should be the same as the receiver of the packet`), nil, nil
 	}
 
 	// Ensure the message key is provided
 	if wasm["msg"] == nil {
-		return false, fmt.Sprintf(types.ErrBadMetadataFormatMsg, memo, `Could not find key wasm["msg"]`), nil, nil
+		return isWasmRouted, fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `Could not find key wasm["msg"]`), nil, nil
 	}
 
 	// Make sure the msg key is a map. If it isn't, return an error
 	_, ok = wasm["msg"].(map[string]interface{})
 	if !ok {
-		return false, fmt.Sprintf(types.ErrBadMetadataFormatMsg, memo, `wasm["msg"] is not an object`), nil, nil
+		return isWasmRouted, fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `wasm["msg"] is not a map object`), nil, nil
 	}
 
 	// Get the message string by serializing the map
 	msgBytes, err = json.Marshal(wasm["msg"])
 	if err != nil {
 		// The tokens will be returned
-		return false, fmt.Sprintf(types.ErrBadMetadataFormatMsg, memo, err.Error()), nil, nil
+		return isWasmRouted, fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, err.Error()), nil, nil
 	}
 
-	return false, "", contractAddr, msgBytes
+	return isWasmRouted, nil, contractAddr, msgBytes
 }
