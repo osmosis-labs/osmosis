@@ -50,18 +50,24 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf("cannot unmarshal sent packet data: %s", err.Error()))
 	}
 
+	// If there is no memo, the packet was either sent with an earlier version of IBC, or the memo was
+	// intentionally left blank. Nothing to do here. Ignore the packet and pass it down the stack.
 	memo := data.GetMemo()
 	if len(memo) == 0 {
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
 
+	// Start of validation of the memo for this hook
+
+	// the metadata must be a valid JSON object
 	var metadata map[string]interface{}
-	err := json.Unmarshal([]byte(memo), &metadata) // ToDo: Be more flexible here? maybe just continue on invalid metadata
+	err := json.Unmarshal([]byte(memo), &metadata)
 	if err != nil {
 		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadPacketMetadataMsg, metadata, err.Error()))
 	}
 
-	// Check for the wasm key. If it doesn't exist. We continue.
+	// If the key "wasm"  doesn't exist, there's nothing to do on this hook. Continue by passing the packet
+	// down the stack
 	wasmRaw, ok := metadata["wasm"]
 	if !ok {
 		return im.App.OnRecvPacket(ctx, packet, relayer)
@@ -80,12 +86,24 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadMetadataFormatMsg, memo, `Could not find key "contract"`))
 	}
 
-	// Get the message
-	msg, err := json.Marshal(wasm["execute"])
+	// Ensure the message key is provided
+	if wasm["msg"] == nil {
+		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadMetadataFormatMsg, memo, `Could not find key "msg"`))
+	}
+
+	// Make sure the msg key is a map. If it isn't, return an error
+	_, ok = wasm["msg"].(map[string]interface{})
+	if !ok {
+		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadMetadataFormatMsg, memo, `wasm["msg"] is not an object`))
+	}
+
+	// Get the message string by serializing the map
+	msg, err := json.Marshal(wasm["msg"])
 	if err != nil {
 		// The tokens will be returned
 		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadMetadataFormatMsg, memo, err.Error()))
 	}
+	// End of validation of the memo for this hook
 
 	// Execute the receive
 	ack := im.App.OnRecvPacket(ctx, packet, relayer)

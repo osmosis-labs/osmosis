@@ -15,7 +15,6 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
-	ibcmock "github.com/cosmos/ibc-go/v3/testing/mock"
 	osmosisibctesting "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/testutil"
 
 	"github.com/osmosis-labs/osmosis/v12/x/ibc-hooks/testutils"
@@ -48,19 +47,6 @@ func (suite *HooksTestSuite) SetupTest() {
 
 func TestIBCHooksTestSuite(t *testing.T) {
 	suite.Run(t, new(HooksTestSuite))
-}
-
-func (suite *HooksTestSuite) CreateMockPacket() channeltypes.Packet {
-	return channeltypes.NewPacket(
-		ibcmock.MockPacketData,
-		suite.chainA.SenderAccount.GetSequence(),
-		suite.path.EndpointA.ChannelConfig.PortID,
-		suite.path.EndpointA.ChannelID,
-		suite.path.EndpointB.ChannelConfig.PortID,
-		suite.path.EndpointB.ChannelID,
-		clienttypes.NewHeight(0, 100),
-		0,
-	)
 }
 
 // ToDo: Move this to osmosistesting to avoid repetition
@@ -144,6 +130,10 @@ func (suite *HooksTestSuite) TestOnRecvPacketHooks() {
 }
 
 func (suite *HooksTestSuite) receivePacket(receiver, memo string) []byte {
+	return suite.receivePacketWithSequence(receiver, memo, 0)
+}
+
+func (suite *HooksTestSuite) receivePacketWithSequence(receiver, memo string, prevSequence uint64) []byte {
 	channelCap := suite.chainB.GetChannelCapability(
 		suite.path.EndpointB.ChannelConfig.PortID,
 		suite.path.EndpointB.ChannelID)
@@ -157,7 +147,7 @@ func (suite *HooksTestSuite) receivePacket(receiver, memo string) []byte {
 
 	packet := channeltypes.NewPacket(
 		packetData.GetBytes(),
-		1,
+		prevSequence+1,
 		suite.path.EndpointB.ChannelConfig.PortID,
 		suite.path.EndpointB.ChannelID,
 		suite.path.EndpointA.ChannelConfig.PortID,
@@ -189,24 +179,12 @@ func (suite *HooksTestSuite) receivePacket(receiver, memo string) []byte {
 	return ack
 }
 
-func (suite *HooksTestSuite) TestRecvTransferWithBadMetadata() {
-	ackBytes := suite.receivePacket(suite.chainB.SenderAccount.GetAddress().String(), `{"wasm": {"execute": "test"}}`)
-	ackStr := string(ackBytes)
-	fmt.Println(ackStr)
-	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
-	err := json.Unmarshal(ackBytes, &ack)
-	suite.Require().NoError(err)
-	suite.Require().Contains(ackStr, "error")
-	suite.Require().Contains(ackStr, "contract")
-	fmt.Println(ack)
-}
-
 func (suite *HooksTestSuite) TestRecvTransferWithMetadata() {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/echo.wasm")
 	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}")
 
-	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"wasm": {"contract": "%s", "execute": {"echo": {"msg": "test"} } } }`, addr))
+	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"echo": {"msg": "test"} } } }`, addr))
 	ackStr := string(ackBytes)
 	fmt.Println(ackStr)
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
@@ -214,4 +192,40 @@ func (suite *HooksTestSuite) TestRecvTransferWithMetadata() {
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 	suite.Require().Equal(ack["result"], "eyJjb250cmFjdF9yZXN1bHQiOiJkR2hwY3lCemFHOTFiR1FnWldOb2J3PT0iLCJpYmNfYWNrIjoiZXlKeVpYTjFiSFFpT2lKQlVUMDlJbjA9In0=")
+}
+
+func (suite *HooksTestSuite) TestPacketsThatShouldBeSkipped() {
+	var sequence uint64
+
+	testCases := []struct {
+		memo           string
+		expPassthrough bool
+	}{
+		{"", true},
+		{"{01]", false}, // bad json
+		{"{}", true},
+		{`{"something": ""}`, true},
+		{`{"wasm": "test"}`, true},
+		{`{"wasm": []`, false},
+		{`{"wasm": {}`, false},
+		{`{"wasm": {"contract": "something"}}`, false},
+		{`{"wasm": {"contract": "osmo1clpqr4nrk4khgkxj78fcwwh6dl3uw4epasmvnj"}}`, false},
+		{`{"wasm": {"msg": "something"}}`, false},
+		{`{"wasm": {"contract": "osmo1clpqr4nrk4khgkxj78fcwwh6dl3uw4epasmvnj", "msg": 1}}`, false},
+	}
+
+	for _, tc := range testCases {
+		ackBytes := suite.receivePacketWithSequence(suite.chainB.SenderAccount.GetAddress().String(), tc.memo, sequence)
+		ackStr := string(ackBytes)
+		fmt.Println(ackStr)
+		var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
+		err := json.Unmarshal(ackBytes, &ack)
+		suite.Require().NoError(err)
+		if tc.expPassthrough {
+			suite.Require().Equal("AQ==", ack["result"])
+		} else {
+			suite.Require().Contains(ackStr, "error")
+		}
+		sequence += 1
+	}
 }
