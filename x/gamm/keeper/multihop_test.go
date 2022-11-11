@@ -82,17 +82,17 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 				ExitFee: sdk.NewDec(0),
 			})
 
-			// if we expect a reduced fee to apply, we set the uosmo pool in DistrInfo to replicate it being a pool with internal incentives
+			// if we expect a reduced fee to apply, we set both pools in DistrInfo to replicate it being an incentivized pool
+			// each pool has three gauges, hence 6 gauges for 2 pools
 			if test.reducedFeeApplied {
 				test := poolincentivestypes.DistrInfo{
-					TotalWeight: sdk.NewInt(2),
-					Records:     []poolincentivestypes.DistrRecord{{GaugeId: 1, Weight: sdk.OneInt()}, {GaugeId: 4, Weight: sdk.OneInt()}},
+					TotalWeight: sdk.NewInt(6),
+					Records: []poolincentivestypes.DistrRecord{
+						{GaugeId: 1, Weight: sdk.OneInt()}, {GaugeId: 2, Weight: sdk.OneInt()}, {GaugeId: 3, Weight: sdk.OneInt()},
+						{GaugeId: 4, Weight: sdk.OneInt()}, {GaugeId: 5, Weight: sdk.OneInt()}, {GaugeId: 6, Weight: sdk.OneInt()}},
 				}
 				suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, test)
 			}
-
-			// poolincentivestypes.DistrInfo
-			// suite.App.PoolIncentivesKeeper.SetDistrInfo()
 
 			// Calculate the chained spot price.
 			calcSpotPrice := func() sdk.Dec {
@@ -243,11 +243,14 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 				ExitFee: sdk.NewDec(0),
 			})
 
-			// if we expect a reduced fee to apply, we set the uosmo pool in DistrInfo to replicate it being a pool with internal incentives
+			// if we expect a reduced fee to apply, we set both pools in DistrInfo to replicate it being an incentivized pool
+			// each pool has three gauges, hence 6 gauges for 2 pools
 			if test.reducedFeeApplied {
 				test := poolincentivestypes.DistrInfo{
 					TotalWeight: sdk.NewInt(2),
-					Records:     []poolincentivestypes.DistrRecord{{GaugeId: 1, Weight: sdk.OneInt()}, {GaugeId: 4, Weight: sdk.OneInt()}},
+					Records: []poolincentivestypes.DistrRecord{
+						{GaugeId: 1, Weight: sdk.OneInt()}, {GaugeId: 2, Weight: sdk.OneInt()}, {GaugeId: 3, Weight: sdk.OneInt()},
+						{GaugeId: 4, Weight: sdk.OneInt()}, {GaugeId: 5, Weight: sdk.OneInt()}, {GaugeId: 6, Weight: sdk.OneInt()}},
 				}
 				suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, test)
 			}
