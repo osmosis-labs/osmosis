@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/v2types"
 )
 
 func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
@@ -613,6 +614,106 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
 
 		suite.Run(tc.name, func() {
 			result, err := queryClient.SpotPrice(gocontext.Background(), tc.req)
+			if tc.expectErr {
+				suite.Require().Error(err, "expected error")
+			} else {
+				suite.Require().NoError(err, "unexpected error")
+				suite.Require().Equal(tc.result, result.SpotPrice)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestV2QueryBalancerPoolSpotPrice() {
+	v2queryClient := v2types.NewQueryClient(suite.QueryHelper)
+	coins := sdk.NewCoins(
+		sdk.NewInt64Coin("tokenA", 1000),
+		sdk.NewInt64Coin("tokenB", 2000),
+		sdk.NewInt64Coin("tokenC", 3000),
+		sdk.NewInt64Coin("tokenD", 4000),
+		sdk.NewInt64Coin("tokenE", 4000), // 4000 intentional
+	)
+	poolID := suite.PrepareBalancerPoolWithCoins(coins...)
+
+	testCases := []struct {
+		name      string
+		req       *v2types.QuerySpotPriceRequest
+		expectErr bool
+		result    string
+	}{
+		{
+			name: "non-existant pool",
+			req: &v2types.QuerySpotPriceRequest{
+				PoolId:          0,
+				BaseAssetDenom:  "tokenA",
+				QuoteAssetDenom: "tokenB",
+			},
+			expectErr: true,
+		},
+		{
+			name: "missing asset denoms",
+			req: &v2types.QuerySpotPriceRequest{
+				PoolId: poolID,
+			},
+			expectErr: true,
+		},
+		{
+			name: "missing pool ID and quote denom",
+			req: &v2types.QuerySpotPriceRequest{
+				BaseAssetDenom: "tokenA",
+			},
+			expectErr: true,
+		},
+		{
+			name: "missing pool ID and base denom",
+			req: &v2types.QuerySpotPriceRequest{
+				QuoteAssetDenom: "tokenB",
+			},
+			expectErr: true,
+		},
+		{
+			name: "tokenA in terms of tokenB",
+			req: &v2types.QuerySpotPriceRequest{
+				PoolId:          poolID,
+				BaseAssetDenom:  "tokenA",
+				QuoteAssetDenom: "tokenB",
+			},
+			result: sdk.NewDec(2).String(),
+		},
+		{
+			name: "tokenB in terms of tokenA",
+			req: &v2types.QuerySpotPriceRequest{
+				PoolId:          poolID,
+				BaseAssetDenom:  "tokenB",
+				QuoteAssetDenom: "tokenA",
+			},
+			result: sdk.NewDecWithPrec(5, 1).String(),
+		},
+		{
+			name: "tokenC in terms of tokenD (rounded decimal of 4/3)",
+			req: &v2types.QuerySpotPriceRequest{
+				PoolId:          poolID,
+				BaseAssetDenom:  "tokenC",
+				QuoteAssetDenom: "tokenD",
+			},
+			result: sdk.MustNewDecFromStr("1.333333330000000000").String(),
+		},
+		{
+			name: "tokenD in terms of tokenE (1)",
+			req: &v2types.QuerySpotPriceRequest{
+				PoolId:          poolID,
+				BaseAssetDenom:  "tokenD",
+				QuoteAssetDenom: "tokenE",
+			},
+			result: sdk.OneDec().String(),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			result, err := v2queryClient.SpotPrice(gocontext.Background(), tc.req)
 			if tc.expectErr {
 				suite.Require().Error(err, "expected error")
 			} else {
