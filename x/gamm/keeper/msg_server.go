@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -57,15 +56,7 @@ func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stables
 func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, msg *stableswap.MsgStableSwapAdjustScalingFactors) (*stableswap.MsgStableSwapAdjustScalingFactorsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	pool, err := server.keeper.GetPoolAndPoke(ctx, msg.PoolID)
-	if err != nil {
-		return nil, err
-	}
-	stableswapPool, ok := pool.(*stableswap.Pool)
-	if !ok {
-		return nil, fmt.Errorf("pool id %d is not of type stableswap pool", msg.PoolID)
-	}
-	if err := stableswapPool.SetScalingFactors(ctx, msg.ScalingFactors, msg.Sender); err != nil {
+	if err := server.keeper.setStableSwapScalingFactors(ctx, msg.PoolID, msg.ScalingFactors, msg.Sender); err != nil {
 		return nil, err
 	}
 

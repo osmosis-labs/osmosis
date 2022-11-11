@@ -14,6 +14,24 @@ var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
 	sdk.NewCoin("bar", sdk.NewInt(10000000)),
 	sdk.NewCoin("baz", sdk.NewInt(10000000)),
 )
+var DefaultPoolAssets = []balancer.PoolAsset{
+	{
+		Weight: sdk.NewInt(100),
+		Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
+	},
+	{
+		Weight: sdk.NewInt(200),
+		Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
+	},
+	{
+		Weight: sdk.NewInt(300),
+		Token:  sdk.NewCoin("baz", sdk.NewInt(5000000)),
+	},
+	{
+		Weight: sdk.NewInt(400),
+		Token:  sdk.NewCoin("uosmo", sdk.NewInt(5000000)),
+	},
+}
 
 // PrepareBalancerPoolWithCoins returns a balancer pool
 // consisted of given coins with equal weight.
@@ -68,25 +86,7 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer
 	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
 
-	poolAssets := []balancer.PoolAsset{
-		{
-			Weight: sdk.NewInt(100),
-			Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
-		},
-		{
-			Weight: sdk.NewInt(200),
-			Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
-		},
-		{
-			Weight: sdk.NewInt(300),
-			Token:  sdk.NewCoin("baz", sdk.NewInt(5000000)),
-		},
-		{
-			Weight: sdk.NewInt(400),
-			Token:  sdk.NewCoin("uosmo", sdk.NewInt(5000000)),
-		},
-	}
-	msg := balancer.NewMsgCreateBalancerPool(s.TestAccs[0], poolParams, poolAssets, "")
+	msg := balancer.NewMsgCreateBalancerPool(s.TestAccs[0], poolParams, DefaultPoolAssets, "")
 	poolId, err := s.App.GAMMKeeper.CreatePool(s.Ctx, msg)
 	s.NoError(err)
 	return poolId
