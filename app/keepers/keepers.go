@@ -217,7 +217,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// channel.RecvPacket -> ibc_hooks.OnRecvPacket -> ibc_rate_limit.OnRecvPacket -> transfer.OnRecvPacket
 
 	// Setup the ICS4Wrapper used by the hooks middleware
-	wasmHooks := ibchooks.NewWasmHooks(nil) // The contract keeper needs to be set later
+	wasmHooks := ibchooks.NewWasmHooks(appKeepers.AccountKeeper, nil) // The contract keeper needs to be set later
 	appKeepers.WasmHooks = &wasmHooks
 	appKeepers.HooksICS4Wrapper = ibchooks.NewICS4Middleware(
 		appKeepers.IBCKeeper.ChannelKeeper,

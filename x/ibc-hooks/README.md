@@ -62,17 +62,17 @@ ICS20 is JSON native, so we use JSON for the memo format.
     //... other ibc fields that we don't care about
     "data":{
     	"denom": "denom on counterparty chain (e.g. uatom)",
-	    "amount": "1000",
+        "amount": "1000",
         "sender": "...", // ignored
         "receiver": "contract addr or blank",
-    	"memo": "{
-           \"wasm\": {
-              \"contract\": \"osmo1contractAddr\",
-              \"msg\": {
-                \"raw_message_fields\": \"raw_message_data\",
+    	"memo": {
+           "wasm": {
+              "contract": "osmo1contractAddr",
+              "msg": {
+                "raw_message_fields": "raw_message_data",
               }
             }
-        }"
+        }
     }
 }
 ```
