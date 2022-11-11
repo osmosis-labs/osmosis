@@ -23,6 +23,7 @@ import (
 	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v12/x/tokenfactory/types"
 	twapquerytypes "github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
+	twapv2querytypes "github.com/osmosis-labs/osmosis/v12/x/twap/client/v2queryproto"
 	txfeestypes "github.com/osmosis-labs/osmosis/v12/x/txfees/types"
 )
 
@@ -117,8 +118,8 @@ func init() {
 	// Does not include denoms_from_creator, TBD if this is the index we want contracts to use instead of admin
 
 	// twap
-	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/ArithmeticTwap", &twapquerytypes.ArithmeticTwapResponse{})
-	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/ArithmeticTwapToNow", &twapquerytypes.ArithmeticTwapToNowResponse{})
+	setWhitelistedQuery("/osmosis.twap.v2.Query/ArithmeticTwap", &twapv2querytypes.ArithmeticTwapResponse{})
+	setWhitelistedQuery("/osmosis.twap.v2.Query/ArithmeticTwapToNow", &twapv2querytypes.ArithmeticTwapToNowResponse{})
 	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/Params", &twapquerytypes.ParamsResponse{})
 }
 
