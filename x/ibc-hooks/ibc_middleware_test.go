@@ -3,6 +3,7 @@ package ibc_hooks_test
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
@@ -129,14 +130,7 @@ func (suite *HooksTestSuite) TestOnRecvPacketHooks() {
 	}
 }
 
-func (suite *HooksTestSuite) receivePacket(receiver, memo string) []byte {
-	return suite.receivePacketWithSequence(receiver, memo, 0)
-}
-
-func (suite *HooksTestSuite) receivePacketWithSequence(receiver, memo string, prevSequence uint64) []byte {
-	channelCap := suite.chainB.GetChannelCapability(
-		suite.path.EndpointB.ChannelConfig.PortID,
-		suite.path.EndpointB.ChannelID)
+func (suite *HooksTestSuite) makeMockPacket(receiver, memo string, prevSequence uint64) channeltypes.Packet {
 	packetData := transfertypes.FungibleTokenPacketData{
 		Denom:    sdk.DefaultBondDenom,
 		Amount:   "1",
@@ -145,7 +139,7 @@ func (suite *HooksTestSuite) receivePacketWithSequence(receiver, memo string, pr
 		Memo:     memo,
 	}
 
-	packet := channeltypes.NewPacket(
+	return channeltypes.NewPacket(
 		packetData.GetBytes(),
 		prevSequence+1,
 		suite.path.EndpointB.ChannelConfig.PortID,
@@ -155,6 +149,19 @@ func (suite *HooksTestSuite) receivePacketWithSequence(receiver, memo string, pr
 		clienttypes.NewHeight(0, 100),
 		0,
 	)
+
+}
+
+func (suite *HooksTestSuite) receivePacket(receiver, memo string) []byte {
+	return suite.receivePacketWithSequence(receiver, memo, 0)
+}
+
+func (suite *HooksTestSuite) receivePacketWithSequence(receiver, memo string, prevSequence uint64) []byte {
+	channelCap := suite.chainB.GetChannelCapability(
+		suite.path.EndpointB.ChannelConfig.PortID,
+		suite.path.EndpointB.ChannelID)
+
+	packet := suite.makeMockPacket(receiver, memo, prevSequence)
 
 	err := suite.chainB.GetOsmosisApp().HooksICS4Wrapper.SendPacket(
 		suite.chainB.GetContext(), channelCap, packet)
@@ -192,6 +199,58 @@ func (suite *HooksTestSuite) TestRecvTransferWithMetadata() {
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 	suite.Require().Equal(ack["result"], "eyJjb250cmFjdF9yZXN1bHQiOiJkR2hwY3lCemFHOTFiR1FnWldOb2J3PT0iLCJpYmNfYWNrIjoiZXlKeVpYTjFiSFFpT2lKQlVUMDlJbjA9In0=")
+}
+
+// After successfully executing a wasm call, the contract should have the funds sent via IBC
+func (suite *HooksTestSuite) TestFundsAreTransferredToTheContract() {
+	// Setup contract
+	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/echo.wasm")
+	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}")
+
+	// Check that the contract has no funds
+	localDenom := osmoutils.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
+	balance := suite.chainA.GetOsmosisApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
+	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
+
+	// Execute the contract via IBC
+	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"echo": {"msg": "test"} } } }`, addr))
+	ackStr := string(ackBytes)
+	fmt.Println(ackStr)
+	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
+	err := json.Unmarshal(ackBytes, &ack)
+	suite.Require().NoError(err)
+	suite.Require().NotContains(ack, "error")
+	suite.Require().Equal(ack["result"], "eyJjb250cmFjdF9yZXN1bHQiOiJkR2hwY3lCemFHOTFiR1FnWldOb2J3PT0iLCJpYmNfYWNrIjoiZXlKeVpYTjFiSFFpT2lKQlVUMDlJbjA9In0=")
+
+	// Check that the token has now been transferred to the contract
+	balance = suite.chainA.GetOsmosisApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
+	suite.Require().Equal(sdk.NewInt(1), balance.Amount)
+}
+
+// If the wasm call wails, the contract acknowledgement should be an error and the funds returned
+func (suite *HooksTestSuite) TestFundsAreReturnedOnFailedContractExec() {
+	// Setup contract
+	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/echo.wasm")
+	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}")
+
+	// Check that the contract has no funds
+	localDenom := osmoutils.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
+	balance := suite.chainA.GetOsmosisApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
+	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
+
+	// Execute the contract via IBC with a message that the contract will reject
+	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"not_echo": {"msg": "test"} } } }`, addr))
+	ackStr := string(ackBytes)
+	fmt.Println(ackStr)
+	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
+	err := json.Unmarshal(ackBytes, &ack)
+	suite.Require().NoError(err)
+	suite.Require().Contains(ack, "error")
+
+	// Check that the token has now been transferred to the contract
+	balance = suite.chainA.GetOsmosisApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
+	fmt.Println(balance)
+	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
 }
 
 func (suite *HooksTestSuite) TestPacketsThatShouldBeSkipped() {

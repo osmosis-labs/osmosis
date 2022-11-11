@@ -82,7 +82,6 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 
 	result, err := h.ContractKeeper.Execute(ctx, contractAddr, WasmHookModuleAccountAddr, msgBytes, funds)
 	if err != nil {
-		// ToDo: Add a test to make sure that if we fail here the tx fails and the funds are properly returned
 		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadExecutionMsg, err.Error()))
 	}
 
