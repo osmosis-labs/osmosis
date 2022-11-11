@@ -36,9 +36,9 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
 
-	var data transfertypes.FungibleTokenPacketData
-	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
-		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf("cannot unmarshal sent packet data: %s", err.Error()))
+	isIcs20, data := isIcs20Packet(packet)
+	if !isIcs20 {
+		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
 
 	// Validate the memo
@@ -83,19 +83,15 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	denom := osmoutils.MustExtractDenomFromPacketOnRecv(packet)
 	funds := sdk.NewCoins(sdk.NewCoin(denom, amount))
 
-	wasmMsgServer := wasmkeeper.NewMsgServerImpl(h.ContractKeeper)
 	execMsg := wasmtypes.MsgExecuteContract{
 		Sender:   WasmHookModuleAccountAddr.String(),
 		Contract: contractAddr.String(),
 		Msg:      msgBytes,
 		Funds:    funds,
 	}
-	if err := execMsg.ValidateBasic(); err != nil {
-		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadExecutionMsg, err.Error()))
-	}
-	response, err := wasmMsgServer.ExecuteContract(sdk.WrapSDKContext(ctx), &execMsg)
+	response, err := h.execWasmMsg(ctx, &execMsg)
 	if err != nil {
-		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadExecutionMsg, err.Error()))
+		return channeltypes.NewErrorAcknowledgement(err.Error())
 	}
 
 	fullAck := ContractAck{ContractResult: response.Data, IbcAck: ack.Acknowledgement()}
@@ -105,6 +101,22 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	}
 
 	return channeltypes.NewResultAcknowledgement(bz)
+}
+
+func (h WasmHooks) execWasmMsg(ctx sdk.Context, execMsg *wasmtypes.MsgExecuteContract) (*wasmtypes.MsgExecuteContractResponse, error) {
+	if err := execMsg.ValidateBasic(); err != nil {
+		return nil, fmt.Errorf(types.ErrBadExecutionMsg, err.Error())
+	}
+	wasmMsgServer := wasmkeeper.NewMsgServerImpl(h.ContractKeeper)
+	return wasmMsgServer.ExecuteContract(sdk.WrapSDKContext(ctx), execMsg)
+}
+
+func isIcs20Packet(packet channeltypes.Packet) (isIcs20 bool, ics20data transfertypes.FungibleTokenPacketData) {
+	var data transfertypes.FungibleTokenPacketData
+	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
+		return false, data
+	}
+	return true, data
 }
 
 func isMemoWasmRouted(memo string) (isWasmRouted bool, metadata map[string]interface{}) {
