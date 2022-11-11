@@ -196,6 +196,7 @@ func (suite *HooksTestSuite) TestRecvTransferWithMetadata() {
 
 func (suite *HooksTestSuite) TestPacketsThatShouldBeSkipped() {
 	var sequence uint64
+	receiver := suite.chainB.SenderAccount.GetAddress().String()
 
 	testCases := []struct {
 		memo           string
@@ -211,11 +212,14 @@ func (suite *HooksTestSuite) TestPacketsThatShouldBeSkipped() {
 		{`{"wasm": {"contract": "something"}}`, false},
 		{`{"wasm": {"contract": "osmo1clpqr4nrk4khgkxj78fcwwh6dl3uw4epasmvnj"}}`, false},
 		{`{"wasm": {"msg": "something"}}`, false},
-		{`{"wasm": {"contract": "osmo1clpqr4nrk4khgkxj78fcwwh6dl3uw4epasmvnj", "msg": 1}}`, false},
+		// invalid receiver
+		{`{"wasm": {"contract": "osmo1clpqr4nrk4khgkxj78fcwwh6dl3uw4epasmvnj", "msg": {}}}`, false},
+		// msg not an object
+		{fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": 1}}`, receiver), false},
 	}
 
 	for _, tc := range testCases {
-		ackBytes := suite.receivePacketWithSequence(suite.chainB.SenderAccount.GetAddress().String(), tc.memo, sequence)
+		ackBytes := suite.receivePacketWithSequence(receiver, tc.memo, sequence)
 		ackStr := string(ackBytes)
 		fmt.Println(ackStr)
 		var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
