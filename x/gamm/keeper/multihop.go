@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
@@ -51,9 +49,6 @@ func (k Keeper) MultihopSwapExactAmountIn(
 	}
 
 	for i, route := range routes {
-		incentivizedPools := k.poolIncentivesKeeper.GetAllIncentivizedPools(ctx)
-		fmt.Printf("ADAM %v \n", incentivizedPools)
-
 		// To prevent the multihop swap from being interrupted prematurely, we keep
 		// the minimum expected output at a very low number until the last pool
 		_outMinAmount := sdk.NewInt(1)
