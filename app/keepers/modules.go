@@ -30,6 +30,7 @@ import (
 	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v12/x/epochs"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm"
+	ibc_hooks "github.com/osmosis-labs/osmosis/v12/x/ibc-hooks"
 	"github.com/osmosis-labs/osmosis/v12/x/incentives"
 	"github.com/osmosis-labs/osmosis/v12/x/lockup"
 	"github.com/osmosis-labs/osmosis/v12/x/mint"
@@ -86,4 +87,5 @@ var AppModuleBasics = []module.AppModuleBasic{
 	tokenfactory.AppModuleBasic{},
 	wasm.AppModuleBasic{},
 	ica.AppModuleBasic{},
+	ibc_hooks.AppModuleBasic{},
 }
