@@ -81,9 +81,9 @@ An ICS20 packet is formatted correctly for wasmhooks iff the following all hold:
 
 * `memo` is not blank
 * `memo` is valid JSON
-* `memo` only has one key, with value "wasm"
+* `memo` has at least one key, with value "wasm"
 * `memo["wasm"]` has exactly two entries, `"contract"` and `"msg"`
-* `memo["wasm"]["msg"]` is a valid JSON encoded string
+* `memo["wasm"]["msg"]` is a valid JSON object
 * `receiver == "" || receiver == memo["wasm"]["contract"]`
 
 ### Execution flow
