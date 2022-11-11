@@ -15,6 +15,24 @@ import (
 
 var _ types.PoolI = &Pool{}
 
+type unsortedPoolLiqError struct {
+	ActualLiquidity sdk.Coins
+}
+
+func (e unsortedPoolLiqError) Error() string {
+	return fmt.Sprintf(`unsorted initial pool liquidity: %s. 
+	Please sort and make sure scaling factor order matches initial liquidity coin order`, e.ActualLiquidity)
+}
+
+type liquidityAndScalingFactorCountMismatchError struct {
+	LiquidityCount     int
+	ScalingFactorCount int
+}
+
+func (e liquidityAndScalingFactorCountMismatchError) Error() string {
+	return fmt.Sprintf("liquidity count (%d) must match scaling factor count (%d)", e.LiquidityCount, e.ScalingFactorCount)
+}
+
 // NewStableswapPool returns a stableswap pool
 // Invariants that are assumed to be satisfied and not checked:
 // * poolID doesn't already exist
@@ -418,20 +436,25 @@ func validateScalingFactors(scalingFactors []uint64, numAssets int) error {
 
 // assumes liquidity is all pool liquidity, in correct sorted order
 func validatePoolLiquidity(liquidity sdk.Coins, scalingFactors []uint64) error {
-	liquidityCopy := make(sdk.Coins, len(liquidity))
-	copy(liquidityCopy, liquidity)
-	liquidityCopy.Sort()
+	liquidityCount := len(liquidity)
+	scalingFactorCount := len(scalingFactors)
+	if liquidityCount != scalingFactorCount {
+		return liquidityAndScalingFactorCountMismatchError{LiquidityCount: liquidityCount, ScalingFactorCount: scalingFactorCount}
+	}
 
-	if len(liquidity) < types.MinPoolAssets {
+	if liquidityCount < types.MinPoolAssets {
 		return types.ErrTooFewPoolAssets
-	} else if len(liquidity) > types.MaxPoolAssets {
+	} else if liquidityCount > types.MaxPoolAssets {
 		return types.ErrTooManyPoolAssets
 	}
 
+	liquidityCopy := make(sdk.Coins, liquidityCount)
+	copy(liquidityCopy, liquidity)
+	liquidityCopy.Sort()
+
 	for i, asset := range liquidity {
 		if asset != liquidityCopy[i] {
-			return fmt.Errorf(`unsorted initial pool liquidity: %s. 
-			Please sort and make sure scaling factor order matches initial liquidity coin order`, liquidity)
+			return unsortedPoolLiqError{ActualLiquidity: liquidity}
 		}
 
 		scaledAmount := asset.Amount.Quo(sdk.NewInt(int64(scalingFactors[i])))
