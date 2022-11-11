@@ -856,6 +856,8 @@ func NewStableSwapAdjustScalingFactorsMsg(clientCtx client.Context, txf tx.Facto
 	return txf, msg, nil
 }
 
+// ParseCoinsNoSort parses coins from coinsStr but does not sort them.
+// Returns error if parsing fails.
 func ParseCoinsNoSort(coinsStr string) (sdk.Coins, error) {
 	coinStrs := strings.Split(coinsStr, ",")
 	decCoins := make(sdk.DecCoins, len(coinStrs))
