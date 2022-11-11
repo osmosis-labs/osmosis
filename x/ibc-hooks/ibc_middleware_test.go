@@ -191,11 +191,13 @@ func (suite *HooksTestSuite) receivePacket(receiver, memo string) []byte {
 
 func (suite *HooksTestSuite) TestRecvTransferWithBadMetadata() {
 	ackBytes := suite.receivePacket(suite.chainB.SenderAccount.GetAddress().String(), `{"wasm": {"execute": "test"}}`)
-	fmt.Println(string(ackBytes))
+	ackStr := string(ackBytes)
+	fmt.Println(ackStr)
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err := json.Unmarshal(ackBytes, &ack)
-	suite.Require().Error(err)
-	suite.Require().Contains(ack, "contract")
+	suite.Require().NoError(err)
+	suite.Require().Contains(ackStr, "error")
+	suite.Require().Contains(ackStr, "contract")
 	fmt.Println(ack)
 }
 
@@ -205,7 +207,8 @@ func (suite *HooksTestSuite) TestRecvTransferWithMetadata() {
 	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}")
 
 	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"wasm": {"contract": "%s", "execute": {"echo": {"msg": "test"} } } }`, addr))
-	fmt.Println(string(ackBytes))
+	ackStr := string(ackBytes)
+	fmt.Println(ackStr)
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err := json.Unmarshal(ackBytes, &ack)
 	suite.Require().NoError(err)
