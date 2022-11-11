@@ -3,6 +3,7 @@ package ibc_hooks
 import (
 	"encoding/json"
 	"fmt"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 
@@ -81,12 +82,22 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	denom := osmoutils.MustExtractDenomFromPacketOnRecv(packet)
 	funds := sdk.NewCoins(sdk.NewCoin(denom, amount))
 
-	result, err := h.ContractKeeper.Execute(ctx, contractAddr, WasmHookModuleAccountAddr, msgBytes, funds)
+	wasmMsgServer := wasmkeeper.NewMsgServerImpl(h.ContractKeeper)
+	execMsg := wasmtypes.MsgExecuteContract{
+		Sender:   WasmHookModuleAccountAddr.String(),
+		Contract: contractAddr.String(),
+		Msg:      msgBytes,
+		Funds:    funds,
+	}
+	if err := execMsg.ValidateBasic(); err != nil {
+		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadExecutionMsg, err.Error()))
+	}
+	response, err := wasmMsgServer.ExecuteContract(sdk.WrapSDKContext(ctx), &execMsg)
 	if err != nil {
 		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadExecutionMsg, err.Error()))
 	}
 
-	fullAck := ContractAck{ContractResult: result, IbcAck: ack.Acknowledgement()}
+	fullAck := ContractAck{ContractResult: response.Data, IbcAck: ack.Acknowledgement()}
 	bz, err = json.Marshal(fullAck)
 	if err != nil {
 		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadResponse, err.Error()))
