@@ -2,8 +2,9 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 	"strings"
+
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
