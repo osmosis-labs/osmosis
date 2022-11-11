@@ -16,6 +16,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/v2types"
 )
 
 var sdkIntMaxValue = sdk.NewInt(0)
@@ -42,6 +43,16 @@ type Querier struct {
 
 func NewQuerier(k Keeper) Querier {
 	return Querier{Keeper: k}
+}
+
+// QuerierV2 defines a wrapper around the x/gamm keeper providing gRPC method
+// handlers for v2 queries.
+type QuerierV2 struct {
+	Keeper
+}
+
+func NewV2Querier(k Keeper) QuerierV2 {
+	return QuerierV2{Keeper: k}
 }
 
 // Pool checks if a pool exists and their respective poolWeights.
@@ -367,6 +378,31 @@ func (q Querier) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest
 	}
 
 	return &types.QuerySpotPriceResponse{
+		SpotPrice: sp.String(),
+	}, nil
+}
+
+func (q QuerierV2) SpotPrice(ctx context.Context, req *v2types.QuerySpotPriceRequest) (*v2types.QuerySpotPriceResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.BaseAssetDenom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid base asset denom")
+	}
+
+	if req.QuoteAssetDenom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid quote asset denom")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	sp, err := q.Keeper.CalculateSpotPrice(sdkCtx, req.PoolId, req.QuoteAssetDenom, req.BaseAssetDenom)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &v2types.QuerySpotPriceResponse{
 		SpotPrice: sp.String(),
 	}, nil
 }
