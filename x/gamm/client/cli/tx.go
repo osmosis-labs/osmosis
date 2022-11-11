@@ -479,22 +479,22 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 
 // Apologies to whoever has to touch this next, this code is horrendous
 func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	pool, err := parseCreateStableswapPoolFlags(fs)
+	flags, err := parseCreateStableswapPoolFlags(fs)
 	if err != nil {
 		return txf, nil, fmt.Errorf("failed to parse pool: %w", err)
 	}
 
-	deposit, err := sdk.ParseCoinsNormalized(pool.InitialDeposit)
+	deposit, err := ParseCoinsNoSort(flags.InitialDeposit)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	swapFee, err := sdk.NewDecFromStr(pool.SwapFee)
+	swapFee, err := sdk.NewDecFromStr(flags.SwapFee)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	exitFee, err := sdk.NewDecFromStr(pool.ExitFee)
+	exitFee, err := sdk.NewDecFromStr(flags.ExitFee)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -505,7 +505,7 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, txf tx.Factory, f
 	}
 
 	scalingFactors := []uint64{}
-	trimmedSfString := strings.Trim(pool.ScalingFactors, "[] {}")
+	trimmedSfString := strings.Trim(flags.ScalingFactors, "[] {}")
 	if len(trimmedSfString) > 0 {
 		ints := strings.Split(trimmedSfString, ",")
 		for _, i := range ints {
@@ -525,8 +525,8 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, txf tx.Factory, f
 		PoolParams:              poolParams,
 		InitialPoolLiquidity:    deposit,
 		ScalingFactors:          scalingFactors,
-		ScalingFactorController: pool.ScalingFactorController,
-		FuturePoolGovernor:      pool.FutureGovernor,
+		ScalingFactorController: flags.ScalingFactorController,
+		FuturePoolGovernor:      flags.FutureGovernor,
 	}
 
 	return txf, msg, nil
@@ -854,4 +854,20 @@ func NewStableSwapAdjustScalingFactorsMsg(clientCtx client.Context, txf tx.Facto
 	}
 
 	return txf, msg, nil
+}
+
+// ParseCoinsNoSort parses coins from coinsStr but does not sort them.
+// Returns error if parsing fails.
+func ParseCoinsNoSort(coinsStr string) (sdk.Coins, error) {
+	coinStrs := strings.Split(coinsStr, ",")
+	decCoins := make(sdk.DecCoins, len(coinStrs))
+	for i, coinStr := range coinStrs {
+		coin, err := sdk.ParseDecCoin(coinStr)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
+
+		decCoins[i] = coin
+	}
+	return sdk.NormalizeCoins(decCoins), nil
 }
