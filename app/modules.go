@@ -145,11 +145,7 @@ func appModules(
 			app.EpochsKeeper,
 		),
 		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
-<<<<<<< HEAD
-=======
-		valsetprefmodule.NewAppModule(appCodec, *app.ValidatorSetPreferenceKeeper),
 		ibc_hooks.NewAppModule(app.AccountKeeper),
->>>>>>> 04ed4c60 (Add IBC hooks module account (#3343))
 	}
 }
 
