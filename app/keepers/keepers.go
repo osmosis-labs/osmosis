@@ -123,11 +123,11 @@ type AppKeepers struct {
 
 	// IBC modules
 	// transfer module
-	TransferModule          transfer.AppModule
-	RateLimitingICS4Wrapper *ibcratelimit.ICS4Wrapper
-	HooksMiddleware         *ibchooks.IBCMiddleware
-	WasmHooks               *ibchooks.WasmHooks
-	HooksICS4Wrapper        ibchooks.ICS4Middleware
+	RawIcs20TransferAppModule transfer.AppModule
+	RateLimitingICS4Wrapper   *ibcratelimit.ICS4Wrapper
+	CombinedTransferIBCModule *ibchooks.IBCMiddleware
+	Ics20WasmHooks            *ibchooks.WasmHooks
+	HooksICS4Wrapper          ibchooks.ICS4Middleware
 
 	// keys to access the substores
 	keys    map[string]*sdk.KVStoreKey
@@ -227,7 +227,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
 		// The transferIBC module is replaced by rateLimitingTransferModule
-		AddRoute(ibctransfertypes.ModuleName, appKeepers.HooksMiddleware)
+		AddRoute(ibctransfertypes.ModuleName, appKeepers.CombinedTransferIBCModule)
 	// Note: the sealing is done after creating wasmd and wiring that up
 
 	// create evidence keeper with router
@@ -356,7 +356,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// Pass the contract keeper to all the structs (generally ICS4Wrappers for ibc middlewares) that need it
 	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
 	appKeepers.RateLimitingICS4Wrapper.ContractKeeper = appKeepers.ContractKeeper
-	appKeepers.WasmHooks.ContractKeeper = appKeepers.ContractKeeper
+	appKeepers.Ics20WasmHooks.ContractKeeper = appKeepers.ContractKeeper
 
 	// wire up x/wasm to IBC
 	ibcRouter.AddRoute(wasm.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper))
@@ -400,10 +400,10 @@ func (appKeepers *AppKeepers) WireICS20PreWasm(
 	bApp *baseapp.BaseApp) {
 	// Setup the ICS4Wrapper used by the hooks middleware
 	wasmHooks := ibchooks.NewWasmHooks(nil) // The contract keeper needs to be set later
-	appKeepers.WasmHooks = &wasmHooks
+	appKeepers.Ics20WasmHooks = &wasmHooks
 	appKeepers.HooksICS4Wrapper = ibchooks.NewICS4Middleware(
 		appKeepers.IBCKeeper.ChannelKeeper,
-		appKeepers.WasmHooks,
+		appKeepers.Ics20WasmHooks,
 	)
 
 	// ChannelKeeper wrapper for rate limiting SendPacket(). The wasmKeeper needs to be added after it's created
@@ -433,14 +433,14 @@ func (appKeepers *AppKeepers) WireICS20PreWasm(
 		appKeepers.ScopedTransferKeeper,
 	)
 	appKeepers.TransferKeeper = &transferKeeper
-	appKeepers.TransferModule = transfer.NewAppModule(*appKeepers.TransferKeeper)
+	appKeepers.RawIcs20TransferAppModule = transfer.NewAppModule(*appKeepers.TransferKeeper)
 	transferIBCModule := transfer.NewIBCModule(*appKeepers.TransferKeeper)
 
 	// RateLimiting IBC Middleware
 	rateLimitingTransferModule := ibcratelimit.NewIBCModule(transferIBCModule, appKeepers.RateLimitingICS4Wrapper)
 	// Hooks Middleware
 	hooksTransferModule := ibchooks.NewIBCMiddleware(&rateLimitingTransferModule, &appKeepers.HooksICS4Wrapper)
-	appKeepers.HooksMiddleware = &hooksTransferModule
+	appKeepers.CombinedTransferIBCModule = &hooksTransferModule
 }
 
 // InitSpecialKeepers initiates special keepers (crisis appkeeper, upgradekeeper, params keeper)
