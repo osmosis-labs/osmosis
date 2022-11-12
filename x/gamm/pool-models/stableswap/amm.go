@@ -301,8 +301,16 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	return xOut
 }
 
-func (p Pool) spotPrice(baseDenom, quoteDenom string) (sdk.Dec, error) {
-	roundMode := osmomath.RoundBankers // TODO:
+func (p Pool) spotPrice(baseDenom, quoteDenom string) (spotPrice sdk.Dec, err error) {
+	// defer to catch panics, in case something internal overflows.
+	defer func() {
+		if r := recover(); r != nil {
+			spotPrice = sdk.Dec{}
+			err = types.ErrSpotPriceInternal
+		}
+	}()
+
+	roundMode := osmomath.RoundBankers
 	reserves, err := p.scaledSortedPoolReserves(baseDenom, quoteDenom, roundMode)
 	if err != nil {
 		return sdk.Dec{}, err
@@ -326,7 +334,7 @@ func (p Pool) spotPrice(baseDenom, quoteDenom string) (sdk.Dec, error) {
 
 	// Since we are operating on scaled reserves, we scale a by the input asset's scaling factor
 	liquidityIndexes := p.getLiquidityIndexMap()
-	scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndexes[baseDenom])
+	scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndexes[quoteDenom])
 	scaledA, err := osmomath.DivIntByU64ToBigDec(a, scalingFactor, roundMode)
 	if err != nil {
 		return sdk.Dec{}, err
@@ -335,9 +343,19 @@ func (p Pool) spotPrice(baseDenom, quoteDenom string) (sdk.Dec, error) {
 	// no need to divide by a, since a = 1.
 	scaledSpot := solveCfmm(baseReserve, quoteReserve, remReserves, scaledA)
 
-	finalSpot := p.getDescaledPoolAmt(quoteDenom, scaledSpot)
+	// We descale by base asset scaling factor since spot price is denominated in base asset
+	spotPrice = p.getDescaledPoolAmt(baseDenom, scaledSpot)
 
-	return finalSpot, nil
+	// if spotPrice greater than max spot price, return an error
+	if spotPrice.GT(types.MaxSpotPrice) {
+		return types.MaxSpotPrice, types.ErrSpotPriceOverflow
+	} else if !spotPrice.IsPositive() {
+		return sdk.Dec{}, types.ErrSpotPriceInternal
+	}
+
+	// we want to round this to `SpotPriceSigFigs` of precision
+	spotPrice = osmomath.SigFigRound(spotPrice, types.SpotPriceSigFigs)
+	return spotPrice, nil
 }
 
 func oneMinus(swapFee sdk.Dec) osmomath.BigDec {
