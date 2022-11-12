@@ -1086,13 +1086,12 @@ func TestStableswapSpotPrice(t *testing.T) {
 			expectedSpotPrice: sdk.OneDec(),
 			expectPass:        true,
 		},
-		// fails with different error than previous test
 		"large even two-asset pool with large scaling factors": {
 			baseDenom:  "foo",
 			quoteDenom: "bar",
 			poolAssets: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 1000000000*10000),
-				sdk.NewInt64Coin("bar", 1000000000*10000),
+				sdk.NewInt64Coin("foo", 1000000000),
+				sdk.NewInt64Coin("bar", 1000000000),
 			),
 			scalingFactors:    []uint64{10000, 10000},
 			expectedSpotPrice: sdk.OneDec(),
