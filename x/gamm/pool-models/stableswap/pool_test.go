@@ -1056,7 +1056,6 @@ func TestValidatePoolLiquidity(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-
 			err := validatePoolLiquidity(tc.liquidity, tc.scalingFactors)
 
 			if tc.expectError != nil {
@@ -1065,6 +1064,55 @@ func TestValidatePoolLiquidity(t *testing.T) {
 			}
 
 			require.NoError(t, err)
+		})
+	}
+}
+
+func TestStableswapSpotPrice(t *testing.T) {
+	type testcase struct {
+		baseDenom         string
+		quoteDenom        string
+		poolAssets        sdk.Coins
+		scalingFactors    []uint64
+		expectedSpotPrice sdk.Dec
+		expectPass        bool
+	}
+	tests := map[string]testcase{
+		"even two-asset pool": {
+			baseDenom:         "foo",
+			quoteDenom:        "bar",
+			poolAssets:        twoEvenStablePoolAssets,
+			scalingFactors:    defaultTwoAssetScalingFactors,
+			expectedSpotPrice: sdk.OneDec(),
+			expectPass:        true,
+		},
+		// fails with different error than previous test
+		"large even two-asset pool with large scaling factors": {
+			baseDenom:  "foo",
+			quoteDenom: "bar",
+			poolAssets: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 1000000000*10000),
+				sdk.NewInt64Coin("bar", 1000000000*10000),
+			),
+			scalingFactors:    []uint64{10000, 10000},
+			expectedSpotPrice: sdk.OneDec(),
+			expectPass:        true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := sdk.Context{}
+			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
+			spotPrice, err := p.SpotPrice(ctx, tc.baseDenom, tc.quoteDenom)
+
+			if tc.expectPass {
+				// We allow for 0.01 additive error due to how we estimate spot price
+				osmoassert.DecApproxEq(t, tc.expectedSpotPrice, spotPrice, sdk.NewDecWithPrec(1, 2))
+				// Pool liquidity should remain unchanged
+				require.Equal(t, tc.poolAssets, p.GetTotalPoolLiquidity(ctx))
+			}
+			osmoassert.ConditionalError(t, !tc.expectPass, err)
 		})
 	}
 }

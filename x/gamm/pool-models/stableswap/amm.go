@@ -322,10 +322,22 @@ func (p Pool) spotPrice(baseDenom, quoteDenom string) (sdk.Dec, error) {
 
 	// We arbitrarily choose a = 1, and anticipate that this is a small value at the scale of
 	// xReserve & yReserve.
-	a := osmomath.OneDec()
+	a := sdk.OneInt()
+
+	// Since we are operating on scaled reserves, we scale a by the input asset's scaling factor
+	liquidityIndexes := p.getLiquidityIndexMap()
+	scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndexes[baseDenom])
+	scaledA, err := osmomath.DivIntByU64ToBigDec(a, scalingFactor, roundMode)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
 	// no need to divide by a, since a = 1.
-	bigDec := solveCfmm(baseReserve, quoteReserve, remReserves, a)
-	return bigDec.SDKDec(), nil
+	scaledSpot := solveCfmm(baseReserve, quoteReserve, remReserves, scaledA)
+
+	finalSpot := p.getDescaledPoolAmt(quoteDenom, scaledSpot)
+
+	return finalSpot, nil
 }
 
 func oneMinus(swapFee sdk.Dec) osmomath.BigDec {
