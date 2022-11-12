@@ -1178,16 +1178,6 @@ func TestStableswapSpotPrice(t *testing.T) {
 			scalingFactors: []uint64{36, 578, 253},
 			expectPass:     true,
 		},
-		"exceeds max spot price": {
-			baseDenom:  "foo",
-			quoteDenom: "bar",
-			poolAssets: sdk.NewCoins(
-				sdk.NewCoin("foo", types.MaxSpotPrice.MulInt64(100000).TruncateInt()),
-				sdk.NewInt64Coin("bar", 1000),
-			),
-			scalingFactors: defaultTwoAssetScalingFactors,
-			expectPass:     false,
-		},
 	}
 
 	for name, tc := range tests {
