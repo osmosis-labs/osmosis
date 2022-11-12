@@ -1189,7 +1189,7 @@ func TestStableswapSpotPrice(t *testing.T) {
 			if tc.expectPass {
 				require.NoError(t, err)
 
-				expectedSpotPrice, err := p.calcOutAmtGivenIn(sdk.NewInt64Coin(tc.quoteDenom, 1), tc.baseDenom, sdk.ZeroDec())
+				expectedSpotPrice, err := p.calcOutAmtGivenIn(sdk.NewInt64Coin(tc.baseDenom, 1), tc.quoteDenom, sdk.ZeroDec())
 				require.NoError(t, err)
 
 				// We allow for a small geometric error due to our spot price being an approximation

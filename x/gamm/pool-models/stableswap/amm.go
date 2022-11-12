@@ -307,7 +307,8 @@ func (p Pool) spotPrice(baseDenom, quoteDenom string) (spotPrice sdk.Dec, err er
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	baseReserve, quoteReserve, remReserves := reserves[0], reserves[1], reserves[2:]
+	// baseReserve and quoteReserve are flipped for alignment with current stargate queries
+	quoteReserve, baseReserve, remReserves := reserves[0], reserves[1], reserves[2:]
 	// y = baseAsset, x = quoteAsset
 	// Define f_{y -> x}(a) as the function that outputs the amount of tokens X you'd get by
 	// trading "a" units of Y against the pool, assuming 0 swap fee, at the current liquidity.
@@ -326,7 +327,7 @@ func (p Pool) spotPrice(baseDenom, quoteDenom string) (spotPrice sdk.Dec, err er
 
 	// Since we are operating on scaled reserves, we scale a by the input asset's scaling factor
 	liquidityIndexes := p.getLiquidityIndexMap()
-	scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndexes[quoteDenom])
+	scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndexes[baseDenom])
 	scaledA, err := osmomath.DivIntByU64ToBigDec(a, scalingFactor, roundMode)
 	if err != nil {
 		return sdk.Dec{}, err
@@ -336,7 +337,7 @@ func (p Pool) spotPrice(baseDenom, quoteDenom string) (spotPrice sdk.Dec, err er
 	scaledSpot := solveCfmm(baseReserve, quoteReserve, remReserves, scaledA)
 
 	// We descale by base asset scaling factor since spot price is denominated in base asset
-	spotPrice = p.getDescaledPoolAmt(baseDenom, scaledSpot)
+	spotPrice = p.getDescaledPoolAmt(quoteDenom, scaledSpot)
 	return spotPrice, nil
 }
 

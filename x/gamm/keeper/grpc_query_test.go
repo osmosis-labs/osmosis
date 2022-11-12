@@ -257,7 +257,6 @@ func (suite *KeeperTestSuite) TestPoolsWithFilter() {
 			}
 		})
 	}
-
 }
 
 func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
@@ -335,8 +334,8 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 			}
 		})
 	}
-
 }
+
 func (suite *KeeperTestSuite) TestQueryPool() {
 	queryClient := suite.queryClient
 
@@ -719,6 +718,172 @@ func (suite *KeeperTestSuite) TestV2QueryBalancerPoolSpotPrice() {
 			} else {
 				suite.Require().NoError(err, "unexpected error")
 				suite.Require().Equal(tc.result, result.SpotPrice)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestQueryStableswapPoolSpotPrice() {
+	queryClient := suite.queryClient
+	poolIDEven := suite.PrepareBasicStableswapPool()
+	poolIDUneven := suite.PrepareImbalancedStableswapPool()
+
+	testCases := []struct {
+		name      string
+		req       *types.QuerySpotPriceRequest
+		expectErr bool
+		result    string
+	}{
+		{
+			name: "non-existent pool",
+			req: &types.QuerySpotPriceRequest{
+				PoolId:          0,
+				BaseAssetDenom:  "foo",
+				QuoteAssetDenom: "bar",
+			},
+			expectErr: true,
+		},
+		{
+			name: "missing asset denoms",
+			req: &types.QuerySpotPriceRequest{
+				PoolId: poolIDEven,
+			},
+			expectErr: true,
+		},
+		{
+			name: "missing pool ID and quote denom",
+			req: &types.QuerySpotPriceRequest{
+				BaseAssetDenom: "foo",
+			},
+			expectErr: true,
+		},
+		{
+			name: "missing pool ID and base denom",
+			req: &types.QuerySpotPriceRequest{
+				QuoteAssetDenom: "bar",
+			},
+			expectErr: true,
+		},
+		{
+			name: "valid request for foo/bar in even pool",
+			req: &types.QuerySpotPriceRequest{
+				PoolId:          poolIDEven,
+				BaseAssetDenom:  "foo",
+				QuoteAssetDenom: "bar",
+			},
+			result: sdk.MustNewDecFromStr("1.00").String(),
+		},
+		{
+			name: "valid request for foo/bar in 1:2:3 pool",
+			req: &types.QuerySpotPriceRequest{
+				PoolId:          poolIDUneven,
+				BaseAssetDenom:  "foo",
+				QuoteAssetDenom: "bar",
+			},
+			result: sdk.MustNewDecFromStr("1.446").String(),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			result, err := queryClient.SpotPrice(gocontext.Background(), tc.req)
+			if tc.expectErr {
+				suite.Require().Error(err, "expected error")
+			} else {
+				suite.Require().NoError(err, "unexpected error")
+				// We allow for a small geometric error due to our spot price being an approximation
+				expectedSpotPrice := sdk.MustNewDecFromStr(tc.result)
+				actualSpotPrice := sdk.MustNewDecFromStr(result.SpotPrice)
+				diff := (expectedSpotPrice.Sub(actualSpotPrice)).Abs()
+				errTerm := diff.Quo(sdk.MinDec(expectedSpotPrice, actualSpotPrice))
+
+				suite.Require().True(errTerm.LT(sdk.NewDecWithPrec(1, 3)), "Expected: %d, Actual: %d", expectedSpotPrice, actualSpotPrice)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestV2QueryStableswapPoolSpotPrice() {
+	v2queryClient := v2types.NewQueryClient(suite.QueryHelper)
+	poolIDEven := suite.PrepareBasicStableswapPool()
+	poolIDUneven := suite.PrepareImbalancedStableswapPool()
+
+	testCases := []struct {
+		name      string
+		req       *v2types.QuerySpotPriceRequest
+		expectErr bool
+		result    string
+	}{
+		{
+			name: "non-existent pool",
+			req: &v2types.QuerySpotPriceRequest{
+				PoolId:          0,
+				BaseAssetDenom:  "foo",
+				QuoteAssetDenom: "bar",
+			},
+			expectErr: true,
+		},
+		{
+			name: "missing asset denoms",
+			req: &v2types.QuerySpotPriceRequest{
+				PoolId: poolIDEven,
+			},
+			expectErr: true,
+		},
+		{
+			name: "missing pool ID and quote denom",
+			req: &v2types.QuerySpotPriceRequest{
+				BaseAssetDenom: "foo",
+			},
+			expectErr: true,
+		},
+		{
+			name: "missing pool ID and base denom",
+			req: &v2types.QuerySpotPriceRequest{
+				QuoteAssetDenom: "bar",
+			},
+			expectErr: true,
+		},
+		{
+			name: "foo in terms of bar in even pool",
+			req: &v2types.QuerySpotPriceRequest{
+				PoolId:          poolIDEven,
+				BaseAssetDenom:  "foo",
+				QuoteAssetDenom: "bar",
+			},
+			result: sdk.MustNewDecFromStr("1.00").String(),
+		},
+		{
+			name: "foo in terms of bar in uneven pool",
+			req: &v2types.QuerySpotPriceRequest{
+				PoolId: poolIDUneven,
+				// flipped base and quote assets from v1 query
+				BaseAssetDenom:  "bar",
+				QuoteAssetDenom: "foo",
+			},
+			result: sdk.MustNewDecFromStr("1.446").String(),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			result, err := v2queryClient.SpotPrice(gocontext.Background(), tc.req)
+			if tc.expectErr {
+				suite.Require().Error(err, "expected error")
+			} else {
+				suite.Require().NoError(err, "unexpected error")
+
+				// We allow for a small geometric error due to our spot price being an approximation
+				expectedSpotPrice := sdk.MustNewDecFromStr(tc.result)
+				actualSpotPrice := sdk.MustNewDecFromStr(result.SpotPrice)
+				diff := (expectedSpotPrice.Sub(actualSpotPrice)).Abs()
+				errTerm := diff.Quo(sdk.MinDec(expectedSpotPrice, actualSpotPrice))
+
+				suite.Require().True(errTerm.LT(sdk.NewDecWithPrec(1, 3)), "Expected: %d, Actual: %d", expectedSpotPrice, actualSpotPrice)
 			}
 		})
 	}
