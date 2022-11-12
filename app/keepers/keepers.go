@@ -209,56 +209,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.ScopedIBCKeeper,
 	)
 
-	// Create the IBC Transfer Stack from bottom to top:
-
-	// SendPacket. Originates from the transferKeeper and and goes up the stack:
-	// transferKeeper.SendPacket -> ibc_rate_limit.SendPacket -> ibc_hooks.SendPacket -> channel.SendPacket
-
-	// RecvPacket, message that originates from core IBC and goes down to app, the flow is the other way
-	// channel.RecvPacket -> ibc_hooks.OnRecvPacket -> ibc_rate_limit.OnRecvPacket -> transfer.OnRecvPacket
-
-	// Setup the ICS4Wrapper used by the hooks middleware
-	wasmHooks := ibchooks.NewWasmHooks(nil) // The contract keeper needs to be set later
-	appKeepers.WasmHooks = &wasmHooks
-	appKeepers.HooksICS4Wrapper = ibchooks.NewICS4Middleware(
-		appKeepers.IBCKeeper.ChannelKeeper,
-		appKeepers.WasmHooks,
-	)
-
-	// ChannelKeeper wrapper for rate limiting SendPacket(). The wasmKeeper needs to be added after it's created
-	rateLimitingParams := appKeepers.GetSubspace(ibcratelimittypes.ModuleName)
-	rateLimitingParams = rateLimitingParams.WithKeyTable(ibcratelimittypes.ParamKeyTable())
-	rateLimitingICS4Wrapper := ibcratelimit.NewICS4Middleware(
-		appKeepers.HooksICS4Wrapper,
-		appKeepers.AccountKeeper,
-		nil,
-		appKeepers.BankKeeper,
-		rateLimitingParams,
-	)
-	appKeepers.RateLimitingICS4Wrapper = &rateLimitingICS4Wrapper
-
-	// Create Transfer Keepers
-	transferKeeper := ibctransferkeeper.NewKeeper(
-		appCodec,
-		appKeepers.keys[ibctransfertypes.StoreKey],
-		appKeepers.GetSubspace(ibctransfertypes.ModuleName),
-		// The ICS4Wrapper is replaced by the rateLimitingICS4Wrapper instead of the channel
-		appKeepers.RateLimitingICS4Wrapper,
-		appKeepers.IBCKeeper.ChannelKeeper,
-		&appKeepers.IBCKeeper.PortKeeper,
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.ScopedTransferKeeper,
-	)
-	appKeepers.TransferKeeper = &transferKeeper
-	appKeepers.TransferModule = transfer.NewAppModule(*appKeepers.TransferKeeper)
-	transferIBCModule := transfer.NewIBCModule(*appKeepers.TransferKeeper)
-
-	// RateLimiting IBC Middleware
-	rateLimitingTransferModule := ibcratelimit.NewIBCModule(transferIBCModule, appKeepers.RateLimitingICS4Wrapper)
-	// Hooks Middleware
-	hooksTransferModule := ibchooks.NewIBCMiddleware(&rateLimitingTransferModule, &appKeepers.HooksICS4Wrapper)
-	appKeepers.HooksMiddleware = &hooksTransferModule
+	appKeepers.WireICS20PreWasm(appCodec, bApp)
 
 	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, appKeepers.keys[icahosttypes.StoreKey],
@@ -433,6 +384,63 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GetSubspace(govtypes.ModuleName), appKeepers.AccountKeeper, appKeepers.BankKeeper,
 		appKeepers.SuperfluidKeeper, govRouter)
 	appKeepers.GovKeeper = &govKeeper
+}
+
+// Create the IBC Transfer Stack from bottom to top:
+//
+// * SendPacket. Originates from the transferKeeper and and goes up the stack:
+// transferKeeper.SendPacket -> ibc_rate_limit.SendPacket -> ibc_hooks.SendPacket -> channel.SendPacket
+// * RecvPacket, message that originates from core IBC and goes down to app, the flow is the other way
+// channel.RecvPacket -> ibc_hooks.OnRecvPacket -> ibc_rate_limit.OnRecvPacket -> transfer.OnRecvPacket
+//
+// After this, the wasm keeper is required to be set on both
+// appkeepers.WasmHooks AND appKeepers.RateLimitingICS4Wrapper
+func (appKeepers *AppKeepers) WireICS20PreWasm(
+	appCodec codec.Codec,
+	bApp *baseapp.BaseApp) {
+	// Setup the ICS4Wrapper used by the hooks middleware
+	wasmHooks := ibchooks.NewWasmHooks(nil) // The contract keeper needs to be set later
+	appKeepers.WasmHooks = &wasmHooks
+	appKeepers.HooksICS4Wrapper = ibchooks.NewICS4Middleware(
+		appKeepers.IBCKeeper.ChannelKeeper,
+		appKeepers.WasmHooks,
+	)
+
+	// ChannelKeeper wrapper for rate limiting SendPacket(). The wasmKeeper needs to be added after it's created
+	rateLimitingParams := appKeepers.GetSubspace(ibcratelimittypes.ModuleName)
+	rateLimitingParams = rateLimitingParams.WithKeyTable(ibcratelimittypes.ParamKeyTable())
+	rateLimitingICS4Wrapper := ibcratelimit.NewICS4Middleware(
+		appKeepers.HooksICS4Wrapper,
+		appKeepers.AccountKeeper,
+		// wasm keeper we set later.
+		nil,
+		appKeepers.BankKeeper,
+		rateLimitingParams,
+	)
+	appKeepers.RateLimitingICS4Wrapper = &rateLimitingICS4Wrapper
+
+	// Create Transfer Keepers
+	transferKeeper := ibctransferkeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[ibctransfertypes.StoreKey],
+		appKeepers.GetSubspace(ibctransfertypes.ModuleName),
+		// The ICS4Wrapper is replaced by the rateLimitingICS4Wrapper instead of the channel
+		appKeepers.RateLimitingICS4Wrapper,
+		appKeepers.IBCKeeper.ChannelKeeper,
+		&appKeepers.IBCKeeper.PortKeeper,
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.ScopedTransferKeeper,
+	)
+	appKeepers.TransferKeeper = &transferKeeper
+	appKeepers.TransferModule = transfer.NewAppModule(*appKeepers.TransferKeeper)
+	transferIBCModule := transfer.NewIBCModule(*appKeepers.TransferKeeper)
+
+	// RateLimiting IBC Middleware
+	rateLimitingTransferModule := ibcratelimit.NewIBCModule(transferIBCModule, appKeepers.RateLimitingICS4Wrapper)
+	// Hooks Middleware
+	hooksTransferModule := ibchooks.NewIBCMiddleware(&rateLimitingTransferModule, &appKeepers.HooksICS4Wrapper)
+	appKeepers.HooksMiddleware = &hooksTransferModule
 }
 
 // InitSpecialKeepers initiates special keepers (crisis appkeeper, upgradekeeper, params keeper)
