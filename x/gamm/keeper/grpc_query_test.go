@@ -10,6 +10,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/v2types"
 )
@@ -416,15 +417,21 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 }
 
 func (suite *KeeperTestSuite) TestPoolType() {
-	poolId := suite.PrepareBalancerPool()
+	poolIdBalancer := suite.PrepareBalancerPool()
+	poolIdStableswap := suite.PrepareBasicStableswapPool()
 
 	// error when querying invalid pool ID
-	_, err := suite.queryClient.PoolType(gocontext.Background(), &types.QueryPoolTypeRequest{PoolId: poolId + 1})
+	_, err := suite.queryClient.PoolType(gocontext.Background(), &types.QueryPoolTypeRequest{PoolId: poolIdStableswap + 1})
 	suite.Require().Error(err)
 
-	res, err := suite.queryClient.PoolType(gocontext.Background(), &types.QueryPoolTypeRequest{PoolId: poolId})
+	res, err := suite.queryClient.PoolType(gocontext.Background(), &types.QueryPoolTypeRequest{PoolId: poolIdBalancer})
 	suite.Require().NoError(err)
-	suite.Require().Equal("Balancer", res.PoolType)
+	suite.Require().Equal(balancer.PoolTypeName, res.PoolType)
+
+	res, err = suite.queryClient.PoolType(gocontext.Background(),
+		&types.QueryPoolTypeRequest{PoolId: poolIdStableswap})
+	suite.Require().NoError(err)
+	suite.Require().Equal(stableswap.PoolTypeName, res.PoolType)
 }
 
 func (suite *KeeperTestSuite) TestQueryNumPools1() {
