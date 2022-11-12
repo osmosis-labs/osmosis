@@ -30,10 +30,10 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 		expectedMessageEvents int
 	}{
 		"zero hops": {
-			routes:                []types.SwapAmountInRoute{},
-			tokenIn:               sdk.NewCoin("foo", sdk.NewInt(tokenIn)),
-			tokenOutMinAmount:     sdk.NewInt(tokenInMinAmount),
-			expectedMessageEvents: 1, // 1 gamm.
+			routes:            []types.SwapAmountInRoute{},
+			tokenIn:           sdk.NewCoin("foo", sdk.NewInt(tokenIn)),
+			tokenOutMinAmount: sdk.NewInt(tokenInMinAmount),
+			expectError:       true,
 		},
 		"one hop": {
 			routes: []types.SwapAmountInRoute{
