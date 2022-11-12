@@ -60,6 +60,10 @@ func (k Keeper) MultihopSwapExactAmountIn(
 		}
 	}
 
+	if additiveSwapFee.Quo(sdk.NewDec(2)).GT(maxSwapFee) {
+		maxSwapFee = additiveSwapFee.Quo(sdk.NewDec(2))
+	}
+
 	for i, route := range routes {
 		// To prevent the multihop swap from being interrupted prematurely, we keep
 		// the minimum expected output at a very low number until the last pool
@@ -143,6 +147,10 @@ func (k Keeper) MultihopSwapExactAmountOut(
 				}
 			}
 		}
+	}
+
+	if additiveSwapFee.Quo(sdk.NewDec(2)).GT(maxSwapFee) {
+		maxSwapFee = additiveSwapFee.Quo(sdk.NewDec(2))
 	}
 
 	// Determine what the estimated input would be for each pool along the multi-hop route
