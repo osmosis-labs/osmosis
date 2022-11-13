@@ -43,5 +43,5 @@ type CommunityPoolKeeper interface {
 }
 
 type PoolIncentivesKeeper interface {
-	GetAllIncentivizedPools(ctx sdk.Context) []uint64
+	IsPoolIncentivized(ctx sdk.Context, poolId uint64) bool
 }
