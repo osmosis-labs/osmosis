@@ -158,17 +158,3 @@ func (k Keeper) IsPoolIncentivized(ctx sdk.Context, poolId uint64) bool {
 	}
 	return false
 }
-
-func (k Keeper) GetAllIncentivizedPools(ctx sdk.Context) []uint64 {
-	distrInfo := k.GetDistrInfo(ctx)
-	pools := []uint64{}
-
-	for _, record := range distrInfo.Records {
-		gauge, err := k.incentivesKeeper.GetGaugeByID(ctx, record.GaugeId)
-		if err == nil {
-			poolId := gammtypes.MustGetPoolIdFromShareDenom(gauge.DistributeTo.Denom)
-			pools = append(pools, poolId)
-		}
-	}
-	return pools
-}
