@@ -183,11 +183,11 @@ func (k Keeper) isOsmoRoutedMultihop(ctx sdk.Context,
 
 	// get list of all incentivized pools
 	incentivizedPools := k.poolIncentivesKeeper.GetAllIncentivizedPools(ctx)
-	for _, pool := range incentivizedPools {
-		if poolIds[0] == pool.PoolId {
+	for _, poolId := range incentivizedPools {
+		if poolIds[0] == poolId {
 			route0Incentivized = true
 		}
-		if poolIds[1] == pool.PoolId {
+		if poolIds[1] == poolId {
 			route1Incentivized = true
 		}
 		if route0Incentivized && route1Incentivized {
