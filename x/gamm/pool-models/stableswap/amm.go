@@ -2,7 +2,6 @@ package stableswap
 
 import (
 	"errors"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -282,6 +281,32 @@ func iterKCalculator(x0, w, yf osmomath.BigDec) func(osmomath.BigDec) (osmomath.
 	}
 }
 
+func deriveUpperLowerXFinalReserveBounds(xReserve, yReserve, wSumSquares, yFinal osmomath.BigDec) (
+	xFinalLowerbound, xFinalUpperbound osmomath.BigDec) {
+	xFinalLowerbound, xFinalUpperbound = xReserve, xReserve
+
+	k0 := cfmmConstantMultiNoV(xReserve, yFinal, wSumSquares)
+	k := cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares)
+	// fmt.Println(k0, k)
+	if k0.Equal(osmomath.ZeroDec()) || k.Equal(osmomath.ZeroDec()) {
+		panic("k should never be zero")
+	}
+	kRatio := k0.Quo(k)
+	if kRatio.LT(osmomath.OneDec()) {
+		// k_0 < k. Need to find an upperbound. Worst case assume a linear relationship, gives an upperbound
+		// TODO: In the future, we can derive better bounds via reasoning about coefficients in the cubic
+		// These are quite close when we are in the "stable" part of the curve though.
+		xFinalUpperbound = xReserve.Quo(kRatio).Ceil()
+	} else if kRatio.GT(osmomath.OneDec()) {
+		// need to find a lowerbound. We could use a cubic relation, but for now we just set it to 0.
+		xFinalLowerbound = osmomath.ZeroDec()
+	} else {
+		// k remains unchanged.
+		// So we keep bounds equal to each other
+	}
+	return xFinalLowerbound, xFinalUpperbound
+}
+
 // solveCFMMBinarySearch searches the correct dx using binary search over constant K.
 func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.BigDec) osmomath.BigDec {
 	if !xReserve.IsPositive() || !yReserve.IsPositive() || wSumSquares.IsNegative() {
@@ -290,40 +315,13 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 		panic("cannot input more than pool reserves")
 	}
 	yFinal := yReserve.Add(yIn)
-	xLowEst, xHighEst := xReserve, xReserve
-	// yFinal is a constant factor in these equations, so avoid paying the precision loss for it
-	// in the core binary search loop. We compute the candidate without this term,
-	// and compute the target, by dividing by yFinal.
-	k0 := cfmmConstantMultiNoVY(xReserve, yFinal, wSumSquares)
-	k := cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares).Quo(yFinal)
-	fmt.Println(k0, k)
-	if k0.Equal(osmomath.ZeroDec()) || k.Equal(osmomath.ZeroDec()) {
-		panic("k should never be zero")
-	}
-	kRatio := k0.Quo(k)
-
-	if kRatio.LT(osmomath.OneDec()) {
-		// k_0 < k. Need to find an upperbound. Worst case assume a linear relationship, gives an upperbound
-		// TODO: In the future, we can derive better bounds via reasoning about coefficients in the cubic
-		// These are quite close when we are in the "stable" part of the curve though.
-		xHighEst = xReserve.Quo(kRatio).Ceil()
-	} else if kRatio.GT(osmomath.OneDec()) {
-		// need to find a lowerbound. We could use a cubic relation, but for now we just set it to 0.
-		xLowEst = osmomath.ZeroDec()
-	} else {
-		// k remains unchanged, so xOut = 0
-		return osmomath.ZeroDec()
-	}
-
+	xLowEst, xHighEst := deriveUpperLowerXFinalReserveBounds(xReserve, yReserve, wSumSquares, yFinal)
+	targetK := targetKCalculator(xReserve, yReserve, wSumSquares, yFinal)
+	iterKCalc := iterKCalculator(xReserve, wSumSquares, yFinal)
 	maxIterations := 256
 
 	// we use a geometric error tolerance that guarantees approximately 10^-12 precision on outputs
 	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.Int{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12)}
-
-	// create single-input CFMM to pass into binary search
-	computeFromEst := func(xEst osmomath.BigDec) (osmomath.BigDec, error) {
-		return cfmmConstantMultiNoVY(xEst, yFinal, wSumSquares), nil
-	}
 
 	// if yIn is positive, we want to under-estimate the amount of xOut.
 	// This means, we want x_out to be rounded down, as x_out = x_init - x_final, for x_init > x_final.
@@ -336,7 +334,7 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	roundingDirection := osmomath.RoundUp
 	errTolerance.RoundingDir = roundingDirection
 
-	xEst, err := osmoutils.BinarySearchBigDec(computeFromEst, xLowEst, xHighEst, k, errTolerance, maxIterations)
+	xEst, err := osmoutils.BinarySearchBigDec(iterKCalc, xLowEst, xHighEst, targetK, errTolerance, maxIterations)
 	if err != nil {
 		panic(err)
 	}
