@@ -164,8 +164,8 @@ $$k_{iter}(y_{out}) = -y_{out}^3 + 3 y_0 y_{out}^2 - (x_f^2 + w + 3y_0^2)y_{out}
 So we can subtract this constant term `y_0 (x_f^2 + w) + y_0^3`, which for `y_out < y_0` is the dominant term in the expression!
 
 So lets define this as:
-$$target_k = \frac{x_0 y_0 (x_0^2 + y_0^2 + w)}{x_f} - (y_0 (x_f^2 + w) + y_0^3)$$
-$$iter_k(y_delta) = -y_{out}^3 + 3 y_0 y_{out}^2 - (x_f^2 + w + 3y_0^2)y_{out}$$
+$$k_{target} = \frac{x_0 y_0 (x_0^2 + y_0^2 + w)}{x_f} - (y_0 (x_f^2 + w) + y_0^3)$$
+$$k_{iter}(y_delta) = -y_{out}^3 + 3 y_0 y_{out}^2 - (x_f^2 + w + 3y_0^2)y_{out}$$
 
 We prove [here](#err_proof) that an error of a multiplicative `e` between `target_k` and `iter_k`, implies an error of less than a factor of `e` in `y_delta`.
 

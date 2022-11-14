@@ -250,6 +250,38 @@ var (
 	k_threshold = osmomath.NewDecWithPrec(1, 1) // Correct within a factor of 1 * 10^{-1}
 )
 
+// $$k_{target} = \frac{x_0 y_0 (x_0^2 + y_0^2 + w)}{y_f} - (x_0 (y_f^2 + w) + x_0^3)$$
+func targetKCalculator(x0, y0, w, yf osmomath.BigDec) osmomath.BigDec {
+	// cfmmNoV(x0, y0, w) = x_0 y_0 (x_0^2 + y_0^2 + w)
+	startK := cfmmConstantMultiNoV(x0, y0, w)
+	// remove extra yf term
+	yfRemoved := startK.Quo(yf)
+	// removed constant term from expression
+	// namely - (x_0 (y_f^2 + w) + x_0^3) = x_0(y_f^2 + w + x_0^2)
+	// innerTerm = x_f^2 + w + y_0^2
+	innerTerm := yf.Mul(yf).Add(w).Add((x0.Mul(x0)))
+	constantTerm := innerTerm.Mul(x0)
+	return yfRemoved.Sub(constantTerm)
+}
+
+// $$k_{iter}(x_f) = -x_{out}^3 + 3 x_0 x_{out}^2 - (y_f^2 + w + 3x_0^2)x_{out}$$
+// where x_out = x_0 - x_f
+func iterKCalculator(x0, w, yf osmomath.BigDec) func(osmomath.BigDec) (osmomath.BigDec, error) {
+	// compute coefficients first
+	cubicCoeff := osmomath.OneDec().Neg()
+	quadraticCoeff := x0.MulInt64(3)
+	linearCoeff := quadraticCoeff.Mul(x0).Add(w).Add(yf.Mul(yf)).Neg()
+	return func(xf osmomath.BigDec) (osmomath.BigDec, error) {
+		xOut := x0.Sub(xf)
+		// horners method
+		// ax^3 + bx^2 + cx = x(c + x(b + ax))
+		res := cubicCoeff.Mul(xOut)
+		res = res.Add(quadraticCoeff).Mul(xOut)
+		res = res.Add(linearCoeff).Mul(xOut)
+		return res, nil
+	}
+}
+
 // solveCFMMBinarySearch searches the correct dx using binary search over constant K.
 func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.BigDec) osmomath.BigDec {
 	if !xReserve.IsPositive() || !yReserve.IsPositive() || wSumSquares.IsNegative() {
