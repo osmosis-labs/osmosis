@@ -130,6 +130,7 @@ func BinarySearchSingleAssetJoin(
 ) (numLPShares sdk.Int, err error) {
 	// use dummy context
 	ctx := sdk.Context{}
+	// should be guaranteed to converge if above 256 since sdk.Int has 256 bits
 	maxIterations := 300
 	// upperbound of number of LP shares = existingShares * tokenIn.Amount / pool.totalLiquidity.AmountOf(tokenIn.Denom)
 	existingTokenLiquidity := pool.GetTotalPoolLiquidity(ctx).AmountOf(tokenIn.Denom)
