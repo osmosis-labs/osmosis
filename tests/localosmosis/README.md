@@ -122,19 +122,7 @@ After a while (~15 minutes), this will create a file called `state_export.json` 
 cp $HOME/state_export.json $HOME/osmosis/tests/LocalOsmosis/state_export/
 ```
 
-6. Ensure you have docker and docker-compose installed:
-
-```sh
-# Docker
-sudo apt-get remove docker docker-engine docker.io
-sudo apt-get update
-sudo apt install docker.io -y
-
-# Docker compose
-sudo apt install docker-compose -y
-```
-
-7. Build the `local:osmosis` docker image:
+2. Initialize LocalOsmosis:
 
 ```bash
 make localnet-state-export-init
