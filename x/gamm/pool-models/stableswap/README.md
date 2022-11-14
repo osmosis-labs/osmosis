@@ -144,52 +144,56 @@ In the lowerbound case, we leave it as lower-bounded by $0$, otherwise we would 
 
 ##### Altering binary search equations due to error tolerance
 
-Great, we have a binary search to finding an input `new_y_reserve`, such that we get a value `k` within some error bound close to the true desired `k`! We can prove that an error by a factor of `e` in `k`, implies an error of a factor less than `e` in `new_y_reserve`. So we could set `e` to be close to some correctness bound we want. Except... `new_y_reserve >> y_in`, so we'd need an extremely high error tolerance for this to work. So we actually want to adapt the equations, to reduce the "common terms" in `k` that we need to binary search over, to help us search. To do this, we open up what are we doing again, and re-expose `y_in` as a variable we explicitly search over (and therefore get error terms in `k` implying error in `y_in`)
+Great, we have a binary search to finding an input `new_y_reserve`, such that we get a value `k` within some error bound close to the true desired `k`! We can prove that an error by a factor of `e` in `k`, implies an error of a factor less than `e` in `new_y_reserve`. So we could set `e` to be close to some correctness bound we want. Except... `new_y_reserve >> y_in`, so we'd need an extremely high error tolerance for this to work. So we actually want to adapt the equations, to reduce the "common terms" in `k` that we need to binary search over, to help us search. To do this, we open up what are we doing again, and re-expose `y_out` as a variable we explicitly search over (and therefore get error terms in `k` implying error in `y_out`)
 
-What we are doing in the binary search is setting `k_target` and searching over `y_{delta}` until we get `k_iter` {within tolerance} to `k_target`, where they are defined as:
+What we are doing above in the binary search is setting `k_target` and searching over `y_f` until we get `k_iter` {within tolerance} to `k_target`. Sine we want to change to iterating over $y_{out}$, we unroll that $y_f = y_0 - y_{out}$ where they are defined as:
 $k_{target} = x_0 y_0 (x_0^2 + y_0^2 + w)$
-$k_{iter}(y_0 + y_{delta}) = h(x_f, y_0 + y_{delta}, w) = x_f (y_0 + y_{delta}) (x_0^2 + (y_0 + y_{delta})^2 + w)$
+$k_{iter}(y_0 - y_{out}) = h(x_f, y_0 - y_{out}, w) = x_f (y_0 - y_{out}) (x_f^2 + (y_0 - y_{out})^2 + w)$
 
-But we can remove many of these terms! First notice that `x_f` is a constant factor in `k_iter`, so we can just divide `k_target` by `x_f` to remove that. So were at:
+But we can remove many of these terms! First notice that `x_f` is a constant factor in `k_iter`, so we can just divide `k_target` by `x_f` to remove that. Then we switch what we search over, from `y_f` to `y_out`, by fixing `y_0`, so were at:
 
 $$k_{target} = x_0 y_0 (x_0^2 + y_0^2 + w) / x_f$$
-$$k_{iter}(y_{delta}) = (y_0 + y_{delta}) (x_0^2 + (y_0 + y_{delta})^2 + w) = (y_0 + y_{delta}) (x_0^2 + w) + (y_0 + y_{delta})^3$$
+$$k_{iter}(y_{out}) = (y_0 - y_{out}) (x_f^2 + (y_0 - y_{out})^2 + w) = (y_0 - y_{out}) (x_f^2 + w) + (y_0 - y_{out})^3$$
 
-So $k_{iter}(y_{delta})$ is a cubic polynomial in $y_{delta}$. Next we remove the terms that have no dependence on `y_{delta}` (the constant term in the polynomial). To do this first we rewrite this to make the polynomial clearer:
+So $k_{iter}(y_{out})$ is a cubic polynomial in $y_{out}$. Next we remove the terms that have no dependence on `y_{delta}` (the constant term in the polynomial). To do this first we rewrite this to make the polynomial clearer:
 
-$$k_{iter}(y_{delta}) = (y_0 + y_{delta}) (x_0^2 + w) + y_0^3 + 3y_0^2 y_{delta} + 3 y_0 y_{delta}^2 + y_{delta}^3$$
-$$k_{iter}(y_{delta}) = y_0 (x_0^2 + w) + y_{delta}(x_0^2 + w) + y_0^3 + 3y_0^2 y_{delta} + 3 y_0 y_{delta}^2 + y_{delta}^3$$
-$$k_{iter}(y_{delta}) = y_{delta}^3 + 3 y_0 y_{delta}^2 + (x_0^2 + w + 3y_0^2)y_{delta} + (y_0 (x_0^2 + w) + y_0^3)$$
+$$k_{iter}(y_{out}) = (y_0 - y_{out}) (x_f^2 + w) + y_0^3 - 3y_0^2 y_{out} + 3 y_0 y_{out}^2 - y_{out}^3$$
+$$k_{iter}(y_{out}) = y_0 (x_f^2 + w) - y_{out}(x_f^2 + w) + y_0^3 - 3y_0^2 y_{out} + 3 y_0 y_{out}^2 - y_{out}^3$$
+$$k_{iter}(y_{out}) = -y_{out}^3 + 3 y_0 y_{out}^2 - (x_f^2 + w + 3y_0^2)y_{out} + (y_0 (x_f^2 + w) + y_0^3)$$
 
-So we can subtract this constant term `y_0 (x_0^2 + w) + y_0^3`, which for `y_delta < y_0` is the dominant term in the expression!
+So we can subtract this constant term `y_0 (x_f^2 + w) + y_0^3`, which for `y_out < y_0` is the dominant term in the expression!
 
 So lets define this as:
-$$target_k = \frac{x_0 y_0 (x_0^2 + y_0^2 + w)}{x_f} - (y_0 (x_0^2 + w) + y_0^3)$$
-$$iter_k(y_delta) = y_{delta}^3 + 3 y_0 y_{delta}^2 + (x_0^2 + w + 3y_0^2)y_{delta}$$
+$$target_k = \frac{x_0 y_0 (x_0^2 + y_0^2 + w)}{x_f} - (y_0 (x_f^2 + w) + y_0^3)$$
+$$iter_k(y_delta) = -y_{out}^3 + 3 y_0 y_{out}^2 - (x_f^2 + w + 3y_0^2)y_{out}$$
 
 We prove [here](#err_proof) that an error of a multiplicative `e` between `target_k` and `iter_k`, implies an error of less than a factor of `e` in `y_delta`.
 
 ##### Combined pseudocode
 
-Now we want to wrap this binary search into `solve_y`. We changed the API slightly, from what was previously denoted, to have this "y_0" term, in order to derive initial bounds.
+Now we want to wrap this binary search into `solve_cfmm`. We changed the API slightly, from what was previously denoted, to have this "y_0" term, in order to derive initial bounds.
 
 ```python
 # solve_y returns y_out s.t. CFMM_eq(x_f, y_f, w) = k = CFMM_eq(x_0, y_0, w)
 # for x_f = x_0 + x_in.
 def solve_y(x_0, y_0, w, x_in):
   x_f = x_0 + x_in
-  k = CFMM_eq(x_0, y_0, w)
   err_tolerance = {"within factor of 10^-12", RoundUp}
-  y_f = iterative_search(x_0, x_f, y_0, w, err_tolerance):
+  y_f = iterative_search(x_0, x_f, y_0, w, err_tolerance)
   y_out = y_0 - y_f
   return y_out
 ```
 
 ```python
+def iter_k_fn(x_f, y_0, w):
+  def f(y_f):
+    y_out = y_0 - y_f
+    return -(y_out)**3 + 3 y_0 * y_out^2 - (x_f**2 + w + 3*y_0**2) * y_out
+
 def iterative_search(x_0, x_f, y_0, w, err_tolerance):
   target_k = target_k_fn(x_0, y_0, w, x_f)
-  iter_k_calculator = lambda y_est: h(x_f, y_est, w)
-  k_0 = iter_k_fn(x_f, y_0, w)
+  iter_k_calculator = iter_k_fn(x_f, y_0, w)
+  k_0 = iter_k_calculator(y_0)
   lowerbound, upperbound = y_0, y_0
   k_ratio = k_0 / k
   if k_ratio < 1:
@@ -204,7 +208,7 @@ def iterative_search(x_0, x_f, y_0, w, err_tolerance):
   else:
     return y_0 # means x_f = x_0
   max_iteration_count = 100
-  return binary_search(lowerbound, upperbound, k_calculator, k, err_tolerance)
+  return binary_search(lowerbound, upperbound, k_calculator, target_k, err_tolerance)
 
 def binary_search(lowerbound, upperbound, approximation_fn, target, max_iteration_count, err_tolerance):
   iter_count = 0
