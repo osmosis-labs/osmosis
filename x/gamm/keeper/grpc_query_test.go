@@ -768,19 +768,19 @@ func (suite *KeeperTestSuite) TestQueryStableswapPoolSpotPrice() {
 			name: "valid request for foo/bar in even pool",
 			req: &types.QuerySpotPriceRequest{
 				PoolId:          poolIDEven,
-				BaseAssetDenom:  "foo",
-				QuoteAssetDenom: "bar",
+				BaseAssetDenom:  "bar",
+				QuoteAssetDenom: "foo",
 			},
-			result: sdk.MustNewDecFromStr("1.00").String(),
+			result: "1.000000000000000000",
 		},
 		{
 			name: "valid request for foo/bar in 1:2:3 pool",
 			req: &types.QuerySpotPriceRequest{
 				PoolId:          poolIDUneven,
-				BaseAssetDenom:  "foo",
-				QuoteAssetDenom: "bar",
+				BaseAssetDenom:  "bar",
+				QuoteAssetDenom: "foo",
 			},
-			result: sdk.MustNewDecFromStr("1.446").String(),
+			result: "1.446096575818955898",
 		},
 	}
 
@@ -850,20 +850,19 @@ func (suite *KeeperTestSuite) TestV2QueryStableswapPoolSpotPrice() {
 			name: "foo in terms of bar in even pool",
 			req: &v2types.QuerySpotPriceRequest{
 				PoolId:          poolIDEven,
-				BaseAssetDenom:  "foo",
-				QuoteAssetDenom: "bar",
+				BaseAssetDenom:  "bar",
+				QuoteAssetDenom: "foo",
 			},
-			result: sdk.MustNewDecFromStr("1.00").String(),
+			result: "1.000000000000000000",
 		},
 		{
 			name: "foo in terms of bar in uneven pool",
 			req: &v2types.QuerySpotPriceRequest{
-				PoolId: poolIDUneven,
-				// flipped base and quote assets from v1 query
-				BaseAssetDenom:  "bar",
-				QuoteAssetDenom: "foo",
+				PoolId:          poolIDUneven,
+				BaseAssetDenom:  "foo",
+				QuoteAssetDenom: "bar",
 			},
-			result: sdk.MustNewDecFromStr("1.446").String(),
+			result: "1.446096575818955898",
 		},
 	}
 
