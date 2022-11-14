@@ -80,7 +80,7 @@ pub mod execute {
             deps.storage,
             info.sender.clone(),
             |state| -> Result<_, ContractError> {
-                if state.is_some_and(|counter| counter.owner != info.sender.clone()) {
+                if state.is_some() && state.unwrap().owner != info.sender.clone() {
                     return Err(ContractError::Unauthorized {});
                 }
                 return Ok(Counter {
