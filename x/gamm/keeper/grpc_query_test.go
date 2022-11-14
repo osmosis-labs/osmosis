@@ -774,7 +774,7 @@ func (suite *KeeperTestSuite) TestQueryStableswapPoolSpotPrice() {
 			result: "1.000000000000000000",
 		},
 		{
-			name: "valid request for foo/bar in 1:2:3 pool",
+			name: "foo in terms of bar for in a 1:2:3, foo bar baz pool",
 			req: &types.QuerySpotPriceRequest{
 				PoolId:          poolIDUneven,
 				BaseAssetDenom:  "bar",
