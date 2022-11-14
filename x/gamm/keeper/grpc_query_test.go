@@ -91,6 +91,83 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestCalcJoinPoolNoSwapShares() {
+	queryClient := suite.queryClient
+	ctx := suite.Ctx
+	poolId := suite.PrepareBalancerPool()
+	swapFee := sdk.ZeroDec()
+
+	testCases := []struct {
+		name        string
+		poolId      uint64
+		tokensIn    sdk.Coins
+		expectedErr error
+	}{
+		{
+			"valid uneven multi asset join test case",
+			poolId,
+			sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(5000000)), sdk.NewCoin("bar", sdk.NewInt(5000000)), sdk.NewCoin("baz", sdk.NewInt(5000000)), sdk.NewCoin("uosmo", sdk.NewInt(5000000))),
+			nil,
+		},
+		{
+			"valid even multi asset join test case",
+			poolId,
+			sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(500000)), sdk.NewCoin("bar", sdk.NewInt(1000000)), sdk.NewCoin("baz", sdk.NewInt(1500000)), sdk.NewCoin("uosmo", sdk.NewInt(2000000))),
+			nil,
+		},
+		{
+			"invalid single asset join test case",
+			poolId,
+			sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000))),
+			errors.New("no-swap joins require LP'ing with all assets in pool"),
+		},
+		{
+			"pool id does not exist",
+			poolId + 1,
+			sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000))),
+			types.PoolDoesNotExistError{PoolId: poolId + 1},
+		},
+		{
+			"token in denom does not exist",
+			poolId,
+			sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10000))),
+			sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, "input denoms must already exist in the pool (%s)", "random"),
+		},
+		{
+			"join pool with incorrect amount of assets",
+			poolId,
+			sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000)), sdk.NewCoin("bar", sdk.NewInt(10000))),
+			errors.New("no-swap joins require LP'ing with all assets in pool"),
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			out, err := queryClient.CalcJoinPoolNoSwapShares(gocontext.Background(), &types.QueryCalcJoinPoolNoSwapSharesRequest{
+				PoolId:   tc.poolId,
+				TokensIn: tc.tokensIn,
+			})
+			if tc.expectedErr == nil {
+				poolRes, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
+					PoolId: tc.poolId,
+				})
+				suite.Require().NoError(err)
+
+				var pool types.PoolI
+				err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
+				suite.Require().NoError(err)
+
+				numShares, numLiquidity, err := pool.CalcJoinPoolNoSwapShares(ctx, tc.tokensIn, swapFee)
+				suite.Require().NoError(err)
+				suite.Require().Equal(numShares, out.SharesOut)
+				suite.Require().Equal(numLiquidity, out.TokensOut)
+			} else {
+				suite.Require().EqualError(err, tc.expectedErr.Error())
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestPoolsWithFilter() {
 	var (
 		defaultAcctFunds sdk.Coins = sdk.NewCoins(
@@ -258,7 +335,6 @@ func (suite *KeeperTestSuite) TestPoolsWithFilter() {
 			}
 		})
 	}
-
 }
 
 func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
