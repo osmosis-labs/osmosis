@@ -115,10 +115,6 @@ func MaximalExactRatioJoin(p types.PoolI, ctx sdk.Context, tokensIn sdk.Coins) (
 	return numShares, remCoins, nil
 }
 
-// Need to get something that makes the result correct within 1 LP share.
-// If we fail to reach it within maxIterations, we return an error.
-var singleAssetJoinAdditive = sdk.NewInt(1)
-
 // We binary search a number of LP shares, s.t. if we exited the pool with the updated liquidity,
 // and swapped all the tokens back to the input denom, we'd get the same amount. (under 0 swap fee)
 // Thanks to CFMM path-independence, we can estimate slippage with these swaps to be sure to get the right numbers here.
@@ -158,7 +154,7 @@ func BinarySearchSingleAssetJoin(
 	}
 
 	// We accept an additive tolerance of 1 LP share error and round down
-	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: singleAssetJoinAdditive, MultiplicativeTolerance: sdk.Dec{}, RoundingDir: osmomath.RoundDown}
+	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.Dec{}, RoundingDir: osmomath.RoundDown}
 
 	numLPShares, err = osmoutils.BinarySearch(
 		estimateCoinOutGivenShares,
