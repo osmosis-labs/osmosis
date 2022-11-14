@@ -822,7 +822,7 @@ func TestCalcSingleAssetJoinShares(t *testing.T) {
 			shares, err := p.calcSingleAssetJoinShares(tc.tokenIn, tc.swapFee)
 			require.NoError(t, err, "test: %s", name)
 
-			p.updatePoolLiquidityForExit(sdk.Coins{tc.tokenIn})
+			p.updatePoolForJoin(sdk.Coins{tc.tokenIn}, shares)
 			exitTokens, err := p.ExitPool(ctx, shares, sdk.ZeroDec())
 			require.NoError(t, err, "test: %s", name)
 

@@ -67,6 +67,14 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 			expectPass: true,
 		},
 		{
+			name: "no scaling factors",
+			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
+				msg.ScalingFactors = []uint64{}
+				return msg
+			}),
+			expectPass: true,
+		},
+		{
 			name: "invalid sender",
 			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.Sender = invalidAddr.String()

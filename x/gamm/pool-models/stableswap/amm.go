@@ -32,23 +32,27 @@ func cfmmConstant(xReserve, yReserve osmomath.BigDec) osmomath.BigDec {
 	return xy.Mul(x2.Add(y2))
 }
 
-// multi-asset CFMM is xyv(x^2 + y^2 + w) = k,
-// where u is the product of the reserves of assets
-// outside of x and y (e.g. u = wz), and v is the sum
-// of their squares (e.g. v = w^2 + z^2).
-// When u = 1 and v = 0, this is equivalent to solidly's CFMM
-// {TODO: Update this comment}
-func cfmmConstantMultiNoV(xReserve, yReserve, vSumSquares osmomath.BigDec) osmomath.BigDec {
-	if !xReserve.IsPositive() || !yReserve.IsPositive() || vSumSquares.IsNegative() {
+// Simplified multi-asset CFMM is xy(x^2 + y^2 + w) = k,
+// where w is the sum of the squares of the
+// reserve assets (e.g. w = m^2 + n^2).
+// When w = 0, this is equivalent to solidly's CFMM
+// We use this version for calculations since the u
+// term in the full CFMM is constant.
+func cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares osmomath.BigDec) osmomath.BigDec {
+	if !xReserve.IsPositive() || !yReserve.IsPositive() || wSumSquares.IsNegative() {
 		panic("invalid input: reserves must be positive")
 	}
 
 	xy := xReserve.Mul(yReserve)
 	x2 := xReserve.Mul(xReserve)
 	y2 := yReserve.Mul(yReserve)
-	return xy.Mul(x2.Add(y2).Add(vSumSquares))
+	return xy.Mul(x2.Add(y2).Add(wSumSquares))
 }
 
+// full multi-asset CFMM is xyu(x^2 + y^2 + w) = k,
+// where u is the product of asset reserves (e.g. u = m * n)
+// and w is the sum of the squares of their squares (e.g. w = m^2 + n^2).
+// When u = 1 and w = 0, this is equivalent to solidly's CFMM
 func cfmmConstantMulti(xReserve, yReserve, u, v osmomath.BigDec) osmomath.BigDec {
 	if !u.IsPositive() {
 		panic("invalid input: reserves must be positive")
@@ -56,7 +60,7 @@ func cfmmConstantMulti(xReserve, yReserve, u, v osmomath.BigDec) osmomath.BigDec
 	return cfmmConstantMultiNoV(xReserve, yReserve, v).Mul(u)
 }
 
-// solidly CFMM is xy(x^2 + y^2) = k, and our multi-asset CFMM is xyz(x^2 + y^2 + w) = k
+// Solidly's CFMM is xy(x^2 + y^2) = k, and our multi-asset CFMM is xyz(x^2 + y^2 + w) = k
 // So we want to solve for a given addition of `b` units of y into the pool,
 // how many units `a` of x do we get out.
 // So we solve the following expression for `a` in two-asset pools:
@@ -332,7 +336,7 @@ func oneMinus(swapFee sdk.Dec) osmomath.BigDec {
 	return osmomath.BigDecFromSDKDec(sdk.OneDec().Sub(swapFee))
 }
 
-// returns outAmt as a decimal
+// calcOutAmtGivenIn calculate amount of specified denom to output from a pool in sdk.Dec given the input `tokenIn`
 func (p Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
 	// round liquidity down, and round token in down
 	reserves, err := p.scaledSortedPoolReserves(tokenIn.Denom, tokenOutDenom, osmomath.RoundDown)
@@ -353,7 +357,7 @@ func (p Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee 
 	return outAmt, nil
 }
 
-// returns inAmt as a decimal
+// calcInAmtGivenOut calculates exact input amount given the desired output and return as a decimal
 func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
 	// round liquidity down, and round token out up
 	reserves, err := p.scaledSortedPoolReserves(tokenInDenom, tokenOut.Denom, osmomath.RoundDown)
@@ -378,10 +382,12 @@ func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee
 	return inCoinAmt, nil
 }
 
+// calcSingleAssetJoinShares calculates the number of LP shares that
+// should be granted given the passed in single-token input (non-mutative)
 func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk.Int, error) {
 	poolWithAddedLiquidityAndShares := func(newLiquidity sdk.Coin, newShares sdk.Int) types.PoolI {
 		paCopy := p.Copy()
-		paCopy.updatePoolForJoin(sdk.NewCoins(tokenIn), newShares)
+		paCopy.updatePoolForJoin(sdk.NewCoins(newLiquidity), newShares)
 		return &paCopy
 	}
 
@@ -392,9 +398,9 @@ func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk
 	return cfmm_common.BinarySearchSingleAssetJoin(p, sdk.NewCoin(tokenIn.Denom, tokenInAmtAfterFee), poolWithAddedLiquidityAndShares)
 }
 
-// We can mutate pa here
-// TODO: some day switch this to a COW wrapped pa, for better perf
-func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
+// Route a pool join attempt to either a single-asset join or all-asset join (mutates pool state)
+// Eventually, we intend to switch this to a COW wrapped pa for better performance
+func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
 	if !tokensIn.DenomsSubsetOf(p.GetTotalPoolLiquidity(ctx)) {
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("attempted joining pool with assets that do not exist in pool")
 	}
@@ -404,15 +410,15 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 			return sdk.ZeroInt(), sdk.NewCoins(), err
 		}
 
-		newLiquidity = tokensIn
+		tokensJoined = tokensIn
 
-		p.updatePoolForJoin(newLiquidity, numShares)
+		p.updatePoolForJoin(tokensJoined, numShares)
 
 		if err = validatePoolLiquidity(p.PoolLiquidity, p.ScalingFactors); err != nil {
 			return sdk.ZeroInt(), sdk.NewCoins(), err
 		}
 
-		return numShares, newLiquidity, err
+		return numShares, tokensJoined, nil
 	} else if len(tokensIn) != p.NumAssets() {
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New(
 			"stableswap pool only supports LP'ing with one asset, or all assets in pool")
@@ -425,7 +431,7 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 	}
 	p.updatePoolForJoin(tokensIn.Sub(remCoins), numShares)
 
-	tokensJoined := tokensIn.Sub(remCoins)
+	tokensJoined = tokensIn.Sub(remCoins)
 
 	if err = validatePoolLiquidity(p.PoolLiquidity, p.ScalingFactors); err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err
