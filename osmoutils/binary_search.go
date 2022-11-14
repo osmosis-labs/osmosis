@@ -42,6 +42,20 @@ func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int {
 		comparisonSign = -1
 	}
 
+	// Ensure that even if expected is within tolerance of actual, we don't count it as equal if its in the wrong direction.
+	// so if were supposed to round down, it must be that `expected >= actual`.
+	// likewise if were supposed to round up, it must be that `expected <= actual`.
+	// If neither of the above, then rounding direction does not enforce a constraint.
+	if e.RoundingDir == osmomath.RoundDown {
+		if expected.LT(actual) {
+			return -1
+		}
+	} else if e.RoundingDir == osmomath.RoundUp {
+		if expected.GT(actual) {
+			return 1
+		}
+	}
+
 	// Check additive tolerance equations
 	if !e.AdditiveTolerance.IsNil() {
 		// if no error accepted, do a direct compare.
@@ -136,10 +150,10 @@ func BinarySearch(f func(input sdk.Int) (sdk.Int, error),
 	}
 	curIteration := 0
 	for ; curIteration < maxIterations; curIteration += 1 {
-		compRes := errTolerance.Compare(curOutput, targetOutput)
-		if compRes > 0 {
+		compRes := errTolerance.Compare(targetOutput, curOutput)
+		if compRes < 0 {
 			upperbound = curEstimate
-		} else if compRes < 0 {
+		} else if compRes > 0 {
 			lowerbound = curEstimate
 		} else {
 			return curEstimate, nil
