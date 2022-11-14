@@ -9,6 +9,8 @@ jobs:
   state_compatability_labels:
     runs-on: ubuntu-latest
     steps:
+      - name: Check
+        run: echo ${{ secrets.ADD_TO_PROJECT_PAT }}
       - uses: mheap/github-action-required-labels@v2.2.3
         env:
           GITHUB_TOKEN: ${{ secrets.ADD_TO_PROJECT_PAT }}
