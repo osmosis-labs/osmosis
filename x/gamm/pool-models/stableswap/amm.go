@@ -2,6 +2,7 @@ package stableswap
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -43,10 +44,19 @@ func cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares osmomath.BigDec) osmom
 		panic("invalid input: reserves must be positive")
 	}
 
-	xy := xReserve.Mul(yReserve)
+	return cfmmConstantMultiNoVY(xReserve, yReserve, wSumSquares).Mul(yReserve)
+}
+
+// returns x(x^2 + y^2 + w) = k
+// For use in comparing values with the same y
+func cfmmConstantMultiNoVY(xReserve, yReserve, wSumSquares osmomath.BigDec) osmomath.BigDec {
+	if !xReserve.IsPositive() || !yReserve.IsPositive() || wSumSquares.IsNegative() {
+		panic("invalid input: reserves must be positive")
+	}
+
 	x2 := xReserve.Mul(xReserve)
 	y2 := yReserve.Mul(yReserve)
-	return xy.Mul(x2.Add(y2).Add(wSumSquares))
+	return xReserve.Mul(x2.Add(y2).Add(wSumSquares))
 }
 
 // full multi-asset CFMM is xyu(x^2 + y^2 + w) = k,
@@ -249,8 +259,12 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	}
 	yFinal := yReserve.Add(yIn)
 	xLowEst, xHighEst := xReserve, xReserve
-	k0 := cfmmConstantMultiNoV(xReserve, yFinal, wSumSquares)
-	k := cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares)
+	// yFinal is a constant factor in these equations, so avoid paying the precision loss for it
+	// in the core binary search loop. We compute the candidate without this term,
+	// and compute the target, by dividing by yFinal.
+	k0 := cfmmConstantMultiNoVY(xReserve, yFinal, wSumSquares)
+	k := cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares).Quo(yFinal)
+	fmt.Println(k0, k)
 	if k0.Equal(osmomath.ZeroDec()) || k.Equal(osmomath.ZeroDec()) {
 		panic("k should never be zero")
 	}
@@ -276,7 +290,7 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 
 	// create single-input CFMM to pass into binary search
 	computeFromEst := func(xEst osmomath.BigDec) (osmomath.BigDec, error) {
-		return cfmmConstantMultiNoV(xEst, yFinal, wSumSquares), nil
+		return cfmmConstantMultiNoVY(xEst, yFinal, wSumSquares), nil
 	}
 
 	// if yIn is positive, we want to under-estimate the amount of xOut.

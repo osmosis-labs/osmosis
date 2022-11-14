@@ -210,6 +210,10 @@ def solve_y(x_0, y_0, w, x_in):
   return y_out
 ```
 
+##### Further optimization
+
+
+
 #### Using this in swap methods
 
 So now we put together the components discussed in prior sections to achieve pseudocode for the SwapExactAmountIn
