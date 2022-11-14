@@ -56,7 +56,7 @@ jobs:
         id: find_go_version
         run: |
           GO_VERSION=$(cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
-          echo "name=go_version::$(echo ${GO_VERSION})" >> $GITHUB_OUTPUT
+          echo "::set-output name=today::$(date "+%Y/%m/%d")"
 
       # Distroless Docker image (default)
       -

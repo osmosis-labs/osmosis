@@ -39,7 +39,7 @@ jobs:
         name: Get today's date
         id: date
         run: |
-          echo "name=today::$(date "+%Y/%m/%d")" >> $GITHUB_OUTPUT
+          echo "::set-output name=today::$(date "+%Y/%m/%d")"
       -
         name: Read mutation_test_txt file
         id: result
