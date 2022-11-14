@@ -40,12 +40,6 @@ var DefaultStableswapLiquidity = sdk.NewCoins(
 	sdk.NewCoin("baz", sdk.NewInt(10000000)),
 )
 
-var DefaultStableswapLiquidity = sdk.NewCoins(
-	sdk.NewCoin("foo", sdk.NewInt(10000000)),
-	sdk.NewCoin("bar", sdk.NewInt(10000000)),
-	sdk.NewCoin("baz", sdk.NewInt(10000000)),
-)
-
 var ImbalancedStableswapLiquidity = sdk.NewCoins(
 	sdk.NewCoin("foo", sdk.NewInt(10_000_000_000)),
 	sdk.NewCoin("bar", sdk.NewInt(20_000_000_000)),
