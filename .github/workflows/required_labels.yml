@@ -9,7 +9,7 @@ jobs:
   state_compatability_labels:
     runs-on: ubuntu-latest
     steps:
-      - uses: RusAkh/github-action-required-labels@v2.2.3
+      - uses: RusAkh/github-action-required-labels
         env:
           GITHUB_TOKEN: ${{ secrets.ADD_TO_PROJECT_PAT }}
         with: # Require one of the following labels
