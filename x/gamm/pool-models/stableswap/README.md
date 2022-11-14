@@ -142,9 +142,54 @@ This means that $\forall c \in \mathbb{R}^+, c * h(x,y,w) < h(x,c*y,w) < c^3 * h
 We can use this fact to get a pretty-good initial upperbound guess for $y$ using the linear estimate.
 In the lowerbound case, we leave it as lower-bounded by $0$, otherwise we would need to take a cubed root to get a better estimate.
 
+##### Altering binary search equations due to error tolerance
+
+Great, we have a binary search to finding an input `new_y_reserve`, such that we get a value `k` within some error bound close to the true desired `k`! We can prove that an error by a factor of `e` in `k`, implies an error of a factor less than `e` in `new_y_reserve`. So we could set `e` to be close to some correctness bound we want. Except... `new_y_reserve >> y_in`, so we'd need an extremely high error tolerance for this to work. So we actually want to adapt the equations, to reduce the "common terms" in `k` that we need to binary search over, to help us search. To do this, we open up what are we doing again, and re-expose `y_in` as a variable we explicitly search over (and therefore get error terms in `k` implying error in `y_in`)
+
+What we are doing in the binary search is setting `k_target` and searching over `y_{delta}` until we get `k_iter` {within tolerance} to `k_target`, where they are defined as:
+$k_{target} = x_0 y_0 (x_0^2 + y_0^2 + w)$
+$k_{iter}(y_0 + y_{delta}) = h(x_f, y_0 + y_{delta}, w) = x_f (y_0 + y_{delta}) (x_0^2 + (y_0 + y_{delta})^2 + w)$
+
+But we can remove many of these terms! First notice that `x_f` is a constant factor in `k_iter`, so we can just divide `k_target` by `x_f` to remove that. So were at:
+
+$$k_{target} = x_0 y_0 (x_0^2 + y_0^2 + w) / x_f$$
+$$k_{iter}(y_{delta}) = (y_0 + y_{delta}) (x_0^2 + (y_0 + y_{delta})^2 + w) = (y_0 + y_{delta}) (x_0^2 + w) + (y_0 + y_{delta})^3$$
+
+So $k_{iter}(y_{delta})$ is a cubic polynomial in $y_{delta}$. Next we remove the terms that have no dependence on `y_{delta}` (the constant term in the polynomial). To do this first we rewrite this to make the polynomial clearer:
+
+$$k_{iter}(y_{delta}) = (y_0 + y_{delta}) (x_0^2 + w) + y_0^3 + 3y_0^2 y_{delta} + 3 y_0 y_{delta}^2 + y_{delta}^3$$
+$$k_{iter}(y_{delta}) = y_0 (x_0^2 + w) + y_{delta}(x_0^2 + w) + y_0^3 + 3y_0^2 y_{delta} + 3 y_0 y_{delta}^2 + y_{delta}^3$$
+$$k_{iter}(y_{delta}) = y_{delta}^3 + 3 y_0 y_{delta}^2 + (x_0^2 + w + 3y_0^2)y_{delta} + (y_0 (x_0^2 + w) + y_0^3)$$
+
+So we can subtract this constant term `y_0 (x_0^2 + w) + y_0^3`, which for `y_delta < y_0` is the dominant term in the expression!
+
+So lets define this as:
+$$target_k = \frac{x_0 y_0 (x_0^2 + y_0^2 + w)}{x_f} - (y_0 (x_0^2 + w) + y_0^3)$$
+$$iter_k(y_delta) = y_{delta}^3 + 3 y_0 y_{delta}^2 + (x_0^2 + w + 3y_0^2)y_{delta}$$
+
+We prove [here](#err_proof) that an error of a multiplicative `e` between `target_k` and `iter_k`, implies an error of less than a factor of `e` in `y_delta`.
+
+##### Combined pseudocode
+
+Now we want to wrap this binary search into `solve_y`. We changed the API slightly, from what was previously denoted, to have this "y_0" term, in order to derive initial bounds.
+
 ```python
-def iterative_search(x_f, y_0, w, k, err_tolerance):
-  k_0 = h(x_f, y_0, w)
+# solve_y returns y_out s.t. CFMM_eq(x_f, y_f, w) = k = CFMM_eq(x_0, y_0, w)
+# for x_f = x_0 + x_in.
+def solve_y(x_0, y_0, w, x_in):
+  x_f = x_0 + x_in
+  k = CFMM_eq(x_0, y_0, w)
+  err_tolerance = {"within factor of 10^-12", RoundUp}
+  y_f = iterative_search(x_0, x_f, y_0, w, err_tolerance):
+  y_out = y_0 - y_f
+  return y_out
+```
+
+```python
+def iterative_search(x_0, x_f, y_0, w, err_tolerance):
+  target_k = target_k_fn(x_0, y_0, w, x_f)
+  iter_k_calculator = lambda y_est: h(x_f, y_est, w)
+  k_0 = iter_k_fn(x_f, y_0, w)
   lowerbound, upperbound = y_0, y_0
   k_ratio = k_0 / k
   if k_ratio < 1:
@@ -158,7 +203,6 @@ def iterative_search(x_f, y_0, w, k, err_tolerance):
     lowerbound = 0
   else:
     return y_0 # means x_f = x_0
-  k_calculator = lambda y_est: h(x_f, y_est, w)
   max_iteration_count = 100
   return binary_search(lowerbound, upperbound, k_calculator, k, err_tolerance)
 
@@ -181,7 +225,8 @@ def binary_search(lowerbound, upperbound, approximation_fn, target, max_iteratio
   return cur_y_guess
 ```
 
-Now we want to wrap this binary search into `solve_y`. We changed the API slightly, from what was previously denoted, to have this "y_0" term, in order to derive initial bounds.
+##### Setting the error tolerance
+
 What remains is setting the error tolerance. We need two properties:
 
 - The returned value to be within some correctness threshold of the true value
@@ -195,20 +240,6 @@ To ensure the returned value is always rounded correctly, we define the rounding
 - If `x_in` is negative, then `y_out` is also negative. The reason is that this is called in CalcInAmtGivenOut, so confusingly `x_in` is the known amount out, as a negative quantity. `y_out` is negative as well, to express that we get that many tokens out. (Since negative, `-y_out` is how many we add into the pool). We want `y_out` to be a larger negative, which means we want to round it down. Note that `y_f > y_0` here. Therefore `y_out = y_0 - y_f` is more negative, the higher `y_f` is. Thus we want to round `y_f` up.
 
 And therefore we round up in both cases.
-
-We capture all of this, in the following `solve_y` pseudocode:
-
-```python
-# solve_cfmm returns y_f s.t. CFMM_eq(x_f, y_f, w) = k
-# for the no-v variant of CFMM_eq
-def solve_y(x_0, y_0, w, x_in):
-  x_f = x_0 + x_in
-  k = CFMM_eq(x_0, y_0, w)
-  err_tolerance = {"within factor of 10^-12", RoundUp}
-  y_f = iterative_search(x_f, y_0, w, k, err_tolerance):
-  y_out = y_0 - y_f
-  return y_out
-```
 
 ##### Further optimization
 
