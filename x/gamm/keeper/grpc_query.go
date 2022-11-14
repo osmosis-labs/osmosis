@@ -16,6 +16,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/v2types"
 )
 
 var sdkIntMaxValue = sdk.NewInt(0)
@@ -42,6 +43,16 @@ type Querier struct {
 
 func NewQuerier(k Keeper) Querier {
 	return Querier{Keeper: k}
+}
+
+// QuerierV2 defines a wrapper around the x/gamm keeper providing gRPC method
+// handlers for v2 queries.
+type QuerierV2 struct {
+	Keeper
+}
+
+func NewV2Querier(k Keeper) QuerierV2 {
+	return QuerierV2{Keeper: k}
 }
 
 // Pool checks if a pool exists and their respective poolWeights.
@@ -94,13 +105,7 @@ func (q Querier) Pools(
 			return err
 		}
 
-		// TODO: pools query should not be balancer specific
-		pool, ok := poolI.(*balancer.Pool)
-		if !ok {
-			return fmt.Errorf("pool (%d) is not basic pool", pool.GetId())
-		}
-
-		any, err := codectypes.NewAnyWithValue(pool)
+		any, err := codectypes.NewAnyWithValue(poolI)
 		if err != nil {
 			return err
 		}
@@ -283,6 +288,29 @@ func (q Querier) CalcExitPoolCoinsFromShares(ctx context.Context, req *types.Que
 	return &types.QueryCalcExitPoolCoinsFromSharesResponse{TokensOut: exitCoins}, nil
 }
 
+//  CalcJoinPoolNoSwapShares returns the amount of shares you'd get if joined a pool without a swap and tokens which need to be provided
+func (q Querier) CalcJoinPoolNoSwapShares(ctx context.Context, req *types.QueryCalcJoinPoolNoSwapSharesRequest) (*types.QueryCalcJoinPoolNoSwapSharesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	pool, err := q.GetPoolAndPoke(sdkCtx, req.PoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	sharesOut, tokensJoined, err := pool.CalcJoinPoolNoSwapShares(sdkCtx, req.TokensIn, pool.GetSwapFee(sdkCtx))
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryCalcJoinPoolNoSwapSharesResponse{
+		TokensOut: tokensJoined,
+		SharesOut: sharesOut,
+	}, nil
+}
+
 // PoolParams queries a specified pool for its params.
 func (q Querier) PoolParams(ctx context.Context, req *types.QueryPoolParamsRequest) (*types.QueryPoolParamsResponse, error) {
 	if req == nil {
@@ -373,6 +401,31 @@ func (q Querier) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest
 	}
 
 	return &types.QuerySpotPriceResponse{
+		SpotPrice: sp.String(),
+	}, nil
+}
+
+func (q QuerierV2) SpotPrice(ctx context.Context, req *v2types.QuerySpotPriceRequest) (*v2types.QuerySpotPriceResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.BaseAssetDenom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid base asset denom")
+	}
+
+	if req.QuoteAssetDenom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid quote asset denom")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	sp, err := q.Keeper.CalculateSpotPrice(sdkCtx, req.PoolId, req.QuoteAssetDenom, req.BaseAssetDenom)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &v2types.QuerySpotPriceResponse{
 		SpotPrice: sp.String(),
 	}, nil
 }

@@ -1,4 +1,4 @@
-# Solidly Stableswap
+# Generalized Solidly Stableswap
 
 Stableswaps are pools that offer low slippage for two assets that are intended to be tightly correlated.
 There is a price ratio they are expected to be at, and the AMM offers low slippage around this price.
@@ -8,10 +8,6 @@ This package implements the Solidly stableswap curve, namely a CFMM with
 invariant: $f(x, y) = xy(x^2 + y^2) = k$
 
 It is generalized to the multi-asset setting as $f(a_1, ..., a_n) = a_1 * ... * a_n (a_1^2 + ... + a_n^2)$
-
-## Choice of curve
-
-{TODO: Include some high level summary of the curve}
 
 ## Pool configuration
 

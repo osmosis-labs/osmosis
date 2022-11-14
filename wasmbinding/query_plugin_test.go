@@ -16,7 +16,12 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	proto "github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
+	gammv2types "github.com/osmosis-labs/osmosis/v12/x/gamm/v2types"
 
 	"github.com/osmosis-labs/osmosis/v12/app"
 	epochtypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
@@ -47,10 +52,11 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 		testSetup              func()
 		path                   string
 		requestData            func() []byte
-		responseProtoStruct    interface{}
+		responseProtoStruct    codec.ProtoMarshaler
 		expectedQuerierError   bool
 		expectedUnMarshalError bool
 		resendRequest          bool
+		checkResponseStruct    bool
 	}{
 		{
 			name: "happy path",
@@ -62,6 +68,35 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				return bz
 			},
 			responseProtoStruct: &epochtypes.QueryEpochsInfoResponse{},
+		},
+		{
+			name: "happy path gamm",
+			path: "/osmosis.gamm.v2.Query/SpotPrice",
+			testSetup: func() {
+				pk := ed25519.GenPrivKey().PubKey()
+				sender := sdk.AccAddress(pk.Address())
+				err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, sender, apptesting.DefaultAcctFunds)
+				suite.Require().NoError(err)
+				msg := balancer.NewMsgCreateBalancerPool(sender,
+					balancer.NewPoolParams(sdk.ZeroDec(), sdk.ZeroDec(), nil),
+					apptesting.DefaultPoolAssets, "")
+				_, err = suite.app.GAMMKeeper.CreatePool(suite.ctx, msg)
+				suite.NoError(err)
+			},
+			requestData: func() []byte {
+				queryrequest := gammv2types.QuerySpotPriceRequest{
+					PoolId:          1,
+					BaseAssetDenom:  "bar",
+					QuoteAssetDenom: "uosmo",
+				}
+				bz, err := proto.Marshal(&queryrequest)
+				suite.Require().NoError(err)
+				return bz
+			},
+			checkResponseStruct: true,
+			responseProtoStruct: &gammv2types.QuerySpotPriceResponse{
+				SpotPrice: sdk.NewDecWithPrec(5, 1).String(),
+			},
 		},
 		{
 			name: "unregistered path(not whitelisted)",
@@ -191,6 +226,13 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			if tc.expectedQuerierError {
 				suite.Require().Error(err)
 				return
+			}
+			if tc.checkResponseStruct {
+				expectedResponse, err := proto.Marshal(tc.responseProtoStruct)
+				suite.Require().NoError(err)
+				expJsonResp, err := wasmbinding.ConvertProtoToJSONMarshal(tc.responseProtoStruct, expectedResponse, suite.app.AppCodec())
+				suite.Require().NoError(err)
+				suite.Require().Equal(expJsonResp, stargateResponse)
 			}
 
 			suite.Require().NoError(err)

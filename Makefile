@@ -399,7 +399,7 @@ localnet-stop:
 	@STATE="" docker-compose -f tests/localosmosis/docker-compose.yml down
 
 localnet-clean:
-	@rm -rfI $(HOME)/.osmosisd/
+	@rm -rfI $(HOME)/.osmosisd-local/
 
 localnet-state-export-init: localnet-state-export-clean localnet-state-export-build 
 

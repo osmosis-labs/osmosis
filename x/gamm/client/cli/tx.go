@@ -39,6 +39,7 @@ func NewTxCmd() *cobra.Command {
 		NewJoinSwapShareAmountOut(),
 		NewExitSwapExternAmountOut(),
 		NewExitSwapShareAmountIn(),
+		NewStableSwapAdjustScalingFactorsCmd(),
 	)
 
 	return txCmd
@@ -348,6 +349,35 @@ func NewExitSwapShareAmountIn() *cobra.Command {
 	return cmd
 }
 
+func NewStableSwapAdjustScalingFactorsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "adjust-scaling-factors --pool-id=[pool-id] --scaling-factors=[scaling-factors]",
+		Short:   "adjust scaling factors",
+		Example: "osmosisd adjust-scaling-factors --pool-id=1 --scaling-factors=\"100, 100\"",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			txf, msg, err := NewStableSwapAdjustScalingFactorsMsg(clientCtx, txf, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(FlagSetAdjustScalingFactors())
+	flags.AddTxFlagsToCmd(cmd)
+	_ = cmd.MarkFlagRequired(FlagPoolId)
+
+	return cmd
+}
+
 func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
 	pool, err := parseCreateBalancerPoolFlags(fs)
 	if err != nil {
@@ -449,22 +479,22 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 
 // Apologies to whoever has to touch this next, this code is horrendous
 func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	pool, err := parseCreateStableswapPoolFlags(fs)
+	flags, err := parseCreateStableswapPoolFlags(fs)
 	if err != nil {
 		return txf, nil, fmt.Errorf("failed to parse pool: %w", err)
 	}
 
-	deposit, err := sdk.ParseCoinsNormalized(pool.InitialDeposit)
+	deposit, err := ParseCoinsNoSort(flags.InitialDeposit)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	swapFee, err := sdk.NewDecFromStr(pool.SwapFee)
+	swapFee, err := sdk.NewDecFromStr(flags.SwapFee)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	exitFee, err := sdk.NewDecFromStr(pool.ExitFee)
+	exitFee, err := sdk.NewDecFromStr(flags.ExitFee)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -475,7 +505,7 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, txf tx.Factory, f
 	}
 
 	scalingFactors := []uint64{}
-	trimmedSfString := strings.Trim(pool.ScalingFactors, "[] {}")
+	trimmedSfString := strings.Trim(flags.ScalingFactors, "[] {}")
 	if len(trimmedSfString) > 0 {
 		ints := strings.Split(trimmedSfString, ",")
 		for _, i := range ints {
@@ -495,8 +525,8 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, txf tx.Factory, f
 		PoolParams:              poolParams,
 		InitialPoolLiquidity:    deposit,
 		ScalingFactors:          scalingFactors,
-		ScalingFactorController: pool.ScalingFactorController,
-		FuturePoolGovernor:      pool.FutureGovernor,
+		ScalingFactorController: flags.ScalingFactorController,
+		FuturePoolGovernor:      flags.FutureGovernor,
 	}
 
 	return txf, msg, nil
@@ -793,4 +823,51 @@ func NewBuildExitSwapShareAmountInMsg(clientCtx client.Context, tokenOutDenom, s
 	}
 
 	return txf, msg, nil
+}
+
+func NewStableSwapAdjustScalingFactorsMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	poolID, err := fs.GetUint64(FlagPoolId)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	scalingFactorsStr, err := fs.GetString(FlagScalingFactors)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	scalingFactorsStrSlice := strings.Split(scalingFactorsStr, ",")
+
+	scalingFactors := make([]uint64, len(scalingFactorsStrSlice))
+	for i, scalingFactorStr := range scalingFactorsStrSlice {
+		scalingFactor, err := strconv.ParseUint(scalingFactorStr, 10, 64)
+		if err != nil {
+			return txf, nil, err
+		}
+		scalingFactors[i] = scalingFactor
+	}
+
+	msg := &stableswap.MsgStableSwapAdjustScalingFactors{
+		Sender:         clientCtx.GetFromAddress().String(),
+		PoolID:         poolID,
+		ScalingFactors: scalingFactors,
+	}
+
+	return txf, msg, nil
+}
+
+// ParseCoinsNoSort parses coins from coinsStr but does not sort them.
+// Returns error if parsing fails.
+func ParseCoinsNoSort(coinsStr string) (sdk.Coins, error) {
+	coinStrs := strings.Split(coinsStr, ",")
+	decCoins := make(sdk.DecCoins, len(coinStrs))
+	for i, coinStr := range coinStrs {
+		coin, err := sdk.ParseDecCoin(coinStr)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
+
+		decCoins[i] = coin
+	}
+	return sdk.NormalizeCoins(decCoins), nil
 }
