@@ -246,7 +246,7 @@ func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []s
 	// TODO: use sdk crypto instead of tendermint to generate address
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
-	params := s.App.GAMMKeeper.GetParams(s.Ctx)
+	params := s.App.SwapRouterKeeper.GetParams(s.Ctx)
 
 	pools := []gammtypes.PoolI{}
 	for index, multiplier := range multipliers {
@@ -280,7 +280,7 @@ func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []s
 		}
 		msg := balancer.NewMsgCreateBalancerPool(acc1, poolParams, poolAssets, defaultFutureGovernor)
 
-		poolId, err := s.App.GAMMKeeper.CreatePool(s.Ctx, msg)
+		poolId, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, msg)
 		s.Require().NoError(err)
 
 		pool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)

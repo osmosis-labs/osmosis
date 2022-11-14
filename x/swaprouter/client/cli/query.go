@@ -27,6 +27,7 @@ func GetQueryCmd() *cobra.Command {
 	cmd.AddCommand(
 		GetCmdEstimateSwapExactAmountIn(),
 		GetCmdEstimateSwapExactAmountOut(),
+		GetCmdNumPools(),
 	)
 
 	return cmd
@@ -134,6 +135,41 @@ $ %s query swaprouter estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vx
 	flags.AddQueryFlagsToCmd(cmd)
 	_ = cmd.MarkFlagRequired(FlagSwapRoutePoolIds)
 	_ = cmd.MarkFlagRequired(FlagSwapRouteDenoms)
+
+	return cmd
+}
+
+// GetCmdNumPools return number of pools available.
+func GetCmdNumPools() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "num-pools",
+		Short: "Query number of pools",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query number of pools.
+Example:
+$ %s query swaprouter num-pools
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := queryproto.NewQueryClient(clientCtx)
+
+			res, err := queryClient.NumPools(cmd.Context(), &queryproto.NumPoolsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }

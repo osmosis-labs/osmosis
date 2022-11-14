@@ -6,16 +6,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
-
 	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/keeper"
-	balancertypes "github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
-
-var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
 
 // RandomJoinPoolMsg pseudo-randomly selects an existing pool ID, attempts to find an account with the
 // respective underlying token denoms, and attempts to execute a join pool transaction
@@ -78,44 +73,6 @@ func RandomExitPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (
 		PoolId:        pool_id,
 		ShareInAmount: gammShares.Amount,
 		TokenOutMins:  tokenOutMins,
-	}, nil
-}
-
-// RandomCreatePoolMsg attempts to find an account with two or more distinct denoms and attempts to send a
-// create pool message composed of those denoms
-func RandomCreateUniV2Msg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*balancertypes.MsgCreateBalancerPool, error) {
-	var poolAssets []balancertypes.PoolAsset
-	// find an address with two or more distinct denoms in their wallet
-	sender, senderExists := sim.RandomSimAccountWithConstraint(createPoolRestriction(k, sim, ctx))
-	if !senderExists {
-		return nil, errors.New("no sender with two different denoms & pool creation fee exists")
-	}
-	poolCoins, ok := sim.GetRandSubsetOfKDenoms(ctx, sender, 2)
-	if !ok {
-		return nil, fmt.Errorf("provided sender with requested number of denoms does not exist")
-	}
-	if poolCoins.Add(PoolCreationFee).IsAnyGT(sim.BankKeeper().SpendableCoins(ctx, sender.Address)) {
-		return nil, errors.New("chose an account / creation amount that didn't pass fee bar")
-	}
-
-	// TODO: pseudo-randomly generate swap and exit fees
-	poolParams := &balancertypes.PoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.ZeroDec(),
-	}
-
-	// from the above selected account, determine the token type and respective weight needed to make the pool
-	for i := 0; i < len(poolCoins); i++ {
-		poolAssets = append(poolAssets, balancertypes.PoolAsset{
-			Weight: sdk.OneInt(),
-			Token:  poolCoins[i],
-		})
-	}
-
-	return &balancertypes.MsgCreateBalancerPool{
-		Sender:     sender.Address.String(),
-		PoolParams: poolParams,
-		PoolAssets: poolAssets,
 	}, nil
 }
 
@@ -319,18 +276,13 @@ func deriveRealMinShareOutAmt(ctx sdk.Context, tokenIn sdk.Coins, pool types.Tra
 	return minShareOutAmt, nil
 }
 
-func createPoolRestriction(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) simtypes.SimAccountConstraint {
-	return func(acc legacysimulationtype.Account) bool {
-		accCoins := sim.BankKeeper().SpendableCoins(ctx, acc.Address)
-		hasTwoCoins := len(accCoins) >= 2
-		hasPoolCreationFee := accCoins.AmountOf("stake").GT(PoolCreationFee.Amount)
-		return hasTwoCoins && hasPoolCreationFee
-	}
-}
-
 func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64, types.TraditionalAmmInterface, sdk.Coin, sdk.Coin, []string, string, error) {
+	poolCount := k.GetPoolCount(ctx)
+	if poolCount == 0 {
+		return 0, nil, sdk.Coin{}, sdk.Coin{}, []string{}, "", errors.New("pool count is zero")
+	}
 	// select a pseudo-random pool ID, max bound by the upcoming pool ID
-	pool_id := simtypes.RandLTBound(sim, k.GetNextPoolId(ctx))
+	pool_id := simtypes.RandLTBound(sim, poolCount)
 	pool, err := k.GetPoolAndPoke(ctx, pool_id)
 	if err != nil {
 		return 0, nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), []string{}, "", err

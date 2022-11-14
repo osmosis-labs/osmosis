@@ -23,8 +23,8 @@ func PriceToTick(price sdk.Dec) sdk.Int {
 	return priceToTick(price)
 }
 
-func (k Keeper) TickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
-	return k.tickToSqrtPrice(tickIndex)
+func TickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
+	return tickToSqrtPrice(tickIndex)
 }
 
 func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo TickInfo) {

@@ -42,12 +42,12 @@ message Pool {
 
 message TickInfo {
   string liquidity_gross = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"liquidity_gross\"",
     (gogoproto.nullable) = false
   ];
   string liquidity_net = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"liquidity_net\"",
     (gogoproto.nullable) = false
   ];
@@ -55,7 +55,7 @@ message TickInfo {
 
 message Position {
   string liquidity = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"liquidity\"",
     (gogoproto.nullable) = false
   ];

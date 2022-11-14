@@ -20,6 +20,7 @@ import (
 	minttypes "github.com/osmosis-labs/osmosis/v12/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v12/x/pool-incentives/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
+	swaprouterqueryproto "github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/queryproto"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v12/x/tokenfactory/types"
 	twapquerytypes "github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
 	txfeestypes "github.com/osmosis-labs/osmosis/v12/x/txfees/types"
@@ -78,6 +79,9 @@ func init() {
 	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/TotalPoolLiquidity", &gammtypes.QueryTotalPoolLiquidityResponse{})
 	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/TotalShares", &gammtypes.QueryTotalSharesResponse{})
 	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/SpotPrice", &gammtypes.QuerySpotPriceResponse{})
+
+	// swaprouter
+	setWhitelistedQuery("/osmosis.swaprouter.v1beta1.Query/NumPools", &swaprouterqueryproto.NumPoolsResponse{})
 
 	// incentives
 	setWhitelistedQuery("/osmosis.incentives.Query/ModuleToDistributeCoins", &incentivestypes.ModuleToDistributeCoinsResponse{})
