@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
@@ -26,16 +27,16 @@ func NewBalancerMsgServerImpl(keeper *Keeper) balancer.MsgServer {
 	}
 }
 
-// func NewStableswapMsgServerImpl(keeper *Keeper) stableswap.MsgServer {
-// 	return &msgServer{
-// 		keeper: keeper,
-// 	}
-// }
+func NewStableswapMsgServerImpl(keeper *Keeper) stableswap.MsgServer {
+	return &msgServer{
+		keeper: keeper,
+	}
+}
 
 var (
-	_ types.MsgServer    = msgServer{}
-	_ balancer.MsgServer = msgServer{}
-	// _ stableswap.MsgServer = msgServer{}
+	_ types.MsgServer      = msgServer{}
+	_ balancer.MsgServer   = msgServer{}
+	_ stableswap.MsgServer = msgServer{}
 )
 
 // CreateBalancerPool is a create balancer pool message.
@@ -44,23 +45,23 @@ func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.
 	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolId}, err
 }
 
-// func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stableswap.MsgCreateStableswapPool) (*stableswap.MsgCreateStableswapPoolResponse, error) {
-// 	poolId, err := server.CreatePool(goCtx, msg)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return &stableswap.MsgCreateStableswapPoolResponse{PoolID: poolId}, nil
-// }
+func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stableswap.MsgCreateStableswapPool) (*stableswap.MsgCreateStableswapPoolResponse, error) {
+	poolId, err := server.CreatePool(goCtx, msg)
+	if err != nil {
+		return nil, err
+	}
+	return &stableswap.MsgCreateStableswapPoolResponse{PoolID: poolId}, nil
+}
 
-// func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, msg *stableswap.MsgStableSwapAdjustScalingFactors) (*stableswap.MsgStableSwapAdjustScalingFactorsResponse, error) {
-// 	ctx := sdk.UnwrapSDKContext(goCtx)
+func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, msg *stableswap.MsgStableSwapAdjustScalingFactors) (*stableswap.MsgStableSwapAdjustScalingFactorsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
-// 	if err := server.keeper.SetStableSwapScalingFactors(ctx, msg.ScalingFactors, msg.PoolID, msg.ScalingFactorGovernor); err != nil {
-// 		return nil, err
-// 	}
+	if err := server.keeper.setStableSwapScalingFactors(ctx, msg.PoolID, msg.ScalingFactors, msg.Sender); err != nil {
+		return nil, err
+	}
 
-// 	return &stableswap.MsgStableSwapAdjustScalingFactorsResponse{}, nil
-// }
+	return &stableswap.MsgStableSwapAdjustScalingFactorsResponse{}, nil
+}
 
 // CreatePool attempts to create a pool returning the newly created pool ID or an error upon failure.
 // The pool creation fee is used to fund the community pool.

@@ -37,6 +37,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryTotalLiquidity(),
 		GetCmdEstimateSwapExactAmountIn(),
 		GetCmdEstimateSwapExactAmountOut(),
+		GetCmdTotalPoolLiquidity(),
 	)
 
 	return cmd

@@ -64,7 +64,10 @@ func (n *NodeConfig) Run() error {
 		n.t,
 		func() bool {
 			// This fails if unsuccessful.
-			n.QueryCurrentHeight()
+			_, err := n.QueryCurrentHeight()
+			if err != nil {
+				return false
+			}
 			n.t.Logf("started node container: %s", n.Name)
 			return true
 		},

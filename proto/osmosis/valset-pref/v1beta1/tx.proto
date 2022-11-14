@@ -1,0 +1,90 @@
+syntax = "proto3";
+package osmosis.valsetpref.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "osmosis/valset-pref/v1beta1/state.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v12/x/valset-pref/types";
+
+// Msg defines the valset-pref modules's gRPC message service.
+service Msg {
+  // SetValidatorSetPreference creates a set of validator preference.
+  // This message will process both create + update request.
+  rpc SetValidatorSetPreference(MsgSetValidatorSetPreference)
+      returns (MsgSetValidatorSetPreferenceResponse);
+
+  // DelegateToValidatorSet gets the owner, coins and delegates to a
+  // validator-set.
+  rpc DelegateToValidatorSet(MsgDelegateToValidatorSet)
+      returns (MsgDelegateToValidatorSetResponse);
+
+  // UndelegateFromValidatorSet gets the owner and coins and undelegates from
+  // validator-set. The unbonding logic will follow the `Undelegate` logic from
+  // the sdk.
+  rpc UndelegateFromValidatorSet(MsgUndelegateFromValidatorSet)
+      returns (MsgUndelegateFromValidatorSetResponse);
+
+  // WithdrawDelegationRewards allows users to claim rewards from the
+  // validator-set.
+  rpc WithdrawDelegationRewards(MsgWithdrawDelegationRewards)
+      returns (MsgWithdrawDelegationRewardsResponse);
+}
+
+// MsgCreateValidatorSetPreference is a list that holds validator-set.
+message MsgSetValidatorSetPreference {
+  // delegator is the user who is trying to create a validator-set.
+  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
+
+  // list of {valAddr, weight} to delegate to
+  repeated ValidatorPreference preferences = 2 [
+    (gogoproto.moretags) = "yaml:\"preferences\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgSetValidatorSetPreferenceResponse {}
+
+// MsgDelegateToValidatorSet allows users to delegate to an existing
+// validator-set
+message MsgDelegateToValidatorSet {
+  // delegator is the user who is trying to delegate.
+  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
+
+  // the amount of tokens the user is trying to delegate.
+  // For ex: delegate 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC
+  // -> 0.2} our staking logic would attempt to delegate 5osmo to A , 3osmo to
+  // B, 2osmo to C.
+  cosmos.base.v1beta1.Coin coin = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+}
+
+message MsgDelegateToValidatorSetResponse {}
+
+message MsgUndelegateFromValidatorSet {
+  // delegator is the user who is trying to undelegate.
+  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
+
+  // the amount the user wants to undelegate
+  // For ex: Undelegate 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3,
+  // ValC
+  // -> 0.2} our undelegate logic would attempt to undelegate 5osmo from A ,
+  // 3osmo from B, 2osmo from C
+  cosmos.base.v1beta1.Coin coin = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+}
+
+message MsgUndelegateFromValidatorSetResponse {}
+
+// MsgWithdrawDelegationRewards allows user to claim staking rewards from the
+// validator set.
+message MsgWithdrawDelegationRewards {
+  // delegator is the user who is trying to claim staking rewards.
+  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
+}
+
+message MsgWithdrawDelegationRewardsResponse {}

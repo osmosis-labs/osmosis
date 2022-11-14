@@ -4,9 +4,11 @@ VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
+GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
 DOCKER := $(shell which docker)
 BUILDDIR ?= $(CURDIR)/build
-E2E_UPGRADE_VERSION := "v12"
+E2E_UPGRADE_VERSION := "v13"
+
 
 export GO111MODULE = on
 
@@ -103,8 +105,8 @@ build-reproducible-amd64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx create --name osmobuilder || true
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
-		--build-arg GO_VERSION=$(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2) \
-		--platform linux/arm64 \
+		--build-arg GO_VERSION=$(GO_VERSION) \
+		--platform linux/amd64 \
 		-t osmosis-amd64 \
 		--load \
 		-f Dockerfile .
@@ -117,7 +119,7 @@ build-reproducible-arm64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx create --name osmobuilder || true
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
-		--build-arg GO_VERSION=$(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2) \
+		--build-arg GO_VERSION=$(GO_VERSION) \
 		--platform linux/arm64 \
 		-t osmosis-arm64 \
 		--load \
@@ -218,33 +220,11 @@ run-querygen:
 	@go run cmd/querygen/main.go
 
 ###############################################################################
-###                                 Devdoc                                  ###
-###############################################################################
-
-build-docs:
-	@cd docs && \
-	while read p; do \
-		(git checkout $${p} && npm install && VUEPRESS_BASE="/$${p}/" npm run build) ; \
-		mkdir -p ~/output/$${p} ; \
-		cp -r .vuepress/dist/* ~/output/$${p}/ ; \
-		cp ~/output/$${p}/index.html ~/output ; \
-	done < versions ;
-
-sync-docs:
-	cd ~/output && \
-	echo "role_arn = ${DEPLOYMENT_ROLE_ARN}" >> /root/.aws/config ; \
-	echo "CI job = ${CIRCLE_BUILD_URL}" >> version.html ; \
-	aws s3 sync . s3://${WEBSITE_BUCKET} --profile terraform --delete ; \
-	aws cloudfront create-invalidation --distribution-id ${CF_DISTRIBUTION_ID} --profile terraform --path "/*" ;
-.PHONY: sync-docs
-
-
-###############################################################################
 ###                           Tests & Simulation                            ###
 ###############################################################################
 
 PACKAGES_UNIT=$(shell go list ./... | grep -E -v 'tests/simulator|e2e')
-PACKAGES_E2E=$(shell go list -tags e2e ./... | grep '/e2e')
+PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
 PACKAGES_SIM=$(shell go list ./... | grep '/tests/simulator')
 TEST_PACKAGES=./...
 
@@ -281,25 +261,25 @@ test-sim-bench:
 # In that case, run `make e2e-remove-resources`
 # manually.
 # Utilizes Go cache.
-test-e2e: e2e-setup test-e2e-ci
+test-e2e: OSMOSIS_E2E=True e2e-setup test-e2e-ci
 
 # test-e2e-ci runs a full e2e test suite
 # does not do any validation about the state of the Docker environment
 # As a result, avoid using this locally.
 test-e2e-ci:
-	@VERSION=$(VERSION) OSMOSIS_E2E_DEBUG_LOG=True OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION)  go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=True OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION)  go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 # test-e2e-debug runs a full e2e test suite but does
 # not attempt to delete Docker resources at the end.
 test-e2e-debug: e2e-setup
-	@VERSION=$(VERSION) OSMOSIS_E2E_DEBUG_LOG=True OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION) OSMOSIS_E2E_SKIP_CLEANUP=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -count=1
+	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=True OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION) OSMOSIS_E2E_SKIP_CLEANUP=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -count=1
 
 # test-e2e-short runs the e2e test with only short tests.
 # Does not delete any of the containers after running.
 # Deletes any existing containers before running.
 # Does not use Go cache.
 test-e2e-short: e2e-setup
-	@VERSION=$(VERSION) OSMOSIS_E2E_DEBUG_LOG=True OSMOSIS_E2E_SKIP_UPGRADE=True OSMOSIS_E2E_SKIP_IBC=True OSMOSIS_E2E_SKIP_STATE_SYNC=True OSMOSIS_E2E_SKIP_CLEANUP=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -count=1
+	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=True OSMOSIS_E2E_SKIP_UPGRADE=True OSMOSIS_E2E_SKIP_IBC=True OSMOSIS_E2E_SKIP_STATE_SYNC=True OSMOSIS_E2E_SKIP_CLEANUP=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -count=1
 
 test-mutation:
 	@bash scripts/mutation-test.sh $(MODULES)
@@ -316,10 +296,10 @@ docker-build-debug:
 	@DOCKER_BUILDKIT=1 docker tag osmosis:${COMMIT} osmosis:debug
 
 docker-build-e2e-init-chain:
-	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain -f tests/e2e/initialization/init.Dockerfile .
+	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain --platform=linux/x86_64 -f tests/e2e/initialization/init.Dockerfile .
 
 docker-build-e2e-init-node:
-	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-node:debug --build-arg E2E_SCRIPT_NAME=node -f tests/e2e/initialization/init.Dockerfile .
+	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-node:debug --build-arg E2E_SCRIPT_NAME=node --platform=linux/x86_64 -f tests/e2e/initialization/init.Dockerfile .
 
 e2e-setup: e2e-check-image-sha e2e-remove-resources
 	@echo Finished e2e environment setup, ready to start the test
@@ -331,6 +311,44 @@ e2e-remove-resources:
 	tests/e2e/scripts/run/remove_stale_resources.sh
 
 .PHONY: test-mutation
+
+###############################################################################
+###                                Docker                                  ###
+###############################################################################
+
+RUNNER_BASE_IMAGE_DISTROLESS := gcr.io/distroless/static
+RUNNER_BASE_IMAGE_ALPINE := alpine:3.16
+RUNNER_BASE_IMAGE_NONROOT := gcr.io/distroless/static:nonroot
+
+docker-build:
+	@DOCKER_BUILDKIT=1 docker build \
+		-t osmosis:local \
+		-t osmosis:local-distroless \
+		--build-arg GO_VERSION=$(GO_VERSION) \
+		--build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_DISTROLESS) \
+		--build-arg GIT_VERSION=$(VERSION) \
+		--build-arg GIT_COMMIT=$(COMMIT) \
+		-f Dockerfile .
+
+docker-build-distroless: docker-build
+
+docker-build-alpine:
+	@DOCKER_BUILDKIT=1 docker build \
+		-t osmosis:local-alpine \
+		--build-arg GO_VERSION=$(GO_VERSION) \
+		--build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_ALPINE) \
+		--build-arg GIT_VERSION=$(VERSION) \
+		--build-arg GIT_COMMIT=$(COMMIT) \
+		-f Dockerfile .
+
+docker-build-nonroot:
+	@DOCKER_BUILDKIT=1 docker build \
+		-t osmosis:local-nonroot \
+		--build-arg GO_VERSION=$(GO_VERSION) \
+		--build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_NONROOT) \
+		--build-arg GIT_VERSION=$(VERSION) \
+		--build-arg GIT_COMMIT=$(COMMIT) \
+		-f Dockerfile .
 
 ###############################################################################
 ###                                Linting                                  ###
@@ -360,29 +378,44 @@ markdown:
 localnet-keys:
 	. tests/localosmosis/scripts/add_keys.sh
 
-localnet-build:
-	@DOCKER_BUILDKIT=1 docker-compose -f tests/localosmosis/docker-compose.yml build
+localnet-init: localnet-clean localnet-build
 
-localnet-build-state-export:
-	@docker build -t local:osmosis-se --build-arg ID=$(ID) -f tests/localosmosis/mainnet_state/Dockerfile-stateExport .
+localnet-build:
+	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose -f tests/localosmosis/docker-compose.yml build
 
 localnet-start:
-	@docker-compose -f tests/localosmosis/docker-compose.yml up
+	@STATE="" docker-compose -f tests/localosmosis/docker-compose.yml up
+
+localnet-start-with-state:
+	@STATE=-s docker-compose -f tests/localosmosis/docker-compose.yml up
 
 localnet-startd:
-	@docker-compose -f tests/localosmosis/docker-compose.yml up -d
+	@STATE="" docker-compose -f tests/localosmosis/docker-compose.yml up -d
 
-localnet-start-state-export:
-	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml up
+localnet-startd-with-state:
+	@STATE=-s docker-compose -f tests/localosmosis/docker-compose.yml up -d
 
 localnet-stop:
+	@STATE="" docker-compose -f tests/localosmosis/docker-compose.yml down
+
+localnet-clean:
+	@rm -rfI $(HOME)/.osmosisd-local/
+
+localnet-state-export-init: localnet-state-export-clean localnet-state-export-build 
+
+localnet-state-export-build:
+	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose -f tests/localosmosis/state_export/docker-compose.yml build
+
+localnet-state-export-start:
+	@docker-compose -f tests/localosmosis/state_export/docker-compose.yml up
+
+localnet-state-export-startd:
+	@docker-compose -f tests/localosmosis/state_export/docker-compose.yml up -d
+
+localnet-state-export-stop:
 	@docker-compose -f tests/localosmosis/docker-compose.yml down
 
-localnet-remove: localnet-stop
-	rm -rf $(PWD)/tests/localosmosis/.osmosisd
-
-localnet-remove-state-export:
-	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml down
+localnet-state-export-clean: localnet-clean
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \

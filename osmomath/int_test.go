@@ -40,17 +40,17 @@ func (s *intTestSuite) TestFromUint64() {
 }
 
 func (s *intTestSuite) TestIntPanic() {
-	// Max Int = 2^512-1 = 1.340781e+154
-	// Min Int = -(2^512-1) = -1.340781e+154
-	s.Require().NotPanics(func() { NewIntWithDecimal(4, 153) })
-	i1 := NewIntWithDecimal(5, 153)
-	s.Require().NotPanics(func() { NewIntWithDecimal(5, 153) })
-	i2 := NewIntWithDecimal(6, 153)
-	s.Require().NotPanics(func() { NewIntWithDecimal(6, 153) })
-	i3 := NewIntWithDecimal(7, 153)
+	// Max Int = 2^1024-1 = 8.988466e+308
+	// Min Int = -(2^1024-1) = -8.988466e+308
+	s.Require().NotPanics(func() { NewIntWithDecimal(4, 307) })
+	i1 := NewIntWithDecimal(4, 307)
+	s.Require().NotPanics(func() { NewIntWithDecimal(5, 307) })
+	i2 := NewIntWithDecimal(5, 307)
+	s.Require().NotPanics(func() { NewIntWithDecimal(92, 306) })
+	i3 := NewIntWithDecimal(92, 306)
 
-	s.Require().Panics(func() { NewIntWithDecimal(2, 154) })
-	s.Require().Panics(func() { NewIntWithDecimal(9, 160) })
+	s.Require().Panics(func() { NewIntWithDecimal(2, 308) })
+	s.Require().Panics(func() { NewIntWithDecimal(9, 340) })
 
 	// Overflow check
 	s.Require().NotPanics(func() { i1.Add(i1) })
@@ -84,7 +84,7 @@ func (s *intTestSuite) TestIntPanic() {
 	s.Require().Panics(func() { i3.Mul(i3.Neg()) })
 
 	// Bound check
-	intmax := NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(512), nil), big.NewInt(1)))
+	intmax := NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(1024), nil), big.NewInt(1)))
 	intmin := intmax.Neg()
 	s.Require().NotPanics(func() { intmax.Add(ZeroInt()) })
 	s.Require().NotPanics(func() { intmin.Sub(ZeroInt()) })

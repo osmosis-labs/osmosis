@@ -13,6 +13,10 @@ const (
 	// i.e. SigFigExponent = 8 is 10^8 which is 100000000. This gives 8 significant figures.
 	SigFigsExponent       = 8
 	BalancerGasFeeForSwap = 10_000
+
+	StableswapMinScaledAmtPerAsset = 1
+	// We keep this multiplier at 1, but can increase if needed in the unlikely scenario where default scaling factors of 1 cannot accommodate enough assets
+	ScalingFactorMultiplier = 1
 )
 
 var (
@@ -29,4 +33,7 @@ var (
 
 	// MultihopSwapFeeMultiplierForOsmoPools if a swap fees multiplier for trades consists of just two OSMO pools during a single transaction.
 	MultihopSwapFeeMultiplierForOsmoPools = sdk.NewDecWithPrec(5, 1) // 0.5
+
+	// Maximum amount per asset after the application of scaling factors should be 10e34.
+	StableswapMaxScaledAmtPerAsset = sdk.NewDec(10).Power(34).TruncateInt()
 )

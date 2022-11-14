@@ -20,6 +20,11 @@ type TestSuite struct {
 	store sdk.KVStore
 }
 
+func (suite *TestSuite) SetupTest() {
+	suite.Setup()
+
+}
+
 const (
 	keyA               = "a"
 	keyB               = "b"
@@ -417,7 +422,7 @@ func (s *TestSuite) TestGetFirstValueAfterPrefixInclusive() {
 	}
 }
 
-func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
+func (s *TestSuite) TestGatherValuesFromIterator() {
 	testcases := map[string]struct {
 		// if prefix is set, startValue and endValue are ignored.
 		// we either create an iterator prefix or a range iterator.
@@ -530,7 +535,7 @@ func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
 				mockParseValueFn = mockParseValueWithError
 			}
 
-			actualValues, err := osmoutils.GatherValuesFromIteratorWithStop(iterator, mockParseValueFn, mockStop)
+			actualValues, err := osmoutils.GatherValuesFromIterator(iterator, mockParseValueFn, mockStop)
 
 			if tc.expectedErr != nil {
 				s.Require().ErrorContains(err, tc.expectedErr.Error())

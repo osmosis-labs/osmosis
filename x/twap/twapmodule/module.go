@@ -18,8 +18,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v12/x/twap"
 	twapclient "github.com/osmosis-labs/osmosis/v12/x/twap/client"
+	twapcli "github.com/osmosis-labs/osmosis/v12/x/twap/client/cli"
 	"github.com/osmosis-labs/osmosis/v12/x/twap/client/grpc"
 	"github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/client/v2queryproto"
 	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
 )
 
@@ -54,7 +56,8 @@ func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
 
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	queryproto.RegisterQueryHandlerClient(context.Background(), mux, queryproto.NewQueryClient(clientCtx)) //nolint:errcheck
+	queryproto.RegisterQueryHandlerClient(context.Background(), mux, queryproto.NewQueryClient(clientCtx))     //nolint:errcheck
+	v2queryproto.RegisterQueryHandlerClient(context.Background(), mux, v2queryproto.NewQueryClient(clientCtx)) //nolint:errcheck
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -63,8 +66,7 @@ func (b AppModuleBasic) GetTxCmd() *cobra.Command {
 }
 
 func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
-	// return cli.GetQueryCmd()
+	return twapcli.GetQueryCmd()
 }
 
 // RegisterInterfaces registers interfaces and implementations of the gamm module.
@@ -79,6 +81,7 @@ type AppModule struct {
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: twapclient.Querier{K: am.k}})
+	v2queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.QuerierV2{Q: twapclient.QuerierV2{K: am.k}})
 }
 
 func NewAppModule(twapKeeper twap.Keeper) AppModule {
@@ -126,7 +129,8 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // BeginBlock performs a no-op.
 func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
-// EndBlock performs a no-op.
+// EndBlock executes all ABCI EndBlock logic respective to the TWAP module. It
+// returns no validator updates.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	am.k.EndBlock(ctx)
 	return []abci.ValidatorUpdate{}

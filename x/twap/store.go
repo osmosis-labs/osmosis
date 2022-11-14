@@ -20,6 +20,9 @@ func (e timeTooOldError) Error() string {
 		" Try storing the accumulator value. (requested time %s)", e.Time)
 }
 
+// just has to not be empty, for store to work / not register as a delete.
+var sentinelExistsValue = []byte{1}
+
 // trackChangedPool places an entry into a transient store,
 // to track that this pool changed this block.
 // This tracking is for use in EndBlock, to create new TWAP records.
@@ -27,8 +30,7 @@ func (k Keeper) trackChangedPool(ctx sdk.Context, poolId uint64) {
 	store := ctx.TransientStore(k.transientKey)
 	poolIdBz := make([]byte, 8)
 	binary.LittleEndian.PutUint64(poolIdBz, poolId)
-	// just has to not be empty, for store to work / not register as a delete.
-	sentinelExistsValue := []byte{1}
+
 	store.Set(poolIdBz, sentinelExistsValue)
 }
 
@@ -66,7 +68,7 @@ func (k Keeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 // - Suppose pruning param -48 hour
 // - Suppose there are three records at: -51 hour, -50 hour, and -1hour
 // If we were to prune everything older than 48 hours,
-// we would be left with with only one record at -1 hour, and we wouldn't be able to
+// we would be left with only one record at -1 hour, and we wouldn't be able to
 // get twaps from the [-48 hour, -1 hour] time range.
 // So, in order to have correct behavior for the desired guarantee,
 // we keep the newest record that is older than the pruning time.

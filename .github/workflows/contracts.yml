@@ -12,11 +12,11 @@ on:
 
 jobs:
   test:
-    name: Test Suite
+    name: Test Cosmwasm Contracts
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        contract: [{workdir: ./x/ibc-rate-limit/, output: testdata/rate_limiter.wasm, build: artifacts/rate_limiter-x86_64.wasm, name: rate_limiter}]
+        contract: [{workdir: ./x/ibc-rate-limit/, output: bytecode/rate_limiter.wasm, build: artifacts/rate_limiter-x86_64.wasm, name: rate_limiter}]
 
     steps:
       - name: Checkout sources
@@ -82,11 +82,11 @@ jobs:
           path: ${{ matrix.contract.workdir }}${{ matrix.contract.build }}
           retention-days: 1
 
-#      - name: Check Test Data
-#        working-directory: ${{ matrix.contract.workdir }}
-#        if: ${{ matrix.contract.output != null }}
-#        run: >
-#          diff ${{ matrix.contract.output }} ${{ matrix.contract.build }}
+      - name: Check Test Data
+        working-directory: ${{ matrix.contract.workdir }}
+        if: ${{ matrix.contract.output != null }}
+        run: >
+          diff ${{ matrix.contract.output }} ${{ matrix.contract.build }}
   
 
   lints:
@@ -107,7 +107,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly
+          toolchain: 1.65.0
           override: true
           components: rustfmt, clippy
 

@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NOTE: never use new(BigDec) or else we will panic unmarshalling into the
@@ -18,16 +20,19 @@ type BigDec struct {
 
 const (
 	// number of decimal places
-	Precision = 18
+	Precision = 36
 
 	// bytes required to represent the above precision
-	// Ceiling[Log2[999 999 999 999 999 999]]
-	DecimalPrecisionBits = 60
+	// Ceiling[Log2[10**Precision - 1]]
+	DecimalPrecisionBits = 120
 
 	maxDecBitLen = maxBitLen + DecimalPrecisionBits
 
 	// max number of iterations in ApproxRoot function
 	maxApproxRootIterations = 100
+
+	// max number of iterations in Log2 function
+	maxLog2Iterations = 300
 )
 
 var (
@@ -37,6 +42,17 @@ var (
 	zeroInt              = big.NewInt(0)
 	oneInt               = big.NewInt(1)
 	tenInt               = big.NewInt(10)
+
+	// log_2(e)
+	// From: https://www.wolframalpha.com/input?i=log_2%28e%29+with+37+digits
+	logOfEbase2 = MustNewDecFromStr("1.442695040888963407359924681001892137")
+
+	// log_2(1.0001)
+	// From: https://www.wolframalpha.com/input?i=log_2%281.0001%29+to+33+digits
+	tickLogOf2 = MustNewDecFromStr("0.000144262291094554178391070900057480")
+	// initialized in init() since requires
+	// precision to be defined.
+	twoBigDec BigDec
 )
 
 // Decimal errors
@@ -52,6 +68,8 @@ func init() {
 	for i := 0; i <= Precision; i++ {
 		precisionMultipliers[i] = calcPrecisionMultiplier(int64(i))
 	}
+
+	twoBigDec = NewBigDec(2)
 }
 
 func precisionInt() *big.Int {
@@ -209,7 +227,8 @@ func (d BigDec) GTE(d2 BigDec) bool   { return (d.i).Cmp(d2.i) >= 0 }          /
 func (d BigDec) LT(d2 BigDec) bool    { return (d.i).Cmp(d2.i) < 0 }           // less than
 func (d BigDec) LTE(d2 BigDec) bool   { return (d.i).Cmp(d2.i) <= 0 }          // less than or equal
 func (d BigDec) Neg() BigDec          { return BigDec{new(big.Int).Neg(d.i)} } // reverse the decimal sign
-func (d BigDec) Abs() BigDec          { return BigDec{new(big.Int).Abs(d.i)} } // absolute value
+// nolint: stylecheck
+func (d BigDec) Abs() BigDec { return BigDec{new(big.Int).Abs(d.i)} } // absolute value
 
 // BigInt returns a copy of the underlying big.Int.
 func (d BigDec) BigInt() *big.Int {
@@ -290,6 +309,19 @@ func (d BigDec) Quo(d2 BigDec) BigDec {
 	mul.Mul(mul, precisionReuse)
 
 	quo := new(big.Int).Quo(mul, d2.i)
+	chopped := chopPrecisionAndRound(quo)
+
+	if chopped.BitLen() > maxDecBitLen {
+		panic("Int overflow")
+	}
+	return BigDec{chopped}
+}
+
+func (d BigDec) QuoRaw(d2 int64) BigDec {
+	// multiply precision, so we can chop it later
+	mul := new(big.Int).Mul(d.i, precisionReuse)
+
+	quo := mul.Quo(mul, big.NewInt(d2))
 	chopped := chopPrecisionAndRound(quo)
 
 	if chopped.BitLen() > maxDecBitLen {
@@ -492,6 +524,52 @@ func (d BigDec) MustFloat64() float64 {
 	} else {
 		return value
 	}
+}
+
+// SdkDec returns the Sdk.Dec representation of a BigDec.
+// Values in any additional decimal places are truncated.
+func (d BigDec) SDKDec() sdk.Dec {
+	precisionDiff := Precision - sdk.Precision
+	precisionFactor := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(precisionDiff)), nil)
+
+	if precisionDiff < 0 {
+		panic("invalid decimal precision")
+	}
+
+	// Truncate any additional decimal values that exist due to BigDec's additional precision
+	// This relies on big.Int's Quo function doing floor division
+	intRepresentation := new(big.Int).Quo(d.BigInt(), precisionFactor)
+
+	// convert int representation back to SDK Dec precision
+	truncatedDec := sdk.NewDecFromBigIntWithPrec(intRepresentation, sdk.Precision)
+
+	return truncatedDec
+}
+
+// BigDecFromSdkDec returns the BigDec representation of an SDKDec.
+// Values in any additional decimal places are truncated.
+func BigDecFromSDKDec(d sdk.Dec) BigDec {
+	return NewDecFromBigIntWithPrec(d.BigInt(), sdk.Precision)
+}
+
+// BigDecFromSdkDecSlice returns the []BigDec representation of an []SDKDec.
+// Values in any additional decimal places are truncated.
+func BigDecFromSDKDecSlice(ds []sdk.Dec) []BigDec {
+	result := make([]BigDec, len(ds))
+	for i, d := range ds {
+		result[i] = NewDecFromBigIntWithPrec(d.BigInt(), sdk.Precision)
+	}
+	return result
+}
+
+// BigDecFromSdkDecSlice returns the []BigDec representation of an []SDKDec.
+// Values in any additional decimal places are truncated.
+func BigDecFromSDKDecCoinSlice(ds []sdk.DecCoin) []BigDec {
+	result := make([]BigDec, len(ds))
+	for i, d := range ds {
+		result[i] = NewDecFromBigIntWithPrec(d.Amount.BigInt(), sdk.Precision)
+	}
+	return result
 }
 
 //     ____
@@ -807,4 +885,90 @@ func DecEq(t *testing.T, exp, got BigDec) (*testing.T, bool, string, string, str
 func DecApproxEq(t *testing.T, d1 BigDec, d2 BigDec, tol BigDec) (*testing.T, bool, string, string, string) {
 	diff := d1.Sub(d2).Abs()
 	return t, diff.LTE(tol), "expected |d1 - d2| <:\t%v\ngot |d1 - d2| = \t\t%v", tol.String(), diff.String()
+}
+
+// LogBase2 returns log_2 {x}.
+// Rounds down by truncations during division and right shifting.
+// Accurate up to 32 precision digits.
+// Implementation is based on:
+// https://stm32duinoforum.com/forum/dsp/BinaryLogarithm.pdf
+func (x BigDec) LogBase2() BigDec {
+	// create a new decimal to avoid mutating
+	// the receiver's int buffer.
+	xCopy := ZeroDec()
+	xCopy.i = new(big.Int).Set(x.i)
+	if xCopy.LTE(ZeroDec()) {
+		panic(fmt.Sprintf("log is not defined at <= 0, given (%s)", xCopy))
+	}
+
+	// Normalize x to be 1 <= x < 2.
+
+	// y is the exponent that results in a whole multiple of 2.
+	y := ZeroDec()
+
+	// repeat until: x >= 1.
+	for xCopy.LT(OneDec()) {
+		xCopy.i.Lsh(xCopy.i, 1)
+		y = y.Sub(OneDec())
+	}
+
+	// repeat until: x < 2.
+	for xCopy.GTE(twoBigDec) {
+		xCopy.i.Rsh(xCopy.i, 1)
+		y = y.Add(OneDec())
+	}
+
+	b := OneDec().Quo(twoBigDec)
+
+	// N.B. At this point x is a positive real number representing
+	// mantissa of the log. We estimate it using the following
+	// algorithm:
+	// https://stm32duinoforum.com/forum/dsp/BinaryLogarithm.pdf
+	// This has shown precision of 32 digits relative
+	// to Wolfram Alpha in tests.
+	for i := 0; i < maxLog2Iterations; i++ {
+		xCopy = xCopy.Mul(xCopy)
+		if xCopy.GTE(twoBigDec) {
+			xCopy.i.Rsh(xCopy.i, 1)
+			y = y.Add(b)
+		}
+		b.i.Rsh(b.i, 1)
+	}
+
+	return y
+}
+
+// Natural logarithm of x.
+// Formula: ln(x) = log_2(x) / log_2(e)
+func (x BigDec) Ln() BigDec {
+	log2x := x.LogBase2()
+
+	y := log2x.Quo(logOfEbase2)
+
+	return y
+}
+
+// log_1.0001(x) "tick" base logarithm
+// Formula: log_1.0001(b) = log_2(b) / log_2(1.0001)
+func (x BigDec) TickLog() BigDec {
+	log2x := x.LogBase2()
+
+	y := log2x.Quo(tickLogOf2)
+
+	return y
+}
+
+// log_a(x) custom base logarithm
+// Formula: log_a(b) = log_2(b) / log_2(a)
+func (x BigDec) CustomBaseLog(base BigDec) BigDec {
+	if base.LTE(ZeroDec()) || base.Equal(OneDec()) {
+		panic(fmt.Sprintf("log is not defined at base <= 0 or base == 1, base given (%s)", base))
+	}
+
+	log2x_argument := x.LogBase2()
+	log2x_base := base.LogBase2()
+
+	y := log2x_argument.Quo(log2x_base)
+
+	return y
 }

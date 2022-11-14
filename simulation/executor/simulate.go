@@ -21,6 +21,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 
+	"github.com/osmosis-labs/osmosis/v12/simulation/executor/internal/executortypes"
+	"github.com/osmosis-labs/osmosis/v12/simulation/executor/internal/stats"
 	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
 )
 
@@ -48,17 +50,18 @@ func SimulateFromSeed(
 
 	legacyInvariantPeriod := uint(10) // TODO: Make a better answer of what to do here, at minimum put into config
 	app := appCreator(simulationHomeDir(), legacyInvariantPeriod, baseappOptionsFromConfig(config)...)
-	actions := app.SimulationManager().Actions(config.Seed, app.AppCodec())
+	simManager := executortypes.CreateSimulationManager(app)
+	actions := simManager.Actions(config.Seed, app.AppCodec())
 
 	// Set up sql table
-	statsDb, err := setupStatsDb(config.ExportConfig)
+	statsDb, err := stats.SetupStatsDb(config.ExportConfig)
 	if err != nil {
 		tb.Fatal(err)
 	}
-	defer statsDb.cleanup()
+	defer statsDb.Cleanup()
 
 	// Encapsulate the bizarre initialization logic that must be cleaned.
-	simCtx, simState, simParams, err := cursedInitializationLogic(tb, w, app, initFunctions, &config)
+	simCtx, simState, simParams, err := cursedInitializationLogic(tb, w, app, simManager, initFunctions, &config)
 	if err != nil {
 		return storetypes.CommitID{}, true, err
 	}
@@ -93,7 +96,7 @@ func SimulateFromSeed(
 
 	stopEarly, err = simState.SimulateAllBlocks(w, simCtx, blockSimulator)
 
-	simState.eventStats.exportEvents(config.ExportConfig.ExportStatsPath, w)
+	simState.eventStats.ExportEvents(config.ExportConfig.ExportStatsPath, w)
 	return storetypes.CommitID{}, stopEarly, err
 }
 
@@ -115,6 +118,7 @@ func cursedInitializationLogic(
 	tb testing.TB,
 	w io.Writer,
 	app simtypes.App,
+	simManager executortypes.Manager,
 	initFunctions InitFunctions,
 	config *Config,
 ) (*simtypes.SimCtx, *simState, Params, error) {
@@ -130,7 +134,7 @@ func cursedInitializationLogic(
 	}
 
 	validators, genesisTimestamp, accs, res := initChain(
-		app.SimulationManager(), r, simParams, accs, app, initFunctions.AppInitialStateFn, config)
+		simManager, r, simParams, accs, app, initFunctions.InitChainFn, config)
 
 	fmt.Printf(
 		"Starting the simulation from time %v (unixtime %v)\n",
@@ -139,6 +143,8 @@ func cursedInitializationLogic(
 
 	simCtx := simtypes.NewSimCtx(r, app, accs, config.InitializationConfig.ChainID)
 
+	// TODO: Understand how this works better in Tendermint wrt
+	// genesis timestamp and proposer for first block
 	initialHeader := tmproto.Header{
 		ChainID:         config.InitializationConfig.ChainID,
 		Height:          int64(config.InitializationConfig.InitialBlockHeight),
@@ -159,35 +165,28 @@ func cursedInitializationLogic(
 
 // initialize the chain for the simulation
 func initChain(
-	simManager *simtypes.Manager,
+	simManager executortypes.Manager,
 	r *rand.Rand,
 	params Params,
 	accounts []simulation.Account,
 	app simtypes.App,
-	appStateFn AppStateFn,
+	initChainFn InitChainFn,
 	config *Config,
 ) (mockValidators, time.Time, []simulation.Account, abci.ResponseInitChain) {
 	// TODO: Cleanup the whole config dependency with appStateFn
-	appState, accounts, chainID, genesisTimestamp := appStateFn(simManager, r, accounts, config.InitializationConfig)
-	consensusParams := randomConsensusParams(r, appState, app.AppCodec())
-	req := abci.RequestInitChain{
-		AppStateBytes:   appState,
-		ChainId:         chainID,
-		ConsensusParams: consensusParams,
-		Time:            genesisTimestamp,
-	}
+	accounts, req := initChainFn(simManager, r, accounts, config.InitializationConfig)
 	// Valid app version can only be zero on app initialization.
 	req.ConsensusParams.Version.AppVersion = 0
 	res := app.GetBaseApp().InitChain(req)
 	validators := newMockValidators(r, res.Validators, params)
 
 	// update config
-	config.InitializationConfig.ChainID = chainID
+	config.InitializationConfig.ChainID = req.ChainId
 	if config.InitializationConfig.InitialBlockHeight == 0 {
 		config.InitializationConfig.InitialBlockHeight = 1
 	}
 
-	return validators, genesisTimestamp, accounts, res
+	return validators, req.Time, accounts, res
 }
 
 //nolint:deadcode,unused
@@ -214,11 +213,11 @@ type blockSimFn func(simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.He
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
 func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions []simtypes.ActionsWithMetadata,
-	simState *simState, config Config, stats statsDb,
+	simState *simState, config Config, stats stats.StatsDb,
 ) blockSimFn {
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0
-	selectAction := simtypes.GetSelectActionFn(actions)
+	selectAction := executortypes.GetSelectActionFn(actions)
 
 	return func(
 		simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.Header,
@@ -268,10 +267,10 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 // This is inheriting old functionality. We should break this as part of making logging be usable / make sense.
 func (simState *simState) logActionResult(
 	header tmproto.Header, actionIndex int,
-	opMsg simulation.OperationMsg, resultData []byte, stats statsDb, actionErr error,
+	opMsg simulation.OperationMsg, resultData []byte, stats stats.StatsDb, actionErr error,
 ) error {
 	opMsg.LogEvent(simState.eventStats.Tally)
-	err := stats.logActionResult(header, opMsg, resultData)
+	err := stats.LogActionResult(header, opMsg, resultData)
 	if err != nil {
 		return err
 	}

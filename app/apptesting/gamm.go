@@ -3,6 +3,7 @@ package apptesting
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	gammkeeper "github.com/osmosis-labs/osmosis/v12/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
@@ -13,6 +14,24 @@ var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
 	sdk.NewCoin("bar", sdk.NewInt(10000000)),
 	sdk.NewCoin("baz", sdk.NewInt(10000000)),
 )
+var DefaultPoolAssets = []balancer.PoolAsset{
+	{
+		Weight: sdk.NewInt(100),
+		Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
+	},
+	{
+		Weight: sdk.NewInt(200),
+		Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
+	},
+	{
+		Weight: sdk.NewInt(300),
+		Token:  sdk.NewCoin("baz", sdk.NewInt(5000000)),
+	},
+	{
+		Weight: sdk.NewInt(400),
+		Token:  sdk.NewCoin("uosmo", sdk.NewInt(5000000)),
+	},
+}
 
 // PrepareBalancerPoolWithCoins returns a balancer pool
 // consisted of given coins with equal weight.
@@ -67,25 +86,7 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer
 	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
 
-	poolAssets := []balancer.PoolAsset{
-		{
-			Weight: sdk.NewInt(100),
-			Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
-		},
-		{
-			Weight: sdk.NewInt(200),
-			Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
-		},
-		{
-			Weight: sdk.NewInt(300),
-			Token:  sdk.NewCoin("baz", sdk.NewInt(5000000)),
-		},
-		{
-			Weight: sdk.NewInt(400),
-			Token:  sdk.NewCoin("uosmo", sdk.NewInt(5000000)),
-		},
-	}
-	msg := balancer.NewMsgCreateBalancerPool(s.TestAccs[0], poolParams, poolAssets, "")
+	msg := balancer.NewMsgCreateBalancerPool(s.TestAccs[0], poolParams, DefaultPoolAssets, "")
 	poolId, err := s.App.GAMMKeeper.CreatePool(s.Ctx, msg)
 	s.NoError(err)
 	return poolId
@@ -117,20 +118,30 @@ func (s *KeeperTestHelper) RunBasicSwap(poolId uint64) {
 	s.FundAcc(s.TestAccs[0], swapIn)
 
 	msg := gammtypes.MsgSwapExactAmountIn{
-		Sender:            string(s.TestAccs[0]),
+		Sender:            s.TestAccs[0].String(),
 		Routes:            []gammtypes.SwapAmountInRoute{{PoolId: poolId, TokenOutDenom: denoms[1]}},
 		TokenIn:           swapIn[0],
 		TokenOutMinAmount: sdk.ZeroInt(),
 	}
-	// TODO: switch to message
-	_, err = s.App.GAMMKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], poolId, msg.TokenIn, denoms[1], msg.TokenOutMinAmount)
+
+	gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
+	_, err = gammMsgServer.SwapExactAmountIn(sdk.WrapSDKContext(s.Ctx), &msg)
 	s.Require().NoError(err)
 }
 
 func (s *KeeperTestHelper) RunBasicExit(poolId uint64) {
 	shareInAmount := sdk.NewInt(100)
 	tokenOutMins := sdk.NewCoins()
-	_, err := s.App.GAMMKeeper.ExitPool(s.Ctx, s.TestAccs[0], poolId, shareInAmount, tokenOutMins)
+
+	msg := gammtypes.MsgExitPool{
+		Sender:        s.TestAccs[0].String(),
+		PoolId:        poolId,
+		ShareInAmount: shareInAmount,
+		TokenOutMins:  tokenOutMins,
+	}
+
+	gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
+	_, err := gammMsgServer.ExitPool(sdk.WrapSDKContext(s.Ctx), &msg)
 	s.Require().NoError(err)
 }
 
@@ -148,12 +159,13 @@ func (s *KeeperTestHelper) RunBasicJoin(poolId uint64) {
 
 	totalPoolShare := pool.GetTotalShares()
 	msg := gammtypes.MsgJoinPool{
-		Sender:         string(s.TestAccs[0]),
+		Sender:         s.TestAccs[0].String(),
 		PoolId:         poolId,
 		ShareOutAmount: totalPoolShare.Quo(sdk.NewInt(100000)),
 		TokenInMaxs:    tokenIn,
 	}
-	// TODO: switch to message
-	_, _, err = s.App.GAMMKeeper.JoinPoolNoSwap(s.Ctx, s.TestAccs[0], poolId, msg.ShareOutAmount, msg.TokenInMaxs)
+
+	gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
+	_, err = gammMsgServer.JoinPool(sdk.WrapSDKContext(s.Ctx), &msg)
 	s.Require().NoError(err)
 }

@@ -30,6 +30,7 @@ import (
 	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v12/x/epochs"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm"
+	ibc_hooks "github.com/osmosis-labs/osmosis/v12/x/ibc-hooks"
 	"github.com/osmosis-labs/osmosis/v12/x/incentives"
 	"github.com/osmosis-labs/osmosis/v12/x/lockup"
 	"github.com/osmosis-labs/osmosis/v12/x/mint"
@@ -40,6 +41,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/tokenfactory"
 	"github.com/osmosis-labs/osmosis/v12/x/twap/twapmodule"
 	"github.com/osmosis-labs/osmosis/v12/x/txfees"
+	valsetprefmodule "github.com/osmosis-labs/osmosis/v12/x/valset-pref/valpref-module"
 )
 
 // AppModuleBasics returns ModuleBasics for the module BasicManager.
@@ -84,6 +86,8 @@ var AppModuleBasics = []module.AppModuleBasic{
 	epochs.AppModuleBasic{},
 	superfluid.AppModuleBasic{},
 	tokenfactory.AppModuleBasic{},
+	valsetprefmodule.AppModuleBasic{},
 	wasm.AppModuleBasic{},
 	ica.AppModuleBasic{},
+	ibc_hooks.AppModuleBasic{},
 }

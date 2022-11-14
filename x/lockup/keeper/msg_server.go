@@ -96,14 +96,7 @@ func (server msgServer) BeginUnlocking(goCtx context.Context, msg *types.MsgBegi
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	lock, err = server.keeper.GetLockByID(ctx, msg.ID)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-	}
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		createBeginUnlockEvent(lock),
-	})
+	// N.B. begin unlock event is emitted downstream in the keeper method.
 
 	return &types.MsgBeginUnlockingResponse{}, nil
 }
@@ -181,4 +174,51 @@ func (server msgServer) ExtendLockup(goCtx context.Context, msg *types.MsgExtend
 	})
 
 	return &types.MsgExtendLockupResponse{}, nil
+}
+
+// ForceUnlock ignores unlock duration and immediately unlocks the lock.
+// This message is only allowed for governance-passed accounts that are kept as parameter in the lockup module.
+// Locks that has been superfluid delegated is not supported.
+func (server msgServer) ForceUnlock(goCtx context.Context, msg *types.MsgForceUnlock) (*types.MsgForceUnlockResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	lock, err := server.keeper.GetLockByID(ctx, msg.ID)
+	if err != nil {
+		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	// check if message sender matches lock owner
+	if lock.Owner != msg.Owner {
+		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "Sender (%s) does not match lock owner (%s)", msg.Owner, lock.Owner)
+	}
+
+	// check for chain parameter that the address is allowed to force unlock
+	forceUnlockAllowedAddresses := server.keeper.GetParams(ctx).ForceUnlockAllowedAddresses
+	found := false
+	for _, addr := range forceUnlockAllowedAddresses {
+		// defense in depth, double checking the message owner and lock owner are both the same and is one of the allowed force unlock addresses
+		if addr == lock.Owner && addr == msg.Owner {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "Sender (%s) not allowed to force unlock", lock.Owner)
+	}
+
+	// check that given lock is not superfluid staked
+	synthLocks := server.keeper.GetAllSyntheticLockupsByLockup(ctx, lock.ID)
+	if len(synthLocks) > 0 {
+		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "superfluid delegation exists for lock")
+	}
+
+	// force unlock given lock
+	// This also supports the case of force unlocking lock as a whole when msg.Coins
+	// provided is empty.
+	err = server.keeper.PartialForceUnlock(ctx, *lock, msg.Coins)
+	if err != nil {
+		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	return &types.MsgForceUnlockResponse{Success: true}, nil
 }

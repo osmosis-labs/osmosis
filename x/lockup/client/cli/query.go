@@ -48,6 +48,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdOutputLocksJson(),
 		GetCmdSyntheticLockupsByLockupID(),
 		GetCmdAccountLockedDuration(),
+		GetCmdParams(),
 	)
 
 	return cmd
@@ -792,6 +793,42 @@ $ %s query lockup output-all-locks <max lock ID>
 
 			fmt.Println("Writing to lock_export.json")
 			return nil
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdParams returns module params.
+func GetCmdParams() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "params",
+		Short: "Query module params",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query module params.
+
+Example:
+$ %s query lockup params
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.Params(cmd.Context(), &types.QueryParamsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
 		},
 	}
 
