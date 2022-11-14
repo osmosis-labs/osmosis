@@ -54,3 +54,5 @@ func init() {
 	RegisterLegacyAminoCodec(authzcodec.Amino)
 	amino.Seal()
 }
+
+const PoolTypeName string = "Stableswap"
