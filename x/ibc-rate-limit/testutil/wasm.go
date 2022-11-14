@@ -68,6 +68,13 @@ func (chain *TestChain) InstantiateContract(suite *suite.Suite, msg string) sdk.
 	return addr
 }
 
+func (chain *TestChain) QueryContract(suite *suite.Suite, contract sdk.AccAddress, key []byte) string {
+	osmosisApp := chain.GetOsmosisApp()
+	state, err := osmosisApp.WasmKeeper.QuerySmart(chain.GetContext(), contract, key)
+	suite.Require().NoError(err)
+	return string(state)
+}
+
 func (chain *TestChain) RegisterRateLimitingContract(addr []byte) {
 	addrStr, err := sdk.Bech32ifyAddressBytes("osmo", addr)
 	require.NoError(chain.T, err)

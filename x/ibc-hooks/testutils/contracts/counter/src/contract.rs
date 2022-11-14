@@ -1,6 +1,10 @@
+use std::collections::HashMap;
+
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{
+    to_binary, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128,
+};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
@@ -61,7 +65,7 @@ pub mod execute {
                     }),
                     Some(counter) => Ok(Counter {
                         count: counter.count + 1,
-                        total_funds: counter.total_funds,
+                        total_funds: naive_add_coins(&info.funds, &counter.total_funds),
                         owner: info.sender.clone(),
                     }),
                 }
@@ -91,6 +95,62 @@ pub mod execute {
         )?;
         Ok(Response::new().add_attribute("action", "reset"))
     }
+}
+
+pub fn naive_add_coins(lhs: &Vec<Coin>, rhs: &Vec<Coin>) -> Vec<Coin> {
+    // This is a naive, inneficient  implementation of Vec<Coin> addition.
+    // This shouldn't be used in production but serves our purpose for this
+    // testing contract
+    let mut coins: HashMap<String, Uint128> = HashMap::new();
+    for coin in lhs {
+        coins.insert(coin.denom.clone(), coin.amount);
+    }
+
+    //HashMap::from(lhs.iter().map(|c| (c.denom, c.amount)).collect());
+
+    for coin in rhs {
+        coins
+            .entry(coin.denom.clone())
+            .and_modify(|e| *e += coin.amount)
+            .or_insert(coin.amount);
+    }
+    coins.iter().map(|(d, &a)| Coin::new(a.into(), d)).collect()
+}
+
+#[test]
+fn coin_addition() {
+    let c1 = vec![Coin::new(1, "a"), Coin::new(2, "b")];
+    let c2 = vec![Coin::new(7, "a"), Coin::new(2, "c")];
+
+    let mut sum = naive_add_coins(&c1, &c1);
+    sum.sort_by(|a, b| a.denom.cmp(&b.denom));
+    assert_eq!(sum, vec![Coin::new(2, "a"), Coin::new(4, "b")]);
+
+    let mut sum = naive_add_coins(&c1, &c2);
+    sum.sort_by(|a, b| a.denom.cmp(&b.denom));
+    assert_eq!(
+        sum,
+        vec![Coin::new(8, "a"), Coin::new(2, "b"), Coin::new(2, "c"),]
+    );
+
+    let mut sum = naive_add_coins(&c2, &c2);
+    sum.sort_by(|a, b| a.denom.cmp(&b.denom));
+    assert_eq!(sum, vec![Coin::new(14, "a"), Coin::new(4, "c"),]);
+
+    let mut sum = naive_add_coins(&c2, &c1);
+    sum.sort_by(|a, b| a.denom.cmp(&b.denom));
+    assert_eq!(
+        sum,
+        vec![Coin::new(8, "a"), Coin::new(2, "b"), Coin::new(2, "c"),]
+    );
+
+    let mut sum = naive_add_coins(&vec![], &c2);
+    sum.sort_by(|a, b| a.denom.cmp(&b.denom));
+    assert_eq!(sum, c2);
+
+    let mut sum = naive_add_coins(&c2, &vec![]);
+    sum.sort_by(|a, b| a.denom.cmp(&b.denom));
+    assert_eq!(sum, c2);
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
