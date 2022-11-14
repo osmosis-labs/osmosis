@@ -45,7 +45,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 
 * [#2788](https://github.com/osmosis-labs/osmosis/pull/2788) Add logarithm base 2 implementation.
-<<<<<<< HEAD
 * [#2739](https://github.com/osmosis-labs/osmosis/pull/2739),[#3356](https://github.com/osmosis-labs/osmosis/pull/3356) Add pool type query, and add it to stargate whitelist
 * [#2956](https://github.com/osmosis-labs/osmosis/issues/2956) Add queries for calculating amount of shares/tokens you get by providing X tokens/shares when entering/exiting a pool
 * [#3313](https://github.com/osmosis-labs/osmosis/pull/3313) Upgrade to IBC v3.4.0, allowing for IBC transfers with metadata.
@@ -54,10 +53,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - This PR adds v2 queries for doing the correct thing, and giving people time to migrate from v1beta1 queries to v2.
   - It also changes cosmwasm to only allow the v2 queries, as no contracts on Osmosis mainnet uses the v1beta1 queries.
 
-=======
-* [#2739](https://github.com/osmosis-labs/osmosis/pull/2739) Add pool type query
-* [#2956](https://github.com/osmosis-labs/osmosis/issues/2956) Add queries for calculating amount of shares/tokens you get by providing X tokens/shares when entering/exiting a pool
->>>>>>> 94534da0 (feat(gamm): CalcJoinPoolShares and CalcExitPoolCoinsFromShares queries (#2972))
 
 ### Bug fixes
 
