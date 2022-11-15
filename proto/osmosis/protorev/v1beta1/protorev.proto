@@ -1,0 +1,42 @@
+syntax = "proto3";
+package osmosis.protorev.v1beta1;
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v12/x/protorev/types";
+
+message NeedToArb {
+    bool need_to_arb = 1;
+}
+
+message SwapInfo {
+    uint64 poold_id = 1;
+
+    cosmos.base.v1beta1.Coin input = 2;
+    cosmos.base.v1beta1.Coin output = 3;
+}
+
+message ArbDetails {
+    string sender = 1;
+
+    repeated SwapInfo swaps = 2;
+}
+
+message ConnectedTokens {
+    repeated string tokens = 1;
+}
+
+message PairsToPoolIDs {
+    repeated uint64 pool_ids = 1;
+}
+
+message CyclicRoute {
+    repeated uint64 id = 1;
+}
+
+message ListOfCyclicRoutes {
+    repeated CyclicRoute cyclic_route = 1;
+}

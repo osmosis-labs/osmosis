@@ -1,0 +1,13 @@
+syntax = "proto3";
+package osmosis.v12.protorev;
+
+// this line is used by starport scaffolding # proto/tx/import
+
+option go_package = "github.com/osmosis-labs/osmosis/v12/x/protorev/types";
+
+// Msg defines the Msg service.
+service Msg {
+    // this line is used by starport scaffolding # proto/tx/rpc
+}
+
+// this line is used by starport scaffolding # proto/tx/message
