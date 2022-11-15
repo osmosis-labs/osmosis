@@ -167,7 +167,9 @@ So lets define this as:
 $$k_{target} = \frac{x_0 y_0 (x_0^2 + y_0^2 + w)}{x_f} - (y_0 (x_f^2 + w) + y_0^3)$$
 $$k_{iter}(y_{out}) = -y_{out}^3 + 3 y_0 y_{out}^2 - (x_f^2 + w + 3y_0^2)y_{out}$$
 
-We prove [here](#err_proof) that an error of a multiplicative `e` between `target_k` and `iter_k`, implies an error of less than a factor of `e` in `y_{out}`.
+We prove [here](#err_proof) that an error of a multiplicative `e` between `target_k` and `iter_k`, implies an error of less than a factor of `10e` in `y_{out}`, as long as `|y_{out}| < y_0`. (The proven bounds are actually better)
+
+We target an error of less than `10^{-8}` in `y_{out}`, so we conservatively set a bound of `10^{-12}` for `e_k`.
 
 ##### Combined pseudocode
 
@@ -311,31 +313,44 @@ We see correctness of the swap fee, by imagining what happens if we took this re
 
 <a name="err_proof">
 
-#### Proof that |e_y| < |e_k|
+#### Proof that |e_y| < 100|e_k|
 
 </a>
 
-In the binary search code, we are going to find a `k'` that is 'close' to `k`. We define and bound this error term as `e_k`, namely `e_k = k - k'`. We then find an implied value of `y'`, but this has an error term off of the true value of `y`, that would lead to exactly `k`. We call this term `y'`, and similarly `e_y = y - y'`.
+Theorem: $|e_y| < 100 |e_k|$ as long as $y_{out} <= y_0$.
 
-Recall we compute `k` as `k = xy(x^2 + y^2 + w)`. So `k' = xy'(x^2 + (y')^2 + w)`. We seek to relate the error terms, so:
+The function $f(y_{out}) = -y_{out}^3 + 3 y_0 y_{out}^2 - (x_f^2 + w + 3y_0^2)y_{out}$ is monotonically increasing over the reals. You can prove this, by seeing that its [derivative's](https://www.wolframalpha.com/input?i=d%2Fdx+-x%5E3+%2B+3a+x%5E2+-+%28b+%2B+3a%5E2%29+x+) 0 values are both imaginary, and therefore has no local minima or maxima in the reals.
+Therefore, there exists exactly one real $y_{out}$ s.t. $f(y_{out}) = k$. Via binary search, we solve for a value $y_{out}^{*}$ such that $\left|\frac{ k - k^{*} }{k}\right| < e_k$, where $k^{*} = f(y_{out}^{*})$. We seek to then derive bounds on $e_y = \left|\frac{ y_{out} - y_{out}^{*} }{y_{out}}\right|$ in relation to $e_k$.
 
-```tex
-k - k' = xy(x^2 + y^2 + w) - xy'(x^2 + (y')^2 + w)
-e_k = (y - y')(x^3 + xw) + x(y^3 - (y')^3)
-e_k = e_y(x^3 + xw) + x(y^3 - (y')^3)
-```
+Let $y_{out} - y_{out}^* = a_y$, we are going to assume that $a_y << y_{out}$, and will justify this later. But due to this, we treat $a_y^c = 0$ for $c > 1$. This then implies that $y_{out}^2 - y_{out}^{*2} = y_{out}^2 - (y_{out} - a_y)^2 \approx 2y_{out}a_y$, and similarly $y_{out}^3 - y_{out}^{*3} \approx 3y_{out}^2 a_y$
 
-Notice that $(y')^3 = (y - e_y)^3 = y^3 - 3y^2e_y + 3ye_y^2 - e_y^3$.
-We assume that `e_y` is sufficiently small, that $e_y^2$ is approximately `0`.
-So we say $(y')^3 \approx y^3 - 3y^2e_y$.
+Now we are prepared to start bounding this.
+$$k - k^{*} = -(y_{out}^3 - y_{out}^{3*}) + 3y_0(y_{out}^2 - y_{out}^{2*}) - (x_f^2 + w + 3y_0^2)(y_{out} - y_{out}^*)$$
+$$k - k^{*} \approx -(3y_{out}^2 a_y) + 3y_0 (2y_{out}a_y) - (x_f^2 + w + 3y_0^2)a_y$$
+$$k - k^{*} \approx a_y(-3y_{out}^2 + 6y_0y_{out} - (x_f^2 + w + 3y_0^2))$$
 
-Thus $e_k \approx e_y(x^3 + xw) + x(y^3 - y^3 + 3y^2e_y) = e_y(x^3 + xw) + 3xy^2e_y = e_y(x^3 + xw + 3xy^2)$.
-Therefore
-$$e_y = \frac{e_k}{x^3 + xw + 3xy^2}$$
+Rewrite $k = y_{out}(-y_{out}^2 + 3y_0y_{out} - (x_f^2 + w + 3y_0^2))$
 
-Since `x` and `y` must be greater than 1, and `w` must be non-negative, we have that `x^3 + xw + 3xy^2 >= 1`.
-Therefore $|e_y| < |e_k|$.
-In fact, `e_y` is much lower than `e_k`.
+$$e_k > \left|\frac{ k - k^{*} }{k}\right| = \left|\frac{a_y}{y_{out}} \frac{(-3y_{out}^2 + 6y_0y_{out} - (x_f^2 + w + 3y_0^2))}{(-y_{out}^2 + 3y_0y_{out} - (x_f^2 + w + 3y_0^2))}\right|$$
+
+Notice that $\left|\frac{a_y}{y_{out}}\right| = e_y$! Therefore
+
+$$e_k > e_y\left|\frac{(-3y_{out}^2 + 6y_0y_{out} - (x_f^2 + w + 3y_0^2))}{(-y_{out}^2 + 3y_0y_{out} - (x_f^2 + w + 3y_0^2))}\right|$$
+
+We bound the right hand side, with the assistance of wolfram alpha. Let $a = y_{out}, b = y_0, c = x_f^2 + w$. Then we see from [wolfram alpha here](https://www.wolframalpha.com/input?i=%7C%28-3a%5E2+%2B+6ab+-+%28c+%2B+3b%5E2%29%29+%2F+%28-a%5E2+%2B+3ab+-+%28c+%2B+3b%5E2%29%29+%7C+%3E+.01), that this right hand expression is provably greater than `.01` if some set of decisions hold. We describe the solution set that satisfies our use case here:
+
+* When $y_{out} > 0$
+  * Use solution set: $a > 0, b > \frac{2}{3} a, c > \frac{1}{99} (-299a^2 + 597ab - 297b^2)$
+    * $a > 0$ by definition.
+    * $b > \frac{2}{3} a$, as thats equivalent to $y_0 > \frac{2}{3} y_{out}$. We already assume that $y_0 >= y_{out}$.
+    * If we take the max possible value of $a$, that $y_{out} = y_0$, then we'd have to show that $x_f^2 + w > \frac{1}{99}y_0^2$. so we just need to bound when the rhs is less than 0. Unfortunately, we either have to assume something stronger about $x_f$, or make a tighter bound on $y_{out}$ than it merely being less than $y_0$.
+* When $y_{out} < 0$
+  * Use solution set: $a < 0, b > \frac{2}{3} a, c > -a^2 + 3ab - 3b^2$
+    * $a < 0$ by definition.
+    * $b > \frac{2}{3} a$, as $y_0$ is positive.
+    * $c > 0$ is by definition, so we just need to bound when $-a^2 + 3ab - 3b^2 < 0$. This is always the case as long as one of $a$ or $b$ is non-zero, per [here](https://www.wolframalpha.com/input?i=-a%5E2+%2B+3ab+-+3b%5E2+%3C+0).
+
+
 
 ### Spot Price
 
