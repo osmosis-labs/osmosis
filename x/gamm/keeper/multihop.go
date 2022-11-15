@@ -17,18 +17,25 @@ func (k Keeper) MultihopSwapExactAmountIn(
 	tokenIn sdk.Coin,
 	tokenOutMinAmount sdk.Int,
 ) (tokenOutAmount sdk.Int, err error) {
-	isMultiHopRouted, routeSwapFee, sumOfSwapFees := false, sdk.Dec{}, sdk.Dec{}
+	var (
+		isMultiHopRouted bool
+		routeSwapFee     sdk.Dec
+		sumOfSwapFees    sdk.Dec
+	)
+
 	route := types.SwapAmountInRoutes(routes)
 	if err := route.Validate(); err != nil {
 		return sdk.Int{}, err
 	}
 
-	// in this loop, we check if:
+	// In this loop, we check if:
 	// - the route is of length 2
 	// - route 1 and route 2 don't trade via the same pool
 	// - route 1 contains uosmo
 	// - both route 1 and route 2 are incentivized pools
-	// if all of the above is true, then we collect the additive and max fee between the two pools to later calculate the following:
+	//
+	// If all of the above is true, then we collect the additive and max fee between the
+	// two pools to later calculate the following:
 	// total_swap_fee = total_swap_fee = max(swapfee1, swapfee2)
 	// fee_per_pool = total_swap_fee * ((pool_fee) / (swapfee1 + swapfee2))
 	if k.isOsmoRoutedMultihop(ctx, route, routes[0].TokenOutDenom, tokenIn.Denom) {
@@ -55,8 +62,8 @@ func (k Keeper) MultihopSwapExactAmountIn(
 
 		swapFee := pool.GetSwapFee(ctx)
 
-		// if we determined the route is an osmo multi-hop and both routes are incentivized,
-		// we modify the swap fee accordingly
+		// If we determined the route is an osmo multi-hop and both routes are incentivized,
+		// we modify the swap fee accordingly.
 		if isMultiHopRouted {
 			swapFee = routeSwapFee.Mul((swapFee.Quo(sumOfSwapFees)))
 		}
@@ -140,10 +147,12 @@ func (k Keeper) MultihopSwapExactAmountOut(
 		if poolErr != nil {
 			return sdk.Int{}, poolErr
 		}
+
 		swapFee := pool.GetSwapFee(ctx)
 		if isMultiHopRouted {
 			swapFee = routeSwapFee.Mul((swapFee.Quo(sumOfSwapFees)))
 		}
+
 		_tokenInAmount, swapErr := k.swapExactAmountOut(ctx, sender, pool, route.TokenInDenom, insExpected[i], _tokenOut, swapFee)
 		if swapErr != nil {
 			return sdk.Int{}, swapErr
@@ -160,9 +169,7 @@ func (k Keeper) MultihopSwapExactAmountOut(
 	return tokenInAmount, nil
 }
 
-func (k Keeper) isOsmoRoutedMultihop(ctx sdk.Context,
-	route types.MultihopRoute,
-	inDenom string, outDenom string) (isRouted bool) {
+func (k Keeper) isOsmoRoutedMultihop(ctx sdk.Context, route types.MultihopRoute, inDenom, outDenom string) (isRouted bool) {
 	if route.Length() != 2 {
 		return false
 	}
