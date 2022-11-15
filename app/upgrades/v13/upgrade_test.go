@@ -2,9 +2,10 @@ package v13_test
 
 import (
 	"fmt"
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
-	"testing"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -42,7 +43,6 @@ func dummyUpgrade(suite *UpgradeTestSuite) {
 		beginBlockRequest := abci.RequestBeginBlock{}
 		suite.App.BeginBlocker(suite.Ctx, beginBlockRequest)
 	})
-
 }
 
 func (suite *UpgradeTestSuite) TestUpgrade() {

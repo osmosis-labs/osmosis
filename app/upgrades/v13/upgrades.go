@@ -2,6 +2,9 @@ package v13
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,8 +17,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/app/upgrades"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
-	"os"
-	"strings"
 )
 
 func setupRateLimiting(ctx sdk.Context, keepers *keepers.AppKeepers) error {
