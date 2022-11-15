@@ -2,6 +2,8 @@ package v13_test
 
 import (
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -26,6 +28,22 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 const dummyUpgradeHeight = 5
+
+func dummyUpgrade(suite *UpgradeTestSuite) {
+	suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight - 1)
+	plan := upgradetypes.Plan{Name: "v13", Height: dummyUpgradeHeight}
+	err := suite.App.UpgradeKeeper.ScheduleUpgrade(suite.Ctx, plan)
+	suite.Require().NoError(err)
+	plan, exists := suite.App.UpgradeKeeper.GetUpgradePlan(suite.Ctx)
+	suite.Require().True(exists)
+
+	suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight)
+	suite.Require().NotPanics(func() {
+		beginBlockRequest := abci.RequestBeginBlock{}
+		suite.App.BeginBlocker(suite.Ctx, beginBlockRequest)
+	})
+
+}
 
 func (suite *UpgradeTestSuite) TestUpgrade() {
 	testCases := []struct {
@@ -53,23 +71,30 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				hasAcc := suite.App.AccountKeeper.HasAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
 				suite.Require().False(hasAcc)
 			},
-			func() {
-				suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight - 1)
-				plan := upgradetypes.Plan{Name: "v13", Height: dummyUpgradeHeight}
-				err := suite.App.UpgradeKeeper.ScheduleUpgrade(suite.Ctx, plan)
-				suite.Require().NoError(err)
-				plan, exists := suite.App.UpgradeKeeper.GetUpgradePlan(suite.Ctx)
-				suite.Require().True(exists)
-
-				suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight)
-				suite.Require().NotPanics(func() {
-					beginBlockRequest := abci.RequestBeginBlock{}
-					suite.App.BeginBlocker(suite.Ctx, beginBlockRequest)
-				})
-			},
+			func() { dummyUpgrade(suite) },
 			func() {
 				hasAcc := suite.App.AccountKeeper.HasAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
 				suite.Require().True(hasAcc)
+			},
+		},
+		{
+			"Test that rate limits are setup",
+			func() {},
+			func() { dummyUpgrade(suite) },
+			func() {
+				// The contract has been uploaded and the param is set
+				paramSpace, ok := suite.App.ParamsKeeper.GetSubspace(ibcratelimittypes.ModuleName)
+				suite.Require().True(ok)
+				var contract string
+				paramSpace.GetIfExists(suite.Ctx, ibcratelimittypes.KeyContractAddress, &contract)
+				suite.Require().NotEmpty(contract)
+
+				// The quotas are configured?
+				contractAddr, err := sdk.AccAddressFromBech32(contract)
+				suite.Require().NoError(err)
+				bytes, err := suite.App.WasmKeeper.QuerySmart(suite.Ctx, contractAddr, []byte(`{"get_quotas": {"channel_id": "any", "denom": "uosmo"}}`))
+				suite.Require().NoError(err)
+				suite.Require().Contains(string(bytes), "weekly")
 			},
 		},
 	}
