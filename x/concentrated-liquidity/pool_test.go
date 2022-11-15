@@ -195,16 +195,16 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 		s.Run(name, func() {
 			s.Setup()
 			// create pool
-			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", currSqrtPrice)
+			poolId, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", currSqrtPrice)
 			s.Require().NoError(err)
 
 			// add positions
-			test.addPositions(s.Ctx, pool.Id)
+			test.addPositions(s.Ctx, poolId)
 
 			tokenIn, tokenOut, updatedTick, updatedLiquidity, _, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(
 				s.Ctx,
 				test.tokenIn, test.tokenOutDenom,
-				swapFee, test.priceLimit, pool.Id)
+				swapFee, test.priceLimit, poolId)
 			s.Require().NoError(err)
 
 			s.Require().Equal(test.expectedTokenIn.String(), tokenIn.String())
@@ -375,20 +375,20 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 		s.Run(name, func() {
 			s.Setup()
 			// create pool
-			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", currSqrtPrice)
+			poolId, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", currSqrtPrice)
 			s.Require().NoError(err)
 
 			// add positions
-			test.addPositions(s.Ctx, pool.Id)
+			test.addPositions(s.Ctx, poolId)
 
 			// execute internal swap function
 			tokenOut, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
 				s.Ctx,
 				test.tokenIn, test.tokenOutDenom,
-				swapFee, test.priceLimit, pool.Id)
+				swapFee, test.priceLimit, poolId)
 			s.Require().NoError(err)
 
-			pool = s.App.ConcentratedLiquidityKeeper.GetPoolbyId(s.Ctx, pool.Id)
+			pool := s.App.ConcentratedLiquidityKeeper.GetPoolbyId(s.Ctx, poolId)
 			s.Require().NoError(err)
 
 			// check that we produced the same token out from the swap function that we expected

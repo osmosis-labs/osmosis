@@ -16,10 +16,10 @@ func (k Keeper) InitializePool(ctx sdk.Context, pool gammtypes.PoolI, creatorAdd
 	panic("not implemented")
 }
 
-func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint64, denom0, denom1 string, currSqrtPrice sdk.Dec) (Pool, error) {
+func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint64, denom0, denom1 string, currSqrtPrice sdk.Dec) (uint64, error) {
 	denom0, denom1, err := cltypes.OrderInitialPoolDenoms(denom0, denom1)
 	if err != nil {
-		return Pool{}, err
+		return 0, err
 	}
 	pool := Pool{
 		// TODO: move gammtypes.NewPoolAddress(poolId) to swaproutertypes
@@ -34,7 +34,7 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint6
 
 	k.setPoolById(ctx, poolId, pool)
 
-	return pool, nil
+	return poolId, nil
 }
 
 // GetPool returns a pool with a given id.
