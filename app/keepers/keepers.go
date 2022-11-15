@@ -125,7 +125,7 @@ type AppKeepers struct {
 	// transfer module
 	RawIcs20TransferAppModule transfer.AppModule
 	RateLimitingICS4Wrapper   *ibcratelimit.ICS4Wrapper
-	CombinedTransferIBCModule *ibchooks.IBCMiddleware
+	TransferStack             *ibchooks.IBCMiddleware
 	Ics20WasmHooks            *ibchooks.WasmHooks
 	HooksICS4Wrapper          ibchooks.ICS4Middleware
 
@@ -209,7 +209,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.ScopedIBCKeeper,
 	)
 
-	appKeepers.WireICS20PreWasm(appCodec, bApp)
+	appKeepers.WireICS20PreWasmKeeper(appCodec, bApp)
 
 	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, appKeepers.keys[icahosttypes.StoreKey],
@@ -227,7 +227,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
 		// The transferIBC module is replaced by rateLimitingTransferModule
-		AddRoute(ibctransfertypes.ModuleName, appKeepers.CombinedTransferIBCModule)
+		AddRoute(ibctransfertypes.ModuleName, appKeepers.TransferStack)
 	// Note: the sealing is done after creating wasmd and wiring that up
 
 	// create evidence keeper with router
@@ -395,7 +395,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 //
 // After this, the wasm keeper is required to be set on both
 // appkeepers.WasmHooks AND appKeepers.RateLimitingICS4Wrapper
-func (appKeepers *AppKeepers) WireICS20PreWasm(
+func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
 	appCodec codec.Codec,
 	bApp *baseapp.BaseApp) {
 	// Setup the ICS4Wrapper used by the hooks middleware
@@ -440,7 +440,7 @@ func (appKeepers *AppKeepers) WireICS20PreWasm(
 	rateLimitingTransferModule := ibcratelimit.NewIBCModule(transferIBCModule, appKeepers.RateLimitingICS4Wrapper)
 	// Hooks Middleware
 	hooksTransferModule := ibchooks.NewIBCMiddleware(&rateLimitingTransferModule, &appKeepers.HooksICS4Wrapper)
-	appKeepers.CombinedTransferIBCModule = &hooksTransferModule
+	appKeepers.TransferStack = &hooksTransferModule
 }
 
 // InitSpecialKeepers initiates special keepers (crisis appkeeper, upgradekeeper, params keeper)
