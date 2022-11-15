@@ -85,6 +85,12 @@ func cubicF(a osmomath.BigDec) (osmomath.BigDec, error) {
 	return a.Power(3), nil
 }
 
+var negCubicFConstant = osmomath.NewBigDec(1 << 62).Power(3).Neg()
+
+func negCubicF(a osmomath.BigDec) (osmomath.BigDec, error) {
+	return a.Power(3).Add(negCubicFConstant), nil
+}
+
 type searchFn func(osmomath.BigDec) (osmomath.BigDec, error)
 
 type binarySearchTestCase struct {
@@ -142,14 +148,14 @@ func TestBinarySearchLineIterationCounts(t *testing.T) {
 	runBinarySearchTestCases(t, tests, exactlyEqual)
 }
 
-var fnMap = map[string]searchFn{"line": lineF, "cubic": cubicF}
+var fnMap = map[string]searchFn{"line": lineF, "cubic": cubicF, "neg_cubic": negCubicF}
 
 // This function tests that any value in a given range can be reached within expected num iterations.
 func TestIterationDepthRandValue(t *testing.T) {
 	tests := map[string]binarySearchTestCase{}
 	exactEqual := ErrTolerance{AdditiveTolerance: sdk.ZeroInt()}
 	withinOne := ErrTolerance{AdditiveTolerance: sdk.OneInt()}
-	within32 := ErrTolerance{AdditiveTolerance:  sdk.OneInt().MulRaw(32)}
+	within32 := ErrTolerance{AdditiveTolerance: sdk.OneInt().MulRaw(32)}
 
 	createRandInput := func(fnName string, lowerbound, upperbound int64,
 		errTolerance ErrTolerance, maxNumIters int, errToleranceName string) {
@@ -260,6 +266,13 @@ func TestBinarySearchBigDec(t *testing.T) {
 			zero, twoTo50,
 			osmomath.NewBigDec((1 << 33) - (1 << 29)),
 			errToleranceBoth, 51, osmomath.NewBigDec(1 << 11), false},
+		"neg cubic f, no err tolerance, converges": {negCubicF, zero, twoTo50,
+			twoTo25PlusOneCubed.Add(negCubicFConstant), withinOne, 51, twoTo25PlusOne, false},
+		// "neg cubic f, large multiplicative err tolerance, converges": {
+		// 	negCubicF,
+		// 	zero, twoTo50,
+		// 	osmomath.NewBigDec(1 << 30).Add(negCubicFConstant),
+		// 	withinFactor8, 51, osmomath.NewBigDec(1 << 11), false},
 	}
 
 	runBinarySearchTestCases(t, tests, equalWithinOne)

@@ -257,7 +257,7 @@ func targetKCalculator(x0, y0, w, yf osmomath.BigDec) osmomath.BigDec {
 	yfRemoved := startK.Quo(yf)
 	// removed constant term from expression
 	// namely - (x_0 (y_f^2 + w) + x_0^3) = x_0(y_f^2 + w + x_0^2)
-	// innerTerm = x_f^2 + w + y_0^2
+	// innerTerm = y_f^2 + w + x_0^2
 	innerTerm := yf.Mul(yf).Add(w).Add((x0.Mul(x0)))
 	constantTerm := innerTerm.Mul(x0)
 	return yfRemoved.Sub(constantTerm)
@@ -281,6 +281,9 @@ func iterKCalculator(x0, w, yf osmomath.BigDec) func(osmomath.BigDec) (osmomath.
 	}
 }
 
+var zero = osmomath.ZeroDec()
+var one = osmomath.OneDec()
+
 func deriveUpperLowerXFinalReserveBounds(xReserve, yReserve, wSumSquares, yFinal osmomath.BigDec) (
 	xFinalLowerbound, xFinalUpperbound osmomath.BigDec) {
 	xFinalLowerbound, xFinalUpperbound = xReserve, xReserve
@@ -288,16 +291,16 @@ func deriveUpperLowerXFinalReserveBounds(xReserve, yReserve, wSumSquares, yFinal
 	k0 := cfmmConstantMultiNoV(xReserve, yFinal, wSumSquares)
 	k := cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares)
 	// fmt.Println(k0, k)
-	if k0.Equal(osmomath.ZeroDec()) || k.Equal(osmomath.ZeroDec()) {
+	if k0.Equal(zero) || k.Equal(zero) {
 		panic("k should never be zero")
 	}
 	kRatio := k0.Quo(k)
-	if kRatio.LT(osmomath.OneDec()) {
+	if kRatio.LT(one) {
 		// k_0 < k. Need to find an upperbound. Worst case assume a linear relationship, gives an upperbound
 		// TODO: In the future, we can derive better bounds via reasoning about coefficients in the cubic
 		// These are quite close when we are in the "stable" part of the curve though.
 		xFinalUpperbound = xReserve.Quo(kRatio).Ceil()
-	} else if kRatio.GT(osmomath.OneDec()) {
+	} else if kRatio.GT(one) {
 		// need to find a lowerbound. We could use a cubic relation, but for now we just set it to 0.
 		xFinalLowerbound = osmomath.ZeroDec()
 	} else {
@@ -314,6 +317,7 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	} else if yIn.Abs().GTE(yReserve) {
 		panic("cannot input more than pool reserves")
 	}
+	// fmt.Printf("solve cfmm xreserve %v, yreserve %v, w %v, yin %v\n", xReserve, yReserve, wSumSquares, yIn)
 	yFinal := yReserve.Add(yIn)
 	xLowEst, xHighEst := deriveUpperLowerXFinalReserveBounds(xReserve, yReserve, wSumSquares, yFinal)
 	targetK := targetKCalculator(xReserve, yReserve, wSumSquares, yFinal)
@@ -340,6 +344,8 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	}
 
 	xOut := xReserve.Sub(xEst)
+	// fmt.Printf("xOut %v\n", xOut)
+
 	// We check the absolute value of the output against the xReserve amount to ensure that:
 	// 1. Swaps cannot more than double the input token's pool supply
 	// 2. Swaps cannot output more than the output token's pool supply
