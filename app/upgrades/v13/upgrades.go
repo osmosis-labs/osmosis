@@ -63,7 +63,13 @@ func setupRateLimiting(ctx sdk.Context, keepers *keepers.AppKeepers) error {
 		return err
 	}
 	addrStr, err := sdk.Bech32ifyAddressBytes("osmo", addr)
+	if err != nil {
+		return err
+	}
 	params, err := ibcratelimittypes.NewParams(addrStr)
+	if err != nil {
+		return err
+	}
 	paramSpace, ok := keepers.ParamsKeeper.GetSubspace(ibcratelimittypes.ModuleName)
 	if !ok {
 		return sdkerrors.New("rate-limiting-upgrades", 2, "can't create paramspace")
