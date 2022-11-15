@@ -1,7 +1,13 @@
 package types
 
 import (
+	"fmt"
+	"math"
+	"strconv"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v12/osmomath"
 )
 
 // TODO: decide on the values for Max tick and Min tick
@@ -12,5 +18,12 @@ var (
 	MaxSqrtRatio = sdk.MustNewDecFromStr("18446050711097703529.7763428")
 	// TODO: this is a temp value, figure out math for this.
 	// we basically want getSqrtRatioAtTick(MIN_TICK)
-	MinSqrtRatio = sdk.MustNewDecFromStr("0")
+	MinSqrtRatio = GetMinSqrtRatio()
 )
+
+// Calculates MinSqrtPrice = sqrt(1.0001^MinTick)
+func GetMinSqrtRatio() sdk.Dec {
+	minSqrtRatio := osmomath.MustNewDecFromStr(strconv.FormatFloat(math.Pow(1.0001, -887272 / 2), 'f', 36, 64))
+	fmt.Println(minSqrtRatio)
+	return minSqrtRatio.SDKDec()
+}
