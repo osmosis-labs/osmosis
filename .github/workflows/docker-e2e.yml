@@ -4,7 +4,7 @@
 #
 # osmolabs/osmosis-e2e-init-chain:X.Y.0    # is pushed
 # osmolabs/osmosis-e2e-init-chain:X.Y      # is updated to X.Y.0
-# osmolabs/osmosis-e2e-init-chain:X        # is updated to X.Y.Z
+# osmolabs/osmosis-e2e-init-chain:X        # is updated to X.Y.0
 #
 # All the images above have support for linux/amd64 and linux/arm64.
 #
