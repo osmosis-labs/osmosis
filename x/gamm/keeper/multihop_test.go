@@ -76,7 +76,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 			expectPass:        true,
 		},
 		{
-			name: "Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) with a half fee applied, pool 1 percent fee, pool 2 10 percent fee",
+			name: "Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) with a half fee applied, (pool 1) 1 percent fee, (pool 2) 10 percent fee",
 			param: param{
 				routes: []types.SwapAmountInRoute{
 					{
@@ -243,7 +243,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 			reducedFeeApplied: true,
 		},
 		{
-			name: "Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) with a half fee applied, pool 1 percent fee, pool 2 10 percent fee",
+			name: "Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) with a half fee applied, (pool 1) 1 percent fee, (pool 2) 10 percent fee",
 			param: param{
 				routes: []types.SwapAmountOutRoute{
 					{
