@@ -2,7 +2,7 @@
 #
 # On every new `vX.Y.0` tag the following images are pushed:
 #
-# osmolabs/osmosis-e2e-init-chain:X.Y.Z    # is pushed
+# osmolabs/osmosis-e2e-init-chain:X.Y.0    # is pushed
 # osmolabs/osmosis-e2e-init-chain:X.Y      # is updated to X.Y.Z
 # osmolabs/osmosis-e2e-init-chain:X        # is updated to X.Y.Z
 #
