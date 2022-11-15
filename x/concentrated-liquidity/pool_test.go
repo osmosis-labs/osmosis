@@ -11,7 +11,6 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	currPrice := sdk.NewDec(5000)
 	currSqrtPrice, err := currPrice.ApproxSqrt() // 70.710678118654752440
 	s.Require().NoError(err)
-	currTick := cl.PriceToTick(currPrice) // 85176
 	lowerPrice := sdk.NewDec(4545)
 	s.Require().NoError(err)
 	lowerTick := cl.PriceToTick(lowerPrice) // 84222
@@ -196,7 +195,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 		s.Run(name, func() {
 			s.Setup()
 			// create pool
-			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", currSqrtPrice, currTick)
+			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", currSqrtPrice)
 			s.Require().NoError(err)
 
 			// add positions
@@ -241,7 +240,6 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 	currPrice := sdk.NewDec(5000)
 	currSqrtPrice, err := currPrice.ApproxSqrt() // 70.710678118654752440
 	s.Require().NoError(err)
-	currTick := cl.PriceToTick(currPrice) // 85176
 	lowerPrice := sdk.NewDec(4545)
 	s.Require().NoError(err)
 	lowerTick := cl.PriceToTick(lowerPrice) // 84222
@@ -377,7 +375,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 		s.Run(name, func() {
 			s.Setup()
 			// create pool
-			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", currSqrtPrice, currTick)
+			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", currSqrtPrice)
 			s.Require().NoError(err)
 
 			// add positions
