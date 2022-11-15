@@ -79,13 +79,13 @@ func (suite *KeeperTestSuite) TestEnsureDenomInPool() {
 			poolAssets:  []balancer.PoolAsset{defaultOsmoPoolAsset, defaultAtomPoolAsset},
 			tokensIn:    sdk.NewCoins(sdk.NewCoin("uatom", sdk.OneInt()), sdk.NewCoin("foo", sdk.OneInt())),
 			expectPass:  false,
-			expectedErr: types.ErrDenomNotFoundInPool,
+			expectedErr: types.ErrInputDenomsNotInPool,
 		},
 		"none of tokensIn is in pool asset map": {
 			poolAssets:  []balancer.PoolAsset{defaultOsmoPoolAsset, defaultAtomPoolAsset},
 			tokensIn:    sdk.NewCoins(sdk.NewCoin("foo", sdk.OneInt())),
 			expectPass:  false,
-			expectedErr: types.ErrDenomNotFoundInPool,
+			expectedErr: types.ErrInputDenomsNotInPool,
 		},
 	}
 

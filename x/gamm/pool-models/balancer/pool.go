@@ -19,7 +19,6 @@ const (
 	nonPostiveSharesAmountErrFormat = "shares amount must be positive, was %d"
 	nonPostiveTokenAmountErrFormat  = "token amount must be positive, was %d"
 	sharesLargerThanMaxErrFormat    = "%d resulted shares is larger than the max amount of %d"
-	invalidInputDenomsErrFormat     = "input denoms must already exist in the pool (%s)"
 
 	failedInterimLiquidityUpdateErrFormat        = "failed to update interim liquidity - pool asset %s does not exist"
 	formatRepeatingPoolAssetsNotAllowedErrFormat = "repeating pool assets not allowed, found %s"
@@ -725,7 +724,7 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 		tokensJoined = tokensIn
 		return numShares, tokensJoined, nil
 	} else if tokensIn.Len() != p.NumAssets() {
-		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("balancer pool only supports LP'ing with one asset or all assets in pool")
+		return sdk.ZeroInt(), sdk.NewCoins(), types.ErrSwapInputTokenCountMismatch
 	}
 
 	// 3) JoinPoolNoSwap with as many tokens as we can. (What is in perfect ratio)
@@ -781,6 +780,11 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 // more complex / don't just alter the state.
 // We should simplify this logic further in the future using multi-join equations.
 func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
+	// ensure that there aren't too many or too few assets in `tokensIn`
+	if tokensIn.Len() != p.NumAssets() {
+		return sdk.ZeroInt(), sdk.NewCoins(), types.ErrNoSwapInputTokenCountMismatch
+	}
+
 	// get all 'pool assets' (aka current pool liquidity + balancer weight)
 	poolAssetsByDenom, err := getPoolAssetsByDenom(p.GetAllPoolAssets())
 	if err != nil {
@@ -790,11 +794,6 @@ func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swa
 	err = ensureDenomInPool(poolAssetsByDenom, tokensIn)
 	if err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err
-	}
-
-	// ensure that there aren't too many or too few assets in `tokensIn`
-	if tokensIn.Len() != p.NumAssets() {
-		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("no-swap joins require LP'ing with all assets in pool")
 	}
 
 	// execute a no-swap join with as many tokens as possible given a perfect ratio:

@@ -1,8 +1,6 @@
 package stableswap
 
 import (
-	"errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v12/osmomath"
@@ -402,7 +400,7 @@ func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk
 // Eventually, we intend to switch this to a COW wrapped pa for better performance
 func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
 	if !tokensIn.DenomsSubsetOf(p.GetTotalPoolLiquidity(ctx)) {
-		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("attempted joining pool with assets that do not exist in pool")
+		return sdk.ZeroInt(), sdk.NewCoins(), types.ErrInputDenomsNotInPool
 	}
 	if len(tokensIn) == 1 && tokensIn[0].Amount.GT(sdk.OneInt()) {
 		numShares, err = p.calcSingleAssetJoinShares(tokensIn[0], swapFee)
@@ -420,8 +418,7 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 
 		return numShares, tokensJoined, nil
 	} else if len(tokensIn) != p.NumAssets() {
-		return sdk.ZeroInt(), sdk.NewCoins(), errors.New(
-			"stableswap pool only supports LP'ing with one asset, or all assets in pool")
+		return sdk.ZeroInt(), sdk.NewCoins(), types.ErrSwapInputTokenCountMismatch
 	}
 
 	// Add all exact coins we can (no swap). ctx arg doesn't matter for Stableswap

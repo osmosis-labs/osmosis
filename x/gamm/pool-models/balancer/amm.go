@@ -234,7 +234,7 @@ func ensureDenomInPool(poolAssetsByDenom map[string]PoolAsset, tokensIn sdk.Coin
 	for _, coin := range tokensIn {
 		_, ok := poolAssetsByDenom[coin.Denom]
 		if !ok {
-			return sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, invalidInputDenomsErrFormat, coin.Denom)
+			return types.ErrInputDenomsNotInPool
 		}
 	}
 

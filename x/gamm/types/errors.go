@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	fmt "fmt"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -13,6 +14,12 @@ type PoolDoesNotExistError struct {
 func (e PoolDoesNotExistError) Error() string {
 	return fmt.Sprintf("pool with ID %d does not exist", e.PoolId)
 }
+
+var (
+	ErrInputDenomsNotInPool          = errors.New("input denoms must already exist in the pool")
+	ErrNoSwapInputTokenCountMismatch = errors.New("no-swap joins require LP'ing with all assets in pool")
+	ErrSwapInputTokenCountMismatch   = errors.New("only allowed LPing with one asset or all assets in pool")
+)
 
 // x/gamm module sentinel errors.
 var (

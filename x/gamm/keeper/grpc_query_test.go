@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	gocontext "context"
-	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -15,45 +14,59 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/v2types"
 )
 
+const (
+	randomDenom = "random"
+)
+
+var (
+	swapFee           = sdk.ZeroDec()
+	evenAmount        = sdk.NewInt(5000000)
+	threeValidAmounts = sdk.NewCoins(
+		sdk.NewCoin("foo", evenAmount),
+		sdk.NewCoin("bar", evenAmount),
+		sdk.NewCoin("baz", evenAmount))
+	validEvenAmounts               = append(threeValidAmounts, sdk.NewCoin("uosmo", evenAmount))
+	invalidAmountsNonExistentDenom = append(threeValidAmounts, sdk.NewCoin(randomDenom, evenAmount))
+)
+
 func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
+
 	queryClient := suite.queryClient
 	ctx := suite.Ctx
-	poolId := suite.PrepareBalancerPool()
 	exitFee := sdk.ZeroDec()
 
-	testCases := []struct {
-		name          string
-		poolId        uint64
-		shareInAmount sdk.Int
-		expectedErr   error
-	}{
+	validPools := suite.initializeValidTestPools()
+
+	sharedTestCases := []*shareInTestCase{
 		{
-			"valid test case",
-			poolId,
-			sdk.NewInt(1000000000000000000),
-			nil,
+			name:          "valid test case",
+			shareInAmount: sdk.NewInt(1000000000000000000),
+		},
+
+		{
+			name:          "zero share in amount",
+			shareInAmount: sdk.ZeroInt(),
+			expectedErr:   sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
 		},
 		{
-			"pool id does not exist",
-			poolId + 1,
-			sdk.NewInt(1000000000000000000),
-			types.ErrPoolNotFound,
-		},
-		{
-			"zero share in amount",
-			poolId,
-			sdk.ZeroInt(),
-			sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
-		},
-		{
-			"negative share in amount",
-			poolId,
-			sdk.NewInt(-10000),
-			sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
+			name:          "negative share in amount",
+			shareInAmount: sdk.NewInt(-10000),
+			expectedErr:   sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
 		},
 	}
 
-	for _, tc := range testCases {
+	// Test case shared by all pools to be tested.
+	allTestCases := mergeTestCases(validPools, sharedTestCases)
+
+	// Add individual test cases
+	allTestCases = append(allTestCases, &shareInTestCase{
+		"pool id does not exist",
+		validPools[len(validPools)-1].poolId + 1, // non-existent id
+		sdk.NewInt(1000000000000000000),
+		types.ErrPoolNotFound,
+	})
+
+	for _, tc := range allTestCases {
 		suite.Run(tc.name, func() {
 			out, err := queryClient.CalcExitPoolCoinsFromShares(gocontext.Background(), &types.QueryCalcExitPoolCoinsFromSharesRequest{
 				PoolId:        tc.poolId,
@@ -92,56 +105,54 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 }
 
 func (suite *KeeperTestSuite) TestCalcJoinPoolNoSwapShares() {
-	queryClient := suite.queryClient
-	ctx := suite.Ctx
-	poolId := suite.PrepareBalancerPool()
-	swapFee := sdk.ZeroDec()
+	var (
+		queryClient = suite.queryClient
+		ctx         = suite.Ctx
+	)
 
-	testCases := []struct {
-		name        string
-		poolId      uint64
-		tokensIn    sdk.Coins
-		expectedErr error
-	}{
+	validPools := suite.initializeValidTestPools()
+
+	sharedTestCases := []*tokensInTestCase{
 		{
-			"valid uneven multi asset join test case",
-			poolId,
-			sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(5000000)), sdk.NewCoin("bar", sdk.NewInt(5000000)), sdk.NewCoin("baz", sdk.NewInt(5000000)), sdk.NewCoin("uosmo", sdk.NewInt(5000000))),
-			nil,
+			name:     "valid even multi asset join test case",
+			tokensIn: validEvenAmounts,
 		},
 		{
-			"valid even multi asset join test case",
-			poolId,
-			sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(500000)), sdk.NewCoin("bar", sdk.NewInt(1000000)), sdk.NewCoin("baz", sdk.NewInt(1500000)), sdk.NewCoin("uosmo", sdk.NewInt(2000000))),
-			nil,
+			name:     "valid uneven multi asset join test case",
+			tokensIn: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(500000)), sdk.NewCoin("bar", sdk.NewInt(1000000)), sdk.NewCoin("baz", sdk.NewInt(1500000)), sdk.NewCoin("uosmo", sdk.NewInt(2000000))),
 		},
 		{
-			"invalid single asset join test case",
-			poolId,
-			sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000))),
-			errors.New("no-swap joins require LP'ing with all assets in pool"),
+			name:        "invalid single asset join test case",
+			tokensIn:    sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000))),
+			expectedErr: types.ErrNoSwapInputTokenCountMismatch,
 		},
 		{
-			"pool id does not exist",
-			poolId + 1,
-			sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000))),
-			types.PoolDoesNotExistError{PoolId: poolId + 1},
+			name:        "token in denom does not exist",
+			tokensIn:    invalidAmountsNonExistentDenom,
+			expectedErr: types.ErrInputDenomsNotInPool,
 		},
 		{
-			"token in denom does not exist",
-			poolId,
-			sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10000))),
-			sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, "input denoms must already exist in the pool (%s)", "random"),
-		},
-		{
-			"join pool with incorrect amount of assets",
-			poolId,
-			sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000)), sdk.NewCoin("bar", sdk.NewInt(10000))),
-			errors.New("no-swap joins require LP'ing with all assets in pool"),
+			name:        "join pool with incorrect amount of assets",
+			tokensIn:    sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000)), sdk.NewCoin("bar", sdk.NewInt(10000))),
+			expectedErr: types.ErrNoSwapInputTokenCountMismatch,
 		},
 	}
 
-	for _, tc := range testCases {
+	allTestCases := mergeTestCases(validPools, sharedTestCases)
+
+	// Indiividual test cases where pool model does not matter.
+	nonExistentPoolId := validPools[len(validPools)-1].poolId + 1
+	allTestCases = append(
+		allTestCases,
+		&tokensInTestCase{
+			"pool id does not exist",
+			nonExistentPoolId, // non-existent id
+			sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000))),
+			types.PoolDoesNotExistError{PoolId: nonExistentPoolId},
+		},
+	)
+
+	for _, tc := range allTestCases {
 		suite.Run(tc.name, func() {
 			out, err := queryClient.CalcJoinPoolNoSwapShares(gocontext.Background(), &types.QueryCalcJoinPoolNoSwapSharesRequest{
 				PoolId:   tc.poolId,
@@ -338,56 +349,50 @@ func (suite *KeeperTestSuite) TestPoolsWithFilter() {
 }
 
 func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
-	queryClient := suite.queryClient
-	ctx := suite.Ctx
-	poolId := suite.PrepareBalancerPool()
-	swapFee := sdk.ZeroDec()
+	var (
+		queryClient = suite.queryClient
+		ctx         = suite.Ctx
+	)
 
-	testCases := []struct {
-		name        string
-		poolId      uint64
-		tokensIn    sdk.Coins
-		expectedErr error
-	}{
+	validPools := suite.initializeValidTestPools()
+
+	sharedTestCases := []*tokensInTestCase{
 		{
-			"valid uneven multi asset join test case",
-			poolId,
-			sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(5000000)), sdk.NewCoin("bar", sdk.NewInt(5000000)), sdk.NewCoin("baz", sdk.NewInt(5000000)), sdk.NewCoin("uosmo", sdk.NewInt(5000000))),
-			nil,
+			name:     "valid even multi asset join test case",
+			tokensIn: validEvenAmounts,
 		},
 		{
-			"valid even multi asset join test case",
-			poolId,
-			sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(500000)), sdk.NewCoin("bar", sdk.NewInt(1000000)), sdk.NewCoin("baz", sdk.NewInt(1500000)), sdk.NewCoin("uosmo", sdk.NewInt(2000000))),
-			nil,
+			name:     "valid uneven multi asset join test case",
+			tokensIn: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(500000)), sdk.NewCoin("bar", sdk.NewInt(1000000)), sdk.NewCoin("baz", sdk.NewInt(1500000)), sdk.NewCoin("uosmo", sdk.NewInt(2000000))),
 		},
 		{
-			"valid single asset join test case",
-			poolId,
-			sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000))),
-			nil,
+			name:     "valid single asset join test case",
+			tokensIn: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000))),
 		},
 		{
-			"pool id does not exist",
-			poolId + 1,
-			sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000))),
-			types.PoolDoesNotExistError{PoolId: poolId + 1},
+			name:        "token in denom does not exist",
+			tokensIn:    invalidAmountsNonExistentDenom,
+			expectedErr: types.ErrInputDenomsNotInPool,
 		},
 		{
-			"token in denom does not exist",
-			poolId,
-			sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10000))),
-			sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, "input denoms must already exist in the pool (%s)", "random"),
-		},
-		{
-			"join pool with incorrect amount of assets",
-			poolId,
-			sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000)), sdk.NewCoin("bar", sdk.NewInt(10000))),
-			errors.New("balancer pool only supports LP'ing with one asset or all assets in pool"),
+			name:        "join pool with incorrect amount of assets",
+			tokensIn:    sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000)), sdk.NewCoin("bar", sdk.NewInt(10000))),
+			expectedErr: types.ErrSwapInputTokenCountMismatch,
 		},
 	}
 
-	for _, tc := range testCases {
+	allTestCases := mergeTestCases(validPools, sharedTestCases)
+
+	// add inidividual test cases
+	nonExistentPoolId := validPools[len(validPools)-1].poolId + 1
+	allTestCases = append(allTestCases, &tokensInTestCase{
+		"pool id does not exist",
+		nonExistentPoolId, // non-existent id
+		sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000))),
+		types.PoolDoesNotExistError{PoolId: nonExistentPoolId},
+	})
+
+	for _, tc := range allTestCases {
 		suite.Run(tc.name, func() {
 			out, err := queryClient.CalcJoinPoolShares(gocontext.Background(), &types.QueryCalcJoinPoolSharesRequest{
 				PoolId:   tc.poolId,

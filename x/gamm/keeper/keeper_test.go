@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -18,6 +19,56 @@ type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
 
 	queryClient types.QueryClient
+}
+
+type poolsCase struct {
+	poolName string
+	poolId   uint64
+}
+
+type testCaseI interface {
+	getName() string
+	initializeNew(string, uint64) testCaseI
+}
+
+type shareInTestCase struct {
+	name          string
+	poolId        uint64
+	shareInAmount sdk.Int
+	expectedErr   error
+}
+
+var _ testCaseI = &shareInTestCase{}
+
+func (tc shareInTestCase) getName() string {
+	return tc.name
+}
+
+func (tc *shareInTestCase) initializeNew(name string, poolId uint64) testCaseI {
+	newTc := *tc
+	newTc.name = name
+	newTc.poolId = poolId
+	return &newTc
+}
+
+type tokensInTestCase struct {
+	name        string
+	poolId      uint64
+	tokensIn    sdk.Coins
+	expectedErr error
+}
+
+var _ testCaseI = &shareInTestCase{}
+
+func (tc tokensInTestCase) getName() string {
+	return tc.name
+}
+
+func (tc *tokensInTestCase) initializeNew(name string, poolId uint64) testCaseI {
+	newTc := *tc
+	newTc.name = name
+	newTc.poolId = poolId
+	return &newTc
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -67,4 +118,31 @@ func (suite *KeeperTestSuite) fundAllAccountsWith(balances sdk.Coins) {
 	for _, acc := range suite.TestAccs {
 		suite.FundAcc(acc, balances)
 	}
+}
+
+func (suite *KeeperTestSuite) initializeValidTestPools() []poolsCase {
+	return []poolsCase{
+		{
+			poolName: "balancer",
+			poolId:   suite.PrepareBalancerPool(),
+		},
+		{
+			poolName: "stableswap",
+			poolId:   suite.PrepareBasicStableswapPool(),
+		},
+	}
+}
+
+func mergeTestCases[T testCaseI](validPools []poolsCase, sharedTestCases []T) []T {
+	allTestCases := make([]T, 0)
+	for _, pool := range validPools {
+		curPool := pool
+		for _, sharedTestCase := range sharedTestCases {
+			// Make a copy of a test case shared by all pools under test.
+			// Update its name and set pool id.
+			poolTestCase := sharedTestCase.initializeNew(fmt.Sprintf("%s - %s", curPool.poolName, sharedTestCase.getName()), curPool.poolId)
+			allTestCases = append(allTestCases, poolTestCase.(T))
+		}
+	}
+	return allTestCases
 }

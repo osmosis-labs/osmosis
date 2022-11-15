@@ -37,6 +37,7 @@ var DefaultStableswapLiquidity = sdk.NewCoins(
 	sdk.NewCoin("foo", sdk.NewInt(10000000)),
 	sdk.NewCoin("bar", sdk.NewInt(10000000)),
 	sdk.NewCoin("baz", sdk.NewInt(10000000)),
+	sdk.NewCoin("uosmo", sdk.NewInt(10000000)),
 )
 
 // PrepareBalancerPoolWithCoins returns a balancer pool
