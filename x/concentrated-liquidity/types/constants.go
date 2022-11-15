@@ -23,7 +23,6 @@ var (
 
 // Calculates MinSqrtPrice = sqrt(1.0001^MinTick)
 func GetMinSqrtRatio() sdk.Dec {
-	minSqrtRatio := osmomath.MustNewDecFromStr(strconv.FormatFloat(math.Pow(1.0001, -887272 / 2), 'f', 36, 64))
-	fmt.Println(minSqrtRatio)
+	minSqrtRatio := osmomath.MustNewDecFromStr(strconv.FormatFloat(math.Pow(1.0001, -887272/2), 'f', 36, 64))
 	return minSqrtRatio.SDKDec()
 }
