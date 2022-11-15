@@ -11,6 +11,13 @@ import (
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v12/x/pool-incentives/types"
 )
 
+var (
+	fooCoin   = sdk.NewCoin("foo", sdk.NewInt(1000000000))
+	barCoin   = sdk.NewCoin("bar", sdk.NewInt(1000000000))
+	bazCoin   = sdk.NewCoin("baz", sdk.NewInt(1000000000))
+	uosmoCoin = sdk.NewCoin("uosmo", sdk.NewInt(1000000000))
+)
+
 func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() {
 	type param struct {
 		routes            []types.SwapAmountInRoute
@@ -47,9 +54,9 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 				tokenIn:           sdk.NewCoin("foo", sdk.NewInt(100000)),
 				tokenOutMinAmount: sdk.NewInt(1),
 			},
-			coinA:      sdk.NewCoin("foo", sdk.NewInt(1000000000)),
-			coinB:      sdk.NewCoin("bar", sdk.NewInt(1000000000)),
-			coinC:      sdk.NewCoin("baz", sdk.NewInt(1000000000)),
+			coinA:      fooCoin,
+			coinB:      barCoin,
+			coinC:      bazCoin,
 			expectPass: true,
 		},
 		{
@@ -69,9 +76,9 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 				tokenIn:           sdk.NewCoin("foo", sdk.NewInt(100000)),
 				tokenOutMinAmount: sdk.NewInt(1),
 			},
-			coinA:             sdk.NewCoin("foo", sdk.NewInt(1000000000)),
-			coinB:             sdk.NewCoin("uosmo", sdk.NewInt(1000000000)),
-			coinC:             sdk.NewCoin("baz", sdk.NewInt(1000000000)),
+			coinA:             fooCoin,
+			coinB:             uosmoCoin,
+			coinC:             bazCoin,
 			reducedFeeApplied: true,
 			expectPass:        true,
 		},
@@ -92,9 +99,9 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 				tokenIn:           sdk.NewCoin("foo", sdk.NewInt(100000)),
 				tokenOutMinAmount: sdk.NewInt(1),
 			},
-			coinA:             sdk.NewCoin("foo", sdk.NewInt(1000000000)),
-			coinB:             sdk.NewCoin("uosmo", sdk.NewInt(1000000000)),
-			coinC:             sdk.NewCoin("baz", sdk.NewInt(1000000000)),
+			coinA:             fooCoin,
+			coinB:             uosmoCoin,
+			coinC:             bazCoin,
 			reducedFeeApplied: true,
 			expectPass:        true,
 		},
@@ -159,13 +166,8 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 
 			if test.expectPass {
 				var expectedMultihopTokenOutAmount sdk.Coin
-				if test.reducedFeeApplied {
-					// calculate the swap as separate swaps with a reduced swap fee
-					expectedMultihopTokenOutAmount = calcOutAmountAsSeparateSwaps(true)
-				} else {
-					// calculate the swap as separate swaps with the default swap fee
-					expectedMultihopTokenOutAmount = calcOutAmountAsSeparateSwaps(false)
-				}
+				// calculate the swap as separate swaps with either the reduced swap fee or normal fee
+				expectedMultihopTokenOutAmount = calcOutAmountAsSeparateSwaps(test.reducedFeeApplied)
 				// compare the expected tokenOut to the actual tokenOut
 				multihopTokenOutAmount, err := keeper.MultihopSwapExactAmountIn(suite.Ctx, suite.TestAccs[0], test.param.routes, test.param.tokenIn, test.param.tokenOutMinAmount)
 				suite.Require().NoError(err)
@@ -214,9 +216,9 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 				tokenInMaxAmount: sdk.NewInt(90000000),
 				tokenOut:         sdk.NewCoin("baz", sdk.NewInt(100000)),
 			},
-			coinA:      sdk.NewCoin("foo", sdk.NewInt(1000000000)),
-			coinB:      sdk.NewCoin("bar", sdk.NewInt(1000000000)),
-			coinC:      sdk.NewCoin("baz", sdk.NewInt(1000000000)),
+			coinA:      fooCoin,
+			coinB:      barCoin,
+			coinC:      bazCoin,
 			expectPass: true,
 		},
 		{
@@ -236,9 +238,9 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 				tokenInMaxAmount: sdk.NewInt(90000000),
 				tokenOut:         sdk.NewCoin("baz", sdk.NewInt(100000)),
 			},
-			coinA:             sdk.NewCoin("foo", sdk.NewInt(1000000000)),
-			coinB:             sdk.NewCoin("uosmo", sdk.NewInt(1000000000)),
-			coinC:             sdk.NewCoin("baz", sdk.NewInt(1000000000)),
+			coinA:             fooCoin,
+			coinB:             uosmoCoin,
+			coinC:             bazCoin,
 			expectPass:        true,
 			reducedFeeApplied: true,
 		},
@@ -259,9 +261,9 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 				tokenInMaxAmount: sdk.NewInt(90000000),
 				tokenOut:         sdk.NewCoin("baz", sdk.NewInt(100000)),
 			},
-			coinA:             sdk.NewCoin("foo", sdk.NewInt(1000000000)),
-			coinB:             sdk.NewCoin("uosmo", sdk.NewInt(1000000000)),
-			coinC:             sdk.NewCoin("baz", sdk.NewInt(1000000000)),
+			coinA:             fooCoin,
+			coinB:             uosmoCoin,
+			coinC:             bazCoin,
 			expectPass:        true,
 			reducedFeeApplied: true,
 		},
@@ -328,13 +330,8 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 
 			if test.expectPass {
 				var expectedMultihopTokenOutAmount sdk.Coin
-				if test.reducedFeeApplied {
-					// calculate the swap as separate swaps with the new reduced swap fee
-					expectedMultihopTokenOutAmount = calcInAmountAsSeparateSwaps(true)
-				} else {
-					// calculate the swap as separate swaps with the default swap fee
-					expectedMultihopTokenOutAmount = calcInAmountAsSeparateSwaps(false)
-				}
+				// calculate the swap as separate swaps with either the reduced swap fee or normal fee
+				expectedMultihopTokenOutAmount = calcInAmountAsSeparateSwaps(test.reducedFeeApplied)
 				// compare the expected tokenOut to the actual tokenOut
 				multihopTokenOutAmount, err := keeper.MultihopSwapExactAmountOut(suite.Ctx, suite.TestAccs[0], test.param.routes, test.param.tokenInMaxAmount, test.param.tokenOut)
 				suite.Require().NoError(err)
