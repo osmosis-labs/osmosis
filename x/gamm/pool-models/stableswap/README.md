@@ -350,6 +350,11 @@ We bound the right hand side, with the assistance of wolfram alpha. Let $a = y_{
     * $b > \frac{2}{3} a$, as $y_0$ is positive.
     * $c > 0$ is by definition, so we just need to bound when $-a^2 + 3ab - 3b^2 < 0$. This is always the case as long as one of $a$ or $b$ is non-zero, per [here](https://www.wolframalpha.com/input?i=-a%5E2+%2B+3ab+-+3b%5E2+%3C+0).
 
+Tieing this all together, we have that 
+
+$$e_k > .01e_y$$
+
+So $e_y < 100 e_k$! QED.
 
 
 ### Spot Price
