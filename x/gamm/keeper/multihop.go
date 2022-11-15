@@ -203,14 +203,10 @@ func (k Keeper) getOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.M
 		}
 		swapFee := pool.GetSwapFee(ctx)
 		additiveSwapFee = additiveSwapFee.Add(swapFee)
-		if swapFee.GT(maxSwapFee) {
-			maxSwapFee = swapFee
-		}
+		maxSwapFee = sdk.MaxDec(maxSwapFee, swapFee)
 	}
 	averageSwapFee := additiveSwapFee.QuoInt64(2)
-	if averageSwapFee.GT(maxSwapFee) {
-		maxSwapFee = averageSwapFee
-	}
+	maxSwapFee = sdk.MaxDec(maxSwapFee, averageSwapFee)
 	return maxSwapFee, additiveSwapFee, nil
 }
 
