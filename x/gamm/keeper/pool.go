@@ -250,7 +250,9 @@ func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (string, error) {
 
 	switch pool := pool.(type) {
 	case *balancer.Pool:
-		return "Balancer", nil
+		return balancer.PoolTypeName, nil
+	case *stableswap.Pool:
+		return stableswap.PoolTypeName, nil
 	default:
 		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
 		return "", sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)

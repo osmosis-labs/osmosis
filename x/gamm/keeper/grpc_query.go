@@ -288,6 +288,29 @@ func (q Querier) CalcExitPoolCoinsFromShares(ctx context.Context, req *types.Que
 	return &types.QueryCalcExitPoolCoinsFromSharesResponse{TokensOut: exitCoins}, nil
 }
 
+//  CalcJoinPoolNoSwapShares returns the amount of shares you'd get if joined a pool without a swap and tokens which need to be provided
+func (q Querier) CalcJoinPoolNoSwapShares(ctx context.Context, req *types.QueryCalcJoinPoolNoSwapSharesRequest) (*types.QueryCalcJoinPoolNoSwapSharesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	pool, err := q.GetPoolAndPoke(sdkCtx, req.PoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	sharesOut, tokensJoined, err := pool.CalcJoinPoolNoSwapShares(sdkCtx, req.TokensIn, pool.GetSwapFee(sdkCtx))
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryCalcJoinPoolNoSwapSharesResponse{
+		TokensOut: tokensJoined,
+		SharesOut: sharesOut,
+	}, nil
+}
+
 // PoolParams queries a specified pool for its params.
 func (q Querier) PoolParams(ctx context.Context, req *types.QueryPoolParamsRequest) (*types.QueryPoolParamsResponse, error) {
 	if req == nil {

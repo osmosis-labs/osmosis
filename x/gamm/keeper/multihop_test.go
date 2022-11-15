@@ -4,9 +4,11 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v12/x/pool-incentives/types"
 )
 
 func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() {
@@ -79,6 +81,18 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 				SwapFee: poolDefaultSwapFee,
 				ExitFee: sdk.NewDec(0),
 			})
+
+			// if we expect a reduced fee to apply, we set both pools in DistrInfo to replicate it being an incentivized pool
+			// each pool has three gauges, hence 6 gauges for 2 pools
+			if test.reducedFeeApplied {
+				test := poolincentivestypes.DistrInfo{
+					TotalWeight: sdk.NewInt(6),
+					Records: []poolincentivestypes.DistrRecord{
+						{GaugeId: 1, Weight: sdk.OneInt()}, {GaugeId: 2, Weight: sdk.OneInt()}, {GaugeId: 3, Weight: sdk.OneInt()},
+						{GaugeId: 4, Weight: sdk.OneInt()}, {GaugeId: 5, Weight: sdk.OneInt()}, {GaugeId: 6, Weight: sdk.OneInt()}},
+				}
+				suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, test)
+			}
 
 			// Calculate the chained spot price.
 			calcSpotPrice := func() sdk.Dec {
@@ -228,6 +242,18 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 				SwapFee: poolDefaultSwapFee,
 				ExitFee: sdk.NewDec(0),
 			})
+
+			// if we expect a reduced fee to apply, we set both pools in DistrInfo to replicate it being an incentivized pool
+			// each pool has three gauges, hence 6 gauges for 2 pools
+			if test.reducedFeeApplied {
+				test := poolincentivestypes.DistrInfo{
+					TotalWeight: sdk.NewInt(2),
+					Records: []poolincentivestypes.DistrRecord{
+						{GaugeId: 1, Weight: sdk.OneInt()}, {GaugeId: 2, Weight: sdk.OneInt()}, {GaugeId: 3, Weight: sdk.OneInt()},
+						{GaugeId: 4, Weight: sdk.OneInt()}, {GaugeId: 5, Weight: sdk.OneInt()}, {GaugeId: 6, Weight: sdk.OneInt()}},
+				}
+				suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, test)
+			}
 
 			// Calculate the chained spot price.
 			calcSpotPrice := func() sdk.Dec {
