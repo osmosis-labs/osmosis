@@ -16,12 +16,27 @@ func (k Keeper) EstimateMultihopSwapExactAmountIn(
 ) (tokenOutAmount sdk.Int, err error) {
 	// use cache context so that pool state is not mutated after estimation
 	cacheCtx, _ := ctx.CacheContext()
-	for i, route := range routes {
-		swapFeeMultiplier := sdk.OneDec()
-		if types.SwapAmountInRoutes(routes).IsOsmoRoutedMultihop() {
-			swapFeeMultiplier = types.MultihopSwapFeeMultiplierForOsmoPools.Clone()
-		}
 
+	var (
+		isMultiHopRouted bool
+		routeSwapFee     sdk.Dec
+		sumOfSwapFees    sdk.Dec
+	)
+
+	route := types.SwapAmountInRoutes(routes)
+	if err := route.Validate(); err != nil {
+		return sdk.Int{}, err
+	}
+
+	if k.isOsmoRoutedMultihop(ctx, route, routes[0].TokenOutDenom, tokenIn.Denom) {
+		isMultiHopRouted = true
+		routeSwapFee, sumOfSwapFees, err = k.getOsmoRoutedMultihopTotalSwapFee(ctx, route)
+		if err != nil {
+			return sdk.Int{}, err
+		}
+	}
+
+	for i, route := range routes {
 		// To prevent the multihop swap from being interrupted prematurely, we keep
 		// the minimum expected output at a very low number until the last pool
 		_outMinAmount := sdk.NewInt(1)
@@ -35,7 +50,13 @@ func (k Keeper) EstimateMultihopSwapExactAmountIn(
 			return sdk.Int{}, poolErr
 		}
 
-		swapFee := pool.GetSwapFee(cacheCtx).Mul(swapFeeMultiplier)
+		swapFee := pool.GetSwapFee(cacheCtx)
+
+		// If we determined the route is an osmo multi-hop and both routes are incentivized,
+		// we modify the swap fee accordingly.
+		if isMultiHopRouted {
+			swapFee = routeSwapFee.Mul((swapFee.Quo(sumOfSwapFees)))
+		}
 
 		// Execute the expected swap on the current routed pool
 		// call internal method with useCacheCtx = false to prevent double caching,
@@ -106,14 +127,30 @@ func (k Keeper) EstimateMultihopSwapExactAmountOut(
 ) (tokenInAmount sdk.Int, err error) {
 	// use cache context so that pool state is not mutated after estimation
 	cacheCtx, _ := ctx.CacheContext()
-	swapFeeMultiplier := sdk.OneDec()
 
-	if types.SwapAmountOutRoutes(routes).IsOsmoRoutedMultihop() {
-		swapFeeMultiplier = types.MultihopSwapFeeMultiplierForOsmoPools.Clone()
+	isMultiHopRouted, routeSwapFee, sumOfSwapFees := false, sdk.Dec{}, sdk.Dec{}
+	route := types.SwapAmountOutRoutes(routes)
+	if err := route.Validate(); err != nil {
+		return sdk.Int{}, err
 	}
 
-	// Determine what the estimated input would be for each pool along the multihop route
-	insExpected, err := k.createMultihopExpectedSwapOuts(cacheCtx, routes, tokenOut, swapFeeMultiplier)
+	if k.isOsmoRoutedMultihop(ctx, route, routes[0].TokenInDenom, tokenOut.Denom) {
+		isMultiHopRouted = true
+		routeSwapFee, sumOfSwapFees, err = k.getOsmoRoutedMultihopTotalSwapFee(ctx, route)
+		if err != nil {
+			return sdk.Int{}, err
+		}
+	}
+
+	// Determine what the estimated input would be for each pool along the multi-hop route
+	// if we determined the route is an osmo multi-hop and both routes are incentivized,
+	// we utilize a separate function that calculates the discounted swap fees
+	var insExpected []sdk.Int
+	if isMultiHopRouted {
+		insExpected, err = k.createOsmoMultihopExpectedSwapOuts(ctx, routes, tokenOut, routeSwapFee, sumOfSwapFees)
+	} else {
+		insExpected, err = k.createMultihopExpectedSwapOuts(ctx, routes, tokenOut)
+	}
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -140,7 +177,12 @@ func (k Keeper) EstimateMultihopSwapExactAmountOut(
 		if poolErr != nil {
 			return sdk.Int{}, poolErr
 		}
-		swapFee := pool.GetSwapFee(cacheCtx).Mul(swapFeeMultiplier)
+
+		swapFee := pool.GetSwapFee(ctx)
+		if isMultiHopRouted {
+			swapFee = routeSwapFee.Mul((swapFee.Quo(sumOfSwapFees)))
+		}
+
 		// Execute the expected swap on the current routed pool
 		// call internal method with useCacheCtx = false to prevent double caching,
 		// we need to save pool state for the next iteration of pool route
