@@ -283,7 +283,7 @@ func getSwapExactAmountInParams(swap *bindings.SwapMsg) (routes []gammtypes.Swap
 		})
 	}
 	if swap.Amount.ExactIn.Input.IsNegative() {
-		return nil, sdk.Coin{}, sdk.Int{}, wasmvmtypes.InvalidRequest{Err: "gamm perform swap negative amount in"}
+		return nil, sdk.Coin{}, sdk.Int{}, wasmvmtypes.InvalidRequest{Err: "swap gives negative amount in"}
 	}
 	tokenIn = sdk.Coin{
 		Denom:  swap.First.DenomIn,
@@ -308,7 +308,7 @@ func getSwapAmountOutParams(swap *bindings.SwapMsg) (routes []gammtypes.SwapAmou
 	}
 	tokenInMaxAmount = swap.Amount.ExactOut.MaxInput
 	if swap.Amount.ExactOut.Output.IsNegative() {
-		return nil, sdk.Coin{}, sdk.Int{}, wasmvmtypes.InvalidRequest{Err: "gamm perform swap negative amount out"}
+		return nil, sdk.Coin{}, sdk.Int{}, wasmvmtypes.InvalidRequest{Err: "swap gives negative amount out"}
 	}
 	tokenOut = sdk.Coin{
 		Denom:  output,

@@ -52,7 +52,7 @@ func (k Keeper) EstimateMultihopSwapExactAmountIn(
 }
 
 // EstimateSwapExactAmountIn estimates the amount of token out given the exact amount of token in.
-// This method does not execute the full steps of an actaul swap, nor does it change the state after estimation.
+// This method does not execute the full steps of an actual swap, nor does it change the state after estimation.
 // Returns the estimated amount of token out using cache context.
 func (k Keeper) EstimateSwapExactAmountIn(
 	ctx sdk.Context,
@@ -67,6 +67,9 @@ func (k Keeper) EstimateSwapExactAmountIn(
 
 // estimateSwapExactAmountIn returns the amount of token out given the amount of token in.
 // This method should only be called by estimate methods, as this method does not include full steps of an actual swap.
+// If useCacheCtx is true, it will use cache context to estimate swap amount out.
+// If not, it will use the original context.
+// Note that in this case, the context that has been provided as an argument "must" be a cache context.
 func (k Keeper) estimateSwapExactAmountIn(
 	ctx sdk.Context,
 	poolId uint64,
@@ -158,7 +161,7 @@ func (k Keeper) EstimateMultihopSwapExactAmountOut(
 }
 
 // EstimateSwapExactAmountOut estimates the amount of token in given the exact amount of token out.
-// This method does not execute the full steps of an actaul swap, nor does it change the state after estimation.
+// This method does not execute the full steps of an actual swap, nor does it change the state after estimation.
 // Returns the estimated amount of token out using cache context.
 func (k Keeper) EstimateSwapExactAmountOut(
 	ctx sdk.Context,
@@ -173,6 +176,9 @@ func (k Keeper) EstimateSwapExactAmountOut(
 
 // estimateSwapExactAmountOut returns the amount of token in given the amount of token out.
 // This method should only be called by estimate methods, as this method does not include full steps of an actual swap.
+// If useCacheCtx is true, it will use cache context to estimate swap amount out.
+// If not, it will use the original context.
+// Note that in this case, the context that has been provided as an argument "must" be a cache context.
 func (k Keeper) estimateSwapExactAmountOut(
 	ctx sdk.Context,
 	poolId uint64,

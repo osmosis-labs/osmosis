@@ -133,7 +133,7 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 				test.param.tokenOutMinAmount)
 			suite.Require().NoError(err)
 
-			// assure that the token out amount is same
+			// ensure that the token out amount is same
 			suite.Require().Equal(multihopTokenOutAmount, estimateMultihopTokenOutAmount)
 
 			// ensure that pool state has not been altered after estimation
