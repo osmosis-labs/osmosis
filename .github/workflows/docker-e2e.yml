@@ -1,10 +1,21 @@
+# This workflow pushes new osmosis-e2e-init-chain docker images on every new tag.
+#
+# On every new `vX.Y.Z` tag the following images are pushed:
+#
+# osmolabs/osmosis-e2e-init-chain:X.Y.Z    # is pushed
+# osmolabs/osmosis-e2e-init-chain:X.Y      # is updated to X.Y.Z
+# osmolabs/osmosis-e2e-init-chain:X        # is updated to X.Y.Z
+#
+# All the images above have support for linux/amd64 and linux/arm64.
+#
+# Due to QEMU virtualization used to build multi-platform docker images
+# this workflow might take a while to complete.
 name: Build and Push E2E Init Chain Images
 
 on:
   push:
     tags:
-    - 'v12+.[0-20]+.0+' 
-    - 'v[0-20]+.0+.0+' 
+    - 'v[0-9]+.[0-9]+.[0-9]+' # ignore rc
 
 env:
   DOCKER_REPOSITORY: osmolabs/osmosis-e2e-init-chain
@@ -41,7 +52,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
       - 
-        name: Build and push (e2e_init_image)
+        name: Build and push 
         id: build_push_e2e_init_image
         uses: docker/build-push-action@v2
         with:
