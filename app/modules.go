@@ -45,6 +45,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	"github.com/osmosis-labs/osmosis/v12/x/protorev"
+	protorevtypes "github.com/osmosis-labs/osmosis/v12/x/protorev/types"
+
 	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
 	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v12/osmoutils/partialord"
@@ -87,6 +90,7 @@ var moduleAccountPermissions = map[string][]string{
 	govtypes.ModuleName:                      {authtypes.Burner},
 	ibctransfertypes.ModuleName:              {authtypes.Minter, authtypes.Burner},
 	gammtypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
+	protorevtypes.ModuleName:                 {authtypes.Minter, authtypes.Burner},
 	incentivestypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 	lockuptypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
 	poolincentivestypes.ModuleName:           nil,
@@ -132,6 +136,7 @@ func appModules(
 		params.NewAppModule(*app.ParamsKeeper),
 		app.TransferModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
+		protorev.NewAppModule(appCodec, *app.ProtoRevKeeper, app.AccountKeeper, app.BankKeeper),
 		twapmodule.NewAppModule(*app.TwapKeeper),
 		txfees.NewAppModule(*app.TxFeesKeeper),
 		incentives.NewAppModule(*app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
@@ -208,6 +213,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		ibchost.ModuleName,
 		icatypes.ModuleName,
 		gammtypes.ModuleName,
+		protorevtypes.ModuleName,
 		twaptypes.ModuleName,
 		txfeestypes.ModuleName,
 		genutiltypes.ModuleName,

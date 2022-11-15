@@ -1,0 +1,14 @@
+syntax = "proto3";
+package osmosis.v12.protorev;
+
+import "gogoproto/gogo.proto";
+import "protorev/params.proto";
+// this line is used by starport scaffolding # genesis/proto/import
+
+option go_package = "github.com/osmosis-labs/osmosis/v12/x/protorev/types";
+
+// GenesisState defines the protorev module's genesis state.
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+  // this line is used by starport scaffolding # genesis/proto/state
+}
