@@ -41,3 +41,7 @@ type BankKeeper interface {
 type CommunityPoolKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
+
+type PoolIncentivesKeeper interface {
+	IsPoolIncentivized(ctx sdk.Context, poolId uint64) bool
+}

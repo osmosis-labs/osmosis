@@ -356,6 +356,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GAMMKeeper,
 	)
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
+	appKeepers.GAMMKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
 
 	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
 		appKeepers.keys[tokenfactorytypes.StoreKey],
