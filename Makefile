@@ -106,6 +106,8 @@ build-reproducible-amd64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
 		--build-arg GO_VERSION=$(GO_VERSION) \
+		--build-arg GIT_VERSION=$(VERSION) \
+		--build-arg GIT_COMMIT=$(COMMIT) \
 		--platform linux/amd64 \
 		-t osmosis-amd64 \
 		--load \
@@ -120,6 +122,8 @@ build-reproducible-arm64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
 		--build-arg GO_VERSION=$(GO_VERSION) \
+		--build-arg GIT_VERSION=$(VERSION) \
+		--build-arg GIT_COMMIT=$(COMMIT) \
 		--platform linux/arm64 \
 		-t osmosis-arm64 \
 		--load \
