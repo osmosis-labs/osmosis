@@ -317,10 +317,12 @@ We see correctness of the swap fee, by imagining what happens if we took this re
 
 </a>
 
-Theorem: $|e_y| < 100 |e_k|$ as long as $y_{out} <= y_0$.
-
 The function $f(y_{out}) = -y_{out}^3 + 3 y_0 y_{out}^2 - (x_f^2 + w + 3y_0^2)y_{out}$ is monotonically increasing over the reals. You can prove this, by seeing that its [derivative's](https://www.wolframalpha.com/input?i=d%2Fdx+-x%5E3+%2B+3a+x%5E2+-+%28b+%2B+3a%5E2%29+x+) 0 values are both imaginary, and therefore has no local minima or maxima in the reals.
 Therefore, there exists exactly one real $y_{out}$ s.t. $f(y_{out}) = k$. Via binary search, we solve for a value $y_{out}^{*}$ such that $\left|\frac{ k - k^{*} }{k}\right| < e_k$, where $k^{*} = f(y_{out}^{*})$. We seek to then derive bounds on $e_y = \left|\frac{ y_{out} - y_{out}^{*} }{y_{out}}\right|$ in relation to $e_k$.
+
+**Theorem**: $e_y < 100 e_k$ as long as $|y_{out}| <= .9y_0$.
+**Informal**, we claim that for $.9y_0 < |y_{out}| < y_0$, `e_y` is "close" to `e_k` under expected parameterizations. And for $y_{out}$ significantly less than $.9y_0$, the error bounds are much better. (Often better than $e_k$)
+
 
 Let $y_{out} - y_{out}^* = a_y$, we are going to assume that $a_y << y_{out}$, and will justify this later. But due to this, we treat $a_y^c = 0$ for $c > 1$. This then implies that $y_{out}^2 - y_{out}^{*2} = y_{out}^2 - (y_{out} - a_y)^2 \approx 2y_{out}a_y$, and similarly $y_{out}^3 - y_{out}^{*3} \approx 3y_{out}^2 a_y$
 
@@ -343,19 +345,18 @@ We bound the right hand side, with the assistance of wolfram alpha. Let $a = y_{
   * Use solution set: $a > 0, b > \frac{2}{3} a, c > \frac{1}{99} (-299a^2 + 597ab - 297b^2)$
     * $a > 0$ by definition.
     * $b > \frac{2}{3} a$, as thats equivalent to $y_0 > \frac{2}{3} y_{out}$. We already assume that $y_0 >= y_{out}$.
-    * If we take the max possible value of $a$, that $y_{out} = y_0$, then we'd have to show that $x_f^2 + w > \frac{1}{99}y_0^2$. so we just need to bound when the rhs is less than 0. Unfortunately, we either have to assume something stronger about $x_f$, or make a tighter bound on $y_{out}$ than it merely being less than $y_0$.
+    * Set $y_{out} = .9y_0$, per our theorem assumption. So $b = .9a$. Take $c = x^2 + w = 0$. Then [we can show that](https://www.wolframalpha.com/input?i=0+%3E+-299a%5E2+%2B+597ab+-+297b%5E2%2C+when+b%3D+.90a) $(-299a^2 + 597ab - 297b^2) < 0$ for all $a$. This completes the constraint set.
 * When $y_{out} < 0$
   * Use solution set: $a < 0, b > \frac{2}{3} a, c > -a^2 + 3ab - 3b^2$
     * $a < 0$ by definition.
     * $b > \frac{2}{3} a$, as $y_0$ is positive.
     * $c > 0$ is by definition, so we just need to bound when $-a^2 + 3ab - 3b^2 < 0$. This is always the case as long as one of $a$ or $b$ is non-zero, per [here](https://www.wolframalpha.com/input?i=-a%5E2+%2B+3ab+-+3b%5E2+%3C+0).
 
-Tieing this all together, we have that 
+Tieing this all together, we have that $e_k > .01e_y$. Therefore $e_y < 100 e_k$, satisfying our theoerem!
 
-$$e_k > .01e_y$$
+To show the informal claims, the constraint that led to this 100x error blowup was trying to accomodate high $y_{out}$. When $y_{out}$ is smaller, the error is far lower. (Often to the case that $e_y < e_k$, you can convince yourself of this by setting the ratio to being greater than 1 in wolfram alpha) When $y_{out}$ is bigger than $.9y_0$, we can rely on x_f^2 + w being much larger to lower this error. In these cases, the $x_f$ term must be large relative to $y_0$, which would yield a far better error bound.
 
-So $e_y < 100 e_k$! QED.
-
+TODO: Justify a_y << y_out. (This should be easy, assume its not, that leads to e_k being high. Ratio test probably easiest. Maybe just add a sentence to that effect)
 
 ### Spot Price
 
