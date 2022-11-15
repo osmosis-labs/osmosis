@@ -388,6 +388,7 @@ func GetCmdSpotPrice() *cobra.Command {
 				return err
 			}
 
+			// nolint: staticcheck
 			res, err := queryClient.SpotPrice(cmd.Context(), &types.QuerySpotPriceRequest{
 				PoolId:          uint64(poolID),
 				BaseAssetDenom:  args[1],
