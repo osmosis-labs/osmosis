@@ -56,7 +56,7 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 	}
 
 	// Test case shared by all pools to be tested.
-	allTestCases := mergeTestCases(validPools, sharedTestCases)
+	allTestCases := createTestCasesForGivenPools(validPools, sharedTestCases)
 
 	// Add individual test cases
 	allTestCases = append(allTestCases, &shareInTestCase{
@@ -138,7 +138,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolNoSwapShares() {
 		},
 	}
 
-	allTestCases := mergeTestCases(validPools, sharedTestCases)
+	allTestCases := createTestCasesForGivenPools(validPools, sharedTestCases)
 
 	// Indiividual test cases where pool model does not matter.
 	nonExistentPoolId := validPools[len(validPools)-1].poolId + 1
@@ -381,7 +381,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 		},
 	}
 
-	allTestCases := mergeTestCases(validPools, sharedTestCases)
+	allTestCases := createTestCasesForGivenPools(validPools, sharedTestCases)
 
 	// add inidividual test cases
 	nonExistentPoolId := validPools[len(validPools)-1].poolId + 1

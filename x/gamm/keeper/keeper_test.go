@@ -120,6 +120,8 @@ func (suite *KeeperTestSuite) fundAllAccountsWith(balances sdk.Coins) {
 	}
 }
 
+// initializeValidTestPools returns a list of all supported pool models.
+// Each pool model has a pool with id created and a name assigned.
 func (suite *KeeperTestSuite) initializeValidTestPools() []poolsCase {
 	return []poolsCase{
 		{
@@ -133,7 +135,10 @@ func (suite *KeeperTestSuite) initializeValidTestPools() []poolsCase {
 	}
 }
 
-func mergeTestCases[T testCaseI](validPools []poolsCase, sharedTestCases []T) []T {
+// createTestCasesForGivenPools creates a test case in sharedTestCases for each pool in validPools
+// and returns the final merged list of all test cases.
+// This helps to reduce code duplciation when testing the same logic for multiple pool models.
+func createTestCasesForGivenPools[T testCaseI](validPools []poolsCase, sharedTestCases []T) []T {
 	allTestCases := make([]T, 0)
 	for _, pool := range validPools {
 		curPool := pool
