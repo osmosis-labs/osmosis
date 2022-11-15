@@ -1,6 +1,6 @@
 # This workflow pushes new osmosis-e2e-init-chain docker images on every new tag.
 #
-# On every new `vX.Y.Z` tag the following images are pushed:
+# On every new `vX.Y.0` tag the following images are pushed:
 #
 # osmolabs/osmosis-e2e-init-chain:X.Y.Z    # is pushed
 # osmolabs/osmosis-e2e-init-chain:X.Y      # is updated to X.Y.Z
