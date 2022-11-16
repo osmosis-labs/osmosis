@@ -162,20 +162,25 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 				cacheCtx, _ := suite.Ctx.CacheContext()
 
 				if osmoFeeReduced {
+					// extract route from swap
+					route := types.SwapAmountInRoutes(test.param.routes)
+					// utilizing the extracted route, determine the routeSwapFee and sumOfSwapFees
+					// these two variables are used to calculate the overall swap fee utilizing the following formula
+					// swapFee = routeSwapFee * ((pool_fee) / (sumOfSwapFees))
+					routeSwapFee, sumOfSwapFees, err := keeper.GetOsmoRoutedMultihopTotalSwapFee(suite.Ctx, route)
+					suite.Require().NoError(err)
 					for _, hop := range test.param.routes {
-						// determine the expected reduced swap fee
-						hopPool, _ := keeper.GetPoolAndPoke(cacheCtx, hop.PoolId)
-						currentPoolSwapFee := hopPool.GetSwapFee(cacheCtx)
-						route := types.SwapAmountInRoutes(test.param.routes)
-						routeSwapFee, sumOfSwapFees, err := keeper.GetOsmoRoutedMultihopTotalSwapFee(suite.Ctx, route)
+						// extract the current pool's swap fee
+						hopPool, err := keeper.GetPoolAndPoke(cacheCtx, hop.PoolId)
 						suite.Require().NoError(err)
+						currentPoolSwapFee := hopPool.GetSwapFee(cacheCtx)
+						// utilize the routeSwapFee, sumOfSwapFees, and current pool swap fee to calculate the new reduced swap fee
 						swapFee := routeSwapFee.Mul((currentPoolSwapFee.Quo(sumOfSwapFees)))
 						// update the pools swap fee directly
 						err = suite.updatePoolSwapFee(cacheCtx, hop.PoolId, swapFee)
 						suite.Require().NoError(err)
 					}
 				}
-
 				nextTokenIn := test.param.tokenIn
 				// we then do individual swaps until we reach the end of the swap route
 				for _, hop := range test.param.routes {
@@ -349,13 +354,19 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 				cacheCtx, _ := suite.Ctx.CacheContext()
 
 				if osmoFeeReduced {
+					// extract route from swap
+					route := types.SwapAmountOutRoutes(test.param.routes)
+					// utilizing the extracted route, determine the routeSwapFee and sumOfSwapFees
+					// these two variables are used to calculate the overall swap fee utilizing the following formula
+					// swapFee = routeSwapFee * ((pool_fee) / (sumOfSwapFees))
+					routeSwapFee, sumOfSwapFees, err := keeper.GetOsmoRoutedMultihopTotalSwapFee(suite.Ctx, route)
+					suite.Require().NoError(err)
 					for _, hop := range test.param.routes {
-						// determine the expected reduced swap fee
-						hopPool, _ := keeper.GetPoolAndPoke(cacheCtx, hop.PoolId)
-						currentPoolSwapFee := hopPool.GetSwapFee(cacheCtx)
-						route := types.SwapAmountOutRoutes(test.param.routes)
-						routeSwapFee, sumOfSwapFees, err := keeper.GetOsmoRoutedMultihopTotalSwapFee(suite.Ctx, route)
+						// extract the current pool's swap fee
+						hopPool, err := keeper.GetPoolAndPoke(cacheCtx, hop.PoolId)
 						suite.Require().NoError(err)
+						currentPoolSwapFee := hopPool.GetSwapFee(cacheCtx)
+						// utilize the routeSwapFee, sumOfSwapFees, and current pool swap fee to calculate the new reduced swap fee
 						swapFee := routeSwapFee.Mul((currentPoolSwapFee.Quo(sumOfSwapFees)))
 						// update the pools swap fee directly
 						err = suite.updatePoolSwapFee(cacheCtx, hop.PoolId, swapFee)
