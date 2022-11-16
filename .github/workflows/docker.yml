@@ -9,9 +9,9 @@
 #
 # The same osmosisd binary is copied in different base runner images:
 #
-# - `osmolabs/osmosis:X.Y.Z`             uses `gcr.io/distroless/static` 
-# - `osmolabs/osmosis:X.Y.Z-distroless`  uses `gcr.io/distroless/static` 
-# - `osmolabs/osmosis:X.Y.Z-nonroot`     uses `gcr.io/distroless/static:nonroot`
+# - `osmolabs/osmosis:X.Y.Z`             uses `gcr.io/distroless/static-debian11`
+# - `osmolabs/osmosis:X.Y.Z-distroless`  uses `gcr.io/distroless/static-debian11`
+# - `osmolabs/osmosis:X.Y.Z-nonroot`     uses `gcr.io/distroless/static-debian11:nonroot`
 # - `osmolabs/osmosis:X.Y.Z-alpine`      uses `alpine:3.16` 
 #
 # All the images above have support for linux/amd64 and linux/arm64.
@@ -28,8 +28,8 @@ on:
   
 env:
   DOCKER_REPOSITORY: osmolabs/osmosis
-  RUNNER_BASE_IMAGE_DISTROLESS: gcr.io/distroless/static
-  RUNNER_BASE_IMAGE_NONROOT: gcr.io/distroless/static:nonroot
+  RUNNER_BASE_IMAGE_DISTROLESS: gcr.io/distroless/static-debian11
+  RUNNER_BASE_IMAGE_NONROOT: gcr.io/distroless/static-debian11:nonroot
   RUNNER_BASE_IMAGE_ALPINE: alpine:3.16
 
 jobs:
