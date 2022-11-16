@@ -18,7 +18,10 @@ func NewParams() Params {
 
 // DefaultParams returns a default set of parameters
 func DefaultParams() Params {
-	return NewParams()
+	return Params{
+		OnlyCheckHotRoutes: true,
+		Enabled:            true,
+	}
 }
 
 // ParamSetPairs get the params.ParamSet

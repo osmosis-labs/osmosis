@@ -1,8 +1,6 @@
 package types
 
-import (
-	"fmt"
-)
+import "strings"
 
 const (
 	// ModuleName defines the module name
@@ -11,46 +9,53 @@ const (
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
 
-	// TransientStoreKey defines the module's transient store key
-	TransientStoreKey = "transient_protorev"
-
 	// RouterKey defines the module's message routing key
 	RouterKey = ModuleName
-
-	// MemStoreKey defines the in-memory store key
-	MemStoreKey = "mem_protorev"
 )
 
 const (
-	prefixNeedToArb = iota + 1
-	prefixArbDetails
-	prefixConnectedTokens
-	prefixConnectedTokensToPoolIDs
-	prefixPoolToRoutes
+	prefixRoute = iota + 1
+	prefixOsmoPools
+	prefixAtomPools
+	prefixProtoRevStatistics
 )
 
 var (
-	// ProtoRev Code
-	KeyNeedToArb                = []byte{prefixNeedToArb}
-	KeyArbDetails               = []byte{prefixArbDetails}
-	KeyConnectedTokens          = []byte{prefixConnectedTokens}
-	KeyConnectedTokensToPoolIDs = []byte{prefixConnectedTokensToPoolIDs}
-	KeyPoolToRoutes             = []byte{prefixPoolToRoutes}
+	// KeyPrefixRoute is the prefix for the route store
+	KeyPrefixRoutes = []byte{prefixRoute}
+
+	// KeyPrefixOsmoPools is the prefix for the osmo pool store
+	KeyPrefixOsmoPools = []byte{prefixOsmoPools}
+
+	// KeyPrefixAtomPools is the prefix for the atom pool store
+	KeyPrefixAtomPools = []byte{prefixAtomPools}
+
+	// KeyPrefixProtoRevStatistics is the prefix for the proto rev statistics store
+	KeyPrefixProtoRevStatistics = []byte{prefixProtoRevStatistics}
 )
 
-func GetConnectedTokensStoreKey(token *string) []byte {
-	return []byte(fmt.Sprintf("token/%s", *token))
+// Returns the key needed to fetch the osmo pool for a given denom
+func GetKeyPrefixOsmoPool(denom string) []byte {
+	return append(KeyPrefixOsmoPools, []byte(denom)...)
 }
 
-func GetConnectedTokensToPoolIDsStoreKey(tokenA, tokenB string) []byte {
-	// Compare tokenA and tokenB to see which one is alphabetically first
-	if tokenA < tokenB {
-		return []byte(fmt.Sprintf("connected_tokens/%s/%s", tokenA, tokenB))
+// Returns the key needed to fetch the atom pool for a given denom
+func GetKeyPrefixAtomPool(denom string) []byte {
+	return append(KeyPrefixAtomPools, []byte(denom)...)
+}
+
+// Returns the key need to fetch the route for a given pair of denoms
+func GetKeyPrefixRouteForPair(denom1, denom2 string) []byte {
+	first := strings.ToUpper(denom1)
+	second := strings.ToUpper(denom2)
+
+	if denom1 < denom2 {
+		first = denom1
+		second = denom2
 	} else {
-		return []byte(fmt.Sprintf("connected_tokens/%s/%s", tokenB, tokenA))
+		first = denom2
+		second = denom1
 	}
-}
 
-func GetPoolToRoutesStoreKey(poolId uint64) []byte {
-	return []byte(fmt.Sprintf("pool_routes/%d", poolId))
+	return append(KeyPrefixRoutes, []byte(first+second)...)
 }
