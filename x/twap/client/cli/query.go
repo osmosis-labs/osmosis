@@ -145,6 +145,7 @@ $ %s q twap 1 uosmo 1667088000 1667174400
 					poolId, baseDenom, liquidity.Liquidity[0], liquidity.Liquidity[1])
 			}
 
+			// nolint: staticcheck
 			res, err := queryClient.ArithmeticTwap(cmd.Context(), &queryproto.ArithmeticTwapRequest{
 				PoolId:     poolId,
 				BaseAsset:  baseDenom,

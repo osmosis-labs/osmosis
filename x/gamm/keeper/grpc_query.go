@@ -288,7 +288,7 @@ func (q Querier) CalcExitPoolCoinsFromShares(ctx context.Context, req *types.Que
 	return &types.QueryCalcExitPoolCoinsFromSharesResponse{TokensOut: exitCoins}, nil
 }
 
-//  CalcJoinPoolNoSwapShares returns the amount of shares you'd get if joined a pool without a swap and tokens which need to be provided
+// CalcJoinPoolNoSwapShares returns the amount of shares you'd get if joined a pool without a swap and tokens which need to be provided
 func (q Querier) CalcJoinPoolNoSwapShares(ctx context.Context, req *types.QueryCalcJoinPoolNoSwapSharesRequest) (*types.QueryCalcJoinPoolNoSwapSharesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -380,6 +380,7 @@ func (q Querier) TotalShares(ctx context.Context, req *types.QueryTotalSharesReq
 }
 
 // SpotPrice returns target pool asset prices on base and quote assets.
+// nolint: staticcheck
 func (q Querier) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest) (*types.QuerySpotPriceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
