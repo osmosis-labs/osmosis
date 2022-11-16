@@ -38,8 +38,8 @@ func cfmmConstant(xReserve, yReserve osmomath.BigDec) osmomath.BigDec {
 // of their squares (e.g. v = w^2 + z^2).
 // When u = 1 and v = 0, this is equivalent to solidly's CFMM
 // {TODO: Update this comment}
-func cfmmConstantMultiNoV(xReserve, yReserve, vSumSquares osmomath.BigDec) osmomath.BigDec {
-	if !xReserve.IsPositive() || !yReserve.IsPositive() || vSumSquares.IsNegative() {
+func cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares osmomath.BigDec) osmomath.BigDec {
+	if !xReserve.IsPositive() || !yReserve.IsPositive() || wSumSquares.IsNegative() {
 		panic("invalid input: reserves must be positive")
 	}
 
@@ -55,11 +55,7 @@ func cfmmConstantMultiNoVY(xReserve, yReserve, wSumSquares osmomath.BigDec) osmo
 
 	x2 := xReserve.Mul(xReserve)
 	y2 := yReserve.Mul(yReserve)
-<<<<<<< HEAD
-	return xy.Mul(x2.Add(y2).Add(vSumSquares))
-=======
 	return xReserve.Mul(x2.Add(y2).Add(wSumSquares))
->>>>>>> 14697093 (Make stableswap error in terms of input size (#3379))
 }
 
 func cfmmConstantMulti(xReserve, yReserve, u, v osmomath.BigDec) osmomath.BigDec {
