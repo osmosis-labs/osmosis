@@ -281,16 +281,18 @@ func iterKCalculator(x0, w, yf osmomath.BigDec) func(osmomath.BigDec) (osmomath.
 	}
 }
 
-var zero = osmomath.ZeroDec()
-var one = osmomath.OneDec()
+var (
+	zero = osmomath.ZeroDec()
+	one  = osmomath.OneDec()
+)
 
 func deriveUpperLowerXFinalReserveBounds(xReserve, yReserve, wSumSquares, yFinal osmomath.BigDec) (
-	xFinalLowerbound, xFinalUpperbound osmomath.BigDec) {
+	xFinalLowerbound, xFinalUpperbound osmomath.BigDec,
+) {
 	xFinalLowerbound, xFinalUpperbound = xReserve, xReserve
 
 	k0 := cfmmConstantMultiNoV(xReserve, yFinal, wSumSquares)
 	k := cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares)
-	// fmt.Println(k0, k)
 	if k0.Equal(zero) || k.Equal(zero) {
 		panic("k should never be zero")
 	}
@@ -303,10 +305,8 @@ func deriveUpperLowerXFinalReserveBounds(xReserve, yReserve, wSumSquares, yFinal
 	} else if kRatio.GT(one) {
 		// need to find a lowerbound. We could use a cubic relation, but for now we just set it to 0.
 		xFinalLowerbound = osmomath.ZeroDec()
-	} else {
-		// k remains unchanged.
-		// So we keep bounds equal to each other
 	}
+	// otherwise, k remains unchanged, so we keep bounds equal to each other
 	return xFinalLowerbound, xFinalUpperbound
 }
 
@@ -317,7 +317,6 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	} else if yIn.Abs().GTE(yReserve) {
 		panic("cannot input more than pool reserves")
 	}
-	// fmt.Printf("solve cfmm xreserve %v, yreserve %v, w %v, yin %v\n", xReserve, yReserve, wSumSquares, yIn)
 	yFinal := yReserve.Add(yIn)
 	xLowEst, xHighEst := deriveUpperLowerXFinalReserveBounds(xReserve, yReserve, wSumSquares, yFinal)
 	targetK := targetKCalculator(xReserve, yReserve, wSumSquares, yFinal)
@@ -344,7 +343,6 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	}
 
 	xOut := xReserve.Sub(xEst)
-	// fmt.Printf("xOut %v\n", xOut)
 
 	// We check the absolute value of the output against the xReserve amount to ensure that:
 	// 1. Swaps cannot more than double the input token's pool supply
