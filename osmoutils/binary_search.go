@@ -71,7 +71,7 @@ func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int {
 	}
 	// Check multiplicative tolerance equations
 	if !e.MultiplicativeTolerance.IsNil() && !e.MultiplicativeTolerance.IsZero() {
-		errTerm := diff.ToDec().Quo(sdk.MinInt(expected, actual).ToDec())
+		errTerm := diff.ToDec().Quo(sdk.MinInt(expected.Abs(), actual.Abs()).ToDec())
 		if errTerm.GT(e.MultiplicativeTolerance) {
 			return comparisonSign
 		}
@@ -85,15 +85,6 @@ func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int {
 // returns 1 if not, and expected > actual.
 // returns -1 if not, and expected < actual
 func (e ErrTolerance) CompareBigDec(expected osmomath.BigDec, actual osmomath.BigDec) int {
-	diff := expected.Sub(actual).Abs()
-
-	comparisonSign := 0
-	if expected.GT(actual) {
-		comparisonSign = 1
-	} else {
-		comparisonSign = -1
-	}
-
 	// Ensure that even if expected is within tolerance of actual, we don't count it as equal if its in the wrong direction.
 	// so if were supposed to round down, it must be that `expected >= actual`.
 	// likewise if were supposed to round up, it must be that `expected <= actual`.
@@ -106,6 +97,15 @@ func (e ErrTolerance) CompareBigDec(expected osmomath.BigDec, actual osmomath.Bi
 		if expected.GT(actual) {
 			return 1
 		}
+	}
+
+	diff := expected.Sub(actual).Abs()
+
+	comparisonSign := 0
+	if expected.GT(actual) {
+		comparisonSign = 1
+	} else {
+		comparisonSign = -1
 	}
 
 	// Check additive tolerance equations
@@ -123,7 +123,8 @@ func (e ErrTolerance) CompareBigDec(expected osmomath.BigDec, actual osmomath.Bi
 	}
 	// Check multiplicative tolerance equations
 	if !e.MultiplicativeTolerance.IsNil() && !e.MultiplicativeTolerance.IsZero() {
-		errTerm := diff.Quo(osmomath.MinDec(expected, actual))
+		errTerm := diff.Quo(osmomath.MinDec(expected.Abs(), actual.Abs()))
+		// fmt.Printf("err term %v\n", errTerm)
 		if errTerm.GT(osmomath.BigDecFromSDKDec(e.MultiplicativeTolerance)) {
 			return comparisonSign
 		}
@@ -198,7 +199,7 @@ func BinarySearchBigDec(f func(input osmomath.BigDec) (osmomath.BigDec, error),
 	}
 	curIteration := 0
 	for ; curIteration < maxIterations; curIteration += 1 {
-		// fmt.Println(targetOutput, curOutput)
+		// fmt.Println("targetOutput, curOutput, curEstimate", targetOutput, curOutput, curEstimate)
 		compRes := errTolerance.CompareBigDec(targetOutput, curOutput)
 		if compRes < 0 {
 			upperbound = curEstimate
