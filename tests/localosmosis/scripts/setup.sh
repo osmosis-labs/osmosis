@@ -1,7 +1,7 @@
 #!/bin/sh
 
 CHAIN_ID=localosmosis
-OSMOSIS_HOME=$HOME/.osmosisd-local
+OSMOSIS_HOME=$HOME/.osmosisd
 CONFIG_FOLDER=$OSMOSIS_HOME/config
 MONIKER=val
 STATE='false'

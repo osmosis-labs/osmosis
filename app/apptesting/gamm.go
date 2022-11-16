@@ -104,6 +104,21 @@ func (s *KeeperTestHelper) PrepareBasicStableswapPool() uint64 {
 		ExitFee: sdk.NewDec(0),
 	}
 
+	msg := stableswap.NewMsgCreateStableswapPool(s.TestAccs[0], params, DefaultStableswapLiquidity, []uint64{}, "")
+	poolId, err := s.App.GAMMKeeper.CreatePool(s.Ctx, msg)
+	s.NoError(err)
+	return poolId
+}
+
+func (s *KeeperTestHelper) PrepareBasicStableswapPool() uint64 {
+	// Mint some assets to the account.
+	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
+
+	params := stableswap.PoolParams{
+		SwapFee: sdk.NewDec(0),
+		ExitFee: sdk.NewDec(0),
+	}
+
 	msg := stableswap.NewMsgCreateStableswapPool(s.TestAccs[0], params, DefaultStableswapLiquidity, []uint64{1, 1, 1}, "")
 	poolId, err := s.App.GAMMKeeper.CreatePool(s.Ctx, msg)
 	s.NoError(err)
