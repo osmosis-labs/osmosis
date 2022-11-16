@@ -153,6 +153,7 @@ $$k_{iter}(y_0 - y_{out}) = h(x_f, y_0 - y_{out}, w) = x_f (y_0 - y_{out}) (x_f^
 But we can remove many of these terms! First notice that `x_f` is a constant factor in `k_iter`, so we can just divide `k_target` by `x_f` to remove that. Then we switch what we search over, from `y_f` to `y_out`, by fixing `y_0`, so were at:
 
 $$k_{target} = x_0 y_0 (x_0^2 + y_0^2 + w) / x_f$$
+
 $$k_{iter}(y_{out}) = (y_0 - y_{out}) (x_f^2 + (y_0 - y_{out})^2 + w) = (y_0 - y_{out}) (x_f^2 + w) + (y_0 - y_{out})^3$$
 
 So $k_{iter}(y_{out})$ is a cubic polynomial in $y_{out}$. Next we remove the terms that have no dependence on `y_{delta}` (the constant term in the polynomial). To do this first we rewrite this to make the polynomial clearer:
