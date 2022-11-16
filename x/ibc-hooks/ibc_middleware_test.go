@@ -3,6 +3,7 @@ package ibc_hooks_test
 import (
 	"encoding/json"
 	"fmt"
+	ibc_hooks "github.com/osmosis-labs/osmosis/v12/x/ibc-hooks"
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/v12/osmoutils"
@@ -299,4 +300,49 @@ func (suite *HooksTestSuite) TestPacketsThatShouldBeSkipped() {
 		}
 		sequence += 1
 	}
+}
+
+// After successfully executing a wasm call, the contract should have the funds sent via IBC
+func (suite *HooksTestSuite) TestFundTracking() {
+	// Setup contract
+	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/counter.wasm")
+	addr := suite.chainA.InstantiateContract(&suite.Suite, `{"count": 0}`)
+
+	// Check that the contract has no funds
+	localDenom := osmoutils.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
+	balance := suite.chainA.GetOsmosisApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
+	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
+
+	// Execute the contract via IBC
+	suite.receivePacket(
+		addr.String(),
+		fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"increment": {} } } }`, addr))
+
+	state := suite.chainA.QueryContract(
+		&suite.Suite, addr,
+		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, ibc_hooks.WasmHookModuleAccountAddr)))
+	suite.Require().Equal(`{"count":0}`, state)
+
+	state = suite.chainA.QueryContract(
+		&suite.Suite, addr,
+		[]byte(fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, ibc_hooks.WasmHookModuleAccountAddr)))
+	suite.Require().Equal(`{"total_funds":[]}`, state)
+
+	suite.receivePacketWithSequence(
+		addr.String(),
+		fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"increment": {} } } }`, addr), 1)
+
+	state = suite.chainA.QueryContract(
+		&suite.Suite, addr,
+		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, ibc_hooks.WasmHookModuleAccountAddr)))
+	suite.Require().Equal(`{"count":1}`, state)
+
+	state = suite.chainA.QueryContract(
+		&suite.Suite, addr,
+		[]byte(fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, ibc_hooks.WasmHookModuleAccountAddr)))
+	suite.Require().Equal(`{"total_funds":[{"denom":"ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B77878","amount":"1"}]}`, state)
+
+	// Check that the token has now been transferred to the contract
+	balance = suite.chainA.GetOsmosisApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
+	suite.Require().Equal(sdk.NewInt(2), balance.Amount)
 }
