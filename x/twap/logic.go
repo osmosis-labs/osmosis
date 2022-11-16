@@ -227,15 +227,16 @@ func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA, asse
 	return record, nil
 }
 
-// computeArithmeticTwap computes and returns an arithmetic TWAP between
-// two records given the quote asset.
+// computeTwap computes and returns a TWAP of a given
+// type - arithmetic or geometric.
+// Between two records given the quote asset.
 // precondition: endRecord.Time >= startRecord.Time
 // if (endRecord.LastErrorTime >= startRecord.Time) returns an error at end + result
 // if (startRecord.LastErrorTime == startRecord.Time) returns an error at end + result
 // if (endRecord.Time == startRecord.Time) returns endRecord.LastSpotPrice
 // else returns
 // (endRecord.Accumulator - startRecord.Accumulator) / (endRecord.Time - startRecord.Time)
-func computeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) (sdk.Dec, error) {
+func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string, twapType twapType) (sdk.Dec, error) {
 	// see if we need to return an error, due to spot price issues
 	var err error = nil
 	if endRecord.LastErrorTime.After(startRecord.Time) ||
@@ -251,11 +252,30 @@ func computeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRec
 		}
 		return endRecord.P1LastSpotPrice, err
 	}
+
+	if twapType == arithmeticTwapType {
+		return computeArithmeticTwap(startRecord, endRecord, quoteAsset), err
+	}
+	return computeGeometricTwap(startRecord, endRecord, quoteAsset), err
+}
+
+// computeArithmeticTwap computes and returns an arithmetic TWAP between
+// two records given the quote asset.
+// TODO: test
+func computeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
 	var accumDiff sdk.Dec
 	if quoteAsset == startRecord.Asset0Denom {
 		accumDiff = endRecord.P0ArithmeticTwapAccumulator.Sub(startRecord.P0ArithmeticTwapAccumulator)
 	} else {
 		accumDiff = endRecord.P1ArithmeticTwapAccumulator.Sub(startRecord.P1ArithmeticTwapAccumulator)
 	}
-	return types.AccumDiffDivDuration(accumDiff, timeDelta), err
+	timeDelta := endRecord.Time.Sub(startRecord.Time)
+	return types.AccumDiffDivDuration(accumDiff, timeDelta)
+}
+
+// computeGeometricTwap computes and returns a geometric TWAP between
+// two records given the quote asset.
+// TODO: test
+func computeGeometricTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
+	panic("not implemented")
 }

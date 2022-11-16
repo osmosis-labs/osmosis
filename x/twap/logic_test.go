@@ -26,6 +26,7 @@ var (
 	OneSec            = sdk.MustNewDecFromStr("1000.000000000000000000")
 	tickLogTen        = osmomath.TickLog(sdk.NewDec(10))
 	tickLogOneOverTen = osmomath.TickLog(sdk.OneDec().QuoInt64(10))
+	tenSecAccum       = OneSec.MulInt64(10)
 )
 
 func (s *TestSuite) TestGetSpotPrices() {
@@ -542,6 +543,7 @@ type computeArithmeticTwapTestCase struct {
 	quoteAsset  string
 	expTwap     sdk.Dec
 	expErr      bool
+	expPanic    bool
 }
 
 type computeThreeAssetArithmeticTwapTestCase struct {
@@ -552,31 +554,12 @@ type computeThreeAssetArithmeticTwapTestCase struct {
 	expErr      bool
 }
 
-// TestComputeArithmeticTwap tests ComputeArithmeticTwap on various inputs.
+// TestComputeArithmeticTwap tests computeTwap on various inputs.
+// TODO: test both arithmetic and geometric twap.
 // The test vectors are structured by setting up different start and records,
 // based on time interval, and their accumulator values.
 // Then an expected TWAP is provided in each test case, to compare against computed.
-func TestComputeArithmeticTwap(t *testing.T) {
-	testCaseFromDeltas := func(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeArithmeticTwapTestCase {
-		return computeArithmeticTwapTestCase{
-			newOneSidedRecord(baseTime, startAccum, true),
-			newOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), true),
-			denom0,
-			expectedTwap,
-			false,
-		}
-	}
-	testCaseFromDeltasAsset1 := func(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeArithmeticTwapTestCase {
-		return computeArithmeticTwapTestCase{
-			newOneSidedRecord(baseTime, startAccum, false),
-			newOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), false),
-			denom1,
-			expectedTwap,
-			false,
-		}
-	}
-	tenSecAccum := OneSec.MulInt64(10)
-	pointOneAccum := OneSec.QuoInt64(10)
+func TestComputeTwap(t *testing.T) {
 	tests := map[string]computeArithmeticTwapTestCase{
 		"basic: spot price = 1 for one second, 0 init accumulator": {
 			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
@@ -606,6 +589,45 @@ func TestComputeArithmeticTwap(t *testing.T) {
 		},
 		"accumulator = 10*OneSec, t=5s. 0 base accum": testCaseFromDeltas(
 			sdk.ZeroDec(), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
+		"accumulator = 10*OneSec, t=100s. 0 base accum (asset 1)": testCaseFromDeltasAsset1(sdk.ZeroDec(), OneSec.MulInt64(10), 100*time.Second, sdk.NewDecWithPrec(1, 1)),
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			actualTwap, err := twap.ComputeTwap(test.startRecord, test.endRecord, test.quoteAsset, twap.ArithmeticTwapType)
+			require.Equal(t, test.expTwap, actualTwap)
+			require.NoError(t, err)
+		})
+	}
+}
+
+// TestComputeArithmeticTwap tests computeArithmeticTwap on various inputs.
+// Contrary to computeTwap that handles the cases with zero delta correctly,
+// this function should panic in case of zero delta.
+func TestComputeArithmeticTwap(t *testing.T) {
+	pointOneAccum := OneSec.QuoInt64(10)
+	tests := map[string]computeArithmeticTwapTestCase{
+		"basic: spot price = 1 for one second, 0 init accumulator": {
+			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			endRecord:   newOneSidedRecord(tPlusOne, OneSec, true),
+			quoteAsset:  denom0,
+			expTwap:     sdk.OneDec(),
+		},
+		// this test just shows what happens in case the records are reversed.
+		// It should return the correct result, even though this is incorrect internal API usage
+		"invalid call: reversed records of above": {
+			startRecord: newOneSidedRecord(tPlusOne, OneSec, true),
+			endRecord:   newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			quoteAsset:  denom0,
+			expTwap:     sdk.OneDec(),
+		},
+		"same record (zero time delta), division by 0 - panic": {
+			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			endRecord:   newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			quoteAsset:  denom0,
+			expPanic:    true,
+		},
+		"accumulator = 10*OneSec, t=5s. 0 base accum": testCaseFromDeltas(
+			sdk.ZeroDec(), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
 		"accumulator = 10*OneSec, t=3s. 0 base accum": testCaseFromDeltas(
 			sdk.ZeroDec(), tenSecAccum, 3*time.Second, ThreePlusOneThird),
 		"accumulator = 10*OneSec, t=100s. 0 base accum": testCaseFromDeltas(
@@ -623,13 +645,16 @@ func TestComputeArithmeticTwap(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			actualTwap, err := twap.ComputeArithmeticTwap(test.startRecord, test.endRecord, test.quoteAsset)
-			require.Equal(t, test.expTwap, actualTwap)
-			require.NoError(t, err)
+
+			osmoassert.ConditionalPanic(t, test.expPanic, func() {
+				actualTwap := twap.ComputeArithmeticTwap(test.startRecord, test.endRecord, test.quoteAsset)
+				require.Equal(t, test.expTwap, actualTwap)
+			})
 		})
 	}
 }
 
+// TODO: split up this test case to cover both arithmetic and geometric twap
 func TestComputeArithmeticTwap_ThreeAsset(t *testing.T) {
 	testThreeAssetCaseFromDeltas := func(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeThreeAssetArithmeticTwapTestCase {
 		return computeThreeAssetArithmeticTwapTestCase{
@@ -668,7 +693,7 @@ func TestComputeArithmeticTwap_ThreeAsset(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			for i, startRec := range test.startRecord {
-				actualTwap, err := twap.ComputeArithmeticTwap(startRec, test.endRecord[i], test.quoteAsset[i])
+				actualTwap, err := twap.ComputeTwap(startRec, test.endRecord[i], test.quoteAsset[i], twap.ArithmeticTwapType)
 				require.Equal(t, test.expTwap[i], actualTwap)
 				require.NoError(t, err)
 			}
@@ -727,7 +752,7 @@ func TestComputeArithmeticTwapWithSpotPriceError(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			actualTwap, err := twap.ComputeArithmeticTwap(test.startRecord, test.endRecord, test.quoteAsset)
+			actualTwap, err := twap.ComputeTwap(test.startRecord, test.endRecord, test.quoteAsset, twap.ArithmeticTwapType)
 			require.Equal(t, test.expTwap, actualTwap)
 			osmoassert.ConditionalError(t, test.expErr, err)
 		})
@@ -1440,5 +1465,27 @@ func (s *TestSuite) TestAfterCreatePool() {
 			s.Require().Equal(1, len(changedPools))
 			s.Require().Equal(tc.poolId, changedPools[0])
 		})
+	}
+}
+
+func testCaseFromDeltas(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeArithmeticTwapTestCase {
+	return computeArithmeticTwapTestCase{
+		newOneSidedRecord(baseTime, startAccum, true),
+		newOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), true),
+		denom0,
+		expectedTwap,
+		false,
+		false,
+	}
+}
+
+func testCaseFromDeltasAsset1(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeArithmeticTwapTestCase {
+	return computeArithmeticTwapTestCase{
+		newOneSidedRecord(baseTime, startAccum, false),
+		newOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), false),
+		denom1,
+		expectedTwap,
+		false,
+		false,
 	}
 }
