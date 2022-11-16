@@ -159,13 +159,17 @@ $$k_{iter}(y_{out}) = (y_0 - y_{out}) (x_f^2 + (y_0 - y_{out})^2 + w) = (y_0 - y
 So $k_{iter}(y_{out})$ is a cubic polynomial in $y_{out}$. Next we remove the terms that have no dependence on `y_{delta}` (the constant term in the polynomial). To do this first we rewrite this to make the polynomial clearer:
 
 $$k_{iter}(y_{out}) = (y_0 - y_{out}) (x_f^2 + w) + y_0^3 - 3y_0^2 y_{out} + 3 y_0 y_{out}^2 - y_{out}^3$$
+
 $$k_{iter}(y_{out}) = y_0 (x_f^2 + w) - y_{out}(x_f^2 + w) + y_0^3 - 3y_0^2 y_{out} + 3 y_0 y_{out}^2 - y_{out}^3$$
+
 $$k_{iter}(y_{out}) = -y_{out}^3 + 3 y_0 y_{out}^2 - (x_f^2 + w + 3y_0^2)y_{out} + (y_0 (x_f^2 + w) + y_0^3)$$
 
 So we can subtract this constant term `y_0 (x_f^2 + w) + y_0^3`, which for `y_out < y_0` is the dominant term in the expression!
 
 So lets define this as:
+
 $$k_{target} = \frac{x_0 y_0 (x_0^2 + y_0^2 + w)}{x_f} - (y_0 (x_f^2 + w) + y_0^3)$$
+
 $$k_{iter}(y_{out}) = -y_{out}^3 + 3 y_0 y_{out}^2 - (x_f^2 + w + 3y_0^2)y_{out}$$
 
 We prove [here](#err_proof) that an error of a multiplicative `e` between `target_k` and `iter_k`, implies an error of less than a factor of `10e` in `y_{out}`, as long as `|y_{out}| < y_0`. (The proven bounds are actually better)
@@ -337,7 +341,9 @@ Let $y_{out} - y_{out}^* = a_y$, we are going to assume that $a_y << y_{out}$, a
 
 Now we are prepared to start bounding this.
 $$k - k^{\*} = -(y_{out}^3 - y_{out}^{3\*}) + 3y_0(y_{out}^2 - y_{out}^{2\*}) - (x_f^2 + w + 3y_0^2)(y_{out} - y_{out}^{\*})$$
+
 $$k - k^{\*} \approx -(3y_{out}^2 a_y) + 3y_0 (2y_{out}a_y) - (x_f^2 + w + 3y_0^2)a_y$$
+
 $$k - k^{\*} \approx a_y(-3y_{out}^2 + 6y_0y_{out} - (x_f^2 + w + 3y_0^2))$$
 
 Rewrite $k = y_{out}(-y_{out}^2 + 3y_0y_{out} - (x_f^2 + w + 3y_0^2))$
