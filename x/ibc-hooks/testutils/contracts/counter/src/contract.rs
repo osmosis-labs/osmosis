@@ -106,7 +106,6 @@ pub fn naive_add_coins(lhs: &Vec<Coin>, rhs: &Vec<Coin>) -> Vec<Coin> {
         coins.insert(coin.denom.clone(), coin.amount);
     }
 
-    //HashMap::from(lhs.iter().map(|c| (c.denom, c.amount)).collect());
 
     for coin in rhs {
         coins
