@@ -16,7 +16,13 @@ func (k Keeper) MultihopSwapExactAmountIn(
 	routes []types.SwapAmountInRoute,
 	tokenIn sdk.Coin,
 	tokenOutMinAmount sdk.Int,
+	estimateSwap bool,
 ) (tokenOutAmount sdk.Int, err error) {
+	// if it's an estimate swap, we use a cached context to prevent storing to the store for estimation
+	if estimateSwap {
+		ctx, _ = ctx.CacheContext()
+	}
+
 	var (
 		isMultiHopRouted bool
 		routeSwapFee     sdk.Dec
@@ -68,7 +74,8 @@ func (k Keeper) MultihopSwapExactAmountIn(
 			swapFee = routeSwapFee.Mul((swapFee.Quo(sumOfSwapFees)))
 		}
 
-		tokenOutAmount, err = k.swapExactAmountIn(ctx, sender, pool, tokenIn, route.TokenOutDenom, _outMinAmount, swapFee)
+		// we call here with useCacheCtx argument as false, because we're already using cached context, regardless of being estimateSwap or not
+		tokenOutAmount, err = k.swapExactAmountIn(ctx, sender, pool, tokenIn, route.TokenOutDenom, _outMinAmount, swapFee, false, estimateSwap)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -89,7 +96,13 @@ func (k Keeper) MultihopSwapExactAmountOut(
 	routes []types.SwapAmountOutRoute,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
+	estimateSwap bool,
 ) (tokenInAmount sdk.Int, err error) {
+	// if it's an estimate swap, we use a cached context to prevent storing to the store for estimation
+	if estimateSwap {
+		ctx, _ = ctx.CacheContext()
+	}
+
 	isMultiHopRouted, routeSwapFee, sumOfSwapFees := false, sdk.Dec{}, sdk.Dec{}
 	route := types.SwapAmountOutRoutes(routes)
 	if err := route.Validate(); err != nil {
@@ -153,7 +166,8 @@ func (k Keeper) MultihopSwapExactAmountOut(
 			swapFee = routeSwapFee.Mul((swapFee.Quo(sumOfSwapFees)))
 		}
 
-		_tokenInAmount, swapErr := k.swapExactAmountOut(ctx, sender, pool, route.TokenInDenom, insExpected[i], _tokenOut, swapFee)
+		// we call here with useCacheCtx argument as false, because we're already using cached context, regardless of being estimateSwap or not
+		_tokenInAmount, swapErr := k.swapExactAmountOut(ctx, sender, pool, route.TokenInDenom, insExpected[i], _tokenOut, swapFee, false, estimateSwap)
 		if swapErr != nil {
 			return sdk.Int{}, swapErr
 		}

@@ -124,7 +124,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 
 				nextTokenIn := test.param.tokenIn
 				for _, hop := range test.param.routes {
-					tokenOut, err := keeper.SwapExactAmountIn(cacheCtx, suite.TestAccs[0], hop.PoolId, nextTokenIn, hop.TokenOutDenom, sdk.OneInt())
+					tokenOut, err := keeper.SwapExactAmountIn(cacheCtx, suite.TestAccs[0], hop.PoolId, nextTokenIn, hop.TokenOutDenom, sdk.OneInt(), false)
 					suite.Require().NoError(err)
 					nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
 				}
@@ -137,7 +137,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 
 				spotPriceBefore := calcSpotPrice()
 
-				multihopTokenOutAmount, err := keeper.MultihopSwapExactAmountIn(suite.Ctx, suite.TestAccs[0], test.param.routes, test.param.tokenIn, test.param.tokenOutMinAmount)
+				multihopTokenOutAmount, err := keeper.MultihopSwapExactAmountIn(suite.Ctx, suite.TestAccs[0], test.param.routes, test.param.tokenIn, test.param.tokenOutMinAmount, false)
 				suite.NoError(err, "test: %v", test.name)
 
 				spotPriceAfter := calcSpotPrice()
@@ -165,7 +165,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 					suite.Require().True(multihopTokenOutAmount.Equal(tokenOutCalculatedAsSeparateSwaps.Amount))
 				}
 			} else {
-				_, err := keeper.MultihopSwapExactAmountIn(suite.Ctx, suite.TestAccs[0], test.param.routes, test.param.tokenIn, test.param.tokenOutMinAmount)
+				_, err := keeper.MultihopSwapExactAmountIn(suite.Ctx, suite.TestAccs[0], test.param.routes, test.param.tokenIn, test.param.tokenOutMinAmount, false)
 				suite.Error(err, "test: %v", test.name)
 			}
 		})
@@ -287,7 +287,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 				nextTokenOut := test.param.tokenOut
 				for i := len(test.param.routes) - 1; i >= 0; i-- {
 					hop := test.param.routes[i]
-					tokenOut, err := keeper.SwapExactAmountOut(cacheCtx, suite.TestAccs[0], hop.PoolId, hop.TokenInDenom, sdk.NewInt(100000000), nextTokenOut)
+					tokenOut, err := keeper.SwapExactAmountOut(cacheCtx, suite.TestAccs[0], hop.PoolId, hop.TokenInDenom, sdk.NewInt(100000000), nextTokenOut, false)
 					suite.Require().NoError(err)
 					nextTokenOut = sdk.NewCoin(hop.TokenInDenom, tokenOut)
 				}
@@ -299,7 +299,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 				tokenInCalculatedAsSeparateSwapsWithoutFee := calcInAmountAsSeparateSwaps(poolZeroSwapFee)
 
 				spotPriceBefore := calcSpotPrice()
-				multihopTokenInAmount, err := keeper.MultihopSwapExactAmountOut(suite.Ctx, suite.TestAccs[0], test.param.routes, test.param.tokenInMaxAmount, test.param.tokenOut)
+				multihopTokenInAmount, err := keeper.MultihopSwapExactAmountOut(suite.Ctx, suite.TestAccs[0], test.param.routes, test.param.tokenInMaxAmount, test.param.tokenOut, false)
 				suite.Require().NoError(err, "test: %v", test.name)
 
 				spotPriceAfter := calcSpotPrice()
@@ -327,7 +327,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 					suite.Require().True(multihopTokenInAmount.Equal(tokenInCalculatedAsSeparateSwaps.Amount))
 				}
 			} else {
-				_, err := keeper.MultihopSwapExactAmountOut(suite.Ctx, suite.TestAccs[0], test.param.routes, test.param.tokenInMaxAmount, test.param.tokenOut)
+				_, err := keeper.MultihopSwapExactAmountOut(suite.Ctx, suite.TestAccs[0], test.param.routes, test.param.tokenInMaxAmount, test.param.tokenOut, false)
 				suite.Error(err, "test: %v", test.name)
 			}
 		})

@@ -122,15 +122,16 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 				suite.TestAccs[0],
 				test.param.routes,
 				test.param.tokenIn,
-				test.param.tokenOutMinAmount)
+				test.param.tokenOutMinAmount, true)
 			suite.Require().NoError(err)
 
 			// calculate token out amount using `EstimateMultihopSwapExactAmountIn`
-			estimateMultihopTokenOutAmount, err := keeper.EstimateMultihopSwapExactAmountIn(
+			estimateMultihopTokenOutAmount, err := keeper.MultihopSwapExactAmountIn(
 				suite.Ctx,
-				test.param.estimateRoutes,
+				suite.TestAccs[0],
+				test.param.routes,
 				test.param.tokenIn,
-				test.param.tokenOutMinAmount)
+				test.param.tokenOutMinAmount, false)
 			suite.Require().NoError(err)
 
 			// ensure that the token out amount is same
@@ -260,14 +261,15 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 				suite.TestAccs[0],
 				test.param.routes,
 				test.param.tokenInMaxAmount,
-				test.param.tokenOut)
+				test.param.tokenOut, false)
 			suite.Require().NoError(err, "test: %v", test.name)
 
-			estimateMultihopTokenInAmount, err := keeper.EstimateMultihopSwapExactAmountOut(
+			estimateMultihopTokenInAmount, err := keeper.MultihopSwapExactAmountOut(
 				suite.Ctx,
+				suite.TestAccs[0],
 				test.param.estimateRoutes,
 				test.param.tokenInMaxAmount,
-				test.param.tokenOut)
+				test.param.tokenOut, true)
 			suite.Require().NoError(err, "test: %v", test.name)
 
 			suite.Require().Equal(multihopTokenInAmount, estimateMultihopTokenInAmount)
@@ -296,13 +298,13 @@ func (suite *KeeperTestSuite) TestEstimateSwapExactAmountIn() {
 	tokenOutDenom := "bar"
 	tokenOutMinAmount := sdk.NewInt(1)
 
-	tokenOutAmount, err := keeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], firstPoolId, tokenIn, tokenOutDenom, tokenOutMinAmount)
+	tokenOutAmount, err := keeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], firstPoolId, tokenIn, tokenOutDenom, tokenOutMinAmount, false)
 	suite.Require().NoError(err)
 
 	pool, err := keeper.GetPoolAndPoke(suite.Ctx, secondPoolId)
 	suite.Require().NoError(err)
-	swapFee := pool.GetSwapFee(suite.Ctx)
-	estimateTokenOutAmount, err := keeper.EstimateSwapExactAmountIn(suite.Ctx, secondPoolId, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
+
+	estimateTokenOutAmount, err := keeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], secondPoolId, tokenIn, tokenOutDenom, tokenOutMinAmount, true)
 
 	// ensure that the two results have the same amount of token out
 	suite.Require().Equal(tokenOutAmount, estimateTokenOutAmount)
@@ -326,13 +328,13 @@ func (suite *KeeperTestSuite) TestEstimateSwapExactAmountOut() {
 	tokenInMaxAmount := sdk.NewInt(900000000)
 	tokenOut := sdk.NewCoin("bar", sdk.NewInt(100000))
 
-	tokenInAmount, err := keeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], firstPoolId, tokenInDenom, tokenInMaxAmount, tokenOut)
+	tokenInAmount, err := keeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], firstPoolId, tokenInDenom, tokenInMaxAmount, tokenOut, false)
 	suite.Require().NoError(err)
 
 	pool, err := keeper.GetPoolAndPoke(suite.Ctx, secondPoolId)
 	suite.Require().NoError(err)
-	swapFee := pool.GetSwapFee(suite.Ctx)
-	estimateTokenInAmount, err := keeper.EstimateSwapExactAmountOut(suite.Ctx, secondPoolId, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
+
+	estimateTokenInAmount, err := keeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], secondPoolId, tokenInDenom, tokenInMaxAmount, tokenOut, true)
 
 	// ensure that the two results have the same amount of token out
 	suite.Require().Equal(tokenInAmount, estimateTokenInAmount)

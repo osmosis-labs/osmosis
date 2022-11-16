@@ -319,7 +319,7 @@ func (s *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset sdk.Coin
 		poolId,
 		fromAsset.Denom,
 		fromAsset.Amount,
-		sdk.NewCoin(toAsset.Denom, toAsset.Amount.Quo(sdk.NewInt(4))),
+		sdk.NewCoin(toAsset.Denom, toAsset.Amount.Quo(sdk.NewInt(4))), false,
 	)
 	s.Require().NoError(err)
 

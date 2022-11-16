@@ -16,6 +16,7 @@ import (
 // tokenOutMinAmount must be returned in the resulting asset returning an error
 // upon failure. Upon success, the resulting tokens swapped for are returned. A
 // swap fee is applied determined by the pool's parameters.
+// The estimateSwap parameter is used to determine whether the swap is an estimate or not.
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -23,6 +24,7 @@ func (k Keeper) SwapExactAmountIn(
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
+	estimateSwap bool,
 ) (sdk.Int, error) {
 	pool, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
@@ -30,13 +32,17 @@ func (k Keeper) SwapExactAmountIn(
 	}
 
 	swapFee := pool.GetSwapFee(ctx)
-	return k.swapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
+
+	// if the swap is an estimate swap, we want to use cache ctx to avoid mutating state
+	return k.swapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee, estimateSwap, estimateSwap)
 }
 
 // swapExactAmountIn is an internal method for swapping an exact amount of tokens
 // as input to a pool, using the provided swapFee. This is intended to allow
 // different swap fees as determined by multi-hops, or when recovering from
 // chain liveness failures.
+// If useCacheCtx is true, then the swap will be performed on a cached context.
+// If the estimateSwap parameter is true, then the swap will not send actual coins upon swap.
 func (k Keeper) swapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -45,7 +51,13 @@ func (k Keeper) swapExactAmountIn(
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
 	swapFee sdk.Dec,
+	useCacheCtx bool,
+	estimateSwap bool,
 ) (tokenOutAmount sdk.Int, err error) {
+	if useCacheCtx {
+		ctx, _ = ctx.CacheContext()
+	}
+
 	tokenOut, err := k.swapExactAmountInNoTokenSend(ctx, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
@@ -57,9 +69,11 @@ func (k Keeper) swapExactAmountIn(
 		return sdk.Int{}, err
 	}
 
-	err = k.sendCoinsAfterSwap(ctx, pool, tokenIn, tokenOut, sender)
-	if err != nil {
-		return sdk.Int{}, err
+	if !estimateSwap {
+		err = k.sendCoinsAfterSwap(ctx, pool, tokenIn, tokenOut, sender)
+		if err != nil {
+			return sdk.Int{}, err
+		}
 	}
 
 	return tokenOut.Amount, nil
@@ -115,19 +129,22 @@ func (k Keeper) SwapExactAmountOut(
 	tokenInDenom string,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
+	estimateSwap bool,
 ) (tokenInAmount sdk.Int, err error) {
 	pool, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 	swapFee := pool.GetSwapFee(ctx)
-	return k.swapExactAmountOut(ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
+	return k.swapExactAmountOut(ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee, estimateSwap, estimateSwap)
 }
 
 // swapExactAmountOut is an internal method for swapping to get an exact number of tokens out of a pool,
 // using the provided swapFee.
 // This is intended to allow different swap fees as determined by multi-hops,
 // or when recovering from chain liveness failures.
+// If useCacheCtx is true, then the swap will be performed on a cached context.
+// If the estimateSwap parameter is true, then the swap will not send actual coins upon swap.
 func (k Keeper) swapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -136,7 +153,13 @@ func (k Keeper) swapExactAmountOut(
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
 	swapFee sdk.Dec,
+	useCacheCtx bool,
+	estimate bool,
 ) (tokenInAmount sdk.Int, err error) {
+	if useCacheCtx {
+		ctx, _ = ctx.CacheContext()
+	}
+
 	tokenIn, err := k.swapExactAmountOutNoTokenSend(ctx, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
@@ -147,9 +170,11 @@ func (k Keeper) swapExactAmountOut(
 		return sdk.Int{}, err
 	}
 
-	err = k.sendCoinsAfterSwap(ctx, pool, tokenIn, tokenOut, sender)
-	if err != nil {
-		return sdk.Int{}, err
+	if !estimate {
+		err = k.sendCoinsAfterSwap(ctx, pool, tokenIn, tokenOut, sender)
+		if err != nil {
+			return sdk.Int{}, err
+		}
 	}
 
 	return tokenIn.Amount, nil

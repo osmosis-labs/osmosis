@@ -98,7 +98,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				suite.NoError(err, "test: %v", test.name)
 
 				prevGasConsumed := suite.Ctx.GasMeter().GasConsumed()
-				tokenOutAmount, err := keeper.SwapExactAmountIn(ctx, suite.TestAccs[0], poolId, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount)
+				tokenOutAmount, err := keeper.SwapExactAmountIn(ctx, suite.TestAccs[0], poolId, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, false)
 				suite.NoError(err, "test: %v", test.name)
 				suite.True(tokenOutAmount.Equal(test.param.expectedTokenOut), "test: %v", test.name)
 				gasConsumedForSwap := suite.Ctx.GasMeter().GasConsumed() - prevGasConsumed
@@ -114,7 +114,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				tradeAvgPrice := test.param.tokenIn.Amount.ToDec().Quo(tokenOutAmount.ToDec())
 				suite.True(tradeAvgPrice.GT(spotPriceBefore) && tradeAvgPrice.LT(spotPriceAfter), "test: %v", test.name)
 			} else {
-				_, err := keeper.SwapExactAmountIn(ctx, suite.TestAccs[0], poolId, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount)
+				_, err := keeper.SwapExactAmountIn(ctx, suite.TestAccs[0], poolId, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, false)
 				suite.Error(err, "test: %v", test.name)
 			}
 		})
@@ -206,7 +206,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 				suite.NoError(err, "test: %v", test.name)
 
 				prevGasConsumed := suite.Ctx.GasMeter().GasConsumed()
-				tokenInAmount, err := keeper.SwapExactAmountOut(ctx, suite.TestAccs[0], poolId, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut)
+				tokenInAmount, err := keeper.SwapExactAmountOut(ctx, suite.TestAccs[0], poolId, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut, false)
 				suite.NoError(err, "test: %v", test.name)
 				suite.True(tokenInAmount.Equal(test.param.expectedTokenInAmount),
 					"test: %v\n expect_eq actual: %s, expected: %s",
@@ -224,7 +224,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 				tradeAvgPrice := tokenInAmount.ToDec().Quo(test.param.tokenOut.Amount.ToDec())
 				suite.True(tradeAvgPrice.GT(spotPriceBefore) && tradeAvgPrice.LT(spotPriceAfter), "test: %v", test.name)
 			} else {
-				_, err := keeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], poolId, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut)
+				_, err := keeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], poolId, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut, false)
 				suite.Error(err, "test: %v", test.name)
 			}
 		})
@@ -259,14 +259,14 @@ func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 			foocoin := sdk.NewCoin("foo", sdk.NewInt(10))
 
 			if tc.expectPass {
-				_, err := suite.App.GAMMKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], poolId, foocoin, "bar", sdk.ZeroInt())
+				_, err := suite.App.GAMMKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], poolId, foocoin, "bar", sdk.ZeroInt(), false)
 				suite.Require().NoError(err)
-				_, err = suite.App.GAMMKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], poolId, "bar", sdk.NewInt(1000000000000000000), foocoin)
+				_, err = suite.App.GAMMKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], poolId, "bar", sdk.NewInt(1000000000000000000), foocoin, false)
 				suite.Require().NoError(err)
 			} else {
-				_, err := suite.App.GAMMKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], poolId, foocoin, "bar", sdk.ZeroInt())
+				_, err := suite.App.GAMMKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], poolId, foocoin, "bar", sdk.ZeroInt(), false)
 				suite.Require().Error(err)
-				_, err = suite.App.GAMMKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], poolId, "bar", sdk.NewInt(1000000000000000000), foocoin)
+				_, err = suite.App.GAMMKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], poolId, "bar", sdk.NewInt(1000000000000000000), foocoin, false)
 				suite.Require().Error(err)
 			}
 		}
@@ -313,8 +313,8 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	for _, test := range testCases {
 		suite.Run(test.name, func() {
 			// Check swaps
-			_, swapInErr := gammKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], test.poolId, testCoin, "bar", sdk.ZeroInt())
-			_, swapOutErr := gammKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], test.poolId, "bar", sdk.NewInt(1000000000000000000), testCoin)
+			_, swapInErr := gammKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], test.poolId, testCoin, "bar", sdk.ZeroInt(), false)
+			_, swapOutErr := gammKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], test.poolId, "bar", sdk.NewInt(1000000000000000000), testCoin, false)
 			if test.expectPass {
 				suite.Require().NoError(swapInErr)
 				suite.Require().NoError(swapOutErr)

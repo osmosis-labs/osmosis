@@ -223,7 +223,7 @@ func PerformSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.Ac
 			return nil, err
 		}
 
-		tokenOutAmount, err := keeper.MultihopSwapExactAmountIn(ctx, contractAddr, routes, tokenIn, tokenOutMinAmount)
+		tokenOutAmount, err := keeper.MultihopSwapExactAmountIn(ctx, contractAddr, routes, tokenIn, tokenOutMinAmount, false)
 		if err != nil {
 			return nil, sdkerrors.Wrap(err, "gamm perform swap exact amount in")
 		}
@@ -234,7 +234,7 @@ func PerformSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.Ac
 			return nil, err
 		}
 
-		tokenInAmount, err := keeper.MultihopSwapExactAmountOut(ctx, contractAddr, routes, tokenInMaxAmount, tokenOut)
+		tokenInAmount, err := keeper.MultihopSwapExactAmountOut(ctx, contractAddr, routes, tokenInMaxAmount, tokenOut, false)
 		if err != nil {
 			return nil, sdkerrors.Wrap(err, "gamm perform swap exact amount out")
 		}

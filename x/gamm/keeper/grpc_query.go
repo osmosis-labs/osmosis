@@ -288,7 +288,7 @@ func (q Querier) CalcExitPoolCoinsFromShares(ctx context.Context, req *types.Que
 	return &types.QueryCalcExitPoolCoinsFromSharesResponse{TokensOut: exitCoins}, nil
 }
 
-//  CalcJoinPoolNoSwapShares returns the amount of shares you'd get if joined a pool without a swap and tokens which need to be provided
+// CalcJoinPoolNoSwapShares returns the amount of shares you'd get if joined a pool without a swap and tokens which need to be provided
 func (q Querier) CalcJoinPoolNoSwapShares(ctx context.Context, req *types.QueryCalcJoinPoolNoSwapSharesRequest) (*types.QueryCalcJoinPoolNoSwapSharesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -460,7 +460,7 @@ func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.Query
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	tokenOutAmount, err := q.Keeper.EstimateMultihopSwapExactAmountIn(sdkCtx, req.Routes, tokenIn, sdk.NewInt(1))
+	tokenOutAmount, err := q.Keeper.MultihopSwapExactAmountIn(sdkCtx, sdk.AccAddress{}, req.Routes, tokenIn, sdk.NewInt(1), true)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -491,7 +491,7 @@ func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.Quer
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	tokenInAmount, err := q.Keeper.EstimateMultihopSwapExactAmountOut(sdkCtx, req.Routes, sdkIntMaxValue, tokenOut)
+	tokenInAmount, err := q.Keeper.MultihopSwapExactAmountOut(sdkCtx, sdk.AccAddress{}, req.Routes, sdkIntMaxValue, tokenOut, true)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
