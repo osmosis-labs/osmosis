@@ -66,7 +66,6 @@ func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		n.t.Error(string(bz))
 		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(bz))
 	}
 	return bz, nil
