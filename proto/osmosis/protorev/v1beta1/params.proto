@@ -1,5 +1,5 @@
 syntax = "proto3";
-package osmosis.v12.protorev;
+package osmosis.protorev.v1beta1;
 
 import "gogoproto/gogo.proto";
 
@@ -7,7 +7,7 @@ option go_package = "github.com/osmosis-labs/osmosis/v12/x/protorev/types";
 
 // Params defines the parameters for the module.
 message Params {
-  // Boolean that determines whether x/protorev will search routes at runtime outside of those defined in hot routes
+  // Boolean that determines whether x/protorev will search routes at runtime
+  // outside of those defined in hot routes
   bool on_check_hot_routes = 1;
-  
 }

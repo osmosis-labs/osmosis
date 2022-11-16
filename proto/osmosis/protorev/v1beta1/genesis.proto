@@ -1,8 +1,7 @@
 syntax = "proto3";
-package osmosis.v12.protorev;
+package osmosis.protorev.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "protorev/params.proto";
 import "osmosis/protorev/v1beta1/protorev.proto";
 import "osmosis/protorev/v1beta1/params.proto";
 
@@ -11,7 +10,7 @@ option go_package = "github.com/osmosis-labs/osmosis/v12/x/protorev/types";
 // GenesisState defines the protorev module's genesis state.
 message GenesisState {
   // Module Parameters
-  Params params = 1 [(gogoproto.nullable) = false];
+  Params params = 1 [ (gogoproto.nullable) = false ];
   // Hot routes that are configured on genesis
-  repeated Route routes = 2 [(gogoproto.nullable) = false];
+  repeated Route routes = 2 [ (gogoproto.nullable) = false ];
 }

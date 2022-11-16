@@ -1,7 +1,6 @@
 syntax = "proto3";
-package osmosis.v12.protorev;
+package osmosis.protorev.v1beta1;
 
 option go_package = "github.com/osmosis-labs/osmosis/v12/x/protorev/types";
 
-service Msg {
-}
+service Msg {}
