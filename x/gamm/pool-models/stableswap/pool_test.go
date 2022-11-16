@@ -1117,7 +1117,7 @@ func TestStableswapSpotPrice(t *testing.T) {
 			quoteDenom:     "bar",
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10000, 20000},
-			expectedPrice:  sdk.NewDecWithPrec(5, 1),
+			expectedPrice:  sdk.NewDec(2),
 			expectPass:     true,
 		},
 		"even two-asset pool with different scaling factors (bar -> foo)": {
@@ -1125,7 +1125,7 @@ func TestStableswapSpotPrice(t *testing.T) {
 			quoteDenom:     "foo",
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10000, 20000},
-			expectedPrice:  sdk.NewDec(2),
+			expectedPrice:  sdk.NewDecWithPrec(5, 1),
 			expectPass:     true,
 		},
 		"uneven two-asset pool": {
