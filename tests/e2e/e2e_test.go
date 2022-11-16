@@ -152,7 +152,6 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	s.NoError(err)
 
 	over := f * 0.02
-	fmt.Printf("ADAM 2 PERCENT %v \n", over)
 
 	// Sending >1%
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
