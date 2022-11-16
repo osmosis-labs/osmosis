@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v13/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
@@ -27,6 +28,7 @@ func newTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0,
 		P1LastSpotPrice:             sp1,
 		P0ArithmeticTwapAccumulator: sdk.ZeroDec(),
 		P1ArithmeticTwapAccumulator: sdk.ZeroDec(),
+		GeometricTwapAccumulator:    sdk.ZeroDec(),
 		LastErrorTime:               lastErrorTime,
 	}, nil
 }
@@ -189,6 +191,12 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 
 	p1NewAccum := types.SpotPriceMulDuration(record.P1LastSpotPrice, timeDelta)
 	newRecord.P1ArithmeticTwapAccumulator = newRecord.P1ArithmeticTwapAccumulator.Add(p1NewAccum)
+
+	// logP0SpotPrice = log_{1.0001}{P_0}
+	logP0SpotPrice := osmomath.TickLog(record.P0LastSpotPrice)
+	// p0NewGeomAccum = log_{1.0001}{P_0} * timeDelta
+	p0NewGeomAccum := types.SpotPriceMulDuration(logP0SpotPrice, timeDelta)
+	newRecord.GeometricTwapAccumulator = newRecord.GeometricTwapAccumulator.Add(p0NewGeomAccum)
 
 	return newRecord
 }

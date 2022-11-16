@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
+	"github.com/osmosis-labs/osmosis/v13/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v13/x/twap"
@@ -18,10 +19,13 @@ import (
 )
 
 var (
-	zeroDec = sdk.ZeroDec()
-	oneDec  = sdk.OneDec()
-	twoDec  = oneDec.Add(oneDec)
-	OneSec  = sdk.MustNewDecFromStr("1000.000000000000000000")
+	zeroDec           = sdk.ZeroDec()
+	oneDec            = sdk.OneDec()
+	twoDec            = oneDec.Add(oneDec)
+	pointFiveDec      = sdk.OneDec().Quo(twoDec)
+	OneSec            = sdk.MustNewDecFromStr("1000.000000000000000000")
+	tickLogTen        = osmomath.TickLog(sdk.NewDec(10))
+	tickLogOneOverTen = osmomath.TickLog(sdk.OneDec().QuoInt64(10))
 )
 
 func (s *TestSuite) TestGetSpotPrices() {
@@ -143,6 +147,7 @@ func (s *TestSuite) TestNewTwapRecord() {
 				s.Require().Equal(s.Ctx.BlockTime(), twapRecord.Time)
 				s.Require().Equal(sdk.ZeroDec(), twapRecord.P0ArithmeticTwapAccumulator)
 				s.Require().Equal(sdk.ZeroDec(), twapRecord.P1ArithmeticTwapAccumulator)
+				s.Require().Equal(sdk.ZeroDec(), twapRecord.GeometricTwapAccumulator)
 			}
 		})
 	}
@@ -160,8 +165,8 @@ func (s *TestSuite) TestUpdateRecord() {
 	updateTime := time.Unix(3, 0).UTC()
 	baseTimeMinusOne := time.Unix(1, 0).UTC()
 
-	zeroAccumNoErrSp10Record := newRecord(poolId, baseTime, sdk.NewDec(10), zeroDec, zeroDec)
-	sp10OneTimeUnitAccumRecord := newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10))
+	zeroAccumNoErrSp10Record := newRecord(poolId, baseTime, sdk.NewDec(10), zeroDec, zeroDec, zeroDec)
+	sp10OneTimeUnitAccumRecord := newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10), OneSec.Mul(tickLogTen))
 	// all tests occur with updateTime = base time + time.Unix(1, 0)
 	tests := map[string]struct {
 		record           types.TwapRecord
@@ -236,31 +241,31 @@ func (s *TestSuite) TestUpdateRecord() {
 
 func TestRecordWithUpdatedAccumulators(t *testing.T) {
 	poolId := uint64(1)
-	defaultRecord := newRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), oneDec, twoDec)
+	defaultRecord := newRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), oneDec, twoDec, pointFiveDec)
 	tests := map[string]struct {
 		record    types.TwapRecord
 		newTime   time.Time
 		expRecord types.TwapRecord
 	}{
 		"accum with zero value": {
-			record:    newRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), zeroDec, zeroDec),
+			record:    newRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), zeroDec, zeroDec, zeroDec),
 			newTime:   time.Unix(2, 0),
-			expRecord: newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)),
+			expRecord: newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10), OneSec.Mul(tickLogTen)),
 		},
 		"small starting accumulators": {
 			record:    defaultRecord,
 			newTime:   time.Unix(2, 0),
-			expRecord: newExpRecord(oneDec.Add(OneSec.MulInt64(10)), twoDec.Add(OneSec.QuoInt64(10))),
+			expRecord: newExpRecord(oneDec.Add(OneSec.MulInt64(10)), twoDec.Add(OneSec.QuoInt64(10)), pointFiveDec.Add(OneSec.Mul(tickLogTen))),
 		},
 		"larger time interval": {
-			record:    newRecord(poolId, time.Unix(11, 0), sdk.NewDec(10), oneDec, twoDec),
+			record:    newRecord(poolId, time.Unix(11, 0), sdk.NewDec(10), oneDec, twoDec, pointFiveDec),
 			newTime:   time.Unix(55, 0),
-			expRecord: newExpRecord(oneDec.Add(OneSec.MulInt64(44*10)), twoDec.Add(OneSec.MulInt64(44).QuoInt64(10))),
+			expRecord: newExpRecord(oneDec.Add(OneSec.MulInt64(44*10)), twoDec.Add(OneSec.MulInt64(44).QuoInt64(10)), pointFiveDec.Add(OneSec.MulInt64(44).Mul(tickLogTen))),
 		},
 		"same time, accumulator should not change": {
 			record:    defaultRecord,
 			newTime:   time.Unix(1, 0),
-			expRecord: newExpRecord(oneDec, twoDec),
+			expRecord: newExpRecord(oneDec, twoDec, pointFiveDec),
 		},
 	}
 
@@ -286,19 +291,19 @@ func TestRecordWithUpdatedAccumulators_ThreeAsset(t *testing.T) {
 		expRecord       []types.TwapRecord
 	}{
 		"accum with zero value": {
-			record:          newThreeAssetRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), zeroDec, zeroDec, zeroDec),
+			record:          newThreeAssetRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), zeroDec, zeroDec, zeroDec, zeroDec, zeroDec, zeroDec),
 			interpolateTime: time.Unix(2, 0),
-			expRecord:       newThreeAssetExpRecord(poolId, OneSec.MulInt64(10), OneSec.QuoInt64(10), OneSec.MulInt64(20)),
+			expRecord:       newThreeAssetExpRecord(poolId, OneSec.MulInt64(10), OneSec.QuoInt64(10), OneSec.MulInt64(20), OneSec.Mul(tickLogTen), OneSec.Mul(tickLogTen), OneSec.Mul(tickLogOneOverTen)),
 		},
 		"small starting accumulators": {
-			record:          newThreeAssetRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), twoDec, oneDec, twoDec),
+			record:          newThreeAssetRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), twoDec, oneDec, twoDec, oneDec, twoDec, oneDec),
 			interpolateTime: time.Unix(2, 0),
-			expRecord:       newThreeAssetExpRecord(poolId, twoDec.Add(OneSec.MulInt64(10)), oneDec.Add(OneSec.QuoInt64(10)), twoDec.Add(OneSec.MulInt64(20))),
+			expRecord:       newThreeAssetExpRecord(poolId, twoDec.Add(OneSec.MulInt64(10)), oneDec.Add(OneSec.QuoInt64(10)), twoDec.Add(OneSec.MulInt64(20)), oneDec.Add(OneSec.Mul(tickLogTen)), twoDec.Add(OneSec.Mul(tickLogTen)), oneDec.Add(OneSec.Mul(tickLogOneOverTen))),
 		},
 		"larger time interval": {
-			record:          newThreeAssetRecord(poolId, time.Unix(11, 0), sdk.NewDec(10), twoDec, oneDec, twoDec),
+			record:          newThreeAssetRecord(poolId, time.Unix(11, 0), sdk.NewDec(10), twoDec, oneDec, twoDec, oneDec, twoDec, oneDec),
 			interpolateTime: time.Unix(55, 0),
-			expRecord:       newThreeAssetExpRecord(poolId, twoDec.Add(OneSec.MulInt64(44*10)), oneDec.Add(OneSec.MulInt64(44).QuoInt64(10)), twoDec.Add(OneSec.MulInt64(44*20))),
+			expRecord:       newThreeAssetExpRecord(poolId, twoDec.Add(OneSec.MulInt64(44*10)), oneDec.Add(OneSec.MulInt64(44).QuoInt64(10)), twoDec.Add(OneSec.MulInt64(44*20)), oneDec.Add(OneSec.MulInt64(44).Mul(tickLogTen)), twoDec.Add(OneSec.MulInt64(44).Mul(tickLogTen)), oneDec.Add(OneSec.MulInt64(44).Mul(tickLogOneOverTen))),
 		},
 	}
 
@@ -318,7 +323,7 @@ func TestRecordWithUpdatedAccumulators_ThreeAsset(t *testing.T) {
 }
 
 func (s *TestSuite) TestGetInterpolatedRecord() {
-	baseRecord := newTwoAssetPoolTwapRecordWithDefaults(baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec())
+	baseRecord := newTwoAssetPoolTwapRecordWithDefaults(baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec().Quo(twoDec))
 
 	// all tests occur with updateTime = base time + time.Unix(1, 0)
 	tests := map[string]struct {
@@ -416,7 +421,7 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 }
 
 func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
-	baseRecord := newThreeAssetRecord(2, baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	baseRecord := newThreeAssetRecord(2, baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	// all tests occur with updateTime = base time + time.Unix(1, 0)
 	tests := map[string]struct {
 		recordsToPreSet       []types.TwapRecord

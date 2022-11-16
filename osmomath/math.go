@@ -171,3 +171,8 @@ func PowApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 	}
 	return sum
 }
+
+// TODO: spec and tests
+func TickLog(x sdk.Dec) sdk.Dec {
+	return BigDecFromSDKDec(x).TickLog().SDKDec()
+}
