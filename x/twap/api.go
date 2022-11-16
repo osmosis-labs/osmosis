@@ -52,6 +52,7 @@ func (k Keeper) GetArithmeticTwap(
 	startTime time.Time,
 	endTime time.Time,
 ) (sdk.Dec, error) {
+<<<<<<< HEAD
 	arithmeticStrategy := &arithmetic{k}
 	return k.getTwap(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, endTime, arithmeticStrategy)
 }
@@ -97,11 +98,13 @@ func (k Keeper) getTwap(
 	endTime time.Time,
 	strategy twapStrategy,
 ) (sdk.Dec, error) {
+=======
+>>>>>>> f7067a696 (valset query ready)
 	if startTime.After(endTime) {
 		return sdk.Dec{}, types.StartTimeAfterEndTimeError{StartTime: startTime, EndTime: endTime}
 	}
 	if endTime.Equal(ctx.BlockTime()) {
-		return k.getTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, strategy)
+		return k.GetArithmeticTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime)
 	} else if endTime.After(ctx.BlockTime()) {
 		return sdk.Dec{}, types.EndTimeInFutureError{EndTime: endTime, BlockTime: ctx.BlockTime()}
 	}
@@ -118,17 +121,22 @@ func (k Keeper) getTwap(
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 // getTwapToNow computes and returns twap from the start time until the current block time. The type
 // of twap returned depends on the strategy given and can be either arithmetic or geometric.
 =======
 >>>>>>> caaa9ee0d (refactored twap api.go for geometric TWAP)
 func (k Keeper) getTwapToNow(
+=======
+// GetArithmeticTwapToNow returns GetArithmeticTwap on the input, with endTime being fixed to ctx.BlockTime()
+// This function does not mutate records.
+func (k Keeper) GetArithmeticTwapToNow(
+>>>>>>> f7067a696 (valset query ready)
 	ctx sdk.Context,
 	poolId uint64,
 	baseAssetDenom string,
 	quoteAssetDenom string,
 	startTime time.Time,
-	strategy twapStrategy,
 ) (sdk.Dec, error) {
 	if startTime.After(ctx.BlockTime()) {
 		return sdk.Dec{}, types.StartTimeAfterEndTimeError{StartTime: startTime, EndTime: ctx.BlockTime()}
