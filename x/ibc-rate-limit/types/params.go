@@ -53,6 +53,12 @@ func validateContractAddress(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	// Empty strings are valid for unsetting the param
+	if v == "" {
+		return nil
+	}
+
+	// Checks that the contract address is valid
 	bech32, err := sdk.AccAddressFromBech32(v)
 	if err != nil {
 		return err

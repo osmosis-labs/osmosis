@@ -34,11 +34,13 @@ env:
 
 jobs:
   docker:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - 
         name: Check out the repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - 
         name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -56,94 +58,76 @@ jobs:
         id: find_go_version
         run: |
           GO_VERSION=$(cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
-          echo "::set-output name=go_version::$(echo ${GO_VERSION})"
-
-      # Distroless Docker image (default)
+          echo "GO_VERSION=$GO_VERSION" >> $GITHUB_ENV
       -
-        name: Docker meta (distroless)
-        id: meta_distroless
-        uses: docker/metadata-action@v3
-        with:
-          images: ${{ env.DOCKER_REPOSITORY }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=semver,pattern={{version}}-distroless
-            type=semver,pattern={{major}}.{{minor}}-distroless
-            type=semver,pattern={{major}}-distroless
+        name: Parse tag
+        id: tag
+        run: |
+          VERSION=$(echo ${{ github.ref_name }} | sed "s/v//")
+          MAJOR_VERSION=$(echo $VERSION | cut -d '.' -f 1)
+          MINOR_VERSION=$(echo $VERSION | cut -d '.' -f 2)
+          PATCH_VERSION=$(echo $VERSION | cut -d '.' -f 3)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "MAJOR_VERSION=$MAJOR_VERSION" >> $GITHUB_ENV
+          echo "MINOR_VERSION=$MINOR_VERSION" >> $GITHUB_ENV
+          echo "PATCH_VERSION=$PATCH_VERSION" >> $GITHUB_ENV
+      # Distroless Docker image (default)
       - 
         name: Build and push (distroless)
         id: build_push_distroless
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           file: Dockerfile
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
           build-args: |
-            GO_VERSION=${{ steps.find_go_version.outputs.go_version }}
+            GO_VERSION=${{ env.GO_VERSION }}
             RUNNER_IMAGE=${{ env.RUNNER_BASE_IMAGE_DISTROLESS }}
-            GIT_VERSION=${GITHUB_REF_NAME#v}
+            GIT_VERSION=${{ env.VERSION }}
             GIT_COMMIT=${{ github.sha }}
-          tags: ${{ steps.meta_distroless.outputs.tags }}
-
-      # Distroless nonroot Docker image
-      -
-        name: Docker meta (nonroot)
-        id: meta_nonroot
-        uses: docker/metadata-action@v3
-        with:
-          images: ${{ env.DOCKER_REPOSITORY }}
-          flavor: |
-            latest=false
-            suffix=-nonroot
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.PATCH_VERSION }}
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}-distroless
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}-distroless
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.PATCH_VERSION }}-distroless
+      # Distroless nonroot Docker image
       - 
         name: Build and push (nonroot)
         id: build_push_nonroot
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           file: Dockerfile
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
           build-args: |
-            GO_VERSION=${{ steps.find_go_version.outputs.go_version }}
+            GO_VERSION=${{ env.GO_VERSION }}
             RUNNER_IMAGE=${{ env.RUNNER_BASE_IMAGE_NONROOT }}
-            GIT_VERSION=${GITHUB_REF_NAME#v}
-            GIT_COMMIT=$GITHUB_SHA
-          tags: ${{ steps.meta_nonroot.outputs.tags }}
-      
-      # Alpine Docker image
-      -
-        name: Docker meta (alpine)
-        id: meta_alpine
-        uses: docker/metadata-action@v3
-        with:
-          images: ${{ env.DOCKER_REPOSITORY }}
-          flavor: |
-            latest=false
-            suffix=-alpine
+            GIT_VERSION=${{ env.VERSION }}
+            GIT_COMMIT=${{ github.sha }}
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}-nonroot
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}-nonroot
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.PATCH_VERSION }}-nonroot
+      # Alpine Docker image
       - 
         name: Build and push (alpine)
         id: build_push_alpine
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           file: Dockerfile
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
           build-args: |
-            GO_VERSION=${{ steps.find_go_version.outputs.go_version }}
+            GO_VERSION=${{ env.GO_VERSION }}
             RUNNER_IMAGE=${{ env.RUNNER_BASE_IMAGE_ALPINE }}
-            GIT_VERSION=${GITHUB_REF_NAME#v}
-            GIT_COMMIT=$GITHUB_SHA
-          tags: ${{ steps.meta_alpine.outputs.tags }}
+            GIT_VERSION=${{ env.VERSION }}
+            GIT_COMMIT=${{ github.sha }}
+          tags: |
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}-alpine
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}-alpine
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.PATCH_VERSION }}-alpine
