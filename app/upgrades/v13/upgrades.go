@@ -1,8 +1,8 @@
 package v13
 
 import (
+	"embed"
 	"fmt"
-	"os"
 	"strings"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -13,15 +13,19 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
+
 	"github.com/osmosis-labs/osmosis/v12/app/keepers"
 	"github.com/osmosis-labs/osmosis/v12/app/upgrades"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 )
 
+//go:embed rate_limiter.wasm
+var embedFs embed.FS
+
 func setupRateLimiting(ctx sdk.Context, keepers *keepers.AppKeepers) error {
 	govModule := keepers.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
-	code, err := os.ReadFile("rate_limiter.wasm")
+	code, err := embedFs.ReadFile("rate_limiter.wasm")
 	if err != nil {
 		return err
 	}
