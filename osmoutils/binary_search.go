@@ -198,7 +198,11 @@ func BinarySearchBigDec(f func(input osmomath.BigDec) (osmomath.BigDec, error),
 	}
 	curIteration := 0
 	for ; curIteration < maxIterations; curIteration += 1 {
+<<<<<<< HEAD
 		// fmt.Println(targetOutput, curOutput)
+=======
+		// fmt.Println("binary search, input, target output, cur output", curEstimate, targetOutput, curOutput)
+>>>>>>> ad3fa380 ([x/gamm][stableswap][bug]: Descale spot prices (#3357))
 		compRes := errTolerance.CompareBigDec(targetOutput, curOutput)
 		if compRes < 0 {
 			upperbound = curEstimate
