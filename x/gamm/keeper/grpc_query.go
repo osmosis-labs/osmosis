@@ -380,6 +380,7 @@ func (q Querier) TotalShares(ctx context.Context, req *types.QueryTotalSharesReq
 }
 
 // SpotPrice returns target pool asset prices on base and quote assets.
+// nolint: staticcheck
 func (q Querier) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest) (*types.QuerySpotPriceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

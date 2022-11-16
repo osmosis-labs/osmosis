@@ -106,12 +106,15 @@ build-reproducible-amd64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
 		--build-arg GO_VERSION=$(GO_VERSION) \
+		--build-arg GIT_VERSION=$(VERSION) \
+		--build-arg GIT_COMMIT=$(COMMIT) \
+		--build-arg RUNNER_IMAGE=alpine:3.16 \
 		--platform linux/amd64 \
-		-t osmosis-amd64 \
+		-t osmosis:local-amd64 \
 		--load \
 		-f Dockerfile .
 	$(DOCKER) rm -f osmobinary || true
-	$(DOCKER) create -ti --name osmobinary osmosis-amd64
+	$(DOCKER) create -ti --name osmobinary osmosis:local-amd64
 	$(DOCKER) cp osmobinary:/bin/osmosisd $(BUILDDIR)/osmosisd-linux-amd64
 	$(DOCKER) rm -f osmobinary
 
@@ -120,12 +123,15 @@ build-reproducible-arm64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
 		--build-arg GO_VERSION=$(GO_VERSION) \
+		--build-arg GIT_VERSION=$(VERSION) \
+		--build-arg GIT_COMMIT=$(COMMIT) \
+		--build-arg RUNNER_IMAGE=alpine:3.16 \
 		--platform linux/arm64 \
-		-t osmosis-arm64 \
+		-t osmosis:local-arm64 \
 		--load \
 		-f Dockerfile .
 	$(DOCKER) rm -f osmobinary || true
-	$(DOCKER) create -ti --name osmobinary osmosis-arm64
+	$(DOCKER) create -ti --name osmobinary osmosis:local-arm64
 	$(DOCKER) cp osmobinary:/bin/osmosisd $(BUILDDIR)/osmosisd-linux-arm64
 	$(DOCKER) rm -f osmobinary
 
@@ -261,7 +267,7 @@ test-sim-bench:
 # In that case, run `make e2e-remove-resources`
 # manually.
 # Utilizes Go cache.
-test-e2e: OSMOSIS_E2E=True e2e-setup test-e2e-ci
+test-e2e: e2e-setup test-e2e-ci
 
 # test-e2e-ci runs a full e2e test suite
 # does not do any validation about the state of the Docker environment
