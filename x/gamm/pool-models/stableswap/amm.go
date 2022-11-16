@@ -5,10 +5,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/osmomath"
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/cfmm_common"
-	types "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/cfmm_common"
+	types "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 var (

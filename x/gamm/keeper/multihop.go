@@ -3,8 +3,8 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 // MultihopSwapExactAmountIn defines the input denom and input amount for the first pool,

@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
-	ibc_hooks "github.com/osmosis-labs/osmosis/v12/x/ibc-hooks"
+	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
+	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 )
 
 type UpgradeTestSuite struct {

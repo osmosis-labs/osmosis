@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
 
 	"github.com/stretchr/testify/suite"
 
@@ -18,9 +18,9 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
 
-	osmosisibctesting "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/testutil"
+	osmosisibctesting "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/testutil"
 
-	"github.com/osmosis-labs/osmosis/v12/x/ibc-hooks/testutils"
+	"github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/testutils"
 )
 
 type HooksTestSuite struct {

@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
+	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 )
 
 func TestDivIntByU64ToBigDec(t *testing.T) {
