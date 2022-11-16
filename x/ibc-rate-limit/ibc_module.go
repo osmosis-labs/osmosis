@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -144,14 +146,6 @@ func (im *IBCModule) OnRecvPacket(
 	return im.app.OnRecvPacket(ctx, packet, relayer)
 }
 
-func isAckError(acknowledgement []byte) bool {
-	var ackErr channeltypes.Acknowledgement_Error
-	if err := json.Unmarshal(acknowledgement, &ackErr); err == nil && len(ackErr.Error) > 0 {
-		return true
-	}
-	return false
-}
-
 // OnAcknowledgementPacket implements the IBCModule interface
 func (im *IBCModule) OnAcknowledgementPacket(
 	ctx sdk.Context,
@@ -164,7 +158,7 @@ func (im *IBCModule) OnAcknowledgementPacket(
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet acknowledgement: %v", err)
 	}
 
-	if isAckError(acknowledgement) {
+	if osmoutils.IsAckError(acknowledgement) {
 		err := im.RevertSentPacket(ctx, packet) // If there is an error here we should still handle the ack
 		if err != nil {
 			ctx.EventManager().EmitEvent(

@@ -79,7 +79,11 @@ func init() {
 	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/PoolParams", &gammtypes.QueryPoolParamsResponse{})
 	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/TotalPoolLiquidity", &gammtypes.QueryTotalPoolLiquidityResponse{})
 	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/TotalShares", &gammtypes.QueryTotalSharesResponse{})
-	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/SpotPrice", &gammtypes.QuerySpotPriceResponse{})
+	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/SpotPrice", &gammtypes.QuerySpotPriceResponse{}) // nolint: staticcheck
+	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/CalcJoinPoolShares", &gammtypes.QueryCalcJoinPoolSharesResponse{})
+	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/CalcExitPoolCoinsFromShares", &gammtypes.QueryCalcExitPoolCoinsFromSharesResponse{})
+	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/CalcJoinPoolNoSwapShares", &gammtypes.QueryCalcJoinPoolNoSwapSharesResponse{})
+	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/PoolType", &gammtypes.QueryPoolTypeResponse{})
 	setWhitelistedQuery("/osmosis.gamm.v2.Query/SpotPrice", &gammv2types.QuerySpotPriceResponse{})
 
 	// incentives

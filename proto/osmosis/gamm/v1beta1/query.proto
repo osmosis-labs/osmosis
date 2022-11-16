@@ -45,6 +45,11 @@ service Query {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/pool_type/{pool_id}";
   }
 
+  // Simulates joining pool without a swap. Returns the amount of shares you'd
+  // get and tokens needed to provide
+  rpc CalcJoinPoolNoSwapShares(QueryCalcJoinPoolNoSwapSharesRequest)
+      returns (QueryCalcJoinPoolNoSwapSharesResponse) {}
+
   rpc CalcJoinPoolShares(QueryCalcJoinPoolSharesRequest)
       returns (QueryCalcJoinPoolSharesResponse) {
     option (google.api.http).get =
@@ -75,6 +80,7 @@ service Query {
   // SpotPrice defines a gRPC query handler that returns the spot price given
   // a base denomination and a quote denomination.
   rpc SpotPrice(QuerySpotPriceRequest) returns (QuerySpotPriceResponse) {
+    option deprecated = true;
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{pool_id}/prices";
   }
@@ -192,10 +198,29 @@ message QueryTotalSharesResponse {
     (gogoproto.nullable) = false
   ];
 }
-
+//=============================== CalcJoinPoolNoSwapShares
+message QueryCalcJoinPoolNoSwapSharesRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  repeated cosmos.base.v1beta1.Coin tokens_in = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
+}
+message QueryCalcJoinPoolNoSwapSharesResponse {
+  repeated cosmos.base.v1beta1.Coin tokens_out = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags) = "yaml:\"tokens_out\"",
+    (gogoproto.nullable) = false
+  ];
+  string shares_out = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+}
 // QuerySpotPriceRequest defines the gRPC request structure for a SpotPrice
 // query.
 message QuerySpotPriceRequest {
+  option deprecated = true;
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string base_asset_denom = 2
       [ (gogoproto.moretags) = "yaml:\"base_asset_denom\"" ];
@@ -224,6 +249,7 @@ message QueryPoolsWithFilterResponse {
 // QuerySpotPriceResponse defines the gRPC response structure for a SpotPrice
 // query.
 message QuerySpotPriceResponse {
+  option deprecated = true;
   // String of the Dec. Ex) 10.203uatom
   string spot_price = 1 [ (gogoproto.moretags) = "yaml:\"spot_price\"" ];
 }
