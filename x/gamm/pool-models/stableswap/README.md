@@ -147,8 +147,8 @@ In the lowerbound case, we leave it as lower-bounded by $0$, otherwise we would 
 Great, we have a binary search to finding an input `new_y_reserve`, such that we get a value `k` within some error bound close to the true desired `k`! We can prove that an error by a factor of `e` in `k`, implies an error of a factor less than `e` in `new_y_reserve`. So we could set `e` to be close to some correctness bound we want. Except... `new_y_reserve >> y_in`, so we'd need an extremely high error tolerance for this to work. So we actually want to adapt the equations, to reduce the "common terms" in `k` that we need to binary search over, to help us search. To do this, we open up what are we doing again, and re-expose `y_out` as a variable we explicitly search over (and therefore get error terms in `k` implying error in `y_out`)
 
 What we are doing above in the binary search is setting `k_target` and searching over `y_f` until we get `k_iter` {within tolerance} to `k_target`. Sine we want to change to iterating over $y_{out}$, we unroll that $y_f = y_0 - y_{out}$ where they are defined as:
-$k_{target} = x_0 y_0 (x_0^2 + y_0^2 + w)$
-$k_{iter}(y_0 - y_{out}) = h(x_f, y_0 - y_{out}, w) = x_f (y_0 - y_{out}) (x_f^2 + (y_0 - y_{out})^2 + w)$
+$$k_{target} = x_0 y_0 (x_0^2 + y_0^2 + w)$$
+$$k_{iter}(y_0 - y_{out}) = h(x_f, y_0 - y_{out}, w) = x_f (y_0 - y_{out}) (x_f^2 + (y_0 - y_{out})^2 + w)$$
 
 But we can remove many of these terms! First notice that `x_f` is a constant factor in `k_iter`, so we can just divide `k_target` by `x_f` to remove that. Then we switch what we search over, from `y_f` to `y_out`, by fixing `y_0`, so were at:
 
