@@ -46,12 +46,3 @@ impl CwTemplateContract {
     }
 }
 
-// struct Coins(Vec<Coin>);
-
-// impl Coins {
-//     fn add_into_vec(&self, other: Vec<Coin>) -> Vec<Coin> {}
-
-//     fn to_vec(&self) -> Vec<Coin> {
-//         return self.0;
-//     }
-// }
