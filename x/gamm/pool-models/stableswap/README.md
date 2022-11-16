@@ -138,11 +138,71 @@ This means that $\forall c \in \mathbb{R}^+, c * h(x,y,w) < h(x,c*y,w) < c^3 * h
 We can use this fact to get a pretty-good initial upperbound guess for $y$ using the linear estimate.
 In the lowerbound case, we leave it as lower-bounded by $0$, otherwise we would need to take a cubed root to get a better estimate.
 
+##### Altering binary search equations due to error tolerance
+
+Great, we have a binary search to finding an input `new_y_reserve`, such that we get a value `k` within some error bound close to the true desired `k`! We can prove that an error by a factor of `e` in `k`, implies an error of a factor less than `e` in `new_y_reserve`. So we could set `e` to be close to some correctness bound we want. Except... `new_y_reserve >> y_in`, so we'd need an extremely high error tolerance for this to work. So we actually want to adapt the equations, to reduce the "common terms" in `k` that we need to binary search over, to help us search. To do this, we open up what are we doing again, and re-expose `y_out` as a variable we explicitly search over (and therefore get error terms in `k` implying error in `y_out`)
+
+What we are doing above in the binary search is setting `k_target` and searching over `y_f` until we get `k_iter` {within tolerance} to `k_target`. Sine we want to change to iterating over $y_{out}$, we unroll that $y_f = y_0 - y_{out}$ where they are defined as:
+$$k_{target} = x_0 y_0 (x_0^2 + y_0^2 + w)$$
+$$k_{iter}(y_0 - y_{out}) = h(x_f, y_0 - y_{out}, w) = x_f (y_0 - y_{out}) (x_f^2 + (y_0 - y_{out})^2 + w)$$
+
+But we can remove many of these terms! First notice that `x_f` is a constant factor in `k_iter`, so we can just divide `k_target` by `x_f` to remove that. Then we switch what we search over, from `y_f` to `y_out`, by fixing `y_0`, so were at:
+
+$$k_{target} = x_0 y_0 (x_0^2 + y_0^2 + w) / x_f$$
+
+$$k_{iter}(y_{out}) = (y_0 - y_{out}) (x_f^2 + (y_0 - y_{out})^2 + w) = (y_0 - y_{out}) (x_f^2 + w) + (y_0 - y_{out})^3$$
+
+So $k_{iter}(y_{out})$ is a cubic polynomial in $y_{out}$. Next we remove the terms that have no dependence on `y_{delta}` (the constant term in the polynomial). To do this first we rewrite this to make the polynomial clearer:
+
+$$k_{iter}(y_{out}) = (y_0 - y_{out}) (x_f^2 + w) + y_0^3 - 3y_0^2 y_{out} + 3 y_0 y_{out}^2 - y_{out}^3$$
+
+$$k_{iter}(y_{out}) = y_0 (x_f^2 + w) - y_{out}(x_f^2 + w) + y_0^3 - 3y_0^2 y_{out} + 3 y_0 y_{out}^2 - y_{out}^3$$
+
+$$k_{iter}(y_{out}) = -y_{out}^3 + 3 y_0 y_{out}^2 - (x_f^2 + w + 3y_0^2)y_{out} + (y_0 (x_f^2 + w) + y_0^3)$$
+
+So we can subtract this constant term `y_0 (x_f^2 + w) + y_0^3`, which for `y_out < y_0` is the dominant term in the expression!
+
+So lets define this as:
+
+$$k_{target} = \frac{x_0 y_0 (x_0^2 + y_0^2 + w)}{x_f} - (y_0 (x_f^2 + w) + y_0^3)$$
+
+$$k_{iter}(y_{out}) = -y_{out}^3 + 3 y_0 y_{out}^2 - (x_f^2 + w + 3y_0^2)y_{out}$$
+
+We prove [here](#err_proof) that an error of a multiplicative `e` between `target_k` and `iter_k`, implies an error of less than a factor of `10e` in `y_{out}`, as long as `|y_{out}| < y_0`. (The proven bounds are actually better)
+
+We target an error of less than `10^{-8}` in `y_{out}`, so we conservatively set a bound of `10^{-12}` for `e_k`.
+
+##### Combined pseudocode
+
+Now we want to wrap this binary search into `solve_cfmm`. We changed the API slightly, from what was previously denoted, to have this "y_0" term, in order to derive initial bounds.
+
+One complexity is that in the iterative search, we iterate over $y_f$, but then translate to $y_0$ in the internal equations.
+So we also use the 
+
 ```python
-def iterative_search(x_f, y_0, w, k, err_tolerance):
-  k_0 = h(x_f, y_0, w)
+# solve_y returns y_out s.t. CFMM_eq(x_f, y_f, w) = k = CFMM_eq(x_0, y_0, w)
+# for x_f = x_0 + x_in.
+def solve_y(x_0, y_0, w, x_in):
+  x_f = x_0 + x_in
+  err_tolerance = {"within factor of 10^-12", RoundUp}
+  y_f = iterative_search(x_0, x_f, y_0, w, err_tolerance)
+  y_out = y_0 - y_f
+  return y_out
+
+def iter_k_fn(x_f, y_0, w):
+  def f(y_f):
+    y_out = y_0 - y_f
+    return -(y_out)**3 + 3 y_0 * y_out^2 - (x_f**2 + w + 3*y_0**2) * y_out
+
+def iterative_search(x_0, x_f, y_0, w, err_tolerance):
+  target_k = target_k_fn(x_0, y_0, w, x_f)
+  iter_k_calculator = iter_k_fn(x_f, y_0, w)
+
+  # use original CFMM to get y_f reserve bounds
+  bound_estimation_target_k = cfmm(x_0, y_0, w)
+  bound_estimation_k0 = cfmm(x_f, y_0, w)
   lowerbound, upperbound = y_0, y_0
-  k_ratio = k_0 / k
+  k_ratio = bound_estimation_k0 / bound_estimation_target_k
   if k_ratio < 1:
     # k_0 < k. Need to find an upperbound. Worst case assume a linear relationship, gives an upperbound
     # We could derive better bounds via reasoning about coefficients in the cubic,
@@ -154,9 +214,8 @@ def iterative_search(x_f, y_0, w, k, err_tolerance):
     lowerbound = 0
   else:
     return y_0 # means x_f = x_0
-  k_calculator = lambda y_est: h(x_f, y_est, w)
   max_iteration_count = 100
-  return binary_search(lowerbound, upperbound, k_calculator, k, err_tolerance)
+  return binary_search(lowerbound, upperbound, k_calculator, target_k, err_tolerance)
 
 def binary_search(lowerbound, upperbound, approximation_fn, target, max_iteration_count, err_tolerance):
   iter_count = 0
@@ -177,7 +236,8 @@ def binary_search(lowerbound, upperbound, approximation_fn, target, max_iteratio
   return cur_y_guess
 ```
 
-Now we want to wrap this binary search into `solve_y`. We changed the API slightly, from what was previously denoted, to have this "y_0" term, in order to derive initial bounds.
+##### Setting the error tolerance
+
 What remains is setting the error tolerance. We need two properties:
 
 - The returned value to be within some correctness threshold of the true value
@@ -192,19 +252,11 @@ To ensure the returned value is always rounded correctly, we define the rounding
 
 And therefore we round up in both cases.
 
-We capture all of this, in the following `solve_y` pseudocode:
+##### Further optimization
 
-```python
-# solve_cfmm returns y_f s.t. CFMM_eq(x_f, y_f, w) = k
-# for the no-v variant of CFMM_eq
-def solve_y(x_0, y_0, w, x_in):
-  x_f = x_0 + x_in
-  k = CFMM_eq(x_0, y_0, w)
-  err_tolerance = {"within factor of 10^-12", RoundUp}
-  y_f = iterative_search(x_f, y_0, w, k, err_tolerance):
-  y_out = y_0 - y_f
-  return y_out
-```
+- The astute observer may notice that the equation we are solving in $\text{solve cfmm}$ is actually a cubic polynomial in $y$, with an always-positive derivative.
+We should then be able to use newton's root finding algorithm to solve for the solution with quadratic convergence.
+We do not pursue this today, due to other engineering tradeoffs, and insufficient analysis being done.
 
 #### Using this in swap methods
 
@@ -268,31 +320,54 @@ We see correctness of the swap fee, by imagining what happens if we took this re
 
 <a name="err_proof">
 
-#### Proof that |e_y| < |e_k|
+#### Proof that |e_y| < 100|e_k|
 
 </a>
 
-In the binary search code, we are going to find a `k'` that is 'close' to `k`. We define and bound this error term as `e_k`, namely `e_k = k - k'`. We then find an implied value of `y'`, but this has an error term off of the true value of `y`, that would lead to exactly `k`. We call this term `y'`, and similarly `e_y = y - y'`.
+The function $f(y_{out}) = -y_{out}^3 + 3 y_0 y_{out}^2 - (x_f^2 + w + 3y_0^2)y_{out}$ is monotonically increasing over the reals.
+You can prove this, by seeing that its [derivative's](https://www.wolframalpha.com/input?i=d%2Fdx+-x%5E3+%2B+3a+x%5E2+-+%28b+%2B+3a%5E2%29+x+) 0 values are both imaginary, and therefore has no local minima or maxima in the reals.
+Therefore, there exists exactly one real $y_{out}$ s.t. $f(y_{out}) = k$.
+Via binary search, we solve for a value $y_{out}^{\*}$ such that $\left|\frac{ k - k^{\*} }{k}\right| < e_k$, where $k^{\*} = f(y_{out}^{\*})$. We seek to then derive bounds on $e_y = \left|\frac{ y_{out} - y_{out}^{\*} }{y_{out}}\right|$ in relation to $e_k$.
 
-Recall we compute `k` as `k = xy(x^2 + y^2 + w)`. So `k' = xy'(x^2 + (y')^2 + w)`. We seek to relate the error terms, so:
+**Theorem**: $e_y < 100 e_k$ as long as $|y_{out}| <= .9y_0$.
+**Informal**, we claim that for $.9y_0 < |y_{out}| < y_0$, `e_y` is "close" to `e_k` under expected parameterizations. And for $y_{out}$ significantly less than $.9y_0$, the error bounds are much better. (Often better than $e_k$)
 
-```tex
-k - k' = xy(x^2 + y^2 + w) - xy'(x^2 + (y')^2 + w)
-e_k = (y - y')(x^3 + xw) + x(y^3 - (y')^3)
-e_k = e_y(x^3 + xw) + x(y^3 - (y')^3)
-```
 
-Notice that $(y')^3 = (y - e_y)^3 = y^3 - 3y^2e_y + 3ye_y^2 - e_y^3$.
-We assume that `e_y` is sufficiently small, that $e_y^2$ is approximately `0`.
-So we say $(y')^3 \approx y^3 - 3y^2e_y$.
+Let $y_{out} - y_{out}^* = a_y$, we are going to assume that $a_y << y_{out}$, and will justify this later. But due to this, we treat $a_y^c = 0$ for $c > 1$. This then implies that $y_{out}^2 - y_{out}^{*2} = y_{out}^2 - (y_{out} - a_y)^2 \approx 2y_{out}a_y$, and similarly $y_{out}^3 - y_{out}^{*3} \approx 3y_{out}^2 a_y$
 
-Thus $e_k \approx e_y(x^3 + xw) + x(y^3 - y^3 + 3y^2e_y) = e_y(x^3 + xw) + 3xy^2e_y = e_y(x^3 + xw + 3xy^2)$.
-Therefore
-$$e_y = \frac{e_k}{x^3 + xw + 3xy^2}$$
+Now we are prepared to start bounding this.
+$$k - k^{\*} = -(y_{out}^3 - y_{out}^{3\*}) + 3y_0(y_{out}^2 - y_{out}^{2\*}) - (x_f^2 + w + 3y_0^2)(y_{out} - y_{out}^{\*})$$
 
-Since `x` and `y` must be greater than 1, and `w` must be non-negative, we have that `x^3 + xw + 3xy^2 >= 1`.
-Therefore $|e_y| < |e_k|$.
-In fact, `e_y` is much lower than `e_k`.
+$$k - k^{\*} \approx -(3y_{out}^2 a_y) + 3y_0 (2y_{out}a_y) - (x_f^2 + w + 3y_0^2)a_y$$
+
+$$k - k^{\*} \approx a_y(-3y_{out}^2 + 6y_0y_{out} - (x_f^2 + w + 3y_0^2))$$
+
+Rewrite $k = y_{out}(-y_{out}^2 + 3y_0y_{out} - (x_f^2 + w + 3y_0^2))$
+
+$$e_k > \left|\frac{ k - k^{\*} }{k}\right| = \left|\frac{a_y}{y_{out}} \frac{(-3y_{out}^2 + 6y_0y_{out} - (x_f^2 + w + 3y_0^2))}{(-y_{out}^2 + 3y_0y_{out} - (x_f^2 + w + 3y_0^2))}\right|$$
+
+Notice that $\left|\frac{a_y}{y_{out}}\right| = e_y$! Therefore
+
+$$e_k > e_y\left|\frac{(-3y_{out}^2 + 6y_0y_{out} - (x_f^2 + w + 3y_0^2))}{(-y_{out}^2 + 3y_0y_{out} - (x_f^2 + w + 3y_0^2))}\right|$$
+
+We bound the right hand side, with the assistance of wolfram alpha. Let $a = y_{out}, b = y_0, c = x_f^2 + w$. Then we see from [wolfram alpha here](https://www.wolframalpha.com/input?i=%7C%28-3a%5E2+%2B+6ab+-+%28c+%2B+3b%5E2%29%29+%2F+%28-a%5E2+%2B+3ab+-+%28c+%2B+3b%5E2%29%29+%7C+%3E+.01), that this right hand expression is provably greater than `.01` if some set of decisions hold. We describe the solution set that satisfies our use case here:
+
+* When $y_{out} > 0$
+  * Use solution set: $a > 0, b > \frac{2}{3} a, c > \frac{1}{99} (-299a^2 + 597ab - 297b^2)$
+    * $a > 0$ by definition.
+    * $b > \frac{2}{3} a$, as thats equivalent to $y_0 > \frac{2}{3} y_{out}$. We already assume that $y_0 >= y_{out}$.
+    * Set $y_{out} = .9y_0$, per our theorem assumption. So $b = .9a$. Take $c = x^2 + w = 0$. Then [we can show that](https://www.wolframalpha.com/input?i=0+%3E+-299a%5E2+%2B+597ab+-+297b%5E2%2C+when+b%3D+.90a) $(-299a^2 + 597ab - 297b^2) < 0$ for all $a$. This completes the constraint set.
+* When $y_{out} < 0$
+  * Use solution set: $a < 0, b > \frac{2}{3} a, c > -a^2 + 3ab - 3b^2$
+    * $a < 0$ by definition.
+    * $b > \frac{2}{3} a$, as $y_0$ is positive.
+    * $c > 0$ is by definition, so we just need to bound when $-a^2 + 3ab - 3b^2 < 0$. This is always the case as long as one of $a$ or $b$ is non-zero, per [here](https://www.wolframalpha.com/input?i=-a%5E2+%2B+3ab+-+3b%5E2+%3C+0).
+
+Tieing this all together, we have that $e_k > .01e_y$. Therefore $e_y < 100 e_k$, satisfying our theoerem!
+
+To show the informal claims, the constraint that led to this 100x error blowup was trying to accomodate high $y_{out}$. When $y_{out}$ is smaller, the error is far lower. (Often to the case that $e_y < e_k$, you can convince yourself of this by setting the ratio to being greater than 1 in wolfram alpha) When $y_{out}$ is bigger than $.9y_0$, we can rely on x_f^2 + w being much larger to lower this error. In these cases, the $x_f$ term must be large relative to $y_0$, which would yield a far better error bound.
+
+TODO: Justify a_y << y_out. (This should be easy, assume its not, that leads to e_k being high. Ratio test probably easiest. Maybe just add a sentence to that effect)
 
 ### Spot Price
 
@@ -341,7 +416,3 @@ Couple ways to define JoinPool Exit Pool relation
 - Fuzz test binary search algorithm, to see that it still works correctly across wide scale ranges
 - Fuzz test approximate equality of iterative approximation swap algorithm and direct equation swap.
 - Flow testing the entire stableswap scaling factor update process
-
-## Extensions
-
-- The astute observer may notice that the equation we are solving in $\text{solve cfmm}$ is actually a cubic polynomial in $y$, with an always-positive derivative. We should then be able to use newton's root finding algorithm to solve for the solution with quadratic convergence. We do not pursue this today, due to other engineering tradeoffs, and insufficient analysis being done.

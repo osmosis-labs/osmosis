@@ -493,3 +493,19 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	// We should be able to send again because the packet that exceeded the quota failed and has been reverted
 	suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1)))
 }
+
+func (suite *MiddlewareTestSuite) TestUnsetRateLimitingContract() {
+	// Setup contract
+	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/rate_limiter.wasm")
+	addr := suite.chainA.InstantiateRLContract(&suite.Suite, "")
+	suite.chainA.RegisterRateLimitingContract(addr)
+
+	// Unset the contract param
+	params, err := types.NewParams("")
+	suite.Require().NoError(err)
+	osmosisApp := suite.chainA.GetOsmosisApp()
+	paramSpace, ok := osmosisApp.AppKeepers.ParamsKeeper.GetSubspace(types.ModuleName)
+	suite.Require().True(ok)
+        // N.B.: this panics if validation fails.
+	paramSpace.SetParamSet(suite.chainA.GetContext(), &params)
+}

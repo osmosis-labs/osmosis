@@ -681,8 +681,9 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 
 	swapFeeCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
 
-	getTestCaseName := func(tc testcase, swapFeeCase string) string {
-		return fmt.Sprintf("tokenOutInitial: %d, tokenInInitial: %d, initialOut: %d, swapFee: %s",
+	getTestCaseName := func(name string, tc testcase, swapFeeCase string) string {
+		return fmt.Sprintf("%s: tokenOutInitial: %d, tokenInInitial: %d, initialOut: %d, swapFee: %s",
+			name,
 			tc.initialPoolOut,
 			tc.initialPoolIn,
 			tc.initialCalcOut,
@@ -690,9 +691,9 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 		)
 	}
 
-	for _, tc := range testcases {
+	for name, tc := range testcases {
 		for _, swapFee := range swapFeeCases {
-			suite.Run(getTestCaseName(tc, swapFee), func() {
+			suite.Run(getTestCaseName(name, tc, swapFee), func() {
 				ctx := suite.CreateTestContext()
 
 				poolLiquidityIn := sdk.NewInt64Coin(tc.denomIn, tc.initialPoolIn)
