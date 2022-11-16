@@ -199,7 +199,7 @@ func BinarySearchBigDec(f func(input osmomath.BigDec) (osmomath.BigDec, error),
 	}
 	curIteration := 0
 	for ; curIteration < maxIterations; curIteration += 1 {
-		// fmt.Println("targetOutput, curOutput, curEstimate", targetOutput, curOutput, curEstimate)
+		// fmt.Println("binary search, input, target output, cur output", curEstimate, targetOutput, curOutput)
 		compRes := errTolerance.CompareBigDec(targetOutput, curOutput)
 		if compRes < 0 {
 			upperbound = curEstimate

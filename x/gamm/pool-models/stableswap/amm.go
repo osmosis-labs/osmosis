@@ -355,14 +355,7 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	return xOut
 }
 
-func (p Pool) spotPrice(baseDenom, quoteDenom string) (sdk.Dec, error) {
-	roundMode := osmomath.RoundBankers // TODO:
-	reserves, err := p.scaledSortedPoolReserves(baseDenom, quoteDenom, roundMode)
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-	baseReserve, quoteReserve, remReserves := reserves[0], reserves[1], reserves[2:]
-	// y = baseAsset, x = quoteAsset
+func (p Pool) spotPrice(baseDenom, quoteDenom string) (spotPrice sdk.Dec, err error) {
 	// Define f_{y -> x}(a) as the function that outputs the amount of tokens X you'd get by
 	// trading "a" units of Y against the pool, assuming 0 swap fee, at the current liquidity.
 	// The spot price of the pool is then lim a -> 0, f_{y -> x}(a) / a
@@ -376,10 +369,12 @@ func (p Pool) spotPrice(baseDenom, quoteDenom string) (sdk.Dec, error) {
 
 	// We arbitrarily choose a = 1, and anticipate that this is a small value at the scale of
 	// xReserve & yReserve.
-	a := osmomath.OneDec()
-	// no need to divide by a, since a = 1.
-	bigDec := solveCfmm(baseReserve, quoteReserve, remReserves, a)
-	return bigDec.SDKDec(), nil
+	a := sdk.OneInt()
+
+	// We swap quoteDenom and baseDenom intentionally, due to the odd issue needed for balancer v1 query compat
+	res, err := p.calcOutAmtGivenIn(sdk.NewCoin(quoteDenom, a), baseDenom, sdk.ZeroDec())
+	// fmt.Println("spot price res", res)
+	return res, err
 }
 
 func oneMinus(swapFee sdk.Dec) osmomath.BigDec {
@@ -402,7 +397,9 @@ func (p Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee 
 	// amm input = tokenIn * (1 - swap fee)
 	ammIn := tokenInDec.Mul(oneMinus(swapFee))
 	// We are solving for the amount of token out, hence x = tokenOutSupply, y = tokenInSupply
+	// fmt.Printf("outSupply %s, inSupply %s, remReservs %s, ammIn %s\n ", tokenOutSupply, tokenInSupply, remReserves, ammIn)
 	cfmmOut := solveCfmm(tokenOutSupply, tokenInSupply, remReserves, ammIn)
+	// fmt.Println("cfmmout ", cfmmOut)
 	outAmt := p.getDescaledPoolAmt(tokenOutDenom, cfmmOut)
 	return outAmt, nil
 }
