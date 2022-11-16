@@ -1222,20 +1222,22 @@ func TestStableswapSpotPrice(t *testing.T) {
 			ctx := sdk.Context{}
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 			spotPrice, err := p.SpotPrice(ctx, tc.baseDenom, tc.quoteDenom)
-			// if (tc.expectedPrice != sdk.Dec{}) {
-			// 	require.Equal(t, tc.expectedPrice, spotPrice)
-			// }
 
 			if tc.expectPass {
 				require.NoError(t, err)
 
-				expectedSpotPrice, err := p.calcOutAmtGivenIn(sdk.NewInt64Coin(tc.quoteDenom, 1), tc.baseDenom, sdk.ZeroDec())
-				require.NoError(t, err)
+				var expectedSpotPrice sdk.Dec
+				if (tc.expectedPrice != sdk.Dec{}) {
+					expectedSpotPrice = tc.expectedPrice
+				} else {
+					expectedSpotPrice, err = p.calcOutAmtGivenIn(sdk.NewInt64Coin(tc.quoteDenom, 1), tc.baseDenom, sdk.ZeroDec())
+					require.NoError(t, err)
+				}
 
 				// We allow for a small geometric error due to our spot price being an approximation
 				diff := (expectedSpotPrice.Sub(spotPrice)).Abs()
 				errTerm := diff.Quo(sdk.MinDec(expectedSpotPrice, spotPrice))
-				require.True(t, errTerm.LT(sdk.NewDecWithPrec(1, 3)), "Expected: %d, Actual: %d", expectedSpotPrice, spotPrice)
+				require.True(t, errTerm.LT(sdk.NewDecWithPrec(1, 8)), "Expected: %d, Actual: %d", expectedSpotPrice, spotPrice)
 
 				// Pool liquidity should remain unchanged
 				require.Equal(t, tc.poolAssets, p.GetTotalPoolLiquidity(ctx))
