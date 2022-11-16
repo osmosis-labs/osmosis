@@ -71,7 +71,7 @@ func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int {
 	}
 	// Check multiplicative tolerance equations
 	if !e.MultiplicativeTolerance.IsNil() && !e.MultiplicativeTolerance.IsZero() {
-		errTerm := diff.ToDec().Quo(sdk.MinInt(expected, actual).ToDec())
+		errTerm := diff.ToDec().Quo(sdk.MinInt(expected.Abs(), actual.Abs()).ToDec())
 		if errTerm.GT(e.MultiplicativeTolerance) {
 			return comparisonSign
 		}
@@ -123,7 +123,7 @@ func (e ErrTolerance) CompareBigDec(expected osmomath.BigDec, actual osmomath.Bi
 	}
 	// Check multiplicative tolerance equations
 	if !e.MultiplicativeTolerance.IsNil() && !e.MultiplicativeTolerance.IsZero() {
-		errTerm := diff.Quo(osmomath.MinDec(expected.Abs(), actual.Abs())).Abs()
+		errTerm := diff.Quo(osmomath.MinDec(expected.Abs(), actual.Abs()))
 		// fmt.Printf("err term %v\n", errTerm)
 		if errTerm.GT(osmomath.BigDecFromSDKDec(e.MultiplicativeTolerance)) {
 			return comparisonSign
