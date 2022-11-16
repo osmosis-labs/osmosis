@@ -65,6 +65,7 @@ func TestCalculateAmountOutAndIn_InverseRelationship(
 		require.True(t, actual.GT(expected))
 	} else {
 		// allow a rounding error of up to 1 for this relation
+		// TODO: Ensure rounding is correct
 		tol := sdk.NewDec(1)
 		osmoassert.DecApproxEq(t, expected, actual, tol)
 	}
