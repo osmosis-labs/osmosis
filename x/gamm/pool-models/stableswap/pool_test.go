@@ -1149,6 +1149,13 @@ func TestStableswapSpotPrice(t *testing.T) {
 			scalingFactors: []uint64{10000, 10000, 10000},
 			expectPass:     true,
 		},
+		"even three-asset pool with different scaling factors": {
+			baseDenom:      "asset/a",
+			quoteDenom:     "asset/b",
+			poolAssets:     threeEvenStablePoolAssets,
+			scalingFactors: []uint64{500, 700, 200},
+			expectPass:     true,
+		},
 		"uneven three-asset pool (a -> b)": {
 			baseDenom:  "asset/a",
 			quoteDenom: "asset/b",
