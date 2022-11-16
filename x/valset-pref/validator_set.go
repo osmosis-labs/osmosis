@@ -29,7 +29,6 @@ func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, pre
 	return nil
 }
 
-// TODO MAYBE: Check if there are any banned assets and ways to handle them
 // DelegateToValidatorSet delegates to a delegators existing validator-set.
 // For ex: delegate 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
 // our delegate logic would attempt to delegate 5osmo to A , 2osmo to B, 3osmo to C
@@ -53,8 +52,7 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 		}
 
 		// tokenAmt takes the amount to delegate, calculated by {val_distribution_weight * tokenAmt}
-		// expect tokenAmt to be in the smallest denom for ex, 1 usmo = 10^6 osmo
-		tokenAmt := val.Weight.Mul(coin.Amount.ToDec()).RoundInt()
+		tokenAmt := val.Weight.Mul(coin.Amount.ToDec()).TruncateInt()
 
 		// TODO: What happens here if validator is jailed, tombstoned, or unbonding
 		// Delegate the unbonded tokens

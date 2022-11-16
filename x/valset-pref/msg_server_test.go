@@ -128,50 +128,52 @@ func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
 func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 	suite.SetupTest()
 
+	amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)} // 100 osmo
+
 	// prepare validators to delegate to
 	preferences := suite.PrepareDelegateToValidatorSet()
 
 	tests := []struct {
 		name           string
 		delegator      sdk.AccAddress
-		coin           sdk.Coin
-		expectedShares []sdk.Dec
+		coin           sdk.Coin  // amount to delegate
+		expectedShares []sdk.Dec //expected shares after delegation
 		expectPass     bool
 		valSetExists   bool
 	}{
 		{
-			name:           "Delegate to valid validators!",
+			name:           "Delegate to valid validators",
 			delegator:      sdk.AccAddress([]byte("addr1---------------")),
-			coin:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),                      // amount to delegate
-			expectedShares: []sdk.Dec{sdk.NewDec(5_000_000), sdk.NewDec(3_000_000), sdk.NewDec(2_000_000)}, // expected shares after delegation
+			coin:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
+			expectedShares: []sdk.Dec{sdk.NewDec(5_000_000), sdk.NewDec(3_000_000), sdk.NewDec(2_000_000)},
 			expectPass:     true,
 		},
 		{
 			name:           "Delegate more tokens to existing validator-set",
 			delegator:      sdk.AccAddress([]byte("addr1---------------")),
-			coin:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),                       // amount to delegate
-			expectedShares: []sdk.Dec{sdk.NewDec(10_000_000), sdk.NewDec(6_000_000), sdk.NewDec(4_000_000)}, // expected shares after delegation
+			coin:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
+			expectedShares: []sdk.Dec{sdk.NewDec(10_000_000), sdk.NewDec(6_000_000), sdk.NewDec(4_000_000)},
 			expectPass:     true,
 			valSetExists:   true,
 		},
 		{
 			name:           "Delegate Decimal Amounts",
 			delegator:      sdk.AccAddress([]byte("addr2---------------")),
-			coin:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(25_000_000)),                       // amount to delegate
-			expectedShares: []sdk.Dec{sdk.NewDec(12_500_000), sdk.NewDec(7_500_000), sdk.NewDec(5_000_000)}, // expected shares after delegation
+			coin:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(25_000_000)),
+			expectedShares: []sdk.Dec{sdk.NewDec(12_500_000), sdk.NewDec(7_500_000), sdk.NewDec(5_000_000)},
 			expectPass:     true,
 		},
 		{
-			name:       "User doesnot have enough tokens to stake",
+			name:       "User does not have enough tokens to stake",
 			delegator:  sdk.AccAddress([]byte("addr3---------------")),
-			coin:       sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(200_000_000)), // amount to delegate
+			coin:       sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(200_000_000)),
 			expectPass: false,
 		},
 	}
 
 	for _, test := range tests {
 		suite.Run(test.name, func() {
-			suite.FundAcc(test.delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)}) // 100 osmo
+			suite.FundAcc(test.delegator, amountToFund)
 
 			// setup message server
 			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorSetPreferenceKeeper)
@@ -187,12 +189,16 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 			if test.expectPass {
 				suite.Require().NoError(err)
 
+				// check if the user balance decreased
+				balance := suite.App.BankKeeper.GetBalance(suite.Ctx, test.delegator, sdk.DefaultBondDenom)
+				suite.Require().True(balance.IsLT(amountToFund[0]))
+
 				// check if the expectedShares matches after delegation
 				for i, val := range preferences {
 					valAddr, err := sdk.ValAddressFromBech32(val.ValOperAddress)
 					suite.Require().NoError(err)
 
-					//gurantees that the delegator exist because we check it in DelegateToValidatorSet
+					//guarantees that the delegator exists because we check it in DelegateToValidatorSet
 					del, _ := suite.App.StakingKeeper.GetDelegation(suite.Ctx, test.delegator, valAddr)
 					suite.Require().Equal(del.Shares, test.expectedShares[i])
 				}
