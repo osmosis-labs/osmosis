@@ -124,6 +124,7 @@ func (e ErrTolerance) CompareBigDec(expected osmomath.BigDec, actual osmomath.Bi
 	// Check multiplicative tolerance equations
 	if !e.MultiplicativeTolerance.IsNil() && !e.MultiplicativeTolerance.IsZero() {
 		errTerm := diff.Quo(osmomath.MinDec(expected.Abs(), actual.Abs())).Abs()
+		// fmt.Printf("err term %v\n", errTerm)
 		if errTerm.GT(osmomath.BigDecFromSDKDec(e.MultiplicativeTolerance)) {
 			return comparisonSign
 		}
@@ -198,6 +199,7 @@ func BinarySearchBigDec(f func(input osmomath.BigDec) (osmomath.BigDec, error),
 	}
 	curIteration := 0
 	for ; curIteration < maxIterations; curIteration += 1 {
+		// fmt.Println("targetOutput, curOutput, curEstimate", targetOutput, curOutput, curEstimate)
 		compRes := errTolerance.CompareBigDec(targetOutput, curOutput)
 		if compRes < 0 {
 			upperbound = curEstimate
