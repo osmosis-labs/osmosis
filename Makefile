@@ -322,9 +322,9 @@ e2e-remove-resources:
 ###                                Docker                                  ###
 ###############################################################################
 
-RUNNER_BASE_IMAGE_DISTROLESS := gcr.io/distroless/static
+RUNNER_BASE_IMAGE_DISTROLESS := gcr.io/distroless/static-debian11
 RUNNER_BASE_IMAGE_ALPINE := alpine:3.16
-RUNNER_BASE_IMAGE_NONROOT := gcr.io/distroless/static:nonroot
+RUNNER_BASE_IMAGE_NONROOT := gcr.io/distroless/static-debian11:nonroot
 
 docker-build:
 	@DOCKER_BUILDKIT=1 docker build \
