@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -78,7 +77,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 			},
 		},
 		{
-			"Test that rate limits are setup",
+			"Test that the contract address is set in the params",
 			func() {},
 			func() { dummyUpgrade(suite) },
 			func() {
@@ -88,22 +87,6 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				var contract string
 				paramSpace.GetIfExists(suite.Ctx, ibcratelimittypes.KeyContractAddress, &contract)
 				suite.Require().NotEmpty(contract)
-
-				// The quotas are configured?
-				contractAddr, err := sdk.AccAddressFromBech32(contract)
-				suite.Require().NoError(err)
-				denoms := []string{
-					"uosmo",
-					"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", // atom
-					"ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // usdc
-					"ibc/EA1D43981D5C9A1C4AAEA9C23BB1D4FA126BA9BC7020A25E0AE4AA841EA25DC5", // weth
-					"ibc/D1542AA8762DB13087D8364F3EA6509FD6F009A34F00426AF9E4F9FA85CBBF1F", // wbtc
-				}
-				for _, denom := range denoms {
-					bytes, err := suite.App.WasmKeeper.QuerySmart(suite.Ctx, contractAddr, []byte(fmt.Sprintf(`{"get_quotas": {"channel_id": "any", "denom": "%s"}}`, denom)))
-					suite.Require().NoError(err)
-					suite.Require().Contains(string(bytes), "weekly")
-				}
 			},
 		},
 	}
