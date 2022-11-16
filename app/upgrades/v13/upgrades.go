@@ -3,7 +3,6 @@ package v13
 import (
 	"embed"
 	"fmt"
-	"strings"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -38,30 +37,12 @@ func setupRateLimiting(ctx sdk.Context, keepers *keepers.AppKeepers) error {
 
 	transferModule := keepers.AccountKeeper.GetModuleAddress(transfertypes.ModuleName)
 
-	denoms := []string{
-		"uosmo",
-		"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", // atom
-		"ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // usdc
-		"ibc/EA1D43981D5C9A1C4AAEA9C23BB1D4FA126BA9BC7020A25E0AE4AA841EA25DC5", // weth
-		"ibc/D1542AA8762DB13087D8364F3EA6509FD6F009A34F00426AF9E4F9FA85CBBF1F", // wbtc
-	}
-
-	quotas := ""
-	for _, denom := range denoms {
-		quotas += fmt.Sprintf(`
-{"channel_id": "any", "denom": "%s", "quotas": [{"name":"weekly", "duration": 604800, "send_recv":[50, 50]}] },`, denom)
-	}
-	if quotas != "" {
-		// Remove the trailing comma because JSON can't handle it
-		quotas = strings.TrimRight(quotas, ",")
-	}
-
 	initMsgBz := []byte(fmt.Sprintf(`{
            "gov_module":  "%s",
            "ibc_module":"%s",
-           "paths": [%s]
+           "paths": []
         }`,
-		govModule, transferModule, quotas))
+		govModule, transferModule))
 
 	addr, _, err := contractKeeper.Instantiate(ctx, codeID, govModule, govModule, initMsgBz, "rate limiting contract", nil)
 	if err != nil {
