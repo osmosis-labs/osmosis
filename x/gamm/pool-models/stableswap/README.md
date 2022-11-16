@@ -251,6 +251,10 @@ And therefore we round up in both cases.
 
 
 
+##### Further optimization
+
+
+
 #### Using this in swap methods
 
 So now we put together the components discussed in prior sections to achieve pseudocode for the SwapExactAmountIn
@@ -317,8 +321,10 @@ We see correctness of the swap fee, by imagining what happens if we took this re
 
 </a>
 
-The function $f(y_{out}) = -y_{out}^3 + 3 y_0 y_{out}^2 - (x_f^2 + w + 3y_0^2)y_{out}$ is monotonically increasing over the reals. You can prove this, by seeing that its [derivative's](https://www.wolframalpha.com/input?i=d%2Fdx+-x%5E3+%2B+3a+x%5E2+-+%28b+%2B+3a%5E2%29+x+) 0 values are both imaginary, and therefore has no local minima or maxima in the reals.
-Therefore, there exists exactly one real $y_{out}$ s.t. $f(y_{out}) = k$. Via binary search, we solve for a value $y_{out}^{*}$ such that $\left|\frac{ k - k^{*} }{k}\right| < e_k$, where $k^{*} = f(y_{out}^{*})$. We seek to then derive bounds on $e_y = \left|\frac{ y_{out} - y_{out}^{*} }{y_{out}}\right|$ in relation to $e_k$.
+The function $f(y_{out}) = -y_{out}^3 + 3 y_0 y_{out}^2 - (x_f^2 + w + 3y_0^2)y_{out}$ is monotonically increasing over the reals.
+You can prove this, by seeing that its [derivative's](https://www.wolframalpha.com/input?i=d%2Fdx+-x%5E3+%2B+3a+x%5E2+-+%28b+%2B+3a%5E2%29+x+) 0 values are both imaginary, and therefore has no local minima or maxima in the reals.
+Therefore, there exists exactly one real $y_{out}$ s.t. $f(y_{out}) = k$.
+Via binary search, we solve for a value $y_{out}^{\*}$ such that $\left|\frac{ k - k^{\*} }{k}\right| < e_k$, where $k^{\*} = f(y_{out}^{\*})$. We seek to then derive bounds on $e_y = \left|\frac{ y_{out} - y_{out}^{\*} }{y_{out}}\right|$ in relation to $e_k$.
 
 **Theorem**: $e_y < 100 e_k$ as long as $|y_{out}| <= .9y_0$.
 **Informal**, we claim that for $.9y_0 < |y_{out}| < y_0$, `e_y` is "close" to `e_k` under expected parameterizations. And for $y_{out}$ significantly less than $.9y_0$, the error bounds are much better. (Often better than $e_k$)
@@ -327,13 +333,13 @@ Therefore, there exists exactly one real $y_{out}$ s.t. $f(y_{out}) = k$. Via bi
 Let $y_{out} - y_{out}^* = a_y$, we are going to assume that $a_y << y_{out}$, and will justify this later. But due to this, we treat $a_y^c = 0$ for $c > 1$. This then implies that $y_{out}^2 - y_{out}^{*2} = y_{out}^2 - (y_{out} - a_y)^2 \approx 2y_{out}a_y$, and similarly $y_{out}^3 - y_{out}^{*3} \approx 3y_{out}^2 a_y$
 
 Now we are prepared to start bounding this.
-$$k - k^{*} = -(y_{out}^3 - y_{out}^{3*}) + 3y_0(y_{out}^2 - y_{out}^{2*}) - (x_f^2 + w + 3y_0^2)(y_{out} - y_{out}^*)$$
-$$k - k^{*} \approx -(3y_{out}^2 a_y) + 3y_0 (2y_{out}a_y) - (x_f^2 + w + 3y_0^2)a_y$$
-$$k - k^{*} \approx a_y(-3y_{out}^2 + 6y_0y_{out} - (x_f^2 + w + 3y_0^2))$$
+$$k - k^{\*} = -(y_{out}^3 - y_{out}^{3\*}) + 3y_0(y_{out}^2 - y_{out}^{2\*}) - (x_f^2 + w + 3y_0^2)(y_{out} - y_{out}^{\*})$$
+$$k - k^{\*} \approx -(3y_{out}^2 a_y) + 3y_0 (2y_{out}a_y) - (x_f^2 + w + 3y_0^2)a_y$$
+$$k - k^{\*} \approx a_y(-3y_{out}^2 + 6y_0y_{out} - (x_f^2 + w + 3y_0^2))$$
 
 Rewrite $k = y_{out}(-y_{out}^2 + 3y_0y_{out} - (x_f^2 + w + 3y_0^2))$
 
-$$e_k > \left|\frac{ k - k^{*} }{k}\right| = \left|\frac{a_y}{y_{out}} \frac{(-3y_{out}^2 + 6y_0y_{out} - (x_f^2 + w + 3y_0^2))}{(-y_{out}^2 + 3y_0y_{out} - (x_f^2 + w + 3y_0^2))}\right|$$
+$$e_k > \left|\frac{ k - k^{\*} }{k}\right| = \left|\frac{a_y}{y_{out}} \frac{(-3y_{out}^2 + 6y_0y_{out} - (x_f^2 + w + 3y_0^2))}{(-y_{out}^2 + 3y_0y_{out} - (x_f^2 + w + 3y_0^2))}\right|$$
 
 Notice that $\left|\frac{a_y}{y_{out}}\right| = e_y$! Therefore
 

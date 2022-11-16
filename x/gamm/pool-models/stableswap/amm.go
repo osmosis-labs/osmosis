@@ -303,10 +303,10 @@ func deriveUpperLowerXFinalReserveBounds(xReserve, yReserve, wSumSquares, yFinal
 	} else if kRatio.GT(one) {
 		// need to find a lowerbound. We could use a cubic relation, but for now we just set it to 0.
 		xFinalLowerbound = osmomath.ZeroDec()
-	} else {
-		// k remains unchanged.
-		// So we keep bounds equal to each other
 	}
+	// else
+	// k remains unchanged.
+	// So we keep bounds equal to each other
 	return xFinalLowerbound, xFinalUpperbound
 }
 
