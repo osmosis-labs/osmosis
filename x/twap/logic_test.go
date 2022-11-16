@@ -243,9 +243,10 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 	poolId := uint64(1)
 	defaultRecord := newRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), oneDec, twoDec, pointFiveDec)
 	tests := map[string]struct {
-		record    types.TwapRecord
-		newTime   time.Time
-		expRecord types.TwapRecord
+		record      types.TwapRecord
+		newTime     time.Time
+		expRecord   types.TwapRecord
+		expectPanic bool
 	}{
 		"accum with zero value": {
 			record:    newRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), zeroDec, zeroDec, zeroDec),
@@ -267,6 +268,16 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 			newTime:   time.Unix(1, 0),
 			expRecord: newExpRecord(oneDec, twoDec, pointFiveDec),
 		},
+		"zero spot price - panic": {
+			record:      withPrice0Set(defaultRecord, sdk.ZeroDec()),
+			newTime:     defaultRecord.Time.Add(time.Second),
+			expectPanic: true,
+		},
+		"spot price of one - geom accumulator 0": {
+			record:    withPrice1Set(withPrice0Set(defaultRecord, sdk.OneDec()), sdk.OneDec()),
+			newTime:   defaultRecord.Time.Add(time.Second),
+			expRecord: newExpRecord(oneDec.Add(OneSec), twoDec.Add(OneSec), pointFiveDec),
+		},
 	}
 
 	for name, test := range tests {
@@ -277,8 +288,10 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 			test.expRecord.P0LastSpotPrice = test.record.P0LastSpotPrice
 			test.expRecord.P1LastSpotPrice = test.record.P1LastSpotPrice
 
-			gotRecord := twap.RecordWithUpdatedAccumulators(test.record, test.newTime)
-			require.Equal(t, test.expRecord, gotRecord)
+			osmoassert.ConditionalPanic(t, test.expectPanic, func() {
+				gotRecord := twap.RecordWithUpdatedAccumulators(test.record, test.newTime)
+				require.Equal(t, test.expRecord, gotRecord)
+			})
 		})
 	}
 }

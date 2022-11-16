@@ -469,8 +469,13 @@ func newEmptyPriceRecord(poolId uint64, t time.Time, asset0 string, asset1 strin
 	}
 }
 
-func withPrice0Set(twapRecord types.TwapRecord) types.TwapRecord {
-	twapRecord.P0LastSpotPrice = sdk.OneDec()
+func withPrice0Set(twapRecord types.TwapRecord, price0ToSet sdk.Dec) types.TwapRecord {
+	twapRecord.P0LastSpotPrice = price0ToSet
+	return twapRecord
+}
+
+func withPrice1Set(twapRecord types.TwapRecord, price1ToSet sdk.Dec) types.TwapRecord {
+	twapRecord.P1LastSpotPrice = price1ToSet
 	return twapRecord
 }
 
