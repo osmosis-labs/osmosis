@@ -23,8 +23,9 @@ files=$(find ./ -type f -and -not \( -path "./vendor*" -or -path "./.git*" -or -
 
 echo "Updating all files"
 for file in $files; do
-    echo $file
-    replace_paths ${file}
+    if test -f "$file"; then
+        replace_paths $file
+    fi
 done
 
 echo "Updating go.mod and vendoring"
