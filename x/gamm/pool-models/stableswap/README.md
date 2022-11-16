@@ -175,6 +175,9 @@ We target an error of less than `10^{-8}` in `y_{out}`, so we conservatively set
 
 Now we want to wrap this binary search into `solve_cfmm`. We changed the API slightly, from what was previously denoted, to have this "y_0" term, in order to derive initial bounds.
 
+One complexity is that in the iterative search, we iterate over $y_f$, but then translate to $y_0$ in the internal equations.
+So we also use the 
+
 ```python
 # solve_y returns y_out s.t. CFMM_eq(x_f, y_f, w) = k = CFMM_eq(x_0, y_0, w)
 # for x_f = x_0 + x_in.
@@ -184,9 +187,7 @@ def solve_y(x_0, y_0, w, x_in):
   y_f = iterative_search(x_0, x_f, y_0, w, err_tolerance)
   y_out = y_0 - y_f
   return y_out
-```
 
-```python
 def iter_k_fn(x_f, y_0, w):
   def f(y_f):
     y_out = y_0 - y_f
@@ -195,9 +196,12 @@ def iter_k_fn(x_f, y_0, w):
 def iterative_search(x_0, x_f, y_0, w, err_tolerance):
   target_k = target_k_fn(x_0, y_0, w, x_f)
   iter_k_calculator = iter_k_fn(x_f, y_0, w)
-  k_0 = iter_k_calculator(y_0)
+
+  # use original CFMM to get y_f reserve bounds
+  bound_estimation_target_k = cfmm(x_0, y_0, w)
+  bound_estimation_k0 = cfmm(x_f, y_0, w)
   lowerbound, upperbound = y_0, y_0
-  k_ratio = k_0 / k
+  k_ratio = bound_estimation_k0 / bound_estimation_target_k
   if k_ratio < 1:
     # k_0 < k. Need to find an upperbound. Worst case assume a linear relationship, gives an upperbound
     # We could derive better bounds via reasoning about coefficients in the cubic,
@@ -249,11 +253,9 @@ And therefore we round up in both cases.
 
 ##### Further optimization
 
-
-
-##### Further optimization
-
-
+- The astute observer may notice that the equation we are solving in $\text{solve cfmm}$ is actually a cubic polynomial in $y$, with an always-positive derivative.
+We should then be able to use newton's root finding algorithm to solve for the solution with quadratic convergence.
+We do not pursue this today, due to other engineering tradeoffs, and insufficient analysis being done.
 
 #### Using this in swap methods
 
@@ -411,7 +413,3 @@ Couple ways to define JoinPool Exit Pool relation
 - Fuzz test binary search algorithm, to see that it still works correctly across wide scale ranges
 - Fuzz test approximate equality of iterative approximation swap algorithm and direct equation swap.
 - Flow testing the entire stableswap scaling factor update process
-
-## Extensions
-
-- The astute observer may notice that the equation we are solving in $\text{solve cfmm}$ is actually a cubic polynomial in $y$, with an always-positive derivative. We should then be able to use newton's root finding algorithm to solve for the solution with quadratic convergence. We do not pursue this today, due to other engineering tradeoffs, and insufficient analysis being done.
