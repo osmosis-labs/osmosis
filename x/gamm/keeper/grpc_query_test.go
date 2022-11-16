@@ -864,7 +864,7 @@ func (suite *KeeperTestSuite) TestQueryStableswapPoolSpotPrice() {
 				BaseAssetDenom:  "bar",
 				QuoteAssetDenom: "foo",
 			},
-			result: "1.446096575818955898",
+			result: "1.454545450000000000",
 		},
 	}
 
@@ -946,7 +946,7 @@ func (suite *KeeperTestSuite) TestV2QueryStableswapPoolSpotPrice() {
 				BaseAssetDenom:  "foo",
 				QuoteAssetDenom: "bar",
 			},
-			result: "1.446096575818955898",
+			result: "1.454545450000000000",
 		},
 	}
 
