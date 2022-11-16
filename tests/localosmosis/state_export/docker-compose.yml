@@ -14,7 +14,7 @@ services:
       - ./scripts/start.sh:/osmosis/start.sh
       - ./scripts/testnetify.py:/osmosis/testnetify.py
       - ./state_export.json:/osmosis/state_export.json
-      - $HOME/.osmosisd/:/osmosis/.osmosisd/
+      - $HOME/.osmosisd-local/:/osmosis/.osmosisd/
     entrypoint:
       - /osmosis/start.sh
     environment:

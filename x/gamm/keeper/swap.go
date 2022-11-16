@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -49,6 +50,13 @@ func (k Keeper) swapExactAmountIn(
 		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
 	}
 	tokensIn := sdk.Coins{tokenIn}
+
+	defer func() {
+		if r := recover(); r != nil {
+			tokenOutAmount = sdk.Int{}
+			err = fmt.Errorf("function swapExactAmountIn failed due to internal reason: %v", r)
+		}
+	}()
 
 	// Executes the swap in the pool and stores the output. Updates pool assets but
 	// does not actually transfer any tokens to or from the pool.
@@ -108,6 +116,13 @@ func (k Keeper) swapExactAmountOut(
 	if tokenInDenom == tokenOut.Denom {
 		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
 	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			tokenInAmount = sdk.Int{}
+			err = fmt.Errorf("function swapExactAmountOut failed due to internal reason: %v", r)
+		}
+	}()
 
 	poolOutBal := pool.GetTotalPoolLiquidity(ctx).AmountOf(tokenOut.Denom)
 	if tokenOut.Amount.GTE(poolOutBal) {
