@@ -506,5 +506,6 @@ func (suite *MiddlewareTestSuite) TestUnsetRateLimitingContract() {
 	osmosisApp := suite.chainA.GetOsmosisApp()
 	paramSpace, ok := osmosisApp.AppKeepers.ParamsKeeper.GetSubspace(types.ModuleName)
 	suite.Require().True(ok)
+        // N.B.: this panics if validation fails.
 	paramSpace.SetParamSet(suite.chainA.GetContext(), &params)
 }
