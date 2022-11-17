@@ -14,6 +14,7 @@ const (
 	// arithmeticTwapType is the type of twap that is calculated by taking the arithmetic weighted average of the spot prices.
 	arithmeticTwapType twapType = iota
 	// geometricTwapType is the type of twap that is calculated by taking the geometric weighted average of the spot prices.
+	// nolint: unused
 	geometricTwapType
 )
 
