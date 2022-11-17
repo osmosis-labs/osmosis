@@ -86,13 +86,19 @@ func TestCalcExitPool(t *testing.T) {
 		expError      bool
 	}{
 		{
-			name:          "two-asset pool, exiting shares grater than total shares",
+			name:          "two-asset pool, exiting shares 100% of total shares",
+			pool:          &twoAssetPool,
+			exitingShares: twoAssetPool.GetTotalShares(),
+			expError:      false,
+		},
+		{
+			name:          "two-asset pool, exiting shares greater than total shares",
 			pool:          &twoAssetPool,
 			exitingShares: twoAssetPool.GetTotalShares().AddRaw(1),
 			expError:      true,
 		},
 		{
-			name:          "three-asset pool, exiting shares grater than total shares",
+			name:          "three-asset pool, exiting shares greater than total shares",
 			pool:          &threeAssetPool,
 			exitingShares: threeAssetPool.GetTotalShares().AddRaw(1),
 			expError:      true,
