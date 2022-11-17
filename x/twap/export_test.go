@@ -77,6 +77,10 @@ func ComputeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRec
 	return computeArithmeticTwap(startRecord, endRecord, quoteAsset)
 }
 
+func ComputeGeometricTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
+	return computeGeometricTwap(startRecord, endRecord, quoteAsset)
+}
+
 func RecordWithUpdatedAccumulators(record types.TwapRecord, t time.Time) types.TwapRecord {
 	return recordWithUpdatedAccumulators(record, t)
 }

@@ -41,10 +41,10 @@ var (
 	accumA, accumB, accumC sdk.Dec = OneSec.MulInt64(10 * 10), OneSec, OneSec.MulInt64(10 * 20)
 
 	// geomAccumAB = 10 seconds * (log_{1.0001}{spot price = 10})
-	geomAccumAB = OneSec.Mul(tickLogTen).MulInt64(10)
+	geomAccumAB = OneSec.Mul(logTen).MulInt64(10)
 	geomAccumAC = geomAccumAB
 	// geomAccumBC = 10 seconds * (log_{1.0001}{spot price = 0.1})
-	geomAccumBC = OneSec.Mul(tickLogOneOverTen).MulInt64(10)
+	geomAccumBC = OneSec.Mul(logOneOverTen).MulInt64(10)
 
 	// accumulators updated from baseRecord with
 	// t = baseTime + 10
@@ -108,7 +108,7 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 		"idempotent overwrite2":                             {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec, sdk.ZeroDec()), tPlusOne, 1, denomA, denomB, nil},
 		"diff spot price": {
 			zeroAccumTenPoint1Record,
-			recordWithUpdatedAccum(zeroAccumTenPoint1Record, OneSec.MulInt64(10), OneSec.QuoInt64(10), OneSec.Mul(tickLogTen)),
+			recordWithUpdatedAccum(zeroAccumTenPoint1Record, OneSec.MulInt64(10), OneSec.QuoInt64(10), OneSec.Mul(logTen)),
 			tPlusOne, 1, denomA, denomB, nil,
 		},
 	}
@@ -467,7 +467,7 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 
 		periodBetweenBaseAndOneHourBeforeThreshold           = (defaultRecordHistoryKeepPeriod.Milliseconds() - time.Hour.Milliseconds())
 		accumBeforeKeepThreshold0, accumBeforeKeepThreshold1 = sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10), sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10)
-		geomAccumBeforeKeepThreshold                         = sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold).Mul(tickLogTen)
+		geomAccumBeforeKeepThreshold                         = sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold).Mul(logTen)
 		// recordBeforeKeepThreshold is a record with t=baseTime+keepPeriod-1h, sp0=30(sp1=0.3) accumulators set relative to baseRecord
 		recordBeforeKeepThreshold types.TwapRecord = newTwoAssetPoolTwapRecordWithDefaults(oneHourBeforeKeepThreshold, sdk.NewDec(30), accumBeforeKeepThreshold0, accumBeforeKeepThreshold1, geomAccumBeforeKeepThreshold)
 	)

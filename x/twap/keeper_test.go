@@ -569,6 +569,13 @@ func newOneSidedRecord(time time.Time, accum sdk.Dec, useP0 bool) types.TwapReco
 	return record
 }
 
+func newOneSidedGeometricRecord(time time.Time, accum sdk.Dec) types.TwapRecord {
+	record := types.TwapRecord{Time: time, Asset0Denom: denom0, Asset1Denom: denom1}
+	record.GeometricTwapAccumulator = accum
+	record.P0LastSpotPrice = sdk.NewDec(10)
+	return record
+}
+
 func newThreeAssetOneSidedRecord(time time.Time, accum sdk.Dec, useP0 bool) []types.TwapRecord {
 	record := types.TwapRecord{Time: time, Asset0Denom: denom0, Asset1Denom: denom1}
 	if useP0 {

@@ -15,6 +15,8 @@ var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
 var zero sdk.Dec = sdk.ZeroDec()
 
 var (
+	Tick = sdk.MustNewDecFromStr("1.0001")
+
 	one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
 	one      sdk.Dec = sdk.OneDec()
 	two      sdk.Dec = sdk.MustNewDecFromStr("2")
@@ -173,6 +175,6 @@ func PowApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 }
 
 // TODO: spec and tests
-func TickLog(x sdk.Dec) sdk.Dec {
+func TwapLog(x sdk.Dec) sdk.Dec {
 	return BigDecFromSDKDec(x).TickLog().SDKDec()
 }

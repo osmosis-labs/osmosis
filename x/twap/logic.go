@@ -193,7 +193,7 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 	newRecord.P1ArithmeticTwapAccumulator = newRecord.P1ArithmeticTwapAccumulator.Add(p1NewAccum)
 
 	// logP0SpotPrice = log_{1.0001}{P_0}
-	logP0SpotPrice := osmomath.TickLog(record.P0LastSpotPrice)
+	logP0SpotPrice := osmomath.TwapLog(record.P0LastSpotPrice)
 	// p0NewGeomAccum = log_{1.0001}{P_0} * timeDelta
 	p0NewGeomAccum := types.SpotPriceMulDuration(logP0SpotPrice, timeDelta)
 	newRecord.GeometricTwapAccumulator = newRecord.GeometricTwapAccumulator.Add(p0NewGeomAccum)
@@ -277,5 +277,16 @@ func computeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRec
 // two records given the quote asset.
 // TODO: test
 func computeGeometricTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
-	panic("not implemented")
+	accumDiff := endRecord.GeometricTwapAccumulator.Sub(startRecord.GeometricTwapAccumulator)
+
+	timeDelta := endRecord.Time.Sub(startRecord.Time)
+	arithmeticMeanOfLogPrices := types.AccumDiffDivDuration(accumDiff, timeDelta)
+
+	geometrciMeanDenom0 := osmomath.Pow(osmomath.Tick, arithmeticMeanOfLogPrices)
+	// N.B.: Geometric mean of recprocals is reciprocal of geometric mean.
+	// https://proofwiki.org/wiki/Geometric_Mean_of_Reciprocals_is_Reciprocal_of_Geometric_Mean
+	if quoteAsset == startRecord.Asset1Denom {
+		return sdk.OneDec().Quo(geometrciMeanDenom0)
+	}
+	return geometrciMeanDenom0
 }
