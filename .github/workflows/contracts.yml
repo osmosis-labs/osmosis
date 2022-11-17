@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - uses: technote-space/get-diff-action@v6.0.1
         with:
           PATTERNS: |
@@ -29,9 +29,9 @@ jobs:
             go.mod
             **/**cargo.toml
       - name: Install toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@1.65.0
         with:
-          toolchain: 1.65.0
+          components: cargo
           target: wasm32-unknown-unknown
 
       - name: Add the wasm target
@@ -52,6 +52,7 @@ jobs:
 
       - name: Set latest cw-optimizoor version
         run: >
+          echo `cargo search cw-optimizoor`
           echo "CW_OPTIMIZOOR_VERSION=`cargo search cw-optimizoor -q | cut -d '"' -f 2`" >> $GITHUB_ENV
 
       - name: Cache cw-optimizoor
@@ -98,16 +99,14 @@ jobs:
 
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - uses: technote-space/get-diff-action@v6.0.1
         with:
           PATTERNS: |
             **/**.rs
       - name: Install toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@1.65.0
         with:
-          profile: minimal
-          toolchain: 1.65.0
           components: rustfmt, clippy
 
       - name: Format
