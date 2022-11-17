@@ -10,7 +10,7 @@ import (
 
 // GetOsmoPool returns the pool id of the Osmo pool for the given denom paired with Osmo
 func (k Keeper) GetOsmoPool(ctx sdk.Context, denom string) (uint64, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.KeyPrefixOsmoPools))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixOsmoPools)
 	key := types.GetKeyPrefixOsmoPool(denom)
 
 	bz := store.Get(key)
@@ -24,7 +24,7 @@ func (k Keeper) GetOsmoPool(ctx sdk.Context, denom string) (uint64, error) {
 
 // SetOsmoPool sets the pool id of the Osmo pool for the given denom paired with Osmo
 func (k Keeper) SetOsmoPool(ctx sdk.Context, denom string, poolId uint64) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.KeyPrefixOsmoPools))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixOsmoPools)
 	key := types.GetKeyPrefixOsmoPool(denom)
 
 	store.Set(key, types.UInt64ToBytes(poolId))
@@ -32,7 +32,7 @@ func (k Keeper) SetOsmoPool(ctx sdk.Context, denom string, poolId uint64) {
 
 // DeleteOsmoPool deletes the pool id of the Osmo pool for the given denom paired with Osmo
 func (k Keeper) DeleteOsmoPool(ctx sdk.Context, denom string) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.KeyPrefixOsmoPools))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixOsmoPools)
 	key := types.GetKeyPrefixOsmoPool(denom)
 
 	store.Delete(key)
@@ -40,7 +40,7 @@ func (k Keeper) DeleteOsmoPool(ctx sdk.Context, denom string) {
 
 // GetAtomPool returns the pool id of the Atom pool for the given denom paired with Atom
 func (k Keeper) GetAtomPool(ctx sdk.Context, denom string) (uint64, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.KeyPrefixAtomPools))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixAtomPools)
 	key := types.GetKeyPrefixAtomPool(denom)
 
 	bz := store.Get(key)
@@ -54,7 +54,7 @@ func (k Keeper) GetAtomPool(ctx sdk.Context, denom string) (uint64, error) {
 
 // SetAtomPool sets the pool id of the Atom pool for the given denom paired with Atom
 func (k Keeper) SetAtomPool(ctx sdk.Context, denom string, poolId uint64) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.KeyPrefixAtomPools))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixAtomPools)
 	key := types.GetKeyPrefixAtomPool(denom)
 
 	store.Set(key, types.UInt64ToBytes(poolId))
@@ -62,20 +62,20 @@ func (k Keeper) SetAtomPool(ctx sdk.Context, denom string, poolId uint64) {
 
 // DeleteAtomPool deletes the pool id of the Atom pool for the given denom paired with Atom
 func (k Keeper) DeleteAtomPool(ctx sdk.Context, denom string) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.KeyPrefixAtomPools))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixAtomPools)
 	key := types.GetKeyPrefixAtomPool(denom)
 
 	store.Delete(key)
 }
 
 // GetRoute returns the route given two denoms
-func (k Keeper) GetSearcherRoutes(ctx sdk.Context, poolID uint64) (*types.SearcherRoutes, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.KeyPrefixRoutes))
-	key := types.GetKeyPrefixRouteForPoolID(poolID)
+func (k Keeper) GetSearcherRoutes(ctx sdk.Context, tokenA, tokenB string) (*types.SearcherRoutes, error) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixSearcherRoutes)
+	key := types.GetKeyPrefixRouteForTokenPair(tokenA, tokenB)
 
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return nil, sdkerrors.Wrapf(ErrNoSearcherRoutes, "poolID entered: %d", poolID)
+		return nil, sdkerrors.Wrapf(ErrNoSearcherRoutes, "token pair entered entered: %s, %s", tokenA, tokenB)
 	}
 
 	searchRoutes := &types.SearcherRoutes{}
@@ -85,17 +85,23 @@ func (k Keeper) GetSearcherRoutes(ctx sdk.Context, poolID uint64) (*types.Search
 }
 
 // SetRoute sets the route given two denoms
-func (k Keeper) SetSearcherRoutes(ctx sdk.Context, poolID uint64, searcherRoutes *types.SearcherRoutes) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.KeyPrefixRoutes))
-	key := types.GetKeyPrefixRouteForPoolID(poolID)
+func (k Keeper) SetSearcherRoutes(ctx sdk.Context, tokenA, tokenB string, searcherRoutes *types.SearcherRoutes) (*types.SearcherRoutes, error) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixSearcherRoutes)
+	key := types.GetKeyPrefixRouteForTokenPair(tokenA, tokenB)
 
-	bz, _ := searcherRoutes.Marshal()
+	bz, err := searcherRoutes.Marshal()
+	if err != nil {
+		return searcherRoutes, err
+	}
+
 	store.Set(key, bz)
+
+	return searcherRoutes, nil
 }
 
 // GetProtoRevStatistics returns the ProtoRevStatistics
 func (k Keeper) GetProtoRevStatistics(ctx sdk.Context) (*types.ProtoRevStatistics, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.KeyPrefixProtoRevStatistics))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtoRevStatistics)
 
 	bz := store.Get(types.KeyPrefixProtoRevStatistics)
 	if len(bz) == 0 {
@@ -104,14 +110,16 @@ func (k Keeper) GetProtoRevStatistics(ctx sdk.Context) (*types.ProtoRevStatistic
 	}
 
 	protoRevStatistics := &types.ProtoRevStatistics{}
-	protoRevStatistics.Unmarshal(bz)
+	if err := protoRevStatistics.Unmarshal(bz); err != nil {
+		return nil, err
+	}
 
 	return protoRevStatistics, nil
 }
 
 // SetProtoRevStatistics sets the ProtoRevStatistics
 func (k Keeper) SetProtoRevStatistics(ctx sdk.Context, protoRevStatistics *types.ProtoRevStatistics) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.KeyPrefixProtoRevStatistics))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtoRevStatistics)
 
 	bz, _ := protoRevStatistics.Marshal()
 	store.Set(types.KeyPrefixProtoRevStatistics, bz)

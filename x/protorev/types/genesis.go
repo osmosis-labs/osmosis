@@ -20,21 +20,36 @@ func (gs GenesisState) Validate() error {
 	return gs.Params.Validate()
 }
 
+type TokenPair struct {
+	TokenA string
+	TokenB string
+}
+
 // Routes entered into the genesis state must start and end with the same denomination and
 // the denomination must be Osmo or Atom
 func (gs GenesisState) CheckRoutes() error {
-	seenPoolIds := make(map[uint64]bool)
+	seenTokenPairs := make(map[TokenPair]bool)
 	for _, searcherRoutes := range gs.Routes {
 		// Validate the searcherRoutes
 		if err := searcherRoutes.Validate(); err != nil {
 			return err
 		}
 
-		// Validate that the poolId is unique
-		if _, ok := seenPoolIds[searcherRoutes.PoolId]; ok {
-			return ErrDuplicatePoolId
+		// sort token pair
+		tokenPair := TokenPair{
+			TokenA: searcherRoutes.TokenA,
+			TokenB: searcherRoutes.TokenB,
 		}
-		seenPoolIds[searcherRoutes.PoolId] = true
+		if tokenPair.TokenA > tokenPair.TokenB {
+			tokenPair.TokenA, tokenPair.TokenB = tokenPair.TokenB, tokenPair.TokenA
+		}
+
+		// Validate that the token pair is unique
+		if _, ok := seenTokenPairs[tokenPair]; ok {
+			return ErrDuplicateTokenPair
+		}
+
+		seenTokenPairs[tokenPair] = true
 	}
 
 	return nil

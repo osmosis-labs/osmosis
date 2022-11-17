@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -10,13 +9,13 @@ import (
 )
 
 func TestGenesisStateValidate(t *testing.T) {
-	invalidRoutes := []*types.Route{
+	routes := []*types.Route{
 		{
 			Pools: []uint64{1, 2},
 		},
 	}
 	invalidSearchRoutes := []types.SearcherRoutes{
-		types.NewSearcherRoutes("invalid", 0, invalidRoutes),
+		types.NewSearcherRoutes(routes, "a", "b"),
 	}
 
 	cases := []struct {
@@ -35,7 +34,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			description: "Default parameters with valid routes",
 			genState: &types.GenesisState{
 				Params: types.DefaultParams(),
-				Routes: []types.SearcherRoutes{createSeacherRoutes(types.AtomDenomination, 3, 0)},
+				Routes: []types.SearcherRoutes{createSeacherRoutes(3, types.AtomDenomination, types.OsmosisDenomination)},
 			},
 			valid: true,
 		},
@@ -43,7 +42,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			description: "Default parameters with invalid routes (duplicate pools)",
 			genState: &types.GenesisState{
 				Params: types.DefaultParams(),
-				Routes: []types.SearcherRoutes{createSeacherRoutes(types.AtomDenomination, 3, 0), createSeacherRoutes(types.AtomDenomination, 3, 0)},
+				Routes: []types.SearcherRoutes{createSeacherRoutes(3, types.AtomDenomination, types.OsmosisDenomination), createSeacherRoutes(3, types.AtomDenomination, types.OsmosisDenomination)},
 			},
 			valid: false,
 		},
@@ -51,7 +50,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			description: "Default parameters with nil routes",
 			genState: &types.GenesisState{
 				Params: types.DefaultParams(),
-				Routes: []types.SearcherRoutes{types.NewSearcherRoutes("invalid", 0, nil)},
+				Routes: []types.SearcherRoutes{types.NewSearcherRoutes(nil, "a", "b")},
 			},
 			valid: false,
 		},
@@ -69,7 +68,6 @@ func TestGenesisStateValidate(t *testing.T) {
 		t.Run(tc.description, func(t *testing.T) {
 			err := tc.genState.Validate()
 
-			fmt.Println(tc.genState)
 			if tc.valid {
 				require.NoError(t, err)
 			} else {
@@ -80,13 +78,13 @@ func TestGenesisStateValidate(t *testing.T) {
 }
 
 // CreateRoute creates SearchRoutes object for testing
-func createSeacherRoutes(arbDenom string, numberPools, poolId uint64) types.SearcherRoutes {
+func createSeacherRoutes(numberPools uint64, tokenA, tokenB string) types.SearcherRoutes {
 	routes := make([]*types.Route, numberPools)
 	for i := uint64(0); i < numberPools; i++ {
 		routes[i] = &types.Route{
-			Pools: []uint64{i, i + 1, i + 2, i + 3},
+			Pools: []uint64{i, i + 1, i + 2},
 		}
 	}
 
-	return types.NewSearcherRoutes(arbDenom, poolId, routes)
+	return types.NewSearcherRoutes(routes, tokenA, tokenB)
 }

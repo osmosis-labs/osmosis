@@ -14,15 +14,15 @@ const (
 )
 
 const (
-	prefixRoute = iota + 1
+	prefixSearcherRoutes = iota + 1
 	prefixOsmoPools
 	prefixAtomPools
 	prefixProtoRevStatistics
 )
 
 var (
-	// KeyPrefixRoute is the prefix for the route store
-	KeyPrefixRoutes = []byte{prefixRoute}
+	// KeyPrefixSearcherRoutes is the prefix for the SearcherRoutes store
+	KeyPrefixSearcherRoutes = []byte{prefixSearcherRoutes}
 
 	// KeyPrefixOsmoPools is the prefix for the osmo pool store
 	KeyPrefixOsmoPools = []byte{prefixOsmoPools}
@@ -47,6 +47,13 @@ func GetKeyPrefixAtomPool(denom string) []byte {
 }
 
 // Returns the key need to fetch the searcher routes for a given pool id
-func GetKeyPrefixRouteForPoolID(poolID uint64) []byte {
-	return append(KeyPrefixRoutes, UInt64ToBytes(poolID)...)
+func GetKeyPrefixRouteForTokenPair(tokenA, tokenB string) []byte {
+	// sort the tokens after converting to upper case
+	upperA := strings.ToUpper(tokenA)
+	upperB := strings.ToUpper(tokenB)
+
+	if upperA < upperB {
+		return append(KeyPrefixSearcherRoutes, []byte(upperA+upperB)...)
+	}
+	return append(KeyPrefixSearcherRoutes, []byte(upperB+upperA)...)
 }

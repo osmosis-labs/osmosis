@@ -7,33 +7,43 @@ import (
 )
 
 // Creates a new SearcherRoutes object
-func NewSearcherRoutes(arbDenom string, poolID uint64, routes []*Route) SearcherRoutes {
+func NewSearcherRoutes(routes []*Route, tokenA, tokenB string) SearcherRoutes {
+	// sort tokenA and tokenB
+	if tokenA > tokenB {
+		tokenA, tokenB = tokenB, tokenA
+	}
+
 	return SearcherRoutes{
-		ArbDenom: strings.ToUpper(arbDenom),
-		PoolId:   poolID,
-		Routes:   routes,
+		Routes: routes,
+		TokenA: strings.ToUpper(tokenA),
+		TokenB: strings.ToUpper(tokenB),
 	}
 }
 
 func (sr *SearcherRoutes) Validate() error {
-	// The arb denomination must be tradable
-	if sr.ArbDenom != AtomDenomination && sr.ArbDenom != OsmosisDenomination {
-		return sdkerrors.Wrapf(ErrInvalidArbDenom, "entered denomination was %s but only %s and %s are allowed", sr.ArbDenom, AtomDenomination, OsmosisDenomination)
+	// Validate that the token pair is valid
+	if sr.TokenA == "" || sr.TokenB == "" {
+		return sdkerrors.Wrap(ErrInvalidTokenName, "token name cannot be empty")
 	}
 
+	// There must be routes within the SearcherRoutes
 	if sr.Routes == nil || len(sr.Routes) == 0 {
 		return sdkerrors.Wrap(ErrInvalidRoute, "no routes were entered")
 	}
 
 	// Iterate through all of the possible routes for this pool
 	for _, route := range sr.Routes {
+		if len(route.Pools) != 3 {
+			return sdkerrors.Wrapf(ErrInvalidRoute, "route %s has %d pools, but should have 3", route, len(route.Pools))
+		}
+
 		uniquePools := make(map[uint64]bool)
 		for _, pool := range route.Pools {
 			uniquePools[pool] = true
 		}
 
 		// There must be at least three pools hops for it to be a valid route
-		if len(uniquePools) < 3 {
+		if len(uniquePools) != 3 {
 			return sdkerrors.Wrapf(ErrInvalidRoute, "the length of the entered cyclic arbitrage route must hit at least three pools: entered number of pools %d", len(uniquePools))
 		}
 	}

@@ -191,38 +191,40 @@ func (suite *KeeperTestSuite) TestDeleteOsmoPool() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGetRoute() {
+func (suite *KeeperTestSuite) TestGetSearcherRoutes() {
 	routes := []*types.Route{
 		{
-			Pools: []uint64{0, 1, 2, 3, 4},
+			Pools: []uint64{0, 1, 2},
 		},
 		{
-			Pools: []uint64{1, 2, 3, 4, 5},
+			Pools: []uint64{1, 2, 3},
 		},
 		{
-			Pools: []uint64{2, 3, 4, 5, 6},
+			Pools: []uint64{2, 3, 4},
 		},
 		{
-			Pools: []uint64{3, 4, 5, 6, 7},
+			Pools: []uint64{3, 4, 5},
 		},
 		{
-			Pools: []uint64{4, 5, 6, 7, 8},
+			Pools: []uint64{4, 5, 6},
 		},
 	}
 
 	cases := []struct {
 		description    string
-		poolID         uint64
+		tokenA         string
+		tokenB         string
 		searcherRoutes types.SearcherRoutes
 		exists         bool
 	}{
 		{
 			description: "Route exists for denom Akash",
-			poolID:      1,
+			tokenA:      "Akash",
+			tokenB:      "atom",
 			searcherRoutes: types.SearcherRoutes{
-				ArbDenom: "ATOM",
-				Routes:   routes,
-				PoolId:   1,
+				TokenA: "AKASH",
+				TokenB: "ATOM",
+				Routes: routes,
 			},
 			exists: true,
 		},
@@ -233,11 +235,13 @@ func (suite *KeeperTestSuite) TestGetRoute() {
 
 	for _, tc := range cases {
 		suite.Run(tc.description, func() {
-			searcherRoutes, err := suite.App.ProtoRevKeeper.GetSearcherRoutes(suite.Ctx, tc.poolID)
+			searcherRoutes, err := suite.App.ProtoRevKeeper.GetSearcherRoutes(suite.Ctx, tc.tokenA, tc.tokenB)
 
 			if tc.exists {
 				suite.Require().NoError(err)
-				suite.Require().Equal(tc.searcherRoutes, *searcherRoutes)
+				suite.Require().Equal(tc.searcherRoutes.TokenA, searcherRoutes.TokenA)
+				suite.Require().Equal(tc.searcherRoutes.TokenB, searcherRoutes.TokenB)
+				suite.Require().Equal(tc.searcherRoutes.Routes, searcherRoutes.Routes)
 			} else {
 				suite.Require().Error(err)
 			}

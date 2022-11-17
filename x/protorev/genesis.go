@@ -23,7 +23,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 	// Init all of the searcher route
 	for _, searcherRoutes := range genState.Routes {
-		k.SetSearcherRoutes(ctx, searcherRoutes.PoolId, &searcherRoutes)
+		k.SetSearcherRoutes(ctx, searcherRoutes.TokenA, searcherRoutes.TokenB, &searcherRoutes)
 	}
 }
 

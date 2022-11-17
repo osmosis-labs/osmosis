@@ -36,7 +36,7 @@ func (k Keeper) ExecuteTrade() {
 
 // FindRoutes that should be traversed in determining the optimal cyclic arbitrage opportunities
 // Given a pool id and input denomination, this will return a list of routes that are a union of
-// avaiable routes in the hot routes and the 3-hop routes.
+// available routes in the hot routes and the 3-hop routes.
 func (k Keeper) FindRoutes() {
 
 }

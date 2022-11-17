@@ -11,5 +11,5 @@ func UInt64ToBytes(number uint64) []byte {
 
 // Converts a []byte into a uint64
 func BytesToUInt64(bz []byte) uint64 {
-	return uint64(binary.LittleEndian.Uint64(bz))
+	return binary.LittleEndian.Uint64(bz)
 }

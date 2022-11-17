@@ -8,7 +8,7 @@ option go_package = "github.com/osmosis-labs/osmosis/v12/x/protorev/types";
 // Params defines the parameters for the module.
 message Params {
   // Boolean that determines whether x/protorev will search routes at runtime
-  bool only_check_hot_routes = 1;
+  bool check_hot_routes = 1;
   // Boolean whether the module is going to be enabled
   bool enabled = 2;
 }
