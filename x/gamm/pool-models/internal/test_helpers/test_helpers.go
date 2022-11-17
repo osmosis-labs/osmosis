@@ -1,6 +1,7 @@
 package test_helpers
 
 import (
+	"math/rand"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
@@ -12,6 +13,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
+	sdkrand "github.com/osmosis-labs/osmosis/v12/simulation/simtypes/random"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
@@ -68,6 +70,36 @@ func TestCalculateAmountOutAndIn_InverseRelationship(
 		// TODO: Ensure rounding is correct
 		tol := sdk.NewDec(1)
 		osmoassert.DecApproxEq(t, expected, actual, tol)
+	}
+}
+
+func TestSlippageRelationWithLiquidityIncrease(
+	testname string,
+	t *testing.T,
+	ctx sdk.Context,
+	createPoolWithLiquidity func(sdk.Context, sdk.Coins) types.PoolI,
+	initLiquidity sdk.Coins) {
+	r := rand.New(rand.NewSource(100))
+	swapInAmt := sdkrand.RandSubsetCoins(r, initLiquidity[:1])
+	swapOutDenom := initLiquidity[1].Denom
+
+	curPool := createPoolWithLiquidity(ctx, initLiquidity)
+	fee := curPool.GetSwapFee(ctx)
+
+	curLiquidity := initLiquidity
+	curOutAmount, err := curPool.CalcOutAmtGivenIn(ctx, swapInAmt, swapOutDenom, fee)
+	require.NoError(t, err)
+	for i := 0; i < 50; i++ {
+		newLiquidity := curLiquidity.Add(curLiquidity...)
+		curPool = createPoolWithLiquidity(ctx, newLiquidity)
+		newOutAmount, err := curPool.CalcOutAmtGivenIn(ctx, swapInAmt, swapOutDenom, fee)
+		require.NoError(t, err)
+		require.True(t, newOutAmount.Amount.GTE(curOutAmount.Amount),
+			"%s: swap with new liquidity %s yielded less than swap with old liquidity %s."+
+				" Swap amount in %s. new swap out: %s, old swap out %s", testname, newLiquidity, curLiquidity,
+			swapInAmt, newOutAmount, curOutAmount)
+
+		curLiquidity, curOutAmount = newLiquidity, newOutAmount
 	}
 }
 
