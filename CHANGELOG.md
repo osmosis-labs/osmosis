@@ -41,7 +41,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-
 ### Features
 
 * [#2788](https://github.com/osmosis-labs/osmosis/pull/2788) Add logarithm base 2 implementation.
@@ -62,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#2937](https://github.com/osmosis-labs/osmosis/pull/2937) End block ordering - staking after gov and module sorting.
 * [#2923](https://github.com/osmosis-labs/osmosis/pull/2923) TWAP calculation now errors if it uses records that have errored previously.
 * [#3312](https://github.com/osmosis-labs/osmosis/pull/3312) Add better panic catches within GAMM txs
+* [#3428](https://github.com/osmosis-labs/osmosis/pull/3428) Permit 100% exit from pool.
 
 ### Misc Improvements
 
