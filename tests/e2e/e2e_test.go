@@ -145,9 +145,6 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	osmoSupply, err := node.QuerySupplyOf("uosmo")
 	s.NoError(err)
 
-	// balance, err := node.QueryBalances(chainA.NodeConfigs[1].PublicAddress)
-	// s.NoError(err)
-
 	f, err := osmoSupply.ToDec().Float64()
 	s.NoError(err)
 
@@ -164,6 +161,8 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	fmt.Println(wd, projectDir)
 	err = copyFile(projectDir+"/x/ibc-rate-limit/bytecode/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
 	s.NoError(err)
+	// set LatestCodeId to 1 since we upload a contract in the upgrade handler for v13
+	chainA.LatestCodeId = 1
 	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
 	chainA.LatestCodeId += 1
 	node.InstantiateWasmContract(
@@ -214,7 +213,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 			if err != nil {
 				return false
 			}
-			return val != ""
+			return val == contracts[0]
 		},
 		1*time.Minute,
 		10*time.Millisecond,

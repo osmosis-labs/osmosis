@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/suite"
@@ -26,6 +28,21 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 const dummyUpgradeHeight = 5
+
+func dummyUpgrade(suite *UpgradeTestSuite) {
+	suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight - 1)
+	plan := upgradetypes.Plan{Name: "v13", Height: dummyUpgradeHeight}
+	err := suite.App.UpgradeKeeper.ScheduleUpgrade(suite.Ctx, plan)
+	suite.Require().NoError(err)
+	plan, exists := suite.App.UpgradeKeeper.GetUpgradePlan(suite.Ctx)
+	suite.Require().True(exists)
+
+	suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight)
+	suite.Require().NotPanics(func() {
+		beginBlockRequest := abci.RequestBeginBlock{}
+		suite.App.BeginBlocker(suite.Ctx, beginBlockRequest)
+	})
+}
 
 func (suite *UpgradeTestSuite) TestUpgrade() {
 	testCases := []struct {
@@ -53,23 +70,23 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				hasAcc := suite.App.AccountKeeper.HasAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
 				suite.Require().False(hasAcc)
 			},
-			func() {
-				suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight - 1)
-				plan := upgradetypes.Plan{Name: "v13", Height: dummyUpgradeHeight}
-				err := suite.App.UpgradeKeeper.ScheduleUpgrade(suite.Ctx, plan)
-				suite.Require().NoError(err)
-				plan, exists := suite.App.UpgradeKeeper.GetUpgradePlan(suite.Ctx)
-				suite.Require().True(exists)
-
-				suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight)
-				suite.Require().NotPanics(func() {
-					beginBlockRequest := abci.RequestBeginBlock{}
-					suite.App.BeginBlocker(suite.Ctx, beginBlockRequest)
-				})
-			},
+			func() { dummyUpgrade(suite) },
 			func() {
 				hasAcc := suite.App.AccountKeeper.HasAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
 				suite.Require().True(hasAcc)
+			},
+		},
+		{
+			"Test that the contract address is set in the params",
+			func() {},
+			func() { dummyUpgrade(suite) },
+			func() {
+				// The contract has been uploaded and the param is set
+				paramSpace, ok := suite.App.ParamsKeeper.GetSubspace(ibcratelimittypes.ModuleName)
+				suite.Require().True(ok)
+				var contract string
+				paramSpace.GetIfExists(suite.Ctx, ibcratelimittypes.KeyContractAddress, &contract)
+				suite.Require().NotEmpty(contract)
 			},
 		},
 	}
