@@ -1267,6 +1267,7 @@ var xxx_messageInfo_QuerySwapExactAmountInResponse proto.InternalMessageInfo
 
 // =============================== EstimateSwapExactAmountOut
 type QuerySwapExactAmountOutRequest struct {
+	// TODO: CHANGE THIS TO RESERVED IN A PATCH RELEASE
 	Sender   string               `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
 	PoolId   uint64               `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
 	Routes   []SwapAmountOutRoute `protobuf:"bytes,3,rep,name=routes,proto3" json:"routes" yaml:"routes"`
