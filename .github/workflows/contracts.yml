@@ -29,9 +29,9 @@ jobs:
             go.mod
             **/**cargo.toml
       - name: Install toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain
         with:
-          toolchain: nightly
+          toolchain: 1.65.0
           target: wasm32-unknown-unknown
 
       - name: Add the wasm target
@@ -104,11 +104,10 @@ jobs:
           PATTERNS: |
             **/**.rs
       - name: Install toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain
         with:
           profile: minimal
           toolchain: 1.65.0
-          override: true
           components: rustfmt, clippy
 
       - name: Format
