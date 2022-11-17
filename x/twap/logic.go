@@ -261,7 +261,6 @@ func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quote
 
 // computeArithmeticTwap computes and returns an arithmetic TWAP between
 // two records given the quote asset.
-// TODO: test
 func computeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
 	var accumDiff sdk.Dec
 	if quoteAsset == startRecord.Asset0Denom {
@@ -275,6 +274,10 @@ func computeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRec
 
 // computeGeometricTwap computes and returns a geometric TWAP between
 // two records given the quote asset.
+// The computation works as follows:
+// - compute arithmetic mean of logarithms of spot prices.
+// - exponentiate the result to get the geometric mean.
+// - if quoted asset is asset 1, take reciprocal of the exponentiated result.
 func computeGeometricTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
 	accumDiff := endRecord.GeometricTwapAccumulator.Sub(startRecord.GeometricTwapAccumulator)
 
