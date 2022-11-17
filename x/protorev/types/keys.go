@@ -36,26 +36,22 @@ var (
 
 // Returns the key needed to fetch the osmo pool for a given denom
 func GetKeyPrefixOsmoPool(denom string) []byte {
-	return append(KeyPrefixOsmoPools, []byte(denom)...)
+	upper := strings.ToUpper(denom)
+	return append(KeyPrefixOsmoPools, []byte(upper)...)
 }
 
 // Returns the key needed to fetch the atom pool for a given denom
 func GetKeyPrefixAtomPool(denom string) []byte {
-	return append(KeyPrefixAtomPools, []byte(denom)...)
+	upper := strings.ToUpper(denom)
+	return append(KeyPrefixAtomPools, []byte(upper)...)
 }
 
 // Returns the key need to fetch the route for a given pair of denoms
 func GetKeyPrefixRouteForPair(denom1, denom2 string) []byte {
-	first := strings.ToUpper(denom1)
-	second := strings.ToUpper(denom2)
+	first, second := strings.ToUpper(denom1), strings.ToUpper(denom2)
 
-	if denom1 < denom2 {
-		first = denom1
-		second = denom2
-	} else {
-		first = denom2
-		second = denom1
+	if first < second {
+		return append(KeyPrefixRoutes, []byte(first+second)...)
 	}
-
-	return append(KeyPrefixRoutes, []byte(first+second)...)
+	return append(KeyPrefixRoutes, []byte(second+first)...)
 }

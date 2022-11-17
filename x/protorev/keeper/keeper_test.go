@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -28,7 +29,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 // SetUpOsmoPools sets up the Osmo pools for testing
 func (suite *KeeperTestSuite) SetUpOsmoPools() {
 	suite.App.AppKeepers.ProtoRevKeeper.SetOsmoPool(suite.Ctx, "Akash", 1)
-	suite.App.AppKeepers.ProtoRevKeeper.SetOsmoPool(suite.Ctx, "Juon", 2)
+	suite.App.AppKeepers.ProtoRevKeeper.SetOsmoPool(suite.Ctx, "Juno", 2)
 	suite.App.AppKeepers.ProtoRevKeeper.SetOsmoPool(suite.Ctx, "Ethereum", 3)
 	suite.App.AppKeepers.ProtoRevKeeper.SetOsmoPool(suite.Ctx, "Bitcoin", 4)
 	suite.App.AppKeepers.ProtoRevKeeper.SetOsmoPool(suite.Ctx, "Canto", 5)
@@ -49,20 +50,20 @@ func (suite *KeeperTestSuite) SetUpRoutes() {
 
 	// create routes with atom
 	for _, token := range tokens {
-		route := CreateRoute(token, 5)
+		route := CreateRoute("atom", token, "atom", 5)
 		suite.App.AppKeepers.ProtoRevKeeper.SetRoute(suite.Ctx, types.AtomDenomination, token, &route)
 	}
 
 	// create routes with osmo
 	for _, token := range tokens {
-		route := CreateRoute(token, 5)
+		route := CreateRoute("osmo", "osmo", token, 5)
 		suite.App.AppKeepers.ProtoRevKeeper.SetRoute(suite.Ctx, types.OsmosisDenomination, token, &route)
 	}
 
 }
 
 // CreateRoute creates a route for testing
-func CreateRoute(arbDenom string, numberPools uint64) types.Route {
+func CreateRoute(arbDenom, swapInDenom, swapOutDenom string, numberPools uint64) types.Route {
 	pools := make([]uint64, numberPools)
 
 	var pool uint64
@@ -71,7 +72,9 @@ func CreateRoute(arbDenom string, numberPools uint64) types.Route {
 	}
 
 	return types.Route{
-		ArbDenom: arbDenom,
-		Pools:    pools,
+		ArbDenom:     strings.ToUpper(arbDenom),
+		SwapInDenom:  strings.ToUpper(swapInDenom),
+		SwapOutDenom: strings.ToUpper(swapOutDenom),
+		Pools:        pools,
 	}
 }
