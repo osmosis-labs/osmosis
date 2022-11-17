@@ -22,7 +22,13 @@ Therefore, we also support a geometric mean TWAP.
 
 The core functionality stays similar to the arithmetic mean TWAP. However, instead of computing the geometric mean TWAP naively, we use the following property:
 
+
 $$GeometricMean(P) = 1.0001^{ArithmeticMean(log_{1.0001}{P})}$$
+
+$$  {(\prod_{i=a}^{b} P_i)}^{\frac{1}\{b-a}}  =  exp(\sum_{i=a}^{b}{\frac{1}{b-a} ln{(P_i)}}) $$
+
+Note that in the second expression we use a different logarithm and power bases of `e`.
+This is for brevity, and the true value used in our implementation is currently `1.0001`.
 
 Naive computation is expensive and easily overflows. As a result, we track logarithms of prices instead of prices themselves in the accumulators.
 When geometric twap is requested, we first compute the arithmetic mean of the logarithms, and then exponentiate it with the same base as the logarithm
