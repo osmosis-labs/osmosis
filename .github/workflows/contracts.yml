@@ -31,7 +31,6 @@ jobs:
       - name: Install toolchain
         uses: dtolnay/rust-toolchain@1.65.0
         with:
-          components: cargo
           target: wasm32-unknown-unknown
 
       - name: Add the wasm target
