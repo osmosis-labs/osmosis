@@ -446,21 +446,8 @@ func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.Query
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Sender == "" {
-		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
-	}
-
 	if req.TokenIn == "" {
 		return nil, status.Error(codes.InvalidArgument, "invalid token")
-	}
-
-	if err := types.SwapAmountInRoutes(req.Routes).Validate(); err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	sender, err := sdk.AccAddressFromBech32(req.Sender)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
 
 	tokenIn, err := sdk.ParseCoinNormalized(req.TokenIn)
@@ -470,7 +457,7 @@ func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.Query
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	tokenOutAmount, err := q.Keeper.MultihopSwapExactAmountIn(sdkCtx, sender, req.Routes, tokenIn, sdk.NewInt(1))
+	tokenOutAmount, err := q.Keeper.MultihopEstimateOutGivenExactAmountIn(sdkCtx, req.Routes, tokenIn)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -486,21 +473,8 @@ func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.Quer
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Sender == "" {
-		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
-	}
-
 	if req.TokenOut == "" {
 		return nil, status.Error(codes.InvalidArgument, "invalid token")
-	}
-
-	if err := types.SwapAmountOutRoutes(req.Routes).Validate(); err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	sender, err := sdk.AccAddressFromBech32(req.Sender)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
 
 	tokenOut, err := sdk.ParseCoinNormalized(req.TokenOut)
@@ -510,7 +484,7 @@ func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.Quer
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	tokenInAmount, err := q.Keeper.MultihopSwapExactAmountOut(sdkCtx, sender, req.Routes, sdkIntMaxValue, tokenOut)
+	tokenInAmount, err := q.Keeper.MultihopEstimateInGivenExactAmountOut(sdkCtx, req.Routes, tokenOut)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
