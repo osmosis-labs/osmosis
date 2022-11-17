@@ -275,7 +275,6 @@ func computeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRec
 
 // computeGeometricTwap computes and returns a geometric TWAP between
 // two records given the quote asset.
-// TODO: test
 func computeGeometricTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
 	accumDiff := endRecord.GeometricTwapAccumulator.Sub(startRecord.GeometricTwapAccumulator)
 

@@ -41,7 +41,7 @@ var (
 	accumA, accumB, accumC sdk.Dec = OneSec.MulInt64(10 * 10), OneSec, OneSec.MulInt64(10 * 20)
 
 	// geomAccumAB = 10 seconds * (log_{1.0001}{spot price = 10})
-	geomAccumAB = OneSec.Mul(logTen).MulInt64(10)
+	geomAccumAB = geometricTenSecAccum.MulInt64(10)
 	geomAccumAC = geomAccumAB
 	// geomAccumBC = 10 seconds * (log_{1.0001}{spot price = 0.1})
 	geomAccumBC = OneSec.Mul(logOneOverTen).MulInt64(10)
@@ -108,7 +108,7 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 		"idempotent overwrite2":                             {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec, sdk.ZeroDec()), tPlusOne, 1, denomA, denomB, nil},
 		"diff spot price": {
 			zeroAccumTenPoint1Record,
-			recordWithUpdatedAccum(zeroAccumTenPoint1Record, OneSec.MulInt64(10), OneSec.QuoInt64(10), OneSec.Mul(logTen)),
+			recordWithUpdatedAccum(zeroAccumTenPoint1Record, OneSec.MulInt64(10), OneSec.QuoInt64(10), geometricTenSecAccum),
 			tPlusOne, 1, denomA, denomB, nil,
 		},
 	}
