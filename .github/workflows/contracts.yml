@@ -52,8 +52,7 @@ jobs:
 
       - name: Set latest cw-optimizoor version
         run: >
-          echo `cargo search cw-optimizoor | cut -d '"' -f 2`;
-          echo "CW_OPTIMIZOOR_VERSION=`cargo search cw-optimizoor -q | cut -d '"' -f 2`" >> $GITHUB_ENV
+          echo "CW_OPTIMIZOOR_VERSION=0.8.0" >> $GITHUB_ENV
 
       - name: Cache cw-optimizoor
         id: cache-cw-optimizoor
