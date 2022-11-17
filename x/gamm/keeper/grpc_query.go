@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"math/big"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -18,20 +17,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/v2types"
 )
-
-var sdkIntMaxValue = sdk.NewInt(0)
-
-func init() {
-	maxInt := big.NewInt(2)
-	maxInt = maxInt.Exp(maxInt, big.NewInt(256), nil)
-
-	_sdkIntMaxValue, ok := sdk.NewIntFromString(maxInt.Sub(maxInt, big.NewInt(1)).String())
-	if !ok {
-		panic("Failed to calculate the max value of sdk.Int")
-	}
-
-	sdkIntMaxValue = _sdkIntMaxValue
-}
 
 var _ types.QueryServer = Querier{}
 
