@@ -10,16 +10,16 @@ option go_package = "github.com/osmosis-labs/osmosis/v12/x/protorev/types";
 
 // Route is a directed cyclic graph that tracks a feasible cyclic arbitrage
 // trading route
-message Route {
+message SearcherRoutes {
   // The denomination that will be used to execute cyclic arbitrade trades
   string arb_denom = 1;
-  // The denom that was inputted in the trade
-  string swap_in_denom = 2;
-  // The denom that was receieved in the trade
-  string swap_out_denom = 3;
-  // The pool IDs that are travered in the directed cyclic graph (traversed left
-  // -> right)
-  repeated uint64 pools = 4;
+  // Stores all of the possible hot paths for a given pool id
+  repeated Route routes = 2;
+}
+
+message Route {
+  // The pool IDs that are travered in the directed cyclic graph (traversed left -> right)
+  repeated uint64 pools = 1;
 }
 
 // ProtoRevStatistics stores information about how many trades, profits, and

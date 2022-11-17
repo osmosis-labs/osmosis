@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -45,36 +44,27 @@ func (suite *KeeperTestSuite) SetUpAtomPools() {
 }
 
 // SetUpRoutes sets up the routes for testing
-func (suite *KeeperTestSuite) SetUpRoutes() {
-	tokens := []string{"Akash", "Juno", "Ethereum", "Bitcoin", "Canto"}
+func (suite *KeeperTestSuite) SetUpSearcherRoutes() {
+	var index uint64
+	for ; index <= 5; index++ {
+		// create routes with atom
+		searcherRoutes := CreateSeacherRoutes("atom", 5)
+		suite.App.AppKeepers.ProtoRevKeeper.SetSearcherRoute(suite.Ctx, index, &searcherRoutes)
 
-	// create routes with atom
-	for _, token := range tokens {
-		route := CreateRoute("atom", token, "atom", 5)
-		suite.App.AppKeepers.ProtoRevKeeper.SetRoute(suite.Ctx, types.AtomDenomination, token, &route)
+		// create routes with osmo
+		searcherRoutes = CreateSeacherRoutes("osmo", 5)
+		suite.App.AppKeepers.ProtoRevKeeper.SetSearcherRoute(suite.Ctx, index*2, &searcherRoutes)
 	}
-
-	// create routes with osmo
-	for _, token := range tokens {
-		route := CreateRoute("osmo", "osmo", token, 5)
-		suite.App.AppKeepers.ProtoRevKeeper.SetRoute(suite.Ctx, types.OsmosisDenomination, token, &route)
-	}
-
 }
 
-// CreateRoute creates a route for testing
-func CreateRoute(arbDenom, swapInDenom, swapOutDenom string, numberPools uint64) types.Route {
-	pools := make([]uint64, numberPools)
-
-	var pool uint64
-	for pool = 0; pool < numberPools; pool++ {
-		pools[pool] = pool
+// CreateRoute creates SearchRoutes object for testing
+func CreateSeacherRoutes(arbDenom string, numberRoutes uint64) types.SearcherRoutes {
+	routes := make([]*types.Route, numberRoutes)
+	for i := uint64(0); i < numberRoutes; i++ {
+		routes[i] = &types.Route{
+			Pools: []uint64{i, i + 1, i + 2, i + 3, i + 4},
+		}
 	}
 
-	return types.Route{
-		ArbDenom:     strings.ToUpper(arbDenom),
-		SwapInDenom:  strings.ToUpper(swapInDenom),
-		SwapOutDenom: strings.ToUpper(swapOutDenom),
-		Pools:        pools,
-	}
+	return types.NewSearcherRoutes(arbDenom, routes)
 }

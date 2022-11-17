@@ -47,11 +47,6 @@ func GetKeyPrefixAtomPool(denom string) []byte {
 }
 
 // Returns the key need to fetch the route for a given pair of denoms
-func GetKeyPrefixRouteForPair(denom1, denom2 string) []byte {
-	first, second := strings.ToUpper(denom1), strings.ToUpper(denom2)
-
-	if first < second {
-		return append(KeyPrefixRoutes, []byte(first+second)...)
-	}
-	return append(KeyPrefixRoutes, []byte(second+first)...)
+func GetKeyPrefixRouteForPoolID(poolID uint64) []byte {
+	return append(KeyPrefixRoutes, UInt64ToBytes(poolID)...)
 }

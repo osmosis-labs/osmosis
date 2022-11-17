@@ -192,63 +192,51 @@ func (suite *KeeperTestSuite) TestDeleteOsmoPool() {
 }
 
 func (suite *KeeperTestSuite) TestGetRoute() {
+	routes := []*types.Route{
+		{
+			Pools: []uint64{0, 1, 2, 3, 4},
+		},
+		{
+			Pools: []uint64{1, 2, 3, 4, 5},
+		},
+		{
+			Pools: []uint64{2, 3, 4, 5, 6},
+		},
+		{
+			Pools: []uint64{3, 4, 5, 6, 7},
+		},
+		{
+			Pools: []uint64{4, 5, 6, 7, 8},
+		},
+	}
+
 	cases := []struct {
-		description string
-		denom1      string
-		denom2      string
-		route       types.Route
-		exists      bool
+		description    string
+		poolID         uint64
+		searcherRoutes types.SearcherRoutes
+		exists         bool
 	}{
 		{
 			description: "Route exists for denom Akash",
-			denom1:      "atom",
-			denom2:      "akash",
-			route: types.Route{
-				ArbDenom:     "ATOM",
-				SwapInDenom:  "AKASH",
-				SwapOutDenom: "ATOM",
-				Pools:        []uint64{0, 1, 2, 3, 4},
+			poolID:      1,
+			searcherRoutes: types.SearcherRoutes{
+				ArbDenom: "ATOM",
+				Routes:   routes,
 			},
 			exists: true,
-		},
-		{
-			description: "Route exists for denom juno",
-			denom1:      "osmo",
-			denom2:      "juno",
-			route: types.Route{
-				ArbDenom:     "OSMO",
-				SwapInDenom:  "OSMO",
-				SwapOutDenom: "JUNO",
-				Pools:        []uint64{0, 1, 2, 3, 4},
-			},
-			exists: true,
-		},
-		{
-			description: "Empty string returns error",
-			denom1:      "",
-			denom2:      "",
-			route:       types.Route{},
-			exists:      false,
-		},
-		{
-			description: "No matching route",
-			denom1:      "bussincoin",
-			denom2:      "skip",
-			route:       types.Route{},
-			exists:      false,
 		},
 	}
 
 	// Insert route data
-	suite.SetUpRoutes()
+	suite.SetUpSearcherRoutes()
 
 	for _, tc := range cases {
 		suite.Run(tc.description, func() {
-			route, err := suite.App.ProtoRevKeeper.GetRoute(suite.Ctx, tc.denom1, tc.denom2)
+			searcherRoutes, err := suite.App.ProtoRevKeeper.GetSearcherRoutes(suite.Ctx, tc.poolID)
 
 			if tc.exists {
 				suite.Require().NoError(err)
-				suite.Require().Equal(tc.route, *route)
+				suite.Require().Equal(tc.searcherRoutes, *searcherRoutes)
 			} else {
 				suite.Require().Error(err)
 			}

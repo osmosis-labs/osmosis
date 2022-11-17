@@ -12,5 +12,5 @@ message GenesisState {
   // Module Parameters
   Params params = 1 [ (gogoproto.nullable) = false ];
   // Hot routes that are configured on genesis
-  repeated Route routes = 2 [ (gogoproto.nullable) = false ];
+  repeated SearcherRoutes routes = 2 [ (gogoproto.nullable) = false ];
 }

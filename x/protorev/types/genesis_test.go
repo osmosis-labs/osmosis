@@ -9,6 +9,15 @@ import (
 )
 
 func TestGenesisState_Validate(t *testing.T) {
+	invalidRoutes := []*types.Route{
+		{
+			Pools: []uint64{1, 2},
+		},
+	}
+	invalidSearchRoutes := []types.SearcherRoutes{
+		types.NewSearcherRoutes("invalid", invalidRoutes),
+	}
+
 	cases := []struct {
 		description string
 		genState    *types.GenesisState
@@ -25,22 +34,23 @@ func TestGenesisState_Validate(t *testing.T) {
 			description: "Default parameters with valid routes",
 			genState: &types.GenesisState{
 				Params: types.DefaultParams(),
-				Routes: []types.Route{
-					createRoute(types.AtomDenomination, 10),
-					createRoute(types.AtomDenomination, 5),
-					createRoute(types.OsmosisDenomination, 4),
-				},
+				Routes: []types.SearcherRoutes{createSeacherRoutes(types.AtomDenomination, 3)},
 			},
 			valid: true,
+		},
+		{
+			description: "Default parameters with nil routes",
+			genState: &types.GenesisState{
+				Params: types.DefaultParams(),
+				Routes: []types.SearcherRoutes{types.NewSearcherRoutes("invalid", nil)},
+			},
+			valid: false,
 		},
 		{
 			description: "Default parameters with invalid routes",
 			genState: &types.GenesisState{
 				Params: types.DefaultParams(),
-				Routes: []types.Route{
-					createRoute(types.AtomDenomination, 10),
-					createRoute(types.AtomDenomination, 1),
-				},
+				Routes: invalidSearchRoutes,
 			},
 			valid: false,
 		},
@@ -58,16 +68,14 @@ func TestGenesisState_Validate(t *testing.T) {
 	}
 }
 
-func createRoute(arbDenom string, numberPools uint64) types.Route {
-	pools := make([]uint64, numberPools)
-
-	var pool uint64
-	for pool = 0; pool < numberPools; pool++ {
-		pools[pool] = pool
+// CreateRoute creates SearchRoutes object for testing
+func createSeacherRoutes(arbDenom string, numberPools uint64) types.SearcherRoutes {
+	routes := make([]*types.Route, numberPools)
+	for i := uint64(0); i < numberPools; i++ {
+		routes[i] = &types.Route{
+			Pools: []uint64{i, i + 1, i + 2, i + 3},
+		}
 	}
 
-	return types.Route{
-		ArbDenom: arbDenom,
-		Pools:    pools,
-	}
+	return types.NewSearcherRoutes(arbDenom, routes)
 }
