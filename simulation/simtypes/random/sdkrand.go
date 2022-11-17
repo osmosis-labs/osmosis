@@ -137,6 +137,22 @@ func RandSubsetCoins(r *rand.Rand, coins sdk.Coins) sdk.Coins {
 	return subset.Sort()
 }
 
+func RandCoin(r *rand.Rand, coins sdk.Coins) sdk.Coins {
+	if len(coins) == 0 {
+		return sdk.Coins{}
+	}
+	// make sure at least one coin added
+	denomIdx := r.Intn(len(coins))
+	coin := coins[denomIdx]
+	amt, err := RandPositiveInt(r, coin.Amount)
+	// malformed coin. 0 amt in coins
+	if err != nil {
+		return sdk.Coins{}
+	}
+
+	return sdk.Coins{sdk.NewCoin(coin.Denom, amt)}
+}
+
 // DeriveRand derives a new Rand deterministically from another random source.
 // Unlike rand.New(rand.NewSource(seed)), the result is "more random"
 // depending on the source and state of r.
