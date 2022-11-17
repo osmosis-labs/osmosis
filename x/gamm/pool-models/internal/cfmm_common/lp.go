@@ -16,7 +16,7 @@ const errMsgFormatSharesLargerThanMax = "%s resulted shares is larger than the m
 // CalcExitPool returns how many tokens should come out, when exiting k LP shares against a "standard" CFMM
 func CalcExitPool(ctx sdk.Context, pool types.PoolI, exitingShares sdk.Int, exitFee sdk.Dec) (sdk.Coins, error) {
 	totalShares := pool.GetTotalShares()
-	if exitingShares.GTE(totalShares) {
+	if exitingShares.GT(totalShares) {
 		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, errMsgFormatSharesLargerThanMax, exitingShares, totalShares)
 	}
 
@@ -42,7 +42,7 @@ func CalcExitPool(ctx sdk.Context, pool types.PoolI, exitingShares sdk.Int, exit
 		if exitAmt.LTE(sdk.ZeroInt()) {
 			continue
 		}
-		if exitAmt.GTE(asset.Amount) {
+		if exitAmt.GT(asset.Amount) {
 			return sdk.Coins{}, errors.New("too many shares out")
 		}
 		exitedCoins = exitedCoins.Add(sdk.NewCoin(asset.Denom, exitAmt))
