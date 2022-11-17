@@ -10,6 +10,7 @@ import (
 
 type (
 	TimeTooOldError = timeTooOldError
+	TwapType        = twapType
 )
 
 const (

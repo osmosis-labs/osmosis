@@ -541,6 +541,7 @@ func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
 type computeTwapTestCase struct {
 	startRecord types.TwapRecord
 	endRecord   types.TwapRecord
+	twapTypes   []twap.TwapType
 	quoteAsset  string
 	expTwap     sdk.Dec
 	expErr      bool
@@ -562,42 +563,57 @@ type computeThreeAssetArithmeticTwapTestCase struct {
 // Then an expected TWAP is provided in each test case, to compare against computed.
 func TestComputeTwap(t *testing.T) {
 	tests := map[string]computeTwapTestCase{
-		"basic: spot price = 1 for one second, 0 init accumulator": {
+		"arithmetic only, basic: spot price = 1 for one second, 0 init accumulator": {
 			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
 			endRecord:   newOneSidedRecord(tPlusOne, OneSec, true),
 			quoteAsset:  denom0,
+			twapTypes:   []twap.TwapType{twap.ArithmeticTwapType},
 			expTwap:     sdk.OneDec(),
 		},
 		// this test just shows what happens in case the records are reversed.
 		// It should return the correct result, even though this is incorrect internal API usage
-		"invalid call: reversed records of above": {
+		"arithmetic only: invalid call: reversed records of above": {
 			startRecord: newOneSidedRecord(tPlusOne, OneSec, true),
 			endRecord:   newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
 			quoteAsset:  denom0,
+			twapTypes:   []twap.TwapType{twap.ArithmeticTwapType},
 			expTwap:     sdk.OneDec(),
 		},
 		"same record: denom0, end spot price = 0": {
 			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
 			endRecord:   newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
 			quoteAsset:  denom0,
+			twapTypes:   []twap.TwapType{twap.ArithmeticTwapType, twap.GeometricTwapType},
 			expTwap:     sdk.ZeroDec(),
 		},
 		"same record: denom1, end spot price = 1": {
 			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
 			endRecord:   newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
 			quoteAsset:  denom1,
+			twapTypes:   []twap.TwapType{twap.ArithmeticTwapType, twap.GeometricTwapType},
 			expTwap:     sdk.OneDec(),
 		},
-		"accumulator = 10*OneSec, t=5s. 0 base accum": testCaseFromDeltas(
+		"arithmetic only: accumulator = 10*OneSec, t=5s. 0 base accum": testCaseFromDeltas(
 			sdk.ZeroDec(), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
-		"accumulator = 10*OneSec, t=100s. 0 base accum (asset 1)": testCaseFromDeltasAsset1(sdk.ZeroDec(), OneSec.MulInt64(10), 100*time.Second, sdk.NewDecWithPrec(1, 1)),
+		"arithmetic only: accumulator = 10*OneSec, t=100s. 0 base accum (asset 1)": testCaseFromDeltasAsset1(sdk.ZeroDec(), OneSec.MulInt64(10), 100*time.Second, sdk.NewDecWithPrec(1, 1)),
+		"geometric only: accumulator = log(10)*OneSec, t=5s. 0 base accum": geometricTestCaseFromDeltas0(
+			sdk.ZeroDec(), geometricTenSecAccum, 5*time.Second, osmomath.Pow(osmomath.Tick, geometricTenSecAccum.QuoInt64(5*1000))),
+		"geometric only: accumulator = log(10)*OneSec, t=100s. 0 base accum (asset 1)": geometricTestCaseFromDeltas1(sdk.ZeroDec(), geometricTenSecAccum, 100*time.Second, sdk.OneDec().Quo(osmomath.Pow(osmomath.Tick, geometricTenSecAccum.QuoInt64(100*1000)))),
 	}
 	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			actualTwap, err := twap.ComputeTwap(test.startRecord, test.endRecord, test.quoteAsset, twap.ArithmeticTwapType)
-			require.Equal(t, test.expTwap, actualTwap)
-			require.NoError(t, err)
-		})
+		for _, twapType := range test.twapTypes {
+			twapType := twapType
+			twapTypeStr := "arithmetic"
+			if twapType == twap.GeometricTwapType {
+				twapTypeStr = "geometric"
+			}
+
+			t.Run(fmt.Sprintf("%s - %s", twapTypeStr, name), func(t *testing.T) {
+				actualTwap, err := twap.ComputeTwap(test.startRecord, test.endRecord, test.quoteAsset, twapType)
+				require.NoError(t, err)
+				osmoassert.DecApproxEq(t, test.expTwap, actualTwap, osmomath.GetPowPrecision())
+			})
+		}
 	}
 }
 
@@ -686,19 +702,19 @@ func TestComputeGeometricTwap(t *testing.T) {
 		},
 
 		// toggle time delta.
-		"accumulator = log(10)*OneSec, t=5s. 0 base accum": geometricTestCaseFromDeltas(
+		"accumulator = log(10)*OneSec, t=5s. 0 base accum": geometricTestCaseFromDeltas0(
 			sdk.ZeroDec(), geometricTenSecAccum, 5*time.Second, osmomath.Pow(osmomath.Tick, geometricTenSecAccum.QuoInt64(5*1000))),
-		"accumulator = log(10)*OneSec, t=3s. 0 base accum": geometricTestCaseFromDeltas(
+		"accumulator = log(10)*OneSec, t=3s. 0 base accum": geometricTestCaseFromDeltas0(
 			sdk.ZeroDec(), geometricTenSecAccum, 3*time.Second, osmomath.Pow(osmomath.Tick, geometricTenSecAccum.QuoInt64(3*1000))),
-		"accumulator = log(10)*OneSec, t=100s. 0 base accum": geometricTestCaseFromDeltas(
+		"accumulator = log(10)*OneSec, t=100s. 0 base accum": geometricTestCaseFromDeltas0(
 			sdk.ZeroDec(), geometricTenSecAccum, 100*time.Second, osmomath.Pow(osmomath.Tick, geometricTenSecAccum.QuoInt64(100*1000))),
 
 		// test that base accum has no impact
-		"accumulator = log(10)*OneSec, t=5s. 10 base accum": geometricTestCaseFromDeltas(
+		"accumulator = log(10)*OneSec, t=5s. 10 base accum": geometricTestCaseFromDeltas0(
 			logTen, geometricTenSecAccum, 5*time.Second, osmomath.Pow(osmomath.Tick, geometricTenSecAccum.QuoInt64(5*1000))),
-		"accumulator = log(10)*OneSec, t=3s. 10*second base accum": geometricTestCaseFromDeltas(
+		"accumulator = log(10)*OneSec, t=3s. 10*second base accum": geometricTestCaseFromDeltas0(
 			OneSec.MulInt64(10).Mul(logTen), geometricTenSecAccum, 3*time.Second, osmomath.Pow(osmomath.Tick, geometricTenSecAccum.QuoInt64(3*1000))),
-		"accumulator = 10*OneSec, t=100s. .1*second base accum": geometricTestCaseFromDeltas(
+		"accumulator = 10*OneSec, t=100s. .1*second base accum": geometricTestCaseFromDeltas0(
 			OneSec.MulInt64(10).Mul(logOneOverTen), geometricTenSecAccum, 100*time.Second, osmomath.Pow(osmomath.Tick, geometricTenSecAccum.QuoInt64(100*1000))),
 
 		// TODO: this is the highest price we currently support with the given precision bounds.
@@ -713,6 +729,8 @@ func TestComputeGeometricTwap(t *testing.T) {
 		// - max spot price
 		// - large time delta
 		// - both
+
+		// TODO: hand calculated tests
 	}
 
 	for name, tc := range tests {
@@ -1543,6 +1561,7 @@ func testCaseFromDeltas(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, 
 	return computeTwapTestCase{
 		newOneSidedRecord(baseTime, startAccum, true),
 		newOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), true),
+		[]twap.TwapType{twap.ArithmeticTwapType},
 		denom0,
 		expectedTwap,
 		false,
@@ -1554,6 +1573,7 @@ func testCaseFromDeltasAsset1(startAccum, accumDiff sdk.Dec, timeDelta time.Dura
 	return computeTwapTestCase{
 		newOneSidedRecord(baseTime, startAccum, false),
 		newOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), false),
+		[]twap.TwapType{twap.ArithmeticTwapType},
 		denom1,
 		expectedTwap,
 		false,
@@ -1561,13 +1581,18 @@ func testCaseFromDeltasAsset1(startAccum, accumDiff sdk.Dec, timeDelta time.Dura
 	}
 }
 
-func geometricTestCaseFromDeltas(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTwapTestCase {
+func geometricTestCaseFromDeltas0(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTwapTestCase {
 	return computeTwapTestCase{
 		newOneSidedGeometricRecord(baseTime, startAccum),
 		newOneSidedGeometricRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff)),
+		[]twap.TwapType{twap.GeometricTwapType},
 		denom0,
 		expectedTwap,
 		false,
 		false,
 	}
+}
+
+func geometricTestCaseFromDeltas1(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTwapTestCase {
+	return geometricTestCaseFromDeltas0(startAccum, accumDiff, timeDelta, sdk.OneDec().Quo(expectedTwap))
 }
