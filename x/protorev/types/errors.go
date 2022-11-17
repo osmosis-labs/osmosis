@@ -7,4 +7,5 @@ import (
 var (
 	ErrInvalidArbDenom = sdkerrors.Register(ModuleName, 1, "This is not a tradeable denomination")
 	ErrInvalidRoute    = sdkerrors.Register(ModuleName, 2, "This is not a valid cyclic route")
+	ErrDuplicatePoolId = sdkerrors.Register(ModuleName, 3, "This pool id is already in use")
 )

@@ -8,17 +8,19 @@ import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v12/x/protorev/types";
 
-// Route is a directed cyclic graph that tracks a feasible cyclic arbitrage
-// trading route
+// SearcherRoutes tracks all of the hot routes for a given pool id
 message SearcherRoutes {
   // The denomination that will be used to execute cyclic arbitrade trades
-  string arb_denom = 1;
+  string arb_denom = 1 [(gogoproto.nullable) = false];
   // Stores all of the possible hot paths for a given pool id
   repeated Route routes = 2;
+  // Stores the pool ID that all of the searcherRoutes correspond to
+  uint64 pool_id = 3 [(gogoproto.nullable) = false];
 }
 
 message Route {
-  // The pool IDs that are travered in the directed cyclic graph (traversed left -> right)
+  // The pool IDs that are travered in the directed cyclic graph (traversed left
+  // -> right)
   repeated uint64 pools = 1;
 }
 

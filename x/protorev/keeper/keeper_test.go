@@ -43,22 +43,22 @@ func (suite *KeeperTestSuite) SetUpAtomPools() {
 	suite.App.AppKeepers.ProtoRevKeeper.SetAtomPool(suite.Ctx, "Canto", 10)
 }
 
-// SetUpRoutes sets up the routes for testing
+// SetUpRoutes sets up the searcher routes for testing
 func (suite *KeeperTestSuite) SetUpSearcherRoutes() {
 	var index uint64
 	for ; index <= 5; index++ {
 		// create routes with atom
-		searcherRoutes := CreateSeacherRoutes("atom", 5)
-		suite.App.AppKeepers.ProtoRevKeeper.SetSearcherRoute(suite.Ctx, index, &searcherRoutes)
+		searcherRoutes := CreateSeacherRoutes("atom", 5, index)
+		suite.App.AppKeepers.ProtoRevKeeper.SetSearcherRoutes(suite.Ctx, index, &searcherRoutes)
 
 		// create routes with osmo
-		searcherRoutes = CreateSeacherRoutes("osmo", 5)
-		suite.App.AppKeepers.ProtoRevKeeper.SetSearcherRoute(suite.Ctx, index*2, &searcherRoutes)
+		searcherRoutes = CreateSeacherRoutes("osmo", 5, index*2)
+		suite.App.AppKeepers.ProtoRevKeeper.SetSearcherRoutes(suite.Ctx, index*2, &searcherRoutes)
 	}
 }
 
 // CreateRoute creates SearchRoutes object for testing
-func CreateSeacherRoutes(arbDenom string, numberRoutes uint64) types.SearcherRoutes {
+func CreateSeacherRoutes(arbDenom string, numberRoutes uint64, poolId uint64) types.SearcherRoutes {
 	routes := make([]*types.Route, numberRoutes)
 	for i := uint64(0); i < numberRoutes; i++ {
 		routes[i] = &types.Route{
@@ -66,5 +66,5 @@ func CreateSeacherRoutes(arbDenom string, numberRoutes uint64) types.SearcherRou
 		}
 	}
 
-	return types.NewSearcherRoutes(arbDenom, routes)
+	return types.NewSearcherRoutes(arbDenom, poolId, routes)
 }

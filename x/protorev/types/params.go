@@ -19,7 +19,7 @@ func NewParams() Params {
 // DefaultParams returns a default set of parameters
 func DefaultParams() Params {
 	return Params{
-		OnlyCheckHotRoutes: true,
+		OnlyCheckHotRoutes: false,
 		Enabled:            true,
 	}
 }

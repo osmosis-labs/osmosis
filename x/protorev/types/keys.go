@@ -46,7 +46,7 @@ func GetKeyPrefixAtomPool(denom string) []byte {
 	return append(KeyPrefixAtomPools, []byte(upper)...)
 }
 
-// Returns the key need to fetch the route for a given pair of denoms
+// Returns the key need to fetch the searcher routes for a given pool id
 func GetKeyPrefixRouteForPoolID(poolID uint64) []byte {
 	return append(KeyPrefixRoutes, UInt64ToBytes(poolID)...)
 }

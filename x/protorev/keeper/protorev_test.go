@@ -222,6 +222,7 @@ func (suite *KeeperTestSuite) TestGetRoute() {
 			searcherRoutes: types.SearcherRoutes{
 				ArbDenom: "ATOM",
 				Routes:   routes,
+				PoolId:   1,
 			},
 			exists: true,
 		},

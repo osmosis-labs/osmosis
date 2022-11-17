@@ -75,7 +75,7 @@ func (k Keeper) GetSearcherRoutes(ctx sdk.Context, poolID uint64) (*types.Search
 
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return nil, sdkerrors.Wrapf(ErrNoRoute, "poolID entered: %d", poolID)
+		return nil, sdkerrors.Wrapf(ErrNoSearcherRoutes, "poolID entered: %d", poolID)
 	}
 
 	searchRoutes := &types.SearcherRoutes{}
@@ -85,7 +85,7 @@ func (k Keeper) GetSearcherRoutes(ctx sdk.Context, poolID uint64) (*types.Search
 }
 
 // SetRoute sets the route given two denoms
-func (k Keeper) SetSearcherRoute(ctx sdk.Context, poolID uint64, searcherRoutes *types.SearcherRoutes) {
+func (k Keeper) SetSearcherRoutes(ctx sdk.Context, poolID uint64, searcherRoutes *types.SearcherRoutes) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.KeyPrefixRoutes))
 	key := types.GetKeyPrefixRouteForPoolID(poolID)
 

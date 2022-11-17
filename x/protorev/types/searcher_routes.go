@@ -7,9 +7,10 @@ import (
 )
 
 // Creates a new SearcherRoutes object
-func NewSearcherRoutes(arbDenom string, routes []*Route) SearcherRoutes {
+func NewSearcherRoutes(arbDenom string, poolID uint64, routes []*Route) SearcherRoutes {
 	return SearcherRoutes{
 		ArbDenom: strings.ToUpper(arbDenom),
+		PoolId:   poolID,
 		Routes:   routes,
 	}
 }
@@ -20,7 +21,7 @@ func (sr *SearcherRoutes) Validate() error {
 		return sdkerrors.Wrapf(ErrInvalidArbDenom, "entered denomination was %s but only %s and %s are allowed", sr.ArbDenom, AtomDenomination, OsmosisDenomination)
 	}
 
-	if sr.Routes != nil && len(sr.Routes) == 0 {
+	if sr.Routes == nil || len(sr.Routes) == 0 {
 		return sdkerrors.Wrap(ErrInvalidRoute, "no routes were entered")
 	}
 
@@ -31,7 +32,7 @@ func (sr *SearcherRoutes) Validate() error {
 			uniquePools[pool] = true
 		}
 
-		// There must be at least three pools hit for it to be a valid route
+		// There must be at least three pools hops for it to be a valid route
 		if len(uniquePools) < 3 {
 			return sdkerrors.Wrapf(ErrInvalidRoute, "the length of the entered cyclic arbitrage route must hit at least three pools: entered number of pools %d", len(uniquePools))
 		}
