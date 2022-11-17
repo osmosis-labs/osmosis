@@ -281,11 +281,14 @@ func iterKCalculator(x0, w, yf osmomath.BigDec) func(osmomath.BigDec) (osmomath.
 	}
 }
 
-var zero = osmomath.ZeroDec()
-var one = osmomath.OneDec()
+var (
+	zero = osmomath.ZeroDec()
+	one  = osmomath.OneDec()
+)
 
 func deriveUpperLowerXFinalReserveBounds(xReserve, yReserve, wSumSquares, yFinal osmomath.BigDec) (
-	xFinalLowerbound, xFinalUpperbound osmomath.BigDec) {
+	xFinalLowerbound, xFinalUpperbound osmomath.BigDec,
+) {
 	xFinalLowerbound, xFinalUpperbound = xReserve, xReserve
 
 	k0 := cfmmConstantMultiNoV(xReserve, yFinal, wSumSquares)
