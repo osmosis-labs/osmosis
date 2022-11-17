@@ -145,9 +145,6 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	osmoSupply, err := node.QuerySupplyOf("uosmo")
 	s.NoError(err)
 
-	// balance, err := node.QueryBalances(chainA.NodeConfigs[1].PublicAddress)
-	// s.NoError(err)
-
 	f, err := osmoSupply.ToDec().Float64()
 	s.NoError(err)
 
