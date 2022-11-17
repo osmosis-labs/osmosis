@@ -714,6 +714,38 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 	}
 }
 
+func (suite *StableSwapTestSuite) Test_StableSwap_Slippage_LiquidityRelation() {
+	type testcase struct {
+		initialLiquidity sdk.Coins
+		scalingFactors   []uint64
+	}
+	testcases := map[string]testcase{
+		"1:1 pool, 1:1 SF": {
+			initialLiquidity: sdk.NewCoins(sdk.NewInt64Coin("bar", 10000), sdk.NewInt64Coin("foo", 10000)),
+			scalingFactors:   []uint64{},
+		},
+		"10:1 pool, 1:1 SF": {
+			initialLiquidity: sdk.NewCoins(sdk.NewInt64Coin("bar", 100000), sdk.NewInt64Coin("foo", 10000)),
+			scalingFactors:   []uint64{},
+		},
+		"10:1 pool, 3:2 SF": {
+			initialLiquidity: sdk.NewCoins(sdk.NewInt64Coin("bar", 100000), sdk.NewInt64Coin("foo", 10000)),
+			scalingFactors:   []uint64{3, 2},
+		},
+	}
+	swapFeeCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
+	for name, tc := range testcases {
+		for _, swapFee := range swapFeeCases {
+			createPoolFn := func(ctx sdk.Context, liq sdk.Coins) types.PoolI {
+				return createTestPool(suite.T(), liq, sdk.MustNewDecFromStr(swapFee), sdk.ZeroDec(), tc.scalingFactors)
+			}
+			ctx := sdk.Context{}
+			test_helpers.TestSlippageRelationWithLiquidityIncrease(name, suite.T(), ctx, createPoolFn, tc.initialLiquidity)
+		}
+
+	}
+}
+
 func calcUReserve(remReserves []osmomath.BigDec) osmomath.BigDec {
 	uReserve := osmomath.OneDec()
 	for _, assetReserve := range remReserves {
