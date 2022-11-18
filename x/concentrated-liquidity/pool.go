@@ -100,6 +100,24 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom 
 	return sdk.Dec{}, nil
 }
 
+// isCurrentTickInRange returns true if pool's current tick is within
+// the range of the lower and upper ticks. False otherwise.
+// TODO: add tests.
+func (p Pool) isCurrentTickInRange(lowerTick, upperTick int64) bool {
+	return p.CurrentTick.GTE(sdk.NewInt(lowerTick)) && p.CurrentTick.LT(sdk.NewInt(upperTick))
+}
+
+// updateLiquidityIfActivePosition updates the pool's liquidity if the position is active.
+// Returns true if updated, false otherwise.
+// TODO: add tests.
+func (p *Pool) updateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upperTick int64, liquidityDelta sdk.Dec) bool {
+	if p.isCurrentTickInRange(lowerTick, upperTick) {
+		p.Liquidity = p.Liquidity.Add(liquidityDelta)
+		return true
+	}
+	return false
+}
+
 // CalcOutAmtGivenIn calculates tokens to be swapped out given the provided amount and fee deducted. It also returns
 // what the updated tick, liquidity, and currentSqrtPrice for the pool would be after this swap.
 // Note this method is non-mutative, so the values returned by CalcOutAmtGivenIn do not get stored

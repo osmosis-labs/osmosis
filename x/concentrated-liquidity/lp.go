@@ -81,9 +81,14 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	return actualAmount0.Neg(), actualAmount1.Neg(), nil
 }
 
-// TODO: spec and tests.
+// updatePosition updates the position in the given pool id and in the given tick range and liquidityAmount.
+// Negative liquidityDelta implies withdrawing liquidity.
+// Positive liquidityDelta implies adding liquidity.
+// Updates ticks and poo, liquidity. Returns how much of each token is either added or removed.
+// Negative returned amounts imply that tokens are removed from the pool.
+// Positive returned amounts imply that tokens are added to the pool.
+// TODO: tests.
 func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec) (sdk.Int, sdk.Int, error) {
-
 	// update tickInfo state
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
 	err := k.initOrUpdateTick(ctx, poolId, lowerTick, liquidityDelta, false)
@@ -161,56 +166,4 @@ func (p Pool) calcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, sqr
 	}
 
 	return actualAmountDenom0, actualAmountDenom1
-}
-
-// isCurrentTickInRange returns true if pool's current tick is within
-// the range of the lower and upper ticks. False otherwise.
-// TODO: add tests.
-func (p Pool) isCurrentTickInRange(lowerTick, upperTick int64) bool {
-	return p.CurrentTick.GTE(sdk.NewInt(lowerTick)) && p.CurrentTick.LT(sdk.NewInt(upperTick))
-}
-
-// updateLiquidityIfActivePosition updates the pool's liquidity if the position is active.
-// Returns true if updated, false otherwise.
-// TODO: add tests.
-func (p *Pool) updateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upperTick int64, liquidityDelta sdk.Dec) bool {
-	if p.isCurrentTickInRange(lowerTick, upperTick) {
-		p.Liquidity = p.Liquidity.Add(liquidityDelta)
-		return true
-	}
-	return false
-}
-
-// ticksToSqrtPrice returns the sqrt price for the lower and upper ticks.
-// Returns error if fails to calculate sqrt price.
-// TODO: spec and tests
-func ticksToSqrtPrice(lowerTick, upperTick int64) (sdk.Dec, sdk.Dec, error) {
-	sqrtPriceUpperTick, err := tickToSqrtPrice(sdk.NewInt(upperTick))
-	if err != nil {
-		return sdk.Dec{}, sdk.Dec{}, err
-	}
-	sqrtPriceLowerTick, err := tickToSqrtPrice(sdk.NewInt(lowerTick))
-	if err != nil {
-		return sdk.Dec{}, sdk.Dec{}, err
-	}
-	return sqrtPriceLowerTick, sqrtPriceUpperTick, nil
-}
-
-// validateTickInRangeIsValid validates that given ticks are valid.
-// That is, both lower and upper ticks are within types.MinTick and types.MaxTick.
-// Also, lower tick must be less than upper tick.
-// Returns error if validation fails. Otherwise, nil.
-func validateTickRangeIsValid(lowerTick int64, upperTick int64) error {
-	// ensure types.MinTick <= lowerTick < types.MaxTick
-	if lowerTick < types.MinTick || lowerTick >= types.MaxTick {
-		return types.InvalidTickError{Tick: lowerTick, IsLower: true}
-	}
-	// ensure types.MaxTick < upperTick <= types.MinTick
-	if upperTick > types.MaxTick || upperTick <= types.MinTick {
-		return types.InvalidTickError{Tick: upperTick, IsLower: false}
-	}
-	if lowerTick >= upperTick {
-		return types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
-	}
-	return nil
 }
