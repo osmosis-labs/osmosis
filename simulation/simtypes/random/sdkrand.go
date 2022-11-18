@@ -2,6 +2,7 @@ package sdkrand
 
 import (
 	"errors"
+	"math"
 	"math/big"
 	"math/rand"
 	"time"
@@ -153,32 +154,20 @@ func RandCoin(r *rand.Rand, coins sdk.Coins) sdk.Coins {
 	return sdk.Coins{sdk.NewCoin(coin.Denom, amt)}
 }
 
-// DeriveRand derives a new Rand deterministically from another random source.
-// Unlike rand.New(rand.NewSource(seed)), the result is "more random"
-// depending on the source and state of r.
-//
-// NOTE: not crypto safe.
-func DeriveRand(r *rand.Rand) *rand.Rand {
-	const num = 8 // TODO what's a good number?  Too large is too slow.
-	ms := multiSource(make([]rand.Source, num))
-
-	for i := 0; i < num; i++ {
-		ms[i] = rand.NewSource(r.Int63())
-	}
-
-	return rand.New(ms)
-}
-
-type multiSource []rand.Source
-
-func (ms multiSource) Int63() (r int64) {
-	for _, source := range ms {
-		r ^= source.Int63()
-	}
-
-	return r
-}
-
-func (ms multiSource) Seed(seed int64) {
-	panic("multiSource Seed should not be called")
+// RandGeometricCoin uniformly samples a denom from the addr's balances.
+// Then it samples an Exponentially distributed amount of the addr's coins, with rate = 10.
+// (Meaning that on average it samples 10% of the chosen balance)
+// Pre-condition: Addr must have a spendable balance
+func RandExponentialCoin(r *rand.Rand, coin sdk.Coin) sdk.Coin {
+	lambda := float64(10)
+	sample := r.ExpFloat64() / lambda
+	// truncate exp at 1, which will only be reached in .0045% of the time.
+	// .000045 ~= (1 - CDF(1, Exp[\lambda=10])) = e^{-10}
+	sample = math.Min(1, sample)
+	// Do some hacky scaling to get this into an SDK decimal,
+	// were going to treat it as an integer in the range [0, 10000]
+	maxRange := int64(10000)
+	intSample := int64(math.Round(sample * float64(maxRange)))
+	newAmount := coin.Amount.MulRaw(intSample).QuoRaw(maxRange)
+	return sdk.NewCoin(coin.Denom, newAmount)
 }

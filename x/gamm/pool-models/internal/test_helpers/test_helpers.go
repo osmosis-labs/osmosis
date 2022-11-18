@@ -12,7 +12,8 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
+	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	sdkrand "github.com/osmosis-labs/osmosis/v13/simulation/simtypes/random"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
@@ -40,6 +41,7 @@ func TestCalculateAmountOutAndIn_InverseRelationship(
 	assetOutDenom string,
 	initialCalcOut int64,
 	swapFee sdk.Dec,
+	errTolerance osmoutils.ErrTolerance,
 ) {
 	initialOut := sdk.NewInt64Coin(assetOutDenom, initialCalcOut)
 	initialOutCoins := sdk.NewCoins(initialOut)
@@ -66,10 +68,11 @@ func TestCalculateAmountOutAndIn_InverseRelationship(
 	if preFeeTokenIn.Equal(sdk.OneInt()) {
 		require.True(t, actual.GT(expected))
 	} else {
-		// allow a rounding error of up to 1 for this relation
-		// TODO: Ensure rounding is correct
-		tol := sdk.NewDec(1)
-		osmoassert.DecApproxEq(t, expected, actual, tol)
+		if expected.Sub(actual).Abs().GT(sdk.OneDec()) {
+			compRes := errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(expected), osmomath.BigDecFromSDKDec(actual))
+			require.True(t, compRes == 0, "expected %s, actual %s, not within error tolerance %v",
+				expected, actual, errTolerance)
+		}
 	}
 }
 
