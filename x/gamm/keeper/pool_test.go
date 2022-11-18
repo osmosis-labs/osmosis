@@ -7,10 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
+	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 var (
@@ -37,7 +37,7 @@ var (
 // 	"github.com/cosmos/cosmos-sdk/simapp"
 // 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-// 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+// 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 // )
 
 // func (suite *KeeperTestSuite) TestCleanupPool() {

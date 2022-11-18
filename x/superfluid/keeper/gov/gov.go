@@ -3,9 +3,9 @@ package gov
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v12/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v12/x/superfluid/keeper/internal/events"
-	"github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v13/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v13/x/superfluid/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

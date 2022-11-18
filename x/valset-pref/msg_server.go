@@ -4,7 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v12/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
 )
 
 type msgServer struct {

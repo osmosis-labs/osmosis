@@ -11,10 +11,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v12/x/twap/client/v2queryproto"
-	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v13/x/twap/client/v2queryproto"
+	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
@@ -145,6 +145,7 @@ $ %s q twap 1 uosmo 1667088000 1667174400
 					poolId, baseDenom, liquidity.Liquidity[0], liquidity.Liquidity[1])
 			}
 
+			// nolint: staticcheck
 			res, err := queryClient.ArithmeticTwap(cmd.Context(), &queryproto.ArithmeticTwapRequest{
 				PoolId:     poolId,
 				BaseAsset:  baseDenom,

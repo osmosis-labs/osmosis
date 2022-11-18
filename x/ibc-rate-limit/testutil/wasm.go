@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
-	"github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -66,6 +66,13 @@ func (chain *TestChain) InstantiateContract(suite *suite.Suite, msg string) sdk.
 	addr, _, err := contractKeeper.Instantiate(chain.GetContext(), codeID, creator, creator, []byte(msg), "contract", nil)
 	suite.Require().NoError(err)
 	return addr
+}
+
+func (chain *TestChain) QueryContract(suite *suite.Suite, contract sdk.AccAddress, key []byte) string {
+	osmosisApp := chain.GetOsmosisApp()
+	state, err := osmosisApp.WasmKeeper.QuerySmart(chain.GetContext(), contract, key)
+	suite.Require().NoError(err)
+	return string(state)
 }
 
 func (chain *TestChain) RegisterRateLimitingContract(addr []byte) {

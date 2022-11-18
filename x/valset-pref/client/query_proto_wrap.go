@@ -3,8 +3,8 @@ package client
 import (
 	"context"
 
-	validatorprefkeeper "github.com/osmosis-labs/osmosis/v12/x/valset-pref"
-	"github.com/osmosis-labs/osmosis/v12/x/valset-pref/client/queryproto"
+	validatorprefkeeper "github.com/osmosis-labs/osmosis/v13/x/valset-pref"
+	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/client/queryproto"
 )
 
 type Querier struct {

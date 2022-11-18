@@ -6,7 +6,7 @@ import (
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,7 +14,7 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v3/modules/core/exported"
 
-	"github.com/osmosis-labs/osmosis/v12/x/ibc-hooks/types"
+	"github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types"
 )
 
 type ContractAck struct {
