@@ -236,7 +236,7 @@ func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA, asse
 // if (endRecord.Time == startRecord.Time) returns endRecord.LastSpotPrice
 // else returns
 // (endRecord.Accumulator - startRecord.Accumulator) / (endRecord.Time - startRecord.Time)
-func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string, twapType twapType) (sdk.Dec, error) {
+func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string, isArithmeticTwap twapType) (sdk.Dec, error) {
 	// see if we need to return an error, due to spot price issues
 	var err error = nil
 	if endRecord.LastErrorTime.After(startRecord.Time) ||
@@ -253,7 +253,7 @@ func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quote
 		return endRecord.P1LastSpotPrice, err
 	}
 
-	if twapType == arithmeticTwapType {
+	if isArithmeticTwap {
 		return computeArithmeticTwap(startRecord, endRecord, quoteAsset), err
 	}
 	return computeGeometricTwap(startRecord, endRecord, quoteAsset), err

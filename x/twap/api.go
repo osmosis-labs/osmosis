@@ -8,14 +8,14 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
-type twapType uint8
+type twapType bool
 
 const (
 	// arithmeticTwapType is the type of twap that is calculated by taking the arithmetic weighted average of the spot prices.
-	arithmeticTwapType twapType = iota
+	arithmeticTwapType twapType = true
 	// geometricTwapType is the type of twap that is calculated by taking the geometric weighted average of the spot prices.
 	// nolint: unused
-	geometricTwapType
+	geometricTwapType twapType = false
 )
 
 // GetArithmeticTwap returns an arithmetic time weighted average price.
