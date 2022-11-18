@@ -31,6 +31,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/epochs"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm"
 	ibc_hooks "github.com/osmosis-labs/osmosis/v12/x/ibc-hooks"
+	ibc_rate_limit "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit"
 	"github.com/osmosis-labs/osmosis/v12/x/incentives"
 	"github.com/osmosis-labs/osmosis/v12/x/lockup"
 	"github.com/osmosis-labs/osmosis/v12/x/mint"
@@ -90,4 +91,5 @@ var AppModuleBasics = []module.AppModuleBasic{
 	wasm.AppModuleBasic{},
 	ica.AppModuleBasic{},
 	ibc_hooks.AppModuleBasic{},
+	ibc_rate_limit.AppModuleBasic{},
 }
