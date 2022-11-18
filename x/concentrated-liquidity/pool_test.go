@@ -390,7 +390,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 		// Slippage protection doesn't cause a failure but interrupts early.
 		"single position within one tick, trade completes but slippage protection interrupts trade early: eth -> usdc": {
 			addPositions: func(ctx sdk.Context, poolId uint64) {
-				// add first position
+				// add position
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
 				s.Require().NoError(err)
 			},
