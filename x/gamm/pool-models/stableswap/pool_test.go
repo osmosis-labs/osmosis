@@ -1271,14 +1271,9 @@ func TestValidateScalingFactors(t *testing.T) {
 			scalingFactors: []uint64{10, 10, 10, 10},
 			expectError:    true,
 		},
-		"number of scaling factors is zero": {
-			numAssets:      0,
-			scalingFactors: []uint64{10, 10, 10},
-			expectError:    true,
-		},
-		"number of scaling factors is less than zero": {
-			numAssets:      -5,
-			scalingFactors: []uint64{10, 10, 10},
+		"number of scaling factors is equal to zero": {
+			numAssets:      3,
+			scalingFactors: []uint64{0, 0, 0},
 			expectError:    true,
 		},
 	}
