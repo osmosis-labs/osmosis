@@ -171,17 +171,3 @@ func RandExponentialCoin(r *rand.Rand, coin sdk.Coin) sdk.Coin {
 	newAmount := coin.Amount.MulRaw(intSample).QuoRaw(maxRange)
 	return sdk.NewCoin(coin.Denom, newAmount)
 }
-
-type multiSource []rand.Source
-
-func (ms multiSource) Int63() (r int64) {
-	for _, source := range ms {
-		r ^= source.Int63()
-	}
-
-	return r
-}
-
-func (ms multiSource) Seed(seed int64) {
-	panic("multiSource Seed should not be called")
-}

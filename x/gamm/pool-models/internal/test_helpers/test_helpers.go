@@ -14,7 +14,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
-  sdkrand "github.com/osmosis-labs/osmosis/v13/simulation/simtypes/random"
+	sdkrand "github.com/osmosis-labs/osmosis/v13/simulation/simtypes/random"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
