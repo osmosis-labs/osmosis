@@ -39,18 +39,44 @@ var (
 )
 
 func (s *KeeperTestSuite) TestCreatePosition() {
-
 	tests := map[string]lpTest{
-		"happy path": *baseCase,
+		"base case": *baseCase,
+		"error: invalid tick": {
+			lowerTick:     types.MaxTick + 1,
+			expectedError: types.InvalidTickError{Tick: types.MaxTick + 1, IsLower: true},
+		},
+		// TODO: add more tests
+		// custom hand-picked values
+		// - error edge cases
+		// - think of overflows
+		// - think of truncations
 	}
 
 	for name, tc := range tests {
 		s.Run(name, func() {
+			tc := tc
 			s.SetupTest()
+
+			// Merge tc with baseCase and update tc
+			// to the merged result. This is done
+			// to reduce the amount of boilerplate
+			// in test cases.
+			baseConfigCopy := *baseCase
+			mergeConfigs(&baseConfigCopy, &tc)
+			tc = baseConfigCopy
 
 			s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, tc.poolId, denom0, denom1, tc.currentSqrtP, tc.currentTick)
 
 			asset0, asset1, liquidityCreated, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.amount0Desired, tc.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), tc.lowerTick, tc.upperTick)
+
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().Equal(asset0, sdk.Int{})
+				s.Require().Equal(asset1, sdk.Int{})
+				s.Require().ErrorAs(err, &tc.expectedError)
+				return
+			}
+
 			s.Require().NoError(err)
 			s.Require().Equal(tc.amount0Expected.String(), asset0.String())
 			s.Require().Equal(tc.amount1Expected.String(), asset1.String())
@@ -66,34 +92,6 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 }
 
 func (s *KeeperTestSuite) TestWithdrawPosition() {
-	// mergeConfigs merges every desired non-zero field from overwrite
-	// into dst. dst is mutated due to being a pointer.
-	mergeConfigs := func(dst *lpTest, overwrite *lpTest) {
-		if overwrite != nil {
-			if overwrite.poolId != 0 {
-				dst.poolId = overwrite.poolId
-			}
-			if overwrite.lowerTick != 0 {
-				dst.lowerTick = overwrite.lowerTick
-			}
-			if overwrite.upperTick != 0 {
-				dst.upperTick = overwrite.upperTick
-			}
-			if !overwrite.liquidityAmount.IsNil() {
-				dst.liquidityAmount = overwrite.liquidityAmount
-			}
-			if !overwrite.amount0Expected.IsNil() {
-				dst.amount0Expected = overwrite.amount0Expected
-			}
-			if !overwrite.amount1Expected.IsNil() {
-				dst.amount1Expected = overwrite.amount1Expected
-			}
-			if overwrite.expectedError != nil {
-				dst.expectedError = overwrite.expectedError
-			}
-		}
-	}
-
 	tests := map[string]struct {
 		setupConfig *lpTest
 		// when this is set, it ovewrites the setupConfig
@@ -108,8 +106,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// system under test parameters
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
-				amount0Expected: sdk.NewInt(998587),     // 0.998587 eth
-				amount1Expected: sdk.NewInt(5000000000), // 5000 usdc
+				amount0Expected: baseCase.amount0Expected, // 0.998587 eth
+				amount1Expected: baseCase.amount1Expected, // 5000 usdc
 			},
 		},
 		"withdraw partial liqudity amount": {
@@ -223,5 +221,33 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// check tick state
 			s.validateTickUpdates(ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity)
 		})
+	}
+}
+
+// mergeConfigs merges every desired non-zero field from overwrite
+// into dst. dst is mutated due to being a pointer.
+func mergeConfigs(dst *lpTest, overwrite *lpTest) {
+	if overwrite != nil {
+		if overwrite.poolId != 0 {
+			dst.poolId = overwrite.poolId
+		}
+		if overwrite.lowerTick != 0 {
+			dst.lowerTick = overwrite.lowerTick
+		}
+		if overwrite.upperTick != 0 {
+			dst.upperTick = overwrite.upperTick
+		}
+		if !overwrite.liquidityAmount.IsNil() {
+			dst.liquidityAmount = overwrite.liquidityAmount
+		}
+		if !overwrite.amount0Expected.IsNil() {
+			dst.amount0Expected = overwrite.amount0Expected
+		}
+		if !overwrite.amount1Expected.IsNil() {
+			dst.amount1Expected = overwrite.amount1Expected
+		}
+		if overwrite.expectedError != nil {
+			dst.expectedError = overwrite.expectedError
+		}
 	}
 }
