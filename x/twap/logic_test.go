@@ -24,8 +24,8 @@ var (
 	twoDec               = oneDec.Add(oneDec)
 	pointFiveDec         = sdk.OneDec().Quo(twoDec)
 	OneSec               = sdk.MustNewDecFromStr("1000.000000000000000000")
-	logTen               = osmomath.TwapLog(sdk.NewDec(10))
-	logOneOverTen        = osmomath.TwapLog(sdk.OneDec().QuoInt64(10))
+	logTen               = twap.TwapLog(sdk.NewDec(10))
+	logOneOverTen        = twap.TwapLog(sdk.OneDec().QuoInt64(10))
 	tenSecAccum          = OneSec.MulInt64(10)
 	geometricTenSecAccum = OneSec.Mul(logTen)
 )
@@ -597,8 +597,8 @@ func TestComputeTwap(t *testing.T) {
 			sdk.ZeroDec(), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
 		"arithmetic only: accumulator = 10*OneSec, t=100s. 0 base accum (asset 1)": testCaseFromDeltasAsset1(sdk.ZeroDec(), OneSec.MulInt64(10), 100*time.Second, sdk.NewDecWithPrec(1, 1)),
 		"geometric only: accumulator = log(10)*OneSec, t=5s. 0 base accum": geometricTestCaseFromDeltas0(
-			sdk.ZeroDec(), geometricTenSecAccum, 5*time.Second, osmomath.Pow(osmomath.Tick, geometricTenSecAccum.QuoInt64(5*1000))),
-		"geometric only: accumulator = log(10)*OneSec, t=100s. 0 base accum (asset 1)": geometricTestCaseFromDeltas1(sdk.ZeroDec(), geometricTenSecAccum, 100*time.Second, sdk.OneDec().Quo(osmomath.Pow(osmomath.Tick, geometricTenSecAccum.QuoInt64(100*1000)))),
+			sdk.ZeroDec(), geometricTenSecAccum, 5*time.Second, osmomath.Pow(twap.GeometricTwapMathBase, geometricTenSecAccum.QuoInt64(5*1000))),
+		"geometric only: accumulator = log(10)*OneSec, t=100s. 0 base accum (asset 1)": geometricTestCaseFromDeltas1(sdk.ZeroDec(), geometricTenSecAccum, 100*time.Second, sdk.OneDec().Quo(osmomath.Pow(twap.GeometricTwapMathBase, geometricTenSecAccum.QuoInt64(100*1000)))),
 	}
 	for name, test := range tests {
 		for _, twapType := range test.twapTypes {
@@ -690,38 +690,38 @@ func TestComputeGeometricTwap(t *testing.T) {
 		// basic test for both denom with non-zero start accumulator
 		"denom0: start accumulator of 10 * 1s, end accumulator 10 * 1s + 20 * 2s = 20": {
 			startRecord: newOneSidedGeometricRecord(baseTime, geometricTenSecAccum),
-			endRecord:   newOneSidedGeometricRecord(baseTime.Add(time.Second*2), geometricTenSecAccum.Add(OneSec.MulInt64(2).Mul(osmomath.TwapLog(sdk.NewDec(20))))),
+			endRecord:   newOneSidedGeometricRecord(baseTime.Add(time.Second*2), geometricTenSecAccum.Add(OneSec.MulInt64(2).Mul(twap.TwapLog(sdk.NewDec(20))))),
 			quoteAsset:  denom0,
 			expTwap:     sdk.NewDec(20),
 		},
 		"denom1 start accumulator of 10 * 1s, end accumulator 10 * 1s + 20 * 2s = 20": {
 			startRecord: newOneSidedGeometricRecord(baseTime, geometricTenSecAccum),
-			endRecord:   newOneSidedGeometricRecord(baseTime.Add(time.Second*2), geometricTenSecAccum.Add(OneSec.MulInt64(2).Mul(osmomath.TwapLog(sdk.NewDec(20))))),
+			endRecord:   newOneSidedGeometricRecord(baseTime.Add(time.Second*2), geometricTenSecAccum.Add(OneSec.MulInt64(2).Mul(twap.TwapLog(sdk.NewDec(20))))),
 			quoteAsset:  denom1,
 			expTwap:     sdk.OneDec().Quo(sdk.NewDec(20)),
 		},
 
 		// toggle time delta.
 		"accumulator = log(10)*OneSec, t=5s. 0 base accum": geometricTestCaseFromDeltas0(
-			sdk.ZeroDec(), geometricTenSecAccum, 5*time.Second, osmomath.Pow(osmomath.Tick, geometricTenSecAccum.QuoInt64(5*1000))),
+			sdk.ZeroDec(), geometricTenSecAccum, 5*time.Second, osmomath.Pow(twap.GeometricTwapMathBase, geometricTenSecAccum.QuoInt64(5*1000))),
 		"accumulator = log(10)*OneSec, t=3s. 0 base accum": geometricTestCaseFromDeltas0(
-			sdk.ZeroDec(), geometricTenSecAccum, 3*time.Second, osmomath.Pow(osmomath.Tick, geometricTenSecAccum.QuoInt64(3*1000))),
+			sdk.ZeroDec(), geometricTenSecAccum, 3*time.Second, osmomath.Pow(twap.GeometricTwapMathBase, geometricTenSecAccum.QuoInt64(3*1000))),
 		"accumulator = log(10)*OneSec, t=100s. 0 base accum": geometricTestCaseFromDeltas0(
-			sdk.ZeroDec(), geometricTenSecAccum, 100*time.Second, osmomath.Pow(osmomath.Tick, geometricTenSecAccum.QuoInt64(100*1000))),
+			sdk.ZeroDec(), geometricTenSecAccum, 100*time.Second, osmomath.Pow(twap.GeometricTwapMathBase, geometricTenSecAccum.QuoInt64(100*1000))),
 
 		// test that base accum has no impact
 		"accumulator = log(10)*OneSec, t=5s. 10 base accum": geometricTestCaseFromDeltas0(
-			logTen, geometricTenSecAccum, 5*time.Second, osmomath.Pow(osmomath.Tick, geometricTenSecAccum.QuoInt64(5*1000))),
+			logTen, geometricTenSecAccum, 5*time.Second, osmomath.Pow(twap.GeometricTwapMathBase, geometricTenSecAccum.QuoInt64(5*1000))),
 		"accumulator = log(10)*OneSec, t=3s. 10*second base accum": geometricTestCaseFromDeltas0(
-			OneSec.MulInt64(10).Mul(logTen), geometricTenSecAccum, 3*time.Second, osmomath.Pow(osmomath.Tick, geometricTenSecAccum.QuoInt64(3*1000))),
+			OneSec.MulInt64(10).Mul(logTen), geometricTenSecAccum, 3*time.Second, osmomath.Pow(twap.GeometricTwapMathBase, geometricTenSecAccum.QuoInt64(3*1000))),
 		"accumulator = 10*OneSec, t=100s. .1*second base accum": geometricTestCaseFromDeltas0(
-			OneSec.MulInt64(10).Mul(logOneOverTen), geometricTenSecAccum, 100*time.Second, osmomath.Pow(osmomath.Tick, geometricTenSecAccum.QuoInt64(100*1000))),
+			OneSec.MulInt64(10).Mul(logOneOverTen), geometricTenSecAccum, 100*time.Second, osmomath.Pow(twap.GeometricTwapMathBase, geometricTenSecAccum.QuoInt64(100*1000))),
 
 		// TODO: this is the highest price we currently support with the given precision bounds.
 		// Need to choose better base and potentially improve math functions to mitigate.
 		"price of 1_000_000 for an hour": {
 			startRecord: newOneSidedGeometricRecord(baseTime, sdk.ZeroDec()),
-			endRecord:   newOneSidedGeometricRecord(baseTime.Add(time.Hour), OneSec.MulInt64(60*60).Mul(osmomath.TwapLog(sdk.NewDec(1_000_000)))),
+			endRecord:   newOneSidedGeometricRecord(baseTime.Add(time.Hour), OneSec.MulInt64(60*60).Mul(twap.TwapLog(sdk.NewDec(1_000_000)))),
 			quoteAsset:  denom0,
 			expTwap:     sdk.NewDec(1_000_000),
 		},

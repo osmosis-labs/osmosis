@@ -11,6 +11,13 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
+// geometricTwapMathBase is the base used for geometric twap calculation
+// in logarithm and power math functions.
+// See twapLog and computeGeometricTwap functions for more details.
+var (
+	geometricTwapMathBase = sdk.NewDec(2)
+)
+
 func newTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
 	denom0, denom1, err := types.LexicographicalOrderDenoms(denom0, denom1)
 	if err != nil {
@@ -193,7 +200,7 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 	newRecord.P1ArithmeticTwapAccumulator = newRecord.P1ArithmeticTwapAccumulator.Add(p1NewAccum)
 
 	// logP0SpotPrice = log_{1.0001}{P_0}
-	logP0SpotPrice := osmomath.TwapLog(record.P0LastSpotPrice)
+	logP0SpotPrice := twapLog(record.P0LastSpotPrice)
 	// p0NewGeomAccum = log_{1.0001}{P_0} * timeDelta
 	p0NewGeomAccum := types.SpotPriceMulDuration(logP0SpotPrice, timeDelta)
 	newRecord.GeometricTwapAccumulator = newRecord.GeometricTwapAccumulator.Add(p0NewGeomAccum)
@@ -284,11 +291,17 @@ func computeGeometricTwap(startRecord types.TwapRecord, endRecord types.TwapReco
 	timeDelta := endRecord.Time.Sub(startRecord.Time)
 	arithmeticMeanOfLogPrices := types.AccumDiffDivDuration(accumDiff, timeDelta)
 
-	geometrciMeanDenom0 := osmomath.Pow(osmomath.Tick, arithmeticMeanOfLogPrices)
+	geometrciMeanDenom0 := osmomath.Pow(geometricTwapMathBase, arithmeticMeanOfLogPrices)
 	// N.B.: Geometric mean of recprocals is reciprocal of geometric mean.
 	// https://proofwiki.org/wiki/Geometric_Mean_of_Reciprocals_is_Reciprocal_of_Geometric_Mean
 	if quoteAsset == startRecord.Asset1Denom {
 		return sdk.OneDec().Quo(geometrciMeanDenom0)
 	}
 	return geometrciMeanDenom0
+}
+
+// twapLog returns the logarithm of the given spot price, base 2.
+// TODO: basic test
+func twapLog(price sdk.Dec) sdk.Dec {
+	return osmomath.BigDecFromSDKDec(price).LogBase2().SDKDec()
 }
