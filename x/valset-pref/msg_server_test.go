@@ -145,23 +145,16 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 			name:           "Delegate to valid validators",
 			delegator:      sdk.AccAddress([]byte("addr1---------------")),
 			coin:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
-			expectedShares: []sdk.Dec{sdk.NewDec(5_000_000), sdk.NewDec(3_000_000), sdk.NewDec(2_000_000)},
+			expectedShares: []sdk.Dec{sdk.NewDec(2_000_000), sdk.NewDec(3_320_000), sdk.NewDec(1_200_000), sdk.NewDec(3_480_000)},
 			expectPass:     true,
 		},
 		{
 			name:           "Delegate more tokens to existing validator-set",
 			delegator:      sdk.AccAddress([]byte("addr1---------------")),
 			coin:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
-			expectedShares: []sdk.Dec{sdk.NewDec(10_000_000), sdk.NewDec(6_000_000), sdk.NewDec(4_000_000)},
+			expectedShares: []sdk.Dec{sdk.NewDec(4_000_000), sdk.NewDec(6_640_000), sdk.NewDec(2_400_000), sdk.NewDec(6_960_000)},
 			expectPass:     true,
 			valSetExists:   true,
-		},
-		{
-			name:           "Delegate Decimal Amounts",
-			delegator:      sdk.AccAddress([]byte("addr2---------------")),
-			coin:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(25_000_000)),
-			expectedShares: []sdk.Dec{sdk.NewDec(12_500_000), sdk.NewDec(7_500_000), sdk.NewDec(5_000_000)},
-			expectPass:     true,
 		},
 		{
 			name:       "User does not have enough tokens to stake",
@@ -173,13 +166,13 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 
 	for _, test := range tests {
 		suite.Run(test.name, func() {
-			suite.FundAcc(test.delegator, amountToFund)
-
 			// setup message server
 			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorSetPreferenceKeeper)
 			c := sdk.WrapSDKContext(suite.Ctx)
 
 			if !test.valSetExists {
+				suite.FundAcc(test.delegator, amountToFund)
+
 				_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
 				suite.Require().NoError(err)
 			}
