@@ -2,6 +2,8 @@ package types
 
 import (
 	fmt "fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // x/concentrated-liquidity module sentinel errors.
@@ -67,4 +69,13 @@ func (e InvalidTickError) Error() string {
 		tickStr = "lower"
 	}
 	return fmt.Sprintf("%s tick (%d) is invalid, Must be >= %d and <= %d", tickStr, e.Tick, MinTick, MaxTick)
+}
+
+type InsufficientLiquidityError struct {
+	Actual    sdk.Dec
+	Available sdk.Dec
+}
+
+func (e InsufficientLiquidityError) Error() string {
+	return fmt.Sprintf("insufficient liqudity requested to withdraw. Actual: (%s). Available (%s)", e.Actual, e.Available)
 }

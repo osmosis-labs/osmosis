@@ -132,7 +132,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				amount1Expected: sdk.NewInt(5000000000), // 5000 usdc
 			},
 		},
-		"no position created": {
+		"error: no position created": {
 			// setup parameters for creation a pool and position.
 			setupConfig: &lpTest{
 				poolId:          1,
@@ -152,7 +152,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				expectedError: types.PositionNotFoundError{PoolId: 1, LowerTick: -1, UpperTick: 86129},
 			},
 		},
-		"pool id for pool that does not exist": {
+		"error: pool id for pool that does not exist": {
 			// setup parameters for creation a pool and position.
 			setupConfig: &lpTest{
 				poolId:          1,
@@ -172,7 +172,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				expectedError: types.PoolNotFoundError{PoolId: 2},
 			},
 		},
-		"invalid tick given": {
+		"error: invalid tick given": {
 			// setup parameters for creation a pool and position.
 			setupConfig: &lpTest{
 				poolId:          1,
@@ -190,6 +190,26 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			sutConfigOverwrite: &lpTest{
 				lowerTick:     types.MaxTick + 1, // invalid tick
 				expectedError: types.InvalidTickError{Tick: types.MaxTick + 1, IsLower: true},
+			},
+		},
+		"error: insufficient liqudity": {
+			// setup parameters for creation a pool and position.
+			setupConfig: &lpTest{
+				poolId:          1,
+				currentSqrtP:    sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+				currentTick:     sdk.NewInt(85176),
+				lowerTick:       int64(84222),
+				upperTick:       int64(86129),
+				amount0Desired:  sdk.NewInt(1000000),    // 1 eth,
+				amount1Desired:  sdk.NewInt(5000000000), // 5000 usdc
+				liquidityAmount: sdk.MustNewDecFromStr("1517818840.967515822610790519"),
+			},
+
+			// system under test parameters
+			// for withdrawing a position.
+			sutConfigOverwrite: &lpTest{
+				liquidityAmount: sdk.MustNewDecFromStr("1517818840.967515822610790519").Add(sdk.OneDec()), // 1 more than available
+				expectedError:   types.InsufficientLiquidityError{Actual: sdk.MustNewDecFromStr("1517818840.967515822610790519").Add(sdk.OneDec()), Available: sdk.MustNewDecFromStr("1517818840.967515822610790519")},
 			},
 		},
 		// liquidityAmount higher than available
@@ -223,7 +243,9 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			if config.expectedError != nil {
 				s.Require().Error(err)
-				s.Require().ErrorIs(config.expectedError, err)
+				s.Require().Equal(amtDenom0, sdk.Int{})
+				s.Require().Equal(amtDenom1, sdk.Int{})
+				s.Require().ErrorAs(err, &config.expectedError)
 				return
 			}
 

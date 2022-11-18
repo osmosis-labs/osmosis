@@ -68,8 +68,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	availableLiquidity := position.Liquidity
 
 	if requestedLiqudityAmountToWithdraw.GT(availableLiquidity) {
-		// TODO: format error correctly.
-		return sdk.Int{}, sdk.Int{}, fmt.Errorf("cannot withdraw more than available")
+		return sdk.Int{}, sdk.Int{}, types.InsufficientLiquidityError{Actual: requestedLiqudityAmountToWithdraw, Available: availableLiquidity}
 	}
 
 	liquidityDelta := requestedLiqudityAmountToWithdraw.Neg()
@@ -141,7 +140,6 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 //    * The provided liquidity is distributed in token1 only.
 // TODO: add tests.
 func (p Pool) calcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, sqrtRatioLowerTick, sqrtRatioUpperTick sdk.Dec, liquidityDelta sdk.Dec) (actualAmountDenom0 sdk.Int, actualAmountDenom1 sdk.Int) {
-
 	if p.isPositionActive(lowerTick, upperTick) {
 		// outcome one: the current price falls within the position
 		// if this is the case, we attempt to provide liquidity evenly between asset0 and asset1
