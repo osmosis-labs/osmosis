@@ -60,10 +60,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 // - if tick ranges are invalid
 // - if attempts to withdraw an amount higher than originally provided in createPosition for a given range
 // TODO: implement and table-driven tests
-func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, requestedLiqudityAmountToWithdraw sdk.Int) (amtDenom0, amtDenom1 sdk.Int, err error) {
-
-	// check if requested liquidiyt matches available
-
+func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, requestedLiqudityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
 	position, err := k.GetPosition(ctx, poolId, owner, lowerTick, upperTick)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
@@ -71,19 +68,19 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 
 	availableLiquidity := position.Liquidity
 
-	if requestedLiqudityAmountToWithdraw.ToDec().GT(availableLiquidity) {
+	if requestedLiqudityAmountToWithdraw.GT(availableLiquidity) {
 		// TODO: format error correctly.
 		return sdk.Int{}, sdk.Int{}, fmt.Errorf("cannot withdraw more than available")
 	}
 
-	liquidityDelta := availableLiquidity.Sub(requestedLiqudityAmountToWithdraw.ToDec())
+	liquidityDelta := requestedLiqudityAmountToWithdraw.Neg()
 
 	actualAmount0, actualAmount1, err := k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	return actualAmount0, actualAmount1, nil
+	return actualAmount0.Neg(), actualAmount1.Neg(), nil
 }
 
 // TODO: spec and tests.

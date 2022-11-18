@@ -66,67 +66,78 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 	}
 }
 
-// func (s *KeeperTestSuite) TestWithdrawPosition() {
+func (s *KeeperTestSuite) TestWithdrawPosition() {
 
-// 	tests := map[string]struct {
-// 		poolId       uint64
-// 		denom0       string
-// 		denom1       string
-// 		currentSqrtP sdk.Dec
-// 		currentTick  sdk.Int
+	tests := map[string]struct {
+		poolId       uint64
+		denom0       string
+		denom1       string
+		currentSqrtP sdk.Dec
+		currentTick  sdk.Int
 
-// 		amount0Desired sdk.Int
-// 		amount1Desired sdk.Int
+		amount0Desired sdk.Int
+		amount1Desired sdk.Int
 
-// 		owner           sdk.AccAddress
-// 		lowerTick       int64
-// 		upperTick       int64
-// 		liquidityAmount sdk.Int
+		owner           sdk.AccAddress
+		lowerTick       int64
+		upperTick       int64
+		liquidityAmount sdk.Dec
 
-// 		expectedAmount0 sdk.Int
-// 		expectedAmount1 sdk.Int
-// 		expectError     bool
-// 	}{
-// 		"example test": {
-// 			poolId: 1,
-// 			denom0: "eth",
-// 			denom1: "usdc",
+		expectedAmount0 sdk.Int
+		expectedAmount1 sdk.Int
+		expectError     bool
+	}{
+		"basic test for active position": {
+			poolId: 1,
+			denom0: "eth",
+			denom1: "usdc",
 
-// 			currentSqrtP: sdk.MustNewDecFromStr("70.710678"),
-// 			currentTick:  sdk.NewInt(85176),
+			currentSqrtP: sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			currentTick:  sdk.NewInt(85176),
 
-// 			amount0Desired: sdk.NewInt(1),
-// 			amount1Desired: sdk.NewInt(5000),
+			amount0Desired: sdk.NewInt(1000000),    // 1 eth,
+			amount1Desired: sdk.NewInt(5000000000), // 5000 usdc
 
-// 			lowerTick: int64(84222),
-// 			upperTick: int64(86129),
-// 		},
-// 	}
+			lowerTick: int64(84222),
+			upperTick: int64(86129),
 
-// 	for name, tc := range tests {
-// 		s.Run(name, func() {
-// 			s.SetupTest()
-// 			ctx := s.Ctx
-// 			concentratedLiquidityKeeper := s.App.ConcentratedLiquidityKeeper
+			liquidityAmount: sdk.MustNewDecFromStr("1517818840.967515822610790519"),
 
-// 			// Setup.
-// 			_, err := concentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, tc.poolId, tc.denom0, tc.denom1, tc.currentSqrtP, tc.currentTick)
-// 			s.Require().NoError(err)
+			expectedAmount0: sdk.NewInt(998587),     // 0.998587 eth
+			expectedAmount1: sdk.NewInt(5000000000), // 5000 usdc
+		},
+		// no position created
+		// invalid pool id
+		// invalid ticks
+		// liquidityAmount higher than available
+		// full liquidity amount
+		// liquidity amount lower than available
+	}
 
-// 			_, _, _, err = concentratedLiquidityKeeper.CreatePosition(ctx, tc.poolId, s.TestAccs[0], tc.amount0Desired, tc.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), tc.lowerTick, tc.upperTick)
-// 			s.Require().NoError(err)
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			ctx := s.Ctx
+			concentratedLiquidityKeeper := s.App.ConcentratedLiquidityKeeper
 
-// 			// System under test.
-// 			amtDenom0, amtDenom1, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, tc.liquidityAmount)
+			// Setup.
+			_, err := concentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, tc.poolId, tc.denom0, tc.denom1, tc.currentSqrtP, tc.currentTick)
+			s.Require().NoError(err)
 
-// 			if tc.expectError {
-// 				s.Require().Error(err)
-// 				return
-// 			}
+			_, _, _, err = concentratedLiquidityKeeper.CreatePosition(ctx, tc.poolId, s.TestAccs[0], tc.amount0Desired, tc.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), tc.lowerTick, tc.upperTick)
+			s.Require().NoError(err)
 
-// 			s.Require().NoError(err)
-// 			s.Require().Equal(tc.expectedAmount0, amtDenom0)
-// 			s.Require().Equal(tc.expectedAmount1, amtDenom1)
-// 		})
-// 	}
-// }
+			// System under test.
+			amtDenom0, amtDenom1, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, tc.liquidityAmount)
+
+			if tc.expectError {
+				s.Require().Error(err)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedAmount0.String(), amtDenom0.String())
+			s.Require().Equal(tc.expectedAmount1.String(), amtDenom1.String())
+		})
+	}
+}
