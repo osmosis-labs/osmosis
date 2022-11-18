@@ -742,7 +742,6 @@ func (suite *StableSwapTestSuite) Test_StableSwap_Slippage_LiquidityRelation() {
 			ctx := sdk.Context{}
 			test_helpers.TestSlippageRelationWithLiquidityIncrease(name, suite.T(), ctx, createPoolFn, tc.initialLiquidity)
 		}
-
 	}
 }
 
