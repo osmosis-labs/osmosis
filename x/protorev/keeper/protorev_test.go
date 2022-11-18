@@ -1,9 +1,5 @@
 package keeper_test
 
-import (
-	"github.com/osmosis-labs/osmosis/v12/x/protorev/types"
-)
-
 func (suite *KeeperTestSuite) TestGetAtomPool() {
 	cases := []struct {
 		description  string
@@ -14,25 +10,25 @@ func (suite *KeeperTestSuite) TestGetAtomPool() {
 		{
 			description:  "Atom pool exists for denom Akash",
 			denom:        "akash",
-			expectedPool: 6,
+			expectedPool: 1,
 			exists:       true,
 		},
 		{
 			description:  "Atom pool exists for denom juno",
 			denom:        "juno",
-			expectedPool: 7,
+			expectedPool: 2,
 			exists:       true,
 		},
 		{
 			description:  "Atom pool exists for denom juno with different casing",
 			denom:        "JuNo",
-			expectedPool: 7,
+			expectedPool: 2,
 			exists:       true,
 		},
 		{
 			description:  "Atom pool exists for denom Ethereum",
 			denom:        "ethEreUm",
-			expectedPool: 8,
+			expectedPool: 3,
 			exists:       true,
 		},
 		{
@@ -42,9 +38,6 @@ func (suite *KeeperTestSuite) TestGetAtomPool() {
 			exists:       false,
 		},
 	}
-
-	// Insert the atom pool data
-	suite.SetUpAtomPools()
 
 	for _, tc := range cases {
 		suite.Run(tc.description, func() {
@@ -83,9 +76,6 @@ func (suite *KeeperTestSuite) TestDeleteAtomPool() {
 		},
 	}
 
-	// Insert the atom pool data
-	suite.SetUpAtomPools()
-
 	for _, tc := range cases {
 		suite.Run(tc.description, func() {
 			_, err := suite.App.ProtoRevKeeper.GetAtomPool(suite.Ctx, tc.denom)
@@ -113,13 +103,13 @@ func (suite *KeeperTestSuite) TestGetOsmoPool() {
 		{
 			description:  "Osmo pool exists for denom Akash",
 			denom:        "akash",
-			expectedPool: 1,
+			expectedPool: 7,
 			exists:       true,
 		},
 		{
 			description:  "Osmo pool exists for denom juno",
 			denom:        "juno",
-			expectedPool: 2,
+			expectedPool: 8,
 			exists:       true,
 		},
 		{
@@ -129,9 +119,6 @@ func (suite *KeeperTestSuite) TestGetOsmoPool() {
 			exists:       false,
 		},
 	}
-
-	// Insert the atom pool data
-	suite.SetUpOsmoPools()
 
 	for _, tc := range cases {
 		suite.Run(tc.description, func() {
@@ -171,9 +158,6 @@ func (suite *KeeperTestSuite) TestDeleteOsmoPool() {
 		},
 	}
 
-	// Insert the atom pool data
-	suite.SetUpOsmoPools()
-
 	for _, tc := range cases {
 		suite.Run(tc.description, func() {
 			_, err := suite.App.ProtoRevKeeper.GetOsmoPool(suite.Ctx, tc.denom)
@@ -192,59 +176,16 @@ func (suite *KeeperTestSuite) TestDeleteOsmoPool() {
 }
 
 func (suite *KeeperTestSuite) TestGetSearcherRoutes() {
-	routes := []*types.Route{
-		{
-			Pools: []uint64{0, 1, 2},
-		},
-		{
-			Pools: []uint64{1, 2, 3},
-		},
-		{
-			Pools: []uint64{2, 3, 4},
-		},
-		{
-			Pools: []uint64{3, 4, 5},
-		},
-		{
-			Pools: []uint64{4, 5, 6},
-		},
+
+	// Tests that we can properly retrieve all of the routes that were set up
+	for _, searcherRoutes := range suite.searcherRoutes {
+		routes, err := suite.App.ProtoRevKeeper.GetSearcherRoutes(suite.Ctx, searcherRoutes.TokenA, searcherRoutes.TokenB)
+
+		suite.Require().NoError(err)
+		suite.Require().Equal(searcherRoutes, *routes)
 	}
 
-	cases := []struct {
-		description    string
-		tokenA         string
-		tokenB         string
-		searcherRoutes types.SearcherRoutes
-		exists         bool
-	}{
-		{
-			description: "Route exists for denom Akash",
-			tokenA:      "Akash",
-			tokenB:      "atom",
-			searcherRoutes: types.SearcherRoutes{
-				TokenA: "AKASH",
-				TokenB: "ATOM",
-				Routes: routes,
-			},
-			exists: true,
-		},
-	}
-
-	// Insert route data
-	suite.SetUpSearcherRoutes()
-
-	for _, tc := range cases {
-		suite.Run(tc.description, func() {
-			searcherRoutes, err := suite.App.ProtoRevKeeper.GetSearcherRoutes(suite.Ctx, tc.tokenA, tc.tokenB)
-
-			if tc.exists {
-				suite.Require().NoError(err)
-				suite.Require().Equal(tc.searcherRoutes.TokenA, searcherRoutes.TokenA)
-				suite.Require().Equal(tc.searcherRoutes.TokenB, searcherRoutes.TokenB)
-				suite.Require().Equal(tc.searcherRoutes.Routes, searcherRoutes.Routes)
-			} else {
-				suite.Require().Error(err)
-			}
-		})
-	}
+	// Testing to see if we will not find a route that does not exist
+	_, err := suite.App.ProtoRevKeeper.GetSearcherRoutes(suite.Ctx, "osmo", "abc")
+	suite.Require().Error(err)
 }

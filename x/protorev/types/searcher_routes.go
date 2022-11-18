@@ -1,8 +1,6 @@
 package types
 
 import (
-	"strings"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -15,8 +13,8 @@ func NewSearcherRoutes(routes []*Route, tokenA, tokenB string) SearcherRoutes {
 
 	return SearcherRoutes{
 		Routes: routes,
-		TokenA: strings.ToUpper(tokenA),
-		TokenB: strings.ToUpper(tokenB),
+		TokenA: tokenA,
+		TokenB: tokenB,
 	}
 }
 

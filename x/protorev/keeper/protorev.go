@@ -71,6 +71,7 @@ func (k Keeper) DeleteAtomPool(ctx sdk.Context, denom string) {
 // GetRoute returns the route given two denoms
 func (k Keeper) GetSearcherRoutes(ctx sdk.Context, tokenA, tokenB string) (*types.SearcherRoutes, error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixSearcherRoutes)
+
 	key := types.GetKeyPrefixRouteForTokenPair(tokenA, tokenB)
 
 	bz := store.Get(key)

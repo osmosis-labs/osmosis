@@ -9,6 +9,8 @@ import (
 var (
 	ErrNoOsmoPool           = sdkerrors.Register(types.ModuleName, 100, "There is no Osmo pool for the given denom")
 	ErrNoAtomPool           = sdkerrors.Register(types.ModuleName, 101, "There is no Osmo pool for the given denom")
-	ErrNoSearcherRoutes     = sdkerrors.Register(types.ModuleName, 103, "No route exists for the given pool id")
-	ErrNoProtoRevStatistics = sdkerrors.Register(types.ModuleName, 104, "There are no proto-rev statistics for the module")
+	ErrNoAtomRoute          = sdkerrors.Register(types.ModuleName, 102, "There is no Atom route for the given denom")
+	ErrNoOsmoRoute          = sdkerrors.Register(types.ModuleName, 103, "There is no Osmo route for the given denom")
+	ErrNoSearcherRoutes     = sdkerrors.Register(types.ModuleName, 104, "No route exists for the given pool id")
+	ErrNoProtoRevStatistics = sdkerrors.Register(types.ModuleName, 105, "There are no proto-rev statistics for the module")
 )
