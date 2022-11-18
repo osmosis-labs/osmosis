@@ -31,6 +31,10 @@ func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tic
 	k.setTickInfo(ctx, poolId, tickIndex, tickInfo)
 }
 
+func (k Keeper) WithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityAmount sdk.Int) (amtDenom0, amtDenom1 sdk.Int, err error) {
+	return k.withdrawPosition(ctx, poolId, owner, lowerTick, upperTick, liquidityAmount)
+}
+
 func GetNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
 	return getNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining)
 }
