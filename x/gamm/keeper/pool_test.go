@@ -1,14 +1,33 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+)
+
+var (
+	defaultPoolAssetsStableSwap = sdk.Coins{
+		sdk.NewCoin("atom", sdk.NewInt(100)),
+		sdk.NewCoin("osmo", sdk.NewInt(100)),
+	}
+	defaultPoolParamsStableSwap = stableswap.PoolParams{
+		SwapFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.NewDecWithPrec(1, 2),
+	}
+	defaultPoolId                        = uint64(1)
+	defaultAcctFundsStableSwap sdk.Coins = sdk.NewCoins(
+		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
+		sdk.NewCoin("atom", sdk.NewInt(100)),
+		sdk.NewCoin("osmo", sdk.NewInt(100)),
+	)
 )
 
 // import (
@@ -315,4 +334,97 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 			suite.Require().False(ok)
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestSetStableSwapScalingFactors() {
+	suite.SetupTest()
+
+	pk := ed25519.GenPrivKey().PubKey()
+	addr := sdk.AccAddress(pk.Address())
+
+	failPk := ed25519.GenPrivKey().PubKey()
+	failAddr := sdk.AccAddress(failPk.Address())
+
+	defaultPoolId := uint64(1)
+
+	testcases := []struct {
+		name             string
+		poolId           uint64
+		scalingFactors   []uint64
+		sender           sdk.AccAddress
+		expError         error
+		isStableSwapPool bool
+	}{
+		{
+			name:             "Error: Pool does not exist",
+			poolId:           defaultPoolId + 1,
+			scalingFactors:   []uint64{1, 1},
+			sender:           addr,
+			expError:         types.PoolDoesNotExistError{PoolId: defaultPoolId + 1},
+			isStableSwapPool: false,
+		},
+		{
+			name:             "Error: Pool id is not of type stableswap pool",
+			poolId:           defaultPoolId + 1,
+			scalingFactors:   []uint64{1, 1},
+			sender:           addr,
+			expError:         fmt.Errorf("pool id 2 is not of type stableswap pool"),
+			isStableSwapPool: false,
+		},
+		{
+			name:             "Error: can not set scaling factors",
+			poolId:           defaultPoolId + 2,
+			scalingFactors:   []uint64{1, 1},
+			sender:           failAddr,
+			expError:         types.ErrNotScalingFactorGovernor,
+			isStableSwapPool: true,
+		},
+		{
+			name:             "Valid case",
+			poolId:           defaultPoolId + 3,
+			scalingFactors:   []uint64{1, 1},
+			sender:           addr,
+			isStableSwapPool: true,
+		},
+	}
+	for _, tc := range testcases {
+		suite.Run(tc.name, func() {
+			// Mint some assets to the accounts.
+			if tc.isStableSwapPool == true {
+				suite.FundAcc(tc.sender, defaultAcctFundsStableSwap)
+				poolId, err := suite.App.GAMMKeeper.CreatePool(
+					suite.Ctx,
+					stableswap.NewMsgCreateStableswapPool(
+						tc.sender,
+						defaultPoolParamsStableSwap,
+						defaultPoolAssetsStableSwap,
+						tc.scalingFactors,
+						defaultFutureGovernor))
+
+				suite.Require().NoError(err)
+				pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
+				stableswapPool, _ := pool.(*stableswap.Pool)
+				stableswapPool.ScalingFactorController = tc.sender.String()
+			} else {
+				// Mint some assets to the accounts.
+				suite.FundAcc(tc.sender, defaultAcctFunds)
+				_, err := suite.App.GAMMKeeper.CreatePool(
+					suite.Ctx,
+					balancer.NewMsgCreateBalancerPool(
+						tc.sender,
+						defaultPoolParams,
+						defaultPoolAssets,
+						defaultFutureGovernor))
+				suite.Require().NoError(err)
+			}
+			err := suite.App.GAMMKeeper.SetStableSwapScalingFactors(suite.Ctx, tc.poolId, tc.scalingFactors, tc.sender.String())
+			if tc.expError != nil {
+				suite.Require().Error(err)
+				suite.Require().EqualError(err, tc.expError.Error())
+			} else {
+				suite.Require().NoError(err)
+			}
+		})
+	}
+
 }
