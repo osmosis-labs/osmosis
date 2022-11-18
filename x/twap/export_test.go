@@ -18,10 +18,6 @@ const (
 	GeometricTwapType  = geometricTwapType
 )
 
-var (
-	GeometricTwapMathBase = geometricTwapMathBase
-)
-
 func (k Keeper) StoreNewRecord(ctx sdk.Context, record types.TwapRecord) {
 	k.storeNewRecord(ctx, record)
 }
@@ -96,6 +92,10 @@ func NewTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0,
 
 func TwapLog(x sdk.Dec) sdk.Dec {
 	return twapLog(x)
+}
+
+func TwapPow(x sdk.Dec) sdk.Dec {
+	return twapPow(x)
 }
 
 func GetSpotPrices(

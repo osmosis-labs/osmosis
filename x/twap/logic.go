@@ -16,6 +16,8 @@ import (
 // See twapLog and computeGeometricTwap functions for more details.
 var (
 	geometricTwapMathBase = sdk.NewDec(2)
+	// TODO: analyze choice.
+	geometricTwapPowPrecision = sdk.MustNewDecFromStr("0.00000001")
 )
 
 func newTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
@@ -291,7 +293,7 @@ func computeGeometricTwap(startRecord types.TwapRecord, endRecord types.TwapReco
 	timeDelta := endRecord.Time.Sub(startRecord.Time)
 	arithmeticMeanOfLogPrices := types.AccumDiffDivDuration(accumDiff, timeDelta)
 
-	geometrciMeanDenom0 := osmomath.Pow(geometricTwapMathBase, arithmeticMeanOfLogPrices)
+	geometrciMeanDenom0 := twapPow(arithmeticMeanOfLogPrices)
 	// N.B.: Geometric mean of recprocals is reciprocal of geometric mean.
 	// https://proofwiki.org/wiki/Geometric_Mean_of_Reciprocals_is_Reciprocal_of_Geometric_Mean
 	if quoteAsset == startRecord.Asset1Denom {
@@ -304,4 +306,10 @@ func computeGeometricTwap(startRecord types.TwapRecord, endRecord types.TwapReco
 // TODO: basic test
 func twapLog(price sdk.Dec) sdk.Dec {
 	return osmomath.BigDecFromSDKDec(price).LogBase2().SDKDec()
+}
+
+// twapPow exponentiates the geometricTwapMathBase to the given exponent.
+// TODO: basic test and benchmark.
+func twapPow(exponent sdk.Dec) sdk.Dec {
+	return osmomath.PowApprox(geometricTwapMathBase, exponent, geometricTwapPowPrecision)
 }
