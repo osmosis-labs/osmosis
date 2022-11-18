@@ -54,7 +54,7 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 	return nil
 }
 
-func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Dec, err error) {
+func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityNet sdk.Dec, err error) {
 	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
 		return sdk.Dec{}, err
