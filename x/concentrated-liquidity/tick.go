@@ -154,6 +154,7 @@ func tickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
 // That is, both lower and upper ticks are within types.MinTick and types.MaxTick.
 // Also, lower tick must be less than upper tick.
 // Returns error if validation fails. Otherwise, nil.
+// TODO: test
 func validateTickRangeIsValid(lowerTick int64, upperTick int64) error {
 	// ensure types.MinTick <= lowerTick < types.MaxTick
 	if lowerTick < types.MinTick || lowerTick >= types.MaxTick {
