@@ -78,9 +78,21 @@ func TestSlippageRelationWithLiquidityIncrease(
 	t *testing.T,
 	ctx sdk.Context,
 	createPoolWithLiquidity func(sdk.Context, sdk.Coins) types.PoolI,
-	initLiquidity sdk.Coins) {
+	initLiquidity sdk.Coins,
+) {
+	TestSlippageRelationOutGivenIn(testname, t, ctx, createPoolWithLiquidity, initLiquidity)
+	TestSlippageRelationInGivenOut(testname, t, ctx, createPoolWithLiquidity, initLiquidity)
+}
+
+func TestSlippageRelationOutGivenIn(
+	testname string,
+	t *testing.T,
+	ctx sdk.Context,
+	createPoolWithLiquidity func(sdk.Context, sdk.Coins) types.PoolI,
+	initLiquidity sdk.Coins,
+) {
 	r := rand.New(rand.NewSource(100))
-	swapInAmt := sdkrand.RandSubsetCoins(r, initLiquidity[:1])
+	swapInAmt := sdkrand.RandCoin(r, initLiquidity[:1])
 	swapOutDenom := initLiquidity[1].Denom
 
 	curPool := createPoolWithLiquidity(ctx, initLiquidity)
@@ -92,6 +104,8 @@ func TestSlippageRelationWithLiquidityIncrease(
 	for i := 0; i < 50; i++ {
 		newLiquidity := curLiquidity.Add(curLiquidity...)
 		curPool = createPoolWithLiquidity(ctx, newLiquidity)
+
+		// ensure out amount goes down as liquidity increases
 		newOutAmount, err := curPool.CalcOutAmtGivenIn(ctx, swapInAmt, swapOutDenom, fee)
 		require.NoError(t, err)
 		require.True(t, newOutAmount.Amount.GTE(curOutAmount.Amount),
@@ -101,6 +115,65 @@ func TestSlippageRelationWithLiquidityIncrease(
 
 		curLiquidity, curOutAmount = newLiquidity, newOutAmount
 	}
+}
+
+func TestSlippageRelationInGivenOut(
+	testname string,
+	t *testing.T,
+	ctx sdk.Context,
+	createPoolWithLiquidity func(sdk.Context, sdk.Coins) types.PoolI,
+	initLiquidity sdk.Coins,
+) {
+	r := rand.New(rand.NewSource(100))
+	swapOutAmt := sdkrand.RandCoin(r, initLiquidity[:1])
+	swapInDenom := initLiquidity[1].Denom
+
+	curPool := createPoolWithLiquidity(ctx, initLiquidity)
+	fee := curPool.GetSwapFee(ctx)
+
+	// we first ensure that the pool has sufficient liquidity to accommodate
+	// a swap that yields `swapOutAmt` without more than doubling input reserves
+	curLiquidity := initLiquidity
+	for !isWithinBounds(ctx, curPool, swapOutAmt, swapInDenom, fee) {
+		// increase pool liquidity by 10x
+		for i, coin := range initLiquidity {
+			curLiquidity[i] = sdk.NewCoin(coin.Denom, coin.Amount.Mul(sdk.NewInt(10)))
+		}
+		curPool = createPoolWithLiquidity(ctx, curLiquidity)
+	}
+
+	curInAmount, err := curPool.CalcInAmtGivenOut(ctx, swapOutAmt, swapInDenom, fee)
+
+	require.NoError(t, err)
+	for i := 0; i < 50; i++ {
+		newLiquidity := curLiquidity.Add(curLiquidity...)
+		curPool = createPoolWithLiquidity(ctx, newLiquidity)
+
+		// ensure required in amount goes down as liquidity increases
+		newInAmount, err := curPool.CalcInAmtGivenOut(ctx, swapOutAmt, swapInDenom, fee)
+		require.NoError(t, err)
+		require.True(t, newInAmount.Amount.LTE(curInAmount.Amount),
+			"%s: swap with new liquidity %s required greater input than swap with old liquidity %s."+
+				" Swap amount out %s. new swap in: %s, old swap in %s", testname, newLiquidity, curLiquidity,
+			swapOutAmt, newInAmount, curInAmount)
+
+		curLiquidity, curInAmount = newLiquidity, newInAmount
+	}
+}
+
+// returns true if the pool can accommodate an InGivenOut swap with `tokenOut` amount out, false otherwise
+func isWithinBounds(ctx sdk.Context, pool types.PoolI, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (b bool) {
+	b = true
+	defer func() {
+		if r := recover(); r != nil {
+			b = false
+		}
+	}()
+	_, err := pool.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee)
+	if err != nil {
+		b = false
+	}
+	return b
 }
 
 func TestCfmmCommonTestSuite(t *testing.T) {
