@@ -498,6 +498,48 @@ func TestCFMMInvariantMultiAssetsDirect(t *testing.T) {
 	}
 }
 
+func TestIterKCalculator(t *testing.T) {
+	tests := map[string]struct {
+		x0 osmomath.BigDec
+		w  osmomath.BigDec
+		yf osmomath.BigDec
+	}{
+		"normal test case": {
+			x0: osmomath.NewBigDec(100),
+			w:  osmomath.NewBigDec(100),
+			yf: osmomath.NewBigDec(100),
+		},
+		"zero w": {
+			x0: osmomath.NewBigDec(100),
+			w:  osmomath.ZeroDec(),
+			yf: osmomath.NewBigDec(100),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			fn := iterKCalculator(tc.x0, tc.w, tc.yf)
+			xf := tc.x0.Sub(osmomath.NewBigDec(20))
+
+			out, err := fn(xf)
+			require.NoError(t, err)
+
+			cubicCoeff := osmomath.OneDec().Neg()
+			quadraticCoeff := tc.x0.MulInt64(3)
+			linearCoeff := quadraticCoeff.Mul(tc.x0).Add(tc.w).Add(tc.yf.Mul(tc.yf)).Neg()
+
+			actual := osmomath.ZeroDec()
+
+			xOut := tc.x0.Sub(xf)
+			actual = cubicCoeff.Mul(xOut)
+			actual = actual.Add(quadraticCoeff).Mul(xOut)
+			actual = actual.Add(linearCoeff).Mul(xOut)
+
+			require.Equal(t, actual, out)
+		})
+	}
+}
+
 func TestCFMMInvariantMultiAssetsBinarySearch(t *testing.T) {
 	kErrTolerance := osmomath.OneDec()
 
