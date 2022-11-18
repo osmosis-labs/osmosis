@@ -45,6 +45,8 @@ func (k Keeper) initOrUpdatePosition(
 
 	position.Liquidity = liquidityAfter
 
+	// TODO: consider deleting position if liquidity becomes zero
+
 	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, position)
 	return nil
 }

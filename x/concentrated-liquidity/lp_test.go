@@ -185,25 +185,33 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-			tc := tc
-			config := *tc.setupConfig
-			sutConfigOverwrite := *tc.sutConfigOverwrite
-			s.SetupTest()
-			ctx := s.Ctx
-			concentratedLiquidityKeeper := s.App.ConcentratedLiquidityKeeper
+			var (
+				tc                 = tc
+				config             = *tc.setupConfig
+				sutConfigOverwrite = *tc.sutConfigOverwrite
+			)
 
-			owner := s.TestAccs[0]
+			s.SetupTest()
+
+			var (
+				ctx                         = s.Ctx
+				concentratedLiquidityKeeper = s.App.ConcentratedLiquidityKeeper
+				liquidityCreated            = sdk.ZeroDec()
+				owner                       = s.TestAccs[0]
+			)
 
 			// Setup.
 			if tc.setupConfig != nil {
 				_, err := concentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, config.poolId, denom0, denom1, config.currentSqrtP, config.currentTick)
 				s.Require().NoError(err)
 
-				_, _, _, err = concentratedLiquidityKeeper.CreatePosition(ctx, config.poolId, owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), config.lowerTick, config.upperTick)
+				_, _, liquidityCreated, err = concentratedLiquidityKeeper.CreatePosition(ctx, config.poolId, owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), config.lowerTick, config.upperTick)
 				s.Require().NoError(err)
 			}
 
 			mergeConfigs(&config, &sutConfigOverwrite)
+
+			expectedRemainingLiquidity := liquidityCreated.Sub(config.liquidityAmount)
 
 			// System under test.
 			amtDenom0, amtDenom1, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, config.poolId, owner, config.lowerTick, config.upperTick, config.liquidityAmount)
@@ -219,6 +227,24 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			s.Require().NoError(err)
 			s.Require().Equal(config.amount0Expected.String(), amtDenom0.String())
 			s.Require().Equal(config.amount1Expected.String(), amtDenom1.String())
+
+			// Check that the position was updated.
+			position, err := concentratedLiquidityKeeper.GetPosition(ctx, config.poolId, owner, config.lowerTick, config.upperTick)
+			s.Require().NoError(err)
+			newPositionLiquidity := position.Liquidity
+			s.Require().Equal(expectedRemainingLiquidity.String(), newPositionLiquidity.String())
+			s.Require().True(newPositionLiquidity.GTE(sdk.ZeroDec()))
+
+			// check tick state
+			lowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, config.poolId, config.lowerTick)
+			s.Require().NoError(err)
+			s.Require().Equal(expectedRemainingLiquidity.String(), lowerTickInfo.LiquidityGross.String())
+			s.Require().Equal(expectedRemainingLiquidity.String(), lowerTickInfo.LiquidityNet.String())
+
+			upperTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, config.poolId, config.upperTick)
+			s.Require().NoError(err)
+			s.Require().Equal(expectedRemainingLiquidity.String(), upperTickInfo.LiquidityGross.String())
+			s.Require().Equal(expectedRemainingLiquidity.Neg().String(), upperTickInfo.LiquidityNet.String())
 		})
 	}
 }
