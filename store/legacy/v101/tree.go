@@ -10,7 +10,7 @@ import (
 	stypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/store"
+	"github.com/osmosis-labs/osmosis/v13/store"
 )
 
 type Child struct {

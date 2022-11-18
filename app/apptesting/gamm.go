@@ -3,10 +3,10 @@ package apptesting
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammkeeper "github.com/osmosis-labs/osmosis/v12/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/stableswap"
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 var DefaultAcctFunds sdk.Coins = sdk.NewCoins(

@@ -6,11 +6,11 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v12/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v12/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v13/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

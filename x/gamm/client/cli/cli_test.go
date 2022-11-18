@@ -7,12 +7,12 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v12/app"
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/client/cli"
-	gammtestutil "github.com/osmosis-labs/osmosis/v12/x/gamm/client/testutil"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/app"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/client/cli"
+	gammtestutil "github.com/osmosis-labs/osmosis/v13/x/gamm/client/testutil"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
