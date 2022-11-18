@@ -18,7 +18,7 @@ import (
 // TODO: list error cases
 // TODO: table-driven tests
 func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (sdk.Int, sdk.Int, sdk.Dec, error) {
-	if err := validateTickRange(lowerTick, upperTick); err != nil {
+	if err := validateTickRangeIsValid(lowerTick, upperTick); err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
@@ -56,7 +56,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 // - if attempts to withdraw an amount higher than originally provided in createPosition for a given range
 // TODO: implement and table-driven tests
 func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, requestedLiqudityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
-	if err := validateTickRange(lowerTick, upperTick); err != nil {
+	if err := validateTickRangeIsValid(lowerTick, upperTick); err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
@@ -141,7 +141,7 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 //    * The provided liquidity is distributed in token1 only.
 // TODO: add tests.
 func (p Pool) calcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, sqrtRatioLowerTick, sqrtRatioUpperTick sdk.Dec, liquidityDelta sdk.Dec) (actualAmountDenom0 sdk.Int, actualAmountDenom1 sdk.Int) {
-	if p.isPositionActive(lowerTick, upperTick) {
+	if p.isCurrentTickInRange(lowerTick, upperTick) {
 		// outcome one: the current price falls within the position
 		// if this is the case, we attempt to provide liquidity evenly between asset0 and asset1
 		// we also update the pool liquidity since the virtual liquidity is modified by this position's creation
@@ -163,20 +163,26 @@ func (p Pool) calcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, sqr
 	return actualAmountDenom0, actualAmountDenom1
 }
 
+// isCurrentTickInRange returns true if pool's current tick is within
+// the range of the lower and upper ticks. False otherwise.
 // TODO: add tests.
-func (p Pool) isPositionActive(lowerTick, upperTick int64) bool {
+func (p Pool) isCurrentTickInRange(lowerTick, upperTick int64) bool {
 	return p.CurrentTick.GTE(sdk.NewInt(lowerTick)) && p.CurrentTick.LT(sdk.NewInt(upperTick))
 }
 
+// updateLiquidityIfActivePosition updates the pool's liquidity if the position is active.
+// Returns true if updated, false otherwise.
 // TODO: add tests.
 func (p *Pool) updateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upperTick int64, liquidityDelta sdk.Dec) bool {
-	if p.isPositionActive(lowerTick, upperTick) {
+	if p.isCurrentTickInRange(lowerTick, upperTick) {
 		p.Liquidity = p.Liquidity.Add(liquidityDelta)
 		return true
 	}
 	return false
 }
 
+// ticksToSqrtPrice returns the sqrt price for the lower and upper ticks.
+// Returns error if fails to calculate sqrt price.
 // TODO: spec and tests
 func ticksToSqrtPrice(lowerTick, upperTick int64) (sdk.Dec, sdk.Dec, error) {
 	sqrtPriceUpperTick, err := tickToSqrtPrice(sdk.NewInt(upperTick))
@@ -190,8 +196,11 @@ func ticksToSqrtPrice(lowerTick, upperTick int64) (sdk.Dec, sdk.Dec, error) {
 	return sqrtPriceLowerTick, sqrtPriceUpperTick, nil
 }
 
-// TODO: spec and tests
-func validateTickRange(lowerTick int64, upperTick int64) error {
+// validateTickInRangeIsValid validates that given ticks are valid.
+// That is, both lower and upper ticks are within types.MinTick and types.MaxTick.
+// Also, lower tick must be less than upper tick.
+// Returns error if validation fails. Otherwise, nil.
+func validateTickRangeIsValid(lowerTick int64, upperTick int64) error {
 	// ensure types.MinTick <= lowerTick < types.MaxTick
 	if lowerTick < types.MinTick || lowerTick >= types.MaxTick {
 		return types.InvalidTickError{Tick: lowerTick, IsLower: true}
