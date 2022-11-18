@@ -981,3 +981,65 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 		})
 	}
 }
+
+func TestTargetKCalculator(t *testing.T) {
+	type testcase struct {
+		x0          osmomath.BigDec
+		y0          osmomath.BigDec
+		w           osmomath.BigDec
+		yf          osmomath.BigDec
+		expectPanic bool
+		// expectK     osmomath.BigDec
+	}
+
+	tests := map[string]testcase{
+		"in case yf is zero": {
+			x0:          osmomath.NewBigDec(100),
+			y0:          osmomath.NewBigDec(100),
+			w:           osmomath.NewBigDec(100),
+			yf:          osmomath.NewBigDec(0),
+			expectPanic: true,
+		},
+		"in case x0 is small": {
+			x0:          osmomath.NewBigDec(1),
+			y0:          osmomath.NewBigDec(100),
+			w:           osmomath.NewBigDec(100),
+			yf:          osmomath.NewBigDec(100),
+			expectPanic: false,
+		},
+		"in case y0 is small": {
+			x0:          osmomath.NewBigDec(100),
+			y0:          osmomath.NewBigDec(1),
+			w:           osmomath.NewBigDec(100),
+			yf:          osmomath.NewBigDec(100),
+			expectPanic: false,
+		},
+		"in case yf is small": {
+			x0:          osmomath.NewBigDec(100),
+			y0:          osmomath.NewBigDec(100),
+			w:           osmomath.NewBigDec(100),
+			yf:          osmomath.NewBigDec(1),
+			expectPanic: false,
+		},
+	}
+
+	kErrTolerance := osmomath.OneDec()
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+
+			sut := func() {
+				expectK := targetKCalculator(tc.x0, tc.y0, tc.w, tc.yf)
+				//calculate kTarger, and assert K value
+				startK := cfmmConstantMultiNoV(tc.x0, tc.y0, tc.w)
+				yfRemoved := startK.Quo(tc.yf)
+				innerTerm := tc.yf.Mul(tc.yf).Add(tc.w).Add((tc.x0.Mul(tc.x0)))
+				constantTerm := innerTerm.Mul(tc.x0)
+				kTarget := yfRemoved.Sub(constantTerm)
+
+				osmomath.DecApproxEq(t, expectK, kTarget, kErrTolerance)
+			}
+			osmoassert.ConditionalPanic(t, tc.expectPanic, sut)
+		})
+	}
+}
