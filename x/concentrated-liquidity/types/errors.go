@@ -55,3 +55,16 @@ type PoolNotFoundError struct {
 func (e PoolNotFoundError) Error() string {
 	return fmt.Sprintf("pool not found. pool id (%d)", e.PoolId)
 }
+
+type InvalidTickError struct {
+	Tick    int64
+	IsLower bool
+}
+
+func (e InvalidTickError) Error() string {
+	tickStr := "upper"
+	if e.IsLower {
+		tickStr = "lower"
+	}
+	return fmt.Sprintf("%s tick (%d) is invalid, Must be >= %d and <= %d", tickStr, e.Tick, MinTick, MaxTick)
+}

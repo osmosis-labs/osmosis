@@ -18,16 +18,8 @@ import (
 // TODO: list error cases
 // TODO: table-driven tests
 func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (sdk.Int, sdk.Int, sdk.Dec, error) {
-	// ensure types.MinTick <= lowerTick < types.MaxTick
-	// TODO (bez): Add unit tests.
-	if lowerTick < types.MinTick || lowerTick >= types.MaxTick {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, fmt.Errorf("invalid lower tick: %d", lowerTick)
-	}
-
-	// ensure types.MaxTick < upperTick <= types.MinTick
-	// TODO (bez): Add unit tests.
-	if upperTick > types.MaxTick || upperTick <= types.MinTick {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, fmt.Errorf("invalid upper tick: %d", upperTick)
+	if err := validateTickRange(lowerTick, upperTick); err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
 	sqrtPriceLowerTick, sqrtPriceUpperTick, err := ticksToSqrtPrice(lowerTick, upperTick)
@@ -64,6 +56,10 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 // - if attempts to withdraw an amount higher than originally provided in createPosition for a given range
 // TODO: implement and table-driven tests
 func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, requestedLiqudityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
+	if err := validateTickRange(lowerTick, upperTick); err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+
 	position, err := k.getPosition(ctx, poolId, owner, lowerTick, upperTick)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
@@ -193,4 +189,20 @@ func ticksToSqrtPrice(lowerTick, upperTick int64) (sdk.Dec, sdk.Dec, error) {
 		return sdk.Dec{}, sdk.Dec{}, err
 	}
 	return sqrtPriceLowerTick, sqrtPriceUpperTick, nil
+}
+
+// TODO: spec and tests
+func validateTickRange(lowerTick int64, upperTick int64) error {
+	// ensure types.MinTick <= lowerTick < types.MaxTick
+	if lowerTick < types.MinTick || lowerTick >= types.MaxTick {
+		return types.InvalidTickError{Tick: lowerTick, IsLower: true}
+	}
+	// ensure types.MaxTick < upperTick <= types.MinTick
+	if upperTick > types.MaxTick || upperTick <= types.MinTick {
+		return types.InvalidTickError{Tick: upperTick, IsLower: false}
+	}
+	if lowerTick >= upperTick {
+		return types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
+	}
+	return nil
 }
