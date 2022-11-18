@@ -36,7 +36,10 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	// now calculate amount for token0 and token1
-	pool := k.getPoolbyId(ctx, poolId)
+	pool, err := k.getPoolbyId(ctx, poolId)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+	}
 
 	liquidityDelta := getLiquidityFromAmounts(pool.CurrentSqrtPrice, sqrtPriceLowerTick, sqrtPriceUpperTick, amount0Desired, amount1Desired)
 	if liquidityDelta.IsZero() {
@@ -107,7 +110,10 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	// now calculate amount for token0 and token1
-	pool := k.getPoolbyId(ctx, poolId)
+	pool, err := k.getPoolbyId(ctx, poolId)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
 
 	sqrtPriceLowerTick, sqrtPriceUpperTick, err := ticksToSqrtPrice(lowerTick, upperTick)
 	if err != nil {

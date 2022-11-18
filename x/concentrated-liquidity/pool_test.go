@@ -390,7 +390,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 				swapFee, test.priceLimit, pool.Id)
 			s.Require().NoError(err)
 
-			pool = s.App.ConcentratedLiquidityKeeper.GetPoolbyId(s.Ctx, pool.Id)
+			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolbyId(s.Ctx, pool.Id)
 			s.Require().NoError(err)
 
 			// check that we produced the same token out from the swap function that we expected
