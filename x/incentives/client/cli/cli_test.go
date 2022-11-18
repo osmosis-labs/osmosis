@@ -9,15 +9,15 @@ import (
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/app"
-	gammtestutil "github.com/osmosis-labs/osmosis/v12/x/gamm/client/testutil"
-	"github.com/osmosis-labs/osmosis/v12/x/incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/v12/x/incentives/types"
-	lockuptestutil "github.com/osmosis-labs/osmosis/v12/x/lockup/client/testutil"
+	"github.com/osmosis-labs/osmosis/v13/app"
+	gammtestutil "github.com/osmosis-labs/osmosis/v13/x/gamm/client/testutil"
+	"github.com/osmosis-labs/osmosis/v13/x/incentives/client/cli"
+	"github.com/osmosis-labs/osmosis/v13/x/incentives/types"
+	lockuptestutil "github.com/osmosis-labs/osmosis/v13/x/lockup/client/testutil"
 
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"

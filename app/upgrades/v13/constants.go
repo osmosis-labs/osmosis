@@ -2,8 +2,8 @@ package v13
 
 import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/osmosis-labs/osmosis/v12/app/upgrades"
-	valsetpreftypes "github.com/osmosis-labs/osmosis/v12/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/v13/app/upgrades"
+	valsetpreftypes "github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v13 upgrade.
