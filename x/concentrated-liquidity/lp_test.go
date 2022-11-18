@@ -22,25 +22,26 @@ type lpTest struct {
 }
 
 var (
-	denom0 = "eth"
-	denom1 = "usdc"
+	denom0   = "eth"
+	denom1   = "usdc"
+	baseCase = &lpTest{
+		poolId:          1,
+		currentTick:     sdk.NewInt(85176),
+		lowerTick:       int64(84222),
+		upperTick:       int64(86129),
+		currentSqrtP:    sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+		amount0Desired:  sdk.NewInt(1000000),                            // 1 eth
+		amount0Expected: sdk.NewInt(998587),                             // 0.998587 eth
+		amount1Desired:  sdk.NewInt(5000000000),                         // 5000 usdc
+		amount1Expected: sdk.NewInt(5000000000),                         // 5000 usdc
+		liquidityAmount: sdk.MustNewDecFromStr("1517818840.967515822610790519"),
+	}
 )
 
 func (s *KeeperTestSuite) TestCreatePosition() {
 
 	tests := map[string]lpTest{
-		"happy path": {
-			poolId:          1,
-			currentTick:     sdk.NewInt(85176),
-			lowerTick:       int64(84222),
-			upperTick:       int64(86129),
-			currentSqrtP:    sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
-			amount0Desired:  sdk.NewInt(1000000),                            // 1 eth
-			amount0Expected: sdk.NewInt(998587),                             // 0.998587 eth
-			amount1Desired:  sdk.NewInt(5000000000),                         // 5000 usdc
-			amount1Expected: sdk.NewInt(5000000000),                         // 5000 usdc
-			liquidityAmount: sdk.MustNewDecFromStr("1517818840.967515822610790519"),
-		},
+		"happy path": *baseCase,
 	}
 
 	for name, tc := range tests {
@@ -111,18 +112,9 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		// the system under test.
 		sutConfigOverwrite *lpTest
 	}{
-		"withdraw full liqudity amount": {
+		"base case: withdraw full liqudity amount": {
 			// setup parameters for creation a pool and position.
-			setupConfig: &lpTest{
-				poolId:          1,
-				currentSqrtP:    sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
-				currentTick:     sdk.NewInt(85176),
-				lowerTick:       int64(84222),
-				upperTick:       int64(86129),
-				amount0Desired:  sdk.NewInt(1000000),    // 1 eth,
-				amount1Desired:  sdk.NewInt(5000000000), // 5000 usdc
-				liquidityAmount: sdk.MustNewDecFromStr("1517818840.967515822610790519"),
-			},
+			setupConfig: baseCase,
 
 			// system under test parameters
 			// for withdrawing a position.
@@ -133,38 +125,20 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		},
 		"withdraw partial liqudity amount": {
 			// setup parameters for creation a pool and position.
-			setupConfig: &lpTest{
-				poolId:          1,
-				currentSqrtP:    sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
-				currentTick:     sdk.NewInt(85176),
-				lowerTick:       int64(84222),
-				upperTick:       int64(86129),
-				amount0Desired:  sdk.NewInt(1000000),    // 1 eth,
-				amount1Desired:  sdk.NewInt(5000000000), // 5000 usdc
-				liquidityAmount: sdk.MustNewDecFromStr("1517818840.967515822610790519"),
-			},
+			setupConfig: baseCase,
 
 			// system under test parameters
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
-				liquidityAmount: sdk.MustNewDecFromStr("1517818840.967515822610790519").QuoInt64(2),
+				liquidityAmount: baseCase.liquidityAmount.QuoInt64(2),
 
-				amount0Expected: sdk.NewInt(998587).QuoRaw(2), // 0.998587 eth
-				amount1Expected: sdk.NewInt(5000000000/2 - 1), // 2499 usdc, one is lost due to truncation
+				amount0Expected: baseCase.amount0Expected.QuoRaw(2),                   // 0.998587 eth
+				amount1Expected: baseCase.amount1Expected.QuoRaw(2).Sub(sdk.OneInt()), // 2499 usdc, one is lost due to truncation
 			},
 		},
 		"error: no position created": {
 			// setup parameters for creation a pool and position.
-			setupConfig: &lpTest{
-				poolId:          1,
-				currentSqrtP:    sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
-				currentTick:     sdk.NewInt(85176),
-				lowerTick:       int64(84222),
-				upperTick:       int64(86129),
-				amount0Desired:  sdk.NewInt(1000000),    // 1 eth,
-				amount1Desired:  sdk.NewInt(5000000000), // 5000 usdc
-				liquidityAmount: sdk.MustNewDecFromStr("1517818840.967515822610790519"),
-			},
+			setupConfig: baseCase,
 
 			// system under test parameters
 			// for withdrawing a position.
@@ -175,16 +149,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		},
 		"error: pool id for pool that does not exist": {
 			// setup parameters for creation a pool and position.
-			setupConfig: &lpTest{
-				poolId:          1,
-				currentSqrtP:    sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
-				currentTick:     sdk.NewInt(85176),
-				lowerTick:       int64(84222),
-				upperTick:       int64(86129),
-				amount0Desired:  sdk.NewInt(1000000),    // 1 eth,
-				amount1Desired:  sdk.NewInt(5000000000), // 5000 usdc
-				liquidityAmount: sdk.MustNewDecFromStr("1517818840.967515822610790519"),
-			},
+			setupConfig: baseCase,
 
 			// system under test parameters
 			// for withdrawing a position.
@@ -195,16 +160,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		},
 		"error: invalid tick given": {
 			// setup parameters for creation a pool and position.
-			setupConfig: &lpTest{
-				poolId:          1,
-				currentSqrtP:    sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
-				currentTick:     sdk.NewInt(85176),
-				lowerTick:       int64(84222),
-				upperTick:       int64(86129),
-				amount0Desired:  sdk.NewInt(1000000),    // 1 eth,
-				amount1Desired:  sdk.NewInt(5000000000), // 5000 usdc
-				liquidityAmount: sdk.MustNewDecFromStr("1517818840.967515822610790519"),
-			},
+			setupConfig: baseCase,
 
 			// system under test parameters
 			// for withdrawing a position.
@@ -215,33 +171,26 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		},
 		"error: insufficient liqudity": {
 			// setup parameters for creation a pool and position.
-			setupConfig: &lpTest{
-				poolId:          1,
-				currentSqrtP:    sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
-				currentTick:     sdk.NewInt(85176),
-				lowerTick:       int64(84222),
-				upperTick:       int64(86129),
-				amount0Desired:  sdk.NewInt(1000000),    // 1 eth,
-				amount1Desired:  sdk.NewInt(5000000000), // 5000 usdc
-				liquidityAmount: sdk.MustNewDecFromStr("1517818840.967515822610790519"),
-			},
+			setupConfig: baseCase,
 
 			// system under test parameters
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
-				liquidityAmount: sdk.MustNewDecFromStr("1517818840.967515822610790519").Add(sdk.OneDec()), // 1 more than available
-				expectedError:   types.InsufficientLiquidityError{Actual: sdk.MustNewDecFromStr("1517818840.967515822610790519").Add(sdk.OneDec()), Available: sdk.MustNewDecFromStr("1517818840.967515822610790519")},
+				liquidityAmount: baseCase.liquidityAmount.Add(sdk.OneDec()), // 1 more than available
+				expectedError:   types.InsufficientLiquidityError{Actual: baseCase.liquidityAmount.Add(sdk.OneDec()), Available: baseCase.liquidityAmount},
 			},
 		},
+		// TODO: test with custom amounts that potentially lead to truncations.
 	}
 
 	for name, tc := range tests {
 		s.Run(name, func() {
 			tc := tc
+			config := *tc.setupConfig
+			sutConfigOverwrite := *tc.sutConfigOverwrite
 			s.SetupTest()
 			ctx := s.Ctx
 			concentratedLiquidityKeeper := s.App.ConcentratedLiquidityKeeper
-			config := tc.setupConfig
 
 			owner := s.TestAccs[0]
 
@@ -254,7 +203,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				s.Require().NoError(err)
 			}
 
-			mergeConfigs(config, tc.sutConfigOverwrite)
+			mergeConfigs(&config, &sutConfigOverwrite)
 
 			// System under test.
 			amtDenom0, amtDenom1, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, config.poolId, owner, config.lowerTick, config.upperTick, config.liquidityAmount)
