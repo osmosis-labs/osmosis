@@ -76,7 +76,6 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 }
 
 func (s *KeeperTestSuite) TestWithdrawPosition() {
-
 	// mergeConfigs merges every desired non-zero field from overwrite
 	// into dst. dst is mutated due to being a pointer.
 	mergeConfigs := func(dst *lpTest, overwrite *lpTest) {
@@ -112,7 +111,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		// the system under test.
 		sutConfigOverwrite *lpTest
 	}{
-		"basic test for active position": {
+		"withdraw full liqudity amount": {
 			// setup parameters for creation a pool and position.
 			setupConfig: &lpTest{
 				poolId:          1,
@@ -130,6 +129,28 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			sutConfigOverwrite: &lpTest{
 				amount0Expected: sdk.NewInt(998587),     // 0.998587 eth
 				amount1Expected: sdk.NewInt(5000000000), // 5000 usdc
+			},
+		},
+		"withdraw partial liqudity amount": {
+			// setup parameters for creation a pool and position.
+			setupConfig: &lpTest{
+				poolId:          1,
+				currentSqrtP:    sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+				currentTick:     sdk.NewInt(85176),
+				lowerTick:       int64(84222),
+				upperTick:       int64(86129),
+				amount0Desired:  sdk.NewInt(1000000),    // 1 eth,
+				amount1Desired:  sdk.NewInt(5000000000), // 5000 usdc
+				liquidityAmount: sdk.MustNewDecFromStr("1517818840.967515822610790519"),
+			},
+
+			// system under test parameters
+			// for withdrawing a position.
+			sutConfigOverwrite: &lpTest{
+				liquidityAmount: sdk.MustNewDecFromStr("1517818840.967515822610790519").QuoInt64(2),
+
+				amount0Expected: sdk.NewInt(998587).QuoRaw(2), // 0.998587 eth
+				amount1Expected: sdk.NewInt(5000000000/2 - 1), // 2499 usdc, one is lost due to truncation
 			},
 		},
 		"error: no position created": {
@@ -212,9 +233,6 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				expectedError:   types.InsufficientLiquidityError{Actual: sdk.MustNewDecFromStr("1517818840.967515822610790519").Add(sdk.OneDec()), Available: sdk.MustNewDecFromStr("1517818840.967515822610790519")},
 			},
 		},
-		// liquidityAmount higher than available
-		// full liquidity amount
-		// liquidity amount lower than available
 	}
 
 	for name, tc := range tests {

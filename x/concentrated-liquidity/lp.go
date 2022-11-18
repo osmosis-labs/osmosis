@@ -129,6 +129,7 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 // calcActualAmounts calculates and returns actual amounts based on where the current tick is located relative to position's
 // lower and upper ticks.
+// The returned amounts are rounded down to avoid returning more to clients than they actually deposited.
 // There are 3 possible cases:
 // -The position is active ( lowerTick <= p.CurrentTick < upperTick).
 //    * The provided liqudity is distributed in both tokens.
@@ -145,18 +146,18 @@ func (p Pool) calcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, sqr
 		// if this is the case, we attempt to provide liquidity evenly between asset0 and asset1
 		// we also update the pool liquidity since the virtual liquidity is modified by this position's creation
 		currentSqrtPrice := p.CurrentSqrtPrice
-		actualAmountDenom0 = calcAmount0Delta(liquidityDelta, currentSqrtPrice, sqrtRatioUpperTick, false).RoundInt()
-		actualAmountDenom1 = calcAmount1Delta(liquidityDelta, currentSqrtPrice, sqrtRatioLowerTick, false).RoundInt()
+		actualAmountDenom0 = calcAmount0Delta(liquidityDelta, currentSqrtPrice, sqrtRatioUpperTick, false).TruncateInt()
+		actualAmountDenom1 = calcAmount1Delta(liquidityDelta, currentSqrtPrice, sqrtRatioLowerTick, false).TruncateInt()
 	} else if p.CurrentTick.LT(sdk.NewInt(lowerTick)) {
 		// outcome two: position is below current price
 		// this means position is solely made up of asset0
 		actualAmountDenom1 = sdk.ZeroInt()
-		actualAmountDenom0 = calcAmount0Delta(liquidityDelta, sqrtRatioLowerTick, sqrtRatioUpperTick, false).RoundInt()
+		actualAmountDenom0 = calcAmount0Delta(liquidityDelta, sqrtRatioLowerTick, sqrtRatioUpperTick, false).TruncateInt()
 	} else {
 		// outcome three: position is above current price
 		// this means position is solely made up of asset1
 		actualAmountDenom0 = sdk.ZeroInt()
-		actualAmountDenom1 = calcAmount1Delta(liquidityDelta, sqrtRatioLowerTick, sqrtRatioUpperTick, false).RoundInt()
+		actualAmountDenom1 = calcAmount1Delta(liquidityDelta, sqrtRatioLowerTick, sqrtRatioUpperTick, false).TruncateInt()
 	}
 
 	return actualAmountDenom0, actualAmountDenom1
