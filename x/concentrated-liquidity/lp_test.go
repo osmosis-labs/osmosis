@@ -46,7 +46,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			expectedError: types.InvalidTickError{Tick: types.MaxTick + 1, IsLower: true},
 		},
 		// TODO: add more tests
-		// custom hand-picked values
+		// - custom hand-picked values
 		// - error edge cases
 		// - think of overflows
 		// - think of truncations
