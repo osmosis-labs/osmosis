@@ -9,8 +9,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
-	keeper "github.com/osmosis-labs/osmosis/v12/x/valset-pref"
-	"github.com/osmosis-labs/osmosis/v12/x/valset-pref/types"
+	keeper "github.com/osmosis-labs/osmosis/v13/x/valset-pref"
+	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -20,8 +20,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	validatorprefclient "github.com/osmosis-labs/osmosis/v12/x/valset-pref/client"
-	"github.com/osmosis-labs/osmosis/v12/x/valset-pref/client/queryproto"
+	validatorprefclient "github.com/osmosis-labs/osmosis/v13/x/valset-pref/client"
+	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/client/queryproto"
 )
 
 var (
