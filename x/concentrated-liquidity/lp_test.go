@@ -57,22 +57,11 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			s.Require().Equal(tc.liquidityAmount.String(), liquidityCreated.String())
 
 			// check position state
-			position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick)
-			s.Require().NoError(err)
-			s.Require().Equal(tc.liquidityAmount.String(), position.Liquidity.String())
+			s.validatePositionUpdate(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, tc.liquidityAmount)
 
 			// check tick state
-			lowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, tc.poolId, tc.lowerTick)
-			s.Require().NoError(err)
-			s.Require().Equal(tc.liquidityAmount.String(), lowerTickInfo.LiquidityGross.String())
-			s.Require().Equal(tc.liquidityAmount.String(), lowerTickInfo.LiquidityNet.String())
-
-			upperTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, tc.poolId, tc.upperTick)
-			s.Require().NoError(err)
-			s.Require().Equal(tc.liquidityAmount.String(), upperTickInfo.LiquidityGross.String())
-			s.Require().Equal(tc.liquidityAmount.Neg().String(), upperTickInfo.LiquidityNet.String())
+			s.validateTickUpdates(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, tc.liquidityAmount)
 		})
-
 	}
 }
 
@@ -229,22 +218,10 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			s.Require().Equal(config.amount1Expected.String(), amtDenom1.String())
 
 			// Check that the position was updated.
-			position, err := concentratedLiquidityKeeper.GetPosition(ctx, config.poolId, owner, config.lowerTick, config.upperTick)
-			s.Require().NoError(err)
-			newPositionLiquidity := position.Liquidity
-			s.Require().Equal(expectedRemainingLiquidity.String(), newPositionLiquidity.String())
-			s.Require().True(newPositionLiquidity.GTE(sdk.ZeroDec()))
+			s.validatePositionUpdate(ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity)
 
 			// check tick state
-			lowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, config.poolId, config.lowerTick)
-			s.Require().NoError(err)
-			s.Require().Equal(expectedRemainingLiquidity.String(), lowerTickInfo.LiquidityGross.String())
-			s.Require().Equal(expectedRemainingLiquidity.String(), lowerTickInfo.LiquidityNet.String())
-
-			upperTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, config.poolId, config.upperTick)
-			s.Require().NoError(err)
-			s.Require().Equal(expectedRemainingLiquidity.String(), upperTickInfo.LiquidityGross.String())
-			s.Require().Equal(expectedRemainingLiquidity.Neg().String(), upperTickInfo.LiquidityNet.String())
+			s.validateTickUpdates(ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity)
 		})
 	}
 }
