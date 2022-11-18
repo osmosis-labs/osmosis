@@ -265,6 +265,10 @@ func targetKCalculator(x0, y0, w, yf osmomath.BigDec) osmomath.BigDec {
 
 // $$k_{iter}(x_f) = -x_{out}^3 + 3 x_0 x_{out}^2 - (y_f^2 + w + 3x_0^2)x_{out}$$
 // where x_out = x_0 - x_f
+// iterKCalculator returns a constantly increasing function to use in cfmm binary solver. Uses horners method https://www.geeksforgeeks.org/horners-method-polynomial-evaluation/
+// x0 - initial reserve of token X
+// w - w is a reserve of assets we do not touch when swapping (ex: in 3 asset pool {x, y, z}, if we swap x for y, `w` would include reserves of token z, because we do not touch it during swap). w = 0 in 2 asset pools
+// yf - y Final. Initial reserves of y plus added liquidity.
 func iterKCalculator(x0, w, yf osmomath.BigDec) func(osmomath.BigDec) (osmomath.BigDec, error) {
 	// compute coefficients first
 	cubicCoeff := osmomath.OneDec().Neg()
@@ -272,7 +276,7 @@ func iterKCalculator(x0, w, yf osmomath.BigDec) func(osmomath.BigDec) (osmomath.
 	linearCoeff := quadraticCoeff.Mul(x0).Add(w).Add(yf.Mul(yf)).Neg()
 	return func(xf osmomath.BigDec) (osmomath.BigDec, error) {
 		xOut := x0.Sub(xf)
-		// horners method
+		// horners method to evaluate polynomials in O(n):
 		// ax^3 + bx^2 + cx = x(c + x(b + ax))
 		res := cubicCoeff.Mul(xOut)
 		res = res.Add(quadraticCoeff).Mul(xOut)
