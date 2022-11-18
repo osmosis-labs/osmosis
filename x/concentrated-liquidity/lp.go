@@ -61,7 +61,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 // - if attempts to withdraw an amount higher than originally provided in createPosition for a given range
 // TODO: implement and table-driven tests
 func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, requestedLiqudityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
-	position, err := k.GetPosition(ctx, poolId, owner, lowerTick, upperTick)
+	position, err := k.getPosition(ctx, poolId, owner, lowerTick, upperTick)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}

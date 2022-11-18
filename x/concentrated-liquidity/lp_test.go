@@ -2,6 +2,8 @@ package concentrated_liquidity_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
 type lpTest struct {
@@ -104,7 +106,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 	}
 
 	tests := map[string]struct {
-		setupConfig lpTest
+		setupConfig *lpTest
 		// when this is set, it ovewrites the setupConfig
 		// and gives the overwritten configuration to
 		// the system under test.
@@ -112,7 +114,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 	}{
 		"basic test for active position": {
 			// setup parameters for creation a pool and position.
-			setupConfig: lpTest{
+			setupConfig: &lpTest{
 				poolId:          1,
 				currentSqrtP:    sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
 				currentTick:     sdk.NewInt(85176),
@@ -130,7 +132,26 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				amount1Expected: sdk.NewInt(5000000000), // 5000 usdc
 			},
 		},
-		// no position created
+		"no position created": {
+			// setup parameters for creation a pool and position.
+			setupConfig: &lpTest{
+				poolId:          1,
+				currentSqrtP:    sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+				currentTick:     sdk.NewInt(85176),
+				lowerTick:       int64(84222),
+				upperTick:       int64(86129),
+				amount0Desired:  sdk.NewInt(1000000),    // 1 eth,
+				amount1Desired:  sdk.NewInt(5000000000), // 5000 usdc
+				liquidityAmount: sdk.MustNewDecFromStr("1517818840.967515822610790519"),
+			},
+
+			// system under test parameters
+			// for withdrawing a position.
+			sutConfigOverwrite: &lpTest{
+				lowerTick:     -1, // valid tick at which no position does not exist
+				expectedError: types.PositionNotFoundError{PoolId: 1, LowerTick: -1, UpperTick: 86129},
+			},
+		},
 		// invalid pool id
 		// invalid ticks
 		// liquidityAmount higher than available
@@ -144,24 +165,27 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			s.SetupTest()
 			ctx := s.Ctx
 			concentratedLiquidityKeeper := s.App.ConcentratedLiquidityKeeper
+			config := tc.setupConfig
 
 			owner := s.TestAccs[0]
 
 			// Setup.
-			_, err := concentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, tc.setupConfig.poolId, denom0, denom1, tc.setupConfig.currentSqrtP, tc.setupConfig.currentTick)
-			s.Require().NoError(err)
+			if tc.setupConfig != nil {
+				_, err := concentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, config.poolId, denom0, denom1, config.currentSqrtP, config.currentTick)
+				s.Require().NoError(err)
 
-			_, _, _, err = concentratedLiquidityKeeper.CreatePosition(ctx, tc.setupConfig.poolId, owner, tc.setupConfig.amount0Desired, tc.setupConfig.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), tc.setupConfig.lowerTick, tc.setupConfig.upperTick)
-			s.Require().NoError(err)
+				_, _, _, err = concentratedLiquidityKeeper.CreatePosition(ctx, config.poolId, owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), config.lowerTick, config.upperTick)
+				s.Require().NoError(err)
+			}
 
-			config := tc.setupConfig
-			mergeConfigs(&config, tc.sutConfigOverwrite)
+			mergeConfigs(config, tc.sutConfigOverwrite)
 
 			// System under test.
 			amtDenom0, amtDenom1, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, config.poolId, owner, config.lowerTick, config.upperTick, config.liquidityAmount)
 
 			if config.expectedError != nil {
 				s.Require().Error(err)
+				s.Require().ErrorIs(config.expectedError, err)
 				return
 			}
 

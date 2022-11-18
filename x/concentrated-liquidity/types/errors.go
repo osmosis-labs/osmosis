@@ -37,3 +37,13 @@ type NotPositiveRequireAmountError struct {
 func (e NotPositiveRequireAmountError) Error() string {
 	return fmt.Sprintf("Required amount should be positive. Got: %s", e.Amount)
 }
+
+type PositionNotFoundError struct {
+	PoolId    uint64
+	LowerTick int64
+	UpperTick int64
+}
+
+func (e PositionNotFoundError) Error() string {
+	return fmt.Sprintf("position not found. pool id (%d), lower tick (%d), upper tick (%d)", e.PoolId, e.LowerTick, e.UpperTick)
+}

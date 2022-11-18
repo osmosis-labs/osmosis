@@ -35,6 +35,14 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	return k.withdrawPosition(ctx, poolId, owner, lowerTick, upperTick, liquidityAmount)
 }
 
+func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) (*Position, error) {
+	return k.getPosition(ctx, poolId, owner, lowerTick, upperTick)
+}
+
+func (k Keeper) HasPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) bool {
+	return k.hasPosition(ctx, poolId, owner, lowerTick, upperTick)
+}
+
 func GetNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
 	return getNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining)
 }
