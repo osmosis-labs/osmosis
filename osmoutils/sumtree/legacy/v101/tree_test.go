@@ -18,8 +18,8 @@ import (
 	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/store"
-	v101 "github.com/osmosis-labs/osmosis/v13/store/legacy/v101"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils/sumtree"
+	v101 "github.com/osmosis-labs/osmosis/v13/osmoutils/sumtree/legacy/v101"
 )
 
 func setupStore() sdk.KVStore {
@@ -35,7 +35,7 @@ func setupStore() sdk.KVStore {
 
 func compareBranch(oldValueBz []byte, valueBz []byte) (err error) {
 	oldValue := v101.Children{}
-	value := store.Node{}
+	value := sumtree.Node{}
 	err = json.Unmarshal(oldValueBz, &oldValue)
 	if err != nil {
 		return
@@ -57,7 +57,7 @@ func compareBranch(oldValueBz []byte, valueBz []byte) (err error) {
 
 func compareLeaf(oldValueBz []byte, valueBz []byte) (err error) {
 	oldValue := sdk.ZeroInt()
-	value := store.Leaf{}
+	value := sumtree.Leaf{}
 	err = json.Unmarshal(oldValueBz, &oldValue)
 	if err != nil {
 		return
