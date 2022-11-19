@@ -110,7 +110,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				amount1Expected: baseCase.amount1Expected, // 5000 usdc
 			},
 		},
-		"withdraw partial liqudity amount": {
+		"withdraw partial liquidity amount": {
 			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
 
