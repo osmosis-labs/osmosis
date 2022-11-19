@@ -83,7 +83,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 // updatePosition updates the position in the given pool id and in the given tick range and liquidityAmount.
 // Negative liquidityDelta implies withdrawing liquidity.
 // Positive liquidityDelta implies adding liquidity.
-// Updates ticks and poo, liquidity. Returns how much of each token is either added or removed.
+// Updates ticks and pool liquidity. Returns how much of each token is either added or removed.
 // Negative returned amounts imply that tokens are removed from the pool.
 // Positive returned amounts imply that tokens are added to the pool.
 // TODO: tests.
