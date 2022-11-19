@@ -49,7 +49,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 }
 
 // withdrawPosition attempts to withdraw liquidityAmount from a position with the given pool id in the given tick range.
-// On success, returns an positive amount of each token withdrawn.
+// On success, returns a positive amount of each token withdrawn.
 // Returns error if
 // - there is no position in the given tick ranges
 // - if tick ranges are invalid
