@@ -89,7 +89,7 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer
 		},
 	}
 	msg := balancer.NewMsgCreateBalancerPool(s.TestAccs[0], poolParams, poolAssets, "")
-	poolId, err := s.App.GAMMKeeper.CreatePool(s.Ctx, msg)
+	poolId, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, msg)
 	s.NoError(err)
 	return poolId
 }
@@ -107,7 +107,7 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolAsset(assets []balancer.Po
 		SwapFee: sdk.ZeroDec(),
 		ExitFee: sdk.ZeroDec(),
 	}, assets, "")
-	poolId, err := s.App.GAMMKeeper.CreatePool(s.Ctx, msg)
+	poolId, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, msg)
 	s.NoError(err)
 	return poolId
 }

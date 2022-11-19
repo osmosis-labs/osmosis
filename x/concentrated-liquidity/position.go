@@ -11,7 +11,7 @@ func (k Keeper) initOrUpdatePosition(ctx sdk.Context,
 	poolId uint64,
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
-	liquidityDelta sdk.Int,
+	liquidityDelta sdk.Dec,
 ) (err error) {
 	position, err := k.GetPosition(ctx, poolId, owner, lowerTick, upperTick)
 	if err != nil {
@@ -38,7 +38,7 @@ func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	found, err := osmoutils.GetIfFound(store, key, &positionStruct)
 	// return 0 values if key has not been initialized
 	if !found {
-		return Position{Liquidity: sdk.ZeroInt()}, nil
+		return Position{Liquidity: sdk.ZeroDec()}, nil
 	}
 	if err != nil {
 		return positionStruct, err

@@ -13,13 +13,13 @@ import (
 )
 
 // tickToSqrtPrice takes the tick index and returns the corresponding sqrt of the price
-func (k Keeper) tickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
-	price, err := sdk.NewDecWithPrec(10001, 4).Power(tickIndex.Uint64()).ApproxSqrt()
+func tickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
+	sqrtPrice, err := sdk.NewDecWithPrec(10001, 4).Power(tickIndex.Uint64()).ApproxSqrt()
 	if err != nil {
 		return sdk.Dec{}, err
 	}
 
-	return price, nil
+	return sqrtPrice, nil
 }
 
 // TODO: implement this
@@ -27,7 +27,7 @@ func (k Keeper) tickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
 // 	return sdk.Int{}
 // }
 
-func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Int, upper bool) (err error) {
+func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
 	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
 		return err
@@ -54,10 +54,10 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 	return nil
 }
 
-func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Int, err error) {
+func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Dec, err error) {
 	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
-		return sdk.Int{}, err
+		return sdk.Dec{}, err
 	}
 
 	return tickInfo.LiquidityNet, nil
@@ -123,7 +123,7 @@ func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 	found, err := osmoutils.GetIfFound(store, key, &tickStruct)
 	// return 0 values if key has not been initialized
 	if !found {
-		return TickInfo{LiquidityGross: sdk.ZeroInt(), LiquidityNet: sdk.ZeroInt()}, err
+		return TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec()}, err
 	}
 	if err != nil {
 		return tickStruct, err

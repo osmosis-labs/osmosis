@@ -5,6 +5,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
 )
 
 const (
@@ -13,8 +14,8 @@ const (
 )
 
 var (
-	_ sdk.Msg             = &MsgCreateStableswapPool{}
-	_ types.CreatePoolMsg = &MsgCreateStableswapPool{}
+	_ sdk.Msg                       = &MsgCreateStableswapPool{}
+	_ swaproutertypes.CreatePoolMsg = &MsgCreateStableswapPool{}
 )
 
 func NewMsgCreateStableswapPool(
@@ -111,6 +112,10 @@ func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (t
 	}
 
 	return &stableswapPool, nil
+}
+
+func (msg MsgCreateStableswapPool) GetPoolType() swaproutertypes.PoolType {
+	return swaproutertypes.StableSwap
 }
 
 var _ sdk.Msg = &MsgStableSwapAdjustScalingFactors{}

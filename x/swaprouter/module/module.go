@@ -16,6 +16,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/swaprouter"
 	swaprouterclient "github.com/osmosis-labs/osmosis/v12/x/swaprouter/client"
 	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/cli"
@@ -84,6 +85,7 @@ type AppModule struct {
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), swaprouter.NewMsgServerImpl(&am.k))
+	balancer.RegisterMsgServer(cfg.MsgServer(), swaprouter.NewBalancerMsgServerImpl(&am.k))
 	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: swaprouterclient.Querier{K: am.k}})
 }
 
@@ -143,8 +145,14 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // **** simulation implementation ****
 // GenerateGenesisState creates a randomized GenState of the swaprouter module.
+// **** simulation implementation ****
+// GenerateGenesisState creates a randomized GenState of the gamm module.
 func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(types.DefaultGenesis())
+	swaprouterGen := types.DefaultGenesis()
+	// change the pool creation fee denom from uosmo to stake
+	swaprouterGen.Params.PoolCreationFee = sdk.NewCoins(swaproutersimulation.PoolCreationFee)
+	DefaultGenJson := simState.Cdc.MustMarshalJSON(swaprouterGen)
+	simState.GenState[types.ModuleName] = DefaultGenJson
 }
 
 func (am AppModule) Actions() []simtypes.Action {

@@ -5,52 +5,63 @@ import (
 )
 
 func (s *KeeperTestSuite) TestCreatePosition() {
-	// testing params
-	// current tick: 85176
-	// lower tick: 84222
-	// upper tick: 86129
-	// liquidity(token in):1517882323
-	// current sqrt price: 70710678
-	// denom0: eth
-	// denom1: usdc
-	poolId := uint64(1)
-	currentTick := sdk.NewInt(85176)
-	lowerTick := int64(84222)
-	upperTick := int64(86129)
-
-	// currentSqrtP, ok := sdk.NewIntFromString("70710678")
-	currentSqrtP, err := sdk.NewDecFromStr("70.710678")
-	s.Require().NoError(err)
 	denom0 := "eth"
 	denom1 := "usdc"
 
-	amount0Desired := sdk.NewInt(1)
-	amount1Desired := sdk.NewInt(5000)
+	tests := map[string]struct {
+		poolId            uint64
+		currentTick       sdk.Int
+		lowerTick         int64
+		upperTick         int64
+		currentSqrtP      sdk.Dec
+		amount0Desired    sdk.Int
+		amount0Expected   sdk.Int
+		amount1Desired    sdk.Int
+		amount1Expected   sdk.Int
+		expectedLiquidity sdk.Dec
+	}{
+		"happy path": {
+			poolId:            1,
+			currentTick:       sdk.NewInt(85176),
+			lowerTick:         int64(84222),
+			upperTick:         int64(86129),
+			currentSqrtP:      sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			amount0Desired:    sdk.NewInt(1000000),                            // 1 eth
+			amount0Expected:   sdk.NewInt(998587),                             // 0.998587 eth
+			amount1Desired:    sdk.NewInt(5000000000),                         // 5000 usdc
+			amount1Expected:   sdk.NewInt(5000000000),                         // 5000 usdc
+			expectedLiquidity: sdk.MustNewDecFromStr("1517818840.967515822610790519"),
+		},
+	}
 
-	s.SetupTest()
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
 
-	s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, poolId, denom0, denom1, currentSqrtP, currentTick)
+			s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, tc.poolId, denom0, denom1, tc.currentSqrtP, tc.currentTick)
 
-	asset0, asset1, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], amount0Desired, amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
-	s.Require().NoError(err)
-	s.Require().Equal(amount0Desired.String(), asset0.String())
-	s.Require().Equal(amount1Desired.String(), asset1.String())
+			asset0, asset1, liquidityCreated, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.amount0Desired, tc.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), tc.lowerTick, tc.upperTick)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.amount0Expected.String(), asset0.String())
+			s.Require().Equal(tc.amount1Expected.String(), asset1.String())
+			s.Require().Equal(tc.expectedLiquidity.String(), liquidityCreated.String())
 
-	// check position state
-	// 1517 is from the liquidity originally provided
-	position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, poolId, s.TestAccs[0], lowerTick, upperTick)
-	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewInt(1517), position.Liquidity)
+			// check position state
+			position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedLiquidity.String(), position.Liquidity.String())
 
-	// check tick state
-	// 1517 is from the liquidity originally provided
-	lowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, poolId, lowerTick)
-	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewInt(1517), lowerTickInfo.LiquidityGross)
-	s.Require().Equal(sdk.NewInt(1517), lowerTickInfo.LiquidityNet)
+			// check tick state
+			lowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, tc.poolId, tc.lowerTick)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedLiquidity.String(), lowerTickInfo.LiquidityGross.String())
+			s.Require().Equal(tc.expectedLiquidity.String(), lowerTickInfo.LiquidityNet.String())
 
-	upperTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, poolId, upperTick)
-	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewInt(1517), upperTickInfo.LiquidityGross)
-	s.Require().Equal(sdk.NewInt(-1517), upperTickInfo.LiquidityNet)
+			upperTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, tc.poolId, tc.upperTick)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedLiquidity.String(), upperTickInfo.LiquidityGross.String())
+			s.Require().Equal(tc.expectedLiquidity.Neg().String(), upperTickInfo.LiquidityNet.String())
+		})
+
+	}
 }

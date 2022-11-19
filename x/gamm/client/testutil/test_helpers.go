@@ -1,17 +1,12 @@
 package testutil
 
 import (
-	"encoding/json"
 	"fmt"
-	"testing"
 
-	"github.com/osmosis-labs/osmosis/v12/app"
 	gammcli "github.com/osmosis-labs/osmosis/v12/x/gamm/client/cli"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,52 +17,6 @@ var commonArgs = []string{
 	fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 	fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 	fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-}
-
-// MsgCreatePool broadcast a pool creation message.
-func MsgCreatePool(
-	t *testing.T,
-	clientCtx client.Context,
-	owner fmt.Stringer,
-	tokenWeights string,
-	initialDeposit string,
-	swapFee string,
-	exitFee string,
-	futureGovernor string,
-	extraArgs ...string,
-) (testutil.BufferWriter, error) {
-	args := []string{}
-
-	jsonFile := testutil.WriteToNewTempFile(t,
-		fmt.Sprintf(`
-		{
-		  "%s": "%s",
-		  "%s": "%s",
-		  "%s": "%s",
-		  "%s": "%s",
-		  "%s": "%s"
-		}
-		`, gammcli.PoolFileWeights,
-			tokenWeights,
-			gammcli.PoolFileInitialDeposit,
-			initialDeposit,
-			gammcli.PoolFileSwapFee,
-			swapFee,
-			gammcli.PoolFileExitFee,
-			exitFee,
-			gammcli.PoolFileExitFee,
-			exitFee,
-		),
-	)
-
-	args = append(args,
-		fmt.Sprintf("--%s=%s", gammcli.FlagPoolFile, jsonFile.Name()),
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, owner.String()),
-		fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
-	)
-
-	args = append(args, commonArgs...)
-	return clitestutil.ExecTestCLICmd(clientCtx, gammcli.NewCreatePoolCmd(), args)
 }
 
 // MsgJoinPool broadcast pool join message.
@@ -99,15 +48,4 @@ func MsgExitPool(clientCtx client.Context, owner fmt.Stringer, poolID uint64, sh
 
 	args = append(args, commonArgs...)
 	return clitestutil.ExecTestCLICmd(clientCtx, gammcli.NewExitPoolCmd(), args)
-}
-
-// UpdateTxFeeDenom creates and modifies gamm genesis to pay fee with given denom.
-func UpdateTxFeeDenom(cdc codec.Codec, denom string) map[string]json.RawMessage {
-	// modification to pay fee with test bond denom "stake"
-	genesisState := app.ModuleBasics.DefaultGenesis(cdc)
-	gammGen := types.DefaultGenesis()
-	gammGen.Params.PoolCreationFee = sdk.Coins{sdk.NewInt64Coin(denom, 1000000)}
-	gammGenJson := cdc.MustMarshalJSON(gammGen)
-	genesisState[types.ModuleName] = gammGenJson
-	return genesisState
 }

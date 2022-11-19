@@ -8,16 +8,7 @@ import (
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		Pools:          []*codectypes.Any{},
+		PoolCount:      0,
 		NextPoolNumber: 1,
-		Params:         DefaultParams(),
 	}
-}
-
-// Validate performs basic genesis state validation returning an error upon any
-// failure.
-func (gs GenesisState) Validate() error {
-	if err := gs.Params.Validate(); err != nil {
-		return err
-	}
-	return nil
 }
