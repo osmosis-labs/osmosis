@@ -135,7 +135,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			},
 		},
 		"error: pool id for pool that does not exist": {
-			// setup parameters for creation a pool and position.
+			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
 
 			// system under test parameters
