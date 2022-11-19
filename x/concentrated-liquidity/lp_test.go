@@ -130,7 +130,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// system under test parameters
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
-				lowerTick:     -1, // valid tick at which no position does not exist
+				lowerTick:     -1, // valid tick at which no position exists
 				expectedError: types.PositionNotFoundError{PoolId: 1, LowerTick: -1, UpperTick: 86129},
 			},
 		},
