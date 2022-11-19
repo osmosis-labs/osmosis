@@ -241,16 +241,13 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 
 func TestGetLiquidityIndexMap(t *testing.T) {
 	tests := map[string]struct {
-		poolAssets     sdk.Coins
-		scalingFactors []uint64
+		poolAssets sdk.Coins
 	}{
 		"2 asset pool": {
 			twoEvenStablePoolAssets,
-			defaultTwoAssetScalingFactors,
 		},
 		"3 asset pool": {
 			threeEvenStablePoolAssets,
-			defaultThreeAssetScalingFactors,
 		},
 		"4 asset pool": {
 			sdk.NewCoins(
@@ -259,17 +256,15 @@ func TestGetLiquidityIndexMap(t *testing.T) {
 				sdk.NewInt64Coin("asset/c", 1000000000),
 				sdk.NewInt64Coin("asset/d", 1000000000),
 			),
-			[]uint64{1, 1, 1, 1},
 		},
 		"5 asset pool": {
 			fiveEvenStablePoolAssets,
-			defaultFiveAssetScalingFactors,
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			pool := poolStructFromAssets(tc.poolAssets, defaultFiveAssetScalingFactors)
+			pool := poolStructFromAssets(tc.poolAssets, []uint64{})
 
 			indexMap := pool.getLiquidityIndexMap()
 			require.Equal(t, len(indexMap), len(tc.poolAssets))
