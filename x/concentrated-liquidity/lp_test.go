@@ -111,7 +111,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			},
 		},
 		"withdraw partial liqudity amount": {
-			// setup parameters for creation a pool and position.
+			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
 
 			// system under test parameters
