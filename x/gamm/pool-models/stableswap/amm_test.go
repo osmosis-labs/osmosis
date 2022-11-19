@@ -688,10 +688,10 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 			scalingFactors := []uint64{}
 			for j := 0; j < c; j++ {
 				coins = coins.Add(sdkrand.RandExponentialCoin(r, sdk.NewCoin(fmt.Sprintf("token%d", j), coinMax)))
-				sf := sdkrand.RandIntBetween(r, 1, 1<<60)
+				sf := sdkrand.RandIntBetween(r, 1, 1<<(61-types.MaxPoolAssets))
 				scalingFactors = append(scalingFactors, uint64(sf))
 			}
-			initialCalcOut := sdkrand.RandIntBetween(r, 1, 1<<60)
+			initialCalcOut := sdkrand.RandIntBetween(r, 1, 1<<(61-types.MaxPoolAssets))
 			testcases[fmt.Sprintf("rand_case_%d_coins_%d", c, i)] = testcase{
 				denomIn:        coins[0].Denom,
 				denomOut:       coins[1].Denom,
@@ -727,7 +727,8 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 				pool := createTestPool(suite.T(), tc.poolLiquidity, swapFeeDec, exitFeeDec, tc.scalingFactors)
 				suite.Require().NotNil(pool)
 				errTolerance := osmoutils.ErrTolerance{
-					AdditiveTolerance: sdk.Int{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12)}
+					AdditiveTolerance: sdk.Int{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12),
+				}
 				test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, tc.denomIn, tc.denomOut, tc.initialCalcOut, swapFeeDec, errTolerance)
 			})
 		}

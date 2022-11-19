@@ -441,9 +441,24 @@ func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk
 		return &paCopy
 	}
 
-	// We apply the swap fee by multiplying by (1 - swapFee) and then truncating to int
-	oneMinusSwapFee := sdk.OneDec().Sub(swapFee)
-	tokenInAmtAfterFee := tokenIn.Amount.ToDec().Mul(oneMinusSwapFee).TruncateInt()
+	// Find the portion of the pool made up by non-input assets
+	sumScalingFactors := int64(0)
+	for _, scalingFactor := range p.ScalingFactors {
+		sumScalingFactors += int64(scalingFactor)
+	}
+
+	// We ensure that uint64 -> int64 conversions are safe in scaling factor validation logic
+	liquidityIndexes := p.getLiquidityIndexMap()
+	inputScalingFactor := int64(p.GetScalingFactorByLiquidityIndex(liquidityIndexes[tokenIn.Denom]))
+
+	// Round the ratio up to overestimate the charged fee
+	nonInputRatio := (sdk.NewDec(sumScalingFactors).Sub(sdk.NewDec(inputScalingFactor))).Quo(sdk.NewDec(sumScalingFactors)).Ceil()
+
+	// Find amount charged in swap fee on non-input assets and subtract from total
+	chargedSwapFee := (nonInputRatio.Mul(tokenIn.Amount.ToDec())).Mul(swapFee)
+
+	// We truncate to ensure we always underestimate the number of calculated shares (by passing in a lower input)
+	tokenInAmtAfterFee := tokenIn.Amount.ToDec().Sub(chargedSwapFee).TruncateInt()
 
 	return cfmm_common.BinarySearchSingleAssetJoin(p, sdk.NewCoin(tokenIn.Denom, tokenInAmtAfterFee), poolWithAddedLiquidityAndShares)
 }

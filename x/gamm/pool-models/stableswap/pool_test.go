@@ -208,10 +208,10 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 		"max scaling factors": {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoEvenStablePoolAssets,
-			scalingFactors: []uint64{(1 << 62) / types.ScalingFactorMultiplier, (1 << 62) / types.ScalingFactorMultiplier},
+			scalingFactors: []uint64{(1 << (61 - types.MaxPoolAssets)) / types.ScalingFactorMultiplier, (1 << (61 - types.MaxPoolAssets)) / types.ScalingFactorMultiplier},
 			expReserves: []osmomath.BigDec{
-				(osmomath.NewBigDec(1000000000).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier))).Quo(osmomath.NewBigDec(int64(1<<62) / types.ScalingFactorMultiplier)),
-				(osmomath.NewBigDec(1000000000).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier))).Quo(osmomath.NewBigDec(int64(1<<62) / types.ScalingFactorMultiplier)),
+				(osmomath.NewBigDec(1000000000).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier))).Quo(osmomath.NewBigDec(int64(1<<(61-types.MaxPoolAssets)) / types.ScalingFactorMultiplier)),
+				(osmomath.NewBigDec(1000000000).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier))).Quo(osmomath.NewBigDec(int64(1<<(61-types.MaxPoolAssets)) / types.ScalingFactorMultiplier)),
 			},
 		},
 		"zero scaling factor": {

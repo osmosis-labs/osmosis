@@ -51,7 +51,7 @@ var (
 	ErrNotStableSwapPool          = sdkerrors.Register(ModuleName, 61, "not stableswap pool")
 	ErrInvalidScalingFactorLength = sdkerrors.Register(ModuleName, 62, "pool liquidity and scaling factors must have same length")
 	ErrNotScalingFactorGovernor   = sdkerrors.Register(ModuleName, 63, "not scaling factor governor")
-	ErrInvalidScalingFactors      = sdkerrors.Register(ModuleName, 64, "scaling factors cannot be 0 or use more than 63 bits")
+	ErrInvalidScalingFactors      = sdkerrors.Register(ModuleName, 64, "scaling factors cannot be 0 or use more than 54 bits")
 	ErrHitMaxScaledAssets         = sdkerrors.Register(ModuleName, 65, "post-scaled pool assets can not exceed 10^34")
 	ErrHitMinScaledAssets         = sdkerrors.Register(ModuleName, 66, "post-scaled pool assets can not be less than 1")
 )

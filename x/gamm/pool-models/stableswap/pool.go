@@ -442,7 +442,7 @@ func validateScalingFactors(scalingFactors []uint64, numAssets int) error {
 	}
 
 	for _, scalingFactor := range scalingFactors {
-		if scalingFactor == 0 || int64(scalingFactor) <= 0 {
+		if scalingFactor == 0 || scalingFactor >= (1<<(62-types.MaxPoolAssets)) {
 			return types.ErrInvalidScalingFactors
 		}
 	}
