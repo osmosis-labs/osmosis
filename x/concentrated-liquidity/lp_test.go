@@ -157,7 +157,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			},
 		},
 		"error: insufficient liqudity": {
-			// setup parameters for creation a pool and position.
+			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
 
 			// system under test parameters
