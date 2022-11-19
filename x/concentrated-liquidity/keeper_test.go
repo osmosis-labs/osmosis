@@ -42,7 +42,7 @@ func (s *KeeperTestSuite) validatePositionUpdate(ctx sdk.Context, poolId uint64,
 	s.Require().True(newPositionLiquidity.GTE(sdk.ZeroDec()))
 }
 
-// validateTickupdates validates that ticks with the given parameters have expectedRemainingLiquidity left.
+// validateTickUpdates validates that ticks with the given parameters have expectedRemainingLiquidity left.
 func (s *KeeperTestSuite) validateTickUpdates(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, expectedRemainingLiquidity sdk.Dec) {
 	lowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, poolId, lowerTick)
 	s.Require().NoError(err)
