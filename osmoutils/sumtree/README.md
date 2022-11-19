@@ -125,8 +125,7 @@ The following constraints are valid for all branch nodes:
 4. There are no duplicate child stored in more than one of node's
     `.Children`.
 
-Example
--------
+### Example
 
 Here is an example tree data:
 
