@@ -99,7 +99,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		// the system under test.
 		sutConfigOverwrite *lpTest
 	}{
-		"base case: withdraw full liqudity amount": {
+		"base case: withdraw full liquidity amount": {
 			// setup parameters for creation a pool and position.
 			setupConfig: baseCase,
 
