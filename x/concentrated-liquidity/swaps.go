@@ -184,7 +184,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 
 // TODO: implement this
 func (k Keeper) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec, priceLimit sdk.Dec, poolId uint64) (tokenOut sdk.Coin, err error) {
-	tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, err := k.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, poolId)
+	calcTokenIn, calcTokenOut, newCurrentTick, newLiquidity, newSqrtPrice, err := k.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, poolId)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -204,7 +204,11 @@ func (k Keeper) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 		return sdk.Coin{}, err
 	}
 
-	return tokenOut, nil
+	if calcTokenIn.Amount.GT(tokenIn.Amount) {
+		return sdk.Coin{}, fmt.Errorf("tokenIn calculated is larger than tokenIn provided")
+	}
+
+	return calcTokenOut, nil
 }
 
 func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec, minPrice, maxPrice sdk.Dec, poolId uint64) (sdk.Coin, sdk.Dec, sdk.Int, sdk.Dec, error) {
