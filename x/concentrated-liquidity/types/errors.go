@@ -79,3 +79,17 @@ type InsufficientLiquidityError struct {
 func (e InsufficientLiquidityError) Error() string {
 	return fmt.Sprintf("insufficient liqudity requested to withdraw. Actual: (%s). Available (%s)", e.Actual, e.Available)
 }
+
+type InsufficientLiquidityCreatedError struct {
+	Actual      sdk.Int
+	Minimum     sdk.Int
+	IsTokenZero bool
+}
+
+func (e InsufficientLiquidityCreatedError) Error() string {
+	tokenNum := uint8(0)
+	if !e.IsTokenZero {
+		tokenNum = 1
+	}
+	return fmt.Sprintf("insufficient amount of token%d created. Actual: (%s). Minimum (%s)", tokenNum, e.Actual, e.Minimum)
+}

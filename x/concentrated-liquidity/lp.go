@@ -38,12 +38,25 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, fmt.Errorf("liquidity delta zero")
 	}
 
-	actualAmount0, actualAmount1, err := k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta)
+	// N.B. we only write cache context if actual amounts
+	// returned are greater than the given minimums.
+	cacheCtx, writeCacheCtx := ctx.CacheContext()
+
+	actualAmount0, actualAmount1, err := k.updatePosition(cacheCtx, poolId, owner, lowerTick, upperTick, liquidityDelta)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
-	// TODO: handle amount0Min, amount1Min
+	if actualAmount0.LT(amount0Min) {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, types.InsufficientLiquidityCreatedError{Actual: actualAmount0, Minimum: amount0Min, IsTokenZero: true}
+	}
+
+	if actualAmount1.LT(amount1Min) {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, types.InsufficientLiquidityCreatedError{Actual: actualAmount1, Minimum: amount1Min}
+	}
+
+	// only persist updates if amount validation passed.
+	writeCacheCtx()
 
 	return actualAmount0, actualAmount1, liquidityDelta, nil
 }

@@ -14,8 +14,10 @@ type lpTest struct {
 	upperTick       int64
 	currentSqrtP    sdk.Dec
 	amount0Desired  sdk.Int
+	amount0Minimum  sdk.Int
 	amount0Expected sdk.Int
 	amount1Desired  sdk.Int
+	amount1Minimum  sdk.Int
 	amount1Expected sdk.Int
 	liquidityAmount sdk.Dec
 	expectedError   error
@@ -31,16 +33,26 @@ var (
 		upperTick:       int64(86129),
 		currentSqrtP:    sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
 		amount0Desired:  sdk.NewInt(1000000),                            // 1 eth
-		amount0Expected: sdk.NewInt(998587),                             // 0.998587 eth
-		amount1Desired:  sdk.NewInt(5000000000),                         // 5000 usdc
-		amount1Expected: sdk.NewInt(5000000000),                         // 5000 usdc
+		amount0Minimum:  sdk.ZeroInt(),
+		amount0Expected: sdk.NewInt(998587),     // 0.998587 eth
+		amount1Desired:  sdk.NewInt(5000000000), // 5000 usdc
+		amount1Minimum:  sdk.ZeroInt(),
+		amount1Expected: sdk.NewInt(5000000000), // 5000 usdc
 		liquidityAmount: sdk.MustNewDecFromStr("1517818840.967515822610790519"),
 	}
 )
 
 func (s *KeeperTestSuite) TestCreatePosition() {
 	tests := map[string]lpTest{
-		"base case": *baseCase,
+		// "base case": *baseCase,
+		"amount of token 0 is smaller than minimum; should fail and not update state": {
+			amount0Minimum: baseCase.amount0Expected.Mul(sdk.NewInt(2)),
+			expectedError:  types.InsufficientLiquidityCreatedError{Actual: baseCase.amount0Expected, Minimum: baseCase.amount0Expected.Mul(sdk.NewInt(2)), IsTokenZero: true},
+		},
+		"amount of token 1 is smaller than minimum; should fail and not update state": {
+			amount1Minimum: baseCase.amount1Expected.Mul(sdk.NewInt(2)),
+			expectedError:  types.InsufficientLiquidityCreatedError{Actual: baseCase.amount1Expected, Minimum: baseCase.amount1Expected.Mul(sdk.NewInt(2))},
+		},
 		"error: invalid tick": {
 			lowerTick:     types.MaxTick + 1,
 			expectedError: types.InvalidTickError{Tick: types.MaxTick + 1, IsLower: true},
@@ -65,15 +77,22 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			mergeConfigs(&baseConfigCopy, &tc)
 			tc = baseConfigCopy
 
-			s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, tc.poolId, denom0, denom1, tc.currentSqrtP, tc.currentTick)
+			_, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, tc.poolId, denom0, denom1, tc.currentSqrtP, tc.currentTick)
+			s.Require().NoError(err)
 
-			asset0, asset1, liquidityCreated, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.amount0Desired, tc.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), tc.lowerTick, tc.upperTick)
+			asset0, asset1, liquidityCreated, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.amount0Desired, tc.amount1Desired, tc.amount0Minimum, tc.amount1Minimum, tc.lowerTick, tc.upperTick)
 
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().Equal(asset0, sdk.Int{})
 				s.Require().Equal(asset1, sdk.Int{})
 				s.Require().ErrorAs(err, &tc.expectedError)
+
+				// make sure that position is not created
+				_, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick)
+
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &types.PositionNotFoundError{PoolId: tc.poolId, LowerTick: tc.lowerTick, UpperTick: tc.upperTick})
 				return
 			}
 
@@ -248,6 +267,12 @@ func mergeConfigs(dst *lpTest, overwrite *lpTest) {
 		}
 		if overwrite.expectedError != nil {
 			dst.expectedError = overwrite.expectedError
+		}
+		if !overwrite.amount0Minimum.IsNil() {
+			dst.amount0Minimum = overwrite.amount0Minimum
+		}
+		if !overwrite.amount1Minimum.IsNil() {
+			dst.amount1Minimum = overwrite.amount1Minimum
 		}
 	}
 }
