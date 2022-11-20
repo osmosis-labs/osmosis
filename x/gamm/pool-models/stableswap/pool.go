@@ -186,7 +186,7 @@ func (p Pool) scaledSortedPoolReserves(first string, second string, round osmoma
 // reorderReservesAndScalingFactors takes the pool liquidity and scaling factors, and reorders them s.t.
 // reorderedReserves[0] = p.GetLiquidity().AmountOf(first)
 // reorderedScalingFactors[0] = p.ScalingFactors[p.getLiquidityIndexMap()[first]]
-// and the same for index 1.
+// Similarly, reordering happens for second and index 1.
 //
 // The remainder of the lists includes every remaining (reserve asset, scaling factor) pair,
 // in a deterministic but unspecified order.
