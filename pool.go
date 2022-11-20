@@ -205,19 +205,17 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 		// tick has been consumed and we must move on to the next tick to complete the swap
 		if nextSqrtPrice.Equal(sqrtPrice) {
 			// retrieve the liquidity held in the next closest initialized tick
-			liquidityDelta, err := k.crossTick(ctx, p.Id, nextTick)
+			liquidityNet, err := k.crossTick(ctx, p.Id, nextTick)
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 			}
 			if zeroForOne {
-				liquidityDelta = liquidityDelta.Neg()
+				liquidityNet = liquidityNet.Neg()
 			}
 			// update the swapState's liquidity with the new tick's liquidity
-			newLiquidity := addLiquidity(swapState.liquidity, liquidityDelta)
+			newLiquidity := addLiquidity(swapState.liquidity, liquidityNet)
 			swapState.liquidity = newLiquidity
-			if swapState.liquidity.LTE(sdk.ZeroDec()) || swapState.liquidity.IsNil() {
-				return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
-			}
+
 			// update the swapState's tick with the tick we retrieved liquidity from
 			if zeroForOne {
 				swapState.tick = sdk.NewInt(nextTick - 1)
