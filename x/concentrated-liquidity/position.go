@@ -47,7 +47,6 @@ func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	return positionStruct, nil
 }
 
-// nolint: unused
 func (k Keeper) setPosition(ctx sdk.Context,
 	poolId uint64,
 	owner sdk.AccAddress,

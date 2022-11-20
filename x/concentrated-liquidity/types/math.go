@@ -183,7 +183,7 @@ func GetLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0,
 	return liquidity
 }
 
-func addLiquidity(liquidityA, liquidityB sdk.Dec) (finalLiquidity sdk.Dec) {
+func AddLiquidity(liquidityA, liquidityB sdk.Dec) (finalLiquidity sdk.Dec) {
 	if liquidityB.LT(sdk.ZeroDec()) {
 		return liquidityA.Sub(liquidityB.Abs())
 	}
