@@ -911,6 +911,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(5300000000)),
 			tokenOutDenom: "eth",
 			priceLimit:    sdk.NewDec(6000),
+			expectedTick:  currTick,
 			expectErr:     true,
 		},
 		"single position within one tick, trade does not complete due to lack of liquidity: eth -> usdc": {
@@ -921,6 +922,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 			},
 			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(1100000)),
 			tokenOutDenom: "usdc",
+			expectedTick:  currTick,
 			priceLimit:    sdk.NewDec(4000),
 			expectErr:     true,
 		},
@@ -928,6 +930,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 
 	for name, test := range tests {
 		s.Run(name, func() {
+			test := test
 			s.Setup()
 			// create pool
 			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", currSqrtPrice, currTick)
