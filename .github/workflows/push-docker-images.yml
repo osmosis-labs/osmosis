@@ -38,7 +38,7 @@ env:
   RUNNER_BASE_IMAGE_ALPINE: alpine:3.16
 
 jobs:
-  osmosisd_images:
+  osmosisd-images:
     runs-on: self-hosted
     steps:
       - 
