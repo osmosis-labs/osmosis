@@ -881,7 +881,7 @@ func TestCalcSingleAssetJoinShares(t *testing.T) {
 			// since each asset swap can have up to sdk.OneInt() error, our expected error bound is 1*numAssets
 			correctnessThreshold := sdk.OneInt().Mul(sdk.NewInt(int64(len(p.PoolLiquidity))))
 
-			tokenOutAmount, err := cfmm_common.SwapAllCoinsToSingleAsset(&p, ctx, exitTokens, tc.tokenIn.Denom)
+			tokenOutAmount, err := cfmm_common.SwapAllCoinsToSingleAsset(&p, ctx, exitTokens, tc.tokenIn.Denom, sdk.ZeroDec())
 			require.True(t, tokenOutAmount.LTE(tc.tokenIn.Amount))
 			require.True(t, tc.expectedOut.Sub(tokenOutAmount).Abs().LTE(correctnessThreshold))
 		})
@@ -998,6 +998,50 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 				require.Equal(t, tc.expPoolAssets, p.PoolLiquidity)
 			}
 			osmoassert.ConditionalError(t, !tc.expectPass, err)
+		})
+	}
+}
+
+func TestSingleAssetJoinSwapFeeRatio(t *testing.T) {
+	type testcase struct {
+		poolLiquidity  sdk.Coins
+		scalingFactors []uint64
+		tokenInDenom   string
+		expectedRatio  sdk.Dec
+	}
+	tests := map[string]testcase{
+		"godoc-example": {
+			poolLiquidity:  sdk.NewCoins(sdk.NewInt64Coin("tokenA", 80), sdk.NewInt64Coin("tokenB", 20)),
+			scalingFactors: []uint64{1, 1},
+			tokenInDenom:   "tokenA",
+			expectedRatio:  sdk.MustNewDecFromStr("0.2"),
+		},
+		"godoc-example-denom-rev": {
+			poolLiquidity:  sdk.NewCoins(sdk.NewInt64Coin("tokenA", 80), sdk.NewInt64Coin("tokenB", 20)),
+			scalingFactors: []uint64{1, 1},
+			tokenInDenom:   "tokenB",
+			expectedRatio:  sdk.MustNewDecFromStr("0.8"),
+		},
+		"80:20 -> 1:1 scaling factor": {
+			poolLiquidity:  sdk.NewCoins(sdk.NewInt64Coin("tokenA", 80), sdk.NewInt64Coin("tokenB", 20)),
+			scalingFactors: []uint64{80, 20},
+			tokenInDenom:   "tokenA",
+			expectedRatio:  sdk.MustNewDecFromStr("0.5"),
+		},
+		"80:20 -> 2:1 scaling factor": {
+			poolLiquidity:  sdk.NewCoins(sdk.NewInt64Coin("tokenA", 80), sdk.NewInt64Coin("tokenB", 20)),
+			scalingFactors: []uint64{40, 20},
+			tokenInDenom:   "tokenA",
+			expectedRatio:  sdk.MustNewDecFromStr("0.333333333333333334"),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			p := poolStructFromAssets(tc.poolLiquidity, tc.scalingFactors)
+
+			ratio, err := p.singleAssetJoinSwapFeeRatio(tc.tokenInDenom)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedRatio, ratio)
 		})
 	}
 }
