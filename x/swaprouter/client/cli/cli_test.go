@@ -7,11 +7,11 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v12/app"
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/cli"
-	swaprouterqueryproto "github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/queryproto"
-	swaproutertestutil "github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/testutil"
+	"github.com/osmosis-labs/osmosis/v13/app"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/cli"
+	swaprouterqueryproto "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/queryproto"
+	swaproutertestutil "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/testutil"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"

@@ -10,7 +10,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
-	"github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
 )
 
 var (

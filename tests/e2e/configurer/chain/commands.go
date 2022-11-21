@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
-	"github.com/osmosis-labs/osmosis/v12/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v12/tests/e2e/util"
-	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
-	swaprouterqueryproto "github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/queryproto"
+	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
+	"github.com/osmosis-labs/osmosis/v13/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v13/tests/e2e/util"
+	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	swaprouterqueryproto "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/queryproto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"

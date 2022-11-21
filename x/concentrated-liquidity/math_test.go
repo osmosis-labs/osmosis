@@ -3,7 +3,7 @@ package concentrated_liquidity_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cl "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity"
+	cl "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
 )
 
 // liquidity1 takes an amount of asset1 in the pool as well as the sqrtpCur and the nextPrice

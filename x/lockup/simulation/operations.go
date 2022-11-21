@@ -6,10 +6,10 @@ import (
 
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v12/x/lockup/keeper"
-	"github.com/osmosis-labs/osmosis/v12/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v13/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

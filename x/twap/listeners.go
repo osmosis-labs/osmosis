@@ -3,9 +3,9 @@ package twap
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 var (

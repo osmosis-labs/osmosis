@@ -3,10 +3,10 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v12/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v13/x/txfees/types"
 )
 
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {

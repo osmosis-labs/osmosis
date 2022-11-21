@@ -8,9 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appParams "github.com/osmosis-labs/osmosis/v12/app/params"
-	stableswap "github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	appParams "github.com/osmosis-labs/osmosis/v13/app/params"
+	stableswap "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 func TestMsgCreateStableswapPool(t *testing.T) {

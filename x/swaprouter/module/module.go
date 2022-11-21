@@ -15,15 +15,15 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v12/x/swaprouter"
-	swaprouterclient "github.com/osmosis-labs/osmosis/v12/x/swaprouter/client"
-	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/cli"
-	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/grpc"
-	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/queryproto"
-	swaproutersimulation "github.com/osmosis-labs/osmosis/v12/x/swaprouter/simulation"
-	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
+	swaprouterclient "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client"
+	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/cli"
+	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/grpc"
+	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/queryproto"
+	swaproutersimulation "github.com/osmosis-labs/osmosis/v13/x/swaprouter/simulation"
+	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 var (

@@ -8,8 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	cl "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity"
-	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
+	cl "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
+	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
 func TestKeeper_TickOrdering(t *testing.T) {

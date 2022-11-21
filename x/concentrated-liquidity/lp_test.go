@@ -3,7 +3,7 @@ package concentrated_liquidity_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
+	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
 type lpTest struct {
