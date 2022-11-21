@@ -649,6 +649,8 @@ func computeSwapStep(
 }
 ```
 
+TODO: add formulas, specific steps for calculating swaps and relation to fees.
+
 #### Range Orders
 
 > As a trader, I want to be able to execute ranger orders so that I have better control of the price at which I trade
@@ -659,7 +661,248 @@ TODO
 
 > As a an LP, I want to earn fees on my capital so that I am incentivized to participate in the market making actively.
 
-TODO
+For our balancer style pools, fees go back directly to the pool to benefit LPs.
+For a concentrated liquidity pool, this is no longer possible due to the non-fungible property
+of positions. As a result, there is a different accumulator-based mechanism for keeping track
+of and storing the fees.
+
+First, note that the fees are collected in tokens themselves rather than in units of liquidity.
+Thus, we need two accumulators for each token. Temporally, these fee accumulators are accessed together
+from state most of the time. Therefore, we define a data structure for storing the fees of each token in the pool.
+
+```go
+// Note that this is proto-generated.
+
+type Fee struct {
+    TokenZero
+    TokenOne
+}
+```
+
+The only time when we need to load only one of the token fee accumulators is during swaps.
+The performance overhead of loading both accumulators is negligible so we choose a better
+abstraction over small performance gain.
+
+
+We define the following accumulators and fee-related
+fields to be stored on various layers of state:
+
+- **Per-pool**
+
+```go
+// Note that this is proto-generated.
+type Pool struct {
+    ...
+    SwapFee sdk.Dec
+    FeeGrowthGlobalOutside Fee
+}
+```
+
+Each pool is initialized with an immutable fee value `SwapFee` to be paid by
+the swappers. It is denominated in units of hundredths of a basis point `0.0001%`.
+// TODO: from uniswap whitepaper. What is the reason for this denomination?
+
+`FeeGrowthGlobalOutside` represents the total amount of fees that have been earned
+per unit of virtual liquidity in each token `L` from the time of the creation of the pool.
+
+Assume that we deposited 1 unit of full-range liqudity at pool creation. A `FeeGrowthGlobalOutside.Token0`
+value shows how much of token0 have been earned by that unit of liquidity up until today.
+
+- **Per-tick**
+
+```go
+// Note that this is proto-generated.
+type Tick struct {
+    ...
+   FeeGrowthOutside Fee
+}
+```
+
+Ticks keep record of fees accumulated outside of them.
+This is required for calcuating the amount of fees accrued within a range.
+
+Note, keeping track of the accumulators is only necessary for the ticks that have
+been initialized. In other words, there is at least one position referencing that tick.
+
+By convention, when a new tick is activated, it is set to the respective `feeGrowthOutsideX`
+if the tick being initialized is below the current tick. This is equivalent to assumming that 
+all fees have been accrued below the initialized tick.
+
+In the example code snippets below, we only focus on the token0. The token1 is analogous. 
+
+```go
+tick.FeeGrowthOutside.Token0 := sdk.ZeroDec()
+
+if initializedTickNum <= pool.CurrentTick {
+    tick.FeeGrowthOutside.Token0 = pool.FeeGrowthGlobalOutside.Token0
+}
+```
+
+Essentially, setting tick's `tick.FeeGrowthOutside.TokenX` to the global `pool.FeeGrowthGlobalOutside.TokenX`
+represents the amount of fees collected by the pool up until the tick was activated.
+
+Once a tick is activated again (crossed in either direction), `tick.FeeGrowthOutside.TokenX` is
+updated to add the difference between `pool.FeeGrowthGlobalOutsideX` and the old value of
+`tick.FeeGrowthOutside.TokenX`. 
+
+```go
+tick.FeeGrowthOutside.Token0 =  tick.FeeGrowthOutside.Token0.Add(pool.FeeGrowthGlobalOutside.Token0.Sub(tick.FeeGrowthOutside.Token0))
+```
+
+Tracking how much of fees are collected outside of a tick allows us to calculate the amount
+of fees inside the position on request.
+
+Intuitively, we update the activated tick with the amount of fees collected for
+every tick lower than the tick that is being crossed.
+
+This has two benefits:
+ * We avoid updating *all* ticks
+ * We can calculate a range by subtracting the top and bottom ticks for the range
+ using formulas below.
+
+Assume `FeeGrowthBelowLowerTick0` and `FeeGrowthAboveUpperTick0`.
+
+We calculate the fee growth below the lower tick in the following way:
+
+```go
+var feeGrowthBelowLowerTick0 sdk.Dec
+
+if pool.CurrentTick >= lowerTickNum {
+    feeGrowthBelowLowerTick0 = pool.FeeGrowthOutside.Token0
+} else {
+    feeGrowthBelowLowerTick0 = pool.FeeGrowthGlobalOutside.Token0 - lowerTick.FeeGrowthOutside.Token0
+}
+```
+
+We calculate the fee growth above the upper tick in the following way:
+
+```go
+var feeGrowthAboveUpperTick0 sdk.Dec
+
+if pool.CurrentTick >= upperTickNum {
+    feeGrowthAboveUpperTick0 = pool.FeeGrowthGlobalOutside.Token0 - upperTick.FeeGrowthOutside.Token0
+} else {
+    feeGrowthAboveUpperTick0 = pool.FeeGrowthOutside.Token0
+}
+```
+
+Now, by having the fee growth below the lower and above the upper tick of a range,
+we can calculate the fee growth inside the range by subtracting the two from the
+global per-unit-of-liquidity fee growth.
+
+```go
+feeGrowthInsideRange0 := pool.FeeGrowthGlobalOutside.Token0 - feeGrowthBelowLowerTick0 - feeGrowthAboveUpperTick0
+```
+
+Note that although `tick.FeeGrowthOutside.Token0` may be initialized at a different
+point in time for each tick, the comparison of these values between ticks
+is not meaningful. There is also no guarantee that the values
+across ticks will follow any particular pattern. 
+
+However, this does not affect the per-position calculations since
+all the position needs to know is the fee growth inside the position's
+range since the position was last touched.
+
+- **Per-position**
+
+type Position struct {
+    FeeGrowthInsideLast Fee
+    UncollectedFee Fee
+}
+
+Recall that contrary to traditional pools, in a concentrated liquidity pool,
+fees do not get auto re-injected into the pool. Instead, they are tracked by
+`position.TokensUncollected0` and `position.TokensUncollected1` fields of each position.
+
+The `position.FeeGrowthInside0Last` and `position.FeeGrowthInside1Last` accumulators
+are used to calculate the  _uncollected fees_ to add to `position.TokensUncollected0`
+and `position.TokensUncollected1`.
+
+The amount of uncollected fees needs to be calculated every time a user modifies
+their position. That is when a position is created, liquidity is added or removed.
+
+We must recalculate the values for any modification because with more liquidity
+added to the position, the amount of fees collected by the position increases.
+
+Let `feeGrowthInside0` be the amount of fee growth per unit of liquidity within
+the position's ticks. We use the same strategy for computing fees between two ticks (in-range) that
+was described in the previous section. Once we have `feeGrowthInside0` computed, we update the
+`position.UncollectedFee.Token0` and `position.FeeGrowthInsideLast.Token0`.
+
+```go
+// Note that tokensUncollected0 is 0 when a position is created.
+if !isPositionNew {
+    uncollectefFeeAddition := pool.Liquidity.Mul(feeGrowthInside.Token0.Sub(position.FeeGrowthInsideLast.Token0))
+    position.UncollectedFee.Token0 = position.UncollectedFee.Token0.Add(uncollectefFeeAddition)
+}
+
+position.FeeGrowthInsideLast.Token0 = feeGrowthInside.Token0
+```
+
+##### Collecting Fees
+
+Collecting fees is as simple as transferring the requested amount
+from the pool address to the position's owner.
+
+After every epoch, the system iterates over all positions to call
+`collectFees` for each and auto-collects fees.
+
+Currently, there is no ability to collect manually to prevent spam.
+
+```go
+func (k Keeper) collectFees(
+    owner sdk.AccAddress,
+    lowerTick, upperTick int64) error {
+    // validate ticks
+
+    // get position if exists
+
+    // bank send position.TokensUncollected0 and position.TokensUncollected1
+    //from pool address to position owner
+    // TODO: revisit to make sure truncations are handled correctly.
+}
+```
+
+##### Swaps
+
+Swapping within a single tick works as the regular `xy = k` curve. For swaps
+across ticks to work, we simply apply the same fee calculation logic for every swap step.
+
+Consider data structures defined above. Let `tokenInAmt` be the amount of token being
+swapped in.
+
+Then, to calculate the fee within a single tick, we perform the following steps:
+
+1. Calculate an updated `tokenInAmtAfterFee` by charging the `pool.SwapFee` on `tokenInAmt`.
+
+```go
+// Update global fee accumulator tracking fees for denom of tokenInAmt.
+// TODO: revisit to make sure if truncations need to happen.
+pool.FeeGrowthGlobalOutside.TokenX = pool.FeeGrowthGlobalOutside.TokenX.Add(tokenInAmt.Mul(pool.SwapFee))
+
+// Update tokenInAmt to account for fees.
+fee = tokenInAmt.Mul(pool.SwapFee).Ceil()
+tokenInAmtAfterFee = tokenInAmt.Sub(fee)
+
+k.bankKeeper.SendCoins(ctx, swapper, pool.GetAddress(), ...) // send tokenInAmtAfterFee
+```
+
+2. Proceed to calculating the next square root price by utilizing the updated `tokenInAmtAfterFee.
+
+Depending on which of the tokens in `tokenIn`,
+
+If token1 is being swapped in:
+$$\Delta \sqrt P = \Delta y / L$$
+
+Here, `tokenInAmtAfterFee` is delta y.
+
+If token0 is being swapped in:
+$$\Delta \sqrt P = L / \Delta x$$
+
+Here, `tokenInAmtAfterFee` is delta x.
+
+Once we have the updated square root price, we can calculate the amount of `tokenOut` to be returned.
+The returned `tokenOut` is computed with fees accounted for given that we used `tokenInAmtAfterFee`.
 
 #### Liquidity Rewards
 
@@ -709,3 +952,7 @@ We will use the following terms throughout the document:
 
 - `Range` - TODO
 
+### External Sources
+
+- [Uniswap V3 Whitepaper](https://uniswap.org/whitepaper-v3.pdf)
+- [Technical Note on Liquidity Math](https://atiselsts.github.io/pdfs/uniswap-v3-liquidity-math.pdf)
