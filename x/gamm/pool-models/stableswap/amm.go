@@ -442,17 +442,17 @@ func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk
 	}
 
 	// Find the portion of the pool made up by non-input assets
-	sumScalingFactors := int64(0)
+	sumScalingFactors := uint64(0)
 	for _, scalingFactor := range p.ScalingFactors {
 		sumScalingFactors += int64(scalingFactor)
 	}
 
 	// We ensure that uint64 -> int64 conversions are safe in scaling factor validation logic
 	liquidityIndexes := p.getLiquidityIndexMap()
-	inputScalingFactor := int64(p.GetScalingFactorByLiquidityIndex(liquidityIndexes[tokenIn.Denom]))
+	inputScalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndexes[tokenIn.Denom])
 
 	// Round the ratio up to overestimate the charged fee
-	nonInputRatio := (sdk.NewDec(sumScalingFactors).Sub(sdk.NewDec(inputScalingFactor))).Quo(sdk.NewDec(sumScalingFactors)).Ceil()
+	nonInputRatio := (sdk.NewDecFromInt(sdk.NewIntFromUint64(sumScalingFactors)).Sub(sdk.NewDec(inputScalingFactor))).Quo(sdk.NewDecFromInt(sdk.NewIntFromUint64(sumScalingFactors))).Ceil()
 
 	// Find amount charged in swap fee on non-input assets and subtract from total
 	chargedSwapFee := (nonInputRatio.Mul(tokenIn.Amount.ToDec())).Mul(swapFee)
