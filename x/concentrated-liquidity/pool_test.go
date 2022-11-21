@@ -911,6 +911,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(5300000000)),
 			tokenOutDenom: "eth",
 			priceLimit:    sdk.NewDec(6000),
+			expectedTick:  currTick,
 			expectErr:     true,
 		},
 		"single position within one tick, trade does not complete due to lack of liquidity: eth -> usdc": {
@@ -921,6 +922,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 			},
 			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(1100000)),
 			tokenOutDenom: "usdc",
+			expectedTick:  currTick,
 			priceLimit:    sdk.NewDec(4000),
 			expectErr:     true,
 		},
@@ -928,6 +930,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 
 	for name, test := range tests {
 		s.Run(name, func() {
+			test := test
 			s.Setup()
 			// create pool
 			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", currSqrtPrice, currTick)
@@ -944,10 +947,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 			if test.expectErr {
 				s.Require().Error(err)
 
-			} else {
-				s.Require().NoError(err)
-
-				pool = s.App.ConcentratedLiquidityKeeper.GetPoolbyId(s.Ctx, pool.Id)
+				pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolbyId(s.Ctx, pool.Id)
 				s.Require().NoError(err)
 
 				// check that we produced the same token out from the swap function that we expected
@@ -1022,6 +1022,45 @@ func (suite *KeeperTestSuite) TestPriceToTick() {
 		suite.Run(tc.name, func() {
 			tick := cl.PriceToTick(tc.price)
 			suite.Require().Equal(tc.tickExpected, tick.String())
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGetLiquidityFromAmounts() {
+	testCases := map[string]struct {
+		currentSqrtP      sdk.Dec
+		sqrtPHigh         sdk.Dec
+		sqrtPLow          sdk.Dec
+		amount0Desired    sdk.Int
+		amount1Desired    sdk.Int
+		expectedLiquidity string
+	}{
+		"happy path": {
+			currentSqrtP:      sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			sqrtPHigh:         sdk.MustNewDecFromStr("74.161984870956629487"), // 5500
+			sqrtPLow:          sdk.MustNewDecFromStr("67.416615162732695594"), // 4545
+			amount0Desired:    sdk.NewInt(1000000),
+			amount1Desired:    sdk.NewInt(5000000000),
+			expectedLiquidity: "1517882343.751510418088349649",
+		},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+
+		suite.Run(name, func() {
+			// CASE A: if the currentSqrtP is less than the sqrtPLow, all the liquidity is in asset0, so GetLiquidityFromAmounts returns the liquidity of asset0
+			// CASE B: if the currentSqrtP is less than the sqrtPHigh but greater than sqrtPLow, the liquidity is split between asset0 and asset1,
+			// so GetLiquidityFromAmounts returns the smaller liquidity of asset0 and asset1
+			// CASE C: if the currentSqrtP is greater than the sqrtPHigh, all the liquidity is in asset1, so GetLiquidityFromAmounts returns the liquidity of asset1
+			liquidity := cl.GetLiquidityFromAmounts(tc.currentSqrtP, tc.sqrtPLow, tc.sqrtPHigh, tc.amount0Desired, tc.amount1Desired)
+			suite.Require().Equal(tc.expectedLiquidity, liquidity.String())
+			// TODO: this check works for CASE B but needs to get reworked when CASE A and CASE C are tested
+			liq0 := cl.Liquidity0(tc.amount0Desired, tc.currentSqrtP, tc.sqrtPHigh)
+			liq1 := cl.Liquidity1(tc.amount1Desired, tc.currentSqrtP, tc.sqrtPLow)
+			liq := sdk.MinDec(liq0, liq1)
+			suite.Require().Equal(liq.String(), liquidity.String())
+
 		})
 	}
 }

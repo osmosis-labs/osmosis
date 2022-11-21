@@ -12,21 +12,6 @@ import (
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
-// tickToSqrtPrice takes the tick index and returns the corresponding sqrt of the price
-func tickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
-	sqrtPrice, err := sdk.NewDecWithPrec(10001, 4).Power(tickIndex.Uint64()).ApproxSqrt()
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-
-	return sqrtPrice, nil
-}
-
-// TODO: implement this
-// func (k Keeper) getTickAtSqrtRatio(sqrtPrice sdk.Dec) sdk.Int {
-// 	return sdk.Int{}
-// }
-
 func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
 	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
@@ -136,4 +121,51 @@ func (k Keeper) setTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tic
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyTick(poolId, tickIndex)
 	osmoutils.MustSet(store, key, &tickInfo)
+}
+
+// ticksToSqrtPrice returns the sqrt price for the lower and upper ticks.
+// Returns error if fails to calculate sqrt price.
+// TODO: spec and tests
+func ticksToSqrtPrice(lowerTick, upperTick int64) (sdk.Dec, sdk.Dec, error) {
+	sqrtPriceUpperTick, err := tickToSqrtPrice(sdk.NewInt(upperTick))
+	if err != nil {
+		return sdk.Dec{}, sdk.Dec{}, err
+	}
+	sqrtPriceLowerTick, err := tickToSqrtPrice(sdk.NewInt(lowerTick))
+	if err != nil {
+		return sdk.Dec{}, sdk.Dec{}, err
+	}
+	return sqrtPriceLowerTick, sqrtPriceUpperTick, nil
+}
+
+// tickToSqrtPrice takes the tick index and returns the corresponding sqrt of the price.
+// Returns error if fails to calculate sqrt price. Otherwise, the computed value and nil.
+// TODO: test
+func tickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
+	sqrtPrice, err := sdk.NewDecWithPrec(10001, 4).Power(tickIndex.Uint64()).ApproxSqrt()
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	return sqrtPrice, nil
+}
+
+// validateTickInRangeIsValid validates that given ticks are valid.
+// That is, both lower and upper ticks are within types.MinTick and types.MaxTick.
+// Also, lower tick must be less than upper tick.
+// Returns error if validation fails. Otherwise, nil.
+// TODO: test
+func validateTickRangeIsValid(lowerTick int64, upperTick int64) error {
+	// ensure types.MinTick <= lowerTick < types.MaxTick
+	if lowerTick < types.MinTick || lowerTick >= types.MaxTick {
+		return types.InvalidTickError{Tick: lowerTick, IsLower: true}
+	}
+	// ensure types.MaxTick < upperTick <= types.MinTick
+	if upperTick > types.MaxTick || upperTick <= types.MinTick {
+		return types.InvalidTickError{Tick: upperTick, IsLower: false}
+	}
+	if lowerTick >= upperTick {
+		return types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
+	}
+	return nil
 }

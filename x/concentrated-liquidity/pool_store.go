@@ -7,12 +7,18 @@ import (
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
-func (k Keeper) getPoolbyId(ctx sdk.Context, poolId uint64) Pool {
+func (k Keeper) getPoolbyId(ctx sdk.Context, poolId uint64) (Pool, error) {
 	store := ctx.KVStore(k.storeKey)
 	pool := Pool{}
 	key := types.KeyPool(poolId)
-	osmoutils.MustGet(store, key, &pool)
-	return pool
+	found, err := osmoutils.GetIfFound(store, key, &pool)
+	if err != nil {
+		panic(err)
+	}
+	if !found {
+		return Pool{}, types.PoolNotFoundError{PoolId: poolId}
+	}
+	return pool, nil
 }
 
 func (k Keeper) setPoolById(ctx sdk.Context, poolId uint64, pool Pool) {
