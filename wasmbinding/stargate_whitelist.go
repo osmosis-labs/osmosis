@@ -13,17 +13,17 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v12/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v12/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v12/x/pool-incentives/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
-	swaprouterqueryproto "github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/queryproto"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v12/x/tokenfactory/types"
-	twapquerytypes "github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
-	txfeestypes "github.com/osmosis-labs/osmosis/v12/x/txfees/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v13/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
+	swaprouterqueryproto "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/queryproto"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
+	twapquerytypes "github.com/osmosis-labs/osmosis/v13/x/twap/client/queryproto"
+	txfeestypes "github.com/osmosis-labs/osmosis/v13/x/txfees/types"
 )
 
 // stargateWhitelist keeps whitelist and its deterministic

@@ -3,7 +3,7 @@ package testutil
 import (
 	"fmt"
 
-	gammcli "github.com/osmosis-labs/osmosis/v12/x/gamm/client/cli"
+	gammcli "github.com/osmosis-labs/osmosis/v13/x/gamm/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

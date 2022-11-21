@@ -18,11 +18,11 @@ import (
 	"github.com/stretchr/testify/require"
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v12/tests/e2e/util"
-	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
-	swaprouterqueryproto "github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/queryproto"
-	twapqueryproto "github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v13/tests/e2e/util"
+	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
+	swaprouterqueryproto "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/queryproto"
+	twapqueryproto "github.com/osmosis-labs/osmosis/v13/x/twap/client/queryproto"
 )
 
 func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte, error) {
