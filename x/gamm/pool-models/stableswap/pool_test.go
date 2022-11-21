@@ -1253,3 +1253,41 @@ func TestStableswapSpotPrice(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateScalingFactors(t *testing.T) {
+
+	tests := map[string]struct {
+		scalingFactors []uint64
+		numAssets      int
+		expectError    bool
+	}{
+		"number of scaling factors match number of assets": {
+			numAssets:      4,
+			scalingFactors: []uint64{10, 10, 10, 10},
+			expectError:    false,
+		},
+		"number of scaling factors and assets mismatch": {
+			numAssets:      3,
+			scalingFactors: []uint64{10, 10, 10, 10},
+			expectError:    true,
+		},
+		"all scaling factors equal to zero": {
+			numAssets:      3,
+			scalingFactors: []uint64{0, 0, 0},
+			expectError:    true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			err := validateScalingFactors(tc.scalingFactors, tc.numAssets)
+
+			if tc.expectError != false {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+		})
+	}
+}
