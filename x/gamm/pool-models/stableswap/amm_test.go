@@ -1003,6 +1003,8 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 }
 
 func TestSingleAssetJoinSwapFeeRatio(t *testing.T) {
+	largeInt, ok := sdk.NewIntFromString("123456789012345678")
+	require.True(t, ok)
 	type testcase struct {
 		poolLiquidity  sdk.Coins
 		scalingFactors []uint64
@@ -1033,6 +1035,16 @@ func TestSingleAssetJoinSwapFeeRatio(t *testing.T) {
 			scalingFactors: []uint64{40, 20},
 			tokenInDenom:   "tokenA",
 			expectedRatio:  sdk.MustNewDecFromStr("0.333333333333333334"),
+		},
+		"60:40:40, large numbers": {
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("tokenA", largeInt.MulRaw(6)),
+				sdk.NewCoin("tokenB", largeInt.MulRaw(4)),
+				sdk.NewCoin("tokenC", largeInt.MulRaw(4))),
+			scalingFactors: []uint64{1, 1, 1},
+			tokenInDenom:   "tokenA",
+			// 1 - (6 / 14) = 8/14 = 4/7 ~= 0.571428571428571429
+			expectedRatio: sdk.MustNewDecFromStr("0.571428571428571429"),
 		},
 	}
 	for name, tc := range tests {
