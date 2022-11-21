@@ -3,8 +3,8 @@ package concentrated_liquidity_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cl "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity"
-	cltypes "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
+	cl "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
 func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {

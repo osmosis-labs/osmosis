@@ -6,9 +6,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/osmomath"
-	cltypes "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	cltypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 // TODO: spec, tests, implementation

@@ -3,7 +3,7 @@ package concentrated_liquidity
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
 // OrderInitialPoolDenoms sets the pool denoms of a cl pool
