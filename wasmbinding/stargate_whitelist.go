@@ -31,7 +31,14 @@ import (
 
 // stargateWhitelist keeps whitelist and its deterministic
 // response binding for stargate queries.
-//
+
+// Design struct:
+//  - We're using GRPCQueriesInfo struct to store the query path and corresponding response. Slides sort in alphabetical order.
+//    So QueryPaths[i] match with QueryReponses[i]
+//  - RegisterService implement QueryServer interface in query.pb files. Purpose to get all query path of module
+//  - RegisterQueryReponse: Get all query responses of module.
+// We go through all module and get query paths & responses. Then use `queries.list` to filter whitelisted queries.
+
 // The query can be multi-thread, so we have to use
 // thread safe sync.Map.
 var stargateWhitelist sync.Map
