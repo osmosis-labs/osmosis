@@ -337,15 +337,13 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 }
 
 func (suite *KeeperTestSuite) TestSetStableSwapScalingFactors() {
-	suite.SetupTest()
 
-	pk := ed25519.GenPrivKey().PubKey()
-	addr := sdk.AccAddress(pk.Address())
+	
+	controllerPk := ed25519.GenPrivKey().PubKey()
+	controllerAddr := sdk.AccAddress(controllerPk.Address())
 
 	failPk := ed25519.GenPrivKey().PubKey()
 	failAddr := sdk.AccAddress(failPk.Address())
-
-	defaultPoolId := uint64(1)
 
 	testcases := []struct {
 		name             string
@@ -357,23 +355,23 @@ func (suite *KeeperTestSuite) TestSetStableSwapScalingFactors() {
 	}{
 		{
 			name:             "Error: Pool does not exist",
-			poolId:           defaultPoolId + 1,
+			poolId:           2,
 			scalingFactors:   []uint64{1, 1},
-			sender:           addr,
+			sender:           controllerAddr,
 			expError:         types.PoolDoesNotExistError{PoolId: defaultPoolId + 1},
 			isStableSwapPool: false,
 		},
 		{
 			name:             "Error: Pool id is not of type stableswap pool",
-			poolId:           defaultPoolId + 1,
+			poolId:           1,
 			scalingFactors:   []uint64{1, 1},
-			sender:           addr,
-			expError:         fmt.Errorf("pool id 2 is not of type stableswap pool"),
+			sender:           controllerAddr,
+			expError:         fmt.Errorf("pool id 1 is not of type stableswap pool"),
 			isStableSwapPool: false,
 		},
 		{
 			name:             "Error: can not set scaling factors",
-			poolId:           defaultPoolId + 2,
+			poolId:           1,
 			scalingFactors:   []uint64{1, 1},
 			sender:           failAddr,
 			expError:         types.ErrNotScalingFactorGovernor,
@@ -381,14 +379,15 @@ func (suite *KeeperTestSuite) TestSetStableSwapScalingFactors() {
 		},
 		{
 			name:             "Valid case",
-			poolId:           defaultPoolId + 3,
+			poolId:           1,
 			scalingFactors:   []uint64{1, 1},
-			sender:           addr,
+			sender:           controllerAddr,
 			isStableSwapPool: true,
 		},
 	}
 	for _, tc := range testcases {
 		suite.Run(tc.name, func() {
+			suite.SetupTest()
 			// Mint some assets to the accounts.
 			if tc.isStableSwapPool == true {
 				suite.FundAcc(tc.sender, defaultAcctFundsStableSwap)
@@ -404,7 +403,8 @@ func (suite *KeeperTestSuite) TestSetStableSwapScalingFactors() {
 				suite.Require().NoError(err)
 				pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
 				stableswapPool, _ := pool.(*stableswap.Pool)
-				stableswapPool.ScalingFactorController = tc.sender.String()
+				stableswapPool.ScalingFactorController = controllerAddr.String()
+				suite.App.GAMMKeeper.SetPool(suite.Ctx, stableswapPool)
 			} else {
 				// Mint some assets to the accounts.
 				suite.FundAcc(tc.sender, defaultAcctFunds)
