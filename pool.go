@@ -88,13 +88,34 @@ func (k Keeper) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 		return sdk.Coin{}, err
 	}
 	// applySwap mutates the pool state to apply the new tick, liquidity and sqrtPrice
-	k.applySwap(ctx, tokenIn, tokenOut, poolId, newLiquidity, newCurrentTick, newSqrtPrice)
+	err = k.applySwap(ctx, tokenIn, tokenOut, poolId, newLiquidity, newCurrentTick, newSqrtPrice)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
 
 	return tokenOut, nil
 }
 
 func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error) {
 	return sdk.Dec{}, nil
+}
+
+// isCurrentTickInRange returns true if pool's current tick is within
+// the range of the lower and upper ticks. False otherwise.
+// TODO: add tests.
+func (p Pool) isCurrentTickInRange(lowerTick, upperTick int64) bool {
+	return p.CurrentTick.GTE(sdk.NewInt(lowerTick)) && p.CurrentTick.LT(sdk.NewInt(upperTick))
+}
+
+// updateLiquidityIfActivePosition updates the pool's liquidity if the position is active.
+// Returns true if updated, false otherwise.
+// TODO: add tests.
+func (p *Pool) updateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upperTick int64, liquidityDelta sdk.Dec) bool {
+	if p.isCurrentTickInRange(lowerTick, upperTick) {
+		p.Liquidity = p.Liquidity.Add(liquidityDelta)
+		return true
+	}
+	return false
 }
 
 // CalcOutAmtGivenIn calculates tokens to be swapped out given the provided amount and fee deducted. It also returns
@@ -106,7 +127,10 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 	swapFee sdk.Dec,
 	priceLimit sdk.Dec,
 	poolId uint64) (tokenIn, tokenOut sdk.Coin, updatedTick sdk.Int, updatedLiquidity, updatedSqrtPrice sdk.Dec, err error) {
-	p := k.getPoolbyId(ctx, poolId)
+	p, err := k.getPoolbyId(ctx, poolId)
+	if err != nil {
+		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
+	}
 	asset0 := p.Token0
 	asset1 := p.Token1
 	tokenAmountInAfterFee := tokenInMin.Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
@@ -246,14 +270,20 @@ func (k *Keeper) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDe
 		return sdk.Coin{}, err
 	}
 
-	k.applySwap(ctx, tokenInCoin, tokenOut, poolId, newLiquidity, newCurrentTick, newCurrentSqrtPrice)
+	err = k.applySwap(ctx, tokenInCoin, tokenOut, poolId, newLiquidity, newCurrentTick, newCurrentSqrtPrice)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
 
 	return tokenInCoin, nil
 }
 
 func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec, minPrice, maxPrice sdk.Dec, poolId uint64) (sdk.Coin, sdk.Dec, sdk.Int, sdk.Dec, error) {
 	tokenOutAmt := tokenOut.Amount.ToDec()
-	p := k.getPoolbyId(ctx, poolId)
+	p, err := k.getPoolbyId(ctx, poolId)
+	if err != nil {
+		return sdk.Coin{}, sdk.Dec{}, sdk.Int{}, sdk.Dec{}, err
+	}
 	asset0 := p.Token0
 	asset1 := p.Token1
 	zeroForOne := tokenOut.Denom == asset0
@@ -359,13 +389,17 @@ func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 }
 
 // ApplySwap.
-func (k *Keeper) applySwap(ctx sdk.Context, tokenIn sdk.Coin, tokenOut sdk.Coin, poolId uint64, newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurrentSqrtPrice sdk.Dec) {
+func (k *Keeper) applySwap(ctx sdk.Context, tokenIn sdk.Coin, tokenOut sdk.Coin, poolId uint64, newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurrentSqrtPrice sdk.Dec) error {
 	// Fixed gas consumption per swap to prevent spam
 	ctx.GasMeter().ConsumeGas(gammtypes.BalancerGasFeeForSwap, "cl pool swap computation")
-	pool := k.getPoolbyId(ctx, poolId)
+	pool, err := k.getPoolbyId(ctx, poolId)
+	if err != nil {
+		return err
+	}
 
 	pool.Liquidity = newLiquidity
 	pool.CurrentTick = newCurrentTick
 	pool.CurrentSqrtPrice = newCurrentSqrtPrice
 	k.setPoolById(ctx, pool.Id, pool)
+	return nil
 }

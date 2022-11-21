@@ -7,13 +7,32 @@ import (
 	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
 )
 
-func (k Keeper) initOrUpdatePosition(ctx sdk.Context,
+// TODO: test
+func (k Keeper) getOrInitPosition(
+	ctx sdk.Context,
+	poolId uint64,
+	owner sdk.AccAddress,
+	lowerTick, upperTick int64,
+	liquidityDelta sdk.Dec,
+) (*Position, error) {
+	if k.hasPosition(ctx, poolId, owner, lowerTick, upperTick) {
+		position, err := k.getPosition(ctx, poolId, owner, lowerTick, upperTick)
+		if err != nil {
+			return nil, err
+		}
+		return position, nil
+	}
+	return &Position{Liquidity: sdk.ZeroDec()}, nil
+}
+
+func (k Keeper) initOrUpdatePosition(
+	ctx sdk.Context,
 	poolId uint64,
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
 	liquidityDelta sdk.Dec,
 ) (err error) {
-	position, err := k.GetPosition(ctx, poolId, owner, lowerTick, upperTick)
+	position, err := k.getOrInitPosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta)
 	if err != nil {
 		return err
 	}
@@ -26,22 +45,30 @@ func (k Keeper) initOrUpdatePosition(ctx sdk.Context,
 
 	position.Liquidity = liquidityAfter
 
+	// TODO: consider deleting position if liquidity becomes zero
+
 	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, position)
 	return nil
 }
 
-func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) (position Position, err error) {
+func (k Keeper) hasPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) bool {
 	store := ctx.KVStore(k.storeKey)
-	positionStruct := Position{}
+	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
+	return store.Has(key)
+}
+
+func (k Keeper) getPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) (*Position, error) {
+	store := ctx.KVStore(k.storeKey)
+	positionStruct := &Position{}
 	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
 
-	found, err := osmoutils.GetIfFound(store, key, &positionStruct)
-	// return 0 values if key has not been initialized
-	if !found {
-		return Position{Liquidity: sdk.ZeroDec()}, nil
-	}
+	found, err := osmoutils.GetIfFound(store, key, positionStruct)
 	if err != nil {
-		return positionStruct, err
+		return nil, err
+	}
+
+	if !found {
+		return nil, types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick}
 	}
 
 	return positionStruct, nil
@@ -51,9 +78,9 @@ func (k Keeper) setPosition(ctx sdk.Context,
 	poolId uint64,
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
-	position Position,
+	position *Position,
 ) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
-	osmoutils.MustSet(store, key, &position)
+	osmoutils.MustSet(store, key, position)
 }

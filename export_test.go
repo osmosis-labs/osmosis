@@ -31,6 +31,18 @@ func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tic
 	k.setTickInfo(ctx, poolId, tickIndex, tickInfo)
 }
 
+func (k Keeper) WithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityAmount sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
+	return k.withdrawPosition(ctx, poolId, owner, lowerTick, upperTick, liquidityAmount)
+}
+
+func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) (*Position, error) {
+	return k.getPosition(ctx, poolId, owner, lowerTick, upperTick)
+}
+
+func (k Keeper) HasPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) bool {
+	return k.hasPosition(ctx, poolId, owner, lowerTick, upperTick)
+}
+
 func GetNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
 	return getNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining)
 }
@@ -59,6 +71,6 @@ func Liquidity1(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	return liquidity1(amount, sqrtPriceA, sqrtPriceB)
 }
 
-func (k Keeper) GetPoolbyId(ctx sdk.Context, poolId uint64) Pool {
+func (k Keeper) GetPoolbyId(ctx sdk.Context, poolId uint64) (Pool, error) {
 	return k.getPoolbyId(ctx, poolId)
 }
