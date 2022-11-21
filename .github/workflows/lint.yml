@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - concentrated-liquidity-main
 
 jobs:
   golangci:
@@ -53,9 +54,4 @@ jobs:
           # within `super-linter`.
           fetch-depth: 0
       - name: Run documentation linter
-        uses: github/super-linter@v4
-        env:
-          VALIDATE_ALL_CODEBASE: false
-          VALIDATE_MARKDOWN: true
-          DEFAULT_BRANCH: main
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: make mdlint

@@ -79,10 +79,6 @@ type PoolI interface {
 	// CalcExitPoolCoinsFromShares returns how many coins ExitPool would return on these arguments.
 	// This does not mutate the pool, or state.
 	CalcExitPoolCoinsFromShares(ctx sdk.Context, numShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error)
-
-	// PokePool determines if a pool's weights need to be updated and updates
-	// them if so.
-	PokePool(blockTime time.Time)
 }
 
 // PoolAmountOutExtension is an extension of the PoolI
@@ -124,6 +120,19 @@ type PoolAmountOutExtension interface {
 
 	// IncreaseLiquidity increases the pool's liquidity by the specified sharesOut and coinsIn.
 	IncreaseLiquidity(sharesOut sdk.Int, coinsIn sdk.Coins)
+}
+
+// WeightedPoolExtension is an extension of the PoolI interface
+// That defines an additional API for handling the pool's weights.
+type WeightedPoolExtension interface {
+	PoolI
+
+	// PokePool determines if a pool's weights need to be updated and updates
+	// them if so.
+	PokePool(blockTime time.Time)
+
+	// GetTokenWeight returns the weight of the specified token in the pool.
+	GetTokenWeight(denom string) (sdk.Int, error)
 }
 
 func NewPoolAddress(poolId uint64) sdk.AccAddress {

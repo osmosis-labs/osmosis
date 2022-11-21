@@ -11,6 +11,7 @@ import (
 
 	epochtypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	gammv2types "github.com/osmosis-labs/osmosis/v12/x/gamm/v2types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v12/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v12/x/mint/types"
@@ -18,6 +19,7 @@ import (
 	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v12/x/tokenfactory/types"
 	twapquerytypes "github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
+	twapv2querytypes "github.com/osmosis-labs/osmosis/v12/x/twap/client/v2queryproto"
 	txfeestypes "github.com/osmosis-labs/osmosis/v12/x/txfees/types"
 )
 
@@ -49,6 +51,8 @@ var (
 		&gammtypes.QueryTotalPoolLiquidityResponse{},
 		&gammtypes.QueryTotalSharesResponse{},
 		&gammtypes.QuerySpotPriceResponse{},
+		&gammtypes.QueryPoolTypeResponse{},
+		&gammv2types.QuerySpotPriceResponse{},
 		&incentivestypes.ModuleToDistributeCoinsResponse{},
 		&incentivestypes.QueryLockableDurationsResponse{},
 		&lockuptypes.ModuleBalanceResponse{},
@@ -69,8 +73,8 @@ var (
 		&txfeestypes.QueryBaseDenomResponse{},
 		&tokenfactorytypes.QueryParamsResponse{},
 		&tokenfactorytypes.QueryDenomAuthorityMetadataResponse{},
-		&twapquerytypes.ArithmeticTwapResponse{},
-		&twapquerytypes.ArithmeticTwapToNowResponse{},
+		&twapv2querytypes.ArithmeticTwapResponse{},
+		&twapv2querytypes.ArithmeticTwapToNowResponse{},
 		&twapquerytypes.ParamsResponse{},
 	}
 )

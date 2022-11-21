@@ -15,17 +15,6 @@ exclude = [
 [lib]
 crate-type = ["cdylib", "rlib"]
 
-[profile.release]
-opt-level = 3
-debug = false
-rpath = false
-lto = true
-debug-assertions = false
-codegen-units = 1
-panic = 'abort'
-incremental = false
-overflow-checks = true
-
 [features]
 # for more explicit tests, cargo test --features=backtraces
 backtraces = ["cosmwasm-std/backtraces"]
@@ -43,14 +32,20 @@ optimize = """docker run --rm -v "$(pwd)":/code \
 """
 
 [dependencies]
-cosmwasm-std = "1.0.0"
-cosmwasm-storage = "1.0.0"
-cw-storage-plus = "0.13.2"
+cosmwasm-std = { version =  "1.1.5", features = ["stargate", "cosmwasm_1_1"]}
+cosmwasm-schema = "1.1.5"
+cosmwasm-storage = "1.1.5"
+cw-storage-plus = "0.16.0"
 cw2 = "0.13.2"
 schemars = "0.8.8"
 serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
+prost = {version = "0.11.2", default-features = false, features = ["prost-derive"]}
+osmosis-std-derive = {version = "0.12.0"}
+osmosis-std = "0.12.0"
+sha2 = "0.10.6"
+hex = "0.4.3"
 
 [dev-dependencies]
-cosmwasm-schema = "1.0.0"
 cw-multi-test = "0.13.2"
+serde-json-wasm = "0.4.1"

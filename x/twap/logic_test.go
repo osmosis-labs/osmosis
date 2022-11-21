@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v12/x/twap"
 	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
@@ -328,6 +329,7 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 		testTime            time.Time
 		expectedAccumulator sdk.Dec
 		expectedErr         error
+		expectedLastErrTime time.Time
 	}{
 		"same time with existing record": {
 			recordsToPreSet: baseRecord,
@@ -344,6 +346,16 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 			testTime:        baseTime.Add(time.Second),
 			// 1(spot price) * 1000(one sec in milli-seconds)
 			expectedAccumulator: baseRecord.P0ArithmeticTwapAccumulator.Add(sdk.NewDec(1000)),
+		},
+		"call 1 second after existing record with error": {
+			recordsToPreSet: withLastErrTime(baseRecord, baseTime),
+			testPoolId:      baseRecord.PoolId,
+			testDenom0:      baseRecord.Asset0Denom,
+			testDenom1:      baseRecord.Asset1Denom,
+			testTime:        baseTime.Add(time.Second),
+			// 1(spot price) * 1000(one sec in milli-seconds)
+			expectedAccumulator: baseRecord.P0ArithmeticTwapAccumulator.Add(sdk.NewDec(1000)),
+			expectedLastErrTime: baseTime.Add(time.Second),
 		},
 		"call 1 second before existing record": {
 			recordsToPreSet: baseRecord,
@@ -391,6 +403,13 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 				s.Require().Equal(test.recordsToPreSet.P1LastSpotPrice, interpolatedRecord.P1LastSpotPrice)
 				s.Require().Equal(test.expectedAccumulator, interpolatedRecord.P0ArithmeticTwapAccumulator)
 				s.Require().Equal(test.expectedAccumulator, interpolatedRecord.P1ArithmeticTwapAccumulator)
+				if test.recordsToPreSet.Time.Equal(test.recordsToPreSet.LastErrorTime) {
+					// last error time updated
+					s.Require().Equal(test.testTime, interpolatedRecord.LastErrorTime)
+				} else {
+					// last error time unchanged
+					s.Require().Equal(test.recordsToPreSet.LastErrorTime, interpolatedRecord.LastErrorTime)
+				}
 			}
 		})
 	}
@@ -409,6 +428,31 @@ func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
 		"call 1 second after existing record": {
 			recordsToPreSet: baseRecord,
 			testTime:        baseTime.Add(time.Second),
+			// P0 and P1 TwapAccumulators both start at 0
+			// A 10 spot price * 1000ms = 10000
+			// A 10 spot price * 1000ms = 10000
+			// B .1 spot price * 1000ms = 100
+			expectedP0Accumulator: []sdk.Dec{
+				baseRecord[0].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(10000)),
+				baseRecord[1].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(10000)),
+				baseRecord[2].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(100)),
+			},
+			// B .1 spot price * 1000ms = 100
+			// C 20 spot price * 1000ms = 20000
+			// C 20 spot price * 1000ms = 20000
+			expectedP1Accumulator: []sdk.Dec{
+				baseRecord[0].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(100)),
+				baseRecord[1].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(20000)),
+				baseRecord[2].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(20000)),
+			},
+		},
+		"call 1 second after existing record with error": {
+			recordsToPreSet: []types.TwapRecord{
+				withLastErrTime(baseRecord[0], baseTime),
+				withLastErrTime(baseRecord[1], baseTime),
+				withLastErrTime(baseRecord[2], baseTime),
+			},
+			testTime: baseTime.Add(time.Second),
 			// P0 and P1 TwapAccumulators both start at 0
 			// A 10 spot price * 1000ms = 10000
 			// A 10 spot price * 1000ms = 10000
@@ -461,6 +505,13 @@ func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
 					s.Require().Equal(test.recordsToPreSet[i].P1LastSpotPrice, interpolatedRecord.P1LastSpotPrice)
 					s.Require().Equal(test.expectedP0Accumulator[i], interpolatedRecord.P0ArithmeticTwapAccumulator)
 					s.Require().Equal(test.expectedP1Accumulator[i], interpolatedRecord.P1ArithmeticTwapAccumulator)
+					if test.recordsToPreSet[i].Time.Equal(test.recordsToPreSet[i].LastErrorTime) {
+						// last error time updated
+						s.Require().Equal(test.testTime, interpolatedRecord.LastErrorTime)
+					} else {
+						// last error time unchanged
+						s.Require().Equal(test.recordsToPreSet[i].LastErrorTime, interpolatedRecord.LastErrorTime)
+					}
 				}
 			}
 		})
@@ -625,9 +676,17 @@ func TestComputeArithmeticTwapWithSpotPriceError(t *testing.T) {
 			expErr:      true,
 		},
 		// should error, since start time may have been used to interpolate this value
-		"err at StartTime exactly": {
+		"err at StartTime exactly from end record": {
 			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
 			endRecord:   newOneSidedRecordWErrorTime(tPlusOne, OneSec, true, baseTime),
+			quoteAsset:  denom0,
+			expTwap:     sdk.OneDec(),
+			expErr:      true,
+		},
+		// should error, since start record is erroneous
+		"err at StartTime exactly from start record": {
+			startRecord: newOneSidedRecordWErrorTime(baseTime, sdk.ZeroDec(), true, baseTime),
+			endRecord:   newOneSidedRecord(tPlusOne, OneSec, true),
 			quoteAsset:  denom0,
 			expTwap:     sdk.OneDec(),
 			expErr:      true,
@@ -666,15 +725,15 @@ func (s *TestSuite) TestPruneRecords() {
 
 	pool1OlderMin2MsRecord, // deleted
 		pool2OlderMin1MsRecordAB, pool2OlderMin1MsRecordAC, pool2OlderMin1MsRecordBC, // deleted
-		pool3OlderBaseRecord, // kept as newest under keep period
+		pool3OlderBaseRecord,    // kept as newest under keep period
 		pool4OlderPlus1Record := // kept as newest under keep period
-	s.createTestRecordsFromTime(baseTime.Add(2 * -recordHistoryKeepPeriod))
+		s.createTestRecordsFromTime(baseTime.Add(2 * -recordHistoryKeepPeriod))
 
 	pool1Min2MsRecord, // kept as newest under keep period
 		pool2Min1MsRecordAB, pool2Min1MsRecordAC, pool2Min1MsRecordBC, // kept as newest under keep period
-		pool3BaseRecord, // kept as it is at the keep period boundary
+		pool3BaseRecord,    // kept as it is at the keep period boundary
 		pool4Plus1Record := // kept as it is above the keep period boundary
-	s.createTestRecordsFromTime(baseTime.Add(-recordHistoryKeepPeriod))
+		s.createTestRecordsFromTime(baseTime.Add(-recordHistoryKeepPeriod))
 
 	// non-ascending insertion order.
 	recordsToPreSet := []types.TwapRecord{
@@ -1050,7 +1109,7 @@ func (s *TestSuite) TestUpdateRecords() {
 		"multi-asset pool; pre-set at t and t + 1; creates new records": {
 			preSetRecords: []types.TwapRecord{threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC, tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC},
 			poolId:        threeAssetRecordAB.PoolId,
-			blockTime: threeAssetRecordAB.Time.Add(time.Second * 11),
+			blockTime:     threeAssetRecordAB.Time.Add(time.Second * 11),
 			spOverrides: []spOverride{
 				{
 					baseDenom:  threeAssetRecordAB.Asset0Denom,
@@ -1138,7 +1197,7 @@ func (s *TestSuite) TestUpdateRecords() {
 		"multi-asset pool; pre-set at t and t + 1 with err, large spot price, overwrites error time": {
 			preSetRecords: []types.TwapRecord{threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC, withLastErrTime(tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAB.Time), tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC},
 			poolId:        threeAssetRecordAB.PoolId,
-			blockTime: threeAssetRecordAB.Time.Add(time.Second * 11),
+			blockTime:     threeAssetRecordAB.Time.Add(time.Second * 11),
 			spOverrides: []spOverride{
 				{
 					baseDenom:  threeAssetRecordAB.Asset0Denom,
@@ -1146,10 +1205,10 @@ func (s *TestSuite) TestUpdateRecords() {
 					overrideSp: sdk.OneDec(),
 				},
 				{
-					baseDenom:   threeAssetRecordAB.Asset1Denom,
-					quoteDenom:  threeAssetRecordAB.Asset0Denom,
-					overrideSp:  sdk.OneDec().Add(sdk.OneDec()),
- 				},
+					baseDenom:  threeAssetRecordAB.Asset1Denom,
+					quoteDenom: threeAssetRecordAB.Asset0Denom,
+					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+				},
 				{
 					baseDenom:  threeAssetRecordAC.Asset0Denom,
 					quoteDenom: threeAssetRecordAC.Asset1Denom,
@@ -1167,9 +1226,9 @@ func (s *TestSuite) TestUpdateRecords() {
 					overrideSp: sdk.OneDec(),
 				},
 				{
-					baseDenom:   threeAssetRecordBC.Asset1Denom,
-					quoteDenom:  threeAssetRecordBC.Asset0Denom,
-					overrideSp:  sdk.OneDec().Add(sdk.OneDec()),
+					baseDenom:  threeAssetRecordBC.Asset1Denom,
+					quoteDenom: threeAssetRecordBC.Asset0Denom,
+					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
 				},
 			},
 
@@ -1188,7 +1247,7 @@ func (s *TestSuite) TestUpdateRecords() {
 				// The new record AB added.
 				{
 					spotPriceA:    sdk.OneDec(),
-					spotPriceB:    sdk.OneDec().Add(sdk.OneDec()),                            
+					spotPriceB:    sdk.OneDec().Add(sdk.OneDec()),
 					lastErrorTime: tPlus10sp5ThreeAssetRecordAB.Time,
 					isMostRecent:  true,
 				},
@@ -1199,8 +1258,8 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				// The original record AC at t + 1.
 				{
-					spotPriceA:    tPlus10sp5ThreeAssetRecordAC.P0LastSpotPrice,
-					spotPriceB:    tPlus10sp5ThreeAssetRecordAC.P1LastSpotPrice,
+					spotPriceA: tPlus10sp5ThreeAssetRecordAC.P0LastSpotPrice,
+					spotPriceB: tPlus10sp5ThreeAssetRecordAC.P1LastSpotPrice,
 				},
 				// The new record AC added.
 				{
@@ -1216,14 +1275,14 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				// The original record BC at t + 1.
 				{
-					spotPriceA:    tPlus10sp5ThreeAssetRecordBC.P0LastSpotPrice,
-					spotPriceB:    tPlus10sp5ThreeAssetRecordBC.P1LastSpotPrice,
+					spotPriceA: tPlus10sp5ThreeAssetRecordBC.P0LastSpotPrice,
+					spotPriceB: tPlus10sp5ThreeAssetRecordBC.P1LastSpotPrice,
 				},
 				// The new record BC added.
 				{
-					spotPriceA:    sdk.OneDec(),
-					spotPriceB:    sdk.OneDec().Add(sdk.OneDec()),                            
-					isMostRecent:  true,
+					spotPriceA:   sdk.OneDec(),
+					spotPriceB:   sdk.OneDec().Add(sdk.OneDec()),
+					isMostRecent: true,
 				},
 			},
 		},
@@ -1272,6 +1331,96 @@ func (s *TestSuite) TestUpdateRecords() {
 			poolHistoricalRecords := s.getAllHistoricalRecordsForPool(tc.poolId)
 			s.Require().NoError(err)
 			validateRecords(tc.expectedHistoricalRecords, poolHistoricalRecords)
+		})
+	}
+}
+
+func (s *TestSuite) TestAfterCreatePool() {
+	tests := map[string]struct {
+		poolId    uint64
+		poolCoins sdk.Coins
+		// if this field is set true, we swap in the same block with pool creation
+		runSwap     bool
+		expectedErr bool
+	}{
+		"Pool not existing": {
+			poolId:      2,
+			expectedErr: true,
+		},
+		"Default Pool, no swap on pool creation block": {
+			poolId:    1,
+			poolCoins: defaultTwoAssetCoins,
+			runSwap:   false,
+		},
+		"Default Pool, swap on pool creation block": {
+			poolId:    1,
+			poolCoins: defaultTwoAssetCoins,
+			runSwap:   true,
+		},
+		"Multi assets pool, no swap on pool creation block": {
+			poolId:    1,
+			poolCoins: defaultThreeAssetCoins,
+			runSwap:   false,
+		},
+		"Multi assets pool, swap on pool creation block": {
+			poolId:    1,
+			poolCoins: defaultThreeAssetCoins,
+			runSwap:   true,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			var poolId uint64
+
+			// set up pool with input coins
+			if tc.poolCoins != nil {
+				poolId = s.PrepareBalancerPoolWithCoins(tc.poolCoins...)
+				if tc.runSwap {
+					s.RunBasicSwap(poolId)
+				}
+			}
+
+			err := s.twapkeeper.AfterCreatePool(s.Ctx, tc.poolId)
+			if tc.expectedErr {
+				s.Require().Error(err)
+				return
+			}
+			s.Require().Equal(tc.poolId, poolId)
+			s.Require().NoError(err)
+
+			denoms := osmoutils.CoinsDenoms(tc.poolCoins)
+			denomPairs := types.GetAllUniqueDenomPairs(denoms)
+			expectedRecords := []types.TwapRecord{}
+			for _, denomPair := range denomPairs {
+				expectedRecord, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denomPair.Denom0, denomPair.Denom1)
+				s.Require().NoError(err)
+				expectedRecords = append(expectedRecords, expectedRecord)
+			}
+
+			// consistency check that the number of records is exactly equal to the number of denompairs
+			allRecords, err := s.twapkeeper.GetAllMostRecentRecordsForPool(s.Ctx, poolId)
+			s.Require().NoError(err)
+			s.Require().Equal(len(denomPairs), len(allRecords))
+			s.Require().Equal(len(expectedRecords), len(allRecords))
+
+			// check on the correctness of all individual twap records
+			for i, denomPair := range denomPairs {
+				actualRecord, err := s.twapkeeper.GetMostRecentRecordStoreRepresentation(s.Ctx, poolId, denomPair.Denom0, denomPair.Denom1)
+				s.Require().NoError(err)
+				s.Require().Equal(expectedRecords[i], actualRecord)
+				actualRecord, err = s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denomPair.Denom0, denomPair.Denom1)
+				s.Require().NoError(err)
+				s.Require().Equal(expectedRecords[i], actualRecord)
+			}
+
+			// test that after creating a pool
+			// has triggered `trackChangedPool`,
+			// and that we have the state of price impacted pools.
+			changedPools := s.twapkeeper.GetChangedPools(s.Ctx)
+			s.Require().Equal(1, len(changedPools))
+			s.Require().Equal(tc.poolId, changedPools[0])
 		})
 	}
 }

@@ -19,6 +19,7 @@ import (
 
 	epochtypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	gammv2types "github.com/osmosis-labs/osmosis/v12/x/gamm/v2types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v12/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v12/x/mint/types"
@@ -26,6 +27,7 @@ import (
 	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v12/x/tokenfactory/types"
 	twapquerytypes "github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
+	twapv2querytypes "github.com/osmosis-labs/osmosis/v12/x/twap/client/v2queryproto"
 	txfeestypes "github.com/osmosis-labs/osmosis/v12/x/txfees/types"
 )
 
@@ -124,6 +126,10 @@ func init() {
 	gammtypes.RegisterQueryServer(g, nil)
 	g.RegisterQueryReponse((*gammtypes.QueryServer)(nil))
 
+	// gamm v2
+	gammv2types.RegisterQueryServer(g, nil)
+	g.RegisterQueryReponse((*gammv2types.QueryServer)(nil))
+
 	// incentives
 	incentivestypes.RegisterQueryServer(g, nil)
 	g.RegisterQueryReponse((*incentivestypes.QueryServer)(nil))
@@ -156,6 +162,10 @@ func init() {
 	// twap
 	twapquerytypes.RegisterQueryServer(g, nil)
 	g.RegisterQueryReponse((*twapquerytypes.QueryServer)(nil))
+
+	// twap v2
+	twapv2querytypes.RegisterQueryServer(g, nil)
+	g.RegisterQueryReponse((*twapv2querytypes.QueryServer)(nil))
 
 	g.Whitelist()
 }
