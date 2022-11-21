@@ -47,7 +47,15 @@ func (server msgServer) DelegateToValidatorSet(goCtx context.Context, msg *types
 
 	return &types.MsgDelegateToValidatorSetResponse{}, nil
 }
+
 func (server msgServer) UndelegateFromValidatorSet(goCtx context.Context, msg *types.MsgUndelegateFromValidatorSet) (*types.MsgUndelegateFromValidatorSetResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	err := server.keeper.UndelegateFromValidatorSet(ctx, msg.Delegator, msg.Coin)
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.MsgUndelegateFromValidatorSetResponse{}, nil
 }
 
