@@ -810,7 +810,7 @@ type Position struct {
     UncollectedFee Fee
 }
 
-Recall that contrary to traditional pools, in concentrated liquidity pool,
+Recall that contrary to traditional pools, in a concentrated liquidity pool,
 fees do not get auto re-injected into the pool. Instead, they are tracked by
 `position.TokensUncollected0` and `position.TokensUncollected1` fields of each position.
 
