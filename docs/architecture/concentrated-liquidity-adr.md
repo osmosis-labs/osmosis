@@ -818,8 +818,8 @@ The `position.FeeGrowthInside0Last` and `position.FeeGrowthInside1Last` accumula
 are used to calculate the  _uncollected fees_ to add to `position.TokensUncollected0`
 and `position.TokensUncollected1`.
 
-The amount of uncollected fees needs to be calculated every time a user touches
-the position. That is when a position is created, liqudiity is added or removed.
+The amount of uncollected fees needs to be calculated every time a user modifies
+their position. That is when a position is created, liquidity is added or removed.
 
 We must recalculate the values for any modification because with more liqudity
 added to the position, the amount of fees collected by the position increases.
