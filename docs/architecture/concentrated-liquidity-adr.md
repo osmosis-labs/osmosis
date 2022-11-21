@@ -753,7 +753,7 @@ Tracking how much of fees are collected outside of a tick allows us to calculate
 of fees inside the position on request.
 
 Intuitively, we update the activated tick with the amount of fees collected for
-every tick lower than the tick that is being been crossed.
+every tick lower than the tick that is being crossed.
 
 This has two benefits:
  * We avoid updating *all* ticks
