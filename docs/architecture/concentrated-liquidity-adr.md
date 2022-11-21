@@ -824,7 +824,7 @@ their position. That is when a position is created, liquidity is added or remove
 We must recalculate the values for any modification because with more liquidity
 added to the position, the amount of fees collected by the position increases.
 
-Let `feeGrowthInside0` be the amount of fee growth per unit of liqudity within
+Let `feeGrowthInside0` be the amount of fee growth per unit of liquidity within
 the position's ticks. We use the same strategy for computing fees between two ticks (in-range) that
 was described in the previous section. Once we have `feeGrowthInside0` computed, we update the
 `position.UncollectedFee.Token0` and `position.FeeGrowthInsideLast.Token0`.
