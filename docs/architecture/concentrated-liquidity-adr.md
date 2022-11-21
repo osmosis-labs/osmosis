@@ -800,7 +800,7 @@ is not meaningful. There is also no guarantee that the values
 across ticks will follow any particular pattern. 
 
 However, this does not affect the per-position calculations since
-all the position  needs to know is the fee growth inside the position's
+all the position needs to know is the fee growth inside the position's
 range since the position was last touched.
 
 - **Per-position**
