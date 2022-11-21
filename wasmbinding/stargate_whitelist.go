@@ -72,7 +72,7 @@ func (g *GRPCQueriesInfo) RegisterService(sd *grpc.ServiceDesc, ss interface{}) 
 	sort.Strings(g.QueryPaths)
 }
 
-func (g *GRPCQueriesInfo) GRPCQueriesInfo2StargateWhitelist() {
+func (g *GRPCQueriesInfo) Whitelist() {
 	for id := range g.QueryPaths {
 		if Contains(QueriesList, g.QueryReponses[id]) {
 			setWhitelistedQuery(g.QueryPaths[id], g.QueryReponses[id])
@@ -150,7 +150,7 @@ func init() {
 	twapquerytypes.RegisterQueryServer(g, nil)
 	g.RegisterQueryReponse((*twapquerytypes.QueryServer)(nil))
 
-	g.GRPCQueriesInfo2StargateWhitelist()
+	g.Whitelist()
 }
 
 // GetWhitelistedQuery returns the whitelisted query at the provided path.
