@@ -844,17 +844,18 @@ position.FeeGrowthInsideLast.Token0 = feeGrowthInside.Token0
 Collecting fees is as simple as transferring the requested amount
 from the pool address to the position's owner.
 
+After every epoch, the system iterates over all positions to call
+`collectFees` for each and auto-collects fees.
+
+Currently, there is no ability to collect manually to prevent spam.
+
 ```go
 func (k Keeper) collectFees(
     owner sdk.AccAddress,
-    lowerTick, upperTick int64, 
-    amount0Requested, amount1Requested sdk.Int) error {
+    lowerTick, upperTick int64) error {
     // validate ticks
 
     // get position if exists
-
-    // make sure that amounts requested are not greater than
-    // position's uncollected fees.
 
     // bank send position.TokensUncollected0 and position.TokensUncollected1
     //from pool address to position owner
