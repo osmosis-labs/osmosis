@@ -667,7 +667,7 @@ of positions. As a result, there is a different accumulator-based mechanism for 
 of and storing the fees.
 
 First, note that the fees are collected in tokens themselves rather than in units of liquidity.
-Thus, we need two accumulators for each token. Temporaly, these fee accumulators accessed together
+Thus, we need two accumulators for each token. Temporally, these fee accumulators are accessed together
 from state most of the time. Therefore, we define a data structure for storing the fees of each token in the pool.
 
 ```go
