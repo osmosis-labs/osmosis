@@ -36,7 +36,6 @@ import (
 // thread safe sync.Map.
 var stargateWhitelist sync.Map
 
-// This is
 type GRPCQueriesInfo struct {
 	QueryPaths    []string
 	QueryReponses []codec.ProtoMarshaler
