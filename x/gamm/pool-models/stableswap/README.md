@@ -413,11 +413,15 @@ Thus we are left with how to account swap fee. We currently account for swap fee
 
 ```python
 def JoinPoolSingleAssetIn(pool, tokenIn):
-  swapFeeApplicableFraction = 1 -(pool.ScaledLiquidityOf(tokenIn.Denom) / pool.SumOfAllScaledLiquidity())
+  swapFeeApplicableFraction = 1 - (pool.ScaledLiquidityOf(tokenIn.Denom) / pool.SumOfAllScaledLiquidity())
   effectiveSwapFee = pool.SwapFee * swapFeeApplicableFraction
   effectiveTokenIn = RoundDown(tokenIn * (1 - effectiveSwapFee))
   return BinarySearchSingleJoinLpShares(pool, effectiveTokenIn)
 ```
+
+We leave the rounding mode for the scaling factor division unspecified.
+This is because its expected to be tiny (as the denominator is larger than the numerator, and we are operating in BigDec),
+and it should be dominated by the later step of rounding down.
 
 ## Code structure
 
