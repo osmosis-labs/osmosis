@@ -24,7 +24,6 @@ var (
 )
 
 type AppModuleBasic struct {
-	cdc codec.Codec
 }
 
 func (AppModuleBasic) Name() string { return types.ModuleName }
@@ -75,9 +74,9 @@ type AppModule struct {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
-func NewAppModule(cdc codec.Codec, concentratedLiquidityKeeper Keeper) AppModule {
+func NewAppModule(concentratedLiquidityKeeper Keeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		AppModuleBasic: AppModuleBasic{},
 		k:              concentratedLiquidityKeeper,
 	}
 }
