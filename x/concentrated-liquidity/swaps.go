@@ -235,19 +235,12 @@ func (k *Keeper) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDe
 		return sdk.Coin{}, err
 	}
 
-	pool, err := k.getPoolById(ctx, poolId)
-	if err != nil {
+	if err := k.applySwap(ctx, tokenInCoin, tokenOut, poolId, newLiquidity, newCurrentTick, newCurrentSqrtPrice); err != nil {
 		return sdk.Coin{}, err
 	}
 
-	err = pool.ApplySwap(ctx, newLiquidity, newCurrentTick, newCurrentSqrtPrice)
-	if err != nil {
-		return sdk.Coin{}, err
-	}
-
-	err = k.setPool(ctx, pool)
-	if err != nil {
-		return sdk.Coin{}, err
+	if tokenInCoin.Amount.GT(tokenIn.Amount) {
+		return sdk.Coin{}, fmt.Errorf("tokenIn calculated is larger than tokenIn provided")
 	}
 
 	return tokenInCoin, nil
@@ -372,7 +365,7 @@ func (k *Keeper) applySwap(ctx sdk.Context, tokenIn sdk.Coin, tokenOut sdk.Coin,
 		return err
 	}
 
-	if err := pool.ApplySwap(ctx, newLiquidity, newCurrentTick, newCurrentSqrtPrice); err != nil {
+	if err := pool.ApplySwap(newLiquidity, newCurrentTick, newCurrentSqrtPrice); err != nil {
 		return err
 	}
 

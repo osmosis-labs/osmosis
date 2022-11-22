@@ -176,11 +176,7 @@ func (p Pool) isCurrentTickInRange(lowerTick, upperTick int64) bool {
 
 // ApplySwap state of pool after swap.
 // It specifically overwrites the pool's liquidity, curr tick and the curr sqrt price
-func (p *Pool) ApplySwap(ctx sdk.Context, newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurrentSqrtPrice sdk.Dec) error {
-	// Fixed gas consumption per swap to prevent spam
-	// TODO: move this outside of the pool.
-	ctx.GasMeter().ConsumeGas(gammtypes.BalancerGasFeeForSwap, "cl pool swap computation")
-
+func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurrentSqrtPrice sdk.Dec) error {
 	p.Liquidity = newLiquidity
 	p.CurrentTick = newCurrentTick
 	p.CurrentSqrtPrice = newCurrentSqrtPrice

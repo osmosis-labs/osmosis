@@ -95,7 +95,7 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 	newCurrSqrtPrice := defaultCurrSqrtPrice.Mul(sdk.NewDec(2))
 
 	gasBeforeSwap := s.Ctx.GasMeter().GasConsumed()
-	mock_pool.ApplySwap(s.Ctx, newLiquidity, newCurrTick, newCurrSqrtPrice)
+	mock_pool.ApplySwap(newLiquidity, newCurrTick, newCurrSqrtPrice)
 	gasAfterSwap := s.Ctx.GasMeter().GasConsumed()
 
 	s.Require().Equal(gasAfterSwap-gasBeforeSwap, uint64(gammtypes.BalancerGasFeeForSwap))
