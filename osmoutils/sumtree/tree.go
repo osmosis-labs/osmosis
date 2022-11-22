@@ -1,6 +1,6 @@
 /// B+ tree implementation on KVStore
 
-package store
+package sumtree
 
 import (
 	"bytes"
