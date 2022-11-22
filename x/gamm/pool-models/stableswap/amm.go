@@ -32,13 +32,13 @@ func cfmmConstant(xReserve, yReserve osmomath.BigDec) osmomath.BigDec {
 	return xy.Mul(x2.Add(y2))
 }
 
-<<<<<<< HEAD
-// multi-asset CFMM is xyv(x^2 + y^2 + w) = k,
-// where u is the product of the reserves of assets
-// outside of x and y (e.g. u = wz), and v is the sum
-// of their squares (e.g. v = w^2 + z^2).
-// When u = 1 and v = 0, this is equivalent to solidly's CFMM
-// {TODO: Update this comment}
+// Multi-asset CFMM is xyv(x^2 + y^2 + w), but because v is a constant throughout,
+// we work with the following simplified multi-asset CFMM: xy(x^2 + y^2 + w) = k,
+// where w is the sum of the squares of the
+// reserve assets (e.g. w = m^2 + n^2).
+// When w = 0, this is equivalent to solidly's CFMM
+// We use this version for calculations since the u
+// term in the full CFMM is constant.
 func cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares osmomath.BigDec) osmomath.BigDec {
 	if !xReserve.IsPositive() || !yReserve.IsPositive() || wSumSquares.IsNegative() {
 		panic("invalid input: reserves must be positive")
@@ -51,26 +51,12 @@ func cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares osmomath.BigDec) osmom
 // For use in comparing values with the same y
 func cfmmConstantMultiNoVY(xReserve, yReserve, wSumSquares osmomath.BigDec) osmomath.BigDec {
 	if !xReserve.IsPositive() || !yReserve.IsPositive() || wSumSquares.IsNegative() {
-=======
-// Simplified multi-asset CFMM is xy(x^2 + y^2 + w) = k,
-// where w is the sum of the squares of the
-// reserve assets (e.g. w = m^2 + n^2).
-// When w = 0, this is equivalent to solidly's CFMM
-// We use this version for calculations since the u
-// term in the full CFMM is constant.
-func cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares osmomath.BigDec) osmomath.BigDec {
-	if !xReserve.IsPositive() || !yReserve.IsPositive() || wSumSquares.IsNegative() {
->>>>>>> 9d3cfc6b (apply suggestions from internal audit (#3369))
 		panic("invalid input: reserves must be positive")
 	}
 
 	x2 := xReserve.Mul(xReserve)
 	y2 := yReserve.Mul(yReserve)
-<<<<<<< HEAD
 	return xReserve.Mul(x2.Add(y2).Add(wSumSquares))
-=======
-	return xy.Mul(x2.Add(y2).Add(wSumSquares))
->>>>>>> 9d3cfc6b (apply suggestions from internal audit (#3369))
 }
 
 // full multi-asset CFMM is xyu(x^2 + y^2 + w) = k,
