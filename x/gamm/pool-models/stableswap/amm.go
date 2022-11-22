@@ -435,16 +435,58 @@ func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk
 		return &paCopy
 	}
 
-	// We apply the swap fee by multiplying by (1 - swapFee) and then truncating to int
-	oneMinusSwapFee := sdk.OneDec().Sub(swapFee)
+	// We apply the swap fee by multiplying by:
+	// 1) getting what % of the input the swap fee should apply to
+	// 2) multiplying that by swap fee
+	// 3) oneMinusSwapFee := (1 - swap_fee * swap_fee_applicable_percent)
+	// 4) Multiplying token in by one minus swap fee.
+	swapFeeApplicableRatio, err := p.singleAssetJoinSwapFeeRatio(tokenIn.Denom)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+	oneMinusSwapFee := sdk.OneDec().Sub(swapFee.Mul(swapFeeApplicableRatio))
 	tokenInAmtAfterFee := tokenIn.Amount.ToDec().Mul(oneMinusSwapFee).TruncateInt()
 
 	return cfmm_common.BinarySearchSingleAssetJoin(p, sdk.NewCoin(tokenIn.Denom, tokenInAmtAfterFee), poolWithAddedLiquidityAndShares)
 }
 
+<<<<<<< HEAD
 // We can mutate pa here
 // TODO: some day switch this to a COW wrapped pa, for better perf
 func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
+=======
+// returns the ratio of input asset liquidity, to total liquidity in pool, post-scaling.
+// We use this as the portion of input liquidity to apply a swap fee too, for single asset joins.
+// So if a pool is currently comprised of 80% of asset A, and 20% of asset B (post-scaling),
+// and we input asset A, this function will return 20%.
+// Note that this will over-estimate swap fee for single asset joins slightly,
+// as in the swapping process into the pool, the A to B ratio would decrease the relative supply of B.
+func (p *Pool) singleAssetJoinSwapFeeRatio(tokenInDenom string) (sdk.Dec, error) {
+	// get a second denom in pool
+	tokenOut := p.PoolLiquidity[0]
+	if tokenOut.Denom == tokenInDenom {
+		tokenOut = p.PoolLiquidity[1]
+	}
+	// We round bankers scaled liquidity, since we care about the ratio of liquidity.
+	scaledLiquidity, err := p.scaledSortedPoolReserves(tokenInDenom, tokenOut.Denom, osmomath.RoundDown)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	totalLiquidityDenominator := osmomath.ZeroDec()
+	for _, amount := range scaledLiquidity {
+		totalLiquidityDenominator = totalLiquidityDenominator.Add(amount)
+	}
+	ratioOfInputAssetLiquidityToTotalLiquidity := scaledLiquidity[0].Quo(totalLiquidityDenominator)
+	// SDKDec() rounds down (as it truncates), therefore 1 - term is rounded up, as desired.
+	nonInternalAssetRatio := sdk.OneDec().Sub(ratioOfInputAssetLiquidityToTotalLiquidity.SDKDec())
+	return nonInternalAssetRatio, nil
+}
+
+// Route a pool join attempt to either a single-asset join or all-asset join (mutates pool state)
+// Eventually, we intend to switch this to a COW wrapped pa for better performance
+func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
+>>>>>>> 3b5e7d65 (Fix swapfee for single asset joins (#3478))
 	if !tokensIn.DenomsSubsetOf(p.GetTotalPoolLiquidity(ctx)) {
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("attempted joining pool with assets that do not exist in pool")
 	}
