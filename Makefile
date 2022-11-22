@@ -106,12 +106,15 @@ build-reproducible-amd64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
 		--build-arg GO_VERSION=$(GO_VERSION) \
+		--build-arg GIT_VERSION=$(VERSION) \
+		--build-arg GIT_COMMIT=$(COMMIT) \
+		--build-arg RUNNER_IMAGE=alpine:3.16 \
 		--platform linux/amd64 \
-		-t osmosis-amd64 \
+		-t osmosis:local-amd64 \
 		--load \
 		-f Dockerfile .
 	$(DOCKER) rm -f osmobinary || true
-	$(DOCKER) create -ti --name osmobinary osmosis-amd64
+	$(DOCKER) create -ti --name osmobinary osmosis:local-amd64
 	$(DOCKER) cp osmobinary:/bin/osmosisd $(BUILDDIR)/osmosisd-linux-amd64
 	$(DOCKER) rm -f osmobinary
 
@@ -120,12 +123,15 @@ build-reproducible-arm64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
 		--build-arg GO_VERSION=$(GO_VERSION) \
+		--build-arg GIT_VERSION=$(VERSION) \
+		--build-arg GIT_COMMIT=$(COMMIT) \
+		--build-arg RUNNER_IMAGE=alpine:3.16 \
 		--platform linux/arm64 \
-		-t osmosis-arm64 \
+		-t osmosis:local-arm64 \
 		--load \
 		-f Dockerfile .
 	$(DOCKER) rm -f osmobinary || true
-	$(DOCKER) create -ti --name osmobinary osmosis-arm64
+	$(DOCKER) create -ti --name osmobinary osmosis:local-arm64
 	$(DOCKER) cp osmobinary:/bin/osmosisd $(BUILDDIR)/osmosisd-linux-arm64
 	$(DOCKER) rm -f osmobinary
 
@@ -316,9 +322,9 @@ e2e-remove-resources:
 ###                                Docker                                  ###
 ###############################################################################
 
-RUNNER_BASE_IMAGE_DISTROLESS := gcr.io/distroless/static
+RUNNER_BASE_IMAGE_DISTROLESS := gcr.io/distroless/static-debian11
 RUNNER_BASE_IMAGE_ALPINE := alpine:3.16
-RUNNER_BASE_IMAGE_NONROOT := gcr.io/distroless/static:nonroot
+RUNNER_BASE_IMAGE_NONROOT := gcr.io/distroless/static-debian11:nonroot
 
 docker-build:
 	@DOCKER_BUILDKIT=1 docker build \
@@ -399,7 +405,7 @@ localnet-stop:
 	@STATE="" docker-compose -f tests/localosmosis/docker-compose.yml down
 
 localnet-clean:
-	@rm -rfI $(HOME)/.osmosisd/
+	@rm -rfI $(HOME)/.osmosisd-local/
 
 localnet-state-export-init: localnet-state-export-clean localnet-state-export-build 
 

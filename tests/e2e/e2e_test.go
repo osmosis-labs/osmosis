@@ -142,12 +142,8 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	node, err := chainA.GetDefaultNode()
 	s.NoError(err)
 
-	supply, err := node.QueryTotalSupply()
+	osmoSupply, err := node.QuerySupplyOf("uosmo")
 	s.NoError(err)
-	osmoSupply := supply.AmountOf("uosmo")
-
-	// balance, err := node.QueryBalances(chainA.NodeConfigs[1].PublicAddress)
-	// s.NoError(err)
 
 	f, err := osmoSupply.ToDec().Float64()
 	s.NoError(err)
@@ -165,6 +161,8 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	fmt.Println(wd, projectDir)
 	err = copyFile(projectDir+"/x/ibc-rate-limit/bytecode/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
 	s.NoError(err)
+	// set LatestCodeId to 1 since we upload a contract in the upgrade handler for v13
+	chainA.LatestCodeId = 1
 	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
 	chainA.LatestCodeId += 1
 	node.InstantiateWasmContract(
@@ -215,7 +213,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 			if err != nil {
 				return false
 			}
-			return val != ""
+			return val == contracts[0]
 		},
 		1*time.Minute,
 		10*time.Millisecond,
@@ -389,9 +387,9 @@ func (s *IntegrationTestSuite) TestTWAP() {
 
 	// These must be equal because they are calculated over time ranges with the stable and equal spot price.
 	// There are potential rounding errors requiring us to approximate the comparison.
-	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsAB, twapFromAfterToNowAB, sdk.NewDecWithPrec(1, 3))
-	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsBC, twapFromAfterToNowBC, sdk.NewDecWithPrec(1, 3))
-	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsCA, twapFromAfterToNowCA, sdk.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsAB, twapFromAfterToNowAB, sdk.NewDecWithPrec(2, 3))
+	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsBC, twapFromAfterToNowBC, sdk.NewDecWithPrec(2, 3))
+	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsCA, twapFromAfterToNowCA, sdk.NewDecWithPrec(2, 3))
 
 	if !s.skipUpgrade {
 		// TODO: we should reduce the pruning time in the v11

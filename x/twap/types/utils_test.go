@@ -16,24 +16,22 @@ func TestMaxSpotPriceEquality(t *testing.T) {
 
 func TestGetAllUniqueDenomPairs(t *testing.T) {
 	tests := map[string]struct {
-		denoms       []string
-		wantedPairGT []string
-		wantedPairLT []string
-		panics       bool
+		denoms      []string
+		wantedPairs []DenomPair
+		panics      bool
 	}{
-		"basic":    {[]string{"A", "B"}, []string{"A"}, []string{"B"}, false},
-		"basicRev": {[]string{"B", "A"}, []string{"A"}, []string{"B"}, false},
+		"basic":    {[]string{"A", "B"}, []DenomPair{{"A", "B"}}, false},
+		"basicRev": {[]string{"B", "A"}, []DenomPair{{"A", "B"}}, false},
 		// AB > A
-		"prefixed": {[]string{"A", "AB"}, []string{"A"}, []string{"AB"}, false},
-		"basic-3":  {[]string{"A", "B", "C"}, []string{"A", "A", "B"}, []string{"B", "C", "C"}, false},
-		"panics":   {[]string{"A", "A"}, []string{}, []string{}, true},
+		"prefixed": {[]string{"A", "AB"}, []DenomPair{{"A", "AB"}}, false},
+		"basic-3":  {[]string{"A", "B", "C"}, []DenomPair{{"A", "B"}, {"A", "C"}, {"B", "C"}}, false},
+		"panics":   {[]string{"A", "A"}, []DenomPair{}, true},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			osmoassert.ConditionalPanic(t, tt.panics, func() {
-				pairGT, pairLT := GetAllUniqueDenomPairs(tt.denoms)
-				require.Equal(t, pairGT, tt.wantedPairGT)
-				require.Equal(t, pairLT, tt.wantedPairLT)
+				pairs := GetAllUniqueDenomPairs(tt.denoms)
+				require.Equal(t, pairs, tt.wantedPairs)
 			})
 		})
 	}

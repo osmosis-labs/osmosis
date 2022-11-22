@@ -53,6 +53,11 @@ service Query {
         "/osmosis/superfluid/v1beta1/connected_intermediary_account/{lock_id}";
   }
 
+  // Returns the amount of delegations of specific denom for all validators
+  rpc TotalDelegationByValidatorForDenom(
+      QueryTotalDelegationByValidatorForDenomRequest)
+      returns (QueryTotalDelegationByValidatorForDenomResponse) {}
+
   // Returns the total amount of osmo superfluidly staked.
   // Response is denominated in uosmo.
   rpc TotalSuperfluidDelegations(TotalSuperfluidDelegationsRequest)
@@ -153,6 +158,24 @@ message ConnectedIntermediaryAccountResponse {
   SuperfluidIntermediaryAccountInfo account = 1;
 }
 
+message QueryTotalDelegationByValidatorForDenomRequest { string denom = 1; }
+message QueryTotalDelegationByValidatorForDenomResponse {
+  repeated Delegations assets = 1 [ (gogoproto.nullable) = false ];
+}
+
+message Delegations {
+  string val_addr = 1;
+  string amount_sfsd = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"amount_sfsd\"",
+    (gogoproto.nullable) = false
+  ];
+  string osmo_equivalent = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"osmo_equivalent\"",
+    (gogoproto.nullable) = false
+  ];
+}
 message TotalSuperfluidDelegationsRequest {}
 
 message TotalSuperfluidDelegationsResponse {

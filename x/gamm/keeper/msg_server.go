@@ -18,12 +18,6 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	}
 }
 
-// func NewStableswapMsgServerImpl(keeper *Keeper) stableswap.MsgServer {
-// 	return &msgServer{
-// 		keeper: keeper,
-// 	}
-// }
-
 var (
 	_ types.MsgServer = msgServer{}
 	// _ stableswap.MsgServer = msgServer{}

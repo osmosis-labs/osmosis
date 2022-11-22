@@ -4,6 +4,7 @@ import (
 	gocontext "context"
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
@@ -24,6 +25,19 @@ func (s *QueryTestSuite) SetupSuite() {
 }
 
 func (s *QueryTestSuite) TestQueriesNeverAlterState() {
+	var (
+		fooDenom   = apptesting.DefaultPoolAssets[0].Token.Denom
+		barDenom   = apptesting.DefaultPoolAssets[1].Token.Denom
+		bazDenom   = apptesting.DefaultPoolAssets[2].Token.Denom
+		uosmoDenom = apptesting.DefaultPoolAssets[3].Token.Denom
+
+		basicValidTokensIn = sdk.NewCoins(
+			sdk.NewCoin(fooDenom, sdk.OneInt()),
+			sdk.NewCoin(barDenom, sdk.OneInt()),
+			sdk.NewCoin(bazDenom, sdk.OneInt()),
+			sdk.NewCoin(uosmoDenom, sdk.OneInt()))
+	)
+
 	testCases := []struct {
 		name   string
 		query  string
@@ -63,7 +77,7 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 		{
 			"Query spot price",
 			"/osmosis.gamm.v1beta1.Query/SpotPrice",
-			&types.QuerySpotPriceRequest{PoolId: 1, BaseAssetDenom: "foo", QuoteAssetDenom: "bar"},
+			&types.QuerySpotPriceRequest{PoolId: 1, BaseAssetDenom: fooDenom, QuoteAssetDenom: barDenom},
 			&types.QuerySpotPriceResponse{},
 		},
 		{
@@ -83,6 +97,24 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 			"/osmosis.gamm.v1beta1.Query/TotalShares",
 			&types.QueryTotalSharesRequest{PoolId: 1},
 			&types.QueryTotalSharesResponse{},
+		},
+		{
+			"Query estimate for join pool shares with no swap",
+			"/osmosis.gamm.v1beta1.Query/CalcJoinPoolNoSwapShares",
+			&types.QueryCalcJoinPoolNoSwapSharesRequest{PoolId: 1, TokensIn: basicValidTokensIn},
+			&types.QueryCalcJoinPoolNoSwapSharesResponse{},
+		},
+		{
+			"Query estimate for join pool shares with no swap",
+			"/osmosis.gamm.v1beta1.Query/CalcJoinPoolShares",
+			&types.QueryCalcJoinPoolSharesRequest{PoolId: 1, TokensIn: basicValidTokensIn},
+			&types.QueryCalcJoinPoolSharesResponse{},
+		},
+		{
+			"Query exit pool coins from shares",
+			"/osmosis.gamm.v1beta1.Query/CalcExitPoolCoinsFromShares",
+			&types.QueryCalcExitPoolCoinsFromSharesRequest{PoolId: 1, ShareInAmount: sdk.OneInt()},
+			&types.QueryCalcExitPoolCoinsFromSharesResponse{},
 		},
 	}
 

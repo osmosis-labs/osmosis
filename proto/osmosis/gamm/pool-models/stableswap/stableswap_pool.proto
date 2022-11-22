@@ -65,8 +65,8 @@ message Pool {
   ];
 
   // for calculation amognst assets with different precisions
-  repeated uint64 scaling_factor = 7
-      [ (gogoproto.moretags) = "yaml:\"stableswap_scaling_factor\"" ];
+  repeated uint64 scaling_factors = 7
+      [ (gogoproto.moretags) = "yaml:\"stableswap_scaling_factors\"" ];
   // scaling_factor_controller is the address can adjust pool scaling factors
   string scaling_factor_controller = 8
       [ (gogoproto.moretags) = "yaml:\"scaling_factor_controller\"" ];

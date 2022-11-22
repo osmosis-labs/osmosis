@@ -9,12 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 func TestSigFigRound(t *testing.T) {
 	// sigfig = 8
-	tenToSigFig := gammtypes.SpotPriceSigFigs
+	tenToSigFig := sdk.NewDec(10).Power(8).TruncateInt()
 
 	testCases := []struct {
 		name           string

@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	gamm "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
@@ -92,6 +93,18 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 
 			suite.createBalancerPoolsFromCoins(tc.poolCoins)
 
+			// if we expect a reduced fee to apply, we set both pools in DistrInfo to replicate it being an incentivized pool
+			// each pool has three gauges, hence 6 gauges for 2 pools
+			if tc.reducedFeeApplied {
+				test := poolincentivestypes.DistrInfo{
+					TotalWeight: sdk.NewInt(6),
+					Records: []poolincentivestypes.DistrRecord{
+						{GaugeId: 1, Weight: sdk.OneInt()}, {GaugeId: 2, Weight: sdk.OneInt()}, {GaugeId: 3, Weight: sdk.OneInt()},
+						{GaugeId: 4, Weight: sdk.OneInt()}, {GaugeId: 5, Weight: sdk.OneInt()}, {GaugeId: 6, Weight: sdk.OneInt()}},
+				}
+				suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, test)
+			}
+
 			tokenOut, err := swaprouterKeeper.RouteExactAmountIn(suite.Ctx, suite.TestAccs[0], tc.routes, tc.tokenIn, tc.tokenOutMinAmount)
 
 			if tc.expectError {
@@ -152,6 +165,18 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 			swaprouterKeeper := suite.App.SwapRouterKeeper
 
 			suite.createBalancerPoolsFromCoins(tc.poolCoins)
+
+			// if we expect a reduced fee to apply, we set both pools in DistrInfo to replicate it being an incentivized pool
+			// each pool has three gauges, hence 6 gauges for 2 pools
+			if tc.reducedFeeApplied {
+				test := poolincentivestypes.DistrInfo{
+					TotalWeight: sdk.NewInt(2),
+					Records: []poolincentivestypes.DistrRecord{
+						{GaugeId: 1, Weight: sdk.OneInt()}, {GaugeId: 2, Weight: sdk.OneInt()}, {GaugeId: 3, Weight: sdk.OneInt()},
+						{GaugeId: 4, Weight: sdk.OneInt()}, {GaugeId: 5, Weight: sdk.OneInt()}, {GaugeId: 6, Weight: sdk.OneInt()}},
+				}
+				suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, test)
+			}
 
 			tokenIn, err := swaprouterKeeper.RouteExactAmountOut(suite.Ctx, suite.TestAccs[0], tc.routes, tc.tokenInMaxAmount, tc.tokenOut)
 

@@ -31,6 +31,8 @@ import (
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v13/x/epochs"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm"
+	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
+	ibc_rate_limit "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit"
 	"github.com/osmosis-labs/osmosis/v13/x/incentives"
 	"github.com/osmosis-labs/osmosis/v13/x/lockup"
 	"github.com/osmosis-labs/osmosis/v13/x/mint"
@@ -42,6 +44,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/twapmodule"
 	"github.com/osmosis-labs/osmosis/v13/x/txfees"
+	valsetprefmodule "github.com/osmosis-labs/osmosis/v13/x/valset-pref/valpref-module"
 )
 
 // AppModuleBasics returns ModuleBasics for the module BasicManager.
@@ -88,6 +91,9 @@ var AppModuleBasics = []module.AppModuleBasic{
 	epochs.AppModuleBasic{},
 	superfluid.AppModuleBasic{},
 	tokenfactory.AppModuleBasic{},
+	valsetprefmodule.AppModuleBasic{},
 	wasm.AppModuleBasic{},
 	ica.AppModuleBasic{},
+	ibc_hooks.AppModuleBasic{},
+	ibc_rate_limit.AppModuleBasic{},
 }

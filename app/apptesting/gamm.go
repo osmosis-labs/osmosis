@@ -5,6 +5,7 @@ import (
 
 	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	swaprouterkeeper "github.com/osmosis-labs/osmosis/v13/x/swaprouter"
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
@@ -15,6 +16,37 @@ var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
 	sdk.NewCoin("foo", sdk.NewInt(10000000)),
 	sdk.NewCoin("bar", sdk.NewInt(10000000)),
 	sdk.NewCoin("baz", sdk.NewInt(10000000)),
+)
+
+var DefaultPoolAssets = []balancer.PoolAsset{
+	{
+		Weight: sdk.NewInt(100),
+		Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
+	},
+	{
+		Weight: sdk.NewInt(200),
+		Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
+	},
+	{
+		Weight: sdk.NewInt(300),
+		Token:  sdk.NewCoin("baz", sdk.NewInt(5000000)),
+	},
+	{
+		Weight: sdk.NewInt(400),
+		Token:  sdk.NewCoin("uosmo", sdk.NewInt(5000000)),
+	},
+}
+
+var DefaultStableswapLiquidity = sdk.NewCoins(
+	sdk.NewCoin("foo", sdk.NewInt(10000000)),
+	sdk.NewCoin("bar", sdk.NewInt(10000000)),
+	sdk.NewCoin("baz", sdk.NewInt(10000000)),
+)
+
+var ImbalancedStableswapLiquidity = sdk.NewCoins(
+	sdk.NewCoin("foo", sdk.NewInt(10_000_000_000)),
+	sdk.NewCoin("bar", sdk.NewInt(20_000_000_000)),
+	sdk.NewCoin("baz", sdk.NewInt(30_000_000_000)),
 )
 
 // PrepareBalancerPoolWithCoins returns a balancer pool
@@ -65,30 +97,42 @@ func (s *KeeperTestHelper) PrepareBalancerPool() uint64 {
 	return poolId
 }
 
+func (s *KeeperTestHelper) PrepareBasicStableswapPool() uint64 {
+	// Mint some assets to the account.
+	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
+
+	params := stableswap.PoolParams{
+		SwapFee: sdk.NewDec(0),
+		ExitFee: sdk.NewDec(0),
+	}
+
+	msg := stableswap.NewMsgCreateStableswapPool(s.TestAccs[0], params, DefaultStableswapLiquidity, []uint64{}, "")
+	poolId, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, msg)
+	s.NoError(err)
+	return poolId
+}
+
+func (s *KeeperTestHelper) PrepareImbalancedStableswapPool() uint64 {
+	// Mint some assets to the account.
+	s.FundAcc(s.TestAccs[0], ImbalancedStableswapLiquidity)
+
+	params := stableswap.PoolParams{
+		SwapFee: sdk.NewDec(0),
+		ExitFee: sdk.NewDec(0),
+	}
+
+	msg := stableswap.NewMsgCreateStableswapPool(s.TestAccs[0], params, ImbalancedStableswapLiquidity, []uint64{1, 1, 1}, "")
+	poolId, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, msg)
+	s.NoError(err)
+	return poolId
+}
+
 // PrepareBalancerPoolWithPoolParams sets up a Balancer pool with poolParams.
 func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer.PoolParams) uint64 {
 	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
 
-	poolAssets := []balancer.PoolAsset{
-		{
-			Weight: sdk.NewInt(100),
-			Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
-		},
-		{
-			Weight: sdk.NewInt(200),
-			Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
-		},
-		{
-			Weight: sdk.NewInt(300),
-			Token:  sdk.NewCoin("baz", sdk.NewInt(5000000)),
-		},
-		{
-			Weight: sdk.NewInt(400),
-			Token:  sdk.NewCoin("uosmo", sdk.NewInt(5000000)),
-		},
-	}
-	msg := balancer.NewMsgCreateBalancerPool(s.TestAccs[0], poolParams, poolAssets, "")
+	msg := balancer.NewMsgCreateBalancerPool(s.TestAccs[0], poolParams, DefaultPoolAssets, "")
 	poolId, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, msg)
 	s.NoError(err)
 	return poolId

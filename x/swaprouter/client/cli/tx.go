@@ -3,6 +3,8 @@ package cli
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	flag "github.com/spf13/pflag"
@@ -15,6 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
@@ -187,7 +190,7 @@ func NewCreatePoolCmd() *cobra.Command {
 }
 
 func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	pool, err := parseCreatePoolFlags(fs)
+	pool, err := parseCreateBalancerPoolFlags(fs)
 	if err != nil {
 		return txf, nil, fmt.Errorf("failed to parse pool: %w", err)
 	}
@@ -283,4 +286,75 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 	}
 
 	return txf, msg, nil
+}
+
+// Apologies to whoever has to touch this next, this code is horrendous
+func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	flags, err := parseCreateStableswapPoolFlags(fs)
+	if err != nil {
+		return txf, nil, fmt.Errorf("failed to parse pool: %w", err)
+	}
+
+	deposit, err := ParseCoinsNoSort(flags.InitialDeposit)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	swapFee, err := sdk.NewDecFromStr(flags.SwapFee)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	exitFee, err := sdk.NewDecFromStr(flags.ExitFee)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	poolParams := &stableswap.PoolParams{
+		SwapFee: swapFee,
+		ExitFee: exitFee,
+	}
+
+	scalingFactors := []uint64{}
+	trimmedSfString := strings.Trim(flags.ScalingFactors, "[] {}")
+	if len(trimmedSfString) > 0 {
+		ints := strings.Split(trimmedSfString, ",")
+		for _, i := range ints {
+			u, err := strconv.ParseUint(i, 10, 64)
+			if err != nil {
+				return txf, nil, err
+			}
+			scalingFactors = append(scalingFactors, u)
+		}
+		if len(scalingFactors) != len(deposit) {
+			return txf, nil, fmt.Errorf("number of scaling factors doesn't match number of assets")
+		}
+	}
+
+	msg := &stableswap.MsgCreateStableswapPool{
+		Sender:                  clientCtx.GetFromAddress().String(),
+		PoolParams:              poolParams,
+		InitialPoolLiquidity:    deposit,
+		ScalingFactors:          scalingFactors,
+		ScalingFactorController: flags.ScalingFactorController,
+		FuturePoolGovernor:      flags.FutureGovernor,
+	}
+
+	return txf, msg, nil
+}
+
+// ParseCoinsNoSort parses coins from coinsStr but does not sort them.
+// Returns error if parsing fails.
+func ParseCoinsNoSort(coinsStr string) (sdk.Coins, error) {
+	coinStrs := strings.Split(coinsStr, ",")
+	decCoins := make(sdk.DecCoins, len(coinStrs))
+	for i, coinStr := range coinStrs {
+		coin, err := sdk.ParseDecCoin(coinStr)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
+
+		decCoins[i] = coin
+	}
+	return sdk.NormalizeCoins(decCoins), nil
 }
