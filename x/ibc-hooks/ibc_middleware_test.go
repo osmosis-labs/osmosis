@@ -3,7 +3,11 @@ package ibc_hooks_test
 import (
 	"encoding/json"
 	"fmt"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
+	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
@@ -196,7 +200,7 @@ func (suite *HooksTestSuite) receivePacketWithSequence(receiver, memo string, pr
 func (suite *HooksTestSuite) TestRecvTransferWithMetadata() {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/echo.wasm")
-	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}")
+	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", 1)
 
 	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"echo": {"msg": "test"} } } }`, addr))
 	ackStr := string(ackBytes)
@@ -212,7 +216,7 @@ func (suite *HooksTestSuite) TestRecvTransferWithMetadata() {
 func (suite *HooksTestSuite) TestFundsAreTransferredToTheContract() {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/echo.wasm")
-	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}")
+	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", 1)
 
 	// Check that the contract has no funds
 	localDenom := osmoutils.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
@@ -238,7 +242,7 @@ func (suite *HooksTestSuite) TestFundsAreTransferredToTheContract() {
 func (suite *HooksTestSuite) TestFundsAreReturnedOnFailedContractExec() {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/echo.wasm")
-	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}")
+	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", 1)
 
 	// Check that the contract has no funds
 	localDenom := osmoutils.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
@@ -306,7 +310,7 @@ func (suite *HooksTestSuite) TestPacketsThatShouldBeSkipped() {
 func (suite *HooksTestSuite) TestFundTracking() {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/counter.wasm")
-	addr := suite.chainA.InstantiateContract(&suite.Suite, `{"count": 0}`)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, `{"count": 0}`, 1)
 
 	// Check that the contract has no funds
 	localDenom := osmoutils.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
@@ -345,4 +349,136 @@ func (suite *HooksTestSuite) TestFundTracking() {
 	// Check that the token has now been transferred to the contract
 	balance = suite.chainA.GetOsmosisApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
 	suite.Require().Equal(sdk.NewInt(2), balance.Amount)
+}
+
+// This is a copy of the SetupGammPoolsWithBondDenomMultiplier from the  test helpers, but using chainA instead of the default
+func (suite *HooksTestSuite) SetupPools(multipliers []sdk.Dec) []gammtypes.PoolI {
+	acc1 := suite.chainA.SenderAccount.GetAddress()
+	bondDenom := suite.chainA.GetOsmosisApp().StakingKeeper.BondDenom(suite.chainA.GetContext())
+
+	pools := []gammtypes.PoolI{}
+	for index, multiplier := range multipliers {
+		token := fmt.Sprintf("token%d", index)
+		uosmoAmount := gammtypes.InitPoolSharesSupply.ToDec().Mul(multiplier).RoundInt()
+
+		var (
+			defaultFutureGovernor = ""
+
+			// pool assets
+			defaultFooAsset = balancer.PoolAsset{
+				Weight: sdk.NewInt(100),
+				Token:  sdk.NewCoin(bondDenom, uosmoAmount),
+			}
+			defaultBarAsset = balancer.PoolAsset{
+				Weight: sdk.NewInt(100),
+				Token:  sdk.NewCoin(token, sdk.NewInt(10000)),
+			}
+
+			poolAssets = []balancer.PoolAsset{defaultFooAsset, defaultBarAsset}
+		)
+
+		poolParams := balancer.PoolParams{
+			SwapFee: sdk.NewDecWithPrec(1, 2),
+			ExitFee: sdk.NewDecWithPrec(1, 2),
+		}
+		msg := balancer.NewMsgCreateBalancerPool(acc1, poolParams, poolAssets, defaultFutureGovernor)
+
+		poolId, err := suite.chainA.GetOsmosisApp().GAMMKeeper.CreatePool(suite.chainA.GetContext(), msg)
+		suite.Require().NoError(err)
+
+		pool, err := suite.chainA.GetOsmosisApp().GAMMKeeper.GetPoolAndPoke(suite.chainA.GetContext(), poolId)
+		suite.Require().NoError(err)
+
+		pools = append(pools, pool)
+	}
+
+	return pools
+}
+
+func (suite *HooksTestSuite) SetupCrosschainSwaps() (sdk.AccAddress, sdk.AccAddress) {
+	owner := suite.chainA.SenderAccount.GetAddress()
+
+	// Fund the account with some uosmo and some stake
+	bankKeeper := suite.chainA.GetOsmosisApp().BankKeeper
+	i, ok := sdk.NewIntFromString("20000000000000000000000")
+	suite.Require().True(ok)
+	amounts := sdk.NewCoins(sdk.NewCoin("uosmo", i), sdk.NewCoin("stake", i), sdk.NewCoin("token0", i), sdk.NewCoin("token1", i))
+	err := bankKeeper.MintCoins(suite.chainA.GetContext(), minttypes.ModuleName, amounts)
+	suite.Require().NoError(err)
+	err = bankKeeper.SendCoinsFromModuleToAccount(suite.chainA.GetContext(), minttypes.ModuleName, owner, amounts)
+	suite.Require().NoError(err)
+
+	suite.SetupPools([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+
+	// Setup contract
+	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/swaprouter.wasm")
+	swaprouterAddr := suite.chainA.InstantiateContract(&suite.Suite,
+		fmt.Sprintf(`{"owner": "%s"}`, owner), 1)
+	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/crosschain_swaps.wasm")
+	crosschainAddr := suite.chainA.InstantiateContract(&suite.Suite,
+		fmt.Sprintf(`{"swap_contract": "%s"}`, swaprouterAddr), 2)
+
+	osmosisApp := suite.chainA.GetOsmosisApp()
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
+
+	ctx := suite.chainA.GetContext()
+
+	//ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, msg []byte, coins sdk.Coins
+	msg := `{"set_route":{"input_denom":"token0","output_denom":"token1","pool_route":[{"pool_id":"1","token_out_denom":"stake"},{"pool_id":"2","token_out_denom":"token1"}]}}`
+	_, err = contractKeeper.Execute(ctx, swaprouterAddr, owner, []byte(msg), sdk.NewCoins())
+	suite.Require().NoError(err)
+
+	// Move forward one block
+	suite.chainA.NextBlock()
+	suite.chainA.Coordinator.IncrementTime()
+
+	// Update both clients
+	err = suite.path.EndpointA.UpdateClient()
+	suite.Require().NoError(err)
+	err = suite.path.EndpointB.UpdateClient()
+	suite.Require().NoError(err)
+
+	return swaprouterAddr, crosschainAddr
+
+}
+
+func (suite *HooksTestSuite) TestCrosschainSwaps() {
+	owner := suite.chainA.SenderAccount.GetAddress()
+	_, crosschainAddr := suite.SetupCrosschainSwaps()
+	osmosisApp := suite.chainA.GetOsmosisApp()
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
+
+	balanceSender := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), owner, "token0")
+	denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "token1"))
+	token1IBC := denomTrace.IBCDenom()
+
+	receiver := suite.chainB.SenderAccount.GetAddress()
+	balanceReceiver := suite.chainB.GetOsmosisApp().BankKeeper.GetBalance(suite.chainB.GetContext(), receiver, token1IBC)
+	suite.Require().Equal(int64(0), balanceReceiver.Amount.Int64())
+
+	ctx := suite.chainA.GetContext()
+
+	msg := fmt.Sprintf(`{"osmosis_swap":{"input_coin":{"denom":"token0","amount":"1000"},"output_denom":"token1","slipage":{"max_slipage_percentage":"20"},"receiver":"%s","channel":"channel-0","failed_delivery":null}}`,
+		suite.chainB.SenderAccount.GetAddress(),
+	)
+	res, err := contractKeeper.Execute(ctx, crosschainAddr, owner, []byte(msg), sdk.NewCoins(sdk.NewCoin("token0", sdk.NewInt(1000))))
+	suite.Require().NoError(err)
+	fmt.Println(string(res))
+
+	balanceSender2 := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), owner, "token0")
+	suite.Require().Equal(int64(1000), balanceSender.Amount.Sub(balanceSender2.Amount).Int64())
+
+	// Move forward one block
+	suite.chainA.NextBlock()
+	suite.chainA.Coordinator.IncrementTime()
+
+	// Update both clients
+	err = suite.path.EndpointA.UpdateClient()
+	suite.Require().NoError(err)
+	err = suite.path.EndpointB.UpdateClient()
+	suite.Require().NoError(err)
+
+	balanceReceiver2 := suite.chainB.GetOsmosisApp().BankKeeper.GetBalance(suite.chainB.GetContext(), receiver, token1IBC)
+	suite.Require().Greater(int64(0), balanceReceiver2.Amount.Int64())
+
 }
