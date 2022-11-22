@@ -13,6 +13,7 @@ import (
 type Querier struct {
 }
 
+// nolint: unused
 var sdkIntMaxValue = sdk.NewInt(0)
 
 func init() {
