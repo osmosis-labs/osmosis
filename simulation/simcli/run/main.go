@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/osmosis-labs/osmosis/v13/client/v2/autocli"
+	"cosmossdk.io/client/v2/autocli"
 
 	simcli "github.com/osmosis-labs/osmosis/v13/simulation/simcli"
 )

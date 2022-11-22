@@ -42,14 +42,18 @@ type contextKey string
 const grpcUrlKey = contextKey("grpc")
 
 func RootCmd(appOptions AppOptions) (*cobra.Command, error) {
+
 	builder := &Builder{
 		GetClientConn: func(ctx context.Context) (grpc.ClientConnInterface, error) {
 			grpcUrl, ok := ctx.Value(grpcUrlKey).(string)
 			if !ok || grpcUrl == "" {
 				return nil, fmt.Errorf("no gRPC endpoint configured")
 			}
-
-			return grpc.Dial(grpcUrl)
+			conn, err := grpc.Dial(grpcUrl)
+			if err != nil {
+				return nil, err
+			}
+			return conn, nil
 		},
 	}
 

@@ -4,7 +4,7 @@ package modulev1
 import (
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
-	_ "github.com/osmosis-labs/osmosis/api/osmosis/app/v1alpha1"
+	// _ "github.com/osmosis-labs/osmosis/api/osmosis/app/v1alpha1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
