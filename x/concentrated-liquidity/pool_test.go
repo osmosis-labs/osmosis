@@ -3,21 +3,21 @@ package concentrated_liquidity_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cl "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
-	cltypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
 func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	currPrice := sdk.NewDec(5000)
 	currSqrtPrice, err := currPrice.ApproxSqrt() // 70.710678118654752440
 	s.Require().NoError(err)
-	currTick := cl.PriceToTick(currPrice) // 85176
+	currTick := math.PriceToTick(currPrice) // 85176
 	lowerPrice := sdk.NewDec(4545)
 	s.Require().NoError(err)
-	lowerTick := cl.PriceToTick(lowerPrice) // 84222
+	lowerTick := math.PriceToTick(lowerPrice) // 84222
 	upperPrice := sdk.NewDec(5500)
 	s.Require().NoError(err)
-	upperTick := cl.PriceToTick(upperPrice) // 86129
+	upperTick := math.PriceToTick(upperPrice) // 86129
 
 	defaultAmt0 := sdk.NewInt(1000000)
 	defaultAmt1 := sdk.NewInt(5000000000)
@@ -164,10 +164,10 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(5500)
 				s.Require().NoError(err)
-				newLowerTick := cl.PriceToTick(newLowerPrice) // 86129
+				newLowerTick := math.PriceToTick(newLowerPrice) // 86129
 				newUpperPrice := sdk.NewDec(6250)
 				s.Require().NoError(err)
-				newUpperTick := cl.PriceToTick(newUpperPrice) // 87407
+				newUpperTick := math.PriceToTick(newUpperPrice) // 87407
 
 				// add position two with the new price range above
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
@@ -213,10 +213,10 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(4000)
 				s.Require().NoError(err)
-				newLowerTick := cl.PriceToTick(newLowerPrice) // 82944
+				newLowerTick := math.PriceToTick(newLowerPrice) // 82944
 				newUpperPrice := sdk.NewDec(4545)
 				s.Require().NoError(err)
-				newUpperTick := cl.PriceToTick(newUpperPrice) // 84222
+				newUpperTick := math.PriceToTick(newUpperPrice) // 84222
 
 				// add position two with the new price range above
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
@@ -262,10 +262,10 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(5001)
 				s.Require().NoError(err)
-				newLowerTick := cl.PriceToTick(newLowerPrice) // 85178
+				newLowerTick := math.PriceToTick(newLowerPrice) // 85178
 				newUpperPrice := sdk.NewDec(6250)
 				s.Require().NoError(err)
-				newUpperTick := cl.PriceToTick(newUpperPrice) // 87407
+				newUpperTick := math.PriceToTick(newUpperPrice) // 87407
 
 				// add position two with the new price range above
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
@@ -305,10 +305,10 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(5001)
 				s.Require().NoError(err)
-				newLowerTick := cl.PriceToTick(newLowerPrice) // 85178
+				newLowerTick := math.PriceToTick(newLowerPrice) // 85178
 				newUpperPrice := sdk.NewDec(6250)
 				s.Require().NoError(err)
-				newUpperTick := cl.PriceToTick(newUpperPrice) // 87407
+				newUpperTick := math.PriceToTick(newUpperPrice) // 87407
 
 				// add position two with the new price range above
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
@@ -354,10 +354,10 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(4000)
 				s.Require().NoError(err)
-				newLowerTick := cl.PriceToTick(newLowerPrice) // 82944
+				newLowerTick := math.PriceToTick(newLowerPrice) // 82944
 				newUpperPrice := sdk.NewDec(4999)
 				s.Require().NoError(err)
-				newUpperTick := cl.PriceToTick(newUpperPrice) // 85174
+				newUpperTick := math.PriceToTick(newUpperPrice) // 85174
 
 				// add position two with the new price range above
 				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
@@ -397,10 +397,10 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(4000)
 				s.Require().NoError(err)
-				newLowerTick := cl.PriceToTick(newLowerPrice) // 82944
+				newLowerTick := math.PriceToTick(newLowerPrice) // 82944
 				newUpperPrice := sdk.NewDec(4999)
 				s.Require().NoError(err)
-				newUpperTick := cl.PriceToTick(newUpperPrice) // 85174
+				newUpperTick := math.PriceToTick(newUpperPrice) // 85174
 
 				// add position two with the new price range above
 				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
@@ -447,10 +447,10 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(5501)
 				s.Require().NoError(err)
-				newLowerTick := cl.PriceToTick(newLowerPrice) // 86131
+				newLowerTick := math.PriceToTick(newLowerPrice) // 86131
 				newUpperPrice := sdk.NewDec(6250)
 				s.Require().NoError(err)
-				newUpperTick := cl.PriceToTick(newUpperPrice) // 87407
+				newUpperTick := math.PriceToTick(newUpperPrice) // 87407
 
 				// add position two with the new price range above
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
@@ -527,32 +527,40 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			s.Require().NoError(err)
 
 			// add positions
-			test.addPositions(s.Ctx, pool.Id)
+			test.addPositions(s.Ctx, pool.GetId())
 
-			tokenIn, tokenOut, updatedTick, updatedLiquidity, _, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(
+			// execute internal swap function
+			tokenOut, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
 				s.Ctx,
 				test.tokenIn, test.tokenOutDenom,
-				swapFee, test.priceLimit, pool.Id)
+				swapFee, test.priceLimit, pool.GetId())
+
 			if test.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
 
-				s.Require().Equal(test.expectedTokenIn.String(), tokenIn.String())
-				s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
-				s.Require().Equal(test.expectedTick.String(), updatedTick.String())
+				pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+				s.Require().NoError(err)
 
+				// check that we produced the same token out from the swap function that we expected
+				s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
+
+				// check that the pool's current tick was updated correctly
+				s.Require().Equal(test.expectedTick.String(), pool.GetCurrentTick().String())
+
+				// the following is needed to get the expected liquidity to later compare to what the pool was updated to
 				if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
 					test.newLowerPrice = lowerPrice
 					test.newUpperPrice = upperPrice
 				}
 
-				newLowerTick := cl.PriceToTick(test.newLowerPrice)
-				newUpperTick := cl.PriceToTick(test.newUpperPrice)
+				newLowerTick := math.PriceToTick(test.newLowerPrice)
+				newUpperTick := math.PriceToTick(test.newUpperPrice)
 
-				lowerSqrtPrice, err := cl.TickToSqrtPrice(newLowerTick)
+				lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick)
 				s.Require().NoError(err)
-				upperSqrtPrice, err := cl.TickToSqrtPrice(newUpperTick)
+				upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick)
 				s.Require().NoError(err)
 
 				if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
@@ -560,8 +568,12 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 					test.poolLiqAmount1 = defaultAmt1
 				}
 
-				expectedLiquidity := cl.GetLiquidityFromAmounts(currSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
-				s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
+				expectedLiquidity := math.GetLiquidityFromAmounts(currSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
+				// check that the pools liquidity was updated correctly
+				s.Require().Equal(expectedLiquidity.String(), pool.GetLiquidity().String())
+
+				// TODO: need to figure out a good way to test that the currentSqrtPrice that the pool is set to makes sense
+				// right now we calculate this value through iterations, so unsure how to do this here / if its needed
 			}
 		})
 
@@ -572,13 +584,13 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 	currPrice := sdk.NewDec(5000)
 	currSqrtPrice, err := currPrice.ApproxSqrt() // 70.710678118654752440
 	s.Require().NoError(err)
-	currTick := cl.PriceToTick(currPrice) // 85176
+	currTick := math.PriceToTick(currPrice) // 85176
 	lowerPrice := sdk.NewDec(4545)
 	s.Require().NoError(err)
-	lowerTick := cl.PriceToTick(lowerPrice) // 84222
+	lowerTick := math.PriceToTick(lowerPrice) // 84222
 	upperPrice := sdk.NewDec(5500)
 	s.Require().NoError(err)
-	upperTick := cl.PriceToTick(upperPrice) // 86129
+	upperTick := math.PriceToTick(upperPrice) // 86129
 
 	defaultAmt0 := sdk.NewInt(1000000)
 	defaultAmt1 := sdk.NewInt(5000000000)
@@ -686,10 +698,10 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(5500)
 				s.Require().NoError(err)
-				newLowerTick := cl.PriceToTick(newLowerPrice) // 86129
+				newLowerTick := math.PriceToTick(newLowerPrice) // 86129
 				newUpperPrice := sdk.NewDec(6250)
 				s.Require().NoError(err)
-				newUpperTick := cl.PriceToTick(newUpperPrice) // 87407
+				newUpperTick := math.PriceToTick(newUpperPrice) // 87407
 
 				// add position two with the new price range above
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
@@ -720,10 +732,10 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(4000)
 				s.Require().NoError(err)
-				newLowerTick := cl.PriceToTick(newLowerPrice) // 82944
+				newLowerTick := math.PriceToTick(newLowerPrice) // 82944
 				newUpperPrice := sdk.NewDec(4545)
 				s.Require().NoError(err)
-				newUpperTick := cl.PriceToTick(newUpperPrice) // 84222
+				newUpperTick := math.PriceToTick(newUpperPrice) // 84222
 
 				// add position two with the new price range above
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
@@ -754,10 +766,10 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(5001)
 				s.Require().NoError(err)
-				newLowerTick := cl.PriceToTick(newLowerPrice) // 85178
+				newLowerTick := math.PriceToTick(newLowerPrice) // 85178
 				newUpperPrice := sdk.NewDec(6250)
 				s.Require().NoError(err)
-				newUpperTick := cl.PriceToTick(newUpperPrice) // 87407
+				newUpperTick := math.PriceToTick(newUpperPrice) // 87407
 
 				// add position two with the new price range above
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
@@ -780,10 +792,10 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(5001)
 				s.Require().NoError(err)
-				newLowerTick := cl.PriceToTick(newLowerPrice) // 85178
+				newLowerTick := math.PriceToTick(newLowerPrice) // 85178
 				newUpperPrice := sdk.NewDec(6250)
 				s.Require().NoError(err)
-				newUpperTick := cl.PriceToTick(newUpperPrice) // 87407
+				newUpperTick := math.PriceToTick(newUpperPrice) // 87407
 
 				// add position two with the new price range above
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
@@ -812,10 +824,10 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(4000)
 				s.Require().NoError(err)
-				newLowerTick := cl.PriceToTick(newLowerPrice) // 82944
+				newLowerTick := math.PriceToTick(newLowerPrice) // 82944
 				newUpperPrice := sdk.NewDec(4999)
 				s.Require().NoError(err)
-				newUpperTick := cl.PriceToTick(newUpperPrice) // 85174
+				newUpperTick := math.PriceToTick(newUpperPrice) // 85174
 
 				// add position two with the new price range above
 				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
@@ -838,10 +850,10 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(4000)
 				s.Require().NoError(err)
-				newLowerTick := cl.PriceToTick(newLowerPrice) // 82944
+				newLowerTick := math.PriceToTick(newLowerPrice) // 82944
 				newUpperPrice := sdk.NewDec(4999)
 				s.Require().NoError(err)
-				newUpperTick := cl.PriceToTick(newUpperPrice) // 85174
+				newUpperTick := math.PriceToTick(newUpperPrice) // 85174
 
 				// add position two with the new price range above
 				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
@@ -870,10 +882,10 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(5501)
 				s.Require().NoError(err)
-				newLowerTick := cl.PriceToTick(newLowerPrice) // 86131
+				newLowerTick := math.PriceToTick(newLowerPrice) // 86131
 				newUpperPrice := sdk.NewDec(6250)
 				s.Require().NoError(err)
-				newUpperTick := cl.PriceToTick(newUpperPrice) // 87407
+				newUpperTick := math.PriceToTick(newUpperPrice) // 87407
 
 				// add position two with the new price range above
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[2], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
@@ -937,24 +949,25 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 			s.Require().NoError(err)
 
 			// add positions
-			test.addPositions(s.Ctx, pool.Id)
+			test.addPositions(s.Ctx, pool.GetId())
 
 			// execute internal swap function
 			tokenOut, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
 				s.Ctx,
 				test.tokenIn, test.tokenOutDenom,
-				swapFee, test.priceLimit, pool.Id)
+				swapFee, test.priceLimit, pool.GetId())
 			if test.expectErr {
 				s.Require().Error(err)
-
-				pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolbyId(s.Ctx, pool.Id)
+			} else {
 				s.Require().NoError(err)
 
-				// check that we produced the same token out from the swap function that we expected
-				s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
+				pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+				s.Require().NoError(err)
 
 				// check that the pool's current tick was updated correctly
-				s.Require().Equal(test.expectedTick.String(), pool.CurrentTick.String())
+				s.Require().Equal(test.expectedTick.String(), pool.GetCurrentTick().String())
+				// check that we produced the same token out from the swap function that we expected
+				s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
 
 				// the following is needed to get the expected liquidity to later compare to what the pool was updated to
 				if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
@@ -962,12 +975,12 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 					test.newUpperPrice = upperPrice
 				}
 
-				newLowerTick := cl.PriceToTick(test.newLowerPrice)
-				newUpperTick := cl.PriceToTick(test.newUpperPrice)
+				newLowerTick := math.PriceToTick(test.newLowerPrice)
+				newUpperTick := math.PriceToTick(test.newUpperPrice)
 
-				lowerSqrtPrice, err := cl.TickToSqrtPrice(newLowerTick)
+				lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick)
 				s.Require().NoError(err)
-				upperSqrtPrice, err := cl.TickToSqrtPrice(newUpperTick)
+				upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick)
 				s.Require().NoError(err)
 
 				if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
@@ -975,9 +988,9 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 					test.poolLiqAmount1 = defaultAmt1
 				}
 
-				expectedLiquidity := cl.GetLiquidityFromAmounts(currSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
+				expectedLiquidity := math.GetLiquidityFromAmounts(currSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
 				// check that the pools liquidity was updated correctly
-				s.Require().Equal(expectedLiquidity.String(), pool.Liquidity.String())
+				s.Require().Equal(expectedLiquidity.String(), pool.GetLiquidity().String())
 
 				// TODO: need to figure out a good way to test that the currentSqrtPrice that the pool is set to makes sense
 				// right now we calculate this value through iterations, so unsure how to do this here / if its needed
@@ -988,81 +1001,40 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 }
 
 func (s *KeeperTestSuite) TestOrderInitialPoolDenoms() {
-	denom0, denom1, err := cltypes.OrderInitialPoolDenoms("axel", "osmo")
+	denom0, denom1, err := types.OrderInitialPoolDenoms("axel", "osmo")
 	s.Require().NoError(err)
 	s.Require().Equal(denom0, "axel")
 	s.Require().Equal(denom1, "osmo")
 
-	denom0, denom1, err = cltypes.OrderInitialPoolDenoms("usdc", "eth")
+	denom0, denom1, err = types.OrderInitialPoolDenoms("usdc", "eth")
 	s.Require().NoError(err)
 	s.Require().Equal(denom0, "eth")
 	s.Require().Equal(denom1, "usdc")
 
-	denom0, denom1, err = cltypes.OrderInitialPoolDenoms("usdc", "usdc")
+	denom0, denom1, err = types.OrderInitialPoolDenoms("usdc", "usdc")
 	s.Require().Error(err)
 
 }
 
-func (suite *KeeperTestSuite) TestPriceToTick() {
-	testCases := []struct {
-		name         string
-		price        sdk.Dec
-		tickExpected string
-	}{
-		{
-			"happy path",
-			sdk.NewDec(5000),
-			"85176",
-		},
-	}
+func (s *KeeperTestSuite) TestGetPoolById() {
+	s.SetupTest()
 
-	for _, tc := range testCases {
-		tc := tc
+	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "token0", "token1", sdk.NewDec(1), sdk.NewInt(1))
+	s.Require().NoError(err)
 
-		suite.Run(tc.name, func() {
-			tick := cl.PriceToTick(tc.price)
-			suite.Require().Equal(tc.tickExpected, tick.String())
-		})
-	}
-}
+	getPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
 
-func (suite *KeeperTestSuite) TestGetLiquidityFromAmounts() {
-	testCases := map[string]struct {
-		currentSqrtP      sdk.Dec
-		sqrtPHigh         sdk.Dec
-		sqrtPLow          sdk.Dec
-		amount0Desired    sdk.Int
-		amount1Desired    sdk.Int
-		expectedLiquidity string
-	}{
-		"happy path": {
-			currentSqrtP:      sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
-			sqrtPHigh:         sdk.MustNewDecFromStr("74.161984870956629487"), // 5500
-			sqrtPLow:          sdk.MustNewDecFromStr("67.416615162732695594"), // 4545
-			amount0Desired:    sdk.NewInt(1000000),
-			amount1Desired:    sdk.NewInt(5000000000),
-			expectedLiquidity: "1517882343.751510418088349649",
-		},
-	}
+	// ensure that the pool is the same
+	s.Require().Equal(pool.GetId(), getPool.GetId())
+	s.Require().Equal(pool.GetAddress(), getPool.GetAddress())
+	s.Require().Equal(pool.GetCurrentSqrtPrice(), getPool.GetCurrentSqrtPrice())
+	s.Require().Equal(pool.GetCurrentTick(), getPool.GetCurrentTick())
+	s.Require().Equal(pool.GetLiquidity(), getPool.GetLiquidity())
 
-	for name, tc := range testCases {
-		tc := tc
-
-		suite.Run(name, func() {
-			// CASE A: if the currentSqrtP is less than the sqrtPLow, all the liquidity is in asset0, so GetLiquidityFromAmounts returns the liquidity of asset0
-			// CASE B: if the currentSqrtP is less than the sqrtPHigh but greater than sqrtPLow, the liquidity is split between asset0 and asset1,
-			// so GetLiquidityFromAmounts returns the smaller liquidity of asset0 and asset1
-			// CASE C: if the currentSqrtP is greater than the sqrtPHigh, all the liquidity is in asset1, so GetLiquidityFromAmounts returns the liquidity of asset1
-			liquidity := cl.GetLiquidityFromAmounts(tc.currentSqrtP, tc.sqrtPLow, tc.sqrtPHigh, tc.amount0Desired, tc.amount1Desired)
-			suite.Require().Equal(tc.expectedLiquidity, liquidity.String())
-			// TODO: this check works for CASE B but needs to get reworked when CASE A and CASE C are tested
-			liq0 := cl.Liquidity0(tc.amount0Desired, tc.currentSqrtP, tc.sqrtPHigh)
-			liq1 := cl.Liquidity1(tc.amount1Desired, tc.currentSqrtP, tc.sqrtPLow)
-			liq := sdk.MinDec(liq0, liq1)
-			suite.Require().Equal(liq.String(), liquidity.String())
-
-		})
-	}
+	// try getting invalid pool
+	_, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, uint64(2))
+	s.Require().Error(err)
 }
 
 // func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {

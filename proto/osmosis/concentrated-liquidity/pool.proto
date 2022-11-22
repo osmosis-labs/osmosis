@@ -1,6 +1,6 @@
 syntax = "proto3";
-// this is a legacy package that requires additional migration logic
-// in order to use the correct packge. Decision made to use legacy package path
+// This is a legacy package that requires additional migration logic
+// in order to use the correct package. Decision made to use legacy package path
 // until clear steps for migration logic and the unknowns for state breaking are
 // investigated for changing proto package.
 package osmosis.concentratedliquidity.v1beta1;
@@ -8,7 +8,7 @@ package osmosis.concentratedliquidity.v1beta1;
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity";
+option go_package = "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/model";
 
 message Pool {
   option (gogoproto.goproto_getters) = false;
@@ -36,27 +36,6 @@ message Pool {
   string current_tick = 7 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"current_tick\"",
-    (gogoproto.nullable) = false
-  ];
-}
-
-message TickInfo {
-  string liquidity_gross = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"liquidity_gross\"",
-    (gogoproto.nullable) = false
-  ];
-  string liquidity_net = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"liquidity_net\"",
-    (gogoproto.nullable) = false
-  ];
-}
-
-message Position {
-  string liquidity = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"liquidity\"",
     (gogoproto.nullable) = false
   ];
 }

@@ -279,6 +279,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GAMMKeeper)
 
 	appKeepers.ConcentratedLiquidityKeeper = concentratedliquidity.NewKeeper(
+		appCodec,
 		appKeepers.keys[concentratedliquiditytypes.StoreKey])
 
 	appKeepers.SwapRouterKeeper = swaprouter.NewKeeper(
