@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	gamm "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
+
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"

@@ -92,6 +92,13 @@ func (k Keeper) SwapExactAmountOut(
 		}
 	}()
 
+	defer func() {
+		if r := recover(); r != nil {
+			tokenInAmount = sdk.Int{}
+			err = fmt.Errorf("function swapExactAmountOut failed due to internal reason: %v", r)
+		}
+	}()
+
 	poolOutBal := pool.GetTotalPoolLiquidity(ctx).AmountOf(tokenOut.Denom)
 	if tokenOut.Amount.GTE(poolOutBal) {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrTooManyTokensOut,
