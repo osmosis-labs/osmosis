@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/model"
 	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
@@ -14,7 +15,7 @@ func (k Keeper) getOrInitPosition(
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
 	liquidityDelta sdk.Dec,
-) (*Position, error) {
+) (*model.Position, error) {
 	if k.hasPosition(ctx, poolId, owner, lowerTick, upperTick) {
 		position, err := k.getPosition(ctx, poolId, owner, lowerTick, upperTick)
 		if err != nil {
@@ -22,7 +23,7 @@ func (k Keeper) getOrInitPosition(
 		}
 		return position, nil
 	}
-	return &Position{Liquidity: sdk.ZeroDec()}, nil
+	return &model.Position{Liquidity: sdk.ZeroDec()}, nil
 }
 
 func (k Keeper) initOrUpdatePosition(
@@ -57,9 +58,9 @@ func (k Keeper) hasPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	return store.Has(key)
 }
 
-func (k Keeper) getPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) (*Position, error) {
+func (k Keeper) getPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) (*model.Position, error) {
 	store := ctx.KVStore(k.storeKey)
-	positionStruct := &Position{}
+	positionStruct := &model.Position{}
 	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
 
 	found, err := osmoutils.GetIfFound(store, key, positionStruct)
@@ -78,7 +79,7 @@ func (k Keeper) setPosition(ctx sdk.Context,
 	poolId uint64,
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
-	position *Position,
+	position *model.Position,
 ) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)

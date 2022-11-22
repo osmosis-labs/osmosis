@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
 	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
@@ -22,18 +23,18 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
-	sqrtPriceLowerTick, sqrtPriceUpperTick, err := ticksToSqrtPrice(lowerTick, upperTick)
+	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
 	// now calculate amount for token0 and token1
-	pool, err := k.getPoolbyId(ctx, poolId)
+	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
-	liquidityDelta := getLiquidityFromAmounts(pool.CurrentSqrtPrice, sqrtPriceLowerTick, sqrtPriceUpperTick, amount0Desired, amount1Desired)
+	liquidityDelta := math.GetLiquidityFromAmounts(pool.GetCurrentSqrtPrice(), sqrtPriceLowerTick, sqrtPriceUpperTick, amount0Desired, amount1Desired)
 	if liquidityDelta.IsZero() {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, fmt.Errorf("liquidity delta zero")
 	}
@@ -122,60 +123,27 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	// now calculate amount for token0 and token1
-	pool, err := k.getPoolbyId(ctx, poolId)
+	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	sqrtPriceLowerTick, sqrtPriceUpperTick, err := ticksToSqrtPrice(lowerTick, upperTick)
+	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	actualAmount0, actualAmount1 := pool.calcActualAmounts(ctx, lowerTick, upperTick, sqrtPriceLowerTick, sqrtPriceUpperTick, liquidityDelta)
+	actualAmount0, actualAmount1 := pool.CalcActualAmounts(ctx, lowerTick, upperTick, sqrtPriceLowerTick, sqrtPriceUpperTick, liquidityDelta)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	pool.updateLiquidityIfActivePosition(ctx, lowerTick, upperTick, liquidityDelta)
+	pool.UpdateLiquidityIfActivePosition(ctx, lowerTick, upperTick, liquidityDelta)
 
-	k.setPoolById(ctx, pool.Id, pool)
+	if err := k.setPool(ctx, pool); err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
 
 	// The returned amounts are rounded down to avoid returning more to clients than they actually deposited.
 	return actualAmount0.TruncateInt(), actualAmount1.TruncateInt(), nil
-}
-
-// calcActualAmounts calculates and returns actual amounts based on where the current tick is located relative to position's
-// lower and upper ticks.
-// There are 3 possible cases:
-// -The position is active ( lowerTick <= p.CurrentTick < upperTick).
-//    * The provided liqudity is distributed in both tokens.
-//    * Actual amounts might differ from desired because we recalculate them from liquidity delta and sqrt price.
-//      the calculations lead to amounts being off. // TODO: confirm logic is correct
-// - Current tick is below the position ( p.CurrentTick < lowerTick).
-//    * The provided liquidity is distributed in token0 only.
-// - Current tick is above the position ( p.CurrentTick >= p.upperTick ).
-//    * The provided liquidity is distributed in token1 only.
-// TODO: add tests.
-func (p Pool) calcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, sqrtRatioLowerTick, sqrtRatioUpperTick sdk.Dec, liquidityDelta sdk.Dec) (actualAmountDenom0 sdk.Dec, actualAmountDenom1 sdk.Dec) {
-	if p.isCurrentTickInRange(lowerTick, upperTick) {
-		// outcome one: the current price falls within the position
-		// if this is the case, we attempt to provide liquidity evenly between asset0 and asset1
-		// we also update the pool liquidity since the virtual liquidity is modified by this position's creation
-		currentSqrtPrice := p.CurrentSqrtPrice
-		actualAmountDenom0 = calcAmount0Delta(liquidityDelta, currentSqrtPrice, sqrtRatioUpperTick, false)
-		actualAmountDenom1 = calcAmount1Delta(liquidityDelta, currentSqrtPrice, sqrtRatioLowerTick, false)
-	} else if p.CurrentTick.LT(sdk.NewInt(lowerTick)) {
-		// outcome two: position is below current price
-		// this means position is solely made up of asset0
-		actualAmountDenom1 = sdk.ZeroDec()
-		actualAmountDenom0 = calcAmount0Delta(liquidityDelta, sqrtRatioLowerTick, sqrtRatioUpperTick, false)
-	} else {
-		// outcome three: position is above current price
-		// this means position is solely made up of asset1
-		actualAmountDenom0 = sdk.ZeroDec()
-		actualAmountDenom1 = calcAmount1Delta(liquidityDelta, sqrtRatioLowerTick, sqrtRatioUpperTick, false)
-	}
-
-	return actualAmountDenom0, actualAmountDenom1
 }
