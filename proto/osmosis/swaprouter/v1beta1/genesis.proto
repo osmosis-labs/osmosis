@@ -7,7 +7,7 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types";
+option go_package = "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types";
 
 // Params holds parameters for the swaprouter module
 message Params {

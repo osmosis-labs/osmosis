@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	ibc_rate_limit "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit"
+	ibc_rate_limit "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -16,10 +16,10 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
-	"github.com/osmosis-labs/osmosis/v12/app"
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/testutil"
-	"github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v13/app"
+	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/testutil"
+	"github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
 	"github.com/stretchr/testify/suite"
 )
 

@@ -1,55 +1,28 @@
-package concentrated_liquidity_test
+package math_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"testing"
 
-	cl "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
 )
 
-func (suite *KeeperTestSuite) TestGetLiquidityFromAmounts() {
-	testCases := map[string]struct {
-		currentSqrtP      sdk.Dec
-		sqrtPHigh         sdk.Dec
-		sqrtPLow          sdk.Dec
-		amount0Desired    sdk.Int
-		amount1Desired    sdk.Int
-		expectedLiquidity string
-	}{
-		"happy path": {
-			currentSqrtP:      sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
-			sqrtPHigh:         sdk.MustNewDecFromStr("74.161984870956629487"), // 5500
-			sqrtPLow:          sdk.MustNewDecFromStr("67.416615162732695594"), // 4545
-			amount0Desired:    sdk.NewInt(1000000),
-			amount1Desired:    sdk.NewInt(5000000000),
-			expectedLiquidity: "1517882343.751510418088349649",
-		},
-	}
+type ConcentratedMathTestSuite struct {
+	apptesting.KeeperTestHelper
+}
 
-	for name, tc := range testCases {
-		tc := tc
-
-		suite.Run(name, func() {
-			// CASE A: if the currentSqrtP is less than the sqrtPLow, all the liquidity is in asset0, so GetLiquidityFromAmounts returns the liquidity of asset0
-			// CASE B: if the currentSqrtP is less than the sqrtPHigh but greater than sqrtPLow, the liquidity is split between asset0 and asset1,
-			// so GetLiquidityFromAmounts returns the smaller liquidity of asset0 and asset1
-			// CASE C: if the currentSqrtP is greater than the sqrtPHigh, all the liquidity is in asset1, so GetLiquidityFromAmounts returns the liquidity of asset1
-			liquidity := cl.GetLiquidityFromAmounts(tc.currentSqrtP, tc.sqrtPLow, tc.sqrtPHigh, tc.amount0Desired, tc.amount1Desired)
-			suite.Require().Equal(tc.expectedLiquidity, liquidity.String())
-			// TODO: this check works for CASE B but needs to get reworked when CASE A and CASE C are tested
-			liq0 := cl.Liquidity0(tc.amount0Desired, tc.currentSqrtP, tc.sqrtPHigh)
-			liq1 := cl.Liquidity1(tc.amount1Desired, tc.currentSqrtP, tc.sqrtPLow)
-			liq := sdk.MinDec(liq0, liq1)
-			suite.Require().Equal(liq.String(), liquidity.String())
-
-		})
-	}
+func TestConcentratedTestSuite(t *testing.T) {
+	suite.Run(t, new(ConcentratedMathTestSuite))
 }
 
 // liquidity1 takes an amount of asset1 in the pool as well as the sqrtpCur and the nextPrice
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // liquidity1 = amount1 / (sqrtPriceB - sqrtPriceA)
-func (suite *KeeperTestSuite) TestLiquidity1() {
+func (suite *ConcentratedMathTestSuite) TestLiquidity1() {
 	testCases := map[string]struct {
 		currentSqrtP      sdk.Dec
 		sqrtPLow          sdk.Dec
@@ -69,7 +42,7 @@ func (suite *KeeperTestSuite) TestLiquidity1() {
 		tc := tc
 
 		suite.Run(name, func() {
-			liquidity := cl.Liquidity1(tc.amount1Desired, tc.currentSqrtP, tc.sqrtPLow)
+			liquidity := math.Liquidity1(tc.amount1Desired, tc.currentSqrtP, tc.sqrtPLow)
 			suite.Require().Equal(tc.expectedLiquidity, liquidity.String())
 		})
 	}
@@ -79,7 +52,7 @@ func (suite *KeeperTestSuite) TestLiquidity1() {
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // liquidity0 = amount0 * (sqrtPriceA * sqrtPriceB) / (sqrtPriceB - sqrtPriceA)
-func (suite *KeeperTestSuite) TestLiquidity0() {
+func (suite *ConcentratedMathTestSuite) TestLiquidity0() {
 	testCases := map[string]struct {
 		currentSqrtP      sdk.Dec
 		sqrtPHigh         sdk.Dec
@@ -99,7 +72,7 @@ func (suite *KeeperTestSuite) TestLiquidity0() {
 		tc := tc
 
 		suite.Run(name, func() {
-			liquidity := cl.Liquidity0(tc.amount0Desired, tc.currentSqrtP, tc.sqrtPHigh)
+			liquidity := math.Liquidity0(tc.amount0Desired, tc.currentSqrtP, tc.sqrtPHigh)
 			suite.Require().Equal(tc.expectedLiquidity, liquidity.String())
 		})
 	}
@@ -114,7 +87,7 @@ func (suite *KeeperTestSuite) TestLiquidity0() {
 // PATH 2
 // else
 // sqrtPriceNext = ((liquidity)) / (((liquidity) / (sqrtPriceCurrent)) + (amountRemaining))
-func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount0RoundingUp() {
+func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount0RoundingUp() {
 	testCases := map[string]struct {
 		liquidity             sdk.Dec
 		sqrtPCurrent          sdk.Dec
@@ -134,7 +107,7 @@ func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount0RoundingUp() {
 		tc := tc
 
 		suite.Run(name, func() {
-			sqrtPriceNext := cl.GetNextSqrtPriceFromAmount0RoundingUp(tc.sqrtPCurrent, tc.liquidity, tc.amount0Remaining)
+			sqrtPriceNext := math.GetNextSqrtPriceFromAmount0RoundingUp(tc.sqrtPCurrent, tc.liquidity, tc.amount0Remaining)
 			suite.Require().Equal(tc.sqrtPriceNextExpected, sqrtPriceNext.String())
 		})
 	}
@@ -144,7 +117,7 @@ func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount0RoundingUp() {
 // utilizes the current squareRootPrice, liquidity of denom1, and amount of denom1 that still needs
 // to be swapped in order to determine the next squareRootPrice
 // sqrtPriceNext = sqrtPriceCurrent + (amount1Remaining / liquidity1)
-func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount1RoundingDown() {
+func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount1RoundingDown() {
 	testCases := map[string]struct {
 		liquidity             sdk.Dec
 		sqrtPCurrent          sdk.Dec
@@ -164,7 +137,7 @@ func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount1RoundingDown() {
 		tc := tc
 
 		suite.Run(name, func() {
-			sqrtPriceNext := cl.GetNextSqrtPriceFromAmount1RoundingDown(tc.sqrtPCurrent, tc.liquidity, tc.amount1Remaining)
+			sqrtPriceNext := math.GetNextSqrtPriceFromAmount1RoundingDown(tc.sqrtPCurrent, tc.liquidity, tc.amount1Remaining)
 			suite.Require().Equal(tc.sqrtPriceNextExpected, sqrtPriceNext.String())
 		})
 	}
@@ -174,7 +147,7 @@ func (suite *KeeperTestSuite) TestGetNextSqrtPriceFromAmount1RoundingDown() {
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // calcAmount0Delta = (liquidity * (sqrtPriceB - sqrtPriceA)) / (sqrtPriceB * sqrtPriceA)
-func (suite *KeeperTestSuite) TestCalcAmount0Delta() {
+func (suite *ConcentratedMathTestSuite) TestCalcAmount0Delta() {
 	testCases := map[string]struct {
 		liquidity       sdk.Dec
 		sqrtPCurrent    sdk.Dec
@@ -194,7 +167,7 @@ func (suite *KeeperTestSuite) TestCalcAmount0Delta() {
 		tc := tc
 
 		suite.Run(name, func() {
-			amount0 := cl.CalcAmount0Delta(tc.liquidity, tc.sqrtPCurrent, tc.sqrtPUpper, false)
+			amount0 := math.CalcAmount0Delta(tc.liquidity, tc.sqrtPCurrent, tc.sqrtPUpper, false)
 			suite.Require().Equal(tc.amount0Expected, amount0.String())
 		})
 	}
@@ -204,7 +177,7 @@ func (suite *KeeperTestSuite) TestCalcAmount0Delta() {
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // calcAmount1Delta = liq * (sqrtPriceB - sqrtPriceA)
-func (suite *KeeperTestSuite) TestCalcAmount1Delta() {
+func (suite *ConcentratedMathTestSuite) TestCalcAmount1Delta() {
 	testCases := map[string]struct {
 		liquidity       sdk.Dec
 		sqrtPCurrent    sdk.Dec
@@ -224,13 +197,13 @@ func (suite *KeeperTestSuite) TestCalcAmount1Delta() {
 		tc := tc
 
 		suite.Run(name, func() {
-			amount1 := cl.CalcAmount1Delta(tc.liquidity, tc.sqrtPCurrent, tc.sqrtPLower, false)
+			amount1 := math.CalcAmount1Delta(tc.liquidity, tc.sqrtPCurrent, tc.sqrtPLower, false)
 			suite.Require().Equal(tc.amount1Expected, amount1.String())
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestComputeSwapState() {
+func (suite *ConcentratedMathTestSuite) TestComputeSwapState() {
 	testCases := map[string]struct {
 		sqrtPCurrent          sdk.Dec
 		sqrtPTarget           sdk.Dec
@@ -267,10 +240,50 @@ func (suite *KeeperTestSuite) TestComputeSwapState() {
 		tc := tc
 
 		suite.Run(name, func() {
-			sqrtPriceNext, amountIn, amountOut := cl.ComputeSwapStep(tc.sqrtPCurrent, tc.sqrtPTarget, tc.liquidity, tc.amountRemaining, tc.zeroForOne)
+			swapStrategy := math.NewSwapStrategy(tc.zeroForOne)
+			sqrtPriceNext, amountIn, amountOut := swapStrategy.ComputeSwapStep(tc.sqrtPCurrent, tc.sqrtPTarget, tc.liquidity, tc.amountRemaining)
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext.String())
 			suite.Require().Equal(tc.expectedAmountIn, amountIn.String())
 			suite.Require().Equal(tc.expectedAmountOut, amountOut.String())
+		})
+	}
+}
+
+func (suite *ConcentratedMathTestSuite) TestGetLiquidityFromAmounts() {
+	testCases := map[string]struct {
+		currentSqrtP      sdk.Dec
+		sqrtPHigh         sdk.Dec
+		sqrtPLow          sdk.Dec
+		amount0Desired    sdk.Int
+		amount1Desired    sdk.Int
+		expectedLiquidity string
+	}{
+		"happy path": {
+			currentSqrtP:      sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			sqrtPHigh:         sdk.MustNewDecFromStr("74.161984870956629487"), // 5500
+			sqrtPLow:          sdk.MustNewDecFromStr("67.416615162732695594"), // 4545
+			amount0Desired:    sdk.NewInt(1000000),
+			amount1Desired:    sdk.NewInt(5000000000),
+			expectedLiquidity: "1517882343.751510418088349649",
+		},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+
+		suite.Run(name, func() {
+			// CASE A: if the currentSqrtP is less than the sqrtPLow, all the liquidity is in asset0, so GetLiquidityFromAmounts returns the liquidity of asset0
+			// CASE B: if the currentSqrtP is less than the sqrtPHigh but greater than sqrtPLow, the liquidity is split between asset0 and asset1,
+			// so GetLiquidityFromAmounts returns the smaller liquidity of asset0 and asset1
+			// CASE C: if the currentSqrtP is greater than the sqrtPHigh, all the liquidity is in asset1, so GetLiquidityFromAmounts returns the liquidity of asset1
+			liquidity := math.GetLiquidityFromAmounts(tc.currentSqrtP, tc.sqrtPLow, tc.sqrtPHigh, tc.amount0Desired, tc.amount1Desired)
+			suite.Require().Equal(tc.expectedLiquidity, liquidity.String())
+			// TODO: this check works for CASE B but needs to get reworked when CASE A and CASE C are tested
+			liq0 := math.Liquidity0(tc.amount0Desired, tc.currentSqrtP, tc.sqrtPHigh)
+			liq1 := math.Liquidity1(tc.amount1Desired, tc.currentSqrtP, tc.sqrtPLow)
+			liq := sdk.MinDec(liq0, liq1)
+			suite.Require().Equal(liq.String(), liquidity.String())
+
 		})
 	}
 }

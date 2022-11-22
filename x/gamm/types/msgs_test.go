@@ -7,10 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v12/app/params"
+	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v13/app/params"
 )
 
 func TestMsgJoinPool(t *testing.T) {
