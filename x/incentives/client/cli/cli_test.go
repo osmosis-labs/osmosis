@@ -9,13 +9,14 @@ import (
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
+	swaproutertestutil "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/testutil"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v13/app"
 	"github.com/osmosis-labs/osmosis/v13/x/incentives/client/cli"
 	"github.com/osmosis-labs/osmosis/v13/x/incentives/types"
 	lockuptestutil "github.com/osmosis-labs/osmosis/v13/x/lockup/client/testutil"
-	swaproutertestutil "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/testutil"
 
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"

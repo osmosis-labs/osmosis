@@ -438,9 +438,9 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 var (
 	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "swaprouter", "v1beta1", "Params"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_EstimateSwapExactAmountIn_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"osmosis", "swaprouter", "v1beta1", "pool_id", "estimate", "swap_exact_amount_in"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_EstimateSwapExactAmountIn_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"osmosis", "gamm", "v1beta1", "pool_id", "estimate", "swap_exact_amount_in"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_EstimateSwapExactAmountOut_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"osmosis", "swaprouter", "v1beta1", "pool_id", "estimate", "swap_exact_amount_out"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_EstimateSwapExactAmountOut_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"osmosis", "gamm", "v1beta1", "pool_id", "estimate", "swap_exact_amount_out"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_NumPools_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "swaprouter", "v1beta1", "num_pools"}, "", runtime.AssumeColonVerbOpt(false)))
 )

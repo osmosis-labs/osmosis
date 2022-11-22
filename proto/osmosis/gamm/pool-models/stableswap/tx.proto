@@ -7,9 +7,12 @@ import "osmosis/gamm/pool-models/stableswap/stableswap_pool.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap";
 
-service Msg {
+service MsgCreator {
   rpc CreateStableswapPool(MsgCreateStableswapPool)
       returns (MsgCreateStableswapPoolResponse);
+}
+
+service MsgScalingFactor {
   rpc StableSwapAdjustScalingFactors(MsgStableSwapAdjustScalingFactors)
       returns (MsgStableSwapAdjustScalingFactorsResponse);
 }

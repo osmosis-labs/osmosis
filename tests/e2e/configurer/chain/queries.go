@@ -67,7 +67,6 @@ func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		n.t.Error(string(bz))
 		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(bz))
 	}
 	return bz, nil
@@ -86,15 +85,16 @@ func (n *NodeConfig) QueryBalances(address string) (sdk.Coins, error) {
 	return balancesResp.GetBalances(), nil
 }
 
-func (n *NodeConfig) QueryTotalSupply() (sdk.Coins, error) {
-	bz, err := n.QueryGRPCGateway("cosmos/bank/v1beta1/supply")
+func (n *NodeConfig) QuerySupplyOf(denom string) (sdk.Int, error) {
+	path := fmt.Sprintf("cosmos/bank/v1beta1/supply/%s", denom)
+	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
-	var supplyResp banktypes.QueryTotalSupplyResponse
+	var supplyResp banktypes.QuerySupplyOfResponse
 	if err := util.Cdc.UnmarshalJSON(bz, &supplyResp); err != nil {
-		return sdk.Coins{}, err
+		return sdk.NewInt(0), err
 	}
-	return supplyResp.GetSupply(), nil
+	return supplyResp.Amount.Amount, nil
 }
 
 func (n *NodeConfig) QueryContractsFromId(codeId int) ([]string, error) {
@@ -188,6 +188,7 @@ func (n *NodeConfig) QueryArithmeticTwapToNow(poolId uint64, baseAsset, quoteAss
 		return sdk.Dec{}, err
 	}
 
+	// nolint: staticcheck
 	var response twapqueryproto.ArithmeticTwapToNowResponse
 	err = util.Cdc.UnmarshalJSON(bz, &response)
 	require.NoError(n.t, err) // this error should not happen
@@ -209,6 +210,7 @@ func (n *NodeConfig) QueryArithmeticTwap(poolId uint64, baseAsset, quoteAsset st
 		return sdk.Dec{}, err
 	}
 
+	// nolint: staticcheck
 	var response twapqueryproto.ArithmeticTwapResponse
 	err = util.Cdc.UnmarshalJSON(bz, &response)
 	require.NoError(n.t, err) // this error should not happen

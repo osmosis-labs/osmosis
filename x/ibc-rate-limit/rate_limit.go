@@ -2,13 +2,12 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
-	"strings"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
 	"github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
 )
@@ -19,9 +18,7 @@ var (
 )
 
 func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
-	msgType, contract string,
-	channelValue sdk.Int, sourceChannel, denom string,
-	amount string,
+	msgType, contract string, packet exported.PacketI,
 ) error {
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
@@ -30,10 +27,7 @@ func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.Permis
 
 	sendPacketMsg, err := BuildWasmExecMsg(
 		msgType,
-		sourceChannel,
-		denom,
-		channelValue,
-		amount,
+		packet,
 	)
 	if err != nil {
 		return err
@@ -49,25 +43,28 @@ func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.Permis
 }
 
 type UndoSendMsg struct {
-	UndoSend UndoSendMsgContent `json:"undo_send"`
+	UndoSend UndoPacketMsg `json:"undo_send"`
 }
 
-type UndoSendMsgContent struct {
-	ChannelId string `json:"channel_id"`
-	Denom     string `json:"denom"`
-	Funds     string `json:"funds"`
+type UndoPacketMsg struct {
+	Packet UnwrappedPacket `json:"packet"`
 }
 
 func UndoSendRateLimit(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
 	contract string,
-	sourceChannel, denom string,
-	amount string,
+	packet exported.PacketI,
 ) error {
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
 		return err
 	}
-	msg := UndoSendMsg{UndoSend: UndoSendMsgContent{ChannelId: sourceChannel, Denom: denom, Funds: amount}}
+
+	unwrapped, err := unwrapPacket(packet)
+	if err != nil {
+		return err
+	}
+
+	msg := UndoSendMsg{UndoSend: UndoPacketMsg{Packet: unwrapped}}
 	asJson, err := json.Marshal(msg)
 	if err != nil {
 		return err
@@ -82,38 +79,67 @@ func UndoSendRateLimit(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedK
 }
 
 type SendPacketMsg struct {
-	SendPacket RateLimitExecMsg `json:"send_packet"`
+	SendPacket PacketMsg `json:"send_packet"`
 }
 
 type RecvPacketMsg struct {
-	RecvPacket RateLimitExecMsg `json:"recv_packet"`
+	RecvPacket PacketMsg `json:"recv_packet"`
 }
 
-type RateLimitExecMsg struct {
-	ChannelId    string  `json:"channel_id"`
-	Denom        string  `json:"denom"`
-	ChannelValue sdk.Int `json:"channel_value"`
-	Funds        string  `json:"funds"`
+type PacketMsg struct {
+	Packet UnwrappedPacket `json:"packet"`
 }
 
-func BuildWasmExecMsg(msgType, sourceChannel, denom string, channelValue sdk.Int, amount string) ([]byte, error) {
-	content := RateLimitExecMsg{
-		ChannelId:    sourceChannel,
-		Denom:        denom,
-		ChannelValue: channelValue,
-		Funds:        amount,
+type UnwrappedPacket struct {
+	Sequence           uint64                                `json:"sequence"`
+	SourcePort         string                                `json:"source_port"`
+	SourceChannel      string                                `json:"source_channel"`
+	DestinationPort    string                                `json:"destination_port"`
+	DestinationChannel string                                `json:"destination_channel"`
+	Data               transfertypes.FungibleTokenPacketData `json:"data"`
+	TimeoutHeight      clienttypes.Height                    `json:"timeout_height"`
+	TimeoutTimestamp   uint64                                `json:"timeout_timestamp,omitempty"`
+}
+
+func unwrapPacket(packet exported.PacketI) (UnwrappedPacket, error) {
+	var packetData transfertypes.FungibleTokenPacketData
+	err := json.Unmarshal(packet.GetData(), &packetData)
+	if err != nil {
+		return UnwrappedPacket{}, err
+	}
+	height, ok := packet.GetTimeoutHeight().(clienttypes.Height)
+	if !ok {
+		return UnwrappedPacket{}, types.ErrBadMessage
+	}
+	return UnwrappedPacket{
+		Sequence:           packet.GetSequence(),
+		SourcePort:         packet.GetSourcePort(),
+		SourceChannel:      packet.GetSourceChannel(),
+		DestinationPort:    packet.GetDestPort(),
+		DestinationChannel: packet.GetDestChannel(),
+		Data:               packetData,
+		TimeoutHeight:      height,
+		TimeoutTimestamp:   packet.GetTimeoutTimestamp(),
+	}, nil
+}
+
+func BuildWasmExecMsg(msgType string, packet exported.PacketI) ([]byte, error) {
+	unwrapped, err := unwrapPacket(packet)
+	if err != nil {
+		return []byte{}, err
 	}
 
-	var (
-		asJson []byte
-		err    error
-	)
+	var asJson []byte
 	switch {
 	case msgType == msgSend:
-		msg := SendPacketMsg{SendPacket: content}
+		msg := SendPacketMsg{SendPacket: PacketMsg{
+			Packet: unwrapped,
+		}}
 		asJson, err = json.Marshal(msg)
 	case msgType == msgRecv:
-		msg := RecvPacketMsg{RecvPacket: content}
+		msg := RecvPacketMsg{RecvPacket: PacketMsg{
+			Packet: unwrapped,
+		}}
 		asJson, err = json.Marshal(msg)
 	default:
 		return []byte{}, types.ErrBadMessage
@@ -124,44 +150,4 @@ func BuildWasmExecMsg(msgType, sourceChannel, denom string, channelValue sdk.Int
 	}
 
 	return asJson, nil
-}
-
-func GetFundsFromPacket(packet exported.PacketI) (string, string, error) {
-	var packetData transfertypes.FungibleTokenPacketData
-	err := json.Unmarshal(packet.GetData(), &packetData)
-	if err != nil {
-		return "", "", err
-	}
-	return packetData.Amount, GetLocalDenom(packetData.Denom), nil
-}
-
-func GetLocalDenom(denom string) string {
-	// Expected denoms in the following cases:
-	//
-	// send non-native: transfer/channel-0/denom -> ibc/xxx
-	// send native: denom -> denom
-	// recv (B)non-native: denom
-	// recv (B)native: transfer/channel-0/denom
-	//
-	if strings.HasPrefix(denom, "transfer/") {
-		denomTrace := transfertypes.ParseDenomTrace(denom)
-		return denomTrace.IBCDenom()
-	} else {
-		return denom
-	}
-}
-
-func CalculateChannelValue(ctx sdk.Context, denom string, port, channel string, bankKeeper bankkeeper.Keeper) sdk.Int {
-	if strings.HasPrefix(denom, "ibc/") {
-		return bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
-	}
-
-	if channel == "any" {
-		// ToDo: Get all channels and sum the escrow addr value over all the channels
-		escrowAddress := transfertypes.GetEscrowAddress(port, channel)
-		return bankKeeper.GetBalance(ctx, escrowAddress, denom).Amount
-	} else {
-		escrowAddress := transfertypes.GetEscrowAddress(port, channel)
-		return bankKeeper.GetBalance(ctx, escrowAddress, denom).Amount
-	}
 }

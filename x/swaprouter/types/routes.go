@@ -6,7 +6,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
@@ -57,11 +56,17 @@ type SwapI interface {
 	) (tokenInAmount sdk.Int, err error)
 }
 
-type SwapAmountInRoutes []SwapAmountInRoute
-
-func (routes SwapAmountInRoutes) IsOsmoRoutedMultihop() bool {
-	return len(routes) == 2 && (routes[0].TokenOutDenom == appparams.BaseCoinUnit)
+type PoolIncentivesKeeperI interface {
+	IsPoolIncentivized(ctx sdk.Context, poolId uint64) bool
 }
+
+type MultihopRoute interface {
+	Length() int
+	PoolIds() []uint64
+	IntermediateDenoms() []string
+}
+
+type SwapAmountInRoutes []SwapAmountInRoute
 
 func (routes SwapAmountInRoutes) Validate() error {
 	if len(routes) == 0 {
@@ -78,11 +83,31 @@ func (routes SwapAmountInRoutes) Validate() error {
 	return nil
 }
 
-type SwapAmountOutRoutes []SwapAmountOutRoute
+func (routes SwapAmountInRoutes) IntermediateDenoms() []string {
+	if len(routes) < 2 {
+		return nil
+	}
+	intermediateDenoms := make([]string, 0, len(routes)-1)
+	for _, route := range routes[:len(routes)-1] {
+		intermediateDenoms = append(intermediateDenoms, route.TokenOutDenom)
+	}
 
-func (routes SwapAmountOutRoutes) IsOsmoRoutedMultihop() bool {
-	return len(routes) == 2 && (routes[1].TokenInDenom == appparams.BaseCoinUnit)
+	return intermediateDenoms
 }
+
+func (routes SwapAmountInRoutes) PoolIds() []uint64 {
+	poolIds := make([]uint64, 0, len(routes))
+	for _, route := range routes {
+		poolIds = append(poolIds, route.PoolId)
+	}
+	return poolIds
+}
+
+func (routes SwapAmountInRoutes) Length() int {
+	return len(routes)
+}
+
+type SwapAmountOutRoutes []SwapAmountOutRoute
 
 func (routes SwapAmountOutRoutes) Validate() error {
 	if len(routes) == 0 {
@@ -97,4 +122,28 @@ func (routes SwapAmountOutRoutes) Validate() error {
 	}
 
 	return nil
+}
+
+func (routes SwapAmountOutRoutes) IntermediateDenoms() []string {
+	if len(routes) < 2 {
+		return nil
+	}
+	intermediateDenoms := make([]string, 0, len(routes)-1)
+	for _, route := range routes[1:] {
+		intermediateDenoms = append(intermediateDenoms, route.TokenInDenom)
+	}
+
+	return intermediateDenoms
+}
+
+func (routes SwapAmountOutRoutes) PoolIds() []uint64 {
+	poolIds := make([]uint64, 0, len(routes))
+	for _, route := range routes {
+		poolIds = append(poolIds, route.PoolId)
+	}
+	return poolIds
+}
+
+func (routes SwapAmountOutRoutes) Length() int {
+	return len(routes)
 }

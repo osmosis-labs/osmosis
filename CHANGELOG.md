@@ -45,18 +45,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 
 * [#2788](https://github.com/osmosis-labs/osmosis/pull/2788) Add logarithm base 2 implementation.
-* [#2739](https://github.com/osmosis-labs/osmosis/pull/2739) Add pool type query
+* [#2739](https://github.com/osmosis-labs/osmosis/pull/2739),[#3356](https://github.com/osmosis-labs/osmosis/pull/3356) Add pool type query, and add it to stargate whitelist
+* [#2956](https://github.com/osmosis-labs/osmosis/issues/2956) Add queries for calculating amount of shares/tokens you get by providing X tokens/shares when entering/exiting a pool
+* [#3217](https://github.com/osmosis-labs/osmosis/pull/3217) Add `CalcJoinPoolShares`, `CalcExitPoolCoinsFromShares`, `CalcJoinPoolNoSwapShares` to the registered Stargate queries list.
+* [#3313](https://github.com/osmosis-labs/osmosis/pull/3313) Upgrade to IBC v3.4.0, allowing for IBC transfers with metadata.
+* [#3335](https://github.com/osmosis-labs/osmosis/pull/3335) Add v2 spot price queries
+  - The v1beta1 queries actually have base asset and quote asset reversed, so you were always getting 1/correct spot price. People fixed this by reordering the arguments.
+  - This PR adds v2 queries for doing the correct thing, and giving people time to migrate from v1beta1 queries to v2.
+  - It also changes cosmwasm to only allow the v2 queries, as no contracts on Osmosis mainnet uses the v1beta1 queries.
+
 
 ### Bug fixes
 
 * [#2803](https://github.com/osmosis-labs/osmosis/pull/2803) Fix total pool liquidity CLI query.
 * [#2914](https://github.com/osmosis-labs/osmosis/pull/2914) Remove out of gas panics from node logs
 * [#2937](https://github.com/osmosis-labs/osmosis/pull/2937) End block ordering - staking after gov and module sorting.
+* [#2923](https://github.com/osmosis-labs/osmosis/pull/2923) TWAP calculation now errors if it uses records that have errored previously.
+* [#3312](https://github.com/osmosis-labs/osmosis/pull/3312) Add better panic catches within GAMM txs
 
 ### Misc Improvements
 
 * [#2804](https://github.com/osmosis-labs/osmosis/pull/2804) Improve error handling and messages when parsing pool assets.
 * [#3035](https://github.com/osmosis-labs/osmosis/pull/3035) Remove `PokePool` from `PoolI` interface. Define on a new WeightedPoolExtension` instead.
+* [#3214](https://github.com/osmosis-labs/osmosis/pull/3214) Add basic CLI query support for TWAP.
 
 ## v12.0.0
 

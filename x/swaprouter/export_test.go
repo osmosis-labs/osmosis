@@ -10,6 +10,11 @@ func (k Keeper) GetNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 	return k.getNextPoolIdAndIncrement(ctx)
 }
 
+func (k Keeper) GetOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.MultihopRoute) (
+	totalPathSwapFee sdk.Dec, sumOfSwapFees sdk.Dec, err error) {
+	return k.getOsmoRoutedMultihopTotalSwapFee(ctx, route)
+}
+
 // SetPoolRoutesUnsafe sets the given routes to the swaprouter keeper
 // to allow routing from a pool type to a certain swap module.
 // For example, balancer -> gamm.

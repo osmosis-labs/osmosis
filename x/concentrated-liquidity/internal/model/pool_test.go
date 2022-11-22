@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/model"
 )
@@ -94,11 +93,8 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 	newCurrTick := defaultCurrTick.Mul(sdk.NewInt(2))
 	newCurrSqrtPrice := defaultCurrSqrtPrice.Mul(sdk.NewDec(2))
 
-	gasBeforeSwap := s.Ctx.GasMeter().GasConsumed()
 	mock_pool.ApplySwap(newLiquidity, newCurrTick, newCurrSqrtPrice)
-	gasAfterSwap := s.Ctx.GasMeter().GasConsumed()
 
-	s.Require().Equal(gasAfterSwap-gasBeforeSwap, uint64(gammtypes.BalancerGasFeeForSwap))
 	s.Require().Equal(mock_pool.Liquidity, newLiquidity)
 	s.Require().Equal(mock_pool.CurrentTick, newCurrTick)
 	s.Require().Equal(mock_pool.CurrentSqrtPrice, newCurrSqrtPrice)

@@ -6,8 +6,12 @@ import (
 	"strconv"
 	"strings"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
@@ -36,6 +40,8 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdSpotPrice(),
 		GetCmdQueryTotalLiquidity(),
 		GetCmdTotalPoolLiquidity(),
+		GetCmdQueryPoolsWithFilter(),
+		GetCmdPoolType(),
 	)
 
 	return cmd
@@ -380,6 +386,7 @@ func GetCmdSpotPrice() *cobra.Command {
 				return err
 			}
 
+			// nolint: staticcheck
 			res, err := queryClient.SpotPrice(cmd.Context(), &types.QuerySpotPriceRequest{
 				PoolId:          uint64(poolID),
 				BaseAssetDenom:  args[1],
@@ -394,5 +401,109 @@ func GetCmdSpotPrice() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetCmdQueryPoolsWithFilter returns pool with filter
+func GetCmdQueryPoolsWithFilter() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pools-with-filter <min_liquidity> <pool_type>",
+		Short: "Query pools with filter",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query pools with filter. The possible filter options are:
+
+1. By Pool type: Either "Balancer" or "Stableswap"
+2. By min pool liquidity by providing min coins
+
+Note that if both filters are to be applied, "min_liquidity" always needs to be provided as the first argument.
+
+Example:
+$ %s query gamm pools-with-filter <min_liquidity> <pool_type> 
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.RangeArgs(1, 2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var min_liquidity sdk.Coins
+			var pool_type string
+			if len(args) == 1 {
+				coins, err := sdk.ParseCoinsNormalized(args[0])
+				if err != nil {
+					pool_type = args[0]
+				}
+				min_liquidity = coins
+			} else {
+				coins, err := sdk.ParseCoinsNormalized(args[0])
+				if err != nil {
+					return status.Errorf(codes.InvalidArgument, "invalid token: %s", err.Error())
+				}
+
+				min_liquidity = coins
+				pool_type = args[1]
+			}
+
+			res, err := queryClient.PoolsWithFilter(cmd.Context(), &types.QueryPoolsWithFilterRequest{
+				MinLiquidity: min_liquidity,
+				PoolType:     pool_type,
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdPoolType returns pool type given pool id.
+func GetCmdPoolType() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pool-type <pool_id>",
+		Short: "Query pool type",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query pool type
+Example:
+$ %s query gamm pool-type <pool_id>
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			poolID, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.PoolType(cmd.Context(), &types.QueryPoolTypeRequest{
+				PoolId: uint64(poolID),
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
 	return cmd
 }

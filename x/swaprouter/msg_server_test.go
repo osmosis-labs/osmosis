@@ -32,10 +32,10 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 		expectedMessageEvents int
 	}{
 		"zero hops": {
-			routes:                []swaproutertypes.SwapAmountInRoute{},
-			tokenIn:               sdk.NewCoin("foo", sdk.NewInt(tokenIn)),
-			tokenOutMinAmount:     sdk.NewInt(tokenInMinAmount),
-			expectedMessageEvents: 1, // 1 gamm.
+			routes:            []swaproutertypes.SwapAmountInRoute{},
+			tokenIn:           sdk.NewCoin("foo", sdk.NewInt(tokenIn)),
+			tokenOutMinAmount: sdk.NewInt(tokenInMinAmount),
+			expectError:       true,
 		},
 		"one hop": {
 			routes: []swaproutertypes.SwapAmountInRoute{
@@ -104,8 +104,8 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			})
 
 			if !tc.expectError {
-				suite.NoError(err)
-				suite.NotNil(response)
+				suite.Require().NoError(err)
+				suite.Require().NotNil(response)
 			}
 
 			suite.AssertEventEmitted(ctx, gammtypes.TypeEvtTokenSwapped, tc.expectedSwapEvents)
@@ -131,10 +131,10 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 		expectedMessageEvents int
 	}{
 		"zero hops": {
-			routes:                []swaproutertypes.SwapAmountOutRoute{},
-			tokenOut:              sdk.NewCoin("foo", sdk.NewInt(tokenOut)),
-			tokenInMaxAmount:      sdk.NewInt(tokenInMaxAmount),
-			expectedMessageEvents: 1, // 1 gamm.
+			routes:           []swaproutertypes.SwapAmountOutRoute{},
+			tokenOut:         sdk.NewCoin("foo", sdk.NewInt(tokenOut)),
+			tokenInMaxAmount: sdk.NewInt(tokenInMaxAmount),
+			expectError:      true,
 		},
 		"one hop": {
 			routes: []swaproutertypes.SwapAmountOutRoute{
@@ -203,8 +203,8 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 			})
 
 			if !tc.expectError {
-				suite.NoError(err)
-				suite.NotNil(response)
+				suite.Require().NoError(err)
+				suite.Require().NotNil(response)
 			}
 
 			suite.AssertEventEmitted(ctx, gammtypes.TypeEvtTokenSwapped, tc.expectedSwapEvents)

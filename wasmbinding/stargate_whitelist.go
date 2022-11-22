@@ -15,6 +15,7 @@ import (
 
 	epochtypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	gammv2types "github.com/osmosis-labs/osmosis/v13/x/gamm/v2types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v13/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
@@ -23,6 +24,7 @@ import (
 	swaprouterqueryproto "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/queryproto"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
 	twapquerytypes "github.com/osmosis-labs/osmosis/v13/x/twap/client/queryproto"
+	twapv2querytypes "github.com/osmosis-labs/osmosis/v13/x/twap/client/v2queryproto"
 	txfeestypes "github.com/osmosis-labs/osmosis/v13/x/txfees/types"
 )
 
@@ -78,7 +80,12 @@ func init() {
 	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/PoolParams", &gammtypes.QueryPoolParamsResponse{})
 	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/TotalPoolLiquidity", &gammtypes.QueryTotalPoolLiquidityResponse{})
 	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/TotalShares", &gammtypes.QueryTotalSharesResponse{})
-	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/SpotPrice", &gammtypes.QuerySpotPriceResponse{})
+	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/CalcJoinPoolShares", &gammtypes.QueryCalcJoinPoolSharesResponse{})
+	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/CalcExitPoolCoinsFromShares", &gammtypes.QueryCalcExitPoolCoinsFromSharesResponse{})
+	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/CalcJoinPoolNoSwapShares", &gammtypes.QueryCalcJoinPoolNoSwapSharesResponse{})
+	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/PoolType", &gammtypes.QueryPoolTypeResponse{})
+	setWhitelistedQuery("/osmosis.gamm.v2.Query/SpotPrice", &gammv2types.QuerySpotPriceResponse{})
+	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/EstimateSwapExactAmountIn", &swaprouterqueryproto.EstimateSwapExactAmountInResponse{})
 
 	// swaprouter
 	setWhitelistedQuery("/osmosis.swaprouter.v1beta1.Query/NumPools", &swaprouterqueryproto.NumPoolsResponse{})
@@ -119,8 +126,8 @@ func init() {
 	// Does not include denoms_from_creator, TBD if this is the index we want contracts to use instead of admin
 
 	// twap
-	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/ArithmeticTwap", &twapquerytypes.ArithmeticTwapResponse{})
-	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/ArithmeticTwapToNow", &twapquerytypes.ArithmeticTwapToNowResponse{})
+	setWhitelistedQuery("/osmosis.twap.v2.Query/ArithmeticTwap", &twapv2querytypes.ArithmeticTwapResponse{})
+	setWhitelistedQuery("/osmosis.twap.v2.Query/ArithmeticTwapToNow", &twapv2querytypes.ArithmeticTwapToNowResponse{})
 	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/Params", &twapquerytypes.ParamsResponse{})
 }
 

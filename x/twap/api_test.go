@@ -285,7 +285,23 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			input:        makeSimpleTwapInput(baseTime.Add(-time.Hour), baseTime, baseQuoteAB),
 			expectError:  twap.TimeTooOldError{Time: baseTime.Add(-time.Hour)},
 		},
-		"spot price error in record": {
+		"spot price error in record at record time (start time = record time)": {
+			recordsToSet: []types.TwapRecord{withLastErrTime(baseRecord, baseTime)},
+			ctxTime:      tPlusOneMin,
+			input:        makeSimpleTwapInput(baseTime, tPlusOneMin, baseQuoteAB),
+			expTwap:      sdk.NewDec(10),
+			expectError:  spotPriceError,
+			expectSpErr:  baseTime,
+		},
+		"spot price error in record at record time (start time > record time)": {
+			recordsToSet: []types.TwapRecord{withLastErrTime(baseRecord, baseTime)},
+			ctxTime:      tPlusOneMin,
+			input:        makeSimpleTwapInput(tPlusOne, tPlusOneMin, baseQuoteAB),
+			expTwap:      sdk.NewDec(10),
+			expectError:  spotPriceError,
+			expectSpErr:  baseTime,
+		},
+		"spot price error in record after record time": {
 			recordsToSet: []types.TwapRecord{withLastErrTime(baseRecord, tPlusOne)},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime, tPlusOneMin, baseQuoteAB),
@@ -702,6 +718,13 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 			input:         makeSimpleTwapToNowInput(baseTime.Add(time.Hour), baseQuoteAB),
 			expectedError: types.StartTimeAfterEndTimeError{StartTime: baseTime.Add(time.Hour), EndTime: tPlusOne},
 		},
+		"spot price error in record at record time (start time > record time)": {
+			recordsToSet:  []types.TwapRecord{withLastErrTime(baseRecord, baseTime)},
+			ctxTime:       tPlusOneMin,
+			input:         makeSimpleTwapInput(tPlusOne, tPlusOneMin, baseQuoteAB),
+			expTwap:       sdk.NewDec(10),
+			expectedError: spotPriceError,
+		},
 	}
 	for name, test := range tests {
 		s.Run(name, func() {
@@ -719,7 +742,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 
 			if test.expectedError != nil {
 				s.Require().Error(err)
-				s.Require().ErrorIs(err, test.expectedError)
+				s.Require().Equal(test.expectedError, err)
 				return
 			}
 			s.Require().NoError(err)
