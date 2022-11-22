@@ -1069,7 +1069,6 @@ func TestValidatePoolLiquidity(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-
 			err := validatePoolLiquidity(tc.liquidity, tc.scalingFactors)
 
 			if tc.expectError != nil {
