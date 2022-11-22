@@ -3,6 +3,8 @@ package concentrated_liquidity
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/model"
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	cltypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
@@ -15,27 +17,19 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	return k.createPosition(ctx, poolId, owner, amount0Desired, amount1Desired, amount0Min, amount1Min, lowerTick, upperTick)
 }
 
-func GetLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0, amount1 sdk.Int) (liquidity sdk.Dec) {
-	return getLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB, amount0, amount1)
-}
-
-func PriceToTick(price sdk.Dec) sdk.Int {
-	return priceToTick(price)
-}
-
-func TickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
-	return tickToSqrtPrice(tickIndex)
-}
-
-func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo TickInfo) {
+func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo model.TickInfo) {
 	k.setTickInfo(ctx, poolId, tickIndex, tickInfo)
+}
+
+func (k Keeper) SetPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) error {
+	return k.setPool(ctx, pool)
 }
 
 func (k Keeper) WithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityAmount sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
 	return k.withdrawPosition(ctx, poolId, owner, lowerTick, upperTick, liquidityAmount)
 }
 
-func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) (*Position, error) {
+func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) (*model.Position, error) {
 	return k.getPosition(ctx, poolId, owner, lowerTick, upperTick)
 }
 
@@ -43,34 +37,14 @@ func (k Keeper) HasPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	return k.hasPosition(ctx, poolId, owner, lowerTick, upperTick)
 }
 
-func GetNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
-	return getNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining)
+func (k Keeper) GetPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedPoolExtension, error) {
+	return k.getPoolById(ctx, poolId)
 }
 
-func GetNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
-	return getNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemaining)
+func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Dec, err error) {
+	return k.crossTick(ctx, poolId, tickIndex)
 }
 
-func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec {
-	return calcAmount0Delta(liq, sqrtPriceA, sqrtPriceB, roundUp)
-}
-
-func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec {
-	return calcAmount1Delta(liq, sqrtPriceA, sqrtPriceB, roundUp)
-}
-
-func ComputeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec, zeroForOne bool) (sqrtPriceNext, amountIn, amountOut sdk.Dec) {
-	return computeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining, zeroForOne)
-}
-
-func Liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
-	return liquidity0(amount, sqrtPriceA, sqrtPriceB)
-}
-
-func Liquidity1(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
-	return liquidity1(amount, sqrtPriceA, sqrtPriceB)
-}
-
-func (k Keeper) GetPoolbyId(ctx sdk.Context, poolId uint64) (Pool, error) {
-	return k.getPoolbyId(ctx, poolId)
+func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickInfo model.TickInfo, err error) {
+	return k.getTickInfo(ctx, poolId, tickIndex)
 }

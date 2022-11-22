@@ -9,6 +9,7 @@ import (
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
+	cdc.RegisterInterface((*ConcentratedPoolExtension)(nil), nil)
 	cdc.RegisterConcrete(&MsgCreatePosition{}, "osmosis/cl-create-position", nil)
 	cdc.RegisterConcrete(&MsgWithdrawPosition{}, "osmosis/cl-withdraw-position", nil)
 }
