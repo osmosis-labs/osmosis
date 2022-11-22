@@ -1016,27 +1016,25 @@ func (s *KeeperTestSuite) TestOrderInitialPoolDenoms() {
 
 }
 
-func (suite *KeeperTestSuite) TestPriceToTick() {
-	testCases := []struct {
-		name         string
-		price        sdk.Dec
-		tickExpected string
-	}{
-		{
-			"happy path",
-			sdk.NewDec(5000),
-			"85176",
-		},
-	}
+func (s *KeeperTestSuite) TestGetPoolById() {
+	s.SetupTest()
 
-	for _, tc := range testCases {
-		tc := tc
+	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "token0", "token1", sdk.NewDec(1), sdk.NewInt(1))
+	s.Require().NoError(err)
 
-		suite.Run(tc.name, func() {
-			tick := math.PriceToTick(tc.price)
-			suite.Require().Equal(tc.tickExpected, tick.String())
-		})
-	}
+	getPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+
+	// ensure that the pool is the same
+	s.Require().Equal(pool.GetId(), getPool.GetId())
+	s.Require().Equal(pool.GetAddress(), getPool.GetAddress())
+	s.Require().Equal(pool.GetCurrentSqrtPrice(), getPool.GetCurrentSqrtPrice())
+	s.Require().Equal(pool.GetCurrentTick(), getPool.GetCurrentTick())
+	s.Require().Equal(pool.GetLiquidity(), getPool.GetLiquidity())
+
+	// try getting invalid pool
+	_, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, uint64(2))
+	s.Require().Error(err)
 }
 
 // func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {

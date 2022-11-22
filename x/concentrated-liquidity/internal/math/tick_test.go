@@ -34,3 +34,26 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 		})
 	}
 }
+
+func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
+	testCases := []struct {
+		name         string
+		price        sdk.Dec
+		tickExpected string
+	}{
+		{
+			"happy path",
+			sdk.NewDec(5000),
+			"85176",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			tick := math.PriceToTick(tc.price)
+			suite.Require().Equal(tc.tickExpected, tick.String())
+		})
+	}
+}
