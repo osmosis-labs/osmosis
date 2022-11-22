@@ -121,7 +121,7 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 				},
 			},
 			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6},
-			tokenIn:                 sdk.NewCoin("foo", sdk.NewInt(100000)),
+			tokenIn:                 sdk.NewCoin(foo, sdk.NewInt(100000)),
 			tokenOutMinAmount:       sdk.NewInt(1),
 			expectReducedFeeApplied: true,
 		},
@@ -136,19 +136,19 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 			routes: []types.SwapAmountInRoute{
 				{
 					PoolId:        1,
-					TokenOutDenom: "uosmo",
+					TokenOutDenom: uosmo,
 				},
 				{
 					PoolId:        2,
-					TokenOutDenom: "baz",
+					TokenOutDenom: baz,
 				},
 				{
 					PoolId:        3,
-					TokenOutDenom: "bar",
+					TokenOutDenom: bar,
 				},
 			},
 			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6},
-			tokenIn:                 sdk.NewCoin("foo", sdk.NewInt(100000)),
+			tokenIn:                 sdk.NewCoin(foo, sdk.NewInt(100000)),
 			tokenOutMinAmount:       sdk.NewInt(1),
 			expectReducedFeeApplied: false,
 		},
@@ -164,15 +164,15 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 			routes: []types.SwapAmountInRoute{
 				{
 					PoolId:        1,
-					TokenOutDenom: "bar",
+					TokenOutDenom: bar,
 				},
 				{
 					PoolId:        2,
-					TokenOutDenom: "baz",
+					TokenOutDenom: baz,
 				},
 			},
 			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6},
-			tokenIn:                 sdk.NewCoin("foo", sdk.NewInt(100000)),
+			tokenIn:                 sdk.NewCoin(foo, sdk.NewInt(100000)),
 			tokenOutMinAmount:       sdk.NewInt(1),
 			expectReducedFeeApplied: false,
 		},
@@ -188,15 +188,15 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 			routes: []types.SwapAmountInRoute{
 				{
 					PoolId:        1,
-					TokenOutDenom: "uosmo",
+					TokenOutDenom: uosmo,
 				},
 				{
 					PoolId:        2,
-					TokenOutDenom: "baz",
+					TokenOutDenom: baz,
 				},
 			},
 			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6},
-			tokenIn:                 sdk.NewCoin("foo", sdk.NewInt(100000)),
+			tokenIn:                 sdk.NewCoin(foo, sdk.NewInt(100000)),
 			tokenOutMinAmount:       sdk.NewInt(1),
 			expectReducedFeeApplied: true,
 		},
@@ -214,28 +214,26 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 			routes: []types.SwapAmountInRoute{
 				{
 					PoolId:        1,
-					TokenOutDenom: "uosmo",
+					TokenOutDenom: uosmo,
 				},
 				{
 					PoolId:        2,
-					TokenOutDenom: "baz",
+					TokenOutDenom: baz,
 				},
 				{
 					PoolId:        3,
-					TokenOutDenom: "bar",
+					TokenOutDenom: bar,
 				},
 			},
 			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9},
-			tokenIn:                 sdk.NewCoin("foo", sdk.NewInt(100000)),
+			tokenIn:                 sdk.NewCoin(foo, sdk.NewInt(100000)),
 			tokenOutMinAmount:       sdk.NewInt(1),
 			expectReducedFeeApplied: false,
 		},
 		// TODO:
 		// tests for concentrated liquidity
-		// test for multi-hop
-		// test for multi hop (osmo routes) -> reduces fee, add an assertion
 		// change values in and out to be different with each swap module type
-		// create more precise assertions on what the results are
+		// tests for stable-swap pools
 		// edge cases:
 		//   * invalid route length
 		//   * pool does not exist
@@ -245,75 +243,25 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
-			gammKeeper := suite.App.GAMMKeeper
 			swaprouterKeeper := suite.App.SwapRouterKeeper
 
 			suite.createBalancerPoolsFromCoinsWithSwapFee(tc.poolCoins, tc.poolFee)
 
 			// if test specifies incentivized gauges, set them here
 			if len(tc.incentivizedGauges) > 0 {
-				var records []poolincentivestypes.DistrRecord
-				totalWeight := sdk.NewInt(int64(len(tc.incentivizedGauges)))
-				for _, gauge := range tc.incentivizedGauges {
-					records = append(records, poolincentivestypes.DistrRecord{GaugeId: gauge, Weight: sdk.OneInt()})
-				}
-				distInfo := poolincentivestypes.DistrInfo{
-					TotalWeight: totalWeight,
-					Records:     records,
-				}
-				suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, distInfo)
-			}
-
-			// calcOutAmountAsSeparateSwaps calculates the multi-hop swap as separate swaps, while also
-			// utilizing a cacheContext so the state does not change
-			calcOutAmountAsSeparateSwaps := func(osmoFeeReduced bool) sdk.Coin {
-				cacheCtx, _ := suite.Ctx.CacheContext()
-
-				if osmoFeeReduced {
-					// extract route from swap
-					route := types.SwapAmountInRoutes(tc.routes)
-					// utilizing the extracted route, determine the routeSwapFee and sumOfSwapFees
-					// these two variables are used to calculate the overall swap fee utilizing the following formula
-					// swapFee = routeSwapFee * ((pool_fee) / (sumOfSwapFees))
-					routeSwapFee, sumOfSwapFees, err := swaprouterKeeper.GetOsmoRoutedMultihopTotalSwapFee(suite.Ctx, route)
-					suite.Require().NoError(err)
-					nextTokenIn := tc.tokenIn
-					for _, hop := range tc.routes {
-						// extract the current pool's swap fee
-						hopPool, err := gammKeeper.GetPoolAndPoke(cacheCtx, hop.PoolId)
-						suite.Require().NoError(err)
-						currentPoolSwapFee := hopPool.GetSwapFee(cacheCtx)
-						// utilize the routeSwapFee, sumOfSwapFees, and current pool swap fee to calculate the new reduced swap fee
-						swapFee := routeSwapFee.Mul((currentPoolSwapFee.Quo(sumOfSwapFees)))
-						// we then do individual swaps until we reach the end of the swap route
-						tokenOut, err := gammKeeper.SwapExactAmountIn(cacheCtx, suite.TestAccs[0], hopPool, nextTokenIn, hop.TokenOutDenom, sdk.OneInt(), swapFee)
-						suite.Require().NoError(err)
-						nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
-					}
-					return nextTokenIn
-				} else {
-					nextTokenIn := tc.tokenIn
-					for _, hop := range tc.routes {
-						hopPool, err := gammKeeper.GetPoolAndPoke(cacheCtx, hop.PoolId)
-						suite.Require().NoError(err)
-						updatedPoolSwapFee := hopPool.GetSwapFee(cacheCtx)
-						tokenOut, err := gammKeeper.SwapExactAmountIn(cacheCtx, suite.TestAccs[0], hopPool, nextTokenIn, hop.TokenOutDenom, sdk.OneInt(), updatedPoolSwapFee)
-						suite.Require().NoError(err)
-						nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
-					}
-					return nextTokenIn
-				}
+				suite.makeGaugesIncentivized(tc.incentivizedGauges)
 			}
 
 			if tc.expectError {
+				// execute the swap
 				_, err := swaprouterKeeper.RouteExactAmountIn(suite.Ctx, suite.TestAccs[0], tc.routes, tc.tokenIn, tc.tokenOutMinAmount)
 				suite.Require().Error(err)
 			} else {
-				var expectedMultihopTokenOutAmount sdk.Coin
 				// calculate the swap as separate swaps with either the reduced swap fee or normal fee
-				expectedMultihopTokenOutAmount = calcOutAmountAsSeparateSwaps(tc.expectReducedFeeApplied)
-				// compare the expected tokenOut to the actual tokenOut
+				expectedMultihopTokenOutAmount := suite.calcInAmountAsSeparateSwaps(tc.expectReducedFeeApplied, tc.routes, tc.tokenIn)
+				// execute the swap
 				multihopTokenOutAmount, err := swaprouterKeeper.RouteExactAmountIn(suite.Ctx, suite.TestAccs[0], tc.routes, tc.tokenIn, tc.tokenOutMinAmount)
+				// compare the expected tokenOut to the actual tokenOut
 				suite.Require().NoError(err)
 				suite.Require().Equal(expectedMultihopTokenOutAmount.Amount.String(), multihopTokenOutAmount.String())
 			}
@@ -350,8 +298,8 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 					TokenInDenom: bar,
 				},
 			},
+			tokenInMaxAmount: sdk.NewInt(90000000),
 			tokenOut:         sdk.NewCoin(foo, defaultSwapAmount),
-			tokenInMaxAmount: defaultSwapAmount.Mul(sdk.NewInt(2)), // the amount here is arbitrary
 		},
 		{
 			name: "Two routes: Swap - [foo -> bar](pool 1) - [bar -> baz](pool 2), both pools 1 percent fee",
@@ -363,17 +311,17 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 			routes: []types.SwapAmountOutRoute{
 				{
 					PoolId:       1,
-					TokenInDenom: "foo",
+					TokenInDenom: foo,
 				},
 				{
 					PoolId:       2,
-					TokenInDenom: "bar",
+					TokenInDenom: bar,
 				},
 			},
 			incentivizedGauges: []uint64{},
 
 			tokenInMaxAmount: sdk.NewInt(90000000),
-			tokenOut:         sdk.NewCoin("baz", sdk.NewInt(100000)),
+			tokenOut:         sdk.NewCoin(baz, sdk.NewInt(100000)),
 		},
 		{
 			name: "Two routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) with a half fee applied, both pools 1 percent fee",
@@ -385,16 +333,16 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 			routes: []types.SwapAmountOutRoute{
 				{
 					PoolId:       1,
-					TokenInDenom: "foo",
+					TokenInDenom: foo,
 				},
 				{
 					PoolId:       2,
-					TokenInDenom: "uosmo",
+					TokenInDenom: uosmo,
 				},
 			},
 			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6},
 			tokenInMaxAmount:        sdk.NewInt(90000000),
-			tokenOut:                sdk.NewCoin("baz", sdk.NewInt(100000)),
+			tokenOut:                sdk.NewCoin(baz, sdk.NewInt(100000)),
 			expectReducedFeeApplied: true,
 		},
 		{
@@ -407,16 +355,16 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 			routes: []types.SwapAmountOutRoute{
 				{
 					PoolId:       1,
-					TokenInDenom: "foo",
+					TokenInDenom: foo,
 				},
 				{
 					PoolId:       2,
-					TokenInDenom: "uosmo",
+					TokenInDenom: uosmo,
 				},
 			},
 			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6},
 			tokenInMaxAmount:        sdk.NewInt(90000000),
-			tokenOut:                sdk.NewCoin("baz", sdk.NewInt(100000)),
+			tokenOut:                sdk.NewCoin(baz, sdk.NewInt(100000)),
 			expectReducedFeeApplied: true,
 		},
 		{
@@ -430,20 +378,20 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 			routes: []types.SwapAmountOutRoute{
 				{
 					PoolId:       1,
-					TokenInDenom: "foo",
+					TokenInDenom: foo,
 				},
 				{
 					PoolId:       2,
-					TokenInDenom: "uosmo",
+					TokenInDenom: uosmo,
 				},
 				{
 					PoolId:       3,
-					TokenInDenom: "baz",
+					TokenInDenom: baz,
 				},
 			},
 			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6},
 			tokenInMaxAmount:        sdk.NewInt(90000000),
-			tokenOut:                sdk.NewCoin("bar", sdk.NewInt(100000)),
+			tokenOut:                sdk.NewCoin(bar, sdk.NewInt(100000)),
 			expectReducedFeeApplied: false,
 		},
 		{
@@ -458,15 +406,15 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 			routes: []types.SwapAmountOutRoute{
 				{
 					PoolId:       1,
-					TokenInDenom: "foo",
+					TokenInDenom: foo,
 				},
 				{
 					PoolId:       2,
-					TokenInDenom: "bar",
+					TokenInDenom: bar,
 				},
 			},
 			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6},
-			tokenOut:                sdk.NewCoin("baz", sdk.NewInt(100000)),
+			tokenOut:                sdk.NewCoin(baz, sdk.NewInt(100000)),
 			tokenInMaxAmount:        sdk.NewInt(90000000),
 			expectReducedFeeApplied: false,
 		},
@@ -482,15 +430,15 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 			routes: []types.SwapAmountOutRoute{
 				{
 					PoolId:       1,
-					TokenInDenom: "foo",
+					TokenInDenom: foo,
 				},
 				{
 					PoolId:       2,
-					TokenInDenom: "uosmo",
+					TokenInDenom: uosmo,
 				},
 			},
 			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6},
-			tokenOut:                sdk.NewCoin("baz", sdk.NewInt(100000)),
+			tokenOut:                sdk.NewCoin(baz, sdk.NewInt(100000)),
 			tokenInMaxAmount:        sdk.NewInt(90000000),
 			expectReducedFeeApplied: true,
 		},
@@ -508,28 +456,26 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 			routes: []types.SwapAmountOutRoute{
 				{
 					PoolId:       1,
-					TokenInDenom: "foo",
+					TokenInDenom: foo,
 				},
 				{
 					PoolId:       2,
-					TokenInDenom: "uosmo",
+					TokenInDenom: uosmo,
 				},
 				{
 					PoolId:       3,
-					TokenInDenom: "baz",
+					TokenInDenom: baz,
 				},
 			},
 			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9},
-			tokenOut:                sdk.NewCoin("bar", sdk.NewInt(100000)),
+			tokenOut:                sdk.NewCoin(bar, sdk.NewInt(100000)),
 			tokenInMaxAmount:        sdk.NewInt(90000000),
 			expectReducedFeeApplied: false,
 		},
 		// TODO:
 		// tests for concentrated liquidity
-		// test for multi-hop
-		// test for multi hop (osmo routes) -> reduces fee, add an assertion
+		// tests for stable-swap pools
 		// change values in and out to be different with each swap module type
-		// create more precise assertions on what the results are
 		// edge cases:
 		//   * invalid route length
 		//   * pool does not exist
@@ -539,77 +485,25 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
-			gammKeeper := suite.App.GAMMKeeper
 			swaprouterKeeper := suite.App.SwapRouterKeeper
 
 			suite.createBalancerPoolsFromCoinsWithSwapFee(tc.poolCoins, tc.poolFee)
 
 			// if test specifies incentivized gauges, set them here
 			if len(tc.incentivizedGauges) > 0 {
-				var records []poolincentivestypes.DistrRecord
-				totalWeight := sdk.NewInt(int64(len(tc.incentivizedGauges)))
-				for _, gauge := range tc.incentivizedGauges {
-					records = append(records, poolincentivestypes.DistrRecord{GaugeId: gauge, Weight: sdk.OneInt()})
-				}
-				distInfo := poolincentivestypes.DistrInfo{
-					TotalWeight: totalWeight,
-					Records:     records,
-				}
-				suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, distInfo)
-			}
-
-			// calcOutAmountAsSeparateSwaps calculates the multi-hop swap as separate swaps, while also
-			// utilizing a cacheContext so the state does not change
-			calcOutAmountAsSeparateSwaps := func(osmoFeeReduced bool) sdk.Coin {
-				cacheCtx, _ := suite.Ctx.CacheContext()
-
-				if osmoFeeReduced {
-					// extract route from swap
-					route := types.SwapAmountOutRoutes(tc.routes)
-					// utilizing the extracted route, determine the routeSwapFee and sumOfSwapFees
-					// these two variables are used to calculate the overall swap fee utilizing the following formula
-					// swapFee = routeSwapFee * ((pool_fee) / (sumOfSwapFees))
-					routeSwapFee, sumOfSwapFees, err := swaprouterKeeper.GetOsmoRoutedMultihopTotalSwapFee(suite.Ctx, route)
-					suite.Require().NoError(err)
-					nextTokenOut := tc.tokenOut
-					for i := len(tc.routes) - 1; i >= 0; i-- {
-						hop := tc.routes[i]
-						// extract the current pool's swap fee
-						hopPool, err := gammKeeper.GetPoolAndPoke(cacheCtx, hop.PoolId)
-						suite.Require().NoError(err)
-						currentPoolSwapFee := hopPool.GetSwapFee(cacheCtx)
-						// utilize the routeSwapFee, sumOfSwapFees, and current pool swap fee to calculate the new reduced swap fee
-						swapFee := routeSwapFee.Mul((currentPoolSwapFee.Quo(sumOfSwapFees)))
-						// we then do individual swaps until we reach the end of the swap route
-						tokenOut, err := gammKeeper.SwapExactAmountOut(cacheCtx, suite.TestAccs[0], hopPool, hop.TokenInDenom, sdk.NewInt(100000000), nextTokenOut, swapFee)
-						suite.Require().NoError(err)
-						nextTokenOut = sdk.NewCoin(hop.TokenInDenom, tokenOut)
-					}
-					return nextTokenOut
-				} else {
-					nextTokenOut := tc.tokenOut
-					for i := len(tc.routes) - 1; i >= 0; i-- {
-						hop := tc.routes[i]
-						hopPool, err := gammKeeper.GetPoolAndPoke(cacheCtx, hop.PoolId)
-						suite.Require().NoError(err)
-						updatedPoolSwapFee := hopPool.GetSwapFee(cacheCtx)
-						tokenOut, err := gammKeeper.SwapExactAmountOut(cacheCtx, suite.TestAccs[0], hopPool, hop.TokenInDenom, sdk.NewInt(100000000), nextTokenOut, updatedPoolSwapFee)
-						suite.Require().NoError(err)
-						nextTokenOut = sdk.NewCoin(hop.TokenInDenom, tokenOut)
-					}
-					return nextTokenOut
-				}
+				suite.makeGaugesIncentivized(tc.incentivizedGauges)
 			}
 
 			if tc.expectError {
+				// execute the swap
 				_, err := swaprouterKeeper.RouteExactAmountOut(suite.Ctx, suite.TestAccs[0], tc.routes, tc.tokenInMaxAmount, tc.tokenOut)
 				suite.Require().Error(err)
 			} else {
-				var expectedMultihopTokenOutAmount sdk.Coin
 				// calculate the swap as separate swaps with either the reduced swap fee or normal fee
-				expectedMultihopTokenOutAmount = calcOutAmountAsSeparateSwaps(tc.expectReducedFeeApplied)
-				// compare the expected tokenOut to the actual tokenOut
+				expectedMultihopTokenOutAmount := suite.calcOutAmountAsSeparateSwaps(tc.expectReducedFeeApplied, tc.routes, tc.tokenOut)
+				// execute the swap
 				multihopTokenOutAmount, err := swaprouterKeeper.RouteExactAmountOut(suite.Ctx, suite.TestAccs[0], tc.routes, tc.tokenInMaxAmount, tc.tokenOut)
+				// compare the expected tokenOut to the actual tokenOut
 				suite.Require().NoError(err)
 				suite.Require().Equal(expectedMultihopTokenOutAmount.Amount.String(), multihopTokenOutAmount.String())
 			}
@@ -704,24 +598,24 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 				routes: []types.SwapAmountInRoute{
 					{
 						PoolId:        1,
-						TokenOutDenom: "bar",
+						TokenOutDenom: bar,
 					},
 					{
 						PoolId:        2,
-						TokenOutDenom: "baz",
+						TokenOutDenom: baz,
 					},
 				},
 				estimateRoutes: []types.SwapAmountInRoute{
 					{
 						PoolId:        3,
-						TokenOutDenom: "bar",
+						TokenOutDenom: bar,
 					},
 					{
 						PoolId:        4,
-						TokenOutDenom: "baz",
+						TokenOutDenom: baz,
 					},
 				},
-				tokenIn:           sdk.NewCoin("foo", sdk.NewInt(100000)),
+				tokenIn:           sdk.NewCoin(foo, sdk.NewInt(100000)),
 				tokenOutMinAmount: sdk.NewInt(1),
 			},
 			expectPass: true,
@@ -732,24 +626,24 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 				routes: []types.SwapAmountInRoute{
 					{
 						PoolId:        1,
-						TokenOutDenom: "uosmo",
+						TokenOutDenom: uosmo,
 					},
 					{
 						PoolId:        2,
-						TokenOutDenom: "baz",
+						TokenOutDenom: baz,
 					},
 				},
 				estimateRoutes: []types.SwapAmountInRoute{
 					{
 						PoolId:        3,
-						TokenOutDenom: "uosmo",
+						TokenOutDenom: uosmo,
 					},
 					{
 						PoolId:        4,
-						TokenOutDenom: "baz",
+						TokenOutDenom: baz,
 					},
 				},
-				tokenIn:           sdk.NewCoin("foo", sdk.NewInt(100000)),
+				tokenIn:           sdk.NewCoin(foo, sdk.NewInt(100000)),
 				tokenOutMinAmount: sdk.NewInt(1),
 			},
 			reducedFeeApplied: true,
@@ -844,25 +738,25 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 				routes: []types.SwapAmountOutRoute{
 					{
 						PoolId:       1,
-						TokenInDenom: "foo",
+						TokenInDenom: foo,
 					},
 					{
 						PoolId:       2,
-						TokenInDenom: "bar",
+						TokenInDenom: bar,
 					},
 				},
 				estimateRoutes: []types.SwapAmountOutRoute{
 					{
 						PoolId:       3,
-						TokenInDenom: "foo",
+						TokenInDenom: foo,
 					},
 					{
 						PoolId:       4,
-						TokenInDenom: "bar",
+						TokenInDenom: bar,
 					},
 				},
 				tokenInMaxAmount: sdk.NewInt(90000000),
-				tokenOut:         sdk.NewCoin("baz", sdk.NewInt(100000)),
+				tokenOut:         sdk.NewCoin(baz, sdk.NewInt(100000)),
 			},
 			expectPass: true,
 		},
@@ -872,25 +766,25 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 				routes: []types.SwapAmountOutRoute{
 					{
 						PoolId:       1,
-						TokenInDenom: "foo",
+						TokenInDenom: foo,
 					},
 					{
 						PoolId:       2,
-						TokenInDenom: "uosmo",
+						TokenInDenom: uosmo,
 					},
 				},
 				estimateRoutes: []types.SwapAmountOutRoute{
 					{
 						PoolId:       3,
-						TokenInDenom: "foo",
+						TokenInDenom: foo,
 					},
 					{
 						PoolId:       4,
-						TokenInDenom: "uosmo",
+						TokenInDenom: uosmo,
 					},
 				},
 				tokenInMaxAmount: sdk.NewInt(90000000),
-				tokenOut:         sdk.NewCoin("baz", sdk.NewInt(100000)),
+				tokenOut:         sdk.NewCoin(baz, sdk.NewInt(100000)),
 			},
 			expectPass:        true,
 			reducedFeeApplied: true,
@@ -954,5 +848,96 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 			suite.Require().Equal(firstEstimatePool, firstEstimatePoolAfterSwap)
 			suite.Require().Equal(secondEstimatePool, secondEstimatePoolAfterSwap)
 		})
+	}
+}
+
+func (suite *KeeperTestSuite) makeGaugesIncentivized(incentivizedGauges []uint64) {
+	var records []poolincentivestypes.DistrRecord
+	totalWeight := sdk.NewInt(int64(len(incentivizedGauges)))
+	for _, gauge := range incentivizedGauges {
+		records = append(records, poolincentivestypes.DistrRecord{GaugeId: gauge, Weight: sdk.OneInt()})
+	}
+	distInfo := poolincentivestypes.DistrInfo{
+		TotalWeight: totalWeight,
+		Records:     records,
+	}
+	suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, distInfo)
+}
+
+func (suite *KeeperTestSuite) calcOutAmountAsSeparateSwaps(osmoFeeReduced bool, routes []swaproutertypes.SwapAmountOutRoute, tokenOut sdk.Coin) sdk.Coin {
+	cacheCtx, _ := suite.Ctx.CacheContext()
+	if osmoFeeReduced {
+		// extract route from swap
+		route := types.SwapAmountOutRoutes(routes)
+		// utilizing the extracted route, determine the routeSwapFee and sumOfSwapFees
+		// these two variables are used to calculate the overall swap fee utilizing the following formula
+		// swapFee = routeSwapFee * ((pool_fee) / (sumOfSwapFees))
+		routeSwapFee, sumOfSwapFees, err := suite.App.SwapRouterKeeper.GetOsmoRoutedMultihopTotalSwapFee(suite.Ctx, route)
+		suite.Require().NoError(err)
+		nextTokenOut := tokenOut
+		for i := len(routes) - 1; i >= 0; i-- {
+			hop := routes[i]
+			// extract the current pool's swap fee
+			hopPool, err := suite.App.GAMMKeeper.GetPoolAndPoke(cacheCtx, hop.PoolId)
+			suite.Require().NoError(err)
+			currentPoolSwapFee := hopPool.GetSwapFee(cacheCtx)
+			// utilize the routeSwapFee, sumOfSwapFees, and current pool swap fee to calculate the new reduced swap fee
+			swapFee := routeSwapFee.Mul((currentPoolSwapFee.Quo(sumOfSwapFees)))
+			// we then do individual swaps until we reach the end of the swap route
+			tokenOut, err := suite.App.GAMMKeeper.SwapExactAmountOut(cacheCtx, suite.TestAccs[0], hopPool, hop.TokenInDenom, sdk.NewInt(100000000), nextTokenOut, swapFee)
+			suite.Require().NoError(err)
+			nextTokenOut = sdk.NewCoin(hop.TokenInDenom, tokenOut)
+		}
+		return nextTokenOut
+	} else {
+		nextTokenOut := tokenOut
+		for i := len(routes) - 1; i >= 0; i-- {
+			hop := routes[i]
+			hopPool, err := suite.App.GAMMKeeper.GetPoolAndPoke(cacheCtx, hop.PoolId)
+			suite.Require().NoError(err)
+			updatedPoolSwapFee := hopPool.GetSwapFee(cacheCtx)
+			tokenOut, err := suite.App.GAMMKeeper.SwapExactAmountOut(cacheCtx, suite.TestAccs[0], hopPool, hop.TokenInDenom, sdk.NewInt(100000000), nextTokenOut, updatedPoolSwapFee)
+			suite.Require().NoError(err)
+			nextTokenOut = sdk.NewCoin(hop.TokenInDenom, tokenOut)
+		}
+		return nextTokenOut
+	}
+}
+
+func (suite *KeeperTestSuite) calcInAmountAsSeparateSwaps(osmoFeeReduced bool, routes []swaproutertypes.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
+	cacheCtx, _ := suite.Ctx.CacheContext()
+	if osmoFeeReduced {
+		// extract route from swap
+		route := types.SwapAmountInRoutes(routes)
+		// utilizing the extracted route, determine the routeSwapFee and sumOfSwapFees
+		// these two variables are used to calculate the overall swap fee utilizing the following formula
+		// swapFee = routeSwapFee * ((pool_fee) / (sumOfSwapFees))
+		routeSwapFee, sumOfSwapFees, err := suite.App.SwapRouterKeeper.GetOsmoRoutedMultihopTotalSwapFee(suite.Ctx, route)
+		suite.Require().NoError(err)
+		nextTokenIn := tokenIn
+		for _, hop := range routes {
+			// extract the current pool's swap fee
+			hopPool, err := suite.App.GAMMKeeper.GetPoolAndPoke(cacheCtx, hop.PoolId)
+			suite.Require().NoError(err)
+			currentPoolSwapFee := hopPool.GetSwapFee(cacheCtx)
+			// utilize the routeSwapFee, sumOfSwapFees, and current pool swap fee to calculate the new reduced swap fee
+			swapFee := routeSwapFee.Mul((currentPoolSwapFee.Quo(sumOfSwapFees)))
+			// we then do individual swaps until we reach the end of the swap route
+			tokenOut, err := suite.App.GAMMKeeper.SwapExactAmountIn(cacheCtx, suite.TestAccs[0], hopPool, nextTokenIn, hop.TokenOutDenom, sdk.OneInt(), swapFee)
+			suite.Require().NoError(err)
+			nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
+		}
+		return nextTokenIn
+	} else {
+		nextTokenIn := tokenIn
+		for _, hop := range routes {
+			hopPool, err := suite.App.GAMMKeeper.GetPoolAndPoke(cacheCtx, hop.PoolId)
+			suite.Require().NoError(err)
+			updatedPoolSwapFee := hopPool.GetSwapFee(cacheCtx)
+			tokenOut, err := suite.App.GAMMKeeper.SwapExactAmountIn(cacheCtx, suite.TestAccs[0], hopPool, nextTokenIn, hop.TokenOutDenom, sdk.OneInt(), updatedPoolSwapFee)
+			suite.Require().NoError(err)
+			nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
+		}
+		return nextTokenIn
 	}
 }
