@@ -1057,3 +1057,46 @@ func TestSingleAssetJoinSwapFeeRatio(t *testing.T) {
 		})
 	}
 }
+
+func TestCalcOutAmtGivenIn(t *testing.T) {
+	type testcase struct {
+		poolLiquidity    sdk.Coins
+		scalingFactors   []uint64
+		swapFee          sdk.Dec
+		tokenIn          sdk.Coin
+		expectedTokenOut sdk.Coin
+	}
+	tests := map[string]testcase{
+		"basic example": {
+			poolLiquidity:    sdk.NewCoins(sdk.NewInt64Coin("ufooo", 10000000000), sdk.NewInt64Coin("tokenB", 10000000000)),
+			scalingFactors:   []uint64{1, 1},
+			swapFee:          sdk.ZeroDec(),
+			tokenIn:          sdk.NewInt64Coin("ufooo", 30_000_000),
+			expectedTokenOut: sdk.NewInt64Coin("tokenB", 29999999),
+		},
+		"basic example .01 swapfee": {
+			poolLiquidity:    sdk.NewCoins(sdk.NewInt64Coin("ufooo", 10000000000), sdk.NewInt64Coin("tokenB", 10000000000)),
+			scalingFactors:   []uint64{1, 1},
+			swapFee:          sdk.MustNewDecFromStr("0.01"),
+			tokenIn:          sdk.NewInt64Coin("ufooo", 30_000_000),
+			expectedTokenOut: sdk.NewInt64Coin("tokenB", 29699999),
+		},
+		"Jon example .01 swapfee": {
+			poolLiquidity:    sdk.NewCoins(sdk.NewInt64Coin("ufooo", 9996981764), sdk.NewInt64Coin("tokenB", 10003100188)),
+			scalingFactors:   []uint64{1, 1},
+			swapFee:          sdk.MustNewDecFromStr("0.01"),
+			tokenIn:          sdk.NewInt64Coin("ufooo", 3018236),
+			expectedTokenOut: sdk.NewInt64Coin("tokenB", 2988053),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			p := poolStructFromAssets(tc.poolLiquidity, tc.scalingFactors)
+			tokenOutDenom := tc.expectedTokenOut.Denom
+
+			outCoin, err := p.CalcOutAmtGivenIn(sdk.Context{}, sdk.NewCoins(tc.tokenIn), tokenOutDenom, tc.swapFee)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedTokenOut, outCoin)
+		})
+	}
+}
