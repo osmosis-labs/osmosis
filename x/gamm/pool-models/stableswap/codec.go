@@ -36,7 +36,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&MsgCreateStableswapPool{},
 		&MsgStableSwapAdjustScalingFactors{},
 	)
-	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+	msgservice.RegisterMsgServiceDesc(registry, &_MsgScalingFactor_serviceDesc)
 }
 
 var (
