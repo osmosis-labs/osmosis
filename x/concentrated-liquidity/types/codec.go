@@ -15,10 +15,6 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	registry.RegisterInterface(
-		"osmosis.concentratedliquidity.v1beta1.PoolI",
-		(*ConcentratedPoolExtension)(nil),
-	)
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgCreatePosition{},

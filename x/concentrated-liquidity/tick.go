@@ -7,13 +7,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	db "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v12/osmomath"
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/model"
+	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
 func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
-	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
+	tickInfo, err := k.getTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
 		return err
 	}
@@ -23,7 +25,7 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 
 	// note that liquidityIn can be either positive or negative.
 	// If negative, this would work as a subtraction from liquidityBefore
-	liquidityAfter := types.AddLiquidity(liquidityBefore, liquidityIn)
+	liquidityAfter := math.AddLiquidity(liquidityBefore, liquidityIn)
 
 	tickInfo.LiquidityGross = liquidityAfter
 
@@ -90,8 +92,8 @@ func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex in
 	return 0, false
 }
 
-func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Dec, err error) {
-	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
+func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Dec, err error) {
+	tickInfo, err := k.getTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -100,15 +102,15 @@ func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liqu
 }
 
 // getTickInfo gets tickInfo given poolId and tickIndex. Returns a boolean field that returns true if value is found for given key.
-func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickInfo types.TickInfo, err error) {
+func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickInfo model.TickInfo, err error) {
 	store := ctx.KVStore(k.storeKey)
-	tickStruct := types.TickInfo{}
+	tickStruct := model.TickInfo{}
 	key := types.KeyTick(poolId, tickIndex)
 
 	found, err := osmoutils.GetIfFound(store, key, &tickStruct)
 	// return 0 values if key has not been initialized
 	if !found {
-		return types.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec()}, err
+		return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec()}, err
 	}
 	if err != nil {
 		return tickStruct, err
@@ -117,8 +119,28 @@ func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 	return tickStruct, nil
 }
 
-func (k Keeper) setTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo types.TickInfo) {
+func (k Keeper) setTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo model.TickInfo) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyTick(poolId, tickIndex)
 	osmoutils.MustSet(store, key, &tickInfo)
+}
+
+// validateTickInRangeIsValid validates that given ticks are valid.
+// That is, both lower and upper ticks are within types.MinTick and types.MaxTick.
+// Also, lower tick must be less than upper tick.
+// Returns error if validation fails. Otherwise, nil.
+// TODO: test
+func validateTickRangeIsValid(lowerTick int64, upperTick int64) error {
+	// ensure types.MinTick <= lowerTick < types.MaxTick
+	if lowerTick < types.MinTick || lowerTick >= types.MaxTick {
+		return types.InvalidTickError{Tick: lowerTick, IsLower: true}
+	}
+	// ensure types.MaxTick < upperTick <= types.MinTick
+	if upperTick > types.MaxTick || upperTick <= types.MinTick {
+		return types.InvalidTickError{Tick: upperTick, IsLower: false}
+	}
+	if lowerTick >= upperTick {
+		return types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
+	}
+	return nil
 }

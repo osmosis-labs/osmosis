@@ -15,8 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	concentrated_pool "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/concentrated-pool"
-	"github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
 var (
@@ -31,7 +30,6 @@ type AppModuleBasic struct {
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	concentrated_pool.RegisterLegacyAminoCodec(cdc)
 	types.RegisterCodec(cdc)
 }
 
@@ -66,7 +64,6 @@ func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
 // RegisterInterfaces registers interfaces and implementations of the gamm module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
-	concentrated_pool.RegisterInterfaces(registry)
 }
 
 type AppModule struct {

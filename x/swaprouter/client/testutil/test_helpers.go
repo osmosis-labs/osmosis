@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v12/app"
-	swaproutercli "github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/cli"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/v13/app"
+	swaproutercli "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/cli"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

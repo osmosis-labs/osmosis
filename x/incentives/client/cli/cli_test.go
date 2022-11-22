@@ -11,11 +11,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/app"
-	"github.com/osmosis-labs/osmosis/v12/x/incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/v12/x/incentives/types"
-	lockuptestutil "github.com/osmosis-labs/osmosis/v12/x/lockup/client/testutil"
-	swaproutertestutil "github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/testutil"
+	"github.com/osmosis-labs/osmosis/v13/app"
+	"github.com/osmosis-labs/osmosis/v13/x/incentives/client/cli"
+	"github.com/osmosis-labs/osmosis/v13/x/incentives/types"
+	lockuptestutil "github.com/osmosis-labs/osmosis/v13/x/lockup/client/testutil"
+	swaproutertestutil "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/testutil"
 
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"

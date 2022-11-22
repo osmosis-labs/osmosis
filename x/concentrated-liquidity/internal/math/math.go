@@ -1,39 +1,13 @@
-package types
+package math
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/osmosis-labs/osmosis/v12/osmomath"
 )
 
-// tickToSqrtPrice takes the tick index and returns the corresponding sqrt of the price
-func TickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
-	price, err := sdk.NewDecWithPrec(10001, 4).Power(tickIndex.Uint64()).ApproxSqrt()
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-
-	return price, nil
-}
-
-// TODO: implement this
-//
-//	func (k Keeper) getTickAtSqrtRatio(sqrtPrice sdk.Dec) sdk.Int {
-//		return sdk.Int{}
-//	}
-//
-// PriceToTick takes a price and returns the corresponding tick index
-func PriceToTick(price sdk.Dec) sdk.Int {
-	logOfPrice := osmomath.BigDecFromSDKDec(price).LogBase2()
-	logInt := osmomath.NewDecWithPrec(10001, 4)
-	tick := logOfPrice.Quo(logInt.LogBase2())
-	return tick.SDKDec().TruncateInt()
-}
-
-// liquidity0 takes an amount of asset0 in the pool as well as the sqrtpCur and the nextPrice
+// Liquidity0 takes an amount of asset0 in the pool as well as the sqrtpCur and the nextPrice
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
-// liquidity0 = amount0 * (sqrtPriceA * sqrtPriceB) / (sqrtPriceB - sqrtPriceA)
+// Liquidity0 = amount0 * (sqrtPriceA * sqrtPriceB) / (sqrtPriceB - sqrtPriceA)
 func Liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
@@ -43,10 +17,10 @@ func Liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	return amount.ToDec().Mul(product).Quo(diff)
 }
 
-// liquidity1 takes an amount of asset1 in the pool as well as the sqrtpCur and the nextPrice
+// Liquidity1 takes an amount of asset1 in the pool as well as the sqrtpCur and the nextPrice
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
-// liquidity1 = amount1 / (sqrtPriceB - sqrtPriceA)
+// Liquidity1 = amount1 / (sqrtPriceB - sqrtPriceA)
 func Liquidity1(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
@@ -55,10 +29,10 @@ func Liquidity1(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	return amount.ToDec().Quo(diff)
 }
 
-// calcAmount0 takes the asset with the smaller liquidity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 0
+// CalcAmount0 takes the asset with the smaller liquidity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 0
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
-// calcAmount0Delta = (liquidity * (sqrtPriceB - sqrtPriceA)) / (sqrtPriceB * sqrtPriceA)
+// CalcAmount0Delta = (liquidity * (sqrtPriceB - sqrtPriceA)) / (sqrtPriceB * sqrtPriceA)
 func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec {
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
@@ -78,10 +52,10 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 	return liq.Mul(diff.Quo(denom))
 }
 
-// calcAmount1 takes the asset with the smaller liquidity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 1
+// CalcAmount1 takes the asset with the smaller liquidity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 1
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
-// calcAmount1Delta = liq * (sqrtPriceB - sqrtPriceA)
+// CalcAmount1Delta = liq * (sqrtPriceB - sqrtPriceA)
 func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec {
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
@@ -100,7 +74,7 @@ func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 	return liq.Mul(diff)
 }
 
-// computeSwapStep calculates the amountIn, amountOut, and the next sqrtPrice given current price, price target, tick liquidity, and amount available to swap
+// ComputeSwapStep calculates the amountIn, amountOut, and the next sqrtPrice given current price, price target, tick liquidity, and amount available to swap
 // lte is reference to "less than or equal", which determines if we are moving left or right of the current price to find the next initialized tick with liquidity
 func ComputeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec, zeroForOne bool) (sqrtPriceNext, amountIn, amountOut sdk.Dec) {
 	// zeroForOne = sqrtPriceCurrent.GTE(sqrtPriceTarget)

@@ -5,12 +5,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v12/app/keepers"
-	"github.com/osmosis-labs/osmosis/v12/app/upgrades"
-	gammkeeper "github.com/osmosis-labs/osmosis/v12/x/gamm/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
-	swaprouterkeeper "github.com/osmosis-labs/osmosis/v12/x/swaprouter"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/v13/app/keepers"
+	"github.com/osmosis-labs/osmosis/v13/app/upgrades"
+	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	swaprouterkeeper "github.com/osmosis-labs/osmosis/v13/x/swaprouter"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 func CreateUpgradeHandler(

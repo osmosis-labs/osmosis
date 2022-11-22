@@ -5,41 +5,44 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	pooltypes "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/concentrated-pool"
-	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/model"
+	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
-
-// TODO: spec, tests, implementation
-func (k Keeper) InitializePool(ctx sdk.Context, pool gammtypes.PoolI, creatorAddress sdk.AccAddress) error {
-	panic("not implemented")
-}
-
-func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint64, denom0, denom1 string, currSqrtPrice sdk.Dec, currTick sdk.Int) (types.ConcentratedPoolExtension, error) {
-	denom0, denom1, err := types.OrderInitialPoolDenoms(denom0, denom1)
-	if err != nil {
-		return &pooltypes.Pool{}, err
-	}
-	pool := pooltypes.Pool{
-		// TODO: move gammtypes.NewPoolAddress(poolId) to swaproutertypes
-		Address:          gammtypes.NewPoolAddress(poolId).String(),
-		Id:               poolId,
-		CurrentSqrtPrice: currSqrtPrice,
-		CurrentTick:      currTick,
-		Liquidity:        sdk.ZeroDec(),
-		Token0:           denom0,
-		Token1:           denom1,
-	}
-
-	err = k.setPool(ctx, &pool)
-	if err != nil {
-		return nil, err
-	}
-
-	return &pool, nil
-}
 
 // GetPool returns a pool with a given id.
 func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error) {
 	return nil, errors.New("not implemented")
+}
+
+func (k Keeper) getPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedPoolExtension, error) {
+	store := ctx.KVStore(k.storeKey)
+	pool := model.Pool{}
+	key := types.KeyPool(poolId)
+	found, err := osmoutils.GetIfFound(store, key, &pool)
+	if err != nil {
+		panic(err)
+	}
+	if !found {
+		return nil, types.PoolNotFoundError{PoolId: poolId}
+	}
+	return &pool, nil
+}
+
+func (k Keeper) unmarshalPool(bz []byte) (types.ConcentratedPoolExtension, error) {
+	var acc types.ConcentratedPoolExtension
+	return acc, k.cdc.UnmarshalInterface(bz, &acc)
+}
+
+// TODO: spec and test
+func (k Keeper) setPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) error {
+	poolModel, ok := pool.(*model.Pool)
+	if !ok {
+		return errors.New("invalid pool type when setting concentreated pool")
+	}
+	store := ctx.KVStore(k.storeKey)
+	key := types.KeyPool(pool.GetId())
+	osmoutils.MustSet(store, key, poolModel)
+	return nil
 }
