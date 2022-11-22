@@ -10,8 +10,13 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gogo/protobuf/proto"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v12/store"
 	"github.com/osmosis-labs/osmosis/v12/x/lockup/types"
+=======
+	"github.com/osmosis-labs/osmosis/v13/osmoutils/sumtree"
+	"github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+>>>>>>> becbf705 (Move prefix sumtree into osmoutils (#3463))
 )
 
 // WithdrawAllMaturedLocks withdraws every lock thats in the process of unlocking, and has finished unlocking by
@@ -587,8 +592,8 @@ func (k Keeper) SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sd
 	return lock, nil
 }
 
-func (k Keeper) accumulationStore(ctx sdk.Context, denom string) store.Tree {
-	return store.NewTree(prefix.NewStore(ctx.KVStore(k.storeKey), accumulationStorePrefix(denom)), 10)
+func (k Keeper) accumulationStore(ctx sdk.Context, denom string) sumtree.Tree {
+	return sumtree.NewTree(prefix.NewStore(ctx.KVStore(k.storeKey), accumulationStorePrefix(denom)), 10)
 }
 
 // removeTokensFromLock is called by lockup slash function.

@@ -10,7 +10,11 @@ import (
 	stypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD:store/legacy/v101/tree.go
 	"github.com/osmosis-labs/osmosis/v12/store"
+=======
+	"github.com/osmosis-labs/osmosis/v13/osmoutils/sumtree"
+>>>>>>> becbf705 (Move prefix sumtree into osmoutils (#3463)):osmoutils/sumtree/legacy/v101/tree.go
 )
 
 type Child struct {
@@ -20,27 +24,27 @@ type Child struct {
 
 type Children []Child // branch nodes
 
-func migrateBranchValue(oldValueBz []byte) *store.Node {
+func migrateBranchValue(oldValueBz []byte) *sumtree.Node {
 	var oldValue Children
 	fmt.Println(string(oldValueBz))
 	err := json.Unmarshal(oldValueBz, &oldValue)
 	if err != nil {
 		panic(err)
 	}
-	cs := make([]*store.Child, len(oldValue))
+	cs := make([]*sumtree.Child, len(oldValue))
 	for i, oldChild := range oldValue {
-		cs[i] = &store.Child{Index: oldChild.Index, Accumulation: oldChild.Acc}
+		cs[i] = &sumtree.Child{Index: oldChild.Index, Accumulation: oldChild.Acc}
 	}
-	return &store.Node{Children: cs}
+	return &sumtree.Node{Children: cs}
 }
 
-func migrateLeafValue(index []byte, oldValueBz []byte) *store.Leaf {
+func migrateLeafValue(index []byte, oldValueBz []byte) *sumtree.Leaf {
 	oldValue := sdk.ZeroInt()
 	err := json.Unmarshal(oldValueBz, &oldValue)
 	if err != nil {
 		panic(err)
 	}
-	return store.NewLeaf(index, oldValue)
+	return sumtree.NewLeaf(index, oldValue)
 }
 
 func nodeKey(level uint16, key []byte) []byte {
