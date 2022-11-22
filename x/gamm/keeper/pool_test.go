@@ -5,7 +5,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
@@ -337,13 +336,8 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 }
 
 func (suite *KeeperTestSuite) TestSetStableSwapScalingFactors() {
-
-	
-	controllerPk := ed25519.GenPrivKey().PubKey()
-	controllerAddr := sdk.AccAddress(controllerPk.Address())
-
-	failPk := ed25519.GenPrivKey().PubKey()
-	failAddr := sdk.AccAddress(failPk.Address())
+	controllerAddr := suite.TestAccs[0]
+	failAddr := suite.TestAccs[1]
 
 	testcases := []struct {
 		name             string
@@ -370,7 +364,7 @@ func (suite *KeeperTestSuite) TestSetStableSwapScalingFactors() {
 			isStableSwapPool: false,
 		},
 		{
-			name:             "Error: can not set scaling factors",
+			name:             "Error: Can not set scaling factors",
 			poolId:           1,
 			scalingFactors:   []uint64{1, 1},
 			sender:           failAddr,
@@ -388,34 +382,25 @@ func (suite *KeeperTestSuite) TestSetStableSwapScalingFactors() {
 	for _, tc := range testcases {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
-			// Mint some assets to the accounts.
 			if tc.isStableSwapPool == true {
-				suite.FundAcc(tc.sender, defaultAcctFundsStableSwap)
-				poolId, err := suite.App.GAMMKeeper.CreatePool(
-					suite.Ctx,
-					stableswap.NewMsgCreateStableswapPool(
-						tc.sender,
-						defaultPoolParamsStableSwap,
-						defaultPoolAssetsStableSwap,
-						tc.scalingFactors,
-						defaultFutureGovernor))
-
-				suite.Require().NoError(err)
-				pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
+				poolId := suite.prepareCustomStableswapPool(
+					defaultAcctFunds,
+					stableswap.PoolParams{
+						SwapFee: defaultSwapFee,
+						ExitFee: defaultExitFee,
+					},
+					sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[0].Denom, defaultAcctFunds[0].Amount.QuoRaw(2)), sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount.QuoRaw(2))),
+					tc.scalingFactors,
+				)
+				pool, _ := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
 				stableswapPool, _ := pool.(*stableswap.Pool)
 				stableswapPool.ScalingFactorController = controllerAddr.String()
 				suite.App.GAMMKeeper.SetPool(suite.Ctx, stableswapPool)
 			} else {
-				// Mint some assets to the accounts.
-				suite.FundAcc(tc.sender, defaultAcctFunds)
-				_, err := suite.App.GAMMKeeper.CreatePool(
-					suite.Ctx,
-					balancer.NewMsgCreateBalancerPool(
-						tc.sender,
-						defaultPoolParams,
-						defaultPoolAssets,
-						defaultFutureGovernor))
-				suite.Require().NoError(err)
+				suite.prepareCustomBalancerPool(
+					defaultAcctFunds,
+					defaultPoolAssets,
+					defaultPoolParams)
 			}
 			err := suite.App.GAMMKeeper.SetStableSwapScalingFactors(suite.Ctx, tc.poolId, tc.scalingFactors, tc.sender.String())
 			if tc.expError != nil {
