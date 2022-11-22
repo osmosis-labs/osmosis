@@ -13,6 +13,4 @@ message GenesisState {
       [ (cosmos_proto.accepts_interface) = "PoolI" ];
   // TODO: deprecate  by adding: reserved 2;
   uint64 next_pool_number = 2;
-  // gamm pool count
-  uint64 pool_count = 3;
 }

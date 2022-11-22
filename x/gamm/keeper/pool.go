@@ -54,8 +54,6 @@ func (k Keeper) InitializePool(ctx sdk.Context, pool types.PoolI, creatorAddress
 
 	k.RecordTotalLiquidityIncrease(ctx, traditionalPool.GetTotalPoolLiquidity(ctx))
 
-	k.incrementPoolCount(ctx)
-
 	return k.setPool(ctx, pool)
 }
 
@@ -149,34 +147,11 @@ func (k Keeper) setPool(ctx sdk.Context, pool types.PoolI) error {
 	return nil
 }
 
-// incrementPoolCount incrementes pool count by 1.
-func (k Keeper) incrementPoolCount(ctx sdk.Context) {
-	store := ctx.KVStore(k.storeKey)
-	poolCount := &gogotypes.UInt64Value{}
-	osmoutils.MustGet(store, types.KeyGammPoolCount, poolCount)
-	poolCount.Value = poolCount.Value + 1
-	osmoutils.MustSet(store, types.KeyGammPoolCount, poolCount)
-}
-
-// initializePoolCount initializes pool count to 0.
-func (k Keeper) initializePoolCount(ctx sdk.Context) {
-	store := ctx.KVStore(k.storeKey)
-	poolCount := &gogotypes.UInt64Value{Value: 0}
-	osmoutils.MustSet(store, types.KeyGammPoolCount, poolCount)
-}
-
 // initializePoolId initializes pool id to 0.
 func (k Keeper) initializePoolId(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	poolId := &gogotypes.UInt64Value{Value: 0}
 	osmoutils.MustSet(store, types.KeyNextGlobalPoolId, poolId)
-}
-
-// SetPoolCount sets pool id to the given value.
-func (k Keeper) SetPoolCount(ctx sdk.Context, count uint64) {
-	store := ctx.KVStore(k.storeKey)
-	poolCount := &gogotypes.UInt64Value{Value: count}
-	osmoutils.MustSet(store, types.KeyGammPoolCount, poolCount)
 }
 
 func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
@@ -292,14 +267,6 @@ func (k Keeper) GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error) 
 
 	denoms := osmoutils.CoinsDenoms(pool.GetTotalPoolLiquidity(ctx))
 	return denoms, err
-}
-
-// GetPoolCount returns the current pool count.
-func (k Keeper) GetPoolCount(ctx sdk.Context) uint64 {
-	store := ctx.KVStore(k.storeKey)
-	poolCount := gogotypes.UInt64Value{}
-	osmoutils.MustGet(store, types.KeyGammPoolCount, &poolCount)
-	return poolCount.Value
 }
 
 // GetNextPoolId returns the next pool Id.

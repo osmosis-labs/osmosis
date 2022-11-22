@@ -10,7 +10,6 @@ import (
 // InitGenesis initializes the x/gamm module's state from a provided genesis
 // state, which includes the current live pools, global pool parameters (e.g. pool creation fee), next pool id etc.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState, unpacker codectypes.AnyUnpacker) {
-	k.initializePoolCount(ctx)
 	k.initializePoolId(ctx)
 	// Sums up the liquidity in all genesis state pools to find the total liquidity across all pools.
 	// Also adds each genesis state pool to the x/gamm module's state
@@ -25,8 +24,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState, unpack
 		if err != nil {
 			panic(err)
 		}
-
-		k.incrementPoolCount(ctx)
 
 		poolAssets := pool.GetTotalPoolLiquidity(ctx)
 		for _, asset := range poolAssets {
@@ -53,7 +50,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	}
 	return &types.GenesisState{
 		Pools:          poolAnys,
-		PoolCount:      k.GetPoolCount(ctx),
 		NextPoolNumber: k.GetNextPoolId(ctx),
 	}
 }

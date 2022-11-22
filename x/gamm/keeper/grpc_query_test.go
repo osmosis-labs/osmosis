@@ -510,22 +510,6 @@ func (suite *KeeperTestSuite) TestPoolType() {
 	suite.Require().Equal(stableswap.PoolTypeName, res.PoolType)
 }
 
-func (suite *KeeperTestSuite) TestQueryNumPools1() {
-	res, err := suite.queryClient.NumPools(gocontext.Background(), &types.QueryNumPoolsRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(uint64(0), res.NumPools)
-}
-
-func (suite *KeeperTestSuite) TestQueryNumPools2() {
-	for i := 0; i < 10; i++ {
-		suite.PrepareBalancerPool()
-	}
-
-	res, err := suite.queryClient.NumPools(gocontext.Background(), &types.QueryNumPoolsRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(uint64(10), res.NumPools)
-}
-
 func (suite *KeeperTestSuite) TestQueryTotalPoolLiquidity() {
 	queryClient := suite.queryClient
 

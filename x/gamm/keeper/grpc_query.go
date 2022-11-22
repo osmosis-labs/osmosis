@@ -108,15 +108,6 @@ func (q Querier) Pools(
 	}, nil
 }
 
-// NumPools returns total number of pools.
-func (q Querier) NumPools(ctx context.Context, _ *types.QueryNumPoolsRequest) (*types.QueryNumPoolsResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	return &types.QueryNumPoolsResponse{
-		NumPools: q.Keeper.GetPoolCount(sdkCtx),
-	}, nil
-}
-
 func (q Querier) PoolType(ctx context.Context, req *types.QueryPoolTypeRequest) (*types.QueryPoolTypeResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
