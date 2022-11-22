@@ -286,9 +286,9 @@ func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64
 		return 0, nil, sdk.Coin{}, sdk.Coin{}, []string{}, "", errors.New("pool count is zero")
 	}
 	// select a pseudo-random pool ID, max bound by the upcoming pool ID
-	poolId := uint64(simtypes.RandLTBound(sim, poolCount) + 1)
+	poolIndex := uint64(simtypes.RandLTBound(sim, poolCount))
 
-	pool := pools[poolId]
+	pool := pools[poolIndex]
 
 	poolCoins := pool.GetTotalPoolLiquidity(ctx)
 
@@ -300,6 +300,10 @@ func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64
 	poolCoins = simtypes.RemoveIndex(poolCoins, index)
 	coinOut := poolCoins[0]
 	poolDenoms := osmoutils.CoinsDenoms(pool.GetTotalPoolLiquidity(ctx))
+
+	// pool ids start from 1.
+	poolId := poolIndex + 1
+
 	gammDenom := types.GetPoolShareDenom(poolId)
 	return poolId, pool, coinIn, coinOut, poolDenoms, gammDenom, err
 }
