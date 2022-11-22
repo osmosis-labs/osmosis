@@ -1,5 +1,4 @@
 # Osmosis
-ahihi
 ![Banner!](assets/banner.png)
 
 [![Project Status: Active -- The project has reached a stable, usable
