@@ -16,7 +16,10 @@ type msgServer struct {
 	keeper *Keeper
 }
 
-var _ balancer.MsgServer = msgServer{}
+var (
+	_ balancer.MsgServer          = (*msgServer)(nil)
+	_ stableswap.MsgCreatorServer = (*msgServer)(nil)
+)
 
 func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	return &msgServer{

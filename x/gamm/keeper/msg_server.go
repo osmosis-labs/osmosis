@@ -13,16 +13,22 @@ type msgServer struct {
 	keeper *Keeper
 }
 
+var (
+	_ types.MsgServer                   = &msgServer{}
+	_ stableswap.MsgScalingFactorServer = &msgServer{}
+)
+
 func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	return &msgServer{
 		keeper: keeper,
 	}
 }
 
-var (
-	_ types.MsgServer                   = msgServer{}
-	_ stableswap.MsgScalingFactorServer = msgServer{}
-)
+func NewStableSwapScalingFactorSetterMsgServerImpl(keeper *Keeper) stableswap.MsgScalingFactorServer {
+	return &msgServer{
+		keeper: keeper,
+	}
+}
 
 func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, msg *stableswap.MsgStableSwapAdjustScalingFactors) (*stableswap.MsgStableSwapAdjustScalingFactorsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
