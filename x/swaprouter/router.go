@@ -10,10 +10,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
-var (
-	swapFeeMultiplier = sdk.OneDec()
-)
-
 // RouteExactAmountIn defines the input denom and input amount for the first pool,
 // the output of the first pool is chained as the input for the next routed pool
 // transaction succeeds when final amount out is greater than tokenOutMinAmount defined.

@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
@@ -19,9 +20,19 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 }
 
 var (
-	_ types.MsgServer = msgServer{}
-	// _ stableswap.MsgServer = msgServer{}
+	_ types.MsgServer                   = msgServer{}
+	_ stableswap.MsgScalingFactorServer = msgServer{}
 )
+
+func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, msg *stableswap.MsgStableSwapAdjustScalingFactors) (*stableswap.MsgStableSwapAdjustScalingFactorsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if err := server.keeper.setStableSwapScalingFactors(ctx, msg.PoolID, msg.ScalingFactors, msg.Sender); err != nil {
+		return nil, err
+	}
+
+	return &stableswap.MsgStableSwapAdjustScalingFactorsResponse{}, nil
+}
 
 // JoinPool routes `JoinPoolNoSwap` where we do an abstract calculation on needed lp liquidity coins to get the designated
 // amount of shares for the pool. (This is done by taking the number of shares we want and then using the total number of shares
