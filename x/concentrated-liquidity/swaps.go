@@ -376,6 +376,9 @@ func (k *Keeper) applySwap(ctx sdk.Context, tokenIn sdk.Coin, tokenOut sdk.Coin,
 		return err
 	}
 
-	k.setPool(ctx, pool)
+	if err := k.setPool(ctx, pool); err != nil {
+		return err
+	}
+
 	return nil
 }

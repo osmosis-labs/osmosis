@@ -140,7 +140,9 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	pool.UpdateLiquidityIfActivePosition(ctx, lowerTick, upperTick, liquidityDelta)
 
-	k.setPool(ctx, pool)
+	if err := k.setPool(ctx, pool); err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
 
 	// The returned amounts are rounded down to avoid returning more to clients than they actually deposited.
 	return actualAmount0.TruncateInt(), actualAmount1.TruncateInt(), nil

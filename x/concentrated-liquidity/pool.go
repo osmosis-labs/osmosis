@@ -16,6 +16,7 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
 	return nil, errors.New("not implemented")
 }
 
+// TODO: spec and test
 func (k Keeper) getPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedPoolExtension, error) {
 	store := ctx.KVStore(k.storeKey)
 	pool := model.Pool{}
@@ -28,11 +29,6 @@ func (k Keeper) getPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedP
 		return nil, types.PoolNotFoundError{PoolId: poolId}
 	}
 	return &pool, nil
-}
-
-func (k Keeper) unmarshalPool(bz []byte) (types.ConcentratedPoolExtension, error) {
-	var acc types.ConcentratedPoolExtension
-	return acc, k.cdc.UnmarshalInterface(bz, &acc)
 }
 
 // TODO: spec and test
