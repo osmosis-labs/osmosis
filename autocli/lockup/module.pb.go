@@ -9,7 +9,7 @@ import (
 	io "io"
 	math "math"
 	math_bits "math/bits"
-	_ "osmosis/app/v1alpha1"	// cosmossdk.io
+	// _ "osmosis/app/v1alpha1"	// cosmossdk.io
 )
 
 // Reference imports to suppress errors if they are not otherwise used.

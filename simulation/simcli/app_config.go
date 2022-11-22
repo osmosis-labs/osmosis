@@ -7,7 +7,6 @@ import (
 
 	ibchost "github.com/cosmos/ibc-go/v3/modules/core/24-host"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
@@ -22,7 +21,6 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
 	twaptypes "github.com/osmosis-labs/osmosis/v13/x/twap/types"
-	// lockupmodule "../../autocli/lockup"
 )
 
 var (
@@ -86,12 +84,12 @@ var (
 						// // ibc_hooks after auth keeper
 						// ibc_hooks.ModuleName,
 					},
-					OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
-						{
-							ModuleName: authtypes.ModuleName,
-							KvStoreKey: "acc",
-						},
-					},
+					// OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
+					// 	{
+					// 		ModuleName: authtypes.ModuleName,
+					// 		KvStoreKey: "acc",
+					// 	},
+					// },
 				}),
 			},
 			{
