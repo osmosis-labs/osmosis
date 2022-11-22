@@ -450,11 +450,6 @@ func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk
 	return cfmm_common.BinarySearchSingleAssetJoin(p, sdk.NewCoin(tokenIn.Denom, tokenInAmtAfterFee), poolWithAddedLiquidityAndShares)
 }
 
-<<<<<<< HEAD
-// We can mutate pa here
-// TODO: some day switch this to a COW wrapped pa, for better perf
-func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
-=======
 // returns the ratio of input asset liquidity, to total liquidity in pool, post-scaling.
 // We use this as the portion of input liquidity to apply a swap fee too, for single asset joins.
 // So if a pool is currently comprised of 80% of asset A, and 20% of asset B (post-scaling),
@@ -486,7 +481,6 @@ func (p *Pool) singleAssetJoinSwapFeeRatio(tokenInDenom string) (sdk.Dec, error)
 // Route a pool join attempt to either a single-asset join or all-asset join (mutates pool state)
 // Eventually, we intend to switch this to a COW wrapped pa for better performance
 func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
->>>>>>> 3b5e7d65 (Fix swapfee for single asset joins (#3478))
 	if !tokensIn.DenomsSubsetOf(p.GetTotalPoolLiquidity(ctx)) {
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("attempted joining pool with assets that do not exist in pool")
 	}
