@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        contract: [{workdir: ./x/ibc-rate-limit/, output: bytecode/rate_limiter.wasm, build: artifacts/rate_limiter-x86_64.wasm, name: rate_limiter}]
+        contract: [{workdir: ./x/ibc-rate-limit/, output: bytecode/rate_limiter.wasm, build: artifacts/rate_limiter.wasm, name: rate_limiter}]
 
     steps:
       - name: Checkout sources
