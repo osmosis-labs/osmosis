@@ -23,7 +23,9 @@ files=$(find ./ -type f -and -not \( -path "./vendor*" -or -path "./.git*" -or -
 
 echo "Updating all files"
 for file in $files; do
-    replace_paths ${file}
+    if test -f "$file"; then
+        replace_paths $file
+    fi
 done
 
 echo "Updating go.mod and vendoring"
@@ -35,5 +37,9 @@ go mod vendor >/dev/null
 # N.B.: This must be run after go mod vendor.
 echo "running make proto-gen"
 make proto-gen >/dev/null
+
+echo "Run go mod vendor after proto-gen to avoid vendoring issues"
+go mod vendor >/dev/null
+
 echo "running make run-querygen"
 make run-querygen >/dev/null

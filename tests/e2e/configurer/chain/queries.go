@@ -18,10 +18,10 @@ import (
 	"github.com/stretchr/testify/require"
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v12/tests/e2e/util"
-	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
-	twapqueryproto "github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v13/tests/e2e/util"
+	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
+	twapqueryproto "github.com/osmosis-labs/osmosis/v13/x/twap/client/queryproto"
 )
 
 func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte, error) {
@@ -66,7 +66,6 @@ func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		n.t.Error(string(bz))
 		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(bz))
 	}
 	return bz, nil
@@ -188,6 +187,7 @@ func (n *NodeConfig) QueryArithmeticTwapToNow(poolId uint64, baseAsset, quoteAss
 		return sdk.Dec{}, err
 	}
 
+	// nolint: staticcheck
 	var response twapqueryproto.ArithmeticTwapToNowResponse
 	err = util.Cdc.UnmarshalJSON(bz, &response)
 	require.NoError(n.t, err) // this error should not happen
@@ -209,6 +209,7 @@ func (n *NodeConfig) QueryArithmeticTwap(poolId uint64, baseAsset, quoteAsset st
 		return sdk.Dec{}, err
 	}
 
+	// nolint: staticcheck
 	var response twapqueryproto.ArithmeticTwapResponse
 	err = util.Cdc.UnmarshalJSON(bz, &response)
 	require.NoError(n.t, err) // this error should not happen

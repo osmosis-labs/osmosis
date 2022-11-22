@@ -34,9 +34,9 @@ import (
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	ibchooks "github.com/osmosis-labs/osmosis/v12/x/ibc-hooks"
-	ibcratelimit "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
+	ibchooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
+	ibcratelimit "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
 
 	icahost "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/keeper"
@@ -52,33 +52,33 @@ import (
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer"
 
-	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik"
-	owasm "github.com/osmosis-labs/osmosis/v12/wasmbinding"
-	epochskeeper "github.com/osmosis-labs/osmosis/v12/x/epochs/keeper"
-	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
-	gammkeeper "github.com/osmosis-labs/osmosis/v12/x/gamm/keeper"
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	incentiveskeeper "github.com/osmosis-labs/osmosis/v12/x/incentives/keeper"
-	incentivestypes "github.com/osmosis-labs/osmosis/v12/x/incentives/types"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v12/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
-	mintkeeper "github.com/osmosis-labs/osmosis/v12/x/mint/keeper"
-	minttypes "github.com/osmosis-labs/osmosis/v12/x/mint/types"
-	poolincentives "github.com/osmosis-labs/osmosis/v12/x/pool-incentives"
-	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v12/x/pool-incentives/keeper"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v12/x/pool-incentives/types"
-	"github.com/osmosis-labs/osmosis/v12/x/superfluid"
-	superfluidkeeper "github.com/osmosis-labs/osmosis/v12/x/superfluid/keeper"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
-	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v12/x/tokenfactory/keeper"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v12/x/tokenfactory/types"
-	"github.com/osmosis-labs/osmosis/v12/x/twap"
-	twaptypes "github.com/osmosis-labs/osmosis/v12/x/twap/types"
-	"github.com/osmosis-labs/osmosis/v12/x/txfees"
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v12/x/txfees/keeper"
-	txfeestypes "github.com/osmosis-labs/osmosis/v12/x/txfees/types"
-	valsetpref "github.com/osmosis-labs/osmosis/v12/x/valset-pref"
-	valsetpreftypes "github.com/osmosis-labs/osmosis/v12/x/valset-pref/types"
+	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
+	owasm "github.com/osmosis-labs/osmosis/v13/wasmbinding"
+	epochskeeper "github.com/osmosis-labs/osmosis/v13/x/epochs/keeper"
+	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
+	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	incentiveskeeper "github.com/osmosis-labs/osmosis/v13/x/incentives/keeper"
+	incentivestypes "github.com/osmosis-labs/osmosis/v13/x/incentives/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v13/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	mintkeeper "github.com/osmosis-labs/osmosis/v13/x/mint/keeper"
+	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
+	poolincentives "github.com/osmosis-labs/osmosis/v13/x/pool-incentives"
+	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/keeper"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v13/x/superfluid"
+	superfluidkeeper "github.com/osmosis-labs/osmosis/v13/x/superfluid/keeper"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v13/x/twap"
+	twaptypes "github.com/osmosis-labs/osmosis/v13/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v13/x/txfees"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v13/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/v13/x/txfees/types"
+	valsetpref "github.com/osmosis-labs/osmosis/v13/x/valset-pref"
+	valsetpreftypes "github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
 )
 
 type AppKeepers struct {
@@ -123,11 +123,11 @@ type AppKeepers struct {
 
 	// IBC modules
 	// transfer module
-	TransferModule          transfer.AppModule
-	RateLimitingICS4Wrapper *ibcratelimit.ICS4Wrapper
-	HooksMiddleware         *ibchooks.IBCMiddleware
-	WasmHooks               *ibchooks.WasmHooks
-	HooksICS4Wrapper        ibchooks.ICS4Middleware
+	RawIcs20TransferAppModule transfer.AppModule
+	RateLimitingICS4Wrapper   *ibcratelimit.ICS4Wrapper
+	TransferStack             *ibchooks.IBCMiddleware
+	Ics20WasmHooks            *ibchooks.WasmHooks
+	HooksICS4Wrapper          ibchooks.ICS4Middleware
 
 	// keys to access the substores
 	keys    map[string]*sdk.KVStoreKey
@@ -209,56 +209,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.ScopedIBCKeeper,
 	)
 
-	// Create the IBC Transfer Stack from bottom to top:
-
-	// SendPacket. Originates from the transferKeeper and and goes up the stack:
-	// transferKeeper.SendPacket -> ibc_rate_limit.SendPacket -> ibc_hooks.SendPacket -> channel.SendPacket
-
-	// RecvPacket, message that originates from core IBC and goes down to app, the flow is the other way
-	// channel.RecvPacket -> ibc_hooks.OnRecvPacket -> ibc_rate_limit.OnRecvPacket -> transfer.OnRecvPacket
-
-	// Setup the ICS4Wrapper used by the hooks middleware
-	wasmHooks := ibchooks.NewWasmHooks(nil) // The contract keeper needs to be set later
-	appKeepers.WasmHooks = &wasmHooks
-	appKeepers.HooksICS4Wrapper = ibchooks.NewICS4Middleware(
-		appKeepers.IBCKeeper.ChannelKeeper,
-		appKeepers.WasmHooks,
-	)
-
-	// ChannelKeeper wrapper for rate limiting SendPacket(). The wasmKeeper needs to be added after it's created
-	rateLimitingParams := appKeepers.GetSubspace(ibcratelimittypes.ModuleName)
-	rateLimitingParams = rateLimitingParams.WithKeyTable(ibcratelimittypes.ParamKeyTable())
-	rateLimitingICS4Wrapper := ibcratelimit.NewICS4Middleware(
-		appKeepers.HooksICS4Wrapper,
-		appKeepers.AccountKeeper,
-		nil,
-		appKeepers.BankKeeper,
-		rateLimitingParams,
-	)
-	appKeepers.RateLimitingICS4Wrapper = &rateLimitingICS4Wrapper
-
-	// Create Transfer Keepers
-	transferKeeper := ibctransferkeeper.NewKeeper(
-		appCodec,
-		appKeepers.keys[ibctransfertypes.StoreKey],
-		appKeepers.GetSubspace(ibctransfertypes.ModuleName),
-		// The ICS4Wrapper is replaced by the rateLimitingICS4Wrapper instead of the channel
-		appKeepers.RateLimitingICS4Wrapper,
-		appKeepers.IBCKeeper.ChannelKeeper,
-		&appKeepers.IBCKeeper.PortKeeper,
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.ScopedTransferKeeper,
-	)
-	appKeepers.TransferKeeper = &transferKeeper
-	appKeepers.TransferModule = transfer.NewAppModule(*appKeepers.TransferKeeper)
-	transferIBCModule := transfer.NewIBCModule(*appKeepers.TransferKeeper)
-
-	// RateLimiting IBC Middleware
-	rateLimitingTransferModule := ibcratelimit.NewIBCModule(transferIBCModule, appKeepers.RateLimitingICS4Wrapper)
-	// Hooks Middleware
-	hooksTransferModule := ibchooks.NewIBCMiddleware(&rateLimitingTransferModule, &appKeepers.HooksICS4Wrapper)
-	appKeepers.HooksMiddleware = &hooksTransferModule
+	appKeepers.WireICS20PreWasmKeeper(appCodec, bApp)
 
 	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, appKeepers.keys[icahosttypes.StoreKey],
@@ -276,7 +227,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
 		// The transferIBC module is replaced by rateLimitingTransferModule
-		AddRoute(ibctransfertypes.ModuleName, appKeepers.HooksMiddleware)
+		AddRoute(ibctransfertypes.ModuleName, appKeepers.TransferStack)
 	// Note: the sealing is done after creating wasmd and wiring that up
 
 	// create evidence keeper with router
@@ -356,6 +307,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GAMMKeeper,
 	)
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
+	appKeepers.GAMMKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
 
 	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
 		appKeepers.keys[tokenfactorytypes.StoreKey],
@@ -405,7 +357,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// Pass the contract keeper to all the structs (generally ICS4Wrappers for ibc middlewares) that need it
 	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
 	appKeepers.RateLimitingICS4Wrapper.ContractKeeper = appKeepers.ContractKeeper
-	appKeepers.WasmHooks.ContractKeeper = appKeepers.ContractKeeper
+	appKeepers.Ics20WasmHooks.ContractKeeper = appKeepers.ContractKeeper
 
 	// wire up x/wasm to IBC
 	ibcRouter.AddRoute(wasm.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper))
@@ -433,6 +385,63 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GetSubspace(govtypes.ModuleName), appKeepers.AccountKeeper, appKeepers.BankKeeper,
 		appKeepers.SuperfluidKeeper, govRouter)
 	appKeepers.GovKeeper = &govKeeper
+}
+
+// Create the IBC Transfer Stack from bottom to top:
+//
+// * SendPacket. Originates from the transferKeeper and and goes up the stack:
+// transferKeeper.SendPacket -> ibc_rate_limit.SendPacket -> ibc_hooks.SendPacket -> channel.SendPacket
+// * RecvPacket, message that originates from core IBC and goes down to app, the flow is the other way
+// channel.RecvPacket -> ibc_hooks.OnRecvPacket -> ibc_rate_limit.OnRecvPacket -> transfer.OnRecvPacket
+//
+// After this, the wasm keeper is required to be set on both
+// appkeepers.WasmHooks AND appKeepers.RateLimitingICS4Wrapper
+func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
+	appCodec codec.Codec,
+	bApp *baseapp.BaseApp) {
+	// Setup the ICS4Wrapper used by the hooks middleware
+	wasmHooks := ibchooks.NewWasmHooks(nil) // The contract keeper needs to be set later
+	appKeepers.Ics20WasmHooks = &wasmHooks
+	appKeepers.HooksICS4Wrapper = ibchooks.NewICS4Middleware(
+		appKeepers.IBCKeeper.ChannelKeeper,
+		appKeepers.Ics20WasmHooks,
+	)
+
+	// ChannelKeeper wrapper for rate limiting SendPacket(). The wasmKeeper needs to be added after it's created
+	rateLimitingParams := appKeepers.GetSubspace(ibcratelimittypes.ModuleName)
+	rateLimitingParams = rateLimitingParams.WithKeyTable(ibcratelimittypes.ParamKeyTable())
+	rateLimitingICS4Wrapper := ibcratelimit.NewICS4Middleware(
+		appKeepers.HooksICS4Wrapper,
+		appKeepers.AccountKeeper,
+		// wasm keeper we set later.
+		nil,
+		appKeepers.BankKeeper,
+		rateLimitingParams,
+	)
+	appKeepers.RateLimitingICS4Wrapper = &rateLimitingICS4Wrapper
+
+	// Create Transfer Keepers
+	transferKeeper := ibctransferkeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[ibctransfertypes.StoreKey],
+		appKeepers.GetSubspace(ibctransfertypes.ModuleName),
+		// The ICS4Wrapper is replaced by the rateLimitingICS4Wrapper instead of the channel
+		appKeepers.RateLimitingICS4Wrapper,
+		appKeepers.IBCKeeper.ChannelKeeper,
+		&appKeepers.IBCKeeper.PortKeeper,
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.ScopedTransferKeeper,
+	)
+	appKeepers.TransferKeeper = &transferKeeper
+	appKeepers.RawIcs20TransferAppModule = transfer.NewAppModule(*appKeepers.TransferKeeper)
+	transferIBCModule := transfer.NewIBCModule(*appKeepers.TransferKeeper)
+
+	// RateLimiting IBC Middleware
+	rateLimitingTransferModule := ibcratelimit.NewIBCModule(transferIBCModule, appKeepers.RateLimitingICS4Wrapper)
+	// Hooks Middleware
+	hooksTransferModule := ibchooks.NewIBCMiddleware(&rateLimitingTransferModule, &appKeepers.HooksICS4Wrapper)
+	appKeepers.TransferStack = &hooksTransferModule
 }
 
 // InitSpecialKeepers initiates special keepers (crisis appkeeper, upgradekeeper, params keeper)

@@ -5,10 +5,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/osmomath"
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/cfmm_common"
-	types "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/cfmm_common"
+	types "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 var (
@@ -43,10 +43,19 @@ func cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares osmomath.BigDec) osmom
 		panic("invalid input: reserves must be positive")
 	}
 
-	xy := xReserve.Mul(yReserve)
+	return cfmmConstantMultiNoVY(xReserve, yReserve, wSumSquares).Mul(yReserve)
+}
+
+// returns x(x^2 + y^2 + w) = k
+// For use in comparing values with the same y
+func cfmmConstantMultiNoVY(xReserve, yReserve, wSumSquares osmomath.BigDec) osmomath.BigDec {
+	if !xReserve.IsPositive() || !yReserve.IsPositive() || wSumSquares.IsNegative() {
+		panic("invalid input: reserves must be positive")
+	}
+
 	x2 := xReserve.Mul(xReserve)
 	y2 := yReserve.Mul(yReserve)
-	return xy.Mul(x2.Add(y2).Add(wSumSquares))
+	return xReserve.Mul(x2.Add(y2).Add(wSumSquares))
 }
 
 // full multi-asset CFMM is xyu(x^2 + y^2 + w) = k,
@@ -240,6 +249,70 @@ var (
 	k_threshold = osmomath.NewDecWithPrec(1, 1) // Correct within a factor of 1 * 10^{-1}
 )
 
+// $$k_{target} = \frac{x_0 y_0 (x_0^2 + y_0^2 + w)}{y_f} - (x_0 (y_f^2 + w) + x_0^3)$$
+func targetKCalculator(x0, y0, w, yf osmomath.BigDec) osmomath.BigDec {
+	// cfmmNoV(x0, y0, w) = x_0 y_0 (x_0^2 + y_0^2 + w)
+	startK := cfmmConstantMultiNoV(x0, y0, w)
+	// remove extra yf term
+	yfRemoved := startK.Quo(yf)
+	// removed constant term from expression
+	// namely - (x_0 (y_f^2 + w) + x_0^3) = x_0(y_f^2 + w + x_0^2)
+	// innerTerm = y_f^2 + w + x_0^2
+	innerTerm := yf.Mul(yf).Add(w).Add((x0.Mul(x0)))
+	constantTerm := innerTerm.Mul(x0)
+	return yfRemoved.Sub(constantTerm)
+}
+
+// $$k_{iter}(x_f) = -x_{out}^3 + 3 x_0 x_{out}^2 - (y_f^2 + w + 3x_0^2)x_{out}$$
+// where x_out = x_0 - x_f
+func iterKCalculator(x0, w, yf osmomath.BigDec) func(osmomath.BigDec) (osmomath.BigDec, error) {
+	// compute coefficients first
+	cubicCoeff := osmomath.OneDec().Neg()
+	quadraticCoeff := x0.MulInt64(3)
+	linearCoeff := quadraticCoeff.Mul(x0).Add(w).Add(yf.Mul(yf)).Neg()
+	return func(xf osmomath.BigDec) (osmomath.BigDec, error) {
+		xOut := x0.Sub(xf)
+		// horners method
+		// ax^3 + bx^2 + cx = x(c + x(b + ax))
+		res := cubicCoeff.Mul(xOut)
+		res = res.Add(quadraticCoeff).Mul(xOut)
+		res = res.Add(linearCoeff).Mul(xOut)
+		return res, nil
+	}
+}
+
+var (
+	zero = osmomath.ZeroDec()
+	one  = osmomath.OneDec()
+)
+
+func deriveUpperLowerXFinalReserveBounds(xReserve, yReserve, wSumSquares, yFinal osmomath.BigDec) (
+	xFinalLowerbound, xFinalUpperbound osmomath.BigDec,
+) {
+	xFinalLowerbound, xFinalUpperbound = xReserve, xReserve
+
+	k0 := cfmmConstantMultiNoV(xReserve, yFinal, wSumSquares)
+	k := cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares)
+	// fmt.Println(k0, k)
+	if k0.Equal(zero) || k.Equal(zero) {
+		panic("k should never be zero")
+	}
+	kRatio := k0.Quo(k)
+	if kRatio.LT(one) {
+		// k_0 < k. Need to find an upperbound. Worst case assume a linear relationship, gives an upperbound
+		// TODO: In the future, we can derive better bounds via reasoning about coefficients in the cubic
+		// These are quite close when we are in the "stable" part of the curve though.
+		xFinalUpperbound = xReserve.Quo(kRatio).Ceil()
+	} else if kRatio.GT(one) {
+		// need to find a lowerbound. We could use a cubic relation, but for now we just set it to 0.
+		xFinalLowerbound = osmomath.ZeroDec()
+	}
+	// else
+	// k remains unchanged.
+	// So we keep bounds equal to each other
+	return xFinalLowerbound, xFinalUpperbound
+}
+
 // solveCFMMBinarySearch searches the correct dx using binary search over constant K.
 func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.BigDec) osmomath.BigDec {
 	if !xReserve.IsPositive() || !yReserve.IsPositive() || wSumSquares.IsNegative() {
@@ -247,37 +320,15 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	} else if yIn.Abs().GTE(yReserve) {
 		panic("cannot input more than pool reserves")
 	}
+	// fmt.Printf("solve cfmm xreserve %v, yreserve %v, w %v, yin %v\n", xReserve, yReserve, wSumSquares, yIn)
 	yFinal := yReserve.Add(yIn)
-	xLowEst, xHighEst := xReserve, xReserve
-	k0 := cfmmConstantMultiNoV(xReserve, yFinal, wSumSquares)
-	k := cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares)
-	if k0.Equal(osmomath.ZeroDec()) || k.Equal(osmomath.ZeroDec()) {
-		panic("k should never be zero")
-	}
-	kRatio := k0.Quo(k)
-
-	if kRatio.LT(osmomath.OneDec()) {
-		// k_0 < k. Need to find an upperbound. Worst case assume a linear relationship, gives an upperbound
-		// TODO: In the future, we can derive better bounds via reasoning about coefficients in the cubic
-		// These are quite close when we are in the "stable" part of the curve though.
-		xHighEst = xReserve.Quo(kRatio).Ceil()
-	} else if kRatio.GT(osmomath.OneDec()) {
-		// need to find a lowerbound. We could use a cubic relation, but for now we just set it to 0.
-		xLowEst = osmomath.ZeroDec()
-	} else {
-		// k remains unchanged, so xOut = 0
-		return osmomath.ZeroDec()
-	}
-
+	xLowEst, xHighEst := deriveUpperLowerXFinalReserveBounds(xReserve, yReserve, wSumSquares, yFinal)
+	targetK := targetKCalculator(xReserve, yReserve, wSumSquares, yFinal)
+	iterKCalc := iterKCalculator(xReserve, wSumSquares, yFinal)
 	maxIterations := 256
 
 	// we use a geometric error tolerance that guarantees approximately 10^-12 precision on outputs
 	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.Int{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12)}
-
-	// create single-input CFMM to pass into binary search
-	computeFromEst := func(xEst osmomath.BigDec) (osmomath.BigDec, error) {
-		return cfmmConstantMultiNoV(xEst, yFinal, wSumSquares), nil
-	}
 
 	// if yIn is positive, we want to under-estimate the amount of xOut.
 	// This means, we want x_out to be rounded down, as x_out = x_init - x_final, for x_init > x_final.
@@ -290,12 +341,14 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	roundingDirection := osmomath.RoundUp
 	errTolerance.RoundingDir = roundingDirection
 
-	xEst, err := osmoutils.BinarySearchBigDec(computeFromEst, xLowEst, xHighEst, k, errTolerance, maxIterations)
+	xEst, err := osmoutils.BinarySearchBigDec(iterKCalc, xLowEst, xHighEst, targetK, errTolerance, maxIterations)
 	if err != nil {
 		panic(err)
 	}
 
 	xOut := xReserve.Sub(xEst)
+	// fmt.Printf("xOut %v\n", xOut)
+
 	// We check the absolute value of the output against the xReserve amount to ensure that:
 	// 1. Swaps cannot more than double the input token's pool supply
 	// 2. Swaps cannot output more than the output token's pool supply
@@ -305,14 +358,7 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	return xOut
 }
 
-func (p Pool) spotPrice(baseDenom, quoteDenom string) (sdk.Dec, error) {
-	roundMode := osmomath.RoundBankers // TODO:
-	reserves, err := p.scaledSortedPoolReserves(baseDenom, quoteDenom, roundMode)
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-	baseReserve, quoteReserve, remReserves := reserves[0], reserves[1], reserves[2:]
-	// y = baseAsset, x = quoteAsset
+func (p Pool) spotPrice(baseDenom, quoteDenom string) (spotPrice sdk.Dec, err error) {
 	// Define f_{y -> x}(a) as the function that outputs the amount of tokens X you'd get by
 	// trading "a" units of Y against the pool, assuming 0 swap fee, at the current liquidity.
 	// The spot price of the pool is then lim a -> 0, f_{y -> x}(a) / a
@@ -326,10 +372,12 @@ func (p Pool) spotPrice(baseDenom, quoteDenom string) (sdk.Dec, error) {
 
 	// We arbitrarily choose a = 1, and anticipate that this is a small value at the scale of
 	// xReserve & yReserve.
-	a := osmomath.OneDec()
-	// no need to divide by a, since a = 1.
-	bigDec := solveCfmm(baseReserve, quoteReserve, remReserves, a)
-	return bigDec.SDKDec(), nil
+	a := sdk.OneInt()
+
+	// We swap quoteDenom and baseDenom intentionally, due to the odd issue needed for balancer v1 query compat
+	res, err := p.calcOutAmtGivenIn(sdk.NewCoin(quoteDenom, a), baseDenom, sdk.ZeroDec())
+	// fmt.Println("spot price res", res)
+	return res, err
 }
 
 func oneMinus(swapFee sdk.Dec) osmomath.BigDec {
@@ -352,7 +400,9 @@ func (p Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee 
 	// amm input = tokenIn * (1 - swap fee)
 	ammIn := tokenInDec.Mul(oneMinus(swapFee))
 	// We are solving for the amount of token out, hence x = tokenOutSupply, y = tokenInSupply
+	// fmt.Printf("outSupply %s, inSupply %s, remReservs %s, ammIn %s\n ", tokenOutSupply, tokenInSupply, remReserves, ammIn)
 	cfmmOut := solveCfmm(tokenOutSupply, tokenInSupply, remReserves, ammIn)
+	// fmt.Println("cfmmout ", cfmmOut)
 	outAmt := p.getDescaledPoolAmt(tokenOutDenom, cfmmOut)
 	return outAmt, nil
 }

@@ -3,11 +3,12 @@ package ibc_hooks_test
 import (
 	"encoding/json"
 	"fmt"
+	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
 
 	"github.com/stretchr/testify/suite"
 
@@ -18,9 +19,9 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
 
-	osmosisibctesting "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/testutil"
+	osmosisibctesting "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/testutil"
 
-	"github.com/osmosis-labs/osmosis/v12/x/ibc-hooks/testutils"
+	"github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/testutils"
 )
 
 type HooksTestSuite struct {
@@ -77,10 +78,12 @@ func (suite *HooksTestSuite) TestOnRecvPacketHooks() {
 		expPass  bool
 	}{
 		{"override", func(status *testutils.Status) {
-			suite.chainB.GetOsmosisApp().HooksMiddleware.ICS4Middleware.Hooks = testutils.TestRecvOverrideHooks{Status: status}
+			suite.chainB.GetOsmosisApp().TransferStack.
+				ICS4Middleware.Hooks = testutils.TestRecvOverrideHooks{Status: status}
 		}, true},
 		{"before and after", func(status *testutils.Status) {
-			suite.chainB.GetOsmosisApp().HooksMiddleware.ICS4Middleware.Hooks = testutils.TestRecvBeforeAfterHooks{Status: status}
+			suite.chainB.GetOsmosisApp().TransferStack.
+				ICS4Middleware.Hooks = testutils.TestRecvBeforeAfterHooks{Status: status}
 		}, true},
 	}
 
@@ -109,7 +112,8 @@ func (suite *HooksTestSuite) TestOnRecvPacketHooks() {
 			data := transfertypes.NewFungibleTokenPacketData(trace.GetFullDenomPath(), amount.String(), suite.chainA.SenderAccount.GetAddress().String(), receiver)
 			packet := channeltypes.NewPacket(data.GetBytes(), seq, path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, path.EndpointB.ChannelConfig.PortID, path.EndpointB.ChannelID, clienttypes.NewHeight(1, 100), 0)
 
-			ack := suite.chainB.GetOsmosisApp().HooksMiddleware.OnRecvPacket(suite.chainB.GetContext(), packet, suite.chainA.SenderAccount.GetAddress())
+			ack := suite.chainB.GetOsmosisApp().TransferStack.
+				OnRecvPacket(suite.chainB.GetContext(), packet, suite.chainA.SenderAccount.GetAddress())
 
 			if tc.expPass {
 				suite.Require().True(ack.Success())
@@ -117,13 +121,15 @@ func (suite *HooksTestSuite) TestOnRecvPacketHooks() {
 				suite.Require().False(ack.Success())
 			}
 
-			if _, ok := suite.chainB.GetOsmosisApp().HooksMiddleware.ICS4Middleware.Hooks.(testutils.TestRecvOverrideHooks); ok {
+			if _, ok := suite.chainB.GetOsmosisApp().TransferStack.
+				ICS4Middleware.Hooks.(testutils.TestRecvOverrideHooks); ok {
 				suite.Require().True(status.OverrideRan)
 				suite.Require().False(status.BeforeRan)
 				suite.Require().False(status.AfterRan)
 			}
 
-			if _, ok := suite.chainB.GetOsmosisApp().HooksMiddleware.ICS4Middleware.Hooks.(testutils.TestRecvBeforeAfterHooks); ok {
+			if _, ok := suite.chainB.GetOsmosisApp().TransferStack.
+				ICS4Middleware.Hooks.(testutils.TestRecvBeforeAfterHooks); ok {
 				suite.Require().False(status.OverrideRan)
 				suite.Require().True(status.BeforeRan)
 				suite.Require().True(status.AfterRan)
@@ -294,4 +300,49 @@ func (suite *HooksTestSuite) TestPacketsThatShouldBeSkipped() {
 		}
 		sequence += 1
 	}
+}
+
+// After successfully executing a wasm call, the contract should have the funds sent via IBC
+func (suite *HooksTestSuite) TestFundTracking() {
+	// Setup contract
+	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/counter.wasm")
+	addr := suite.chainA.InstantiateContract(&suite.Suite, `{"count": 0}`)
+
+	// Check that the contract has no funds
+	localDenom := osmoutils.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
+	balance := suite.chainA.GetOsmosisApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
+	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
+
+	// Execute the contract via IBC
+	suite.receivePacket(
+		addr.String(),
+		fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"increment": {} } } }`, addr))
+
+	state := suite.chainA.QueryContract(
+		&suite.Suite, addr,
+		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, ibc_hooks.WasmHookModuleAccountAddr)))
+	suite.Require().Equal(`{"count":0}`, state)
+
+	state = suite.chainA.QueryContract(
+		&suite.Suite, addr,
+		[]byte(fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, ibc_hooks.WasmHookModuleAccountAddr)))
+	suite.Require().Equal(`{"total_funds":[]}`, state)
+
+	suite.receivePacketWithSequence(
+		addr.String(),
+		fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"increment": {} } } }`, addr), 1)
+
+	state = suite.chainA.QueryContract(
+		&suite.Suite, addr,
+		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, ibc_hooks.WasmHookModuleAccountAddr)))
+	suite.Require().Equal(`{"count":1}`, state)
+
+	state = suite.chainA.QueryContract(
+		&suite.Suite, addr,
+		[]byte(fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, ibc_hooks.WasmHookModuleAccountAddr)))
+	suite.Require().Equal(`{"total_funds":[{"denom":"ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B77878","amount":"1"}]}`, state)
+
+	// Check that the token has now been transferred to the contract
+	balance = suite.chainA.GetOsmosisApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
+	suite.Require().Equal(sdk.NewInt(2), balance.Amount)
 }

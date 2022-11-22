@@ -471,4 +471,12 @@ pub mod tests {
             _ => panic!("parsed into wrong variant"),
         }
     }
+
+    #[test]
+    fn packet_with_memo() {
+        // extra fields (like memo) get ignored.
+        let json = r#"{"recv_packet":{"packet":{"sequence":1,"source_port":"transfer","source_channel":"channel-0","destination_port":"transfer","destination_channel":"channel-0","data":{"denom":"stake","amount":"1","sender":"osmo177uaalkhra6wth6hc9hu79f72eq903kwcusx4r","receiver":"osmo1fj6yt4pwfea4865z763fvhwktlpe020ef93dlq","memo":"some info"},"timeout_height":{"revision_height":100}}}}"#;
+        let _parsed: SudoMsg = serde_json_wasm::from_str(json).unwrap();
+        //println!("{parsed:?}");
+    }
 }
