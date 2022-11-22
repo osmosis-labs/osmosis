@@ -1,4 +1,4 @@
-package store
+package sumtree
 
 var nodeKeyPrefix []byte
 
