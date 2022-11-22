@@ -1,4 +1,4 @@
-package store_test
+package sumtree_test
 
 import (
 	"bytes"
@@ -15,13 +15,13 @@ import (
 	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/store"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils/sumtree"
 )
 
 type TreeTestSuite struct {
 	suite.Suite
 
-	tree store.Tree
+	tree sumtree.Tree
 }
 
 func (suite *TreeTestSuite) SetupTest() {
@@ -31,7 +31,7 @@ func (suite *TreeTestSuite) SetupTest() {
 	_, _, err = tree.SaveVersion()
 	suite.Require().Nil(err)
 	kvstore := iavlstore.UnsafeNewStore(tree)
-	suite.tree = store.NewTree(kvstore, 10)
+	suite.tree = sumtree.NewTree(kvstore, 10)
 }
 
 func TestTreeTestSuite(t *testing.T) {
