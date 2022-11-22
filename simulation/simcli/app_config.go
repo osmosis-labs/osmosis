@@ -22,7 +22,7 @@ import (
 	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
 	twaptypes "github.com/osmosis-labs/osmosis/v13/x/twap/types"
 
-	lockupapi "./api/osmosis/lockup/module/v1"
+	lockupapi "github.com/osmosis-labs/osmosis/v13/api/osmosis/lockup/module/v1"
 )
 
 var (
@@ -96,7 +96,7 @@ var (
 			},
 			{
 				Name:   lockuptypes.ModuleName,
-				Config: appconfig.WrapAny(&lockuptypes.Module{}),
+				Config: appconfig.WrapAny(&lockupapi.Module{}),
 			},
 		},
 	})
