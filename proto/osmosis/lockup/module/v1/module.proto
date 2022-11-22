@@ -4,7 +4,7 @@ package osmosis.lockup.module.v1;
 
 import "osmosis/app/v1alpha1/module.proto";
 
-option go_package = "./x/lockup/types";
+option go_package = "./api/lockup/module/module.proto";
 
 // Module is the configuration object of lockup module
 message Module {
