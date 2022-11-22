@@ -22,6 +22,7 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
 	twaptypes "github.com/osmosis-labs/osmosis/v13/x/twap/types"
+	// lockupmodule "../../autocli/lockup"
 )
 
 var (
