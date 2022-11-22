@@ -104,5 +104,9 @@ jobs:
       - name: Format
         working-directory: ${{ matrix.workdir }}
         run: >
-          diff ${{ matrix.contract.output }} ${{ matrix.contract.build }}
+          cargo fmt --all -- --check
 
+      - name: run cargo clippy
+        working-directory: ${{ matrix.workdir }}
+        run: >
+          cargo clippy -- -D warnings
