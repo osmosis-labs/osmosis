@@ -30,7 +30,7 @@ func setupRateLimiting(ctx sdk.Context, keepers *keepers.AppKeepers) error {
 	}
 	contractKeeper := wasmkeeper.NewGovPermissionKeeper(keepers.WasmKeeper)
 	instantiateConfig := wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeOnlyAddress, Address: govModule.String()}
-	codeID, err := contractKeeper.Create(ctx, govModule, code, &instantiateConfig)
+	codeID, _, err := contractKeeper.Create(ctx, govModule, code, &instantiateConfig)
 	if err != nil {
 		return err
 	}
