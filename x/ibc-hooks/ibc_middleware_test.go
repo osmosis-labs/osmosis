@@ -449,12 +449,12 @@ func (suite *HooksTestSuite) TestCrosschainSwaps() {
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
 
 	balanceSender := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), owner, "token0")
-	denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "token1"))
-	token1IBC := denomTrace.IBCDenom()
 
-	receiver := suite.chainB.SenderAccount.GetAddress()
-	balanceReceiver := suite.chainB.GetOsmosisApp().BankKeeper.GetBalance(suite.chainB.GetContext(), receiver, token1IBC)
-	suite.Require().Equal(int64(0), balanceReceiver.Amount.Int64())
+	//denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "token1"))
+	//token1IBC := denomTrace.IBCDenom()
+	//receiver := suite.chainB.SenderAccount.GetAddress()
+	//balanceReceiver := suite.chainB.GetOsmosisApp().BankKeeper.GetBalance(suite.chainB.GetContext(), receiver, token1IBC)
+	//suite.Require().Equal(int64(0), balanceReceiver.Amount.Int64())
 
 	ctx := suite.chainA.GetContext()
 
@@ -463,22 +463,13 @@ func (suite *HooksTestSuite) TestCrosschainSwaps() {
 	)
 	res, err := contractKeeper.Execute(ctx, crosschainAddr, owner, []byte(msg), sdk.NewCoins(sdk.NewCoin("token0", sdk.NewInt(1000))))
 	suite.Require().NoError(err)
-	fmt.Println(string(res))
+	suite.Require().Contains(string(res), "Sent")
+	suite.Require().Contains(string(res), "token1")
+	suite.Require().Contains(string(res), fmt.Sprintf("to channel-0/%s", suite.chainB.SenderAccount.GetAddress()))
 
 	balanceSender2 := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), owner, "token0")
 	suite.Require().Equal(int64(1000), balanceSender.Amount.Sub(balanceSender2.Amount).Int64())
 
-	// Move forward one block
-	suite.chainA.NextBlock()
-	suite.chainA.Coordinator.IncrementTime()
-
-	// Update both clients
-	err = suite.path.EndpointA.UpdateClient()
-	suite.Require().NoError(err)
-	err = suite.path.EndpointB.UpdateClient()
-	suite.Require().NoError(err)
-
-	balanceReceiver2 := suite.chainB.GetOsmosisApp().BankKeeper.GetBalance(suite.chainB.GetContext(), receiver, token1IBC)
-	suite.Require().Greater(int64(0), balanceReceiver2.Amount.Int64())
-
+	//balanceReceiver2 := suite.chainB.GetOsmosisApp().BankKeeper.GetBalance(suite.chainB.GetContext(), receiver, token1IBC)
+	//suite.Require().Greater(int64(0), balanceReceiver2.Amount.Int64())
 }
