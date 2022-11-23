@@ -15,14 +15,8 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
-	swaprouterclient "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client"
-	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/cli"
-	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/grpc"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/queryproto"
-	swaproutersimulation "github.com/osmosis-labs/osmosis/v13/x/swaprouter/simulation"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
@@ -64,11 +58,11 @@ func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux 
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.NewTxCmd()
+	return nil
 }
 
 func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
+	return nil
 }
 
 // RegisterInterfaces registers interfaces and implementations of the gamm module.
@@ -84,11 +78,6 @@ type AppModule struct {
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), swaprouter.NewMsgServerImpl(&am.k))
-	balancer.RegisterMsgServer(cfg.MsgServer(), swaprouter.NewBalancerMsgServerImpl(&am.k))
-	// TODO: enable after gamm refactor is ported from `concentrated-liqudity-main`
-	// stableswap.RegisterMsgCreatorServer(cfg.MsgServer(), swaprouter.NewStableswapMsgServerImpl(&am.k))
-	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: swaprouterclient.Querier{K: am.k}})
 }
 
 func NewAppModule(swaprouterKeeper swaprouter.Keeper, gammKeeper types.GammKeeper) AppModule {
@@ -144,19 +133,3 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
-
-// **** simulation implementation ****
-// GenerateGenesisState creates a randomized GenState of the swaprouter module.
-// **** simulation implementation ****
-// GenerateGenesisState creates a randomized GenState of the gamm module.
-func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
-	swaprouterGen := types.DefaultGenesis()
-	// change the pool creation fee denom from uosmo to stake
-	swaprouterGen.Params.PoolCreationFee = sdk.NewCoins(swaproutersimulation.PoolCreationFee)
-	DefaultGenJson := simState.Cdc.MustMarshalJSON(swaprouterGen)
-	simState.GenState[types.ModuleName] = DefaultGenJson
-}
-
-func (am AppModule) Actions() []simtypes.Action {
-	return swaproutersimulation.DefaultActions(am.k, am.gammKeeper)
-}
