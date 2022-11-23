@@ -29,7 +29,7 @@ func TestNoStorageWithoutProposal(t *testing.T) {
 	// upload reflect code
 	wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")
 	require.NoError(t, err)
-	_, err = contractKeeper.Create(ctx, creator, wasmCode, nil)
+	_, _, err = contractKeeper.Create(ctx, creator, wasmCode, nil)
 	require.Error(t, err)
 }
 
