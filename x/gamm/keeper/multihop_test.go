@@ -263,7 +263,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolMultihopSwapExactAmountIn() {
 				nextTokenIn := test.param.tokenIn
 				// we then do individual swaps until we reach the end of the swap route
 				for _, hop := range test.param.routes {
-					tokenOut, err := keeper.SwapExactAmountIn(cacheCtx, suite.TestAccs[0], hop.PoolId, nextTokenIn, hop.TokenOutDenom, sdk.OneInt())
+					tokenOut, err := keeper.SwapExactAmountInLegacy(cacheCtx, suite.TestAccs[0], hop.PoolId, nextTokenIn, hop.TokenOutDenom, sdk.OneInt())
 					suite.Require().NoError(err)
 					nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
 				}
@@ -533,7 +533,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolMultihopSwapExactAmountOut() {
 				// we then do individual swaps until we reach the end of the swap route
 				for i := len(test.param.routes) - 1; i >= 0; i-- {
 					hop := test.param.routes[i]
-					tokenOut, err := keeper.SwapExactAmountOut(cacheCtx, suite.TestAccs[0], hop.PoolId, hop.TokenInDenom, sdk.NewInt(100000000), nextTokenOut)
+					tokenOut, err := keeper.SwapExactAmountOutLegacy(cacheCtx, suite.TestAccs[0], hop.PoolId, hop.TokenInDenom, sdk.NewInt(100000000), nextTokenOut)
 					suite.Require().NoError(err)
 					nextTokenOut = sdk.NewCoin(hop.TokenInDenom, tokenOut)
 				}
