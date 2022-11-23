@@ -11,12 +11,31 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
-// SwapExactAmountIn attempts to swap one asset, tokenIn, for another asset
+// swapExactAmountIn is an internal method for swapping an exact amount of tokens
+// as input to a pool, using the provided swapFee. This is intended to allow
+// different swap fees as determined by multi-hops, or when recovering from
+// chain liveness failures.
+// TODO: investigate if swapFee can be unexported
+// https://github.com/osmosis-labs/osmosis/issues/3130
+func (k Keeper) SwapExactAmountIn(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	pool types.PoolI,
+	tokenIn sdk.Coin,
+	tokenOutDenom string,
+	tokenOutMinAmount sdk.Int,
+	swapFee sdk.Dec,
+) (tokenOutAmount sdk.Int, err error) {
+	panic("not implemented")
+}
+
+// SwapExactAmountInLegacy attempts to swap one asset, tokenIn, for another asset
 // denominated via tokenOutDenom through a pool denoted by poolId specifying that
 // tokenOutMinAmount must be returned in the resulting asset returning an error
 // upon failure. Upon success, the resulting tokens swapped for are returned. A
 // swap fee is applied determined by the pool's parameters.
-func (k Keeper) SwapExactAmountIn(
+// TODO: to be removed in future merges.
+func (k Keeper) SwapExactAmountInLegacy(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
 	poolId uint64,
@@ -84,7 +103,24 @@ func (k Keeper) swapExactAmountIn(
 	return tokenOutAmount, nil
 }
 
+// SwapExactAmountOut is a method for swapping by providing an exact amount of tokens out.
+// Returns the amount of tokenIn consumed to performed the swap. Otherwise, returns error.
+// Consumes swapFee. This is intended to allow different swap fees as determined by multi-hops,
+// or when recovering from chain liveness failures.
 func (k Keeper) SwapExactAmountOut(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	pool types.PoolI,
+	tokenInDenom string,
+	tokenInMaxAmount sdk.Int,
+	tokenOut sdk.Coin,
+	swapFee sdk.Dec,
+) (tokenInAmount sdk.Int, err error) {
+	panic("not implemented")
+}
+
+//
+func (k Keeper) SwapExactAmountOutLegacy(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
 	poolId uint64,

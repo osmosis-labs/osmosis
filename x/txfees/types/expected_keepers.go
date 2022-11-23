@@ -13,10 +13,10 @@ type SpotPriceCalculator interface {
 
 // GammKeeper defines the contract needed for AccountKeeper related APIs.
 type GammKeeper interface {
-	SwapExactAmountIn(
+	SwapExactAmountInLegacy(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
-		poolId uint64,
+		pool uint64,
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
 		tokenOutMinAmount sdk.Int,
