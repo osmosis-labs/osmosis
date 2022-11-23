@@ -60,7 +60,6 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-
 	// TODO: uncomment this once gamm refactor is merged from concentrated-liquidity-main
 	// suite.Run(t, new(IntegrationTestSuite))
 }
@@ -212,10 +211,6 @@ func (s IntegrationTestSuite) TestNewSwapExactAmountOutCmd() {
 // }
 
 func (s IntegrationTestSuite) TestNewSwapExactAmountInCmd() {
-
-	// TODO: remove this once gamm refactor is merged from concentrated-liquidity-main
-	s.T().Skip()
-
 	val := s.network.Validators[0]
 
 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewSwapExactAmountIn",
@@ -318,10 +313,6 @@ func (s *IntegrationTestSuite) TestGetCmdNumPools() {
 }
 
 func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
-
-	// TODO: remove this once gamm refactor is merged from concentrated-liquidity-main
-	s.T().Skip()
-
 	val := s.network.Validators[0]
 
 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewCreatePoolAddr",

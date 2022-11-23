@@ -51,6 +51,16 @@ func (suite *KeeperTestSuite) createBalancerPoolsFromCoins(poolCoins []sdk.Coins
 	}
 }
 
+// createBalancerPoolsFromCoinsWithSwapFee creates balancer pools from given sets of coins and respective swap fees.
+// Where element 1 of the input corresponds to the first pool created,
+// element 2 to the second pool created, up until the last element.
+func (suite *KeeperTestSuite) createBalancerPoolsFromCoinsWithSwapFee(poolCoins []sdk.Coins, swapFee []sdk.Dec) {
+	for i, curPoolCoins := range poolCoins {
+		suite.FundAcc(suite.TestAccs[0], curPoolCoins)
+		suite.PrepareBalancerPoolWithCoinsAndSwapFee(swapFee[i], curPoolCoins...)
+	}
+}
+
 func (suite *KeeperTestSuite) TestInitGenesis() {
 	suite.Setup()
 

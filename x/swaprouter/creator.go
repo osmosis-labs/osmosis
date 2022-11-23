@@ -69,6 +69,13 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 	return pool.GetId(), nil
 }
 
+// getNextPoolIdAndIncrement returns the next pool Id, and increments the corresponding state entry.
+func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
+	nextPoolId := k.GetNextPoolId(ctx)
+	k.SetNextPoolId(ctx, nextPoolId+1)
+	return nextPoolId
+}
+
 func validateCreatePoolMsg(ctx sdk.Context, msg types.CreatePoolMsg) error {
 	err := msg.Validate(ctx)
 	if err != nil {
