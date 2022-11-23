@@ -103,7 +103,6 @@ func (k *Keeper) SetPoolIncentivesKeeper(poolIncentivesKeeper types.PoolIncentiv
 }
 
 // getNextPoolIdAndIncrement returns the next pool Id, and increments the corresponding state entry.
-// nolint: unused
 func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 	nextPoolId := k.GetNextPoolId(ctx)
 	k.SetNextPoolId(ctx, nextPoolId+1)

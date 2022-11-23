@@ -11,9 +11,12 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
-var _ types.PoolI = &Pool{}
+var (
+	_ types.PoolI = &Pool{}
+)
 
 type unsortedPoolLiqError struct {
 	ActualLiquidity sdk.Coins
@@ -458,9 +461,9 @@ func validatePoolLiquidity(liquidity sdk.Coins, scalingFactors []uint64) error {
 		return liquidityAndScalingFactorCountMismatchError{LiquidityCount: liquidityCount, ScalingFactorCount: scalingFactorCount}
 	}
 
-	if liquidityCount < types.MinPoolAssets {
+	if liquidityCount < swaproutertypes.MinPoolAssets {
 		return types.ErrTooFewPoolAssets
-	} else if liquidityCount > types.MaxPoolAssets {
+	} else if liquidityCount > swaproutertypes.MaxPoolAssets {
 		return types.ErrTooManyPoolAssets
 	}
 

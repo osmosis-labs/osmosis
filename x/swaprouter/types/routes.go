@@ -9,22 +9,22 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
-// AccountI defines the account contract that must be fulfilled when
-// creating a x/swaprouter keeper.
+// AccountKeeper defines the account contract that must be fulfilled when
+// creating a x/gamm keeper.
 type AccountI interface {
 	NewAccount(sdk.Context, authtypes.AccountI) authtypes.AccountI
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
 	SetAccount(ctx sdk.Context, acc authtypes.AccountI)
 }
 
-// BankI defines the banking contract that must be fulfilled when
-// creating a x/swaprouter keeper.
+// BankKeeper defines the banking contract that must be fulfilled when
+// creating a x/gamm keeper.
 type BankI interface {
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 	SetDenomMetaData(ctx sdk.Context, denomMetaData banktypes.Metadata)
 }
 
-// CommunityPoolI defines the contract needed to be fulfilled for distribution keeper.
+// CommunityPoolKeeper defines the contract needed to be fulfilled for distribution keeper.
 type CommunityPoolI interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
@@ -38,7 +38,7 @@ type SwapI interface {
 	SwapExactAmountIn(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
-		pool gammtypes.PoolI,
+		poolId gammtypes.PoolI,
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
 		tokenOutMinAmount sdk.Int,
@@ -48,7 +48,7 @@ type SwapI interface {
 	SwapExactAmountOut(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
-		pool gammtypes.PoolI,
+		poolId gammtypes.PoolI,
 		tokenInDenom string,
 		tokenInMaxAmount sdk.Int,
 		tokenOut sdk.Coin,
