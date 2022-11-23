@@ -9,16 +9,16 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
-// AccountKeeper defines the account contract that must be fulfilled when
-// creating a x/gamm keeper.
+// AccountI defines the account contract that must be fulfilled when
+// creating a x/swaprouter keeper.
 type AccountI interface {
 	NewAccount(sdk.Context, authtypes.AccountI) authtypes.AccountI
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
 	SetAccount(ctx sdk.Context, acc authtypes.AccountI)
 }
 
-// BankKeeper defines the banking contract that must be fulfilled when
-// creating a x/gamm keeper.
+// BankI defines the banking contract that must be fulfilled when
+// creating a x/swaprouter keeper.
 type BankI interface {
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 	SetDenomMetaData(ctx sdk.Context, denomMetaData banktypes.Metadata)
