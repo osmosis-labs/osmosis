@@ -26,11 +26,6 @@ var (
 	KeyPrefixPools = []byte{0x02}
 	// KeyTotalLiquidity defines key to store total liquidity.
 	KeyTotalLiquidity = []byte{0x03}
-	// KeyGammPoolCount defines key to store the count of gamm pools.
-	// Gamm pool count is equivalent to "next global pool id" that used to be
-	// in the gamm module. Since global pool id management has been moved
-	// to `swaprouter`, we convert this index to return the number of pools.
-	KeyGammPoolCount = []byte{0x04}
 )
 
 func MustGetPoolIdFromShareDenom(denom string) uint64 {

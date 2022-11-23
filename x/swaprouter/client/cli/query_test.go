@@ -32,7 +32,7 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 	}{
 		{
 			"Query num pools",
-			"/osmosis.gamm.v1beta1.Query/NumPools",
+			"/osmosis.swaprouter.v1beta1.Query/NumPools",
 			&swaprouterqueryproto.NumPoolsRequest{},
 			&swaprouterqueryproto.NumPoolsResponse{},
 		},

@@ -34,9 +34,7 @@ func (n *NodeConfig) CreatePool(poolFile, from string, isLegacy bool) uint64 {
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	path := "osmosis/gamm/v1beta1/num_pools"
-
-	bz, err := n.QueryGRPCGateway(path)
+	bz, err := n.QueryGRPCGateway(fmt.Sprintf("osmosis/%s/v1beta1/num_pools", moduleName))
 	require.NoError(n.t, err)
 
 	var numPools swaprouterqueryproto.NumPoolsResponse

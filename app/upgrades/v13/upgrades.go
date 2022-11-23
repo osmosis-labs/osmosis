@@ -98,7 +98,6 @@ func migrateNextPoolId(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, swaproute
 	// N.B: pool id in gamm is to be deprecated in the future
 	// Instead,it is moved to swaprouter.
 	nextPoolId := gammKeeper.GetNextPoolId(ctx)
-	gammKeeper.SetPoolCount(ctx, nextPoolId-1)
 	swaprouterKeeper.SetNextPoolId(ctx, nextPoolId)
 
 	for poolId := uint64(1); poolId < nextPoolId; poolId++ {
