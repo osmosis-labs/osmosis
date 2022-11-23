@@ -3,6 +3,7 @@ package stableswap
 import (
 	"fmt"
 	"math/big"
+	"math/rand"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,8 +12,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	sdkrand "github.com/osmosis-labs/osmosis/v13/simulation/simtypes/random"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/test_helpers"
+	types "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 // CFMMTestCase defines a testcase for stableswap pools
@@ -523,11 +527,9 @@ func TestCFMMInvariantMultiAssetsBinarySearch(t *testing.T) {
 func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_InverseRelationship() {
 	type testcase struct {
 		denomOut       string
-		initialPoolOut int64
 		initialCalcOut int64
 
-		denomIn       string
-		initialPoolIn int64
+		denomIn string
 
 		poolLiquidity  sdk.Coins
 		scalingFactors []uint64
@@ -677,25 +679,43 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 			scalingFactors: []uint64{100, 76, 33},
 		},
 	}
+	// create randomized test cases
+	r := rand.New(rand.NewSource(12345))
+	coinMax := sdk.NewInt(10).ToDec().Power(30).TruncateInt()
+	for c := 2; c < 5; c++ {
+		for i := 0; i < 10; i++ {
+			coins := sdk.NewCoins()
+			scalingFactors := []uint64{}
+			for j := 0; j < c; j++ {
+				coins = coins.Add(sdkrand.RandExponentialCoin(r, sdk.NewCoin(fmt.Sprintf("token%d", j), coinMax)))
+				sf := sdkrand.RandIntBetween(r, 1, 1<<60)
+				scalingFactors = append(scalingFactors, uint64(sf))
+			}
+			initialCalcOut := sdkrand.RandIntBetween(r, 1, 1<<60)
+			testcases[fmt.Sprintf("rand_case_%d_coins_%d", c, i)] = testcase{
+				denomIn:        coins[0].Denom,
+				denomOut:       coins[1].Denom,
+				initialCalcOut: int64(initialCalcOut),
+				poolLiquidity:  coins,
+				scalingFactors: scalingFactors,
+			}
+		}
+	}
 
 	swapFeeCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
 
-	getTestCaseName := func(tc testcase, swapFeeCase string) string {
-		return fmt.Sprintf("tokenOutInitial: %d, tokenInInitial: %d, initialOut: %d, swapFee: %s",
-			tc.initialPoolOut,
-			tc.initialPoolIn,
+	getTestCaseName := func(name string, tc testcase, swapFeeCase string) string {
+		return fmt.Sprintf("%s: initialOut: %d, swapFee: %s",
+			name,
 			tc.initialCalcOut,
 			swapFeeCase,
 		)
 	}
 
-	for _, tc := range testcases {
+	for name, tc := range testcases {
 		for _, swapFee := range swapFeeCases {
-			suite.Run(getTestCaseName(tc, swapFee), func() {
+			suite.Run(getTestCaseName(name, tc, swapFee), func() {
 				ctx := suite.CreateTestContext()
-
-				poolLiquidityIn := sdk.NewInt64Coin(tc.denomIn, tc.initialPoolIn)
-				poolLiquidityOut := sdk.NewInt64Coin(tc.denomOut, tc.initialPoolOut)
 
 				swapFeeDec, err := sdk.NewDecFromStr(swapFee)
 				suite.Require().NoError(err)
@@ -706,8 +726,41 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 				// TODO: add scaling factors into inverse relationship tests
 				pool := createTestPool(suite.T(), tc.poolLiquidity, swapFeeDec, exitFeeDec, tc.scalingFactors)
 				suite.Require().NotNil(pool)
-				test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, poolLiquidityIn.Denom, poolLiquidityOut.Denom, tc.initialCalcOut, swapFeeDec)
+				errTolerance := osmoutils.ErrTolerance{
+					AdditiveTolerance: sdk.Int{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12)}
+				test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, tc.denomIn, tc.denomOut, tc.initialCalcOut, swapFeeDec, errTolerance)
 			})
+		}
+	}
+}
+
+func (suite *StableSwapTestSuite) Test_StableSwap_Slippage_LiquidityRelation() {
+	type testcase struct {
+		initialLiquidity sdk.Coins
+		scalingFactors   []uint64
+	}
+	testcases := map[string]testcase{
+		"1:1 pool, 1:1 SF": {
+			initialLiquidity: sdk.NewCoins(sdk.NewInt64Coin("bar", 10000), sdk.NewInt64Coin("foo", 10000)),
+			scalingFactors:   []uint64{},
+		},
+		"10:1 pool, 1:1 SF": {
+			initialLiquidity: sdk.NewCoins(sdk.NewInt64Coin("bar", 100000), sdk.NewInt64Coin("foo", 10000)),
+			scalingFactors:   []uint64{},
+		},
+		"10:1 pool, 3:2 SF": {
+			initialLiquidity: sdk.NewCoins(sdk.NewInt64Coin("bar", 100000), sdk.NewInt64Coin("foo", 10000)),
+			scalingFactors:   []uint64{3, 2},
+		},
+	}
+	swapFeeCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
+	for name, tc := range testcases {
+		for _, swapFee := range swapFeeCases {
+			createPoolFn := func(ctx sdk.Context, liq sdk.Coins) types.PoolI {
+				return createTestPool(suite.T(), liq, sdk.MustNewDecFromStr(swapFee), sdk.ZeroDec(), tc.scalingFactors)
+			}
+			ctx := sdk.Context{}
+			test_helpers.TestSlippageRelationWithLiquidityIncrease(name, suite.T(), ctx, createPoolFn, tc.initialLiquidity)
 		}
 	}
 }
@@ -821,14 +874,14 @@ func TestCalcSingleAssetJoinShares(t *testing.T) {
 			shares, err := p.calcSingleAssetJoinShares(tc.tokenIn, tc.swapFee)
 			require.NoError(t, err, "test: %s", name)
 
-			p.updatePoolLiquidityForExit(sdk.Coins{tc.tokenIn})
+			p.updatePoolForJoin(sdk.Coins{tc.tokenIn}, shares)
 			exitTokens, err := p.ExitPool(ctx, shares, sdk.ZeroDec())
 			require.NoError(t, err, "test: %s", name)
 
 			// since each asset swap can have up to sdk.OneInt() error, our expected error bound is 1*numAssets
 			correctnessThreshold := sdk.OneInt().Mul(sdk.NewInt(int64(len(p.PoolLiquidity))))
 
-			tokenOutAmount, err := cfmm_common.SwapAllCoinsToSingleAsset(&p, ctx, exitTokens, tc.tokenIn.Denom)
+			tokenOutAmount, err := cfmm_common.SwapAllCoinsToSingleAsset(&p, ctx, exitTokens, tc.tokenIn.Denom, sdk.ZeroDec())
 			require.True(t, tokenOutAmount.LTE(tc.tokenIn.Amount))
 			require.True(t, tc.expectedOut.Sub(tokenOutAmount).Abs().LTE(correctnessThreshold))
 		})
@@ -877,34 +930,34 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 				sdk.NewInt64Coin("bar", 1),
 			),
 			poolAssets: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 10_000_000_000),
-				sdk.NewInt64Coin("bar", 10_000_000_000),
+				sdk.NewCoin("foo", types.StableswapMaxScaledAmtPerAsset),
+				sdk.NewCoin("bar", types.StableswapMaxScaledAmtPerAsset),
 			),
 			scalingFactors:  defaultTwoAssetScalingFactors,
 			swapFee:         sdk.ZeroDec(),
 			expNumShare:     sdk.ZeroInt(),
 			expTokensJoined: sdk.Coins{},
 			expPoolAssets: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 10_000_000_000),
-				sdk.NewInt64Coin("bar", 10_000_000_000),
+				sdk.NewCoin("foo", types.StableswapMaxScaledAmtPerAsset),
+				sdk.NewCoin("bar", types.StableswapMaxScaledAmtPerAsset),
 			),
 			expectPass: false,
 		},
 		"single-asset pool join exceeds hits max scaled asset amount": {
 			tokensIn: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 1),
+				sdk.NewInt64Coin("foo", 2),
 			),
 			poolAssets: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 10_000_000_000),
-				sdk.NewInt64Coin("bar", 10_000_000_000),
+				sdk.NewCoin("foo", types.StableswapMaxScaledAmtPerAsset),
+				sdk.NewCoin("bar", types.StableswapMaxScaledAmtPerAsset),
 			),
 			scalingFactors:  defaultTwoAssetScalingFactors,
 			swapFee:         sdk.ZeroDec(),
 			expNumShare:     sdk.ZeroInt(),
 			expTokensJoined: sdk.Coins{},
 			expPoolAssets: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 10_000_000_000),
-				sdk.NewInt64Coin("bar", 10_000_000_000),
+				sdk.NewCoin("foo", types.StableswapMaxScaledAmtPerAsset),
+				sdk.NewCoin("bar", types.StableswapMaxScaledAmtPerAsset),
 			),
 			expectPass: false,
 		},
@@ -914,19 +967,19 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 				sdk.NewInt64Coin("bar", 1),
 			),
 			poolAssets: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 9_999_999_999),
-				sdk.NewInt64Coin("bar", 9_999_999_999),
+				sdk.NewCoin("foo", types.StableswapMaxScaledAmtPerAsset.Sub(sdk.NewInt(1))),
+				sdk.NewCoin("bar", types.StableswapMaxScaledAmtPerAsset.Sub(sdk.NewInt(1))),
 			),
 			scalingFactors: defaultTwoAssetScalingFactors,
 			swapFee:        sdk.ZeroDec(),
-			expNumShare:    sdk.NewInt(10000000000),
+			expNumShare:    types.InitPoolSharesSupply.Quo(types.StableswapMaxScaledAmtPerAsset),
 			expTokensJoined: sdk.NewCoins(
 				sdk.NewInt64Coin("foo", 1),
 				sdk.NewInt64Coin("bar", 1),
 			),
 			expPoolAssets: sdk.NewCoins(
-				sdk.NewInt64Coin("foo", 10_000_000_000),
-				sdk.NewInt64Coin("bar", 10_000_000_000),
+				sdk.NewCoin("foo", types.StableswapMaxScaledAmtPerAsset),
+				sdk.NewCoin("bar", types.StableswapMaxScaledAmtPerAsset),
 			),
 			expectPass: true,
 		},
@@ -945,6 +998,62 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 				require.Equal(t, tc.expPoolAssets, p.PoolLiquidity)
 			}
 			osmoassert.ConditionalError(t, !tc.expectPass, err)
+		})
+	}
+}
+
+func TestSingleAssetJoinSwapFeeRatio(t *testing.T) {
+	largeInt, ok := sdk.NewIntFromString("123456789012345678")
+	require.True(t, ok)
+	type testcase struct {
+		poolLiquidity  sdk.Coins
+		scalingFactors []uint64
+		tokenInDenom   string
+		expectedRatio  sdk.Dec
+	}
+	tests := map[string]testcase{
+		"godoc-example": {
+			poolLiquidity:  sdk.NewCoins(sdk.NewInt64Coin("tokenA", 80), sdk.NewInt64Coin("tokenB", 20)),
+			scalingFactors: []uint64{1, 1},
+			tokenInDenom:   "tokenA",
+			expectedRatio:  sdk.MustNewDecFromStr("0.2"),
+		},
+		"godoc-example-denom-rev": {
+			poolLiquidity:  sdk.NewCoins(sdk.NewInt64Coin("tokenA", 80), sdk.NewInt64Coin("tokenB", 20)),
+			scalingFactors: []uint64{1, 1},
+			tokenInDenom:   "tokenB",
+			expectedRatio:  sdk.MustNewDecFromStr("0.8"),
+		},
+		"80:20 -> 1:1 scaling factor": {
+			poolLiquidity:  sdk.NewCoins(sdk.NewInt64Coin("tokenA", 80), sdk.NewInt64Coin("tokenB", 20)),
+			scalingFactors: []uint64{80, 20},
+			tokenInDenom:   "tokenA",
+			expectedRatio:  sdk.MustNewDecFromStr("0.5"),
+		},
+		"80:20 -> 2:1 scaling factor": {
+			poolLiquidity:  sdk.NewCoins(sdk.NewInt64Coin("tokenA", 80), sdk.NewInt64Coin("tokenB", 20)),
+			scalingFactors: []uint64{40, 20},
+			tokenInDenom:   "tokenA",
+			expectedRatio:  sdk.MustNewDecFromStr("0.333333333333333334"),
+		},
+		"60:40:40, large numbers": {
+			poolLiquidity: sdk.NewCoins(
+				sdk.NewCoin("tokenA", largeInt.MulRaw(6)),
+				sdk.NewCoin("tokenB", largeInt.MulRaw(4)),
+				sdk.NewCoin("tokenC", largeInt.MulRaw(4))),
+			scalingFactors: []uint64{1, 1, 1},
+			tokenInDenom:   "tokenA",
+			// 1 - (6 / 14) = 8/14 = 4/7 ~= 0.571428571428571429
+			expectedRatio: sdk.MustNewDecFromStr("0.571428571428571429"),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			p := poolStructFromAssets(tc.poolLiquidity, tc.scalingFactors)
+
+			ratio, err := p.singleAssetJoinSwapFeeRatio(tc.tokenInDenom)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedRatio, ratio)
 		})
 	}
 }

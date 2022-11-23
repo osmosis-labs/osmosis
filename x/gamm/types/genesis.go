@@ -8,7 +8,6 @@ import (
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		Pools:          []*codectypes.Any{},
-		PoolCount:      0,
 		NextPoolNumber: 1,
 	}
 }

@@ -185,6 +185,72 @@ Sudo messages can only be executed by the chain.
 * RecvPacket - Increments the amount used out of the receive quota and checks that the receive is allowed. If it isn't, it will return a RateLimitExceeded error
 * UndoSend - If a send has failed, the undo message is used to remove its cost from the send quota
 
+All of these messages receive the packet from the chain and extract the necessary information to process the packet and determine if it should be the rate limited. 
+
+### Necessary information 
+
+To determine if a packet should be rate limited, we need:
+
+* Channel: The channel on the Osmosis side: `packet.SourceChannel` for sends, and `packet.DestinationChannel` for receives. 
+* Denom: The denom of the token being transferred as known on the Osmosis side (more on that bellow)
+* Channel Value: The total value of the chanel denominated in `Denom` (i.e.: channel-17 is worth 10k osmo).  
+* Funds: the amount being transferred
+
+#### Notes on Channel
+The contract also supports quotas on a custom channel called "any" that is checked on every transfer. If either the 
+transfer channel or the "any" channel have a quota that has been filled, the transaction will be rate limited.
+
+#### Notes on Denom
+We always use the the denom as represented on Osmosis. For native assets that is the local denom, and for non-native 
+assets it's the "ibc" prefix and the sha256 hash of the denom trace (`ibc/...`).
+
+##### Sends
+
+For native denoms, we can just use the denom in the packet. If the denom is invalid, it will fail somewhere else along the chain. Example result: `uosmo`
+
+For non-native denoms, the contract needs to hash the denom trace and append it to the `ibc/` prefix. The
+contract always receives the parsed denom (i.e.: `transfer/channel-32/uatom` instead of
+`ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2`). This is because of the order in which 
+the middleware is called. When sending a non-native denom, the packet contains `transfer/source-channel/denom` as it
+is built on the `relay.SendTransfer()` in the transfer module and then passed to the middleware. Example result: `ibc/<hash>`
+
+##### Receives
+
+This behaves slightly different if the asset is an osmosis asset that was sent to the counterparty and is being
+returned to the chain, or if the asset is being received by the chain and originates on the counterparty. In ibc this
+is called being a "source" or a "sink" respectively.
+
+If the chain is a sink for the denom, we build the local denom by prefixing the port and the channel 
+(`transfer/local-channel`) and hashing that denom. Example result: `ibc/<hash>`
+
+If the chain is the source for the denom, there are two possibilities:
+
+* The token is a native token, in which case we just remove the prefix added by the counterparty. Example result: `uosmo`
+* The token is a non-native token, in which case we remove the extra prefix and hash it. Example result `ibc/<hash>`
+
+#### Notes on Channel Value
+We have iterated on different strategies for calculating the channel value. Our preferred strategy is the following:
+* For non-native tokens (`ibc/...`), the channel value should be the supply of those tokens in Osmosis
+* For native tokens, the channel value should be the total amount of tokens in escrow across all ibc channels
+
+The later ensures the limits are lower and represent the amount of native tokens that exist outside Osmosis. This is 
+beneficial as we assume the majority of native tokens exist on the native chain and the amount "normal" ibc transfers is 
+proportional to the tokens that have left the chain. 
+
+This strategy cannot be implemented at the moment because IBC does not track the amount of tokens in escrow across 
+all channels ([github issue](https://github.com/cosmos/ibc-go/issues/2664)). Instead, we use the current supply on 
+Osmosis for all denoms (i.e.: treat native and non-native tokens the same way). Once that ticket is fixed, we will 
+update this strategy.
+
+##### Caching
+
+The channel value varies constantly. To have better predictability, and avoid issues of the value growing if there is 
+a potential infinite mint bug, we cache the channel value at the beginning of the period for every quota.
+
+This means that if we have a daily quota of 1% of the osmo supply, and the channel value is 1M osmo at the beginning of 
+the quota, no more than 100k osmo can transferred during that day. If 10M osmo were to be minted or IBC'd in during that
+period, the quota will not increase until the period expired. Then it will be 1% of the new channel value (~11M)
+
 ### Integration
 
 The rate limit middleware wraps the `transferIBCModule` and is added as the entry route for IBC transfers.
@@ -196,11 +262,30 @@ This integration can be seen in [osmosis/app/keepers/keepers.go](https://github.
 
 ## Testing strategy
 
-TODO: Fill this out
+
+A general testing strategy is as follows:
+
+* Setup two chains.
+* Send some tokens from A->B and some from B->A (so that there are IBC tokens to play with in both sides)
+* Add the rate limiter on A with low limits (i.e. 1% of supply)
+* Test Function for chains A' and B' and denom d
+  * Send some d tokens from A' to B' and get close to the limit. 
+  * Do the same transfer making sure the amount is above the quota and verify it fails with the rate limit error
+  * Wait until the reset time has passed, and send again. The transfer should now succeed
+* Repeat the above test for the following combination of chains and tokens: `(A,B,a)`, `(B,A,a)`, `(A,B,b)`, `(B,A,b)`, 
+  where `a` and `b` are native tokens to chains A and B respectively.
+
+For more comprehensive tests we can also:
+* Add a third chain C and make sure everything works properly for C tokens that have been transferred to A and to B
+* Test that the contracts gov address can reset rate limits if the quota has been hit
+* Test the queries for getting information about the state of the quotas 
+* Test that rate limit symmetries hold (i.e.: sending the a token through a rate-limited channel and then sending back 
+  reduces the rate limits by the same amount that it was increased during the first send)
+* Ensure that the channels between the test chains have different names (A->B="channel-0", B->A="channel-1", for example)
 
 ## Known Future work
 
-Items that've been highlighted above:
+Items that have been highlighted above:
 
 * Making automated rate limits get added for channels, instead of manual configuration only
 * Improving parameterization strategies / data analysis

@@ -21,12 +21,18 @@ import (
 // startTime must be within 48 hours of ctx.BlockTime(), if you need older TWAPs,
 // you will have to maintain the accumulator yourself.
 //
+// endTime will be set in the function ArithmeticTwap() to ctx.BlockTime() which calls GetArithmeticTwap function if:
+// * it is not provided externally
+// * it is set to current time
+//
 // This function will error if:
 // * startTime > endTime
 // * endTime in the future
 // * startTime older than 48 hours OR pool creation
 // * pool with id poolId does not exist, or does not contain quoteAssetDenom, baseAssetDenom
-//
+// * there were some computational errors during computing arithmetic twap within the time range of
+//   startRecord, endRecord - including the exact record times, which indicates that the result returned could be faulty
+
 // N.B. If there is a notable use case, the state machine could maintain more historical records, e.g. at one per hour.
 func (k Keeper) GetArithmeticTwap(
 	ctx sdk.Context,

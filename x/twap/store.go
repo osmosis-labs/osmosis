@@ -68,7 +68,7 @@ func (k Keeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 // - Suppose pruning param -48 hour
 // - Suppose there are three records at: -51 hour, -50 hour, and -1hour
 // If we were to prune everything older than 48 hours,
-// we would be left with with only one record at -1 hour, and we wouldn't be able to
+// we would be left with only one record at -1 hour, and we wouldn't be able to
 // get twaps from the [-48 hour, -1 hour] time range.
 // So, in order to have correct behavior for the desired guarantee,
 // we keep the newest record that is older than the pruning time.

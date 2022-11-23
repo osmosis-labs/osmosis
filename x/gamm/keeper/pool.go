@@ -10,6 +10,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
@@ -52,8 +53,6 @@ func (k Keeper) InitializePool(ctx sdk.Context, pool types.PoolI, creatorAddress
 	}
 
 	k.RecordTotalLiquidityIncrease(ctx, traditionalPool.GetTotalPoolLiquidity(ctx))
-
-	k.incrementPoolCount(ctx)
 
 	return k.setPool(ctx, pool)
 }
@@ -148,34 +147,11 @@ func (k Keeper) setPool(ctx sdk.Context, pool types.PoolI) error {
 	return nil
 }
 
-// incrementPoolCount incrementes pool count by 1.
-func (k Keeper) incrementPoolCount(ctx sdk.Context) {
-	store := ctx.KVStore(k.storeKey)
-	poolCount := &gogotypes.UInt64Value{}
-	osmoutils.MustGet(store, types.KeyGammPoolCount, poolCount)
-	poolCount.Value = poolCount.Value + 1
-	osmoutils.MustSet(store, types.KeyGammPoolCount, poolCount)
-}
-
-// initializePoolCount initializes pool count to 0.
-func (k Keeper) initializePoolCount(ctx sdk.Context) {
-	store := ctx.KVStore(k.storeKey)
-	poolCount := &gogotypes.UInt64Value{Value: 0}
-	osmoutils.MustSet(store, types.KeyGammPoolCount, poolCount)
-}
-
 // initializePoolId initializes pool id to 0.
 func (k Keeper) initializePoolId(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	poolId := &gogotypes.UInt64Value{Value: 0}
 	osmoutils.MustSet(store, types.KeyNextGlobalPoolId, poolId)
-}
-
-// SetPoolCount sets pool id to the given value.
-func (k Keeper) SetPoolCount(ctx sdk.Context, count uint64) {
-	store := ctx.KVStore(k.storeKey)
-	poolCount := &gogotypes.UInt64Value{Value: count}
-	osmoutils.MustSet(store, types.KeyGammPoolCount, poolCount)
 }
 
 func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
@@ -293,14 +269,6 @@ func (k Keeper) GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error) 
 	return denoms, err
 }
 
-// GetPoolCount returns the current pool count.
-func (k Keeper) GetPoolCount(ctx sdk.Context) uint64 {
-	store := ctx.KVStore(k.storeKey)
-	poolCount := gogotypes.UInt64Value{}
-	osmoutils.MustGet(store, types.KeyGammPoolCount, &poolCount)
-	return poolCount.Value
-}
-
 // GetNextPoolId returns the next pool Id.
 // TODO: remove after concentrated-liquidity upgrade.
 func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
@@ -326,9 +294,30 @@ func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (string, error) {
 
 	switch pool := pool.(type) {
 	case *balancer.Pool:
-		return "Balancer", nil
+		return balancer.PoolTypeName, nil
+	case *stableswap.Pool:
+		return stableswap.PoolTypeName, nil
 	default:
 		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
 		return "", sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
 	}
+}
+
+// setStableSwapScalingFactors sets the stable swap scaling factors.
+// errors if the pool does not exist, the sender is not the scaling factor controller, or due to other
+// internal errors.
+func (k Keeper) setStableSwapScalingFactors(ctx sdk.Context, poolId uint64, scalingFactors []uint64, sender string) error {
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
+	if err != nil {
+		return err
+	}
+	stableswapPool, ok := pool.(*stableswap.Pool)
+	if !ok {
+		return fmt.Errorf("pool id %d is not of type stableswap pool", poolId)
+	}
+	if err := stableswapPool.SetScalingFactors(ctx, scalingFactors, sender); err != nil {
+		return err
+	}
+
+	return k.setPool(ctx, stableswapPool)
 }

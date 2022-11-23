@@ -13,6 +13,8 @@ import (
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 
+	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
+
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -71,6 +73,8 @@ import (
 	twaptypes "github.com/osmosis-labs/osmosis/v13/x/twap/types"
 	"github.com/osmosis-labs/osmosis/v13/x/txfees"
 	txfeestypes "github.com/osmosis-labs/osmosis/v13/x/txfees/types"
+	valsetpreftypes "github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
+	valsetprefmodule "github.com/osmosis-labs/osmosis/v13/x/valset-pref/valpref-module"
 )
 
 // moduleAccountPermissions defines module account permissions
@@ -78,6 +82,7 @@ import (
 var moduleAccountPermissions = map[string][]string{
 	authtypes.FeeCollectorName:               nil,
 	distrtypes.ModuleName:                    nil,
+	ibc_hooks.ModuleName:                     nil,
 	icatypes.ModuleName:                      nil,
 	minttypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
 	minttypes.DeveloperVestingModuleAcctName: nil,
@@ -94,6 +99,7 @@ var moduleAccountPermissions = map[string][]string{
 	txfeestypes.NonNativeFeeCollectorName:    nil,
 	wasm.ModuleName:                          {authtypes.Burner},
 	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
+	valsetpreftypes.ModuleName:               {authtypes.Staking},
 }
 
 // appModules return modules to initialize module manager.
@@ -128,7 +134,7 @@ func appModules(
 		ibc.NewAppModule(app.IBCKeeper),
 		ica.NewAppModule(nil, app.ICAHostKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
-		app.TransferModule,
+		app.RawIcs20TransferAppModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		twapmodule.NewAppModule(*app.TwapKeeper),
 		concentratedliquidity.NewAppModule(*app.ConcentratedLiquidityKeeper),
@@ -148,6 +154,8 @@ func appModules(
 		),
 		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 		swaproutermodule.NewAppModule(*app.SwapRouterKeeper, app.GAMMKeeper),
+		valsetprefmodule.NewAppModule(appCodec, *app.ValidatorSetPreferenceKeeper),
+		ibc_hooks.NewAppModule(app.AccountKeeper),
 	}
 }
 
@@ -218,6 +226,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		poolincentivestypes.ModuleName,
 		superfluidtypes.ModuleName,
 		tokenfactorytypes.ModuleName,
+		valsetpreftypes.ModuleName,
 		incentivestypes.ModuleName,
 		epochstypes.ModuleName,
 		lockuptypes.ModuleName,
@@ -225,6 +234,8 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		concentratedliquiditytypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
+		// ibc_hooks after auth keeper
+		ibc_hooks.ModuleName,
 	}
 }
 

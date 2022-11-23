@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/osmosis-labs/osmosis/v13/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
@@ -114,10 +115,6 @@ func MaximalExactRatioJoin(p types.TraditionalAmmInterface, ctx sdk.Context, tok
 	return numShares, remCoins, nil
 }
 
-// Need to get something that makes the result correct within 1 LP share.
-// If we fail to reach it within maxIterations, we return an error.
-var singleAssetJoinCorrectnessThreshold = sdk.NewInt(1)
-
 // We binary search a number of LP shares, s.t. if we exited the pool with the updated liquidity,
 // and swapped all the tokens back to the input denom, we'd get the same amount. (under 0 swap fee)
 // Thanks to CFMM path-independence, we can estimate slippage with these swaps to be sure to get the right numbers here.
@@ -133,6 +130,7 @@ func BinarySearchSingleAssetJoin(
 ) (numLPShares sdk.Int, err error) {
 	// use dummy context
 	ctx := sdk.Context{}
+	// should be guaranteed to converge if above 256 since sdk.Int has 256 bits
 	maxIterations := 300
 	// upperbound of number of LP shares = existingShares * tokenIn.Amount / pool.totalLiquidity.AmountOf(tokenIn.Denom)
 	existingTokenLiquidity := pool.GetTotalPoolLiquidity(ctx).AmountOf(tokenIn.Denom)
@@ -153,22 +151,25 @@ func BinarySearchSingleAssetJoin(
 			return sdk.Int{}, err
 		}
 
-		return SwapAllCoinsToSingleAsset(poolWithUpdatedLiquidity, ctx, exitedCoins, swapToDenom)
+		return SwapAllCoinsToSingleAsset(poolWithUpdatedLiquidity, ctx, exitedCoins, swapToDenom, sdk.ZeroDec())
 	}
 
-	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: singleAssetJoinCorrectnessThreshold, MultiplicativeTolerance: sdk.OneDec()}
+	// We accept an additive tolerance of 1 LP share error and round down
+	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.Dec{}, RoundingDir: osmomath.RoundDown}
 
-	// we set the target at input amount minus additive tolerance so we never output more tokens than were passed in
 	numLPShares, err = osmoutils.BinarySearch(
 		estimateCoinOutGivenShares,
-		LPShareLowerBound, LPShareUpperBound, tokenIn.Amount.Sub(singleAssetJoinCorrectnessThreshold), errTolerance, maxIterations)
+		LPShareLowerBound, LPShareUpperBound, tokenIn.Amount, errTolerance, maxIterations)
+	if err != nil {
+		return sdk.Int{}, err
+	}
 
-	return numLPShares, err
+	return numLPShares, nil
 }
 
 // SwapAllCoinsToSingleAsset iterates through each token in the input set and trades it against the same pool sequentially
-func SwapAllCoinsToSingleAsset(pool types.PoolI, ctx sdk.Context, inTokens sdk.Coins, swapToDenom string) (sdk.Int, error) {
-	swapFee := sdk.ZeroDec()
+func SwapAllCoinsToSingleAsset(pool types.PoolI, ctx sdk.Context, inTokens sdk.Coins, swapToDenom string,
+	swapFee sdk.Dec) (sdk.Int, error) {
 	tokenOutAmt := inTokens.AmountOfNoDenomValidation(swapToDenom)
 	for _, coin := range inTokens {
 		if coin.Denom == swapToDenom {

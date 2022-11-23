@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
@@ -15,7 +16,10 @@ type msgServer struct {
 	keeper *Keeper
 }
 
-var _ balancer.MsgServer = msgServer{}
+var (
+	_ balancer.MsgServer          = (*msgServer)(nil)
+	_ stableswap.MsgCreatorServer = (*msgServer)(nil)
+)
 
 func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	return &msgServer{
@@ -29,19 +33,28 @@ func NewBalancerMsgServerImpl(keeper *Keeper) balancer.MsgServer {
 	}
 }
 
+func NewStableswapMsgServerImpl(keeper *Keeper) stableswap.MsgCreatorServer {
+	return &msgServer{
+		keeper: keeper,
+	}
+}
+
 // CreateBalancerPool is a create balancer pool message.
 func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.MsgCreateBalancerPool) (*balancer.MsgCreateBalancerPoolResponse, error) {
 	poolId, err := server.CreatePool(goCtx, msg)
-	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolId}, err
+	if err != nil {
+		return nil, err
+	}
+	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolId}, nil
 }
 
-// func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stableswap.MsgCreateStableswapPool) (*stableswap.MsgCreateStableswapPoolResponse, error) {
-// 	poolId, err := server.CreatePool(goCtx, msg)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return &stableswap.MsgCreateStableswapPoolResponse{PoolID: poolId}, nil
-// }
+func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stableswap.MsgCreateStableswapPool) (*stableswap.MsgCreateStableswapPoolResponse, error) {
+	poolId, err := server.CreatePool(goCtx, msg)
+	if err != nil {
+		return nil, err
+	}
+	return &stableswap.MsgCreateStableswapPoolResponse{PoolID: poolId}, nil
+}
 
 // func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, msg *stableswap.MsgStableSwapAdjustScalingFactors) (*stableswap.MsgStableSwapAdjustScalingFactorsResponse, error) {
 // 	ctx := sdk.UnwrapSDKContext(goCtx)

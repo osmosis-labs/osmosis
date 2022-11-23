@@ -43,8 +43,7 @@ func TestGammInitGenesis(t *testing.T) {
 	require.NoError(t, err)
 
 	app.GAMMKeeper.InitGenesis(ctx, types.GenesisState{
-		Pools:     []*codectypes.Any{any},
-		PoolCount: poolCount,
+		Pools: []*codectypes.Any{any},
 	}, app.AppCodec())
 	app.SwapRouterKeeper.InitGenesis(ctx, &swaproutertypes.GenesisState{
 		Params: swaproutertypes.Params{
@@ -54,7 +53,6 @@ func TestGammInitGenesis(t *testing.T) {
 
 	poolStored, err := app.GAMMKeeper.GetPoolAndPoke(ctx, 1)
 	require.NoError(t, err)
-	require.Equal(t, poolCount, app.GAMMKeeper.GetPoolCount(ctx))
 	require.Equal(t, balancerPool.GetId(), poolStored.GetId())
 	require.Equal(t, balancerPool.GetAddress(), poolStored.GetAddress())
 	require.Equal(t, balancerPool.GetSwapFee(ctx), poolStored.GetSwapFee(ctx))
@@ -111,7 +109,6 @@ func TestGammExportGenesis(t *testing.T) {
 
 	genesis := app.GAMMKeeper.ExportGenesis(ctx)
 	require.Len(t, genesis.Pools, 2)
-	require.Equal(t, genesis.PoolCount, uint64(2))
 }
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
