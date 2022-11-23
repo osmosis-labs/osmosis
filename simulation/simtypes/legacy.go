@@ -57,7 +57,9 @@ func GenAndDeliverTx(
 	moduleName string,
 ) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 	account := ak.GetAccount(ctx, simAccount.Address)
+	r := rand.New(rand.NewSource(99))
 	tx, err := helpers.GenTx(
+		r,
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
