@@ -356,7 +356,10 @@ func (k Keeper) createMultihopExpectedSwapOuts(
 			return nil, err
 		}
 
-		pool := poolI.(gammtypes.TraditionalAmmInterface)
+		pool, ok := poolI.(gammtypes.TraditionalAmmInterface)
+		if !ok {
+			return nil, fmt.Errorf("type assertion failed")
+		}
 
 		tokenIn, err := pool.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), route.TokenInDenom, pool.GetSwapFee(ctx))
 		if err != nil {

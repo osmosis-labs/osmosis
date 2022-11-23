@@ -65,6 +65,9 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	} else if actualAmount0.IsZero() && actualAmount1.IsPositive() {
 		err = k.bankKeeper.SendCoins(ctx, owner, pool.GetAddress(), sdk.NewCoins(sdk.NewCoin(denom1, actualAmount0)))
 	}
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+	}
 
 	// only persist updates if amount validation passed.
 	writeCacheCtx()
@@ -114,6 +117,9 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 		err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, sdk.NewCoins(sdk.NewCoin(denom0, actualAmount0)))
 	} else if actualAmount0.IsZero() && actualAmount1.IsPositive() {
 		err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, sdk.NewCoins(sdk.NewCoin(denom1, actualAmount0)))
+	}
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
 	}
 
 	return actualAmount0.Neg(), actualAmount1.Neg(), nil

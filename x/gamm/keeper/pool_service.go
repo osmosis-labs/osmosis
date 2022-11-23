@@ -165,14 +165,9 @@ func (k Keeper) JoinSwapExactAmountIn(
 		}
 	}()
 
-	poolI, err := k.getPoolForSwap(ctx, poolId)
+	pool, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
-	}
-
-	pool, ok := poolI.(types.TraditionalAmmInterface)
-	if !ok {
-		return sdk.Int{}, fmt.Errorf("type assertion failed")
 	}
 
 	sharesOut, err = pool.JoinPool(ctx, tokensIn, pool.GetSwapFee(ctx))
