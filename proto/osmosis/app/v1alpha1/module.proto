@@ -13,7 +13,7 @@ extend google.protobuf.MessageOptions {
   // separate proto package from the API they expose. Ex: the cosmos.group.v1
   // API would be exposed by module configs cosmos.group.module.v1,
   // cosmos.group.module.v2, etc.
-  ModuleDescriptor module = 57193479;
+  ModuleDescriptor module = 57193480;
 }
 
 // ModuleDescriptor describes an app module.
