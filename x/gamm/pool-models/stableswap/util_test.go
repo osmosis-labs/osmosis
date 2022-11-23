@@ -9,7 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
-func createTestPool(t *testing.T, poolLiquidity sdk.Coins, swapFee, exitFee sdk.Dec, scalingFactors []uint64) types.StableSwapExtension {
+func createTestPool(t *testing.T, poolLiquidity sdk.Coins, swapFee, exitFee sdk.Dec, scalingFactors []uint64) types.TraditionalAmmInterface {
 	pool, err := NewStableswapPool(1, PoolParams{
 		SwapFee: swapFee,
 		ExitFee: exitFee,

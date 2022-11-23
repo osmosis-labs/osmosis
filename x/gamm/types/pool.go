@@ -137,16 +137,6 @@ type WeightedPoolExtension interface {
 	GetTokenWeight(denom string) (sdk.Int, error)
 }
 
-type BalancerPool interface {
-	PoolI
-	TraditionalAmmInterface
-}
-
-type StableSwapExtension interface {
-	PoolI
-	TraditionalAmmInterface
-}
-
 // TODO: move to swaprouter
 func NewPoolAddress(poolId uint64) sdk.AccAddress {
 	key := append([]byte("pool"), sdk.Uint64ToBigEndian(poolId)...)

@@ -14,9 +14,6 @@ type BankKeeper interface {
 
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 
-	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
-	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error
-
 	SetDenomMetaData(ctx sdk.Context, denomMetaData banktypes.Metadata)
 
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
