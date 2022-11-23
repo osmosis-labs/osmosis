@@ -24,7 +24,7 @@ type BankI interface {
 	SetDenomMetaData(ctx sdk.Context, denomMetaData banktypes.Metadata)
 }
 
-// CommunityPoolKeeper defines the contract needed to be fulfilled for distribution keeper.
+// CommunityPoolI defines the contract needed to be fulfilled for distribution keeper.
 type CommunityPoolI interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
