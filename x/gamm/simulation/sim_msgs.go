@@ -277,16 +277,19 @@ func deriveRealMinShareOutAmt(ctx sdk.Context, tokenIn sdk.Coins, pool types.Tra
 }
 
 func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64, types.TraditionalAmmInterface, sdk.Coin, sdk.Coin, []string, string, error) {
-	poolCount := k.GetPoolCount(ctx)
+	pools, err := k.GetPoolsAndPoke(ctx)
+	if err != nil {
+		return 0, nil, sdk.Coin{}, sdk.Coin{}, nil, "", err
+	}
+	poolCount := len(pools)
 	if poolCount == 0 {
 		return 0, nil, sdk.Coin{}, sdk.Coin{}, []string{}, "", errors.New("pool count is zero")
 	}
 	// select a pseudo-random pool ID, max bound by the upcoming pool ID
-	pool_id := simtypes.RandLTBound(sim, poolCount)
-	pool, err := k.GetPoolAndPoke(ctx, pool_id)
-	if err != nil {
-		return 0, nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), []string{}, "", err
-	}
+	poolIndex := uint64(simtypes.RandLTBound(sim, poolCount))
+
+	pool := pools[poolIndex]
+
 	poolCoins := pool.GetTotalPoolLiquidity(ctx)
 
 	// TODO: Improve this, don't just assume two asset pools
@@ -297,6 +300,10 @@ func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64
 	poolCoins = simtypes.RemoveIndex(poolCoins, index)
 	coinOut := poolCoins[0]
 	poolDenoms := osmoutils.CoinsDenoms(pool.GetTotalPoolLiquidity(ctx))
-	gammDenom := types.GetPoolShareDenom(pool_id)
-	return pool_id, pool, coinIn, coinOut, poolDenoms, gammDenom, err
+
+	// pool ids start from 1.
+	poolId := poolIndex + 1
+
+	gammDenom := types.GetPoolShareDenom(poolId)
+	return poolId, pool, coinIn, coinOut, poolDenoms, gammDenom, err
 }

@@ -134,10 +134,6 @@ func (suite *UpgradeTestSuite) TestMigrateNextPoolIdAndCreatePool() {
 	actualNextPoolId := swaprouterKeeper.GetNextPoolId(ctx)
 	suite.Require().Equal(expectedNextPoolId, actualNextPoolId)
 
-	// validate gamm pool count.
-	actualGammPoolCount := gammKeeper.GetPoolCount(ctx)
-	suite.Require().Equal(expectedNextPoolId-1, actualGammPoolCount)
-
 	// create a pool after migration.
 	actualCreatedPoolId := suite.PrepareBalancerPool()
 	suite.Require().Equal(expectedNextPoolId, actualCreatedPoolId)
