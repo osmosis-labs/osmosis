@@ -3,10 +3,12 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	proto "github.com/gogo/protobuf/proto"
+
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 type ConcentratedPoolExtension interface {
-	// gammtypes.PoolI
+	gammtypes.PoolI
 	proto.Message
 
 	GetAddress() sdk.AccAddress

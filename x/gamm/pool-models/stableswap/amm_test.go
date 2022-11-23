@@ -756,7 +756,7 @@ func (suite *StableSwapTestSuite) Test_StableSwap_Slippage_LiquidityRelation() {
 	swapFeeCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
 	for name, tc := range testcases {
 		for _, swapFee := range swapFeeCases {
-			createPoolFn := func(ctx sdk.Context, liq sdk.Coins) types.PoolI {
+			createPoolFn := func(ctx sdk.Context, liq sdk.Coins) types.TraditionalAmmInterface {
 				return createTestPool(suite.T(), liq, sdk.MustNewDecFromStr(swapFee), sdk.ZeroDec(), tc.scalingFactors)
 			}
 			ctx := sdk.Context{}
@@ -881,7 +881,7 @@ func TestCalcSingleAssetJoinShares(t *testing.T) {
 			// since each asset swap can have up to sdk.OneInt() error, our expected error bound is 1*numAssets
 			correctnessThreshold := sdk.OneInt().Mul(sdk.NewInt(int64(len(p.PoolLiquidity))))
 
-			tokenOutAmount, err := cfmm_common.SwapAllCoinsToSingleAsset(&p, ctx, exitTokens, tc.tokenIn.Denom, sdk.ZeroDec())
+			tokenOutAmount, err := cfmm_common.SwapAllCoinsToSingleAsset(&p, ctx, exitTokens, tc.tokenIn.Denom)
 			require.True(t, tokenOutAmount.LTE(tc.tokenIn.Amount))
 			require.True(t, tc.expectedOut.Sub(tokenOutAmount).Abs().LTE(correctnessThreshold))
 		})

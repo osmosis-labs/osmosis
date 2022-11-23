@@ -1,9 +1,14 @@
 package concentrated_liquidity
 
 import (
+	"errors"
 	fmt "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	events "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal"
 
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/model"
@@ -46,13 +51,52 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint6
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolId gammtypes.PoolI,
+	poolI gammtypes.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
 	swapFee sdk.Dec,
-) (sdk.Int, error) {
-	return sdk.Int{}, nil
+) (tokenOutAmount sdk.Int, err error) {
+	if tokenIn.Denom == tokenOutDenom {
+		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
+	}
+
+	// get concentratedPool extension from poolI
+	pool, err := k.getPoolById(ctx, poolI.GetId())
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	// determine if we are swapping asset0 for asset1 or vice versa
+	asset0 := pool.GetToken0()
+	zeroForOne := tokenIn.Denom == asset0
+	var tokenOutCoin sdk.Coin
+
+	// change priceLimit based on which direction we are swapping
+	if zeroForOne {
+		tokenOutCoin, err = k.SwapOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, sdk.NewDec(1), pool.GetId())
+	} else {
+		tokenOutCoin, err = k.SwapOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, sdk.NewDec(999999999999), pool.GetId())
+	}
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	tokenOutAmount = tokenOutCoin.Amount
+	if !tokenOutAmount.IsPositive() {
+		return sdk.Int{}, sdkerrors.Wrapf(gammtypes.ErrInvalidMathApprox, "token amount must be positive")
+	}
+	if tokenOutAmount.LT(tokenOutMinAmount) {
+		return sdk.Int{}, sdkerrors.Wrapf(gammtypes.ErrLimitMinAmount, "%s token is lesser than min amount", tokenOutDenom)
+	}
+
+	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
+	// Also emits swap event and updates related liquidity metrics
+	if err := k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOutCoin); err != nil {
+		return sdk.Int{}, err
+	}
+
+	return tokenOutAmount, nil
 }
 
 func (k Keeper) SwapExactAmountOut(
@@ -375,4 +419,37 @@ func (k *Keeper) applySwap(ctx sdk.Context, tokenIn sdk.Coin, tokenOut sdk.Coin,
 	}
 
 	return nil
+}
+
+// updatePoolForSwap takes a pool, sender, and tokenIn, tokenOut amounts
+// It then updates the pool's balances to the new reserve amounts, and
+// sends the in tokens from the sender to the pool, and the out tokens from the pool to the sender.
+func (k Keeper) updatePoolForSwap(
+	ctx sdk.Context,
+	pool gammtypes.PoolI,
+	sender sdk.AccAddress,
+	tokenIn sdk.Coin,
+	tokenOut sdk.Coin,
+) error {
+	err := k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), sdk.Coins{
+		tokenIn,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), sender, sdk.Coins{
+		tokenOut,
+	})
+	if err != nil {
+		return err
+	}
+
+	// TODO: implement hooks and possibly liquidity inc dec?
+	events.EmitSwapEvent(ctx, sender, pool.GetId(), tokenIn, tokenOut)
+	// k.hooks.AfterSwap(ctx, sender, pool.GetId(), tokenIn, tokenOut)
+	// k.RecordTotalLiquidityIncrease(ctx, tokenIn)
+	// k.RecordTotalLiquidityDecrease(ctx, tokenOut)
+
+	return err
 }

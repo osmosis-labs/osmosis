@@ -15,8 +15,8 @@ import (
 )
 
 // TODO spec and tests
-func (k Keeper) InitializePool(ctx sdk.Context, pool types.PoolI, creatorAddress sdk.AccAddress) error {
-	traditionalPool, ok := pool.(types.TraditionalAmmInterface)
+func (k Keeper) InitializePool(ctx sdk.Context, poolI types.PoolI, creatorAddress sdk.AccAddress) error {
+	pool, ok := poolI.(types.TraditionalAmmInterface)
 	if !ok {
 		return fmt.Errorf("failed to create gamm pool. Could not cast to TraditionalAmmInterface")
 	}
@@ -52,19 +52,19 @@ func (k Keeper) InitializePool(ctx sdk.Context, pool types.PoolI, creatorAddress
 		return err
 	}
 
-	k.RecordTotalLiquidityIncrease(ctx, traditionalPool.GetTotalPoolLiquidity(ctx))
+	k.RecordTotalLiquidityIncrease(ctx, pool.GetTotalPoolLiquidity(ctx))
 
 	k.incrementPoolCount(ctx)
 
-	return k.setPool(ctx, pool)
+	return k.setPool(ctx, poolI)
 }
 
 func (k Keeper) MarshalPool(pool types.PoolI) ([]byte, error) {
 	return k.cdc.MarshalInterface(pool)
 }
 
-func (k Keeper) UnmarshalPool(bz []byte) (types.TraditionalAmmInterface, error) {
-	var acc types.TraditionalAmmInterface
+func (k Keeper) UnmarshalPool(bz []byte) (types.PoolI, error) {
+	var acc types.PoolI
 	return acc, k.cdc.UnmarshalInterface(bz, &acc)
 }
 
@@ -85,13 +85,18 @@ func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.Traditiona
 
 	bz := store.Get(poolKey)
 
-	pool, err := k.UnmarshalPool(bz)
+	poolI, err := k.UnmarshalPool(bz)
 	if err != nil {
 		return nil, err
 	}
 
-	if pokePool, ok := pool.(types.WeightedPoolExtension); ok {
+	if pokePool, ok := poolI.(types.WeightedPoolExtension); ok {
 		pokePool.PokePool(ctx.BlockTime())
+	}
+
+	pool, ok := poolI.(types.TraditionalAmmInterface)
+	if !ok {
+		return nil, fmt.Errorf("type cast failed")
 	}
 
 	return pool, nil
@@ -122,14 +127,20 @@ func (k Keeper) GetPoolsAndPoke(ctx sdk.Context) (res []types.TraditionalAmmInte
 	for ; iter.Valid(); iter.Next() {
 		bz := iter.Value()
 
-		pool, err := k.UnmarshalPool(bz)
+		poolI, err := k.UnmarshalPool(bz)
 		if err != nil {
 			return nil, err
 		}
 
-		if pokePool, ok := pool.(types.WeightedPoolExtension); ok {
+		if pokePool, ok := poolI.(types.WeightedPoolExtension); ok {
 			pokePool.PokePool(ctx.BlockTime())
 		}
+
+		pool, ok := poolI.(types.TraditionalAmmInterface)
+		if !ok {
+			return nil, fmt.Errorf("type cast failed")
+		}
+
 		res = append(res, pool)
 	}
 

@@ -817,7 +817,10 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 		tc := tc
 
 		suite.T().Run(tc.name, func(t *testing.T) {
-			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
+			poolI := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
+
+			pool, ok := poolI.(*balancer.Pool)
+			require.True(t, ok)
 
 			// system under test
 			sut := func() {
@@ -834,10 +837,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 				}
 			}
 
-			balancerPool, ok := pool.(*balancer.Pool)
-			require.True(t, ok)
-
-			assertPoolStateNotModified(t, balancerPool, func() {
+			assertPoolStateNotModified(t, pool, func() {
 				osmoassert.ConditionalPanic(t, tc.expectPanic, sut)
 			})
 		})
@@ -857,7 +857,10 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 		tc := tc
 
 		suite.T().Run(tc.name, func(t *testing.T) {
-			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
+			poolI := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
+
+			pool, ok := poolI.(*balancer.Pool)
+			require.True(t, ok)
 
 			// system under test
 			sut := func() {
@@ -952,7 +955,10 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 		tc := tc
 
 		suite.T().Run(tc.name, func(t *testing.T) {
-			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
+			poolI := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
+
+			pool, ok := poolI.(*balancer.Pool)
+			require.True(t, ok)
 
 			// system under test
 			sut := func() {
@@ -1033,7 +1039,7 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 	}
 
 	// joins with predetermined ratio
-	joinPool := func(pool types.TraditionalAmmInterface, tc *testCase) {
+	joinPool := func(pool types.BalancerPool, tc *testCase) {
 		tokensIn := sdk.Coins{
 			sdk.NewCoin(denomIn, sdk.NewInt(tc.initialTokensDenomIn).MulRaw(tc.percentRatio).QuoRaw(100)),
 			sdk.NewCoin(denomOut, sdk.NewInt(tc.initialTokensDenomOut).MulRaw(tc.percentRatio).QuoRaw(100)),
@@ -1044,7 +1050,7 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 	}
 
 	// exits for same amount of shares minted
-	exitPool := func(pool types.TraditionalAmmInterface, tc *testCase) {
+	exitPool := func(pool types.BalancerPool, tc *testCase) {
 		_, err := pool.ExitPool(suite.Ctx, tc.numShares, exitFeeDec)
 		suite.Require().NoError(err)
 	}

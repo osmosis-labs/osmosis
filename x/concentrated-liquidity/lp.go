@@ -56,6 +56,16 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, types.InsufficientLiquidityCreatedError{Actual: actualAmount1, Minimum: amount1Min}
 	}
 
+	denom0 := pool.GetToken0()
+	denom1 := pool.GetToken1()
+	if actualAmount0.IsPositive() && actualAmount1.IsPositive() {
+		err = k.bankKeeper.SendCoins(ctx, owner, pool.GetAddress(), sdk.NewCoins(sdk.NewCoin(denom0, actualAmount0), sdk.NewCoin(denom1, actualAmount1)))
+	} else if actualAmount0.IsPositive() && actualAmount1.IsZero() {
+		err = k.bankKeeper.SendCoins(ctx, owner, pool.GetAddress(), sdk.NewCoins(sdk.NewCoin(denom0, actualAmount0)))
+	} else if actualAmount0.IsZero() && actualAmount1.IsPositive() {
+		err = k.bankKeeper.SendCoins(ctx, owner, pool.GetAddress(), sdk.NewCoins(sdk.NewCoin(denom1, actualAmount0)))
+	}
+
 	// only persist updates if amount validation passed.
 	writeCacheCtx()
 
@@ -89,6 +99,21 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	actualAmount0, actualAmount1, err := k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	denom0 := pool.GetToken0()
+	denom1 := pool.GetToken1()
+	if actualAmount0.IsPositive() && actualAmount1.IsPositive() {
+		err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, sdk.NewCoins(sdk.NewCoin(denom0, actualAmount0), sdk.NewCoin(denom1, actualAmount1)))
+	} else if actualAmount0.IsPositive() && actualAmount1.IsZero() {
+		err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, sdk.NewCoins(sdk.NewCoin(denom0, actualAmount0)))
+	} else if actualAmount0.IsZero() && actualAmount1.IsPositive() {
+		err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, sdk.NewCoins(sdk.NewCoin(denom1, actualAmount0)))
 	}
 
 	return actualAmount0.Neg(), actualAmount1.Neg(), nil
@@ -134,6 +159,20 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	actualAmount0, actualAmount1 := pool.CalcActualAmounts(ctx, lowerTick, upperTick, sqrtPriceLowerTick, sqrtPriceUpperTick, liquidityDelta)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	// denom0 := pool.GetToken0()
+	// denom1 := pool.GetToken1()
+	// if actualAmount0.IsPositive() && actualAmount1.IsPositive() {
+	// 	err = k.bankKeeper.SendCoins(ctx, owner, pool.GetAddress(), sdk.NewCoins(sdk.NewCoin(denom0, actualAmount0.RoundInt()), sdk.NewCoin(denom1, actualAmount1.RoundInt())))
+	// } else if actualAmount0.IsPositive() && actualAmount1.IsZero() {
+	// 	err = k.bankKeeper.SendCoins(ctx, owner, pool.GetAddress(), sdk.NewCoins(sdk.NewCoin(denom0, actualAmount0.RoundInt())))
+	// } else if actualAmount0.IsZero() && actualAmount1.IsPositive() {
+	// 	err = k.bankKeeper.SendCoins(ctx, owner, pool.GetAddress(), sdk.NewCoins(sdk.NewCoin(denom1, actualAmount1.RoundInt())))
+	// }
+
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}

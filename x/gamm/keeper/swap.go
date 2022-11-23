@@ -20,7 +20,7 @@ import (
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	pool types.PoolI,
+	poolI types.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
@@ -30,6 +30,11 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
 	}
 	tokensIn := sdk.Coins{tokenIn}
+
+	pool, ok := poolI.(types.TraditionalAmmInterface)
+	if !ok {
+		return sdk.Int{}, errors.New("type cast failed")
+	}
 
 	defer func() {
 		if r := recover(); r != nil {

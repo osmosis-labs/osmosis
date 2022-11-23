@@ -2,11 +2,13 @@ package swaprouter
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
@@ -130,7 +132,12 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 			swapFee = routeSwapFee.Mul((swapFee.Quo(sumOfSwapFees)))
 		}
 
-		tokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.Coins{tokenIn}, route.TokenOutDenom, swapFee)
+		poolTrad, ok := pool.(gammtypes.TraditionalAmmInterface)
+		if !ok {
+			return sdk.Int{}, fmt.Errorf("type casting failed")
+		}
+
+		tokenOut, err := poolTrad.CalcOutAmtGivenIn(ctx, sdk.Coins{tokenIn}, route.TokenOutDenom, swapFee)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -344,10 +351,12 @@ func (k Keeper) createMultihopExpectedSwapOuts(
 			return nil, err
 		}
 
-		pool, err := swapModule.GetPool(ctx, route.PoolId)
+		poolI, err := swapModule.GetPool(ctx, route.PoolId)
 		if err != nil {
 			return nil, err
 		}
+
+		pool := poolI.(gammtypes.TraditionalAmmInterface)
 
 		tokenIn, err := pool.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), route.TokenInDenom, pool.GetSwapFee(ctx))
 		if err != nil {
@@ -382,8 +391,13 @@ func (k Keeper) createOsmoMultihopExpectedSwapOuts(
 			return nil, err
 		}
 
+		poolTrad, ok := pool.(gammtypes.TraditionalAmmInterface)
+		if !ok {
+			return nil, fmt.Errorf("type casting failed")
+		}
+
 		swapFee := pool.GetSwapFee(ctx)
-		tokenIn, err := pool.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), route.TokenInDenom, cumulativeRouteSwapFee.Mul((swapFee.Quo(sumOfSwapFees))))
+		tokenIn, err := poolTrad.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), route.TokenInDenom, cumulativeRouteSwapFee.Mul((swapFee.Quo(sumOfSwapFees))))
 		if err != nil {
 			return nil, err
 		}
