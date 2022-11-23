@@ -125,6 +125,7 @@ func (s *KeeperTestSuite) TestCLPoolSimpleSwapExactAmountIn() {
 				s.Require().Equal(test.param.expectedTokenOut.String(), tokenOutAmount.String())
 
 				gasConsumedForSwap := s.Ctx.GasMeter().GasConsumed() - prevGasConsumed
+				// TODO: make a CLGasFeeForSwap
 				// Check that we consume enough gas that a CL pool swap warrants
 				// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
 				s.Require().Greater(gasConsumedForSwap, uint64(types.BalancerGasFeeForSwap))

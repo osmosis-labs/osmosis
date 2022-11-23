@@ -58,6 +58,8 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	denom0 := pool.GetToken0()
 	denom1 := pool.GetToken1()
+
+	// send deposit amount from position owner to pool
 	if actualAmount0.IsPositive() && actualAmount1.IsPositive() {
 		err = k.bankKeeper.SendCoins(ctx, owner, pool.GetAddress(), sdk.NewCoins(sdk.NewCoin(denom0, actualAmount0), sdk.NewCoin(denom1, actualAmount1)))
 	} else if actualAmount0.IsPositive() && actualAmount1.IsZero() {
@@ -111,6 +113,8 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 
 	denom0 := pool.GetToken0()
 	denom1 := pool.GetToken1()
+
+	// send withdraw amount from pool to position owner
 	if actualAmount0.IsPositive() && actualAmount1.IsPositive() {
 		err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, sdk.NewCoins(sdk.NewCoin(denom0, actualAmount0), sdk.NewCoin(denom1, actualAmount1)))
 	} else if actualAmount0.IsPositive() && actualAmount1.IsZero() {
@@ -165,20 +169,6 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	actualAmount0, actualAmount1 := pool.CalcActualAmounts(ctx, lowerTick, upperTick, sqrtPriceLowerTick, sqrtPriceUpperTick, liquidityDelta)
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, err
-	}
-
-	// denom0 := pool.GetToken0()
-	// denom1 := pool.GetToken1()
-	// if actualAmount0.IsPositive() && actualAmount1.IsPositive() {
-	// 	err = k.bankKeeper.SendCoins(ctx, owner, pool.GetAddress(), sdk.NewCoins(sdk.NewCoin(denom0, actualAmount0.RoundInt()), sdk.NewCoin(denom1, actualAmount1.RoundInt())))
-	// } else if actualAmount0.IsPositive() && actualAmount1.IsZero() {
-	// 	err = k.bankKeeper.SendCoins(ctx, owner, pool.GetAddress(), sdk.NewCoins(sdk.NewCoin(denom0, actualAmount0.RoundInt())))
-	// } else if actualAmount0.IsZero() && actualAmount1.IsPositive() {
-	// 	err = k.bankKeeper.SendCoins(ctx, owner, pool.GetAddress(), sdk.NewCoins(sdk.NewCoin(denom1, actualAmount1.RoundInt())))
-	// }
-
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
