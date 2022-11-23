@@ -240,7 +240,8 @@ func (suite *ConcentratedMathTestSuite) TestComputeSwapState() {
 		tc := tc
 
 		suite.Run(name, func() {
-			sqrtPriceNext, amountIn, amountOut := math.ComputeSwapStep(tc.sqrtPCurrent, tc.sqrtPTarget, tc.liquidity, tc.amountRemaining, tc.zeroForOne)
+			swapStrategy := math.NewSwapStrategy(tc.zeroForOne)
+			sqrtPriceNext, amountIn, amountOut := swapStrategy.ComputeSwapStep(tc.sqrtPCurrent, tc.sqrtPTarget, tc.liquidity, tc.amountRemaining)
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext.String())
 			suite.Require().Equal(tc.expectedAmountIn, amountIn.String())
 			suite.Require().Equal(tc.expectedAmountOut, amountOut.String())
