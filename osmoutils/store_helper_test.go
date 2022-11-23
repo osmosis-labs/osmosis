@@ -811,7 +811,7 @@ func (s *TestSuite) TestMustGet() {
 	}
 }
 
-// TestMustGet tests that GetIfFound returns a boolean indicating 
+// TestGetIfFound tests that GetIfFound returns a boolean indicating 
 // whether value exists for the given key and error
 func (s *TestSuite) TestGetIfFound() {
 	tests := map[string]struct {
