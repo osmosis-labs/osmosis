@@ -811,6 +811,98 @@ func (s *TestSuite) TestMustGet() {
 	}
 }
 
+// TestGetIfFound tests that GetIfFound returns a boolean indicating 
+// whether value exists for the given key and error
+func (s *TestSuite) TestGetIfFound() {
+	tests := map[string]struct {
+		// keys and values to preset
+		preSetKeyValues map[string]proto.Message
+
+		// keys and values to attempt to get and validate
+		expectedGetKeyValues map[string]proto.Message
+
+		actualResultProto proto.Message
+
+		expectFound bool
+
+		expectErr bool
+	}{
+		"basic valid test": {
+			preSetKeyValues: map[string]proto.Message{
+				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
+				keyB: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
+				keyC: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
+			},
+
+			expectedGetKeyValues: map[string]proto.Message{
+				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
+				keyB: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
+				keyC: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
+			},
+
+			actualResultProto: &sdk.DecProto{},
+
+			expectFound: true,
+		},
+		"attempt to get non-existent key - not found & no err return": {
+			preSetKeyValues: map[string]proto.Message{
+				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
+				keyC: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
+			},
+
+			expectedGetKeyValues: map[string]proto.Message{
+				keyB: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
+			},
+
+			actualResultProto: &sdk.DecProto{},
+
+			expectFound: false,
+
+			expectErr: false,
+		},
+		"invalid proto Dec vs TwapRecord - found but Unmarshal err": {
+			preSetKeyValues: map[string]proto.Message{
+				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
+			},
+
+			expectedGetKeyValues: map[string]proto.Message{
+				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
+			},
+
+			actualResultProto: &twaptypes.TwapRecord{},
+
+			expectFound: true,
+
+			expectErr: true,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupStoreWithBasePrefix()
+
+			// Setup
+			for key, value := range tc.preSetKeyValues {
+				osmoutils.MustSet(s.store, []byte(key), value)
+			}
+
+			for key, expectedValue := range tc.expectedGetKeyValues {
+				// System under test.
+				found, err := osmoutils.GetIfFound(s.store, []byte(key), tc.actualResultProto)
+				// Assertions.
+				s.Require().Equal(found, tc.expectFound)
+				if tc.expectErr {
+					s.Require().Error(err)
+				} 
+				// make sure found by key & Unmarshal successfully
+				if !tc.expectErr && tc.expectFound {
+					s.Require().Equal(expectedValue.String(), tc.actualResultProto.String())
+				}
+			}
+		})
+	}
+}
+
 // TestMustSet tests that MustSet updates the store correctly
 // and panics if an error is encountered.
 func (s *TestSuite) TestMustSet() {
