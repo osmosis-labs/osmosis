@@ -94,7 +94,7 @@ func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.Traditiona
 
 	pool, ok := poolI.(types.TraditionalAmmInterface)
 	if !ok {
-		return nil, fmt.Errorf("type cast failed")
+		return nil, fmt.Errorf("failed cast to TraditionalAmmInterface, actual type: %T", poolI)
 	}
 
 	return pool, nil
@@ -136,7 +136,7 @@ func (k Keeper) GetPoolsAndPoke(ctx sdk.Context) (res []types.TraditionalAmmInte
 
 		pool, ok := poolI.(types.TraditionalAmmInterface)
 		if !ok {
-			return nil, fmt.Errorf("type cast failed")
+			return nil, fmt.Errorf("failed cast to TraditionalAmmInterface, actual type: %T", poolI)
 		}
 
 		res = append(res, pool)

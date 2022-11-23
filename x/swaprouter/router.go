@@ -119,12 +119,12 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 		}
 
 		// Execute the expected swap on the current routed pool
-		pool, poolErr := swapModule.GetPool(ctx, route.PoolId)
+		poolI, poolErr := swapModule.GetPool(ctx, route.PoolId)
 		if poolErr != nil {
 			return sdk.Int{}, poolErr
 		}
 
-		swapFee := pool.GetSwapFee(ctx)
+		swapFee := poolI.GetSwapFee(ctx)
 
 		// If we determined the route is an osmo multi-hop and both routes are incentivized,
 		// we modify the swap fee accordingly.
@@ -132,9 +132,9 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 			swapFee = routeSwapFee.Mul((swapFee.Quo(sumOfSwapFees)))
 		}
 
-		poolTrad, ok := pool.(gammtypes.TraditionalAmmInterface)
+		poolTrad, ok := poolI.(gammtypes.TraditionalAmmInterface)
 		if !ok {
-			return sdk.Int{}, fmt.Errorf("type casting failed")
+			return sdk.Int{}, fmt.Errorf("failed cast to TraditionalAmmInterface, actual type: %T", poolI)
 		}
 
 		tokenOut, err := poolTrad.CalcOutAmtGivenIn(ctx, sdk.Coins{tokenIn}, route.TokenOutDenom, swapFee)
@@ -389,17 +389,17 @@ func (k Keeper) createOsmoMultihopExpectedSwapOuts(
 			return nil, err
 		}
 
-		pool, err := swapModule.GetPool(ctx, route.PoolId)
+		poolI, err := swapModule.GetPool(ctx, route.PoolId)
 		if err != nil {
 			return nil, err
 		}
 
-		poolTrad, ok := pool.(gammtypes.TraditionalAmmInterface)
+		poolTrad, ok := poolI.(gammtypes.TraditionalAmmInterface)
 		if !ok {
-			return nil, fmt.Errorf("type casting failed")
+			return nil, fmt.Errorf("failed cast to TraditionalAmmInterface, actual type: %T", poolI)
 		}
 
-		swapFee := pool.GetSwapFee(ctx)
+		swapFee := poolI.GetSwapFee(ctx)
 		tokenIn, err := poolTrad.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), route.TokenInDenom, cumulativeRouteSwapFee.Mul((swapFee.Quo(sumOfSwapFees))))
 		if err != nil {
 			return nil, err

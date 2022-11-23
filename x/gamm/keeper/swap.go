@@ -33,7 +33,7 @@ func (k Keeper) SwapExactAmountIn(
 
 	pool, ok := poolI.(types.TraditionalAmmInterface)
 	if !ok {
-		return sdk.Int{}, errors.New("type cast failed")
+		return sdk.Int{}, fmt.Errorf("failed cast to TraditionalAmmInterface, actual type: %T", poolI)
 	}
 
 	defer func() {
