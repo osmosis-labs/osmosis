@@ -10,9 +10,9 @@ type swapStrategy interface {
 	ValidatePriceLimit(sqrtPriceLimit, currentSqrtPrice sdk.Dec) error
 }
 
-func New(zeroForOne bool) swapStrategy {
+func New(zeroForOne bool, sqrtPriceLimit sdk.Dec) swapStrategy {
 	if zeroForOne {
-		return &zeroForOneStrategy{}
+		return &zeroForOneStrategy{sqrtPriceLimit: sqrtPriceLimit}
 	}
-	return &oneForZeroStrategy{}
+	return &oneForZeroStrategy{sqrtPriceLimit: sqrtPriceLimit}
 }
