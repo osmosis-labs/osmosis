@@ -267,7 +267,7 @@ test-sim-bench:
 # In that case, run `make e2e-remove-resources`
 # manually.
 # Utilizes Go cache.
-test-e2e: OSMOSIS_E2E=True e2e-setup test-e2e-ci
+test-e2e: e2e-setup test-e2e-ci
 
 # test-e2e-ci runs a full e2e test suite
 # does not do any validation about the state of the Docker environment
