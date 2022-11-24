@@ -83,6 +83,8 @@ jobs:
         if: ${{ matrix.contract.output != null }}
         run: >
           diff ${{ matrix.contract.output }} ${{ matrix.contract.build }}
+
+
   lints:
     name: Cosmwasm Lints
     runs-on: ubuntu-latest
