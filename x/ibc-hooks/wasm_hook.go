@@ -202,16 +202,3 @@ func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, cont
 
 	return isWasmRouted, contractAddr, msgBytes, nil
 }
-
-func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error {
-	// Notify the wasmhook
-	err := im.App.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
-	if err != nil {
-		return err
-	}
-	// ToDo: pass acknowledgements to contracts that are watching for them
-	// Query contract that keeps state about ack watchers
-	// If the contract is watching acks for sha256(IbcMsg::Transfer), then make a sudo call letting it know that the ack has been received
-	// Otherwise, return
-	return nil
-}
