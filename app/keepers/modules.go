@@ -28,6 +28,7 @@ import (
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v13/x/epochs"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm"
 	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
@@ -82,6 +83,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 	gamm.AppModuleBasic{},
 	twapmodule.AppModuleBasic{},
 	swaproutermodule.AppModuleBasic{},
+	concentratedliquidity.AppModuleBasic{},
 	txfees.AppModuleBasic{},
 	incentives.AppModuleBasic{},
 	lockup.AppModuleBasic{},
