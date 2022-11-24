@@ -13,7 +13,7 @@ import (
 
 var defaultPooledAssetAmount = int64(500)
 
-func (suite *KeeperTestSuite) preparePool(denom string) (poolID uint64, pool gammtypes.PoolI) {
+func (suite *KeeperTestSuite) preparePool(denom string) (poolID uint64, pool gammtypes.TraditionalAmmInterface) {
 	baseDenom, _ := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)
 	poolID = suite.PrepareBalancerPoolWithCoins(
 		sdk.NewInt64Coin(baseDenom, defaultPooledAssetAmount),
@@ -42,7 +42,7 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 		coins      sdk.Coins
 		baseDenom  string
 		denoms     []string
-		poolTypes  []gammtypes.PoolI
+		poolTypes  []gammtypes.TraditionalAmmInterface
 		swapFee    sdk.Dec
 		expectPass bool
 	}{
@@ -51,7 +51,7 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 			coins:     sdk.Coins{sdk.NewInt64Coin(uion, 10)},
 			baseDenom: baseDenom,
 			denoms:    []string{uion},
-			poolTypes: []gammtypes.PoolI{uionPool},
+			poolTypes: []gammtypes.TraditionalAmmInterface{uionPool},
 			swapFee:   sdk.MustNewDecFromStr("0"),
 		},
 		{
@@ -59,7 +59,7 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 			coins:     sdk.Coins{sdk.NewInt64Coin(atom, 20), sdk.NewInt64Coin(ust, 30)},
 			baseDenom: baseDenom,
 			denoms:    []string{atom, ust},
-			poolTypes: []gammtypes.PoolI{atomPool, ustPool},
+			poolTypes: []gammtypes.TraditionalAmmInterface{atomPool, ustPool},
 			swapFee:   sdk.MustNewDecFromStr("0"),
 		},
 	}

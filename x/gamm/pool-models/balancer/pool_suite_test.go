@@ -817,7 +817,10 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 		tc := tc
 
 		suite.T().Run(tc.name, func(t *testing.T) {
-			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
+			poolI := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
+
+			pool, ok := poolI.(*balancer.Pool)
+			require.True(t, ok)
 
 			// system under test
 			sut := func() {
@@ -834,10 +837,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 				}
 			}
 
-			balancerPool, ok := pool.(*balancer.Pool)
-			require.True(t, ok)
-
-			assertPoolStateNotModified(t, balancerPool, func() {
+			assertPoolStateNotModified(t, pool, func() {
 				osmoassert.ConditionalPanic(t, tc.expectPanic, sut)
 			})
 		})
@@ -857,7 +857,10 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 		tc := tc
 
 		suite.T().Run(tc.name, func(t *testing.T) {
-			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
+			poolI := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
+
+			pool, ok := poolI.(*balancer.Pool)
+			require.True(t, ok)
 
 			// system under test
 			sut := func() {
@@ -952,7 +955,10 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 		tc := tc
 
 		suite.T().Run(tc.name, func(t *testing.T) {
-			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
+			poolI := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
+
+			pool, ok := poolI.(*balancer.Pool)
+			require.True(t, ok)
 
 			// system under test
 			sut := func() {
