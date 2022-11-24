@@ -84,6 +84,30 @@ func (qp QueryPlugin) GetSpotPrice(ctx sdk.Context, spotPrice *bindings.SpotPric
 	return &price, nil
 }
 
+// EstimateSwap validates each denom (in / out) and performs a swap.
+func (qp QueryPlugin) EstimateSwap(ctx sdk.Context, estimateSwap *bindings.EstimateSwap) (*bindings.SwapAmount, error) {
+	if estimateSwap == nil {
+		return nil, wasmvmtypes.InvalidRequest{Err: "gamm estimate swap null"}
+	}
+	if err := sdk.ValidateDenom(estimateSwap.First.DenomIn); err != nil {
+		return nil, sdkerrors.Wrap(err, "gamm estimate swap denom in")
+	}
+	if err := sdk.ValidateDenom(estimateSwap.First.DenomOut); err != nil {
+		return nil, sdkerrors.Wrap(err, "gamm estimate swap denom out")
+	}
+	senderAddr, err := sdk.AccAddressFromBech32(estimateSwap.Sender)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "gamm estimate swap sender address")
+	}
+
+	if estimateSwap.Amount == (bindings.SwapAmount{}) {
+		return nil, wasmvmtypes.InvalidRequest{Err: "gamm estimate swap empty swap"}
+	}
+
+	estimate, err := PerformSwap(qp.gammKeeper, ctx, senderAddr, estimateSwap.ToSwapMsg())
+	return estimate, err
+}
+
 func (qp QueryPlugin) ArithmeticTwap(ctx sdk.Context, arithmeticTwap *bindings.ArithmeticTwap) (*sdk.Dec, error) {
 	if arithmeticTwap == nil {
 		return nil, wasmvmtypes.InvalidRequest{Err: "gamm arithmetic twap null"}

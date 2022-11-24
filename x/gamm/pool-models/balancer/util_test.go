@@ -17,7 +17,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
-func createTestPool(t *testing.T, swapFee, exitFee sdk.Dec, poolAssets ...balancer.PoolAsset) types.TraditionalAmmInterface {
+func createTestPool(t *testing.T, swapFee, exitFee sdk.Dec, poolAssets ...balancer.PoolAsset) types.PoolI {
 	pool, err := balancer.NewBalancerPool(
 		1,
 		balancer.NewPoolParams(swapFee, exitFee, nil),

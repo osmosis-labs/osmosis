@@ -2,10 +2,7 @@ package v13_test
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
-
-	gamm "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
 
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
 
@@ -15,7 +12,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	v13 "github.com/osmosis-labs/osmosis/v13/app/upgrades/v13"
 	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 )
 
@@ -103,46 +99,5 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 			tc.upgrade()
 			tc.post_upgrade()
 		})
-	}
-}
-
-func (suite *UpgradeTestSuite) TestMigrateNextPoolIdAndCreatePool() {
-	suite.SetupTest() // reset
-
-	const (
-		expectedNextPoolId uint64 = 3
-	)
-
-	var (
-		gammKeeperType = reflect.TypeOf(&gamm.Keeper{})
-	)
-
-	ctx := suite.Ctx
-	gammKeeper := suite.App.GAMMKeeper
-	swaprouterKeeper := suite.App.SwapRouterKeeper
-
-	// Set next pool id to given constant, because creating pools doesn't
-	// increment id on current version
-	gammKeeper.SetNextPoolId(ctx, expectedNextPoolId)
-	nextPoolId := gammKeeper.GetNextPoolId(ctx)
-	suite.Require().Equal(expectedNextPoolId, nextPoolId)
-
-	// system under test.
-	v13.MigrateNextPoolId(ctx, gammKeeper, swaprouterKeeper)
-
-	// validate swaprouter's next pool id.
-	actualNextPoolId := swaprouterKeeper.GetNextPoolId(ctx)
-	suite.Require().Equal(expectedNextPoolId, actualNextPoolId)
-
-	// create a pool after migration.
-	actualCreatedPoolId := suite.PrepareBalancerPool()
-	suite.Require().Equal(expectedNextPoolId, actualCreatedPoolId)
-
-	// validate that module route mapping has been created for each pool id.
-	for poolId := uint64(1); poolId < expectedNextPoolId; poolId++ {
-		swapModule, err := swaprouterKeeper.GetSwapModule(ctx, poolId)
-		suite.Require().NoError(err)
-
-		suite.Require().Equal(gammKeeperType, reflect.TypeOf(swapModule))
 	}
 }

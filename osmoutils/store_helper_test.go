@@ -811,7 +811,7 @@ func (s *TestSuite) TestMustGet() {
 	}
 }
 
-// TestGetIfFound tests that GetIfFound returns a boolean indicating
+// TestGetIfFound tests that GetIfFound returns a boolean indicating 
 // whether value exists for the given key and error
 func (s *TestSuite) TestGetIfFound() {
 	tests := map[string]struct {
@@ -893,7 +893,7 @@ func (s *TestSuite) TestGetIfFound() {
 				s.Require().Equal(found, tc.expectFound)
 				if tc.expectErr {
 					s.Require().Error(err)
-				}
+				} 
 				// make sure found by key & Unmarshal successfully
 				if !tc.expectErr && tc.expectFound {
 					s.Require().Equal(expectedValue.String(), tc.actualResultProto.String())

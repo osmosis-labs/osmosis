@@ -17,7 +17,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
 	swaprouterclient "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/cli"
@@ -87,7 +86,8 @@ type AppModule struct {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), swaprouter.NewMsgServerImpl(&am.k))
 	balancer.RegisterMsgServer(cfg.MsgServer(), swaprouter.NewBalancerMsgServerImpl(&am.k))
-	stableswap.RegisterMsgCreatorServer(cfg.MsgServer(), swaprouter.NewStableswapMsgServerImpl(&am.k))
+	// TODO: enable after gamm refactor is ported from `concentrated-liqudity-main`
+	// stableswap.RegisterMsgCreatorServer(cfg.MsgServer(), swaprouter.NewStableswapMsgServerImpl(&am.k))
 	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: swaprouterclient.Querier{K: am.k}})
 }
 

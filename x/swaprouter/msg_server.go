@@ -17,8 +17,9 @@ type msgServer struct {
 }
 
 var (
-	_ balancer.MsgServer          = (*msgServer)(nil)
-	_ stableswap.MsgCreatorServer = (*msgServer)(nil)
+	_ balancer.MsgServer = (*msgServer)(nil)
+	// TODO: enable after gamm refactor is ported from `concentrated-liqudity-main`
+	// _ stableswap.MsgCreatorServer = (*msgServer)(nil)
 )
 
 func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
@@ -33,11 +34,12 @@ func NewBalancerMsgServerImpl(keeper *Keeper) balancer.MsgServer {
 	}
 }
 
-func NewStableswapMsgServerImpl(keeper *Keeper) stableswap.MsgCreatorServer {
-	return &msgServer{
-		keeper: keeper,
-	}
-}
+// TODO: enable after gamm refactor is ported from `concentrated-liqudity-main`
+// func NewStableswapMsgServerImpl(keeper *Keeper) stableswap.MsgCreatorServer {
+// 	return &msgServer{
+// 		keeper: keeper,
+// 	}
+// }
 
 // CreateBalancerPool is a create balancer pool message.
 func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.MsgCreateBalancerPool) (*balancer.MsgCreateBalancerPoolResponse, error) {
