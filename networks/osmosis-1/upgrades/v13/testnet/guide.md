@@ -95,7 +95,7 @@ Create the v13 folder, make the build, and copy the daemon over to that folder
 mkdir -p ~/.osmosisd/cosmovisor/upgrades/v13/bin
 cd $HOME/osmosis
 git pull
-git checkout v13.0.0-rc3
+git checkout v13.0.0-rc4
 make build
 cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v13/bin
 ```
@@ -113,7 +113,7 @@ Now, at the upgrade height, Cosmovisor will upgrade to the v13 binary
 ```{.sh}
 cd $HOME/osmosis
 git pull
-git checkout v13.0.0-rc3
+git checkout v13.0.0-rc4
 make install
 ```
 
