@@ -366,14 +366,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		wasmOpts...,
 	)
 	appKeepers.WasmKeeper = &wasmKeeper
-	// Update the ICS4Wrapper with the proper contractKeeper
-	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
-	appKeepers.RateLimitingICS4Wrapper.ContractKeeper = appKeepers.ContractKeeper
-
-	// Pass the contract keeper to all the structs (generally ICS4Wrappers for ibc middlewares) that need it
-	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
-	appKeepers.RateLimitingICS4Wrapper.ContractKeeper = appKeepers.ContractKeeper
-	appKeepers.Ics20WasmHooks.ContractKeeper = appKeepers.ContractKeeper
 
 	// Pass the contract keeper to all the structs (generally ICS4Wrappers for ibc middlewares) that need it
 	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
