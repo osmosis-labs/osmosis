@@ -56,6 +56,8 @@ import (
 
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v13/wasmbinding"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	epochskeeper "github.com/osmosis-labs/osmosis/v13/x/epochs/keeper"
 	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
@@ -123,6 +125,7 @@ type AppKeepers struct {
 	ContractKeeper               *wasmkeeper.PermissionedKeeper
 	TokenFactoryKeeper           *tokenfactorykeeper.Keeper
 	SwapRouterKeeper             *swaprouter.Keeper
+	ConcentratedLiquidityKeeper  *concentratedliquidity.Keeper
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
 
 	// IBC modules
@@ -245,7 +248,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	gammKeeper := gammkeeper.NewKeeper(
 		appCodec, appKeepers.keys[gammtypes.StoreKey],
-		appKeepers.GetSubspace(gammtypes.ModuleName),
 		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.DistrKeeper)
 	appKeepers.GAMMKeeper = &gammKeeper
 
@@ -255,11 +257,15 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GetSubspace(twaptypes.ModuleName),
 		appKeepers.GAMMKeeper)
 
+	appKeepers.ConcentratedLiquidityKeeper = concentratedliquidity.NewKeeper(
+		appCodec,
+		appKeepers.keys[concentratedliquiditytypes.StoreKey])
+
 	appKeepers.SwapRouterKeeper = swaprouter.NewKeeper(
 		appKeepers.keys[swaproutertypes.StoreKey],
 		appKeepers.GetSubspace(swaproutertypes.ModuleName),
 		appKeepers.GAMMKeeper,
-		nil, // TODO: set CL keeper once it is merged.
+		appKeepers.ConcentratedLiquidityKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.AccountKeeper,
 		appKeepers.DistrKeeper,
@@ -278,7 +284,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.keys[txfeestypes.StoreKey],
-		appKeepers.GAMMKeeper,
+		appKeepers.SwapRouterKeeper,
 		appKeepers.GAMMKeeper,
 		txfeestypes.FeeCollectorName,
 		txfeestypes.NonNativeFeeCollectorName,
@@ -318,10 +324,10 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.IncentivesKeeper,
 		appKeepers.DistrKeeper,
-		appKeepers.GAMMKeeper,
+		appKeepers.SwapRouterKeeper,
 	)
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
-	appKeepers.GAMMKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
+	appKeepers.SwapRouterKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
 
 	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
 		appKeepers.keys[tokenfactorytypes.StoreKey],
@@ -367,6 +373,14 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		wasmOpts...,
 	)
 	appKeepers.WasmKeeper = &wasmKeeper
+	// Update the ICS4Wrapper with the proper contractKeeper
+	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
+	appKeepers.RateLimitingICS4Wrapper.ContractKeeper = appKeepers.ContractKeeper
+
+	// Pass the contract keeper to all the structs (generally ICS4Wrappers for ibc middlewares) that need it
+	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
+	appKeepers.RateLimitingICS4Wrapper.ContractKeeper = appKeepers.ContractKeeper
+	appKeepers.Ics20WasmHooks.ContractKeeper = appKeepers.ContractKeeper
 
 	// Pass the contract keeper to all the structs (generally ICS4Wrappers for ibc middlewares) that need it
 	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
@@ -552,6 +566,14 @@ func (appKeepers *AppKeepers) SetupHooks() {
 		),
 	)
 
+	appKeepers.SwapRouterKeeper.SetPoolCreationListeners(
+		swaproutertypes.NewPoolCreationListeners(
+			// insert gamm hooks receivers here
+			appKeepers.PoolIncentivesKeeper.Hooks(),
+			appKeepers.TwapKeeper.PoolCreationListeners(),
+		),
+	)
+
 	appKeepers.LockupKeeper.SetHooks(
 		lockuptypes.NewMultiLockupHooks(
 			// insert lockup hooks receivers here
@@ -609,6 +631,7 @@ func KVStoreKeys() []string {
 		capabilitytypes.StoreKey,
 		gammtypes.StoreKey,
 		twaptypes.StoreKey,
+		concentratedliquiditytypes.StoreKey,
 		swaproutertypes.StoreKey,
 		lockuptypes.StoreKey,
 		incentivestypes.StoreKey,

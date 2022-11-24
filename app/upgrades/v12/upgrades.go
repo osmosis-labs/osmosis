@@ -62,8 +62,10 @@ func CreateUpgradeHandler(
 				// Change: Removed authz messages
 				sdk.MsgTypeURL(&gammtypes.MsgJoinPool{}),
 				sdk.MsgTypeURL(&gammtypes.MsgExitPool{}),
-				sdk.MsgTypeURL(&gammtypes.MsgSwapExactAmountIn{}),
-				sdk.MsgTypeURL(&gammtypes.MsgSwapExactAmountOut{}),
+				// N.B.: messsages were moved to another module.
+				// Leaving for historic reasons.
+				// sdk.MsgTypeURL(&gammtypes.MsgSwapExactAmountIn{}),
+				// sdk.MsgTypeURL(&gammtypes.MsgSwapExactAmountOut{}),
 				sdk.MsgTypeURL(&gammtypes.MsgJoinSwapExternAmountIn{}),
 				sdk.MsgTypeURL(&gammtypes.MsgJoinSwapShareAmountOut{}),
 				sdk.MsgTypeURL(&gammtypes.MsgExitSwapExternAmountOut{}),
@@ -75,7 +77,7 @@ func CreateUpgradeHandler(
 		keepers.ICAHostKeeper.SetParams(ctx, hostParams)
 
 		// Initialize TWAP state
-		latestPoolId := keepers.GAMMKeeper.GetNextPoolId(ctx) - 1
+		latestPoolId := keepers.SwapRouterKeeper.GetNextPoolId(ctx) - 1
 		err := keepers.TwapKeeper.MigrateExistingPools(ctx, latestPoolId)
 		if err != nil {
 			return nil, err

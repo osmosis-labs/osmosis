@@ -257,7 +257,7 @@ func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []s
 	// TODO: use sdk crypto instead of tendermint to generate address
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
-	params := s.App.GAMMKeeper.GetParams(s.Ctx)
+	params := s.App.SwapRouterKeeper.GetParams(s.Ctx)
 
 	pools := []gammtypes.PoolI{}
 	for index, multiplier := range multipliers {
@@ -291,7 +291,7 @@ func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []s
 		}
 		msg := balancer.NewMsgCreateBalancerPool(acc1, poolParams, poolAssets, defaultFutureGovernor)
 
-		poolId, err := s.App.GAMMKeeper.CreatePool(s.Ctx, msg)
+		poolId, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, msg)
 		s.Require().NoError(err)
 
 		pool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
@@ -313,13 +313,18 @@ func (s *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset sdk.Coin
 	coins := sdk.Coins{sdk.NewInt64Coin(fromAsset.Denom, 100000000000000)}
 	s.FundAcc(acc1, coins)
 
-	_, err := s.App.GAMMKeeper.SwapExactAmountOutLegacy(
+	pool, err := s.App.GAMMKeeper.GetPool(s.Ctx, poolId)
+	s.Require().NoError(err)
+	swapFee := pool.GetSwapFee(s.Ctx)
+
+	_, err = s.App.GAMMKeeper.SwapExactAmountOut(
 		s.Ctx,
 		acc1,
-		poolId,
+		pool,
 		fromAsset.Denom,
 		fromAsset.Amount,
 		sdk.NewCoin(toAsset.Denom, toAsset.Amount.Quo(sdk.NewInt(4))),
+		swapFee,
 	)
 	s.Require().NoError(err)
 

@@ -95,7 +95,7 @@ func (msg MsgCreateBalancerPool) InitialLiquidity() sdk.Coins {
 	return coins
 }
 
-func (msg MsgCreateBalancerPool) CreatePool(ctx sdk.Context, poolID uint64) (types.PoolI, error) {
+func (msg MsgCreateBalancerPool) CreatePool(ctx sdk.Context, poolID uint64) (types.TraditionalAmmInterface, error) {
 	poolI, err := NewBalancerPool(poolID, *msg.PoolParams, msg.PoolAssets, msg.FuturePoolGovernor, ctx.BlockTime())
 	return &poolI, err
 }

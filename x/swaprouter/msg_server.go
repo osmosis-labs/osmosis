@@ -17,9 +17,8 @@ type msgServer struct {
 }
 
 var (
-	_ balancer.MsgServer = (*msgServer)(nil)
-	// TODO: enable after gamm refactor is ported from `concentrated-liqudity-main`
-	// _ stableswap.MsgCreatorServer = (*msgServer)(nil)
+	_ balancer.MsgServer          = (*msgServer)(nil)
+	_ stableswap.MsgCreatorServer = (*msgServer)(nil)
 )
 
 func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
@@ -34,12 +33,11 @@ func NewBalancerMsgServerImpl(keeper *Keeper) balancer.MsgServer {
 	}
 }
 
-// TODO: enable after gamm refactor is ported from `concentrated-liqudity-main`
-// func NewStableswapMsgServerImpl(keeper *Keeper) stableswap.MsgCreatorServer {
-// 	return &msgServer{
-// 		keeper: keeper,
-// 	}
-// }
+func NewStableswapMsgServerImpl(keeper *Keeper) stableswap.MsgCreatorServer {
+	return &msgServer{
+		keeper: keeper,
+	}
+}
 
 // CreateBalancerPool is a create balancer pool message.
 func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.MsgCreateBalancerPool) (*balancer.MsgCreateBalancerPoolResponse, error) {
@@ -57,6 +55,16 @@ func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stables
 	}
 	return &stableswap.MsgCreateStableswapPoolResponse{PoolID: poolId}, nil
 }
+
+// func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, msg *stableswap.MsgStableSwapAdjustScalingFactors) (*stableswap.MsgStableSwapAdjustScalingFactorsResponse, error) {
+// 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+// 	if err := server.keeper.SetStableSwapScalingFactors(ctx, msg.ScalingFactors, msg.PoolID, msg.ScalingFactorGovernor); err != nil {
+// 		return nil, err
+// 	}
+
+// 	return &stableswap.MsgStableSwapAdjustScalingFactorsResponse{}, nil
+// }
 
 // CreatePool attempts to create a pool returning the newly created pool ID or an error upon failure.
 // The pool creation fee is used to fund the community pool.

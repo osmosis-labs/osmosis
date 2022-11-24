@@ -65,7 +65,7 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 				})
 				suite.Require().NoError(err)
 
-				var pool types.PoolI
+				var pool types.TraditionalAmmInterface
 				err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 				suite.Require().NoError(err)
 
@@ -153,7 +153,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolNoSwapShares() {
 				})
 				suite.Require().NoError(err)
 
-				var pool types.PoolI
+				var pool types.TraditionalAmmInterface
 				err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 				suite.Require().NoError(err)
 
@@ -399,7 +399,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 				})
 				suite.Require().NoError(err)
 
-				var pool types.PoolI
+				var pool types.TraditionalAmmInterface
 				err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 				suite.Require().NoError(err)
 
@@ -508,22 +508,6 @@ func (suite *KeeperTestSuite) TestPoolType() {
 		&types.QueryPoolTypeRequest{PoolId: poolIdStableswap})
 	suite.Require().NoError(err)
 	suite.Require().Equal(stableswap.PoolTypeName, res.PoolType)
-}
-
-func (suite *KeeperTestSuite) TestQueryNumPools1() {
-	res, err := suite.queryClient.NumPools(gocontext.Background(), &types.QueryNumPoolsRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(uint64(0), res.NumPools)
-}
-
-func (suite *KeeperTestSuite) TestQueryNumPools2() {
-	for i := 0; i < 10; i++ {
-		suite.PrepareBalancerPool()
-	}
-
-	res, err := suite.queryClient.NumPools(gocontext.Background(), &types.QueryNumPoolsRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(uint64(10), res.NumPools)
 }
 
 func (suite *KeeperTestSuite) TestQueryTotalPoolLiquidity() {
