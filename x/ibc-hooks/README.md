@@ -114,6 +114,51 @@ In wasm hooks, post packet execution:
 * if wasm message has error, return ErrAck
 * otherwise continue through middleware
 
+## Ack Hooks
+
+A contract that, through a wasm hook, sends an IBC packet, may need to listen for the ACK from that packet. To allow
+contracts to listen on the ack of specific packets, we provide AckHooks. 
+
+### Design
+
+The ack hooks will be configured with a param pointing to a contract that knows which contracts have been subscribed to 
+listen to ACKs (subscription contract). When an ack is received, the contract will query the subscription contract for 
+the information of any subscribers to the specific packet's ack. It then notifies any subscribers about the ack, and 
+deletes the listener from the subscription contract. 
+
+### Use case
+
+The crosschain swaps implementation sends an IBC transfer. If the transfer were to fail, we want to allow the sender
+to be able to retrieve their funds (which would otherwise be stuck in the contract). To do this, we allow users to 
+retrieve the funds after the timeout has passed, but without the ack information, we cannot guarantee that  
+
+### Implementation
+
+#### Subscription Contract Messages
+Execute:
+* `Subscribe { packet: IbcMsg::Transfer, event: EventType }` 
+* `Unsubscribe { packet: IbcMsg::Transfer, event: EventType }` (for completeness)
+
+Sudo:
+* `UnsubscribeAll { packet: IbcMsg::Transfer, event: EventType }`
+
+Where `EventType` can be "acknowledgment" or "timeout"
+
+#### Interface for receiving the Ack
+
+Execute:
+* `ReceiveAck { packet: IbcMsg::Transfer, ack: TBD }`
 
 
-### Testing strategy
+## Pipeline Hooks
+
+For simplicity, the two hooks described above are implemented under WasmHooks. In the future, these could be split 
+into two independent hooks and configured as a Pipelining hook. 
+
+TODO: Is this over-engineering this?
+
+# Testing strategy
+
+# Future Work
+* Does it make sense to move most of this code to cosmwasm and have the middleware just call a dispatcher contract 
+  on every function? Similarly to how wasmd does it for IBC enabled contracts but for the transfer module.

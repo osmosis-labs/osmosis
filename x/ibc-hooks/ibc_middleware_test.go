@@ -544,6 +544,9 @@ func (suite *HooksTestSuite) FullSendBToA(msg sdk.Msg) (*sdk.Result, *sdk.Result
 	suite.Require().NoError(err)
 
 	ack, err := ibctesting.ParseAckFromEvents(receiveResult.GetEvents())
+	suite.Require().NoError(err)
+	err = suite.path.EndpointB.AcknowledgePacket(packet, ack)
+	suite.Require().NoError(err)
 
 	err = suite.path.EndpointA.UpdateClient()
 	suite.Require().NoError(err)
@@ -580,22 +583,21 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBC() {
 	// Generate full memo
 	msg := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, swapMsg)
 	// Send IBC transfer with the memo with crosschain-swap instructions
-	_, res, ack, err := suite.FullSendBToA(NewMsgTransfer(sdk.NewCoin(token0IBC, sdk.NewInt(1000)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), msg))
+	_, receiveResult, _, err := suite.FullSendBToA(NewMsgTransfer(sdk.NewCoin(token0IBC, sdk.NewInt(1000)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), msg))
 	suite.Require().NoError(err)
-	suite.Require().NotNil(ack)
-	suite.Require().NotNil(res)
+	suite.Require().NotNil(receiveResult)
 
 	// "Relay the packet" by executing the receive on chain B
-	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
+	packet, err := ibctesting.ParsePacketFromEvents(receiveResult.GetEvents())
 	suite.Require().NoError(err)
-
 	err = suite.path.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
-
-	res2, err := suite.path.EndpointB.RecvPacketWithResult(packet)
+	receiveOnB, err := suite.path.EndpointB.RecvPacketWithResult(packet)
 	suite.Require().NoError(err)
-
-	_, err = ibctesting.ParseAckFromEvents(res2.GetEvents())
+	ack, err := ibctesting.ParseAckFromEvents(receiveOnB.GetEvents())
+	suite.Require().NoError(err)
+	// Acknowledge the receive on chain A
+	err = suite.path.EndpointA.AcknowledgePacket(packet, ack)
 	suite.Require().NoError(err)
 
 	balanceToken0After := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), initializer, token0IBC)
