@@ -3,7 +3,7 @@ module github.com/osmosis-labs/osmosis/v13
 go 1.18
 
 require (
-	github.com/CosmWasm/wasmd v0.28.0-osmo-v12
+	github.com/CosmWasm/wasmd v0.28.0
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8
 	github.com/cosmos/cosmos-sdk v0.46.6
 	github.com/cosmos/go-bip39 v1.0.0
@@ -33,6 +33,7 @@ require (
 	google.golang.org/grpc v1.50.1
 	gopkg.in/yaml.v2 v2.4.0
 	mvdan.cc/gofumpt v0.4.0
+	osmosis.io/epochs/v2 v2.0.0
 )
 
 require (
@@ -42,7 +43,7 @@ require (
 	github.com/creachadair/taskgroup v0.3.2 // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
-	github.com/google/btree v1.0.0 // indirect
+	github.com/google/btree v1.1.2 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.3 // indirect
 	github.com/maratori/testableexamples v1.0.0 // indirect
 	github.com/regen-network/cosmos-proto v0.3.1 // indirect
@@ -65,7 +66,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/BurntSushi/toml v1.2.1 // indirect
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
-	github.com/CosmWasm/wasmvm v1.0.0
+	github.com/CosmWasm/wasmvm v1.1.1
 	github.com/GaijinEntertainment/go-exhaustruct/v2 v2.3.0 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
@@ -135,7 +136,7 @@ require (
 	github.com/gogo/gateway v1.1.0 // indirect
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/golang/snappy v0.0.3 // indirect
+	github.com/golang/snappy v0.0.4 // indirect
 	github.com/golangci/check v0.0.0-20180506172741-cfe4005ccda2 // indirect
 	github.com/golangci/dupl v0.0.0-20180902072040-3e9179ac440a // indirect
 	github.com/golangci/go-misc v0.0.0-20220329215616-d24fe342adfe // indirect
@@ -301,4 +302,5 @@ replace (
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// use grpc compatible with cosmos protobufs
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
+	osmosis.io/epochs/v2 => ./x/epochs
 )

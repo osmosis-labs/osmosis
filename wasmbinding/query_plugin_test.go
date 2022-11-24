@@ -23,8 +23,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	gammv2types "github.com/osmosis-labs/osmosis/v13/x/gamm/v2types"
 
+	epochtypes "osmosis.io/epochs/v2/types"
+
 	"github.com/osmosis-labs/osmosis/v13/app"
-	epochtypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 
 	"github.com/osmosis-labs/osmosis/v13/wasmbinding"

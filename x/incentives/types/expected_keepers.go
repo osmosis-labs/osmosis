@@ -3,7 +3,8 @@ package types
 import (
 	time "time"
 
-	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
+	epochstypes "osmosis.io/epochs/v2/types"
+
 	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

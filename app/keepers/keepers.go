@@ -54,10 +54,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
 
+	epochskeeper "osmosis.io/epochs/v2/keeper"
+	epochstypes "osmosis.io/epochs/v2/types"
+
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v13/wasmbinding"
-	epochskeeper "github.com/osmosis-labs/osmosis/v13/x/epochs/keeper"
-	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v13/x/incentives/keeper"
