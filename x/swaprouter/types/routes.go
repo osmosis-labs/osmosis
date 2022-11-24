@@ -18,7 +18,7 @@ type AccountI interface {
 }
 
 // BankI defines the banking contract that must be fulfilled when
-// creating a x/gamm keeper.
+// creating a x/swaprouter keeper.
 type BankI interface {
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 	SetDenomMetaData(ctx sdk.Context, denomMetaData banktypes.Metadata)
