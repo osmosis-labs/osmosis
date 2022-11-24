@@ -60,8 +60,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-	// TODO: uncomment this once gamm refactor is merged from concentrated-liquidity-main
-	// suite.Run(t, new(IntegrationTestSuite))
+	suite.Run(t, new(IntegrationTestSuite))
 }
 
 func (s IntegrationTestSuite) TestNewSwapExactAmountOutCmd() {

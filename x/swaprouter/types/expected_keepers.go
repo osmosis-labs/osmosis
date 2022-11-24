@@ -8,7 +8,7 @@ import (
 
 // GammKeeper defines the expected interface needed for swaprouter module
 type GammKeeper interface {
-	GetPoolAndPoke(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
+	GetPoolAndPoke(ctx sdk.Context, poolId uint64) (gammtypes.TraditionalAmmInterface, error)
 
 	GetNextPoolId(ctx sdk.Context) uint64
 }

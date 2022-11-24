@@ -9,12 +9,11 @@ import (
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertestutil "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/testutil"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v13/app"
-	gammtestutil "github.com/osmosis-labs/osmosis/v13/x/gamm/client/testutil"
 	"github.com/osmosis-labs/osmosis/v13/x/incentives/client/cli"
 	"github.com/osmosis-labs/osmosis/v13/x/incentives/types"
 	lockuptestutil "github.com/osmosis-labs/osmosis/v13/x/lockup/client/testutil"
@@ -37,19 +36,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	// modification to pay pool creation fee with test bond denom "stake"
 	// marshal result into genesis json
-	genesisState := app.ModuleBasics.DefaultGenesis(s.cfg.Codec)
-	gammGen := gammtypes.DefaultGenesis()
-	gammGen.Params.PoolCreationFee = sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 1000000)}
-	gammGenJson := s.cfg.Codec.MustMarshalJSON(gammGen)
-	genesisState[gammtypes.ModuleName] = gammGenJson
-	s.cfg.GenesisState = genesisState
+	s.cfg.GenesisState = swaproutertestutil.UpdateTxFeeDenom(s.cfg.Codec, s.cfg.BondDenom)
 
 	// create a network with a validator
 	s.network = network.New(s.T(), s.cfg)
 	val := s.network.Validators[0]
 
 	// create a pool to receive gamm tokens
-	_, err := gammtestutil.MsgCreatePool(s.T(), val.ClientCtx, val.Address, "5stake,5node0token", "100stake,100node0token", "0.01", "0.01", "")
+	_, err := swaproutertestutil.MsgCreatePool(s.T(), val.ClientCtx, val.Address, "5stake,5node0token", "100stake,100node0token", "0.01", "0.01", "")
 	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(1)

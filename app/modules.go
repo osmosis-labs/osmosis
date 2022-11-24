@@ -63,6 +63,8 @@ import (
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
 	superfluid "github.com/osmosis-labs/osmosis/v13/x/superfluid"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
+	swaproutermodule "github.com/osmosis-labs/osmosis/v13/x/swaprouter/module"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/twapmodule"
@@ -148,6 +150,7 @@ func appModules(
 			app.EpochsKeeper,
 		),
 		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
+		swaproutermodule.NewAppModule(*app.SwapRouterKeeper, app.GAMMKeeper),
 		valsetprefmodule.NewAppModule(appCodec, *app.ValidatorSetPreferenceKeeper),
 		ibc_hooks.NewAppModule(app.AccountKeeper),
 	}
@@ -209,6 +212,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		icatypes.ModuleName,
 		gammtypes.ModuleName,
 		twaptypes.ModuleName,
+		swaproutertypes.ModuleName,
 		txfeestypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,

@@ -21,6 +21,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/tests/e2e/util"
 	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
+	swaprouterqueryproto "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/queryproto"
 	twapqueryproto "github.com/osmosis-labs/osmosis/v13/x/twap/client/queryproto"
 )
 
@@ -254,4 +255,16 @@ func (n *NodeConfig) QueryListSnapshots() ([]*tmabcitypes.Snapshot, error) {
 	}
 
 	return listSnapshots.Snapshots, nil
+}
+
+// QueryTotalPools returns the total number of pools existing.
+func (n *NodeConfig) QueryTotalPools() uint64 {
+	path := "/osmosis/swaprouter/v1beta1/num_pools"
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var numPoolsResponse swaprouterqueryproto.NumPoolsResponse
+	err = util.Cdc.UnmarshalJSON(bz, &numPoolsResponse)
+	require.NoError(n.t, err) // this error should not happen
+	return numPoolsResponse.NumPools
 }
