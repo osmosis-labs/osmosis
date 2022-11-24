@@ -2,7 +2,6 @@ package v13
 
 import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
-
 	"github.com/osmosis-labs/osmosis/v13/app/upgrades"
 	concentratedliquidtytypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
