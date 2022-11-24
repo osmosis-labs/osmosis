@@ -27,7 +27,7 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 
-	"osmosis.io/epochs/v2"
+	"github.com/osmosis-labs/osmosis/x/epochs"
 
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm"

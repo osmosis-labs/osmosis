@@ -13,7 +13,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	epochtypes "osmosis.io/epochs/v2/types"
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	gammv2types "github.com/osmosis-labs/osmosis/v13/x/gamm/v2types"

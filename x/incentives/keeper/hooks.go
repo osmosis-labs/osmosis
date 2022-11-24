@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	epochstypes "osmosis.io/epochs/v2/types"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	"github.com/osmosis-labs/osmosis/v13/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"osmosis.io/epochs/v2/types"
+	"github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -45,8 +45,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"osmosis.io/epochs/v2"
-	epochstypes "osmosis.io/epochs/v2/types"
+	"github.com/osmosis-labs/osmosis/x/epochs"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"

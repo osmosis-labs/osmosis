@@ -18,6 +18,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/osmosis-labs/go-mutesting v0.0.0-20220811235203-65a53b4ea8e3
+	github.com/osmosis-labs/osmosis/x/epochs v1.0.0
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.5.0
@@ -33,7 +34,6 @@ require (
 	google.golang.org/grpc v1.50.1
 	gopkg.in/yaml.v2 v2.4.0
 	mvdan.cc/gofumpt v0.4.0
-	osmosis.io/epochs/v2 v2.0.0
 )
 
 require (
@@ -300,7 +300,7 @@ replace (
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20221118211718-545aed73e94e
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+	github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
 	// use grpc compatible with cosmos protobufs
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
-	osmosis.io/epochs/v2 => ./x/epochs
 )

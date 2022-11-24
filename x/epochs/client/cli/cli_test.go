@@ -5,8 +5,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v13/app"
-	"osmosis.io/epochs/v2/client/cli"
-	"osmosis.io/epochs/v2/types"
+	"github.com/osmosis-labs/osmosis/x/epochs/client/cli"
+	"github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"

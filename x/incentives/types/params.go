@@ -1,7 +1,7 @@
 package types
 
 import (
-	epochtypes "osmosis.io/epochs/v2/types"
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )

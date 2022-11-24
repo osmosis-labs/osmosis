@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
-	epochstypes "osmosis.io/epochs/v2/types"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	"github.com/osmosis-labs/osmosis/v13/tests/e2e/util"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"

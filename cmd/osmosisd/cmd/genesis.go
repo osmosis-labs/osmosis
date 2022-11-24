@@ -27,7 +27,7 @@ import (
 
 	appParams "github.com/osmosis-labs/osmosis/v13/app/params"
 
-	epochstypes "osmosis.io/epochs/v2/types"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	incentivestypes "github.com/osmosis-labs/osmosis/v13/x/incentives/types"
 	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"

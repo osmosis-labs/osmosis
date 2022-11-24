@@ -6,7 +6,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
-	"osmosis.io/epochs/v2/types"
+
+	"github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
 )

@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	epochstypes "osmosis.io/epochs/v2/types"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v13/x/incentives/types"
