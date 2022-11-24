@@ -56,16 +56,6 @@ func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stables
 	return &stableswap.MsgCreateStableswapPoolResponse{PoolID: poolId}, nil
 }
 
-// func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, msg *stableswap.MsgStableSwapAdjustScalingFactors) (*stableswap.MsgStableSwapAdjustScalingFactorsResponse, error) {
-// 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-// 	if err := server.keeper.SetStableSwapScalingFactors(ctx, msg.ScalingFactors, msg.PoolID, msg.ScalingFactorGovernor); err != nil {
-// 		return nil, err
-// 	}
-
-// 	return &stableswap.MsgStableSwapAdjustScalingFactorsResponse{}, nil
-// }
-
 // CreatePool attempts to create a pool returning the newly created pool ID or an error upon failure.
 // The pool creation fee is used to fund the community pool.
 // It will create a dedicated module account for the pool and sends the initial liquidity to the created module account.
