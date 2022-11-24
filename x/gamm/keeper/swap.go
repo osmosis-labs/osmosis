@@ -158,7 +158,7 @@ func (k Keeper) CalcInAmtGivenOut(
 		return sdk.Coin{}, fmt.Errorf("given pool does not implement TraditionalAmmInterface, implements %T", poolI)
 	}
 
-	return pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(tokenOut), tokenInDenom, swapFee)
+	return pool.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), tokenInDenom, swapFee)
 }
 
 // updatePoolForSwap takes a pool, sender, and tokenIn, tokenOut amounts
