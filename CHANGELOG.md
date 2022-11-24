@@ -69,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#3035](https://github.com/osmosis-labs/osmosis/pull/3035) Remove `PokePool` from `PoolI` interface. Define on a new WeightedPoolExtension` instead.
 * [#3214](https://github.com/osmosis-labs/osmosis/pull/3214) Add basic CLI query support for TWAP.
 
+
 ## v12.0.0
 
 This release includes several cosmwasm-developer and appchain-ecosystem affecting upgrades:

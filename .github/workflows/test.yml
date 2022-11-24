@@ -105,4 +105,3 @@ jobs:
       -
         name: Test e2e and Upgrade
         run: make test-e2e-ci
-        
