@@ -9,8 +9,8 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
-// AccountKeeper defines the account contract that must be fulfilled when
-// creating a x/gamm keeper.
+// AccountI defines the account contract that must be fulfilled when
+// creating a x/swaprouter keeper.
 type AccountI interface {
 	NewAccount(sdk.Context, authtypes.AccountI) authtypes.AccountI
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
