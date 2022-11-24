@@ -132,12 +132,7 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 			swapFee = routeSwapFee.Mul((swapFee.Quo(sumOfSwapFees)))
 		}
 
-		poolTrad, ok := poolI.(gammtypes.TraditionalAmmInterface)
-		if !ok {
-			return sdk.Int{}, fmt.Errorf("failed cast to TraditionalAmmInterface, actual type: %T", poolI)
-		}
-
-		tokenOut, err := poolTrad.CalcOutAmtGivenIn(ctx, sdk.Coins{tokenIn}, route.TokenOutDenom, swapFee)
+		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, tokenIn, route.TokenOutDenom, swapFee)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -356,12 +351,7 @@ func (k Keeper) createMultihopExpectedSwapOuts(
 			return nil, err
 		}
 
-		pool, ok := poolI.(gammtypes.TraditionalAmmInterface)
-		if !ok {
-			return nil, fmt.Errorf("type assertion failed")
-		}
-
-		tokenIn, err := pool.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), route.TokenInDenom, pool.GetSwapFee(ctx))
+		tokenIn, err := swapModule.CalcInAmtGivenOut(ctx, poolI, tokenOut, route.TokenInDenom, poolI.GetSwapFee(ctx))
 		if err != nil {
 			return nil, err
 		}

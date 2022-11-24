@@ -131,6 +131,36 @@ func (k Keeper) SwapExactAmountOut(
 	return tokenInAmount, nil
 }
 
+func (k Keeper) CalcOutAmtGivenIn(
+	ctx sdk.Context,
+	poolI types.PoolI,
+	tokenIn sdk.Coin,
+	tokenOutDenom string,
+	swapFee sdk.Dec,
+) (tokenOut sdk.Coin, err error) {
+	pool, ok := poolI.(types.TraditionalAmmInterface)
+	if !ok {
+		return sdk.Coin{}, fmt.Errorf("given pool does not implement TraditionalAmmInterface, implements %T", poolI)
+	}
+
+	return pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(tokenIn), tokenOutDenom, swapFee)
+}
+
+func (k Keeper) CalcInAmtGivenOut(
+	ctx sdk.Context,
+	poolI types.PoolI,
+	tokenOut sdk.Coin,
+	tokenInDenom string,
+	swapFee sdk.Dec,
+) (tokenIn sdk.Coin, err error) {
+	pool, ok := poolI.(types.TraditionalAmmInterface)
+	if !ok {
+		return sdk.Coin{}, fmt.Errorf("given pool does not implement TraditionalAmmInterface, implements %T", poolI)
+	}
+
+	return pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(tokenOut), tokenInDenom, swapFee)
+}
+
 // updatePoolForSwap takes a pool, sender, and tokenIn, tokenOut amounts
 // It then updates the pool's balances to the new reserve amounts, and
 // sends the in tokens from the sender to the pool, and the out tokens from the pool to the sender.

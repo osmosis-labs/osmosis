@@ -114,7 +114,7 @@ func (k Keeper) SwapExactAmountOut(
 // SwapOutAmtGivenIn is the internal mutative method for CalcOutAmtGivenIn. Utilizing CalcOutAmtGivenIn's output, this function applies the
 // new tick, liquidity, and sqrtPrice to the respective pool
 func (k Keeper) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec, priceLimit sdk.Dec, poolId uint64) (tokenOut sdk.Coin, err error) {
-	tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, err := k.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, poolId)
+	tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, err := k.CalcOutAmtGivenInOld(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, poolId)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -127,10 +127,30 @@ func (k Keeper) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 	return tokenOut, nil
 }
 
-// CalcOutAmtGivenIn calculates tokens to be swapped out given the provided amount and fee deducted. It also returns
+func (k Keeper) CalcOutAmtGivenIn(
+	ctx sdk.Context,
+	poolI gammtypes.PoolI,
+	tokenIn sdk.Coin,
+	tokenOutDenom string,
+	swapFee sdk.Dec,
+) (tokenOut sdk.Coin, err error) {
+	return sdk.Coin{}, nil
+}
+
+func (k Keeper) CalcInAmtGivenOut(
+	ctx sdk.Context,
+	poolI gammtypes.PoolI,
+	tokenOut sdk.Coin,
+	tokenInDenom string,
+	swapFee sdk.Dec,
+) (tokenIn sdk.Coin, err error) {
+	return sdk.Coin{}, nil
+}
+
+// CalcOutAmtGivenInOld calculates tokens to be swapped out given the provided amount and fee deducted. It also returns
 // what the updated tick, liquidity, and currentSqrtPrice for the pool would be after this swap.
 // Note this method is non-mutative, so the values returned by CalcOutAmtGivenIn do not get stored
-func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
+func (k Keeper) CalcOutAmtGivenInOld(ctx sdk.Context,
 	tokenInMin sdk.Coin,
 	tokenOutDenom string,
 	swapFee sdk.Dec,
@@ -274,7 +294,7 @@ func (k Keeper) CalcOutAmtGivenIn(ctx sdk.Context,
 }
 
 func (k *Keeper) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec, minPrice, maxPrice sdk.Dec, poolId uint64) (tokenIn sdk.Coin, err error) {
-	tokenInCoin, newLiquidity, newCurrentTick, newCurrentSqrtPrice, err := k.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, sdk.ZeroDec(), sdk.NewDec(9999999999), poolId)
+	tokenInCoin, newLiquidity, newCurrentTick, newCurrentSqrtPrice, err := k.CalcInAmtGivenOutOld(ctx, tokenOut, tokenInDenom, swapFee, sdk.ZeroDec(), sdk.NewDec(9999999999), poolId)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -290,7 +310,7 @@ func (k *Keeper) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDe
 	return tokenInCoin, nil
 }
 
-func (k Keeper) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec, minPrice, maxPrice sdk.Dec, poolId uint64) (sdk.Coin, sdk.Dec, sdk.Int, sdk.Dec, error) {
+func (k Keeper) CalcInAmtGivenOutOld(ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec, minPrice, maxPrice sdk.Dec, poolId uint64) (sdk.Coin, sdk.Dec, sdk.Int, sdk.Dec, error) {
 	tokenOutAmt := tokenOut.Amount.ToDec()
 	p, err := k.getPoolById(ctx, poolId)
 	if err != nil {
