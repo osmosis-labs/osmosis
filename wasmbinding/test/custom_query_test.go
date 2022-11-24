@@ -172,91 +172,6 @@ func TestQuerySpotPrice(t *testing.T) {
 	require.InEpsilonf(t, expected+swapFee, price, epsilon, fmt.Sprintf("Outside of tolerance (%f)", epsilon))
 }
 
-func TestQueryEstimateSwap(t *testing.T) {
-	actor := RandomAccountAddress()
-	osmosis, ctx := SetupCustomApp(t, actor)
-	epsilon := 2e-3
-
-	fundAccount(t, ctx, osmosis, actor, defaultFunds)
-
-	poolFunds := []sdk.Coin{
-		sdk.NewInt64Coin("uosmo", 12000000),
-		sdk.NewInt64Coin("ustar", 240000000),
-	}
-	// 2 star to 1 osmo
-	starPool := preparePool(t, ctx, osmosis, actor, poolFunds)
-
-	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
-	require.NotEmpty(t, reflect)
-
-	// The contract/sender needs to have funds for estimating the price
-	fundAccount(t, ctx, osmosis, reflect, defaultFunds)
-
-	// Estimate swap rate
-	uosmo, err := poolFunds[0].Amount.ToDec().Float64()
-	require.NoError(t, err)
-	ustar, err := poolFunds[1].Amount.ToDec().Float64()
-	require.NoError(t, err)
-	swapRate := ustar / uosmo
-
-	// Query estimate cost (Exact in. No route)
-	amountIn := sdk.NewInt(10000)
-	query := bindings.OsmosisQuery{
-		EstimateSwap: &bindings.EstimateSwap{
-			Sender: reflect.String(),
-			First: bindings.Swap{
-				PoolId:   starPool,
-				DenomIn:  "uosmo",
-				DenomOut: "ustar",
-			},
-			Route: []bindings.Step{},
-			Amount: bindings.SwapAmount{
-				In: &amountIn,
-			},
-		},
-	}
-	resp := bindings.EstimatePriceResponse{}
-	queryCustom(t, ctx, osmosis, reflect, query, &resp)
-	require.NotNil(t, resp.Amount.Out)
-	require.Nil(t, resp.Amount.In)
-	cost, err := (*resp.Amount.Out).ToDec().Float64()
-	require.NoError(t, err)
-
-	amount, err := amountIn.ToDec().Float64()
-	require.NoError(t, err)
-	expected := amount * swapRate // out
-	require.InEpsilonf(t, expected, cost, epsilon, fmt.Sprintf("Outside of tolerance (%f)", epsilon))
-
-	// And the other way around
-	// Query estimate cost (Exact out. No route)
-	amountOut := sdk.NewInt(10000)
-	query = bindings.OsmosisQuery{
-		EstimateSwap: &bindings.EstimateSwap{
-			Sender: reflect.String(),
-			First: bindings.Swap{
-				PoolId:   starPool,
-				DenomIn:  "uosmo",
-				DenomOut: "ustar",
-			},
-			Route: []bindings.Step{},
-			Amount: bindings.SwapAmount{
-				Out: &amountOut,
-			},
-		},
-	}
-	resp = bindings.EstimatePriceResponse{}
-	queryCustom(t, ctx, osmosis, reflect, query, &resp)
-	require.NotNil(t, resp.Amount.In)
-	require.Nil(t, resp.Amount.Out)
-	cost, err = (*resp.Amount.In).ToDec().Float64()
-	require.NoError(t, err)
-
-	amount, err = amountOut.ToDec().Float64()
-	require.NoError(t, err)
-	expected = amount * 1. / swapRate
-	require.InEpsilonf(t, expected, cost, epsilon, fmt.Sprintf("Outside of tolerance (%f)", epsilon))
-}
-
 type ReflectQuery struct {
 	Chain *ChainRequest `json:"chain,omitempty"`
 }
@@ -352,7 +267,7 @@ func preparePool(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sd
 	}
 
 	msg := balancer.NewMsgCreateBalancerPool(addr, poolParams, assets, "")
-	poolId, err := osmosis.GAMMKeeper.CreatePool(ctx, &msg)
+	poolId, err := osmosis.SwapRouterKeeper.CreatePool(ctx, &msg)
 	require.NoError(t, err)
 	return poolId
 }

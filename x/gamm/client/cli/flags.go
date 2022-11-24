@@ -5,22 +5,6 @@ import (
 )
 
 const (
-	// Will be parsed to string.
-	FlagPoolFile = "pool-file"
-	FlagPoolType = "pool-type"
-
-	// Names of fields in pool json file.
-	PoolFileWeights        = "weights"
-	PoolFileInitialDeposit = "initial-deposit"
-	PoolFileSwapFee        = "swap-fee"
-	PoolFileExitFee        = "exit-fee"
-	PoolFileFutureGovernor = "future-governor"
-
-	PoolFileSmoothWeightChangeParams = "lbp-params"
-	PoolFileStartTime                = "start-time"
-	PoolFileDuration                 = "duration"
-	PoolFileTargetPoolWeights        = "target-pool-weights"
-
 	FlagPoolId = "pool-id"
 	// Will be parsed to sdk.Int.
 	FlagShareAmountOut = "share-amount-out"
@@ -41,55 +25,6 @@ const (
 	// FlagScalingFactors represents the flag name for the scaling factors.
 	FlagScalingFactors = "scaling-factors"
 )
-
-type createBalancerPoolInputs struct {
-	Weights                  string                         `json:"weights"`
-	InitialDeposit           string                         `json:"initial-deposit"`
-	SwapFee                  string                         `json:"swap-fee"`
-	ExitFee                  string                         `json:"exit-fee"`
-	FutureGovernor           string                         `json:"future-governor"`
-	SmoothWeightChangeParams smoothWeightChangeParamsInputs `json:"lbp-params"`
-}
-
-type createStableswapPoolInputs struct {
-	InitialDeposit          string `json:"initial-deposit"`
-	SwapFee                 string `json:"swap-fee"`
-	ExitFee                 string `json:"exit-fee"`
-	FutureGovernor          string `json:"future-governor"`
-	ScalingFactorController string `json:"scaling-factor-controller"`
-	ScalingFactors          string `json:"scaling-factors"`
-}
-
-type smoothWeightChangeParamsInputs struct {
-	StartTime         string `json:"start-time"`
-	Duration          string `json:"duration"`
-	TargetPoolWeights string `json:"target-pool-weights"`
-}
-
-func FlagSetQuerySwapRoutes() *flag.FlagSet {
-	fs := flag.NewFlagSet("", flag.ContinueOnError)
-
-	fs.StringArray(FlagSwapRoutePoolIds, []string{""}, "swap route pool id")
-	fs.StringArray(FlagSwapRouteDenoms, []string{""}, "swap route amount")
-	return fs
-}
-
-func FlagSetSwapAmountOutRoutes() *flag.FlagSet {
-	fs := flag.NewFlagSet("", flag.ContinueOnError)
-
-	fs.StringArray(FlagSwapRoutePoolIds, []string{""}, "swap route pool ids")
-	fs.StringArray(FlagSwapRouteDenoms, []string{""}, "swap route denoms")
-	return fs
-}
-
-func FlagSetCreatePool() *flag.FlagSet {
-	fs := flag.NewFlagSet("", flag.ContinueOnError)
-
-	fs.String(FlagPoolFile, "", "Pool json file path (if this path is given, other create pool flags should not be used)")
-	fs.String(FlagPoolType, "uniswap", "Pool type (either \"balancer\", \"uniswap\", or \"stableswap\"")
-
-	return fs
-}
 
 func FlagSetJoinPool() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)

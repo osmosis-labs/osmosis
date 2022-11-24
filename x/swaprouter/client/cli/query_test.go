@@ -4,6 +4,8 @@ import (
 	gocontext "context"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
 	swaprouterqueryproto "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/queryproto"
 )
@@ -48,6 +50,5 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 }
 
 func TestQueryTestSuite(t *testing.T) {
-	// TODO: uncomment this once gamm refactor is merged from concentrated-liquidity-main
-	// suite.Run(t, new(QueryTestSuite))
+	suite.Run(t, new(QueryTestSuite))
 }
