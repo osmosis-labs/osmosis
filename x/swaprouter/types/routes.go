@@ -17,7 +17,7 @@ type AccountI interface {
 	SetAccount(ctx sdk.Context, acc authtypes.AccountI)
 }
 
-// BankKeeper defines the banking contract that must be fulfilled when
+// BankI defines the banking contract that must be fulfilled when
 // creating a x/gamm keeper.
 type BankI interface {
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
