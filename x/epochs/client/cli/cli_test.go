@@ -1,113 +1,101 @@
 package cli_test
 
-import (
-	"github.com/gogo/protobuf/proto"
-	"github.com/stretchr/testify/suite"
+// type IntegrationTestSuite struct {
+// 	suite.Suite
 
-	"github.com/osmosis-labs/osmosis/v13/app"
-	"github.com/osmosis-labs/osmosis/x/epochs/client/cli"
-	"github.com/osmosis-labs/osmosis/x/epochs/types"
+// 	cfg     network.Config
+// 	network *network.Network
+// }
 
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
-)
+// func (s *IntegrationTestSuite) SetupSuite() {
+// 	s.T().Log("setting up integration test suite")
 
-type IntegrationTestSuite struct {
-	suite.Suite
+// 	s.cfg = app.DefaultConfig()
 
-	cfg     network.Config
-	network *network.Network
-}
+// 	s.network = network.New(s.T(), s.cfg)
 
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
+// 	_, err := s.network.WaitForHeight(1)
+// 	s.Require().NoError(err)
+// }
 
-	s.cfg = app.DefaultConfig()
+// func (s *IntegrationTestSuite) TearDownSuite() {
+// 	s.T().Log("tearing down integration test suite")
+// 	s.network.Cleanup()
+// }
 
-	s.network = network.New(s.T(), s.cfg)
+// func (s *IntegrationTestSuite) TestGetCmdCurrentEpoch() {
+// 	val := s.network.Validators[0]
 
-	_, err := s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-}
+// 	testCases := []struct {
+// 		name       string
+// 		identifier string
+// 		expectErr  bool
+// 		respType   proto.Message
+// 	}{
+// 		{
+// 			"query weekly epoch number",
+// 			"weekly",
+// 			false, &types.QueryCurrentEpochResponse{},
+// 		},
+// 		{
+// 			"query unavailable epoch number",
+// 			"unavailable",
+// 			false, &types.QueryCurrentEpochResponse{},
+// 		},
+// 	}
 
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
-	s.network.Cleanup()
-}
+// 	for _, tc := range testCases {
+// 		tc := tc
 
-func (s *IntegrationTestSuite) TestGetCmdCurrentEpoch() {
-	val := s.network.Validators[0]
+// 		s.Run(tc.name, func() {
+// 			cmd := cli.GetCmdCurrentEpoch()
+// 			clientCtx := val.ClientCtx
 
-	testCases := []struct {
-		name       string
-		identifier string
-		expectErr  bool
-		respType   proto.Message
-	}{
-		{
-			"query weekly epoch number",
-			"weekly",
-			false, &types.QueryCurrentEpochResponse{},
-		},
-		{
-			"query unavailable epoch number",
-			"unavailable",
-			false, &types.QueryCurrentEpochResponse{},
-		},
-	}
+// 			args := []string{
+// 				tc.identifier,
+// 			}
 
-	for _, tc := range testCases {
-		tc := tc
+// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+// 			if tc.expectErr {
+// 				s.Require().Error(err)
+// 			} else {
+// 				s.Require().NoError(err, out.String())
+// 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+// 			}
+// 		})
+// 	}
+// }
 
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdCurrentEpoch()
-			clientCtx := val.ClientCtx
+// func (s *IntegrationTestSuite) TestGetCmdEpochsInfos() {
+// 	val := s.network.Validators[0]
 
-			args := []string{
-				tc.identifier,
-			}
+// 	testCases := []struct {
+// 		name      string
+// 		expectErr bool
+// 		respType  proto.Message
+// 	}{
+// 		{
+// 			"query epoch infos",
+// 			false, &types.QueryEpochsInfoResponse{},
+// 		},
+// 	}
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-			}
-		})
-	}
-}
+// 	for _, tc := range testCases {
+// 		tc := tc
 
-func (s *IntegrationTestSuite) TestGetCmdEpochsInfos() {
-	val := s.network.Validators[0]
+// 		s.Run(tc.name, func() {
+// 			cmd := cli.GetCmdCurrentEpoch()
+// 			clientCtx := val.ClientCtx
 
-	testCases := []struct {
-		name      string
-		expectErr bool
-		respType  proto.Message
-	}{
-		{
-			"query epoch infos",
-			false, &types.QueryEpochsInfoResponse{},
-		},
-	}
+// 			args := []string{}
 
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdCurrentEpoch()
-			clientCtx := val.ClientCtx
-
-			args := []string{}
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-			}
-		})
-	}
-}
+// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+// 			if tc.expectErr {
+// 				s.Require().Error(err)
+// 			} else {
+// 				s.Require().NoError(err, out.String())
+// 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+// 			}
+// 		})
+// 	}
+// }

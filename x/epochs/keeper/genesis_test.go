@@ -4,16 +4,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osmosis-labs/osmosis/x/epochs/simapp"
+	"github.com/osmosis-labs/osmosis/x/epochs/types"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	simapp "github.com/osmosis-labs/osmosis/v13/app"
-
-	"github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 func TestEpochsExportGenesis(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	chainStartTime := ctx.BlockTime()
@@ -31,7 +29,7 @@ func TestEpochsExportGenesis(t *testing.T) {
 }
 
 func TestEpochsInitGenesis(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	// On init genesis, default epochs information is set

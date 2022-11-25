@@ -1,18 +1,16 @@
 package keeper_test
 
 import (
+	"sort"
 	"testing"
 	"time"
 
+	"github.com/osmosis-labs/osmosis/x/epochs/simapp"
+	"github.com/osmosis-labs/osmosis/x/epochs/types"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	simapp "github.com/osmosis-labs/osmosis/v13/app"
-	"github.com/osmosis-labs/osmosis/x/epochs/types"
-
+	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/maps"
-
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 )
 
 // This test is responsible for testing how epochs increment based off
@@ -91,7 +89,7 @@ func (suite KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 
 			// get sorted heights
 			heights := maps.Keys(test.blockHeightTimePairs)
-			osmoutils.SortSlice(heights)
+			SortSlice(heights)
 			for _, h := range heights {
 				// for each height in order, run begin block
 				suite.Ctx = suite.Ctx.WithBlockHeight(int64(h)).WithBlockTime(test.blockHeightTimePairs[h])
@@ -117,7 +115,7 @@ func initializeBlankEpochInfoFields(epoch types.EpochInfo, identifier string, du
 }
 
 func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	// On init genesis, default epochs information is set
@@ -175,4 +173,12 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	require.Equal(t, epochInfo.CurrentEpochStartHeight, ctx.BlockHeight())
 	require.Equal(t, epochInfo.CurrentEpochStartTime.UTC().String(), now.Add(month).UTC().String())
 	require.Equal(t, epochInfo.EpochCountingStarted, true)
+}
+
+// SortSlice sorts a slice of type T elements that implement constraints.Ordered.
+// Mutates input slice s
+func SortSlice[T constraints.Ordered](s []T) {
+	sort.Slice(s, func(i, j int) bool {
+		return s[i] < s[j]
+	})
 }
