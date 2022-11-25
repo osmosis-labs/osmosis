@@ -14,11 +14,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
-// TODO spec and tests
-func (k Keeper) InitializePool(ctx sdk.Context, pool types.PoolI, creatorAddress sdk.AccAddress) error {
-	panic("not implemented")
-}
-
 func (k Keeper) MarshalPool(pool types.PoolI) ([]byte, error) {
 	return k.cdc.MarshalInterface(pool)
 }
@@ -26,11 +21,6 @@ func (k Keeper) MarshalPool(pool types.PoolI) ([]byte, error) {
 func (k Keeper) UnmarshalPool(bz []byte) (types.PoolI, error) {
 	var acc types.PoolI
 	return acc, k.cdc.UnmarshalInterface(bz, &acc)
-}
-
-// GetPool returns a pool with a given id.
-func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
-	return k.getPoolForSwap(ctx, poolId)
 }
 
 // GetPoolAndPoke returns a PoolI based on it's identifier if one exists. If poolId corresponds
