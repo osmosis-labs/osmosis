@@ -148,7 +148,7 @@ func (p *UpdateUnpoolWhiteListProposal) ValidateBasic() error {
 }
 
 func (p UpdateUnpoolWhiteListProposal) String() string {
-	return fmt.Sprintf(`Set Superfluid Assets Proposal:
+	return fmt.Sprintf(`Update Unpool Whitelist Assets Proposal:
 	Title:       %s
 	Description: %s
 	Pool Ids:     %+v
