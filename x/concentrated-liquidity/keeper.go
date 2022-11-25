@@ -4,7 +4,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
@@ -13,10 +12,10 @@ type Keeper struct {
 	cdc      codec.BinaryCodec
 
 	// keepers
-	bankKeeper types.BankKeeper
+	bankKeeper gammtypes.BankKeeper
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.BankKeeper) *Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper gammtypes.BankKeeper) *Keeper {
 	return &Keeper{
 		storeKey:   storeKey,
 		cdc:        cdc,
