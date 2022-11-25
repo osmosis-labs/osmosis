@@ -13,18 +13,13 @@ type msgServer struct {
 	keeper *Keeper
 }
 
-var (
-	_ types.MsgServer                   = &msgServer{}
-	_ stableswap.MsgScalingFactorServer = &msgServer{}
-)
-
 func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	return &msgServer{
 		keeper: keeper,
 	}
 }
 
-func NewStableSwapScalingFactorSetterMsgServerImpl(keeper *Keeper) stableswap.MsgScalingFactorServer {
+func NewStableswapMsgScalingFactorModifierServerImpl(keeper *Keeper) stableswap.MsgScalingFactorServer {
 	return &msgServer{
 		keeper: keeper,
 	}

@@ -675,14 +675,6 @@ func TestAuthzMsg(t *testing.T) {
 				InitialPoolLiquidity: sdk.NewCoins(coin),
 			},
 		},
-		{
-			name: "MsgCreateStableswapPool",
-			gammMsg: &stableswap.MsgCreateStableswapPool{
-				Sender:               addr1,
-				PoolParams:           &stableswap.PoolParams{},
-				InitialPoolLiquidity: sdk.NewCoins(coin),
-			},
-		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {

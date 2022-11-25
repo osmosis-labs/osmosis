@@ -5,8 +5,6 @@ import (
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 // AccountKeeper defines the account contract that must be fulfilled when
@@ -31,14 +29,14 @@ type CommunityPoolI interface {
 
 // TODO: godoc
 type SwapI interface {
-	InitializePool(ctx sdk.Context, pool gammtypes.PoolI, creatorAddress sdk.AccAddress) error
+	InitializePool(ctx sdk.Context, pool PoolI, creatorAddress sdk.AccAddress) error
 
-	GetPool(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
+	GetPool(ctx sdk.Context, poolId uint64) (PoolI, error)
 
 	SwapExactAmountIn(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
-		poolId gammtypes.PoolI,
+		poolId PoolI,
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
 		tokenOutMinAmount sdk.Int,
@@ -48,7 +46,7 @@ type SwapI interface {
 	SwapExactAmountOut(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
-		poolId gammtypes.PoolI,
+		poolId PoolI,
 		tokenInDenom string,
 		tokenInMaxAmount sdk.Int,
 		tokenOut sdk.Coin,

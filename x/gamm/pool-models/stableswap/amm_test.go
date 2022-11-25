@@ -17,6 +17,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/test_helpers"
 	types "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 // CFMMTestCase defines a testcase for stableswap pools
@@ -756,7 +757,7 @@ func (suite *StableSwapTestSuite) Test_StableSwap_Slippage_LiquidityRelation() {
 	swapFeeCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
 	for name, tc := range testcases {
 		for _, swapFee := range swapFeeCases {
-			createPoolFn := func(ctx sdk.Context, liq sdk.Coins) types.PoolI {
+			createPoolFn := func(ctx sdk.Context, liq sdk.Coins) swaproutertypes.PoolI {
 				return createTestPool(suite.T(), liq, sdk.MustNewDecFromStr(swapFee), sdk.ZeroDec(), tc.scalingFactors)
 			}
 			ctx := sdk.Context{}

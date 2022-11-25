@@ -100,7 +100,7 @@ func (k Keeper) validateCreatedPool(
 	ctx sdk.Context,
 	initialPoolLiquidity sdk.Coins,
 	poolId uint64,
-	pool gammtypes.TraditionalAmmInterface,
+	pool types.PoolI,
 ) error {
 	if pool.GetId() != poolId {
 		return errors.Wrapf(types.ErrInvalidPool,

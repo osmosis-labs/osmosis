@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	_ types.PoolI                   = &Pool{}
+	_ swaproutertypes.PoolI         = &Pool{}
 	_ types.TraditionalAmmInterface = &Pool{}
 )
 

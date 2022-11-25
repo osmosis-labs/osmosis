@@ -104,7 +104,7 @@ type AppModule struct {
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(&am.keeper))
-	stableswap.RegisterMsgScalingFactorServer(cfg.MsgServer(), keeper.NewStableSwapScalingFactorSetterMsgServerImpl(&am.keeper))
+	stableswap.RegisterMsgScalingFactorServer(cfg.MsgServer(), keeper.NewStableswapMsgScalingFactorModifierServerImpl(&am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
 	v2types.RegisterQueryServer(cfg.QueryServer(), keeper.NewV2Querier(am.keeper))
 }

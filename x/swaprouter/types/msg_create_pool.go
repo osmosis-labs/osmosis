@@ -2,8 +2,6 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 // CreatePoolMsg defines an interface that every CreatePool transaction should implement.
@@ -19,5 +17,5 @@ type CreatePoolMsg interface {
 	// Initial Liquidity for the pool that the sender is required to send to the pool account
 	InitialLiquidity() sdk.Coins
 	// CreatePool creates a pool implementing PoolI, using data from the message.
-	CreatePool(ctx sdk.Context, poolID uint64) (gammtypes.TraditionalAmmInterface, error)
+	CreatePool(ctx sdk.Context, poolID uint64) (PoolI, error)
 }
