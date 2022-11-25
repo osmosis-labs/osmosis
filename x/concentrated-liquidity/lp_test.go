@@ -278,3 +278,108 @@ func mergeConfigs(dst *lpTest, overwrite *lpTest) {
 		}
 	}
 }
+
+func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
+	type sendTest struct {
+		coin0       sdk.Coin
+		coin1       sdk.Coin
+		poolToUser  bool
+		expectError bool
+	}
+	tests := map[string]sendTest{
+		"asset0 and asset1 are positive, position creation (user to pool)": {
+			coin0: sdk.NewCoin("eth", sdk.NewInt(1000000)),
+			coin1: sdk.NewCoin("usdc", sdk.NewInt(1000000)),
+		},
+		"only asset0 is positive, position creation (user to pool)": {
+			coin0: sdk.NewCoin("eth", sdk.NewInt(1000000)),
+			coin1: sdk.NewCoin("usdc", sdk.NewInt(0)),
+		},
+		"only asset1 is positive, position creation (user to pool)": {
+			coin0: sdk.NewCoin("eth", sdk.NewInt(0)),
+			coin1: sdk.NewCoin("usdc", sdk.NewInt(1000000)),
+		},
+		"only asset0 is greater than sender has, position creation (user to pool)": {
+			coin0:       sdk.NewCoin("eth", sdk.NewInt(100000000000000)),
+			coin1:       sdk.NewCoin("usdc", sdk.NewInt(1000000)),
+			expectError: true,
+		},
+		// "only asset1 is greater than sender has, position creation (user to pool)": {
+		// 	coin0:       sdk.NewCoin("eth", sdk.NewInt(1000000)),
+		// 	coin1:       sdk.NewCoin("usdc", sdk.NewInt(100000000000000)),
+		// 	expectError: true,
+		// },
+		"asset0 and asset1 are positive, withdraw (pool to user)": {
+			coin0:      sdk.NewCoin("eth", sdk.NewInt(1000000)),
+			coin1:      sdk.NewCoin("usdc", sdk.NewInt(1000000)),
+			poolToUser: true,
+		},
+		"only asset0 is positive, withdraw (pool to user)": {
+			coin0:      sdk.NewCoin("eth", sdk.NewInt(1000000)),
+			coin1:      sdk.NewCoin("usdc", sdk.NewInt(0)),
+			poolToUser: true,
+		},
+		"only asset1 is positive, withdraw (pool to user)": {
+			coin0:      sdk.NewCoin("eth", sdk.NewInt(0)),
+			coin1:      sdk.NewCoin("usdc", sdk.NewInt(1000000)),
+			poolToUser: true,
+		},
+		"only asset0 is greater than sender has, withdraw (pool to user)": {
+			coin0:       sdk.NewCoin("eth", sdk.NewInt(100000000000000)),
+			coin1:       sdk.NewCoin("usdc", sdk.NewInt(1000000)),
+			poolToUser:  true,
+			expectError: true,
+		},
+		// "only asset1 is greater than sender has, withdraw (pool to user)": {
+		// 	coin0:       sdk.NewCoin("eth", sdk.NewInt(1000000)),
+		// 	coin1:       sdk.NewCoin("usdc", sdk.NewInt(100000000000000)),
+		//  poolToUser:  true,
+		// 	expectError: true,
+		// },
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			tc := tc
+			s.SetupTest()
+
+			_, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, denom0, denom1, sdk.MustNewDecFromStr("70.710678118654752440"), sdk.NewInt(85176))
+			s.Require().NoError(err)
+
+			poolI, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, 1)
+			s.Require().NoError(err)
+			concentratedPool := poolI.(types.ConcentratedPoolExtension)
+
+			s.FundAcc(poolI.GetAddress(), sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+
+			sender := s.TestAccs[0]
+			receiver := concentratedPool.GetAddress()
+			if tc.poolToUser {
+				sender = concentratedPool.GetAddress()
+				receiver = s.TestAccs[0]
+			}
+			preSendBalanceSender := s.App.BankKeeper.GetAllBalances(s.Ctx, sender)
+			preSendBalanceReceiver := s.App.BankKeeper.GetAllBalances(s.Ctx, receiver)
+
+			err = s.App.ConcentratedLiquidityKeeper.SendCoinsBetweenPoolAndUser(s.Ctx, concentratedPool.GetToken0(), concentratedPool.GetToken1(), tc.coin0.Amount, tc.coin1.Amount, sender, receiver)
+
+			postSendBalanceSender := s.App.BankKeeper.GetAllBalances(s.Ctx, sender)
+			postSendBalanceReceiver := s.App.BankKeeper.GetAllBalances(s.Ctx, receiver)
+
+			if tc.expectError {
+				s.Require().Error(err)
+				s.Require().Equal(preSendBalanceSender.String(), postSendBalanceSender.String())
+				s.Require().Equal(preSendBalanceReceiver.String(), postSendBalanceReceiver.String())
+				return
+			}
+
+			expectedPostSendBalanceSender := preSendBalanceSender.Sub(sdk.NewCoins(tc.coin0, tc.coin1))
+			expectedPostSendBalanceReceiver := preSendBalanceReceiver.Add(tc.coin0, tc.coin1)
+
+			s.Require().NoError(err)
+			s.Require().Equal(expectedPostSendBalanceSender.String(), postSendBalanceSender.String())
+			s.Require().Equal(expectedPostSendBalanceReceiver.String(), postSendBalanceReceiver.String())
+		})
+	}
+}

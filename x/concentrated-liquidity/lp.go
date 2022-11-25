@@ -165,9 +165,9 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	return actualAmount0.TruncateInt(), actualAmount1.TruncateInt(), nil
 }
 
+// sendCoinsBetweenPoolAndUser takes the amounts calculated from a join/exit position and executes the send between pool and user
 func (k Keeper) sendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 string, amount0, amount1 sdk.Int, sender, receiver sdk.AccAddress) error {
 	var finalCoinsToSend sdk.Coins
-	// after amounts are calculated for joining or exiting a position, we create a coins object and send it to the respective address
 	if amount0.IsPositive() {
 		finalCoinsToSend = append(finalCoinsToSend, sdk.NewCoin(denom0, amount0))
 	}
