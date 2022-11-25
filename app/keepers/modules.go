@@ -39,7 +39,6 @@ import (
 	poolincentivesclient "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/client"
 	superfluid "github.com/osmosis-labs/osmosis/v13/x/superfluid"
 	superfluidclient "github.com/osmosis-labs/osmosis/v13/x/superfluid/client"
-	swaproutermodule "github.com/osmosis-labs/osmosis/v13/x/swaprouter/module"
 	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/twapmodule"
 	"github.com/osmosis-labs/osmosis/v13/x/txfees"
@@ -81,7 +80,6 @@ var AppModuleBasics = []module.AppModuleBasic{
 	vesting.AppModuleBasic{},
 	gamm.AppModuleBasic{},
 	twapmodule.AppModuleBasic{},
-	swaproutermodule.AppModuleBasic{},
 	txfees.AppModuleBasic{},
 	incentives.AppModuleBasic{},
 	lockup.AppModuleBasic{},

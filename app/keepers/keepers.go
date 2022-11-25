@@ -52,8 +52,6 @@ import (
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer"
 
-	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
-
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v13/wasmbinding"
 	epochskeeper "github.com/osmosis-labs/osmosis/v13/x/epochs/keeper"
@@ -72,7 +70,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/superfluid"
 	superfluidkeeper "github.com/osmosis-labs/osmosis/v13/x/superfluid/keeper"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/keeper"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
 	"github.com/osmosis-labs/osmosis/v13/x/twap"
@@ -122,7 +119,6 @@ type AppKeepers struct {
 	WasmKeeper                   *wasm.Keeper
 	ContractKeeper               *wasmkeeper.PermissionedKeeper
 	TokenFactoryKeeper           *tokenfactorykeeper.Keeper
-	SwapRouterKeeper             *swaprouter.Keeper
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
 
 	// IBC modules
@@ -254,16 +250,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.tkeys[twaptypes.TransientStoreKey],
 		appKeepers.GetSubspace(twaptypes.ModuleName),
 		appKeepers.GAMMKeeper)
-
-	appKeepers.SwapRouterKeeper = swaprouter.NewKeeper(
-		appKeepers.keys[swaproutertypes.StoreKey],
-		appKeepers.GetSubspace(swaproutertypes.ModuleName),
-		appKeepers.GAMMKeeper,
-		nil, // TODO: set CL keeper once it is merged.
-		appKeepers.BankKeeper,
-		appKeepers.AccountKeeper,
-		appKeepers.DistrKeeper,
-	)
 
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
 		appKeepers.keys[lockuptypes.StoreKey],
@@ -523,7 +509,6 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
 	paramsKeeper.Subspace(twaptypes.ModuleName)
-	paramsKeeper.Subspace(swaproutertypes.ModuleName)
 	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
 
 	return paramsKeeper
@@ -609,7 +594,6 @@ func KVStoreKeys() []string {
 		capabilitytypes.StoreKey,
 		gammtypes.StoreKey,
 		twaptypes.StoreKey,
-		swaproutertypes.StoreKey,
 		lockuptypes.StoreKey,
 		incentivestypes.StoreKey,
 		epochstypes.StoreKey,

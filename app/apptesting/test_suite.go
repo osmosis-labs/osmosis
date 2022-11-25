@@ -313,7 +313,7 @@ func (s *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset sdk.Coin
 	coins := sdk.Coins{sdk.NewInt64Coin(fromAsset.Denom, 100000000000000)}
 	s.FundAcc(acc1, coins)
 
-	_, err := s.App.GAMMKeeper.SwapExactAmountOutLegacy(
+	_, err := s.App.GAMMKeeper.SwapExactAmountOut(
 		s.Ctx,
 		acc1,
 		poolId,
