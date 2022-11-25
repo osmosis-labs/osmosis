@@ -506,14 +506,14 @@ func (suite *HooksTestSuite) RelayPacket(packet channeltypes.Packet, direction D
 	err := receiver.UpdateClient()
 	suite.Require().NoError(err)
 
-	// B Receives
+	// receiver Receives
 	receiveResult, err := receiver.RecvPacketWithResult(packet)
 	suite.Require().NoError(err)
 
 	ack, err := ibctesting.ParseAckFromEvents(receiveResult.GetEvents())
 	suite.Require().NoError(err)
 
-	// A Acknowledges
+	// sender Acknowledges
 	err = sender.AcknowledgePacket(packet, ack)
 	suite.Require().NoError(err)
 
@@ -566,7 +566,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBC() {
 
 	// Generate swap instructions for the contract
 	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"input_coin":{"denom":"token0","amount":"1000"},"output_denom":"token1","slipage":{"max_slipage_percentage":"20"},"receiver":"%s","channel":"channel-0","failed_delivery":null}}`,
-		suite.chainB.SenderAccount.GetAddress(),
+		receiver,
 	)
 	// Generate full memo
 	msg := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, swapMsg)
@@ -588,4 +588,55 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBC() {
 
 	balanceToken1After := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), receiver, token1IBC)
 	suite.Require().Greater(balanceToken1After.Amount.Int64(), int64(0))
+}
+
+// This is a compy of the above tot est bad acks. Lots of repetition here could be abstracted, but keeping as-is for
+// now to avoid complexity
+// The main difference between this test and the above one is that the receiver specified in the memo does not
+// exist on chain B
+func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
+	initializer := suite.chainB.SenderAccount.GetAddress()
+	_, crosschainAddr := suite.SetupCrosschainSwaps()
+	// Send some token0 tokens to B so that there are ibc tokens to send to A and crosschain-swap
+	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "")
+	suite.FullSend(transferMsg, AtoB)
+
+	// Calculate the names of the tokens when swapped via IBC
+	denomTrace0 := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "token0"))
+	token0IBC := denomTrace0.IBCDenom()
+
+	osmosisAppB := suite.chainB.GetOsmosisApp()
+	balanceToken0 := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), initializer, token0IBC)
+	receiver := "invalid1address" // Will not exist on chainB
+
+	// Generate swap instructions for the contract. This will send correctly on chainA, but fail to be received on chainB
+	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"input_coin":{"denom":"token0","amount":"1000"},"output_denom":"token1","slipage":{"max_slipage_percentage":"20"},"receiver":"%s","channel":"channel-0","failed_delivery":null}}`,
+		receiver, // Note that this is the chain A account, which does not exist on chain B
+	)
+	// Generate full memo
+	msg := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, swapMsg)
+	// Send IBC transfer with the memo with crosschain-swap instructions
+	transferMsg = NewMsgTransfer(sdk.NewCoin(token0IBC, sdk.NewInt(1000)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), msg)
+	_, receiveResult, ack, err := suite.FullSend(transferMsg, BtoA)
+
+	// We use the receive result here because the receive adds another packet to be sent back
+	suite.Require().NoError(err)
+	suite.Require().NotNil(receiveResult)
+	fmt.Println(ack)
+	// "Relay the packet" by executing the receive on chain B
+	packet, err := ibctesting.ParsePacketFromEvents(receiveResult.GetEvents())
+	suite.Require().NoError(err)
+	_, ack2 := suite.RelayPacket(packet, AtoB)
+	fmt.Println(string(ack2))
+
+	balanceToken0After := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), initializer, token0IBC)
+	suite.Require().Equal(int64(1000), balanceToken0.Amount.Sub(balanceToken0After.Amount).Int64())
+
+	// The balance is stuck in the contract
+	osmosisAppA := suite.chainA.GetOsmosisApp()
+	balanceContract := osmosisAppA.BankKeeper.GetBalance(suite.chainA.GetContext(), crosschainAddr, "token1")
+	suite.Require().Greater(int64(0), balanceContract.Amount.Int64())
+	
+	// ToDo: check that the contract knows there has been a bad ack and that the balance can be recovered
+
 }
