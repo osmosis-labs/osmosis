@@ -817,10 +817,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 		tc := tc
 
 		suite.T().Run(tc.name, func(t *testing.T) {
-			poolI := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
-
-			pool, ok := poolI.(*balancer.Pool)
-			require.True(t, ok)
+			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
 
 			// system under test
 			sut := func() {
@@ -857,10 +854,7 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 		tc := tc
 
 		suite.T().Run(tc.name, func(t *testing.T) {
-			poolI := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
-
-			pool, ok := poolI.(*balancer.Pool)
-			require.True(t, ok)
+			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
 
 			// system under test
 			sut := func() {
@@ -955,10 +949,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 		tc := tc
 
 		suite.T().Run(tc.name, func(t *testing.T) {
-			poolI := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
-
-			pool, ok := poolI.(*balancer.Pool)
-			require.True(t, ok)
+			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
 
 			// system under test
 			sut := func() {
@@ -1032,7 +1023,7 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 			Weight: sdk.NewInt(5),
 		}
 
-		pool = createTestPool(suite.T(), swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn).(*balancer.Pool)
+		pool = createTestPool(suite.T(), swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn)
 		suite.Require().NotNil(pool)
 
 		return pool
