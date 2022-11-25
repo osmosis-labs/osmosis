@@ -450,12 +450,6 @@ func (suite *HooksTestSuite) TestCrosschainSwaps() {
 
 	balanceSender := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), owner, "token0")
 
-	//denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "token1"))
-	//token1IBC := denomTrace.IBCDenom()
-	//receiver := suite.chainB.SenderAccount.GetAddress()
-	//balanceReceiver := suite.chainB.GetOsmosisApp().BankKeeper.GetBalance(suite.chainB.GetContext(), receiver, token1IBC)
-	//suite.Require().Equal(int64(0), balanceReceiver.Amount.Int64())
-
 	ctx := suite.chainA.GetContext()
 
 	msg := fmt.Sprintf(`{"osmosis_swap":{"input_coin":{"denom":"token0","amount":"1000"},"output_denom":"token1","slipage":{"max_slipage_percentage":"20"},"receiver":"%s","channel":"channel-0","failed_delivery":null}}`,
@@ -469,9 +463,6 @@ func (suite *HooksTestSuite) TestCrosschainSwaps() {
 
 	balanceSender2 := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), owner, "token0")
 	suite.Require().Equal(int64(1000), balanceSender.Amount.Sub(balanceSender2.Amount).Int64())
-
-	//balanceReceiver2 := suite.chainB.GetOsmosisApp().BankKeeper.GetBalance(suite.chainB.GetContext(), receiver, token1IBC)
-	//suite.Require().Greater(int64(0), balanceReceiver2.Amount.Int64())
 }
 
 // custom MsgTransfer constructor that supports Memo
@@ -490,68 +481,65 @@ func NewMsgTransfer(
 	}
 }
 
-// The following methods are utility functions copied from the rate limiting tests. These could be abstracted to avoid
-// repetition, but at the cost of a more complex testing struct that abstracts these two.
-func (suite *HooksTestSuite) FullSendAToB(msg sdk.Msg) (*sdk.Result, string, error) {
-	sendResult, err := suite.chainA.SendMsgsNoCheck(msg)
-	if err != nil {
-		return nil, "", err
-	}
+type Direction int64
 
-	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents())
-	if err != nil {
-		return nil, "", err
-	}
+const (
+	AtoB Direction = iota
+	BtoA
+)
 
-	err = suite.path.EndpointB.UpdateClient()
-	if err != nil {
-		return nil, "", err
+func (suite *HooksTestSuite) GetEndpoints(direction Direction) (sender *ibctesting.Endpoint, receiver *ibctesting.Endpoint) {
+	switch direction {
+	case AtoB:
+		sender = suite.path.EndpointA
+		receiver = suite.path.EndpointB
+	case BtoA:
+		sender = suite.path.EndpointB
+		receiver = suite.path.EndpointA
 	}
-
-	res, err := suite.path.EndpointB.RecvPacketWithResult(packet)
-	if err != nil {
-		return nil, "", err
-	}
-
-	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
-	if err != nil {
-		return nil, "", err
-	}
-
-	err = suite.path.EndpointA.UpdateClient()
-	if err != nil {
-		return nil, "", err
-	}
-	err = suite.path.EndpointB.UpdateClient()
-	if err != nil {
-		return nil, "", err
-	}
-
-	return sendResult, string(ack), nil
+	return sender, receiver
 }
 
-func (suite *HooksTestSuite) FullSendBToA(msg sdk.Msg) (*sdk.Result, *sdk.Result, string, error) {
-	sendResult, err := suite.chainB.SendMsgsNoCheck(msg)
+func (suite *HooksTestSuite) RelayPacket(packet channeltypes.Packet, direction Direction) (*sdk.Result, []byte) {
+	sender, receiver := suite.GetEndpoints(direction)
+
+	err := receiver.UpdateClient()
 	suite.Require().NoError(err)
 
-	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents())
-	suite.Require().NoError(err)
-
-	err = suite.path.EndpointA.UpdateClient()
-	suite.Require().NoError(err)
-
-	receiveResult, err := suite.path.EndpointA.RecvPacketWithResult(packet)
+	// B Receives
+	receiveResult, err := receiver.RecvPacketWithResult(packet)
 	suite.Require().NoError(err)
 
 	ack, err := ibctesting.ParseAckFromEvents(receiveResult.GetEvents())
 	suite.Require().NoError(err)
-	err = suite.path.EndpointB.AcknowledgePacket(packet, ack)
+
+	// A Acknowledges
+	err = sender.AcknowledgePacket(packet, ack)
 	suite.Require().NoError(err)
 
-	err = suite.path.EndpointA.UpdateClient()
+	err = sender.UpdateClient()
 	suite.Require().NoError(err)
-	err = suite.path.EndpointB.UpdateClient()
+	err = receiver.UpdateClient()
 	suite.Require().NoError(err)
+
+	return receiveResult, ack
+}
+
+func (suite *HooksTestSuite) FullSend(msg sdk.Msg, direction Direction) (*sdk.Result, *sdk.Result, string, error) {
+	var sender *osmosisibctesting.TestChain
+	switch direction {
+	case AtoB:
+		sender = suite.chainA
+	case BtoA:
+		sender = suite.chainB
+	}
+	sendResult, err := sender.SendMsgsNoCheck(msg)
+	suite.Require().NoError(err)
+
+	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents())
+	suite.Require().NoError(err)
+
+	receiveResult, ack := suite.RelayPacket(packet, direction)
 
 	return sendResult, receiveResult, string(ack), err
 }
@@ -559,9 +547,9 @@ func (suite *HooksTestSuite) FullSendBToA(msg sdk.Msg) (*sdk.Result, *sdk.Result
 func (suite *HooksTestSuite) TestCrosschainSwapsViaIBC() {
 	initializer := suite.chainB.SenderAccount.GetAddress()
 	_, crosschainAddr := suite.SetupCrosschainSwaps()
-
 	// Send some token0 tokens to B so that there are ibc tokens to send to A and crosschain-swap
-	suite.FullSendAToB(NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), ""))
+	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "")
+	suite.FullSend(transferMsg, AtoB)
 
 	// Calculate the names of the tokens when swapped via IBC
 	denomTrace0 := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "token0"))
@@ -583,22 +571,17 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBC() {
 	// Generate full memo
 	msg := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, swapMsg)
 	// Send IBC transfer with the memo with crosschain-swap instructions
-	_, receiveResult, _, err := suite.FullSendBToA(NewMsgTransfer(sdk.NewCoin(token0IBC, sdk.NewInt(1000)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), msg))
+	transferMsg = NewMsgTransfer(sdk.NewCoin(token0IBC, sdk.NewInt(1000)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), msg)
+	_, receiveResult, _, err := suite.FullSend(transferMsg, BtoA)
+
+	// We use the receive result here because the receive adds another packet to be sent back
 	suite.Require().NoError(err)
 	suite.Require().NotNil(receiveResult)
 
 	// "Relay the packet" by executing the receive on chain B
 	packet, err := ibctesting.ParsePacketFromEvents(receiveResult.GetEvents())
 	suite.Require().NoError(err)
-	err = suite.path.EndpointB.UpdateClient()
-	suite.Require().NoError(err)
-	receiveOnB, err := suite.path.EndpointB.RecvPacketWithResult(packet)
-	suite.Require().NoError(err)
-	ack, err := ibctesting.ParseAckFromEvents(receiveOnB.GetEvents())
-	suite.Require().NoError(err)
-	// Acknowledge the receive on chain A
-	err = suite.path.EndpointA.AcknowledgePacket(packet, ack)
-	suite.Require().NoError(err)
+	suite.RelayPacket(packet, AtoB)
 
 	balanceToken0After := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), initializer, token0IBC)
 	suite.Require().Equal(int64(1000), balanceToken0.Amount.Sub(balanceToken0After.Amount).Int64())
