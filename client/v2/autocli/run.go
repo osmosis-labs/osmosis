@@ -30,6 +30,7 @@ func Run(appOptions AppOptions) error {
 func RunFromAppConfig(appConfig depinject.Config) error {
 	var appOptions AppOptions
 	err := depinject.Inject(appConfig, &appOptions)
+	fmt.Println(appOptions)
 	if err != nil {
 		return err
 	}
