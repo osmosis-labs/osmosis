@@ -3,10 +3,10 @@ package keeper
 import (
 	"fmt"
 
+	gogotypes "github.com/gogo/protobuf/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	gogotypes "github.com/gogo/protobuf/types"
 
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
@@ -16,53 +16,15 @@ import (
 
 // TODO spec and tests
 func (k Keeper) InitializePool(ctx sdk.Context, pool types.PoolI, creatorAddress sdk.AccAddress) error {
-	traditionalPool, ok := pool.(types.TraditionalAmmInterface)
-	if !ok {
-		return fmt.Errorf("failed to create gamm pool. Could not cast to TraditionalAmmInterface")
-	}
-
-	poolId := pool.GetId()
-
-	// Add the share token's meta data to the bank keeper.
-	poolShareBaseDenom := types.GetPoolShareDenom(poolId)
-	poolShareDisplayDenom := fmt.Sprintf("GAMM-%d", poolId)
-	k.bankKeeper.SetDenomMetaData(ctx, banktypes.Metadata{
-		Description: fmt.Sprintf("The share token of the gamm pool %d", poolId),
-		DenomUnits: []*banktypes.DenomUnit{
-			{
-				Denom:    poolShareBaseDenom,
-				Exponent: 0,
-				Aliases: []string{
-					"attopoolshare",
-				},
-			},
-			{
-				Denom:    poolShareDisplayDenom,
-				Exponent: types.OneShareExponent,
-				Aliases:  nil,
-			},
-		},
-		Base:    poolShareBaseDenom,
-		Display: poolShareDisplayDenom,
-	})
-
-	// Mint the initial pool shares share token to the sender
-	err := k.MintPoolShareToAccount(ctx, pool, creatorAddress, pool.GetTotalShares())
-	if err != nil {
-		return err
-	}
-
-	k.RecordTotalLiquidityIncrease(ctx, traditionalPool.GetTotalPoolLiquidity(ctx))
-
-	return k.setPool(ctx, pool)
+	panic("not implemented")
 }
 
 func (k Keeper) MarshalPool(pool types.PoolI) ([]byte, error) {
 	return k.cdc.MarshalInterface(pool)
 }
 
-func (k Keeper) UnmarshalPool(bz []byte) (types.TraditionalAmmInterface, error) {
-	var acc types.TraditionalAmmInterface
+func (k Keeper) UnmarshalPool(bz []byte) (types.PoolI, error) {
+	var acc types.PoolI
 	return acc, k.cdc.UnmarshalInterface(bz, &acc)
 }
 
@@ -74,7 +36,7 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 // GetPoolAndPoke returns a PoolI based on it's identifier if one exists. If poolId corresponds
 // to a pool with weights (e.g. balancer), the weights of the pool are updated via PokePool prior to returning.
 // TODO: Consider rename to GetPool due to downstream API confusion.
-func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.TraditionalAmmInterface, error) {
+func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
 	if !store.Has(poolKey) {
@@ -96,7 +58,7 @@ func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.Traditiona
 }
 
 // Get pool and check if the pool is active, i.e. allowed to be swapped against.
-func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.TraditionalAmmInterface, error) {
+func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
 		return &balancer.Pool{}, err
@@ -113,7 +75,7 @@ func (k Keeper) iterator(ctx sdk.Context, prefix []byte) sdk.Iterator {
 	return sdk.KVStorePrefixIterator(store, prefix)
 }
 
-func (k Keeper) GetPoolsAndPoke(ctx sdk.Context) (res []types.TraditionalAmmInterface, err error) {
+func (k Keeper) GetPoolsAndPoke(ctx sdk.Context) (res []types.PoolI, err error) {
 	iter := k.iterator(ctx, types.KeyPrefixPools)
 	defer iter.Close()
 
@@ -145,13 +107,6 @@ func (k Keeper) setPool(ctx sdk.Context, pool types.PoolI) error {
 	store.Set(poolKey, bz)
 
 	return nil
-}
-
-// initializePoolId initializes pool id to 0.
-func (k Keeper) initializePoolId(ctx sdk.Context) {
-	store := ctx.KVStore(k.storeKey)
-	poolId := &gogotypes.UInt64Value{Value: 0}
-	osmoutils.MustSet(store, types.KeyNextGlobalPoolId, poolId)
 }
 
 func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
@@ -269,21 +224,32 @@ func (k Keeper) GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error) 
 	return denoms, err
 }
 
-// GetNextPoolId returns the next pool Id.
-// TODO: remove after concentrated-liquidity upgrade.
-func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
+// setNextPoolId sets next pool Id.
+func (k Keeper) setNextPoolId(ctx sdk.Context, poolId uint64) {
 	store := ctx.KVStore(k.storeKey)
-	nextPoolId := gogotypes.UInt64Value{}
-	osmoutils.MustGet(store, types.KeyNextGlobalPoolId, &nextPoolId)
-	return nextPoolId.Value
+	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: poolId})
+	store.Set(types.KeyNextGlobalPoolId, bz)
 }
 
-// SetNextPoolId sets the next pool Id.
-// TODO: remove after concentrated-liquidity upgrade.
-func (k Keeper) SetNextPoolId(ctx sdk.Context, nextPoolId uint64) {
+// GetNextPoolId returns the next pool Id.
+func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
+	var nextPoolId uint64
 	store := ctx.KVStore(k.storeKey)
-	nextPoolIdState := gogotypes.UInt64Value{Value: nextPoolId}
-	osmoutils.MustSet(store, types.KeyNextGlobalPoolId, &nextPoolIdState)
+
+	bz := store.Get(types.KeyNextGlobalPoolId)
+	if bz == nil {
+		panic(fmt.Errorf("pool has not been initialized -- Should have been done in InitGenesis"))
+	} else {
+		val := gogotypes.UInt64Value{}
+
+		err := k.cdc.Unmarshal(bz, &val)
+		if err != nil {
+			panic(err)
+		}
+
+		nextPoolId = val.GetValue()
+	}
+	return nextPoolId
 }
 
 func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (string, error) {
@@ -301,6 +267,13 @@ func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (string, error) {
 		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
 		return "", sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
 	}
+}
+
+// getNextPoolIdAndIncrement returns the next pool Id, and increments the corresponding state entry.
+func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
+	nextPoolId := k.GetNextPoolId(ctx)
+	k.setNextPoolId(ctx, nextPoolId+1)
+	return nextPoolId
 }
 
 // setStableSwapScalingFactors sets the stable swap scaling factors.

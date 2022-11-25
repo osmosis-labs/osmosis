@@ -245,6 +245,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	gammKeeper := gammkeeper.NewKeeper(
 		appCodec, appKeepers.keys[gammtypes.StoreKey],
+		appKeepers.GetSubspace(gammtypes.ModuleName),
 		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.DistrKeeper)
 	appKeepers.GAMMKeeper = &gammKeeper
 
@@ -258,7 +259,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.keys[swaproutertypes.StoreKey],
 		appKeepers.GetSubspace(swaproutertypes.ModuleName),
 		appKeepers.GAMMKeeper,
-		nil, // TODO: propagate CL keeper once it is merged.
+		nil, // TODO: set CL keeper once it is merged.
 		appKeepers.BankKeeper,
 		appKeepers.AccountKeeper,
 		appKeepers.DistrKeeper,
@@ -277,7 +278,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.keys[txfeestypes.StoreKey],
-		appKeepers.SwapRouterKeeper,
+		appKeepers.GAMMKeeper,
 		appKeepers.GAMMKeeper,
 		txfeestypes.FeeCollectorName,
 		txfeestypes.NonNativeFeeCollectorName,
@@ -317,10 +318,10 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.IncentivesKeeper,
 		appKeepers.DistrKeeper,
-		appKeepers.SwapRouterKeeper,
+		appKeepers.GAMMKeeper,
 	)
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
-	appKeepers.SwapRouterKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
+	appKeepers.GAMMKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
 
 	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
 		appKeepers.keys[tokenfactorytypes.StoreKey],
@@ -548,14 +549,6 @@ func (appKeepers *AppKeepers) SetupHooks() {
 			// insert gamm hooks receivers here
 			appKeepers.PoolIncentivesKeeper.Hooks(),
 			appKeepers.TwapKeeper.GammHooks(),
-		),
-	)
-
-	appKeepers.SwapRouterKeeper.SetPoolCreationListeners(
-		swaproutertypes.NewPoolCreationListeners(
-			// insert gamm hooks receivers here
-			appKeepers.PoolIncentivesKeeper.Hooks(),
-			appKeepers.TwapKeeper.PoolCreationListeners(),
 		),
 	)
 

@@ -36,8 +36,8 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferAndCreatePool() {
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 
 	chainANode, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
-	chainANode.CreatePool("ibcDenomPool.json", initialization.ValidatorWalletName, false)
+	s.NoError(err)
+	chainANode.CreatePool("ibcDenomPool.json", initialization.ValidatorWalletName)
 }
 
 // TestSuperfluidVoting tests that superfluid voting is functioning as expected.
@@ -50,9 +50,9 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferAndCreatePool() {
 func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
+	s.NoError(err)
 
-	poolId := chainANode.CreatePool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress, false)
+	poolId := chainANode.CreatePool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
 
 	// enable superfluid assets
 	chainA.EnableSuperfluidAsset(fmt.Sprintf("gamm/pool/%d", poolId))
@@ -251,7 +251,7 @@ func (s *IntegrationTestSuite) TestAddToExistingLock() {
 	s.NoError(err)
 	// ensure we can add to new locks and superfluid locks
 	// create pool and enable superfluid assets
-	poolId := chainANode.CreatePool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress, false)
+	poolId := chainANode.CreatePool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
 	chainA.EnableSuperfluidAsset(fmt.Sprintf("gamm/pool/%d", poolId))
 
 	// setup wallets and send gamm tokens to these wallets on chainA
@@ -290,7 +290,7 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	s.NoError(err)
 
 	// Triggers the creation of TWAP records.
-	poolId := chainANode.CreatePool(poolFile, initialization.ValidatorWalletName, false)
+	poolId := chainANode.CreatePool(poolFile, initialization.ValidatorWalletName)
 	swapWalletAddr := chainANode.CreateWallet(walletName)
 
 	timeBeforeSwap := chainANode.QueryLatestBlockTime()

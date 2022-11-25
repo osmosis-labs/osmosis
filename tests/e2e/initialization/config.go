@@ -19,10 +19,10 @@ import (
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
 	epochtypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v13/x/incentives/types"
 	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
 	poolitypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 	twaptypes "github.com/osmosis-labs/osmosis/v13/x/twap/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v13/x/txfees/types"
 
@@ -242,7 +242,7 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 		return err
 	}
 
-	err = updateModuleGenesis(appGenState, swaproutertypes.ModuleName, &swaproutertypes.GenesisState{}, updateSwaprouterGenesis)
+	err = updateModuleGenesis(appGenState, gammtypes.ModuleName, &gammtypes.GenesisState{}, updateGammGenesis)
 	if err != nil {
 		return err
 	}
@@ -352,7 +352,7 @@ func updateTxfeesGenesis(txfeesGenState *txfeestypes.GenesisState) {
 	txfeesGenState.Basedenom = OsmoDenom
 }
 
-func updateSwaprouterGenesis(gammGenState *swaproutertypes.GenesisState) {
+func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
 	gammGenState.Params.PoolCreationFee = tenOsmo
 }
 

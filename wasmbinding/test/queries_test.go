@@ -306,3 +306,236 @@ func TestSpotPrice(t *testing.T) {
 		})
 	}
 }
+
+func TestEstimateSwap(t *testing.T) {
+	actor := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, actor)
+	epsilon := 1e-3
+
+	fundAccount(t, ctx, osmosis, actor, defaultFunds)
+
+	poolFunds := []sdk.Coin{
+		sdk.NewInt64Coin("uosmo", 12000000),
+		sdk.NewInt64Coin("ustar", 240000000),
+	}
+	// 20 star to 1 osmo
+	starPool := preparePool(t, ctx, osmosis, actor, poolFunds)
+
+	// Estimate swap rate
+	uosmo := poolFunds[0].Amount.ToDec().MustFloat64()
+	ustar := poolFunds[1].Amount.ToDec().MustFloat64()
+	swapRate := ustar / uosmo
+
+	amountIn := sdk.NewInt(10000)
+	zeroAmount := sdk.ZeroInt()
+	negativeAmount := amountIn.Neg()
+
+	amount := amountIn.ToDec().MustFloat64()
+	starAmount := sdk.NewInt(int64(amount * swapRate))
+
+	starSwapAmount := bindings.SwapAmount{Out: &starAmount}
+
+	queryPlugin := wasmbinding.NewQueryPlugin(osmosis.GAMMKeeper, osmosis.TwapKeeper, osmosis.TokenFactoryKeeper)
+
+	specs := map[string]struct {
+		estimateSwap *bindings.EstimateSwap
+		expCost      *bindings.SwapAmount
+		expErr       bool
+	}{
+		"valid estimate swap (exact in)": {
+			estimateSwap: &bindings.EstimateSwap{
+				Sender: actor.String(),
+				First: bindings.Swap{
+					PoolId:   starPool,
+					DenomIn:  "uosmo",
+					DenomOut: "ustar",
+				},
+				Route: nil,
+				Amount: bindings.SwapAmount{
+					In: &amountIn,
+				},
+			},
+			expCost: &starSwapAmount,
+		},
+		"non-existent pool id": {
+			estimateSwap: &bindings.EstimateSwap{
+				Sender: actor.String(),
+				First: bindings.Swap{
+					PoolId:   starPool + 3,
+					DenomIn:  "uosmo",
+					DenomOut: "ustar",
+				},
+				Route: nil,
+				Amount: bindings.SwapAmount{
+					In: &amountIn,
+				},
+			},
+			expErr: true,
+		},
+		"zero pool id": {
+			estimateSwap: &bindings.EstimateSwap{
+				Sender: actor.String(),
+				First: bindings.Swap{
+					PoolId:   0,
+					DenomIn:  "uosmo",
+					DenomOut: "ustar",
+				},
+				Route: nil,
+				Amount: bindings.SwapAmount{
+					In: &amountIn,
+				},
+			},
+			expErr: true,
+		},
+		"invalid denom in": {
+			estimateSwap: &bindings.EstimateSwap{
+				Sender: actor.String(),
+				First: bindings.Swap{
+					PoolId:   starPool,
+					DenomIn:  "invalid",
+					DenomOut: "ustar",
+				},
+				Route: nil,
+				Amount: bindings.SwapAmount{
+					In: &amountIn,
+				},
+			},
+			expErr: true,
+		},
+		"empty denom in": {
+			estimateSwap: &bindings.EstimateSwap{
+				Sender: actor.String(),
+				First: bindings.Swap{
+					PoolId:   starPool,
+					DenomIn:  "",
+					DenomOut: "ustar",
+				},
+				Route: nil,
+				Amount: bindings.SwapAmount{
+					In: &amountIn,
+				},
+			},
+			expErr: true,
+		},
+		"invalid denom out": {
+			estimateSwap: &bindings.EstimateSwap{
+				Sender: actor.String(),
+				First: bindings.Swap{
+					PoolId:   starPool,
+					DenomIn:  "ustar",
+					DenomOut: "invalid",
+				},
+				Route: nil,
+				Amount: bindings.SwapAmount{
+					In: &amountIn,
+				},
+			},
+			expErr: true,
+		},
+		"empty denom out": {
+			estimateSwap: &bindings.EstimateSwap{
+				Sender: actor.String(),
+				First: bindings.Swap{
+					PoolId:   starPool,
+					DenomIn:  "ustar",
+					DenomOut: "",
+				},
+				Route: nil,
+				Amount: bindings.SwapAmount{
+					In: &amountIn,
+				},
+			},
+			expErr: true,
+		},
+		"null estimate swap": {
+			estimateSwap: nil,
+			expErr:       true,
+		},
+		"empty swap amount": {
+			estimateSwap: &bindings.EstimateSwap{
+				Sender: actor.String(),
+				First: bindings.Swap{
+					PoolId:   starPool,
+					DenomIn:  "uosmo",
+					DenomOut: "ustar",
+				},
+				Route:  nil,
+				Amount: bindings.SwapAmount{},
+			},
+			expErr: true,
+		},
+		"zero amount in": {
+			estimateSwap: &bindings.EstimateSwap{
+				Sender: actor.String(),
+				First: bindings.Swap{
+					PoolId:   starPool,
+					DenomIn:  "uosmo",
+					DenomOut: "ustar",
+				},
+				Route: nil,
+				Amount: bindings.SwapAmount{
+					In: &zeroAmount,
+				},
+			},
+			expErr: true,
+		},
+		"zero amount out": {
+			estimateSwap: &bindings.EstimateSwap{
+				Sender: actor.String(),
+				First: bindings.Swap{
+					PoolId:   starPool,
+					DenomIn:  "uosmo",
+					DenomOut: "ustar",
+				},
+				Route: nil,
+				Amount: bindings.SwapAmount{
+					Out: &zeroAmount,
+				},
+			},
+			expErr: true,
+		},
+		"negative amount in": {
+			estimateSwap: &bindings.EstimateSwap{
+				Sender: actor.String(),
+				First: bindings.Swap{
+					PoolId:   starPool,
+					DenomIn:  "uosmo",
+					DenomOut: "ustar",
+				},
+				Route: nil,
+				Amount: bindings.SwapAmount{
+					In: &negativeAmount,
+				},
+			},
+			expErr: true,
+		},
+		"negative amount out": {
+			estimateSwap: &bindings.EstimateSwap{
+				Sender: actor.String(),
+				First: bindings.Swap{
+					PoolId:   starPool,
+					DenomIn:  "uosmo",
+					DenomOut: "ustar",
+				},
+				Route: nil,
+				Amount: bindings.SwapAmount{
+					Out: &negativeAmount,
+				},
+			},
+			expErr: true,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			// when
+			gotCost, gotErr := queryPlugin.EstimateSwap(ctx, spec.estimateSwap)
+			// then
+			if spec.expErr {
+				require.Error(t, gotErr)
+				return
+			}
+			require.NoError(t, gotErr)
+			assert.InEpsilonf(t, (*spec.expCost.Out).ToDec().MustFloat64(), (*gotCost.Out).ToDec().MustFloat64(), epsilon, "exp %s but got %s", spec.expCost.Out.String(), gotCost.Out.String())
+		})
+	}
+}

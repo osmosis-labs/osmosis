@@ -15,8 +15,7 @@ import (
 )
 
 var (
-	_ types.PoolI                   = &Pool{}
-	_ types.TraditionalAmmInterface = &Pool{}
+	_ types.PoolI = &Pool{}
 )
 
 type unsortedPoolLiqError struct {

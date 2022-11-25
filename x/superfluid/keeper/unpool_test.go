@@ -94,7 +94,6 @@ func (suite *KeeperTestSuite) TestUnpool() {
 			ctx := suite.Ctx
 			bankKeeper := suite.App.BankKeeper
 			gammKeeper := suite.App.GAMMKeeper
-			swaprouterKeeper := suite.App.SwapRouterKeeper
 			superfluidKeeper := suite.App.SuperfluidKeeper
 			lockupKeeper := suite.App.LockupKeeper
 			stakingKeeper := suite.App.StakingKeeper
@@ -117,7 +116,7 @@ func (suite *KeeperTestSuite) TestUnpool() {
 				ExitFee: sdk.NewDec(0),
 			}, defaultPoolAssets, defaultFutureGovernor)
 
-			poolId, err := swaprouterKeeper.CreatePool(ctx, msg)
+			poolId, err := gammKeeper.CreatePool(ctx, msg)
 			suite.Require().NoError(err)
 
 			// join pool
