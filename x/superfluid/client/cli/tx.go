@@ -460,7 +460,6 @@ func NewCmdUpdateUnpoolWhitelistProposal() *cobra.Command {
 }
 
 func parseUpdateUnpoolWhitelistArgsToContent(flags *flag.FlagSet) (govtypes.Content, error) {
-
 	title, err := flags.GetString(govcli.FlagTitle)
 	if err != nil {
 		return nil, err
