@@ -5,8 +5,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
@@ -52,6 +54,138 @@ func (k Keeper) CalculateSpotPrice(
 	// we want to round this to `SpotPriceSigFigs` of precision
 	spotPrice = osmomath.SigFigRound(spotPrice, types.SpotPriceSigFigs)
 	return spotPrice, err
+}
+
+func validateCreatePoolMsg(ctx sdk.Context, msg types.CreatePoolMsg) error {
+	err := msg.Validate(ctx)
+	if err != nil {
+		return err
+	}
+
+	initialPoolLiquidity := msg.InitialLiquidity()
+	numAssets := initialPoolLiquidity.Len()
+	if numAssets < types.MinPoolAssets {
+		return types.ErrTooFewPoolAssets
+	}
+	if numAssets > types.MaxPoolAssets {
+		return sdkerrors.Wrapf(
+			types.ErrTooManyPoolAssets,
+			"pool has too many PoolAssets (%d)", numAssets,
+		)
+	}
+	return nil
+}
+
+func (k Keeper) validateCreatedPool(
+	ctx sdk.Context,
+	initialPoolLiquidity sdk.Coins,
+	poolId uint64,
+	pool types.PoolI,
+) error {
+	if pool.GetId() != poolId {
+		return sdkerrors.Wrapf(types.ErrInvalidPool,
+			"Pool was attempted to be created with incorrect pool ID.")
+	}
+	if !pool.GetAddress().Equals(types.NewPoolAddress(poolId)) {
+		return sdkerrors.Wrapf(types.ErrInvalidPool,
+			"Pool was attempted to be created with incorrect pool address.")
+	}
+	// Notably we use the initial pool liquidity at the start of the messages definition
+	// just in case CreatePool was mutative.
+	if !pool.GetTotalPoolLiquidity(ctx).IsEqual(initialPoolLiquidity) {
+		return sdkerrors.Wrapf(types.ErrInvalidPool,
+			"Pool was attempted to be created, with initial liquidity not equal to what was specified.")
+	}
+	// This check can be removed later, and replaced with a minimum.
+	if !pool.GetTotalShares().Equal(types.InitPoolSharesSupply) {
+		return sdkerrors.Wrapf(types.ErrInvalidPool,
+			"Pool was attempted to be created with incorrect number of initial shares.")
+	}
+	return nil
+}
+
+// CreatePool attempts to create a pool returning the newly created pool ID or
+// an error upon failure. The pool creation fee is used to fund the community
+// pool. It will create a dedicated module account for the pool and sends the
+// initial liquidity to the created module account.
+//
+// After the initial liquidity is sent to the pool's account, shares are minted
+// and sent to the pool creator. The shares are created using a denomination in
+// the form of gamm/pool/{poolID}. In addition, the x/bank metadata is updated
+// to reflect the newly created GAMM share denomination.
+func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, error) {
+	err := validateCreatePoolMsg(ctx, msg)
+	if err != nil {
+		return 0, err
+	}
+
+	sender := msg.PoolCreator()
+	initialPoolLiquidity := msg.InitialLiquidity()
+
+	// send pool creation fee to community pool
+	params := k.GetParams(ctx)
+	if err := k.communityPoolKeeper.FundCommunityPool(ctx, params.PoolCreationFee, sender); err != nil {
+		return 0, err
+	}
+
+	poolId := k.getNextPoolIdAndIncrement(ctx)
+	pool, err := msg.CreatePool(ctx, poolId)
+	if err != nil {
+		return 0, err
+	}
+
+	if err := k.validateCreatedPool(ctx, initialPoolLiquidity, poolId, pool); err != nil {
+		return 0, err
+	}
+
+	// create and save the pool's module account to the account keeper
+	if err := osmoutils.CreateModuleAccount(ctx, k.accountKeeper, pool.GetAddress()); err != nil {
+		return 0, fmt.Errorf("creating pool module account for id %d: %w", poolId, err)
+	}
+
+	// send initial liquidity to the pool
+	err = k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), initialPoolLiquidity)
+	if err != nil {
+		return 0, err
+	}
+
+	// Mint the initial pool shares share token to the sender
+	err = k.MintPoolShareToAccount(ctx, pool, sender, pool.GetTotalShares())
+	if err != nil {
+		return 0, err
+	}
+
+	// Finally, add the share token's meta data to the bank keeper.
+	poolShareBaseDenom := types.GetPoolShareDenom(pool.GetId())
+	poolShareDisplayDenom := fmt.Sprintf("GAMM-%d", pool.GetId())
+	k.bankKeeper.SetDenomMetaData(ctx, banktypes.Metadata{
+		Description: fmt.Sprintf("The share token of the gamm pool %d", pool.GetId()),
+		DenomUnits: []*banktypes.DenomUnit{
+			{
+				Denom:    poolShareBaseDenom,
+				Exponent: 0,
+				Aliases: []string{
+					"attopoolshare",
+				},
+			},
+			{
+				Denom:    poolShareDisplayDenom,
+				Exponent: types.OneShareExponent,
+				Aliases:  nil,
+			},
+		},
+		Base:    poolShareBaseDenom,
+		Display: poolShareDisplayDenom,
+	})
+
+	if err := k.setPool(ctx, pool); err != nil {
+		return 0, err
+	}
+
+	k.hooks.AfterPoolCreated(ctx, sender, pool.GetId())
+	k.RecordTotalLiquidityIncrease(ctx, initialPoolLiquidity)
+
+	return pool.GetId(), nil
 }
 
 // JoinPoolNoSwap aims to LP exactly enough to pool #{poolId} to get shareOutAmount number of LP shares.
@@ -120,7 +254,7 @@ func (k Keeper) JoinPoolNoSwap(
 // 1. calculate how much percent of the pool does given share account for(# of input shares / # of current total shares)
 // 2. since we know how much % of the pool we want, iterate through all pool liquidity to calculate how much coins we need for
 // each pool asset.
-func getMaximalNoSwapLPAmount(ctx sdk.Context, pool types.TraditionalAmmInterface, shareOutAmount sdk.Int) (neededLpLiquidity sdk.Coins, err error) {
+func getMaximalNoSwapLPAmount(ctx sdk.Context, pool types.PoolI, shareOutAmount sdk.Int) (neededLpLiquidity sdk.Coins, err error) {
 	totalSharesAmount := pool.GetTotalShares()
 	// shareRatio is the desired number of shares, divided by the total number of
 	// shares currently in the pool. It is intended to be used in scenarios where you want
@@ -292,18 +426,11 @@ func (k Keeper) ExitSwapShareAmountIn(
 		return sdk.Int{}, err
 	}
 	tokenOutAmount = exitCoins.AmountOf(tokenOutDenom)
-
-	pool, err := k.GetPool(ctx, poolId)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-	swapFee := pool.GetSwapFee(ctx)
-
 	for _, coin := range exitCoins {
 		if coin.Denom == tokenOutDenom {
 			continue
 		}
-		swapOut, err := k.SwapExactAmountIn(ctx, sender, pool, coin, tokenOutDenom, sdk.ZeroInt(), swapFee)
+		swapOut, err := k.SwapExactAmountInLegacy(ctx, sender, poolId, coin, tokenOutDenom, sdk.ZeroInt())
 		if err != nil {
 			return sdk.Int{}, err
 		}

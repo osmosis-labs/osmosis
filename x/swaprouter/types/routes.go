@@ -38,7 +38,7 @@ type SwapI interface {
 	SwapExactAmountIn(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
-		poolId gammtypes.PoolI,
+		pool gammtypes.PoolI,
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
 		tokenOutMinAmount sdk.Int,
@@ -48,7 +48,7 @@ type SwapI interface {
 	SwapExactAmountOut(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
-		poolId gammtypes.PoolI,
+		pool gammtypes.PoolI,
 		tokenInDenom string,
 		tokenInMaxAmount sdk.Int,
 		tokenOut sdk.Coin,

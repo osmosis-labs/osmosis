@@ -5,7 +5,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 const (
@@ -13,8 +12,8 @@ const (
 )
 
 var (
-	_ sdk.Msg                       = &MsgCreateBalancerPool{}
-	_ swaproutertypes.CreatePoolMsg = &MsgCreateBalancerPool{}
+	_ sdk.Msg             = &MsgCreateBalancerPool{}
+	_ types.CreatePoolMsg = &MsgCreateBalancerPool{}
 )
 
 func NewMsgCreateBalancerPool(
@@ -95,11 +94,7 @@ func (msg MsgCreateBalancerPool) InitialLiquidity() sdk.Coins {
 	return coins
 }
 
-func (msg MsgCreateBalancerPool) CreatePool(ctx sdk.Context, poolID uint64) (types.TraditionalAmmInterface, error) {
+func (msg MsgCreateBalancerPool) CreatePool(ctx sdk.Context, poolID uint64) (types.PoolI, error) {
 	poolI, err := NewBalancerPool(poolID, *msg.PoolParams, msg.PoolAssets, msg.FuturePoolGovernor, ctx.BlockTime())
 	return &poolI, err
-}
-
-func (msg MsgCreateBalancerPool) GetPoolType() swaproutertypes.PoolType {
-	return swaproutertypes.Balancer
 }

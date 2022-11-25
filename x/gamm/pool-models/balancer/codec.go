@@ -24,11 +24,6 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		(*types.PoolI)(nil),
 		&Pool{},
 	)
-	registry.RegisterInterface(
-		"osmosis.gamm.v1beta1.TraditionalAmmInterface",
-		(*types.TraditionalAmmInterface)(nil),
-		&Pool{},
-	)
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgCreateBalancerPool{},

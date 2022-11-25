@@ -1,24 +1,23 @@
-package swaprouter
+package keeper
 
 import (
-	"errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
-	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
-// RouteExactAmountIn defines the input denom and input amount for the first pool,
+// MultihopSwapExactAmountIn defines the input denom and input amount for the first pool,
 // the output of the first pool is chained as the input for the next routed pool
 // transaction succeeds when final amount out is greater than tokenOutMinAmount defined.
-func (k Keeper) RouteExactAmountIn(
+func (k Keeper) MultihopSwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
 	routes []types.SwapAmountInRoute,
 	tokenIn sdk.Coin,
-	tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error) {
+	tokenOutMinAmount sdk.Int,
+) (tokenOutAmount sdk.Int, err error) {
 	var (
 		isMultiHopRouted bool
 		routeSwapFee     sdk.Dec
@@ -56,13 +55,8 @@ func (k Keeper) RouteExactAmountIn(
 			_outMinAmount = tokenOutMinAmount
 		}
 
-		swapModule, err := k.GetSwapModule(ctx, route.PoolId)
-		if err != nil {
-			return sdk.Int{}, err
-		}
-
 		// Execute the expected swap on the current routed pool
-		pool, poolErr := swapModule.GetPool(ctx, route.PoolId)
+		pool, poolErr := k.getPoolForSwap(ctx, route.PoolId)
 		if poolErr != nil {
 			return sdk.Int{}, poolErr
 		}
@@ -75,7 +69,7 @@ func (k Keeper) RouteExactAmountIn(
 			swapFee = routeSwapFee.Mul((swapFee.Quo(sumOfSwapFees)))
 		}
 
-		tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, route.TokenOutDenom, _outMinAmount, swapFee)
+		tokenOutAmount, err = k.swapExactAmountIn(ctx, sender, pool, tokenIn, route.TokenOutDenom, _outMinAmount, swapFee)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -83,7 +77,7 @@ func (k Keeper) RouteExactAmountIn(
 		// Chain output of current pool as the input for the next routed pool
 		tokenIn = sdk.NewCoin(route.TokenOutDenom, tokenOutAmount)
 	}
-	return tokenOutAmount, nil
+	return tokenOutAmount, err
 }
 
 func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
@@ -111,13 +105,8 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 	}
 
 	for _, route := range routes {
-		swapModule, err := k.GetSwapModule(ctx, route.PoolId)
-		if err != nil {
-			return sdk.Int{}, err
-		}
-
 		// Execute the expected swap on the current routed pool
-		pool, poolErr := swapModule.GetPool(ctx, route.PoolId)
+		pool, poolErr := k.getPoolForSwap(ctx, route.PoolId)
 		if poolErr != nil {
 			return sdk.Int{}, poolErr
 		}
@@ -137,7 +126,7 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 
 		tokenOutAmount = tokenOut.Amount
 		if !tokenOutAmount.IsPositive() {
-			return sdk.Int{}, errors.New("token amount must be positive")
+			return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
 		}
 
 		// Chain output of current pool as the input for the next routed pool
@@ -150,7 +139,8 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 // Calculation starts by providing the tokenOutAmount of the final pool to calculate the required tokenInAmount
 // the calculated tokenInAmount is used as defined tokenOutAmount of the previous pool, calculating in reverse order of the swap
 // Transaction succeeds if the calculated tokenInAmount of the first pool is less than the defined tokenInMaxAmount defined.
-func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
+func (k Keeper) MultihopSwapExactAmountOut(
+	ctx sdk.Context,
 	sender sdk.AccAddress,
 	routes []types.SwapAmountOutRoute,
 	tokenInMaxAmount sdk.Int,
@@ -200,11 +190,6 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	// value of this method is done when we calculate insExpected – this for loop primarily serves to execute the actual
 	// swaps on each pool.
 	for i, route := range routes {
-		swapModule, err := k.GetSwapModule(ctx, route.PoolId)
-		if err != nil {
-			return sdk.Int{}, err
-		}
-
 		_tokenOut := tokenOut
 
 		// If there is one pool left in the route, set the expected output of the current swap
@@ -214,7 +199,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		}
 
 		// Execute the expected swap on the current routed pool
-		pool, poolErr := swapModule.GetPool(ctx, route.PoolId)
+		pool, poolErr := k.getPoolForSwap(ctx, route.PoolId)
 		if poolErr != nil {
 			return sdk.Int{}, poolErr
 		}
@@ -224,7 +209,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 			swapFee = routeSwapFee.Mul((swapFee.Quo(sumOfSwapFees)))
 		}
 
-		_tokenInAmount, swapErr := swapModule.SwapExactAmountOut(ctx, sender, pool, route.TokenInDenom, insExpected[i], _tokenOut, swapFee)
+		_tokenInAmount, swapErr := k.swapExactAmountOut(ctx, sender, pool, route.TokenInDenom, insExpected[i], _tokenOut, swapFee)
 		if swapErr != nil {
 			return sdk.Int{}, swapErr
 		}
@@ -306,12 +291,7 @@ func (k Keeper) getOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.M
 	maxSwapFee := sdk.ZeroDec()
 
 	for _, poolId := range route.PoolIds() {
-		swapModule, err := k.GetSwapModule(ctx, poolId)
-		if err != nil {
-			return sdk.Dec{}, sdk.Dec{}, err
-		}
-
-		pool, poolErr := swapModule.GetPool(ctx, poolId)
+		pool, poolErr := k.getPoolForSwap(ctx, poolId)
 		if poolErr != nil {
 			return sdk.Dec{}, sdk.Dec{}, poolErr
 		}
@@ -329,7 +309,6 @@ func (k Keeper) getOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.M
 // amount for this last pool and then chains that input as the output of the previous pool in the route, repeating
 // until the first pool is reached. It returns an array of inputs, each of which correspond to a pool ID in the
 // route of pools for the original multihop transaction.
-// TODO: test this.
 func (k Keeper) createMultihopExpectedSwapOuts(
 	ctx sdk.Context,
 	routes []types.SwapAmountOutRoute,
@@ -339,12 +318,7 @@ func (k Keeper) createMultihopExpectedSwapOuts(
 	for i := len(routes) - 1; i >= 0; i-- {
 		route := routes[i]
 
-		swapModule, err := k.GetSwapModule(ctx, route.PoolId)
-		if err != nil {
-			return nil, err
-		}
-
-		pool, err := swapModule.GetPool(ctx, route.PoolId)
+		pool, err := k.getPoolForSwap(ctx, route.PoolId)
 		if err != nil {
 			return nil, err
 		}
@@ -372,12 +346,7 @@ func (k Keeper) createOsmoMultihopExpectedSwapOuts(
 	for i := len(routes) - 1; i >= 0; i-- {
 		route := routes[i]
 
-		swapModule, err := k.GetSwapModule(ctx, route.PoolId)
-		if err != nil {
-			return nil, err
-		}
-
-		pool, err := swapModule.GetPool(ctx, route.PoolId)
+		pool, err := k.getPoolForSwap(ctx, route.PoolId)
 		if err != nil {
 			return nil, err
 		}
@@ -393,32 +362,4 @@ func (k Keeper) createOsmoMultihopExpectedSwapOuts(
 	}
 
 	return insExpected, nil
-}
-
-// GetSwapModule returns the swap module for the given pool ID.
-// Returns error if:
-// - any database error occurs.
-// - fails to find a pool with the given id.
-// - the swap module of the type corresponding to the pool id is not registered
-// in swaprouter's keeper constructor.
-// TODO: unexport after concentrated-liqudity upgrade. Currently, it is exported
-// for the upgrade handler logic and tests.
-func (k Keeper) GetSwapModule(ctx sdk.Context, poolId uint64) (types.SwapI, error) {
-	store := ctx.KVStore(k.storeKey)
-
-	moduleRoute := &types.ModuleRoute{}
-	found, err := osmoutils.GetIfFound(store, types.FormatModuleRouteKey(poolId), moduleRoute)
-	if err != nil {
-		return nil, err
-	}
-	if !found {
-		return nil, types.FailedToFindRouteError{PoolId: poolId}
-	}
-
-	swapModule, routeExists := k.routes[moduleRoute.PoolType]
-	if !routeExists {
-		return nil, types.UndefinedRouteError{PoolType: moduleRoute.PoolType, PoolId: poolId}
-	}
-
-	return swapModule, nil
 }

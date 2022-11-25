@@ -2,9 +2,11 @@ package keeper
 
 import (
 	"context"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
@@ -13,21 +15,42 @@ type msgServer struct {
 	keeper *Keeper
 }
 
-var (
-	_ types.MsgServer                   = &msgServer{}
-	_ stableswap.MsgScalingFactorServer = &msgServer{}
-)
-
 func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	return &msgServer{
 		keeper: keeper,
 	}
 }
 
-func NewStableSwapScalingFactorSetterMsgServerImpl(keeper *Keeper) stableswap.MsgScalingFactorServer {
+func NewBalancerMsgServerImpl(keeper *Keeper) balancer.MsgServer {
 	return &msgServer{
 		keeper: keeper,
 	}
+}
+
+func NewStableswapMsgServerImpl(keeper *Keeper) stableswap.MsgServer {
+	return &msgServer{
+		keeper: keeper,
+	}
+}
+
+var (
+	_ types.MsgServer      = msgServer{}
+	_ balancer.MsgServer   = msgServer{}
+	_ stableswap.MsgServer = msgServer{}
+)
+
+// CreateBalancerPool is a create balancer pool message.
+func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.MsgCreateBalancerPool) (*balancer.MsgCreateBalancerPoolResponse, error) {
+	poolId, err := server.CreatePool(goCtx, msg)
+	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolId}, err
+}
+
+func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stableswap.MsgCreateStableswapPool) (*stableswap.MsgCreateStableswapPoolResponse, error) {
+	poolId, err := server.CreatePool(goCtx, msg)
+	if err != nil {
+		return nil, err
+	}
+	return &stableswap.MsgCreateStableswapPoolResponse{PoolID: poolId}, nil
 }
 
 func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, msg *stableswap.MsgStableSwapAdjustScalingFactors) (*stableswap.MsgStableSwapAdjustScalingFactorsResponse, error) {
@@ -38,6 +61,32 @@ func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, ms
 	}
 
 	return &stableswap.MsgStableSwapAdjustScalingFactorsResponse{}, nil
+}
+
+// CreatePool attempts to create a pool returning the newly created pool ID or an error upon failure.
+// The pool creation fee is used to fund the community pool.
+// It will create a dedicated module account for the pool and sends the initial liquidity to the created module account.
+func (server msgServer) CreatePool(goCtx context.Context, msg types.CreatePoolMsg) (poolId uint64, err error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	poolId, err = server.keeper.CreatePool(ctx, msg)
+	if err != nil {
+		return 0, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtPoolCreated,
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.PoolCreator().String()),
+		),
+	})
+
+	return poolId, nil
 }
 
 // JoinPool routes `JoinPoolNoSwap` where we do an abstract calculation on needed lp liquidity coins to get the designated
@@ -107,6 +156,56 @@ func (server msgServer) ExitPool(goCtx context.Context, msg *types.MsgExitPool) 
 	return &types.MsgExitPoolResponse{
 		TokenOut: exitCoins,
 	}, nil
+}
+
+func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgSwapExactAmountIn) (*types.MsgSwapExactAmountInResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	tokenOutAmount, err := server.keeper.MultihopSwapExactAmountIn(ctx, sender, msg.Routes, msg.TokenIn, msg.TokenOutMinAmount)
+	if err != nil {
+		return nil, err
+	}
+
+	// Swap event is handled elsewhere
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+		),
+	})
+
+	return &types.MsgSwapExactAmountInResponse{TokenOutAmount: tokenOutAmount}, nil
+}
+
+func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.MsgSwapExactAmountOut) (*types.MsgSwapExactAmountOutResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	tokenInAmount, err := server.keeper.MultihopSwapExactAmountOut(ctx, sender, msg.Routes, msg.TokenInMaxAmount, msg.TokenOut)
+	if err != nil {
+		return nil, err
+	}
+
+	// Swap event is handled elsewhere
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+		),
+	})
+
+	return &types.MsgSwapExactAmountOutResponse{TokenInAmount: tokenInAmount}, nil
 }
 
 func (server msgServer) JoinSwapExternAmountIn(goCtx context.Context, msg *types.MsgJoinSwapExternAmountIn) (*types.MsgJoinSwapExternAmountInResponse, error) {

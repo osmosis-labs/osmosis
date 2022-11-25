@@ -27,10 +27,9 @@ const (
 )
 
 var (
-	_ types.PoolI                   = &Pool{}
-	_ types.PoolAmountOutExtension  = &Pool{}
-	_ types.WeightedPoolExtension   = &Pool{}
-	_ types.TraditionalAmmInterface = &Pool{}
+	_ types.PoolI                  = &Pool{}
+	_ types.PoolAmountOutExtension = &Pool{}
+	_ types.WeightedPoolExtension  = &Pool{}
 )
 
 // NewPool returns a weighted CPMM pool with the provided parameters, and initial assets.

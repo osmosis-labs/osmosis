@@ -5,7 +5,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 const (
@@ -14,8 +13,8 @@ const (
 )
 
 var (
-	_ sdk.Msg                       = &MsgCreateStableswapPool{}
-	_ swaproutertypes.CreatePoolMsg = &MsgCreateStableswapPool{}
+	_ sdk.Msg             = &MsgCreateStableswapPool{}
+	_ types.CreatePoolMsg = &MsgCreateStableswapPool{}
 )
 
 func NewMsgCreateStableswapPool(
@@ -109,7 +108,7 @@ func (msg MsgCreateStableswapPool) InitialLiquidity() sdk.Coins {
 	return msg.InitialPoolLiquidity
 }
 
-func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (types.TraditionalAmmInterface, error) {
+func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 	stableswapPool, err := NewStableswapPool(poolId, *msg.PoolParams, msg.InitialPoolLiquidity,
 		msg.ScalingFactors, msg.ScalingFactorController, msg.FuturePoolGovernor)
 	if err != nil {
@@ -117,10 +116,6 @@ func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (t
 	}
 
 	return &stableswapPool, nil
-}
-
-func (msg MsgCreateStableswapPool) GetPoolType() swaproutertypes.PoolType {
-	return swaproutertypes.StableSwap
 }
 
 var _ sdk.Msg = &MsgStableSwapAdjustScalingFactors{}
