@@ -13,7 +13,6 @@ import (
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
 
-	// ctx     sdk.Context
 	querier types.QueryServer
 	// queryClient types.QueryClient
 	// app     *app.OsmosisApp
