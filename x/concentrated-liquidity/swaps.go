@@ -8,7 +8,7 @@ import (
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	events "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal"
+	events "github.com/osmosis-labs/osmosis/v13/x/swaprouter/events"
 
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/model"
@@ -466,7 +466,7 @@ func (k Keeper) updatePoolForSwap(
 	}
 
 	// TODO: implement hooks
-	events.EmitSwapEvent(ctx, sender, pool.GetId(), tokenIn, tokenOut)
+	events.EmitSwapEvent(ctx, sender, pool.GetId(), sdk.Coins{tokenIn}, sdk.Coins{tokenOut})
 	// k.hooks.AfterSwap(ctx, sender, pool.GetId(), tokenIn, tokenOut)
 	// k.RecordTotalLiquidityIncrease(ctx, tokenIn)
 	// k.RecordTotalLiquidityDecrease(ctx, tokenOut)
