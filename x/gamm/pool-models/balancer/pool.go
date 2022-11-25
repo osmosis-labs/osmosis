@@ -12,6 +12,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 //nolint:deadcode
@@ -27,7 +28,7 @@ const (
 )
 
 var (
-	_ types.PoolI                   = &Pool{}
+	_ swaproutertypes.PoolI         = &Pool{}
 	_ types.PoolAmountOutExtension  = &Pool{}
 	_ types.WeightedPoolExtension   = &Pool{}
 	_ types.TraditionalAmmInterface = &Pool{}

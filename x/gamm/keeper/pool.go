@@ -12,10 +12,11 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 // TODO spec and tests
-func (k Keeper) InitializePool(ctx sdk.Context, pool types.PoolI, creatorAddress sdk.AccAddress) error {
+func (k Keeper) InitializePool(ctx sdk.Context, pool swaproutertypes.PoolI, creatorAddress sdk.AccAddress) error {
 	traditionalPool, ok := pool.(types.TraditionalAmmInterface)
 	if !ok {
 		return fmt.Errorf("failed to create gamm pool. Could not cast to TraditionalAmmInterface")
@@ -57,7 +58,7 @@ func (k Keeper) InitializePool(ctx sdk.Context, pool types.PoolI, creatorAddress
 	return k.setPool(ctx, pool)
 }
 
-func (k Keeper) MarshalPool(pool types.PoolI) ([]byte, error) {
+func (k Keeper) MarshalPool(pool swaproutertypes.PoolI) ([]byte, error) {
 	return k.cdc.MarshalInterface(pool)
 }
 
@@ -67,7 +68,7 @@ func (k Keeper) UnmarshalPool(bz []byte) (types.TraditionalAmmInterface, error) 
 }
 
 // GetPool returns a pool with a given id.
-func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
+func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (swaproutertypes.PoolI, error) {
 	return k.getPoolForSwap(ctx, poolId)
 }
 
@@ -134,7 +135,7 @@ func (k Keeper) GetPoolsAndPoke(ctx sdk.Context) (res []types.TraditionalAmmInte
 	return res, nil
 }
 
-func (k Keeper) setPool(ctx sdk.Context, pool types.PoolI) error {
+func (k Keeper) setPool(ctx sdk.Context, pool swaproutertypes.PoolI) error {
 	bz, err := k.MarshalPool(pool)
 	if err != nil {
 		return err

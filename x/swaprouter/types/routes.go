@@ -5,11 +5,9 @@ import (
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
-// AccountKeeper defines the account contract that must be fulfilled when
+// AccountI defines the account contract that must be fulfilled when
 // creating a x/gamm keeper.
 type AccountI interface {
 	NewAccount(sdk.Context, authtypes.AccountI) authtypes.AccountI
@@ -17,28 +15,28 @@ type AccountI interface {
 	SetAccount(ctx sdk.Context, acc authtypes.AccountI)
 }
 
-// BankKeeper defines the banking contract that must be fulfilled when
+// BankI defines the banking contract that must be fulfilled when
 // creating a x/gamm keeper.
 type BankI interface {
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 	SetDenomMetaData(ctx sdk.Context, denomMetaData banktypes.Metadata)
 }
 
-// CommunityPoolKeeper defines the contract needed to be fulfilled for distribution keeper.
+// CommunityPoolI defines the contract needed to be fulfilled for distribution keeper.
 type CommunityPoolI interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
 
 // TODO: godoc
 type SwapI interface {
-	InitializePool(ctx sdk.Context, pool gammtypes.PoolI, creatorAddress sdk.AccAddress) error
+	InitializePool(ctx sdk.Context, pool PoolI, creatorAddress sdk.AccAddress) error
 
-	GetPool(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
+	GetPool(ctx sdk.Context, poolId uint64) (PoolI, error)
 
 	SwapExactAmountIn(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
-		poolId gammtypes.PoolI,
+		pool PoolI,
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
 		tokenOutMinAmount sdk.Int,
@@ -48,7 +46,7 @@ type SwapI interface {
 	SwapExactAmountOut(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
-		poolId gammtypes.PoolI,
+		pool PoolI,
 		tokenInDenom string,
 		tokenInMaxAmount sdk.Int,
 		tokenOut sdk.Coin,

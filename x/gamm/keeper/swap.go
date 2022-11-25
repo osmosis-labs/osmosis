@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/keeper/internal/events"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 // swapExactAmountIn is an internal method for swapping an exact amount of tokens
@@ -20,7 +21,7 @@ import (
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	pool types.PoolI,
+	pool swaproutertypes.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
@@ -71,7 +72,7 @@ func (k Keeper) SwapExactAmountIn(
 func (k Keeper) SwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolI types.PoolI,
+	pool swaproutertypes.PoolI,
 	tokenInDenom string,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
@@ -79,10 +80,6 @@ func (k Keeper) SwapExactAmountOut(
 ) (tokenInAmount sdk.Int, err error) {
 	if tokenInDenom == tokenOut.Denom {
 		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
-	}
-	pool, ok := poolI.(types.TraditionalAmmInterface)
-	if !ok {
-		return sdk.Int{}, errors.New("given pool does not implement TraditionalAmmInterface")
 	}
 
 	defer func() {
@@ -131,7 +128,7 @@ func (k Keeper) SwapExactAmountOut(
 // sends the in tokens from the sender to the pool, and the out tokens from the pool to the sender.
 func (k Keeper) updatePoolForSwap(
 	ctx sdk.Context,
-	pool types.PoolI,
+	pool swaproutertypes.PoolI,
 	sender sdk.AccAddress,
 	tokenIn sdk.Coin,
 	tokenOut sdk.Coin,
