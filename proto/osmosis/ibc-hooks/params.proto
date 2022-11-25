@@ -1,0 +1,12 @@
+syntax = "proto3";
+package osmosis.ibchooks;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types";
+
+// Params defines the parameters for the ibc-hooks module.
+message Params {
+  string contract_address = 1
+      [ (gogoproto.moretags) = "yaml:\"contract_address\"" ];
+}

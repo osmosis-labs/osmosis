@@ -138,6 +138,7 @@ retrieve the funds after the timeout has passed, but without the ack information
 Execute:
 * `Subscribe { packet: IbcMsg::Transfer, event: EventType }` 
 * `Unsubscribe { packet: IbcMsg::Transfer, event: EventType }` (for completeness)
+* `Listeners {}`
 
 Sudo:
 * `UnsubscribeAll { packet: IbcMsg::Transfer, event: EventType }`
@@ -146,7 +147,7 @@ Where `EventType` can be "acknowledgment" or "timeout"
 
 #### Interface for receiving the Ack
 
-Execute:
+Sudo:
 * `ReceiveAck { packet: IbcMsg::Transfer, ack: TBD }`
 
 

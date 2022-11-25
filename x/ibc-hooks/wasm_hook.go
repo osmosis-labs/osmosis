@@ -3,6 +3,7 @@ package ibc_hooks
 import (
 	"encoding/json"
 	"fmt"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
@@ -23,11 +24,16 @@ type ContractAck struct {
 }
 
 type WasmHooks struct {
+	paramSpace     paramtypes.Subspace
 	ContractKeeper *wasmkeeper.PermissionedKeeper
+	WasmKeeper     *wasmkeeper.Keeper
 }
 
-func NewWasmHooks(contractKeeper *wasmkeeper.PermissionedKeeper) WasmHooks {
-	return WasmHooks{ContractKeeper: contractKeeper}
+func NewWasmHooks(paramSpace paramtypes.Subspace, contractKeeper *wasmkeeper.PermissionedKeeper) WasmHooks {
+	return WasmHooks{
+		paramSpace:     paramSpace,
+		ContractKeeper: contractKeeper,
+	}
 }
 
 func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
@@ -203,15 +209,65 @@ func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, cont
 	return isWasmRouted, contractAddr, msgBytes, nil
 }
 
+type ListenersResponse struct {
+	Listeners []string `json:"listeners"`
+}
+
+func (i *WasmHooks) GetParams(ctx sdk.Context) (contract string) {
+	i.paramSpace.GetIfExists(ctx, []byte("contract"), &contract)
+	return contract
+}
+
 func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error {
 	err := im.App.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
 	if err != nil {
 		return err
 	}
 	// Notify the wasmhook
-	// ToDo: pass acknowledgements to contracts that are watching for them
-	// Query contract that keeps state about ack watchers
-	// If the contract is watching acks for sha256(IbcMsg::Transfer), then make a sudo call letting it know that the ack has been received
-	// Otherwise, return
+	contract := h.GetParams(ctx)
+	if len(contract) == 0 {
+		return nil
+	}
+	contractAddr, err := sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return err
+	}
+
+	// Query contract that keeps state about ack listeners
+	res, err := h.WasmKeeper.QuerySmart(ctx, contractAddr, []byte(`{"listeners": {}"}`))
+	if err != nil {
+		return err
+	}
+	var listeners ListenersResponse
+	err = json.Unmarshal(res, &listeners)
+	if err != nil {
+		return err
+	}
+
+	for _, listener := range listeners.Listeners {
+		// For every ack listener
+		listenerAddr, err := sdk.AccAddressFromBech32(listener)
+		if err != nil {
+			return err
+		}
+		// Notify them that the ack has been received
+		_, err = h.ContractKeeper.Sudo(ctx, listenerAddr,
+			[]byte(fmt.Sprintf(`{"receive_ack": {"sequence": %d, "ack": "%s"}}`,
+				packet.Sequence, acknowledgement)))
+		if err != nil {
+			// We explicitly ignore the errors but add an event that we can track
+			ctx.EventManager().EmitEvent(
+				sdk.NewEvent(
+					types.EventErrNotifyingAck,
+					sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
+					sdk.NewAttribute(types.AttributeKeyFailureType, "notify_acknowledgment"),
+					sdk.NewAttribute(types.AttributeKeyContract, contract),
+					sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
+				),
+			)
+
+		}
+	}
+
 	return nil
 }

@@ -35,6 +35,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	ibchooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
+	ibchookstypes "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
 
@@ -372,6 +373,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
 	appKeepers.RateLimitingICS4Wrapper.ContractKeeper = appKeepers.ContractKeeper
 	appKeepers.Ics20WasmHooks.ContractKeeper = appKeepers.ContractKeeper
+	appKeepers.Ics20WasmHooks.WasmKeeper = appKeepers.WasmKeeper
 
 	// wire up x/wasm to IBC
 	ibcRouter.AddRoute(wasm.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper))
@@ -414,7 +416,10 @@ func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
 	appCodec codec.Codec,
 	bApp *baseapp.BaseApp) {
 	// Setup the ICS4Wrapper used by the hooks middleware
-	wasmHooks := ibchooks.NewWasmHooks(nil) // The contract keeper needs to be set later
+
+	ibcHooksParams := appKeepers.GetSubspace(ibchooks.ModuleName)
+	ibcHooksParams = ibcHooksParams.WithKeyTable(ibchookstypes.ParamKeyTable())
+	wasmHooks := ibchooks.NewWasmHooks(ibcHooksParams, nil) // The contract keeper needs to be set later
 	appKeepers.Ics20WasmHooks = &wasmHooks
 	appKeepers.HooksICS4Wrapper = ibchooks.NewICS4Middleware(
 		appKeepers.IBCKeeper.ChannelKeeper,
@@ -525,6 +530,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(twaptypes.ModuleName)
 	paramsKeeper.Subspace(swaproutertypes.ModuleName)
 	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
+	paramsKeeper.Subspace(ibchooks.ModuleName)
 
 	return paramsKeeper
 }

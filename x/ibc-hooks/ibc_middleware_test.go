@@ -635,8 +635,8 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 	// The balance is stuck in the contract
 	osmosisAppA := suite.chainA.GetOsmosisApp()
 	balanceContract := osmosisAppA.BankKeeper.GetBalance(suite.chainA.GetContext(), crosschainAddr, "token1")
-	suite.Require().Greater(int64(0), balanceContract.Amount.Int64())
-	
+	suite.Require().Greater(balanceContract.Amount.Int64(), int64(0))
+
 	// ToDo: check that the contract knows there has been a bad ack and that the balance can be recovered
 
 }
