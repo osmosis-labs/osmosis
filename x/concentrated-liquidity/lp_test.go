@@ -343,30 +343,39 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 			tc := tc
 			s.SetupTest()
 
+			// create a CL pool
 			_, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, denom0, denom1, sdk.MustNewDecFromStr("70.710678118654752440"), sdk.NewInt(85176))
 			s.Require().NoError(err)
 
+			// store pool interface
 			poolI, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, 1)
 			s.Require().NoError(err)
 			concentratedPool := poolI.(types.ConcentratedPoolExtension)
 
+			// fund pool address and user address
 			s.FundAcc(poolI.GetAddress(), sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 
+			// set sender and receiver based on test case
 			sender := s.TestAccs[0]
 			receiver := concentratedPool.GetAddress()
 			if tc.poolToUser {
 				sender = concentratedPool.GetAddress()
 				receiver = s.TestAccs[0]
 			}
+
+			// store pre send balance of sender and receiver
 			preSendBalanceSender := s.App.BankKeeper.GetAllBalances(s.Ctx, sender)
 			preSendBalanceReceiver := s.App.BankKeeper.GetAllBalances(s.Ctx, receiver)
 
+			// system under test
 			err = s.App.ConcentratedLiquidityKeeper.SendCoinsBetweenPoolAndUser(s.Ctx, concentratedPool.GetToken0(), concentratedPool.GetToken1(), tc.coin0.Amount, tc.coin1.Amount, sender, receiver)
 
+			// store post send balance of sender and receiver
 			postSendBalanceSender := s.App.BankKeeper.GetAllBalances(s.Ctx, sender)
 			postSendBalanceReceiver := s.App.BankKeeper.GetAllBalances(s.Ctx, receiver)
 
+			// if error is expected, ensure balances do not change
 			if tc.expectError {
 				s.Require().Error(err)
 				s.Require().Equal(preSendBalanceSender.String(), postSendBalanceSender.String())
@@ -374,6 +383,7 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 				return
 			}
 
+			// otherwise, ensure balances are added/deducted appropriately
 			expectedPostSendBalanceSender := preSendBalanceSender.Sub(sdk.NewCoins(tc.coin0, tc.coin1))
 			expectedPostSendBalanceReceiver := preSendBalanceReceiver.Add(tc.coin0, tc.coin1)
 
