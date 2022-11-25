@@ -5,8 +5,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 type msgServer struct {
@@ -25,6 +27,22 @@ func NewStableswapMsgScalingFactorModifierServerImpl(keeper *Keeper) stableswap.
 	}
 }
 
+var (
+	_ types.MsgServer             = msgServer{}
+	_ balancer.MsgServer          = msgServer{}
+	_ stableswap.MsgCreatorServer = msgServer{}
+)
+
+// Deprecated: use CreateBalancerPool in x/swaprouter.
+func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.MsgCreateBalancerPool) (*balancer.MsgCreateBalancerPoolResponse, error) {
+	panic("not implemented")
+}
+
+// Deprecated: use CreateStableswapPool in x/swaprouter.
+func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stableswap.MsgCreateStableswapPool) (*stableswap.MsgCreateStableswapPoolResponse, error) {
+	panic("not implemented")
+}
+
 func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, msg *stableswap.MsgStableSwapAdjustScalingFactors) (*stableswap.MsgStableSwapAdjustScalingFactorsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -33,6 +51,11 @@ func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, ms
 	}
 
 	return &stableswap.MsgStableSwapAdjustScalingFactorsResponse{}, nil
+}
+
+// Deprecated: use CreatePool in x/swaprouter.
+func (server msgServer) CreatePool(goCtx context.Context, msg swaproutertypes.CreatePoolMsg) (poolId uint64, err error) {
+	panic("not implemented")
 }
 
 // JoinPool routes `JoinPoolNoSwap` where we do an abstract calculation on needed lp liquidity coins to get the designated
@@ -102,6 +125,16 @@ func (server msgServer) ExitPool(goCtx context.Context, msg *types.MsgExitPool) 
 	return &types.MsgExitPoolResponse{
 		TokenOut: exitCoins,
 	}, nil
+}
+
+// Deprecated: use SwapExactAmountIn in x/swaprouter.
+func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgSwapExactAmountIn) (*types.MsgSwapExactAmountInResponse, error) {
+	panic("not implemented")
+}
+
+// Deprecated: use SwapExactAmountOut in x/swaprouter.
+func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.MsgSwapExactAmountOut) (*types.MsgSwapExactAmountOutResponse, error) {
+	panic("not implemented")
 }
 
 func (server msgServer) JoinSwapExternAmountIn(goCtx context.Context, msg *types.MsgJoinSwapExternAmountIn) (*types.MsgJoinSwapExternAmountInResponse, error) {
