@@ -1,15 +1,14 @@
 package keeper_test
 
 import (
-	"sort"
 	"testing"
 	"time"
 
 	"github.com/osmosis-labs/osmosis/x/epochs/simapp"
 	"github.com/osmosis-labs/osmosis/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/x/epochs/utils"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/maps"
 )
 
@@ -89,7 +88,7 @@ func (suite KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 
 			// get sorted heights
 			heights := maps.Keys(test.blockHeightTimePairs)
-			SortSlice(heights)
+			utils.SortSlice(heights)
 			for _, h := range heights {
 				// for each height in order, run begin block
 				suite.Ctx = suite.Ctx.WithBlockHeight(int64(h)).WithBlockTime(test.blockHeightTimePairs[h])
@@ -173,12 +172,4 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	require.Equal(t, epochInfo.CurrentEpochStartHeight, ctx.BlockHeight())
 	require.Equal(t, epochInfo.CurrentEpochStartTime.UTC().String(), now.Add(month).UTC().String())
 	require.Equal(t, epochInfo.EpochCountingStarted, true)
-}
-
-// SortSlice sorts a slice of type T elements that implement constraints.Ordered.
-// Mutates input slice s
-func SortSlice[T constraints.Ordered](s []T) {
-	sort.Slice(s, func(i, j int) bool {
-		return s[i] < s[j]
-	})
 }
