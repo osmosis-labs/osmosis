@@ -14,8 +14,6 @@ type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
 
 	querier types.QueryServer
-	// queryClient types.QueryClient
-	// app     *app.OsmosisApp
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
