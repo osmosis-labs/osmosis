@@ -72,7 +72,7 @@ func (k Keeper) SwapExactAmountIn(
 func (k Keeper) SwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolI swaproutertypes.PoolI,
+	pool swaproutertypes.PoolI,
 	tokenInDenom string,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
@@ -80,10 +80,6 @@ func (k Keeper) SwapExactAmountOut(
 ) (tokenInAmount sdk.Int, err error) {
 	if tokenInDenom == tokenOut.Denom {
 		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
-	}
-	pool, ok := poolI.(types.TraditionalAmmInterface)
-	if !ok {
-		return sdk.Int{}, errors.New("given pool does not implement TraditionalAmmInterface")
 	}
 
 	defer func() {
