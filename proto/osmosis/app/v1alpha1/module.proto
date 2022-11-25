@@ -1,18 +1,19 @@
 syntax = "proto3";
 
-package cosmos.app.v1alpha1;
+package osmosis.app.v1alpha1;
 
 import "google/protobuf/descriptor.proto";
 
 extend google.protobuf.MessageOptions {
   // module indicates that this proto type is a config object for an app module
   // and optionally provides other descriptive information about the module.
-  // It is recommended that a new module config object and go module is versioned
-  // for every state machine breaking version of a module. The recommended
-  // pattern for doing this is to put module config objects in a separate proto
-  // package from the API they expose. Ex: the cosmos.group.v1 API would be
-  // exposed by module configs cosmos.group.module.v1, cosmos.group.module.v2, etc.
-  ModuleDescriptor module = 57193479;
+  // It is recommended that a new module config object and go module is
+  // versioned for every state machine breaking version of a module. The
+  // recommended pattern for doing this is to put module config objects in a
+  // separate proto package from the API they expose. Ex: the cosmos.group.v1
+  // API would be exposed by module configs cosmos.group.module.v1,
+  // cosmos.group.module.v2, etc.
+  ModuleDescriptor module = 57193480;
 }
 
 // ModuleDescriptor describes an app module.
@@ -71,7 +72,8 @@ message PackageReference {
   // as it may mean that the pinned descriptor for a legacy module has been
   // improperly updated or that there is some other versioning discrepancy.
   // Runtime protobuf definitions will also be checked for compatibility
-  // with pinned file descriptors to make sure there are no incompatible changes.
+  // with pinned file descriptors to make sure there are no incompatible
+  // changes.
   //
   // This behavior ensures that:
   // * pinned proto images are up-to-date
