@@ -989,7 +989,7 @@ func TestTargetKCalculator(t *testing.T) {
 		w           osmomath.BigDec
 		yf          osmomath.BigDec
 		expectPanic bool
-		// expectK     osmomath.BigDec
+		targetK     osmomath.BigDec
 	}
 
 	tests := map[string]testcase{
@@ -999,6 +999,7 @@ func TestTargetKCalculator(t *testing.T) {
 			w:           osmomath.NewBigDec(100),
 			yf:          osmomath.NewBigDec(0),
 			expectPanic: true,
+			targetK:     osmomath.NewBigDec(0),
 		},
 		"in case x0 is small": {
 			x0:          osmomath.NewBigDec(1),
@@ -1006,6 +1007,7 @@ func TestTargetKCalculator(t *testing.T) {
 			w:           osmomath.NewBigDec(100),
 			yf:          osmomath.NewBigDec(100),
 			expectPanic: false,
+			targetK:     osmomath.NewBigDec(0),
 		},
 		"in case y0 is small": {
 			x0:          osmomath.NewBigDec(100),
@@ -1013,6 +1015,7 @@ func TestTargetKCalculator(t *testing.T) {
 			w:           osmomath.NewBigDec(100),
 			yf:          osmomath.NewBigDec(100),
 			expectPanic: false,
+			targetK:     osmomath.NewBigDec(-999999),
 		},
 		"in case yf is small": {
 			x0:          osmomath.NewBigDec(100),
@@ -1020,6 +1023,7 @@ func TestTargetKCalculator(t *testing.T) {
 			w:           osmomath.NewBigDec(100),
 			yf:          osmomath.NewBigDec(1),
 			expectPanic: false,
+			targetK:     osmomath.NewBigDec(299000000),
 		},
 	}
 
@@ -1029,15 +1033,9 @@ func TestTargetKCalculator(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 
 			sut := func() {
-				expectK := targetKCalculator(tc.x0, tc.y0, tc.w, tc.yf)
 				//calculate kTarger, and assert K value
-				startK := cfmmConstantMultiNoV(tc.x0, tc.y0, tc.w)
-				yfRemoved := startK.Quo(tc.yf)
-				innerTerm := tc.yf.Mul(tc.yf).Add(tc.w).Add((tc.x0.Mul(tc.x0)))
-				constantTerm := innerTerm.Mul(tc.x0)
-				kTarget := yfRemoved.Sub(constantTerm)
-
-				osmomath.DecApproxEq(t, expectK, kTarget, kErrTolerance)
+				kTarget := targetKCalculator(tc.x0, tc.y0, tc.w, tc.yf)
+				osmomath.DecApproxEq(t, tc.targetK, kTarget, kErrTolerance)
 			}
 			osmoassert.ConditionalPanic(t, tc.expectPanic, sut)
 		})
