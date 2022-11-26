@@ -1,8 +1,6 @@
 
 #!/bin/bash
 # microtick and bitcanna contributed significantly here.
-# rocksdb doesn't work yet
-# sage prediction: it will state sync fine with v12.2.1 and it won't work with v12.3.0 and the issue will be a blockheader.apphash error, which is a p2p issue, NOT an issue with the commit state of the store, as those would halt the local osmosis instance.
 
 
 
@@ -37,11 +35,13 @@ echo "TRUST HASH: $TRUST_HASH"
 
 
 # export state sync vars
-# export OSMOSISD_P2P_MAX_NUM_OUTBOUND_PEERS=200
+export OSMOSISD_P2P_MAX_NUM_OUTBOUND_PEERS=0 #this is so that we only connect to Notional's peer
+export OSMOSISD_P2P_PERSISTENT_PEERS=ad431b916e5c7f55b1d4a852db115510f31d2d3a@65.108.232.181:26656
 export OSMOSISD_STATESYNC_ENABLE=true
 export OSMOSISD_STATESYNC_RPC_SERVERS="https://rpc.osmosis.zone:443,http://65.108.232.181:26657"
 export OSMOSISD_STATESYNC_TRUST_HEIGHT=$BLOCK_HEIGHT
 export OSMOSISD_STATESYNC_TRUST_HASH=$TRUST_HASH
+
 
 
 
