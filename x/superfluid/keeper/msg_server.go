@@ -126,6 +126,11 @@ func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.
 		return nil, err
 	}
 
+	err = server.keeper.checkUnpoolWhitelisted(ctx, msg.PoolId)
+	if err != nil {
+		return nil, err
+	}
+
 	// We get all the lockIDs to unpool
 	lpShareDenom := gammtypes.GetPoolShareDenom(msg.PoolId)
 	minimalDuration := time.Millisecond
