@@ -97,6 +97,8 @@ func (k Keeper) getTwap(
 	return strategy.computeTwap(startRecord, endRecord, quoteAssetDenom)
 }
 
+// getTwapToNow extracts the computation from GetArithmeticTwap and allows TWAP computation either
+// arithmetic or geometric mean based on the strategy provided.
 func (k Keeper) getTwapToNow(
 	ctx sdk.Context,
 	poolId uint64,
