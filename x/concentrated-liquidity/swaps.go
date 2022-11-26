@@ -9,6 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/model"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 type SwapState struct {
@@ -46,7 +47,7 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint6
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolId gammtypes.PoolI,
+	pool swaproutertypes.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
@@ -58,7 +59,7 @@ func (k Keeper) SwapExactAmountIn(
 func (k Keeper) SwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolId gammtypes.PoolI,
+	pool swaproutertypes.PoolI,
 	tokenInDenom string,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,

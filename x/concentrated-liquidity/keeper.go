@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 type Keeper struct {
@@ -25,6 +25,6 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.Ba
 }
 
 // TODO: spec, tests, implementation
-func (k Keeper) InitializePool(ctx sdk.Context, pool gammtypes.PoolI, creatorAddress sdk.AccAddress) error {
+func (k Keeper) InitializePool(ctx sdk.Context, pool swaproutertypes.PoolI, creatorAddress sdk.AccAddress) error {
 	panic("not implemented")
 }

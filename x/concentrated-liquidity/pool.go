@@ -8,11 +8,11 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/model"
 	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 // GetPool returns a pool with a given id.
-func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error) {
+func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (swaproutertypes.PoolI, error) {
 	return nil, errors.New("not implemented")
 }
 
