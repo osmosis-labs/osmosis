@@ -83,6 +83,7 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, err
 	}
 
+	// check that the tokenOut calculated is both valid and less than specified limit
 	tokenOutAmount = tokenOutCoin.Amount
 	if !tokenOutAmount.IsPositive() {
 		return sdk.Int{}, sdkerrors.Wrapf(gammtypes.ErrInvalidMathApprox, "token amount must be positive")
@@ -128,6 +129,7 @@ func (k Keeper) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 	return tokenOut, nil
 }
 
+// TODO: Calc stubs while we figure out how we want to work this through the swap router
 func (k Keeper) CalcOutAmtGivenIn(
 	ctx sdk.Context,
 	poolI swaproutertypes.PoolI,

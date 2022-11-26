@@ -124,7 +124,6 @@ func (k Keeper) GetPoolsAndPoke(ctx sdk.Context) (res []types.TraditionalAmmInte
 		if pokePool, ok := pool.(types.WeightedPoolExtension); ok {
 			pokePool.PokePool(ctx.BlockTime())
 		}
-
 		res = append(res, pool)
 	}
 
