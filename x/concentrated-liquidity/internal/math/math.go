@@ -4,7 +4,29 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Liquidity0 takes an amount of asset0 in the pool as well as the sqrtpCur and the nextPrice
+type swapStrategy interface {
+	GetNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec)
+	ComputeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext, amountIn, amountOut sdk.Dec)
+	SetLiquidityDeltaSign(sdk.Dec) sdk.Dec
+	SetNextTick(int64) sdk.Int
+}
+
+type zeroForOneStrategy struct{}
+
+var _ swapStrategy = (*zeroForOneStrategy)(nil)
+
+type oneForZeroStrategy struct{}
+
+var _ swapStrategy = (*oneForZeroStrategy)(nil)
+
+func NewSwapStrategy(zeroForOne bool) swapStrategy {
+	if zeroForOne {
+		return &zeroForOneStrategy{}
+	}
+	return &oneForZeroStrategy{}
+}
+
+// liquidity0 takes an amount of asset0 in the pool as well as the sqrtpCur and the nextPrice
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // Liquidity0 = amount0 * (sqrtPriceA * sqrtPriceB) / (sqrtPriceB - sqrtPriceA)
@@ -76,37 +98,54 @@ func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 
 // ComputeSwapStep calculates the amountIn, amountOut, and the next sqrtPrice given current price, price target, tick liquidity, and amount available to swap
 // lte is reference to "less than or equal", which determines if we are moving left or right of the current price to find the next initialized tick with liquidity
-func ComputeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec, zeroForOne bool) (sqrtPriceNext, amountIn, amountOut sdk.Dec) {
-	// zeroForOne = sqrtPriceCurrent.GTE(sqrtPriceTarget)
-	if zeroForOne {
-		amountIn = CalcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, false)
-	} else {
-		amountIn = CalcAmount1Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, false)
-	}
+func (s *zeroForOneStrategy) ComputeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext, amountIn, amountOut sdk.Dec) {
+	amountIn = CalcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, false)
 	if amountRemaining.GTE(amountIn) {
 		sqrtPriceNext = sqrtPriceTarget
 	} else {
-		sqrtPriceNext = GetNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining, zeroForOne)
+		sqrtPriceNext = s.GetNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining)
 	}
-
-	if zeroForOne {
-		amountIn = CalcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
-		amountOut = CalcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
-	} else {
-		amountIn = CalcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
-		amountOut = CalcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
-	}
+	amountIn = CalcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
+	amountOut = CalcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
 
 	return sqrtPriceNext, amountIn, amountOut
 }
 
-func GetNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec, zeroForOne bool) (sqrtPriceNext sdk.Dec) {
-	if zeroForOne {
-		sqrtPriceNext = GetNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining)
+func (s *oneForZeroStrategy) ComputeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext, amountIn, amountOut sdk.Dec) {
+	amountIn = CalcAmount1Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, false)
+	if amountRemaining.GTE(amountIn) {
+		sqrtPriceNext = sqrtPriceTarget
 	} else {
-		sqrtPriceNext = GetNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemaining)
+		sqrtPriceNext = s.GetNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining)
 	}
-	return sqrtPriceNext
+	amountIn = CalcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
+	amountOut = CalcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
+
+	return sqrtPriceNext, amountIn, amountOut
+}
+
+func (s *zeroForOneStrategy) GetNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
+	return GetNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining)
+}
+
+func (s *oneForZeroStrategy) GetNextSqrtPriceFromInput(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
+	return GetNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemaining)
+}
+
+func (s *zeroForOneStrategy) SetLiquidityDeltaSign(deltaLiquidity sdk.Dec) sdk.Dec {
+	return deltaLiquidity.Neg()
+}
+
+func (s *oneForZeroStrategy) SetLiquidityDeltaSign(deltaLiquidity sdk.Dec) sdk.Dec {
+	return deltaLiquidity
+}
+
+func (s *zeroForOneStrategy) SetNextTick(nextTick int64) sdk.Int {
+	return sdk.NewInt(nextTick - 1)
+}
+
+func (s *oneForZeroStrategy) SetNextTick(nextTick int64) sdk.Int {
+	return sdk.NewInt(nextTick)
 }
 
 // getNextSqrtPriceFromAmount0RoundingUp utilizes the current squareRootPrice, liquidity of denom0, and amount of denom0 that still needs

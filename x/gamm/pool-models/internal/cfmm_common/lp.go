@@ -9,6 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 const errMsgFormatSharesLargerThanMax = "%s resulted shares is larger than the max amount of %s"
@@ -168,8 +169,8 @@ func BinarySearchSingleAssetJoin(
 }
 
 // SwapAllCoinsToSingleAsset iterates through each token in the input set and trades it against the same pool sequentially
-func SwapAllCoinsToSingleAsset(pool types.TraditionalAmmInterface, ctx sdk.Context, inTokens sdk.Coins, swapToDenom string) (sdk.Int, error) {
-	swapFee := sdk.ZeroDec()
+func SwapAllCoinsToSingleAsset(pool swaproutertypes.PoolI, ctx sdk.Context, inTokens sdk.Coins, swapToDenom string,
+	swapFee sdk.Dec) (sdk.Int, error) {
 	tokenOutAmt := inTokens.AmountOfNoDenomValidation(swapToDenom)
 	for _, coin := range inTokens {
 		if coin.Denom == swapToDenom {

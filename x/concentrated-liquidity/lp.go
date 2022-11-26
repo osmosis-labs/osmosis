@@ -56,17 +56,8 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, types.InsufficientLiquidityCreatedError{Actual: actualAmount1, Minimum: amount1Min}
 	}
 
-	denom0 := pool.GetToken0()
-	denom1 := pool.GetToken1()
-
 	// send deposit amount from position owner to pool
-	if actualAmount0.IsPositive() && actualAmount1.IsPositive() {
-		err = k.bankKeeper.SendCoins(ctx, owner, pool.GetAddress(), sdk.NewCoins(sdk.NewCoin(denom0, actualAmount0), sdk.NewCoin(denom1, actualAmount1)))
-	} else if actualAmount0.IsPositive() && actualAmount1.IsZero() {
-		err = k.bankKeeper.SendCoins(ctx, owner, pool.GetAddress(), sdk.NewCoins(sdk.NewCoin(denom0, actualAmount0)))
-	} else if actualAmount0.IsZero() && actualAmount1.IsPositive() {
-		err = k.bankKeeper.SendCoins(ctx, owner, pool.GetAddress(), sdk.NewCoins(sdk.NewCoin(denom1, actualAmount0)))
-	}
+	err = k.sendCoinsBetweenPoolAndUser(cacheCtx, pool.GetToken0(), pool.GetToken1(), actualAmount0, actualAmount1, owner, pool.GetAddress())
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
@@ -111,17 +102,8 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	denom0 := pool.GetToken0()
-	denom1 := pool.GetToken1()
-
 	// send withdraw amount from pool to position owner
-	if actualAmount0.IsPositive() && actualAmount1.IsPositive() {
-		err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, sdk.NewCoins(sdk.NewCoin(denom0, actualAmount0), sdk.NewCoin(denom1, actualAmount1)))
-	} else if actualAmount0.IsPositive() && actualAmount1.IsZero() {
-		err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, sdk.NewCoins(sdk.NewCoin(denom0, actualAmount0)))
-	} else if actualAmount0.IsZero() && actualAmount1.IsPositive() {
-		err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, sdk.NewCoins(sdk.NewCoin(denom1, actualAmount0)))
-	}
+	err = k.sendCoinsBetweenPoolAndUser(ctx, pool.GetToken0(), pool.GetToken1(), actualAmount0, actualAmount1, pool.GetAddress(), owner)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
@@ -181,4 +163,20 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	// The returned amounts are rounded down to avoid returning more to clients than they actually deposited.
 	return actualAmount0.TruncateInt(), actualAmount1.TruncateInt(), nil
+}
+
+// sendCoinsBetweenPoolAndUser takes the amounts calculated from a join/exit position and executes the send between pool and user
+func (k Keeper) sendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 string, amount0, amount1 sdk.Int, sender, receiver sdk.AccAddress) error {
+	var finalCoinsToSend sdk.Coins
+	if amount0.IsPositive() {
+		finalCoinsToSend = append(finalCoinsToSend, sdk.NewCoin(denom0, amount0))
+	}
+	if amount1.IsPositive() {
+		finalCoinsToSend = append(finalCoinsToSend, sdk.NewCoin(denom1, amount1))
+	}
+	err := k.bankKeeper.SendCoins(ctx, sender, receiver, finalCoinsToSend)
+	if err != nil {
+		return err
+	}
+	return nil
 }

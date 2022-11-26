@@ -35,6 +35,7 @@ import (
 	lockupkeeper "github.com/osmosis-labs/osmosis/v13/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 type KeeperTestHelper struct {
@@ -252,14 +253,14 @@ func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, re
 }
 
 // SetupGammPoolsWithBondDenomMultiplier uses given multipliers to set initial pool supply of bond denom.
-func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []sdk.Dec) []gammtypes.PoolI {
+func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []sdk.Dec) []swaproutertypes.PoolI {
 	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 	// TODO: use sdk crypto instead of tendermint to generate address
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
 	params := s.App.SwapRouterKeeper.GetParams(s.Ctx)
 
-	pools := []gammtypes.PoolI{}
+	pools := []swaproutertypes.PoolI{}
 	for index, multiplier := range multipliers {
 		token := fmt.Sprintf("token%d", index)
 		uosmoAmount := gammtypes.InitPoolSharesSupply.ToDec().Mul(multiplier).RoundInt()

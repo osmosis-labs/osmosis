@@ -3,6 +3,7 @@ package concentrated_liquidity
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/model"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	cltypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
@@ -33,6 +34,11 @@ func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	return k.getPosition(ctx, poolId, owner, lowerTick, upperTick)
 }
 
+func ComputeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec, zeroForOne bool) (sqrtPriceNext, amountIn, amountOut sdk.Dec) {
+	swapStrategy := math.NewSwapStrategy(zeroForOne)
+	return swapStrategy.ComputeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining)
+}
+
 func (k Keeper) HasPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) bool {
 	return k.hasPosition(ctx, poolId, owner, lowerTick, upperTick)
 }
@@ -47,4 +53,8 @@ func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liqu
 
 func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickInfo model.TickInfo, err error) {
 	return k.getTickInfo(ctx, poolId, tickIndex)
+}
+
+func (k Keeper) SendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 string, amount0, amount1 sdk.Int, sender, receiver sdk.AccAddress) error {
+	return k.sendCoinsBetweenPoolAndUser(ctx, denom0, denom1, amount0, amount1, sender, receiver)
 }
