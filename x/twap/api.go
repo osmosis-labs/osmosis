@@ -56,8 +56,13 @@ func (k Keeper) GetArithmeticTwap(
 	return k.getTwap(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, endTime, arithmeticStrategy)
 }
 
+<<<<<<< HEAD
 // GetArithmeticTwapToNow returns arithmetic twap from start time until the current block time for quote and base
 // assets in a given pool.
+=======
+// GetArithmeticTwapToNow returns GetArithmeticTwap on the input, with endTime being fixed to ctx.BlockTime()
+// This function does not mutate records.
+>>>>>>> caaa9ee0d (refactored twap api.go for geometric TWAP)
 func (k Keeper) GetArithmeticTwapToNow(
 	ctx sdk.Context,
 	poolId uint64,
@@ -69,8 +74,20 @@ func (k Keeper) GetArithmeticTwapToNow(
 	return k.getTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, arithmeticStrategy)
 }
 
+<<<<<<< HEAD
 // getTwap computes and returns twap from the start time until the end time. The type
 // of twap returned depends on the strategy given and can be either arithmetic or geometric.
+=======
+// GetBeginBlockAccumulatorRecord returns a TwapRecord struct corresponding to the state of pool `poolId`
+// as of the beginning of the block this is called on.
+// This uses the state of the beginning of the block, as if there were swaps since the block has started,
+// these swaps have had no time to be arbitraged back.
+// This accumulator can be stored, to compute wider ranged twaps.
+func (k Keeper) GetBeginBlockAccumulatorRecord(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
+	return k.getMostRecentRecord(ctx, poolId, asset0Denom, asset1Denom)
+}
+
+>>>>>>> caaa9ee0d (refactored twap api.go for geometric TWAP)
 func (k Keeper) getTwap(
 	ctx sdk.Context,
 	poolId uint64,
@@ -100,8 +117,11 @@ func (k Keeper) getTwap(
 	return strategy.computeTwap(startRecord, endRecord, quoteAssetDenom)
 }
 
+<<<<<<< HEAD
 // getTwapToNow computes and returns twap from the start time until the current block time. The type
 // of twap returned depends on the strategy given and can be either arithmetic or geometric.
+=======
+>>>>>>> caaa9ee0d (refactored twap api.go for geometric TWAP)
 func (k Keeper) getTwapToNow(
 	ctx sdk.Context,
 	poolId uint64,
