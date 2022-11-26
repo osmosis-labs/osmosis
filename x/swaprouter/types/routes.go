@@ -45,7 +45,7 @@ type SwapI interface {
 
 	CalcOutAmtGivenIn(
 		ctx sdk.Context,
-		poolI gammtypes.PoolI,
+		poolI PoolI,
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
 		swapFee sdk.Dec,
@@ -63,7 +63,7 @@ type SwapI interface {
 
 	CalcInAmtGivenOut(
 		ctx sdk.Context,
-		poolI gammtypes.PoolI,
+		poolI PoolI,
 		tokenOut sdk.Coin,
 		tokenInDenom string,
 		swapFee sdk.Dec,

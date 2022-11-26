@@ -52,7 +52,7 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint6
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	pool swaproutertypes.PoolI,
+	poolI swaproutertypes.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
@@ -93,7 +93,7 @@ func (k Keeper) SwapExactAmountIn(
 
 	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
 	// Also emits swap event and updates related liquidity metrics
-	if err := k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOutCoin); err != nil {
+	if err := k.updatePoolForSwap(ctx, poolI, sender, tokenIn, tokenOutCoin); err != nil {
 		return sdk.Int{}, err
 	}
 
@@ -130,7 +130,7 @@ func (k Keeper) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 
 func (k Keeper) CalcOutAmtGivenIn(
 	ctx sdk.Context,
-	poolI gammtypes.PoolI,
+	poolI swaproutertypes.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	swapFee sdk.Dec,
@@ -140,7 +140,7 @@ func (k Keeper) CalcOutAmtGivenIn(
 
 func (k Keeper) CalcInAmtGivenOut(
 	ctx sdk.Context,
-	poolI gammtypes.PoolI,
+	poolI swaproutertypes.PoolI,
 	tokenOut sdk.Coin,
 	tokenInDenom string,
 	swapFee sdk.Dec,
@@ -437,7 +437,7 @@ func (k *Keeper) applySwap(ctx sdk.Context, tokenIn sdk.Coin, tokenOut sdk.Coin,
 // sends the in tokens from the sender to the pool, and the out tokens from the pool to the sender.
 func (k Keeper) updatePoolForSwap(
 	ctx sdk.Context,
-	pool gammtypes.PoolI,
+	pool swaproutertypes.PoolI,
 	sender sdk.AccAddress,
 	tokenIn sdk.Coin,
 	tokenOut sdk.Coin,

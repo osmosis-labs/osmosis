@@ -17,11 +17,6 @@ import (
 
 // TODO spec and tests
 func (k Keeper) InitializePool(ctx sdk.Context, pool swaproutertypes.PoolI, creatorAddress sdk.AccAddress) error {
-	traditionalPool, ok := pool.(types.TraditionalAmmInterface)
-	if !ok {
-		return fmt.Errorf("failed to create gamm pool. Could not cast to TraditionalAmmInterface")
-	}
-
 	poolId := pool.GetId()
 
 	// Add the share token's meta data to the bank keeper.
@@ -62,8 +57,8 @@ func (k Keeper) MarshalPool(pool swaproutertypes.PoolI) ([]byte, error) {
 	return k.cdc.MarshalInterface(pool)
 }
 
-func (k Keeper) UnmarshalPool(bz []byte) (types.PoolI, error) {
-	var acc types.PoolI
+func (k Keeper) UnmarshalPool(bz []byte) (types.TraditionalAmmInterface, error) {
+	var acc types.TraditionalAmmInterface
 	return acc, k.cdc.UnmarshalInterface(bz, &acc)
 }
 

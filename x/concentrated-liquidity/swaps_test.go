@@ -6,6 +6,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -113,14 +114,14 @@ func (s *KeeperTestSuite) TestCLPoolSimpleSwapExactAmountIn() {
 
 			if test.expectErr {
 				pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-				_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool.(types.PoolI), test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, swapFee)
+				_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool.(swaproutertypes.PoolI), test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, swapFee)
 				s.Require().Error(err)
 			} else {
 				spotPriceBefore := pool.GetCurrentSqrtPrice().Power(2)
 				prevGasConsumed := s.Ctx.GasMeter().GasConsumed()
 
 				// Execute the swap directed in the test case
-				tokenOutAmount, err := s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool.(types.PoolI), test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, swapFee)
+				tokenOutAmount, err := s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool.(swaproutertypes.PoolI), test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, swapFee)
 				s.Require().NoError(err)
 				s.Require().Equal(test.param.expectedTokenOut.String(), tokenOutAmount.String())
 

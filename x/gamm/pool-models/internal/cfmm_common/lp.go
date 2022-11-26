@@ -152,7 +152,7 @@ func BinarySearchSingleAssetJoin(
 			return sdk.Int{}, err
 		}
 
-		return SwapAllCoinsToSingleAsset(poolWithUpdatedLiquidity, ctx, exitedCoins, swapToDenom)
+		return SwapAllCoinsToSingleAsset(poolWithUpdatedLiquidity, ctx, exitedCoins, swapToDenom, sdk.ZeroDec())
 	}
 
 	// We accept an additive tolerance of 1 LP share error and round down

@@ -32,11 +32,6 @@ func (k Keeper) SwapExactAmountIn(
 	}
 	tokensIn := sdk.Coins{tokenIn}
 
-	pool, ok := poolI.(types.TraditionalAmmInterface)
-	if !ok {
-		return sdk.Int{}, fmt.Errorf("failed cast to TraditionalAmmInterface, actual type: %T", poolI)
-	}
-
 	defer func() {
 		if r := recover(); r != nil {
 			tokenOutAmount = sdk.Int{}
@@ -130,7 +125,7 @@ func (k Keeper) SwapExactAmountOut(
 
 func (k Keeper) CalcOutAmtGivenIn(
 	ctx sdk.Context,
-	poolI types.PoolI,
+	poolI swaproutertypes.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	swapFee sdk.Dec,
@@ -145,7 +140,7 @@ func (k Keeper) CalcOutAmtGivenIn(
 
 func (k Keeper) CalcInAmtGivenOut(
 	ctx sdk.Context,
-	poolI types.PoolI,
+	poolI swaproutertypes.PoolI,
 	tokenOut sdk.Coin,
 	tokenInDenom string,
 	swapFee sdk.Dec,
