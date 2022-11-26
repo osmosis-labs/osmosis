@@ -79,18 +79,13 @@ func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.Traditiona
 
 	bz := store.Get(poolKey)
 
-	poolI, err := k.UnmarshalPool(bz)
+	pool, err := k.UnmarshalPool(bz)
 	if err != nil {
 		return nil, err
 	}
 
-	if pokePool, ok := poolI.(types.WeightedPoolExtension); ok {
+	if pokePool, ok := pool.(types.WeightedPoolExtension); ok {
 		pokePool.PokePool(ctx.BlockTime())
-	}
-
-	pool, ok := poolI.(types.TraditionalAmmInterface)
-	if !ok {
-		return nil, fmt.Errorf("failed cast to TraditionalAmmInterface, actual type: %T", poolI)
 	}
 
 	return pool, nil
@@ -121,18 +116,13 @@ func (k Keeper) GetPoolsAndPoke(ctx sdk.Context) (res []types.TraditionalAmmInte
 	for ; iter.Valid(); iter.Next() {
 		bz := iter.Value()
 
-		poolI, err := k.UnmarshalPool(bz)
+		pool, err := k.UnmarshalPool(bz)
 		if err != nil {
 			return nil, err
 		}
 
-		if pokePool, ok := poolI.(types.WeightedPoolExtension); ok {
+		if pokePool, ok := pool.(types.WeightedPoolExtension); ok {
 			pokePool.PokePool(ctx.BlockTime())
-		}
-
-		pool, ok := poolI.(types.TraditionalAmmInterface)
-		if !ok {
-			return nil, fmt.Errorf("failed cast to TraditionalAmmInterface, actual type: %T", poolI)
 		}
 
 		res = append(res, pool)
