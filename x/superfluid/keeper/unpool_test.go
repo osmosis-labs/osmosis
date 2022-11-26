@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -251,4 +250,38 @@ func (suite *KeeperTestSuite) TestUnpool() {
 			}
 		})
 	}
+}
+
+// TestUnpoolAllowedPools_WhiteList tests that unpooling does not work for pools not in a whitelist.
+// Should fail immediately if pool is not in whitelist.
+func (suite *KeeperTestSuite) TestUnpoolAllowedPools_WhiteList() {
+	// lock id does not matter in the context of this test.
+	const (
+		testLockId        = 1
+		whiteListedPoolId = 1
+	)
+	suite.SetupTest()
+	ctx := suite.Ctx
+	superfluidKeeper := suite.App.SuperfluidKeeper
+
+	// id 1
+	suite.PrepareBalancerPool()
+	// id 2
+	suite.PrepareBalancerPool()
+
+	// set id 1 to whitelist
+	superfluidKeeper.SetUnpoolAllowedPools(ctx, []uint64{whiteListedPoolId})
+
+	_, err := superfluidKeeper.UnpoolAllowedPools(ctx, suite.TestAccs[0], whiteListedPoolId, testLockId)
+
+	// An error should still occur due to incorrect setup. However, it should be unrelated
+	// to whitelist.
+	suite.Error(err)
+	suite.Require().NotErrorIs(err, types.ErrPoolNotWhitelisted)
+
+	_, err = superfluidKeeper.UnpoolAllowedPools(ctx, suite.TestAccs[0], whiteListedPoolId+1, testLockId)
+
+	// Here, we used a non-whitelisted pool id so it should fail with the whitelist error.
+	suite.Error(err)
+	suite.Require().ErrorIs(err, types.ErrPoolNotWhitelisted)
 }
