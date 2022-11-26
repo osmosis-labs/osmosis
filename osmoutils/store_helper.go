@@ -137,3 +137,17 @@ func MustGetDec(store store.KVStore, key []byte) sdk.Dec {
 	MustGet(store, key, result)
 	return result.Dec
 }
+
+// GetIfFound returns a value at key by mutating the result parameter. Returns true if the value was found and the
+// result mutated correctly. False otherwise. Returns error only when database or serialization errors occur
+// returns a boolean indicating whether value exists for the given key and error
+func GetIfFound(store store.KVStore, key []byte, result proto.Message) (found bool, err error) {
+	b := store.Get(key)
+	if b == nil {
+		return false, nil
+	}
+	if err := proto.Unmarshal(b, result); err != nil {
+		return true, err
+	}
+	return true, nil
+}
