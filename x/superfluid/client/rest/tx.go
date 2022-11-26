@@ -10,23 +10,25 @@ import (
 func ProposalSetSuperfluidAssetsRESTHandler(clientCtx client.Context) govrest.ProposalRESTHandler {
 	return govrest.ProposalRESTHandler{
 		SubRoute: "set-superfluid-assets",
-		Handler:  newSetSuperfluidAssetsHandler(clientCtx),
-	}
-}
-
-func newSetSuperfluidAssetsHandler(clientCtx client.Context) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+		Handler:  emptyHandler(clientCtx),
 	}
 }
 
 func ProposalRemoveSuperfluidAssetsRESTHandler(clientCtx client.Context) govrest.ProposalRESTHandler {
 	return govrest.ProposalRESTHandler{
 		SubRoute: "remove-superfluid-assets",
-		Handler:  newRemoveSuperfluidAssetsHandler(clientCtx),
+		Handler:  emptyHandler(clientCtx),
 	}
 }
 
-func newRemoveSuperfluidAssetsHandler(clientCtx client.Context) http.HandlerFunc {
+func ProposalUpdateUnpoolWhitelistProposal(clientCtx client.Context) govrest.ProposalRESTHandler {
+	return govrest.ProposalRESTHandler{
+		SubRoute: "update-unpool-whitelist",
+		Handler:  emptyHandler(clientCtx),
+	}
+}
+
+func emptyHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 	}
 }

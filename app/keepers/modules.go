@@ -66,6 +66,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 			ibcclientclient.UpgradeProposalHandler,
 			superfluidclient.SetSuperfluidAssetsProposalHandler,
 			superfluidclient.RemoveSuperfluidAssetsProposalHandler,
+			superfluidclient.UpdateUnpoolWhitelistProposalHandler,
 		)...,
 	),
 	params.AppModuleBasic{},
