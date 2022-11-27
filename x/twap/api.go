@@ -56,8 +56,8 @@ func (k Keeper) GetArithmeticTwap(
 	return k.getTwap(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, endTime, arithmeticStrategy)
 }
 
-// GetArithmeticTwapToNow returns GetArithmeticTwap on the input, with endTime being fixed to ctx.BlockTime()
-// This function does not mutate records.
+// GetArithmeticTwapToNow returns arithmetic twap from start time until the current block time for quote and base
+// assets in a given pool.
 func (k Keeper) GetArithmeticTwapToNow(
 	ctx sdk.Context,
 	poolId uint64,
@@ -97,8 +97,8 @@ func (k Keeper) getTwap(
 	return strategy.computeTwap(startRecord, endRecord, quoteAssetDenom)
 }
 
-// getTwapToNow extracts the computation from GetArithmeticTwap and allows TWAP computation either
-// arithmetic or geometric mean based on the strategy provided.
+// getTwapToNow computes and returns twap from the start time until the current block time. The type
+// of twap returned depends on the strategy given and can be either arithmetic or geometric.
 func (k Keeper) getTwapToNow(
 	ctx sdk.Context,
 	poolId uint64,
