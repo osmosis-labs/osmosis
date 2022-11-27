@@ -12,5 +12,6 @@ var (
 	MaxSqrtRatio = sdk.MustNewDecFromStr("18446050711097703529.7763428")
 	// TODO: this is a temp value, figure out math for this.
 	// we basically want getSqrtRatioAtTick(MIN_TICK)
-	MinSqrtRatio = sdk.MustNewDecFromStr("0")
+	MinSqrtRatio              = sdk.MustNewDecFromStr("0")
+	ConcentratedGasFeeForSwap = 10_000
 )
