@@ -3,6 +3,7 @@ package osmosis.gamm.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "osmosis/gamm/v1beta1/tx.proto";
+import "osmosis/swaprouter/v1beta1/swap_route.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
@@ -15,6 +16,11 @@ option go_package = "github.com/osmosis-labs/osmosis/v13/x/gamm/types";
 service Query {
   rpc Pools(QueryPoolsRequest) returns (QueryPoolsResponse) {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/pools";
+  }
+
+  // Deprecated: please use NumPools in x/swaprouter.
+  rpc NumPools(QueryNumPoolsRequest) returns (QueryNumPoolsResponse) {
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/num_pools";
   }
 
   rpc TotalLiquidity(QueryTotalLiquidityRequest)
@@ -80,6 +86,20 @@ service Query {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{pool_id}/prices";
   }
+
+  // Deprecated: please use EstimateSwapExactAmountIn in x/swaprouter.
+  rpc EstimateSwapExactAmountIn(QuerySwapExactAmountInRequest)
+      returns (QuerySwapExactAmountInResponse) {
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_in";
+  }
+
+  // Deprecated: please use EstimateSwapExactAmountOut in x/swaprouter.
+  rpc EstimateSwapExactAmountOut(QuerySwapExactAmountOutRequest)
+      returns (QuerySwapExactAmountOutResponse) {
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_out";
+  }
 }
 
 //=============================== Pool
@@ -101,6 +121,14 @@ message QueryPoolsResponse {
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+//=============================== NumPools
+// Deprecated: use QueryNumPoolsRequest in x/swaprouter.
+message QueryNumPoolsRequest {}
+// Deprecated: use QueryNumPoolsResponse in x/swaprouter.
+message QueryNumPoolsResponse {
+  uint64 num_pools = 1 [ (gogoproto.moretags) = "yaml:\"num_pools\"" ];
 }
 
 //=============================== PoolType
@@ -229,6 +257,50 @@ message QuerySpotPriceResponse {
   option deprecated = true;
   // String of the Dec. Ex) 10.203uatom
   string spot_price = 1 [ (gogoproto.moretags) = "yaml:\"spot_price\"" ];
+}
+
+//=============================== EstimateSwapExactAmountIn
+// Deprecated: use QuerySwapExactAmountInRequest in x/swaprouter.
+message QuerySwapExactAmountInRequest {
+  // TODO: CHANGE THIS TO RESERVED IN A PATCH RELEASE
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string token_in = 3 [ (gogoproto.moretags) = "yaml:\"token_in\"" ];
+  repeated osmosis.swaprouter.v1beta1.SwapAmountInRoute routes = 4 [
+    (gogoproto.moretags) = "yaml:\"routes\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// Deprecated: use QuerySwapExactAmountInResponse in x/swaprouter.
+message QuerySwapExactAmountInResponse {
+  string token_out_amount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_out_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+//=============================== EstimateSwapExactAmountOut
+// Deprecated: use QuerySwapExactAmountOutRequest in x/swaprouter.
+message QuerySwapExactAmountOutRequest {
+  // TODO: CHANGE THIS TO RESERVED IN A PATCH RELEASE
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  repeated osmosis.swaprouter.v1beta1.SwapAmountOutRoute routes = 3 [
+    (gogoproto.moretags) = "yaml:\"routes\"",
+    (gogoproto.nullable) = false
+  ];
+  string token_out = 4 [ (gogoproto.moretags) = "yaml:\"token_out\"" ];
+}
+
+// Deprecated: use QuerySwapExactAmountOutResponse in x/swaprouter.
+message QuerySwapExactAmountOutResponse {
+  string token_in_amount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_in_amount\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message QueryTotalLiquidityRequest {}

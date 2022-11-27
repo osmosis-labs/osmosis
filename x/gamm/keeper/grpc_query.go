@@ -108,6 +108,11 @@ func (q Querier) Pools(
 	}, nil
 }
 
+// Deprecated: use NumPools in x/swaprouter.
+func (q Querier) NumPools(ctx context.Context, _ *types.QueryNumPoolsRequest) (*types.QueryNumPoolsResponse, error) {
+	panic("not implemented")
+}
+
 func (q Querier) PoolType(ctx context.Context, req *types.QueryPoolTypeRequest) (*types.QueryPoolTypeResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -414,4 +419,14 @@ func (q Querier) TotalLiquidity(ctx context.Context, _ *types.QueryTotalLiquidit
 	return &types.QueryTotalLiquidityResponse{
 		Liquidity: q.Keeper.GetTotalLiquidity(sdkCtx),
 	}, nil
+}
+
+// Deprecated: use EstimateSwapExactAmountIn in x/swaprouter.
+func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.QuerySwapExactAmountInRequest) (*types.QuerySwapExactAmountInResponse, error) {
+	panic("not implemented")
+}
+
+// Deprecated: use EstimateSwapExactAmountOut in x/swaprouter.
+func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.QuerySwapExactAmountOutRequest) (*types.QuerySwapExactAmountOutResponse, error) {
+	panic("not implemented")
 }
