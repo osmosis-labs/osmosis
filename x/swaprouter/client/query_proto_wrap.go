@@ -1,8 +1,6 @@
 package client
 
 import (
-	"math/big"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -18,20 +16,6 @@ type Querier struct {
 	K swaprouter.Keeper
 }
 
-var sdkIntMaxValue = sdk.NewInt(0)
-
-func init() {
-	maxInt := big.NewInt(2)
-	maxInt = maxInt.Exp(maxInt, big.NewInt(256), nil)
-
-	_sdkIntMaxValue, ok := sdk.NewIntFromString(maxInt.Sub(maxInt, big.NewInt(1)).String())
-	if !ok {
-		panic("Failed to calculate the max value of sdk.Int")
-	}
-
-	sdkIntMaxValue = _sdkIntMaxValue
-}
-
 func (q Querier) Params(ctx sdk.Context,
 	req queryproto.ParamsRequest,
 ) (*queryproto.ParamsResponse, error) {
@@ -41,21 +25,8 @@ func (q Querier) Params(ctx sdk.Context,
 
 // EstimateSwapExactAmountIn estimates input token amount for a swap.
 func (q Querier) EstimateSwapExactAmountIn(ctx sdk.Context, req queryproto.EstimateSwapExactAmountInRequest) (*queryproto.EstimateSwapExactAmountInResponse, error) {
-	if req.Sender == "" {
-		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
-	}
-
 	if req.TokenIn == "" {
 		return nil, status.Error(codes.InvalidArgument, "invalid token")
-	}
-
-	if err := types.SwapAmountInRoutes(req.Routes).Validate(); err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	sender, err := sdk.AccAddressFromBech32(req.Sender)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
 
 	tokenIn, err := sdk.ParseCoinNormalized(req.TokenIn)
@@ -63,7 +34,7 @@ func (q Querier) EstimateSwapExactAmountIn(ctx sdk.Context, req queryproto.Estim
 		return nil, status.Errorf(codes.InvalidArgument, "invalid token: %s", err.Error())
 	}
 
-	tokenOutAmount, err := q.K.RouteExactAmountIn(ctx, sender, req.Routes, tokenIn, sdk.NewInt(1))
+	tokenOutAmount, err := q.K.MultihopEstimateOutGivenExactAmountIn(ctx, req.Routes, tokenIn)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -87,17 +58,12 @@ func (q Querier) EstimateSwapExactAmountOut(ctx sdk.Context, req queryproto.Esti
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	sender, err := sdk.AccAddressFromBech32(req.Sender)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
-	}
-
 	tokenOut, err := sdk.ParseCoinNormalized(req.TokenOut)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid token: %s", err.Error())
 	}
 
-	tokenInAmount, err := q.K.RouteExactAmountOut(ctx, sender, req.Routes, sdkIntMaxValue, tokenOut)
+	tokenInAmount, err := q.K.MultihopEstimateInGivenExactAmountOut(ctx, req.Routes, tokenOut)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

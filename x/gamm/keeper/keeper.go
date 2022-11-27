@@ -30,6 +30,7 @@ type Keeper struct {
 	accountKeeper       types.AccountKeeper
 	bankKeeper          types.BankKeeper
 	communityPoolKeeper types.CommunityPoolKeeper
+	swaprouterKeeper    types.SwaprouterKeeper
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, communityPoolKeeper types.CommunityPoolKeeper) Keeper {
@@ -63,4 +64,9 @@ func (k *Keeper) SetHooks(gh types.GammHooks) *Keeper {
 	k.hooks = gh
 
 	return k
+}
+
+// Set the swaprouter keeper.
+func (k *Keeper) SetSwapRouterKeeper(swaprouterKeeper types.SwaprouterKeeper) {
+	k.swaprouterKeeper = swaprouterKeeper
 }
