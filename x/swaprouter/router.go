@@ -2,13 +2,11 @@ package swaprouter
 
 import (
 	"errors"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
@@ -384,13 +382,8 @@ func (k Keeper) createOsmoMultihopExpectedSwapOuts(
 			return nil, err
 		}
 
-		poolTrad, ok := poolI.(gammtypes.TraditionalAmmInterface)
-		if !ok {
-			return nil, fmt.Errorf("failed cast to TraditionalAmmInterface, actual type: %T", poolI)
-		}
-
 		swapFee := poolI.GetSwapFee(ctx)
-		tokenIn, err := poolTrad.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), route.TokenInDenom, cumulativeRouteSwapFee.Mul((swapFee.Quo(sumOfSwapFees))))
+		tokenIn, err := poolI.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), route.TokenInDenom, cumulativeRouteSwapFee.Mul((swapFee.Quo(sumOfSwapFees))))
 		if err != nil {
 			return nil, err
 		}
