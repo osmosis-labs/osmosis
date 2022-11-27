@@ -23,42 +23,6 @@ const (
 	TypeMsgExitSwapShareAmountIn   = "exit_swap_share_amount_in"
 )
 
-// Deprecated: use SwapAmountInRoutes in x/swaprouter instead.
-type SwapAmountInRoutes []SwapAmountInRoute
-
-func (routes SwapAmountInRoutes) Validate() error {
-	if len(routes) == 0 {
-		return swaproutertypes.ErrEmptyRoutes
-	}
-
-	for _, route := range routes {
-		err := sdk.ValidateDenom(route.TokenOutDenom)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// Deprecated: use SwapAmountOutRoutes in x/swaprouter instead.
-type SwapAmountOutRoutes []SwapAmountOutRoute
-
-func (routes SwapAmountOutRoutes) Validate() error {
-	if len(routes) == 0 {
-		return swaproutertypes.ErrEmptyRoutes
-	}
-
-	for _, route := range routes {
-		err := sdk.ValidateDenom(route.TokenInDenom)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func ValidateFutureGovernor(governor string) error {
 	// allow empty governor
 	if governor == "" {
@@ -110,7 +74,7 @@ func (msg MsgSwapExactAmountIn) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	err = SwapAmountInRoutes(msg.Routes).Validate()
+	err = swaproutertypes.SwapAmountInRoutes(msg.Routes).Validate()
 	if err != nil {
 		return err
 	}
@@ -148,7 +112,7 @@ func (msg MsgSwapExactAmountOut) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	err = SwapAmountOutRoutes(msg.Routes).Validate()
+	err = swaproutertypes.SwapAmountOutRoutes(msg.Routes).Validate()
 	if err != nil {
 		return err
 	}
