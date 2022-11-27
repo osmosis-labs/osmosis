@@ -461,8 +461,6 @@ func (k Keeper) updatePoolForSwap(
 	// TODO: implement hooks
 	events.EmitSwapEvent(ctx, sender, pool.GetId(), sdk.Coins{tokenIn}, sdk.Coins{tokenOut})
 	// k.hooks.AfterSwap(ctx, sender, pool.GetId(), tokenIn, tokenOut)
-	// k.RecordTotalLiquidityIncrease(ctx, tokenIn)
-	// k.RecordTotalLiquidityDecrease(ctx, tokenOut)
 
 	return err
 }
