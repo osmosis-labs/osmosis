@@ -1,8 +1,6 @@
 package client
 
 import (
-	"math/big"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -16,20 +14,6 @@ import (
 
 type Querier struct {
 	K swaprouter.Keeper
-}
-
-var sdkIntMaxValue = sdk.NewInt(0)
-
-func init() {
-	maxInt := big.NewInt(2)
-	maxInt = maxInt.Exp(maxInt, big.NewInt(256), nil)
-
-	_sdkIntMaxValue, ok := sdk.NewIntFromString(maxInt.Sub(maxInt, big.NewInt(1)).String())
-	if !ok {
-		panic("Failed to calculate the max value of sdk.Int")
-	}
-
-	sdkIntMaxValue = _sdkIntMaxValue
 }
 
 func (q Querier) Params(ctx sdk.Context,

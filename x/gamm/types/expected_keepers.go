@@ -5,7 +5,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
@@ -66,13 +65,13 @@ type SwaprouterKeeper interface {
 
 	MultihopEstimateOutGivenExactAmountIn(
 		ctx sdk.Context,
-		routes []types.SwapAmountInRoute,
+		routes []swaproutertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
 	) (tokenOutAmount sdk.Int, err error)
 
 	MultihopEstimateInGivenExactAmountOut(
 		ctx sdk.Context,
-		routes []types.SwapAmountOutRoute,
+		routes []swaproutertypes.SwapAmountOutRoute,
 		tokenOut sdk.Coin) (tokenInAmount sdk.Int, err error)
 
 	GetNextPoolId(ctx sdk.Context) uint64
