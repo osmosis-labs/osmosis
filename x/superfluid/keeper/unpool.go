@@ -156,7 +156,7 @@ func (k Keeper) unbondSuperfluidIfExists(ctx sdk.Context, sender sdk.AccAddress,
 func (k Keeper) GetUnpoolAllowedPools(ctx sdk.Context) []uint64 {
 	store := ctx.KVStore(k.storeKey)
 	allowedPools := types.UnpoolWhitelistedPools{}
-	found, err := osmoutils.GetIfFound(store, types.KeyUnpoolAllowedPools, &allowedPools)
+	found, err := osmoutils.Get(store, types.KeyUnpoolAllowedPools, &allowedPools)
 	if err != nil {
 		panic(err)
 	}
