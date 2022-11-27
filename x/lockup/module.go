@@ -16,6 +16,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -35,6 +37,9 @@ import (
 
 	simulation "github.com/osmosis-labs/osmosis/v13/x/lockup/simulation"
 	"github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	modulev1 "github.com/osmosis-labs/osmosis/v13/api/osmosis/lockup/module/v1"
+	store "github.com/cosmos/cosmos-sdk/store/types"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 var (
@@ -102,6 +107,12 @@ func (a AppModuleBasic) GetTxCmd() *cobra.Command {
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
 
 // ----------------------------------------------------------------------------
 // AppModule
@@ -201,4 +212,45 @@ func (am AppModule) Actions() []simtypes.Action {
 		simtypes.NewMsgBasedAction("unlock all tokens", am.keeper, simulation.RandomMsgBeginUnlockingAll),
 		simtypes.NewMsgBasedAction("unlock lock", am.keeper, simulation.RandomMsgBeginUnlocking),
 	}
+}
+
+
+func init() {
+	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(ProvideModule),
+	)
+}
+
+type LockupInputs struct {
+	depinject.In
+
+	Config *modulev1.Module
+	Key    *store.KVStoreKey
+	Cdc    codec.Codec
+
+	AccountKeeper types.AccountKeeper
+	BankKeeper    types.BankKeeper
+	DisKeeper 	  types.CommunityPoolKeeper
+	Subspace      paramstypes.Subspace
+}
+
+type LockupOutputs struct {
+	depinject.Out
+
+	LockupKeeper  keeper.Keeper
+	Module        appmodule.AppModule
+}
+
+func ProvideModule(in LockupInputs) LockupOutputs {
+	lockupKeeper := keeper.NewKeeper(
+		in.Key,
+		in.AccountKeeper,
+		in.BankKeeper,
+		in.DisKeeper,
+		in.Subspace,
+	)
+
+	m := NewAppModule(*lockupKeeper, in.AccountKeeper, in.BankKeeper)
+
+	return LockupOutputs{LockupKeeper: *lockupKeeper, Module: m}
 }
