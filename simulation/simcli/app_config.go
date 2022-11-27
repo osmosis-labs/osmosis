@@ -7,6 +7,10 @@ import (
 
 	ibchost "github.com/cosmos/ibc-go/v3/modules/core/24-host"
 
+	_ "github.com/cosmos/cosmos-sdk/runtime" // do not comment/remove
+
+	_ "github.com/osmosis-labs/osmosis/v13/x/lockup"
+
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
@@ -14,6 +18,9 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
+	lockupmodule "github.com/osmosis-labs/osmosis/v13/api/osmosis/lockup/module/v1"
+	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
 	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
@@ -91,10 +98,10 @@ var (
 					// },
 				}),
 			},
-			// {
-			// 	Name:   lockuptypes.ModuleName,
-			// 	Config: appconfig.WrapAny(&lockupmodule.Module{}),
-			// },
+			{
+				Name:   lockuptypes.ModuleName,
+				Config: appconfig.WrapAny(&lockupmodule.Module{}),
+			},
 		},
 	})
 )
