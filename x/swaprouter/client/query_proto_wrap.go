@@ -14,9 +14,6 @@ import (
 
 // This file should evolve to being code gen'd, off of `proto/swaprouter/v1beta/query.yml`
 
-type swaprouterQuerierI interface {
-}
-
 type Querier struct {
 	K swaprouter.Keeper
 }
