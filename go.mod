@@ -3,6 +3,7 @@ module github.com/osmosis-labs/osmosis/v13
 go 1.18
 
 require (
+	cosmossdk.io/depinject v1.0.0-alpha.3
 	github.com/CosmWasm/wasmd v0.28.0-osmo-v12
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8
 	github.com/cosmos/cosmos-sdk v0.46.6
@@ -37,7 +38,6 @@ require (
 )
 
 require (
-	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	github.com/Abirdcfly/dupword v0.0.7 // indirect
 	github.com/Djarvur/go-err113 v0.0.0-20210108212216-aea10b59be24 // indirect
 	github.com/alingse/asasalint v0.0.11 // indirect
@@ -45,7 +45,6 @@ require (
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
 	github.com/google/btree v1.0.0 // indirect
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.14.0 // indirect
 	github.com/iancoleman/strcase v0.2.0 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.3 // indirect
 	github.com/maratori/testableexamples v1.0.0 // indirect
@@ -58,7 +57,6 @@ require (
 	github.com/zimmski/go-mutesting v0.0.0-20210610104036-6d9217011a00 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/zap v1.22.0 // indirect
-	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
@@ -307,7 +305,7 @@ replace (
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.28.0-osmo-v12.1
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v13.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/8757a61551aa1ea993c85a523e18094ab555b1d7
 	// tag: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/sdk-v13.0.0-rc1
-	github.com/cosmos/cosmos-sdk => github.com/RusAkh/cosmos-sdk v0.45.1-0.20221123172528-b79307de567c // v0.45.1-0.20221110061840-8757a61551aa //2022-10-31 17:40:01
+	github.com/cosmos/cosmos-sdk => github.com/RusAkh/cosmos-sdk v0.45.1-0.20221127162255-d3a8a1ae9804 // v0.45.1-0.20221110061840-8757a61551aa //2022-10-31 17:40:01
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 // use grpc compatible with cosmos protobufs

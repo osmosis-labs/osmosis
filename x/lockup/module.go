@@ -37,9 +37,11 @@ import (
 
 	simulation "github.com/osmosis-labs/osmosis/v13/x/lockup/simulation"
 	"github.com/osmosis-labs/osmosis/v13/x/lockup/types"
-	modulev1 "github.com/osmosis-labs/osmosis/v13/api/osmosis/lockup/module/v1"
+
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	modulev1 "github.com/osmosis-labs/osmosis/v13/api/osmosis/lockup/module/v1"
 )
 
 var (
@@ -230,15 +232,15 @@ type LockupInputs struct {
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
-	DisKeeper 	  types.CommunityPoolKeeper
+	DisKeeper     types.CommunityPoolKeeper
 	Subspace      paramstypes.Subspace
 }
 
 type LockupOutputs struct {
 	depinject.Out
 
-	LockupKeeper  keeper.Keeper
-	Module        appmodule.AppModule
+	LockupKeeper keeper.Keeper
+	Module       appmodule.AppModule
 }
 
 func ProvideModule(in LockupInputs) LockupOutputs {

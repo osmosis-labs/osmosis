@@ -30,7 +30,6 @@ func Run(appOptions AppOptions) error {
 func RunFromAppConfig(appConfig depinject.Config) error {
 	var appOptions AppOptions
 	err := depinject.Inject(appConfig, &appOptions)
-	fmt.Println(appOptions)
 	if err != nil {
 		return err
 	}
@@ -85,7 +84,7 @@ func RootCmd(appOptions AppOptions) (*cobra.Command, error) {
 		return nil, err
 	}
 
-	rootCmd := &cobra.Command{Use: "smthd"}
+	rootCmd := &cobra.Command{Use: "osmosisd"}
 	var grpcUrl string
 	rootCmd.PersistentFlags().StringVar(&grpcUrl, "grpc-url", "", "the gRPC URL of the node to connect with")
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
