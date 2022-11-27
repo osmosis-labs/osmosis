@@ -141,11 +141,9 @@ func (s *KeeperTestSuite) TestCLPoolSimpleSwapExactAmountIn() {
 				spotPriceAfter := pool.GetCurrentSqrtPrice().Power(2)
 
 				// Ratio of the token out should be between the before spot price and after spot price.
-				var tradeAvgPrice sdk.Dec
-				if zeroForOne {
-					tradeAvgPrice = tokenOutAmount.ToDec().Quo(test.param.tokenIn.Amount.ToDec())
-				} else {
-					tradeAvgPrice = test.param.tokenIn.Amount.ToDec().Quo(tokenOutAmount.ToDec())
+				tradeAvgPrice := tradeAvgPrice = tokenOutAmount.ToDec().Quo(test.param.tokenIn.Amount.ToDec())
+				if !zeroForOne {
+					tradeAvgPrice = sdk.OneDec().Quo(tradeAvgPrice)
 				}
 
 				if zeroForOne {
