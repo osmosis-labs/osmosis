@@ -531,27 +531,20 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			// add positions
 			test.addPositions(s.Ctx, pool.GetId())
 
-			// execute internal swap function
-			tokenOut, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
+			// perform calc
+			tokenIn, tokenOut, updatedTick, updatedLiquidity, _, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenInOld(
 				s.Ctx,
 				test.tokenIn, test.tokenOutDenom,
 				swapFee, test.priceLimit, pool.GetId())
-
 			if test.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
 
-				pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-				s.Require().NoError(err)
-
-				// check that we produced the same token out from the swap function that we expected
+				s.Require().Equal(test.expectedTokenIn.String(), tokenIn.String())
 				s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
+				s.Require().Equal(test.expectedTick.String(), updatedTick.String())
 
-				// check that the pool's current tick was updated correctly
-				s.Require().Equal(test.expectedTick.String(), pool.GetCurrentTick().String())
-
-				// the following is needed to get the expected liquidity to later compare to what the pool was updated to
 				if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
 					test.newLowerPrice = lowerPrice
 					test.newUpperPrice = upperPrice
@@ -571,11 +564,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				}
 
 				expectedLiquidity := math.GetLiquidityFromAmounts(currSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
-				// check that the pools liquidity was updated correctly
-				s.Require().Equal(expectedLiquidity.String(), pool.GetLiquidity().String())
-
-				// TODO: need to figure out a good way to test that the currentSqrtPrice that the pool is set to makes sense
-				// right now we calculate this value through iterations, so unsure how to do this here / if its needed
+				s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
 			}
 		})
 
@@ -1041,92 +1030,419 @@ func (s *KeeperTestSuite) TestGetPoolById() {
 	s.Require().Error(err)
 }
 
-// func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
-// 	ctx := s.Ctx
-// 	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", sdk.MustNewDecFromStr("70.710678"), sdk.NewInt(85176))
-// 	s.Require().NoError(err)
-// 	s.SetupPosition(pool.Id)
+func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
+	currPrice := sdk.NewDec(5000)
+	currSqrtPrice, err := currPrice.ApproxSqrt() // 70.710678118654752440
+	s.Require().NoError(err)
+	currTick := math.PriceToTick(currPrice) // 85176
+	lowerPrice := sdk.NewDec(4545)
+	s.Require().NoError(err)
+	lowerTick := math.PriceToTick(lowerPrice) // 84222
+	upperPrice := sdk.NewDec(5500)
+	s.Require().NoError(err)
+	upperTick := math.PriceToTick(upperPrice) // 86129
 
-// 	// test asset a to b logic
-// 	tokenOut := sdk.NewCoin("usdc", sdk.NewInt(4199999999))
-// 	tokenInDenom := "eth"
-// 	swapFee := sdk.NewDec(0)
-// 	minPrice := sdk.NewDec(4500)
-// 	maxPrice := sdk.NewDec(5500)
+	defaultAmt0 := sdk.NewInt(1000000)
+	defaultAmt1 := sdk.NewInt(5000000000)
 
-// 	amountIn, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
-// 	s.Require().NoError(err)
-// 	s.Require().Equal(sdk.NewDec(805287), amountIn.Amount.ToDec())
+	swapFee := sdk.ZeroDec()
 
-// 	// test asset b to a logic
-// 	tokenOut = sdk.NewCoin("eth", sdk.NewInt(133700))
-// 	tokenInDenom = "usdc"
-// 	swapFee = sdk.NewDec(0)
+	tests := map[string]struct {
+		positionAmount0  sdk.Int
+		positionAmount1  sdk.Int
+		addPositions     func(ctx sdk.Context, poolId uint64)
+		tokenOutMax      sdk.Coin
+		tokenInDenom     string
+		priceLimit       sdk.Dec
+		expectedTokenIn  sdk.Coin
+		expectedTokenOut sdk.Coin
+		expectedTick     sdk.Int
+		newLowerPrice    sdk.Dec
+		newUpperPrice    sdk.Dec
+		poolLiqAmount0   sdk.Int
+		poolLiqAmount1   sdk.Int
+		expectErr        bool
+	}{
+		//  One price range
+		//
+		//          5000
+		//  4545 -----|----- 5500
+		"single position within one tick: usdc -> eth": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
+			},
+			tokenOutMax:      sdk.NewCoin("usdc", sdk.NewInt(42000000)),
+			tokenInDenom:     "eth",
+			priceLimit:       sdk.NewDec(5004),
+			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(42000000)),
+			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(8396)),
+			expectedTick:     sdk.NewInt(85184),
+		},
+		"single position within one tick: eth -> usdc": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
+			},
+			tokenOutMax:      sdk.NewCoin("eth", sdk.NewInt(13370)),
+			tokenInDenom:     "usdc",
+			priceLimit:       sdk.NewDec(4993),
+			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(13370)),
+			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(66808387)),
+			expectedTick:     sdk.NewInt(85163),
+		},
+		//  Two equal price ranges
+		//
+		//          5000
+		//  4545 -----|----- 5500
+		//  4545 -----|----- 5500
+		"two positions within one tick: usdc -> eth": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
 
-// 	amountIn, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
-// 	s.Require().NoError(err)
-// 	s.Require().Equal(sdk.NewDec(666975610), amountIn.Amount.ToDec())
+				// add second position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
+			},
+			tokenOutMax:      sdk.NewCoin("usdc", sdk.NewInt(42000000)),
+			tokenInDenom:     "eth",
+			priceLimit:       sdk.NewDec(5002),
+			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(42000000)),
+			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(8398)),
+			expectedTick:     sdk.NewInt(85180),
+			// two positions with same liquidity entered
+			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
+			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
+		},
+		"two positions within one tick: eth -> usdc": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
 
-// 	// test asset a to b logic
-// 	tokenOut = sdk.NewCoin("usdc", sdk.NewInt(4199999999))
-// 	tokenInDenom = "eth"
-// 	swapFee = sdk.NewDecWithPrec(2, 2)
+				// add second position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
+			},
+			tokenOutMax:      sdk.NewCoin("eth", sdk.NewInt(13370)),
+			tokenInDenom:     "usdc",
+			priceLimit:       sdk.NewDec(4996),
+			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(13370)),
+			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(66829187)),
+			expectedTick:     sdk.NewInt(85169), // TODO: should be 85170, is 85169 due to log precision
+			// two positions with same liquidity entered
+			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
+			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
+		},
+		//  Consecutive price ranges
+		//
+		//          5000
+		//  4545 -----|----- 5500
+		//             5500 ----------- 6250
+		//
+		"two positions with consecutive price ranges: usdc -> eth": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
 
-// 	amountIn, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
-// 	s.Require().NoError(err)
-// 	s.Require().Equal(sdk.NewDec(821722), amountIn.Amount.ToDec())
-// }
+				// create second position parameters
+				newLowerPrice := sdk.NewDec(5500)
+				s.Require().NoError(err)
+				newLowerTick := math.PriceToTick(newLowerPrice) // 86129
+				newUpperPrice := sdk.NewDec(6250)
+				s.Require().NoError(err)
+				newUpperTick := math.PriceToTick(newUpperPrice) // 87407
 
-// func (s *KeeperTestSuite) TestSwapInAmtGivenOut() {
-// 	ctx := s.Ctx
-// 	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, "eth", "usdc", sdk.MustNewDecFromStr("70.710678"), sdk.NewInt(85176))
-// 	s.Require().NoError(err)
-// 	fmt.Printf("%v pool liq pre \n", pool.Liquidity)
-// 	lowerTick := int64(84222)
-// 	upperTick := int64(86129)
-// 	amount0Desired := sdk.NewInt(1)
-// 	amount1Desired := sdk.NewInt(5000)
+				// add position two with the new price range above
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				s.Require().NoError(err)
+			},
+			tokenOutMax:      sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenInDenom:     "eth",
+			priceLimit:       sdk.NewDec(6106),
+			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(1820628)),
+			expectedTick:     sdk.NewInt(87173),
+			newLowerPrice:    sdk.NewDec(5500),
+			newUpperPrice:    sdk.NewDec(6250),
+		},
+		//  Consecutive price ranges
+		//
+		//                     5000
+		//             4545 -----|----- 5500
+		//  4000 ----------- 4545
+		//
+		"two positions with consecutive price ranges: eth -> usdc": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
 
-// 	s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, pool.Id, s.TestAccs[0], amount0Desired, amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
+				// create second position parameters
+				newLowerPrice := sdk.NewDec(4000)
+				s.Require().NoError(err)
+				newLowerTick := math.PriceToTick(newLowerPrice) // 82944
+				newUpperPrice := sdk.NewDec(4545)
+				s.Require().NoError(err)
+				newUpperTick := math.PriceToTick(newUpperPrice) // 84222
 
-// 	// test asset a to b logic
-// 	tokenOut := sdk.NewCoin("usdc", sdk.NewInt(4199999999))
-// 	tokenInDenom := "eth"
-// 	swapFee := sdk.NewDec(0)
-// 	minPrice := sdk.NewDec(4500)
-// 	maxPrice := sdk.NewDec(5500)
+				// add position two with the new price range above
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				s.Require().NoError(err)
+			},
+			tokenOutMax:      sdk.NewCoin("eth", sdk.NewInt(2000000)),
+			tokenInDenom:     "usdc",
+			priceLimit:       sdk.NewDec(4094),
+			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(2000000)),
+			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(9103305821)),
+			expectedTick:     sdk.NewInt(83179),
+			newLowerPrice:    sdk.NewDec(4000),
+			newUpperPrice:    sdk.NewDec(4545),
+		},
+		//  Partially overlapping price ranges
+		//
+		//          5000
+		//  4545 -----|----- 5500
+		//        5001 ----------- 6250
+		//
+		"two positions with partially overlapping price ranges: usdc -> eth": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
 
-// 	amountIn, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
-// 	s.Require().NoError(err)
-// 	fmt.Printf("%v amountIn \n", amountIn)
-// 	pool = s.App.ConcentratedLiquidityKeeper.GetPoolbyId(ctx, pool.Id)
+				// create second position parameters
+				newLowerPrice := sdk.NewDec(5001)
+				s.Require().NoError(err)
+				newLowerTick := math.PriceToTick(newLowerPrice) // 85178
+				newUpperPrice := sdk.NewDec(6250)
+				s.Require().NoError(err)
+				newUpperTick := math.PriceToTick(newUpperPrice) // 87407
 
-// // test asset a to b logic
-// tokenOut := sdk.NewCoin("usdc", sdk.NewInt(4199999999))
-// tokenInDenom := "eth"
-// swapFee := sdk.NewDec(0)
-// minPrice := sdk.NewDec(4500)
-// maxPrice := sdk.NewDec(5500)
+				// add position two with the new price range above
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				s.Require().NoError(err)
+			},
+			tokenOutMax:      sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenInDenom:     "eth",
+			priceLimit:       sdk.NewDec(6056),
+			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(9999724947)),
+			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(1864112)),
+			expectedTick:     sdk.NewInt(87092),
+			newLowerPrice:    sdk.NewDec(5001),
+			newUpperPrice:    sdk.NewDec(6250),
+		},
+		"two positions with partially overlapping price ranges, not utilizing full liquidity of second position: usdc -> eth": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
 
-// amountIn, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
-// s.Require().NoError(err)
-// s.Require().Equal(sdk.NewDec(805287), amountIn.Amount.ToDec())
+				// create second position parameters
+				newLowerPrice := sdk.NewDec(5001)
+				s.Require().NoError(err)
+				newLowerTick := math.PriceToTick(newLowerPrice) // 85178
+				newUpperPrice := sdk.NewDec(6250)
+				s.Require().NoError(err)
+				newUpperTick := math.PriceToTick(newUpperPrice) // 87407
 
-// // test asset b to a logic
-// tokenOut = sdk.NewCoin("eth", sdk.NewInt(133700))
-// tokenInDenom = "usdc"
-// swapFee = sdk.NewDec(0)
+				// add position two with the new price range above
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				s.Require().NoError(err)
+			},
+			tokenOutMax:      sdk.NewCoin("usdc", sdk.NewInt(8500000000)),
+			tokenInDenom:     "eth",
+			priceLimit:       sdk.NewDec(6056),
+			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(8500000000)),
+			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(1609141)),
+			expectedTick:     sdk.NewInt(86509),
+			newLowerPrice:    sdk.NewDec(5001),
+			newUpperPrice:    sdk.NewDec(6250),
+		},
+		//  Partially overlapping price ranges
+		//
+		//                5000
+		//        4545 -----|----- 5500
+		//  4000 ----------- 4999
+		//
+		"two positions with partially overlapping price ranges: eth -> usdc": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
 
-// amountIn, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
-// s.Require().NoError(err)
-// s.Require().Equal(sdk.NewDec(666975610), amountIn.Amount.ToDec())
+				// create second position parameters
+				newLowerPrice := sdk.NewDec(4000)
+				s.Require().NoError(err)
+				newLowerTick := math.PriceToTick(newLowerPrice) // 82944
+				newUpperPrice := sdk.NewDec(4999)
+				s.Require().NoError(err)
+				newUpperTick := math.PriceToTick(newUpperPrice) // 85174
 
-// // test asset a to b logic
-// tokenOut = sdk.NewCoin("usdc", sdk.NewInt(4199999999))
-// tokenInDenom = "eth"
-// swapFee = sdk.NewDecWithPrec(2, 2)
+				// add position two with the new price range above
+				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				s.Require().NoError(err)
+			},
+			tokenOutMax:      sdk.NewCoin("eth", sdk.NewInt(2000000)),
+			tokenInDenom:     "usdc",
+			priceLimit:       sdk.NewDec(4128),
+			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(2000000)),
+			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(9321119065)),
+			expectedTick:     sdk.NewInt(83261),
+			newLowerPrice:    sdk.NewDec(4000),
+			newUpperPrice:    sdk.NewDec(4999),
+		},
+		"two positions with partially overlapping price ranges, not utilizing full liquidity of second position: eth -> usdc": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
 
-// amountIn, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, minPrice, maxPrice, pool.Id)
-// s.Require().NoError(err)
-// s.Require().Equal(sdk.NewDec(821722), amountIn.Amount.ToDec())
-// }
+				// create second position parameters
+				newLowerPrice := sdk.NewDec(4000)
+				s.Require().NoError(err)
+				newLowerTick := math.PriceToTick(newLowerPrice) // 82944
+				newUpperPrice := sdk.NewDec(4999)
+				s.Require().NoError(err)
+				newUpperTick := math.PriceToTick(newUpperPrice) // 85174
+
+				// add position two with the new price range above
+				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				s.Require().NoError(err)
+			},
+			tokenOutMax:      sdk.NewCoin("eth", sdk.NewInt(1800000)),
+			tokenInDenom:     "usdc",
+			priceLimit:       sdk.NewDec(4128),
+			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1800000)),
+			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(8479202154)),
+			expectedTick:     sdk.NewInt(83648),
+			newLowerPrice:    sdk.NewDec(4000),
+			newUpperPrice:    sdk.NewDec(4999),
+		},
+		//  Sequential price ranges with a gap
+		//
+		//          5000
+		//  4545 -----|----- 5500
+		//              5501 ----------- 6250
+		//
+		"two sequential positions with a gap": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
+
+				// create second position parameters
+				newLowerPrice := sdk.NewDec(5501)
+				s.Require().NoError(err)
+				newLowerTick := math.PriceToTick(newLowerPrice) // 86131
+				newUpperPrice := sdk.NewDec(6250)
+				s.Require().NoError(err)
+				newUpperTick := math.PriceToTick(newUpperPrice) // 87407
+
+				// add position two with the new price range above
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				s.Require().NoError(err)
+			},
+			tokenOutMax:      sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenInDenom:     "eth",
+			priceLimit:       sdk.NewDec(6106),
+			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(1820536)),
+			expectedTick:     sdk.NewInt(87173),
+			newLowerPrice:    sdk.NewDec(5501),
+			newUpperPrice:    sdk.NewDec(6250),
+		},
+		// Slippage protection doesn't cause a failure but interrupts early.
+		"single position within one tick, trade completes but slippage protection interrupts trade early: eth -> usdc": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
+			},
+			tokenOutMax:      sdk.NewCoin("eth", sdk.NewInt(13370)),
+			tokenInDenom:     "usdc",
+			priceLimit:       sdk.NewDec(4994),
+			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(12891)),
+			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(64414929)),
+			expectedTick:     sdk.NewInt(85164),
+		},
+		"single position within one tick, trade does not complete due to lack of liquidity: usdc -> eth": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
+			},
+			tokenOutMax:  sdk.NewCoin("usdc", sdk.NewInt(5300000000)),
+			tokenInDenom: "eth",
+			priceLimit:   sdk.NewDec(6000),
+			expectErr:    true,
+		},
+		"single position within one tick, trade does not complete due to lack of liquidity: eth -> usdc": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], defaultAmt0, defaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick.Int64(), upperTick.Int64())
+				s.Require().NoError(err)
+			},
+			tokenOutMax:  sdk.NewCoin("eth", sdk.NewInt(1100000)),
+			tokenInDenom: "usdc",
+			priceLimit:   sdk.NewDec(4000),
+			expectErr:    true,
+		},
+	}
+
+	for name, test := range tests {
+		s.Run(name, func() {
+			s.Setup()
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+			// create pool
+			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", currSqrtPrice, currTick)
+			s.Require().NoError(err)
+
+			// add positions
+			test.addPositions(s.Ctx, pool.GetId())
+
+			// perform calc
+			tokenIn, tokenOut, updatedTick, updatedLiquidity, _, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOutOld(
+				s.Ctx,
+				test.tokenOutMax, test.tokenInDenom,
+				swapFee, test.priceLimit, pool.GetId())
+			if test.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
+				s.Require().Equal(test.expectedTokenIn.String(), tokenIn.String())
+				s.Require().Equal(test.expectedTick.String(), updatedTick.String())
+
+				if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
+					test.newLowerPrice = lowerPrice
+					test.newUpperPrice = upperPrice
+				}
+
+				newLowerTick := math.PriceToTick(test.newLowerPrice)
+				newUpperTick := math.PriceToTick(test.newUpperPrice)
+
+				lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick)
+				s.Require().NoError(err)
+				upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick)
+				s.Require().NoError(err)
+
+				if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
+					test.poolLiqAmount0 = defaultAmt0
+					test.poolLiqAmount1 = defaultAmt1
+				}
+
+				expectedLiquidity := math.GetLiquidityFromAmounts(currSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
+				s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
+			}
+		})
+
+	}
+}
