@@ -7,6 +7,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8
 	github.com/cosmos/cosmos-sdk v0.46.6
 	github.com/cosmos/go-bip39 v1.0.0
+	github.com/cosmos/gogoproto v1.4.3
 	github.com/cosmos/iavl v0.19.4
 	github.com/cosmos/ibc-go/v3 v3.4.0
 	github.com/gogo/protobuf v1.3.3
@@ -44,6 +45,7 @@ require (
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
 	github.com/google/btree v1.0.0 // indirect
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.14.0 // indirect
 	github.com/iancoleman/strcase v0.2.0 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.3 // indirect
 	github.com/maratori/testableexamples v1.0.0 // indirect
@@ -56,6 +58,7 @@ require (
 	github.com/zimmski/go-mutesting v0.0.0-20210610104036-6d9217011a00 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/zap v1.22.0 // indirect
+	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 

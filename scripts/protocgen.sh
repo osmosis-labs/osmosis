@@ -15,6 +15,11 @@ for dir in $proto_dirs; do
   for file in $(find "${dir}" -maxdepth 1 -name '*.proto'); do
     if grep go_package $file &>/dev/null; then
       buf generate --template buf.gen.gogo.yaml $file
+      # if [[ "$file" == *"/module/v1/module.proto"* ]]; then
+      #   buf generate --template buf.gen.pulsar.yaml $file
+      # else
+      #   buf generate --template buf.gen.gogo.yaml $file
+      # fi
     fi
   done
 done

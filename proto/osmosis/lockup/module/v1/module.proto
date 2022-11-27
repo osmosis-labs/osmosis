@@ -2,13 +2,13 @@ syntax = "proto3";
 
 package osmosis.lockup.module.v1;
 
-import "osmosis/app/v1alpha1/module.proto";
+import "cosmos/app/v1alpha1/module.proto";
 
-option go_package = "./api/lockup/module";
+option go_package = "github.com/osmosis-labs/osmosis/v13/x/lockup/types";
 
 // Module is the configuration object of lockup module
 message Module {
-  option (osmosis.app.v1alpha1.module) = {
+  option (cosmos.app.v1alpha1.module) = {
     go_import : "github.com/osmosis-labs/osmosis/x/lockup"
   };
 }

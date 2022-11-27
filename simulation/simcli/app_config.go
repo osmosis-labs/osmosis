@@ -18,10 +18,11 @@ import (
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
 	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
 
-	lockupapi "github.com/osmosis-labs/osmosis/v13/api/osmosis/lockup/module/v1"
 	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
 	twaptypes "github.com/osmosis-labs/osmosis/v13/x/twap/types"
+
+	lockupmodule "github.com/osmosis-labs/osmosis/v13/api/osmosis/lockup/module/v1"
 )
 
 var (
@@ -95,7 +96,7 @@ var (
 			},
 			{
 				Name:   lockuptypes.ModuleName,
-				Config: appconfig.WrapAny(&lockupapi.Module{}),
+				Config: appconfig.WrapAny(&lockupmodule.Module{}),
 			},
 		},
 	})
