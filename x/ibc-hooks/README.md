@@ -136,19 +136,21 @@ retrieve the funds after the timeout has passed, but without the ack information
 
 #### Subscription Contract Messages
 Execute:
-* `Subscribe { packet: IbcMsg::Transfer, event: EventType }` 
-* `Unsubscribe { packet: IbcMsg::Transfer, event: EventType }` (for completeness)
-* `Listeners {}`
+* `Subscribe { packet: sequence_number, event: EventType }` 
+* `Unsubscribe { packet: sequence_number, event: EventType }` (for completeness)
+
+Query:
+* `Listeners { packet: sequence_number, event: EventType }`
 
 Sudo:
-* `UnsubscribeAll { packet: IbcMsg::Transfer, event: EventType }`
+* `UnsubscribeAll { packet: sequence_number, event: EventType }`
 
 Where `EventType` can be "acknowledgment" or "timeout"
 
 #### Interface for receiving the Ack
 
 Sudo:
-* `ReceiveAck { packet: IbcMsg::Transfer, ack: TBD }`
+* `ReceiveAck { packet: sequence_number, ack: TBD }`
 
 
 ## Pipeline Hooks

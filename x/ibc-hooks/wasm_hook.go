@@ -218,6 +218,7 @@ func (i *WasmHooks) GetParams(ctx sdk.Context) (contract string) {
 	return contract
 }
 
+// TODO: Refactor this to be reusable and called on Ack and Timeout
 func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error {
 	err := im.App.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
 	if err != nil {
@@ -234,28 +235,47 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 	}
 
 	// Query contract that keeps state about ack listeners
-	res, err := h.WasmKeeper.QuerySmart(ctx, contractAddr, []byte(`{"listeners": {}"}`))
+	msg := fmt.Sprintf(`{"listeners": {"sequence": %d, "event": "acknowledgement"}}`, packet.Sequence)
+	res, err := h.WasmKeeper.QuerySmart(ctx, contractAddr, []byte(msg))
 	if err != nil {
 		return err
 	}
-	var listeners ListenersResponse
+	var listeners []string
 	err = json.Unmarshal(res, &listeners)
 	if err != nil {
 		return err
 	}
 
-	for _, listener := range listeners.Listeners {
+	for _, listener := range listeners {
 		// For every ack listener
 		listenerAddr, err := sdk.AccAddressFromBech32(listener)
 		if err != nil {
 			return err
 		}
 		// Notify them that the ack has been received
-		_, err = h.ContractKeeper.Sudo(ctx, listenerAddr,
-			[]byte(fmt.Sprintf(`{"receive_ack": {"sequence": %d, "ack": "%s"}}`,
-				packet.Sequence, acknowledgement)))
+		ackAsJson, err := json.Marshal(acknowledgement)
+		if err != nil {
+			return err
+		}
+
+		success := "false"
+		if osmoutils.IsAckError(acknowledgement) {
+			success = "true"
+		}
+
+		sudoMsg := []byte(fmt.Sprintf(
+			`{"receive_ack": {"sequence": %d, "ack": %s, "success": %s}}`,
+			packet.Sequence, ackAsJson, success))
+		_, err = h.ContractKeeper.Sudo(ctx, listenerAddr, sudoMsg)
 		if err != nil {
 			// We explicitly ignore the errors but add an event that we can track
+			// TODO: Should we just error out here?
+			//   Risk Scenarios:
+			//    1. The contract does not receive the a success ack and allows users to withdraw funds after the timeout
+			//    2. A bad contract registers as a listener and when this fails, the ack errors out
+			//  Potential solution:
+			//    * Just allow some contracts (i.e.: crosschain swaps) to register as a listener
+			//    * Only allow users to withdraw funds after the timeout if the timeout packet has been received
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(
 					types.EventErrNotifyingAck,
@@ -265,8 +285,20 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 					sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
 				),
 			)
-
 		}
+	}
+
+	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, []byte(`{"unsubscribe_all": {}}`))
+	if err != nil {
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventErrUnsubscribing,
+				sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
+				sdk.NewAttribute(types.AttributeKeyFailureType, "unsubscribe_acknowledgment"),
+				sdk.NewAttribute(types.AttributeKeyContract, contract),
+				sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
+			),
+		)
 	}
 
 	return nil
