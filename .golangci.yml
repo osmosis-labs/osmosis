@@ -35,8 +35,6 @@ linters:
     - noctx
     - paralleltest
     - promlinter
-    - rowserrcheck
-    - sqlclosecheck
     - tenv
     - testpackage
     - tparallel

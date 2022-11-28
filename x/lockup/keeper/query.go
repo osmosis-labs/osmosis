@@ -101,6 +101,7 @@ func queryAccountUnlockableCoins(ctx sdk.Context, req abci.RequestQuery, k Keepe
 	return res, nil
 }
 
+//nolint:unused
 func queryAccountUnlockingCoins(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	var params types.AccountUnlockableCoinsRequest
 

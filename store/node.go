@@ -220,6 +220,7 @@ func (children children) find(key []byte) (idx int, match bool) {
 	return len(children), false
 }
 
+//nolint:unused
 func (children children) set(idx int, child child) children {
 	children[idx] = child
 	return children

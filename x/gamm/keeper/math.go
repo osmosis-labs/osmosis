@@ -11,7 +11,7 @@ import (
 var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
 
 // Singletons
-var zero sdk.Dec = sdk.ZeroDec()
+var zero sdk.Dec = sdk.ZeroDec() //nolint:unused
 
 var (
 	one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")

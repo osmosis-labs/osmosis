@@ -69,6 +69,7 @@ func WeightedOperations(
 	}
 }
 
+//nolint:unused
 func genFuturePoolGovernor(r *rand.Rand, addr sdk.Address, tokenList []string) string {
 	choice := r.Int31n(4)
 	if choice == 0 { // No governor

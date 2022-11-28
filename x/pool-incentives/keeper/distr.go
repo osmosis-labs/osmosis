@@ -97,6 +97,8 @@ func (k Keeper) SetDistrInfo(ctx sdk.Context, distrInfo types.DistrInfo) {
 
 // indexOfDistrRecordByGaugeId returns the index of the record for the specific gauge id.
 // If there is no record matched to the gauge id, return -1.
+//
+//nolint:unused
 func (k Keeper) indexOfDistrRecordByGaugeId(ctx sdk.Context, gaugeId uint64) int {
 	distrInfo := k.GetDistrInfo(ctx)
 	records := distrInfo.Records

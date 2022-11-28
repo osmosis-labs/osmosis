@@ -86,8 +86,8 @@ type AppModule struct {
 	bk     types.BankKeeper
 	keeper keeper.Keeper
 
-	accountKeeper stakingtypes.AccountKeeper
-	bankKeeper    stakingtypes.BankKeeper
+	accountKeeper stakingtypes.AccountKeeper //nolint:unused
+	bankKeeper    stakingtypes.BankKeeper    //nolint:unused
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {

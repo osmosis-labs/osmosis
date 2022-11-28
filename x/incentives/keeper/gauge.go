@@ -58,6 +58,7 @@ func (k Keeper) getToDistributeCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
 	return coins.Sub(distributed)
 }
 
+//nolint:unused
 func (k Keeper) getCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
 	return k.getCoinsFromGauges(k.getGaugesFromIterator(ctx, iterator))
 }
