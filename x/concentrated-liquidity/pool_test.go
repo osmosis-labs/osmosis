@@ -532,7 +532,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			test.addPositions(s.Ctx, pool.GetId())
 
 			// perform calc
-			tokenIn, tokenOut, updatedTick, updatedLiquidity, _, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenInOld(
+			tokenIn, tokenOut, updatedTick, updatedLiquidity, _, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenInTemp(
 				s.Ctx,
 				test.tokenIn, test.tokenOutDenom,
 				swapFee, test.priceLimit, pool.GetId())
@@ -1408,7 +1408,7 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
 			test.addPositions(s.Ctx, pool.GetId())
 
 			// perform calc
-			tokenIn, tokenOut, updatedTick, updatedLiquidity, _, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOutOld(
+			tokenIn, tokenOut, updatedTick, updatedLiquidity, _, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOutTemp(
 				s.Ctx,
 				test.tokenOutMax, test.tokenInDenom,
 				swapFee, test.priceLimit, pool.GetId())
