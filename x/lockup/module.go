@@ -216,7 +216,6 @@ func (am AppModule) Actions() []simtypes.Action {
 	}
 }
 
-
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(ProvideModule),
