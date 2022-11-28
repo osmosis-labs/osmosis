@@ -11,10 +11,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -520,4 +520,16 @@ func (q Querier) TotalDelegationByDelegator(goCtx context.Context, req *types.Qu
 	})
 
 	return &res, nil
+}
+
+func (q Querier) UnpoolWhitelist(goCtx context.Context, req *types.QueryUnpoolWhitelistRequest) (*types.QueryUnpoolWhitelistResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	allowedPools := q.GetUnpoolAllowedPools(sdk.UnwrapSDKContext(goCtx))
+
+	return &types.QueryUnpoolWhitelistResponse{
+		PoolIds: allowedPools,
+	}, nil
 }

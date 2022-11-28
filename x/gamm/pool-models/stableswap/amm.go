@@ -5,10 +5,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/osmomath"
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/cfmm_common"
-	types "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/cfmm_common"
+	types "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 var (
@@ -280,11 +280,14 @@ func iterKCalculator(x0, w, yf osmomath.BigDec) func(osmomath.BigDec) (osmomath.
 	}
 }
 
-var zero = osmomath.ZeroDec()
-var one = osmomath.OneDec()
+var (
+	zero = osmomath.ZeroDec()
+	one  = osmomath.OneDec()
+)
 
 func deriveUpperLowerXFinalReserveBounds(xReserve, yReserve, wSumSquares, yFinal osmomath.BigDec) (
-	xFinalLowerbound, xFinalUpperbound osmomath.BigDec) {
+	xFinalLowerbound, xFinalUpperbound osmomath.BigDec,
+) {
 	xFinalLowerbound, xFinalUpperbound = xReserve, xReserve
 
 	k0 := cfmmConstantMultiNoV(xReserve, yFinal, wSumSquares)
@@ -437,11 +440,47 @@ func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk
 		return &paCopy
 	}
 
-	// We apply the swap fee by multiplying by (1 - swapFee) and then truncating to int
-	oneMinusSwapFee := sdk.OneDec().Sub(swapFee)
+	// We apply the swap fee by multiplying by:
+	// 1) getting what % of the input the swap fee should apply to
+	// 2) multiplying that by swap fee
+	// 3) oneMinusSwapFee := (1 - swap_fee * swap_fee_applicable_percent)
+	// 4) Multiplying token in by one minus swap fee.
+	swapFeeApplicableRatio, err := p.singleAssetJoinSwapFeeRatio(tokenIn.Denom)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+	oneMinusSwapFee := sdk.OneDec().Sub(swapFee.Mul(swapFeeApplicableRatio))
 	tokenInAmtAfterFee := tokenIn.Amount.ToDec().Mul(oneMinusSwapFee).TruncateInt()
 
 	return cfmm_common.BinarySearchSingleAssetJoin(p, sdk.NewCoin(tokenIn.Denom, tokenInAmtAfterFee), poolWithAddedLiquidityAndShares)
+}
+
+// returns the ratio of input asset liquidity, to total liquidity in pool, post-scaling.
+// We use this as the portion of input liquidity to apply a swap fee too, for single asset joins.
+// So if a pool is currently comprised of 80% of asset A, and 20% of asset B (post-scaling),
+// and we input asset A, this function will return 20%.
+// Note that this will over-estimate swap fee for single asset joins slightly,
+// as in the swapping process into the pool, the A to B ratio would decrease the relative supply of B.
+func (p *Pool) singleAssetJoinSwapFeeRatio(tokenInDenom string) (sdk.Dec, error) {
+	// get a second denom in pool
+	tokenOut := p.PoolLiquidity[0]
+	if tokenOut.Denom == tokenInDenom {
+		tokenOut = p.PoolLiquidity[1]
+	}
+	// We round bankers scaled liquidity, since we care about the ratio of liquidity.
+	scaledLiquidity, err := p.scaledSortedPoolReserves(tokenInDenom, tokenOut.Denom, osmomath.RoundDown)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	totalLiquidityDenominator := osmomath.ZeroDec()
+	for _, amount := range scaledLiquidity {
+		totalLiquidityDenominator = totalLiquidityDenominator.Add(amount)
+	}
+	ratioOfInputAssetLiquidityToTotalLiquidity := scaledLiquidity[0].Quo(totalLiquidityDenominator)
+	// SDKDec() rounds down (as it truncates), therefore 1 - term is rounded up, as desired.
+	nonInternalAssetRatio := sdk.OneDec().Sub(ratioOfInputAssetLiquidityToTotalLiquidity.SDKDec())
+	return nonInternalAssetRatio, nil
 }
 
 // Route a pool join attempt to either a single-asset join or all-asset join (mutates pool state)
