@@ -32,6 +32,7 @@ const (
 )
 
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
+//
 //nolint:forcetypeassert
 func AddGenesisAccountCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{

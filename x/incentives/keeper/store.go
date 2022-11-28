@@ -66,6 +66,7 @@ func (k Keeper) addGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64) er
 }
 
 // deleteGaugeRefByKey removes gauge ID from an array associated to provided key
+//
 //nolint:ineffassign
 func (k Keeper) deleteGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64) error {
 	index := -1
