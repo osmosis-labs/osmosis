@@ -15,11 +15,6 @@ import (
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
-var (
-	upperPriceLimit = sdk.NewDec(999999999999)
-	lowerPriceLimit = sdk.NewDec(1)
-)
-
 type SwapState struct {
 	amountSpecifiedRemaining sdk.Dec // remaining amount of tokens that need to be bought by the pool
 	amountCalculated         sdk.Dec // amount out
@@ -28,7 +23,13 @@ type SwapState struct {
 	liquidity                sdk.Dec // new liquidity when swap is done
 }
 
-func (k Keeper) CreateNewConcentratedLiquidityPool(ctx sdk.Context, poolId uint64, denom0, denom1 string, currSqrtPrice sdk.Dec, currTick sdk.Int) (types.ConcentratedPoolExtension, error) {
+func (k Keeper) CreateNewConcentratedLiquidityPool(
+	ctx sdk.Context,
+	poolId uint64,
+	denom0, denom1 string,
+	currSqrtPrice sdk.Dec,
+	currTick sdk.Int,
+) (types.ConcentratedPoolExtension, error) {
 	denom0, denom1, err := types.OrderInitialPoolDenoms(denom0, denom1)
 	if err != nil {
 		return nil, err
@@ -74,22 +75,21 @@ func (k Keeper) SwapExactAmountIn(
 	// determine if we are swapping asset0 for asset1 or vice versa
 	asset0 := pool.GetToken0()
 	zeroForOne := tokenIn.Denom == asset0
-	var tokenOutCoin sdk.Coin
 
 	// change priceLimit based on which direction we are swapping
 	var priceLimit sdk.Dec
 	if zeroForOne {
-		priceLimit = lowerPriceLimit
+		priceLimit = types.LowerPriceLimit
 	} else {
-		priceLimit = upperPriceLimit
+		priceLimit = types.UpperPriceLimit
 	}
-	tokenOutCoin, err = k.SwapOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, pool.GetId())
+	tokenOut, err := k.SwapOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, pool.GetId())
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
 	// check that the tokenOut calculated is both valid and less than specified limit
-	tokenOutAmount = tokenOutCoin.Amount
+	tokenOutAmount = tokenOut.Amount
 	if !tokenOutAmount.IsPositive() {
 		return sdk.Int{}, fmt.Errorf("token amount must be positive: got %v", tokenOutAmount)
 	}
@@ -99,7 +99,7 @@ func (k Keeper) SwapExactAmountIn(
 
 	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
 	// Also emits swap event and updates related liquidity metrics
-	if err := k.updatePoolForSwap(ctx, poolI, sender, tokenIn, tokenOutCoin); err != nil {
+	if err := k.updatePoolForSwap(ctx, poolI, sender, tokenIn, tokenOut); err != nil {
 		return sdk.Int{}, err
 	}
 
@@ -109,18 +109,66 @@ func (k Keeper) SwapExactAmountIn(
 func (k Keeper) SwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	pool swaproutertypes.PoolI,
+	poolI swaproutertypes.PoolI,
 	tokenInDenom string,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
 	swapFee sdk.Dec,
 ) (tokenInAmount sdk.Int, err error) {
-	return sdk.Int{}, nil
+	if tokenOut.Denom == tokenInDenom {
+		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
+	}
+
+	// type cast PoolI to ConcentratedPoolExtension
+	pool, ok := poolI.(types.ConcentratedPoolExtension)
+	if !ok {
+		return sdk.Int{}, fmt.Errorf("pool type (%T) cannot be cast to ConcentratedPoolExtension", poolI)
+	}
+
+	// determine if we are swapping asset0 for asset1 or vice versa
+	asset0 := pool.GetToken0()
+	zeroForOne := tokenOut.Denom == asset0
+
+	// change priceLimit based on which direction we are swapping
+	var priceLimit sdk.Dec
+	if zeroForOne {
+		priceLimit = types.LowerPriceLimit
+	} else {
+		priceLimit = types.UpperPriceLimit
+	}
+	tokenIn, err := k.SwapInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, priceLimit, pool.GetId())
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	// check that the tokenOut calculated is both valid and less than specified limit
+	tokenInAmount = tokenIn.Amount
+	if !tokenInAmount.IsPositive() {
+		return sdk.Int{}, fmt.Errorf("token amount must be positive: got %v", tokenInAmount)
+	}
+	if tokenInAmount.GT(tokenInMaxAmount) {
+		return sdk.Int{}, fmt.Errorf("%s token is lesser than min amount", tokenInDenom)
+	}
+
+	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
+	// Also emits swap event and updates related liquidity metrics
+	if err := k.updatePoolForSwap(ctx, poolI, sender, tokenIn, tokenIn); err != nil {
+		return sdk.Int{}, err
+	}
+
+	return tokenInAmount, nil
 }
 
 // SwapOutAmtGivenIn is the internal mutative method for CalcOutAmtGivenIn. Utilizing CalcOutAmtGivenIn's output, this function applies the
 // new tick, liquidity, and sqrtPrice to the respective pool
-func (k Keeper) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec, priceLimit sdk.Dec, poolId uint64) (tokenOut sdk.Coin, err error) {
+func (k Keeper) SwapOutAmtGivenIn(
+	ctx sdk.Context,
+	tokenIn sdk.Coin,
+	tokenOutDenom string,
+	swapFee sdk.Dec,
+	priceLimit sdk.Dec,
+	poolId uint64,
+) (tokenOut sdk.Coin, err error) {
 	tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, err := k.calcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, poolId)
 	if err != nil {
 		return sdk.Coin{}, err
@@ -132,6 +180,30 @@ func (k Keeper) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 	}
 
 	return tokenOut, nil
+}
+
+func (k *Keeper) SwapInAmtGivenOut(
+	ctx sdk.Context,
+	desiredTokenOut sdk.Coin,
+	tokenInDenom string,
+	swapFee sdk.Dec,
+	priceLimit sdk.Dec,
+	poolId uint64,
+) (tokenIn sdk.Coin, err error) {
+	tokenIn, actualTokenOut, updatedTick, updatedLiquidity, updatedSqrtPrice, err := k.calcInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, swapFee, priceLimit, poolId)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+
+	if err := k.applySwap(ctx, tokenIn, actualTokenOut, poolId, updatedLiquidity, updatedTick, updatedSqrtPrice); err != nil {
+		return sdk.Coin{}, err
+	}
+
+	if tokenIn.Amount.GT(tokenIn.Amount) {
+		return sdk.Coin{}, fmt.Errorf("tokenIn calculated is larger than tokenIn provided")
+	}
+
+	return tokenIn, nil
 }
 
 // TODO: Calc stubs while we figure out how we want to work this through the swap router
@@ -163,7 +235,8 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 	tokenOutDenom string,
 	swapFee sdk.Dec,
 	priceLimit sdk.Dec,
-	poolId uint64) (tokenIn, tokenOut sdk.Coin, updatedTick sdk.Int, updatedLiquidity, updatedSqrtPrice sdk.Dec, err error) {
+	poolId uint64,
+) (tokenIn, tokenOut sdk.Coin, updatedTick sdk.Int, updatedLiquidity, updatedSqrtPrice sdk.Dec, err error) {
 	p, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
@@ -296,24 +369,14 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 	return tokenIn, tokenOut, swapState.tick, swapState.liquidity, swapState.sqrtPrice, nil
 }
 
-func (k *Keeper) SwapInAmtGivenOut(ctx sdk.Context, desiredTokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec, priceLimit sdk.Dec, poolId uint64) (tokenIn sdk.Coin, err error) {
-	tokenIn, actualTokenOut, updatedTick, updatedLiquidity, updatedSqrtPrice, err := k.calcInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, swapFee, sdk.NewDec(9999999999), poolId)
-	if err != nil {
-		return sdk.Coin{}, err
-	}
-
-	if err := k.applySwap(ctx, tokenIn, actualTokenOut, poolId, updatedLiquidity, updatedTick, updatedSqrtPrice); err != nil {
-		return sdk.Coin{}, err
-	}
-
-	if tokenIn.Amount.GT(tokenIn.Amount) {
-		return sdk.Coin{}, fmt.Errorf("tokenIn calculated is larger than tokenIn provided")
-	}
-
-	return tokenIn, nil
-}
-
-func (k Keeper) calcInAmtGivenOut(ctx sdk.Context, desiredTokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec, priceLimit sdk.Dec, poolId uint64) (tokenIn, tokenOut sdk.Coin, updatedTick sdk.Int, updatedLiquidity, updatedSqrtPrice sdk.Dec, err error) {
+func (k Keeper) calcInAmtGivenOut(
+	ctx sdk.Context,
+	desiredTokenOut sdk.Coin,
+	tokenInDenom string,
+	swapFee sdk.Dec,
+	priceLimit sdk.Dec,
+	poolId uint64,
+) (tokenIn, tokenOut sdk.Coin, updatedTick sdk.Int, updatedLiquidity, updatedSqrtPrice sdk.Dec, err error) {
 	p, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
@@ -443,7 +506,15 @@ func (k Keeper) calcInAmtGivenOut(ctx sdk.Context, desiredTokenOut sdk.Coin, tok
 
 // applySwap persists the swap state and charges gas fees.
 // TODO: test this and make sure that gas consumption is taken
-func (k *Keeper) applySwap(ctx sdk.Context, tokenIn sdk.Coin, tokenOut sdk.Coin, poolId uint64, newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurrentSqrtPrice sdk.Dec) error {
+func (k *Keeper) applySwap(
+	ctx sdk.Context,
+	tokenIn sdk.Coin,
+	tokenOut sdk.Coin,
+	poolId uint64,
+	newLiquidity sdk.Dec,
+	newCurrentTick sdk.Int,
+	newCurrentSqrtPrice sdk.Dec,
+) error {
 	// Fixed gas consumption per swap to prevent spam
 	ctx.GasMeter().ConsumeGas(gammtypes.BalancerGasFeeForSwap, "cl pool swap computation")
 	pool, err := k.getPoolById(ctx, poolId)
