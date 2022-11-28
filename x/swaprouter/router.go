@@ -383,7 +383,7 @@ func (k Keeper) createOsmoMultihopExpectedSwapOuts(
 		}
 
 		swapFee := poolI.GetSwapFee(ctx)
-		tokenIn, err := poolI.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), route.TokenInDenom, cumulativeRouteSwapFee.Mul((swapFee.Quo(sumOfSwapFees))))
+		tokenIn, err := swapModule.CalcInAmtGivenOut(ctx, poolI, tokenOut, route.TokenInDenom, cumulativeRouteSwapFee.Mul((swapFee.Quo(sumOfSwapFees))))
 		if err != nil {
 			return nil, err
 		}

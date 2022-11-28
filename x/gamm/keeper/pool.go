@@ -57,8 +57,8 @@ func (k Keeper) MarshalPool(pool swaproutertypes.PoolI) ([]byte, error) {
 	return k.cdc.MarshalInterface(pool)
 }
 
-func (k Keeper) UnmarshalPool(bz []byte) (types.TraditionalAmmInterface, error) {
-	var acc types.TraditionalAmmInterface
+func (k Keeper) UnmarshalPool(bz []byte) (types.CFMMI, error) {
+	var acc types.CFMMI
 	return acc, k.cdc.UnmarshalInterface(bz, &acc)
 }
 
@@ -70,7 +70,7 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (swaproutertypes.PoolI, 
 // GetPoolAndPoke returns a PoolI based on it's identifier if one exists. If poolId corresponds
 // to a pool with weights (e.g. balancer), the weights of the pool are updated via PokePool prior to returning.
 // TODO: Consider rename to GetPool due to downstream API confusion.
-func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.TraditionalAmmInterface, error) {
+func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.CFMMI, error) {
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
 	if !store.Has(poolKey) {
@@ -92,7 +92,7 @@ func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.Traditiona
 }
 
 // Get pool and check if the pool is active, i.e. allowed to be swapped against.
-func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.TraditionalAmmInterface, error) {
+func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.CFMMI, error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
 		return &balancer.Pool{}, err
@@ -109,7 +109,7 @@ func (k Keeper) iterator(ctx sdk.Context, prefix []byte) sdk.Iterator {
 	return sdk.KVStorePrefixIterator(store, prefix)
 }
 
-func (k Keeper) GetPoolsAndPoke(ctx sdk.Context) (res []types.TraditionalAmmInterface, err error) {
+func (k Keeper) GetPoolsAndPoke(ctx sdk.Context) (res []types.CFMMI, err error) {
 	iter := k.iterator(ctx, types.KeyPrefixPools)
 	defer iter.Close()
 
@@ -316,4 +316,12 @@ func (k Keeper) setStableSwapScalingFactors(ctx sdk.Context, poolId uint64, scal
 	}
 
 	return k.setPool(ctx, stableswapPool)
+}
+
+func convertToCFMMPooll(pool swaproutertypes.PoolI) (types.CFMMI, error) {
+	cfmmPool, ok := pool.(types.CFMMI)
+	if !ok {
+		return nil, fmt.Errorf("given pool does not implement CFMMI, implements %T", pool)
+	}
+	return cfmmPool, nil
 }
