@@ -43,10 +43,6 @@ func (k Keeper) HasPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	return k.hasPosition(ctx, poolId, owner, lowerTick, upperTick)
 }
 
-func (k Keeper) GetPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedPoolExtension, error) {
-	return k.getPoolById(ctx, poolId)
-}
-
 func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Dec, err error) {
 	return k.crossTick(ctx, poolId, tickIndex)
 }

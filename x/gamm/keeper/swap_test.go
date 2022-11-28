@@ -184,8 +184,10 @@ func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				suite.NoError(err)
 				pool = poolExt.(swaproutertypes.PoolI)
 			} else if test.param.poolType == "concentratedliquidity" {
-				poolExt, err := suite.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, "bar", "foo", sdk.MustNewDecFromStr("70.710678118654752440"), sdk.NewInt(85176))
+				poolExtId, err := suite.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, "bar", "foo", sdk.MustNewDecFromStr("70.710678118654752440"), sdk.NewInt(85176))
 				suite.NoError(err)
+				poolExt, err := suite.App.ConcentratedLiquidityKeeper.GetPoolById(suite.Ctx, poolExtId)
+				suite.Require().NoError(err)
 				pool = poolExt.(swaproutertypes.PoolI)
 			}
 
@@ -263,8 +265,10 @@ func (suite *KeeperTestSuite) TestCalcInAmtGivenOut() {
 				suite.NoError(err)
 				pool = poolExt.(swaproutertypes.PoolI)
 			} else if test.param.poolType == "concentratedliquidity" {
-				poolExt, err := suite.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, "bar", "foo", sdk.MustNewDecFromStr("70.710678118654752440"), sdk.NewInt(85176))
+				poolExtId, err := suite.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, "bar", "foo", sdk.MustNewDecFromStr("70.710678118654752440"), sdk.NewInt(85176))
 				suite.NoError(err)
+				poolExt, err := suite.App.ConcentratedLiquidityKeeper.GetPoolById(suite.Ctx, poolExtId)
+				suite.Require().NoError(err)
 				pool = poolExt.(swaproutertypes.PoolI)
 			}
 
