@@ -237,7 +237,7 @@ func RandomExitSwapShareAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.
 }
 
 // TODO: Fix CalcJoinPoolShares API so we don't have to do this
-func deriveRealMinShareOutAmt(ctx sdk.Context, tokenIn sdk.Coins, pool types.TraditionalAmmInterface) (sdk.Int, error) {
+func deriveRealMinShareOutAmt(ctx sdk.Context, tokenIn sdk.Coins, pool types.CFMMPoolI) (sdk.Int, error) {
 	minShareOutAmt, _, err := pool.CalcJoinPoolShares(ctx, tokenIn, pool.GetSwapFee(ctx))
 	if err != nil {
 		return sdk.Int{}, err
@@ -276,7 +276,7 @@ func deriveRealMinShareOutAmt(ctx sdk.Context, tokenIn sdk.Coins, pool types.Tra
 	return minShareOutAmt, nil
 }
 
-func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64, types.TraditionalAmmInterface, sdk.Coin, sdk.Coin, []string, string, error) {
+func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64, types.CFMMPoolI, sdk.Coin, sdk.Coin, []string, string, error) {
 	pools, err := k.GetPoolsAndPoke(ctx)
 	if err != nil {
 		return 0, nil, sdk.Coin{}, sdk.Coin{}, nil, "", err

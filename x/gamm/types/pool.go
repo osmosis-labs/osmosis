@@ -10,8 +10,9 @@ import (
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
-// TraditionalAmmInterface defines an interface for pools representing traditional AMM.
-type TraditionalAmmInterface interface {
+// CFMMPoolI defines an interface for pools representing constant function
+// AMM.
+type CFMMPoolI interface {
 	swaproutertypes.PoolI
 
 	// JoinPool joins the pool using all of the tokensIn provided.
@@ -38,6 +39,19 @@ type TraditionalAmmInterface interface {
 	// CalcJoinPoolShares returns how many LP shares JoinPool would return on these arguments.
 	// This does not mutate the pool, or state.
 	CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error)
+	// SwapOutAmtGivenIn swaps 'tokenIn' against the pool, for tokenOutDenom, with the provided swapFee charged.
+	// Balance transfers are done in the keeper, but this method updates the internal pool state.
+	SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error)
+	// CalcOutAmtGivenIn returns how many coins SwapOutAmtGivenIn would return on these arguments.
+	// This does not mutate the pool, or state.
+	CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error)
+
+	// SwapInAmtGivenOut swaps exactly enough tokensIn against the pool, to get the provided tokenOut amount out of the pool.
+	// Balance transfers are done in the keeper, but this method updates the internal pool state.
+	SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error)
+	// CalcInAmtGivenOut returns how many coins SwapInAmtGivenOut would return on these arguments.
+	// This does not mutate the pool, or state.
+	CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error)
 }
 
 // PoolAmountOutExtension is an extension of the PoolI
@@ -47,7 +61,7 @@ type TraditionalAmmInterface interface {
 // amount of coins to get out.
 // See definitions below.
 type PoolAmountOutExtension interface {
-	TraditionalAmmInterface
+	CFMMPoolI
 
 	// CalcTokenInShareAmountOut returns the number of tokenInDenom tokens
 	// that would be returned if swapped for an exact number of shares (shareOutAmount).
@@ -84,7 +98,7 @@ type PoolAmountOutExtension interface {
 // WeightedPoolExtension is an extension of the PoolI interface
 // That defines an additional API for handling the pool's weights.
 type WeightedPoolExtension interface {
-	TraditionalAmmInterface
+	CFMMPoolI
 
 	// PokePool determines if a pool's weights need to be updated and updates
 	// them if so.
