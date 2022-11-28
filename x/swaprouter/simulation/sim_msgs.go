@@ -152,7 +152,7 @@ func createPoolRestriction(k swaprouter.Keeper, sim *simtypes.SimCtx, ctx sdk.Co
 	}
 }
 
-// TODO: refactor this to work with simulateion pools
+// TODO: refactor this to work with simulation pools
 func getRandPool(k simulationKeeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64, gammtypes.CFMMPoolI, sdk.Coin, sdk.Coin, []string, string, error) {
 	// select a pseudo-random pool ID, max bound by the upcoming pool ID
 	pool_id := simtypes.RandLTBound(sim, k.keeper.GetNextPoolId(ctx))
