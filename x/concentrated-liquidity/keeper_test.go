@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
 )
 
 var (
@@ -16,8 +15,8 @@ var (
 	DefaultUpperPrice       = sdk.NewDec(5500)
 	DefaultUpperTick        = int64(86129)
 	DefaultCurrPrice        = sdk.NewDec(5000)
-	DefaultCurrTick         = math.PriceToTick(DefaultCurrPrice) // 85176
-	DefaultCurrSqrtPrice, _ = DefaultCurrPrice.ApproxSqrt()      // 70.710678118654752440
+	DefaultCurrTick         = int64(85176)
+	DefaultCurrSqrtPrice, _ = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
 	DefaultZeroSwapFee      = sdk.ZeroDec()
 	DefaultAmt0             = sdk.NewInt(1000000)
 	DefaultAmt1             = sdk.NewInt(5000000000)
