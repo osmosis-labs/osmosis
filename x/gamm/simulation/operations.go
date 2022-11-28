@@ -267,5 +267,5 @@ func RandomExactAmountInRoute(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, to
 	}
 
 	tokenOut = tokenIn
-	return
+	return res, tokenOut
 }

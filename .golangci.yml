@@ -1,0 +1,99 @@
+run:
+  tests: false
+#   # timeout for analysis, e.g. 30s, 5m, default is 1m
+#   timeout: 5m
+
+linters:
+  disable-all: true
+  # Enable specific linter
+  # https://golangci-lint.run/usage/linters/#enabled-by-default-linters
+  enable:
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - contextcheck
+    #    - cyclop
+#    - deadcode <- re-enable in another pr
+    - depguard
+    #    - dogsled <- disabled because we would like to participate in the iditerod
+    # - dupl <- really just catches cli stub text
+    - durationcheck
+    - errcheck
+    - errname
+#    - errorlint <- later
+#    - exhaustive <- too picky
+    #    - exhaustivestruct <- disabled because we don't want to use every element of every struct
+    - exportloopref
+    #    - forbidigo <- forbids fmt.Print* by default
+    - forcetypeassert
+    #    - funlen <- some of our functions are longer than this by necessity
+    #    - gci <- questionable utility
+    #    - gochecknoglobals <- disabled because we want some globals
+    #    - gochecknoinits <- disabled because we want to use init()
+    #    - gocognit <- disabled for same reason as gocyclo
+    - goconst
+    # - gocritic <- re enable later to catch capitalized local variables
+    #    - gocyclo <- disabled because it won't work with how we cosmos
+    # - godot
+    #    - godox <- detects TODO/BUG/FIXME and we may wantnthis later but isn't appropriate now
+    #    - goerr113 <- disabled due to lack of comprehension
+    - gofmt
+    # - gofumpt
+    - goheader
+    - goimports
+    #    - gomoddirectives <- disables replaces
+    - gomodguard
+    - goprintffuncname
+#    - gosec <- triggers too much for this round and should be re-enabled later
+#    - gosimple <- later
+    - govet
+    #   - ifshort <- seems to be of questionable value
+    - importas
+    - ineffassign
+    #    - ireturn <- disabled because we want to return interfaces
+    #    - lll <- disabled as it is a bit much.  Maybe we have a desired limit?
+    - makezero
+    - misspell
+    - nakedret
+#    - nestif <- ?
+    - nilerr
+    - nilnil
+    #    - nlreturn <- disabled as it doesn't auto-fix something simple and doesn't add anything useful
+    - noctx
+    #    - nolintlint <- disabled because we use nolint in some places
+    - paralleltest
+    # - prealloc <- disabled because it makes simple code complicated
+#    - predeclared <- later
+    - promlinter
+#    - revive <- temporarily disabled while jacob figures out how to make poolId not trigger it.
+    - rowserrcheck
+    - sqlclosecheck
+#    - staticcheck <- later
+#    - structcheck <- later
+#    - stylecheck <- enable later, atriggers on underscores in variable names and on poolId
+    #    - tagliatelle <- disabled for defying cosmos idiom
+    - tenv
+    - testpackage
+#    - thelper <- later
+    - tparallel
+    - typecheck
+    - unconvert
+#    - unparam <- looks for unused parameters (enable later)
+#    - unused <- looks for unused variables (enable later)
+#    - varcheck <- later
+    #    - varnamelen <- disabled because defies idiom
+    #    - wastedassign
+    - whitespace
+#    - wrapcheck
+#    - wsl
+
+issues:
+  exclude-rules:
+    - path: bench_test\.go
+      linters:
+        - errcheck
+    - path: client/docs
+      linters:
+        - all
+  max-issues-per-linter: 10000
+  max-same-issues: 10000

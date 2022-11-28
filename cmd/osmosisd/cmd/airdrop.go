@@ -111,7 +111,6 @@ Example:
 
 			totalAtomBalance := sdk.NewInt(0)
 			for _, account := range genStateV036.AppState.Accounts {
-
 				balance := account.Coins.AmountOf(denom)
 				totalAtomBalance = totalAtomBalance.Add(balance)
 
@@ -236,7 +235,7 @@ Example:
 				return fmt.Errorf("failed to marshal snapshot: %w", err)
 			}
 
-			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0644)
+			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0o644)
 			return err
 		},
 	}

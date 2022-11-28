@@ -22,7 +22,6 @@ func (k Keeper) UnmarshalPool(bz []byte) (types.PoolI, error) {
 }
 
 func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
-
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
 	if !store.Has(poolKey) {

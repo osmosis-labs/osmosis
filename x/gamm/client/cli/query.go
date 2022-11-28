@@ -42,6 +42,7 @@ func GetQueryCmd() *cobra.Command {
 }
 
 // GetCmdPool returns pool
+//nolint:goconst
 func GetCmdPool() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pool <poolID>",
@@ -75,16 +76,17 @@ $ %s query gamm pool 1
 
 			if clientCtx.OutputFormat == "text" {
 				var pool types.Pool
-				pool.XXX_Unmarshal(res.GetPool().Value)
+				err := pool.XXX_Unmarshal(res.GetPool().Value)
+				if err != nil {
+					return err
+				}
 				out, err := yaml.Marshal(pool)
-
 				if err != nil {
 					return err
 				}
 				return writeOutputBoilerplate(clientCtx, out)
 			} else {
 				out, err := clientCtx.JSONMarshaler.MarshalJSON(res)
-
 				if err != nil {
 					return err
 				}
@@ -211,14 +213,12 @@ $ %s query gamm pool-params 1
 
 			if clientCtx.OutputFormat == "text" {
 				out, err := yaml.Marshal(res.GetParams())
-
 				if err != nil {
 					return err
 				}
 				return writeOutputBoilerplate(clientCtx, out)
 			} else {
 				out, err := clientCtx.JSONMarshaler.MarshalJSON(res)
-
 				if err != nil {
 					return err
 				}
@@ -233,6 +233,7 @@ $ %s query gamm pool-params 1
 }
 
 // TODO: Push this to the SDK
+//nolint:goconst
 func writeOutputBoilerplate(ctx client.Context, out []byte) error {
 	writer := ctx.Output
 	if writer == nil {

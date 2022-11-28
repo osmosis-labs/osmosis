@@ -11,7 +11,6 @@ import (
 )
 
 func TestGenesisStateMarshalUnmarshal(t *testing.T) {
-
 	tests := []struct {
 		state *types.GenesisState
 	}{

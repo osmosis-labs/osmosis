@@ -11,7 +11,6 @@ import (
 )
 
 func TestParamsMarshalUnmarshal(t *testing.T) {
-
 	tests := []struct {
 		params *types.Params
 	}{
@@ -38,7 +37,6 @@ func TestParamsMarshalUnmarshal(t *testing.T) {
 }
 
 func TestLockableDurationsInfoMarshalUnmarshal(t *testing.T) {
-
 	tests := []struct {
 		durations *types.LockableDurationsInfo
 	}{
@@ -68,7 +66,6 @@ func TestLockableDurationsInfoMarshalUnmarshal(t *testing.T) {
 }
 
 func TestDistrInfoMarshalUnmarshal(t *testing.T) {
-
 	tests := []struct {
 		info *types.DistrInfo
 	}{
@@ -117,7 +114,6 @@ func TestDistrInfoMarshalUnmarshal(t *testing.T) {
 }
 
 func TestDistrRecordMarshalUnmarshal(t *testing.T) {
-
 	tests := []struct {
 		info *types.DistrRecord
 	}{

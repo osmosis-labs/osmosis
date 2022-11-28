@@ -41,7 +41,7 @@ func (ak AdminKeeper) Relock(ctx sdk.Context, lockID uint64, newCoins sdk.Coins)
 	return nil
 }
 
-// BreakLock unlock a lockID without considering time with admin priviledge
+// BreakLock unlock a lockID without considering time with admin privilege
 func (ak AdminKeeper) BreakLock(ctx sdk.Context, lockID uint64) error {
 	lock, err := ak.GetLockByID(ctx, lockID)
 	if err != nil {

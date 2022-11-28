@@ -18,9 +18,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v3/x/gamm/types"
 )
 
-var (
-	sdkIntMaxValue = sdk.NewInt(0)
-)
+var sdkIntMaxValue = sdk.NewInt(0)
 
 func init() {
 	maxInt := big.NewInt(2)
@@ -97,7 +95,6 @@ func (k Keeper) Pools(
 		anys = append(anys, any)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

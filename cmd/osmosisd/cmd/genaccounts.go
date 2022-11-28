@@ -32,6 +32,7 @@ const (
 )
 
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
+//nolint:forcetypeassert
 func AddGenesisAccountCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-genesis-account [address_or_key_name] [coin][,[coin]]",
@@ -183,6 +184,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 	return cmd
 }
 
+//nolint:forcetypeassert
 func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "import-genesis-accounts-from-snapshot [input-snapshot-file] [input-ions-file]",
@@ -231,7 +233,7 @@ Example:
 			defer snapshotJSON.Close()
 			byteValue, _ := ioutil.ReadAll(snapshotJSON)
 			snapshot := Snapshot{}
-			json.Unmarshal(byteValue, &snapshot)
+			err = json.Unmarshal(byteValue, &snapshot)
 			if err != nil {
 				return err
 			}
@@ -245,7 +247,7 @@ Example:
 			defer ionJSON.Close()
 			byteValue2, _ := ioutil.ReadAll(ionJSON)
 			var ionAmts map[string]int64
-			json.Unmarshal(byteValue2, &ionAmts)
+			err = json.Unmarshal(byteValue2, &ionAmts)
 			if err != nil {
 				return err
 			}
@@ -263,7 +265,6 @@ Example:
 				if _, ok := nonAirdropAccs[acc.Address]; !ok {
 					nonAirdropAccs[acc.Address] = sdk.NewCoins()
 				}
-
 			}
 
 			for addr, amt := range ionAmts {

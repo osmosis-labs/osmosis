@@ -14,7 +14,10 @@ func (node *node) isLeaf() bool {
 func (node *node) children() (res children) {
 	bz := node.tree.store.Get(node.tree.nodeKey(node.level, node.key))
 	if bz != nil {
-		json.Unmarshal(bz, &res)
+		err := json.Unmarshal(bz, &res)
+		if err != nil {
+			panic(err)
+		}
 	}
 	return
 }
@@ -160,7 +163,7 @@ func (node *node) pull(key []byte) {
 	}
 
 	children = children.delete(idx)
-	// For sake of efficienty on our use case, we pull only when a node gets
+	// For sake of efficiently on our use case, we pull only when a node gets
 	// empty.
 	// if len(data.Index) >= int(node.tree.m/2) {
 	if len(children) > 0 {

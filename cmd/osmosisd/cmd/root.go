@@ -102,6 +102,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 
 	rootCmd.AddCommand(
 		// genutilcli.InitCmd(osmosis.ModuleBasics, osmosis.DefaultNodeHome),
+		forceprune(),
 		InitCmd(osmosis.ModuleBasics, osmosis.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, osmosis.DefaultNodeHome),
 		genutilcli.MigrateGenesisCmd(),
@@ -233,8 +234,8 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 
 func createOsmosisAppAndExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailWhiteList []string,
-	appOpts servertypes.AppOptions) (servertypes.ExportedApp, error) {
-
+	appOpts servertypes.AppOptions,
+) (servertypes.ExportedApp, error) {
 	encCfg := osmosis.MakeEncodingConfig() // Ideally, we would reuse the one created by NewRootCmd.
 	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	var app *osmosis.OsmosisApp

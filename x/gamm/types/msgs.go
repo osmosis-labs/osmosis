@@ -68,7 +68,6 @@ var _ sdk.Msg = &MsgCreatePool{}
 func (msg MsgCreatePool) Route() string { return RouterKey }
 func (msg MsgCreatePool) Type() string  { return TypeMsgCreatePool }
 func (msg MsgCreatePool) ValidateBasic() error {
-
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
@@ -91,9 +90,11 @@ func (msg MsgCreatePool) ValidateBasic() error {
 
 	return nil
 }
+
 func (msg MsgCreatePool) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
+
 func (msg MsgCreatePool) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -127,9 +128,11 @@ func (msg MsgSwapExactAmountIn) ValidateBasic() error {
 
 	return nil
 }
+
 func (msg MsgSwapExactAmountIn) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
+
 func (msg MsgSwapExactAmountIn) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -144,7 +147,6 @@ func (msg MsgSwapExactAmountOut) Route() string { return RouterKey }
 func (msg MsgSwapExactAmountOut) Type() string  { return TypeMsgSwapExactAmountOut }
 func (msg MsgSwapExactAmountOut) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
-
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
@@ -164,9 +166,11 @@ func (msg MsgSwapExactAmountOut) ValidateBasic() error {
 
 	return nil
 }
+
 func (msg MsgSwapExactAmountOut) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
+
 func (msg MsgSwapExactAmountOut) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -196,9 +200,11 @@ func (msg MsgJoinPool) ValidateBasic() error {
 
 	return nil
 }
+
 func (msg MsgJoinPool) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
+
 func (msg MsgJoinPool) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -228,9 +234,11 @@ func (msg MsgExitPool) ValidateBasic() error {
 
 	return nil
 }
+
 func (msg MsgExitPool) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
+
 func (msg MsgExitPool) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -259,9 +267,11 @@ func (msg MsgJoinSwapExternAmountIn) ValidateBasic() error {
 
 	return nil
 }
+
 func (msg MsgJoinSwapExternAmountIn) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
+
 func (msg MsgJoinSwapExternAmountIn) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -295,9 +305,11 @@ func (msg MsgJoinSwapShareAmountOut) ValidateBasic() error {
 
 	return nil
 }
+
 func (msg MsgJoinSwapShareAmountOut) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
+
 func (msg MsgJoinSwapShareAmountOut) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -326,9 +338,11 @@ func (msg MsgExitSwapExternAmountOut) ValidateBasic() error {
 
 	return nil
 }
+
 func (msg MsgExitSwapExternAmountOut) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
+
 func (msg MsgExitSwapExternAmountOut) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -362,9 +376,11 @@ func (msg MsgExitSwapShareAmountIn) ValidateBasic() error {
 
 	return nil
 }
+
 func (msg MsgExitSwapShareAmountIn) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
+
 func (msg MsgExitSwapShareAmountIn) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {

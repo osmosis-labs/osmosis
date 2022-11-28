@@ -115,14 +115,14 @@ func TestPoolUpdatePoolAssetBalance(t *testing.T) {
 	// create a different pool each time.
 	pacc_internal := pacc.(*Pool)
 
-	err = pacc_internal.setInitialPoolAssets([]PoolAsset{PoolAsset{
+	err = pacc_internal.setInitialPoolAssets([]PoolAsset{{
 		Weight: sdk.NewInt(-1),
 		Token:  sdk.NewCoin("negativeWeight", sdk.NewInt(50000)),
 	}})
 
 	require.Error(t, err)
 
-	err = pacc_internal.setInitialPoolAssets([]PoolAsset{PoolAsset{
+	err = pacc_internal.setInitialPoolAssets([]PoolAsset{{
 		Weight: sdk.NewInt(0),
 		Token:  sdk.NewCoin("zeroWeight", sdk.NewInt(50000)),
 	}})
@@ -573,7 +573,6 @@ func TestPoolPokeTokenWeights(t *testing.T) {
 		// Should have been deleted by the last test case of after PokeTokenWeights pokes past end time.
 		require.Nil(t, pacc.GetPoolParams().SmoothWeightChangeParams)
 	}
-
 }
 
 func TestPoolParamStartTime(t *testing.T) {

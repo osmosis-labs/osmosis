@@ -56,9 +56,11 @@ func (m MsgCreateGauge) ValidateBasic() error {
 
 	return nil
 }
+
 func (m MsgCreateGauge) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
+
 func (m MsgCreateGauge) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}
@@ -87,9 +89,11 @@ func (m MsgAddToGauge) ValidateBasic() error {
 
 	return nil
 }
+
 func (m MsgAddToGauge) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
+
 func (m MsgAddToGauge) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}

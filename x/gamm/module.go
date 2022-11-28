@@ -60,7 +60,10 @@ func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
 
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -93,7 +96,8 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 func NewAppModule(cdc codec.Marshaler, keeper keeper.Keeper,
-	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper) AppModule {
+	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper,
+) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,

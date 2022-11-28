@@ -283,7 +283,6 @@ func queryAccountLockedLongerDurationFn(clientCtx client.Context) http.HandlerFu
 
 func queryAccountLockedLongerDurationDenomFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		vars := mux.Vars(r)
 		strOwnerAddress := vars[RestOwnerAddress]
 		owner, err := sdk.AccAddressFromBech32(strOwnerAddress)
