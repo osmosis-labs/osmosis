@@ -108,6 +108,15 @@ func (q Querier) Pools(
 	}, nil
 }
 
+// Deprecated: use NumPools in x/swaprouter.
+func (q Querier) NumPools(ctx context.Context, _ *types.QueryNumPoolsRequest) (*types.QueryNumPoolsResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	return &types.QueryNumPoolsResponse{
+		NumPools: q.swaprouterKeeper.GetNextPoolId(sdkCtx) - 1,
+	}, nil
+}
+
 func (q Querier) PoolType(ctx context.Context, req *types.QueryPoolTypeRequest) (*types.QueryPoolTypeResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -413,5 +422,59 @@ func (q Querier) TotalLiquidity(ctx context.Context, _ *types.QueryTotalLiquidit
 
 	return &types.QueryTotalLiquidityResponse{
 		Liquidity: q.Keeper.GetTotalLiquidity(sdkCtx),
+	}, nil
+}
+
+// Deprecated: use EstimateSwapExactAmountIn in x/swaprouter.
+func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.QuerySwapExactAmountInRequest) (*types.QuerySwapExactAmountInResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.TokenIn == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid token")
+	}
+
+	tokenIn, err := sdk.ParseCoinNormalized(req.TokenIn)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid token: %s", err.Error())
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	tokenOutAmount, err := q.swaprouterKeeper.MultihopEstimateOutGivenExactAmountIn(sdkCtx, req.Routes, tokenIn)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QuerySwapExactAmountInResponse{
+		TokenOutAmount: tokenOutAmount,
+	}, nil
+}
+
+// Deprecated: use EstimateSwapExactAmountOut in x/swaprouter.
+func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.QuerySwapExactAmountOutRequest) (*types.QuerySwapExactAmountOutResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.TokenOut == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid token")
+	}
+
+	tokenOut, err := sdk.ParseCoinNormalized(req.TokenOut)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid token: %s", err.Error())
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	tokenInAmount, err := q.swaprouterKeeper.MultihopEstimateInGivenExactAmountOut(sdkCtx, req.Routes, tokenOut)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QuerySwapExactAmountOutResponse{
+		TokenInAmount: tokenInAmount,
 	}, nil
 }
