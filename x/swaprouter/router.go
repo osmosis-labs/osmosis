@@ -117,12 +117,12 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 		}
 
 		// Execute the expected swap on the current routed pool
-		pool, poolErr := swapModule.GetPool(ctx, route.PoolId)
+		poolI, poolErr := swapModule.GetPool(ctx, route.PoolId)
 		if poolErr != nil {
 			return sdk.Int{}, poolErr
 		}
 
-		swapFee := pool.GetSwapFee(ctx)
+		swapFee := poolI.GetSwapFee(ctx)
 
 		// If we determined the route is an osmo multi-hop and both routes are incentivized,
 		// we modify the swap fee accordingly.
@@ -130,7 +130,7 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 			swapFee = routeSwapFee.Mul((swapFee.Quo(sumOfSwapFees)))
 		}
 
-		tokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.Coins{tokenIn}, route.TokenOutDenom, swapFee)
+		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, tokenIn, route.TokenOutDenom, swapFee)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -344,12 +344,12 @@ func (k Keeper) createMultihopExpectedSwapOuts(
 			return nil, err
 		}
 
-		pool, err := swapModule.GetPool(ctx, route.PoolId)
+		poolI, err := swapModule.GetPool(ctx, route.PoolId)
 		if err != nil {
 			return nil, err
 		}
 
-		tokenIn, err := pool.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), route.TokenInDenom, pool.GetSwapFee(ctx))
+		tokenIn, err := swapModule.CalcInAmtGivenOut(ctx, poolI, tokenOut, route.TokenInDenom, poolI.GetSwapFee(ctx))
 		if err != nil {
 			return nil, err
 		}
@@ -377,13 +377,13 @@ func (k Keeper) createOsmoMultihopExpectedSwapOuts(
 			return nil, err
 		}
 
-		pool, err := swapModule.GetPool(ctx, route.PoolId)
+		poolI, err := swapModule.GetPool(ctx, route.PoolId)
 		if err != nil {
 			return nil, err
 		}
 
-		swapFee := pool.GetSwapFee(ctx)
-		tokenIn, err := pool.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), route.TokenInDenom, cumulativeRouteSwapFee.Mul((swapFee.Quo(sumOfSwapFees))))
+		swapFee := poolI.GetSwapFee(ctx)
+		tokenIn, err := poolI.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), route.TokenInDenom, cumulativeRouteSwapFee.Mul((swapFee.Quo(sumOfSwapFees))))
 		if err != nil {
 			return nil, err
 		}

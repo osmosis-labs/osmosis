@@ -834,10 +834,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 				}
 			}
 
-			balancerPool, ok := pool.(*balancer.Pool)
-			require.True(t, ok)
-
-			assertPoolStateNotModified(t, balancerPool, func() {
+			assertPoolStateNotModified(t, pool, func() {
 				osmoassert.ConditionalPanic(t, tc.expectPanic, sut)
 			})
 		})
@@ -1026,7 +1023,7 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 			Weight: sdk.NewInt(5),
 		}
 
-		pool = createTestPool(suite.T(), swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn).(*balancer.Pool)
+		pool = createTestPool(suite.T(), swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn)
 		suite.Require().NotNil(pool)
 
 		return pool

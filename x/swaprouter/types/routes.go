@@ -43,6 +43,14 @@ type SwapI interface {
 		swapFee sdk.Dec,
 	) (sdk.Int, error)
 
+	CalcOutAmtGivenIn(
+		ctx sdk.Context,
+		poolI PoolI,
+		tokenIn sdk.Coin,
+		tokenOutDenom string,
+		swapFee sdk.Dec,
+	) (tokenOut sdk.Coin, err error)
+
 	SwapExactAmountOut(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
@@ -52,6 +60,14 @@ type SwapI interface {
 		tokenOut sdk.Coin,
 		swapFee sdk.Dec,
 	) (tokenInAmount sdk.Int, err error)
+
+	CalcInAmtGivenOut(
+		ctx sdk.Context,
+		poolI PoolI,
+		tokenOut sdk.Coin,
+		tokenInDenom string,
+		swapFee sdk.Dec,
+	) (tokenIn sdk.Coin, err error)
 }
 
 type PoolIncentivesKeeperI interface {

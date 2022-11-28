@@ -8,6 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -117,6 +118,164 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 			} else {
 				_, err := keeper.SwapExactAmountIn(ctx, suite.TestAccs[0], pool, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, swapFee)
 				suite.Error(err, "test: %v", test.name)
+			}
+		})
+	}
+}
+
+// TestCalcOutAmtGivenIn only tests that balancer and stableswap pools are type casted correctly while concentratedliquidity pools fail
+func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
+	type param struct {
+		poolType      string
+		tokenIn       sdk.Coin
+		tokenOutDenom string
+	}
+
+	tests := []struct {
+		name       string
+		param      param
+		expectPass bool
+	}{
+		{
+			name: "balancer",
+			param: param{
+				poolType:      "balancer",
+				tokenIn:       sdk.NewCoin("foo", sdk.NewInt(100000)),
+				tokenOutDenom: "bar",
+			},
+			expectPass: true,
+		},
+		{
+			name: "stableswap",
+			param: param{
+				poolType:      "stableswap",
+				tokenIn:       sdk.NewCoin("foo", sdk.NewInt(100000)),
+				tokenOutDenom: "bar",
+			},
+			expectPass: true,
+		},
+		{
+			name: "concentratedliquidity",
+			param: param{
+				poolType:      "concentratedliquidity",
+				tokenIn:       sdk.NewCoin("foo", sdk.NewInt(100000)),
+				tokenOutDenom: "bar",
+			},
+			expectPass: false,
+		},
+	}
+
+	for _, test := range tests {
+		suite.Run(test.name, func() {
+			// Init suite for each test.
+			suite.SetupTest()
+			keeper := suite.App.GAMMKeeper
+			ctx := suite.Ctx
+
+			var pool swaproutertypes.PoolI
+			if test.param.poolType == "balancer" {
+				poolId := suite.PrepareBalancerPool()
+				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
+				suite.NoError(err)
+				pool = poolExt.(swaproutertypes.PoolI)
+			} else if test.param.poolType == "stableswap" {
+				poolId := suite.PrepareBasicStableswapPool()
+				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
+				suite.NoError(err)
+				pool = poolExt.(swaproutertypes.PoolI)
+			} else if test.param.poolType == "concentratedliquidity" {
+				poolExt, err := suite.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, "bar", "foo", sdk.MustNewDecFromStr("70.710678118654752440"), sdk.NewInt(85176))
+				suite.NoError(err)
+				pool = poolExt.(swaproutertypes.PoolI)
+			}
+
+			swapFee := pool.GetSwapFee(suite.Ctx)
+
+			_, err := keeper.CalcOutAmtGivenIn(ctx, pool, test.param.tokenIn, test.param.tokenOutDenom, swapFee)
+
+			if test.expectPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+// TestCalcInAmtGivenOut only tests that balancer and stableswap pools are type casted correctly while concentratedliquidity pools fail
+func (suite *KeeperTestSuite) TestCalcInAmtGivenOut() {
+	type param struct {
+		poolType     string
+		tokenOut     sdk.Coin
+		tokenInDenom string
+	}
+
+	tests := []struct {
+		name       string
+		param      param
+		expectPass bool
+	}{
+		{
+			name: "balancer",
+			param: param{
+				poolType:     "balancer",
+				tokenOut:     sdk.NewCoin("foo", sdk.NewInt(100000)),
+				tokenInDenom: "bar",
+			},
+			expectPass: true,
+		},
+		{
+			name: "stableswap",
+			param: param{
+				poolType:     "stableswap",
+				tokenOut:     sdk.NewCoin("foo", sdk.NewInt(100000)),
+				tokenInDenom: "bar",
+			},
+			expectPass: true,
+		},
+		{
+			name: "concentratedliquidity",
+			param: param{
+				poolType:     "concentratedliquidity",
+				tokenOut:     sdk.NewCoin("foo", sdk.NewInt(100000)),
+				tokenInDenom: "bar",
+			},
+			expectPass: false,
+		},
+	}
+
+	for _, test := range tests {
+		suite.Run(test.name, func() {
+			// Init suite for each test.
+			suite.SetupTest()
+			keeper := suite.App.GAMMKeeper
+			ctx := suite.Ctx
+
+			var pool swaproutertypes.PoolI
+			if test.param.poolType == "balancer" {
+				poolId := suite.PrepareBalancerPool()
+				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
+				suite.NoError(err)
+				pool = poolExt.(swaproutertypes.PoolI)
+			} else if test.param.poolType == "stableswap" {
+				poolId := suite.PrepareBasicStableswapPool()
+				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
+				suite.NoError(err)
+				pool = poolExt.(swaproutertypes.PoolI)
+			} else if test.param.poolType == "concentratedliquidity" {
+				poolExt, err := suite.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, "bar", "foo", sdk.MustNewDecFromStr("70.710678118654752440"), sdk.NewInt(85176))
+				suite.NoError(err)
+				pool = poolExt.(swaproutertypes.PoolI)
+			}
+
+			swapFee := pool.GetSwapFee(suite.Ctx)
+
+			_, err := keeper.CalcInAmtGivenOut(ctx, pool, test.param.tokenOut, test.param.tokenInDenom, swapFee)
+
+			if test.expectPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
 			}
 		})
 	}

@@ -7,8 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/keeper/internal/events"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/events"
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
@@ -121,6 +121,36 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, err
 	}
 	return tokenInAmount, nil
+}
+
+func (k Keeper) CalcOutAmtGivenIn(
+	ctx sdk.Context,
+	poolI swaproutertypes.PoolI,
+	tokenIn sdk.Coin,
+	tokenOutDenom string,
+	swapFee sdk.Dec,
+) (tokenOut sdk.Coin, err error) {
+	pool, ok := poolI.(types.TraditionalAmmInterface)
+	if !ok {
+		return sdk.Coin{}, fmt.Errorf("given pool does not implement TraditionalAmmInterface, implements %T", poolI)
+	}
+
+	return pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(tokenIn), tokenOutDenom, swapFee)
+}
+
+func (k Keeper) CalcInAmtGivenOut(
+	ctx sdk.Context,
+	poolI swaproutertypes.PoolI,
+	tokenOut sdk.Coin,
+	tokenInDenom string,
+	swapFee sdk.Dec,
+) (tokenIn sdk.Coin, err error) {
+	pool, ok := poolI.(types.TraditionalAmmInterface)
+	if !ok {
+		return sdk.Coin{}, fmt.Errorf("given pool does not implement TraditionalAmmInterface, implements %T", poolI)
+	}
+
+	return pool.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), tokenInDenom, swapFee)
 }
 
 // updatePoolForSwap takes a pool, sender, and tokenIn, tokenOut amounts
