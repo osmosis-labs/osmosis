@@ -5,9 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	"github.com/osmosis-labs/osmosis/v12/x/twap"
-	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/x/twap"
+	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
 // TestAfterPoolCreatedHook tests if internal tracking logic has been triggered correctly,
@@ -47,10 +47,10 @@ func (s *TestSuite) TestAfterPoolCreatedHook() {
 			}
 
 			denoms := osmoutils.CoinsDenoms(tc.poolCoins)
-			denomPairs0, denomPairs1 := types.GetAllUniqueDenomPairs(denoms)
+			denomPairs := types.GetAllUniqueDenomPairs(denoms)
 			expectedRecords := []types.TwapRecord{}
-			for i := 0; i < len(denomPairs0); i++ {
-				expectedRecord, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denomPairs0[i], denomPairs1[i])
+			for _, denomPair := range denomPairs {
+				expectedRecord, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denomPair.Denom0, denomPair.Denom1)
 				s.Require().NoError(err)
 				expectedRecords = append(expectedRecords, expectedRecord)
 			}
@@ -61,11 +61,11 @@ func (s *TestSuite) TestAfterPoolCreatedHook() {
 			s.Commit()
 
 			// check on the correctness of all individual twap records
-			for i := 0; i < len(denomPairs0); i++ {
-				actualRecord, err := s.twapkeeper.GetMostRecentRecordStoreRepresentation(s.Ctx, poolId, denomPairs0[i], denomPairs1[i])
+			for i, denomPair := range denomPairs {
+				actualRecord, err := s.twapkeeper.GetMostRecentRecordStoreRepresentation(s.Ctx, poolId, denomPair.Denom0, denomPair.Denom1)
 				s.Require().NoError(err)
 				s.Require().Equal(expectedRecords[i], actualRecord)
-				actualRecord, err = s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denomPairs0[i], denomPairs1[i])
+				actualRecord, err = s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denomPair.Denom0, denomPair.Denom1)
 				s.Require().NoError(err)
 				s.Require().Equal(expectedRecords[i], actualRecord)
 			}
@@ -73,7 +73,7 @@ func (s *TestSuite) TestAfterPoolCreatedHook() {
 			// consistency check that the number of records is exactly equal to the number of denompairs
 			allRecords, err := s.twapkeeper.GetAllMostRecentRecordsForPool(s.Ctx, poolId)
 			s.Require().NoError(err)
-			s.Require().Equal(len(denomPairs0), len(allRecords))
+			s.Require().Equal(len(denomPairs), len(allRecords))
 		})
 	}
 }

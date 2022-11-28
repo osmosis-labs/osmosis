@@ -10,15 +10,16 @@ import (
 	"time"
 
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
+
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
-	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
-	"github.com/osmosis-labs/osmosis/v12/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v12/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
+	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
+	"github.com/osmosis-labs/osmosis/v13/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v13/tests/e2e/initialization"
 )
 
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.
@@ -141,12 +142,8 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	node, err := chainA.GetDefaultNode()
 	s.NoError(err)
 
-	supply, err := node.QueryTotalSupply()
+	osmoSupply, err := node.QuerySupplyOf("uosmo")
 	s.NoError(err)
-	osmoSupply := supply.AmountOf("uosmo")
-
-	// balance, err := node.QueryBalances(chainA.NodeConfigs[1].PublicAddress)
-	// s.NoError(err)
 
 	f, err := osmoSupply.ToDec().Float64()
 	s.NoError(err)
@@ -162,8 +159,10 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	// co up two levels
 	projectDir := filepath.Dir(filepath.Dir(wd))
 	fmt.Println(wd, projectDir)
-	err = copyFile(projectDir+"/x/ibc-rate-limit/testdata/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
+	err = copyFile(projectDir+"/x/ibc-rate-limit/bytecode/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
 	s.NoError(err)
+	// set LatestCodeId to 1 since we upload a contract in the upgrade handler for v13
+	chainA.LatestCodeId = 1
 	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
 	chainA.LatestCodeId += 1
 	node.InstantiateWasmContract(
@@ -214,7 +213,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 			if err != nil {
 				return false
 			}
-			return val != ""
+			return val == contracts[0]
 		},
 		1*time.Minute,
 		10*time.Millisecond,
@@ -388,9 +387,9 @@ func (s *IntegrationTestSuite) TestTWAP() {
 
 	// These must be equal because they are calculated over time ranges with the stable and equal spot price.
 	// There are potential rounding errors requiring us to approximate the comparison.
-	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsAB, twapFromAfterToNowAB, sdk.NewDecWithPrec(1, 3))
-	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsBC, twapFromAfterToNowBC, sdk.NewDecWithPrec(1, 3))
-	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsCA, twapFromAfterToNowCA, sdk.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsAB, twapFromAfterToNowAB, sdk.NewDecWithPrec(2, 3))
+	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsBC, twapFromAfterToNowBC, sdk.NewDecWithPrec(2, 3))
+	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsCA, twapFromAfterToNowCA, sdk.NewDecWithPrec(2, 3))
 
 	if !s.skipUpgrade {
 		// TODO: we should reduce the pruning time in the v11
@@ -521,7 +520,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 
 	// start the state synchin node.
 	err = stateSynchingNode.Run()
-	s.NoError(err)
+	s.Require().NoError(err)
 
 	// ensure that the state synching node cathes up to the running node.
 	s.Require().Eventually(func() bool {
@@ -537,7 +536,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 
 	// stop the state synching node.
 	err = chainA.RemoveNode(stateSynchingNode.Name)
-	s.NoError(err)
+	s.Require().NoError(err)
 }
 
 func (s *IntegrationTestSuite) TestExpeditedProposals() {

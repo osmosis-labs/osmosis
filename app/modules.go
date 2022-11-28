@@ -13,6 +13,8 @@ import (
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 
+	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
+
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -43,30 +45,32 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
-	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v12/osmoutils/partialord"
-	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v12/x/epochs"
-	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm"
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v12/x/incentives"
-	incentivestypes "github.com/osmosis-labs/osmosis/v12/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v12/x/lockup"
-	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v12/x/mint"
-	minttypes "github.com/osmosis-labs/osmosis/v12/x/mint/types"
-	poolincentives "github.com/osmosis-labs/osmosis/v12/x/pool-incentives"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v12/x/pool-incentives/types"
-	superfluid "github.com/osmosis-labs/osmosis/v12/x/superfluid"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
-	"github.com/osmosis-labs/osmosis/v12/x/tokenfactory"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v12/x/tokenfactory/types"
-	"github.com/osmosis-labs/osmosis/v12/x/twap/twapmodule"
-	twaptypes "github.com/osmosis-labs/osmosis/v12/x/twap/types"
-	"github.com/osmosis-labs/osmosis/v12/x/txfees"
-	txfeestypes "github.com/osmosis-labs/osmosis/v12/x/txfees/types"
+	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
+	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils/partialord"
+	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v13/x/epochs"
+	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/x/incentives"
+	incentivestypes "github.com/osmosis-labs/osmosis/v13/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v13/x/lockup"
+	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v13/x/mint"
+	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
+	poolincentives "github.com/osmosis-labs/osmosis/v13/x/pool-incentives"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
+	superfluid "github.com/osmosis-labs/osmosis/v13/x/superfluid"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v13/x/twap/twapmodule"
+	twaptypes "github.com/osmosis-labs/osmosis/v13/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v13/x/txfees"
+	txfeestypes "github.com/osmosis-labs/osmosis/v13/x/txfees/types"
+	valsetpreftypes "github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
+	valsetprefmodule "github.com/osmosis-labs/osmosis/v13/x/valset-pref/valpref-module"
 )
 
 // moduleAccountPermissions defines module account permissions
@@ -74,6 +78,7 @@ import (
 var moduleAccountPermissions = map[string][]string{
 	authtypes.FeeCollectorName:               nil,
 	distrtypes.ModuleName:                    nil,
+	ibc_hooks.ModuleName:                     nil,
 	icatypes.ModuleName:                      nil,
 	minttypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
 	minttypes.DeveloperVestingModuleAcctName: nil,
@@ -90,6 +95,7 @@ var moduleAccountPermissions = map[string][]string{
 	txfeestypes.NonNativeFeeCollectorName:    nil,
 	wasm.ModuleName:                          {authtypes.Burner},
 	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
+	valsetpreftypes.ModuleName:               {authtypes.Staking},
 }
 
 // appModules return modules to initialize module manager.
@@ -124,7 +130,7 @@ func appModules(
 		ibc.NewAppModule(app.IBCKeeper),
 		ica.NewAppModule(nil, app.ICAHostKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
-		app.TransferModule,
+		app.RawIcs20TransferAppModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		twapmodule.NewAppModule(*app.TwapKeeper),
 		txfees.NewAppModule(*app.TxFeesKeeper),
@@ -142,6 +148,8 @@ func appModules(
 			app.EpochsKeeper,
 		),
 		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
+		valsetprefmodule.NewAppModule(appCodec, *app.ValidatorSetPreferenceKeeper),
+		ibc_hooks.NewAppModule(app.AccountKeeper),
 	}
 }
 
@@ -211,12 +219,15 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		poolincentivestypes.ModuleName,
 		superfluidtypes.ModuleName,
 		tokenfactorytypes.ModuleName,
+		valsetpreftypes.ModuleName,
 		incentivestypes.ModuleName,
 		epochstypes.ModuleName,
 		lockuptypes.ModuleName,
 		authz.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
+		// ibc_hooks after auth keeper
+		ibc_hooks.ModuleName,
 	}
 }
 

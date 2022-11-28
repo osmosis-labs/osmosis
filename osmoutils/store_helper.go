@@ -25,13 +25,13 @@ func GatherAllKeysFromStore(storeObj store.KVStore) []string {
 func GatherValuesFromStore[T any](storeObj store.KVStore, keyStart []byte, keyEnd []byte, parseValue func([]byte) (T, error)) ([]T, error) {
 	iterator := storeObj.Iterator(keyStart, keyEnd)
 	defer iterator.Close()
-	return gatherValuesFromIteratorWithStop(iterator, parseValue, noStopFn)
+	return gatherValuesFromIterator(iterator, parseValue, noStopFn)
 }
 
 func GatherValuesFromStorePrefix[T any](storeObj store.KVStore, prefix []byte, parseValue func([]byte) (T, error)) ([]T, error) {
 	iterator := sdk.KVStorePrefixIterator(storeObj, prefix)
 	defer iterator.Close()
-	return gatherValuesFromIteratorWithStop(iterator, parseValue, noStopFn)
+	return gatherValuesFromIterator(iterator, parseValue, noStopFn)
 }
 
 func GetValuesUntilDerivedStop[T any](storeObj store.KVStore, keyStart []byte, stopFn func([]byte) bool, parseValue func([]byte) (T, error)) ([]T, error) {
@@ -60,7 +60,7 @@ func GetIterValuesWithStop[T any](
 	iter := makeIterator(storeObj, keyStart, keyEnd, reverse)
 	defer iter.Close()
 
-	return gatherValuesFromIteratorWithStop(iter, parseValue, stopFn)
+	return gatherValuesFromIterator(iter, parseValue, stopFn)
 }
 
 func GetFirstValueAfterPrefixInclusive[T any](storeObj store.KVStore, keyStart []byte, parseValue func([]byte) (T, error)) (T, error) {
@@ -82,7 +82,7 @@ func GetFirstValueInRange[T any](storeObj store.KVStore, keyStart []byte, keyEnd
 	return parseValue(iterator.Value())
 }
 
-func gatherValuesFromIteratorWithStop[T any](iterator db.Iterator, parseValue func([]byte) (T, error), stopFn func([]byte) bool) ([]T, error) {
+func gatherValuesFromIterator[T any](iterator db.Iterator, parseValue func([]byte) (T, error), stopFn func([]byte) bool) ([]T, error) {
 	values := []T{}
 	for ; iterator.Valid(); iterator.Next() {
 		if stopFn(iterator.Key()) {
@@ -136,4 +136,18 @@ func MustGetDec(store store.KVStore, key []byte) sdk.Dec {
 	result := &sdk.DecProto{}
 	MustGet(store, key, result)
 	return result.Dec
+}
+
+// GetIfFound returns a value at key by mutating the result parameter. Returns true if the value was found and the
+// result mutated correctly. False otherwise. Returns error only when database or serialization errors occur
+// returns a boolean indicating whether value exists for the given key and error
+func GetIfFound(store store.KVStore, key []byte, result proto.Message) (found bool, err error) {
+	b := store.Get(key)
+	if b == nil {
+		return false, nil
+	}
+	if err := proto.Unmarshal(b, result); err != nil {
+		return true, err
+	}
+	return true, nil
 }
