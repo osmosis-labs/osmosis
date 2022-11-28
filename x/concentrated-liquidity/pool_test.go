@@ -579,7 +579,6 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				// right now we calculate this value through iterations, so unsure how to do this here / if its needed
 			}
 		})
-
 	}
 }
 
@@ -1001,7 +1000,6 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn() {
 				// right now we calculate this value through iterations, so unsure how to do this here / if its needed
 			}
 		})
-
 	}
 }
 
@@ -1018,7 +1016,6 @@ func (s *KeeperTestSuite) TestOrderInitialPoolDenoms() {
 
 	denom0, denom1, err = types.OrderInitialPoolDenoms("usdc", "usdc")
 	s.Require().Error(err)
-
 }
 
 func (s *KeeperTestSuite) TestGetPoolById() {
