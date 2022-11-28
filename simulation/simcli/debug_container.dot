@@ -6,11 +6,11 @@ digraph "" {
 
   "*cosmossdk.io/api/cosmos/app/runtime/v1alpha1.Module"[color="lightgrey", fontcolor="dimgrey", penwidth="0.5"];
   "*cosmossdk.io/api/cosmos/app/v1alpha1.Config"[color="lightgrey", fontcolor="dimgrey", penwidth="0.5"];
-  "*github.com/cosmos/cosmos-sdk/store/types.KVStoreKey"[color="red", fontcolor="red", penwidth="0.5"];
   "*github.com/osmosis-labs/osmosis/v13/api/osmosis/lockup/module/v1.Module"[color="black", fontcolor="black", penwidth="1.5"];
   "cosmossdk.io/client/v2/autocli.RunFromAppConfig"[color="red", fontcolor="red", penwidth="0.5", shape="hexagon"];
   "cosmossdk.io/core/appconfig.Compose"[color="black", fontcolor="black", penwidth="1.5", shape="box"];
   "github.com/cosmos/cosmos-sdk/codec.Codec"[color="lightgrey", fontcolor="dimgrey", penwidth="0.5"];
+  "github.com/cosmos/cosmos-sdk/store/types.StoreKey"[color="red", fontcolor="red", penwidth="0.5"];
   "github.com/cosmos/cosmos-sdk/x/params/types.Subspace"[color="lightgrey", fontcolor="dimgrey", penwidth="0.5"];
   "github.com/osmosis-labs/osmosis/v13/x/lockup/keeper.Keeper"[color="lightgrey", fontcolor="dimgrey", penwidth="0.5"];
   "github.com/osmosis-labs/osmosis/v13/x/lockup/types.AccountKeeper"[color="lightgrey", fontcolor="dimgrey", penwidth="0.5"];
@@ -22,7 +22,7 @@ digraph "" {
   "cosmossdk.io/core/appconfig.Compose" -> "*cosmossdk.io/api/cosmos/app/runtime/v1alpha1.Module";
   "cosmossdk.io/core/appconfig.Compose" -> "*github.com/osmosis-labs/osmosis/v13/api/osmosis/lockup/module/v1.Module";
   "*github.com/osmosis-labs/osmosis/v13/api/osmosis/lockup/module/v1.Module" -> "github.com/osmosis-labs/osmosis/v13/x/lockup.ProvideModule";
-  "*github.com/cosmos/cosmos-sdk/store/types.KVStoreKey" -> "github.com/osmosis-labs/osmosis/v13/x/lockup.ProvideModule";
+  "github.com/cosmos/cosmos-sdk/store/types.StoreKey" -> "github.com/osmosis-labs/osmosis/v13/x/lockup.ProvideModule";
   "github.com/cosmos/cosmos-sdk/codec.Codec" -> "github.com/osmosis-labs/osmosis/v13/x/lockup.ProvideModule";
   "github.com/osmosis-labs/osmosis/v13/x/lockup/types.AccountKeeper" -> "github.com/osmosis-labs/osmosis/v13/x/lockup.ProvideModule";
   "github.com/osmosis-labs/osmosis/v13/x/lockup/types.BankKeeper" -> "github.com/osmosis-labs/osmosis/v13/x/lockup.ProvideModule";
