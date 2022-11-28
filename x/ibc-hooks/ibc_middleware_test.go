@@ -626,19 +626,21 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 	receiver := "invalid1address" // Will not exist on chainB
 
 	// Generate swap instructions for the contract. This will send correctly on chainA, but fail to be received on chainB
-	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"input_coin":{"denom":"token0","amount":"1000"},"output_denom":"token1","slipage":{"max_slipage_percentage":"20"},"receiver":"%s","channel":"channel-0","failed_delivery":null}}`,
+	recoverAddr := suite.chainA.SenderAccounts[8].SenderAccount.GetAddress()
+	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"input_coin":{"denom":"token0","amount":"1000"},"output_denom":"token1","slipage":{"max_slipage_percentage":"20"},"receiver":"%s","channel":"channel-0","failed_delivery": {"recovery_addr": "%s"}}}`,
 		receiver, // Note that this is the chain A account, which does not exist on chain B
+		recoverAddr,
 	)
 	// Generate full memo
 	msg := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, swapMsg)
 	// Send IBC transfer with the memo with crosschain-swap instructions
 	transferMsg = NewMsgTransfer(sdk.NewCoin(token0IBC, sdk.NewInt(1000)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), msg)
-	_, receiveResult, ack, err := suite.FullSend(transferMsg, BtoA)
+	_, receiveResult, _, err := suite.FullSend(transferMsg, BtoA)
 
 	// We use the receive result here because the receive adds another packet to be sent back
 	suite.Require().NoError(err)
 	suite.Require().NotNil(receiveResult)
-	fmt.Println(ack)
+
 	// "Relay the packet" by executing the receive on chain B
 	packet, err := ibctesting.ParsePacketFromEvents(receiveResult.GetEvents())
 	suite.Require().NoError(err)
@@ -653,6 +655,20 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 	balanceContract := osmosisAppA.BankKeeper.GetBalance(suite.chainA.GetContext(), crosschainAddr, "token1")
 	suite.Require().Greater(balanceContract.Amount.Int64(), int64(0))
 
-	// ToDo: check that the contract knows there has been a bad ack and that the balance can be recovered
+	// check that the contract knows this
+	state := suite.chainA.QueryContract(
+		&suite.Suite, crosschainAddr,
+		[]byte(fmt.Sprintf(`{"recoverable": {"addr": "%s"}}`, recoverAddr)))
+	suite.Require().Contains(state, "token1")
+	suite.Require().Contains(state, `"sequence":2`)
+
+	// Recover the stuck amount
+	recoverMsg := `{"recover": {}}`
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisAppA.WasmKeeper)
+	_, err = contractKeeper.Execute(suite.chainA.GetContext(), crosschainAddr, recoverAddr, []byte(recoverMsg), sdk.NewCoins())
+	suite.Require().NoError(err)
+
+	balanceRecovery := osmosisAppA.BankKeeper.GetBalance(suite.chainA.GetContext(), recoverAddr, "token1")
+	suite.Require().Greater(balanceRecovery.Amount.Int64(), int64(0))
 
 }
