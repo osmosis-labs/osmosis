@@ -235,6 +235,42 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			expectedLiquidityGross: sdk.NewDec(100000000000),
 		},
 		{
+			name: "Init tick 50 with -50000000000 liquidity, upper",
+			param: param{
+				poolId:      1,
+				tickIndex:   50,
+				liquidityIn: DefaultLiquidityAmt.Neg(),
+				upper:       true,
+			},
+			tickExists:             false,
+			expectedLiquidityNet:   sdk.NewDec(50000000000),
+			expectedLiquidityGross: sdk.NewDec(-50000000000),
+		},
+		{
+			name: "Update tick 50 that already contains 50000000000 liquidity with -50000000000 liquidity, upper",
+			param: param{
+				poolId:      1,
+				tickIndex:   50,
+				liquidityIn: DefaultLiquidityAmt.Neg(),
+				upper:       true,
+			},
+			tickExists:             true,
+			expectedLiquidityNet:   sdk.ZeroDec(),
+			expectedLiquidityGross: sdk.ZeroDec(),
+		},
+		{
+			name: "Update tick -50 that already contains 50000000000 liquidity with -50000000000 liquidity, lower",
+			param: param{
+				poolId:      1,
+				tickIndex:   -50,
+				liquidityIn: DefaultLiquidityAmt.Neg(),
+				upper:       false,
+			},
+			tickExists:             true,
+			expectedLiquidityNet:   sdk.ZeroDec(),
+			expectedLiquidityGross: sdk.ZeroDec(),
+		},
+		{
 			name: "Init tick for non-existing pool",
 			param: param{
 				poolId:      2,
