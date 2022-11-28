@@ -183,24 +183,6 @@ func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurren
 	return nil
 }
 
-// TODO: Figure out what we are going to do with these stubs since we call these in the keeper but are needed to use PoolI
-func (p Pool) CalcInAmtGivenOut(
-	ctx sdk.Context, tokensOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
-	return sdk.Coin{}, nil
-}
-
-func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokensIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (sdk.Coin, error) {
-	return sdk.Coin{}, nil
-}
-
 func (p Pool) GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins {
 	return sdk.Coins{}
-}
-
-func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokensOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
-	return sdk.Coin{}, nil
-}
-
-func (p *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokensIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
-	return sdk.Coin{}, nil
 }
