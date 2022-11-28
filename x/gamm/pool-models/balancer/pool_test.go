@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/test_helpers"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
@@ -573,8 +574,10 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 				pool := createTestPool(suite.T(), swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn)
 				suite.Require().NotNil(pool)
 
+				errTolerance := osmoutils.ErrTolerance{
+					AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.Dec{}}
 				sut := func() {
-					test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, poolAssetIn.Token.Denom, poolAssetOut.Token.Denom, tc.initialCalcOut, swapFeeDec)
+					test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, poolAssetIn.Token.Denom, poolAssetOut.Token.Denom, tc.initialCalcOut, swapFeeDec, errTolerance)
 				}
 
 				balancerPool, ok := pool.(*balancer.Pool)

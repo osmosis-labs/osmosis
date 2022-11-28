@@ -69,7 +69,7 @@ TODO: Improve diagrams showing this accumulated weight concept with a binary tre
 
 ## Implementation Details
 
-The B-Tree implementation under `osmosis/store` is designed specifically
+The B-Tree implementation under `osmoutils/sumtree` is designed specifically
 for allowing efficient computation of a random prefix sum, with the
 underlying data being updatable as explained above.
 
@@ -125,8 +125,7 @@ The following constraints are valid for all branch nodes:
 4. There are no duplicate child stored in more than one of node's
     `.Children`.
 
-Example
--------
+### Example
 
 Here is an example tree data:
 
@@ -145,8 +144,8 @@ Here is an example tree data:
 The branch nodes will have the following childrens:
 
 ``` {.go}
-require.Equal(store.Get(nodeKey(2, nil)), Children{{0xaaaa, 60}, {0xbb44, 300}, {0xeeaaaa, 700}})
-require.Equal(store.Get(nodeKey(1, 0xaaaa)), Children{{0xaaaa, 10}, {0xaaaa01, 20}, {0xaabb, 30}})
-require.Equal(store.Get(nodeKey(1, 0xbb44)), Children{{0xbb55, 100}, {0xbe, 200}})
-require.Equal(store.Get(nodeKey(1, 0xeeaaaa)), Children{{0xef1234, 300}, {0xffff, 400}})
+require.Equal(sumtree.Get(nodeKey(2, nil)), Children{{0xaaaa, 60}, {0xbb44, 300}, {0xeeaaaa, 700}})
+require.Equal(sumtree.Get(nodeKey(1, 0xaaaa)), Children{{0xaaaa, 10}, {0xaaaa01, 20}, {0xaabb, 30}})
+require.Equal(sumtree.Get(nodeKey(1, 0xbb44)), Children{{0xbb55, 100}, {0xbe, 200}})
+require.Equal(sumtree.Get(nodeKey(1, 0xeeaaaa)), Children{{0xef1234, 300}, {0xffff, 400}})
 ```
