@@ -1,5 +1,5 @@
 use cosmwasm_std::Addr;
 use cw_storage_plus::Map;
 
-// Contracts listening for a packet sequenc_number and a specific event
-pub const LISTENERS: Map<(u64, &str), Vec<Addr>> = Map::new("listeners");
+// Contracts listening for a packet's channel, sequenc_number, and event
+pub const LISTENERS: Map<(&str, u64, &str), Vec<Addr>> = Map::new("listeners");

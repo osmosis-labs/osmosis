@@ -235,7 +235,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 	}
 
 	// Query contract that keeps state about ack listeners
-	msg := fmt.Sprintf(`{"listeners": {"sequence": %d, "event": "acknowledgement"}}`, packet.Sequence)
+	msg := fmt.Sprintf(`{"listeners": {"channel": "%s", "sequence": %d, "event": "acknowledgement"}}`, packet.SourceChannel, packet.Sequence)
 	res, err := h.WasmKeeper.QuerySmart(ctx, contractAddr, []byte(msg))
 	if err != nil {
 		return err
@@ -244,6 +244,11 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 	err = json.Unmarshal(res, &listeners)
 	if err != nil {
 		return err
+	}
+
+	success := "false"
+	if !osmoutils.IsAckError(acknowledgement) {
+		success = "true"
 	}
 
 	for _, listener := range listeners {
@@ -258,14 +263,9 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 			return err
 		}
 
-		success := "false"
-		if osmoutils.IsAckError(acknowledgement) {
-			success = "true"
-		}
-
 		sudoMsg := []byte(fmt.Sprintf(
-			`{"receive_ack": {"sequence": %d, "ack": %s, "success": %s}}`,
-			packet.Sequence, ackAsJson, success))
+			`{"receive_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}`,
+			packet.SourceChannel, packet.Sequence, ackAsJson, success))
 		_, err = h.ContractKeeper.Sudo(ctx, listenerAddr, sudoMsg)
 		if err != nil {
 			// We explicitly ignore the errors but add an event that we can track

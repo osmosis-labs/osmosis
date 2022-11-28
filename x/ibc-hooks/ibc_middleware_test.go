@@ -606,7 +606,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBC() {
 	suite.Require().Greater(balanceToken1After.Amount.Int64(), int64(0))
 }
 
-// This is a compy of the above tot est bad acks. Lots of repetition here could be abstracted, but keeping as-is for
+// This is a copy of the above to test bad acks. Lots of repetition here could be abstracted, but keeping as-is for
 // now to avoid complexity
 // The main difference between this test and the above one is that the receiver specified in the memo does not
 // exist on chain B

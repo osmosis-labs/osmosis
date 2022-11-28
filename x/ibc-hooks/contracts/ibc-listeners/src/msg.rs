@@ -23,19 +23,27 @@ impl fmt::Display for EventType {
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    Subscribe { sequence: u64, event: EventType },
+    Subscribe {
+        channel: String,
+        sequence: u64,
+        event: EventType,
+    },
 }
 
 #[cw_serde]
 pub enum SudoMsg {
-    UnSubscribeAll { sequence: u64 },
+    UnSubscribeAll { channel: String, sequence: u64 },
 }
 
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
     #[returns(Vec<Addr>)]
-    Listeners { sequence: u64, event: EventType },
+    Listeners {
+        channel: String,
+        sequence: u64,
+        event: EventType,
+    },
 }
 
 #[cw_serde]
