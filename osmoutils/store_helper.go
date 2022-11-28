@@ -139,7 +139,7 @@ func MustGetDec(store store.KVStore, key []byte) sdk.Dec {
 }
 
 // Get returns a value at key by mutating the result parameter. Returns true if the value was found and the
-// result mutated correctly. False otherwise. Returns false and error only when database or serialization errors occur
+// result mutated correctly. If the value is not in the store, returns false. Returns error only when database or serialization errors occur. (And when an error occurs, returns false)
 func Get(store store.KVStore, key []byte, result proto.Message) (found bool, err error) {
 	b := store.Get(key)
 	if b == nil {
