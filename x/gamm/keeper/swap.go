@@ -39,7 +39,7 @@ func (k Keeper) SwapExactAmountIn(
 		}
 	}()
 
-	cfmmPool, err := convertToCFMMPooll(pool)
+	cfmmPool, err := convertToCFMMPool(pool)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -107,7 +107,7 @@ func (k Keeper) SwapExactAmountOut(
 			"can't get more tokens out than there are tokens in the pool")
 	}
 
-	cfmmPool, err := convertToCFMMPooll(pool)
+	cfmmPool, err := convertToCFMMPool(pool)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -140,7 +140,7 @@ func (k Keeper) CalcOutAmtGivenIn(
 	tokenOutDenom string,
 	swapFee sdk.Dec,
 ) (tokenOut sdk.Coin, err error) {
-	cfmmPool, err := convertToCFMMPooll(poolI)
+	cfmmPool, err := convertToCFMMPool(poolI)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -154,7 +154,7 @@ func (k Keeper) CalcInAmtGivenOut(
 	tokenInDenom string,
 	swapFee sdk.Dec,
 ) (tokenIn sdk.Coin, err error) {
-	cfmmPool, err := convertToCFMMPooll(poolI)
+	cfmmPool, err := convertToCFMMPool(poolI)
 	if err != nil {
 		return sdk.Coin{}, err
 	}

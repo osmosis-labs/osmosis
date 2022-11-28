@@ -31,7 +31,7 @@ var (
 	_ swaproutertypes.PoolI        = &Pool{}
 	_ types.PoolAmountOutExtension = &Pool{}
 	_ types.WeightedPoolExtension  = &Pool{}
-	_ types.CFMMI                  = &Pool{}
+	_ types.CFMMPoolI              = &Pool{}
 )
 
 // NewPool returns a weighted CPMM pool with the provided parameters, and initial assets.

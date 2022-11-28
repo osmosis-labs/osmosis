@@ -73,7 +73,7 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 		suite.Run(tc.name, func() {
 			for i, coin := range tc.coins {
 				// Get the output amount in osmo denom
-				pool, ok := tc.poolTypes[i].(gammtypes.CFMMI)
+				pool, ok := tc.poolTypes[i].(gammtypes.CFMMPoolI)
 				suite.Require().True(ok)
 
 				expectedOutput, err := pool.CalcOutAmtGivenIn(suite.Ctx,

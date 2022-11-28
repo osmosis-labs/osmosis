@@ -16,7 +16,7 @@ import (
 
 var (
 	_ swaproutertypes.PoolI = &Pool{}
-	_ types.CFMMI           = &Pool{}
+	_ types.CFMMPoolI       = &Pool{}
 )
 
 type unsortedPoolLiqError struct {

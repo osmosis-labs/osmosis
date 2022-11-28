@@ -28,8 +28,8 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&Pool{},
 	)
 	registry.RegisterInterface(
-		"osmosis.gamm.v1beta1.CFMMI",
-		(*types.CFMMI)(nil),
+		"osmosis.gamm.v1beta1.CFMMPoolI",
+		(*types.CFMMPoolI)(nil),
 		&Pool{},
 	)
 	registry.RegisterImplementations(

@@ -10,9 +10,9 @@ import (
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
-// CFMMI defines an interface for pools representing constant function
+// CFMMPoolI defines an interface for pools representing constant function
 // AMM.
-type CFMMI interface {
+type CFMMPoolI interface {
 	swaproutertypes.PoolI
 
 	// JoinPool joins the pool using all of the tokensIn provided.
@@ -61,7 +61,7 @@ type CFMMI interface {
 // amount of coins to get out.
 // See definitions below.
 type PoolAmountOutExtension interface {
-	CFMMI
+	CFMMPoolI
 
 	// CalcTokenInShareAmountOut returns the number of tokenInDenom tokens
 	// that would be returned if swapped for an exact number of shares (shareOutAmount).
@@ -98,7 +98,7 @@ type PoolAmountOutExtension interface {
 // WeightedPoolExtension is an extension of the PoolI interface
 // That defines an additional API for handling the pool's weights.
 type WeightedPoolExtension interface {
-	CFMMI
+	CFMMPoolI
 
 	// PokePool determines if a pool's weights need to be updated and updates
 	// them if so.
