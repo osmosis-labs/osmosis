@@ -2,10 +2,14 @@ package keeper
 
 import (
 	"context"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 type msgServer struct {
@@ -18,16 +22,69 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	}
 }
 
-// func NewStableswapMsgServerImpl(keeper *Keeper) stableswap.MsgServer {
-// 	return &msgServer{
-// 		keeper: keeper,
-// 	}
-// }
+func NewStableswapMsgScalingFactorModifierServerImpl(keeper *Keeper) stableswap.MsgScalingFactorServer {
+	return &msgServer{
+		keeper: keeper,
+	}
+}
 
 var (
-	_ types.MsgServer = msgServer{}
-	// _ stableswap.MsgServer = msgServer{}
+	_ types.MsgServer             = msgServer{}
+	_ balancer.MsgServer          = msgServer{}
+	_ stableswap.MsgCreatorServer = msgServer{}
 )
+
+// Deprecated: use CreateBalancerPool in x/swaprouter.
+func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.MsgCreateBalancerPool) (*balancer.MsgCreateBalancerPoolResponse, error) {
+	poolId, err := server.CreatePool(goCtx, msg)
+	if err != nil {
+		return nil, err
+	}
+	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolId}, nil
+}
+
+// Deprecated: use CreateStableswapPool in x/swaprouter.
+func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stableswap.MsgCreateStableswapPool) (*stableswap.MsgCreateStableswapPoolResponse, error) {
+	poolId, err := server.CreatePool(goCtx, msg)
+	if err != nil {
+		return nil, err
+	}
+	return &stableswap.MsgCreateStableswapPoolResponse{PoolID: poolId}, nil
+}
+
+func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, msg *stableswap.MsgStableSwapAdjustScalingFactors) (*stableswap.MsgStableSwapAdjustScalingFactorsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if err := server.keeper.setStableSwapScalingFactors(ctx, msg.PoolID, msg.ScalingFactors, msg.Sender); err != nil {
+		return nil, err
+	}
+
+	return &stableswap.MsgStableSwapAdjustScalingFactorsResponse{}, nil
+}
+
+// Deprecated: use CreatePool in x/swaprouter.
+func (server msgServer) CreatePool(goCtx context.Context, msg swaproutertypes.CreatePoolMsg) (poolId uint64, err error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	poolId, err = server.keeper.swaprouterKeeper.CreatePool(ctx, msg)
+	if err != nil {
+		return 0, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtPoolCreated,
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.PoolCreator().String()),
+		),
+	})
+
+	return poolId, nil
+}
 
 // JoinPool routes `JoinPoolNoSwap` where we do an abstract calculation on needed lp liquidity coins to get the designated
 // amount of shares for the pool. (This is done by taking the number of shares we want and then using the total number of shares
@@ -96,6 +153,58 @@ func (server msgServer) ExitPool(goCtx context.Context, msg *types.MsgExitPool) 
 	return &types.MsgExitPoolResponse{
 		TokenOut: exitCoins,
 	}, nil
+}
+
+// Deprecated: use SwapExactAmountIn in x/swaprouter.
+func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgSwapExactAmountIn) (*types.MsgSwapExactAmountInResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	tokenOutAmount, err := server.keeper.swaprouterKeeper.RouteExactAmountIn(ctx, sender, msg.Routes, msg.TokenIn, msg.TokenOutMinAmount)
+	if err != nil {
+		return nil, err
+	}
+
+	// Swap event is handled elsewhere
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+		),
+	})
+
+	return &types.MsgSwapExactAmountInResponse{TokenOutAmount: tokenOutAmount}, nil
+}
+
+// Deprecated: use SwapExactAmountOut in x/swaprouter.
+func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.MsgSwapExactAmountOut) (*types.MsgSwapExactAmountOutResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	tokenInAmount, err := server.keeper.swaprouterKeeper.RouteExactAmountOut(ctx, sender, msg.Routes, msg.TokenInMaxAmount, msg.TokenOut)
+	if err != nil {
+		return nil, err
+	}
+
+	// Swap event is handled elsewhere
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+		),
+	})
+
+	return &types.MsgSwapExactAmountOutResponse{TokenInAmount: tokenInAmount}, nil
 }
 
 func (server msgServer) JoinSwapExternAmountIn(goCtx context.Context, msg *types.MsgJoinSwapExternAmountIn) (*types.MsgJoinSwapExternAmountInResponse, error) {

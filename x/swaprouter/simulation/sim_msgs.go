@@ -7,12 +7,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
-	balancertypes "github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v12/x/swaprouter"
-	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
+	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
+	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 // simulationKeeper is a wrapper around swaprouter's keeper which makes it easy to wire new keepers
@@ -152,10 +152,10 @@ func createPoolRestriction(k swaprouter.Keeper, sim *simtypes.SimCtx, ctx sdk.Co
 	}
 }
 
-func getRandPool(k simulationKeeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64, gammtypes.TraditionalAmmInterface, sdk.Coin, sdk.Coin, []string, string, error) {
+func getRandPool(k simulationKeeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64, types.PoolI, sdk.Coin, sdk.Coin, []string, string, error) {
 	// select a pseudo-random pool ID, max bound by the upcoming pool ID
 	pool_id := simtypes.RandLTBound(sim, k.keeper.GetNextPoolId(ctx))
-	pool, err := k.gammKeeper.GetPoolAndPoke(ctx, pool_id)
+	pool, err := k.gammKeeper.GetPool(ctx, pool_id)
 	if err != nil {
 		return 0, nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), []string{}, "", err
 	}

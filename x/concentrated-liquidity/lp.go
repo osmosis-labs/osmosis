@@ -5,7 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	types "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
+	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
 // createPosition creates a concentrated liquidity position in range between lowerTick and upperTick
@@ -17,88 +18,165 @@ import (
 // Returns error if:
 // TODO: list error cases
 // TODO: table-driven tests
-func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (amtDenom0, amtDenom1 sdk.Int, liquidityCreated sdk.Dec, err error) {
-	// ensure types.MinTick <= lowerTick < types.MaxTick
-	// TODO (bez): Add unit tests.
-	if lowerTick < types.MinTick || lowerTick >= types.MaxTick {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, fmt.Errorf("invalid lower tick: %d", lowerTick)
+func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (sdk.Int, sdk.Int, sdk.Dec, error) {
+	if err := validateTickRangeIsValid(lowerTick, upperTick); err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
-	// ensure types.MaxTick < upperTick <= types.MinTick
-	// TODO (bez): Add unit tests.
-	if upperTick > types.MaxTick || upperTick <= types.MinTick {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, fmt.Errorf("invalid upper tick: %d", upperTick)
+	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
 	// now calculate amount for token0 and token1
-	pool := k.getPoolbyId(ctx, poolId)
-
-	currentSqrtPrice := pool.CurrentSqrtPrice
-	sqrtRatioUpperTick, err := tickToSqrtPrice(sdk.NewInt(upperTick))
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
-	}
-	sqrtRatioLowerTick, err := tickToSqrtPrice(sdk.NewInt(lowerTick))
+	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
-	liquidity := getLiquidityFromAmounts(currentSqrtPrice, sqrtRatioLowerTick, sqrtRatioUpperTick, amount0Desired, amount1Desired)
-	if liquidity.IsZero() {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, fmt.Errorf("token in amount is zero")
+	liquidityDelta := math.GetLiquidityFromAmounts(pool.GetCurrentSqrtPrice(), sqrtPriceLowerTick, sqrtPriceUpperTick, amount0Desired, amount1Desired)
+	if liquidityDelta.IsZero() {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, fmt.Errorf("liquidity delta zero")
 	}
 
+	// N.B. we only write cache context if actual amounts
+	// returned are greater than the given minimums.
+	cacheCtx, writeCacheCtx := ctx.CacheContext()
+
+	actualAmount0, actualAmount1, err := k.updatePosition(cacheCtx, poolId, owner, lowerTick, upperTick, liquidityDelta)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+	}
+
+	if actualAmount0.LT(amount0Min) {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, types.InsufficientLiquidityCreatedError{Actual: actualAmount0, Minimum: amount0Min, IsTokenZero: true}
+	}
+
+	if actualAmount1.LT(amount1Min) {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, types.InsufficientLiquidityCreatedError{Actual: actualAmount1, Minimum: amount1Min}
+	}
+
+	// send deposit amount from position owner to pool
+	err = k.sendCoinsBetweenPoolAndUser(cacheCtx, pool.GetToken0(), pool.GetToken1(), actualAmount0, actualAmount1, owner, pool.GetAddress())
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+	}
+
+	// only persist updates if amount validation passed.
+	writeCacheCtx()
+
+	return actualAmount0, actualAmount1, liquidityDelta, nil
+}
+
+// withdrawPosition attempts to withdraw liquidityAmount from a position with the given pool id in the given tick range.
+// On success, returns a positive amount of each token withdrawn.
+// Returns error if
+// - there is no position in the given tick ranges
+// - if tick ranges are invalid
+// - if attempts to withdraw an amount higher than originally provided in createPosition for a given range.
+func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, requestedLiqudityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
+	if err := validateTickRangeIsValid(lowerTick, upperTick); err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	position, err := k.getPosition(ctx, poolId, owner, lowerTick, upperTick)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	availableLiquidity := position.Liquidity
+
+	if requestedLiqudityAmountToWithdraw.GT(availableLiquidity) {
+		return sdk.Int{}, sdk.Int{}, types.InsufficientLiquidityError{Actual: requestedLiqudityAmountToWithdraw, Available: availableLiquidity}
+	}
+
+	liquidityDelta := requestedLiqudityAmountToWithdraw.Neg()
+
+	actualAmount0, actualAmount1, err := k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	// send withdraw amount from pool to position owner
+	err = k.sendCoinsBetweenPoolAndUser(ctx, pool.GetToken0(), pool.GetToken1(), actualAmount0, actualAmount1, pool.GetAddress(), owner)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	return actualAmount0.Neg(), actualAmount1.Neg(), nil
+}
+
+// updatePosition updates the position in the given pool id and in the given tick range and liquidityAmount.
+// Negative liquidityDelta implies withdrawing liquidity.
+// Positive liquidityDelta implies adding liquidity.
+// Updates ticks and pool liquidity. Returns how much of each token is either added or removed.
+// Negative returned amounts imply that tokens are removed from the pool.
+// Positive returned amounts imply that tokens are added to the pool.
+// TODO: tests.
+func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec) (sdk.Int, sdk.Int, error) {
 	// update tickInfo state
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
-	err = k.initOrUpdateTick(ctx, poolId, lowerTick, liquidity, false)
+	err := k.initOrUpdateTick(ctx, poolId, lowerTick, liquidityDelta, false)
 	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		return sdk.Int{}, sdk.Int{}, err
 	}
 
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
-	err = k.initOrUpdateTick(ctx, poolId, upperTick, liquidity, true)
+	err = k.initOrUpdateTick(ctx, poolId, upperTick, liquidityDelta, true)
 	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		return sdk.Int{}, sdk.Int{}, err
 	}
 
 	// update position state
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
-	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity)
+	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta)
 	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	if pool.CurrentTick.LT(sdk.NewInt(lowerTick)) {
-		// outcome one: position is below current price
-		// this means position is solely made up of asset0
-		amtDenom0 = calcAmount0Delta(liquidity, sqrtRatioLowerTick, sqrtRatioUpperTick, false).RoundInt()
-		amtDenom1 = sdk.ZeroInt()
-	} else if pool.CurrentTick.LT(sdk.NewInt(upperTick)) {
-		// outcome two: the current price falls within the position
-		// if this is the case, we attempt to provide liquidity evenly between asset0 and asset1
-		// we also update the pool liquidity since the virtual liquidity is modified by this position's creation
-		amtDenom0 = calcAmount0Delta(liquidity, currentSqrtPrice, sqrtRatioUpperTick, false).RoundInt()
-		amtDenom1 = calcAmount1Delta(liquidity, currentSqrtPrice, sqrtRatioLowerTick, false).RoundInt()
-		pool.Liquidity = pool.Liquidity.Add(liquidity)
-	} else {
-		// outcome three: position is above current price
-		// this means position is solely made up of asset1
-		amtDenom0 = sdk.ZeroInt()
-		amtDenom1 = calcAmount1Delta(liquidity, sqrtRatioLowerTick, sqrtRatioUpperTick, false).RoundInt()
+	// now calculate amount for token0 and token1
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	k.setPoolById(ctx, pool.Id, pool)
+	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
 
-	return amtDenom0, amtDenom1, liquidity, nil
+	actualAmount0, actualAmount1 := pool.CalcActualAmounts(ctx, lowerTick, upperTick, sqrtPriceLowerTick, sqrtPriceUpperTick, liquidityDelta)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	pool.UpdateLiquidityIfActivePosition(ctx, lowerTick, upperTick, liquidityDelta)
+
+	if err := k.setPool(ctx, pool); err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	// The returned amounts are rounded down to avoid returning more to clients than they actually deposited.
+	return actualAmount0.TruncateInt(), actualAmount1.TruncateInt(), nil
 }
 
-// withdrawPosition withdraws a concentrated liquidity position from the given pool id in the given tick range and liquidityAmount.
-// On success, returns an amount of each token withdrawn.
-// Returns error if
-// - there is no position in the given tick ranges
-// - if tick ranges are invalid
-// - if attempts to withdraw an amount higher than originally provided in createPosition for a given range
-// TODO: implement and table-driven tests
-func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityAmount sdk.Int) (amtDenom0, amtDenom1 sdk.Int, err error) {
-	panic("not implemented")
+// sendCoinsBetweenPoolAndUser takes the amounts calculated from a join/exit position and executes the send between pool and user
+func (k Keeper) sendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 string, amount0, amount1 sdk.Int, sender, receiver sdk.AccAddress) error {
+	var finalCoinsToSend sdk.Coins
+	if amount0.IsPositive() {
+		finalCoinsToSend = append(finalCoinsToSend, sdk.NewCoin(denom0, amount0))
+	}
+	if amount1.IsPositive() {
+		finalCoinsToSend = append(finalCoinsToSend, sdk.NewCoin(denom1, amount1))
+	}
+	err := k.bankKeeper.SendCoins(ctx, sender, receiver, finalCoinsToSend)
+	if err != nil {
+		return err
+	}
+	return nil
 }

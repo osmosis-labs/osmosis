@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
 type msgServer struct {
@@ -64,7 +64,7 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 		return nil, err
 	}
 
-	amount0, amount1, err := server.keeper.withdrawPosition(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick, msg.LiquidityAmount)
+	amount0, amount1, err := server.keeper.withdrawPosition(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick, msg.LiquidityAmount.ToDec())
 	if err != nil {
 		return nil, err
 	}

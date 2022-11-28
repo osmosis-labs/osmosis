@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
-	"github.com/osmosis-labs/osmosis/v12/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v12/tests/e2e/util"
-	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
-	swaprouterqueryproto "github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/queryproto"
+	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
+	"github.com/osmosis-labs/osmosis/v13/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v13/tests/e2e/util"
+	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	swaprouterqueryproto "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/queryproto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -34,9 +34,7 @@ func (n *NodeConfig) CreatePool(poolFile, from string, isLegacy bool) uint64 {
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	path := "osmosis/gamm/v1beta1/num_pools"
-
-	bz, err := n.QueryGRPCGateway(path)
+	bz, err := n.QueryGRPCGateway(fmt.Sprintf("osmosis/%s/v1beta1/num_pools", moduleName))
 	require.NoError(n.t, err)
 
 	var numPools swaprouterqueryproto.NumPoolsResponse

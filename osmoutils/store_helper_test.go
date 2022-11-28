@@ -9,10 +9,10 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	twaptypes "github.com/osmosis-labs/osmosis/v12/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	twaptypes "github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
 type TestSuite struct {
@@ -422,7 +422,7 @@ func (s *TestSuite) TestGetFirstValueAfterPrefixInclusive() {
 	}
 }
 
-func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
+func (s *TestSuite) TestGatherValuesFromIterator() {
 	testcases := map[string]struct {
 		// if prefix is set, startValue and endValue are ignored.
 		// we either create an iterator prefix or a range iterator.
@@ -535,7 +535,7 @@ func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
 				mockParseValueFn = mockParseValueWithError
 			}
 
-			actualValues, err := osmoutils.GatherValuesFromIteratorWithStop(iterator, mockParseValueFn, mockStop)
+			actualValues, err := osmoutils.GatherValuesFromIterator(iterator, mockParseValueFn, mockStop)
 
 			if tc.expectedErr != nil {
 				s.Require().ErrorContains(err, tc.expectedErr.Error())

@@ -3,9 +3,9 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	minttypes "github.com/osmosis-labs/osmosis/v12/x/mint/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 type Hooks struct {

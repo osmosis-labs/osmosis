@@ -7,11 +7,11 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v12/app"
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/client/cli"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	swaproutertestutil "github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/testutil"
+	"github.com/osmosis-labs/osmosis/v13/app"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/client/cli"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertestutil "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/testutil"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -442,44 +442,6 @@ func (s *IntegrationTestSuite) TestGetCmdPools() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 
 				s.Require().Greater(len(resp.Pools), 0, out.String())
-			}
-		})
-	}
-}
-
-func (s *IntegrationTestSuite) TestGetCmdNumPools() {
-	val := s.network.Validators[0]
-
-	testCases := []struct {
-		name      string
-		args      []string
-		expectErr bool
-	}{
-		{
-			"query num-pools",
-			[]string{
-				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
-			},
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdNumPools() // osmosisd query gamm num-pools
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				resp := types.QueryNumPoolsResponse{}
-				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-
-				s.Require().Greater(resp.NumPools, uint64(0), out.String())
 			}
 		})
 	}

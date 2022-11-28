@@ -6,7 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 
-	types "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
+
+	types "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/gamm interfaces and concrete types
@@ -21,7 +24,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface(
 		"osmosis.gamm.v1beta1.PoolI",
-		(*types.PoolI)(nil),
+		(*swaproutertypes.PoolI)(nil),
 		&Pool{},
 	)
 	registry.RegisterInterface(
@@ -34,7 +37,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&MsgCreateStableswapPool{},
 		&MsgStableSwapAdjustScalingFactors{},
 	)
-	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+	msgservice.RegisterMsgServiceDesc(registry, &_MsgScalingFactor_serviceDesc)
 }
 
 var (
@@ -51,5 +54,11 @@ var (
 
 func init() {
 	RegisterLegacyAminoCodec(amino)
+	// Register all Amino interfaces and concrete types on the authz Amino codec so that this can later be
+	// used to properly serialize MsgGrant and MsgExec instances
+	sdk.RegisterLegacyAminoCodec(amino)
+	RegisterLegacyAminoCodec(authzcodec.Amino)
 	amino.Seal()
 }
+
+const PoolTypeName string = "Stableswap"

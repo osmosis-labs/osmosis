@@ -11,8 +11,8 @@ import (
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
 )
 
 type QueryTestSuite struct {

@@ -6,11 +6,11 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v12/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v12/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v13/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -135,4 +135,26 @@ func (k Keeper) GetLockableDurations(ctx sdk.Context) []time.Duration {
 func (k Keeper) GetAllGauges(ctx sdk.Context) []incentivestypes.Gauge {
 	gauges := k.incentivesKeeper.GetGauges(ctx)
 	return gauges
+}
+
+func (k Keeper) IsPoolIncentivized(ctx sdk.Context, poolId uint64) bool {
+	lockableDurations := k.GetLockableDurations(ctx)
+	distrInfo := k.GetDistrInfo(ctx)
+
+	candidateGaugeIds := []uint64{}
+	for _, lockableDuration := range lockableDurations {
+		gaugeId, err := k.GetPoolGaugeId(ctx, poolId, lockableDuration)
+		if err == nil {
+			candidateGaugeIds = append(candidateGaugeIds, gaugeId)
+		}
+	}
+
+	for _, record := range distrInfo.Records {
+		for _, gaugeId := range candidateGaugeIds {
+			if record.GaugeId == gaugeId {
+				return true
+			}
+		}
+	}
+	return false
 }

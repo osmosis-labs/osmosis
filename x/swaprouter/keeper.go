@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogotypes "github.com/gogo/protobuf/types"
 
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -13,11 +13,12 @@ import (
 type Keeper struct {
 	storeKey sdk.StoreKey
 
-	gammKeeper          types.SwapI
-	concentratedKeeper  types.SwapI
-	bankKeeper          types.BankI
-	accountKeeper       types.AccountI
-	communityPoolKeeper types.CommunityPoolI
+	gammKeeper           types.SwapI
+	concentratedKeeper   types.SwapI
+	poolIncentivesKeeper types.PoolIncentivesKeeperI
+	bankKeeper           types.BankI
+	accountKeeper        types.AccountI
+	communityPoolKeeper  types.CommunityPoolI
 
 	poolCreationListeners types.PoolCreationListeners
 
@@ -94,4 +95,9 @@ func (k *Keeper) SetPoolCreationListeners(listeners types.PoolCreationListeners)
 func (k Keeper) SetNextPoolId(ctx sdk.Context, poolId uint64) {
 	store := ctx.KVStore(k.storeKey)
 	osmoutils.MustSet(store, types.KeyNextGlobalPoolId, &gogotypes.UInt64Value{Value: poolId})
+}
+
+// SetPoolIncentivesKeeper sets pool incentives keeper
+func (k *Keeper) SetPoolIncentivesKeeper(poolIncentivesKeeper types.PoolIncentivesKeeperI) {
+	k.poolIncentivesKeeper = poolIncentivesKeeper
 }

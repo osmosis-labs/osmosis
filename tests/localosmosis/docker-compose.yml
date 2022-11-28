@@ -15,7 +15,7 @@ services:
       - ./scripts/nativeDenomPoolB.json:/osmosis/nativeDenomPoolB.json
       - ./scripts/nativeDenomThreeAssetPool.json:/osmosis/nativeDenomThreeAssetPool.json
       - ./scripts/setup.sh:/osmosis/setup.sh
-      - $HOME/.osmosisd/:/osmosis/.osmosisd/
+      - $HOME/.osmosisd-local/:/osmosis/.osmosisd/
     entrypoint:
       - /osmosis/setup.sh
     command:

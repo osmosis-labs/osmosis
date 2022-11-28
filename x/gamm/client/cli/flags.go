@@ -22,6 +22,8 @@ const (
 	FlagSwapRouteAmounts = "swap-route-amounts"
 	// Will be parsed to []string.
 	FlagSwapRouteDenoms = "swap-route-denoms"
+	// FlagScalingFactors represents the flag name for the scaling factors.
+	FlagScalingFactors = "scaling-factors"
 )
 
 func FlagSetJoinPool() *flag.FlagSet {
@@ -48,6 +50,15 @@ func FlagSetJoinSwapExternAmount() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
 	fs.Uint64(FlagPoolId, 0, "The id of pool")
+
+	return fs
+}
+
+func FlagSetAdjustScalingFactors() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+
+	fs.Uint64(FlagPoolId, 0, "The id of pool")
+	fs.String(FlagScalingFactors, "", "The scaling factors")
 
 	return fs
 }

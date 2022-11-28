@@ -4,7 +4,7 @@ package osmosis.concentratedliquidity.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v12/x/concentrated-liquidity/types";
+option go_package = "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types";
 
 // GenesisState defines the gamm module's genesis state.
 message GenesisState {}

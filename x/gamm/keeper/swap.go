@@ -2,12 +2,14 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/keeper/internal/events"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/events"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 // swapExactAmountIn is an internal method for swapping an exact amount of tokens
@@ -19,7 +21,7 @@ import (
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	pool types.PoolI,
+	pool swaproutertypes.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
@@ -29,6 +31,13 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
 	}
 	tokensIn := sdk.Coins{tokenIn}
+
+	defer func() {
+		if r := recover(); r != nil {
+			tokenOutAmount = sdk.Int{}
+			err = fmt.Errorf("function swapExactAmountIn failed due to internal reason: %v", r)
+		}
+	}()
 
 	// Executes the swap in the pool and stores the output. Updates pool assets but
 	// does not actually transfer any tokens to or from the pool.
@@ -63,7 +72,7 @@ func (k Keeper) SwapExactAmountIn(
 func (k Keeper) SwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolI types.PoolI,
+	pool swaproutertypes.PoolI,
 	tokenInDenom string,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
@@ -72,10 +81,20 @@ func (k Keeper) SwapExactAmountOut(
 	if tokenInDenom == tokenOut.Denom {
 		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
 	}
-	pool, ok := poolI.(types.TraditionalAmmInterface)
-	if !ok {
-		return sdk.Int{}, errors.New("given pool does not implement TraditionalAmmInterface")
-	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			tokenInAmount = sdk.Int{}
+			err = fmt.Errorf("function swapExactAmountOut failed due to internal reason: %v", r)
+		}
+	}()
+
+	defer func() {
+		if r := recover(); r != nil {
+			tokenInAmount = sdk.Int{}
+			err = fmt.Errorf("function swapExactAmountOut failed due to internal reason: %v", r)
+		}
+	}()
 
 	poolOutBal := pool.GetTotalPoolLiquidity(ctx).AmountOf(tokenOut.Denom)
 	if tokenOut.Amount.GTE(poolOutBal) {
@@ -104,12 +123,42 @@ func (k Keeper) SwapExactAmountOut(
 	return tokenInAmount, nil
 }
 
+func (k Keeper) CalcOutAmtGivenIn(
+	ctx sdk.Context,
+	poolI swaproutertypes.PoolI,
+	tokenIn sdk.Coin,
+	tokenOutDenom string,
+	swapFee sdk.Dec,
+) (tokenOut sdk.Coin, err error) {
+	pool, ok := poolI.(types.TraditionalAmmInterface)
+	if !ok {
+		return sdk.Coin{}, fmt.Errorf("given pool does not implement TraditionalAmmInterface, implements %T", poolI)
+	}
+
+	return pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(tokenIn), tokenOutDenom, swapFee)
+}
+
+func (k Keeper) CalcInAmtGivenOut(
+	ctx sdk.Context,
+	poolI swaproutertypes.PoolI,
+	tokenOut sdk.Coin,
+	tokenInDenom string,
+	swapFee sdk.Dec,
+) (tokenIn sdk.Coin, err error) {
+	pool, ok := poolI.(types.TraditionalAmmInterface)
+	if !ok {
+		return sdk.Coin{}, fmt.Errorf("given pool does not implement TraditionalAmmInterface, implements %T", poolI)
+	}
+
+	return pool.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), tokenInDenom, swapFee)
+}
+
 // updatePoolForSwap takes a pool, sender, and tokenIn, tokenOut amounts
 // It then updates the pool's balances to the new reserve amounts, and
 // sends the in tokens from the sender to the pool, and the out tokens from the pool to the sender.
 func (k Keeper) updatePoolForSwap(
 	ctx sdk.Context,
-	pool types.PoolI,
+	pool swaproutertypes.PoolI,
 	sender sdk.AccAddress,
 	tokenIn sdk.Coin,
 	tokenOut sdk.Coin,

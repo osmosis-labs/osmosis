@@ -29,12 +29,13 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v12/app"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v12/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v12/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v13/app"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v13/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 type KeeperTestHelper struct {
@@ -224,6 +225,17 @@ func (s *KeeperTestHelper) EndBlock() {
 	s.App.EndBlocker(s.Ctx, reqEndBlock)
 }
 
+func (s *KeeperTestHelper) RunMsg(msg sdk.Msg) (*sdk.Result, error) {
+	// cursed that we have to copy this internal logic from SDK
+	router := s.App.GetBaseApp().MsgServiceRouter()
+	if handler := router.Handler(msg); handler != nil {
+		// ADR 031 request type routing
+		return handler(s.Ctx, msg)
+	}
+	s.FailNow("msg %v could not be ran", msg)
+	return nil, fmt.Errorf("msg %v could not be ran", msg)
+}
+
 // AllocateRewardsToValidator allocates reward tokens to a distribution module then allocates rewards to the validator address.
 func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, rewardAmt sdk.Int) {
 	validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
@@ -241,14 +253,14 @@ func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, re
 }
 
 // SetupGammPoolsWithBondDenomMultiplier uses given multipliers to set initial pool supply of bond denom.
-func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []sdk.Dec) []gammtypes.PoolI {
+func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []sdk.Dec) []swaproutertypes.PoolI {
 	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 	// TODO: use sdk crypto instead of tendermint to generate address
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
 	params := s.App.SwapRouterKeeper.GetParams(s.Ctx)
 
-	pools := []gammtypes.PoolI{}
+	pools := []swaproutertypes.PoolI{}
 	for index, multiplier := range multipliers {
 		token := fmt.Sprintf("token%d", index)
 		uosmoAmount := gammtypes.InitPoolSharesSupply.ToDec().Mul(multiplier).RoundInt()

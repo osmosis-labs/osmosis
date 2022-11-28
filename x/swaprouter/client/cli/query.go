@@ -10,8 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
 
-	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v12/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
