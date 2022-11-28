@@ -38,7 +38,7 @@ import (
 	simulation "github.com/osmosis-labs/osmosis/v13/x/lockup/simulation"
 	"github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 
-	store "github.com/cosmos/cosmos-sdk/store/types"
+	// store "github.com/cosmos/cosmos-sdk/store/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	modulev1 "github.com/osmosis-labs/osmosis/v13/api/osmosis/lockup/module/v1"
@@ -226,7 +226,7 @@ type LockupInputs struct {
 	depinject.In
 
 	Config *modulev1.Module
-	Key    *store.KVStoreKey
+	Key    sdk.StoreKey
 	Cdc    codec.Codec
 
 	AccountKeeper types.AccountKeeper
