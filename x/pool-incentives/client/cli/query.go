@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v3/x/pool-incentives/types"
 	"github.com/spf13/cobra"
 )
 
@@ -25,6 +25,10 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 
 	cmd.AddCommand(
 		GetCmdGaugeIds(),
+		GetCmdDistrInfo(),
+		GetCmdParams(),
+		GetCmdLockableDurations(),
+		GetCmdIncentivizedPools(),
 	)
 
 	return cmd
@@ -73,7 +77,7 @@ $ %s query pool-incentives gauge-ids 1
 	return cmd
 }
 
-// GetCmdDistrInfo takes the pool id and returns the matching gauge ids and durations
+// GetCmdDistrInfo takes the pool id and returns the matching gauge ids and weights
 func GetCmdDistrInfo() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "distr-info",

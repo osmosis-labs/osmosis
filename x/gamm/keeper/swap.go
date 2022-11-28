@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v3/x/gamm/types"
 )
 
 func (k Keeper) SwapExactAmountIn(
@@ -157,9 +157,12 @@ func (k Keeper) updatePoolForSwap(
 		return err
 	}
 
-	k.hooks.AfterSwap(ctx, sender, pool.GetId(), sdk.Coins{tokenIn}, sdk.Coins{tokenOut})
-	k.RecordTotalLiquidityIncrease(ctx, sdk.Coins{tokenIn})
-	k.RecordTotalLiquidityDecrease(ctx, sdk.Coins{tokenOut})
+	tokensIn := sdk.Coins{tokenIn}
+	tokensOut := sdk.Coins{tokenOut}
+	k.createSwapEvent(ctx, sender, pool.GetId(), tokensIn, tokensOut)
+	k.hooks.AfterSwap(ctx, sender, pool.GetId(), tokensIn, tokensOut)
+	k.RecordTotalLiquidityIncrease(ctx, tokensIn)
+	k.RecordTotalLiquidityDecrease(ctx, tokensOut)
 
 	return err
 }

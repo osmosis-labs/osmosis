@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v3/x/gamm/types"
 )
 
 var (
@@ -119,7 +119,7 @@ func (k Keeper) NumPools(
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	return &types.QueryNumPoolsResponse{
-		NumPools: k.getNextPoolNumber(sdkCtx) - 1,
+		NumPools: k.GetNextPoolNumber(sdkCtx) - 1,
 	}, nil
 }
 

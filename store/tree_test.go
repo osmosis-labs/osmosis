@@ -12,10 +12,10 @@ import (
 
 	dbm "github.com/tendermint/tm-db"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/store"
+	"github.com/osmosis-labs/osmosis/v3/store"
 )
 
 type TreeTestSuite struct {

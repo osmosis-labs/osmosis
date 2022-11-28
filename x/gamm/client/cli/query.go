@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/osmosis-labs/osmosis/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v3/x/gamm/types"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 )
@@ -119,8 +119,13 @@ $ %s query gamm pools
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
 			res, err := queryClient.Pools(cmd.Context(), &types.QueryPoolsRequest{
-				Pagination: nil,
+				Pagination: pageReq,
 			})
 			if err != nil {
 				return err
@@ -131,6 +136,7 @@ $ %s query gamm pools
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "pools")
 
 	return cmd
 }

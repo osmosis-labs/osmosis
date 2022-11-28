@@ -10,8 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v3/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v3/x/lockup/types"
 	"github.com/spf13/cobra"
 )
 
@@ -126,7 +126,7 @@ func NewAddToGaugeCmd() *cobra.Command {
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			gaugeId, err := strconv.ParseUint(args[1], 10, 64)
+			gaugeId, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
 				return err
 			}

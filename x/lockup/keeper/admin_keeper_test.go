@@ -4,8 +4,8 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/lockup/keeper"
-	"github.com/osmosis-labs/osmosis/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v3/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/v3/x/lockup/types"
 )
 
 func (suite *KeeperTestSuite) TestRelock() {

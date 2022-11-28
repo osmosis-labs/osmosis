@@ -12,10 +12,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/app"
+	"github.com/osmosis-labs/osmosis/v3/app"
 
-	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v3/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v3/x/pool-incentives/types"
 )
 
 type KeeperTestSuite struct {

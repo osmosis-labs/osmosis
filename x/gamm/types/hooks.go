@@ -18,6 +18,7 @@ var _ GammHooks = MultiGammHooks{}
 // combine multiple gamm hooks, all hook functions are run in array sequence
 type MultiGammHooks []GammHooks
 
+// Creates hooks for the Gamm Module
 func NewMultiGammHooks(hooks ...GammHooks) MultiGammHooks {
 	return hooks
 }
