@@ -811,9 +811,9 @@ func (s *TestSuite) TestMustGet() {
 	}
 }
 
-// TestMustGet tests that GetIfFound returns a boolean indicating 
+// TestGet tests that Get returns a boolean indicating
 // whether value exists for the given key and error
-func (s *TestSuite) TestGetIfFound() {
+func (s *TestSuite) TestGet() {
 	tests := map[string]struct {
 		// keys and values to preset
 		preSetKeyValues map[string]proto.Message
@@ -888,12 +888,12 @@ func (s *TestSuite) TestGetIfFound() {
 
 			for key, expectedValue := range tc.expectedGetKeyValues {
 				// System under test.
-				found, err := osmoutils.GetIfFound(s.store, []byte(key), tc.actualResultProto)
+				found, err := osmoutils.Get(s.store, []byte(key), tc.actualResultProto)
 				// Assertions.
 				s.Require().Equal(found, tc.expectFound)
 				if tc.expectErr {
 					s.Require().Error(err)
-				} 
+				}
 				// make sure found by key & Unmarshal successfully
 				if !tc.expectErr && tc.expectFound {
 					s.Require().Equal(expectedValue.String(), tc.actualResultProto.String())
