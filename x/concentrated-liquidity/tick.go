@@ -15,6 +15,11 @@ import (
 )
 
 func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
+	_, err = k.getPoolById(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
 	tickInfo, err := k.getTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
 		return err
