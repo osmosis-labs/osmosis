@@ -19,7 +19,7 @@ type twapStrategy interface {
 		quoteAssetDenom string,
 		startTime time.Time) (sdk.Dec, error)
 	// computeTwap calculates the TWAP with specific startRecord and endRecord.
-	computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec
+	computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) (sdk.Dec, error)
 }
 
 type arithmetic struct {
@@ -38,6 +38,6 @@ func (s *arithmetic) getTwapToNow(
 	return s.keeper.GetArithmeticTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime)
 }
 
-func (s *arithmetic) computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
-	return computeArithmeticTwap(startRecord, endRecord, quoteAsset)
+func (s *arithmetic) computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) (sdk.Dec, error) {
+	return computeTwap(startRecord, endRecord, quoteAsset, arithmeticTwapType)
 }
