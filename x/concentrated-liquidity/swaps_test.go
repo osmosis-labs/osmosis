@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	cltypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
@@ -176,7 +177,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			param: param{
 				tokenOut:         sdk.NewCoin("usdc", sdk.NewInt(42000000)),
 				tokenInDenom:     "eth",
-				tokenInMaxAmount: sdk.NewInt(999999999999),
+				tokenInMaxAmount: sdk.Int(types.UpperPriceLimit),
 				expectedTokenIn:  sdk.NewInt(8396),
 			},
 		},
@@ -191,7 +192,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			param: param{
 				tokenOut:         sdk.NewCoin("eth", sdk.NewInt(13370)),
 				tokenInDenom:     "usdc",
-				tokenInMaxAmount: sdk.NewInt(999999999999),
+				tokenInMaxAmount: sdk.Int(types.UpperPriceLimit),
 				expectedTokenIn:  sdk.NewInt(66808387),
 			},
 		},
@@ -200,7 +201,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			param: param{
 				tokenOut:         sdk.NewCoin("usdc", sdk.NewInt(42000000)),
 				tokenInDenom:     "eth",
-				tokenInMaxAmount: sdk.NewInt(1),
+				tokenInMaxAmount: sdk.Int(types.LowerPriceLimit),
 			},
 			expectErr: "token is lesser than min amount",
 		},
@@ -209,7 +210,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			param: param{
 				tokenOut:         sdk.NewCoin("eth", sdk.NewInt(13370)),
 				tokenInDenom:     "eth",
-				tokenInMaxAmount: sdk.NewInt(999999999999),
+				tokenInMaxAmount: sdk.Int(types.UpperPriceLimit),
 			},
 			expectErr: "cannot trade same denomination in and out",
 		},
@@ -218,7 +219,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			param: param{
 				tokenOut:         sdk.NewCoin("etha", sdk.NewInt(13370)),
 				tokenInDenom:     "eth",
-				tokenInMaxAmount: sdk.NewInt(999999999999),
+				tokenInMaxAmount: sdk.Int(types.UpperPriceLimit),
 			},
 			expectErr: "does not match any asset in pool",
 		},
@@ -227,7 +228,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			param: param{
 				tokenOut:         sdk.NewCoin("eth", sdk.NewInt(13370)),
 				tokenInDenom:     "etha",
-				tokenInMaxAmount: sdk.NewInt(999999999999),
+				tokenInMaxAmount: sdk.Int(types.UpperPriceLimit),
 			},
 			expectErr: "does not match any asset in pool",
 		},
