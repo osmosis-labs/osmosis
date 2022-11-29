@@ -146,8 +146,6 @@ func (k Keeper) SwapExactAmountOut(
 	if !tokenInAmount.IsPositive() {
 		return sdk.Int{}, fmt.Errorf("token amount must be positive: got %v", tokenInAmount)
 	}
-	fmt.Printf("tokenInAmount %v \n", tokenInAmount)
-	fmt.Printf("tokenInMaxAmount %v \n", tokenInMaxAmount)
 	if tokenInAmount.GT(tokenInMaxAmount) {
 		return sdk.Int{}, fmt.Errorf("%s token is lesser than min amount", tokenInDenom)
 	}
@@ -204,7 +202,6 @@ func (k *Keeper) SwapInAmtGivenOut(
 	return tokenIn, nil
 }
 
-// TODO: Calc stubs while we figure out how we want to work this through the swap router
 func (k Keeper) CalcOutAmtGivenIn(
 	ctx sdk.Context,
 	poolI swaproutertypes.PoolI,
@@ -212,7 +209,11 @@ func (k Keeper) CalcOutAmtGivenIn(
 	tokenOutDenom string,
 	swapFee sdk.Dec,
 ) (tokenOut sdk.Coin, err error) {
-	return sdk.Coin{}, nil
+	_, tokenOut, _, _, _, err = k.calcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, sdk.ZeroDec(), poolI.GetId())
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+	return tokenOut, nil
 }
 
 func (k Keeper) CalcInAmtGivenOut(
@@ -222,7 +223,11 @@ func (k Keeper) CalcInAmtGivenOut(
 	tokenInDenom string,
 	swapFee sdk.Dec,
 ) (tokenIn sdk.Coin, err error) {
-	return sdk.Coin{}, nil
+	tokenIn, _, _, _, _, err = k.calcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, sdk.ZeroDec(), poolI.GetId())
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+	return tokenIn, nil
 }
 
 // calcOutAmtGivenIn calculates tokens to be swapped out given the provided amount and fee deducted. It also returns
@@ -246,6 +251,13 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 	// if swapping asset0 for asset1, zeroForOne is true
 	zeroForOne := tokenInMin.Denom == asset0
 	swapStrategy := math.NewSwapStrategy(zeroForOne)
+
+	// if priceLimit not set, set to max/min value based on swap direction
+	if zeroForOne && priceLimit.Equal(sdk.ZeroDec()) {
+		priceLimit = types.LowerPriceLimit
+	} else if !zeroForOne && priceLimit.Equal(sdk.ZeroDec()) {
+		priceLimit = types.UpperPriceLimit
+	}
 
 	// get current sqrt price from pool
 	curSqrtPrice := p.GetCurrentSqrtPrice()
@@ -385,6 +397,13 @@ func (k Keeper) calcInAmtGivenOut(
 	// if swapping asset0 for asset1, zeroForOne is true
 	zeroForOne := desiredTokenOut.Denom == asset0
 	swapStrategy := math.NewSwapStrategy(zeroForOne)
+
+	// if priceLimit not set, set to max/min value based on swap direction
+	if zeroForOne && priceLimit.Equal(sdk.ZeroDec()) {
+		priceLimit = types.LowerPriceLimit
+	} else if !zeroForOne && priceLimit.Equal(sdk.ZeroDec()) {
+		priceLimit = types.UpperPriceLimit
+	}
 
 	// get current sqrt price from pool
 	curSqrtPrice := p.GetCurrentSqrtPrice()
