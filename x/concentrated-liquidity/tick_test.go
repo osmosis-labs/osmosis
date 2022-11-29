@@ -123,6 +123,7 @@ func (s *KeeperTestSuite) TestNextInitializedTick() {
 }
 
 func (s *KeeperTestSuite) TestInitOrUpdateTick() {
+	const validPoolId = 1
 	type param struct {
 		poolId      uint64
 		tickIndex   int64
@@ -136,12 +137,12 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		tickExists             bool
 		expectedLiquidityNet   sdk.Dec
 		expectedLiquidityGross sdk.Dec
-		expectErr              bool
+		expectedErr            string
 	}{
 		{
 			name: "Init tick 50 with 50000000000 liquidity, upper",
 			param: param{
-				poolId:      1,
+				poolId:      validPoolId,
 				tickIndex:   50,
 				liquidityIn: DefaultLiquidityAmt,
 				upper:       true,
@@ -153,7 +154,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		{
 			name: "Init tick 50 with 50000000000 liquidity, lower",
 			param: param{
-				poolId:      1,
+				poolId:      validPoolId,
 				tickIndex:   50,
 				liquidityIn: DefaultLiquidityAmt,
 				upper:       false,
@@ -165,7 +166,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		{
 			name: "Update tick 50 that already contains 50000000000 liquidity with 50000000000 more liquidity, upper",
 			param: param{
-				poolId:      1,
+				poolId:      validPoolId,
 				tickIndex:   50,
 				liquidityIn: DefaultLiquidityAmt,
 				upper:       true,
@@ -177,7 +178,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		{
 			name: "Update tick 50 that already contains 50000000000 liquidity with 50000000000 more liquidity, lower",
 			param: param{
-				poolId:      1,
+				poolId:      validPoolId,
 				tickIndex:   50,
 				liquidityIn: DefaultLiquidityAmt,
 				upper:       false,
@@ -189,7 +190,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		{
 			name: "Init tick -50 with 50000000000 liquidity, upper",
 			param: param{
-				poolId:      1,
+				poolId:      validPoolId,
 				tickIndex:   -50,
 				liquidityIn: DefaultLiquidityAmt,
 				upper:       true,
@@ -201,7 +202,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		{
 			name: "Init tick -50 with 50000000000 liquidity, lower",
 			param: param{
-				poolId:      1,
+				poolId:      validPoolId,
 				tickIndex:   -50,
 				liquidityIn: DefaultLiquidityAmt,
 				upper:       false,
@@ -213,7 +214,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		{
 			name: "Update tick -50 that already contains 50000000000 liquidity with 50000000000 more liquidity, upper",
 			param: param{
-				poolId:      1,
+				poolId:      validPoolId,
 				tickIndex:   -50,
 				liquidityIn: DefaultLiquidityAmt,
 				upper:       true,
@@ -225,7 +226,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		{
 			name: "Update tick -50 that already contains 50000000000 liquidity with 50000000000 more liquidity, lower",
 			param: param{
-				poolId:      1,
+				poolId:      validPoolId,
 				tickIndex:   -50,
 				liquidityIn: DefaultLiquidityAmt,
 				upper:       false,
@@ -237,7 +238,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		{
 			name: "Init tick 50 with -50000000000 liquidity, upper",
 			param: param{
-				poolId:      1,
+				poolId:      validPoolId,
 				tickIndex:   50,
 				liquidityIn: DefaultLiquidityAmt.Neg(),
 				upper:       true,
@@ -249,7 +250,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		{
 			name: "Update tick 50 that already contains 50000000000 liquidity with -50000000000 liquidity, upper",
 			param: param{
-				poolId:      1,
+				poolId:      validPoolId,
 				tickIndex:   50,
 				liquidityIn: DefaultLiquidityAmt.Neg(),
 				upper:       true,
@@ -261,7 +262,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		{
 			name: "Update tick -50 that already contains 50000000000 liquidity with -50000000000 liquidity, lower",
 			param: param{
-				poolId:      1,
+				poolId:      validPoolId,
 				tickIndex:   -50,
 				liquidityIn: DefaultLiquidityAmt.Neg(),
 				upper:       false,
@@ -278,8 +279,8 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 				liquidityIn: DefaultLiquidityAmt,
 				upper:       true,
 			},
-			tickExists: false,
-			expectErr:  true,
+			tickExists:  false,
+			expectedErr: "pool not found",
 		},
 	}
 
@@ -308,8 +309,8 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 
 			// Initialize or update the tick according to the test case
 			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, test.param.poolId, test.param.tickIndex, test.param.liquidityIn, test.param.upper)
-			if test.expectErr {
-				s.Require().Error(err)
+			if test.expectedErr != "" {
+				s.Require().ErrorContains(err, test.expectedErr)
 				return
 			}
 			s.Require().NoError(err)
