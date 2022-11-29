@@ -521,3 +521,15 @@ func (q Querier) TotalDelegationByDelegator(goCtx context.Context, req *types.Qu
 
 	return &res, nil
 }
+
+func (q Querier) UnpoolWhitelist(goCtx context.Context, req *types.QueryUnpoolWhitelistRequest) (*types.QueryUnpoolWhitelistResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	allowedPools := q.GetUnpoolAllowedPools(sdk.UnwrapSDKContext(goCtx))
+
+	return &types.QueryUnpoolWhitelistResponse{
+		PoolIds: allowedPools,
+	}, nil
+}

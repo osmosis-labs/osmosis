@@ -36,6 +36,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdSuperfluidUndelegationsByDelegator(),
 		GetCmdTotalSuperfluidDelegations(),
 		GetCmdTotalDelegationByDelegator(),
+		GetCmdUnpoolWhitelist(),
 	)
 
 	return cmd
@@ -366,6 +367,31 @@ func GetCmdTotalDelegationByDelegator() *cobra.Command {
 			res, err := queryClient.TotalDelegationByDelegator(cmd.Context(), &types.QueryTotalDelegationByDelegatorRequest{
 				DelegatorAddress: args[0],
 			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func GetCmdUnpoolWhitelist() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "unpool-whitelist",
+		Short: "Query whitelisted pool ids to unpool.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.UnpoolWhitelist(cmd.Context(), &types.QueryUnpoolWhitelistRequest{})
 			if err != nil {
 				return err
 			}
