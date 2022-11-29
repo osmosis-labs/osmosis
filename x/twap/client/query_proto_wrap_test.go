@@ -11,7 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/client"
-	"github.com/osmosis-labs/osmosis/v13/x/twap/client/v2queryproto"
+	"github.com/osmosis-labs/osmosis/v13/x/twap/client/queryproto"
 )
 
 type QueryTestSuite struct {
@@ -152,14 +152,14 @@ func (suite *QueryTestSuite) TestV2QueryTwap() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			client := client.QuerierV2{K: *suite.App.TwapKeeper}
+			client := client.Querier{K: *suite.App.TwapKeeper}
 
 			startTime := validStartTime
 			if tc.startTimeOverwrite != nil {
 				startTime = *tc.startTimeOverwrite
 			}
 
-			result, err := client.ArithmeticTwap(ctx, v2queryproto.ArithmeticTwapRequest{
+			result, err := client.ArithmeticTwap(ctx, queryproto.ArithmeticTwapRequest{
 				PoolId:     tc.poolId,
 				BaseAsset:  tc.baseAssetDenom,
 				QuoteAsset: tc.quoteAssetDenom,
@@ -174,7 +174,7 @@ func (suite *QueryTestSuite) TestV2QueryTwap() {
 				suite.Require().Equal(tc.result, result.ArithmeticTwap.String())
 			}
 
-			resultToNow, err := client.ArithmeticTwapToNow(ctx, v2queryproto.ArithmeticTwapToNowRequest{
+			resultToNow, err := client.ArithmeticTwapToNow(ctx, queryproto.ArithmeticTwapToNowRequest{
 				PoolId:     tc.poolId,
 				BaseAsset:  tc.baseAssetDenom,
 				QuoteAsset: tc.quoteAssetDenom,
