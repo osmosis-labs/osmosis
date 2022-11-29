@@ -158,18 +158,9 @@ func (q Querier) CalcJoinPoolShares(ctx context.Context, req *types.QueryCalcJoi
 
 // PoolsWithFilter query allows to query pools with specific parameters
 func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithFilterRequest) (*types.QueryPoolsWithFilterResponse, error) {
-	res, err := q.Pools(ctx, &types.QueryPoolsRequest{
-		Pagination: &query.PageRequest{},
-	})
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	pools := res.Pools
-
-	var response = []*codectypes.Any{}
+	store := sdkCtx.KVStore(q.Keeper.storeKey)
+	poolStore := prefix.NewStore(store, types.KeyPrefixPools)
 
 	// set filters
 	min_liquidity := req.MinLiquidity
@@ -184,14 +175,14 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 		checks_needed++
 	}
 
-	for _, p := range pools {
+	var response = []*codectypes.Any{}
+	pageRes, err := query.Paginate(poolStore, req.Pagination, func(_, value []byte) error {
 		var checks = 0
-		var pool types.PoolI
-
-		err := q.cdc.UnpackAny(p, &pool)
+		pool, err := q.Keeper.UnmarshalPool(value)
 		if err != nil {
-			return nil, sdkerrors.ErrUnpackAny
+			return err
 		}
+
 		poolId := pool.GetId()
 
 		// if liquidity specified in request
@@ -226,23 +217,34 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 		if pool_type != "" {
 			poolType, err := q.GetPoolType(sdkCtx, poolId)
 			if err != nil {
-				return nil, types.ErrPoolNotFound
+				return types.ErrPoolNotFound
 			}
 
 			if poolType == pool_type {
 				checks++
 			} else {
-				continue
+				return nil
 			}
 		}
 
 		if checks == checks_needed {
-			response = append(response, p)
+			any, err := codectypes.NewAnyWithValue(pool)
+			if err != nil {
+				return err
+			}
+			response = append(response, any)
 		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryPoolsWithFilterResponse{
-		Pools: response,
+		Pools:      response,
+		Pagination: pageRes,
 	}, nil
 }
 
