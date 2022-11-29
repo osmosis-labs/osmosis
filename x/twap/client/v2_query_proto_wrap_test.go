@@ -30,26 +30,33 @@ func (suite *QueryTestSuite) SetupTest() {
 
 func (suite *QueryTestSuite) TestV2QueryTwap() {
 	suite.SetupTest()
-	coins := sdk.NewCoins(
-		sdk.NewInt64Coin("tokenA", 1000),
-		sdk.NewInt64Coin("tokenB", 2000),
-		sdk.NewInt64Coin("tokenC", 3000),
-		sdk.NewInt64Coin("tokenD", 4000),
-		sdk.NewInt64Coin("tokenE", 4000), // 4000 intentional
-	)
-	poolID := suite.PrepareBalancerPoolWithCoins(coins...)
 
-	oldBlockTime := suite.Ctx.BlockTime()
-	newBlockTime := oldBlockTime.Add(time.Hour)
+	var (
+		coins = sdk.NewCoins(
+			sdk.NewInt64Coin("tokenA", 1000),
+			sdk.NewInt64Coin("tokenB", 2000),
+			sdk.NewInt64Coin("tokenC", 3000),
+			sdk.NewInt64Coin("tokenD", 4000),
+			sdk.NewInt64Coin("tokenE", 4000), // 4000 intentional
+		)
+		poolID          = suite.PrepareBalancerPoolWithCoins(coins...)
+		validStartTime  = suite.Ctx.BlockTime()
+		newBlockTime    = validStartTime.Add(time.Hour)
+		startTimeTooOld = validStartTime.Add(-time.Hour)
+
+		// Set current block time one hour from initial.
+		ctx = suite.Ctx.WithBlockTime(newBlockTime)
+	)
 
 	testCases := []struct {
-		name            string
-		poolId          uint64
-		baseAssetDenom  string
-		quoteAssetDenom string
-		endTime         *time.Time
-		expectErr       bool
-		result          string
+		name               string
+		poolId             uint64
+		baseAssetDenom     string
+		quoteAssetDenom    string
+		startTimeOverwrite *time.Time
+		endTime            *time.Time
+		expectErr          bool
+		result             string
 	}{
 		{
 			name:            "non-existant pool",
@@ -130,6 +137,15 @@ func (suite *QueryTestSuite) TestV2QueryTwap() {
 
 			result: sdk.NewDec(2).String(),
 		},
+		{
+			name:               "tokenA in terms of tokenB - start time too old",
+			poolId:             poolID,
+			baseAssetDenom:     "tokenA",
+			quoteAssetDenom:    "tokenB",
+			startTimeOverwrite: &startTimeTooOld,
+
+			expectErr: true,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -138,14 +154,16 @@ func (suite *QueryTestSuite) TestV2QueryTwap() {
 		suite.Run(tc.name, func() {
 			client := client.QuerierV2{K: *suite.App.TwapKeeper}
 
-			// Set current block time one hour from now.
-			ctx := suite.Ctx.WithBlockTime(newBlockTime)
+			startTime := validStartTime
+			if tc.startTimeOverwrite != nil {
+				startTime = *tc.startTimeOverwrite
+			}
 
 			result, err := client.ArithmeticTwap(ctx, v2queryproto.ArithmeticTwapRequest{
 				PoolId:     tc.poolId,
 				BaseAsset:  tc.baseAssetDenom,
 				QuoteAsset: tc.quoteAssetDenom,
-				StartTime:  oldBlockTime,
+				StartTime:  startTime,
 				EndTime:    tc.endTime,
 			})
 
@@ -160,7 +178,7 @@ func (suite *QueryTestSuite) TestV2QueryTwap() {
 				PoolId:     tc.poolId,
 				BaseAsset:  tc.baseAssetDenom,
 				QuoteAsset: tc.quoteAssetDenom,
-				StartTime:  oldBlockTime,
+				StartTime:  startTime,
 			})
 
 			if tc.expectErr {
