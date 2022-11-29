@@ -227,7 +227,7 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 			}
 		}
 
-		if checks == checks_needed {
+		if accumulate && checks == checks_needed {
 			any, err := codectypes.NewAnyWithValue(pool)
 			if err != nil {
 				return false, err
