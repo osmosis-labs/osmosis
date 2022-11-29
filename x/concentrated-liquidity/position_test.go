@@ -25,7 +25,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 		expectedErr       string
 	}{
 		{
-			name: "Init position from -50 to 50 with 50000000000 liquidity",
+			name: "Init position from -50 to 50 with DefaultLiquidityAmt liquidity",
 			param: param{
 				poolId:         validPoolId,
 				lowerTick:      -50,
@@ -33,10 +33,10 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				liquidityDelta: DefaultLiquidityAmt,
 			},
 			positionExists:    false,
-			expectedLiquidity: sdk.NewDec(50000000000),
+			expectedLiquidity: DefaultLiquidityAmt,
 		},
 		{
-			name: "Update position from -50 to 50 that already contains 50000000000 liquidity with 50000000000 more liquidity",
+			name: "Update position from -50 to 50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity",
 			param: param{
 				poolId:         validPoolId,
 				lowerTick:      -50,
@@ -44,7 +44,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				liquidityDelta: DefaultLiquidityAmt,
 			},
 			positionExists:    true,
-			expectedLiquidity: sdk.NewDec(100000000000),
+			expectedLiquidity: DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
 		},
 		{
 			name: "Init position for non-existing pool",
@@ -58,7 +58,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			expectedErr:    "cannot retrieve position for a non-existent pool",
 		},
 		{
-			name: "Init position from -50 to 50 with -50000000000 liquidity",
+			name: "Init position from -50 to 50 with negative DefaultLiquidityAmt liquidity",
 			param: param{
 				poolId:         validPoolId,
 				lowerTick:      -50,
