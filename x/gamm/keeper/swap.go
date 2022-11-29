@@ -7,8 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/keeper/internal/events"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/events"
 )
 
 // SwapExactAmountIn attempts to swap one asset, tokenIn, for another asset
@@ -40,7 +40,7 @@ func (k Keeper) SwapExactAmountIn(
 func (k Keeper) swapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	pool types.PoolI,
+	pool types.CFMMPoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
@@ -107,7 +107,7 @@ func (k Keeper) SwapExactAmountOut(
 func (k Keeper) swapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	pool types.PoolI,
+	pool types.CFMMPoolI,
 	tokenInDenom string,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
@@ -156,7 +156,7 @@ func (k Keeper) swapExactAmountOut(
 // sends the in tokens from the sender to the pool, and the out tokens from the pool to the sender.
 func (k Keeper) updatePoolForSwap(
 	ctx sdk.Context,
-	pool types.PoolI,
+	pool types.CFMMPoolI,
 	sender sdk.AccAddress,
 	tokenIn sdk.Coin,
 	tokenOut sdk.Coin,

@@ -9,6 +9,7 @@ import (
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 
 	types "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/gamm interfaces and concrete types
@@ -23,7 +24,12 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface(
 		"osmosis.gamm.v1beta1.PoolI",
-		(*types.PoolI)(nil),
+		(*swaproutertypes.PoolI)(nil),
+		&Pool{},
+	)
+	registry.RegisterInterface(
+		"osmosis.gamm.v1beta1.CFMMPoolI",
+		(*types.CFMMPoolI)(nil),
 		&Pool{},
 	)
 	registry.RegisterImplementations(

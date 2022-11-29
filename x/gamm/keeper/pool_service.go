@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 // CalculateSpotPrice returns the spot price of the quote asset in terms of the base asset,
@@ -56,7 +57,7 @@ func (k Keeper) CalculateSpotPrice(
 	return spotPrice, err
 }
 
-func validateCreatePoolMsg(ctx sdk.Context, msg types.CreatePoolMsg) error {
+func validateCreatePoolMsg(ctx sdk.Context, msg swaproutertypes.CreatePoolMsg) error {
 	err := msg.Validate(ctx)
 	if err != nil {
 		return err
@@ -64,10 +65,10 @@ func validateCreatePoolMsg(ctx sdk.Context, msg types.CreatePoolMsg) error {
 
 	initialPoolLiquidity := msg.InitialLiquidity()
 	numAssets := initialPoolLiquidity.Len()
-	if numAssets < types.MinPoolAssets {
+	if numAssets < swaproutertypes.MinPoolAssets {
 		return types.ErrTooFewPoolAssets
 	}
-	if numAssets > types.MaxPoolAssets {
+	if numAssets > swaproutertypes.MaxPoolAssets {
 		return sdkerrors.Wrapf(
 			types.ErrTooManyPoolAssets,
 			"pool has too many PoolAssets (%d)", numAssets,
@@ -80,7 +81,7 @@ func (k Keeper) validateCreatedPool(
 	ctx sdk.Context,
 	initialPoolLiquidity sdk.Coins,
 	poolId uint64,
-	pool types.PoolI,
+	pool swaproutertypes.PoolI,
 ) error {
 	if pool.GetId() != poolId {
 		return sdkerrors.Wrapf(types.ErrInvalidPool,
@@ -113,7 +114,7 @@ func (k Keeper) validateCreatedPool(
 // and sent to the pool creator. The shares are created using a denomination in
 // the form of gamm/pool/{poolID}. In addition, the x/bank metadata is updated
 // to reflect the newly created GAMM share denomination.
-func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, error) {
+func (k Keeper) CreatePool(ctx sdk.Context, msg swaproutertypes.CreatePoolMsg) (uint64, error) {
 	err := validateCreatePoolMsg(ctx, msg)
 	if err != nil {
 		return 0, err
@@ -254,7 +255,7 @@ func (k Keeper) JoinPoolNoSwap(
 // 1. calculate how much percent of the pool does given share account for(# of input shares / # of current total shares)
 // 2. since we know how much % of the pool we want, iterate through all pool liquidity to calculate how much coins we need for
 // each pool asset.
-func getMaximalNoSwapLPAmount(ctx sdk.Context, pool types.PoolI, shareOutAmount sdk.Int) (neededLpLiquidity sdk.Coins, err error) {
+func getMaximalNoSwapLPAmount(ctx sdk.Context, pool types.CFMMPoolI, shareOutAmount sdk.Int) (neededLpLiquidity sdk.Coins, err error) {
 	totalSharesAmount := pool.GetTotalShares()
 	// shareRatio is the desired number of shares, divided by the total number of
 	// shares currently in the pool. It is intended to be used in scenarios where you want
