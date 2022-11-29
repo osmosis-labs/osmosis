@@ -24,8 +24,10 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-const FlagSelectPoolIds = "breakdown-by-pool-ids"
-const FlagMinimumStakeAmount = "minimum-stake-amount"
+const (
+	FlagSelectPoolIds      = "breakdown-by-pool-ids"
+	FlagMinimumStakeAmount = "minimum-stake-amount"
+)
 
 type DeriveSnapshot struct {
 	NumberAccounts uint64                    `json:"num_accounts"`

@@ -169,7 +169,7 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 
 	pools := res.Pools
 
-	var response = []*codectypes.Any{}
+	response := []*codectypes.Any{}
 
 	// set filters
 	min_liquidity := req.MinLiquidity
@@ -185,7 +185,7 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 	}
 
 	for _, p := range pools {
-		var checks = 0
+		checks := 0
 		var pool types.PoolI
 
 		err := q.cdc.UnpackAny(p, &pool)

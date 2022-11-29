@@ -286,7 +286,8 @@ func (k Keeper) isOsmoRoutedMultihop(ctx sdk.Context, route types.MultihopRoute,
 }
 
 func (k Keeper) getOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.MultihopRoute) (
-	totalPathSwapFee sdk.Dec, sumOfSwapFees sdk.Dec, err error) {
+	totalPathSwapFee sdk.Dec, sumOfSwapFees sdk.Dec, err error,
+) {
 	additiveSwapFee := sdk.ZeroDec()
 	maxSwapFee := sdk.ZeroDec()
 

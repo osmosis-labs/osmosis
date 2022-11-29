@@ -158,7 +158,7 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolAsset(assets []balancer.Po
 // Modify spotprice of a pool to target spotprice
 func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice sdk.Dec, baseDenom string) {
 	var quoteDenom string
-	var int64Max = int64(^uint64(0) >> 1)
+	int64Max := int64(^uint64(0) >> 1)
 
 	s.Require().Positive(targetSpotPrice)
 	s.Require().Greater(gammtypes.MaxSpotPrice, targetSpotPrice)

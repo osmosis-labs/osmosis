@@ -18,9 +18,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
 )
 
-var (
-	_ module.AppModuleBasic = AppModuleBasic{}
-)
+var _ module.AppModuleBasic = AppModuleBasic{}
 
 type AppModuleBasic struct{}
 

@@ -401,7 +401,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 // appkeepers.WasmHooks AND appKeepers.RateLimitingICS4Wrapper
 func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
 	appCodec codec.Codec,
-	bApp *baseapp.BaseApp) {
+	bApp *baseapp.BaseApp,
+) {
 	// Setup the ICS4Wrapper used by the hooks middleware
 	wasmHooks := ibchooks.NewWasmHooks(nil) // The contract keeper needs to be set later
 	appKeepers.Ics20WasmHooks = &wasmHooks
