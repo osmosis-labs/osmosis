@@ -233,9 +233,10 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 				return false, err
 			}
 			response = append(response, any)
+			return true, nil
 		}
 
-		return true, nil
+		return false, nil
 	})
 
 	if err != nil {
