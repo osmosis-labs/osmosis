@@ -28,7 +28,7 @@ func (suite *QueryTestSuite) SetupTest() {
 	suite.Setup()
 }
 
-func (suite *QueryTestSuite) TestV2QueryTwap() {
+func (suite *QueryTestSuite) TestQueryTwap() {
 	suite.SetupTest()
 
 	var (
