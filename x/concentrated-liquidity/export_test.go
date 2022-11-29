@@ -17,10 +17,6 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	return k.createPosition(ctx, poolId, owner, amount0Desired, amount1Desired, amount0Min, amount1Min, lowerTick, upperTick)
 }
 
-func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo model.TickInfo) {
-	k.setTickInfo(ctx, poolId, tickIndex, tickInfo)
-}
-
 func (k Keeper) SetPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) error {
 	return k.setPool(ctx, pool)
 }

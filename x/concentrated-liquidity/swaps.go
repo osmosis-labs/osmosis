@@ -181,7 +181,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 
 	// if swapping asset0 for asset1, zeroForOne is true
 	zeroForOne := tokenInMin.Denom == asset0
-	swapStrategy := swapstrategy.New(zeroForOne, sqrtPriceLimit)
+	swapStrategy := swapstrategy.New(zeroForOne, sqrtPriceLimit, k.storeKey)
 
 	// get current sqrt price from pool
 	curSqrtPrice := p.GetCurrentSqrtPrice()
@@ -224,7 +224,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		// if zeroForOne is false, we look to the left of the tick the current sqrt price is at
 		// if zeroForOne is true, we look to the right of the tick the current sqrt price is at
 		// if no ticks are initialized (no users have created liquidity positions) then we return an error
-		nextTick, ok := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), zeroForOne)
+		nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, swapState.tick.Int64())
 		if !ok {
 			return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("there are no more ticks initialized to fill the swap")
 		}
@@ -310,7 +310,7 @@ func (k Keeper) calcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 	asset0 := p.GetToken0()
 	asset1 := p.GetToken1()
 	zeroForOne := tokenOut.Denom == asset0
-	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec()) // TODO: correct price limit when in given out is refactored.
+	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey) // TODO: correct price limit when in given out is refactored.
 
 	// get current sqrt price from pool
 	curSqrtPrice := p.GetCurrentSqrtPrice()
@@ -364,7 +364,7 @@ func (k Keeper) calcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
 	for swapState.amountSpecifiedRemaining.GT(sdk.NewDecWithPrec(1, 6)) {
-		nextTick, ok := k.NextInitializedTick(ctx, poolId, swapState.tick.Int64(), zeroForOne)
+		nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, swapState.tick.Int64())
 
 		// TODO: we can enable this error checking once we fix tick initialization
 		if !ok {
