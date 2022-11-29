@@ -177,7 +177,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			param: param{
 				tokenOut:         sdk.NewCoin("usdc", sdk.NewInt(42000000)),
 				tokenInDenom:     "eth",
-				tokenInMaxAmount: sdk.Int(types.UpperPriceLimit),
+				tokenInMaxAmount: types.UpperPriceLimit.RoundInt(),
 				expectedTokenIn:  sdk.NewInt(8396),
 			},
 		},
@@ -192,7 +192,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			param: param{
 				tokenOut:         sdk.NewCoin("eth", sdk.NewInt(13370)),
 				tokenInDenom:     "usdc",
-				tokenInMaxAmount: sdk.Int(types.UpperPriceLimit),
+				tokenInMaxAmount: types.UpperPriceLimit.RoundInt(),
 				expectedTokenIn:  sdk.NewInt(66808387),
 			},
 		},
@@ -201,7 +201,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			param: param{
 				tokenOut:         sdk.NewCoin("usdc", sdk.NewInt(42000000)),
 				tokenInDenom:     "eth",
-				tokenInMaxAmount: sdk.Int(types.LowerPriceLimit),
+				tokenInMaxAmount: types.LowerPriceLimit.RoundInt(),
 			},
 			expectErr: "token is lesser than min amount",
 		},
@@ -210,7 +210,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			param: param{
 				tokenOut:         sdk.NewCoin("eth", sdk.NewInt(13370)),
 				tokenInDenom:     "eth",
-				tokenInMaxAmount: sdk.Int(types.UpperPriceLimit),
+				tokenInMaxAmount: types.UpperPriceLimit.RoundInt(),
 			},
 			expectErr: "cannot trade same denomination in and out",
 		},
@@ -219,7 +219,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			param: param{
 				tokenOut:         sdk.NewCoin("etha", sdk.NewInt(13370)),
 				tokenInDenom:     "eth",
-				tokenInMaxAmount: sdk.Int(types.UpperPriceLimit),
+				tokenInMaxAmount: types.UpperPriceLimit.RoundInt(),
 			},
 			expectErr: "does not match any asset in pool",
 		},
@@ -228,7 +228,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			param: param{
 				tokenOut:         sdk.NewCoin("eth", sdk.NewInt(13370)),
 				tokenInDenom:     "etha",
-				tokenInMaxAmount: sdk.Int(types.UpperPriceLimit),
+				tokenInMaxAmount: types.UpperPriceLimit.RoundInt(),
 			},
 			expectErr: "does not match any asset in pool",
 		},

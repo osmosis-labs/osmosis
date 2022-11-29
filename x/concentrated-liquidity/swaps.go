@@ -146,6 +146,8 @@ func (k Keeper) SwapExactAmountOut(
 	if !tokenInAmount.IsPositive() {
 		return sdk.Int{}, fmt.Errorf("token amount must be positive: got %v", tokenInAmount)
 	}
+	fmt.Printf("tokenInAmount %v \n", tokenInAmount)
+	fmt.Printf("tokenInMaxAmount %v \n", tokenInMaxAmount)
 	if tokenInAmount.GT(tokenInMaxAmount) {
 		return sdk.Int{}, fmt.Errorf("%s token is lesser than min amount", tokenInDenom)
 	}
