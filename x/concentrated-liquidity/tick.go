@@ -18,9 +18,8 @@ import (
 // if we are initializing or updating an upper tick, we subtract the liquidityIn from the LiquidityNet
 // if we are initializing or updating an lower tick, we add the liquidityIn from the LiquidityNet
 func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
-	_, err = k.getPoolById(ctx, poolId)
-	if err != nil {
-		return err
+	if !k.poolExists(ctx, poolId) {
+		return fmt.Errorf("cannot initialize or update a tick for a non-existing pool (pool id %d)", poolId)
 	}
 
 	tickInfo, err := k.getTickInfo(ctx, poolId, tickIndex)

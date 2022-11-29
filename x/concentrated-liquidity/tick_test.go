@@ -280,7 +280,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 				upper:       true,
 			},
 			tickExists:  false,
-			expectedErr: "pool not found",
+			expectedErr: "cannot initialize or update a tick for a non-existing pool",
 		},
 	}
 
