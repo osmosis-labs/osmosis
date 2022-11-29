@@ -5,9 +5,9 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	simapp "github.com/osmosis-labs/osmosis/app"
-	pool_incentives "github.com/osmosis-labs/osmosis/x/pool-incentives"
-	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	simapp "github.com/osmosis-labs/osmosis/v4/app"
+	pool_incentives "github.com/osmosis-labs/osmosis/v4/x/pool-incentives"
+	"github.com/osmosis-labs/osmosis/v4/x/pool-incentives/types"
 	"github.com/stretchr/testify/assert"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )

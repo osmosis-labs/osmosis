@@ -5,7 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v4/x/lockup/types"
 )
 
 // constants

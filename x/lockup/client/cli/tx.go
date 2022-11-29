@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v4/x/lockup/types"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -73,7 +73,10 @@ func NewLockTokensCmd() *cobra.Command {
 
 	cmd.Flags().AddFlagSet(FlagSetLockTokens())
 	flags.AddTxFlagsToCmd(cmd)
-	cmd.MarkFlagRequired(FlagDuration)
+	err := cmd.MarkFlagRequired(FlagDuration)
+	if err != nil {
+		panic(err)
+	}
 	return cmd
 }
 

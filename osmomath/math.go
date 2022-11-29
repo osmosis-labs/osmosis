@@ -16,7 +16,6 @@ var one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
 var one sdk.Dec = sdk.OneDec()
 var two sdk.Dec = sdk.MustNewDecFromStr("2")
 
-
 /*********************************************************/
 
 // AbsDifferenceWithSign returns | a - b |, (a - b).sign()

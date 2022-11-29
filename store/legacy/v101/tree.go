@@ -7,10 +7,10 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	stypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/store"
+	"github.com/osmosis-labs/osmosis/v4/store"
 )
 
 type Child struct {
@@ -30,9 +30,12 @@ func migrateBranchValue(oldValueBz []byte) *store.Node {
 	}
 	cs := make([]*store.Child, len(oldValue))
 	for i, oldChild := range oldValue {
-		cs[i] = &store.Child{oldChild.Index, oldChild.Acc}
+		cs[i] = &store.Child{
+			Index:        oldChild.Index,
+			Accumulation: oldChild.Acc}
 	}
-	return &store.Node{cs}
+	return &store.Node{
+		Children: cs}
 }
 
 func migrateLeafValue(index []byte, oldValueBz []byte) *store.Leaf {
@@ -57,7 +60,7 @@ func leafKey(key []byte) []byte {
 func migrateTreeNode(store sdk.KVStore, level uint16, key []byte) {
 	if level == 0 {
 		migrateTreeLeaf(store, key)
-	} else  {
+	} else {
 		migrateTreeBranch(store, level, key)
 	}
 }

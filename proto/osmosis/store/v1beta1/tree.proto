@@ -6,9 +6,7 @@ import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/store";
 
-message Node {
-  repeated Child children = 1;
-}
+message Node { repeated Child children = 1; }
 
 message Child {
   bytes index = 1;
@@ -18,6 +16,4 @@ message Child {
   ];
 }
 
-message Leaf {
-  Child leaf = 1;
-}
+message Leaf { Child leaf = 1; }

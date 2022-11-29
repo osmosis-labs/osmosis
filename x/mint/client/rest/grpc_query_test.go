@@ -1,3 +1,4 @@
+//go:build norace
 // +build norace
 
 package rest_test
@@ -22,8 +23,8 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/osmosis-labs/osmosis/app"
-	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v4/app"
+	minttypes "github.com/osmosis-labs/osmosis/v4/x/mint/types"
 	dbm "github.com/tendermint/tm-db"
 )
 

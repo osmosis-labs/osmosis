@@ -6,11 +6,11 @@ run:
 linters:
   disable-all: true
   enable:
-    - errcheck
+    # - errcheck
     - gofmt
     # - goimports
     # - golint
-    - maligned
+    - govet
 
 issues:
   exclude-rules:

@@ -3,13 +3,18 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v4/x/pool-incentives/types"
 )
 
 func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
 	k.SetLockableDurations(ctx, genState.LockableDurations)
-	if genState.DistrInfo != nil {
+	if genState.DistrInfo == nil {
+		k.SetDistrInfo(ctx, types.DistrInfo{
+			TotalWeight: sdk.NewInt(0),
+			Records:     nil,
+		})
+	} else {
 		k.SetDistrInfo(ctx, *genState.DistrInfo)
 	}
 }

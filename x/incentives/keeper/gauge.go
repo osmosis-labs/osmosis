@@ -7,9 +7,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
-	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v4/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v4/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v4/x/lockup/types"
 	db "github.com/tendermint/tm-db"
 )
 
@@ -93,8 +93,14 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 		if err := k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingGauges, timeKey), gauge.Id); err != nil {
 			return err
 		}
+		if err := k.addGaugeIDForDenom(ctx, gauge.Id, gauge.DistributeTo.Denom); err != nil {
+			return err
+		}
 	} else if gauge.IsActiveGauge(curTime) {
 		if err := k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixActiveGauges, timeKey), gauge.Id); err != nil {
+			return err
+		}
+		if err := k.addGaugeIDForDenom(ctx, gauge.Id, gauge.DistributeTo.Denom); err != nil {
 			return err
 		}
 	} else {
@@ -529,7 +535,7 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 	}
 	gauges := []types.Gauge{}
 	// initialize gauges to active and upcomings if not set
-	for s, _ := range denomSet {
+	for s := range denomSet {
 		gaugeIDs := k.getAllGaugeIDsByDenom(ctx, s)
 		// Each gauge only rewards locks to one denom, so no duplicates
 		for _, id := range gaugeIDs {
