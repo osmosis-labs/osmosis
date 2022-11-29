@@ -10,7 +10,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 var (
@@ -41,7 +40,7 @@ var (
 )
 
 func (suite *KeeperTestSuite) TestCreateBalancerPool() {
-	params := suite.App.SwapRouterKeeper.GetParams(suite.Ctx)
+	params := suite.App.GAMMKeeper.GetParams(suite.Ctx)
 	testAccount := suite.TestAccs[0]
 
 	// get raw pool creation fee(s) as DecCoins
@@ -170,7 +169,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 	for _, test := range tests {
 		suite.SetupTest()
 		gammKeeper := suite.App.GAMMKeeper
-		swaprouterKeeper := suite.App.SwapRouterKeeper
+		swaprouterKeeper := suite.App.GAMMKeeper
 		distributionKeeper := suite.App.DistrKeeper
 		bankKeeper := suite.App.BankKeeper
 
@@ -224,7 +223,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 }
 
 func (suite *KeeperTestSuite) TestPoolCreationFee() {
-	params := suite.App.SwapRouterKeeper.GetParams(suite.Ctx)
+	params := suite.App.GAMMKeeper.GetParams(suite.Ctx)
 
 	// get raw pool creation fee(s) as DecCoins
 	poolCreationFeeDecCoins := sdk.DecCoins{}
@@ -268,12 +267,11 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 	for _, test := range tests {
 		suite.SetupTest()
 		gammKeeper := suite.App.GAMMKeeper
-		swaprouterKeeper := suite.App.SwapRouterKeeper
 		distributionKeeper := suite.App.DistrKeeper
 		bankKeeper := suite.App.BankKeeper
 
 		// set pool creation fee
-		swaprouterKeeper.SetParams(suite.Ctx, swaproutertypes.Params{
+		gammKeeper.SetParams(suite.Ctx, types.Params{
 			PoolCreationFee: test.poolCreationFee,
 		})
 
@@ -287,7 +285,7 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 		senderBalBeforeNewPool := bankKeeper.GetAllBalances(suite.Ctx, sender)
 
 		// attempt to create a pool with the given NewMsgCreateBalancerPool message
-		poolId, err := swaprouterKeeper.CreatePool(suite.Ctx, test.msg)
+		poolId, err := gammKeeper.CreatePool(suite.Ctx, test.msg)
 
 		if test.expectPass {
 			suite.Require().NoError(err, "test: %v", test.name)
@@ -449,7 +447,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 
 		ctx := suite.Ctx
 		gammKeeper := suite.App.GAMMKeeper
-		swaprouterKeeper := suite.App.SwapRouterKeeper
+		swaprouterKeeper := suite.App.GAMMKeeper
 		bankKeeper := suite.App.BankKeeper
 		testAccount := suite.TestAccs[0]
 
@@ -562,7 +560,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 
 			gammKeeper := suite.App.GAMMKeeper
 			bankKeeper := suite.App.BankKeeper
-			swaprouterKeeper := suite.App.SwapRouterKeeper
+			swaprouterKeeper := suite.App.GAMMKeeper
 
 			// Mint assets to the pool creator
 			suite.FundAcc(test.txSender, defaultAcctFunds)
@@ -654,7 +652,7 @@ func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 		suite.Run(tc.name, func() {
 			ctx := suite.Ctx
 			gammKeeper := suite.App.GAMMKeeper
-			swaprouterKeeper := suite.App.SwapRouterKeeper
+			swaprouterKeeper := suite.App.GAMMKeeper
 
 			for _, acc := range suite.TestAccs {
 				suite.FundAcc(acc, defaultAcctFunds)
@@ -849,7 +847,7 @@ func (suite *KeeperTestSuite) TestGetPoolDenom() {
 	// setup pool with denoms
 	suite.FundAcc(suite.TestAccs[0], defaultAcctFunds)
 	poolCreateMsg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], defaultPoolParams, defaultPoolAssets, defaultFutureGovernor)
-	_, err := suite.App.SwapRouterKeeper.CreatePool(suite.Ctx, poolCreateMsg)
+	_, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, poolCreateMsg)
 	suite.Require().NoError(err)
 
 	for _, tc := range []struct {
