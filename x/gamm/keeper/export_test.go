@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 // SetParams sets the total set of params.
@@ -18,4 +18,9 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
 
 func (k Keeper) GetNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 	return k.getNextPoolIdAndIncrement(ctx)
+}
+
+func (k Keeper) GetOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.MultihopRoute) (
+	totalPathSwapFee sdk.Dec, sumOfSwapFees sdk.Dec, err error) {
+	return k.getOsmoRoutedMultihopTotalSwapFee(ctx, route)
 }

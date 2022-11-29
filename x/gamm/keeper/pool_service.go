@@ -7,9 +7,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v12/osmomath"
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 // CalculateSpotPrice returns the spot price of the quote asset in terms of the base asset,
@@ -202,6 +202,14 @@ func (k Keeper) JoinPoolNoSwap(
 	shareOutAmount sdk.Int,
 	tokenInMaxs sdk.Coins,
 ) (tokenIn sdk.Coins, sharesOut sdk.Int, err error) {
+	// defer to catch panics, in case something internal overflows.
+	defer func() {
+		if r := recover(); r != nil {
+			tokenIn = sdk.Coins{}
+			sharesOut = sdk.Int{}
+			err = fmt.Errorf("function JoinPoolNoSwap failed due to internal reason: %v", r)
+		}
+	}()
 	// all pools handled within this method are pointer references, `JoinPool` directly updates the pools
 	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
@@ -245,6 +253,37 @@ func (k Keeper) JoinPoolNoSwap(
 	return neededLpLiquidity, sharesOut, err
 }
 
+
+// getMaximalNoSwapLPAmount returns the coins(lp liquidity) needed to get the specified amount of shares in the pool.
+// Steps to getting the needed lp liquidity coins needed for the share of the pools are
+// 1. calculate how much percent of the pool does given share account for(# of input shares / # of current total shares)
+// 2. since we know how much % of the pool we want, iterate through all pool liquidity to calculate how much coins we need for
+// each pool asset.
+func getMaximalNoSwapLPAmount(ctx sdk.Context, pool types.PoolI, shareOutAmount sdk.Int) (neededLpLiquidity sdk.Coins, err error) {
+	totalSharesAmount := pool.GetTotalShares()
+	// shareRatio is the desired number of shares, divided by the total number of
+	// shares currently in the pool. It is intended to be used in scenarios where you want
+	shareRatio := shareOutAmount.ToDec().QuoInt(totalSharesAmount)
+	if shareRatio.LTE(sdk.ZeroDec()) {
+		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "Too few shares out wanted. "+
+			"(debug: getMaximalNoSwapLPAmount share ratio is zero or negative)")
+	}
+
+	poolLiquidity := pool.GetTotalPoolLiquidity(ctx)
+	neededLpLiquidity = sdk.Coins{}
+
+	for _, coin := range poolLiquidity {
+		// (coin.Amt * shareRatio).Ceil()
+		neededAmt := coin.Amount.ToDec().Mul(shareRatio).Ceil().RoundInt()
+		if neededAmt.LTE(sdk.ZeroInt()) {
+			return sdk.Coins{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "Too few shares out wanted")
+		}
+		neededCoin := sdk.Coin{Denom: coin.Denom, Amount: neededAmt}
+		neededLpLiquidity = neededLpLiquidity.Add(neededCoin)
+	}
+	return neededLpLiquidity, nil
+}
+
 // JoinSwapExactAmountIn is an LP transaction, that will LP all of the provided
 // tokensIn coins. The underlying pool is responsible for swapping any non-even
 // LP proportions to the correct ratios. An error is returned if the amount of
@@ -256,13 +295,21 @@ func (k Keeper) JoinSwapExactAmountIn(
 	poolId uint64,
 	tokensIn sdk.Coins,
 	shareOutMinAmount sdk.Int,
-) (sdk.Int, error) {
+) (sharesOut sdk.Int, err error) {
+	// defer to catch panics, in case something internal overflows.
+	defer func() {
+		if r := recover(); r != nil {
+			sharesOut = sdk.Int{}
+			err = fmt.Errorf("function JoinSwapExactAmountIn failed due to internal reason: %v", r)
+		}
+	}()
+
 	pool, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	sharesOut, err := pool.JoinPool(ctx, tokensIn, pool.GetSwapFee(ctx))
+	sharesOut, err = pool.JoinPool(ctx, tokensIn, pool.GetSwapFee(ctx))
 	switch {
 	case err != nil:
 		return sdk.ZeroInt(), err
@@ -293,6 +340,14 @@ func (k Keeper) JoinSwapShareAmountOut(
 	shareOutAmount sdk.Int,
 	tokenInMaxAmount sdk.Int,
 ) (tokenInAmount sdk.Int, err error) {
+	// defer to catch panics, in case something internal overflows.
+	defer func() {
+		if r := recover(); r != nil {
+			tokenInAmount = sdk.Int{}
+			err = fmt.Errorf("function JoinSwapShareAmountOut failed due to internal reason: %v", r)
+		}
+	}()
+
 	pool, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
@@ -336,8 +391,10 @@ func (k Keeper) ExitPool(
 	}
 
 	totalSharesAmount := pool.GetTotalShares()
-	if shareInAmount.GTE(totalSharesAmount) || shareInAmount.LTE(sdk.ZeroInt()) {
-		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
+	if shareInAmount.GTE(totalSharesAmount) {
+		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "Trying to exit >= the number of shares contained in the pool.")
+	} else if shareInAmount.LTE(sdk.ZeroInt()) {
+		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "Trying to exit a negative amount of shares")
 	}
 	exitFee := pool.GetExitFee(ctx)
 	exitCoins, err = pool.ExitPool(ctx, shareInAmount, exitFee)

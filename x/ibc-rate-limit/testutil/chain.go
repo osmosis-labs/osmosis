@@ -1,6 +1,7 @@
 package osmosisibctesting
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -9,13 +10,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
 	"github.com/cosmos/ibc-go/v3/testing/simapp/helpers"
-	"github.com/osmosis-labs/osmosis/v12/app"
+	"github.com/osmosis-labs/osmosis/v13/app"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type TestChain struct {
 	*ibctesting.TestChain
+}
+
+func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
+	osmosisApp := app.Setup(false)
+	return osmosisApp, app.NewDefaultGenesisState()
 }
 
 // SendMsgsNoCheck overrides ibctesting.TestChain.SendMsgs so that it doesn't check for errors. That should be handled by the caller

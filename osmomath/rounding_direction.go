@@ -10,9 +10,10 @@ import (
 type RoundingDirection int
 
 const (
-	RoundUp      RoundingDirection = 1
-	RoundDown    RoundingDirection = 2
-	RoundBankers RoundingDirection = 3
+	RoundUnconstrained RoundingDirection = 0
+	RoundUp            RoundingDirection = 1
+	RoundDown          RoundingDirection = 2
+	RoundBankers       RoundingDirection = 3
 )
 
 func DivIntByU64ToBigDec(i sdk.Int, u uint64, round RoundingDirection) (BigDec, error) {
