@@ -26,7 +26,7 @@ type TreeTestSuite struct {
 
 func (suite *TreeTestSuite) SetupTest() {
 	db := dbm.NewMemDB()
-	tree, err := iavl.NewMutableTree(db, 100)
+	tree, err := iavl.NewMutableTree(db, 100, false)
 	suite.Require().NoError(err)
 	_, _, err = tree.SaveVersion()
 	suite.Require().Nil(err)
