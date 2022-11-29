@@ -165,19 +165,9 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 	// set filters
 	min_liquidity := req.MinLiquidity
 	pool_type := req.PoolType
-	checks_needed := 0
-	// increase amount of needed checks for each filter by 1
-	if len(min_liquidity) > 0 {
-		checks_needed++
-	}
-
-	if pool_type != "" {
-		checks_needed++
-	}
 
 	var response = []*codectypes.Any{}
 	pageRes, err := query.FilteredPaginate(poolStore, req.Pagination, func(_, value []byte, accumulate bool) (bool, error) {
-		var checks = 0
 		pool, err := q.Keeper.UnmarshalPool(value)
 		if err != nil {
 			return false, err
@@ -189,8 +179,8 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 		if len(min_liquidity) > 0 {
 			poolLiquidity := pool.GetTotalPoolLiquidity(sdkCtx)
 
-			if poolLiquidity.IsAllGTE(min_liquidity) {
-				checks++
+			if !poolLiquidity.IsAllGTE(min_liquidity) {
+				return false, nil
 			}
 		}
 
@@ -201,25 +191,21 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 				return false, types.ErrPoolNotFound
 			}
 
-			if poolType == pool_type {
-				checks++
+			if poolType != pool_type {
+				return false, nil
 			}
 		}
 
-		if checks == checks_needed {
-			any, err := codectypes.NewAnyWithValue(pool)
-			if err != nil {
-				return false, err
-			}
-
-			if accumulate {
-				response = append(response, any)
-			}
-
-			return true, nil
+		any, err := codectypes.NewAnyWithValue(pool)
+		if err != nil {
+			return false, err
 		}
 
-		return false, nil
+		if accumulate {
+			response = append(response, any)
+		}
+
+		return true, nil
 	})
 
 	if err != nil {
