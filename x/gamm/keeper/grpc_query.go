@@ -164,7 +164,7 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 
 	// set filters
 	minLiquidity := req.MinLiquidity
-	poolLiquidity := req.PoolType
+	poolType := req.PoolType
 
 	var response = []*codectypes.Any{}
 	pageRes, err := query.FilteredPaginate(poolStore, req.Pagination, func(_, value []byte, accumulate bool) (bool, error) {
@@ -185,13 +185,13 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 		}
 
 		// if pool type specified in request
-		if poolLiquidity != "" {
+		if poolType != "" {
 			poolType, err := q.GetPoolType(sdkCtx, poolId)
 			if err != nil {
 				return false, types.ErrPoolNotFound
 			}
 
-			if poolType != poolLiquidity {
+			if poolType != poolType {
 				return false, nil
 			}
 		}
