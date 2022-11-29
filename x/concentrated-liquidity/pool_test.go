@@ -1041,6 +1041,24 @@ func (s *KeeperTestSuite) TestGetPoolById() {
 	s.Require().Error(err)
 }
 
+func (s *KeeperTestSuite) TestPoolExists() {
+	s.SetupTest()
+
+	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "token0", "token1", sdk.NewDec(1), sdk.NewInt(1))
+	s.Require().NoError(err)
+
+	poolExists := s.App.ConcentratedLiquidityKeeper.PoolExists(s.Ctx, pool.GetId())
+
+	// ensure that this returns true
+	s.Require().True(poolExists)
+
+	// try checking for a non-existent pool
+	poolExists = s.App.ConcentratedLiquidityKeeper.PoolExists(s.Ctx, 2)
+
+	// ensure that this returns false
+	s.Require().False(poolExists)
+}
+
 // func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
 // 	ctx := s.Ctx
 // 	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", sdk.MustNewDecFromStr("70.710678"), sdk.NewInt(85176))

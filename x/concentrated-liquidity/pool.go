@@ -31,7 +31,7 @@ func (k Keeper) getPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedP
 	return &pool, nil
 }
 
-// TODO: spec and test
+// poolExists returns true if a pool with the given id exists. False otherwise.
 func (k Keeper) poolExists(ctx sdk.Context, poolId uint64) bool {
 	store := ctx.KVStore(k.storeKey)
 	pool := model.Pool{}

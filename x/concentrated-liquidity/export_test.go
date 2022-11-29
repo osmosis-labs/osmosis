@@ -62,3 +62,7 @@ func (k Keeper) SendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 stri
 func (k Keeper) InitOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
 	return k.initOrUpdateTick(ctx, poolId, tickIndex, liquidityIn, upper)
 }
+
+func (k Keeper) PoolExists(ctx sdk.Context, poolId uint64) bool {
+	return k.poolExists(ctx, poolId)
+}
