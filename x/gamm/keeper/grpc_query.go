@@ -163,8 +163,8 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 	poolStore := prefix.NewStore(store, types.KeyPrefixPools)
 
 	// set filters
-	min_liquidity := req.MinLiquidity
-	pool_type := req.PoolType
+	minLiquidity := req.MinLiquidity
+	poolLiquidity := req.PoolType
 
 	var response = []*codectypes.Any{}
 	pageRes, err := query.FilteredPaginate(poolStore, req.Pagination, func(_, value []byte, accumulate bool) (bool, error) {
@@ -176,22 +176,22 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 		poolId := pool.GetId()
 
 		// if liquidity specified in request
-		if len(min_liquidity) > 0 {
+		if len(minLiquidity) > 0 {
 			poolLiquidity := pool.GetTotalPoolLiquidity(sdkCtx)
 
-			if !poolLiquidity.IsAllGTE(min_liquidity) {
+			if !poolLiquidity.IsAllGTE(minLiquidity) {
 				return false, nil
 			}
 		}
 
 		// if pool type specified in request
-		if pool_type != "" {
+		if poolLiquidity != "" {
 			poolType, err := q.GetPoolType(sdkCtx, poolId)
 			if err != nil {
 				return false, types.ErrPoolNotFound
 			}
 
-			if poolType != pool_type {
+			if poolType != poolLiquidity {
 				return false, nil
 			}
 		}
