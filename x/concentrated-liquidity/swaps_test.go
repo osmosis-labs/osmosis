@@ -21,7 +21,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 	tests := []struct {
 		name      string
 		param     param
-		expectErr bool
+		expectErr string
 	}{
 		{
 			name: "Proper swap usdc > eth",
@@ -59,7 +59,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 				tokenOutDenom:     "eth",
 				tokenOutMinAmount: sdk.NewInt(8397),
 			},
-			expectErr: true,
+			expectErr: "token is lesser than min amount",
 		},
 		{
 			name: "in and out denom are same",
@@ -68,7 +68,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 				tokenOutDenom:     "eth",
 				tokenOutMinAmount: sdk.NewInt(1),
 			},
-			expectErr: true,
+			expectErr: "cannot trade same denomination in and out",
 		},
 		{
 			name: "unknown in denom",
@@ -77,7 +77,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 				tokenOutDenom:     "eth",
 				tokenOutMinAmount: sdk.NewInt(1),
 			},
-			expectErr: true,
+			expectErr: "does not match any asset in pool",
 		},
 		{
 			name: "unknown out denom",
@@ -86,7 +86,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 				tokenOutDenom:     "etha",
 				tokenOutMinAmount: sdk.NewInt(1),
 			},
-			expectErr: true,
+			expectErr: "does not match any asset in pool",
 		},
 	}
 
@@ -113,8 +113,8 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			// Execute the swap directed in the test case
 			tokenOutAmount, err := s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool.(swaproutertypes.PoolI), test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, DefaultZeroSwapFee)
 
-			if test.expectErr {
-				s.Require().Error(err)
+			if test.expectErr != "" {
+				s.Require().ErrorContains(err, test.expectErr)
 			} else {
 				s.Require().NoError(err)
 				s.Require().Equal(test.param.expectedTokenOut.String(), tokenOutAmount.String())
@@ -164,7 +164,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 	tests := []struct {
 		name      string
 		param     param
-		expectErr bool
+		expectErr string
 	}{
 		{
 			name: "Proper swap eth > usdc",
@@ -202,7 +202,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 				tokenInDenom:     "eth",
 				tokenInMaxAmount: sdk.NewInt(1),
 			},
-			expectErr: true,
+			expectErr: "token is lesser than min amount",
 		},
 		{
 			name: "in and out denom are same",
@@ -211,7 +211,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 				tokenInDenom:     "eth",
 				tokenInMaxAmount: sdk.NewInt(999999999999),
 			},
-			expectErr: true,
+			expectErr: "cannot trade same denomination in and out",
 		},
 		{
 			name: "unknown in denom",
@@ -220,7 +220,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 				tokenInDenom:     "eth",
 				tokenInMaxAmount: sdk.NewInt(999999999999),
 			},
-			expectErr: true,
+			expectErr: "does not match any asset in pool",
 		},
 		{
 			name: "unknown out denom",
@@ -229,7 +229,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 				tokenInDenom:     "etha",
 				tokenInMaxAmount: sdk.NewInt(999999999999),
 			},
-			expectErr: true,
+			expectErr: "does not match any asset in pool",
 		},
 	}
 
@@ -256,8 +256,8 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			// Execute the swap directed in the test case
 			tokenIn, err := s.App.ConcentratedLiquidityKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool.(swaproutertypes.PoolI), test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut, DefaultZeroSwapFee)
 
-			if test.expectErr {
-				s.Require().Error(err)
+			if test.expectErr != "" {
+				s.Require().ErrorContains(err, test.expectErr)
 			} else {
 				s.Require().NoError(err)
 				s.Require().Equal(test.param.expectedTokenIn.String(), tokenIn.String())

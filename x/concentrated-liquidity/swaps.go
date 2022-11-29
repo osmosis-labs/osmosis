@@ -199,10 +199,6 @@ func (k *Keeper) SwapInAmtGivenOut(
 		return sdk.Coin{}, err
 	}
 
-	if tokenIn.Amount.GT(tokenIn.Amount) {
-		return sdk.Coin{}, fmt.Errorf("tokenIn calculated is larger than tokenIn provided")
-	}
-
 	return tokenIn, nil
 }
 
