@@ -69,6 +69,8 @@ func (k Keeper) GetArithmeticTwapToNow(
 	return k.getTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, arithmeticStrategy)
 }
 
+// getTwap computes and returns twap from the start time until the end time. The type
+// of twap returned depends on the strategy given and can be either arithmetic or geometric.
 func (k Keeper) getTwap(
 	ctx sdk.Context,
 	poolId uint64,
@@ -94,7 +96,8 @@ func (k Keeper) getTwap(
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	return strategy.computeTwap(startRecord, endRecord, quoteAssetDenom)
+
+	return computeArithmeticTwap(startRecord, endRecord, quoteAssetDenom), nil
 }
 
 // getTwapToNow computes and returns twap from the start time until the current block time. The type
@@ -119,7 +122,8 @@ func (k Keeper) getTwapToNow(
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	return strategy.computeTwap(startRecord, endRecord, quoteAssetDenom)
+
+	return computeArithmeticTwap(startRecord, endRecord, quoteAssetDenom), nil
 }
 
 // GetBeginBlockAccumulatorRecord returns a TwapRecord struct corresponding to the state of pool `poolId`
