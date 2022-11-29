@@ -18,17 +18,20 @@ type QuerierV2 struct {
 func (q QuerierV2) ArithmeticTwap(ctx sdk.Context,
 	req v2queryproto.ArithmeticTwapRequest,
 ) (*v2queryproto.ArithmeticTwapResponse, error) {
-	if (req.EndTime == nil || *req.EndTime == time.Time{}) {
+	if req.EndTime == nil {
+		req.EndTime = &time.Time{}
+	}
+	if (*req.EndTime == time.Time{}) {
 		*req.EndTime = ctx.BlockTime()
 	}
 
-	twap, err := q.K.GetArithmeticTwap(ctx, req.PoolId, req.QuoteAsset, req.BaseAsset, req.StartTime, *req.EndTime)
+	twap, err := q.K.GetArithmeticTwap(ctx, req.PoolId, req.BaseAsset, req.QuoteAsset, req.StartTime, *req.EndTime)
 	return &v2queryproto.ArithmeticTwapResponse{ArithmeticTwap: twap}, err
 }
 
 func (q QuerierV2) ArithmeticTwapToNow(ctx sdk.Context,
 	req v2queryproto.ArithmeticTwapToNowRequest,
 ) (*v2queryproto.ArithmeticTwapToNowResponse, error) {
-	twap, err := q.K.GetArithmeticTwapToNow(ctx, req.PoolId, req.QuoteAsset, req.BaseAsset, req.StartTime)
+	twap, err := q.K.GetArithmeticTwapToNow(ctx, req.PoolId, req.BaseAsset, req.QuoteAsset, req.StartTime)
 	return &v2queryproto.ArithmeticTwapToNowResponse{ArithmeticTwap: twap}, err
 }
