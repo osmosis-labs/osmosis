@@ -151,7 +151,7 @@ func BinarySearchSingleAssetJoin(
 			return sdk.Int{}, err
 		}
 
-		return SwapAllCoinsToSingleAsset(poolWithUpdatedLiquidity, ctx, exitedCoins, swapToDenom)
+		return SwapAllCoinsToSingleAsset(poolWithUpdatedLiquidity, ctx, exitedCoins, swapToDenom, sdk.ZeroDec())
 	}
 
 	// We accept an additive tolerance of 1 LP share error and round down
@@ -168,8 +168,8 @@ func BinarySearchSingleAssetJoin(
 }
 
 // SwapAllCoinsToSingleAsset iterates through each token in the input set and trades it against the same pool sequentially
-func SwapAllCoinsToSingleAsset(pool types.PoolI, ctx sdk.Context, inTokens sdk.Coins, swapToDenom string) (sdk.Int, error) {
-	swapFee := sdk.ZeroDec()
+func SwapAllCoinsToSingleAsset(pool types.PoolI, ctx sdk.Context, inTokens sdk.Coins, swapToDenom string,
+	swapFee sdk.Dec) (sdk.Int, error) {
 	tokenOutAmt := inTokens.AmountOfNoDenomValidation(swapToDenom)
 	for _, coin := range inTokens {
 		if coin.Denom == swapToDenom {
