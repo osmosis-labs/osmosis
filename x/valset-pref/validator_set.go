@@ -54,7 +54,7 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 		// tokenAmt takes the amount to delegate, calculated by {val_distribution_weight * tokenAmt}
 		tokenAmt := val.Weight.Mul(coin.Amount.ToDec()).TruncateInt()
 
-		// TODO: What happens here if validator is jailed, tombstoned, or unbonding
+		// TODO: What happens here if validator unbonding
 		// Delegate the unbonded tokens
 		_, err = k.stakingKeeper.Delegate(ctx, delegator, tokenAmt, stakingtypes.Unbonded, validator, true)
 		if err != nil {
@@ -90,7 +90,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	}
 
 	if !totalAmountFromWeights.Equal(tokenAmt) {
-		return fmt.Errorf("The undelegate total donot add up with the amount calculated from weights expected %s got %s", tokenAmt, totalAmountFromWeights)
+		return fmt.Errorf("The undelegate total do not add up with the amount calculated from weights expected %s got %s", tokenAmt, totalAmountFromWeights)
 	}
 
 	for _, val := range existingSet.Preferences {

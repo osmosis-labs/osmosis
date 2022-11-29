@@ -52,46 +52,11 @@ func (k Keeper) GetArithmeticTwap(
 	startTime time.Time,
 	endTime time.Time,
 ) (sdk.Dec, error) {
-	arithmeticStrategy := &arithmetic{k}
-	return k.getTwap(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, endTime, arithmeticStrategy)
-}
-
-// GetArithmeticTwapToNow returns GetArithmeticTwap on the input, with endTime being fixed to ctx.BlockTime()
-// This function does not mutate records.
-func (k Keeper) GetArithmeticTwapToNow(
-	ctx sdk.Context,
-	poolId uint64,
-	baseAssetDenom string,
-	quoteAssetDenom string,
-	startTime time.Time,
-) (sdk.Dec, error) {
-	arithmeticStrategy := &arithmetic{k}
-	return k.getTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, arithmeticStrategy)
-}
-
-// GetBeginBlockAccumulatorRecord returns a TwapRecord struct corresponding to the state of pool `poolId`
-// as of the beginning of the block this is called on.
-// This uses the state of the beginning of the block, as if there were swaps since the block has started,
-// these swaps have had no time to be arbitraged back.
-// This accumulator can be stored, to compute wider ranged twaps.
-func (k Keeper) GetBeginBlockAccumulatorRecord(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
-	return k.getMostRecentRecord(ctx, poolId, asset0Denom, asset1Denom)
-}
-
-func (k Keeper) getTwap(
-	ctx sdk.Context,
-	poolId uint64,
-	baseAssetDenom string,
-	quoteAssetDenom string,
-	startTime time.Time,
-	endTime time.Time,
-	strategy twapStrategy,
-) (sdk.Dec, error) {
 	if startTime.After(endTime) {
 		return sdk.Dec{}, types.StartTimeAfterEndTimeError{StartTime: startTime, EndTime: endTime}
 	}
 	if endTime.Equal(ctx.BlockTime()) {
-		return k.getTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, strategy)
+		return k.GetArithmeticTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime)
 	} else if endTime.After(ctx.BlockTime()) {
 		return sdk.Dec{}, types.EndTimeInFutureError{EndTime: endTime, BlockTime: ctx.BlockTime()}
 	}
@@ -106,13 +71,14 @@ func (k Keeper) getTwap(
 	return computeTwap(startRecord, endRecord, quoteAssetDenom, arithmeticTwapType)
 }
 
-func (k Keeper) getTwapToNow(
+// GetArithmeticTwapToNow returns GetArithmeticTwap on the input, with endTime being fixed to ctx.BlockTime()
+// This function does not mutate records.
+func (k Keeper) GetArithmeticTwapToNow(
 	ctx sdk.Context,
 	poolId uint64,
 	baseAssetDenom string,
 	quoteAssetDenom string,
 	startTime time.Time,
-	strategy twapStrategy,
 ) (sdk.Dec, error) {
 	if startTime.After(ctx.BlockTime()) {
 		return sdk.Dec{}, types.StartTimeAfterEndTimeError{StartTime: startTime, EndTime: ctx.BlockTime()}
