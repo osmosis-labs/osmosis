@@ -113,7 +113,7 @@ func calcPoolOutGivenSingleIn(
 	return newPoolSupply.Sub(poolSupply)
 }
 
-//tAi
+// tAi
 func calcSingleInGivenPoolOut(
 	tokenBalanceIn,
 	tokenWeightIn,
