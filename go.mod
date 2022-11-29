@@ -248,7 +248,7 @@ require (
 )
 
 replace (
-	// use osmosis-sdk
+	// use osmosis-sdk: https://github.com/osmosis-labs/cosmos-sdk/tree/v3-fast-iavl
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.42.10-0.20221128091104-08d731319cf3
 	// use cosmos-flavored protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.4
