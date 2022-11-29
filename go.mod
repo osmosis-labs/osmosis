@@ -115,6 +115,7 @@ require (
 )
 
 replace (
+	// osmosis-sdk v0.42.* with fast iavl: https://github.com/osmosis-labs/cosmos-sdk/tree/v4-fast-iavl
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.42.10-0.20221129140918-a2b8d7f3f408
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
