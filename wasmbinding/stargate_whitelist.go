@@ -121,8 +121,8 @@ func init() {
 	// Does not include denoms_from_creator, TBD if this is the index we want contracts to use instead of admin
 
 	// twap
-	setWhitelistedQuery("/osmosis.twap.v2.Query/ArithmeticTwap", &twapquerytypes.ArithmeticTwapResponse{})
-	setWhitelistedQuery("/osmosis.twap.v2.Query/ArithmeticTwapToNow", &twapquerytypes.ArithmeticTwapToNowResponse{})
+	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/ArithmeticTwap", &twapquerytypes.ArithmeticTwapResponse{})
+	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/ArithmeticTwapToNow", &twapquerytypes.ArithmeticTwapToNowResponse{})
 	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/Params", &twapquerytypes.ParamsResponse{})
 }
 
