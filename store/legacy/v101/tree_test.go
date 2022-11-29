@@ -23,7 +23,7 @@ import (
 
 func setupStore() sdk.KVStore {
 	db := dbm.NewMemDB()
-	tree, _ := iavl.NewMutableTree(db, 100)
+	tree, _ := iavl.NewMutableTree(db, 100, false)
 	tree.SaveVersion()
 	kvstore := iavlstore.UnsafeNewStore(tree)
 	return kvstore
