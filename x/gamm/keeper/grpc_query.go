@@ -176,11 +176,11 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 	}
 
 	var response = []*codectypes.Any{}
-	pageRes, err := query.Paginate(poolStore, req.Pagination, func(_, value []byte) error {
+	pageRes, err := query.FilteredPaginate(poolStore, req.Pagination, func(_, value []byte, accumulate bool) (bool, error) {
 		var checks = 0
 		pool, err := q.Keeper.UnmarshalPool(value)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		poolId := pool.GetId()
@@ -217,25 +217,25 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 		if pool_type != "" {
 			poolType, err := q.GetPoolType(sdkCtx, poolId)
 			if err != nil {
-				return types.ErrPoolNotFound
+				return false, types.ErrPoolNotFound
 			}
 
 			if poolType == pool_type {
 				checks++
 			} else {
-				return nil
+				return false, nil
 			}
 		}
 
 		if checks == checks_needed {
 			any, err := codectypes.NewAnyWithValue(pool)
 			if err != nil {
-				return err
+				return false, err
 			}
 			response = append(response, any)
 		}
 
-		return nil
+		return true, nil
 	})
 
 	if err != nil {
