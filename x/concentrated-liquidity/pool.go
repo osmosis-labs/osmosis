@@ -16,7 +16,7 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (swaproutertypes.PoolI, 
 	return nil, errors.New("not implemented")
 }
 
-// TODO: spec and test
+// getPoolById returns a concentratedPoolExtension that corresponds to the requested pool id. Returns error if pool id is not found.
 func (k Keeper) getPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedPoolExtension, error) {
 	store := ctx.KVStore(k.storeKey)
 	pool := model.Pool{}
@@ -47,7 +47,7 @@ func (k Keeper) poolExists(ctx sdk.Context, poolId uint64) bool {
 func (k Keeper) setPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) error {
 	poolModel, ok := pool.(*model.Pool)
 	if !ok {
-		return errors.New("invalid pool type when setting concentreated pool")
+		return errors.New("invalid pool type when setting concentrated pool")
 	}
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyPool(pool.GetId())
