@@ -294,7 +294,7 @@ func mergeConfigs(dst *lpTest, overwrite *lpTest) {
 			dst.liquidityAmount = overwrite.liquidityAmount
 		}
 		if !overwrite.amount0Minimum.IsNil() {
-			dst.amount0Expected = overwrite.amount0Expected
+			dst.amount0Minimum = overwrite.amount0Minimum
 		}
 		if !overwrite.amount0Desired.IsNil() {
 			dst.amount0Desired = overwrite.amount0Desired
