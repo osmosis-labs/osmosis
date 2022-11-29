@@ -167,7 +167,7 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 	pool_type := req.PoolType
 	checks_needed := 0
 	// increase amount of needed checks for each filter by 1
-	if min_liquidity != nil {
+	if len(min_liquidity) > 0 {
 		checks_needed++
 	}
 
@@ -186,29 +186,10 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 		poolId := pool.GetId()
 
 		// if liquidity specified in request
-		if min_liquidity != nil {
+		if len(min_liquidity) > 0 {
 			poolLiquidity := pool.GetTotalPoolLiquidity(sdkCtx)
-			amount_of_denoms := 0
-			check_amount := false
-			check_denoms := false
 
 			if poolLiquidity.IsAllGTE(min_liquidity) {
-				check_amount = true
-			}
-
-			for _, req_coin := range min_liquidity {
-				for _, coin := range poolLiquidity {
-					if req_coin.Denom == coin.Denom {
-						amount_of_denoms++
-					}
-				}
-			}
-
-			if amount_of_denoms == len(min_liquidity) {
-				check_denoms = true
-			}
-
-			if check_amount && check_denoms {
 				checks++
 			}
 		}
@@ -222,17 +203,19 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 
 			if poolType == pool_type {
 				checks++
-			} else {
-				return false, nil
 			}
 		}
 
-		if accumulate && checks == checks_needed {
+		if checks == checks_needed {
 			any, err := codectypes.NewAnyWithValue(pool)
 			if err != nil {
 				return false, err
 			}
-			response = append(response, any)
+
+			if accumulate {
+				response = append(response, any)
+			}
+
 			return true, nil
 		}
 
