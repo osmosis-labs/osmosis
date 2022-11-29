@@ -14,23 +14,21 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/twap/client/v2queryproto"
 )
 
-type KeeperTestSuite struct {
+type QueryTestSuite struct {
 	apptesting.KeeperTestHelper
 
 	queryClient types.QueryClient
 }
 
 func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
+	suite.Run(t, new(QueryTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
+func (suite *QueryTestSuite) SetupTest() {
 	suite.Setup()
-
-	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
 }
 
-func (suite *KeeperTestSuite) TestV2QueryBalancerPoolSpotPrice() {
+func (suite *QueryTestSuite) TestV2QueryTwap() {
 	suite.SetupTest()
 	coins := sdk.NewCoins(
 		sdk.NewInt64Coin("tokenA", 1000),
