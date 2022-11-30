@@ -402,7 +402,7 @@ func (suite *HooksTestSuite) RegisterListenersContract(addr []byte) {
 	params, err := ibchookstypes.NewParams(addrStr)
 	suite.Require().NoError(err)
 	osmosisApp := suite.chainA.GetOsmosisApp()
-	paramSpace, ok := osmosisApp.AppKeepers.ParamsKeeper.GetSubspace(ibc_hooks.ModuleName)
+	paramSpace, ok := osmosisApp.AppKeepers.ParamsKeeper.GetSubspace(ibchookstypes.ModuleName)
 	suite.Require().True(ok)
 	paramSpace.SetParamSet(suite.chainA.GetContext(), &params)
 }

@@ -417,7 +417,7 @@ func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
 	bApp *baseapp.BaseApp) {
 	// Setup the ICS4Wrapper used by the hooks middleware
 
-	ibcHooksParams := appKeepers.GetSubspace(ibchooks.ModuleName)
+	ibcHooksParams := appKeepers.GetSubspace(ibchookstypes.ModuleName)
 	ibcHooksParams = ibcHooksParams.WithKeyTable(ibchookstypes.ParamKeyTable())
 	wasmHooks := ibchooks.NewWasmHooks(ibcHooksParams, nil) // The contract keeper needs to be set later
 	appKeepers.Ics20WasmHooks = &wasmHooks
@@ -530,7 +530,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(twaptypes.ModuleName)
 	paramsKeeper.Subspace(swaproutertypes.ModuleName)
 	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
-	paramsKeeper.Subspace(ibchooks.ModuleName)
+	paramsKeeper.Subspace(ibchookstypes.ModuleName)
 
 	return paramsKeeper
 }

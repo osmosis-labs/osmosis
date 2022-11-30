@@ -279,7 +279,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(
 					types.EventErrNotifyingAck,
-					sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
+					sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 					sdk.NewAttribute(types.AttributeKeyFailureType, "notify_acknowledgment"),
 					sdk.NewAttribute(types.AttributeKeyContract, contract),
 					sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
@@ -293,7 +293,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventErrUnsubscribing,
-				sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
+				sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 				sdk.NewAttribute(types.AttributeKeyFailureType, "unsubscribe_acknowledgment"),
 				sdk.NewAttribute(types.AttributeKeyContract, contract),
 				sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
