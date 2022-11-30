@@ -27,8 +27,7 @@ var _ swapStrategy = (*oneForZeroStrategy)(nil)
 // and amount available to swap
 //
 // oneForZeroStrategy assumes moving to the right of the current square root price. amountRemaining or
-// amountIn is the amount of token 1. amountOut is token 0. The calculations and validations are performed
-// accordingly.
+// amountIn is the amount of token 1. amountOut is token 0.
 func (s oneForZeroStrategy) ComputeSwapStep(sqrtPriceCurrent, nextSqrtPrice, liquidity, amountRemaining sdk.Dec) (sdk.Dec, sdk.Dec, sdk.Dec) {
 	// as long as the nextSqrtPrice (calculated above) is within the user defined price limit, we set it as the target sqrtPrice
 	// if it is outside the user defined price limit, we set the target sqrtPrice to the user defined price limit
