@@ -93,3 +93,11 @@ func (e InsufficientLiquidityCreatedError) Error() string {
 	}
 	return fmt.Sprintf("insufficient amount of token%d created. Actual: (%s). Minimum (%s)", tokenNum, e.Actual, e.Minimum)
 }
+
+type PoolDoesNotExistError struct {
+	PoolId uint64
+}
+
+func (e PoolDoesNotExistError) Error() string {
+	return fmt.Sprintf("cannot initialize or update a tick for a non-existing pool. pool id (%d)", e.PoolId)
+}
