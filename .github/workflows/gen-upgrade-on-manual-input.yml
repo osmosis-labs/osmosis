@@ -23,7 +23,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2.3.4
 
-      - name: specify input
+      - name: Specify input
         run: |
           env=${{ inputs.version }}
           if [[ $env != '' ]]; then 
@@ -31,7 +31,12 @@ jobs:
             echo "input=$env" >> $GITHUB_ENV
           else
             echo ${{ github.event.release.tag_name }}
-            echo "input=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+            version=${{ github.event.release.tag_name }}
+            version=${version[@]:1}
+            version=(${version//./ })
+            version=${version[0]}
+            echo $version
+            echo "input=$version" >> $GITHUB_ENV
           fi
 
       - name: Run version script
