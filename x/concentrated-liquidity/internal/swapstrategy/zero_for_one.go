@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
@@ -46,6 +45,13 @@ func (s zeroForOneStrategy) ComputeSwapStep(sqrtPriceCurrent, nextSqrtPrice, liq
 	return nextSqrtPrice, amountIn, amountOut
 }
 
+// InitializeTickValue returns the initial tick value for computing swaps based
+// on the actual current tick.
+//
+// zeroForOneStrategy assumes moving to the left of the current square root price.
+// As a result, we use reverse iterator in NextInitializedTick to find the next
+// tick to the left of current. The end cursor for reverse iteration is non-inclusive
+// so must add one here to make sure that the current tick is included in the search.
 func (s zeroForOneStrategy) InitializeTickValue(currentTick sdk.Int) sdk.Int {
 	return currentTick.Add(sdk.OneInt())
 }
@@ -63,10 +69,7 @@ func (s zeroForOneStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, 
 	prefixBz := types.KeyTickPrefix(poolId)
 	prefixStore := prefix.NewStore(store, prefixBz)
 
-	// When looking to the left of the current tick, we need to evaluate the
-	// current tick as well. The end cursor for reverse iteration is non-inclusive
-	// so must add one and handle overflow.
-	startKey := types.TickIndexToBytes(osmomath.Max(tickIndex-1, tickIndex))
+	startKey := types.TickIndexToBytes(tickIndex)
 
 	iter := prefixStore.ReverseIterator(nil, startKey)
 	defer iter.Close()

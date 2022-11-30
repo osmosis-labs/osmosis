@@ -45,6 +45,15 @@ func (s oneForZeroStrategy) ComputeSwapStep(sqrtPriceCurrent, nextSqrtPrice, liq
 	return nextSqrtPrice, amountIn, amountOut
 }
 
+// InitializeTickValue returns the initial tick value for computing swaps based
+// on the actual current tick.
+//
+// oneForZeroStrategy assumes moving to the right of the current square root price.
+// As a result, we use forward iterator in NextInitializedTick to find the next
+// tick to the left of current. The end cursor for forward iteration is inclusive.
+// Therefore, this method is, essentially a no-op. The logic is reversed for
+// zeroForOneStrategy where we use reverse iterator and have to add one to
+// the input. Therefore, we define this method to account for different strategies.
 func (s oneForZeroStrategy) InitializeTickValue(currentTick sdk.Int) sdk.Int {
 	return currentTick
 }
