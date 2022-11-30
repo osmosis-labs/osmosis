@@ -1,6 +1,6 @@
 package types
 
 const (
-	// ModuleName defines the module name
 	ModuleName = "ibchooks"
+	StoreKey   = "hooks-for-ibc" // not using the module name because of collisions with key "ibc"
 )

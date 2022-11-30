@@ -35,6 +35,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	ibchooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
+	ibchookskeeper "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/keeper"
 	ibchookstypes "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
@@ -107,6 +108,7 @@ type AppKeepers struct {
 	DistrKeeper                  *distrkeeper.Keeper
 	SlashingKeeper               *slashingkeeper.Keeper
 	IBCKeeper                    *ibckeeper.Keeper
+	IBCHooksKeeper               *ibchookskeeper.Keeper
 	ICAHostKeeper                *icahostkeeper.Keeper
 	TransferKeeper               *ibctransferkeeper.Keeper
 	EvidenceKeeper               *evidencekeeper.Keeper
@@ -214,7 +216,13 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.ScopedIBCKeeper,
 	)
 
-	appKeepers.WireICS20PreWasmKeeper(appCodec, bApp)
+	// Configure the hooks keeper
+	hooksKeeper := ibchookskeeper.NewKeeper(
+		appKeepers.keys[ibchookstypes.StoreKey],
+	)
+	appKeepers.IBCHooksKeeper = &hooksKeeper
+
+	appKeepers.WireICS20PreWasmKeeper(appCodec, bApp, appKeepers.IBCHooksKeeper)
 
 	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, appKeepers.keys[icahosttypes.StoreKey],
@@ -373,7 +381,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
 	appKeepers.RateLimitingICS4Wrapper.ContractKeeper = appKeepers.ContractKeeper
 	appKeepers.Ics20WasmHooks.ContractKeeper = appKeepers.ContractKeeper
-	appKeepers.Ics20WasmHooks.WasmKeeper = appKeepers.WasmKeeper
 
 	// wire up x/wasm to IBC
 	ibcRouter.AddRoute(wasm.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper))
@@ -414,12 +421,11 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 // appkeepers.WasmHooks AND appKeepers.RateLimitingICS4Wrapper
 func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
 	appCodec codec.Codec,
-	bApp *baseapp.BaseApp) {
+	bApp *baseapp.BaseApp,
+	hooksKeeper *ibchookskeeper.Keeper,
+) {
 	// Setup the ICS4Wrapper used by the hooks middleware
-
-	ibcHooksParams := appKeepers.GetSubspace(ibchookstypes.ModuleName)
-	ibcHooksParams = ibcHooksParams.WithKeyTable(ibchookstypes.ParamKeyTable())
-	wasmHooks := ibchooks.NewWasmHooks(ibcHooksParams, nil) // The contract keeper needs to be set later
+	wasmHooks := ibchooks.NewWasmHooks(hooksKeeper, nil) // The contract keeper needs to be set later
 	appKeepers.Ics20WasmHooks = &wasmHooks
 	appKeepers.HooksICS4Wrapper = ibchooks.NewICS4Middleware(
 		appKeepers.IBCKeeper.ChannelKeeper,
@@ -626,5 +632,6 @@ func KVStoreKeys() []string {
 		wasm.StoreKey,
 		tokenfactorytypes.StoreKey,
 		valsetpreftypes.StoreKey,
+		ibchookstypes.StoreKey,
 	}
 }

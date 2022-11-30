@@ -2,39 +2,45 @@ package keeper
 
 import (
 	"fmt"
-
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 type (
 	Keeper struct {
 		storeKey sdk.StoreKey
-
-		paramSpace paramtypes.Subspace
 	}
 )
 
 // NewKeeper returns a new instance of the x/ibchooks keeper
 func NewKeeper(
 	storeKey sdk.StoreKey,
-	paramSpace paramtypes.Subspace,
 ) Keeper {
-	if !paramSpace.HasKeyTable() {
-		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
-	}
-
 	return Keeper{
-		storeKey:   storeKey,
-		paramSpace: paramSpace,
+		storeKey: storeKey,
 	}
 }
 
 // Logger returns a logger for the x/tokenfactory module
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+func GetPacketKey(channel string, packetSequence uint64) []byte {
+	return []byte(fmt.Sprintf("%s::%d", channel, packetSequence))
+}
+
+// StorePacketCallback stores which contract will be listening for the ack or timeout of a packet
+func (k Keeper) StorePacketCallback(ctx sdk.Context, channel string, packetSequence uint64, contract string) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(GetPacketKey(channel, packetSequence), []byte(contract))
+}
+
+// GetPacketCallback returns the bech32 addr of the contract that is expecting a callback from a packet
+func (k Keeper) GetPacketCallback(ctx sdk.Context, channel string, packetSequence uint64) string {
+	store := ctx.KVStore(k.storeKey)
+	return string(store.Get(GetPacketKey(channel, packetSequence)))
 }

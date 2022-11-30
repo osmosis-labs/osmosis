@@ -7,7 +7,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
-	ibchookstypes "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types"
 	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
 	"testing"
 
@@ -396,18 +395,7 @@ func (suite *HooksTestSuite) SetupPools(multipliers []sdk.Dec) []gammtypes.PoolI
 	return pools
 }
 
-func (suite *HooksTestSuite) RegisterListenersContract(addr []byte) {
-	addrStr, err := sdk.Bech32ifyAddressBytes("osmo", addr)
-	suite.Require().NoError(err)
-	params, err := ibchookstypes.NewParams(addrStr)
-	suite.Require().NoError(err)
-	osmosisApp := suite.chainA.GetOsmosisApp()
-	paramSpace, ok := osmosisApp.AppKeepers.ParamsKeeper.GetSubspace(ibchookstypes.ModuleName)
-	suite.Require().True(ok)
-	paramSpace.SetParamSet(suite.chainA.GetContext(), &params)
-}
-
-func (suite *HooksTestSuite) SetupCrosschainSwaps() (sdk.AccAddress, sdk.AccAddress, sdk.AccAddress) {
+func (suite *HooksTestSuite) SetupCrosschainSwaps() (sdk.AccAddress, sdk.AccAddress) {
 	owner := suite.chainA.SenderAccount.GetAddress()
 
 	// Fund the account with some uosmo and some stake
@@ -423,16 +411,12 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps() (sdk.AccAddress, sdk.AccAddr
 	suite.SetupPools([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 	// Setup contract
-	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/ibc_listeners.wasm")
-	listenerAddr := suite.chainA.InstantiateContract(&suite.Suite,
-		`{}`, 1)
-	suite.RegisterListenersContract(listenerAddr)
 	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/swaprouter.wasm")
 	swaprouterAddr := suite.chainA.InstantiateContract(&suite.Suite,
-		fmt.Sprintf(`{"owner": "%s"}`, owner), 2)
+		fmt.Sprintf(`{"owner": "%s"}`, owner), 1)
 	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/crosschain_swaps.wasm")
 	crosschainAddr := suite.chainA.InstantiateContract(&suite.Suite,
-		fmt.Sprintf(`{"swap_contract": "%s", "ibc_listeners_contract": "%s"}`, swaprouterAddr, listenerAddr), 3)
+		fmt.Sprintf(`{"swap_contract": "%s"}`, swaprouterAddr), 2)
 
 	osmosisApp := suite.chainA.GetOsmosisApp()
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
@@ -454,13 +438,13 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps() (sdk.AccAddress, sdk.AccAddr
 	err = suite.path.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
 
-	return swaprouterAddr, crosschainAddr, listenerAddr
+	return swaprouterAddr, crosschainAddr
 
 }
 
 func (suite *HooksTestSuite) TestCrosschainSwaps() {
 	owner := suite.chainA.SenderAccount.GetAddress()
-	_, crosschainAddr, _ := suite.SetupCrosschainSwaps()
+	_, crosschainAddr := suite.SetupCrosschainSwaps()
 	osmosisApp := suite.chainA.GetOsmosisApp()
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
 
@@ -562,7 +546,7 @@ func (suite *HooksTestSuite) FullSend(msg sdk.Msg, direction Direction) (*sdk.Re
 
 func (suite *HooksTestSuite) TestCrosschainSwapsViaIBC() {
 	initializer := suite.chainB.SenderAccount.GetAddress()
-	_, crosschainAddr, _ := suite.SetupCrosschainSwaps()
+	_, crosschainAddr := suite.SetupCrosschainSwaps()
 	// Send some token0 tokens to B so that there are ibc tokens to send to A and crosschain-swap
 	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "")
 	suite.FullSend(transferMsg, AtoB)
@@ -612,7 +596,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBC() {
 // exist on chain B
 func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 	initializer := suite.chainB.SenderAccount.GetAddress()
-	_, crosschainAddr, _ := suite.SetupCrosschainSwaps()
+	_, crosschainAddr := suite.SetupCrosschainSwaps()
 	// Send some token0 tokens to B so that there are ibc tokens to send to A and crosschain-swap
 	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "")
 	suite.FullSend(transferMsg, AtoB)
