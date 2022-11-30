@@ -69,16 +69,16 @@ type smoothWeightChangeParamsInputs struct {
 func FlagSetQuerySwapRoutes() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.StringArray(FlagSwapRoutePoolIds, []string{""}, "swap route pool id")
-	fs.StringArray(FlagSwapRouteDenoms, []string{""}, "swap route amount")
+	fs.String(FlagSwapRoutePoolIds, "", "swap route pool id")
+	fs.String(FlagSwapRouteDenoms, "", "swap route amount")
 	return fs
 }
 
 func FlagSetSwapAmountOutRoutes() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.StringArray(FlagSwapRoutePoolIds, []string{""}, "swap route pool ids")
-	fs.StringArray(FlagSwapRouteDenoms, []string{""}, "swap route denoms")
+	fs.String(FlagSwapRoutePoolIds, "", "swap route pool ids")
+	fs.String(FlagSwapRouteDenoms, "", "swap route denoms")
 	return fs
 }
 
