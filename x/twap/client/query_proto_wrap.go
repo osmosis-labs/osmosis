@@ -18,7 +18,10 @@ type Querier struct {
 func (q Querier) ArithmeticTwap(ctx sdk.Context,
 	req queryproto.ArithmeticTwapRequest, // nolint: staticcheck
 ) (*queryproto.ArithmeticTwapResponse, error) {
-	if (req.EndTime == nil || *req.EndTime == time.Time{}) {
+	if req.EndTime == nil {
+		req.EndTime = &time.Time{}
+	}
+	if (*req.EndTime == time.Time{}) {
 		*req.EndTime = ctx.BlockTime()
 	}
 
