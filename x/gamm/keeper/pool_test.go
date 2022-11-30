@@ -355,3 +355,79 @@ func (suite *KeeperTestSuite) TestConvertToCFMMPool() {
 		})
 	}
 }
+
+// TestMarshalUnmarshalPool tests that by changing the interfaces
+// that we marshal to and unmarshal from store, we do not
+// change the underlying bytes. This shows that migrations are
+// not necessary.
+func (suite *KeeperTestSuite) TestMarshalUnmarshalPool() {
+
+	suite.SetupTest()
+	k := suite.App.GAMMKeeper
+
+	balancerPoolId := suite.PrepareBalancerPool()
+	balancerPool, err := k.GetPoolAndPoke(suite.Ctx, balancerPoolId)
+	suite.Require().NoError(err)
+
+	stableswapPoolId := suite.PrepareBasicStableswapPool()
+	stableswapPool, err := k.GetPoolAndPoke(suite.Ctx, stableswapPoolId)
+	suite.Require().NoError(err)
+
+	tests := []struct {
+		name string
+		pool types.CFMMPoolI
+	}{
+		{
+			name: "balancer",
+			pool: balancerPool,
+		},
+		{
+			name: "stableswap",
+			pool: stableswapPool,
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			var poolI swaproutertypes.PoolI = tc.pool
+			var cfmmPoolI types.CFMMPoolI = tc.pool
+
+			// Marshal poolI as PoolI
+			bzPoolI, err := k.MarshalPool(poolI)
+			suite.Require().NoError(err)
+
+			// Marshal cfmmPoolI as PoolI
+			bzCfmmPoolI, err := k.MarshalPool(cfmmPoolI)
+			suite.Require().NoError(err)
+
+			suite.Require().Equal(bzPoolI, bzCfmmPoolI)
+
+			// Unmarshal bzPoolI as CFMMPoolI
+			unmarshalBzPoolIAsCfmmPoolI, err := k.UnmarshalPool(bzPoolI)
+			suite.Require().NoError(err)
+
+			// Unmarshal bzPoolI as PoolI
+			unmarshalBzPoolIAsPoolI, err := k.UnmarshalPoolLegacy(bzPoolI)
+			suite.Require().NoError(err)
+
+			suite.Require().Equal(unmarshalBzPoolIAsCfmmPoolI, unmarshalBzPoolIAsPoolI)
+
+			// Unmarshal bzCfmmPoolI as CFMMPoolI
+			unmarshalBzCfmmPoolIAsCfmmPoolI, err := k.UnmarshalPool(bzCfmmPoolI)
+			suite.Require().NoError(err)
+
+			// Unmarshal bzCfmmPoolI as PoolI
+			unmarshalBzCfmmPoolIAsPoolI, err := k.UnmarshalPoolLegacy(bzCfmmPoolI)
+			suite.Require().NoError(err)
+
+			// bzCfmmPoolI as CFMMPoolI equals bzCfmmPoolI as PoolI
+			suite.Require().Equal(unmarshalBzCfmmPoolIAsCfmmPoolI, unmarshalBzCfmmPoolIAsPoolI)
+
+			// All unmarshalled combinations are equal.
+			suite.Require().Equal(unmarshalBzPoolIAsCfmmPoolI, unmarshalBzCfmmPoolIAsCfmmPoolI)
+		})
+	}
+}
