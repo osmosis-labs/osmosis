@@ -25,9 +25,10 @@ jobs:
 
       - name: specify input
         run: |
-          if [[ ${{ inputs.version }} != '' ]]; then 
-            echo ${{ inputs.version }}
-            echo "input=${{ inputs.version }}" >> $GITHUB_ENV
+          env=${{ inputs.version }}
+          if [[ $env != '' ]]; then 
+            echo $env
+            echo "input=$env" >> $GITHUB_ENV
           else
             echo ${{ github.event.release.tag_name }}
             echo "input=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
