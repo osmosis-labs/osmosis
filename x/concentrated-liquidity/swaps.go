@@ -359,11 +359,7 @@ func (k Keeper) calcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDen
 		amountSpecifiedRemaining: tokenOutAmt,
 		amountCalculated:         sdk.ZeroDec(),
 		sqrtPrice:                curSqrtPrice,
-		tick:                     p.GetCurrentTick(),
-	}
-
-	if zeroForOne {
-		swapState.tick = swapState.tick.Add(sdk.OneInt())
+		tick:                     swapStrategy.InitializeTickValue(p.GetCurrentTick()),
 	}
 
 	// TODO: This should be GT 0 but some instances have very small remainder
