@@ -21,7 +21,12 @@ type swapStrategy interface {
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
 	NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64) (next sdk.Int, initialized bool)
 	// SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.
-	// This is called when consuming all liquidity within a tick.
+	// This is called when consuming all liquidity.
+	// Generally, when a position is created, we add liquidity to lower tick
+	// and subtract from the upper tick to reflect that this new
+	// liquidity would be added when the price crosses the lower tick
+	// going up, and subtracted when the price crosses the upper tick
+	// going up. As a result, the sign depend on the direction we are moving.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
 	SetLiquidityDeltaSign(liquidityDelta sdk.Dec) sdk.Dec
 	// ValidatePriceLimit validates the given square root price limit

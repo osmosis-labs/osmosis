@@ -87,11 +87,17 @@ func (s zeroForOneStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, 
 }
 
 // SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.
-// This is called when consuming all liquidity within a tick.
+// This is called when consuming all liquidity.
+// Generally, when a position is created, we add liquidity to lower tick
+// and subtract from the upper tick to reflect that this new
+// liquidity would be added when the price crosses the lower tick
+// going up, and subtracted when the price crosses the upper tick
+// going up. As a result, the sign depend on the direction we are moving.
 //
 // zeroForOneStrategy assumes moving to the left of the current square root price.
-// Therefore, if all liqudiity within a tick is consumed, we are exitig a tick
-// so liquidity must be subtracted.
+// When we move to the left, we must be crossing upper ticks first where
+// liqudiity delta tracks the amount of liquidity being removed. So the sign must be
+// negative.
 func (s zeroForOneStrategy) SetLiquidityDeltaSign(deltaLiquidity sdk.Dec) sdk.Dec {
 	return deltaLiquidity.Neg()
 }
