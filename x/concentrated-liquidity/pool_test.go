@@ -1035,7 +1035,7 @@ func (s *KeeperTestSuite) TestGetPoolById() {
 		{
 			name:        "Get non-existing pool",
 			poolId:      2,
-			expectedErr: types.PoolDoesNotExistError{PoolId: 2},
+			expectedErr: types.PoolNotFoundError{PoolId: 2},
 		},
 	}
 
