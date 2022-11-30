@@ -137,7 +137,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		tickExists             bool
 		expectedLiquidityNet   sdk.Dec
 		expectedLiquidityGross sdk.Dec
-		expectedErr            string
+		expectedErr            error
 	}{
 		{
 			name: "Init tick 50 with 50000000000 liquidity, upper",
@@ -280,7 +280,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 				upper:       true,
 			},
 			tickExists:  false,
-			expectedErr: "cannot initialize or update a tick for a non-existing pool",
+			expectedErr: types.PoolDoesNotExistError{PoolId: 2},
 		},
 	}
 
@@ -309,8 +309,8 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 
 			// Initialize or update the tick according to the test case
 			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, test.param.poolId, test.param.tickIndex, test.param.liquidityIn, test.param.upper)
-			if test.expectedErr != "" {
-				s.Require().ErrorContains(err, test.expectedErr)
+			if test.expectedErr != nil {
+				s.Require().ErrorIs(err, test.expectedErr)
 				return
 			}
 			s.Require().NoError(err)
