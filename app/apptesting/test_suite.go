@@ -100,16 +100,6 @@ func (s *KeeperTestHelper) CreateTestContextWithMultiStore() (sdk.Context, sdk.C
 	return sdk.NewContext(ms, tmtypes.Header{}, false, logger), ms
 }
 
-// CreateTestContextWithMultiStore creates a test context and returns it together with multi store.
-func (s *KeeperTestHelper) CreateTestContextWithMultiStoreAndDb() (sdk.Context, sdk.CommitMultiStore, db.DB) {
-	db := db.NewMemDB()
-	logger := log.NewNopLogger()
-
-	ms := rootmulti.NewStore(db, logger)
-
-	return sdk.NewContext(ms, tmtypes.Header{}, false, logger), ms, db
-}
-
 // CreateTestContext creates a test context.
 func (s *KeeperTestHelper) Commit() {
 	oldHeight := s.Ctx.BlockHeight()
