@@ -98,6 +98,12 @@ func (s oneForZeroStrategy) SetLiquidityDeltaSign(deltaLiquidity sdk.Dec) sdk.De
 	return deltaLiquidity
 }
 
+// ValidatePriceLimit validates the given square root price limit
+// given the square root price.
+//
+// oneForZeroStrategy assumes moving to the right of the current square root price.
+// Therefore, the following invariant must hold:
+// current square root price <= sqrtPriceLimit <= types.MaxSqrtRatio
 func (s oneForZeroStrategy) ValidatePriceLimit(sqrtPriceLimit, currentSqrtPrice sdk.Dec) error {
 	// check that the price limit is below the current sqrt price but not lower than the minimum sqrt ratio if we are swapping asset0 for asset1
 	if sqrtPriceLimit.LT(currentSqrtPrice) || sqrtPriceLimit.GT(types.MaxSqrtRatio) {
