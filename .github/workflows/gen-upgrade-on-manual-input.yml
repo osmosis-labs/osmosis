@@ -3,6 +3,9 @@
 # 2) will increase an E2E_UPGRADE_VERSION variable in Makefile
 # 3) create a pull request with these changes to main
 
+# Please note that if the given version (or release major version) is smaller than the latest
+# existing upgrade handler version in `app/upgrades/`, this will be a no-op.
+
 name: On Trigger Gen Upgrade Handler
 
 on:
