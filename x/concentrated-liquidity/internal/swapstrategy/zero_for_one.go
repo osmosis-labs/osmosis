@@ -47,12 +47,16 @@ func (s zeroForOneStrategy) ComputeSwapStep(sqrtPriceCurrent, nextSqrtPrice, liq
 	return nextSqrtPrice, amountIn, amountOut
 }
 
+func (s zeroForOneStrategy) InitializeTickValue(currentTick sdk.Int) sdk.Int {
+	return currentTick.Add(sdk.OneInt())
+}
+
 // NextInitializedTick returns the next initialized tick index based on the
 // provided tickindex. If no initialized tick exists, <0, false>
 // will be returned.
 //
 // zeroForOneStrategy searches for the next tick to the left of the current tickIndex.
-func (s zeroForOneStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64) (next int64, initialized bool) {
+func (s zeroForOneStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64) (next sdk.Int, initialized bool) {
 	store := ctx.KVStore(s.storeKey)
 
 	// Construct a prefix store with a prefix of <TickPrefix | poolID>, allowing
@@ -63,7 +67,7 @@ func (s zeroForOneStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, 
 	// When looking to the left of the current tick, we need to evaluate the
 	// current tick as well. The end cursor for reverse iteration is non-inclusive
 	// so must add one and handle overflow.
-	startKey := types.TickIndexToBytes(osmomath.Max(tickIndex, tickIndex+1))
+	startKey := types.TickIndexToBytes(osmomath.Max(tickIndex-1, tickIndex))
 
 	iter := prefixStore.ReverseIterator(nil, startKey)
 	defer iter.Close()
@@ -76,18 +80,20 @@ func (s zeroForOneStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, 
 			panic(fmt.Errorf("invalid tick index (%s): %v", string(iter.Key()), err))
 		}
 		if tick <= tickIndex {
-			return tick, true
+			return sdk.NewInt(tick), true
 		}
 	}
-	return 0, false
+	return sdk.ZeroInt(), false
 }
 
+// SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.
+// This is called when consuming all liquidity within a tick.
+//
+// zeroForOneStrategy assumes moving to the left of the current square root price.
+// Therefore, if all liqudiity within a tick is consumed, we are exitig a tick
+// so liquidity must be subtracted.
 func (s zeroForOneStrategy) SetLiquidityDeltaSign(deltaLiquidity sdk.Dec) sdk.Dec {
 	return deltaLiquidity.Neg()
-}
-
-func (s zeroForOneStrategy) SetNextTick(nextTick int64) sdk.Int {
-	return sdk.NewInt(nextTick - 1)
 }
 
 func (s zeroForOneStrategy) ValidatePriceLimit(sqrtPriceLimit, currentSqrtPrice sdk.Dec) error {

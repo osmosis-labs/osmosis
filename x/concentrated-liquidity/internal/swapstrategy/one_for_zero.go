@@ -46,12 +46,16 @@ func (s oneForZeroStrategy) ComputeSwapStep(sqrtPriceCurrent, nextSqrtPrice, liq
 	return nextSqrtPrice, amountIn, amountOut
 }
 
+func (s oneForZeroStrategy) InitializeTickValue(currentTick sdk.Int) sdk.Int {
+	return currentTick
+}
+
 // NextInitializedTick returns the next initialized tick index based on the
 // provided tickindex. If no initialized tick exists, <0, false>
 // will be returned.
 //
 // oneForZerostrategy searches for the next tick to the right of the current tickIndex.
-func (s oneForZeroStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64) (next int64, initialized bool) {
+func (s oneForZeroStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64) (next sdk.Int, initialized bool) {
 	store := ctx.KVStore(s.storeKey)
 
 	// Construct a prefix store with a prefix of <TickPrefix | poolID>, allowing
@@ -72,18 +76,14 @@ func (s oneForZeroStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, 
 		}
 
 		if tick > tickIndex {
-			return tick, true
+			return sdk.NewInt(tick), true
 		}
 	}
-	return 0, false
+	return sdk.ZeroInt(), false
 }
 
 func (s oneForZeroStrategy) SetLiquidityDeltaSign(deltaLiquidity sdk.Dec) sdk.Dec {
 	return deltaLiquidity
-}
-
-func (s oneForZeroStrategy) SetNextTick(nextTick int64) sdk.Int {
-	return sdk.NewInt(nextTick)
 }
 
 func (s oneForZeroStrategy) ValidatePriceLimit(sqrtPriceLimit, currentSqrtPrice sdk.Dec) error {
