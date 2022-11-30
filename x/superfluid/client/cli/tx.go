@@ -5,8 +5,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
 	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
+
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -401,4 +404,93 @@ func NewCmdUnPoolWhitelistedPool() *cobra.Command {
 
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
+}
+
+// NewCmdUpdateUnpoolWhitelistProposal defines the command to create a new update unpool whitelist proposal command.
+func NewCmdUpdateUnpoolWhitelistProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "update-unpool-whitelist [flags]",
+		Args:  cobra.ExactArgs(0),
+		Short: "Update unpool whitelist proposal",
+		Long: "This proposal will update the unpool whitelist if passed. " +
+			"Every pool id must be valid. If the pool id is invalid, the proposal will not be submitted. " +
+			"If the flag to overwrite is set, the whitelist is completely overridden. Otherwise, it is appended to the existing whitelist, having all duplicates removed.",
+		Example: "osmosisd tx gov submit-proposal update-unpool-whitelist --pool-ids \"1, 2, 3\" --title \"Title\" --description \"Description\"",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			content, err := parseUpdateUnpoolWhitelistArgsToContent(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			from := clientCtx.GetFromAddress()
+
+			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
+			if err != nil {
+				return err
+			}
+
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return err
+			}
+
+			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
+	cmd.Flags().String(FlagPoolIds, "", "The new pool id whitelist to set")
+	cmd.Flags().Bool(FlagOverwrite, false, "The flag indicating whether to overwrite the whitelist or append to it")
+
+	return cmd
+}
+
+func parseUpdateUnpoolWhitelistArgsToContent(flags *flag.FlagSet) (govtypes.Content, error) {
+	title, err := flags.GetString(govcli.FlagTitle)
+	if err != nil {
+		return nil, err
+	}
+
+	description, err := flags.GetString(govcli.FlagDescription)
+	if err != nil {
+		return nil, err
+	}
+
+	poolIdsStr, err := flags.GetString(FlagPoolIds)
+	if err != nil {
+		return nil, err
+	}
+
+	poolIds, err := osmoutils.ParseUint64SliceFromString(poolIdsStr, ",")
+	if err != nil {
+		return nil, err
+	}
+
+	isOverwrite, err := flags.GetBool(FlagOverwrite)
+	if err != nil {
+		return nil, err
+	}
+
+	content := &types.UpdateUnpoolWhiteListProposal{
+		Title:       title,
+		Description: description,
+		Ids:         poolIds,
+		IsOverwrite: isOverwrite,
+	}
+	return content, nil
 }

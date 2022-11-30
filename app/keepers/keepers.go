@@ -37,6 +37,7 @@ import (
 	ibchooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
 
 	icahost "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/keeper"
@@ -120,6 +121,8 @@ type AppKeepers struct {
 	ContractKeeper               *wasmkeeper.PermissionedKeeper
 	TokenFactoryKeeper           *tokenfactorykeeper.Keeper
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
+	// Note: DO NOT USE. This is not yet initialized
+	SwapRouterKeeper *swaprouter.Keeper
 
 	// IBC modules
 	// transfer module
@@ -373,7 +376,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper)).
 		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(*appKeepers.PoolIncentivesKeeper)).
 		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*appKeepers.TxFeesKeeper)).
-		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*appKeepers.SuperfluidKeeper, *appKeepers.EpochsKeeper))
+		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*appKeepers.SuperfluidKeeper, *appKeepers.EpochsKeeper, *appKeepers.GAMMKeeper))
 
 	// The gov proposal types can be individually enabled
 	if len(wasmEnabledProposals) != 0 {

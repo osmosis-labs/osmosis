@@ -10,6 +10,12 @@ import (
 
 type (
 	TimeTooOldError = timeTooOldError
+	TwapType        = twapType
+)
+
+const (
+	ArithmeticTwapType = arithmeticTwapType
+	GeometricTwapType  = geometricTwapType
 )
 
 func (k Keeper) StoreNewRecord(ctx sdk.Context, record types.TwapRecord) {
@@ -64,8 +70,16 @@ func (k Keeper) GetInterpolatedRecord(ctx sdk.Context, poolId uint64, asset0Deno
 	return k.getInterpolatedRecord(ctx, poolId, t, asset0Denom, asset1Denom)
 }
 
-func ComputeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) (sdk.Dec, error) {
+func ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string, twapType twapType) (sdk.Dec, error) {
+	return computeTwap(startRecord, endRecord, quoteAsset, twapType)
+}
+
+func ComputeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
 	return computeArithmeticTwap(startRecord, endRecord, quoteAsset)
+}
+
+func ComputeGeometricTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
+	return computeGeometricTwap(startRecord, endRecord, quoteAsset)
 }
 
 func RecordWithUpdatedAccumulators(record types.TwapRecord, t time.Time) types.TwapRecord {
@@ -74,6 +88,14 @@ func RecordWithUpdatedAccumulators(record types.TwapRecord, t time.Time) types.T
 
 func NewTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
 	return newTwapRecord(k, ctx, poolId, denom0, denom1)
+}
+
+func TwapLog(x sdk.Dec) sdk.Dec {
+	return twapLog(x)
+}
+
+func TwapPow(x sdk.Dec) sdk.Dec {
+	return twapPow(x)
 }
 
 func GetSpotPrices(

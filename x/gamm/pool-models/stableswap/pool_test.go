@@ -239,6 +239,42 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 	}
 }
 
+func TestGetLiquidityIndexMap(t *testing.T) {
+	tests := map[string]struct {
+		poolAssets sdk.Coins
+	}{
+		"2 asset pool": {
+			twoEvenStablePoolAssets,
+		},
+		"3 asset pool": {
+			threeEvenStablePoolAssets,
+		},
+		"4 asset pool": {
+			sdk.NewCoins(
+				sdk.NewInt64Coin("asset/a", 1000000000),
+				sdk.NewInt64Coin("asset/b", 1000000000),
+				sdk.NewInt64Coin("asset/c", 1000000000),
+				sdk.NewInt64Coin("asset/d", 1000000000),
+			),
+		},
+		"5 asset pool": {
+			fiveEvenStablePoolAssets,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			pool := poolStructFromAssets(tc.poolAssets, []uint64{})
+
+			indexMap := pool.getLiquidityIndexMap()
+			require.Equal(t, len(indexMap), len(tc.poolAssets))
+			for ind := 0; ind < len(tc.poolAssets); ind++ {
+				actual_ind := indexMap[tc.poolAssets[ind].Denom]
+				require.Equal(t, actual_ind, ind)
+			}
+		})
+	}
+}
 func TestGetDescaledPoolAmts(t *testing.T) {
 	tests := map[string]struct {
 		denom          string
@@ -808,7 +844,6 @@ func TestInverseJoinPoolExitPool(t *testing.T) {
 		unevenJoinedTokens sdk.Coins
 		scalingFactors     []uint64
 		swapFee            sdk.Dec
-		expectPass         bool
 	}
 
 	tests := map[string]testcase{
@@ -817,70 +852,60 @@ func TestInverseJoinPoolExitPool(t *testing.T) {
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
 			swapFee:        sdk.ZeroDec(),
-			expectPass:     true,
 		},
 		"[single asset join] uneven two asset pool, no swap fee": {
 			tokensIn:       hundredFoo,
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
 			swapFee:        sdk.ZeroDec(),
-			expectPass:     true,
 		},
 		"[single asset join] even 3-asset pool, no swap fee": {
 			tokensIn:       thousandAssetA,
 			poolAssets:     threeEvenStablePoolAssets,
 			scalingFactors: defaultThreeAssetScalingFactors,
 			swapFee:        sdk.ZeroDec(),
-			expectPass:     true,
 		},
 		"[single asset join] uneven 3-asset pool, no swap fee": {
 			tokensIn:       thousandAssetA,
 			poolAssets:     threeUnevenStablePoolAssets,
 			scalingFactors: defaultThreeAssetScalingFactors,
 			swapFee:        sdk.ZeroDec(),
-			expectPass:     true,
 		},
 		"[single asset join] even two asset pool, default swap fee": {
 			tokensIn:       hundredFoo,
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
 			swapFee:        defaultSwapFee,
-			expectPass:     true,
 		},
 		"[single asset join] uneven two asset pool, default swap fee": {
 			tokensIn:       hundredFoo,
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
 			swapFee:        defaultSwapFee,
-			expectPass:     true,
 		},
 		"[single asset join] even 3-asset pool, default swap fee": {
 			tokensIn:       thousandAssetA,
 			poolAssets:     threeEvenStablePoolAssets,
 			scalingFactors: defaultThreeAssetScalingFactors,
 			swapFee:        defaultSwapFee,
-			expectPass:     true,
 		},
 		"[single asset join] uneven 3-asset pool, default swap fee": {
 			tokensIn:       thousandAssetA,
 			poolAssets:     threeUnevenStablePoolAssets,
 			scalingFactors: defaultThreeAssetScalingFactors,
 			swapFee:        defaultSwapFee,
-			expectPass:     true,
 		},
 		"[single asset join] even 3-asset pool, 0.03 swap fee": {
 			tokensIn:       thousandAssetA,
 			poolAssets:     threeEvenStablePoolAssets,
 			scalingFactors: defaultThreeAssetScalingFactors,
 			swapFee:        sdk.MustNewDecFromStr("0.03"),
-			expectPass:     true,
 		},
 		"[single asset join] uneven 3-asset pool, 0.03 swap fee": {
 			tokensIn:       thousandAssetA,
 			poolAssets:     threeUnevenStablePoolAssets,
 			scalingFactors: defaultThreeAssetScalingFactors,
 			swapFee:        sdk.MustNewDecFromStr("0.03"),
-			expectPass:     true,
 		},
 
 		"[all asset join] even two asset pool, same tokenIn ratio": {
@@ -888,28 +913,24 @@ func TestInverseJoinPoolExitPool(t *testing.T) {
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
 			swapFee:        sdk.ZeroDec(),
-			expectPass:     true,
 		},
 		"[all asset join] even two asset pool, different tokenIn ratio with pool": {
 			tokensIn:       sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tenPercentOfTwoPoolRaw)), sdk.NewCoin("bar", sdk.NewInt(10+tenPercentOfTwoPoolRaw))),
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
 			swapFee:        sdk.ZeroDec(),
-			expectPass:     true,
 		},
 		"[all asset join] even two asset pool, different tokenIn ratio with pool, nonzero swap fee": {
 			tokensIn:       sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tenPercentOfTwoPoolRaw)), sdk.NewCoin("bar", sdk.NewInt(10+tenPercentOfTwoPoolRaw))),
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
 			swapFee:        defaultSwapFee,
-			expectPass:     true,
 		},
 		"[all asset join] even two asset pool, no tokens in": {
 			tokensIn:       sdk.NewCoins(),
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
 			swapFee:        sdk.ZeroDec(),
-			expectPass:     true,
 		},
 	}
 
@@ -918,32 +939,40 @@ func TestInverseJoinPoolExitPool(t *testing.T) {
 			ctx := sdk.Context{}
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 
+			// only for single asset join case
+			var swapRatio sdk.Dec
+			var err error
+			if len(tc.tokensIn) == 1 {
+				swapRatio, err = p.singleAssetJoinSwapFeeRatio(tc.tokensIn[0].Denom)
+				require.NoError(t, err)
+			}
+
 			// we join then exit the pool
 			shares, err := p.JoinPool(ctx, tc.tokensIn, tc.swapFee)
 			tokenOut, err := p.ExitPool(ctx, shares, defaultExitFee)
 
 			// if single asset join, we swap output tokens to input denom to test the full inverse relationship
 			if len(tc.tokensIn) == 1 {
-				tokenOutAmt, err := cfmm_common.SwapAllCoinsToSingleAsset(&p, ctx, tokenOut, tc.tokensIn[0].Denom)
+				tokenOutAmt, err := cfmm_common.SwapAllCoinsToSingleAsset(&p, ctx, tokenOut, tc.tokensIn[0].Denom, sdk.ZeroDec())
 				require.NoError(t, err)
 				tokenOut = sdk.NewCoins(sdk.NewCoin(tc.tokensIn[0].Denom, tokenOutAmt))
 			}
 
-			// if single asset join, we expect output token swapped into the input denom to be input minus swap fee
+			// if single asset join, we expect output token swapped into the input denom
+			// to be smaller by swap ratio * 2
 			var expectedTokenOut sdk.Coins
 			if len(tc.tokensIn) == 1 {
-				expectedAmt := (tc.tokensIn[0].Amount.ToDec().Mul(sdk.OneDec().Sub(tc.swapFee))).TruncateInt()
+				oneMinusSingleSwapFee := sdk.OneDec().Sub((swapRatio.Mul(tc.swapFee)))
+				expectedAmt := (tc.tokensIn[0].Amount.ToDec().Mul(oneMinusSingleSwapFee)).TruncateInt()
 				expectedTokenOut = sdk.NewCoins(sdk.NewCoin(tc.tokensIn[0].Denom, expectedAmt))
 			} else {
 				expectedTokenOut = tc.tokensIn
 			}
 
-			if tc.expectPass {
-				finalPoolLiquidity := p.GetTotalPoolLiquidity(ctx)
-				require.True(t, tokenOut.IsAllLTE(expectedTokenOut))
-				require.True(t, finalPoolLiquidity.IsAllGTE(tc.poolAssets))
-			}
-			osmoassert.ConditionalError(t, !tc.expectPass, err)
+			finalPoolLiquidity := p.GetTotalPoolLiquidity(ctx)
+			require.True(t, tokenOut.IsAllLTE(expectedTokenOut), "token out %v, expected <= %v", tokenOut, expectedTokenOut)
+			require.True(t, finalPoolLiquidity.IsAllGTE(tc.poolAssets))
+			require.NoError(t, err)
 		})
 	}
 }

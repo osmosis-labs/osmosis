@@ -158,91 +158,59 @@ func (q Querier) CalcJoinPoolShares(ctx context.Context, req *types.QueryCalcJoi
 
 // PoolsWithFilter query allows to query pools with specific parameters
 func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithFilterRequest) (*types.QueryPoolsWithFilterResponse, error) {
-	res, err := q.Pools(ctx, &types.QueryPoolsRequest{
-		Pagination: &query.PageRequest{},
-	})
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	pools := res.Pools
+	store := sdkCtx.KVStore(q.Keeper.storeKey)
+	poolStore := prefix.NewStore(store, types.KeyPrefixPools)
 
 	var response = []*codectypes.Any{}
-
-	// set filters
-	min_liquidity := req.MinLiquidity
-	pool_type := req.PoolType
-	checks_needed := 0
-	// increase amount of needed checks for each filter by 1
-	if min_liquidity != nil {
-		checks_needed++
-	}
-
-	if pool_type != "" {
-		checks_needed++
-	}
-
-	for _, p := range pools {
-		var checks = 0
-		var pool types.PoolI
-
-		err := q.cdc.UnpackAny(p, &pool)
+	pageRes, err := query.FilteredPaginate(poolStore, req.Pagination, func(_, value []byte, accumulate bool) (bool, error) {
+		pool, err := q.Keeper.UnmarshalPool(value)
 		if err != nil {
-			return nil, sdkerrors.ErrUnpackAny
+			return false, err
 		}
+
 		poolId := pool.GetId()
 
 		// if liquidity specified in request
-		if min_liquidity != nil {
+		if len(req.MinLiquidity) > 0 {
 			poolLiquidity := pool.GetTotalPoolLiquidity(sdkCtx)
-			amount_of_denoms := 0
-			check_amount := false
-			check_denoms := false
 
-			if poolLiquidity.IsAllGTE(min_liquidity) {
-				check_amount = true
-			}
-
-			for _, req_coin := range min_liquidity {
-				for _, coin := range poolLiquidity {
-					if req_coin.Denom == coin.Denom {
-						amount_of_denoms++
-					}
-				}
-			}
-
-			if amount_of_denoms == len(min_liquidity) {
-				check_denoms = true
-			}
-
-			if check_amount && check_denoms {
-				checks++
+			if !poolLiquidity.IsAllGTE(req.MinLiquidity) {
+				return false, nil
 			}
 		}
 
 		// if pool type specified in request
-		if pool_type != "" {
+		if req.PoolType != "" {
 			poolType, err := q.GetPoolType(sdkCtx, poolId)
 			if err != nil {
-				return nil, types.ErrPoolNotFound
+				return false, types.ErrPoolNotFound
 			}
 
-			if poolType == pool_type {
-				checks++
-			} else {
-				continue
+			if poolType != req.PoolType {
+				return false, nil
 			}
 		}
 
-		if checks == checks_needed {
-			response = append(response, p)
+		any, err := codectypes.NewAnyWithValue(pool)
+		if err != nil {
+			return false, err
 		}
+
+		if accumulate {
+			response = append(response, any)
+		}
+
+		return true, nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryPoolsWithFilterResponse{
-		Pools: response,
+		Pools:      response,
+		Pagination: pageRes,
 	}, nil
 }
 
