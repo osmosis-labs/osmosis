@@ -19,11 +19,14 @@ func TestMsgsTestSuite(t *testing.T) {
 }
 
 func (suite *MsgsTestSuite) TestMsgSetHotRoutes() {
-	validArbRoutes := types.CreateSeacherRoutes(3, types.AtomDenomination, types.OsmosisDenomination)
+	validArbRoutes := types.CreateSeacherRoutes(3, types.OsmosisDenomination, "ethereum", types.AtomDenomination, types.AtomDenomination)
 
-	notThreePoolArbRoutes := types.CreateSeacherRoutes(3, types.AtomDenomination, types.OsmosisDenomination)
+	notThreePoolArbRoutes := types.CreateSeacherRoutes(3, types.OsmosisDenomination, "ethereum", types.AtomDenomination, types.AtomDenomination)
 	extraTrade := types.NewTrade(100000, "a", "b")
 	notThreePoolArbRoutes.ArbRoutes = append(notThreePoolArbRoutes.ArbRoutes, &types.Route{[]*types.Trade{&extraTrade}})
+
+	invalidArbDenoms := types.CreateSeacherRoutes(3, types.OsmosisDenomination, "ethereum", "juno", "juno")
+	mismatchedDenoms := types.CreateSeacherRoutes(3, types.OsmosisDenomination, "ethereum", types.AtomDenomination, types.OsmosisDenomination)
 	cases := []struct {
 		description string
 		admin       string
@@ -58,6 +61,18 @@ func (suite *MsgsTestSuite) TestMsgSetHotRoutes() {
 			"Invalid message (with invalid arb routes)",
 			createAccount().String(),
 			[]*types.TokenPairArbRoutes{&notThreePoolArbRoutes},
+			false,
+		},
+		{
+			"Invalid message (with invalid arb denoms)",
+			createAccount().String(),
+			[]*types.TokenPairArbRoutes{&invalidArbDenoms},
+			false,
+		},
+		{
+			"Invalid message (with mismatched arb denoms)",
+			createAccount().String(),
+			[]*types.TokenPairArbRoutes{&mismatchedDenoms},
 			false,
 		},
 	}

@@ -33,7 +33,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			description: "Default parameters with valid routes",
 			genState: &types.GenesisState{
 				Params:     types.DefaultParams(),
-				TokenPairs: []types.TokenPairArbRoutes{types.CreateSeacherRoutes(3, types.AtomDenomination, types.OsmosisDenomination)},
+				TokenPairs: []types.TokenPairArbRoutes{types.CreateSeacherRoutes(3, types.OsmosisDenomination, "ethereum", types.AtomDenomination, types.AtomDenomination)},
 			},
 			valid: true,
 		},
@@ -41,7 +41,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			description: "Default parameters with invalid routes (duplicate token pairs)",
 			genState: &types.GenesisState{
 				Params:     types.DefaultParams(),
-				TokenPairs: []types.TokenPairArbRoutes{types.CreateSeacherRoutes(3, types.AtomDenomination, types.OsmosisDenomination), types.CreateSeacherRoutes(3, types.AtomDenomination, types.OsmosisDenomination)},
+				TokenPairs: []types.TokenPairArbRoutes{types.CreateSeacherRoutes(3, types.OsmosisDenomination, "ethereum", types.AtomDenomination, types.AtomDenomination), types.CreateSeacherRoutes(3, types.OsmosisDenomination, "ethereum", types.AtomDenomination, types.AtomDenomination)},
 			},
 			valid: false,
 		},
@@ -54,10 +54,26 @@ func TestGenesisStateValidate(t *testing.T) {
 			valid: false,
 		},
 		{
-			description: "Default parameters with invalid routes",
+			description: "Default parameters with invalid routes (4 pool route)",
 			genState: &types.GenesisState{
 				Params:     types.DefaultParams(),
 				TokenPairs: invalidSearchRoutes,
+			},
+			valid: false,
+		},
+		{
+			description: "Default parameters with invalid routes (mismatch in and out denoms)",
+			genState: &types.GenesisState{
+				Params:     types.DefaultParams(),
+				TokenPairs: []types.TokenPairArbRoutes{types.CreateSeacherRoutes(3, types.OsmosisDenomination, "ethereum", types.AtomDenomination, types.OsmosisDenomination)},
+			},
+			valid: false,
+		},
+		{
+			description: "Default parameters with invalid routes (invalid in arb denom)",
+			genState: &types.GenesisState{
+				Params:     types.DefaultParams(),
+				TokenPairs: []types.TokenPairArbRoutes{types.CreateSeacherRoutes(3, types.OsmosisDenomination, "ethereum", "juno", "juno")},
 			},
 			valid: false,
 		},

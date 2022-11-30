@@ -6,8 +6,8 @@ import "osmosis/protorev/v1beta1/protorev.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v13/x/protorev/types";
 
-// SetProtoRevEnabledProposal is a gov Content type to update the proto rev
-// enabled field in the params
+// SetProtoRevEnabledProposal is a gov Content type to update whether the
+// protorev module is enabled
 message SetProtoRevEnabledProposal {
   option (gogoproto.equal) = true;
   option (gogoproto.goproto_getters) = false;
@@ -19,7 +19,8 @@ message SetProtoRevEnabledProposal {
 }
 
 // SetProtoRevAdminAccountProposal is a gov Content type to set the admin
-// account that will receive permissions to alter hot routes
+// account that will receive permissions to alter hot routes and set the developer address 
+// that will be receiving a share of profits from the module
 message SetProtoRevAdminAccountProposal {
   option (gogoproto.equal) = true;
   option (gogoproto.goproto_getters) = false;

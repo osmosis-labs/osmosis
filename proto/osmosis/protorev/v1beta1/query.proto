@@ -38,14 +38,14 @@ service Query {
   }
 
   // GetProtoRevStatisticsByPool queries the number of arbitrages and profits
-  // that have happened for a given pool
+  // that have been executed for a given pool
   rpc GetProtoRevStatisticsByPool(QueryGetProtoRevStatisticsByPoolRequest)
       returns (QueryGetProtoRevStatisticsByPoolResponse) {
     option (google.api.http).get = "/osmosis/v12/protorev/statistics_by_pool";
   }
 
   // GetProtoRevAllStatistics queries all of pools that the module has arbitrage
-  // against and the number of trades and profits that have happened for each
+  // against and the number of trades and profits that have been executed for each
   // pool
   rpc GetProtoRevAllStatistics(QueryGetProtoRevAllStatisticsRequest)
       returns (QueryGetProtoRevAllStatisticsResponse) {
@@ -94,7 +94,7 @@ message QueryGetProtoRevProfitsByDenomRequest {
 // QueryGetProtoRevProfitsByDenomResponse is response type for the
 // Query/GetProtoRevProfitsByDenom RPC method.
 message QueryGetProtoRevProfitsByDenomResponse {
-  // profit is the profits of the module by denom
+  // profit is the profits of the module by the selected denom
   cosmos.base.v1beta1.Coin profit = 1;
 }
 
@@ -112,14 +112,14 @@ message QueryGetProtoRevAllProfitsResponse {
 // QueryGetProtoRevStatisticsByPoolRequest is request type for the
 // Query/GetProtoRevStatisticsByPool RPC method.
 message QueryGetProtoRevStatisticsByPoolRequest {
-  // pool_id is the pool id to query trades by
+  // pool_id is the pool id to query statistics by
   uint64 pool_id = 1;
 }
 
 // QueryGetProtoRevStatisticsByPoolResponse is response type for the
 // Query/GetProtoRevStatisticsByPool RPC method.
 message QueryGetProtoRevStatisticsByPoolResponse {
-  // statistics is the number of trades the module has executed after a swap on
+  // statistics contains the number of trades the module has executed after a swap on
   // a given pool and the profits from the trades
   PoolStatistics statistics = 1;
 }
@@ -131,7 +131,7 @@ message QueryGetProtoRevAllStatisticsRequest {}
 // QueryGetProtoRevAllStatisticsResponse is response type for the
 // Query/GetProtoRevAllStatistics RPC method.
 message QueryGetProtoRevAllStatisticsResponse {
-  // statistics is the number of trades the module has executed after a swap on
+  // statistics contains the number of trades the module has executed after a swap on
   // a given pool and the profits from the trades for all pools
   map<uint64, PoolStatistics> statistics = 1 [ (gogoproto.nullable) = false ];
 }

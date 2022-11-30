@@ -44,7 +44,8 @@ func init() {
 }
 
 // Routes entered into the genesis state must start and end with the same denomination and
-// the denomination must be Osmo or Atom
+// the denomination must be Osmo or Atom. Additionally, there cannot be duplicate routes (same
+// token pairs).
 func (gs GenesisState) CheckRoutes() error {
 	seenTokenPairs := make(map[TokenPair]bool)
 	for _, tokenPairArbRoutes := range gs.TokenPairs {

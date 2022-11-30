@@ -23,7 +23,8 @@ type BankKeeper interface {
 	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error
 }
 
-// GAMMKeeper
+// GAMMKeeper defines the Gamm contract that must be fulfilled when
+// creating a x/protorev keeper.
 type GAMMKeeper interface {
 	GetPoolAndPoke(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
 	GetPoolsAndPoke(ctx sdk.Context) (res []gammtypes.PoolI, err error)
@@ -32,6 +33,8 @@ type GAMMKeeper interface {
 	MultihopSwapExactAmountIn(ctx sdk.Context, sender sdk.AccAddress, routes []types.SwapAmountInRoute, tokenIn sdk.Coin, tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error)
 }
 
+// EpochKeeper defines the Epoch contract that must be fulfilled when
+// creating a x/protorev keeper.
 type EpochKeeper interface {
 	GetEpochInfo(ctx sdk.Context, identifier string) epochtypes.EpochInfo
 }

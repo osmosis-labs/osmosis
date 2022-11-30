@@ -15,7 +15,7 @@ service Msg {
   };
 
   // SetDeveloperAccount sets the account that can withdraw a portion of the
-  // profit from the protorev module. This will be Skip's address once deployed
+  // profits from the protorev module. This will be Skip's address.
   rpc SetDeveloperAccount(MsgSetDeveloperAccount)
       returns (MsgSetDeveloperAccountResponse) {
     option (google.api.http).post =
@@ -38,7 +38,7 @@ message MsgSetHotRoutesResponse {}
 message MsgSetDeveloperAccount {
   // admin is the account that is authorized to set the developer account.
   string admin = 1;
-  // developer_account is the account that will receive a portion of the profit
+  // developer_account is the account that will receive a portion of the profits
   // from the protorev module.
   string developer_account = 2;
 }

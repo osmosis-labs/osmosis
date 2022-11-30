@@ -30,6 +30,16 @@ func (tp *TokenPairArbRoutes) Validate() error {
 			return sdkerrors.Wrapf(ErrInvalidRoute, "route %s has %d pools, but should have 3", route, len(route.Trades))
 		}
 
+		// In denoms must match either osmo or atom
+		if route.Trades[0].DenomA != AtomDenomination && route.Trades[0].DenomA != OsmosisDenomination {
+			return sdkerrors.Wrapf(ErrInvalidArbDenom, "route has invalid first pool denom: %s", route.Trades[0].DenomA)
+		}
+
+		// Out and in denoms must match
+		if route.Trades[0].DenomA != route.Trades[2].DenomB {
+			return sdkerrors.Wrapf(ErrInvalidRoute, "route has invalid first and last pool denoms: %s -> %s", route.Trades[0].DenomA, route.Trades[2].DenomB)
+		}
+
 		uniquePools := make(map[uint64]bool)
 		for _, trade := range route.Trades {
 			uniquePools[trade.Pool] = true

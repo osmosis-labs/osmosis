@@ -24,18 +24,23 @@ func CheckMatchAndReturnOther(tokenA, tokenB, match string) (string, bool) {
 	return "", false
 }
 
-func CreateSeacherRoutes(numRoutes int, tokenInDenom, tokenOutDenom string) TokenPairArbRoutes {
+func CreateSeacherRoutes(numRoutes int, swapIn, swapOut, tokenInDenom, tokenOutDenom string) TokenPairArbRoutes {
 	routes := make([]*Route, numRoutes)
 	for i := 0; i < numRoutes; i++ {
 		trades := make([]*Trade, 3)
 
-		for j := 0; j < 3; j++ {
-			trade := NewTrade(uint64((j+1)*(1+i)), "a", "b")
-			trades[j] = &trade
-		}
+		firstTrade := NewTrade(0, tokenInDenom, swapIn)
+		trades[0] = &firstTrade
+
+		secondTrade := NewTrade(1, swapIn, swapOut)
+		trades[1] = &secondTrade
+
+		thirdTrade := NewTrade(2, swapOut, tokenOutDenom)
+		trades[2] = &thirdTrade
+
 		newRoutes := NewRoutes(trades)
 		routes[i] = &newRoutes
 	}
 
-	return NewTokenPairArbRoutes(routes, tokenInDenom, tokenOutDenom)
+	return NewTokenPairArbRoutes(routes, swapIn, swapOut)
 }
