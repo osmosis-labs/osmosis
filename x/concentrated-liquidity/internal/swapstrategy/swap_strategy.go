@@ -22,7 +22,7 @@ type swapStrategy interface {
 	NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64) (next sdk.Int, initialized bool)
 	// SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.
 	// This is called when consuming all liquidity.
-	// Generally, when a position is created, we add liquidity to lower tick
+	// When a position is created, we add liquidity to lower tick
 	// and subtract from the upper tick to reflect that this new
 	// liquidity would be added when the price crosses the lower tick
 	// going up, and subtracted when the price crosses the upper tick
