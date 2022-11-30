@@ -1,13 +1,8 @@
 package concentrated_liquidity
 
 import (
-	fmt "fmt"
-
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	db "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/model"
@@ -43,60 +38,9 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Add(liquidityIn)
 	}
 
-	k.setTickInfo(ctx, poolId, tickIndex, tickInfo)
+	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
 
 	return nil
-}
-
-// NextInitializedTick returns the next initialized tick index based on the
-// current or provided tick index. If no initialized tick exists, <0, false>
-// will be returned. The zeroForOne argument indicates if we need to find the next
-// initialized tick to the left or right of the current tick index, where true
-// indicates searching to the left.
-func (k Keeper) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64, zeroForOne bool) (next int64, initialized bool) {
-	store := ctx.KVStore(k.storeKey)
-
-	// Construct a prefix store with a prefix of <TickPrefix | poolID>, allowing
-	// us to retrieve the next initialized tick without having to scan all ticks.
-	prefixBz := types.KeyTickPrefix(poolId)
-	prefixStore := prefix.NewStore(store, prefixBz)
-
-	var startKey []byte
-	if !zeroForOne {
-		startKey = types.TickIndexToBytes(tickIndex)
-	} else {
-		// When looking to the left of the current tick, we need to evaluate the
-		// current tick as well. The end cursor for reverse iteration is non-inclusive
-		// so must add one and handle overflow.
-		startKey = types.TickIndexToBytes(osmomath.Max(tickIndex, tickIndex+1))
-	}
-
-	var iter db.Iterator
-	if !zeroForOne {
-		iter = prefixStore.Iterator(startKey, nil)
-	} else {
-		iter = prefixStore.ReverseIterator(nil, startKey)
-	}
-
-	defer iter.Close()
-
-	for ; iter.Valid(); iter.Next() {
-		// Since, we constructed our prefix store with <TickPrefix | poolID>, the
-		// key is the encoding of a tick index.
-		tick, err := types.TickIndexFromBytes(iter.Key())
-		if err != nil {
-			panic(fmt.Errorf("invalid tick index (%s): %v", string(iter.Key()), err))
-		}
-
-		if !zeroForOne && tick > tickIndex {
-			return tick, true
-		}
-		if zeroForOne && tick <= tickIndex {
-			return tick, true
-		}
-	}
-
-	return 0, false
 }
 
 func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Dec, err error) {
@@ -126,7 +70,7 @@ func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 	return tickStruct, nil
 }
 
-func (k Keeper) setTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo model.TickInfo) {
+func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo model.TickInfo) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyTick(poolId, tickIndex)
 	osmoutils.MustSet(store, key, &tickInfo)

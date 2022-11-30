@@ -101,3 +101,13 @@ type PoolDoesNotExistError struct {
 func (e PoolDoesNotExistError) Error() string {
 	return fmt.Sprintf("cannot initialize or update a tick for a non-existing pool. pool id (%d)", e.PoolId)
 }
+
+type InvalidPriceLimitError struct {
+	SqrtPriceLimit sdk.Dec
+	LowerBound     sdk.Dec
+	UpperBound     sdk.Dec
+}
+
+func (e InvalidPriceLimitError) Error() string {
+	return fmt.Sprintf("invalid sqrt price limit given (%s), should be greater than (%s) and less than (%s)", e.SqrtPriceLimit, e.LowerBound, e.UpperBound)
+}
