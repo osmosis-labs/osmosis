@@ -3,7 +3,6 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 
 	epochtypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
@@ -30,7 +29,7 @@ type GAMMKeeper interface {
 	GetPoolsAndPoke(ctx sdk.Context) (res []gammtypes.PoolI, err error)
 	GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error)
 	SwapExactAmountIn(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, tokenIn sdk.Coin, tokenOutDenom string, tokenOutMinAmount sdk.Int) (sdk.Int, error)
-	MultihopSwapExactAmountIn(ctx sdk.Context, sender sdk.AccAddress, routes []types.SwapAmountInRoute, tokenIn sdk.Coin, tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error)
+	MultihopSwapExactAmountIn(ctx sdk.Context, sender sdk.AccAddress, routes []gammtypes.SwapAmountInRoute, tokenIn sdk.Coin, tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error)
 }
 
 // EpochKeeper defines the Epoch contract that must be fulfilled when

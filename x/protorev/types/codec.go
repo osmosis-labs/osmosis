@@ -10,9 +10,8 @@ import (
 )
 
 var (
-	Amino     = codec.NewLegacyAmino()
+	amino     = codec.NewLegacyAmino()
 	ModuleCdc = codec.NewProtoCodec(cdctypes.NewInterfaceRegistry())
-	aminoCdc  = codec.NewAminoCodec(Amino)
 )
 
 const (
@@ -21,8 +20,8 @@ const (
 )
 
 func init() {
-	RegisterCodec(Amino)
-	Amino.Seal()
+	RegisterCodec(amino)
+	amino.Seal()
 }
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
