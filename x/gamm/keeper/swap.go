@@ -39,9 +39,14 @@ func (k Keeper) SwapExactAmountIn(
 		}
 	}()
 
+	cfmmPool, err := convertToCFMMPool(pool)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
 	// Executes the swap in the pool and stores the output. Updates pool assets but
 	// does not actually transfer any tokens to or from the pool.
-	tokenOutCoin, err := pool.SwapOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
+	tokenOutCoin, err := cfmmPool.SwapOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -102,7 +107,12 @@ func (k Keeper) SwapExactAmountOut(
 			"can't get more tokens out than there are tokens in the pool")
 	}
 
-	tokenIn, err := pool.SwapInAmtGivenOut(ctx, sdk.Coins{tokenOut}, tokenInDenom, swapFee)
+	cfmmPool, err := convertToCFMMPool(pool)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	tokenIn, err := cfmmPool.SwapInAmtGivenOut(ctx, sdk.Coins{tokenOut}, tokenInDenom, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -130,12 +140,11 @@ func (k Keeper) CalcOutAmtGivenIn(
 	tokenOutDenom string,
 	swapFee sdk.Dec,
 ) (tokenOut sdk.Coin, err error) {
-	pool, ok := poolI.(types.TraditionalAmmInterface)
-	if !ok {
-		return sdk.Coin{}, fmt.Errorf("given pool does not implement TraditionalAmmInterface, implements %T", poolI)
+	cfmmPool, err := convertToCFMMPool(poolI)
+	if err != nil {
+		return sdk.Coin{}, err
 	}
-
-	return pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(tokenIn), tokenOutDenom, swapFee)
+	return cfmmPool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(tokenIn), tokenOutDenom, swapFee)
 }
 
 func (k Keeper) CalcInAmtGivenOut(
@@ -145,12 +154,11 @@ func (k Keeper) CalcInAmtGivenOut(
 	tokenInDenom string,
 	swapFee sdk.Dec,
 ) (tokenIn sdk.Coin, err error) {
-	pool, ok := poolI.(types.TraditionalAmmInterface)
-	if !ok {
-		return sdk.Coin{}, fmt.Errorf("given pool does not implement TraditionalAmmInterface, implements %T", poolI)
+	cfmmPool, err := convertToCFMMPool(poolI)
+	if err != nil {
+		return sdk.Coin{}, err
 	}
-
-	return pool.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), tokenInDenom, swapFee)
+	return cfmmPool.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), tokenInDenom, swapFee)
 }
 
 // updatePoolForSwap takes a pool, sender, and tokenIn, tokenOut amounts

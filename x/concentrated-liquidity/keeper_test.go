@@ -18,8 +18,11 @@ var (
 	DefaultCurrTick         = sdk.NewInt(85176)
 	DefaultCurrSqrtPrice, _ = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
 	DefaultZeroSwapFee      = sdk.ZeroDec()
+	ETH                     = "eth"
 	DefaultAmt0             = sdk.NewInt(1000000)
+	USDC                    = "usdc"
 	DefaultAmt1             = sdk.NewInt(5000000000)
+	DefaultLiquidityAmt     = sdk.NewDec(50000000000)
 )
 
 type KeeperTestSuite struct {

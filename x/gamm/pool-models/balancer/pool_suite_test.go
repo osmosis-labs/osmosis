@@ -1030,7 +1030,7 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 	}
 
 	// joins with predetermined ratio
-	joinPool := func(pool types.TraditionalAmmInterface, tc *testCase) {
+	joinPool := func(pool types.CFMMPoolI, tc *testCase) {
 		tokensIn := sdk.Coins{
 			sdk.NewCoin(denomIn, sdk.NewInt(tc.initialTokensDenomIn).MulRaw(tc.percentRatio).QuoRaw(100)),
 			sdk.NewCoin(denomOut, sdk.NewInt(tc.initialTokensDenomOut).MulRaw(tc.percentRatio).QuoRaw(100)),
@@ -1041,7 +1041,7 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 	}
 
 	// exits for same amount of shares minted
-	exitPool := func(pool types.TraditionalAmmInterface, tc *testCase) {
+	exitPool := func(pool types.CFMMPoolI, tc *testCase) {
 		_, err := pool.ExitPool(suite.Ctx, tc.numShares, exitFeeDec)
 		suite.Require().NoError(err)
 	}
