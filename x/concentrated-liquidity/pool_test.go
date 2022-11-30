@@ -552,7 +552,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			}
 
 			// perform swap
-			tokenOut, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
+			_, tokenOut, _, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
 				s.Ctx,
 				test.tokenIn, test.tokenOutDenom,
 				DefaultZeroSwapFee, test.priceLimit, pool.GetId())
@@ -999,7 +999,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 			}
 
 			// perform swap
-			tokenIn, err = s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
+			tokenIn, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
 				s.Ctx,
 				test.tokenOut, test.tokenInDenom,
 				DefaultZeroSwapFee, test.priceLimit, pool.GetId())

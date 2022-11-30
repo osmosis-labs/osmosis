@@ -83,7 +83,7 @@ func (k Keeper) SwapExactAmountIn(
 	} else {
 		priceLimit = types.UpperPriceLimit
 	}
-	tokenOut, err := k.SwapOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, pool.GetId())
+	tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, err := k.SwapOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, pool.GetId())
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -99,7 +99,7 @@ func (k Keeper) SwapExactAmountIn(
 
 	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
 	// Also emits swap event and updates related liquidity metrics
-	if err := k.updatePoolForSwap(ctx, poolI, sender, tokenIn, tokenOut); err != nil {
+	if err := k.updatePoolForSwap(ctx, poolI, sender, tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice); err != nil {
 		return sdk.Int{}, err
 	}
 
@@ -136,7 +136,7 @@ func (k Keeper) SwapExactAmountOut(
 	} else {
 		priceLimit = types.UpperPriceLimit
 	}
-	tokenIn, err := k.SwapInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, priceLimit, pool.GetId())
+	tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, err := k.SwapInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, priceLimit, pool.GetId())
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -152,7 +152,7 @@ func (k Keeper) SwapExactAmountOut(
 
 	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
 	// Also emits swap event and updates related liquidity metrics
-	if err := k.updatePoolForSwap(ctx, poolI, sender, tokenIn, tokenIn); err != nil {
+	if err := k.updatePoolForSwap(ctx, poolI, sender, tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice); err != nil {
 		return sdk.Int{}, err
 	}
 
@@ -168,18 +168,18 @@ func (k Keeper) SwapOutAmtGivenIn(
 	swapFee sdk.Dec,
 	priceLimit sdk.Dec,
 	poolId uint64,
-) (tokenOut sdk.Coin, err error) {
+) (calcTokenIn, calcTokenOut sdk.Coin, currentTick sdk.Int, liquidity, sqrtPrice sdk.Dec, err error) {
 	tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, err := k.calcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, poolId)
 	if err != nil {
-		return sdk.Coin{}, err
-	}
-	// applySwap mutates the pool state to apply the new tick, liquidity and sqrtPrice
-	err = k.applySwap(ctx, tokenIn, tokenOut, poolId, newLiquidity, newCurrentTick, newSqrtPrice)
-	if err != nil {
-		return sdk.Coin{}, err
+		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
-	return tokenOut, nil
+	err = k.applySwap(ctx, tokenIn, tokenOut, poolId, newLiquidity, newCurrentTick, newSqrtPrice)
+	if err != nil {
+		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
+	}
+
+	return tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, nil
 }
 
 func (k *Keeper) SwapInAmtGivenOut(
@@ -189,17 +189,18 @@ func (k *Keeper) SwapInAmtGivenOut(
 	swapFee sdk.Dec,
 	priceLimit sdk.Dec,
 	poolId uint64,
-) (tokenIn sdk.Coin, err error) {
-	tokenIn, actualTokenOut, updatedTick, updatedLiquidity, updatedSqrtPrice, err := k.calcInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, swapFee, priceLimit, poolId)
+) (calcTokenIn, calcTokenOut sdk.Coin, currentTick sdk.Int, liquidity, sqrtPrice sdk.Dec, err error) {
+	tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, err := k.calcInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, swapFee, priceLimit, poolId)
 	if err != nil {
-		return sdk.Coin{}, err
+		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
-	if err := k.applySwap(ctx, tokenIn, actualTokenOut, poolId, updatedLiquidity, updatedTick, updatedSqrtPrice); err != nil {
-		return sdk.Coin{}, err
+	err = k.applySwap(ctx, tokenIn, tokenOut, poolId, newLiquidity, newCurrentTick, newSqrtPrice)
+	if err != nil {
+		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
-	return tokenIn, nil
+	return tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, nil
 }
 
 func (k Keeper) CalcOutAmtGivenIn(
@@ -559,8 +560,17 @@ func (k Keeper) updatePoolForSwap(
 	sender sdk.AccAddress,
 	tokenIn sdk.Coin,
 	tokenOut sdk.Coin,
+	newCurrentTick sdk.Int,
+	newLiquidity sdk.Dec,
+	newSqrtPrice sdk.Dec,
 ) error {
-	err := k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), sdk.Coins{
+	// applySwap mutates the pool state to apply the new tick, liquidity and sqrtPrice
+	err := k.applySwap(ctx, tokenIn, tokenOut, pool.GetId(), newLiquidity, newCurrentTick, newSqrtPrice)
+	if err != nil {
+		return err
+	}
+
+	err = k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), sdk.Coins{
 		tokenIn,
 	})
 	if err != nil {
