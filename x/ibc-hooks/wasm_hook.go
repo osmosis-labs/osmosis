@@ -215,6 +215,7 @@ func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, cont
 }
 
 func (h WasmHooks) SendPacketAfterHook(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet ibcexported.PacketI, err error) {
+	// ToDo: Remove the callback from the packet before sending. This is to avoid issues with the memo on chains that don't support it
 	if err != nil {
 		return
 	}
