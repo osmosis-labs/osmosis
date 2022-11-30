@@ -9,12 +9,12 @@ on:
   release: 
     types: [published]
 
-  # workflow_dispatch:
-  #   inputs:
-  #     version:
-  #       description: 'Major vesrion to generate. Default value (v1) will ignore the action. Example format: v13'
-  #       required: true
-  #       default: 'v1'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Major vesrion to generate. Default value (v1) will ignore the action. Example format: v13'
+        required: true
+        default: 'v1'
 
 jobs:
   post_release:
@@ -23,12 +23,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2.3.4
 
+      - name: specify input
+        run: |
+          if [[ ${{ inputs.version == '' }} != '' ]]; then 
+            echo ${{ inputs.version == '' }}
+            echo "input=${{ inputs.version == '' }}" >> $GITHUB_ENV
+          else
+            echo ${{ github.event.release.tag_name }}
+            echo "input=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+          fi
+
       - name: Run version script
-        run: bash ./scripts/check_release.sh ${{ inputs.version }}
+        run: bash ./scripts/check_release.sh ${{ env.input }}
 
       - name: Run post release script
         if: env.MAJOR == 1    # 1 means vX of existing upgrade handler is smaller than A in tag vA.B.C
-        run: bash ./scripts/empty_upgrade_handler_gen.sh ${{ inputs.version }}
+        run: bash ./scripts/empty_upgrade_handler_gen.sh ${{ env.input }}
 
       - name: Create PR
         if: env.MAJOR == 1
