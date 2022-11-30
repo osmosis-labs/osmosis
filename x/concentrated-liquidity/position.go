@@ -1,8 +1,6 @@
 package concentrated_liquidity
 
 import (
-	fmt "fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
@@ -19,7 +17,7 @@ func (k Keeper) getOrInitPosition(
 	liquidityDelta sdk.Dec,
 ) (*model.Position, error) {
 	if !k.poolExists(ctx, poolId) {
-		return nil, fmt.Errorf("cannot retrieve position for a non-existent pool, pool id %d", poolId)
+		return nil, types.PoolNotFoundError{PoolId: poolId}
 	}
 	if k.hasPosition(ctx, poolId, owner, lowerTick, upperTick) {
 		position, err := k.getPosition(ctx, poolId, owner, lowerTick, upperTick)
@@ -52,7 +50,7 @@ func (k Keeper) initOrUpdatePosition(
 	// If negative, this would work as a subtraction from liquidityBefore
 	liquidityAfter := liquidityBefore.Add(liquidityDelta)
 	if liquidityAfter.IsNegative() {
-		return fmt.Errorf("liquidity cannot be negative, got %v", liquidityAfter)
+		return types.NegativeLiquidityError{Liquidity: liquidityAfter}
 	}
 
 	position.Liquidity = liquidityAfter

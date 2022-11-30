@@ -3,6 +3,8 @@ package concentrated_liquidity_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -22,7 +24,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 		param             param
 		positionExists    bool
 		expectedLiquidity sdk.Dec
-		expectedErr       string
+		expectedErr       error
 	}{
 		{
 			name: "Init position from -50 to 50 with 50000000000 liquidity",
@@ -55,7 +57,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				liquidityDelta: DefaultLiquidityAmt,
 			},
 			positionExists: false,
-			expectedErr:    "cannot retrieve position for a non-existent pool",
+			expectedErr:    types.PoolNotFoundError{PoolId: 2},
 		},
 		{
 			name: "Init position from -50 to 50 with -50000000000 liquidity",
@@ -66,7 +68,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				liquidityDelta: DefaultLiquidityAmt.Neg(),
 			},
 			positionExists: false,
-			expectedErr:    "liquidity cannot be negative",
+			expectedErr:    types.NegativeLiquidityError{Liquidity: DefaultLiquidityAmt.Neg()},
 		},
 	}
 
@@ -96,13 +98,14 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			} else {
 				// If we did not have a position before, ensure getting the non-existent position returns an error
 				s.Require().Error(err)
-				s.Require().ErrorContains(err, "position not found")
+				s.Require().ErrorContains(err, types.PositionNotFoundError{PoolId: 1, LowerTick: test.param.lowerTick, UpperTick: test.param.upperTick}.Error())
 			}
 
 			// Initialize or update the position according to the test case
 			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, test.param.poolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.liquidityDelta)
-			if test.expectedErr != "" {
-				s.Require().ErrorContains(err, test.expectedErr)
+			if test.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, test.expectedErr.Error())
 				return
 			}
 			s.Require().NoError(err)

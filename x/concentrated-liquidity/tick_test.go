@@ -280,7 +280,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 				upper:       true,
 			},
 			tickExists:  false,
-			expectedErr: types.PoolDoesNotExistError{PoolId: 2},
+			expectedErr: types.PoolNotFoundError{PoolId: 2},
 		},
 	}
 
