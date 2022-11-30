@@ -265,7 +265,6 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 			swapState.liquidity = newLiquidity
 
 			// update the swapState's tick with the tick we retrieved liquidity from
-			// swapState.tick = swapStrategy.SetNextTick(nextTick)
 			swapState.tick = nextTick
 		} else if !sqrtPriceStart.Equal(sqrtPrice) {
 			// otherwise if the sqrtPrice calculated from computeSwapStep does not equal the sqrtPrice we started with at the
