@@ -1026,16 +1026,16 @@ func (s *KeeperTestSuite) TestGetPoolById() {
 	tests := []struct {
 		name        string
 		poolId      uint64
-		expectedErr string
+		expectedErr error
 	}{
 		{
 			name:   "Get existing pool",
-			poolId: 1,
+			poolId: validPoolId,
 		},
 		{
 			name:        "Get non-existing pool",
 			poolId:      2,
-			expectedErr: "pool not found",
+			expectedErr: types.PoolDoesNotExistError{PoolId: 2},
 		},
 	}
 
@@ -1050,7 +1050,7 @@ func (s *KeeperTestSuite) TestGetPoolById() {
 			// Get pool defined in test case
 			getPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, test.poolId)
 
-			if test.expectedErr == "" {
+			if test.expectedErr == nil {
 				// Ensure no error is returned
 				s.Require().NoError(err)
 
@@ -1063,7 +1063,7 @@ func (s *KeeperTestSuite) TestGetPoolById() {
 			} else {
 				// Ensure specified error is returned
 				s.Require().Error(err)
-				s.Require().ErrorContains(err, test.expectedErr)
+				s.Require().ErrorIs(err, test.expectedErr)
 
 				// Check that GetPoolById returns a nil pool object due to error
 				s.Require().Nil(getPool)
