@@ -3,7 +3,7 @@
 # 2) will increase an E2E_UPGRADE_VERSION variable in Makefile
 # 3) create a pull request with these changes to main
 
-name: On Manual Input Auto Upgrade
+name: On Trigger Gen Upgrade Handler
 
 on:
   release: 
