@@ -112,6 +112,7 @@ type AppKeepers struct {
 	LockupKeeper                 *lockupkeeper.Keeper
 	EpochsKeeper                 *epochskeeper.Keeper
 	IncentivesKeeper             *incentiveskeeper.Keeper
+	ProtoRevKeeper               *protorevkeeper.Keeper
 	MintKeeper                   *mintkeeper.Keeper
 	PoolIncentivesKeeper         *poolincentiveskeeper.Keeper
 	TxFeesKeeper                 *txfeeskeeper.Keeper
@@ -262,6 +263,12 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.DistrKeeper, appKeepers.GetSubspace(lockuptypes.ModuleName))
 
 	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appKeepers.keys[epochstypes.StoreKey])
+
+	protorevKeeper := protorevkeeper.NewKeeper(
+		appCodec, appKeepers.keys[protorevtypes.StoreKey],
+		appKeepers.GetSubspace(protorevtypes.ModuleName),
+		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.GAMMKeeper, appKeepers.EpochsKeeper)
+	appKeepers.ProtoRevKeeper = &protorevKeeper
 
 	txFeesKeeper := txfeeskeeper.NewKeeper(
 		appKeepers.AccountKeeper,
@@ -507,6 +514,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(incentivestypes.ModuleName)
 	paramsKeeper.Subspace(lockuptypes.ModuleName)
 	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
+	paramsKeeper.Subspace(protorevtypes.ModuleName).WithKeyTable(protorevtypes.ParamKeyTable())
 	paramsKeeper.Subspace(superfluidtypes.ModuleName)
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
@@ -607,5 +615,6 @@ func KVStoreKeys() []string {
 		wasm.StoreKey,
 		tokenfactorytypes.StoreKey,
 		valsetpreftypes.StoreKey,
+		protorevtypes.StoreKey,
 	}
 }
