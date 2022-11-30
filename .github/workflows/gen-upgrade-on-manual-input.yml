@@ -6,15 +6,15 @@
 name: On Manual Input Auto Upgrade
 
 on:
+  release: 
+    types: [published]
+
   workflow_dispatch:
     inputs:
       version:
         description: 'Major vesrion to generate. Default value (v1) will ignore the action. Example format: v13'
         required: true
         default: 'v1'
-  
-  release: 
-    types: [published]
 
 jobs:
   post_release:
