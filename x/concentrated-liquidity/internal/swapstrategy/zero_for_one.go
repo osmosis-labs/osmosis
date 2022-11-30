@@ -96,7 +96,7 @@ func (s zeroForOneStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, 
 //
 // zeroForOneStrategy assumes moving to the left of the current square root price.
 // When we move to the left, we must be crossing upper ticks first where
-// liqudiity delta tracks the amount of liquidity being removed. So the sign must be
+// liquidity delta tracks the amount of liquidity being removed. So the sign must be
 // negative.
 func (s zeroForOneStrategy) SetLiquidityDeltaSign(deltaLiquidity sdk.Dec) sdk.Dec {
 	return deltaLiquidity.Neg()
