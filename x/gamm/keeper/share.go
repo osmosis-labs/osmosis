@@ -8,7 +8,7 @@ import (
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
-func (k Keeper) applyJoinPoolStateChange(ctx sdk.Context, pool types.CFMMPoolI, joiner sdk.AccAddress, numShares sdk.Int, joinCoins sdk.Coins) error {
+func (k Keeper) applyJoinPoolStateChange(ctx sdk.Context, pool swaproutertypes.PoolI, joiner sdk.AccAddress, numShares sdk.Int, joinCoins sdk.Coins) error {
 	err := k.bankKeeper.SendCoins(ctx, joiner, pool.GetAddress(), joinCoins)
 	if err != nil {
 		return err
