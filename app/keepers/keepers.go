@@ -68,6 +68,8 @@ import (
 	poolincentives "github.com/osmosis-labs/osmosis/v13/x/pool-incentives"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
+	protorevkeeper "github.com/osmosis-labs/osmosis/v13/x/protorev/keeper"
+	protorevtypes "github.com/osmosis-labs/osmosis/v13/x/protorev/types"
 	"github.com/osmosis-labs/osmosis/v13/x/superfluid"
 	superfluidkeeper "github.com/osmosis-labs/osmosis/v13/x/superfluid/keeper"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
