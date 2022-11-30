@@ -20,9 +20,9 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 	}
 
 	tests := []struct {
-		name      string
-		param     param
-		expectErr string
+		name        string
+		param       param
+		expectedErr error
 	}{
 		{
 			name: "Proper swap usdc > eth",
@@ -32,9 +32,9 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			// expectedTokenIn:  42000000.0000 rounded up https://www.wolframalpha.com/input?i=1517818840.967515822610790519+*+%2870.738349405152439867+-+70.710678118654752440%29
 			// expectedTokenOut: 8396.714105 rounded down https://www.wolframalpha.com/input?i=%281517818840.967515822610790519+*+%2870.738349405152439867+-+70.710678118654752440+%29%29+%2F+%2870.710678118654752440+*+70.738349405152439867%29
 			param: param{
-				tokenIn:           sdk.NewCoin("usdc", sdk.NewInt(42000000)),
-				tokenOutDenom:     "eth",
-				tokenOutMinAmount: sdk.NewInt(1),
+				tokenIn:           sdk.NewCoin(USDC, sdk.NewInt(42000000)),
+				tokenOutDenom:     ETH,
+				tokenOutMinAmount: types.LowerPriceLimit.RoundInt(),
 				expectedTokenOut:  sdk.NewInt(8396),
 			},
 		},
@@ -47,47 +47,47 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			// expectedTokenOut: 66808387.149 rounded down https://www.wolframalpha.com/input?i=1517818840.967515822610790519+*+%2870.710678118654752440+-+70.666662070529219856%29
 			// expectedTick: 	 85163.7 rounded down https://www.wolframalpha.com/input?i2d=true&i=Log%5B1.0001%2C4993.777128190373086350%5D
 			param: param{
-				tokenIn:           sdk.NewCoin("eth", sdk.NewInt(13370)),
-				tokenOutDenom:     "usdc",
-				tokenOutMinAmount: sdk.NewInt(1),
+				tokenIn:           sdk.NewCoin(ETH, sdk.NewInt(13370)),
+				tokenOutDenom:     USDC,
+				tokenOutMinAmount: types.LowerPriceLimit.RoundInt(),
 				expectedTokenOut:  sdk.NewInt(66808387),
 			},
 		},
 		{
 			name: "out is lesser than min amount",
 			param: param{
-				tokenIn:           sdk.NewCoin("usdc", sdk.NewInt(42000000)),
-				tokenOutDenom:     "eth",
+				tokenIn:           sdk.NewCoin(USDC, sdk.NewInt(42000000)),
+				tokenOutDenom:     ETH,
 				tokenOutMinAmount: sdk.NewInt(8397),
 			},
-			expectErr: "token is lesser than min amount",
+			expectedErr: types.AmountLessThanMinError{TokenAmount: sdk.NewInt(8396), TokenMin: sdk.NewInt(8397)},
 		},
 		{
 			name: "in and out denom are same",
 			param: param{
-				tokenIn:           sdk.NewCoin("eth", sdk.NewInt(13370)),
-				tokenOutDenom:     "eth",
-				tokenOutMinAmount: sdk.NewInt(1),
+				tokenIn:           sdk.NewCoin(ETH, sdk.NewInt(13370)),
+				tokenOutDenom:     ETH,
+				tokenOutMinAmount: types.LowerPriceLimit.RoundInt(),
 			},
-			expectErr: "cannot trade same denomination in and out",
+			expectedErr: types.DenomDuplicatedError{TokenInDenom: ETH, TokenOutDenom: ETH},
 		},
 		{
 			name: "unknown in denom",
 			param: param{
 				tokenIn:           sdk.NewCoin("etha", sdk.NewInt(13370)),
-				tokenOutDenom:     "eth",
-				tokenOutMinAmount: sdk.NewInt(1),
+				tokenOutDenom:     ETH,
+				tokenOutMinAmount: types.LowerPriceLimit.RoundInt(),
 			},
-			expectErr: "does not match any asset in pool",
+			expectedErr: types.TokenInDenomNotInPoolError{TokenInDenom: "etha"},
 		},
 		{
 			name: "unknown out denom",
 			param: param{
-				tokenIn:           sdk.NewCoin("eth", sdk.NewInt(13370)),
+				tokenIn:           sdk.NewCoin(ETH, sdk.NewInt(13370)),
 				tokenOutDenom:     "etha",
-				tokenOutMinAmount: sdk.NewInt(1),
+				tokenOutMinAmount: types.LowerPriceLimit.RoundInt(),
 			},
-			expectErr: "does not match any asset in pool",
+			expectedErr: types.TokenOutDenomNotInPoolError{TokenOutDenom: "etha"},
 		},
 	}
 
@@ -113,9 +113,9 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 
 			// Execute the swap directed in the test case
 			tokenOutAmount, err := s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool.(swaproutertypes.PoolI), test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, DefaultZeroSwapFee)
-
-			if test.expectErr != "" {
-				s.Require().ErrorContains(err, test.expectErr)
+			if test.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, test.expectedErr.Error())
 			} else {
 				s.Require().NoError(err)
 				s.Require().Equal(test.param.expectedTokenOut.String(), tokenOutAmount.String())
@@ -127,7 +127,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 				s.Require().Greater(gasConsumedForSwap, uint64(cltypes.ConcentratedGasFeeForSwap))
 
 				// Assert events
-				s.AssertEventEmitted(s.Ctx, cltypes.TypeEvtTokenSwapped, 1)
+				s.AssertEventEmitted(s.Ctx, swaproutertypes.TypeEvtTokenSwapped, 1)
 
 				// Retrieve pool again post swap
 				pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
@@ -137,14 +137,12 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 
 				// Ratio of the token out should be between the before spot price and after spot price.
 				tradeAvgPrice := tokenOutAmount.ToDec().Quo(test.param.tokenIn.Amount.ToDec())
-				if !zeroForOne {
-					tradeAvgPrice = sdk.OneDec().Quo(tradeAvgPrice)
-				}
 
 				if zeroForOne {
 					s.Require().True(tradeAvgPrice.LT(spotPriceBefore))
 					s.Require().True(tradeAvgPrice.GT(spotPriceAfter))
 				} else {
+					tradeAvgPrice = sdk.OneDec().Quo(tradeAvgPrice)
 					s.Require().True(tradeAvgPrice.GT(spotPriceBefore))
 					s.Require().True(tradeAvgPrice.LT(spotPriceAfter))
 				}
@@ -163,9 +161,9 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 	}
 
 	tests := []struct {
-		name      string
-		param     param
-		expectErr string
+		name        string
+		param       param
+		expectedErr error
 	}{
 		{
 			name: "Proper swap eth > usdc",
@@ -175,8 +173,8 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			// expectedTokenIn:  42000000.0000 rounded up https://www.wolframalpha.com/input?i=1517818840.967515822610790519+*+%2870.738349405152439867+-+70.710678118654752440%29
 			// expectedTokenOut: 8396.714105 rounded down https://www.wolframalpha.com/input?i=%281517818840.967515822610790519+*+%2870.738349405152439867+-+70.710678118654752440+%29%29+%2F+%2870.710678118654752440+*+70.738349405152439867%29
 			param: param{
-				tokenOut:         sdk.NewCoin("usdc", sdk.NewInt(42000000)),
-				tokenInDenom:     "eth",
+				tokenOut:         sdk.NewCoin(USDC, sdk.NewInt(42000000)),
+				tokenInDenom:     ETH,
 				tokenInMaxAmount: types.UpperPriceLimit.RoundInt(),
 				expectedTokenIn:  sdk.NewInt(8396),
 			},
@@ -190,8 +188,8 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			// expectedTokenOut: 66808387.149 rounded down https://www.wolframalpha.com/input?i=1517818840.967515822610790519+*+%2870.710678118654752440+-+70.666662070529219856%29
 			// expectedTick: 	 85163.7 rounded down https://www.wolframalpha.com/input?i2d=true&i=Log%5B1.0001%2C4993.777128190373086350%5D
 			param: param{
-				tokenOut:         sdk.NewCoin("eth", sdk.NewInt(13370)),
-				tokenInDenom:     "usdc",
+				tokenOut:         sdk.NewCoin(ETH, sdk.NewInt(13370)),
+				tokenInDenom:     USDC,
 				tokenInMaxAmount: types.UpperPriceLimit.RoundInt(),
 				expectedTokenIn:  sdk.NewInt(66808387),
 			},
@@ -199,38 +197,38 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 		{
 			name: "out is more than max amount",
 			param: param{
-				tokenOut:         sdk.NewCoin("usdc", sdk.NewInt(42000000)),
-				tokenInDenom:     "eth",
+				tokenOut:         sdk.NewCoin(USDC, sdk.NewInt(42000000)),
+				tokenInDenom:     ETH,
 				tokenInMaxAmount: types.LowerPriceLimit.RoundInt(),
 			},
-			expectErr: "token is lesser than min amount",
+			expectedErr: types.AmountGreaterThanMaxError{TokenAmount: sdk.NewInt(8396), TokenMax: types.LowerPriceLimit.RoundInt()},
 		},
 		{
 			name: "in and out denom are same",
 			param: param{
-				tokenOut:         sdk.NewCoin("eth", sdk.NewInt(13370)),
-				tokenInDenom:     "eth",
+				tokenOut:         sdk.NewCoin(ETH, sdk.NewInt(13370)),
+				tokenInDenom:     ETH,
 				tokenInMaxAmount: types.UpperPriceLimit.RoundInt(),
 			},
-			expectErr: "cannot trade same denomination in and out",
-		},
-		{
-			name: "unknown in denom",
-			param: param{
-				tokenOut:         sdk.NewCoin("etha", sdk.NewInt(13370)),
-				tokenInDenom:     "eth",
-				tokenInMaxAmount: types.UpperPriceLimit.RoundInt(),
-			},
-			expectErr: "does not match any asset in pool",
+			expectedErr: types.DenomDuplicatedError{TokenInDenom: ETH, TokenOutDenom: ETH},
 		},
 		{
 			name: "unknown out denom",
 			param: param{
-				tokenOut:         sdk.NewCoin("eth", sdk.NewInt(13370)),
+				tokenOut:         sdk.NewCoin("etha", sdk.NewInt(13370)),
+				tokenInDenom:     ETH,
+				tokenInMaxAmount: types.UpperPriceLimit.RoundInt(),
+			},
+			expectedErr: types.TokenOutDenomNotInPoolError{TokenOutDenom: "etha"},
+		},
+		{
+			name: "unknown in denom",
+			param: param{
+				tokenOut:         sdk.NewCoin(ETH, sdk.NewInt(13370)),
 				tokenInDenom:     "etha",
 				tokenInMaxAmount: types.UpperPriceLimit.RoundInt(),
 			},
-			expectErr: "does not match any asset in pool",
+			expectedErr: types.TokenInDenomNotInPoolError{TokenInDenom: "etha"},
 		},
 	}
 
@@ -257,8 +255,9 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			// Execute the swap directed in the test case
 			tokenIn, err := s.App.ConcentratedLiquidityKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool.(swaproutertypes.PoolI), test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut, DefaultZeroSwapFee)
 
-			if test.expectErr != "" {
-				s.Require().ErrorContains(err, test.expectErr)
+			if test.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, test.expectedErr.Error())
 			} else {
 				s.Require().NoError(err)
 				s.Require().Equal(test.param.expectedTokenIn.String(), tokenIn.String())
@@ -269,7 +268,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 				s.Require().Greater(gasConsumedForSwap, uint64(cltypes.ConcentratedGasFeeForSwap))
 
 				// Assert events
-				s.AssertEventEmitted(s.Ctx, cltypes.TypeEvtTokenSwapped, 1)
+				s.AssertEventEmitted(s.Ctx, swaproutertypes.TypeEvtTokenSwapped, 1)
 
 				// Retrieve pool again post swap
 				pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
@@ -279,14 +278,12 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 
 				// Ratio of the token out should be between the before spot price and after spot price.
 				tradeAvgPrice := tokenIn.ToDec().Quo(test.param.tokenOut.Amount.ToDec())
-				if !zeroForOne {
-					tradeAvgPrice = sdk.OneDec().Quo(tradeAvgPrice)
-				}
 
 				if zeroForOne {
 					s.Require().True(tradeAvgPrice.LT(spotPriceBefore))
 					s.Require().True(tradeAvgPrice.GT(spotPriceAfter))
 				} else {
+					tradeAvgPrice = sdk.OneDec().Quo(tradeAvgPrice)
 					s.Require().True(tradeAvgPrice.GT(spotPriceBefore))
 					s.Require().True(tradeAvgPrice.LT(spotPriceAfter))
 				}

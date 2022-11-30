@@ -1,7 +1,6 @@
 package concentrated_liquidity
 
 import (
-	"errors"
 	fmt "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -63,7 +62,7 @@ func (k Keeper) SwapExactAmountIn(
 	swapFee sdk.Dec,
 ) (tokenOutAmount sdk.Int, err error) {
 	if tokenIn.Denom == tokenOutDenom {
-		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
+		return sdk.Int{}, types.DenomDuplicatedError{TokenInDenom: tokenIn.Denom, TokenOutDenom: tokenOutDenom}
 	}
 
 	// type cast PoolI to ConcentratedPoolExtension
@@ -94,7 +93,7 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, fmt.Errorf("token amount must be positive: got %v", tokenOutAmount)
 	}
 	if tokenOutAmount.LT(tokenOutMinAmount) {
-		return sdk.Int{}, fmt.Errorf("%s token is lesser than min amount", tokenOutDenom)
+		return sdk.Int{}, types.AmountLessThanMinError{TokenAmount: tokenOutAmount, TokenMin: tokenOutMinAmount}
 	}
 
 	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
@@ -116,7 +115,7 @@ func (k Keeper) SwapExactAmountOut(
 	swapFee sdk.Dec,
 ) (tokenInAmount sdk.Int, err error) {
 	if tokenOut.Denom == tokenInDenom {
-		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
+		return sdk.Int{}, types.DenomDuplicatedError{TokenInDenom: tokenInDenom, TokenOutDenom: tokenOut.Denom}
 	}
 
 	// type cast PoolI to ConcentratedPoolExtension
@@ -147,7 +146,7 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, fmt.Errorf("token amount must be positive: got %v", tokenInAmount)
 	}
 	if tokenInAmount.GT(tokenInMaxAmount) {
-		return sdk.Int{}, fmt.Errorf("%s token is lesser than min amount", tokenInDenom)
+		return sdk.Int{}, types.AmountGreaterThanMaxError{TokenAmount: tokenInAmount, TokenMax: tokenInMaxAmount}
 	}
 
 	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
@@ -277,15 +276,15 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 	}
 	// check that the specified tokenIn matches one of the assets in the specified pool
 	if tokenInMin.Denom != asset0 && tokenInMin.Denom != asset1 {
-		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("tokenIn (%s) does not match any asset in pool", tokenInMin.Denom)
+		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, types.TokenInDenomNotInPoolError{TokenInDenom: tokenInMin.Denom}
 	}
 	// check that the specified tokenOut matches one of the assets in the specified pool
 	if tokenOutDenom != asset0 && tokenOutDenom != asset1 {
-		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("tokenOutDenom (%s) does not match any asset in pool", tokenOutDenom)
+		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, types.TokenOutDenomNotInPoolError{TokenOutDenom: tokenOutDenom}
 	}
 	// check that token in and token out are different denominations
 	if tokenInMin.Denom == tokenOutDenom {
-		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("tokenIn (%s) cannot be the same as tokenOut (%s)", tokenInMin.Denom, tokenOutDenom)
+		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, types.DenomDuplicatedError{TokenInDenom: tokenInMin.Denom, TokenOutDenom: tokenOutDenom}
 	}
 
 	// initialize swap state with the following parameters:
@@ -423,15 +422,15 @@ func (k Keeper) calcInAmtGivenOut(
 	}
 	// check that the specified tokenOut matches one of the assets in the specified pool
 	if desiredTokenOut.Denom != asset0 && desiredTokenOut.Denom != asset1 {
-		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("tokenOut (%s) does not match any asset in pool", desiredTokenOut.Denom)
+		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, types.TokenOutDenomNotInPoolError{TokenOutDenom: desiredTokenOut.Denom}
 	}
 	// check that the specified tokenIn matches one of the assets in the specified pool
 	if tokenInDenom != asset0 && tokenInDenom != asset1 {
-		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("tokenInDenom (%s) does not match any asset in pool", tokenInDenom)
+		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, types.TokenInDenomNotInPoolError{TokenInDenom: tokenInDenom}
 	}
 	// check that token in and token out are different denominations
 	if desiredTokenOut.Denom == tokenInDenom {
-		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("tokenOut (%s) cannot be the same as tokenIn (%s)", desiredTokenOut.Denom, tokenInDenom)
+		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, types.DenomDuplicatedError{TokenInDenom: tokenInDenom, TokenOutDenom: desiredTokenOut.Denom}
 	}
 
 	// initialize swap state with the following parameters:

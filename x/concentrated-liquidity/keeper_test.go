@@ -20,9 +20,11 @@ var (
 	DefaultZeroSwapFee      = sdk.ZeroDec()
 	ETH                     = "eth"
 	DefaultAmt0             = sdk.NewInt(1000000)
+	DefaultAmt0Expected     = sdk.NewInt(998587)
 	USDC                    = "usdc"
 	DefaultAmt1             = sdk.NewInt(5000000000)
-	DefaultLiquidityAmt     = sdk.NewDec(50000000000)
+	DefaultAmt1Expected     = sdk.NewInt(5000000000)
+	DefaultLiquidityAmt     = sdk.MustNewDecFromStr("1517818840.967515822610790519")
 )
 
 type KeeperTestSuite struct {
