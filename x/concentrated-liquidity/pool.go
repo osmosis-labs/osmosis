@@ -44,18 +44,6 @@ func (k Keeper) poolExists(ctx sdk.Context, poolId uint64) bool {
 }
 
 // TODO: spec and test
-func (k Keeper) poolExists(ctx sdk.Context, poolId uint64) bool {
-	store := ctx.KVStore(k.storeKey)
-	pool := model.Pool{}
-	key := types.KeyPool(poolId)
-	found, err := osmoutils.GetIfFound(store, key, &pool)
-	if err != nil {
-		panic(err)
-	}
-	return found
-}
-
-// TODO: spec and test
 func (k Keeper) setPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) error {
 	poolModel, ok := pool.(*model.Pool)
 	if !ok {
