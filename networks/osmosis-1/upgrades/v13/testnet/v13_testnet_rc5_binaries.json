@@ -1,0 +1,6 @@
+{
+    "binaries": {
+        "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v13.0.0-rc5-testnet/osmosisd-13.0.0-rc5-testnet-linux-amd64?checksum=sha256:ef9765fc90baeb38448f24153c301116ff11b07d544a8b867cda8148796f163f",
+        "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v13.0.0-rc5-testnet/osmosisd-13.0.0-rc5-testnet-linux-arm64?checksum=sha256:a65e6842311fa9be0340fc6c75db9050df27f2149eef82b6a9aa50eaa23e02fb"
+    }
+}
