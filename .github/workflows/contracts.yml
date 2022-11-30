@@ -70,6 +70,13 @@ jobs:
           retention-days: 1
         if: env.GIT_DIFF
 
+      - name: 'Upload Cargo.lock artifact'
+        uses: actions/upload-artifact@v3
+        with:
+          name: Cargo.lock
+          path: ${{ matrix.contract.workdir }}Cargo.lock
+          retention-days: 1
+
       - name: Check Test Data
         working-directory: ${{ matrix.contract.workdir }}
         if: env.GIT_DIFF
