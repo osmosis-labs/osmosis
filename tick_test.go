@@ -121,3 +121,207 @@ func (s *KeeperTestSuite) TestNextInitializedTick() {
 		})
 	})
 }
+
+func (s *KeeperTestSuite) TestInitOrUpdateTick() {
+	const validPoolId = 1
+	type param struct {
+		poolId      uint64
+		tickIndex   int64
+		liquidityIn sdk.Dec
+		upper       bool
+	}
+
+	tests := []struct {
+		name                   string
+		param                  param
+		tickExists             bool
+		expectedLiquidityNet   sdk.Dec
+		expectedLiquidityGross sdk.Dec
+		expectedErr            error
+	}{
+		{
+			name: "Init tick 50 with 50000000000 liquidity, upper",
+			param: param{
+				poolId:      validPoolId,
+				tickIndex:   50,
+				liquidityIn: DefaultLiquidityAmt,
+				upper:       true,
+			},
+			tickExists:             false,
+			expectedLiquidityNet:   sdk.NewDec(-50000000000),
+			expectedLiquidityGross: sdk.NewDec(50000000000),
+		},
+		{
+			name: "Init tick 50 with 50000000000 liquidity, lower",
+			param: param{
+				poolId:      validPoolId,
+				tickIndex:   50,
+				liquidityIn: DefaultLiquidityAmt,
+				upper:       false,
+			},
+			tickExists:             false,
+			expectedLiquidityNet:   sdk.NewDec(50000000000),
+			expectedLiquidityGross: sdk.NewDec(50000000000),
+		},
+		{
+			name: "Update tick 50 that already contains 50000000000 liquidity with 50000000000 more liquidity, upper",
+			param: param{
+				poolId:      validPoolId,
+				tickIndex:   50,
+				liquidityIn: DefaultLiquidityAmt,
+				upper:       true,
+			},
+			tickExists:             true,
+			expectedLiquidityNet:   sdk.NewDec(-100000000000),
+			expectedLiquidityGross: sdk.NewDec(100000000000),
+		},
+		{
+			name: "Update tick 50 that already contains 50000000000 liquidity with 50000000000 more liquidity, lower",
+			param: param{
+				poolId:      validPoolId,
+				tickIndex:   50,
+				liquidityIn: DefaultLiquidityAmt,
+				upper:       false,
+			},
+			tickExists:             true,
+			expectedLiquidityNet:   sdk.NewDec(100000000000),
+			expectedLiquidityGross: sdk.NewDec(100000000000),
+		},
+		{
+			name: "Init tick -50 with 50000000000 liquidity, upper",
+			param: param{
+				poolId:      validPoolId,
+				tickIndex:   -50,
+				liquidityIn: DefaultLiquidityAmt,
+				upper:       true,
+			},
+			tickExists:             false,
+			expectedLiquidityNet:   sdk.NewDec(-50000000000),
+			expectedLiquidityGross: sdk.NewDec(50000000000),
+		},
+		{
+			name: "Init tick -50 with 50000000000 liquidity, lower",
+			param: param{
+				poolId:      validPoolId,
+				tickIndex:   -50,
+				liquidityIn: DefaultLiquidityAmt,
+				upper:       false,
+			},
+			tickExists:             false,
+			expectedLiquidityNet:   sdk.NewDec(50000000000),
+			expectedLiquidityGross: sdk.NewDec(50000000000),
+		},
+		{
+			name: "Update tick -50 that already contains 50000000000 liquidity with 50000000000 more liquidity, upper",
+			param: param{
+				poolId:      validPoolId,
+				tickIndex:   -50,
+				liquidityIn: DefaultLiquidityAmt,
+				upper:       true,
+			},
+			tickExists:             true,
+			expectedLiquidityNet:   sdk.NewDec(-100000000000),
+			expectedLiquidityGross: sdk.NewDec(100000000000),
+		},
+		{
+			name: "Update tick -50 that already contains 50000000000 liquidity with 50000000000 more liquidity, lower",
+			param: param{
+				poolId:      validPoolId,
+				tickIndex:   -50,
+				liquidityIn: DefaultLiquidityAmt,
+				upper:       false,
+			},
+			tickExists:             true,
+			expectedLiquidityNet:   sdk.NewDec(100000000000),
+			expectedLiquidityGross: sdk.NewDec(100000000000),
+		},
+		{
+			name: "Init tick 50 with -50000000000 liquidity, upper",
+			param: param{
+				poolId:      validPoolId,
+				tickIndex:   50,
+				liquidityIn: DefaultLiquidityAmt.Neg(),
+				upper:       true,
+			},
+			tickExists:             false,
+			expectedLiquidityNet:   sdk.NewDec(50000000000),
+			expectedLiquidityGross: sdk.NewDec(-50000000000),
+		},
+		{
+			name: "Update tick 50 that already contains 50000000000 liquidity with -50000000000 liquidity, upper",
+			param: param{
+				poolId:      validPoolId,
+				tickIndex:   50,
+				liquidityIn: DefaultLiquidityAmt.Neg(),
+				upper:       true,
+			},
+			tickExists:             true,
+			expectedLiquidityNet:   sdk.ZeroDec(),
+			expectedLiquidityGross: sdk.ZeroDec(),
+		},
+		{
+			name: "Update tick -50 that already contains 50000000000 liquidity with -50000000000 liquidity, lower",
+			param: param{
+				poolId:      validPoolId,
+				tickIndex:   -50,
+				liquidityIn: DefaultLiquidityAmt.Neg(),
+				upper:       false,
+			},
+			tickExists:             true,
+			expectedLiquidityNet:   sdk.ZeroDec(),
+			expectedLiquidityGross: sdk.ZeroDec(),
+		},
+		{
+			name: "Init tick for non-existing pool",
+			param: param{
+				poolId:      2,
+				tickIndex:   50,
+				liquidityIn: DefaultLiquidityAmt,
+				upper:       true,
+			},
+			tickExists:  false,
+			expectedErr: types.PoolDoesNotExistError{PoolId: 2},
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			// Init suite for each test.
+			s.Setup()
+
+			// Create a CL pool with poolId 1
+			_, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, ETH, USDC, DefaultCurrSqrtPrice, sdk.NewInt(DefaultCurrTick))
+			s.Require().NoError(err)
+
+			// If tickExists set, initialize the specified tick with defaultLiquidityAmt
+			preexistingLiquidity := sdk.ZeroDec()
+			if test.tickExists {
+				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, test.param.poolId, test.param.tickIndex, DefaultLiquidityAmt, test.param.upper)
+				s.Require().NoError(err)
+				preexistingLiquidity = DefaultLiquidityAmt
+			}
+
+			// Get the tick info for poolId 1
+			tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, test.param.tickIndex)
+
+			// Ensure tick state contains any preexistingLiquidity (zero otherwise)
+			s.Require().Equal(preexistingLiquidity, tickInfo.LiquidityGross)
+
+			// Initialize or update the tick according to the test case
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, test.param.poolId, test.param.tickIndex, test.param.liquidityIn, test.param.upper)
+			if test.expectedErr != nil {
+				s.Require().ErrorIs(err, test.expectedErr)
+				return
+			}
+			s.Require().NoError(err)
+
+			// Get the tick info for poolId 1 again
+			tickInfo, err = s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, test.param.tickIndex)
+			s.Require().NoError(err)
+
+			// Check that the initialized or updated tick matches our expectation
+			s.Require().Equal(test.expectedLiquidityNet, tickInfo.LiquidityNet)
+			s.Require().Equal(test.expectedLiquidityGross, tickInfo.LiquidityGross)
+		})
+	}
+}

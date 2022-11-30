@@ -9,6 +9,22 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
 )
 
+var (
+	DefaultLowerPrice       = sdk.NewDec(4545)
+	DefaultLowerTick        = int64(84222)
+	DefaultUpperPrice       = sdk.NewDec(5500)
+	DefaultUpperTick        = int64(86129)
+	DefaultCurrPrice        = sdk.NewDec(5000)
+	DefaultCurrTick         = int64(85176)
+	DefaultCurrSqrtPrice, _ = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
+	DefaultZeroSwapFee      = sdk.ZeroDec()
+	ETH                     = "eth"
+	DefaultAmt0             = sdk.NewInt(1000000)
+	USDC                    = "usdc"
+	DefaultAmt1             = sdk.NewInt(5000000000)
+	DefaultLiquidityAmt     = sdk.NewDec(50000000000)
+)
+
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
 }
