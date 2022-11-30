@@ -140,6 +140,143 @@ func (q Querier) PoolType(ctx context.Context, req *types.QueryPoolTypeRequest) 
 	}, err
 }
 
+<<<<<<< HEAD
+=======
+// CalcJoinPoolShares queries the amount of shares you get by providing specific amount of tokens
+func (q Querier) CalcJoinPoolShares(ctx context.Context, req *types.QueryCalcJoinPoolSharesRequest) (*types.QueryCalcJoinPoolSharesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if req.TokensIn == nil {
+		return nil, status.Error(codes.InvalidArgument, "no tokens in")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	pool, err := q.Keeper.getPoolForSwap(sdkCtx, req.PoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	numShares, newLiquidity, err := pool.CalcJoinPoolShares(sdkCtx, req.TokensIn, pool.GetSwapFee(sdkCtx))
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryCalcJoinPoolSharesResponse{
+		ShareOutAmount: numShares,
+		TokensOut:      newLiquidity,
+	}, nil
+}
+
+// PoolsWithFilter query allows to query pools with specific parameters
+func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithFilterRequest) (*types.QueryPoolsWithFilterResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	store := sdkCtx.KVStore(q.Keeper.storeKey)
+	poolStore := prefix.NewStore(store, types.KeyPrefixPools)
+
+	var response = []*codectypes.Any{}
+	pageRes, err := query.FilteredPaginate(poolStore, req.Pagination, func(_, value []byte, accumulate bool) (bool, error) {
+		pool, err := q.Keeper.UnmarshalPool(value)
+		if err != nil {
+			return false, err
+		}
+
+		poolId := pool.GetId()
+
+		// if liquidity specified in request
+		if len(req.MinLiquidity) > 0 {
+			poolLiquidity := pool.GetTotalPoolLiquidity(sdkCtx)
+
+			if !poolLiquidity.IsAllGTE(req.MinLiquidity) {
+				return false, nil
+			}
+		}
+
+		// if pool type specified in request
+		if req.PoolType != "" {
+			poolType, err := q.GetPoolType(sdkCtx, poolId)
+			if err != nil {
+				return false, types.ErrPoolNotFound
+			}
+
+			if poolType != req.PoolType {
+				return false, nil
+			}
+		}
+
+		any, err := codectypes.NewAnyWithValue(pool)
+		if err != nil {
+			return false, err
+		}
+
+		if accumulate {
+			response = append(response, any)
+		}
+
+		return true, nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryPoolsWithFilterResponse{
+		Pools:      response,
+		Pagination: pageRes,
+	}, nil
+}
+
+// CalcExitPoolCoinsFromShares queries the amount of tokens you get by exiting a specific amount of shares
+func (q Querier) CalcExitPoolCoinsFromShares(ctx context.Context, req *types.QueryCalcExitPoolCoinsFromSharesRequest) (*types.QueryCalcExitPoolCoinsFromSharesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	pool, err := q.Keeper.GetPoolAndPoke(sdkCtx, req.PoolId)
+	if err != nil {
+		return nil, types.ErrPoolNotFound
+	}
+
+	exitFee := pool.GetExitFee(sdkCtx)
+
+	totalSharesAmount := pool.GetTotalShares()
+	if req.ShareInAmount.GTE(totalSharesAmount) || req.ShareInAmount.LTE(sdk.ZeroInt()) {
+		return nil, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
+	}
+
+	exitCoins, err := pool.CalcExitPoolCoinsFromShares(sdkCtx, req.ShareInAmount, exitFee)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryCalcExitPoolCoinsFromSharesResponse{TokensOut: exitCoins}, nil
+}
+
+// CalcJoinPoolNoSwapShares returns the amount of shares you'd get if joined a pool without a swap and tokens which need to be provided
+func (q Querier) CalcJoinPoolNoSwapShares(ctx context.Context, req *types.QueryCalcJoinPoolNoSwapSharesRequest) (*types.QueryCalcJoinPoolNoSwapSharesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	pool, err := q.GetPoolAndPoke(sdkCtx, req.PoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	sharesOut, tokensJoined, err := pool.CalcJoinPoolNoSwapShares(sdkCtx, req.TokensIn, pool.GetSwapFee(sdkCtx))
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryCalcJoinPoolNoSwapSharesResponse{
+		TokensOut: tokensJoined,
+		SharesOut: sharesOut,
+	}, nil
+}
+
+>>>>>>> 1dedc28c (Add Pagination to Pool With Filter Query (#3563))
 // PoolParams queries a specified pool for its params.
 func (q Querier) PoolParams(ctx context.Context, req *types.QueryPoolParamsRequest) (*types.QueryPoolParamsResponse, error) {
 	if req == nil {

@@ -152,6 +152,28 @@ message QuerySpotPriceRequest {
   reserved "withSwapFee";
 }
 
+<<<<<<< HEAD
+=======
+//=============================== PoolsWithFilter
+
+message QueryPoolsWithFilterRequest {
+  repeated cosmos.base.v1beta1.Coin min_liquidity = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags) = "yaml:\"min_liquidity\"",
+    (gogoproto.nullable) = false
+  ];
+  string pool_type = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+message QueryPoolsWithFilterResponse {
+  repeated google.protobuf.Any pools = 1
+      [ (cosmos_proto.accepts_interface) = "PoolI" ];
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+>>>>>>> 1dedc28c (Add Pagination to Pool With Filter Query (#3563))
 // QuerySpotPriceResponse defines the gRPC response structure for a SpotPrice
 // query.
 message QuerySpotPriceResponse {
