@@ -27,7 +27,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
+	db "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/v13/app"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
@@ -92,7 +92,7 @@ func (s *KeeperTestHelper) CreateTestContext() sdk.Context {
 
 // CreateTestContextWithMultiStore creates a test context and returns it together with multi store.
 func (s *KeeperTestHelper) CreateTestContextWithMultiStore() (sdk.Context, sdk.CommitMultiStore) {
-	db := dbm.NewMemDB()
+	db := db.NewMemDB()
 	logger := log.NewNopLogger()
 
 	ms := rootmulti.NewStore(db, logger)
