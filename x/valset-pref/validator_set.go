@@ -133,7 +133,7 @@ func (k Keeper) getValAddrAndVal(ctx sdk.Context, valOperAddress string) (sdk.Va
 // IsPreferenceValid loops through the validator preferences and checks its existence and validity.
 func (k Keeper) IsPreferenceValid(ctx sdk.Context, preferences []types.ValidatorPreference) bool {
 	for _, val := range preferences {
-		_, _, err := k.getValAddrAndVal(ctx, val.ValOperAddress)
+		_, _, err := k.GetValidatorInfo(ctx, val.ValOperAddress)
 		if err != nil {
 			return false
 		}
@@ -172,6 +172,14 @@ func (k Keeper) IsValidatorSetEqual(newPreferences, existingPreferences []types.
 	}
 
 	return isEqual
+}
+
+func (k Keeper) GetValidatorInfo(ctx sdk.Context, existingValAddr string) (sdk.ValAddress, stakingtypes.Validator, error) {
+	valAddr, validator, err := k.getValAddrAndVal(ctx, existingValAddr)
+	if err != nil {
+		return nil, stakingtypes.Validator{}, err
+	}
+	return valAddr, validator, nil
 }
 
 func (k Keeper) SetupStructs(validator types.ValidatorPreference, amountFromShares sdk.Dec) (valSet, valSet) {

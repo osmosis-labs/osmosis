@@ -387,13 +387,8 @@ func (suite *KeeperTestSuite) TestRedelegateValidatorSet() {
 			// fund the account that is trying to delegate
 			suite.FundAcc(test.delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100)})
 
-			// set the creation fee
-			suite.App.ValidatorPreferenceKeeper.SetParams(suite.Ctx, types.Params{
-				ValsetCreationFee: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))),
-			})
-
 			// setup message server
-			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorPreferenceKeeper)
+			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorSetPreferenceKeeper)
 			c := sdk.WrapSDKContext(suite.Ctx)
 
 			// call the create validator set preference
