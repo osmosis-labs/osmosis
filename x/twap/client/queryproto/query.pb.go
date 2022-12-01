@@ -16,7 +16,7 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	_ "github.com/gogo/protobuf/types"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
-	types1 "github.com/osmosis-labs/osmosis/v12/x/twap/types"
+	types1 "github.com/osmosis-labs/osmosis/v13/x/twap/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -454,6 +454,7 @@ func (c *queryClient) ArithmeticTwap(ctx context.Context, in *ArithmeticTwapRequ
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *queryClient) ArithmeticTwapToNow(ctx context.Context, in *ArithmeticTwapToNowRequest, opts ...grpc.CallOption) (*ArithmeticTwapToNowResponse, error) {
 	out := new(ArithmeticTwapToNowResponse)
 	err := c.cc.Invoke(ctx, "/osmosis.twap.v1beta1.Query/ArithmeticTwapToNow", in, out, opts...)

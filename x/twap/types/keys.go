@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 )
 
 const (
@@ -36,7 +36,7 @@ var (
 	// format is just pool id | denom1 | denom2
 	// made for getting most recent key
 	mostRecentTWAPsPrefix = mostRecentTWAPsNoSeparator + KeySeparator
-	// format is time | pool id | denom1 | denom2 | time
+	// format is time | pool id | denom1 | denom2
 	// made for efficiently deleting records by time in pruning
 	HistoricalTWAPTimeIndexPrefix = historicalTWAPTimeIndexNoSeparator + KeySeparator
 	// format is pool id | denom1 | denom2 | time

@@ -11,6 +11,7 @@ Osmosis implements the following custom modules:
   * These go towards gauges defined by the `incentives` module
 * `superfluid` - Defines superfluid staking, allowing DeFi assets to have their osmo-backing be staked.
 * `tokenfactory` - Allows minting of new tokens of the form `factory/{creator address}/{subdenom}` for user-defined subdenoms. 
+* `twap` - The TWAP package is responsible for being able to serve TWAPs for every AMM pool.
 * `txfees` - Contains logic for whitelisting txfee tokens, making them easily priceable in osmo, and auto-swapping to osmo.
   * Also contains logic for custom Osmosis mempool logic, though this should perhaps relocate.
 

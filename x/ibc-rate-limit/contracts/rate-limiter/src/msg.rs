@@ -1,7 +1,12 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Addr, Uint256};
+use cosmwasm_std::Addr;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+#[cfg(test)]
+use cosmwasm_std::Uint256;
+
+use crate::packet::Packet;
 
 // PathMsg contains a channel_id and denom to represent a unique identifier within ibc-go, and a list of rate limit quotas
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -82,21 +87,17 @@ pub enum QueryMsg {
 #[cw_serde]
 pub enum SudoMsg {
     SendPacket {
-        channel_id: String,
-        denom: String,
-        channel_value: Uint256,
-        funds: Uint256,
+        packet: Packet,
+        #[cfg(test)]
+        channel_value_mock: Option<Uint256>,
     },
     RecvPacket {
-        channel_id: String,
-        denom: String,
-        channel_value: Uint256,
-        funds: Uint256,
+        packet: Packet,
+        #[cfg(test)]
+        channel_value_mock: Option<Uint256>,
     },
     UndoSend {
-        channel_id: String,
-        denom: String,
-        funds: Uint256,
+        packet: Packet,
     },
 }
 

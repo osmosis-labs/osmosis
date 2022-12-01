@@ -5,7 +5,17 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
+)
+
+type twapType bool
+
+const (
+	// arithmeticTwapType is the type of twap that is calculated by taking the arithmetic weighted average of the spot prices.
+	arithmeticTwapType twapType = true
+	// geometricTwapType is the type of twap that is calculated by taking the geometric weighted average of the spot prices.
+	// nolint: unused
+	geometricTwapType twapType = false
 )
 
 // GetArithmeticTwap returns an arithmetic time weighted average price.
@@ -21,12 +31,18 @@ import (
 // startTime must be within 48 hours of ctx.BlockTime(), if you need older TWAPs,
 // you will have to maintain the accumulator yourself.
 //
+// endTime will be set in the function ArithmeticTwap() to ctx.BlockTime() which calls GetArithmeticTwap function if:
+// * it is not provided externally
+// * it is set to current time
+//
 // This function will error if:
 // * startTime > endTime
 // * endTime in the future
 // * startTime older than 48 hours OR pool creation
 // * pool with id poolId does not exist, or does not contain quoteAssetDenom, baseAssetDenom
-//
+// * there were some computational errors during computing arithmetic twap within the time range of
+//   startRecord, endRecord - including the exact record times, which indicates that the result returned could be faulty
+
 // N.B. If there is a notable use case, the state machine could maintain more historical records, e.g. at one per hour.
 func (k Keeper) GetArithmeticTwap(
 	ctx sdk.Context,
@@ -52,7 +68,7 @@ func (k Keeper) GetArithmeticTwap(
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	return computeArithmeticTwap(startRecord, endRecord, quoteAssetDenom)
+	return computeTwap(startRecord, endRecord, quoteAssetDenom, arithmeticTwapType)
 }
 
 // GetArithmeticTwapToNow returns GetArithmeticTwap on the input, with endTime being fixed to ctx.BlockTime()
@@ -76,7 +92,7 @@ func (k Keeper) GetArithmeticTwapToNow(
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	return computeArithmeticTwap(startRecord, endRecord, quoteAssetDenom)
+	return computeTwap(startRecord, endRecord, quoteAssetDenom, arithmeticTwapType)
 }
 
 // GetBeginBlockAccumulatorRecord returns a TwapRecord struct corresponding to the state of pool `poolId`

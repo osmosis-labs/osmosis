@@ -4,8 +4,8 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v13/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
 func (s *TestSuite) TestGetArithmeticTwap_Query() {

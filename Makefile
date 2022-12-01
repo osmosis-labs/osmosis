@@ -106,12 +106,15 @@ build-reproducible-amd64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
 		--build-arg GO_VERSION=$(GO_VERSION) \
+		--build-arg GIT_VERSION=$(VERSION) \
+		--build-arg GIT_COMMIT=$(COMMIT) \
+		--build-arg RUNNER_IMAGE=alpine:3.16 \
 		--platform linux/amd64 \
-		-t osmosis-amd64 \
+		-t osmosis:local-amd64 \
 		--load \
 		-f Dockerfile .
 	$(DOCKER) rm -f osmobinary || true
-	$(DOCKER) create -ti --name osmobinary osmosis-amd64
+	$(DOCKER) create -ti --name osmobinary osmosis:local-amd64
 	$(DOCKER) cp osmobinary:/bin/osmosisd $(BUILDDIR)/osmosisd-linux-amd64
 	$(DOCKER) rm -f osmobinary
 
@@ -120,12 +123,15 @@ build-reproducible-arm64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
 		--build-arg GO_VERSION=$(GO_VERSION) \
+		--build-arg GIT_VERSION=$(VERSION) \
+		--build-arg GIT_COMMIT=$(COMMIT) \
+		--build-arg RUNNER_IMAGE=alpine:3.16 \
 		--platform linux/arm64 \
-		-t osmosis-arm64 \
+		-t osmosis:local-arm64 \
 		--load \
 		-f Dockerfile .
 	$(DOCKER) rm -f osmobinary || true
-	$(DOCKER) create -ti --name osmobinary osmosis-arm64
+	$(DOCKER) create -ti --name osmobinary osmosis:local-arm64
 	$(DOCKER) cp osmobinary:/bin/osmosisd $(BUILDDIR)/osmosisd-linux-arm64
 	$(DOCKER) rm -f osmobinary
 
@@ -261,7 +267,7 @@ test-sim-bench:
 # In that case, run `make e2e-remove-resources`
 # manually.
 # Utilizes Go cache.
-test-e2e: OSMOSIS_E2E=True e2e-setup test-e2e-ci
+test-e2e: e2e-setup test-e2e-ci
 
 # test-e2e-ci runs a full e2e test suite
 # does not do any validation about the state of the Docker environment
@@ -272,7 +278,7 @@ test-e2e-ci:
 # test-e2e-debug runs a full e2e test suite but does
 # not attempt to delete Docker resources at the end.
 test-e2e-debug: e2e-setup
-	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION) OSMOSIS_E2E_SKIP_CLEANUP=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -count=1
+	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=True OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION) OSMOSIS_E2E_SKIP_CLEANUP=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -count=1
 
 # test-e2e-short runs the e2e test with only short tests.
 # Does not delete any of the containers after running.
@@ -296,10 +302,10 @@ docker-build-debug:
 	@DOCKER_BUILDKIT=1 docker tag osmosis:${COMMIT} osmosis:debug
 
 docker-build-e2e-init-chain:
-	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain -f tests/e2e/initialization/init.Dockerfile .
+	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain --platform=linux/x86_64 -f tests/e2e/initialization/init.Dockerfile .
 
 docker-build-e2e-init-node:
-	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-node:debug --build-arg E2E_SCRIPT_NAME=node -f tests/e2e/initialization/init.Dockerfile .
+	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-node:debug --build-arg E2E_SCRIPT_NAME=node --platform=linux/x86_64 -f tests/e2e/initialization/init.Dockerfile .
 
 e2e-setup: e2e-check-image-sha e2e-remove-resources
 	@echo Finished e2e environment setup, ready to start the test
@@ -316,9 +322,9 @@ e2e-remove-resources:
 ###                                Docker                                  ###
 ###############################################################################
 
-RUNNER_BASE_IMAGE_DISTROLESS := gcr.io/distroless/static
+RUNNER_BASE_IMAGE_DISTROLESS := gcr.io/distroless/static-debian11
 RUNNER_BASE_IMAGE_ALPINE := alpine:3.16
-RUNNER_BASE_IMAGE_NONROOT := gcr.io/distroless/static:nonroot
+RUNNER_BASE_IMAGE_NONROOT := gcr.io/distroless/static-debian11:nonroot
 
 docker-build:
 	@DOCKER_BUILDKIT=1 docker build \
@@ -399,7 +405,7 @@ localnet-stop:
 	@STATE="" docker-compose -f tests/localosmosis/docker-compose.yml down
 
 localnet-clean:
-	@rm -rfI $(HOME)/.osmosisd/
+	@rm -rfI $(HOME)/.osmosisd-local/
 
 localnet-state-export-init: localnet-state-export-clean localnet-state-export-build 
 

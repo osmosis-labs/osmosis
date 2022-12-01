@@ -29,12 +29,12 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v12/app"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v12/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v12/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v13/app"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v13/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
 )
 
 type KeeperTestHelper struct {
@@ -222,6 +222,17 @@ func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, prop
 func (s *KeeperTestHelper) EndBlock() {
 	reqEndBlock := abci.RequestEndBlock{Height: s.Ctx.BlockHeight()}
 	s.App.EndBlocker(s.Ctx, reqEndBlock)
+}
+
+func (s *KeeperTestHelper) RunMsg(msg sdk.Msg) (*sdk.Result, error) {
+	// cursed that we have to copy this internal logic from SDK
+	router := s.App.GetBaseApp().MsgServiceRouter()
+	if handler := router.Handler(msg); handler != nil {
+		// ADR 031 request type routing
+		return handler(s.Ctx, msg)
+	}
+	s.FailNow("msg %v could not be ran", msg)
+	return nil, fmt.Errorf("msg %v could not be ran", msg)
 }
 
 // AllocateRewardsToValidator allocates reward tokens to a distribution module then allocates rewards to the validator address.
