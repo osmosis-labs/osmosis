@@ -28,8 +28,7 @@ service Msg {
   // RedelegateValidatorSet takes the existing validator set and redelegates to
   // a new set.
   rpc RedelegateValidatorSet(MsgRedelegateValidatorSet)
-  returns (MsgRedelegateValidatorSetResponse);
-
+      returns (MsgRedelegateValidatorSetResponse);
 
   // WithdrawDelegationRewards allows users to claim rewards from the
   // validator-set.
