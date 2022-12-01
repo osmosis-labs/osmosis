@@ -3,8 +3,9 @@ package ibc_hooks_test
 import (
 	"encoding/json"
 	"fmt"
-	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 	"testing"
+
+	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 
