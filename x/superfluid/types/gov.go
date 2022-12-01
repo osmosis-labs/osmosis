@@ -12,6 +12,7 @@ import (
 const (
 	ProposalTypeSetSuperfluidAssets    = "SetSuperfluidAssets"
 	ProposalTypeRemoveSuperfluidAssets = "RemoveSuperfluidAssets"
+	ProposalTypeUpdateUnpoolWhitelist  = "UpdateUnpoolWhitelist"
 )
 
 func init() {
@@ -19,11 +20,14 @@ func init() {
 	govtypes.RegisterProposalTypeCodec(&SetSuperfluidAssetsProposal{}, "osmosis/SetSuperfluidAssetsProposal")
 	govtypes.RegisterProposalType(ProposalTypeRemoveSuperfluidAssets)
 	govtypes.RegisterProposalTypeCodec(&RemoveSuperfluidAssetsProposal{}, "osmosis/RemoveSuperfluidAssetsProposal")
+	govtypes.RegisterProposalType(ProposalTypeUpdateUnpoolWhitelist)
+	govtypes.RegisterProposalTypeCodec(&UpdateUnpoolWhiteListProposal{}, "osmosis/UpdateUnpoolWhiteListProposal")
 }
 
 var (
 	_ govtypes.Content = &SetSuperfluidAssetsProposal{}
 	_ govtypes.Content = &RemoveSuperfluidAssetsProposal{}
+	_ govtypes.Content = &UpdateUnpoolWhiteListProposal{}
 )
 
 func NewSetSuperfluidAssetsProposal(title, description string, assets []SuperfluidAsset) govtypes.Content {
@@ -107,4 +111,47 @@ func (p RemoveSuperfluidAssetsProposal) String() string {
   SuperfluidAssetDenoms:     %+v
 `, p.Title, p.Description, p.SuperfluidAssetDenoms))
 	return b.String()
+}
+
+func NewUpdateUnpoolWhitelistProposal(title, description string, poolIds []uint64, isOverwrite bool) govtypes.Content {
+	return &UpdateUnpoolWhiteListProposal{
+		Title:       title,
+		Description: description,
+		Ids:         poolIds,
+		IsOverwrite: isOverwrite,
+	}
+}
+
+func (p *UpdateUnpoolWhiteListProposal) GetTitle() string { return p.Title }
+
+func (p *UpdateUnpoolWhiteListProposal) GetDescription() string { return p.Description }
+
+func (p *UpdateUnpoolWhiteListProposal) ProposalRoute() string { return RouterKey }
+
+func (p *UpdateUnpoolWhiteListProposal) ProposalType() string {
+	return ProposalTypeUpdateUnpoolWhitelist
+}
+
+func (p *UpdateUnpoolWhiteListProposal) ValidateBasic() error {
+	err := govtypes.ValidateAbstract(p)
+	if err != nil {
+		return err
+	}
+
+	for _, id := range p.Ids {
+		if id == 0 {
+			return fmt.Errorf("pool id cannot be 0")
+		}
+	}
+
+	return nil
+}
+
+func (p UpdateUnpoolWhiteListProposal) String() string {
+	return fmt.Sprintf(`Update Unpool Whitelist Assets Proposal:
+	Title:       %s
+	Description: %s
+	Pool Ids:     %+v
+	IsOverwrite:  %t
+  `, p.Title, p.Description, p.Ids, p.IsOverwrite)
 }

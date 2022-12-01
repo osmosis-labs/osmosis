@@ -239,6 +239,42 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 	}
 }
 
+func TestGetLiquidityIndexMap(t *testing.T) {
+	tests := map[string]struct {
+		poolAssets sdk.Coins
+	}{
+		"2 asset pool": {
+			twoEvenStablePoolAssets,
+		},
+		"3 asset pool": {
+			threeEvenStablePoolAssets,
+		},
+		"4 asset pool": {
+			sdk.NewCoins(
+				sdk.NewInt64Coin("asset/a", 1000000000),
+				sdk.NewInt64Coin("asset/b", 1000000000),
+				sdk.NewInt64Coin("asset/c", 1000000000),
+				sdk.NewInt64Coin("asset/d", 1000000000),
+			),
+		},
+		"5 asset pool": {
+			fiveEvenStablePoolAssets,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			pool := poolStructFromAssets(tc.poolAssets, []uint64{})
+
+			indexMap := pool.getLiquidityIndexMap()
+			require.Equal(t, len(indexMap), len(tc.poolAssets))
+			for ind := 0; ind < len(tc.poolAssets); ind++ {
+				actual_ind := indexMap[tc.poolAssets[ind].Denom]
+				require.Equal(t, actual_ind, ind)
+			}
+		})
+	}
+}
 func TestGetDescaledPoolAmts(t *testing.T) {
 	tests := map[string]struct {
 		denom          string

@@ -13,7 +13,6 @@ import (
 
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v13/x/twap/client/v2queryproto"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
@@ -61,7 +60,7 @@ $ %s q twap 1 uosmo 1667088000 1667174400
 			if err != nil {
 				return err
 			}
-			queryClient := v2queryproto.NewQueryClient(clientCtx)
+			queryClient := queryproto.NewQueryClient(clientCtx)
 			gammClient := gammtypes.NewQueryClient(clientCtx)
 			liquidity, err := gammClient.TotalPoolLiquidity(cmd.Context(), &gammtypes.QueryTotalPoolLiquidityRequest{PoolId: poolId})
 			if err != nil {
@@ -80,7 +79,7 @@ $ %s q twap 1 uosmo 1667088000 1667174400
 					poolId, baseDenom, liquidity.Liquidity[0], liquidity.Liquidity[1])
 			}
 
-			res, err := queryClient.ArithmeticTwap(cmd.Context(), &v2queryproto.ArithmeticTwapRequest{
+			res, err := queryClient.ArithmeticTwap(cmd.Context(), &queryproto.ArithmeticTwapRequest{
 				PoolId:     poolId,
 				BaseAsset:  baseDenom,
 				QuoteAsset: quoteDenom,

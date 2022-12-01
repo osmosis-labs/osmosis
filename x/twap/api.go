@@ -8,6 +8,16 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
+type twapType bool
+
+const (
+	// arithmeticTwapType is the type of twap that is calculated by taking the arithmetic weighted average of the spot prices.
+	arithmeticTwapType twapType = true
+	// geometricTwapType is the type of twap that is calculated by taking the geometric weighted average of the spot prices.
+	// nolint: unused
+	geometricTwapType twapType = false
+)
+
 // GetArithmeticTwap returns an arithmetic time weighted average price.
 // The returned twap is the time weighted average price (TWAP) of:
 // * the base asset, in units of the quote asset (1 unit of base = x units of quote)
@@ -58,7 +68,7 @@ func (k Keeper) GetArithmeticTwap(
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	return computeArithmeticTwap(startRecord, endRecord, quoteAssetDenom)
+	return computeTwap(startRecord, endRecord, quoteAssetDenom, arithmeticTwapType)
 }
 
 // GetArithmeticTwapToNow returns GetArithmeticTwap on the input, with endTime being fixed to ctx.BlockTime()
@@ -82,7 +92,7 @@ func (k Keeper) GetArithmeticTwapToNow(
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	return computeArithmeticTwap(startRecord, endRecord, quoteAssetDenom)
+	return computeTwap(startRecord, endRecord, quoteAssetDenom, arithmeticTwapType)
 }
 
 // GetBeginBlockAccumulatorRecord returns a TwapRecord struct corresponding to the state of pool `poolId`

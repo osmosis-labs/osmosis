@@ -15,7 +15,9 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
+	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/cli"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
@@ -30,7 +32,6 @@ type AppModuleBasic struct{}
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterLegacyAminoCodec(cdc)
 }
 
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
@@ -58,16 +59,15 @@ func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux 
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
-	return nil
+	return cli.NewTxCmd()
 }
 
 func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
+	return cli.GetQueryCmd()
 }
 
 // RegisterInterfaces registers interfaces and implementations of the gamm module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-	types.RegisterInterfaces(registry)
 }
 
 type AppModule struct {
@@ -133,3 +133,22 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+// **** simulation implementation ****
+// GenerateGenesisState creates a randomized GenState of the swaprouter module.
+// **** simulation implementation ****
+// GenerateGenesisState creates a randomized GenState of the gamm module.
+func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
+	swaprouterGen := types.DefaultGenesis()
+	// change the pool creation fee denom from uosmo to stake
+	// TODO: uncomment this once simulation is enabled.
+	// swaprouterGen.Params.PoolCreationFee = sdk.NewCoins(swaproutersimulation.PoolCreationFee)
+	DefaultGenJson := simState.Cdc.MustMarshalJSON(swaprouterGen)
+	simState.GenState[types.ModuleName] = DefaultGenJson
+}
+
+func (am AppModule) Actions() []simtypes.Action {
+	// TODO: uncomment this once simulation is enabled.
+	// return swaproutersimulation.DefaultActions(am.k, am.gammKeeper)
+	return nil
+}

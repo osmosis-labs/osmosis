@@ -39,6 +39,7 @@ import (
 	ibchookstypes "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
 
 	icahost "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/keeper"
@@ -53,8 +54,6 @@ import (
 
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer"
-
-	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
 
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v13/wasmbinding"
@@ -74,7 +73,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/superfluid"
 	superfluidkeeper "github.com/osmosis-labs/osmosis/v13/x/superfluid/keeper"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/keeper"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
 	"github.com/osmosis-labs/osmosis/v13/x/twap"
@@ -125,8 +123,9 @@ type AppKeepers struct {
 	WasmKeeper                   *wasm.Keeper
 	ContractKeeper               *wasmkeeper.PermissionedKeeper
 	TokenFactoryKeeper           *tokenfactorykeeper.Keeper
-	SwapRouterKeeper             *swaprouter.Keeper
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
+	// Note: DO NOT USE. This is not yet initialized
+	SwapRouterKeeper *swaprouter.Keeper
 
 	// IBC modules
 	// transfer module
@@ -264,16 +263,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GetSubspace(twaptypes.ModuleName),
 		appKeepers.GAMMKeeper)
 
-	appKeepers.SwapRouterKeeper = swaprouter.NewKeeper(
-		appKeepers.keys[swaproutertypes.StoreKey],
-		appKeepers.GetSubspace(swaproutertypes.ModuleName),
-		appKeepers.GAMMKeeper,
-		nil, // TODO: set CL keeper once it is merged.
-		appKeepers.BankKeeper,
-		appKeepers.AccountKeeper,
-		appKeepers.DistrKeeper,
-	)
-
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
 		appKeepers.keys[lockuptypes.StoreKey],
 		// TODO: Visit why this needs to be deref'd
@@ -396,7 +385,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper)).
 		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(*appKeepers.PoolIncentivesKeeper)).
 		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*appKeepers.TxFeesKeeper)).
-		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*appKeepers.SuperfluidKeeper, *appKeepers.EpochsKeeper))
+		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*appKeepers.SuperfluidKeeper, *appKeepers.EpochsKeeper, *appKeepers.GAMMKeeper))
 
 	// The gov proposal types can be individually enabled
 	if len(wasmEnabledProposals) != 0 {
@@ -534,7 +523,6 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
 	paramsKeeper.Subspace(twaptypes.ModuleName)
-	paramsKeeper.Subspace(swaproutertypes.ModuleName)
 	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
 	paramsKeeper.Subspace(ibchookstypes.ModuleName)
 
@@ -621,7 +609,6 @@ func KVStoreKeys() []string {
 		capabilitytypes.StoreKey,
 		gammtypes.StoreKey,
 		twaptypes.StoreKey,
-		swaproutertypes.StoreKey,
 		lockuptypes.StoreKey,
 		incentivestypes.StoreKey,
 		epochstypes.StoreKey,

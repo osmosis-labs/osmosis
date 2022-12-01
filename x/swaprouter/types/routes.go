@@ -5,12 +5,10 @@ import (
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 // AccountI defines the account contract that must be fulfilled when
-// creating a x/swaprouter keeper.
+// creating a x/gamm keeper.
 type AccountI interface {
 	NewAccount(sdk.Context, authtypes.AccountI) authtypes.AccountI
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
@@ -18,7 +16,7 @@ type AccountI interface {
 }
 
 // BankI defines the banking contract that must be fulfilled when
-// creating a x/swaprouter keeper.
+// creating a x/gamm keeper.
 type BankI interface {
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 	SetDenomMetaData(ctx sdk.Context, denomMetaData banktypes.Metadata)
@@ -31,29 +29,45 @@ type CommunityPoolI interface {
 
 // TODO: godoc
 type SwapI interface {
-	InitializePool(ctx sdk.Context, pool gammtypes.PoolI, creatorAddress sdk.AccAddress) error
+	InitializePool(ctx sdk.Context, pool PoolI, creatorAddress sdk.AccAddress) error
 
-	GetPool(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
+	GetPool(ctx sdk.Context, poolId uint64) (PoolI, error)
 
 	SwapExactAmountIn(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
-		pool gammtypes.PoolI,
+		pool PoolI,
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
 		tokenOutMinAmount sdk.Int,
 		swapFee sdk.Dec,
 	) (sdk.Int, error)
 
+	CalcOutAmtGivenIn(
+		ctx sdk.Context,
+		poolI PoolI,
+		tokenIn sdk.Coin,
+		tokenOutDenom string,
+		swapFee sdk.Dec,
+	) (tokenOut sdk.Coin, err error)
+
 	SwapExactAmountOut(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
-		pool gammtypes.PoolI,
+		pool PoolI,
 		tokenInDenom string,
 		tokenInMaxAmount sdk.Int,
 		tokenOut sdk.Coin,
 		swapFee sdk.Dec,
 	) (tokenInAmount sdk.Int, err error)
+
+	CalcInAmtGivenOut(
+		ctx sdk.Context,
+		poolI PoolI,
+		tokenOut sdk.Coin,
+		tokenInDenom string,
+		swapFee sdk.Dec,
+	) (tokenIn sdk.Coin, err error)
 }
 
 type PoolIncentivesKeeperI interface {

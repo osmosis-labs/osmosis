@@ -78,6 +78,13 @@ jobs:
           path: ${{ matrix.contract.workdir }}${{ matrix.contract.build }}
           retention-days: 1
 
+      - name: 'Upload Cargo.lock artifact'
+        uses: actions/upload-artifact@v3
+        with:
+          name: Cargo.lock
+          path: ${{ matrix.contract.workdir }}Cargo.lock
+          retention-days: 1
+
       - name: Check Test Data
         working-directory: ${{ matrix.contract.workdir }}
         if: ${{ matrix.contract.output != null }}

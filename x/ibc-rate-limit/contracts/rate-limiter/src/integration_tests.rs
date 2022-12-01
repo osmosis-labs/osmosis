@@ -1,6 +1,6 @@
 #![cfg(test)]
-use crate::{helpers::RateLimitingContract, msg::ExecuteMsg, test_msg_send};
-use cosmwasm_std::{Addr, Coin, Empty, Uint128};
+use crate::{helpers::RateLimitingContract, msg::ExecuteMsg, test_msg_send, ContractError};
+use cosmwasm_std::{Addr, Coin, Empty, Timestamp, Uint128, Uint256};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 
 use crate::{
@@ -109,9 +109,20 @@ fn expiration() {
         funds: 300_u32.into()
     );
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
-    let _err = app.sudo(cosmos_msg).unwrap_err();
+    let err = app.sudo(cosmos_msg).unwrap_err();
 
-    // TODO: how do we check the error type here?
+    assert_eq!(
+        err.downcast_ref::<ContractError>().unwrap(),
+        &ContractError::RateLimitExceded {
+            channel: "channel".to_string(),
+            denom: "denom".to_string(),
+            amount: Uint256::from_u128(300),
+            quota_name: "weekly".to_string(),
+            used: Uint256::from_u128(300),
+            max: Uint256::from_u128(300),
+            reset: Timestamp::from_nanos(1572402219879305533),
+        }
+    );
 
     // ... Time passes
     app.update_block(|b| {
