@@ -61,6 +61,10 @@ func (k Keeper) InitOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 	return k.initOrUpdateTick(ctx, poolId, tickIndex, liquidityIn, upper)
 }
 
+func (k Keeper) InitOrUpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec) (err error) {
+	return k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta)
+}
+
 func (k Keeper) PoolExists(ctx sdk.Context, poolId uint64) bool {
 	return k.poolExists(ctx, poolId)
 }

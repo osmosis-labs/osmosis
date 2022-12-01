@@ -77,7 +77,7 @@ type InsufficientLiquidityError struct {
 }
 
 func (e InsufficientLiquidityError) Error() string {
-	return fmt.Sprintf("insufficient liqudity requested to withdraw. Actual: (%s). Available (%s)", e.Actual, e.Available)
+	return fmt.Sprintf("insufficient liquidity requested to withdraw. Actual: (%s). Available (%s)", e.Actual, e.Available)
 }
 
 type InsufficientLiquidityCreatedError struct {
@@ -91,15 +91,15 @@ func (e InsufficientLiquidityCreatedError) Error() string {
 	if !e.IsTokenZero {
 		tokenNum = 1
 	}
-	return fmt.Sprintf("insufficient amount of token%d created. Actual: (%s). Minimum (%s)", tokenNum, e.Actual, e.Minimum)
+	return fmt.Sprintf("insufficient amount of token %d created. Actual: (%s). Minimum (%s)", tokenNum, e.Actual, e.Minimum)
 }
 
-type PoolDoesNotExistError struct {
-	PoolId uint64
+type NegativeLiquidityError struct {
+	Liquidity sdk.Dec
 }
 
-func (e PoolDoesNotExistError) Error() string {
-	return fmt.Sprintf("cannot initialize or update a tick for a non-existing pool. pool id (%d)", e.PoolId)
+func (e NegativeLiquidityError) Error() string {
+	return fmt.Sprintf("liquidity cannot be negative, got (%d)", e.Liquidity)
 }
 
 type DenomDuplicatedError struct {
