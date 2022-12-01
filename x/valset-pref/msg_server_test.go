@@ -292,3 +292,128 @@ func (suite *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestRedelegateValidatorSet() {
+	suite.SetupTest()
+
+	// setup 3 validators
+	valAddrs := suite.SetupMultipleValidators(9)
+
+	tests := []struct {
+		name           string
+		delegator      sdk.AccAddress
+		newPreferences []types.ValidatorPreference
+		coinToStake    sdk.Coin
+		expectPass     bool
+	}{
+		{
+			name:      "update existing Validator set",
+			delegator: sdk.AccAddress([]byte("addr1---------------")),
+			newPreferences: []types.ValidatorPreference{
+				{
+					ValOperAddress: valAddrs[0],
+					Weight:         sdk.NewDecWithPrec(2, 1),
+				},
+				{
+					ValOperAddress: valAddrs[1],
+					Weight:         sdk.NewDecWithPrec(2, 1),
+				},
+				{
+					ValOperAddress: valAddrs[2],
+					Weight:         sdk.NewDecWithPrec(6, 1),
+				},
+			},
+			coinToStake: sdk.NewCoin("stake", sdk.NewInt(20)),
+			expectPass:  true,
+		},
+
+		// {
+		// 	name:      "update the same validator set as above",
+		// 	delegator: sdk.AccAddress([]byte("addr1---------------")),
+		// 	newPreferences: []types.ValidatorPreference{
+		// 		{
+		// 			ValOperAddress: valAddrs[0],
+		// 			Weight:         sdk.NewDecWithPrec(5, 1),
+		// 		},
+		// 		{
+		// 			ValOperAddress: valAddrs[1],
+		// 			Weight:         sdk.NewDecWithPrec(3, 1),
+		// 		},
+		// 		{
+		// 			ValOperAddress: valAddrs[2],
+		// 			Weight:         sdk.NewDecWithPrec(2, 1),
+		// 		},
+		// 	},
+		// 	coinToStake: sdk.NewCoin("stake", sdk.NewInt(20)),
+		// 	expectPass:  true,
+		// },
+		// {
+		// 	name:      "update existing Validator with new validators",
+		// 	delegator: sdk.AccAddress([]byte("addr2---------------")),
+		// 	newPreferences: []types.ValidatorPreference{
+		// 		{
+		// 			ValOperAddress: valAddrs[3],
+		// 			Weight:         sdk.NewDecWithPrec(2, 1),
+		// 		},
+		// 		{
+		// 			ValOperAddress: valAddrs[4],
+		// 			Weight:         sdk.NewDecWithPrec(2, 1),
+		// 		},
+		// 		{
+		// 			ValOperAddress: valAddrs[5],
+		// 			Weight:         sdk.NewDecWithPrec(2, 1),
+		// 		},
+		// 		{
+		// 			ValOperAddress: valAddrs[6],
+		// 			Weight:         sdk.NewDecWithPrec(2, 1),
+		// 		},
+		// 		{
+		// 			ValOperAddress: valAddrs[7],
+		// 			Weight:         sdk.NewDecWithPrec(1, 1),
+		// 		},
+		// 		{
+		// 			ValOperAddress: valAddrs[8],
+		// 			Weight:         sdk.NewDecWithPrec(1, 1),
+		// 		},
+		// 	},
+		// 	coinToStake: sdk.NewCoin("stake", sdk.NewInt(50)),
+		// 	expectPass:  true,
+		// },
+	}
+
+	for _, test := range tests {
+		suite.Run(test.name, func() {
+
+			// fund the account that is trying to delegate
+			suite.FundAcc(test.delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100)})
+
+			// set the creation fee
+			suite.App.ValidatorPreferenceKeeper.SetParams(suite.Ctx, types.Params{
+				ValsetCreationFee: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))),
+			})
+
+			// setup message server
+			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorPreferenceKeeper)
+			c := sdk.WrapSDKContext(suite.Ctx)
+
+			// call the create validator set preference
+			preferences := suite.PrepareDelegateToValidatorSet()
+
+			// call the create validator set preference
+			_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
+			suite.Require().NoError(err)
+
+			// call the create validator set preference
+			_, err = msgServer.DelegateToValidatorSet(c, types.NewMsgDelegateToValidatorSet(test.delegator, test.coinToStake))
+			suite.Require().NoError(err)
+
+			_, err = msgServer.RedelegateValidatorSet(c, types.NewMsgRedelegateValidatorSet(test.delegator, test.newPreferences))
+			if test.expectPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+
+		})
+	}
+}
