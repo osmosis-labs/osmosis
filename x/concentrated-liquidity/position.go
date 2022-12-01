@@ -8,13 +8,12 @@ import (
 	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
-// TODO: test
+// getOrInitPosition retrieves the position for the given tick range. If it doesn't exist, it returns an initialized position with zero liquidity.
 func (k Keeper) getOrInitPosition(
 	ctx sdk.Context,
 	poolId uint64,
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
-	liquidityDelta sdk.Dec,
 ) (*model.Position, error) {
 	if !k.poolExists(ctx, poolId) {
 		return nil, types.PoolNotFoundError{PoolId: poolId}
@@ -39,7 +38,7 @@ func (k Keeper) initOrUpdatePosition(
 	lowerTick, upperTick int64,
 	liquidityDelta sdk.Dec,
 ) (err error) {
-	position, err := k.getOrInitPosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta)
+	position, err := k.getOrInitPosition(ctx, poolId, owner, lowerTick, upperTick)
 	if err != nil {
 		return err
 	}
