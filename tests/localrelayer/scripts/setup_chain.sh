@@ -69,19 +69,19 @@ edit_genesis () {
 add_genesis_accounts () {
     
     # Validator
-    echo "⚖️ Adding validator account"
+    echo "⚖️ Add validator account"
     echo $VALIDATOR_MNEMONIC | osmosisd keys add $VALIDATOR_MONIKER --recover --keyring-backend=test --home $OSMOSIS_HOME
     VALIDATOR_ACCOUNT=$(osmosisd keys show -a $VALIDATOR_MONIKER --keyring-backend test --home $OSMOSIS_HOME)
     osmosisd add-genesis-account $VALIDATOR_ACCOUNT 100000000000uosmo,100000000000uion,100000000000stake --home $OSMOSIS_HOME
     
     # Faucet
-    echo "🚰 Adding faucet account"
+    echo "🚰 Add faucet account"
     echo $FAUCET_MNEMONIC | osmosisd keys add faucet --recover --keyring-backend=test --home $OSMOSIS_HOME
     FAUCET_ACCOUNT=$(osmosisd keys show -a faucet --keyring-backend test --home $OSMOSIS_HOME)
     osmosisd add-genesis-account $FAUCET_ACCOUNT 100000000000uosmo,100000000000uion,100000000000stake --home $OSMOSIS_HOME
 
     # Relayer
-    echo "🔗 Adding relayer account"
+    echo "🔗 Add relayer account"
     echo $RELAYER_MNEMONIC | osmosisd keys add relayer --recover --keyring-backend=test --home $OSMOSIS_HOME
     RELAYER_ACCOUNT=$(osmosisd keys show -a relayer --keyring-backend test --home $OSMOSIS_HOME)
     osmosisd add-genesis-account $RELAYER_ACCOUNT 1000000000uosmo,1000000000uion,1000000000stake --home $OSMOSIS_HOME
