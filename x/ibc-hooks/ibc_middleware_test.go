@@ -3,12 +3,13 @@ package ibc_hooks_test
 import (
 	"encoding/json"
 	"fmt"
+	"testing"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
-	"testing"
 
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 
@@ -423,7 +424,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps() (sdk.AccAddress, sdk.AccAddr
 
 	ctx := suite.chainA.GetContext()
 
-	//ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, msg []byte, coins sdk.Coins
+	// ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, msg []byte, coins sdk.Coins
 	msg := `{"set_route":{"input_denom":"token0","output_denom":"token1","pool_route":[{"pool_id":"1","token_out_denom":"stake"},{"pool_id":"2","token_out_denom":"token1"}]}}`
 	_, err = contractKeeper.Execute(ctx, swaprouterAddr, owner, []byte(msg), sdk.NewCoins())
 	suite.Require().NoError(err)
@@ -439,7 +440,6 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps() (sdk.AccAddress, sdk.AccAddr
 	suite.Require().NoError(err)
 
 	return swaprouterAddr, crosschainAddr
-
 }
 
 func (suite *HooksTestSuite) TestCrosschainSwaps() {
@@ -654,5 +654,4 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 
 	balanceRecovery := osmosisAppA.BankKeeper.GetBalance(suite.chainA.GetContext(), recoverAddr, "token1")
 	suite.Require().Greater(balanceRecovery.Amount.Int64(), int64(0))
-
 }
