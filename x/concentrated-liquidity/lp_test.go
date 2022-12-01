@@ -26,7 +26,7 @@ type lpTest struct {
 var (
 	baseCase = &lpTest{
 		poolId:          1,
-		currentTick:     sdk.NewInt(DefaultCurrTick),
+		currentTick:     DefaultCurrTick,
 		lowerTick:       DefaultLowerTick,
 		upperTick:       DefaultUpperTick,
 		currentSqrtP:    DefaultCurrSqrtPrice,
