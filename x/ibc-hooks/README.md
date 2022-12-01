@@ -114,17 +114,15 @@ In wasm hooks, post packet execution:
 * if wasm message has error, return ErrAck
 * otherwise continue through middleware
 
-## Ack Hooks
+## Ack callbacks
 
-A contract that, through a wasm hook, sends an IBC packet, may need to listen for the ACK from that packet. To allow
-contracts to listen on the ack of specific packets, we provide AckHooks. 
+A contract that, through a wasm hook, sends an IBC transfer, may need to listen for the ACK from that packet. To allow
+contracts to listen on the ack of specific packets, we provide Ack callbacks. 
 
 ### Design
 
-The ack hooks will be configured with a param pointing to a contract that knows which contracts have been subscribed to 
-listen to ACKs (subscription contract). When an ack is received, the contract will query the subscription contract for 
-the information of any subscribers to the specific packet's ack. It then notifies any subscribers about the ack, and 
-deletes the listener from the subscription contract. 
+The sender of an IBC transfer packet may specify a callback for when the ack of that packet is received in the memo 
+field of the transfer packet. 
 
 ### Use case
 
@@ -134,31 +132,20 @@ retrieve the funds after the timeout has passed, but without the ack information
 
 ### Implementation
 
-#### Subscription Contract Messages
-Execute:
-* `Subscribe { packet: sequence_number, event: EventType }` 
-* `Unsubscribe { packet: sequence_number, event: EventType }` (for completeness)
+#### Callback information in memo
 
-Query:
-* `Listeners { packet: sequence_number, event: EventType }`
+The for the callback to be processed, the transfer packet's memo should look like this:
 
-Sudo:
-* `UnsubscribeAll { packet: sequence_number, event: EventType }`
+`{"callback": "osmo1contractAddr"}`
 
-Where `EventType` can be "acknowledgment" or "timeout"
+The wasm hooks will keep the mapping from the packet's channel and sequence to the contract in storage. When an ack is
+received, it will notify the specified contract via a sudo message.
 
 #### Interface for receiving the Ack
 
-Sudo:
-* `ReceiveAck { packet: sequence_number, ack: TBD }`
+The contract that awaits the callback should implement the following interface for a sudo message:
 
-
-## Pipeline Hooks
-
-For simplicity, the two hooks described above are implemented under WasmHooks. In the future, these could be split 
-into two independent hooks and configured as a Pipelining hook. 
-
-TODO: Is this over-engineering this?
+* `ReceiveAck { channel: String, sequence: u64, ack: String, success: bool }`
 
 # Testing strategy
 

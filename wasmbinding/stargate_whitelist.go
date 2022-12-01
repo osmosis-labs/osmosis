@@ -130,7 +130,6 @@ func init() {
 
 	// IBC
 	setWhitelistedQuery("/ibc.applications.transfer.v1.Msg/Transfer", &transfertypes.MsgTransferResponse{})
-
 }
 
 // GetWhitelistedQuery returns the whitelisted query at the provided path.
