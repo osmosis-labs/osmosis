@@ -3,12 +3,15 @@ package ibc_hooks
 import (
 	"encoding/json"
 	"fmt"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	"github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/keeper"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
@@ -24,14 +27,22 @@ type ContractAck struct {
 
 type WasmHooks struct {
 	ContractKeeper *wasmkeeper.PermissionedKeeper
+	hooksKeeper    *keeper.Keeper
 }
 
-func NewWasmHooks(contractKeeper *wasmkeeper.PermissionedKeeper) WasmHooks {
-	return WasmHooks{ContractKeeper: contractKeeper}
+func NewWasmHooks(hooksKeeper *keeper.Keeper, contractKeeper *wasmkeeper.PermissionedKeeper) WasmHooks {
+	return WasmHooks{
+		ContractKeeper: contractKeeper,
+		hooksKeeper:    hooksKeeper,
+	}
+}
+
+func (h WasmHooks) ProperlyConfigured() bool {
+	return h.ContractKeeper != nil && h.hooksKeeper != nil
 }
 
 func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
-	if h.ContractKeeper == nil {
+	if !h.ProperlyConfigured() {
 		// Not configured
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
@@ -119,7 +130,7 @@ func isIcs20Packet(packet channeltypes.Packet) (isIcs20 bool, ics20data transfer
 	return true, data
 }
 
-func isMemoWasmRouted(memo string) (isWasmRouted bool, metadata map[string]interface{}) {
+func isMemoWasmRouted(memo, key string) (isWasmRouted bool, metadata map[string]interface{}) {
 	metadata = make(map[string]interface{})
 
 	// If there is no memo, the packet was either sent with an earlier version of IBC, or the memo was
@@ -134,9 +145,9 @@ func isMemoWasmRouted(memo string) (isWasmRouted bool, metadata map[string]inter
 		return false, metadata
 	}
 
-	// If the key "wasm" doesn't exist, there's nothing to do on this hook. Continue by passing the packet
+	// If the key doesn't exist, there's nothing to do on this hook. Continue by passing the packet
 	// down the stack
-	_, ok := metadata["wasm"]
+	_, ok := metadata[key]
 	if !ok {
 		return false, metadata
 	}
@@ -145,7 +156,7 @@ func isMemoWasmRouted(memo string) (isWasmRouted bool, metadata map[string]inter
 }
 
 func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, contractAddr sdk.AccAddress, msgBytes []byte, err error) {
-	isWasmRouted, metadata := isMemoWasmRouted(memo)
+	isWasmRouted, metadata := isMemoWasmRouted(memo, "wasm")
 	if !isWasmRouted {
 		return isWasmRouted, sdk.AccAddress{}, nil, nil
 	}
@@ -201,4 +212,84 @@ func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, cont
 	}
 
 	return isWasmRouted, contractAddr, msgBytes, nil
+}
+
+func (h WasmHooks) SendPacketAfterHook(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet ibcexported.PacketI, err error) {
+	// ToDo: Remove the callback from the packet before sending. This is to avoid issues with the memo on chains that don't support it
+	if err != nil {
+		return
+	}
+	concretePacket, ok := packet.(channeltypes.Packet)
+	if !ok {
+		return
+	}
+
+	isIcs20, data := isIcs20Packet(concretePacket)
+	if !isIcs20 {
+		return
+	}
+
+	isWasmRouted, metadata := isMemoWasmRouted(data.GetMemo(), "callback")
+	if !isWasmRouted {
+		return
+	}
+
+	callbackRaw := metadata["callback"]
+
+	// Make sure the callback contract is a string and a valid bech32 addr. If it isn't, ignore this packet
+	contract, ok := callbackRaw.(string)
+	if !ok {
+		return
+	}
+	_, err = sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return
+	}
+
+	h.hooksKeeper.StorePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence(), contract)
+}
+
+func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error {
+	err := im.App.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
+	if err != nil {
+		return err
+	}
+
+	if !h.ProperlyConfigured() {
+		// Not configured. Return from the underlying implementation
+		return nil
+	}
+
+	contract := h.hooksKeeper.GetPacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
+	if contract == "" {
+		// No callback configured
+		return nil
+	}
+
+	contractAddr, err := sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return sdkerrors.Wrap(err, "Ack callback error") // The callback configured is not a beck32. Error out
+	}
+
+	success := "false"
+	if !osmoutils.IsAckError(acknowledgement) {
+		success = "true"
+	}
+
+	// Notify the sender that the ack has been received
+	ackAsJson, err := json.Marshal(acknowledgement)
+	if err != nil {
+		// If the ack is not a json object, error
+		return err
+	}
+
+	sudoMsg := []byte(fmt.Sprintf(
+		`{"receive_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}`,
+		packet.SourceChannel, packet.Sequence, ackAsJson, success))
+	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
+	if err != nil {
+		// error processing the callback
+		return sdkerrors.Wrap(err, "Ack callback error")
+	}
+	return nil
 }

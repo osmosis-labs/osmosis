@@ -196,7 +196,7 @@ func (suite *HooksTestSuite) receivePacketWithSequence(receiver, memo string, pr
 func (suite *HooksTestSuite) TestRecvTransferWithMetadata() {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/echo.wasm")
-	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}")
+	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", 1)
 
 	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"echo": {"msg": "test"} } } }`, addr))
 	ackStr := string(ackBytes)
@@ -212,7 +212,7 @@ func (suite *HooksTestSuite) TestRecvTransferWithMetadata() {
 func (suite *HooksTestSuite) TestFundsAreTransferredToTheContract() {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/echo.wasm")
-	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}")
+	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", 1)
 
 	// Check that the contract has no funds
 	localDenom := osmoutils.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
@@ -238,7 +238,7 @@ func (suite *HooksTestSuite) TestFundsAreTransferredToTheContract() {
 func (suite *HooksTestSuite) TestFundsAreReturnedOnFailedContractExec() {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/echo.wasm")
-	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}")
+	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", 1)
 
 	// Check that the contract has no funds
 	localDenom := osmoutils.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
@@ -306,7 +306,7 @@ func (suite *HooksTestSuite) TestPacketsThatShouldBeSkipped() {
 func (suite *HooksTestSuite) TestFundTracking() {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/counter.wasm")
-	addr := suite.chainA.InstantiateContract(&suite.Suite, `{"count": 0}`)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, `{"count": 0}`, 1)
 
 	// Check that the contract has no funds
 	localDenom := osmoutils.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
