@@ -2,6 +2,7 @@ package wasmbinding
 
 import (
 	"fmt"
+	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	"sync"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
@@ -129,6 +130,10 @@ func init() {
 	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/ArithmeticTwapToNow", &twapquerytypes.ArithmeticTwapToNowResponse{})
 	setWhitelistedQuery("/osmosis.twap.v2.Query/ArithmeticTwapToNow", &twapv2querytypes.ArithmeticTwapToNowResponse{})
 	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/Params", &twapquerytypes.ParamsResponse{})
+
+	// IBC
+	setWhitelistedQuery("/ibc.applications.transfer.v1.Msg/Transfer", &transfertypes.MsgTransferResponse{})
+
 }
 
 // GetWhitelistedQuery returns the whitelisted query at the provided path.
