@@ -1064,24 +1064,55 @@ func (s *KeeperTestSuite) TestOrderInitialPoolDenoms() {
 }
 
 func (s *KeeperTestSuite) TestGetPoolById() {
-	s.SetupTest()
+	const validPoolId = 1
 
-	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "token0", "token1", sdk.NewDec(1), sdk.NewInt(1))
-	s.Require().NoError(err)
+	tests := []struct {
+		name        string
+		poolId      uint64
+		expectedErr error
+	}{
+		{
+			name:   "Get existing pool",
+			poolId: validPoolId,
+		},
+		{
+			name:        "Get non-existing pool",
+			poolId:      2,
+			expectedErr: types.PoolNotFoundError{PoolId: 2},
+		},
+	}
 
-	getPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-	s.Require().NoError(err)
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
 
-	// ensure that the pool is the same
-	s.Require().Equal(pool.GetId(), getPool.GetId())
-	s.Require().Equal(pool.GetAddress(), getPool.GetAddress())
-	s.Require().Equal(pool.GetCurrentSqrtPrice(), getPool.GetCurrentSqrtPrice())
-	s.Require().Equal(pool.GetCurrentTick(), getPool.GetCurrentTick())
-	s.Require().Equal(pool.GetLiquidity(), getPool.GetLiquidity())
+			// Set up default pool
+			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, ETH, USDC, DefaultCurrSqrtPrice, DefaultCurrTick)
+			s.Require().NoError(err)
 
-	// try getting invalid pool
-	_, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, uint64(2))
-	s.Require().Error(err)
+			// Get pool defined in test case
+			getPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, test.poolId)
+
+			if test.expectedErr == nil {
+				// Ensure no error is returned
+				s.Require().NoError(err)
+
+				// Ensure that pool returned matches the default pool attributes
+				s.Require().Equal(pool.GetId(), getPool.GetId())
+				s.Require().Equal(pool.GetAddress(), getPool.GetAddress())
+				s.Require().Equal(pool.GetCurrentSqrtPrice(), getPool.GetCurrentSqrtPrice())
+				s.Require().Equal(pool.GetCurrentTick(), getPool.GetCurrentTick())
+				s.Require().Equal(pool.GetLiquidity(), getPool.GetLiquidity())
+			} else {
+				// Ensure specified error is returned
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, test.expectedErr)
+
+				// Check that GetPoolById returns a nil pool object due to error
+				s.Require().Nil(getPool)
+			}
+		})
+	}
 }
 
 func (s *KeeperTestSuite) TestPoolExists() {
