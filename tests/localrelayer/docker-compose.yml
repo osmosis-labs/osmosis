@@ -20,6 +20,7 @@ services:
       - VALIDATOR_MONIKER=validator-a
       - VALIDATOR_MNEMONIC=family album bird seek tilt color pill danger message abuse manual tent almost ridge boost blast high comic core quantum spoon coconut oyster remove
       - FAUCET_MNEMONIC=increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great
+      - RELAYER_MNEMONIC=black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken
     ports:
       - 26657:26657
       - 1317:1317
@@ -70,6 +71,7 @@ services:
       - VALIDATOR_MONIKER=validator-b
       - VALIDATOR_MNEMONIC=family album bird seek tilt color pill danger message abuse manual tent almost ridge boost blast high comic core quantum spoon coconut oyster remove
       - FAUCET_MNEMONIC=increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great
+      - RELAYER_MNEMONIC=black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken
     ports:
       # Can't use the same ports
       - 36657:26657
@@ -113,11 +115,10 @@ services:
       - /home/hermes/setup.sh
     environment:
       - CHAIN_A_ID=localosmosis-a
-      - CHAIN_A_MNEMONIC=increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great
+      - CHAIN_A_MNEMONIC=black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken
       - CHAIN_B_ID=localosmosis-b
-      - CHAIN_B_MNEMONIC=increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great
+      - CHAIN_B_MNEMONIC=black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken
     ports:
-      # Can't use the same ports
       - 3000:3000
     depends_on:
     - localosmosis-a
