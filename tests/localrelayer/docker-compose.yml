@@ -110,7 +110,7 @@ services:
     user: root:root
     volumes:
       - ./scripts/setup_hermes.sh:/home/hermes/setup.sh
-      - ./hermes/config.toml:/root/.hermes/config.toml
+      - ./config/hermes/config.toml:/root/.hermes/config.toml
     entrypoint:
       - /home/hermes/setup.sh
     environment:
