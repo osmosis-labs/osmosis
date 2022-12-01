@@ -1087,7 +1087,7 @@ func (s *KeeperTestSuite) TestGetPoolById() {
 			s.SetupTest()
 
 			// Set up default pool
-			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, ETH, USDC, DefaultCurrSqrtPrice, sdk.NewInt(DefaultCurrTick))
+			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, ETH, USDC, DefaultCurrSqrtPrice, DefaultCurrTick)
 			s.Require().NoError(err)
 
 			// Get pool defined in test case
