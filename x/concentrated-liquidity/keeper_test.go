@@ -15,14 +15,16 @@ var (
 	DefaultUpperPrice       = sdk.NewDec(5500)
 	DefaultUpperTick        = int64(86129)
 	DefaultCurrPrice        = sdk.NewDec(5000)
-	DefaultCurrTick         = int64(85176)
+	DefaultCurrTick         = sdk.NewInt(85176)
 	DefaultCurrSqrtPrice, _ = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
 	DefaultZeroSwapFee      = sdk.ZeroDec()
 	ETH                     = "eth"
 	DefaultAmt0             = sdk.NewInt(1000000)
+	DefaultAmt0Expected     = sdk.NewInt(998587)
 	USDC                    = "usdc"
 	DefaultAmt1             = sdk.NewInt(5000000000)
-	DefaultLiquidityAmt     = sdk.NewDec(50000000000)
+	DefaultAmt1Expected     = sdk.NewInt(5000000000)
+	DefaultLiquidityAmt     = sdk.MustNewDecFromStr("1517818840.967515822610790519")
 )
 
 type KeeperTestSuite struct {
@@ -38,13 +40,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 }
 
 func (s *KeeperTestSuite) SetupPosition(poolId uint64) {
-	lowerTick := int64(84222)
-	upperTick := int64(86129)
-	amount0Desired := sdk.NewInt(1000000)
-	amount1Desired := sdk.NewInt(5000000000)
-
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-	_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], amount0Desired, amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
+	_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 	s.Require().NoError(err)
 }
 
