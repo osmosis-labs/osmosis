@@ -35,7 +35,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				liquidityDelta: DefaultLiquidityAmt,
 			},
 			positionExists:    false,
-			expectedLiquidity: sdk.NewDec(50000000000),
+			expectedLiquidity: DefaultLiquidityAmt,
 		},
 		{
 			name: "Update position from -50 to 50 that already contains 50000000000 liquidity with 50000000000 more liquidity",
@@ -46,7 +46,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				liquidityDelta: DefaultLiquidityAmt,
 			},
 			positionExists:    true,
-			expectedLiquidity: sdk.NewDec(100000000000),
+			expectedLiquidity: DefaultLiquidityAmt.Add(DefaultLiquidityAmt),
 		},
 		{
 			name: "Init position for non-existing pool",
