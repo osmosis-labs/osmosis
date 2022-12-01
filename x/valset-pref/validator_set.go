@@ -173,3 +173,19 @@ func (k Keeper) IsValidatorSetEqual(newPreferences, existingPreferences []types.
 
 	return isEqual
 }
+
+func (k Keeper) SetupStructs(validator types.ValidatorPreference, amountFromShares sdk.Dec) (valSet, valSet) {
+	existing_val := valSet{
+		valAddr: validator.ValOperAddress,
+		weight:  validator.Weight,
+		amount:  amountFromShares,
+	}
+
+	existing_val_test := valSet{
+		valAddr: validator.ValOperAddress,
+		weight:  validator.Weight,
+		amount:  sdk.NewDec(0),
+	}
+
+	return existing_val, existing_val_test
+}
