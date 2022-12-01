@@ -31,12 +31,12 @@ port = 3001
 [[chains]]
 id = 'localosmosis-b'
 type = 'CosmosSdk'
-rpc_addr = 'https://localosmosis-b:26657'
+rpc_addr = 'http://localosmosis-b:26657'
 grpc_addr = 'http://localosmosis-b:9090'
 websocket_addr = 'wss://localosmosis-b:26657/websocket'
 rpc_timeout = '10s'
 account_prefix = 'osmo'
-key_name = 'keyosmosis'
+key_name = 'localosmosis-b'
 key_store_type = 'Test'
 store_prefix = 'ibc'
 default_gas = 100000
@@ -55,7 +55,7 @@ denominator = '3'
 
 [chains.gas_price]
 price = 0.1
-denom = 'uatom'
+denom = 'uosmo'
 
 [chains.packet_filter]
 policy = 'allow'
@@ -70,12 +70,12 @@ derivation = 'cosmos'
 [[chains]]
 id = 'localosmosis-a'
 type = 'CosmosSdk'
-rpc_addr = 'https://localosmosis-a:26657'
+rpc_addr = 'http://localosmosis-a:26657'
 grpc_addr = 'http://localosmosis-a:9090'
 websocket_addr = 'wss://localosmosis-a:26657/websocket'
 rpc_timeout = '10s'
 account_prefix = 'osmo'
-key_name = 'keyosmosis'
+key_name = 'localosmosis-a'
 key_store_type = 'Test'
 store_prefix = 'ibc'
 default_gas = 100000

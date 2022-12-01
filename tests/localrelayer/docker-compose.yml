@@ -105,9 +105,10 @@ services:
 
   hermes:
     image: informalsystems/hermes:1.1.0
+    user: root:root
     volumes:
       - ./scripts/setup_hermes.sh:/home/hermes/setup.sh
-      - ./hermes/config.toml:/home/hermes/.hermes/config.toml
+      - ./hermes/config.toml:/root/.hermes/config.toml
     entrypoint:
       - /home/hermes/setup.sh
     environment:
