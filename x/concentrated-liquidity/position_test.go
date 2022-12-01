@@ -2,12 +2,9 @@ package concentrated_liquidity_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
-
-var _ = suite.TestingSuite(nil)
 
 func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 	const validPoolId = 1
@@ -78,7 +75,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			s.Setup()
 
 			// Create a CL pool with poolId 1
-			_, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, ETH, USDC, DefaultCurrSqrtPrice, DefaultCurrTick)
+			_, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, validPoolId, ETH, USDC, DefaultCurrSqrtPrice, DefaultCurrTick)
 			s.Require().NoError(err)
 
 			// If positionExists set, initialize the specified position with defaultLiquidityAmt
@@ -90,7 +87,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			}
 
 			// Get the position info for poolId 1
-			positionInfo, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, 1, s.TestAccs[0], test.param.lowerTick, test.param.upperTick)
+			positionInfo, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, validPoolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick)
 			if test.positionExists {
 				// If we had a position before, ensure the position info displays proper liquidity
 				s.Require().NoError(err)
@@ -98,7 +95,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			} else {
 				// If we did not have a position before, ensure getting the non-existent position returns an error
 				s.Require().Error(err)
-				s.Require().ErrorContains(err, types.PositionNotFoundError{PoolId: 1, LowerTick: test.param.lowerTick, UpperTick: test.param.upperTick}.Error())
+				s.Require().ErrorContains(err, types.PositionNotFoundError{PoolId: validPoolId, LowerTick: test.param.lowerTick, UpperTick: test.param.upperTick}.Error())
 			}
 
 			// Initialize or update the position according to the test case
@@ -111,7 +108,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			s.Require().NoError(err)
 
 			// Get the tick info for poolId 1
-			positionInfo, err = s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, 1, s.TestAccs[0], test.param.lowerTick, test.param.upperTick)
+			positionInfo, err = s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, validPoolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick)
 			s.Require().NoError(err)
 
 			// Check that the initialized or updated position matches our expectation
