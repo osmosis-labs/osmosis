@@ -12,6 +12,12 @@ type msgServer struct {
 	keeper *Keeper
 }
 
+type valSet struct {
+	valAddr string
+	weight  sdk.Dec
+	amount  sdk.Dec
+}
+
 // NewMsgServerImpl returns an implementation of the MsgServer interface
 // for the provided Keeper.
 func NewMsgServerImpl(keeper *Keeper) types.MsgServer {

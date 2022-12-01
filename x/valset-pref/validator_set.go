@@ -189,3 +189,27 @@ func (k Keeper) SetupStructs(validator types.ValidatorPreference, amountFromShar
 
 	return existing_val, existing_val_test
 }
+
+func (k Keeper) FindMin(valPrefs []*valSet) (min valSet, idx int) {
+	min = *valPrefs[0]
+	idx = 0
+	for i, val := range valPrefs {
+		if val.amount.LT(min.amount) {
+			min = *val
+			idx = i
+		}
+	}
+	return min, idx
+}
+
+func (k Keeper) FindMax(valPrefs []*valSet) (max valSet, idx int) {
+	max = *valPrefs[0]
+	idx = 0
+	for i, val := range valPrefs {
+		if val.amount.GT(max.amount) {
+			max = *val
+			idx = i
+		}
+	}
+	return max, idx
+}
