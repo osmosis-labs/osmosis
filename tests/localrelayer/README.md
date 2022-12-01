@@ -1,6 +1,6 @@
 # Localrelayer
 
-Localrelayer is a local testing environments composed of two localOsmosis instances connected by a relayer
+Localrelayer is a local testing environment composed of two localOsmosis instances connected by a relayer.
 
 ## Deploy
 
@@ -34,7 +34,7 @@ The command will:
  ⠿ Container localrelayer-hermes-1          Created
 ```
 
-> If you don't want the logs you can start in detached mode with:
+> If you don't want the logs, you can start in detached mode with the following command:
 > 
 > `make startd`
 
@@ -148,7 +148,7 @@ curl -s http://$LCD_ENDPOINT:1317/cosmos/bank/v1beta1/balances/osmo1e5zmvznxr0zu
 
 ### Hermes
 
-Test that hermes is working by send IBC transaction.
+You can test that hermes is working by send IBC transaction.
 
 Make sure `hermes` is running:
 
