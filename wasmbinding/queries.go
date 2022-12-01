@@ -119,7 +119,7 @@ func (qp QueryPlugin) ArithmeticTwap(ctx sdk.Context, arithmeticTwap *bindings.A
 	startTime := time.UnixMilli(arithmeticTwap.StartTime)
 	endTime := time.UnixMilli(arithmeticTwap.EndTime)
 
-	twap, err := qp.twapKeeper.GetArithmeticTwap(ctx, poolId, quoteAssetDenom, baseAssetDenom, startTime, endTime)
+	twap, err := qp.twapKeeper.GetArithmeticTwap(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, endTime)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "gamm arithmetic twap")
 	}
@@ -137,7 +137,7 @@ func (qp QueryPlugin) ArithmeticTwapToNow(ctx sdk.Context, arithmeticTwap *bindi
 	baseAssetDenom := arithmeticTwap.BaseAssetDenom
 	startTime := time.UnixMilli(arithmeticTwap.StartTime)
 
-	twap, err := qp.twapKeeper.GetArithmeticTwapToNow(ctx, poolId, quoteAssetDenom, baseAssetDenom, startTime)
+	twap, err := qp.twapKeeper.GetArithmeticTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "gamm arithmetic twap")
 	}
