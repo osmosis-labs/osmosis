@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 	"github.com/osmosis-labs/osmosis/v13/x/txfees/types"
 )
@@ -72,7 +73,10 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 		suite.Run(tc.name, func() {
 			for i, coin := range tc.coins {
 				// Get the output amount in osmo denom
-				expectedOutput, err := tc.poolTypes[i].CalcOutAmtGivenIn(suite.Ctx,
+				pool, ok := tc.poolTypes[i].(gammtypes.CFMMPoolI)
+				suite.Require().True(ok)
+
+				expectedOutput, err := pool.CalcOutAmtGivenIn(suite.Ctx,
 					sdk.Coins{sdk.Coin{Denom: tc.denoms[i], Amount: coin.Amount}},
 					tc.baseDenom,
 					tc.swapFee)

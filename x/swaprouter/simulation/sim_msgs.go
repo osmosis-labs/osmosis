@@ -152,10 +152,15 @@ func createPoolRestriction(k swaprouter.Keeper, sim *simtypes.SimCtx, ctx sdk.Co
 	}
 }
 
-func getRandPool(k simulationKeeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64, types.PoolI, sdk.Coin, sdk.Coin, []string, string, error) {
+// TODO: refactor this to work with simulation pools
+func getRandPool(k simulationKeeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64, gammtypes.CFMMPoolI, sdk.Coin, sdk.Coin, []string, string, error) {
 	// select a pseudo-random pool ID, max bound by the upcoming pool ID
 	pool_id := simtypes.RandLTBound(sim, k.keeper.GetNextPoolId(ctx))
 	pool, err := k.gammKeeper.GetPool(ctx, pool_id)
+	cfmmPool, ok := (pool).(gammtypes.CFMMPoolI)
+	if !ok {
+		return 0, nil, sdk.Coin{}, sdk.Coin{}, nil, "", fmt.Errorf("pool %d is not a CFMM pool but (%T)", pool_id, pool)
+	}
 	if err != nil {
 		return 0, nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), []string{}, "", err
 	}
@@ -170,5 +175,5 @@ func getRandPool(k simulationKeeper, sim *simtypes.SimCtx, ctx sdk.Context) (uin
 	coinOut := poolCoins[0]
 	poolDenoms := osmoutils.CoinsDenoms(pool.GetTotalPoolLiquidity(ctx))
 	gammDenom := gammtypes.GetPoolShareDenom(pool_id)
-	return pool_id, pool, coinIn, coinOut, poolDenoms, gammDenom, err
+	return pool_id, cfmmPool, coinIn, coinOut, poolDenoms, gammDenom, err
 }

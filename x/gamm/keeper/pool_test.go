@@ -4,11 +4,15 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/golang/mock/gomock"
 
+	"github.com/osmosis-labs/osmosis/v13/tests/mocks"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 // import (
@@ -313,6 +317,41 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 
 			_, ok := pool.(types.WeightedPoolExtension)
 			suite.Require().False(ok)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestConvertToCFMMPool() {
+	ctrl := gomock.NewController(suite.T())
+
+	tests := map[string]struct {
+		pool        swaproutertypes.PoolI
+		expectError bool
+	}{
+		"cfmm pool": {
+			pool: mocks.NewMockCFMMPoolI(ctrl),
+		},
+		"non cfmm pool": {
+			pool:        mocks.NewMockConcentratedPoolExtension(ctrl),
+			expectError: true,
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			suite.SetupTest()
+
+			pool, err := keeper.ConvertToCFMMPool(tc.pool)
+
+			if tc.expectError {
+				suite.Require().Error(err)
+				suite.Require().Nil(pool)
+				return
+			}
+
+			suite.Require().NoError(err)
+			suite.Require().NotNil(pool)
+			suite.Require().Equal(tc.pool, pool)
 		})
 	}
 }

@@ -93,3 +93,64 @@ func (e InsufficientLiquidityCreatedError) Error() string {
 	}
 	return fmt.Sprintf("insufficient amount of token%d created. Actual: (%s). Minimum (%s)", tokenNum, e.Actual, e.Minimum)
 }
+
+type PoolDoesNotExistError struct {
+	PoolId uint64
+}
+
+func (e PoolDoesNotExistError) Error() string {
+	return fmt.Sprintf("cannot initialize or update a tick for a non-existing pool. pool id (%d)", e.PoolId)
+}
+
+type DenomDuplicatedError struct {
+	TokenInDenom  string
+	TokenOutDenom string
+}
+
+func (e DenomDuplicatedError) Error() string {
+	return fmt.Sprintf("cannot trade same denomination in (%s) and out (%s)", e.TokenInDenom, e.TokenOutDenom)
+}
+
+type AmountLessThanMinError struct {
+	TokenAmount sdk.Int
+	TokenMin    sdk.Int
+}
+
+func (e AmountLessThanMinError) Error() string {
+	return fmt.Sprintf("token amount calculated (%s) is lesser than min amount (%s)", e.TokenAmount, e.TokenMin)
+}
+
+type AmountGreaterThanMaxError struct {
+	TokenAmount sdk.Int
+	TokenMax    sdk.Int
+}
+
+func (e AmountGreaterThanMaxError) Error() string {
+	return fmt.Sprintf("token amount calculated (%s) is greater than max amount (%s)", e.TokenAmount, e.TokenMax)
+}
+
+type TokenInDenomNotInPoolError struct {
+	TokenInDenom string
+}
+
+func (e TokenInDenomNotInPoolError) Error() string {
+	return fmt.Sprintf("tokenIn (%s) does not match any asset in pool", e.TokenInDenom)
+}
+
+type TokenOutDenomNotInPoolError struct {
+	TokenOutDenom string
+}
+
+func (e TokenOutDenomNotInPoolError) Error() string {
+	return fmt.Sprintf("tokenOut (%s) does not match any asset in pool", e.TokenOutDenom)
+}
+
+type InvalidPriceLimitError struct {
+	SqrtPriceLimit sdk.Dec
+	LowerBound     sdk.Dec
+	UpperBound     sdk.Dec
+}
+
+func (e InvalidPriceLimitError) Error() string {
+	return fmt.Sprintf("invalid sqrt price limit given (%s), should be greater than (%s) and less than (%s)", e.SqrtPriceLimit, e.LowerBound, e.UpperBound)
+}

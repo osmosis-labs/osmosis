@@ -186,7 +186,7 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 
 	for _, p := range pools {
 		var checks = 0
-		var pool types.TraditionalAmmInterface
+		var pool types.CFMMPoolI
 
 		err := q.cdc.UnpackAny(p, &pool)
 		if err != nil {

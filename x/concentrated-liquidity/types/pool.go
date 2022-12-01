@@ -2,14 +2,12 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	proto "github.com/gogo/protobuf/proto"
 
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 type ConcentratedPoolExtension interface {
 	swaproutertypes.PoolI
-	proto.Message
 
 	// TODO: move these to separate interfaces
 	GetToken0() string

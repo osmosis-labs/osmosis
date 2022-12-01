@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	_ swaproutertypes.PoolI         = &Pool{}
-	_ types.TraditionalAmmInterface = &Pool{}
+	_ swaproutertypes.PoolI = &Pool{}
+	_ types.CFMMPoolI       = &Pool{}
 )
 
 type unsortedPoolLiqError struct {

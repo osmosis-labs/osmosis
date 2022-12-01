@@ -66,7 +66,7 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 				})
 				suite.Require().NoError(err)
 
-				var pool types.TraditionalAmmInterface
+				var pool types.CFMMPoolI
 				err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 				suite.Require().NoError(err)
 
@@ -154,7 +154,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolNoSwapShares() {
 				})
 				suite.Require().NoError(err)
 
-				var pool types.TraditionalAmmInterface
+				var pool types.CFMMPoolI
 				err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 				suite.Require().NoError(err)
 
@@ -400,7 +400,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 				})
 				suite.Require().NoError(err)
 
-				var pool types.TraditionalAmmInterface
+				var pool types.CFMMPoolI
 				err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 				suite.Require().NoError(err)
 
