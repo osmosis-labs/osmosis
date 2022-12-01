@@ -84,7 +84,7 @@ func (k Keeper) getTwap(
 		return sdk.Dec{}, types.StartTimeAfterEndTimeError{StartTime: startTime, EndTime: endTime}
 	}
 	if endTime.Equal(ctx.BlockTime()) {
-		return strategy.getTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime)
+		return k.getTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, strategy)
 	} else if endTime.After(ctx.BlockTime()) {
 		return sdk.Dec{}, types.EndTimeInFutureError{EndTime: endTime, BlockTime: ctx.BlockTime()}
 	}
