@@ -2,9 +2,25 @@
 
 Localrelayer is a local testing environment composed of two localOsmosis instances connected by a relayer.
 
+![Architecture](./assets/architecture.png)
+
+### Endpoints
+
+| Chain ID         | Component  | Endpoint                 |
+|------------------|------------|--------------------------|
+| `localosmosis-a` | `RPC`      | <http://localhost:26657> |
+| `localosmosis-a` | `REST/LCD` | <http://localhost:1317>  |
+| `localosmosis-a` | `gRPC`     | <http://localhost:9090>  |
+| `localosmosis-a` | `faucet`   | <http://localhost:8080>  |
+| `localosmosis-b` | `RPC`      | <http://localhost:36657> |
+| `localosmosis-b` | `REST/LCD` | <http://localhost:31317> |
+| `localosmosis-b` | `gRPC`     | <http://localhost:39090> |
+| `localosmosis-b` | `faucet`   | <http://localhost:38080> |
+| `-`              | `hermes`   | <http://localhost:3000>  |
+
 ## Deploy
 
-Build a local image with current changes
+Build a local docker image with current changes
 
 ```bash
 make build
@@ -55,26 +71,6 @@ ff7abb62fdb3   confio/faucet:0.28.11          "/app/packages/fauce…"   About a
 d90ec29c7a6f   local:osmosis                  "/osmosis/setup.sh"      About a minute ago   Up 3 seconds   26656/tcp, 0.0.0.0:31317->1317/tcp, 0.0.0.0:39090->9090/tcp, 0.0.0.0:36657->26657/tcp   localrelayer-localosmosis-b-1
 e36cead49a07   local:osmosis                  "/osmosis/setup.sh"      About a minute ago   Up 3 seconds   0.0.0.0:1317->1317/tcp, 0.0.0.0:9090->9090/tcp, 0.0.0.0:26657->26657/tcp, 26656/tcp     localrelayer-localosmosis-a-1
 ```
-
-## Architecture
-
-The following diagrams shows the components and the port-mappings:
-
-![Architecture](./assets/architecture.png)
-
-### Endpoints
-
-| Chain ID         | Component  | Endpoint          |
-|------------------|------------|-------------------|
-| `localosmosis-a` | `RPC`      | <localhost:26657> |
-| `localosmosis-a` | `REST/LCD` | <localhost:1317>  |
-| `localosmosis-a` | `gRPC`     | <localhost:1317>  |
-| `localosmosis-a` | `faucet`   | <localhost:8080>  |
-| `localosmosis-b` | `RPC`      | <localhost:36657> |
-| `localosmosis-b` | `REST/LCD` | <localhost:31317> |
-| `localosmosis-b` | `gRPC`     | <localhost:39090> |
-| `localosmosis-b` | `faucet`   | <localhost:38080> |
-| `-`              | `hermes`   | <localhost:3000>  |
 
 ## Accounts
 
