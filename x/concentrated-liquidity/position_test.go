@@ -98,7 +98,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				s.Require().ErrorContains(err, types.PositionNotFoundError{PoolId: validPoolId, LowerTick: test.param.lowerTick, UpperTick: test.param.upperTick}.Error())
 			}
 
-			// Initialize or update the position according to the test case
+			// System under test. Initialize or update the position according to the test case
 			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, test.param.poolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.liquidityDelta)
 			if test.expectedErr != nil {
 				s.Require().Error(err)
