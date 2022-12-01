@@ -74,7 +74,7 @@ const (
 var _ sdk.Msg = &MsgDelegateToValidatorSet{}
 
 // NewMsgMsgStakeToValidatorSet creates a msg to stake to a validator set.
-func NewMsgMsgStakeToValidatorSet(delegator sdk.AccAddress, coin sdk.Coin) *MsgDelegateToValidatorSet {
+func NewMsgDelegateToValidatorSet(delegator sdk.AccAddress, coin sdk.Coin) *MsgDelegateToValidatorSet {
 	return &MsgDelegateToValidatorSet{
 		Delegator: delegator.String(),
 		Coin:      coin,

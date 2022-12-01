@@ -29,21 +29,26 @@ func (suite *KeeperTestSuite) SetupMultipleValidators(numValidator int) []string
 }
 
 func (suite *KeeperTestSuite) PrepareDelegateToValidatorSet() []types.ValidatorPreference {
-	valAddrs := suite.SetupMultipleValidators(3)
+	valAddrs := suite.SetupMultipleValidators(4)
 	valPreferences := []types.ValidatorPreference{
 		{
 			ValOperAddress: valAddrs[0],
-			Weight:         sdk.NewDecWithPrec(5, 1),
+			Weight:         sdk.NewDecWithPrec(2, 1), // 0.2
 		},
 		{
 			ValOperAddress: valAddrs[1],
-			Weight:         sdk.NewDecWithPrec(3, 1),
+			Weight:         sdk.NewDecWithPrec(332, 3), // 0.332
 		},
 		{
 			ValOperAddress: valAddrs[2],
-			Weight:         sdk.NewDecWithPrec(2, 1),
+			Weight:         sdk.NewDecWithPrec(12, 2), // 0.12
+		},
+		{
+			ValOperAddress: valAddrs[3],
+			Weight:         sdk.NewDecWithPrec(348, 3), // 0.348
 		},
 	}
+
 	return valPreferences
 }
 
