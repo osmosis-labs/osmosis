@@ -12,11 +12,13 @@ CHAIN_B_MNEMONIC=${CHAIN_B_MNEMONIC:-$DEFAULT_CHAIN_B_MNEMONIC}
 CHAIN_B_ID=${CHAIN_B_ID:-$DEFAULT_CHAIN_B_ID}
 
 install_prerequisites(){
-    apt update &> /dev/null
-    apt -y install curl &> /dev/null
+    echo "🧰 Install prerequisites"
+    apt update
+    apt -y install curl
 }
 
 add_keys(){
+
     echo "🔑 Adding key for $CHAIN_A_ID"
     mkdir -p /home/hermes/mnemonics/
     echo $CHAIN_A_MNEMONIC > /home/hermes/mnemonics/$CHAIN_A_ID
@@ -61,9 +63,9 @@ create_channel(){
     --new-client-connection --yes
 }
 
-install_prerequisites()
-add_keys()
-create_channel()
+install_prerequisites
+add_keys
+create_channel
 
 echo "✉️ Start Hermes"
 hermes start
