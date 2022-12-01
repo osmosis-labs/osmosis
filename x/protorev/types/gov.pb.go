@@ -23,8 +23,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// SetProtoRevEnabledProposal is a gov Content type to update the proto rev
-// enabled field in the params
+// SetProtoRevEnabledProposal is a gov Content type to update whether the
+// protorev module is enabled
 type SetProtoRevEnabledProposal struct {
 	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
@@ -64,7 +64,8 @@ func (m *SetProtoRevEnabledProposal) XXX_DiscardUnknown() {
 var xxx_messageInfo_SetProtoRevEnabledProposal proto.InternalMessageInfo
 
 // SetProtoRevAdminAccountProposal is a gov Content type to set the admin
-// account that will receive permissions to alter hot routes
+// account that will receive permissions to alter hot routes and set the
+// developer address that will be receiving a share of profits from the module
 type SetProtoRevAdminAccountProposal struct {
 	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`

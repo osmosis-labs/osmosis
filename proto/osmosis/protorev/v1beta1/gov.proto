@@ -19,8 +19,8 @@ message SetProtoRevEnabledProposal {
 }
 
 // SetProtoRevAdminAccountProposal is a gov Content type to set the admin
-// account that will receive permissions to alter hot routes and set the developer address 
-// that will be receiving a share of profits from the module
+// account that will receive permissions to alter hot routes and set the
+// developer address that will be receiving a share of profits from the module
 message SetProtoRevAdminAccountProposal {
   option (gogoproto.equal) = true;
   option (gogoproto.goproto_getters) = false;

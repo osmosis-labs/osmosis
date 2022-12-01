@@ -547,19 +547,19 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "v12", "protorev", "params"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "v13", "protorev", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetProtoRevNumberOfTrades_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "v12", "protorev", "number_of_trades"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetProtoRevNumberOfTrades_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "v13", "protorev", "number_of_trades"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetProtoRevProfitsByDenom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "v12", "protorev", "profits_by_denom"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetProtoRevProfitsByDenom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "v13", "protorev", "profits_by_denom"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetProtoRevAllProfits_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "v12", "protorev", "all_profits"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetProtoRevAllProfits_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "v13", "protorev", "all_profits"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetProtoRevStatisticsByPool_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "v12", "protorev", "statistics_by_pool"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetProtoRevStatisticsByPool_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "v13", "protorev", "statistics_by_pool"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetProtoRevAllStatistics_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "v12", "protorev", "all_statistics"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetProtoRevAllStatistics_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "v13", "protorev", "all_statistics"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetProtoRevTokenPairArbRoutes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "v12", "protorev", "token_pair_arb_routes"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetProtoRevTokenPairArbRoutes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "v13", "protorev", "token_pair_arb_routes"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

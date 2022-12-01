@@ -242,9 +242,9 @@ func RegisterMsgHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 }
 
 var (
-	pattern_Msg_SetHotRoutes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "protorev", "v1beta1", "set_hot_routes"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Msg_SetHotRoutes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "v13", "protorev", "set_hot_routes"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Msg_SetDeveloperAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "protorev", "v1beta1", "set_developer_account"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Msg_SetDeveloperAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "v13", "protorev", "set_developer_account"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (
