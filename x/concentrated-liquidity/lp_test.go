@@ -197,18 +197,29 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				expectedError: types.PoolNotFoundError{PoolId: 2},
 			},
 		},
-		"error: invalid tick given": {
+		"error: upper tick out of bounds": {
 			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
 
 			// system under test parameters
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
-				lowerTick:     types.MaxTick + 1, // invalid tick
-				expectedError: types.InvalidTickError{Tick: types.MaxTick + 1, IsLower: true},
+				upperTick:     types.MaxTick + 1, // invalid tick
+				expectedError: types.InvalidTickError{Tick: types.MaxTick + 1, IsLower: false},
 			},
 		},
-		"error: insufficient liqudity": {
+		"error: lower tick out of bounds": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			// for withdrawing a position.
+			sutConfigOverwrite: &lpTest{
+				lowerTick:     types.MinTick - 1, // invalid tick
+				expectedError: types.InvalidTickError{Tick: types.MinTick - 1, IsLower: true},
+			},
+		},
+		"error: insufficient liquidity": {
 			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
 
@@ -217,6 +228,18 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			sutConfigOverwrite: &lpTest{
 				liquidityAmount: baseCase.liquidityAmount.Add(sdk.OneDec()), // 1 more than available
 				expectedError:   types.InsufficientLiquidityError{Actual: baseCase.liquidityAmount.Add(sdk.OneDec()), Available: baseCase.liquidityAmount},
+			},
+		},
+		"error: upper tick is below the lower tick, but both are in bounds": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			// for withdrawing a position.
+			sutConfigOverwrite: &lpTest{
+				lowerTick:     50,
+				upperTick:     40,
+				expectedError: types.InvalidLowerUpperTickError{LowerTick: 50, UpperTick: 40},
 			},
 		},
 		// TODO: test with custom amounts that potentially lead to truncations.
