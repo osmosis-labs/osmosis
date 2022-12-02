@@ -30,8 +30,8 @@ services:
     
   faucet-a:
     command:
-    - start 
-    - localosmosis-a:26657
+      - start
+      - localosmosis-a:26657
     image: confio/faucet:0.28.11
     environment:
       FAUCET_CONCURRENCY:         1
@@ -47,9 +47,9 @@ services:
       FAUCET_REFILL_THRESHOLD:    20
       FAUCET_COOLDOWN_TIME:       30         # 30s
     ports:
-    - 8000:8000
+      - 8000:8000
     depends_on:
-    - localosmosis-a
+      - localosmosis-a
     networks:
       - localosmosis
 
@@ -82,8 +82,8 @@ services:
     
   faucet-b:
     command:
-    - start 
-    - localosmosis-b:26657
+      - start
+      - localosmosis-b:26657
     image: confio/faucet:0.28.11
     environment:
       FAUCET_CONCURRENCY:         1
@@ -99,11 +99,11 @@ services:
       FAUCET_REFILL_THRESHOLD:    20
       FAUCET_COOLDOWN_TIME:       30         # 30s
     ports:
-    - 38000:8000
+      - 38000:8000
     depends_on:
     - localosmosis-b
     networks:
-    - localosmosis
+      - localosmosis
 
   hermes:
     image: informalsystems/hermes:1.1.0
@@ -121,8 +121,8 @@ services:
     ports:
       - 3000:3000
     depends_on:
-    - localosmosis-a
-    - localosmosis-b
+      - localosmosis-a
+      - localosmosis-b
     networks:
       - localosmosis
 
