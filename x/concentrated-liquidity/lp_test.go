@@ -68,6 +68,11 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			amount1Minimum: baseCase.amount1Expected.Mul(sdk.NewInt(2)),
 			expectedError:  types.InsufficientLiquidityCreatedError{Actual: baseCase.amount1Expected, Minimum: baseCase.amount1Expected.Mul(sdk.NewInt(2))},
 		},
+		"error: amount of token 1 is smaller than minimum; should fail and not update state test": {
+			amount0Desired: sdk.ZeroInt(),
+			amount1Desired: sdk.ZeroInt(),
+			expectedError:  types.ZeroLiquidityError{},
+		},
 		// TODO: add more tests
 		// - custom hand-picked values
 		// - think of overflows
