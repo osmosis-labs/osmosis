@@ -110,7 +110,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 				s.Require().Error(err)
 				s.Require().Equal(asset0, sdk.Int{})
 				s.Require().Equal(asset1, sdk.Int{})
-				s.Require().ErrorContains(err, tc.expectedError.Error())
+				s.Require().ErrorAs(err, &tc.expectedError)
 
 				// Check account balances
 				s.Require().Equal(userBalancePrePositionCreation.String(), userBalancePostPositionCreation.String())
