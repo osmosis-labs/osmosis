@@ -154,8 +154,6 @@ The Code Layout is very similar to TWAP module.
 - msg_server.go - handle messages request from client and process responses. 
 - store.go - Managing logic for getting and setting things to underlying stores (KVStore)
 
-
-
 ## Redelegate algorithm logic pseudocode
 
 Existing ValSet   20osmos {ValA-> 0.5, ValB-> 0.3, ValC-> 0.2} [ValA-> 10osmo, ValB-> 6osmo, ValC-> 4osmo]

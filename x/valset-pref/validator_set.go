@@ -197,20 +197,7 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 		}
 	}
 
-	for _, val := range diffValSet {
-		valAddrSrc_small, err := sdk.ValAddressFromBech32(val.valAddr)
-		if err != nil {
-			return fmt.Errorf("validator address not formatted")
-		}
-
-		validator, found := k.stakingKeeper.GetValidator(ctx, valAddrSrc_small)
-		if !found {
-			return fmt.Errorf("validator not found %s", validator)
-		}
-	}
-
 	return nil
-
 }
 
 // GetValAddrAndVal checks if the validator address is valid and the validator provided exists on chain.
