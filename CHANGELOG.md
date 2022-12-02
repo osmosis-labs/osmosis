@@ -45,6 +45,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 
 * [#2788](https://github.com/osmosis-labs/osmosis/pull/2788) Add logarithm base 2 implementation.
+
+### Bug fixes
+
+### Misc Improvements
+
+
+## v13.0.0
+
+This release includes stableswap, and expands the IBC safety & composability functionality of Osmosis. The primary features are:
+
+* Gamm:
+  * Introduction of the stableswap pool type
+  * Multi-hop swapfee reduction
+  * Filtered queries to help front-ends
+  * Adding a spot price v2 query
+    * spotprice v1beta1 had baseassetdenom and quoteassetdenom backwards.
+    * All contracts and integrators should switch to the v2 query from now on.
+  * Adding more queries for contract developers
+  * Force unpooling is now enableable by governance
+* IBC features
+  * Upgrade to IBC v3.4.0
+  * Added IBC rate limiting, to increase safety of bridged assets
+  * Allow ICS-20 to call into cosmwasm contracts
+* Cosmwasm
+  * Upgrade to cosmwasm v0.29.x
+  * Inclusion of requested queries for contract developers
+
+### Features
+
 * [#2739](https://github.com/osmosis-labs/osmosis/pull/2739),[#3356](https://github.com/osmosis-labs/osmosis/pull/3356) Add pool type query, and add it to stargate whitelist
 * [#2956](https://github.com/osmosis-labs/osmosis/issues/2956) Add queries for calculating amount of shares/tokens you get by providing X tokens/shares when entering/exiting a pool
 * [#3217](https://github.com/osmosis-labs/osmosis/pull/3217) Add `CalcJoinPoolShares`, `CalcExitPoolCoinsFromShares`, `CalcJoinPoolNoSwapShares` to the registered Stargate queries list.
