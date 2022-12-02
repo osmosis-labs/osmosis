@@ -40,7 +40,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## v13.0.0
+
+This release includes stableswap, and expands the IBC safety & composability functionality of Osmosis. The primary features are:
+
+* Gamm:
+  * Introduction of the stableswap pool type
+  * Multi-hop swapfee reduction
+  * Filtered queries to help front-ends
+  * Adding a spot price v2 query
+    * spotprice v1beta1 had baseassetdenom and quoteassetdenom backwards.
+    * All contracts and integrators should switch to the v2 query from now on.
+  * Adding more queries for contract developers
+  * Force unpooling is now enableable by governance
+* IBC features
+  * Upgrade to IBC v3.4.0
+  * Added IBC rate limiting, to increase safety of bridged assets
+  * Allow ICS-20 to call into cosmwasm contracts
+* Cosmwasm
+  * Upgrade to cosmwasm v0.29.x
+  * Inclusion of requested queries for contract developers
 
 ### Features
 
