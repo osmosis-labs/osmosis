@@ -18,14 +18,13 @@ import (
 func (app *OsmosisApp) ExportAppStateAndValidators(
 	forZeroHeight bool, jailAllowedAddrs []string, modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
-	// as if they could withdraw from the start of the next block
-	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
-
+	ctx := app.NewUncachedContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 	// We export at last height + 1, because that's the height at which
 	// Tendermint will start InitChain.
 	height := app.LastBlockHeight() + 1
 	if forZeroHeight {
 		height = 0
+		ctx = app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 		app.prepForZeroHeightGenesis(ctx, jailAllowedAddrs)
 	}
 
@@ -35,6 +34,7 @@ func (app *OsmosisApp) ExportAppStateAndValidators(
 		return servertypes.ExportedApp{}, err
 	}
 
+	// despite name, does no writes
 	validators, err := staking.WriteValidators(ctx, *app.StakingKeeper)
 	return servertypes.ExportedApp{
 		AppState:        appState,
