@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 var (
@@ -1113,6 +1114,75 @@ func TestValidatePoolLiquidity(t *testing.T) {
 			}
 
 			require.NoError(t, err)
+		})
+	}
+}
+
+func TestSetScalingFactors(t *testing.T) {
+	pk := ed25519.GenPrivKey().PubKey()
+	addr := sdk.AccAddress(pk.Address())
+
+	failPk := ed25519.GenPrivKey().PubKey()
+	failAddr := sdk.AccAddress(failPk.Address())
+
+	tests := map[string]struct {
+		scalingFactors []uint64
+		sender         string
+		poolAssets     sdk.Coins
+		expError       error
+	}{
+		"Sender is not scaling factor governor in pool": {
+			scalingFactors: defaultTwoAssetScalingFactors,
+			sender:         failAddr.String(),
+			poolAssets:     twoEvenStablePoolAssets,
+			expError:       types.ErrNotScalingFactorGovernor,
+		},
+
+		"Invalid scaling factor's length": {
+			scalingFactors: defaultTwoAssetScalingFactors,
+			sender:         addr.String(),
+			poolAssets:     threeEvenStablePoolAssets,
+			expError:       types.ErrInvalidScalingFactorLength,
+		},
+		"Invalid pool liquidity": {
+			scalingFactors: []uint64{1},
+			sender:         addr.String(),
+			poolAssets:     sdk.NewCoins(sdk.NewInt64Coin("foo", 1000000000)),
+			expError:       types.ErrTooFewPoolAssets,
+		},
+		"Valid set scaling for two assets in pool": {
+			scalingFactors: defaultTwoAssetScalingFactors,
+			sender:         addr.String(),
+			poolAssets:     twoEvenStablePoolAssets,
+		},
+		"Valid set scaling for two uneven assets in pool": {
+			scalingFactors: []uint64{2, 1},
+			sender:         addr.String(),
+			poolAssets:     twoUnevenStablePoolAssets,
+		},
+		"Valid set scaling for three assets in pool": {
+			scalingFactors: defaultThreeAssetScalingFactors,
+			sender:         addr.String(),
+			poolAssets:     threeEvenStablePoolAssets,
+		},
+		"Valid set scaling for three uneven assets in pool": {
+			scalingFactors: []uint64{1, 2, 3},
+			sender:         addr.String(),
+			poolAssets:     threeUnevenStablePoolAssets,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := sdk.Context{}
+			pool := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
+			pool.ScalingFactorController = addr.String()
+			err := pool.SetScalingFactors(ctx, tc.scalingFactors, tc.sender)
+			if tc.expError != nil {
+				require.Error(t, err)
+				require.Equal(t, err, tc.expError)
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }
