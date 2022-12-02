@@ -3,6 +3,7 @@ package twap_test
 import (
 	"errors"
 	"fmt"
+	"math"
 	"testing"
 	"time"
 
@@ -1660,7 +1661,10 @@ func (s *TestSuite) TestTwapLog() {
 		s.Run(name, func() {
 			osmoassert.ConditionalPanic(s.T(), test.expectedPanic, func() {
 				result := twap.TwapLog(test.priceValue.SDKDec())
+				result_by_customBaseLog := test.priceValue.CustomBaseLog(osmomath.BigDecFromSDKDec(twap.GeometricTwapMathBase))
+
 				require.True(osmomath.DecApproxEq(s.T(), test.expected, osmomath.BigDecFromSDKDec(result), expectedErrTolerance))
+				require.True(osmomath.DecApproxEq(s.T(), result_by_customBaseLog, osmomath.BigDecFromSDKDec(result), expectedErrTolerance))
 			})
 		})
 	}
@@ -1717,7 +1721,10 @@ func (s *TestSuite) TestTwapPow() {
 		s.Run(name, func() {
 			osmoassert.ConditionalPanic(s.T(), test.expectedPanic, func() {
 				result := twap.TwapPow(test.exponentValue.SDKDec())
+				result_by_mathPow := math.Pow(twap.GeometricTwapMathBase.MustFloat64(), test.exponentValue.SDKDec().MustFloat64())
+
 				require.True(osmomath.DecApproxEq(s.T(), test.expected, osmomath.BigDecFromSDKDec(result), expectedErrTolerance))
+				require.True(osmomath.DecApproxEq(s.T(), osmomath.MustNewDecFromStr(fmt.Sprint(result_by_mathPow)), osmomath.BigDecFromSDKDec(result), expectedErrTolerance))
 			})
 		})
 	}
