@@ -12,12 +12,6 @@ type msgServer struct {
 	keeper *Keeper
 }
 
-type valSet struct {
-	valAddr string
-	weight  sdk.Dec
-	amount  sdk.Dec
-}
-
 // NewMsgServerImpl returns an implementation of the MsgServer interface
 // for the provided Keeper.
 func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
@@ -66,11 +60,6 @@ func (server msgServer) UndelegateFromValidatorSet(goCtx context.Context, msg *t
 	return &types.MsgUndelegateFromValidatorSetResponse{}, nil
 }
 
-// The redelegation command allows delegators to instantly switch validators.
-// Once the unbonding period has passed, the redelegation is automatically completed in the EndBlocker.
-// A redelegation object is created every time a redelegation occurs. To prevent "redelegation hopping" redelegations may not occur under the situation that:
-// 1. the (re)delegator already has another immature redelegation in progress with a destination to a validator (let's call it Validator X)
-// 2. the (re)delegator is attempting to create a new redelegation where the source validator for this new redelegation is Validator X
 func (server msgServer) RedelegateValidatorSet(goCtx context.Context, msg *types.MsgRedelegateValidatorSet) (*types.MsgRedelegateValidatorSetResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -79,12 +68,12 @@ func (server msgServer) RedelegateValidatorSet(goCtx context.Context, msg *types
 		return nil, fmt.Errorf("user %s doesn't have validator set", msg.Delegator)
 	}
 
-	// Message 1: override the validator set preference set entry
 	delegator, err := sdk.AccAddressFromBech32(msg.Delegator)
 	if err != nil {
 		return nil, err
 	}
 
+	// Message 1: override the validator set preference set entry
 	_, err = server.SetValidatorSetPreference(goCtx, &types.MsgSetValidatorSetPreference{
 		Delegator:   msg.Delegator,
 		Preferences: msg.Preferences,
@@ -93,7 +82,21 @@ func (server msgServer) RedelegateValidatorSet(goCtx context.Context, msg *types
 		return nil, err
 	}
 
-	// Message 2: Work on redelegation
+	// Message 2: Perform the actual redelegation
+	err = server.keeper.PreformRedelegation(ctx, delegator, existingSet, msg.Preferences)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgRedelegateValidatorSetResponse{}, nil
+}
+
+func (server msgServer) WithdrawDelegationRewards(goCtx context.Context, msg *types.MsgWithdrawDelegationRewards) (*types.MsgWithdrawDelegationRewardsResponse, error) {
+	return &types.MsgWithdrawDelegationRewardsResponse{}, nil
+}
+
+/**
+// Message 2: Work on redelegation
 	var existingvalSet []valSet
 	var newValSet []valSet
 	totalTokenAmount := sdk.NewDec(0)
@@ -188,9 +191,4 @@ func (server msgServer) RedelegateValidatorSet(goCtx context.Context, msg *types
 
 	}
 
-	return &types.MsgRedelegateValidatorSetResponse{}, nil
-}
-
-func (server msgServer) WithdrawDelegationRewards(goCtx context.Context, msg *types.MsgWithdrawDelegationRewards) (*types.MsgWithdrawDelegationRewardsResponse, error) {
-	return &types.MsgWithdrawDelegationRewardsResponse{}, nil
-}
+**/

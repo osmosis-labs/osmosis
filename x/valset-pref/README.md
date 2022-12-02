@@ -161,12 +161,14 @@ The Code Layout is very similar to TWAP module.
 Existing ValSet   20osmos {ValA-> 0.5, ValB-> 0.3, ValC-> 0.2} [ValA-> 10osmo, ValB-> 6osmo, ValC-> 4osmo]
 New ValSet        20osmos {ValD-> 0.2, ValE-> 0.2, ValF-> 0.6} [ValD-> 4osmo, ValE-> 4osmo, ValD-> 12osmo]
 
-- Rearrage the structs 
+- // Rearranging the exisintValSet and newValSet to to add extra validator padding
   - existing_valset_updated = [ValA: 10, ValB: 6, ValC: 4, ValD: 0, ValE: 0, ValF: 0]
   - new_valset_updated = [ValD: 4, ValE: 4, ValF: 12, ValA: 0, ValB: 0, ValC: 0]
+
+  // calculate the difference between two sets
   - diff_arr = [ValA: 10, ValB: 6, ValC: 4, ValD: -4, ValE: -4, ValF: -12]
 
-
+	// Algorithm starts here
 - for i, validator in diff_arr: 
   - if validator.amount > 0 
     - for validator.amount > 0: 

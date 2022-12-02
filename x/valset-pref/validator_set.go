@@ -9,6 +9,12 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
 )
 
+type valSet struct {
+	valAddr string
+	weight  sdk.Dec
+	amount  sdk.Dec
+}
+
 func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, preferences []types.ValidatorPreference) error {
 	// check if a user already has a validator-set created
 	existingValidators, found := k.GetValidatorSetPreference(ctx, delegator)
@@ -115,6 +121,105 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	return nil
 }
 
+// The redelegation command allows delegators to instantly switch validators.
+// Once the unbonding period has passed, the redelegation is automatically completed in the EndBlocker.
+// A redelegation object is created every time a redelegation occurs. To prevent "redelegation hopping" redelegations may not occur under the situation that:
+// 1. the (re)delegator already has another immature redelegation in progress with a destination to a validator (let's call it Validator X)
+// 2. the (re)delegator is attempting to create a new redelegation where the source validator for this new redelegation is Validator X
+func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, existingSet types.ValidatorSetPreferences, newSet []types.ValidatorPreference) error {
+
+	var existingValSet []valSet
+	var newValSet []valSet
+	totalTokenAmount := sdk.NewDec(0)
+
+	// Rearranging the exisintValSet and newValSet to to add extra validator padding
+	for _, existingVals := range existingSet.Preferences {
+		valAddr, validator, err := k.GetValidatorInfo(ctx, existingVals.ValOperAddress)
+		if err != nil {
+			return nil
+		}
+
+		// check if the user has delegated tokens to the valset (TEST)
+		delegation, found := k.stakingKeeper.GetDelegation(ctx, delegator, valAddr)
+		if !found {
+			return fmt.Errorf("No delegation found")
+		}
+
+		tokenFromShares := validator.TokensFromShares(delegation.Shares)
+		existing_val, existing_val_zero_amount := k.SetupStructs(existingVals, tokenFromShares)
+		existingValSet = append(existingValSet, existing_val)
+		newValSet = append(newValSet, existing_val_zero_amount)
+		totalTokenAmount = totalTokenAmount.Add(tokenFromShares)
+		fmt.Println("EXISTING VAL: ", existingVals.ValOperAddress, tokenFromShares)
+	}
+
+	for _, newVals := range newSet {
+		amountToDelegate := newVals.Weight.Mul(totalTokenAmount)
+
+		new_val, new_val_zero_amount := k.SetupStructs(newVals, amountToDelegate)
+		newValSet = append(newValSet, new_val)
+		existingValSet = append(existingValSet, new_val_zero_amount)
+		fmt.Println("NEW VAL: ", newVals.ValOperAddress, amountToDelegate)
+	}
+
+	// calculate the difference between two sets
+	var diffValSet []*valSet
+	for i, newVals := range existingValSet {
+		diffAmount := newVals.amount.Sub(newValSet[i].amount)
+
+		diff_val := valSet{
+			valAddr: newVals.valAddr,
+			weight:  newVals.amount,
+			amount:  diffAmount,
+		}
+		diffValSet = append(diffValSet, &diff_val)
+	}
+
+	// Algorithm starts here
+	for _, diff_val := range diffValSet {
+		for diff_val.amount.GT(sdk.NewDec(0)) {
+			source_large := diff_val.valAddr
+			target_large, idx := k.FindMin(diffValSet)
+
+			validator_source, err := sdk.ValAddressFromBech32(source_large)
+			if err != nil {
+				return fmt.Errorf("validator address not formatted")
+			}
+
+			validator_target, err := sdk.ValAddressFromBech32(target_large.valAddr)
+			if err != nil {
+				return fmt.Errorf("validator address not formatted")
+			}
+
+			amount := sdk.MinDec(target_large.amount.Abs(), diff_val.amount)
+			k.stakingKeeper.BeginRedelegation(ctx, delegator, validator_source, validator_target, amount)
+
+			// Find target value in diffValSet and set that to (sourceAmt - targetAmt)
+			diff_val.amount = diff_val.amount.Sub(amount)            // set the source to 0
+			diffValSet[idx].amount = target_large.amount.Add(amount) // set the target to (sourceAmt - targetAmt)
+			fmt.Println("FIRST", idx, source_large, target_large.valAddr, amount)
+		}
+	}
+
+	for _, val := range diffValSet {
+		valAddrSrc_small, err := sdk.ValAddressFromBech32(val.valAddr)
+		if err != nil {
+			return fmt.Errorf("validator address not formatted")
+		}
+
+		validator, found := k.stakingKeeper.GetValidator(ctx, valAddrSrc_small)
+		if !found {
+			return fmt.Errorf("validator not found %s", validator)
+		}
+
+		fmt.Println("Validators: ", validator.OperatorAddress, validator.DelegatorShares)
+
+	}
+
+	return nil
+
+}
+
 // GetValAddrAndVal checks if the validator address is valid and the validator provided exists on chain.
 func (k Keeper) getValAddrAndVal(ctx sdk.Context, valOperAddress string) (sdk.ValAddress, stakingtypes.Validator, error) {
 	valAddr, err := sdk.ValAddressFromBech32(valOperAddress)
@@ -183,19 +288,19 @@ func (k Keeper) GetValidatorInfo(ctx sdk.Context, existingValAddr string) (sdk.V
 }
 
 func (k Keeper) SetupStructs(validator types.ValidatorPreference, amountFromShares sdk.Dec) (valSet, valSet) {
-	existing_val := valSet{
+	val_struct := valSet{
 		valAddr: validator.ValOperAddress,
 		weight:  validator.Weight,
 		amount:  amountFromShares,
 	}
 
-	existing_val_test := valSet{
+	val_struct_zero_amount := valSet{
 		valAddr: validator.ValOperAddress,
 		weight:  validator.Weight,
 		amount:  sdk.NewDec(0),
 	}
 
-	return existing_val, existing_val_test
+	return val_struct, val_struct_zero_amount
 }
 
 func (k Keeper) FindMin(valPrefs []*valSet) (min valSet, idx int) {

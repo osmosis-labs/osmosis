@@ -323,7 +323,7 @@ func (suite *KeeperTestSuite) TestRedelegateValidatorSet() {
 					Weight:         sdk.NewDecWithPrec(6, 1),
 				},
 			},
-			coinToStake: sdk.NewCoin("stake", sdk.NewInt(20)),
+			coinToStake: sdk.NewCoin("stake", sdk.NewInt(20_000_000)),
 			expectPass:  true,
 		},
 
@@ -385,7 +385,7 @@ func (suite *KeeperTestSuite) TestRedelegateValidatorSet() {
 		suite.Run(test.name, func() {
 
 			// fund the account that is trying to delegate
-			suite.FundAcc(test.delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100)})
+			suite.FundAcc(test.delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)})
 
 			// setup message server
 			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorSetPreferenceKeeper)
