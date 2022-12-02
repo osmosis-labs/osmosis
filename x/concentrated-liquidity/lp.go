@@ -19,7 +19,7 @@ import (
 // - the provided ticks are out of range / invalid
 // - the pool provided does not exist
 // - the liquidity delta is zero
-// - the amount0 or amount1 returned from the position update is less than the defined minimums
+// - the amount0 or amount1 returned from the position update is less than the given minimums
 // - the pool or user does not have enough tokens to satisfy the requested amount
 func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (sdk.Int, sdk.Int, sdk.Dec, error) {
 	if err := validateTickRangeIsValid(lowerTick, upperTick); err != nil {
