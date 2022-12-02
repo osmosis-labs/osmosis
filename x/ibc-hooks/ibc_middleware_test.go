@@ -520,7 +520,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps() (sdk.AccAddress, sdk.AccAddr
 		fmt.Sprintf(`{"owner": "%s"}`, owner), 1)
 	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/crosschain_swaps.wasm")
 	crosschainAddr := suite.chainA.InstantiateContract(&suite.Suite,
-		fmt.Sprintf(`{"swap_contract": "%s"}`, swaprouterAddr), 2)
+		fmt.Sprintf(`{"swap_contract": "%s", "track_ibc_sends": true}`, swaprouterAddr), 2)
 
 	osmosisApp := suite.chainA.GetOsmosisApp()
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
