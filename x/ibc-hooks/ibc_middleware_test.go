@@ -499,7 +499,7 @@ func (suite *HooksTestSuite) SetupPools(multipliers []sdk.Dec) []gammtypes.PoolI
 	return pools
 }
 
-func (suite *HooksTestSuite) SetupCrosschainSwaps() (sdk.AccAddress, sdk.AccAddress) {
+func (suite *HooksTestSuite) SetupCrosschainSwaps(withAckTracking bool) (sdk.AccAddress, sdk.AccAddress) {
 	owner := suite.chainA.SenderAccount.GetAddress()
 
 	// Fund the account with some uosmo and some stake
@@ -519,8 +519,12 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps() (sdk.AccAddress, sdk.AccAddr
 	swaprouterAddr := suite.chainA.InstantiateContract(&suite.Suite,
 		fmt.Sprintf(`{"owner": "%s"}`, owner), 1)
 	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/crosschain_swaps.wasm")
+	trackAcks := "false"
+	if withAckTracking {
+		trackAcks = "true"
+	}
 	crosschainAddr := suite.chainA.InstantiateContract(&suite.Suite,
-		fmt.Sprintf(`{"swap_contract": "%s", "track_ibc_sends": true}`, swaprouterAddr), 2)
+		fmt.Sprintf(`{"swap_contract": "%s", "track_ibc_sends": %s}`, swaprouterAddr, trackAcks), 2)
 
 	osmosisApp := suite.chainA.GetOsmosisApp()
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
@@ -547,7 +551,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps() (sdk.AccAddress, sdk.AccAddr
 
 func (suite *HooksTestSuite) TestCrosschainSwaps() {
 	owner := suite.chainA.SenderAccount.GetAddress()
-	_, crosschainAddr := suite.SetupCrosschainSwaps()
+	_, crosschainAddr := suite.SetupCrosschainSwaps(true)
 	osmosisApp := suite.chainA.GetOsmosisApp()
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
 
@@ -568,9 +572,17 @@ func (suite *HooksTestSuite) TestCrosschainSwaps() {
 	suite.Require().Equal(int64(1000), balanceSender.Amount.Sub(balanceSender2.Amount).Int64())
 }
 
-func (suite *HooksTestSuite) TestCrosschainSwapsViaIBC() {
+// Crosschain swaps should successfully work with and without ack tracking. Only BadAcks depend on ack tracking.
+func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCWithoutAckTracking() {
+	suite.CrosschainSwapsViaIBCTest(false)
+}
+func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCWithAckTracking() {
+	suite.CrosschainSwapsViaIBCTest(true)
+}
+
+func (suite *HooksTestSuite) CrosschainSwapsViaIBCTest(withAckTracking bool) {
 	initializer := suite.chainB.SenderAccount.GetAddress()
-	_, crosschainAddr := suite.SetupCrosschainSwaps()
+	_, crosschainAddr := suite.SetupCrosschainSwaps(withAckTracking)
 	// Send some token0 tokens to B so that there are ibc tokens to send to A and crosschain-swap
 	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "")
 	suite.FullSend(transferMsg, AtoB)
@@ -620,7 +632,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBC() {
 // exist on chain B
 func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 	initializer := suite.chainB.SenderAccount.GetAddress()
-	_, crosschainAddr := suite.SetupCrosschainSwaps()
+	_, crosschainAddr := suite.SetupCrosschainSwaps(true)
 	// Send some token0 tokens to B so that there are ibc tokens to send to A and crosschain-swap
 	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "")
 	suite.FullSend(transferMsg, AtoB)
