@@ -326,59 +326,58 @@ func (suite *KeeperTestSuite) TestRedelegateValidatorSet() {
 			coinToStake: sdk.NewCoin("stake", sdk.NewInt(20_000_000)),
 			expectPass:  true,
 		},
-
-		// {
-		// 	name:      "update the same validator set as above",
-		// 	delegator: sdk.AccAddress([]byte("addr1---------------")),
-		// 	newPreferences: []types.ValidatorPreference{
-		// 		{
-		// 			ValOperAddress: valAddrs[0],
-		// 			Weight:         sdk.NewDecWithPrec(5, 1),
-		// 		},
-		// 		{
-		// 			ValOperAddress: valAddrs[1],
-		// 			Weight:         sdk.NewDecWithPrec(3, 1),
-		// 		},
-		// 		{
-		// 			ValOperAddress: valAddrs[2],
-		// 			Weight:         sdk.NewDecWithPrec(2, 1),
-		// 		},
-		// 	},
-		// 	coinToStake: sdk.NewCoin("stake", sdk.NewInt(20)),
-		// 	expectPass:  true,
-		// },
-		// {
-		// 	name:      "update existing Validator with new validators",
-		// 	delegator: sdk.AccAddress([]byte("addr2---------------")),
-		// 	newPreferences: []types.ValidatorPreference{
-		// 		{
-		// 			ValOperAddress: valAddrs[3],
-		// 			Weight:         sdk.NewDecWithPrec(2, 1),
-		// 		},
-		// 		{
-		// 			ValOperAddress: valAddrs[4],
-		// 			Weight:         sdk.NewDecWithPrec(2, 1),
-		// 		},
-		// 		{
-		// 			ValOperAddress: valAddrs[5],
-		// 			Weight:         sdk.NewDecWithPrec(2, 1),
-		// 		},
-		// 		{
-		// 			ValOperAddress: valAddrs[6],
-		// 			Weight:         sdk.NewDecWithPrec(2, 1),
-		// 		},
-		// 		{
-		// 			ValOperAddress: valAddrs[7],
-		// 			Weight:         sdk.NewDecWithPrec(1, 1),
-		// 		},
-		// 		{
-		// 			ValOperAddress: valAddrs[8],
-		// 			Weight:         sdk.NewDecWithPrec(1, 1),
-		// 		},
-		// 	},
-		// 	coinToStake: sdk.NewCoin("stake", sdk.NewInt(50)),
-		// 	expectPass:  true,
-		// },
+		{
+			name:      "update the same validator set as above",
+			delegator: sdk.AccAddress([]byte("addr1---------------")),
+			newPreferences: []types.ValidatorPreference{
+				{
+					ValOperAddress: valAddrs[0],
+					Weight:         sdk.NewDecWithPrec(5, 1),
+				},
+				{
+					ValOperAddress: valAddrs[1],
+					Weight:         sdk.NewDecWithPrec(3, 1),
+				},
+				{
+					ValOperAddress: valAddrs[2],
+					Weight:         sdk.NewDecWithPrec(2, 1),
+				},
+			},
+			coinToStake: sdk.NewCoin("stake", sdk.NewInt(20_000_000)),
+			expectPass:  true,
+		},
+		{
+			name:      "update existing Validator with new validators",
+			delegator: sdk.AccAddress([]byte("addr2---------------")),
+			newPreferences: []types.ValidatorPreference{
+				{
+					ValOperAddress: valAddrs[3],
+					Weight:         sdk.NewDecWithPrec(2, 1),
+				},
+				{
+					ValOperAddress: valAddrs[4],
+					Weight:         sdk.NewDecWithPrec(2, 1),
+				},
+				{
+					ValOperAddress: valAddrs[5],
+					Weight:         sdk.NewDecWithPrec(2, 1),
+				},
+				{
+					ValOperAddress: valAddrs[6],
+					Weight:         sdk.NewDecWithPrec(2, 1),
+				},
+				{
+					ValOperAddress: valAddrs[7],
+					Weight:         sdk.NewDecWithPrec(1, 1),
+				},
+				{
+					ValOperAddress: valAddrs[8],
+					Weight:         sdk.NewDecWithPrec(1, 1),
+				},
+			},
+			coinToStake: sdk.NewCoin("stake", sdk.NewInt(50_000_000)),
+			expectPass:  true,
+		},
 	}
 
 	for _, test := range tests {
@@ -404,6 +403,7 @@ func (suite *KeeperTestSuite) TestRedelegateValidatorSet() {
 
 			_, err = msgServer.RedelegateValidatorSet(c, types.NewMsgRedelegateValidatorSet(test.delegator, test.newPreferences))
 			if test.expectPass {
+				// TODO: check if the validator have recieved the correct amount of tokens
 				suite.Require().NoError(err)
 			} else {
 				suite.Require().Error(err)

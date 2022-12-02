@@ -127,7 +127,6 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 // 1. the (re)delegator already has another immature redelegation in progress with a destination to a validator (let's call it Validator X)
 // 2. the (re)delegator is attempting to create a new redelegation where the source validator for this new redelegation is Validator X
 func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, existingSet types.ValidatorSetPreferences, newSet []types.ValidatorPreference) error {
-
 	var existingValSet []valSet
 	var newValSet []valSet
 	totalTokenAmount := sdk.NewDec(0)
@@ -146,20 +145,18 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 		}
 
 		tokenFromShares := validator.TokensFromShares(delegation.Shares)
-		existing_val, existing_val_zero_amount := k.SetupStructs(existingVals, tokenFromShares)
+		existing_val, existing_val_zero_amount := k.GetValSetStruct(existingVals, tokenFromShares)
 		existingValSet = append(existingValSet, existing_val)
 		newValSet = append(newValSet, existing_val_zero_amount)
 		totalTokenAmount = totalTokenAmount.Add(tokenFromShares)
-		fmt.Println("EXISTING VAL: ", existingVals.ValOperAddress, tokenFromShares)
 	}
 
 	for _, newVals := range newSet {
 		amountToDelegate := newVals.Weight.Mul(totalTokenAmount)
 
-		new_val, new_val_zero_amount := k.SetupStructs(newVals, amountToDelegate)
+		new_val, new_val_zero_amount := k.GetValSetStruct(newVals, amountToDelegate)
 		newValSet = append(newValSet, new_val)
 		existingValSet = append(existingValSet, new_val_zero_amount)
-		fmt.Println("NEW VAL: ", newVals.ValOperAddress, amountToDelegate)
 	}
 
 	// calculate the difference between two sets
@@ -197,7 +194,6 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 			// Find target value in diffValSet and set that to (sourceAmt - targetAmt)
 			diff_val.amount = diff_val.amount.Sub(amount)            // set the source to 0
 			diffValSet[idx].amount = target_large.amount.Add(amount) // set the target to (sourceAmt - targetAmt)
-			fmt.Println("FIRST", idx, source_large, target_large.valAddr, amount)
 		}
 	}
 
@@ -211,9 +207,6 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 		if !found {
 			return fmt.Errorf("validator not found %s", validator)
 		}
-
-		fmt.Println("Validators: ", validator.OperatorAddress, validator.DelegatorShares)
-
 	}
 
 	return nil
@@ -287,7 +280,10 @@ func (k Keeper) GetValidatorInfo(ctx sdk.Context, existingValAddr string) (sdk.V
 	return valAddr, validator, nil
 }
 
-func (k Keeper) SetupStructs(validator types.ValidatorPreference, amountFromShares sdk.Dec) (valSet, valSet) {
+// GetValSetStruct initializes valSet struct with valAddr, weight and amount.
+// It also creates an extra struct with zero amount, that can be appended to newValSet that will be created.
+// We do this to make sure the struct array length is the same to calculate their difference.
+func (k Keeper) GetValSetStruct(validator types.ValidatorPreference, amountFromShares sdk.Dec) (valSet, valSet) {
 	val_struct := valSet{
 		valAddr: validator.ValOperAddress,
 		weight:  validator.Weight,
@@ -303,6 +299,7 @@ func (k Keeper) SetupStructs(validator types.ValidatorPreference, amountFromShar
 	return val_struct, val_struct_zero_amount
 }
 
+// FindMin takes in a valSet struct array and computes the minimum val set based on the amount delegated to a validator.
 func (k Keeper) FindMin(valPrefs []*valSet) (min valSet, idx int) {
 	min = *valPrefs[0]
 	idx = 0
@@ -315,6 +312,7 @@ func (k Keeper) FindMin(valPrefs []*valSet) (min valSet, idx int) {
 	return min, idx
 }
 
+// FindMax takes in a valSet struct array and computes the maximum val set based the amount delegated to a validator.
 func (k Keeper) FindMax(valPrefs []*valSet) (max valSet, idx int) {
 	max = *valPrefs[0]
 	idx = 0
