@@ -4,7 +4,7 @@ Localrelayer is a local testing environment composed of two localOsmosis instanc
 
 ![Architecture](./assets/architecture.png)
 
-### Endpoints
+## Endpoints
 
 | Chain ID         | Component  | Endpoint                 |
 |------------------|------------|--------------------------|
@@ -17,6 +17,20 @@ Localrelayer is a local testing environment composed of two localOsmosis instanc
 | `localosmosis-b` | `gRPC`     | <http://localhost:39090> |
 | `localosmosis-b` | `faucet`   | <http://localhost:38080> |
 | `-`              | `hermes`   | <http://localhost:3000>  |
+
+## Accounts
+
+By default the following mnemonics are used:
+
+| Chain ID         | Account       | Mnemonic                                                                                                                                                          |
+|------------------|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `localosmosis-a` | `validator-a` | *family album bird seek tilt color pill danger message abuse manual tent almost ridge boost blast high comic core quantum spoon coconut oyster remove*            |
+| `localosmosis-a` | `faucet`      | *increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great*     |
+| `localosmosis-a` | `relayer`     | *black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken* |
+| `localosmosis-b` | `validator-b` | *family album bird seek tilt color pill danger message abuse manual tent almost ridge boost blast high comic core quantum spoon coconut oyster remove*            |
+| `localosmosis-b` | `faucet`      | *increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great*     |
+| `localosmosis-b` | `relayer`     | *black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken* |
+
 
 ## Deploy
 
@@ -71,19 +85,6 @@ ff7abb62fdb3   confio/faucet:0.28.11          "/app/packages/fauce…"   About a
 d90ec29c7a6f   local:osmosis                  "/osmosis/setup.sh"      About a minute ago   Up 3 seconds   26656/tcp, 0.0.0.0:31317->1317/tcp, 0.0.0.0:39090->9090/tcp, 0.0.0.0:36657->26657/tcp   localrelayer-localosmosis-b-1
 e36cead49a07   local:osmosis                  "/osmosis/setup.sh"      About a minute ago   Up 3 seconds   0.0.0.0:1317->1317/tcp, 0.0.0.0:9090->9090/tcp, 0.0.0.0:26657->26657/tcp, 26656/tcp     localrelayer-localosmosis-a-1
 ```
-
-## Accounts
-
-By default the following mnemonics are used:
-
-| Chain ID         | Account       | Mnemonic                                                                                                                                                          |
-|------------------|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `localosmosis-a` | `validator-a` | *family album bird seek tilt color pill danger message abuse manual tent almost ridge boost blast high comic core quantum spoon coconut oyster remove*            |
-| `localosmosis-a` | `faucet`      | *increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great*     |
-| `localosmosis-a` | `relayer`     | *black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken* |
-| `localosmosis-b` | `validator-b` | *family album bird seek tilt color pill danger message abuse manual tent almost ridge boost blast high comic core quantum spoon coconut oyster remove*            |
-| `localosmosis-b` | `faucet`      | *increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great*     |
-| `localosmosis-b` | `relayer`     | *black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken* |
 
 ## Usage
 
