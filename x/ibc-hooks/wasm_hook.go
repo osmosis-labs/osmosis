@@ -231,9 +231,24 @@ func (h WasmHooks) SendPacketOverride(i ICS4Middleware, ctx sdk.Context, chanCap
 		return i.channel.SendPacket(ctx, chanCap, packet) // continue
 	}
 
-	// Remove the memo from the data so the packet is sent without it.
+	// We remove the callback metadata from the memo as it has already been processed.
+
+	// If the only available key in the memo is the callback, we should remove the memo
+	// from the data completely so the packet is sent without it.
 	// This way receiver chains that are on old versions of IBC will be able to process the packet
-	data.Memo = ""
+
+	callbackRaw := metadata["callback"] // This will be used later.
+	delete(metadata, "callback")
+	bzMetadata, err := json.Marshal(metadata)
+	if err != nil {
+		return sdkerrors.Wrap(err, "Send packet with callback error")
+	}
+	stringMetadata := string(bzMetadata)
+	if stringMetadata == "{}" {
+		data.Memo = ""
+	} else {
+		data.Memo = stringMetadata
+	}
 	dataBytes, err := json.Marshal(data)
 	if err != nil {
 		return sdkerrors.Wrap(err, "Send packet with callback error")
@@ -254,7 +269,6 @@ func (h WasmHooks) SendPacketOverride(i ICS4Middleware, ctx sdk.Context, chanCap
 	if err != nil {
 		return err
 	}
-	callbackRaw := metadata["callback"]
 
 	// Make sure the callback contract is a string and a valid bech32 addr. If it isn't, ignore this packet
 	contract, ok := callbackRaw.(string)
