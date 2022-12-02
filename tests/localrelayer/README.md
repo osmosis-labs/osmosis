@@ -56,7 +56,7 @@ The command will:
 
 2. run the following containers:
 
-```
+```bash
  ⠿ Container localrelayer-localosmosis-b-1  Created
  ⠿ Container localrelayer-localosmosis-a-1  Created
  ⠿ Container localrelayer-faucet-a-1        Created
