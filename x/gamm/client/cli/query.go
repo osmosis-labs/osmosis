@@ -43,24 +43,16 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
-// GetCmdPool returns pool.
 func GetCmdPool() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "pool <poolID>",
-		Short: "Query pool",
-		Long: osmocli.FormatLongDescription(`Query pool.
+	return osmocli.SimpleQueryCmd[*types.QueryPoolRequest](
+		"pool [poolID]",
+		"Query pool",
+		`Query pool.
 Example:
 {{.CommandPrefix}} pool 1
-`, types.ModuleName),
-		Args: cobra.ExactArgs(1),
-		RunE: osmocli.NewQueryLogicAllFieldsAsArgs[*types.QueryPoolRequest](
-			"Pool", types.NewQueryClient,
-		),
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+`,
+		types.ModuleName, types.NewQueryClient,
+	)
 }
 
 // TODO: Push this to the SDK.
@@ -128,39 +120,16 @@ $ %s query gamm pools
 	return cmd
 }
 
-// GetCmdNumPools return number of pools available.
 func GetCmdNumPools() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "num-pools",
-		Short: "Query number of pools",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query number of pools.
+	return osmocli.SimpleQueryCmd[*types.QueryNumPoolsRequest](
+		"num-pools",
+		"Query number of pools",
+		`Query number of pools.
 Example:
-$ %s query gamm num-pools
+{{.CommandPrefix}} num-pools
 `,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.NumPools(cmd.Context(), &types.QueryNumPoolsRequest{})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+		types.ModuleName, types.NewQueryClient,
+	)
 }
 
 // GetCmdPoolParams return pool params.
@@ -223,85 +192,53 @@ $ %s query gamm pool-params 1
 	return cmd
 }
 
-// GetCmd return total share.
 func GetCmdTotalPoolLiquidity() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "total-pool-liquidity <poolID>",
-		Short: "Query total-pool-liquidity",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query total-pool-liquidity.
+	return osmocli.SimpleQueryCmd[*types.QueryTotalPoolLiquidityRequest](
+		"total-pool-liquidity [poolID]",
+		"Query total-pool-liquidity",
+		`Query total-pool-liquidity.
 Example:
-$ %s query gamm total-pool-liquidity 1
+{{.CommandPrefix}} total-pool-liquidity 1
 `,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: osmocli.NewQueryLogicAllFieldsAsArgs[*types.QueryTotalPoolLiquidityRequest](
-			"TotalPoolLiquidity", types.NewQueryClient,
-		),
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+		types.ModuleName, types.NewQueryClient,
+	)
 }
 
-// GetCmdTotalShares return total share.
 func GetCmdTotalShares() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "total-share <poolID>",
-		Short: "Query total-share",
-		Long: osmocli.FormatLongDescription(`Query total-share.
+	return osmocli.SimpleQueryCmd[*types.QueryTotalSharesRequest](
+		"total-share [poolID]",
+		"Query total-share",
+		`Query total-share.
 Example:
-$ %s query gamm total-share 1
-`, types.ModuleName),
-		Args: cobra.ExactArgs(1),
-		RunE: osmocli.NewQueryLogicAllFieldsAsArgs[*types.QueryTotalSharesRequest](
-			"TotalShares", types.NewQueryClient,
-		),
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// GetCmdQueryTotalLiquidity return total liquidity.
-func GetCmdQueryTotalLiquidity() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "total-liquidity",
-		Short: "Query total-liquidity",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query total-liquidity.
-Example:
-$ %s query gamm total-liquidity
+{{.CommandPrefix}} total-share 1
 `,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(0),
-		RunE: osmocli.NewQueryLogicAllFieldsAsArgs[*types.QueryTotalLiquidityRequest](
-			"TotalLiquidity", types.NewQueryClient),
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+		types.ModuleName, types.NewQueryClient,
+	)
 }
 
-// GetCmdSpotPrice returns spot price
-func GetCmdSpotPrice() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "spot-price <pool-ID> <base-asset-denom> <quote-asset-denom>",
-		Short: "Query spot-price",
-		Args:  cobra.ExactArgs(3),
-		RunE: osmocli.NewQueryLogicAllFieldsAsArgs[*types.QuerySpotPriceRequest](
-			"SpotPrice", types.NewQueryClient),
-	}
+func GetCmdQueryTotalLiquidity() *cobra.Command {
+	return osmocli.SimpleQueryCmd[*types.QueryTotalLiquidityRequest](
+		"total-liquidity",
+		"Query total-liquidity",
+		`Query total-liquidity.
+Example:
+{{.CommandPrefix}} total-liquidity
+`,
+		types.ModuleName, types.NewQueryClient,
+	)
+}
 
-	flags.AddQueryFlagsToCmd(cmd)
-	return cmd
+func GetCmdSpotPrice() *cobra.Command {
+	//nolint:staticcheck
+	return osmocli.SimpleQueryCmd[*types.QuerySpotPriceRequest](
+		"spot-price <pool-ID> [quote-asset-denom] [base-asset-denom]",
+		"Query spot-price (LEGACY, arguments are reversed!!)",
+		`Query spot price (Legacy).
+Example:
+{{.CommandPrefix}} spot-price 1 uosmo ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
+`,
+		types.ModuleName, types.NewQueryClient,
+	)
 }
 
 // GetCmdEstimateSwapExactAmountIn returns estimation of output coin when amount of x token input.
@@ -474,8 +411,7 @@ $ %s query gamm pools-with-filter <min_liquidity> <pool_type>
 
 // GetCmdPoolType returns pool type given pool id.
 func GetCmdPoolType() *cobra.Command {
-	return osmocli.SimpleQueryCommand[*types.QueryPoolTypeRequest](
-		"PoolType",
+	return osmocli.SimpleQueryCmd[*types.QueryPoolTypeRequest](
 		"pool-type <pool_id>",
 		"Query pool type",
 		`Query pool type

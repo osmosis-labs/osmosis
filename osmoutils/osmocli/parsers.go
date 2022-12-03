@@ -37,6 +37,15 @@ func ParseNumFields[reqP proto.Message]() int {
 	return t.NumField()
 }
 
+func ParseExpectedFnName[reqP proto.Message]() string {
+	req := osmoutils.MakeNew[reqP]()
+	v := reflect.ValueOf(req).Elem()
+	s := v.Type().String()
+	prefixTrimmed := strings.Split(s, "Query")[1]
+	suffixTrimmed := strings.TrimSuffix(prefixTrimmed, "Request")
+	return suffixTrimmed
+}
+
 func ParseField(v reflect.Value, t reflect.Type, fieldIndex int, arg string) error {
 	fVal := v.Field(fieldIndex)
 	fType := t.Field(fieldIndex)

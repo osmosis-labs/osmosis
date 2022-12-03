@@ -38,20 +38,41 @@ Use "{{.CommandPath}} [command] --help" for more information about a command.{{e
 	return cmd.Help()
 }
 
-func SimpleQueryCommand[reqP proto.Message, querier any](querierFnName string, use string, short string, long string,
-	moduleName string, newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
+type QueryDescriptor struct {
+	Use   string
+	Short string
+	Long  string
+
+	QueryFnName string
+}
+
+func SimpleQueryFromDescriptor[reqP proto.Message, querier any](desc QueryDescriptor, newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   use,
-		Short: short,
-		Long:  FormatLongDescription(long, moduleName),
+		Use:   desc.Use,
+		Short: desc.Short,
+		Long:  desc.Long,
 		Args:  cobra.ExactArgs(ParseNumFields[reqP]()),
 		RunE: NewQueryLogicAllFieldsAsArgs[reqP](
-			querierFnName, newQueryClientFn),
+			desc.QueryFnName, newQueryClientFn),
 	}
-
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
+}
+
+// SimpleQueryCmd builds a query, for the common, simple case.
+// It detects that the querier function name is the same as the ProtoMessage name,
+// with just the "Query" and "Request" args chopped off.
+// It expects all proto fields to appear as arguments, in order.
+func SimpleQueryCmd[reqP proto.Message, querier any](use string, short string, long string,
+	moduleName string, newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
+	desc := QueryDescriptor{
+		Use:         use,
+		Short:       short,
+		Long:        FormatLongDescription(long, moduleName),
+		QueryFnName: ParseExpectedFnName[reqP](),
+	}
+	return SimpleQueryFromDescriptor[reqP](desc, newQueryClientFn)
 }
 
 type ParamGetter[reqP proto.Message, resP proto.Message] interface {
