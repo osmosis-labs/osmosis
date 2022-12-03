@@ -62,68 +62,6 @@ func (s *KeeperTestSuite) TestTickOrdering() {
 	s.Require().Equal([]int64{78, 70, -4, -55, -200}, vals)
 }
 
-func (s *KeeperTestSuite) TestNextInitializedTick() {
-	s.SetupTest()
-
-	liquidityTicks := []int64{-200, -55, -4, 70, 78, 84, 139, 240, 535}
-	for _, t := range liquidityTicks {
-		s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, 1, t, model.TickInfo{})
-	}
-
-	s.Run("lte=true", func() {
-		s.Run("returns tick to right if at initialized tick", func() {
-			n, initd := s.App.ConcentratedLiquidityKeeper.NextInitializedTick(s.Ctx, 1, 78, false)
-			s.Require().Equal(int64(84), n)
-			s.Require().True(initd)
-		})
-		s.Run("returns tick to right if at initialized tick", func() {
-			n, initd := s.App.ConcentratedLiquidityKeeper.NextInitializedTick(s.Ctx, 1, -55, false)
-			s.Require().Equal(int64(-4), n)
-			s.Require().True(initd)
-		})
-		s.Run("returns the tick directly to the right", func() {
-			n, initd := s.App.ConcentratedLiquidityKeeper.NextInitializedTick(s.Ctx, 1, 77, false)
-			s.Require().Equal(int64(78), n)
-			s.Require().True(initd)
-		})
-		s.Run("returns the tick directly to the right", func() {
-			n, initd := s.App.ConcentratedLiquidityKeeper.NextInitializedTick(s.Ctx, 1, -56, false)
-			s.Require().Equal(int64(-55), n)
-			s.Require().True(initd)
-		})
-		s.Run("returns the next words initialized tick if on the right boundary", func() {
-			n, initd := s.App.ConcentratedLiquidityKeeper.NextInitializedTick(s.Ctx, 1, -257, false)
-			s.Require().Equal(int64(-200), n)
-			s.Require().True(initd)
-		})
-		s.Run("returns the next initialized tick from the next word", func() {
-			s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, 1, 340, model.TickInfo{})
-
-			n, initd := s.App.ConcentratedLiquidityKeeper.NextInitializedTick(s.Ctx, 1, 328, false)
-			s.Require().Equal(int64(340), n)
-			s.Require().True(initd)
-		})
-	})
-
-	s.Run("lte=false", func() {
-		s.Run("returns tick directly to the left of input tick if not initialized", func() {
-			n, initd := s.App.ConcentratedLiquidityKeeper.NextInitializedTick(s.Ctx, 1, 79, true)
-			s.Require().Equal(int64(78), n)
-			s.Require().True(initd)
-		})
-		s.Run("returns same tick if initialized", func() {
-			n, initd := s.App.ConcentratedLiquidityKeeper.NextInitializedTick(s.Ctx, 1, 78, true)
-			s.Require().Equal(int64(78), n)
-			s.Require().True(initd)
-		})
-		s.Run("returns next initialized tick far away", func() {
-			n, initd := s.App.ConcentratedLiquidityKeeper.NextInitializedTick(s.Ctx, 1, 100, true)
-			s.Require().Equal(int64(84), n)
-			s.Require().True(initd)
-		})
-	})
-}
-
 func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 	type param struct {
 		poolId      uint64
@@ -281,7 +219,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 				upper:       true,
 			},
 			tickExists:  false,
-			expectedErr: types.PoolDoesNotExistError{PoolId: 2},
+			expectedErr: types.PoolNotFoundError{PoolId: 2},
 		},
 	}
 
@@ -291,7 +229,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			s.Setup()
 
 			// Create a CL pool with poolId 1
-			_, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, ETH, USDC, DefaultCurrSqrtPrice, sdk.NewInt(DefaultCurrTick))
+			_, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, ETH, USDC, DefaultCurrSqrtPrice, DefaultCurrTick)
 			s.Require().NoError(err)
 
 			// If tickExists set, initialize the specified tick with defaultLiquidityAmt
@@ -337,19 +275,19 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 		{
 			name:             "Get tick info on existing pool and existing tick",
 			poolToGet:        validPoolId,
-			tickToGet:        DefaultCurrTick,
+			tickToGet:        DefaultCurrTick.Int64(),
 			expectedTickInfo: model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg()},
 		},
 		{
 			name:             "Get tick info on existing pool with no existing tick",
 			poolToGet:        validPoolId,
-			tickToGet:        DefaultCurrTick + 1,
+			tickToGet:        DefaultCurrTick.Int64() + 1,
 			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec()},
 		},
 		{
 			name:             "Get tick info on a non-existing pool with no existing tick",
 			poolToGet:        2,
-			tickToGet:        DefaultCurrTick + 1,
+			tickToGet:        DefaultCurrTick.Int64() + 1,
 			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec()},
 		},
 	}
@@ -360,11 +298,11 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			s.Setup()
 
 			// Create a CL pool with poolId 1
-			_, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, ETH, USDC, DefaultCurrSqrtPrice, sdk.NewInt(DefaultCurrTick))
+			_, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, ETH, USDC, DefaultCurrSqrtPrice, DefaultCurrTick)
 			s.Require().NoError(err)
 
 			// Set up an initialized tick
-			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, 1, DefaultCurrTick, DefaultLiquidityAmt, true)
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, 1, DefaultCurrTick.Int64(), DefaultLiquidityAmt, true)
 
 			// System under test
 			tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, test.poolToGet, test.tickToGet)
