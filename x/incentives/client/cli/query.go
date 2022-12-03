@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v13/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 
@@ -19,13 +20,7 @@ import (
 // GetQueryCmd returns the query commands for this module.
 func GetQueryCmd() *cobra.Command {
 	// group incentives queries under a subcommand
-	cmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      fmt.Sprintf("Querying commands for the %s module", types.ModuleName),
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
+	cmd := osmocli.QueryIndexCmd(types.ModuleName)
 
 	cmd.AddCommand(
 		GetCmdGauges(),

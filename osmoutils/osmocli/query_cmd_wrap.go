@@ -17,8 +17,8 @@ func QueryIndexCmd(moduleName string) *cobra.Command {
 }
 
 func indexRunCmd(cmd *cobra.Command, args []string) error {
-	usageTemplate := `Usage:{{if .Runnable}}
-  {{.UseLine}}{{end}}
+	usageTemplate := `Usage:{{if .HasAvailableSubCommands}}
+  {{.CommandPath}} [command]{{end}}
   
 {{if .HasAvailableSubCommands}}Available Commands:{{range .Commands}}{{if .IsAvailableCommand}}
   {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}
