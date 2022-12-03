@@ -12,7 +12,7 @@ option (gogoproto.goproto_getters_all) = false;
 service Query {
   // Returns the list of ValidatorPreferences for the user.
   rpc UserValidatorPreferences(UserValidatorPreferencesRequest)
-      returns (UserValidatorPreferenceResponse) {
+      returns (UserValidatorPreferencesResponse) {
     option (google.api.http).get = "/osmosis/valset-pref/v1beta1/{address}";
   }
 }
@@ -24,6 +24,6 @@ message UserValidatorPreferencesRequest {
 }
 
 // Response type the QueryUserValidatorPreferences query request
-message UserValidatorPreferenceResponse {
+message UserValidatorPreferencesResponse {
   repeated ValidatorPreference preferences = 1 [ (gogoproto.nullable) = false ];
 }

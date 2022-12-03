@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	validatorprefkeeper "github.com/osmosis-labs/osmosis/v13/x/valset-pref"
 	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/client/queryproto"
 )
@@ -16,13 +17,13 @@ func NewQuerier(k validatorprefkeeper.Keeper) Querier {
 	return Querier{k}
 }
 
-func (q Querier) UserValidatorPreferences(ctx sdk.Context, req queryproto.UserValidatorPreferencesRequest) (*queryproto.UserValidatorPreferenceResponse, error) {
+func (q Querier) UserValidatorPreferences(ctx sdk.Context, req queryproto.UserValidatorPreferencesRequest) (*queryproto.UserValidatorPreferencesResponse, error) {
 	validatorSet, found := q.K.GetValidatorSetPreference(ctx, req.Address)
 	if !found {
 		return nil, fmt.Errorf("Validator set not found")
 	}
 
-	return &queryproto.UserValidatorPreferenceResponse{
+	return &queryproto.UserValidatorPreferencesResponse{
 		Preferences: validatorSet.Preferences,
 	}, nil
 }
