@@ -1,6 +1,8 @@
 package concentrated_liquidity_test
 
 import (
+	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
@@ -24,42 +26,57 @@ type lpTest struct {
 }
 
 var (
-	denom0   = "eth"
-	denom1   = "usdc"
 	baseCase = &lpTest{
 		poolId:          1,
-		currentTick:     sdk.NewInt(85176),
-		lowerTick:       int64(84222),
-		upperTick:       int64(86129),
-		currentSqrtP:    sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
-		amount0Desired:  sdk.NewInt(1000000),                            // 1 eth
+		currentTick:     DefaultCurrTick,
+		lowerTick:       DefaultLowerTick,
+		upperTick:       DefaultUpperTick,
+		currentSqrtP:    DefaultCurrSqrtPrice,
+		amount0Desired:  DefaultAmt0,
 		amount0Minimum:  sdk.ZeroInt(),
-		amount0Expected: sdk.NewInt(998587),     // 0.998587 eth
-		amount1Desired:  sdk.NewInt(5000000000), // 5000 usdc
+		amount0Expected: DefaultAmt0Expected,
+		amount1Desired:  DefaultAmt1,
 		amount1Minimum:  sdk.ZeroInt(),
-		amount1Expected: sdk.NewInt(5000000000), // 5000 usdc
-		liquidityAmount: sdk.MustNewDecFromStr("1517818840.967515822610790519"),
+		amount1Expected: DefaultAmt1Expected,
+		liquidityAmount: DefaultLiquidityAmt,
 	}
 )
 
 func (s *KeeperTestSuite) TestCreatePosition() {
 	tests := map[string]lpTest{
-		// "base case": *baseCase,
-		"amount of token 0 is smaller than minimum; should fail and not update state": {
+		"base case": {},
+		"error: non-existent pool": {
+			poolId:        2,
+			expectedError: types.PoolNotFoundError{PoolId: 2},
+		},
+		"error: lower tick out of bounds": {
+			lowerTick:     types.MinTick - 1,
+			expectedError: types.InvalidTickError{Tick: types.MinTick - 1, IsLower: true},
+		},
+		"error: upper tick out of bounds": {
+			upperTick:     types.MaxTick + 1,
+			expectedError: types.InvalidTickError{Tick: types.MaxTick + 1, IsLower: false},
+		},
+		"error: upper tick is below the lower tick, but both are in bounds": {
+			lowerTick:     50,
+			upperTick:     40,
+			expectedError: types.InvalidLowerUpperTickError{LowerTick: 50, UpperTick: 40},
+		},
+		"error: amount of token 0 is smaller than minimum; should fail and not update state": {
 			amount0Minimum: baseCase.amount0Expected.Mul(sdk.NewInt(2)),
 			expectedError:  types.InsufficientLiquidityCreatedError{Actual: baseCase.amount0Expected, Minimum: baseCase.amount0Expected.Mul(sdk.NewInt(2)), IsTokenZero: true},
 		},
-		"amount of token 1 is smaller than minimum; should fail and not update state": {
+		"error: amount of token 1 is smaller than minimum; should fail and not update state": {
 			amount1Minimum: baseCase.amount1Expected.Mul(sdk.NewInt(2)),
 			expectedError:  types.InsufficientLiquidityCreatedError{Actual: baseCase.amount1Expected, Minimum: baseCase.amount1Expected.Mul(sdk.NewInt(2))},
 		},
-		"error: invalid tick": {
-			lowerTick:     types.MaxTick + 1,
-			expectedError: types.InvalidTickError{Tick: types.MaxTick + 1, IsLower: true},
+		"error: amount of token 1 is smaller than minimum; should fail and not update state test": {
+			amount0Desired: sdk.ZeroInt(),
+			amount1Desired: sdk.ZeroInt(),
+			expectedError:  errors.New("liquidityDelta calculated equals zero"),
 		},
 		// TODO: add more tests
 		// - custom hand-picked values
-		// - error edge cases
 		// - think of overflows
 		// - think of truncations
 	}
@@ -69,43 +86,65 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			tc := tc
 			s.SetupTest()
 
-			// Merge tc with baseCase and update tc
-			// to the merged result. This is done
-			// to reduce the amount of boilerplate
-			// in test cases.
+			// Merge tc with baseCase and update tc to the merged result. This is done to reduce the amount of boilerplate in test cases.
 			baseConfigCopy := *baseCase
 			mergeConfigs(&baseConfigCopy, &tc)
 			tc = baseConfigCopy
 
-			_, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, tc.poolId, denom0, denom1, tc.currentSqrtP, tc.currentTick)
+			// Create a CL pool with poolId 1
+			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, ETH, USDC, tc.currentSqrtP, tc.currentTick)
 			s.Require().NoError(err)
 
+			// Fund test account and create the desired position
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+
+			// Note user and pool account balances before create position is called
+			userBalancePrePositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
+			poolBalancePrePositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
+
 			asset0, asset1, liquidityCreated, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.amount0Desired, tc.amount1Desired, tc.amount0Minimum, tc.amount1Minimum, tc.lowerTick, tc.upperTick)
 
+			// Note user and pool account balances to compare after create position is called
+			userBalancePostPositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
+			poolBalancePostPositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
+
+			// If we expect an error, make sure:
+			// - some error was emitted
+			// - asset0 and asset1 that were calculated from create position is nil
+			// - the error emitted was the expected error
+			// - account balances are untouched
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().Equal(asset0, sdk.Int{})
 				s.Require().Equal(asset1, sdk.Int{})
 				s.Require().ErrorAs(err, &tc.expectedError)
 
-				// make sure that position is not created
-				_, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick)
+				// Check account balances
+				s.Require().Equal(userBalancePrePositionCreation.String(), userBalancePostPositionCreation.String())
+				s.Require().Equal(poolBalancePrePositionCreation.String(), poolBalancePostPositionCreation.String())
 
+				// Redundantly ensure that position was not created
+				position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick)
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, &types.PositionNotFoundError{PoolId: tc.poolId, LowerTick: tc.lowerTick, UpperTick: tc.upperTick})
+				s.Require().Nil(position)
 				return
 			}
 
+			// Else, check that we had no error from creating the position, and that the liquidity and assets that were returned are expected
 			s.Require().NoError(err)
 			s.Require().Equal(tc.amount0Expected.String(), asset0.String())
 			s.Require().Equal(tc.amount1Expected.String(), asset1.String())
 			s.Require().Equal(tc.liquidityAmount.String(), liquidityCreated.String())
 
-			// check position state
+			// Check account balances
+			s.Require().Equal(userBalancePrePositionCreation.Sub(sdk.NewCoins(sdk.NewCoin(ETH, asset0), (sdk.NewCoin(USDC, asset1)))).String(), userBalancePostPositionCreation.String())
+			s.Require().Equal(poolBalancePrePositionCreation.Add(sdk.NewCoin(ETH, asset0), (sdk.NewCoin(USDC, asset1))).String(), poolBalancePostPositionCreation.String())
+
+			// Check position state
 			s.validatePositionUpdate(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, tc.liquidityAmount)
 
-			// check tick state
+			// Check tick state
 			s.validateTickUpdates(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, tc.liquidityAmount)
 		})
 	}
@@ -165,18 +204,29 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				expectedError: types.PoolNotFoundError{PoolId: 2},
 			},
 		},
-		"error: invalid tick given": {
+		"error: upper tick out of bounds": {
 			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
 
 			// system under test parameters
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
-				lowerTick:     types.MaxTick + 1, // invalid tick
-				expectedError: types.InvalidTickError{Tick: types.MaxTick + 1, IsLower: true},
+				upperTick:     types.MaxTick + 1, // invalid tick
+				expectedError: types.InvalidTickError{Tick: types.MaxTick + 1, IsLower: false},
 			},
 		},
-		"error: insufficient liqudity": {
+		"error: lower tick out of bounds": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			// for withdrawing a position.
+			sutConfigOverwrite: &lpTest{
+				lowerTick:     types.MinTick - 1, // invalid tick
+				expectedError: types.InvalidTickError{Tick: types.MinTick - 1, IsLower: true},
+			},
+		},
+		"error: insufficient liquidity": {
 			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
 
@@ -185,6 +235,18 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			sutConfigOverwrite: &lpTest{
 				liquidityAmount: baseCase.liquidityAmount.Add(sdk.OneDec()), // 1 more than available
 				expectedError:   types.InsufficientLiquidityError{Actual: baseCase.liquidityAmount.Add(sdk.OneDec()), Available: baseCase.liquidityAmount},
+			},
+		},
+		"error: upper tick is below the lower tick, but both are in bounds": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			// for withdrawing a position.
+			sutConfigOverwrite: &lpTest{
+				lowerTick:     50,
+				upperTick:     40,
+				expectedError: types.InvalidLowerUpperTickError{LowerTick: 50, UpperTick: 40},
 			},
 		},
 		// TODO: test with custom amounts that potentially lead to truncations.
@@ -209,7 +271,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			// Setup.
 			if tc.setupConfig != nil {
-				_, err := concentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, config.poolId, denom0, denom1, config.currentSqrtP, config.currentTick)
+				_, err := concentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, config.poolId, ETH, USDC, config.currentSqrtP, config.currentTick)
 				s.Require().NoError(err)
 
 				s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
@@ -261,20 +323,26 @@ func mergeConfigs(dst *lpTest, overwrite *lpTest) {
 		if !overwrite.liquidityAmount.IsNil() {
 			dst.liquidityAmount = overwrite.liquidityAmount
 		}
+		if !overwrite.amount0Minimum.IsNil() {
+			dst.amount0Minimum = overwrite.amount0Minimum
+		}
+		if !overwrite.amount0Desired.IsNil() {
+			dst.amount0Desired = overwrite.amount0Desired
+		}
 		if !overwrite.amount0Expected.IsNil() {
 			dst.amount0Expected = overwrite.amount0Expected
+		}
+		if !overwrite.amount1Minimum.IsNil() {
+			dst.amount1Minimum = overwrite.amount1Minimum
+		}
+		if !overwrite.amount1Desired.IsNil() {
+			dst.amount1Desired = overwrite.amount1Desired
 		}
 		if !overwrite.amount1Expected.IsNil() {
 			dst.amount1Expected = overwrite.amount1Expected
 		}
 		if overwrite.expectedError != nil {
 			dst.expectedError = overwrite.expectedError
-		}
-		if !overwrite.amount0Minimum.IsNil() {
-			dst.amount0Minimum = overwrite.amount0Minimum
-		}
-		if !overwrite.amount1Minimum.IsNil() {
-			dst.amount1Minimum = overwrite.amount1Minimum
 		}
 	}
 }
@@ -344,7 +412,7 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 			s.SetupTest()
 
 			// create a CL pool
-			_, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, denom0, denom1, sdk.MustNewDecFromStr("70.710678118654752440"), sdk.NewInt(85176))
+			_, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, ETH, USDC, sdk.MustNewDecFromStr("70.710678118654752440"), sdk.NewInt(85176))
 			s.Require().NoError(err)
 
 			// store pool interface

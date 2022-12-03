@@ -1,7 +1,7 @@
 package concentrated_liquidity
 
 import (
-	fmt "fmt"
+	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -16,8 +16,11 @@ import (
 // to create position if the desired amounts cannot be satisfied.
 // On success, returns an actual amount of each token used and liquidity created.
 // Returns error if:
-// TODO: list error cases
-// TODO: table-driven tests
+// - the provided ticks are out of range / invalid
+// - the pool provided does not exist
+// - the liquidity delta is zero
+// - the amount0 or amount1 returned from the position update is less than the given minimums
+// - the pool or user does not have enough tokens to satisfy the requested amount
 func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (sdk.Int, sdk.Int, sdk.Dec, error) {
 	if err := validateTickRangeIsValid(lowerTick, upperTick); err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
@@ -34,9 +37,10 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
+	// calculate liquidity created from this position
 	liquidityDelta := math.GetLiquidityFromAmounts(pool.GetCurrentSqrtPrice(), sqrtPriceLowerTick, sqrtPriceUpperTick, amount0Desired, amount1Desired)
 	if liquidityDelta.IsZero() {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, fmt.Errorf("liquidity delta zero")
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, errors.New("liquidityDelta calculated equals zero")
 	}
 
 	// N.B. we only write cache context if actual amounts
