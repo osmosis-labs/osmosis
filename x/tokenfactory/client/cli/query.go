@@ -6,9 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-
 	// "github.com/cosmos/cosmos-sdk/client/flags"
 	// sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -30,60 +27,18 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
-// GetCmdDenomAuthorityMetadata returns the authority metadata for a queried denom
 func GetCmdDenomAuthorityMetadata() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "denom-authority-metadata [denom] [flags]",
-		Short: "Get the authority metadata for a specific denom",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.DenomAuthorityMetadata(cmd.Context(), &types.QueryDenomAuthorityMetadataRequest{
-				Denom: args[0],
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+	return osmocli.SimpleQueryCmd[*types.QueryDenomAuthorityMetadataRequest](
+		"denom-authority-metadata [denom] [flags]",
+		"Get the authority metadata for a specific denom", "",
+		types.ModuleName, types.NewQueryClient,
+	)
 }
 
-// GetCmdDenomsFromCreator a command to get a list of all tokens created by a specific creator address
 func GetCmdDenomsFromCreator() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "denoms-from-creator [creator address] [flags]",
-		Short: "Returns a list of all tokens created by a specific creator address",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.DenomsFromCreator(cmd.Context(), &types.QueryDenomsFromCreatorRequest{
-				Creator: args[0],
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+	return osmocli.SimpleQueryCmd[*types.QueryDenomsFromCreatorRequest](
+		"denoms-from-creator [creator address] [flags]",
+		"Returns a list of all tokens created by a specific creator address", "",
+		types.ModuleName, types.NewQueryClient,
+	)
 }

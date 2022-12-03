@@ -41,7 +41,13 @@ func ParseExpectedFnName[reqP proto.Message]() string {
 	req := osmoutils.MakeNew[reqP]()
 	v := reflect.ValueOf(req).Elem()
 	s := v.Type().String()
-	prefixTrimmed := strings.Split(s, "Query")[1]
+	// handle some non-std queries
+	var prefixTrimmed string
+	if strings.Contains(s, "Query") {
+		prefixTrimmed = strings.Split(s, "Query")[1]
+	} else {
+		prefixTrimmed = strings.Split(s, ".")[1]
+	}
 	suffixTrimmed := strings.TrimSuffix(prefixTrimmed, "Request")
 	return suffixTrimmed
 }
