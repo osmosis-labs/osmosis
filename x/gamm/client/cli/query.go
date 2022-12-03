@@ -48,35 +48,14 @@ func GetCmdPool() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pool <poolID>",
 		Short: "Query pool",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query pool.
+		Long: osmocli.FormatLongDescription(`Query pool.
 Example:
-$ %s query gamm pool 1
-`,
-				version.AppName,
-			),
-		),
+{{.CommandPrefix}} pool 1
+`, types.ModuleName),
 		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-			poolID, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.Pool(cmd.Context(), &types.QueryPoolRequest{
-				PoolId: uint64(poolID),
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
+		RunE: osmocli.NewQueryLogicAllFieldsAsArgs[*types.QueryPoolRequest, *types.QueryPoolResponse](
+			"Pool", types.NewQueryClient,
+		),
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)

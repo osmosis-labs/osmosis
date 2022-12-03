@@ -2,9 +2,43 @@ package osmocli
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 	"time"
 )
+
+func ParseField(v reflect.Value, t reflect.Type, fieldIndex int, arg string) error {
+	fVal := v.Field(fieldIndex)
+	fType := t.Field(fieldIndex)
+
+	// fmt.Printf("Field %d: %s %s %s\n", fieldIndex, fType.Name, fType.Type, fType.Type.Kind())
+	switch fType.Type.Kind() {
+	case reflect.Uint64:
+		u, err := ParseUint(arg, fType.Name)
+		if err != nil {
+			return err
+		}
+		fVal.SetUint(u)
+		return nil
+	case reflect.Uint:
+		u, err := ParseUint(arg, fType.Name)
+		if err != nil {
+			return err
+		}
+		fVal.SetUint(u)
+		return nil
+	case reflect.Int:
+		// Handle int type
+		// ...
+	case reflect.String:
+		// Handle string type
+		// ...
+	case reflect.Struct:
+		// Handle struct type
+		// ...
+	}
+	return fmt.Errorf("field type not recognized. Got type %v", fType)
+}
 
 func ParseUint(arg string, fieldName string) (uint64, error) {
 	v, err := strconv.ParseUint(arg, 10, 64)

@@ -3,6 +3,7 @@ package osmocli
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -68,4 +69,67 @@ func GetParams[reqP proto.Message, resP proto.Message, querier ParamGetter[reqP,
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
+}
+
+func callQueryClientFn[reqP proto.Message, resP proto.Message, querier any](ctx context.Context, fnName string, req reqP, q querier) (res resP, err error) {
+	qVal := reflect.ValueOf(q)
+	method := qVal.MethodByName(fnName)
+	args := []reflect.Value{
+		reflect.ValueOf(ctx),
+		reflect.ValueOf(req),
+	}
+	results := method.Call(args)
+	if len(results) != 2 {
+		panic("We got something wrong")
+	}
+	if !results[1].IsNil() {
+		//nolint:forcetypeassert
+		err = results[1].Interface().(error)
+		return res, err
+	}
+	//nolint:forcetypeassert
+	res = results[0].Interface().(resP)
+	return res, nil
+}
+
+func ParseFieldsFromArgs[reqP proto.Message](args []string) (reqP, error) {
+	req := osmoutils.MakeNew[reqP]()
+	v := reflect.ValueOf(req).Elem()
+	t := v.Type()
+	if len(args) != t.NumField() {
+		return req, fmt.Errorf("Incorrect number of arguments, expected %d got %d", t.NumField(), len(args))
+	}
+
+	// Iterate over the fields in the struct
+	for i := 0; i < t.NumField(); i++ {
+		err := ParseField(v, t, i, args[i])
+		if err != nil {
+			return req, err
+		}
+	}
+	return req, nil
+}
+
+func NewQueryLogicAllFieldsAsArgs[reqP proto.Message, resP proto.Message, querier any](keeperFnName string,
+	newQueryClientFn func(grpc1.ClientConn) querier) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		clientCtx, err := client.GetClientQueryContext(cmd)
+		if err != nil {
+			return err
+		}
+		queryClient := newQueryClientFn(clientCtx)
+		var req reqP
+
+		req, err = ParseFieldsFromArgs[reqP](args)
+		if err != nil {
+			return err
+		}
+
+		res, err := callQueryClientFn[reqP, resP](cmd.Context(), keeperFnName, req, queryClient)
+		if err != nil {
+			return err
+		}
+
+		return clientCtx.PrintProto(res)
+	}
 }
