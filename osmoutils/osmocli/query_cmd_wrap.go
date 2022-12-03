@@ -10,6 +10,8 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
+
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 )
 
 func QueryIndexCmd(moduleName string) *cobra.Command {
@@ -40,7 +42,7 @@ type ParamGetter[reqP proto.Message, resP proto.Message] interface {
 }
 
 func GetParams[reqP proto.Message, resP proto.Message, querier ParamGetter[reqP, resP]](
-	moduleName string, dummyProtoMsg reqP,
+	moduleName string,
 	newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "params [flags]",
@@ -53,7 +55,8 @@ func GetParams[reqP proto.Message, resP proto.Message, querier ParamGetter[reqP,
 			}
 			queryClient := newQueryClientFn(clientCtx)
 
-			res, err := queryClient.Params(cmd.Context(), dummyProtoMsg)
+			req := osmoutils.MakeNew[reqP]()
+			res, err := queryClient.Params(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
