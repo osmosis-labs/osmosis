@@ -50,6 +50,7 @@ jobs:
         uses: peter-evans/create-pull-request@v4
         with:
           base: ${{ github.event.repository.default_branch }}
+          title: "auto: code-gen upgrade handler ${{ env.input }}"
           body: |
             Update report
             - Created a new empty upgrade handler
