@@ -71,7 +71,7 @@ func GetParams[reqP proto.Message, resP proto.Message, querier ParamGetter[reqP,
 	return cmd
 }
 
-func callQueryClientFn[reqP proto.Message, resP proto.Message, querier any](ctx context.Context, fnName string, req reqP, q querier) (res resP, err error) {
+func callQueryClientFn[reqP proto.Message, querier any](ctx context.Context, fnName string, req reqP, q querier) (res proto.Message, err error) {
 	qVal := reflect.ValueOf(q)
 	method := qVal.MethodByName(fnName)
 	args := []reflect.Value{
@@ -88,7 +88,7 @@ func callQueryClientFn[reqP proto.Message, resP proto.Message, querier any](ctx 
 		return res, err
 	}
 	//nolint:forcetypeassert
-	res = results[0].Interface().(resP)
+	res = results[0].Interface().(proto.Message)
 	return res, nil
 }
 
@@ -110,7 +110,7 @@ func ParseFieldsFromArgs[reqP proto.Message](args []string) (reqP, error) {
 	return req, nil
 }
 
-func NewQueryLogicAllFieldsAsArgs[reqP proto.Message, resP proto.Message, querier any](keeperFnName string,
+func NewQueryLogicAllFieldsAsArgs[reqP proto.Message, querier any](keeperFnName string,
 	newQueryClientFn func(grpc1.ClientConn) querier) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		clientCtx, err := client.GetClientQueryContext(cmd)
@@ -125,7 +125,7 @@ func NewQueryLogicAllFieldsAsArgs[reqP proto.Message, resP proto.Message, querie
 			return err
 		}
 
-		res, err := callQueryClientFn[reqP, resP](cmd.Context(), keeperFnName, req, queryClient)
+		res, err := callQueryClientFn(cmd.Context(), keeperFnName, req, queryClient)
 		if err != nil {
 			return err
 		}

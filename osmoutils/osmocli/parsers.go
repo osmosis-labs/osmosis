@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -31,8 +32,12 @@ func ParseField(v reflect.Value, t reflect.Type, fieldIndex int, arg string) err
 		// Handle int type
 		// ...
 	case reflect.String:
-		// Handle string type
-		// ...
+		s, err := ParseDenom(arg, fType.Name)
+		if err != nil {
+			return err
+		}
+		fVal.SetString(s)
+		return nil
 	case reflect.Struct:
 		// Handle struct type
 		// ...
@@ -55,4 +60,8 @@ func ParseUnixTime(arg string, fieldName string) (time.Time, error) {
 	}
 	startTime := time.Unix(timeUnix, 0)
 	return startTime, nil
+}
+
+func ParseDenom(arg string, fieldName string) (string, error) {
+	return strings.TrimSpace(arg), nil
 }

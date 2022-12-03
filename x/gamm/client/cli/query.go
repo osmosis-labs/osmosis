@@ -53,7 +53,7 @@ Example:
 {{.CommandPrefix}} pool 1
 `, types.ModuleName),
 		Args: cobra.ExactArgs(1),
-		RunE: osmocli.NewQueryLogicAllFieldsAsArgs[*types.QueryPoolRequest, *types.QueryPoolResponse](
+		RunE: osmocli.NewQueryLogicAllFieldsAsArgs[*types.QueryPoolRequest](
 			"Pool", types.NewQueryClient,
 		),
 	}
@@ -237,7 +237,7 @@ $ %s query gamm total-pool-liquidity 1
 			),
 		),
 		Args: cobra.ExactArgs(1),
-		RunE: osmocli.NewQueryLogicAllFieldsAsArgs[*types.QueryTotalPoolLiquidityRequest, *types.QueryTotalPoolLiquidityResponse](
+		RunE: osmocli.NewQueryLogicAllFieldsAsArgs[*types.QueryTotalPoolLiquidityRequest](
 			"TotalPoolLiquidity", types.NewQueryClient,
 		),
 	}
@@ -257,7 +257,7 @@ Example:
 $ %s query gamm total-share 1
 `, types.ModuleName),
 		Args: cobra.ExactArgs(1),
-		RunE: osmocli.NewQueryLogicAllFieldsAsArgs[*types.QueryTotalSharesRequest, *types.QueryTotalSharesResponse](
+		RunE: osmocli.NewQueryLogicAllFieldsAsArgs[*types.QueryTotalSharesRequest](
 			"TotalShares", types.NewQueryClient,
 		),
 	}
@@ -281,20 +281,8 @@ $ %s query gamm total-liquidity
 			),
 		),
 		Args: cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.TotalLiquidity(cmd.Context(), &types.QueryTotalLiquidityRequest{})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
+		RunE: osmocli.NewQueryLogicAllFieldsAsArgs[*types.QueryTotalLiquidityRequest](
+			"TotalLiquidity", types.NewQueryClient),
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
@@ -308,31 +296,8 @@ func GetCmdSpotPrice() *cobra.Command {
 		Use:   "spot-price <pool-ID> <base-asset-denom> <quote-asset-denom>",
 		Short: "Query spot-price",
 		Args:  cobra.ExactArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-
-			poolID, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-
-			// nolint: staticcheck
-			res, err := queryClient.SpotPrice(cmd.Context(), &types.QuerySpotPriceRequest{
-				PoolId:          uint64(poolID),
-				BaseAssetDenom:  args[1],
-				QuoteAssetDenom: args[2],
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
+		RunE: osmocli.NewQueryLogicAllFieldsAsArgs[*types.QuerySpotPriceRequest](
+			"SpotPrice", types.NewQueryClient),
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
@@ -521,27 +486,8 @@ $ %s query gamm pool-type <pool_id>
 			),
 		),
 		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			poolID, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.PoolType(cmd.Context(), &types.QueryPoolTypeRequest{
-				PoolId: uint64(poolID),
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
+		RunE: osmocli.NewQueryLogicAllFieldsAsArgs[*types.QueryPoolTypeRequest](
+			"PoolType", types.NewQueryClient),
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
