@@ -472,3 +472,103 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestIsInitialPosition() {
+	type sendTest struct {
+		initialSqrtPrice sdk.Dec
+		initialTick      sdk.Int
+		expectedResponse bool
+	}
+	tests := map[string]sendTest{
+		"happy path: both initialSqrt price and initialTick are set, not initial position": {
+			initialSqrtPrice: DefaultCurrSqrtPrice,
+			initialTick:      DefaultCurrTick,
+			expectedResponse: false,
+		},
+		"happy path: both initialSqrt price and initialTick are not set, is initial position": {
+			initialSqrtPrice: sdk.ZeroDec(),
+			initialTick:      sdk.ZeroInt(),
+			expectedResponse: true,
+		},
+		"initialSqrt price is not set but initialTick is (should not happen)": {
+			initialSqrtPrice: sdk.ZeroDec(),
+			initialTick:      DefaultCurrTick,
+			expectedResponse: false,
+		},
+		"initialSqrt price is set but initialTick is not (should not happen)": {
+			initialSqrtPrice: DefaultCurrSqrtPrice,
+			initialTick:      sdk.ZeroInt(),
+			expectedResponse: false,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			tc := tc
+			s.SetupTest()
+
+			// system under test
+			isInitialPosition := s.App.ConcentratedLiquidityKeeper.IsInitialPosition(tc.initialSqrtPrice, tc.initialTick)
+
+			s.Require().Equal(tc.expectedResponse, isInitialPosition)
+
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestCreateInitialPosition() {
+	type sendTest struct {
+		amount0Desired sdk.Int
+		amount1Desired sdk.Int
+		expectedError  error
+	}
+	tests := map[string]sendTest{
+		"happy path: both amount0 and amount1 provided": {
+			amount0Desired: DefaultAmt0,
+			amount1Desired: DefaultAmt1,
+		},
+		"err: only amount0 provided": {
+			amount0Desired: DefaultAmt0,
+			amount1Desired: sdk.ZeroInt(),
+			expectedError:  types.InitialLiquidityZeroError{Amount0: DefaultAmt0, Amount1: sdk.ZeroInt()},
+		},
+		"err: only amount1 provided": {
+			amount0Desired: sdk.ZeroInt(),
+			amount1Desired: DefaultAmt1,
+			expectedError:  types.InitialLiquidityZeroError{Amount0: sdk.ZeroInt(), Amount1: DefaultAmt1},
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			tc := tc
+			s.SetupTest()
+
+			// create a CL pool
+			pool := s.PrepareDefaultPool(s.Ctx)
+
+			// ensure tick and sqrtPrice are initialized to zero
+			s.Require().Equal(pool.GetCurrentTick(), sdk.ZeroInt())
+			s.Require().Equal(pool.GetCurrentSqrtPrice(), sdk.ZeroDec())
+
+			// system under test
+			err := s.App.ConcentratedLiquidityKeeper.CreateInitialPosition(s.Ctx, pool, tc.amount0Desired, tc.amount1Desired)
+
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &tc.expectedError)
+			} else {
+				s.Require().NoError(err)
+
+				// Retrieve pool again
+				pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+				s.Require().NoError(err)
+
+				// Ensure tick and sqrtPrice are updated
+				s.Require().Equal(pool.GetCurrentTick().String(), DefaultCurrTick.String())
+				s.Require().Equal(pool.GetCurrentSqrtPrice().String(), DefaultCurrSqrtPrice.String())
+			}
+
+		})
+	}
+}

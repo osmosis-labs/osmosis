@@ -45,24 +45,10 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	initialTick := pool.GetCurrentTick()
 
 	// If the currentSqrtPrice and currentTick are zero, then this is the first position to be created for this pool.
-	// We therefore calculate the sqrtPrice and currentTick based on the inputs of this position
+	// We then calculate the sqrtPrice and currentTick based on the inputs of this position
 	// TODO: We need to review this logic very carefully, as I am not 100 percent convinced it is safe / correct
-	if initialSqrtPrice.Equal(sdk.ZeroDec()) && initialTick.Equal(sdk.ZeroInt()) {
-		if amount0Desired.Equal(sdk.ZeroInt()) || amount1Desired.Equal(sdk.ZeroInt()) {
-			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, types.InitialLiquidityZeroError{Amount0: amount0Desired, Amount1: amount1Desired}
-		}
-		initialSpotPrice := amount1Desired.Quo(amount0Desired).ToDec()
-		initialSqrtPrice, err = initialSpotPrice.ApproxSqrt()
-		if err != nil {
-			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
-		}
-		initialTick = math.PriceToTick(initialSpotPrice)
-		pool.SetCurrentSqrtPrice(initialSqrtPrice)
-		pool.SetCurrentTick(initialTick)
-		err = k.setPool(cacheCtx, pool)
-		if err != nil {
-			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
-		}
+	if k.isInitialPosition(initialSqrtPrice, initialTick) {
+		k.createInitialPosition(cacheCtx, pool, amount0Desired, amount1Desired)
 	}
 
 	liquidityDelta := math.GetLiquidityFromAmounts(pool.GetCurrentSqrtPrice(), sqrtPriceLowerTick, sqrtPriceUpperTick, amount0Desired, amount1Desired)
@@ -202,6 +188,44 @@ func (k Keeper) sendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 stri
 		finalCoinsToSend = append(finalCoinsToSend, sdk.NewCoin(denom1, amount1))
 	}
 	err := k.bankKeeper.SendCoins(ctx, sender, receiver, finalCoinsToSend)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// isInitialPosition checks if the initial sqrtPrice and initial tick are equal to zero.
+// If so, this is the first position to be created for this pool, and we return true.
+// If not, we return false.
+func (k Keeper) isInitialPosition(initialSqrtPrice sdk.Dec, initialTick sdk.Int) bool {
+	if initialSqrtPrice.Equal(sdk.ZeroDec()) && initialTick.Equal(sdk.ZeroInt()) {
+		return true
+	}
+	return false
+}
+
+// createInitialPosition ensures that the first position created on this pool includes both asset0 and asset1
+// This is required so we can set the pool's sqrtPrice and calculate it's initial tick from this
+func (k Keeper) createInitialPosition(ctx sdk.Context, pool types.ConcentratedPoolExtension, amount0Desired, amount1Desired sdk.Int) error {
+	// Check that the position includes some amount of both asset0 and asset1
+	if !amount0Desired.GT(sdk.ZeroInt()) || !amount1Desired.GT(sdk.ZeroInt()) {
+		return types.InitialLiquidityZeroError{Amount0: amount0Desired, Amount1: amount1Desired}
+	}
+
+	// Calculate the spot price and sqrt price from the amount provided
+	initialSpotPrice := amount1Desired.Quo(amount0Desired).ToDec()
+	initialSqrtPrice, err := initialSpotPrice.ApproxSqrt()
+	if err != nil {
+		return err
+	}
+
+	// Calculate the initial tick from the initial spot price
+	initialTick := math.PriceToTick(initialSpotPrice)
+
+	// Set the pool's current sqrt price and current tick to the above calculated values
+	pool.SetCurrentSqrtPrice(initialSqrtPrice)
+	pool.SetCurrentTick(initialTick)
+	err = k.setPool(ctx, pool)
 	if err != nil {
 		return err
 	}
