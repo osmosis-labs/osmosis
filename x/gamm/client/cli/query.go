@@ -237,27 +237,9 @@ $ %s query gamm total-pool-liquidity 1
 			),
 		),
 		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			poolID, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.TotalPoolLiquidity(cmd.Context(), &types.QueryTotalPoolLiquidityRequest{
-				PoolId: uint64(poolID),
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
+		RunE: osmocli.NewQueryLogicAllFieldsAsArgs[*types.QueryTotalPoolLiquidityRequest, *types.QueryTotalPoolLiquidityResponse](
+			"TotalPoolLiquidity", types.NewQueryClient,
+		),
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
@@ -270,36 +252,14 @@ func GetCmdTotalShares() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "total-share <poolID>",
 		Short: "Query total-share",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query total-share.
+		Long: osmocli.FormatLongDescription(`Query total-share.
 Example:
 $ %s query gamm total-share 1
-`,
-				version.AppName,
-			),
-		),
+`, types.ModuleName),
 		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			poolID, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.TotalShares(cmd.Context(), &types.QueryTotalSharesRequest{
-				PoolId: uint64(poolID),
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
+		RunE: osmocli.NewQueryLogicAllFieldsAsArgs[*types.QueryTotalSharesRequest, *types.QueryTotalSharesResponse](
+			"TotalShares", types.NewQueryClient,
+		),
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
