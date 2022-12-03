@@ -1,4 +1,4 @@
-package grpc
+package grpc 
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
 // SOURCE AT `proto/osmosis/valset-pref/v1beta1/query.yml`
@@ -22,10 +22,11 @@ var _ queryproto.QueryServer = Querier{}
 
 func (q Querier) UserValidatorPreferences(grpcCtx context.Context,
 	req *queryproto.UserValidatorPreferencesRequest,
-) (*queryproto.UserValidatorPreferenceResponse, error) {
+) (*queryproto.UserValidatorPreferencesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.UserValidatorPreferences(ctx, *req)
 }
+
