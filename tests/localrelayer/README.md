@@ -135,17 +135,17 @@ curl --header "Content-Type: application/json" \
 Check balance:
 
 ```bash
-LCD_ENDPOINT=http://localhost:1317
+LCD_ENDPOINT=\localhost:1317
 
 # Use the following endpoint for localosmosis-b:
-# LCD_ENDPOINT =http://localhost:31317
+# LCD_ENDPOINT=localhost:31317
 
-curl -s http://$LCD_ENDPOINT:1317/cosmos/bank/v1beta1/balances/osmo1e5zmvznxr0zuulsstna0rd3959sw858e5ctw2j
+curl -s http://$LCD_ENDPOINT/cosmos/bank/v1beta1/balances/osmo1e5zmvznxr0zuulsstna0rd3959sw858e5ctw2j
 ```
 
 ### Hermes
 
-You can test that hermes is working by send IBC transaction.
+You can test that hermes is working by sending a test IBC transaction.
 
 Make sure `hermes` is running:
 
