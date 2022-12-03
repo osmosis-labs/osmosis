@@ -48,7 +48,10 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	// We then calculate the sqrtPrice and currentTick based on the inputs of this position
 	// TODO: We need to review this logic very carefully, as I am not 100 percent convinced it is safe / correct
 	if k.isInitialPosition(initialSqrtPrice, initialTick) {
-		k.createInitialPosition(cacheCtx, pool, amount0Desired, amount1Desired)
+		err := k.createInitialPosition(cacheCtx, pool, amount0Desired, amount1Desired)
+		if err != nil {
+			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		}
 	}
 
 	liquidityDelta := math.GetLiquidityFromAmounts(pool.GetCurrentSqrtPrice(), sqrtPriceLowerTick, sqrtPriceUpperTick, amount0Desired, amount1Desired)
