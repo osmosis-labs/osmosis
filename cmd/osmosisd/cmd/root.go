@@ -293,15 +293,16 @@ func createOsmosisAppAndExport(
 ) (servertypes.ExportedApp, error) {
 	encCfg := osmosis.MakeEncodingConfig() // Ideally, we would reuse the one created by NewRootCmd.
 	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
+	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
 	var app *osmosis.OsmosisApp
 	if height != -1 {
-		app = osmosis.NewOsmosisApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), appOpts, osmosis.GetWasmEnabledProposals(), osmosis.EmptyWasmOpts)
+		app = osmosis.NewOsmosisApp(logger, db, traceStore, false, map[int64]bool{}, homeDir, uint(1), appOpts, osmosis.GetWasmEnabledProposals(), osmosis.EmptyWasmOpts)
 
 		if err := app.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		app = osmosis.NewOsmosisApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), appOpts, osmosis.GetWasmEnabledProposals(), osmosis.EmptyWasmOpts)
+		app = osmosis.NewOsmosisApp(logger, db, traceStore, true, map[int64]bool{}, homeDir, uint(1), appOpts, osmosis.GetWasmEnabledProposals(), osmosis.EmptyWasmOpts)
 	}
 
 	return app.ExportAppStateAndValidators(forZeroHeight, jailWhiteList, modulesToExport)
