@@ -46,7 +46,11 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	// If the currentSqrtPrice and currentTick are zero, then this is the first position to be created for this pool.
 	// We therefore calculate the sqrtPrice and currentTick based on the inputs of this position
+	// TODO: We need to review this logic very carefully, as I am not 100 percent convinced it is safe / correct
 	if currSqrtPrice.Equal(sdk.ZeroDec()) && currentTick.Equal(sdk.ZeroInt()) {
+		if amount0Desired.Equal(sdk.ZeroInt()) || amount1Desired.Equal(sdk.ZeroInt()) {
+			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, types.InitialLiquidityZeroError{Amount0: amount0Desired, Amount1: amount1Desired}
+		}
 		currentSpotPrice := amount1Desired.Quo(amount0Desired).ToDec()
 		currSqrtPrice, err = currentSpotPrice.ApproxSqrt()
 		if err != nil {

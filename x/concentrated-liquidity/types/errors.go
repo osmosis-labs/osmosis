@@ -154,3 +154,12 @@ type InvalidPriceLimitError struct {
 func (e InvalidPriceLimitError) Error() string {
 	return fmt.Sprintf("invalid sqrt price limit given (%s), should be greater than (%s) and less than (%s)", e.SqrtPriceLimit, e.LowerBound, e.UpperBound)
 }
+
+type InitialLiquidityZeroError struct {
+	Amount0 sdk.Int
+	Amount1 sdk.Int
+}
+
+func (e InitialLiquidityZeroError) Error() string {
+	return fmt.Sprintf("first position must contain non-zero value of both assets to determine spot price: Amount0 (%s) Amount1 (%s)", e.Amount0, e.Amount1)
+}

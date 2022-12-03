@@ -9,20 +9,21 @@ import (
 )
 
 type lpTest struct {
-	poolId          uint64
-	owner           sdk.AccAddress
-	currentTick     sdk.Int
-	lowerTick       int64
-	upperTick       int64
-	currentSqrtP    sdk.Dec
-	amount0Desired  sdk.Int
-	amount0Minimum  sdk.Int
-	amount0Expected sdk.Int
-	amount1Desired  sdk.Int
-	amount1Minimum  sdk.Int
-	amount1Expected sdk.Int
-	liquidityAmount sdk.Dec
-	expectedError   error
+	poolId            uint64
+	owner             sdk.AccAddress
+	currentTick       sdk.Int
+	lowerTick         int64
+	upperTick         int64
+	currentSqrtP      sdk.Dec
+	amount0Desired    sdk.Int
+	amount0Minimum    sdk.Int
+	amount0Expected   sdk.Int
+	amount1Desired    sdk.Int
+	amount1Minimum    sdk.Int
+	amount1Expected   sdk.Int
+	liquidityAmount   sdk.Dec
+	preCreatePosition bool
+	expectedError     error
 }
 
 var (
@@ -70,10 +71,16 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			amount1Minimum: baseCase.amount1Expected.Mul(sdk.NewInt(2)),
 			expectedError:  types.InsufficientLiquidityCreatedError{Actual: baseCase.amount1Expected, Minimum: baseCase.amount1Expected.Mul(sdk.NewInt(2))},
 		},
-		"error: amount of token 1 is smaller than minimum; should fail and not update state test": {
+		"error: first position value since pool's inception, must contain both assets to determine spot price": {
 			amount0Desired: sdk.ZeroInt(),
 			amount1Desired: sdk.ZeroInt(),
-			expectedError:  errors.New("liquidityDelta calculated equals zero"),
+			expectedError:  types.InitialLiquidityZeroError{Amount0: sdk.ZeroInt(), Amount1: sdk.ZeroInt()},
+		},
+		"error: second position value, requesting zero of both assets causes zero liquidity delta error": {
+			preCreatePosition: true,
+			amount0Desired:    sdk.ZeroInt(),
+			amount1Desired:    sdk.ZeroInt(),
+			expectedError:     errors.New("liquidityDelta calculated equals zero"),
 		},
 		// TODO: add more tests
 		// - custom hand-picked values
@@ -92,6 +99,13 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			tc = baseConfigCopy
 
 			pool := s.SetupDefaultPool(s.Ctx)
+
+			// pre create a position prior to testing if test case requires it
+			if tc.preCreatePosition {
+				s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, tc.poolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, tc.amount0Minimum, tc.amount1Minimum, tc.lowerTick, tc.upperTick)
+				s.Require().NoError(err)
+			}
 
 			// Fund test account and create the desired position
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
@@ -340,6 +354,9 @@ func mergeConfigs(dst *lpTest, overwrite *lpTest) {
 		}
 		if overwrite.expectedError != nil {
 			dst.expectedError = overwrite.expectedError
+		}
+		if overwrite.preCreatePosition != false {
+			dst.preCreatePosition = overwrite.preCreatePosition
 		}
 	}
 }
