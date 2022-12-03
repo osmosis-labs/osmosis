@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v13/x/txfees/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -15,14 +16,7 @@ import (
 
 // GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd() *cobra.Command {
-	// Group queries under a subcommand
-	cmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      fmt.Sprintf("Querying commands for the %s module", types.ModuleName),
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
+	cmd := osmocli.QueryIndexCmd(types.ModuleName)
 
 	cmd.AddCommand(
 		GetCmdFeeTokens(),
