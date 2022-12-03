@@ -474,23 +474,14 @@ $ %s query gamm pools-with-filter <min_liquidity> <pool_type>
 
 // GetCmdPoolType returns pool type given pool id.
 func GetCmdPoolType() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "pool-type <pool_id>",
-		Short: "Query pool type",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query pool type
+	return osmocli.SimpleQueryCommand[*types.QueryPoolTypeRequest](
+		"PoolType",
+		"pool-type <pool_id>",
+		"Query pool type",
+		`Query pool type
 Example:
-$ %s query gamm pool-type <pool_id>
+{{.CommandPrefix}} pool-type <pool_id>
 `,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: osmocli.NewQueryLogicAllFieldsAsArgs[*types.QueryPoolTypeRequest](
-			"PoolType", types.NewQueryClient),
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+		types.ModuleName, types.NewQueryClient,
+	)
 }

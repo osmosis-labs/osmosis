@@ -6,7 +6,36 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gogo/protobuf/proto"
+
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 )
+
+func ParseFieldsFromArgs[reqP proto.Message](args []string) (reqP, error) {
+	req := osmoutils.MakeNew[reqP]()
+	v := reflect.ValueOf(req).Elem()
+	t := v.Type()
+	if len(args) != t.NumField() {
+		return req, fmt.Errorf("Incorrect number of arguments, expected %d got %d", t.NumField(), len(args))
+	}
+
+	// Iterate over the fields in the struct
+	for i := 0; i < t.NumField(); i++ {
+		err := ParseField(v, t, i, args[i])
+		if err != nil {
+			return req, err
+		}
+	}
+	return req, nil
+}
+
+func ParseNumFields[reqP proto.Message]() int {
+	req := osmoutils.MakeNew[reqP]()
+	v := reflect.ValueOf(req).Elem()
+	t := v.Type()
+	return t.NumField()
+}
 
 func ParseField(v reflect.Value, t reflect.Type, fieldIndex int, arg string) error {
 	fVal := v.Field(fieldIndex)

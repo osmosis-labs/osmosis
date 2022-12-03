@@ -38,6 +38,22 @@ Use "{{.CommandPath}} [command] --help" for more information about a command.{{e
 	return cmd.Help()
 }
 
+func SimpleQueryCommand[reqP proto.Message, querier any](querierFnName string, use string, short string, long string,
+	moduleName string, newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   use,
+		Short: short,
+		Long:  FormatLongDescription(long, moduleName),
+		Args:  cobra.ExactArgs(ParseNumFields[reqP]()),
+		RunE: NewQueryLogicAllFieldsAsArgs[reqP](
+			querierFnName, newQueryClientFn),
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
 type ParamGetter[reqP proto.Message, resP proto.Message] interface {
 	Params(context.Context, reqP, ...grpc.CallOption) (resP, error)
 }
@@ -90,24 +106,6 @@ func callQueryClientFn[reqP proto.Message, querier any](ctx context.Context, fnN
 	//nolint:forcetypeassert
 	res = results[0].Interface().(proto.Message)
 	return res, nil
-}
-
-func ParseFieldsFromArgs[reqP proto.Message](args []string) (reqP, error) {
-	req := osmoutils.MakeNew[reqP]()
-	v := reflect.ValueOf(req).Elem()
-	t := v.Type()
-	if len(args) != t.NumField() {
-		return req, fmt.Errorf("Incorrect number of arguments, expected %d got %d", t.NumField(), len(args))
-	}
-
-	// Iterate over the fields in the struct
-	for i := 0; i < t.NumField(); i++ {
-		err := ParseField(v, t, i, args[i])
-		if err != nil {
-			return req, err
-		}
-	}
-	return req, nil
 }
 
 func NewQueryLogicAllFieldsAsArgs[reqP proto.Message, querier any](keeperFnName string,
