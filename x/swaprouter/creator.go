@@ -43,7 +43,10 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 
 	k.SetModuleRoute(ctx, poolId, msg.GetPoolType())
 
-	if err := k.validateCreatedPool(ctx, initialPoolLiquidity, poolId, pool); err != nil {
+	poolType := msg.GetPoolType()
+	// run validation for all pool types
+	// total shares and liquidity is not checked for concentrated pools because they are initialized with no liquidity
+	if err := k.validateCreatedPool(ctx, initialPoolLiquidity, poolId, pool, poolType); err != nil {
 		return 0, err
 	}
 
@@ -64,7 +67,10 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 		return 0, err
 	}
 
-	k.poolCreationListeners.AfterPoolCreated(ctx, sender, pool.GetId())
+	// TODO: Ensure this is correct decision. Without this hack, we try to make gauges for the CL pool which isn't needed
+	if poolType.String() != "Concentrated" {
+		k.poolCreationListeners.AfterPoolCreated(ctx, sender, pool.GetId())
+	}
 
 	return pool.GetId(), nil
 }
@@ -84,14 +90,17 @@ func validateCreatePoolMsg(ctx sdk.Context, msg types.CreatePoolMsg) error {
 
 	initialPoolLiquidity := msg.InitialLiquidity()
 	numAssets := initialPoolLiquidity.Len()
-	if numAssets < types.MinPoolAssets {
-		return types.ErrTooFewPoolAssets
-	}
-	if numAssets > types.MaxPoolAssets {
-		return errors.Wrapf(
-			types.ErrTooManyPoolAssets,
-			"pool has too many PoolAssets (%d)", numAssets,
-		)
+
+	if msg.GetPoolType().String() != "Concentrated" {
+		if numAssets < types.MinPoolAssets {
+			return types.ErrTooFewPoolAssets
+		}
+		if numAssets > types.MaxPoolAssets {
+			return errors.Wrapf(
+				types.ErrTooManyPoolAssets,
+				"pool has too many PoolAssets (%d)", numAssets,
+			)
+		}
 	}
 	return nil
 }
@@ -101,6 +110,7 @@ func (k Keeper) validateCreatedPool(
 	initialPoolLiquidity sdk.Coins,
 	poolId uint64,
 	pool types.PoolI,
+	poolType types.PoolType,
 ) error {
 	if pool.GetId() != poolId {
 		return errors.Wrapf(types.ErrInvalidPool,
@@ -110,17 +120,21 @@ func (k Keeper) validateCreatedPool(
 		return errors.Wrapf(types.ErrInvalidPool,
 			"Pool was attempted to be created with incorrect pool address.")
 	}
-	// Notably we use the initial pool liquidity at the start of the messages definition
-	// just in case CreatePool was mutative.
-	if !pool.GetTotalPoolLiquidity(ctx).IsEqual(initialPoolLiquidity) {
-		return errors.Wrap(types.ErrInvalidPool,
-			"Pool was attempted to be created, with initial liquidity not equal to what was specified.")
-	}
-	// TODO: this check should be moved
-	// This check can be removed later, and replaced with a minimum.
-	if !pool.GetTotalShares().Equal(gammtypes.InitPoolSharesSupply) {
-		return errors.Wrap(types.ErrInvalidPool,
-			"Pool was attempted to be created with incorrect number of initial shares.")
+
+	// Check the total pool liquidity/shares if pool is not a concentrated liquidity pool
+	if poolType.String() != "Concentrated" {
+		// Notably we use the initial pool liquidity at the start of the messages definition
+		// just in case CreatePool was mutative.
+		if !pool.GetTotalPoolLiquidity(ctx).IsEqual(initialPoolLiquidity) {
+			return errors.Wrap(types.ErrInvalidPool,
+				"Pool was attempted to be created, with initial liquidity not equal to what was specified.")
+		}
+		// TODO: this check should be moved
+		// This check can be removed later, and replaced with a minimum.
+		if !pool.GetTotalShares().Equal(gammtypes.InitPoolSharesSupply) {
+			return errors.Wrap(types.ErrInvalidPool,
+				"Pool was attempted to be created with incorrect number of initial shares.")
+		}
 	}
 	return nil
 }

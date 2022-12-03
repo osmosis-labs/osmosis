@@ -509,8 +509,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 			// create pool
-			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", DefaultCurrSqrtPrice, DefaultCurrTick)
-			s.Require().NoError(err)
+			pool := s.SetupDefaultPool(s.Ctx)
 
 			// add positions
 			test.addPositions(s.Ctx, pool.GetId())
@@ -956,8 +955,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 
 			// create pool
-			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", DefaultCurrSqrtPrice, DefaultCurrTick)
-			s.Require().NoError(err)
+			pool := s.SetupDefaultPool(s.Ctx)
 
 			// add positions
 			test.addPositions(s.Ctx, pool.GetId())
@@ -1087,8 +1085,7 @@ func (s *KeeperTestSuite) TestGetPoolById() {
 			s.SetupTest()
 
 			// Set up default pool
-			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, ETH, USDC, DefaultCurrSqrtPrice, DefaultCurrTick)
-			s.Require().NoError(err)
+			pool := s.SetupDefaultPool(s.Ctx)
 
 			// Get pool defined in test case
 			getPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, test.poolId)
@@ -1118,8 +1115,7 @@ func (s *KeeperTestSuite) TestGetPoolById() {
 func (s *KeeperTestSuite) TestPoolExists() {
 	s.SetupTest()
 
-	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "token0", "token1", sdk.NewDec(1), sdk.NewInt(1))
-	s.Require().NoError(err)
+	pool := s.SetupDefaultPool(s.Ctx)
 
 	poolExists := s.App.ConcentratedLiquidityKeeper.PoolExists(s.Ctx, pool.GetId())
 

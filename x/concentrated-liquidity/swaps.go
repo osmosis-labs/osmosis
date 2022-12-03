@@ -8,8 +8,8 @@ import (
 	events "github.com/osmosis-labs/osmosis/v13/x/swaprouter/events"
 
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/model"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
@@ -27,8 +27,6 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(
 	ctx sdk.Context,
 	poolId uint64,
 	denom0, denom1 string,
-	currSqrtPrice sdk.Dec,
-	currTick sdk.Int,
 ) (types.ConcentratedPoolExtension, error) {
 	denom0, denom1, err := types.OrderInitialPoolDenoms(denom0, denom1)
 	if err != nil {
@@ -38,8 +36,8 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(
 		// TODO: move gammtypes.NewPoolAddress(poolId) to swaproutertypes
 		Address:          gammtypes.NewPoolAddress(poolId).String(),
 		Id:               poolId,
-		CurrentSqrtPrice: currSqrtPrice,
-		CurrentTick:      currTick,
+		CurrentSqrtPrice: sdk.ZeroDec(),
+		CurrentTick:      sdk.ZeroInt(),
 		Liquidity:        sdk.ZeroDec(),
 		Token0:           denom0,
 		Token1:           denom1,

@@ -3,6 +3,7 @@ package apptesting
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
@@ -133,6 +134,17 @@ func (s *KeeperTestHelper) PrepareBasicStableswapPool() uint64 {
 	}
 
 	msg := stableswap.NewMsgCreateStableswapPool(s.TestAccs[0], params, DefaultStableswapLiquidity, []uint64{}, "")
+	poolId, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, msg)
+	s.NoError(err)
+	return poolId
+}
+
+// TODO: Use this once GetPool is implemented for CL Pool
+func (s *KeeperTestHelper) PrepareBasicConcentratedPool() uint64 {
+	// Mint some assets to the account.
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000)), sdk.NewCoin("usdc", sdk.NewInt(5000000000))))
+
+	msg := clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], "eth", "usdc")
 	poolId, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, msg)
 	s.NoError(err)
 	return poolId

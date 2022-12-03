@@ -97,8 +97,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			s.Setup()
 
 			// Create a usdc - eth concentrated liquidity pool
-			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", DefaultCurrSqrtPrice, DefaultCurrTick)
-			s.Require().NoError(err)
+			pool := s.SetupDefaultPool(s.Ctx)
 
 			// Check the test case to see if we are swapping asset0 for asset1 or vice versa
 			asset0 := pool.GetToken0()
@@ -108,6 +107,8 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			s.SetupPosition(1)
 
 			// Note spot price and gas used prior to swap
+			pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
 			spotPriceBefore := pool.GetCurrentSqrtPrice().Power(2)
 			prevGasConsumed := s.Ctx.GasMeter().GasConsumed()
 
@@ -238,8 +239,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			s.Setup()
 
 			// Create a usdc - eth concentrated liquidity pool
-			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, "eth", "usdc", DefaultCurrSqrtPrice, DefaultCurrTick)
-			s.Require().NoError(err)
+			pool := s.SetupDefaultPool(s.Ctx)
 
 			// Check the test case to see if we are swapping asset0 for asset1 or vice versa
 			asset0 := pool.GetToken0()
@@ -249,6 +249,8 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			s.SetupPosition(1)
 
 			// Note spot price and gas used prior to swap
+			pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
 			spotPriceBefore := pool.GetCurrentSqrtPrice().Power(2)
 			prevGasConsumed := s.Ctx.GasMeter().GasConsumed()
 

@@ -26,5 +26,5 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.Ba
 
 // TODO: spec, tests, implementation
 func (k Keeper) InitializePool(ctx sdk.Context, pool swaproutertypes.PoolI, creatorAddress sdk.AccAddress) error {
-	panic("not implemented")
+	return nil
 }

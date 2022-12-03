@@ -1,4 +1,4 @@
-package types_test
+package model_test
 
 import (
 	"testing"
@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	appParams "github.com/osmosis-labs/osmosis/v13/app/params"
+	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
@@ -19,12 +20,12 @@ func TestMsgCreatePosition(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		msg        types.MsgCreatePosition
+		msg        clmodel.MsgCreatePosition
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: types.MsgCreatePosition{
+			msg: clmodel.MsgCreatePosition{
 				PoolId:          1,
 				Sender:          addr1,
 				LowerTick:       1,
@@ -38,7 +39,7 @@ func TestMsgCreatePosition(t *testing.T) {
 		},
 		{
 			name: "invalid sender",
-			msg: types.MsgCreatePosition{
+			msg: clmodel.MsgCreatePosition{
 				PoolId:          1,
 				Sender:          invalidAddr.String(),
 				LowerTick:       1,
@@ -52,7 +53,7 @@ func TestMsgCreatePosition(t *testing.T) {
 		},
 		{
 			name: "invalid price range, lower tick > upper",
-			msg: types.MsgCreatePosition{
+			msg: clmodel.MsgCreatePosition{
 				PoolId:          1,
 				Sender:          addr1,
 				LowerTick:       10,
@@ -66,7 +67,7 @@ func TestMsgCreatePosition(t *testing.T) {
 		},
 		{
 			name: "lower tick < min tick",
-			msg: types.MsgCreatePosition{
+			msg: clmodel.MsgCreatePosition{
 				PoolId:          1,
 				Sender:          addr1,
 				LowerTick:       types.MinTick - 1,
@@ -80,7 +81,7 @@ func TestMsgCreatePosition(t *testing.T) {
 		},
 		{
 			name: "upper tick > max tick",
-			msg: types.MsgCreatePosition{
+			msg: clmodel.MsgCreatePosition{
 				PoolId:          1,
 				Sender:          addr1,
 				LowerTick:       1,
@@ -94,7 +95,7 @@ func TestMsgCreatePosition(t *testing.T) {
 		},
 		{
 			name: "negative token 0 desire",
-			msg: types.MsgCreatePosition{
+			msg: clmodel.MsgCreatePosition{
 				PoolId:          1,
 				Sender:          addr1,
 				LowerTick:       1,
@@ -108,7 +109,7 @@ func TestMsgCreatePosition(t *testing.T) {
 		},
 		{
 			name: "negative token 1 desire",
-			msg: types.MsgCreatePosition{
+			msg: clmodel.MsgCreatePosition{
 				PoolId:          1,
 				Sender:          addr1,
 				LowerTick:       1,
@@ -122,7 +123,7 @@ func TestMsgCreatePosition(t *testing.T) {
 		},
 		{
 			name: "zero desire",
-			msg: types.MsgCreatePosition{
+			msg: clmodel.MsgCreatePosition{
 				PoolId:          1,
 				Sender:          addr1,
 				LowerTick:       1,
@@ -136,7 +137,7 @@ func TestMsgCreatePosition(t *testing.T) {
 		},
 		{
 			name: "negative amount",
-			msg: types.MsgCreatePosition{
+			msg: clmodel.MsgCreatePosition{
 				PoolId:          1,
 				Sender:          addr1,
 				LowerTick:       1,
@@ -150,7 +151,7 @@ func TestMsgCreatePosition(t *testing.T) {
 		},
 		{
 			name: "zero amount",
-			msg: types.MsgCreatePosition{
+			msg: clmodel.MsgCreatePosition{
 				PoolId:          1,
 				Sender:          addr1,
 				LowerTick:       1,
@@ -188,12 +189,12 @@ func TestMsgWithdrawPosition(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		msg        types.MsgWithdrawPosition
+		msg        clmodel.MsgWithdrawPosition
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: types.MsgWithdrawPosition{
+			msg: clmodel.MsgWithdrawPosition{
 				PoolId:          1,
 				Sender:          addr1,
 				LowerTick:       1,
@@ -204,7 +205,7 @@ func TestMsgWithdrawPosition(t *testing.T) {
 		},
 		{
 			name: "invalid sender",
-			msg: types.MsgWithdrawPosition{
+			msg: clmodel.MsgWithdrawPosition{
 				PoolId:          1,
 				Sender:          invalidAddr.String(),
 				LowerTick:       1,
@@ -215,7 +216,7 @@ func TestMsgWithdrawPosition(t *testing.T) {
 		},
 		{
 			name: "invalid price range, lower tick > upper",
-			msg: types.MsgWithdrawPosition{
+			msg: clmodel.MsgWithdrawPosition{
 				PoolId:          1,
 				Sender:          addr1,
 				LowerTick:       10,
@@ -226,7 +227,7 @@ func TestMsgWithdrawPosition(t *testing.T) {
 		},
 		{
 			name: "lower tick < min tick",
-			msg: types.MsgWithdrawPosition{
+			msg: clmodel.MsgWithdrawPosition{
 				PoolId:          1,
 				Sender:          addr1,
 				LowerTick:       types.MinTick - 1,
@@ -237,7 +238,7 @@ func TestMsgWithdrawPosition(t *testing.T) {
 		},
 		{
 			name: "upper tick > max tick",
-			msg: types.MsgWithdrawPosition{
+			msg: clmodel.MsgWithdrawPosition{
 				PoolId:          1,
 				Sender:          addr1,
 				LowerTick:       1,
@@ -248,7 +249,7 @@ func TestMsgWithdrawPosition(t *testing.T) {
 		},
 		{
 			name: "negative amount",
-			msg: types.MsgWithdrawPosition{
+			msg: clmodel.MsgWithdrawPosition{
 				PoolId:          1,
 				Sender:          addr1,
 				LowerTick:       1,
@@ -259,7 +260,7 @@ func TestMsgWithdrawPosition(t *testing.T) {
 		},
 		{
 			name: "zero amount",
-			msg: types.MsgWithdrawPosition{
+			msg: clmodel.MsgWithdrawPosition{
 				PoolId:          1,
 				Sender:          addr1,
 				LowerTick:       1,
@@ -277,6 +278,77 @@ func TestMsgWithdrawPosition(t *testing.T) {
 			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
 			require.Equal(t, msg.Route(), types.RouterKey)
 			require.Equal(t, msg.Type(), "withdraw-position")
+			signers := msg.GetSigners()
+			require.Equal(t, len(signers), 1)
+			require.Equal(t, signers[0].String(), addr1)
+		} else {
+			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		}
+	}
+}
+
+func TestMsgCreateConcentratedPool(t *testing.T) {
+	appParams.SetAddressPrefixes()
+	pk1 := ed25519.GenPrivKey().PubKey()
+	addr1 := sdk.AccAddress(pk1.Address()).String()
+	invalidAddr := sdk.AccAddress("invalid")
+
+	tests := []struct {
+		name       string
+		msg        clmodel.MsgCreateConcentratedPool
+		expectPass bool
+	}{
+		{
+			name: "proper msg",
+			msg: clmodel.MsgCreateConcentratedPool{
+				Sender: addr1,
+				Denom0: "eth",
+				Denom1: "usdc",
+			},
+			expectPass: true,
+		},
+		{
+			name: "invalid sender",
+			msg: clmodel.MsgCreateConcentratedPool{
+				Sender: invalidAddr.String(),
+				Denom0: "eth",
+				Denom1: "usdc",
+			},
+			expectPass: false,
+		},
+		{
+			name: "missing denom1",
+			msg: clmodel.MsgCreateConcentratedPool{
+				Sender: invalidAddr.String(),
+				Denom0: "eth",
+			},
+			expectPass: false,
+		},
+		{
+			name: "missing denom0",
+			msg: clmodel.MsgCreateConcentratedPool{
+				Sender: invalidAddr.String(),
+				Denom1: "usdc",
+			},
+			expectPass: false,
+		},
+		{
+			name: "missing sender",
+			msg: clmodel.MsgCreateConcentratedPool{
+				Denom0: "eth",
+				Denom1: "usdc",
+			},
+			expectPass: false,
+		},
+	}
+
+	for _, test := range tests {
+		msg := test.msg
+
+		if test.expectPass {
+			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			require.Equal(t, msg.Route(), types.RouterKey)
+			require.Equal(t, msg.Type(), "create_concentrated_pool")
 			signers := msg.GetSigners()
 			require.Equal(t, len(signers), 1)
 			require.Equal(t, signers[0].String(), addr1)

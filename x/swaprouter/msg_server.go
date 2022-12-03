@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	cl "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
@@ -54,6 +55,14 @@ func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stables
 		return nil, err
 	}
 	return &stableswap.MsgCreateStableswapPoolResponse{PoolID: poolId}, nil
+}
+
+func (server msgServer) CreateConcentratedPool(goCtx context.Context, msg *cl.MsgCreateConcentratedPool) (*cl.MsgCreateConcentratedPoolResponse, error) {
+	poolId, err := server.CreatePool(goCtx, msg)
+	if err != nil {
+		return nil, err
+	}
+	return &cl.MsgCreateConcentratedPoolResponse{PoolID: poolId}, nil
 }
 
 // func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, msg *stableswap.MsgStableSwapAdjustScalingFactors) (*stableswap.MsgStableSwapAdjustScalingFactorsResponse, error) {

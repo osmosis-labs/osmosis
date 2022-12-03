@@ -75,8 +75,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			s.Setup()
 
 			// Create a CL pool with poolId 1
-			_, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, validPoolId, ETH, USDC, DefaultCurrSqrtPrice, DefaultCurrTick)
-			s.Require().NoError(err)
+			s.SetupDefaultPool(s.Ctx)
 
 			// If positionExists set, initialize the specified position with defaultLiquidityAmt
 			preexistingLiquidity := sdk.ZeroDec()
