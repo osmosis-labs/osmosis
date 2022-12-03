@@ -1,9 +1,15 @@
 package osmocli
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	grpc1 "github.com/gogo/protobuf/grpc"
+	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 )
 
 func QueryIndexCmd(moduleName string) *cobra.Command {
@@ -27,4 +33,36 @@ Use "{{.CommandPath}} [command] --help" for more information about a command.{{e
 `
 	cmd.SetUsageTemplate(usageTemplate)
 	return cmd.Help()
+}
+
+type ParamGetter[reqP proto.Message, resP proto.Message] interface {
+	Params(context.Context, reqP, ...grpc.CallOption) (resP, error)
+}
+
+func GetParams[reqP proto.Message, resP proto.Message, querier ParamGetter[reqP, resP]](
+	moduleName string, dummyProtoMsg reqP,
+	newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "params [flags]",
+		Short: fmt.Sprintf("Get the params for the x/%s module", moduleName),
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := newQueryClientFn(clientCtx)
+
+			res, err := queryClient.Params(cmd.Context(), dummyProtoMsg)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }

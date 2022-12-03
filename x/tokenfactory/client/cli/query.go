@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"fmt"
 
 	// "strings"
 
@@ -13,52 +12,20 @@ import (
 	// "github.com/cosmos/cosmos-sdk/client/flags"
 	// sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd() *cobra.Command {
-	// Group tokenfactory queries under a subcommand
-	cmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      fmt.Sprintf("Querying commands for the %s module", types.ModuleName),
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
+	cmd := osmocli.QueryIndexCmd(types.ModuleName)
 
 	cmd.AddCommand(
-		GetParams(),
+		osmocli.GetParams[*types.QueryParamsRequest, *types.QueryParamsResponse](
+			types.ModuleName, &types.QueryParamsRequest{}, types.NewQueryClient),
 		GetCmdDenomAuthorityMetadata(),
 		GetCmdDenomsFromCreator(),
 	)
-
-	return cmd
-}
-
-// GetParams returns the params for the module
-func GetParams() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "params [flags]",
-		Short: "Get the params for the x/tokenfactory module",
-		Args:  cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.Params(cmd.Context(), &types.QueryParamsRequest{})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
