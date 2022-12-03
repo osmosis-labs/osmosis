@@ -40,8 +40,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 }
 
-// SetupDefaultPool sets up a eth usdc concentrated liquid pool with pool ID 1 and no liquidity
-func (s *KeeperTestSuite) SetupDefaultPool(ctx sdk.Context) types.ConcentratedPoolExtension {
+// PrepareDefaultPool sets up a eth usdc concentrated liquid pool with pool ID 1 and no liquidity
+func (s *KeeperTestSuite) PrepareDefaultPool(ctx sdk.Context) types.ConcentratedPoolExtension {
 	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, ETH, USDC)
 	s.Require().NoError(err)
 	return pool

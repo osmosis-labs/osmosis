@@ -75,7 +75,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			s.Setup()
 
 			// Create a CL pool with poolId 1
-			s.SetupDefaultPool(s.Ctx)
+			s.PrepareDefaultPool(s.Ctx)
 
 			// If positionExists set, initialize the specified position with defaultLiquidityAmt
 			preexistingLiquidity := sdk.ZeroDec()

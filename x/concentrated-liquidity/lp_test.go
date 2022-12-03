@@ -98,7 +98,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			mergeConfigs(&baseConfigCopy, &tc)
 			tc = baseConfigCopy
 
-			pool := s.SetupDefaultPool(s.Ctx)
+			pool := s.PrepareDefaultPool(s.Ctx)
 
 			// pre create a position prior to testing if test case requires it
 			if tc.preCreatePosition {
@@ -283,7 +283,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			// Setup.
 			if tc.setupConfig != nil {
-				s.SetupDefaultPool(s.Ctx)
+				s.PrepareDefaultPool(s.Ctx)
 				var err error
 				s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 				_, _, liquidityCreated, err = concentratedLiquidityKeeper.CreatePosition(ctx, config.poolId, owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), config.lowerTick, config.upperTick)
@@ -426,7 +426,7 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 			s.SetupTest()
 
 			// create a CL pool
-			s.SetupDefaultPool(s.Ctx)
+			s.PrepareDefaultPool(s.Ctx)
 
 			// store pool interface
 			poolI, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, 1)

@@ -228,7 +228,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			s.Setup()
 
 			// Create a CL pool with poolId 1
-			s.SetupDefaultPool(s.Ctx)
+			s.PrepareDefaultPool(s.Ctx)
 
 			// If tickExists set, initialize the specified tick with defaultLiquidityAmt
 			preexistingLiquidity := sdk.ZeroDec()

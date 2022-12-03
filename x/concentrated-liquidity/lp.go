@@ -41,24 +41,24 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	// returned are greater than the given minimums.
 	cacheCtx, writeCacheCtx := ctx.CacheContext()
 
-	currSqrtPrice := pool.GetCurrentSqrtPrice()
-	currentTick := pool.GetCurrentTick()
+	initialSqrtPrice := pool.GetCurrentSqrtPrice()
+	initialTick := pool.GetCurrentTick()
 
 	// If the currentSqrtPrice and currentTick are zero, then this is the first position to be created for this pool.
 	// We therefore calculate the sqrtPrice and currentTick based on the inputs of this position
 	// TODO: We need to review this logic very carefully, as I am not 100 percent convinced it is safe / correct
-	if currSqrtPrice.Equal(sdk.ZeroDec()) && currentTick.Equal(sdk.ZeroInt()) {
+	if initialSqrtPrice.Equal(sdk.ZeroDec()) && initialTick.Equal(sdk.ZeroInt()) {
 		if amount0Desired.Equal(sdk.ZeroInt()) || amount1Desired.Equal(sdk.ZeroInt()) {
 			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, types.InitialLiquidityZeroError{Amount0: amount0Desired, Amount1: amount1Desired}
 		}
-		currentSpotPrice := amount1Desired.Quo(amount0Desired).ToDec()
-		currSqrtPrice, err = currentSpotPrice.ApproxSqrt()
+		initialSpotPrice := amount1Desired.Quo(amount0Desired).ToDec()
+		initialSqrtPrice, err = initialSpotPrice.ApproxSqrt()
 		if err != nil {
 			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 		}
-		newTick := math.PriceToTick(currentSpotPrice)
-		pool.SetCurrentSqrtPrice(currSqrtPrice)
-		pool.SetCurrentTick(newTick)
+		initialTick = math.PriceToTick(initialSpotPrice)
+		pool.SetCurrentSqrtPrice(initialSqrtPrice)
+		pool.SetCurrentTick(initialTick)
 		err = k.setPool(cacheCtx, pool)
 		if err != nil {
 			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
