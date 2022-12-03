@@ -24,8 +24,12 @@ func TicksToSqrtPrice(lowerTick, upperTick int64) (sdk.Dec, sdk.Dec, error) {
 // TickToSqrtPrice takes the tick index and returns the corresponding sqrt of the price.
 // Returns error if fails to calculate sqrt price. Otherwise, the computed value and nil.
 // TODO: test
-func TickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
-	sqrtPrice, err := sdk.NewDecWithPrec(10001, 4).Power(tickIndex.Uint64()).ApproxSqrt()
+func TickToSqrtPrice(tickIndex sdk.Int) (sqrtPrice sdk.Dec, err error) {
+	if tickIndex.GTE(sdk.ZeroInt()) {
+		sqrtPrice, err = sdk.NewDecWithPrec(10001, 4).Power(tickIndex.Uint64()).ApproxSqrt()
+	} else {
+		sqrtPrice, err = sdk.OneDec().Quo(sdk.NewDecWithPrec(10001, 4).Power(2)).ApproxSqrt()
+	}
 	if err != nil {
 		return sdk.Dec{}, err
 	}
