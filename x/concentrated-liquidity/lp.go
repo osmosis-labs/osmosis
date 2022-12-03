@@ -1,6 +1,8 @@
 package concentrated_liquidity
 
 import (
+	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
@@ -38,7 +40,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	// calculate liquidity created from this position
 	liquidityDelta := math.GetLiquidityFromAmounts(pool.GetCurrentSqrtPrice(), sqrtPriceLowerTick, sqrtPriceUpperTick, amount0Desired, amount1Desired)
 	if liquidityDelta.IsZero() {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, types.ZeroLiquidityError{}
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, errors.New("liquidityDelta calculated equals zero")
 	}
 
 	// N.B. we only write cache context if actual amounts

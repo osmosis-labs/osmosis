@@ -154,10 +154,3 @@ type InvalidPriceLimitError struct {
 func (e InvalidPriceLimitError) Error() string {
 	return fmt.Sprintf("invalid sqrt price limit given (%s), should be greater than (%s) and less than (%s)", e.SqrtPriceLimit, e.LowerBound, e.UpperBound)
 }
-
-type ZeroLiquidityError struct {
-}
-
-func (e ZeroLiquidityError) Error() string {
-	return fmt.Sprintf("liquidityDelta calculated equals zero")
-}

@@ -1,6 +1,8 @@
 package concentrated_liquidity_test
 
 import (
+	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
@@ -71,7 +73,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 		"error: amount of token 1 is smaller than minimum; should fail and not update state test": {
 			amount0Desired: sdk.ZeroInt(),
 			amount1Desired: sdk.ZeroInt(),
-			expectedError:  types.ZeroLiquidityError{},
+			expectedError:  errors.New("liquidityDelta calculated equals zero"),
 		},
 		// TODO: add more tests
 		// - custom hand-picked values
