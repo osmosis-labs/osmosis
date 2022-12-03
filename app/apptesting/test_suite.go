@@ -166,6 +166,16 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 	return valAddr
 }
 
+// SetupMultipleValidators setups "numValidator" validators and returns their address in string
+func (s *KeeperTestHelper) SetupMultipleValidators(numValidator int) []string {
+	valAddrs := []string{}
+	for i := 0; i < numValidator; i++ {
+		valAddr := s.SetupValidator(stakingtypes.Bonded)
+		valAddrs = append(valAddrs, valAddr.String())
+	}
+	return valAddrs
+}
+
 // BeginNewBlock starts a new block.
 func (s *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 	var valAddr []byte
