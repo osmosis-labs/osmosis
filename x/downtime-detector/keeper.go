@@ -42,7 +42,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	}
 
 	// k.SetParams(ctx, genState.Params)
-
 }
 
 // ExportGenesis returns the twap module's exported genesis.
