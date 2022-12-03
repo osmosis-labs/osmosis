@@ -68,7 +68,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 	}
 
 	// TODO: Ensure this is correct decision. Without this hack, we try to make gauges for the CL pool which isn't needed
-	if poolType.String() != "Concentrated" {
+	if poolType != types.Concentrated {
 		k.poolCreationListeners.AfterPoolCreated(ctx, sender, pool.GetId())
 	}
 
@@ -91,7 +91,7 @@ func validateCreatePoolMsg(ctx sdk.Context, msg types.CreatePoolMsg) error {
 	initialPoolLiquidity := msg.InitialLiquidity()
 	numAssets := initialPoolLiquidity.Len()
 
-	if msg.GetPoolType().String() != "Concentrated" {
+	if msg.GetPoolType() != types.Concentrated {
 		if numAssets < types.MinPoolAssets {
 			return types.ErrTooFewPoolAssets
 		}
@@ -122,7 +122,7 @@ func (k Keeper) validateCreatedPool(
 	}
 
 	// Check the total pool liquidity/shares if pool is not a concentrated liquidity pool
-	if poolType.String() != "Concentrated" {
+	if poolType != types.Concentrated {
 		// Notably we use the initial pool liquidity at the start of the messages definition
 		// just in case CreatePool was mutative.
 		if !pool.GetTotalPoolLiquidity(ctx).IsEqual(initialPoolLiquidity) {
