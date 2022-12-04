@@ -330,132 +330,30 @@ func GetCmdAccountLockedLongerDuration() *cobra.Command {
 		`{{.Short}}`, types.ModuleName, types.NewQueryClient)
 }
 
-// GetCmdAccountLockedDuration returns account locked records with a specific duration.
+// GetCmdAccountLockedLongerDuration returns account locked records with longer duration.
 func GetCmdAccountLockedDuration() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "account-locked-duration <address> <duration>",
-		Short: "Query account locked records with a specific duration",
-		Example: strings.TrimSpace(
-			fmt.Sprintf(`Query account locked records with a specific duration.
-Example:
-$ %s query lockup account-locked-duration osmo1yl6hdjhmkf37639730gffanpzndzdpmhxy9ep3 604800s
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			duration, err := time.ParseDuration(args[1])
-			if err != nil {
-				return err
-			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.AccountLockedDuration(cmd.Context(), &types.AccountLockedDurationRequest{Owner: args[0], Duration: duration})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+	return osmocli.SimpleQueryCmd[*types.AccountLockedDurationRequest](
+		"account-locked-duration <address> <duration>",
+		"Query account locked records with a specific duration",
+		`{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} account-locked-duration osmo1yl6hdjhmkf37639730gffanpzndzdpmhxy9ep3 604800s`, types.ModuleName, types.NewQueryClient)
 }
 
-// GetCmdAccountLockedLongerDurationNotUnlockingOnly returns account locked records with longer duration from unlocking only queue.
+// GetCmdAccountLockedLongerDuration returns account locked records with longer duration.
 func GetCmdAccountLockedLongerDurationNotUnlockingOnly() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "account-locked-longer-duration-not-unlocking <address> <duration>",
-		Short: "Query account locked records with longer duration from unlocking only queue",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query account locked records with longer duration from unlocking only queue.
-
-Example:
-$ %s query lockup account-locked-longer-duration-not-unlocking <address> <duration>
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			duration, err := time.ParseDuration(args[1])
-			if err != nil {
-				return err
-			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.AccountLockedLongerDurationNotUnlockingOnly(cmd.Context(), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: args[0], Duration: duration})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+	return osmocli.SimpleQueryCmd[*types.AccountLockedLongerDurationNotUnlockingOnlyRequest](
+		"account-locked-longer-duration-not-unlocking <address> <duration>",
+		"Query account locked records with longer duration from unlocking only queue",
+		`{{.Short}}`, types.ModuleName, types.NewQueryClient)
 }
 
 // GetCmdAccountLockedLongerDurationDenom returns account's locks for a specific denom
 // with longer duration than the given duration.
 func GetCmdAccountLockedLongerDurationDenom() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "account-locked-longer-duration-denom <address> <duration> <denom>",
-		Short: "Query locked records for a denom with longer duration",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query account's locked records for a denom with longer duration.
-
-Example:
-$ %s query lockup account-locked-pastime <address> <duration> <denom>
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			duration, err := time.ParseDuration(args[1])
-			if err != nil {
-				return err
-			}
-
-			denom := args[2]
-
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.AccountLockedLongerDurationDenom(cmd.Context(), &types.AccountLockedLongerDurationDenomRequest{Owner: args[0], Duration: duration, Denom: denom})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+	return osmocli.SimpleQueryCmd[*types.AccountLockedLongerDurationDenomRequest](
+		"account-locked-longer-duration-denom <address> <duration> <denom>",
+		"Query locked records for a denom with longer duration",
+		`{{.Short}}`, types.ModuleName, types.NewQueryClient)
 }
 
 // GetCmdTotalBondedByDenom returns total amount of locked asset of a specific denom.
