@@ -71,12 +71,7 @@ $ <appd> query superfluid params
 func GetCmdAllSuperfluidAssets() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.AllAssetsRequest](
 		"all-superfluid-assets",
-		"Query all superfluid assets",
-		`Query all superfluid assets.
-
-Example:
-{{.CommandPrefix}} all-superfluid-assets
-`,
+		"Query all superfluid assets", "",
 		types.ModuleName, types.NewQueryClient,
 	)
 }
@@ -189,54 +184,17 @@ func GetCmdTotalSuperfluidDelegations() *cobra.Command {
 }
 
 func GetCmdTotalDelegationByDelegator() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "total-delegation-by-delegator [delegator_address]",
-		Short: "Query both superfluid delegation and normal delegation",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.TotalDelegationByDelegator(cmd.Context(), &types.QueryTotalDelegationByDelegatorRequest{
-				DelegatorAddress: args[0],
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+	return osmocli.SimpleQueryCmd[*types.QueryTotalDelegationByDelegatorRequest](
+		"total-delegation-by-delegator [delegator_address]",
+		"Query both superfluid delegation and normal delegation", "",
+		types.ModuleName, types.NewQueryClient,
+	)
 }
 
 func GetCmdUnpoolWhitelist() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "unpool-whitelist",
-		Short: "Query whitelisted pool ids to unpool.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.UnpoolWhitelist(cmd.Context(), &types.QueryUnpoolWhitelistRequest{})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+	return osmocli.SimpleQueryCmd[*types.QueryUnpoolWhitelistRequest](
+		"unpool-whitelist",
+		"Query whitelisted pool ids to unpool", "",
+		types.ModuleName, types.NewQueryClient,
+	)
 }
