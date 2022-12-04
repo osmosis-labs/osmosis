@@ -56,9 +56,7 @@ func GetCmdModuleBalance() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.ModuleBalanceRequest](
 		"module-balance",
 		"Query module balance",
-		`{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} module-balance
-`, types.ModuleName, types.NewQueryClient)
+		`{{.Short}}`, types.ModuleName, types.NewQueryClient)
 }
 
 // GetCmdModuleLockedAmount returns locked balance of the module,
@@ -67,12 +65,11 @@ func GetCmdModuleLockedAmount() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.ModuleLockedAmountRequest](
 		"module-locked-amount",
 		"Query locked amount",
-		`{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} module-locked-amount
-`, types.ModuleName, types.NewQueryClient)
+		`{{.Short}}`, types.ModuleName, types.NewQueryClient)
 }
 
 // GetCmdAccountUnlockableCoins returns unlockable coins which has finsihed unlocking.
+// TODO: DELETE THIS + Actual query in subsequent PR
 func GetCmdAccountUnlockableCoins() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account-unlockable-coins <address>",
