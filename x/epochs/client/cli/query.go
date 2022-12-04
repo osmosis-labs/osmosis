@@ -23,9 +23,7 @@ func GetCmdEpochsInfos() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.QueryEpochsInfoRequest](
 		"epoch-infos",
 		"Query running epochInfos",
-		`Query running epoch infos.
-
-Example:
+		`{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} epoch-infos
 `,
 		types.ModuleName, types.NewQueryClient,
@@ -36,9 +34,7 @@ func GetCmdCurrentEpoch() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.QueryCurrentEpochRequest](
 		"current-epoch [identifier]",
 		"Query current epoch by specified identifier",
-		`Query current epoch by specified identifier.
-
-Example:
+		`{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} current-epoch day
 `,
 		types.ModuleName, types.NewQueryClient,

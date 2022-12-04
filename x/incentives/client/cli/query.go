@@ -116,45 +116,13 @@ $ %s query incentives to-distribute-coins
 	return cmd
 }
 
-// GetCmdGaugeByID returns a gauge by ID.
 func GetCmdGaugeByID() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "gauge-by-id [id]",
-		Short: "Query gauge by id.",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query gauge by id.
-
-Example:
-$ %s query incentives gauge-by-id 1
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			id, err := strconv.ParseUint(args[0], 10, 64)
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.GaugeByID(cmd.Context(), &types.GaugeByIDRequest{Id: id})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+	return osmocli.SimpleQueryCmd[*types.GaugeByIDRequest](
+		"gauge-by-id [id]",
+		"Query gauge by id.",
+		`{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} gauge-by-id 1
+`, types.ModuleName, types.NewQueryClient)
 }
 
 // GetCmdActiveGauges returns active gauges.
