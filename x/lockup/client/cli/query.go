@@ -53,75 +53,23 @@ func GetQueryCmd() *cobra.Command {
 // Lockup module is where coins of locks are held.
 // This includes locked balance and unlocked balance of the module.
 func GetCmdModuleBalance() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "module-balance",
-		Short: "Query module balance",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query module balance.
-
-Example:
-$ %s query lockup module-balance
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.ModuleBalance(cmd.Context(), &types.ModuleBalanceRequest{})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+	return osmocli.SimpleQueryCmd[*types.ModuleBalanceRequest](
+		"module-balance",
+		"Query module balance",
+		`{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} module-balance
+`, types.ModuleName, types.NewQueryClient)
 }
 
 // GetCmdModuleLockedAmount returns locked balance of the module,
 // which are all the tokens not unlocking + tokens that are not finished unlocking.
 func GetCmdModuleLockedAmount() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "module-locked-amount",
-		Short: "Query module locked amount",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query module locked amount.
-
-Example:
-$ %s query lockup module-locked-amount
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.ModuleLockedAmount(cmd.Context(), &types.ModuleLockedAmountRequest{})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+	return osmocli.SimpleQueryCmd[*types.ModuleLockedAmountRequest](
+		"module-locked-amount",
+		"Query locked amount",
+		`{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} module-locked-amount
+`, types.ModuleName, types.NewQueryClient)
 }
 
 // GetCmdAccountUnlockableCoins returns unlockable coins which has finsihed unlocking.
@@ -163,76 +111,21 @@ $ %s query lockup account-unlockable-coins <address>
 
 // GetCmdAccountUnlockingCoins returns unlocking coins of a specific account.
 func GetCmdAccountUnlockingCoins() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "account-unlocking-coins <address>",
-		Short: "Query account's unlocking coins",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query account's unlocking coins.
-
-Example:
-$ %s query lockup account-unlocking-coins <address>
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.AccountUnlockingCoins(cmd.Context(), &types.AccountUnlockingCoinsRequest{Owner: args[0]})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+	return osmocli.SimpleQueryCmd[*types.AccountUnlockingCoinsRequest](
+		"account-unlocking-coins <address>",
+		"Query account's unlocking coins",
+		`{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} account-unlocking-coins <address>
+`, types.ModuleName, types.NewQueryClient)
 }
 
-// GetCmdAccountLockedCoins returns locked coins that can't be withdrawn of a specific account.
 func GetCmdAccountLockedCoins() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "account-locked-coins <address>",
-		Short: "Query account's locked coins",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query account's locked coins.
-
-Example:
-$ %s query lockup account-locked-coins <address>
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.AccountLockedCoins(cmd.Context(), &types.AccountLockedCoinsRequest{Owner: args[0]})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+	return osmocli.SimpleQueryCmd[*types.AccountLockedCoinsRequest](
+		"account-locked-coins <address>",
+		"Query account's locked coins",
+		`{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} account-locked-coins <address>
+`, types.ModuleName, types.NewQueryClient)
 }
 
 // GetCmdAccountLockedPastTime returns locks of an account with unlock time beyond timestamp.
@@ -413,44 +306,15 @@ $ %s query lockup account-locked-pastime-denom <address> <timestamp> <denom>
 
 // GetCmdLockedByID returns lock by id.
 func GetCmdLockedByID() *cobra.Command {
-	cmd := &cobra.Command{
+	q := osmocli.QueryDescriptor{
 		Use:   "lock-by-id <id>",
 		Short: "Query account's lock record by id",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query account's lock record by id.
-
-Example:
-$ %s query lockup lock-by-id <id>
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			id, err := strconv.ParseUint(args[0], 10, 64)
-			if err != nil {
-				panic(err)
-			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.LockedByID(cmd.Context(), &types.LockedRequest{LockId: id})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} lock-by-id 1`,
+		QueryFnName: "LockedByID",
 	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+	q.Long = osmocli.FormatLongDesc(q.Long, osmocli.NewLongMetadata(types.ModuleName).WithShort(q.Short))
+	return osmocli.SimpleQueryFromDescriptor[*types.LockedRequest](q, types.NewQueryClient)
 }
 
 // GetCmdSyntheticLockupsByLockupID returns synthetic lockups by lockup id.
