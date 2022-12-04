@@ -29,9 +29,7 @@ func GetCmdGaugeIds() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.QueryGaugeIdsRequest](
 		"gauge-ids [pool-id]",
 		"Query the matching gauge ids and durations by pool id",
-		`Query the matching gauge ids and durations by pool id.
-
-Example:
+		`{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} gauge-ids 1
 `, types.ModuleName, types.NewQueryClient)
 }
@@ -41,9 +39,7 @@ func GetCmdDistrInfo() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.QueryDistrInfoRequest](
 		"distr-info",
 		"Query distribution info",
-		`Query distribution info.
-
-Example:
+		`{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} distr-info
 `, types.ModuleName, types.NewQueryClient)
 }
