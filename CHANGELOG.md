@@ -42,7 +42,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v12.3.0
 
+<<<<<<< HEAD
 * [#3325](https://github.com/osmosis-labs/osmosis/pull/3325) Use mainline iavl v0.19.4 instead of our iavl fork
+=======
+### Features
+
+* [#2788](https://github.com/osmosis-labs/osmosis/pull/2788) Add logarithm base 2 implementation.
+
+### Bug fixes
+
+* [#3608](https://github.com/osmosis-labs/osmosis/pull/3608) Make it possible to state export from any directory.
+
+### Misc Improvements
+
+
+## v13.0.0
+
+This release includes stableswap, and expands the IBC safety & composability functionality of Osmosis. The primary features are:
+>>>>>>> da4f5038 (Allow state exporting from any directory (#3608))
 
 ## v12.2.1
 

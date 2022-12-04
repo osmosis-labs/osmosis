@@ -2,15 +2,13 @@ package app
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // ExportAppStateAndValidators exports the state of the application for a genesis
@@ -25,8 +23,7 @@ func (app *OsmosisApp) ExportAppStateAndValidators(
 	// Tendermint will start InitChain.
 	height := app.LastBlockHeight() + 1
 	if forZeroHeight {
-		height = 0
-		app.prepForZeroHeightGenesis(ctx, jailAllowedAddrs)
+		return servertypes.ExportedApp{}, fmt.Errorf("forZeroHeight not supported")
 	}
 
 	genState := app.mm.ExportGenesis(ctx, app.AppCodec(), modulesToExport)
@@ -44,6 +41,7 @@ func (app *OsmosisApp) ExportAppStateAndValidators(
 	}, err
 }
 
+<<<<<<< HEAD
 // prepare for fresh start at zero height
 // NOTE zero height genesis is a temporary feature which will be deprecated
 //
@@ -194,4 +192,8 @@ func (app *OsmosisApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 			return false
 		},
 	)
+=======
+func (app *OsmosisApp) ExportState(ctx sdk.Context) map[string]json.RawMessage {
+	return app.mm.ExportGenesis(ctx, app.AppCodec())
+>>>>>>> da4f5038 (Allow state exporting from any directory (#3608))
 }
