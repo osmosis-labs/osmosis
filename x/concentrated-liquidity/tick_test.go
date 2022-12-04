@@ -271,6 +271,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 		poolToGet        uint64
 		tickToGet        int64
 		expectedTickInfo model.TickInfo
+		expectedErr      error
 	}{
 		{
 			name:             "Get tick info on existing pool and existing tick",
@@ -285,10 +286,10 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec()},
 		},
 		{
-			name:             "Get tick info on a non-existing pool with no existing tick",
-			poolToGet:        2,
-			tickToGet:        DefaultCurrTick.Int64() + 1,
-			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec()},
+			name:        "Get tick info on a non-existing pool with no existing tick",
+			poolToGet:   2,
+			tickToGet:   DefaultCurrTick.Int64() + 1,
+			expectedErr: types.PoolNotFoundError{PoolId: 2},
 		},
 	}
 
@@ -306,9 +307,14 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 
 			// System under test
 			tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, test.poolToGet, test.tickToGet)
-			s.Require().NoError(err)
-			s.Require().Equal(test.expectedTickInfo, tickInfo)
-
+			if test.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &test.expectedErr)
+				s.Require().Equal(model.TickInfo{}, tickInfo)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(test.expectedTickInfo, tickInfo)
+			}
 		})
 	}
 }
