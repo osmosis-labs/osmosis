@@ -42,10 +42,14 @@ message Trade {
   string denomB = 3;
 }
 
-// PoolStatistics tracks the arbitrarge statistics for a given pool
+// PoolStatistics contains the number of trades the module has executed after a
+// swap on a given pool and the profits from the trades
 message PoolStatistics {
-  // Mapping between denom and the profits earned for this pool
-  map<string, cosmos.base.v1beta1.Coin> profits = 1;
-  // Number of arbitrages that have been executed on this pool
-  uint64 num_arbitrages = 2;
+  repeated cosmos.base.v1beta1.Coin profits = 1;
+  // number_of_trades is the number of trades the module has executed
+  string number_of_trades = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  uint64 pool_id = 3;
 }

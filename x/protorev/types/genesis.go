@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -62,7 +64,7 @@ func (gs GenesisState) CheckRoutes() error {
 		}
 		// Validate that the token pair is unique
 		if _, ok := seenTokenPairs[tokenPair]; ok {
-			return ErrDuplicateTokenPair
+			return fmt.Errorf("duplicate token pair: %s", tokenPair)
 		}
 
 		seenTokenPairs[tokenPair] = true

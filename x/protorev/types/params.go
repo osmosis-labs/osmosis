@@ -1,7 +1,8 @@
 package types
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"fmt"
+
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -43,7 +44,7 @@ func (p Params) Validate() error {
 func ValidateBoolean(i interface{}) error {
 	_, ok := i.(bool)
 	if !ok {
-		return sdkerrors.Wrapf(ErrInvalidParams, "expected bool, got %T", i)
+		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	return nil
 }

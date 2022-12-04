@@ -1,7 +1,7 @@
 package types
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"fmt"
 )
 
 // Creates a new TokenPairArbRoutes object
@@ -16,28 +16,28 @@ func NewTokenPairArbRoutes(routes []*Route, tokenA, tokenB string) TokenPairArbR
 func (tp *TokenPairArbRoutes) Validate() error {
 	// Validate that the token pair is valid
 	if tp.TokenA == "" || tp.TokenB == "" {
-		return sdkerrors.Wrap(ErrInvalidTokenName, "token name cannot be empty")
+		return fmt.Errorf("token names cannot be empty")
 	}
 
 	// The list cannot be nil
 	if tp.ArbRoutes == nil {
-		return sdkerrors.Wrap(ErrInvalidRoute, "no routes were entered")
+		return fmt.Errorf("the list of routes cannot be nil")
 	}
 
 	// Iterate through all of the possible routes for this pool
 	for _, route := range tp.ArbRoutes {
 		if len(route.Trades) != 3 {
-			return sdkerrors.Wrapf(ErrInvalidRoute, "route %s has %d pools, but should have 3", route, len(route.Trades))
+			return fmt.Errorf("there must be exactly 3 trades in a route")
 		}
 
 		// In denoms must match either osmo or atom
 		if route.Trades[0].DenomA != AtomDenomination && route.Trades[0].DenomA != OsmosisDenomination {
-			return sdkerrors.Wrapf(ErrInvalidArbDenom, "route has invalid first pool denom: %s", route.Trades[0].DenomA)
+			return fmt.Errorf("the first trade must have either osmo or atom as the in denom")
 		}
 
 		// Out and in denoms must match
 		if route.Trades[0].DenomA != route.Trades[2].DenomB {
-			return sdkerrors.Wrapf(ErrInvalidRoute, "route has invalid first and last pool denoms: %s -> %s", route.Trades[0].DenomA, route.Trades[2].DenomB)
+			return fmt.Errorf("the first and last trades must have matching denoms")
 		}
 
 		uniquePools := make(map[uint64]bool)
@@ -47,7 +47,7 @@ func (tp *TokenPairArbRoutes) Validate() error {
 
 		// There must be at least three pools hops for it to be a valid route
 		if len(uniquePools) != 3 {
-			return sdkerrors.Wrapf(ErrInvalidRoute, "the length of the entered cyclic arbitrage route must be exactly three pools: entered number of pools %d", len(uniquePools))
+			return fmt.Errorf("There must be exactly 3 unique pools in a route")
 		}
 	}
 

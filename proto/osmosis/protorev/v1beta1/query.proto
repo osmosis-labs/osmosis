@@ -133,7 +133,7 @@ message QueryGetProtoRevAllStatisticsRequest {}
 message QueryGetProtoRevAllStatisticsResponse {
   // statistics contains the number of trades the module has executed after a
   // swap on a given pool and the profits from the trades for all pools
-  map<uint64, PoolStatistics> statistics = 1 [ (gogoproto.nullable) = false ];
+  repeated PoolStatistics statistics = 1 [ (gogoproto.nullable) = false ];
 }
 
 // QueryGetProtoRevTokenPairArbRoutesRequest is request type for the

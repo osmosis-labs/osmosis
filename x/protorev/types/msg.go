@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -56,7 +58,7 @@ func (msg MsgSetHotRoutes) ValidateBasic() error {
 		}
 		// Validate that the token pair is unique
 		if _, ok := seenTokenPairs[tokenPair]; ok {
-			return ErrDuplicateTokenPair
+			return fmt.Errorf("duplicate token pair: %s", tokenPair)
 		}
 
 		seenTokenPairs[tokenPair] = true
