@@ -85,42 +85,13 @@ func GetCmdAssetMultiplier() *cobra.Command {
 	)
 }
 
-// GetCmdAllIntermediaryAccounts returns all superfluid intermediary accounts.
 func GetCmdAllIntermediaryAccounts() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "all-intermediary-accounts",
-		Short: "Query all superfluid intermediary accounts",
-		Long: osmocli.FormatLongDescDirect(`{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} all-intermediary-accounts
-`, types.ModuleName),
-		Args: cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.AllIntermediaryAccounts(cmd.Context(), &types.AllIntermediaryAccountsRequest{
-				Pagination: pageReq,
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "superfluid")
-
-	return cmd
+	return osmocli.SimpleQueryCmd[*types.AllIntermediaryAccountsRequest](
+		"all-intermediary-accounts",
+		"Query all superfluid intermediary accounts",
+		`{{.Short}}`,
+		types.ModuleName, types.NewQueryClient,
+	)
 }
 
 func GetCmdConnectedIntermediaryAccount() *cobra.Command {

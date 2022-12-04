@@ -316,86 +316,18 @@ func GetCmdLockedByID() *cobra.Command {
 
 // GetCmdSyntheticLockupsByLockupID returns synthetic lockups by lockup id.
 func GetCmdSyntheticLockupsByLockupID() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "synthetic-lockups-by-lock-id <id>",
-		Short: "Query synthetic lockups by lockup id",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query synthetic lockups by lockup id.
-
-Example:
-$ %s query lockup synthetic-lockups-by-lock-id <id>
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			id, err := strconv.ParseUint(args[0], 10, 64)
-			if err != nil {
-				panic(err)
-			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.SyntheticLockupsByLockupID(cmd.Context(), &types.SyntheticLockupsByLockupIDRequest{LockId: id})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+	return osmocli.SimpleQueryCmd[*types.SyntheticLockupsByLockupIDRequest](
+		"synthetic-lockups-by-lock-id <id>",
+		"Query synthetic lockups by lockup id",
+		`{{.Short}}`, types.ModuleName, types.NewQueryClient)
 }
 
 // GetCmdAccountLockedLongerDuration returns account locked records with longer duration.
 func GetCmdAccountLockedLongerDuration() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "account-locked-longer-duration <address> <duration>",
-		Short: "Query account locked records with longer duration",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query account locked records with longer duration.
-
-Example:
-$ %s query lockup account-locked-longer-duration <address> <duration>
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			duration, err := time.ParseDuration(args[1])
-			if err != nil {
-				return err
-			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.AccountLockedLongerDuration(cmd.Context(), &types.AccountLockedLongerDurationRequest{Owner: args[0], Duration: duration})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+	return osmocli.SimpleQueryCmd[*types.AccountLockedLongerDurationRequest](
+		"account-locked-longer-duration <address> <duration>",
+		"Query account locked records with longer duration",
+		`{{.Short}}`, types.ModuleName, types.NewQueryClient)
 }
 
 // GetCmdAccountLockedDuration returns account locked records with a specific duration.

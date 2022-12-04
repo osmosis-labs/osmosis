@@ -106,7 +106,15 @@ func ParseField(flags *pflag.FlagSet, v reflect.Value, t reflect.Type, fieldInde
 	case reflect.Int64:
 		fallthrough
 	case reflect.Int:
-		i, err := ParseInt(arg, fType.Name)
+		typeStr := fType.Type.String()
+		var i int64
+		var err error
+		if typeStr == "time.Duration" {
+			dur, err2 := time.ParseDuration(arg)
+			i, err = int64(dur), err2
+		} else {
+			i, err = ParseInt(arg, fType.Name)
+		}
 		if err != nil {
 			return true, err
 		}
@@ -131,8 +139,6 @@ func ParseField(flags *pflag.FlagSet, v reflect.Value, t reflect.Type, fieldInde
 			return false, nil
 		}
 	case reflect.Struct:
-		// Handle struct type
-		// ...
 	}
 	fmt.Println(fType.Type.Kind().String())
 	return true, fmt.Errorf("field type not recognized. Got type %v", fType)
