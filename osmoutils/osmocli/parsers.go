@@ -58,13 +58,15 @@ func ParseField(v reflect.Value, t reflect.Type, fieldIndex int, arg string) err
 
 	// fmt.Printf("Field %d: %s %s %s\n", fieldIndex, fType.Name, fType.Type, fType.Type.Kind())
 	switch fType.Type.Kind() {
+	// SetUint allows anyof type u8, u16, u32, u64, and uint
+	case reflect.Uint8:
+		fallthrough
+	case reflect.Uint16:
+		fallthrough
+	case reflect.Uint32:
+		fallthrough
 	case reflect.Uint64:
-		u, err := ParseUint(arg, fType.Name)
-		if err != nil {
-			return err
-		}
-		fVal.SetUint(u)
-		return nil
+		fallthrough
 	case reflect.Uint:
 		u, err := ParseUint(arg, fType.Name)
 		if err != nil {
@@ -72,9 +74,22 @@ func ParseField(v reflect.Value, t reflect.Type, fieldIndex int, arg string) err
 		}
 		fVal.SetUint(u)
 		return nil
+	// SetInt allows anyof type i8,i16,i32,i64 and int
+	case reflect.Int8:
+		fallthrough
+	case reflect.Int16:
+		fallthrough
+	case reflect.Int32:
+		fallthrough
+	case reflect.Int64:
+		fallthrough
 	case reflect.Int:
-		// Handle int type
-		// ...
+		i, err := ParseInt(arg, fType.Name)
+		if err != nil {
+			return err
+		}
+		fVal.SetInt(i)
+		return nil
 	case reflect.String:
 		s, err := ParseDenom(arg, fType.Name)
 		if err != nil {
@@ -93,6 +108,14 @@ func ParseUint(arg string, fieldName string) (uint64, error) {
 	v, err := strconv.ParseUint(arg, 10, 64)
 	if err != nil {
 		return 0, fmt.Errorf("could not parse %s as uint for field %s: %w", arg, fieldName, err)
+	}
+	return v, nil
+}
+
+func ParseInt(arg string, fieldName string) (int64, error) {
+	v, err := strconv.ParseInt(arg, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("could not parse %s as int for field %s: %w", arg, fieldName, err)
 	}
 	return v, nil
 }
