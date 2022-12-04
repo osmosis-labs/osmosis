@@ -45,11 +45,13 @@ message Trade {
 // PoolStatistics contains the number of trades the module has executed after a
 // swap on a given pool and the profits from the trades
 message PoolStatistics {
+  // profits is the total profit from all trades on this pool
   repeated cosmos.base.v1beta1.Coin profits = 1;
   // number_of_trades is the number of trades the module has executed
   string number_of_trades = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
+  // pool_id is the id of the pool
   uint64 pool_id = 3;
 }

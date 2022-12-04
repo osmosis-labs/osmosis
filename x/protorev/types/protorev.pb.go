@@ -205,10 +205,12 @@ func (m *Trade) GetDenomB() string {
 // PoolStatistics contains the number of trades the module has executed after a
 // swap on a given pool and the profits from the trades
 type PoolStatistics struct {
+	// profits is the total profit from all trades on this pool
 	Profits []*types.Coin `protobuf:"bytes,1,rep,name=profits,proto3" json:"profits,omitempty"`
 	// number_of_trades is the number of trades the module has executed
 	NumberOfTrades github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=number_of_trades,json=numberOfTrades,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"number_of_trades"`
-	PoolId         uint64                                 `protobuf:"varint,3,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
+	// pool_id is the id of the pool
+	PoolId uint64 `protobuf:"varint,3,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
 }
 
 func (m *PoolStatistics) Reset()         { *m = PoolStatistics{} }
