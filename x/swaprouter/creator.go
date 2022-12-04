@@ -67,7 +67,8 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 		return 0, err
 	}
 
-	// TODO: Ensure this is correct decision. Without this hack, we try to make gauges for the CL pool which isn't needed
+	// TODO: Add AfterCFMMPoolCreated hook so we can remove this if statement
+	// https://github.com/osmosis-labs/osmosis/issues/3612
 	if poolType != types.Concentrated {
 		k.poolCreationListeners.AfterPoolCreated(ctx, sender, pool.GetId())
 	}
