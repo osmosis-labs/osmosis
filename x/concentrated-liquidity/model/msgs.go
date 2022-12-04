@@ -1,8 +1,6 @@
 package model
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -14,103 +12,7 @@ import (
 // constants.
 const (
 	TypeMsgCreateConcentratedPool = "create_concentrated_pool"
-	TypeMsgCreatePosition         = "create-position"
-	TypeMsgWithdrawPosition       = "withdraw-position"
 )
-
-var _ sdk.Msg = &MsgCreatePosition{}
-
-func (msg MsgCreatePosition) Route() string { return cltypes.RouterKey }
-func (msg MsgCreatePosition) Type() string  { return TypeMsgCreatePosition }
-func (msg MsgCreatePosition) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return fmt.Errorf("Invalid sender address (%s)", err)
-	}
-
-	if msg.LowerTick >= msg.UpperTick {
-		return cltypes.InvalidLowerUpperTickError{LowerTick: msg.LowerTick, UpperTick: msg.UpperTick}
-	}
-
-	if msg.LowerTick < cltypes.MinTick || msg.LowerTick > cltypes.MaxTick {
-		return cltypes.InvalidLowerTickError{LowerTick: msg.LowerTick}
-	}
-
-	if msg.UpperTick < cltypes.MinTick || msg.UpperTick > cltypes.MaxTick {
-		return cltypes.InvalidUpperTickError{UpperTick: msg.UpperTick}
-	}
-
-	if !msg.TokenDesired0.IsValid() || msg.TokenDesired0.IsZero() {
-		return fmt.Errorf("Invalid coins (%s)", msg.TokenDesired0.String())
-	}
-
-	if !msg.TokenDesired1.IsValid() || msg.TokenDesired1.IsZero() {
-		return fmt.Errorf("Invalid coins (%s)", msg.TokenDesired1.String())
-	}
-
-	if msg.TokenMinAmount0.IsNegative() {
-		return cltypes.NotPositiveRequireAmountError{Amount: msg.TokenMinAmount0.String()}
-	}
-
-	if msg.TokenMinAmount1.IsNegative() {
-		return cltypes.NotPositiveRequireAmountError{Amount: msg.TokenMinAmount1.String()}
-	}
-
-	return nil
-}
-
-func (msg MsgCreatePosition) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-func (msg MsgCreatePosition) GetSigners() []sdk.AccAddress {
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{sender}
-}
-
-var _ sdk.Msg = &MsgWithdrawPosition{}
-
-func (msg MsgWithdrawPosition) Route() string { return cltypes.RouterKey }
-func (msg MsgWithdrawPosition) Type() string  { return TypeMsgWithdrawPosition }
-func (msg MsgWithdrawPosition) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return fmt.Errorf("Invalid sender address (%s)", err)
-	}
-
-	if msg.LowerTick >= msg.UpperTick {
-		return cltypes.InvalidLowerUpperTickError{LowerTick: msg.LowerTick, UpperTick: msg.UpperTick}
-	}
-
-	if msg.LowerTick < cltypes.MinTick || msg.LowerTick > cltypes.MaxTick {
-		return cltypes.InvalidLowerTickError{LowerTick: msg.LowerTick}
-	}
-
-	if msg.UpperTick < cltypes.MinTick || msg.UpperTick > cltypes.MaxTick {
-		return cltypes.InvalidUpperTickError{UpperTick: msg.UpperTick}
-	}
-
-	if !msg.LiquidityAmount.IsPositive() {
-		return cltypes.NotPositiveRequireAmountError{Amount: msg.LiquidityAmount.String()}
-	}
-
-	return nil
-}
-
-func (msg MsgWithdrawPosition) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-func (msg MsgWithdrawPosition) GetSigners() []sdk.AccAddress {
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{sender}
-}
 
 var (
 	_ sdk.Msg                       = &MsgCreateConcentratedPool{}

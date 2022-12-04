@@ -6,7 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
@@ -14,14 +13,14 @@ type msgServer struct {
 	keeper *Keeper
 }
 
-func NewMsgServerImpl(keeper *Keeper) clmodel.MsgServer {
+func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	return &msgServer{
 		keeper: keeper,
 	}
 }
 
 // TODO: tests, including events
-func (server msgServer) CreatePosition(goCtx context.Context, msg *clmodel.MsgCreatePosition) (*clmodel.MsgCreatePositionResponse, error) {
+func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCreatePosition) (*types.MsgCreatePositionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
@@ -53,11 +52,11 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *clmodel.MsgCr
 		),
 	})
 
-	return &clmodel.MsgCreatePositionResponse{Amount0: actualAmount0, Amount1: actualAmount1}, nil
+	return &types.MsgCreatePositionResponse{Amount0: actualAmount0, Amount1: actualAmount1}, nil
 }
 
 // TODO: tests, including events
-func (server msgServer) WithdrawPosition(goCtx context.Context, msg *clmodel.MsgWithdrawPosition) (*clmodel.MsgWithdrawPositionResponse, error) {
+func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWithdrawPosition) (*types.MsgWithdrawPositionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
@@ -89,5 +88,5 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *clmodel.Msg
 		),
 	})
 
-	return &clmodel.MsgWithdrawPositionResponse{Amount0: amount0, Amount1: amount1}, nil
+	return &types.MsgWithdrawPositionResponse{Amount0: amount0, Amount1: amount1}, nil
 }

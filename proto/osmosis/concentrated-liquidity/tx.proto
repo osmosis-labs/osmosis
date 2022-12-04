@@ -4,29 +4,12 @@ package osmosis.concentratedliquidity.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model";
+option go_package = "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types";
 
 service Msg {
   rpc CreatePosition(MsgCreatePosition) returns (MsgCreatePositionResponse);
   rpc WithdrawPosition(MsgWithdrawPosition)
       returns (MsgWithdrawPositionResponse);
-}
-
-service MsgCreator {
-  rpc CreateConcentratedPool(MsgCreateConcentratedPool)
-      returns (MsgCreateConcentratedPoolResponse);
-}
-
-// ===================== MsgCreateConcentratedPool
-message MsgCreateConcentratedPool {
-  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  string denom0 = 2 [ (gogoproto.moretags) = "yaml:\"denom0\"" ];
-  string denom1 = 3 [ (gogoproto.moretags) = "yaml:\"denom1\"" ];
-}
-
-// Returns a poolID with custom poolName.
-message MsgCreateConcentratedPoolResponse {
-  uint64 pool_id = 1 [ (gogoproto.customname) = "PoolID" ];
 }
 
 // ===================== MsgCreatePosition
