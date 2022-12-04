@@ -77,57 +77,21 @@ func writeOutputBoilerplate(ctx client.Context, out []byte) error {
 	return nil
 }
 
-// GetCmdPools return pools.
 func GetCmdPools() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "pools",
-		Short: "Query pools",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query pools.
-Example:
-$ %s query gamm pools
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.Pools(cmd.Context(), &types.QueryPoolsRequest{
-				Pagination: pageReq,
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "pools")
-
-	return cmd
+	return osmocli.SimpleQueryCmd[*types.QueryPoolsRequest](
+		"pools",
+		"Query pools",
+		`{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} pools`,
+		types.ModuleName, types.NewQueryClient,
+	)
 }
 
 func GetCmdNumPools() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.QueryNumPoolsRequest](
 		"num-pools",
 		"Query number of pools",
-		`Query number of pools.
-Example:
-{{.CommandPrefix}} num-pools
-`,
+		"{{.Short}}",
 		types.ModuleName, types.NewQueryClient,
 	)
 }

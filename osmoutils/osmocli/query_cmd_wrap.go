@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -43,19 +44,29 @@ type QueryDescriptor struct {
 	Short string
 	Long  string
 
+	HasPagination bool
+
 	QueryFnName string
 }
 
 func SimpleQueryFromDescriptor[reqP proto.Message, querier any](desc QueryDescriptor, newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
+	numArgs := ParseNumFields[reqP]()
+	if desc.HasPagination {
+		numArgs = numArgs - 1
+	}
 	cmd := &cobra.Command{
 		Use:   desc.Use,
 		Short: desc.Short,
 		Long:  desc.Long,
-		Args:  cobra.ExactArgs(ParseNumFields[reqP]()),
+		Args:  cobra.ExactArgs(numArgs),
 		RunE: NewQueryLogicAllFieldsAsArgs[reqP](
 			desc.QueryFnName, newQueryClientFn),
 	}
 	flags.AddQueryFlagsToCmd(cmd)
+	if desc.HasPagination {
+		cmdName := strings.Split(desc.Use, " ")[0]
+		flags.AddPaginationFlagsToCmd(cmd, cmdName)
+	}
 
 	return cmd
 }
@@ -67,10 +78,11 @@ func SimpleQueryFromDescriptor[reqP proto.Message, querier any](desc QueryDescri
 func SimpleQueryCmd[reqP proto.Message, querier any](use string, short string, long string,
 	moduleName string, newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
 	desc := QueryDescriptor{
-		Use:         use,
-		Short:       short,
-		Long:        FormatLongDesc(long, NewLongMetadata(moduleName).WithShort(short)),
-		QueryFnName: ParseExpectedFnName[reqP](),
+		Use:           use,
+		Short:         short,
+		Long:          FormatLongDesc(long, NewLongMetadata(moduleName).WithShort(short)),
+		HasPagination: ParseHasPagination[reqP](),
+		QueryFnName:   ParseExpectedFnName[reqP](),
 	}
 	return SimpleQueryFromDescriptor[reqP](desc, newQueryClientFn)
 }
@@ -139,7 +151,7 @@ func NewQueryLogicAllFieldsAsArgs[reqP proto.Message, querier any](keeperFnName 
 		queryClient := newQueryClientFn(clientCtx)
 		var req reqP
 
-		req, err = ParseFieldsFromArgs[reqP](args)
+		req, err = ParseFieldsFromFlagsAndArgs[reqP](cmd.Flags(), args)
 		if err != nil {
 			return err
 		}
