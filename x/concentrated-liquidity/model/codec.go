@@ -6,12 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
-
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterInterface((*types.ConcentratedPoolExtension)(nil), nil)
 	cdc.RegisterConcrete(&MsgCreateConcentratedPool{}, "osmosis/create-concentrated-pool", nil)
 }
 
