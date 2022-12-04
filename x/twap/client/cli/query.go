@@ -28,7 +28,7 @@ func GetQueryTwapCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "twap [poolid] [base denom] [start time] [end time]",
 		Short: "Query twap",
-		Long: osmocli.FormatLongDescription(`Query twap for pool. Start time must be unix time. End time can be unix time or duration.
+		Long: osmocli.FormatLongDescDirect(`Query twap for pool. Start time must be unix time. End time can be unix time or duration.
 
 Example:
 {{.CommandPrefix}} twap 1 uosmo 1667088000 24h

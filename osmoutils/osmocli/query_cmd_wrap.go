@@ -69,7 +69,7 @@ func SimpleQueryCmd[reqP proto.Message, querier any](use string, short string, l
 	desc := QueryDescriptor{
 		Use:         use,
 		Short:       short,
-		Long:        FormatLongDescription(long, moduleName),
+		Long:        FormatLongDesc(long, NewLongMetadata(moduleName).WithShort(short)),
 		QueryFnName: ParseExpectedFnName[reqP](),
 	}
 	return SimpleQueryFromDescriptor[reqP](desc, newQueryClientFn)

@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -11,7 +10,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
@@ -80,9 +78,7 @@ func GetCmdAssetMultiplier() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.AssetMultiplierRequest](
 		"asset-multiplier [denom]",
 		"Query asset multiplier by denom",
-		`Query asset multiplier by denom.
-
-Example:
+		`{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} asset-multiplier gamm/pool/1
 `,
 		types.ModuleName, types.NewQueryClient,
@@ -94,15 +90,9 @@ func GetCmdAllIntermediaryAccounts() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "all-intermediary-accounts",
 		Short: "Query all superfluid intermediary accounts",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query all superfluid intermediary accounts.
-
-Example:
-$ %s query superfluid all-intermediary-accounts
-`,
-				version.AppName,
-			),
-		),
+		Long: osmocli.FormatLongDescDirect(`{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} all-intermediary-accounts
+`, types.ModuleName),
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -137,9 +127,7 @@ func GetCmdConnectedIntermediaryAccount() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.ConnectedIntermediaryAccountRequest](
 		"connected-intermediary-account [lock_id]",
 		"Query connected intermediary account",
-		`Query connected intermediary account.
-
-Example:
+		`{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} connected-intermediary-account 1
 `,
 		types.ModuleName, types.NewQueryClient,
