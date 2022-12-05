@@ -87,7 +87,6 @@ endif
 ###############################################################################
 
 check_version:
-	@echo "Go version: $(GO_MAJOR_VERSION).$(GO_MINOR_VERSION)"
 ifneq ($(GO_MINOR_VERSION),18)
 	@echo "ERROR: Go version 1.18 is required for this version of Osmosis. Go 1.19 has changes that are believed to break consensus."
 	exit 1
