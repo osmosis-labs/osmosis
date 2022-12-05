@@ -72,7 +72,6 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 	if poolType != types.Concentrated {
 		k.poolCreationListeners.AfterPoolCreated(ctx, sender, pool.GetId())
 	}
-
 	return pool.GetId(), nil
 }
 
@@ -97,22 +96,6 @@ func (k Keeper) validateCreatedPool(
 	if !pool.GetAddress().Equals(gammtypes.NewPoolAddress(poolId)) {
 		return errors.Wrapf(types.ErrInvalidPool,
 			"Pool was attempted to be created with incorrect pool address.")
-	}
-
-	// Check the total pool liquidity/shares if pool is not a concentrated liquidity pool
-	if poolType != types.Concentrated {
-		// Notably we use the initial pool liquidity at the start of the messages definition
-		// just in case CreatePool was mutative.
-		if !pool.GetTotalPoolLiquidity(ctx).IsEqual(initialPoolLiquidity) {
-			return errors.Wrap(types.ErrInvalidPool,
-				"Pool was attempted to be created, with initial liquidity not equal to what was specified.")
-		}
-		// TODO: this check should be moved
-		// This check can be removed later, and replaced with a minimum.
-		if !pool.GetTotalShares().Equal(gammtypes.InitPoolSharesSupply) {
-			return errors.Wrap(types.ErrInvalidPool,
-				"Pool was attempted to be created with incorrect number of initial shares.")
-		}
 	}
 	return nil
 }
