@@ -5,11 +5,15 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/golang/mock/gomock"
 
+	"github.com/osmosis-labs/osmosis/v13/tests/mocks"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 var (
@@ -331,6 +335,117 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 
 			_, ok := pool.(types.WeightedPoolExtension)
 			suite.Require().False(ok)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestConvertToCFMMPool() {
+	ctrl := gomock.NewController(suite.T())
+
+	tests := map[string]struct {
+		pool        swaproutertypes.PoolI
+		expectError bool
+	}{
+		"cfmm pool": {
+			pool: mocks.NewMockCFMMPoolI(ctrl),
+		},
+		"non cfmm pool": {
+			pool:        mocks.NewMockConcentratedPoolExtension(ctrl),
+			expectError: true,
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			suite.SetupTest()
+
+			pool, err := keeper.ConvertToCFMMPool(tc.pool)
+
+			if tc.expectError {
+				suite.Require().Error(err)
+				suite.Require().Nil(pool)
+				return
+			}
+
+			suite.Require().NoError(err)
+			suite.Require().NotNil(pool)
+			suite.Require().Equal(tc.pool, pool)
+		})
+	}
+}
+
+// TestMarshalUnmarshalPool tests that by changing the interfaces
+// that we marshal to and unmarshal from store, we do not
+// change the underlying bytes. This shows that migrations are
+// not necessary.
+func (suite *KeeperTestSuite) TestMarshalUnmarshalPool() {
+
+	suite.SetupTest()
+	k := suite.App.GAMMKeeper
+
+	balancerPoolId := suite.PrepareBalancerPool()
+	balancerPool, err := k.GetPoolAndPoke(suite.Ctx, balancerPoolId)
+	suite.Require().NoError(err)
+
+	stableswapPoolId := suite.PrepareBasicStableswapPool()
+	stableswapPool, err := k.GetPoolAndPoke(suite.Ctx, stableswapPoolId)
+	suite.Require().NoError(err)
+
+	tests := []struct {
+		name string
+		pool types.CFMMPoolI
+	}{
+		{
+			name: "balancer",
+			pool: balancerPool,
+		},
+		{
+			name: "stableswap",
+			pool: stableswapPool,
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			var poolI swaproutertypes.PoolI = tc.pool
+			var cfmmPoolI types.CFMMPoolI = tc.pool
+
+			// Marshal poolI as PoolI
+			bzPoolI, err := k.MarshalPool(poolI)
+			suite.Require().NoError(err)
+
+			// Marshal cfmmPoolI as PoolI
+			bzCfmmPoolI, err := k.MarshalPool(cfmmPoolI)
+			suite.Require().NoError(err)
+
+			suite.Require().Equal(bzPoolI, bzCfmmPoolI)
+
+			// Unmarshal bzPoolI as CFMMPoolI
+			unmarshalBzPoolIAsCfmmPoolI, err := k.UnmarshalPool(bzPoolI)
+			suite.Require().NoError(err)
+
+			// Unmarshal bzPoolI as PoolI
+			unmarshalBzPoolIAsPoolI, err := k.UnmarshalPoolLegacy(bzPoolI)
+			suite.Require().NoError(err)
+
+			suite.Require().Equal(unmarshalBzPoolIAsCfmmPoolI, unmarshalBzPoolIAsPoolI)
+
+			// Unmarshal bzCfmmPoolI as CFMMPoolI
+			unmarshalBzCfmmPoolIAsCfmmPoolI, err := k.UnmarshalPool(bzCfmmPoolI)
+			suite.Require().NoError(err)
+
+			// Unmarshal bzCfmmPoolI as PoolI
+			unmarshalBzCfmmPoolIAsPoolI, err := k.UnmarshalPoolLegacy(bzCfmmPoolI)
+			suite.Require().NoError(err)
+
+			// bzCfmmPoolI as CFMMPoolI equals bzCfmmPoolI as PoolI
+			suite.Require().Equal(unmarshalBzCfmmPoolIAsCfmmPoolI, unmarshalBzCfmmPoolIAsPoolI)
+
+			// All unmarshalled combinations are equal.
+			suite.Require().Equal(unmarshalBzPoolIAsCfmmPoolI, unmarshalBzCfmmPoolIAsCfmmPoolI)
 		})
 	}
 }
