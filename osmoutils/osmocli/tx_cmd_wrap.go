@@ -1,6 +1,7 @@
 package osmocli
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -10,6 +11,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
+
+func TxIndexCmd(moduleName string) *cobra.Command {
+	cmd := IndexCmd(moduleName)
+	cmd.Short = fmt.Sprintf("%s transactions subcommands", moduleName)
+	return cmd
+}
 
 type TxCliDesc struct {
 	Use     string
