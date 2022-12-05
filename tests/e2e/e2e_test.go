@@ -133,10 +133,6 @@ func copyFile(a, b string) error {
 }
 
 func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
-
-	// TODO: need to upload the contract in setup for this test to work.
-	s.T().Skip("Skipping IBC rate limiting tests")
-
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
@@ -165,8 +161,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	fmt.Println(wd, projectDir)
 	err = copyFile(projectDir+"/x/ibc-rate-limit/bytecode/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
 	s.NoError(err)
-	// set LatestCodeId to 1 since we upload a contract in the upgrade handler for v13
-	chainA.LatestCodeId = 1
+
 	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
 	chainA.LatestCodeId += 1
 	node.InstantiateWasmContract(
