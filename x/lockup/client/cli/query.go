@@ -116,6 +116,7 @@ func GetCmdAccountUnlockingCoins() *cobra.Command {
 `, types.ModuleName, types.NewQueryClient)
 }
 
+// GetCmdAccountLockedCoins returns locked coins that that are still in a locked state from the specified account.
 func GetCmdAccountLockedCoins() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.AccountLockedCoinsRequest](
 		"account-locked-coins <address>",
