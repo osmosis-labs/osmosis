@@ -16,7 +16,6 @@ import (
 // GetQueryCmd returns the cli query commands for the minting module.
 func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
-
 	cmd.AddCommand(
 		GetCmdQueryParams(),
 		GetCmdQueryEpochProvisions(),

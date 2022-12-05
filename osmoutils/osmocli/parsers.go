@@ -184,6 +184,16 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 		fVal.SetString(s)
 		return true, nil
 	case reflect.Ptr:
+	case reflect.Slice:
+		typeStr := fType.Type.String()
+		if typeStr == "types.Coins" {
+			coins, err := ParseCoins(arg, fType.Name)
+			if err != nil {
+				return true, err
+			}
+			fVal.Set(reflect.ValueOf(coins))
+			return true, nil
+		}
 	case reflect.Struct:
 		typeStr := fType.Type.String()
 		if typeStr == "types.Coin" {
@@ -192,13 +202,6 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 				return true, err
 			}
 			fVal.Set(reflect.ValueOf(coin))
-			return true, nil
-		} else if typeStr == "types.Coins" {
-			coins, err := ParseCoins(arg, fType.Name)
-			if err != nil {
-				return true, err
-			}
-			fVal.Set(reflect.ValueOf(coins))
 			return true, nil
 		}
 	}
