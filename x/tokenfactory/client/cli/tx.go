@@ -38,9 +38,8 @@ func GetTxCmd() *cobra.Command {
 
 func NewCreateDenomCmd() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgCreateDenom](&osmocli.TxCliDesc{
-		Use:     "create-denom [subdenom] [flags]",
-		Short:   "create a new denom from an account. (Costs osmo though!)",
-		NumArgs: 1,
+		Use:   "create-denom [subdenom] [flags]",
+		Short: "create a new denom from an account. (Costs osmo though!)",
 	})
 }
 
@@ -142,30 +141,9 @@ func NewBurnCmd() *cobra.Command {
 // 	return cmd
 // }
 
-// NewChangeAdminCmd broadcast MsgChangeAdmin
 func NewChangeAdminCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	return osmocli.BuildTxCli[*types.MsgChangeAdmin](&osmocli.TxCliDesc{
 		Use:   "change-admin [denom] [new-admin-address] [flags]",
 		Short: "Changes the admin address for a factory-created denom. Must have admin authority to do so.",
-		Args:  cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			msg := types.NewMsgChangeAdmin(
-				clientCtx.GetFromAddress().String(),
-				args[0],
-				args[1],
-			)
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-	return cmd
+	})
 }

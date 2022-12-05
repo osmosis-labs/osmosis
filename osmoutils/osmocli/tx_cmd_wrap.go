@@ -24,6 +24,8 @@ type TxCliDesc struct {
 
 func BuildTxCli[M sdk.Msg](desc *TxCliDesc) *cobra.Command {
 	desc.TxSignerFieldName = strings.ToLower(desc.TxSignerFieldName)
+	// NumArgs = NumFields - 1, since 1 field is from the msg
+	desc.NumArgs = ParseNumFields[M]() - 1
 	desc.ParseAndBuildMsg = func(clientCtx client.Context, args []string, flags *pflag.FlagSet) (sdk.Msg, error) {
 		flagAdvice := FlagAdvice{
 			IsTx:              true,
