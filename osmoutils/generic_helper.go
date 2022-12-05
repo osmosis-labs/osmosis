@@ -2,6 +2,9 @@ package osmoutils
 
 import "reflect"
 
+// MakeNew makes a new instance of generic T.
+// if T is a pointer, makes a new instance of the underlying struct via reflection,
+// and then a pointer to it.
 func MakeNew[T any]() T {
 	var v T
 	if typ := reflect.TypeOf(v); typ.Kind() == reflect.Ptr {
