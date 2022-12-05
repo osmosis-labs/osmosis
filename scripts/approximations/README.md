@@ -15,8 +15,8 @@ Plots the results for rough comparison.
 
 
 The following are the resources used to write the script:
-https://xn--2-umb.com/22/approximation/
-https://sites.tufts.edu/atasissa/files/2019/09/remez.pdf
+- <https://xn--2-umb.com/22/approximation>
+- <https://sites.tufts.edu/atasissa/files/2019/09/remez.pdf>
 
 ## Configuration
 
