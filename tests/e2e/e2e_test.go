@@ -121,8 +121,8 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	)
 }
 
-// CopyFile copies a file from A to B with io.Copy
-func CopyFile(src, dst string) error {
+// copyFile copies a file from A to B with io.Copy
+func copyFile(src, dst string) error {
 	// open the source file
 	source, err := os.Open(src)
 	if err != nil {
