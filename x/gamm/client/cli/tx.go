@@ -46,6 +46,10 @@ func NewTxCmd() *cobra.Command {
 	return txCmd
 }
 
+var poolIdFlagOverride = map[string]string{
+	"poolid": FlagPoolId,
+}
+
 func NewCreatePoolCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-pool [flags]",
@@ -169,53 +173,49 @@ func NewSwapExactAmountOutCmd() *cobra.Command {
 }
 
 func NewJoinSwapExternAmountIn() *cobra.Command {
-	cmd := osmocli.TxCliDesc{
-		Use:              "join-swap-extern-amount-in [token-in] [share-out-min-amount]",
-		Short:            "join swap extern amount in",
-		NumArgs:          2,
-		ParseAndBuildMsg: NewBuildJoinSwapExternAmountInMsg,
-	}.BuildCommandCustomFn()
+	cmd := osmocli.BuildTxCli[*types.MsgJoinSwapExternAmountIn](&osmocli.TxCliDesc{
+		Use:                 "join-swap-extern-amount-in [token-in] [share-out-min-amount]",
+		Short:               "join swap extern amount in",
+		CustomFlagOverrides: poolIdFlagOverride,
+	})
 
-	cmd.Flags().AddFlagSet(FlagSetJoinSwapExternAmount())
+	cmd.Flags().AddFlagSet(FlagSetJustPoolId())
 	_ = cmd.MarkFlagRequired(FlagPoolId)
 	return cmd
 }
 
 func NewJoinSwapShareAmountOut() *cobra.Command {
-	cmd := osmocli.TxCliDesc{
-		Use:              "join-swap-share-amount-out [token-in-denom] [token-in-max-amount] [share-out-amount]",
-		Short:            "join swap share amount out",
-		NumArgs:          3,
-		ParseAndBuildMsg: NewBuildJoinSwapShareAmountOutMsg,
-	}.BuildCommandCustomFn()
+	cmd := osmocli.BuildTxCli[*types.MsgJoinSwapShareAmountOut](&osmocli.TxCliDesc{
+		Use:                 "join-swap-share-amount-out [token-in-denom] [token-in-max-amount] [share-out-amount]",
+		Short:               "join swap share amount out",
+		CustomFlagOverrides: poolIdFlagOverride,
+	})
 
-	cmd.Flags().AddFlagSet(FlagSetJoinSwapExternAmount())
+	cmd.Flags().AddFlagSet(FlagSetJustPoolId())
 	_ = cmd.MarkFlagRequired(FlagPoolId)
 	return cmd
 }
 
 func NewExitSwapExternAmountOut() *cobra.Command {
-	cmd := osmocli.TxCliDesc{
-		Use:              "exit-swap-extern-amount-out [token-out] [share-in-max-amount]",
-		Short:            "exit swap extern amount out",
-		NumArgs:          2,
-		ParseAndBuildMsg: NewBuildExitSwapExternAmountOutMsg,
-	}.BuildCommandCustomFn()
+	cmd := osmocli.BuildTxCli[*types.MsgExitSwapExternAmountOut](&osmocli.TxCliDesc{
+		Use:                 "exit-swap-extern-amount-out [token-out] [share-in-max-amount]",
+		Short:               "exit swap extern amount out",
+		CustomFlagOverrides: poolIdFlagOverride,
+	})
 
-	cmd.Flags().AddFlagSet(FlagSetJoinSwapExternAmount())
+	cmd.Flags().AddFlagSet(FlagSetJustPoolId())
 	_ = cmd.MarkFlagRequired(FlagPoolId)
 	return cmd
 }
 
 func NewExitSwapShareAmountIn() *cobra.Command {
-	cmd := osmocli.TxCliDesc{
-		Use:              "exit-swap-share-amount-in [token-out-denom] [share-in-amount] [token-out-min-amount]",
-		Short:            "exit swap share amount in",
-		NumArgs:          3,
-		ParseAndBuildMsg: NewBuildExitSwapShareAmountInMsg,
-	}.BuildCommandCustomFn()
+	cmd := osmocli.BuildTxCli[*types.MsgExitSwapShareAmountIn](&osmocli.TxCliDesc{
+		Use:                 "exit-swap-share-amount-in [token-out-denom] [share-in-amount] [token-out-min-amount]",
+		Short:               "exit swap share amount in",
+		CustomFlagOverrides: poolIdFlagOverride,
+	})
 
-	cmd.Flags().AddFlagSet(FlagSetJoinSwapExternAmount())
+	cmd.Flags().AddFlagSet(FlagSetJustPoolId())
 	_ = cmd.MarkFlagRequired(FlagPoolId)
 	return cmd
 }
@@ -571,109 +571,6 @@ func NewBuildSwapExactAmountOutMsg(clientCtx client.Context, args []string, fs *
 		Routes:           routes,
 		TokenInMaxAmount: tokenInMaxAmount,
 		TokenOut:         tokenOut,
-	}, nil
-}
-
-func NewBuildJoinSwapExternAmountInMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
-	tokenInStr, shareOutMinAmountStr := args[0], args[1]
-	poolID, err := fs.GetUint64(FlagPoolId)
-	if err != nil {
-		return nil, err
-	}
-
-	tokenIn, err := sdk.ParseCoinNormalized(tokenInStr)
-	if err != nil {
-		return nil, err
-	}
-
-	shareOutMinAmount, ok := sdk.NewIntFromString(shareOutMinAmountStr)
-	if !ok {
-		return nil, errors.New("invalid share out min amount")
-	}
-	return &types.MsgJoinSwapExternAmountIn{
-		Sender:            clientCtx.GetFromAddress().String(),
-		PoolId:            poolID,
-		TokenIn:           tokenIn,
-		ShareOutMinAmount: shareOutMinAmount,
-	}, nil
-}
-
-func NewBuildJoinSwapShareAmountOutMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
-	tokenInDenom, tokenInMaxAmtStr, shareOutAmtStr := args[0], args[1], args[2]
-	poolID, err := fs.GetUint64(FlagPoolId)
-	if err != nil {
-		return nil, err
-	}
-
-	tokenInMaxAmt, ok := sdk.NewIntFromString(tokenInMaxAmtStr)
-	if !ok {
-		return nil, errors.New("token in max amount")
-	}
-
-	shareOutAmt, ok := sdk.NewIntFromString(shareOutAmtStr)
-	if !ok {
-		return nil, errors.New("share out amount")
-	}
-
-	return &types.MsgJoinSwapShareAmountOut{
-		Sender:           clientCtx.GetFromAddress().String(),
-		PoolId:           poolID,
-		TokenInDenom:     tokenInDenom,
-		TokenInMaxAmount: tokenInMaxAmt,
-		ShareOutAmount:   shareOutAmt,
-	}, nil
-}
-
-func NewBuildExitSwapExternAmountOutMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
-	tokenOutStr, shareInMaxAmtStr := args[0], args[1]
-	poolID, err := fs.GetUint64(FlagPoolId)
-	if err != nil {
-		return nil, err
-	}
-
-	tokenOut, err := sdk.ParseCoinNormalized(tokenOutStr)
-	if err != nil {
-		return nil, errors.New("token out")
-	}
-
-	shareInMaxAmt, ok := sdk.NewIntFromString(shareInMaxAmtStr)
-	if !ok {
-		return nil, errors.New("share in max amount")
-	}
-
-	msg := &types.MsgExitSwapExternAmountOut{
-		Sender:           clientCtx.GetFromAddress().String(),
-		PoolId:           poolID,
-		TokenOut:         tokenOut,
-		ShareInMaxAmount: shareInMaxAmt,
-	}
-
-	return msg, nil
-}
-
-func NewBuildExitSwapShareAmountInMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
-	tokenOutDenom, shareInAmtStr, tokenOutMinAmountStr := args[0], args[1], args[2]
-	poolID, err := fs.GetUint64(FlagPoolId)
-	if err != nil {
-		return nil, err
-	}
-
-	shareInAmt, ok := sdk.NewIntFromString(shareInAmtStr)
-	if !ok {
-		return nil, errors.New("share in amount")
-	}
-
-	tokenOutMinAmount, ok := sdk.NewIntFromString(tokenOutMinAmountStr)
-	if !ok {
-		return nil, errors.New("token out min amount")
-	}
-
-	return &types.MsgExitSwapShareAmountIn{
-		Sender:            clientCtx.GetFromAddress().String(),
-		PoolId:            poolID,
-		TokenOutDenom:     tokenOutDenom,
-		ShareInAmount:     shareInAmt,
-		TokenOutMinAmount: tokenOutMinAmount,
 	}, nil
 }
 

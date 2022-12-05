@@ -88,8 +88,9 @@ type FlagAdvice struct {
 	FromValue         string
 }
 
-// ParseField parses ...
-// returns true if the parsed field was parsed from an arg
+// ParseField parses field #fieldIndex from either an arg or a flag.
+// Returns true if it was parsed from an argument.
+// Returns error if there was an issue in parsing this field.
 func ParseField(v reflect.Value, t reflect.Type, fieldIndex int, arg string, flagAdvice FlagAdvice, flags *pflag.FlagSet) (bool, error) {
 	fVal := v.Field(fieldIndex)
 	fType := t.Field(fieldIndex)
@@ -145,7 +146,10 @@ func parseFieldFromDirectlySetFlag(fVal reflect.Value, fType reflect.StructField
 	// get string. If its a string great, run through arg parser. Otherwise try setting directly
 	s, err := flags.GetString(flagName)
 	if err != nil {
-		flag := flags.Lookup(s)
+		flag := flags.Lookup(flagName)
+		if flag == nil {
+			return true, fmt.Errorf("Programmer set the flag name wrong. Flag %s does not exist", flagName)
+		}
 		t := flag.Value.Type()
 		if t == "uint64" {
 			u, err := flags.GetUint64(flagName)
@@ -221,14 +225,21 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 		}
 	case reflect.Struct:
 		typeStr := fType.Type.String()
+		var v any
+		var err error
 		if typeStr == "types.Coin" {
-			coin, err := ParseCoin(arg, fType.Name)
-			if err != nil {
-				return true, err
-			}
-			fVal.Set(reflect.ValueOf(coin))
-			return true, nil
+			v, err = ParseCoin(arg, fType.Name)
+		} else if typeStr == "types.Int" {
+			v, err = ParseSdkInt(arg, fType.Name)
+		} else {
+			return true, fmt.Errorf("struct field type not recognized. Got type %v", fType)
 		}
+
+		if err != nil {
+			return true, err
+		}
+		fVal.Set(reflect.ValueOf(v))
+		return true, nil
 	}
 	fmt.Println(fType.Type.Kind().String())
 	return true, fmt.Errorf("field type not recognized. Got type %v", fType)
@@ -279,4 +290,13 @@ func ParseCoins(arg string, fieldName string) (sdk.Coins, error) {
 		return sdk.Coins{}, fmt.Errorf("could not parse %s as sdk.Coins for field %s: %w", arg, fieldName, err)
 	}
 	return coins, nil
+}
+
+// TODO: This really shouldn't be getting used in the CLI, its misdesign on the CLI ux
+func ParseSdkInt(arg string, fieldName string) (sdk.Int, error) {
+	i, ok := sdk.NewIntFromString(arg)
+	if !ok {
+		return sdk.Int{}, fmt.Errorf("could not parse %s as sdk.Int for field %s", arg, fieldName)
+	}
+	return i, nil
 }
