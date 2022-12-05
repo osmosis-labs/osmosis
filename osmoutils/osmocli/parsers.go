@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
@@ -17,7 +16,7 @@ import (
 
 // Parses arguments 1-1 from args
 // makes an exception, where it allows Pagination to come from flags.
-func ParseFieldsFromFlagsAndArgs[reqP proto.Message](flagAdvice FlagAdvice, flags *pflag.FlagSet, args []string) (reqP, error) {
+func ParseFieldsFromFlagsAndArgs[reqP any](flagAdvice FlagAdvice, flags *pflag.FlagSet, args []string) (reqP, error) {
 	req := osmoutils.MakeNew[reqP]()
 	v := reflect.ValueOf(req).Elem()
 	t := v.Type()
@@ -40,14 +39,14 @@ func ParseFieldsFromFlagsAndArgs[reqP proto.Message](flagAdvice FlagAdvice, flag
 	return req, nil
 }
 
-func ParseNumFields[reqP proto.Message]() int {
+func ParseNumFields[reqP any]() int {
 	req := osmoutils.MakeNew[reqP]()
 	v := reflect.ValueOf(req).Elem()
 	t := v.Type()
 	return t.NumField()
 }
 
-func ParseExpectedFnName[reqP proto.Message]() string {
+func ParseExpectedQueryFnName[reqP any]() string {
 	req := osmoutils.MakeNew[reqP]()
 	v := reflect.ValueOf(req).Elem()
 	s := v.Type().String()
@@ -62,7 +61,7 @@ func ParseExpectedFnName[reqP proto.Message]() string {
 	return suffixTrimmed
 }
 
-func ParseHasPagination[reqP proto.Message]() bool {
+func ParseHasPagination[reqP any]() bool {
 	req := osmoutils.MakeNew[reqP]()
 	t := reflect.ValueOf(req).Elem().Type()
 	for i := 0; i < t.NumField(); i++ {
@@ -98,19 +97,25 @@ func ParseField(v reflect.Value, t reflect.Type, fieldIndex int, arg string, fla
 
 	parsedFromFlag, err := ParseFieldFromFlag(fVal, fType, flagAdvice, flags)
 	if err != nil {
-		return true, err
+		return false, err
 	}
 	if parsedFromFlag {
 		return false, nil
 	}
-	return ParseFieldFromArg(fVal, fType, arg)
+	return true, ParseFieldFromArg(fVal, fType, arg)
 }
 
-// ParseFieldFromFlag
+// ParseFieldFromFlag attempts to parses the value of a field in a struct from a flag.
+// The field is identified by the provided `reflect.StructField`.
+// The flag advice and `pflag.FlagSet` are used to determine the flag to parse the field from.
+// If the field corresponds to a value from a flag, true is returned.
+// Otherwise, `false` is returned.
+// In the true case, the parsed value is set on the provided `reflect.Value`.
+// An error is returned if there is an issue parsing the field from the flag.
 func ParseFieldFromFlag(fVal reflect.Value, fType reflect.StructField, flagAdvice FlagAdvice, flags *pflag.FlagSet) (bool, error) {
 	lowercaseFieldNameStr := strings.ToLower(fType.Name)
 	if flagName, ok := flagAdvice.CustomFlagOverrides[lowercaseFieldNameStr]; ok {
-		return parseFieldFromDirectlySetFlag(fVal, fType, flagAdvice, flagName, flags)
+		return true, parseFieldFromDirectlySetFlag(fVal, fType, flagAdvice, flagName, flags)
 	}
 
 	kind := fType.Type.Kind()
@@ -132,7 +137,7 @@ func ParseFieldFromFlag(fVal reflect.Value, fType reflect.StructField, flagAdvic
 			if typeStr == paginationType {
 				pageReq, err := client.ReadPageRequest(flags)
 				if err != nil {
-					return false, err
+					return true, err
 				}
 				fVal.Set(reflect.ValueOf(pageReq))
 				return true, nil
@@ -142,55 +147,39 @@ func ParseFieldFromFlag(fVal reflect.Value, fType reflect.StructField, flagAdvic
 	return false, nil
 }
 
-func parseFieldFromDirectlySetFlag(fVal reflect.Value, fType reflect.StructField, flagAdvice FlagAdvice, flagName string, flags *pflag.FlagSet) (bool, error) {
+func parseFieldFromDirectlySetFlag(fVal reflect.Value, fType reflect.StructField, flagAdvice FlagAdvice, flagName string, flags *pflag.FlagSet) error {
 	// get string. If its a string great, run through arg parser. Otherwise try setting directly
 	s, err := flags.GetString(flagName)
 	if err != nil {
 		flag := flags.Lookup(flagName)
 		if flag == nil {
-			return true, fmt.Errorf("Programmer set the flag name wrong. Flag %s does not exist", flagName)
+			return fmt.Errorf("Programmer set the flag name wrong. Flag %s does not exist", flagName)
 		}
 		t := flag.Value.Type()
 		if t == "uint64" {
 			u, err := flags.GetUint64(flagName)
 			if err != nil {
-				return true, err
+				return err
 			}
 			fVal.SetUint(u)
-			return true, nil
+			return nil
 		}
 	}
 	return ParseFieldFromArg(fVal, fType, s)
 }
 
-func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string) (bool, error) {
+func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string) error {
 	switch fType.Type.Kind() {
 	// SetUint allows anyof type u8, u16, u32, u64, and uint
-	case reflect.Uint8:
-		fallthrough
-	case reflect.Uint16:
-		fallthrough
-	case reflect.Uint32:
-		fallthrough
-	case reflect.Uint64:
-		fallthrough
-	case reflect.Uint:
+	case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uint:
 		u, err := ParseUint(arg, fType.Name)
 		if err != nil {
-			return true, err
+			return err
 		}
 		fVal.SetUint(u)
-		return true, nil
+		return nil
 	// SetInt allows anyof type i8,i16,i32,i64 and int
-	case reflect.Int8:
-		fallthrough
-	case reflect.Int16:
-		fallthrough
-	case reflect.Int32:
-		fallthrough
-	case reflect.Int64:
-		fallthrough
-	case reflect.Int:
+	case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Int:
 		typeStr := fType.Type.String()
 		var i int64
 		var err error
@@ -201,27 +190,27 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 			i, err = ParseInt(arg, fType.Name)
 		}
 		if err != nil {
-			return true, err
+			return err
 		}
 		fVal.SetInt(i)
-		return true, nil
+		return nil
 	case reflect.String:
 		s, err := ParseDenom(arg, fType.Name)
 		if err != nil {
-			return true, err
+			return err
 		}
 		fVal.SetString(s)
-		return true, nil
+		return nil
 	case reflect.Ptr:
 	case reflect.Slice:
 		typeStr := fType.Type.String()
 		if typeStr == "types.Coins" {
 			coins, err := ParseCoins(arg, fType.Name)
 			if err != nil {
-				return true, err
+				return err
 			}
 			fVal.Set(reflect.ValueOf(coins))
-			return true, nil
+			return nil
 		}
 	case reflect.Struct:
 		typeStr := fType.Type.String()
@@ -232,17 +221,17 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 		} else if typeStr == "types.Int" {
 			v, err = ParseSdkInt(arg, fType.Name)
 		} else {
-			return true, fmt.Errorf("struct field type not recognized. Got type %v", fType)
+			return fmt.Errorf("struct field type not recognized. Got type %v", fType)
 		}
 
 		if err != nil {
-			return true, err
+			return err
 		}
 		fVal.Set(reflect.ValueOf(v))
-		return true, nil
+		return nil
 	}
 	fmt.Println(fType.Type.Kind().String())
-	return true, fmt.Errorf("field type not recognized. Got type %v", fType)
+	return fmt.Errorf("field type not recognized. Got type %v", fType)
 }
 
 func ParseUint(arg string, fieldName string) (uint64, error) {

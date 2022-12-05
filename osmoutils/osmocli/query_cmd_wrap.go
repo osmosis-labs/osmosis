@@ -69,7 +69,7 @@ func SimpleQueryCmd[reqP proto.Message, querier any](use string, short string, l
 		Short:         short,
 		Long:          FormatLongDesc(long, NewLongMetadata(moduleName).WithShort(short)),
 		HasPagination: ParseHasPagination[reqP](),
-		QueryFnName:   ParseExpectedFnName[reqP](),
+		QueryFnName:   ParseExpectedQueryFnName[reqP](),
 	}
 	return SimpleQueryFromDescriptor[reqP](desc, newQueryClientFn)
 }
