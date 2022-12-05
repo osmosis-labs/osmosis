@@ -5,10 +5,9 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestAbsDifferenceWithSign(t *testing.T) {
@@ -163,6 +162,31 @@ func TestPow(t *testing.T) {
 				tc.expectedResult.Sub(actualResult).Abs().LTE(powPrecision),
 				fmt.Sprintf("test %d failed: expected value & actual value's difference should be less than precision", i),
 			)
+		})
+	}
+}
+
+func TestExp(t *testing.T) {
+
+	tests := map[string]struct {
+		exponent       BigDec
+		expectedResult BigDec
+		expectError    bool
+	}{
+		// The value below is log base 2 of Max Spot Price (2^128 - 1)
+		"exp(32) = 78962960182680.695160978022635108224219956195115352": {
+			exponent: NewBigDec(32),
+			// https://www.wolframalpha.com/input?i=exp%2832%29+50+sig+figs
+			expectedResult: MustNewDecFromStr("78962960182680.695160978022635108224219956195115352"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+
+			result := Exp(tc.exponent)
+
+			require.Equal(t, tc.expectedResult, result)
 		})
 	}
 }
