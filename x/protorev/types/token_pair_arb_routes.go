@@ -8,14 +8,14 @@ import (
 func NewTokenPairArbRoutes(routes []*Route, tokenA, tokenB string) TokenPairArbRoutes {
 	return TokenPairArbRoutes{
 		ArbRoutes: routes,
-		TokenA:    tokenA,
-		TokenB:    tokenB,
+		TokenIn:   tokenA,
+		TokenOut:  tokenB,
 	}
 }
 
 func (tp *TokenPairArbRoutes) Validate() error {
 	// Validate that the token pair is valid
-	if tp.TokenA == "" || tp.TokenB == "" {
+	if tp.TokenIn == "" || tp.TokenOut == "" {
 		return fmt.Errorf("token names cannot be empty")
 	}
 
@@ -31,12 +31,12 @@ func (tp *TokenPairArbRoutes) Validate() error {
 		}
 
 		// In denoms must match either osmo or atom
-		if route.Trades[0].DenomA != AtomDenomination && route.Trades[0].DenomA != OsmosisDenomination {
+		if route.Trades[0].TokenIn != AtomDenomination && route.Trades[0].TokenIn != OsmosisDenomination {
 			return fmt.Errorf("the first trade must have either osmo or atom as the in denom")
 		}
 
 		// Out and in denoms must match
-		if route.Trades[0].DenomA != route.Trades[2].DenomB {
+		if route.Trades[0].TokenIn != route.Trades[2].TokenOut {
 			return fmt.Errorf("the first and last trades must have matching denoms")
 		}
 
@@ -62,8 +62,8 @@ func NewRoutes(trades []*Trade) Route {
 
 func NewTrade(pool uint64, tokenA, tokenB string) Trade {
 	return Trade{
-		Pool:   pool,
-		DenomA: tokenA,
-		DenomB: tokenB,
+		Pool:     pool,
+		TokenIn:  tokenA,
+		TokenOut: tokenB,
 	}
 }

@@ -15,9 +15,9 @@ message TokenPairArbRoutes {
   // Stores all of the possible hot paths for a given pair of tokens
   repeated Route arb_routes = 1;
   // Token denomination of the first asset
-  string token_a = 2;
+  string token_in = 2;
   // Token denomination of the second asset
-  string token_b = 3;
+  string token_out = 3;
 }
 
 // Route is a hot route for a given pair of tokens
@@ -37,9 +37,9 @@ message Trade {
   // -> right)
   uint64 pool = 1;
   // The denom of token A that is traded
-  string denomA = 2;
+  string token_in = 2;
   // The denom of token B that is traded
-  string denomB = 3;
+  string token_out = 3;
 }
 
 // PoolStatistics contains the number of trades the module has executed after a

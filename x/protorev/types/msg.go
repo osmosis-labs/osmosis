@@ -53,8 +53,8 @@ func (msg MsgSetHotRoutes) ValidateBasic() error {
 		}
 
 		tokenPair := TokenPair{
-			TokenA: tokenPairArbRoutes.TokenA,
-			TokenB: tokenPairArbRoutes.TokenB,
+			TokenA: tokenPairArbRoutes.TokenIn,
+			TokenB: tokenPairArbRoutes.TokenOut,
 		}
 		// Validate that the token pair is unique
 		if _, ok := seenTokenPairs[tokenPair]; ok {
