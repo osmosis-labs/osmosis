@@ -21,6 +21,7 @@ func TxIndexCmd(moduleName string) *cobra.Command {
 type TxCliDesc struct {
 	Use     string
 	Short   string
+	Long    string
 	Example string
 
 	NumArgs int
@@ -78,6 +79,9 @@ func (desc TxCliDesc) BuildCommandCustomFn() *cobra.Command {
 	}
 	if desc.Example != "" {
 		cmd.Example = desc.Example
+	}
+	if desc.Long != "" {
+		cmd.Long = desc.Long
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
