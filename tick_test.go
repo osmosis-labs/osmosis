@@ -10,6 +10,8 @@ import (
 	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
+const validPoolId = 1
+
 func (s *KeeperTestSuite) TestTickOrdering() {
 	s.SetupTest()
 
@@ -61,7 +63,6 @@ func (s *KeeperTestSuite) TestTickOrdering() {
 }
 
 func (s *KeeperTestSuite) TestInitOrUpdateTick() {
-	const validPoolId = 1
 	type param struct {
 		poolId      uint64
 		tickIndex   int64
@@ -260,6 +261,60 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			// Check that the initialized or updated tick matches our expectation
 			s.Require().Equal(test.expectedLiquidityNet, tickInfo.LiquidityNet)
 			s.Require().Equal(test.expectedLiquidityGross, tickInfo.LiquidityGross)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetTickInfo() {
+	tests := []struct {
+		name             string
+		poolToGet        uint64
+		tickToGet        int64
+		expectedTickInfo model.TickInfo
+		expectedErr      error
+	}{
+		{
+			name:             "Get tick info on existing pool and existing tick",
+			poolToGet:        validPoolId,
+			tickToGet:        DefaultCurrTick.Int64(),
+			expectedTickInfo: model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg()},
+		},
+		{
+			name:             "Get tick info on existing pool with no existing tick",
+			poolToGet:        validPoolId,
+			tickToGet:        DefaultCurrTick.Int64() + 1,
+			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec()},
+		},
+		{
+			name:        "Get tick info on a non-existing pool with no existing tick",
+			poolToGet:   2,
+			tickToGet:   DefaultCurrTick.Int64() + 1,
+			expectedErr: types.PoolNotFoundError{PoolId: 2},
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			// Init suite for each test.
+			s.Setup()
+
+			// Create a CL pool with poolId 1
+			_, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, ETH, USDC, DefaultCurrSqrtPrice, DefaultCurrTick)
+			s.Require().NoError(err)
+
+			// Set up an initialized tick
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, 1, DefaultCurrTick.Int64(), DefaultLiquidityAmt, true)
+
+			// System under test
+			tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, test.poolToGet, test.tickToGet)
+			if test.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &test.expectedErr)
+				s.Require().Equal(model.TickInfo{}, tickInfo)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(test.expectedTickInfo, tickInfo)
+			}
 		})
 	}
 }

@@ -57,6 +57,9 @@ func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 	store := ctx.KVStore(k.storeKey)
 	tickStruct := model.TickInfo{}
 	key := types.KeyTick(poolId, tickIndex)
+	if !k.poolExists(ctx, poolId) {
+		return model.TickInfo{}, types.PoolNotFoundError{PoolId: poolId}
+	}
 
 	found, err := osmoutils.GetIfFound(store, key, &tickStruct)
 	// return 0 values if key has not been initialized
