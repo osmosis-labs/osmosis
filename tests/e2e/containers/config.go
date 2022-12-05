@@ -23,8 +23,8 @@ const (
 	// Pre-upgrade osmosis repo/tag to pull.
 	// It should be uploaded to Docker Hub. OSMOSIS_E2E_SKIP_UPGRADE should be unset
 	// for this functionality to be used.
-	previousVersionOsmoRepository = "osmolabs/osmosis"
-	previousVersionOsmoTag        = "12.2"
+	previousVersionOsmoRepository = "osmolabs/osmosis-dev"
+	previousVersionOsmoTag        = "13.1.0"
 	// Pre-upgrade repo/tag for osmosis initialization (this should be one version below upgradeVersion)
 	previousVersionInitRepository = "osmolabs/osmosis-e2e-init-chain"
 	previousVersionInitTag        = "v13.1.0"
