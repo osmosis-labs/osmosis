@@ -75,18 +75,6 @@ func ParseHasPagination[reqP any]() bool {
 
 const paginationType = "*query.PageRequest"
 
-type FlagAdvice struct {
-	HasPagination bool
-
-	// Map of FieldName -> FlagName
-	CustomFlagOverrides map[string]string
-
-	// Tx sender value
-	IsTx              bool
-	TxSenderFieldName string
-	FromValue         string
-}
-
 // ParseField parses field #fieldIndex from either an arg or a flag.
 // Returns true if it was parsed from an argument.
 // Returns error if there was an issue in parsing this field.

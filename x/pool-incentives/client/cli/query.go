@@ -14,7 +14,7 @@ func GetQueryCmd() *cobra.Command {
 	cmd.AddCommand(
 		GetCmdGaugeIds(),
 		GetCmdDistrInfo(),
-		osmocli.GetParams[*types.QueryParamsRequest, *types.QueryParamsResponse](
+		osmocli.GetParams[*types.QueryParamsRequest](
 			types.ModuleName, types.NewQueryClient),
 		GetCmdLockableDurations(),
 		GetCmdIncentivizedPools(),

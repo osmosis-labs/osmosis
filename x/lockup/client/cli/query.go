@@ -42,7 +42,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdOutputLocksJson(),
 		GetCmdSyntheticLockupsByLockupID(),
 		GetCmdAccountLockedDuration(),
-		osmocli.GetParams[*types.QueryParamsRequest, *types.QueryParamsResponse](
+		osmocli.GetParams[*types.QueryParamsRequest](
 			types.ModuleName, types.NewQueryClient),
 	)
 
