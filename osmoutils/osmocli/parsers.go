@@ -77,7 +77,11 @@ const paginationType = "*query.PageRequest"
 
 type FlagAdvice struct {
 	HasPagination bool
-	TxSender      string
+
+	// Tx sender value
+	IsTx              bool
+	TxSenderFieldName string
+	FromValue         string
 }
 
 // ParseField parses ...
@@ -102,7 +106,17 @@ func ParseFieldFromFlag(fVal reflect.Value, fType reflect.StructField, flagAdvic
 	kind := fType.Type.Kind()
 	switch kind {
 	case reflect.String:
-		// typeStr := fType.Type.String()
+		if flagAdvice.IsTx {
+			lowerCaseTypeStr := strings.ToLower(fType.Name)
+			// matchesFieldName is true if lowerCaseTypeStr is the same as TxSenderFieldName,
+			// or if TxSenderFieldName is left blank, then matches fields named "sender" or "owner"
+			matchesFieldName := (flagAdvice.TxSenderFieldName == lowerCaseTypeStr) ||
+				(flagAdvice.TxSenderFieldName == "" && (lowerCaseTypeStr == "sender" || lowerCaseTypeStr == "owner"))
+			if matchesFieldName {
+				fVal.SetString(flagAdvice.FromValue)
+				return true, nil
+			}
+		}
 	case reflect.Ptr:
 		if flagAdvice.HasPagination {
 			typeStr := fType.Type.String()

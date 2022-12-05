@@ -358,7 +358,7 @@ func NewStableSwapAdjustScalingFactorsCmd() *cobra.Command {
 		Example:          "osmosisd adjust-scaling-factors --pool-id=1 --scaling-factors=\"100, 100\"",
 		NumArgs:          0,
 		ParseAndBuildMsg: NewStableSwapAdjustScalingFactorsMsg,
-	}.BuildCommand()
+	}.BuildCommandCustomFn()
 
 	cmd.Flags().AddFlagSet(FlagSetAdjustScalingFactors())
 	_ = cmd.MarkFlagRequired(FlagPoolId)
