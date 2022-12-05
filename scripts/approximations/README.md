@@ -20,7 +20,7 @@ https://sites.tufts.edu/atasissa/files/2019/09/remez.pdf
 
 ## Configuration
 
-There are several parameters that can be changes on the needs basis at the
+There are several parameters that can be changed on the needs basis at the
 top of `main.py`.
 
 Some of the parameters include the function we are approximating, the [x_start, x_end] range of
@@ -28,16 +28,16 @@ the approximation, and the number of terms to be used. For the full parameter li
 
 ## Usage
 
-Assumming that you are in the root of the repository:
+Assuming that you are in the root of the repository:
 
 ```bash
-# Create virtual environment.
+# Create a virtual environment.
 python3 -m venv scripts/approximations/venv
 
 # Start the environment
 source scripts/approximations/venv/bin/activate
 
-# Install dependencies to the virtual environment.
+# Install dependencies in the virtual environment.
 pip install -r scripts/approximations/requirements.txt
 
 # Run the script.
