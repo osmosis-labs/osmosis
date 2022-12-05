@@ -1,6 +1,8 @@
 package concentrated_liquidity_test
 
 import (
+	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
@@ -26,7 +28,7 @@ type lpTest struct {
 var (
 	baseCase = &lpTest{
 		poolId:          1,
-		currentTick:     sdk.NewInt(DefaultCurrTick),
+		currentTick:     DefaultCurrTick,
 		lowerTick:       DefaultLowerTick,
 		upperTick:       DefaultUpperTick,
 		currentSqrtP:    DefaultCurrSqrtPrice,
@@ -67,6 +69,11 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 		"error: amount of token 1 is smaller than minimum; should fail and not update state": {
 			amount1Minimum: baseCase.amount1Expected.Mul(sdk.NewInt(2)),
 			expectedError:  types.InsufficientLiquidityCreatedError{Actual: baseCase.amount1Expected, Minimum: baseCase.amount1Expected.Mul(sdk.NewInt(2))},
+		},
+		"error: amount of token 1 is smaller than minimum; should fail and not update state test": {
+			amount0Desired: sdk.ZeroInt(),
+			amount1Desired: sdk.ZeroInt(),
+			expectedError:  errors.New("liquidityDelta calculated equals zero"),
 		},
 		// TODO: add more tests
 		// - custom hand-picked values
@@ -197,18 +204,29 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				expectedError: types.PoolNotFoundError{PoolId: 2},
 			},
 		},
-		"error: invalid tick given": {
+		"error: upper tick out of bounds": {
 			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
 
 			// system under test parameters
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
-				lowerTick:     types.MaxTick + 1, // invalid tick
-				expectedError: types.InvalidTickError{Tick: types.MaxTick + 1, IsLower: true},
+				upperTick:     types.MaxTick + 1, // invalid tick
+				expectedError: types.InvalidTickError{Tick: types.MaxTick + 1, IsLower: false},
 			},
 		},
-		"error: insufficient liqudity": {
+		"error: lower tick out of bounds": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			// for withdrawing a position.
+			sutConfigOverwrite: &lpTest{
+				lowerTick:     types.MinTick - 1, // invalid tick
+				expectedError: types.InvalidTickError{Tick: types.MinTick - 1, IsLower: true},
+			},
+		},
+		"error: insufficient liquidity": {
 			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
 
@@ -217,6 +235,18 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			sutConfigOverwrite: &lpTest{
 				liquidityAmount: baseCase.liquidityAmount.Add(sdk.OneDec()), // 1 more than available
 				expectedError:   types.InsufficientLiquidityError{Actual: baseCase.liquidityAmount.Add(sdk.OneDec()), Available: baseCase.liquidityAmount},
+			},
+		},
+		"error: upper tick is below the lower tick, but both are in bounds": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			// for withdrawing a position.
+			sutConfigOverwrite: &lpTest{
+				lowerTick:     50,
+				upperTick:     40,
+				expectedError: types.InvalidLowerUpperTickError{LowerTick: 50, UpperTick: 40},
 			},
 		},
 		// TODO: test with custom amounts that potentially lead to truncations.

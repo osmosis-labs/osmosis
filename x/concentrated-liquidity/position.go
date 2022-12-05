@@ -1,8 +1,6 @@
 package concentrated_liquidity
 
 import (
-	fmt "fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
@@ -10,16 +8,15 @@ import (
 	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
-// TODO: test
+// getOrInitPosition retrieves the position for the given tick range. If it doesn't exist, it returns an initialized position with zero liquidity.
 func (k Keeper) getOrInitPosition(
 	ctx sdk.Context,
 	poolId uint64,
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
-	liquidityDelta sdk.Dec,
 ) (*model.Position, error) {
 	if !k.poolExists(ctx, poolId) {
-		return nil, fmt.Errorf("cannot retrieve position for a non-existent pool, pool id %d", poolId)
+		return nil, types.PoolNotFoundError{PoolId: poolId}
 	}
 	if k.hasPosition(ctx, poolId, owner, lowerTick, upperTick) {
 		position, err := k.getPosition(ctx, poolId, owner, lowerTick, upperTick)
@@ -41,7 +38,7 @@ func (k Keeper) initOrUpdatePosition(
 	lowerTick, upperTick int64,
 	liquidityDelta sdk.Dec,
 ) (err error) {
-	position, err := k.getOrInitPosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta)
+	position, err := k.getOrInitPosition(ctx, poolId, owner, lowerTick, upperTick)
 	if err != nil {
 		return err
 	}
@@ -52,7 +49,7 @@ func (k Keeper) initOrUpdatePosition(
 	// If negative, this would work as a subtraction from liquidityBefore
 	liquidityAfter := liquidityBefore.Add(liquidityDelta)
 	if liquidityAfter.IsNegative() {
-		return fmt.Errorf("liquidity cannot be negative, got %v", liquidityAfter)
+		return types.NegativeLiquidityError{Liquidity: liquidityAfter}
 	}
 
 	position.Liquidity = liquidityAfter
