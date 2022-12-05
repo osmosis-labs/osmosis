@@ -27,16 +27,22 @@ type QueryDescriptor struct {
 	HasPagination bool
 
 	QueryFnName string
+
+	// Map of FieldName -> FlagName
+	CustomFlagOverrides map[string]string
 }
 
 func SimpleQueryFromDescriptor[reqP proto.Message, querier any](desc QueryDescriptor, newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
-	numArgs := ParseNumFields[reqP]()
+	numArgs := ParseNumFields[reqP]() - len(desc.CustomFlagOverrides)
 	if desc.HasPagination {
 		numArgs = numArgs - 1
 	}
+	if len(desc.CustomFlagOverrides) == 0 {
+		desc.CustomFlagOverrides = map[string]string{}
+	}
 	flagAdvice := FlagAdvice{
 		HasPagination:       desc.HasPagination,
-		CustomFlagOverrides: map[string]string{},
+		CustomFlagOverrides: desc.CustomFlagOverrides,
 	}
 	cmd := &cobra.Command{
 		Use:   desc.Use,

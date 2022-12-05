@@ -357,51 +357,19 @@ func GetCmdAccountLockedLongerDurationDenom() *cobra.Command {
 		`{{.Short}}`, types.ModuleName, types.NewQueryClient)
 }
 
-// GetCmdTotalBondedByDenom returns total amount of locked asset of a specific denom.
 func GetCmdTotalLockedByDenom() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := osmocli.SimpleQueryFromDescriptor[*types.LockedDenomRequest](osmocli.QueryDescriptor{
 		Use:   "total-locked-of-denom <denom>",
 		Short: "Query locked amount for a specific denom bigger then duration provided",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query locked records for a specific denom bigger then duration provided.
-
-Example:
-$ %s query lockup total-locked-of-denom <denom>
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			durationStr, err := cmd.Flags().GetString(FlagMinDuration)
-			if err != nil {
-				return err
-			}
-
-			duration, err := time.ParseDuration(durationStr)
-			if err != nil {
-				return err
-			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.LockedDenom(cmd.Context(), &types.LockedDenomRequest{Denom: args[0], Duration: duration})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
+		Long: osmocli.FormatLongDescDirect(`{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} total-locked-of-denom uosmo --min-duration=0s`, types.ModuleName),
+		CustomFlagOverrides: map[string]string{
+			"duration": FlagMinDuration,
 		},
-	}
+		QueryFnName: "LockedDenom",
+	}, types.NewQueryClient)
 
 	cmd.Flags().AddFlagSet(FlagSetMinDuration())
-	flags.AddQueryFlagsToCmd(cmd)
-
 	return cmd
 }
 
