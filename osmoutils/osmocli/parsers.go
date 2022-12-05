@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/pflag"
 
@@ -184,6 +185,15 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 		return true, nil
 	case reflect.Ptr:
 	case reflect.Struct:
+		typeStr := fType.Type.String()
+		if typeStr == "types.Coin" {
+			coin, err := ParseCoin(arg, fType.Name)
+			if err != nil {
+				return true, err
+			}
+			fVal.Set(reflect.ValueOf(coin))
+			return true, nil
+		}
 	}
 	fmt.Println(fType.Type.Kind().String())
 	return true, fmt.Errorf("field type not recognized. Got type %v", fType)
@@ -216,4 +226,13 @@ func ParseUnixTime(arg string, fieldName string) (time.Time, error) {
 
 func ParseDenom(arg string, fieldName string) (string, error) {
 	return strings.TrimSpace(arg), nil
+}
+
+// TODO: Make this able to read from some local alias file for denoms.
+func ParseCoin(arg string, fieldName string) (sdk.Coin, error) {
+	coin, err := sdk.ParseCoinNormalized(arg)
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("could not parse %s as sdk.Coin for field %s: %w", arg, fieldName, err)
+	}
+	return coin, nil
 }
