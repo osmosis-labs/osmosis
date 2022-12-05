@@ -1606,51 +1606,6 @@ func (s *TestSuite) TestTwapLog() {
 		expected      osmomath.BigDec
 		expectedPanic bool
 	}{
-		"TwapLog(-1); invalid; panic": {
-			priceValue:    osmomath.OneDec().Neg(),
-			expectedPanic: true,
-		},
-		"TwapLog(0); invalid; panic": {
-			priceValue:    osmomath.ZeroDec(),
-			expectedPanic: true,
-		},
-		"TwapLog(0.001) = -9.965784284662087044": {
-			priceValue: osmomath.MustNewDecFromStr("0.001"),
-			// From:  https://www.wolframalpha.com/input?i2d=true&i=log+base+2+of0.001with+19+digits
-			expected: osmomath.MustNewDecFromStr("-9.965784284662087044"),
-		},
-		"TwapLog(0.05) = -4.3219280948873623479": {
-			priceValue: osmomath.MustNewDecFromStr("0.05"),
-			// From:  https://www.wolframalpha.com/input?i2d=true&i=log+base+2+of+0.05+with+20+digits
-			expected: osmomath.MustNewDecFromStr("-4.3219280948873623479"),
-		},
-		"TwapLog(1) = 0": {
-			priceValue: osmomath.OneDec(),
-			expected:   osmomath.ZeroDec(),
-		},
-		"TwapLog(2) = 1": {
-			priceValue: osmomath.NewBigDec(2),
-			expected:   osmomath.OneDec(),
-		},
-		"TwapLog(13) = 3.700439718141092160": {
-			priceValue: osmomath.NewBigDec(13),
-			// From: https://www.wolframalpha.com/input?i2d=true&i=log+base+2+of+13+with+19+digits
-			expected: osmomath.MustNewDecFromStr("3.700439718141092160"),
-		},
-		"TwapLog(128) = 7": {
-			priceValue: osmomath.NewBigDec(128),
-			expected:   osmomath.NewBigDec(7),
-		},
-		"TwapLog(1024) = -4.3219280948873623479": {
-			priceValue: osmomath.MustNewDecFromStr("0.05"),
-			// From:  https://www.wolframalpha.com/input?i2d=true&i=log+base+2+of+0.05+with+20+digits
-			expected: osmomath.MustNewDecFromStr("-4.3219280948873623479"),
-		},
-		"Twaplog{1024.987654321} = 10.00139081765414132": {
-			priceValue: osmomath.NewDecWithPrec(1024987654321, 9),
-			// From: https://www.wolframalpha.com/input?i2d=true&i=log+base+2+of+1024.987654321+with+19+digits
-			expected: osmomath.MustNewDecFromStr("10.00139081765414132"),
-		},
 		"Twaplog{912648174127941279170121098210.928219201902041311} = 99.525973560175362367": {
 			priceValue: osmomath.MustNewDecFromStr("912648174127941279170121098210.928219201902041311"),
 			// From: https://www.wolframalpha.com/input?i2d=true&i=log+base+2+of+912648174127941279170121098210.928219201902041311+with+20+digits
@@ -1663,8 +1618,8 @@ func (s *TestSuite) TestTwapLog() {
 				result := twap.TwapLog(test.priceValue.SDKDec())
 				result_by_customBaseLog := test.priceValue.CustomBaseLog(osmomath.BigDecFromSDKDec(twap.GeometricTwapMathBase))
 
-				require.True(osmomath.DecApproxEq(s.T(), test.expected, osmomath.BigDecFromSDKDec(result), expectedErrTolerance))
-				require.True(osmomath.DecApproxEq(s.T(), result_by_customBaseLog, osmomath.BigDecFromSDKDec(result), expectedErrTolerance))
+				s.Require().True(test.expected.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
+				s.Require().True(result_by_customBaseLog.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
 			})
 		})
 	}
@@ -1678,43 +1633,10 @@ func (s *TestSuite) TestTwapPow() {
 		expected      osmomath.BigDec
 		expectedPanic bool
 	}{
-		"TwapPow(0) = 1": {
-			exponentValue: osmomath.ZeroDec(),
-			expected:      osmomath.OneDec(),
-		},
-		"TwapPow(0.1) = 1.071773": {
-			exponentValue: osmomath.MustNewDecFromStr("0.1"),
-			//From: https://www.wolframalpha.com/input?i2d=true&i=power+base+2+exponent+0.1+with+7+digits
-			expected: osmomath.MustNewDecFromStr("1.071773"),
-		},
-		"TwapPow(0.12345678) = 1.08934186": {
-			exponentValue: osmomath.MustNewDecFromStr("0.12345678"),
-			//From: https://www.wolframalpha.com/input?i2d=true&i=power+base+2+exponent+0.12345678+with+9+digits
-			expected: osmomath.MustNewDecFromStr("1.08934186"),
-		},
 		"TwapPow(0.5) = 1.41421356": {
 			exponentValue: osmomath.MustNewDecFromStr("0.5"),
 			//From: https://www.wolframalpha.com/input?i2d=true&i=power+base+2+exponent+0.5+with+9+digits
 			expected: osmomath.MustNewDecFromStr("1.41421356"),
-		},
-		"TwapPow(0.7654321) = 1.699879": {
-			exponentValue: osmomath.MustNewDecFromStr("0.7654321"),
-			//From: https://www.wolframalpha.com/input?i2d=true&i=power+base+2+exponent+0.7654321+with+7+digits
-			expected: osmomath.MustNewDecFromStr("1.699879"),
-		},
-		"TwapPow(0.9) = 1.86606598": {
-			exponentValue: osmomath.MustNewDecFromStr("0.9"),
-			//From: https://www.wolframalpha.com/input?i2d=true&i=power+base+2+exponent+0.9+with+9+digits
-			expected: osmomath.MustNewDecFromStr("1.86606598"),
-		},
-		"TwapPow(0.99999999) = 1.99999999": {
-			exponentValue: osmomath.MustNewDecFromStr("0.99999999"),
-			//From: https://www.wolframalpha.com/input?i2d=true&i=power+base+2+exponent+0.99999999+with+9+digits
-			expected: osmomath.MustNewDecFromStr("1.99999999"),
-		},
-		"TwapPow(1); invalid; panic": {
-			exponentValue: osmomath.OneDec(),
-			expectedPanic: true,
 		},
 	}
 	for name, test := range tests {
@@ -1723,8 +1645,8 @@ func (s *TestSuite) TestTwapPow() {
 				result := twap.TwapPow(test.exponentValue.SDKDec())
 				result_by_mathPow := math.Pow(twap.GeometricTwapMathBase.MustFloat64(), test.exponentValue.SDKDec().MustFloat64())
 
-				require.True(osmomath.DecApproxEq(s.T(), test.expected, osmomath.BigDecFromSDKDec(result), expectedErrTolerance))
-				require.True(osmomath.DecApproxEq(s.T(), osmomath.MustNewDecFromStr(fmt.Sprint(result_by_mathPow)), osmomath.BigDecFromSDKDec(result), expectedErrTolerance))
+				s.Require().True(test.expected.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
+				s.Require().True(osmomath.MustNewDecFromStr(fmt.Sprint(result_by_mathPow)).Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
 			})
 		})
 	}
