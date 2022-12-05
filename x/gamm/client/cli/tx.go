@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
+	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
@@ -304,7 +305,7 @@ func NewExitSwapExternAmountOut() *cobra.Command {
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			txf, msg, err := NewBuildExitSwapExternAmountOutMsg(clientCtx, args[0], args[1], txf, cmd.Flags())
+			msg, err := NewBuildExitSwapExternAmountOutMsg(clientCtx, args[0], args[1], cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -349,32 +350,19 @@ func NewExitSwapShareAmountIn() *cobra.Command {
 	return cmd
 }
 
+// TODO: Change these flags to args. Required flags don't make that much sense.
 func NewStableSwapAdjustScalingFactorsCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "adjust-scaling-factors --pool-id=[pool-id] --scaling-factors=[scaling-factors]",
-		Short:   "adjust scaling factors",
-		Example: "osmosisd adjust-scaling-factors --pool-id=1 --scaling-factors=\"100, 100\"",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			txf, msg, err := NewStableSwapAdjustScalingFactorsMsg(clientCtx, txf, cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
-		},
-	}
+	cmd := osmocli.TxCliDesc{
+		Use:              "adjust-scaling-factors --pool-id=[pool-id] --scaling-factors=[scaling-factors]",
+		Short:            "adjust scaling factors",
+		Example:          "osmosisd adjust-scaling-factors --pool-id=1 --scaling-factors=\"100, 100\"",
+		NumArgs:          0,
+		ParseAndBuildMsg: NewStableSwapAdjustScalingFactorsMsg,
+	}.BuildCommand()
 
 	cmd.Flags().AddFlagSet(FlagSetAdjustScalingFactors())
-	flags.AddTxFlagsToCmd(cmd)
 	_ = cmd.MarkFlagRequired(FlagPoolId)
-
+	_ = cmd.MarkFlagRequired(FlagScalingFactors)
 	return cmd
 }
 
@@ -776,20 +764,20 @@ func NewBuildJoinSwapShareAmountOutMsg(clientCtx client.Context, tokenInDenom, t
 	return txf, msg, nil
 }
 
-func NewBuildExitSwapExternAmountOutMsg(clientCtx client.Context, tokenOutStr, shareInMaxAmtStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+func NewBuildExitSwapExternAmountOutMsg(clientCtx client.Context, tokenOutStr, shareInMaxAmtStr string, fs *flag.FlagSet) (sdk.Msg, error) {
 	poolID, err := fs.GetUint64(FlagPoolId)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	tokenOut, err := sdk.ParseCoinNormalized(tokenOutStr)
 	if err != nil {
-		return txf, nil, errors.New("token out")
+		return nil, errors.New("token out")
 	}
 
 	shareInMaxAmt, ok := sdk.NewIntFromString(shareInMaxAmtStr)
 	if !ok {
-		return txf, nil, errors.New("share in max amount")
+		return nil, errors.New("share in max amount")
 	}
 
 	msg := &types.MsgExitSwapExternAmountOut{
@@ -799,7 +787,7 @@ func NewBuildExitSwapExternAmountOutMsg(clientCtx client.Context, tokenOutStr, s
 		ShareInMaxAmount: shareInMaxAmt,
 	}
 
-	return txf, msg, nil
+	return msg, nil
 }
 
 func NewBuildExitSwapShareAmountInMsg(clientCtx client.Context, tokenOutDenom, shareInAmtStr, tokenOutMinAmountStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
@@ -829,15 +817,15 @@ func NewBuildExitSwapShareAmountInMsg(clientCtx client.Context, tokenOutDenom, s
 	return txf, msg, nil
 }
 
-func NewStableSwapAdjustScalingFactorsMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+func NewStableSwapAdjustScalingFactorsMsg(clientCtx client.Context, _args []string, fs *flag.FlagSet) (sdk.Msg, error) {
 	poolID, err := fs.GetUint64(FlagPoolId)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	scalingFactorsStr, err := fs.GetString(FlagScalingFactors)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	scalingFactorsStrSlice := strings.Split(scalingFactorsStr, ",")
@@ -846,7 +834,7 @@ func NewStableSwapAdjustScalingFactorsMsg(clientCtx client.Context, txf tx.Facto
 	for i, scalingFactorStr := range scalingFactorsStrSlice {
 		scalingFactor, err := strconv.ParseUint(scalingFactorStr, 10, 64)
 		if err != nil {
-			return txf, nil, err
+			return nil, err
 		}
 		scalingFactors[i] = scalingFactor
 	}
@@ -857,7 +845,7 @@ func NewStableSwapAdjustScalingFactorsMsg(clientCtx client.Context, txf tx.Facto
 		ScalingFactors: scalingFactors,
 	}
 
-	return txf, msg, nil
+	return msg, nil
 }
 
 // ParseCoinsNoSort parses coins from coinsStr but does not sort them.

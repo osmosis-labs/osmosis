@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -11,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	// "github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
 )
 
@@ -37,29 +39,17 @@ func GetTxCmd() *cobra.Command {
 
 // NewCreateDenomCmd broadcast MsgCreateDenom
 func NewCreateDenomCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "create-denom [subdenom] [flags]",
-		Short: "create a new denom from an account",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			msg := types.NewMsgCreateDenom(
+	return osmocli.TxCliDesc{
+		Use:     "create-denom [subdenom] [flags]",
+		Short:   "create a new denom from an account. (Costs osmo though!)",
+		NumArgs: 1,
+		ParseAndBuildMsg: func(clientCtx client.Context, args []string, flags *pflag.FlagSet) (sdk.Msg, error) {
+			return types.NewMsgCreateDenom(
 				clientCtx.GetFromAddress().String(),
 				args[0],
-			)
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+			), nil
 		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-	return cmd
+	}.BuildCommand()
 }
 
 // NewMintCmd broadcast MsgMint

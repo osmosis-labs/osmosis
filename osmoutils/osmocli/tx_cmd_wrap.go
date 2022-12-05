@@ -1,0 +1,52 @@
+package osmocli
+
+import (
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+)
+
+type TxCliDesc struct {
+	Use     string
+	Short   string
+	Example string
+
+	NumArgs int
+	// Contract: len(args) = NumArgs
+	ParseAndBuildMsg  func(clientCtx client.Context, args []string, flags *pflag.FlagSet) (sdk.Msg, error)
+	TxSignerFieldName string
+}
+
+// Creates a new cobra command given the description.
+// Its up to then caller to add CLI flags, aside from `flags.AddTxFlagsToCmd(cmd)`
+func (desc TxCliDesc) BuildCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   desc.Use,
+		Short: desc.Short,
+		Args:  cobra.ExactArgs(desc.NumArgs),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			msg, err := desc.ParseAndBuildMsg(clientCtx, args, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+	if desc.Example != "" {
+		cmd.Example = desc.Example
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
