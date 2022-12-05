@@ -2,7 +2,6 @@ package cli
 
 import (
 	"strconv"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -28,46 +27,16 @@ func GetTxCmd() *cobra.Command {
 	return cmd
 }
 
-// NewLockTokensCmd creates a new lock with the specified duration and tokens from the user's account.
 func NewLockTokensCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := osmocli.BuildTxCli[*types.MsgLockTokens](&osmocli.TxCliDesc{
 		Use:   "lock-tokens [tokens]",
 		Short: "lock tokens into lockup pool from user account",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-			coins, err := sdk.ParseCoinsNormalized(args[0])
-			if err != nil {
-				return err
-			}
-
-			durationStr, err := cmd.Flags().GetString(FlagDuration)
-			if err != nil {
-				return err
-			}
-
-			duration, err := time.ParseDuration(durationStr)
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgLockTokens(
-				clientCtx.GetFromAddress(),
-				duration,
-				coins,
-			)
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		CustomFlagOverrides: map[string]string{
+			"duration": FlagDuration,
 		},
-	}
+	})
 
 	cmd.Flags().AddFlagSet(FlagSetLockTokens())
-	flags.AddTxFlagsToCmd(cmd)
 	err := cmd.MarkFlagRequired(FlagDuration)
 	if err != nil {
 		panic(err)

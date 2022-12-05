@@ -79,6 +79,9 @@ const paginationType = "*query.PageRequest"
 type FlagAdvice struct {
 	HasPagination bool
 
+	// Map of FieldName -> FlagName
+	CustomFlagOverrides map[string]string
+
 	// Tx sender value
 	IsTx              bool
 	TxSenderFieldName string
@@ -99,20 +102,24 @@ func ParseField(v reflect.Value, t reflect.Type, fieldIndex int, arg string, fla
 	if parsedFromFlag {
 		return false, nil
 	}
-	return ParseFieldFromArg(fVal, fType, arg, flags)
+	return ParseFieldFromArg(fVal, fType, arg)
 }
 
 // ParseFieldFromFlag
 func ParseFieldFromFlag(fVal reflect.Value, fType reflect.StructField, flagAdvice FlagAdvice, flags *pflag.FlagSet) (bool, error) {
+	lowercaseFieldNameStr := strings.ToLower(fType.Name)
+	if flagName, ok := flagAdvice.CustomFlagOverrides[lowercaseFieldNameStr]; ok {
+		return parseFieldFromDirectlySetFlag(fVal, fType, flagAdvice, flagName, flags)
+	}
+
 	kind := fType.Type.Kind()
 	switch kind {
 	case reflect.String:
 		if flagAdvice.IsTx {
-			lowerCaseTypeStr := strings.ToLower(fType.Name)
-			// matchesFieldName is true if lowerCaseTypeStr is the same as TxSenderFieldName,
+			// matchesFieldName is true if lowercaseFieldNameStr is the same as TxSenderFieldName,
 			// or if TxSenderFieldName is left blank, then matches fields named "sender" or "owner"
-			matchesFieldName := (flagAdvice.TxSenderFieldName == lowerCaseTypeStr) ||
-				(flagAdvice.TxSenderFieldName == "" && (lowerCaseTypeStr == "sender" || lowerCaseTypeStr == "owner"))
+			matchesFieldName := (flagAdvice.TxSenderFieldName == lowercaseFieldNameStr) ||
+				(flagAdvice.TxSenderFieldName == "" && (lowercaseFieldNameStr == "sender" || lowercaseFieldNameStr == "owner"))
 			if matchesFieldName {
 				fVal.SetString(flagAdvice.FromValue)
 				return true, nil
@@ -134,7 +141,25 @@ func ParseFieldFromFlag(fVal reflect.Value, fType reflect.StructField, flagAdvic
 	return false, nil
 }
 
-func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string, flags *pflag.FlagSet) (bool, error) {
+func parseFieldFromDirectlySetFlag(fVal reflect.Value, fType reflect.StructField, flagAdvice FlagAdvice, flagName string, flags *pflag.FlagSet) (bool, error) {
+	// get string. If its a string great, run through arg parser. Otherwise try setting directly
+	s, err := flags.GetString(flagName)
+	if err != nil {
+		flag := flags.Lookup(s)
+		t := flag.Value.Type()
+		if t == "uint64" {
+			u, err := flags.GetUint64(flagName)
+			if err != nil {
+				return true, err
+			}
+			fVal.SetUint(u)
+			return true, nil
+		}
+	}
+	return ParseFieldFromArg(fVal, fType, s)
+}
+
+func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string) (bool, error) {
 	switch fType.Type.Kind() {
 	// SetUint allows anyof type u8, u16, u32, u64, and uint
 	case reflect.Uint8:

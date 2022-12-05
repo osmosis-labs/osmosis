@@ -27,19 +27,26 @@ type TxCliDesc struct {
 	// Contract: len(args) = NumArgs
 	ParseAndBuildMsg  func(clientCtx client.Context, args []string, flags *pflag.FlagSet) (sdk.Msg, error)
 	TxSignerFieldName string
+
+	// Map of FieldName -> FlagName
+	CustomFlagOverrides map[string]string
 }
 
 func BuildTxCli[M sdk.Msg](desc *TxCliDesc) *cobra.Command {
 	desc.TxSignerFieldName = strings.ToLower(desc.TxSignerFieldName)
 	if desc.NumArgs == 0 {
 		// NumArgs = NumFields - 1, since 1 field is from the msg
-		desc.NumArgs = ParseNumFields[M]() - 1
+		desc.NumArgs = ParseNumFields[M]() - 1 - len(desc.CustomFlagOverrides)
+	}
+	if len(desc.CustomFlagOverrides) == 0 {
+		desc.CustomFlagOverrides = map[string]string{}
 	}
 	desc.ParseAndBuildMsg = func(clientCtx client.Context, args []string, flags *pflag.FlagSet) (sdk.Msg, error) {
 		flagAdvice := FlagAdvice{
-			IsTx:              true,
-			TxSenderFieldName: desc.TxSignerFieldName,
-			FromValue:         clientCtx.GetFromAddress().String(),
+			IsTx:                true,
+			TxSenderFieldName:   desc.TxSignerFieldName,
+			FromValue:           clientCtx.GetFromAddress().String(),
+			CustomFlagOverrides: desc.CustomFlagOverrides,
 		}
 		return ParseFieldsFromFlagsAndArgs[M](flagAdvice, flags, args)
 	}
