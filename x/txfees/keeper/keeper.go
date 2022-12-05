@@ -14,12 +14,10 @@ import (
 type Keeper struct {
 	storeKey sdk.StoreKey
 
-	accountKeeper             types.AccountKeeper
-	bankKeeper                types.BankKeeper
-	gammKeeper                types.GammKeeper
-	spotPriceCalculator       types.SpotPriceCalculator
-	feeCollectorName          string
-	nonNativeFeeCollectorName string
+	accountKeeper       types.AccountKeeper
+	bankKeeper          types.BankKeeper
+	gammKeeper          types.GammKeeper
+	spotPriceCalculator types.SpotPriceCalculator
 }
 
 var _ types.TxFeesKeeper = (*Keeper)(nil)
@@ -30,17 +28,13 @@ func NewKeeper(
 	storeKey sdk.StoreKey,
 	gammKeeper types.GammKeeper,
 	spotPriceCalculator types.SpotPriceCalculator,
-	feeCollectorName string,
-	nonNativeFeeCollectorName string,
 ) Keeper {
 	return Keeper{
-		accountKeeper:             accountKeeper,
-		bankKeeper:                bankKeeper,
-		storeKey:                  storeKey,
-		gammKeeper:                gammKeeper,
-		spotPriceCalculator:       spotPriceCalculator,
-		feeCollectorName:          feeCollectorName,
-		nonNativeFeeCollectorName: nonNativeFeeCollectorName,
+		accountKeeper:       accountKeeper,
+		bankKeeper:          bankKeeper,
+		storeKey:            storeKey,
+		gammKeeper:          gammKeeper,
+		spotPriceCalculator: spotPriceCalculator,
 	}
 }
 
