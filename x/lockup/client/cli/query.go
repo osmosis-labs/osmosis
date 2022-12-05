@@ -339,7 +339,7 @@ func GetCmdAccountLockedDuration() *cobra.Command {
 {{.CommandPrefix}} account-locked-duration osmo1yl6hdjhmkf37639730gffanpzndzdpmhxy9ep3 604800s`, types.ModuleName, types.NewQueryClient)
 }
 
-// GetCmdAccountLockedLongerDuration returns account locked records with longer duration.
+// GetCmdAccountLockedLongerDurationNotUnlockingOnly returns account locked records with longer duration from unlocking only queue.
 func GetCmdAccountLockedLongerDurationNotUnlockingOnly() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.AccountLockedLongerDurationNotUnlockingOnlyRequest](
 		"account-locked-longer-duration-not-unlocking <address> <duration>",
