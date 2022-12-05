@@ -44,7 +44,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Features
 
-* [#2788](https://github.com/osmosis-labs/osmosis/pull/2788) Add logarithm base 2 implementation.
+### Bug fixes
+
+## v13.1.0
+
+* Correctly apply DragonBerry IBC patch
 
 ### Bug fixes
 
@@ -84,7 +88,7 @@ This release includes stableswap, and expands the IBC safety & composability fun
   - The v1beta1 queries actually have base asset and quote asset reversed, so you were always getting 1/correct spot price. People fixed this by reordering the arguments.
   - This PR adds v2 queries for doing the correct thing, and giving people time to migrate from v1beta1 queries to v2.
   - It also changes cosmwasm to only allow the v2 queries, as no contracts on Osmosis mainnet uses the v1beta1 queries.
-
+* [#2788](https://github.com/osmosis-labs/osmosis/pull/2788) Add logarithm base 2 implementation.
 
 ### Bug fixes
 
