@@ -23,22 +23,30 @@ import (
 )
 
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.
-// Additionally, it attempst to create a pool with IBC denoms.
+// Additionally, it attempts to create a pool with IBC denoms.
 func (s *IntegrationTestSuite) TestIBCTokenTransferAndCreatePool() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
+
 	chainA := s.configurer.GetChainConfig(0)
 	chainB := s.configurer.GetChainConfig(1)
+
+	// send OsmoToken from chainA to chainB
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+	// send OsmoToken from chainB to chainA
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+	// send StakeToken from chainA to chainB
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
+	// send StakeToken from chainB to chainA
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
+	// create a pool called "ibcDenomPool.json" using the "ValidatorWalletName"
 	chainANode.CreatePool("ibcDenomPool.json", initialization.ValidatorWalletName)
 }
+
 
 // TestSuperfluidVoting tests that superfluid voting is functioning as expected.
 // It does so by doing the following:
@@ -113,22 +121,29 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	)
 }
 
-// Copy a file from A to B with io.Copy
-func copyFile(a, b string) error {
-	source, err := os.Open(a)
+// CopyFile copies a file from A to B with io.Copy
+func CopyFile(src, dst string) error {
+	// open the source file
+	source, err := os.Open(src)
 	if err != nil {
 		return err
 	}
 	defer source.Close()
-	destination, err := os.Create(b)
+
+	// create the destination file
+	destination, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
 	defer destination.Close()
+
+	// use io.Copy to copy the contents of the source file
+	// to the destination file
 	_, err = io.Copy(destination, source)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -229,39 +244,48 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	node.WasmExecute(contracts[0], `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
 }
 
-// TestAddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.
+// TestAddToExistingLockPostUpgrade ensures that the `addToExistingLock` function
+// works for locks created before an upgrade.
 func (s *IntegrationTestSuite) TestAddToExistingLockPostUpgrade() {
 	if s.skipUpgrade {
 		s.T().Skip("Skipping AddToExistingLockPostUpgrade test")
 	}
+
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
-	// ensure we can add to existing locks and superfluid locks that existed pre upgrade on chainA
-	// we use the hardcoded gamm/pool/1 and these specific wallet names to match what was created pre upgrade
-	lockupWalletAddr, lockupWalletSuperfluidAddr := chainANode.GetWallet("lockup-wallet"), chainANode.GetWallet("lockup-wallet-superfluid")
+
+	// Ensure that we can add to existing locks and superfluid locks that existed
+	// before the upgrade on chainA. We use the hardcoded gamm/pool/1 and these
+	// specific wallet names to match what was created before the upgrade.
+	lockupWalletAddr := chainANode.GetWallet("lockup-wallet")
+	lockupWalletSuperfluidAddr := chainANode.GetWallet("lockup-wallet-superfluid")
 	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), "gamm/pool/1", "240s", lockupWalletAddr)
 	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), "gamm/pool/1", "240s", lockupWalletSuperfluidAddr)
 }
+
 
 // TestAddToExistingLock tests lockups to both regular and superfluid locks.
 func (s *IntegrationTestSuite) TestAddToExistingLock() {
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
-	// ensure we can add to new locks and superfluid locks
-	// create pool and enable superfluid assets
+
+	// Ensure that we can add to new locks and superfluid locks.
+	// Create a pool and enable superfluid assets.
 	poolId := chainANode.CreatePool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
 	chainA.EnableSuperfluidAsset(fmt.Sprintf("gamm/pool/%d", poolId))
 
-	// setup wallets and send gamm tokens to these wallets on chainA
-	lockupWalletAddr, lockupWalletSuperfluidAddr := chainANode.CreateWallet("TestAddToExistingLock"), chainANode.CreateWallet("TestAddToExistingLockSuperfluid")
+	// Set up wallets and send gamm tokens to these wallets on chainA.
+	lockupWalletAddr := chainANode.CreateWallet("TestAddToExistingLock")
+	lockupWalletSuperfluidAddr := chainANode.CreateWallet("TestAddToExistingLockSuperfluid")
 	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[0].PublicAddress, lockupWalletAddr)
 	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[0].PublicAddress, lockupWalletSuperfluidAddr)
 
-	// ensure we can add to new locks and superfluid locks on chainA
+	// Ensure that we can add to new locks and superfluid locks on chainA.
 	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId), lockupWalletAddr, lockupWalletSuperfluidAddr)
 }
+
 
 // TestTWAP tests TWAP by creating a pool, performing a swap.
 // These two operations should create TWAP records.
@@ -446,6 +470,7 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningCA, twapAfterSwapBeforePruning10MsCA, sdk.NewDecWithPrec(1, 3))
 }
 
+// TestStateSync tests that a node can catch up to the current state of the blockchain by using state synchronization.
 func (s *IntegrationTestSuite) TestStateSync() {
 	if s.skipStateSync {
 		s.T().Skip()
@@ -460,7 +485,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 	stateSyncHostPort := fmt.Sprintf("%s:26657", runningNode.Name)
 	stateSyncRPCServers := []string{stateSyncHostPort, stateSyncHostPort}
 
-	// get trust height and trust hash.
+	// Get the trust height and trust hash.
 	trustHeight, err := runningNode.QueryCurrentHeight()
 	s.Require().NoError(err)
 
@@ -476,10 +501,11 @@ func (s *IntegrationTestSuite) TestStateSync() {
 		SnapshotKeepRecent: 2,
 	}
 
+	// Create a temporary directory for the state-syncing node's configuration files.
 	tempDir, err := os.MkdirTemp("", "osmosis-e2e-statesync-")
 	s.Require().NoError(err)
 
-	// configure genesis and config files for the state-synchin node.
+	// Configure the genesis and config files for the state-synching node.
 	nodeInit, err := initialization.InitSingleNode(
 		chainA.Id,
 		tempDir,
@@ -496,7 +522,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 
 	stateSynchingNode := chainA.CreateNode(nodeInit)
 
-	// ensure that the running node has snapshots at a height > trustHeight.
+	// Ensure that the running node has snapshots at a height > trustHeight.
 	hasSnapshotsAvailable := func(syncInfo coretypes.SyncInfo) bool {
 		snapshotHeight := runningNode.SnapshotInterval
 		if uint64(syncInfo.LatestBlockHeight) < snapshotHeight {
@@ -506,53 +532,68 @@ func (s *IntegrationTestSuite) TestStateSync() {
 
 		snapshots, err := runningNode.QueryListSnapshots()
 		s.Require().NoError(err)
-
-		for _, snapshot := range snapshots {
-			if snapshot.Height > uint64(trustHeight) {
-				s.T().Log("found state sync snapshot after trust height")
-				return true
-			}
+			for _, snapshot := range snapshots {
+		if snapshot.Height > uint64(trustHeight) {
+			s.T().Log("found state sync snapshot after trust height")
+			return true
 		}
-		s.T().Log("state sync snashot after trust height is not found")
-		return false
 	}
-	runningNode.WaitUntil(hasSnapshotsAvailable)
-
-	// start the state synchin node.
-	err = stateSynchingNode.Run()
-	s.Require().NoError(err)
-
-	// ensure that the state synching node cathes up to the running node.
-	s.Require().Eventually(func() bool {
-		stateSyncNodeHeight, err := stateSynchingNode.QueryCurrentHeight()
-		s.Require().NoError(err)
-		runningNodeHeight, err := runningNode.QueryCurrentHeight()
-		s.Require().NoError(err)
-		return stateSyncNodeHeight == runningNodeHeight
-	},
-		3*time.Minute,
-		500*time.Millisecond,
-	)
-
-	// stop the state synching node.
-	err = chainA.RemoveNode(stateSynchingNode.Name)
-	s.Require().NoError(err)
+	s.T().Log("state sync snapshot after trust height is not found")
+	return false
 }
+runningNode.WaitUntil(hasSnapshotsAvailable)
 
+// Start the state synching node.
+err = stateSynchingNode.Run()
+s.Require().NoError(err)
+
+// Ensure that the state synching node catches up to the running node.
+s.Require().Eventually(func() bool {
+	stateSyncNodeHeight, err := stateSynchingNode.QueryCurrentHeight()
+	s.Require().NoError(err)
+	runningNodeHeight, err := runningNode.QueryCurrentHeight()
+	s.Require().NoError(err)
+	return stateSyncNodeHeight == runningNodeHeight
+},
+	3*time.Minute,
+	500*time.Millisecond,
+)
+
+// Stop the state synching node.
+err = chainA.RemoveNode(stateSynchingNode.Name)
+s.Require().NoError(err)
+}
+		
+		
+		
+		
+		
+		
+// TestExpeditedProposals tests that expedited proposals can be submitted and voted on in a timely manner.
 func (s *IntegrationTestSuite) TestExpeditedProposals() {
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
 
+	// Submit a text proposal for an expedited vote.
 	chainANode.SubmitTextProposal("expedited text proposal", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
 	chainA.LatestProposalNumber += 1
+
+	// Deposit funds for the proposal.
 	chainANode.DepositProposal(chainA.LatestProposalNumber, true)
+
+	// Create a channel to receive the total time it takes for the proposal to pass.
 	totalTimeChan := make(chan time.Duration, 1)
+
+	// Query the proposal status in a separate goroutine, sending the total time it took for the proposal to pass on the channel.
 	go chainANode.QueryPropStatusTimed(chainA.LatestProposalNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
+
+	// Vote yes on the proposal on each node.
 	for _, node := range chainA.NodeConfigs {
 		node.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
 	}
-	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
+
+	// If querying the proposal status takes longer than the timeout period, stop the goroutine and return an error.
 	var elapsed time.Duration
 	timeoutPeriod := time.Duration(2 * time.Minute)
 	select {
@@ -562,11 +603,15 @@ func (s *IntegrationTestSuite) TestExpeditedProposals() {
 		s.Require().NoError(err)
 	}
 
-	// compare the time it took to reach pass status to expected expedited voting period
+	// Compare the time it took for the proposal to pass to the expected expedited voting period.
 	expeditedVotingPeriodDuration := time.Duration(chainA.ExpeditedVotingPeriod * float32(time.Second))
 	timeDelta := elapsed - expeditedVotingPeriodDuration
-	// ensure delta is within two seconds of expected time
+
+	// Ensure that the time delta is within two seconds of the expected time.
 	s.Require().Less(timeDelta, 2*time.Second)
 	s.T().Logf("expeditedVotingPeriodDuration within two seconds of expected time: %v", timeDelta)
+
+	// Close the channel.
 	close(totalTimeChan)
 }
+
