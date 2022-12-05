@@ -56,6 +56,7 @@ func GetCmdToDistributeCoins() *cobra.Command {
 	)
 }
 
+// GetCmdGaugeByID returns a gauge by ID.
 func GetCmdGaugeByID() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.GaugeByIDRequest](
 		"gauge-by-id [id]",
@@ -65,6 +66,7 @@ func GetCmdGaugeByID() *cobra.Command {
 `, types.ModuleName, types.NewQueryClient)
 }
 
+// GetCmdActiveGauges returns active gauges.
 func GetCmdActiveGauges() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.ActiveGaugesRequest](
 		"active-gauges",
@@ -74,7 +76,7 @@ func GetCmdActiveGauges() *cobra.Command {
 	)
 }
 
-// GetCmdGauges returns active gauges.
+// GetCmdActiveGaugesPerDenom returns active gauges for a specified denom.
 func GetCmdActiveGaugesPerDenom() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.ActiveGaugesPerDenomRequest](
 		"active-gauges-per-denom [denom]",
@@ -95,7 +97,7 @@ func GetCmdUpcomingGauges() *cobra.Command {
 	)
 }
 
-// GetCmdUpcomingGauges returns scheduled gauges.
+// GetCmdUpcomingGaugesPerDenom returns scheduled gauges for specified denom..
 func GetCmdUpcomingGaugesPerDenom() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.UpcomingGaugesPerDenomRequest](
 		"upcoming-gauges-per-denom [denom]",
