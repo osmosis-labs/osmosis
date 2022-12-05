@@ -54,13 +54,16 @@ func SimpleQueryFromDescriptor[reqP proto.Message, querier any](desc QueryDescri
 	if desc.HasPagination {
 		numArgs = numArgs - 1
 	}
+	flagAdvice := FlagAdvice{
+		HasPagination: desc.HasPagination,
+	}
 	cmd := &cobra.Command{
 		Use:   desc.Use,
 		Short: desc.Short,
 		Long:  desc.Long,
 		Args:  cobra.ExactArgs(numArgs),
 		RunE: NewQueryLogicAllFieldsAsArgs[reqP](
-			desc.QueryFnName, newQueryClientFn),
+			flagAdvice, desc.QueryFnName, newQueryClientFn),
 	}
 	flags.AddQueryFlagsToCmd(cmd)
 	if desc.HasPagination {
@@ -141,7 +144,7 @@ func callQueryClientFn[reqP proto.Message, querier any](ctx context.Context, fnN
 	return res, nil
 }
 
-func NewQueryLogicAllFieldsAsArgs[reqP proto.Message, querier any](keeperFnName string,
+func NewQueryLogicAllFieldsAsArgs[reqP proto.Message, querier any](flagAdvice FlagAdvice, keeperFnName string,
 	newQueryClientFn func(grpc1.ClientConn) querier) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		clientCtx, err := client.GetClientQueryContext(cmd)
@@ -151,7 +154,7 @@ func NewQueryLogicAllFieldsAsArgs[reqP proto.Message, querier any](keeperFnName 
 		queryClient := newQueryClientFn(clientCtx)
 		var req reqP
 
-		req, err = ParseFieldsFromFlagsAndArgs[reqP](cmd.Flags(), args)
+		req, err = ParseFieldsFromFlagsAndArgs[reqP](flagAdvice, cmd.Flags(), args)
 		if err != nil {
 			return err
 		}

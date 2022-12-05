@@ -16,7 +16,7 @@ import (
 
 // Parses arguments 1-1 from args
 // makes an exception, where it allows Pagination to come from flags.
-func ParseFieldsFromFlagsAndArgs[reqP proto.Message](flags *pflag.FlagSet, args []string) (reqP, error) {
+func ParseFieldsFromFlagsAndArgs[reqP proto.Message](flagAdvice FlagAdvice, flags *pflag.FlagSet, args []string) (reqP, error) {
 	req := osmoutils.MakeNew[reqP]()
 	v := reflect.ValueOf(req).Elem()
 	t := v.Type()
@@ -28,7 +28,7 @@ func ParseFieldsFromFlagsAndArgs[reqP proto.Message](flags *pflag.FlagSet, args 
 		if len(args) > i+argIndexOffset {
 			arg = args[i+argIndexOffset]
 		}
-		usedArg, err := ParseField(flags, v, t, i, arg)
+		usedArg, err := ParseField(v, t, i, arg, flagAdvice, flags)
 		if err != nil {
 			return req, err
 		}
@@ -66,19 +66,60 @@ func ParseHasPagination[reqP proto.Message]() bool {
 	t := reflect.ValueOf(req).Elem().Type()
 	for i := 0; i < t.NumField(); i++ {
 		fType := t.Field(i)
-		if fType.Type.String() == "*query.PageRequest" {
+		if fType.Type.String() == paginationType {
 			return true
 		}
 	}
 	return false
 }
 
-// returns (increment_arg_index, error)
-func ParseField(flags *pflag.FlagSet, v reflect.Value, t reflect.Type, fieldIndex int, arg string) (bool, error) {
+const paginationType = "*query.PageRequest"
+
+type FlagAdvice struct {
+	HasPagination bool
+	TxSender      string
+}
+
+// ParseField parses ...
+// returns true if the parsed field was parsed from an arg
+func ParseField(v reflect.Value, t reflect.Type, fieldIndex int, arg string, flagAdvice FlagAdvice, flags *pflag.FlagSet) (bool, error) {
 	fVal := v.Field(fieldIndex)
 	fType := t.Field(fieldIndex)
-
 	// fmt.Printf("Field %d: %s %s %s\n", fieldIndex, fType.Name, fType.Type, fType.Type.Kind())
+
+	parsedFromFlag, err := ParseFieldFromFlag(fVal, fType, flagAdvice, flags)
+	if err != nil {
+		return true, err
+	}
+	if parsedFromFlag {
+		return false, nil
+	}
+	return ParseFieldFromArg(fVal, fType, arg, flags)
+}
+
+// ParseFieldFromFlag
+func ParseFieldFromFlag(fVal reflect.Value, fType reflect.StructField, flagAdvice FlagAdvice, flags *pflag.FlagSet) (bool, error) {
+	kind := fType.Type.Kind()
+	switch kind {
+	case reflect.String:
+		// typeStr := fType.Type.String()
+	case reflect.Ptr:
+		if flagAdvice.HasPagination {
+			typeStr := fType.Type.String()
+			if typeStr == paginationType {
+				pageReq, err := client.ReadPageRequest(flags)
+				if err != nil {
+					return false, err
+				}
+				fVal.Set(reflect.ValueOf(pageReq))
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
+
+func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string, flags *pflag.FlagSet) (bool, error) {
 	switch fType.Type.Kind() {
 	// SetUint allows anyof type u8, u16, u32, u64, and uint
 	case reflect.Uint8:
@@ -128,16 +169,6 @@ func ParseField(flags *pflag.FlagSet, v reflect.Value, t reflect.Type, fieldInde
 		fVal.SetString(s)
 		return true, nil
 	case reflect.Ptr:
-		// general strategy very TBD, rn just handle pagination
-		typeStr := fType.Type.String()
-		if typeStr == "*query.PageRequest" {
-			pageReq, err := client.ReadPageRequest(flags)
-			if err != nil {
-				return false, err
-			}
-			fVal.Set(reflect.ValueOf(pageReq))
-			return false, nil
-		}
 	case reflect.Struct:
 	}
 	fmt.Println(fType.Type.Kind().String())
