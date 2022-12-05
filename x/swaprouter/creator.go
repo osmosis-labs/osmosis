@@ -21,7 +21,7 @@ import (
 // the form of <swap module name>/pool/{poolID}. In addition, the x/bank metadata is updated
 // to reflect the newly created GAMM share denomination.
 func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, error) {
-	err := validateCreatePoolMsg(ctx, msg)
+	err := msg.Validate(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -81,29 +81,6 @@ func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 	nextPoolId := k.GetNextPoolId(ctx)
 	k.SetNextPoolId(ctx, nextPoolId+1)
 	return nextPoolId
-}
-
-func validateCreatePoolMsg(ctx sdk.Context, msg types.CreatePoolMsg) error {
-	err := msg.Validate(ctx)
-	if err != nil {
-		return err
-	}
-
-	initialPoolLiquidity := msg.InitialLiquidity()
-	numAssets := initialPoolLiquidity.Len()
-
-	if msg.GetPoolType() != types.Concentrated {
-		if numAssets < types.MinPoolAssets {
-			return types.ErrTooFewPoolAssets
-		}
-		if numAssets > types.MaxPoolAssets {
-			return errors.Wrapf(
-				types.ErrTooManyPoolAssets,
-				"pool has too many PoolAssets (%d)", numAssets,
-			)
-		}
-	}
-	return nil
 }
 
 func (k Keeper) validateCreatedPool(
