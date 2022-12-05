@@ -1,19 +1,20 @@
-package v13
+package v14
 
 import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/osmosis-labs/osmosis/v13/app/upgrades"
+	valsetpreftypes "github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
 )
 
-// UpgradeName defines the on-chain upgrade name for the Osmosis v13 upgrade.
-const UpgradeName = "v13"
+// UpgradeName defines the on-chain upgrade name for the Osmosis v14 upgrade.
+const UpgradeName = "v14"
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
 	CreateUpgradeHandler: CreateUpgradeHandler,
 	StoreUpgrades: store.StoreUpgrades{
-		Added:   []string{},
+		Added:   []string{valsetpreftypes.StoreKey},
 		Deleted: []string{},
 	},
 }
