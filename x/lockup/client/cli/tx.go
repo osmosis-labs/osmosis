@@ -20,7 +20,7 @@ func GetTxCmd() *cobra.Command {
 	cmd := osmocli.TxIndexCmd(types.ModuleName)
 	cmd.AddCommand(
 		NewLockTokensCmd(),
-		NewBeginUnlockingCmd(),
+		NewBeginUnlockingAllCmd(),
 		NewBeginUnlockByIDCmd(),
 		NewForceUnlockByIdCmd(),
 	)
@@ -75,30 +75,12 @@ func NewLockTokensCmd() *cobra.Command {
 	return cmd
 }
 
-// NewBeginUnlockingCmd starts unlocking all unlockable locks from user's account.
-func NewBeginUnlockingCmd() *cobra.Command {
-	cmd := &cobra.Command{
+// TODO: We should change the Use string to be unlock-all
+func NewBeginUnlockingAllCmd() *cobra.Command {
+	return osmocli.BuildTxCli[*types.MsgBeginUnlockingAll](&osmocli.TxCliDesc{
 		Use:   "begin-unlock-tokens",
-		Short: "begin unlock not unlocking tokens from lockup pool for an account",
-		Args:  cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			msg := types.NewMsgBeginUnlockingAll(
-				clientCtx.GetFromAddress(),
-			)
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-	return cmd
+		Short: "begin unlock not unlocking tokens from lockup pool for sender",
+	})
 }
 
 // NewBeginUnlockByIDCmd unlocks individual period lock by ID.

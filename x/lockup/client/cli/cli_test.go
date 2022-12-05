@@ -189,7 +189,7 @@ func (s *IntegrationTestSuite) TestBeginUnlockingCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewBeginUnlockingCmd()
+			cmd := cli.NewBeginUnlockingAllCmd()
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)

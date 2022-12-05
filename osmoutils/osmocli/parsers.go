@@ -193,6 +193,13 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 			}
 			fVal.Set(reflect.ValueOf(coin))
 			return true, nil
+		} else if typeStr == "types.Coins" {
+			coins, err := ParseCoins(arg, fType.Name)
+			if err != nil {
+				return true, err
+			}
+			fVal.Set(reflect.ValueOf(coins))
+			return true, nil
 		}
 	}
 	fmt.Println(fType.Type.Kind().String())
@@ -235,4 +242,13 @@ func ParseCoin(arg string, fieldName string) (sdk.Coin, error) {
 		return sdk.Coin{}, fmt.Errorf("could not parse %s as sdk.Coin for field %s: %w", arg, fieldName, err)
 	}
 	return coin, nil
+}
+
+// TODO: Make this able to read from some local alias file for denoms.
+func ParseCoins(arg string, fieldName string) (sdk.Coins, error) {
+	coins, err := sdk.ParseCoinsNormalized(arg)
+	if err != nil {
+		return sdk.Coins{}, fmt.Errorf("could not parse %s as sdk.Coins for field %s: %w", arg, fieldName, err)
+	}
+	return coins, nil
 }
