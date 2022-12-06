@@ -113,7 +113,7 @@ func (q Querier) NumPools(ctx context.Context, _ *types.QueryNumPoolsRequest) (*
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	return &types.QueryNumPoolsResponse{
-		NumPools: q.Keeper.GetNextPoolId(sdkCtx) - 1,
+		NumPools: q.Keeper.swaprouterKeeper.GetNextPoolId(sdkCtx) - 1,
 	}, nil
 }
 
