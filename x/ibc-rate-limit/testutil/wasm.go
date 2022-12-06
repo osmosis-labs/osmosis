@@ -3,7 +3,7 @@ package osmosisibctesting
 import (
 	"crypto/sha256"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/stretchr/testify/require"
 
@@ -21,7 +21,7 @@ func (chain *TestChain) StoreContractCode(suite *suite.Suite, path string) {
 	osmosisApp := chain.GetOsmosisApp()
 
 	govKeeper := osmosisApp.GovKeeper
-	wasmCode, err := ioutil.ReadFile(path)
+	wasmCode, err := os.ReadFile(path)
 	suite.Require().NoError(err)
 
 	addr := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
