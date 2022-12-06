@@ -551,7 +551,6 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.SwapRouterKeeper.SetPoolCreationListeners(
 		swaproutertypes.NewPoolCreationListeners(
-			// insert gamm hooks receivers here
 			appKeepers.PoolIncentivesKeeper.Hooks(),
 			appKeepers.TwapKeeper.PoolCreationListeners(),
 		),
