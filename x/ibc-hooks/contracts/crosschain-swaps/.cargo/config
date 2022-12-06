@@ -1,0 +1,5 @@
+[alias]
+wasm = "build --release --target wasm32-unknown-unknown"
+schema = "run --example build-schema"
+optimize = "run-script optimize"
+optimize-m1 = "run-script optimize-m1"
