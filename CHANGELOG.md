@@ -54,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Misc Improvements
 
 * [#3611](https://github.com/osmosis-labs/osmosis/pull/3611) Introduce osmocli, to automate thousands of lines of CLI boilerplate
+* [#3634](https://github.com/osmosis-labs/osmosis/pull/3634) (Makefile) Ensure correct golang version in make build and make install. (Thank you @jhernandezb )
 
 ## v13.0.0
 
