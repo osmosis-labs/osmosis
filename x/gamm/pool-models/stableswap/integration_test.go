@@ -31,7 +31,7 @@ func (s *TestSuite) TestSetScalingFactors() {
 	s.SetupTest()
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address())
-	nextPoolId := s.App.GAMMKeeper.GetNextPoolId(s.Ctx)
+	nextPoolId := s.App.SwapRouterKeeper.GetNextPoolId(s.Ctx)
 	defaultCreatePoolMsg := *baseCreatePoolMsgGen(addr1)
 	defaultCreatePoolMsg.ScalingFactorController = defaultCreatePoolMsg.Sender
 	defaultAdjustSFMsg := stableswap.NewMsgStableSwapAdjustScalingFactors(defaultCreatePoolMsg.Sender, nextPoolId, []uint64{1, 1})
