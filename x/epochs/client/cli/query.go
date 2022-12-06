@@ -1,28 +1,15 @@
 package cli
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/spf13/cobra"
 
+	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v13/x/epochs/types"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd() *cobra.Command {
-	// Group epochs queries under a subcommand
-	cmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      fmt.Sprintf("Querying commands for the %s module", types.ModuleName),
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
+	cmd := osmocli.QueryIndexCmd(types.ModuleName)
 
 	cmd.AddCommand(
 		GetCmdEpochsInfos(),
@@ -32,76 +19,24 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
-// GetCmdEpochsInfos provide running epochInfos.
 func GetCmdEpochsInfos() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "epoch-infos",
-		Short: "Query running epochInfos",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query running epoch infos.
-
-Example:
-$ %s query epochs epoch-infos
+	return osmocli.SimpleQueryCmd[*types.QueryEpochsInfoRequest](
+		"epoch-infos",
+		"Query running epochInfos",
+		`{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} epoch-infos
 `,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.EpochInfos(cmd.Context(), &types.QueryEpochsInfoRequest{})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+		types.ModuleName, types.NewQueryClient,
+	)
 }
 
-// GetCmdCurrentEpoch provides current epoch by specified identifier.
 func GetCmdCurrentEpoch() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "current-epoch",
-		Short: "Query current epoch by specified identifier",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query current epoch by specified identifier.
-
-Example:
-$ %s query epochs current-epoch day
+	return osmocli.SimpleQueryCmd[*types.QueryCurrentEpochRequest](
+		"current-epoch [identifier]",
+		"Query current epoch by specified identifier",
+		`{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} current-epoch day
 `,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.CurrentEpoch(cmd.Context(), &types.QueryCurrentEpochRequest{
-				Identifier: args[0],
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+		types.ModuleName, types.NewQueryClient,
+	)
 }

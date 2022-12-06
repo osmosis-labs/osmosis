@@ -49,8 +49,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Bug fixes
 
+* [#3608](https://github.com/osmosis-labs/osmosis/pull/3608) Make it possible to state export from any directory.
+
 ### Misc Improvements
 
+* [#3611](https://github.com/osmosis-labs/osmosis/pull/3611) Introduce osmocli, to automate thousands of lines of CLI boilerplate
 
 ## v13.0.0
 

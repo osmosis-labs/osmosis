@@ -276,6 +276,7 @@ func TestGetLiquidityIndexMap(t *testing.T) {
 		})
 	}
 }
+
 func TestGetDescaledPoolAmts(t *testing.T) {
 	tests := map[string]struct {
 		denom          string

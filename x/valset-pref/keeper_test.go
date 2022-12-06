@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
 	"github.com/stretchr/testify/suite"
@@ -16,16 +15,6 @@ type KeeperTestSuite struct {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
-}
-
-// SetupMultipleValidators setups "numValidator" validators and returns their address in string
-func (suite *KeeperTestSuite) SetupMultipleValidators(numValidator int) []string {
-	valAddrs := []string{}
-	for i := 0; i < numValidator; i++ {
-		valAddr := suite.SetupValidator(stakingtypes.Bonded)
-		valAddrs = append(valAddrs, valAddr.String())
-	}
-	return valAddrs
 }
 
 func (suite *KeeperTestSuite) PrepareDelegateToValidatorSet() []types.ValidatorPreference {
