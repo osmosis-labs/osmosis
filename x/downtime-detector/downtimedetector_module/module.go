@@ -38,7 +38,6 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(types.DefaultGenesis())
 }
 
-// ValidateGenesis performs genesis state validation for the gamm module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var genState types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
@@ -47,8 +46,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 	return genState.Validate()
 }
 
-// ---------------------------------------
-// Interfaces.
 func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
 
@@ -58,14 +55,12 @@ func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux 
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
 	return nil
-	// return cli.NewTxCmd()
 }
 
 func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return twapcli.GetQueryCmd()
 }
 
-// RegisterInterfaces registers interfaces and implementations of the gamm module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 }
 
@@ -101,8 +96,6 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 	}
 }
 
-// InitGenesis performs genesis initialization for the twap module.
-// no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 
@@ -112,8 +105,6 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	return []abci.ValidatorUpdate{}
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the twap.
-// module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	genState := am.k.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(genState)
@@ -125,5 +116,4 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 	return []abci.ValidatorUpdate{}
 }
 
-// ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }

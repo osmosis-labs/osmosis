@@ -25,6 +25,6 @@ In the downtime detector module, we store state entries for:
 Then in every begin block:
 
 * Store last blocks timestamp
-* if time since last block timestamp >= 30 seconds, iterate through all $DOWNTIME_PERIODS and add a state entry for the current block time
+* if time since last block timestamp >= 30 seconds, iterate through all $DOWNTIME_PERIODS less than the downtime, and in each add a state entry for the current block time
 
 Then our query for has it been $RECOVERY_PERIOD since $DOWNTIME_PERIOD, simply reads the state entry for that $DOWNTIME_PERIOD, and then checks if time difference between now and that block is > RECOVERY_PERIOD.
