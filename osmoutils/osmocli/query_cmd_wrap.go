@@ -37,13 +37,10 @@ func SimpleQueryFromDescriptor[reqP proto.Message, querier any](desc QueryDescri
 	if desc.HasPagination {
 		numArgs = numArgs - 1
 	}
-	if len(desc.CustomFlagOverrides) == 0 {
-		desc.CustomFlagOverrides = map[string]string{}
-	}
 	flagAdvice := FlagAdvice{
 		HasPagination:       desc.HasPagination,
 		CustomFlagOverrides: desc.CustomFlagOverrides,
-	}
+	}.Sanitize()
 	cmd := &cobra.Command{
 		Use:   desc.Use,
 		Short: desc.Short,
