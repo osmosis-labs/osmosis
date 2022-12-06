@@ -55,13 +55,13 @@ def main():
     plot_nodes_x = np.linspace(x_start, x_end, num_points_plot)
 
     # 3.1 Equispaced Polynomial Approximation
-    plot_nodes_y_eqispaced_poly = polynomial.solve(plot_nodes_x, coefficients_equispaced_poly)
+    plot_nodes_y_eqispaced_poly = polynomial.evaluate(plot_nodes_x, coefficients_equispaced_poly)
 
     # 3.2 Chebyshev Polynomial Approximation
-    plot_nodes_y_chebyshev_poly = polynomial.solve(plot_nodes_x, coefficients_chebyshev_poly)
+    plot_nodes_y_chebyshev_poly = polynomial.evaluate(plot_nodes_x, coefficients_chebyshev_poly)
 
     # 3.3 Chebyshev Rational Approximation
-    y_chebyshev_rational = rational.solve(plot_nodes_x, numerator_coefficients_chebyshev_rational.tolist(), denominator_coefficients_chebyshev_rational.tolist())
+    y_chebyshev_rational = rational.evaluate(plot_nodes_x, numerator_coefficients_chebyshev_rational.tolist(), denominator_coefficients_chebyshev_rational.tolist())
 
     # 3.4 quspaced Polynomial Accurate (Large Number of Coordinates)
     y_accurate = approximated_fn(x_accurate)

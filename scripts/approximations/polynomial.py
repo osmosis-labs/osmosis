@@ -30,8 +30,8 @@ def construct_vandermonde_matrix(x_list: list) -> list[list]:
 
     return matrix
 
-def solve(x: np.ndarray, coeffs: np.ndarray) -> np.ndarray:
-    """ Solves the polynomial. Given a list of x coordinates and a list of coefficients, returns a list of
+def evaluate(x: np.ndarray, coeffs: np.ndarray) -> np.ndarray:
+    """ Evaluates the polynomial. Given a list of x coordinates and a list of coefficients, returns a list of
     y coordinates, one for each x coordinate. The coefficients must be in ascending order.
     """
     o = len(coeffs)

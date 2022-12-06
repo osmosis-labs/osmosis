@@ -28,8 +28,8 @@ def construct_vandermonde_matrix(x_list: list, y_list: list) -> list[list]:
 
     return matrix
 
-def solve(x: np.ndarray, coefficients_numerator: list, coefficients_denominator: list) -> np.ndarray:
-    """ Solves the rational function. Assume rational h(x) = p(x) / q(x)
+def evaluate(x: np.ndarray, coefficients_numerator: list, coefficients_denominator: list) -> np.ndarray:
+    """ Evaluates the rational function. Assume rational h(x) = p(x) / q(x)
     Given a list of x coordinates, a list of coefficients of p(x) - coefficients_numerator, and a list of
     coefficients of q(x) - coefficients_denominator, returns a list of y coordinates, one for each x coordinate.
     """
