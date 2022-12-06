@@ -64,6 +64,9 @@ func TestIntegrationTestSuite(t *testing.T) {
 }
 
 func (s IntegrationTestSuite) TestNewSwapExactAmountOutCmd() {
+
+	s.T().Skip("TODO: uncomment once swaps are ported from x/gamm to x/swaprouter")
+
 	val := s.network.Validators[0]
 
 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewSwapExactAmountOut",
@@ -210,6 +213,8 @@ func (s IntegrationTestSuite) TestNewSwapExactAmountOutCmd() {
 // }
 
 func (s IntegrationTestSuite) TestNewSwapExactAmountInCmd() {
+	s.T().Skip("TODO: uncomment once swaps are ported from x/gamm to x/swaprouter")
+
 	val := s.network.Validators[0]
 
 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewSwapExactAmountIn",
