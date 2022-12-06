@@ -93,12 +93,15 @@ func (k Keeper) SetOsmoPool(ctx sdk.Context, denom string, poolId uint64) {
 	store.Set(key, sdk.Uint64ToBigEndian(poolId))
 }
 
-// DeleteOsmoPool deletes the pool id of the Osmo pool for the given denom paired with Osmo
-func (k Keeper) DeleteOsmoPool(ctx sdk.Context, denom string) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixOsmoPools)
-	key := types.GetKeyPrefixOsmoPool(denom)
+// DeleteAllOsmoPools deletes all the Osmo pools
+func (k Keeper) DeleteAllOsmoPools(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixOsmoPools)
 
-	store.Delete(key)
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		store.Delete(iterator.Key())
+	}
 }
 
 // GetAtomPool returns the pool id of the Atom pool for the given denom paired with Atom
@@ -123,10 +126,13 @@ func (k Keeper) SetAtomPool(ctx sdk.Context, denom string, poolId uint64) {
 	store.Set(key, sdk.Uint64ToBigEndian(poolId))
 }
 
-// DeleteAtomPool deletes the pool id of the Atom pool for the given denom paired with Atom
-func (k Keeper) DeleteAtomPool(ctx sdk.Context, denom string) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixAtomPools)
-	key := types.GetKeyPrefixAtomPool(denom)
+// DeleteAllAtomPools deletes all the Atom pools
+func (k Keeper) DeleteAllAtomPools(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixAtomPools)
 
-	store.Delete(key)
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		store.Delete(iterator.Key())
+	}
 }
