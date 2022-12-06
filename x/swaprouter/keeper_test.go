@@ -19,10 +19,6 @@ const testExpectedPoolId = 3
 var testPoolCreationFee = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000_000_000)}
 
 func TestKeeperTestSuite(t *testing.T) {
-
-	// TODO: re-enable this once swaprouter is fully merged.
-	t.SkipNow()
-
 	suite.Run(t, new(KeeperTestSuite))
 }
 
@@ -53,4 +49,43 @@ func (suite *KeeperTestSuite) createBalancerPoolsFromCoins(poolCoins []sdk.Coins
 		suite.FundAcc(suite.TestAccs[0], curPoolCoins)
 		suite.PrepareBalancerPoolWithCoins(curPoolCoins...)
 	}
+}
+
+// createBalancerPoolsFromCoinsWithSwapFee creates balancer pools from given sets of coins and respective swap fees.
+// Where element 1 of the input corresponds to the first pool created,
+// element 2 to the second pool created, up until the last element.
+func (suite *KeeperTestSuite) createBalancerPoolsFromCoinsWithSwapFee(poolCoins []sdk.Coins, swapFee []sdk.Dec) {
+	for i, curPoolCoins := range poolCoins {
+		suite.FundAcc(suite.TestAccs[0], curPoolCoins)
+		suite.PrepareBalancerPoolWithCoinsAndSwapFee(swapFee[i], curPoolCoins...)
+	}
+}
+
+func (suite *KeeperTestSuite) TestInitGenesis() {
+	suite.Setup()
+
+	suite.App.SwapRouterKeeper.InitGenesis(suite.Ctx, &types.GenesisState{
+		Params: types.Params{
+			PoolCreationFee: testPoolCreationFee,
+		},
+		NextPoolId: testExpectedPoolId,
+	})
+
+	suite.Require().Equal(uint64(testExpectedPoolId), suite.App.SwapRouterKeeper.GetNextPoolIdAndIncrement(suite.Ctx))
+	suite.Require().Equal(testPoolCreationFee, suite.App.SwapRouterKeeper.GetParams(suite.Ctx).PoolCreationFee)
+}
+
+func (suite *KeeperTestSuite) TestExportGenesis() {
+	suite.Setup()
+
+	suite.App.SwapRouterKeeper.InitGenesis(suite.Ctx, &types.GenesisState{
+		Params: types.Params{
+			PoolCreationFee: testPoolCreationFee,
+		},
+		NextPoolId: testExpectedPoolId,
+	})
+
+	genesis := suite.App.SwapRouterKeeper.ExportGenesis(suite.Ctx)
+	suite.Require().Equal(uint64(testExpectedPoolId), genesis.NextPoolId)
+	suite.Require().Equal(testPoolCreationFee, genesis.Params.PoolCreationFee)
 }

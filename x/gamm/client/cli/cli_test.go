@@ -10,9 +10,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/app"
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/client/cli"
-	gammtestutil "github.com/osmosis-labs/osmosis/v13/x/gamm/client/testutil"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertestutil "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/testutil"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -36,14 +35,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	s.cfg = app.DefaultConfig()
-
-	// modification to pay fee with test bond denom "stake"
-	genesisState := app.ModuleBasics.DefaultGenesis(s.cfg.Codec)
-	gammGen := gammtypes.DefaultGenesis()
-	gammGen.Params.PoolCreationFee = sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 1000000)}
-	gammGenJson := s.cfg.Codec.MustMarshalJSON(gammGen)
-	genesisState[gammtypes.ModuleName] = gammGenJson
-	s.cfg.GenesisState = genesisState
+	s.cfg.GenesisState = swaproutertestutil.UpdateTxFeeDenom(s.cfg.Codec, s.cfg.BondDenom)
 
 	s.network = network.New(s.T(), s.cfg)
 
@@ -53,7 +45,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	val := s.network.Validators[0]
 
 	// create a new pool
-	_, err = gammtestutil.MsgCreatePool(s.T(), val.ClientCtx, val.Address, "5stake,5node0token", "100stake,100node0token", "0.01", "0.01", "")
+	_, err = swaproutertestutil.MsgCreatePool(s.T(), val.ClientCtx, val.Address, "5stake,5node0token", "100stake,100node0token", "0.01", "0.01", "")
 	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(1)
@@ -797,44 +789,6 @@ func (s *IntegrationTestSuite) TestGetCmdPools() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 
 				s.Require().Greater(len(resp.Pools), 0, out.String())
-			}
-		})
-	}
-}
-
-func (s *IntegrationTestSuite) TestGetCmdNumPools() {
-	val := s.network.Validators[0]
-
-	testCases := []struct {
-		name      string
-		args      []string
-		expectErr bool
-	}{
-		{
-			"query num-pools",
-			[]string{
-				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
-			},
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdNumPools() // osmosisd query gamm num-pools
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				resp := types.QueryNumPoolsResponse{}
-				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-
-				s.Require().Greater(resp.NumPools, uint64(0), out.String())
 			}
 		})
 	}

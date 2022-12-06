@@ -48,7 +48,7 @@ func (s *TestSuite) TestSetScalingFactors() {
 		s.Run(name, func() {
 			s.SetupTest()
 			sender := tc.createMsg.GetSigners()[0]
-			s.FundAcc(sender, s.App.GAMMKeeper.GetParams(s.Ctx).PoolCreationFee)
+			s.FundAcc(sender, s.App.SwapRouterKeeper.GetParams(s.Ctx).PoolCreationFee)
 			s.FundAcc(sender, tc.createMsg.InitialPoolLiquidity.Sort())
 			_, err := s.RunMsg(&tc.createMsg)
 			s.Require().NoError(err)

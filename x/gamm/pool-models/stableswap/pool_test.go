@@ -7,11 +7,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/tendermint/tendermint/crypto/ed25519"
+
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 var (
@@ -1107,7 +1108,7 @@ func TestValidatePoolLiquidity(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := validatePoolLiquidity(tc.liquidity, tc.scalingFactors)
+			err := ValidatePoolLiquidity(tc.liquidity, tc.scalingFactors)
 
 			if tc.expectError != nil {
 				require.Error(t, err)
@@ -1380,7 +1381,7 @@ func TestValidateScalingFactors(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := validateScalingFactors(tc.scalingFactors, tc.numAssets)
+			err := ValidateScalingFactors(tc.scalingFactors, tc.numAssets)
 
 			if tc.expectError != false {
 				require.Error(t, err)

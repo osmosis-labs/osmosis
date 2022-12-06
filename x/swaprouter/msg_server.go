@@ -6,6 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	balancerv2 "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer/v2"
+	stableswapv2 "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap/v2"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
@@ -14,11 +16,55 @@ type msgServer struct {
 	keeper *Keeper
 }
 
+var (
+	_ balancerv2.MsgCreatorServer   = (*msgServer)(nil)
+	_ stableswapv2.MsgCreatorServer = (*msgServer)(nil)
+)
+
 func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	return &msgServer{
 		keeper: keeper,
 	}
 }
+
+func NewBalancerMsgServerImpl(keeper *Keeper) balancerv2.MsgCreatorServer {
+	return &msgServer{
+		keeper: keeper,
+	}
+}
+
+func NewStableswapMsgServerImpl(keeper *Keeper) stableswapv2.MsgCreatorServer {
+	return &msgServer{
+		keeper: keeper,
+	}
+}
+
+// CreateBalancerPool is a create balancer pool message.
+func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancerv2.MsgCreateBalancerPool) (*balancerv2.MsgCreateBalancerPoolResponse, error) {
+	poolId, err := server.CreatePool(goCtx, msg)
+	if err != nil {
+		return nil, err
+	}
+	return &balancerv2.MsgCreateBalancerPoolResponse{PoolID: poolId}, nil
+}
+
+func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stableswapv2.MsgCreateStableswapPool) (*stableswapv2.MsgCreateStableswapPoolResponse, error) {
+	poolId, err := server.CreatePool(goCtx, msg)
+	if err != nil {
+		return nil, err
+	}
+	return &stableswapv2.MsgCreateStableswapPoolResponse{PoolID: poolId}, nil
+}
+
+// func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, msg *stableswap.MsgStableSwapAdjustScalingFactors) (*stableswap.MsgStableSwapAdjustScalingFactorsResponse, error) {
+// 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+// 	if err := server.keeper.SetStableSwapScalingFactors(ctx, msg.ScalingFactors, msg.PoolID, msg.ScalingFactorGovernor); err != nil {
+// 		return nil, err
+// 	}
+
+// 	return &stableswap.MsgStableSwapAdjustScalingFactorsResponse{}, nil
+// }
 
 // CreatePool attempts to create a pool returning the newly created pool ID or an error upon failure.
 // The pool creation fee is used to fund the community pool.

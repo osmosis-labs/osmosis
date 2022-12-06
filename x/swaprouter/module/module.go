@@ -16,9 +16,14 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
+	balancerv2 "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer/v2"
+	stableswapv2 "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap/v2"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
+	swaprouterclient "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/cli"
+	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/grpc"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/queryproto"
+	swaproutersimulation "github.com/osmosis-labs/osmosis/v13/x/swaprouter/simulation"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
@@ -32,6 +37,7 @@ type AppModuleBasic struct{}
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
 }
 
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
@@ -68,6 +74,9 @@ func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
 
 // RegisterInterfaces registers interfaces and implementations of the gamm module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
+	balancerv2.RegisterInterfaces(registry)
+	stableswapv2.RegisterInterfaces(registry)
 }
 
 type AppModule struct {
@@ -78,6 +87,10 @@ type AppModule struct {
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), swaprouter.NewMsgServerImpl(&am.k))
+	balancerv2.RegisterMsgCreatorServer(cfg.MsgServer(), swaprouter.NewBalancerMsgServerImpl(&am.k))
+	stableswapv2.RegisterMsgCreatorServer(cfg.MsgServer(), swaprouter.NewStableswapMsgServerImpl(&am.k))
+	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: swaprouterclient.Querier{K: am.k}})
 }
 
 func NewAppModule(swaprouterKeeper swaprouter.Keeper, gammKeeper types.GammKeeper) AppModule {
@@ -141,14 +154,11 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
 	swaprouterGen := types.DefaultGenesis()
 	// change the pool creation fee denom from uosmo to stake
-	// TODO: uncomment this once simulation is enabled.
-	// swaprouterGen.Params.PoolCreationFee = sdk.NewCoins(swaproutersimulation.PoolCreationFee)
+	swaprouterGen.Params.PoolCreationFee = sdk.NewCoins(swaproutersimulation.PoolCreationFee)
 	DefaultGenJson := simState.Cdc.MustMarshalJSON(swaprouterGen)
 	simState.GenState[types.ModuleName] = DefaultGenJson
 }
 
 func (am AppModule) Actions() []simtypes.Action {
-	// TODO: uncomment this once simulation is enabled.
-	// return swaproutersimulation.DefaultActions(am.k, am.gammKeeper)
-	return nil
+	return swaproutersimulation.DefaultActions(am.k, am.gammKeeper)
 }

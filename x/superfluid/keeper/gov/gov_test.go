@@ -13,7 +13,7 @@ import (
 )
 
 func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
-	coins := suite.App.GAMMKeeper.GetParams(suite.Ctx).PoolCreationFee
+	coins := suite.App.SwapRouterKeeper.GetParams(suite.Ctx).PoolCreationFee
 	poolAssets := []balancer.PoolAsset{}
 	for _, denom := range denoms {
 		coins = coins.Add(sdk.NewInt64Coin(denom, 1000000000000000000))
@@ -33,7 +33,7 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.ZeroDec(),
 	}, poolAssets, "")
-	poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
+	poolId, err := suite.App.SwapRouterKeeper.CreatePool(suite.Ctx, msg)
 	suite.Require().NoError(err)
 
 	return poolId

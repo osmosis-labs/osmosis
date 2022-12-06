@@ -28,7 +28,14 @@ func NewBalancerMsgServerImpl(keeper *Keeper) balancer.MsgServer {
 	}
 }
 
+// Deprecated: Use NewStableswapMsgCreatorServerImpl and NewStableswapMsgScalingFactorSetterServer instead.
 func NewStableswapMsgServerImpl(keeper *Keeper) stableswap.MsgServer {
+	return &msgServer{
+		keeper: keeper,
+	}
+}
+
+func NewStableswapMsgServer(keeper *Keeper) stableswap.MsgServer {
 	return &msgServer{
 		keeper: keeper,
 	}
@@ -64,13 +71,11 @@ func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, ms
 	return &stableswap.MsgStableSwapAdjustScalingFactorsResponse{}, nil
 }
 
-// CreatePool attempts to create a pool returning the newly created pool ID or an error upon failure.
-// The pool creation fee is used to fund the community pool.
-// It will create a dedicated module account for the pool and sends the initial liquidity to the created module account.
+// Deprecated: use CreatePool in x/swaprouter instead.
 func (server msgServer) CreatePool(goCtx context.Context, msg swaproutertypes.CreatePoolMsg) (poolId uint64, err error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	poolId, err = server.keeper.CreatePool(ctx, msg)
+	poolId, err = server.keeper.swaprouterKeeper.CreatePool(ctx, msg)
 	if err != nil {
 		return 0, err
 	}

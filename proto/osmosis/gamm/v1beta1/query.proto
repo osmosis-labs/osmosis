@@ -3,6 +3,7 @@ package osmosis.gamm.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "osmosis/gamm/v1beta1/tx.proto";
+import "osmosis/swaprouter/v1beta1/swap_route.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
@@ -17,7 +18,9 @@ service Query {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/pools";
   }
 
+  // Deprecated: please use NumPools in x/swaprouter.
   rpc NumPools(QueryNumPoolsRequest) returns (QueryNumPoolsResponse) {
+    option deprecated = true;
     option (google.api.http).get = "/osmosis/gamm/v1beta1/num_pools";
   }
 
@@ -121,8 +124,11 @@ message QueryPoolsResponse {
 }
 
 //=============================== NumPools
-message QueryNumPoolsRequest {}
+// Deprecated: use QueryNumPoolsRequest in x/swaprouter.
+message QueryNumPoolsRequest { option deprecated = true; }
+// Deprecated: use QueryNumPoolsResponse in x/swaprouter.
 message QueryNumPoolsResponse {
+  option deprecated = true;
   uint64 num_pools = 1 [ (gogoproto.moretags) = "yaml:\"num_pools\"" ];
 }
 

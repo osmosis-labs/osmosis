@@ -66,7 +66,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
-	return genState.Validate()
+	return nil
 }
 
 // ---------------------------------------
@@ -104,7 +104,9 @@ type AppModule struct {
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(&am.keeper))
+	// N.B.: the messager server at the line below is deprecated.
 	balancer.RegisterMsgServer(cfg.MsgServer(), keeper.NewBalancerMsgServerImpl(&am.keeper))
+	// N.B.: the messager server at the line below is deprecated.
 	stableswap.RegisterMsgServer(cfg.MsgServer(), keeper.NewStableswapMsgServerImpl(&am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
 	v2types.RegisterQueryServer(cfg.QueryServer(), keeper.NewV2Querier(am.keeper))
@@ -175,7 +177,6 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
 	DefaultGen := types.DefaultGenesis()
 	// change the pool creation fee denom from uosmo to stake
-	DefaultGen.Params.PoolCreationFee = sdk.NewCoins(simulation.PoolCreationFee)
 	DefaultGenJson := simState.Cdc.MustMarshalJSON(DefaultGen)
 	simState.GenState[types.ModuleName] = DefaultGenJson
 }

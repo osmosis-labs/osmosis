@@ -33,41 +33,43 @@ type SwapI interface {
 
 	GetPool(ctx sdk.Context, poolId uint64) (PoolI, error)
 
-	SwapExactAmountIn(
-		ctx sdk.Context,
-		sender sdk.AccAddress,
-		pool PoolI,
-		tokenIn sdk.Coin,
-		tokenOutDenom string,
-		tokenOutMinAmount sdk.Int,
-		swapFee sdk.Dec,
-	) (sdk.Int, error)
+	// TODO: uncomment when swaps are moved from
+	// x/gamm to x/swaprouter.
+	// SwapExactAmountIn(
+	// 	ctx sdk.Context,
+	// 	sender sdk.AccAddress,
+	// 	pool PoolI,
+	// 	tokenIn sdk.Coin,
+	// 	tokenOutDenom string,
+	// 	tokenOutMinAmount sdk.Int,
+	// 	swapFee sdk.Dec,
+	// ) (sdk.Int, error)
 
-	CalcOutAmtGivenIn(
-		ctx sdk.Context,
-		poolI PoolI,
-		tokenIn sdk.Coin,
-		tokenOutDenom string,
-		swapFee sdk.Dec,
-	) (tokenOut sdk.Coin, err error)
+	// CalcOutAmtGivenIn(
+	// 	ctx sdk.Context,
+	// 	poolI PoolI,
+	// 	tokenIn sdk.Coin,
+	// 	tokenOutDenom string,
+	// 	swapFee sdk.Dec,
+	// ) (tokenOut sdk.Coin, err error)
 
-	SwapExactAmountOut(
-		ctx sdk.Context,
-		sender sdk.AccAddress,
-		pool PoolI,
-		tokenInDenom string,
-		tokenInMaxAmount sdk.Int,
-		tokenOut sdk.Coin,
-		swapFee sdk.Dec,
-	) (tokenInAmount sdk.Int, err error)
+	// SwapExactAmountOut(
+	// 	ctx sdk.Context,
+	// 	sender sdk.AccAddress,
+	// 	pool PoolI,
+	// 	tokenInDenom string,
+	// 	tokenInMaxAmount sdk.Int,
+	// 	tokenOut sdk.Coin,
+	// 	swapFee sdk.Dec,
+	// ) (tokenInAmount sdk.Int, err error)
 
-	CalcInAmtGivenOut(
-		ctx sdk.Context,
-		poolI PoolI,
-		tokenOut sdk.Coin,
-		tokenInDenom string,
-		swapFee sdk.Dec,
-	) (tokenIn sdk.Coin, err error)
+	// CalcInAmtGivenOut(
+	// 	ctx sdk.Context,
+	// 	poolI PoolI,
+	// 	tokenOut sdk.Coin,
+	// 	tokenInDenom string,
+	// 	swapFee sdk.Dec,
+	// ) (tokenIn sdk.Coin, err error)
 }
 
 type PoolIncentivesKeeperI interface {

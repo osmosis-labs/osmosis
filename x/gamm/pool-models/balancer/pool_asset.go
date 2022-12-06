@@ -5,8 +5,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"gopkg.in/yaml.v2"
+
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -67,7 +68,7 @@ func sortPoolAssetsByDenom(assets []PoolAsset) {
 	})
 }
 
-func validateUserSpecifiedPoolAssets(assets []PoolAsset) error {
+func ValidateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 	// The pool must be swapping between at least two assets
 	if len(assets) < 2 {
 		return types.ErrTooFewPoolAssets

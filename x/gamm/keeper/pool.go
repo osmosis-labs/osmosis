@@ -3,10 +3,10 @@ package keeper
 import (
 	"fmt"
 
-	gogotypes "github.com/gogo/protobuf/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	gogotypes "github.com/gogo/protobuf/types"
 
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
@@ -15,6 +15,44 @@ import (
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
+// TODO spec and tests
+func (k Keeper) InitializePool(ctx sdk.Context, pool swaproutertypes.PoolI, creatorAddress sdk.AccAddress) error {
+	poolId := pool.GetId()
+
+	// Add the share token's meta data to the bank keeper.
+	poolShareBaseDenom := types.GetPoolShareDenom(poolId)
+	poolShareDisplayDenom := fmt.Sprintf("GAMM-%d", poolId)
+	k.bankKeeper.SetDenomMetaData(ctx, banktypes.Metadata{
+		Description: fmt.Sprintf("The share token of the gamm pool %d", poolId),
+		DenomUnits: []*banktypes.DenomUnit{
+			{
+				Denom:    poolShareBaseDenom,
+				Exponent: 0,
+				Aliases: []string{
+					"attopoolshare",
+				},
+			},
+			{
+				Denom:    poolShareDisplayDenom,
+				Exponent: types.OneShareExponent,
+				Aliases:  nil,
+			},
+		},
+		Base:    poolShareBaseDenom,
+		Display: poolShareDisplayDenom,
+	})
+
+	// Mint the initial pool shares share token to the sender
+	err := k.MintPoolShareToAccount(ctx, pool, creatorAddress, pool.GetTotalShares())
+	if err != nil {
+		return err
+	}
+
+	k.RecordTotalLiquidityIncrease(ctx, pool.GetTotalPoolLiquidity(ctx))
+
+	return k.setPool(ctx, pool)
+}
+
 func (k Keeper) MarshalPool(pool swaproutertypes.PoolI) ([]byte, error) {
 	return k.cdc.MarshalInterface(pool)
 }
@@ -22,6 +60,11 @@ func (k Keeper) MarshalPool(pool swaproutertypes.PoolI) ([]byte, error) {
 func (k Keeper) UnmarshalPool(bz []byte) (types.CFMMPoolI, error) {
 	var acc types.CFMMPoolI
 	return acc, k.cdc.UnmarshalInterface(bz, &acc)
+}
+
+// GetPool returns a pool with a given id.
+func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (swaproutertypes.PoolI, error) {
+	return k.getPoolForSwap(ctx, poolId)
 }
 
 // GetPoolAndPoke returns a PoolI based on it's identifier if one exists. If poolId corresponds
@@ -100,6 +143,13 @@ func (k Keeper) setPool(ctx sdk.Context, pool swaproutertypes.PoolI) error {
 	return nil
 }
 
+// initializePoolId initializes pool id to 0.
+func (k Keeper) initializePoolId(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	poolId := &gogotypes.UInt64Value{Value: 0}
+	osmoutils.MustSet(store, types.KeyNextGlobalPoolId, poolId)
+}
+
 func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
@@ -119,7 +169,7 @@ func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 // All locks on this pool share must be unlocked prior to execution. Use LockupKeeper.ForceUnlock
 // on remaining locks before calling this function.
 // func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolIds []uint64, excludedModules []string) (err error) {
-// 	pools := make(map[string]types.CFMMPoolI)
+// 	pools := make(map[string]types.PoolI)
 // 	totalShares := make(map[string]sdk.Int)
 // 	for _, poolId := range poolIds {
 // 		pool, err := k.GetPool(ctx, poolId)
@@ -215,32 +265,21 @@ func (k Keeper) GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error) 
 	return denoms, err
 }
 
-// setNextPoolId sets next pool Id.
-func (k Keeper) setNextPoolId(ctx sdk.Context, poolId uint64) {
+// GetNextPoolId returns the next pool Id.
+// TODO: remove after concentrated-liquidity upgrade.
+func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: poolId})
-	store.Set(types.KeyNextGlobalPoolId, bz)
+	nextPoolId := gogotypes.UInt64Value{}
+	osmoutils.MustGet(store, types.KeyNextGlobalPoolId, &nextPoolId)
+	return nextPoolId.Value
 }
 
-// GetNextPoolId returns the next pool Id.
-func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
-	var nextPoolId uint64
+// SetNextPoolId sets the next pool Id.
+// TODO: remove after concentrated-liquidity upgrade.
+func (k Keeper) SetNextPoolId(ctx sdk.Context, nextPoolId uint64) {
 	store := ctx.KVStore(k.storeKey)
-
-	bz := store.Get(types.KeyNextGlobalPoolId)
-	if bz == nil {
-		panic(fmt.Errorf("pool has not been initialized -- Should have been done in InitGenesis"))
-	} else {
-		val := gogotypes.UInt64Value{}
-
-		err := k.cdc.Unmarshal(bz, &val)
-		if err != nil {
-			panic(err)
-		}
-
-		nextPoolId = val.GetValue()
-	}
-	return nextPoolId
+	nextPoolIdState := gogotypes.UInt64Value{Value: nextPoolId}
+	osmoutils.MustSet(store, types.KeyNextGlobalPoolId, &nextPoolIdState)
 }
 
 func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (string, error) {
@@ -258,13 +297,6 @@ func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (string, error) {
 		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
 		return "", sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
 	}
-}
-
-// getNextPoolIdAndIncrement returns the next pool Id, and increments the corresponding state entry.
-func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
-	nextPoolId := k.GetNextPoolId(ctx)
-	k.setNextPoolId(ctx, nextPoolId+1)
-	return nextPoolId
 }
 
 // setStableSwapScalingFactors sets the stable swap scaling factors.
@@ -289,7 +321,6 @@ func (k Keeper) setStableSwapScalingFactors(ctx sdk.Context, poolId uint64, scal
 // convertToCFMMPool converts PoolI to CFMMPoolI by casting the input.
 // Returns the pool of the CFMMPoolI or error if the given pool does not implement
 // CFMMPoolI.
-// nolint: unused
 func convertToCFMMPool(pool swaproutertypes.PoolI) (types.CFMMPoolI, error) {
 	cfmmPool, ok := pool.(types.CFMMPoolI)
 	if !ok {

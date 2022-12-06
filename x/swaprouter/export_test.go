@@ -1,8 +1,14 @@
 package swaprouter
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
+
+func (k Keeper) GetNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
+	return k.getNextPoolIdAndIncrement(ctx)
+}
 
 // SetPoolRoutesUnsafe sets the given routes to the swaprouter keeper
 // to allow routing from a pool type to a certain swap module.
