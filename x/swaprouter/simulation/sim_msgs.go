@@ -9,7 +9,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
-	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
+	balancerv2 "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer/v2"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
@@ -27,8 +28,8 @@ var PoolCreationFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 10_000_000)
 
 // RandomCreatePoolMsg attempts to find an account with two or more distinct denoms and attempts to send a
 // create pool message composed of those denoms
-func RandomCreateUniV2Msg(k swaprouter.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*balancertypes.MsgCreateBalancerPool, error) {
-	var poolAssets []balancertypes.PoolAsset
+func RandomCreateUniV2Msg(k swaprouter.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*balancerv2.MsgCreateBalancerPool, error) {
+	var poolAssets []balancer.PoolAsset
 	// find an address with two or more distinct denoms in their wallet
 	sender, senderExists := sim.RandomSimAccountWithConstraint(createPoolRestriction(k, sim, ctx))
 	if !senderExists {
@@ -43,20 +44,20 @@ func RandomCreateUniV2Msg(k swaprouter.Keeper, sim *simtypes.SimCtx, ctx sdk.Con
 	}
 
 	// TODO: pseudo-randomly generate swap and exit fees
-	poolParams := &balancertypes.PoolParams{
+	poolParams := &balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.ZeroDec(),
 	}
 
 	// from the above selected account, determine the token type and respective weight needed to make the pool
 	for i := 0; i < len(poolCoins); i++ {
-		poolAssets = append(poolAssets, balancertypes.PoolAsset{
+		poolAssets = append(poolAssets, balancer.PoolAsset{
 			Weight: sdk.OneInt(),
 			Token:  poolCoins[i],
 		})
 	}
 
-	return &balancertypes.MsgCreateBalancerPool{
+	return &balancerv2.MsgCreateBalancerPool{
 		Sender:     sender.Address.String(),
 		PoolParams: poolParams,
 		PoolAssets: poolAssets,
