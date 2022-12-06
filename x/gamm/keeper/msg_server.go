@@ -8,6 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
+	stableswapv2 "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap/v2"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
@@ -22,6 +23,8 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	}
 }
 
+// Deprecated: please use balancerv2.
+// nolint: staticcheck
 func NewBalancerMsgServerImpl(keeper *Keeper) balancer.MsgServer {
 	return &msgServer{
 		keeper: keeper,
@@ -29,12 +32,15 @@ func NewBalancerMsgServerImpl(keeper *Keeper) balancer.MsgServer {
 }
 
 // Deprecated: Use NewStableswapMsgCreatorServerImpl and NewStableswapMsgScalingFactorSetterServer instead.
+// nolint: staticcheck
 func NewStableswapMsgServerImpl(keeper *Keeper) stableswap.MsgServer {
 	return &msgServer{
 		keeper: keeper,
 	}
 }
 
+// Deprecated: please use stableswapv2.
+// nolint: staticcheck
 func NewStableswapMsgServer(keeper *Keeper) stableswap.MsgServer {
 	return &msgServer{
 		keeper: keeper,
@@ -42,25 +48,37 @@ func NewStableswapMsgServer(keeper *Keeper) stableswap.MsgServer {
 }
 
 var (
-	_ types.MsgServer      = msgServer{}
-	_ balancer.MsgServer   = msgServer{}
-	_ stableswap.MsgServer = msgServer{}
+	_ types.MsgServer = msgServer{}
+	// Deprecated: please use balancerv2.
+	// nolint: staticcheck
+	_ balancer.MsgServer = msgServer{}
+	// Deprecated: please use stableswapv2.
+	// nolint: staticcheck
+	_ stableswap.MsgServer                      = msgServer{}
+	_ stableswapv2.MsgScalingFactorSetterServer = msgServer{}
 )
 
-// CreateBalancerPool is a create balancer pool message.
+// Deprecated: please use CreateBalancerPool in x/swaprouter.
+// nolint: staticcheck
 func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.MsgCreateBalancerPool) (*balancer.MsgCreateBalancerPoolResponse, error) {
 	poolId, err := server.CreatePool(goCtx, msg)
+	// nolint: staticcheck
 	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolId}, err
 }
 
+// Deprecated: please use CreateStableswapPool in x/swaprouter.
+// nolint: staticcheck
 func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stableswap.MsgCreateStableswapPool) (*stableswap.MsgCreateStableswapPoolResponse, error) {
 	poolId, err := server.CreatePool(goCtx, msg)
 	if err != nil {
 		return nil, err
 	}
+	// nolint: staticcheck
 	return &stableswap.MsgCreateStableswapPoolResponse{PoolID: poolId}, nil
 }
 
+// Deprecated: please use StableSwapAdjustScalingFactorsV2 in x/gamm.
+// nolint: staticcheck
 func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, msg *stableswap.MsgStableSwapAdjustScalingFactors) (*stableswap.MsgStableSwapAdjustScalingFactorsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -68,7 +86,18 @@ func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, ms
 		return nil, err
 	}
 
+	// nolint: staticcheck
 	return &stableswap.MsgStableSwapAdjustScalingFactorsResponse{}, nil
+}
+
+func (server msgServer) StableSwapAdjustScalingFactorsV2(goCtx context.Context, msg *stableswapv2.MsgStableSwapAdjustScalingFactors) (*stableswapv2.MsgStableSwapAdjustScalingFactorsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if err := server.keeper.setStableSwapScalingFactors(ctx, msg.PoolID, msg.ScalingFactors, msg.Sender); err != nil {
+		return nil, err
+	}
+
+	return &stableswapv2.MsgStableSwapAdjustScalingFactorsResponse{}, nil
 }
 
 // Deprecated: use CreatePool in x/swaprouter instead.

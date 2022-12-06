@@ -88,6 +88,7 @@ func GetCmdPools() *cobra.Command {
 }
 
 func GetCmdNumPools() *cobra.Command {
+	// nolint: staticcheck
 	return osmocli.SimpleQueryCmd[*types.QueryNumPoolsRequest](
 		"num-pools",
 		"Query number of pools",

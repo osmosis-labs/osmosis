@@ -108,10 +108,12 @@ func (q Querier) Pools(
 	}, nil
 }
 
-// NumPools returns total number of pools.
+// Deprecated: please use NumPools in x/swaprouter.
+// nolint: staticcheck
 func (q Querier) NumPools(ctx context.Context, _ *types.QueryNumPoolsRequest) (*types.QueryNumPoolsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
+	// nolint: staticcheck
 	return &types.QueryNumPoolsResponse{
 		NumPools: q.Keeper.swaprouterKeeper.GetNextPoolId(sdkCtx) - 1,
 	}, nil

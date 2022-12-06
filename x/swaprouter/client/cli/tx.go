@@ -17,7 +17,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
+	balancerv2 "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer/v2"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
+	stableswapv2 "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap/v2"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
@@ -236,7 +238,7 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 		ExitFee: exitFee,
 	}
 
-	msg := &balancer.MsgCreateBalancerPool{
+	msg := &balancerv2.MsgCreateBalancerPool{
 		Sender:             clientCtx.GetFromAddress().String(),
 		PoolParams:         poolParams,
 		PoolAssets:         poolAssets,
@@ -331,7 +333,7 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, txf tx.Factory, f
 		}
 	}
 
-	msg := &stableswap.MsgCreateStableswapPool{
+	msg := &stableswapv2.MsgCreateStableswapPool{
 		Sender:                  clientCtx.GetFromAddress().String(),
 		PoolParams:              poolParams,
 		InitialPoolLiquidity:    deposit,

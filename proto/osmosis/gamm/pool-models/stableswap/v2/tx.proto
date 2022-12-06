@@ -13,7 +13,7 @@ service MsgCreator {
 }
 
 service MsgScalingFactorSetter {
-  rpc StableSwapAdjustScalingFactors(MsgStableSwapAdjustScalingFactors)
+  rpc StableSwapAdjustScalingFactorsV2(MsgStableSwapAdjustScalingFactors)
       returns (MsgStableSwapAdjustScalingFactorsResponse);
 }
 
