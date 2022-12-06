@@ -18,9 +18,6 @@ var (
 	one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
 	one      sdk.Dec = sdk.OneDec()
 	two      sdk.Dec = sdk.MustNewDecFromStr("2")
-
-	// https://www.wolframalpha.com/input?i=2.718281828459045235360287471352662498&assumption=%22ClashPrefs%22+-%3E+%7B%22Math%22%7D
-	eulersNumber = MustNewDecFromStr("2.718281828459045235360287471352662498")
 )
 
 // Returns the internal "power precision".
@@ -174,31 +171,3 @@ func PowApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 	}
 	return sum
 }
-
-// TODO: spec
-func Exp(exponent BigDec) BigDec {
-
-	// let exponent = i + f where i is the integer part and f is the fractional part.
-	// then e^exponent = e^i * e^f
-
-	integer := exponent.TruncateDec()
-	fractional := exponent.Sub(integer)
-
-	integerExp := eulersNumber.Power(uint64(integer.TruncateInt64()))
-
-	fractionalExp := expApprox(eulersNumber, fractional)
-
-	return integerExp.Add(fractionalExp)
-}
-
-// expApprox computes the exponential of a base.
-// 0 < exponent < 1
-// exp(0) = 1
-// exp(1) = e
-// Find Chebyshev nodes using Remez algorithm:
-// https://github.com/samhocevar/lolremez/wiki/Tutorial-1-of-5%3A-exp%28x%29-the-quick-way
-func expApprox(base BigDec, exponent BigDec) BigDec {
-	return ZeroDec()
-}
-
-// Step 1: find Chebushev

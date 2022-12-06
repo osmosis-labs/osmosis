@@ -972,22 +972,3 @@ func (x BigDec) CustomBaseLog(base BigDec) BigDec {
 
 	return y
 }
-
-// TODO: spec and tests - taken from sdk.
-func (d BigDec) PowerMut(power uint64) BigDec {
-	// TODO: use mutable functions here
-	if power == 0 {
-		return OneDec()
-	}
-	tmp := OneDec()
-
-	for i := power; i > 1; {
-		if i%2 != 0 {
-			tmp = tmp.Mul(d)
-		}
-		i /= 2
-		d = d.Mul(d)
-	}
-
-	return d.Mul(tmp)
-}
