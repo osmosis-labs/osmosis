@@ -8,7 +8,7 @@ import (
 	valsetpreftypes "github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
 )
 
-// UpgradeName defines the on-chain upgrade name for the Osmosis v13 upgrade.
+// UpgradeName defines the on-chain upgrade name for the Osmosis v14 upgrade.
 const UpgradeName = "v14"
 
 var Upgrade = upgrades.Upgrade{
