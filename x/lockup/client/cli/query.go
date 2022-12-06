@@ -128,45 +128,12 @@ func GetCmdAccountLockedCoins() *cobra.Command {
 
 // GetCmdAccountLockedPastTime returns locks of an account with unlock time beyond timestamp.
 func GetCmdAccountLockedPastTime() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "account-locked-pastime <address> <timestamp>",
-		Short: "Query locked records of an account with unlock time beyond timestamp",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query locked records of an account with unlock time beyond timestamp.
-
-Example:
-$ %s query lockup account-locked-pastime <address> <timestamp>
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			i, err := strconv.ParseInt(args[1], 10, 64)
-			if err != nil {
-				panic(err)
-			}
-			timestamp := time.Unix(i, 0)
-
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.AccountLockedPastTime(cmd.Context(), &types.AccountLockedPastTimeRequest{Owner: args[0], Timestamp: timestamp})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+	return osmocli.SimpleQueryCmd[*types.AccountLockedPastTimeRequest](
+		"account-locked-pastime <address> <timestamp>",
+		"Query locked records of an account with unlock time beyond timestamp",
+		`{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} account-locked-pastime <address> <timestamp>
+`, types.ModuleName, types.NewQueryClient)
 }
 
 // GetCmdAccountLockedPastTimeNotUnlockingOnly returns locks of an account with unlock time beyond provided timestamp

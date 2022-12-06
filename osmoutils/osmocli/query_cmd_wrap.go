@@ -30,6 +30,8 @@ type QueryDescriptor struct {
 
 	// Map of FieldName -> FlagName
 	CustomFlagOverrides map[string]string
+	// Map of FieldName -> CustomParseFn
+	CustomFieldParsers map[string]CustomFieldParserFn
 }
 
 func SimpleQueryFromDescriptor[reqP proto.Message, querier any](desc QueryDescriptor, newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
@@ -40,6 +42,7 @@ func SimpleQueryFromDescriptor[reqP proto.Message, querier any](desc QueryDescri
 	flagAdvice := FlagAdvice{
 		HasPagination:       desc.HasPagination,
 		CustomFlagOverrides: desc.CustomFlagOverrides,
+		CustomFieldParsers:  desc.CustomFieldParsers,
 	}.Sanitize()
 	cmd := &cobra.Command{
 		Use:   desc.Use,

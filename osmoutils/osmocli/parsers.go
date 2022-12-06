@@ -217,6 +217,8 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 			v, err = ParseCoin(arg, fType.Name)
 		} else if typeStr == "types.Int" {
 			v, err = ParseSdkInt(arg, fType.Name)
+		} else if typeStr == "time.Time" {
+			v, err = ParseUnixTime(arg, fType.Name)
 		} else {
 			return fmt.Errorf("struct field type not recognized. Got type %v", fType)
 		}
