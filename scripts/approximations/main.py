@@ -27,8 +27,8 @@ def main():
 
     # number of (x,y) coordinates used to plot the resulting approximation.
     num_points_plot = 10
-    # number of (x,y) coordinates used to plot the highly accurate
-    # equispaced approximation that we treat as "the closest to truth".
+    # number of (x,y) coordinates used to plot the
+    # actual function that is evenly spaced on the X-axis.
     num_points_plot_accurate = 50000
     # function to approximate
     approximated_fn = lambda x: math.e**x
@@ -45,7 +45,7 @@ def main():
     # 2.3. Chebyshev Rational Approximation
     numerator_coefficients_chebyshev_rational, denominator_coefficients_chebyshev_rational = approximations.chebyshev_rational_approx(approximated_fn, x_start, x_end, num_terms_approximation)
 
-    # 2.4. Equspaced Polynomial Accurate (Large Number of Coordinates)
+    # 2.4. Actual With Large Number of Coordinates (evenly spaced on the X-axis)
     x_accurate = np.linspace(x_start, x_end, num_points_plot_accurate)
 
     #######################################
@@ -63,7 +63,7 @@ def main():
     # 3.3 Chebyshev Rational Approximation
     y_chebyshev_rational = rational.evaluate(plot_nodes_x, numerator_coefficients_chebyshev_rational.tolist(), denominator_coefficients_chebyshev_rational.tolist())
 
-    # 3.4 quspaced Polynomial Accurate (Large Number of Coordinates)
+    # 3.4 Actual With Large Number of Coordinate (evenly spaced on the X-axis)
     y_accurate = approximated_fn(x_accurate)
 
     #############################
@@ -78,8 +78,8 @@ def main():
     # 4.3 Chebyshev Rational Approximation
     plt.plot(plot_nodes_x,y_chebyshev_rational, label="Chebyshev Rational")
 
-    # 4.4 quspaced Polynomial Accurate (Large Number of Coordinates)
-    plt.plot(x_accurate,y_accurate, label=F"{num_points_plot_accurate} terms Equispaced Poly")
+    # 4.4 Actual With Large Number of Coordinates (evenly spaced on the X-axis)
+    plt.plot(x_accurate,y_accurate, label=F"Actual - {num_points_plot_accurate} evenly spaced points")
 
     plt.legend(loc="upper left")
     plt.grid(True)
