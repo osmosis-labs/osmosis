@@ -84,7 +84,6 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithCoinsAndWeights(coins sdk.Coin
 	return s.PrepareBalancerPoolWithPoolAsset(poolAssets)
 }
 
-// PrepareBalancerPoolWithCoins returns a balancer pool
 // PrepareBalancerPoolWithCoinsWeightsAndSwapFee returns a balancer pool
 // consisted of given coins with the specified weights and swap fee.
 func (s *KeeperTestHelper) PrepareBalancerPoolWithCoinsWeightsAndSwapFee(coins sdk.Coins, weights []int64, swapFee sdk.Dec) uint64 {
