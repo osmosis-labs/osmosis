@@ -69,7 +69,7 @@ func (msg MsgCreateConcentratedPool) Validate(ctx sdk.Context) error {
 }
 
 func (msg MsgCreateConcentratedPool) InitialLiquidity() sdk.Coins {
-	return nil
+	return sdk.Coins{}
 }
 
 func (msg MsgCreateConcentratedPool) CreatePool(ctx sdk.Context, poolID uint64) (swaproutertypes.PoolI, error) {

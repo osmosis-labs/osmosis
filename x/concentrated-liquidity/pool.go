@@ -13,7 +13,15 @@ import (
 
 // GetPool returns a pool with a given id.
 func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (swaproutertypes.PoolI, error) {
-	return nil, errors.New("not implemented")
+	concentratedPool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return nil, types.PoolNotFoundError{PoolId: poolId}
+	}
+	pool, ok := concentratedPool.(swaproutertypes.PoolI)
+	if !ok {
+		return nil, errors.New("invalid pool type when setting concentrated pool")
+	}
+	return pool, nil
 }
 
 // getPoolById returns a concentratedPoolExtension that corresponds to the requested pool id. Returns error if pool id is not found.
