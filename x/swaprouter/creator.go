@@ -21,7 +21,7 @@ import (
 // the form of <swap module name>/pool/{poolID}. In addition, the x/bank metadata is updated
 // to reflect the newly created GAMM share denomination.
 func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, error) {
-	err := msg.Validate(ctx)
+	err := validateCreatePoolMsg(ctx, msg)
 	if err != nil {
 		return 0, err
 	}
@@ -72,6 +72,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 	if poolType != types.Concentrated {
 		k.poolCreationListeners.AfterPoolCreated(ctx, sender, pool.GetId())
 	}
+
 	return pool.GetId(), nil
 }
 
@@ -80,6 +81,29 @@ func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 	nextPoolId := k.GetNextPoolId(ctx)
 	k.SetNextPoolId(ctx, nextPoolId+1)
 	return nextPoolId
+}
+
+func validateCreatePoolMsg(ctx sdk.Context, msg types.CreatePoolMsg) error {
+	err := msg.Validate(ctx)
+	if err != nil {
+		return err
+	}
+
+	initialPoolLiquidity := msg.InitialLiquidity()
+	numAssets := initialPoolLiquidity.Len()
+
+	if msg.GetPoolType() != types.Concentrated {
+		if numAssets < types.MinPoolAssets {
+			return types.ErrTooFewPoolAssets
+		}
+		if numAssets > types.MaxPoolAssets {
+			return errors.Wrapf(
+				types.ErrTooManyPoolAssets,
+				"pool has too many PoolAssets (%d)", numAssets,
+			)
+		}
+	}
+	return nil
 }
 
 func (k Keeper) validateCreatedPool(
@@ -96,6 +120,22 @@ func (k Keeper) validateCreatedPool(
 	if !pool.GetAddress().Equals(gammtypes.NewPoolAddress(poolId)) {
 		return errors.Wrapf(types.ErrInvalidPool,
 			"Pool was attempted to be created with incorrect pool address.")
+	}
+
+	// Check the total pool liquidity/shares if pool is not a concentrated liquidity pool
+	if poolType != types.Concentrated {
+		// Notably we use the initial pool liquidity at the start of the messages definition
+		// just in case CreatePool was mutative.
+		if !pool.GetTotalPoolLiquidity(ctx).IsEqual(initialPoolLiquidity) {
+			return errors.Wrap(types.ErrInvalidPool,
+				"Pool was attempted to be created, with initial liquidity not equal to what was specified.")
+		}
+		// TODO: this check should be moved
+		// This check can be removed later, and replaced with a minimum.
+		if !pool.GetTotalShares().Equal(gammtypes.InitPoolSharesSupply) {
+			return errors.Wrap(types.ErrInvalidPool,
+				"Pool was attempted to be created with incorrect number of initial shares.")
+		}
 	}
 	return nil
 }
