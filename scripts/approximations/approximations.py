@@ -41,7 +41,7 @@ def chebyshev_poly_approx(fn, x_start: int, x_end: int, num_terms: int) -> np.nd
 
     return coef
 
-def chebyshev_rational_approx(fn, x_start: int, x_end: int, num_terms_numerator: int) -> Tuple[np.array, np.array]:
+def chebyshev_rational_approx(fn, x_start: int, x_end: int, num_terms_numerator: int, num_terms_denominator: int) -> Tuple[np.array, np.array]:
     """ Returns a rational approximation between x_start and x_end with num_terms terms
     using Chebyshev nodes.
 
@@ -60,7 +60,7 @@ def chebyshev_rational_approx(fn, x_start: int, x_end: int, num_terms_numerator:
     - item 2: num_terms y coordinates for the equispaced x coordinates
     """
     # Compute Chebyshev coordinates.
-    x_chebyshev, y_chebyshev = chebyshev.get_nodes(fn, x_start, x_end, num_terms_numerator * 2 - 1)
+    x_chebyshev, y_chebyshev = chebyshev.get_nodes(fn, x_start, x_end, num_terms_numerator  + num_terms_denominator - 1)
 
     # Construct a system of linear equations.
     vandermonde_matrix = rational.construct_rational_eval_matrix(x_chebyshev, y_chebyshev)
