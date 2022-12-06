@@ -26,7 +26,7 @@ def main():
     num_terms_approximation = 3
 
     # number of (x,y) coordinates used to plot the resulting approximation.
-    num_points_plot = 10
+    num_points_plot = 100000000
     # number of (x,y) coordinates used to plot the
     # actual function that is evenly spaced on the X-axis.
     num_points_plot_accurate = 50000
