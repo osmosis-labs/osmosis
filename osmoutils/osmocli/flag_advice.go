@@ -3,6 +3,7 @@ package osmocli
 import (
 	"strings"
 
+	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
 
@@ -17,6 +18,11 @@ type FlagAdvice struct {
 	IsTx              bool
 	TxSenderFieldName string
 	FromValue         string
+}
+
+type FlagDesc struct {
+	RequiredFlags []*pflag.FlagSet
+	OptionalFlags []*pflag.FlagSet
 }
 
 type FieldReadLocation = bool
@@ -49,5 +55,25 @@ func FlagOnlyParser[v any](f func(fs *pflag.FlagSet) (v, error)) CustomFieldPars
 	return func(_arg string, fs *pflag.FlagSet) (any, FieldReadLocation, error) {
 		t, err := f(fs)
 		return t, UsedFlag, err
+	}
+}
+
+// AddFlags from desc to cmd.
+// Required flags are marked as required.
+func AddFlags(cmd *cobra.Command, desc FlagDesc) {
+	for i := 0; i < len(desc.OptionalFlags); i++ {
+		cmd.Flags().AddFlagSet(desc.OptionalFlags[i])
+	}
+	for i := 0; i < len(desc.RequiredFlags); i++ {
+		fs := desc.RequiredFlags[i]
+		cmd.Flags().AddFlagSet(fs)
+
+		// mark all these flags as required.
+		fs.VisitAll(func(flag *pflag.Flag) {
+			err := cmd.MarkFlagRequired(flag.Name)
+			if err != nil {
+				panic(err)
+			}
+		})
 	}
 }

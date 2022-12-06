@@ -28,6 +28,7 @@ type QueryDescriptor struct {
 
 	QueryFnName string
 
+	Flags FlagDesc
 	// Map of FieldName -> FlagName
 	CustomFlagOverrides map[string]string
 	// Map of FieldName -> CustomParseFn
@@ -53,6 +54,7 @@ func SimpleQueryFromDescriptor[reqP proto.Message, querier any](desc QueryDescri
 			flagAdvice, desc.QueryFnName, newQueryClientFn),
 	}
 	flags.AddQueryFlagsToCmd(cmd)
+	AddFlags(cmd, desc.Flags)
 	if desc.HasPagination {
 		cmdName := strings.Split(desc.Use, " ")[0]
 		flags.AddPaginationFlagsToCmd(cmd, cmdName)

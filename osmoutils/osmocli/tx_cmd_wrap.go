@@ -29,6 +29,7 @@ type TxCliDesc struct {
 	ParseAndBuildMsg  func(clientCtx client.Context, args []string, flags *pflag.FlagSet) (sdk.Msg, error)
 	TxSignerFieldName string
 
+	Flags FlagDesc
 	// Map of FieldName -> FlagName
 	CustomFlagOverrides map[string]string
 	// Map of FieldName -> CustomParseFn
@@ -85,5 +86,6 @@ func (desc TxCliDesc) BuildCommandCustomFn() *cobra.Command {
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+	AddFlags(cmd, desc.Flags)
 	return cmd
 }
