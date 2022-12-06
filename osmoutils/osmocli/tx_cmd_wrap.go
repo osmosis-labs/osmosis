@@ -36,6 +36,12 @@ type TxCliDesc struct {
 	CustomFieldParsers map[string]CustomFieldParserFn
 }
 
+func AddTxCmd[M sdk.Msg](cmd *cobra.Command, f func() (*TxCliDesc, M)) {
+	desc, _ := f()
+	subCmd := BuildTxCli[M](desc)
+	cmd.AddCommand(subCmd)
+}
+
 func BuildTxCli[M sdk.Msg](desc *TxCliDesc) *cobra.Command {
 	desc.TxSignerFieldName = strings.ToLower(desc.TxSignerFieldName)
 	if desc.NumArgs == 0 {

@@ -11,8 +11,8 @@ import (
 // GetTxCmd returns the transaction commands for this module.
 func GetTxCmd() *cobra.Command {
 	cmd := osmocli.TxIndexCmd(types.ModuleName)
+	osmocli.AddTxCmd(cmd, NewLockTokensCmd)
 	cmd.AddCommand(
-		NewLockTokensCmd(),
 		NewBeginUnlockingAllCmd(),
 		NewBeginUnlockByIDCmd(),
 		NewForceUnlockByIdCmd(),
@@ -21,15 +21,15 @@ func GetTxCmd() *cobra.Command {
 	return cmd
 }
 
-func NewLockTokensCmd() *cobra.Command {
-	return osmocli.BuildTxCli[*types.MsgLockTokens](&osmocli.TxCliDesc{
+func NewLockTokensCmd() (*osmocli.TxCliDesc, *types.MsgLockTokens) {
+	return &osmocli.TxCliDesc{
 		Use:   "lock-tokens [tokens]",
 		Short: "lock tokens into lockup pool from user account",
 		CustomFlagOverrides: map[string]string{
 			"duration": FlagDuration,
 		},
 		Flags: osmocli.FlagDesc{RequiredFlags: []*pflag.FlagSet{FlagSetLockTokens()}},
-	})
+	}, &types.MsgLockTokens{}
 }
 
 // TODO: We should change the Use string to be unlock-all
