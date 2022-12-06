@@ -44,7 +44,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#3608](https://github.com/osmosis-labs/osmosis/pull/3608) Make it possible to state export from any directory.
 
+<<<<<<< HEAD
 ## v12.3.0
+=======
+### Misc Improvements
+
+* [#3611](https://github.com/osmosis-labs/osmosis/pull/3611) Introduce osmocli, to automate thousands of lines of CLI boilerplate
+* [#3634](https://github.com/osmosis-labs/osmosis/pull/3634) (Makefile) Ensure correct golang version in make build and make install. (Thank you @jhernandezb )
+
+## v13.0.0
+
+This release includes stableswap, and expands the IBC safety & composability functionality of Osmosis. The primary features are:
+
+* Gamm:
+  * Introduction of the stableswap pool type
+  * Multi-hop swapfee reduction
+  * Filtered queries to help front-ends
+  * Adding a spot price v2 query
+    * spotprice v1beta1 had baseassetdenom and quoteassetdenom backwards.
+    * All contracts and integrators should switch to the v2 query from now on.
+  * Adding more queries for contract developers
+  * Force unpooling is now enableable by governance
+* IBC features
+  * Upgrade to IBC v3.4.0
+  * Added IBC rate limiting, to increase safety of bridged assets
+  * Allow ICS-20 to call into cosmwasm contracts
+* Cosmwasm
+  * Upgrade to cosmwasm v0.29.x
+  * Inclusion of requested queries for contract developers
+>>>>>>> f52cb533 (Ensure go v1.18 used in make build & make install (#3634))
 
 * [#3325](https://github.com/osmosis-labs/osmosis/pull/3325) Use mainline iavl v0.19.4 instead of our iavl fork
 
