@@ -169,7 +169,7 @@ func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 // All locks on this pool share must be unlocked prior to execution. Use LockupKeeper.ForceUnlock
 // on remaining locks before calling this function.
 // func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolIds []uint64, excludedModules []string) (err error) {
-// 	pools := make(map[string]types.PoolI)
+// 	pools := make(map[string]types.CFMMPoolI)
 // 	totalShares := make(map[string]sdk.Int)
 // 	for _, poolId := range poolIds {
 // 		pool, err := k.GetPool(ctx, poolId)
