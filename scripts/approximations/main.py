@@ -21,7 +21,7 @@ def main():
     # start of the interval to calculate the approximation on
     x_start = 0
     # end of the interval to calculate the approximation on
-    x_end = 3
+    x_end = 1
     # number of terms in the polynomial approximation / numerator of the rational approximation.
     num_terms_approximation = 3
 
@@ -32,6 +32,15 @@ def main():
     num_points_plot_accurate = 50000
     # function to approximate
     approximated_fn = lambda x: math.e**x
+
+    # flag controlling whether to plot each approximation.
+    # Plots if true.
+    shouldPlotApproximations = False
+
+    # flag controlling whether to compute max error for each approximation
+    # given the equally spaced x coordinates.
+    # Computes if true.
+    shouldComputeErrorDelta = True
 
     #####################
     # 2. Approximations 
@@ -69,22 +78,45 @@ def main():
     #############################
     # 4. Plot Every Approximation
 
-    # 4.1 Equispaced Polynomial Approximation
-    plt.plot(plot_nodes_x, plot_nodes_y_eqispaced_poly, label="Equispaced Poly")
+    if shouldPlotApproximations:
+        # 4.1 Equispaced Polynomial Approximation
+        plt.plot(plot_nodes_x, plot_nodes_y_eqispaced_poly, label="Equispaced Poly")
 
-    # 4.2 Chebyshev Polynomial Approximation
-    plt.plot(plot_nodes_x,plot_nodes_y_chebyshev_poly, label="Chebyshev Poly")
+        # 4.2 Chebyshev Polynomial Approximation
+        plt.plot(plot_nodes_x,plot_nodes_y_chebyshev_poly, label="Chebyshev Poly")
 
-    # 4.3 Chebyshev Rational Approximation
-    plt.plot(plot_nodes_x,y_chebyshev_rational, label="Chebyshev Rational")
+        # 4.3 Chebyshev Rational Approximation
+        plt.plot(plot_nodes_x,y_chebyshev_rational, label="Chebyshev Rational")
 
-    # 4.4 Actual With Large Number of Coordinates (evenly spaced on the X-axis)
-    plt.plot(x_accurate,y_accurate, label=F"Actual - {num_points_plot_accurate} evenly spaced points")
+        # 4.4 Actual With Large Number of Coordinates (evenly spaced on the X-axis)
+        plt.plot(x_accurate,y_accurate, label=F"Actual - {num_points_plot_accurate} evenly spaced points")
 
-    plt.legend(loc="upper left")
-    plt.grid(True)
-    plt.title(f"Appproximation of e^x on [{x_start}, {x_end}] with {num_terms_approximation} terms")
-    plt.show()
+        plt.legend(loc="upper left")
+        plt.grid(True)
+        plt.title(f"Appproximation of e^x on [{x_start}, {x_end}] with {num_terms_approximation} terms")
+        plt.show()
+
+    #############################
+    # 5. Compute Errors
+
+    if shouldComputeErrorDelta:
+        print(F"\n\nMax Error on [{x_start}, {x_end}]")
+        print(F"{num_points_plot} coordinates equally spaced on the X axis")
+        print(F"{num_terms_approximation} polynomial terms and ({num_terms_approximation}, {num_terms_approximation}) rational terms used for approximations.\n\n")
+
+        plot_nodes_y_actual = approximated_fn(plot_nodes_x)
+
+        # 5.1 Equispaced Polynomial Approximation
+        delta_eqispaced_poly = np.abs(plot_nodes_y_eqispaced_poly - plot_nodes_y_actual)
+        print(F"Equispaced Poly: {np.amax(delta_eqispaced_poly)}")
+
+        # 5.2 Chebyshev Polynomial Approximation
+        delta_chebyshev_poly = np.abs(plot_nodes_y_chebyshev_poly - plot_nodes_y_actual)
+        print(F"Chebyshev Poly: {np.amax(delta_chebyshev_poly)}")
+
+        # 5.3 Chebyshev Rational Approximation
+        delta_chebyshev_rational = np.abs(y_chebyshev_rational - plot_nodes_y_actual)
+        print(F"Chebyshev Rational: {np.amax(delta_chebyshev_rational)}")
 
 if __name__ == "__main__":
     main()
