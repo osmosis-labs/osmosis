@@ -15,7 +15,7 @@ class TestChebyshevRational(unittest.TestCase):
         x = [1, 2, 3, 4, 5]
         y = list(map(fn, x))
 
-        coeffs = rational.construct_vandermonde_matrix(x, y)
+        coeffs = rational.construct_rational_eval_matrix(x, y)
         
         # number of rows is correct
         self.assertEqual(len(x), len(coeffs))

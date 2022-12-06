@@ -63,7 +63,7 @@ def chebyshev_rational_approx(fn, x_start: int, x_end: int, num_terms_numerator:
     x_chebyshev, y_chebyshev = chebyshev.get_nodes(fn, x_start, x_end, num_terms_numerator * 2 - 1)
 
     # Construct a system of linear equations.
-    vandermonde_matrix = rational.construct_vandermonde_matrix(x_chebyshev, y_chebyshev)
+    vandermonde_matrix = rational.construct_rational_eval_matrix(x_chebyshev, y_chebyshev)
 
     # Solve the matrix to get the coefficients used in the final approximation polynomial.
     coef = np.linalg.solve(np.array(vandermonde_matrix), y_chebyshev)

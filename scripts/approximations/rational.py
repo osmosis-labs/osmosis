@@ -1,7 +1,7 @@
 import numpy as np
 
-def construct_vandermonde_matrix(x_list: list, y_list: list) -> list[list]:
-    """ Constructs a Vandermonde matrix for a rational approximation.
+def construct_rational_eval_matrix(x_list: list, y_list: list) -> list[list]:
+    """ Constructs a matrix to use for computing coefficients for a rational approximation
         from the list of x and y values given.
         len(x_list) * len(x_list)
         x_list is the list of all x values to construct the matrix from.
