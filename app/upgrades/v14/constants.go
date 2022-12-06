@@ -16,6 +16,6 @@ var Upgrade = upgrades.Upgrade{
 	CreateUpgradeHandler: CreateUpgradeHandler,
 	StoreUpgrades: store.StoreUpgrades{
 		Added:   []string{valsetpreftypes.StoreKey, swaproutertypes.StoreKey},
-		Deleted: []string{}, // double check bech32ibc
+		Deleted: []string{},
 	},
 }
