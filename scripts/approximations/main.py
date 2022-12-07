@@ -22,10 +22,10 @@ def main():
     # end of the interval to calculate the approximation on
     x_end = 1
     # number of paramters to use for the approximations.
-    num_parameters = 20
+    num_parameters = 30
 
     # number of (x,y) coordinates used to plot the resulting approximation.
-    num_points_plot = 100
+    num_points_plot = 1000
 
     # function to approximate
     approximated_fn = lambda x: sympy.Pow(sympy.E, x)
@@ -62,15 +62,15 @@ def main():
 
             # Equispaced Polynomial Approximation
             max_error_equispaced_poly = approximations.compute_max_error(y_eqispaced_poly, y_actual)
-            print(F"Equispaced Poly: {max_error_equispaced_poly.evalf(chop=1e-30)}")
+            print(F"Equispaced Poly: {max_error_equispaced_poly.evalf(chop=1e-100)}")
 
             # Chebyshev Polynomial Approximation
             max_error_chebyshev_poly = approximations.compute_max_error(y_chebyshev_poly, y_actual)
-            print(F"Chebyshev Poly: {max_error_chebyshev_poly.evalf(chop=1e-30)}")
+            print(F"Chebyshev Poly: {max_error_chebyshev_poly.evalf(chop=1e-100)}")
 
             # Chebyshev Rational Approximation
             max_error_chebyshev_rational = approximations.compute_max_error(y_chebyshev_rational, y_actual)
-            print(F"Chebyshev Rational: {max_error_chebyshev_rational}")
+            print(F"Chebyshev Rational: {max_error_chebyshev_rational.evalf(chop=1e-100)}")
 
         ###############################
         # Plot Every Approximation Kind
@@ -106,12 +106,9 @@ def main():
         # Compute Deltas
         # The deltas are taken from actual function values for different number of parameters
         # This is needed to find the most optimal number of parameters to use.
-        for num_parameters in range(1, 21):
-            x_axis.append(int(num_parameters))
-            y_eqispaced_poly, y_chebyshev_poly, y_chebyshev_rational, y_actual = approximations.approx_and_eval_all(approximated_fn, num_parameters, x_coordinates)
-
-            print(f"num_parameters: {num_parameters}\n")
-            print(f"y_quispaced_poly: {y_eqispaced_poly}\n")
+        for num_parameters_current in range(1, num_parameters + 1):
+            x_axis.append(int(num_parameters_current))
+            y_eqispaced_poly, y_chebyshev_poly, y_chebyshev_rational, y_actual = approximations.approx_and_eval_all(approximated_fn, num_parameters_current, x_coordinates)
 
             deltas_eqispaced_poly.append(approximations.compute_max_error(y_eqispaced_poly, y_actual))
             deltas_chebyshev_poly.append(approximations.compute_max_error(y_chebyshev_poly, y_actual))
@@ -119,8 +116,6 @@ def main():
 
         ##################
         # Plot the results
-
-        print(f"deltas_eqispaced_poly: {deltas_eqispaced_poly}\n")
 
         # Equispaced Polynomial Approximation
         plt.semilogy(x_axis, deltas_eqispaced_poly, label="Equispaced Poly")

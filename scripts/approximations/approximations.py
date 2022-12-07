@@ -10,7 +10,7 @@ def linspace(start: sympy.Float, end: sympy.Float, num_points: int) -> list[symp
 
     result: list[sympy.Float] = []
     for i in range(num_points):
-        cur_coord = sympy.Float(start + i * (end - start) / (num_points - 1), 40)
+        cur_coord = sympy.Float(start + i * (end - start) / (num_points - 1), 200)
 
         if cur_coord is sympy.nan:
             raise ValueError("cur_coord is nan")
@@ -83,8 +83,6 @@ def chebyshev_poly_approx(fn, x_start: int, x_end: int, num_terms: int):
     """
     # Compute Chebyshev coordinates.
     x_estimated, y_estimated = chebyshev.get_nodes(fn, x_start, x_end, num_terms)
-
-    print(f"x_estimated: {x_estimated}")
 
     # Construct a system of linear equations.
     vandermonde_matrix = polynomial.construct_vandermonde_matrix(x_estimated)
