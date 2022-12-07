@@ -523,8 +523,9 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(withAckTracking bool) (sdk.Acc
 	if withAckTracking {
 		trackAcks = "true"
 	}
+	channels := `[["osmosis-test", "channel-0", "osmo"]]`
 	crosschainAddr := suite.chainA.InstantiateContract(&suite.Suite,
-		fmt.Sprintf(`{"swap_contract": "%s", "track_ibc_sends": %s}`, swaprouterAddr, trackAcks), 2)
+		fmt.Sprintf(`{"swap_contract": "%s", "track_ibc_sends": %s, "channels": %s}`, swaprouterAddr, trackAcks, channels), 2)
 
 	osmosisApp := suite.chainA.GetOsmosisApp()
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
@@ -647,7 +648,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 
 	// Generate swap instructions for the contract. This will send correctly on chainA, but fail to be received on chainB
 	recoverAddr := suite.chainA.SenderAccounts[8].SenderAccount.GetAddress()
-	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"input_coin":{"denom":"token0","amount":"1000"},"output_denom":"token1","slipage":{"max_slipage_percentage":"20"},"receiver":"%s","channel":"osmosis-bad-test","failed_delivery": {"recovery_addr": "%s"}}}`,
+	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"input_coin":{"denom":"token0","amount":"1000"},"output_denom":"token1","slipage":{"max_slipage_percentage":"20"},"receiver":"%s","channel":"channel-0","failed_delivery": {"recovery_addr": "%s"}}}`,
 		receiver, // Note that this is the chain A account, which does not exist on chain B
 		recoverAddr,
 	)

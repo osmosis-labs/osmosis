@@ -1,42 +1,41 @@
-use cosmwasm_std::{coins, from_binary, to_binary, wasm_execute, BankMsg, Reply, Timestamp};
+use cosmwasm_std::{coins, from_binary, to_binary, wasm_execute, BankMsg, Deps, Reply, Timestamp};
 use cosmwasm_std::{Addr, Coin, DepsMut, Response, SubMsg, SubMsgResponse, SubMsgResult};
 use swaprouter::msg::{ExecuteMsg as SwapRouterExecute, Slipage, SwapResponse};
 
-use crate::consts::{CHANNEL_MAP, FORWARD_REPLY_ID, PACKET_LIFETIME, SWAP_REPLY_ID};
+use crate::consts::{FORWARD_REPLY_ID, PACKET_LIFETIME, SWAP_REPLY_ID};
 use crate::ibc::{MsgTransfer, MsgTransferResponse};
 use crate::msg::{CrosschainSwapResponse, Recovery};
 
 use crate::state::{
-    ForwardMsgReplyState, ForwardTo, IBCTransfer, Status, SwapMsgReplyState, CONFIG,
+    ForwardMsgReplyState, ForwardTo, IBCTransfer, Status, SwapMsgReplyState, CHANNEL_MAP, CONFIG,
     FORWARD_REPLY_STATES, INFLIGHT_PACKETS, RECOVERY_STATES, SWAP_REPLY_STATES,
 };
 use crate::ContractError;
 
-fn get_channel(channel: &str) -> Result<String, ContractError> {
+fn get_channel(deps: Deps, channel: &str) -> Result<String, ContractError> {
     // Only allowing channels explicitely defined in the map.
     // In the future we can default to the channel name or
     // use storage to make this more dynamic
-    CHANNEL_MAP
-        .get(channel)
-        .map(|s| s.channel.to_string())
-        .ok_or(ContractError::CustomError {
+    Ok(CHANNEL_MAP
+        .load(deps.storage, channel)
+        .map_err(|_| ContractError::CustomError {
             val: "invalid channel".to_string(),
-        })
+        })?
+        .channel)
 }
 
 // Validate that the receiver address is a valid address for the destination chain.
 // This will prevent IBC transfers from failing after forwarding
-fn validate_receiver(channel: &str, receiver: Addr) -> Result<Addr, ContractError> {
+fn validate_receiver(deps: Deps, channel: &str, receiver: Addr) -> Result<Addr, ContractError> {
     let Ok((prefix, _, _)) = bech32::decode(receiver.as_str()) else {
         return Err(ContractError::CustomError { val: format!("invalid receiver {receiver} for channel {channel}") })
     };
-    let expected_prefix =
-        CHANNEL_MAP
-            .get(channel)
-            .map(|s| s.addr_prefix)
-            .ok_or(ContractError::CustomError {
-                val: "invalid channel".to_string(),
-            })?;
+    let expected_prefix = CHANNEL_MAP
+        .load(deps.storage, channel)
+        .map_err(|_| ContractError::CustomError {
+            val: "invalid channel".to_string(),
+        })?
+        .addr_prefix;
 
     if prefix != expected_prefix {
         return Err(ContractError::CustomError {
@@ -73,6 +72,19 @@ pub fn swap_and_forward(
     };
     let msg = wasm_execute(config.swap_contract, &swap_msg, vec![input_coin])?;
 
+    // In v1, we want to ensure the receiver is valid, as we're not tracking the
+    // acks/timeouts after forwarding.
+    let (valid_channel, receiver) = if !config.track_ibc_callbacks {
+        (
+            get_channel(deps.as_ref(), &channel)?.to_string(),
+            validate_receiver(deps.as_ref(), &channel, receiver)?,
+        )
+    } else {
+        // in v2, we can trust the user and they will be able to recover the
+        // funds if they send a bad receiver
+        (channel, receiver)
+    };
+
     // Store information about the original message to be used in the reply
     SWAP_REPLY_STATES.save(
         deps.storage,
@@ -81,8 +93,8 @@ pub fn swap_and_forward(
             block_time,
             contract_addr,
             forward_to: ForwardTo {
-                channel: get_channel(&channel)?,
-                receiver: validate_receiver(&channel, receiver)?,
+                channel: valid_channel,
+                receiver,
                 failed_delivery,
             },
         },

@@ -8,7 +8,7 @@ use cw2::set_contract_version;
 use crate::consts::{FORWARD_REPLY_ID, SWAP_REPLY_ID};
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg, SudoMsg};
-use crate::state::{Config, CONFIG, RECOVERY_STATES};
+use crate::state::{ChainData, Config, CHANNEL_MAP, CONFIG, RECOVERY_STATES};
 use crate::{execute, sudo};
 
 // version info for migration info
@@ -32,6 +32,16 @@ pub fn instantiate(
         track_ibc_callbacks: msg.track_ibc_sends.unwrap_or(false),
     };
     CONFIG.save(deps.storage, &state)?;
+    for (name, channel, addr_prefix) in msg.channels.into_iter() {
+        CHANNEL_MAP.save(
+            deps.storage,
+            &name,
+            &ChainData {
+                channel,
+                addr_prefix,
+            },
+        )?;
+    }
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")

@@ -15,6 +15,11 @@ pub struct InstantiateMsg {
     /// The information about the packet sender and recovery address is still
     /// stored, so recovery could be possible after a contract upgrade.
     pub track_ibc_sends: Option<bool>,
+    /// These are the channels that will be accepted by the contract. This is
+    /// needed to avoid sending packets to addresses not supported by the
+    /// receiving chain in v1. Once ack ibc send tracking is enabled in the
+    /// chain, this list can be removed.
+    pub channels: Vec<(String, String, String)>,
 }
 
 #[cw_serde]
