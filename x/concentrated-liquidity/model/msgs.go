@@ -6,7 +6,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
@@ -34,7 +33,7 @@ func NewMsgCreateConcentratedPool(
 	}
 }
 
-func (msg MsgCreateConcentratedPool) Route() string { return cltypes.RouterKey }
+func (msg MsgCreateConcentratedPool) Route() string { return types.RouterKey }
 func (msg MsgCreateConcentratedPool) Type() string  { return TypeMsgCreateConcentratedPool }
 func (msg MsgCreateConcentratedPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
