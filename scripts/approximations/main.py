@@ -26,7 +26,7 @@ def main():
     # end of the interval to calculate the approximation on
     x_end = 1
     # number of paramters to use for the approximations.
-    num_parameters = 10
+    num_parameters = 20
 
     # number of (x,y) coordinates used to plot the resulting approximation.
     num_points_plot = 100
@@ -52,8 +52,6 @@ def main():
     # Equispaced x coordinates to be used for plotting every approximation.
     x_coordinates = approximations.linspace(x_start, x_end, num_points_plot)
 
-    sympy.evaluate(True)
-
     if shouldComputeErrorDelta or shouldPlotApproximations:
         ###############################################
         # Approximation With Given Number of Parameters
@@ -68,11 +66,11 @@ def main():
 
             # Equispaced Polynomial Approximation
             max_error_equispaced_poly = approximations.compute_max_error(y_eqispaced_poly, y_actual)
-            print(F"Equispaced Poly: {max_error_equispaced_poly}")
+            print(F"Equispaced Poly: {max_error_equispaced_poly.evalf(chop=1e-30)}")
 
             # Chebyshev Polynomial Approximation
-            # max_error_chebyshev_poly = approximations.compute_max_error(y_chebyshev_poly, y_actual)
-            # print(F"Chebyshev Poly: {max_error_chebyshev_poly}")
+            max_error_chebyshev_poly = approximations.compute_max_error(y_chebyshev_poly, y_actual)
+            print(F"Chebyshev Poly: {max_error_chebyshev_poly.evalf(chop=1e-30)}")
 
             # Chebyshev Rational Approximation
             # max_error_chebyshev_rational = approximations.compute_max_error(y_chebyshev_rational, y_actual)
@@ -81,34 +79,23 @@ def main():
         ###############################
         # Plot Every Approximation Kind
         if shouldPlotApproximations:
+
             # Equispaced Polynomial Approximation
-            # plt.plot(x_coordinates, y_eqispaced_poly, label="Equispaced Poly")
-
-            # plot(approximated_fn, x_start, x_end, label="Equispaced Poly")
-
-            
-            t = symbols('t')
-            x = 0.05*t + 0.2/((t - 5)**2 + 2)
-            print("here")
-            # plot(x, (t, 0, 10), ylabel='Speed')
-
             plt.plot(x_coordinates, y_eqispaced_poly, label="Equispaced Poly")
-            plt.show()
-            print("here")
 
             # Chebyshev Polynomial Approximation
-            # plt.plot(x_coordinates, y_chebyshev_poly, label="Chebyshev Poly")
+            plt.plot(x_coordinates, y_chebyshev_poly, label="Chebyshev Poly")
 
             # Chebyshev Rational Approximation
             # plt.plot(x_coordinates, y_chebyshev_rational, label="Chebyshev Rational")
 
             # Actual With Large Number of Coordinates (evenly spaced on the X-axis)
-            # plt.plot(x_coordinates, y_actual, label=F"Actual")
+            plt.plot(x_coordinates, y_actual, label=F"Actual")
 
-            # plt.legend(loc="upper left")
-            # plt.grid(True)
-            # plt.title(f"Appproximation of e^x on [{x_start}, {x_end}] with {num_parameters} parameters")
-            # plt.show()
+            plt.legend(loc="upper left")
+            plt.grid(True)
+            plt.title(f"Appproximation of e^x on [{x_start}, {x_end}] with {num_parameters} parameters")
+            plt.show()
 
     #####################################################
     # Calculate Errors Given Varying Number of Parameters
@@ -131,7 +118,7 @@ def main():
             print(f"y_quispaced_poly: {y_eqispaced_poly}\n")
 
             deltas_eqispaced_poly.append(approximations.compute_max_error(y_eqispaced_poly, y_actual))
-            # deltas_chebyshev_poly.append(approximations.compute_max_error(y_chebyshev_poly, y_actual))
+            deltas_chebyshev_poly.append(approximations.compute_max_error(y_chebyshev_poly, y_actual))
             # deltas_chebyshev_rational.append(approximations.compute_max_error(y_chebyshev_rational, y_actual))
 
         ##################
@@ -143,7 +130,7 @@ def main():
         plt.semilogy(x_axis, deltas_eqispaced_poly, label="Equispaced Poly")
 
         # Chebyshev Polynomial Approximation
-        # plt.semilogy(x_axis, deltas_chebyshev_poly, label="Chebyshev Poly")
+        plt.semilogy(x_axis, deltas_chebyshev_poly, label="Chebyshev Poly")
 
         # Chebyshev Rational Approximation
         # plt.semilogy(x_axis, deltas_chebyshev_rational, label="Chebyshev Rational")

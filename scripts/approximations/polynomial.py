@@ -35,14 +35,10 @@ def evaluate(x, coeffs):
     """ Evaluates the polynomial. Given a list of x coordinates and a list of coefficients, returns a list of
     y coordinates, one for each x coordinate. The coefficients must be in ascending order.
     """
-    print(f"x {x}")
-    print(f"coeffs {coeffs}")
-
     y = []
     for x_i in x:
         y_i = 0
         for i in range(len(coeffs)):
             y_i += coeffs[i]*sympy.Pow(x_i, i)
         y.append(y_i)
-
     return y

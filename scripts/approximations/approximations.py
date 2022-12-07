@@ -29,15 +29,15 @@ def approx_and_eval_all(approximated_fn, num_parameters: int, x_coordinates) -> 
     coefficients_equispaced_poly = equispaced_poly_approx(approximated_fn, x_start, x_end, num_parameters)
     y_eqispaced_poly = polynomial.evaluate(x_coordinates, coefficients_equispaced_poly)
 
+    # Chebyshev Polynomial Approximation
+    coefficients_chebyshev_poly = chebyshev_poly_approx(approximated_fn, x_start, x_end, num_parameters)
+    y_chebyshev_poly = polynomial.evaluate(x_coordinates, coefficients_chebyshev_poly)
+
     if True:
         y_actual = []
         for x in x_coordinates:
             y_actual.append(approximated_fn(x))
-        return (y_eqispaced_poly, [], [], y_actual)
-
-    # Chebyshev Polynomial Approximation
-    coefficients_chebyshev_poly = chebyshev_poly_approx(approximated_fn, x_start, x_end, num_parameters)
-    y_chebyshev_poly = polynomial.evaluate(x_coordinates, coefficients_chebyshev_poly)
+        return (y_eqispaced_poly, y_chebyshev_poly, [], y_actual)
     
     # Chebyshev Rational Approximation
     numerator_coefficients_chebyshev_rational, denominator_coefficients_chebyshev_rational = chebyshev_rational_approx(approximated_fn, x_start, x_end, num_parameters)
@@ -51,9 +51,6 @@ def approx_and_eval_all(approximated_fn, num_parameters: int, x_coordinates) -> 
 def compute_max_error(y_approximation, y_actual) -> Float:
     if len(y_approximation) != len(y_actual):
         raise ValueError(F"y_approximation ({len(y_approximation)}) and y_actual ({len(y_actual)}) must be the same length.")
-
-    print(f"\ny_approximation: ", y_approximation)
-    print(f"\ny_actual: ", y_actual)
 
     max: Float = None
     for i in range(len(y_approximation)):
@@ -93,13 +90,15 @@ def chebyshev_poly_approx(fn, x_start: int, x_end: int, num_terms: int):
     # Compute Chebyshev coordinates.
     x_estimated, y_estimated = chebyshev.get_nodes(fn, x_start, x_end, num_terms)
 
+    print(f"x_estimated: {x_estimated}")
+
     # Construct a system of linear equations.
     vandermonde_matrix = polynomial.construct_vandermonde_matrix(x_estimated)
 
     # Solve the matrix to get the coefficients used in the final approximation polynomial.
-    # coef = np.linalg.solve(np.array(vandermonde_matrix), y_estimated)
+    coef = vandermonde_matrix.solve(sympy.Matrix(y_estimated))
 
-    return nan
+    return coef
 
 def chebyshev_rational_approx(fn, x_start: int, x_end: int, num_parameters: int):
     """ Returns a rational approximation between x_start and x_end with num_terms terms
