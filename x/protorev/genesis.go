@@ -24,7 +24,12 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 	// Init all of the searcher routes
 	for _, tokenPairArbRoutes := range genState.TokenPairs {
-		_, err := k.SetTokenPairArbRoutes(ctx, tokenPairArbRoutes.TokenIn, tokenPairArbRoutes.TokenOut, &tokenPairArbRoutes)
+		err := tokenPairArbRoutes.Validate()
+		if err != nil {
+			panic(err)
+		}
+
+		_, err = k.SetTokenPairArbRoutes(ctx, tokenPairArbRoutes.TokenIn, tokenPairArbRoutes.TokenOut, &tokenPairArbRoutes)
 		if err != nil {
 			panic(err)
 		}

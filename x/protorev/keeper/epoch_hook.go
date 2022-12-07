@@ -30,7 +30,8 @@ func (h EpochHooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, ep
 	return nil
 }
 
-// AfterEpochEnd is the epoch end hook.
+// AfterEpochEnd is the epoch end hook. The module will update all of the pools in the store that are
+// used for trading.
 func (h EpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	switch epochIdentifier {
 	case "week":

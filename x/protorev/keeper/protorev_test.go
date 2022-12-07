@@ -127,7 +127,7 @@ func (suite *KeeperTestSuite) TestGetTokenPairArbRoutes() {
 		tokenPairArbRoutes, err := suite.App.ProtoRevKeeper.GetTokenPairArbRoutes(suite.Ctx, tokenPair.TokenIn, tokenPair.TokenOut)
 
 		suite.Require().NoError(err)
-		suite.Require().Equal(tokenPair, *tokenPairArbRoutes)
+		suite.Require().Equal(tokenPair, tokenPairArbRoutes)
 	}
 
 	// Testing to see if we will not find a route that does not exist
