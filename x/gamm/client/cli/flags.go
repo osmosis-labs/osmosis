@@ -73,12 +73,15 @@ func FlagSetMultihopSwapRoutes() *flag.FlagSet {
 	return fs
 }
 
-func FlagSetCreatePool() *flag.FlagSet {
+func FlagSetCreatePoolFile() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
-
 	fs.String(FlagPoolFile, "", "Pool json file path (if this path is given, other create pool flags should not be used)")
-	fs.String(FlagPoolType, "uniswap", "Pool type (either \"balancer\", \"uniswap\", or \"stableswap\"")
+	return fs
+}
 
+func FlagSetCreatePoolType() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+	fs.String(FlagPoolType, "uniswap", "Pool type (either \"balancer\", \"uniswap\", or \"stableswap\"")
 	return fs
 }
 

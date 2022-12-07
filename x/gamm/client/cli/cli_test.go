@@ -1,6 +1,7 @@
 package cli_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -8,8 +9,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/client/cli"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -23,320 +26,154 @@ type IntegrationTestSuite struct {
 	network *network.Network
 }
 
-// func (s *IntegrationTestSuite) SetupSuite() {
-// 	s.T().Log("setting up integration test suite")
-// 	fmt.Println("setting up integration test suite")
-// 	s.cfg = app.DefaultConfig()
+func TestNewCreatePoolCmd(t *testing.T) {
+	testCases := map[string]struct {
+		json      string
+		expectErr bool
+	}{
+		"two tokens pair pool": {
+			`{
+			  "weights": "1node0token,3stake",
+			  "initial-deposit": "100node0token,100stake",
+			  "swap-fee": "0.001",
+			  "exit-fee": "0.001"
+			}`,
+			false,
+		},
+		"future governor address": {
+			fmt.Sprintf(`
+			{
+			  "%s": "1node0token,3stake",
+			  "%s": "100node0token,100stake",
+			  "%s": "0.001",
+			  "%s": "0.001",
+			  "%s": "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
+			}
+			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
+			false,
+		},
+		"bad pool json - missing quotes around exit fee": {
+			fmt.Sprintf(`
+			{
+			  "%s": "1node0token,3stake",
+			  "%s": "100node0token,100stake",
+			  "%s": "0.001",
+			  "%s": 0.001
+			}
+	`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
+			true,
+		},
+		"empty pool json": {
+			"", true,
+		},
+		"smooth change params": {
+			fmt.Sprintf(`
+				{
+					"%s": "1node0token,3stake",
+					"%s": "100node0token,100stake",
+					"%s": "0.001",
+					"%s": "0.001",
+					"%s": {
+						"%s": "864h",
+						"%s": "2node0token,1stake",
+						"%s": "2006-01-02T15:04:05Z"
+					}
+				}
+				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+				cli.PoolFileSmoothWeightChangeParams, cli.PoolFileDuration, cli.PoolFileTargetPoolWeights, cli.PoolFileStartTime,
+			),
+			false,
+		},
+		"smooth change params - no start time": {
+			fmt.Sprintf(`
+				{
+					"%s": "1node0token,3stake",
+					"%s": "100node0token,100stake",
+					"%s": "0.001",
+					"%s": "0.001",
+					"%s": {
+						"%s": "864h",
+						"%s": "2node0token,1stake"
+					}
+				}
+				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+				cli.PoolFileSmoothWeightChangeParams, cli.PoolFileDuration, cli.PoolFileTargetPoolWeights,
+			),
+			false,
+		},
+		"empty smooth change params": {
+			fmt.Sprintf(`
+				{
+					"%s": "1node0token,3stake",
+					"%s": "100node0token,100stake",
+					"%s": "0.001",
+					"%s": "0.001",
+					"%s": {}
+				}
+				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+				cli.PoolFileSmoothWeightChangeParams,
+			),
+			false,
+		},
+		"smooth change params wrong type": {
+			fmt.Sprintf(`
+				{
+					"%s": "1node0token,3stake",
+					"%s": "100node0token,100stake",
+					"%s": "0.001",
+					"%s": "0.001",
+					"%s": "invalid string"
+				}
+				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+				cli.PoolFileSmoothWeightChangeParams,
+			),
+			true,
+		},
+		"smooth change params missing duration": {
+			fmt.Sprintf(`
+				{
+					"%s": "1node0token,3stake",
+					"%s": "100node0token,100stake",
+					"%s": "0.001",
+					"%s": "0.001",
+					"%s": {
+						"%s": "2node0token,1stake"
+					}
+				}
+				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+				cli.PoolFileSmoothWeightChangeParams, cli.PoolFileTargetPoolWeights,
+			),
+			true,
+		},
+		"unknown fields in json": {
+			fmt.Sprintf(`
+			{
+			  "%s": "1node0token",
+			  "%s": "100node0token",
+			  "%s": "0.001",
+			  "%s": "0.001"
+			  "unknown": true,
+			}
+			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
+			true,
+		},
+	}
 
-// 	// modification to pay fee with test bond denom "stake"
-// 	genesisState := app.ModuleBasics.DefaultGenesis(s.cfg.Codec)
-// 	gammGen := gammtypes.DefaultGenesis()
-// 	gammGen.Params.PoolCreationFee = sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 1000000)}
-// 	gammGenJson := s.cfg.Codec.MustMarshalJSON(gammGen)
-// 	genesisState[gammtypes.ModuleName] = gammGenJson
-// 	s.cfg.GenesisState = genesisState
+	for name, tc := range testCases {
+		t.Run(name, func(tt *testing.T) {
+			desc := cli.NewCreatePoolCmd()
+			jsonFile := testutil.WriteToNewTempFile(tt, tc.json)
+			Cmd := fmt.Sprintf("--pool-file=%s --from=%s", jsonFile.Name(), testAddresses[0].String())
 
-// 	s.network = network.New(s.T(), s.cfg)
-
-// 	_, err := s.network.WaitForHeight(1)
-// 	s.Require().NoError(err)
-
-// 	// val := s.network.Validators[0]
-
-// 	// create a new pool
-// 	// _, err = gammtestutil.MsgCreatePool(s.T(), val.ClientCtx, val.Address, "5stake,5node0token", "100stake,100node0token", "0.01", "0.01", "")
-// 	// s.Require().NoError(err)
-
-// 	_, err = s.network.WaitForHeight(1)
-// 	s.Require().NoError(err)
-// }
-
-// func (s *IntegrationTestSuite) TearDownSuite() {
-// 	s.T().Log("tearing down integration test suite")
-// 	s.network.Cleanup()
-// }
-
-// func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
-// 	val := s.network.Validators[0]
-
-// 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewCreatePoolAddr",
-// 		keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-// 	s.Require().NoError(err)
-
-// 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
-
-// 	_, err = banktestutil.MsgSendExec(
-// 		val.ClientCtx,
-// 		val.Address,
-// 		newAddr,
-// 		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 200000000), sdk.NewInt64Coin("node0token", 20000)), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-// 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-// 		osmoutils.DefaultFeeString(s.cfg),
-// 	)
-// 	s.Require().NoError(err)
-
-// 	testCases := []struct {
-// 		name         string
-// 		json         string
-// 		expectErr    bool
-// 		respType     proto.Message
-// 		expectedCode uint32
-// 	}{
-// 		{
-// 			"one token pair pool",
-// 			fmt.Sprintf(`
-// 			{
-// 			  "%s": "1node0token",
-// 			  "%s": "100node0token",
-// 			  "%s": "0.001",
-// 			  "%s": "0.001"
-// 			}
-// 			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
-// 			true, &sdk.TxResponse{}, 4,
-// 		},
-// 		{
-// 			"two tokens pair pool",
-// 			fmt.Sprintf(`
-// 			{
-// 			  "%s": "1node0token,3stake",
-// 			  "%s": "100node0token,100stake",
-// 			  "%s": "0.001",
-// 			  "%s": "0.001"
-// 			}
-// 			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
-// 			false, &sdk.TxResponse{}, 0,
-// 		},
-// 		{
-// 			"change order of json fields",
-// 			fmt.Sprintf(`
-// 			{
-// 			  "%s": "100node0token,100stake",
-// 			  "%s": "0.001",
-// 			  "%s": "1node0token,3stake",
-// 			  "%s": "0.001"
-// 			}
-// 			`, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileWeights, cli.PoolFileExitFee),
-// 			false, &sdk.TxResponse{}, 0,
-// 		},
-// 		{ // --record-tokens=100.0stake2 --record-tokens=100.0stake --record-tokens-weight=5 --record-tokens-weight=5 --swap-fee=0.01 --exit-fee=0.01 --from=validator --keyring-backend=test --chain-id=testing --yes
-// 			"three tokens pair pool - insufficient balance check",
-// 			fmt.Sprintf(`
-// 			{
-// 			  "%s": "1node0token,1stake,2btc",
-// 			  "%s": "100node0token,100stake,100btc",
-// 			  "%s": "0.001",
-// 			  "%s": "0.001"
-// 			}
-// 			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
-// 			false, &sdk.TxResponse{}, 5,
-// 		},
-// 		{
-// 			"future governor address",
-// 			fmt.Sprintf(`
-// 			{
-// 			  "%s": "1node0token,3stake",
-// 			  "%s": "100node0token,100stake",
-// 			  "%s": "0.001",
-// 			  "%s": "0.001",
-// 			  "%s": "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
-// 			}
-// 			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
-// 			false, &sdk.TxResponse{}, 0,
-// 		},
-// 		// Due to CI time concerns, we leave these CLI tests commented out, and instead guaranteed via
-// 		// the logic tests.
-// 		// {
-// 		// 	"future governor time",
-// 		// 	fmt.Sprintf(`
-// 		// 	{
-// 		// 	  "%s": "1node0token,3stake",
-// 		// 	  "%s": "100node0token,100stake",
-// 		// 	  "%s": "0.001",
-// 		// 	  "%s": "0.001",
-// 		// 	  "%s": "2h"
-// 		// 	}
-// 		// 	`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
-// 		// 	false, &sdk.TxResponse{}, 0,
-// 		// },
-// 		// {
-// 		// 	"future governor token + time",
-// 		// 	fmt.Sprintf(`
-// 		// 	{
-// 		// 	  "%s": "1node0token,3stake",
-// 		// 	  "%s": "100node0token,100stake",
-// 		// 	  "%s": "0.001",
-// 		// 	  "%s": "0.001",
-// 		// 	  "%s": "token,1000h"
-// 		// 	}
-// 		// 	`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
-// 		// 	false, &sdk.TxResponse{}, 0,
-// 		// },
-// 		// {
-// 		// 	"invalid future governor",
-// 		// 	fmt.Sprintf(`
-// 		// 	{
-// 		// 	  "%s": "1node0token,3stake",
-// 		// 	  "%s": "100node0token,100stake",
-// 		// 	  "%s": "0.001",
-// 		// 	  "%s": "0.001",
-// 		// 	  "%s": "validdenom,invalidtime"
-// 		// 	}
-// 		// 	`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
-// 		// 	true, &sdk.TxResponse{}, 7,
-// 		// },
-// 		{
-// 			"not valid json",
-// 			"bad json",
-// 			true, &sdk.TxResponse{}, 0,
-// 		},
-// 		{
-// 			"bad pool json - missing quotes around exit fee",
-// 			fmt.Sprintf(`
-// 			{
-// 			  "%s": "1node0token,3stake",
-// 			  "%s": "100node0token,100stake",
-// 			  "%s": "0.001",
-// 			  "%s": 0.001
-// 			}
-// 	`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
-// 			true, &sdk.TxResponse{}, 0,
-// 		},
-// 		{
-// 			"empty pool json",
-// 			"", true, &sdk.TxResponse{}, 0,
-// 		},
-// 		{
-// 			"smooth change params",
-// 			fmt.Sprintf(`
-// 				{
-// 					"%s": "1node0token,3stake",
-// 					"%s": "100node0token,100stake",
-// 					"%s": "0.001",
-// 					"%s": "0.001",
-// 					"%s": {
-// 						"%s": "864h",
-// 						"%s": "2node0token,1stake",
-// 						"%s": "2006-01-02T15:04:05Z"
-// 					}
-// 				}
-// 				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
-// 				cli.PoolFileSmoothWeightChangeParams, cli.PoolFileDuration, cli.PoolFileTargetPoolWeights, cli.PoolFileStartTime,
-// 			),
-// 			false, &sdk.TxResponse{}, 0,
-// 		},
-// 		{
-// 			"smooth change params - no start time",
-// 			fmt.Sprintf(`
-// 				{
-// 					"%s": "1node0token,3stake",
-// 					"%s": "100node0token,100stake",
-// 					"%s": "0.001",
-// 					"%s": "0.001",
-// 					"%s": {
-// 						"%s": "864h",
-// 						"%s": "2node0token,1stake"
-// 					}
-// 				}
-// 				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
-// 				cli.PoolFileSmoothWeightChangeParams, cli.PoolFileDuration, cli.PoolFileTargetPoolWeights,
-// 			),
-// 			false, &sdk.TxResponse{}, 0,
-// 		},
-// 		{
-// 			"empty smooth change params",
-// 			fmt.Sprintf(`
-// 				{
-// 					"%s": "1node0token,3stake",
-// 					"%s": "100node0token,100stake",
-// 					"%s": "0.001",
-// 					"%s": "0.001",
-// 					"%s": {}
-// 				}
-// 				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
-// 				cli.PoolFileSmoothWeightChangeParams,
-// 			),
-// 			false, &sdk.TxResponse{}, 0,
-// 		},
-// 		{
-// 			"smooth change params wrong type",
-// 			fmt.Sprintf(`
-// 				{
-// 					"%s": "1node0token,3stake",
-// 					"%s": "100node0token,100stake",
-// 					"%s": "0.001",
-// 					"%s": "0.001",
-// 					"%s": "invalid string"
-// 				}
-// 				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
-// 				cli.PoolFileSmoothWeightChangeParams,
-// 			),
-// 			true, &sdk.TxResponse{}, 0,
-// 		},
-// 		{
-// 			"smooth change params missing duration",
-// 			fmt.Sprintf(`
-// 				{
-// 					"%s": "1node0token,3stake",
-// 					"%s": "100node0token,100stake",
-// 					"%s": "0.001",
-// 					"%s": "0.001",
-// 					"%s": {
-// 						"%s": "2node0token,1stake"
-// 					}
-// 				}
-// 				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
-// 				cli.PoolFileSmoothWeightChangeParams, cli.PoolFileTargetPoolWeights,
-// 			),
-// 			true, &sdk.TxResponse{}, 0,
-// 		},
-// 		{
-// 			"unknown fields in json",
-// 			fmt.Sprintf(`
-// 			{
-// 			  "%s": "1node0token",
-// 			  "%s": "100node0token",
-// 			  "%s": "0.001",
-// 			  "%s": "0.001"
-// 			  "unknown": true,
-// 			}
-// 			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
-// 			true, &sdk.TxResponse{}, 0,
-// 		},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		tc := tc
-
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.NewCreatePoolCmd()
-// 			clientCtx := val.ClientCtx
-
-// 			jsonFile := testutil.WriteToNewTempFile(s.T(), tc.json)
-
-// 			args := []string{
-// 				fmt.Sprintf("--%s=%s", cli.FlagPoolFile, jsonFile.Name()),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
-// 				// common args
-// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-// 				osmoutils.DefaultFeeString(s.cfg),
-// 				fmt.Sprintf("--%s=%s", flags.FlagGas, fmt.Sprint(300000)),
-// 			}
-
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-// 			if tc.expectErr {
-// 				s.Require().Error(err)
-// 			} else {
-// 				s.Require().NoError(err, out.String())
-// 				err = clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType)
-// 				s.Require().NoError(err, out.String())
-
-// 				txResp := tc.respType.(*sdk.TxResponse)
-// 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
-// 			}
-// 		})
-// 	}
-// }
+			txTc := osmocli.TxCliTestCase[*balancer.MsgCreateBalancerPool]{
+				Cmd:                    Cmd,
+				ExpectedErr:            tc.expectErr,
+				OnlyCheckValidateBasic: true,
+			}
+			osmocli.RunTxTestCase(tt, desc, &txTc)
+		})
+	}
+}
 
 func TestNewJoinPoolCmd(t *testing.T) {
 	desc, _ := cli.NewJoinPoolCmd()
@@ -418,6 +255,23 @@ func TestNewJoinSwapExternAmountInCmd(t *testing.T) {
 	osmocli.RunTxTestCases(t, desc, tcs)
 }
 
+func TestNewJoinSwapShareAmountOutCmd(t *testing.T) {
+	desc, _ := cli.NewJoinSwapShareAmountOut()
+	tcs := map[string]osmocli.TxCliTestCase[*types.MsgJoinSwapShareAmountOut]{
+		"swap exact amount in": {
+			Cmd: "stake 10 1 --pool-id=1 --from=" + testAddresses[0].String(),
+			ExpectedMsg: &types.MsgJoinSwapShareAmountOut{
+				Sender:           testAddresses[0].String(),
+				PoolId:           1,
+				TokenInDenom:     "stake",
+				ShareOutAmount:   sdk.NewIntFromUint64(10),
+				TokenInMaxAmount: sdk.NewIntFromUint64(1),
+			},
+		},
+	}
+	osmocli.RunTxTestCases(t, desc, tcs)
+}
+
 func TestNewExitSwapExternAmountOutCmd(t *testing.T) {
 	desc, _ := cli.NewExitSwapExternAmountOut()
 	tcs := map[string]osmocli.TxCliTestCase[*types.MsgExitSwapExternAmountOut]{
@@ -434,113 +288,22 @@ func TestNewExitSwapExternAmountOutCmd(t *testing.T) {
 	osmocli.RunTxTestCases(t, desc, tcs)
 }
 
-// func (s IntegrationTestSuite) TestNewJoinSwapShareAmountOutCmd() {
-// 	val := s.network.Validators[0]
-
-// 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewJoinSwapShareAmountOutAddr", keyring.English,
-// 		sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-// 	s.Require().NoError(err)
-
-// 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
-
-// 	_, err = banktestutil.MsgSendExec(
-// 		val.ClientCtx,
-// 		val.Address,
-// 		newAddr,
-// 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-// 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-// 		osmoutils.DefaultFeeString(s.cfg),
-// 	)
-// 	s.Require().NoError(err)
-
-// 	testCases := []struct {
-// 		name         string
-// 		args         []string
-// 		expectErr    bool
-// 		respType     proto.Message
-// 		expectedCode uint32
-// 	}{
-// 		{
-// 			"join swap share amount out", // osmosisd tx gamm join-swap-share-amount-out --pool-id=1 stake 10 1 --from=validator --keyring-backend=test --chain-id=testing --yes
-// 			[]string{
-// 				"stake", "50", "5000000000000000000",
-// 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
-// 				// common args
-// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-// 			},
-// 			false, &sdk.TxResponse{}, 0,
-// 		},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		tc := tc
-
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.NewJoinSwapShareAmountOut()
-// 			clientCtx := val.ClientCtx
-
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			if tc.expectErr {
-// 				s.Require().Error(err)
-// 			} else {
-// 				s.Require().NoError(err, out.String())
-// 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-
-// 				txResp := tc.respType.(*sdk.TxResponse)
-// 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
-// 			}
-// 		})
-// 	}
-// }
-
-// func (s IntegrationTestSuite) TestNewExitSwapShareAmountInCmd() {
-// 	val := s.network.Validators[0]
-
-// 	testCases := []struct {
-// 		name         string
-// 		args         []string
-// 		expectErr    bool
-// 		respType     proto.Message
-// 		expectedCode uint32
-// 	}{
-// 		{
-// 			"exit swap share amount in", // osmosisd tx gamm exit-swap-share-amount-in --pool-id=1 stake 10 1 --from=validator --keyring-backend=test --chain-id=testing --yes
-// 			[]string{
-// 				"stake", "10000000000000000000", "1",
-// 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-// 				// common args
-// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-// 			},
-// 			false, &sdk.TxResponse{}, 0,
-// 		},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		tc := tc
-
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.NewExitSwapShareAmountIn()
-// 			clientCtx := val.ClientCtx
-
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			if tc.expectErr {
-// 				s.Require().Error(err)
-// 			} else {
-// 				s.Require().NoError(err, out.String())
-// 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-
-// 				txResp := tc.respType.(*sdk.TxResponse)
-// 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
-// 			}
-// 		})
-// 	}
-// }
+func TestNewExitSwapShareAmountInCmd(t *testing.T) {
+	desc, _ := cli.NewExitSwapShareAmountIn()
+	tcs := map[string]osmocli.TxCliTestCase[*types.MsgExitSwapShareAmountIn]{
+		"swap exact amount in": {
+			Cmd: "stake 10 1 --pool-id=1 --from=" + testAddresses[0].String(),
+			ExpectedMsg: &types.MsgExitSwapShareAmountIn{
+				Sender:            testAddresses[0].String(),
+				PoolId:            1,
+				TokenOutDenom:     "stake",
+				ShareInAmount:     sdk.NewIntFromUint64(10),
+				TokenOutMinAmount: sdk.NewIntFromUint64(1),
+			},
+		},
+	}
+	osmocli.RunTxTestCases(t, desc, tcs)
+}
 
 // func (s *IntegrationTestSuite) TestGetCmdPools() {
 // 	val := s.network.Validators[0]
