@@ -123,7 +123,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 
 	cdc.MustUnmarshalJSON(gs, &genesisState)
 
-	am.k.InitGenesis(ctx, &genesisState)
+	am.k.InitGenesis(ctx, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 

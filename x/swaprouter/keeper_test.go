@@ -64,7 +64,7 @@ func (suite *KeeperTestSuite) createBalancerPoolsFromCoinsWithSwapFee(poolCoins 
 func (suite *KeeperTestSuite) TestInitGenesis() {
 	suite.Setup()
 
-	suite.App.SwapRouterKeeper.InitGenesis(suite.Ctx, &types.GenesisState{
+	suite.App.SwapRouterKeeper.InitGenesis(suite.Ctx, types.GenesisState{
 		Params: types.Params{
 			PoolCreationFee: testPoolCreationFee,
 		},
@@ -78,7 +78,7 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 func (suite *KeeperTestSuite) TestExportGenesis() {
 	suite.Setup()
 
-	suite.App.SwapRouterKeeper.InitGenesis(suite.Ctx, &types.GenesisState{
+	suite.App.SwapRouterKeeper.InitGenesis(suite.Ctx, types.GenesisState{
 		Params: types.Params{
 			PoolCreationFee: testPoolCreationFee,
 		},

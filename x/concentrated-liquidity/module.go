@@ -15,8 +15,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/client/cli"
 	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
 )
 
 var (
@@ -24,12 +26,16 @@ var (
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
-type AppModuleBasic struct {
+type AppModuleBasic struct{}
+
+func NewAppModuleBasic() AppModuleBasic {
+	return AppModuleBasic{}
 }
 
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterCodec(cdc)
 	clmodel.RegisterCodec(cdc)
 }
 
@@ -54,7 +60,7 @@ func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {}
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
-	return nil
+	return cli.NewTxCmd()
 }
 
 func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
@@ -63,23 +69,31 @@ func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
 
 // RegisterInterfaces registers interfaces and implementations of the gamm module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
 	clmodel.RegisterInterfaces(registry)
 }
 
 type AppModule struct {
 	AppModuleBasic
-
-	k Keeper
-}
-
-func (am AppModule) RegisterServices(cfg module.Configurator) {
+	swaprouterKeeper swaprouter.Keeper
+	keeper           Keeper
 }
 
 func NewAppModule(concentratedLiquidityKeeper Keeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
-		k:              concentratedLiquidityKeeper,
+		AppModuleBasic: NewAppModuleBasic(),
+		keeper:         concentratedLiquidityKeeper,
 	}
+}
+
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), NewMsgServerImpl(&am.keeper))
+	clmodel.RegisterMsgCreatorServer(cfg.MsgServer(), swaprouter.NewConcentratedMsgServerImpl(&am.swaprouterKeeper))
+	//types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
+}
+
+func (am AppModule) Name() string {
+	return am.AppModuleBasic.Name()
 }
 
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
@@ -106,7 +120,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	// Initialize global index to index in genesis state
 	cdc.MustUnmarshalJSON(gs, &genState)
 
-	am.k.InitGenesis(ctx, genState)
+	am.keeper.InitGenesis(ctx, genState)
 
 	return []abci.ValidatorUpdate{}
 }
@@ -114,7 +128,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 // ExportGenesis returns the exported genesis state as raw bytes for the twap.
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	genState := am.k.ExportGenesis(ctx)
+	genState := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(genState)
 }
 

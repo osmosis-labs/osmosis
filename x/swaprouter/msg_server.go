@@ -40,6 +40,12 @@ func NewStableswapMsgServerImpl(keeper *Keeper) stableswap.MsgCreatorServer {
 	}
 }
 
+func NewConcentratedMsgServerImpl(keeper *Keeper) cl.MsgCreatorServer {
+	return &msgServer{
+		keeper: keeper,
+	}
+}
+
 // CreateBalancerPool is a create balancer pool message.
 func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.MsgCreateBalancerPool) (*balancer.MsgCreateBalancerPoolResponse, error) {
 	poolId, err := server.CreatePool(goCtx, msg)

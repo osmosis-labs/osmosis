@@ -6,7 +6,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 type msgServer struct {
@@ -17,6 +19,44 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	return &msgServer{
 		keeper: keeper,
 	}
+}
+
+var (
+	_ types.MsgServer          = msgServer{}
+	_ clmodel.MsgCreatorServer = msgServer{}
+)
+
+// Deprecated: use CreateConcentratedPool in x/swaprouter.
+func (server msgServer) CreateConcentratedPool(goCtx context.Context, msg *clmodel.MsgCreateConcentratedPool) (*clmodel.MsgCreateConcentratedPoolResponse, error) {
+	poolId, err := server.CreatePool(goCtx, msg)
+	if err != nil {
+		return nil, err
+	}
+	return &clmodel.MsgCreateConcentratedPoolResponse{PoolID: poolId}, nil
+}
+
+// Deprecated: use CreatePool in x/swaprouter.
+func (server msgServer) CreatePool(goCtx context.Context, msg swaproutertypes.CreatePoolMsg) (poolId uint64, err error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	poolId, err = server.keeper.swaprouterKeeper.CreatePool(ctx, msg)
+	if err != nil {
+		return 0, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtPoolCreated,
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.PoolCreator().String()),
+		),
+	})
+
+	return poolId, nil
 }
 
 // TODO: tests, including events

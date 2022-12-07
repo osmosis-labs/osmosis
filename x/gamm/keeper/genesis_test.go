@@ -45,7 +45,7 @@ func TestGammInitGenesis(t *testing.T) {
 	app.GAMMKeeper.InitGenesis(ctx, types.GenesisState{
 		Pools: []*codectypes.Any{any},
 	}, app.AppCodec())
-	app.SwapRouterKeeper.InitGenesis(ctx, &swaproutertypes.GenesisState{
+	app.SwapRouterKeeper.InitGenesis(ctx, swaproutertypes.GenesisState{
 		Params: swaproutertypes.Params{
 			PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000_000_000)},
 		},

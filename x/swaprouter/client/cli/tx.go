@@ -16,6 +16,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	cl "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
@@ -154,13 +155,28 @@ func NewCreatePoolCmd() *cobra.Command {
 		Use:   "create-pool [flags]",
 		Short: "create a new pool and provide the liquidity to it",
 		Long:  `Must provide path to a pool JSON file (--pool-file) describing the pool to be created`,
-		Example: `Sample pool JSON file contents:
+		Example: `Sample pool JSON file contents for balancer:
 {
 	"weights": "4uatom,4osmo,2uakt",
 	"initial-deposit": "100uatom,5osmo,20uakt",
 	"swap-fee": "0.01",
 	"exit-fee": "0.01",
 	"future-governor": "168h"
+}
+For stableswap (demonstrating need for a 1:1000 scaling factor, see doc)
+{
+	"initial-deposit": "1000000uusdc,1000miliusdc",
+	"swap-fee": "0.01",
+	"exit-fee": "0.01",
+	"future-governor": "168h",
+	"scaling-factors": "1000,1"
+}
+
+For concentrated liquidity (CL pools are initialized with no liquidity)
+{
+	"denom0": "uosmo",
+	"denom1": "uion",
+	"tick-spacing": "1"
 }
 `,
 		Args: cobra.ExactArgs(0),
@@ -172,9 +188,28 @@ func NewCreatePoolCmd() *cobra.Command {
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			txf, msg, err := NewBuildCreateBalancerPoolMsg(clientCtx, txf, cmd.Flags())
+			poolType, err := cmd.Flags().GetString(FlagPoolType)
 			if err != nil {
 				return err
+			}
+			poolType = strings.ToLower(poolType)
+
+			var msg sdk.Msg
+			if poolType == "balancer" || poolType == "uniswap" {
+				msg, err = NewBuildCreateBalancerPoolMsg(clientCtx, cmd.Flags())
+				if err != nil {
+					return err
+				}
+			} else if poolType == "stableswap" {
+				msg, err = NewBuildCreateStableswapPoolMsg(clientCtx, cmd.Flags())
+				if err != nil {
+					return err
+				}
+			} else if poolType == "concentrated" {
+				msg, err = NewBuildCreateConcentratedPoolMsg(clientCtx, cmd.Flags())
+				if err != nil {
+					return err
+				}
 			}
 
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
@@ -189,40 +224,40 @@ func NewCreatePoolCmd() *cobra.Command {
 	return cmd
 }
 
-func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (sdk.Msg, error) {
 	pool, err := parseCreateBalancerPoolFlags(fs)
 	if err != nil {
-		return txf, nil, fmt.Errorf("failed to parse pool: %w", err)
+		return nil, fmt.Errorf("failed to parse pool: %w", err)
 	}
 
 	deposit, err := sdk.ParseCoinsNormalized(pool.InitialDeposit)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	poolAssetCoins, err := sdk.ParseDecCoins(pool.Weights)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	if len(deposit) != len(poolAssetCoins) {
-		return txf, nil, errors.New("deposit tokens and token weights should have same length")
+		return nil, errors.New("deposit tokens and token weights should have same length")
 	}
 
 	swapFee, err := sdk.NewDecFromStr(pool.SwapFee)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	exitFee, err := sdk.NewDecFromStr(pool.ExitFee)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	var poolAssets []balancer.PoolAsset
 	for i := 0; i < len(poolAssetCoins); i++ {
 		if poolAssetCoins[i].Denom != deposit[i].Denom {
-			return txf, nil, errors.New("deposit tokens and token weights should have same denom order")
+			return nil, errors.New("deposit tokens and token weights should have same denom order")
 		}
 
 		poolAssets = append(poolAssets, balancer.PoolAsset{
@@ -246,18 +281,18 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 	if (pool.SmoothWeightChangeParams != smoothWeightChangeParamsInputs{}) {
 		duration, err := time.ParseDuration(pool.SmoothWeightChangeParams.Duration)
 		if err != nil {
-			return txf, nil, fmt.Errorf("could not parse duration: %w", err)
+			return nil, fmt.Errorf("could not parse duration: %w", err)
 		}
 
 		targetPoolAssetCoins, err := sdk.ParseDecCoins(pool.SmoothWeightChangeParams.TargetPoolWeights)
 		if err != nil {
-			return txf, nil, err
+			return nil, err
 		}
 
 		var targetPoolAssets []balancer.PoolAsset
 		for i := 0; i < len(targetPoolAssetCoins); i++ {
 			if targetPoolAssetCoins[i].Denom != poolAssetCoins[i].Denom {
-				return txf, nil, errors.New("initial pool weights and target pool weights should have same denom order")
+				return nil, errors.New("initial pool weights and target pool weights should have same denom order")
 			}
 
 			targetPoolAssets = append(targetPoolAssets, balancer.PoolAsset{
@@ -276,7 +311,7 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 		if pool.SmoothWeightChangeParams.StartTime != "" {
 			startTime, err := time.Parse(time.RFC3339, pool.SmoothWeightChangeParams.StartTime)
 			if err != nil {
-				return txf, nil, fmt.Errorf("could not parse time: %w", err)
+				return nil, fmt.Errorf("could not parse time: %w", err)
 			}
 
 			smoothWeightParams.StartTime = startTime
@@ -285,29 +320,29 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 		msg.PoolParams.SmoothWeightChangeParams = &smoothWeightParams
 	}
 
-	return txf, msg, nil
+	return msg, nil
 }
 
 // Apologies to whoever has to touch this next, this code is horrendous
-func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (sdk.Msg, error) {
 	flags, err := parseCreateStableswapPoolFlags(fs)
 	if err != nil {
-		return txf, nil, fmt.Errorf("failed to parse pool: %w", err)
+		return nil, fmt.Errorf("failed to parse pool: %w", err)
 	}
 
 	deposit, err := ParseCoinsNoSort(flags.InitialDeposit)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	swapFee, err := sdk.NewDecFromStr(flags.SwapFee)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	exitFee, err := sdk.NewDecFromStr(flags.ExitFee)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	poolParams := &stableswap.PoolParams{
@@ -322,25 +357,44 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, txf tx.Factory, f
 		for _, i := range ints {
 			u, err := strconv.ParseUint(i, 10, 64)
 			if err != nil {
-				return txf, nil, err
+				return nil, err
 			}
 			scalingFactors = append(scalingFactors, u)
 		}
 		if len(scalingFactors) != len(deposit) {
-			return txf, nil, fmt.Errorf("number of scaling factors doesn't match number of assets")
+			return nil, fmt.Errorf("number of scaling factors doesn't match number of assets")
 		}
 	}
 
-	msg := &stableswap.MsgCreateStableswapPool{
+	return &stableswap.MsgCreateStableswapPool{
 		Sender:                  clientCtx.GetFromAddress().String(),
 		PoolParams:              poolParams,
 		InitialPoolLiquidity:    deposit,
 		ScalingFactors:          scalingFactors,
 		ScalingFactorController: flags.ScalingFactorController,
 		FuturePoolGovernor:      flags.FutureGovernor,
+	}, nil
+}
+
+func NewBuildCreateConcentratedPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (sdk.Msg, error) {
+	pool, err := parseCreateConcentratedPoolFlags(fs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse pool: %w", err)
 	}
 
-	return txf, msg, nil
+	tickSpacing, err := strconv.ParseUint(pool.TickSpacing, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	msg := &cl.MsgCreateConcentratedPool{
+		Sender:      clientCtx.GetFromAddress().String(),
+		Denom0:      pool.Denom0,
+		Denom1:      pool.Denom1,
+		TickSpacing: tickSpacing,
+	}
+
+	return msg, nil
 }
 
 // ParseCoinsNoSort parses coins from coinsStr but does not sort them.
