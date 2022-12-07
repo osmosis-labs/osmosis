@@ -22,13 +22,16 @@ func (k Keeper) GetTokenPairArbRoutes(ctx sdk.Context, tokenA, tokenB string) (*
 	}
 
 	tokenPairArbRoutes := &types.TokenPairArbRoutes{}
-	tokenPairArbRoutes.Unmarshal(bz)
+	err := tokenPairArbRoutes.Unmarshal(bz)
+	if err != nil {
+		return nil, err
+	}
 
 	return tokenPairArbRoutes, nil
 }
 
 // GetAllTokenPairArbRoutes returns all the token pair arb routes
-func (k Keeper) GetAllTokenPairArbRoutes(ctx sdk.Context) (tokenPairs []*types.TokenPairArbRoutes) {
+func (k Keeper) GetAllTokenPairArbRoutes(ctx sdk.Context) ([]*types.TokenPairArbRoutes, error) {
 	routes := make([]*types.TokenPairArbRoutes, 0)
 
 	store := ctx.KVStore(k.storeKey)
@@ -37,12 +40,15 @@ func (k Keeper) GetAllTokenPairArbRoutes(ctx sdk.Context) (tokenPairs []*types.T
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		tokenPairArbRoutes := &types.TokenPairArbRoutes{}
-		tokenPairArbRoutes.Unmarshal(iterator.Value())
+		err := tokenPairArbRoutes.Unmarshal(iterator.Value())
+		if err != nil {
+			return nil, err
+		}
 
 		routes = append(routes, tokenPairArbRoutes)
 	}
 
-	return routes
+	return routes, nil
 }
 
 // SetTokenPairArbRoutes sets the token pair arb routes given two denoms

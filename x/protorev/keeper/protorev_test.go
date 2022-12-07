@@ -137,7 +137,9 @@ func (suite *KeeperTestSuite) TestGetTokenPairArbRoutes() {
 
 func (suite *KeeperTestSuite) TestGetAllTokenPairArbRoutes() {
 	// Tests that we can properly retrieve all of the routes that were set up
-	tokenPairArbRoutes := suite.App.ProtoRevKeeper.GetAllTokenPairArbRoutes(suite.Ctx)
+	tokenPairArbRoutes, err := suite.App.ProtoRevKeeper.GetAllTokenPairArbRoutes(suite.Ctx)
+
+	suite.Require().NoError(err)
 
 	suite.Require().Equal(len(suite.tokenPairArbRoutes), len(tokenPairArbRoutes))
 	suite.Require().Equal(suite.tokenPairArbRoutes, tokenPairArbRoutes)
@@ -145,8 +147,9 @@ func (suite *KeeperTestSuite) TestGetAllTokenPairArbRoutes() {
 
 func (suite *KeeperTestSuite) TestDeleteAllTokenPairArbRoutes() {
 	// Tests that we can properly retrieve all of the routes that were set up
-	tokenPairArbRoutes := suite.App.ProtoRevKeeper.GetAllTokenPairArbRoutes(suite.Ctx)
+	tokenPairArbRoutes, err := suite.App.ProtoRevKeeper.GetAllTokenPairArbRoutes(suite.Ctx)
 
+	suite.Require().NoError(err)
 	suite.Require().Equal(len(suite.tokenPairArbRoutes), len(tokenPairArbRoutes))
 	suite.Require().Equal(suite.tokenPairArbRoutes, tokenPairArbRoutes)
 
@@ -154,7 +157,8 @@ func (suite *KeeperTestSuite) TestDeleteAllTokenPairArbRoutes() {
 	suite.App.ProtoRevKeeper.DeleteAllTokenPairArbRoutes(suite.Ctx)
 
 	// Test after deletion
-	tokenPairArbRoutes = suite.App.ProtoRevKeeper.GetAllTokenPairArbRoutes(suite.Ctx)
+	tokenPairArbRoutes, err = suite.App.ProtoRevKeeper.GetAllTokenPairArbRoutes(suite.Ctx)
 
+	suite.Require().NoError(err)
 	suite.Require().Equal(0, len(tokenPairArbRoutes))
 }
