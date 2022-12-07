@@ -35,13 +35,16 @@ def main():
     deltas_chebyshev_poly = []
     deltas_chebyshev_rational = []
 
+    # Equispaced x coordinates to be used for plotting every approximation.
+    x_coordinates = np.linspace(x_start, x_end, num_points_plot)
+
     ###################
     # 2. Compute Deltas
     # The deltas are taken from actual function values for different number of parameters
     # This is needed to find the most optimal number of parameters to use.
     for num_parameters in range(1, 21):
         x_axis.append(int(num_parameters))
-        y_eqispaced_poly, y_chebyshev_poly, y_chebyshev_rational, y_actual = approximations.approximate_all_with_num_parameters(approximated_fn, x_start, x_end, num_parameters, num_points_plot, num_points_plot_accurate)
+        y_eqispaced_poly, y_chebyshev_poly, y_chebyshev_rational, y_actual = approximations.approx_and_eval_all(approximated_fn, num_parameters, x_coordinates)
 
         deltas_eqispaced_poly.append(approximations.compute_max_error(y_eqispaced_poly, y_actual))
         deltas_chebyshev_poly.append(approximations.compute_max_error(y_chebyshev_poly, y_actual))

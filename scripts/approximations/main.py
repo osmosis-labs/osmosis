@@ -43,7 +43,10 @@ def main():
     #####################
     # 2. Approximations 
 
-    y_eqispaced_poly, y_chebyshev_poly, y_chebyshev_rational, y_actual = approximations.approximate_all_with_num_parameters(approximated_fn, x_start, x_end, num_parameters, num_points_plot)
+    # Equispaced x coordinates to be used for plotting every approximation.
+    x_coordinates = np.linspace(x_start, x_end, num_points_plot)
+
+    y_eqispaced_poly, y_chebyshev_poly, y_chebyshev_rational, y_actual = approximations.approx_and_eval_all(approximated_fn, num_parameters, x_coordinates)
 
     # Equispaced x coordinates to be used for plotting every approximation.
     plot_nodes_x = np.linspace(x_start, x_end, num_points_plot)

@@ -5,35 +5,23 @@ import rational
 import polynomial
 import chebyshev
 
-def approximate_all_with_num_parameters(approximated_fn, x_start: int, x_end: int, num_parameters: int, num_points_plot: int) -> tuple[np.array, np.array, np.array, np.array]:
-     #####################
-    # 2. Approximations 
-
-    # 2.1. Equispaced Polynomial Approximation
+def approx_and_eval_all(approximated_fn, num_parameters: int, x_coordinates: np.array) -> tuple[np.array, np.array, np.array, np.array]:
+    x_start = x_coordinates[0]
+    x_end = x_coordinates[-1]
+    
+    # Equispaced Polynomial Approximation
     coefficients_equispaced_poly = equispaced_poly_approx(approximated_fn, x_start, x_end, num_parameters)
-    
-    # 2.2. Chebyshev Polynomial Approximation
-    coefficients_chebyshev_poly = chebyshev_poly_approx(approximated_fn, x_start, x_end, num_parameters)
-    
-    # 2.3. Chebyshev Rational Approximation
-    numerator_coefficients_chebyshev_rational, denominator_coefficients_chebyshev_rational = chebyshev_rational_approx(approximated_fn, x_start, x_end, num_parameters)
-
-    #######################################
-    # 3. Compute (x,y) Coordinates To Plot
-
-    # Equispaced x coordinates to be used for plotting every approximation.
-    x_coordinates = np.linspace(x_start, x_end, num_points_plot)
-
-    # 3.1 Equispaced Polynomial Approximation
     y_eqispaced_poly = polynomial.evaluate(x_coordinates, coefficients_equispaced_poly)
-
-    # 3.2 Chebyshev Polynomial Approximation
+    
+    # Chebyshev Polynomial Approximation
+    coefficients_chebyshev_poly = chebyshev_poly_approx(approximated_fn, x_start, x_end, num_parameters)
     y_chebyshev_poly = polynomial.evaluate(x_coordinates, coefficients_chebyshev_poly)
-
-    # 3.3 Chebyshev Rational Approximation
+    
+    # Chebyshev Rational Approximation
+    numerator_coefficients_chebyshev_rational, denominator_coefficients_chebyshev_rational = chebyshev_rational_approx(approximated_fn, x_start, x_end, num_parameters)
     y_chebyshev_rational = rational.evaluate(x_coordinates, numerator_coefficients_chebyshev_rational.tolist(), denominator_coefficients_chebyshev_rational.tolist())
 
-    # 3.4 Actual With Large Number of Coordinate (evenly spaced on the X-axis)
+    # Actual
     y_actual = approximated_fn(x_coordinates)
 
     return (y_eqispaced_poly, y_chebyshev_poly, y_chebyshev_rational, y_actual)
