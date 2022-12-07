@@ -22,10 +22,10 @@ def main():
     # end of the interval to calculate the approximation on
     x_end = 1
     # number of paramters to use for the approximations.
-    num_parameters = 30
+    num_parameters = 13
 
     # number of (x,y) coordinates used to plot the resulting approximation.
-    num_points_plot = 1000
+    num_points_plot = 10000
 
     # function to approximate
     approximated_fn = lambda x: sympy.Pow(sympy.E, x)
@@ -43,7 +43,7 @@ def main():
     # with a varying number of parameters. This is useful to find the most
     # optimal number of parameters to use for each kind of approximation.
     # Plots if true.
-    shouldPlotMaxError = True
+    shouldPlotMaxError = False
 
     # Equispaced x coordinates to be used for plotting every approximation.
     x_coordinates = approximations.linspace(x_start, x_end, num_points_plot)
