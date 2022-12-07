@@ -7,7 +7,7 @@ import polynomial
 import rational
 import approximations
 
-def approximate_all_with_num_terms(approximated_fn, x_start: int, x_end: int, num_parameters: int, num_points_plot: int, num_points_plot_accurate: int) -> tuple[int, int, int]:
+def approximate_all_with_num_parameters(approximated_fn, x_start: int, x_end: int, num_parameters: int, num_points_plot: int, num_points_plot_accurate: int) -> tuple[np.array, np.array, np.array, np.array]:
      #####################
     # 2. Approximations 
 
@@ -20,39 +20,39 @@ def approximate_all_with_num_terms(approximated_fn, x_start: int, x_end: int, nu
     # 2.3. Chebyshev Rational Approximation
     numerator_coefficients_chebyshev_rational, denominator_coefficients_chebyshev_rational = approximations.chebyshev_rational_approx(approximated_fn, x_start, x_end, num_parameters)
 
-    # 2.4. Actual With Large Number of Coordinates (evenly spaced on the X-axis)
-    x_accurate = np.linspace(x_start, x_end, num_points_plot_accurate)
-
     #######################################
     # 3. Compute (x,y) Coordinates To Plot
 
     # Equispaced x coordinates to be used for plotting every approximation.
-    plot_nodes_x = np.linspace(x_start, x_end, num_points_plot)
+    x_coordinates = np.linspace(x_start, x_end, num_points_plot)
 
     # 3.1 Equispaced Polynomial Approximation
-    plot_nodes_y_eqispaced_poly = polynomial.evaluate(plot_nodes_x, coefficients_equispaced_poly)
+    y_eqispaced_poly = polynomial.evaluate(x_coordinates, coefficients_equispaced_poly)
 
     # 3.2 Chebyshev Polynomial Approximation
-    plot_nodes_y_chebyshev_poly = polynomial.evaluate(plot_nodes_x, coefficients_chebyshev_poly)
+    y_chebyshev_poly = polynomial.evaluate(x_coordinates, coefficients_chebyshev_poly)
 
     # 3.3 Chebyshev Rational Approximation
-    y_chebyshev_rational = rational.evaluate(plot_nodes_x, numerator_coefficients_chebyshev_rational.tolist(), denominator_coefficients_chebyshev_rational.tolist())
+    y_chebyshev_rational = rational.evaluate(x_coordinates, numerator_coefficients_chebyshev_rational.tolist(), denominator_coefficients_chebyshev_rational.tolist())
 
     # 3.4 Actual With Large Number of Coordinate (evenly spaced on the X-axis)
-    plot_nodes_y_actual = approximated_fn(plot_nodes_x)
+    y_actual = approximated_fn(x_coordinates)
 
-    plot_nodes_y_actual = approximated_fn(plot_nodes_x)
+    return (y_eqispaced_poly, y_chebyshev_poly, y_chebyshev_rational, y_actual)
 
-    # 5.1 Equispaced Polynomial Approximation
-    delta_eqispaced_poly = np.abs(plot_nodes_y_eqispaced_poly - plot_nodes_y_actual)
+    # # 5.1 Equispaced Polynomial Approximation
+    # delta_eqispaced_poly = np.abs(plot_nodes_y_eqispaced_poly - plot_nodes_y_actual)
 
-    # 5.2 Chebyshev Polynomial Approximation
-    delta_chebyshev_poly = np.abs(plot_nodes_y_chebyshev_poly - plot_nodes_y_actual)
+    # # 5.2 Chebyshev Polynomial Approximation
+    # delta_chebyshev_poly = np.abs(plot_nodes_y_chebyshev_poly - plot_nodes_y_actual)
 
-    # 5.3 Chebyshev Rational Approximation
-    delta_chebyshev_rational = np.abs(y_chebyshev_rational - plot_nodes_y_actual)
+    # # 5.3 Chebyshev Rational Approximation
+    # delta_chebyshev_rational = np.abs(y_chebyshev_rational - plot_nodes_y_actual)
 
-    return (np.amax(delta_eqispaced_poly), np.amax(delta_chebyshev_poly), np.amax(delta_chebyshev_rational))
+    # return (np.amax(delta_eqispaced_poly), np.amax(delta_chebyshev_poly), np.amax(delta_chebyshev_rational))
+
+def compute_max_error(y_approximation: np.array, y_actual: np.array) -> float:
+    return np.amax(np.abs(y_approximation - y_actual))
 
 # This script does the following:
 # - Computes polynomial and rational approximations of a given function (e^x by default).
@@ -91,11 +91,11 @@ def main():
     # This is needed to find the most optimal number of parameters to use.
     for num_parameters in range(1, 21):
         x_axis.append(int(num_parameters))
-        delta_eqispaced_poly, delta_chebyshev_poly, delta_chebyshev_rational = approximate_all_with_num_terms(approximated_fn, x_start, x_end, num_parameters, num_points_plot, num_points_plot_accurate)
+        y_eqispaced_poly, y_chebyshev_poly, y_chebyshev_rational, y_actual = approximate_all_with_num_parameters(approximated_fn, x_start, x_end, num_parameters, num_points_plot, num_points_plot_accurate)
 
-        deltas_eqispaced_poly.append(delta_eqispaced_poly)
-        deltas_chebyshev_poly.append(delta_chebyshev_poly)
-        deltas_chebyshev_rational.append(delta_chebyshev_rational)
+        deltas_eqispaced_poly.append(compute_max_error(y_eqispaced_poly, y_actual))
+        deltas_chebyshev_poly.append(compute_max_error(y_chebyshev_poly, y_actual))
+        deltas_chebyshev_rational.append(compute_max_error(y_chebyshev_rational, y_actual))
 
     #####################
     # 3. Plot the results
