@@ -343,44 +343,6 @@ func TestNewExitSwapShareAmountInCmd(t *testing.T) {
 // 	}
 // }
 
-// func (s *IntegrationTestSuite) TestGetCmdNumPools() {
-// 	val := s.network.Validators[0]
-
-// 	testCases := []struct {
-// 		name      string
-// 		args      []string
-// 		expectErr bool
-// 	}{
-// 		{
-// 			"query num-pools",
-// 			[]string{
-// 				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
-// 			},
-// 			false,
-// 		},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		tc := tc
-
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.GetCmdNumPools() // osmosisd query gamm num-pools
-// 			clientCtx := val.ClientCtx
-
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			if tc.expectErr {
-// 				s.Require().Error(err)
-// 			} else {
-// 				resp := types.QueryNumPoolsResponse{}
-// 				s.Require().NoError(err, out.String())
-// 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-
-// 				s.Require().Greater(resp.NumPools, uint64(0), out.String())
-// 			}
-// 		})
-// 	}
-// }
-
 // func (s *IntegrationTestSuite) TestGetCmdPool() {
 // 	val := s.network.Validators[0]
 
@@ -449,42 +411,6 @@ func TestNewExitSwapShareAmountInCmd(t *testing.T) {
 // 				s.Require().Error(err)
 // 			} else {
 // 				resp := types.QueryTotalSharesResponse{}
-// 				s.Require().NoError(err, out.String())
-// 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-// 			}
-// 		})
-// 	}
-// }
-
-// func (s *IntegrationTestSuite) TestGetCmdTotalLiquidity() {
-// 	val := s.network.Validators[0]
-
-// 	testCases := []struct {
-// 		name      string
-// 		args      []string
-// 		expectErr bool
-// 	}{
-// 		{
-// 			"query total liquidity", // osmosisd query gamm total-liquidity
-// 			[]string{
-// 				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
-// 			},
-// 			false,
-// 		},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		tc := tc
-
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.GetCmdQueryTotalLiquidity()
-// 			clientCtx := val.ClientCtx
-
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			if tc.expectErr {
-// 				s.Require().Error(err)
-// 			} else {
-// 				resp := types.QueryTotalLiquidityResponse{}
 // 				s.Require().NoError(err, out.String())
 // 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 // 			}
@@ -610,7 +536,3 @@ func TestNewExitSwapShareAmountInCmd(t *testing.T) {
 // // 		})
 // // 	}
 // // }
-
-// func TestIntegrationTestSuite(t *testing.T) {
-// 	suite.Run(t, new(IntegrationTestSuite))
-// }
