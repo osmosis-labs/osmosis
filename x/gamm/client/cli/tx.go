@@ -311,7 +311,7 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (
 		}
 
 		if len(targetPoolAssetCoins) != len(poolAssetCoins) {
-			return txf, nil, errors.New("initial pool weights and target pool weights should have same length")
+			return nil, errors.New("initial pool weights and target pool weights should have same length")
 		}
 
 		var targetPoolAssets []balancer.PoolAsset
