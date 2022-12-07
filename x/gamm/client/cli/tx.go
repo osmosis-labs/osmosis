@@ -115,12 +115,16 @@ For stableswap (demonstrating need for a 1:1000 scaling factor, see doc)
 }
 
 func NewJoinPoolCmd() *cobra.Command {
-	cmd := osmocli.TxCliDesc{
-		Use:              "join-pool",
-		Short:            "join a new pool and provide the liquidity to it",
-		NumArgs:          0,
-		ParseAndBuildMsg: NewBuildJoinPoolMsg,
-	}.BuildCommandCustomFn()
+	cmd := osmocli.BuildTxCli[*types.MsgJoinPool](&osmocli.TxCliDesc{
+		Use:   "join-pool",
+		Short: "join a new pool and provide the liquidity to it",
+		CustomFlagOverrides: map[string]string{
+			"poolid":         FlagPoolId,
+			"ShareOutAmount": FlagShareAmountOut,
+		},
+		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
+			"TokenInMaxs": osmocli.FlagOnlyParser(maxAmountsInParser),
+		}})
 
 	cmd.Flags().AddFlagSet(FlagSetJoinPool())
 	_ = cmd.MarkFlagRequired(FlagPoolId)
@@ -130,12 +134,16 @@ func NewJoinPoolCmd() *cobra.Command {
 }
 
 func NewExitPoolCmd() *cobra.Command {
-	cmd := osmocli.TxCliDesc{
-		Use:              "exit-pool",
-		Short:            "exit a new pool and withdraw the liquidity from it",
-		NumArgs:          0,
-		ParseAndBuildMsg: NewBuildExitPoolMsg,
-	}.BuildCommandCustomFn()
+	cmd := osmocli.BuildTxCli[*types.MsgExitPool](&osmocli.TxCliDesc{
+		Use:   "exit-pool",
+		Short: "exit a new pool and withdraw the liquidity from it",
+		CustomFlagOverrides: map[string]string{
+			"poolid":        FlagPoolId,
+			"ShareInAmount": FlagShareAmountIn,
+		},
+		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
+			"TokenOutMins": osmocli.FlagOnlyParser(minAmountsOutParser),
+		}})
 
 	cmd.Flags().AddFlagSet(FlagSetExitPool())
 	_ = cmd.MarkFlagRequired(FlagPoolId)
@@ -145,12 +153,12 @@ func NewExitPoolCmd() *cobra.Command {
 }
 
 func NewSwapExactAmountInCmd() *cobra.Command {
-	cmd := osmocli.TxCliDesc{
-		Use:              "swap-exact-amount-in [token-in] [token-out-min-amount]",
-		Short:            "swap exact amount in",
-		NumArgs:          2,
-		ParseAndBuildMsg: NewBuildSwapExactAmountInMsg,
-	}.BuildCommandCustomFn()
+	cmd := osmocli.BuildTxCli[*types.MsgSwapExactAmountIn](&osmocli.TxCliDesc{
+		Use:   "swap-exact-amount-in [token-in] [token-out-min-amount]",
+		Short: "swap exact amount in",
+		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
+			"Routes": osmocli.FlagOnlyParser(swapAmountInRoutes),
+		}})
 
 	cmd.Flags().AddFlagSet(FlagSetQuerySwapRoutes())
 	_ = cmd.MarkFlagRequired(FlagSwapRoutePoolIds)
@@ -159,6 +167,7 @@ func NewSwapExactAmountInCmd() *cobra.Command {
 }
 
 func NewSwapExactAmountOutCmd() *cobra.Command {
+	// Can't get rid of this parser without a break, because the args are out of order.
 	cmd := osmocli.TxCliDesc{
 		Use:              "swap-exact-amount-out [token-out] [token-in-max-amount]",
 		Short:            "swap exact amount out",
@@ -388,80 +397,29 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, fs *flag.FlagSet)
 	}, nil
 }
 
-func NewBuildJoinPoolMsg(clientCtx client.Context, _args []string, fs *flag.FlagSet) (sdk.Msg, error) {
-	poolId, err := fs.GetUint64(FlagPoolId)
-	if err != nil {
-		return nil, err
-	}
-
-	shareAmountOutStr, err := fs.GetString(FlagShareAmountOut)
-	if err != nil {
-		return nil, err
-	}
-
-	shareAmountOut, ok := sdk.NewIntFromString(shareAmountOutStr)
-	if !ok {
-		return nil, fmt.Errorf("invalid share amount out")
-	}
-
-	maxAmountsInStrs, err := fs.GetStringArray(FlagMaxAmountsIn)
-	if err != nil {
-		return nil, err
-	}
-
-	maxAmountsIn := sdk.Coins{}
-	for i := 0; i < len(maxAmountsInStrs); i++ {
-		parsed, err := sdk.ParseCoinsNormalized(maxAmountsInStrs[i])
-		if err != nil {
-			return nil, err
-		}
-		maxAmountsIn = maxAmountsIn.Add(parsed...)
-	}
-
-	return &types.MsgJoinPool{
-		Sender:         clientCtx.GetFromAddress().String(),
-		PoolId:         poolId,
-		ShareOutAmount: shareAmountOut,
-		TokenInMaxs:    maxAmountsIn,
-	}, nil
+func maxAmountsInParser(fs *flag.FlagSet) (sdk.Coins, error) {
+	return stringArrayCoinsParser(FlagMaxAmountsIn, fs)
 }
 
-func NewBuildExitPoolMsg(clientCtx client.Context, _args []string, fs *flag.FlagSet) (sdk.Msg, error) {
-	poolId, err := fs.GetUint64(FlagPoolId)
+func minAmountsOutParser(fs *flag.FlagSet) (sdk.Coins, error) {
+	return stringArrayCoinsParser(FlagMinAmountsOut, fs)
+}
+
+func stringArrayCoinsParser(flagName string, fs *flag.FlagSet) (sdk.Coins, error) {
+	amountsArr, err := fs.GetStringArray(flagName)
 	if err != nil {
 		return nil, err
 	}
 
-	shareAmountInStr, err := fs.GetString(FlagShareAmountIn)
-	if err != nil {
-		return nil, err
-	}
-
-	shareAmountIn, ok := sdk.NewIntFromString(shareAmountInStr)
-	if !ok {
-		return nil, fmt.Errorf("invalid share amount in")
-	}
-
-	minAmountsOutStrs, err := fs.GetStringArray(FlagMinAmountsOut)
-	if err != nil {
-		return nil, err
-	}
-
-	minAmountsOut := sdk.Coins{}
-	for i := 0; i < len(minAmountsOutStrs); i++ {
-		parsed, err := sdk.ParseCoinsNormalized(minAmountsOutStrs[i])
+	coins := sdk.Coins{}
+	for i := 0; i < len(amountsArr); i++ {
+		parsed, err := sdk.ParseCoinsNormalized(amountsArr[i])
 		if err != nil {
 			return nil, err
 		}
-		minAmountsOut = minAmountsOut.Add(parsed...)
+		coins = coins.Add(parsed...)
 	}
-
-	return &types.MsgExitPool{
-		Sender:        clientCtx.GetFromAddress().String(),
-		PoolId:        poolId,
-		ShareInAmount: shareAmountIn,
-		TokenOutMins:  minAmountsOut,
-	}, nil
+	return coins, nil
 }
 
 func swapAmountInRoutes(fs *flag.FlagSet) ([]types.SwapAmountInRoute, error) {
@@ -524,30 +482,6 @@ func swapAmountOutRoutes(fs *flag.FlagSet) ([]types.SwapAmountOutRoute, error) {
 		})
 	}
 	return routes, nil
-}
-
-func NewBuildSwapExactAmountInMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
-	tokenInStr, tokenOutMinAmtStr := args[0], args[1]
-	routes, err := swapAmountInRoutes(fs)
-	if err != nil {
-		return nil, err
-	}
-
-	tokenIn, err := sdk.ParseCoinNormalized(tokenInStr)
-	if err != nil {
-		return nil, err
-	}
-
-	tokenOutMinAmt, ok := sdk.NewIntFromString(tokenOutMinAmtStr)
-	if !ok {
-		return nil, fmt.Errorf("invalid token out min amount, %s", tokenOutMinAmtStr)
-	}
-	return &types.MsgSwapExactAmountIn{
-		Sender:            clientCtx.GetFromAddress().String(),
-		Routes:            routes,
-		TokenIn:           tokenIn,
-		TokenOutMinAmount: tokenOutMinAmt,
-	}, nil
 }
 
 func NewBuildSwapExactAmountOutMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
