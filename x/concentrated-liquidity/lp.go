@@ -22,17 +22,16 @@ import (
 // - the amount0 or amount1 returned from the position update is less than the given minimums
 // - the pool or user does not have enough tokens to satisfy the requested amount
 func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (sdk.Int, sdk.Int, sdk.Dec, error) {
-	if err := validateTickRangeIsValid(lowerTick, upperTick); err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
-	}
-
-	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
+	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
-	// now calculate amount for token0 and token1
-	pool, err := k.getPoolById(ctx, poolId)
+	if err := validateTickRangeIsValid(pool.GetTickSpacing(), lowerTick, upperTick); err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+	}
+
+	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
@@ -91,7 +90,12 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 // - if tick ranges are invalid
 // - if attempts to withdraw an amount higher than originally provided in createPosition for a given range.
 func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, requestedLiqudityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
-	if err := validateTickRangeIsValid(lowerTick, upperTick); err != nil {
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	if err := validateTickRangeIsValid(pool.GetTickSpacing(), lowerTick, upperTick); err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
@@ -109,11 +113,6 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	liquidityDelta := requestedLiqudityAmountToWithdraw.Neg()
 
 	actualAmount0, actualAmount1, err := k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta)
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, err
-	}
-
-	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}

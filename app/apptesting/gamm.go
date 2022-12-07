@@ -144,7 +144,7 @@ func (s *KeeperTestHelper) PrepareBasicConcentratedPool() uint64 {
 	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000)), sdk.NewCoin("usdc", sdk.NewInt(5000000000))))
 
-	msg := clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], "eth", "usdc")
+	msg := clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], "eth", "usdc", 1)
 	poolId, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, msg)
 	s.NoError(err)
 	return poolId

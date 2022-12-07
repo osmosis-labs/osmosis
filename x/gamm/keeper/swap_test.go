@@ -184,7 +184,7 @@ func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				suite.NoError(err)
 				pool = poolExt.(swaproutertypes.PoolI)
 			} else if test.param.poolType == "concentratedliquidity" {
-				poolExt, err := suite.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, "bar", "foo")
+				poolExt, err := suite.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, "bar", "foo", 1)
 				suite.NoError(err)
 				pool = poolExt.(swaproutertypes.PoolI)
 			}
@@ -263,7 +263,7 @@ func (suite *KeeperTestSuite) TestCalcInAmtGivenOut() {
 				suite.NoError(err)
 				pool = poolExt.(swaproutertypes.PoolI)
 			} else if test.param.poolType == "concentratedliquidity" {
-				poolExt, err := suite.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, "bar", "foo")
+				poolExt, err := suite.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, "bar", "foo", 1)
 				suite.NoError(err)
 				pool = poolExt.(swaproutertypes.PoolI)
 			}

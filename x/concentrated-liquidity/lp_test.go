@@ -22,6 +22,7 @@ type lpTest struct {
 	amount1Minimum    sdk.Int
 	amount1Expected   sdk.Int
 	liquidityAmount   sdk.Dec
+	tickSpacing       uint64
 	preCreatePosition bool
 	expectedError     error
 }
@@ -40,6 +41,7 @@ var (
 		amount1Minimum:  sdk.ZeroInt(),
 		amount1Expected: DefaultAmt1Expected,
 		liquidityAmount: DefaultLiquidityAmt,
+		tickSpacing:     uint64(1),
 	}
 )
 
@@ -82,6 +84,17 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			amount1Desired:    sdk.ZeroInt(),
 			expectedError:     errors.New("liquidityDelta calculated equals zero"),
 		},
+		"create a position with non default tick spacing (10) with ticks that fall into tick spacing requirements": {
+			lowerTick:       int64(84220),
+			upperTick:       int64(86130),
+			amount0Expected: sdk.NewInt(997568),
+			liquidityAmount: sdk.MustNewDecFromStr("1514719247.706987476085061790"),
+			tickSpacing:     10,
+		},
+		"error: attempt to create a position that does not fall into tick spacing requirement of that pool": {
+			tickSpacing:   10,
+			expectedError: types.TickSpacingError{TickSpacing: 10, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick},
+		},
 		// TODO: add more tests
 		// - custom hand-picked values
 		// - think of overflows
@@ -98,7 +111,8 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			mergeConfigs(&baseConfigCopy, &tc)
 			tc = baseConfigCopy
 
-			pool := s.PrepareDefaultPool(s.Ctx)
+			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, ETH, USDC, tc.tickSpacing)
+			s.Require().NoError(err)
 
 			// pre create a position prior to testing if test case requires it
 			if tc.preCreatePosition {
@@ -357,6 +371,9 @@ func mergeConfigs(dst *lpTest, overwrite *lpTest) {
 		}
 		if overwrite.preCreatePosition != false {
 			dst.preCreatePosition = overwrite.preCreatePosition
+		}
+		if overwrite.tickSpacing != 0 {
+			dst.tickSpacing = overwrite.tickSpacing
 		}
 	}
 }

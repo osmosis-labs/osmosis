@@ -26,6 +26,7 @@ var (
 	DefaultAmt1             = sdk.NewInt(5000000000)
 	DefaultAmt1Expected     = sdk.NewInt(5000000000)
 	DefaultLiquidityAmt     = sdk.MustNewDecFromStr("1517818840.967515822610790519")
+	DefaultTickSpacing      = uint64(1)
 )
 
 type KeeperTestSuite struct {
@@ -42,7 +43,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 // PrepareDefaultPool sets up a eth usdc concentrated liquid pool with pool ID 1 and no liquidity
 func (s *KeeperTestSuite) PrepareDefaultPool(ctx sdk.Context) types.ConcentratedPoolExtension {
-	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, ETH, USDC)
+	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, ETH, USDC, DefaultTickSpacing)
 	s.Require().NoError(err)
 	return pool
 }

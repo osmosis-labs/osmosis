@@ -71,6 +71,26 @@ func (e InvalidTickError) Error() string {
 	return fmt.Sprintf("%s tick (%d) is invalid, Must be >= %d and <= %d", tickStr, e.Tick, MinTick, MaxTick)
 }
 
+type TickSpacingError struct {
+	TickSpacing uint64
+	LowerTick   int64
+	UpperTick   int64
+}
+
+func (e TickSpacingError) Error() string {
+	return fmt.Sprintf("lowerTick (%d) and upperTick (%d) must be divisible by the pool's tickSpacing parameter (%d)", e.LowerTick, e.UpperTick, e.TickSpacing)
+}
+
+type TickSpacingBoundaryError struct {
+	TickSpacing        uint64
+	TickSpacingMinimum uint64
+	TickSpacingMaximum uint64
+}
+
+func (e TickSpacingBoundaryError) Error() string {
+	return fmt.Sprintf("requested tickSpacing (%d) is not between the minimum (%d) and maximum (%d)", e.TickSpacing, e.TickSpacingMinimum, e.TickSpacingMaximum)
+}
+
 type InsufficientLiquidityError struct {
 	Actual    sdk.Dec
 	Available sdk.Dec

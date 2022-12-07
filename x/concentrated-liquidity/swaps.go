@@ -27,6 +27,7 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(
 	ctx sdk.Context,
 	poolId uint64,
 	denom0, denom1 string,
+	tickSpacing uint64,
 ) (types.ConcentratedPoolExtension, error) {
 	denom0, denom1, err := types.OrderInitialPoolDenoms(denom0, denom1)
 	if err != nil {
@@ -41,6 +42,7 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(
 		Liquidity:        sdk.ZeroDec(),
 		Token0:           denom0,
 		Token1:           denom1,
+		TickSpacing:      tickSpacing,
 	}
 
 	err = k.setPool(ctx, pool)

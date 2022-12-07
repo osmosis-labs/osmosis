@@ -15,7 +15,7 @@ var (
 	_ types.ConcentratedPoolExtension = &Pool{}
 )
 
-func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string) (Pool, error) {
+func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpacing uint64) (Pool, error) {
 	denom0, denom1, err := types.OrderInitialPoolDenoms(denom0, denom1)
 	if err != nil {
 		return Pool{}, err
@@ -29,6 +29,7 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string) (Pool, e
 		Liquidity:        sdk.ZeroDec(),
 		Token0:           denom0,
 		Token1:           denom1,
+		TickSpacing:      tickSpacing,
 	}
 
 	return pool, nil
@@ -109,6 +110,11 @@ func (p Pool) GetCurrentSqrtPrice() sdk.Dec {
 // GetCurrentTick returns the current tick of the pool
 func (p Pool) GetCurrentTick() sdk.Int {
 	return p.CurrentTick
+}
+
+// GetTickSpacing returns the current tick spacing parameter of the pool
+func (p Pool) GetTickSpacing() uint64 {
+	return p.TickSpacing
 }
 
 // GetLiquidity returns the liquidity of the pool

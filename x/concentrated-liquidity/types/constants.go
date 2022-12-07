@@ -16,4 +16,6 @@ var (
 	ConcentratedGasFeeForSwap = 10_000
 	UpperPriceLimit           = sdk.NewDec(999999999999)
 	LowerPriceLimit           = sdk.NewDec(1)
+	TickSpacingMinimum        = uint64(1)
+	TickSpacingMaximum        = uint64(200)
 )

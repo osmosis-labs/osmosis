@@ -5,6 +5,7 @@ import (
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	cltypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
@@ -23,11 +24,13 @@ func NewMsgCreateConcentratedPool(
 	sender sdk.AccAddress,
 	denom0 string,
 	denom1 string,
+	tickSpacing uint64,
 ) MsgCreateConcentratedPool {
 	return MsgCreateConcentratedPool{
-		Sender: sender.String(),
-		Denom0: denom0,
-		Denom1: denom1,
+		Sender:      sender.String(),
+		Denom0:      denom0,
+		Denom1:      denom1,
+		TickSpacing: tickSpacing,
 	}
 }
 
@@ -37,6 +40,11 @@ func (msg MsgCreateConcentratedPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	// TODO: Determine what we want the min and max tick range to be.
+	if !(msg.TickSpacing >= types.TickSpacingMinimum) || !(msg.TickSpacing <= types.TickSpacingMaximum) {
+		return types.TickSpacingBoundaryError{TickSpacing: msg.TickSpacing, TickSpacingMinimum: types.TickSpacingMinimum, TickSpacingMaximum: types.TickSpacingMaximum}
 	}
 
 	return nil
@@ -73,7 +81,7 @@ func (msg MsgCreateConcentratedPool) InitialLiquidity() sdk.Coins {
 }
 
 func (msg MsgCreateConcentratedPool) CreatePool(ctx sdk.Context, poolID uint64) (swaproutertypes.PoolI, error) {
-	poolI, err := NewConcentratedLiquidityPool(poolID, msg.Denom0, msg.Denom1)
+	poolI, err := NewConcentratedLiquidityPool(poolID, msg.Denom0, msg.Denom1, msg.TickSpacing)
 	return &poolI, err
 }
 
