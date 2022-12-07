@@ -24,6 +24,9 @@ def main():
     # number of paramters to use for the approximations.
     num_parameters = 13
 
+    # number of paramters to use for plotting error deltas.
+    num_parameters_errors = 30
+
     # number of (x,y) coordinates used to plot the resulting approximation.
     num_points_plot = 10000
 
@@ -43,7 +46,7 @@ def main():
     # with a varying number of parameters. This is useful to find the most
     # optimal number of parameters to use for each kind of approximation.
     # Plots if true.
-    shouldPlotMaxError = False
+    shouldPlotMaxError = True
 
     # Equispaced x coordinates to be used for plotting every approximation.
     x_coordinates = approximations.linspace(x_start, x_end, num_points_plot)
@@ -105,7 +108,7 @@ def main():
         # Compute Deltas
         # The deltas are taken from actual function values for different number of parameters
         # This is needed to find the most optimal number of parameters to use.
-        for num_parameters_current in range(1, num_parameters + 1):
+        for num_parameters_current in range(1, num_parameters_errors + 1):
             x_axis.append(int(num_parameters_current))
             y_eqispaced_poly, y_chebyshev_poly, y_chebyshev_rational, y_actual = approximations.approx_and_eval_all(approximated_fn, num_parameters_current, x_coordinates)
 
