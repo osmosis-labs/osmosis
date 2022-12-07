@@ -272,7 +272,7 @@ func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quote
 // two records given the quote asset.
 func computeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
 	var accumDiff sdk.Dec
-	if quoteAsset == startRecord.Asset0Denom {
+	if quoteAsset == startRecord.Asset1Denom {
 		accumDiff = endRecord.P0ArithmeticTwapAccumulator.Sub(startRecord.P0ArithmeticTwapAccumulator)
 	} else {
 		accumDiff = endRecord.P1ArithmeticTwapAccumulator.Sub(startRecord.P1ArithmeticTwapAccumulator)

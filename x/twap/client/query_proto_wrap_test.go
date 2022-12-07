@@ -90,7 +90,7 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 			quoteAssetDenom: "tokenB",
 			endTime:         &newBlockTime,
 
-			result: sdk.NewDec(2).String(),
+			result: sdk.OneDec().Quo(sdk.NewDec(2)).String(), // 1000 / 2000 = 0.5
 		},
 		{
 			name:            "tokenB in terms of tokenA",
@@ -99,7 +99,7 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 			quoteAssetDenom: "tokenA",
 			endTime:         &newBlockTime,
 
-			result: sdk.NewDecWithPrec(5, 1).String(),
+			result: sdk.NewDec(2).String(),
 		},
 		{
 			name:            "tokenC in terms of tokenD (rounded decimal of 4/3)",
@@ -108,7 +108,7 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 			quoteAssetDenom: "tokenD",
 			endTime:         &newBlockTime,
 
-			result: sdk.MustNewDecFromStr("1.333333330000000000").String(),
+			result: sdk.MustNewDecFromStr("0.75").String(), // 3000 / 4000 = 0.75
 		},
 		{
 			name:            "tokenD in terms of tokenE (1)",
@@ -117,7 +117,7 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 			quoteAssetDenom: "tokenE",
 			endTime:         &newBlockTime,
 
-			result: sdk.OneDec().String(),
+			result: sdk.OneDec().String(), // 4000 / 4000 = 1
 		},
 		{
 			name:            "tokenA in terms of tokenB - no end time",
@@ -126,7 +126,7 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 			quoteAssetDenom: "tokenB",
 			endTime:         nil,
 
-			result: sdk.NewDec(2).String(),
+			result: sdk.OneDec().Quo(sdk.NewDec(2)).String(), // 1000 / 2000 = 0.5
 		},
 		{
 			name:            "tokenA in terms of tokenB - end time is empty",
@@ -135,7 +135,7 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 			quoteAssetDenom: "tokenB",
 			endTime:         &time.Time{},
 
-			result: sdk.NewDec(2).String(),
+			result: sdk.OneDec().Quo(sdk.NewDec(2)).String(), // 1000 / 2000 = 0.5
 		},
 		{
 			name:               "tokenA in terms of tokenB - start time too old",
