@@ -1,20 +1,18 @@
-from typing import Tuple
-from sympy import *
 import sympy
 
 import rational
 import polynomial
 import chebyshev
 
-def linspace(start: Float, end: Float, num_points: int) -> list[Float]:
+def linspace(start: sympy.Float, end: sympy.Float, num_points: int) -> list[sympy.Float]:
     if num_points == 1:
         return [(end - start) / 2]
 
-    result: list[Float] = []
+    result: list[sympy.Float] = []
     for i in range(num_points):
-        cur_coord = Float(start + i * (end - start) / (num_points - 1), 40)
+        cur_coord = sympy.Float(start + i * (end - start) / (num_points - 1), 40)
 
-        if cur_coord is nan:
+        if cur_coord is sympy.nan:
             raise ValueError("cur_coord is nan")
 
         result.append(cur_coord)
@@ -44,14 +42,14 @@ def approx_and_eval_all(approximated_fn, num_parameters: int, x_coordinates) -> 
 
     return (y_eqispaced_poly, y_chebyshev_poly, y_chebyshev_rational, y_actual)
 
-def compute_max_error(y_approximation, y_actual) -> Float:
+def compute_max_error(y_approximation, y_actual) -> sympy.Float:
     if len(y_approximation) != len(y_actual):
         raise ValueError(F"y_approximation ({len(y_approximation)}) and y_actual ({len(y_actual)}) must be the same length.")
 
-    max: Float = None
+    max: sympy.Float = None
     for i in range(len(y_approximation)):
         cur_abs = sympy.Abs(y_approximation[i] - y_actual[i])
-        if cur_abs is nan:
+        if cur_abs is sympy.nan:
             raise ValueError(F"cur_abs is nan. y_approximation[i] ({y_approximation[i]}) and y_actual[i] ({y_actual[i]})")
         if max is None:
             max = cur_abs
@@ -59,7 +57,7 @@ def compute_max_error(y_approximation, y_actual) -> Float:
             max = sympy.Max(max, cur_abs)
     return max
 
-def equispaced_poly_approx(fn, x_start: Float, x_end: Float, num_terms: int):
+def equispaced_poly_approx(fn, x_start: sympy.Float, x_end: sympy.Float, num_terms: int):
     """ Returns the coefficients for an equispaced polynomial between x_start and x_end with num_terms terms.
 
     The return value is a list of num_terms polynomial coefficients needed to get the returned y coordinates from returned x coordinates.

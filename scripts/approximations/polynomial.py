@@ -1,9 +1,6 @@
+import sympy as sp
 
-
-import numpy as np
-import sympy
-
-def construct_vandermonde_matrix(x_list: list[sympy.Float]) -> sympy.Matrix:
+def construct_vandermonde_matrix(x_list: list[sp.Float]) -> sp.Matrix:
     """ Constructs a Vandermonde matrix for a polynomial approximation.
     from the list of x values given.
     
@@ -26,10 +23,10 @@ def construct_vandermonde_matrix(x_list: list[sympy.Float]) -> sympy.Matrix:
     for i in range(num_terms):
         row = []
         for j in range(num_terms):
-            row.append(sympy.Pow(x_list[i], j))
+            row.append(sp.Pow(x_list[i], j))
         matrix.append(row)
 
-    return sympy.Matrix(matrix)
+    return sp.Matrix(matrix)
 
 def evaluate(x, coeffs):
     """ Evaluates the polynomial. Given a list of x coordinates and a list of coefficients, returns a list of
@@ -39,6 +36,6 @@ def evaluate(x, coeffs):
     for x_i in x:
         y_i = 0
         for i in range(len(coeffs)):
-            y_i += coeffs[i]*sympy.Pow(x_i, i)
+            y_i += coeffs[i]*sp.Pow(x_i, i)
         y.append(y_i)
     return y

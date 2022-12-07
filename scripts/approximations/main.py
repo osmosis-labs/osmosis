@@ -1,9 +1,5 @@
-import math
-import numpy as np
 import matplotlib.pyplot as plt
 import sympy
-from sympy.plotting import plot
-from sympy import symbols
 
 import approximations
 
