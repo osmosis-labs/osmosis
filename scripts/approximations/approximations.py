@@ -33,18 +33,14 @@ def approx_and_eval_all(approximated_fn, num_parameters: int, x_coordinates) -> 
     coefficients_chebyshev_poly = chebyshev_poly_approx(approximated_fn, x_start, x_end, num_parameters)
     y_chebyshev_poly = polynomial.evaluate(x_coordinates, coefficients_chebyshev_poly)
 
-    if True:
-        y_actual = []
-        for x in x_coordinates:
-            y_actual.append(approximated_fn(x))
-        return (y_eqispaced_poly, y_chebyshev_poly, [], y_actual)
-    
     # Chebyshev Rational Approximation
     numerator_coefficients_chebyshev_rational, denominator_coefficients_chebyshev_rational = chebyshev_rational_approx(approximated_fn, x_start, x_end, num_parameters)
-    y_chebyshev_rational = rational.evaluate(x_coordinates, numerator_coefficients_chebyshev_rational.tolist(), denominator_coefficients_chebyshev_rational.tolist())
+    y_chebyshev_rational = rational.evaluate(x_coordinates, numerator_coefficients_chebyshev_rational, denominator_coefficients_chebyshev_rational)
 
     # Actual
-    y_actual = approximated_fn(x_coordinates)
+    y_actual = []
+    for x in x_coordinates:
+        y_actual.append(approximated_fn(x))
 
     return (y_eqispaced_poly, y_chebyshev_poly, y_chebyshev_rational, y_actual)
 
@@ -141,15 +137,15 @@ def chebyshev_rational_approx(fn, x_start: int, x_end: int, num_parameters: int)
 
     # Solve the matrix to get the coefficients used in the final approximation polynomial.
     # coef = np.linalg.solve(np.array(matrix), y_chebyshev)
+    coef = matrix.solve(sympy.Matrix(y_chebyshev))
 
     # first num_terms_numerator values are the numerator coefficients
     # next num_terms_numerator - 1 values are the denominator coefficients
-    # coef_numerator = coef[:num_terms_numerator]
-    # coef_denominator = coef[num_terms_numerator:]
+    coef_numerator = coef[:num_terms_numerator]
+    coef_denominator = coef[num_terms_numerator:]
 
     # h(x) = (p_0 + p_1 x + p_2 x^2) / (1 + q_1 x + q_2 x^2)
     # Therefore, we insert 1 here.
-    # coef_denominator = np.insert(coef_denominator, 0, 1, axis=0)
+    coef_denominator = [1] + coef_denominator
 
-    # return [coef_numerator, coef_denominator]
-    return [nan, nan]
+    return [coef_numerator, coef_denominator]

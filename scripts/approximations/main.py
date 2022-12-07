@@ -73,8 +73,8 @@ def main():
             print(F"Chebyshev Poly: {max_error_chebyshev_poly.evalf(chop=1e-30)}")
 
             # Chebyshev Rational Approximation
-            # max_error_chebyshev_rational = approximations.compute_max_error(y_chebyshev_rational, y_actual)
-            # print(F"Chebyshev Rational: {max_error_chebyshev_rational}")
+            max_error_chebyshev_rational = approximations.compute_max_error(y_chebyshev_rational, y_actual)
+            print(F"Chebyshev Rational: {max_error_chebyshev_rational}")
 
         ###############################
         # Plot Every Approximation Kind
@@ -119,7 +119,7 @@ def main():
 
             deltas_eqispaced_poly.append(approximations.compute_max_error(y_eqispaced_poly, y_actual))
             deltas_chebyshev_poly.append(approximations.compute_max_error(y_chebyshev_poly, y_actual))
-            # deltas_chebyshev_rational.append(approximations.compute_max_error(y_chebyshev_rational, y_actual))
+            deltas_chebyshev_rational.append(approximations.compute_max_error(y_chebyshev_rational, y_actual))
 
         ##################
         # Plot the results
@@ -133,7 +133,7 @@ def main():
         plt.semilogy(x_axis, deltas_chebyshev_poly, label="Chebyshev Poly")
 
         # Chebyshev Rational Approximation
-        # plt.semilogy(x_axis, deltas_chebyshev_rational, label="Chebyshev Rational")
+        plt.semilogy(x_axis, deltas_chebyshev_rational, label="Chebyshev Rational")
 
         plt.legend(loc="upper left")
         plt.grid(True)

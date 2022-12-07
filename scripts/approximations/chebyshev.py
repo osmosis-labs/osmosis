@@ -3,7 +3,7 @@ import math
 import sympy
 from typing import Tuple
 
-def get_nodes(fn, x_start: sympy.Float, x_end: sympy.Float, num_terms: int ) -> Tuple[list, list]:
+def get_nodes(fn, x_start: sympy.Float, x_end: sympy.Float, num_terms: int) -> Tuple[list, list]:
     """ Returns Chebyshev nodes between x_start and x_end with num_terms terms
     and the given function fn.
 

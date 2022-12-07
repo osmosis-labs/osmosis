@@ -1,4 +1,6 @@
-import numpy as np
+import sympy
+
+import polynomial
 
 def construct_rational_eval_matrix(x_list: list, y_list: list, num_terms_numerator: int, num_terms_denominator) -> list[list]:
     """ Constructs a matrix to use for computing coefficients for a rational approximation
@@ -15,31 +17,28 @@ def construct_rational_eval_matrix(x_list: list, y_list: list, num_terms_numerat
     for i in range(num_terms_numerator + num_terms_denominator - 1):
         row = []
         for j in range(num_terms_numerator):
-            row.append(x_list[i]**j)
+            row.append(sympy.Pow(x_list[i], j))
 
         for j in range(num_terms_denominator):
             # denominator terms
             if j > 0:
-                row.append(-1 * x_list[i]**j * y_list[i])
+                row.append(-1 * sympy.Pow(x_list[i], j) * y_list[i])
 
         matrix.append(row)
 
-    return matrix
+    return sympy.Matrix(matrix)
 
-def evaluate(x: np.ndarray, coefficients_numerator: list, coefficients_denominator: list) -> np.ndarray:
+def evaluate(x: list, coefficients_numerator: list, coefficients_denominator: list):
     """ Evaluates the rational function. Assume rational h(x) = p(x) / q(x)
     Given a list of x coordinates, a list of coefficients of p(x) - coefficients_numerator, and a list of
     coefficients of q(x) - coefficients_denominator, returns a list of y coordinates, one for each x coordinate.
     """
-    num_numerator_coeffs = len(coefficients_numerator)
-    num_denominator_coeffs = len(coefficients_denominator)
+    p = polynomial.evaluate(x, coefficients_numerator)
+    q = polynomial.evaluate(x, coefficients_denominator)
 
-    p = 0
-    for i in range(num_numerator_coeffs):
-        p += coefficients_numerator[i]*x**i
-    
-    q = 0
-    for i in range(num_denominator_coeffs):
-        q += coefficients_denominator[i]*x**i
+    result = []
 
-    return p / q
+    for i in range(len(x)):
+        result.append(p[i] / q[i])
+
+    return result
