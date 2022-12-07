@@ -39,5 +39,5 @@ func MsgBeginUnlocking(clientCtx client.Context, owner fmt.Stringer, extraArgs .
 	}
 
 	args = append(args, commonArgs...)
-	return clitestutil.ExecTestCLICmd(clientCtx, lockupcli.NewBeginUnlockingCmd(), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, lockupcli.NewBeginUnlockingAllCmd(), args)
 }

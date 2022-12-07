@@ -5,9 +5,6 @@ import (
 )
 
 const (
-	MinPoolAssets = 2
-	MaxPoolAssets = 8
-
 	OneShareExponent = 18
 	// Raise 10 to the power of SigFigsExponent to determine number of significant figures.
 	// i.e. SigFigExponent = 8 is 10^8 which is 100000000. This gives 8 significant figures.
