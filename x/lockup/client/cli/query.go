@@ -26,9 +26,9 @@ func GetQueryCmd() *cobra.Command {
 
 	qcGetter := types.NewQueryClient
 	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdModuleBalance)
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdModuleLockedAmount)
 	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdAccountUnlockingCoins)
 	cmd.AddCommand(
-		GetCmdModuleLockedAmount(),
 		GetCmdAccountUnlockableCoins(),
 		GetCmdAccountLockedCoins(),
 		GetCmdAccountLockedPastTime(),
@@ -62,11 +62,11 @@ func GetCmdModuleBalance() (*osmocli.QueryDescriptor, *types.ModuleBalanceReques
 
 // GetCmdModuleLockedAmount returns locked balance of the module,
 // which are all the tokens not unlocking + tokens that are not finished unlocking.
-func GetCmdModuleLockedAmount() *cobra.Command {
-	return osmocli.SimpleQueryCmd[*types.ModuleLockedAmountRequest](
-		"module-locked-amount",
-		"Query locked amount",
-		`{{.Short}}`, types.ModuleName, types.NewQueryClient)
+func GetCmdModuleLockedAmount() (*osmocli.QueryDescriptor, *types.ModuleLockedAmountRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "module-locked-amount",
+		Short: "Query locked amount",
+		Long:  `{{.Short}}`}, &types.ModuleLockedAmountRequest{}
 }
 
 // GetCmdAccountUnlockableCoins returns unlockable coins which has finsihed unlocking.
