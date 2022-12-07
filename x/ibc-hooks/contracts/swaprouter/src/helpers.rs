@@ -120,39 +120,45 @@ pub fn calculate_min_output_from_twap(
         nanos: 0_i32,
     };
 
+    let end_time = OsmosisTimestamp {
+        seconds: now.seconds() as i64,
+        nanos: 0_i32,
+    };
+
     // deps.api.debug(&format!("twap_price: {twap_price}"));
 
     for route_part in route {
-        // deps.api.debug(&format!("route part: {route_part:?}"));
+        deps.api
+            .debug(&format!("route part: {quote_denom:?} {route_part:?}"));
 
         let twap = TwapQuerier::new(&deps.querier)
-            .arithmetic_twap_to_now(
+            .arithmetic_twap(
                 route_part.pool_id,
                 route_part.token_out_denom.clone(), // base_asset
                 quote_denom.clone(),                // quote_asset
                 Some(start_time.clone()),
+                Some(end_time.clone()),
             )
             .map_err(|_e| ContractError::CustomError {
                 val: format!("failed to fetch twap price for {route_part:?} in {quote_denom}"),
             })?
             .arithmetic_twap;
 
-        // deps.api.debug(&format!("twap = {twap}"));
+        deps.api.debug(&format!("twap = {twap}"));
 
         let twap: Decimal = twap.parse().map_err(|_e| ContractError::CustomError {
             val: "Invalid twap value received from the chain".to_string(),
         })?;
 
-        twap_price =
-            twap_price
-                .checked_mul(twap.into())
-                .map_err(|_e| ContractError::CustomError {
-                    val: format!("Invalid value for twap price: {twap_price} * {twap}"),
-                })?;
+        twap_price = twap_price
+            .checked_mul(twap.into()) // TODO: Need to figure out why this is failing. The params seem to be in the correct order
+            .map_err(|_e| ContractError::CustomError {
+                val: format!("Invalid value for twap price: {twap_price} * {twap}"),
+            })?;
 
         // the current output is the input for the next route_part
         quote_denom = route_part.token_out_denom;
-        // deps.api.debug(&format!("twap_price: {twap_price}"));
+        deps.api.debug(&format!("twap_price: {twap_price}"));
     }
 
     twap_price = twap_price - twap_price.mul(percentage);

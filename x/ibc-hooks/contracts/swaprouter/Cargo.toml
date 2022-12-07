@@ -56,4 +56,4 @@ serde = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
-osmosis-testing = {git = "https://github.com/osmosis-labs/osmosis-rust", branch = "v13"}
+osmosis-testing = { git = "https://github.com/osmosis-labs/osmosis-rust", branch = "osmosis-v13" }

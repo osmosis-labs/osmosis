@@ -26,9 +26,9 @@ rpath = false
 cosmwasm-schema = "1.1.2"
 cosmwasm-std = {version = "1.1.2", features = ["stargate"]}
 cosmwasm-storage = "1.1.2"
-cw-storage-plus = "0.16.0"
-cw2 = "0.16.0"
+cw-storage-plus = "1.0.1"
+cw2 = "1.0.0"
 schemars = "0.8.8"
-osmosis-std = "0.12.0"
+osmosis-std = { git = "https://github.com/osmosis-labs/osmosis-rust", branch = "osmosis-v13" }
 serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }

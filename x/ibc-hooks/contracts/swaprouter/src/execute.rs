@@ -35,8 +35,6 @@ pub fn set_route(
     ROUTING_TABLE.save(deps.storage, (&input_denom, &output_denom), &pool_route)?;
 
     Ok(Response::new().add_attribute("action", "set_route"))
-
-    // TODO: add more attributes
 }
 
 pub fn trade_with_slippage_limit(

@@ -36,7 +36,7 @@ impl TestEnv {
         gamm.create_basic_pool(
             &[
                 Coin::new(100_000_000, "uatom"),
-                Coin::new(100_000_000, "uosmo"),
+                Coin::new(200_000_000, "uosmo"),
             ],
             &owner,
         )
