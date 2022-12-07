@@ -88,75 +88,47 @@ func TestAccountUnlockingCoinsCmd(t *testing.T) {
 	osmocli.RunQueryTestCases(t, desc, tcs)
 }
 
-// func (s IntegrationTestSuite) TestCmdAccountLockedPastTime() {
-// 	val := s.network.Validators[0]
+func TestCmdAccountLockedPastTime(t *testing.T) {
+	desc, _ := GetCmdAccountLockedPastTime()
+	tcs := map[string]osmocli.QueryCliTestCase[*types.AccountLockedPastTimeRequest]{
+		"basic test": {
+			Cmd: testAddresses[0].String() + " 1670431012",
+			ExpectedQuery: &types.AccountLockedPastTimeRequest{
+				Owner:     testAddresses[0].String(),
+				Timestamp: time.Unix(1670431012, 0),
+			},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}
 
-// 	timestamp := time.Now().Unix()
-// 	testCases := []struct {
-// 		name string
-// 		args []string
-// 	}{
-// 		{
-// 			"query account locked coins past time",
-// 			[]string{
-// 				val.Address.String(),
-// 				fmt.Sprintf("%d", timestamp),
-// 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-// 			},
-// 		},
-// 	}
+func TestCmdAccountLockedPastTimeNotUnlockingOnly(t *testing.T) {
+	desc, _ := GetCmdAccountLockedPastTimeNotUnlockingOnly()
+	tcs := map[string]osmocli.QueryCliTestCase[*types.AccountLockedPastTimeNotUnlockingOnlyRequest]{
+		"basic test": {
+			Cmd: testAddresses[0].String() + " 1670431012",
+			ExpectedQuery: &types.AccountLockedPastTimeNotUnlockingOnlyRequest{
+				Owner:     testAddresses[0].String(),
+				Timestamp: time.Unix(1670431012, 0),
+			},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}
 
-// 	for _, tc := range testCases {
-// 		tc := tc
-
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.GetCmdAccountLockedPastTime()
-// 			clientCtx := val.ClientCtx
-
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			s.Require().NoError(err)
-
-// 			var result types.AccountLockedPastTimeResponse
-// 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
-// 			s.Require().Len(result.Locks, 1)
-// 		})
-// 	}
-// }
-
-// func (s IntegrationTestSuite) TestCmdAccountLockedPastTimeNotUnlockingOnly() {
-// 	val := s.network.Validators[0]
-
-// 	timestamp := time.Now().Unix()
-// 	testCases := []struct {
-// 		name string
-// 		args []string
-// 	}{
-// 		{
-// 			"query account locked coins past time not unlocking only",
-// 			[]string{
-// 				val.Address.String(),
-// 				fmt.Sprintf("%d", timestamp),
-// 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-// 			},
-// 		},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		tc := tc
-
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.GetCmdAccountLockedPastTimeNotUnlockingOnly()
-// 			clientCtx := val.ClientCtx
-
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			s.Require().NoError(err)
-
-// 			var result types.AccountLockedPastTimeNotUnlockingOnlyResponse
-// 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
-// 			s.Require().Len(result.Locks, 0)
-// 		})
-// 	}
-// }
+func TestCmdTotalLockedByDenom(t *testing.T) {
+	desc, _ := GetCmdTotalLockedByDenom()
+	tcs := map[string]osmocli.QueryCliTestCase[*types.LockedDenomRequest]{
+		"basic test": {
+			Cmd: "uosmo --min-duration=1s",
+			ExpectedQuery: &types.LockedDenomRequest{
+				Denom:    "uosmo",
+				Duration: time.Second,
+			},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}
 
 // func (s IntegrationTestSuite) TestCmdAccountUnlockedBeforeTime() {
 // 	val := s.network.Validators[0]

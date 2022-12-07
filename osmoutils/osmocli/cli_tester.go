@@ -1,7 +1,6 @@
 package osmocli
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
@@ -9,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
+	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/require"
 )
@@ -43,9 +43,10 @@ func RunQueryTestCases[Q proto.Message](t *testing.T, desc *QueryDescriptor, tes
 
 func RunTxTestCase[M sdk.Msg](t *testing.T, desc *TxCliDesc, tc *TxCliTestCase[M]) {
 	cmd := BuildTxCli[M](desc)
-
+	err := resetCommandFlagValues(cmd)
+	require.NoError(t, err, "error in resetCommandFlagValues")
 	args := strings.Split(tc.Cmd, " ")
-	err := cmd.Flags().Parse(args)
+	err = cmd.Flags().Parse(args)
 	require.NoError(t, err, "error in cmd.Flags().Parse(args)")
 	clientCtx := newClientContextWithFrom(t, cmd.Flags())
 
@@ -60,9 +61,10 @@ func RunTxTestCase[M sdk.Msg](t *testing.T, desc *TxCliDesc, tc *TxCliTestCase[M
 
 func RunQueryTestCase[Q proto.Message](t *testing.T, desc *QueryDescriptor, tc *QueryCliTestCase[Q]) {
 	cmd := BuildQueryCli[Q, int](desc, nil)
-
+	err := resetCommandFlagValues(cmd)
+	require.NoError(t, err, "error in resetCommandFlagValues")
 	args := strings.Split(tc.Cmd, " ")
-	err := cmd.Flags().Parse(args)
+	err = cmd.Flags().Parse(args)
 	require.NoError(t, err, "error in cmd.Flags().Parse(args)")
 
 	req, err := desc.ParseQuery(args, cmd.Flags())
@@ -79,10 +81,25 @@ func RunQueryTestCase[Q proto.Message](t *testing.T, desc *QueryDescriptor, tc *
 func newClientContextWithFrom(t *testing.T, fs *pflag.FlagSet) client.Context {
 	clientCtx := client.Context{}
 	from, _ := fs.GetString(flags.FlagFrom)
-	fmt.Println("hi, from", from)
 	fromAddr, fromName, _, err := client.GetFromFields(nil, from, true)
 	require.NoError(t, err)
 
 	clientCtx = clientCtx.WithFrom(from).WithFromAddress(fromAddr).WithFromName(fromName)
 	return clientCtx
+}
+
+// taken from https://github.com/golang/debug/pull/8,
+// due to no cobra command for resetting flag value
+func resetCommandFlagValues(cmd *cobra.Command) error {
+	var retErr error = nil
+	cmd.Flags().VisitAll(func(f *pflag.Flag) {
+		if f.Changed {
+			err := f.Value.Set(f.DefValue)
+			if err != nil {
+				retErr = err
+			}
+			f.Changed = false
+		}
+	})
+	return retErr
 }
