@@ -523,7 +523,8 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(withAckTracking bool) (sdk.Acc
 	if withAckTracking {
 		trackAcks = "true"
 	}
-	channels := `[["osmosis-test", "channel-0", "osmo"]]`
+	// Configuring two prefixes for the same channel here. This is so that we can test bad acks when the receiver can't handle the receiving addr
+	channels := `[["osmo", "channel-0"],["juno", "channel-0"]]`
 	crosschainAddr := suite.chainA.InstantiateContract(&suite.Suite,
 		fmt.Sprintf(`{"swap_contract": "%s", "track_ibc_sends": %s, "channels": %s}`, swaprouterAddr, trackAcks, channels), 2)
 
@@ -560,7 +561,7 @@ func (suite *HooksTestSuite) TestCrosschainSwaps() {
 
 	ctx := suite.chainA.GetContext()
 
-	msg := fmt.Sprintf(`{"osmosis_swap":{"input_coin":{"denom":"token0","amount":"1000"},"output_denom":"token1","slipage":{"max_slipage_percentage":"20"},"receiver":"%s","channel":"osmosis-test","failed_delivery":null}}`,
+	msg := fmt.Sprintf(`{"osmosis_swap":{"input_coin":{"denom":"token0","amount":"1000"},"output_denom":"token1","slipage":{"max_slipage_percentage":"20"},"receiver":"%s","failed_delivery":null}}`,
 		suite.chainB.SenderAccount.GetAddress(),
 	)
 	res, err := contractKeeper.Execute(ctx, crosschainAddr, owner, []byte(msg), sdk.NewCoins(sdk.NewCoin("token0", sdk.NewInt(1000))))
@@ -602,7 +603,7 @@ func (suite *HooksTestSuite) CrosschainSwapsViaIBCTest(withAckTracking bool) {
 	suite.Require().Equal(int64(0), balanceToken1.Amount.Int64())
 
 	// Generate swap instructions for the contract
-	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"input_coin":{"denom":"token0","amount":"1000"},"output_denom":"token1","slipage":{"max_slipage_percentage":"20"},"receiver":"%s","channel":"osmosis-test","failed_delivery":null}}`,
+	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"input_coin":{"denom":"token0","amount":"1000"},"output_denom":"token1","slipage":{"max_slipage_percentage":"20"},"receiver":"%s","failed_delivery":null}}`,
 		receiver,
 	)
 	// Generate full memo
@@ -648,7 +649,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 
 	// Generate swap instructions for the contract. This will send correctly on chainA, but fail to be received on chainB
 	recoverAddr := suite.chainA.SenderAccounts[8].SenderAccount.GetAddress()
-	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"input_coin":{"denom":"token0","amount":"1000"},"output_denom":"token1","slipage":{"max_slipage_percentage":"20"},"receiver":"%s","channel":"channel-0","failed_delivery": {"recovery_addr": "%s"}}}`,
+	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"input_coin":{"denom":"token0","amount":"1000"},"output_denom":"token1","slipage":{"max_slipage_percentage":"20"},"receiver":"%s","failed_delivery": {"recovery_addr": "%s"}}}`,
 		receiver, // Note that this is the chain A account, which does not exist on chain B
 		recoverAddr,
 	)

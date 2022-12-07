@@ -65,11 +65,5 @@ pub const INFLIGHT_PACKETS: Map<(&str, u64), IBCTransfer> = Map::new("inflight")
 /// Recovery. This tracks any recovery that an addr can execute.
 pub const RECOVERY_STATES: Map<&Addr, Vec<IBCTransfer>> = Map::new("recovery");
 
-#[cw_serde]
-pub struct ChainData {
-    pub channel: String,
-    pub addr_prefix: String,
-}
-
-/// A mapping of knwon IBC channels accepted by the contract
-pub const CHANNEL_MAP: Map<&str, ChainData> = Map::new("chain_map");
+/// A mapping of knwon IBC channels accepted by the contract. bech32_prefix => channel
+pub const CHANNEL_MAP: Map<&str, String> = Map::new("chain_map");
