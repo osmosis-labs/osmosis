@@ -41,7 +41,7 @@ def chebyshev_poly_approx(fn, x_start: int, x_end: int, num_terms: int) -> np.nd
 
     return coef
 
-def chebyshev_rational_approx(fn, x_start: int, x_end: int, num_terms_numerator: int, num_terms_denominator: int) -> Tuple[np.array, np.array]:
+def chebyshev_rational_approx(fn, x_start: int, x_end: int, num_parameters: int) -> Tuple[np.array, np.array]:
     """ Returns a rational approximation between x_start and x_end with num_terms terms
     using Chebyshev nodes.
 
@@ -59,14 +59,38 @@ def chebyshev_rational_approx(fn, x_start: int, x_end: int, num_terms_numerator:
     - item 1: num_terms equispaced x coordinates between x_start and x_end
     - item 2: num_terms y coordinates for the equispaced x coordinates
     """
+
+    if num_parameters % 2 == 0:
+        # if num_parameters is 6, we want (3, 4) terms
+        # assume h(x) = p(x) / q(x)
+        # we always set the first term of q(x) to 1 for ease of calculation.
+        # so, we want p(x) to have 3 terms and q(x) to have 4 terms.
+        num_terms_numerator = num_parameters // 2
+        num_terms_denominator = num_parameters // 2 + 1
+    else:
+        # if num_parameters is 5, we want (3, 3) terms
+        # assume h(x) = p(x) / q(x)
+        # we always set the first term of q(x) to 1 for ease of calculation.
+        # so, we want p(x) to have 3 terms and q(x) to have 4 terms.
+        num_terms_numerator = num_parameters // 2 + 1
+        num_terms_denominator = num_parameters // 2 + 1
+
+    print(F"\n\nRational ({num_terms_numerator}/{num_terms_denominator}) with {num_parameters} parameters")
+
     # Compute Chebyshev coordinates.
-    x_chebyshev, y_chebyshev = chebyshev.get_nodes(fn, x_start, x_end, num_terms_numerator  + num_terms_denominator - 1)
+    x_chebyshev, y_chebyshev = chebyshev.get_nodes(fn, x_start, x_end, num_parameters)
+
+    print(F"\n\nx_chebyshev: {x_chebyshev}")
+
+    print(F"\n\ny_chebyshev: {y_chebyshev}")
 
     # Construct a system of linear equations.
-    vandermonde_matrix = rational.construct_rational_eval_matrix(x_chebyshev, y_chebyshev)
+    matrix = rational.construct_rational_eval_matrix(x_chebyshev, y_chebyshev, num_terms_numerator, num_terms_denominator)
+
+    print(F"\n\nmatrix: {matrix}")
 
     # Solve the matrix to get the coefficients used in the final approximation polynomial.
-    coef = np.linalg.solve(np.array(vandermonde_matrix), y_chebyshev)
+    coef = np.linalg.solve(np.array(matrix), y_chebyshev)
 
     # first num_terms_numerator values are the numerator coefficients
     # next num_terms_numerator - 1 values are the denominator coefficients

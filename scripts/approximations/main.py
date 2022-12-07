@@ -22,16 +22,8 @@ def main():
     x_start = 0
     # end of the interval to calculate the approximation on
     x_end = 1
-    # number of terms in the polynomial approximation / numerator of the rational approximation.
-    num_terms_approximation_poly = 6
-
-    num_terms_aprroximation_rational_numerator = num_terms_approximation_poly // 2
-    num_terms_aprroximation_rational_denominator = num_terms_approximation_poly // 2
-    if num_terms_approximation_poly % 2 == 1:
-        # Assume num_terms_approximation_poly is 3.
-        # Then, num_terms_aprroximation_rational_numerator = 1
-        # and num_terms_aprroximation_rational_denominator = 2
-        num_terms_aprroximation_rational_numerator += 1
+    # number of paramters to use for the approximations.
+    num_parameters = 6
 
     # number of (x,y) coordinates used to plot the resulting approximation.
     num_points_plot = 100000
@@ -54,13 +46,13 @@ def main():
     # 2. Approximations 
 
     # 2.1. Equispaced Polynomial Approximation
-    coefficients_equispaced_poly = approximations.equispaced_poly_approx(approximated_fn, x_start, x_end, num_terms_approximation_poly)
+    coefficients_equispaced_poly = approximations.equispaced_poly_approx(approximated_fn, x_start, x_end, num_parameters)
     
     # 2.2. Chebyshev Polynomial Approximation
-    coefficients_chebyshev_poly = approximations.chebyshev_poly_approx(approximated_fn, x_start, x_end, num_terms_approximation_poly)
+    coefficients_chebyshev_poly = approximations.chebyshev_poly_approx(approximated_fn, x_start, x_end, num_parameters)
     
     # 2.3. Chebyshev Rational Approximation
-    numerator_coefficients_chebyshev_rational, denominator_coefficients_chebyshev_rational = approximations.chebyshev_rational_approx(approximated_fn, x_start, x_end,num_terms_aprroximation_rational_numerator, num_terms_aprroximation_rational_denominator)
+    numerator_coefficients_chebyshev_rational, denominator_coefficients_chebyshev_rational = approximations.chebyshev_rational_approx(approximated_fn, x_start, x_end, num_parameters)
 
     # 2.4. Actual With Large Number of Coordinates (evenly spaced on the X-axis)
     x_accurate = np.linspace(x_start, x_end, num_points_plot_accurate)
@@ -101,7 +93,7 @@ def main():
 
         plt.legend(loc="upper left")
         plt.grid(True)
-        plt.title(f"Appproximation of e^x on [{x_start}, {x_end}] with {num_terms_approximation_poly} terms")
+        plt.title(f"Appproximation of e^x on [{x_start}, {x_end}] with {num_parameters} parameters")
         plt.show()
 
     #############################
@@ -110,7 +102,7 @@ def main():
     if shouldComputeErrorDelta:
         print(F"\n\nMax Error on [{x_start}, {x_end}]")
         print(F"{num_points_plot} coordinates equally spaced on the X axis")
-        print(F"{num_terms_approximation_poly} polynomial terms and ({num_terms_aprroximation_rational_numerator}, {num_terms_aprroximation_rational_denominator}) rational terms used for approximations.\n\n")
+        print(F"{num_parameters} parameters used\n\n")
 
         plot_nodes_y_actual = approximated_fn(plot_nodes_x)
 

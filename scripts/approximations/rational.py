@@ -1,6 +1,6 @@
 import numpy as np
 
-def construct_rational_eval_matrix(x_list: list, y_list: list) -> list[list]:
+def construct_rational_eval_matrix(x_list: list, y_list: list, num_terms_numerator: int, num_terms_denominator) -> list[list]:
     """ Constructs a matrix to use for computing coefficients for a rational approximation
         from the list of x and y values given.
         len(x_list) * len(x_list)
@@ -14,12 +14,12 @@ def construct_rational_eval_matrix(x_list: list, y_list: list) -> list[list]:
 
     matrix = []
 
-    for i in range(num_terms * 2 - 1):
+    for i in range(num_terms_numerator + num_terms_denominator - 1):
         row = []
-        for j in range(num_terms):
+        for j in range(num_terms_numerator):
             row.append(x_list[i]**j)
 
-        for j in range(num_terms):
+        for j in range(num_terms_denominator):
             # denominator terms
             if j > 0:
                 row.append(-1 * x_list[i]**j * y_list[i])
