@@ -11,6 +11,7 @@ import (
 	grpc1 "github.com/gogo/protobuf/grpc"
 	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 // global variable set on index command.
@@ -31,6 +32,8 @@ type QueryDescriptor struct {
 	CustomFlagOverrides map[string]string
 	// Map of FieldName -> CustomParseFn
 	CustomFieldParsers map[string]CustomFieldParserFn
+
+	ParseQuery func(args []string, flags *pflag.FlagSet) (proto.Message, error)
 
 	ModuleName string
 	numArgs    int
@@ -76,18 +79,23 @@ func prepareDescriptor[reqP proto.Message](desc *QueryDescriptor) {
 
 func BuildQueryCli[reqP proto.Message, querier any](desc *QueryDescriptor, newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
 	prepareDescriptor[reqP](desc)
-	flagAdvice := FlagAdvice{
-		HasPagination:       desc.HasPagination,
-		CustomFlagOverrides: desc.CustomFlagOverrides,
-		CustomFieldParsers:  desc.CustomFieldParsers,
-	}.Sanitize()
+	if desc.ParseQuery == nil {
+		desc.ParseQuery = func(args []string, fs *pflag.FlagSet) (proto.Message, error) {
+			flagAdvice := FlagAdvice{
+				HasPagination:       desc.HasPagination,
+				CustomFlagOverrides: desc.CustomFlagOverrides,
+				CustomFieldParsers:  desc.CustomFieldParsers,
+			}.Sanitize()
+			return ParseFieldsFromFlagsAndArgs[reqP](flagAdvice, fs, args)
+		}
+	}
+
 	cmd := &cobra.Command{
 		Use:   desc.Use,
 		Short: desc.Short,
 		Long:  desc.Long,
 		Args:  cobra.ExactArgs(desc.numArgs),
-		RunE: NewQueryLogicAllFieldsAsArgs[reqP](
-			flagAdvice, desc.QueryFnName, newQueryClientFn),
+		RunE:  queryLogic(desc, newQueryClientFn),
 	}
 	flags.AddQueryFlagsToCmd(cmd)
 	AddFlags(cmd, desc.Flags)
@@ -143,7 +151,7 @@ func callQueryClientFn(ctx context.Context, fnName string, req proto.Message, q 
 	return res, nil
 }
 
-func NewQueryLogicAllFieldsAsArgs[reqP proto.Message, querier any](flagAdvice FlagAdvice, keeperFnName string,
+func queryLogic[querier any](desc *QueryDescriptor,
 	newQueryClientFn func(grpc1.ClientConn) querier) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		clientCtx, err := client.GetClientQueryContext(cmd)
@@ -151,14 +159,13 @@ func NewQueryLogicAllFieldsAsArgs[reqP proto.Message, querier any](flagAdvice Fl
 			return err
 		}
 		queryClient := newQueryClientFn(clientCtx)
-		var req reqP
 
-		req, err = ParseFieldsFromFlagsAndArgs[reqP](flagAdvice, cmd.Flags(), args)
+		req, err := desc.ParseQuery(args, cmd.Flags())
 		if err != nil {
 			return err
 		}
 
-		res, err := callQueryClientFn(cmd.Context(), keeperFnName, req, queryClient)
+		res, err := callQueryClientFn(cmd.Context(), desc.QueryFnName, req, queryClient)
 		if err != nil {
 			return err
 		}

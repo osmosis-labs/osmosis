@@ -235,7 +235,6 @@ func GetCmdTotalLockedByDenom() *cobra.Command {
 		CustomFlagOverrides: map[string]string{
 			"duration": FlagMinDuration,
 		},
-		QueryFnName: "LockedDenom",
 	}, types.NewQueryClient)
 
 	cmd.Flags().AddFlagSet(FlagSetMinDuration())

@@ -64,75 +64,29 @@ func TestBeginUnlockingByIDCmd(t *testing.T) {
 	osmocli.RunTxTestCases(t, desc, tcs)
 }
 
-// func (s *IntegrationTestSuite) TestCmdAccountUnlockingCoins() {
-// 	val := s.network.Validators[0]
+func TestModuleBalanceCmd(t *testing.T) {
+	desc, _ := GetCmdModuleBalance()
+	tcs := map[string]osmocli.QueryCliTestCase[*types.ModuleBalanceRequest]{
+		"basic test": {
+			Cmd:           "",
+			ExpectedQuery: &types.ModuleBalanceRequest{},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}
 
-// 	testCases := []struct {
-// 		name  string
-// 		args  []string
-// 		coins sdk.Coins
-// 	}{
-// 		{
-// 			"query validator account unlocking coins",
-// 			[]string{
-// 				val.Address.String(),
-// 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-// 			},
-// 			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))},
-// 		},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		tc := tc
-
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.GetCmdAccountUnlockingCoins()
-// 			clientCtx := val.ClientCtx
-
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			s.Require().NoError(err)
-
-// 			var result types.AccountUnlockingCoinsResponse
-// 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
-// 			s.Require().Equal(tc.coins.String(), result.Coins.String())
-// 		})
-// 	}
-// }
-
-// func (s IntegrationTestSuite) TestCmdAccountLockedCoins() {
-// 	val := s.network.Validators[0]
-
-// 	testCases := []struct {
-// 		name  string
-// 		args  []string
-// 		coins sdk.Coins
-// 	}{
-// 		{
-// 			"query account locked coins",
-// 			[]string{
-// 				val.Address.String(),
-// 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-// 			},
-// 			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))},
-// 		},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		tc := tc
-
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.GetCmdAccountLockedCoins()
-// 			clientCtx := val.ClientCtx
-
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			s.Require().NoError(err)
-
-// 			var result types.ModuleLockedAmountResponse
-// 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
-// 			s.Require().Equal(tc.coins.String(), result.Coins.String())
-// 		})
-// 	}
-// }
+func TestAccountUnlockingCoinsCmd(t *testing.T) {
+	desc, _ := GetCmdAccountUnlockingCoins()
+	tcs := map[string]osmocli.QueryCliTestCase[*types.AccountUnlockingCoinsRequest]{
+		"basic test": {
+			Cmd: testAddresses[0].String(),
+			ExpectedQuery: &types.AccountUnlockingCoinsRequest{
+				Owner: testAddresses[0].String(),
+			},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}
 
 // func (s IntegrationTestSuite) TestCmdAccountLockedPastTime() {
 // 	val := s.network.Validators[0]

@@ -33,6 +33,14 @@ func RunTxTestCases[M sdk.Msg](t *testing.T, desc *TxCliDesc, testcases map[stri
 	}
 }
 
+func RunQueryTestCases[Q proto.Message](t *testing.T, desc *QueryDescriptor, testcases map[string]QueryCliTestCase[Q]) {
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			RunQueryTestCase(t, desc, &tc)
+		})
+	}
+}
+
 func RunTxTestCase[M sdk.Msg](t *testing.T, desc *TxCliDesc, tc *TxCliTestCase[M]) {
 	cmd := BuildTxCli[M](desc)
 
@@ -50,22 +58,21 @@ func RunTxTestCase[M sdk.Msg](t *testing.T, desc *TxCliDesc, tc *TxCliTestCase[M
 	require.Equal(t, tc.ExpectedMsg, msg)
 }
 
-// func RunQueryTestCase[Q proto.Message](t *testing.T, desc *QueryDescriptor, tc *QueryCliTestCase[Q]) {
-// 	cmd := BuildQueryCli[Q, int](desc, nil)
+func RunQueryTestCase[Q proto.Message](t *testing.T, desc *QueryDescriptor, tc *QueryCliTestCase[Q]) {
+	cmd := BuildQueryCli[Q, int](desc, nil)
 
-// 	args := strings.Split(tc.Cmd, " ")
-// 	err := cmd.Flags().Parse(args)
-// 	require.NoError(t, err, "error in cmd.Flags().Parse(args)")
-// 	clientCtx := newClientContextWithFrom(t, cmd.Flags())
+	args := strings.Split(tc.Cmd, " ")
+	err := cmd.Flags().Parse(args)
+	require.NoError(t, err, "error in cmd.Flags().Parse(args)")
 
-// 	req, err = ParseFieldsFromFlagsAndArgs[Q](flagAdvice, cmd.Flags(), args)
-// 	if tc.ExpectedErr {
-// 		require.Error(t, err)
-// 		return
-// 	}
-// 	require.NoError(t, err, "error in desc.ParseAndBuildMsg")
-// 	require.Equal(t, tc.ExpectedMsg, msg)
-// }
+	req, err := desc.ParseQuery(args, cmd.Flags())
+	if tc.ExpectedErr {
+		require.Error(t, err)
+		return
+	}
+	require.NoError(t, err, "error in desc.ParseQuery")
+	require.Equal(t, tc.ExpectedQuery, req)
+}
 
 // This logic is copied from the SDK, it should've just been publicly exposed.
 // But instead its buried within a mega-method.
