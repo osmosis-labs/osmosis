@@ -64,41 +64,6 @@ func TestBeginUnlockingByIDCmd(t *testing.T) {
 	osmocli.RunTxTestCases(t, desc, tcs)
 }
 
-// func (s *IntegrationTestSuite) TestCmdAccountUnlockableCoins() {
-// 	val := s.network.Validators[0]
-
-// 	testCases := []struct {
-// 		name  string
-// 		args  []string
-// 		coins sdk.Coins
-// 	}{
-// 		{
-// 			"query validator account unlockable coins",
-// 			[]string{
-// 				val.Address.String(),
-// 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-// 			},
-// 			sdk.Coins{},
-// 		},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		tc := tc
-
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.GetCmdAccountUnlockableCoins()
-// 			clientCtx := val.ClientCtx
-
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			s.Require().NoError(err)
-
-// 			var result types.AccountUnlockableCoinsResponse
-// 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
-// 			s.Require().Equal(tc.coins.String(), result.Coins.String())
-// 		})
-// 	}
-// }
-
 // func (s *IntegrationTestSuite) TestCmdAccountUnlockingCoins() {
 // 	val := s.network.Validators[0]
 
@@ -128,74 +93,6 @@ func TestBeginUnlockingByIDCmd(t *testing.T) {
 // 			s.Require().NoError(err)
 
 // 			var result types.AccountUnlockingCoinsResponse
-// 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
-// 			s.Require().Equal(tc.coins.String(), result.Coins.String())
-// 		})
-// 	}
-// }
-
-// func (s IntegrationTestSuite) TestCmdModuleBalance() {
-// 	val := s.network.Validators[0]
-
-// 	testCases := []struct {
-// 		name  string
-// 		args  []string
-// 		coins sdk.Coins
-// 	}{
-// 		{
-// 			"query module balance",
-// 			[]string{
-// 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-// 			},
-// 			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(400))},
-// 		},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		tc := tc
-
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.GetCmdModuleBalance()
-// 			clientCtx := val.ClientCtx
-
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			s.Require().NoError(err)
-
-// 			var result types.ModuleBalanceResponse
-// 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
-// 			s.Require().Equal(tc.coins.String(), result.Coins.String())
-// 		})
-// 	}
-// }
-
-// func (s IntegrationTestSuite) TestCmdModuleLockedAmount() {
-// 	val := s.network.Validators[0]
-
-// 	testCases := []struct {
-// 		name  string
-// 		args  []string
-// 		coins sdk.Coins
-// 	}{
-// 		{
-// 			"query module locked balance",
-// 			[]string{
-// 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-// 			},
-// 			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(400))},
-// 		},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		tc := tc
-
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.GetCmdModuleLockedAmount()
-// 			clientCtx := val.ClientCtx
-
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			s.Require().NoError(err)
-
-// 			var result types.ModuleLockedAmountResponse
 // 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
 // 			s.Require().Equal(tc.coins.String(), result.Coins.String())
 // 		})

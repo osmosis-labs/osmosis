@@ -13,11 +13,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func QueryIndexCmd(moduleName string) *cobra.Command {
-	cmd := IndexCmd(moduleName)
-	cmd.Short = fmt.Sprintf("Querying commands for the %s module", moduleName)
-	return cmd
-}
+// global variable set on index command.
+// helps populate Longs, when not set in QueryDescriptor.
+var lastQueryModuleName string
 
 type QueryDescriptor struct {
 	Use   string
@@ -33,13 +31,51 @@ type QueryDescriptor struct {
 	CustomFlagOverrides map[string]string
 	// Map of FieldName -> CustomParseFn
 	CustomFieldParsers map[string]CustomFieldParserFn
+
+	ModuleName string
+	numArgs    int
 }
 
-func SimpleQueryFromDescriptor[reqP proto.Message, querier any](desc QueryDescriptor, newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
-	numArgs := ParseNumFields[reqP]() - len(desc.CustomFlagOverrides)
-	if desc.HasPagination {
-		numArgs = numArgs - 1
+func QueryIndexCmd(moduleName string) *cobra.Command {
+	cmd := IndexCmd(moduleName)
+	cmd.Short = fmt.Sprintf("Querying commands for the %s module", moduleName)
+	lastQueryModuleName = moduleName
+	return cmd
+}
+
+func AddQueryCmd[Q proto.Message, querier any](cmd *cobra.Command, newQueryClientFn func(grpc1.ClientConn) querier, f func() (*QueryDescriptor, Q)) {
+	desc, _ := f()
+	prepareDescriptor[Q](desc)
+	subCmd := BuildQueryCli[Q](desc, newQueryClientFn)
+	cmd.AddCommand(subCmd)
+}
+
+func (desc *QueryDescriptor) FormatLong(moduleName string) {
+	desc.Long = FormatLongDesc(desc.Long, NewLongMetadata(moduleName).WithShort(desc.Short))
+}
+
+func prepareDescriptor[reqP proto.Message](desc *QueryDescriptor) {
+	if !desc.HasPagination {
+		desc.HasPagination = ParseHasPagination[reqP]()
 	}
+	if desc.QueryFnName == "" {
+		desc.QueryFnName = ParseExpectedQueryFnName[reqP]()
+	}
+	if strings.Contains(desc.Long, "{") {
+		if desc.ModuleName == "" {
+			desc.ModuleName = lastQueryModuleName
+		}
+		desc.FormatLong(desc.ModuleName)
+	}
+
+	desc.numArgs = ParseNumFields[reqP]() - len(desc.CustomFlagOverrides)
+	if desc.HasPagination {
+		desc.numArgs = desc.numArgs - 1
+	}
+}
+
+func BuildQueryCli[reqP proto.Message, querier any](desc *QueryDescriptor, newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
+	prepareDescriptor[reqP](desc)
 	flagAdvice := FlagAdvice{
 		HasPagination:       desc.HasPagination,
 		CustomFlagOverrides: desc.CustomFlagOverrides,
@@ -49,7 +85,7 @@ func SimpleQueryFromDescriptor[reqP proto.Message, querier any](desc QueryDescri
 		Use:   desc.Use,
 		Short: desc.Short,
 		Long:  desc.Long,
-		Args:  cobra.ExactArgs(numArgs),
+		Args:  cobra.ExactArgs(desc.numArgs),
 		RunE: NewQueryLogicAllFieldsAsArgs[reqP](
 			flagAdvice, desc.QueryFnName, newQueryClientFn),
 	}
@@ -70,25 +106,23 @@ func SimpleQueryFromDescriptor[reqP proto.Message, querier any](desc QueryDescri
 func SimpleQueryCmd[reqP proto.Message, querier any](use string, short string, long string,
 	moduleName string, newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
 	desc := QueryDescriptor{
-		Use:           use,
-		Short:         short,
-		Long:          FormatLongDesc(long, NewLongMetadata(moduleName).WithShort(short)),
-		HasPagination: ParseHasPagination[reqP](),
-		QueryFnName:   ParseExpectedQueryFnName[reqP](),
+		Use:   use,
+		Short: short,
+		Long:  FormatLongDesc(long, NewLongMetadata(moduleName).WithShort(short)),
 	}
-	return SimpleQueryFromDescriptor[reqP](desc, newQueryClientFn)
+	return BuildQueryCli[reqP](&desc, newQueryClientFn)
 }
 
 func GetParams[reqP proto.Message, querier any](moduleName string,
 	newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
-	return SimpleQueryFromDescriptor[reqP](QueryDescriptor{
+	return BuildQueryCli[reqP](&QueryDescriptor{
 		Use:         "params [flags]",
 		Short:       fmt.Sprintf("Get the params for the x/%s module", moduleName),
 		QueryFnName: "Params",
 	}, newQueryClientFn)
 }
 
-func callQueryClientFn[reqP proto.Message, querier any](ctx context.Context, fnName string, req reqP, q querier) (res proto.Message, err error) {
+func callQueryClientFn(ctx context.Context, fnName string, req proto.Message, q any) (res proto.Message, err error) {
 	qVal := reflect.ValueOf(q)
 	method := qVal.MethodByName(fnName)
 	args := []reflect.Value{

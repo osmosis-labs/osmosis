@@ -24,11 +24,12 @@ import (
 func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
 
+	qcGetter := types.NewQueryClient
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdModuleBalance)
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdAccountUnlockingCoins)
 	cmd.AddCommand(
-		GetCmdModuleBalance(),
 		GetCmdModuleLockedAmount(),
 		GetCmdAccountUnlockableCoins(),
-		GetCmdAccountUnlockingCoins(),
 		GetCmdAccountLockedCoins(),
 		GetCmdAccountLockedPastTime(),
 		GetCmdAccountLockedPastTimeNotUnlockingOnly(),
@@ -52,11 +53,11 @@ func GetQueryCmd() *cobra.Command {
 // GetCmdModuleBalance returns full balance of the lockup module.
 // Lockup module is where coins of locks are held.
 // This includes locked balance and unlocked balance of the module.
-func GetCmdModuleBalance() *cobra.Command {
-	return osmocli.SimpleQueryCmd[*types.ModuleBalanceRequest](
-		"module-balance",
-		"Query module balance",
-		`{{.Short}}`, types.ModuleName, types.NewQueryClient)
+func GetCmdModuleBalance() (*osmocli.QueryDescriptor, *types.ModuleBalanceRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "module-balance",
+		Short: "Query module balance",
+		Long:  `{{.Short}}`}, &types.ModuleBalanceRequest{}
 }
 
 // GetCmdModuleLockedAmount returns locked balance of the module,
@@ -107,13 +108,12 @@ $ %s query lockup account-unlockable-coins <address>
 }
 
 // GetCmdAccountUnlockingCoins returns unlocking coins of a specific account.
-func GetCmdAccountUnlockingCoins() *cobra.Command {
-	return osmocli.SimpleQueryCmd[*types.AccountUnlockingCoinsRequest](
-		"account-unlocking-coins <address>",
-		"Query account's unlocking coins",
-		`{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} account-unlocking-coins <address>
-`, types.ModuleName, types.NewQueryClient)
+func GetCmdAccountUnlockingCoins() (*osmocli.QueryDescriptor, *types.AccountUnlockingCoinsRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "account-unlocking-coins <address>",
+		Short: "Query account's unlocking coins",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} account-unlocking-coins <address>`}, &types.AccountUnlockingCoinsRequest{}
 }
 
 // GetCmdAccountLockedCoins returns locked coins that that are still in a locked state from the specified account.
@@ -181,7 +181,7 @@ func GetCmdLockedByID() *cobra.Command {
 		QueryFnName: "LockedByID",
 	}
 	q.Long = osmocli.FormatLongDesc(q.Long, osmocli.NewLongMetadata(types.ModuleName).WithShort(q.Short))
-	return osmocli.SimpleQueryFromDescriptor[*types.LockedRequest](q, types.NewQueryClient)
+	return osmocli.BuildQueryCli[*types.LockedRequest](&q, types.NewQueryClient)
 }
 
 // GetCmdSyntheticLockupsByLockupID returns synthetic lockups by lockup id.
@@ -227,7 +227,7 @@ func GetCmdAccountLockedLongerDurationDenom() *cobra.Command {
 }
 
 func GetCmdTotalLockedByDenom() *cobra.Command {
-	cmd := osmocli.SimpleQueryFromDescriptor[*types.LockedDenomRequest](osmocli.QueryDescriptor{
+	cmd := osmocli.BuildQueryCli[*types.LockedDenomRequest](&osmocli.QueryDescriptor{
 		Use:   "total-locked-of-denom <denom>",
 		Short: "Query locked amount for a specific denom bigger then duration provided",
 		Long: osmocli.FormatLongDescDirect(`{{.Short}}{{.ExampleHeader}}
