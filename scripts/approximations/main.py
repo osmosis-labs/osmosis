@@ -78,16 +78,16 @@ def main():
         ###############################
         # Plot Every Approximation Kind
         if shouldPlotApproximations:
-            # 5.1 Equispaced Polynomial Approximation
+            # Equispaced Polynomial Approximation
             plt.plot(x_coordinates, y_eqispaced_poly, label="Equispaced Poly")
 
-            # 5.2 Chebyshev Polynomial Approximation
+            # Chebyshev Polynomial Approximation
             plt.plot(x_coordinates, y_chebyshev_poly, label="Chebyshev Poly")
 
-            # 5.3 Chebyshev Rational Approximation
+            # Chebyshev Rational Approximation
             plt.plot(x_coordinates, y_chebyshev_rational, label="Chebyshev Rational")
 
-            # 5.4 Actual With Large Number of Coordinates (evenly spaced on the X-axis)
+            # Actual With Large Number of Coordinates (evenly spaced on the X-axis)
             plt.plot(x_coordinates, y_actual, label=F"Actual")
 
             plt.legend(loc="upper left")

@@ -10,8 +10,6 @@ def construct_rational_eval_matrix(x_list: list, y_list: list, num_terms_numerat
             ...
             [1 x_n x_n^2 ... x_n^{n-1} - y_n*x_n - y_n*x_n^2 ... - y_n*x_n^{n-1}]
     """
-    num_terms = (len(x_list) + 1) // 2
-
     matrix = []
 
     for i in range(num_terms_numerator + num_terms_denominator - 1):
