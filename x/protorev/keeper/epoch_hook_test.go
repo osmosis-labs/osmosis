@@ -6,6 +6,12 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
 )
 
+// TestEpochHook tests that the epoch hook is correctly setting the pool IDs for the osmo and atom pools.
+// The epoch hook is run after the pools are set and committed in keeper_test.go. All of the pools are initialized in the setup function in keeper_test.go
+// and are available in the suite.pools variable. The pools are filtered to only include the pools that
+// have osmo or atom as one of the assets. The pools are then filtered again to only include the pools that
+// have the highest liquidity. The pools are then checked to see if the pool IDs are correctly set in the
+// osmo and atom stores.
 func (suite *KeeperTestSuite) TestEpochHook() {
 	// All of the pools initialized in the setup function are available in keeper_test.go
 	// akash <-> types.OsmosisDenomination

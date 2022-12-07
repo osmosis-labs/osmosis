@@ -45,6 +45,7 @@ func (h EpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epoch
 	return nil
 }
 
+// Update pools requests the highest liquidity pools from the gamm module and updates the pools in the store
 func (k Keeper) UpdatePools(ctx sdk.Context) error {
 	// Get the highest liquidity pools
 	osmoPools, atomPools, err := k.GetHighestLiquidityPools(ctx)

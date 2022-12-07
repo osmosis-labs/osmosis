@@ -81,7 +81,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 		sdk.NewCoin("busd", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293", sdk.NewInt(9000000000000000000)),
 	)
-
 	suite.fundAllAccountsWith()
 	suite.Commit()
 

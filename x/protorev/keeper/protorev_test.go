@@ -2,6 +2,7 @@ package keeper_test
 
 import "github.com/osmosis-labs/osmosis/v13/x/protorev/types"
 
+// TestGetAtomPool tests the GetAtomPool function.
 func (suite *KeeperTestSuite) TestGetAtomPool() {
 	cases := []struct {
 		description  string
@@ -55,6 +56,7 @@ func (suite *KeeperTestSuite) TestGetAtomPool() {
 	}
 }
 
+// TestDeleteAllAtomPools tests the DeleteAllAtomPools function.
 func (suite *KeeperTestSuite) TestDeleteAllAtomPools() {
 	suite.App.AppKeepers.ProtoRevKeeper.DeleteAllAtomPools(suite.Ctx)
 
@@ -67,6 +69,7 @@ func (suite *KeeperTestSuite) TestDeleteAllAtomPools() {
 	}
 }
 
+// TestGetOsmoPool tests the GetOsmoPool function.
 func (suite *KeeperTestSuite) TestGetOsmoPool() {
 	cases := []struct {
 		description  string
@@ -109,6 +112,7 @@ func (suite *KeeperTestSuite) TestGetOsmoPool() {
 
 }
 
+// TestDeleteAllOsmoPools tests the DeleteAllOsmoPools function.
 func (suite *KeeperTestSuite) TestDeleteAllOsmoPools() {
 	suite.App.AppKeepers.ProtoRevKeeper.DeleteAllOsmoPools(suite.Ctx)
 
@@ -121,6 +125,7 @@ func (suite *KeeperTestSuite) TestDeleteAllOsmoPools() {
 	}
 }
 
+// TestGetTokenPairArbRoutes tests the GetTokenPairArbRoutes function.
 func (suite *KeeperTestSuite) TestGetTokenPairArbRoutes() {
 	// Tests that we can properly retrieve all of the routes that were set up
 	for _, tokenPair := range suite.tokenPairArbRoutes {
@@ -135,6 +140,7 @@ func (suite *KeeperTestSuite) TestGetTokenPairArbRoutes() {
 	suite.Require().Error(err)
 }
 
+// TestGetAllTokenPairArbRoutes tests the GetAllTokenPairArbRoutes function.
 func (suite *KeeperTestSuite) TestGetAllTokenPairArbRoutes() {
 	// Tests that we can properly retrieve all of the routes that were set up
 	tokenPairArbRoutes, err := suite.App.ProtoRevKeeper.GetAllTokenPairArbRoutes(suite.Ctx)
@@ -145,6 +151,7 @@ func (suite *KeeperTestSuite) TestGetAllTokenPairArbRoutes() {
 	suite.Require().Equal(suite.tokenPairArbRoutes, tokenPairArbRoutes)
 }
 
+// TestDeleteAllTokenPairArbRoutes tests the DeleteAllTokenPairArbRoutes function.
 func (suite *KeeperTestSuite) TestDeleteAllTokenPairArbRoutes() {
 	// Tests that we can properly retrieve all of the routes that were set up
 	tokenPairArbRoutes, err := suite.App.ProtoRevKeeper.GetAllTokenPairArbRoutes(suite.Ctx)

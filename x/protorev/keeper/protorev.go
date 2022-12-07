@@ -99,7 +99,7 @@ func (k Keeper) SetOsmoPool(ctx sdk.Context, denom string, poolId uint64) {
 	store.Set(key, sdk.Uint64ToBigEndian(poolId))
 }
 
-// DeleteAllOsmoPools deletes all the Osmo pools
+// DeleteAllOsmoPools deletes all the Osmo pools from modules store
 func (k Keeper) DeleteAllOsmoPools(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixOsmoPools)
@@ -132,7 +132,7 @@ func (k Keeper) SetAtomPool(ctx sdk.Context, denom string, poolId uint64) {
 	store.Set(key, sdk.Uint64ToBigEndian(poolId))
 }
 
-// DeleteAllAtomPools deletes all the Atom pools
+// DeleteAllAtomPools deletes all the Atom pools from modules store
 func (k Keeper) DeleteAllAtomPools(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixAtomPools)
