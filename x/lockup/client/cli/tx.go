@@ -12,11 +12,9 @@ import (
 func GetTxCmd() *cobra.Command {
 	cmd := osmocli.TxIndexCmd(types.ModuleName)
 	osmocli.AddTxCmd(cmd, NewLockTokensCmd)
-	cmd.AddCommand(
-		NewBeginUnlockingAllCmd(),
-		NewBeginUnlockByIDCmd(),
-		NewForceUnlockByIdCmd(),
-	)
+	osmocli.AddTxCmd(cmd, NewBeginUnlockingAllCmd)
+	osmocli.AddTxCmd(cmd, NewBeginUnlockByIDCmd)
+	osmocli.AddTxCmd(cmd, NewForceUnlockByIdCmd)
 
 	return cmd
 }
@@ -33,28 +31,28 @@ func NewLockTokensCmd() (*osmocli.TxCliDesc, *types.MsgLockTokens) {
 }
 
 // TODO: We should change the Use string to be unlock-all
-func NewBeginUnlockingAllCmd() *cobra.Command {
-	return osmocli.BuildTxCli[*types.MsgBeginUnlockingAll](&osmocli.TxCliDesc{
+func NewBeginUnlockingAllCmd() (*osmocli.TxCliDesc, *types.MsgBeginUnlockingAll) {
+	return &osmocli.TxCliDesc{
 		Use:   "begin-unlock-tokens",
 		Short: "begin unlock not unlocking tokens from lockup pool for sender",
-	})
+	}, &types.MsgBeginUnlockingAll{}
 }
 
 // NewBeginUnlockByIDCmd unlocks individual period lock by ID.
-func NewBeginUnlockByIDCmd() *cobra.Command {
-	return osmocli.BuildTxCli[*types.MsgBeginUnlocking](&osmocli.TxCliDesc{
+func NewBeginUnlockByIDCmd() (*osmocli.TxCliDesc, *types.MsgBeginUnlocking) {
+	return &osmocli.TxCliDesc{
 		Use:   "begin-unlock-by-id [id]",
 		Short: "begin unlock individual period lock by ID",
 		CustomFlagOverrides: map[string]string{
 			"coins": FlagAmount,
 		},
 		Flags: osmocli.FlagDesc{OptionalFlags: []*pflag.FlagSet{FlagSetUnlockTokens()}},
-	})
+	}, &types.MsgBeginUnlocking{}
 }
 
 // NewForceUnlockByIdCmd force unlocks individual period lock by ID if proper permissions exist.
-func NewForceUnlockByIdCmd() *cobra.Command {
-	return osmocli.BuildTxCli[*types.MsgBeginUnlocking](&osmocli.TxCliDesc{
+func NewForceUnlockByIdCmd() (*osmocli.TxCliDesc, *types.MsgForceUnlock) {
+	return &osmocli.TxCliDesc{
 		Use:   "force-unlock-by-id [id]",
 		Short: "force unlocks individual period lock by ID",
 		Long:  "force unlocks individual period lock by ID. if no amount provided, entire lock is unlocked",
@@ -62,5 +60,5 @@ func NewForceUnlockByIdCmd() *cobra.Command {
 			"coins": FlagAmount,
 		},
 		Flags: osmocli.FlagDesc{OptionalFlags: []*pflag.FlagSet{FlagSetUnlockTokens()}},
-	})
+	}, &types.MsgForceUnlock{}
 }

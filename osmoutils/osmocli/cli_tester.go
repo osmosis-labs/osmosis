@@ -1,6 +1,7 @@
 package osmocli
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -29,9 +30,8 @@ func RunTxTestCase[M sdk.Msg](t *testing.T, desc *TxCliDesc, tc *TxCliTestCase[M
 	cmd := BuildTxCli[M](desc)
 
 	args := strings.Split(tc.Cmd, " ")
-	pflag.CommandLine.AddFlagSet(cmd.Flags())
-	err := pflag.CommandLine.Parse(args)
-	require.NoError(t, err, "error in pflag.CommandLine.Parse(args)")
+	err := cmd.Flags().Parse(args)
+	require.NoError(t, err, "error in cmd.Flags().Parse(args)")
 	clientCtx := newClientContextWithFrom(t, cmd.Flags())
 
 	msg, err := desc.ParseAndBuildMsg(clientCtx, args, cmd.Flags())
@@ -48,6 +48,7 @@ func RunTxTestCase[M sdk.Msg](t *testing.T, desc *TxCliDesc, tc *TxCliTestCase[M
 func newClientContextWithFrom(t *testing.T, fs *pflag.FlagSet) client.Context {
 	clientCtx := client.Context{}
 	from, _ := fs.GetString(flags.FlagFrom)
+	fmt.Println("hi, from", from)
 	fromAddr, fromName, _, err := client.GetFromFields(nil, from, true)
 	require.NoError(t, err)
 

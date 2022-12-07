@@ -11,32 +11,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 )
 
-// import (
-// 	"fmt"
-// 	"testing"
-// 	"time"
-
-// 	"github.com/gogo/protobuf/proto"
-// 	"github.com/stretchr/testify/suite"
-// 	tmcli "github.com/tendermint/tendermint/libs/cli"
-
-// 	"github.com/osmosis-labs/osmosis/v13/app"
-// 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
-// 	"github.com/osmosis-labs/osmosis/v13/x/lockup/client/cli"
-// 	lockuptestutil "github.com/osmosis-labs/osmosis/v13/x/lockup/client/testutil"
-// 	"github.com/osmosis-labs/osmosis/v13/x/lockup/types"
-
-// 	"github.com/cosmos/cosmos-sdk/client/flags"
-// 	"github.com/cosmos/cosmos-sdk/crypto/hd"
-// 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-// 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-// 	"github.com/cosmos/cosmos-sdk/testutil/network"
-// 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
-// )
-
 var testAddresses = osmoutils.CreateRandomAccounts(3)
 
-func TestMsgLockTokens(t *testing.T) {
+func TestLockTokensCmd(t *testing.T) {
 	desc, _ := NewLockTokensCmd()
 	tcs := map[string]osmocli.TxCliTestCase[*types.MsgLockTokens]{
 		"lock 201stake tokens for 1 day": {
@@ -51,172 +28,41 @@ func TestMsgLockTokens(t *testing.T) {
 	osmocli.RunTxTestCases(t, desc, tcs)
 }
 
-// 	for _, tc := range testCases {
-// 		tc := tc
+func TestBeginUnlockingAllCmd(t *testing.T) {
+	desc, _ := NewBeginUnlockingAllCmd()
+	tcs := map[string]osmocli.TxCliTestCase[*types.MsgBeginUnlockingAll]{
+		"basic test": {
+			Cmd: "--from=" + testAddresses[0].String(),
+			ExpectedMsg: &types.MsgBeginUnlockingAll{
+				Owner: testAddresses[0].String(),
+			},
+		},
+	}
+	osmocli.RunTxTestCases(t, desc, tcs)
+}
 
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.NewLockTokensCmd()
-// 			clientCtx := val.ClientCtx
-
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			if tc.expectErr {
-// 				s.Require().Error(err)
-// 			} else {
-// 				s.Require().NoError(err, out.String())
-// 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-
-// 				txResp := tc.respType.(*sdk.TxResponse)
-// 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
-// 			}
-// 		})
-// 	}
-// }
-
-// func (s *IntegrationTestSuite) TestBeginUnlockingCmd() {
-// 	val := s.network.Validators[0]
-
-// 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("BeginUnlockingAcc",
-// 		keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-// 	s.Require().NoError(err)
-
-// 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
-
-// 	_, err = banktestutil.MsgSendExec(
-// 		val.ClientCtx,
-// 		val.Address,
-// 		newAddr,
-// 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-// 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-// 		osmoutils.DefaultFeeString(s.cfg),
-// 	)
-// 	s.Require().NoError(err)
-
-// 	// lock tokens for a second
-// 	_, err = lockuptestutil.MsgLockTokens(val.ClientCtx, newAddr, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))), "1s")
-// 	s.Require().NoError(err)
-
-// 	_, err = s.network.WaitForHeight(1)
-// 	s.Require().NoError(err)
-
-// 	testCases := []struct {
-// 		name         string
-// 		args         []string
-// 		expectErr    bool
-// 		respType     proto.Message
-// 		expectedCode uint32
-// 	}{
-// 		{
-// 			"begin unlocking",
-// 			[]string{
-// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
-// 				// common args
-// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFees, s.feeCoins.String()),
-// 			},
-// 			false, &sdk.TxResponse{}, 0,
-// 		},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		tc := tc
-
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.NewBeginUnlockingAllCmd()
-// 			clientCtx := val.ClientCtx
-
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			if tc.expectErr {
-// 				s.Require().Error(err)
-// 			} else {
-// 				s.Require().NoError(err, out.String())
-// 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-
-// 				txResp := tc.respType.(*sdk.TxResponse)
-// 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
-// 			}
-// 		})
-// 	}
-// }
-
-// func (s *IntegrationTestSuite) TestNewBeginUnlockPeriodLockCmd() {
-// 	val := s.network.Validators[0]
-// 	clientCtx := val.ClientCtx
-
-// 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("BeginUnlockPeriodLockAcc",
-// 		keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-// 	s.Require().NoError(err)
-
-// 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
-
-// 	_, err = banktestutil.MsgSendExec(
-// 		clientCtx,
-// 		val.Address,
-// 		newAddr,
-// 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-// 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-// 		osmoutils.DefaultFeeString(s.cfg),
-// 	)
-// 	s.Require().NoError(err)
-
-// 	// lock tokens for a second
-// 	txResp := sdk.TxResponse{}
-// 	out, err := lockuptestutil.MsgLockTokens(clientCtx,
-// 		newAddr,
-// 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))),
-// 		"1s")
-// 	s.Require().NoError(err)
-// 	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-// 	// This is a hardcoded path in the events to get the lockID
-// 	// this is incredibly brittle...
-// 	// fmt.Println(txResp.Logs[0])
-// 	lockID := txResp.Logs[0].Events[2].Attributes[0].Value
-
-// 	_, err = s.network.WaitForHeight(1)
-// 	s.Require().NoError(err)
-
-// 	testCases := []struct {
-// 		name         string
-// 		args         []string
-// 		expectErr    bool
-// 		respType     proto.Message
-// 		expectedCode uint32
-// 	}{
-// 		{
-// 			"begin unlocking by id",
-// 			[]string{
-// 				lockID,
-// 				fmt.Sprintf("--%s=%s", cli.FlagAmount, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))).String()),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
-// 				// common args
-// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFees, s.feeCoins.String()),
-// 			},
-// 			false, &sdk.TxResponse{}, 0,
-// 		},
-// 	}
-// 	fmt.Println(testCases[0].args)
-
-// 	for _, tc := range testCases {
-// 		tc := tc
-
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.NewBeginUnlockByIDCmd()
-
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			if tc.expectErr {
-// 				s.Require().Error(err)
-// 			} else {
-// 				s.Require().NoError(err, out.String())
-// 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-
-// 				txResp := tc.respType.(*sdk.TxResponse)
-// 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
-// 			}
-// 		})
-// 	}
-// }
+func TestBeginUnlockingByIDCmd(t *testing.T) {
+	desc, _ := NewBeginUnlockByIDCmd()
+	tcs := map[string]osmocli.TxCliTestCase[*types.MsgBeginUnlocking]{
+		"basic test no coins": {
+			Cmd: "10 --from=" + testAddresses[0].String(),
+			ExpectedMsg: &types.MsgBeginUnlocking{
+				Owner: testAddresses[0].String(),
+				ID:    10,
+				Coins: sdk.Coins(nil),
+			},
+		},
+		"basic test w/ coins": {
+			Cmd: "10 --amount=5uosmo --from=" + testAddresses[0].String(),
+			ExpectedMsg: &types.MsgBeginUnlocking{
+				Owner: testAddresses[0].String(),
+				ID:    10,
+				Coins: sdk.NewCoins(sdk.NewInt64Coin("uosmo", 5)),
+			},
+		},
+	}
+	osmocli.RunTxTestCases(t, desc, tcs)
+}
 
 // func (s *IntegrationTestSuite) TestCmdAccountUnlockableCoins() {
 // 	val := s.network.Validators[0]
