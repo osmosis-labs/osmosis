@@ -250,7 +250,7 @@ $ %s query gamm estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85
 		},
 	}
 
-	cmd.Flags().AddFlagSet(FlagSetQuerySwapRoutes())
+	cmd.Flags().AddFlagSet(FlagSetMultihopSwapRoutes())
 	flags.AddQueryFlagsToCmd(cmd)
 	_ = cmd.MarkFlagRequired(FlagSwapRoutePoolIds)
 	_ = cmd.MarkFlagRequired(FlagSwapRouteDenoms)
@@ -303,7 +303,7 @@ $ %s query gamm estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz8
 		},
 	}
 
-	cmd.Flags().AddFlagSet(FlagSetQuerySwapRoutes())
+	cmd.Flags().AddFlagSet(FlagSetMultihopSwapRoutes())
 	flags.AddQueryFlagsToCmd(cmd)
 	_ = cmd.MarkFlagRequired(FlagSwapRoutePoolIds)
 	_ = cmd.MarkFlagRequired(FlagSwapRouteDenoms)

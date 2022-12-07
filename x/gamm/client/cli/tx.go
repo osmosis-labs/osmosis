@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	flag "github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
@@ -29,16 +30,15 @@ func NewTxCmd() *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-
+	osmocli.AddTxCmd(txCmd, NewJoinPoolCmd)
+	osmocli.AddTxCmd(txCmd, NewExitPoolCmd)
+	osmocli.AddTxCmd(txCmd, NewSwapExactAmountInCmd)
+	osmocli.AddTxCmd(txCmd, NewSwapExactAmountOutCmd)
+	osmocli.AddTxCmd(txCmd, NewJoinSwapExternAmountIn)
+	osmocli.AddTxCmd(txCmd, NewExitSwapExternAmountOut)
 	txCmd.AddCommand(
 		NewCreatePoolCmd(),
-		NewJoinPoolCmd(),
-		NewExitPoolCmd(),
-		NewSwapExactAmountInCmd(),
-		NewSwapExactAmountOutCmd(),
-		NewJoinSwapExternAmountIn(),
 		NewJoinSwapShareAmountOut(),
-		NewExitSwapExternAmountOut(),
 		NewExitSwapShareAmountIn(),
 		NewStableSwapAdjustScalingFactorsCmd(),
 	)
@@ -114,8 +114,8 @@ For stableswap (demonstrating need for a 1:1000 scaling factor, see doc)
 	return cmd
 }
 
-func NewJoinPoolCmd() *cobra.Command {
-	cmd := osmocli.BuildTxCli[*types.MsgJoinPool](&osmocli.TxCliDesc{
+func NewJoinPoolCmd() (*osmocli.TxCliDesc, *types.MsgJoinPool) {
+	return &osmocli.TxCliDesc{
 		Use:   "join-pool",
 		Short: "join a new pool and provide the liquidity to it",
 		CustomFlagOverrides: map[string]string{
@@ -124,17 +124,13 @@ func NewJoinPoolCmd() *cobra.Command {
 		},
 		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
 			"TokenInMaxs": osmocli.FlagOnlyParser(maxAmountsInParser),
-		}})
-
-	cmd.Flags().AddFlagSet(FlagSetJoinPool())
-	_ = cmd.MarkFlagRequired(FlagPoolId)
-	_ = cmd.MarkFlagRequired(FlagShareAmountOut)
-	_ = cmd.MarkFlagRequired(FlagMaxAmountsIn)
-	return cmd
+		},
+		Flags: osmocli.FlagDesc{RequiredFlags: []*pflag.FlagSet{FlagSetJoinPool()}},
+	}, &types.MsgJoinPool{}
 }
 
-func NewExitPoolCmd() *cobra.Command {
-	cmd := osmocli.BuildTxCli[*types.MsgExitPool](&osmocli.TxCliDesc{
+func NewExitPoolCmd() (*osmocli.TxCliDesc, *types.MsgExitPool) {
+	return &osmocli.TxCliDesc{
 		Use:   "exit-pool",
 		Short: "exit a new pool and withdraw the liquidity from it",
 		CustomFlagOverrides: map[string]string{
@@ -143,54 +139,40 @@ func NewExitPoolCmd() *cobra.Command {
 		},
 		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
 			"TokenOutMins": osmocli.FlagOnlyParser(minAmountsOutParser),
-		}})
-
-	cmd.Flags().AddFlagSet(FlagSetExitPool())
-	_ = cmd.MarkFlagRequired(FlagPoolId)
-	_ = cmd.MarkFlagRequired(FlagShareAmountIn)
-	_ = cmd.MarkFlagRequired(FlagMinAmountsOut)
-	return cmd
+		},
+		Flags: osmocli.FlagDesc{RequiredFlags: []*pflag.FlagSet{FlagSetExitPool()}},
+	}, &types.MsgExitPool{}
 }
 
-func NewSwapExactAmountInCmd() *cobra.Command {
-	cmd := osmocli.BuildTxCli[*types.MsgSwapExactAmountIn](&osmocli.TxCliDesc{
+func NewSwapExactAmountInCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountIn) {
+	return &osmocli.TxCliDesc{
 		Use:   "swap-exact-amount-in [token-in] [token-out-min-amount]",
 		Short: "swap exact amount in",
 		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
 			"Routes": osmocli.FlagOnlyParser(swapAmountInRoutes),
-		}})
-
-	cmd.Flags().AddFlagSet(FlagSetQuerySwapRoutes())
-	_ = cmd.MarkFlagRequired(FlagSwapRoutePoolIds)
-	_ = cmd.MarkFlagRequired(FlagSwapRouteDenoms)
-	return cmd
+		},
+		Flags: osmocli.FlagDesc{RequiredFlags: []*pflag.FlagSet{FlagSetMultihopSwapRoutes()}},
+	}, &types.MsgSwapExactAmountIn{}
 }
 
-func NewSwapExactAmountOutCmd() *cobra.Command {
+func NewSwapExactAmountOutCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountOut) {
 	// Can't get rid of this parser without a break, because the args are out of order.
-	cmd := osmocli.TxCliDesc{
+	return &osmocli.TxCliDesc{
 		Use:              "swap-exact-amount-out [token-out] [token-in-max-amount]",
 		Short:            "swap exact amount out",
 		NumArgs:          2,
 		ParseAndBuildMsg: NewBuildSwapExactAmountOutMsg,
-	}.BuildCommandCustomFn()
-
-	cmd.Flags().AddFlagSet(FlagSetSwapAmountOutRoutes())
-	_ = cmd.MarkFlagRequired(FlagSwapRoutePoolIds)
-	_ = cmd.MarkFlagRequired(FlagSwapRouteDenoms)
-	return cmd
+		Flags:            osmocli.FlagDesc{RequiredFlags: []*pflag.FlagSet{FlagSetMultihopSwapRoutes()}},
+	}, &types.MsgSwapExactAmountOut{}
 }
 
-func NewJoinSwapExternAmountIn() *cobra.Command {
-	cmd := osmocli.BuildTxCli[*types.MsgJoinSwapExternAmountIn](&osmocli.TxCliDesc{
+func NewJoinSwapExternAmountIn() (*osmocli.TxCliDesc, *types.MsgJoinSwapExternAmountIn) {
+	return &osmocli.TxCliDesc{
 		Use:                 "join-swap-extern-amount-in [token-in] [share-out-min-amount]",
 		Short:               "join swap extern amount in",
 		CustomFlagOverrides: poolIdFlagOverride,
-	})
-
-	cmd.Flags().AddFlagSet(FlagSetJustPoolId())
-	_ = cmd.MarkFlagRequired(FlagPoolId)
-	return cmd
+		Flags:               osmocli.FlagDesc{RequiredFlags: []*pflag.FlagSet{FlagSetJustPoolId()}},
+	}, &types.MsgJoinSwapExternAmountIn{}
 }
 
 func NewJoinSwapShareAmountOut() *cobra.Command {
@@ -198,23 +180,18 @@ func NewJoinSwapShareAmountOut() *cobra.Command {
 		Use:                 "join-swap-share-amount-out [token-in-denom] [token-in-max-amount] [share-out-amount]",
 		Short:               "join swap share amount out",
 		CustomFlagOverrides: poolIdFlagOverride,
+		Flags:               osmocli.FlagDesc{RequiredFlags: []*pflag.FlagSet{FlagSetJustPoolId()}},
 	})
-
-	cmd.Flags().AddFlagSet(FlagSetJustPoolId())
-	_ = cmd.MarkFlagRequired(FlagPoolId)
 	return cmd
 }
 
-func NewExitSwapExternAmountOut() *cobra.Command {
-	cmd := osmocli.BuildTxCli[*types.MsgExitSwapExternAmountOut](&osmocli.TxCliDesc{
+func NewExitSwapExternAmountOut() (*osmocli.TxCliDesc, *types.MsgExitSwapExternAmountOut) {
+	return &osmocli.TxCliDesc{
 		Use:                 "exit-swap-extern-amount-out [token-out] [share-in-max-amount]",
 		Short:               "exit swap extern amount out",
 		CustomFlagOverrides: poolIdFlagOverride,
-	})
-
-	cmd.Flags().AddFlagSet(FlagSetJustPoolId())
-	_ = cmd.MarkFlagRequired(FlagPoolId)
-	return cmd
+		Flags:               osmocli.FlagDesc{RequiredFlags: []*pflag.FlagSet{FlagSetJustPoolId()}},
+	}, &types.MsgExitSwapExternAmountOut{}
 }
 
 func NewExitSwapShareAmountIn() *cobra.Command {

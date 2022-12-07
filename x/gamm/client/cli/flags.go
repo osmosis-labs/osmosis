@@ -66,19 +66,10 @@ type smoothWeightChangeParamsInputs struct {
 	TargetPoolWeights string `json:"target-pool-weights"`
 }
 
-func FlagSetQuerySwapRoutes() *flag.FlagSet {
+func FlagSetMultihopSwapRoutes() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
-
 	fs.String(FlagSwapRoutePoolIds, "", "swap route pool id")
 	fs.String(FlagSwapRouteDenoms, "", "swap route amount")
-	return fs
-}
-
-func FlagSetSwapAmountOutRoutes() *flag.FlagSet {
-	fs := flag.NewFlagSet("", flag.ContinueOnError)
-
-	fs.String(FlagSwapRoutePoolIds, "", "swap route pool ids")
-	fs.String(FlagSwapRouteDenoms, "", "swap route denoms")
 	return fs
 }
 
@@ -93,11 +84,9 @@ func FlagSetCreatePool() *flag.FlagSet {
 
 func FlagSetJoinPool() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
-
 	fs.Uint64(FlagPoolId, 0, "The id of pool")
 	fs.String(FlagShareAmountOut, "", "Minimum amount of Gamm tokens to receive")
 	fs.StringArray(FlagMaxAmountsIn, []string{""}, "Maximum amount of each denom to send into the pool (specify multiple denoms with: --max-amounts-in=1uosmo --max-amounts-in=1uion)")
-
 	return fs
 }
 
