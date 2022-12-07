@@ -83,6 +83,15 @@ func ParseField(v reflect.Value, t reflect.Type, fieldIndex int, arg string, fla
 	fType := t.Field(fieldIndex)
 	// fmt.Printf("Field %d: %s %s %s\n", fieldIndex, fType.Name, fType.Type, fType.Type.Kind())
 
+	lowercaseFieldNameStr := strings.ToLower(fType.Name)
+	if parseFn, ok := flagAdvice.CustomFieldParsers[lowercaseFieldNameStr]; ok {
+		v, usedArg, err := parseFn(arg, flags)
+		if err == nil {
+			fVal.Set(reflect.ValueOf(v))
+		}
+		return usedArg, err
+	}
+
 	parsedFromFlag, err := ParseFieldFromFlag(fVal, fType, flagAdvice, flags)
 	if err != nil {
 		return false, err
@@ -208,6 +217,8 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 			v, err = ParseCoin(arg, fType.Name)
 		} else if typeStr == "types.Int" {
 			v, err = ParseSdkInt(arg, fType.Name)
+		} else if typeStr == "time.Time" {
+			v, err = ParseUnixTime(arg, fType.Name)
 		} else {
 			return fmt.Errorf("struct field type not recognized. Got type %v", fType)
 		}
