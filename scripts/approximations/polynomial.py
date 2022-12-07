@@ -1,8 +1,9 @@
 
 
 import numpy as np
+import sympy
 
-def construct_vandermonde_matrix(x_list: list) -> list[list]:
+def construct_vandermonde_matrix(x_list: list[sympy.Float]) -> sympy.Matrix:
     """ Constructs a Vandermonde matrix for a polynomial approximation.
     from the list of x values given.
     
@@ -25,17 +26,23 @@ def construct_vandermonde_matrix(x_list: list) -> list[list]:
     for i in range(num_terms):
         row = []
         for j in range(num_terms):
-            row.append(x_list[i]**j)
+            row.append(sympy.Pow(x_list[i], j))
         matrix.append(row)
 
-    return matrix
+    return sympy.Matrix(matrix)
 
-def evaluate(x: np.ndarray, coeffs: np.ndarray) -> np.ndarray:
+def evaluate(x, coeffs):
     """ Evaluates the polynomial. Given a list of x coordinates and a list of coefficients, returns a list of
     y coordinates, one for each x coordinate. The coefficients must be in ascending order.
     """
-    o = len(coeffs)
-    y = 0
-    for i in range(o):
-        y += coeffs[i]*x**i
+    print(f"x {x}")
+    print(f"coeffs {coeffs}")
+
+    y = []
+    for x_i in x:
+        y_i = 0
+        for i in range(len(coeffs)):
+            y_i += coeffs[i]*sympy.Pow(x_i, i)
+        y.append(y_i)
+
     return y
