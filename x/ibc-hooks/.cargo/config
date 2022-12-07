@@ -1,3 +1,2 @@
 [alias]
-wasm = "build --release --target wasm32-unknown-unknown"
-optimize-m1 = "cw-optimizoor"
+wasm = "build --release --lib --target wasm32-unknown-unknown"

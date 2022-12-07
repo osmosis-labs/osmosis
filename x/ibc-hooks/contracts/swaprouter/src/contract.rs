@@ -1,4 +1,4 @@
-#[cfg(not(feature = "library"))]
+#[cfg(not(feature = "imported"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdResult,
@@ -18,7 +18,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 // Msg Reply IDs
 pub const SWAP_REPLY_ID: u64 = 1u64;
 
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[cfg_attr(not(feature = "imported"), entry_point)]
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
@@ -38,7 +38,7 @@ pub fn instantiate(
     // .add_attribute("owner", owner.as_str()))
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[cfg_attr(not(feature = "imported"), entry_point)]
 pub fn execute(
     deps: DepsMut,
     env: Env,
@@ -59,7 +59,7 @@ pub fn execute(
     }
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[cfg_attr(not(feature = "imported"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetOwner {} => to_binary(&query_owner(deps)?),
@@ -70,7 +70,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[cfg_attr(not(feature = "imported"), entry_point)]
 pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
     deps.api
         .debug(&format!("executing swaprouter reply: {msg:?}"));

@@ -1,4 +1,8 @@
-cargo-features = ["workspace-inheritance"]
+# This feature has been stabilized in 1.64. If using an earlier version (like in
+# rust-optimizer-arm:0.12.8) you should uncomment this like to be able to
+# compile the contract
+#
+#cargo-features = ["workspace-inheritance"]
 
 [package]
 name = "crosschain-swaps"
@@ -21,8 +25,8 @@ crate-type = ["cdylib", "rlib"]
 [features]
 # for more explicit tests, cargo test --features=backtraces
 backtraces = ["cosmwasm-std/backtraces"]
-# use library feature to disable all instantiate/execute/query exports
-library = []
+# use imported feature to disable all instantiate/execute/query exports
+imported = []
 
 [package.metadata.scripts]
 optimize = """docker run --rm -v "$(pwd)":/code \
@@ -33,10 +37,10 @@ optimize = """docker run --rm -v "$(pwd)":/code \
 optimize-m1 = """docker run --rm -v "$(pwd)":/code \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  cosmwasm/rust-optimizer-arm64:0.12.8
+  cosmwasm/rust-optimizer-arm64:0.12.10
 """
 
-[[example]]
+[[bin]]
 name = "build-schema"
 path = "build-schema/schema.rs"
 
@@ -51,7 +55,7 @@ osmosis-std = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
 
-swaprouter = { path = "../swaprouter", features = ["library"]}
+swaprouter = { path = "../swaprouter", features = ["imported"]}
 cw-utils = "0.16.0"
 serde-json-wasm = "0.4.1"
 prost = {version = "0.11.2", default-features = false, features = ["prost-derive"]}
@@ -61,5 +65,4 @@ bech32 = "0.9.1"
 
 [dev-dependencies]
 cw-multi-test = "0.13.2"
-osmosis-std = "0.12.0"
 osmosis-testing = {git = "https://github.com/osmosis-labs/osmosis-rust", branch = "v13"}

@@ -10,17 +10,6 @@ authors = ["Nicolas Lara <nicolaslara@gmail.com>"]
 edition = "2021"
 rust-version  = "1.65.0"
 
-[workspace.dependencies]
-cosmwasm-schema = "1.1.2"
-cosmwasm-std = {version = "1.1.2", features = ["stargate"]}
-cosmwasm-storage = "1.1.2"
-cw-storage-plus = "0.16.0"
-cw2 = "0.16.0"
-schemars = "0.8.8"
-osmosis-std = "0.12.0"
-serde = { version = "1.0.137", default-features = false, features = ["derive"] }
-thiserror = { version = "1.0.31" }
-
 
 [profile.release]
 codegen-units = 1
@@ -32,3 +21,14 @@ opt-level = 3
 overflow-checks = true
 panic = 'abort'
 rpath = false
+
+[workspace.dependencies]
+cosmwasm-schema = "1.1.2"
+cosmwasm-std = {version = "1.1.2", features = ["stargate"]}
+cosmwasm-storage = "1.1.2"
+cw-storage-plus = "0.16.0"
+cw2 = "0.16.0"
+schemars = "0.8.8"
+osmosis-std = "0.12.0"
+serde = { version = "1.0.137", default-features = false, features = ["derive"] }
+thiserror = { version = "1.0.31" }

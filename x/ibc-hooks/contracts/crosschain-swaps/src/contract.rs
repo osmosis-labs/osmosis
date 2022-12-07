@@ -1,4 +1,4 @@
-#[cfg(not(feature = "library"))]
+#[cfg(not(feature = "imported"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdResult,
@@ -16,7 +16,7 @@ const CONTRACT_NAME: &str = "crates.io:crosschain-swaps";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Handling contract instantiation
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[cfg_attr(not(feature = "imported"), entry_point)]
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
@@ -38,13 +38,13 @@ pub fn instantiate(
         .add_attribute("owner", info.sender))
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[cfg_attr(not(feature = "imported"), entry_point)]
 pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
     match msg {}
 }
 
 /// Handling contract execution
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[cfg_attr(not(feature = "imported"), entry_point)]
 pub fn execute(
     deps: DepsMut,
     env: Env,
@@ -75,7 +75,7 @@ pub fn execute(
 }
 
 /// Handling contract queries
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[cfg_attr(not(feature = "imported"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Recoverable { addr } => to_binary(
@@ -86,7 +86,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[cfg_attr(not(feature = "imported"), entry_point)]
 pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
     match msg {
         SudoMsg::ReceivePacket {} => unimplemented!(),
@@ -100,7 +100,7 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, Contract
     }
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[cfg_attr(not(feature = "imported"), entry_point)]
 pub fn reply(deps: DepsMut, _env: Env, reply: Reply) -> Result<Response, ContractError> {
     deps.api
         .debug(&format!("executing crosschain reply: {reply:?}"));
