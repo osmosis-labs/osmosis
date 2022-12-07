@@ -21,13 +21,7 @@ import (
 )
 
 func NewTxCmd() *cobra.Command {
-	txCmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      "Generalized automated market maker transaction subcommands",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
+	txCmd := osmocli.TxIndexCmd(types.ModuleName)
 	osmocli.AddTxCmd(txCmd, NewJoinPoolCmd)
 	osmocli.AddTxCmd(txCmd, NewExitPoolCmd)
 	osmocli.AddTxCmd(txCmd, NewSwapExactAmountInCmd)
@@ -40,7 +34,6 @@ func NewTxCmd() *cobra.Command {
 		NewCreatePoolCmd().BuildCommandCustomFn(),
 		NewStableSwapAdjustScalingFactorsCmd(),
 	)
-
 	return txCmd
 }
 
