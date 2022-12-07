@@ -2,28 +2,28 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
-import polynomial
-import rational
 import approximations
 
 # This script does the following:
 # - Computes polynomial and rational approximations of a given function (e^x by default).
 # - Computes (x,y) coordinates for every approximation given the same x coordinates.
 # - Plots the results for rough comparison.
+# - Computes the max error for every approximation given the same x coordinates.
+# - Computes and plots max errors for every approximation with a varying number of parameters.
 # The following are the resources used to write the script:
 # https://xn--2-umb.com/22/approximation/
 # https://sites.tufts.edu/atasissa/files/2019/09/remez.pdf
 def main():
 
-    ##############################
-    # 1. Configuration Parameters
+    ##########################
+    # Configuration Parameters
 
     # start of the interval to calculate the approximation on
     x_start = 0
     # end of the interval to calculate the approximation on
     x_end = 1
     # number of paramters to use for the approximations.
-    num_parameters = 12
+    num_parameters = 11
 
     # number of (x,y) coordinates used to plot the resulting approximation.
     num_points_plot = 10000
@@ -40,59 +40,100 @@ def main():
     # Computes if true.
     shouldComputeErrorDelta = True
 
-    #####################
-    # 2. Approximations 
+    # flag controlling whether to plot max error for every approximation
+    # with a varying number of parameters. This is useful to find the most
+    # optimal number of parameters to use for each kind of approximation.
+    # Plots if true.
+    shouldPlotMaxError = True
 
     # Equispaced x coordinates to be used for plotting every approximation.
     x_coordinates = np.linspace(x_start, x_end, num_points_plot)
 
-    y_eqispaced_poly, y_chebyshev_poly, y_chebyshev_rational, y_actual = approximations.approx_and_eval_all(approximated_fn, num_parameters, x_coordinates)
+    if shouldComputeErrorDelta or shouldPlotApproximations:
+        ###############################################
+        # Approximation With Given Number of Parameters
+        y_eqispaced_poly, y_chebyshev_poly, y_chebyshev_rational, y_actual = approximations.approx_and_eval_all(approximated_fn, num_parameters, x_coordinates)
 
-    # Equispaced x coordinates to be used for plotting every approximation.
-    plot_nodes_x = np.linspace(x_start, x_end, num_points_plot)
+        ################
+        # Compute Errors
+        if shouldComputeErrorDelta:
+            print(F"\n\nMax Error on [{x_start}, {x_end}]")
+            print(F"{num_points_plot} coordinates equally spaced on the X axis")
+            print(F"{num_parameters} parameters used\n\n")
 
+            plot_nodes_y_actual = approximated_fn(x_coordinates)
 
-    #############################
-    # 4. Compute Errors
+            # Equispaced Polynomial Approximation
+            max_error_equispaced_poly = approximations.compute_max_error(y_eqispaced_poly, plot_nodes_y_actual)
+            print(F"Equispaced Poly: {max_error_equispaced_poly}")
 
-    if shouldComputeErrorDelta:
-        print(F"\n\nMax Error on [{x_start}, {x_end}]")
-        print(F"{num_points_plot} coordinates equally spaced on the X axis")
-        print(F"{num_parameters} parameters used\n\n")
+            # Chebyshev Polynomial Approximation
+            max_error_chebyshev_poly = approximations.compute_max_error(y_chebyshev_poly, plot_nodes_y_actual)
+            print(F"Chebyshev Poly: {max_error_chebyshev_poly}")
 
-        plot_nodes_y_actual = approximated_fn(plot_nodes_x)
+            # Chebyshev Rational Approximation
+            max_error_chebyshev_rational = approximations.compute_max_error(y_chebyshev_rational, plot_nodes_y_actual)
+            print(F"Chebyshev Rational: {max_error_chebyshev_rational}")
 
-        # 4.1 Equispaced Polynomial Approximation
-        delta_eqispaced_poly = np.abs(y_eqispaced_poly - plot_nodes_y_actual)
-        print(F"Equispaced Poly: {np.amax(delta_eqispaced_poly)}")
+        ###############################
+        # Plot Every Approximation Kind
+        if shouldPlotApproximations:
+            # 5.1 Equispaced Polynomial Approximation
+            plt.plot(x_coordinates, y_eqispaced_poly, label="Equispaced Poly")
 
-        # 4.2 Chebyshev Polynomial Approximation
-        delta_chebyshev_poly = np.abs(y_chebyshev_poly - plot_nodes_y_actual)
-        print(F"Chebyshev Poly: {np.amax(delta_chebyshev_poly)}")
+            # 5.2 Chebyshev Polynomial Approximation
+            plt.plot(x_coordinates, y_chebyshev_poly, label="Chebyshev Poly")
 
-        # 4.3 Chebyshev Rational Approximation
-        delta_chebyshev_rational = np.abs(y_chebyshev_rational - plot_nodes_y_actual)
-        print(F"Chebyshev Rational: {np.amax(delta_chebyshev_rational)}")
+            # 5.3 Chebyshev Rational Approximation
+            plt.plot(x_coordinates, y_chebyshev_rational, label="Chebyshev Rational")
 
-    #############################
-    # 5. Plot Every Approximation
+            # 5.4 Actual With Large Number of Coordinates (evenly spaced on the X-axis)
+            plt.plot(x_coordinates, y_actual, label=F"Actual")
 
-    if shouldPlotApproximations:
-        # 5.1 Equispaced Polynomial Approximation
-        plt.plot(plot_nodes_x, y_eqispaced_poly, label="Equispaced Poly")
+            plt.legend(loc="upper left")
+            plt.grid(True)
+            plt.title(f"Appproximation of e^x on [{x_start}, {x_end}] with {num_parameters} parameters")
+            plt.show()
 
-        # 5.2 Chebyshev Polynomial Approximation
-        plt.plot(plot_nodes_x, y_chebyshev_poly, label="Chebyshev Poly")
+    #####################################################
+    # Calculate Errors Given Varying Number of Parameters
+    if shouldPlotMaxError:
+        x_axis = []
 
-        # 5.3 Chebyshev Rational Approximation
-        plt.plot(plot_nodes_x, y_chebyshev_rational, label="Chebyshev Rational")
+        deltas_eqispaced_poly = []
+        deltas_chebyshev_poly = []
+        deltas_chebyshev_rational = []
 
-        # 5.4 Actual With Large Number of Coordinates (evenly spaced on the X-axis)
-        plt.plot(plot_nodes_x, y_actual, label=F"Actual")
+        ################
+        # Compute Deltas
+        # The deltas are taken from actual function values for different number of parameters
+        # This is needed to find the most optimal number of parameters to use.
+        for num_parameters in range(1, 21):
+            x_axis.append(int(num_parameters))
+            y_eqispaced_poly, y_chebyshev_poly, y_chebyshev_rational, y_actual = approximations.approx_and_eval_all(approximated_fn, num_parameters, x_coordinates)
+
+            deltas_eqispaced_poly.append(approximations.compute_max_error(y_eqispaced_poly, y_actual))
+            deltas_chebyshev_poly.append(approximations.compute_max_error(y_chebyshev_poly, y_actual))
+            deltas_chebyshev_rational.append(approximations.compute_max_error(y_chebyshev_rational, y_actual))
+
+        ##################
+        # Plot the results
+
+        # Equispaced Polynomial Approximation
+        plt.semilogy(x_axis, deltas_eqispaced_poly, label="Equispaced Poly")
+
+        # Chebyshev Polynomial Approximation
+        plt.semilogy(x_axis, deltas_chebyshev_poly, label="Chebyshev Poly")
+
+        # Chebyshev Rational Approximation
+        plt.semilogy(x_axis, deltas_chebyshev_rational, label="Chebyshev Rational")
 
         plt.legend(loc="upper left")
         plt.grid(True)
-        plt.title(f"Appproximation of e^x on [{x_start}, {x_end}] with {num_parameters} parameters")
+        plt.title(f"Approximation Errors on [{x_start}, {x_end}]")
+        plt.gca().invert_yaxis()
+        plt.xlabel('Number of Parameters')
+        plt.ylabel(F"-log_10{{ max | f'(x) - f(x) | }} where x is in [{x_start}, {x_end}]")
         plt.show()
 
 if __name__ == "__main__":
