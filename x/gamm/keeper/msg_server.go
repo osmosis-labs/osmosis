@@ -38,14 +38,6 @@ func NewStableswapMsgServerImpl(keeper *Keeper) stableswap.MsgServer {
 	}
 }
 
-// Deprecated: please use stableswapv2.
-// nolint: staticcheck
-func NewStableswapMsgServer(keeper *Keeper) stableswap.MsgServer {
-	return &msgServer{
-		keeper: keeper,
-	}
-}
-
 var (
 	_ types.MsgServer      = msgServer{}
 	_ balancer.MsgServer   = msgServer{}
