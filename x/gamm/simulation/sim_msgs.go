@@ -112,7 +112,6 @@ func RandomCreateUniV2Msg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context
 		})
 	}
 
-	// nolint: staticcheck
 	return &balancertypes.MsgCreateBalancerPool{
 		Sender:     sender.Address.String(),
 		PoolParams: poolParams,
