@@ -16,6 +16,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
+	concentrated "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
@@ -88,6 +89,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), swaprouter.NewMsgServerImpl(&am.k))
 	balancer.RegisterMsgServer(cfg.MsgServer(), swaprouter.NewBalancerMsgServerImpl(&am.k))
 	stableswap.RegisterMsgCreatorServer(cfg.MsgServer(), swaprouter.NewStableswapMsgServerImpl(&am.k))
+	concentrated.RegisterMsgCreatorServer(cfg.MsgServer(), swaprouter.NewConcentratedMsgServerImpl(&am.k))
 	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: swaprouterclient.Querier{K: am.k}})
 }
 

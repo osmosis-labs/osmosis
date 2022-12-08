@@ -88,7 +88,6 @@ func NewAppModule(concentratedLiquidityKeeper Keeper) AppModule {
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), NewMsgServerImpl(&am.keeper))
-	clmodel.RegisterMsgCreatorServer(cfg.MsgServer(), swaprouter.NewConcentratedMsgServerImpl(&am.swaprouterKeeper))
 	//types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
 }
 
