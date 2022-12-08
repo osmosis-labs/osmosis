@@ -13,9 +13,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
 	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutersimtypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/simulation"
 )
-
-var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
 
 // RandomJoinPoolMsg pseudo-randomly selects an existing pool ID, attempts to find an account with the
 // respective underlying token denoms, and attempts to execute a join pool transaction
@@ -94,7 +93,7 @@ func RandomCreateUniV2Msg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context
 	if !ok {
 		return nil, fmt.Errorf("provided sender with requested number of denoms does not exist")
 	}
-	if poolCoins.Add(PoolCreationFee).IsAnyGT(sim.BankKeeper().SpendableCoins(ctx, sender.Address)) {
+	if poolCoins.Add(swaproutersimtypes.PoolCreationFee).IsAnyGT(sim.BankKeeper().SpendableCoins(ctx, sender.Address)) {
 		return nil, errors.New("chose an account / creation amount that didn't pass fee bar")
 	}
 
@@ -403,7 +402,7 @@ func createPoolRestriction(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Contex
 	return func(acc legacysimulationtype.Account) bool {
 		accCoins := sim.BankKeeper().SpendableCoins(ctx, acc.Address)
 		hasTwoCoins := len(accCoins) >= 2
-		hasPoolCreationFee := accCoins.AmountOf("stake").GT(PoolCreationFee.Amount)
+		hasPoolCreationFee := accCoins.AmountOf(swaproutersimtypes.PoolCreationFee.Denom).GT(swaproutersimtypes.PoolCreationFee.Amount)
 		return hasTwoCoins && hasPoolCreationFee
 	}
 }
@@ -412,12 +411,12 @@ func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64
 	// select a pseudo-random pool ID, max bound by the upcoming pool ID
 	pools, err := k.GetPoolsAndPoke(ctx)
 	if err != nil {
-		return 0, nil, sdk.Coin{}, sdk.Coin{}, nil, "", err
+		return 0, nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), []string{}, "", err
 	}
 
 	numPools := len(pools)
 	if numPools == 0 {
-		return 0, nil, sdk.Coin{}, sdk.Coin{}, nil, "", fmt.Errorf("no pools exist")
+		return 0, nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), []string{}, "", fmt.Errorf("no pools exist")
 	}
 
 	pool_id := uint64(simtypes.RandLTBound(sim, numPools) + 1)

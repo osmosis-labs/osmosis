@@ -149,7 +149,7 @@ func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *s
 	swaprouterGen := types.DefaultGenesis()
 	// change the pool creation fee denom from uosmo to stake
 	// TODO: uncomment this once simulation is enabled.
-	// swaprouterGen.Params.PoolCreationFee = sdk.NewCoins(swaproutersimulation.PoolCreationFee)
+	swaprouterGen.Params.PoolCreationFee = sdk.NewCoins(swaproutersimulation.PoolCreationFee)
 	DefaultGenJson := simState.Cdc.MustMarshalJSON(swaprouterGen)
 	simState.GenState[types.ModuleName] = DefaultGenJson
 }

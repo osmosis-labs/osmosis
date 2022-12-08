@@ -11,7 +11,8 @@ import (
 
 // Parameter store keys.
 var (
-	KeyPoolCreationFee = []byte("PoolCreationFee")
+	KeyPoolCreationFee     = []byte("PoolCreationFee")
+	defaultPoolCreationFee = sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000) // 1000 OSMO
 )
 
 // ParamTable for gamm module.
@@ -28,7 +29,7 @@ func NewParams(poolCreationFee sdk.Coins) Params {
 // DefaultParams are the default swaprouter module parameters.
 func DefaultParams() Params {
 	return Params{
-		PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)}, // 1000 OSMO
+		PoolCreationFee: sdk.NewCoins(defaultPoolCreationFee),
 	}
 }
 
