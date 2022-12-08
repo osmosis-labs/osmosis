@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 var testAddresses = osmoutils.CreateRandomAccounts(3)
@@ -305,155 +306,44 @@ func TestNewExitSwapShareAmountInCmd(t *testing.T) {
 	osmocli.RunTxTestCases(t, desc, tcs)
 }
 
-// func (s *IntegrationTestSuite) TestGetCmdPools() {
-// 	val := s.network.Validators[0]
+func TestGetCmdPools(t *testing.T) {
+	desc, _ := cli.GetCmdPools()
+	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryPoolsRequest]{
+		"basic test": {
+			Cmd: "--offset=2",
+			ExpectedQuery: &types.QueryPoolsRequest{
+				Pagination: &query.PageRequest{Key: []uint8{}, Offset: 2, Limit: 100},
+			},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}
 
-// 	testCases := []struct {
-// 		name      string
-// 		args      []string
-// 		expectErr bool
-// 	}{
-// 		{
-// 			"query pools",
-// 			[]string{
-// 				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
-// 			},
-// 			false,
-// 		},
-// 	}
+func TestGetCmdPool(t *testing.T) {
+	desc, _ := cli.GetCmdPool()
+	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryPoolRequest]{
+		"basic test": {
+			Cmd:           "1",
+			ExpectedQuery: &types.QueryPoolRequest{PoolId: 1},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}
 
-// 	for _, tc := range testCases {
-// 		tc := tc
-
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.GetCmdPools() // osmosisd query gamm pools
-// 			clientCtx := val.ClientCtx
-
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			if tc.expectErr {
-// 				s.Require().Error(err)
-// 			} else {
-// 				resp := types.QueryPoolsResponse{}
-// 				s.Require().NoError(err, out.String())
-// 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-
-// 				s.Require().Greater(len(resp.Pools), 0, out.String())
-// 			}
-// 		})
-// 	}
-// }
-
-// func (s *IntegrationTestSuite) TestGetCmdPool() {
-// 	val := s.network.Validators[0]
-
-// 	testCases := []struct {
-// 		name      string
-// 		args      []string
-// 		expectErr bool
-// 	}{
-// 		{
-// 			"query pool by id", // osmosisd query gamm pool 1
-// 			[]string{
-// 				"1",
-// 				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
-// 			},
-// 			false,
-// 		},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		tc := tc
-
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.GetCmdPool()
-// 			clientCtx := val.ClientCtx
-
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			if tc.expectErr {
-// 				s.Require().Error(err)
-// 			} else {
-// 				s.Require().NoError(err, out.String())
-
-// 				resp := types.QueryPoolResponse{}
-// 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-// 			}
-// 		})
-// 	}
-// }
-
-// func (s *IntegrationTestSuite) TestGetCmdTotalShares() {
-// 	val := s.network.Validators[0]
-
-// 	testCases := []struct {
-// 		name      string
-// 		args      []string
-// 		expectErr bool
-// 	}{
-// 		{
-// 			"query pool total share by id", // osmosisd query gamm total-share 1
-// 			[]string{
-// 				"1",
-// 				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
-// 			},
-// 			false,
-// 		},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		tc := tc
-
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.GetCmdTotalShares()
-// 			clientCtx := val.ClientCtx
-
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			if tc.expectErr {
-// 				s.Require().Error(err)
-// 			} else {
-// 				resp := types.QueryTotalSharesResponse{}
-// 				s.Require().NoError(err, out.String())
-// 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-// 			}
-// 		})
-// 	}
-// }
-
-// func (s *IntegrationTestSuite) TestGetCmdSpotPrice() {
-// 	val := s.network.Validators[0]
-
-// 	testCases := []struct {
-// 		name      string
-// 		args      []string
-// 		expectErr bool
-// 	}{
-// 		{
-// 			"query pool spot price", // osmosisd query gamm spot-price 1 stake node0token
-// 			[]string{
-// 				"1", "stake", "node0token",
-// 				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
-// 			},
-// 			false,
-// 		},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		tc := tc
-
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.GetCmdSpotPrice()
-// 			clientCtx := val.ClientCtx
-
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			if tc.expectErr {
-// 				s.Require().Error(err)
-// 			} else {
-// 				resp := types.QuerySpotPriceResponse{}
-// 				s.Require().NoError(err, out.String())
-// 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-// 			}
-// 		})
-// 	}
-// }
+func TestGetCmdSpotPrice(t *testing.T) {
+	desc, _ := cli.GetCmdSpotPrice()
+	tcs := map[string]osmocli.QueryCliTestCase[*types.QuerySpotPriceRequest]{
+		"basic test": {
+			Cmd: "1 uosmo ibc/111",
+			ExpectedQuery: &types.QuerySpotPriceRequest{
+				PoolId:          1,
+				BaseAssetDenom:  "uosmo",
+				QuoteAssetDenom: "ibc/111",
+			},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}
 
 // // func (s *IntegrationTestSuite) TestGetCmdEstimateSwapExactAmountIn() {
 // // 	val := s.network.Validators[0]

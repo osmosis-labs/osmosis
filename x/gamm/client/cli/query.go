@@ -24,14 +24,13 @@ import (
 // GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
-
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdSpotPrice)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPool)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPools)
 	cmd.AddCommand(
-		GetCmdPool(),
-		GetCmdPools(),
 		GetCmdNumPools(),
 		GetCmdPoolParams(),
 		GetCmdTotalShares(),
-		GetCmdSpotPrice(),
 		GetCmdQueryTotalLiquidity(),
 		GetCmdEstimateSwapExactAmountIn(),
 		GetCmdEstimateSwapExactAmountOut(),
@@ -43,16 +42,12 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
-func GetCmdPool() *cobra.Command {
-	return osmocli.SimpleQueryCmd[*types.QueryPoolRequest](
-		"pool [poolID]",
-		"Query pool",
-		`Query pool.
-Example:
-{{.CommandPrefix}} pool 1
-`,
-		types.ModuleName, types.NewQueryClient,
-	)
+func GetCmdPool() (*osmocli.QueryDescriptor, *types.QueryPoolRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "pool [poolID]",
+		Short: "Query pool",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} pool 1`}, &types.QueryPoolRequest{}
 }
 
 // TODO: Push this to the SDK.
@@ -77,14 +72,12 @@ func writeOutputBoilerplate(ctx client.Context, out []byte) error {
 	return nil
 }
 
-func GetCmdPools() *cobra.Command {
-	return osmocli.SimpleQueryCmd[*types.QueryPoolsRequest](
-		"pools",
-		"Query pools",
-		`{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} pools`,
-		types.ModuleName, types.NewQueryClient,
-	)
+func GetCmdPools() (*osmocli.QueryDescriptor, *types.QueryPoolsRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "pools",
+		Short: "Query pools",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} pools`}, &types.QueryPoolsRequest{}
 }
 
 func GetCmdNumPools() *cobra.Command {
@@ -192,17 +185,14 @@ Example:
 	)
 }
 
-func GetCmdSpotPrice() *cobra.Command {
-	//nolint:staticcheck
-	return osmocli.SimpleQueryCmd[*types.QuerySpotPriceRequest](
-		"spot-price <pool-ID> [quote-asset-denom] [base-asset-denom]",
-		"Query spot-price (LEGACY, arguments are reversed!!)",
-		`Query spot price (Legacy).
-Example:
+//nolint:staticcheck
+func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *types.QuerySpotPriceRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "spot-price <pool-ID> [quote-asset-denom] [base-asset-denom]",
+		Short: "Query spot-price (LEGACY, arguments are reversed!!)",
+		Long: `Query spot price (Legacy).{{.ExampleHeader}}
 {{.CommandPrefix}} spot-price 1 uosmo ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
-`,
-		types.ModuleName, types.NewQueryClient,
-	)
+`}, &types.QuerySpotPriceRequest{}
 }
 
 // GetCmdEstimateSwapExactAmountIn returns estimation of output coin when amount of x token input.
