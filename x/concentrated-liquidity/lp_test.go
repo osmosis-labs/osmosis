@@ -22,6 +22,7 @@ type lpTest struct {
 	amount1Minimum  sdk.Int
 	amount1Expected sdk.Int
 	liquidityAmount sdk.Dec
+	tickSpacing     uint64
 	expectedError   error
 }
 
@@ -39,6 +40,7 @@ var (
 		amount1Minimum:  sdk.ZeroInt(),
 		amount1Expected: DefaultAmt1Expected,
 		liquidityAmount: DefaultLiquidityAmt,
+		tickSpacing:     DefaultTickSpacing,
 	}
 )
 
@@ -75,6 +77,17 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			amount1Desired: sdk.ZeroInt(),
 			expectedError:  errors.New("liquidityDelta calculated equals zero"),
 		},
+		"create a position with non default tick spacing (10) with ticks that fall into tick spacing requirements": {
+			lowerTick:       int64(84220),
+			upperTick:       int64(86130),
+			amount0Expected: sdk.NewInt(997568),
+			liquidityAmount: sdk.MustNewDecFromStr("1514719247.706987476085061790"),
+			tickSpacing:     10,
+		},
+		"error: attempt to use and upper and lower tick that are not divisible by tick spacing": {
+			tickSpacing:   10,
+			expectedError: types.TickSpacingError{TickSpacing: 10, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick},
+		},
 		// TODO: add more tests
 		// - custom hand-picked values
 		// - think of overflows
@@ -91,8 +104,8 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			mergeConfigs(&baseConfigCopy, &tc)
 			tc = baseConfigCopy
 
-			// Create a CL pool with poolId 1
-			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, ETH, USDC, tc.currentSqrtP, tc.currentTick)
+			// Create a CL pool with custom tickSpacing
+			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, ETH, USDC, tc.tickSpacing)
 			s.Require().NoError(err)
 
 			// Fund test account and create the desired position
@@ -271,9 +284,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			// Setup.
 			if tc.setupConfig != nil {
-				_, err := concentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, config.poolId, ETH, USDC, config.currentSqrtP, config.currentTick)
-				s.Require().NoError(err)
-
+				s.PrepareDefaultPool(ctx)
+				var err error
 				s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 				_, _, liquidityCreated, err = concentratedLiquidityKeeper.CreatePosition(ctx, config.poolId, owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), config.lowerTick, config.upperTick)
 				s.Require().NoError(err)
@@ -344,6 +356,9 @@ func mergeConfigs(dst *lpTest, overwrite *lpTest) {
 		if overwrite.expectedError != nil {
 			dst.expectedError = overwrite.expectedError
 		}
+		if overwrite.tickSpacing != 0 {
+			dst.tickSpacing = overwrite.tickSpacing
+		}
 	}
 }
 
@@ -412,8 +427,7 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 			s.SetupTest()
 
 			// create a CL pool
-			_, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, ETH, USDC, sdk.MustNewDecFromStr("70.710678118654752440"), sdk.NewInt(85176))
-			s.Require().NoError(err)
+			s.PrepareDefaultPool(s.Ctx)
 
 			// store pool interface
 			poolI, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, 1)

@@ -28,7 +28,7 @@ func TickToSqrtPrice(tickIndex sdk.Int) (sqrtPrice sdk.Dec, err error) {
 	if tickIndex.GTE(sdk.ZeroInt()) {
 		sqrtPrice, err = sdk.NewDecWithPrec(10001, 4).Power(tickIndex.Uint64()).ApproxSqrt()
 	} else {
-		sqrtPrice, err = sdk.OneDec().Quo(sdk.NewDecWithPrec(10001, 4).Power(2)).ApproxSqrt()
+		sqrtPrice, err = sdk.OneDec().Quo(sdk.NewDecWithPrec(10001, 4).Power(tickIndex.Abs().Uint64())).ApproxSqrt()
 	}
 	if err != nil {
 		return sdk.Dec{}, err

@@ -15,20 +15,22 @@ var (
 	_ types.ConcentratedPoolExtension = &Pool{}
 )
 
-func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, currSqrtPrice sdk.Dec, currTick sdk.Int) (Pool, error) {
+func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, currSqrtPrice sdk.Dec, tickSpacing uint64) (Pool, error) {
 	denom0, denom1, err := types.OrderInitialPoolDenoms(denom0, denom1)
 	if err != nil {
 		return Pool{}, err
 	}
+
 	pool := Pool{
 		// TODO: move gammtypes.NewPoolAddress(poolId) to swaproutertypes
 		Address:          gammtypes.NewPoolAddress(poolId).String(),
 		Id:               poolId,
-		CurrentSqrtPrice: currSqrtPrice,
-		CurrentTick:      currTick,
+		CurrentSqrtPrice: sdk.ZeroDec(),
+		CurrentTick:      sdk.ZeroInt(),
 		Liquidity:        sdk.ZeroDec(),
 		Token0:           denom0,
 		Token1:           denom1,
+		TickSpacing:      tickSpacing,
 	}
 
 	return pool, nil
@@ -111,6 +113,11 @@ func (p Pool) GetCurrentTick() sdk.Int {
 	return p.CurrentTick
 }
 
+// GetTickSpacing returns the current tick spacing parameter of the pool
+func (p Pool) GetTickSpacing() uint64 {
+	return p.TickSpacing
+}
+
 // GetLiquidity returns the liquidity of the pool
 func (p Pool) GetLiquidity() sdk.Dec {
 	return p.Liquidity
@@ -119,6 +126,17 @@ func (p Pool) GetLiquidity() sdk.Dec {
 // UpdateLiquidity updates the liquidity of the pool. Note that this method is mutative.
 func (p *Pool) UpdateLiquidity(newLiquidity sdk.Dec) {
 	p.Liquidity = p.Liquidity.Add(newLiquidity)
+}
+
+// SetCurrentSqrtPrice updates the current sqrt price of the pool when the first position is created.
+func (p *Pool) SetCurrentSqrtPrice(newSqrtPrice sdk.Dec) {
+	p.CurrentSqrtPrice = newSqrtPrice
+}
+
+// SetCurrentTick updates the current tick of the pool when the first position is created.
+// For safety, we only allow for this method to be called if CurrentTick is zero.
+func (p *Pool) SetCurrentTick(newTick sdk.Int) {
+	p.CurrentTick = newTick
 }
 
 // updateLiquidityIfActivePosition updates the pool's liquidity if the position is active.

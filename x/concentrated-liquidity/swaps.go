@@ -27,8 +27,7 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(
 	ctx sdk.Context,
 	poolId uint64,
 	denom0, denom1 string,
-	currSqrtPrice sdk.Dec,
-	currTick sdk.Int,
+	tickSpacing uint64,
 ) (types.ConcentratedPoolExtension, error) {
 	denom0, denom1, err := types.OrderInitialPoolDenoms(denom0, denom1)
 	if err != nil {
@@ -38,11 +37,12 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(
 		// TODO: move gammtypes.NewPoolAddress(poolId) to swaproutertypes
 		Address:          gammtypes.NewPoolAddress(poolId).String(),
 		Id:               poolId,
-		CurrentSqrtPrice: currSqrtPrice,
-		CurrentTick:      currTick,
+		CurrentSqrtPrice: sdk.ZeroDec(),
+		CurrentTick:      sdk.ZeroInt(),
 		Liquidity:        sdk.ZeroDec(),
 		Token0:           denom0,
 		Token1:           denom1,
+		TickSpacing:      tickSpacing,
 	}
 
 	err = k.setPool(ctx, pool)

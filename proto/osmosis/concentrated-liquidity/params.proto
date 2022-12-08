@@ -1,0 +1,11 @@
+syntax = "proto3";
+package osmosis.concentratedliquidity.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types";
+
+message Params {
+  repeated string authorized_tick_spacing = 1
+      [ (gogoproto.moretags) = "yaml:\"authorized_tick_spacing\"" ];
+}
