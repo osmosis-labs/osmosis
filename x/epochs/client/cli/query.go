@@ -20,12 +20,14 @@ func GetCmdEpochInfos() (*osmocli.QueryDescriptor, *types.QueryEpochsInfoRequest
 	return &osmocli.QueryDescriptor{
 		Use:   "epoch-infos",
 		Short: "Query running epoch infos.",
-		Long:  `{{.Short}}{{.ExampleHeader}}`}, &types.QueryEpochsInfoRequest{}
+		Long: `{{.Short}}{{.ExampleHeader}}
+		{{.CommandPrefix}}`}, &types.QueryEpochsInfoRequest{}
 }
 
 func GetCmdCurrentEpoch() (*osmocli.QueryDescriptor, *types.QueryCurrentEpochRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "current-epoch",
 		Short: "Query current epoch by specified identifier.",
-		Long:  `{{.Short}}{{.ExampleHeader}}`}, &types.QueryCurrentEpochRequest{}
+		Long: `{{.Short}}{{.ExampleHeader}}
+		{{.CommandPrefix}} day`}, &types.QueryCurrentEpochRequest{}
 }
