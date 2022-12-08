@@ -30,8 +30,6 @@ func NewBalancerMsgServerImpl(keeper *Keeper) balancer.MsgServer {
 	}
 }
 
-// Deprecated: Use NewStableswapMsgCreatorServerImpl and NewStableswapMsgScalingFactorSetterServer instead.
-// nolint: staticcheck
 func NewStableswapMsgServerImpl(keeper *Keeper) stableswap.MsgServer {
 	return &msgServer{
 		keeper: keeper,
