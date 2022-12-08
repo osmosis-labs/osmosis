@@ -1,5 +1,6 @@
 import unittest
 import math
+import sympy as sp
 
 import rational
 
@@ -15,24 +16,21 @@ class TestChebyshevRational(unittest.TestCase):
         x = [1, 2, 3, 4, 5]
         y = list(map(fn, x))
 
-        coeffs = rational.construct_rational_eval_matrix(x, y)
+        coeffs = rational.construct_rational_eval_matrix(x, y, 3, 3)
         
-        # number of rows is correct
-        self.assertEqual(len(x), len(coeffs))
+        # correct matrix size
+        self.assertEqual(len(x) * len(x), len(coeffs))
 
         # first row is correct
-        for i in range(len(coeffs)):
-            # number of columns in each row is correct
-            self.assertEqual(len(coeffs), len(coeffs[i]))
-
+        for i in range(len(x)):
             x_i = x[i]
             y_i = y[i]
 
-            expected_row = [1, x_i, x_i**2, -1 * x_i * y_i, -1 * x_i**2 * y_i]
+            expected_row = [sp.Pow(x_i, 0), sp.Pow(x_i, 1), sp.Pow(x_i, 2), -1 * sp.Pow(x_i, 1) * y_i, -1 * sp.Pow(x_i, 2) * y_i]
 
-            actual_rot = coeffs[i]
+            actual_row = coeffs.row(i).tolist()[0]
 
-            self.assertEqual(expected_row, actual_rot)
+            self.assertEqual(expected_row, actual_row)
 
 if __name__ == '__main__':
     unittest.main()

@@ -2,7 +2,7 @@ import sympy as sp
 
 import polynomial
 
-def construct_rational_eval_matrix(x_list: list, y_list: list, num_terms_numerator: int, num_terms_denominator) -> list[list]:
+def construct_rational_eval_matrix(x_list: list, y_list: list, num_terms_numerator: int, num_terms_denominator) -> sp.Matrix:
     """ Constructs a matrix to use for computing coefficients for a rational approximation
         from the list of x and y values given.
         len(x_list) * len(x_list)
