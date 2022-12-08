@@ -101,7 +101,7 @@ func (server msgServer) CreatePool(goCtx context.Context, msg swaproutertypes.Cr
 // and the actual number of share amount resulted from joining pool.
 // Internal logic flow for each pool model is as follows:
 // Balancer: TokensInMaxs provided as the argument must either contain no tokens or containing all assets in the pool.
-// * For the case of a not containg tokens, we simply perform calculation of sharesOut and needed amount of tokens for joining the pool
+// * For the case of a not containing tokens, we simply perform calculation of sharesOut and needed amount of tokens for joining the pool
 func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) (*types.MsgJoinPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
