@@ -68,13 +68,7 @@ func (k Keeper) SetTokenPairArbRoutes(ctx sdk.Context, tokenA, tokenB string, to
 
 // DeleteAllTokenPairArbRoutes deletes all the token pair arb routes
 func (k Keeper) DeleteAllTokenPairArbRoutes(ctx sdk.Context) {
-	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixTokenPairRoutes)
-
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		store.Delete(iterator.Key())
-	}
+	k.DeleteAllEntriesForKeyPrefix(ctx, types.KeyPrefixTokenPairRoutes)
 }
 
 // GetOsmoPool returns the pool id of the Osmo pool for the given denom paired with Osmo
@@ -101,13 +95,7 @@ func (k Keeper) SetOsmoPool(ctx sdk.Context, denom string, poolId uint64) {
 
 // DeleteAllOsmoPools deletes all the Osmo pools from modules store
 func (k Keeper) DeleteAllOsmoPools(ctx sdk.Context) {
-	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixOsmoPools)
-
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		store.Delete(iterator.Key())
-	}
+	k.DeleteAllEntriesForKeyPrefix(ctx, types.KeyPrefixOsmoPools)
 }
 
 // GetAtomPool returns the pool id of the Atom pool for the given denom paired with Atom
@@ -134,8 +122,13 @@ func (k Keeper) SetAtomPool(ctx sdk.Context, denom string, poolId uint64) {
 
 // DeleteAllAtomPools deletes all the Atom pools from modules store
 func (k Keeper) DeleteAllAtomPools(ctx sdk.Context) {
+	k.DeleteAllEntriesForKeyPrefix(ctx, types.KeyPrefixAtomPools)
+}
+
+// DeleteAllEntriesForKeyPrefix deletes all the entries from the store for the given key prefix
+func (k Keeper) DeleteAllEntriesForKeyPrefix(ctx sdk.Context, keyPrefix []byte) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixAtomPools)
+	iterator := sdk.KVStorePrefixIterator(store, keyPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

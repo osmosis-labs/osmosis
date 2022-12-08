@@ -35,10 +35,6 @@ func (h EpochHooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, ep
 func (h EpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	switch epochIdentifier {
 	case "week":
-		// Reset the pools in the store
-		h.k.DeleteAllAtomPools(ctx)
-		h.k.DeleteAllOsmoPools(ctx)
-
 		// Update the pools in the store
 		return h.k.UpdatePools(ctx)
 	}
@@ -47,6 +43,10 @@ func (h EpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epoch
 
 // Update pools requests the highest liquidity pools from the gamm module and updates the pools in the store
 func (k Keeper) UpdatePools(ctx sdk.Context) error {
+	// Reset the pools in the store
+	k.DeleteAllAtomPools(ctx)
+	k.DeleteAllOsmoPools(ctx)
+
 	// Get the highest liquidity pools
 	osmoPools, atomPools, err := k.GetHighestLiquidityPools(ctx)
 	if err != nil {

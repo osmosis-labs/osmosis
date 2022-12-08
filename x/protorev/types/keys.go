@@ -41,5 +41,5 @@ func GetKeyPrefixAtomPool(denom string) []byte {
 
 // Returns the key needed to fetch the tokenPair routes for a given pair of tokens
 func GetKeyPrefixRouteForTokenPair(tokenA, tokenB string) []byte {
-	return append(KeyPrefixTokenPairRoutes, []byte(tokenA+tokenB)...)
+	return append(KeyPrefixTokenPairRoutes, []byte(tokenA+"|"+tokenB)...)
 }
