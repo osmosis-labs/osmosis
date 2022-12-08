@@ -13,6 +13,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 type decimalTestSuite struct {
@@ -720,6 +721,17 @@ func (s *decimalTestSuite) TestLog2() {
 			initialValue: MustNewDecFromStr("912648174127941279170121098210.92821920190204131121"),
 			// From: https://www.wolframalpha.com/input?i=log+base+2+of+912648174127941279170121098210.92821920190204131121+38+digits
 			expected: MustNewDecFromStr("99.525973560175362367047484597337715868"),
+		},
+		"log_2{Max Spot Price} = 128": {
+			initialValue: BigDecFromSDKDec(gammtypes.MaxSpotPrice), // 2^128 - 1
+			// From: https://www.wolframalpha.com/input?i=log+base+2+of+%28%282%5E128%29+-+1%29+38+digits
+			expected: MustNewDecFromStr("128"),
+		},
+		// The value tested below is: gammtypes.MaxSpotPrice * 0.99 = (2^128 - 1) * 0.99
+		"log_2{336879543251729078828740861357450529340.45} = 127.98550043030488492336620207564264562": {
+			initialValue: MustNewDecFromStr("336879543251729078828740861357450529340.45"),
+			// From: https://www.wolframalpha.com/input?i=log+base+2+of+%28%28%282%5E128%29+-+1%29*0.99%29++38+digits
+			expected: MustNewDecFromStr("127.98550043030488492336620207564264562"),
 		},
 	}
 
