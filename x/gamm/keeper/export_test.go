@@ -21,6 +21,10 @@ func (k Keeper) GetOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.M
 	return k.getOsmoRoutedMultihopTotalSwapFee(ctx, route)
 }
 
+func ConvertToCFMMPool(pool swaproutertypes.PoolI) (types.CFMMPoolI, error) {
+	return convertToCFMMPool(pool)
+}
+
 func (k Keeper) UnmarshalPoolLegacy(bz []byte) (swaproutertypes.PoolI, error) {
 	var acc swaproutertypes.PoolI
 	return acc, k.cdc.UnmarshalInterface(bz, &acc)
