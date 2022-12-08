@@ -24,15 +24,14 @@ import (
 // concentrated-liquidity upgrade.
 func (n *NodeConfig) CreatePool(poolFile, from string, isLegacy bool) uint64 {
 	n.LogActionF("creating pool from file %s", poolFile)
+	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--from=%s", from)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
 
 	moduleName := "swaprouter"
 	if isLegacy {
 		moduleName = "gamm"
 	}
-
-	cmd := []string{"osmosisd", "tx", moduleName, "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--from=%s", from)}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	require.NoError(n.t, err)
 
 	bz, err := n.QueryGRPCGateway(fmt.Sprintf("osmosis/%s/v1beta1/num_pools", moduleName))
 	require.NoError(n.t, err)
@@ -112,7 +111,7 @@ func (n *NodeConfig) FailIBCTransfer(from, recipient, amount string) {
 
 	cmd := []string{"osmosisd", "tx", "ibc-transfer", "transfer", "transfer", "channel-0", recipient, amount, fmt.Sprintf("--from=%s", from)}
 
-	_, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "Rate Limit exceeded")
+	_, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "rate limit exceeded")
 	require.NoError(n.t, err)
 
 	n.LogActionF("Failed to send IBC transfer (as expected)")
