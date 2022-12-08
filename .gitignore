@@ -233,3 +233,4 @@ blocks.db
 
 # Python
 **/venv/*
+**/*.pyc
