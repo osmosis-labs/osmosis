@@ -92,27 +92,26 @@ func (k Keeper) GetHighestLiquidityPools(ctx sdk.Context) (map[string]LiquidityP
 
 			// Check if there is a match with osmo
 			if otherDenom, match := types.CheckMatchAndReturnOther(tokenA.Denom, tokenB.Denom, types.OsmosisDenomination); match {
-				if currPool, ok := osmoPools[otherDenom]; !ok {
-					osmoPools[otherDenom] = newPool
-				} else {
-					if newPool.Liquidity.GT(currPool.Liquidity) {
-						osmoPools[otherDenom] = newPool
-					}
-				}
+				k.updateHighestLiquidityPool(otherDenom, osmoPools, newPool)
 			}
 
 			// Check if there is a match with atom
 			if otherDenom, match := types.CheckMatchAndReturnOther(tokenA.Denom, tokenB.Denom, types.AtomDenomination); match {
-				if currPool, ok := atomPools[otherDenom]; !ok {
-					atomPools[otherDenom] = newPool
-				} else {
-					if newPool.Liquidity.GT(currPool.Liquidity) {
-						atomPools[otherDenom] = newPool
-					}
-				}
+				k.updateHighestLiquidityPool(otherDenom, atomPools, newPool)
 			}
 		}
 	}
 
 	return osmoPools, atomPools, nil
+}
+
+// updateHighestLiquidityPool updates the pool with the highest liquidity for either osmo or atom
+func (k Keeper) updateHighestLiquidityPool(denom string, pool map[string]LiquidityPoolStruct, newPool LiquidityPoolStruct) {
+	if currPool, ok := pool[denom]; !ok {
+		pool[denom] = newPool
+	} else {
+		if newPool.Liquidity.GT(currPool.Liquidity) {
+			pool[denom] = newPool
+		}
+	}
 }
