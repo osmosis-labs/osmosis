@@ -17,9 +17,9 @@ import (
 
 //nolint:deadcode
 const (
-	nonPostiveSharesAmountErrFormat = "shares amount must be positive, was %d"
-	nonPostiveTokenAmountErrFormat  = "token amount must be positive, was %d"
-	sharesLargerThanMaxErrFormat    = "%d resulted shares is larger than the max amount of %d"
+	nonPostiveSharesAmountErrFormat = "shares amount must be positive, was %s"
+	nonPostiveTokenAmountErrFormat  = "token amount must be positive, was %s"
+	sharesLargerThanMaxErrFormat    = "%s resulted shares is larger than the max amount of %s"
 	invalidInputDenomsErrFormat     = "input denoms must already exist in the pool (%s)"
 
 	failedInterimLiquidityUpdateErrFormat        = "failed to update interim liquidity - pool asset %s does not exist"
@@ -894,7 +894,7 @@ func (p *Pool) CalcTokenInShareAmountOut(
 	).Ceil().TruncateInt()
 
 	if !tokenInAmount.IsPositive() {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount.Int64())
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount)
 	}
 
 	return tokenInAmount, nil
@@ -921,7 +921,7 @@ func (p *Pool) JoinPoolTokenInMaxShareAmountOut(
 	).TruncateInt()
 
 	if !tokenInAmount.IsPositive() {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount.Int64())
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount)
 	}
 
 	poolAssetIn.Token.Amount = poolAssetIn.Token.Amount.Add(tokenInAmount)
@@ -953,11 +953,11 @@ func (p *Pool) ExitSwapExactAmountOut(
 	).TruncateInt()
 
 	if !sharesIn.IsPositive() {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrNotPositiveRequireAmount, nonPostiveSharesAmountErrFormat, sharesIn.Int64())
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrNotPositiveRequireAmount, nonPostiveSharesAmountErrFormat, sharesIn)
 	}
 
 	if sharesIn.GT(shareInMaxAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, sharesLargerThanMaxErrFormat, sharesIn.Int64(), shareInMaxAmount.Uint64())
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, sharesLargerThanMaxErrFormat, sharesIn, shareInMaxAmount)
 	}
 
 	if err := p.exitPool(ctx, sdk.NewCoins(tokenOut), sharesIn); err != nil {
