@@ -97,14 +97,7 @@ message MsgRedelegateValidatorSet {
   ];
 }
 
-message MsgRedelegateValidatorSetResponse {
-  // returns the time for the delegation to mature for undelegation.
-  repeated google.protobuf.Timestamp mature_time = 5 [
-    (gogoproto.stdtime) = true,
-    (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"mature_time\""
-  ];
-}
+message MsgRedelegateValidatorSetResponse {}
 
 // MsgWithdrawDelegationRewards allows user to claim staking rewards from the
 // validator set.

@@ -347,7 +347,7 @@ func (suite *KeeperTestSuite) TestRedelegateValidatorSet() {
 				},
 			},
 			coinToStake:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),
-			expectedShares: []sdk.Dec{sdk.NewDec(14_000_000), sdk.NewDec(10_000_000), sdk.NewDec(16_000_000)},
+			expectedShares: []sdk.Dec{sdk.NewDec(10_000_000), sdk.NewDec(6_000_000), sdk.NewDec(4_000_000)},
 			expectPass:     true,
 		},
 		{
@@ -429,6 +429,8 @@ func (suite *KeeperTestSuite) TestRedelegateValidatorSet() {
 
 				// TODO: Only way to correctly check redelegation is to mature it, but for that we need matureTime, SrcVal, DestVal.
 				// TODO: Cont'd: This will mean we have to make our proto response return {matureTime, ValSrc, ValDest} for every single redelegation
+				//ctx = suite.Ctx.WithBlockTime(time)
+
 				// mature all the redelegations
 				// for _, time := range redelegateResponse.MatureTime {
 				// 	ctx = suite.Ctx.WithBlockTime(time)

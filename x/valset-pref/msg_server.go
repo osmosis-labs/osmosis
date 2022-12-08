@@ -83,12 +83,12 @@ func (server msgServer) RedelegateValidatorSet(goCtx context.Context, msg *types
 	}
 
 	// Message 2: Perform the actual redelegation
-	matureTime, err := server.keeper.PreformRedelegation(ctx, delegator, existingSet, msg.Preferences)
+	err = server.keeper.PreformRedelegation(ctx, delegator, existingSet, msg.Preferences)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgRedelegateValidatorSetResponse{MatureTime: matureTime}, nil
+	return &types.MsgRedelegateValidatorSetResponse{}, nil
 }
 
 func (server msgServer) WithdrawDelegationRewards(goCtx context.Context, msg *types.MsgWithdrawDelegationRewards) (*types.MsgWithdrawDelegationRewardsResponse, error) {

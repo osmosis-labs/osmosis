@@ -127,7 +127,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 // A redelegation object is created every time a redelegation occurs. To prevent "redelegation hopping" redelegations may not occur under the situation that:
 // 1. the (re)delegator already has another immature redelegation in progress with a destination to a validator (let's call it Validator X)
 // 2. the (re)delegator is attempting to create a new redelegation where the source validator for this new redelegation is Validator X
-func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, existingSet types.ValidatorSetPreferences, newSet []types.ValidatorPreference) ([]time.Time, error) {
+func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, existingSet types.ValidatorSetPreferences, newSet []types.ValidatorPreference) error {
 	var existingValSet []valSet
 	var newValSet []valSet
 	var matureTime []time.Time
@@ -137,13 +137,13 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 	for _, existingVals := range existingSet.Preferences {
 		valAddr, validator, err := k.GetValidatorInfo(ctx, existingVals.ValOperAddress)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		// check if the user has delegated tokens to the valset
 		delegation, found := k.stakingKeeper.GetDelegation(ctx, delegator, valAddr)
 		if !found {
-			return nil, fmt.Errorf("No delegation found")
+			return fmt.Errorf("No delegation found")
 		}
 
 		tokenFromShares := validator.TokensFromShares(delegation.Shares)
@@ -182,18 +182,18 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 
 			validator_source, err := sdk.ValAddressFromBech32(source_large)
 			if err != nil {
-				return nil, fmt.Errorf("validator address not formatted")
+				return fmt.Errorf("validator address not formatted")
 			}
 
 			validator_target, err := sdk.ValAddressFromBech32(target_large.valAddr)
 			if err != nil {
-				return nil, fmt.Errorf("validator address not formatted")
+				return fmt.Errorf("validator address not formatted")
 			}
 
 			amount := sdk.MinDec(target_large.amount.Abs(), diff_val.amount)
 			time, err := k.stakingKeeper.BeginRedelegation(ctx, delegator, validator_source, validator_target, amount)
 			if err != nil {
-				return nil, err
+				return err
 			}
 
 			// Find target value in diffValSet and set that to (sourceAmt - targetAmt)
@@ -203,7 +203,7 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 		}
 	}
 
-	return matureTime, nil
+	return nil
 }
 
 // GetValAddrAndVal checks if the validator address is valid and the validator provided exists on chain.
