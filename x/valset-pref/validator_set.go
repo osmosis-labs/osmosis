@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -126,22 +127,23 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 // A redelegation object is created every time a redelegation occurs. To prevent "redelegation hopping" redelegations may not occur under the situation that:
 // 1. the (re)delegator already has another immature redelegation in progress with a destination to a validator (let's call it Validator X)
 // 2. the (re)delegator is attempting to create a new redelegation where the source validator for this new redelegation is Validator X
-func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, existingSet types.ValidatorSetPreferences, newSet []types.ValidatorPreference) error {
+func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, existingSet types.ValidatorSetPreferences, newSet []types.ValidatorPreference) ([]time.Time, error) {
 	var existingValSet []valSet
 	var newValSet []valSet
+	var matureTime []time.Time
 	totalTokenAmount := sdk.NewDec(0)
 
-	// Rearranging the exisintValSet and newValSet to to add extra validator padding
+	// Rearranging the exisingValSet and newValSet to to add extra validator padding
 	for _, existingVals := range existingSet.Preferences {
 		valAddr, validator, err := k.GetValidatorInfo(ctx, existingVals.ValOperAddress)
 		if err != nil {
-			return nil
+			return nil, err
 		}
 
-		// check if the user has delegated tokens to the valset (TEST)
+		// check if the user has delegated tokens to the valset
 		delegation, found := k.stakingKeeper.GetDelegation(ctx, delegator, valAddr)
 		if !found {
-			return fmt.Errorf("No delegation found")
+			return nil, fmt.Errorf("No delegation found")
 		}
 
 		tokenFromShares := validator.TokensFromShares(delegation.Shares)
@@ -180,24 +182,28 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 
 			validator_source, err := sdk.ValAddressFromBech32(source_large)
 			if err != nil {
-				return fmt.Errorf("validator address not formatted")
+				return nil, fmt.Errorf("validator address not formatted")
 			}
 
 			validator_target, err := sdk.ValAddressFromBech32(target_large.valAddr)
 			if err != nil {
-				return fmt.Errorf("validator address not formatted")
+				return nil, fmt.Errorf("validator address not formatted")
 			}
 
 			amount := sdk.MinDec(target_large.amount.Abs(), diff_val.amount)
-			k.stakingKeeper.BeginRedelegation(ctx, delegator, validator_source, validator_target, amount)
+			time, err := k.stakingKeeper.BeginRedelegation(ctx, delegator, validator_source, validator_target, amount)
+			if err != nil {
+				return nil, err
+			}
 
 			// Find target value in diffValSet and set that to (sourceAmt - targetAmt)
 			diff_val.amount = diff_val.amount.Sub(amount)            // set the source to 0
 			diffValSet[idx].amount = target_large.amount.Add(amount) // set the target to (sourceAmt - targetAmt)
+			matureTime = append(matureTime, time)
 		}
 	}
 
-	return nil
+	return matureTime, nil
 }
 
 // GetValAddrAndVal checks if the validator address is valid and the validator provided exists on chain.

@@ -260,13 +260,14 @@ func (suite *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorSetPreferenceKeeper)
 			c := sdk.WrapSDKContext(suite.Ctx)
 
-			// call the create validator set preference
+			// creates a validator preference list to delegate to
 			preferences := suite.PrepareDelegateToValidatorSet()
 
+			// SetValidatorSetPreference sets a new list of val-set
 			_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
 			suite.Require().NoError(err)
 
-			// call the create validator set preference
+			// DelegateToValidatorSet delegate to existing val-set
 			_, err = msgServer.DelegateToValidatorSet(c, types.NewMsgDelegateToValidatorSet(test.delegator, test.coinToStake))
 			suite.Require().NoError(err)
 
@@ -296,7 +297,7 @@ func (suite *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 func (suite *KeeperTestSuite) TestRedelegateValidatorSet() {
 	suite.SetupTest()
 
-	// setup 3 validators
+	// setup 9 validators
 	valAddrs := suite.SetupMultipleValidators(9)
 
 	tests := []struct {
@@ -304,10 +305,11 @@ func (suite *KeeperTestSuite) TestRedelegateValidatorSet() {
 		delegator      sdk.AccAddress
 		newPreferences []types.ValidatorPreference
 		coinToStake    sdk.Coin
+		expectedShares []sdk.Dec // expected shares after redelegation
 		expectPass     bool
 	}{
 		{
-			name:      "update existing Validator set",
+			name:      "redelegate to a new set of validators",
 			delegator: sdk.AccAddress([]byte("addr1---------------")),
 			newPreferences: []types.ValidatorPreference{
 				{
@@ -323,11 +325,12 @@ func (suite *KeeperTestSuite) TestRedelegateValidatorSet() {
 					Weight:         sdk.NewDecWithPrec(6, 1),
 				},
 			},
-			coinToStake: sdk.NewCoin("stake", sdk.NewInt(20_000_000)),
-			expectPass:  true,
+			coinToStake:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),
+			expectedShares: []sdk.Dec{sdk.NewDec(4_000_000), sdk.NewDec(4_000_000), sdk.NewDec(12_000_000)},
+			expectPass:     true,
 		},
 		{
-			name:      "update the same validator set as above",
+			name:      "redelegate to the same set of validators with different weights",
 			delegator: sdk.AccAddress([]byte("addr1---------------")),
 			newPreferences: []types.ValidatorPreference{
 				{
@@ -343,17 +346,35 @@ func (suite *KeeperTestSuite) TestRedelegateValidatorSet() {
 					Weight:         sdk.NewDecWithPrec(2, 1),
 				},
 			},
-			coinToStake: sdk.NewCoin("stake", sdk.NewInt(20_000_000)),
-			expectPass:  true,
+			coinToStake:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),
+			expectedShares: []sdk.Dec{sdk.NewDec(14_000_000), sdk.NewDec(10_000_000), sdk.NewDec(16_000_000)},
+			expectPass:     true,
 		},
 		{
-			name:      "update existing Validator with new validators",
+			name:      "redelegate to new set, but one validator from old set",
 			delegator: sdk.AccAddress([]byte("addr2---------------")),
 			newPreferences: []types.ValidatorPreference{
+				{
+					ValOperAddress: valAddrs[2],
+					Weight:         sdk.NewDecWithPrec(2, 1),
+				},
 				{
 					ValOperAddress: valAddrs[3],
 					Weight:         sdk.NewDecWithPrec(2, 1),
 				},
+				{
+					ValOperAddress: valAddrs[4],
+					Weight:         sdk.NewDecWithPrec(6, 1),
+				},
+			},
+			coinToStake:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),
+			expectedShares: []sdk.Dec{sdk.NewDec(4_000_000), sdk.NewDec(4_000_000), sdk.NewDec(12_000_000)},
+			expectPass:     true,
+		},
+		{
+			name:      "redelegate to new set of validators",
+			delegator: sdk.AccAddress([]byte("addr3---------------")),
+			newPreferences: []types.ValidatorPreference{
 				{
 					ValOperAddress: valAddrs[4],
 					Weight:         sdk.NewDecWithPrec(2, 1),
@@ -372,11 +393,12 @@ func (suite *KeeperTestSuite) TestRedelegateValidatorSet() {
 				},
 				{
 					ValOperAddress: valAddrs[8],
-					Weight:         sdk.NewDecWithPrec(1, 1),
+					Weight:         sdk.NewDecWithPrec(3, 1),
 				},
 			},
-			coinToStake: sdk.NewCoin("stake", sdk.NewInt(50_000_000)),
-			expectPass:  true,
+			coinToStake:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(50_000_000)),
+			expectedShares: []sdk.Dec{sdk.NewDec(10_000_000), sdk.NewDec(10_000_000), sdk.NewDec(10_000_000), sdk.NewDec(5_000_000), sdk.NewDec(15_000_000)},
+			expectPass:     true,
 		},
 	}
 
@@ -390,20 +412,40 @@ func (suite *KeeperTestSuite) TestRedelegateValidatorSet() {
 			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorSetPreferenceKeeper)
 			c := sdk.WrapSDKContext(suite.Ctx)
 
-			// call the create validator set preference
+			// creates a validator preference list to delegate to
 			preferences := suite.PrepareDelegateToValidatorSet()
 
-			// call the create validator set preference
+			// SetValidatorSetPreference sets a new list of val-set
 			_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
 			suite.Require().NoError(err)
 
-			// call the create validator set preference
+			// DelegateToValidatorSet delegate to existing val-set
 			_, err = msgServer.DelegateToValidatorSet(c, types.NewMsgDelegateToValidatorSet(test.delegator, test.coinToStake))
 			suite.Require().NoError(err)
 
+			// RedelegateValidatorSet redelegates from an exisitng set to a new one
 			_, err = msgServer.RedelegateValidatorSet(c, types.NewMsgRedelegateValidatorSet(test.delegator, test.newPreferences))
 			if test.expectPass {
-				// TODO: check if the validator have recieved the correct amount of tokens
+
+				// TODO: Only way to correctly check redelegation is to mature it, but for that we need matureTime, SrcVal, DestVal.
+				// TODO: Cont'd: This will mean we have to make our proto response return {matureTime, ValSrc, ValDest} for every single redelegation
+				// mature all the redelegations
+				// for _, time := range redelegateResponse.MatureTime {
+				// 	ctx = suite.Ctx.WithBlockTime(time)
+				// 	_, err = suite.App.StakingKeeper.CompleteRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1])
+				// 	require.NoError(err)
+				// }
+
+				//check if the validator have recieved the correct amount of tokens
+				for i, val := range test.newPreferences {
+					valAddr, err := sdk.ValAddressFromBech32(val.ValOperAddress)
+					suite.Require().NoError(err)
+
+					// guarantees that the delegator exists because we check it in DelegateToValidatorSet
+					del, _ := suite.App.StakingKeeper.GetDelegation(suite.Ctx, test.delegator, valAddr)
+					suite.Require().Equal(del.Shares, test.expectedShares[i])
+				}
+
 				suite.Require().NoError(err)
 			} else {
 				suite.Require().Error(err)
