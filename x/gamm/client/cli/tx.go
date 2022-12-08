@@ -283,7 +283,6 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (
 		ExitFee: exitFee,
 	}
 
-	// nolint: staticcheck
 	msg := &balancer.MsgCreateBalancerPool{
 		Sender:             clientCtx.GetFromAddress().String(),
 		PoolParams:         poolParams,
@@ -379,7 +378,6 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, fs *flag.FlagSet)
 		}
 	}
 
-	// nolint: staticcheck
 	return &stableswap.MsgCreateStableswapPool{
 		Sender:                  clientCtx.GetFromAddress().String(),
 		PoolParams:              poolParams,
@@ -598,7 +596,6 @@ func NewStableSwapAdjustScalingFactorsMsg(clientCtx client.Context, _args []stri
 		scalingFactors[i] = scalingFactor
 	}
 
-	// nolint: staticcheck
 	msg := &stableswap.MsgStableSwapAdjustScalingFactors{
 		Sender:         clientCtx.GetFromAddress().String(),
 		PoolID:         poolID,
