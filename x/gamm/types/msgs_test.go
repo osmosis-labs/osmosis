@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
@@ -955,7 +956,16 @@ func TestAuthzMsg(t *testing.T) {
 				TokenOut:         coin,
 				TokenInMaxAmount: sdk.NewInt(1),
 			},
-		}}
+		},
+		{
+			name: "MsgCreateStableswapPool",
+			gammMsg: &stableswap.MsgCreateStableswapPool{
+				Sender:               addr1,
+				PoolParams:           &stableswap.PoolParams{},
+				InitialPoolLiquidity: sdk.NewCoins(coin),
+			},
+		},
+	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			apptesting.TestMessageAuthzSerialization(t, tc.gammMsg)
