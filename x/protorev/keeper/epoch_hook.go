@@ -91,12 +91,12 @@ func (k Keeper) GetHighestLiquidityPools(ctx sdk.Context) (map[string]LiquidityP
 			}
 
 			// Check if there is a match with osmo
-			if otherDenom, match := types.CheckMatchAndReturnOther(tokenA.Denom, tokenB.Denom, types.OsmosisDenomination); match {
+			if otherDenom, match := types.CheckOsmoAtomDenomMatch(tokenA.Denom, tokenB.Denom, types.OsmosisDenomination); match {
 				k.updateHighestLiquidityPool(otherDenom, osmoPools, newPool)
 			}
 
 			// Check if there is a match with atom
-			if otherDenom, match := types.CheckMatchAndReturnOther(tokenA.Denom, tokenB.Denom, types.AtomDenomination); match {
+			if otherDenom, match := types.CheckOsmoAtomDenomMatch(tokenA.Denom, tokenB.Denom, types.AtomDenomination); match {
 				k.updateHighestLiquidityPool(otherDenom, atomPools, newPool)
 			}
 		}

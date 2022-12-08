@@ -62,7 +62,7 @@ func (suite *KeeperTestSuite) TestDeleteAllAtomPools() {
 
 	// Iterate through all of the pools and check if any paired with Atom exist
 	for _, pool := range suite.pools {
-		if otherDenom, match := types.CheckMatchAndReturnOther(pool.Asset1, pool.Asset2, types.AtomDenomination); match {
+		if otherDenom, match := types.CheckOsmoAtomDenomMatch(pool.Asset1, pool.Asset2, types.AtomDenomination); match {
 			_, err := suite.App.AppKeepers.ProtoRevKeeper.GetAtomPool(suite.Ctx, otherDenom)
 			suite.Require().Error(err)
 		}
@@ -118,7 +118,7 @@ func (suite *KeeperTestSuite) TestDeleteAllOsmoPools() {
 
 	// Iterate through all of the pools and check if any paired with Osmo exist
 	for _, pool := range suite.pools {
-		if otherDenom, match := types.CheckMatchAndReturnOther(pool.Asset1, pool.Asset2, types.OsmosisDenomination); match {
+		if otherDenom, match := types.CheckOsmoAtomDenomMatch(pool.Asset1, pool.Asset2, types.OsmosisDenomination); match {
 			_, err := suite.App.AppKeepers.ProtoRevKeeper.GetOsmoPool(suite.Ctx, otherDenom)
 			suite.Require().Error(err)
 		}
