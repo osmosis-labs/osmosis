@@ -83,7 +83,6 @@ func RandomExitPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (
 
 // RandomCreatePoolMsg attempts to find an account with two or more distinct denoms and attempts to send a
 // create pool message composed of those denoms
-// nolint: staticcheck
 func RandomCreateUniV2Msg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*balancertypes.MsgCreateBalancerPool, error) {
 	var poolAssets []balancertypes.PoolAsset
 	// find an address with two or more distinct denoms in their wallet
