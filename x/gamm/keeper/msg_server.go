@@ -22,8 +22,6 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	}
 }
 
-// Deprecated: please use balancerv2.
-// nolint: staticcheck
 func NewBalancerMsgServerImpl(keeper *Keeper) balancer.MsgServer {
 	return &msgServer{
 		keeper: keeper,
