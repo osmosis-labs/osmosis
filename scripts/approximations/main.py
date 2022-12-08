@@ -4,56 +4,74 @@ import sympy
 import approximations
 import rational
 
+##########################
+# Configuration Parameters
+
+# start of the interval to calculate the approximation on
+x_start = 0
+# end of the interval to calculate the approximation on
+x_end = 1
+# number of paramters to use for the approximations.
+num_parameters = 13
+
+# number of paramters to use for plotting error deltas.
+num_parameters_errors = 30
+
+# number of (x,y) coordinates used to plot the resulting approximation.
+num_points_plot = 100000
+
+# function to approximate
+approximated_fn = lambda x: sympy.Pow(sympy.E, x)
+
+# fixed point precision used in Osmosis `osmomath` package.
+osmomath_precision = 36
+
+# flag controlling whether to plot each approximation.
+# Plots if true.
+shouldPlotApproximations = True
+
+# flag controlling whether to compute max error for each approximation
+# given the equally spaced x coordinates.
+# Computes if true.
+shouldComputeErrorDelta = True
+
+# flag controlling whether to plot errors over a range.
+# Currently, does so only for Chebyshev Rational Approximation.
+# Computes if true.
+shouldPlotErrorRange  = True
+
+# flag controlling whether to plot max error for every approximation
+# with a varying number of parameters. This is useful to find the most
+# optimal number of parameters to use for each kind of approximation.
+# Plots if true.
+shouldPlotMaxError = True
+
+def plot_error_range(x_coordinates, y_approximation, y_actual):
+    """ Given x coordinates that correspond to approximated y coordinates and actual y coordinates,
+    compute the deltas between y approximated and y actual and plot them in log scale on y.
+    """
+    error_deltas = approximations.compute_error_range(y_approximation, y_actual)
+
+    plt.semilogy(x_coordinates, error_deltas)
+
+    plt.grid(True)
+    plt.title(f"Chebyshev Rational e^x Errors on [{x_start}, {x_end}]. {num_parameters} params, {num_points_plot} points")
+    plt.show()
+
 # This script does the following:
 # - Computes polynomial and rational approximations of a given function (e^x by default).
 # - Computes (x,y) coordinates for every approximation given the same x coordinates.
 # - Plots the results for rough comparison.
 # - Computes the max error for every approximation given the same x coordinates.
 # - Computes and plots max errors for every approximation with a varying number of parameters.
-# The following are the resources used to write the script:
+# This script runs various approximation methods, plots their results and deltas
+# from actual function values. The script can also be configured to print the maximum error.
+# The exact behavior is controlled by the global
+# variables at the top of the file. 
+# The following are the resources used:
 # https://xn--2-umb.com/22/approximation/
 # https://sites.tufts.edu/atasissa/files/2019/09/remez.pdf
 def main():
-
-    ##########################
-    # Configuration Parameters
-
-    # start of the interval to calculate the approximation on
-    x_start = 0
-    # end of the interval to calculate the approximation on
-    x_end = 1
-    # number of paramters to use for the approximations.
-    num_parameters = 13
-
-    # number of paramters to use for plotting error deltas.
-    num_parameters_errors = 30
-
-    # number of (x,y) coordinates used to plot the resulting approximation.
-    num_points_plot = 100000
-
-    # function to approximate
-    approximated_fn = lambda x: sympy.Pow(sympy.E, x)
-
-    # flag controlling whether to plot each approximation.
-    # Plots if true.
-    shouldPlotApproximations = False
-
-    # flag controlling whether to compute max error for each approximation
-    # given the equally spaced x coordinates.
-    # Computes if true.
-    shouldComputeErrorDelta = False
-
-    # flag controlling whether to plot errors over a range.
-    # Currently, does so only for Chebyshev Rational Approximation.
-    # Computes if true.
-    shouldPlotErrorRange  = True
-
-    # flag controlling whether to plot max error for every approximation
-    # with a varying number of parameters. This is useful to find the most
-    # optimal number of parameters to use for each kind of approximation.
-    # Plots if true.
-    shouldPlotMaxError = False
-
     # Equispaced x coordinates to be used for plotting every approximation.
     x_coordinates = approximations.linspace(x_start, x_end, num_points_plot)
 
@@ -82,14 +100,7 @@ def main():
             print(F"Chebyshev Rational: {max_error_chebyshev_rational.evalf(chop=1e-100)}")
 
         if shouldPlotErrorRange:
-            chebyshev_rational_error_deltas = approximations.compute_error_range(y_chebyshev_rational, y_actual)
-
-            plt.semilogy(x_coordinates, chebyshev_rational_error_deltas)
-
-            plt.grid(True)
-            plt.title(f"Chebyshev Rational e^x Errors on [{x_start}, {x_end}]. {num_parameters} params, {num_points_plot} points")
-            plt.show()
-            
+            plot_error_range(x_coordinates, y_chebyshev_rational, y_actual)
 
         ###############################
         # Plot Every Approximation Kind
@@ -156,29 +167,6 @@ def main():
 # We are planning to use it in production. Therefore, we need to peform coefficient
 # truncations to 36 decimal points (the max osmomath supported precision).
 def exponent_approximation_choice():
-
-    ##########################
-    # Configuration Parameters
-
-    # start of the interval to calculate the approximation on
-    x_start = 0
-    # end of the interval to calculate the approximation on
-    x_end = 1
-    # number of paramters to use for the approximations.
-    num_parameters = 13
-
-    # number of paramters to use for plotting error deltas.
-    num_parameters_errors = 30
-
-    # number of (x,y) coordinates used to plot the resulting approximation.
-    num_points_plot = 100000
-
-    # fixed point precision used in Osmosis `osmomath` package.
-    osmomath_precision = 36
-
-    # function to approximate
-    approximated_fn = lambda x: sympy.Pow(sympy.E, x)
-
     # Equispaced x coordinates to be used for plotting every approximation.
     x_coordinates = approximations.linspace(x_start, x_end, num_points_plot)
     x_coordinates = [sympy.Float(sympy.N(coef, osmomath_precision + 1), osmomath_precision + 1) for coef in x_coordinates]
@@ -196,14 +184,9 @@ def exponent_approximation_choice():
     # Compute Actual Values
     y_actual = approximations.get_y_actual(approximated_fn, x_coordinates)
 
-    chebyshev_rational_error_deltas = approximations.compute_error_range(y_chebyshev_rational, y_actual)
-
-    plt.semilogy(x_coordinates, chebyshev_rational_error_deltas)
-
-    plt.grid(True)
-    plt.title(f"Chebyshev Rational e^x Errors on [{x_start}, {x_end}]. {num_parameters} params, {num_points_plot} points")
-    plt.show()
+    plot_error_range(x_coordinates, y_chebyshev_rational, y_actual)
 
 if __name__ == "__main__":
+    # Uncomment to run the main script.
     #main()
     exponent_approximation_choice()
