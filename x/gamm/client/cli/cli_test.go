@@ -345,84 +345,34 @@ func TestGetCmdSpotPrice(t *testing.T) {
 	osmocli.RunQueryTestCases(t, desc, tcs)
 }
 
-// // func (s *IntegrationTestSuite) TestGetCmdEstimateSwapExactAmountIn() {
-// // 	val := s.network.Validators[0]
+func TestGetCmdEstimateSwapExactAmountIn(t *testing.T) {
+	desc, _ := cli.GetCmdEstimateSwapExactAmountIn()
+	tcs := map[string]osmocli.QueryCliTestCase[*types.QuerySwapExactAmountInRequest]{
+		"basic test": {
+			Cmd: "1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 10stake --swap-route-pool-ids=2 --swap-route-denoms=node0token",
+			ExpectedQuery: &types.QuerySwapExactAmountInRequest{
+				Sender:  "osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7",
+				PoolId:  1,
+				TokenIn: "10stake",
+				Routes:  []types.SwapAmountInRoute{{PoolId: 2, TokenOutDenom: "node0token"}},
+			},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}
 
-// // 	testCases := []struct {
-// // 		name      string
-// // 		args      []string
-// // 		expectErr bool
-// // 	}{
-// // 		{
-// // 			"query pool estimate swap exact amount in", // osmosisd query gamm estimate-swap-exact-amount-in 1 cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq 10.0stake --swap-route-pool-ids=1 --swap-route-denoms=node0token
-// // 			[]string{
-// // 				"1",
-// // 				"cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq",
-// // 				"10.0stake",
-// // 				fmt.Sprintf("--%s=%d", cli.FlagSwapRoutePoolIds, 1),
-// // 				fmt.Sprintf("--%s=%s", cli.FlagSwapRouteDenoms, "node0token"),
-// // 				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
-// // 			},
-// // 			false,
-// // 		},
-// // 	}
-
-// // 	for _, tc := range testCases {
-// // 		tc := tc
-
-// // 		s.Run(tc.name, func() {
-// // 			cmd := cli.GetCmdEstimateSwapExactAmountIn()
-// // 			clientCtx := val.ClientCtx
-
-// // 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// // 			if tc.expectErr {
-// // 				s.Require().Error(err)
-// // 			} else {
-// // 				resp := types.QuerySwapExactAmountInResponse{}
-// // 				s.Require().NoError(err, out.String())
-// // 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-// // 			}
-// // 		})
-// // 	}
-// // }
-
-// // func (s *IntegrationTestSuite) TestGetCmdEstimateSwapExactAmountOut() {
-// // 	val := s.network.Validators[0]
-
-// // 	testCases := []struct {
-// // 		name      string
-// // 		args      []string
-// // 		expectErr bool
-// // 	}{
-// // 		{
-// // 			"query pool estimate swap exact amount in", // osmosisd query gamm estimate-swap-exact-amount-in 1 cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq 10.0stake --swap-route-pool-ids=1 --swap-route-denoms=node0token
-// // 			[]string{
-// // 				"1",
-// // 				val.Address.String(),
-// // 				"10.0stake",
-// // 				fmt.Sprintf("--%s=%d", cli.FlagSwapRoutePoolIds, 1),
-// // 				fmt.Sprintf("--%s=%s", cli.FlagSwapRouteDenoms, "node0token"),
-// // 				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
-// // 			},
-// // 			false,
-// // 		},
-// // 	}
-
-// // 	for _, tc := range testCases {
-// // 		tc := tc
-
-// // 		s.Run(tc.name, func() {
-// // 			cmd := cli.GetCmdEstimateSwapExactAmountOut()
-// // 			clientCtx := val.ClientCtx
-
-// // 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// // 			if tc.expectErr {
-// // 				s.Require().Error(err)
-// // 			} else {
-// // 				resp := types.QuerySwapExactAmountOutResponse{}
-// // 				s.Require().NoError(err, out.String())
-// // 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-// // 			}
-// // 		})
-// // 	}
-// // }
+func TestGetCmdEstimateSwapExactAmountOut(t *testing.T) {
+	desc, _ := cli.GetCmdEstimateSwapExactAmountOut()
+	tcs := map[string]osmocli.QueryCliTestCase[*types.QuerySwapExactAmountOutRequest]{
+		"basic test": {
+			Cmd: "1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 10stake --swap-route-pool-ids=2 --swap-route-denoms=node0token",
+			ExpectedQuery: &types.QuerySwapExactAmountOutRequest{
+				Sender:   "osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7",
+				PoolId:   1,
+				TokenOut: "10stake",
+				Routes:   []types.SwapAmountOutRoute{{PoolId: 2, TokenInDenom: "node0token"}},
+			},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}
