@@ -36,11 +36,18 @@ def approx_and_eval_all(approximated_fn, num_parameters: int, x_coordinates) -> 
     y_chebyshev_rational = rational.evaluate(x_coordinates, numerator_coefficients_chebyshev_rational, denominator_coefficients_chebyshev_rational)
 
     # Actual
+    y_actual = get_y_actual(approximated_fn, x_coordinates)
+
+    return (y_eqispaced_poly, y_chebyshev_poly, y_chebyshev_rational, y_actual)
+
+def get_y_actual(approximated_fn, x_coordinates) -> list[sympy.Float]:
+    """ Given x coordinates and a function, returns a list of y coordinates, one for each x coordinate
+    that represent the true (x,y) coordinates of the function, as calculated by Sympy.
+    """
     y_actual = []
     for x in x_coordinates:
         y_actual.append(approximated_fn(x))
-
-    return (y_eqispaced_poly, y_chebyshev_poly, y_chebyshev_rational, y_actual)
+    return y_actual
 
 def compute_max_error(y_approximation, y_actual) -> sympy.Float:
     """ Given an approximated list of y values and actual y values, computes and returns

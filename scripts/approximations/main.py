@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import sympy
 
 import approximations
+import rational
 
 # This script does the following:
 # - Computes polynomial and rational approximations of a given function (e^x by default).
@@ -151,5 +152,58 @@ def main():
         plt.ylabel(F"-log_10{{ max | f'(x) - f(x) | }} where x is in [{x_start}, {x_end}]")
         plt.show()
 
+# This script isolates the 13-parameter Chebyshev Rational approximation of e^x
+# We are planning to use it in production. Therefore, we need to peform coefficient
+# truncations to 36 decimal points (the max osmomath supported precision).
+def exponent_approximation_choice():
+
+    ##########################
+    # Configuration Parameters
+
+    # start of the interval to calculate the approximation on
+    x_start = 0
+    # end of the interval to calculate the approximation on
+    x_end = 1
+    # number of paramters to use for the approximations.
+    num_parameters = 13
+
+    # number of paramters to use for plotting error deltas.
+    num_parameters_errors = 30
+
+    # number of (x,y) coordinates used to plot the resulting approximation.
+    num_points_plot = 100000
+
+    # fixed point precision used in Osmosis `osmomath` package.
+    osmomath_precision = 36
+
+    # function to approximate
+    approximated_fn = lambda x: sympy.Pow(sympy.E, x)
+
+    # Equispaced x coordinates to be used for plotting every approximation.
+    x_coordinates = approximations.linspace(x_start, x_end, num_points_plot)
+    x_coordinates = [sympy.Float(sympy.N(coef, osmomath_precision + 1), osmomath_precision + 1) for coef in x_coordinates]
+
+    # Chebyshev Rational Approximation to get the coefficients.
+    coef_numerator, coef_denominator = approximations.chebyshev_rational_approx(approximated_fn, x_start, x_end, num_parameters)
+
+    # Truncate the coefficients to osmomath precision.
+    coef_numerator = [sympy.Float(sympy.N(coef, osmomath_precision + 1), osmomath_precision + 1) for coef in coef_numerator]
+    coef_denominator = [sympy.Float(sympy.N(coef, osmomath_precision + 1), osmomath_precision + 1) for coef in coef_denominator]
+
+    # Evaluate approximation.
+    y_chebyshev_rational = rational.evaluate(x_coordinates, coef_numerator, coef_denominator)
+
+    # Compute Actual Values
+    y_actual = approximations.get_y_actual(approximated_fn, x_coordinates)
+
+    chebyshev_rational_error_deltas = approximations.compute_error_range(y_chebyshev_rational, y_actual)
+
+    plt.semilogy(x_coordinates, chebyshev_rational_error_deltas)
+
+    plt.grid(True)
+    plt.title(f"Chebyshev Rational e^x Errors on [{x_start}, {x_end}]. {num_parameters} params, {num_points_plot} points")
+    plt.show()
+
 if __name__ == "__main__":
-    main()
+    #main()
+    exponent_approximation_choice()
