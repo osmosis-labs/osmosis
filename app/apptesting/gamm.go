@@ -212,6 +212,7 @@ func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice sdk.De
 		quoteDenom = denoms[1]
 	} else {
 		quoteDenom = denoms[0]
+
 		amountTrade := s.CalcAmoutOfTokenToGetTargetPrice(s.Ctx, pool, targetSpotPrice, baseDenom, quoteDenom)
 		if amountTrade.IsPositive() {
 			swapIn := sdk.NewCoins(sdk.NewCoin(quoteDenom, sdk.NewInt(amountTrade.RoundInt64())))
