@@ -107,8 +107,6 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	// N.B.: the messager server at the line below is deprecated.
 	// nolint: staticcheck
 	balancer.RegisterMsgServer(cfg.MsgServer(), keeper.NewBalancerMsgServerImpl(&am.keeper))
-	// N.B.: the messager server at the line below is deprecated.
-	// nolint: staticcheck
 	stableswap.RegisterMsgServer(cfg.MsgServer(), keeper.NewStableswapMsgServerImpl(&am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
 	v2types.RegisterQueryServer(cfg.QueryServer(), keeper.NewV2Querier(am.keeper))
