@@ -159,7 +159,7 @@ The Code Layout is very similar to TWAP module.
 Existing ValSet   20osmos {ValA-> 0.5, ValB-> 0.3, ValC-> 0.2} [ValA-> 10osmo, ValB-> 6osmo, ValC-> 4osmo]
 New ValSet        20osmos {ValD-> 0.2, ValE-> 0.2, ValF-> 0.6} [ValD-> 4osmo, ValE-> 4osmo, ValD-> 12osmo]
 
-- // Rearranging the exisintValSet and newValSet to to add extra validator padding
+- // Rearranging the existingValSet and newValSet to to add extra validator padding
   - existing_valset_updated = [ValA: 10, ValB: 6, ValC: 4, ValD: 0, ValE: 0, ValF: 0]
   - new_valset_updated = [ValD: 4, ValE: 4, ValF: 12, ValA: 0, ValB: 0, ValC: 0]
 
@@ -173,11 +173,11 @@ New ValSet        20osmos {ValD-> 0.2, ValE-> 0.2, ValF-> 0.6} [ValD-> 4osmo, Va
         source_validator = validator.address
         target_validator = FindMin(diff_arr)  
 
-        amount_to_redelegate = FindMin(target_validator.amount, validator.amount)
-        sdk.BeginRedelegation(delegator, source_validator, target_validator, amount_to_redelegate) 
+        amount_to_redelegate = FindMin(abs(target_validator.amount), validator.amount)
+        sdk.BeginRedelegation(ctx, delegator, source_validator, target_validator, amount_to_redelegate) 
 
-        diff_arr[i].amount = target_validator.amount + amount_to_redelegate 
         validator.amount = validator.amount - amount_to_redelegate
+        diff_arr[i].amount = target_validator.amount + amount_to_redelegate 
 
 - Result 
   1. diff_arr = [ValA: 0, ValB: 0, ValC: 0, ValD: 0, ValE: 0, ValF: 0]
@@ -189,5 +189,5 @@ New ValSet        20osmos {ValD-> 0.2, ValE-> 0.2, ValF-> 0.6} [ValD-> 4osmo, Va
 2. ValA -> ValB (redelegate) ValB -> ValC (redelegate) **CONSECUTIVE REDELEGATION DOES NOT WORK**
 3. Once you redelegate from ValA -> ValB, you will not be able to redelegate from ValB to another validator for the next 21 days.
   - the validator on the receiving end of redelegation will be on a 21-day redelegation lock
-
+4. Cannot redelegate to same validator 
 

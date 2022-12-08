@@ -3,7 +3,6 @@ package keeper
 import (
 	"fmt"
 	"sort"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -130,7 +129,6 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, existingSet types.ValidatorSetPreferences, newSet []types.ValidatorPreference) error {
 	var existingValSet []valSet
 	var newValSet []valSet
-	var matureTime []time.Time
 	totalTokenAmount := sdk.NewDec(0)
 
 	// Rearranging the exisingValSet and newValSet to to add extra validator padding
@@ -191,7 +189,7 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 			}
 
 			amount := sdk.MinDec(target_large.amount.Abs(), diff_val.amount)
-			time, err := k.stakingKeeper.BeginRedelegation(ctx, delegator, validator_source, validator_target, amount)
+			_, err = k.stakingKeeper.BeginRedelegation(ctx, delegator, validator_source, validator_target, amount)
 			if err != nil {
 				return err
 			}
@@ -199,7 +197,6 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 			// Find target value in diffValSet and set that to (sourceAmt - targetAmt)
 			diff_val.amount = diff_val.amount.Sub(amount)            // set the source to 0
 			diffValSet[idx].amount = target_large.amount.Add(amount) // set the target to (sourceAmt - targetAmt)
-			matureTime = append(matureTime, time)
 		}
 	}
 
