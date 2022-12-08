@@ -40,13 +40,12 @@ var (
 	_ stableswap.MsgServer = msgServer{}
 )
 
-// Deprecated: please use CreateBalancerPool in x/swaprouter.
+// CreateBalancerPool is a create balancer pool message.
 func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.MsgCreateBalancerPool) (*balancer.MsgCreateBalancerPoolResponse, error) {
 	poolId, err := server.CreatePool(goCtx, msg)
 	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolId}, err
 }
 
-// Deprecated: please use CreateStableswapPool in x/swaprouter.
 func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stableswap.MsgCreateStableswapPool) (*stableswap.MsgCreateStableswapPoolResponse, error) {
 	poolId, err := server.CreatePool(goCtx, msg)
 	if err != nil {
@@ -55,17 +54,19 @@ func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stables
 	return &stableswap.MsgCreateStableswapPoolResponse{PoolID: poolId}, nil
 }
 
-// Deprecated: please use StableSwapAdjustScalingFactorsV2 in x/gamm.
 func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, msg *stableswap.MsgStableSwapAdjustScalingFactors) (*stableswap.MsgStableSwapAdjustScalingFactorsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if err := server.keeper.setStableSwapScalingFactors(ctx, msg.PoolID, msg.ScalingFactors, msg.Sender); err != nil {
 		return nil, err
 	}
+
 	return &stableswap.MsgStableSwapAdjustScalingFactorsResponse{}, nil
 }
 
-// Deprecated: use CreatePool in x/swaprouter instead.
+// CreatePool attempts to create a pool returning the newly created pool ID or an error upon failure.
+// The pool creation fee is used to fund the community pool.
+// It will create a dedicated module account for the pool and sends the initial liquidity to the created module account.
 func (server msgServer) CreatePool(goCtx context.Context, msg swaproutertypes.CreatePoolMsg) (poolId uint64, err error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
