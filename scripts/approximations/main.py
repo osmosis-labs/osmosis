@@ -28,7 +28,7 @@ def main():
     num_parameters_errors = 30
 
     # number of (x,y) coordinates used to plot the resulting approximation.
-    num_points_plot = 10000
+    num_points_plot = 100000
 
     # function to approximate
     approximated_fn = lambda x: sympy.Pow(sympy.E, x)
@@ -40,18 +40,23 @@ def main():
     # flag controlling whether to compute max error for each approximation
     # given the equally spaced x coordinates.
     # Computes if true.
-    shouldComputeErrorDelta = True
+    shouldComputeErrorDelta = False
+
+    # flag controlling whether to plot errors over a range.
+    # Currently, does so only for Chebyshev Rational Approximation.
+    # Computes if true.
+    shouldPlotErrorRange  = True
 
     # flag controlling whether to plot max error for every approximation
     # with a varying number of parameters. This is useful to find the most
     # optimal number of parameters to use for each kind of approximation.
     # Plots if true.
-    shouldPlotMaxError = True
+    shouldPlotMaxError = False
 
     # Equispaced x coordinates to be used for plotting every approximation.
     x_coordinates = approximations.linspace(x_start, x_end, num_points_plot)
 
-    if shouldComputeErrorDelta or shouldPlotApproximations:
+    if shouldComputeErrorDelta or shouldPlotApproximations or shouldPlotErrorRange:
         ###############################################
         # Approximation With Given Number of Parameters
         y_eqispaced_poly, y_chebyshev_poly, y_chebyshev_rational, y_actual = approximations.approx_and_eval_all(approximated_fn, num_parameters, x_coordinates)
@@ -74,6 +79,16 @@ def main():
             # Chebyshev Rational Approximation
             max_error_chebyshev_rational = approximations.compute_max_error(y_chebyshev_rational, y_actual)
             print(F"Chebyshev Rational: {max_error_chebyshev_rational.evalf(chop=1e-100)}")
+
+        if shouldPlotErrorRange:
+            chebyshev_rational_error_deltas = approximations.compute_error_range(y_chebyshev_rational, y_actual)
+
+            plt.semilogy(x_coordinates, chebyshev_rational_error_deltas)
+
+            plt.grid(True)
+            plt.title(f"Chebyshev Rational e^x Errors on [{x_start}, {x_end}]. {num_parameters} params, {num_points_plot} points")
+            plt.show()
+            
 
         ###############################
         # Plot Every Approximation Kind

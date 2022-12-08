@@ -43,6 +43,14 @@ def approx_and_eval_all(approximated_fn, num_parameters: int, x_coordinates) -> 
     return (y_eqispaced_poly, y_chebyshev_poly, y_chebyshev_rational, y_actual)
 
 def compute_max_error(y_approximation, y_actual) -> sympy.Float:
+    """ Given an approximated list of y values and actual y values, computes and returns
+    the maximum error delta between them.
+
+    CONTRACT:
+    - y_approximation and y_actual must be the same length
+    - for every i in range(len(y_approximation)), y_approximation[i] and y_actual[i] must correspond to the
+    same x coordinate
+    """
     if len(y_approximation) != len(y_actual):
         raise ValueError(F"y_approximation ({len(y_approximation)}) and y_actual ({len(y_actual)}) must be the same length.")
 
@@ -56,6 +64,23 @@ def compute_max_error(y_approximation, y_actual) -> sympy.Float:
         else:
             max = sympy.Max(max, cur_abs)
     return max
+
+def compute_error_range(y_approximation: list, y_actual: list) -> list[sympy.Float]:
+    """ Given an approximated list of y values and actual y values, computes and returns
+    error deltas between them.
+
+    CONTRACT:
+    - y_approximation and y_actual must be the same length
+    - for every i in range(len(y_approximation)), y_approximation[i] and y_actual[i] must correspond to the
+    same x coordinate
+    """
+    result = []
+    for i in range(len(y_approximation)):
+        cur_abs = sympy.Abs(y_approximation[i] - y_actual[i])
+        if cur_abs is sympy.nan:
+            raise ValueError(F"cur_abs is nan. y_approximation[i] ({y_approximation[i]}) and y_actual[i] ({y_actual[i]})")
+        result.append(cur_abs)
+    return result
 
 def equispaced_poly_approx(fn, x_start: sympy.Float, x_end: sympy.Float, num_terms: int):
     """ Returns the coefficients for an equispaced polynomial between x_start and x_end with num_terms terms.
