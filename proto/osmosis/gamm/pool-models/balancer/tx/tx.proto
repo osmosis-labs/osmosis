@@ -6,16 +6,13 @@ import "osmosis/gamm/pool-models/balancer/balancerPool.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer";
 
-// Deprecated: please use v2.
 service Msg {
-  option deprecated = true;
   rpc CreateBalancerPool(MsgCreateBalancerPool)
       returns (MsgCreateBalancerPoolResponse);
 }
 
-// Deprecated: please use v2.
+// ===================== MsgCreatePool
 message MsgCreateBalancerPool {
-  option deprecated = true;
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 
   osmosis.gamm.v1beta1.PoolParams pool_params = 2
@@ -28,8 +25,7 @@ message MsgCreateBalancerPool {
       [ (gogoproto.moretags) = "yaml:\"future_pool_governor\"" ];
 }
 
-// Deprecated: please use v2.
+// Returns the poolID
 message MsgCreateBalancerPoolResponse {
-  option deprecated = true;
   uint64 pool_id = 1 [ (gogoproto.customname) = "PoolID" ];
 }

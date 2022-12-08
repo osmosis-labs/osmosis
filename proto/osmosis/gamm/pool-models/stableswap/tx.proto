@@ -7,18 +7,15 @@ import "osmosis/gamm/pool-models/stableswap/stableswap_pool.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap";
 
-// Deprecated: please use v2.
 service Msg {
-  option deprecated = true;
   rpc CreateStableswapPool(MsgCreateStableswapPool)
       returns (MsgCreateStableswapPoolResponse);
   rpc StableSwapAdjustScalingFactors(MsgStableSwapAdjustScalingFactors)
       returns (MsgStableSwapAdjustScalingFactorsResponse);
 }
 
-// Deprecated: please use v2.
+// ===================== MsgCreatePool
 message MsgCreateStableswapPool {
-  option deprecated = true;
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 
   PoolParams pool_params = 2 [ (gogoproto.moretags) = "yaml:\"pool_params\"" ];
@@ -38,15 +35,14 @@ message MsgCreateStableswapPool {
       [ (gogoproto.moretags) = "yaml:\"scaling_factor_controller\"" ];
 }
 
-// Deprecated: please use v2.
+// Returns a poolID with custom poolName.
 message MsgCreateStableswapPoolResponse {
-  option deprecated = true;
   uint64 pool_id = 1 [ (gogoproto.customname) = "PoolID" ];
 }
 
-// Deprecated: please use v2.
+// Sender must be the pool's scaling_factor_governor in order for the tx to
+// succeed. Adjusts stableswap scaling factors.
 message MsgStableSwapAdjustScalingFactors {
-  option deprecated = true;
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.customname) = "PoolID" ];
 
@@ -54,5 +50,4 @@ message MsgStableSwapAdjustScalingFactors {
       [ (gogoproto.moretags) = "yaml:\"stableswap_scaling_factor\"" ];
 }
 
-// Deprecated: please use v2.
-message MsgStableSwapAdjustScalingFactorsResponse { option deprecated = true; }
+message MsgStableSwapAdjustScalingFactorsResponse {}

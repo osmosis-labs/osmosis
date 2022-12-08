@@ -9,7 +9,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	balancerv2 "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer/v2"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
@@ -27,7 +26,7 @@ var PoolCreationFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 10_000_000)
 
 // RandomCreatePoolMsg attempts to find an account with two or more distinct denoms and attempts to send a
 // create pool message composed of those denoms
-func RandomCreateUniV2Msg(k swaprouter.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*balancerv2.MsgCreateBalancerPool, error) {
+func RandomCreateUniV2Msg(k swaprouter.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*balancer.MsgCreateBalancerPool, error) {
 	var poolAssets []balancer.PoolAsset
 	// find an address with two or more distinct denoms in their wallet
 	sender, senderExists := sim.RandomSimAccountWithConstraint(createPoolRestriction(k, sim, ctx))
@@ -56,7 +55,7 @@ func RandomCreateUniV2Msg(k swaprouter.Keeper, sim *simtypes.SimCtx, ctx sdk.Con
 		})
 	}
 
-	return &balancerv2.MsgCreateBalancerPool{
+	return &balancer.MsgCreateBalancerPool{
 		Sender:     sender.Address.String(),
 		PoolParams: poolParams,
 		PoolAssets: poolAssets,
