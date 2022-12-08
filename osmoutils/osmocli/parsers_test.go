@@ -6,7 +6,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/test-go/testify/require"
+	"github.com/stretchr/testify/require"
 )
 
 type testingStruct struct {

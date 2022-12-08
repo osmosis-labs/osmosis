@@ -252,7 +252,7 @@ func ParseUint(arg string, fieldName string) (uint64, error) {
 func ParseFloat(arg string, fieldName string) (float64, error) {
 	v, err := strconv.ParseFloat(arg, 64)
 	if err != nil {
-		return 0, fmt.Errorf("could not parse %s as uint for field %s: %w", arg, fieldName, err)
+		return 0, fmt.Errorf("could not parse %s as float for field %s: %w", arg, fieldName, err)
 	}
 	return v, nil
 }
