@@ -1,83 +1,39 @@
 package cli
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v13/x/mint/types"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
 // GetQueryCmd returns the cli query commands for the minting module.
 func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
-	cmd.AddCommand(
-		GetCmdQueryParams(),
-		GetCmdQueryEpochProvisions(),
-	)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdQueryParams)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdQueryEpochProvisions)
 
 	return cmd
 }
 
 // GetCmdQueryParams implements a command to return the current minting
 // parameters.
-func GetCmdQueryParams() *cobra.Command {
-	cmd := &cobra.Command{
+func GetCmdQueryParams() (*osmocli.QueryDescriptor, *types.QueryParamsRequest) {
+	return &osmocli.QueryDescriptor{
 		Use:   "params",
 		Short: "Query the current minting parameters",
-		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			params := &types.QueryParamsRequest{}
-			res, err := queryClient.Params(context.Background(), params)
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(&res.Params)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} params`,
+	}, &types.QueryParamsRequest{}
 }
 
 // GetCmdQueryEpochProvisions implements a command to return the current minting
 // epoch provisions value.
-func GetCmdQueryEpochProvisions() *cobra.Command {
-	cmd := &cobra.Command{
+func GetCmdQueryEpochProvisions() (*osmocli.QueryDescriptor, *types.QueryEpochProvisionsRequest) {
+	return &osmocli.QueryDescriptor{
 		Use:   "epoch-provisions",
 		Short: "Query the current minting epoch provisions value",
-		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			params := &types.QueryEpochProvisionsRequest{}
-			res, err := queryClient.EpochProvisions(context.Background(), params)
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintString(fmt.Sprintf("%s\n", res.EpochProvisions))
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} epoch-provisions`,
+	}, &types.QueryEpochProvisionsRequest{}
 }
