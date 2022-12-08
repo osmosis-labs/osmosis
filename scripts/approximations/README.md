@@ -2,10 +2,10 @@
 
 ## Context
 
-This is a script to approximate a mathematical operation using polynomial
+This is a set of scripts to approximate a mathematical operation using polynomial
 and rational approximations.
 
-This script does the following:
+The `main` in the `main` function of `main.py`. It does the following:
 
 1. Computes polynomial and rational approximations of a given function (e^x by default), 
 returning the coefficients.
@@ -13,10 +13,39 @@ returning the coefficients.
 2. Computes (x,y) coordinates for every kind of approximation given the same x coordinates.
 Plots the results for rough comparison.
 
+3. Plots the results for rough comparison.
 
-The following are the resources used to write the script:
+4. Computes the max error for every approximation given the same x coordinates.
+
+5. Computes and plots max errors for every approximation with a varying number of parameters.
+
+In other words, this script runs various approximation methods, plots their results and deltas
+from actual function values. It can be configured to print the maximum error.
+The exact behavior is controlled by the global variables at the top of `main.py`.
+
+The following are the resources used to create this:
 - <https://xn--2-umb.com/22/approximation>
 - <https://sites.tufts.edu/atasissa/files/2019/09/remez.pdf>
+
+In `main.py`, there is also a `exponent_approximation_choice` script.
+
+This is a shorter and simpler version of `main` that isolates the 13-parameter
+Chebyshev Rational approximation of e^x. We are planning to use it in production.
+Therefore, we need to peform coefficient truncations to 36 decimal points
+(the max osmomath supported precision). This truncation is applied
+to `exponent_approximation_choice` but not `main`.
+
+## Requirements
+
+- These scripts require Sympy: https://docs.sympy.org/latest/install.html
+- It can be installed using Anaconda: https://www.anaconda.com/products/distribution
+
+### Common Problems
+
+Dependency clash between Anaconda and pip:
+- https://stackoverflow.com/questions/46449850/how-to-fix-the-error-qobjectmovetothread-in-opencv-in-python/63350799#63350799
+
+The solution on Ubuntu is to remove `pyqt`, `python-opencv` and other deps from the `conda` environment. Instead, install them via `pip`.
 
 ## Configuration
 
