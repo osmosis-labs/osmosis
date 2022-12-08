@@ -198,6 +198,54 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolAssetAndSwapFee(assets []b
 	return poolId
 }
 
+// Modify spotprice of a pool to target spotprice
+func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice sdk.Dec, baseDenom string) {
+	var quoteDenom string
+	var int64Max = int64(^uint64(0) >> 1)
+
+	s.Require().Positive(targetSpotPrice)
+	s.Require().Greater(gammtypes.MaxSpotPrice, targetSpotPrice)
+	pool, _ := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolID)
+	denoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, poolID)
+	s.Require().NoError(err)
+	if denoms[0] == baseDenom {
+		quoteDenom = denoms[1]
+	} else {
+		quoteDenom = denoms[0]
+		amountTrade := s.CalcAmoutOfTokenToGetTargetPrice(s.Ctx, pool, targetSpotPrice, baseDenom, quoteDenom)
+		if amountTrade.IsPositive() {
+			swapIn := sdk.NewCoins(sdk.NewCoin(quoteDenom, sdk.NewInt(amountTrade.RoundInt64())))
+			s.FundAcc(s.TestAccs[0], swapIn)
+			msg := gammtypes.MsgSwapExactAmountIn{
+				Sender:            s.TestAccs[0].String(),
+				Routes:            []gammtypes.SwapAmountInRoute{{PoolId: poolID, TokenOutDenom: baseDenom}},
+				TokenIn:           swapIn[0],
+				TokenOutMinAmount: sdk.ZeroInt(),
+			}
+
+			gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
+			_, err = gammMsgServer.SwapExactAmountIn(sdk.WrapSDKContext(s.Ctx), &msg)
+			s.Require().NoError(err)
+		} else {
+			swapOut := sdk.NewCoins(sdk.NewCoin(quoteDenom, sdk.NewInt(amountTrade.RoundInt64()).Abs()))
+			swapFee := pool.GetSwapFee(s.Ctx)
+			tokenIn, err := pool.CalcInAmtGivenOut(s.Ctx, swapOut, baseDenom, swapFee)
+			s.Require().NoError(err)
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(tokenIn))
+			msg := gammtypes.MsgSwapExactAmountOut{
+				Sender:           s.TestAccs[0].String(),
+				Routes:           []gammtypes.SwapAmountOutRoute{{PoolId: poolID, TokenInDenom: baseDenom}},
+				TokenInMaxAmount: sdk.NewInt(int64Max),
+				TokenOut:         swapOut[0],
+			}
+
+			gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
+			_, err = gammMsgServer.SwapExactAmountOut(sdk.WrapSDKContext(s.Ctx), &msg)
+			s.Require().NoError(err)
+		}
+	}
+}
+
 func (s *KeeperTestHelper) RunBasicSwap(poolId uint64) {
 	denoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, poolId)
 	s.Require().NoError(err)
