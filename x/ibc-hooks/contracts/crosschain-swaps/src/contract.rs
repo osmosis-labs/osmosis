@@ -59,7 +59,7 @@ pub fn execute(
             input_coin,
             output_denom,
             receiver,
-            slipage,
+            slippage,
             failed_delivery,
         } => execute::swap_and_forward(
             deps,
@@ -67,7 +67,7 @@ pub fn execute(
             env.contract.address,
             input_coin,
             output_denom,
-            slipage,
+            slippage,
             receiver,
             failed_delivery,
         ),

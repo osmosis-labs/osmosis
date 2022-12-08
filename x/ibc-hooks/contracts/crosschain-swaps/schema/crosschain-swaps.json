@@ -44,7 +44,7 @@
               "input_coin",
               "output_denom",
               "receiver",
-              "slipage"
+              "slippage"
             ],
             "properties": {
               "channel": {
@@ -69,8 +69,8 @@
               "receiver": {
                 "$ref": "#/definitions/Addr"
               },
-              "slipage": {
-                "$ref": "#/definitions/Slipage"
+              "slippage": {
+                "$ref": "#/definitions/Slippage"
               }
             },
             "additionalProperties": false
@@ -134,15 +134,15 @@
         },
         "additionalProperties": false
       },
-      "Slipage": {
+      "Slippage": {
         "oneOf": [
           {
             "type": "object",
             "required": [
-              "max_slipage_percentage"
+              "max_slippage_percentage"
             ],
             "properties": {
-              "max_slipage_percentage": {
+              "max_slippage_percentage": {
                 "$ref": "#/definitions/Decimal"
               }
             },

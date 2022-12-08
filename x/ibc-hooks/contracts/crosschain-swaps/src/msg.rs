@@ -1,6 +1,6 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Coin};
-use swaprouter::msg::Slipage;
+use swaprouter::msg::Slippage;
 
 /// Message type for `instantiate` entry_point
 #[cw_serde]
@@ -36,7 +36,7 @@ pub enum ExecuteMsg {
         input_coin: Coin,
         output_denom: String,
         receiver: Addr,
-        slipage: Slipage,
+        slippage: Slippage,
         failed_delivery: Option<Recovery>,
     },
     /// Executing a recover will transfer any recoverable tokens that the sender
