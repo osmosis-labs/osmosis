@@ -35,18 +35,6 @@ Therefore, we need to peform coefficient truncations to 36 decimal points
 (the max osmomath supported precision). This truncation is applied
 to `exponent_approximation_choice` but not `main`.
 
-## Requirements
-
-- These scripts require Sympy: https://docs.sympy.org/latest/install.html
-- It can be installed using Anaconda: https://www.anaconda.com/products/distribution
-
-### Common Problems
-
-Dependency clash between Anaconda and pip:
-- https://stackoverflow.com/questions/46449850/how-to-fix-the-error-qobjectmovetothread-in-opencv-in-python/63350799#63350799
-
-The solution on Ubuntu is to remove `pyqt`, `python-opencv` and other deps from the `conda` environment. Instead, install them via `pip`.
-
 ## Configuration
 
 There are several parameters that can be changed on the needs basis at the
@@ -57,14 +45,14 @@ the approximation, and the number of terms to be used. For the full parameter li
 
 ## Usage
 
-Assuming that you are in the root of the repository:
+Assuming that you are in the root of the repository and have Sympy installed:
 
 ```bash
 # Create a virtual environment.
-python3 -m venv scripts/approximations/venv
+python3 -m venv ~/approx-venv
 
 # Start the environment
-source scripts/approximations/venv/bin/activate
+source ~/approx-venv/bin/activate
 
 # Install dependencies in the virtual environment.
 pip install -r scripts/approximations/requirements.txt
