@@ -51,7 +51,7 @@ func (msg MsgCreateStableswapPool) ValidateBasic() error {
 	scalingFactors := msg.ScalingFactors
 	// The message's scaling factors must be empty or a valid set of scaling factors
 	if len(scalingFactors) != 0 {
-		if err = ValidateScalingFactors(scalingFactors, len(msg.InitialPoolLiquidity)); err != nil {
+		if err = validateScalingFactors(scalingFactors, len(msg.InitialPoolLiquidity)); err != nil {
 			return err
 		}
 	} else {
@@ -62,12 +62,12 @@ func (msg MsgCreateStableswapPool) ValidateBasic() error {
 
 	// validation for pool initial liquidity
 	// The message's pool liquidity must have between 2 and 8 assets with at most 10B post-scaled units in each
-	if err = ValidatePoolLiquidity(msg.InitialPoolLiquidity, scalingFactors); err != nil {
+	if err = validatePoolLiquidity(msg.InitialPoolLiquidity, scalingFactors); err != nil {
 		return err
 	}
 
 	// validation for scaling factor owner
-	if err = ValidateScalingFactorController(msg.ScalingFactorController); err != nil {
+	if err = validateScalingFactorController(msg.ScalingFactorController); err != nil {
 		return err
 	}
 

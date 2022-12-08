@@ -39,7 +39,7 @@ func (msg MsgCreateBalancerPool) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	err = ValidateUserSpecifiedPoolAssets(msg.PoolAssets)
+	err = validateUserSpecifiedPoolAssets(msg.PoolAssets)
 	if err != nil {
 		return err
 	}

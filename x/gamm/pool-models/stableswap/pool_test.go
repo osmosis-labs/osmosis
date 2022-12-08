@@ -1108,7 +1108,7 @@ func TestValidatePoolLiquidity(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := ValidatePoolLiquidity(tc.liquidity, tc.scalingFactors)
+			err := validatePoolLiquidity(tc.liquidity, tc.scalingFactors)
 
 			if tc.expectError != nil {
 				require.Error(t, err)
@@ -1381,7 +1381,7 @@ func TestValidateScalingFactors(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := ValidateScalingFactors(tc.scalingFactors, tc.numAssets)
+			err := validateScalingFactors(tc.scalingFactors, tc.numAssets)
 
 			if tc.expectError != false {
 				require.Error(t, err)

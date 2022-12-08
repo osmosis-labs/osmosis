@@ -68,7 +68,7 @@ func sortPoolAssetsByDenom(assets []PoolAsset) {
 	})
 }
 
-func ValidateUserSpecifiedPoolAssets(assets []PoolAsset) error {
+func validateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 	// The pool must be swapping between at least two assets
 	if len(assets) < 2 {
 		return types.ErrTooFewPoolAssets
