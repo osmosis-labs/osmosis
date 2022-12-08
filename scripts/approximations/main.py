@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-import sympy
+import sympy as sp
 
 import approximations
 import rational
@@ -9,8 +9,10 @@ import rational
 
 # start of the interval to calculate the approximation on
 x_start = 0
+
 # end of the interval to calculate the approximation on
 x_end = 1
+
 # number of paramters to use for the approximations.
 num_parameters = 13
 
@@ -21,7 +23,7 @@ num_parameters_errors = 30
 num_points_plot = 100000
 
 # function to approximate
-approximated_fn = lambda x: sympy.Pow(sympy.E, x)
+approximated_fn = lambda x: sp.Pow(sp.E, x)
 
 # fixed point precision used in Osmosis `osmomath` package.
 osmomath_precision = 36
@@ -169,14 +171,14 @@ def main():
 def exponent_approximation_choice():
     # Equispaced x coordinates to be used for plotting every approximation.
     x_coordinates = approximations.linspace(x_start, x_end, num_points_plot)
-    x_coordinates = [sympy.Float(sympy.N(coef, osmomath_precision + 1), osmomath_precision + 1) for coef in x_coordinates]
+    x_coordinates = [sp.Float(sp.N(coef, osmomath_precision + 1), osmomath_precision + 1) for coef in x_coordinates]
 
     # Chebyshev Rational Approximation to get the coefficients.
     coef_numerator, coef_denominator = approximations.chebyshev_rational_approx(approximated_fn, x_start, x_end, num_parameters)
 
     # Truncate the coefficients to osmomath precision.
-    coef_numerator = [sympy.Float(sympy.N(coef, osmomath_precision + 1), osmomath_precision + 1) for coef in coef_numerator]
-    coef_denominator = [sympy.Float(sympy.N(coef, osmomath_precision + 1), osmomath_precision + 1) for coef in coef_denominator]
+    coef_numerator = [sp.Float(sp.N(coef, osmomath_precision + 1), osmomath_precision + 1) for coef in coef_numerator]
+    coef_denominator = [sp.Float(sp.N(coef, osmomath_precision + 1), osmomath_precision + 1) for coef in coef_denominator]
 
     # Evaluate approximation.
     y_chebyshev_rational = rational.evaluate(x_coordinates, coef_numerator, coef_denominator)

@@ -1,4 +1,4 @@
-import sympy
+import sympy as sp
 
 import polynomial
 
@@ -17,16 +17,16 @@ def construct_rational_eval_matrix(x_list: list, y_list: list, num_terms_numerat
     for i in range(num_terms_numerator + num_terms_denominator - 1):
         row = []
         for j in range(num_terms_numerator):
-            row.append(sympy.Pow(x_list[i], j))
+            row.append(sp.Pow(x_list[i], j))
 
         for j in range(num_terms_denominator):
             # denominator terms
             if j > 0:
-                row.append(-1 * sympy.Pow(x_list[i], j) * y_list[i])
+                row.append(-1 * sp.Pow(x_list[i], j) * y_list[i])
 
         matrix.append(row)
 
-    return sympy.Matrix(matrix)
+    return sp.Matrix(matrix)
 
 def evaluate(x: list, coefficients_numerator: list, coefficients_denominator: list):
     """ Evaluates the rational function. Assume rational h(x) = p(x) / q(x)

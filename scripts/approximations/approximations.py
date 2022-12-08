@@ -1,18 +1,21 @@
-import sympy
+import sympy as sp
 
 import rational
 import polynomial
 import chebyshev
 
-def linspace(start: sympy.Float, end: sympy.Float, num_points: int) -> list[sympy.Float]:
+def linspace(start: sp.Float, end: sp.Float, num_points: int) -> list[sp.Float]:
+    """ Given [start, end] on the x-axis, creates the desired number of
+    equispaced points and returns them in increasing order as a list. 
+    """
     if num_points == 1:
         return [(end - start) / 2]
 
-    result: list[sympy.Float] = []
+    result: list[sp.Float] = []
     for i in range(num_points):
-        cur_coord = sympy.Float(start + i * (end - start) / (num_points - 1), 200)
+        cur_coord = sp.Float(start + i * (end - start) / (num_points - 1), 200)
 
-        if cur_coord is sympy.nan:
+        if cur_coord is sp.nan:
             raise ValueError("cur_coord is nan")
 
         result.append(cur_coord)
@@ -20,6 +23,15 @@ def linspace(start: sympy.Float, end: sympy.Float, num_points: int) -> list[symp
     return result
 
 def approx_and_eval_all(approximated_fn, num_parameters: int, x_coordinates) -> tuple:
+    """ Performs all supported approximations of the given function, evaluates
+    each wih the given x-coordinates.
+
+    Returns y-coordinates as a tuple in the following order:
+    - Evaluated Equispaced Polynomial
+    - Evaluated Chebyshev Polynomial
+    - Evaluated Chebyshev Rational
+    - True Y-coordinates as determined by Sympy's implementation of the function.
+    """
     x_start = x_coordinates[0]
     x_end = x_coordinates[-1]
     
@@ -40,16 +52,16 @@ def approx_and_eval_all(approximated_fn, num_parameters: int, x_coordinates) -> 
 
     return (y_eqispaced_poly, y_chebyshev_poly, y_chebyshev_rational, y_actual)
 
-def get_y_actual(approximated_fn, x_coordinates) -> list[sympy.Float]:
+def get_y_actual(approximated_fn, x_coordinates) -> list[sp.Float]:
     """ Given x coordinates and a function, returns a list of y coordinates, one for each x coordinate
-    that represent the true (x,y) coordinates of the function, as calculated by Sympy.
+    that represent the true (x,y) coordinates of the function, as calculated by sp.
     """
     y_actual = []
     for x in x_coordinates:
         y_actual.append(approximated_fn(x))
     return y_actual
 
-def compute_max_error(y_approximation, y_actual) -> sympy.Float:
+def compute_max_error(y_approximation, y_actual) -> sp.Float:
     """ Given an approximated list of y values and actual y values, computes and returns
     the maximum error delta between them.
 
@@ -61,18 +73,18 @@ def compute_max_error(y_approximation, y_actual) -> sympy.Float:
     if len(y_approximation) != len(y_actual):
         raise ValueError(F"y_approximation ({len(y_approximation)}) and y_actual ({len(y_actual)}) must be the same length.")
 
-    max: sympy.Float = None
+    max: sp.Float = None
     for i in range(len(y_approximation)):
-        cur_abs = sympy.Abs(y_approximation[i] - y_actual[i])
-        if cur_abs is sympy.nan:
+        cur_abs = sp.Abs(y_approximation[i] - y_actual[i])
+        if cur_abs is sp.nan:
             raise ValueError(F"cur_abs is nan. y_approximation[i] ({y_approximation[i]}) and y_actual[i] ({y_actual[i]})")
         if max is None:
             max = cur_abs
         else:
-            max = sympy.Max(max, cur_abs)
+            max = sp.Max(max, cur_abs)
     return max
 
-def compute_error_range(y_approximation: list, y_actual: list) -> list[sympy.Float]:
+def compute_error_range(y_approximation: list, y_actual: list) -> list[sp.Float]:
     """ Given an approximated list of y values and actual y values, computes and returns
     error deltas between them.
 
@@ -83,20 +95,20 @@ def compute_error_range(y_approximation: list, y_actual: list) -> list[sympy.Flo
     """
     result = []
     for i in range(len(y_approximation)):
-        cur_abs = sympy.Abs(y_approximation[i] - y_actual[i])
-        if cur_abs is sympy.nan:
+        cur_abs = sp.Abs(y_approximation[i] - y_actual[i])
+        if cur_abs is sp.nan:
             raise ValueError(F"cur_abs is nan. y_approximation[i] ({y_approximation[i]}) and y_actual[i] ({y_actual[i]})")
         result.append(cur_abs)
     return result
 
-def equispaced_poly_approx(fn, x_start: sympy.Float, x_end: sympy.Float, num_terms: int):
+def equispaced_poly_approx(fn, x_start: sp.Float, x_end: sp.Float, num_terms: int):
     """ Returns the coefficients for an equispaced polynomial between x_start and x_end with num_terms terms.
 
     The return value is a list of num_terms polynomial coefficients needed to get the returned y coordinates from returned x coordinates.
     """
     # Compute equispaced coordinates.
     equispaced_nodes_x = linspace(x_start, x_end, num_terms)
-    y_nodes = sympy.Matrix([fn(x) for x in equispaced_nodes_x])
+    y_nodes = sp.Matrix([fn(x) for x in equispaced_nodes_x])
 
     # Construct a system of linear equations.
     vandermonde_matrix = polynomial.construct_vandermonde_matrix(equispaced_nodes_x)
@@ -120,7 +132,7 @@ def chebyshev_poly_approx(fn, x_start: int, x_end: int, num_terms: int):
     vandermonde_matrix = polynomial.construct_vandermonde_matrix(x_estimated)
 
     # Solve the matrix to get the coefficients used in the final approximation polynomial.
-    coef = vandermonde_matrix.solve(sympy.Matrix(y_estimated))
+    coef = vandermonde_matrix.solve(sp.Matrix(y_estimated))
 
     return coef
 
@@ -165,7 +177,7 @@ def chebyshev_rational_approx(fn, x_start: int, x_end: int, num_parameters: int)
 
     # Solve the matrix to get the coefficients used in the final approximation polynomial.
     # coef = np.linalg.solve(np.array(matrix), y_chebyshev)
-    coef = matrix.solve(sympy.Matrix(y_chebyshev))
+    coef = matrix.solve(sp.Matrix(y_chebyshev))
 
     # first num_terms_numerator values are the numerator coefficients
     # next num_terms_numerator - 1 values are the denominator coefficients
