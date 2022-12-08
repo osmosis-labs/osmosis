@@ -18,6 +18,8 @@ const (
 	GeometricTwapType  = geometricTwapType
 )
 
+var GeometricTwapMathBase = geometricTwapMathBase
+
 func (k Keeper) StoreNewRecord(ctx sdk.Context, record types.TwapRecord) {
 	k.storeNewRecord(ctx, record)
 }
