@@ -1,33 +1,17 @@
-use cosmwasm_std::{coins, from_binary, to_binary, wasm_execute, BankMsg, Deps, Reply, Timestamp};
+use cosmwasm_std::{coins, from_binary, to_binary, wasm_execute, BankMsg, Reply, Timestamp};
 use cosmwasm_std::{Addr, Coin, DepsMut, Response, SubMsg, SubMsgResponse, SubMsgResult};
 use swaprouter::msg::{ExecuteMsg as SwapRouterExecute, Slipage, SwapResponse};
 
-use crate::consts::{FORWARD_REPLY_ID, PACKET_LIFETIME, SWAP_REPLY_ID};
+use crate::checks::{validate_memo, validate_receiver};
+use crate::consts::{CALLBACK_KEY, FORWARD_REPLY_ID, PACKET_LIFETIME, SWAP_REPLY_ID};
 use crate::ibc::{MsgTransfer, MsgTransferResponse};
 use crate::msg::{CrosschainSwapResponse, Recovery};
 
 use crate::state::{
-    ForwardMsgReplyState, ForwardTo, IBCTransfer, Status, SwapMsgReplyState, CHANNEL_MAP, CONFIG,
+    ForwardMsgReplyState, ForwardTo, IBCTransfer, Status, SwapMsgReplyState, CONFIG,
     FORWARD_REPLY_STATES, INFLIGHT_PACKETS, RECOVERY_STATES, SWAP_REPLY_STATES,
 };
 use crate::ContractError;
-
-// Validate that the receiver address is a valid address for the destination chain.
-// This will prevent IBC transfers from failing after forwarding
-fn validate_receiver(deps: Deps, receiver: Addr) -> Result<(String, Addr), ContractError> {
-    let Ok((prefix, _, _)) = bech32::decode(receiver.as_str()) else {
-        return Err(ContractError::CustomError { val: format!("invalid receiver {receiver}") })
-    };
-
-    let channel =
-        CHANNEL_MAP
-            .load(deps.storage, &prefix)
-            .map_err(|_| ContractError::CustomError {
-                val: "invalid receiver {receiver}".to_string(),
-            })?;
-
-    Ok((channel, receiver))
-}
 
 /// This is the main execute call of this contract.
 ///
@@ -41,8 +25,10 @@ pub fn swap_and_forward(
     output_denom: String,
     slipage: Slipage,
     receiver: Addr,
+    next_memo: Option<String>,
     failed_delivery: Option<Recovery>,
 ) -> Result<Response, ContractError> {
+    deps.api.debug(&format!("executing swap and forward"));
     let config = CONFIG.load(deps.storage)?;
 
     // Message to swap tokens in the underlying swaprouter contract
@@ -53,7 +39,12 @@ pub fn swap_and_forward(
     };
     let msg = wasm_execute(config.swap_contract, &swap_msg, vec![input_coin])?;
 
+    // Check that the received is valid and retrieve its channel
     let (valid_channel, valid_receiver) = validate_receiver(deps.as_ref(), receiver)?;
+    // If there is a memo, check that it is valid
+    if let Some(memo) = &next_memo {
+        validate_memo(&memo)?;
+    }
 
     // Check that there isn't anything stored in SWAP_REPLY_STATES. If there is,
     // it means that the contract is already waiting for a reply and should not
@@ -75,6 +66,7 @@ pub fn swap_and_forward(
             forward_to: ForwardTo {
                 channel: valid_channel,
                 receiver: valid_receiver,
+                next_memo,
                 failed_delivery,
             },
         },
@@ -110,10 +102,37 @@ pub fn handle_swap_reply(deps: DepsMut, msg: Reply) -> Result<Response, Contract
     let ts = swap_msg_state.block_time.plus_seconds(PACKET_LIFETIME);
     let config = CONFIG.load(deps.storage)?;
 
-    let memo = match config.track_ibc_callbacks {
-        true => format!(r#"{{"callback": "{contract_addr}"}}"#),
-        false => format!(""),
+    // If the memo is provided we want to include it in the IBC message
+    let memo: serde_cw_value::Value = if let Some(memo) = swap_msg_state.forward_to.next_memo {
+        serde_json_wasm::from_str(&memo.to_string()).map_err(|_e| ContractError::CustomError {
+            val: format!("invalid memo. Should be unreachable"),
+        })?
+    } else {
+        serde_json_wasm::from_str("{}").unwrap()
     };
+
+    // If tracking callbacks, we want to include the callback key in the memo
+    // without otherwise modifying the provided one
+    let memo = match config.track_ibc_callbacks {
+        true => {
+            let serde_cw_value::Value::Map(mut m) = memo else { unreachable!() };
+            m.insert(
+                serde_cw_value::Value::String(CALLBACK_KEY.to_string()),
+                serde_cw_value::Value::String(contract_addr.to_string()),
+            );
+            serde_cw_value::Value::Map(m)
+        }
+        false => memo,
+    };
+
+    // Serialize the memo. If it is an empty json object, set it to ""
+    let mut memo_str =
+        serde_json_wasm::to_string(&memo).map_err(|_e| ContractError::CustomError {
+            val: "invalid memo: could not serialize".to_string(),
+        })?;
+    if memo_str == "{}" {
+        memo_str = String::new();
+    }
 
     // Cosmwasm's  IBCMsg::Transfer  does not support memo.
     // To build and send the packet properly, we need to send it using stargate messages.
@@ -132,7 +151,7 @@ pub fn handle_swap_reply(deps: DepsMut, msg: Reply) -> Result<Response, Contract
         receiver: swap_msg_state.forward_to.receiver.clone().into(),
         timeout_height: None,
         timeout_timestamp: Some(ts.nanos()),
-        memo,
+        memo: memo_str,
     };
 
     // Base response

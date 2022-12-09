@@ -693,3 +693,49 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 	balanceRecovery := osmosisAppA.BankKeeper.GetBalance(suite.chainA.GetContext(), recoverAddr, "token1")
 	suite.Require().Greater(balanceRecovery.Amount.Int64(), int64(0))
 }
+
+func (suite *HooksTestSuite) TestBadCrosschainSwapsNextMemoMessages() {
+	initializer := suite.chainB.SenderAccount.GetAddress()
+	_, crosschainAddr := suite.SetupCrosschainSwaps(true)
+	// Send some token0 tokens to B so that there are ibc tokens to send to A and crosschain-swap
+	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(20000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "")
+	suite.FullSend(transferMsg, AtoB)
+
+	// Calculate the names of the tokens when swapped via IBC
+	denomTrace0 := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "token0"))
+	token0IBC := denomTrace0.IBCDenom()
+
+	recoverAddr := suite.chainA.SenderAccounts[8].SenderAccount.GetAddress()
+	receiver := initializer
+
+	innerMsg := fmt.Sprintf(`{"osmosis_swap":{"input_coin":{"denom":"token0","amount":"1000"},"output_denom":"token1","slipage":{"max_slipage_percentage":"20"},"receiver":"%s","failed_delivery": {"recovery_addr": "%s"},"next_memo":%%s}}`,
+		receiver, // Note that this is the chain A account, which does not exist on chain B
+		recoverAddr)
+
+	testCases := []struct {
+		memo    string
+		expPass bool
+	}{
+		{fmt.Sprintf(innerMsg, `1`), false},
+		{fmt.Sprintf(innerMsg, `""`), false},
+		{fmt.Sprintf(innerMsg, `null`), true},
+		{fmt.Sprintf(innerMsg, `"{\"callback\": \"something\"}"`), false},
+		{fmt.Sprintf(innerMsg, `"{\"myKey\": \"myValue\"}"`), true},
+		{fmt.Sprintf(innerMsg, `"{}""`), true},
+	}
+
+	for _, tc := range testCases {
+		// Generate swap instructions for the contract. This will send correctly on chainA, but fail to be received on chainB
+		// Generate full memo
+		msg := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, tc.memo)
+		// Send IBC transfer with the memo with crosschain-swap instructions
+		transferMsg = NewMsgTransfer(sdk.NewCoin(token0IBC, sdk.NewInt(1000)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), msg)
+		_, _, ack, _ := suite.FullSend(transferMsg, BtoA)
+		if tc.expPass {
+			fmt.Println(ack)
+			suite.Require().Contains(ack, "result", tc.memo)
+		} else {
+			suite.Require().Contains(ack, "error", tc.memo)
+		}
+	}
+}

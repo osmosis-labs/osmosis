@@ -60,6 +60,7 @@ pub fn execute(
             output_denom,
             receiver,
             slipage,
+            next_memo,
             failed_delivery,
         } => execute::swap_and_forward(
             deps,
@@ -69,6 +70,7 @@ pub fn execute(
             output_denom,
             slipage,
             receiver,
+            next_memo,
             failed_delivery,
         ),
         ExecuteMsg::Recover {} => execute::recover(deps, info.sender),

@@ -1,3 +1,4 @@
+pub mod checks;
 pub mod consts;
 pub mod contract;
 mod error;
