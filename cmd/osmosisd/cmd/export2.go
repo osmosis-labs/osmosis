@@ -132,6 +132,7 @@ func exportLogic(logger log.Logger, cmd printer, appOpts servertypes.AppOptions,
 		return err
 	}
 
-	cmd.Println(string(sdk.MustSortJSON(encoded)))
+	fmt.Println(string(encoded))
+	// cmd.Println(string(sdk.MustSortJSON(encoded)))
 	return nil
 }
