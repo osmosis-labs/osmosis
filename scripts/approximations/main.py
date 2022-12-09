@@ -23,7 +23,7 @@ num_parameters_errors = 30
 num_points_plot = 100000
 
 # function to approximate
-approximated_fn = lambda x: sp.Pow(sp.E, x)
+approximated_fn = lambda x: sp.Pow(2, x)
 
 # fixed point precision used in Osmosis `osmomath` package.
 osmomath_precision = 36
@@ -180,13 +180,16 @@ def exponent_approximation_choice():
     coef_numerator = [sp.Float(sp.N(coef, osmomath_precision + 1), osmomath_precision + 1) for coef in coef_numerator]
     coef_denominator = [sp.Float(sp.N(coef, osmomath_precision + 1), osmomath_precision + 1) for coef in coef_denominator]
 
+    print(coef_numerator)
+    print(coef_denominator)
+
     # Evaluate approximation.
-    y_chebyshev_rational = rational.evaluate(x_coordinates, coef_numerator, coef_denominator)
+    # y_chebyshev_rational = rational.evaluate(x_coordinates, coef_numerator, coef_denominator)
 
-    # Compute Actual Values
-    y_actual = approximations.get_y_actual(approximated_fn, x_coordinates)
+    # # Compute Actual Values
+    # y_actual = approximations.get_y_actual(approximated_fn, x_coordinates)
 
-    plot_error_range(x_coordinates, y_chebyshev_rational, y_actual)
+    # plot_error_range(x_coordinates, y_chebyshev_rational, y_actual)
 
 if __name__ == "__main__":
     # Uncomment to run the main script.
