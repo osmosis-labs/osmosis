@@ -55,6 +55,16 @@ pub fn swap_and_forward(
 
     let (valid_channel, valid_receiver) = validate_receiver(deps.as_ref(), receiver)?;
 
+    // Check that there isn't anything stored in SWAP_REPLY_STATES. If there is,
+    // it means that the contract is already waiting for a reply and should not
+    // override the stored state. This should only happen if a contract we call
+    // calls back to this one. This is likely a malicious attempt modify the
+    // contract's state before it has replied.
+    if SWAP_REPLY_STATES.may_load(deps.storage)?.is_some() {
+        return Err(ContractError::CustomError {
+            val: "Already waiting for a reply".to_string(),
+        });
+    }
     // Store information about the original message to be used in the reply
     SWAP_REPLY_STATES.save(
         deps.storage,
@@ -70,29 +80,23 @@ pub fn swap_and_forward(
         },
     )?;
 
-    Ok(Response::new().add_submessage(SubMsg::reply_on_success(msg, SWAP_REPLY_ID)))
+    Ok(Response::new().add_submessage(SubMsg::reply_always(msg, SWAP_REPLY_ID)))
 }
 
 pub fn handle_swap_reply(deps: DepsMut, msg: Reply) -> Result<Response, ContractError> {
     deps.api.debug(&format!("handle_swap_reply"));
-    // TODO: Warning! This may be succeptible to "reentrancy". We are assuming
-    //       that the swaprouter this contract was initialized with is the
-    //       correct one and that it doesn't call back into this contract (which
-    //       could modify the item stored in SWAP_REPLY_STATES).
-    //
-    //       Review this. Though this may not be an issue at all, because: if
-    //       the underlying swaprouter contract is compromised, they will
-    //       already have the funds and can just send them without having to do
-    //       contract call trickery.
-    //
-    //       Alternative: replace the item with a "stack" and add complexity.
     let swap_msg_state = SWAP_REPLY_STATES.load(deps.storage)?;
     SWAP_REPLY_STATES.remove(deps.storage);
 
     // If the swaprouter swap failed, return an error
+    if let SubMsgResult::Err(e) = msg.result {
+        return Err(ContractError::CustomError {
+            val: format!("Failed Swap: {e}"),
+        });
+    };
     let SubMsgResult::Ok(SubMsgResponse { data: Some(b), .. }) = msg.result else {
         return Err(ContractError::CustomError {
-            val: format!("Failed Swap"),
+            val: format!("Failed Swap: No data"),
         })
     };
 
@@ -105,6 +109,7 @@ pub fn handle_swap_reply(deps: DepsMut, msg: Reply) -> Result<Response, Contract
     let contract_addr = &swap_msg_state.contract_addr;
     let ts = swap_msg_state.block_time.plus_seconds(PACKET_LIFETIME);
     let config = CONFIG.load(deps.storage)?;
+
     let memo = match config.track_ibc_callbacks {
         true => format!(r#"{{"callback": "{contract_addr}"}}"#),
         false => format!(""),
