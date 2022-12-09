@@ -1116,6 +1116,18 @@ func (s *decimalTestSuite) TestPowerInteger() {
 
 			expectedResult: NewBigDec(81),
 		},
+		"-3 ^ 50 = 717897987691852588770249": {
+			base:     NewBigDec(-3),
+			exponent: 50,
+
+			expectedResult: MustNewDecFromStr("717897987691852588770249"),
+		},
+		"-3 ^ 51 = -2153693963075557766310747": {
+			base:     NewBigDec(-3),
+			exponent: 51,
+
+			expectedResult: MustNewDecFromStr("-2153693963075557766310747"),
+		},
 		"1.414213562373095049 ^ 2 = 2": {
 			base:     NewDecWithPrec(1414213562373095049, 18),
 			exponent: 2,
