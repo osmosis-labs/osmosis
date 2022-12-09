@@ -39,7 +39,7 @@ func openDB(rootDir string) (dbm.DB, error) {
 // FasterExportCmd dumps app state to JSON.
 func FasterExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "export",
+		Use:   "export2",
 		Short: "Export state to JSON",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := server.GetServerContextFromCmd(cmd)
