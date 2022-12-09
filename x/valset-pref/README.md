@@ -171,13 +171,13 @@ New ValSet        20osmos {ValD-> 0.2, ValE-> 0.2, ValF-> 0.6} [ValD-> 4osmo, Va
   - if validator.amount > 0 
     - for validator.amount > 0: 
         source_validator = validator.address
-        target_validator = FindMin(diff_arr)  
+        target_validator, idx = FindMin(diff_arr)   // gets the index of minValue and the minValue
 
         amount_to_redelegate = FindMin(abs(target_validator.amount), validator.amount)
         sdk.BeginRedelegation(ctx, delegator, source_validator, target_validator, amount_to_redelegate) 
 
         validator.amount = validator.amount - amount_to_redelegate
-        diff_arr[i].amount = target_validator.amount + amount_to_redelegate 
+        diff_arr[idx].amount = target_validator.amount + amount_to_redelegate 
 
 - Result 
   1. diff_arr = [ValA: 0, ValB: 0, ValC: 0, ValD: 0, ValE: 0, ValF: 0]
