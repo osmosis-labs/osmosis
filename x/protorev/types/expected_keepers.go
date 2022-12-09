@@ -24,8 +24,8 @@ type BankKeeper interface {
 // GAMMKeeper defines the Gamm contract that must be fulfilled when
 // creating a x/protorev keeper.
 type GAMMKeeper interface {
-	GetPoolAndPoke(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
-	GetPoolsAndPoke(ctx sdk.Context) (res []gammtypes.PoolI, err error)
+	GetPoolAndPoke(ctx sdk.Context, poolId uint64) (gammtypes.CFMMPoolI, error)
+	GetPoolsAndPoke(ctx sdk.Context) (res []gammtypes.CFMMPoolI, err error)
 	GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error)
 	SwapExactAmountIn(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, tokenIn sdk.Coin, tokenOutDenom string, tokenOutMinAmount sdk.Int) (sdk.Int, error)
 	MultihopSwapExactAmountIn(ctx sdk.Context, sender sdk.AccAddress, routes []gammtypes.SwapAmountInRoute, tokenIn sdk.Coin, tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error)
