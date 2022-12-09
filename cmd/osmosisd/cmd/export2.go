@@ -3,6 +3,7 @@ package cmd
 // DONTCOVER
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/config"
-	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -127,7 +127,7 @@ func exportLogic(logger log.Logger, cmd printer, appOpts servertypes.AppOptions,
 	// NOTE: Tendermint uses a custom JSON decoder for GenesisDoc
 	// (except for stuff inside AppState). Inside AppState, we're free
 	// to encode as protobuf or amino.
-	encoded, err := tmjson.Marshal(doc)
+	encoded, err := json.Marshal(doc)
 	if err != nil {
 		return err
 	}
