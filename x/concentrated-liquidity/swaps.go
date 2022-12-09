@@ -23,16 +23,23 @@ type SwapState struct {
 	liquidity                sdk.Dec // new liquidity when swap is done
 }
 
+// CreateNewConcentratedLiquidityPool creates a new concentrated liquidity pool with the given parameters.
+// The pool is created with zero liquidity and the initial sqrt price and current tick set to zero.
+// The given token denominations are ordered to ensure that the first token is the numerator of the price, and the second token is the denominator of the price.
+// The pool is added to the pool store, and an error is returned if the operation fails.
 func (k Keeper) CreateNewConcentratedLiquidityPool(
 	ctx sdk.Context,
 	poolId uint64,
 	denom0, denom1 string,
 	tickSpacing uint64,
 ) (types.ConcentratedPoolExtension, error) {
+	// Order the initial pool denoms so that denom0 is lexicographically smaller than denom1.
 	denom0, denom1, err := types.OrderInitialPoolDenoms(denom0, denom1)
 	if err != nil {
 		return nil, err
 	}
+
+	// Create a new concentrated liquidity pool with the given parameters.
 	pool := &model.Pool{
 		// TODO: move gammtypes.NewPoolAddress(poolId) to swaproutertypes
 		Address:          gammtypes.NewPoolAddress(poolId).String(),
@@ -45,6 +52,7 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(
 		TickSpacing:      tickSpacing,
 	}
 
+	// Add the pool to the pool store.
 	err = k.setPool(ctx, pool)
 	if err != nil {
 		return nil, err

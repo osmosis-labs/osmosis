@@ -33,13 +33,13 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.Ba
 	}
 }
 
-// GetParams returns the total set of lockup parameters.
+// GetParams returns the total set of concentrated-liquidity module's parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.paramSpace.GetParamSet(ctx, &params)
 	return params
 }
 
-// SetParams sets the total set of lockup parameters.
+// SetParams sets the concentrated-liquidity module's parameters with the provided parameters.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }

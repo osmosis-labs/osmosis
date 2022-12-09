@@ -22,29 +22,33 @@ import (
 // - the amount0 or amount1 returned from the position update is less than the given minimums
 // - the pool or user does not have enough tokens to satisfy the requested amount
 func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (sdk.Int, sdk.Int, sdk.Dec, error) {
-	// Retrieve pool by pool ID
+	// Retrieve the pool associated with the given pool ID.
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
-	// Check if provided tick range conforms to pool and module parameter requirements
+	// Check if the provided tick range is valid according to the pool's tick spacing and module parameters.
 	if err := validateTickRangeIsValid(pool.GetTickSpacing(), lowerTick, upperTick); err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
-	// Transform provided ticks to what they represent in terms of sqrtPrice
+	// Transform the provided ticks into their corresponding square root prices.
 	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
-	// N.B. we only write cache context if actual amounts
-	// returned are greater than the given minimums.
+
+	// Create a cache context for the current transaction.
+	// This allows us to make changes to the context without persisting them until later.
+	// We only write the cache context (i.e. persist the changes) if the actual amounts returned
+	// are greater than the given minimum amounts.
 	cacheCtx, writeCacheCtx := ctx.CacheContext()
 	initialSqrtPrice := pool.GetCurrentSqrtPrice()
 	initialTick := pool.GetCurrentTick()
-	// If the currentSqrtPrice and currentTick are zero, then this is the first position to be created for this pool.
-	// We then calculate the sqrtPrice and currentTick based on the inputs of this position
+
+	// If the current square root price and current tick are zero, then this is the first position to be created for this pool.
+	// In this case, we calculate the square root price and current tick based on the inputs of this position.
 	// TODO: We need to review this logic very carefully, as I am not 100 percent convinced it is safe / correct
 	if k.isInitialPosition(initialSqrtPrice, initialTick) {
 		err := k.createInitialPosition(cacheCtx, pool, amount0Desired, amount1Desired)
@@ -52,27 +56,35 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 		}
 	}
+
+	// Calculate the amount of liquidity that will be added to the pool by creating this position.
 	liquidityDelta := math.GetLiquidityFromAmounts(pool.GetCurrentSqrtPrice(), sqrtPriceLowerTick, sqrtPriceUpperTick, amount0Desired, amount1Desired)
 	if liquidityDelta.IsZero() {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, errors.New("liquidityDelta calculated equals zero")
 	}
+
+	// Update the position in the pool based on the provided tick range and liquidity delta.
 	actualAmount0, actualAmount1, err := k.updatePosition(cacheCtx, poolId, owner, lowerTick, upperTick, liquidityDelta)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
+	// Check if the actual amounts of tokens 0 and 1 are greater than or equal to the given minimum amounts.
 	if actualAmount0.LT(amount0Min) {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, types.InsufficientLiquidityCreatedError{Actual: actualAmount0, Minimum: amount0Min, IsTokenZero: true}
 	}
 	if actualAmount1.LT(amount1Min) {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, types.InsufficientLiquidityCreatedError{Actual: actualAmount1, Minimum: amount1Min}
 	}
-	// send deposit amount from position owner to pool
+
+	// Transfer the actual amounts of tokens 0 and 1 from the position owner to the pool.
 	err = k.sendCoinsBetweenPoolAndUser(cacheCtx, pool.GetToken0(), pool.GetToken1(), actualAmount0, actualAmount1, owner, pool.GetAddress())
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
-	// only persist updates if amount validation passed.
+
+	// Persist the changes made to the cache context if the actual amounts of tokens 0 and 1 are greater than or equal to the given minimum amounts.
 	writeCacheCtx()
+
 	return actualAmount0, actualAmount1, liquidityDelta, nil
 }
 
@@ -83,34 +95,46 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 // - if tick ranges are invalid
 // - if attempts to withdraw an amount higher than originally provided in createPosition for a given range.
 func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, requestedLiqudityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
+	// Retrieve the pool associated with the given pool ID.
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
+	// Check if the provided tick range is valid according to the pool's tick spacing and module parameters.
 	if err := validateTickRangeIsValid(pool.GetTickSpacing(), lowerTick, upperTick); err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
+	// Retrieve the position in the pool for the provided owner and tick range.
 	position, err := k.getPosition(ctx, poolId, owner, lowerTick, upperTick)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
+
+	// Check if the requested liquidity amount to withdraw is less than or equal to the available liquidity for the position.
+	// If it is greater than the available liquidity, return an error.
 	availableLiquidity := position.Liquidity
 	if requestedLiqudityAmountToWithdraw.GT(availableLiquidity) {
 		return sdk.Int{}, sdk.Int{}, types.InsufficientLiquidityError{Actual: requestedLiqudityAmountToWithdraw, Available: availableLiquidity}
 	}
+
+	// Calculate the change in liquidity for the pool based on the requested amount to withdraw.
+	// This amount is negative because that liquidity is being withdrawn from the pool.
 	liquidityDelta := requestedLiqudityAmountToWithdraw.Neg()
+
+	// Update the position in the pool based on the provided tick range and liquidity delta.
 	actualAmount0, actualAmount1, err := k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	// send withdraw amount from pool to position owner
+	// Transfer the actual amounts of tokens 0 and 1 from the pool to the position owner.
 	err = k.sendCoinsBetweenPoolAndUser(ctx, pool.GetToken0(), pool.GetToken1(), actualAmount0, actualAmount1, pool.GetAddress(), owner)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
+
 	return actualAmount0.Neg(), actualAmount1.Neg(), nil
 }
 

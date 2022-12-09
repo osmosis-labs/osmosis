@@ -16,11 +16,13 @@ var (
 )
 
 func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, currSqrtPrice sdk.Dec, tickSpacing uint64) (Pool, error) {
+	// Order the initial pool denoms so that denom0 is lexicographically smaller than denom1.
 	denom0, denom1, err := types.OrderInitialPoolDenoms(denom0, denom1)
 	if err != nil {
 		return Pool{}, err
 	}
 
+	// Create a new pool struct with the specified parameters
 	pool := Pool{
 		// TODO: move gammtypes.NewPoolAddress(poolId) to swaproutertypes
 		Address:          gammtypes.NewPoolAddress(poolId).String(),
