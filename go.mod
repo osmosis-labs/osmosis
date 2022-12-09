@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/CosmWasm/wasmd v0.29.2-osmo-v13
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8
-	github.com/cosmos/cosmos-sdk v0.45.11
+	github.com/cosmos/cosmos-sdk v0.46.6
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.19.4
 	github.com/cosmos/ibc-go/v3 v3.4.0
@@ -50,6 +50,7 @@ require (
 	github.com/sashamelentyev/interfacebloat v1.1.0 // indirect
 	github.com/sashamelentyev/usestdlibvars v1.20.0 // indirect
 	github.com/sivchari/nosnakecase v1.7.0 // indirect
+	github.com/tidwall/btree v1.6.0 // indirect
 	github.com/timonwong/loggercheck v0.9.3 // indirect
 	github.com/zimmski/go-mutesting v0.0.0-20210610104036-6d9217011a00 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
