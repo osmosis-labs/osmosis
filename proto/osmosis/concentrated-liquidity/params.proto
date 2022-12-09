@@ -1,5 +1,5 @@
 syntax = "proto3";
-package osmosis.concentratedliquidity.v1beta1;
+package osmosis.concentratedliquidity;
 
 import "gogoproto/gogo.proto";
 
