@@ -14,6 +14,10 @@ const (
 	StableswapMinScaledAmtPerAsset = 1
 	// We keep this multiplier at 1, but can increase if needed in the unlikely scenario where default scaling factors of 1 cannot accommodate enough assets
 	ScalingFactorMultiplier = 1
+
+	// pools can be created with min and max number of assets defined with this constants
+	MinNumOfAssetsInPool = 2
+	MaxNumOfAssetsInPool = 8
 )
 
 var (
