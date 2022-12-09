@@ -15,7 +15,9 @@ var (
 	_ types.ConcentratedPoolExtension = &Pool{}
 )
 
-func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, currSqrtPrice sdk.Dec, tickSpacing uint64) (Pool, error) {
+// NewConcentratedLiquidityPool creates a new ConcentratedLiquidity pool with the specified parameters.
+// The two provided denoms are ordered so that denom0 is lexicographically smaller than denom1.
+func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpacing uint64) (Pool, error) {
 	// Order the initial pool denoms so that denom0 is lexicographically smaller than denom1.
 	denom0, denom1, err := types.OrderInitialPoolDenoms(denom0, denom1)
 	if err != nil {
@@ -85,8 +87,14 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom 
 		return p.CurrentSqrtPrice.Power(2), nil
 	} else if p.Token1 == baseAssetDenom && p.Token0 == quoteAssetDenom { // if not, we calculate the reverse spot price by 1 / currentSqrtPrice^2
 		return sdk.NewDec(1).Quo(p.CurrentSqrtPrice.Power(2)), nil
+	} else if p.Token0 != baseAssetDenom && p.Token1 != baseAssetDenom {
+		return sdk.Dec{}, fmt.Errorf("base asset denom (%s) is not in the pool", baseAssetDenom)
+	} else if p.Token0 != quoteAssetDenom && p.Token1 != quoteAssetDenom {
+		return sdk.Dec{}, fmt.Errorf("quote asset denom (%s) is not in the pool", quoteAssetDenom)
+	} else if p.Token0 == p.Token0 {
+		return sdk.Dec{}, fmt.Errorf("base asset denom (%s) and quote asset denom (%s) cannot be the same", baseAssetDenom, quoteAssetDenom)
 	} else {
-		return sdk.Dec{}, fmt.Errorf("base asset denom %s is not in the pool", baseAssetDenom)
+		return sdk.Dec{}, fmt.Errorf("spot price could not be calculated for an unknown reason")
 	}
 }
 
