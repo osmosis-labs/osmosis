@@ -20,5 +20,29 @@ type arithmetic struct {
 var _ twapStrategy = &arithmetic{}
 
 func (s *arithmetic) computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) (sdk.Dec, error) {
-	return computeTwap(startRecord, endRecord, quoteAsset, arithmeticTwapType)
+	var accumDiff sdk.Dec
+	if quoteAsset == startRecord.Asset0Denom {
+		accumDiff = endRecord.P0ArithmeticTwapAccumulator.Sub(startRecord.P0ArithmeticTwapAccumulator)
+	} else {
+		accumDiff = endRecord.P1ArithmeticTwapAccumulator.Sub(startRecord.P1ArithmeticTwapAccumulator)
+	}
+	timeDelta := endRecord.Time.Sub(startRecord.Time)
+	return types.AccumDiffDivDuration(accumDiff, timeDelta)
+}
+
+var _ twapStrategy = &geometric{}
+
+func (s *geometric) computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) (sdk.Dec, error) {
+	accumDiff := endRecord.GeometricTwapAccumulator.Sub(startRecord.GeometricTwapAccumulator)
+
+	timeDelta := endRecord.Time.Sub(startRecord.Time)
+	arithmeticMeanOfLogPrices := types.AccumDiffDivDuration(accumDiff, timeDelta)
+
+	geometricMeanDenom0 := twapPow(arithmeticMeanOfLogPrices)
+	// N.B.: Geometric mean of recprocals is reciprocal of geometric mean.
+	// https://proofwiki.org/wiki/Geometric_Mean_of_Reciprocals_is_Reciprocal_of_Geometric_Mean
+	if quoteAsset == startRecord.Asset1Denom {
+		return sdk.OneDec().Quo(geometricMeanDenom0)
+	}
+	return geometricMeanDenom0
 }

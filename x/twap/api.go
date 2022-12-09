@@ -56,6 +56,18 @@ func (k Keeper) GetArithmeticTwap(
 	return k.getTwap(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, endTime, arithmeticStrategy)
 }
 
+func (k Keeper) GetGeometricTwap(
+	ctx sdk.Context,
+	poolId uint64,
+	baseAssetDenom string,
+	quoteAssetDenom string,
+	startTime time.Time,
+	endTime time.Time,
+) (sdk.Dec, error) {
+	geometricS := &geometric{k}
+	return k.getTwap(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, endTime, geometricS)
+}
+
 // GetArithmeticTwapToNow returns arithmetic twap from start time until the current block time for quote and base
 // assets in a given pool.
 func (k Keeper) GetArithmeticTwapToNow(
@@ -67,6 +79,19 @@ func (k Keeper) GetArithmeticTwapToNow(
 ) (sdk.Dec, error) {
 	arithmeticStrategy := &arithmetic{k}
 	return k.getTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, arithmeticStrategy)
+}
+
+// GetArithmeticTwapToNow returns arithmetic twap from start time until the current block time for quote and base
+// assets in a given pool.
+func (k Keeper) GetGeometricTwapToNow(
+	ctx sdk.Context,
+	poolId uint64,
+	baseAssetDenom string,
+	quoteAssetDenom string,
+	startTime time.Time,
+) (sdk.Dec, error) {
+	geometricS := &geometric{k}
+	return k.getTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, geometricS)
 }
 
 // getTwap computes and returns twap from the start time until the end time. The type
@@ -97,7 +122,7 @@ func (k Keeper) getTwap(
 		return sdk.Dec{}, err
 	}
 
-	return strategy.computeTwap(startRecord, endRecord, quoteAssetDenom)
+	return computeTwap(startRecord, endRecord, quoteAssetDenom, strategy)
 }
 
 // getTwapToNow computes and returns twap from the start time until the current block time. The type
@@ -123,7 +148,7 @@ func (k Keeper) getTwapToNow(
 		return sdk.Dec{}, err
 	}
 
-	return strategy.computeTwap(startRecord, endRecord, quoteAssetDenom)
+	return computeTwap(startRecord, endRecord, quoteAssetDenom, strategy)
 }
 
 // GetBeginBlockAccumulatorRecord returns a TwapRecord struct corresponding to the state of pool `poolId`
