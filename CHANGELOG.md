@@ -46,6 +46,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Bug fixes
 
+## v13.1.2
+
+### Bug fixes
+
+* Fix state export
+* Update swagger files for v13
+
+## v13.1.1
+
+* Add a check in the makefile for using go v1.18
+
 ## v13.1.0
 
 * Correctly apply DragonBerry IBC patch
