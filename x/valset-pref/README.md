@@ -29,13 +29,13 @@ How does this module work?
 
 Staking Calculation 
 
-- The user provides an amount to delegate and our `MsgStakeToValidatorSet` divides the amount based on validator weight distribution.
+- The user provides an amount to delegate and our `MsgDelegateToValidatorSet` divides the amount based on validator weight distribution.
   For example: Stake 100osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
   our delegate logic will attempt to delegate (100 * 0.5) 50osmo for ValA , (100 * 0.3) 30osmo from ValB and (100 * 0.2) 20osmo from ValC.
 
 UnStaking Calculation 
 
-- The user provides an amount to undelegate and our `MsgUnStakeFromValidatorSet` divides the amount based on validator weight distribution.
+- The user provides an amount to undelegate and our `MsgUnDelegateToValidatorSet` divides the amount based on validator weight distribution.
 - Here, the user can either undelegate the entire amount or partial amount 
   - Entire amount unstaking: UnStake 100osmo from validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2},
     our undelegate logic will attempt to undelegate 50osmo from ValA , 30osmo from ValB, 20osmo from ValC
@@ -88,10 +88,10 @@ restaking to a new set is going to happen behind the scenes.
 - Update the `KVStore` value for the specific owner address key.
 - Run the undelegate logic and restake the tokens with updated weights. 
 
-### StakeToValidatorSet
+### DelegateToValidatorSet
 
 Gets the existing validator-set of the delegator and delegates the given amount. The given amount 
-will be divided based on the weights distributed to the validators. The weights will be unchanged! 
+will be divided based on the weights distributed to the validators. The weights will be unchanged 
 
 ```go
     string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
