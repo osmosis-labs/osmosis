@@ -16,6 +16,24 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 	// Init module parameters
 	k.SetParams(ctx, genState.Params)
+
+	// Update the pools on genesis
+	if err := k.UpdatePools(ctx); err != nil {
+		panic(err)
+	}
+
+	// Init all of the searcher routes
+	for _, tokenPairArbRoutes := range genState.TokenPairs {
+		err := tokenPairArbRoutes.Validate()
+		if err != nil {
+			panic(err)
+		}
+
+		_, err = k.SetTokenPairArbRoutes(ctx, tokenPairArbRoutes.TokenIn, tokenPairArbRoutes.TokenOut, &tokenPairArbRoutes)
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 // ExportGenesis returns the module's exported genesis

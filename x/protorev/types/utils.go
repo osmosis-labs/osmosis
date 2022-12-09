@@ -1,7 +1,7 @@
 package types
 
 // Checks if the matching variable matches one of the tokens and if so returns the other and true
-func CheckMatchAndReturnOther(tokenA, tokenB, match string) (string, bool) {
+func CheckOsmoAtomDenomMatch(tokenA, tokenB, match string) (string, bool) {
 	if tokenA == match {
 		return tokenB, true
 	} else if tokenB == match {

@@ -576,6 +576,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 			appKeepers.SuperfluidKeeper.Hooks(),
 			appKeepers.IncentivesKeeper.Hooks(),
 			appKeepers.MintKeeper.Hooks(),
+			appKeepers.ProtoRevKeeper.EpochHooks(),
 		),
 	)
 
