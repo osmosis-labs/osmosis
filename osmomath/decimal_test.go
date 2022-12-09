@@ -13,6 +13,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 type decimalTestSuite struct {
@@ -1015,6 +1016,126 @@ func (s *decimalTestSuite) TestCustomBaseLog() {
 				require.True(DecApproxEq(s.T(), tc.expected, res, tc.expectedErrTolerance))
 				require.Equal(s.T(), initialCopy, tc.initialValue)
 			})
+		})
+	}
+}
+
+func (s *decimalTestSuite) TestPowerInteger() {
+	var expectedErrTolerance = MustNewDecFromStr("0.000000000000000000000000000000100000")
+
+	tests := map[string]struct {
+		base           BigDec
+		exponent       uint64
+		expectedResult BigDec
+
+		expectedToleranceOverwrite BigDec
+	}{
+		"0^2": {
+			base:     ZeroDec(),
+			exponent: 2,
+
+			expectedResult: ZeroDec(),
+		},
+		"1^2": {
+			base:     OneDec(),
+			exponent: 2,
+
+			expectedResult: OneDec(),
+		},
+		"4^4": {
+			base:     MustNewDecFromStr("4"),
+			exponent: 4,
+
+			expectedResult: MustNewDecFromStr("256"),
+		},
+		"5^3": {
+			base:     MustNewDecFromStr("5"),
+			exponent: 4,
+
+			expectedResult: MustNewDecFromStr("625"),
+		},
+		"e^10": {
+			base:     eulersNumber,
+			exponent: 10,
+
+			// https://www.wolframalpha.com/input?i=e%5E10+41+digits
+			expectedResult: MustNewDecFromStr("22026.465794806716516957900645284244366354"),
+		},
+		"geom twap overflow: 2^log_2{max spot price + 1}": {
+			base: twoBigDec,
+			// add 1 for simplicity of calculation to isolate overflow.
+			exponent: uint64(BigDecFromSDKDec(gammtypes.MaxSpotPrice).Add(OneDec()).LogBase2().TruncateInt().Uint64()),
+
+			// https://www.wolframalpha.com/input?i=2%5E%28floor%28+log+base+2+%282%5E128%29%29%29+++39+digits
+			expectedResult: MustNewDecFromStr("340282366920938463463374607431768211456"),
+		},
+		"geom twap overflow: 2^log_2{max spot price}": {
+			base:     twoBigDec,
+			exponent: uint64(BigDecFromSDKDec(gammtypes.MaxSpotPrice).LogBase2().TruncateInt().Uint64()),
+
+			// https://www.wolframalpha.com/input?i=2%5E%28floor%28+log+base+2+%282%5E128+-+1%29%29%29+++39+digits
+			expectedResult: MustNewDecFromStr("170141183460469231731687303715884105728"),
+		},
+		"geom twap overflow: 2^log_2{max spot price / 2 - 2017}": { // 2017 is prime.
+			base:     twoBigDec,
+			exponent: uint64(BigDecFromSDKDec(gammtypes.MaxSpotPrice.Quo(sdk.NewDec(2)).Sub(sdk.NewDec(2017))).LogBase2().TruncateInt().Uint64()),
+
+			// https://www.wolframalpha.com/input?i=e%5E10+41+digits
+			expectedResult: MustNewDecFromStr("85070591730234615865843651857942052864"),
+		},
+
+		// sdk.Dec test vectors copied from osmosis-labs/cosmos-sdk:
+
+		"1.0 ^ (10) => 1.0": {
+			base:     OneDec(),
+			exponent: 10,
+
+			expectedResult: OneDec(),
+		},
+		"0.5 ^ 2 => 0.25": {
+			base:     NewDecWithPrec(5, 1),
+			exponent: 2,
+
+			expectedResult: NewDecWithPrec(25, 2),
+		},
+		"0.2 ^ 2 => 0.04": {
+			base:     NewDecWithPrec(2, 1),
+			exponent: 2,
+
+			expectedResult: NewDecWithPrec(4, 2),
+		},
+		"3 ^ 3 => 27": {
+			base:     NewBigDec(3),
+			exponent: 3,
+
+			expectedResult: NewBigDec(27),
+		},
+		"-3 ^ 4 = 81": {
+			base:     NewBigDec(-3),
+			exponent: 4,
+
+			expectedResult: NewBigDec(81),
+		},
+		"1.414213562373095049 ^ 2 = 2": {
+			base:     NewDecWithPrec(1414213562373095049, 18),
+			exponent: 2,
+
+			expectedResult:             NewBigDec(2),
+			expectedToleranceOverwrite: MustNewDecFromStr("0.0000000000000000006"),
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+
+			tolerance := expectedErrTolerance
+			if !tc.expectedToleranceOverwrite.IsNil() {
+				tolerance = tc.expectedToleranceOverwrite
+			}
+
+			actualResult := tc.base.PowerInteger(tc.exponent)
+			require.True(DecApproxEq(s.T(), tc.expectedResult, actualResult, tolerance))
 		})
 	}
 }
