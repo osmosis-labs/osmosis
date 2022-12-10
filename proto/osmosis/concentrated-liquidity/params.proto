@@ -10,6 +10,6 @@ message Params {
   // spacing values concentrated-liquidity pools can be created with. For
   // example, an authorized_tick_spacing of ["1", "10", "30"] allows for pools
   // to be created with tick spacing of 1, 10, or 30.
-  repeated string authorized_tick_spacing = 1
+  repeated uint64 authorized_tick_spacing = 1
       [ (gogoproto.moretags) = "yaml:\"authorized_tick_spacing\"" ];
 }

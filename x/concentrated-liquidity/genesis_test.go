@@ -16,7 +16,7 @@ import (
 var (
 	now         = time.Now().UTC()
 	testGenesis = types.GenesisState{
-		Params: types.Params{AuthorizedTickSpacing: []string{"1", "10", "50"}},
+		Params: types.Params{AuthorizedTickSpacing: []uint64{1, 10, 50}},
 	}
 )
 

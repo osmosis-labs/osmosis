@@ -28,7 +28,7 @@ type Params struct {
 	// spacing values concentrated-liquidity pools can be created with. For
 	// example, an authorized_tick_spacing of ["1", "10", "30"] allows for pools
 	// to be created with tick spacing of 1, 10, or 30.
-	AuthorizedTickSpacing []string `protobuf:"bytes,1,rep,name=authorized_tick_spacing,json=authorizedTickSpacing,proto3" json:"authorized_tick_spacing,omitempty" yaml:"authorized_tick_spacing"`
+	AuthorizedTickSpacing []uint64 `protobuf:"varint,1,rep,packed,name=authorized_tick_spacing,json=authorizedTickSpacing,proto3" json:"authorized_tick_spacing,omitempty" yaml:"authorized_tick_spacing"`
 }
 
 func (m *Params) Reset()         { *m = Params{} }
@@ -64,7 +64,7 @@ func (m *Params) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Params proto.InternalMessageInfo
 
-func (m *Params) GetAuthorizedTickSpacing() []string {
+func (m *Params) GetAuthorizedTickSpacing() []uint64 {
 	if m != nil {
 		return m.AuthorizedTickSpacing
 	}
@@ -88,13 +88,13 @@ var fileDescriptor_cd3784445b6f6ba7 = []byte{
 	0x2b, 0x25, 0x92, 0x9e, 0x9f, 0x9e, 0x0f, 0x56, 0xa9, 0x0f, 0x62, 0x41, 0x34, 0x29, 0xa5, 0x70,
 	0xb1, 0x05, 0x80, 0x0d, 0x11, 0x8a, 0xe2, 0x12, 0x4f, 0x2c, 0x2d, 0xc9, 0xc8, 0x2f, 0xca, 0xac,
 	0x4a, 0x4d, 0x89, 0x2f, 0xc9, 0x4c, 0xce, 0x8e, 0x2f, 0x2e, 0x48, 0x4c, 0xce, 0xcc, 0x4b, 0x97,
-	0x60, 0x54, 0x60, 0xd6, 0xe0, 0x74, 0x52, 0xfa, 0x74, 0x4f, 0x5e, 0xae, 0x32, 0x31, 0x37, 0xc7,
+	0x60, 0x54, 0x60, 0xd6, 0x60, 0x71, 0x52, 0xfa, 0x74, 0x4f, 0x5e, 0xae, 0x32, 0x31, 0x37, 0xc7,
 	0x4a, 0x09, 0x87, 0x42, 0xa5, 0x20, 0x51, 0x84, 0x4c, 0x48, 0x66, 0x72, 0x76, 0x30, 0x44, 0xdc,
 	0x29, 0xe6, 0xc4, 0x23, 0x39, 0xc6, 0x0b, 0x8f, 0xe4, 0x18, 0x1f, 0x3c, 0x92, 0x63, 0x9c, 0xf0,
 	0x58, 0x8e, 0xe1, 0xc2, 0x63, 0x39, 0x86, 0x1b, 0x8f, 0xe5, 0x18, 0xa2, 0x9c, 0xd2, 0x33, 0x4b,
 	0x32, 0x4a, 0x93, 0xf4, 0x92, 0xf3, 0x73, 0xf5, 0xa1, 0xee, 0xd7, 0xcd, 0x49, 0x4c, 0x2a, 0x86,
 	0x71, 0xf4, 0xcb, 0x0c, 0x8d, 0xf5, 0x2b, 0x70, 0xf9, 0xbf, 0xa4, 0xb2, 0x20, 0xb5, 0x38, 0x89,
-	0x0d, 0xec, 0x15, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0xfe, 0xcb, 0x76, 0x0e, 0x2e, 0x01,
+	0x0d, 0xec, 0x15, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0x74, 0x0d, 0x5d, 0xfc, 0x2e, 0x01,
 	0x00, 0x00,
 }
 
@@ -119,13 +119,22 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if len(m.AuthorizedTickSpacing) > 0 {
-		for iNdEx := len(m.AuthorizedTickSpacing) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.AuthorizedTickSpacing[iNdEx])
-			copy(dAtA[i:], m.AuthorizedTickSpacing[iNdEx])
-			i = encodeVarintParams(dAtA, i, uint64(len(m.AuthorizedTickSpacing[iNdEx])))
-			i--
-			dAtA[i] = 0xa
+		dAtA2 := make([]byte, len(m.AuthorizedTickSpacing)*10)
+		var j1 int
+		for _, num := range m.AuthorizedTickSpacing {
+			for num >= 1<<7 {
+				dAtA2[j1] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j1++
+			}
+			dAtA2[j1] = uint8(num)
+			j1++
 		}
+		i -= j1
+		copy(dAtA[i:], dAtA2[:j1])
+		i = encodeVarintParams(dAtA, i, uint64(j1))
+		i--
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -148,10 +157,11 @@ func (m *Params) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.AuthorizedTickSpacing) > 0 {
-		for _, s := range m.AuthorizedTickSpacing {
-			l = len(s)
-			n += 1 + l + sovParams(uint64(l))
+		l = 0
+		for _, e := range m.AuthorizedTickSpacing {
+			l += sovParams(uint64(e))
 		}
+		n += 1 + sovParams(uint64(l)) + l
 	}
 	return n
 }
@@ -192,37 +202,81 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AuthorizedTickSpacing", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowParams
+			if wireType == 0 {
+				var v uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowParams
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
 				}
-				if iNdEx >= l {
+				m.AuthorizedTickSpacing = append(m.AuthorizedTickSpacing, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowParams
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthParams
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthParams
+				}
+				if postIndex > l {
 					return io.ErrUnexpectedEOF
 				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
 				}
+				elementCount = count
+				if elementCount != 0 && len(m.AuthorizedTickSpacing) == 0 {
+					m.AuthorizedTickSpacing = make([]uint64, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowParams
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.AuthorizedTickSpacing = append(m.AuthorizedTickSpacing, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field AuthorizedTickSpacing", wireType)
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthParams
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthParams
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.AuthorizedTickSpacing = append(m.AuthorizedTickSpacing, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipParams(dAtA[iNdEx:])

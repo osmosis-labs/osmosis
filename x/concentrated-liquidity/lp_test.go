@@ -267,12 +267,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-			var (
-				tc                 = tc
-				config             = *tc.setupConfig
-				sutConfigOverwrite = *tc.sutConfigOverwrite
-			)
-
+			// Setup.
 			s.SetupTest()
 
 			var (
@@ -280,9 +275,12 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				concentratedLiquidityKeeper = s.App.ConcentratedLiquidityKeeper
 				liquidityCreated            = sdk.ZeroDec()
 				owner                       = s.TestAccs[0]
+				tc                          = tc
+				config                      = *tc.setupConfig
+				sutConfigOverwrite          = *tc.sutConfigOverwrite
 			)
 
-			// Setup.
+			// If a setupConfig is provided, use it to create a pool and position.
 			if tc.setupConfig != nil {
 				s.PrepareDefaultPool(ctx)
 				var err error
@@ -291,9 +289,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				s.Require().NoError(err)
 			}
 
+			// If specific configs are provided in the test case, overwrite the config with those values.
 			mergeConfigs(&config, &sutConfigOverwrite)
-
-			expectedRemainingLiquidity := liquidityCreated.Sub(config.liquidityAmount)
 
 			// System under test.
 			amtDenom0, amtDenom1, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, config.poolId, owner, config.lowerTick, config.upperTick, config.liquidityAmount)
@@ -309,6 +306,9 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			s.Require().NoError(err)
 			s.Require().Equal(config.amount0Expected.String(), amtDenom0.String())
 			s.Require().Equal(config.amount1Expected.String(), amtDenom1.String())
+
+			// Determine the liquidity expected to remain after the withdraw.
+			expectedRemainingLiquidity := liquidityCreated.Sub(config.liquidityAmount)
 
 			// Check that the position was updated.
 			s.validatePositionUpdate(ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity)

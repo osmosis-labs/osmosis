@@ -24,6 +24,7 @@ type SwapState struct {
 }
 
 // CreateNewConcentratedLiquidityPool creates a new concentrated liquidity pool with the given parameters.
+// The pool tokens are denom0 and denom1, and are ordered such that denom0 is lexicographically smaller than denom1.
 // The pool is created with zero liquidity and the initial sqrt price and current tick set to zero.
 // The given token denominations are ordered to ensure that the first token is the numerator of the price, and the second token is the denominator of the price.
 // The pool is added to the pool store, and an error is returned if the operation fails.

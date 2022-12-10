@@ -2,6 +2,7 @@ package concentrated_liquidity
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -17,11 +18,11 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (swaproutertypes.PoolI, 
 	if err != nil {
 		return nil, types.PoolNotFoundError{PoolId: poolId}
 	}
-	pool, ok := concentratedPool.(swaproutertypes.PoolI)
-	if !ok {
-		return nil, errors.New("invalid pool type when setting concentrated pool")
+	poolI, err := convertConcentratedToPoolInterface(concentratedPool)
+	if err != nil {
+		return nil, err
 	}
-	return pool, nil
+	return poolI, nil
 }
 
 // getPoolById returns a concentratedPoolExtension that corresponds to the requested pool id. Returns error if pool id is not found.
@@ -61,4 +62,18 @@ func (k Keeper) setPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) e
 	key := types.KeyPool(pool.GetId())
 	osmoutils.MustSet(store, key, poolModel)
 	return nil
+}
+
+// convertConcentratedToPoolInterface takes a types.ConcentratedPoolExtension and attempts to convert it to a
+// swaproutertypes.PoolI. If the conversion is successful, the converted value is returned. If the conversion fails,
+// an error is returned.
+func convertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (swaproutertypes.PoolI, error) {
+	// Attempt to convert the concentratedPool to a swaproutertypes.PoolI
+	pool, ok := concentratedPool.(swaproutertypes.PoolI)
+	if !ok {
+		// If the conversion fails, return an error
+		return nil, fmt.Errorf("given pool does not implement CFMMPoolI, implements %T", pool)
+	}
+	// Return the converted value
+	return pool, nil
 }
