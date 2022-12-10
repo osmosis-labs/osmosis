@@ -49,7 +49,6 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	// If the current square root price and current tick are zero, then this is the first position to be created for this pool.
 	// In this case, we calculate the square root price and current tick based on the inputs of this position.
-	// TODO: We need to review this logic very carefully, as I am not 100 percent convinced it is safe / correct
 	if k.isInitialPosition(initialSqrtPrice, initialTick) {
 		err := k.initializeInitialPosition(cacheCtx, pool, amount0Desired, amount1Desired)
 		if err != nil {
