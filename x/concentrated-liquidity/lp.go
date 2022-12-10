@@ -40,7 +40,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	// Create a cache context for the current transaction.
-	// This allows us to make changes to the context without persisting them until later.
+	// This allows us to make changes to the context without persisting it until later.
 	// We only write the cache context (i.e. persist the changes) if the actual amounts returned
 	// are greater than the given minimum amounts.
 	cacheCtx, writeCacheCtx := ctx.CacheContext()
