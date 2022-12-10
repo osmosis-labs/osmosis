@@ -24,6 +24,20 @@ func TestDecimalTestSuite(t *testing.T) {
 	suite.Run(t, new(decimalTestSuite))
 }
 
+// assertMutResult given expected value after applying a math operation, a start value,
+// mutative and non mutative results with start values, asserts that mutation are only applied
+// to the mutative versions. Also, asserts that both results match the expected value.
+func (s *decimalTestSuite) assertMutResult(expectedResult, startValue, mutativeResult, nonMutativeResult, mutativeStartValue, nonMutativeStartValue BigDec) {
+	// assert both results are as expected.
+	s.Require().Equal(expectedResult, mutativeResult)
+	s.Require().Equal(expectedResult, nonMutativeResult)
+
+	// assert that mutative method mutated the receiver
+	s.Require().Equal(mutativeStartValue, expectedResult)
+	// assert that non-mutative method did not mutate the receiver
+	s.Require().Equal(nonMutativeStartValue, startValue)
+}
+
 func TestDecApproxEq(t *testing.T) {
 	// d1 = 0.55, d2 = 0.6, tol = 0.1
 	d1 := NewDecWithPrec(55, 2)
@@ -1232,16 +1246,51 @@ func (s *decimalTestSuite) TestMul_Mutation() {
 			startNonMut := tc.startValue.Clone()
 
 			resultMut := startMut.MulMut(mulBy)
-			result := startNonMut.Mul(mulBy)
+			resultNonMut := startNonMut.Mul(mulBy)
 
-			// assert both results are as expectde.
-			s.Require().Equal(tc.expectedMulResult, resultMut)
-			s.Require().Equal(tc.expectedMulResult, result)
+			s.assertMutResult(tc.expectedMulResult, tc.startValue, resultMut, resultNonMut, startMut, startNonMut)
+		})
+	}
+}
 
-			// assert MulMut mutated the receiver
-			s.Require().Equal(tc.expectedMulResult, startMut)
-			// assert Mul did not mutate the receiver
-			s.Require().Equal(tc.startValue, startNonMut)
+// TestMul_Mutation tests that PowerIntegerMut mutates the receiver
+// while PowerInteger is not.
+func (s *decimalTestSuite) TestPowerInteger_Mutation() {
+
+	exponent := uint64(2)
+
+	tests := map[string]struct {
+		startValue     BigDec
+		expectedResult BigDec
+	}{
+		"1": {
+			startValue:     OneDec(),
+			expectedResult: OneDec(),
+		},
+		"-3": {
+			startValue:     MustNewDecFromStr("-3"),
+			expectedResult: MustNewDecFromStr("9"),
+		},
+		"0": {
+			startValue:     ZeroDec(),
+			expectedResult: ZeroDec(),
+		},
+		"4": {
+			startValue:     MustNewDecFromStr("4.5"),
+			expectedResult: MustNewDecFromStr("20.25"),
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+
+			startMut := tc.startValue.Clone()
+			startNonMut := tc.startValue.Clone()
+
+			resultMut := startMut.PowerIntegerMut(exponent)
+			resultNonMut := startNonMut.PowerInteger(exponent)
+
+			s.assertMutResult(tc.expectedResult, tc.startValue, resultMut, resultNonMut, startMut, startNonMut)
 		})
 	}
 }
