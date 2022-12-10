@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -9,6 +8,7 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -21,14 +21,7 @@ import (
 
 // GetTxCmd returns the transaction commands for this module.
 func GetTxCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      fmt.Sprintf("%s transactions subcommands", types.ModuleName),
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
-
+	cmd := osmocli.TxIndexCmd(types.ModuleName)
 	cmd.AddCommand(
 		NewSuperfluidDelegateCmd(),
 		NewSuperfluidUndelegateCmd(),
@@ -79,107 +72,19 @@ func NewSuperfluidDelegateCmd() *cobra.Command {
 	return cmd
 }
 
-// NewSuperfluidUndelegateCmd broadcast MsgSuperfluidUndelegate.
 func NewSuperfluidUndelegateCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	return osmocli.BuildTxCli[*types.MsgSuperfluidUndelegate](&osmocli.TxCliDesc{
 		Use:   "undelegate [lock_id] [flags]",
 		Short: "superfluid undelegate a lock from a validator",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			lockId, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgSuperfluidUndelegate(
-				clientCtx.GetFromAddress(),
-				uint64(lockId),
-			)
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-	return cmd
+	})
 }
 
-// NewSuperfluidUnbondLock broadcast MsgSuperfluidUndelegate and.
 func NewSuperfluidUnbondLockCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	return osmocli.BuildTxCli[*types.MsgSuperfluidUnbondLock](&osmocli.TxCliDesc{
 		Use:   "unbond-lock [lock_id] [flags]",
 		Short: "unbond lock that has been superfluid staked",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			lockId, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgSuperfluidUnbondLock(
-				clientCtx.GetFromAddress(),
-				uint64(lockId),
-			)
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-	return cmd
+	})
 }
-
-// NewSuperfluidRedelegateCmd broadcast MsgSuperfluidRedelegate
-// func NewSuperfluidRedelegateCmd() *cobra.Command {
-// 	cmd := &cobra.Command{
-// 		Use:   "redelegate [lock_id] [val_addr] [flags]",
-// 		Short: "superfluid redelegate a lock to a new validator",
-// 		Args:  cobra.ExactArgs(2),
-// 		RunE: func(cmd *cobra.Command, args []string) error {
-// 			clientCtx, err := client.GetClientTxContext(cmd)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-// 			lockId, err := strconv.Atoi(args[0])
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			valAddr, err := sdk.ValAddressFromBech32(args[1])
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			msg := types.NewMsgSuperfluidRedelegate(
-// 				clientCtx.GetFromAddress(),
-// 				uint64(lockId),
-// 				valAddr,
-// 			)
-
-// 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
-// 		},
-// 	}
-
-// 	flags.AddTxFlagsToCmd(cmd)
-// 	return cmd
-// }
 
 // NewCmdSubmitSetSuperfluidAssetsProposal implements a command handler for submitting a superfluid asset set proposal transaction.
 func NewCmdSubmitSetSuperfluidAssetsProposal() *cobra.Command {
@@ -375,35 +280,11 @@ func NewCmdLockAndSuperfluidDelegate() *cobra.Command {
 	return cmd
 }
 
-// NewCmdUnPoolWhitelistedPool implements a command handler for unpooling whitelisted pools.
 func NewCmdUnPoolWhitelistedPool() *cobra.Command {
-	cmd := &cobra.Command{
+	return osmocli.BuildTxCli[*types.MsgUnPoolWhitelistedPool](&osmocli.TxCliDesc{
 		Use:   "unpool-whitelisted-pool [pool_id] [flags]",
 		Short: "unpool whitelisted pool",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			sender := clientCtx.GetFromAddress()
-
-			poolId, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgUnPoolWhitelistedPool(sender, uint64(poolId))
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-	return cmd
+	})
 }
 
 // NewCmdUpdateUnpoolWhitelistProposal defines the command to create a new update unpool whitelist proposal command.

@@ -166,6 +166,16 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 	return valAddr
 }
 
+// SetupMultipleValidators setups "numValidator" validators and returns their address in string
+func (s *KeeperTestHelper) SetupMultipleValidators(numValidator int) []string {
+	valAddrs := []string{}
+	for i := 0; i < numValidator; i++ {
+		valAddr := s.SetupValidator(stakingtypes.Bonded)
+		valAddrs = append(valAddrs, valAddr.String())
+	}
+	return valAddrs
+}
+
 // BeginNewBlock starts a new block.
 func (s *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 	var valAddr []byte
@@ -252,14 +262,14 @@ func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, re
 }
 
 // SetupGammPoolsWithBondDenomMultiplier uses given multipliers to set initial pool supply of bond denom.
-func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []sdk.Dec) []gammtypes.PoolI {
+func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []sdk.Dec) []gammtypes.CFMMPoolI {
 	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 	// TODO: use sdk crypto instead of tendermint to generate address
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
 	params := s.App.GAMMKeeper.GetParams(s.Ctx)
 
-	pools := []gammtypes.PoolI{}
+	pools := []gammtypes.CFMMPoolI{}
 	for index, multiplier := range multipliers {
 		token := fmt.Sprintf("token%d", index)
 		uosmoAmount := gammtypes.InitPoolSharesSupply.ToDec().Mul(multiplier).RoundInt()

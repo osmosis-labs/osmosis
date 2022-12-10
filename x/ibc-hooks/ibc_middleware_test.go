@@ -46,6 +46,10 @@ func (suite *HooksTestSuite) SetupTest() {
 	suite.chainB = &osmosisibctesting.TestChain{
 		TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(2)),
 	}
+	err := suite.chainA.MoveEpochsToTheFuture()
+	suite.Require().NoError(err)
+	err = suite.chainB.MoveEpochsToTheFuture()
+	suite.Require().NoError(err)
 	suite.path = NewTransferPath(suite.chainA, suite.chainB)
 	suite.coordinator.Setup(suite.path)
 }

@@ -13,6 +13,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 type decimalTestSuite struct {
@@ -721,6 +722,17 @@ func (s *decimalTestSuite) TestLog2() {
 			// From: https://www.wolframalpha.com/input?i=log+base+2+of+912648174127941279170121098210.92821920190204131121+38+digits
 			expected: MustNewDecFromStr("99.525973560175362367047484597337715868"),
 		},
+		"log_2{Max Spot Price} = 128": {
+			initialValue: BigDecFromSDKDec(gammtypes.MaxSpotPrice), // 2^128 - 1
+			// From: https://www.wolframalpha.com/input?i=log+base+2+of+%28%282%5E128%29+-+1%29+38+digits
+			expected: MustNewDecFromStr("128"),
+		},
+		// The value tested below is: gammtypes.MaxSpotPrice * 0.99 = (2^128 - 1) * 0.99
+		"log_2{336879543251729078828740861357450529340.45} = 127.98550043030488492336620207564264562": {
+			initialValue: MustNewDecFromStr("336879543251729078828740861357450529340.45"),
+			// From: https://www.wolframalpha.com/input?i=log+base+2+of+%28%28%282%5E128%29+-+1%29*0.99%29++38+digits
+			expected: MustNewDecFromStr("127.98550043030488492336620207564264562"),
+		},
 	}
 
 	for name, tc := range tests {
@@ -1015,6 +1027,88 @@ func (s *decimalTestSuite) TestCustomBaseLog() {
 				require.True(DecApproxEq(s.T(), tc.expected, res, tc.expectedErrTolerance))
 				require.Equal(s.T(), initialCopy, tc.initialValue)
 			})
+		})
+	}
+}
+
+func (s *decimalTestSuite) TestClone() {
+
+	// The value to change the underlying copy's
+	// internal value to assert on the original BigDec
+	// remaining unchanged.
+	changeValue := big.NewInt(10)
+
+	tests := map[string]struct {
+		startValue BigDec
+	}{
+		"1.1": {
+			startValue: MustNewDecFromStr("1.1"),
+		},
+		"-3": {
+			startValue: MustNewDecFromStr("-3"),
+		},
+		"0": {
+			startValue: MustNewDecFromStr("-3"),
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+
+			copy := tc.startValue.Clone()
+
+			s.Require().Equal(tc.startValue, copy)
+
+			copy.i.Set(changeValue)
+			// copy and startValue do not share internals.
+			s.Require().NotEqual(tc.startValue, copy)
+		})
+	}
+}
+
+// TestMul_Mutation tests that MulMut mutates the receiver
+// while Mut is not.
+func (s *decimalTestSuite) TestMul_Mutation() {
+
+	mulBy := MustNewDecFromStr("2")
+
+	tests := map[string]struct {
+		startValue        BigDec
+		expectedMulResult BigDec
+	}{
+		"1.1": {
+			startValue:        MustNewDecFromStr("1.1"),
+			expectedMulResult: MustNewDecFromStr("2.2"),
+		},
+		"-3": {
+			startValue:        MustNewDecFromStr("-3"),
+			expectedMulResult: MustNewDecFromStr("-6"),
+		},
+		"0": {
+			startValue:        ZeroDec(),
+			expectedMulResult: ZeroDec(),
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+
+			startMut := tc.startValue.Clone()
+			startNonMut := tc.startValue.Clone()
+
+			resultMut := startMut.MulMut(mulBy)
+			result := startNonMut.Mul(mulBy)
+
+			// assert both results are as expectde.
+			s.Require().Equal(tc.expectedMulResult, resultMut)
+			s.Require().Equal(tc.expectedMulResult, result)
+
+			// assert MulMut mutated the receiver
+			s.Require().Equal(tc.expectedMulResult, startMut)
+			// assert Mul did not mutate the receiver
+			s.Require().Equal(tc.startValue, startNonMut)
 		})
 	}
 }

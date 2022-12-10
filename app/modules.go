@@ -62,6 +62,8 @@ import (
 	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
 	poolincentives "github.com/osmosis-labs/osmosis/v13/x/pool-incentives"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v13/x/protorev"
+	protorevtypes "github.com/osmosis-labs/osmosis/v13/x/protorev/types"
 	superfluid "github.com/osmosis-labs/osmosis/v13/x/superfluid"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
 	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory"
@@ -89,6 +91,7 @@ var moduleAccountPermissions = map[string][]string{
 	ibctransfertypes.ModuleName:              {authtypes.Minter, authtypes.Burner},
 	gammtypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
 	incentivestypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
+	protorevtypes.ModuleName:                 {authtypes.Minter, authtypes.Burner},
 	lockuptypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
 	poolincentivestypes.ModuleName:           nil,
 	superfluidtypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
@@ -134,6 +137,7 @@ func appModules(
 		app.RawIcs20TransferAppModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		twapmodule.NewAppModule(*app.TwapKeeper),
+		protorev.NewAppModule(appCodec, *app.ProtoRevKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper, app.GAMMKeeper),
 		txfees.NewAppModule(*app.TxFeesKeeper),
 		incentives.NewAppModule(*app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
 		lockup.NewAppModule(*app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
@@ -209,6 +213,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		ibchost.ModuleName,
 		icatypes.ModuleName,
 		gammtypes.ModuleName,
+		protorevtypes.ModuleName,
 		twaptypes.ModuleName,
 		txfeestypes.ModuleName,
 		genutiltypes.ModuleName,
