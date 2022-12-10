@@ -77,3 +77,17 @@ func convertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolE
 	// Return the converted value
 	return pool, nil
 }
+
+// convertPoolInterfaceToConcentrated takes a swaproutertypes.PoolI and attempts to convert it to a
+// types.ConcentratedPoolExtension. If the conversion is successful, the converted value is returned. If the conversion fails,
+// an error is returned.
+func convertPoolInterfaceToConcentrated(poolI swaproutertypes.PoolI) (types.ConcentratedPoolExtension, error) {
+	// Attempt to convert swaproutertypes.PoolI to a concentratedPool
+	concentratedPool, ok := poolI.(types.ConcentratedPoolExtension)
+	if !ok {
+		// If the conversion fails, return an error
+		return nil, fmt.Errorf("given pool does not implement ConcentratedPoolExtension, implements %T", concentratedPool)
+	}
+	// Return the converted value
+	return concentratedPool, nil
+}

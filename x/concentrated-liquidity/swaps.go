@@ -41,25 +41,23 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(
 	}
 
 	// Create a new concentrated liquidity pool with the given parameters.
-	pool := &model.Pool{
-		// TODO: move gammtypes.NewPoolAddress(poolId) to swaproutertypes
-		Address:          gammtypes.NewPoolAddress(poolId).String(),
-		Id:               poolId,
-		CurrentSqrtPrice: sdk.ZeroDec(),
-		CurrentTick:      sdk.ZeroInt(),
-		Liquidity:        sdk.ZeroDec(),
-		Token0:           denom0,
-		Token1:           denom1,
-		TickSpacing:      tickSpacing,
-	}
-
-	// Add the pool to the pool store.
-	err = k.setPool(ctx, pool)
+	poolI, err := model.NewConcentratedLiquidityPool(poolId, denom0, denom1, tickSpacing)
 	if err != nil {
 		return nil, err
 	}
 
-	return pool, nil
+	conentratedPool, err := convertPoolInterfaceToConcentrated(&poolI)
+	if err != nil {
+		return nil, err
+	}
+
+	// Add the pool to the pool store.
+	err = k.setPool(ctx, conentratedPool)
+	if err != nil {
+		return nil, err
+	}
+
+	return conentratedPool, nil
 }
 
 func (k Keeper) SwapExactAmountIn(
