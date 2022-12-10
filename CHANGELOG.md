@@ -47,6 +47,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#3609](https://github.com/osmosis-labs/osmosis/pull/3609) Add Downtime-detection module.
 * [#2788](https://github.com/osmosis-labs/osmosis/pull/2788) Add logarithm base 2 implementation.
 * [#3677](https://github.com/osmosis-labs/osmosis/pull/3677) Add methods for cloning and mutative multiplication on osmomath.BigDec.
+* [#3676](https://github.com/osmosis-labs/osmosis/pull/3676) implement `PowerInteger` function on `osmomath.BigDec` 
+* [#3678](https://github.com/osmosis-labs/osmosis/pull/3678) implement mutative `PowerIntegerMut` function on `osmomath.BigDec`.
 
 ### Bug fixes
 
@@ -88,7 +90,6 @@ This release includes stableswap, and expands the IBC safety & composability fun
   - The v1beta1 queries actually have base asset and quote asset reversed, so you were always getting 1/correct spot price. People fixed this by reordering the arguments.
   - This PR adds v2 queries for doing the correct thing, and giving people time to migrate from v1beta1 queries to v2.
   - It also changes cosmwasm to only allow the v2 queries, as no contracts on Osmosis mainnet uses the v1beta1 queries.
-
 
 ### Bug fixes
 

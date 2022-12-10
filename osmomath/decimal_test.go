@@ -24,6 +24,20 @@ func TestDecimalTestSuite(t *testing.T) {
 	suite.Run(t, new(decimalTestSuite))
 }
 
+// assertMutResult given expected value after applying a math operation, a start value,
+// mutative and non mutative results with start values, asserts that mutation are only applied
+// to the mutative versions. Also, asserts that both results match the expected value.
+func (s *decimalTestSuite) assertMutResult(expectedResult, startValue, mutativeResult, nonMutativeResult, mutativeStartValue, nonMutativeStartValue BigDec) {
+	// assert both results are as expected.
+	s.Require().Equal(expectedResult, mutativeResult)
+	s.Require().Equal(expectedResult, nonMutativeResult)
+
+	// assert that mutative method mutated the receiver
+	s.Require().Equal(mutativeStartValue, expectedResult)
+	// assert that non-mutative method did not mutate the receiver
+	s.Require().Equal(nonMutativeStartValue, startValue)
+}
+
 func TestDecApproxEq(t *testing.T) {
 	// d1 = 0.55, d2 = 0.6, tol = 0.1
 	d1 := NewDecWithPrec(55, 2)
@@ -1031,6 +1045,139 @@ func (s *decimalTestSuite) TestCustomBaseLog() {
 	}
 }
 
+func (s *decimalTestSuite) TestPowerInteger() {
+	var expectedErrTolerance = MustNewDecFromStr("0.000000000000000000000000000000100000")
+
+	tests := map[string]struct {
+		base           BigDec
+		exponent       uint64
+		expectedResult BigDec
+
+		expectedToleranceOverwrite BigDec
+	}{
+		"0^2": {
+			base:     ZeroDec(),
+			exponent: 2,
+
+			expectedResult: ZeroDec(),
+		},
+		"1^2": {
+			base:     OneDec(),
+			exponent: 2,
+
+			expectedResult: OneDec(),
+		},
+		"4^4": {
+			base:     MustNewDecFromStr("4"),
+			exponent: 4,
+
+			expectedResult: MustNewDecFromStr("256"),
+		},
+		"5^3": {
+			base:     MustNewDecFromStr("5"),
+			exponent: 4,
+
+			expectedResult: MustNewDecFromStr("625"),
+		},
+		"e^10": {
+			base:     eulersNumber,
+			exponent: 10,
+
+			// https://www.wolframalpha.com/input?i=e%5E10+41+digits
+			expectedResult: MustNewDecFromStr("22026.465794806716516957900645284244366354"),
+		},
+		"geom twap overflow: 2^log_2{max spot price + 1}": {
+			base: twoBigDec,
+			// add 1 for simplicity of calculation to isolate overflow.
+			exponent: uint64(BigDecFromSDKDec(gammtypes.MaxSpotPrice).Add(OneDec()).LogBase2().TruncateInt().Uint64()),
+
+			// https://www.wolframalpha.com/input?i=2%5E%28floor%28+log+base+2+%282%5E128%29%29%29+++39+digits
+			expectedResult: MustNewDecFromStr("340282366920938463463374607431768211456"),
+		},
+		"geom twap overflow: 2^log_2{max spot price}": {
+			base:     twoBigDec,
+			exponent: uint64(BigDecFromSDKDec(gammtypes.MaxSpotPrice).LogBase2().TruncateInt().Uint64()),
+
+			// https://www.wolframalpha.com/input?i=2%5E%28floor%28+log+base+2+%282%5E128+-+1%29%29%29+++39+digits
+			expectedResult: MustNewDecFromStr("170141183460469231731687303715884105728"),
+		},
+		"geom twap overflow: 2^log_2{max spot price / 2 - 2017}": { // 2017 is prime.
+			base:     twoBigDec,
+			exponent: uint64(BigDecFromSDKDec(gammtypes.MaxSpotPrice.Quo(sdk.NewDec(2)).Sub(sdk.NewDec(2017))).LogBase2().TruncateInt().Uint64()),
+
+			// https://www.wolframalpha.com/input?i=e%5E10+41+digits
+			expectedResult: MustNewDecFromStr("85070591730234615865843651857942052864"),
+		},
+
+		// sdk.Dec test vectors copied from osmosis-labs/cosmos-sdk:
+
+		"1.0 ^ (10) => 1.0": {
+			base:     OneDec(),
+			exponent: 10,
+
+			expectedResult: OneDec(),
+		},
+		"0.5 ^ 2 => 0.25": {
+			base:     NewDecWithPrec(5, 1),
+			exponent: 2,
+
+			expectedResult: NewDecWithPrec(25, 2),
+		},
+		"0.2 ^ 2 => 0.04": {
+			base:     NewDecWithPrec(2, 1),
+			exponent: 2,
+
+			expectedResult: NewDecWithPrec(4, 2),
+		},
+		"3 ^ 3 => 27": {
+			base:     NewBigDec(3),
+			exponent: 3,
+
+			expectedResult: NewBigDec(27),
+		},
+		"-3 ^ 4 = 81": {
+			base:     NewBigDec(-3),
+			exponent: 4,
+
+			expectedResult: NewBigDec(81),
+		},
+		"-3 ^ 50 = 717897987691852588770249": {
+			base:     NewBigDec(-3),
+			exponent: 50,
+
+			expectedResult: MustNewDecFromStr("717897987691852588770249"),
+		},
+		"-3 ^ 51 = -2153693963075557766310747": {
+			base:     NewBigDec(-3),
+			exponent: 51,
+
+			expectedResult: MustNewDecFromStr("-2153693963075557766310747"),
+		},
+		"1.414213562373095049 ^ 2 = 2": {
+			base:     NewDecWithPrec(1414213562373095049, 18),
+			exponent: 2,
+
+			expectedResult:             NewBigDec(2),
+			expectedToleranceOverwrite: MustNewDecFromStr("0.0000000000000000006"),
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+
+			tolerance := expectedErrTolerance
+			if !tc.expectedToleranceOverwrite.IsNil() {
+				tolerance = tc.expectedToleranceOverwrite
+			}
+
+			actualResult := tc.base.PowerInteger(tc.exponent)
+			require.True(DecApproxEq(s.T(), tc.expectedResult, actualResult, tolerance))
+
+		})
+	}
+}
+
 func (s *decimalTestSuite) TestClone() {
 
 	// The value to change the underlying copy's
@@ -1099,16 +1246,51 @@ func (s *decimalTestSuite) TestMul_Mutation() {
 			startNonMut := tc.startValue.Clone()
 
 			resultMut := startMut.MulMut(mulBy)
-			result := startNonMut.Mul(mulBy)
+			resultNonMut := startNonMut.Mul(mulBy)
 
-			// assert both results are as expectde.
-			s.Require().Equal(tc.expectedMulResult, resultMut)
-			s.Require().Equal(tc.expectedMulResult, result)
+			s.assertMutResult(tc.expectedMulResult, tc.startValue, resultMut, resultNonMut, startMut, startNonMut)
+		})
+	}
+}
 
-			// assert MulMut mutated the receiver
-			s.Require().Equal(tc.expectedMulResult, startMut)
-			// assert Mul did not mutate the receiver
-			s.Require().Equal(tc.startValue, startNonMut)
+// TestMul_Mutation tests that PowerIntegerMut mutates the receiver
+// while PowerInteger is not.
+func (s *decimalTestSuite) TestPowerInteger_Mutation() {
+
+	exponent := uint64(2)
+
+	tests := map[string]struct {
+		startValue     BigDec
+		expectedResult BigDec
+	}{
+		"1": {
+			startValue:     OneDec(),
+			expectedResult: OneDec(),
+		},
+		"-3": {
+			startValue:     MustNewDecFromStr("-3"),
+			expectedResult: MustNewDecFromStr("9"),
+		},
+		"0": {
+			startValue:     ZeroDec(),
+			expectedResult: ZeroDec(),
+		},
+		"4": {
+			startValue:     MustNewDecFromStr("4.5"),
+			expectedResult: MustNewDecFromStr("20.25"),
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+
+			startMut := tc.startValue.Clone()
+			startNonMut := tc.startValue.Clone()
+
+			resultMut := startMut.PowerIntegerMut(exponent)
+			resultNonMut := startNonMut.PowerInteger(exponent)
+
+			s.assertMutResult(tc.expectedResult, tc.startValue, resultMut, resultNonMut, startMut, startNonMut)
 		})
 	}
 }
