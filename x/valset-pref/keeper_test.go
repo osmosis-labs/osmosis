@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
 	"github.com/stretchr/testify/suite"
@@ -39,6 +40,23 @@ func (suite *KeeperTestSuite) PrepareDelegateToValidatorSet() []types.ValidatorP
 	}
 
 	return valPreferences
+}
+
+func (suite *KeeperTestSuite) GetDelegationRewards(ctx sdk.Context, val types.ValidatorPreference, delegator sdk.AccAddress) (sdk.DecCoins, stakingtypes.Validator) {
+	valAddr, err := sdk.ValAddressFromBech32(val.ValOperAddress)
+	suite.Require().NoError(err)
+
+	validator, found := suite.App.StakingKeeper.GetValidator(ctx, valAddr)
+	suite.Require().True(found)
+
+	endingPeriod := suite.App.DistrKeeper.IncrementValidatorPeriod(ctx, validator)
+
+	delegation, found := suite.App.StakingKeeper.GetDelegation(ctx, delegator, valAddr)
+	suite.Require().True(found)
+
+	rewards := suite.App.DistrKeeper.CalculateDelegationRewards(ctx, validator, delegation, endingPeriod)
+
+	return rewards, validator
 }
 
 func TestKeeperTestSuite(t *testing.T) {

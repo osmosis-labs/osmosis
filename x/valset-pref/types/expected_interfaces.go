@@ -25,4 +25,5 @@ type CommunityPoolKeeper interface {
 	WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error)
 	IncrementValidatorPeriod(ctx sdk.Context, val stakingtypes.ValidatorI) uint64
 	CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins)
+	AllocateTokensToValidator(ctx sdk.Context, val stakingtypes.ValidatorI, tokens sdk.DecCoins)
 }

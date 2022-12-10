@@ -41,6 +41,7 @@ require (
 )
 
 require (
+	cosmossdk.io/math v1.0.0-beta.4 // indirect
 	github.com/Abirdcfly/dupword v0.0.7 // indirect
 	github.com/Djarvur/go-err113 v0.0.0-20210108212216-aea10b59be24 // indirect
 	github.com/alingse/asasalint v0.0.11 // indirect
