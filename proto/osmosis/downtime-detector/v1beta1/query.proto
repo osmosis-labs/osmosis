@@ -15,9 +15,6 @@ import "google/protobuf/timestamp.proto";
 option go_package = "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/client/queryproto";
 
 service Query {
-  rpc Params(ParamsRequest) returns (ParamsResponse) {
-    option (google.api.http).get = "/osmosis/downtime-detector/v1beta1/Params";
-  }
   rpc RecoveredSinceDowntimeOfLength(RecoveredSinceDowntimeOfLengthRequest)
       returns (RecoveredSinceDowntimeOfLengthResponse) {
     option (google.api.http).get =
@@ -44,6 +41,3 @@ message RecoveredSinceDowntimeOfLengthRequest {
 message RecoveredSinceDowntimeOfLengthResponse {
   bool succesfully_recovered = 1;
 }
-
-message ParamsRequest {}
-message ParamsResponse { Params params = 1 [ (gogoproto.nullable) = false ]; }

@@ -10,9 +10,6 @@ import "osmosis/downtime-detector/v1beta1/downtime_duration.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/types";
 
-// Params holds parameters for the downtime-detector module
-message Params {}
-
 message GenesisDowntimeEntry {
   Downtime duration = 1 [ (gogoproto.moretags) = "yaml:\"duration\"" ];
   google.protobuf.Timestamp last_downtime = 2 [
@@ -31,7 +28,4 @@ message GenesisState {
     (gogoproto.stdtime) = true,
     (gogoproto.moretags) = "yaml:\"last_block_time\""
   ];
-
-  // params is the container of twap parameters.
-  Params params = 3 [ (gogoproto.nullable) = false ];
 }
