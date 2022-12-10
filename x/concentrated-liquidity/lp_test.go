@@ -516,3 +516,53 @@ func (s *KeeperTestSuite) TestIsInitialPosition() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestInitializeInitialPosition() {
+	type sendTest struct {
+		amount0Desired sdk.Int
+		amount1Desired sdk.Int
+		expectedError  error
+	}
+	tests := map[string]sendTest{
+		"happy path": {
+			amount0Desired: DefaultAmt0,
+			amount1Desired: DefaultAmt1,
+		},
+		"error: amount0Desired is zero": {
+			amount0Desired: sdk.ZeroInt(),
+			amount1Desired: DefaultAmt1,
+			expectedError:  types.InitialLiquidityZeroError{Amount0: sdk.ZeroInt(), Amount1: DefaultAmt1},
+		},
+		"error: amount1Desired is zero": {
+			amount0Desired: DefaultAmt0,
+			amount1Desired: sdk.ZeroInt(),
+			expectedError:  types.InitialLiquidityZeroError{Amount0: DefaultAmt0, Amount1: sdk.ZeroInt()},
+		},
+		"error: both amount0Desired and amount01Desired is zero": {
+			amount0Desired: sdk.ZeroInt(),
+			amount1Desired: sdk.ZeroInt(),
+			expectedError:  types.InitialLiquidityZeroError{Amount0: sdk.ZeroInt(), Amount1: sdk.ZeroInt()},
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			tc := tc
+			s.SetupTest()
+
+			// create a CL pool
+			pool := s.PrepareDefaultPool(s.Ctx)
+
+			// System under test
+			err := s.App.ConcentratedLiquidityKeeper.InitializeInitialPosition(s.Ctx, pool, tc.amount0Desired, tc.amount1Desired)
+
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &tc.expectedError)
+			} else {
+				s.Require().NoError(err)
+			}
+
+		})
+	}
+}
