@@ -16,7 +16,7 @@ type TradeInfo struct {
 	Pool        gammtypes.CFMMPoolI
 }
 
-// BuildRoutes builds all of the possible routes given the given tokenIn, tokenOut and poolId
+// BuildRoutes builds all of the possible arbitrage routes given the given tokenIn, tokenOut and poolId that were used in the swap
 func (k Keeper) BuildRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64) [][]TradeInfo {
 	routes := make([][]TradeInfo, 0)
 
@@ -38,8 +38,7 @@ func (k Keeper) BuildRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId ui
 	return routes
 }
 
-// BuildTokenPairRoutes builds all of the possible routes given the given tokenIn and tokenOut from the
-// TokenPairRoutes store
+// BuildTokenPairRoutes builds all of the possible arbitrage routes from the hot routes given the tokenIn, tokenOut and poolId that were used in the swap
 func (k Keeper) BuildTokenPairRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64) ([][]TradeInfo, error) {
 	// Get all of the routes from the store that match the given tokenIn and tokenOut
 	tokenPairArbRoutes, err := k.GetTokenPairArbRoutes(ctx, tokenIn, tokenOut)
@@ -54,7 +53,6 @@ func (k Keeper) BuildTokenPairRoutes(ctx sdk.Context, tokenIn, tokenOut string, 
 
 		var newTrade TradeInfo
 		for _, trade := range route.Trades {
-
 			// 0 is a placeholder for swaps that should be entered into the hot route
 			if trade.Pool == 0 {
 				pool, err := k.GetAndCheckPool(ctx, poolId)
@@ -97,7 +95,7 @@ func (k Keeper) BuildTokenPairRoutes(ctx sdk.Context, tokenIn, tokenOut string, 
 	return routes, nil
 }
 
-// BuildOsmoRoute builds a route from the given tokenIn to the given tokenOut, using the given poolId as the middle hop
+// BuildOsmoRoute builds a cyclic arbitrage route that starts and ends with osmo given the tokenIn, tokenOut and poolId that were used in the swap
 func (k Keeper) BuildOsmoRoute(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64) ([]TradeInfo, error) {
 	// Creating the first trade in the arb
 	entryPoolId, err := k.GetOsmoPool(ctx, tokenOut)
@@ -146,7 +144,7 @@ func (k Keeper) BuildOsmoRoute(ctx sdk.Context, tokenIn, tokenOut string, poolId
 	return []TradeInfo{entryTrade, middleTrade, exitTrade}, nil
 }
 
-// BuildAtomRoute builds a route from the given tokenIn to the given tokenOut, using the given poolId as the middle hop
+// BuildAtomRoute builds a cyclic arbitrage route that starts and ends with atom given the tokenIn, tokenOut and poolId that were used in the swap
 func (k Keeper) BuildAtomRoute(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64) ([]TradeInfo, error) {
 	// Creating the first trade in the arb
 	entryPoolId, err := k.GetAtomPool(ctx, tokenOut)
