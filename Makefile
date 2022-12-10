@@ -10,6 +10,9 @@ BUILDDIR ?= $(CURDIR)/build
 E2E_UPGRADE_VERSION := "v14"
 
 
+GO_MAJOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
+GO_MINOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f2)
+
 export GO111MODULE = on
 
 # process build tags
@@ -83,13 +86,19 @@ endif
 ###                                  Build                                  ###
 ###############################################################################
 
+check_version:
+ifneq ($(GO_MINOR_VERSION),18)
+	@echo "ERROR: Go version 1.18 is required for this version of Osmosis. Go 1.19 has changes that are believed to break consensus."
+	exit 1
+endif
+
 all: install lint test
 
 BUILD_TARGETS := build install
 
 build: BUILD_ARGS=-o $(BUILDDIR)/
 
-$(BUILD_TARGETS): go.sum $(BUILDDIR)/
+$(BUILD_TARGETS): check_version go.sum $(BUILDDIR)/
 	go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
 
 $(BUILDDIR)/:

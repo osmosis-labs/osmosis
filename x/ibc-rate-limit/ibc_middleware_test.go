@@ -15,10 +15,11 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/testutil"
-	"github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
+	osmosisibctesting "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/testutil"
+	"github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
 )
 
 type MiddlewareTestSuite struct {
@@ -54,11 +55,14 @@ func (suite *MiddlewareTestSuite) SetupTest() {
 		TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(1)),
 	}
 	// Remove epochs to prevent  minting
-	suite.chainA.MoveEpochsToTheFuture()
+	err := suite.chainA.MoveEpochsToTheFuture()
+	suite.Require().NoError(err)
 	suite.chainB = &osmosisibctesting.TestChain{
 		TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(2)),
 	}
 	suite.path = NewTransferPath(suite.chainA, suite.chainB)
+	err = suite.chainB.MoveEpochsToTheFuture()
+	suite.Require().NoError(err)
 	suite.coordinator.Setup(suite.path)
 }
 
@@ -506,6 +510,6 @@ func (suite *MiddlewareTestSuite) TestUnsetRateLimitingContract() {
 	osmosisApp := suite.chainA.GetOsmosisApp()
 	paramSpace, ok := osmosisApp.AppKeepers.ParamsKeeper.GetSubspace(types.ModuleName)
 	suite.Require().True(ok)
-        // N.B.: this panics if validation fails.
+	// N.B.: this panics if validation fails.
 	paramSpace.SetParamSet(suite.chainA.GetContext(), &params)
 }
