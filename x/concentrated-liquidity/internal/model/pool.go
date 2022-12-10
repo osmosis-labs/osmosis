@@ -91,7 +91,7 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom 
 		return sdk.Dec{}, fmt.Errorf("base asset denom (%s) is not in the pool", baseAssetDenom)
 	} else if p.Token0 != quoteAssetDenom && p.Token1 != quoteAssetDenom {
 		return sdk.Dec{}, fmt.Errorf("quote asset denom (%s) is not in the pool", quoteAssetDenom)
-	} else if p.Token0 == p.Token0 {
+	} else if p.Token0 == p.Token1 {
 		return sdk.Dec{}, fmt.Errorf("base asset denom (%s) and quote asset denom (%s) cannot be the same", baseAssetDenom, quoteAssetDenom)
 	} else {
 		return sdk.Dec{}, fmt.Errorf("spot price could not be calculated for an unknown reason")

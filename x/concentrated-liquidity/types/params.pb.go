@@ -24,9 +24,9 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type Params struct {
-	// authorized_tick_spacing is an array of strings that represents the tick
+	// authorized_tick_spacing is an array of uint64s that represents the tick
 	// spacing values concentrated-liquidity pools can be created with. For
-	// example, an authorized_tick_spacing of ["1", "10", "30"] allows for pools
+	// example, an authorized_tick_spacing of [1, 10, 30] allows for pools
 	// to be created with tick spacing of 1, 10, or 30.
 	AuthorizedTickSpacing []uint64 `protobuf:"varint,1,rep,packed,name=authorized_tick_spacing,json=authorizedTickSpacing,proto3" json:"authorized_tick_spacing,omitempty" yaml:"authorized_tick_spacing"`
 }
