@@ -9,44 +9,53 @@ import (
 )
 
 type lpTest struct {
-	poolId          uint64
-	owner           sdk.AccAddress
-	currentTick     sdk.Int
-	lowerTick       int64
-	upperTick       int64
-	currentSqrtP    sdk.Dec
-	amount0Desired  sdk.Int
-	amount0Minimum  sdk.Int
-	amount0Expected sdk.Int
-	amount1Desired  sdk.Int
-	amount1Minimum  sdk.Int
-	amount1Expected sdk.Int
-	liquidityAmount sdk.Dec
-	tickSpacing     uint64
-	expectedError   error
+	poolId             uint64
+	owner              sdk.AccAddress
+	currentTick        sdk.Int
+	lowerTick          int64
+	upperTick          int64
+	currentSqrtP       sdk.Dec
+	amount0Desired     sdk.Int
+	amount0Minimum     sdk.Int
+	amount0Expected    sdk.Int
+	amount1Desired     sdk.Int
+	amount1Minimum     sdk.Int
+	amount1Expected    sdk.Int
+	liquidityAmount    sdk.Dec
+	tickSpacing        uint64
+	isNotFirstPosition bool
+	expectedError      error
 }
 
 var (
 	baseCase = &lpTest{
-		poolId:          1,
-		currentTick:     DefaultCurrTick,
-		lowerTick:       DefaultLowerTick,
-		upperTick:       DefaultUpperTick,
-		currentSqrtP:    DefaultCurrSqrtPrice,
-		amount0Desired:  DefaultAmt0,
-		amount0Minimum:  sdk.ZeroInt(),
-		amount0Expected: DefaultAmt0Expected,
-		amount1Desired:  DefaultAmt1,
-		amount1Minimum:  sdk.ZeroInt(),
-		amount1Expected: DefaultAmt1Expected,
-		liquidityAmount: DefaultLiquidityAmt,
-		tickSpacing:     DefaultTickSpacing,
+		isNotFirstPosition: false,
+		poolId:             1,
+		currentTick:        DefaultCurrTick,
+		lowerTick:          DefaultLowerTick,
+		upperTick:          DefaultUpperTick,
+		currentSqrtP:       DefaultCurrSqrtPrice,
+		amount0Desired:     DefaultAmt0,
+		amount0Minimum:     sdk.ZeroInt(),
+		amount0Expected:    DefaultAmt0Expected,
+		amount1Desired:     DefaultAmt1,
+		amount1Minimum:     sdk.ZeroInt(),
+		amount1Expected:    DefaultAmt1Expected,
+		liquidityAmount:    DefaultLiquidityAmt,
+		tickSpacing:        DefaultTickSpacing,
 	}
 )
 
 func (s *KeeperTestSuite) TestCreatePosition() {
 	tests := map[string]lpTest{
 		"base case": {},
+		"create a position with non default tick spacing (10) with ticks that fall into tick spacing requirements": {
+			lowerTick:       int64(84220),
+			upperTick:       int64(86130),
+			amount0Expected: sdk.NewInt(997568),
+			liquidityAmount: sdk.MustNewDecFromStr("1514719247.706987476085061790"),
+			tickSpacing:     10,
+		},
 		"error: non-existent pool": {
 			poolId:        2,
 			expectedError: types.PoolNotFoundError{PoolId: 2},
@@ -72,21 +81,28 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			amount1Minimum: baseCase.amount1Expected.Mul(sdk.NewInt(2)),
 			expectedError:  types.InsufficientLiquidityCreatedError{Actual: baseCase.amount1Expected, Minimum: baseCase.amount1Expected.Mul(sdk.NewInt(2))},
 		},
-		"error: amount of token 1 is smaller than minimum; should fail and not update state test": {
-			amount0Desired: sdk.ZeroInt(),
-			amount1Desired: sdk.ZeroInt(),
-			expectedError:  errors.New("liquidityDelta calculated equals zero"),
-		},
-		"create a position with non default tick spacing (10) with ticks that fall into tick spacing requirements": {
-			lowerTick:       int64(84220),
-			upperTick:       int64(86130),
-			amount0Expected: sdk.NewInt(997568),
-			liquidityAmount: sdk.MustNewDecFromStr("1514719247.706987476085061790"),
-			tickSpacing:     10,
+		"error: a non first position with zero amount desired for both denoms should fail liquidity delta check": {
+			isNotFirstPosition: true,
+			amount0Desired:     sdk.ZeroInt(),
+			amount1Desired:     sdk.ZeroInt(),
+			expectedError:      errors.New("liquidityDelta calculated equals zero"),
 		},
 		"error: attempt to use and upper and lower tick that are not divisible by tick spacing": {
 			tickSpacing:   10,
 			expectedError: types.TickSpacingError{TickSpacing: 10, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick},
+		},
+		"error: first position cannot have a zero amount for denom0": {
+			amount0Desired: sdk.ZeroInt(),
+			expectedError:  types.InitialLiquidityZeroError{Amount0: sdk.ZeroInt(), Amount1: DefaultAmt1},
+		},
+		"error: first position cannot have a zero amount for denom1": {
+			amount1Desired: sdk.ZeroInt(),
+			expectedError:  types.InitialLiquidityZeroError{Amount0: DefaultAmt0, Amount1: sdk.ZeroInt()},
+		},
+		"error: first position cannot have a zero amount for both denom0 and denom1": {
+			amount1Desired: sdk.ZeroInt(),
+			amount0Desired: sdk.ZeroInt(),
+			expectedError:  types.InitialLiquidityZeroError{Amount0: sdk.ZeroInt(), Amount1: sdk.ZeroInt()},
 		},
 		// TODO: add more tests
 		// - custom hand-picked values
@@ -108,8 +124,16 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, ETH, USDC, tc.tickSpacing)
 			s.Require().NoError(err)
 
+			// If we want to test a non-first position, we create a first position with a separate account
+			if tc.isNotFirstPosition {
+				// Fund test account and create the desired position
+				s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1)))
+				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, 1, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), tc.lowerTick, tc.upperTick)
+				s.Require().NoError(err)
+			}
+
 			// Fund test account and create the desired position
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1)))
 
 			// Note user and pool account balances before create position is called
 			userBalancePrePositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
@@ -130,7 +154,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 				s.Require().Error(err)
 				s.Require().Equal(asset0, sdk.Int{})
 				s.Require().Equal(asset1, sdk.Int{})
-				s.Require().ErrorAs(err, &tc.expectedError)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
 
 				// Check account balances
 				s.Require().Equal(userBalancePrePositionCreation.String(), userBalancePostPositionCreation.String())
@@ -358,6 +382,9 @@ func mergeConfigs(dst *lpTest, overwrite *lpTest) {
 		}
 		if overwrite.tickSpacing != 0 {
 			dst.tickSpacing = overwrite.tickSpacing
+		}
+		if overwrite.isNotFirstPosition != false {
+			dst.isNotFirstPosition = overwrite.isNotFirstPosition
 		}
 	}
 }
