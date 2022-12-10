@@ -51,7 +51,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	// In this case, we calculate the square root price and current tick based on the inputs of this position.
 	// TODO: We need to review this logic very carefully, as I am not 100 percent convinced it is safe / correct
 	if k.isInitialPosition(initialSqrtPrice, initialTick) {
-		err := k.createInitialPosition(cacheCtx, pool, amount0Desired, amount1Desired)
+		err := k.initializeInitialPosition(cacheCtx, pool, amount0Desired, amount1Desired)
 		if err != nil {
 			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 		}
@@ -220,7 +220,7 @@ func (k Keeper) isInitialPosition(initialSqrtPrice sdk.Dec, initialTick sdk.Int)
 
 // createInitialPosition ensures that the first position created on this pool includes both asset0 and asset1
 // This is required so we can set the pool's sqrtPrice and calculate it's initial tick from this
-func (k Keeper) createInitialPosition(ctx sdk.Context, pool types.ConcentratedPoolExtension, amount0Desired, amount1Desired sdk.Int) error {
+func (k Keeper) initializeInitialPosition(ctx sdk.Context, pool types.ConcentratedPoolExtension, amount0Desired, amount1Desired sdk.Int) error {
 	// Check that the position includes some amount of both asset0 and asset1
 	if !amount0Desired.GT(sdk.ZeroInt()) || !amount1Desired.GT(sdk.ZeroInt()) {
 		return types.InitialLiquidityZeroError{Amount0: amount0Desired, Amount1: amount1Desired}

@@ -473,3 +473,46 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestIsInitialPosition() {
+	type sendTest struct {
+		initialSqrtPrice sdk.Dec
+		initialTick      sdk.Int
+		expectedResponse bool
+	}
+	tests := map[string]sendTest{
+		"happy path: is initial position": {
+			initialSqrtPrice: sdk.ZeroDec(),
+			initialTick:      sdk.ZeroInt(),
+			expectedResponse: true,
+		},
+		"happy path: is not initial position": {
+			initialSqrtPrice: DefaultCurrSqrtPrice,
+			initialTick:      DefaultCurrTick,
+			expectedResponse: false,
+		},
+		"tick is zero but initialSqrtPrice is not, should not be detected as initial potion": {
+			initialSqrtPrice: DefaultCurrSqrtPrice,
+			initialTick:      sdk.ZeroInt(),
+			expectedResponse: false,
+		},
+		"initialSqrtPrice is zero but tick is not, should not be detected as initial position (should not happen)": {
+			initialSqrtPrice: sdk.ZeroDec(),
+			initialTick:      DefaultCurrTick,
+			expectedResponse: false,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			// System under test
+			if s.App.ConcentratedLiquidityKeeper.IsInitialPosition(tc.initialSqrtPrice, tc.initialTick) {
+				// If we expect the response to be true, then we should check that it is true
+				s.Require().True(tc.expectedResponse)
+			} else {
+				// Else, we should check that it is false
+				s.Require().False(tc.expectedResponse)
+			}
+		})
+	}
+}
