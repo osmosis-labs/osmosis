@@ -97,7 +97,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			s.Setup()
 
 			// Create a default CL pool
-			pool := s.PrepareDefaultPool(s.Ctx)
+			pool := s.PrepareConcentratedPool()
 
 			// Check the test case to see if we are swapping asset0 for asset1 or vice versa
 			asset0 := pool.GetToken0()
@@ -241,7 +241,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			s.Setup()
 
 			// Create a default CL pool
-			pool := s.PrepareDefaultPool(s.Ctx)
+			pool := s.PrepareConcentratedPool()
 
 			// Check the test case to see if we are swapping asset0 for asset1 or vice versa
 			asset0 := pool.GetToken0()

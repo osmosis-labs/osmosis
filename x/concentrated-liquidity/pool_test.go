@@ -510,7 +510,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 
 			// Create default CL pool
-			pool := s.PrepareDefaultPool(s.Ctx)
+			pool := s.PrepareConcentratedPool()
 
 			// add positions
 			test.addPositions(s.Ctx, pool.GetId())
@@ -956,7 +956,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 
 			// Create default CL pool
-			pool := s.PrepareDefaultPool(s.Ctx)
+			pool := s.PrepareConcentratedPool()
 
 			// add positions
 			test.addPositions(s.Ctx, pool.GetId())
@@ -1086,7 +1086,7 @@ func (s *KeeperTestSuite) TestGetPoolById() {
 			s.SetupTest()
 
 			// Create default CL pool
-			pool := s.PrepareDefaultPool(s.Ctx)
+			pool := s.PrepareConcentratedPool()
 
 			// Get pool defined in test case
 			getPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, test.poolId)
@@ -1117,7 +1117,7 @@ func (s *KeeperTestSuite) TestPoolExists() {
 	s.SetupTest()
 
 	// Create default CL pool
-	pool := s.PrepareDefaultPool(s.Ctx)
+	pool := s.PrepareConcentratedPool()
 
 	// Check that the pool exists
 	poolExists := s.App.ConcentratedLiquidityKeeper.PoolExists(s.Ctx, pool.GetId())

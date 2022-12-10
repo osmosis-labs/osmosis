@@ -306,7 +306,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			// If a setupConfig is provided, use it to create a pool and position.
 			if tc.setupConfig != nil {
-				s.PrepareDefaultPool(ctx)
+				s.PrepareConcentratedPool()
 				var err error
 				s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 				_, _, liquidityCreated, err = concentratedLiquidityKeeper.CreatePosition(ctx, config.poolId, owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), config.lowerTick, config.upperTick)
@@ -454,7 +454,7 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 			s.SetupTest()
 
 			// create a CL pool
-			s.PrepareDefaultPool(s.Ctx)
+			s.PrepareConcentratedPool()
 
 			// store pool interface
 			poolI, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, 1)
@@ -578,7 +578,7 @@ func (s *KeeperTestSuite) TestInitializeInitialPosition() {
 			s.SetupTest()
 
 			// create a CL pool
-			pool := s.PrepareDefaultPool(s.Ctx)
+			pool := s.PrepareConcentratedPool()
 
 			// System under test
 			err := s.App.ConcentratedLiquidityKeeper.InitializeInitialPosition(s.Ctx, pool, tc.amount0Desired, tc.amount1Desired)

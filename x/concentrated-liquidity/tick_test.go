@@ -229,7 +229,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			s.Setup()
 
 			// Create a default CL pool
-			s.PrepareDefaultPool(s.Ctx)
+			s.PrepareConcentratedPool()
 
 			// If tickExists set, initialize the specified tick with defaultLiquidityAmt
 			preexistingLiquidity := sdk.ZeroDec()
@@ -298,7 +298,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			s.Setup()
 
 			// Create a default CL pool
-			s.PrepareDefaultPool(s.Ctx)
+			s.PrepareConcentratedPool()
 
 			// Set up an initialized tick
 			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, 1, DefaultCurrTick.Int64(), DefaultLiquidityAmt, true)

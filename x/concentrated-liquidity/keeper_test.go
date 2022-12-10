@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
 var (
@@ -39,13 +38,6 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
-}
-
-// PrepareDefaultPool sets up an eth usdc concentrated liquidity pool with pool ID 1, tick spacing of 1, and no liquidity
-func (s *KeeperTestSuite) PrepareDefaultPool(ctx sdk.Context) types.ConcentratedPoolExtension {
-	pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(ctx, 1, ETH, USDC, DefaultTickSpacing)
-	s.Require().NoError(err)
-	return pool
 }
 
 func (s *KeeperTestSuite) SetupPosition(poolId uint64) {
