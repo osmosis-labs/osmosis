@@ -260,15 +260,32 @@ func (d BigDec) Sub(d2 BigDec) BigDec {
 	return BigDec{res}
 }
 
-// multiplication
-func (d BigDec) Mul(d2 BigDec) BigDec {
-	mul := new(big.Int).Mul(d.i, d2.i)
-	chopped := chopPrecisionAndRound(mul)
+// Clone performs a deep copy of the receiver
+// and returns the new result.
+func (d BigDec) Clone() BigDec {
+	copy := BigDec{new(big.Int)}
+	copy.i.Set(d.i)
+	return copy
+}
 
-	if chopped.BitLen() > maxDecBitLen {
+// Mut performs non-mutative multiplication.
+// The receiver is not modifier but the result is.
+func (d BigDec) Mul(d2 BigDec) BigDec {
+	copy := d.Clone()
+	copy.MulMut(d2)
+	return copy
+}
+
+// Mut performs non-mutative multiplication.
+// The receiver is not modifier but the result is.
+func (d BigDec) MulMut(d2 BigDec) BigDec {
+	d.i.Mul(d.i, d2.i)
+	d.i = chopPrecisionAndRound(d.i)
+
+	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
-	return BigDec{chopped}
+	return BigDec{d.i}
 }
 
 // multiplication truncate

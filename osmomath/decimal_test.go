@@ -1030,3 +1030,85 @@ func (s *decimalTestSuite) TestCustomBaseLog() {
 		})
 	}
 }
+
+func (s *decimalTestSuite) TestClone() {
+
+	// The value to change the underlying copy's
+	// internal value to assert on the original BigDec
+	// remaining unchanged.
+	changeValue := big.NewInt(10)
+
+	tests := map[string]struct {
+		startValue BigDec
+	}{
+		"1.1": {
+			startValue: MustNewDecFromStr("1.1"),
+		},
+		"-3": {
+			startValue: MustNewDecFromStr("-3"),
+		},
+		"0": {
+			startValue: MustNewDecFromStr("-3"),
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+
+			copy := tc.startValue.Clone()
+
+			s.Require().Equal(tc.startValue, copy)
+
+			copy.i.Set(changeValue)
+			// copy and startValue do not share internals.
+			s.Require().NotEqual(tc.startValue, copy)
+		})
+	}
+}
+
+// TestMul_Mutation tests that MulMut mutates the receiver
+// while Mut is not.
+func (s *decimalTestSuite) TestMul_Mutation() {
+
+	mulBy := MustNewDecFromStr("2")
+
+	tests := map[string]struct {
+		startValue        BigDec
+		expectedMulResult BigDec
+	}{
+		"1.1": {
+			startValue:        MustNewDecFromStr("1.1"),
+			expectedMulResult: MustNewDecFromStr("2.2"),
+		},
+		"-3": {
+			startValue:        MustNewDecFromStr("-3"),
+			expectedMulResult: MustNewDecFromStr("-6"),
+		},
+		"0": {
+			startValue:        ZeroDec(),
+			expectedMulResult: ZeroDec(),
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+
+			startMut := tc.startValue.Clone()
+			startNonMut := tc.startValue.Clone()
+
+			resultMut := startMut.MulMut(mulBy)
+			result := startNonMut.Mul(mulBy)
+
+			// assert both results are as expectde.
+			s.Require().Equal(tc.expectedMulResult, resultMut)
+			s.Require().Equal(tc.expectedMulResult, result)
+
+			// assert MulMut mutated the receiver
+			s.Require().Equal(tc.expectedMulResult, startMut)
+			// assert Mul did not mutate the receiver
+			s.Require().Equal(tc.startValue, startNonMut)
+		})
+	}
+}
