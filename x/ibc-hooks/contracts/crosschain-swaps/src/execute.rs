@@ -52,8 +52,8 @@ pub fn swap_and_forward(
     // calls back to this one. This is likely a malicious attempt modify the
     // contract's state before it has replied.
     if SWAP_REPLY_STATES.may_load(deps.storage)?.is_some() {
-        return Err(ContractError::CustomError {
-            val: "Already waiting for a reply".to_string(),
+        return Err(ContractError::ContractLocked {
+            msg: "Already waiting for a reply".to_string(),
         });
     }
     // Store information about the original message to be used in the reply
@@ -82,19 +82,17 @@ pub fn handle_swap_reply(deps: DepsMut, msg: Reply) -> Result<Response, Contract
 
     // If the swaprouter swap failed, return an error
     if let SubMsgResult::Err(e) = msg.result {
-        return Err(ContractError::CustomError {
-            val: format!("Failed Swap: {e}"),
-        });
+        return Err(ContractError::FailedSwap { msg: e });
     };
     let SubMsgResult::Ok(SubMsgResponse { data: Some(b), .. }) = msg.result else {
-        return Err(ContractError::CustomError {
-            val: format!("Failed Swap: No data"),
+        return Err(ContractError::FailedSwap {
+            msg: format!("No data"),
         })
     };
 
     // Parse underlying response from the chain
     let parsed = cw_utils::parse_execute_response_data(&b)
-        .map_err(|e| ContractError::CustomError { val: e.to_string() })?;
+        .map_err(|e| ContractError::FailedSwap { msg: e.to_string() })?;
     let swap_response: SwapResponse = from_binary(&parsed.data.unwrap())?;
 
     // Build an IBC packet to forward the swap.
@@ -103,9 +101,10 @@ pub fn handle_swap_reply(deps: DepsMut, msg: Reply) -> Result<Response, Contract
     let config = CONFIG.load(deps.storage)?;
 
     // If the memo is provided we want to include it in the IBC message
-    let memo: serde_cw_value::Value = if let Some(memo) = swap_msg_state.forward_to.next_memo {
-        serde_json_wasm::from_str(&memo.to_string()).map_err(|_e| ContractError::CustomError {
-            val: format!("invalid memo. Should be unreachable"),
+    let memo: serde_cw_value::Value = if let Some(memo) = &swap_msg_state.forward_to.next_memo {
+        serde_json_wasm::from_str(&memo.to_string()).map_err(|_e| ContractError::InvalidMemo {
+            error: format!("this should be unreachable"),
+            memo: memo.to_string(),
         })?
     } else {
         serde_json_wasm::from_str("{}").unwrap()
@@ -127,8 +126,9 @@ pub fn handle_swap_reply(deps: DepsMut, msg: Reply) -> Result<Response, Contract
 
     // Serialize the memo. If it is an empty json object, set it to ""
     let mut memo_str =
-        serde_json_wasm::to_string(&memo).map_err(|_e| ContractError::CustomError {
-            val: "invalid memo: could not serialize".to_string(),
+        serde_json_wasm::to_string(&memo).map_err(|_e| ContractError::InvalidMemo {
+            error: "could not serialize".to_string(),
+            memo: format!("{:?}", swap_msg_state.forward_to.next_memo),
         })?;
     if memo_str == "{}" {
         memo_str = String::new();
@@ -199,15 +199,15 @@ use ::prost::Message; // Proveides ::decode() for MsgTransferResponse
 pub fn handle_forward_reply(deps: DepsMut, msg: Reply) -> Result<Response, ContractError> {
     // Parse the result from the underlying chain call (IBC send)
     let SubMsgResult::Ok(SubMsgResponse { data: Some(b), .. }) = msg.result else {
-        return Err(ContractError::CustomError { val: "invalid reply".to_string() })
+        return Err(ContractError::FailedIBCTransfer { msg: format!("failed reply: {:?}", msg.result) })
     };
 
     // The response contains the packet sequence. This is needed to be able to
     // ensure that, if there is a delivery failure, the packet that failed is
     // the same one that we stored recovery information for
     let response =
-        MsgTransferResponse::decode(&b[..]).map_err(|_e| ContractError::CustomError {
-            val: "could not decode response".to_string(),
+        MsgTransferResponse::decode(&b[..]).map_err(|_e| ContractError::FailedIBCTransfer {
+            msg: format!("could not decode response: {b}"),
         })?;
 
     // Similar consideration as the warning above. Is it safe for this to be an Item?

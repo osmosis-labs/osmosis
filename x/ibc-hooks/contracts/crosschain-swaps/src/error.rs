@@ -9,8 +9,24 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
-    #[error("Custom Error val: {val:?}")]
-    CustomError { val: String },
-    // Add any other custom errors you like here.
-    // Look at https://docs.rs/thiserror/1.0.21/thiserror/ for details.
+    #[error("invalid reply id: {id}")]
+    InvalidReplyID { id: u64 },
+
+    #[error("invalid receiver: {receiver}")]
+    InvalidReceiver { receiver: String },
+
+    #[error("invalid memo: {error}. Got: {memo}")]
+    InvalidMemo { error: String, memo: String },
+
+    #[error("contract locked: {msg}")]
+    ContractLocked { msg: String },
+
+    #[error("failed swap: {msg}")]
+    FailedSwap { msg: String },
+
+    #[error("failed ibc transfer: {msg:?}")]
+    FailedIBCTransfer { msg: String },
+
+    #[error("custom error: {msg:?}")]
+    CustomError { msg: String },
 }

@@ -110,8 +110,6 @@ pub fn reply(deps: DepsMut, _env: Env, reply: Reply) -> Result<Response, Contrac
     match reply.id {
         SWAP_REPLY_ID => execute::handle_swap_reply(deps, reply),
         FORWARD_REPLY_ID => execute::handle_forward_reply(deps, reply),
-        id => Err(ContractError::CustomError {
-            val: format!("invalid reply id: {}", id),
-        }),
+        id => Err(ContractError::InvalidReplyID { id }),
     }
 }
