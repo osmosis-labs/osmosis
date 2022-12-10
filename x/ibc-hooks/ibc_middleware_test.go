@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
+	ibchooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 
@@ -321,12 +321,12 @@ func (suite *HooksTestSuite) TestFundTracking() {
 
 	state := suite.chainA.QueryContract(
 		&suite.Suite, addr,
-		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, ibc_hooks.WasmHookModuleAccountAddr)))
+		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, ibchooks.WasmHookModuleAccountAddr)))
 	suite.Require().Equal(`{"count":0}`, state)
 
 	state = suite.chainA.QueryContract(
 		&suite.Suite, addr,
-		[]byte(fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, ibc_hooks.WasmHookModuleAccountAddr)))
+		[]byte(fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, ibchooks.WasmHookModuleAccountAddr)))
 	suite.Require().Equal(`{"total_funds":[{"denom":"ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B77878","amount":"1"}]}`, state)
 
 	suite.receivePacketWithSequence(
@@ -335,12 +335,12 @@ func (suite *HooksTestSuite) TestFundTracking() {
 
 	state = suite.chainA.QueryContract(
 		&suite.Suite, addr,
-		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, ibc_hooks.WasmHookModuleAccountAddr)))
+		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, ibchooks.WasmHookModuleAccountAddr)))
 	suite.Require().Equal(`{"count":1}`, state)
 
 	state = suite.chainA.QueryContract(
 		&suite.Suite, addr,
-		[]byte(fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, ibc_hooks.WasmHookModuleAccountAddr)))
+		[]byte(fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, ibchooks.WasmHookModuleAccountAddr)))
 	suite.Require().Equal(`{"total_funds":[{"denom":"ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B77878","amount":"2"}]}`, state)
 
 	// Check that the token has now been transferred to the contract
