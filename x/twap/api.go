@@ -8,15 +8,15 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
-type twapType bool
+// type twapType bool
 
-const (
-	// arithmeticTwapType is the type of twap that is calculated by taking the arithmetic weighted average of the spot prices.
-	arithmeticTwapType twapType = true
-	// geometricTwapType is the type of twap that is calculated by taking the geometric weighted average of the spot prices.
-	// nolint: unused
-	geometricTwapType twapType = false
-)
+// const (
+// 	// arithmeticTwapType is the type of twap that is calculated by taking the arithmetic weighted average of the spot prices.
+// 	arithmeticTwapType twapType = true
+// 	// geometricTwapType is the type of twap that is calculated by taking the geometric weighted average of the spot prices.
+// 	// nolint: unused
+// 	geometricTwapType twapType = false
+// )
 
 // GetArithmeticTwap returns an arithmetic time weighted average price.
 // The returned twap is the time weighted average price (TWAP) of:
@@ -56,6 +56,18 @@ func (k Keeper) GetArithmeticTwap(
 	return k.getTwap(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, endTime, arithmeticStrategy)
 }
 
+func (k Keeper) GetGeometricTwap(
+	ctx sdk.Context,
+	poolId uint64,
+	baseAssetDenom string,
+	quoteAssetDenom string,
+	startTime time.Time,
+	endTime time.Time,
+) (sdk.Dec, error) {
+	geometricStrategy := &geometric{k}
+	return k.getTwap(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, endTime, geometricStrategy)
+}
+
 // GetArithmeticTwapToNow returns arithmetic twap from start time until the current block time for quote and base
 // assets in a given pool.
 func (k Keeper) GetArithmeticTwapToNow(
@@ -67,6 +79,17 @@ func (k Keeper) GetArithmeticTwapToNow(
 ) (sdk.Dec, error) {
 	arithmeticStrategy := &arithmetic{k}
 	return k.getTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, arithmeticStrategy)
+}
+
+func (k Keeper) GetGeometricTwapToNow(
+	ctx sdk.Context,
+	poolId uint64,
+	baseAssetDenom string,
+	quoteAssetDenom string,
+	startTime time.Time,
+) (sdk.Dec, error) {
+	geometricStrategy := &geometric{k}
+	return k.getTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, geometricStrategy)
 }
 
 // getTwap computes and returns twap from the start time until the end time. The type
@@ -97,7 +120,7 @@ func (k Keeper) getTwap(
 		return sdk.Dec{}, err
 	}
 
-	return strategy.computeTwap(startRecord, endRecord, quoteAssetDenom)
+	return strategy.computeTwap(startRecord, endRecord, quoteAssetDenom), err
 }
 
 // getTwapToNow computes and returns twap from the start time until the current block time. The type
@@ -123,7 +146,7 @@ func (k Keeper) getTwapToNow(
 		return sdk.Dec{}, err
 	}
 
-	return strategy.computeTwap(startRecord, endRecord, quoteAssetDenom)
+	return strategy.computeTwap(startRecord, endRecord, quoteAssetDenom), err
 }
 
 // GetBeginBlockAccumulatorRecord returns a TwapRecord struct corresponding to the state of pool `poolId`
