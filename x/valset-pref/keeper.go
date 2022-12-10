@@ -13,19 +13,22 @@ import (
 )
 
 type Keeper struct {
-	storeKey      sdk.StoreKey
-	paramSpace    paramtypes.Subspace
-	stakingKeeper types.StakingInterface
+	storeKey            sdk.StoreKey
+	paramSpace          paramtypes.Subspace
+	stakingKeeper       types.StakingInterface
+	communityPoolKeeper types.CommunityPoolKeeper
 }
 
 func NewKeeper(storeKey sdk.StoreKey,
 	paramSpace paramtypes.Subspace,
 	stakingKeeper types.StakingInterface,
+	communityPoolKeeper types.CommunityPoolKeeper,
 ) Keeper {
 	return Keeper{
-		storeKey:      storeKey,
-		paramSpace:    paramSpace,
-		stakingKeeper: stakingKeeper,
+		storeKey:            storeKey,
+		paramSpace:          paramSpace,
+		stakingKeeper:       stakingKeeper,
+		communityPoolKeeper: communityPoolKeeper,
 	}
 }
 

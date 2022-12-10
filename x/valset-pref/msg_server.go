@@ -92,5 +92,12 @@ func (server msgServer) RedelegateValidatorSet(goCtx context.Context, msg *types
 }
 
 func (server msgServer) WithdrawDelegationRewards(goCtx context.Context, msg *types.MsgWithdrawDelegationRewards) (*types.MsgWithdrawDelegationRewardsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	err := server.keeper.WithdrawDelegationRewards(ctx, msg.Delegator)
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.MsgWithdrawDelegationRewardsResponse{}, nil
 }
