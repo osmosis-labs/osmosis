@@ -9,10 +9,18 @@ import (
 
 type IBCAliases map[string]string
 
-var DenomToIbcAlias IBCAliases = IBCAliases{}
+var DenomToIbcAlias IBCAliases
 
 func GetIBCAliasesMap() IBCAliases {
+	if DenomToIbcAlias == nil {
+		return makeIBCAliasesMap()
+	}
+	return DenomToIbcAlias
+}
+
+func makeIBCAliasesMap() IBCAliases {
 	assetlistFile, err := os.Open("assetlist.json")
+
 	if err != nil {
 		panic(fmt.Sprintf("Could not open file: %s", err))
 	}
@@ -30,6 +38,7 @@ func GetIBCAliasesMap() IBCAliases {
 		fmt.Println(err)
 	}
 
+	DenomToIbcAlias = IBCAliases{}
 	assets, _ := result["assets"].([]interface{})
 	for i := 0; i < len(assets); i++ {
 		var alias string
