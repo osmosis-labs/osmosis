@@ -300,7 +300,7 @@ replace (
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v13.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/8757a61551aa1ea993c85a523e18094ab555b1d7
 	// tag: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/sdk-v13.0.0-rc2
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20221118211718-545aed73e94e
+	github.com/cosmos/cosmos-sdk => github.com/RusAkh/cosmos-sdk v0.45.1-0.20221211043818-b89e4de3c55e // github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20221118211718-545aed73e94e TODO: change back
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// use grpc compatible with cosmos protobufs
