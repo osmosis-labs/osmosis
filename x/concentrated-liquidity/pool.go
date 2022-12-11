@@ -40,6 +40,7 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(
 		return nil, err
 	}
 
+	// Convert the pool interface to a concentrated pool.
 	conentratedPool, err := convertPoolInterfaceToConcentrated(&poolI)
 	if err != nil {
 		return nil, err
@@ -134,6 +135,8 @@ func convertPoolInterfaceToConcentrated(poolI swaproutertypes.PoolI) (types.Conc
 	return concentratedPool, nil
 }
 
+// validateTickSpacing returns true if the given tick spacing is one of the authorized tick spacings set in the
+// concentrated liquidity module params. False otherwise.
 func (k Keeper) validateTickSpacing(ctx sdk.Context, tickSpacing uint64) bool {
 	params := k.GetParams(ctx)
 	for _, authorizedTick := range params.AuthorizedTickSpacing {
