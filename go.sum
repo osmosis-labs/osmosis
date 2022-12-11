@@ -90,8 +90,6 @@ github.com/OneOfOne/xxhash v1.2.2 h1:KMrpdQIwFcEqXDklaen+P1axHaj9BSKzvpUUfnHldSE
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
 github.com/OpenPeeDeeP/depguard v1.1.1 h1:TSUznLjvp/4IUP+OQ0t/4jF4QUyxIcVX8YnghZdunyA=
 github.com/OpenPeeDeeP/depguard v1.1.1/go.mod h1:JtAMzWkmFEzDPyAd+W0NHl1lvpQKTvT9jnRVsohBKpc=
-github.com/RusAkh/cosmos-sdk v0.45.1-0.20221211043818-b89e4de3c55e h1:5XYyUv3dWE/gZssXueXGWoEjTpWJ0v+nM1PKmn8VdCA=
-github.com/RusAkh/cosmos-sdk v0.45.1-0.20221211043818-b89e4de3c55e/go.mod h1:rud0OaBIuq3+qOqtwT4SR7Q7iSzRp7w41fjninTjfnQ=
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
 github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6/go.mod h1:3eOhrUMpNV+6aFIbp5/iudMxNCF27Vw2OZgy4xEx0Fg=
@@ -849,6 +847,8 @@ github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnh
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
 github.com/ory/dockertest/v3 v3.9.1 h1:v4dkG+dlu76goxMiTT2j8zV7s4oPPEppKT8K8p2f1kY=
 github.com/ory/dockertest/v3 v3.9.1/go.mod h1:42Ir9hmvaAPm0Mgibk6mBPi7SFvTXxEcnztDYOJ//uM=
+github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20221118211718-545aed73e94e h1:A3byMZpvq21iI7yWJUNdHw0nf8jVAbVUsWY9twnXSXE=
+github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20221118211718-545aed73e94e/go.mod h1:rud0OaBIuq3+qOqtwT4SR7Q7iSzRp7w41fjninTjfnQ=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
 github.com/osmosis-labs/wasmd v0.29.2-osmo-v13 h1:HvxAks1ctB3nBx1cXqcmfA0g0BKe7Og77OA2j2rxaJk=
