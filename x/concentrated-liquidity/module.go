@@ -15,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
+	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
@@ -30,6 +31,7 @@ func (AppModuleBasic) Name() string { return types.ModuleName }
 
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterCodec(cdc)
+	clmodel.RegisterCodec(cdc)
 }
 
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
@@ -63,6 +65,7 @@ func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
 // RegisterInterfaces registers interfaces and implementations of the gamm module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
+	clmodel.RegisterInterfaces(registry)
 }
 
 type AppModule struct {

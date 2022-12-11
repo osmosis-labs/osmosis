@@ -8,8 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/model"
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 )
 
 const (

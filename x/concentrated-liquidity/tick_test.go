@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	cl "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/model"
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 

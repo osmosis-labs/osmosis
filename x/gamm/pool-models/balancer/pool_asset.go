@@ -5,8 +5,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"gopkg.in/yaml.v2"
+
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -67,6 +68,9 @@ func sortPoolAssetsByDenom(assets []PoolAsset) {
 	})
 }
 
+// validateUserSpecifiedPoolAssets validates that the provided pool assets meet certain criteria.
+// It checks that the number of assets is at least 2 and no more than 8, that each asset's weight is valid,
+// and that each asset's token is valid and positive. If any of these checks fail, the corresponding error is returned.
 func validateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 	// The pool must be swapping between at least two assets
 	if len(assets) < 2 {
