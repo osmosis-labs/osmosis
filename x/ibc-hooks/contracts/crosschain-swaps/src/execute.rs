@@ -72,7 +72,7 @@ pub fn swap_and_forward(
         },
     )?;
 
-    Ok(Response::new().add_submessage(SubMsg::reply_always(msg, SWAP_REPLY_ID)))
+    Ok(Response::new().add_submessage(SubMsg::reply_on_success(msg, SWAP_REPLY_ID)))
 }
 
 pub fn handle_swap_reply(deps: DepsMut, msg: Reply) -> Result<Response, ContractError> {
@@ -81,9 +81,6 @@ pub fn handle_swap_reply(deps: DepsMut, msg: Reply) -> Result<Response, Contract
     SWAP_REPLY_STATES.remove(deps.storage);
 
     // If the swaprouter swap failed, return an error
-    if let SubMsgResult::Err(e) = msg.result {
-        return Err(ContractError::FailedSwap { msg: e });
-    };
     let SubMsgResult::Ok(SubMsgResponse { data: Some(b), .. }) = msg.result else {
         return Err(ContractError::FailedSwap {
             msg: format!("No data"),
@@ -91,8 +88,10 @@ pub fn handle_swap_reply(deps: DepsMut, msg: Reply) -> Result<Response, Contract
     };
 
     // Parse underlying response from the chain
-    let parsed = cw_utils::parse_execute_response_data(&b)
-        .map_err(|e| ContractError::FailedSwap { msg: e.to_string() })?;
+    let parsed =
+        cw_utils::parse_execute_response_data(&b).map_err(|e| ContractError::FailedSwap {
+            msg: format!("failed to parse: {e}"),
+        })?;
     let swap_response: SwapResponse = from_binary(&parsed.data.unwrap())?;
 
     // Build an IBC packet to forward the swap.

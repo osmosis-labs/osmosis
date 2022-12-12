@@ -98,7 +98,9 @@ pub fn calculate_min_output_from_twap(
     percentage_impact: Decimal,
 ) -> Result<Coin, ContractError> {
     // get trade route
-    let route = ROUTING_TABLE.load(deps.storage, (&input_token.denom, &output_denom))?;
+    let route = ROUTING_TABLE
+        .load(deps.storage, (&input_token.denom, &output_denom))
+        .unwrap_or_default();
     if route.is_empty() {
         return Err(ContractError::InvalidPoolRoute {
             reason: format!("No route foung for {} -> {output_denom}", input_token.denom),
