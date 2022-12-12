@@ -8,16 +8,14 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
+type twapStrategies twapStrategy
+
 // arithmeticTwapType is the type of twap that is calculated by taking the arithmetic weighted average of the spot prices.
-// var arithmeticTwapType = &TwapType{
-// 	arithmeticTwap: Keeper,
-// }
+var arithmeticTwapStrategy twapStrategies = &arithmetic{}
 
 // geometricTwapType is the type of twap that is calculated by taking the geometric weighted average of the spot prices.
 // nolint: unused
-// var geometricTwapType = &TwapType{
-// 	geometricTwap: Keeper,
-// }
+var geometricTwapStrategy twapStrategies = &geometric{}
 
 // GetArithmeticTwap returns an arithmetic time weighted average price.
 // The returned twap is the time weighted average price (TWAP) of:

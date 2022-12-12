@@ -10,15 +10,11 @@ import (
 
 type (
 	TimeTooOldError = timeTooOldError
+	TwapStrategies  = twapStrategies
 )
 
-var TwapGeometricStrategy twapStrategy = &geometric{}
-var TwapArithmetrcStrategy twapStrategy = &arithmetic{}
-
-type TwapStrategies struct {
-	GeometricStrategy  geometric
-	ArithmeticStrategy arithmetic
-}
+var ArithmeticTwapStrategy = arithmeticTwapStrategy
+var GeometricTwapStrategy = geometricTwapStrategy
 
 func (k Keeper) StoreNewRecord(ctx sdk.Context, record types.TwapRecord) {
 	k.storeNewRecord(ctx, record)
@@ -76,16 +72,6 @@ func ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quote
 	return strategy.computeTwap(startRecord, endRecord, quoteAsset)
 }
 
-func (k Keeper) ComputeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
-	arithmeticStrategy := &arithmetic{k}
-	return arithmeticStrategy.computeTwap(startRecord, endRecord, quoteAsset)
-}
-
-func (k Keeper) ComputeGeometricTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
-	geometricStrategy := &geometric{k}
-	return geometricStrategy.computeTwap(startRecord, endRecord, quoteAsset)
-}
-
 func RecordWithUpdatedAccumulators(record types.TwapRecord, t time.Time) types.TwapRecord {
 	return recordWithUpdatedAccumulators(record, t)
 }
@@ -122,14 +108,4 @@ func (k *Keeper) SetAmmInterface(ammInterface types.AmmInterface) {
 
 func (k *Keeper) AfterCreatePool(ctx sdk.Context, poolId uint64) error {
 	return k.afterCreatePool(ctx, poolId)
-}
-
-func (k Keeper) GetArithmeticStrategy() *arithmetic {
-	arithmeticStrategy := &arithmetic{k}
-	return arithmeticStrategy
-}
-
-func (k Keeper) GetGeometricStrategy() *geometric {
-	geometricStrategy := &geometric{k}
-	return geometricStrategy
 }
