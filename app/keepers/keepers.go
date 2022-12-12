@@ -37,6 +37,7 @@ import (
 	ibchooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
 
 	icahost "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/keeper"
@@ -67,6 +68,8 @@ import (
 	poolincentives "github.com/osmosis-labs/osmosis/v13/x/pool-incentives"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
+	protorevkeeper "github.com/osmosis-labs/osmosis/v13/x/protorev/keeper"
+	protorevtypes "github.com/osmosis-labs/osmosis/v13/x/protorev/types"
 	"github.com/osmosis-labs/osmosis/v13/x/superfluid"
 	superfluidkeeper "github.com/osmosis-labs/osmosis/v13/x/superfluid/keeper"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
@@ -111,6 +114,7 @@ type AppKeepers struct {
 	LockupKeeper                 *lockupkeeper.Keeper
 	EpochsKeeper                 *epochskeeper.Keeper
 	IncentivesKeeper             *incentiveskeeper.Keeper
+	ProtoRevKeeper               *protorevkeeper.Keeper
 	MintKeeper                   *mintkeeper.Keeper
 	PoolIncentivesKeeper         *poolincentiveskeeper.Keeper
 	TxFeesKeeper                 *txfeeskeeper.Keeper
@@ -120,6 +124,8 @@ type AppKeepers struct {
 	ContractKeeper               *wasmkeeper.PermissionedKeeper
 	TokenFactoryKeeper           *tokenfactorykeeper.Keeper
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
+	// Note: DO NOT USE. This is not yet initialized
+	SwapRouterKeeper *swaprouter.Keeper
 
 	// IBC modules
 	// transfer module
@@ -260,14 +266,18 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appKeepers.keys[epochstypes.StoreKey])
 
+	protorevKeeper := protorevkeeper.NewKeeper(
+		appCodec, appKeepers.keys[protorevtypes.StoreKey],
+		appKeepers.GetSubspace(protorevtypes.ModuleName),
+		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.GAMMKeeper, appKeepers.EpochsKeeper)
+	appKeepers.ProtoRevKeeper = &protorevKeeper
+
 	txFeesKeeper := txfeeskeeper.NewKeeper(
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.keys[txfeestypes.StoreKey],
 		appKeepers.GAMMKeeper,
 		appKeepers.GAMMKeeper,
-		txfeestypes.FeeCollectorName,
-		txfeestypes.NonNativeFeeCollectorName,
 	)
 	appKeepers.TxFeesKeeper = &txFeesKeeper
 
@@ -373,7 +383,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper)).
 		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(*appKeepers.PoolIncentivesKeeper)).
 		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*appKeepers.TxFeesKeeper)).
-		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*appKeepers.SuperfluidKeeper, *appKeepers.EpochsKeeper))
+		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*appKeepers.SuperfluidKeeper, *appKeepers.EpochsKeeper, *appKeepers.GAMMKeeper))
 
 	// The gov proposal types can be individually enabled
 	if len(wasmEnabledProposals) != 0 {
@@ -504,6 +514,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(incentivestypes.ModuleName)
 	paramsKeeper.Subspace(lockuptypes.ModuleName)
 	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
+	paramsKeeper.Subspace(protorevtypes.ModuleName)
 	paramsKeeper.Subspace(superfluidtypes.ModuleName)
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
@@ -565,6 +576,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 			appKeepers.SuperfluidKeeper.Hooks(),
 			appKeepers.IncentivesKeeper.Hooks(),
 			appKeepers.MintKeeper.Hooks(),
+			appKeepers.ProtoRevKeeper.EpochHooks(),
 		),
 	)
 
@@ -604,5 +616,6 @@ func KVStoreKeys() []string {
 		wasm.StoreKey,
 		tokenfactorytypes.StoreKey,
 		valsetpreftypes.StoreKey,
+		protorevtypes.StoreKey,
 	}
 }

@@ -398,7 +398,30 @@ The JoinPool API only supports JoinPoolNoSwap if
 
 #### Join pool single asset in
 
-Couple ways to define JoinPool Exit Pool relation
+There are a couple ways to define `JoinPoolSingleAssetIn`. The simplest way is to define it from its intended relation from the CFMM, with Exit pool. We describe this below under the zero swap fee case.
+
+Let `pool_{L, S}` represent a pool with liquidity `L`, and `S` total LP shares.
+If we call `pool_{L, S}.JoinPoolSingleAssetIn(tokensIn) -> (N, pool_{L + tokensIn, S + N})`, or in others we get out `N` new LP shares, and a pool with with tokensIn added to liquidity. 
+It must then be the case that `pool_{L+tokensIn, S+N}.ExitPool(N) -> (tokensExited, pool_{L + tokensIn - tokensExited, S})`.
+Then if we swap all of `tokensExited` back to tokensIn, under 0 swap fee, we should get back to `pool_{L, S}` under the CFMM property.
+
+In other words, if we single asset join pool, and then exit pool, we should return back to the same CFMM `k` value we started with. Then if we swap back to go entirely back into our input asset, we should have exactly many tokens as we started with, under 0 swap fee.
+
+We can solve this relation with a binary search over the amount of LP shares to give!
+
+Thus we are left with how to account swap fee. We currently account for swap fee, by considering the asset ratio in the pool. If post scaling factors, the pool liquidity is say 60:20:20, where 60 is the asset were bringing in, then we consider "only (1 - 60%) = 40%" of the input as getting swapped. So we charge the swap fee on 40% of our single asset join in input. So the pseudocode for this is roughly:
+
+```python
+def JoinPoolSingleAssetIn(pool, tokenIn):
+  swapFeeApplicableFraction = 1 - (pool.ScaledLiquidityOf(tokenIn.Denom) / pool.SumOfAllScaledLiquidity())
+  effectiveSwapFee = pool.SwapFee * swapFeeApplicableFraction
+  effectiveTokenIn = RoundDown(tokenIn * (1 - effectiveSwapFee))
+  return BinarySearchSingleJoinLpShares(pool, effectiveTokenIn)
+```
+
+We leave the rounding mode for the scaling factor division unspecified.
+This is because its expected to be tiny (as the denominator is larger than the numerator, and we are operating in BigDec),
+and it should be dominated by the later step of rounding down.
 
 ## Code structure
 
