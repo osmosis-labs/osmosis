@@ -26,18 +26,20 @@ func TestMsgCreateConcentratedPool(t *testing.T) {
 		{
 			name: "proper msg",
 			msg: clmodel.MsgCreateConcentratedPool{
-				Sender: addr1,
-				Denom0: "eth",
-				Denom1: "usdc",
+				Sender:      addr1,
+				Denom0:      ETH,
+				Denom1:      USDC,
+				TickSpacing: DefaultTickSpacing,
 			},
 			expectPass: true,
 		},
 		{
 			name: "invalid sender",
 			msg: clmodel.MsgCreateConcentratedPool{
-				Sender: invalidAddr.String(),
-				Denom0: "eth",
-				Denom1: "usdc",
+				Sender:      invalidAddr.String(),
+				Denom0:      ETH,
+				Denom1:      USDC,
+				TickSpacing: DefaultTickSpacing,
 			},
 			expectPass: false,
 		},
@@ -45,7 +47,7 @@ func TestMsgCreateConcentratedPool(t *testing.T) {
 			name: "missing denom1",
 			msg: clmodel.MsgCreateConcentratedPool{
 				Sender: invalidAddr.String(),
-				Denom0: "eth",
+				Denom0: ETH,
 			},
 			expectPass: false,
 		},
@@ -53,15 +55,15 @@ func TestMsgCreateConcentratedPool(t *testing.T) {
 			name: "missing denom0",
 			msg: clmodel.MsgCreateConcentratedPool{
 				Sender: invalidAddr.String(),
-				Denom1: "usdc",
+				Denom1: USDC,
 			},
 			expectPass: false,
 		},
 		{
 			name: "missing sender",
 			msg: clmodel.MsgCreateConcentratedPool{
-				Denom0: "eth",
-				Denom1: "usdc",
+				Denom0: ETH,
+				Denom1: USDC,
 			},
 			expectPass: false,
 		},
