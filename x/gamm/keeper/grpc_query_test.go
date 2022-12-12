@@ -65,7 +65,7 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 				})
 				suite.Require().NoError(err)
 
-				var pool types.PoolI
+				var pool types.CFMMPoolI
 				err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 				suite.Require().NoError(err)
 
@@ -153,7 +153,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolNoSwapShares() {
 				})
 				suite.Require().NoError(err)
 
-				var pool types.PoolI
+				var pool types.CFMMPoolI
 				err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 				suite.Require().NoError(err)
 
@@ -399,7 +399,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 				})
 				suite.Require().NoError(err)
 
-				var pool types.PoolI
+				var pool types.CFMMPoolI
 				err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 				suite.Require().NoError(err)
 
@@ -433,7 +433,7 @@ func (suite *KeeperTestSuite) TestQueryPool() {
 			PoolId: poolId,
 		})
 		suite.Require().NoError(err)
-		var pool types.PoolI
+		var pool types.CFMMPoolI
 		err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 		suite.Require().NoError(err)
 		suite.Require().Equal(poolId, pool.GetId())
@@ -450,7 +450,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 			PoolId: poolId,
 		})
 		suite.Require().NoError(err)
-		var pool types.PoolI
+		var pool types.CFMMPoolI
 		err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 		suite.Require().NoError(err)
 		suite.Require().Equal(poolId, pool.GetId())
@@ -467,7 +467,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(1, len(res.Pools))
 	for _, r := range res.Pools {
-		var pool types.PoolI
+		var pool types.CFMMPoolI
 		err = suite.App.InterfaceRegistry().UnpackAny(r, &pool)
 		suite.Require().NoError(err)
 		suite.Require().Equal(types.NewPoolAddress(uint64(1)).String(), pool.GetAddress().String())
@@ -484,7 +484,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(5, len(res.Pools))
 	for i, r := range res.Pools {
-		var pool types.PoolI
+		var pool types.CFMMPoolI
 		err = suite.App.InterfaceRegistry().UnpackAny(r, &pool)
 		suite.Require().NoError(err)
 		suite.Require().Equal(types.NewPoolAddress(uint64(i+1)).String(), pool.GetAddress().String())

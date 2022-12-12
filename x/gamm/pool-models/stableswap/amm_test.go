@@ -756,7 +756,7 @@ func (suite *StableSwapTestSuite) Test_StableSwap_Slippage_LiquidityRelation() {
 	swapFeeCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
 	for name, tc := range testcases {
 		for _, swapFee := range swapFeeCases {
-			createPoolFn := func(ctx sdk.Context, liq sdk.Coins) types.PoolI {
+			createPoolFn := func(ctx sdk.Context, liq sdk.Coins) types.CFMMPoolI {
 				return createTestPool(suite.T(), liq, sdk.MustNewDecFromStr(swapFee), sdk.ZeroDec(), tc.scalingFactors)
 			}
 			ctx := sdk.Context{}

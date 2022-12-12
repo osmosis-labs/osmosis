@@ -1,22 +1,29 @@
 package client
 
 import (
-	"context"
+	"fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	validatorprefkeeper "github.com/osmosis-labs/osmosis/v13/x/valset-pref"
 	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/client/queryproto"
 )
 
 type Querier struct {
-	validatorprefkeeper.Keeper
+	K validatorprefkeeper.Keeper
 }
-
-var _ queryproto.QueryServer = Querier{}
 
 func NewQuerier(k validatorprefkeeper.Keeper) Querier {
 	return Querier{k}
 }
 
-func (q Querier) UserValidatorPreferences(ctx context.Context, req *queryproto.QueryUserValidatorPreferences) (*queryproto.QueryUserValidatorPreferenceResponse, error) {
-	return &queryproto.QueryUserValidatorPreferenceResponse{}, nil
+func (q Querier) UserValidatorPreferences(ctx sdk.Context, req queryproto.UserValidatorPreferencesRequest) (*queryproto.UserValidatorPreferencesResponse, error) {
+	validatorSet, found := q.K.GetValidatorSetPreference(ctx, req.Address)
+	if !found {
+		return nil, fmt.Errorf("Validator set not found")
+	}
+
+	return &queryproto.UserValidatorPreferencesResponse{
+		Preferences: validatorSet.Preferences,
+	}, nil
 }

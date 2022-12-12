@@ -264,7 +264,7 @@ func (s *KeeperTestHelper) RunBasicJoin(poolId uint64) {
 	s.Require().NoError(err)
 }
 
-func (s *KeeperTestHelper) CalcAmoutOfTokenToGetTargetPrice(ctx sdk.Context, pool gammtypes.PoolI, targetSpotPrice sdk.Dec, baseDenom, quoteDenom string) (amountTrade sdk.Dec) {
+func (s *KeeperTestHelper) CalcAmoutOfTokenToGetTargetPrice(ctx sdk.Context, pool gammtypes.CFMMPoolI, targetSpotPrice sdk.Dec, baseDenom, quoteDenom string) (amountTrade sdk.Dec) {
 	blPool, ok := pool.(*balancer.Pool)
 	s.Require().True(ok)
 	quoteAsset, _ := blPool.GetPoolAsset(quoteDenom)
