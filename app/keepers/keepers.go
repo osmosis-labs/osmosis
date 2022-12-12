@@ -274,6 +274,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.DistrKeeper,
 	)
 	appKeepers.GAMMKeeper.SetSwapRouterKeeper(appKeepers.SwapRouterKeeper)
+	appKeepers.ConcentratedLiquidityKeeper.SetSwapRouterKeeper(appKeepers.SwapRouterKeeper)
 
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
 		appKeepers.keys[lockuptypes.StoreKey],

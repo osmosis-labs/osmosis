@@ -1,6 +1,8 @@
 package model
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -39,6 +41,18 @@ func (msg MsgCreateConcentratedPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	if msg.TickSpacing <= 0 {
+		return fmt.Errorf("tick spacing must be positive")
+	}
+
+	if msg.Denom0 == msg.Denom1 {
+		return fmt.Errorf("denom0 and denom1 must be different")
+	}
+
+	if msg.Denom0 == "" || msg.Denom1 == "" {
+		return fmt.Errorf("denom0 and denom1 must be non-empty")
 	}
 
 	return nil

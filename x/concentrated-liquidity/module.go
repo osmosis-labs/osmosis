@@ -25,6 +25,7 @@ var (
 )
 
 type AppModuleBasic struct {
+	cdc codec.Codec
 }
 
 func (AppModuleBasic) Name() string { return types.ModuleName }
@@ -71,17 +72,19 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 type AppModule struct {
 	AppModuleBasic
 
-	k Keeper
+	keeper Keeper
+}
+
+func NewAppModule(cdc codec.Codec, keeper Keeper) AppModule {
+	return AppModule{
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		keeper:         keeper,
+	}
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-}
-
-func NewAppModule(concentratedLiquidityKeeper Keeper) AppModule {
-	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
-		k:              concentratedLiquidityKeeper,
-	}
+	types.RegisterMsgServer(cfg.MsgServer(), NewMsgServerImpl(&am.keeper))
+	clmodel.RegisterMsgCreatorServer(cfg.MsgServer(), NewMsgCreatorServerImpl(&am.keeper))
 }
 
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
@@ -108,7 +111,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	// Initialize global index to index in genesis state
 	cdc.MustUnmarshalJSON(gs, &genState)
 
-	am.k.InitGenesis(ctx, genState)
+	am.keeper.InitGenesis(ctx, genState)
 
 	return []abci.ValidatorUpdate{}
 }
@@ -116,7 +119,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 // ExportGenesis returns the exported genesis state as raw bytes for the twap.
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	genState := am.k.ExportGenesis(ctx)
+	genState := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(genState)
 }
 

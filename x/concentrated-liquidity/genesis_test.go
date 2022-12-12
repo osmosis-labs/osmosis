@@ -61,11 +61,11 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 
 	// Create an app module for the ConcentratedLiquidityKeeper
-	appModule := cl.NewAppModule(*app.ConcentratedLiquidityKeeper)
-
-	// Export the genesis state
 	encodingConfig := osmoapp.MakeEncodingConfig()
 	appCodec := encodingConfig.Marshaler
+	appModule := cl.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper)
+
+	// Export the genesis state
 	genesisExported := appModule.ExportGenesis(ctx, appCodec)
 
 	// Test that the exported genesis can be marshaled and unmarshaled without panicking
@@ -73,7 +73,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 		app := osmoapp.Setup(false)
 		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 		ctx = ctx.WithBlockTime(now.Add(time.Second))
-		am := cl.NewAppModule(*app.ConcentratedLiquidityKeeper)
+		am := cl.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper)
 		am.InitGenesis(ctx, appCodec, genesisExported)
 	})
 }

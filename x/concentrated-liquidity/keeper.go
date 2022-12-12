@@ -19,7 +19,8 @@ type Keeper struct {
 	paramSpace paramtypes.Subspace
 
 	// keepers
-	bankKeeper types.BankKeeper
+	swaprouterKeeper types.SwaprouterKeeper
+	bankKeeper       types.BankKeeper
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.BankKeeper, paramSpace paramtypes.Subspace) *Keeper {
@@ -86,4 +87,9 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI swaproutertypes.PoolI, cre
 	// k.RecordTotalLiquidityIncrease(ctx, pool.GetTotalPoolLiquidity(ctx))
 
 	return k.setPool(ctx, pool)
+}
+
+// Set the swaprouter keeper.
+func (k *Keeper) SetSwapRouterKeeper(swaprouterKeeper types.SwaprouterKeeper) {
+	k.swaprouterKeeper = swaprouterKeeper
 }
