@@ -46,18 +46,18 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(
 		return nil, err
 	}
 
-	conentratedPool, err := convertPoolInterfaceToConcentrated(&poolI)
+	concentratedPool, err := convertPoolInterfaceToConcentrated(&poolI)
 	if err != nil {
 		return nil, err
 	}
 
 	// Add the pool to the pool store.
-	err = k.setPool(ctx, conentratedPool)
+	err = k.setPool(ctx, concentratedPool)
 	if err != nil {
 		return nil, err
 	}
 
-	return conentratedPool, nil
+	return concentratedPool, nil
 }
 
 func (k Keeper) SwapExactAmountIn(
