@@ -1,4 +1,4 @@
-package utils
+package osmoutils
 
 import (
 	"encoding/binary"

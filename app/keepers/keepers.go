@@ -70,6 +70,8 @@ import (
 	poolincentives "github.com/osmosis-labs/osmosis/v13/x/pool-incentives"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
+	protorevkeeper "github.com/osmosis-labs/osmosis/v13/x/protorev/keeper"
+	protorevtypes "github.com/osmosis-labs/osmosis/v13/x/protorev/types"
 	"github.com/osmosis-labs/osmosis/v13/x/superfluid"
 	superfluidkeeper "github.com/osmosis-labs/osmosis/v13/x/superfluid/keeper"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
@@ -115,6 +117,7 @@ type AppKeepers struct {
 	LockupKeeper                 *lockupkeeper.Keeper
 	EpochsKeeper                 *epochskeeper.Keeper
 	IncentivesKeeper             *incentiveskeeper.Keeper
+	ProtoRevKeeper               *protorevkeeper.Keeper
 	MintKeeper                   *mintkeeper.Keeper
 	PoolIncentivesKeeper         *poolincentiveskeeper.Keeper
 	TxFeesKeeper                 *txfeeskeeper.Keeper
@@ -269,6 +272,12 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.DistrKeeper, appKeepers.GetSubspace(lockuptypes.ModuleName))
 
 	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appKeepers.keys[epochstypes.StoreKey])
+
+	protorevKeeper := protorevkeeper.NewKeeper(
+		appCodec, appKeepers.keys[protorevtypes.StoreKey],
+		appKeepers.GetSubspace(protorevtypes.ModuleName),
+		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.GAMMKeeper, appKeepers.EpochsKeeper)
+	appKeepers.ProtoRevKeeper = &protorevKeeper
 
 	txFeesKeeper := txfeeskeeper.NewKeeper(
 		appKeepers.AccountKeeper,
@@ -512,6 +521,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(incentivestypes.ModuleName)
 	paramsKeeper.Subspace(lockuptypes.ModuleName)
 	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
+	paramsKeeper.Subspace(protorevtypes.ModuleName)
 	paramsKeeper.Subspace(superfluidtypes.ModuleName)
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
@@ -573,6 +583,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 			appKeepers.SuperfluidKeeper.Hooks(),
 			appKeepers.IncentivesKeeper.Hooks(),
 			appKeepers.MintKeeper.Hooks(),
+			appKeepers.ProtoRevKeeper.EpochHooks(),
 		),
 	)
 
@@ -613,5 +624,6 @@ func KVStoreKeys() []string {
 		wasm.StoreKey,
 		tokenfactorytypes.StoreKey,
 		valsetpreftypes.StoreKey,
+		protorevtypes.StoreKey,
 	}
 }
