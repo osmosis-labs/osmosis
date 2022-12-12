@@ -32,3 +32,5 @@ schemars = "0.8.8"
 osmosis-std = { git = "https://github.com/osmosis-labs/osmosis-rust", branch = "osmosis-v13" }
 serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
+cw-multi-test = "0.13.2"
+osmosis-testing = {git = "https://github.com/osmosis-labs/osmosis-rust", branch = "osmosis-v13"}

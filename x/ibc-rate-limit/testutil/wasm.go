@@ -2,7 +2,7 @@ package osmosisibctesting
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/stretchr/testify/require"
 
@@ -11,15 +11,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
-	"github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
 )
 
 func (chain *TestChain) StoreContractCode(suite *suite.Suite, path string) {
 	osmosisApp := chain.GetOsmosisApp()
 
 	govKeeper := osmosisApp.GovKeeper
-	wasmCode, err := ioutil.ReadFile(path)
+	wasmCode, err := os.ReadFile(path)
 	suite.Require().NoError(err)
 
 	addr := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)

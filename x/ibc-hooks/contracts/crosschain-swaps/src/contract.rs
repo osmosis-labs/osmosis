@@ -60,6 +60,7 @@ pub fn execute(
             output_denom,
             receiver,
             slippage,
+            next_memo,
             failed_delivery,
         } => execute::swap_and_forward(
             deps,
@@ -69,6 +70,7 @@ pub fn execute(
             output_denom,
             slippage,
             receiver,
+            next_memo,
             failed_delivery,
         ),
         ExecuteMsg::Recover {} => execute::recover(deps, info.sender),
@@ -108,8 +110,6 @@ pub fn reply(deps: DepsMut, _env: Env, reply: Reply) -> Result<Response, Contrac
     match reply.id {
         SWAP_REPLY_ID => execute::handle_swap_reply(deps, reply),
         FORWARD_REPLY_ID => execute::handle_forward_reply(deps, reply),
-        id => Err(ContractError::CustomError {
-            val: format!("invalid reply id: {}", id),
-        }),
+        id => Err(ContractError::InvalidReplyID { id }),
     }
 }

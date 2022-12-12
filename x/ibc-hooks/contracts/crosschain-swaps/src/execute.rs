@@ -1,33 +1,17 @@
-use cosmwasm_std::{coins, from_binary, to_binary, wasm_execute, BankMsg, Deps, Reply, Timestamp};
+use cosmwasm_std::{coins, from_binary, to_binary, wasm_execute, BankMsg, Reply, Timestamp};
 use cosmwasm_std::{Addr, Coin, DepsMut, Response, SubMsg, SubMsgResponse, SubMsgResult};
 use swaprouter::msg::{ExecuteMsg as SwapRouterExecute, Slippage, SwapResponse};
 
-use crate::consts::{FORWARD_REPLY_ID, PACKET_LIFETIME, SWAP_REPLY_ID};
+use crate::checks::{validate_memo, validate_receiver};
+use crate::consts::{CALLBACK_KEY, FORWARD_REPLY_ID, PACKET_LIFETIME, SWAP_REPLY_ID};
 use crate::ibc::{MsgTransfer, MsgTransferResponse};
 use crate::msg::{CrosschainSwapResponse, Recovery};
 
 use crate::state::{
-    ForwardMsgReplyState, ForwardTo, IBCTransfer, Status, SwapMsgReplyState, CHANNEL_MAP, CONFIG,
+    ForwardMsgReplyState, ForwardTo, IBCTransfer, Status, SwapMsgReplyState, CONFIG,
     FORWARD_REPLY_STATES, INFLIGHT_PACKETS, RECOVERY_STATES, SWAP_REPLY_STATES,
 };
 use crate::ContractError;
-
-// Validate that the receiver address is a valid address for the destination chain.
-// This will prevent IBC transfers from failing after forwarding
-fn validate_receiver(deps: Deps, receiver: Addr) -> Result<(String, Addr), ContractError> {
-    let Ok((prefix, _, _)) = bech32::decode(receiver.as_str()) else {
-        return Err(ContractError::CustomError { val: format!("invalid receiver {receiver}") })
-    };
-
-    let channel =
-        CHANNEL_MAP
-            .load(deps.storage, &prefix)
-            .map_err(|_| ContractError::CustomError {
-                val: "invalid receiver {receiver}".to_string(),
-            })?;
-
-    Ok((channel, receiver))
-}
 
 /// This is the main execute call of this contract.
 ///
@@ -41,8 +25,10 @@ pub fn swap_and_forward(
     output_denom: String,
     slippage: Slippage,
     receiver: Addr,
+    next_memo: Option<String>,
     failed_delivery: Option<Recovery>,
 ) -> Result<Response, ContractError> {
+    deps.api.debug(&format!("executing swap and forward"));
     let config = CONFIG.load(deps.storage)?;
 
     // Message to swap tokens in the underlying swaprouter contract
@@ -53,8 +39,23 @@ pub fn swap_and_forward(
     };
     let msg = wasm_execute(config.swap_contract, &swap_msg, vec![input_coin])?;
 
+    // Check that the received is valid and retrieve its channel
     let (valid_channel, valid_receiver) = validate_receiver(deps.as_ref(), receiver)?;
+    // If there is a memo, check that it is valid
+    if let Some(memo) = &next_memo {
+        validate_memo(&memo)?;
+    }
 
+    // Check that there isn't anything stored in SWAP_REPLY_STATES. If there is,
+    // it means that the contract is already waiting for a reply and should not
+    // override the stored state. This should only happen if a contract we call
+    // calls back to this one. This is likely a malicious attempt modify the
+    // contract's state before it has replied.
+    if SWAP_REPLY_STATES.may_load(deps.storage)?.is_some() {
+        return Err(ContractError::ContractLocked {
+            msg: "Already waiting for a reply".to_string(),
+        });
+    }
     // Store information about the original message to be used in the reply
     SWAP_REPLY_STATES.save(
         deps.storage,
@@ -65,6 +66,7 @@ pub fn swap_and_forward(
             forward_to: ForwardTo {
                 channel: valid_channel,
                 receiver: valid_receiver,
+                next_memo,
                 failed_delivery,
             },
         },
@@ -75,40 +77,61 @@ pub fn swap_and_forward(
 
 pub fn handle_swap_reply(deps: DepsMut, msg: Reply) -> Result<Response, ContractError> {
     deps.api.debug(&format!("handle_swap_reply"));
-    // TODO: Warning! This may be succeptible to "reentrancy". We are assuming
-    //       that the swaprouter this contract was initialized with is the
-    //       correct one and that it doesn't call back into this contract (which
-    //       could modify the item stored in SWAP_REPLY_STATES).
-    //
-    //       Review this. Though this may not be an issue at all, because: if
-    //       the underlying swaprouter contract is compromised, they will
-    //       already have the funds and can just send them without having to do
-    //       contract call trickery.
-    //
-    //       Alternative: replace the item with a "stack" and add complexity.
     let swap_msg_state = SWAP_REPLY_STATES.load(deps.storage)?;
     SWAP_REPLY_STATES.remove(deps.storage);
 
     // If the swaprouter swap failed, return an error
     let SubMsgResult::Ok(SubMsgResponse { data: Some(b), .. }) = msg.result else {
-        return Err(ContractError::CustomError {
-            val: format!("Failed Swap"),
+        return Err(ContractError::FailedSwap {
+            msg: format!("No data"),
         })
     };
 
     // Parse underlying response from the chain
-    let parsed = cw_utils::parse_execute_response_data(&b)
-        .map_err(|e| ContractError::CustomError { val: e.to_string() })?;
+    let parsed =
+        cw_utils::parse_execute_response_data(&b).map_err(|e| ContractError::FailedSwap {
+            msg: format!("failed to parse: {e}"),
+        })?;
     let swap_response: SwapResponse = from_binary(&parsed.data.unwrap())?;
 
     // Build an IBC packet to forward the swap.
     let contract_addr = &swap_msg_state.contract_addr;
     let ts = swap_msg_state.block_time.plus_seconds(PACKET_LIFETIME);
     let config = CONFIG.load(deps.storage)?;
-    let memo = match config.track_ibc_callbacks {
-        true => format!(r#"{{"callback": "{contract_addr}"}}"#),
-        false => format!(""),
+
+    // If the memo is provided we want to include it in the IBC message
+    let memo: serde_cw_value::Value = if let Some(memo) = &swap_msg_state.forward_to.next_memo {
+        serde_json_wasm::from_str(&memo.to_string()).map_err(|_e| ContractError::InvalidMemo {
+            error: format!("this should be unreachable"),
+            memo: memo.to_string(),
+        })?
+    } else {
+        serde_json_wasm::from_str("{}").unwrap()
     };
+
+    // If tracking callbacks, we want to include the callback key in the memo
+    // without otherwise modifying the provided one
+    let memo = match config.track_ibc_callbacks {
+        true => {
+            let serde_cw_value::Value::Map(mut m) = memo else { unreachable!() };
+            m.insert(
+                serde_cw_value::Value::String(CALLBACK_KEY.to_string()),
+                serde_cw_value::Value::String(contract_addr.to_string()),
+            );
+            serde_cw_value::Value::Map(m)
+        }
+        false => memo,
+    };
+
+    // Serialize the memo. If it is an empty json object, set it to ""
+    let mut memo_str =
+        serde_json_wasm::to_string(&memo).map_err(|_e| ContractError::InvalidMemo {
+            error: "could not serialize".to_string(),
+            memo: format!("{:?}", swap_msg_state.forward_to.next_memo),
+        })?;
+    if memo_str == "{}" {
+        memo_str = String::new();
+    }
 
     // Cosmwasm's  IBCMsg::Transfer  does not support memo.
     // To build and send the packet properly, we need to send it using stargate messages.
@@ -127,7 +150,7 @@ pub fn handle_swap_reply(deps: DepsMut, msg: Reply) -> Result<Response, Contract
         receiver: swap_msg_state.forward_to.receiver.clone().into(),
         timeout_height: None,
         timeout_timestamp: Some(ts.nanos()),
-        memo,
+        memo: memo_str,
     };
 
     // Base response
@@ -175,15 +198,15 @@ use ::prost::Message; // Proveides ::decode() for MsgTransferResponse
 pub fn handle_forward_reply(deps: DepsMut, msg: Reply) -> Result<Response, ContractError> {
     // Parse the result from the underlying chain call (IBC send)
     let SubMsgResult::Ok(SubMsgResponse { data: Some(b), .. }) = msg.result else {
-        return Err(ContractError::CustomError { val: "invalid reply".to_string() })
+        return Err(ContractError::FailedIBCTransfer { msg: format!("failed reply: {:?}", msg.result) })
     };
 
     // The response contains the packet sequence. This is needed to be able to
     // ensure that, if there is a delivery failure, the packet that failed is
     // the same one that we stored recovery information for
     let response =
-        MsgTransferResponse::decode(&b[..]).map_err(|_e| ContractError::CustomError {
-            val: "could not decode response".to_string(),
+        MsgTransferResponse::decode(&b[..]).map_err(|_e| ContractError::FailedIBCTransfer {
+            msg: format!("could not decode response: {b}"),
         })?;
 
     // Similar consideration as the warning above. Is it safe for this to be an Item?

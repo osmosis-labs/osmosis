@@ -13,7 +13,7 @@ import (
 // This function calculates the osmo equivalent worth of an LP share.
 // It is intended to eventually use the TWAP of the worth of an LP share
 // once that is exposed from the gamm module.
-func (k Keeper) calculateOsmoBackingPerShare(pool gammtypes.PoolI, osmoInPool sdk.Int) sdk.Dec {
+func (k Keeper) calculateOsmoBackingPerShare(pool gammtypes.CFMMPoolI, osmoInPool sdk.Int) sdk.Dec {
 	twap := osmoInPool.ToDec().Quo(pool.GetTotalShares().ToDec())
 	return twap
 }

@@ -131,33 +131,35 @@ func isIcs20Packet(packet channeltypes.Packet) (isIcs20 bool, ics20data transfer
 	return true, data
 }
 
-func isMemoWasmRouted(memo, key string) (isWasmRouted bool, metadata map[string]interface{}) {
-	metadata = make(map[string]interface{})
+// jsonStringHasKey parses the memo as a json object and checks if it contains the key.
+// isWasmRouted
+func jsonStringHasKey(memo, key string) (found bool, jsonObject map[string]interface{}) {
+	jsonObject = make(map[string]interface{})
 
 	// If there is no memo, the packet was either sent with an earlier version of IBC, or the memo was
 	// intentionally left blank. Nothing to do here. Ignore the packet and pass it down the stack.
 	if len(memo) == 0 {
-		return false, metadata
+		return false, jsonObject
 	}
 
-	// the metadata must be a valid JSON object
-	err := json.Unmarshal([]byte(memo), &metadata)
+	// the jsonObject must be a valid JSON object
+	err := json.Unmarshal([]byte(memo), &jsonObject)
 	if err != nil {
-		return false, metadata
+		return false, jsonObject
 	}
 
 	// If the key doesn't exist, there's nothing to do on this hook. Continue by passing the packet
 	// down the stack
-	_, ok := metadata[key]
+	_, ok := jsonObject[key]
 	if !ok {
-		return false, metadata
+		return false, jsonObject
 	}
 
-	return true, metadata
+	return true, jsonObject
 }
 
 func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, contractAddr sdk.AccAddress, msgBytes []byte, err error) {
-	isWasmRouted, metadata := isMemoWasmRouted(memo, "wasm")
+	isWasmRouted, metadata := jsonStringHasKey(memo, "wasm")
 	if !isWasmRouted {
 		return isWasmRouted, sdk.AccAddress{}, nil, nil
 	}
@@ -226,8 +228,8 @@ func (h WasmHooks) SendPacketOverride(i ICS4Middleware, ctx sdk.Context, chanCap
 		return i.channel.SendPacket(ctx, chanCap, packet) // continue
 	}
 
-	isWasmRouted, metadata := isMemoWasmRouted(data.GetMemo(), "callback")
-	if !isWasmRouted {
+	isCallbackRouted, metadata := jsonStringHasKey(data.GetMemo(), "callback")
+	if !isCallbackRouted {
 		return i.channel.SendPacket(ctx, chanCap, packet) // continue
 	}
 

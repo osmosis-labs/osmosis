@@ -15,6 +15,7 @@ pub struct Config {
 pub struct ForwardTo {
     pub channel: String,
     pub receiver: Addr,
+    pub next_memo: Option<String>,
     pub failed_delivery: Option<Recovery>,
 }
 

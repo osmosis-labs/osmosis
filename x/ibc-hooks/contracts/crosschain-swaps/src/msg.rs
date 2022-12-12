@@ -37,6 +37,7 @@ pub enum ExecuteMsg {
         output_denom: String,
         receiver: Addr,
         slippage: Slippage,
+        next_memo: Option<String>,
         failed_delivery: Option<Recovery>,
     },
     /// Executing a recover will transfer any recoverable tokens that the sender
