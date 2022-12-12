@@ -7,7 +7,7 @@ func DefaultGenesis() *GenesisState {
 	for _, downtime := range DowntimeToDuration.Keys() {
 		genDowntimes = append(genDowntimes, GenesisDowntimeEntry{
 			Duration:     downtime,
-			LastDowntime: time.Unix(0, 0),
+			LastDowntime: DefaultLastDowntime,
 		})
 	}
 	return &GenesisState{

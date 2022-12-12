@@ -11,17 +11,69 @@ import (
 )
 
 var baseTime = time.Unix(1257894000, 0).UTC()
+var sec = time.Second
+var min = time.Minute
 
-type KeeperTestSuite struct {
-	apptesting.KeeperTestHelper
+type blocktimes []time.Duration
+
+func (b blocktimes) EndTime() time.Time {
+	endTime := baseTime
+	for _, d := range b {
+		endTime = endTime.Add(d)
+	}
+	return endTime
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
-	suite.Setup()
+func (suite *KeeperTestSuite) runBlocktimes(times blocktimes) {
+	suite.Ctx = suite.Ctx.WithBlockTime(baseTime)
+	suite.App.DowntimeKeeper.BeginBlock(suite.Ctx)
+	for _, duration := range times {
+		suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(duration))
+		suite.App.DowntimeKeeper.BeginBlock(suite.Ctx)
+	}
 }
 
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
+var abruptRecovery5minDowntime10min blocktimes = []time.Duration{sec, 10 * min, 5 * min}
+var smootherRecovery5minDowntime10min blocktimes = []time.Duration{sec, 10 * min, min, min, min, min, min}
+
+func (suite *KeeperTestSuite) TestBeginBlock() {
+	tests := map[string]struct {
+		times     blocktimes
+		downtimes []types.GenesisDowntimeEntry
+	}{
+		"10 min halt, then 5 min halt": {
+			times: abruptRecovery5minDowntime10min,
+			downtimes: []types.GenesisDowntimeEntry{
+				{
+					Duration:     types.Downtime_DURATION_1M,
+					LastDowntime: abruptRecovery5minDowntime10min.EndTime(),
+				},
+				{
+					Duration:     types.Downtime_DURATION_3M,
+					LastDowntime: abruptRecovery5minDowntime10min.EndTime(),
+				},
+				{
+					Duration:     types.Downtime_DURATION_5M,
+					LastDowntime: abruptRecovery5minDowntime10min.EndTime(),
+				},
+				{
+					Duration:     types.Downtime_DURATION_10M,
+					LastDowntime: abruptRecovery5minDowntime10min.EndTime().Add(-5 * time.Minute),
+				},
+			},
+		},
+	}
+	for name, test := range tests {
+		suite.Run(name, func() {
+			suite.runBlocktimes(test.times)
+			suite.Require().Equal(test.times.EndTime(), suite.Ctx.BlockTime())
+			for _, downtime := range test.downtimes {
+				lastDowntime, err := suite.App.DowntimeKeeper.GetLastDowntimeOfLength(suite.Ctx, downtime.Duration)
+				suite.Require().NoError(err)
+				suite.Require().Equal(downtime.LastDowntime, lastDowntime)
+			}
+		})
+	}
 }
 
 func (suite *KeeperTestSuite) TestImportExport() {
@@ -61,4 +113,16 @@ func (suite *KeeperTestSuite) TestImportExport() {
 			}
 		})
 	}
+}
+
+type KeeperTestSuite struct {
+	apptesting.KeeperTestHelper
+}
+
+func (suite *KeeperTestSuite) SetupTest() {
+	suite.Setup()
+}
+
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
 }

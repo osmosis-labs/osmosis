@@ -15,6 +15,7 @@ const (
 )
 
 var DowntimeToDuration = btree.NewMap[Downtime, time.Duration](16)
+var DefaultLastDowntime = time.Unix(0, 0)
 
 // init initializes the DowntimeToDuration map with mappings
 // from the Duration enum values to their corresponding
