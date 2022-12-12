@@ -40,6 +40,10 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(
 		return nil, err
 	}
 
+	if !k.validateTickSpacing(ctx, tickSpacing) {
+		return nil, err
+	}
+
 	// Add the pool to the pool store.
 	err = k.setPool(ctx, concentratedPool)
 	if err != nil {
