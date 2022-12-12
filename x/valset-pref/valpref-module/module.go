@@ -9,19 +9,20 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
-	keeper "github.com/osmosis-labs/osmosis/v13/x/valset-pref"
-	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	keeper "github.com/osmosis-labs/osmosis/v13/x/valset-pref"
 	validatorprefclient "github.com/osmosis-labs/osmosis/v13/x/valset-pref/client"
+	valsetprefcli "github.com/osmosis-labs/osmosis/v13/x/valset-pref/client/cli"
+	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/client/grpc"
 	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (
@@ -81,12 +82,12 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *r
 
 // GetTxCmd returns the capability module's root tx command.
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
-	return nil
+	return valsetprefcli.GetTxCmd()
 }
 
 // GetQueryCmd returns the capability module's root query command.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
+	return valsetprefcli.GetQueryCmd()
 }
 
 // ----------------------------------------------------------------------------
@@ -130,7 +131,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(&am.keeper))
-	queryproto.RegisterQueryServer(cfg.QueryServer(), validatorprefclient.NewQuerier(am.keeper))
+	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: validatorprefclient.Querier{K: am.keeper}})
 }
 
 // RegisterInvariants registers the capability module's invariants.

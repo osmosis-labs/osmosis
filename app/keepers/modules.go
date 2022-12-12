@@ -37,6 +37,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/mint"
 	poolincentives "github.com/osmosis-labs/osmosis/v13/x/pool-incentives"
 	poolincentivesclient "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/client"
+	"github.com/osmosis-labs/osmosis/v13/x/protorev"
 	superfluid "github.com/osmosis-labs/osmosis/v13/x/superfluid"
 	superfluidclient "github.com/osmosis-labs/osmosis/v13/x/superfluid/client"
 	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory"
@@ -81,6 +82,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 	vesting.AppModuleBasic{},
 	gamm.AppModuleBasic{},
 	twapmodule.AppModuleBasic{},
+	protorev.AppModuleBasic{},
 	txfees.AppModuleBasic{},
 	incentives.AppModuleBasic{},
 	lockup.AppModuleBasic{},

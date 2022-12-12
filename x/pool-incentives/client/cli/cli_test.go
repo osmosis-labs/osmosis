@@ -107,41 +107,6 @@ func (s *IntegrationTestSuite) TestGetCmdDistrInfo() {
 	}
 }
 
-// TestGetCmdParams tests module params CLI query commands
-func (s *IntegrationTestSuite) TestGetCmdParams() {
-	val := s.network.Validators[0]
-
-	testCases := []struct {
-		name      string
-		expectErr bool
-		respType  proto.Message
-	}{
-		{
-			"query module params",
-			false, &types.QueryParamsResponse{},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdParams()
-			clientCtx := val.ClientCtx
-
-			args := []string{}
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-			}
-		})
-	}
-}
-
 // TestGetCmdLockableDurations tests lockable duration CLI query commands
 func (s *IntegrationTestSuite) TestGetCmdLockableDurations() {
 	val := s.network.Validators[0]
