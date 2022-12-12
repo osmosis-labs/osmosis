@@ -423,7 +423,7 @@ func (d BigDec) ApproxRoot(root uint64) (guess BigDec, err error) {
 	guess, delta := OneDec(), OneDec()
 
 	for iter := 0; delta.Abs().GT(SmallestDec()) && iter < maxApproxRootIterations; iter++ {
-		prev := guess.Power(root - 1)
+		prev := guess.PowerInteger(root - 1)
 		if prev.IsZero() {
 			prev = SmallestDec()
 		}
@@ -435,24 +435,6 @@ func (d BigDec) ApproxRoot(root uint64) (guess BigDec, err error) {
 	}
 
 	return guess, nil
-}
-
-// Power returns a the result of raising to a positive integer power
-func (d BigDec) Power(power uint64) BigDec {
-	if power == 0 {
-		return OneDec()
-	}
-	tmp := OneDec()
-
-	for i := power; i > 1; {
-		if i%2 != 0 {
-			tmp = tmp.Mul(d)
-		}
-		i /= 2
-		d = d.Mul(d)
-	}
-
-	return d.Mul(tmp)
 }
 
 // ApproxSqrt is a wrapper around ApproxRoot for the common special case
@@ -899,9 +881,9 @@ func DecEq(t *testing.T, exp, got BigDec) (*testing.T, bool, string, string, str
 
 // DecApproxEq returns true if the differences between two given decimals are smaller than the tolerance range.
 // Intended to be used with require/assert:  require.True(t, DecEq(...))
-func DecApproxEq(t *testing.T, d1 BigDec, d2 BigDec, tol BigDec) (*testing.T, bool, string, string, string) {
+func DecApproxEq(t *testing.T, d1 BigDec, d2 BigDec, tol BigDec) (*testing.T, bool, string, string, string, string, string) {
 	diff := d1.Sub(d2).Abs()
-	return t, diff.LTE(tol), "expected |d1 - d2| <:\t%v\ngot |d1 - d2| = \t\t%v", tol.String(), diff.String()
+	return t, diff.LTE(tol), "expected |d1 - d2| <:\t%v\ngot |d1 - d2| = \t\t%v\nd1\t%v\nd2\t%v", tol.String(), diff.String(), d1.String(), d2.String()
 }
 
 // LogBase2 returns log_2 {x}.
@@ -1016,4 +998,36 @@ func (d BigDec) PowerIntegerMut(power uint64) BigDec {
 	}
 
 	return d.MulMut(tmp)
+}
+
+// Power returns a the result of raising to a positive decimal power.
+func (d BigDec) Power(power BigDec) BigDec {
+	if d.IsNegative() {
+		panic(fmt.Sprintf("negative base is not supported for Power(), base was (%s)", d))
+	}
+
+	if power.IsZero() {
+		return OneDec()
+	}
+
+	if d.IsZero() {
+		return ZeroDec()
+	}
+
+	if power.IsNegative() {
+		power = power.Neg()
+	}
+
+	if d.Equal(twoBigDec) {
+		return exp2(power)
+	}
+
+	// d^power = exp2(power * log_2{base})
+	result := exp2(d.LogBase2().Mul(power))
+
+	if power.IsNegative() {
+		return OneDec().Quo(result)
+	}
+
+	return result
 }

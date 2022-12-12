@@ -82,13 +82,13 @@ func lineF(a osmomath.BigDec) (osmomath.BigDec, error) {
 	return a, nil
 }
 func cubicF(a osmomath.BigDec) (osmomath.BigDec, error) {
-	return a.Power(3), nil
+	return a.PowerInteger(3), nil
 }
 
-var negCubicFConstant = osmomath.NewBigDec(1 << 62).Power(3).Neg()
+var negCubicFConstant = osmomath.NewBigDec(1 << 62).PowerInteger(3).Neg()
 
 func negCubicF(a osmomath.BigDec) (osmomath.BigDec, error) {
-	return a.Power(3).Add(negCubicFConstant), nil
+	return a.PowerInteger(3).Add(negCubicFConstant), nil
 }
 
 type searchFn func(osmomath.BigDec) (osmomath.BigDec, error)
@@ -217,7 +217,7 @@ func runBinarySearchTestCases(t *testing.T, tests map[string]binarySearchTestCas
 				} else if equality == errToleranceEqual {
 					require.True(t, tc.errTolerance.CompareBigDec(tc.expectedSolvedInput, actualSolvedInput) == 0)
 				} else {
-					_, valid, msg, dec1, dec2 := osmomath.DecApproxEq(t, tc.expectedSolvedInput, actualSolvedInput, osmomath.OneDec())
+					_, valid, msg, dec1, dec2, _, _ := osmomath.DecApproxEq(t, tc.expectedSolvedInput, actualSolvedInput, osmomath.OneDec())
 					require.True(t, valid, msg+" \n d1 = %s, d2 = %s", dec1, dec2,
 						tc.expectedSolvedInput, actualSolvedInput)
 				}
@@ -232,7 +232,7 @@ func TestBinarySearchBigDec(t *testing.T) {
 
 	twoTo50 := osmomath.NewBigDec(1 << 50)
 	twoTo25PlusOne := osmomath.NewBigDec(1 + (1 << 25))
-	twoTo25PlusOneCubed := twoTo25PlusOne.Power(3)
+	twoTo25PlusOneCubed := twoTo25PlusOne.PowerInteger(3)
 
 	tests := map[string]binarySearchTestCase{
 		"cubic f, no err tolerance, converges":     {cubicF, zero, twoTo50, twoTo25PlusOneCubed, withinOne, 51, twoTo25PlusOne, false},

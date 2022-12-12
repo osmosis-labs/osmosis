@@ -474,26 +474,6 @@ func (s *decimalTestSuite) TestDecCeil() {
 	}
 }
 
-func (s *decimalTestSuite) TestPower() {
-	testCases := []struct {
-		input    BigDec
-		power    uint64
-		expected BigDec
-	}{
-		{OneDec(), 10, OneDec()},                                                                   // 1.0 ^ (10) => 1.0
-		{NewDecWithPrec(5, 1), 2, NewDecWithPrec(25, 2)},                                           // 0.5 ^ 2 => 0.25
-		{NewDecWithPrec(2, 1), 2, NewDecWithPrec(4, 2)},                                            // 0.2 ^ 2 => 0.04
-		{NewDecFromInt(NewInt(3)), 3, NewDecFromInt(NewInt(27))},                                   // 3 ^ 3 => 27
-		{NewDecFromInt(NewInt(-3)), 4, NewDecFromInt(NewInt(81))},                                  // -3 ^ 4 = 81
-		{MustNewDecFromStr("1.414213562373095048801688724209698079"), 2, NewDecFromInt(NewInt(2))}, // 1.414213562373095048801688724209698079 ^ 2 = 2
-	}
-
-	for i, tc := range testCases {
-		res := tc.input.Power(tc.power)
-		s.Require().True(tc.expected.Sub(res).Abs().LTE(SmallestDec()), "unexpected result for test case %d, input: %v", i, tc.input)
-	}
-}
-
 func (s *decimalTestSuite) TestApproxRoot() {
 	testCases := []struct {
 		input    BigDec
@@ -1291,6 +1271,132 @@ func (s *decimalTestSuite) TestPowerInteger_Mutation() {
 			resultNonMut := startNonMut.PowerInteger(exponent)
 
 			s.assertMutResult(tc.expectedResult, tc.startValue, resultMut, resultNonMut, startMut, startNonMut)
+		})
+	}
+}
+
+func (s *decimalTestSuite) TestPower() {
+	var expectedErrTolerance = MustNewDecFromStr("0.000000000000000001")
+
+	tests := map[string]struct {
+		base           BigDec
+		exponent       BigDec
+		expectedResult BigDec
+		expectPanic    bool
+
+		expectedToleranceOverwrite BigDec
+	}{
+		// integer exponents
+		"0^2": {
+			base:     ZeroDec(),
+			exponent: twoBigDec,
+
+			expectedResult: ZeroDec(),
+		},
+		"1^2": {
+			base:     OneDec(),
+			exponent: twoBigDec,
+
+			expectedResult: OneDec(),
+		},
+		"4^4": {
+			base:     MustNewDecFromStr("4"),
+			exponent: MustNewDecFromStr("4"),
+
+			expectedResult: MustNewDecFromStr("256"),
+		},
+		"5^3": {
+			base:     MustNewDecFromStr("5"),
+			exponent: MustNewDecFromStr("4"),
+
+			expectedResult: MustNewDecFromStr("625"),
+		},
+		"e^10": {
+			base:     eulersNumber,
+			exponent: MustNewDecFromStr("10"),
+
+			// https://www.wolframalpha.com/input?i=e%5E10+41+digits
+			expectedResult: MustNewDecFromStr("22026.465794806716516957900645284244366354"),
+		},
+		"geom twap overflow: 2^log_2{max spot price + 1}": {
+			base: twoBigDec,
+			// add 1 for simplicity of calculation to isolate overflow.
+			exponent: BigDecFromSDKDec(gammtypes.MaxSpotPrice).Add(OneDec()).LogBase2(),
+
+			// https://www.wolframalpha.com/input?i=2%5E%28floor%28+log+base+2+%282%5E128%29%29%29+++39+digits
+			expectedResult: MustNewDecFromStr("340282366920938463463374607431768211456"),
+		},
+		// "geom twap overflow: 2^log_2{max spot price}": {
+		// 	base:     twoBigDec,
+		// 	exponent: BigDecFromSDKDec(gammtypes.MaxSpotPrice).LogBase2(),
+
+		// 	// True value: 340282366920938463463374607431768201077.906430000000000000000000000000000000
+		// 	// This is likely due to log base 2 giving 1.999...
+		// 	// When we multiply that number by a large base and take an expoent, it ends up being slightly off.
+		// 	expectedResult:             MustNewDecFromStr("340282366920938463463374607431768201078"),
+		// 	expectedToleranceOverwrite: twoBigDec,
+		// },
+		// "geom twap overflow: 2^log_2{max spot price / 2 - 2017}": { // 2017 is prime.
+		// 	base:     twoBigDec,
+		// 	exponent: BigDecFromSDKDec(gammtypes.MaxSpotPrice.Quo(sdk.NewDec(2)).Sub(sdk.NewDec(2017))).LogBase2(),
+
+		// 	// https://www.wolframalpha.com/input?i=e%5E10+41+digits
+		// 	expectedResult: MustNewDecFromStr("85070591730234615865843651857942052864"),
+		// },
+
+		// sdk.Dec test vectors copied from osmosis-labs/cosmos-sdk:
+
+		"1.0 ^ (10) => 1.0": {
+			base:     OneDec(),
+			exponent: MustNewDecFromStr("10"),
+
+			expectedResult: OneDec(),
+		},
+		"0.5 ^ 2 => 0.25": {
+			base:     NewDecWithPrec(5, 1),
+			exponent: twoBigDec,
+
+			expectedResult: NewDecWithPrec(25, 2),
+		},
+		"0.2 ^ 2 => 0.04": {
+			base:     NewDecWithPrec(2, 1),
+			exponent: twoBigDec,
+
+			expectedResult: NewDecWithPrec(4, 2),
+		},
+		"3 ^ 3 => 27": {
+			base:     NewBigDec(3),
+			exponent: MustNewDecFromStr("3"),
+
+			expectedResult: NewBigDec(27),
+		},
+		"negative base - panic": {
+			base:     NewBigDec(-3),
+			exponent: MustNewDecFromStr("4"),
+
+			expectPanic: true,
+		},
+		"1.414213562373095049 ^ 2 = 2": {
+			base:     NewDecWithPrec(1414213562373095049, 18),
+			exponent: MustNewDecFromStr("2"),
+
+			expectedResult:             NewBigDec(2),
+			expectedToleranceOverwrite: MustNewDecFromStr("0.0000000000000000006"),
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			osmoassert.ConditionalPanic(s.T(), tc.expectPanic, func() {
+				tolerance := expectedErrTolerance
+				if !tc.expectedToleranceOverwrite.IsNil() {
+					tolerance = tc.expectedToleranceOverwrite
+				}
+
+				actualResult := tc.base.Power(tc.exponent)
+				require.True(DecApproxEq(s.T(), tc.expectedResult, actualResult, tolerance))
+			})
 		})
 	}
 }
