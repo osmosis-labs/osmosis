@@ -107,7 +107,6 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 		return 0, 0, err
 	}
 
-	
 	defer db_bs.Close()
 
 	bs := tmstore.NewBlockStore(db_bs)
