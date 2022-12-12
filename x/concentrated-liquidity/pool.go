@@ -23,11 +23,6 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(
 	denom0, denom1 string,
 	tickSpacing uint64,
 ) (types.ConcentratedPoolExtension, error) {
-	// Check that the tick spacing is one of the authorized tick spacings.
-	if !k.validateTickSpacing(ctx, tickSpacing) {
-		return nil, errors.New("invalid tick spacing")
-	}
-
 	// Order the initial pool denoms so that denom0 is lexicographically smaller than denom1.
 	denom0, denom1, err := types.OrderInitialPoolDenoms(denom0, denom1)
 	if err != nil {
@@ -40,19 +35,18 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(
 		return nil, err
 	}
 
-	// Convert the pool interface to a concentrated pool.
-	conentratedPool, err := convertPoolInterfaceToConcentrated(&poolI)
+	concentratedPool, err := convertPoolInterfaceToConcentrated(&poolI)
 	if err != nil {
 		return nil, err
 	}
 
 	// Add the pool to the pool store.
-	err = k.setPool(ctx, conentratedPool)
+	err = k.setPool(ctx, concentratedPool)
 	if err != nil {
 		return nil, err
 	}
 
-	return conentratedPool, nil
+	return concentratedPool, nil
 }
 
 // GetPool returns a pool with a given id.

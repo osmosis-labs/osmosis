@@ -67,14 +67,6 @@ func (s *ConcentratedPoolTestSuite) TestSpotPrice() {
 			expectedSpotPrice: DefaultReverseSpotPrice,
 		},
 		{
-			name: "Error: quote and base denom are the same",
-			param: param{
-				baseDenom:  ETH,
-				quoteDenom: ETH,
-			},
-			expectedErr: fmt.Errorf("base asset denom (%s) and quote asset denom (%s) cannot be the same", ETH, ETH),
-		},
-		{
 			name: "Error: quote asset denom does not exist in the pool",
 			param: param{
 				baseDenom:  ETH,
@@ -108,7 +100,6 @@ func (s *ConcentratedPoolTestSuite) TestSpotPrice() {
 
 			// Check the spot price of the mock pool using the SpotPrice method.
 			spotPriceFromMethod, err := mock_pool.SpotPrice(sdk.Context{}, tc.param.baseDenom, tc.param.quoteDenom)
-			fmt.Printf("err %v \n", err)
 
 			if tc.expectedErr != nil {
 				s.Require().Error(err)

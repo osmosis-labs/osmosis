@@ -14,7 +14,6 @@ import (
 )
 
 var (
-	now         = time.Now().UTC()
 	testGenesis = types.GenesisState{
 		Params: types.Params{AuthorizedTickSpacing: []uint64{1, 10, 50}},
 	}
@@ -26,6 +25,7 @@ func TestInitGenesis(t *testing.T) {
 	// Set up the app and context
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	now := ctx.BlockTime()
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 
 	// Initialize the state with the provided genesis
@@ -42,6 +42,7 @@ func TestExportGenesis(t *testing.T) {
 	// Set up the app and context
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	now := ctx.BlockTime()
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 
 	// Initialize the state with the provided genesis
@@ -58,6 +59,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	// Set up the app and context
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	now := ctx.BlockTime()
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 
 	// Create an app module for the ConcentratedLiquidityKeeper

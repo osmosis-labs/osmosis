@@ -82,20 +82,19 @@ func (p Pool) IsActive(ctx sdk.Context) bool {
 // If base asset is the Token0 of the pool, we use the current sqrt price of the pool.
 // If not, we calculate the inverse of the current sqrt price of the pool.
 func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error) {
-	// if zero for one, we use the pool curr sqrt price directly.
-	if p.Token0 == baseAssetDenom && p.Token1 == quoteAssetDenom {
-		return p.CurrentSqrtPrice.Power(2), nil
-	} else if p.Token1 == baseAssetDenom && p.Token0 == quoteAssetDenom { // if not, we calculate the reverse spot price by 1 / currentSqrtPrice^2
-		return sdk.NewDec(1).Quo(p.CurrentSqrtPrice.Power(2)), nil
-	} else if p.Token0 != baseAssetDenom && p.Token1 != baseAssetDenom {
-		return sdk.Dec{}, fmt.Errorf("base asset denom (%s) is not in the pool", baseAssetDenom)
-	} else if p.Token0 != quoteAssetDenom && p.Token1 != quoteAssetDenom {
-		return sdk.Dec{}, fmt.Errorf("quote asset denom (%s) is not in the pool", quoteAssetDenom)
-	} else if p.Token0 == p.Token1 {
-		return sdk.Dec{}, fmt.Errorf("base asset denom (%s) and quote asset denom (%s) cannot be the same", baseAssetDenom, quoteAssetDenom)
-	} else {
-		return sdk.Dec{}, fmt.Errorf("spot price could not be calculated for an unknown reason")
+	// validate base asset is in pool
+	if baseAssetDenom != p.Token0 && baseAssetDenom != p.Token1 {
+		return sdk.Dec{}, fmt.Errorf("base asset denom (%s) is not in pool with (%s, %s) pair", baseAssetDenom, p.Token0, p.Token1)
 	}
+	// validate quote asset is in pool
+	if quoteAssetDenom != p.Token0 && quoteAssetDenom != p.Token1 {
+		return sdk.Dec{}, fmt.Errorf("quote asset denom (%s) is not in pool with (%s, %s) pair", quoteAssetDenom, p.Token0, p.Token1)
+	}
+
+	if baseAssetDenom == p.Token0 {
+		return p.CurrentSqrtPrice.Power(2), nil
+	}
+	return sdk.NewDec(1).Quo(p.CurrentSqrtPrice.Power(2)), nil
 }
 
 // GetTotalShares returns the total shares of the pool
