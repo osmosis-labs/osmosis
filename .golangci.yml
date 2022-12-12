@@ -1,7 +1,6 @@
 run:
   tests: false
-#   # timeout for analysis, e.g. 30s, 5m, default is 1m
-#   timeout: 5m
+  timeout: 5m
 
 linters:
   disable-all: true
@@ -21,7 +20,7 @@ linters:
     - goheader
     - gomodguard
     - goprintffuncname
-    - gosimple # specializes in simplifying code, subset of staticcheck binary.
+    - gosimple
     - govet
     - importas
     - ineffassign
@@ -31,13 +30,13 @@ linters:
     - nilnil
     - paralleltest
     - promlinter
-    - staticcheck 
-    - stylecheck 
+    - staticcheck
+    - stylecheck
     - tenv
     - testpackage
     - typecheck
     - unconvert
-    - unused 
+    - unused
     - whitespace
 
 issues:
@@ -50,16 +49,16 @@ issues:
         - unused
         - deadcode
     - linters:
-      - staticcheck
+        - staticcheck
       text: "SA1024: cutset contains duplicate characters" # proved to not provide much value, only false positives.
     - linters:
-      - staticcheck
+        - staticcheck
       text: "SA9004: only the first constant in this group has an explicit type" # explicitly recommended in go syntax
     - linters:
-      - stylecheck
+        - stylecheck
       text: "ST1003:" # requires identifiers with "id" to be "ID".
     - linters:
-      - stylecheck
+        - stylecheck
       text: "ST1005:" # punctuation in error messages
   max-issues-per-linter: 10000
   max-same-issues: 10000
