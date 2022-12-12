@@ -11,13 +11,12 @@ import (
 	grpc1 "github.com/gogo/protobuf/grpc"
 	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
-func QueryIndexCmd(moduleName string) *cobra.Command {
-	cmd := IndexCmd(moduleName)
-	cmd.Short = fmt.Sprintf("Querying commands for the %s module", moduleName)
-	return cmd
-}
+// global variable set on index command.
+// helps populate Longs, when not set in QueryDescriptor.
+var lastQueryModuleName string
 
 type QueryDescriptor struct {
 	Use   string
@@ -33,25 +32,70 @@ type QueryDescriptor struct {
 	CustomFlagOverrides map[string]string
 	// Map of FieldName -> CustomParseFn
 	CustomFieldParsers map[string]CustomFieldParserFn
+
+	ParseQuery func(args []string, flags *pflag.FlagSet) (proto.Message, error)
+
+	ModuleName string
+	numArgs    int
 }
 
-func SimpleQueryFromDescriptor[reqP proto.Message, querier any](desc QueryDescriptor, newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
-	numArgs := ParseNumFields[reqP]() - len(desc.CustomFlagOverrides)
-	if desc.HasPagination {
-		numArgs = numArgs - 1
+func QueryIndexCmd(moduleName string) *cobra.Command {
+	cmd := IndexCmd(moduleName)
+	cmd.Short = fmt.Sprintf("Querying commands for the %s module", moduleName)
+	lastQueryModuleName = moduleName
+	return cmd
+}
+
+func AddQueryCmd[Q proto.Message, querier any](cmd *cobra.Command, newQueryClientFn func(grpc1.ClientConn) querier, f func() (*QueryDescriptor, Q)) {
+	desc, _ := f()
+	prepareDescriptor[Q](desc)
+	subCmd := BuildQueryCli[Q](desc, newQueryClientFn)
+	cmd.AddCommand(subCmd)
+}
+
+func (desc *QueryDescriptor) FormatLong(moduleName string) {
+	desc.Long = FormatLongDesc(desc.Long, NewLongMetadata(moduleName).WithShort(desc.Short))
+}
+
+func prepareDescriptor[reqP proto.Message](desc *QueryDescriptor) {
+	if !desc.HasPagination {
+		desc.HasPagination = ParseHasPagination[reqP]()
 	}
-	flagAdvice := FlagAdvice{
-		HasPagination:       desc.HasPagination,
-		CustomFlagOverrides: desc.CustomFlagOverrides,
-		CustomFieldParsers:  desc.CustomFieldParsers,
-	}.Sanitize()
+	if desc.QueryFnName == "" {
+		desc.QueryFnName = ParseExpectedQueryFnName[reqP]()
+	}
+	if strings.Contains(desc.Long, "{") {
+		if desc.ModuleName == "" {
+			desc.ModuleName = lastQueryModuleName
+		}
+		desc.FormatLong(desc.ModuleName)
+	}
+
+	desc.numArgs = ParseNumFields[reqP]() - len(desc.CustomFlagOverrides)
+	if desc.HasPagination {
+		desc.numArgs = desc.numArgs - 1
+	}
+}
+
+func BuildQueryCli[reqP proto.Message, querier any](desc *QueryDescriptor, newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
+	prepareDescriptor[reqP](desc)
+	if desc.ParseQuery == nil {
+		desc.ParseQuery = func(args []string, fs *pflag.FlagSet) (proto.Message, error) {
+			flagAdvice := FlagAdvice{
+				HasPagination:       desc.HasPagination,
+				CustomFlagOverrides: desc.CustomFlagOverrides,
+				CustomFieldParsers:  desc.CustomFieldParsers,
+			}.Sanitize()
+			return ParseFieldsFromFlagsAndArgs[reqP](flagAdvice, fs, args)
+		}
+	}
+
 	cmd := &cobra.Command{
 		Use:   desc.Use,
 		Short: desc.Short,
 		Long:  desc.Long,
-		Args:  cobra.ExactArgs(numArgs),
-		RunE: NewQueryLogicAllFieldsAsArgs[reqP](
-			flagAdvice, desc.QueryFnName, newQueryClientFn),
+		Args:  cobra.ExactArgs(desc.numArgs),
+		RunE:  queryLogic(desc, newQueryClientFn),
 	}
 	flags.AddQueryFlagsToCmd(cmd)
 	AddFlags(cmd, desc.Flags)
@@ -70,25 +114,23 @@ func SimpleQueryFromDescriptor[reqP proto.Message, querier any](desc QueryDescri
 func SimpleQueryCmd[reqP proto.Message, querier any](use string, short string, long string,
 	moduleName string, newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
 	desc := QueryDescriptor{
-		Use:           use,
-		Short:         short,
-		Long:          FormatLongDesc(long, NewLongMetadata(moduleName).WithShort(short)),
-		HasPagination: ParseHasPagination[reqP](),
-		QueryFnName:   ParseExpectedQueryFnName[reqP](),
+		Use:   use,
+		Short: short,
+		Long:  FormatLongDesc(long, NewLongMetadata(moduleName).WithShort(short)),
 	}
-	return SimpleQueryFromDescriptor[reqP](desc, newQueryClientFn)
+	return BuildQueryCli[reqP](&desc, newQueryClientFn)
 }
 
 func GetParams[reqP proto.Message, querier any](moduleName string,
 	newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
-	return SimpleQueryFromDescriptor[reqP](QueryDescriptor{
+	return BuildQueryCli[reqP](&QueryDescriptor{
 		Use:         "params [flags]",
 		Short:       fmt.Sprintf("Get the params for the x/%s module", moduleName),
 		QueryFnName: "Params",
 	}, newQueryClientFn)
 }
 
-func callQueryClientFn[reqP proto.Message, querier any](ctx context.Context, fnName string, req reqP, q querier) (res proto.Message, err error) {
+func callQueryClientFn(ctx context.Context, fnName string, req proto.Message, q any) (res proto.Message, err error) {
 	qVal := reflect.ValueOf(q)
 	method := qVal.MethodByName(fnName)
 	args := []reflect.Value{
@@ -109,7 +151,7 @@ func callQueryClientFn[reqP proto.Message, querier any](ctx context.Context, fnN
 	return res, nil
 }
 
-func NewQueryLogicAllFieldsAsArgs[reqP proto.Message, querier any](flagAdvice FlagAdvice, keeperFnName string,
+func queryLogic[querier any](desc *QueryDescriptor,
 	newQueryClientFn func(grpc1.ClientConn) querier) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		clientCtx, err := client.GetClientQueryContext(cmd)
@@ -117,14 +159,13 @@ func NewQueryLogicAllFieldsAsArgs[reqP proto.Message, querier any](flagAdvice Fl
 			return err
 		}
 		queryClient := newQueryClientFn(clientCtx)
-		var req reqP
 
-		req, err = ParseFieldsFromFlagsAndArgs[reqP](flagAdvice, cmd.Flags(), args)
+		req, err := desc.ParseQuery(args, cmd.Flags())
 		if err != nil {
 			return err
 		}
 
-		res, err := callQueryClientFn(cmd.Context(), keeperFnName, req, queryClient)
+		res, err := callQueryClientFn(cmd.Context(), desc.QueryFnName, req, queryClient)
 		if err != nil {
 			return err
 		}
