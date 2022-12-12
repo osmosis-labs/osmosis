@@ -12,7 +12,13 @@ type (
 	TimeTooOldError = timeTooOldError
 )
 
-var GeometricTwapMathBase = geometricTwapMathBase
+var TwapGeometricStrategy twapStrategy = &geometric{}
+var TwapArithmetrcStrategy twapStrategy = &arithmetic{}
+
+type TwapStrategies struct {
+	GeometricStrategy  geometric
+	ArithmeticStrategy arithmetic
+}
 
 func (k Keeper) StoreNewRecord(ctx sdk.Context, record types.TwapRecord) {
 	k.storeNewRecord(ctx, record)
@@ -116,4 +122,14 @@ func (k *Keeper) SetAmmInterface(ammInterface types.AmmInterface) {
 
 func (k *Keeper) AfterCreatePool(ctx sdk.Context, poolId uint64) error {
 	return k.afterCreatePool(ctx, poolId)
+}
+
+func (k Keeper) GetArithmeticStrategy() *arithmetic {
+	arithmeticStrategy := &arithmetic{k}
+	return arithmeticStrategy
+}
+
+func (k Keeper) GetGeometricStrategy() *geometric {
+	geometricStrategy := &geometric{k}
+	return geometricStrategy
 }
