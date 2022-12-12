@@ -98,7 +98,7 @@ func (m *MsgCreateConcentratedPool) GetTickSpacing() uint64 {
 	return 0
 }
 
-// Returns a poolID with custom poolName.
+// Returns a unique poolID to identify the pool with.
 type MsgCreateConcentratedPoolResponse struct {
 	PoolID uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
 }

@@ -19,7 +19,7 @@ message MsgCreateConcentratedPool {
   uint64 tick_spacing = 4 [ (gogoproto.moretags) = "yaml:\"tick_spacing\"" ];
 }
 
-// Returns a poolID with custom poolName.
+// Returns a unique poolID to identify the pool with.
 message MsgCreateConcentratedPoolResponse {
   uint64 pool_id = 1 [ (gogoproto.customname) = "PoolID" ];
 }
