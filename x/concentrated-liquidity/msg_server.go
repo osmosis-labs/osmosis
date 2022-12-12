@@ -27,6 +27,11 @@ func NewMsgCreatorServerImpl(keeper *Keeper) concentrated.MsgCreatorServer {
 	}
 }
 
+var (
+	_ types.MsgServer               = msgServer{}
+	_ concentrated.MsgCreatorServer = msgServer{}
+)
+
 // CreatePool attempts to create a pool returning the newly created pool ID or an error upon failure.
 // The pool creation fee is used to fund the community pool.
 // It will create a dedicated module account for the pool and sends the initial liquidity to the created module account.
