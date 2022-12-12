@@ -6,6 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/model"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	cltypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 // OrderInitialPoolDenoms sets the pool denoms of a cl pool
@@ -75,4 +76,12 @@ func (k Keeper) IsInitialPosition(initialSqrtPrice sdk.Dec, initialTick sdk.Int)
 
 func (k Keeper) InitializeInitialPosition(ctx sdk.Context, pool types.ConcentratedPoolExtension, amount0Desired, amount1Desired sdk.Int) error {
 	return k.initializeInitialPosition(ctx, pool, amount0Desired, amount1Desired)
+}
+
+func ConvertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (swaproutertypes.PoolI, error) {
+	return convertConcentratedToPoolInterface(concentratedPool)
+}
+
+func ConvertPoolInterfaceToConcentrated(poolI swaproutertypes.PoolI) (types.ConcentratedPoolExtension, error) {
+	return convertPoolInterfaceToConcentrated(poolI)
 }

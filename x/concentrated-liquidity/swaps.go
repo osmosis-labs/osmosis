@@ -8,7 +8,6 @@ import (
 	events "github.com/osmosis-labs/osmosis/v13/x/swaprouter/events"
 
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/model"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
@@ -21,43 +20,6 @@ type SwapState struct {
 	sqrtPrice                sdk.Dec // new current price when swap is done
 	tick                     sdk.Int // new tick when swap is done
 	liquidity                sdk.Dec // new liquidity when swap is done
-}
-
-// CreateNewConcentratedLiquidityPool creates a new concentrated liquidity pool with the given parameters.
-// The pool tokens are denom0 and denom1, and are ordered such that denom0 is lexicographically smaller than denom1.
-// The pool is created with zero liquidity and the initial sqrt price and current tick set to zero.
-// The given token denominations are ordered to ensure that the first token is the numerator of the price, and the second token is the denominator of the price.
-// The pool is added to the pool store, and an error is returned if the operation fails.
-func (k Keeper) CreateNewConcentratedLiquidityPool(
-	ctx sdk.Context,
-	poolId uint64,
-	denom0, denom1 string,
-	tickSpacing uint64,
-) (types.ConcentratedPoolExtension, error) {
-	// Order the initial pool denoms so that denom0 is lexicographically smaller than denom1.
-	denom0, denom1, err := types.OrderInitialPoolDenoms(denom0, denom1)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create a new concentrated liquidity pool with the given parameters.
-	poolI, err := model.NewConcentratedLiquidityPool(poolId, denom0, denom1, tickSpacing)
-	if err != nil {
-		return nil, err
-	}
-
-	concentratedPool, err := convertPoolInterfaceToConcentrated(&poolI)
-	if err != nil {
-		return nil, err
-	}
-
-	// Add the pool to the pool store.
-	err = k.setPool(ctx, concentratedPool)
-	if err != nil {
-		return nil, err
-	}
-
-	return concentratedPool, nil
 }
 
 func (k Keeper) SwapExactAmountIn(
