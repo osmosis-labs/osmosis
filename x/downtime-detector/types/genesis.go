@@ -19,3 +19,7 @@ func DefaultGenesis() *GenesisState {
 func (g *GenesisState) Validate() error {
 	return nil
 }
+
+func NewGenesisDowntimeEntry(dur Downtime, time time.Time) GenesisDowntimeEntry {
+	return GenesisDowntimeEntry{Duration: dur, LastDowntime: time}
+}
