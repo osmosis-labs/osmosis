@@ -35,18 +35,13 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(
 		return nil, err
 	}
 
-	concentratedPool, err := convertPoolInterfaceToConcentrated(&poolI)
-	if err != nil {
-		return nil, err
-	}
-
 	// Add the pool to the pool store.
-	err = k.setPool(ctx, concentratedPool)
+	err = k.setPool(ctx, &poolI)
 	if err != nil {
 		return nil, err
 	}
 
-	return concentratedPool, nil
+	return &poolI, nil
 }
 
 // GetPool returns a pool with a given id.
