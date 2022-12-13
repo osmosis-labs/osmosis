@@ -65,9 +65,9 @@ func (k Keeper) BuildTokenPairRoutes(ctx sdk.Context, tokenIn, tokenOut string, 
 // BuildTradeInfoHotRoute constructs a cyclic arbitrage route given a hot route from the store and information about the swap that should be placed
 // in the hot route.
 func (k Keeper) BuildTradeInfoHotRoute(ctx sdk.Context, route *types.Route, tokenIn, tokenOut string, poolId uint64) (Route, error) {
-	newRoute := Route{}
+	newRoute := Route{Trades: make([]TradeInfo, len(route.Trades))}
 
-	for _, trade := range route.Trades {
+	for index, trade := range route.Trades {
 		var newTrade TradeInfo
 		// 0 is a placeholder for swaps that should be entered into the hot route
 		if trade.Pool == 0 {
@@ -96,7 +96,7 @@ func (k Keeper) BuildTradeInfoHotRoute(ctx sdk.Context, route *types.Route, toke
 			}
 		}
 
-		newRoute.Trades = append(newRoute.Trades, newTrade)
+		newRoute.Trades[index] = newTrade
 	}
 
 	if err := k.CheckValidHotRoute(newRoute); err != nil {
