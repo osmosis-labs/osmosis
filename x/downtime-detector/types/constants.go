@@ -11,7 +11,8 @@ import (
 const (
 	ModuleName = "downtime-detector"
 	StoreKey   = ModuleName
-	RouterKey  = ModuleName
+	// must be alphanumeric
+	RouterKey = "downtimedetector"
 
 	QuerierRoute = ModuleName
 )
