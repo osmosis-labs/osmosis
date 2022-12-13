@@ -11,8 +11,8 @@ pub struct InstantiateMsg {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum Slipage {
-    MaxSlipagePercentage(Decimal),
+pub enum Slippage {
+    MaxSlippagePercentage(Decimal),
     MinOutputAmount(Uint128),
 }
 
@@ -27,7 +27,7 @@ pub enum ExecuteMsg {
     Swap {
         input_coin: Coin,
         output_denom: String,
-        slipage: Slipage,
+        slippage: Slippage,
     },
 }
 

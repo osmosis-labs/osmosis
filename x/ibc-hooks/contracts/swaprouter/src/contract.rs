@@ -54,8 +54,8 @@ pub fn execute(
         ExecuteMsg::Swap {
             input_coin,
             output_denom,
-            slipage,
-        } => trade_with_slippage_limit(deps, env, info, input_coin, output_denom, slipage),
+            slippage,
+        } => trade_with_slippage_limit(deps, env, info, input_coin, output_denom, slippage),
     }
 }
 

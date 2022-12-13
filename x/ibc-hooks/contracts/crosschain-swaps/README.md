@@ -35,7 +35,7 @@ of an IBC transfer to do crosschain swaps would look as follows:
         "osmosis_swap": {
             "input_coin": {"denom":"token0","amount":"1000"}, 
             "output_denom":"token1",
-            "slipage":{"max_slipage_percentage":"5"},
+            "slippage":{"max_slippage_percentage":"5"},
             "receiver":"juno1receiver",
             "failed_delivery":null
         }
@@ -52,7 +52,7 @@ can be set to an address on Osmosis that will be allowed to recover the tokens
 in case of a failure. This key is optional and if ommited will default to
 `false`.
 
-The `slipage` can be set to a percentage of the twap price (as shown above), or as
+The `slippage` can be set to a percentage of the twap price (as shown above), or as
 the minimum amount of tokens expected to be received: `{"min_output_amount": "100"}`.
 
 

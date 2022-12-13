@@ -8,7 +8,7 @@ use osmosis_testing::cosmrs::proto::cosmwasm::wasm::v1::MsgExecuteContractRespon
 use osmosis_testing::{
     Account, Bank, Module, OsmosisTestApp, RunnerError, RunnerExecuteResult, SigningAccount, Wasm,
 };
-use swaprouter::msg::{ExecuteMsg, Slipage};
+use swaprouter::msg::{ExecuteMsg, Slippage};
 use test_env::*;
 
 test_swap!(
@@ -18,7 +18,7 @@ test_swap!(
     msg = ExecuteMsg::Swap {
         input_coin: Coin::new(1000, "uosmo"),
         output_denom: "uion".to_string(),
-        slipage: Slipage::MinOutputAmount(1u128.into()),
+        slippage: Slippage::MinOutputAmount(1u128.into()),
     },
     funds: [
         Coin::new(1000, "uosmo")
@@ -32,7 +32,7 @@ test_swap!(
     msg = ExecuteMsg::Swap {
         input_coin: Coin::new(1000, "uosmo"),
         output_denom: "uion".to_string(),
-        slipage: Slipage::MinOutputAmount(1u128.into()),
+        slippage: Slippage::MinOutputAmount(1u128.into()),
     },
     funds: [
         Coin::new(10, "uosmo")
@@ -46,7 +46,7 @@ test_swap!(
     msg = ExecuteMsg::Swap {
         input_coin: Coin::new(1000, "uosmo"),
         output_denom: "uion".to_string(),
-        slipage: Slipage::MinOutputAmount(1u128.into()),
+        slippage: Slippage::MinOutputAmount(1u128.into()),
     },
     funds: [
         Coin::new(10, "uion")
@@ -60,7 +60,7 @@ test_swap!(
     msg = ExecuteMsg::Swap {
         input_coin: Coin::new(1000, "uosmo"),
         output_denom: "uion".to_string(),
-        slipage: Slipage::MinOutputAmount(1000000000000000000000000u128.into()),
+        slippage: Slippage::MinOutputAmount(1000000000000000000000000u128.into()),
     },
     funds: [
         Coin::new(1000, "uosmo")
@@ -74,7 +74,7 @@ test_swap!(
     msg = ExecuteMsg::Swap {
         input_coin: Coin::new(1000, "uion"),
         output_denom: "uosmo".to_string(),
-        slipage: Slipage::MinOutputAmount(1000000000000000000000000u128.into()),
+        slippage: Slippage::MinOutputAmount(1000000000000000000000000u128.into()),
     },
     funds: [
         Coin::new(1000, "uion")
@@ -88,7 +88,7 @@ test_swap!(
     msg = ExecuteMsg::Swap {
         input_coin: Coin::new(1000, "uosmo"),
         output_denom: "uion".to_string(),
-        slipage: Slipage::MaxSlipagePercentage(Decimal::from_str("5").unwrap()),
+        slippage: Slippage::MaxSlippagePercentage(Decimal::from_str("5").unwrap()),
     },
     funds: [
         Coin::new(10000, "uosmo")

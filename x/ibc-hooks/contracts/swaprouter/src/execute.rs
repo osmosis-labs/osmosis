@@ -12,7 +12,7 @@ use crate::error::ContractError;
 use crate::helpers::{
     calculate_min_output_from_twap, check_is_contract_owner, generate_swap_msg, validate_pool_route,
 };
-use crate::msg::{Slipage, SwapResponse};
+use crate::msg::{Slippage, SwapResponse};
 use crate::state::{SwapMsgReplyState, ROUTING_TABLE, SWAP_REPLY_STATES};
 
 pub fn set_route(
@@ -43,21 +43,21 @@ pub fn trade_with_slippage_limit(
     info: MessageInfo,
     input_token: Coin,
     output_denom: String,
-    slipage: Slipage,
+    slippage: Slippage,
 ) -> Result<Response, ContractError> {
     if !has_coins(&info.funds, &input_token) {
         return Err(ContractError::InsufficientFunds {});
     }
 
-    let min_output_token = match slipage {
-        Slipage::MaxSlipagePercentage(percentage) => calculate_min_output_from_twap(
+    let min_output_token = match slippage {
+        Slippage::MaxSlippagePercentage(percentage) => calculate_min_output_from_twap(
             deps.as_ref(),
             input_token.clone(),
             output_denom,
             env.block.time,
             percentage,
         )?,
-        Slipage::MinOutputAmount(minimum_output_amount) => {
+        Slippage::MinOutputAmount(minimum_output_amount) => {
             coin(minimum_output_amount.u128(), output_denom)
         }
     };

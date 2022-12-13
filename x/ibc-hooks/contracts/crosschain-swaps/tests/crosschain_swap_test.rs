@@ -7,7 +7,7 @@ use osmosis_testing::cosmrs::proto::cosmos::bank::v1beta1::QueryAllBalancesReque
 
 use crosschain_swaps::msg::ExecuteMsg as CrossChainExecute;
 use osmosis_testing::{Account, Bank, Module, Wasm};
-use swaprouter::msg::{ExecuteMsg as SwapRouterExecute, Slipage};
+use swaprouter::msg::{ExecuteMsg as SwapRouterExecute, Slippage};
 use test_env::*;
 
 const INITIAL_AMOUNT: u128 = 1_000_000_000_000;
@@ -59,7 +59,7 @@ fn crosschain_swap() {
     let msg = CrossChainExecute::OsmosisSwap {
         input_coin: input_coin.clone(),
         output_denom: output_denom.clone(),
-        slipage: Slipage::MaxSlipagePercentage(Decimal::from_str("5").unwrap()),
+        slippage: Slippage::MaxSlippagePercentage(Decimal::from_str("5").unwrap()),
         receiver: Addr::unchecked("osmo1l4u56l7cvx8n0n6c7w650k02vz67qudjlcut89"),
         channel: format!("cosmoshub"),
         failed_delivery: None,
