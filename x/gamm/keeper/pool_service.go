@@ -57,54 +57,6 @@ func (k Keeper) CalculateSpotPrice(
 	return spotPrice, err
 }
 
-func validateCreatePoolMsg(ctx sdk.Context, msg swaproutertypes.CreatePoolMsg) error {
-	err := msg.Validate(ctx)
-	if err != nil {
-		return err
-	}
-
-	initialPoolLiquidity := msg.InitialLiquidity()
-	numAssets := initialPoolLiquidity.Len()
-	if numAssets < swaproutertypes.MinPoolAssets {
-		return types.ErrTooFewPoolAssets
-	}
-	if numAssets > swaproutertypes.MaxPoolAssets {
-		return sdkerrors.Wrapf(
-			types.ErrTooManyPoolAssets,
-			"pool has too many PoolAssets (%d)", numAssets,
-		)
-	}
-	return nil
-}
-
-func (k Keeper) validateCreatedPool(
-	ctx sdk.Context,
-	initialPoolLiquidity sdk.Coins,
-	poolId uint64,
-	pool swaproutertypes.PoolI,
-) error {
-	if pool.GetId() != poolId {
-		return sdkerrors.Wrapf(types.ErrInvalidPool,
-			"Pool was attempted to be created with incorrect pool ID.")
-	}
-	if !pool.GetAddress().Equals(types.NewPoolAddress(poolId)) {
-		return sdkerrors.Wrapf(types.ErrInvalidPool,
-			"Pool was attempted to be created with incorrect pool address.")
-	}
-	// Notably we use the initial pool liquidity at the start of the messages definition
-	// just in case CreatePool was mutative.
-	if !pool.GetTotalPoolLiquidity(ctx).IsEqual(initialPoolLiquidity) {
-		return sdkerrors.Wrapf(types.ErrInvalidPool,
-			"Pool was attempted to be created, with initial liquidity not equal to what was specified.")
-	}
-	// This check can be removed later, and replaced with a minimum.
-	if !pool.GetTotalShares().Equal(types.InitPoolSharesSupply) {
-		return sdkerrors.Wrapf(types.ErrInvalidPool,
-			"Pool was attempted to be created with incorrect number of initial shares.")
-	}
-	return nil
-}
-
 // CreatePool attempts to create a pool returning the newly created pool ID or
 // an error upon failure. The pool creation fee is used to fund the community
 // pool. It will create a dedicated module account for the pool and sends the
