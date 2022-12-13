@@ -21,6 +21,7 @@ jobs:
             **/**.go
             go.mod
             go.sum
+            .github/**
       - name: Get data from build cache
         uses: actions/cache@v2
         with:
