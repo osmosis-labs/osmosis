@@ -72,6 +72,7 @@ impl TestEnv {
             &CrosschainInstantiate {
                 swap_contract: swaprouter_address.clone(),
                 track_ibc_sends: None,
+                channels: vec![("osmo".to_string(), "channel-0".to_string())],
             },
         );
 
@@ -114,12 +115,9 @@ fn get_swaprouter_wasm() -> Vec<u8> {
     let wasm_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("..")
         .join("..")
-        .join("..")
-        .join("swaprouter")
-        .join("target")
-        .join("wasm32-unknown-unknown")
-        .join("release")
+        .join("bytecode")
         .join("swaprouter.wasm");
+    println!("{wasm_path:?}");
     std::fs::read(wasm_path).unwrap()
 }
 
@@ -127,9 +125,8 @@ fn get_crosschain_swaps_wasm() -> Vec<u8> {
     let wasm_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("..")
         .join("..")
-        .join("target")
-        .join("wasm32-unknown-unknown")
-        .join("release")
+        .join("bytecode")
         .join("crosschain_swaps.wasm");
+    println!("{wasm_path:?}");
     std::fs::read(wasm_path).unwrap()
 }

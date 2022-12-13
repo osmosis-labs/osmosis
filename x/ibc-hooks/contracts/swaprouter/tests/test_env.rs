@@ -83,9 +83,7 @@ fn get_wasm() -> Vec<u8> {
     let wasm_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("..")
         .join("..")
-        .join("target")
-        .join("wasm32-unknown-unknown")
-        .join("release")
+        .join("bytecode")
         .join("swaprouter.wasm");
     std::fs::read(wasm_path).unwrap()
 }
