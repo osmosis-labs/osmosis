@@ -136,7 +136,7 @@ retrieve the funds after the timeout has passed, but without the ack information
 
 The for the callback to be processed, the transfer packet's memo should look like this:
 
-`{"callback": "osmo1contractAddr"}`
+`{"ibc_callback": "osmo1contractAddr"}`
 
 The wasm hooks will keep the mapping from the packet's channel and sequence to the contract in storage. When an ack is
 received, it will notify the specified contract via a sudo message.

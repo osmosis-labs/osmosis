@@ -228,7 +228,7 @@ func (h WasmHooks) SendPacketOverride(i ICS4Middleware, ctx sdk.Context, chanCap
 		return i.channel.SendPacket(ctx, chanCap, packet) // continue
 	}
 
-	isCallbackRouted, metadata := jsonStringHasKey(data.GetMemo(), "callback")
+	isCallbackRouted, metadata := jsonStringHasKey(data.GetMemo(), types.IBCCallbackKey)
 	if !isCallbackRouted {
 		return i.channel.SendPacket(ctx, chanCap, packet) // continue
 	}
@@ -239,8 +239,8 @@ func (h WasmHooks) SendPacketOverride(i ICS4Middleware, ctx sdk.Context, chanCap
 	// from the data completely so the packet is sent without it.
 	// This way receiver chains that are on old versions of IBC will be able to process the packet
 
-	callbackRaw := metadata["callback"] // This will be used later.
-	delete(metadata, "callback")
+	callbackRaw := metadata[types.IBCCallbackKey] // This will be used later.
+	delete(metadata, types.IBCCallbackKey)
 	bzMetadata, err := json.Marshal(metadata)
 	if err != nil {
 		return sdkerrors.Wrap(err, "Send packet with callback error")
