@@ -174,13 +174,13 @@ New ValSet        20osmos {ValD-> 0.2, ValE-> 0.2, ValF-> 0.6} [ValD-> 4osmo, Va
         target_validator, idx = FindMin(diff_arr)   // gets the index of minValue and the minValue
 
         // reDelegationAmt to is the amount to redelegate, which is the min of diffAmount and target_validator
-        amount_to_redelegate = FindMin(abs(target_validator.amount), validator.amount)
-        sdk.BeginRedelegation(ctx, delegator, source_validator, target_validator, amount_to_redelegate) 
+        reDelegationAmt = FindMin(abs(target_validator.amount), validator.amount)
+        sdk.BeginRedelegation(ctx, delegator, source_validator, target_validator, reDelegationAmt) 
 
         // Update the current diffAmount by subtracting it with the reDelegationAmount
-        validator.amount = validator.amount - amount_to_redelegate
+        validator.amount = validator.amount - reDelegationAmt
         // Find target_validator through idx in diffValSet and set that to (target_validatorAmount - reDelegationAmount)
-        diff_arr[idx].amount = target_validator.amount + amount_to_redelegate 
+        diff_arr[idx].amount = target_validator.amount + reDelegationAmt 
 
 - Result 
   1. diff_arr = [ValA: 0, ValB: 0, ValC: 0, ValD: 0, ValE: 0, ValF: 0]
@@ -193,4 +193,3 @@ New ValSet        20osmos {ValD-> 0.2, ValE-> 0.2, ValF-> 0.6} [ValD-> 4osmo, Va
 3. Once you redelegate from ValA -> ValB, you will not be able to redelegate from ValB to another validator for the next 21 days.
   - the validator on the receiving end of redelegation will be on a 21-day redelegation lock
 4. Cannot redelegate to same validator 
-
