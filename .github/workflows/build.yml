@@ -47,7 +47,11 @@ jobs:
         run: |
           go mod download
           cd cmd/osmosisd
+<<<<<<< HEAD
           GOWRK=off go build .
+=======
+          go build .
+>>>>>>> d216b283 (Add more file-awareness for tests (#3697))
         if: env.GIT_DIFF
 
       - uses: actions/upload-artifact@v2

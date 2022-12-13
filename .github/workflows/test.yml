@@ -70,7 +70,10 @@ jobs:
             go.mod
             go.sum
             Makefile
+<<<<<<< HEAD
             Dockerfile
+=======
+>>>>>>> d216b283 (Add more file-awareness for tests (#3697))
       -
         name: Get data from build cache
         uses: actions/cache@v2
