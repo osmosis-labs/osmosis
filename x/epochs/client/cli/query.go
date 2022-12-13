@@ -10,33 +10,24 @@ import (
 // GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
-
-	cmd.AddCommand(
-		GetCmdEpochsInfos(),
-		GetCmdCurrentEpoch(),
-	)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdEpochInfos)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdCurrentEpoch)
 
 	return cmd
 }
 
-func GetCmdEpochsInfos() *cobra.Command {
-	return osmocli.SimpleQueryCmd[*types.QueryEpochsInfoRequest](
-		"epoch-infos",
-		"Query running epochInfos",
-		`{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} epoch-infos
-`,
-		types.ModuleName, types.NewQueryClient,
-	)
+func GetCmdEpochInfos() (*osmocli.QueryDescriptor, *types.QueryEpochsInfoRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "epoch-infos",
+		Short: "Query running epoch infos.",
+		Long: `{{.Short}}{{.ExampleHeader}}
+		{{.CommandPrefix}}`}, &types.QueryEpochsInfoRequest{}
 }
 
-func GetCmdCurrentEpoch() *cobra.Command {
-	return osmocli.SimpleQueryCmd[*types.QueryCurrentEpochRequest](
-		"current-epoch [identifier]",
-		"Query current epoch by specified identifier",
-		`{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} current-epoch day
-`,
-		types.ModuleName, types.NewQueryClient,
-	)
+func GetCmdCurrentEpoch() (*osmocli.QueryDescriptor, *types.QueryCurrentEpochRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "current-epoch",
+		Short: "Query current epoch by specified identifier.",
+		Long: `{{.Short}}{{.ExampleHeader}}
+		{{.CommandPrefix}} day`}, &types.QueryCurrentEpochRequest{}
 }
