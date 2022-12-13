@@ -68,6 +68,9 @@ func (k Keeper) CalculateSpotPrice(
 // LEGACY, consider removing in subsequent PR
 func (k Keeper) CreatePool(ctx sdk.Context, msg swaproutertypes.CreatePoolMsg) (uint64, error) {
 	poolId, err := k.poolCreationManager.CreatePool(ctx, msg)
+	if err != nil {
+		return 0, err
+	}
 	expectedPoolId := k.getNextPoolIdAndIncrement(ctx)
 	if poolId != expectedPoolId {
 		return 0, fmt.Errorf("Intermediate code that will get removed in swaprouter transition"+
