@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -8,7 +9,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
@@ -114,46 +114,21 @@ func (k Keeper) validateCreatedPool(
 // and sent to the pool creator. The shares are created using a denomination in
 // the form of gamm/pool/{poolID}. In addition, the x/bank metadata is updated
 // to reflect the newly created GAMM share denomination.
+// LEGACY, consider removing in subsequent PR
 func (k Keeper) CreatePool(ctx sdk.Context, msg swaproutertypes.CreatePoolMsg) (uint64, error) {
-	err := validateCreatePoolMsg(ctx, msg)
-	if err != nil {
-		return 0, err
+	poolId, err := k.poolCreationManager.CreatePool(ctx, msg)
+	expectedPoolId := k.getNextPoolIdAndIncrement(ctx)
+	if poolId != expectedPoolId {
+		return 0, errors.New("Intermediate code that will get removed in swaprouter transition: expected pool Id wrong")
 	}
+	return poolId, err
+}
 
-	sender := msg.PoolCreator()
-	initialPoolLiquidity := msg.InitialLiquidity()
-
-	// send pool creation fee to community pool
-	params := k.GetParams(ctx)
-	if err := k.communityPoolKeeper.FundCommunityPool(ctx, params.PoolCreationFee, sender); err != nil {
-		return 0, err
-	}
-
-	poolId := k.getNextPoolIdAndIncrement(ctx)
-	pool, err := msg.CreatePool(ctx, poolId)
-	if err != nil {
-		return 0, err
-	}
-
-	if err := k.validateCreatedPool(ctx, initialPoolLiquidity, poolId, pool); err != nil {
-		return 0, err
-	}
-
-	// create and save the pool's module account to the account keeper
-	if err := osmoutils.CreateModuleAccount(ctx, k.accountKeeper, pool.GetAddress()); err != nil {
-		return 0, fmt.Errorf("creating pool module account for id %d: %w", poolId, err)
-	}
-
-	// send initial liquidity to the pool
-	err = k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), initialPoolLiquidity)
-	if err != nil {
-		return 0, err
-	}
-
+func (k Keeper) InitializePool(ctx sdk.Context, pool swaproutertypes.PoolI, sender sdk.AccAddress) (err error) {
 	// Mint the initial pool shares share token to the sender
 	err = k.MintPoolShareToAccount(ctx, pool, sender, pool.GetTotalShares())
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	// Finally, add the share token's meta data to the bank keeper.
@@ -180,13 +155,12 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg swaproutertypes.CreatePoolMsg) (
 	})
 
 	if err := k.setPool(ctx, pool); err != nil {
-		return 0, err
+		return err
 	}
 
 	k.hooks.AfterPoolCreated(ctx, sender, pool.GetId())
-	k.RecordTotalLiquidityIncrease(ctx, initialPoolLiquidity)
-
-	return pool.GetId(), nil
+	k.RecordTotalLiquidityIncrease(ctx, pool.GetTotalPoolLiquidity(ctx))
+	return nil
 }
 
 // JoinPoolNoSwap aims to LP exactly enough to pool #{poolId} to get shareOutAmount number of LP shares.
