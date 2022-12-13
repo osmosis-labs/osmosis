@@ -69,6 +69,7 @@ jobs:
             tests/**/**.go
             go.mod
             go.sum
+            Makefile
       -
         name: Get data from build cache
         uses: actions/cache@v2

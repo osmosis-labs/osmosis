@@ -22,6 +22,7 @@ jobs:
             go.mod
             go.sum
             .github/**
+            Makefile
       - name: Get data from build cache
         uses: actions/cache@v2
         with:
@@ -61,6 +62,7 @@ jobs:
             **/**.md
             go.mod
             go.sum
+            Makefile
       - name: Run documentation linter
         run: make mdlint
         if: env.GIT_DIFF
