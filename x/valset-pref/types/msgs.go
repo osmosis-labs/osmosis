@@ -34,11 +34,6 @@ func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 	totalWeight := sdk.ZeroDec()
 	validatorAddrs := []string{}
 	for _, validator := range m.Preferences {
-		_, err := sdk.ValAddressFromBech32(validator.ValOperAddress)
-		if err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid validator address (%s)", err)
-		}
-
 		totalWeight = totalWeight.Add(validator.Weight)
 		validatorAddrs = append(validatorAddrs, validator.ValOperAddress)
 	}

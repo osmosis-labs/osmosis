@@ -38,7 +38,10 @@ func NewMsgSetValidatorSetPreference(clientCtx client.Context, args []string, fs
 		return nil, err
 	}
 
-	valAddrs := osmoutils.ParseSdkValAddressFromString(args[1], ",")
+	valAddrs, err := osmoutils.ParseSdkValAddressFromString(args[1], ",")
+	if err != nil {
+		return nil, err
+	}
 
 	weights, err := osmoutils.ParseSdkDecFromString(args[2], ",")
 	if err != nil {
