@@ -86,6 +86,7 @@ jobs:
           key: ${{ runner.os }}-go-docker-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-docker-${{ matrix.go-version }}-
+        if: env.GIT_DIFF
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v2
