@@ -48,8 +48,6 @@ func ParseSdkIntFromString(s string, separator string) ([]sdk.Int, error) {
 	}
 	return parsedInts, nil
 }
-<<<<<<< HEAD
-=======
 
 func ParseSdkDecFromString(s string, separator string) ([]sdk.Dec, error) {
 	var parsedDec []sdk.Dec
@@ -86,4 +84,3 @@ func CreateRandomAccounts(numAccts int) []sdk.AccAddress {
 
 	return testAddrs
 }
->>>>>>> 1986ad22 (Osmocli: Fix lines of code overhead + speed of CLI tests (#3647))
