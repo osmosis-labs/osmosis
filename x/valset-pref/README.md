@@ -168,15 +168,18 @@ New ValSet        20osmos {ValD-> 0.2, ValE-> 0.2, ValF-> 0.6} [ValD-> 4osmo, Va
 
 	// Algorithm starts here
 - for i, validator in diff_arr: 
-  - if validator.amount > 0 
     - for validator.amount > 0: 
         source_validator = validator.address
+        // FindMin returns the index and MinAmt of the minimum amount in diffValSet
         target_validator, idx = FindMin(diff_arr)   // gets the index of minValue and the minValue
 
+        // reDelegationAmt to is the amount to redelegate, which is the min of diffAmount and target_validator
         amount_to_redelegate = FindMin(abs(target_validator.amount), validator.amount)
         sdk.BeginRedelegation(ctx, delegator, source_validator, target_validator, amount_to_redelegate) 
 
+        // Update the current diffAmount by subtracting it with the reDelegationAmount
         validator.amount = validator.amount - amount_to_redelegate
+        // Find target_validator through idx in diffValSet and set that to (target_validatorAmount - reDelegationAmount)
         diff_arr[idx].amount = target_validator.amount + amount_to_redelegate 
 
 - Result 

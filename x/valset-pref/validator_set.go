@@ -126,6 +126,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 // A redelegation object is created every time a redelegation occurs. To prevent "redelegation hopping" redelegations may not occur under the situation that:
 // 1. the (re)delegator already has another immature redelegation in progress with a destination to a validator (let's call it Validator X)
 // 2. the (re)delegator is attempting to create a new redelegation where the source validator for this new redelegation is Validator X
+// 3. the (re)delegator cannot create a new redelegation until the unbonding period i.e. 21 days.
 func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, existingSet types.ValidatorSetPreferences, newSet []types.ValidatorPreference) error {
 	var existingValSet []valSet
 	var newValSet []valSet
@@ -175,28 +176,31 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 	// Algorithm starts here
 	for _, diff_val := range diffValSet {
 		for diff_val.amount.GT(sdk.NewDec(0)) {
-			source_large := diff_val.valAddr
-			target_large, idx := k.FindMin(diffValSet)
+			source_val := diff_val.valAddr
+			// FindMin returns the index and MinAmt of the minimum amount in diffValSet
+			target_val, idx := k.FindMin(diffValSet)
 
-			validator_source, err := sdk.ValAddressFromBech32(source_large)
+			validator_source, err := sdk.ValAddressFromBech32(source_val)
 			if err != nil {
 				return fmt.Errorf("validator address not formatted")
 			}
 
-			validator_target, err := sdk.ValAddressFromBech32(target_large.valAddr)
+			validator_target, err := sdk.ValAddressFromBech32(target_val.valAddr)
 			if err != nil {
 				return fmt.Errorf("validator address not formatted")
 			}
 
-			amount := sdk.MinDec(target_large.amount.Abs(), diff_val.amount)
-			_, err = k.stakingKeeper.BeginRedelegation(ctx, delegator, validator_source, validator_target, amount)
+			// reDelegationAmt to is the amount to redelegate, which is the min of diffAmount and target_validator
+			reDelegationAmt := sdk.MinDec(target_val.amount.Abs(), diff_val.amount)
+			_, err = k.stakingKeeper.BeginRedelegation(ctx, delegator, validator_source, validator_target, reDelegationAmt)
 			if err != nil {
 				return err
 			}
 
-			// Find target value in diffValSet and set that to (sourceAmt - targetAmt)
-			diff_val.amount = diff_val.amount.Sub(amount)            // set the source to 0
-			diffValSet[idx].amount = target_large.amount.Add(amount) // set the target to (sourceAmt - targetAmt)
+			// Update the current diffAmount by subtracting it with the reDelegationAmount
+			diff_val.amount = diff_val.amount.Sub(reDelegationAmt)
+			// Find target_validator through idx in diffValSet and set that to (target_validatorAmount - reDelegationAmount)
+			diffValSet[idx].amount = target_val.amount.Add(reDelegationAmt)
 		}
 	}
 
