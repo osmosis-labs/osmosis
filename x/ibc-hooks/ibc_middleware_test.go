@@ -721,7 +721,7 @@ func (suite *HooksTestSuite) TestBadCrosschainSwapsNextMemoMessages() {
 	recoverAddr := suite.chainA.SenderAccounts[8].SenderAccount.GetAddress()
 	receiver := initializer
 
-	innerMsg := fmt.Sprintf(`{"osmosis_swap":{"input_coin":{"denom":"token0","amount":"1000"},"output_denom":"token1","slipage":{"max_slipage_percentage":"20"},"receiver":"%s","failed_delivery": {"recovery_addr": "%s"},"next_memo":%%s}}`,
+	innerMsg := fmt.Sprintf(`{"osmosis_swap":{"input_coin":{"denom":"token0","amount":"1000"},"output_denom":"token1","slippage":{"max_slippage_percentage":"20"},"receiver":"%s","failed_delivery": {"recovery_addr": "%s"},"next_memo":%%s}}`,
 		receiver, // Note that this is the chain A account, which does not exist on chain B
 		recoverAddr)
 
@@ -843,12 +843,12 @@ func (suite *HooksTestSuite) TestCrosschainForwardWithMemo() {
 	//suite.Require().Equal(int64(0), balanceToken1.Amount.Int64())
 
 	// Generate swap instructions for the contract
-	nextMemo := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"osmosis_swap":{"input_coin":{"denom":"%s","amount":"800"},"output_denom":"token0","slipage":{"max_slipage_percentage":"20"},"receiver":"%s"}}}}`,
+	nextMemo := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"osmosis_swap":{"input_coin":{"denom":"%s","amount":"800"},"output_denom":"token0","slippage":{"max_slippage_percentage":"20"},"receiver":"%s"}}}}`,
 		crosschainAddrB,
 		token1IBC,
 		receiver,
 	)
-	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"input_coin":{"denom":"token0","amount":"1000"},"output_denom":"token1","slipage":{"max_slipage_percentage":"20"},"receiver":"%s", "next_memo": %#v}}`,
+	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"input_coin":{"denom":"token0","amount":"1000"},"output_denom":"token1","slippage":{"max_slippage_percentage":"20"},"receiver":"%s", "next_memo": %#v}}`,
 		crosschainAddrB,
 		nextMemo,
 	)
