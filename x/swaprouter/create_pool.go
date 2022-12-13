@@ -66,10 +66,11 @@ func validateCreatePoolMsg(ctx sdk.Context, msg types.CreatePoolMsg) error {
 // pool. It will create a dedicated module account for the pool and sends the
 // initial liquidity to the created module account.
 //
-// After the initial liquidity is sent to the pool's account, shares are minted
-// and sent to the pool creator. The shares are created using a denomination in
-// the form of <swap module name>/pool/{poolID}. In addition, the x/bank metadata is updated
-// to reflect the newly created GAMM share denomination.
+// After the initial liquidity is sent to the pool's account, this function calls an
+// InitializePool function from the source module. That module is responsible for:
+// - saving the pool into its own state
+// - Minting LP shares to pool creator
+// - Setting metadata for the shares
 func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, error) {
 	err := validateCreatePoolMsg(ctx, msg)
 	if err != nil {

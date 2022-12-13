@@ -124,6 +124,12 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg swaproutertypes.CreatePoolMsg) (
 	return poolId, err
 }
 
+// This function:
+// - saves the pool to state
+// - Mints LP shares to the pool creator
+// - Sets bank metadata for the LP denom
+// - Records total liquidity increase
+// - Calls the AfterPoolCreated hook
 func (k Keeper) InitializePool(ctx sdk.Context, pool swaproutertypes.PoolI, sender sdk.AccAddress) (err error) {
 	// Mint the initial pool shares share token to the sender
 	err = k.MintPoolShareToAccount(ctx, pool, sender, pool.GetTotalShares())

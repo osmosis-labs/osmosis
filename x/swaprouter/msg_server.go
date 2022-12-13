@@ -18,20 +18,6 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	}
 }
 
-// CreatePool attempts to create a pool returning the newly created pool ID or an error upon failure.
-// The pool creation fee is used to fund the community pool.
-// It will create a dedicated module account for the pool and sends the initial liquidity to the created module account.
-func (server msgServer) CreatePool(goCtx context.Context, msg types.CreatePoolMsg) (poolId uint64, err error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	poolId, err = server.keeper.CreatePool(ctx, msg)
-	if err != nil {
-		return 0, err
-	}
-
-	return poolId, nil
-}
-
 // TODO: spec and tests, including events
 func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgSwapExactAmountIn) (*types.MsgSwapExactAmountInResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
