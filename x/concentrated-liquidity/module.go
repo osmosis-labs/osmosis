@@ -24,9 +24,7 @@ var (
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
-type AppModuleBasic struct {
-	cdc codec.Codec
-}
+type AppModuleBasic struct{}
 
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
@@ -75,9 +73,9 @@ type AppModule struct {
 	keeper Keeper
 }
 
-func NewAppModule(cdc codec.Codec, keeper Keeper) AppModule {
+func NewAppModule(keeper Keeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
 	}
 }
