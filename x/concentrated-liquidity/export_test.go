@@ -81,7 +81,3 @@ func (k Keeper) InitializeInitialPosition(ctx sdk.Context, pool types.Concentrat
 func ConvertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (swaproutertypes.PoolI, error) {
 	return convertConcentratedToPoolInterface(concentratedPool)
 }
-
-func ConvertPoolInterfaceToConcentrated(poolI swaproutertypes.PoolI) (types.ConcentratedPoolExtension, error) {
-	return convertPoolInterfaceToConcentrated(poolI)
-}
