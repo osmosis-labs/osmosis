@@ -25,6 +25,8 @@ var _ twapStrategy = &arithmetic{}
 
 var _ twapStrategy = &geometric{}
 
+// computeTwap computes and returns an arithmetic TWAP between
+// two records given the quote asset.
 func (s *arithmetic) computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
 	var accumDiff sdk.Dec
 	if quoteAsset == startRecord.Asset0Denom {
@@ -37,6 +39,8 @@ func (s *arithmetic) computeTwap(startRecord types.TwapRecord, endRecord types.T
 
 }
 
+// computeTwap computes and returns a geometric TWAP between
+// two records given the quote asset.
 func (s *geometric) computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
 	accumDiff := endRecord.GeometricTwapAccumulator.Sub(startRecord.GeometricTwapAccumulator)
 

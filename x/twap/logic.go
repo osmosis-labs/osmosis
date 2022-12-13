@@ -265,46 +265,7 @@ func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quote
 	}
 
 	return strategy.computeTwap(startRecord, endRecord, quoteAsset), err
-
-	// if isArithmeticTwap {
-	// 	return computeArithmeticTwap(startRecord, endRecord, quoteAsset), err
-	// }
-	// return computeGeometricTwap(startRecord, endRecord, quoteAsset), err
 }
-
-// computeArithmeticTwap computes and returns an arithmetic TWAP between
-// two records given the quote asset.
-// func computeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
-// 	var accumDiff sdk.Dec
-// 	if quoteAsset == startRecord.Asset0Denom {
-// 		accumDiff = endRecord.P0ArithmeticTwapAccumulator.Sub(startRecord.P0ArithmeticTwapAccumulator)
-// 	} else {
-// 		accumDiff = endRecord.P1ArithmeticTwapAccumulator.Sub(startRecord.P1ArithmeticTwapAccumulator)
-// 	}
-// 	timeDelta := endRecord.Time.Sub(startRecord.Time)
-// 	return types.AccumDiffDivDuration(accumDiff, timeDelta)
-// }
-
-// computeGeometricTwap computes and returns a geometric TWAP between
-// two records given the quote asset.
-// The computation works as follows:
-// - compute arithmetic mean of logarithms of spot prices.
-// - exponentiate the result to get the geometric mean.
-// - if quoted asset is asset 1, take reciprocal of the exponentiated result.
-// func computeGeometricTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
-// 	accumDiff := endRecord.GeometricTwapAccumulator.Sub(startRecord.GeometricTwapAccumulator)
-
-// 	timeDelta := endRecord.Time.Sub(startRecord.Time)
-// 	arithmeticMeanOfLogPrices := types.AccumDiffDivDuration(accumDiff, timeDelta)
-
-// 	geometricMeanDenom0 := twapPow(arithmeticMeanOfLogPrices)
-// 	// N.B.: Geometric mean of recprocals is reciprocal of geometric mean.
-// 	// https://proofwiki.org/wiki/Geometric_Mean_of_Reciprocals_is_Reciprocal_of_Geometric_Mean
-// 	if quoteAsset == startRecord.Asset1Denom {
-// 		return sdk.OneDec().Quo(geometricMeanDenom0)
-// 	}
-// 	return geometricMeanDenom0
-// }
 
 // twapLog returns the logarithm of the given spot price, base 2.
 // TODO: basic test
