@@ -32,7 +32,6 @@ jobs:
           PATTERNS: |
             **/**.wasm
             **/**!(test).go
-            tests/**/**.go
             go.mod
             go.sum
             Makefile
