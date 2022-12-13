@@ -83,7 +83,7 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 			suite.Require().Equal(len(tc.expected), len(routes))
 
 			for routeIndex, route := range routes {
-				for tradeIndex, trade := range route {
+				for tradeIndex, trade := range route.Trades {
 					suite.Require().Equal(tc.expected[routeIndex][tradeIndex].PoolId, trade.Pool.GetId())
 					suite.Require().Equal(tc.expected[routeIndex][tradeIndex].InputDenom, trade.InputDenom)
 					suite.Require().Equal(tc.expected[routeIndex][tradeIndex].OutputDenom, trade.OutputDenom)
@@ -119,7 +119,7 @@ func (suite *KeeperTestSuite) TestBuildAtomRoute() {
 			hasRoute:      true,
 		},
 		{
-			description:   "Route exists for swap in Terra and swap out Osmo (no mapping pool)",
+			description:   "Route does not exist for swap in Terra and swap out Osmo because the pool does not exist",
 			swapIn:        "terra",
 			swapOut:       types.OsmosisDenomination,
 			poolId:        7,
@@ -134,12 +134,12 @@ func (suite *KeeperTestSuite) TestBuildAtomRoute() {
 
 			if tc.hasRoute {
 				suite.Require().NoError(err)
-				suite.Require().Equal(len(tc.expectedRoute), len(route))
+				suite.Require().Equal(len(tc.expectedRoute), len(route.Trades))
 
 				for index, trade := range tc.expectedRoute {
-					suite.Require().Equal(trade.PoolId, route[index].Pool.GetId())
-					suite.Require().Equal(trade.InputDenom, route[index].InputDenom)
-					suite.Require().Equal(trade.OutputDenom, route[index].OutputDenom)
+					suite.Require().Equal(trade.PoolId, route.Trades[index].Pool.GetId())
+					suite.Require().Equal(trade.InputDenom, route.Trades[index].InputDenom)
+					suite.Require().Equal(trade.OutputDenom, route.Trades[index].OutputDenom)
 				}
 			} else {
 				suite.Require().Error(err)
@@ -174,7 +174,7 @@ func (suite *KeeperTestSuite) TestBuildOsmoRoute() {
 			hasRoute:      true,
 		},
 		{
-			description:   "Route exists for swap in Terra and swap out Atom (no mapping pool)",
+			description:   "Route does not exist for swap in Terra and swap out Atom because the pool does not exist",
 			swapIn:        "terra",
 			swapOut:       types.AtomDenomination,
 			poolId:        7,
@@ -189,12 +189,12 @@ func (suite *KeeperTestSuite) TestBuildOsmoRoute() {
 
 			if tc.hasRoute {
 				suite.Require().NoError(err)
-				suite.Require().Equal(len(tc.expectedRoute), len(route))
+				suite.Require().Equal(len(tc.expectedRoute), len(route.Trades))
 
 				for index, trade := range tc.expectedRoute {
-					suite.Require().Equal(trade.PoolId, route[index].Pool.GetId())
-					suite.Require().Equal(trade.InputDenom, route[index].InputDenom)
-					suite.Require().Equal(trade.OutputDenom, route[index].OutputDenom)
+					suite.Require().Equal(trade.PoolId, route.Trades[index].Pool.GetId())
+					suite.Require().Equal(trade.InputDenom, route.Trades[index].InputDenom)
+					suite.Require().Equal(trade.OutputDenom, route.Trades[index].OutputDenom)
 				}
 			} else {
 				suite.Require().Error(err)
@@ -232,12 +232,12 @@ func (suite *KeeperTestSuite) TestBuildTokenPairRoutes() {
 
 				for index, route := range routes {
 
-					suite.Require().Equal(len(tc.expectedRoutes[index]), len(route))
+					suite.Require().Equal(len(tc.expectedRoutes[index]), len(route.Trades))
 
 					for index, trade := range tc.expectedRoutes[index] {
-						suite.Require().Equal(trade.PoolId, route[index].Pool.GetId())
-						suite.Require().Equal(trade.InputDenom, route[index].InputDenom)
-						suite.Require().Equal(trade.OutputDenom, route[index].OutputDenom)
+						suite.Require().Equal(trade.PoolId, route.Trades[index].Pool.GetId())
+						suite.Require().Equal(trade.InputDenom, route.Trades[index].InputDenom)
+						suite.Require().Equal(trade.OutputDenom, route.Trades[index].OutputDenom)
 					}
 				}
 
