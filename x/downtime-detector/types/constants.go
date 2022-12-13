@@ -1,6 +1,8 @@
 package types
 
 import (
+	fmt "fmt"
+	"strings"
 	time "time"
 
 	"github.com/tidwall/btree"
@@ -46,4 +48,31 @@ func init() {
 	DowntimeToDuration.Set(Downtime_DURATION_24H, 24*time.Hour)
 	DowntimeToDuration.Set(Downtime_DURATION_36H, 36*time.Hour)
 	DowntimeToDuration.Set(Downtime_DURATION_48H, 48*time.Hour)
+}
+
+func DowntimeStrings() []string {
+	arr := []string{}
+	DowntimeToDuration.Ascend(Downtime(0), func(_ Downtime, v time.Duration) bool {
+		arr = append(arr, v.String())
+		return true
+	})
+	return arr
+}
+
+func DowntimeByDuration(duration time.Duration) (Downtime, error) {
+	var result Downtime
+	found := false
+	DowntimeToDuration.Ascend(Downtime(0), func(k Downtime, v time.Duration) bool {
+		if v == duration {
+			result = k
+			found = true
+			return false
+		}
+		return true
+	})
+	if found {
+		return result, nil
+	}
+	downtimeOptions := strings.Join(DowntimeStrings(), ", ")
+	return result, fmt.Errorf("downtime of %s does not exist. Chain-provided downtimes [%s]", duration.String(), downtimeOptions)
 }
