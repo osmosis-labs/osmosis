@@ -63,10 +63,6 @@
       },
       {
         "name": "v12",
-<<<<<<< HEAD
-        "tag" : "v12.1.0",
-        "height" : 6246000
-=======
         "tag" : "v12.3.0",
         "height" : 6246000,
         "next_version_name" : "v13"
@@ -75,7 +71,6 @@
         "name": "v13",
         "tag" : "v13.1.0",
         "height" : 7241500
->>>>>>> 18eda0ec (update chain.schema.json for v13 (#3690))
       }
     ]
   }
