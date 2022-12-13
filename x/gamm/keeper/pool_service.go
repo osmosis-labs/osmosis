@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -71,7 +70,8 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg swaproutertypes.CreatePoolMsg) (
 	poolId, err := k.poolCreationManager.CreatePool(ctx, msg)
 	expectedPoolId := k.getNextPoolIdAndIncrement(ctx)
 	if poolId != expectedPoolId {
-		return 0, errors.New("Intermediate code that will get removed in swaprouter transition: expected pool Id wrong")
+		return 0, fmt.Errorf("Intermediate code that will get removed in swaprouter transition"+
+			"expected pool id %d, got %d", expectedPoolId, poolId)
 	}
 	return poolId, err
 }
