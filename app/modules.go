@@ -13,7 +13,7 @@ import (
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 
-	downtimemodule "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/downtimedetector_module"
+	downtimemodule "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/module"
 	downtimetypes "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/types"
 
 	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
