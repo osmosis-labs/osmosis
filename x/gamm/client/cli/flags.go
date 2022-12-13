@@ -66,38 +66,30 @@ type smoothWeightChangeParamsInputs struct {
 	TargetPoolWeights string `json:"target-pool-weights"`
 }
 
-func FlagSetQuerySwapRoutes() *flag.FlagSet {
+func FlagSetMultihopSwapRoutes() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
-
 	fs.String(FlagSwapRoutePoolIds, "", "swap route pool id")
 	fs.String(FlagSwapRouteDenoms, "", "swap route amount")
 	return fs
 }
 
-func FlagSetSwapAmountOutRoutes() *flag.FlagSet {
+func FlagSetCreatePoolFile() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
-
-	fs.String(FlagSwapRoutePoolIds, "", "swap route pool ids")
-	fs.String(FlagSwapRouteDenoms, "", "swap route denoms")
+	fs.String(FlagPoolFile, "", "Pool json file path (if this path is given, other create pool flags should not be used)")
 	return fs
 }
 
-func FlagSetCreatePool() *flag.FlagSet {
+func FlagSetCreatePoolType() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
-
-	fs.String(FlagPoolFile, "", "Pool json file path (if this path is given, other create pool flags should not be used)")
 	fs.String(FlagPoolType, "uniswap", "Pool type (either \"balancer\", \"uniswap\", or \"stableswap\"")
-
 	return fs
 }
 
 func FlagSetJoinPool() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
-
 	fs.Uint64(FlagPoolId, 0, "The id of pool")
 	fs.String(FlagShareAmountOut, "", "Minimum amount of Gamm tokens to receive")
 	fs.StringArray(FlagMaxAmountsIn, []string{""}, "Maximum amount of each denom to send into the pool (specify multiple denoms with: --max-amounts-in=1uosmo --max-amounts-in=1uion)")
-
 	return fs
 }
 

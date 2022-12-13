@@ -989,3 +989,31 @@ func (x BigDec) CustomBaseLog(base BigDec) BigDec {
 
 	return y
 }
+
+// PowerInteger takes a given decimal to an integer power
+// and returns the result. Non-mutative. Uses square and multiply
+// algorithm for performing the calculation.
+func (d BigDec) PowerInteger(power uint64) BigDec {
+	clone := d.Clone()
+	return clone.PowerIntegerMut(power)
+}
+
+// PowerIntegerMut takes a given decimal to an integer power
+// and returns the result. Mutative. Uses square and multiply
+// algorithm for performing the calculation.
+func (d BigDec) PowerIntegerMut(power uint64) BigDec {
+	if power == 0 {
+		return OneDec()
+	}
+	tmp := OneDec()
+
+	for i := power; i > 1; {
+		if i%2 != 0 {
+			tmp = tmp.MulMut(d)
+		}
+		i /= 2
+		d = d.MulMut(d)
+	}
+
+	return d.MulMut(tmp)
+}
