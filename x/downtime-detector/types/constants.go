@@ -53,7 +53,9 @@ func init() {
 func DowntimeStrings() []string {
 	arr := []string{}
 	DowntimeToDuration.Ascend(Downtime(0), func(_ Downtime, v time.Duration) bool {
-		arr = append(arr, v.String())
+		s := strings.Replace(v.String(), "m0s", "m", 1)
+		s = strings.Replace(s, "h0m", "h", 1)
+		arr = append(arr, s)
 		return true
 	})
 	return arr
