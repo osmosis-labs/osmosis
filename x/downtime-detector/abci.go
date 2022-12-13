@@ -19,7 +19,10 @@ func (k *Keeper) BeginBlock(ctx sdk.Context) {
 	k.StoreLastBlockTime(ctx, curTime)
 }
 
+// saveDowntimeUpdates saves the current block time as the
+// last time the chain was down for all downtime lengths that are LTE the provided downtime.
 func (k *Keeper) saveDowntimeUpdates(ctx sdk.Context, downtime time.Duration) {
+	// minimum stored downtime is 30S, so if downtime is less than that, don't update anything.
 	if downtime < 30*time.Second {
 		return
 	}
