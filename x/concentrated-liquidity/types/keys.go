@@ -16,9 +16,10 @@ const (
 
 // Key prefixes
 var (
-	TickPrefix     = []byte{0x01}
-	PositionPrefix = []byte{0x02}
-	PoolPrefix     = []byte{0x03}
+	TickPrefix          = []byte{0x01}
+	PositionPrefix      = []byte{0x02}
+	RangePositionPrefix = []byte{0x03}
+	PoolPrefix          = []byte{0x04}
 )
 
 // TickIndexToBytes converts a tick index to a byte slice. Negative tick indexes
@@ -69,6 +70,13 @@ func KeyPosition(poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64)
 	key = append(key, address.MustLengthPrefix(addr)...)
 	key = append(key, sdk.Uint64ToBigEndian(uint64(lowerTick))...)
 	key = append(key, sdk.Uint64ToBigEndian(uint64(upperTick))...)
+	return key
+}
+
+func KeyRangePosition(poolId uint64) []byte {
+	var key []byte
+	key = append(key, RangePositionPrefix...)
+	key = append(key, sdk.Uint64ToBigEndian(poolId)...)
 	return key
 }
 
