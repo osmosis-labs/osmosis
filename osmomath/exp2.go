@@ -33,7 +33,7 @@ var (
 	maxSupportedExponent = MustNewDecFromStr("2").PowerInteger(9)
 )
 
-// Exp2 takes 2 to the power of a given non-negative decimal exponent.
+// Exp2 takes 2 to the power of a given non-negative decimal exponent
 // and returns the result.
 // The computation is performed by using th following property:
 // 2^decimal_exp = 2^{integer_exp + fractional_exp} = 2^integer_exp * 2^fractional_exp
