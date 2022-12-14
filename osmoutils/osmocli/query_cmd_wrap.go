@@ -133,6 +133,10 @@ func GetParams[reqP proto.Message, querier any](moduleName string,
 func callQueryClientFn(ctx context.Context, fnName string, req proto.Message, q any) (res proto.Message, err error) {
 	qVal := reflect.ValueOf(q)
 	method := qVal.MethodByName(fnName)
+	if (method == reflect.Value{}) {
+		return nil, fmt.Errorf("Method %s does not exist on the querier."+
+			" You likely need to override QueryFnName in your Query descriptor", fnName)
+	}
 	args := []reflect.Value{
 		reflect.ValueOf(ctx),
 		reflect.ValueOf(req),
