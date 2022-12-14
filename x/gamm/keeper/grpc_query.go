@@ -349,6 +349,8 @@ func (q Querier) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
+	// Note: the base and quote asset are provided as argument incorrectly intentionally.
+	// due to the historic bug in the original implementation.
 	sp, err := q.Keeper.CalculateSpotPrice(sdkCtx, req.PoolId, req.BaseAssetDenom, req.QuoteAssetDenom)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

@@ -24,8 +24,8 @@ import (
 func (k Keeper) CalculateSpotPrice(
 	ctx sdk.Context,
 	poolID uint64,
-	baseAssetDenom string,
 	quoteAssetDenom string,
+	baseAssetDenom string,
 ) (spotPrice sdk.Dec, err error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolID)
 	if err != nil {
@@ -40,7 +40,7 @@ func (k Keeper) CalculateSpotPrice(
 		}
 	}()
 
-	spotPrice, err = pool.SpotPrice(ctx, baseAssetDenom, quoteAssetDenom)
+	spotPrice, err = pool.SpotPrice(ctx, quoteAssetDenom, baseAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
