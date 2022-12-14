@@ -6,7 +6,6 @@ import (
 	cl "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
@@ -1140,20 +1139,5 @@ func (s *KeeperTestSuite) TestConvertConcentratedToPoolInterface() {
 
 	// Ensure no error occurs when converting to PoolInterface
 	_, err := cl.ConvertConcentratedToPoolInterface(concentratedPool)
-	s.Require().NoError(err)
-}
-
-func (s *KeeperTestSuite) TestConvertPoolInterfaceToConcentrated() {
-	s.SetupTest()
-
-	// Create default CL pool
-	concentratedPool := s.PrepareConcentratedPool()
-
-	// Make it a poolI
-	poolI, ok := concentratedPool.(swaproutertypes.PoolI)
-	s.Require().True(ok)
-
-	// Ensure no error occurs when converting to PoolInterface
-	_, err := cl.ConvertPoolInterfaceToConcentrated(poolI)
 	s.Require().NoError(err)
 }

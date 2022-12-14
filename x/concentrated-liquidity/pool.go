@@ -35,22 +35,17 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(
 		return nil, err
 	}
 
-	concentratedPool, err := convertPoolInterfaceToConcentrated(&poolI)
-	if err != nil {
-		return nil, err
-	}
-
 	if !k.validateTickSpacing(ctx, tickSpacing) {
 		return nil, err
 	}
 
 	// Add the pool to the pool store.
-	err = k.setPool(ctx, concentratedPool)
+	err = k.setPool(ctx, &poolI)
 	if err != nil {
 		return nil, err
 	}
 
-	return concentratedPool, nil
+	return &poolI, nil
 }
 
 // GetPool returns a pool with a given id.
@@ -119,22 +114,7 @@ func convertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolE
 	return pool, nil
 }
 
-// convertPoolInterfaceToConcentrated takes a swaproutertypes.PoolI and attempts to convert it to a
-// types.ConcentratedPoolExtension. If the conversion is successful, the converted value is returned. If the conversion fails,
-// an error is returned.
-func convertPoolInterfaceToConcentrated(poolI swaproutertypes.PoolI) (types.ConcentratedPoolExtension, error) {
-	// Attempt to convert swaproutertypes.PoolI to a concentratedPool
-	concentratedPool, ok := poolI.(types.ConcentratedPoolExtension)
-	if !ok {
-		// If the conversion fails, return an error
-		return nil, fmt.Errorf("given pool does not implement ConcentratedPoolExtension, implements %T", concentratedPool)
-	}
-	// Return the converted value
-	return concentratedPool, nil
-}
-
 // validateTickSpacing returns true if the given tick spacing is one of the authorized tick spacings set in the
-// concentrated liquidity module params. False otherwise.
 func (k Keeper) validateTickSpacing(ctx sdk.Context, tickSpacing uint64) bool {
 	params := k.GetParams(ctx)
 	for _, authorizedTick := range params.AuthorizedTickSpacing {

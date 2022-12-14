@@ -6,9 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	concentrated "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
+	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 type msgServer struct {
@@ -21,26 +20,26 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	}
 }
 
-func NewMsgCreatorServerImpl(keeper *Keeper) concentrated.MsgCreatorServer {
+func NewMsgCreatorServerImpl(keeper *Keeper) clmodel.MsgCreatorServer {
 	return &msgServer{
 		keeper: keeper,
 	}
 }
 
 var (
-	_ types.MsgServer               = msgServer{}
-	_ concentrated.MsgCreatorServer = msgServer{}
+	_ types.MsgServer          = msgServer{}
+	_ clmodel.MsgCreatorServer = msgServer{}
 )
 
-// CreatePool attempts to create a pool returning the newly created pool ID or an error upon failure.
+// CreateConcentratedPool attempts to create a pool returning a MsgCreateConcentratedPoolResponse or an error upon failure.
 // The pool creation fee is used to fund the community pool.
 // It will create a dedicated module account for the pool and sends the initial liquidity to the created module account.
-func (server msgServer) CreatePool(goCtx context.Context, msg swaproutertypes.CreatePoolMsg) (poolId uint64, err error) {
+func (server msgServer) CreateConcentratedPool(goCtx context.Context, msg *clmodel.MsgCreateConcentratedPool) (*clmodel.MsgCreateConcentratedPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	poolId, err = server.keeper.swaprouterKeeper.CreatePool(ctx, msg)
+	poolId, err := server.keeper.swaprouterKeeper.CreatePool(ctx, msg)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -55,15 +54,7 @@ func (server msgServer) CreatePool(goCtx context.Context, msg swaproutertypes.Cr
 		),
 	})
 
-	return poolId, nil
-}
-
-func (server msgServer) CreateConcentratedPool(goCtx context.Context, msg *concentrated.MsgCreateConcentratedPool) (*concentrated.MsgCreateConcentratedPoolResponse, error) {
-	poolId, err := server.CreatePool(goCtx, msg)
-	if err != nil {
-		return nil, err
-	}
-	return &concentrated.MsgCreateConcentratedPoolResponse{PoolID: poolId}, nil
+	return &clmodel.MsgCreateConcentratedPoolResponse{PoolID: poolId}, nil
 }
 
 // TODO: tests, including events

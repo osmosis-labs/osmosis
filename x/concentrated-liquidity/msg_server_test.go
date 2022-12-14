@@ -33,12 +33,12 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 		"error: missing denom0": {
 			denom1:        USDC,
 			tickSpacing:   DefaultTickSpacing,
-			expectedError: fmt.Errorf("denom0 and denom1 must be non-empty"),
+			expectedError: fmt.Errorf("denom0 is invalid: %s", sdk.ValidateDenom("")),
 		},
 		"error: missing denom1": {
 			denom0:        ETH,
 			tickSpacing:   DefaultTickSpacing,
-			expectedError: fmt.Errorf("denom0 and denom1 must be non-empty"),
+			expectedError: fmt.Errorf("denom1 is invalid: %s", sdk.ValidateDenom("")),
 		},
 		"error: missing tickSpacing": {
 			denom0:        ETH,
