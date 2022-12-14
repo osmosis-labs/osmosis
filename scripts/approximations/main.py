@@ -20,10 +20,10 @@ num_parameters = 13
 num_parameters_errors = 30
 
 # number of (x,y) coordinates used to plot the resulting approximation.
-num_points_plot = 100000
+num_points_plot = 10000
 
 # function to approximate
-approximated_fn = lambda x: sp.Pow(sp.E, x)
+approximated_fn = lambda x: sp.Pow(2, x)
 
 # fixed point precision used in Osmosis `osmomath` package.
 osmomath_precision = 36
@@ -48,16 +48,23 @@ shouldPlotErrorRange  = True
 # Plots if true.
 shouldPlotMaxError = True
 
-def plot_error_range(x_coordinates, y_approximation, y_actual):
+def plot_error_range(x_coordinates, y_approximation, y_actual, is_absolute: bool):
     """ Given x coordinates that correspond to approximated y coordinates and actual y coordinates,
-    compute the deltas between y approximated and y actual and plot them in log scale on y.
+    computes the error between y approximated and y actual and plot them in log scale on y.
+
+    If is_absolute, plots the absolute error. Otherwise, plots the relative error.
     """
-    error_deltas = approximations.compute_error_range(y_approximation, y_actual)
+    if is_absolute:
+        error_kind_str = "Absolute"
+        error_deltas = approximations.compute_absolute_error_range(y_approximation, y_actual)
+    else:
+        error_kind_str = "Relative"
+        error_deltas = approximations.compute_relative_error_range(y_approximation, y_actual)
 
     plt.semilogy(x_coordinates, error_deltas)
 
     plt.grid(True)
-    plt.title(f"Chebyshev Rational e^x Errors on [{x_start}, {x_end}]. {num_parameters} params, {num_points_plot} points")
+    plt.title(f"Chebyshev Rational e^x {error_kind_str} Errors on [{x_start}, {x_end}]. {num_parameters} params, {num_points_plot} points")
     plt.show()
 
 # This script does the following:
@@ -171,14 +178,41 @@ def main():
 def exponent_approximation_choice():
     # Equispaced x coordinates to be used for plotting every approximation.
     x_coordinates = approximations.linspace(x_start, x_end, num_points_plot)
-    x_coordinates = [sp.Float(sp.N(coef, osmomath_precision + 1), osmomath_precision + 1) for coef in x_coordinates]
+    x_coordinates = [sp.N(sp.Float(coef, osmomath_precision), n=osmomath_precision) for coef in x_coordinates]
+
+    print(x_coordinates)
 
     # Chebyshev Rational Approximation to get the coefficients.
-    coef_numerator, coef_denominator = approximations.chebyshev_rational_approx(approximated_fn, x_start, x_end, num_parameters)
+    # coef_numerator, coef_denominator = approximations.chebyshev_rational_approx(approximated_fn, x_start, x_end, num_parameters)
+    # coef_numerator = [sp.N(coef, osmomath_precision + 2) for coef in coef_numerator]
+    # coef_denominator = [sp.N(coef, osmomath_precision + 2) for coef in coef_denominator]
 
-    # Truncate the coefficients to osmomath precision.
-    coef_numerator = [sp.Float(sp.N(coef, osmomath_precision + 1), osmomath_precision + 1) for coef in coef_numerator]
-    coef_denominator = [sp.Float(sp.N(coef, osmomath_precision + 1), osmomath_precision + 1) for coef in coef_denominator]
+    # Hard code and round up numerator coefficientst that are to be used in production
+    # Hard code and round down numerator coefficientst that are to be used in production
+    # Both of these are calculated us=ing the above commented out code.
+
+    coef_numerator = [
+        sp.N(sp.Float("1.000000000000000000000044212244679434", osmomath_precision), n=osmomath_precision),
+        sp.N(sp.Float("0.352032455817400196452603772766844426", osmomath_precision), n=osmomath_precision),
+        sp.N(sp.Float("0.056507868883666405413116800969512484", osmomath_precision), n=osmomath_precision),
+        sp.N(sp.Float("0.005343900728213034434757419480319916", osmomath_precision), n=osmomath_precision),
+        sp.N(sp.Float("0.000317708814342353603087543715930732", osmomath_precision), n=osmomath_precision),
+        sp.N(sp.Float("0.000011429747507407623028722262874632", osmomath_precision), n=osmomath_precision),
+        sp.N(sp.Float("0.000000198381965651614980168744540366", osmomath_precision), n=osmomath_precision),
+    ]
+
+    coef_denominator = [
+        sp.N(sp.Float("1.0000000000000000000000000000000000000", osmomath_precision), n=osmomath_precision),
+        sp.N(sp.Float("-0.341114724742545112949699755780593311", osmomath_precision), n=osmomath_precision),
+        sp.N(sp.Float("0.052724071627342653404436933178482287", osmomath_precision), n=osmomath_precision),
+        sp.N(sp.Float("-0.004760950735524957576233524801866342", osmomath_precision), n=osmomath_precision),
+        sp.N(sp.Float("0.000267168475410566529819971616894193", osmomath_precision), n=osmomath_precision),
+        sp.N(sp.Float("-0.000008923715368802211181557353097439", osmomath_precision), n=osmomath_precision),
+        sp.N(sp.Float("0.000000140277233177373698516010555916", osmomath_precision), n=osmomath_precision),
+    ]
+
+    print(coef_numerator)
+    print(coef_denominator)
 
     # Evaluate approximation.
     y_chebyshev_rational = rational.evaluate(x_coordinates, coef_numerator, coef_denominator)
@@ -186,7 +220,7 @@ def exponent_approximation_choice():
     # Compute Actual Values
     y_actual = approximations.get_y_actual(approximated_fn, x_coordinates)
 
-    plot_error_range(x_coordinates, y_chebyshev_rational, y_actual)
+    plot_error_range(x_coordinates, y_chebyshev_rational, y_actual, True)
 
 if __name__ == "__main__":
     # Uncomment to run the main script.
