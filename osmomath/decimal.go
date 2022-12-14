@@ -52,7 +52,7 @@ var (
 	tickLogOf2 = MustNewDecFromStr("0.000144262291094554178391070900057480")
 	// initialized in init() since requires
 	// precision to be defined.
-	twoBigDec BigDec
+	twoBigDec BigDec = MustNewDecFromStr("2")
 )
 
 // Decimal errors
@@ -68,8 +68,6 @@ func init() {
 	for i := 0; i <= Precision; i++ {
 		precisionMultipliers[i] = calcPrecisionMultiplier(int64(i))
 	}
-
-	twoBigDec = NewBigDec(2)
 }
 
 func precisionInt() *big.Int {
