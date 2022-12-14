@@ -773,12 +773,12 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 		suite.Run(tc.name, func() {
 			// pool assets
 			defaultBaseAsset := balancer.PoolAsset{
-				Weight: tc.quoteDenomWeight,
-				Token:  tc.quoteDenomPoolInput,
-			}
-			defaultQuoteAsset := balancer.PoolAsset{
 				Weight: tc.baseDenomWeight,
 				Token:  tc.baseDenomPoolInput,
+			}
+			defaultQuoteAsset := balancer.PoolAsset{
+				Weight: tc.quoteDenomWeight,
+				Token:  tc.quoteDenomPoolInput,
 			}
 
 			poolAssets := []balancer.PoolAsset{defaultBaseAsset, defaultQuoteAsset}
