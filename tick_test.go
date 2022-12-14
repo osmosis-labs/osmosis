@@ -18,7 +18,7 @@ func (s *KeeperTestSuite) TestTickOrdering() {
 	storeKey := sdk.NewKVStoreKey("concentrated_liquidity")
 	tKey := sdk.NewTransientStoreKey("transient_test")
 	s.Ctx = testutil.DefaultContext(storeKey, tKey)
-	s.App.ConcentratedLiquidityKeeper = cl.NewKeeper(s.App.AppCodec(), storeKey, s.App.BankKeeper)
+	s.App.ConcentratedLiquidityKeeper = cl.NewKeeper(s.App.AppCodec(), storeKey, s.App.BankKeeper, s.App.GetSubspace(types.ModuleName))
 
 	liquidityTicks := []int64{-200, -55, -4, 70, 78, 84, 139, 240, 535}
 	for _, t := range liquidityTicks {
@@ -228,9 +228,8 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			// Init suite for each test.
 			s.Setup()
 
-			// Create a CL pool with poolId 1
-			_, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, ETH, USDC, DefaultCurrSqrtPrice, DefaultCurrTick)
-			s.Require().NoError(err)
+			// Create a default CL pool
+			s.PrepareConcentratedPool()
 
 			// If tickExists set, initialize the specified tick with defaultLiquidityAmt
 			preexistingLiquidity := sdk.ZeroDec()
@@ -298,12 +297,11 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			// Init suite for each test.
 			s.Setup()
 
-			// Create a CL pool with poolId 1
-			_, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, ETH, USDC, DefaultCurrSqrtPrice, DefaultCurrTick)
-			s.Require().NoError(err)
+			// Create a default CL pool
+			s.PrepareConcentratedPool()
 
 			// Set up an initialized tick
-			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, 1, DefaultCurrTick.Int64(), DefaultLiquidityAmt, true)
+			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, 1, DefaultCurrTick.Int64(), DefaultLiquidityAmt, true)
 
 			// System under test
 			tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, test.poolToGet, test.tickToGet)

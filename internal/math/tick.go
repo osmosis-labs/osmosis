@@ -25,10 +25,13 @@ func TicksToSqrtPrice(lowerTick, upperTick int64) (sdk.Dec, sdk.Dec, error) {
 // Returns error if fails to calculate sqrt price. Otherwise, the computed value and nil.
 // TODO: test
 func TickToSqrtPrice(tickIndex sdk.Int) (sqrtPrice sdk.Dec, err error) {
+	// If the tick index is positive, we can use the normal equation to calculate the square root price.
+	// However, if the tick index is negative, since we cannot take negative powers with the sdk,
+	// we need to take one over the original equation in order to make the power positive.
 	if tickIndex.GTE(sdk.ZeroInt()) {
 		sqrtPrice, err = sdk.NewDecWithPrec(10001, 4).Power(tickIndex.Uint64()).ApproxSqrt()
 	} else {
-		sqrtPrice, err = sdk.OneDec().Quo(sdk.NewDecWithPrec(10001, 4).Power(2)).ApproxSqrt()
+		sqrtPrice, err = sdk.OneDec().Quo(sdk.NewDecWithPrec(10001, 4).Power(tickIndex.Abs().Uint64())).ApproxSqrt()
 	}
 	if err != nil {
 		return sdk.Dec{}, err
