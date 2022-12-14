@@ -997,3 +997,45 @@ func (d BigDec) PowerIntegerMut(power uint64) BigDec {
 
 	return d.MulMut(tmp)
 }
+
+// Power returns a result of raising the given big dec to
+// a positive decimal power. Panics if the power is negative.
+// Panics if the base is negative. Does not mutate the receiver.
+// N.B.: support for negative power can be added when needed.
+func (d BigDec) Power(power BigDec) BigDec {
+	if d.IsNegative() {
+		panic(fmt.Sprintf("negative base is not supported for Power(), base was (%s)", d))
+	}
+	if power.IsNegative() {
+		panic(fmt.Sprintf("negative power is not supported for Power(), power was (%s)", power))
+	}
+	if power.Abs().GT(maxSupportedExponent) {
+		panic(fmt.Sprintf("integer exponent %s is too large, max (%s)", power, maxSupportedExponent))
+	}
+	if power.IsInteger() {
+		return d.PowerInteger(power.TruncateInt().Uint64())
+	}
+	if power.IsZero() {
+		return OneDec()
+	}
+	if d.IsZero() {
+		return ZeroDec()
+	}
+	if d.Equal(twoBigDec) {
+		return Exp2(power)
+	}
+
+	// d^power = exp2(power * log_2{base})
+	result := Exp2(d.LogBase2().Mul(power))
+
+	return result
+}
+
+// PowerMut returns a result of raising the given big dec to
+// a positive decimal power. Panics if the power is negative.
+// Panics if the base is negative. Mutates the receiver.
+// N.B.: support for negative power can be added when needed.
+func (d BigDec) PowerMut(power BigDec) BigDec {
+	d.i.Set(d.Power(power).i)
+	return d
+}
