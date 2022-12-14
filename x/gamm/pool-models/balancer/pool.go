@@ -623,7 +623,7 @@ func (p *Pool) applySwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coin
 //
 // panics if the pool in state is incorrect, and has any weight that is 0.
 func (p Pool) SpotPrice(ctx sdk.Context, quoteAsset, baseAsset string) (spotPrice sdk.Dec, err error) {
-	quote, base, err := p.parsePoolAssetsByDenoms(baseAsset, quoteAsset)
+	quote, base, err := p.parsePoolAssetsByDenoms(quoteAsset, baseAsset)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -632,9 +632,10 @@ func (p Pool) SpotPrice(ctx sdk.Context, quoteAsset, baseAsset string) (spotPric
 	}
 
 	// spot_price = (Quote Supply / Quote Weight) / (Base Supply / Base Weight)
+	//            = (Quote Supply / Quote Weight) * (Base Weight / Base Supply)
 	// spot_price = (Quote Weight / Base Weight) * (Quote Supply / Base Supply)
-	invWeightRatio := quote.Weight.ToDec().Quo(base.Weight.ToDec())
-	supplyRatio := base.Token.Amount.ToDec().Quo(quote.Token.Amount.ToDec())
+	invWeightRatio := base.Weight.ToDec().Quo(quote.Weight.ToDec())
+	supplyRatio := quote.Token.Amount.ToDec().Quo(base.Token.Amount.ToDec())
 	spotPrice = supplyRatio.Mul(invWeightRatio)
 
 	return spotPrice, err
