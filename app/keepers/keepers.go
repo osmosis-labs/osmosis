@@ -34,6 +34,8 @@ import (
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	downtimedetector "github.com/osmosis-labs/osmosis/v13/x/downtime-detector"
+	downtimetypes "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/types"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
 	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
@@ -187,6 +189,10 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		blockedAddress,
 	)
 	appKeepers.DistrKeeper = &distrKeeper
+
+	appKeepers.DowntimeKeeper = downtimedetector.NewKeeper(
+		appKeepers.keys[downtimetypes.StoreKey],
+	)
 
 	slashingKeeper := slashingkeeper.NewKeeper(
 		appCodec,
@@ -572,6 +578,7 @@ func KVStoreKeys() []string {
 		stakingtypes.StoreKey,
 		minttypes.StoreKey,
 		distrtypes.StoreKey,
+		downtimetypes.StoreKey,
 		slashingtypes.StoreKey,
 		govtypes.StoreKey,
 		paramstypes.StoreKey,

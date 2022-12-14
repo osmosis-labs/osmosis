@@ -17,9 +17,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 
 	downtimedetector "github.com/osmosis-labs/osmosis/v13/x/downtime-detector"
+	downtimeclient "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/client"
+	downtimecli "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/client/cli"
+	"github.com/osmosis-labs/osmosis/v13/x/downtime-detector/client/grpc"
+	"github.com/osmosis-labs/osmosis/v13/x/downtime-detector/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v13/x/downtime-detector/types"
-	twapcli "github.com/osmosis-labs/osmosis/v13/x/twap/client/cli"
-	"github.com/osmosis-labs/osmosis/v13/x/twap/client/queryproto"
 )
 
 var (
@@ -58,7 +60,7 @@ func (b AppModuleBasic) GetTxCmd() *cobra.Command {
 }
 
 func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return twapcli.GetQueryCmd()
+	return downtimecli.GetQueryCmd()
 }
 
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
@@ -71,7 +73,7 @@ type AppModule struct {
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	// queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: twapclient.Querier{K: am.k}})
+	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: downtimeclient.Querier{K: am.k}})
 }
 
 func NewAppModule(k downtimedetector.Keeper) AppModule {
@@ -81,8 +83,7 @@ func NewAppModule(k downtimedetector.Keeper) AppModule {
 	}
 }
 
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-}
+func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
 func (am AppModule) Route() sdk.Route {
 	return sdk.Route{}
@@ -110,7 +111,9 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 	return cdc.MustMarshalJSON(genState)
 }
 
-func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
+func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
+	am.k.BeginBlock(ctx)
+}
 
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
