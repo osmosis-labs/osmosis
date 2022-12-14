@@ -17,15 +17,3 @@ message Position {
     (gogoproto.nullable) = false
   ];
 }
-
-message RangePosition {
-  string liquidity = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"liquidity\"",
-    (gogoproto.nullable) = false
-  ];
-  string address = 2 [ (gogoproto.moretags) = "yaml:\"address\"" ];
-  bool zero_for_one = 3 [ (gogoproto.moretags) = "yaml:\"zero_for_one\"" ];
-  uint64 lower_tick = 4 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
-  uint64 upper_tick = 5 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
-}

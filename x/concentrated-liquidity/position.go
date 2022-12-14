@@ -2,7 +2,6 @@ package concentrated_liquidity
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
@@ -94,55 +93,4 @@ func (k Keeper) setPosition(ctx sdk.Context,
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
 	osmoutils.MustSet(store, key, position)
-}
-
-func (k Keeper) setRangePosition(ctx sdk.Context,
-	poolId uint64,
-	owner sdk.AccAddress,
-	lowerTick, upperTick int64,
-	rangePosition *model.RangePosition,
-) {
-	store := ctx.KVStore(k.storeKey)
-	key := types.KeyRangePosition(poolId)
-	osmoutils.MustSet(store, key, rangePosition)
-}
-
-func (k Keeper) RangePositionIterator(ctx sdk.Context,
-	poolId uint64,
-) sdk.Iterator {
-	store := ctx.KVStore(k.storeKey)
-	return sdk.KVStorePrefixIterator(store, types.KeyRangePosition(poolId))
-}
-
-func (k Keeper) finalizeRangeOrderPositions(ctx sdk.Context, poolId uint64) error {
-	pool, err := k.getPoolById(ctx, poolId)
-	if err != nil {
-		return err
-	}
-
-	currentTick := pool.GetCurrentTick()
-
-	iterator := k.RangePositionIterator(ctx, poolId)
-	defer iterator.Close()
-
-	// iterate over all range positions and withdraw expired positions
-	for ; iterator.Valid(); iterator.Next() {
-		rangePosition := model.RangePosition{}
-		err := proto.Unmarshal(iterator.Value(), &rangePosition)
-		if err != nil {
-			panic(err)
-		}
-
-		// If the range position is not expired, skip it
-		if (rangePosition.ZeroForOne && rangePosition.UpperTick < currentTick.Uint64()) ||
-			(!rangePosition.ZeroForOne && currentTick.Uint64() < rangePosition.LowerTick) {
-			_, _, err = k.withdrawPosition(ctx, poolId, sdk.AccAddress(rangePosition.Address), int64(rangePosition.LowerTick), int64(rangePosition.UpperTick), rangePosition.Liquidity)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	// todo: delete range positions
-	return nil
 }

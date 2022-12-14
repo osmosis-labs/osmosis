@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
@@ -84,49 +83,6 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	// Persist the changes made to the cache context if the actual amounts of tokens 0 and 1 are greater than or equal to the given minimum amounts.
 	writeCacheCtx()
-
-	return actualAmount0, actualAmount1, liquidityDelta, nil
-}
-
-// does same as createPosition, but adds additional state entry to store range position
-func (k Keeper) createRangePosition(ctx sdk.Context,
-	poolId uint64,
-	owner sdk.AccAddress,
-	amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int,
-	lowerTick, upperTick int64,
-	zeroForOne bool,
-) (sdk.Int, sdk.Int, sdk.Dec, error) {
-	pool, err := k.getPoolById(ctx, poolId)
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
-	}
-	currentTick := pool.GetCurrentTick()
-
-	// first sanity check on the range position given
-	if zeroForOne && upperTick < currentTick.Int64() || !zeroForOne && lowerTick > currentTick.Int64() {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, errors.New("range position closes as it opens")
-	}
-
-	// call create position, as the logic for adding position for pool stands same for range positions
-	actualAmount0, actualAmount1, liquidityDelta, err := k.createPosition(
-		ctx,
-		poolId,
-		owner,
-		amount0Desired,
-		amount1Desired,
-		amount0Min,
-		amount1Min,
-		lowerTick,
-		upperTick,
-	)
-
-	// TODO: handle existing positions here, think about how to handle position and range position
-	position := &model.RangePosition{Liquidity: liquidityDelta, ZeroForOne: zeroForOne, LowerTick: uint64(lowerTick), UpperTick: uint64(upperTick)}
-	k.setRangePosition(ctx, poolId, owner, lowerTick, upperTick, position)
-
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
-	}
 
 	return actualAmount0, actualAmount1, liquidityDelta, nil
 }

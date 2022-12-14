@@ -496,11 +496,6 @@ func (k *Keeper) applySwap(
 		return err
 	}
 
-	// withdraw fulfilled range orders
-	if err := k.finalizeRangeOrderPositions(ctx, poolId); err != nil {
-		return err
-	}
-
 	return nil
 }
 
