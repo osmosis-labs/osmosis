@@ -3,6 +3,7 @@ package osmosis.concentratedliquidity.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
+import "google/protobuf/any.proto";
 import "osmosis/concentrated-liquidity/params.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types";
@@ -11,4 +12,6 @@ option go_package = "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidit
 message GenesisState {
   // params are all the parameters of the module
   Params params = 1 [ (gogoproto.nullable) = false ];
+  repeated google.protobuf.Any pools = 2
+      [ (cosmos_proto.accepts_interface) = "PoolI" ];
 }
