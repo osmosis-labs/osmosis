@@ -14,7 +14,10 @@ type ConcentratedPoolExtension interface {
 	GetToken1() string
 	GetCurrentSqrtPrice() sdk.Dec
 	GetCurrentTick() sdk.Int
+	GetTickSpacing() uint64
 	GetLiquidity() sdk.Dec
+	SetCurrentSqrtPrice(newSqrtPrice sdk.Dec)
+	SetCurrentTick(newTick sdk.Int)
 
 	UpdateLiquidity(newLiquidity sdk.Dec)
 	ApplySwap(newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurrentSqrtPrice sdk.Dec) error

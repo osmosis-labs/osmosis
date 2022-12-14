@@ -1,6 +1,7 @@
 package model_test
 
 import (
+	fmt "fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,6 +12,24 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/model"
 )
 
+const (
+	ETH                = "eth"
+	USDC               = "usdc"
+	DAI                = "dai"
+	DefaultValidPoolID = uint64(1)
+	DefaultTickSpacing = uint64(1)
+)
+
+var (
+	DefaultSpotPrice        = sdk.MustNewDecFromStr("0.2")
+	DefaultReverseSpotPrice = sdk.NewDec(1).Quo(DefaultSpotPrice)
+	DefaultSqrtSpotPrice, _ = DefaultSpotPrice.ApproxSqrt()
+	DefaultLiquidityAmt     = sdk.MustNewDecFromStr("1517818840.967515822610790519")
+	DefaultCurrTick         = sdk.NewInt(85176)
+	DefaultCurrPrice        = sdk.NewDec(5000)
+	DefaultCurrSqrtPrice, _ = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
+)
+
 type ConcentratedPoolTestSuite struct {
 	apptesting.KeeperTestHelper
 }
@@ -19,84 +38,206 @@ func TestConcentratedPoolTestSuite(t *testing.T) {
 	suite.Run(t, new(ConcentratedPoolTestSuite))
 }
 
+// TestSpotPrice tests the SpotPrice method of the ConcentratedPoolTestSuite.
 func (s *ConcentratedPoolTestSuite) TestSpotPrice() {
-	defaultSpotPrice := sdk.MustNewDecFromStr("0.2")
-	defaultSqrtSpotPrice, err := defaultSpotPrice.ApproxSqrt()
-	s.Require().NoError(err)
-	reverseSpotPirce := sdk.NewDec(1).Quo(defaultSpotPrice)
-	defaultToken0 := "tokenA"
-	defaultToken1 := "tokenB"
-	randomToken := "random"
+	type param struct {
+		baseDenom  string
+		quoteDenom string
+	}
 
-	testCases := []struct {
-		baseDenom   string
-		quoteDenom  string
-		expectedSp  sdk.Dec
-		expectedErr bool
+	tests := []struct {
+		name              string
+		param             param
+		expectedSpotPrice sdk.Dec
+		expectedErr       error
 	}{
-		{defaultToken0, defaultToken1, defaultSpotPrice, false},
-		{defaultToken1, defaultToken0, reverseSpotPirce, false},
-		{defaultToken0, defaultToken0, reverseSpotPirce, true},
-		{defaultToken0, randomToken, sdk.ZeroDec(), true},
+		{
+			name: "Happy path",
+			param: param{
+				baseDenom:  ETH,
+				quoteDenom: USDC,
+			},
+			expectedSpotPrice: DefaultSpotPrice,
+		},
+		{
+			name: "Happy path: reverse spot price",
+			param: param{
+				baseDenom:  USDC,
+				quoteDenom: ETH,
+			},
+			expectedSpotPrice: DefaultReverseSpotPrice,
+		},
+		{
+			name: "Error: quote asset denom does not exist in the pool",
+			param: param{
+				baseDenom:  ETH,
+				quoteDenom: DAI,
+			},
+			expectedSpotPrice: sdk.ZeroDec(),
+			expectedErr:       fmt.Errorf("quote asset denom (%s) is not in the pool", DAI),
+		},
+		{
+			name: "Error: base asset denom does not exist in the pool",
+			param: param{
+				baseDenom:  DAI,
+				quoteDenom: ETH,
+			},
+			expectedSpotPrice: sdk.ZeroDec(),
+			expectedErr:       fmt.Errorf("base asset denom (%s) is not in the pool", DAI),
+		},
 	}
 
-	mock_pool := model.Pool{
-		CurrentSqrtPrice: defaultSqrtSpotPrice,
-		Token0:           defaultToken0,
-		Token1:           defaultToken1,
-	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// Init suite for each test.
+			s.Setup()
 
-	for _, tc := range testCases {
-		sp, err := mock_pool.SpotPrice(sdk.Context{}, tc.baseDenom, tc.quoteDenom)
-		if tc.expectedErr {
-			s.Require().Error(err)
-		} else {
-			s.Require().NoError(err)
+			// Create a concentrated liquidity pool struct instance
+			mock_pool := model.Pool{
+				CurrentSqrtPrice: DefaultSqrtSpotPrice,
+				Token0:           ETH,
+				Token1:           USDC,
+			}
 
-			// we use elipson due to sqrt approximation
-			elipson := sdk.MustNewDecFromStr("0.0000000000000001")
-			s.Require().True(sp.Sub(tc.expectedSp).Abs().LT(elipson))
-		}
+			// Check the spot price of the mock pool using the SpotPrice method.
+			spotPriceFromMethod, err := mock_pool.SpotPrice(sdk.Context{}, tc.param.baseDenom, tc.param.quoteDenom)
+
+			if tc.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &tc.expectedErr)
+			} else {
+				s.Require().NoError(err)
+
+				// We use elipson due to sqrt approximation
+				elipson := sdk.MustNewDecFromStr("0.0000000000000001")
+				s.Require().True(spotPriceFromMethod.Sub(tc.expectedSpotPrice).Abs().LT(elipson))
+			}
+		})
 	}
 }
 
+// TestUpdateLiquidity tests the UpdateLiquidity method of the ConcentratedPoolTestSuite.
 func (s *ConcentratedPoolTestSuite) TestUpdateLiquidity() {
-	defaultLiquidity := sdk.NewDec(100)
 	mock_pool := model.Pool{
-		Liquidity: defaultLiquidity,
+		Liquidity: DefaultLiquidityAmt,
 	}
 
-	// try updating it with zero dec
+	// Try updating the liquidity with a zero sdk.Dec value.
 	mock_pool.UpdateLiquidity(sdk.ZeroDec())
 
-	s.Require().Equal(defaultLiquidity, mock_pool.Liquidity)
+	// Assert that the liquidity has not changed.
+	s.Require().Equal(DefaultLiquidityAmt, mock_pool.Liquidity)
 
-	// try adding 10 to pool liquidity
+	// Try adding 10 to the pool liquidity.
 	mock_pool.UpdateLiquidity(sdk.NewDec(10))
-	s.Require().Equal(defaultLiquidity.Add(sdk.NewDec(10)), mock_pool.Liquidity)
+
+	// Assert that the liquidity has increased by 10.
+	s.Require().Equal(DefaultLiquidityAmt.Add(sdk.NewDec(10)), mock_pool.Liquidity)
 }
 
 func (s *ConcentratedPoolTestSuite) TestApplySwap() {
+	// Set up the test suite.
 	s.Setup()
 
-	defaultLiquidity := sdk.NewDec(100)
-	defaultCurrTick := sdk.NewInt(1)
-	defaultCurrSqrtPrice := sdk.NewDec(5)
-
+	// Create a concentrated liquidity pool struct instance
 	mock_pool := model.Pool{
-		Liquidity:        defaultLiquidity,
-		CurrentTick:      defaultCurrTick,
-		CurrentSqrtPrice: defaultCurrSqrtPrice,
+		Liquidity:        DefaultLiquidityAmt,
+		CurrentTick:      DefaultCurrTick,
+		CurrentSqrtPrice: DefaultCurrSqrtPrice,
 	}
 
-	newLiquidity := defaultLiquidity.Mul(sdk.NewDec(2))
-	newCurrTick := defaultCurrTick.Mul(sdk.NewInt(2))
-	newCurrSqrtPrice := defaultCurrSqrtPrice.Mul(sdk.NewDec(2))
+	// Create new values for liquidity, current tick, and current square root price.
+	newLiquidity := DefaultLiquidityAmt.Mul(sdk.NewDec(2))
+	newCurrTick := DefaultCurrTick.Mul(sdk.NewInt(2))
+	newCurrSqrtPrice := DefaultCurrSqrtPrice.Mul(sdk.NewDec(2))
 
+	// Apply the new values to the mock pool using the ApplySwap method.
 	mock_pool.ApplySwap(newLiquidity, newCurrTick, newCurrSqrtPrice)
 
+	// Assert that the values in the mock pool have been updated.
 	s.Require().Equal(mock_pool.Liquidity, newLiquidity)
 	s.Require().Equal(mock_pool.CurrentTick, newCurrTick)
 	s.Require().Equal(mock_pool.CurrentSqrtPrice, newCurrSqrtPrice)
+}
 
+// TestNewConcentratedLiquidityPool is a test suite that tests the NewConcentratedLiquidityPool function.
+func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
+	type param struct {
+		poolId      uint64
+		denom0      string
+		denom1      string
+		tickSpacing uint64
+	}
+
+	tests := []struct {
+		name                string
+		param               param
+		expectedPoolId      uint64
+		expectedDenom0      string
+		expectedDenom1      string
+		expectedTickSpacing uint64
+		expectedErr         error
+	}{
+		{
+			name: "Happy path",
+			param: param{
+				poolId:      DefaultValidPoolID,
+				denom0:      ETH,
+				denom1:      USDC,
+				tickSpacing: 1,
+			},
+			expectedPoolId:      DefaultValidPoolID,
+			expectedDenom0:      ETH,
+			expectedDenom1:      USDC,
+			expectedTickSpacing: DefaultTickSpacing,
+		},
+		{
+			name: "Non lexicographical order of denoms should get reordered",
+			param: param{
+				poolId:      DefaultValidPoolID,
+				denom0:      USDC,
+				denom1:      ETH,
+				tickSpacing: DefaultTickSpacing,
+			},
+			expectedPoolId:      DefaultValidPoolID,
+			expectedDenom0:      ETH,
+			expectedDenom1:      USDC,
+			expectedTickSpacing: DefaultTickSpacing,
+		},
+		{
+			name: "Error: same denom not allowed",
+			param: param{
+				poolId:      DefaultValidPoolID,
+				denom0:      USDC,
+				denom1:      USDC,
+				tickSpacing: DefaultTickSpacing,
+			},
+			expectedErr: fmt.Errorf("cannot have the same asset in a single pool"),
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			// Init suite for each test.
+			s.Setup()
+
+			// Call NewConcentratedLiquidityPool with the parameters from the current test.
+			pool, err := model.NewConcentratedLiquidityPool(test.param.poolId, test.param.denom0, test.param.denom1, test.param.tickSpacing)
+
+			if test.expectedErr != nil {
+				// If the test is expected to produce an error, check if it does.
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &test.expectedErr)
+			} else {
+				// If the test is not expected to produce an error, check if it doesn't.
+				s.Require().NoError(err)
+
+				// Check if the values of the returned pool match the expected values.
+				s.Require().Equal(test.expectedPoolId, pool.Id)
+				s.Require().Equal(test.expectedDenom0, pool.Token0)
+				s.Require().Equal(test.expectedDenom1, pool.Token1)
+				s.Require().Equal(test.expectedTickSpacing, pool.TickSpacing)
+			}
+		})
+	}
 }

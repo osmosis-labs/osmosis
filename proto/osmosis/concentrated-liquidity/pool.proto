@@ -38,4 +38,7 @@ message Pool {
     (gogoproto.moretags) = "yaml:\"current_tick\"",
     (gogoproto.nullable) = false
   ];
+  // tick_spacing must be one of the authorized_tick_spacing values set in the
+  // concentrated-liquidity parameters
+  uint64 tick_spacing = 8 [ (gogoproto.moretags) = "yaml:\"tick_spacing\"" ];
 }

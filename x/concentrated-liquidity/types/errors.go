@@ -154,3 +154,32 @@ type InvalidPriceLimitError struct {
 func (e InvalidPriceLimitError) Error() string {
 	return fmt.Sprintf("invalid sqrt price limit given (%s), should be greater than (%s) and less than (%s)", e.SqrtPriceLimit, e.LowerBound, e.UpperBound)
 }
+
+type TickSpacingError struct {
+	TickSpacing uint64
+	LowerTick   int64
+	UpperTick   int64
+}
+
+func (e TickSpacingError) Error() string {
+	return fmt.Sprintf("lowerTick (%d) and upperTick (%d) must be divisible by the pool's tickSpacing parameter (%d)", e.LowerTick, e.UpperTick, e.TickSpacing)
+}
+
+type TickSpacingBoundaryError struct {
+	TickSpacing        uint64
+	TickSpacingMinimum uint64
+	TickSpacingMaximum uint64
+}
+
+func (e TickSpacingBoundaryError) Error() string {
+	return fmt.Sprintf("requested tickSpacing (%d) is not between the minimum (%d) and maximum (%d)", e.TickSpacing, e.TickSpacingMinimum, e.TickSpacingMaximum)
+}
+
+type InitialLiquidityZeroError struct {
+	Amount0 sdk.Int
+	Amount1 sdk.Int
+}
+
+func (e InitialLiquidityZeroError) Error() string {
+	return fmt.Sprintf("first position must contain non-zero value of both assets to determine spot price: Amount0 (%s) Amount1 (%s)", e.Amount0, e.Amount1)
+}

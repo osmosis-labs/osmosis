@@ -3,8 +3,12 @@ package osmosis.concentratedliquidity.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
+import "osmosis/concentrated-liquidity/params.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types";
 
-// GenesisState defines the gamm module's genesis state.
-message GenesisState {}
+// GenesisState defines the concentrated liquidity module's genesis state.
+message GenesisState {
+  // params are all the parameters of the module
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}

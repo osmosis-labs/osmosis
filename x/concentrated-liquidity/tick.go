@@ -84,15 +84,23 @@ func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tic
 // Also, lower tick must be less than upper tick.
 // Returns error if validation fails. Otherwise, nil.
 // TODO: test
-func validateTickRangeIsValid(lowerTick int64, upperTick int64) error {
-	// ensure types.MinTick <= lowerTick < types.MaxTick
+func validateTickRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int64) error {
+	// Check if the lower and upper tick values are divisible by the tick spacing.
+	if lowerTick%int64(tickSpacing) != 0 || upperTick%int64(tickSpacing) != 0 {
+		return types.TickSpacingError{LowerTick: lowerTick, UpperTick: upperTick, TickSpacing: tickSpacing}
+	}
+
+	// Check if the lower tick value is within the valid range of MinTick to MaxTick.
 	if lowerTick < types.MinTick || lowerTick >= types.MaxTick {
 		return types.InvalidTickError{Tick: lowerTick, IsLower: true}
 	}
-	// ensure types.MaxTick < upperTick <= types.MinTick
+
+	// Check if the upper tick value is within the valid range of MinTick to MaxTick.
 	if upperTick > types.MaxTick || upperTick <= types.MinTick {
 		return types.InvalidTickError{Tick: upperTick, IsLower: false}
 	}
+
+	// Check if the lower tick value is greater than or equal to the upper tick value.
 	if lowerTick >= upperTick {
 		return types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
 	}

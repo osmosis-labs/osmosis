@@ -261,6 +261,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appCodec,
 		appKeepers.keys[concentratedliquiditytypes.StoreKey],
 		appKeepers.BankKeeper,
+		appKeepers.GetSubspace(concentratedliquiditytypes.ModuleName),
 	)
 
 	appKeepers.SwapRouterKeeper = swaprouter.NewKeeper(
@@ -542,6 +543,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(twaptypes.ModuleName)
 	paramsKeeper.Subspace(swaproutertypes.ModuleName)
 	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
+	paramsKeeper.Subspace(concentratedliquiditytypes.ModuleName)
 
 	return paramsKeeper
 }

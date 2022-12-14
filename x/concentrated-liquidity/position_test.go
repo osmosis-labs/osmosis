@@ -75,9 +75,8 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			// Init suite for each test.
 			s.Setup()
 
-			// Create a CL pool with poolId 1
-			_, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, validPoolId, ETH, USDC, DefaultCurrSqrtPrice, DefaultCurrTick)
-			s.Require().NoError(err)
+			// Create a default CL pool
+			s.PrepareConcentratedPool()
 
 			// If positionExists set, initialize the specified position with defaultLiquidityAmt
 			preexistingLiquidity := sdk.ZeroDec()
@@ -164,12 +163,11 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			// Init suite for each test.
 			s.Setup()
 
-			// Create a CL pool with poolId 1
-			_, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, validPoolId, ETH, USDC, DefaultCurrSqrtPrice, DefaultCurrTick)
-			s.Require().NoError(err)
+			// Create a default CL pool
+			s.PrepareConcentratedPool()
 
 			// Set up a default initialized position
-			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt)
+			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt)
 
 			// System under test
 			position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, test.poolToGet, s.TestAccs[test.ownerIndex], test.lowerTick, test.upperTick)
