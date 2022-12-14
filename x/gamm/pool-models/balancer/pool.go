@@ -633,7 +633,7 @@ func (p Pool) SpotPrice(ctx sdk.Context, quoteAsset, baseAsset string) (spotPric
 
 	// spot_price = (Quote Supply / Quote Weight) / (Base Supply / Base Weight)
 	//            = (Quote Supply / Quote Weight) * (Base Weight / Base Supply)
-	// spot_price = (Quote Weight / Base Weight) * (Quote Supply / Base Supply)
+	//            = (Quote Weight / Base Weight) * (Quote Supply / Base Supply)
 	invWeightRatio := base.Weight.ToDec().Quo(quote.Weight.ToDec())
 	supplyRatio := quote.Token.Amount.ToDec().Quo(base.Token.Amount.ToDec())
 	spotPrice = supplyRatio.Mul(invWeightRatio)
