@@ -17,7 +17,6 @@ var (
 )
 
 func TestExp2ChebyshevRationalApprox(t *testing.T) {
-
 	smallValue := osmomath.MustNewDecFromStr("0.00001")
 	smallerValue := osmomath.MustNewDecFromStr("0.00000000000000000001")
 
