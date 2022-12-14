@@ -20,7 +20,7 @@ func (k *Keeper) setGenDowntimes(ctx sdk.Context, genDowntimes []types.GenesisDo
 	}
 }
 
-// ExportGenesis returns the twap module's exported genesis.
+// ExportGenesis returns the downtime detector module's exported genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	t, err := k.GetLastBlockTime(ctx)
 	if err != nil {
