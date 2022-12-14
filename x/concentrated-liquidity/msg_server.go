@@ -93,6 +93,22 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 	return &types.MsgCreatePositionResponse{Amount0: actualAmount0, Amount1: actualAmount1}, nil
 }
 
+func (server msgServer) CreateRangePosition(goCtx context.Context, msg *types.MsgCreateRangePosition) (*types.MsgCreateRangePositionResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	actualAmount0, actualAmount1, _, err := server.keeper.createRangePosition(ctx, msg.PoolId, sender, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick, msg.ZeroForOne)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgCreateRangePositionResponse{Amount0: actualAmount0, Amount1: actualAmount1}, nil
+}
+
 // TODO: tests, including events
 func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWithdrawPosition) (*types.MsgWithdrawPositionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
