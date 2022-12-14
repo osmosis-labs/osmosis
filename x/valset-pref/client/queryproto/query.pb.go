@@ -6,9 +6,9 @@ package queryproto
 import (
 	context "context"
 	fmt "fmt"
+	grpc1 "github.com/cosmos/gogoproto/grpc"
+	proto "github.com/cosmos/gogoproto/proto"
 	_ "github.com/gogo/protobuf/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
-	proto "github.com/gogo/protobuf/proto"
 	types "github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"

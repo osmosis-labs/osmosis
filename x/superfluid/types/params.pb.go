@@ -6,9 +6,9 @@ package types
 import (
 	fmt "fmt"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	proto "github.com/cosmos/gogoproto/proto"
 	_ "github.com/gogo/protobuf/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
-	_ "github.com/gogo/protobuf/types"
+	_ "google.golang.org/protobuf/types/known/durationpb"
 	io "io"
 	math "math"
 	math_bits "math/bits"

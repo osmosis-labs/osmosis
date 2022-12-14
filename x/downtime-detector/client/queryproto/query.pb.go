@@ -10,16 +10,17 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/query"
+	grpc1 "github.com/cosmos/gogoproto/grpc"
+	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
 	_ "github.com/gogo/protobuf/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
-	proto "github.com/gogo/protobuf/proto"
-	_ "github.com/gogo/protobuf/types"
-	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
-	types1 "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/types"
+	types "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	_ "google.golang.org/protobuf/types/known/durationpb"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -176,7 +177,7 @@ func (m *ParamsRequest) XXX_DiscardUnknown() {
 var xxx_messageInfo_ParamsRequest proto.InternalMessageInfo
 
 type ParamsResponse struct {
-	Params types1.Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+	Params types.Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 }
 
 func (m *ParamsResponse) Reset()         { *m = ParamsResponse{} }
@@ -212,11 +213,11 @@ func (m *ParamsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ParamsResponse proto.InternalMessageInfo
 
-func (m *ParamsResponse) GetParams() types1.Params {
+func (m *ParamsResponse) GetParams() types.Params {
 	if m != nil {
 		return m.Params
 	}
-	return types1.Params{}
+	return types.Params{}
 }
 
 func init() {
@@ -403,7 +404,7 @@ func (m *RecoveredSinceDowntimeOfLengthRequest) MarshalToSizedBuffer(dAtA []byte
 	_ = i
 	var l int
 	_ = l
-	n1, err1 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.Recovery, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.Recovery):])
+	n1, err1 := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.Recovery, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.Recovery):])
 	if err1 != nil {
 		return 0, err1
 	}
@@ -411,7 +412,7 @@ func (m *RecoveredSinceDowntimeOfLengthRequest) MarshalToSizedBuffer(dAtA []byte
 	i = encodeVarintQuery(dAtA, i, uint64(n1))
 	i--
 	dAtA[i] = 0x12
-	n2, err2 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.Downtime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.Downtime):])
+	n2, err2 := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.Downtime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.Downtime):])
 	if err2 != nil {
 		return 0, err2
 	}
@@ -528,9 +529,9 @@ func (m *RecoveredSinceDowntimeOfLengthRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.Downtime)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.Downtime)
 	n += 1 + l + sovQuery(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.Recovery)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.Recovery)
 	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
@@ -631,7 +632,7 @@ func (m *RecoveredSinceDowntimeOfLengthRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.Downtime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdDurationUnmarshal(&m.Downtime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -664,7 +665,7 @@ func (m *RecoveredSinceDowntimeOfLengthRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.Recovery, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdDurationUnmarshal(&m.Recovery, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

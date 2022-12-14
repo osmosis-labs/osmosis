@@ -6,10 +6,10 @@ package types
 import (
 	fmt "fmt"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
 	_ "github.com/gogo/protobuf/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
-	_ "github.com/gogo/protobuf/types"
-	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
+	_ "google.golang.org/protobuf/types/known/durationpb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -445,7 +445,7 @@ func (m *LockableDurationsInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = l
 	if len(m.LockableDurations) > 0 {
 		for iNdEx := len(m.LockableDurations) - 1; iNdEx >= 0; iNdEx-- {
-			n, err := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.LockableDurations[iNdEx], dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.LockableDurations[iNdEx]):])
+			n, err := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.LockableDurations[iNdEx], dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.LockableDurations[iNdEx]):])
 			if err != nil {
 				return 0, err
 			}
@@ -563,7 +563,7 @@ func (m *PoolToGauge) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	n1, err1 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.Duration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.Duration):])
+	n1, err1 := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.Duration, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.Duration):])
 	if err1 != nil {
 		return 0, err1
 	}
@@ -653,7 +653,7 @@ func (m *LockableDurationsInfo) Size() (n int) {
 	_ = l
 	if len(m.LockableDurations) > 0 {
 		for _, e := range m.LockableDurations {
-			l = github_com_gogo_protobuf_types.SizeOfStdDuration(e)
+			l = github_com_cosmos_gogoproto_types.SizeOfStdDuration(e)
 			n += 1 + l + sovIncentives(uint64(l))
 		}
 	}
@@ -703,7 +703,7 @@ func (m *PoolToGauge) Size() (n int) {
 	if m.GaugeId != 0 {
 		n += 1 + sovIncentives(uint64(m.GaugeId))
 	}
-	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.Duration)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.Duration)
 	n += 1 + l + sovIncentives(uint64(l))
 	return n
 }
@@ -870,7 +870,7 @@ func (m *LockableDurationsInfo) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.LockableDurations = append(m.LockableDurations, time.Duration(0))
-			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&(m.LockableDurations[len(m.LockableDurations)-1]), dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdDurationUnmarshal(&(m.LockableDurations[len(m.LockableDurations)-1]), dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1212,7 +1212,7 @@ func (m *PoolToGauge) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.Duration, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdDurationUnmarshal(&m.Duration, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

@@ -7,10 +7,11 @@ import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/cosmos-sdk/codec/types"
+	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
 	_ "github.com/gogo/protobuf/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
-	_ "github.com/gogo/protobuf/types"
-	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
+	_ "google.golang.org/protobuf/types/known/durationpb"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -264,7 +265,7 @@ func (m *GenesisDowntimeEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	n1, err1 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.LastDowntime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.LastDowntime):])
+	n1, err1 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.LastDowntime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.LastDowntime):])
 	if err1 != nil {
 		return 0, err1
 	}
@@ -272,7 +273,7 @@ func (m *GenesisDowntimeEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i = encodeVarintGenesis(dAtA, i, uint64(n1))
 	i--
 	dAtA[i] = 0x12
-	n2, err2 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.DowntimeDuration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.DowntimeDuration):])
+	n2, err2 := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.DowntimeDuration, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.DowntimeDuration):])
 	if err2 != nil {
 		return 0, err2
 	}
@@ -313,7 +314,7 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x1a
-	n4, err4 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.LastBlockTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.LastBlockTime):])
+	n4, err4 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.LastBlockTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.LastBlockTime):])
 	if err4 != nil {
 		return 0, err4
 	}
@@ -364,9 +365,9 @@ func (m *GenesisDowntimeEntry) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.DowntimeDuration)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.DowntimeDuration)
 	n += 1 + l + sovGenesis(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.LastDowntime)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.LastDowntime)
 	n += 1 + l + sovGenesis(uint64(l))
 	return n
 }
@@ -383,7 +384,7 @@ func (m *GenesisState) Size() (n int) {
 			n += 1 + l + sovGenesis(uint64(l))
 		}
 	}
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.LastBlockTime)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.LastBlockTime)
 	n += 1 + l + sovGenesis(uint64(l))
 	l = m.Params.Size()
 	n += 1 + l + sovGenesis(uint64(l))
@@ -504,7 +505,7 @@ func (m *GenesisDowntimeEntry) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.DowntimeDuration, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdDurationUnmarshal(&m.DowntimeDuration, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -537,7 +538,7 @@ func (m *GenesisDowntimeEntry) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.LastDowntime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.LastDowntime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -654,7 +655,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.LastBlockTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.LastBlockTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

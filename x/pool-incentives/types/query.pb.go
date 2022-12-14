@@ -6,16 +6,16 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	grpc1 "github.com/cosmos/gogoproto/grpc"
+	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
 	_ "github.com/gogo/protobuf/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
-	proto "github.com/gogo/protobuf/proto"
-	_ "github.com/gogo/protobuf/types"
-	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
-	types1 "github.com/osmosis-labs/osmosis/v13/x/incentives/types"
+	types "github.com/osmosis-labs/osmosis/v13/x/incentives/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	_ "google.golang.org/protobuf/types/known/durationpb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -603,7 +603,7 @@ func (m *QueryExternalIncentiveGaugesRequest) XXX_DiscardUnknown() {
 var xxx_messageInfo_QueryExternalIncentiveGaugesRequest proto.InternalMessageInfo
 
 type QueryExternalIncentiveGaugesResponse struct {
-	Data []types1.Gauge `protobuf:"bytes,1,rep,name=data,proto3" json:"data"`
+	Data []types.Gauge `protobuf:"bytes,1,rep,name=data,proto3" json:"data"`
 }
 
 func (m *QueryExternalIncentiveGaugesResponse) Reset()         { *m = QueryExternalIncentiveGaugesResponse{} }
@@ -639,7 +639,7 @@ func (m *QueryExternalIncentiveGaugesResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryExternalIncentiveGaugesResponse proto.InternalMessageInfo
 
-func (m *QueryExternalIncentiveGaugesResponse) GetData() []types1.Gauge {
+func (m *QueryExternalIncentiveGaugesResponse) GetData() []types.Gauge {
 	if m != nil {
 		return m.Data
 	}
@@ -1093,7 +1093,7 @@ func (m *QueryGaugeIdsResponse_GaugeIdWithDuration) MarshalToSizedBuffer(dAtA []
 		i--
 		dAtA[i] = 0x1a
 	}
-	n1, err1 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.Duration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.Duration):])
+	n1, err1 := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.Duration, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.Duration):])
 	if err1 != nil {
 		return 0, err1
 	}
@@ -1266,7 +1266,7 @@ func (m *QueryLockableDurationsResponse) MarshalToSizedBuffer(dAtA []byte) (int,
 	_ = l
 	if len(m.LockableDurations) > 0 {
 		for iNdEx := len(m.LockableDurations) - 1; iNdEx >= 0; iNdEx-- {
-			n, err := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.LockableDurations[iNdEx], dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.LockableDurations[iNdEx]):])
+			n, err := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.LockableDurations[iNdEx], dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.LockableDurations[iNdEx]):])
 			if err != nil {
 				return 0, err
 			}
@@ -1327,7 +1327,7 @@ func (m *IncentivizedPool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x18
 	}
-	n4, err4 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.LockableDuration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.LockableDuration):])
+	n4, err4 := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.LockableDuration, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.LockableDuration):])
 	if err4 != nil {
 		return 0, err4
 	}
@@ -1487,7 +1487,7 @@ func (m *QueryGaugeIdsResponse_GaugeIdWithDuration) Size() (n int) {
 	if m.GaugeId != 0 {
 		n += 1 + sovQuery(uint64(m.GaugeId))
 	}
-	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.Duration)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.Duration)
 	n += 1 + l + sovQuery(uint64(l))
 	l = len(m.GaugeIncentivePercentage)
 	if l > 0 {
@@ -1553,7 +1553,7 @@ func (m *QueryLockableDurationsResponse) Size() (n int) {
 	_ = l
 	if len(m.LockableDurations) > 0 {
 		for _, e := range m.LockableDurations {
-			l = github_com_gogo_protobuf_types.SizeOfStdDuration(e)
+			l = github_com_cosmos_gogoproto_types.SizeOfStdDuration(e)
 			n += 1 + l + sovQuery(uint64(l))
 		}
 	}
@@ -1578,7 +1578,7 @@ func (m *IncentivizedPool) Size() (n int) {
 	if m.PoolId != 0 {
 		n += 1 + sovQuery(uint64(m.PoolId))
 	}
-	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.LockableDuration)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.LockableDuration)
 	n += 1 + l + sovQuery(uint64(l))
 	if m.GaugeId != 0 {
 		n += 1 + sovQuery(uint64(m.GaugeId))
@@ -1861,7 +1861,7 @@ func (m *QueryGaugeIdsResponse_GaugeIdWithDuration) Unmarshal(dAtA []byte) error
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.Duration, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdDurationUnmarshal(&m.Duration, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2293,7 +2293,7 @@ func (m *QueryLockableDurationsResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.LockableDurations = append(m.LockableDurations, time.Duration(0))
-			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&(m.LockableDurations[len(m.LockableDurations)-1]), dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdDurationUnmarshal(&(m.LockableDurations[len(m.LockableDurations)-1]), dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2445,7 +2445,7 @@ func (m *IncentivizedPool) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.LockableDuration, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdDurationUnmarshal(&m.LockableDuration, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2681,7 +2681,7 @@ func (m *QueryExternalIncentiveGaugesResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Data = append(m.Data, types1.Gauge{})
+			m.Data = append(m.Data, types.Gauge{})
 			if err := m.Data[len(m.Data)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

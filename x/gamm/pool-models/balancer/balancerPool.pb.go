@@ -12,12 +12,13 @@ import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	types1 "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/types"
+	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
 	_ "github.com/gogo/protobuf/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
-	_ "github.com/gogo/protobuf/types"
-	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
+	_ "google.golang.org/protobuf/types/known/durationpb"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -186,7 +187,7 @@ func (m *PoolParams) GetSmoothWeightChangeParams() *SmoothWeightChangeParams {
 type PoolAsset struct {
 	// Coins we are talking about,
 	// the denomination must be unique amongst all PoolAssets for this pool.
-	Token types1.Coin `protobuf:"bytes,1,opt,name=token,proto3" json:"token" yaml:"token"`
+	Token types.Coin `protobuf:"bytes,1,opt,name=token,proto3" json:"token" yaml:"token"`
 	// Weight that is not normalized. This weight must be less than 2^50
 	Weight github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=weight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"weight" yaml:"weight"`
 }
@@ -224,11 +225,11 @@ func (m *PoolAsset) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PoolAsset proto.InternalMessageInfo
 
-func (m *PoolAsset) GetToken() types1.Coin {
+func (m *PoolAsset) GetToken() types.Coin {
 	if m != nil {
 		return m.Token
 	}
-	return types1.Coin{}
+	return types.Coin{}
 }
 
 type Pool struct {
@@ -246,7 +247,7 @@ type Pool struct {
 	// TODO: Further improve these docs
 	FuturePoolGovernor string `protobuf:"bytes,4,opt,name=future_pool_governor,json=futurePoolGovernor,proto3" json:"future_pool_governor,omitempty" yaml:"future_pool_governor"`
 	// sum of all LP tokens sent out
-	TotalShares types1.Coin `protobuf:"bytes,5,opt,name=total_shares,json=totalShares,proto3" json:"total_shares" yaml:"total_shares"`
+	TotalShares types.Coin `protobuf:"bytes,5,opt,name=total_shares,json=totalShares,proto3" json:"total_shares" yaml:"total_shares"`
 	// These are assumed to be sorted by denomiation.
 	// They contain the pool asset and the information about the weight
 	PoolAssets []PoolAsset `protobuf:"bytes,6,rep,name=pool_assets,json=poolAssets,proto3" json:"pool_assets" yaml:"pool_assets"`
@@ -401,7 +402,7 @@ func (m *SmoothWeightChangeParams) MarshalToSizedBuffer(dAtA []byte) (int, error
 			dAtA[i] = 0x1a
 		}
 	}
-	n1, err1 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.Duration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.Duration):])
+	n1, err1 := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.Duration, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.Duration):])
 	if err1 != nil {
 		return 0, err1
 	}
@@ -409,7 +410,7 @@ func (m *SmoothWeightChangeParams) MarshalToSizedBuffer(dAtA []byte) (int, error
 	i = encodeVarintBalancerPool(dAtA, i, uint64(n1))
 	i--
 	dAtA[i] = 0x12
-	n2, err2 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime):])
+	n2, err2 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.StartTime):])
 	if err2 != nil {
 		return 0, err2
 	}
@@ -621,9 +622,9 @@ func (m *SmoothWeightChangeParams) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.StartTime)
 	n += 1 + l + sovBalancerPool(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.Duration)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.Duration)
 	n += 1 + l + sovBalancerPool(uint64(l))
 	if len(m.InitialPoolWeights) > 0 {
 		for _, e := range m.InitialPoolWeights {
@@ -766,7 +767,7 @@ func (m *SmoothWeightChangeParams) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -799,7 +800,7 @@ func (m *SmoothWeightChangeParams) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.Duration, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdDurationUnmarshal(&m.Duration, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
