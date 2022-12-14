@@ -1,9 +1,10 @@
 package twap
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"errors"
+	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type Migrator struct {
@@ -12,6 +13,10 @@ type Migrator struct {
 
 func NewMigrator(keeper Keeper) Migrator {
 	return Migrator{keeper: keeper}
+}
+
+func (m Migrator) Migrate1To2(ctx sdk.Context) error {
+	return m.keeper.initializeGeometricTwap(ctx)
 }
 
 // MigrateExistingPools iterates through all pools and creates state entry for the twap module.
@@ -25,36 +30,32 @@ func (k Keeper) MigrateExistingPools(ctx sdk.Context, latestPoolId uint64) error
 	return nil
 }
 
-func (m Migrator) Migrate1To2(ctx sdk.Context) error {
-	historicalPoolIndexedRecords, err := m.keeper.getAllHistoricalPoolIndexedTWAPs(ctx)
+func (k Keeper) initializeGeometricTwap(ctx sdk.Context) error {
+	// In ascending order by time.
+	historicalTimeIndexed, err := k.getAllHistoricalTimeIndexedTWAPs(ctx)
 	if err != nil {
 		return err
 	}
 
-	for _, record := range historicalPoolIndexedRecords {
+	if len(historicalTimeIndexed) == 0 {
+		return errors.New("error: no historical twap records found")
+	}
+
+	// Since we are iterate over time-indexed records in ascending order,
+	// most recent record should also be updated correctly.
+	for i, record := range historicalTimeIndexed {
+		// Sanity check order.
+		if i > 0 {
+			previousRecord := historicalTimeIndexed[i-1]
+
+			isCorrectOrder := previousRecord.Time.Before(record.Time)
+			if !isCorrectOrder {
+				return fmt.Errorf("error: historical twap records are not in ascending order, (%v), was after (%v)", previousRecord, record)
+			}
+		}
+
 		record.GeometricTwapAccumulator = sdk.ZeroDec()
-		m.keeper.storeHistoricalTWAP(ctx, record)
+		k.storeNewRecord(ctx, record)
 	}
-
-	historicalTimeIndexed, err := m.keeper.getAllHistoricalTimeIndexedTWAPs(ctx)
-	if err != nil {
-		return err
-	}
-
-	for _, record := range historicalTimeIndexed {
-		record.GeometricTwapAccumulator = sdk.ZeroDec()
-		m.keeper.storeHistoricalTWAP(ctx, record)
-	}
-
-	mostRecent, err := types.GetAllMostRecentTwaps(ctx.KVStore(m.keeper.storeKey))
-	if err != nil {
-		return err
-	}
-
-	for _, record := range mostRecent {
-		record.GeometricTwapAccumulator = sdk.ZeroDec()
-		m.keeper.storeHistoricalTWAP(ctx, record)
-	}
-
 	return nil
 }
