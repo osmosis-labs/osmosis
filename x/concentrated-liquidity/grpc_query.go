@@ -68,7 +68,10 @@ func (q Querier) Pools(
 	pageRes, err := query.Paginate(poolStore, req.Pagination, func(key, _ []byte) error {
 		pool := model.Pool{}
 		// Get the next pool from the poolStore and pass it to the pool variable
-		osmoutils.GetIfFound(poolStore, key, &pool)
+		_, err := osmoutils.GetIfFound(poolStore, key, &pool)
+		if err != nil {
+			return err
+		}
 
 		// Retrieve the poolInterface from the respective pool
 		poolI, err := q.Keeper.GetPool(sdkCtx, pool.GetId())
