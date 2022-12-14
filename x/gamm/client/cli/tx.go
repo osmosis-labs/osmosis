@@ -16,33 +16,23 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func NewTxCmd() *cobra.Command {
-	txCmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      "Generalized automated market maker transaction subcommands",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
-
+	txCmd := osmocli.TxIndexCmd(types.ModuleName)
+	osmocli.AddTxCmd(txCmd, NewJoinPoolCmd)
+	osmocli.AddTxCmd(txCmd, NewExitPoolCmd)
+	osmocli.AddTxCmd(txCmd, NewSwapExactAmountInCmd)
+	osmocli.AddTxCmd(txCmd, NewSwapExactAmountOutCmd)
+	osmocli.AddTxCmd(txCmd, NewJoinSwapExternAmountIn)
+	osmocli.AddTxCmd(txCmd, NewJoinSwapShareAmountOut)
+	osmocli.AddTxCmd(txCmd, NewExitSwapExternAmountOut)
+	osmocli.AddTxCmd(txCmd, NewExitSwapShareAmountIn)
 	txCmd.AddCommand(
-		NewCreatePoolCmd(),
-		NewJoinPoolCmd(),
-		NewExitPoolCmd(),
-		NewSwapExactAmountInCmd(),
-		NewSwapExactAmountOutCmd(),
-		NewJoinSwapExternAmountIn(),
-		NewJoinSwapShareAmountOut(),
-		NewExitSwapExternAmountOut(),
-		NewExitSwapShareAmountIn(),
+		NewCreatePoolCmd().BuildCommandCustomFn(),
 		NewStableSwapAdjustScalingFactorsCmd(),
 	)
-
 	return txCmd
 }
 
@@ -50,12 +40,12 @@ var poolIdFlagOverride = map[string]string{
 	"poolid": FlagPoolId,
 }
 
-func NewCreatePoolCmd() *cobra.Command {
-	cmd := &cobra.Command{
+func NewCreatePoolCmd() *osmocli.TxCliDesc {
+	desc := osmocli.TxCliDesc{
 		Use:   "create-pool [flags]",
 		Short: "create a new pool and provide the liquidity to it",
-		Long:  `Must provide path to a pool JSON file (--pool-file) describing the pool to be created`,
-		Example: `Sample pool JSON file contents for balancer:
+		Long: `Must provide path to a pool JSON file (--pool-file) describing the pool to be created
+Sample pool JSON file contents for balancer:
 {
 	"weights": "4uatom,4osmo,2uakt",
 	"initial-deposit": "100uatom,5osmo,20uakt",
@@ -73,49 +63,18 @@ For stableswap (demonstrating need for a 1:1000 scaling factor, see doc)
 	"scaling-factors": "1000,1"
 }
 `,
-		Args: cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).
-				WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			poolType, err := cmd.Flags().GetString(FlagPoolType)
-			if err != nil {
-				return err
-			}
-			poolType = strings.ToLower(poolType)
-
-			var msg sdk.Msg
-			if poolType == "balancer" || poolType == "uniswap" {
-				msg, err = NewBuildCreateBalancerPoolMsg(clientCtx, cmd.Flags())
-				if err != nil {
-					return err
-				}
-			} else if poolType == "stableswap" {
-				msg, err = NewBuildCreateStableswapPoolMsg(clientCtx, cmd.Flags())
-				if err != nil {
-					return err
-				}
-			}
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		NumArgs:          0,
+		ParseAndBuildMsg: BuildCreatePoolCmd,
+		Flags: osmocli.FlagDesc{
+			RequiredFlags: []*flag.FlagSet{FlagSetCreatePoolFile()},
+			OptionalFlags: []*flag.FlagSet{FlagSetCreatePoolType()},
 		},
 	}
-
-	cmd.Flags().AddFlagSet(FlagSetCreatePool())
-	flags.AddTxFlagsToCmd(cmd)
-
-	_ = cmd.MarkFlagRequired(FlagPoolFile)
-
-	return cmd
+	return &desc
 }
 
-func NewJoinPoolCmd() *cobra.Command {
-	cmd := osmocli.BuildTxCli[*types.MsgJoinPool](&osmocli.TxCliDesc{
+func NewJoinPoolCmd() (*osmocli.TxCliDesc, *types.MsgJoinPool) {
+	return &osmocli.TxCliDesc{
 		Use:   "join-pool",
 		Short: "join a new pool and provide the liquidity to it",
 		CustomFlagOverrides: map[string]string{
@@ -124,17 +83,13 @@ func NewJoinPoolCmd() *cobra.Command {
 		},
 		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
 			"TokenInMaxs": osmocli.FlagOnlyParser(maxAmountsInParser),
-		}})
-
-	cmd.Flags().AddFlagSet(FlagSetJoinPool())
-	_ = cmd.MarkFlagRequired(FlagPoolId)
-	_ = cmd.MarkFlagRequired(FlagShareAmountOut)
-	_ = cmd.MarkFlagRequired(FlagMaxAmountsIn)
-	return cmd
+		},
+		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJoinPool()}},
+	}, &types.MsgJoinPool{}
 }
 
-func NewExitPoolCmd() *cobra.Command {
-	cmd := osmocli.BuildTxCli[*types.MsgExitPool](&osmocli.TxCliDesc{
+func NewExitPoolCmd() (*osmocli.TxCliDesc, *types.MsgExitPool) {
+	return &osmocli.TxCliDesc{
 		Use:   "exit-pool",
 		Short: "exit a new pool and withdraw the liquidity from it",
 		CustomFlagOverrides: map[string]string{
@@ -143,90 +98,67 @@ func NewExitPoolCmd() *cobra.Command {
 		},
 		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
 			"TokenOutMins": osmocli.FlagOnlyParser(minAmountsOutParser),
-		}})
-
-	cmd.Flags().AddFlagSet(FlagSetExitPool())
-	_ = cmd.MarkFlagRequired(FlagPoolId)
-	_ = cmd.MarkFlagRequired(FlagShareAmountIn)
-	_ = cmd.MarkFlagRequired(FlagMinAmountsOut)
-	return cmd
+		},
+		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetExitPool()}},
+	}, &types.MsgExitPool{}
 }
 
-func NewSwapExactAmountInCmd() *cobra.Command {
-	cmd := osmocli.BuildTxCli[*types.MsgSwapExactAmountIn](&osmocli.TxCliDesc{
+func NewSwapExactAmountInCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountIn) {
+	return &osmocli.TxCliDesc{
 		Use:   "swap-exact-amount-in [token-in] [token-out-min-amount]",
 		Short: "swap exact amount in",
 		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
 			"Routes": osmocli.FlagOnlyParser(swapAmountInRoutes),
-		}})
-
-	cmd.Flags().AddFlagSet(FlagSetQuerySwapRoutes())
-	_ = cmd.MarkFlagRequired(FlagSwapRoutePoolIds)
-	_ = cmd.MarkFlagRequired(FlagSwapRouteDenoms)
-	return cmd
+		},
+		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
+	}, &types.MsgSwapExactAmountIn{}
 }
 
-func NewSwapExactAmountOutCmd() *cobra.Command {
+func NewSwapExactAmountOutCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountOut) {
 	// Can't get rid of this parser without a break, because the args are out of order.
-	cmd := osmocli.TxCliDesc{
+	return &osmocli.TxCliDesc{
 		Use:              "swap-exact-amount-out [token-out] [token-in-max-amount]",
 		Short:            "swap exact amount out",
 		NumArgs:          2,
 		ParseAndBuildMsg: NewBuildSwapExactAmountOutMsg,
-	}.BuildCommandCustomFn()
-
-	cmd.Flags().AddFlagSet(FlagSetSwapAmountOutRoutes())
-	_ = cmd.MarkFlagRequired(FlagSwapRoutePoolIds)
-	_ = cmd.MarkFlagRequired(FlagSwapRouteDenoms)
-	return cmd
+		Flags:            osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
+	}, &types.MsgSwapExactAmountOut{}
 }
 
-func NewJoinSwapExternAmountIn() *cobra.Command {
-	cmd := osmocli.BuildTxCli[*types.MsgJoinSwapExternAmountIn](&osmocli.TxCliDesc{
+func NewJoinSwapExternAmountIn() (*osmocli.TxCliDesc, *types.MsgJoinSwapExternAmountIn) {
+	return &osmocli.TxCliDesc{
 		Use:                 "join-swap-extern-amount-in [token-in] [share-out-min-amount]",
 		Short:               "join swap extern amount in",
 		CustomFlagOverrides: poolIdFlagOverride,
-	})
-
-	cmd.Flags().AddFlagSet(FlagSetJustPoolId())
-	_ = cmd.MarkFlagRequired(FlagPoolId)
-	return cmd
+		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
+	}, &types.MsgJoinSwapExternAmountIn{}
 }
 
-func NewJoinSwapShareAmountOut() *cobra.Command {
-	cmd := osmocli.BuildTxCli[*types.MsgJoinSwapShareAmountOut](&osmocli.TxCliDesc{
+func NewJoinSwapShareAmountOut() (*osmocli.TxCliDesc, *types.MsgJoinSwapShareAmountOut) {
+	return &osmocli.TxCliDesc{
 		Use:                 "join-swap-share-amount-out [token-in-denom] [token-in-max-amount] [share-out-amount]",
 		Short:               "join swap share amount out",
 		CustomFlagOverrides: poolIdFlagOverride,
-	})
-
-	cmd.Flags().AddFlagSet(FlagSetJustPoolId())
-	_ = cmd.MarkFlagRequired(FlagPoolId)
-	return cmd
+		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
+	}, &types.MsgJoinSwapShareAmountOut{}
 }
 
-func NewExitSwapExternAmountOut() *cobra.Command {
-	cmd := osmocli.BuildTxCli[*types.MsgExitSwapExternAmountOut](&osmocli.TxCliDesc{
+func NewExitSwapExternAmountOut() (*osmocli.TxCliDesc, *types.MsgExitSwapExternAmountOut) {
+	return &osmocli.TxCliDesc{
 		Use:                 "exit-swap-extern-amount-out [token-out] [share-in-max-amount]",
 		Short:               "exit swap extern amount out",
 		CustomFlagOverrides: poolIdFlagOverride,
-	})
-
-	cmd.Flags().AddFlagSet(FlagSetJustPoolId())
-	_ = cmd.MarkFlagRequired(FlagPoolId)
-	return cmd
+		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
+	}, &types.MsgExitSwapExternAmountOut{}
 }
 
-func NewExitSwapShareAmountIn() *cobra.Command {
-	cmd := osmocli.BuildTxCli[*types.MsgExitSwapShareAmountIn](&osmocli.TxCliDesc{
+func NewExitSwapShareAmountIn() (*osmocli.TxCliDesc, *types.MsgExitSwapShareAmountIn) {
+	return &osmocli.TxCliDesc{
 		Use:                 "exit-swap-share-amount-in [token-out-denom] [share-in-amount] [token-out-min-amount]",
 		Short:               "exit swap share amount in",
 		CustomFlagOverrides: poolIdFlagOverride,
-	})
-
-	cmd.Flags().AddFlagSet(FlagSetJustPoolId())
-	_ = cmd.MarkFlagRequired(FlagPoolId)
-	return cmd
+		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
+	}, &types.MsgExitSwapShareAmountIn{}
 }
 
 // TODO: Change these flags to args. Required flags don't make that much sense.
@@ -243,6 +175,28 @@ func NewStableSwapAdjustScalingFactorsCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired(FlagPoolId)
 	_ = cmd.MarkFlagRequired(FlagScalingFactors)
 	return cmd
+}
+
+func BuildCreatePoolCmd(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
+	poolType, err := fs.GetString(FlagPoolType)
+	if err != nil {
+		return nil, err
+	}
+	poolType = strings.ToLower(poolType)
+
+	var msg sdk.Msg
+	if poolType == "balancer" || poolType == "uniswap" {
+		msg, err = NewBuildCreateBalancerPoolMsg(clientCtx, fs)
+		if err != nil {
+			return nil, err
+		}
+	} else if poolType == "stableswap" {
+		msg, err = NewBuildCreateStableswapPoolMsg(clientCtx, fs)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return msg, nil
 }
 
 func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (sdk.Msg, error) {
