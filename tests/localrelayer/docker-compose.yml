@@ -102,14 +102,21 @@ services:
     user: root:root
     volumes:
       - ./scripts/setup_hermes.sh:/home/hermes/setup.sh
-      - ./config/hermes/config.toml:/root/.hermes/config.toml
+      - ./config/hermes/config.toml:/etc/hermes/config.toml
     entrypoint:
       - /home/hermes/setup.sh
     environment:
       - CHAIN_A_ID=localosmosis
+      - CHAIN_A_HOST=localosmosis
       - CHAIN_A_MNEMONIC=black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken
+      - CHAIN_A_ADDRESS_PREFIX=osmo
+      - CHAIN_A_TOKEN=uosmo
       - CHAIN_B_ID=localjuno
+      - CHAIN_B_HOST=localjuno
       - CHAIN_B_MNEMONIC=black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken
+      - CHAIN_B_ADDRESS_PREFIX=juno
+      - CHAIN_B_TOKEN=ujuno
+
     ports:
       - 3000:3000
     depends_on:
