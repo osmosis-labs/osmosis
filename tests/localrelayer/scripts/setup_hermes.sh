@@ -34,8 +34,9 @@ install_prerequisites(){
 }
 
 create_config(){
+    mkdir -p /root/.hermes/
     # Replace environment variables in config file
-    envsubst < /etc/hermes/config.toml | tee /root/.hermes/config.toml
+    envsubst < /etc/hermes/config.toml | tee /root/.hermes/config.toml > /dev/null
 }
 
 add_keys(){
