@@ -143,7 +143,6 @@ func (p *Pool) SetCurrentSqrtPrice(newSqrtPrice sdk.Dec) {
 }
 
 // SetCurrentTick updates the current tick of the pool when the first position is created.
-// For safety, we only allow for this method to be called if CurrentTick is zero.
 func (p *Pool) SetCurrentTick(newTick sdk.Int) {
 	p.CurrentTick = newTick
 }
