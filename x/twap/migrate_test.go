@@ -93,3 +93,58 @@ func (suite *TestSuite) TestTwapRecord_GeometricTwap_MarshalUnmarshal() {
 	suite.Require().False(originalRecord.GeometricTwapAccumulator.IsNil())
 	suite.Require().Equal(sdk.ZeroDec(), originalRecord.GeometricTwapAccumulator)
 }
+
+func (suite *TestSuite) TestInitializeGeometricTwap() {
+
+	tests := map[string]struct {
+		expectError bool
+
+		preExistingRecords []types.TwapRecord
+
+		// pool id -> most recent records
+		expectedMostRecent map[uint64][]types.TwapRecord
+	}{
+		"one record, one pool": {
+			preExistingRecords: []types.TwapRecord{
+				baseRecord,
+			},
+
+			expectedMostRecent: map[uint64][]types.TwapRecord{
+				1: {
+					baseRecord,
+				},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.SetupTest()
+			k := suite.App.TwapKeeper
+			ctx := suite.Ctx
+
+			suite.preSetRecords(tc.preExistingRecords)
+
+			err := k.InitializeGeometricTwap(ctx)
+
+			if tc.expectError {
+				suite.Require().Error(err)
+				return
+			}
+
+			suite.Require().NoError(err)
+
+			suite.Require().Greater(len(tc.expectedMostRecent), 0)
+			for poolId, expectedMostRecentRecord := range tc.expectedMostRecent {
+				actualMostRecentRecord, err := k.GetAllMostRecentRecordsForPool(ctx, poolId)
+				suite.Require().NoError(err)
+
+				for i, expectedRecord := range expectedMostRecentRecord {
+					suite.Require().Equal(expectedRecord, actualMostRecentRecord[i])
+				}
+			}
+
+		})
+	}
+}

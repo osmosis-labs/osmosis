@@ -79,6 +79,12 @@ type AppModule struct {
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: twapclient.Querier{K: am.k}})
+
+	m := twap.NewMigrator(am.k)
+	err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate1To2)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func NewAppModule(twapKeeper twap.Keeper) AppModule {
@@ -134,4 +140,4 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 1 }
+func (AppModule) ConsensusVersion() uint64 { return 2 }

@@ -123,3 +123,7 @@ func (k *Keeper) SetAmmInterface(ammInterface types.AmmInterface) {
 func (k *Keeper) AfterCreatePool(ctx sdk.Context, poolId uint64) error {
 	return k.afterCreatePool(ctx, poolId)
 }
+
+func (k Keeper) InitializeGeometricTwap(ctx sdk.Context) error {
+	return k.initializeGeometricTwap(ctx)
+}
