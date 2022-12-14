@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"

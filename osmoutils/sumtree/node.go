@@ -3,7 +3,7 @@ package sumtree
 import (
 	"bytes"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

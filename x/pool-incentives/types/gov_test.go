@@ -3,9 +3,10 @@ package types_test
 import (
 	"testing"
 
-	proto "github.com/gogo/protobuf/proto"
-	"github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
+	proto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
+
+	"github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

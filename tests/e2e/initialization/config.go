@@ -15,7 +15,7 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
 	epochtypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"

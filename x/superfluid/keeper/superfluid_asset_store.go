@@ -3,7 +3,8 @@ package keeper
 // This file handles
 
 import (
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
+
 	"github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"

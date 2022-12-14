@@ -9,7 +9,8 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.19.4
 	github.com/cosmos/ibc-go/v3 v3.4.0
-	github.com/gogo/protobuf v1.3.3
+	github.com/cosmos/gogogateway v1.2.0
+	github.com/cosmos/gogoproto v1.4.3
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/golangci/golangci-lint v1.50.1
@@ -301,8 +302,6 @@ replace (
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk (branch: osmosis-main)
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20221213195007-48fe175f9839
-	// use cosmos-compatible protobufs
-	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// use grpc compatible with cosmos protobufs
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )

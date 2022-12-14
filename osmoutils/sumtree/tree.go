@@ -7,7 +7,7 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	store "github.com/cosmos/cosmos-sdk/store"
 	stypes "github.com/cosmos/cosmos-sdk/store/types"

@@ -8,7 +8,7 @@ import (
 	db "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 func GatherAllKeysFromStore(storeObj store.KVStore) []string {

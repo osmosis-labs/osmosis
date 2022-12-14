@@ -8,7 +8,7 @@ import (
 	"time"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	db "github.com/tendermint/tm-db"
 
 	epochtypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"

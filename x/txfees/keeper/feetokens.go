@@ -1,7 +1,8 @@
 package keeper
 
 import (
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
+
 	"github.com/osmosis-labs/osmosis/v13/x/txfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

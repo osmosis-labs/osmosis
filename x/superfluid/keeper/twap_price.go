@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
