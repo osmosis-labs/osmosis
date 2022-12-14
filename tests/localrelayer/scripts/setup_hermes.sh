@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-DEFAULT_CHAIN_A_ID="localosmosis-a"
+DEFAULT_CHAIN_A_ID=""
 DEFAULT_CHAIN_A_MNEMONIC="black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken"
 DEFAULT_CHAIN_B_ID="localosmosis-b"
 DEFAULT_CHAIN_B_MNEMONIC="black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken"

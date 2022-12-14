@@ -27,7 +27,7 @@ edit_genesis () {
 
     # Update staking module
     dasel put string -f $GENESIS '.app_state.staking.params.bond_denom' 'uosmo'
-    dasel put string -f $GENESIS '.app_state.staking.params.unbonding_time' '240s'
+    dasel put string -f $GENESIS '.app_state.staking.params.unbonding_time' '10000s'
 
     # Update crisis module
     dasel put string -f $GENESIS '.app_state.crisis.constant_fee.denom' 'uosmo'
