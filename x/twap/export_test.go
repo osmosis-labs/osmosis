@@ -72,6 +72,10 @@ func (k Keeper) GetInterpolatedRecord(ctx sdk.Context, poolId uint64, asset0Deno
 	return k.getInterpolatedRecord(ctx, poolId, t, asset0Denom, asset1Denom)
 }
 
+func (k Keeper) InitializeGeometricTwap(ctx sdk.Context) error {
+	return k.initializeGeometricTwap(ctx)
+}
+
 func ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string, twapType twapType) (sdk.Dec, error) {
 	return computeTwap(startRecord, endRecord, quoteAsset, twapType)
 }
