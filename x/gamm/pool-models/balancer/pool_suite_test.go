@@ -834,10 +834,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 				}
 			}
 
-			balancerPool, ok := pool.(*balancer.Pool)
-			require.True(t, ok)
-
-			assertPoolStateNotModified(t, balancerPool, func() {
+			assertPoolStateNotModified(t, pool, func() {
 				osmoassert.ConditionalPanic(t, tc.expectPanic, sut)
 			})
 		})
@@ -1101,14 +1098,14 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 			Weight: sdk.NewInt(5),
 		}
 
-		pool = createTestPool(suite.T(), swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn).(*balancer.Pool)
+		pool = createTestPool(suite.T(), swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn)
 		suite.Require().NotNil(pool)
 
 		return pool
 	}
 
 	// joins with predetermined ratio
-	joinPool := func(pool types.PoolI, tc *testCase) {
+	joinPool := func(pool types.CFMMPoolI, tc *testCase) {
 		tokensIn := sdk.Coins{
 			sdk.NewCoin(denomIn, sdk.NewInt(tc.initialTokensDenomIn).MulRaw(tc.percentRatio).QuoRaw(100)),
 			sdk.NewCoin(denomOut, sdk.NewInt(tc.initialTokensDenomOut).MulRaw(tc.percentRatio).QuoRaw(100)),
@@ -1119,7 +1116,7 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 	}
 
 	// exits for same amount of shares minted
-	exitPool := func(pool types.PoolI, tc *testCase) {
+	exitPool := func(pool types.CFMMPoolI, tc *testCase) {
 		_, err := pool.ExitPool(suite.Ctx, tc.numShares, exitFeeDec)
 		suite.Require().NoError(err)
 	}

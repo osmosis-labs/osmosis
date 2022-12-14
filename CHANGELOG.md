@@ -44,7 +44,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Features
 
+* [#3609](https://github.com/osmosis-labs/osmosis/pull/3609) Add Downtime-detection module.
 * [#2788](https://github.com/osmosis-labs/osmosis/pull/2788) Add logarithm base 2 implementation.
+* [#3677](https://github.com/osmosis-labs/osmosis/pull/3677) Add methods for cloning and mutative multiplication on osmomath.BigDec.
+* [#3676](https://github.com/osmosis-labs/osmosis/pull/3676) implement `PowerInteger` function on `osmomath.BigDec` 
+* [#3678](https://github.com/osmosis-labs/osmosis/pull/3678) implement mutative `PowerIntegerMut` function on `osmomath.BigDec`.
+* [#3693](https://github.com/osmosis-labs/osmosis/pull/3693) Add `EstimateSwapExactAmountOut` query to stargate whitelist
+
+### Bug fixes
+
+* [#3608](https://github.com/osmosis-labs/osmosis/pull/3608) Make it possible to state export from any directory.
+
+### Misc Improvements
+
+* [#3611](https://github.com/osmosis-labs/osmosis/pull/3611),[#3647](https://github.com/osmosis-labs/osmosis/pull/3647) Introduce osmocli, to automate thousands of lines of CLI boilerplate
+* [#3634](https://github.com/osmosis-labs/osmosis/pull/3634) (Makefile) Ensure correct golang version in make build and make install. (Thank you @jhernandezb )
+
+## v13.0.0
+
+This release includes stableswap, and expands the IBC safety & composability functionality of Osmosis. The primary features are:
+
+* Gamm:
+  * Introduction of the stableswap pool type
+  * Multi-hop swapfee reduction
+  * Filtered queries to help front-ends
+  * Adding a spot price v2 query
+    * spotprice v1beta1 had baseassetdenom and quoteassetdenom backwards.
+    * All contracts and integrators should switch to the v2 query from now on.
+  * Adding more queries for contract developers
+  * Force unpooling is now enableable by governance
+* IBC features
+  * Upgrade to IBC v3.4.0
+  * Added IBC rate limiting, to increase safety of bridged assets
+  * Allow ICS-20 to call into cosmwasm contracts
+* Cosmwasm
+  * Upgrade to cosmwasm v0.29.x
+  * Inclusion of requested queries for contract developers
+
+### Features
+
 * [#2739](https://github.com/osmosis-labs/osmosis/pull/2739),[#3356](https://github.com/osmosis-labs/osmosis/pull/3356) Add pool type query, and add it to stargate whitelist
 * [#2956](https://github.com/osmosis-labs/osmosis/issues/2956) Add queries for calculating amount of shares/tokens you get by providing X tokens/shares when entering/exiting a pool
 * [#3217](https://github.com/osmosis-labs/osmosis/pull/3217) Add `CalcJoinPoolShares`, `CalcExitPoolCoinsFromShares`, `CalcJoinPoolNoSwapShares` to the registered Stargate queries list.
@@ -53,7 +91,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - The v1beta1 queries actually have base asset and quote asset reversed, so you were always getting 1/correct spot price. People fixed this by reordering the arguments.
   - This PR adds v2 queries for doing the correct thing, and giving people time to migrate from v1beta1 queries to v2.
   - It also changes cosmwasm to only allow the v2 queries, as no contracts on Osmosis mainnet uses the v1beta1 queries.
-
 
 ### Bug fixes
 
