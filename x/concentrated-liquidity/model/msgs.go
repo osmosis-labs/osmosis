@@ -51,8 +51,12 @@ func (msg MsgCreateConcentratedPool) ValidateBasic() error {
 		return fmt.Errorf("denom0 and denom1 must be different")
 	}
 
-	if msg.Denom0 == "" || msg.Denom1 == "" {
-		return fmt.Errorf("denom0 and denom1 must be non-empty")
+	if sdk.ValidateDenom(msg.Denom0) != nil {
+		return fmt.Errorf("denom0 is invalid: %s", sdk.ValidateDenom(msg.Denom0))
+	}
+
+	if sdk.ValidateDenom(msg.Denom1) != nil {
+		return fmt.Errorf("denom1 is invalid: %s", sdk.ValidateDenom(msg.Denom1))
 	}
 
 	return nil
@@ -81,6 +85,8 @@ func (msg MsgCreateConcentratedPool) PoolCreator() sdk.AccAddress {
 }
 
 func (msg MsgCreateConcentratedPool) Validate(ctx sdk.Context) error {
+	// TODO: Add check that denom exists on chain
+	// https://github.com/osmosis-labs/osmosis/issues/3723
 	return msg.ValidateBasic()
 }
 
