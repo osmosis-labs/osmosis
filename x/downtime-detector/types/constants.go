@@ -9,10 +9,10 @@ import (
 )
 
 const (
-	ModuleName = "downtime-detector"
+	// we don't use a `-` as RouterKey must be alphanumeric
+	ModuleName = "downtimedetector"
 	StoreKey   = ModuleName
-	// must be alphanumeric
-	RouterKey = "downtimedetector"
+	RouterKey  = ModuleName
 
 	QuerierRoute = ModuleName
 )
