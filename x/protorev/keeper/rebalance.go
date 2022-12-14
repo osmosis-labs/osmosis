@@ -69,10 +69,8 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit sdk.I
 		return profit, err
 	}
 
-	// Set and return the profit denominated in uosmo
-	uosmoProfit := conversionTokenOut.Amount
-
-	return uosmoProfit, nil
+	// return the profit denominated in uosmo
+	return conversionTokenOut.Amount, nil
 }
 
 // EstimateMultihopProfit estimates the profit for a given route
