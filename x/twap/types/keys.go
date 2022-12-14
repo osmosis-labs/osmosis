@@ -82,6 +82,11 @@ func GetAllMostRecentTwapsForPool(store sdk.KVStore, poolId uint64) ([]TwapRecor
 	return osmoutils.GatherValuesFromStore(store, []byte(startPrefix), []byte(endPrefix), ParseTwapFromBz)
 }
 
+// GetAllMostRecentTwaps returns all of the most recent twap records of every pool.
+func GetAllMostRecentTwaps(store sdk.KVStore) ([]TwapRecord, error) {
+	return osmoutils.GatherValuesFromStorePrefix(store, []byte(mostRecentTWAPsPrefix), ParseTwapFromBz)
+}
+
 func ParseTwapFromBz(bz []byte) (twap TwapRecord, err error) {
 	if len(bz) == 0 {
 		return TwapRecord{}, errors.New("twap not found")
