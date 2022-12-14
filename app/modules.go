@@ -137,7 +137,7 @@ func appModules(
 		app.RawIcs20TransferAppModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		twapmodule.NewAppModule(*app.TwapKeeper),
-		concentratedliquidity.NewAppModule(*app.ConcentratedLiquidityKeeper),
+		concentratedliquidity.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper),
 		txfees.NewAppModule(*app.TxFeesKeeper),
 		incentives.NewAppModule(*app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
 		lockup.NewAppModule(*app.LockupKeeper, app.AccountKeeper, app.BankKeeper),

@@ -226,7 +226,7 @@ func (k Keeper) initializeInitialPosition(ctx sdk.Context, pool types.Concentrat
 	}
 
 	// Calculate the spot price and sqrt price from the amount provided
-	initialSpotPrice := amount1Desired.Quo(amount0Desired).ToDec()
+	initialSpotPrice := amount1Desired.ToDec().Quo(amount0Desired.ToDec())
 	initialSqrtPrice, err := initialSpotPrice.ApproxSqrt()
 	if err != nil {
 		return err
