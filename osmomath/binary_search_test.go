@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	withinOne     = ErrTolerance{AdditiveTolerance: sdk.OneInt()}
+	withinOne     = ErrTolerance{AdditiveTolerance: sdk.OneDec()}
 	withinFactor8 = ErrTolerance{MultiplicativeTolerance: sdk.NewDec(8)}
 	zero          = ZeroDec()
 )
@@ -27,10 +27,10 @@ func TestBinarySearch(t *testing.T) {
 		output := sdk.Int(result)
 		return output, nil
 	}
-	noErrTolerance := ErrTolerance{AdditiveTolerance: sdk.ZeroInt()}
-	testErrToleranceAdditive := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20)}
-	testErrToleranceMultiplicative := ErrTolerance{AdditiveTolerance: sdk.ZeroInt(), MultiplicativeTolerance: sdk.NewDec(10)}
-	testErrToleranceBoth := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20), MultiplicativeTolerance: sdk.NewDec(1 << 3)}
+	noErrTolerance := ErrTolerance{AdditiveTolerance: sdk.ZeroDec()}
+	testErrToleranceAdditive := ErrTolerance{AdditiveTolerance: sdk.NewDec(1 << 20)}
+	testErrToleranceMultiplicative := ErrTolerance{AdditiveTolerance: sdk.ZeroDec(), MultiplicativeTolerance: sdk.NewDec(10)}
+	testErrToleranceBoth := ErrTolerance{AdditiveTolerance: sdk.NewDec(1 << 20), MultiplicativeTolerance: sdk.NewDec(1 << 3)}
 	tests := map[string]struct {
 		f             func(sdk.Int) (sdk.Int, error)
 		lowerbound    sdk.Int
@@ -155,9 +155,9 @@ var fnMap = map[string]searchFn{"line": lineF, "cubic": cubicF, "neg_cubic": neg
 // This function tests that any value in a given range can be reached within expected num iterations.
 func TestIterationDepthRandValue(t *testing.T) {
 	tests := map[string]binarySearchTestCase{}
-	exactEqual := ErrTolerance{AdditiveTolerance: sdk.ZeroInt()}
-	withinOne := ErrTolerance{AdditiveTolerance: sdk.OneInt()}
-	within32 := ErrTolerance{AdditiveTolerance: sdk.OneInt().MulRaw(32)}
+	exactEqual := ErrTolerance{AdditiveTolerance: sdk.ZeroDec()}
+	withinOne := ErrTolerance{AdditiveTolerance: sdk.OneDec()}
+	within32 := ErrTolerance{AdditiveTolerance: sdk.OneDec().Mul(sdk.NewDec(32))}
 
 	createRandInput := func(fnName string, lowerbound, upperbound int64,
 		errTolerance ErrTolerance, maxNumIters int, errToleranceName string) {
@@ -229,8 +229,8 @@ func runBinarySearchTestCases(t *testing.T, tests map[string]binarySearchTestCas
 }
 
 func TestBinarySearchBigDec(t *testing.T) {
-	testErrToleranceAdditive := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 30)}
-	errToleranceBoth := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 30), MultiplicativeTolerance: sdk.NewDec(1 << 3)}
+	testErrToleranceAdditive := ErrTolerance{AdditiveTolerance: sdk.NewDec(1 << 30)}
+	errToleranceBoth := ErrTolerance{AdditiveTolerance: sdk.NewDec(1 << 30), MultiplicativeTolerance: sdk.NewDec(1 << 3)}
 
 	twoTo50 := NewBigDec(1 << 50)
 	twoTo25PlusOne := NewBigDec(1 + (1 << 25))
@@ -281,7 +281,7 @@ func TestBinarySearchBigDec(t *testing.T) {
 }
 
 func TestBinarySearchRoundingBehavior(t *testing.T) {
-	withinTwoTo30 := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 30)}
+	withinTwoTo30 := ErrTolerance{AdditiveTolerance: sdk.NewDec(1 << 30)}
 
 	twoTo50 := NewBigDec(1 << 50)
 	// twoTo25PlusOne := NewBigDec(1 + (1 << 25))
@@ -320,10 +320,10 @@ func TestBinarySearchRoundingBehavior(t *testing.T) {
 }
 
 func TestErrTolerance_Compare(t *testing.T) {
-	ZeroErrTolerance := ErrTolerance{AdditiveTolerance: sdk.ZeroInt(), MultiplicativeTolerance: sdk.Dec{}}
-	NonZeroErrAdditive := ErrTolerance{AdditiveTolerance: sdk.NewInt(10), MultiplicativeTolerance: sdk.Dec{}}
-	NonZeroErrMultiplicative := ErrTolerance{AdditiveTolerance: sdk.Int{}, MultiplicativeTolerance: sdk.NewDec(10)}
-	NonZeroErrBoth := ErrTolerance{AdditiveTolerance: sdk.NewInt(1), MultiplicativeTolerance: sdk.NewDec(10)}
+	ZeroErrTolerance := ErrTolerance{AdditiveTolerance: sdk.ZeroDec(), MultiplicativeTolerance: sdk.Dec{}}
+	NonZeroErrAdditive := ErrTolerance{AdditiveTolerance: sdk.NewDec(10), MultiplicativeTolerance: sdk.Dec{}}
+	NonZeroErrMultiplicative := ErrTolerance{AdditiveTolerance: sdk.Dec{}, MultiplicativeTolerance: sdk.NewDec(10)}
+	NonZeroErrBoth := ErrTolerance{AdditiveTolerance: sdk.NewDec(1), MultiplicativeTolerance: sdk.NewDec(10)}
 	tests := []struct {
 		name         string
 		tol          ErrTolerance

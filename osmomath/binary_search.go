@@ -21,7 +21,7 @@ import (
 // RoundingDir = RoundUnconstrained.
 // Note that if AdditiveTolerance == 0, then this is equivalent to a standard compare.
 type ErrTolerance struct {
-	AdditiveTolerance       sdk.Int
+	AdditiveTolerance       sdk.Dec
 	MultiplicativeTolerance sdk.Dec
 	RoundingDir             RoundingDirection
 }
@@ -31,7 +31,7 @@ type ErrTolerance struct {
 // returns 1 if not, and expected > actual.
 // returns -1 if not, and expected < actual
 func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int {
-	diff := expected.Sub(actual).Abs()
+	diff := expected.ToDec().Sub(actual.ToDec()).Abs()
 
 	comparisonSign := 0
 	if expected.GT(actual) {
@@ -69,7 +69,7 @@ func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int {
 	}
 	// Check multiplicative tolerance equations
 	if !e.MultiplicativeTolerance.IsNil() && !e.MultiplicativeTolerance.IsZero() {
-		errTerm := diff.ToDec().Quo(sdk.MinInt(expected.Abs(), actual.Abs()).ToDec())
+		errTerm := diff.Quo(sdk.MinInt(expected.Abs(), actual.Abs()).ToDec())
 		if errTerm.GT(e.MultiplicativeTolerance) {
 			return comparisonSign
 		}
@@ -115,7 +115,11 @@ func (e ErrTolerance) CompareBigDec(expected BigDec, actual BigDec) int {
 			}
 		}
 
+<<<<<<< HEAD:osmomath/binary_search.go
 		if diff.GT(BigDecFromSDKDec(e.AdditiveTolerance.ToDec())) {
+=======
+		if diff.GT(osmomath.BigDecFromSDKDec(e.AdditiveTolerance)) {
+>>>>>>> 5ab7ebf6 (refactor(osmoutils): use Dec for additive tolerance instead of Int (#3711)):osmoutils/binary_search.go
 			return comparisonSign
 		}
 	}
