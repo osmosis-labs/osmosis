@@ -474,26 +474,6 @@ func (s *decimalTestSuite) TestDecCeil() {
 	}
 }
 
-func (s *decimalTestSuite) TestPower() {
-	testCases := []struct {
-		input    BigDec
-		power    uint64
-		expected BigDec
-	}{
-		{OneDec(), 10, OneDec()},                                                                   // 1.0 ^ (10) => 1.0
-		{NewDecWithPrec(5, 1), 2, NewDecWithPrec(25, 2)},                                           // 0.5 ^ 2 => 0.25
-		{NewDecWithPrec(2, 1), 2, NewDecWithPrec(4, 2)},                                            // 0.2 ^ 2 => 0.04
-		{NewDecFromInt(NewInt(3)), 3, NewDecFromInt(NewInt(27))},                                   // 3 ^ 3 => 27
-		{NewDecFromInt(NewInt(-3)), 4, NewDecFromInt(NewInt(81))},                                  // -3 ^ 4 = 81
-		{MustNewDecFromStr("1.414213562373095048801688724209698079"), 2, NewDecFromInt(NewInt(2))}, // 1.414213562373095048801688724209698079 ^ 2 = 2
-	}
-
-	for i, tc := range testCases {
-		res := tc.input.Power(tc.power)
-		s.Require().True(tc.expected.Sub(res).Abs().LTE(SmallestDec()), "unexpected result for test case %d, input: %v", i, tc.input)
-	}
-}
-
 func (s *decimalTestSuite) TestApproxRoot() {
 	testCases := []struct {
 		input    BigDec
