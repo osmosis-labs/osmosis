@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/model"
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
@@ -32,6 +32,10 @@ func (k Keeper) CreateNewConcentratedLiquidityPool(
 	// Create a new concentrated liquidity pool with the given parameters.
 	poolI, err := model.NewConcentratedLiquidityPool(poolId, denom0, denom1, tickSpacing)
 	if err != nil {
+		return nil, err
+	}
+
+	if !k.validateTickSpacing(ctx, tickSpacing) {
 		return nil, err
 	}
 
@@ -108,4 +112,15 @@ func convertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolE
 	}
 	// Return the converted value
 	return pool, nil
+}
+
+// validateTickSpacing returns true if the given tick spacing is one of the authorized tick spacings set in the
+func (k Keeper) validateTickSpacing(ctx sdk.Context, tickSpacing uint64) bool {
+	params := k.GetParams(ctx)
+	for _, authorizedTick := range params.AuthorizedTickSpacing {
+		if tickSpacing == authorizedTick {
+			return true
+		}
+	}
+	return false
 }

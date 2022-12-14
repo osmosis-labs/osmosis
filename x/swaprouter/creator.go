@@ -21,50 +21,59 @@ import (
 // the form of <swap module name>/pool/{poolID}. In addition, the x/bank metadata is updated
 // to reflect the newly created GAMM share denomination.
 func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, error) {
-	err := validateCreatePoolMsg(ctx, msg)
+	// Run validate basic on the message.
+	err := msg.Validate(ctx)
 	if err != nil {
 		return 0, err
 	}
 
-	sender := msg.PoolCreator()
-	initialPoolLiquidity := msg.InitialLiquidity()
-
-	// send pool creation fee to community pool
+	// Send pool creation fee to community pool
 	params := k.GetParams(ctx)
+	sender := msg.PoolCreator()
 	if err := k.communityPoolKeeper.FundCommunityPool(ctx, params.PoolCreationFee, sender); err != nil {
 		return 0, err
 	}
 
+	// Get the next pool ID and increment the pool ID counter
+	// Create the pool with the given pool ID
 	poolId := k.getNextPoolIdAndIncrement(ctx)
 	pool, err := msg.CreatePool(ctx, poolId)
 	if err != nil {
 		return 0, err
 	}
 
+	// Store the poolId to poolType
 	k.SetModuleRoute(ctx, poolId, msg.GetPoolType())
 
-	if err := k.validateCreatedPool(ctx, initialPoolLiquidity, poolId, pool); err != nil {
+	// Run validation on poolId and address for all pool types
+	if err := k.validateCreatedPool(ctx, poolId, pool); err != nil {
 		return 0, err
 	}
 
-	// create and save the pool's module account to the account keeper
+	// Create and save the pool's module account to the account keeper.
 	if err := osmoutils.CreateModuleAccount(ctx, k.accountKeeper, pool.GetAddress()); err != nil {
 		return 0, fmt.Errorf("creating pool module account for id %d: %w", poolId, err)
 	}
 
+	// Run the respective pool type's initialization logic.
 	swapModule := k.routes[msg.GetPoolType()]
-
 	if err := swapModule.InitializePool(ctx, pool, sender); err != nil {
 		return 0, err
 	}
 
-	// send initial liquidity to the pool
+	// Send initial liquidity to the pool's address.
+	initialPoolLiquidity := msg.InitialLiquidity()
 	err = k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), initialPoolLiquidity)
 	if err != nil {
 		return 0, err
 	}
 
-	k.poolCreationListeners.AfterPoolCreated(ctx, sender, pool.GetId())
+	// TODO: Add AfterCFMMPoolCreated hook so we can remove this if statement
+	// https://github.com/osmosis-labs/osmosis/issues/3612
+	poolType := msg.GetPoolType()
+	if poolType != types.Concentrated {
+		k.poolCreationListeners.AfterPoolCreated(ctx, sender, pool.GetId())
+	}
 
 	return pool.GetId(), nil
 }
@@ -76,29 +85,8 @@ func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 	return nextPoolId
 }
 
-func validateCreatePoolMsg(ctx sdk.Context, msg types.CreatePoolMsg) error {
-	err := msg.Validate(ctx)
-	if err != nil {
-		return err
-	}
-
-	initialPoolLiquidity := msg.InitialLiquidity()
-	numAssets := initialPoolLiquidity.Len()
-	if numAssets < types.MinPoolAssets {
-		return types.ErrTooFewPoolAssets
-	}
-	if numAssets > types.MaxPoolAssets {
-		return errors.Wrapf(
-			types.ErrTooManyPoolAssets,
-			"pool has too many PoolAssets (%d)", numAssets,
-		)
-	}
-	return nil
-}
-
 func (k Keeper) validateCreatedPool(
 	ctx sdk.Context,
-	initialPoolLiquidity sdk.Coins,
 	poolId uint64,
 	pool types.PoolI,
 ) error {
@@ -109,18 +97,6 @@ func (k Keeper) validateCreatedPool(
 	if !pool.GetAddress().Equals(gammtypes.NewPoolAddress(poolId)) {
 		return errors.Wrapf(types.ErrInvalidPool,
 			"Pool was attempted to be created with incorrect pool address.")
-	}
-	// Notably we use the initial pool liquidity at the start of the messages definition
-	// just in case CreatePool was mutative.
-	if !pool.GetTotalPoolLiquidity(ctx).IsEqual(initialPoolLiquidity) {
-		return errors.Wrap(types.ErrInvalidPool,
-			"Pool was attempted to be created, with initial liquidity not equal to what was specified.")
-	}
-	// TODO: this check should be moved
-	// This check can be removed later, and replaced with a minimum.
-	if !pool.GetTotalShares().Equal(gammtypes.InitPoolSharesSupply) {
-		return errors.Wrap(types.ErrInvalidPool,
-			"Pool was attempted to be created with incorrect number of initial shares.")
 	}
 	return nil
 }
