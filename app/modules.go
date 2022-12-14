@@ -13,6 +13,9 @@ import (
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 
+	downtimemodule "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/module"
+	downtimetypes "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/types"
+
 	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -125,6 +128,7 @@ func appModules(
 		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper, app.BankKeeper),
 		slashing.NewAppModule(appCodec, *app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		distr.NewAppModule(appCodec, *app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
+		downtimemodule.NewAppModule(*app.DowntimeKeeper),
 		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		upgrade.NewAppModule(*app.UpgradeKeeper),
 		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
@@ -175,6 +179,7 @@ func orderBeginBlockers(allModuleNames []string) []string {
 	// IBChost came after staking, before superfluid.
 	// TODO: Come back and delete this line after testing the base change.
 	ord.Sequence(stakingtypes.ModuleName, ibchost.ModuleName, superfluidtypes.ModuleName)
+	// We leave downtime-detector un-constrained.
 	// every remaining module's begin block is a no-op.
 	return ord.TotalOrdering()
 }
@@ -204,6 +209,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		distrtypes.ModuleName,
+		downtimetypes.ModuleName,
 		stakingtypes.ModuleName,
 		slashingtypes.ModuleName,
 		govtypes.ModuleName,
