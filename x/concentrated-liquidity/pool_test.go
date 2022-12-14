@@ -57,7 +57,7 @@ func (s *KeeperTestSuite) TestInitializePool() {
 			name:           "Wrong pool type: empty pool interface that doesn't implement ConcentratedPoolExtension",
 			poolI:          invalidPoolI,
 			creatorAddress: validCreatorAddress,
-			expectedErr:    fmt.Errorf("invalid pool type when setting concentrated pool"),
+			expectedErr:    fmt.Errorf("given pool does not implement ConcentratedPoolExtension, implements %T", invalidPoolI),
 		},
 		{
 			name:           "Invalid tick spacing",
