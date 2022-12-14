@@ -1600,13 +1600,14 @@ func (s *TestSuite) TestTwapLog() {
 	var expectedValue = osmomath.MustNewDecFromStr("99.525973560175362367")
 
 	result := twap.TwapLog(priceValue.SDKDec())
-	result_by_customBaseLog := priceValue.CustomBaseLog(osmomath.BigDecFromSDKDec(twap.GeometricTwapMathBase))
+	result_by_customBaseLog := priceValue.CustomBaseLog(twap.GeometricTwapMathBase)
 	s.Require().True(expectedValue.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
 	s.Require().True(result_by_customBaseLog.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
 
 }
 
-func (s *TestSuite) TestTwapPow() {
+// TestTwapPow_CorrectBase tests that the right base is used for the twap power function.
+func (s *TestSuite) TestTwapPow_CorrectBase() {
 	var expectedErrTolerance = osmomath.MustNewDecFromStr("0.00000100")
 	// "TwapPow(0.5) = 1.41421356"
 	// From: https://www.wolframalpha.com/input?i2d=true&i=power+base+2+exponent+0.5+with+9+digits
@@ -1617,6 +1618,24 @@ func (s *TestSuite) TestTwapPow() {
 	result_by_mathPow := math.Pow(twap.GeometricTwapMathBase.MustFloat64(), exponentValue.SDKDec().MustFloat64())
 	s.Require().True(expectedValue.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
 	s.Require().True(osmomath.MustNewDecFromStr(fmt.Sprint(result_by_mathPow)).Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
+}
+
+// TestTwapPow_MaxSpotPrice_NoOverflow tests that no overflow occurs at log_2{max spot price values}.
+// and that the epsilot is within the tolerated multiplicative error.
+func (s *TestSuite) TestTwapLogPow_MaxSpotPrice_NoOverflow() {
+	errTolerance := osmomath.ErrTolerance{
+		MultiplicativeTolerance: sdk.OneDec().Quo(sdk.NewDec(10).Power(18)),
+		RoundingDir:             osmomath.RoundDown,
+	}
+
+	oneYear := OneSec.MulInt64(60 * 60 * 24 * 365)
+
+	oneYearTimesMaxSpotPrice := oneYear.Mul(gammtypes.MaxSpotPrice)
+
+	exponentValue := twap.TwapLog(oneYearTimesMaxSpotPrice)
+	finalValue := twap.TwapPow(exponentValue)
+
+	s.Equal(0, errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(oneYearTimesMaxSpotPrice), osmomath.BigDecFromSDKDec(finalValue)))
 }
 
 func testCaseFromDeltas(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTwapTestCase {
