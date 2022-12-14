@@ -744,8 +744,7 @@ func TestComputeGeometricTwap(t *testing.T) {
 	}
 }
 
-// TODO: split up this test case to cover both arithmetic and geometric twap
-func TestComputeArithmeticTwap_ThreeAsset(t *testing.T) {
+func TestComputeArithmeticTwap_ThreeAsset_Arithmetic(t *testing.T) {
 	testThreeAssetCaseFromDeltas := func(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeThreeAssetArithmeticTwapTestCase {
 		return computeThreeAssetArithmeticTwapTestCase{
 			newThreeAssetOneSidedRecord(baseTime, startAccum, true),
@@ -786,6 +785,58 @@ func TestComputeArithmeticTwap_ThreeAsset(t *testing.T) {
 				actualTwap, err := twap.ComputeTwap(startRec, test.endRecord[i], test.quoteAsset[i], twap.ArithmeticTwapType)
 				require.Equal(t, test.expTwap[i], actualTwap)
 				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestComputeArithmeticTwap_ThreeAsset_Geometric(t *testing.T) {
+	testThreeAssetCaseFromDeltas := func(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeThreeAssetArithmeticTwapTestCase {
+		return computeThreeAssetArithmeticTwapTestCase{
+			newThreeAssetOneSidedRecord(baseTime, startAccum, true),
+			newThreeAssetOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), true),
+			[]string{denom0, denom0, denom1},
+			[]sdk.Dec{expectedTwap, expectedTwap, expectedTwap},
+			false,
+		}
+	}
+
+	five := sdk.NewDec(5)
+	fiveFor3Sec := OneSec.MulInt64(3).Mul(twap.TwapLog(five))
+
+	ten := five.MulInt64(2)
+	tenFor100Sec := OneSec.MulInt64(100).Mul(twap.TwapLog(ten))
+
+	// pointOneAccum := OneSec.QuoInt64(10)
+	tests := map[string]computeThreeAssetArithmeticTwapTestCase{
+		"three asset basic: spot price = 10 for one second, 0 init accumulator": {
+			startRecord: newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			endRecord:   newThreeAssetOneSidedRecord(tPlusOne, geometricTenSecAccum, true),
+			quoteAsset:  []string{denom0, denom0, denom1},
+			expTwap:     []sdk.Dec{sdk.NewDec(10), sdk.NewDec(10), sdk.NewDec(10)},
+		},
+		"three asset same record: asset1, end spot price = 1": {
+			startRecord: newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			endRecord:   newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			quoteAsset:  []string{denom1, denom2, denom2},
+			expTwap:     []sdk.Dec{sdk.OneDec(), sdk.OneDec(), sdk.OneDec()},
+		},
+		"three asset. accumulator = 5*3Sec, t=3s, no start accum": testThreeAssetCaseFromDeltas(
+			sdk.ZeroDec(), fiveFor3Sec, 3*time.Second, five),
+
+		// test that base accum has no impact
+		"three asset. accumulator = 5*3Sec, t=3s. 10 base accum": testThreeAssetCaseFromDeltas(
+			geometricTenSecAccum, fiveFor3Sec, 3*time.Second, five),
+		"three asset. accumulator = 100*100s, t=100s. .1*second base accum": testThreeAssetCaseFromDeltas(
+			twap.TwapLog(OneSec.Quo(ten)), tenFor100Sec, 100*time.Second, ten),
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			for i, startRec := range test.startRecord {
+				actualTwap, err := twap.ComputeTwap(startRec, test.endRecord[i], test.quoteAsset[i], twap.GeometricTwapType)
+
+				require.NoError(t, err)
+				osmoassert.DecApproxEq(t, test.expTwap[i], actualTwap, sdk.MustNewDecFromStr("0.00000001"))
 			}
 		})
 	}
