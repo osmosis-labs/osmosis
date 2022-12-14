@@ -37,7 +37,8 @@ var (
 // and returns the result.
 // The computation is performed by using th following property:
 // 2^decimal_exp = 2^{integer_exp + fractional_exp} = 2^integer_exp * 2^fractional_exp
-// The max supported exponent is 2^10. If greater exponent is given, the function panics.
+// The max supported exponent is defined by the global maxSupportedExponent.
+// If a greater exponent is given, the function panics.
 // Panics if the exponent is negative.
 func Exp2(exponent BigDec) BigDec {
 	if exponent.Abs().GT(maxSupportedExponent) {
