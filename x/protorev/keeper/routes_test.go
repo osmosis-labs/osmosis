@@ -83,10 +83,9 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 			suite.Require().Equal(len(tc.expected), len(routes))
 
 			for routeIndex, route := range routes {
-				for tradeIndex, trade := range route.Trades {
-					suite.Require().Equal(tc.expected[routeIndex][tradeIndex].PoolId, trade.Pool.GetId())
-					suite.Require().Equal(tc.expected[routeIndex][tradeIndex].InputDenom, trade.InputDenom)
-					suite.Require().Equal(tc.expected[routeIndex][tradeIndex].OutputDenom, trade.OutputDenom)
+				for tradeIndex, trade := range route {
+					suite.Require().Equal(tc.expected[routeIndex][tradeIndex].PoolId, trade.PoolId)
+					suite.Require().Equal(tc.expected[routeIndex][tradeIndex].OutputDenom, trade.TokenOutDenom)
 				}
 			}
 		})
@@ -134,12 +133,11 @@ func (suite *KeeperTestSuite) TestBuildAtomRoute() {
 
 			if tc.hasRoute {
 				suite.Require().NoError(err)
-				suite.Require().Equal(len(tc.expectedRoute), len(route.Trades))
+				suite.Require().Equal(len(tc.expectedRoute), len(route.PoolIds()))
 
 				for index, trade := range tc.expectedRoute {
-					suite.Require().Equal(trade.PoolId, route.Trades[index].Pool.GetId())
-					suite.Require().Equal(trade.InputDenom, route.Trades[index].InputDenom)
-					suite.Require().Equal(trade.OutputDenom, route.Trades[index].OutputDenom)
+					suite.Require().Equal(trade.PoolId, route[index].PoolId)
+					suite.Require().Equal(trade.OutputDenom, route[index].TokenOutDenom)
 				}
 			} else {
 				suite.Require().Error(err)
@@ -189,12 +187,11 @@ func (suite *KeeperTestSuite) TestBuildOsmoRoute() {
 
 			if tc.hasRoute {
 				suite.Require().NoError(err)
-				suite.Require().Equal(len(tc.expectedRoute), len(route.Trades))
+				suite.Require().Equal(len(tc.expectedRoute), len(route.PoolIds()))
 
 				for index, trade := range tc.expectedRoute {
-					suite.Require().Equal(trade.PoolId, route.Trades[index].Pool.GetId())
-					suite.Require().Equal(trade.InputDenom, route.Trades[index].InputDenom)
-					suite.Require().Equal(trade.OutputDenom, route.Trades[index].OutputDenom)
+					suite.Require().Equal(trade.PoolId, route[index].PoolId)
+					suite.Require().Equal(trade.OutputDenom, route[index].TokenOutDenom)
 				}
 			} else {
 				suite.Require().Error(err)
@@ -232,12 +229,11 @@ func (suite *KeeperTestSuite) TestBuildTokenPairRoutes() {
 
 				for index, route := range routes {
 
-					suite.Require().Equal(len(tc.expectedRoutes[index]), len(route.Trades))
+					suite.Require().Equal(len(tc.expectedRoutes[index]), len(route.PoolIds()))
 
 					for index, trade := range tc.expectedRoutes[index] {
-						suite.Require().Equal(trade.PoolId, route.Trades[index].Pool.GetId())
-						suite.Require().Equal(trade.InputDenom, route.Trades[index].InputDenom)
-						suite.Require().Equal(trade.OutputDenom, route.Trades[index].OutputDenom)
+						suite.Require().Equal(trade.PoolId, route[index].PoolId)
+						suite.Require().Equal(trade.OutputDenom, route[index].TokenOutDenom)
 					}
 				}
 
