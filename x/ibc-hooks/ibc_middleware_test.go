@@ -440,7 +440,7 @@ func (suite *HooksTestSuite) TestAcks() {
 	addr := suite.chainA.InstantiateContract(&suite.Suite, `{"count": 0}`, 1)
 
 	// Generate swap instructions for the contract
-	callbackMemo := fmt.Sprintf(`{"callback":"%s"}`, addr)
+	callbackMemo := fmt.Sprintf(`{"ibc_callback":"%s"}`, addr)
 	// Send IBC transfer with the memo with crosschain-swap instructions
 	transferMsg := NewMsgTransfer(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)), suite.chainA.SenderAccount.GetAddress().String(), addr.String(), callbackMemo)
 	suite.FullSend(transferMsg, AtoB)

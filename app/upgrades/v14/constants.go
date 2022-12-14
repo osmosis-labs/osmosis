@@ -2,6 +2,7 @@ package v14
 
 import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
+	ibchookstypes "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types"
 
 	"github.com/osmosis-labs/osmosis/v13/app/upgrades"
 	protorevtypes "github.com/osmosis-labs/osmosis/v13/x/protorev/types"
@@ -15,7 +16,7 @@ var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
 	CreateUpgradeHandler: CreateUpgradeHandler,
 	StoreUpgrades: store.StoreUpgrades{
-		Added:   []string{valsetpreftypes.StoreKey, protorevtypes.StoreKey},
+		Added:   []string{valsetpreftypes.StoreKey, protorevtypes.StoreKey, ibchookstypes.StoreKey},
 		Deleted: []string{},
 	},
 }
