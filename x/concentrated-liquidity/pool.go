@@ -115,7 +115,6 @@ func convertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolE
 }
 
 // validateTickSpacing returns true if the given tick spacing is one of the authorized tick spacings set in the
-// concentrated liquidity module params. False otherwise.
 func (k Keeper) validateTickSpacing(ctx sdk.Context, tickSpacing uint64) bool {
 	params := k.GetParams(ctx)
 	for _, authorizedTick := range params.AuthorizedTickSpacing {
