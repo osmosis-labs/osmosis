@@ -1,0 +1,57 @@
+syntax = "proto3";
+package osmosis.protorev.v1beta1;
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v13/x/protorev/types";
+
+// TokenPairArbRoutes tracks all of the hot routes for a given pair of tokens
+message TokenPairArbRoutes {
+  option (gogoproto.equal) = true;
+
+  // Stores all of the possible hot paths for a given pair of tokens
+  repeated Route arb_routes = 1;
+  // Token denomination of the first asset
+  string token_in = 2;
+  // Token denomination of the second asset
+  string token_out = 3;
+}
+
+// Route is a hot route for a given pair of tokens
+message Route {
+  option (gogoproto.equal) = true;
+
+  // The pool IDs that are travered in the directed cyclic graph (traversed left
+  // -> right)
+  repeated Trade trades = 1;
+}
+
+// Trade is a single trade in a route
+message Trade {
+  option (gogoproto.equal) = true;
+
+  // The pool IDs that are travered in the directed cyclic graph (traversed left
+  // -> right)
+  uint64 pool = 1;
+  // The denom of token A that is traded
+  string token_in = 2;
+  // The denom of token B that is traded
+  string token_out = 3;
+}
+
+// PoolStatistics contains the number of trades the module has executed after a
+// swap on a given pool and the profits from the trades
+message PoolStatistics {
+  // profits is the total profit from all trades on this pool
+  repeated cosmos.base.v1beta1.Coin profits = 1;
+  // number_of_trades is the number of trades the module has executed
+  string number_of_trades = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  // pool_id is the id of the pool
+  uint64 pool_id = 3;
+}

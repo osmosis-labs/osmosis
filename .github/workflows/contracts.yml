@@ -32,16 +32,19 @@ jobs:
         uses: dtolnay/rust-toolchain@1.65.0
         with:
           target: wasm32-unknown-unknown
+        if: env.GIT_DIFF
 
       - name: Add the wasm target
         working-directory: ${{ matrix.contract.workdir }}
         run: >
           rustup target add wasm32-unknown-unknown;
+        if: env.GIT_DIFF
 
       - name: Test
         working-directory: ${{ matrix.contract.workdir }}
         run: >
           cargo test
+        if: env.GIT_DIFF
 
 #      - name: Set latest cw-optimizoor version
 #        run: >
@@ -70,6 +73,7 @@ jobs:
             --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
             --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
             cosmwasm/workspace-optimizer:0.12.10
+        if: env.GIT_DIFF
 
       - name: 'Upload optimized contract artifact'
         uses: actions/upload-artifact@v3
@@ -77,6 +81,7 @@ jobs:
           name: ${{ matrix.contract.name }}
           path: ${{ matrix.contract.workdir }}${{ matrix.contract.build }}
           retention-days: 1
+        if: env.GIT_DIFF
 
       - name: 'Upload Cargo.lock artifact'
         uses: actions/upload-artifact@v3
@@ -84,12 +89,14 @@ jobs:
           name: Cargo.lock
           path: ${{ matrix.contract.workdir }}Cargo.lock
           retention-days: 1
+        if: env.GIT_DIFF
 
       - name: Check Test Data
         working-directory: ${{ matrix.contract.workdir }}
         if: ${{ matrix.contract.output != null }}
         run: >
           diff ${{ matrix.contract.output }} ${{ matrix.contract.build }}
+        if: env.GIT_DIFF
   
 
   lints:
