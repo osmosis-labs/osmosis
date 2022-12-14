@@ -27,9 +27,9 @@ var (
 		MustNewDecFromStr("0.000000140277233177373698516010555916"),
 	}
 
-	// maxSupportedExponent = 2^10. The value is chosen by finding
-	// at which value some of the underlying internal functions overflow.
-	// If needed, exp2 can be reimplemented to allow for greater exponents.
+	// maxSupportedExponent = 2^10. The value is chosen by benchmarking
+	// when the underlying internal functions overflow.
+	// If needed in the future, Exp2 can be reimplemented to allow for greater exponents.
 	maxSupportedExponent = MustNewDecFromStr("2").PowerInteger(9)
 )
 
