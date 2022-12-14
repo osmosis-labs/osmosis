@@ -23,7 +23,9 @@ func (k Keeper) GetNumberOfTrades(ctx sdk.Context) (sdk.Int, error) {
 	}
 
 	trades := sdk.Int{}
-	trades.Unmarshal(bz)
+	if err := trades.Unmarshal(bz); err != nil {
+		return sdk.ZeroInt(), err
+	}
 
 	return trades, nil
 }
@@ -54,7 +56,9 @@ func (k Keeper) GetProfitsByDenom(ctx sdk.Context, denom string) (sdk.Coin, erro
 	}
 
 	profits := sdk.Coin{}
-	profits.Unmarshal(bz)
+	if err := profits.Unmarshal(bz); err != nil {
+		return sdk.NewCoin(denom, sdk.ZeroInt()), err
+	}
 
 	return profits, nil
 }
@@ -126,7 +130,9 @@ func (k Keeper) GetTradesByRoute(ctx sdk.Context, route []uint64) (sdk.Int, erro
 	}
 
 	trades := sdk.Int{}
-	trades.Unmarshal(bz)
+	if err := trades.Unmarshal(bz); err != nil {
+		return sdk.ZeroInt(), err
+	}
 	return trades, nil
 }
 
@@ -157,7 +163,9 @@ func (k Keeper) GetProfitsByRoute(ctx sdk.Context, route []uint64, denom string)
 	}
 
 	profits := sdk.Coin{}
-	profits.Unmarshal(bz)
+	if err := profits.Unmarshal(bz); err != nil {
+		return sdk.NewCoin(denom, sdk.ZeroInt()), err
+	}
 
 	return profits, nil
 }
