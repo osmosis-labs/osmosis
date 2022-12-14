@@ -21,6 +21,8 @@ jobs:
             **/**.go
             go.mod
             go.sum
+            .github/**
+            Makefile
       - name: Get data from build cache
         uses: actions/cache@v2
         with:
@@ -39,6 +41,7 @@ jobs:
           key: ${{ runner.os }}-go-linter-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-linter-${{ matrix.go-version }}-
+        if: env.GIT_DIFF
       - name: Run golangci-lint
         run: make lint
         if: env.GIT_DIFF
@@ -53,5 +56,13 @@ jobs:
           # Full git history is needed to get a proper list of changed files
           # within `super-linter`.
           fetch-depth: 0
+      - uses: technote-space/get-diff-action@v6.0.1
+        with:
+          PATTERNS: |
+            **/**.md
+            go.mod
+            go.sum
+            Makefile
       - name: Run documentation linter
         run: make mdlint
+        if: env.GIT_DIFF
