@@ -33,13 +33,13 @@ var (
 	maxSupportedExponent = MustNewDecFromStr("2").PowerInteger(9)
 )
 
-// exp2 takes 2 to the power of a given non-negative decimal exponent.
+// Exp2 takes 2 to the power of a given non-negative decimal exponent.
 // and returns the result.
 // The computation is performed by using th following property:
 // 2^decimal_exp = 2^{integer_exp + fractional_exp} = 2^integer_exp * 2^fractional_exp
 // The max supported exponent is 2^10. If greater exponent is given, the function panics.
 // Panics if the exponent is negative.
-func exp2(exponent BigDec) BigDec {
+func Exp2(exponent BigDec) BigDec {
 	if exponent.Abs().GT(maxSupportedExponent) {
 		panic(fmt.Sprintf("integer exponent %s is too large, max (%s)", exponent, maxSupportedExponent))
 	}
