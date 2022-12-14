@@ -9,6 +9,7 @@ import (
 // InitGenesis initializes the concentrated-liquidity module with the provided genesis state.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
+	// TODO: Initialize any pools that come from genesis state due to export
 }
 
 // ExportGenesis returns the concentrated-liquidity module's exported genesis state.

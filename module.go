@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -15,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/client/cli"
 	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
@@ -24,7 +26,9 @@ var (
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	cdc codec.Codec
+}
 
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
@@ -51,14 +55,16 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
 
-func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {}
+func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)) //nolint:errcheck
+}
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
-	return nil
+	return cli.NewTxCmd()
 }
 
 func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
+	return cli.GetQueryCmd()
 }
 
 // RegisterInterfaces registers interfaces and implementations of the gamm module.
@@ -73,9 +79,9 @@ type AppModule struct {
 	keeper Keeper
 }
 
-func NewAppModule(keeper Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper Keeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 	}
 }
@@ -83,6 +89,7 @@ func NewAppModule(keeper Keeper) AppModule {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), NewMsgServerImpl(&am.keeper))
 	clmodel.RegisterMsgCreatorServer(cfg.MsgServer(), NewMsgCreatorServerImpl(&am.keeper))
+	types.RegisterQueryServer(cfg.QueryServer(), NewQuerier(am.keeper))
 }
 
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
