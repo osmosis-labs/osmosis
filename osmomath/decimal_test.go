@@ -475,26 +475,6 @@ func (s *decimalTestSuite) TestDecCeil() {
 	}
 }
 
-func (s *decimalTestSuite) TestPower() {
-	testCases := []struct {
-		input    osmomath.BigDec
-		power    uint64
-		expected osmomath.BigDec
-	}{
-		{osmomath.OneDec(), 10, osmomath.OneDec()},                                                                            // 1.0 ^ (10) => 1.0
-		{osmomath.NewDecWithPrec(5, 1), 2, osmomath.NewDecWithPrec(25, 2)},                                                    // 0.5 ^ 2 => 0.25
-		{osmomath.NewDecWithPrec(2, 1), 2, osmomath.NewDecWithPrec(4, 2)},                                                     // 0.2 ^ 2 => 0.04
-		{osmomath.NewDecFromInt(osmomath.NewInt(3)), 3, osmomath.NewDecFromInt(osmomath.NewInt(27))},                          // 3 ^ 3 => 27
-		{osmomath.NewDecFromInt(osmomath.NewInt(-3)), 4, osmomath.NewDecFromInt(osmomath.NewInt(81))},                         // -3 ^ 4 = 81
-		{osmomath.MustNewDecFromStr("1.414213562373095048801688724209698079"), 2, osmomath.NewDecFromInt(osmomath.NewInt(2))}, // 1.414213562373095048801688724209698079 ^ 2 = 2
-	}
-
-	for i, tc := range testCases {
-		res := tc.input.Power(tc.power)
-		s.Require().True(tc.expected.Sub(res).Abs().LTE(osmomath.SmallestDec()), "unexpected result for test case %d, input: %v", i, tc.input)
-	}
-}
-
 func (s *decimalTestSuite) TestApproxRoot() {
 	testCases := []struct {
 		input    osmomath.BigDec
