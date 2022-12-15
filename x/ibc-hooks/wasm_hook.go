@@ -132,7 +132,6 @@ func isIcs20Packet(packet channeltypes.Packet) (isIcs20 bool, ics20data transfer
 }
 
 // jsonStringHasKey parses the memo as a json object and checks if it contains the key.
-// isWasmRouted
 func jsonStringHasKey(memo, key string) (found bool, jsonObject map[string]interface{}) {
 	jsonObject = make(map[string]interface{})
 
