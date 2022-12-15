@@ -6,26 +6,40 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/twap"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
+type TwapStrategyTestSuite struct {
+	apptesting.KeeperTestHelper
+}
+
+func TestTwapStrategyTestSuite(t *testing.T) {
+	suite.Run(t, new(TwapStrategyTestSuite))
+}
+
+func (suite *TwapStrategyTestSuite) SetupTest() {
+	suite.Setup()
+}
+
 // TestComputeArithmeticTwap tests computeTwap on various inputs.
 // TODO: test both arithmetic and geometric twap.
 // The test vectors are structured by setting up different start and records,
 // based on time interval, and their accumulator values.
 // Then an expected TWAP is provided in each test case, to compare against computed.
-func TestComputeTwap(t *testing.T) {
+func (suite *TwapStrategyTestSuite) TestComputeTwap() {
 	tests := map[string]computeTwapTestCase{
 		"arithmetic only, basic: spot price = 1 for one second, 0 init accumulator": {
 			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
 			endRecord:   newOneSidedRecord(tPlusOne, OneSec, true),
 			quoteAsset:  denom0,
 			twapStrategies: []twap.TwapStrategies{
-				twap.ArithmeticTwapStrategy,
+				twap.ArithmeticTwapStrategy{suite.App.TwapKeeper},
 			},
 			expTwap: sdk.OneDec(),
 		},
@@ -36,7 +50,7 @@ func TestComputeTwap(t *testing.T) {
 			endRecord:   newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
 			quoteAsset:  denom0,
 			twapStrategies: []twap.TwapStrategies{
-				twap.ArithmeticTwapStrategy,
+				twap.ArithmeticTwapStrategy{suite.App.TwapKeeper},
 			},
 			expTwap: sdk.OneDec(),
 		},
@@ -45,8 +59,8 @@ func TestComputeTwap(t *testing.T) {
 			endRecord:   newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
 			quoteAsset:  denom0,
 			twapStrategies: []twap.TwapStrategies{
-				twap.ArithmeticTwapStrategy,
-				twap.GeometricTwapStrategy,
+				twap.ArithmeticTwapStrategy{suite.App.TwapKeeper},
+				twap.GeometricTwapStrategy{suite.App.TwapKeeper},
 			},
 			expTwap: sdk.ZeroDec(),
 		},
@@ -55,8 +69,8 @@ func TestComputeTwap(t *testing.T) {
 			endRecord:   newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
 			quoteAsset:  denom1,
 			twapStrategies: []twap.TwapStrategies{
-				twap.ArithmeticTwapStrategy,
-				twap.GeometricTwapStrategy,
+				twap.ArithmeticTwapStrategy{suite.App.TwapKeeper},
+				twap.GeometricTwapStrategy{suite.App.TwapKeeper},
 			},
 			expTwap: sdk.OneDec(),
 		},
@@ -68,19 +82,19 @@ func TestComputeTwap(t *testing.T) {
 		"geometric only: accumulator = log(10)*OneSec, t=100s. 0 base accum (asset 1)": geometricTestCaseFromDeltas1(sdk.ZeroDec(), geometricTenSecAccum, 100*time.Second, sdk.OneDec().Quo(twap.TwapPow(geometricTenSecAccum.QuoInt64(100*1000)))),
 	}
 	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
+		suite.Run(name, func() {
 			for _, twapStrategy := range test.twapStrategies {
 				actualTwap := twap.ComputeTwap(test.startRecord, test.endRecord, test.quoteAsset, twapStrategy)
-				osmoassert.DecApproxEq(t, test.expTwap, actualTwap, osmomath.GetPowPrecision())
+				osmoassert.DecApproxEq(suite.T(), test.expTwap, actualTwap, osmomath.GetPowPrecision())
 			}
 		})
 	}
 }
 
-// TestComputeArithmeticTwap tests computeArithmeticTwap on various inputs.
+// TestComputeArithmeticStrategyTwap tests computeArithmeticTwap on various inputs.
 // Contrary to computeTwap that handles the cases with zero delta correctly,
 // this function should panic in case of zero delta.
-func TestComputeArithmeticTwap(t *testing.T) {
+func (suite *TwapStrategyTestSuite) TestComputeArithmeticStrategyTwap(t *testing.T) {
 	pointOneAccum := OneSec.QuoInt64(10)
 	tests := map[string]computeTwapTestCase{
 		"basic: spot price = 1 for one second, 0 init accumulator": {
@@ -121,17 +135,17 @@ func TestComputeArithmeticTwap(t *testing.T) {
 		"accumulator = 10*OneSec, t=100s. 0 base accum (asset 1)": testCaseFromDeltasAsset1(sdk.ZeroDec(), OneSec.MulInt64(10), 100*time.Second, sdk.NewDecWithPrec(1, 1)),
 	}
 	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			arithmeticStrategy := twap.ArithmeticTwapStrategy
-			osmoassert.ConditionalPanic(t, test.expPanic, func() {
-				actualTwap := twap.ComputeTwap(test.startRecord, test.endRecord, test.quoteAsset, arithmeticStrategy)
-				require.Equal(t, test.expTwap, actualTwap)
+		suite.Run(name, func() {
+			osmoassert.ConditionalPanic(s.T(), test.expPanic, func() {
+				arithmeticStrategy := twap.ArithmeticTwapStrategy{suite.App.TwapKeeper}
+				actualTwap := arithmeticStrategy.ComputeTwap(test.startRecord, test.endRecord, test.quoteAsset)
+				suite.Require().Equal(test.expTwap, actualTwap)
 			})
 		})
 	}
 }
 
-func TestComputeGeometricTwap(t *testing.T) {
+func (suite *TwapStrategyTestSuite) TestComputeGeometricStrategyTwap(t *testing.T) {
 	tests := map[string]computeTwapTestCase{
 		// basic test for both denom with zero start accumulator
 		"basic denom0: spot price = 1 for one second, 0 init accumulator": {
@@ -194,18 +208,18 @@ func TestComputeGeometricTwap(t *testing.T) {
 	}
 
 	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			osmoassert.ConditionalPanic(t, tc.expPanic, func() {
-				geometricStrategy := twap.GeometricTwapStrategy
-				actualTwap := twap.ComputeTwap(tc.startRecord, tc.endRecord, tc.quoteAsset, geometricStrategy)
-				osmoassert.DecApproxEq(t, tc.expTwap, actualTwap, osmomath.GetPowPrecision())
+		suite.Run(name, func() {
+			osmoassert.ConditionalPanic(suite.T(), tc.expPanic, func() {
+				geometricStrategy := twap.GeometricTwapStrategy{suite.App.TwapKeeper}
+				actualTwap := geometricStrategy.ComputeTwap(tc.startRecord, tc.endRecord, tc.quoteAsset)
+				osmoassert.DecApproxEq(suite.T(), tc.expTwap, actualTwap, osmomath.GetPowPrecision())
 			})
 		})
 	}
 }
 
 // TODO: split up this test case to cover both arithmetic and geometric twap
-func TestComputeArithmeticTwap_ThreeAsset(t *testing.T) {
+func (suite *TwapStrategyTestSuite) TestComputeArithmeticTwap_ThreeAsset(t *testing.T) {
 	testThreeAssetCaseFromDeltas := func(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeThreeAssetArithmeticTwapTestCase {
 		return computeThreeAssetArithmeticTwapTestCase{
 			newThreeAssetOneSidedRecord(baseTime, startAccum, true),
@@ -240,11 +254,11 @@ func TestComputeArithmeticTwap_ThreeAsset(t *testing.T) {
 			pointOneAccum, tenSecAccum, 100*time.Second, sdk.NewDecWithPrec(1, 1)),
 	}
 	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
+		suite.Run(name, func() {
 			for i, startRec := range test.startRecord {
 				arithmeticStrategy := twap.ArithmeticTwapStrategy
 				actualTwap := twap.ComputeTwap(startRec, test.endRecord[i], test.quoteAsset[i], arithmeticStrategy)
-				require.Equal(t, test.expTwap[i], actualTwap)
+				suite.Require().Equal(test.expTwap[i], actualTwap)
 			}
 		})
 	}
@@ -252,7 +266,7 @@ func TestComputeArithmeticTwap_ThreeAsset(t *testing.T) {
 
 // This tests the behavior of computeArithmeticTwap, around error returning
 // when there has been an intermediate spot price error.
-func TestComputeArithmeticTwapWithSpotPriceError(t *testing.T) {
+func (suite *TwapStrategyTestSuite) TestComputeArithmeticTwapWithSpotPriceError(t *testing.T) {
 	newOneSidedRecordWErrorTime := func(time time.Time, accum sdk.Dec, useP0 bool, errTime time.Time) types.TwapRecord {
 		record := newOneSidedRecord(time, accum, useP0)
 		record.LastErrorTime = errTime
@@ -295,10 +309,10 @@ func TestComputeArithmeticTwapWithSpotPriceError(t *testing.T) {
 		},
 	}
 	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
+		suite.Run(name, func() {
 			arithmeticStrategy := twap.ArithmeticTwapStrategy
 			actualTwap := twap.ComputeTwap(test.startRecord, test.endRecord, test.quoteAsset, arithmeticStrategy)
-			require.Equal(t, test.expTwap, actualTwap)
+			suite.Require().Equal( test.expTwap, actualTwap)
 		})
 	}
 }

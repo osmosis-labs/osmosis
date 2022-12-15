@@ -21,9 +21,11 @@ type geometric struct {
 	keeper Keeper
 }
 
-var _ twapStrategy = &arithmetic{}
+type twapStrategies twapStrategy
 
-var _ twapStrategy = &geometric{}
+var _ twapStrategies = &arithmetic{}
+
+var _ twapStrategies = &geometric{}
 
 // computeTwap computes and returns an arithmetic TWAP between
 // two records given the quote asset.

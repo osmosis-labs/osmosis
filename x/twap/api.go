@@ -8,15 +8,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
-type twapStrategies twapStrategy
-
-// arithmeticTwapType is the type of twap that is calculated by taking the arithmetic weighted average of the spot prices.
-var arithmeticTwapStrategy twapStrategies = &arithmetic{}
-
-// geometricTwapType is the type of twap that is calculated by taking the geometric weighted average of the spot prices.
-// nolint: unused
-var geometricTwapStrategy twapStrategies = &geometric{}
-
 // GetArithmeticTwap returns an arithmetic time weighted average price.
 // The returned twap is the time weighted average price (TWAP) of:
 // * the base asset, in units of the quote asset (1 unit of base = x units of quote)
@@ -119,7 +110,7 @@ func (k Keeper) getTwap(
 		return sdk.Dec{}, err
 	}
 
-	return strategy.computeTwap(startRecord, endRecord, quoteAssetDenom), err
+	return computeTwap(startRecord, endRecord, quoteAssetDenom, strategy)
 }
 
 // getTwapToNow computes and returns twap from the start time until the current block time. The type
@@ -145,7 +136,7 @@ func (k Keeper) getTwapToNow(
 		return sdk.Dec{}, err
 	}
 
-	return strategy.computeTwap(startRecord, endRecord, quoteAssetDenom), err
+	return computeTwap(startRecord, endRecord, quoteAssetDenom, strategy)
 }
 
 // GetBeginBlockAccumulatorRecord returns a TwapRecord struct corresponding to the state of pool `poolId`
