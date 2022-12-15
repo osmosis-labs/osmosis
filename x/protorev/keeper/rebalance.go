@@ -11,7 +11,7 @@ import (
 // and returns the optimal route if there is one
 func (k Keeper) IterateRoutes(ctx sdk.Context, routes []gammtypes.SwapAmountInRoutes) (sdk.Coin, sdk.Int, gammtypes.SwapAmountInRoutes) {
 	var optimalRoute gammtypes.SwapAmountInRoutes
-	maxProfitInputCoin := sdk.NewCoin(types.OsmosisDenomination, sdk.ZeroInt())
+	var maxProfitInputCoin sdk.Coin
 	maxProfit := sdk.ZeroInt()
 
 	for _, route := range routes {
@@ -64,7 +64,8 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit sdk.I
 
 	// Calculate the amount of uosmo that we can get if we swapped the
 	// profited amount of the orignal asset through the highest uosmo liquidity pool
-	conversionTokenOut, err := conversionPool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(sdk.NewCoin(inputCoin.Denom, profit)), types.OsmosisDenomination, conversionPool.GetSwapFee(ctx))
+	conversionTokenOut, err := conversionPool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(sdk.NewCoin(inputCoin.Denom, profit)),
+		types.OsmosisDenomination, conversionPool.GetSwapFee(ctx))
 	if err != nil {
 		return profit, err
 	}
@@ -80,7 +81,7 @@ func (k Keeper) EstimateMultihopProfit(ctx sdk.Context, inputDenom string, amoun
 	tokenIn := sdk.NewCoin(inputDenom, amount)
 	amtOut, err := k.gammKeeper.MultihopEstimateOutGivenExactAmountIn(ctx, route, tokenIn)
 	if err != nil {
-		return sdk.NewCoin(types.OsmosisDenomination, sdk.ZeroInt()), sdk.ZeroInt(), err
+		return sdk.Coin{}, sdk.ZeroInt(), err
 	}
 	profit := amtOut.Sub(tokenIn.Amount)
 	return tokenIn, profit, nil
@@ -88,43 +89,41 @@ func (k Keeper) EstimateMultihopProfit(ctx sdk.Context, inputDenom string, amoun
 
 // FindMaxProfitRoute runs a binary search to find the max profit for a given route
 func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route gammtypes.SwapAmountInRoutes, inputDenom string) (sdk.Coin, sdk.Int, error) {
-	left := 0
-	right := len(types.InputAmountList) - 1
-	midPosition := 0
+	var maxIterations = 20
+	var tokenIn sdk.Coin
+	var profit sdk.Int
+	currLeft := 0
+	currRight := len(types.InputAmountList) - 1
+	currMid := 0
 	iteration := 0
 
-	for left < right {
-		midPosition = (left + right) / 2
+	for currLeft < currRight && iteration < maxIterations {
+		iteration++
+
+		currMid = (currLeft + currRight) / 2
 
 		// Short circuit profit searching if there is an error in the GAMM module
-		_, profitMidPosition, err := k.EstimateMultihopProfit(ctx, inputDenom, types.InputAmountList[midPosition], route)
+		tokenInMid, profitMid, err := k.EstimateMultihopProfit(ctx, inputDenom, types.InputAmountList[currMid], route)
 		if err != nil {
-			return sdk.Coin{Denom: types.OsmosisDenomination, Amount: sdk.ZeroInt()}, sdk.ZeroInt(), err
+			return sdk.Coin{}, sdk.ZeroInt(), err
 		}
 
 		// Short circuit profit searching if there is an error in the GAMM module
-		_, profitMidPositionPlusOne, err := k.EstimateMultihopProfit(ctx, inputDenom, types.InputAmountList[midPosition+1], route)
+		tokenInMidPlusOne, profitMidPlusOne, err := k.EstimateMultihopProfit(ctx, inputDenom, types.InputAmountList[currMid+1], route)
 		if err != nil {
-			return sdk.Coin{Denom: types.OsmosisDenomination, Amount: sdk.ZeroInt()}, sdk.ZeroInt(), err
+			return sdk.Coin{}, sdk.ZeroInt(), err
 		}
 
 		// Reduce subspace to search for max profit
-		if profitMidPosition.LTE(profitMidPositionPlusOne) {
-			left = midPosition + 1
-		} else if profitMidPosition.GT(profitMidPositionPlusOne) {
-			right = midPosition
+		if profitMid.LTE(profitMidPlusOne) {
+			currLeft = currMid + 1
+			tokenIn = tokenInMidPlusOne
+			profit = profitMidPlusOne
+		} else {
+			currRight = currMid
+			tokenIn = tokenInMid
+			profit = profitMid
 		}
-
-		// Circuit breaker to prevent unbounded runtime
-		iteration += 1
-		if iteration >= 20 {
-			break
-		}
-	}
-
-	tokenIn, profit, err := k.EstimateMultihopProfit(ctx, inputDenom, types.InputAmountList[left], route)
-	if err != nil {
-		return sdk.Coin{Denom: types.OsmosisDenomination, Amount: sdk.ZeroInt()}, sdk.ZeroInt(), err
 	}
 
 	return tokenIn, profit, nil
