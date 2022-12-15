@@ -253,7 +253,7 @@ func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (swaproutertypes.Poo
 	case *balancer.Pool:
 		return swaproutertypes.Balancer, nil
 	case *stableswap.Pool:
-		return swaproutertypes.StableSwap, nil
+		return swaproutertypes.Stableswap, nil
 	default:
 		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
 		return -1, sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)

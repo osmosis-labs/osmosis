@@ -43,7 +43,6 @@ func migrateNextPoolId(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, swaproute
 	swaprouterKeeper.SetNextPoolId(ctx, nextPoolId)
 
 	for poolId := uint64(1); poolId < nextPoolId; poolId++ {
-
 		poolType, err := gammKeeper.GetPoolType(ctx, poolId)
 		if err != nil {
 			panic(err)
