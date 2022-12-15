@@ -3,9 +3,7 @@ package wasmbinding
 import (
 	"fmt"
 	"sync"
-
-	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
-
+	
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
