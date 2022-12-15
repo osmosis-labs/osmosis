@@ -243,20 +243,20 @@ func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 	return nextPoolId
 }
 
-func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (string, error) {
+func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (swaproutertypes.PoolType, error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
-		return "", err
+		return -1, err
 	}
 
 	switch pool := pool.(type) {
 	case *balancer.Pool:
-		return balancer.PoolTypeName, nil
+		return swaproutertypes.Balancer, nil
 	case *stableswap.Pool:
-		return stableswap.PoolTypeName, nil
+		return swaproutertypes.Stableswap, nil
 	default:
 		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
-		return "", sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
+		return -1, sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
 	}
 }
 
