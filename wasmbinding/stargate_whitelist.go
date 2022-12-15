@@ -3,7 +3,7 @@ package wasmbinding
 import (
 	"fmt"
 	"sync"
-	
+
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
