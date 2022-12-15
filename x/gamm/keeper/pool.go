@@ -260,13 +260,6 @@ func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (swaproutertypes.Poo
 	}
 }
 
-// getNextPoolIdAndIncrement returns the next pool Id, and increments the corresponding state entry.
-func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
-	nextPoolId := k.GetNextPoolId(ctx)
-	k.setNextPoolId(ctx, nextPoolId+1)
-	return nextPoolId
-}
-
 // setStableSwapScalingFactors sets the stable swap scaling factors.
 // errors if the pool does not exist, the sender is not the scaling factor controller, or due to other
 // internal errors.
