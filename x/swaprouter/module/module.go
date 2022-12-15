@@ -74,13 +74,13 @@ type AppModule struct {
 	AppModuleBasic
 
 	k          swaprouter.Keeper
-	gammKeeper types.GammKeeper
+	gammKeeper types.SwapI
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
-func NewAppModule(swaprouterKeeper swaprouter.Keeper, gammKeeper types.GammKeeper) AppModule {
+func NewAppModule(swaprouterKeeper swaprouter.Keeper, gammKeeper types.SwapI) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		k:              swaprouterKeeper,
