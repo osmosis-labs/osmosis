@@ -16,6 +16,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/v2types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -125,8 +126,13 @@ func (q Querier) PoolType(ctx context.Context, req *types.QueryPoolTypeRequest) 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	poolType, err := q.Keeper.GetPoolType(sdkCtx, req.PoolId)
 
+	poolTypeStr, ok := swaproutertypes.PoolType_name[int32(poolType)]
+	if !ok {
+		return nil, status.Errorf(codes.Internal, "invalid pool type: %d", poolType)
+	}
+
 	return &types.QueryPoolTypeResponse{
-		PoolType: poolType,
+		PoolType: poolTypeStr,
 	}, err
 }
 
@@ -187,7 +193,12 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 				return false, types.ErrPoolNotFound
 			}
 
-			if poolType != req.PoolType {
+			poolTypeStr, ok := swaproutertypes.PoolType_name[int32(poolType)]
+			if !ok {
+				return false, fmt.Errorf("%d pool type not found", int32(poolType))
+			}
+
+			if poolTypeStr != req.PoolType {
 				return false, nil
 			}
 		}

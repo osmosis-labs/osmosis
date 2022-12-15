@@ -13,8 +13,11 @@ The ``GAMM`` module (**G**eneralized **A**utomated **M**arket **M**aker) provide
 
 ## Concepts
 
-The `x/gamm` module implements an AMM using Balancer style pools with
-varying amounts and weights of assets in pools.
+The `x/gamm` module implements an AMM using:
+- Balancer style pools with varying amounts and weights of assets in pools.
+- Stableswap pools - still WIP.
+
+Here we will explain basic GAMM concepts and give an overview of how GAMM module's code is organized to support both type of pools.
 
 ### Pool
 
@@ -23,13 +26,22 @@ varying amounts and weights of assets in pools.
 At an initial creation of the pool, a fixed amount of 100 share token is
 minted in the pool and sent to the creator of the pool's account. The
 pool share denom is in the format of `gamm/pool/{poolID}` and is
-displayed in the format of `GAMM-{poolID}` to the user. Pool assets are
-sorted in alphabetical order by default.
+displayed in the format of `GAMM-{poolID}` to the user. 
+Pool assets are sorted in alphabetical order by default.
+Pool creation is possible only for at least 2 and no more than 8 denominations.
+
+`PoolCreationFee` needs to be paid to create the pool. This also keeps
+us safe when it comes to the malicious creation of unneeded pools.
+
 
 #### Joining Pool
 
-When joining a pool, a user provides the maximum amount of tokens
-they're willing to deposit, while the front end takes care of the
+When joining a pool without swapping - with `JoinPool`, a user can provide the maximum amount of tokens `TokenInMaxs'
+they're willing to deposit. This argument must contain all the denominations from the pool or no tokens at all, 
+otherwise, the tx will be aborted.
+If `TokenInMaxs` contains no tokens, the calculations are done based on the user's balance as the only constraint.
+
+The front end takes care of the 
 calculation of how many share tokens the user is eligible for at the
 specific moment of sending the transaction.
 
@@ -37,8 +49,18 @@ Calculation of exactly how many tokens are needed to get the designated
 share is done at the moment of processing the transaction, validating
 that it does not exceed the maximum amount of tokens the user is willing
 to deposit. After the validation, GAMM share tokens of the pool are
-minted and sent to the user's account. Joining the pool using a single
-asset is also possible.
+minted and sent to the user's account.
+
+Joining the pool using a single asset is also possible with `JoinSwapExternAmountIn`.
+
+Existing Join types:
+- JoinPool
+- JoinSwapExternAmountIn
+- JoinSwapShareAmountOut
+
+#### Join types code call stack and structure:
+<img src="GAMM_JoinPoolMsgs.png" height="500"/>
+</br>
 
 #### Exiting Pool
 
@@ -49,7 +71,22 @@ the exit fee, which is set as a param of the pool. The user's share
 tokens burnt as result. Exiting the pool using a single asset is also
 possible.
 
-[Exiting pool](https://github.com/osmosis-labs/osmosis/blob/main/x/gamm/keeper/pool_service.go)
+Exiting a pool is possible only if user will leave a positive balance for a certain denomination after exiting
+or positive number of LP shares. 
+Otherwise transaction will be aborted and user will not be able to exit a pool.
+Therefore, it is not possible to "drain out" a pool.
+
+When exiting a pool with a swap, both exit and swap fees are paid.
+
+Existing Exit types:
+- ExitPool
+- ExitSwapExternAmountOut
+- ExitSwapShareAmountIn
+
+#### Exit types code call stack and structure:
+<img src="GAMM_ExitPoolMsgs.png" height="500"/>
+</br>
+
 
 ### Swap
 
@@ -69,6 +106,10 @@ user should be putting in is done through the following formula:
 
 `tokenBalanceIn * [{tokenBalanceOut / (tokenBalanceOut - tokenAmountOut)} ^ (tokenWeightOut / tokenWeightIn) -1] / tokenAmountIn`
 
+Existing Swap types:
+- SwapExactAmountIn
+- SwapExactAmountOut
+
 #### Spot Price
 
 Meanwhile, calculation of the spot price with a swap fee is done using
@@ -84,7 +125,9 @@ the following formula:
 
 All tokens are swapped using a multi-hop mechanism. That is, all swaps
 are routed via the most cost-efficient way, swapping in and out from
-multiple pools in the process.
+multiple pools in the process. 
+The most cost-efficient route is determined offline and the list of the pools is provided externally, by user, during the broadcasting of the swapping transaction. 
+In the moment of the execution the provided route may not be the most cost efficient one anymore.
 
 When a trade consists of just two OSMO-included routes during a single transaction,
 the swap fees on each hop would be automatically halved. 

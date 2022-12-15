@@ -459,6 +459,14 @@ func (suite *HooksTestSuite) TestAcks() {
 
 }
 
+func (suite *HooksTestSuite) TestSendWithoutMemo() {
+	// Sending a packet without memo to ensure that the ibc_callback middleware doesn't interfere with a regular send
+	transferMsg := NewMsgTransfer(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)), suite.chainA.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String(), "")
+	_, _, ack, err := suite.FullSend(transferMsg, AtoB)
+	suite.Require().NoError(err)
+	suite.Require().Contains(ack, "result")
+}
+
 type Chain int64
 
 const (

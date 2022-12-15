@@ -28,18 +28,18 @@ type ContractAck struct {
 
 type WasmHooks struct {
 	ContractKeeper *wasmkeeper.PermissionedKeeper
-	hooksKeeper    *keeper.Keeper
+	ibcHooksKeeper *keeper.Keeper
 }
 
-func NewWasmHooks(hooksKeeper *keeper.Keeper, contractKeeper *wasmkeeper.PermissionedKeeper) WasmHooks {
+func NewWasmHooks(ibcHooksKeeper *keeper.Keeper, contractKeeper *wasmkeeper.PermissionedKeeper) WasmHooks {
 	return WasmHooks{
 		ContractKeeper: contractKeeper,
-		hooksKeeper:    hooksKeeper,
+		ibcHooksKeeper: ibcHooksKeeper,
 	}
 }
 
 func (h WasmHooks) ProperlyConfigured() bool {
-	return h.ContractKeeper != nil && h.hooksKeeper != nil
+	return h.ContractKeeper != nil && h.ibcHooksKeeper != nil
 }
 
 func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
@@ -132,7 +132,6 @@ func isIcs20Packet(packet channeltypes.Packet) (isIcs20 bool, ics20data transfer
 }
 
 // jsonStringHasKey parses the memo as a json object and checks if it contains the key.
-// isWasmRouted
 func jsonStringHasKey(memo, key string) (found bool, jsonObject map[string]interface{}) {
 	jsonObject = make(map[string]interface{})
 
@@ -282,7 +281,7 @@ func (h WasmHooks) SendPacketOverride(i ICS4Middleware, ctx sdk.Context, chanCap
 		return nil
 	}
 
-	h.hooksKeeper.StorePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence(), contract)
+	h.ibcHooksKeeper.StorePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence(), contract)
 	return nil
 }
 
@@ -297,7 +296,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 		return nil
 	}
 
-	contract := h.hooksKeeper.GetPacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
+	contract := h.ibcHooksKeeper.GetPacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
 	if contract == "" {
 		// No callback configured
 		return nil

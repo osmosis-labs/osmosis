@@ -52,7 +52,7 @@ var (
 	tickLogOf2 = MustNewDecFromStr("0.000144262291094554178391070900057480")
 	// initialized in init() since requires
 	// precision to be defined.
-	twoBigDec BigDec
+	twoBigDec BigDec = MustNewDecFromStr("2")
 )
 
 // Decimal errors
@@ -68,8 +68,6 @@ func init() {
 	for i := 0; i <= Precision; i++ {
 		precisionMultipliers[i] = calcPrecisionMultiplier(int64(i))
 	}
-
-	twoBigDec = NewBigDec(2)
 }
 
 func precisionInt() *big.Int {
@@ -423,7 +421,7 @@ func (d BigDec) ApproxRoot(root uint64) (guess BigDec, err error) {
 	guess, delta := OneDec(), OneDec()
 
 	for iter := 0; delta.Abs().GT(SmallestDec()) && iter < maxApproxRootIterations; iter++ {
-		prev := guess.Power(root - 1)
+		prev := guess.PowerInteger(root - 1)
 		if prev.IsZero() {
 			prev = SmallestDec()
 		}
@@ -435,24 +433,6 @@ func (d BigDec) ApproxRoot(root uint64) (guess BigDec, err error) {
 	}
 
 	return guess, nil
-}
-
-// Power returns a the result of raising to a positive integer power
-func (d BigDec) Power(power uint64) BigDec {
-	if power == 0 {
-		return OneDec()
-	}
-	tmp := OneDec()
-
-	for i := power; i > 1; {
-		if i%2 != 0 {
-			tmp = tmp.Mul(d)
-		}
-		i /= 2
-		d = d.Mul(d)
-	}
-
-	return d.Mul(tmp)
 }
 
 // ApproxSqrt is a wrapper around ApproxRoot for the common special case

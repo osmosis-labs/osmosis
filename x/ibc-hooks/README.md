@@ -128,7 +128,8 @@ field of the transfer packet.
 
 The crosschain swaps implementation sends an IBC transfer. If the transfer were to fail, we want to allow the sender
 to be able to retrieve their funds (which would otherwise be stuck in the contract). To do this, we allow users to 
-retrieve the funds after the timeout has passed, but without the ack information, we cannot guarantee that  
+retrieve the funds after the timeout has passed, but without the ack information, we cannot guarantee that the send 
+hasn't failed (i.e.: returned an error ack notifying that the receiving change didn't accept it)
 
 ### Implementation
 
@@ -149,6 +150,4 @@ The contract that awaits the callback should implement the following interface f
 
 # Testing strategy
 
-# Future Work
-* Does it make sense to move most of this code to cosmwasm and have the middleware just call a dispatcher contract 
-  on every function? Similarly to how wasmd does it for IBC enabled contracts but for the transfer module.
+See go tests.
