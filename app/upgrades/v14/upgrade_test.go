@@ -60,4 +60,9 @@ func (suite *UpgradeTestSuite) TestMigrateNextPoolIdAndCreatePool() {
 
 		suite.Require().Equal(gammKeeperType, reflect.TypeOf(swapModule))
 	}
+
+	// validate params
+	gammPoolCreationFee := gammKeeper.GetParams(ctx).PoolCreationFee
+	swaprouterPoolCreationFee := swaprouterKeeper.GetParams(ctx).PoolCreationFee
+	suite.Require().Equal(gammPoolCreationFee, swaprouterPoolCreationFee)
 }
