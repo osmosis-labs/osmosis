@@ -176,4 +176,14 @@ func (s *KeeperTestSuite) TestPoolIToConcentratedPool() {
 	// Ensure no error occurs when converting to ConcentratedPool
 	_, err := cl.ConvertPoolInterfaceToConcentrated(poolI)
 	s.Require().NoError(err)
+
+	// Create a default stableswap pool
+	stableswapPoolID := s.PrepareBasicStableswapPool()
+	stableswapPool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, stableswapPoolID)
+	s.Require().NoError(err)
+
+	// Ensure error occurs when converting to ConcentratedPool
+	_, err = cl.ConvertPoolInterfaceToConcentrated(stableswapPool)
+	s.Require().Error(err)
+	s.Require().ErrorContains(err, fmt.Errorf("given pool does not implement ConcentratedPoolExtension, implements %T", stableswapPool).Error())
 }
