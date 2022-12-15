@@ -105,7 +105,12 @@ func TestGammExportGenesis(t *testing.T) {
 	require.NoError(t, err)
 
 	genesis := app.GAMMKeeper.ExportGenesis(ctx)
-	require.Equal(t, genesis.NextPoolNumber, uint64(3))
+	// Note: the next pool number index has been migrated to
+	// swaprouter.
+	// The reason it is kept in gamm is for migrations.
+	// As a result, it is 1 here. This index is to be removed
+	// in a subsequent upgrade.
+	require.Equal(t, genesis.NextPoolNumber, uint64(1))
 	require.Len(t, genesis.Pools, 2)
 }
 
