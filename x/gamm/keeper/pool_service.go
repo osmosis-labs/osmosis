@@ -160,14 +160,18 @@ func (k Keeper) JoinPoolNoSwap(
 	}
 
 	// check that needed lp liquidity does not exceed the given `tokenInMaxs` parameter. Return error if so.
-	// if tokenInMaxs == 0, don't do this check.
+	//if tokenInMaxs == 0, don't do this check.
 	if tokenInMaxs.Len() != 0 {
-		if !(neededLpLiquidity.DenomsSubsetOf(tokenInMaxs) && tokenInMaxs.IsAllGTE(neededLpLiquidity)) {
-			return nil, sdk.ZeroInt(), sdkerrors.Wrapf(types.ErrLimitMaxAmount, "TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap,"+
+		if !(neededLpLiquidity.DenomsSubsetOf(tokenInMaxs)) {
+			return nil, sdk.ZeroInt(), sdkerrors.Wrapf(types.ErrLimitMaxAmount, "TokenInMaxs does not include all the tokens that are part of the target pool,"+
 				" upperbound: %v, needed %v", tokenInMaxs, neededLpLiquidity)
 		} else if !(tokenInMaxs.DenomsSubsetOf(neededLpLiquidity)) {
 			return nil, sdk.ZeroInt(), sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, "TokenInMaxs includes tokens that are not part of the target pool,"+
 				" input tokens: %v, pool tokens %v", tokenInMaxs, neededLpLiquidity)
+		}
+		if !(tokenInMaxs.IsAllGTE(neededLpLiquidity)) {
+			return nil, sdk.ZeroInt(), sdkerrors.Wrapf(types.ErrLimitMaxAmount, "TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap,"+
+				" upperbound: %v, needed %v", tokenInMaxs, neededLpLiquidity)
 		}
 	}
 

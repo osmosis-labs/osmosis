@@ -341,6 +341,15 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 			},
 			expectPass: false,
 		},
+		{
+			name:            "join no swap with TokenInMaxs not containing every token in pool",
+			txSender:        suite.TestAccs[1],
+			sharesRequested: types.OneShare.MulRaw(50),
+			tokenInMaxs: sdk.Coins{
+				fiveKFooAndBar[0],
+			},
+			expectPass: false,
+		},
 	}
 
 	for _, test := range tests {
