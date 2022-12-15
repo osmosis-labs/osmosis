@@ -19,7 +19,9 @@ func CreateUpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		keepers.SwapRouterKeeper.SetParams(ctx, swaproutertypes.DefaultParams())
+		swaprouterParams := swaproutertypes.NewParams(keepers.GAMMKeeper.GetParams(ctx).PoolCreationFee)
+
+		keepers.SwapRouterKeeper.SetParams(ctx, swaprouterParams)
 
 		// N.B: pool id in gamm is to be deprecated in the future
 		// Instead,it is moved to swaprouter.
