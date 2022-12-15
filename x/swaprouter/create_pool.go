@@ -144,3 +144,31 @@ func (k Keeper) SetPoolRoute(ctx sdk.Context, poolId uint64, poolType types.Pool
 	store := ctx.KVStore(k.storeKey)
 	osmoutils.MustSet(store, types.FormatModuleRouteKey(poolId), &types.ModuleRoute{PoolType: poolType})
 }
+
+// GetSwapModule returns the swap module for the given pool ID.
+// Returns error if:
+// - any database error occurs.
+// - fails to find a pool with the given id.
+// - the swap module of the type corresponding to the pool id is not registered
+// in swaprouter's keeper constructor.
+// TODO: unexport after concentrated-liqudity upgrade. Currently, it is exported
+// for the upgrade handler logic and tests.
+func (k Keeper) GetPoolModule(ctx sdk.Context, poolId uint64) (types.SwapI, error) {
+	store := ctx.KVStore(k.storeKey)
+
+	moduleRoute := &types.ModuleRoute{}
+	found, err := osmoutils.Get(store, types.FormatModuleRouteKey(poolId), moduleRoute)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, types.FailedToFindRouteError{PoolId: poolId}
+	}
+
+	swapModule, routeExists := k.routes[moduleRoute.PoolType]
+	if !routeExists {
+		return nil, types.UndefinedRouteError{PoolType: moduleRoute.PoolType, PoolId: poolId}
+	}
+
+	return swapModule, nil
+}
