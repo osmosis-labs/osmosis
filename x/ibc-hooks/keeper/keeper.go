@@ -45,3 +45,9 @@ func (k Keeper) GetPacketCallback(ctx sdk.Context, channel string, packetSequenc
 	store := ctx.KVStore(k.storeKey)
 	return string(store.Get(GetPacketKey(channel, packetSequence)))
 }
+
+// DeletePacketCallback deletes the callback from storage once it has been processed
+func (k Keeper) DeletePacketCallback(ctx sdk.Context, channel string, packetSequence uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(GetPacketKey(channel, packetSequence))
+}
