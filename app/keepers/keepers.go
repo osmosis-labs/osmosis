@@ -200,6 +200,10 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.DistrKeeper = &distrKeeper
 
+	appKeepers.DowntimeKeeper = downtimedetector.NewKeeper(
+		appKeepers.keys[downtimetypes.StoreKey],
+	)
+
 	slashingKeeper := slashingkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[slashingtypes.StoreKey],
