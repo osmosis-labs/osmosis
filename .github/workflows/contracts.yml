@@ -45,7 +45,6 @@ jobs:
           cargo test
         if: env.GIT_DIFF
 
-<<<<<<< HEAD
       - name: Set latest cw-optimizoor version
         run: >
           echo "CW_OPTIMIZOOR_VERSION=0.8.0" >> $GITHUB_ENV
@@ -66,8 +65,6 @@ jobs:
         run: >
           cargo install cw-optimizoor
 
-=======
->>>>>>> 0a3c4422 (Removing the second check as it breaks the yml file (#3719))
       - name: Optimize
         working-directory: ${{ matrix.contract.workdir }}
         run: >
