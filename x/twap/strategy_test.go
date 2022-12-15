@@ -269,8 +269,7 @@ func (suite *TwapStrategyTestSuite) TestComputeArithmeticTwap_ThreeAsset() {
 		suite.Run(name, func() {
 			for i, startRec := range test.startRecord {
 				arithmeticStrategy := &twap.ArithmeticTwapStrategy{ArithKeeper: *suite.App.TwapKeeper}
-				actualTwap, err := twap.ComputeTwap(startRec, test.endRecord[i], test.quoteAsset[i], arithmeticStrategy)
-				suite.Require().Error(err)
+				actualTwap := arithmeticStrategy.ComputeTwap(startRec, test.endRecord[i], test.quoteAsset[i])
 				suite.Require().Equal(test.expTwap[i], actualTwap)
 			}
 		})
