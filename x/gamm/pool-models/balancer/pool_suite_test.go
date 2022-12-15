@@ -903,9 +903,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 
 		suite.T().Run(tc.name, func(t *testing.T) {
 			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
-			calPool, ok := pool.(types.TraditionalAmmInterface)
-			suite.Require().Equal(ok, true)
-			_, err := calPool.GetMaximalNoSwapLPAmount(suite.Ctx, tc.shareOutAmount)
+			_, err := pool.GetMaximalNoSwapLPAmount(suite.Ctx, tc.shareOutAmount)
 			if tc.err != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorAs(tc.err, &err)
