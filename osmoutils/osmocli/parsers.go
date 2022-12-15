@@ -3,11 +3,9 @@ package osmocli
 import (
 	"fmt"
 	"reflect"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
-	"unicode"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -287,51 +285,6 @@ func ParseCoin(arg string, fieldName string) (sdk.Coin, error) {
 		return sdk.Coin{}, fmt.Errorf("could not parse %s as sdk.Coin for field %s: %w", arg, fieldName, err)
 	}
 	return coin, nil
-}
-
-// ParseCoinsFromString parses a string of coins in the format. Ex. "10uosmo, 12uatom"
-// Supports whitespace tramming and coin validation
-// Note that this method returns empty coins if the input is empty
-func ParseCoinsFromString(coins string) (sdk.Coins, error) {
-	coinsSlice := strings.Split(coins, ",")
-
-	if len(coinsSlice) == 1 && coinsSlice[0] == "" {
-		return sdk.Coins{}, nil
-	}
-	parsedCoins := sdk.Coins{}
-	var IsLetter = regexp.MustCompile(`^[a-zA-Z]+$`).MatchString
-
-	for _, coin := range coinsSlice {
-		coin = strings.TrimSpace(coin)
-		matches := strings.IndexFunc(coin, unicode.IsLetter)
-		if matches == -1 {
-			return nil, fmt.Errorf("invalid coin format: %s", coin)
-		}
-
-		amountString := coin[:matches]
-		denomString := coin[matches:]
-
-		// first sanity check the denom
-		isLetter := IsLetter(denomString)
-		if !isLetter {
-			return nil, fmt.Errorf("invalid coin denom: %s", coin)
-		}
-
-		amount, err := strconv.ParseInt(amountString, 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("invalid coin amount: %s", coin)
-		}
-
-		parsedCoins = append(parsedCoins, sdk.NewCoin(denomString, sdk.NewInt(amount)))
-	}
-
-	parsedCoins = parsedCoins.Sort()
-	err := parsedCoins.Validate()
-	if err != nil {
-		return nil, err
-	}
-
-	return parsedCoins, nil
 }
 
 // TODO: Make this able to read from some local alias file for denoms.

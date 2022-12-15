@@ -294,7 +294,7 @@ func (suite *KeeperTestSuite) TestPoolsWithFilter() {
 					Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
 				},
 			},
-			expectedErr: true,
+			expectedErr: false,
 		},
 		{
 			name:                        "only valid pool type specified",
