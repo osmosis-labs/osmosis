@@ -50,4 +50,5 @@ type PoolIncentivesKeeper interface {
 
 type PoolCreationManager interface {
 	CreatePool(ctx sdk.Context, msg swaproutertypes.CreatePoolMsg) (uint64, error)
+	GetNextPoolId(ctx sdk.Context) uint64
 }
