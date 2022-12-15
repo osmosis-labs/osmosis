@@ -155,3 +155,30 @@ func TestParseFieldFromArg(t *testing.T) {
 		})
 	}
 }
+
+func TestParseCoinsFromString(t *testing.T) {
+	tests := []struct {
+		name    string
+		coins   string
+		expPass bool
+		expCoin sdk.Coins
+	}{
+		{"empty coins", "", true, sdk.Coins{}},
+		{"invalid coin", "foo", false, sdk.Coins{}},
+		{"valid coin", "10foo", true, sdk.Coins{sdk.NewCoin("foo", sdk.NewInt(10))}},
+		{"valid two coins", "10foo,20bar", true, sdk.Coins{sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(20))}},
+		{"two same coins", "10foo,20foo", false, sdk.Coins{}},
+		{"valid there coins", "10foo,20bar,30baz", true, sdk.Coins{sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(20)), sdk.NewCoin("baz", sdk.NewInt(30))}},
+		{"valid coins with spaces", "10foo, 10bar", true, sdk.Coins{sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(10))}},
+		{"valid coins with spaces and tabs", "10foo, 10bar\t", true, sdk.Coins{sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(10))}},
+	}
+
+	for _, tc := range tests {
+		_, err := ParseCoinsFromString(tc.coins)
+		if tc.expPass {
+			require.NoError(t, err, tc.name)
+		} else {
+			require.Error(t, err, tc.name)
+		}
+	}
+}
