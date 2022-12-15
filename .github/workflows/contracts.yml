@@ -87,18 +87,27 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v3
+      - uses: technote-space/get-diff-action@v6.0.1
+        with:
+          PATTERNS: |
+            **/**.rs
+            **/**Cargo.toml
+            **/**Cargo.lock
       - name: Install toolchain
         uses: dtolnay/rust-toolchain@1.65.0
         with:
           components: rustfmt, clippy
+        if: env.GIT_DIFF
 
       - name: Format
         working-directory: ${{ matrix.workdir }}
         run: >
           cargo fmt --all -- --check
+        if: env.GIT_DIFF
 
       - name: run cargo clippy
         working-directory: ${{ matrix.workdir }}
         run: >
           cargo clippy -- -D warnings
+        if: env.GIT_DIFF
 
