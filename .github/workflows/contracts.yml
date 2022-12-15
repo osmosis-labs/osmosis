@@ -25,9 +25,8 @@ jobs:
         with:
           PATTERNS: |
             **/**.rs
-            **/**.go
-            go.mod
-            **/**cargo.toml
+            **/**Cargo.toml
+            **/**Cargo.lock
       - name: Install toolchain
         uses: dtolnay/rust-toolchain@1.65.0
         with:
@@ -46,6 +45,7 @@ jobs:
           cargo test
         if: env.GIT_DIFF
 
+<<<<<<< HEAD
       - name: Set latest cw-optimizoor version
         run: >
           echo "CW_OPTIMIZOOR_VERSION=0.8.0" >> $GITHUB_ENV
@@ -66,6 +66,8 @@ jobs:
         run: >
           cargo install cw-optimizoor
 
+=======
+>>>>>>> 0a3c4422 (Removing the second check as it breaks the yml file (#3719))
       - name: Optimize
         working-directory: ${{ matrix.contract.workdir }}
         run: >
@@ -82,10 +84,9 @@ jobs:
 
       - name: Check Test Data
         working-directory: ${{ matrix.contract.workdir }}
-        if: ${{ matrix.contract.output != null }}
+        if: env.GIT_DIFF
         run: >
           diff ${{ matrix.contract.output }} ${{ matrix.contract.build }}
-        if: env.GIT_DIFF
   
 
   lints:
@@ -102,18 +103,23 @@ jobs:
         with:
           PATTERNS: |
             **/**.rs
+            **/**Cargo.toml
+            **/**Cargo.lock
       - name: Install toolchain
         uses: dtolnay/rust-toolchain@1.65.0
         with:
           components: rustfmt, clippy
+        if: env.GIT_DIFF
 
       - name: Format
         working-directory: ${{ matrix.workdir }}
         run: >
           cargo fmt --all -- --check
+        if: env.GIT_DIFF
 
       - name: run cargo clippy
         working-directory: ${{ matrix.workdir }}
         run: >
           cargo clippy -- -D warnings
+        if: env.GIT_DIFF
 
