@@ -72,7 +72,7 @@ jobs:
 
       - name: Check Test Data
         working-directory: ${{ matrix.contract.workdir }}
-        if: env.GIT_DIFF && ${{ matrix.contract.output != null }}
+        if: env.GIT_DIFF
         run: >
           diff ${{ matrix.contract.output }} ${{ matrix.contract.build }}
   
