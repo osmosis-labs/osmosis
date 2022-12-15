@@ -17,6 +17,7 @@ use crate::ContractError;
 ///
 /// It's objective is to trigger a swap between the supplied pairs
 ///
+#[allow(clippy::too_many_arguments)]
 pub fn swap_and_forward(
     deps: DepsMut,
     block_time: Timestamp,
@@ -43,7 +44,7 @@ pub fn swap_and_forward(
     let (valid_channel, valid_receiver) = validate_receiver(deps.as_ref(), receiver)?;
     // If there is a memo, check that it is valid
     if let Some(memo) = &next_memo {
-        validate_memo(&memo)?;
+        validate_memo(memo)?;
     }
 
     // Check that there isn't anything stored in SWAP_REPLY_STATES. If there is,
@@ -141,7 +142,7 @@ pub fn handle_swap_reply(deps: DepsMut, msg: Reply) -> Result<Response, Contract
         source_channel: swap_msg_state.forward_to.channel.clone(),
         token: Some(
             Coin::new(
-                swap_response.amount.clone().into(),
+                swap_response.amount.into(),
                 swap_response.token_out_denom.clone(),
             )
             .into(),
@@ -223,7 +224,7 @@ pub fn handle_forward_reply(deps: DepsMut, msg: Reply) -> Result<Response, Contr
     // can later be recovered by that addr.
     if let Some(Recovery { recovery_addr }) = failed_delivery {
         let recovery = IBCTransfer {
-            recovery_addr: recovery_addr.clone(),
+            recovery_addr,
             channel_id: channel_id.clone(),
             sequence: response.sequence,
             amount,
@@ -232,11 +233,7 @@ pub fn handle_forward_reply(deps: DepsMut, msg: Reply) -> Result<Response, Contr
         };
 
         // Save as in-flight to be able to manipulate when the ack/timeout is received
-        INFLIGHT_PACKETS.save(
-            deps.storage,
-            (&channel_id.clone(), response.sequence),
-            &recovery,
-        )?;
+        INFLIGHT_PACKETS.save(deps.storage, (&channel_id, response.sequence), &recovery)?;
     };
 
     // The response data

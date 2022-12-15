@@ -20,7 +20,7 @@ pub fn validate_receiver(deps: Deps, receiver: Addr) -> Result<(String, Addr), C
 }
 
 pub fn validate_memo(memo: &str) -> Result<(), ContractError> {
-    let maybe_value: Result<serde_cw_value::Value, _> = serde_json_wasm::from_str(&memo);
+    let maybe_value: Result<serde_cw_value::Value, _> = serde_json_wasm::from_str(memo);
     if let Err(err) = maybe_value {
         return Err(ContractError::InvalidMemo {
             error: format!("failed to parse: {err}"),

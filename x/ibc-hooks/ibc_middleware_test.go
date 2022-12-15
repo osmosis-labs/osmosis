@@ -732,7 +732,7 @@ func (suite *HooksTestSuite) TestBadCrosschainSwapsNextMemoMessages() {
 		{fmt.Sprintf(innerMsg, `1`), false},
 		{fmt.Sprintf(innerMsg, `""`), false},
 		{fmt.Sprintf(innerMsg, `null`), true},
-		{fmt.Sprintf(innerMsg, `"{\"callback\": \"something\"}"`), false},
+		{fmt.Sprintf(innerMsg, `"{\"ibc_callback\": \"something\"}"`), false},
 		{fmt.Sprintf(innerMsg, `"{\"myKey\": \"myValue\"}"`), true},
 		{fmt.Sprintf(innerMsg, `"{}""`), true},
 	}
