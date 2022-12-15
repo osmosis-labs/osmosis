@@ -91,8 +91,3 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 func (k Keeper) setParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
-
-// GetParams returns the total set params.
-func (k Keeper) GetPoolCreationFee(ctx sdk.Context) sdk.Coins {
-	return k.GetParams(ctx).PoolCreationFee
-}

@@ -13,7 +13,7 @@ import (
 type Keeper struct {
 	storeKey sdk.StoreKey
 
-	gammKeeper           types.GammKeeper
+	gammKeeper           types.SwapI
 	concentratedKeeper   types.SwapI
 	poolIncentivesKeeper types.PoolIncentivesKeeperI
 	bankKeeper           types.BankI
@@ -27,7 +27,7 @@ type Keeper struct {
 	paramSpace paramtypes.Subspace
 }
 
-func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.GammKeeper, concentratedKeeper types.SwapI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI) *Keeper {
+func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.SwapI, concentratedKeeper types.SwapI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
