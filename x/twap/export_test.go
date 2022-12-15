@@ -10,7 +10,7 @@ import (
 
 type (
 	TimeTooOldError        = timeTooOldError
-	TwapStrategies         = twapStrategies
+	TwapStrategy           = twapStrategy
 	ArithmeticTwapStrategy = arithmetic
 	GeometricTwapStrategy  = geometric
 )
