@@ -81,7 +81,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 	initialPoolLiquidity := msg.InitialLiquidity()
 
 	// send pool creation fee to community pool
-	fee := k.gammKeeper.GetPoolCreationFee(ctx)
+	fee := k.GetParams(ctx).PoolCreationFee
 	if err := k.communityPoolKeeper.FundCommunityPool(ctx, fee, sender); err != nil {
 		return 0, err
 	}
