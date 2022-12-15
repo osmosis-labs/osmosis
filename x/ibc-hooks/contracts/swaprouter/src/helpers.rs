@@ -153,7 +153,7 @@ pub fn calculate_min_output_from_twap(
         })?;
 
         twap_price = twap_price
-            .checked_mul(twap.into()) // TODO: Need to figure out why this is failing. The params seem to be in the correct order
+            .checked_mul(twap)
             .map_err(|_e| ContractError::CustomError {
                 val: format!("Invalid value for twap price: {twap_price} * {twap}"),
             })?;
