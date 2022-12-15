@@ -14,6 +14,9 @@ import (
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 
+	downtimemodule "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/module"
+	downtimetypes "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/types"
+
 	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -66,6 +69,8 @@ import (
 	protorevtypes "github.com/osmosis-labs/osmosis/v13/x/protorev/types"
 	superfluid "github.com/osmosis-labs/osmosis/v13/x/superfluid"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
+	swaprouter "github.com/osmosis-labs/osmosis/v13/x/swaprouter/module"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/twapmodule"
@@ -126,6 +131,7 @@ func appModules(
 		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper, app.BankKeeper),
 		slashing.NewAppModule(appCodec, *app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		distr.NewAppModule(appCodec, *app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
+		downtimemodule.NewAppModule(*app.DowntimeKeeper),
 		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		upgrade.NewAppModule(*app.UpgradeKeeper),
 		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
@@ -136,6 +142,7 @@ func appModules(
 		params.NewAppModule(*app.ParamsKeeper),
 		app.RawIcs20TransferAppModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
+		swaprouter.NewAppModule(*app.SwapRouterKeeper, app.GAMMKeeper),
 		twapmodule.NewAppModule(*app.TwapKeeper),
 		protorev.NewAppModule(appCodec, *app.ProtoRevKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper, app.GAMMKeeper),
 		txfees.NewAppModule(*app.TxFeesKeeper),
@@ -176,6 +183,7 @@ func orderBeginBlockers(allModuleNames []string) []string {
 	// IBChost came after staking, before superfluid.
 	// TODO: Come back and delete this line after testing the base change.
 	ord.Sequence(stakingtypes.ModuleName, ibchost.ModuleName, superfluidtypes.ModuleName)
+	// We leave downtime-detector un-constrained.
 	// every remaining module's begin block is a no-op.
 	return ord.TotalOrdering()
 }
@@ -205,6 +213,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		distrtypes.ModuleName,
+		downtimetypes.ModuleName,
 		stakingtypes.ModuleName,
 		slashingtypes.ModuleName,
 		govtypes.ModuleName,
@@ -213,6 +222,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		ibchost.ModuleName,
 		icatypes.ModuleName,
 		gammtypes.ModuleName,
+		swaproutertypes.ModuleName,
 		protorevtypes.ModuleName,
 		twaptypes.ModuleName,
 		txfeestypes.ModuleName,

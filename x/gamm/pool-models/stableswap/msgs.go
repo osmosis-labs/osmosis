@@ -120,7 +120,7 @@ func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (s
 }
 
 func (msg MsgCreateStableswapPool) GetPoolType() swaproutertypes.PoolType {
-	return swaproutertypes.StableSwap
+	return swaproutertypes.Stableswap
 }
 
 var _ sdk.Msg = &MsgStableSwapAdjustScalingFactors{}

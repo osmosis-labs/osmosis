@@ -34,12 +34,15 @@ import (
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	downtimedetector "github.com/osmosis-labs/osmosis/v13/x/downtime-detector"
+	downtimetypes "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/types"
 	ibchooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/keeper"
 	ibchookstypes "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 
 	icahost "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/keeper"
@@ -106,6 +109,7 @@ type AppKeepers struct {
 	AuthzKeeper                  *authzkeeper.Keeper
 	StakingKeeper                *stakingkeeper.Keeper
 	DistrKeeper                  *distrkeeper.Keeper
+	DowntimeKeeper               *downtimedetector.Keeper
 	SlashingKeeper               *slashingkeeper.Keeper
 	IBCKeeper                    *ibckeeper.Keeper
 	IBCHooksKeeper               *ibchookskeeper.Keeper
@@ -126,9 +130,8 @@ type AppKeepers struct {
 	WasmKeeper                   *wasm.Keeper
 	ContractKeeper               *wasmkeeper.PermissionedKeeper
 	TokenFactoryKeeper           *tokenfactorykeeper.Keeper
+	SwapRouterKeeper             *swaprouter.Keeper
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
-	// Note: DO NOT USE. This is not yet initialized
-	SwapRouterKeeper *swaprouter.Keeper
 
 	// IBC modules
 	// transfer module
@@ -200,6 +203,10 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.DistrKeeper = &distrKeeper
 
+	appKeepers.DowntimeKeeper = downtimedetector.NewKeeper(
+		appKeepers.keys[downtimetypes.StoreKey],
+	)
+
 	slashingKeeper := slashingkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[slashingtypes.StoreKey],
@@ -257,7 +264,9 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	gammKeeper := gammkeeper.NewKeeper(
 		appCodec, appKeepers.keys[gammtypes.StoreKey],
 		appKeepers.GetSubspace(gammtypes.ModuleName),
-		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.DistrKeeper)
+		appKeepers.AccountKeeper,
+		// TODO: Add a mintcoins restriction
+		appKeepers.BankKeeper, appKeepers.DistrKeeper)
 	appKeepers.GAMMKeeper = &gammKeeper
 
 	appKeepers.TwapKeeper = twap.NewKeeper(
@@ -336,6 +345,17 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.DistrKeeper,
 	)
 	appKeepers.TokenFactoryKeeper = &tokenFactoryKeeper
+
+	appKeepers.SwapRouterKeeper = swaprouter.NewKeeper(
+		appKeepers.keys[swaproutertypes.StoreKey],
+		appKeepers.GetSubspace(swaproutertypes.ModuleName),
+		appKeepers.GAMMKeeper,
+		nil,
+		appKeepers.BankKeeper,
+		appKeepers.AccountKeeper,
+		appKeepers.DistrKeeper,
+	)
+	appKeepers.GAMMKeeper.SetPoolCreationManager(appKeepers.SwapRouterKeeper)
 
 	validatorSetPreferenceKeeper := valsetpref.NewKeeper(
 		appKeepers.keys[valsetpreftypes.StoreKey],
@@ -527,6 +547,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
 	paramsKeeper.Subspace(protorevtypes.ModuleName)
 	paramsKeeper.Subspace(superfluidtypes.ModuleName)
+	paramsKeeper.Subspace(swaproutertypes.ModuleName)
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
@@ -606,6 +627,7 @@ func KVStoreKeys() []string {
 		stakingtypes.StoreKey,
 		minttypes.StoreKey,
 		distrtypes.StoreKey,
+		downtimetypes.StoreKey,
 		slashingtypes.StoreKey,
 		govtypes.StoreKey,
 		paramstypes.StoreKey,
@@ -621,6 +643,7 @@ func KVStoreKeys() []string {
 		incentivestypes.StoreKey,
 		epochstypes.StoreKey,
 		poolincentivestypes.StoreKey,
+		swaproutertypes.StoreKey,
 		authzkeeper.StoreKey,
 		txfeestypes.StoreKey,
 		superfluidtypes.StoreKey,

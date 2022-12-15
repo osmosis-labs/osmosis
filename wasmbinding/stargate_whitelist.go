@@ -15,6 +15,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	downtimequerytypes "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/client/queryproto"
 	epochtypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	gammv2types "github.com/osmosis-labs/osmosis/v13/x/gamm/v2types"
@@ -86,6 +87,7 @@ func init() {
 	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/PoolType", &gammtypes.QueryPoolTypeResponse{})
 	setWhitelistedQuery("/osmosis.gamm.v2.Query/SpotPrice", &gammv2types.QuerySpotPriceResponse{})
 	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/EstimateSwapExactAmountIn", &gammtypes.QuerySwapExactAmountInResponse{})
+	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/EstimateSwapExactAmountOut", &gammtypes.QuerySwapExactAmountOutResponse{})
 
 	// incentives
 	setWhitelistedQuery("/osmosis.incentives.Query/ModuleToDistributeCoins", &incentivestypes.ModuleToDistributeCoinsResponse{})
@@ -127,8 +129,8 @@ func init() {
 	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/ArithmeticTwapToNow", &twapquerytypes.ArithmeticTwapToNowResponse{})
 	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/Params", &twapquerytypes.ParamsResponse{})
 
-	// IBC
-	setWhitelistedQuery("/ibc.applications.transfer.v1.Msg/Transfer", &transfertypes.MsgTransferResponse{})
+	// downtime-detector
+	setWhitelistedQuery("/osmosis.downtimedetector.v1beta1.Query/RecoveredSinceDowntimeOfLength", &downtimequerytypes.RecoveredSinceDowntimeOfLengthResponse{})
 }
 
 // GetWhitelistedQuery returns the whitelisted query at the provided path.
