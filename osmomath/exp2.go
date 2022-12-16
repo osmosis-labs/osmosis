@@ -42,6 +42,8 @@ var (
 // Panics if the exponent is negative.
 // The answer is correct up to a factor of 10^-18.
 // Meaning, result = result * k for k in [1 - 10^(-18), 1 + 10^(-18)]
+// Note: our Python script plots show accuracy up to a factor of 10^22.
+// However, in Go tests we only test up to 10^18. Therefore, thos is the guarantee.
 func Exp2(exponent BigDec) BigDec {
 	if exponent.Abs().GT(maxSupportedExponent) {
 		panic(fmt.Sprintf("integer exponent %s is too large, max (%s)", exponent, maxSupportedExponent))
@@ -72,6 +74,8 @@ func Exp2(exponent BigDec) BigDec {
 // CONTRACT: exponent must be in the range [0, 1], panics if not.
 // The answer is correct up to a factor of 10^-18.
 // Meaning, result = result * k for k in [1 - 10^(-18), 1 + 10^(-18)]
+// Note: our Python script plots show accuracy up to a factor of 10^22.
+// However, in Go tests we only test up to 10^18. Therefore, thos is the guarantee.
 func exp2ChebyshevRationalApprox(x BigDec) BigDec {
 	if x.LT(ZeroDec()) || x.GT(OneDec()) {
 		panic(fmt.Sprintf("exponent must be in the range [0, 1], got %s", x))
