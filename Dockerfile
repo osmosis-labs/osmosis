@@ -19,7 +19,8 @@ RUN apk add --no-cache \
 
 # Download go dependencies
 WORKDIR /osmosis
-COPY go.work go.mod go.sum osmomath/. ./
+COPY go.work go.mod go.sum ./
+COPY osmomath/ ./osmomath
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/root/go/pkg/mod \
     go mod download
