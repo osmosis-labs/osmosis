@@ -229,15 +229,6 @@ func (suite *KeeperTestSuite) TestCalcInAmtGivenOut() {
 			},
 			expectPass: true,
 		},
-		{
-			name: "concentratedliquidity",
-			param: param{
-				poolType:     "concentratedliquidity",
-				tokenOut:     sdk.NewCoin("foo", sdk.NewInt(100000)),
-				tokenInDenom: "bar",
-			},
-			expectPass: false,
-		},
 	}
 
 	for _, test := range tests {
