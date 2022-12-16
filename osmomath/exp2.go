@@ -55,6 +55,7 @@ func Exp2(exponent BigDec) BigDec {
 	fractionalExponent := exponent.Sub(integerExponent)
 	fractionalResult := exp2ChebyshevRationalApprox(fractionalExponent)
 
+	// Left bit shift is equivalent to multiplying by 2^integerExponent.
 	fractionalResult.i = fractionalResult.i.Lsh(fractionalResult.i, uint(integerExponent.TruncateInt().Uint64()))
 
 	return fractionalResult
