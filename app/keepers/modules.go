@@ -41,6 +41,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/protorev"
 	superfluid "github.com/osmosis-labs/osmosis/v13/x/superfluid"
 	superfluidclient "github.com/osmosis-labs/osmosis/v13/x/superfluid/client"
+	swaprouter "github.com/osmosis-labs/osmosis/v13/x/swaprouter/module"
 	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/twapmodule"
 	"github.com/osmosis-labs/osmosis/v13/x/txfees"
@@ -83,6 +84,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 	transfer.AppModuleBasic{},
 	vesting.AppModuleBasic{},
 	gamm.AppModuleBasic{},
+	swaprouter.AppModuleBasic{},
 	twapmodule.AppModuleBasic{},
 	protorev.AppModuleBasic{},
 	txfees.AppModuleBasic{},

@@ -7,6 +7,9 @@ var (
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
 
+	// RouterKey is the message route for slashing
+	RouterKey = ModuleName
+
 	// KeyPrefixValidatorSet defines prefix key for validator set.
 	KeyPrefixValidatorSet = []byte{0x01}
 
