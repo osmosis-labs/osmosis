@@ -75,21 +75,16 @@ func TestSigFigRound(t *testing.T) {
 	for i, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			expPanic := tc.tenToSigFig.IsZero()
-			f := func() {
-				actualResult := SigFigRound(tc.decimal, tc.tenToSigFig)
+			var actualResult sdk.Dec
+			ConditionalPanic(t, tc.tenToSigFig.Equal(sdk.ZeroInt()), func() {
+				actualResult = SigFigRound(tc.decimal, tc.tenToSigFig)
 				require.Equal(
 					t,
 					tc.expectedResult,
 					actualResult,
 					fmt.Sprintf("test %d failed: expected value & actual value should be equal", i),
 				)
-			}
-			if expPanic {
-				require.Panics(t, f)
-			} else {
-				f()
-			}
+			})
 		})
 
 	}
