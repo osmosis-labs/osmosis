@@ -98,7 +98,7 @@ type MultihopRoute interface {
 // This is a temporary function to be used until we make the route protos be shared between
 // x/gamm and x/swaprouter instead of duplicating them in each module.
 func ConvertAmountInRoutes(gammRoutes []SwapAmountInRoute) []swaproutertypes.SwapAmountInRoute {
-	swaprouterRoutes := make([]swaproutertypes.SwapAmountInRoute, len(gammRoutes))
+	swaprouterRoutes := make([]swaproutertypes.SwapAmountInRoute, 0, len(gammRoutes))
 	for _, route := range gammRoutes {
 		swaprouterRoutes = append(swaprouterRoutes, swaproutertypes.SwapAmountInRoute{
 			PoolId:        route.PoolId,
@@ -112,7 +112,7 @@ func ConvertAmountInRoutes(gammRoutes []SwapAmountInRoute) []swaproutertypes.Swa
 // This is a temporary function to be used until we make the route protos be shared between
 // x/gamm and x/swaprouter instead of duplicating them in each module.
 func ConvertAmountOutRoutes(gammRoutes []SwapAmountOutRoute) []swaproutertypes.SwapAmountOutRoute {
-	swaprouterRoutes := make([]swaproutertypes.SwapAmountOutRoute, len(gammRoutes))
+	swaprouterRoutes := make([]swaproutertypes.SwapAmountOutRoute, 0, len(gammRoutes))
 	for _, route := range gammRoutes {
 		swaprouterRoutes = append(swaprouterRoutes, swaproutertypes.SwapAmountOutRoute{
 			PoolId:       route.PoolId,
