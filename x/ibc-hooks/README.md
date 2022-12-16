@@ -124,6 +124,8 @@ contracts to listen on the ack of specific packets, we provide Ack callbacks.
 The sender of an IBC transfer packet may specify a callback for when the ack of that packet is received in the memo 
 field of the transfer packet. 
 
+Crucially, _only_ the IBC packet sender can set the callback.
+
 ### Use case
 
 The crosschain swaps implementation sends an IBC transfer. If the transfer were to fail, we want to allow the sender
