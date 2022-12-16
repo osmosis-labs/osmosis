@@ -72,7 +72,7 @@ var routeDiffDenom = gammtypes.SwapAmountInRoutes{
 	},
 	gammtypes.SwapAmountInRoute{
 		PoolId:        33,
-		TokenOutDenom: "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858",
+		TokenOutDenom: types.AtomDenomination,
 	}}
 
 // No Arbitrage Opportunity
@@ -125,39 +125,39 @@ func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
 		{name: "Mainnet Arb Route - 2 Asset, Same Weights (Block: 5905150)",
 			param: param{
 				route:          routeTwoAssetSameWeight,
-				expectedAmtIn:  sdk.NewInt(10100000),
-				expectedProfit: sdk.NewInt(24852)},
+				expectedAmtIn:  sdk.NewInt(10000000),
+				expectedProfit: sdk.NewInt(24848)},
 			expectPass: true},
 		{name: "Mainnet Arb Route - Multi Asset, Same Weights (Block: 6906570)",
 			param: param{
 				route:          routeMultiAssetSameWeight,
-				expectedAmtIn:  sdk.NewInt(4800000),
-				expectedProfit: sdk.NewInt(4547)},
+				expectedAmtIn:  sdk.NewInt(5000000),
+				expectedProfit: sdk.NewInt(4538)},
 			expectPass: true},
 		{name: "Arb Route - Multi Asset, Same Weights - Pool 22 instead of 26 (Block: 6906570)",
 			param: param{
 				route:          routeMostProfitable,
-				expectedAmtIn:  sdk.NewInt(519700000),
-				expectedProfit: sdk.NewInt(67511701)},
+				expectedAmtIn:  sdk.NewInt(520000000),
+				expectedProfit: sdk.NewInt(67511675)},
 			expectPass: true},
 		{name: "Mainnet Arb Route - Multi Asset, Different Weights (Block: 6908256)",
 			param: param{
 				route:          routeDiffDenom,
-				expectedAmtIn:  sdk.NewInt(4100000),
+				expectedAmtIn:  sdk.NewInt(4000000),
 				expectedProfit: sdk.NewInt(5826)},
 			expectPass: true},
 		{name: "StableSwap Test Route",
 			param: param{
 				route:          routeStableSwap,
-				expectedAmtIn:  sdk.NewInt(137600000),
-				expectedProfit: sdk.NewInt(56585438)},
+				expectedAmtIn:  sdk.NewInt(138000000),
+				expectedProfit: sdk.NewInt(56585052)},
 			expectPass: true},
 		{name: "No Arbitrage Opportunity",
 			param: param{
 				route:          routeNoArb,
-				expectedAmtIn:  sdk.NewInt(0),
+				expectedAmtIn:  sdk.Int{},
 				expectedProfit: sdk.NewInt(0)},
-			expectPass: false},
+			expectPass: true},
 	}
 
 	for _, test := range tests {
@@ -282,8 +282,8 @@ func (suite *KeeperTestSuite) TestIterateRoutes() {
 		{name: "Single Route Test",
 			params: paramm{
 				routes:                     []gammtypes.SwapAmountInRoutes{routeTwoAssetSameWeight},
-				expectedMaxProfitAmount:    sdk.NewInt(24852),
-				expectedMaxProfitInputCoin: sdk.NewCoin("uosmo", sdk.NewInt(10100000)),
+				expectedMaxProfitAmount:    sdk.NewInt(24848),
+				expectedMaxProfitInputCoin: sdk.NewCoin("uosmo", sdk.NewInt(10000000)),
 				expectedOptimalRoute:       routeTwoAssetSameWeight,
 				arbDenom:                   types.OsmosisDenomination,
 			},
@@ -292,8 +292,8 @@ func (suite *KeeperTestSuite) TestIterateRoutes() {
 		{name: "Two routes with same arb denom test - more profitable route second",
 			params: paramm{
 				routes:                     []gammtypes.SwapAmountInRoutes{routeMultiAssetSameWeight, routeTwoAssetSameWeight},
-				expectedMaxProfitAmount:    sdk.NewInt(24852),
-				expectedMaxProfitInputCoin: sdk.NewCoin("uosmo", sdk.NewInt(10100000)),
+				expectedMaxProfitAmount:    sdk.NewInt(24848),
+				expectedMaxProfitInputCoin: sdk.NewCoin("uosmo", sdk.NewInt(10000000)),
 				expectedOptimalRoute:       routeTwoAssetSameWeight,
 				arbDenom:                   types.OsmosisDenomination,
 			},
@@ -302,20 +302,22 @@ func (suite *KeeperTestSuite) TestIterateRoutes() {
 		{name: "Three routes with same arb denom test - most profitable route first",
 			params: paramm{
 				routes:                     []gammtypes.SwapAmountInRoutes{routeMostProfitable, routeMultiAssetSameWeight, routeTwoAssetSameWeight},
-				expectedMaxProfitAmount:    sdk.NewInt(67511701),
-				expectedMaxProfitInputCoin: sdk.NewCoin("uosmo", sdk.NewInt(519700000)),
+				expectedMaxProfitAmount:    sdk.NewInt(67511675),
+				expectedMaxProfitInputCoin: sdk.NewCoin("uosmo", sdk.NewInt(520000000)),
 				expectedOptimalRoute:       routeMostProfitable,
 				arbDenom:                   types.OsmosisDenomination,
 			},
+			expectPass: true,
 		},
 		{name: "Two routes, different arb denoms test - more profitable route second",
 			params: paramm{
 				routes:                     []gammtypes.SwapAmountInRoutes{routeNoArb, routeDiffDenom},
-				expectedMaxProfitAmount:    sdk.NewInt(5826),
-				expectedMaxProfitInputCoin: sdk.NewCoin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", sdk.NewInt(4100000)),
+				expectedMaxProfitAmount:    sdk.NewInt(4880),
+				expectedMaxProfitInputCoin: sdk.NewCoin("ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", sdk.NewInt(4000000)),
 				expectedOptimalRoute:       routeDiffDenom,
-				arbDenom:                   "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858",
+				arbDenom:                   types.AtomDenomination,
 			},
+			expectPass: true,
 		},
 	}
 
