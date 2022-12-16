@@ -12,7 +12,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	sdkrand "github.com/osmosis-labs/osmosis/v13/simulation/simtypes/random"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/test_helpers"
@@ -726,8 +725,13 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 				// TODO: add scaling factors into inverse relationship tests
 				pool := createTestPool(suite.T(), tc.poolLiquidity, swapFeeDec, exitFeeDec, tc.scalingFactors)
 				suite.Require().NotNil(pool)
+<<<<<<< HEAD
 				errTolerance := osmoutils.ErrTolerance{
 					AdditiveTolerance: sdk.Int{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12)}
+=======
+				errTolerance := osmomath.ErrTolerance{
+					AdditiveTolerance: sdk.Dec{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12)}
+>>>>>>> 3095a7d3 (Move binary search from osmomath to osmoutils (#3763))
 				test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, tc.denomIn, tc.denomOut, tc.initialCalcOut, swapFeeDec, errTolerance)
 			})
 		}
