@@ -116,7 +116,7 @@ In wasm hooks, post packet execution:
 
 ## Ack callbacks
 
-A contract that, through a wasm hook, sends an IBC transfer, may need to listen for the ACK from that packet. To allow
+A contract that sends an IBC transfer, may need to listen for the ACK from that packet. To allow
 contracts to listen on the ack of specific packets, we provide Ack callbacks. 
 
 ### Design
