@@ -20,3 +20,16 @@ func TestGetCmdDenomAuthorityMetadata(t *testing.T) {
 	}
 	osmocli.RunQueryTestCases(t, desc, tcs)
 }
+
+func TestGetCmdDenomsFromCreator(t *testing.T) {
+	desc, _ := cli.GetCmdDenomsFromCreator()
+	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryDenomsFromCreatorRequest]{
+		"basic test": {
+			Cmd: "osmo1test",
+			ExpectedQuery: &types.QueryDenomsFromCreatorRequest{
+				Creator: "osmo1test",
+			},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}
