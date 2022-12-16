@@ -270,7 +270,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.keys[swaproutertypes.StoreKey],
 		appKeepers.GetSubspace(swaproutertypes.ModuleName),
 		appKeepers.GAMMKeeper,
-		nil,
+		nil,  // TODO: add concentrated liquidity keeper once it is merged
 		appKeepers.BankKeeper,
 		appKeepers.AccountKeeper,
 		appKeepers.DistrKeeper,
