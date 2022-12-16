@@ -137,7 +137,7 @@ hasn't failed (i.e.: returned an error ack notifying that the receiving change d
 
 #### Callback information in memo
 
-The for the callback to be processed, the transfer packet's memo should look like this:
+For the callback to be processed, the transfer packet's memo should contain the following in its JSON:
 
 `{"ibc_callback": "osmo1contractAddr"}`
 
