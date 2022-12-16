@@ -151,6 +151,7 @@ func (s *KeeperTestHelper) PrepareCustomBalancerPool(assets []balancer.PoolAsset
 }
 
 // PrepareCustomBalancerPoolFromCoins sets up a Balancer pool with an array of coins and given parameters
+// The coins are converted to pool assets where each asset has a weight of 1.
 func (s *KeeperTestHelper) PrepareCustomBalancerPoolFromCoins(coins sdk.Coins, params balancer.PoolParams) uint64 {
 	var poolAssets []balancer.PoolAsset
 	for _, coin := range coins {
