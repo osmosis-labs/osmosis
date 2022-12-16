@@ -636,7 +636,7 @@ func TestSwap(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			// when
-			gotAmount, gotErr := wasmbinding.PerformSwap(osmosis.GAMMKeeper, ctx, actor, spec.swap)
+			gotAmount, gotErr := wasmbinding.PerformSwap(osmosis.SwapRouterKeeper, ctx, actor, spec.swap)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)
@@ -818,7 +818,7 @@ func TestSwapMultiHop(t *testing.T) {
 			// use scratch context to avoid interference between tests
 			subCtx, _ := ctx.CacheContext()
 			// when
-			gotAmount, gotErr := wasmbinding.PerformSwap(osmosis.GAMMKeeper, subCtx, actor, spec.swap)
+			gotAmount, gotErr := wasmbinding.PerformSwap(osmosis.SwapRouterKeeper, subCtx, actor, spec.swap)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)

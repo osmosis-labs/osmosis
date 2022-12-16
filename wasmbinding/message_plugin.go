@@ -11,29 +11,32 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v13/wasmbinding/bindings"
 	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaprouter "github.com/osmosis-labs/osmosis/v13/x/swaprouter"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 
 	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/keeper"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
 )
 
 // CustomMessageDecorator returns decorator for custom CosmWasm bindings messages
-func CustomMessageDecorator(gammKeeper *gammkeeper.Keeper, bank *bankkeeper.BaseKeeper, tokenFactory *tokenfactorykeeper.Keeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {
+func CustomMessageDecorator(gammKeeper *gammkeeper.Keeper, bank *bankkeeper.BaseKeeper, tokenFactory *tokenfactorykeeper.Keeper, swaprouterKeeper *swaprouter.Keeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {
 	return func(old wasmkeeper.Messenger) wasmkeeper.Messenger {
 		return &CustomMessenger{
-			wrapped:      old,
-			bank:         bank,
-			gammKeeper:   gammKeeper,
-			tokenFactory: tokenFactory,
+			wrapped:          old,
+			bank:             bank,
+			gammKeeper:       gammKeeper,
+			swaprouterKeeper: swaprouterKeeper,
+			tokenFactory:     tokenFactory,
 		}
 	}
 }
 
 type CustomMessenger struct {
-	wrapped      wasmkeeper.Messenger
-	bank         *bankkeeper.BaseKeeper
-	gammKeeper   *gammkeeper.Keeper
-	tokenFactory *tokenfactorykeeper.Keeper
+	wrapped          wasmkeeper.Messenger
+	bank             *bankkeeper.BaseKeeper
+	gammKeeper       *gammkeeper.Keeper
+	swaprouterKeeper *swaprouter.Keeper
+	tokenFactory     *tokenfactorykeeper.Keeper
 }
 
 var _ wasmkeeper.Messenger = (*CustomMessenger)(nil)
@@ -205,7 +208,7 @@ func PerformBurn(f *tokenfactorykeeper.Keeper, ctx sdk.Context, contractAddr sdk
 
 // swapTokens swaps one denom for another.
 func (m *CustomMessenger) swapTokens(ctx sdk.Context, contractAddr sdk.AccAddress, swap *bindings.SwapMsg) ([]sdk.Event, [][]byte, error) {
-	_, err := PerformSwap(m.gammKeeper, ctx, contractAddr, swap)
+	_, err := PerformSwap(m.swaprouterKeeper, ctx, contractAddr, swap)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrap(err, "perform swap")
 	}
@@ -213,17 +216,17 @@ func (m *CustomMessenger) swapTokens(ctx sdk.Context, contractAddr sdk.AccAddres
 }
 
 // PerformSwap can be used both for the real swap, and the EstimateSwap query
-func PerformSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, swap *bindings.SwapMsg) (*bindings.SwapAmount, error) {
+func PerformSwap(keeper *swaprouter.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, swap *bindings.SwapMsg) (*bindings.SwapAmount, error) {
 	if swap == nil {
 		return nil, wasmvmtypes.InvalidRequest{Err: "gamm perform swap null swap"}
 	}
 	if swap.Amount.ExactIn != nil {
-		routes := []gammtypes.SwapAmountInRoute{{
+		routes := []swaproutertypes.SwapAmountInRoute{{
 			PoolId:        swap.First.PoolId,
 			TokenOutDenom: swap.First.DenomOut,
 		}}
 		for _, step := range swap.Route {
-			routes = append(routes, gammtypes.SwapAmountInRoute{
+			routes = append(routes, swaproutertypes.SwapAmountInRoute{
 				PoolId:        step.PoolId,
 				TokenOutDenom: step.DenomOut,
 			})
@@ -236,19 +239,19 @@ func PerformSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.Ac
 			Amount: swap.Amount.ExactIn.Input,
 		}
 		tokenOutMinAmount := swap.Amount.ExactIn.MinOutput
-		tokenOutAmount, err := keeper.MultihopSwapExactAmountIn(ctx, contractAddr, routes, tokenIn, tokenOutMinAmount)
+		tokenOutAmount, err := keeper.RouteExactAmountIn(ctx, contractAddr, routes, tokenIn, tokenOutMinAmount)
 		if err != nil {
 			return nil, sdkerrors.Wrap(err, "gamm perform swap exact amount in")
 		}
 		return &bindings.SwapAmount{Out: &tokenOutAmount}, nil
 	} else if swap.Amount.ExactOut != nil {
-		routes := []gammtypes.SwapAmountOutRoute{{
+		routes := []swaproutertypes.SwapAmountOutRoute{{
 			PoolId:       swap.First.PoolId,
 			TokenInDenom: swap.First.DenomIn,
 		}}
 		output := swap.First.DenomOut
 		for _, step := range swap.Route {
-			routes = append(routes, gammtypes.SwapAmountOutRoute{
+			routes = append(routes, swaproutertypes.SwapAmountOutRoute{
 				PoolId:       step.PoolId,
 				TokenInDenom: output,
 			})
@@ -262,7 +265,7 @@ func PerformSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.Ac
 			Denom:  output,
 			Amount: swap.Amount.ExactOut.Output,
 		}
-		tokenInAmount, err := keeper.MultihopSwapExactAmountOut(ctx, contractAddr, routes, tokenInMaxAmount, tokenOut)
+		tokenInAmount, err := keeper.RouteExactAmountOut(ctx, contractAddr, routes, tokenInMaxAmount, tokenOut)
 		if err != nil {
 			return nil, sdkerrors.Wrap(err, "gamm perform swap exact amount out")
 		}

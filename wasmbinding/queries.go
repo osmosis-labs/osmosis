@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/wasmbinding/bindings"
 	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
 	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/keeper"
 	twapkeeper "github.com/osmosis-labs/osmosis/v13/x/twap"
 )
@@ -19,14 +20,16 @@ type QueryPlugin struct {
 	gammKeeper         *gammkeeper.Keeper
 	twapKeeper         *twapkeeper.Keeper
 	tokenFactoryKeeper *tokenfactorykeeper.Keeper
+	swaprouterKeeper   *swaprouter.Keeper
 }
 
 // NewQueryPlugin returns a reference to a new QueryPlugin.
-func NewQueryPlugin(gk *gammkeeper.Keeper, tk *twapkeeper.Keeper, tfk *tokenfactorykeeper.Keeper) *QueryPlugin {
+func NewQueryPlugin(gk *gammkeeper.Keeper, tk *twapkeeper.Keeper, tfk *tokenfactorykeeper.Keeper, swaprouterKeeper *swaprouter.Keeper) *QueryPlugin {
 	return &QueryPlugin{
 		gammKeeper:         gk,
 		twapKeeper:         tk,
 		tokenFactoryKeeper: tfk,
+		swaprouterKeeper:   swaprouterKeeper,
 	}
 }
 
@@ -104,7 +107,7 @@ func (qp QueryPlugin) EstimateSwap(ctx sdk.Context, estimateSwap *bindings.Estim
 		return nil, wasmvmtypes.InvalidRequest{Err: "gamm estimate swap empty swap"}
 	}
 
-	estimate, err := PerformSwap(qp.gammKeeper, ctx, senderAddr, estimateSwap.ToSwapMsg())
+	estimate, err := PerformSwap(qp.swaprouterKeeper, ctx, senderAddr, estimateSwap.ToSwapMsg())
 	return estimate, err
 }
 
