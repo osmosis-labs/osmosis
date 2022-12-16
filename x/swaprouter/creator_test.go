@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
@@ -22,6 +23,8 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 			Weight: sdk.NewInt(1),
 		},
 	}, "")
+
+	validConcentratedPoolMsg := clmodel.NewMsgCreateConcentratedPool(suite.TestAccs[0], foo, bar, 1)
 
 	tests := []struct {
 		name               string
@@ -42,8 +45,13 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 			msg:                validBalancerPoolMsg,
 			expectedModuleType: gammKeeperType,
 		},
+		{
+			name:               "concentrated pool - success",
+			creatorFundAmount:  sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount.Mul(sdk.NewInt(2))), sdk.NewCoin(bar, defaultInitPoolAmount.Mul(sdk.NewInt(2)))),
+			msg:                validConcentratedPoolMsg,
+			expectedModuleType: concentratedKeeperType,
+		},
 		// TODO: add stableswap test
-		// TODO: add concentrated-liquidity rest
 		// TODO: cover errors and edge cases
 	}
 

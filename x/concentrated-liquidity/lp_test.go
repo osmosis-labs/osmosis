@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
@@ -120,8 +121,14 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			mergeConfigs(&baseConfigCopy, &tc)
 			tc = baseConfigCopy
 
+			// Fund account to pay for the pool creation fee.
+			s.FundAcc(s.TestAccs[0], PoolCreationFee)
+
 			// Create a CL pool with custom tickSpacing
-			pool, err := s.App.ConcentratedLiquidityKeeper.CreateNewConcentratedLiquidityPool(s.Ctx, 1, ETH, USDC, tc.tickSpacing)
+			poolID, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing))
+			s.Require().NoError(err)
+
+			pool, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, poolID)
 			s.Require().NoError(err)
 
 			// If we want to test a non-first position, we create a first position with a separate account
