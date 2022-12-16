@@ -39,6 +39,8 @@ func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err err
 	return err
 }
 
+// Frustratingly, this has to return the error descriptor, not an actual error itself
+// because the SDK errors here are not actually errors. (They don't implement error interface)
 func IsOutOfGasError(err any) (bool, string) {
 	switch e := err.(type) {
 	case types.ErrorOutOfGas:
