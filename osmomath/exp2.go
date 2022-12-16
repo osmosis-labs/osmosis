@@ -48,16 +48,14 @@ func Exp2(exponent BigDec) BigDec {
 		panic(fmt.Sprintf("negative exponent %s is not supported", exponent))
 	}
 
-	integerExponentDec := exponent.TruncateDec()
-	integerExponent := integerExponentDec.TruncateInt()
-	integerResult := twoBigDec.PowerInteger(integerExponent.Uint64())
+	integerExponent := exponent.TruncateDec()
 
-	fractionalExponent := exponent.Sub(integerExponentDec)
+	fractionalExponent := exponent.Sub(integerExponent)
 	fractionalResult := exp2ChebyshevRationalApprox(fractionalExponent)
 
-	result := integerResult.Mul(fractionalResult)
+	fractionalResult.i = fractionalResult.i.Lsh(fractionalResult.i, uint(integerExponent.TruncateInt().Uint64()))
 
-	return result
+	return fractionalResult
 }
 
 // exp2ChebyshevRationalApprox takes 2 to the power of a given decimal exponent.
