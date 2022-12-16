@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
+	ibchooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 
@@ -201,7 +201,7 @@ func (suite *HooksTestSuite) receivePacketWithSequence(receiver, memo string, pr
 func (suite *HooksTestSuite) TestRecvTransferWithMetadata() {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/echo.wasm")
-	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}")
+	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", 1)
 
 	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"echo": {"msg": "test"} } } }`, addr))
 	ackStr := string(ackBytes)
@@ -217,7 +217,7 @@ func (suite *HooksTestSuite) TestRecvTransferWithMetadata() {
 func (suite *HooksTestSuite) TestFundsAreTransferredToTheContract() {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/echo.wasm")
-	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}")
+	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", 1)
 
 	// Check that the contract has no funds
 	localDenom := osmoutils.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
@@ -243,7 +243,7 @@ func (suite *HooksTestSuite) TestFundsAreTransferredToTheContract() {
 func (suite *HooksTestSuite) TestFundsAreReturnedOnFailedContractExec() {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/echo.wasm")
-	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}")
+	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", 1)
 
 	// Check that the contract has no funds
 	localDenom := osmoutils.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
@@ -311,7 +311,7 @@ func (suite *HooksTestSuite) TestPacketsThatShouldBeSkipped() {
 func (suite *HooksTestSuite) TestFundTracking() {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/counter.wasm")
-	addr := suite.chainA.InstantiateContract(&suite.Suite, `{"count": 0}`)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, `{"count": 0}`, 1)
 
 	// Check that the contract has no funds
 	localDenom := osmoutils.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
@@ -325,13 +325,13 @@ func (suite *HooksTestSuite) TestFundTracking() {
 
 	state := suite.chainA.QueryContract(
 		&suite.Suite, addr,
-		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, ibc_hooks.WasmHookModuleAccountAddr)))
+		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, ibchooks.WasmHookModuleAccountAddr)))
 	suite.Require().Equal(`{"count":0}`, state)
 
 	state = suite.chainA.QueryContract(
 		&suite.Suite, addr,
-		[]byte(fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, ibc_hooks.WasmHookModuleAccountAddr)))
-	suite.Require().Equal(`{"total_funds":[]}`, state)
+		[]byte(fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, ibchooks.WasmHookModuleAccountAddr)))
+	suite.Require().Equal(`{"total_funds":[{"denom":"ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B77878","amount":"1"}]}`, state)
 
 	suite.receivePacketWithSequence(
 		addr.String(),
@@ -339,15 +339,126 @@ func (suite *HooksTestSuite) TestFundTracking() {
 
 	state = suite.chainA.QueryContract(
 		&suite.Suite, addr,
-		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, ibc_hooks.WasmHookModuleAccountAddr)))
+		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, ibchooks.WasmHookModuleAccountAddr)))
 	suite.Require().Equal(`{"count":1}`, state)
 
 	state = suite.chainA.QueryContract(
 		&suite.Suite, addr,
-		[]byte(fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, ibc_hooks.WasmHookModuleAccountAddr)))
-	suite.Require().Equal(`{"total_funds":[{"denom":"ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B77878","amount":"1"}]}`, state)
+		[]byte(fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, ibchooks.WasmHookModuleAccountAddr)))
+	suite.Require().Equal(`{"total_funds":[{"denom":"ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B77878","amount":"2"}]}`, state)
 
 	// Check that the token has now been transferred to the contract
 	balance = suite.chainA.GetOsmosisApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
 	suite.Require().Equal(sdk.NewInt(2), balance.Amount)
+}
+
+// custom MsgTransfer constructor that supports Memo
+func NewMsgTransfer(
+	token sdk.Coin, sender, receiver string, memo string,
+) *transfertypes.MsgTransfer {
+	return &transfertypes.MsgTransfer{
+		SourcePort:       "transfer",
+		SourceChannel:    "channel-0",
+		Token:            token,
+		Sender:           sender,
+		Receiver:         receiver,
+		TimeoutHeight:    clienttypes.NewHeight(0, 100),
+		TimeoutTimestamp: 0,
+		Memo:             memo,
+	}
+}
+
+type Direction int64
+
+const (
+	AtoB Direction = iota
+	BtoA
+)
+
+func (suite *HooksTestSuite) GetEndpoints(direction Direction) (sender *ibctesting.Endpoint, receiver *ibctesting.Endpoint) {
+	switch direction {
+	case AtoB:
+		sender = suite.path.EndpointA
+		receiver = suite.path.EndpointB
+	case BtoA:
+		sender = suite.path.EndpointB
+		receiver = suite.path.EndpointA
+	}
+	return sender, receiver
+}
+
+func (suite *HooksTestSuite) RelayPacket(packet channeltypes.Packet, direction Direction) (*sdk.Result, []byte) {
+	sender, receiver := suite.GetEndpoints(direction)
+
+	err := receiver.UpdateClient()
+	suite.Require().NoError(err)
+
+	// receiver Receives
+	receiveResult, err := receiver.RecvPacketWithResult(packet)
+	suite.Require().NoError(err)
+
+	ack, err := ibctesting.ParseAckFromEvents(receiveResult.GetEvents())
+	suite.Require().NoError(err)
+
+	// sender Acknowledges
+	err = sender.AcknowledgePacket(packet, ack)
+	suite.Require().NoError(err)
+
+	err = sender.UpdateClient()
+	suite.Require().NoError(err)
+	err = receiver.UpdateClient()
+	suite.Require().NoError(err)
+
+	return receiveResult, ack
+}
+
+func (suite *HooksTestSuite) FullSend(msg sdk.Msg, direction Direction) (*sdk.Result, *sdk.Result, string, error) {
+	var sender *osmosisibctesting.TestChain
+	switch direction {
+	case AtoB:
+		sender = suite.chainA
+	case BtoA:
+		sender = suite.chainB
+	}
+	sendResult, err := sender.SendMsgsNoCheck(msg)
+	suite.Require().NoError(err)
+
+	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents())
+	suite.Require().NoError(err)
+
+	receiveResult, ack := suite.RelayPacket(packet, direction)
+
+	return sendResult, receiveResult, string(ack), err
+}
+
+func (suite *HooksTestSuite) TestAcks() {
+	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/counter.wasm")
+	addr := suite.chainA.InstantiateContract(&suite.Suite, `{"count": 0}`, 1)
+
+	// Generate swap instructions for the contract
+	callbackMemo := fmt.Sprintf(`{"ibc_callback":"%s"}`, addr)
+	// Send IBC transfer with the memo with crosschain-swap instructions
+	transferMsg := NewMsgTransfer(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)), suite.chainA.SenderAccount.GetAddress().String(), addr.String(), callbackMemo)
+	suite.FullSend(transferMsg, AtoB)
+
+	// The test contract will increment the counter for itself every time it receives an ack
+	state := suite.chainA.QueryContract(
+		&suite.Suite, addr,
+		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, addr)))
+	suite.Require().Equal(`{"count":1}`, state)
+
+	suite.FullSend(transferMsg, AtoB)
+	state = suite.chainA.QueryContract(
+		&suite.Suite, addr,
+		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, addr)))
+	suite.Require().Equal(`{"count":2}`, state)
+
+}
+
+func (suite *HooksTestSuite) TestSendWithoutMemo() {
+	// Sending a packet without memo to ensure that the ibc_callback middleware doesn't interfere with a regular send
+	transferMsg := NewMsgTransfer(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)), suite.chainA.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String(), "")
+	_, _, ack, err := suite.FullSend(transferMsg, AtoB)
+	suite.Require().NoError(err)
+	suite.Require().Contains(ack, "result")
 }

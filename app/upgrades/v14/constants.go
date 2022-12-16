@@ -2,6 +2,7 @@ package v14
 
 import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
+	ibchookstypes "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types"
 
 	"github.com/osmosis-labs/osmosis/v13/app/upgrades"
 	downtimetypes "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/types"
@@ -17,7 +18,7 @@ var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
 	CreateUpgradeHandler: CreateUpgradeHandler,
 	StoreUpgrades: store.StoreUpgrades{
-		Added:   []string{valsetpreftypes.StoreKey, protorevtypes.StoreKey, swaproutertypes.StoreKey, downtimetypes.StoreKey},
+		Added:   []string{valsetpreftypes.StoreKey, protorevtypes.StoreKey, swaproutertypes.StoreKey, downtimetypes.StoreKey, ibchookstypes.StoreKey},
 		Deleted: []string{},
 	},
 }
