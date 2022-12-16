@@ -40,6 +40,8 @@ var (
 // The max supported exponent is defined by the global maxSupportedExponent.
 // If a greater exponent is given, the function panics.
 // Panics if the exponent is negative.
+// The answer is correct up to a factor of 10^-18.
+// Meaning, result = result * k for k in [1 - 10^(-18), 1 + 10^(-18)]
 func Exp2(exponent BigDec) BigDec {
 	if exponent.Abs().GT(maxSupportedExponent) {
 		panic(fmt.Sprintf("integer exponent %s is too large, max (%s)", exponent, maxSupportedExponent))
@@ -67,6 +69,8 @@ func Exp2(exponent BigDec) BigDec {
 // See scripts/approximations/README.md for details of the scripts used
 // to compute the coefficients.
 // CONTRACT: exponent must be in the range [0, 1], panics if not.
+// The answer is correct up to a factor of 10^-18.
+// Meaning, result = result * k for k in [1 - 10^(-18), 1 + 10^(-18)]
 func exp2ChebyshevRationalApprox(x BigDec) BigDec {
 	if x.LT(ZeroDec()) || x.GT(OneDec()) {
 		panic(fmt.Sprintf("exponent must be in the range [0, 1], got %s", x))
