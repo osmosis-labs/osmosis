@@ -255,7 +255,7 @@ func (h WasmHooks) SendPacketOverride(i ICS4Middleware, ctx sdk.Context, chanCap
 		return sdkerrors.Wrap(err, "Send packet with callback error")
 	}
 
-	packetWithoutMemo := channeltypes.Packet{
+	packetWithoutCallbackMemo := channeltypes.Packet{
 		Sequence:           concretePacket.Sequence,
 		SourcePort:         concretePacket.SourcePort,
 		SourceChannel:      concretePacket.SourceChannel,
@@ -266,7 +266,7 @@ func (h WasmHooks) SendPacketOverride(i ICS4Middleware, ctx sdk.Context, chanCap
 		TimeoutHeight:      concretePacket.TimeoutHeight,
 	}
 
-	err = i.channel.SendPacket(ctx, chanCap, packetWithoutMemo)
+	err = i.channel.SendPacket(ctx, chanCap, packetWithoutCallbackMemo)
 	if err != nil {
 		return err
 	}
