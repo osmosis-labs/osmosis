@@ -14,11 +14,11 @@ type twapStrategy interface {
 }
 
 type arithmetic struct {
-	ArithKeeper Keeper
+	TwapKeeper Keeper
 }
 
 type geometric struct {
-	GeomKeeper Keeper
+	TwapKeeper Keeper
 }
 
 // computeTwap computes and returns an arithmetic TWAP between
