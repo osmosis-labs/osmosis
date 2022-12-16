@@ -18,8 +18,15 @@ func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err err
 	// Add a panic safeguard
 	defer func() {
 		if recoveryError := recover(); recoveryError != nil {
-			PrintPanicRecoveryError(ctx, recoveryError)
-			err = errors.New("panic occurred during execution")
+			if isErr, descriptor := IsOutOfGasError(recoveryError); isErr {
+				// don't log anything, this is routine. Just return an error.
+				// The CacheCtx shares the same gas meter as the underlying Ctx, per SDK design.
+				// so all gas writes are already on the underlying gas meter.
+				err = errors.New("out of gas occurred during execution: " + descriptor)
+			} else {
+				PrintPanicRecoveryError(ctx, recoveryError)
+				err = errors.New("panic occurred during execution")
+			}
 		}
 	}()
 	// makes a new cache context, which all state changes get wrapped inside of.
@@ -33,6 +40,19 @@ func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err err
 		ctx.EventManager().EmitEvents(cacheCtx.EventManager().Events())
 	}
 	return err
+}
+
+// Frustratingly, this has to return the error descriptor, not an actual error itself
+// because the SDK errors here are not actually errors. (They don't implement error interface)
+func IsOutOfGasError(err any) (bool, string) {
+	switch e := err.(type) {
+	case types.ErrorOutOfGas:
+		return true, e.Descriptor
+	case types.ErrorGasOverflow:
+		return true, e.Descriptor
+	default:
+		return false, ""
+	}
 }
 
 // PrintPanicRecoveryError error logs the recoveryError, along with the stacktrace, if it can be parsed.
