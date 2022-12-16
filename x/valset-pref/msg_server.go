@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
@@ -57,6 +58,37 @@ func (server msgServer) UndelegateFromValidatorSet(goCtx context.Context, msg *t
 	}
 
 	return &types.MsgUndelegateFromValidatorSetResponse{}, nil
+}
+
+func (server msgServer) RedelegateValidatorSet(goCtx context.Context, msg *types.MsgRedelegateValidatorSet) (*types.MsgRedelegateValidatorSetResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	existingSet, found := server.keeper.GetValidatorSetPreference(ctx, msg.Delegator)
+	if !found {
+		return nil, fmt.Errorf("user %s doesn't have validator set", msg.Delegator)
+	}
+
+	delegator, err := sdk.AccAddressFromBech32(msg.Delegator)
+	if err != nil {
+		return nil, err
+	}
+
+	// Message 1: override the validator set preference set entry
+	_, err = server.SetValidatorSetPreference(goCtx, &types.MsgSetValidatorSetPreference{
+		Delegator:   msg.Delegator,
+		Preferences: msg.Preferences,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Message 2: Perform the actual redelegation
+	err = server.keeper.PreformRedelegation(ctx, delegator, existingSet, msg.Preferences)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgRedelegateValidatorSetResponse{}, nil
 }
 
 func (server msgServer) WithdrawDelegationRewards(goCtx context.Context, msg *types.MsgWithdrawDelegationRewards) (*types.MsgWithdrawDelegationRewardsResponse, error) {

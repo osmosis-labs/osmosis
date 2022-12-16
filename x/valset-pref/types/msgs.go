@@ -144,6 +144,64 @@ func (m MsgUndelegateFromValidatorSet) GetSigners() []sdk.AccAddress {
 
 // constants
 const (
+	TypeMsgRedelegateValidatorSet = "redelegate_validator_set"
+)
+
+var _ sdk.Msg = &MsgRedelegateValidatorSet{}
+
+// NewMsgMsgStakeToValidatorSet creates a msg to stake to a validator.
+func NewMsgRedelegateValidatorSet(delegator sdk.AccAddress, preferences []ValidatorPreference) *MsgRedelegateValidatorSet {
+	return &MsgRedelegateValidatorSet{
+		Delegator:   delegator.String(),
+		Preferences: preferences,
+	}
+}
+
+func (m MsgRedelegateValidatorSet) Route() string { return RouterKey }
+func (m MsgRedelegateValidatorSet) Type() string  { return TypeMsgRedelegateValidatorSet }
+func (m MsgRedelegateValidatorSet) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Delegator)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid delegator address (%s)", err)
+	}
+
+	total_weight := sdk.NewDec(0)
+	validatorAddrs := []string{}
+	for _, validator := range m.Preferences {
+		_, err := sdk.ValAddressFromBech32(validator.ValOperAddress)
+		if err != nil {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid validator address (%s)", err)
+		}
+
+		total_weight = total_weight.Add(validator.Weight)
+		validatorAddrs = append(validatorAddrs, validator.ValOperAddress)
+	}
+
+	// check that all the validator address are unique
+	containsDuplicate := osmoutils.ContainsDuplicate(validatorAddrs)
+	if containsDuplicate {
+		return fmt.Errorf("The validator operator address are duplicated")
+	}
+
+	// check if the total validator distribution weights equal 1
+	if !total_weight.Equal(sdk.NewDec(1)) {
+		return fmt.Errorf("The weights allocated to the validators do not add up to 1, Got: %d", total_weight)
+	}
+
+	return nil
+}
+
+func (m MsgRedelegateValidatorSet) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+func (m MsgRedelegateValidatorSet) GetSigners() []sdk.AccAddress {
+	delegator, _ := sdk.AccAddressFromBech32(m.Delegator)
+	return []sdk.AccAddress{delegator}
+}
+
+// constants
+const (
 	TypeMsgWithdrawDelegationRewards = "withdraw_delegation_rewards"
 )
 
