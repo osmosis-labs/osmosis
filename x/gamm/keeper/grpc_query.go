@@ -109,12 +109,12 @@ func (q Querier) Pools(
 	}, nil
 }
 
-// NumPools returns total number of pools.
+// TODO: mark deprecated and move to swaprouter.
 func (q Querier) NumPools(ctx context.Context, _ *types.QueryNumPoolsRequest) (*types.QueryNumPoolsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	return &types.QueryNumPoolsResponse{
-		NumPools: q.Keeper.GetNextPoolId(sdkCtx) - 1,
+		NumPools: q.poolCreationManager.GetNextPoolId(sdkCtx) - 1,
 	}, nil
 }
 

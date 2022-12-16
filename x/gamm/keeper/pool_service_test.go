@@ -169,7 +169,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 	for _, test := range tests {
 		suite.SetupTest()
 		gammKeeper := suite.App.GAMMKeeper
-		swaprouterKeeper := suite.App.GAMMKeeper
+		swaprouterKeeper := suite.App.SwapRouterKeeper
 		distributionKeeper := suite.App.DistrKeeper
 		bankKeeper := suite.App.BankKeeper
 
@@ -357,7 +357,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 
 		ctx := suite.Ctx
 		gammKeeper := suite.App.GAMMKeeper
-		swaprouterKeeper := suite.App.GAMMKeeper
+		swaprouterKeeper := suite.App.SwapRouterKeeper
 		bankKeeper := suite.App.BankKeeper
 		testAccount := suite.TestAccs[0]
 
@@ -470,7 +470,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 
 			gammKeeper := suite.App.GAMMKeeper
 			bankKeeper := suite.App.BankKeeper
-			swaprouterKeeper := suite.App.GAMMKeeper
+			swaprouterKeeper := suite.App.SwapRouterKeeper
 
 			// Mint assets to the pool creator
 			suite.FundAcc(test.txSender, defaultAcctFunds)
@@ -562,7 +562,7 @@ func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 		suite.Run(tc.name, func() {
 			ctx := suite.Ctx
 			gammKeeper := suite.App.GAMMKeeper
-			swaprouterKeeper := suite.App.GAMMKeeper
+			swaprouterKeeper := suite.App.SwapRouterKeeper
 
 			for _, acc := range suite.TestAccs {
 				suite.FundAcc(acc, defaultAcctFunds)
@@ -757,7 +757,7 @@ func (suite *KeeperTestSuite) TestGetPoolDenom() {
 	// setup pool with denoms
 	suite.FundAcc(suite.TestAccs[0], defaultAcctFunds)
 	poolCreateMsg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], defaultPoolParams, defaultPoolAssets, defaultFutureGovernor)
-	_, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, poolCreateMsg)
+	_, err := suite.App.SwapRouterKeeper.CreatePool(suite.Ctx, poolCreateMsg)
 	suite.Require().NoError(err)
 
 	for _, tc := range []struct {
