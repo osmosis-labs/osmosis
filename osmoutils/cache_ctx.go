@@ -15,9 +15,6 @@ import (
 // If there is no error, proceeds as normal (but with some slowdown due to SDK store weirdness)
 // Try to avoid usage of iterators in f.
 func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err error) {
-	// makes a new cache context, which all state changes get wrapped inside of.
-	cacheCtx, write := ctx.CacheContext()
-
 	// Add a panic safeguard
 	defer func() {
 		if recoveryError := recover(); recoveryError != nil {
@@ -27,12 +24,10 @@ func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err err
 				PrintPanicRecoveryError(ctx, recoveryError)
 				err = errors.New("panic occurred during execution")
 			}
-
-			newConsumed := cacheCtx.GasMeter().GasConsumed()
-			oldConsumed := ctx.GasMeter().GasConsumed()
-			ctx.GasMeter().ConsumeGas(newConsumed-oldConsumed, "apply func if no err: "+err.Error())
 		}
 	}()
+	// makes a new cache context, which all state changes get wrapped inside of.
+	cacheCtx, write := ctx.CacheContext()
 	err = f(cacheCtx)
 	if err != nil {
 		ctx.Logger().Error(err.Error())
