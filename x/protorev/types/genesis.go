@@ -12,8 +12,11 @@ var AtomDenomination string = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9C
 // OsmosisDenomination stores the native denom name for Osmosis on chain used for route building
 var OsmosisDenomination string = "uosmo"
 
-// (2 ^ 14) = 16,384
+// MaxInputAmount is the upper bound for what will be used to find the optimal in amount when creating (2 ^ 14) = 16,384
 var MaxInputAmount = sdk.NewInt(16_384)
+
+// StepSize is the amount we multiply each index in the binary search method
+var StepSize = sdk.NewInt(1_000_000)
 
 // Max iterations for binary search (log2(16_384) = 14)
 const MaxIterations = 14

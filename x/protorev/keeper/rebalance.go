@@ -92,28 +92,24 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route gammtypes.SwapAmoun
 	tokenIn := sdk.Coin{}
 	profit := sdk.ZeroInt()
 
-	// 10 ^ 6 is multiplied to the input amount to convert to the base unit
-	million := sdk.NewInt(1_000_000)
 	curLeft := sdk.OneInt()
-	curMid := sdk.OneInt()
 	curRight := types.MaxInputAmount
-
 	iteration := 0
 
 	for curLeft.LT(curRight) && iteration < types.MaxIterations {
 		iteration++
 
-		curMid = (curLeft.Add(curRight)).Quo(sdk.NewInt(2))
+		curMid := (curLeft.Add(curRight)).Quo(sdk.NewInt(2))
 		curMidPlusOne := curMid.Add(sdk.OneInt())
 
 		// Short circuit profit searching if there is an error in the GAMM module
-		_, profitMid, err := k.EstimateMultihopProfit(ctx, inputDenom, curMid.Mul(million), route)
+		_, profitMid, err := k.EstimateMultihopProfit(ctx, inputDenom, curMid.Mul(types.StepSize), route)
 		if err != nil {
 			return sdk.Coin{}, sdk.ZeroInt(), err
 		}
 
 		// Short circuit profit searching if there is an error in the GAMM module
-		tokenInMidPlusOne, profitMidPlusOne, err := k.EstimateMultihopProfit(ctx, inputDenom, curMidPlusOne.Mul(million), route)
+		tokenInMidPlusOne, profitMidPlusOne, err := k.EstimateMultihopProfit(ctx, inputDenom, curMidPlusOne.Mul(types.StepSize), route)
 		if err != nil {
 			return sdk.Coin{}, sdk.ZeroInt(), err
 		}
