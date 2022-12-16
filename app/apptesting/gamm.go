@@ -71,7 +71,10 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithCoinsAndWeights(coins sdk.Coin
 		poolAssets = append(poolAssets, poolAsset)
 	}
 
-	return s.PrepareBalancerPoolWithPoolAsset(poolAssets)
+	return s.PrepareCustomBalancerPool(poolAssets, balancer.PoolParams{
+		SwapFee: sdk.ZeroDec(),
+		ExitFee: sdk.ZeroDec(),
+	})
 }
 
 // PrepareBalancerPool returns a Balancer pool's pool-ID with pool params set in PrepareBalancerPoolWithPoolParams.
@@ -128,31 +131,37 @@ func (s *KeeperTestHelper) PrepareImbalancedStableswapPool() uint64 {
 
 // PrepareBalancerPoolWithPoolParams sets up a Balancer pool with poolParams.
 func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer.PoolParams) uint64 {
-	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
-
-	msg := balancer.NewMsgCreateBalancerPool(s.TestAccs[0], poolParams, DefaultPoolAssets, "")
-	poolId, err := s.App.GAMMKeeper.CreatePool(s.Ctx, msg)
-	s.NoError(err)
-	return poolId
+	return s.PrepareCustomBalancerPool(DefaultPoolAssets, poolParams)
 }
 
-// PrepareBalancerPoolWithPoolAsset sets up a Balancer pool with an array of assets.
-func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolAsset(assets []balancer.PoolAsset) uint64 {
+// PrepareCustomBalancerPool sets up a Balancer pool with an array of assets and given parameters
+func (s *KeeperTestHelper) PrepareCustomBalancerPool(assets []balancer.PoolAsset, params balancer.PoolParams) uint64 {
 	// Add coins for pool creation fee + coins needed to mint balances
-	fundCoins := sdk.Coins{sdk.NewCoin("uosmo", sdk.NewInt(10000000000))}
+	fundCoins := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000000)))
 	for _, a := range assets {
 		fundCoins = fundCoins.Add(a.Token)
 	}
 	s.FundAcc(s.TestAccs[0], fundCoins)
 
-	msg := balancer.NewMsgCreateBalancerPool(s.TestAccs[0], balancer.PoolParams{
-		SwapFee: sdk.ZeroDec(),
-		ExitFee: sdk.ZeroDec(),
-	}, assets, "")
+	msg := balancer.NewMsgCreateBalancerPool(s.TestAccs[0], params, assets, "")
 	poolId, err := s.App.GAMMKeeper.CreatePool(s.Ctx, msg)
 	s.NoError(err)
 	return poolId
+}
+
+// PrepareCustomBalancerPoolFromCoins sets up a Balancer pool with an array of coins and given parameters
+func (s *KeeperTestHelper) PrepareCustomBalancerPoolFromCoins(coins sdk.Coins, params balancer.PoolParams) uint64 {
+	var poolAssets []balancer.PoolAsset
+	for _, coin := range coins {
+		poolAsset := balancer.PoolAsset{
+			Weight: sdk.NewInt(1),
+			Token:  coin,
+		}
+		poolAssets = append(poolAssets, poolAsset)
+	}
+
+	return s.PrepareCustomBalancerPool(poolAssets, params)
 }
 
 // Modify spotprice of a pool to target spotprice
