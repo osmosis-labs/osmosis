@@ -13,6 +13,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 type decimalTestSuite struct {
@@ -718,7 +719,7 @@ func (s *decimalTestSuite) TestLog2() {
 			expected: osmomath.MustNewDecFromStr("99.525973560175362367047484597337715868"),
 		},
 		"log_2{Max Spot Price} = 128": {
-			initialValue: osmomath.BigDecFromSDKDec(osmomath.MaxSpotPrice), // 2^128 - 1
+			initialValue: osmomath.BigDecFromSDKDec(gammtypes.MaxSpotPrice), // 2^128 - 1
 			// From: https://www.wolframalpha.com/input?i=log+base+2+of+%28%282%5E128%29+-+1%29+38+digits
 			expected: osmomath.MustNewDecFromStr("128"),
 		},
@@ -732,7 +733,7 @@ func (s *decimalTestSuite) TestLog2() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-			f := func() {
+			osmomath.ConditionalPanic(s.T(), tc.expectedPanic, func() {
 				// Create a copy to test that the original was not modified.
 				// That is, that LogbBase2() is non-mutative.
 				initialCopy := tc.initialValue.Clone()
@@ -740,12 +741,7 @@ func (s *decimalTestSuite) TestLog2() {
 				res := tc.initialValue.LogBase2()
 				require.True(osmomath.DecApproxEq(s.T(), tc.expected, res, expectedErrTolerance))
 				require.Equal(s.T(), initialCopy, tc.initialValue)
-			}
-			if tc.expectedPanic {
-				require.Panics(s.T(), f)
-			} else {
-				f()
-			}
+			})
 		})
 	}
 }
@@ -820,7 +816,7 @@ func (s *decimalTestSuite) TestLn() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-			f := func() {
+			osmomath.ConditionalPanic(s.T(), tc.expectedPanic, func() {
 				// Create a copy to test that the original was not modified.
 				// That is, that Ln() is non-mutative.
 				initialCopy := tc.initialValue.Clone()
@@ -828,12 +824,7 @@ func (s *decimalTestSuite) TestLn() {
 				res := tc.initialValue.Ln()
 				require.True(osmomath.DecApproxEq(s.T(), tc.expected, res, expectedErrTolerance))
 				require.Equal(s.T(), initialCopy, tc.initialValue)
-			}
-			if tc.expectedPanic {
-				require.Panics(s.T(), f)
-			} else {
-				f()
-			}
+			})
 		})
 	}
 }
@@ -900,7 +891,7 @@ func (s *decimalTestSuite) TestTickLog() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-			f := func() {
+			osmomath.ConditionalPanic(s.T(), tc.expectedPanic, func() {
 				// Create a copy to test that the original was not modified.
 				// That is, that Ln() is non-mutative.
 				initialCopy := tc.initialValue.Clone()
@@ -909,12 +900,7 @@ func (s *decimalTestSuite) TestTickLog() {
 				fmt.Println(name, res.Sub(tc.expected).Abs())
 				require.True(osmomath.DecApproxEq(s.T(), tc.expected, res, tc.expectedErrTolerance))
 				require.Equal(s.T(), initialCopy, tc.initialValue)
-			}
-			if tc.expectedPanic {
-				require.Panics(s.T(), f)
-			} else {
-				f()
-			}
+			})
 		})
 	}
 }
@@ -1020,19 +1006,14 @@ func (s *decimalTestSuite) TestCustomBaseLog() {
 	}
 	for name, tc := range tests {
 		s.Run(name, func() {
-			f := func() {
+			osmomath.ConditionalPanic(s.T(), tc.expectedPanic, func() {
 				// Create a copy to test that the original was not modified.
 				// That is, that Ln() is non-mutative.
 				initialCopy := tc.initialValue.Clone()
 				res := tc.initialValue.CustomBaseLog(tc.base)
 				require.True(osmomath.DecApproxEq(s.T(), tc.expected, res, tc.expectedErrTolerance))
 				require.Equal(s.T(), initialCopy, tc.initialValue)
-			}
-			if tc.expectedPanic {
-				s.Require().Panics(f)
-			} else {
-				f()
-			}
+			})
 		})
 	}
 }
@@ -1081,21 +1062,21 @@ func (s *decimalTestSuite) TestPowerInteger() {
 		"geom twap overflow: 2^log_2{max spot price + 1}": {
 			base: osmomath.TwoBigDec,
 			// add 1 for simplicity of calculation to isolate overflow.
-			exponent: uint64(osmomath.BigDecFromSDKDec(osmomath.MaxSpotPrice).Add(osmomath.OneDec()).LogBase2().TruncateInt().Uint64()),
+			exponent: uint64(osmomath.BigDecFromSDKDec(gammtypes.MaxSpotPrice).Add(osmomath.OneDec()).LogBase2().TruncateInt().Uint64()),
 
 			// https://www.wolframalpha.com/input?i=2%5E%28floor%28+log+base+2+%282%5E128%29%29%29+++39+digits
 			expectedResult: osmomath.MustNewDecFromStr("340282366920938463463374607431768211456"),
 		},
 		"geom twap overflow: 2^log_2{max spot price}": {
 			base:     osmomath.TwoBigDec,
-			exponent: uint64(osmomath.BigDecFromSDKDec(osmomath.MaxSpotPrice).LogBase2().TruncateInt().Uint64()),
+			exponent: uint64(osmomath.BigDecFromSDKDec(gammtypes.MaxSpotPrice).LogBase2().TruncateInt().Uint64()),
 
 			// https://www.wolframalpha.com/input?i=2%5E%28floor%28+log+base+2+%282%5E128+-+1%29%29%29+++39+digits
 			expectedResult: osmomath.MustNewDecFromStr("170141183460469231731687303715884105728"),
 		},
 		"geom twap overflow: 2^log_2{max spot price / 2 - 2017}": { // 2017 is prime.
 			base:     osmomath.TwoBigDec,
-			exponent: uint64(osmomath.BigDecFromSDKDec(osmomath.MaxSpotPrice.Quo(sdk.NewDec(2)).Sub(sdk.NewDec(2017))).LogBase2().TruncateInt().Uint64()),
+			exponent: uint64(osmomath.BigDecFromSDKDec(gammtypes.MaxSpotPrice.Quo(sdk.NewDec(2)).Sub(sdk.NewDec(2017))).LogBase2().TruncateInt().Uint64()),
 
 			// https://www.wolframalpha.com/input?i=e%5E10+41+digits
 			expectedResult: osmomath.MustNewDecFromStr("85070591730234615865843651857942052864"),
@@ -1227,7 +1208,6 @@ func (s *decimalTestSuite) TestMul_Mutation() {
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-
 			startMut := tc.startValue.Clone()
 			startNonMut := tc.startValue.Clone()
 

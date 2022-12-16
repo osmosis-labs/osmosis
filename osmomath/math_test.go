@@ -89,21 +89,16 @@ func TestPowApprox(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		expectPanic := tc.base.IsZero()
-		f := func() {
+		var actualResult sdk.Dec
+		ConditionalPanic(t, tc.base.Equal(sdk.ZeroDec()), func() {
 			fmt.Println(tc.base)
-			actualResult := PowApprox(tc.base, tc.exp, tc.powPrecision)
+			actualResult = PowApprox(tc.base, tc.exp, tc.powPrecision)
 			require.True(
 				t,
 				tc.expectedResult.Sub(actualResult).Abs().LTE(tc.powPrecision),
 				fmt.Sprintf("test %d failed: expected value & actual value's difference should be less than precision", i),
 			)
-		}
-		if expectPanic {
-			require.Panics(t, f, fmt.Sprintf("test %d failed: should panic", i))
-		} else {
-			f()
-		}
+		})
 	}
 }
 
@@ -158,19 +153,14 @@ func TestPow(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		f := func() {
-			actualResult := Pow(tc.base, tc.exp)
+		var actualResult sdk.Dec
+		ConditionalPanic(t, tc.base.Equal(sdk.ZeroDec()), func() {
+			actualResult = Pow(tc.base, tc.exp)
 			require.True(
 				t,
 				tc.expectedResult.Sub(actualResult).Abs().LTE(powPrecision),
 				fmt.Sprintf("test %d failed: expected value & actual value's difference should be less than precision", i),
 			)
-		}
-		expectPanic := tc.base.IsZero()
-		if expectPanic {
-			require.Panics(t, f)
-		} else {
-			f()
-		}
+		})
 	}
 }
