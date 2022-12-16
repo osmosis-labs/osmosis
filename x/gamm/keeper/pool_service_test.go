@@ -240,8 +240,8 @@ func (suite *KeeperTestSuite) TestSpotPriceOverflow() {
 			poolLiquidity: sdk.NewCoins(sdk.NewCoin(denomA, types.MaxSpotPrice.TruncateInt().Add(sdk.OneInt())),
 				sdk.NewCoin(denomB, sdk.OneInt())),
 			poolWeights:     []int64{1, 1},
-			quoteAssetDenom: denomB,
-			baseAssetDenom:  denomA,
+			quoteAssetDenom: denomA,
+			baseAssetDenom:  denomB,
 			overflows:       true,
 		},
 		"uniV2 internal error": {
@@ -264,7 +264,7 @@ func (suite *KeeperTestSuite) TestSpotPriceOverflow() {
 			osmoassert.ConditionalPanic(suite.T(), tc.panics, func() {
 				poolSpotPrice, poolErr = pool.SpotPrice(suite.Ctx, tc.baseAssetDenom, tc.quoteAssetDenom)
 			})
-			keeperSpotPrice, keeperErr := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx, poolId, tc.baseAssetDenom, tc.quoteAssetDenom)
+			keeperSpotPrice, keeperErr := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx, poolId, tc.quoteAssetDenom, tc.baseAssetDenom)
 			if tc.overflows {
 				suite.Require().NoError(poolErr)
 				suite.Require().ErrorIs(keeperErr, types.ErrSpotPriceOverflow)

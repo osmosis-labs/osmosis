@@ -59,6 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Bug fixes
 
 * [#3608](https://github.com/osmosis-labs/osmosis/pull/3608) Make it possible to state export from any directory.
+* [#3715](https://github.com/osmosis-labs/osmosis/pull/3715) Fix x/gamm CalculateSpotPrice, balancer.SpotPrice and Stableswap.SpotPrice base and quote asset.
 
 ### Misc Improvements
 
