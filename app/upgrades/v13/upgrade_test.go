@@ -2,7 +2,7 @@ package v13_test
 
 import (
 	"fmt"
-	ibchookstypes "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types"
+	ibchookstypes "github.com/osmosis-labs/ibc-hooks/types"
 	"testing"
 
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	ibchooks "github.com/osmosis-labs/ibc-hooks"
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 )
 
 type UpgradeTestSuite struct {
@@ -55,7 +55,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 		{
 			"Test that the upgrade succeeds",
 			func() {
-				acc := suite.App.AccountKeeper.GetAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
+				acc := suite.App.AccountKeeper.GetAccount(suite.Ctx, ibchooks.WasmHookModuleAccountAddr)
 				suite.App.AccountKeeper.RemoveAccount(suite.Ctx, acc)
 				// Because of SDK version map bug, we can't do the following, and instaed do a massive hack
 				// vm := suite.App.UpgradeKeeper.GetModuleVersionMap(suite.Ctx)
@@ -68,12 +68,12 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				versionStore := prefix.NewStore(store, []byte{upgradetypes.VersionMapByte})
 				versionStore.Delete([]byte(ibchookstypes.ModuleName))
 
-				hasAcc := suite.App.AccountKeeper.HasAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
+				hasAcc := suite.App.AccountKeeper.HasAccount(suite.Ctx, ibchooks.WasmHookModuleAccountAddr)
 				suite.Require().False(hasAcc)
 			},
 			func() { dummyUpgrade(suite) },
 			func() {
-				hasAcc := suite.App.AccountKeeper.HasAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
+				hasAcc := suite.App.AccountKeeper.HasAccount(suite.Ctx, ibchooks.WasmHookModuleAccountAddr)
 				suite.Require().True(hasAcc)
 			},
 		},

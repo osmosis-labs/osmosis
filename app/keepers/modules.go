@@ -27,11 +27,11 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 
+	ibc_hooks "github.com/osmosis-labs/ibc-hooks"
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
 	downtimemodule "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/module"
 	"github.com/osmosis-labs/osmosis/v13/x/epochs"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm"
-	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 	ibc_rate_limit "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit"
 	"github.com/osmosis-labs/osmosis/v13/x/incentives"
 	"github.com/osmosis-labs/osmosis/v13/x/lockup"

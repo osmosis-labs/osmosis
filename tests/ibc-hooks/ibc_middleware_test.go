@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	ibchooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
+	ibchooks "github.com/osmosis-labs/ibc-hooks"
 
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 
@@ -22,7 +22,7 @@ import (
 
 	osmosisibctesting "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/testutil"
 
-	"github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/testutils"
+	"github.com/osmosis-labs/osmosis/v13/tests/ibc-hooks/testutils"
 )
 
 type HooksTestSuite struct {

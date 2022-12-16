@@ -39,6 +39,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	ibchooks "github.com/osmosis-labs/ibc-hooks"
 	"github.com/osmosis-labs/osmosis/v13/app/keepers"
 	"github.com/osmosis-labs/osmosis/v13/app/upgrades"
 	v10 "github.com/osmosis-labs/osmosis/v13/app/upgrades/v10"
@@ -54,7 +55,6 @@ import (
 	v8 "github.com/osmosis-labs/osmosis/v13/app/upgrades/v8"
 	v9 "github.com/osmosis-labs/osmosis/v13/app/upgrades/v9"
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
-	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 )
 
 const appName = "OsmosisApp"
@@ -72,7 +72,7 @@ var (
 	maccPerms = moduleAccountPermissions
 
 	// module accounts that are allowed to receive tokens.
-	allowedReceivingModAcc = map[string]bool{ibc_hooks.WasmHookModuleAccountAddr.String(): true}
+	allowedReceivingModAcc = map[string]bool{ibchooks.WasmHookModuleAccountAddr.String(): true}
 
 	// TODO: Refactor wasm items into a wasm.go file
 	// WasmProposalsEnabled enables all x/wasm proposals when it's value is "true"

@@ -9,7 +9,7 @@ import (
 	ibc "github.com/cosmos/ibc-go/v3/modules/core"
 	ibchost "github.com/cosmos/ibc-go/v3/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
-	ibchookstypes "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types"
+	ibchookstypes "github.com/osmosis-labs/ibc-hooks/types"
 
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
@@ -17,7 +17,7 @@ import (
 	downtimemodule "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/module"
 	downtimetypes "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/types"
 
-	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
+	ibc_hooks "github.com/osmosis-labs/ibc-hooks"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"

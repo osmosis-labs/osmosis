@@ -3,22 +3,19 @@ package ibc_hooks
 import (
 	"encoding/json"
 	"fmt"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	"github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/keeper"
+	"github.com/osmosis-labs/ibc-hooks/keeper"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v3/modules/core/exported"
 
-	"github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types"
+	"github.com/osmosis-labs/ibc-hooks/types"
 )
 
 type ContractAck struct {
@@ -92,7 +89,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	}
 
 	// The packet's denom is the denom in the sender chain. This needs to be converted to the local denom.
-	denom := osmoutils.MustExtractDenomFromPacketOnRecv(packet)
+	denom := MustExtractDenomFromPacketOnRecv(packet)
 	funds := sdk.NewCoins(sdk.NewCoin(denom, amount))
 
 	execMsg := wasmtypes.MsgExecuteContract{
@@ -308,7 +305,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 	}
 
 	success := "false"
-	if !osmoutils.IsAckError(acknowledgement) {
+	if !IsAckError(acknowledgement) {
 		success = "true"
 	}
 

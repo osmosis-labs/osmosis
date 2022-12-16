@@ -238,7 +238,7 @@ run-querygen:
 ###                           Tests & Simulation                            ###
 ###############################################################################
 
-PACKAGES_UNIT=$(shell go list ./... | grep -E -v 'tests/simulator|e2e')
+PACKAGES_UNIT=$(shell go list ./... | grep -E -v 'tests/simulator|e2e' && go list ./tests/ibc-hooks/...)
 PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
 PACKAGES_SIM=$(shell go list ./... | grep '/tests/simulator')
 TEST_PACKAGES=./...
