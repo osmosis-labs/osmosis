@@ -154,11 +154,7 @@ func BinarySearchSingleAssetJoin(
 	}
 
 	// We accept an additive tolerance of 1 LP share error and round down
-<<<<<<< HEAD
-	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.Dec{}, RoundingDir: osmomath.RoundDown}
-=======
-	errTolerance := osmomath.ErrTolerance{AdditiveTolerance: sdk.OneDec(), MultiplicativeTolerance: sdk.Dec{}, RoundingDir: osmomath.RoundDown}
->>>>>>> 3095a7d3 (Move binary search from osmomath to osmoutils (#3763))
+	errTolerance := osmomath.ErrTolerance{AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.Dec{}, RoundingDir: osmomath.RoundDown}
 
 	numLPShares, err = osmomath.BinarySearch(
 		estimateCoinOutGivenShares,
