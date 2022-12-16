@@ -12,40 +12,20 @@ import (
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
-// CreateNewConcentratedLiquidityPool creates a new concentrated liquidity pool with the given parameters.
-// The pool tokens are denom0 and denom1, and are ordered such that denom0 is lexicographically smaller than denom1.
-// The pool is created with zero liquidity and the initial sqrt price and current tick set to zero.
-// The given token denominations are ordered to ensure that the first token is the numerator of the price, and the second token is the denominator of the price.
-// The pool is added to the pool store, and an error is returned if the operation fails.
-func (k Keeper) CreateNewConcentratedLiquidityPool(
-	ctx sdk.Context,
-	poolId uint64,
-	denom0, denom1 string,
-	tickSpacing uint64,
-) (types.ConcentratedPoolExtension, error) {
-	// Order the initial pool denoms so that denom0 is lexicographically smaller than denom1.
-	denom0, denom1, err := types.OrderInitialPoolDenoms(denom0, denom1)
+// InitializePool initializes a concentrated liquidity pool and sets it in state.
+func (k Keeper) InitializePool(ctx sdk.Context, poolI swaproutertypes.PoolI, creatorAddress sdk.AccAddress) error {
+	concentratedPool, err := convertPoolInterfaceToConcentrated(poolI)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	// Create a new concentrated liquidity pool with the given parameters.
-	poolI, err := model.NewConcentratedLiquidityPool(poolId, denom0, denom1, tickSpacing)
-	if err != nil {
-		return nil, err
-	}
+	tickSpacing := concentratedPool.GetTickSpacing()
 
 	if !k.validateTickSpacing(ctx, tickSpacing) {
-		return nil, err
+		return fmt.Errorf("invalid tick spacing. Got %d", tickSpacing)
 	}
 
-	// Add the pool to the pool store.
-	err = k.setPool(ctx, &poolI)
-	if err != nil {
-		return nil, err
-	}
-
-	return &poolI, nil
+	return k.setPool(ctx, concentratedPool)
 }
 
 // GetPool returns a pool with a given id.
@@ -112,6 +92,20 @@ func convertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolE
 	}
 	// Return the converted value
 	return pool, nil
+}
+
+// convertPoolInterfaceToConcentrated takes a swaproutertypes.PoolI and attempts to convert it to a
+// types.ConcentratedPoolExtension. If the conversion is successful, the converted value is returned. If the conversion fails,
+// an error is returned.
+func convertPoolInterfaceToConcentrated(poolI swaproutertypes.PoolI) (types.ConcentratedPoolExtension, error) {
+	// Attempt to convert swaproutertypes.PoolI to a concentratedPool
+	concentratedPool, ok := poolI.(types.ConcentratedPoolExtension)
+	if !ok {
+		// If the conversion fails, return an error
+		return nil, fmt.Errorf("given pool does not implement ConcentratedPoolExtension, implements %T", poolI)
+	}
+	// Return the converted value
+	return concentratedPool, nil
 }
 
 // validateTickSpacing returns true if the given tick spacing is one of the authorized tick spacings set in the
