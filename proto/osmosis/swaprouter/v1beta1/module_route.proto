@@ -1,0 +1,29 @@
+syntax = "proto3";
+package osmosis.swaprouter.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types";
+
+// PoolType is an enumeration of all supported pool types.
+enum PoolType {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // Balancer is the standard xy=k curve. Its pool model is defined in x/gamm.
+  Balancer = 0;
+  // Stableswap is the Solidly cfmm stable swap curve. Its pool model is defined
+  // in x/gamm.
+  Stableswap = 1;
+  // Concentrated is the pool model specific to concentrated liquidity. It is
+  // defined in x/concentrated-liquidity.
+  Concentrated = 2;
+}
+
+// ModuleRouter defines a route encapsulating pool type.
+// It is used as the value of a mapping from pool id to the pool type,
+// allowing the swap router to know which module to route swaps to given the
+// pool id.
+message ModuleRoute {
+  // pool_type specifies the type of the pool
+  PoolType pool_type = 1;
+}

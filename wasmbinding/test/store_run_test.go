@@ -13,7 +13,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/app"
+	"github.com/osmosis-labs/osmosis/v13/app"
 )
 
 func TestNoStorageWithoutProposal(t *testing.T) {
@@ -29,7 +29,7 @@ func TestNoStorageWithoutProposal(t *testing.T) {
 	// upload reflect code
 	wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")
 	require.NoError(t, err)
-	_, err = contractKeeper.Create(ctx, creator, wasmCode, nil)
+	_, _, err = contractKeeper.Create(ctx, creator, wasmCode, nil)
 	require.Error(t, err)
 }
 

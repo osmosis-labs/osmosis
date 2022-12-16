@@ -14,6 +14,7 @@ const (
 	TypeMsgBeginUnlockingAll = "begin_unlocking_all"
 	TypeMsgBeginUnlocking    = "begin_unlocking"
 	TypeMsgExtendLockup      = "edit_lockup"
+	TypeForceUnlock          = "force_unlock"
 )
 
 var _ sdk.Msg = &MsgLockTokens{}
@@ -162,6 +163,44 @@ func (m MsgExtendLockup) GetSignBytes() []byte {
 }
 
 func (m MsgExtendLockup) GetSigners() []sdk.AccAddress {
+	owner, _ := sdk.AccAddressFromBech32(m.Owner)
+	return []sdk.AccAddress{owner}
+}
+
+var _ sdk.Msg = &MsgForceUnlock{}
+
+// NewMsgBeginUnlockingAll creates a message to begin unlocking tokens.
+func NewMsgForceUnlock(owner sdk.AccAddress, id uint64, coins sdk.Coins) *MsgForceUnlock {
+	return &MsgForceUnlock{
+		Owner: owner.String(),
+		ID:    id,
+		Coins: coins,
+	}
+}
+
+func (m MsgForceUnlock) Route() string { return RouterKey }
+func (m MsgForceUnlock) Type() string  { return TypeMsgBeginUnlockingAll }
+func (m MsgForceUnlock) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Owner)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
+	}
+
+	if m.ID <= 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "lock id should be bigger than 1 (%s)", err)
+	}
+
+	if !m.Coins.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.Coins.String())
+	}
+	return nil
+}
+
+func (m MsgForceUnlock) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+func (m MsgForceUnlock) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}
 }

@@ -1,10 +1,18 @@
 package app
 
 import (
-	"github.com/osmosis-labs/osmosis/v12/app/params"
+	"github.com/osmosis-labs/osmosis/v13/app/params"
 
 	"github.com/cosmos/cosmos-sdk/std"
 )
+
+var (
+	encodingConfig params.EncodingConfig = MakeEncodingConfig()
+)
+
+func GetEncodingConfig() params.EncodingConfig {
+	return encodingConfig
+}
 
 // MakeEncodingConfig creates an EncodingConfig.
 func MakeEncodingConfig() params.EncodingConfig {

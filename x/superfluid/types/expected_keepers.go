@@ -7,10 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v12/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v13/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 )
 
 // LockupKeeper defines the expected interface needed to retrieve locks.
@@ -44,8 +44,8 @@ type LockupMsgServer interface {
 
 // GammKeeper defines the expected interface needed for superfluid module.
 type GammKeeper interface {
-	GetPoolAndPoke(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
-	GetPoolsAndPoke(ctx sdk.Context) (res []gammtypes.PoolI, err error)
+	GetPoolAndPoke(ctx sdk.Context, poolId uint64) (gammtypes.CFMMPoolI, error)
+	GetPoolsAndPoke(ctx sdk.Context) (res []gammtypes.CFMMPoolI, err error)
 	ExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, tokenOutMins sdk.Coins) (exitCoins sdk.Coins, err error)
 }
 

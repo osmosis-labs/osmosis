@@ -39,19 +39,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v12/app/keepers"
-	"github.com/osmosis-labs/osmosis/v12/app/upgrades"
-	v10 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v10"
-	v11 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v11"
-	v12 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v12"
-	v3 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v3"
-	v4 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v4"
-	v5 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v5"
-	v6 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v6"
-	v7 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v7"
-	v8 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v8"
-	v9 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v9"
-	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v13/app/keepers"
+	"github.com/osmosis-labs/osmosis/v13/app/upgrades"
+	v10 "github.com/osmosis-labs/osmosis/v13/app/upgrades/v10"
+	v11 "github.com/osmosis-labs/osmosis/v13/app/upgrades/v11"
+	v12 "github.com/osmosis-labs/osmosis/v13/app/upgrades/v12"
+	v13 "github.com/osmosis-labs/osmosis/v13/app/upgrades/v13"
+	v14 "github.com/osmosis-labs/osmosis/v13/app/upgrades/v14"
+	v3 "github.com/osmosis-labs/osmosis/v13/app/upgrades/v3"
+	v4 "github.com/osmosis-labs/osmosis/v13/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/v13/app/upgrades/v5"
+	v6 "github.com/osmosis-labs/osmosis/v13/app/upgrades/v6"
+	v7 "github.com/osmosis-labs/osmosis/v13/app/upgrades/v7"
+	v8 "github.com/osmosis-labs/osmosis/v13/app/upgrades/v8"
+	v9 "github.com/osmosis-labs/osmosis/v13/app/upgrades/v9"
+	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
+	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 )
 
 const appName = "OsmosisApp"
@@ -69,8 +72,9 @@ var (
 	maccPerms = moduleAccountPermissions
 
 	// module accounts that are allowed to receive tokens.
-	allowedReceivingModAcc = map[string]bool{}
+	allowedReceivingModAcc = map[string]bool{ibc_hooks.WasmHookModuleAccountAddr.String(): true}
 
+	// TODO: Refactor wasm items into a wasm.go file
 	// WasmProposalsEnabled enables all x/wasm proposals when it's value is "true"
 	// and EnableSpecificWasmProposals is empty. Otherwise, all x/wasm proposals
 	// are disabled.
@@ -88,7 +92,7 @@ var (
 
 	// _ sdksimapp.App = (*OsmosisApp)(nil)
 
-	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade}
+	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 )
 
@@ -154,7 +158,7 @@ func NewOsmosisApp(
 	wasmOpts []wasm.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
-	encodingConfig := MakeEncodingConfig()
+	encodingConfig := GetEncodingConfig()
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
@@ -175,6 +179,10 @@ func NewOsmosisApp(
 
 	wasmDir := filepath.Join(homePath, "wasm")
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
+
+	// Uncomment this for debugging contracts. In the future this could be made into a param passed by the tests
+	//wasmConfig.ContractDebugMode = true
+
 	if err != nil {
 		panic(fmt.Sprintf("error while reading wasm config: %s", err))
 	}
@@ -266,6 +274,8 @@ func NewOsmosisApp(
 			app.IBCKeeper,
 		),
 	)
+	// Uncomment to enable postHandlers:
+	// app.SetPostHandler(NewTxPostHandler())
 	app.SetEndBlocker(app.EndBlocker)
 
 	// Register snapshot extensions to enable state-sync for wasm.

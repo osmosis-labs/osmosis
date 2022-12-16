@@ -2,12 +2,13 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/keeper/internal/events"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/events"
 )
 
 // SwapExactAmountIn attempts to swap one asset, tokenIn, for another asset
@@ -39,7 +40,7 @@ func (k Keeper) SwapExactAmountIn(
 func (k Keeper) swapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	pool types.PoolI,
+	pool types.CFMMPoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
@@ -49,6 +50,13 @@ func (k Keeper) swapExactAmountIn(
 		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
 	}
 	tokensIn := sdk.Coins{tokenIn}
+
+	defer func() {
+		if r := recover(); r != nil {
+			tokenOutAmount = sdk.Int{}
+			err = fmt.Errorf("function swapExactAmountIn failed due to internal reason: %v", r)
+		}
+	}()
 
 	// Executes the swap in the pool and stores the output. Updates pool assets but
 	// does not actually transfer any tokens to or from the pool.
@@ -92,14 +100,14 @@ func (k Keeper) SwapExactAmountOut(
 	return k.swapExactAmountOut(ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
 }
 
-// swapExactAmountIn is an internal method for swapping to get an exact number of tokens out of a pool,
+// swapExactAmountOut is an internal method for swapping to get an exact number of tokens out of a pool,
 // using the provided swapFee.
 // This is intended to allow different swap fees as determined by multi-hops,
 // or when recovering from chain liveness failures.
 func (k Keeper) swapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	pool types.PoolI,
+	pool types.CFMMPoolI,
 	tokenInDenom string,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
@@ -108,6 +116,13 @@ func (k Keeper) swapExactAmountOut(
 	if tokenInDenom == tokenOut.Denom {
 		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
 	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			tokenInAmount = sdk.Int{}
+			err = fmt.Errorf("function swapExactAmountOut failed due to internal reason: %v", r)
+		}
+	}()
 
 	poolOutBal := pool.GetTotalPoolLiquidity(ctx).AmountOf(tokenOut.Denom)
 	if tokenOut.Amount.GTE(poolOutBal) {
@@ -141,7 +156,7 @@ func (k Keeper) swapExactAmountOut(
 // sends the in tokens from the sender to the pool, and the out tokens from the pool to the sender.
 func (k Keeper) updatePoolForSwap(
 	ctx sdk.Context,
-	pool types.PoolI,
+	pool types.CFMMPoolI,
 	sender sdk.AccAddress,
 	tokenIn sdk.Coin,
 	tokenOut sdk.Coin,

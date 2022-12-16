@@ -7,9 +7,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v12/tests/mocks"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/tests/mocks"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -292,7 +292,7 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	gammKeeper := suite.App.GAMMKeeper
 	ctrl := gomock.NewController(suite.T())
 	defer ctrl.Finish()
-	inactivePool := mocks.NewMockPoolI(ctrl)
+	inactivePool := mocks.NewMockCFMMPoolI(ctrl)
 	inactivePoolId := gammKeeper.GetNextPoolIdAndIncrement(suite.Ctx)
 	// Add mock return values for pool -- we need to do this because
 	// mock objects don't have interface functions implemented by default.

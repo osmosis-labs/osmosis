@@ -4,7 +4,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 // InitGenesis initializes the x/gamm module's state from a provided genesis
@@ -17,7 +17,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState, unpack
 	// Also adds each genesis state pool to the x/gamm module's state
 	liquidity := sdk.Coins{}
 	for _, any := range genState.Pools {
-		var pool types.PoolI
+		var pool types.CFMMPoolI
 		err := unpacker.UnpackAny(any, &pool)
 		if err != nil {
 			panic(err)

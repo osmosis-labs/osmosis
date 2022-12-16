@@ -6,8 +6,8 @@ import (
 
 	db "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v12/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v13/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -386,7 +386,7 @@ func (k Keeper) checkFinishDistribution(ctx sdk.Context, gauges []types.Gauge) {
 // GetModuleToDistributeCoins returns sum of coins yet to be distributed for all of the module.
 func (k Keeper) GetModuleToDistributeCoins(ctx sdk.Context) sdk.Coins {
 	activeGaugesDistr := k.getToDistributeCoinsFromIterator(ctx, k.ActiveGaugesIterator(ctx))
-	upcomingGaugesDistr := k.getToDistributeCoinsFromIterator(ctx, k.UpcomingGaugesIteratorAfterTime(ctx, ctx.BlockTime()))
+	upcomingGaugesDistr := k.getToDistributeCoinsFromIterator(ctx, k.UpcomingGaugesIterator(ctx))
 	return activeGaugesDistr.Add(upcomingGaugesDistr...)
 }
 

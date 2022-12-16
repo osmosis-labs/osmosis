@@ -6,8 +6,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 type msgServer struct {
@@ -26,16 +28,16 @@ func NewBalancerMsgServerImpl(keeper *Keeper) balancer.MsgServer {
 	}
 }
 
-// func NewStableswapMsgServerImpl(keeper *Keeper) stableswap.MsgServer {
-// 	return &msgServer{
-// 		keeper: keeper,
-// 	}
-// }
+func NewStableswapMsgServerImpl(keeper *Keeper) stableswap.MsgServer {
+	return &msgServer{
+		keeper: keeper,
+	}
+}
 
 var (
-	_ types.MsgServer    = msgServer{}
-	_ balancer.MsgServer = msgServer{}
-	// _ stableswap.MsgServer = msgServer{}
+	_ types.MsgServer      = msgServer{}
+	_ balancer.MsgServer   = msgServer{}
+	_ stableswap.MsgServer = msgServer{}
 )
 
 // CreateBalancerPool is a create balancer pool message.
@@ -44,28 +46,28 @@ func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.
 	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolId}, err
 }
 
-// func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stableswap.MsgCreateStableswapPool) (*stableswap.MsgCreateStableswapPoolResponse, error) {
-// 	poolId, err := server.CreatePool(goCtx, msg)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return &stableswap.MsgCreateStableswapPoolResponse{PoolID: poolId}, nil
-// }
+func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stableswap.MsgCreateStableswapPool) (*stableswap.MsgCreateStableswapPoolResponse, error) {
+	poolId, err := server.CreatePool(goCtx, msg)
+	if err != nil {
+		return nil, err
+	}
+	return &stableswap.MsgCreateStableswapPoolResponse{PoolID: poolId}, nil
+}
 
-// func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, msg *stableswap.MsgStableSwapAdjustScalingFactors) (*stableswap.MsgStableSwapAdjustScalingFactorsResponse, error) {
-// 	ctx := sdk.UnwrapSDKContext(goCtx)
+func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, msg *stableswap.MsgStableSwapAdjustScalingFactors) (*stableswap.MsgStableSwapAdjustScalingFactorsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
-// 	if err := server.keeper.SetStableSwapScalingFactors(ctx, msg.ScalingFactors, msg.PoolID, msg.ScalingFactorGovernor); err != nil {
-// 		return nil, err
-// 	}
+	if err := server.keeper.setStableSwapScalingFactors(ctx, msg.PoolID, msg.ScalingFactors, msg.Sender); err != nil {
+		return nil, err
+	}
 
-// 	return &stableswap.MsgStableSwapAdjustScalingFactorsResponse{}, nil
-// }
+	return &stableswap.MsgStableSwapAdjustScalingFactorsResponse{}, nil
+}
 
 // CreatePool attempts to create a pool returning the newly created pool ID or an error upon failure.
 // The pool creation fee is used to fund the community pool.
 // It will create a dedicated module account for the pool and sends the initial liquidity to the created module account.
-func (server msgServer) CreatePool(goCtx context.Context, msg types.CreatePoolMsg) (poolId uint64, err error) {
+func (server msgServer) CreatePool(goCtx context.Context, msg swaproutertypes.CreatePoolMsg) (poolId uint64, err error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	poolId, err = server.keeper.CreatePool(ctx, msg)
@@ -98,12 +100,8 @@ func (server msgServer) CreatePool(goCtx context.Context, msg types.CreatePoolMs
 // This can result in negotiable difference between the number of shares provided within the msg
 // and the actual number of share amount resulted from joining pool.
 // Internal logic flow for each pool model is as follows:
-// Balancer: TokensIn provided as the argument must be either a single token or tokens containing all assets in the pool.
-// * For the case of a single token, we simply perform single asset join (balancer notation: pAo, pool shares amount out,
-// given single asset in).
-// * For the case of multi-asset join, we first calculate the maximal amount of tokens that can be joined whilst maintaining
-// pool asset's ratio without swap. We then iterate through the remaining coins that couldn't be joined
-// and perform single asset join on each token.
+// Balancer: TokensInMaxs provided as the argument must either contain no tokens or containing all assets in the pool.
+// * For the case of a not containing tokens, we simply perform calculation of sharesOut and needed amount of tokens for joining the pool
 func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) (*types.MsgJoinPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -207,6 +205,10 @@ func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.Msg
 	return &types.MsgSwapExactAmountOutResponse{TokenInAmount: tokenInAmount}, nil
 }
 
+// JoinSwapExactAmountIn is an LP transaction, that will LP all of the provided tokensIn coins.
+// * For the case of a single token, we simply perform single asset join (balancer notation: pAo, pool shares amount out,
+// given single asset in).
+// For more details on the calculation of the number of shares look at the CalcJoinPoolShares function for the appropriate pool style
 func (server msgServer) JoinSwapExternAmountIn(goCtx context.Context, msg *types.MsgJoinSwapExternAmountIn) (*types.MsgJoinSwapExternAmountInResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

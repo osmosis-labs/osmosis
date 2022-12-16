@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,9 +29,11 @@ type Keeper struct {
 	hooks      types.GammHooks
 
 	// keepers
-	accountKeeper       types.AccountKeeper
-	bankKeeper          types.BankKeeper
-	communityPoolKeeper types.CommunityPoolKeeper
+	accountKeeper        types.AccountKeeper
+	bankKeeper           types.BankKeeper
+	communityPoolKeeper  types.CommunityPoolKeeper
+	poolIncentivesKeeper types.PoolIncentivesKeeper
+	poolCreationManager  types.PoolCreationManager
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, communityPoolKeeper types.CommunityPoolKeeper) Keeper {
@@ -69,6 +71,14 @@ func (k *Keeper) SetHooks(gh types.GammHooks) *Keeper {
 	k.hooks = gh
 
 	return k
+}
+
+func (k *Keeper) SetPoolIncentivesKeeper(poolIncentivesKeeper types.PoolIncentivesKeeper) {
+	k.poolIncentivesKeeper = poolIncentivesKeeper
+}
+
+func (k *Keeper) SetPoolCreationManager(poolCreationManager types.PoolCreationManager) {
+	k.poolCreationManager = poolCreationManager
 }
 
 // GetParams returns the total set params.

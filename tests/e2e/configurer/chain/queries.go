@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"time"
 
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -16,10 +18,10 @@ import (
 	"github.com/stretchr/testify/require"
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v12/tests/e2e/util"
-	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
-	twapqueryproto "github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v13/tests/e2e/util"
+	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
+	twapqueryproto "github.com/osmosis-labs/osmosis/v13/x/twap/client/queryproto"
 )
 
 func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte, error) {
@@ -64,7 +66,6 @@ func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		n.t.Error(string(bz))
 		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(bz))
 	}
 	return bz, nil
@@ -81,6 +82,32 @@ func (n *NodeConfig) QueryBalances(address string) (sdk.Coins, error) {
 		return sdk.Coins{}, err
 	}
 	return balancesResp.GetBalances(), nil
+}
+
+func (n *NodeConfig) QuerySupplyOf(denom string) (sdk.Int, error) {
+	path := fmt.Sprintf("cosmos/bank/v1beta1/supply/%s", denom)
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var supplyResp banktypes.QuerySupplyOfResponse
+	if err := util.Cdc.UnmarshalJSON(bz, &supplyResp); err != nil {
+		return sdk.NewInt(0), err
+	}
+	return supplyResp.Amount.Amount, nil
+}
+
+func (n *NodeConfig) QueryContractsFromId(codeId int) ([]string, error) {
+	path := fmt.Sprintf("/cosmwasm/wasm/v1/code/%d/contracts", codeId)
+	bz, err := n.QueryGRPCGateway(path)
+
+	require.NoError(n.t, err)
+
+	var contractsResponse wasmtypes.QueryContractsByCodeResponse
+	if err := util.Cdc.UnmarshalJSON(bz, &contractsResponse); err != nil {
+		return nil, err
+	}
+
+	return contractsResponse.Contracts, nil
 }
 
 func (n *NodeConfig) QueryPropTally(proposalNumber int) (sdk.Int, sdk.Int, sdk.Int, sdk.Int, error) {
@@ -160,6 +187,7 @@ func (n *NodeConfig) QueryArithmeticTwapToNow(poolId uint64, baseAsset, quoteAss
 		return sdk.Dec{}, err
 	}
 
+	// nolint: staticcheck
 	var response twapqueryproto.ArithmeticTwapToNowResponse
 	err = util.Cdc.UnmarshalJSON(bz, &response)
 	require.NoError(n.t, err) // this error should not happen
@@ -181,6 +209,7 @@ func (n *NodeConfig) QueryArithmeticTwap(poolId uint64, baseAsset, quoteAsset st
 		return sdk.Dec{}, err
 	}
 
+	// nolint: staticcheck
 	var response twapqueryproto.ArithmeticTwapResponse
 	err = util.Cdc.UnmarshalJSON(bz, &response)
 	require.NoError(n.t, err) // this error should not happen
@@ -197,10 +226,12 @@ func (n *NodeConfig) QueryHashFromBlock(height int64) (string, error) {
 }
 
 // QueryCurrentHeight returns the current block height of the node or error.
-func (n *NodeConfig) QueryCurrentHeight() int64 {
+func (n *NodeConfig) QueryCurrentHeight() (int64, error) {
 	status, err := n.rpcClient.Status(context.Background())
-	require.NoError(n.t, err)
-	return status.SyncInfo.LatestBlockHeight
+	if err != nil {
+		return 0, err
+	}
+	return status.SyncInfo.LatestBlockHeight, nil
 }
 
 // QueryLatestBlockTime returns the latest block time.

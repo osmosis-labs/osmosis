@@ -7,7 +7,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/osmosis-labs/osmosis/v12/app/params"
+	"github.com/osmosis-labs/osmosis/v13/app/params"
 
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -40,7 +40,7 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
-	osmosis "github.com/osmosis-labs/osmosis/v12/app"
+	osmosis "github.com/osmosis-labs/osmosis/v13/app"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the
@@ -150,6 +150,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, osmosis.DefaultNodeHome),
 		genutilcli.MigrateGenesisCmd(),
 		ExportDeriveBalancesCmd(),
+		StakedToCSVCmd(),
 		AddGenesisAccountCmd(osmosis.DefaultNodeHome),
 		AddGenesisWasmMsgCmd(osmosis.DefaultNodeHome),
 		genutilcli.GenTxCmd(osmosis.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, osmosis.DefaultNodeHome),
@@ -288,20 +289,19 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 // createOsmosisAppAndExport creates and exports the new Osmosis app, returns the state of the new Osmosis app for a genesis file.
 func createOsmosisAppAndExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailWhiteList []string,
-	appOpts servertypes.AppOptions,
+	appOpts servertypes.AppOptions, modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
 	encCfg := osmosis.MakeEncodingConfig() // Ideally, we would reuse the one created by NewRootCmd.
 	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
-	var app *osmosis.OsmosisApp
-	if height != -1 {
-		app = osmosis.NewOsmosisApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), appOpts, osmosis.GetWasmEnabledProposals(), osmosis.EmptyWasmOpts)
+	loadLatest := height == -1
+	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
+	app := osmosis.NewOsmosisApp(logger, db, traceStore, loadLatest, map[int64]bool{}, homeDir, 0, appOpts, osmosis.GetWasmEnabledProposals(), osmosis.EmptyWasmOpts)
 
+	if !loadLatest {
 		if err := app.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
-	} else {
-		app = osmosis.NewOsmosisApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), appOpts, osmosis.GetWasmEnabledProposals(), osmosis.EmptyWasmOpts)
 	}
 
-	return app.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
+	return app.ExportAppStateAndValidators(forZeroHeight, jailWhiteList, modulesToExport)
 }

@@ -5,12 +5,20 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
 type (
 	TimeTooOldError = timeTooOldError
+	TwapType        = twapType
 )
+
+const (
+	ArithmeticTwapType = arithmeticTwapType
+	GeometricTwapType  = geometricTwapType
+)
+
+var GeometricTwapMathBase = geometricTwapMathBase
 
 func (k Keeper) StoreNewRecord(ctx sdk.Context, record types.TwapRecord) {
 	k.storeNewRecord(ctx, record)
@@ -64,8 +72,16 @@ func (k Keeper) GetInterpolatedRecord(ctx sdk.Context, poolId uint64, asset0Deno
 	return k.getInterpolatedRecord(ctx, poolId, t, asset0Denom, asset1Denom)
 }
 
-func ComputeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) (sdk.Dec, error) {
+func ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string, twapType twapType) (sdk.Dec, error) {
+	return computeTwap(startRecord, endRecord, quoteAsset, twapType)
+}
+
+func ComputeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
 	return computeArithmeticTwap(startRecord, endRecord, quoteAsset)
+}
+
+func ComputeGeometricTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
+	return computeGeometricTwap(startRecord, endRecord, quoteAsset)
 }
 
 func RecordWithUpdatedAccumulators(record types.TwapRecord, t time.Time) types.TwapRecord {
@@ -74,6 +90,14 @@ func RecordWithUpdatedAccumulators(record types.TwapRecord, t time.Time) types.T
 
 func NewTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
 	return newTwapRecord(k, ctx, poolId, denom0, denom1)
+}
+
+func TwapLog(x sdk.Dec) sdk.Dec {
+	return twapLog(x)
+}
+
+func TwapPow(x sdk.Dec) sdk.Dec {
+	return twapPow(x)
 }
 
 func GetSpotPrices(
@@ -92,4 +116,8 @@ func (k *Keeper) GetAmmInterface() types.AmmInterface {
 
 func (k *Keeper) SetAmmInterface(ammInterface types.AmmInterface) {
 	k.ammkeeper = ammInterface
+}
+
+func (k *Keeper) AfterCreatePool(ctx sdk.Context, poolId uint64) error {
+	return k.afterCreatePool(ctx, poolId)
 }

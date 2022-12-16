@@ -18,15 +18,16 @@ import (
 	"github.com/gogo/protobuf/proto"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v12/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/v12/x/mint/types"
-	poolitypes "github.com/osmosis-labs/osmosis/v12/x/pool-incentives/types"
-	twaptypes "github.com/osmosis-labs/osmosis/v12/x/twap/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v12/x/txfees/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v13/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
+	poolitypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v13/x/twap/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v13/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v12/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v13/tests/e2e/util"
 )
 
 // NodeConfig is a confiuration for the node supplied from the test runner
@@ -247,6 +248,11 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 		return err
 	}
 
+	err = updateModuleGenesis(appGenState, swaproutertypes.ModuleName, &swaproutertypes.GenesisState{}, updateSwaprouterGenesis(appGenState))
+	if err != nil {
+		return err
+	}
+
 	err = updateModuleGenesis(appGenState, epochtypes.ModuleName, &epochtypes.GenesisState{}, updateEpochGenesis)
 	if err != nil {
 		return err
@@ -354,6 +360,16 @@ func updateTxfeesGenesis(txfeesGenState *txfeestypes.GenesisState) {
 
 func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
 	gammGenState.Params.PoolCreationFee = tenOsmo
+}
+
+func updateSwaprouterGenesis(appGenState map[string]json.RawMessage) func(*swaproutertypes.GenesisState) {
+	return func(s *swaproutertypes.GenesisState) {
+		gammGenState := &gammtypes.GenesisState{}
+		if err := util.Cdc.UnmarshalJSON(appGenState[gammtypes.ModuleName], gammGenState); err != nil {
+			panic(err)
+		}
+		s.NextPoolId = gammGenState.NextPoolNumber
+	}
 }
 
 func updateEpochGenesis(epochGenState *epochtypes.GenesisState) {

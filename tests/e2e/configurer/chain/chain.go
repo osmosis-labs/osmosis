@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
-	"github.com/osmosis-labs/osmosis/v12/tests/e2e/configurer/config"
+	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
+	"github.com/osmosis-labs/osmosis/v13/tests/e2e/configurer/config"
 
-	"github.com/osmosis-labs/osmosis/v12/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v12/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v13/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v13/tests/e2e/initialization"
 )
 
 type Config struct {
@@ -28,6 +28,8 @@ type Config struct {
 	LatestProposalNumber int
 	LatestLockNumber     int
 	NodeConfigs          []*NodeConfig
+
+	LatestCodeId int
 
 	t                *testing.T
 	containerManager *containers.Manager
@@ -124,7 +126,8 @@ func (c *Config) WaitUntilHeight(height int64) {
 func (c *Config) WaitForNumHeights(heightsToWait int64) {
 	node, err := c.GetDefaultNode()
 	require.NoError(c.t, err)
-	currentHeight := node.QueryCurrentHeight()
+	currentHeight, err := node.QueryCurrentHeight()
+	require.NoError(c.t, err)
 	c.WaitUntilHeight(currentHeight + heightsToWait)
 }
 
@@ -150,7 +153,7 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 			if ibcCoin.Len() == 1 {
 				tokenPre := balancesDstPre.AmountOfNoDenomValidation(ibcCoin[0].Denom)
 				tokenPost := balancesDstPost.AmountOfNoDenomValidation(ibcCoin[0].Denom)
-				resPre := initialization.OsmoToken.Amount
+				resPre := token.Amount
 				resPost := tokenPost.Sub(tokenPre)
 				return resPost.Uint64() == resPre.Uint64()
 			} else {

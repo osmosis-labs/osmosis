@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 )
 
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
@@ -512,4 +512,19 @@ func (suite *KeeperTestSuite) TestLockedDenom() {
 	suite.WithdrawAllMaturedLocks()
 	testTotalLockedDuration("2h", 0)
 	testTotalLockedDuration("1h", 10)
+}
+
+func (suite *KeeperTestSuite) TestParams() {
+	suite.SetupTest()
+
+	// Query default params
+	res, err := suite.querier.Params(sdk.WrapSDKContext(suite.Ctx), &types.QueryParamsRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal([]string(nil), res.Params.ForceUnlockAllowedAddresses)
+
+	// Set new params & query
+	suite.App.LockupKeeper.SetParams(suite.Ctx, types.NewParams([]string{suite.TestAccs[0].String()}))
+	res, err = suite.querier.Params(sdk.WrapSDKContext(suite.Ctx), &types.QueryParamsRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal([]string{suite.TestAccs[0].String()}, res.Params.ForceUnlockAllowedAddresses)
 }

@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/osmosis-labs/osmosis/v12/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -284,4 +284,10 @@ func (q Querier) LockedDenom(goCtx context.Context, req *types.LockedDenomReques
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	return &types.LockedDenomResponse{Amount: q.Keeper.GetLockedDenom(ctx, req.Denom, req.Duration)}, nil
+}
+
+// Params returns module params
+func (q Querier) Params(goCtx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	return &types.QueryParamsResponse{Params: q.Keeper.GetParams(ctx)}, nil
 }

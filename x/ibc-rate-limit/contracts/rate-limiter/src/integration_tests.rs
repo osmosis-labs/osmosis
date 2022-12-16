@@ -1,10 +1,10 @@
 #![cfg(test)]
-use crate::{helpers::RateLimitingContract, msg::ExecuteMsg};
-use cosmwasm_std::{Addr, Coin, Empty, Uint128};
+use crate::{helpers::RateLimitingContract, msg::ExecuteMsg, test_msg_send, ContractError};
+use cosmwasm_std::{Addr, Coin, Empty, Timestamp, Uint128, Uint256};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 
 use crate::{
-    msg::{InstantiateMsg, PathMsg, QuotaMsg, SudoMsg},
+    msg::{InstantiateMsg, PathMsg, QuotaMsg},
     state::tests::{RESET_TIME_DAILY, RESET_TIME_MONTHLY, RESET_TIME_WEEKLY},
 };
 
@@ -42,7 +42,7 @@ fn mock_app() -> App {
 // Instantiate the contract
 fn proper_instantiate(paths: Vec<PathMsg>) -> (App, RateLimitingContract) {
     let mut app = mock_app();
-    let cw_template_id = app.store_code(contract_template());
+    let cw_code_id = app.store_code(contract_template());
 
     let msg = InstantiateMsg {
         gov_module: Addr::unchecked(GOV_ADDR),
@@ -52,7 +52,7 @@ fn proper_instantiate(paths: Vec<PathMsg>) -> (App, RateLimitingContract) {
 
     let cw_rate_limit_contract_addr = app
         .instantiate_contract(
-            cw_template_id,
+            cw_code_id,
             Addr::unchecked(GOV_ADDR),
             &msg,
             &[],
@@ -73,18 +73,18 @@ fn expiration() {
     let quota = QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10);
 
     let (mut app, cw_rate_limit_contract) = proper_instantiate(vec![PathMsg {
-        channel_id: format!("channel"),
+        channel_id: format!("any"),
         denom: format!("denom"),
         quotas: vec![quota],
     }]);
 
     // Using all the allowance
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 300,
-    };
+        channel_value: 3_000_u32.into(),
+        funds: 300_u32.into()
+    );
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     let res = app.sudo(cosmos_msg).unwrap();
 
@@ -102,16 +102,27 @@ fn expiration() {
     assert_eq!(value, "300");
 
     // Another packet is rate limited
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 300,
-    };
+        channel_value: 3_000_u32.into(),
+        funds: 300_u32.into()
+    );
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
-    let _err = app.sudo(cosmos_msg).unwrap_err();
+    let err = app.sudo(cosmos_msg).unwrap_err();
 
-    // TODO: how do we check the error type here?
+    assert_eq!(
+        err.downcast_ref::<ContractError>().unwrap(),
+        &ContractError::RateLimitExceded {
+            channel: "channel".to_string(),
+            denom: "denom".to_string(),
+            amount: Uint256::from_u128(300),
+            quota_name: "weekly".to_string(),
+            used: Uint256::from_u128(300),
+            max: Uint256::from_u128(300),
+            reset: Timestamp::from_nanos(1572402219879305533),
+        }
+    );
 
     // ... Time passes
     app.update_block(|b| {
@@ -120,12 +131,12 @@ fn expiration() {
     });
 
     // Sending the packet should work now
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 300,
-    };
+        channel_value: 3_000_u32.into(),
+        funds: 300_u32.into()
+    );
 
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     let res = app.sudo(cosmos_msg).unwrap();
@@ -153,28 +164,28 @@ fn multiple_quotas() {
     ];
 
     let (mut app, cw_rate_limit_contract) = proper_instantiate(vec![PathMsg {
-        channel_id: format!("channel"),
+        channel_id: format!("any"),
         denom: format!("denom"),
         quotas,
     }]);
 
     // Sending 1% to use the daily allowance
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 100,
-        funds: 1,
-    };
+        channel_value: 101_u32.into(),
+        funds: 1_u32.into()
+    );
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap();
 
     // Another packet is rate limited
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 100,
-        funds: 1,
-    };
+        channel_value: 101_u32.into(),
+        funds: 1_u32.into()
+    );
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap_err();
 
@@ -185,12 +196,12 @@ fn multiple_quotas() {
     });
 
     // Sending the packet should work now
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 100,
-        funds: 1,
-    };
+        channel_value: 101_u32.into(),
+        funds: 1_u32.into()
+    );
 
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap();
@@ -204,12 +215,12 @@ fn multiple_quotas() {
         });
 
         // Sending the packet should work now
-        let msg = SudoMsg::SendPacket {
+        let msg = test_msg_send!(
             channel_id: format!("channel"),
             denom: format!("denom"),
-            channel_value: 100,
-            funds: 1,
-        };
+            channel_value: 101_u32.into(),
+            funds: 1_u32.into()
+        );
         let cosmos_msg = cw_rate_limit_contract.sudo(msg);
         app.sudo(cosmos_msg).unwrap();
     }
@@ -221,12 +232,12 @@ fn multiple_quotas() {
     });
 
     // We now have exceeded the weekly limit!  Even if the daily limit allows us, the weekly doesn't
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 100,
-        funds: 1,
-    };
+        channel_value: 101_u32.into(),
+        funds: 1_u32.into()
+    );
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap_err();
 
@@ -237,12 +248,12 @@ fn multiple_quotas() {
     });
 
     // We can still can't send because the weekly and monthly limits are the same
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 100,
-        funds: 1,
-    };
+        channel_value: 101_u32.into(),
+        funds: 1_u32.into()
+    );
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap_err();
 
@@ -254,12 +265,12 @@ fn multiple_quotas() {
     });
 
     // We can still can't send because the  monthly limit hasn't passed
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 100,
-        funds: 1,
-    };
+        channel_value: 101_u32.into(),
+        funds: 1_u32.into()
+    );
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap_err();
 
@@ -269,12 +280,12 @@ fn multiple_quotas() {
         b.time = b.time.plus_seconds((RESET_TIME_WEEKLY * 2) + 1) // Two weeks
     });
 
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 100,
-        funds: 1,
-    };
+        channel_value: 101_u32.into(),
+        funds: 1_u32.into()
+    );
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap();
 }
@@ -287,38 +298,38 @@ fn channel_value_cached() {
     ];
 
     let (mut app, cw_rate_limit_contract) = proper_instantiate(vec![PathMsg {
-        channel_id: format!("channel"),
+        channel_id: format!("any"),
         denom: format!("denom"),
         quotas,
     }]);
 
     // Sending 1% (half of the daily allowance)
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 100,
-        funds: 1,
-    };
+        channel_value: 100_u32.into(),
+        funds: 1_u32.into()
+    );
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap();
 
     // Sending 3% is now rate limited
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 100,
-        funds: 3,
-    };
+        channel_value: 100_u32.into(),
+        funds: 3_u32.into()
+    );
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap_err();
 
     // Even if the channel value increases, the percentage is calculated based on the value at period start
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 100000,
-        funds: 3,
-    };
+        channel_value: 100000_u32.into(),
+        funds: 3_u32.into()
+    );
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap_err();
 
@@ -333,12 +344,12 @@ fn channel_value_cached() {
     // Sending 1% of a new value (10_000) passes the daily check, cause it
     // has expired, but not the weekly check (The value for last week is
     // sitll 100, as only 1 day has passed)
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 10_000,
-        funds: 100,
-    };
+        channel_value: 10_000_u32.into(),
+        funds: 100_u32.into()
+    );
 
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap_err();
@@ -350,23 +361,23 @@ fn channel_value_cached() {
     });
 
     // Sending 1% of a new value should work and set the value for the day at 10_000
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 10_000,
-        funds: 100,
-    };
+        channel_value: 10_000_u32.into(),
+        funds: 100_u32.into()
+    );
 
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap();
 
     // If the value magically decreasses. We can still send up to 100 more (1% of 10k)
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 1,
-        funds: 75,
-    };
+        channel_value: 1_u32.into(),
+        funds: 75_u32.into()
+    );
 
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap();
@@ -377,21 +388,22 @@ fn add_paths_later() {
     let (mut app, cw_rate_limit_contract) = proper_instantiate(vec![]);
 
     // All sends are allowed
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 300,
-    };
+        channel_value: 3_000_u32.into(),
+        funds: 300_u32.into()
+    );
     let cosmos_msg = cw_rate_limit_contract.sudo(msg.clone());
     let res = app.sudo(cosmos_msg).unwrap();
+
     let Attribute { key, value } = &res.custom_attrs(1)[3];
     assert_eq!(key, "quota");
     assert_eq!(value, "none");
 
     // Add a weekly limit of 1%
     let management_msg = ExecuteMsg::AddPath {
-        channel_id: format!("channel"),
+        channel_id: format!("any"),
         denom: format!("denom"),
         quotas: vec![QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 1, 1)],
     };

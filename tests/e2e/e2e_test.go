@@ -1,22 +1,25 @@
-//go:build e2e
-// +build e2e
-
 package e2e
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strconv"
 	"time"
 
+	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
+
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
-	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
-	"github.com/osmosis-labs/osmosis/v12/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v12/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
+	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
+	"github.com/osmosis-labs/osmosis/v13/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v13/tests/e2e/initialization"
 )
 
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.
@@ -108,6 +111,121 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 		10*time.Millisecond,
 		"superfluid delegation vote overwrite not working as expected",
 	)
+}
+
+// Copy a file from A to B with io.Copy
+func copyFile(a, b string) error {
+	source, err := os.Open(a)
+	if err != nil {
+		return err
+	}
+	defer source.Close()
+	destination, err := os.Create(b)
+	if err != nil {
+		return err
+	}
+	defer destination.Close()
+	_, err = io.Copy(destination, source)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
+	if s.skipIBC {
+		s.T().Skip("Skipping IBC tests")
+	}
+	chainA := s.configurer.GetChainConfig(0)
+	chainB := s.configurer.GetChainConfig(1)
+
+	node, err := chainA.GetDefaultNode()
+	s.NoError(err)
+
+	osmoSupply, err := node.QuerySupplyOf("uosmo")
+	s.NoError(err)
+
+	f, err := osmoSupply.ToDec().Float64()
+	s.NoError(err)
+
+	over := f * 0.02
+
+	// Sending >1%
+	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
+
+	// copy the contract from x/rate-limit/testdata/
+	wd, err := os.Getwd()
+	s.NoError(err)
+	// co up two levels
+	projectDir := filepath.Dir(filepath.Dir(wd))
+	fmt.Println(wd, projectDir)
+	err = copyFile(projectDir+"/x/ibc-rate-limit/bytecode/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
+	s.NoError(err)
+
+	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
+	chainA.LatestCodeId = 1
+	node.InstantiateWasmContract(
+		strconv.Itoa(chainA.LatestCodeId),
+		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [{"channel_id": "channel-0", "denom": "%s", "quotas": [{"name":"testQuota", "duration": 86400, "send_recv": [1, 1]}] } ] }`, node.PublicAddress, node.PublicAddress, initialization.OsmoToken.Denom),
+		initialization.ValidatorWalletName)
+
+	// Using code_id 1 because this is the only contract right now. This may need to change if more contracts are added
+	contracts, err := node.QueryContractsFromId(chainA.LatestCodeId)
+	s.NoError(err)
+	s.Require().Len(contracts, 1, "Wrong number of contracts for the rate limiter")
+
+	proposal := paramsutils.ParamChangeProposalJSON{
+		Title:       "Param Change",
+		Description: "Changing the rate limit contract param",
+		Changes: paramsutils.ParamChangesJSON{
+			paramsutils.ParamChangeJSON{
+				Subspace: ibcratelimittypes.ModuleName,
+				Key:      "contract",
+				Value:    []byte(fmt.Sprintf(`"%s"`, contracts[0])),
+			},
+		},
+		Deposit: "625000000uosmo",
+	}
+	proposalJson, err := json.Marshal(proposal)
+	s.NoError(err)
+
+	node.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
+	chainA.LatestProposalNumber += 1
+
+	for _, n := range chainA.NodeConfigs {
+		n.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
+	}
+
+	// The value is returned as a string, so we have to unmarshal twice
+	type Params struct {
+		Key      string `json:"key"`
+		Subspace string `json:"subspace"`
+		Value    string `json:"value"`
+	}
+
+	s.Eventually(
+		func() bool {
+			var params Params
+			node.QueryParams(ibcratelimittypes.ModuleName, "contract", &params)
+			var val string
+			err := json.Unmarshal([]byte(params.Value), &val)
+			if err != nil {
+				return false
+			}
+			return val == contracts[0]
+		},
+		1*time.Minute,
+		10*time.Millisecond,
+		"Osmosis node failed to retrieve params",
+	)
+
+	// Sending <1%. Should work
+	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
+	// Sending >1%. Should fail
+	node.FailIBCTransfer(initialization.ValidatorWalletName, chainB.NodeConfigs[0].PublicAddress, fmt.Sprintf("%duosmo", int(over)))
+
+	// Removing the rate limit so it doesn't affect other tests
+	node.WasmExecute(contracts[0], `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
 }
 
 // TestAddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.
@@ -268,9 +386,9 @@ func (s *IntegrationTestSuite) TestTWAP() {
 
 	// These must be equal because they are calculated over time ranges with the stable and equal spot price.
 	// There are potential rounding errors requiring us to approximate the comparison.
-	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsAB, twapFromAfterToNowAB, sdk.NewDecWithPrec(1, 3))
-	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsBC, twapFromAfterToNowBC, sdk.NewDecWithPrec(1, 3))
-	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsCA, twapFromAfterToNowCA, sdk.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsAB, twapFromAfterToNowAB, sdk.NewDecWithPrec(2, 3))
+	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsBC, twapFromAfterToNowBC, sdk.NewDecWithPrec(2, 3))
+	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsCA, twapFromAfterToNowCA, sdk.NewDecWithPrec(2, 3))
 
 	if !s.skipUpgrade {
 		// TODO: we should reduce the pruning time in the v11
@@ -342,7 +460,8 @@ func (s *IntegrationTestSuite) TestStateSync() {
 	stateSyncRPCServers := []string{stateSyncHostPort, stateSyncHostPort}
 
 	// get trust height and trust hash.
-	trustHeight := runningNode.QueryCurrentHeight()
+	trustHeight, err := runningNode.QueryCurrentHeight()
+	s.Require().NoError(err)
 
 	trustHash, err := runningNode.QueryHashFromBlock(trustHeight)
 	s.Require().NoError(err)
@@ -400,12 +519,14 @@ func (s *IntegrationTestSuite) TestStateSync() {
 
 	// start the state synchin node.
 	err = stateSynchingNode.Run()
-	s.NoError(err)
+	s.Require().NoError(err)
 
 	// ensure that the state synching node cathes up to the running node.
 	s.Require().Eventually(func() bool {
-		stateSyncNodeHeight := stateSynchingNode.QueryCurrentHeight()
-		runningNodeHeight := runningNode.QueryCurrentHeight()
+		stateSyncNodeHeight, err := stateSynchingNode.QueryCurrentHeight()
+		s.Require().NoError(err)
+		runningNodeHeight, err := runningNode.QueryCurrentHeight()
+		s.Require().NoError(err)
 		return stateSyncNodeHeight == runningNodeHeight
 	},
 		3*time.Minute,
@@ -414,14 +535,10 @@ func (s *IntegrationTestSuite) TestStateSync() {
 
 	// stop the state synching node.
 	err = chainA.RemoveNode(stateSynchingNode.Name)
-	s.NoError(err)
+	s.Require().NoError(err)
 }
 
 func (s *IntegrationTestSuite) TestExpeditedProposals() {
-	if !s.skipUpgrade {
-		s.T().Skip("this can be re-enabled post v12")
-	}
-
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
