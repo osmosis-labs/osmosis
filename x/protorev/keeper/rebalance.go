@@ -89,40 +89,42 @@ func (k Keeper) EstimateMultihopProfit(ctx sdk.Context, inputDenom string, amoun
 
 // FindMaxProfitRoute runs a binary search to find the max profit for a given route
 func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route gammtypes.SwapAmountInRoutes, inputDenom string) (sdk.Coin, sdk.Int, error) {
-	var maxIterations = 20
-	var tokenIn sdk.Coin
-	var profit sdk.Int
-	currLeft := 0
-	currRight := len(types.InputAmountList) - 1
-	currMid := 0
+	tokenIn := sdk.Coin{}
+	profit := sdk.ZeroInt()
+
+	// 10 ^ 6 is multiplied to the input amount to convert to the base unit
+	million := sdk.NewInt(1_000_000)
+	curLeft := sdk.OneInt()
+	curMid := sdk.OneInt()
+	curRight := types.MaxInputAmount
+
 	iteration := 0
 
-	for currLeft < currRight && iteration < maxIterations {
+	for curLeft.LT(curRight) && iteration < types.MaxIterations {
 		iteration++
 
-		currMid = (currLeft + currRight) / 2
+		curMid = (curLeft.Add(curRight)).Quo(sdk.NewInt(2))
+		curMidPlusOne := curMid.Add(sdk.OneInt())
 
 		// Short circuit profit searching if there is an error in the GAMM module
-		tokenInMid, profitMid, err := k.EstimateMultihopProfit(ctx, inputDenom, types.InputAmountList[currMid], route)
+		_, profitMid, err := k.EstimateMultihopProfit(ctx, inputDenom, curMid.Mul(million), route)
 		if err != nil {
 			return sdk.Coin{}, sdk.ZeroInt(), err
 		}
 
 		// Short circuit profit searching if there is an error in the GAMM module
-		tokenInMidPlusOne, profitMidPlusOne, err := k.EstimateMultihopProfit(ctx, inputDenom, types.InputAmountList[currMid+1], route)
+		tokenInMidPlusOne, profitMidPlusOne, err := k.EstimateMultihopProfit(ctx, inputDenom, curMidPlusOne.Mul(million), route)
 		if err != nil {
 			return sdk.Coin{}, sdk.ZeroInt(), err
 		}
 
 		// Reduce subspace to search for max profit
 		if profitMid.LTE(profitMidPlusOne) {
-			currLeft = currMid + 1
+			curLeft = curMidPlusOne
 			tokenIn = tokenInMidPlusOne
 			profit = profitMidPlusOne
 		} else {
-			currRight = currMid
-			tokenIn = tokenInMid
-			profit = profitMid
+			curRight = curMid
 		}
 	}
 
