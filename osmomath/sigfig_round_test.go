@@ -7,8 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 )
 
 func TestSigFigRound(t *testing.T) {
@@ -78,7 +76,7 @@ func TestSigFigRound(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			var actualResult sdk.Dec
-			osmoassert.ConditionalPanic(t, tc.tenToSigFig.Equal(sdk.ZeroInt()), func() {
+			ConditionalPanic(t, tc.tenToSigFig.Equal(sdk.ZeroInt()), func() {
 				actualResult = SigFigRound(tc.decimal, tc.tenToSigFig)
 				require.Equal(
 					t,
