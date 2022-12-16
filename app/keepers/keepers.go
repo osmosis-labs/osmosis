@@ -275,6 +275,17 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GetSubspace(twaptypes.ModuleName),
 		appKeepers.GAMMKeeper)
 
+	appKeepers.SwapRouterKeeper = swaprouter.NewKeeper(
+		appKeepers.keys[swaproutertypes.StoreKey],
+		appKeepers.GetSubspace(swaproutertypes.ModuleName),
+		appKeepers.GAMMKeeper,
+		nil, // TODO: add concentrated liquidity keeper once it is merged
+		appKeepers.BankKeeper,
+		appKeepers.AccountKeeper,
+		appKeepers.DistrKeeper,
+	)
+	appKeepers.GAMMKeeper.SetPoolCreationManager(appKeepers.SwapRouterKeeper)
+
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
 		appKeepers.keys[lockuptypes.StoreKey],
 		// TODO: Visit why this needs to be deref'd
@@ -332,9 +343,11 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.IncentivesKeeper,
 		appKeepers.DistrKeeper,
-		appKeepers.GAMMKeeper,
+		appKeepers.SwapRouterKeeper,
 	)
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
+	appKeepers.SwapRouterKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
+	// TODO: remove the line below once multihop is ported to swaprouter.
 	appKeepers.GAMMKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
 
 	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
@@ -345,17 +358,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.DistrKeeper,
 	)
 	appKeepers.TokenFactoryKeeper = &tokenFactoryKeeper
-
-	appKeepers.SwapRouterKeeper = swaprouter.NewKeeper(
-		appKeepers.keys[swaproutertypes.StoreKey],
-		appKeepers.GetSubspace(swaproutertypes.ModuleName),
-		appKeepers.GAMMKeeper,
-		nil,
-		appKeepers.BankKeeper,
-		appKeepers.AccountKeeper,
-		appKeepers.DistrKeeper,
-	)
-	appKeepers.GAMMKeeper.SetPoolCreationManager(appKeepers.SwapRouterKeeper)
 
 	validatorSetPreferenceKeeper := valsetpref.NewKeeper(
 		appKeepers.keys[valsetpreftypes.StoreKey],

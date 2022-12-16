@@ -356,7 +356,7 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	return xOut
 }
 
-func (p Pool) spotPrice(baseDenom, quoteDenom string) (spotPrice sdk.Dec, err error) {
+func (p Pool) spotPrice(quoteDenom, baseDenom string) (spotPrice sdk.Dec, err error) {
 	// Define f_{y -> x}(a) as the function that outputs the amount of tokens X you'd get by
 	// trading "a" units of Y against the pool, assuming 0 swap fee, at the current liquidity.
 	// The spot price of the pool is then lim a -> 0, f_{y -> x}(a) / a
@@ -372,8 +372,7 @@ func (p Pool) spotPrice(baseDenom, quoteDenom string) (spotPrice sdk.Dec, err er
 	// xReserve & yReserve.
 	a := sdk.OneInt()
 
-	// We swap quoteDenom and baseDenom intentionally, due to the odd issue needed for balancer v1 query compat
-	res, err := p.calcOutAmtGivenIn(sdk.NewCoin(quoteDenom, a), baseDenom, sdk.ZeroDec())
+	res, err := p.calcOutAmtGivenIn(sdk.NewCoin(baseDenom, a), quoteDenom, sdk.ZeroDec())
 	// fmt.Println("spot price res", res)
 	return res, err
 }
