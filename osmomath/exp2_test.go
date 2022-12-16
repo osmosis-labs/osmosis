@@ -16,6 +16,14 @@ var (
 )
 
 func TestExp2ChebyshevRationalApprox(t *testing.T) {
+	// These values are used to test the approximated results close
+	// to 0 and 1 boundaries.
+	// With other types of approximations, there is a high likelyhood
+	// of larger errors clsoer to the boundaries. This is known as Runge's phenomenon.
+	// https://en.wikipedia.org/wiki/Runge%27s_phenomenon
+	//
+	// Chebyshev approximation should be able to handle this better.
+	// Tests at the boundaries help to validate there is no Runge's phenomenon.
 	smallValue := osmomath.MustNewDecFromStr("0.00001")
 	smallerValue := osmomath.MustNewDecFromStr("0.00000000000000000001")
 
