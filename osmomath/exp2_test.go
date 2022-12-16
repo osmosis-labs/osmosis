@@ -64,9 +64,7 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       minDecTolerance,
 				MultiplicativeTolerance: minDecTolerance,
-				// TODO: confirm if rounding behavior is acceptable.
-				// Note, that a Python estimate passes RoundDown but not Wolfram.
-				RoundingDir: osmomath.RoundUnconstrained,
+				RoundingDir:             osmomath.RoundUnconstrained,
 			},
 		},
 		"exp2(0.99999)": {
@@ -99,7 +97,7 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       minDecTolerance,
 				MultiplicativeTolerance: minDecTolerance,
-				RoundingDir:             osmomath.RoundUnconstrained, // TODO: confirm if this is acceptable.
+				RoundingDir:             osmomath.RoundUnconstrained,
 			},
 		},
 		"exp2(0.3334567)": {
@@ -121,7 +119,7 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       sdk.MustNewDecFromStr("0.00000000000000002"),
 				MultiplicativeTolerance: minDecTolerance.Mul(sdk.NewDec(10)),
-				RoundingDir:             osmomath.RoundUnconstrained, // TODO: confirm if this is acceptable.
+				RoundingDir:             osmomath.RoundUnconstrained,
 			},
 		},
 		"exp2(0.999999999999999999999999999999999956)": {
@@ -179,7 +177,7 @@ func TestExp2(t *testing.T) {
 			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       minDecTolerance,
 				MultiplicativeTolerance: minDecTolerance,
-				RoundingDir:             osmomath.RoundUnconstrained, // TODO: confirm if this is acceptable.
+				RoundingDir:             osmomath.RoundUnconstrained,
 			},
 		},
 		"exp2(63.84864288)": {
@@ -190,7 +188,7 @@ func TestExp2(t *testing.T) {
 			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       sdk.MustNewDecFromStr("0.00042"),
 				MultiplicativeTolerance: minDecTolerance,
-				RoundingDir:             osmomath.RoundUnconstrained, // TODO: confirm if this is acceptable.
+				RoundingDir:             osmomath.RoundUnconstrained,
 			},
 		},
 		"exp2(64.5)": {
@@ -201,7 +199,7 @@ func TestExp2(t *testing.T) {
 			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       sdk.MustNewDecFromStr("0.000000000000000008"),
 				MultiplicativeTolerance: minDecTolerance,
-				RoundingDir:             osmomath.RoundUnconstrained, // TODO: confirm if this is acceptable.
+				RoundingDir:             osmomath.RoundUnconstrained,
 			},
 		},
 		"exp2(80.5)": {
@@ -212,7 +210,7 @@ func TestExp2(t *testing.T) {
 			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       sdk.MustNewDecFromStr("0.0000000000006"),
 				MultiplicativeTolerance: minDecTolerance,
-				RoundingDir:             osmomath.RoundUnconstrained, // TODO: confirm if this is acceptable.
+				RoundingDir:             osmomath.RoundUnconstrained,
 			},
 		},
 		"exp2(100.5)": {
@@ -223,7 +221,7 @@ func TestExp2(t *testing.T) {
 			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       sdk.MustNewDecFromStr("0.0000006"),
 				MultiplicativeTolerance: minDecTolerance,
-				RoundingDir:             osmomath.RoundUnconstrained, // TODO: confirm if this is acceptable.
+				RoundingDir:             osmomath.RoundUnconstrained,
 			},
 		},
 		"exp2(128.5)": {
@@ -234,7 +232,7 @@ func TestExp2(t *testing.T) {
 			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       sdk.MustNewDecFromStr("146.5"),
 				MultiplicativeTolerance: minDecTolerance,
-				RoundingDir:             osmomath.RoundUnconstrained, // TODO: confirm if this is acceptable.
+				RoundingDir:             osmomath.RoundUnconstrained,
 			},
 		},
 		"exp2(127.999999999999999999999999999999999999)": {
