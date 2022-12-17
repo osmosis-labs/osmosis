@@ -34,7 +34,6 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	gammKeeper types.GAMMKeeper,
 	epochKeeper types.EpochKeeper,
-
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {

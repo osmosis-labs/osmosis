@@ -168,7 +168,7 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 	store := sdkCtx.KVStore(q.Keeper.storeKey)
 	poolStore := prefix.NewStore(store, types.KeyPrefixPools)
 
-	var response = []*codectypes.Any{}
+	response := []*codectypes.Any{}
 	pageRes, err := query.FilteredPaginate(poolStore, req.Pagination, func(_, value []byte, accumulate bool) (bool, error) {
 		pool, err := q.Keeper.UnmarshalPool(value)
 		if err != nil {
@@ -214,7 +214,6 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 
 		return true, nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
