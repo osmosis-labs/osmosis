@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v2"
 
+	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
@@ -22,7 +22,7 @@ type decimalTestSuite struct {
 }
 
 var (
-	zeroAdditiveErrTolerance = osmoutils.ErrTolerance{
+	zeroAdditiveErrTolerance = osmomath.ErrTolerance{
 		AdditiveTolerance: sdk.ZeroDec(),
 	}
 )
@@ -1283,7 +1283,7 @@ func (s *decimalTestSuite) TestPower() {
 		exponent       osmomath.BigDec
 		expectedResult osmomath.BigDec
 		expectPanic    bool
-		errTolerance   osmoutils.ErrTolerance
+		errTolerance   osmomath.ErrTolerance
 	}{
 		// N.B.: integer exponents are tested under TestPowerInteger.
 
@@ -1302,7 +1302,7 @@ func (s *decimalTestSuite) TestPower() {
 			// https://www.wolframalpha.com/input?i=2%5E0.5+37+digits
 			expectedResult: osmomath.MustNewDecFromStr("1.414213562373095048801688724209698079"),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance: minDecTolerance,
 				RoundingDir:       osmomath.RoundDown,
 			},
@@ -1314,7 +1314,7 @@ func (s *decimalTestSuite) TestPower() {
 			// https://www.wolframalpha.com/input?i=3%5E0.33+37+digits
 			expectedResult: osmomath.MustNewDecFromStr("1.436977652184851654252692986409357265"),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance: minDecTolerance,
 				RoundingDir:       osmomath.RoundDown,
 			},
@@ -1326,7 +1326,7 @@ func (s *decimalTestSuite) TestPower() {
 			// https://www.wolframalpha.com/input?i=e%5E0.9899+37+digits
 			expectedResult: osmomath.MustNewDecFromStr("2.690965362357751196751808686902156603"),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance: minDecTolerance,
 				RoundingDir:       osmomath.RoundUnconstrained, // TODO: understand if rounding behavior is acceptable.
 			},
@@ -1338,7 +1338,7 @@ func (s *decimalTestSuite) TestPower() {
 			// https://www.wolframalpha.com/input?i=10%5E0.001+37+digits
 			expectedResult: osmomath.MustNewDecFromStr("1.002305238077899671915404889328110554"),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance: minDecTolerance,
 				RoundingDir:       osmomath.RoundUnconstrained, // TODO: understand if rounding behavior is acceptable.
 			},
@@ -1350,7 +1350,7 @@ func (s *decimalTestSuite) TestPower() {
 			// https://www.wolframalpha.com/input?i=13%5E100.7777+37+digits
 			expectedResult: osmomath.MustNewDecFromStr("1.822422110233759706998600329118969132").Mul(osmomath.NewBigDec(10).PowerInteger(112)),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				MultiplicativeTolerance: minDecTolerance,
 				RoundingDir:             osmomath.RoundDown,
 			},
