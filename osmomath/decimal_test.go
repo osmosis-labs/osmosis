@@ -38,6 +38,26 @@ func (s *decimalTestSuite) assertMutResult(expectedResult, startValue, mutativeR
 	s.Require().Equal(nonMutativeStartValue, startValue)
 }
 
+func TestAddMut(t *testing.T) {
+	tests := []struct {
+		testing osmomath.BigDec
+		adding  osmomath.BigDec
+		want    osmomath.BigDec
+	}{
+		{osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0)},
+		{osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(2)},
+		{osmomath.NewBigDec(10), osmomath.NewBigDec(1), osmomath.NewBigDec(11)},
+		{osmomath.NewBigDec(12340), osmomath.NewBigDec(10), osmomath.NewBigDec(12350)},
+		{osmomath.NewDecWithPrec(12340, 4), osmomath.NewDecWithPrec(12340, 4), osmomath.NewDecWithPrec(24680, 4)},
+		{osmomath.NewDecWithPrec(12340, 5), osmomath.NewDecWithPrec(12, 5), osmomath.NewDecWithPrec(12352, 5)},
+		{osmomath.NewDecWithPrec(12340, 8), osmomath.NewDecWithPrec(1009009009009009009, 8), osmomath.NewDecWithPrec(1009009009009021349, 8)},
+		{osmomath.NewDecWithPrec(1009009009009009009, 17), osmomath.NewDecWithPrec(100, 17), osmomath.NewDecWithPrec(1009009009009009109, 17)},
+	}
+	for _, tc := range tests {
+		tc.testing.AddMut(tc.adding)
+		require.Equal(t, tc.want, tc.testing)
+	}
+}
 func TestDecApproxEq(t *testing.T) {
 	// d1 = 0.55, d2 = 0.6, tol = 0.1
 	d1 := osmomath.NewDecWithPrec(55, 2)
