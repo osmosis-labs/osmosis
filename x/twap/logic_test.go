@@ -744,18 +744,7 @@ func TestComputeGeometricTwap(t *testing.T) {
 	}
 }
 
-// TODO: split up this test case to cover both arithmetic and geometric twap
-func TestComputeArithmeticTwap_ThreeAsset(t *testing.T) {
-	testThreeAssetCaseFromDeltas := func(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeThreeAssetArithmeticTwapTestCase {
-		return computeThreeAssetArithmeticTwapTestCase{
-			newThreeAssetOneSidedRecord(baseTime, startAccum, true),
-			newThreeAssetOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), true),
-			[]string{denom0, denom0, denom1},
-			[]sdk.Dec{expectedTwap, expectedTwap, expectedTwap},
-			false,
-		}
-	}
-
+func TestComputeArithmeticTwap_ThreeAsset_Arithmetic(t *testing.T) {
 	tenSecAccum := OneSec.MulInt64(10)
 	pointOneAccum := OneSec.QuoInt64(10)
 	tests := map[string]computeThreeAssetArithmeticTwapTestCase{
@@ -786,6 +775,51 @@ func TestComputeArithmeticTwap_ThreeAsset(t *testing.T) {
 				actualTwap, err := twap.ComputeTwap(startRec, test.endRecord[i], test.quoteAsset[i], twap.ArithmeticTwapType)
 				require.Equal(t, test.expTwap[i], actualTwap)
 				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestComputeArithmeticTwap_ThreeAsset_Geometric(t *testing.T) {
+	var (
+		five        = sdk.NewDec(5)
+		fiveFor3Sec = OneSec.MulInt64(3).Mul(twap.TwapLog(five))
+
+		ten          = five.MulInt64(2)
+		tenFor100Sec = OneSec.MulInt64(100).Mul(twap.TwapLog(ten))
+
+		errTolerance = sdk.MustNewDecFromStr("0.00000001")
+	)
+
+	tests := map[string]computeThreeAssetArithmeticTwapTestCase{
+		"three asset basic: spot price = 10 for one second, 0 init accumulator": {
+			startRecord: newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			endRecord:   newThreeAssetOneSidedRecord(tPlusOne, geometricTenSecAccum, true),
+			quoteAsset:  []string{denom0, denom0, denom1},
+			expTwap:     []sdk.Dec{sdk.NewDec(10), sdk.NewDec(10), sdk.NewDec(10)},
+		},
+		"three asset same record: asset1, end spot price = 1": {
+			startRecord: newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			endRecord:   newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			quoteAsset:  []string{denom1, denom2, denom2},
+			expTwap:     []sdk.Dec{sdk.OneDec(), sdk.OneDec(), sdk.OneDec()},
+		},
+		"three asset. accumulator = 5*3Sec, t=3s, no start accum": testThreeAssetCaseFromDeltas(
+			sdk.ZeroDec(), fiveFor3Sec, 3*time.Second, five),
+
+		// test that base accum has no impact
+		"three asset. accumulator = 5*3Sec, t=3s. 10 base accum": testThreeAssetCaseFromDeltas(
+			geometricTenSecAccum, fiveFor3Sec, 3*time.Second, five),
+		"three asset. accumulator = 100*100s, t=100s. .1*second base accum": testThreeAssetCaseFromDeltas(
+			twap.TwapLog(OneSec.Quo(ten)), tenFor100Sec, 100*time.Second, ten),
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			for i, startRec := range test.startRecord {
+				actualTwap, err := twap.ComputeTwap(startRec, test.endRecord[i], test.quoteAsset[i], twap.GeometricTwapType)
+
+				require.NoError(t, err)
+				osmoassert.DecApproxEq(t, test.expTwap[i], actualTwap, errTolerance)
 			}
 		})
 	}
@@ -1558,6 +1592,33 @@ func (s *TestSuite) TestAfterCreatePool() {
 	}
 }
 
+func (s *TestSuite) TestTwapLog() {
+	var expectedErrTolerance = osmomath.MustNewDecFromStr("0.000000000000000100")
+	// "Twaplog{912648174127941279170121098210.928219201902041311} = 99.525973560175362367"
+	// From: https://www.wolframalpha.com/input?i2d=true&i=log+base+2+of+912648174127941279170121098210.928219201902041311+with+20+digits
+	var priceValue = osmomath.MustNewDecFromStr("912648174127941279170121098210.928219201902041311")
+	var expectedValue = osmomath.MustNewDecFromStr("99.525973560175362367")
+
+	result := twap.TwapLog(priceValue.SDKDec())
+	result_by_customBaseLog := priceValue.CustomBaseLog(osmomath.BigDecFromSDKDec(twap.GeometricTwapMathBase))
+	s.Require().True(expectedValue.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
+	s.Require().True(result_by_customBaseLog.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
+
+}
+
+func (s *TestSuite) TestTwapPow() {
+	var expectedErrTolerance = osmomath.MustNewDecFromStr("0.00000100")
+	// "TwapPow(0.5) = 1.41421356"
+	// From: https://www.wolframalpha.com/input?i2d=true&i=power+base+2+exponent+0.5+with+9+digits
+	exponentValue := osmomath.MustNewDecFromStr("0.5")
+	expectedValue := osmomath.MustNewDecFromStr("1.41421356")
+
+	result := twap.TwapPow(exponentValue.SDKDec())
+	result_by_mathPow := math.Pow(twap.GeometricTwapMathBase.MustFloat64(), exponentValue.SDKDec().MustFloat64())
+	s.Require().True(expectedValue.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
+	s.Require().True(osmomath.MustNewDecFromStr(fmt.Sprint(result_by_mathPow)).Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
+}
+
 func testCaseFromDeltas(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTwapTestCase {
 	return computeTwapTestCase{
 		newOneSidedRecord(baseTime, startAccum, true),
@@ -1598,29 +1659,12 @@ func geometricTestCaseFromDeltas1(startAccum, accumDiff sdk.Dec, timeDelta time.
 	return geometricTestCaseFromDeltas0(startAccum, accumDiff, timeDelta, sdk.OneDec().Quo(expectedTwap))
 }
 
-func (s *TestSuite) TestTwapLog() {
-	var expectedErrTolerance = osmomath.MustNewDecFromStr("0.000000000000000100")
-	// "Twaplog{912648174127941279170121098210.928219201902041311} = 99.525973560175362367"
-	// From: https://www.wolframalpha.com/input?i2d=true&i=log+base+2+of+912648174127941279170121098210.928219201902041311+with+20+digits
-	var priceValue = osmomath.MustNewDecFromStr("912648174127941279170121098210.928219201902041311")
-	var expectedValue = osmomath.MustNewDecFromStr("99.525973560175362367")
-
-	result := twap.TwapLog(priceValue.SDKDec())
-	result_by_customBaseLog := priceValue.CustomBaseLog(osmomath.BigDecFromSDKDec(twap.GeometricTwapMathBase))
-	s.Require().True(expectedValue.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
-	s.Require().True(result_by_customBaseLog.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
-
-}
-
-func (s *TestSuite) TestTwapPow() {
-	var expectedErrTolerance = osmomath.MustNewDecFromStr("0.00000100")
-	// "TwapPow(0.5) = 1.41421356"
-	// From: https://www.wolframalpha.com/input?i2d=true&i=power+base+2+exponent+0.5+with+9+digits
-	exponentValue := osmomath.MustNewDecFromStr("0.5")
-	expectedValue := osmomath.MustNewDecFromStr("1.41421356")
-
-	result := twap.TwapPow(exponentValue.SDKDec())
-	result_by_mathPow := math.Pow(twap.GeometricTwapMathBase.MustFloat64(), exponentValue.SDKDec().MustFloat64())
-	s.Require().True(expectedValue.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
-	s.Require().True(osmomath.MustNewDecFromStr(fmt.Sprint(result_by_mathPow)).Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
+func testThreeAssetCaseFromDeltas(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeThreeAssetArithmeticTwapTestCase {
+	return computeThreeAssetArithmeticTwapTestCase{
+		newThreeAssetOneSidedRecord(baseTime, startAccum, true),
+		newThreeAssetOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), true),
+		[]string{denom0, denom0, denom1},
+		[]sdk.Dec{expectedTwap, expectedTwap, expectedTwap},
+		false,
+	}
 }

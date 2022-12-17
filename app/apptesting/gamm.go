@@ -106,7 +106,7 @@ func (s *KeeperTestHelper) PrepareBasicStableswapPool() uint64 {
 	}
 
 	msg := stableswap.NewMsgCreateStableswapPool(s.TestAccs[0], params, DefaultStableswapLiquidity, []uint64{}, "")
-	poolId, err := s.App.GAMMKeeper.CreatePool(s.Ctx, msg)
+	poolId, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, msg)
 	s.NoError(err)
 	return poolId
 }
@@ -121,7 +121,7 @@ func (s *KeeperTestHelper) PrepareImbalancedStableswapPool() uint64 {
 	}
 
 	msg := stableswap.NewMsgCreateStableswapPool(s.TestAccs[0], params, ImbalancedStableswapLiquidity, []uint64{1, 1, 1}, "")
-	poolId, err := s.App.GAMMKeeper.CreatePool(s.Ctx, msg)
+	poolId, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, msg)
 	s.NoError(err)
 	return poolId
 }
@@ -132,7 +132,7 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
 
 	msg := balancer.NewMsgCreateBalancerPool(s.TestAccs[0], poolParams, DefaultPoolAssets, "")
-	poolId, err := s.App.GAMMKeeper.CreatePool(s.Ctx, msg)
+	poolId, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, msg)
 	s.NoError(err)
 	return poolId
 }
@@ -150,7 +150,7 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolAsset(assets []balancer.Po
 		SwapFee: sdk.ZeroDec(),
 		ExitFee: sdk.ZeroDec(),
 	}, assets, "")
-	poolId, err := s.App.GAMMKeeper.CreatePool(s.Ctx, msg)
+	poolId, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, msg)
 	s.NoError(err)
 	return poolId
 }
