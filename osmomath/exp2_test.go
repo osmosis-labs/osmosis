@@ -8,7 +8,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 )
 
 var (
@@ -17,13 +16,21 @@ var (
 )
 
 func TestExp2ChebyshevRationalApprox(t *testing.T) {
+	// These values are used to test the approximated results close
+	// to 0 and 1 boundaries.
+	// With other types of approximations, there is a high likelyhood
+	// of larger errors clsoer to the boundaries. This is known as Runge's phenomenon.
+	// https://en.wikipedia.org/wiki/Runge%27s_phenomenon
+	//
+	// Chebyshev approximation should be able to handle this better.
+	// Tests at the boundaries help to validate there is no Runge's phenomenon.
 	smallValue := osmomath.MustNewDecFromStr("0.00001")
 	smallerValue := osmomath.MustNewDecFromStr("0.00000000000000000001")
 
 	tests := map[string]struct {
 		exponent       osmomath.BigDec
 		expectedResult osmomath.BigDec
-		errTolerance   osmoutils.ErrTolerance
+		errTolerance   osmomath.ErrTolerance
 		expectPanic    bool
 	}{
 		"exp2(0.5)": {
@@ -31,7 +38,7 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 			// https://www.wolframalpha.com/input?i=2%5E0.5+37+digits
 			expectedResult: osmomath.MustNewDecFromStr("1.414213562373095048801688724209698079"),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       minDecTolerance,
 				MultiplicativeTolerance: minDecTolerance,
 				RoundingDir:             osmomath.RoundDown,
@@ -41,7 +48,7 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 			exponent:       osmomath.ZeroDec(),
 			expectedResult: osmomath.OneDec(),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       sdk.ZeroDec(),
 				MultiplicativeTolerance: sdk.ZeroDec(),
 				RoundingDir:             osmomath.RoundDown,
@@ -51,7 +58,7 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 			exponent:       osmomath.OneDec(),
 			expectedResult: osmomath.MustNewDecFromStr("2"),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       sdk.ZeroDec(),
 				MultiplicativeTolerance: sdk.ZeroDec(),
 				RoundingDir:             osmomath.RoundDown,
@@ -62,12 +69,10 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 			// https://www.wolframalpha.com/input?i=2%5E0.00001+37+digits
 			expectedResult: osmomath.MustNewDecFromStr("1.000006931495828305653209089800561681"),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       minDecTolerance,
 				MultiplicativeTolerance: minDecTolerance,
-				// TODO: confirm if rounding behavior is acceptable.
-				// Note, that a Python estimate passes RoundDown but not Wolfram.
-				RoundingDir: osmomath.RoundUnconstrained,
+				RoundingDir:             osmomath.RoundUnconstrained,
 			},
 		},
 		"exp2(0.99999)": {
@@ -75,7 +80,7 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 			// https://www.wolframalpha.com/input?i=2%5E0.99999+37+digits
 			expectedResult: osmomath.MustNewDecFromStr("1.999986137104433991477606830496602898"),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       sdk.MustNewDecFromStr("0.00000000000000007"),
 				MultiplicativeTolerance: minDecTolerance.Mul(sdk.NewDec(100)),
 				RoundingDir:             osmomath.RoundDown,
@@ -86,7 +91,7 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 			// https://www.wolframalpha.com/input?i=2%5E%281+-+0.00000000000000000001%29+37+digits
 			expectedResult: osmomath.MustNewDecFromStr("1.999999999999999999986137056388801094"),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       minDecTolerance,
 				MultiplicativeTolerance: minDecTolerance,
 				RoundingDir:             osmomath.RoundDown,
@@ -97,10 +102,10 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 			// https://www.wolframalpha.com/input?i=2%5E0.00000000000000000001+37+digits
 			expectedResult: osmomath.MustNewDecFromStr("1.000000000000000000006931471805599453"),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       minDecTolerance,
 				MultiplicativeTolerance: minDecTolerance,
-				RoundingDir:             osmomath.RoundUnconstrained, // TODO: confirm if this is acceptable.
+				RoundingDir:             osmomath.RoundUnconstrained,
 			},
 		},
 		"exp2(0.3334567)": {
@@ -108,7 +113,7 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 			// https://www.wolframalpha.com/input?i=2%5E0.3334567+37+digits
 			expectedResult: osmomath.MustNewDecFromStr("1.260028791934303989065848870753742298"),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       sdk.MustNewDecFromStr("0.00000000000000007"),
 				MultiplicativeTolerance: minDecTolerance.Mul(sdk.NewDec(10)),
 				RoundingDir:             osmomath.RoundDown,
@@ -119,10 +124,10 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 			// https://www.wolframalpha.com/input?i=2%5E0.84864288+37+digits
 			expectedResult: osmomath.MustNewDecFromStr("1.800806138872630518880998772777747572"),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       sdk.MustNewDecFromStr("0.00000000000000002"),
 				MultiplicativeTolerance: minDecTolerance.Mul(sdk.NewDec(10)),
-				RoundingDir:             osmomath.RoundUnconstrained, // TODO: confirm if this is acceptable.
+				RoundingDir:             osmomath.RoundUnconstrained,
 			},
 		},
 		"exp2(0.999999999999999999999999999999999956)": {
@@ -130,7 +135,7 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 			// https://www.wolframalpha.com/input?i=2%5E0.999999999999999999999999999999999956+37+digits
 			expectedResult: osmomath.MustNewDecFromStr("1.999999999999999999999999999999999939"),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       minDecTolerance,
 				MultiplicativeTolerance: minDecTolerance,
 				RoundingDir:             osmomath.RoundDown,
@@ -169,7 +174,7 @@ func TestExp2(t *testing.T) {
 	tests := map[string]struct {
 		exponent       osmomath.BigDec
 		expectedResult osmomath.BigDec
-		errTolerance   osmoutils.ErrTolerance
+		errTolerance   osmomath.ErrTolerance
 		expectPanic    bool
 	}{
 		"exp2(28.5)": {
@@ -177,10 +182,10 @@ func TestExp2(t *testing.T) {
 			// https://www.wolframalpha.com/input?i=2%5E%2828.5%29+45+digits
 			expectedResult: osmomath.MustNewDecFromStr("379625062.497006211556423566253288543343173698"),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       minDecTolerance,
 				MultiplicativeTolerance: minDecTolerance,
-				RoundingDir:             osmomath.RoundUnconstrained, // TODO: confirm if this is acceptable.
+				RoundingDir:             osmomath.RoundUnconstrained,
 			},
 		},
 		"exp2(63.84864288)": {
@@ -188,10 +193,10 @@ func TestExp2(t *testing.T) {
 			// https://www.wolframalpha.com/input?i=2%5E%2863.84864288%29+56+digits
 			expectedResult: osmomath.MustNewDecFromStr("16609504985074238416.013387053450559984846024066925604094"),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       sdk.MustNewDecFromStr("0.00042"),
 				MultiplicativeTolerance: minDecTolerance,
-				RoundingDir:             osmomath.RoundUnconstrained, // TODO: confirm if this is acceptable.
+				RoundingDir:             osmomath.RoundUnconstrained,
 			},
 		},
 		"exp2(64.5)": {
@@ -199,10 +204,10 @@ func TestExp2(t *testing.T) {
 			// https://www.wolframalpha.com/input?i=2%5E%2864.5%29+56+digits
 			expectedResult: osmomath.MustNewDecFromStr("26087635650665564424.699143612505016737766552579185717157"),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       sdk.MustNewDecFromStr("0.000000000000000008"),
 				MultiplicativeTolerance: minDecTolerance,
-				RoundingDir:             osmomath.RoundUnconstrained, // TODO: confirm if this is acceptable.
+				RoundingDir:             osmomath.RoundUnconstrained,
 			},
 		},
 		"exp2(80.5)": {
@@ -210,10 +215,10 @@ func TestExp2(t *testing.T) {
 			// https://www.wolframalpha.com/input?i=2%5E%2880.5%29+61+digits
 			expectedResult: osmomath.MustNewDecFromStr("1709679290002018430137083.075789128776926268789829515159631571"),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       sdk.MustNewDecFromStr("0.0000000000006"),
 				MultiplicativeTolerance: minDecTolerance,
-				RoundingDir:             osmomath.RoundUnconstrained, // TODO: confirm if this is acceptable.
+				RoundingDir:             osmomath.RoundUnconstrained,
 			},
 		},
 		"exp2(100.5)": {
@@ -221,10 +226,10 @@ func TestExp2(t *testing.T) {
 			// https://www.wolframalpha.com/input?i=2%5E%28100.5%29+67+digits
 			expectedResult: osmomath.MustNewDecFromStr("1792728671193156477399422023278.661496394239222564273688025833797661"),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       sdk.MustNewDecFromStr("0.0000006"),
 				MultiplicativeTolerance: minDecTolerance,
-				RoundingDir:             osmomath.RoundUnconstrained, // TODO: confirm if this is acceptable.
+				RoundingDir:             osmomath.RoundUnconstrained,
 			},
 		},
 		"exp2(128.5)": {
@@ -232,10 +237,10 @@ func TestExp2(t *testing.T) {
 			// https://www.wolframalpha.com/input?i=2%5E%28128.5%29+75+digits
 			expectedResult: osmomath.MustNewDecFromStr("481231938336009023090067544955250113854.229961482126296754016435255422777776"),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       sdk.MustNewDecFromStr("146.5"),
 				MultiplicativeTolerance: minDecTolerance,
-				RoundingDir:             osmomath.RoundUnconstrained, // TODO: confirm if this is acceptable.
+				RoundingDir:             osmomath.RoundUnconstrained,
 			},
 		},
 		"exp2(127.999999999999999999999999999999999999)": {
@@ -243,7 +248,7 @@ func TestExp2(t *testing.T) {
 			// https://www.wolframalpha.com/input?i=2%5E%28127.999999999999999999999999999999999999%29+75+digits
 			expectedResult: osmomath.MustNewDecFromStr("340282366920938463463374607431768211220.134236774486705862055857235845515682"),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       sdk.MustNewDecFromStr("15044647266406936"),
 				MultiplicativeTolerance: minDecTolerance,
 				RoundingDir:             osmomath.RoundDown,
@@ -254,7 +259,7 @@ func TestExp2(t *testing.T) {
 			// https://www.wolframalpha.com/input?i=2%5E%28127.84864288%29+75+digits
 			expectedResult: osmomath.MustNewDecFromStr("306391287650667462068703337664945630660.398687487527674545778353588077174571"),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       sdk.MustNewDecFromStr("7707157415597963"),
 				MultiplicativeTolerance: minDecTolerance,
 				RoundingDir:             osmomath.RoundUnconstrained,
@@ -273,7 +278,7 @@ func TestExp2(t *testing.T) {
 			// https://www.wolframalpha.com/input?i=2%5E%282%5E9%29
 			expectedResult: osmomath.MustNewDecFromStr("13407807929942597099574024998205846127479365820592393377723561443721764030073546976801874298166903427690031858186486050853753882811946569946433649006084096"),
 
-			errTolerance: osmoutils.ErrTolerance{
+			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance:       minDecTolerance,
 				MultiplicativeTolerance: minDecTolerance,
 				RoundingDir:             osmomath.RoundDown,

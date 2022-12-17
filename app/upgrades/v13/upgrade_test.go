@@ -2,6 +2,7 @@ package v13_test
 
 import (
 	"fmt"
+	ibchookstypes "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types"
 	"testing"
 
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
@@ -58,14 +59,14 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				suite.App.AccountKeeper.RemoveAccount(suite.Ctx, acc)
 				// Because of SDK version map bug, we can't do the following, and instaed do a massive hack
 				// vm := suite.App.UpgradeKeeper.GetModuleVersionMap(suite.Ctx)
-				// delete(vm, ibc_hooks.ModuleName)
+				// delete(vm, ibchookstypes.ModuleName)
 				// OR
-				// vm[ibc_hooks.ModuleName] = 0
+				// vm[ibchookstypes.ModuleName] = 0
 				// suite.App.UpgradeKeeper.SetModuleVersionMap(suite.Ctx, vm)
 				upgradeStoreKey := suite.App.AppKeepers.GetKey(upgradetypes.StoreKey)
 				store := suite.Ctx.KVStore(upgradeStoreKey)
 				versionStore := prefix.NewStore(store, []byte{upgradetypes.VersionMapByte})
-				versionStore.Delete([]byte(ibc_hooks.ModuleName))
+				versionStore.Delete([]byte(ibchookstypes.ModuleName))
 
 				hasAcc := suite.App.AccountKeeper.HasAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
 				suite.Require().False(hasAcc)

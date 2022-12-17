@@ -23,6 +23,7 @@ import (
 	incentivestypes "github.com/osmosis-labs/osmosis/v13/x/incentives/types"
 	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
 	poolitypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 	twaptypes "github.com/osmosis-labs/osmosis/v13/x/twap/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v13/x/txfees/types"
 
@@ -158,7 +159,6 @@ func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, forkHei
 	return genutil.ExportGenesisFile(genDoc, genFile)
 }
 
-//nolint:typecheck
 func updateModuleGenesis[V proto.Message](appGenState map[string]json.RawMessage, moduleName string, protoVal V, updateGenesis func(V)) error {
 	if err := util.Cdc.UnmarshalJSON(appGenState[moduleName], protoVal); err != nil {
 		return err
@@ -243,6 +243,11 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 	}
 
 	err = updateModuleGenesis(appGenState, gammtypes.ModuleName, &gammtypes.GenesisState{}, updateGammGenesis)
+	if err != nil {
+		return err
+	}
+
+	err = updateModuleGenesis(appGenState, swaproutertypes.ModuleName, &swaproutertypes.GenesisState{}, updateSwaprouterGenesis(appGenState))
 	if err != nil {
 		return err
 	}
@@ -354,6 +359,16 @@ func updateTxfeesGenesis(txfeesGenState *txfeestypes.GenesisState) {
 
 func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
 	gammGenState.Params.PoolCreationFee = tenOsmo
+}
+
+func updateSwaprouterGenesis(appGenState map[string]json.RawMessage) func(*swaproutertypes.GenesisState) {
+	return func(s *swaproutertypes.GenesisState) {
+		gammGenState := &gammtypes.GenesisState{}
+		if err := util.Cdc.UnmarshalJSON(appGenState[gammtypes.ModuleName], gammGenState); err != nil {
+			panic(err)
+		}
+		s.NextPoolId = gammGenState.NextPoolNumber
+	}
 }
 
 func updateEpochGenesis(epochGenState *epochtypes.GenesisState) {

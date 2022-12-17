@@ -3,8 +3,6 @@ package osmomath
 import (
 	"math/rand"
 	"testing"
-
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 func BenchmarkLog2(b *testing.B) {
@@ -15,7 +13,7 @@ func BenchmarkLog2(b *testing.B) {
 		NewBigDec(2048 * 2048 * 2048 * 2048 * 2048),
 		MustNewDecFromStr("999999999999999999999999999999999999999999999999999999.9122181273612911"),
 		MustNewDecFromStr("0.563289239121902491248219047129047129"),
-		BigDecFromSDKDec(gammtypes.MaxSpotPrice),                        // 2^128 - 1
+		BigDecFromSDKDec(MaxSpotPrice),                                  // 2^128 - 1
 		MustNewDecFromStr("336879543251729078828740861357450529340.45"), // (2^128 - 1) * 0.99
 	}
 

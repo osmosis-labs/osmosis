@@ -53,9 +53,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#3693](https://github.com/osmosis-labs/osmosis/pull/3693) Add `EstimateSwapExactAmountOut` query to stargate whitelist
 * [#3731](https://github.com/osmosis-labs/osmosis/pull/3731) Power and PowerMut functions with decimal exponent
 
+### API breaks
+
+* [#3763](https://github.com/osmosis-labs/osmosis/pull/3763) Move binary search and error tolerance code from `osmoutils` into `osmomath`
+
 ### Bug fixes
 
 * [#3608](https://github.com/osmosis-labs/osmosis/pull/3608) Make it possible to state export from any directory.
+* [#3715](https://github.com/osmosis-labs/osmosis/pull/3715) Fix x/gamm CalculateSpotPrice, balancer.SpotPrice and Stableswap.SpotPrice base and quote asset.
 
 ### Misc Improvements
 
@@ -63,6 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#3634](https://github.com/osmosis-labs/osmosis/pull/3634) (Makefile) Ensure correct golang version in make build and make install. (Thank you @jhernandezb )
 * [#3712](https://github.com/osmosis-labs/osmosis/pull/3712) replace `osmomath.BigDec` `Power` with `PowerInteger` 
 * [#3711](https://github.com/osmosis-labs/osmosis/pull/3711) Use Dec instead of Int for additive `ErrTolerace` in `osmoutils`.
+
 
 ## v13.0.0
 

@@ -40,6 +40,10 @@ var (
 // The max supported exponent is defined by the global maxSupportedExponent.
 // If a greater exponent is given, the function panics.
 // Panics if the exponent is negative.
+// The answer is correct up to a factor of 10^-18.
+// Meaning, result = result * k for k in [1 - 10^(-18), 1 + 10^(-18)]
+// Note: our Python script plots show accuracy up to a factor of 10^22.
+// However, in Go tests we only test up to 10^18. Therefore, this is the guarantee.
 func Exp2(exponent BigDec) BigDec {
 	if exponent.Abs().GT(maxSupportedExponent) {
 		panic(fmt.Sprintf("integer exponent %s is too large, max (%s)", exponent, maxSupportedExponent))
@@ -48,16 +52,15 @@ func Exp2(exponent BigDec) BigDec {
 		panic(fmt.Sprintf("negative exponent %s is not supported", exponent))
 	}
 
-	integerExponentDec := exponent.TruncateDec()
-	integerExponent := integerExponentDec.TruncateInt()
-	integerResult := twoBigDec.PowerInteger(integerExponent.Uint64())
+	integerExponent := exponent.TruncateDec()
 
-	fractionalExponent := exponent.Sub(integerExponentDec)
+	fractionalExponent := exponent.Sub(integerExponent)
 	fractionalResult := exp2ChebyshevRationalApprox(fractionalExponent)
 
-	result := integerResult.Mul(fractionalResult)
+	// Left bit shift is equivalent to multiplying by 2^integerExponent.
+	fractionalResult.i = fractionalResult.i.Lsh(fractionalResult.i, uint(integerExponent.TruncateInt().Uint64()))
 
-	return result
+	return fractionalResult
 }
 
 // exp2ChebyshevRationalApprox takes 2 to the power of a given decimal exponent.
@@ -69,6 +72,10 @@ func Exp2(exponent BigDec) BigDec {
 // See scripts/approximations/README.md for details of the scripts used
 // to compute the coefficients.
 // CONTRACT: exponent must be in the range [0, 1], panics if not.
+// The answer is correct up to a factor of 10^-18.
+// Meaning, result = result * k for k in [1 - 10^(-18), 1 + 10^(-18)]
+// Note: our Python script plots show accuracy up to a factor of 10^22.
+// However, in Go tests we only test up to 10^18. Therefore, this is the guarantee.
 func exp2ChebyshevRationalApprox(x BigDec) BigDec {
 	if x.LT(ZeroDec()) || x.GT(OneDec()) {
 		panic(fmt.Sprintf("exponent must be in the range [0, 1], got %s", x))
