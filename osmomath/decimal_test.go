@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v2"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
@@ -734,12 +733,11 @@ func (s *decimalTestSuite) TestLog2() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-			osmoassert.ConditionalPanic(s.T(), tc.expectedPanic, func() {
+			osmomath.ConditionalPanic(s.T(), tc.expectedPanic, func() {
 				// Create a copy to test that the original was not modified.
 				// That is, that LogbBase2() is non-mutative.
 				initialCopy := tc.initialValue.Clone()
 
-				// system under test.
 				res := tc.initialValue.LogBase2()
 				require.True(osmomath.DecApproxEq(s.T(), tc.expected, res, expectedErrTolerance))
 				require.Equal(s.T(), initialCopy, tc.initialValue)
@@ -818,12 +816,11 @@ func (s *decimalTestSuite) TestLn() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-			osmoassert.ConditionalPanic(s.T(), tc.expectedPanic, func() {
+			osmomath.ConditionalPanic(s.T(), tc.expectedPanic, func() {
 				// Create a copy to test that the original was not modified.
 				// That is, that Ln() is non-mutative.
 				initialCopy := tc.initialValue.Clone()
 
-				// system under test.
 				res := tc.initialValue.Ln()
 				require.True(osmomath.DecApproxEq(s.T(), tc.expected, res, expectedErrTolerance))
 				require.Equal(s.T(), initialCopy, tc.initialValue)
@@ -894,12 +891,11 @@ func (s *decimalTestSuite) TestTickLog() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-			osmoassert.ConditionalPanic(s.T(), tc.expectedPanic, func() {
+			osmomath.ConditionalPanic(s.T(), tc.expectedPanic, func() {
 				// Create a copy to test that the original was not modified.
 				// That is, that Ln() is non-mutative.
 				initialCopy := tc.initialValue.Clone()
 
-				// system under test.
 				res := tc.initialValue.TickLog()
 				fmt.Println(name, res.Sub(tc.expected).Abs())
 				require.True(osmomath.DecApproxEq(s.T(), tc.expected, res, tc.expectedErrTolerance))
@@ -1010,11 +1006,10 @@ func (s *decimalTestSuite) TestCustomBaseLog() {
 	}
 	for name, tc := range tests {
 		s.Run(name, func() {
-			osmoassert.ConditionalPanic(s.T(), tc.expectedPanic, func() {
+			osmomath.ConditionalPanic(s.T(), tc.expectedPanic, func() {
 				// Create a copy to test that the original was not modified.
 				// That is, that Ln() is non-mutative.
 				initialCopy := tc.initialValue.Clone()
-				// system under test.
 				res := tc.initialValue.CustomBaseLog(tc.base)
 				require.True(osmomath.DecApproxEq(s.T(), tc.expected, res, tc.expectedErrTolerance))
 				require.Equal(s.T(), initialCopy, tc.initialValue)
@@ -1213,7 +1208,6 @@ func (s *decimalTestSuite) TestMul_Mutation() {
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-
 			startMut := tc.startValue.Clone()
 			startNonMut := tc.startValue.Clone()
 

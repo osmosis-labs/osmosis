@@ -109,7 +109,7 @@ func (s *KeeperTestHelper) PrepareBasicStableswapPool() uint64 {
 	}
 
 	msg := stableswap.NewMsgCreateStableswapPool(s.TestAccs[0], params, DefaultStableswapLiquidity, []uint64{}, "")
-	poolId, err := s.App.GAMMKeeper.CreatePool(s.Ctx, msg)
+	poolId, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, msg)
 	s.NoError(err)
 	return poolId
 }
@@ -124,7 +124,7 @@ func (s *KeeperTestHelper) PrepareImbalancedStableswapPool() uint64 {
 	}
 
 	msg := stableswap.NewMsgCreateStableswapPool(s.TestAccs[0], params, ImbalancedStableswapLiquidity, []uint64{1, 1, 1}, "")
-	poolId, err := s.App.GAMMKeeper.CreatePool(s.Ctx, msg)
+	poolId, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, msg)
 	s.NoError(err)
 	return poolId
 }

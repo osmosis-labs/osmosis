@@ -293,7 +293,7 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	ctrl := gomock.NewController(suite.T())
 	defer ctrl.Finish()
 	inactivePool := mocks.NewMockCFMMPoolI(ctrl)
-	inactivePoolId := gammKeeper.GetNextPoolIdAndIncrement(suite.Ctx)
+	inactivePoolId := activePoolId + 1
 	// Add mock return values for pool -- we need to do this because
 	// mock objects don't have interface functions implemented by default.
 	inactivePool.EXPECT().IsActive(suite.Ctx).Return(false).AnyTimes()

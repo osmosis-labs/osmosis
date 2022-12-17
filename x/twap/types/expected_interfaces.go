@@ -12,7 +12,7 @@ type AmmInterface interface {
 	CalculateSpotPrice(
 		ctx sdk.Context,
 		poolID uint64,
-		baseAssetDenom string,
 		quoteAssetDenom string,
+		baseAssetDenom string,
 	) (price sdk.Dec, err error)
 }

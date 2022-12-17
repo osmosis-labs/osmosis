@@ -6,8 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 )
 
 func TestDivIntByU64ToBigDec(t *testing.T) {
@@ -45,7 +43,11 @@ func TestDivIntByU64ToBigDec(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got, err := DivIntByU64ToBigDec(tt.i, tt.u, tt.round)
 			require.Equal(t, tt.want, got)
-			osmoassert.ConditionalError(t, tt.expErr, err)
+			if tt.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }

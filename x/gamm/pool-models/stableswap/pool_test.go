@@ -7,11 +7,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/tendermint/tendermint/crypto/ed25519"
+
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 var (
@@ -1217,7 +1218,7 @@ func TestStableswapSpotPrice(t *testing.T) {
 			quoteDenom:     "bar",
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10000, 20000},
-			expectedPrice:  sdk.NewDec(2),
+			expectedPrice:  sdk.NewDecWithPrec(5, 1),
 			expectPass:     true,
 		},
 		"even two-asset pool with different scaling factors (bar -> foo)": {
@@ -1225,7 +1226,7 @@ func TestStableswapSpotPrice(t *testing.T) {
 			quoteDenom:     "foo",
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10000, 20000},
-			expectedPrice:  sdk.NewDecWithPrec(5, 1),
+			expectedPrice:  sdk.NewDec(2),
 			expectPass:     true,
 		},
 		"uneven two-asset pool": {
@@ -1328,7 +1329,7 @@ func TestStableswapSpotPrice(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx := sdk.Context{}
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
-			spotPrice, err := p.SpotPrice(ctx, tc.baseDenom, tc.quoteDenom)
+			spotPrice, err := p.SpotPrice(ctx, tc.quoteDenom, tc.baseDenom)
 
 			if tc.expectPass {
 				require.NoError(t, err)
@@ -1337,7 +1338,7 @@ func TestStableswapSpotPrice(t *testing.T) {
 				if (tc.expectedPrice != sdk.Dec{}) {
 					expectedSpotPrice = tc.expectedPrice
 				} else {
-					expectedSpotPrice, err = p.calcOutAmtGivenIn(sdk.NewInt64Coin(tc.quoteDenom, 1), tc.baseDenom, sdk.ZeroDec())
+					expectedSpotPrice, err = p.calcOutAmtGivenIn(sdk.NewInt64Coin(tc.baseDenom, 1), tc.quoteDenom, sdk.ZeroDec())
 					require.NoError(t, err)
 				}
 
