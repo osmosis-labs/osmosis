@@ -1,4 +1,4 @@
-package osmoutils
+package noapptest
 
 import (
 	"time"
@@ -11,7 +11,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 )
 
-func NoAppCtxWithStore(keys []sdk.StoreKey, header tmproto.Header, isCheckTx bool) sdk.Context {
+func CtxWithStoreKeys(keys []sdk.StoreKey, header tmproto.Header, isCheckTx bool) sdk.Context {
 	db := dbm.NewMemDB()
 	logger := log.NewNopLogger()
 	cms := store.NewCommitMultiStore(db, logger)
@@ -25,8 +25,8 @@ func NoAppCtxWithStore(keys []sdk.StoreKey, header tmproto.Header, isCheckTx boo
 	return sdk.NewContext(cms, header, isCheckTx, logger)
 }
 
-func DefaultNoAppCtxWithStore(storeKeys []sdk.StoreKey) sdk.Context {
+func DefaultCtxWithStoreKeys(storeKeys []sdk.StoreKey) sdk.Context {
 	header := tmproto.Header{Height: 1, ChainID: "osmoutils-test-1", Time: time.Now().UTC()}
 	deliverTx := false
-	return NoAppCtxWithStore(storeKeys, header, deliverTx)
+	return CtxWithStoreKeys(storeKeys, header, deliverTx)
 }

@@ -9,11 +9,16 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/params"
+	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils/noapptest"
 	twaptypes "github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
@@ -22,6 +27,7 @@ import (
 // unfortunately setting up account implies setting up params
 type TestSuite struct {
 	suite.Suite
+
 	ctx   sdk.Context
 	store sdk.KVStore
 
@@ -30,20 +36,32 @@ type TestSuite struct {
 }
 
 func (suite *TestSuite) SetupTest() {
+	// For the test suite, we manually wire a custom store "customStoreKey"
+	// Auth module (for module_account_test.go) which requires params module as well.
 	customStoreKey := sdk.NewKVStoreKey("osmoutil_store_test")
 	suite.authStoreKey = sdk.NewKVStoreKey(authtypes.StoreKey)
-	suite.ctx = osmoutils.DefaultNoAppCtxWithStore([]sdk.StoreKey{customStoreKey, suite.authStoreKey})
+	// setup ctx + stores
+	paramsKey := sdk.NewKVStoreKey(paramstypes.StoreKey)
+	paramsTKey := sdk.NewKVStoreKey(paramstypes.TStoreKey)
+	suite.ctx = noapptest.DefaultCtxWithStoreKeys(
+		[]sdk.StoreKey{customStoreKey, suite.authStoreKey, paramsKey, paramsTKey})
 	suite.store = suite.ctx.KVStore(customStoreKey)
+	// setup params (needed for auth)
+	encConfig := noapptest.MakeTestEncodingConfig(auth.AppModuleBasic{}, params.AppModuleBasic{})
+	paramsKeeper := paramskeeper.NewKeeper(encConfig.Codec, encConfig.Amino, paramsKey, paramsTKey)
+	paramsKeeper.Subspace(authtypes.ModuleName)
 
-	// maccPerms := map[string][]string{
-	// 	"fee_collector": nil,
-	// 	"mint":          {"minter"},
-	// }
-	// suite.accountKeeper = authkeeper.NewAccountKeeper(
-	// 	a, // TODO
-	// 	suite.authStoreKey,
-	// 	paramstore.NewDefault(), // TODO
-	// 	authtypes.ProtoBaseAccount, maccPerms)
+	// setup auth
+	maccPerms := map[string][]string{
+		"fee_collector": nil,
+		"mint":          {"minter"},
+	}
+	authsubspace, _ := paramsKeeper.GetSubspace(authtypes.ModuleName)
+	suite.accountKeeper = authkeeper.NewAccountKeeper(
+		encConfig.Codec,
+		suite.authStoreKey,
+		authsubspace,
+		authtypes.ProtoBaseAccount, maccPerms)
 }
 
 const (
