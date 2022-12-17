@@ -250,12 +250,11 @@ func (d BigDec) Add(d2 BigDec) BigDec {
 
 // mutative addition
 func (d *BigDec) AddMut(d2 BigDec) {
-	res := new(big.Int).Add(d.i, d2.i)
+	d.i = new(big.Int).Add(d.i, d2.i)
 
-	if res.BitLen() > maxDecBitLen {
+	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
-	d.i = res
 }
 
 // subtraction
@@ -349,12 +348,11 @@ func (d *BigDec) QuoMut(d2 BigDec) {
 	mul.Mul(mul, precisionReuse)
 
 	quo := new(big.Int).Quo(mul, d2.i)
-	chopped := chopPrecisionAndRound(quo)
+	d.i = chopPrecisionAndRound(quo)
 
-	if chopped.BitLen() > maxDecBitLen {
+	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
-	d.i = chopped
 }
 func (d BigDec) QuoRaw(d2 int64) BigDec {
 	// multiply precision, so we can chop it later
