@@ -248,6 +248,16 @@ func (d BigDec) Add(d2 BigDec) BigDec {
 	return BigDec{res}
 }
 
+// mutative addition
+func (d *BigDec) AddMut(d2 BigDec) {
+	res := new(big.Int).Add(d.i, d2.i)
+
+	if res.BitLen() > maxDecBitLen {
+		panic("Int overflow")
+	}
+	d.i = res
+}
+
 // subtraction
 func (d BigDec) Sub(d2 BigDec) BigDec {
 	res := new(big.Int).Sub(d.i, d2.i)
