@@ -4,8 +4,10 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/v13/tests/mocks"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
@@ -428,6 +430,8 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 
 	// Setup active pool
 	activePoolId := suite.PrepareBalancerPool()
+	activePool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, activePoolId)
+	suite.Require().NoError(err)
 
 	// Setup mock inactive pool
 	gammKeeper := suite.App.GAMMKeeper
@@ -442,20 +446,20 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	gammKeeper.SetPool(suite.Ctx, inactivePool)
 
 	type testCase struct {
-		poolId     uint64
+		pool       swaproutertypes.PoolI
 		expectPass bool
 		name       string
 	}
 	testCases := []testCase{
-		{activePoolId, true, "swap succeeds on active pool"},
-		{inactivePoolId, false, "swap fails on inactive pool"},
+		{activePool, true, "swap succeeds on active pool"},
+		{inactivePool, false, "swap fails on inactive pool"},
 	}
 
 	for _, test := range testCases {
 		suite.Run(test.name, func() {
 			// Check swaps
-			_, swapInErr := gammKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], test.poolId, testCoin, "bar", sdk.ZeroInt())
-			_, swapOutErr := gammKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], test.poolId, "bar", sdk.NewInt(1000000000000000000), testCoin)
+			_, swapInErr := gammKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], test.pool, testCoin, "bar", sdk.ZeroInt(), sdk.ZeroDec())
+			_, swapOutErr := gammKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], test.pool, "bar", sdk.NewInt(1000000000000000000), testCoin, sdk.ZeroDec())
 			if test.expectPass {
 				suite.Require().NoError(swapInErr)
 				suite.Require().NoError(swapOutErr)

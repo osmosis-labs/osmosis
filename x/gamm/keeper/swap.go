@@ -30,6 +30,9 @@ func (k Keeper) SwapExactAmountIn(
 	if tokenIn.Denom == tokenOutDenom {
 		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
 	}
+	if !pool.IsActive(ctx) {
+		return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
+	}
 	tokensIn := sdk.Coins{tokenIn}
 
 	defer func() {
@@ -86,7 +89,9 @@ func (k Keeper) SwapExactAmountOut(
 	if tokenInDenom == tokenOut.Denom {
 		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
 	}
-
+	if !pool.IsActive(ctx) {
+		return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
+	}
 	defer func() {
 		if r := recover(); r != nil {
 			tokenInAmount = sdk.Int{}

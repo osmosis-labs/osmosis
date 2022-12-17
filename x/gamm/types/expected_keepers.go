@@ -49,6 +49,8 @@ type CommunityPoolKeeper interface {
 type PoolManager interface {
 	CreatePool(ctx sdk.Context, msg swaproutertypes.CreatePoolMsg) (uint64, error)
 
+	GetNextPoolId(ctx sdk.Context) uint64
+
 	RouteExactAmountIn(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
