@@ -145,7 +145,7 @@ func (s *KeeperTestHelper) PrepareCustomBalancerPool(assets []balancer.PoolAsset
 	s.FundAcc(s.TestAccs[0], fundCoins)
 
 	msg := balancer.NewMsgCreateBalancerPool(s.TestAccs[0], params, assets, "")
-	poolId, err := s.App.GAMMKeeper.CreatePool(s.Ctx, msg)
+	poolId, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, msg)
 	s.NoError(err)
 	return poolId
 }
