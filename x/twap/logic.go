@@ -264,7 +264,7 @@ func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quote
 		return endRecord.P1LastSpotPrice, err
 	}
 
-	return strategy.computeTwap(startRecord, endRecord, quoteAsset), nil
+	return strategy.computeTwap(startRecord, endRecord, quoteAsset), err
 }
 
 // twapLog returns the logarithm of the given spot price, base 2.

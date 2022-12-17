@@ -203,6 +203,7 @@ func testCaseFromDeltas(s *TestSuite, startAccum, accumDiff sdk.Dec, timeDelta t
 		denom0,
 		expectedTwap,
 		false,
+		false,
 	}
 }
 
@@ -218,6 +219,7 @@ func testCaseFromDeltasAsset1(s *TestSuite, startAccum, accumDiff sdk.Dec, timeD
 		denom1,
 		expectedTwap,
 		false,
+		false,
 	}
 }
 
@@ -232,6 +234,7 @@ func geometricTestCaseFromDeltas0(s *TestSuite, startAccum, accumDiff sdk.Dec, t
 		},
 		denom0,
 		expectedTwap,
+		false,
 		false,
 	}
 }
