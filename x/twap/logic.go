@@ -16,8 +16,6 @@ import (
 // See twapLog and computeGeometricTwap functions for more details.
 var (
 	geometricTwapMathBase = osmomath.NewBigDec(2)
-	// TODO: analyze choice.
-	geometricTwapPowPrecision = sdk.MustNewDecFromStr("0.00000001")
 )
 
 func newTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
