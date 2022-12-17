@@ -42,20 +42,53 @@ func TestAddMut(t *testing.T) {
 	tests := []struct {
 		testing osmomath.BigDec
 		adding  osmomath.BigDec
-		want    osmomath.BigDec
 	}{
-		{osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0)},
-		{osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(2)},
-		{osmomath.NewBigDec(10), osmomath.NewBigDec(1), osmomath.NewBigDec(11)},
-		{osmomath.NewBigDec(12340), osmomath.NewBigDec(10), osmomath.NewBigDec(12350)},
-		{osmomath.NewDecWithPrec(12340, 4), osmomath.NewDecWithPrec(12340, 4), osmomath.NewDecWithPrec(24680, 4)},
-		{osmomath.NewDecWithPrec(12340, 5), osmomath.NewDecWithPrec(12, 5), osmomath.NewDecWithPrec(12352, 5)},
-		{osmomath.NewDecWithPrec(12340, 8), osmomath.NewDecWithPrec(1009009009009009009, 8), osmomath.NewDecWithPrec(1009009009009021349, 8)},
-		{osmomath.NewDecWithPrec(1009009009009009009, 17), osmomath.NewDecWithPrec(100, 17), osmomath.NewDecWithPrec(1009009009009009109, 17)},
+		{osmomath.NewBigDec(0), osmomath.NewBigDec(0)},
+		{osmomath.NewBigDec(1), osmomath.NewBigDec(1)},
+		{osmomath.NewBigDec(10), osmomath.NewBigDec(1)},
+		{osmomath.NewBigDec(12340), osmomath.NewBigDec(10)},
+		{osmomath.NewDecWithPrec(12340, 4), osmomath.NewDecWithPrec(12340, 4)},
+		{osmomath.NewDecWithPrec(12340, 5), osmomath.NewDecWithPrec(12, 5)},
+		{osmomath.NewDecWithPrec(12340, 8), osmomath.NewDecWithPrec(1009009009009009009, 8)},
+		{osmomath.NewDecWithPrec(1009009009009009009, 17), osmomath.NewDecWithPrec(100, 17)},
 	}
 	for _, tc := range tests {
+		want := tc.testing.Add(tc.adding)
 		tc.testing.AddMut(tc.adding)
-		require.Equal(t, tc.want, tc.testing)
+
+		require.Equal(t, want, tc.testing)
+	}
+}
+
+func TestQuoMut(t *testing.T) {
+	tests := []struct {
+		testing osmomath.BigDec
+		quo     osmomath.BigDec
+
+		expectingErr bool
+	}{
+		{osmomath.NewBigDec(0), osmomath.NewBigDec(0), true},
+		{osmomath.NewBigDec(1), osmomath.NewBigDec(1), false},
+		{osmomath.NewBigDec(10), osmomath.NewBigDec(1), false},
+		{osmomath.NewBigDec(12340), osmomath.NewBigDec(10), false},
+		{osmomath.NewDecWithPrec(12340, 4), osmomath.NewDecWithPrec(12340, 4), false},
+		{osmomath.NewDecWithPrec(12340, 5), osmomath.NewDecWithPrec(12, 5), false},
+		{osmomath.NewDecWithPrec(1009009009009009009, 8), osmomath.NewDecWithPrec(1000, 8), false},
+		{osmomath.NewDecWithPrec(500, 17), osmomath.NewDecWithPrec(100, 17), false},
+	}
+	for _, tc := range tests {
+		if !tc.expectingErr {
+			want := tc.testing.Quo(tc.quo)
+			tc.testing.QuoMut(tc.quo)
+
+			require.Equal(t, want, tc.testing)
+		} else {
+			save := tc.testing
+
+			require.Panics(t, func() { tc.testing.QuoMut(tc.quo) })
+			require.Equal(t, save, tc.testing)
+		}
+
 	}
 }
 func TestDecApproxEq(t *testing.T) {
