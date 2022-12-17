@@ -1328,7 +1328,7 @@ func (s *decimalTestSuite) TestPower() {
 
 			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance: minDecTolerance,
-				RoundingDir:       osmomath.RoundUnconstrained, // TODO: understand if rounding behavior is acceptable.
+				RoundingDir:       osmomath.RoundUnconstrained,
 			},
 		},
 		"10^0.001 (small non-integer exponent)": {
@@ -1340,7 +1340,7 @@ func (s *decimalTestSuite) TestPower() {
 
 			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance: minDecTolerance,
-				RoundingDir:       osmomath.RoundUnconstrained, // TODO: understand if rounding behavior is acceptable.
+				RoundingDir:       osmomath.RoundUnconstrained,
 			},
 		},
 		"13^100.7777 (large non-integer exponent)": {

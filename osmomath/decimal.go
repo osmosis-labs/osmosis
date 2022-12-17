@@ -1001,6 +1001,12 @@ func (d BigDec) PowerIntegerMut(power uint64) BigDec {
 // Power returns a result of raising the given big dec to
 // a positive decimal power. Panics if the power is negative.
 // Panics if the base is negative. Does not mutate the receiver.
+// The max supported exponent is defined by the global maxSupportedExponent.
+// If a greater exponent is given, the function panics.
+// The answer is correct up to a factor of 10^-18.
+// Meaning, result = result * k for k in [1 - 10^(-18), 1 + 10^(-18)]
+// Note: our Python script plots show accuracy up to a factor of 10^22.
+// However, in Go tests we only test up to 10^18. Therefore, this is the guarantee.
 // N.B.: support for negative power can be added when needed.
 func (d BigDec) Power(power BigDec) BigDec {
 	if d.IsNegative() {
@@ -1034,6 +1040,12 @@ func (d BigDec) Power(power BigDec) BigDec {
 // PowerMut returns a result of raising the given big dec to
 // a positive decimal power. Panics if the power is negative.
 // Panics if the base is negative. Mutates the receiver.
+// The max supported exponent is defined by the global maxSupportedExponent.
+// If a greater exponent is given, the function panics.
+// The answer is correct up to a factor of 10^-18.
+// Meaning, result = result * k for k in [1 - 10^(-18), 1 + 10^(-18)]
+// Note: our Python script plots show accuracy up to a factor of 10^22.
+// However, in Go tests we only test up to 10^18. Therefore, this is the guarantee.
 // N.B.: support for negative power can be added when needed.
 func (d BigDec) PowerMut(power BigDec) BigDec {
 	d.i.Set(d.Power(power).i)
