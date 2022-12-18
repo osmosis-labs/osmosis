@@ -155,6 +155,10 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 
 	bc.t.Logf("started Hermes relayer container: %s", hermesResource.Container.ID)
 
+	// XXX: Give time to both networks to start, otherwise we might see gRPC
+	// transport errors.
+	time.Sleep(5 * time.Second)
+
 	// create the client, connection and channel between the two Osmosis chains
 	return bc.connectIBCChains(chainConfigA, chainConfigB)
 }
