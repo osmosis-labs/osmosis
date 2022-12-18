@@ -2,6 +2,8 @@ syntax = "proto3";
 package osmosis.txfees.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "amino/amino.proto";
 import "osmosis/txfees/v1beta1/feetoken.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v13/x/txfees/types";
@@ -12,6 +14,9 @@ option go_package = "github.com/osmosis-labs/osmosis/v13/x/txfees/types";
 // used to update the Pool to associate with the denom. If Pool ID is set to 0,
 // it will remove the denom from the whitelisted set.
 message UpdateFeeTokenProposal {
+  option (amino.name) = "osmosis/UpdateFeeTokenProposal";
+  option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
+
   option (gogoproto.equal) = true;
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.goproto_stringer) = false;

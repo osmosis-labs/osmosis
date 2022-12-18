@@ -2,6 +2,7 @@ syntax = "proto3";
 package osmosis.protorev.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "amino/amino.proto";
 import "google/api/annotations.proto";
 import "osmosis/protorev/v1beta1/protorev.proto";
 
@@ -25,6 +26,8 @@ service Msg {
 
 // MsgSetHotRoutes defines the Msg/SetHotRoutes request type.
 message MsgSetHotRoutes {
+  option (amino.name) = "osmosis/MsgSetHotRoutes";
+
   // admin is the account that is authorized to set the hot routes.
   string admin = 1;
   // hot_routes is the list of hot routes to set.
@@ -36,6 +39,8 @@ message MsgSetHotRoutesResponse {}
 
 // MsgSetDeveloperAccount defines the Msg/SetDeveloperAccount request type.
 message MsgSetDeveloperAccount {
+  option (amino.name) = "osmosis/MsgSetDeveloperAccount";
+
   // admin is the account that is authorized to set the developer account.
   string admin = 1;
   // developer_account is the account that will receive a portion of the profits
