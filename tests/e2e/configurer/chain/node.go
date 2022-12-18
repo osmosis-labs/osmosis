@@ -71,8 +71,8 @@ func (n *NodeConfig) Run() error {
 			n.t.Logf("started node container: %s", n.Name)
 			return true
 		},
-		2*time.Minute,
-		time.Second,
+		time.Second*30,
+		10*time.Millisecond,
 		"Osmosis node failed to produce blocks",
 	)
 

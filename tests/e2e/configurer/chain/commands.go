@@ -280,7 +280,7 @@ func (n *NodeConfig) QueryPropStatusTimed(proposalNumber int, desiredStatus stri
 
 			return status == desiredStatus
 		},
-		1*time.Minute,
+		time.Second*30,
 		10*time.Millisecond,
 		"Osmosis node failed to retrieve prop tally",
 	)
