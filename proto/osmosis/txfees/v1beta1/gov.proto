@@ -15,7 +15,7 @@ option go_package = "github.com/osmosis-labs/osmosis/v13/x/txfees/types";
 // it will remove the denom from the whitelisted set.
 message UpdateFeeTokenProposal {
   option (amino.name) = "osmosis/UpdateFeeTokenProposal";
-  option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
+  option (cosmos_proto.implements_interface) = "Content";
 
   option (gogoproto.equal) = true;
   option (gogoproto.goproto_getters) = false;
