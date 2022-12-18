@@ -13,22 +13,22 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 	}{
 		"positive tick index 1": {
 			tickIndex:         sdk.NewInt(85176),
-			sqrtPriceExpected: "70.710004849206351867", // 70.710004849206120647
+			sqrtPriceExpected: "70.710004849206120646",
 			// https://www.wolframalpha.com/input?i2d=true&i=Power%5B1.0001%2CDivide%5B85176%2C2%5D%5D
 		},
 		"positive tick index 2": {
 			tickIndex:         sdk.NewInt(86129),
-			sqrtPriceExpected: "74.160724590951092256", // 74.160724590950847046
+			sqrtPriceExpected: "74.160724590950847045",
 			// https://www.wolframalpha.com/input?i2d=true&i=Power%5B1.0001%2CDivide%5B86129%2C2%5D%5D
 		},
 		"negative tick index 1": {
 			tickIndex:         sdk.NewInt(-85176),
-			sqrtPriceExpected: "0.014142270278902748", // 0.0141422702789027917
+			sqrtPriceExpected: "0.014142270278902791",
 			// https://www.wolframalpha.com/input?i2d=true&i=Power%5B1.0001%2CDivide%5B-85176%2C2%5D%5D
 		},
 		"negative tick index 2": {
 			tickIndex:         sdk.NewInt(-86129),
-			sqrtPriceExpected: "0.013484226394978060", // 0.0134842263949780882
+			sqrtPriceExpected: "0.013484226394978088",
 			// https://www.wolframalpha.com/input?i2d=true&i=Power%5B1.0001%2CDivide%5B-86129%2C2%5D%5D
 		},
 	}

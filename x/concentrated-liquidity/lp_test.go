@@ -54,7 +54,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			lowerTick:       int64(84220),
 			upperTick:       int64(86130),
 			amount0Expected: sdk.NewInt(997568),
-			liquidityAmount: sdk.MustNewDecFromStr("1514719247.706987476085061790"),
+			liquidityAmount: sdk.MustNewDecFromStr("1514719247.706887470270366521"),
 			tickSpacing:     10,
 		},
 		"error: non-existent pool": {
@@ -222,8 +222,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			sutConfigOverwrite: &lpTest{
 				liquidityAmount: baseCase.liquidityAmount.QuoInt64(2),
 
-				amount0Expected: baseCase.amount0Expected.QuoRaw(2),                   // 0.4992935 / 2 eth
-				amount1Expected: baseCase.amount1Expected.QuoRaw(2).Sub(sdk.OneInt()), // 2499 usdc, one is lost due to truncation
+				amount0Expected: baseCase.amount0Expected.QuoRaw(2), // 0.4992935 / 2 eth
+				amount1Expected: baseCase.amount1Expected.QuoRaw(2), // 2499 usdc
 			},
 		},
 		"error: no position created": {
