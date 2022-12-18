@@ -11,9 +11,13 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
-var _ types.PoolI = &Pool{}
+var (
+	_ swaproutertypes.PoolI = &Pool{}
+	_ types.CFMMPoolI       = &Pool{}
+)
 
 type unsortedPoolLiqError struct {
 	ActualLiquidity sdk.Coins
@@ -327,8 +331,8 @@ func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDen
 
 // SpotPrice calculates the approximate amount of `baseDenom` one would receive for
 // an input dx of `quoteDenom` (to simplify calculations, we approximate dx = 1)
-func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error) {
-	return p.spotPrice(baseAssetDenom, quoteAssetDenom)
+func (p Pool) SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom string) (sdk.Dec, error) {
+	return p.spotPrice(quoteAssetDenom, baseAssetDenom)
 }
 
 func (p Pool) Copy() Pool {
@@ -458,9 +462,9 @@ func validatePoolLiquidity(liquidity sdk.Coins, scalingFactors []uint64) error {
 		return liquidityAndScalingFactorCountMismatchError{LiquidityCount: liquidityCount, ScalingFactorCount: scalingFactorCount}
 	}
 
-	if liquidityCount < types.MinPoolAssets {
+	if liquidityCount < swaproutertypes.MinPoolAssets {
 		return types.ErrTooFewPoolAssets
-	} else if liquidityCount > types.MaxPoolAssets {
+	} else if liquidityCount > swaproutertypes.MaxPoolAssets {
 		return types.ErrTooManyPoolAssets
 	}
 

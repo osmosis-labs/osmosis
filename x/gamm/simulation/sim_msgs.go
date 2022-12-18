@@ -360,7 +360,7 @@ func RandomExitSwapShareAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.
 }
 
 // TODO: Fix CalcJoinPoolShares API so we don't have to do this
-func deriveRealMinShareOutAmt(ctx sdk.Context, tokenIn sdk.Coins, pool types.PoolI) (sdk.Int, error) {
+func deriveRealMinShareOutAmt(ctx sdk.Context, tokenIn sdk.Coins, pool types.CFMMPoolI) (sdk.Int, error) {
 	minShareOutAmt, _, err := pool.CalcJoinPoolShares(ctx, tokenIn, pool.GetSwapFee(ctx))
 	if err != nil {
 		return sdk.Int{}, err
@@ -403,18 +403,30 @@ func createPoolRestriction(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Contex
 	return func(acc legacysimulationtype.Account) bool {
 		accCoins := sim.BankKeeper().SpendableCoins(ctx, acc.Address)
 		hasTwoCoins := len(accCoins) >= 2
-		hasPoolCreationFee := accCoins.AmountOf("stake").GT(PoolCreationFee.Amount)
+		hasPoolCreationFee := accCoins.AmountOf(PoolCreationFee.Denom).GT(PoolCreationFee.Amount)
 		return hasTwoCoins && hasPoolCreationFee
 	}
 }
 
-func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64, types.PoolI, sdk.Coin, sdk.Coin, []string, string, error) {
+func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64, types.CFMMPoolI, sdk.Coin, sdk.Coin, []string, string, error) {
 	// select a pseudo-random pool ID, max bound by the upcoming pool ID
-	pool_id := simtypes.RandLTBound(sim, k.GetNextPoolId(ctx))
-	pool, err := k.GetPoolAndPoke(ctx, pool_id)
+	pools, err := k.GetPoolsAndPoke(ctx)
 	if err != nil {
 		return 0, nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), []string{}, "", err
 	}
+
+	numPools := len(pools)
+	if numPools == 0 {
+		return 0, nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), []string{}, "", fmt.Errorf("no pools exist")
+	}
+
+	pool_id := uint64(simtypes.RandLTBound(sim, numPools) + 1)
+
+	pool := pools[pool_id-1]
+	if err != nil {
+		return 0, nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), []string{}, "", err
+	}
+
 	poolCoins := pool.GetTotalPoolLiquidity(ctx)
 
 	// TODO: Improve this, don't just assume two asset pools

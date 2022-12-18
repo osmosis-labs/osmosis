@@ -28,6 +28,7 @@ import (
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
+	downtimemodule "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/module"
 	"github.com/osmosis-labs/osmosis/v13/x/epochs"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm"
 	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
@@ -37,8 +38,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/mint"
 	poolincentives "github.com/osmosis-labs/osmosis/v13/x/pool-incentives"
 	poolincentivesclient "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/client"
+	"github.com/osmosis-labs/osmosis/v13/x/protorev"
 	superfluid "github.com/osmosis-labs/osmosis/v13/x/superfluid"
 	superfluidclient "github.com/osmosis-labs/osmosis/v13/x/superfluid/client"
+	swaprouter "github.com/osmosis-labs/osmosis/v13/x/swaprouter/module"
 	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/twapmodule"
 	"github.com/osmosis-labs/osmosis/v13/x/txfees"
@@ -53,6 +56,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 	capability.AppModuleBasic{},
 	staking.AppModuleBasic{},
 	mint.AppModuleBasic{},
+	downtimemodule.AppModuleBasic{},
 	distr.AppModuleBasic{},
 	gov.NewAppModuleBasic(
 		append(
@@ -80,7 +84,9 @@ var AppModuleBasics = []module.AppModuleBasic{
 	transfer.AppModuleBasic{},
 	vesting.AppModuleBasic{},
 	gamm.AppModuleBasic{},
+	swaprouter.AppModuleBasic{},
 	twapmodule.AppModuleBasic{},
+	protorev.AppModuleBasic{},
 	txfees.AppModuleBasic{},
 	incentives.AppModuleBasic{},
 	lockup.AppModuleBasic{},

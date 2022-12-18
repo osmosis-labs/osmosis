@@ -13,7 +13,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	sdkrand "github.com/osmosis-labs/osmosis/v13/simulation/simtypes/random"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
@@ -36,12 +35,12 @@ func (suite *CfmmCommonTestSuite) CreateTestContext() sdk.Context {
 func TestCalculateAmountOutAndIn_InverseRelationship(
 	t *testing.T,
 	ctx sdk.Context,
-	pool types.PoolI,
+	pool types.CFMMPoolI,
 	assetInDenom string,
 	assetOutDenom string,
 	initialCalcOut int64,
 	swapFee sdk.Dec,
-	errTolerance osmoutils.ErrTolerance,
+	errTolerance osmomath.ErrTolerance,
 ) {
 	initialOut := sdk.NewInt64Coin(assetOutDenom, initialCalcOut)
 	initialOutCoins := sdk.NewCoins(initialOut)
@@ -80,7 +79,7 @@ func TestSlippageRelationWithLiquidityIncrease(
 	testname string,
 	t *testing.T,
 	ctx sdk.Context,
-	createPoolWithLiquidity func(sdk.Context, sdk.Coins) types.PoolI,
+	createPoolWithLiquidity func(sdk.Context, sdk.Coins) types.CFMMPoolI,
 	initLiquidity sdk.Coins,
 ) {
 	TestSlippageRelationOutGivenIn(testname, t, ctx, createPoolWithLiquidity, initLiquidity)
@@ -91,7 +90,7 @@ func TestSlippageRelationOutGivenIn(
 	testname string,
 	t *testing.T,
 	ctx sdk.Context,
-	createPoolWithLiquidity func(sdk.Context, sdk.Coins) types.PoolI,
+	createPoolWithLiquidity func(sdk.Context, sdk.Coins) types.CFMMPoolI,
 	initLiquidity sdk.Coins,
 ) {
 	r := rand.New(rand.NewSource(100))
@@ -124,7 +123,7 @@ func TestSlippageRelationInGivenOut(
 	testname string,
 	t *testing.T,
 	ctx sdk.Context,
-	createPoolWithLiquidity func(sdk.Context, sdk.Coins) types.PoolI,
+	createPoolWithLiquidity func(sdk.Context, sdk.Coins) types.CFMMPoolI,
 	initLiquidity sdk.Coins,
 ) {
 	r := rand.New(rand.NewSource(100))
@@ -165,7 +164,7 @@ func TestSlippageRelationInGivenOut(
 }
 
 // returns true if the pool can accommodate an InGivenOut swap with `tokenOut` amount out, false otherwise
-func isWithinBounds(ctx sdk.Context, pool types.PoolI, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (b bool) {
+func isWithinBounds(ctx sdk.Context, pool types.CFMMPoolI, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (b bool) {
 	b = true
 	defer func() {
 		if r := recover(); r != nil {

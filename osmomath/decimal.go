@@ -52,7 +52,7 @@ var (
 	tickLogOf2 = MustNewDecFromStr("0.000144262291094554178391070900057480")
 	// initialized in init() since requires
 	// precision to be defined.
-	twoBigDec BigDec
+	twoBigDec BigDec = MustNewDecFromStr("2")
 )
 
 // Decimal errors
@@ -68,8 +68,6 @@ func init() {
 	for i := 0; i <= Precision; i++ {
 		precisionMultipliers[i] = calcPrecisionMultiplier(int64(i))
 	}
-
-	twoBigDec = NewBigDec(2)
 }
 
 func precisionInt() *big.Int {
@@ -260,15 +258,32 @@ func (d BigDec) Sub(d2 BigDec) BigDec {
 	return BigDec{res}
 }
 
-// multiplication
-func (d BigDec) Mul(d2 BigDec) BigDec {
-	mul := new(big.Int).Mul(d.i, d2.i)
-	chopped := chopPrecisionAndRound(mul)
+// Clone performs a deep copy of the receiver
+// and returns the new result.
+func (d BigDec) Clone() BigDec {
+	copy := BigDec{new(big.Int)}
+	copy.i.Set(d.i)
+	return copy
+}
 
-	if chopped.BitLen() > maxDecBitLen {
+// Mut performs non-mutative multiplication.
+// The receiver is not modifier but the result is.
+func (d BigDec) Mul(d2 BigDec) BigDec {
+	copy := d.Clone()
+	copy.MulMut(d2)
+	return copy
+}
+
+// Mut performs non-mutative multiplication.
+// The receiver is not modifier but the result is.
+func (d BigDec) MulMut(d2 BigDec) BigDec {
+	d.i.Mul(d.i, d2.i)
+	d.i = chopPrecisionAndRound(d.i)
+
+	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
-	return BigDec{chopped}
+	return BigDec{d.i}
 }
 
 // multiplication truncate
@@ -406,7 +421,7 @@ func (d BigDec) ApproxRoot(root uint64) (guess BigDec, err error) {
 	guess, delta := OneDec(), OneDec()
 
 	for iter := 0; delta.Abs().GT(SmallestDec()) && iter < maxApproxRootIterations; iter++ {
-		prev := guess.Power(root - 1)
+		prev := guess.PowerInteger(root - 1)
 		if prev.IsZero() {
 			prev = SmallestDec()
 		}
@@ -418,24 +433,6 @@ func (d BigDec) ApproxRoot(root uint64) (guess BigDec, err error) {
 	}
 
 	return guess, nil
-}
-
-// Power returns a the result of raising to a positive integer power
-func (d BigDec) Power(power uint64) BigDec {
-	if power == 0 {
-		return OneDec()
-	}
-	tmp := OneDec()
-
-	for i := power; i > 1; {
-		if i%2 != 0 {
-			tmp = tmp.Mul(d)
-		}
-		i /= 2
-		d = d.Mul(d)
-	}
-
-	return d.Mul(tmp)
 }
 
 // ApproxSqrt is a wrapper around ApproxRoot for the common special case
@@ -971,4 +968,32 @@ func (x BigDec) CustomBaseLog(base BigDec) BigDec {
 	y := log2x_argument.Quo(log2x_base)
 
 	return y
+}
+
+// PowerInteger takes a given decimal to an integer power
+// and returns the result. Non-mutative. Uses square and multiply
+// algorithm for performing the calculation.
+func (d BigDec) PowerInteger(power uint64) BigDec {
+	clone := d.Clone()
+	return clone.PowerIntegerMut(power)
+}
+
+// PowerIntegerMut takes a given decimal to an integer power
+// and returns the result. Mutative. Uses square and multiply
+// algorithm for performing the calculation.
+func (d BigDec) PowerIntegerMut(power uint64) BigDec {
+	if power == 0 {
+		return OneDec()
+	}
+	tmp := OneDec()
+
+	for i := power; i > 1; {
+		if i%2 != 0 {
+			tmp = tmp.MulMut(d)
+		}
+		i /= 2
+		d = d.MulMut(d)
+	}
+
+	return d.MulMut(tmp)
 }

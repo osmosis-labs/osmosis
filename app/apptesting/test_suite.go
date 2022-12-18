@@ -166,6 +166,16 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 	return valAddr
 }
 
+// SetupMultipleValidators setups "numValidator" validators and returns their address in string
+func (s *KeeperTestHelper) SetupMultipleValidators(numValidator int) []string {
+	valAddrs := []string{}
+	for i := 0; i < numValidator; i++ {
+		valAddr := s.SetupValidator(stakingtypes.Bonded)
+		valAddrs = append(valAddrs, valAddr.String())
+	}
+	return valAddrs
+}
+
 // BeginNewBlock starts a new block.
 func (s *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 	var valAddr []byte
@@ -252,14 +262,14 @@ func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, re
 }
 
 // SetupGammPoolsWithBondDenomMultiplier uses given multipliers to set initial pool supply of bond denom.
-func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []sdk.Dec) []gammtypes.PoolI {
+func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []sdk.Dec) []gammtypes.CFMMPoolI {
 	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 	// TODO: use sdk crypto instead of tendermint to generate address
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
 	params := s.App.GAMMKeeper.GetParams(s.Ctx)
 
-	pools := []gammtypes.PoolI{}
+	pools := []gammtypes.CFMMPoolI{}
 	for index, multiplier := range multipliers {
 		token := fmt.Sprintf("token%d", index)
 		uosmoAmount := gammtypes.InitPoolSharesSupply.ToDec().Mul(multiplier).RoundInt()
@@ -291,7 +301,7 @@ func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []s
 		}
 		msg := balancer.NewMsgCreateBalancerPool(acc1, poolParams, poolAssets, defaultFutureGovernor)
 
-		poolId, err := s.App.GAMMKeeper.CreatePool(s.Ctx, msg)
+		poolId, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, msg)
 		s.Require().NoError(err)
 
 		pool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
@@ -323,7 +333,7 @@ func (s *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset sdk.Coin
 	)
 	s.Require().NoError(err)
 
-	spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, toAsset.Denom, fromAsset.Denom)
+	spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, fromAsset.Denom, toAsset.Denom)
 	s.Require().NoError(err)
 
 	return spotPrice
@@ -364,7 +374,7 @@ func (s *KeeperTestHelper) BuildTx(
 // StateNotAltered validates that app state is not altered. Fails if it is.
 func (s *KeeperTestHelper) StateNotAltered() {
 	oldState := s.App.ExportState(s.Ctx)
-	s.Commit()
+	s.App.Commit()
 	newState := s.App.ExportState(s.Ctx)
 	s.Require().Equal(oldState, newState)
 }

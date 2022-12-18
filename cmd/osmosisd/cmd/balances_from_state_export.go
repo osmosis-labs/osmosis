@@ -24,8 +24,10 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-const FlagSelectPoolIds = "breakdown-by-pool-ids"
-const FlagMinimumStakeAmount = "minimum-stake-amount"
+const (
+	FlagSelectPoolIds      = "breakdown-by-pool-ids"
+	FlagMinimumStakeAmount = "minimum-stake-amount"
+)
 
 type DeriveSnapshot struct {
 	NumberAccounts uint64                    `json:"num_accounts"`
@@ -57,7 +59,7 @@ func newDerivedAccount(address string) DerivedAccount {
 }
 
 // underlyingCoins returns liquidity pool's underlying coin balances.
-func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sdk.Coins {
+func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.CFMMPoolI) sdk.Coins {
 	balances := sdk.Coins{}
 	convertAgain := false
 	for _, coin := range originCoins {
@@ -85,7 +87,7 @@ func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sd
 // TODO: Make a separate type for this.
 func underlyingCoinsForSelectPools(
 	originCoins sdk.Coins,
-	pools map[string]gammtypes.PoolI,
+	pools map[string]gammtypes.CFMMPoolI,
 	selectPoolIDs []uint64,
 ) map[uint64]sdk.Coins {
 	balancesByPool := make(map[uint64]sdk.Coins)
@@ -263,9 +265,9 @@ Example:
 			}
 
 			// collect gamm pools
-			pools := make(map[string]gammtypes.PoolI)
+			pools := make(map[string]gammtypes.CFMMPoolI)
 			for _, any := range gammGenesis.Pools {
-				var pool gammtypes.PoolI
+				var pool gammtypes.CFMMPoolI
 				err := clientCtx.InterfaceRegistry.UnpackAny(any, &pool)
 				if err != nil {
 					panic(err)

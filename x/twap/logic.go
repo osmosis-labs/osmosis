@@ -55,7 +55,9 @@ func getSpotPrices(
 	previousErrorTime time.Time,
 ) (sp0 sdk.Dec, sp1 sdk.Dec, latestErrTime time.Time) {
 	latestErrTime = previousErrorTime
+	// sp0 = denom0 quote, denom1 base.
 	sp0, err0 := k.CalculateSpotPrice(ctx, poolId, denom0, denom1)
+	// sp1 = denom0 base, denom1 quote.
 	sp1, err1 := k.CalculateSpotPrice(ctx, poolId, denom1, denom0)
 	if err0 != nil || err1 != nil {
 		latestErrTime = ctx.BlockTime()

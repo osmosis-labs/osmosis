@@ -10,47 +10,42 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
+	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func NewTxCmd() *cobra.Command {
-	txCmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      "Generalized automated market maker transaction subcommands",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
-
+	txCmd := osmocli.TxIndexCmd(types.ModuleName)
+	osmocli.AddTxCmd(txCmd, NewJoinPoolCmd)
+	osmocli.AddTxCmd(txCmd, NewExitPoolCmd)
+	osmocli.AddTxCmd(txCmd, NewSwapExactAmountInCmd)
+	osmocli.AddTxCmd(txCmd, NewSwapExactAmountOutCmd)
+	osmocli.AddTxCmd(txCmd, NewJoinSwapExternAmountIn)
+	osmocli.AddTxCmd(txCmd, NewJoinSwapShareAmountOut)
+	osmocli.AddTxCmd(txCmd, NewExitSwapExternAmountOut)
+	osmocli.AddTxCmd(txCmd, NewExitSwapShareAmountIn)
 	txCmd.AddCommand(
-		NewCreatePoolCmd(),
-		NewJoinPoolCmd(),
-		NewExitPoolCmd(),
-		NewSwapExactAmountInCmd(),
-		NewSwapExactAmountOutCmd(),
-		NewJoinSwapExternAmountIn(),
-		NewJoinSwapShareAmountOut(),
-		NewExitSwapExternAmountOut(),
-		NewExitSwapShareAmountIn(),
+		NewCreatePoolCmd().BuildCommandCustomFn(),
 		NewStableSwapAdjustScalingFactorsCmd(),
 	)
-
 	return txCmd
 }
 
-func NewCreatePoolCmd() *cobra.Command {
-	cmd := &cobra.Command{
+var poolIdFlagOverride = map[string]string{
+	"poolid": FlagPoolId,
+}
+
+func NewCreatePoolCmd() *osmocli.TxCliDesc {
+	desc := osmocli.TxCliDesc{
 		Use:   "create-pool [flags]",
 		Short: "create a new pool and provide the liquidity to it",
-		Long:  `Must provide path to a pool JSON file (--pool-file) describing the pool to be created`,
-		Example: `Sample pool JSON file contents for balancer:
+		Long: `Must provide path to a pool JSON file (--pool-file) describing the pool to be created
+Sample pool JSON file contents for balancer:
 {
 	"weights": "4uatom,4osmo,2uakt",
 	"initial-deposit": "100uatom,5osmo,20uakt",
@@ -68,350 +63,176 @@ For stableswap (demonstrating need for a 1:1000 scaling factor, see doc)
 	"scaling-factors": "1000,1"
 }
 `,
-		Args: cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).
-				WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			poolType, err := cmd.Flags().GetString(FlagPoolType)
-			if err != nil {
-				return err
-			}
-			poolType = strings.ToLower(poolType)
-
-			var msg sdk.Msg
-			if poolType == "balancer" || poolType == "uniswap" {
-				txf, msg, err = NewBuildCreateBalancerPoolMsg(clientCtx, txf, cmd.Flags())
-				if err != nil {
-					return err
-				}
-			} else if poolType == "stableswap" {
-				txf, msg, err = NewBuildCreateStableswapPoolMsg(clientCtx, txf, cmd.Flags())
-				if err != nil {
-					return err
-				}
-			}
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		NumArgs:          0,
+		ParseAndBuildMsg: BuildCreatePoolCmd,
+		Flags: osmocli.FlagDesc{
+			RequiredFlags: []*flag.FlagSet{FlagSetCreatePoolFile()},
+			OptionalFlags: []*flag.FlagSet{FlagSetCreatePoolType()},
 		},
 	}
-
-	cmd.Flags().AddFlagSet(FlagSetCreatePool())
-	flags.AddTxFlagsToCmd(cmd)
-
-	_ = cmd.MarkFlagRequired(FlagPoolFile)
-
-	return cmd
+	return &desc
 }
 
-func NewJoinPoolCmd() *cobra.Command {
-	cmd := &cobra.Command{
+func NewJoinPoolCmd() (*osmocli.TxCliDesc, *types.MsgJoinPool) {
+	return &osmocli.TxCliDesc{
 		Use:   "join-pool",
 		Short: "join a new pool and provide the liquidity to it",
-		Args:  cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			txf, msg, err := NewBuildJoinPoolMsg(clientCtx, txf, cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		CustomFlagOverrides: map[string]string{
+			"poolid":         FlagPoolId,
+			"ShareOutAmount": FlagShareAmountOut,
 		},
-	}
-
-	cmd.Flags().AddFlagSet(FlagSetJoinPool())
-	flags.AddTxFlagsToCmd(cmd)
-
-	_ = cmd.MarkFlagRequired(FlagPoolId)
-	_ = cmd.MarkFlagRequired(FlagShareAmountOut)
-	_ = cmd.MarkFlagRequired(FlagMaxAmountsIn)
-
-	return cmd
+		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
+			"TokenInMaxs": osmocli.FlagOnlyParser(maxAmountsInParser),
+		},
+		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJoinPool()}},
+	}, &types.MsgJoinPool{}
 }
 
-func NewExitPoolCmd() *cobra.Command {
-	cmd := &cobra.Command{
+func NewExitPoolCmd() (*osmocli.TxCliDesc, *types.MsgExitPool) {
+	return &osmocli.TxCliDesc{
 		Use:   "exit-pool",
 		Short: "exit a new pool and withdraw the liquidity from it",
-		Args:  cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			txf, msg, err := NewBuildExitPoolMsg(clientCtx, txf, cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		CustomFlagOverrides: map[string]string{
+			"poolid":        FlagPoolId,
+			"ShareInAmount": FlagShareAmountIn,
 		},
-	}
-
-	cmd.Flags().AddFlagSet(FlagSetExitPool())
-	flags.AddTxFlagsToCmd(cmd)
-
-	_ = cmd.MarkFlagRequired(FlagPoolId)
-	_ = cmd.MarkFlagRequired(FlagShareAmountIn)
-	_ = cmd.MarkFlagRequired(FlagMinAmountsOut)
-
-	return cmd
+		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
+			"TokenOutMins": osmocli.FlagOnlyParser(minAmountsOutParser),
+		},
+		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetExitPool()}},
+	}, &types.MsgExitPool{}
 }
 
-func NewSwapExactAmountInCmd() *cobra.Command {
-	cmd := &cobra.Command{
+func NewSwapExactAmountInCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountIn) {
+	return &osmocli.TxCliDesc{
 		Use:   "swap-exact-amount-in [token-in] [token-out-min-amount]",
 		Short: "swap exact amount in",
-		Args:  cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			txf, msg, err := NewBuildSwapExactAmountInMsg(clientCtx, args[0], args[1], txf, cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
+			"Routes": osmocli.FlagOnlyParser(swapAmountInRoutes),
 		},
-	}
-
-	cmd.Flags().AddFlagSet(FlagSetQuerySwapRoutes())
-	flags.AddTxFlagsToCmd(cmd)
-	_ = cmd.MarkFlagRequired(FlagSwapRoutePoolIds)
-	_ = cmd.MarkFlagRequired(FlagSwapRouteDenoms)
-
-	return cmd
+		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
+	}, &types.MsgSwapExactAmountIn{}
 }
 
-func NewSwapExactAmountOutCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "swap-exact-amount-out [token-out] [token-in-max-amount]",
-		Short: "swap exact amount out",
-		Args:  cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			txf, msg, err := NewBuildSwapExactAmountOutMsg(clientCtx, args[0], args[1], txf, cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
-		},
-	}
-
-	cmd.Flags().AddFlagSet(FlagSetSwapAmountOutRoutes())
-	flags.AddTxFlagsToCmd(cmd)
-	_ = cmd.MarkFlagRequired(FlagSwapRoutePoolIds)
-	_ = cmd.MarkFlagRequired(FlagSwapRouteDenoms)
-
-	return cmd
+func NewSwapExactAmountOutCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountOut) {
+	// Can't get rid of this parser without a break, because the args are out of order.
+	return &osmocli.TxCliDesc{
+		Use:              "swap-exact-amount-out [token-out] [token-in-max-amount]",
+		Short:            "swap exact amount out",
+		NumArgs:          2,
+		ParseAndBuildMsg: NewBuildSwapExactAmountOutMsg,
+		Flags:            osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
+	}, &types.MsgSwapExactAmountOut{}
 }
 
-func NewJoinSwapExternAmountIn() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "join-swap-extern-amount-in [token-in] [share-out-min-amount]",
-		Short: "join swap extern amount in",
-		Args:  cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			txf, msg, err := NewBuildJoinSwapExternAmountInMsg(clientCtx, args[0], args[1], txf, cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
-		},
-	}
-
-	cmd.Flags().AddFlagSet(FlagSetJoinSwapExternAmount())
-	flags.AddTxFlagsToCmd(cmd)
-	_ = cmd.MarkFlagRequired(FlagPoolId)
-
-	return cmd
+func NewJoinSwapExternAmountIn() (*osmocli.TxCliDesc, *types.MsgJoinSwapExternAmountIn) {
+	return &osmocli.TxCliDesc{
+		Use:                 "join-swap-extern-amount-in [token-in] [share-out-min-amount]",
+		Short:               "join swap extern amount in",
+		CustomFlagOverrides: poolIdFlagOverride,
+		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
+	}, &types.MsgJoinSwapExternAmountIn{}
 }
 
-func NewJoinSwapShareAmountOut() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "join-swap-share-amount-out [token-in-denom] [token-in-max-amount] [share-out-amount]",
-		Short: "join swap share amount out",
-		Args:  cobra.ExactArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			txf, msg, err := NewBuildJoinSwapShareAmountOutMsg(clientCtx, args[0], args[1], args[2], txf, cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
-		},
-	}
-
-	cmd.Flags().AddFlagSet(FlagSetJoinSwapExternAmount())
-	flags.AddTxFlagsToCmd(cmd)
-	_ = cmd.MarkFlagRequired(FlagPoolId)
-
-	return cmd
+func NewJoinSwapShareAmountOut() (*osmocli.TxCliDesc, *types.MsgJoinSwapShareAmountOut) {
+	return &osmocli.TxCliDesc{
+		Use:                 "join-swap-share-amount-out [token-in-denom] [token-in-max-amount] [share-out-amount]",
+		Short:               "join swap share amount out",
+		CustomFlagOverrides: poolIdFlagOverride,
+		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
+	}, &types.MsgJoinSwapShareAmountOut{}
 }
 
-func NewExitSwapExternAmountOut() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "exit-swap-extern-amount-out [token-out] [share-in-max-amount]",
-		Short: "exit swap extern amount out",
-		Args:  cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			txf, msg, err := NewBuildExitSwapExternAmountOutMsg(clientCtx, args[0], args[1], txf, cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
-		},
-	}
-
-	cmd.Flags().AddFlagSet(FlagSetJoinSwapExternAmount())
-	flags.AddTxFlagsToCmd(cmd)
-	_ = cmd.MarkFlagRequired(FlagPoolId)
-
-	return cmd
+func NewExitSwapExternAmountOut() (*osmocli.TxCliDesc, *types.MsgExitSwapExternAmountOut) {
+	return &osmocli.TxCliDesc{
+		Use:                 "exit-swap-extern-amount-out [token-out] [share-in-max-amount]",
+		Short:               "exit swap extern amount out",
+		CustomFlagOverrides: poolIdFlagOverride,
+		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
+	}, &types.MsgExitSwapExternAmountOut{}
 }
 
-func NewExitSwapShareAmountIn() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "exit-swap-share-amount-in [token-out-denom] [share-in-amount] [token-out-min-amount]",
-		Short: "exit swap share amount in",
-		Args:  cobra.ExactArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			txf, msg, err := NewBuildExitSwapShareAmountInMsg(clientCtx, args[0], args[1], args[2], txf, cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
-		},
-	}
-
-	cmd.Flags().AddFlagSet(FlagSetJoinSwapExternAmount())
-	flags.AddTxFlagsToCmd(cmd)
-	_ = cmd.MarkFlagRequired(FlagPoolId)
-
-	return cmd
+func NewExitSwapShareAmountIn() (*osmocli.TxCliDesc, *types.MsgExitSwapShareAmountIn) {
+	return &osmocli.TxCliDesc{
+		Use:                 "exit-swap-share-amount-in [token-out-denom] [share-in-amount] [token-out-min-amount]",
+		Short:               "exit swap share amount in",
+		CustomFlagOverrides: poolIdFlagOverride,
+		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
+	}, &types.MsgExitSwapShareAmountIn{}
 }
 
+// TODO: Change these flags to args. Required flags don't make that much sense.
 func NewStableSwapAdjustScalingFactorsCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "adjust-scaling-factors --pool-id=[pool-id] --scaling-factors=[scaling-factors]",
-		Short:   "adjust scaling factors",
-		Example: "osmosisd adjust-scaling-factors --pool-id=1 --scaling-factors=\"100, 100\"",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			txf, msg, err := NewStableSwapAdjustScalingFactorsMsg(clientCtx, txf, cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
-		},
-	}
+	cmd := osmocli.TxCliDesc{
+		Use:              "adjust-scaling-factors --pool-id=[pool-id] --scaling-factors=[scaling-factors]",
+		Short:            "adjust scaling factors",
+		Example:          "osmosisd adjust-scaling-factors --pool-id=1 --scaling-factors=\"100, 100\"",
+		NumArgs:          0,
+		ParseAndBuildMsg: NewStableSwapAdjustScalingFactorsMsg,
+	}.BuildCommandCustomFn()
 
 	cmd.Flags().AddFlagSet(FlagSetAdjustScalingFactors())
-	flags.AddTxFlagsToCmd(cmd)
 	_ = cmd.MarkFlagRequired(FlagPoolId)
-
+	_ = cmd.MarkFlagRequired(FlagScalingFactors)
 	return cmd
 }
 
-func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+func BuildCreatePoolCmd(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
+	poolType, err := fs.GetString(FlagPoolType)
+	if err != nil {
+		return nil, err
+	}
+	poolType = strings.ToLower(poolType)
+
+	var msg sdk.Msg
+	if poolType == "balancer" || poolType == "uniswap" {
+		msg, err = NewBuildCreateBalancerPoolMsg(clientCtx, fs)
+		if err != nil {
+			return nil, err
+		}
+	} else if poolType == "stableswap" {
+		msg, err = NewBuildCreateStableswapPoolMsg(clientCtx, fs)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return msg, nil
+}
+
+func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (sdk.Msg, error) {
 	pool, err := parseCreateBalancerPoolFlags(fs)
 	if err != nil {
-		return txf, nil, fmt.Errorf("failed to parse pool: %w", err)
+		return nil, fmt.Errorf("failed to parse pool: %w", err)
 	}
 
 	deposit, err := sdk.ParseCoinsNormalized(pool.InitialDeposit)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	poolAssetCoins, err := sdk.ParseDecCoins(pool.Weights)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	if len(deposit) != len(poolAssetCoins) {
-		return txf, nil, errors.New("deposit tokens and token weights should have same length")
+		return nil, errors.New("deposit tokens and token weights should have same length")
 	}
 
 	swapFee, err := sdk.NewDecFromStr(pool.SwapFee)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	exitFee, err := sdk.NewDecFromStr(pool.ExitFee)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	var poolAssets []balancer.PoolAsset
 	for i := 0; i < len(poolAssetCoins); i++ {
 		if poolAssetCoins[i].Denom != deposit[i].Denom {
-			return txf, nil, errors.New("deposit tokens and token weights should have same denom order")
+			return nil, errors.New("deposit tokens and token weights should have same denom order")
 		}
 
 		poolAssets = append(poolAssets, balancer.PoolAsset{
@@ -435,18 +256,22 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 	if (pool.SmoothWeightChangeParams != smoothWeightChangeParamsInputs{}) {
 		duration, err := time.ParseDuration(pool.SmoothWeightChangeParams.Duration)
 		if err != nil {
-			return txf, nil, fmt.Errorf("could not parse duration: %w", err)
+			return nil, fmt.Errorf("could not parse duration: %w", err)
 		}
 
 		targetPoolAssetCoins, err := sdk.ParseDecCoins(pool.SmoothWeightChangeParams.TargetPoolWeights)
 		if err != nil {
-			return txf, nil, err
+			return nil, err
+		}
+
+		if len(targetPoolAssetCoins) != len(poolAssetCoins) {
+			return nil, errors.New("initial pool weights and target pool weights should have same length")
 		}
 
 		var targetPoolAssets []balancer.PoolAsset
 		for i := 0; i < len(targetPoolAssetCoins); i++ {
 			if targetPoolAssetCoins[i].Denom != poolAssetCoins[i].Denom {
-				return txf, nil, errors.New("initial pool weights and target pool weights should have same denom order")
+				return nil, errors.New("initial pool weights and target pool weights should have same denom order")
 			}
 
 			targetPoolAssets = append(targetPoolAssets, balancer.PoolAsset{
@@ -465,7 +290,7 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 		if pool.SmoothWeightChangeParams.StartTime != "" {
 			startTime, err := time.Parse(time.RFC3339, pool.SmoothWeightChangeParams.StartTime)
 			if err != nil {
-				return txf, nil, fmt.Errorf("could not parse time: %w", err)
+				return nil, fmt.Errorf("could not parse time: %w", err)
 			}
 
 			smoothWeightParams.StartTime = startTime
@@ -474,29 +299,29 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 		msg.PoolParams.SmoothWeightChangeParams = &smoothWeightParams
 	}
 
-	return txf, msg, nil
+	return msg, nil
 }
 
 // Apologies to whoever has to touch this next, this code is horrendous
-func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (sdk.Msg, error) {
 	flags, err := parseCreateStableswapPoolFlags(fs)
 	if err != nil {
-		return txf, nil, fmt.Errorf("failed to parse pool: %w", err)
+		return nil, fmt.Errorf("failed to parse pool: %w", err)
 	}
 
 	deposit, err := ParseCoinsNoSort(flags.InitialDeposit)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	swapFee, err := sdk.NewDecFromStr(flags.SwapFee)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	exitFee, err := sdk.NewDecFromStr(flags.ExitFee)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	poolParams := &stableswap.PoolParams{
@@ -511,105 +336,48 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, txf tx.Factory, f
 		for _, i := range ints {
 			u, err := strconv.ParseUint(i, 10, 64)
 			if err != nil {
-				return txf, nil, err
+				return nil, err
 			}
 			scalingFactors = append(scalingFactors, u)
 		}
 		if len(scalingFactors) != len(deposit) {
-			return txf, nil, fmt.Errorf("number of scaling factors doesn't match number of assets")
+			return nil, fmt.Errorf("number of scaling factors doesn't match number of assets")
 		}
 	}
 
-	msg := &stableswap.MsgCreateStableswapPool{
+	return &stableswap.MsgCreateStableswapPool{
 		Sender:                  clientCtx.GetFromAddress().String(),
 		PoolParams:              poolParams,
 		InitialPoolLiquidity:    deposit,
 		ScalingFactors:          scalingFactors,
 		ScalingFactorController: flags.ScalingFactorController,
 		FuturePoolGovernor:      flags.FutureGovernor,
-	}
-
-	return txf, msg, nil
+	}, nil
 }
 
-func NewBuildJoinPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolId, err := fs.GetUint64(FlagPoolId)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	shareAmountOutStr, err := fs.GetString(FlagShareAmountOut)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	shareAmountOut, ok := sdk.NewIntFromString(shareAmountOutStr)
-	if !ok {
-		return txf, nil, fmt.Errorf("invalid share amount out")
-	}
-
-	maxAmountsInStrs, err := fs.GetStringArray(FlagMaxAmountsIn)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	maxAmountsIn := sdk.Coins{}
-	for i := 0; i < len(maxAmountsInStrs); i++ {
-		parsed, err := sdk.ParseCoinsNormalized(maxAmountsInStrs[i])
-		if err != nil {
-			return txf, nil, err
-		}
-		maxAmountsIn = maxAmountsIn.Add(parsed...)
-	}
-
-	msg := &types.MsgJoinPool{
-		Sender:         clientCtx.GetFromAddress().String(),
-		PoolId:         poolId,
-		ShareOutAmount: shareAmountOut,
-		TokenInMaxs:    maxAmountsIn,
-	}
-
-	return txf, msg, nil
+func maxAmountsInParser(fs *flag.FlagSet) (sdk.Coins, error) {
+	return stringArrayCoinsParser(FlagMaxAmountsIn, fs)
 }
 
-func NewBuildExitPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolId, err := fs.GetUint64(FlagPoolId)
+func minAmountsOutParser(fs *flag.FlagSet) (sdk.Coins, error) {
+	return stringArrayCoinsParser(FlagMinAmountsOut, fs)
+}
+
+func stringArrayCoinsParser(flagName string, fs *flag.FlagSet) (sdk.Coins, error) {
+	amountsArr, err := fs.GetStringArray(flagName)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
-	shareAmountInStr, err := fs.GetString(FlagShareAmountIn)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	shareAmountIn, ok := sdk.NewIntFromString(shareAmountInStr)
-	if !ok {
-		return txf, nil, fmt.Errorf("invalid share amount in")
-	}
-
-	minAmountsOutStrs, err := fs.GetStringArray(FlagMinAmountsOut)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	minAmountsOut := sdk.Coins{}
-	for i := 0; i < len(minAmountsOutStrs); i++ {
-		parsed, err := sdk.ParseCoinsNormalized(minAmountsOutStrs[i])
+	coins := sdk.Coins{}
+	for i := 0; i < len(amountsArr); i++ {
+		parsed, err := sdk.ParseCoinsNormalized(amountsArr[i])
 		if err != nil {
-			return txf, nil, err
+			return nil, err
 		}
-		minAmountsOut = minAmountsOut.Add(parsed...)
+		coins = coins.Add(parsed...)
 	}
-
-	msg := &types.MsgExitPool{
-		Sender:        clientCtx.GetFromAddress().String(),
-		PoolId:        poolId,
-		ShareInAmount: shareAmountIn,
-		TokenOutMins:  minAmountsOut,
-	}
-
-	return txf, msg, nil
+	return coins, nil
 }
 
 func swapAmountInRoutes(fs *flag.FlagSet) ([]types.SwapAmountInRoute, error) {
@@ -674,170 +442,39 @@ func swapAmountOutRoutes(fs *flag.FlagSet) ([]types.SwapAmountOutRoute, error) {
 	return routes, nil
 }
 
-func NewBuildSwapExactAmountInMsg(clientCtx client.Context, tokenInStr, tokenOutMinAmtStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	routes, err := swapAmountInRoutes(fs)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	tokenIn, err := sdk.ParseCoinNormalized(tokenInStr)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	tokenOutMinAmt, ok := sdk.NewIntFromString(tokenOutMinAmtStr)
-	if !ok {
-		return txf, nil, fmt.Errorf("invalid token out min amount, %s", tokenOutMinAmtStr)
-	}
-	msg := &types.MsgSwapExactAmountIn{
-		Sender:            clientCtx.GetFromAddress().String(),
-		Routes:            routes,
-		TokenIn:           tokenIn,
-		TokenOutMinAmount: tokenOutMinAmt,
-	}
-
-	return txf, msg, nil
-}
-
-func NewBuildSwapExactAmountOutMsg(clientCtx client.Context, tokenOutStr, tokenInMaxAmountStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+func NewBuildSwapExactAmountOutMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
+	tokenOutStr, tokenInMaxAmountStr := args[0], args[1]
 	routes, err := swapAmountOutRoutes(fs)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	tokenOut, err := sdk.ParseCoinNormalized(tokenOutStr)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	tokenInMaxAmount, ok := sdk.NewIntFromString(tokenInMaxAmountStr)
 	if !ok {
-		return txf, nil, errors.New("invalid token in max amount")
+		return nil, errors.New("invalid token in max amount")
 	}
-	msg := &types.MsgSwapExactAmountOut{
+	return &types.MsgSwapExactAmountOut{
 		Sender:           clientCtx.GetFromAddress().String(),
 		Routes:           routes,
 		TokenInMaxAmount: tokenInMaxAmount,
 		TokenOut:         tokenOut,
-	}
-
-	return txf, msg, nil
+	}, nil
 }
 
-func NewBuildJoinSwapExternAmountInMsg(clientCtx client.Context, tokenInStr, shareOutMinAmountStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+func NewStableSwapAdjustScalingFactorsMsg(clientCtx client.Context, _args []string, fs *flag.FlagSet) (sdk.Msg, error) {
 	poolID, err := fs.GetUint64(FlagPoolId)
 	if err != nil {
-		return txf, nil, err
-	}
-
-	tokenIn, err := sdk.ParseCoinNormalized(tokenInStr)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	shareOutMinAmount, ok := sdk.NewIntFromString(shareOutMinAmountStr)
-	if !ok {
-		return txf, nil, errors.New("invalid share out min amount")
-	}
-	msg := &types.MsgJoinSwapExternAmountIn{
-		Sender:            clientCtx.GetFromAddress().String(),
-		PoolId:            poolID,
-		TokenIn:           tokenIn,
-		ShareOutMinAmount: shareOutMinAmount,
-	}
-
-	return txf, msg, nil
-}
-
-func NewBuildJoinSwapShareAmountOutMsg(clientCtx client.Context, tokenInDenom, tokenInMaxAmtStr, shareOutAmtStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolID, err := fs.GetUint64(FlagPoolId)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	tokenInMaxAmt, ok := sdk.NewIntFromString(tokenInMaxAmtStr)
-	if !ok {
-		return txf, nil, errors.New("token in max amount")
-	}
-
-	shareOutAmt, ok := sdk.NewIntFromString(shareOutAmtStr)
-	if !ok {
-		return txf, nil, errors.New("share out amount")
-	}
-
-	msg := &types.MsgJoinSwapShareAmountOut{
-		Sender:           clientCtx.GetFromAddress().String(),
-		PoolId:           poolID,
-		TokenInDenom:     tokenInDenom,
-		TokenInMaxAmount: tokenInMaxAmt,
-		ShareOutAmount:   shareOutAmt,
-	}
-
-	return txf, msg, nil
-}
-
-func NewBuildExitSwapExternAmountOutMsg(clientCtx client.Context, tokenOutStr, shareInMaxAmtStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolID, err := fs.GetUint64(FlagPoolId)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	tokenOut, err := sdk.ParseCoinNormalized(tokenOutStr)
-	if err != nil {
-		return txf, nil, errors.New("token out")
-	}
-
-	shareInMaxAmt, ok := sdk.NewIntFromString(shareInMaxAmtStr)
-	if !ok {
-		return txf, nil, errors.New("share in max amount")
-	}
-
-	msg := &types.MsgExitSwapExternAmountOut{
-		Sender:           clientCtx.GetFromAddress().String(),
-		PoolId:           poolID,
-		TokenOut:         tokenOut,
-		ShareInMaxAmount: shareInMaxAmt,
-	}
-
-	return txf, msg, nil
-}
-
-func NewBuildExitSwapShareAmountInMsg(clientCtx client.Context, tokenOutDenom, shareInAmtStr, tokenOutMinAmountStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolID, err := fs.GetUint64(FlagPoolId)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	shareInAmt, ok := sdk.NewIntFromString(shareInAmtStr)
-	if !ok {
-		return txf, nil, errors.New("share in amount")
-	}
-
-	tokenOutMinAmount, ok := sdk.NewIntFromString(tokenOutMinAmountStr)
-	if !ok {
-		return txf, nil, errors.New("token out min amount")
-	}
-
-	msg := &types.MsgExitSwapShareAmountIn{
-		Sender:            clientCtx.GetFromAddress().String(),
-		PoolId:            poolID,
-		TokenOutDenom:     tokenOutDenom,
-		ShareInAmount:     shareInAmt,
-		TokenOutMinAmount: tokenOutMinAmount,
-	}
-
-	return txf, msg, nil
-}
-
-func NewStableSwapAdjustScalingFactorsMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolID, err := fs.GetUint64(FlagPoolId)
-	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	scalingFactorsStr, err := fs.GetString(FlagScalingFactors)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	scalingFactorsStrSlice := strings.Split(scalingFactorsStr, ",")
@@ -846,7 +483,7 @@ func NewStableSwapAdjustScalingFactorsMsg(clientCtx client.Context, txf tx.Facto
 	for i, scalingFactorStr := range scalingFactorsStrSlice {
 		scalingFactor, err := strconv.ParseUint(scalingFactorStr, 10, 64)
 		if err != nil {
-			return txf, nil, err
+			return nil, err
 		}
 		scalingFactors[i] = scalingFactor
 	}
@@ -857,7 +494,7 @@ func NewStableSwapAdjustScalingFactorsMsg(clientCtx client.Context, txf tx.Facto
 		ScalingFactors: scalingFactors,
 	}
 
-	return txf, msg, nil
+	return msg, nil
 }
 
 // ParseCoinsNoSort parses coins from coinsStr but does not sort them.

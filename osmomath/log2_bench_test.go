@@ -13,6 +13,8 @@ func BenchmarkLog2(b *testing.B) {
 		NewBigDec(2048 * 2048 * 2048 * 2048 * 2048),
 		MustNewDecFromStr("999999999999999999999999999999999999999999999999999999.9122181273612911"),
 		MustNewDecFromStr("0.563289239121902491248219047129047129"),
+		BigDecFromSDKDec(MaxSpotPrice),                                  // 2^128 - 1
+		MustNewDecFromStr("336879543251729078828740861357450529340.45"), // (2^128 - 1) * 0.99
 	}
 
 	for i := 0; i < b.N; i++ {

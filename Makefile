@@ -7,8 +7,11 @@ SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
 DOCKER := $(shell which docker)
 BUILDDIR ?= $(CURDIR)/build
-E2E_UPGRADE_VERSION := "v13"
+E2E_UPGRADE_VERSION := "v14"
 
+
+GO_MAJOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
+GO_MINOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f2)
 
 export GO111MODULE = on
 
@@ -83,13 +86,19 @@ endif
 ###                                  Build                                  ###
 ###############################################################################
 
+check_version:
+ifneq ($(GO_MINOR_VERSION),18)
+	@echo "ERROR: Go version 1.18 is required for this version of Osmosis. Go 1.19 has changes that are believed to break consensus."
+	exit 1
+endif
+
 all: install lint test
 
 BUILD_TARGETS := build install
 
 build: BUILD_ARGS=-o $(BUILDDIR)/
 
-$(BUILD_TARGETS): go.sum $(BUILDDIR)/
+$(BUILD_TARGETS): check_version go.sum $(BUILDDIR)/
 	go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
 
 $(BUILDDIR)/:
@@ -299,6 +308,10 @@ build-e2e-script:
 
 docker-build-debug:
 	@DOCKER_BUILDKIT=1 docker build -t osmosis:${COMMIT} --build-arg BASE_IMG_TAG=debug -f Dockerfile .
+	@DOCKER_BUILDKIT=1 docker tag osmosis:${COMMIT} osmosis:debug
+
+docker-build-debug-alpine:
+	@DOCKER_BUILDKIT=1 docker build -t osmosis:${COMMIT} --build-arg BASE_IMG_TAG=debug --build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_ALPINE) -f Dockerfile .
 	@DOCKER_BUILDKIT=1 docker tag osmosis:${COMMIT} osmosis:debug
 
 docker-build-e2e-init-chain:
