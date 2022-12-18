@@ -79,7 +79,6 @@ func TestQuoMut(t *testing.T) {
 	for _, tc := range tests {
 		if !tc.expectingErr {
 			want := tc.testing.Quo(tc.quo)
-			fmt.Println(tc.testing, tc.quo)
 			tc.testing.QuoMut(tc.quo)
 
 			require.Equal(t, want, tc.testing)

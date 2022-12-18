@@ -346,11 +346,11 @@ func (d BigDec) Quo(d2 BigDec) BigDec {
 // mutative quotient
 func (d BigDec) QuoMut(d2 BigDec) BigDec {
 	// multiply precision twice
-	mul := new(big.Int).Mul(d.i, precisionReuse)
-	mul.Mul(mul, precisionReuse)
+	d.i.Mul(d.i, precisionReuse)
+	d.i.Mul(d.i, precisionReuse)
 
-	d.i.Quo(mul, d2.i)
-	d.i = chopPrecisionAndRound(d.i)
+	d.i.Quo(d.i, d2.i)
+	chopPrecisionAndRound(d.i)
 
 	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")

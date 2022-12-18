@@ -1,0 +1,16 @@
+- mut add
+- test add mut
+- quo  mut
+- test quo mut/ remove want from test struct
+
+<!-- < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < ☺
+v                               ✰  Thanks for creating a PR! ✰    
+v    Before smashing the submit button please review the checkboxes.
+v    If a checkbox is n/a - please still include it but + a little note why
+v    If your PR doesn't close an issue, that's OK!  Just remove the Closes: #XXX line!
+☺ > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > >  -->
+
+Closes: #3773
+
+## What is the purpose of the change
+mutative add and quo + tests
