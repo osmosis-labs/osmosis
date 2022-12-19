@@ -13,7 +13,7 @@ use crate::helpers::{
     calculate_min_output_from_twap, check_is_contract_owner, generate_swap_msg, validate_pool_route,
 };
 use crate::msg::{Slippage, SwapResponse};
-use crate::state::{SwapMsgReplyState, ROUTING_TABLE, SWAP_REPLY_STATES};
+use crate::state::{State, SwapMsgReplyState, ROUTING_TABLE, SWAP_REPLY_STATES};
 
 pub fn set_route(
     deps: DepsMut,
@@ -35,6 +35,20 @@ pub fn set_route(
     ROUTING_TABLE.save(deps.storage, (&input_denom, &output_denom), &pool_route)?;
 
     Ok(Response::new().add_attribute("action", "set_route"))
+}
+
+pub fn transfer_ownership(
+    deps: DepsMut,
+    info: MessageInfo,
+    new_owner: String,
+) -> Result<Response, ContractError> {
+    // only owner can transfer
+    deps.api.addr_validate(owner)?;
+    check_is_contract_owner(deps.as_ref(), info.sender)?;
+
+    STATE.save(deps.storage, State { owner: new_owner })?;
+
+    Ok(Response::new().add_attribute("action", "transfer_ownership"))
 }
 
 pub fn trade_with_slippage_limit(

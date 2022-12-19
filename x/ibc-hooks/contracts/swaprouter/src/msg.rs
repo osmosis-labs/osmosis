@@ -15,6 +15,9 @@ pub enum Slippage {
 
 #[cw_serde]
 pub enum ExecuteMsg {
+    TransferOwnership {
+        new_owner: String,
+    },
     SetRoute {
         input_denom: String,
         output_denom: String,
