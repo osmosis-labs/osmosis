@@ -19,6 +19,7 @@ RUN apk add --no-cache \
 
 # Download go dependencies
 WORKDIR /osmosis
+COPY go.work go.mod go.sum ./
 
 # Cosmwasm - Download correct libwasmvm version
 RUN WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | cut -d ' ' -f 2) && \
@@ -28,7 +29,6 @@ RUN WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | cut -d ' ' -f 2) &&
     wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/checksums.txt -O /tmp/checksums.txt && \
     sha256sum /lib/libwasmvm_muslc.a | grep $(cat /tmp/checksums.txt | grep $(uname -m) | cut -d ' ' -f 1)
 
-COPY go.work go.mod go.sum ./
 COPY x/ibc-hooks/ ./x/ibc-hooks
 COPY osmoutils/ ./osmoutils
 COPY osmomath/ ./osmomath
