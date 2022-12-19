@@ -27,7 +27,12 @@ require (
 	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/tendermint v0.34.22
 	github.com/tendermint/tm-db v0.6.8-0.20220506192307-f628bb5dc95b
+<<<<<<< HEAD
 	go.uber.org/multierr v1.8.0
+=======
+	github.com/tidwall/btree v1.6.0
+	go.uber.org/multierr v1.9.0
+>>>>>>> a5bc6077 (chore(deps): Bump go.uber.org/multierr from 1.8.0 to 1.9.0 (#3786))
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
 	google.golang.org/genproto v0.0.0-20221024183307-1bc688fe9f3e
 	google.golang.org/grpc v1.50.1
