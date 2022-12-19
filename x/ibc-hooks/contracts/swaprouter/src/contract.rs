@@ -6,7 +6,7 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
-use crate::execute::{handle_swap_reply, set_route, trade_with_slippage_limit};
+use crate::execute::{handle_swap_reply, set_route, trade_with_slippage_limit, transfer_ownership};
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::query::{query_owner, query_route};
 use crate::state::{State, STATE, SWAP_REPLY_STATES};
@@ -56,7 +56,7 @@ pub fn execute(
             output_denom,
             slippage,
         } => trade_with_slippage_limit(deps, env, info, input_coin, output_denom, slippage),
-        ExecuteMsg::TransferOwnership { new_owner } => todo!(),
+        ExecuteMsg::TransferOwnership { new_owner } => transfer_ownership(deps, info, new_owner),
     }
 }
 

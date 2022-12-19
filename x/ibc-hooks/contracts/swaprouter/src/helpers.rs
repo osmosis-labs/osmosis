@@ -14,6 +14,8 @@ use crate::{
 
 pub fn check_is_contract_owner(deps: Deps, sender: Addr) -> Result<(), ContractError> {
     let config = STATE.load(deps.storage).unwrap();
+    println!("here");
+    println!("{}, {}", config.owner, sender);
     if config.owner != sender {
         Err(ContractError::Unauthorized {})
     } else {
