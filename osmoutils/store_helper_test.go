@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	twaptypes "github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 

@@ -3,6 +3,7 @@ package twap_test
 import (
 	"errors"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"math"
 	"testing"
 	"time"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v13/x/twap"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"

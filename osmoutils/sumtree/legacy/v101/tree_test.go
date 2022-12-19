@@ -19,6 +19,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	v101 "github.com/osmosis-labs/osmosis/osmoutils/sumtree/legacy/v101"
+
+	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
 )
 
 func setupStore() sdk.KVStore {

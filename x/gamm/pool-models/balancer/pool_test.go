@@ -3,6 +3,7 @@ package balancer_test
 import (
 	"errors"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"testing"
 	time "time"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/test_helpers"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"

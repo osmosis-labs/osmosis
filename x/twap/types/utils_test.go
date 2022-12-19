@@ -2,11 +2,11 @@ package types
 
 import (
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
