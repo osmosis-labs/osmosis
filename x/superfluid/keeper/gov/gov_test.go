@@ -33,7 +33,7 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.ZeroDec(),
 	}, poolAssets, "")
-	poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
+	poolId, err := suite.App.SwapRouterKeeper.CreatePool(suite.Ctx, msg)
 	suite.Require().NoError(err)
 
 	return poolId

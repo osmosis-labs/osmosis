@@ -222,7 +222,7 @@ func (k Keeper) setNextPoolId(ctx sdk.Context, poolId uint64) {
 	store.Set(types.KeyNextGlobalPoolId, bz)
 }
 
-// GetNextPoolId returns the next pool Id.
+// Deprecated: pool id index has been moved to x/swaprouter.
 func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 	var nextPoolId uint64
 	store := ctx.KVStore(k.storeKey)
@@ -258,13 +258,6 @@ func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (swaproutertypes.Poo
 		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
 		return -1, sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
 	}
-}
-
-// getNextPoolIdAndIncrement returns the next pool Id, and increments the corresponding state entry.
-func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
-	nextPoolId := k.GetNextPoolId(ctx)
-	k.setNextPoolId(ctx, nextPoolId+1)
-	return nextPoolId
 }
 
 // setStableSwapScalingFactors sets the stable swap scaling factors.

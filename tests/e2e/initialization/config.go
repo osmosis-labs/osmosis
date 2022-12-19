@@ -159,7 +159,6 @@ func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, forkHei
 	return genutil.ExportGenesisFile(genDoc, genFile)
 }
 
-//nolint:typecheck
 func updateModuleGenesis[V proto.Message](appGenState map[string]json.RawMessage, moduleName string, protoVal V, updateGenesis func(V)) error {
 	if err := util.Cdc.UnmarshalJSON(appGenState[moduleName], protoVal); err != nil {
 		return err
