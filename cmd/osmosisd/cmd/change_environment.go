@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const EnvVariable = "OSMOSISD_ENVIRONMENT"
+
 // ExportAirdropSnapshotCmd generates a snapshot.json from a provided exported genesis.json.
 func ChangeEnvironmentCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -38,7 +40,7 @@ Example:
 			}
 
 			m := make(map[string]string)
-			m["OSMOSISD_ENVIRONMENT"] = newEnv
+			m[EnvVariable] = newEnv
 
 			godotenv.Write(m, envPath)
 
