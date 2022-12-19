@@ -14,15 +14,13 @@ func Liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
+	amountBigDec := osmomath.BigDecFromSDKDec(amount.ToDec())
+	sqrtPriceABigDec := osmomath.BigDecFromSDKDec(sqrtPriceA)
+	sqrtPriceBBigDec := osmomath.BigDecFromSDKDec(sqrtPriceB)
 
-	// transform sqrtPriceA and sqrtPriceB to BigDec using osmomath for more final precision
-	sqrtPriceAOsmomath := osmomath.MustNewDecFromStr(sqrtPriceA.String())
-	sqrtPriceBOsmomath := osmomath.MustNewDecFromStr(sqrtPriceB.String())
-	product := sqrtPriceAOsmomath.Mul(sqrtPriceBOsmomath)
-	diff := sqrtPriceBOsmomath.Sub(sqrtPriceAOsmomath)
-
-	// conduct the liquidity calculation, then transform back to normal sdk.Dec
-	return osmomath.MustNewDecFromStr(amount.String()).Mul(product).Quo(diff).SDKDec()
+	product := sqrtPriceABigDec.Mul(sqrtPriceBBigDec)
+	diff := sqrtPriceBBigDec.Sub(sqrtPriceABigDec)
+	return amountBigDec.Mul(product).Quo(diff).SDKDec()
 }
 
 // Liquidity1 takes an amount of asset1 in the pool as well as the sqrtpCur and the nextPrice
@@ -33,14 +31,12 @@ func Liquidity1(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
+	amountBigDec := osmomath.BigDecFromSDKDec(amount.ToDec())
+	sqrtPriceABigDec := osmomath.BigDecFromSDKDec(sqrtPriceA)
+	sqrtPriceBBigDec := osmomath.BigDecFromSDKDec(sqrtPriceB)
 
-	// transform sqrtPriceA and sqrtPriceB to BigDec using osmomath for more final precision
-	sqrtPriceAOsmomath := osmomath.MustNewDecFromStr(sqrtPriceA.String())
-	sqrtPriceBOsmomath := osmomath.MustNewDecFromStr(sqrtPriceB.String())
-	diff := sqrtPriceBOsmomath.Sub(sqrtPriceAOsmomath)
-
-	// conduct the liquidity calculation, then transform back to normal sdk.Dec
-	return osmomath.MustNewDecFromStr(amount.String()).Quo(diff).SDKDec()
+	diff := sqrtPriceBBigDec.Sub(sqrtPriceABigDec)
+	return amountBigDec.Quo(diff).SDKDec()
 }
 
 // CalcAmount0 takes the asset with the smaller liquidity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 0
@@ -90,10 +86,11 @@ func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 
 // getNextSqrtPriceFromAmount0RoundingUp utilizes the current squareRootPrice, liquidity of denom0, and amount of denom0 that still needs
 // to be swapped in order to determine the next squareRootPrice
-// if (amountRemaining * sqrtPriceCurrent) / amountRemaining  == sqrtPriceCurrent AND (liquidity) + (amountRemaining * sqrtPriceCurrent) >= (liquidity)
+// there are two formulas used for calculating the nextSquareRootPrice. The most accurate formula is used when we can guarantee the product will not overflow
 // sqrtPriceNext = (liquidity * sqrtPriceCurrent) / ((liquidity) + (amountRemaining * sqrtPriceCurrent))
-// else
+// otherwise we use the following, less precise formula
 // sqrtPriceNext = ((liquidity)) / (((liquidity) / (sqrtPriceCurrent)) + (amountRemaining))
+// TODO: make an issue to determine if we can remove the less precise formula
 func GetNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
 	if amountRemaining.Equal(sdk.ZeroDec()) {
 		return sqrtPriceCurrent
@@ -101,7 +98,6 @@ func GetNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRe
 
 	product := amountRemaining.Mul(sqrtPriceCurrent)
 	// use precise formula if product doesn't overflow
-	// TODO: see if we even need to do this check
 	if (product.Quo(amountRemaining)).Equal(sqrtPriceCurrent) {
 		denominator := liquidity.Add(product)
 		if denominator.GTE(liquidity) {
@@ -109,7 +105,7 @@ func GetNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRe
 		}
 	}
 	// if the product does overflow, use less precise formula
-	return liquidity.QuoRoundUp((liquidity.Quo(sqrtPriceCurrent).Add(amountRemaining)))
+	return liquidity.QuoRoundUp(liquidity.Quo(sqrtPriceCurrent).Add(amountRemaining))
 }
 
 // getNextSqrtPriceFromAmount1RoundingDown utilizes the current squareRootPrice, liquidity of denom1, and amount of denom1 that still needs
