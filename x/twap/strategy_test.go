@@ -8,7 +8,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/twap"
-	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
 // TestComputeArithmeticStrategyTwap tests computeArithmeticTwap on various inputs.
@@ -138,17 +137,7 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap() {
 	}
 }
 
-// TODO: split up this test case to cover both arithmetic and geometric twap
-func (s *TestSuite) TestComputeArithmeticTwap_ThreeAsset() {
-	testThreeAssetCaseFromDeltas := func(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeThreeAssetArithmeticTwapTestCase {
-		return computeThreeAssetArithmeticTwapTestCase{
-			newThreeAssetOneSidedRecord(baseTime, startAccum, true),
-			newThreeAssetOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), true),
-			[]string{denom0, denom0, denom1},
-			[]sdk.Dec{expectedTwap, expectedTwap, expectedTwap},
-		}
-	}
-
+func (s *TestSuite) TestComputeArithmeticTwap_ThreeAsset_Arithmetic() {
 	tenSecAccum := OneSec.MulInt64(10)
 	pointOneAccum := OneSec.QuoInt64(10)
 	tests := map[string]computeThreeAssetArithmeticTwapTestCase{
@@ -158,12 +147,12 @@ func (s *TestSuite) TestComputeArithmeticTwap_ThreeAsset() {
 			quoteAsset:  []string{denom0, denom0, denom1},
 			expTwap:     []sdk.Dec{sdk.OneDec(), sdk.OneDec(), sdk.OneDec()},
 		},
-		"three asset same record: asset1, end spot price = 1": {
-			startRecord: newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			endRecord:   newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			quoteAsset:  []string{denom1, denom2, denom2},
-			expTwap:     []sdk.Dec{sdk.OneDec(), sdk.OneDec(), sdk.OneDec()},
-		},
+		// "three asset same record: asset1, end spot price = 1": {
+		// 	startRecord: newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+		// 	endRecord:   newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+		// 	quoteAsset:  []string{denom1, denom2, denom2},
+		// 	expTwap:     []sdk.Dec{sdk.OneDec(), sdk.OneDec(), sdk.OneDec()},
+		// },
 		"three asset. accumulator = 10*OneSec, t=5s. 0 base accum": testThreeAssetCaseFromDeltas(
 			sdk.ZeroDec(), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
 
@@ -184,61 +173,46 @@ func (s *TestSuite) TestComputeArithmeticTwap_ThreeAsset() {
 	}
 }
 
-type computeThreeAssetArithmeticTwapTestCase struct {
-	startRecord []types.TwapRecord
-	endRecord   []types.TwapRecord
-	quoteAsset  []string
-	expTwap     []sdk.Dec
-}
+func (s *TestSuite) TestComputeArithmeticTwap_ThreeAsset_Geometric() {
+	var (
+		five        = sdk.NewDec(5)
+		fiveFor3Sec = OneSec.MulInt64(3).Mul(twap.TwapLog(five))
 
-func testCaseFromDeltas(s *TestSuite, startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTwapTestCase {
-	return computeTwapTestCase{
-		newOneSidedRecord(baseTime, startAccum, true),
-		newOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), true),
-		[]twap.TwapStrategy{
-			&twap.ArithmeticTwapStrategy{
-				TwapKeeper: *s.App.TwapKeeper,
-			},
+		ten          = five.MulInt64(2)
+		tenFor100Sec = OneSec.MulInt64(100).Mul(twap.TwapLog(ten))
+
+		errTolerance = sdk.MustNewDecFromStr("0.00000001")
+	)
+
+	tests := map[string]computeThreeAssetArithmeticTwapTestCase{
+		"three asset basic: spot price = 10 for one second, 0 init accumulator": {
+			startRecord: newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			endRecord:   newThreeAssetOneSidedRecord(tPlusOne, geometricTenSecAccum, true),
+			quoteAsset:  []string{denom0, denom0, denom1},
+			expTwap:     []sdk.Dec{sdk.NewDec(10), sdk.NewDec(10), sdk.NewDec(10)},
 		},
-		denom0,
-		expectedTwap,
-		false,
-		false,
-	}
-}
+		// "three asset same record: asset1, end spot price = 1": {
+		// 	startRecord: newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+		// 	endRecord:   newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+		// 	quoteAsset:  []string{denom1, denom2, denom2},
+		// 	expTwap:     []sdk.Dec{sdk.OneDec(), sdk.OneDec(), sdk.OneDec()},
+		// },
+		"three asset. accumulator = 5*3Sec, t=3s, no start accum": testThreeAssetCaseFromDeltas(
+			sdk.ZeroDec(), fiveFor3Sec, 3*time.Second, five),
 
-func testCaseFromDeltasAsset1(s *TestSuite, startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTwapTestCase {
-	return computeTwapTestCase{
-		newOneSidedRecord(baseTime, startAccum, false),
-		newOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), false),
-		[]twap.TwapStrategy{
-			&twap.ArithmeticTwapStrategy{
-				TwapKeeper: *s.App.TwapKeeper,
-			},
-		},
-		denom1,
-		expectedTwap,
-		false,
-		false,
+		// test that base accum has no impact
+		"three asset. accumulator = 5*3Sec, t=3s. 10 base accum": testThreeAssetCaseFromDeltas(
+			geometricTenSecAccum, fiveFor3Sec, 3*time.Second, five),
+		"three asset. accumulator = 100*100s, t=100s. .1*second base accum": testThreeAssetCaseFromDeltas(
+			twap.TwapLog(OneSec.Quo(ten)), tenFor100Sec, 100*time.Second, ten),
 	}
-}
-
-func geometricTestCaseFromDeltas0(s *TestSuite, startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTwapTestCase {
-	return computeTwapTestCase{
-		newOneSidedGeometricRecord(baseTime, startAccum),
-		newOneSidedGeometricRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff)),
-		[]twap.TwapStrategy{
-			&twap.GeometricTwapStrategy{
-				TwapKeeper: *s.App.TwapKeeper,
-			},
-		},
-		denom0,
-		expectedTwap,
-		false,
-		false,
+	for name, test := range tests {
+		s.Run(name, func() {
+			for i, startRec := range test.startRecord {
+				geometricStrategy := &twap.GeometricTwapStrategy{TwapKeeper: *s.App.TwapKeeper}
+				actualTwap := geometricStrategy.ComputeTwap(startRec, test.endRecord[i], test.quoteAsset[i])
+				osmoassert.DecApproxEq(s.T(), test.expTwap[i], actualTwap, errTolerance)
+			}
+		})
 	}
-}
-
-func geometricTestCaseFromDeltas1(s *TestSuite, startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTwapTestCase {
-	return geometricTestCaseFromDeltas0(s, startAccum, accumDiff, timeDelta, sdk.OneDec().Quo(expectedTwap))
 }
