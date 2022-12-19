@@ -84,9 +84,9 @@ def compute_max_error(y_approximation, y_actual) -> sp.Float:
             max = sp.Max(max, cur_abs)
     return max
 
-def compute_error_range(y_approximation: list, y_actual: list) -> list[sp.Float]:
+def compute_absolute_error_range(y_approximation: list, y_actual: list) -> list[sp.Float]:
     """ Given an approximated list of y values and actual y values, computes and returns
-    error deltas between them.
+    absolute error between them, computed as | y_approximation[i] - y_actual[i] |.
 
     CONTRACT:
     - y_approximation and y_actual must be the same length
@@ -99,6 +99,29 @@ def compute_error_range(y_approximation: list, y_actual: list) -> list[sp.Float]
         if cur_abs is sp.nan:
             raise ValueError(F"cur_abs is nan. y_approximation[i] ({y_approximation[i]}) and y_actual[i] ({y_actual[i]})")
         result.append(cur_abs)
+    return result
+
+def compute_relative_error_range(y_approximation: list, y_actual: list) -> list[sp.Float]:
+    """ Given an approximated list of y values and actual y values, computes and returns
+    relative error between them, computed as | y_approximation[i] - y_actual[i] | / y_actual[i].
+
+    For y_actual[i] = 0, relative error is defined as 0.
+
+    CONTRACT:
+    - y_approximation and y_actual must be the same length
+    - for every i in range(len(y_approximation)), y_approximation[i] and y_actual[i] must correspond to the
+    same x coordinate
+    """
+    result = []
+    for i in range(len(y_approximation)):
+        if y_actual[i] == 0:
+            result.append(0)
+            continue
+
+        cur_relative_error = sp.Abs(y_approximation[i] - y_actual[i]) / y_actual[i]
+        if cur_relative_error is sp.nan:
+            raise ValueError(F"cur_abs is nan. y_approximation[i] ({y_approximation[i]}) and y_actual[i] ({y_actual[i]})")
+        result.append(cur_relative_error)
     return result
 
 def equispaced_poly_approx(fn, x_start: sp.Float, x_end: sp.Float, num_terms: int):

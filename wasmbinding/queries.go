@@ -63,11 +63,11 @@ func (qp QueryPlugin) GetSpotPrice(ctx sdk.Context, spotPrice *bindings.SpotPric
 	}
 
 	poolId := spotPrice.Swap.PoolId
-	denomIn := spotPrice.Swap.DenomIn
-	denomOut := spotPrice.Swap.DenomOut
+	baseAsset := spotPrice.Swap.DenomOut
+	quoteAsset := spotPrice.Swap.DenomIn
 	withSwapFee := spotPrice.WithSwapFee
 
-	price, err := qp.gammKeeper.CalculateSpotPrice(ctx, poolId, denomIn, denomOut)
+	price, err := qp.gammKeeper.CalculateSpotPrice(ctx, poolId, quoteAsset, baseAsset)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "gamm get spot price")
 	}

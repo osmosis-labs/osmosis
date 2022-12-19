@@ -89,7 +89,7 @@ func (msg MsgCreateBalancerPool) InitialLiquidity() sdk.Coins {
 		coins = append(coins, asset.Token)
 	}
 	if coins == nil {
-		panic("Shouldn't happen")
+		panic("InitialLiquidity coins is equal to nil - this shouldn't happen")
 	}
 	coins = coins.Sort()
 	return coins

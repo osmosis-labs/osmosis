@@ -112,7 +112,7 @@ func genTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, ch
 		if err != nil {
 			panic(err)
 		}
-		//nolint:forcetypeassert
+
 		sigs[i] = sig
 		err = txBuilder.SetSignatures(sigs...)
 		if err != nil {
