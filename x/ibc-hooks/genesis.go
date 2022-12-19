@@ -9,7 +9,7 @@ import (
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"reflect"
 
-	"github.com/osmosis-labs/ibc-hooks/types"
+	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 )
 
 var WasmHookModuleAccountAddr sdk.AccAddress = address.Module(types.ModuleName, []byte("wasm-hook intermediary account"))

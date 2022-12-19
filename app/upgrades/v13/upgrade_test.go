@@ -2,7 +2,7 @@ package v13_test
 
 import (
 	"fmt"
-	ibchookstypes "github.com/osmosis-labs/ibc-hooks/types"
+	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 	"testing"
 
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	ibchooks "github.com/osmosis-labs/ibc-hooks"
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
+	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 )
 
 type UpgradeTestSuite struct {

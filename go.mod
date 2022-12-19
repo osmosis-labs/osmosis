@@ -18,7 +18,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/ibc-hooks v0.0.0
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0
 	github.com/osmosis-labs/osmosis/osmomath v0.0.1
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
@@ -307,7 +307,7 @@ replace (
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// IBC hooks
-	github.com/osmosis-labs/ibc-hooks => ./x/ibc-hooks
+	github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
 	// use local folders for our custom go mods
 	github.com/osmosis-labs/osmosis/osmomath => ./osmomath
 	// use grpc compatible with cosmos protobufs
