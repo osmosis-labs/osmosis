@@ -557,7 +557,6 @@ type computeTwapTestCase struct {
 	expPanic       bool
 }
 
-
 // TestPruneRecords tests that twap records earlier than
 // current block time - RecordHistoryKeepPeriod are pruned from the store
 // while keeping the newest record before the above time threshold.
@@ -1332,6 +1331,20 @@ func (s *TestSuite) TestComputeTwap() {
 		"geometric only: accumulator = log(10)*OneSec, t=5s. 0 base accum": geometricTestCaseFromDeltas0(
 			s, sdk.ZeroDec(), geometricTenSecAccum, 5*time.Second, twap.TwapPow(geometricTenSecAccum.QuoInt64(5*1000))),
 		"geometric only: accumulator = log(10)*OneSec, t=100s. 0 base accum (asset 1)": geometricTestCaseFromDeltas1(s, sdk.ZeroDec(), geometricTenSecAccum, 100*time.Second, sdk.OneDec().Quo(twap.TwapPow(geometricTenSecAccum.QuoInt64(100*1000)))),
+		"three asset same record: asset1, end spot price = 1": {
+			startRecord: newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true)[1],
+			endRecord:   newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true)[1],
+			quoteAsset:  denom2,
+			expTwap:     sdk.OneDec(),
+			twapStrategies: []twap.TwapStrategy{
+				&twap.ArithmeticTwapStrategy{
+					TwapKeeper: *s.App.TwapKeeper,
+				},
+				&twap.GeometricTwapStrategy{
+					TwapKeeper: *s.App.TwapKeeper,
+				},
+			},
+		},
 	}
 	for name, test := range tests {
 		s.Run(name, func() {
@@ -1414,7 +1427,6 @@ func (s *TestSuite) TestTwapLog() {
 	result_by_customBaseLog := priceValue.CustomBaseLog(osmomath.BigDecFromSDKDec(twap.GeometricTwapMathBase))
 	s.Require().True(expectedValue.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
 	s.Require().True(result_by_customBaseLog.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
-
 }
 
 func (s *TestSuite) TestTwapPow() {
@@ -1429,7 +1441,6 @@ func (s *TestSuite) TestTwapPow() {
 	s.Require().True(expectedValue.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
 	s.Require().True(osmomath.MustNewDecFromStr(fmt.Sprint(result_by_mathPow)).Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
 }
-
 
 func testCaseFromDeltas(s *TestSuite, startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTwapTestCase {
 	return computeTwapTestCase{

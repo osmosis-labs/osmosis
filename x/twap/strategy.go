@@ -32,7 +32,6 @@ func (s *arithmetic) computeTwap(startRecord types.TwapRecord, endRecord types.T
 	}
 	timeDelta := endRecord.Time.Sub(startRecord.Time)
 	return types.AccumDiffDivDuration(accumDiff, timeDelta)
-
 }
 
 // computeTwap computes and returns a geometric TWAP between

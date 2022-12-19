@@ -147,12 +147,6 @@ func (s *TestSuite) TestComputeArithmeticTwap_ThreeAsset_Arithmetic() {
 			quoteAsset:  []string{denom0, denom0, denom1},
 			expTwap:     []sdk.Dec{sdk.OneDec(), sdk.OneDec(), sdk.OneDec()},
 		},
-		// "three asset same record: asset1, end spot price = 1": {
-		// 	startRecord: newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-		// 	endRecord:   newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-		// 	quoteAsset:  []string{denom1, denom2, denom2},
-		// 	expTwap:     []sdk.Dec{sdk.OneDec(), sdk.OneDec(), sdk.OneDec()},
-		// },
 		"three asset. accumulator = 10*OneSec, t=5s. 0 base accum": testThreeAssetCaseFromDeltas(
 			sdk.ZeroDec(), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
 
@@ -191,12 +185,6 @@ func (s *TestSuite) TestComputeArithmeticTwap_ThreeAsset_Geometric() {
 			quoteAsset:  []string{denom0, denom0, denom1},
 			expTwap:     []sdk.Dec{sdk.NewDec(10), sdk.NewDec(10), sdk.NewDec(10)},
 		},
-		// "three asset same record: asset1, end spot price = 1": {
-		// 	startRecord: newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-		// 	endRecord:   newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-		// 	quoteAsset:  []string{denom1, denom2, denom2},
-		// 	expTwap:     []sdk.Dec{sdk.OneDec(), sdk.OneDec(), sdk.OneDec()},
-		// },
 		"three asset. accumulator = 5*3Sec, t=3s, no start accum": testThreeAssetCaseFromDeltas(
 			sdk.ZeroDec(), fiveFor3Sec, 3*time.Second, five),
 
