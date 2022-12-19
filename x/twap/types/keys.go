@@ -5,8 +5,6 @@ import (
 	fmt "fmt"
 	time "time"
 
-	"github.com/osmosis-labs/osmosis/v13/osmostores"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 
@@ -81,7 +79,7 @@ func GetAllMostRecentTwapsForPool(store sdk.KVStore, poolId uint64) ([]TwapRecor
 	poolIdPlusOneS := osmoutils.FormatFixedLengthU64(poolId + 1)
 	startPrefix := fmt.Sprintf("%s%s%s", mostRecentTWAPsPrefix, poolIdS, KeySeparator)
 	endPrefix := fmt.Sprintf("%s%s%s", mostRecentTWAPsPrefix, poolIdPlusOneS, KeySeparator)
-	return osmostores.GatherValuesFromStore(store, []byte(startPrefix), []byte(endPrefix), ParseTwapFromBz)
+	return osmoutils.GatherValuesFromStore(store, []byte(startPrefix), []byte(endPrefix), ParseTwapFromBz)
 }
 
 func ParseTwapFromBz(bz []byte) (twap TwapRecord, err error) {

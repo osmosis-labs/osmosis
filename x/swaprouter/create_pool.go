@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/osmosis-labs/osmosis/v13/osmostores"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -144,7 +142,7 @@ func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 
 func (k Keeper) SetPoolRoute(ctx sdk.Context, poolId uint64, poolType types.PoolType) {
 	store := ctx.KVStore(k.storeKey)
-	osmostores.MustSet(store, types.FormatModuleRouteKey(poolId), &types.ModuleRoute{PoolType: poolType})
+	osmoutils.MustSet(store, types.FormatModuleRouteKey(poolId), &types.ModuleRoute{PoolType: poolType})
 }
 
 // GetSwapModule returns the swap module for the given pool ID.
@@ -159,7 +157,7 @@ func (k Keeper) GetPoolModule(ctx sdk.Context, poolId uint64) (types.SwapI, erro
 	store := ctx.KVStore(k.storeKey)
 
 	moduleRoute := &types.ModuleRoute{}
-	found, err := osmostores.Get(store, types.FormatModuleRouteKey(poolId), moduleRoute)
+	found, err := osmoutils.Get(store, types.FormatModuleRouteKey(poolId), moduleRoute)
 	if err != nil {
 		return nil, err
 	}

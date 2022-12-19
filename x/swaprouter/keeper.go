@@ -3,8 +3,7 @@ package swaprouter
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogotypes "github.com/gogo/protobuf/types"
-	"github.com/osmosis-labs/osmosis/v13/osmostores"
-
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -76,7 +75,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	nextPoolId := gogotypes.UInt64Value{}
-	osmostores.MustGet(store, types.KeyNextGlobalPoolId, &nextPoolId)
+	osmoutils.MustGet(store, types.KeyNextGlobalPoolId, &nextPoolId)
 	return nextPoolId.Value
 }
 
@@ -94,7 +93,7 @@ func (k *Keeper) SetPoolCreationListeners(listeners types.PoolCreationListeners)
 // SetNextPoolId sets next pool Id.
 func (k Keeper) SetNextPoolId(ctx sdk.Context, poolId uint64) {
 	store := ctx.KVStore(k.storeKey)
-	osmostores.MustSet(store, types.KeyNextGlobalPoolId, &gogotypes.UInt64Value{Value: poolId})
+	osmoutils.MustSet(store, types.KeyNextGlobalPoolId, &gogotypes.UInt64Value{Value: poolId})
 }
 
 // SetPoolIncentivesKeeper sets pool incentives keeper

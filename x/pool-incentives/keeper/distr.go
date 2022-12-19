@@ -2,9 +2,8 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"sort"
-
-	"github.com/osmosis-labs/osmosis/v13/osmostores"
 
 	"github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
 
@@ -71,13 +70,13 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 func (k Keeper) GetDistrInfo(ctx sdk.Context) types.DistrInfo {
 	store := ctx.KVStore(k.storeKey)
 	distrInfo := types.DistrInfo{}
-	osmostores.MustGet(store, types.DistrInfoKey, &distrInfo)
+	osmoutils.MustGet(store, types.DistrInfoKey, &distrInfo)
 	return distrInfo
 }
 
 func (k Keeper) SetDistrInfo(ctx sdk.Context, distrInfo types.DistrInfo) {
 	store := ctx.KVStore(k.storeKey)
-	osmostores.MustSet(store, types.DistrInfoKey, &distrInfo)
+	osmoutils.MustSet(store, types.DistrInfoKey, &distrInfo)
 }
 
 // validateRecords validates a list of records to ensure that:

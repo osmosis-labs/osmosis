@@ -1,4 +1,4 @@
-package osmostores
+package osmoutils
 
 import (
 	"errors"

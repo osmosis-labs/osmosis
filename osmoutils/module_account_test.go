@@ -1,4 +1,4 @@
-package osmostores_test
+package osmoutils_test
 
 import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"

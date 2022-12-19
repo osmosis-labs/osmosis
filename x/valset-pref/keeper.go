@@ -2,8 +2,7 @@ package keeper
 
 import (
 	"fmt"
-
-	"github.com/osmosis-labs/osmosis/v13/osmostores"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -36,7 +35,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 func (k Keeper) SetValidatorSetPreferences(ctx sdk.Context, delegator string, validators types.ValidatorSetPreferences) {
 	store := ctx.KVStore(k.storeKey)
-	osmostores.MustSet(store, []byte(delegator), &validators)
+	osmoutils.MustSet(store, []byte(delegator), &validators)
 }
 
 func (k Keeper) GetValidatorSetPreference(ctx sdk.Context, delegator string) (types.ValidatorSetPreferences, bool) {
