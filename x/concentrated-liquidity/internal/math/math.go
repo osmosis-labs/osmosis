@@ -14,6 +14,9 @@ func Liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
+
+	// We convert to BigDec to avoid precision loss when calculating liquidity. Without doing this,
+	// our liquidity calculations will be off from our theoretical calculations within our tests.
 	amountBigDec := osmomath.BigDecFromSDKDec(amount.ToDec())
 	sqrtPriceABigDec := osmomath.BigDecFromSDKDec(sqrtPriceA)
 	sqrtPriceBBigDec := osmomath.BigDecFromSDKDec(sqrtPriceB)
@@ -31,6 +34,9 @@ func Liquidity1(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
+
+	// We convert to BigDec to avoid precision loss when calculating liquidity. Without doing this,
+	// our liquidity calculations will be off from our theoretical calculations within our tests.
 	amountBigDec := osmomath.BigDecFromSDKDec(amount.ToDec())
 	sqrtPriceABigDec := osmomath.BigDecFromSDKDec(sqrtPriceA)
 	sqrtPriceBBigDec := osmomath.BigDecFromSDKDec(sqrtPriceB)
