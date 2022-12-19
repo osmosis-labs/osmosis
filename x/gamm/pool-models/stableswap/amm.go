@@ -483,6 +483,7 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 	if !tokensIn.DenomsSubsetOf(p.GetTotalPoolLiquidity(ctx)) {
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("attempted joining pool with assets that do not exist in pool")
 	}
+
 	if len(tokensIn) == 1 && tokensIn[0].Amount.GT(sdk.OneInt()) {
 		numShares, err = p.calcSingleAssetJoinShares(tokensIn[0], swapFee)
 		if err != nil {
@@ -490,27 +491,21 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 		}
 
 		tokensJoined = tokensIn
-
-		p.updatePoolForJoin(tokensJoined, numShares)
-
-		if err = validatePoolLiquidity(p.PoolLiquidity, p.ScalingFactors); err != nil {
-			return sdk.ZeroInt(), sdk.NewCoins(), err
-		}
-
-		return numShares, tokensJoined, nil
 	} else if len(tokensIn) != p.NumAssets() {
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New(
 			"stableswap pool only supports LP'ing with one asset, or all assets in pool")
+	} else {
+		// Add all exact coins we can (no swap). ctx arg doesn't matter for Stableswap
+		var remCoins sdk.Coins
+		numShares, remCoins, err = cfmm_common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
+		if err != nil {
+			return sdk.ZeroInt(), sdk.NewCoins(), err
+		}
+
+		tokensJoined = tokensIn.Sub(remCoins)
 	}
 
-	// Add all exact coins we can (no swap). ctx arg doesn't matter for Stableswap
-	numShares, remCoins, err := cfmm_common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
-	if err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), err
-	}
-	p.updatePoolForJoin(tokensIn.Sub(remCoins), numShares)
-
-	tokensJoined = tokensIn.Sub(remCoins)
+	p.updatePoolForJoin(tokensJoined, numShares)
 
 	if err = validatePoolLiquidity(p.PoolLiquidity, p.ScalingFactors); err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err
