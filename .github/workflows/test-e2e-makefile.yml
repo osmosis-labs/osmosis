@@ -49,8 +49,7 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       -
-        name: Build e2e init chain image
-        run: make docker-build-e2e-init-chain
-      -
         name: Test e2e short
-        run: make test-e2e-short
+        run: |
+        make docker-build-e2e-init-chain &
+        make test-e2e-short
