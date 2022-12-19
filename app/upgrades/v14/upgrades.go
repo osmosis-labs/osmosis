@@ -39,6 +39,7 @@ func CreateUpgradeHandler(
 func migrateNextPoolId(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, swaprouterKeeper *swaprouter.Keeper) {
 	// N.B: pool id in gamm is to be deprecated in the future
 	// Instead,it is moved to swaprouter.
+	// nolint: staticcheck
 	nextPoolId := gammKeeper.GetNextPoolId(ctx)
 	swaprouterKeeper.SetNextPoolId(ctx, nextPoolId)
 

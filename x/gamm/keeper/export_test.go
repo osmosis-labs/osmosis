@@ -17,10 +17,6 @@ func (k Keeper) SetPool(ctx sdk.Context, pool swaproutertypes.PoolI) error {
 	return k.setPool(ctx, pool)
 }
 
-func (k Keeper) GetNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
-	return k.getNextPoolIdAndIncrement(ctx)
-}
-
 func (k Keeper) SetStableSwapScalingFactors(ctx sdk.Context, poolId uint64, scalingFactors []uint64, sender string) error {
 	return k.setStableSwapScalingFactors(ctx, poolId, scalingFactors, sender)
 }

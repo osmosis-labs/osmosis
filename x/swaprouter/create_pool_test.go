@@ -77,7 +77,7 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 		senderBalBeforeNewPool := bankKeeper.GetAllBalances(suite.Ctx, sender)
 
 		// attempt to create a pool with the given NewMsgCreateBalancerPool message
-		poolId, err := gammKeeper.CreatePool(suite.Ctx, test.msg)
+		poolId, err := swaprouterKeeper.CreatePool(suite.Ctx, test.msg)
 
 		if test.expectPass {
 			suite.Require().NoError(err, "test: %v", test.name)

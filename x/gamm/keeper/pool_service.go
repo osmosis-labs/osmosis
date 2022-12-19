@@ -23,8 +23,8 @@ import (
 func (k Keeper) CalculateSpotPrice(
 	ctx sdk.Context,
 	poolID uint64,
-	baseAssetDenom string,
 	quoteAssetDenom string,
+	baseAssetDenom string,
 ) (spotPrice sdk.Dec, err error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolID)
 	if err != nil {
@@ -39,7 +39,7 @@ func (k Keeper) CalculateSpotPrice(
 		}
 	}()
 
-	spotPrice, err = pool.SpotPrice(ctx, baseAssetDenom, quoteAssetDenom)
+	spotPrice, err = pool.SpotPrice(ctx, quoteAssetDenom, baseAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -54,29 +54,6 @@ func (k Keeper) CalculateSpotPrice(
 	// we want to round this to `SpotPriceSigFigs` of precision
 	spotPrice = osmomath.SigFigRound(spotPrice, types.SpotPriceSigFigs)
 	return spotPrice, err
-}
-
-// CreatePool attempts to create a pool returning the newly created pool ID or
-// an error upon failure. The pool creation fee is used to fund the community
-// pool. It will create a dedicated module account for the pool and sends the
-// initial liquidity to the created module account.
-//
-// After the initial liquidity is sent to the pool's account, shares are minted
-// and sent to the pool creator. The shares are created using a denomination in
-// the form of gamm/pool/{poolID}. In addition, the x/bank metadata is updated
-// to reflect the newly created GAMM share denomination.
-// LEGACY, consider removing in subsequent PR
-func (k Keeper) CreatePool(ctx sdk.Context, msg swaproutertypes.CreatePoolMsg) (uint64, error) {
-	poolId, err := k.poolCreationManager.CreatePool(ctx, msg)
-	if err != nil {
-		return 0, err
-	}
-	expectedPoolId := k.getNextPoolIdAndIncrement(ctx)
-	if poolId != expectedPoolId {
-		return 0, fmt.Errorf("Intermediate code that will get removed in swaprouter transition"+
-			"expected pool id %d, got %d", expectedPoolId, poolId)
-	}
-	return poolId, err
 }
 
 // This function:
