@@ -55,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### API breaks
 
 * [#3763](https://github.com/osmosis-labs/osmosis/pull/3763) Move binary search and error tolerance code from `osmoutils` into `osmomath`
+* [#376x](https://github.com/osmosis-labs/osmosis/pull/3763) Remove Osmosis gamm and twap `bindings` that were previously supported as custom wasm plugins.
 
 ### Bug fixes
 
