@@ -3,8 +3,9 @@ package types
 import (
 	"errors"
 	fmt "fmt"
-	"github.com/osmosis-labs/osmosis/v13/osmostores"
 	time "time"
+
+	"github.com/osmosis-labs/osmosis/v13/osmostores"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"

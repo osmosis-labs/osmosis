@@ -275,7 +275,6 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 
 // Test authz serialize and de-serializes for swaprouter msg.
 func TestAuthzMsg(t *testing.T) {
-
 	// TODO: remove when types are registered.
 	t.SkipNow()
 

@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"fmt"
-	"github.com/osmosis-labs/osmosis/v13/osmostores"
 	"sort"
+
+	"github.com/osmosis-labs/osmosis/v13/osmostores"
 
 	"github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
 

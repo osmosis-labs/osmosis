@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"errors"
+
 	"github.com/osmosis-labs/osmosis/v13/osmostores"
 
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"

@@ -2,8 +2,9 @@ package types
 
 import (
 	"fmt"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"testing"
+
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 
 	"github.com/stretchr/testify/require"
 

@@ -3,8 +3,9 @@ package twap
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/osmosis-labs/osmosis/v13/osmostores"
 	"time"
+
+	"github.com/osmosis-labs/osmosis/v13/osmostores"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 

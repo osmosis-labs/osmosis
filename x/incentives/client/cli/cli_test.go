@@ -1,8 +1,9 @@
 package cli
 
 import (
-	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"testing"
+
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -52,7 +53,8 @@ func TestGetCmdActiveGauges(t *testing.T) {
 			Cmd: "--offset=2",
 			ExpectedQuery: &types.ActiveGaugesRequest{
 				Pagination: &query.PageRequest{Key: []uint8{}, Offset: 2, Limit: 100},
-			}},
+			},
+		},
 	}
 	osmocli.RunQueryTestCases(t, desc, tcs)
 }
@@ -65,7 +67,8 @@ func TestGetCmdActiveGaugesPerDenom(t *testing.T) {
 			ExpectedQuery: &types.ActiveGaugesPerDenomRequest{
 				Denom:      "uosmo",
 				Pagination: &query.PageRequest{Key: []uint8{}, Offset: 2, Limit: 100},
-			}},
+			},
+		},
 	}
 	osmocli.RunQueryTestCases(t, desc, tcs)
 }
@@ -77,7 +80,8 @@ func TestGetCmdUpcomingGauges(t *testing.T) {
 			Cmd: "--offset=2",
 			ExpectedQuery: &types.UpcomingGaugesRequest{
 				Pagination: &query.PageRequest{Key: []uint8{}, Offset: 2, Limit: 100},
-			}},
+			},
+		},
 	}
 	osmocli.RunQueryTestCases(t, desc, tcs)
 }
@@ -90,7 +94,8 @@ func TestGetCmdUpcomingGaugesPerDenom(t *testing.T) {
 			ExpectedQuery: &types.UpcomingGaugesPerDenomRequest{
 				Denom:      "uosmo",
 				Pagination: &query.PageRequest{Key: []uint8{}, Offset: 2, Limit: 100},
-			}},
+			},
+		},
 	}
 	osmocli.RunQueryTestCases(t, desc, tcs)
 }

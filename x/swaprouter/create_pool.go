@@ -2,8 +2,9 @@ package swaprouter
 
 import (
 	"fmt"
-	"github.com/osmosis-labs/osmosis/v13/osmostores"
 	"strconv"
+
+	"github.com/osmosis-labs/osmosis/v13/osmostores"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
