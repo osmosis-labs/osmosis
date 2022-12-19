@@ -51,7 +51,6 @@ import (
 
 	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v13/osmoutils/partialord"
 	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v13/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
