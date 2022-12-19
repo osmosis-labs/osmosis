@@ -9,20 +9,59 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/params"
+	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils/noapptest"
 	twaptypes "github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
+// We need to setup a test suite with account keeper
+// and a custom store setup.
+// unfortunately setting up account implies setting up params
 type TestSuite struct {
-	apptesting.KeeperTestHelper
+	suite.Suite
+
+	ctx   sdk.Context
 	store sdk.KVStore
+
+	authStoreKey  sdk.StoreKey
+	accountKeeper authkeeper.AccountKeeperI
 }
 
 func (suite *TestSuite) SetupTest() {
-	suite.Setup()
+	// For the test suite, we manually wire a custom store "customStoreKey"
+	// Auth module (for module_account_test.go) which requires params module as well.
+	customStoreKey := sdk.NewKVStoreKey("osmoutil_store_test")
+	suite.authStoreKey = sdk.NewKVStoreKey(authtypes.StoreKey)
+	// setup ctx + stores
+	paramsKey := sdk.NewKVStoreKey(paramstypes.StoreKey)
+	paramsTKey := sdk.NewKVStoreKey(paramstypes.TStoreKey)
+	suite.ctx = noapptest.DefaultCtxWithStoreKeys(
+		[]sdk.StoreKey{customStoreKey, suite.authStoreKey, paramsKey, paramsTKey})
+	suite.store = suite.ctx.KVStore(customStoreKey)
+	// setup params (needed for auth)
+	encConfig := noapptest.MakeTestEncodingConfig(auth.AppModuleBasic{}, params.AppModuleBasic{})
+	paramsKeeper := paramskeeper.NewKeeper(encConfig.Codec, encConfig.Amino, paramsKey, paramsTKey)
+	paramsKeeper.Subspace(authtypes.ModuleName)
 
+	// setup auth
+	maccPerms := map[string][]string{
+		"fee_collector": nil,
+		"mint":          {"minter"},
+	}
+	authsubspace, _ := paramsKeeper.GetSubspace(authtypes.ModuleName)
+	suite.accountKeeper = authkeeper.NewAccountKeeper(
+		encConfig.Codec,
+		suite.authStoreKey,
+		authsubspace,
+		authtypes.ProtoBaseAccount, maccPerms)
 }
 
 const (
@@ -50,15 +89,6 @@ var (
 
 func TestOsmoUtilsTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
-}
-
-func (s *TestSuite) SetupStoreWithBasePrefix() {
-	_, ms := s.CreateTestContextWithMultiStore()
-	prefix := sdk.NewKVStoreKey(basePrefix)
-	ms.MountStoreWithDB(prefix, sdk.StoreTypeIAVL, nil)
-	err := ms.LoadLatestVersion()
-	s.Require().NoError(err)
-	s.store = ms.GetKVStore(prefix)
 }
 
 func mockParseValue(b []byte) (string, error) {
@@ -95,8 +125,7 @@ func (s *TestSuite) TestGatherAllKeysFromStore() {
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.SetupStoreWithBasePrefix()
-
+			s.SetupTest()
 			for i, key := range tc.preSetKeys {
 				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
 			}
@@ -207,7 +236,7 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.SetupStoreWithBasePrefix()
+			s.SetupTest()
 
 			for i, key := range tc.preSetKeys {
 				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
@@ -298,8 +327,7 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.SetupStoreWithBasePrefix()
-
+			s.SetupTest()
 			for i, key := range tc.preSetKeys {
 				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
 			}
@@ -402,8 +430,7 @@ func (s *TestSuite) TestGetFirstValueAfterPrefixInclusive() {
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.SetupStoreWithBasePrefix()
-
+			s.SetupTest()
 			for i, key := range tc.preSetKeys {
 				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
 			}
@@ -503,8 +530,7 @@ func (s *TestSuite) TestGatherValuesFromIterator() {
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.SetupStoreWithBasePrefix()
-
+			s.SetupTest()
 			var iterator sdk.Iterator
 
 			for i, key := range tc.preSetKeys {
@@ -638,7 +664,7 @@ func (s *TestSuite) TestGetIterValuesWithStop() {
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.SetupStoreWithBasePrefix()
+			s.SetupTest()
 
 			for i, key := range tc.preSetKeys {
 				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
@@ -706,8 +732,7 @@ func (s *TestSuite) TestGetValuesUntilDerivedStop() {
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.SetupStoreWithBasePrefix()
-
+			s.SetupTest()
 			for i, key := range tc.preSetKeys {
 				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
 			}
@@ -792,8 +817,7 @@ func (s *TestSuite) TestMustGet() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-			s.SetupStoreWithBasePrefix()
-
+			s.SetupTest()
 			// Setup
 			for key, value := range tc.preSetKeyValues {
 				osmoutils.MustSet(s.store, []byte(key), value)
@@ -879,8 +903,7 @@ func (s *TestSuite) TestGet() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-			s.SetupStoreWithBasePrefix()
-
+			s.SetupTest()
 			// Setup
 			for key, value := range tc.preSetKeyValues {
 				osmoutils.MustSet(s.store, []byte(key), value)
@@ -946,9 +969,6 @@ func (s *TestSuite) TestMustSet() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-			s.SetupStoreWithBasePrefix()
-
-			// Setup
 			osmoassert.ConditionalPanic(s.T(), tc.expectPanic, func() {
 				osmoutils.MustSet(s.store, []byte(tc.setKey), tc.setValue)
 			})
@@ -1005,8 +1025,7 @@ func (s *TestSuite) TestMustGetDec() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-			s.SetupStoreWithBasePrefix()
-
+			s.SetupTest()
 			// Setup
 			for key, value := range tc.preSetKeyValues {
 				osmoutils.MustSetDec(s.store, []byte(key), value)
@@ -1032,9 +1051,6 @@ func (s *TestSuite) TestMustGetDec() {
 // only panic if the proto argument is invalid.
 // Therefore, we only test a success case here.
 func (s *TestSuite) TestMustSetDec() {
-	// Setup.
-	s.SetupStoreWithBasePrefix()
-
 	originalDecValue := sdk.OneDec()
 
 	// System under test.
