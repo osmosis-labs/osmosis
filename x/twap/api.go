@@ -42,8 +42,7 @@ func (k Keeper) GetArithmeticTwap(
 	startTime time.Time,
 	endTime time.Time,
 ) (sdk.Dec, error) {
-	arithmeticStrategy := &arithmetic{k}
-	return k.getTwap(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, endTime, arithmeticStrategy)
+	return k.getTwap(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, endTime, k.GetArithmeticStrategy())
 }
 
 func (k Keeper) GetGeometricTwap(
@@ -54,8 +53,7 @@ func (k Keeper) GetGeometricTwap(
 	startTime time.Time,
 	endTime time.Time,
 ) (sdk.Dec, error) {
-	geometricStrategy := &geometric{k}
-	return k.getTwap(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, endTime, geometricStrategy)
+	return k.getTwap(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, endTime, k.GetGeometricStrategy())
 }
 
 // GetArithmeticTwapToNow returns arithmetic twap from start time until the current block time for quote and base
@@ -67,8 +65,7 @@ func (k Keeper) GetArithmeticTwapToNow(
 	quoteAssetDenom string,
 	startTime time.Time,
 ) (sdk.Dec, error) {
-	arithmeticStrategy := &arithmetic{k}
-	return k.getTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, arithmeticStrategy)
+	return k.getTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, k.GetArithmeticStrategy())
 }
 
 func (k Keeper) GetGeometricTwapToNow(
@@ -78,8 +75,7 @@ func (k Keeper) GetGeometricTwapToNow(
 	quoteAssetDenom string,
 	startTime time.Time,
 ) (sdk.Dec, error) {
-	geometricStrategy := &geometric{k}
-	return k.getTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, geometricStrategy)
+	return k.getTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, k.GetGeometricStrategy())
 }
 
 // getTwap computes and returns twap from the start time until the end time. The type
