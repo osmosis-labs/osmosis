@@ -270,8 +270,8 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 // That is:
 // - to the correct module (concentrated-liquidity or gamm)
 // - over the right routes (hops)
+// - fee reduction is applied correctly
 func (suite *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
-
 	tests := []struct {
 		name                    string
 		poolCoins               []sdk.Coins
