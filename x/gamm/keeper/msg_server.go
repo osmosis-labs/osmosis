@@ -70,7 +70,7 @@ func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, ms
 func (server msgServer) CreatePool(goCtx context.Context, msg swaproutertypes.CreatePoolMsg) (poolId uint64, err error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	poolId, err = server.keeper.CreatePool(ctx, msg)
+	poolId, err = server.keeper.poolCreationManager.CreatePool(ctx, msg)
 	if err != nil {
 		return 0, err
 	}

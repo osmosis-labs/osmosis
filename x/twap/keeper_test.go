@@ -583,6 +583,7 @@ func newThreeAssetOneSidedRecord(time time.Time, accum sdk.Dec, useP0 bool) []ty
 	} else {
 		record.P1ArithmeticTwapAccumulator = accum
 	}
+	record.GeometricTwapAccumulator = accum
 	record.P0LastSpotPrice = sdk.ZeroDec()
 	record.P1LastSpotPrice = sdk.OneDec()
 	records := []types.TwapRecord{record, record, record}

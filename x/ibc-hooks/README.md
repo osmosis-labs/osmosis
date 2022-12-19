@@ -116,13 +116,15 @@ In wasm hooks, post packet execution:
 
 ## Ack callbacks
 
-A contract that, through a wasm hook, sends an IBC transfer, may need to listen for the ACK from that packet. To allow
+A contract that sends an IBC transfer, may need to listen for the ACK from that packet. To allow
 contracts to listen on the ack of specific packets, we provide Ack callbacks. 
 
 ### Design
 
 The sender of an IBC transfer packet may specify a callback for when the ack of that packet is received in the memo 
 field of the transfer packet. 
+
+Crucially, _only_ the IBC packet sender can set the callback.
 
 ### Use case
 
@@ -135,7 +137,7 @@ hasn't failed (i.e.: returned an error ack notifying that the receiving change d
 
 #### Callback information in memo
 
-The for the callback to be processed, the transfer packet's memo should look like this:
+For the callback to be processed, the transfer packet's memo should contain the following in its JSON:
 
 `{"ibc_callback": "osmo1contractAddr"}`
 

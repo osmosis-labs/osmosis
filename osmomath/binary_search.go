@@ -1,11 +1,9 @@
-package osmoutils
+package osmomath
 
 import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
 )
 
 // ErrTolerance is used to define a compare function, which checks if two
@@ -25,7 +23,7 @@ import (
 type ErrTolerance struct {
 	AdditiveTolerance       sdk.Dec
 	MultiplicativeTolerance sdk.Dec
-	RoundingDir             osmomath.RoundingDirection
+	RoundingDir             RoundingDirection
 }
 
 // Compare returns if actual is within errTolerance of expected.
@@ -46,11 +44,11 @@ func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int {
 	// so if were supposed to round down, it must be that `expected >= actual`.
 	// likewise if were supposed to round up, it must be that `expected <= actual`.
 	// If neither of the above, then rounding direction does not enforce a constraint.
-	if e.RoundingDir == osmomath.RoundDown {
+	if e.RoundingDir == RoundDown {
 		if expected.LT(actual) {
 			return -1
 		}
-	} else if e.RoundingDir == osmomath.RoundUp {
+	} else if e.RoundingDir == RoundUp {
 		if expected.GT(actual) {
 			return 1
 		}
@@ -84,16 +82,16 @@ func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int {
 // returns 0 if it is
 // returns 1 if not, and expected > actual.
 // returns -1 if not, and expected < actual
-func (e ErrTolerance) CompareBigDec(expected osmomath.BigDec, actual osmomath.BigDec) int {
+func (e ErrTolerance) CompareBigDec(expected BigDec, actual BigDec) int {
 	// Ensure that even if expected is within tolerance of actual, we don't count it as equal if its in the wrong direction.
 	// so if were supposed to round down, it must be that `expected >= actual`.
 	// likewise if were supposed to round up, it must be that `expected <= actual`.
 	// If neither of the above, then rounding direction does not enforce a constraint.
-	if e.RoundingDir == osmomath.RoundDown {
+	if e.RoundingDir == RoundDown {
 		if expected.LT(actual) {
 			return -1
 		}
-	} else if e.RoundingDir == osmomath.RoundUp {
+	} else if e.RoundingDir == RoundUp {
 		if expected.GT(actual) {
 			return 1
 		}
@@ -117,15 +115,15 @@ func (e ErrTolerance) CompareBigDec(expected osmomath.BigDec, actual osmomath.Bi
 			}
 		}
 
-		if diff.GT(osmomath.BigDecFromSDKDec(e.AdditiveTolerance)) {
+		if diff.GT(BigDecFromSDKDec(e.AdditiveTolerance)) {
 			return comparisonSign
 		}
 	}
 	// Check multiplicative tolerance equations
 	if !e.MultiplicativeTolerance.IsNil() && !e.MultiplicativeTolerance.IsZero() {
-		errTerm := diff.Quo(osmomath.MinDec(expected.Abs(), actual.Abs()))
+		errTerm := diff.Quo(MinDec(expected.Abs(), actual.Abs()))
 		// fmt.Printf("err term %v\n", errTerm)
-		if errTerm.GT(osmomath.BigDecFromSDKDec(e.MultiplicativeTolerance)) {
+		if errTerm.GT(BigDecFromSDKDec(e.MultiplicativeTolerance)) {
 			return comparisonSign
 		}
 	}
@@ -184,18 +182,18 @@ type SdkDec[D any] interface {
 //
 // It binary searches on the input range, until it finds an input y s.t. f(y) meets the err tolerance constraints for how close it is to x.
 // If we perform more than maxIterations (or equivalently lowerbound = upperbound), we return an error.
-func BinarySearchBigDec(f func(input osmomath.BigDec) (osmomath.BigDec, error),
-	lowerbound osmomath.BigDec,
-	upperbound osmomath.BigDec,
-	targetOutput osmomath.BigDec,
+func BinarySearchBigDec(f func(input BigDec) (BigDec, error),
+	lowerbound BigDec,
+	upperbound BigDec,
+	targetOutput BigDec,
 	errTolerance ErrTolerance,
 	maxIterations int,
-) (osmomath.BigDec, error) {
+) (BigDec, error) {
 	// Setup base case of loop
-	curEstimate := lowerbound.Add(upperbound).Quo(osmomath.NewBigDec(2))
+	curEstimate := lowerbound.Add(upperbound).Quo(NewBigDec(2))
 	curOutput, err := f(curEstimate)
 	if err != nil {
-		return osmomath.BigDec{}, err
+		return BigDec{}, err
 	}
 	curIteration := 0
 	for ; curIteration < maxIterations; curIteration += 1 {
@@ -208,12 +206,12 @@ func BinarySearchBigDec(f func(input osmomath.BigDec) (osmomath.BigDec, error),
 		} else {
 			return curEstimate, nil
 		}
-		curEstimate = lowerbound.Add(upperbound).Quo(osmomath.NewBigDec(2))
+		curEstimate = lowerbound.Add(upperbound).Quo(NewBigDec(2))
 		curOutput, err = f(curEstimate)
 		if err != nil {
-			return osmomath.BigDec{}, err
+			return BigDec{}, err
 		}
 	}
 
-	return osmomath.BigDec{}, errors.New("hit maximum iterations, did not converge fast enough")
+	return BigDec{}, errors.New("hit maximum iterations, did not converge fast enough")
 }

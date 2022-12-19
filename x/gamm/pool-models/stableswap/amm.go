@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/cfmm_common"
 	types "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
@@ -327,7 +326,7 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	maxIterations := 256
 
 	// we use a geometric error tolerance that guarantees approximately 10^-12 precision on outputs
-	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.Dec{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12)}
+	errTolerance := osmomath.ErrTolerance{AdditiveTolerance: sdk.Dec{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12)}
 
 	// if yIn is positive, we want to under-estimate the amount of xOut.
 	// This means, we want x_out to be rounded down, as x_out = x_init - x_final, for x_init > x_final.
@@ -340,7 +339,7 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	roundingDirection := osmomath.RoundUp
 	errTolerance.RoundingDir = roundingDirection
 
-	xEst, err := osmoutils.BinarySearchBigDec(iterKCalc, xLowEst, xHighEst, targetK, errTolerance, maxIterations)
+	xEst, err := osmomath.BinarySearchBigDec(iterKCalc, xLowEst, xHighEst, targetK, errTolerance, maxIterations)
 	if err != nil {
 		panic(err)
 	}
@@ -357,7 +356,7 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	return xOut
 }
 
-func (p Pool) spotPrice(baseDenom, quoteDenom string) (spotPrice sdk.Dec, err error) {
+func (p Pool) spotPrice(quoteDenom, baseDenom string) (spotPrice sdk.Dec, err error) {
 	// Define f_{y -> x}(a) as the function that outputs the amount of tokens X you'd get by
 	// trading "a" units of Y against the pool, assuming 0 swap fee, at the current liquidity.
 	// The spot price of the pool is then lim a -> 0, f_{y -> x}(a) / a
@@ -373,8 +372,7 @@ func (p Pool) spotPrice(baseDenom, quoteDenom string) (spotPrice sdk.Dec, err er
 	// xReserve & yReserve.
 	a := sdk.OneInt()
 
-	// We swap quoteDenom and baseDenom intentionally, due to the odd issue needed for balancer v1 query compat
-	res, err := p.calcOutAmtGivenIn(sdk.NewCoin(quoteDenom, a), baseDenom, sdk.ZeroDec())
+	res, err := p.calcOutAmtGivenIn(sdk.NewCoin(baseDenom, a), quoteDenom, sdk.ZeroDec())
 	// fmt.Println("spot price res", res)
 	return res, err
 }
