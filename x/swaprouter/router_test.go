@@ -30,10 +30,8 @@ var (
 // That is:
 // - to the correct module (concentrated-liquidity or gamm)
 // - over the right routes (hops)
+// - fee reduction is applied correctly
 func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
-	type param struct {
-	}
-
 	tests := []struct {
 		name                    string
 		poolCoins               []sdk.Coins
