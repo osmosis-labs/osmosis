@@ -11,14 +11,12 @@ import (
 
 type QueryPlugin struct {
 	tokenFactoryKeeper *tokenfactorykeeper.Keeper
-	swaprouterKeeper   *swaprouter.Keeper
 }
 
 // NewQueryPlugin returns a reference to a new QueryPlugin.
 func NewQueryPlugin(tfk *tokenfactorykeeper.Keeper) *QueryPlugin {
 	return &QueryPlugin{
 		tokenFactoryKeeper: tfk,
-		swaprouterKeeper:   swaprouterKeeper,
 	}
 }
 

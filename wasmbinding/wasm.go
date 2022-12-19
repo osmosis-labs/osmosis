@@ -15,7 +15,6 @@ import (
 func RegisterCustomPlugins(
 	bank *bankkeeper.BaseKeeper,
 	tokenFactory *tokenfactorykeeper.Keeper,
-	swaprouterKeeper *swaprouter.Keeper,
 ) []wasmkeeper.Option {
 	wasmQueryPlugin := NewQueryPlugin(tokenFactory)
 
