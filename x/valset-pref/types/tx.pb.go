@@ -483,6 +483,99 @@ func (m *MsgWithdrawDelegationRewardsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgWithdrawDelegationRewardsResponse proto.InternalMessageInfo
 
+// MsgDelegateBondedTokens breaks bonded lockup (by ID) of osmo, of
+// length <= 2 weeks and takes all that osmo and delegates according to
+// delegator's current validator set preference.
+type MsgDelegateBondedTokens struct {
+	// delegator is the user who is trying to force unbond osmo and delegate.
+	Delegator string `protobuf:"bytes,1,opt,name=delegator,proto3" json:"delegator,omitempty" yaml:"delegator"`
+	// lockup id of osmo in the pool
+	LockID uint64 `protobuf:"varint,2,opt,name=lockID,proto3" json:"lockID,omitempty"`
+}
+
+func (m *MsgDelegateBondedTokens) Reset()         { *m = MsgDelegateBondedTokens{} }
+func (m *MsgDelegateBondedTokens) String() string { return proto.CompactTextString(m) }
+func (*MsgDelegateBondedTokens) ProtoMessage()    {}
+func (*MsgDelegateBondedTokens) Descriptor() ([]byte, []int) {
+	return fileDescriptor_daa95be02b2fc560, []int{10}
+}
+func (m *MsgDelegateBondedTokens) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgDelegateBondedTokens) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgDelegateBondedTokens.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgDelegateBondedTokens) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDelegateBondedTokens.Merge(m, src)
+}
+func (m *MsgDelegateBondedTokens) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgDelegateBondedTokens) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDelegateBondedTokens.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgDelegateBondedTokens proto.InternalMessageInfo
+
+func (m *MsgDelegateBondedTokens) GetDelegator() string {
+	if m != nil {
+		return m.Delegator
+	}
+	return ""
+}
+
+func (m *MsgDelegateBondedTokens) GetLockID() uint64 {
+	if m != nil {
+		return m.LockID
+	}
+	return 0
+}
+
+type MsgDelegateBondedTokensResponse struct {
+}
+
+func (m *MsgDelegateBondedTokensResponse) Reset()         { *m = MsgDelegateBondedTokensResponse{} }
+func (m *MsgDelegateBondedTokensResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgDelegateBondedTokensResponse) ProtoMessage()    {}
+func (*MsgDelegateBondedTokensResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_daa95be02b2fc560, []int{11}
+}
+func (m *MsgDelegateBondedTokensResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgDelegateBondedTokensResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgDelegateBondedTokensResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgDelegateBondedTokensResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDelegateBondedTokensResponse.Merge(m, src)
+}
+func (m *MsgDelegateBondedTokensResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgDelegateBondedTokensResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDelegateBondedTokensResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgDelegateBondedTokensResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgSetValidatorSetPreference)(nil), "osmosis.valsetpref.v1beta1.MsgSetValidatorSetPreference")
 	proto.RegisterType((*MsgSetValidatorSetPreferenceResponse)(nil), "osmosis.valsetpref.v1beta1.MsgSetValidatorSetPreferenceResponse")
@@ -494,6 +587,8 @@ func init() {
 	proto.RegisterType((*MsgRedelegateValidatorSetResponse)(nil), "osmosis.valsetpref.v1beta1.MsgRedelegateValidatorSetResponse")
 	proto.RegisterType((*MsgWithdrawDelegationRewards)(nil), "osmosis.valsetpref.v1beta1.MsgWithdrawDelegationRewards")
 	proto.RegisterType((*MsgWithdrawDelegationRewardsResponse)(nil), "osmosis.valsetpref.v1beta1.MsgWithdrawDelegationRewardsResponse")
+	proto.RegisterType((*MsgDelegateBondedTokens)(nil), "osmosis.valsetpref.v1beta1.MsgDelegateBondedTokens")
+	proto.RegisterType((*MsgDelegateBondedTokensResponse)(nil), "osmosis.valsetpref.v1beta1.MsgDelegateBondedTokensResponse")
 }
 
 func init() {
@@ -569,6 +664,9 @@ type MsgClient interface {
 	// WithdrawDelegationRewards allows users to claim rewards from the
 	// validator-set.
 	WithdrawDelegationRewards(ctx context.Context, in *MsgWithdrawDelegationRewards, opts ...grpc.CallOption) (*MsgWithdrawDelegationRewardsResponse, error)
+	// DelegateBondedTokens allows users to break the lockup bond and delegate
+	// osmo tokens to a predefined validator-set.
+	DelegateBondedTokens(ctx context.Context, in *MsgDelegateBondedTokens, opts ...grpc.CallOption) (*MsgDelegateBondedTokensResponse, error)
 }
 
 type msgClient struct {
@@ -624,6 +722,15 @@ func (c *msgClient) WithdrawDelegationRewards(ctx context.Context, in *MsgWithdr
 	return out, nil
 }
 
+func (c *msgClient) DelegateBondedTokens(ctx context.Context, in *MsgDelegateBondedTokens, opts ...grpc.CallOption) (*MsgDelegateBondedTokensResponse, error) {
+	out := new(MsgDelegateBondedTokensResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.valsetpref.v1beta1.Msg/DelegateBondedTokens", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// SetValidatorSetPreference creates a set of validator preference.
@@ -642,6 +749,9 @@ type MsgServer interface {
 	// WithdrawDelegationRewards allows users to claim rewards from the
 	// validator-set.
 	WithdrawDelegationRewards(context.Context, *MsgWithdrawDelegationRewards) (*MsgWithdrawDelegationRewardsResponse, error)
+	// DelegateBondedTokens allows users to break the lockup bond and delegate
+	// osmo tokens to a predefined validator-set.
+	DelegateBondedTokens(context.Context, *MsgDelegateBondedTokens) (*MsgDelegateBondedTokensResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -662,6 +772,9 @@ func (*UnimplementedMsgServer) RedelegateValidatorSet(ctx context.Context, req *
 }
 func (*UnimplementedMsgServer) WithdrawDelegationRewards(ctx context.Context, req *MsgWithdrawDelegationRewards) (*MsgWithdrawDelegationRewardsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WithdrawDelegationRewards not implemented")
+}
+func (*UnimplementedMsgServer) DelegateBondedTokens(ctx context.Context, req *MsgDelegateBondedTokens) (*MsgDelegateBondedTokensResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DelegateBondedTokens not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -758,6 +871,24 @@ func _Msg_WithdrawDelegationRewards_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_DelegateBondedTokens_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDelegateBondedTokens)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).DelegateBondedTokens(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.valsetpref.v1beta1.Msg/DelegateBondedTokens",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).DelegateBondedTokens(ctx, req.(*MsgDelegateBondedTokens))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.valsetpref.v1beta1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -781,6 +912,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "WithdrawDelegationRewards",
 			Handler:    _Msg_WithdrawDelegationRewards_Handler,
+		},
+		{
+			MethodName: "DelegateBondedTokens",
+			Handler:    _Msg_DelegateBondedTokens_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1100,6 +1235,64 @@ func (m *MsgWithdrawDelegationRewardsResponse) MarshalToSizedBuffer(dAtA []byte)
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgDelegateBondedTokens) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgDelegateBondedTokens) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgDelegateBondedTokens) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.LockID != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.LockID))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Delegator) > 0 {
+		i -= len(m.Delegator)
+		copy(dAtA[i:], m.Delegator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Delegator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgDelegateBondedTokensResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgDelegateBondedTokensResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgDelegateBondedTokensResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -1229,6 +1422,31 @@ func (m *MsgWithdrawDelegationRewards) Size() (n int) {
 }
 
 func (m *MsgWithdrawDelegationRewardsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgDelegateBondedTokens) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Delegator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.LockID != 0 {
+		n += 1 + sovTx(uint64(m.LockID))
+	}
+	return n
+}
+
+func (m *MsgDelegateBondedTokensResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2014,6 +2232,157 @@ func (m *MsgWithdrawDelegationRewardsResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgWithdrawDelegationRewardsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgDelegateBondedTokens) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgDelegateBondedTokens: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgDelegateBondedTokens: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Delegator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Delegator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LockID", wireType)
+			}
+			m.LockID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LockID |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgDelegateBondedTokensResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgDelegateBondedTokensResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgDelegateBondedTokensResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

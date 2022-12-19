@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
 )
 
@@ -34,6 +35,7 @@ func (server msgServer) SetValidatorSetPreference(goCtx context.Context, msg *ty
 	return &types.MsgSetValidatorSetPreferenceResponse{}, nil
 }
 
+// DelegateToValidatorSet delegates to a delegators existing validator-set.
 func (server msgServer) DelegateToValidatorSet(goCtx context.Context, msg *types.MsgDelegateToValidatorSet) (*types.MsgDelegateToValidatorSetResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -45,6 +47,7 @@ func (server msgServer) DelegateToValidatorSet(goCtx context.Context, msg *types
 	return &types.MsgDelegateToValidatorSetResponse{}, nil
 }
 
+// UndelegateFromValidatorSet undelegates {coin} amount from the validator set.
 func (server msgServer) UndelegateFromValidatorSet(goCtx context.Context, msg *types.MsgUndelegateFromValidatorSet) (*types.MsgUndelegateFromValidatorSetResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -56,6 +59,7 @@ func (server msgServer) UndelegateFromValidatorSet(goCtx context.Context, msg *t
 	return &types.MsgUndelegateFromValidatorSetResponse{}, nil
 }
 
+// RedelegateValidatorSet allows delegators to set a new validator set and switch validators.
 func (server msgServer) RedelegateValidatorSet(goCtx context.Context, msg *types.MsgRedelegateValidatorSet) (*types.MsgRedelegateValidatorSetResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -87,6 +91,7 @@ func (server msgServer) RedelegateValidatorSet(goCtx context.Context, msg *types
 	return &types.MsgRedelegateValidatorSetResponse{}, nil
 }
 
+// WithdrawDelegationRewards withdraws all the delegation rewards from the validator in the val-set.
 func (server msgServer) WithdrawDelegationRewards(goCtx context.Context, msg *types.MsgWithdrawDelegationRewards) (*types.MsgWithdrawDelegationRewardsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -96,4 +101,34 @@ func (server msgServer) WithdrawDelegationRewards(goCtx context.Context, msg *ty
 	}
 
 	return &types.MsgWithdrawDelegationRewardsResponse{}, nil
+}
+
+// DelegateBondedTokens force unlocks bonded uosmo and stakes according to your current validator set preference.
+func (server msgServer) DelegateBondedTokens(goCtx context.Context, msg *types.MsgDelegateBondedTokens) (*types.MsgDelegateBondedTokensResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// get the existing validator set preference from store
+	_, found := server.keeper.GetValidatorSetPreference(ctx, msg.Delegator)
+	if !found {
+		return nil, fmt.Errorf("user %s doesn't have validator set", msg.Delegator)
+	}
+
+	// Message 1: force unlock bonded osmo tokens.
+	unlockedOsmoToken, err := server.keeper.ForceUnlockBondedOsmo(ctx, msg.LockID, msg.Delegator)
+	if err != nil {
+		return nil, err
+	}
+
+	delegator, err := sdk.AccAddressFromBech32(msg.Delegator)
+	if err != nil {
+		return nil, err
+	}
+
+	// Message 2: Perform osmo token delegation.
+	_, err = server.DelegateToValidatorSet(goCtx, types.NewMsgDelegateToValidatorSet(delegator, unlockedOsmoToken))
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgDelegateBondedTokensResponse{}, nil
 }

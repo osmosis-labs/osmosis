@@ -3,14 +3,17 @@ package keeper_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
-
 	"github.com/stretchr/testify/suite"
+
+	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v14/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
 
 	valPref "github.com/osmosis-labs/osmosis/v14/x/valset-pref"
 )
@@ -199,7 +202,71 @@ func (suite *KeeperTestSuite) SetupValidatorsAndDelegations() ([]string, []types
 	amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)} // 100 osmo
 
 	return valAddrs, preferences, amountToFund
+}
 
+func (suite *KeeperTestSuite) SetupLocks(delegator sdk.AccAddress) []lockuptypes.PeriodLock {
+	// create a pool with uosmo
+	locks := []lockuptypes.PeriodLock{}
+	// Setup lock
+	coinsToLock := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10_000_000)}
+	osmoToLock := sdk.Coins{sdk.NewInt64Coin(appParams.BaseCoinUnit, 10_000_000)}
+	multipleCoinsToLock := sdk.Coins{coinsToLock[0], osmoToLock[0]}
+	suite.FundAcc(delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000), sdk.NewInt64Coin(appParams.BaseCoinUnit, 100_000_000)})
+
+	// happy lock case
+	twoWeekDuration, err := time.ParseDuration("336h")
+	suite.Require().NoError(err)
+	workingLock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, delegator, osmoToLock, twoWeekDuration)
+	suite.Require().NoError(err)
+
+	locks = append(locks, workingLock)
+
+	// locking with stake denom instead of osmo denom
+	stakeDenomLock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, delegator, coinsToLock, twoWeekDuration)
+	suite.Require().NoError(err)
+
+	locks = append(locks, stakeDenomLock)
+
+	// lock case where lock owner != delegation owner
+	suite.FundAcc(sdk.AccAddress([]byte("addr5---------------")), osmoToLock)
+	lockWithDifferentOwner, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, sdk.AccAddress([]byte("addr5---------------")), osmoToLock, twoWeekDuration)
+	suite.Require().NoError(err)
+
+	locks = append(locks, lockWithDifferentOwner)
+
+	// lock case where the duration != <= 2 weeks
+	morethanTwoWeekDuration, err := time.ParseDuration("337h")
+	suite.Require().NoError(err)
+	maxDurationLock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, delegator, osmoToLock, morethanTwoWeekDuration)
+	suite.Require().NoError(err)
+
+	locks = append(locks, maxDurationLock)
+
+	// unbonding locks
+	unbondingLocks, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, delegator, osmoToLock, twoWeekDuration)
+	suite.Require().NoError(err)
+
+	err = suite.App.LockupKeeper.BeginUnlock(suite.Ctx, unbondingLocks.ID, nil)
+	suite.Require().NoError(err)
+
+	locks = append(locks, unbondingLocks)
+
+	// synthetic locks
+	syntheticLocks, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, delegator, osmoToLock, twoWeekDuration)
+	suite.Require().NoError(err)
+
+	err = suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, syntheticLocks.ID, "uosmo", time.Minute, true)
+	suite.Require().NoError(err)
+
+	locks = append(locks, syntheticLocks)
+
+	// multiple asset lock
+	multiassetLock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, delegator, multipleCoinsToLock, twoWeekDuration)
+	suite.Require().NoError(err)
+
+	locks = append(locks, multiassetLock)
+
+	return locks
 }
 
 func TestKeeperTestSuite(t *testing.T) {
