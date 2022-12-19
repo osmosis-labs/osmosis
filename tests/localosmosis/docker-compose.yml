@@ -3,13 +3,13 @@ version: "3"
 services:
 
   osmosisd:
-    image: local:osmosis
-    build:
-      context: ../../
-      dockerfile: Dockerfile
-      args:
-        RUNNER_IMAGE: alpine:3.16
-        GO_VERSION: 1.18
+    image: osmolabs/osmosis:13-alpine
+    # build:
+    #   context: ../../
+    #   dockerfile: Dockerfile
+    #   args:
+    #     RUNNER_IMAGE: alpine:3.16
+    #     GO_VERSION: 1.18
     volumes:
       - ./scripts/nativeDenomPoolA.json:/osmosis/nativeDenomPoolA.json
       - ./scripts/nativeDenomPoolB.json:/osmosis/nativeDenomPoolB.json
@@ -19,9 +19,25 @@ services:
     entrypoint:
       - /osmosis/setup.sh
     command:
-      - $STATE
+      # - $STATE
+      - "true"
     ports:
       - 26657:26657
       - 1317:1317
       - 9090:9090
       - 9091:9091
+
+  frontend:
+    image: osmolabs/osmosis-frontend-testnet:latest
+    ports:
+      - 3000:3000
+    environment:
+      - RPC_ENDPOINT=localhost:26657
+      - REST_ENDPOINT=localhost:1317
+      - CHAIN_ID=localosmosis
+    volumes:
+      - ./scripts/frontend/start.sh:/app/start.sh
+    entrypoint:
+      - /app/start.sh
+    depends_on:
+      - osmosisd
