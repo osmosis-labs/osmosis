@@ -3,10 +3,11 @@ package cli
 import (
 	"errors"
 	"fmt"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"

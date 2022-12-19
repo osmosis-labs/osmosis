@@ -2,8 +2,9 @@ package cli_test
 
 import (
 	"fmt"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"testing"
+
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 
 	"github.com/stretchr/testify/suite"
 

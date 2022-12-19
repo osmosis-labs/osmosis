@@ -1,9 +1,10 @@
 package cli_test
 
 import (
-	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"testing"
 	"time"
+
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 
 	"github.com/osmosis-labs/osmosis/v13/x/downtime-detector/client/cli"
 	"github.com/osmosis-labs/osmosis/v13/x/downtime-detector/client/queryproto"
@@ -18,32 +19,37 @@ func TestRecoveredSinceQueryCmd(t *testing.T) {
 			Cmd: "30s 10m",
 			ExpectedQuery: &queryproto.RecoveredSinceDowntimeOfLengthRequest{
 				Downtime: types.Downtime_DURATION_30S,
-				Recovery: time.Minute * 10},
+				Recovery: time.Minute * 10,
+			},
 		},
 		"invalid duration": {
 			Cmd: "31s 10m",
 			ExpectedQuery: &queryproto.RecoveredSinceDowntimeOfLengthRequest{
 				Downtime: types.Downtime_DURATION_30S,
-				Recovery: time.Minute * 10},
+				Recovery: time.Minute * 10,
+			},
 			ExpectedErr: true,
 		},
 		"90m": {
 			Cmd: "90m 10m",
 			ExpectedQuery: &queryproto.RecoveredSinceDowntimeOfLengthRequest{
 				Downtime: types.Downtime_DURATION_1_5H,
-				Recovery: time.Minute * 10},
+				Recovery: time.Minute * 10,
+			},
 		},
 		"1.5h": {
 			Cmd: "1.5h 10m",
 			ExpectedQuery: &queryproto.RecoveredSinceDowntimeOfLengthRequest{
 				Downtime: types.Downtime_DURATION_1_5H,
-				Recovery: time.Minute * 10},
+				Recovery: time.Minute * 10,
+			},
 		},
 		"1h30m": {
 			Cmd: "1h30m 10m",
 			ExpectedQuery: &queryproto.RecoveredSinceDowntimeOfLengthRequest{
 				Downtime: types.Downtime_DURATION_1_5H,
-				Recovery: time.Minute * 10},
+				Recovery: time.Minute * 10,
+			},
 		},
 	}
 	osmocli.RunQueryTestCases(t, desc, tcs)
