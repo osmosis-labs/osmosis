@@ -3,6 +3,7 @@ package types
 import (
 	fmt "fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -12,6 +13,24 @@ type PoolDoesNotExistError struct {
 
 func (e PoolDoesNotExistError) Error() string {
 	return fmt.Sprintf("pool with ID %d does not exist", e.PoolId)
+}
+
+type UnsortedPoolLiqError struct {
+	ActualLiquidity sdk.Coins
+}
+
+func (e UnsortedPoolLiqError) Error() string {
+	return fmt.Sprintf(`unsorted initial pool liquidity: %s. 
+	Please sort and make sure scaling factor order matches initial liquidity coin order`, e.ActualLiquidity)
+}
+
+type LiquidityAndScalingFactorCountMismatchError struct {
+	LiquidityCount     int
+	ScalingFactorCount int
+}
+
+func (e LiquidityAndScalingFactorCountMismatchError) Error() string {
+	return fmt.Sprintf("liquidity count (%d) must match scaling factor count (%d)", e.LiquidityCount, e.ScalingFactorCount)
 }
 
 // x/gamm module sentinel errors.
