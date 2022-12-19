@@ -37,6 +37,12 @@ type SwapRouterKeeper interface {
 		routes []swaproutertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
 		tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error)
+
+	MultihopEstimateOutGivenExactAmountIn(
+		ctx sdk.Context,
+		routes []swaproutertypes.SwapAmountInRoute,
+		tokenIn sdk.Coin,
+	) (tokenOutAmount sdk.Int, err error)
 }
 
 // EpochKeeper defines the Epoch contract that must be fulfilled when
