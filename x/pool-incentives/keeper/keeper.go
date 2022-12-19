@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"fmt"
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	"time"
+
+	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	"github.com/tendermint/tendermint/libs/log"
 
