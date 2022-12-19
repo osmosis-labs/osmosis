@@ -96,8 +96,8 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         if: env.GIT_DIFF
-      - name: Test e2e and Upgrade
-      - run: |
+      - 
+        name: Test e2e and Upgrade
+        run: |
         make docker-build-debug &
         make test-e2e-ci
-      - if: env.GIT_DIFF
