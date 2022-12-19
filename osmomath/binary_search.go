@@ -141,14 +141,19 @@ func BinarySearch(f func(input sdk.Int) (sdk.Int, error),
 	errTolerance ErrTolerance,
 	maxIterations int,
 ) (sdk.Int, error) {
-	// Setup base case of loop
-	curEstimate := lowerbound.Add(upperbound).QuoRaw(2)
-	curOutput, err := f(curEstimate)
-	if err != nil {
-		return sdk.Int{}, err
-	}
+	var (
+		curEstimate, curOutput sdk.Int
+		err                    error
+	)
+
 	curIteration := 0
 	for ; curIteration < maxIterations; curIteration += 1 {
+		curEstimate = lowerbound.Add(upperbound).QuoRaw(2)
+		curOutput, err = f(curEstimate)
+		if err != nil {
+			return sdk.Int{}, err
+		}
+
 		compRes := errTolerance.Compare(targetOutput, curOutput)
 		if compRes < 0 {
 			upperbound = curEstimate
@@ -156,11 +161,6 @@ func BinarySearch(f func(input sdk.Int) (sdk.Int, error),
 			lowerbound = curEstimate
 		} else {
 			return curEstimate, nil
-		}
-		curEstimate = lowerbound.Add(upperbound).QuoRaw(2)
-		curOutput, err = f(curEstimate)
-		if err != nil {
-			return sdk.Int{}, err
 		}
 	}
 
@@ -182,21 +182,22 @@ type SdkDec[D any] interface {
 //
 // It binary searches on the input range, until it finds an input y s.t. f(y) meets the err tolerance constraints for how close it is to x.
 // If we perform more than maxIterations (or equivalently lowerbound = upperbound), we return an error.
-func BinarySearchBigDec(f func(input BigDec) (BigDec, error),
+func BinarySearchBigDec(f func(input BigDec) BigDec,
 	lowerbound BigDec,
 	upperbound BigDec,
 	targetOutput BigDec,
 	errTolerance ErrTolerance,
 	maxIterations int,
 ) (BigDec, error) {
-	// Setup base case of loop
-	curEstimate := lowerbound.Add(upperbound).Quo(NewBigDec(2))
-	curOutput, err := f(curEstimate)
-	if err != nil {
-		return BigDec{}, err
-	}
+	var (
+		curEstimate, curOutput BigDec
+	)
+
 	curIteration := 0
 	for ; curIteration < maxIterations; curIteration += 1 {
+		curEstimate = lowerbound.Add(upperbound).Quo(NewBigDec(2))
+		curOutput = f(curEstimate)
+
 		// fmt.Println("binary search, input, target output, cur output", curEstimate, targetOutput, curOutput)
 		compRes := errTolerance.CompareBigDec(targetOutput, curOutput)
 		if compRes < 0 {
@@ -205,11 +206,6 @@ func BinarySearchBigDec(f func(input BigDec) (BigDec, error),
 			lowerbound = curEstimate
 		} else {
 			return curEstimate, nil
-		}
-		curEstimate = lowerbound.Add(upperbound).Quo(NewBigDec(2))
-		curOutput, err = f(curEstimate)
-		if err != nil {
-			return BigDec{}, err
 		}
 	}
 
