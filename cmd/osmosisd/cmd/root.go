@@ -40,6 +40,8 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
+	"github.com/joho/godotenv"
+
 	osmosis "github.com/osmosis-labs/osmosis/v13/app"
 )
 
@@ -47,6 +49,7 @@ import (
 // main function.
 func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	encodingConfig := osmosis.MakeEncodingConfig()
+	homeDir := getHomeEnvironment()
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
@@ -55,7 +58,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
 		WithBroadcastMode(flags.BroadcastBlock).
-		WithHomeDir(osmosis.DefaultNodeHome).
+		WithHomeDir(homeDir).
 		WithViper("OSMOSIS")
 
 	rootCmd := &cobra.Command{
@@ -83,6 +86,28 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	initRootCmd(rootCmd, encodingConfig)
 
 	return rootCmd, encodingConfig
+}
+
+func getHomeEnvironment() string {
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+	envPath := filepath.Join(userHomeDir, ".osmosisd/.env")
+
+	err = godotenv.Load(envPath)
+	if err != nil {
+		panic(err)
+	}
+
+	val := os.Getenv("OSMOSISD_ENVIRONMENT")
+	if val == "mainnet" {
+		return filepath.Join(userHomeDir, ".osmosisd")
+	} else if val == "localosmosis" {
+		return filepath.Join(userHomeDir, ".osmosisd-local")
+	} else {
+		panic("invalid environment variable")
+	}
 }
 
 // initAppConfig helps to override default appConfig template and configs.
