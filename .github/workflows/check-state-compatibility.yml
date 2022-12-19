@@ -94,7 +94,7 @@ jobs:
         name: 🐿 Setup Golang
         uses: actions/setup-go@v3
         with:
-          go-version: '^${{ env.GOLANG_VERSION }}'
+          go-version-file: go.mod
       -
         name: 🔨 Build the osmosisd binary
         run: |
