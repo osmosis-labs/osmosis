@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/types/query"

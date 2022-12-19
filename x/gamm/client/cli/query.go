@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"os"
 	"strconv"
 	"strings"

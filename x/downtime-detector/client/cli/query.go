@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"time"
 
 	"github.com/spf13/cobra"

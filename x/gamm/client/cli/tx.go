@@ -3,6 +3,7 @@ package cli
 import (
 	"errors"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"strconv"
 	"strings"
 	"time"

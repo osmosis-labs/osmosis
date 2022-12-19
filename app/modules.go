@@ -9,6 +9,7 @@ import (
 	ibc "github.com/cosmos/ibc-go/v3/modules/core"
 	ibchost "github.com/cosmos/ibc-go/v3/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
+	"github.com/osmosis-labs/osmosis/osmoutils/partialord"
 	ibchookstypes "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types"
 
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"

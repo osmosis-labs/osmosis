@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 
 	"github.com/spf13/cobra"
 
