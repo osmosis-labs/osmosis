@@ -2,10 +2,10 @@ package simulation
 
 import (
 	"errors"
+	"github.com/osmosis-labs/osmosis/v13/osmostores"
 
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory/keeper"
 	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
@@ -116,7 +116,7 @@ func accountCreatedTokenFactoryDenom(k keeper.Keeper, ctx sdk.Context) simtypes.
 
 func getTokenFactoryDenomAndItsAdmin(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context, acc legacysimulationtype.Account) (string, sdk.AccAddress, error) {
 	store := k.GetCreatorPrefixStore(ctx, acc.Address.String())
-	denoms := osmoutils.GatherAllKeysFromStore(store)
+	denoms := osmostores.GatherAllKeysFromStore(store)
 	denom := simtypes.RandSelect(sim, denoms...)
 
 	authData, err := k.GetAuthorityMetadata(ctx, denom)

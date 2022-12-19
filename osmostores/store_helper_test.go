@@ -1,18 +1,17 @@
-package osmoutils_test
+package osmostores_test
 
 import (
 	"errors"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v13/osmostores"
+	twaptypes "github.com/osmosis-labs/osmosis/v13/x/twap/types"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
-
-	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	twaptypes "github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
 type TestSuite struct {
@@ -101,7 +100,7 @@ func (s *TestSuite) TestGatherAllKeysFromStore() {
 				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
 			}
 
-			actualValues := osmoutils.GatherAllKeysFromStore(s.store)
+			actualValues := osmostores.GatherAllKeysFromStore(s.store)
 
 			s.Require().Equal(tc.expectedValues, actualValues)
 		})
@@ -213,7 +212,7 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
 			}
 
-			actualValues, err := osmoutils.GatherValuesFromStore(s.store, tc.keyStart, tc.keyEnd, tc.parseFn)
+			actualValues, err := osmostores.GatherValuesFromStore(s.store, tc.keyStart, tc.keyEnd, tc.parseFn)
 
 			if tc.expectedErr != nil {
 				s.Require().ErrorContains(err, tc.expectedErr.Error())
@@ -304,7 +303,7 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
 			}
 
-			actualValues, err := osmoutils.GatherValuesFromStorePrefix(s.store, tc.prefix, tc.parseFn)
+			actualValues, err := osmostores.GatherValuesFromStorePrefix(s.store, tc.prefix, tc.parseFn)
 
 			if tc.expectedErr != nil {
 				s.Require().ErrorContains(err, tc.expectedErr.Error())
@@ -408,7 +407,7 @@ func (s *TestSuite) TestGetFirstValueAfterPrefixInclusive() {
 				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
 			}
 
-			actualValues, err := osmoutils.GetFirstValueAfterPrefixInclusive(s.store, tc.prefix, tc.parseFn)
+			actualValues, err := osmostores.GetFirstValueAfterPrefixInclusive(s.store, tc.prefix, tc.parseFn)
 
 			if tc.expectedErr != nil {
 				s.Require().ErrorContains(err, tc.expectedErr.Error())
@@ -535,7 +534,7 @@ func (s *TestSuite) TestGatherValuesFromIterator() {
 				mockParseValueFn = mockParseValueWithError
 			}
 
-			actualValues, err := osmoutils.GatherValuesFromIterator(iterator, mockParseValueFn, mockStop)
+			actualValues, err := osmostores.GatherValuesFromIterator(iterator, mockParseValueFn, mockStop)
 
 			if tc.expectedErr != nil {
 				s.Require().ErrorContains(err, tc.expectedErr.Error())
@@ -644,7 +643,7 @@ func (s *TestSuite) TestGetIterValuesWithStop() {
 				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
 			}
 
-			actualValues, err := osmoutils.GetIterValuesWithStop(s.store, tc.keyStart, tc.keyEnd, tc.isReverse, tc.stopFn, tc.parseFn)
+			actualValues, err := osmostores.GetIterValuesWithStop(s.store, tc.keyStart, tc.keyEnd, tc.isReverse, tc.stopFn, tc.parseFn)
 
 			if tc.expectedErr != nil {
 				s.Require().ErrorContains(err, tc.expectedErr.Error())
@@ -712,7 +711,7 @@ func (s *TestSuite) TestGetValuesUntilDerivedStop() {
 				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
 			}
 
-			actualValues, err := osmoutils.GetValuesUntilDerivedStop(s.store, tc.keyStart, tc.stopFn, tc.parseFn)
+			actualValues, err := osmostores.GetValuesUntilDerivedStop(s.store, tc.keyStart, tc.stopFn, tc.parseFn)
 
 			if tc.expectedErr != nil {
 				s.Require().ErrorContains(err, tc.expectedErr.Error())
@@ -728,8 +727,8 @@ func (s *TestSuite) TestGetValuesUntilDerivedStop() {
 }
 
 func (s *TestSuite) TestNoStopFn_AlwaysFalse() {
-	s.Require().False(osmoutils.NoStopFn([]byte(keyA)))
-	s.Require().False(osmoutils.NoStopFn([]byte(keyB)))
+	s.Require().False(osmostores.NoStopFn([]byte(keyA)))
+	s.Require().False(osmostores.NoStopFn([]byte(keyB)))
 }
 
 // TestMustGet tests that MustGet retrieves the correct
@@ -796,13 +795,13 @@ func (s *TestSuite) TestMustGet() {
 
 			// Setup
 			for key, value := range tc.preSetKeyValues {
-				osmoutils.MustSet(s.store, []byte(key), value)
+				osmostores.MustSet(s.store, []byte(key), value)
 			}
 
 			osmoassert.ConditionalPanic(s.T(), tc.expectPanic, func() {
 				for key, expectedValue := range tc.expectedGetKeyValues {
 					// System under test.
-					osmoutils.MustGet(s.store, []byte(key), tc.actualResultProto)
+					osmostores.MustGet(s.store, []byte(key), tc.actualResultProto)
 					// Assertions.
 					s.Require().Equal(expectedValue.String(), tc.actualResultProto.String())
 				}
@@ -883,12 +882,12 @@ func (s *TestSuite) TestGet() {
 
 			// Setup
 			for key, value := range tc.preSetKeyValues {
-				osmoutils.MustSet(s.store, []byte(key), value)
+				osmostores.MustSet(s.store, []byte(key), value)
 			}
 
 			for key, expectedValue := range tc.expectedGetKeyValues {
 				// System under test.
-				found, err := osmoutils.Get(s.store, []byte(key), tc.actualResultProto)
+				found, err := osmostores.Get(s.store, []byte(key), tc.actualResultProto)
 				// Assertions.
 				s.Require().Equal(found, tc.expectFound)
 				if tc.expectErr {
@@ -950,14 +949,14 @@ func (s *TestSuite) TestMustSet() {
 
 			// Setup
 			osmoassert.ConditionalPanic(s.T(), tc.expectPanic, func() {
-				osmoutils.MustSet(s.store, []byte(tc.setKey), tc.setValue)
+				osmostores.MustSet(s.store, []byte(tc.setKey), tc.setValue)
 			})
 
 			if tc.expectPanic {
 				return
 			}
 
-			osmoutils.MustGet(s.store, []byte(tc.setKey), tc.actualResultProto)
+			osmostores.MustGet(s.store, []byte(tc.setKey), tc.actualResultProto)
 			s.Require().Equal(tc.setValue.String(), tc.actualResultProto.String())
 		})
 	}
@@ -1009,13 +1008,13 @@ func (s *TestSuite) TestMustGetDec() {
 
 			// Setup
 			for key, value := range tc.preSetKeyValues {
-				osmoutils.MustSetDec(s.store, []byte(key), value)
+				osmostores.MustSetDec(s.store, []byte(key), value)
 			}
 
 			osmoassert.ConditionalPanic(s.T(), tc.expectPanic, func() {
 				for key, expectedValue := range tc.expectedGetKeyValues {
 					// System under test.
-					actualDec := osmoutils.MustGetDec(s.store, []byte(key))
+					actualDec := osmostores.MustGetDec(s.store, []byte(key))
 					// Assertions.
 					s.Require().Equal(expectedValue.String(), actualDec.String())
 				}
@@ -1038,9 +1037,9 @@ func (s *TestSuite) TestMustSetDec() {
 	originalDecValue := sdk.OneDec()
 
 	// System under test.
-	osmoutils.MustSetDec(s.store, []byte(keyA), originalDecValue)
+	osmostores.MustSetDec(s.store, []byte(keyA), originalDecValue)
 
 	// Assertions.
-	retrievedDecVaue := osmoutils.MustGetDec(s.store, []byte(keyA))
+	retrievedDecVaue := osmostores.MustGetDec(s.store, []byte(keyA))
 	s.Require().Equal(originalDecValue.String(), retrievedDecVaue.String())
 }

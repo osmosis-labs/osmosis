@@ -3,11 +3,11 @@ package twap
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/v13/osmostores"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
@@ -56,8 +56,8 @@ func (k Keeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
 	key1 := types.FormatHistoricalTimeIndexTWAPKey(twap.Time, twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
 	key2 := types.FormatHistoricalPoolIndexTWAPKey(twap.PoolId, twap.Asset0Denom, twap.Asset1Denom, twap.Time)
-	osmoutils.MustSet(store, key1, &twap)
-	osmoutils.MustSet(store, key2, &twap)
+	osmostores.MustSet(store, key1, &twap)
+	osmostores.MustSet(store, key2, &twap)
 }
 
 // pruneRecordsBeforeTimeButNewest prunes all records for each pool before the given time but the newest
@@ -153,20 +153,20 @@ func (k Keeper) getAllMostRecentRecordsForPool(ctx sdk.Context, poolId uint64) (
 
 // getAllHistoricalTimeIndexedTWAPs returns all historical TWAPs indexed by time.
 func (k Keeper) getAllHistoricalTimeIndexedTWAPs(ctx sdk.Context) ([]types.TwapRecord, error) {
-	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), []byte(types.HistoricalTWAPTimeIndexPrefix), types.ParseTwapFromBz)
+	return osmostores.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), []byte(types.HistoricalTWAPTimeIndexPrefix), types.ParseTwapFromBz)
 }
 
 // getAllHistoricalPoolIndexedTWAPs returns all historical TWAPs indexed by pool id.
 // nolint: unused
 func (k Keeper) getAllHistoricalPoolIndexedTWAPs(ctx sdk.Context) ([]types.TwapRecord, error) {
-	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), []byte(types.HistoricalTWAPPoolIndexPrefix), types.ParseTwapFromBz)
+	return osmostores.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), []byte(types.HistoricalTWAPPoolIndexPrefix), types.ParseTwapFromBz)
 }
 
 // storeNewRecord stores a record, in both the most recent record store and historical stores.
 func (k Keeper) storeNewRecord(ctx sdk.Context, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FormatMostRecentTWAPKey(twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
-	osmoutils.MustSet(store, key, &twap)
+	osmostores.MustSet(store, key, &twap)
 	k.storeHistoricalTWAP(ctx, twap)
 }
 
@@ -193,7 +193,7 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 	endKey := types.FormatHistoricalPoolIndexTimeSuffix(poolId, asset0Denom, asset1Denom, t)
 	reverseIterate := true
 
-	twap, err := osmoutils.GetFirstValueInRange(store, startKey, endKey, reverseIterate, types.ParseTwapFromBz)
+	twap, err := osmostores.GetFirstValueInRange(store, startKey, endKey, reverseIterate, types.ParseTwapFromBz)
 	if err != nil {
 		// diagnose why we have no results by seeing what happens for getMostRecentRecord for this pool id
 		_, errDiagnose := k.getMostRecentRecord(ctx, poolId, asset0Denom, asset1Denom)

@@ -2,11 +2,11 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/osmosis-labs/osmosis/v13/osmostores"
 	"time"
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v13/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
@@ -122,13 +122,13 @@ func (k Keeper) GetPoolIdFromGaugeId(ctx sdk.Context, gaugeId uint64, lockableDu
 func (k Keeper) SetLockableDurations(ctx sdk.Context, lockableDurations []time.Duration) {
 	store := ctx.KVStore(k.storeKey)
 	info := types.LockableDurationsInfo{LockableDurations: lockableDurations}
-	osmoutils.MustSet(store, types.LockableDurationsKey, &info)
+	osmostores.MustSet(store, types.LockableDurationsKey, &info)
 }
 
 func (k Keeper) GetLockableDurations(ctx sdk.Context) []time.Duration {
 	store := ctx.KVStore(k.storeKey)
 	info := types.LockableDurationsInfo{}
-	osmoutils.MustGet(store, types.LockableDurationsKey, &info)
+	osmostores.MustGet(store, types.LockableDurationsKey, &info)
 	return info.LockableDurations
 }
 

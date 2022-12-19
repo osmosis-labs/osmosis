@@ -2,11 +2,11 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/osmosis-labs/osmosis/v13/osmostores"
 	"time"
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -62,13 +62,13 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 func (k Keeper) SetLockableDurations(ctx sdk.Context, lockableDurations []time.Duration) {
 	store := ctx.KVStore(k.storeKey)
 	info := types.LockableDurationsInfo{LockableDurations: lockableDurations}
-	osmoutils.MustSet(store, types.LockableDurationsKey, &info)
+	osmostores.MustSet(store, types.LockableDurationsKey, &info)
 }
 
 // GetLockableDurations returns all incentivized lockable durations.
 func (k Keeper) GetLockableDurations(ctx sdk.Context) []time.Duration {
 	store := ctx.KVStore(k.storeKey)
 	info := types.LockableDurationsInfo{}
-	osmoutils.MustGet(store, types.LockableDurationsKey, &info)
+	osmostores.MustGet(store, types.LockableDurationsKey, &info)
 	return info.LockableDurations
 }

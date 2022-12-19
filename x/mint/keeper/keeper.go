@@ -2,10 +2,10 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/osmosis-labs/osmosis/v13/osmostores"
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
 
@@ -91,14 +91,14 @@ func (k *Keeper) SetHooks(h types.MintHooks) *Keeper {
 
 // GetMinter gets the minter.
 func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
-	osmoutils.MustGet(ctx.KVStore(k.storeKey), types.MinterKey, &minter)
+	osmostores.MustGet(ctx.KVStore(k.storeKey), types.MinterKey, &minter)
 	return
 }
 
 // SetMinter sets the minter.
 func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
 	store := ctx.KVStore(k.storeKey)
-	osmoutils.MustSet(store, types.MinterKey, &minter)
+	osmostores.MustSet(store, types.MinterKey, &minter)
 }
 
 // GetParams returns the total set of minting parameters.
