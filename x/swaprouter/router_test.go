@@ -81,6 +81,7 @@ func (suite *KeeperTestSuite) TestGetPoolModule() {
 
 			if tc.expectError != nil {
 				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, tc.expectError)
 				suite.Require().Nil(swapModule)
 				return
 			}
