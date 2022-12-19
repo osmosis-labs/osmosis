@@ -100,6 +100,7 @@ build: BUILD_ARGS=-o $(BUILDDIR)/
 
 $(BUILD_TARGETS): check_version go.sum $(BUILDDIR)/
 	go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
+	@bash scripts/create-environment.sh
 
 $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
