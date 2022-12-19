@@ -9,7 +9,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const EnvVariable = "OSMOSISD_ENVIRONMENT"
+const (
+	EnvVariable = "OSMOSISD_ENVIRONMENT"
+	EnvMainnet  = "mainnet"
+	EnvLocalnet = "localosmosis"
+)
 
 // ExportAirdropSnapshotCmd generates a snapshot.json from a provided exported genesis.json.
 func ChangeEnvironmentCmd() *cobra.Command {
@@ -24,30 +28,31 @@ Example:
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			newEnv := args[0]
-			if newEnv != "mainnet" && newEnv != "localosmosis" {
+			if newEnv != EnvMainnet && newEnv != EnvLocalnet {
 				return fmt.Errorf("invalid environment variable")
 			}
 
 			userHomeDir, err := os.UserHomeDir()
 			if err != nil {
-				panic(err)
+				return err
 			}
 			envPath := filepath.Join(userHomeDir, ".osmosisd/.env")
 
 			err = godotenv.Load(envPath)
 			if err != nil {
-				panic(err)
+				return err
 			}
 
 			m := make(map[string]string)
 			m[EnvVariable] = newEnv
 
-			godotenv.Write(m, envPath)
+			err = godotenv.Write(m, envPath)
+			if err != nil {
+				return err
+			}
 
 			return nil
 		},
 	}
 	return cmd
 }
-
-

@@ -101,9 +101,9 @@ func getHomeEnvironment() string {
 	}
 
 	val := os.Getenv(EnvVariable)
-	if val == "mainnet" {
+	if val == EnvMainnet {
 		return filepath.Join(userHomeDir, ".osmosisd")
-	} else if val == "localosmosis" {
+	} else if val == EnvLocalnet {
 		return filepath.Join(userHomeDir, ".osmosisd-local")
 	} else {
 		panic("invalid environment variable")
