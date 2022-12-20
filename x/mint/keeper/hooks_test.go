@@ -1,13 +1,13 @@
 package keeper_test
 
 import (
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	osmoapp "github.com/osmosis-labs/osmosis/v13/app"
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/x/mint/keeper"
 	"github.com/osmosis-labs/osmosis/v13/x/mint/types"
 

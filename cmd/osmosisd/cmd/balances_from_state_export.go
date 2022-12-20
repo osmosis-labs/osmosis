@@ -12,8 +12,8 @@ import (
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 

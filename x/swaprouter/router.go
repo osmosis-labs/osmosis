@@ -14,7 +14,8 @@ func (k Keeper) RouteExactAmountIn(
 	sender sdk.AccAddress,
 	routes []types.SwapAmountInRoute,
 	tokenIn sdk.Coin,
-	tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error) {
+	tokenOutMinAmount sdk.Int,
+) (tokenOutAmount sdk.Int, err error) {
 	panic("not implemented")
 }
 

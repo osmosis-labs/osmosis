@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 

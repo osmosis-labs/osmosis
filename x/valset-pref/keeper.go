@@ -3,12 +3,13 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
+
 	"github.com/tendermint/tendermint/libs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/gogo/protobuf/proto"
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
 )
 

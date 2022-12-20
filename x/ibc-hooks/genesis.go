@@ -10,6 +10,8 @@ import (
 	"reflect"
 
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
+
+	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
 var WasmHookModuleAccountAddr sdk.AccAddress = address.Module(types.ModuleName, []byte("wasm-hook intermediary account"))

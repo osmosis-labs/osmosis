@@ -1,9 +1,9 @@
 package cli_test
 
 import (
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v13/x/epochs/client/cli"
 	"github.com/osmosis-labs/osmosis/v13/x/epochs/types"
 )

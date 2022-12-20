@@ -3,9 +3,10 @@ package keeper
 import (
 	"time"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 

@@ -120,7 +120,6 @@ func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
 			} else {
 				suite.Require().Error(err)
 			}
-
 		})
 	}
 }
@@ -427,7 +426,6 @@ func (suite *KeeperTestSuite) TestRedelegateValidatorSet() {
 
 	for _, test := range tests {
 		suite.Run(test.name, func() {
-
 			// fund the account that is trying to delegate
 			suite.FundAcc(test.delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)})
 
@@ -466,7 +464,6 @@ func (suite *KeeperTestSuite) TestRedelegateValidatorSet() {
 			} else {
 				suite.Require().Error(err)
 			}
-
 		})
 	}
 }

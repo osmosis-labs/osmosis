@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

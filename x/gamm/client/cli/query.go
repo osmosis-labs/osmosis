@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
+
 	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -18,7 +20,6 @@ import (
 	flag "github.com/spf13/pflag"
 	"gopkg.in/yaml.v2"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
@@ -49,7 +50,8 @@ func GetCmdPool() (*osmocli.QueryDescriptor, *types.QueryPoolRequest) {
 		Use:   "pool [poolID]",
 		Short: "Query pool",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} pool 1`}, &types.QueryPoolRequest{}
+{{.CommandPrefix}} pool 1`,
+	}, &types.QueryPoolRequest{}
 }
 
 // TODO: Push this to the SDK.
@@ -79,7 +81,8 @@ func GetCmdPools() (*osmocli.QueryDescriptor, *types.QueryPoolsRequest) {
 		Use:   "pools",
 		Short: "Query pools",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} pools`}, &types.QueryPoolsRequest{}
+{{.CommandPrefix}} pools`,
+	}, &types.QueryPoolsRequest{}
 }
 
 func GetCmdNumPools() *cobra.Command {
@@ -194,7 +197,8 @@ func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *types.QuerySpotPriceRequest) 
 		Short: "Query spot-price (LEGACY, arguments are reversed!!)",
 		Long: `Query spot price (Legacy).{{.ExampleHeader}}
 {{.CommandPrefix}} spot-price 1 uosmo ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
-`}, &types.QuerySpotPriceRequest{}
+`,
+	}, &types.QuerySpotPriceRequest{}
 }
 
 // GetCmdEstimateSwapExactAmountIn returns estimation of output coin when amount of x token input.
