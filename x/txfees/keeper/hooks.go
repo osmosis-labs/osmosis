@@ -41,7 +41,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 					TokenOutDenom: baseDenom,
 				},
 			}
-			_, err := k.gammKeeper.RouteExactAmountIn(cacheCtx, nonNativeFeeAddr, routes, coinBalance, minAmountOut)
+			_, err := k.poolManager.RouteExactAmountIn(cacheCtx, nonNativeFeeAddr, routes, coinBalance, minAmountOut)
 			return err
 		})
 	}

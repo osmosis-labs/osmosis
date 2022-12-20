@@ -13,8 +13,8 @@ type SpotPriceCalculator interface {
 	CalculateSpotPrice(ctx sdk.Context, poolId uint64, quoteDenom, baseDenom string) (sdk.Dec, error)
 }
 
-// SwapRouterKeeper defines the contract needed for swap related APIs.
-type SwapRouterKeeper interface {
+// PoolManager defines the contract needed for swap related APIs.
+type PoolManager interface {
 	RouteExactAmountIn(
 		ctx sdk.Context,
 		sender sdk.AccAddress,

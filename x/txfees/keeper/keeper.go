@@ -16,7 +16,7 @@ type Keeper struct {
 
 	accountKeeper       types.AccountKeeper
 	bankKeeper          types.BankKeeper
-	gammKeeper          types.SwapRouterKeeper
+	poolManager         types.PoolManager
 	spotPriceCalculator types.SpotPriceCalculator
 }
 
@@ -26,14 +26,14 @@ func NewKeeper(
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	storeKey sdk.StoreKey,
-	swaprouterKeeper types.SwapRouterKeeper,
+	poolManager types.PoolManager,
 	spotPriceCalculator types.SpotPriceCalculator,
 ) Keeper {
 	return Keeper{
 		accountKeeper:       accountKeeper,
 		bankKeeper:          bankKeeper,
 		storeKey:            storeKey,
-		gammKeeper:          swaprouterKeeper,
+		poolManager:         poolManager,
 		spotPriceCalculator: spotPriceCalculator,
 	}
 }
