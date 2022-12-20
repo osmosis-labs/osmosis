@@ -93,7 +93,7 @@ pub fn handle_swap_reply(deps: DepsMut, msg: Reply) -> Result<Response, Contract
         cw_utils::parse_execute_response_data(&b).map_err(|e| ContractError::FailedSwap {
             msg: format!("failed to parse: {e}"),
         })?;
-    let swap_response: SwapResponse = from_binary(&parsed.data.unwrap())?;
+    let swap_response: SwapResponse = from_binary(&parsed.data.unwrap_or_default())?;
 
     // Build an IBC packet to forward the swap.
     let contract_addr = &swap_msg_state.contract_addr;
