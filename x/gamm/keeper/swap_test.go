@@ -126,6 +126,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 }
 
 // TestCalcOutAmtGivenIn only tests that balancer and stableswap pools are type casted correctly while concentratedliquidity pools fail
+// TODO: add failing CL pool tests.
 func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	type param struct {
 		poolType      string
@@ -192,6 +193,7 @@ func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 }
 
 // TestCalcInAmtGivenOut only tests that balancer and stableswap pools are type casted correctly while concentratedliquidity pools fail
+// TODO: add failing CL pool tests.
 func (suite *KeeperTestSuite) TestCalcInAmtGivenOut() {
 	type param struct {
 		poolType     string
