@@ -3,6 +3,7 @@ package ibc_hooks
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -72,11 +73,11 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	authKeeper AccountKeeper
+	authKeeper osmoutils.AccountKeeper
 }
 
 // NewAppModule creates a new AppModule object.
-func NewAppModule(ak AccountKeeper) AppModule {
+func NewAppModule(ak osmoutils.AccountKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		authKeeper:     ak,

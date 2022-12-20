@@ -8,10 +8,10 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	ibchooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
+	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
 
