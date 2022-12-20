@@ -26,26 +26,13 @@ func (k Keeper) UnmarshalPool(bz []byte) (types.CFMMPoolI, error) {
 
 // GetPool returns a pool with a given id.
 func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (swaproutertypes.PoolI, error) {
-	return k.getPool(ctx, poolId)
+	return k.GetPoolAndPoke(ctx, poolId)
 }
 
 // GetPoolAndPoke returns a PoolI based on it's identifier if one exists. If poolId corresponds
 // to a pool with weights (e.g. balancer), the weights of the pool are updated via PokePool prior to returning.
 // TODO: Consider rename to GetPool due to downstream API confusion.
 func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.CFMMPoolI, error) {
-	pool, err := k.getPool(ctx, poolId)
-	if err != nil {
-		return nil, err
-	}
-
-	if pokePool, ok := pool.(types.WeightedPoolExtension); ok {
-		pokePool.PokePool(ctx.BlockTime())
-	}
-
-	return pool, nil
-}
-
-func (k Keeper) getPool(ctx sdk.Context, poolId uint64) (types.CFMMPoolI, error) {
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
 	if !store.Has(poolKey) {
@@ -57,6 +44,10 @@ func (k Keeper) getPool(ctx sdk.Context, poolId uint64) (types.CFMMPoolI, error)
 	pool, err := k.UnmarshalPool(bz)
 	if err != nil {
 		return nil, err
+	}
+
+	if pokePool, ok := pool.(types.WeightedPoolExtension); ok {
+		pokePool.PokePool(ctx.BlockTime())
 	}
 
 	return pool, nil
