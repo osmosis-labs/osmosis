@@ -330,17 +330,9 @@ func (d BigDec) MulInt64(i int64) BigDec {
 
 // quotient
 func (d BigDec) Quo(d2 BigDec) BigDec {
-	// multiply precision twice
-	mul := new(big.Int).Mul(d.i, precisionReuse)
-	mul.Mul(mul, precisionReuse)
-
-	quo := new(big.Int).Quo(mul, d2.i)
-	chopped := chopPrecisionAndRound(quo)
-
-	if chopped.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	return BigDec{chopped}
+	copy := d.Clone()
+	copy.QuoMut(d2)
+	return copy
 }
 
 // mutative quotient
