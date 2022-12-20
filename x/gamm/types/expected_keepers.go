@@ -76,7 +76,3 @@ type PoolManager interface {
 		routes []swaproutertypes.SwapAmountOutRoute,
 		tokenOut sdk.Coin) (tokenInAmount sdk.Int, err error)
 }
-
-type PoolIncentivesKeeper interface {
-	IsPoolIncentivized(ctx sdk.Context, poolId uint64) bool
-}
