@@ -17,7 +17,9 @@ type LiquidityPoolStruct struct {
 	PoolId    uint64
 }
 
-var _ epochstypes.EpochHooks = EpochHooks{}
+var (
+	_ epochstypes.EpochHooks = EpochHooks{}
+)
 
 func (k Keeper) EpochHooks() epochstypes.EpochHooks {
 	return EpochHooks{k}
@@ -28,18 +30,32 @@ func (h EpochHooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, ep
 	return nil
 }
 
-// AfterEpochEnd is the epoch end hook. The module will update all of the pools in the store that are
-// used for trading.
+// AfterEpochEnd is the epoch end hook.
 func (h EpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
-	switch epochIdentifier {
-	case "week":
-		// Update the pools in the store
-		return h.k.UpdatePools(ctx)
+	enabled, err := h.k.GetProtoRevEnabled(ctx)
+	if err == nil && enabled {
+		switch epochIdentifier {
+		case "week":
+			// Distribute developer fees to the developer account. We do not error check because the developer account
+			// may not have been set by this point (gets set in a proposal after genesis)
+			h.k.SendDeveloperFeesToDeveloperAccount(ctx)
+
+			// Update the pools in the store
+			return h.k.UpdatePools(ctx)
+		case "day":
+			// Increment number of days since genesis to properly calculate developer fees after cyclic arbitrage trades
+			if daysSinceGenesis, err := h.k.GetDaysSinceGenesis(ctx); err != nil {
+				h.k.SetDaysSinceGenesis(ctx, 1)
+			} else {
+				h.k.SetDaysSinceGenesis(ctx, daysSinceGenesis+1)
+			}
+
+		}
 	}
+
 	return nil
 }
 
-// Update pools requests the highest liquidity pools from the gamm module and updates the pools in the store
 func (k Keeper) UpdatePools(ctx sdk.Context) error {
 	// Reset the pools in the store
 	k.DeleteAllAtomPools(ctx)
