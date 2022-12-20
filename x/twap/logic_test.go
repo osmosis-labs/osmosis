@@ -547,16 +547,6 @@ type computeThreeAssetArithmeticTwapTestCase struct {
 	expErr      bool
 }
 
-type computeTwapTestCase struct {
-	startRecord    types.TwapRecord
-	endRecord      types.TwapRecord
-	twapStrategies []twap.TwapStrategy
-	quoteAsset     string
-	expTwap        sdk.Dec
-	expErr         bool
-	expPanic       bool
-}
-
 // TestPruneRecords tests that twap records earlier than
 // current block time - RecordHistoryKeepPeriod are pruned from the store
 // while keeping the newest record before the above time threshold.
@@ -1266,97 +1256,6 @@ func (s *TestSuite) TestAfterCreatePool() {
 	}
 }
 
-// TestComputeArithmeticTwap tests computeTwap on various inputs.
-// TODO: test both arithmetic and geometric twap.
-// The test vectors are structured by setting up different start and records,
-// based on time interval, and their accumulator values.
-// Then an expected TWAP is provided in each test case, to compare against computed.
-func (s *TestSuite) TestComputeTwap() {
-	tests := map[string]computeTwapTestCase{
-		"arithmetic only, basic: spot price = 1 for one second, 0 init accumulator": {
-			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			endRecord:   newOneSidedRecord(tPlusOne, OneSec, true),
-			quoteAsset:  denom0,
-			twapStrategies: []twap.TwapStrategy{
-				&twap.ArithmeticTwapStrategy{
-					TwapKeeper: *s.App.TwapKeeper,
-				},
-			},
-			expTwap: sdk.OneDec(),
-		},
-		// this test just shows what happens in case the records are reversed.
-		// It should return the correct result, even though this is incorrect internal API usage
-		"arithmetic only: invalid call: reversed records of above": {
-			startRecord: newOneSidedRecord(tPlusOne, OneSec, true),
-			endRecord:   newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			quoteAsset:  denom0,
-			twapStrategies: []twap.TwapStrategy{
-				&twap.ArithmeticTwapStrategy{
-					TwapKeeper: *s.App.TwapKeeper,
-				},
-			},
-			expTwap: sdk.OneDec(),
-		},
-		"same record: denom0, end spot price = 0": {
-			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			endRecord:   newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			quoteAsset:  denom0,
-			twapStrategies: []twap.TwapStrategy{
-				&twap.ArithmeticTwapStrategy{
-					TwapKeeper: *s.App.TwapKeeper,
-				},
-				&twap.GeometricTwapStrategy{
-					TwapKeeper: *s.App.TwapKeeper,
-				},
-			},
-			expTwap: sdk.ZeroDec(),
-		},
-		"same record: denom1, end spot price = 1": {
-			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			endRecord:   newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			quoteAsset:  denom1,
-			twapStrategies: []twap.TwapStrategy{
-				&twap.ArithmeticTwapStrategy{
-					TwapKeeper: *s.App.TwapKeeper,
-				},
-				&twap.GeometricTwapStrategy{
-					TwapKeeper: *s.App.TwapKeeper,
-				},
-			},
-			expTwap: sdk.OneDec(),
-		},
-		"arithmetic only: accumulator = 10*OneSec, t=5s. 0 base accum": testCaseFromDeltas(
-			s, sdk.ZeroDec(), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
-		"arithmetic only: accumulator = 10*OneSec, t=100s. 0 base accum (asset 1)": testCaseFromDeltasAsset1(s, sdk.ZeroDec(), OneSec.MulInt64(10), 100*time.Second, sdk.NewDecWithPrec(1, 1)),
-		"geometric only: accumulator = log(10)*OneSec, t=5s. 0 base accum": geometricTestCaseFromDeltas0(
-			s, sdk.ZeroDec(), geometricTenSecAccum, 5*time.Second, twap.TwapPow(geometricTenSecAccum.QuoInt64(5*1000))),
-		"geometric only: accumulator = log(10)*OneSec, t=100s. 0 base accum (asset 1)": geometricTestCaseFromDeltas1(s, sdk.ZeroDec(), geometricTenSecAccum, 100*time.Second, sdk.OneDec().Quo(twap.TwapPow(geometricTenSecAccum.QuoInt64(100*1000)))),
-		"three asset same record: asset1, end spot price = 1": {
-			startRecord: newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true)[1],
-			endRecord:   newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true)[1],
-			quoteAsset:  denom2,
-			expTwap:     sdk.OneDec(),
-			twapStrategies: []twap.TwapStrategy{
-				&twap.ArithmeticTwapStrategy{
-					TwapKeeper: *s.App.TwapKeeper,
-				},
-				&twap.GeometricTwapStrategy{
-					TwapKeeper: *s.App.TwapKeeper,
-				},
-			},
-		},
-	}
-	for name, test := range tests {
-		s.Run(name, func() {
-			for _, twapStrategy := range test.twapStrategies {
-				actualTwap, err := twap.ComputeTwap(test.startRecord, test.endRecord, test.quoteAsset, twapStrategy)
-				s.Require().NoError(err)
-				osmoassert.DecApproxEq(s.T(), test.expTwap, actualTwap, osmomath.GetPowPrecision())
-			}
-		})
-	}
-}
-
 // This tests the behavior of computeArithmeticTwap, around error returning
 // when there has been an intermediate spot price error.
 func (s *TestSuite) TestComputeArithmeticTwapWithSpotPriceError() {
@@ -1365,6 +1264,11 @@ func (s *TestSuite) TestComputeArithmeticTwapWithSpotPriceError() {
 		record.LastErrorTime = errTime
 		return record
 	}
+
+	arithStrategy := &twap.ArithmeticTwapStrategy{
+		TwapKeeper: *s.App.TwapKeeper,
+	}
+
 	tests := map[string]computeTwapTestCase{
 		// should error, since end time may have been used to interpolate this value
 		"errAtEndTime from end record": {
@@ -1408,8 +1312,7 @@ func (s *TestSuite) TestComputeArithmeticTwapWithSpotPriceError() {
 	}
 	for name, test := range tests {
 		s.Run(name, func() {
-			arithmeticStrategy := &twap.ArithmeticTwapStrategy{*s.App.TwapKeeper}
-			actualTwap, err := twap.ComputeTwap(test.startRecord, test.endRecord, test.quoteAsset, arithmeticStrategy)
+			actualTwap, err := twap.ComputeTwap(test.startRecord, test.endRecord, test.quoteAsset, arithStrategy)
 			s.Require().Equal(test.expTwap, actualTwap)
 			osmoassert.ConditionalError(s.T(), test.expErr, err)
 		})
