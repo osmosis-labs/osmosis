@@ -70,6 +70,8 @@ var AppModuleBasics = []module.AppModuleBasic{
 			poolincentivesclient.ReplacePoolIncentivesHandler,
 			ibcclientclient.UpdateClientProposalHandler,
 			ibcclientclient.UpgradeProposalHandler,
+			protorevclient.SetProtoRevAdminAccountProposalHandler,
+			protorevclient.SetProtoRevEnabledProposalHandler,
 			superfluidclient.SetSuperfluidAssetsProposalHandler,
 			superfluidclient.RemoveSuperfluidAssetsProposalHandler,
 			superfluidclient.UpdateUnpoolWhitelistProposalHandler,
