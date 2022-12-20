@@ -207,6 +207,36 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 	return nil
 }
 
+// WithdrawDelegationRewards withdraws all the delegation rewards from the validator in the val-set.
+// Delegation reward is collected by the validator and in doing so, they can charge commission to the delegators.
+// Rewards are calculated per period, and is updated each time validator delegation changes. For ex: when a delegator
+// receives new delgation the rewards can be calculated by taking (total rewards before new delegation - the total current rewards).
+func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delegatorAddr string) error {
+	// get the existing validator set preference
+	existingSet, found := k.GetValidatorSetPreference(ctx, delegatorAddr)
+	if !found {
+		return fmt.Errorf("user %s doesn't have validator set", delegatorAddr)
+	}
+
+	delegator, err := sdk.AccAddressFromBech32(delegatorAddr)
+	if err != nil {
+		return err
+	}
+
+	for _, val := range existingSet.Preferences {
+		valAddr, err := sdk.ValAddressFromBech32(val.ValOperAddress)
+		if err != nil {
+			return fmt.Errorf("validator address not formatted")
+		}
+
+		_, err = k.distirbutionKeeper.WithdrawDelegationRewards(ctx, delegator, valAddr)
+		if err != nil {
+			return nil
+		}
+	}
+	return nil
+}
+
 // GetValAddrAndVal checks if the validator address is valid and the validator provided exists on chain.
 func (k Keeper) getValAddrAndVal(ctx sdk.Context, valOperAddress string) (sdk.ValAddress, stakingtypes.Validator, error) {
 	valAddr, err := sdk.ValAddressFromBech32(valOperAddress)
