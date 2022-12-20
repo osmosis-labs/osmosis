@@ -51,7 +51,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	k.SetDaysSinceGenesis(ctx, 0)
 
 	// Default we only allow 3 pools to be arbitraged against per tx
-	k.SetMaxPools(ctx, 3)
+	if err := k.SetMaxPools(ctx, 3); err != nil {
+		panic(err)
+	}
 
 	// Update the pools on genesis
 	if err := k.UpdatePools(ctx); err != nil {
