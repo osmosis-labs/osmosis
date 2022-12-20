@@ -1,6 +1,7 @@
 package client
 
 import (
+	"errors"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,7 +17,7 @@ type Querier struct {
 }
 
 func (q Querier) ArithmeticTwap(ctx sdk.Context,
-	req queryproto.ArithmeticTwapRequest, // nolint: staticcheck
+	req queryproto.ArithmeticTwapRequest,
 ) (*queryproto.ArithmeticTwapResponse, error) {
 	if req.EndTime == nil {
 		req.EndTime = &time.Time{}
@@ -27,17 +28,33 @@ func (q Querier) ArithmeticTwap(ctx sdk.Context,
 
 	twap, err := q.K.GetArithmeticTwap(ctx, req.PoolId, req.BaseAsset, req.QuoteAsset, req.StartTime, *req.EndTime)
 
-	// nolint: staticcheck
 	return &queryproto.ArithmeticTwapResponse{ArithmeticTwap: twap}, err
 }
 
 func (q Querier) ArithmeticTwapToNow(ctx sdk.Context,
-	req queryproto.ArithmeticTwapToNowRequest, // nolint: staticcheck
+	req queryproto.ArithmeticTwapToNowRequest,
 ) (*queryproto.ArithmeticTwapToNowResponse, error) {
 	twap, err := q.K.GetArithmeticTwapToNow(ctx, req.PoolId, req.BaseAsset, req.QuoteAsset, req.StartTime)
 
-	// nolint: staticcheck
 	return &queryproto.ArithmeticTwapToNowResponse{ArithmeticTwap: twap}, err
+}
+
+func (q Querier) GeometricTwap(ctx sdk.Context,
+	req queryproto.GeometricTwapRequest,
+) (*queryproto.GeometricTwapResponse, error) {
+	if req.EndTime == nil {
+		req.EndTime = &time.Time{}
+	}
+	if (*req.EndTime == time.Time{}) {
+		*req.EndTime = ctx.BlockTime()
+	}
+	return nil, errors.New("not implemented")
+}
+
+func (q Querier) GeometricTwapToNow(ctx sdk.Context,
+	req queryproto.GeometricTwapToNowRequest,
+) (*queryproto.GeometricTwapToNowResponse, error) {
+	return nil, errors.New("not implemented")
 }
 
 func (q Querier) Params(ctx sdk.Context,
