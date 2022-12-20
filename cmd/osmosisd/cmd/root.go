@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -106,7 +107,7 @@ func getHomeEnvironment() string {
 	} else if val == EnvLocalnet {
 		return filepath.Join(userHomeDir, ".osmosisd-local")
 	} else {
-		panic("invalid environment variable")
+		panic(fmt.Errorf("Invalid environment variable"))
 	}
 }
 
