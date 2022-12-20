@@ -11,7 +11,7 @@ import (
 	ibchooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
 
