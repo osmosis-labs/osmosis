@@ -38,7 +38,7 @@ func (h EpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epoch
 		case "week":
 			// Distribute developer fees to the developer account. We do not error check because the developer account
 			// may not have been set by this point (gets set in a proposal after genesis)
-			h.k.SendDeveloperFeesToDeveloperAccount(ctx)
+			_ = h.k.SendDeveloperFeesToDeveloperAccount(ctx)
 
 			// Update the pools in the store
 			return h.k.UpdatePools(ctx)
@@ -49,7 +49,6 @@ func (h EpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epoch
 			} else {
 				h.k.SetDaysSinceGenesis(ctx, daysSinceGenesis+1)
 			}
-
 		}
 	}
 

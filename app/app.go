@@ -272,8 +272,7 @@ func NewOsmosisApp(
 			app.IBCKeeper,
 		),
 	)
-	// Uncomment to enable postHandlers:
-	// app.SetPostHandler(NewTxPostHandler())
+	app.SetPostHandler(NewPostHandler(app.ProtoRevKeeper))
 	app.SetEndBlocker(app.EndBlocker)
 
 	// Register snapshot extensions to enable state-sync for wasm.
