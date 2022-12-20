@@ -161,5 +161,10 @@ func (k Keeper) ExecuteTrade(ctx sdk.Context, route poolmanagertypes.SwapAmountI
 		return err
 	}
 
+	// Update the developer fees
+	if err = k.UpdateDeveloperFees(ctx, inputCoin, tokenOutAmount); err != nil {
+		return err
+	}
+
 	return nil
 }
