@@ -240,12 +240,9 @@ func (d BigDec) BigInt() *big.Int {
 
 // addition
 func (d BigDec) Add(d2 BigDec) BigDec {
-	res := new(big.Int).Add(d.i, d2.i)
-
-	if res.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	return BigDec{res}
+	copy := d.Clone()
+	copy.AddMut(d2)
+	return copy
 }
 
 // mutative addition
