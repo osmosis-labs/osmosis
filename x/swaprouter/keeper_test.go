@@ -37,7 +37,7 @@ func (suite *KeeperTestSuite) createPoolFromType(poolType types.PoolType) {
 		suite.PrepareBalancerPool()
 		return
 	case types.Stableswap:
-		// TODO
+		suite.PrepareBasicStableswapPool()
 		return
 	case types.Concentrated:
 		// TODO
@@ -53,4 +53,33 @@ func (suite *KeeperTestSuite) createBalancerPoolsFromCoins(poolCoins []sdk.Coins
 		suite.FundAcc(suite.TestAccs[0], curPoolCoins)
 		suite.PrepareBalancerPoolWithCoins(curPoolCoins...)
 	}
+}
+
+func (suite *KeeperTestSuite) TestInitGenesis() {
+	suite.Setup()
+
+	suite.App.SwapRouterKeeper.InitGenesis(suite.Ctx, &types.GenesisState{
+		Params: types.Params{
+			PoolCreationFee: testPoolCreationFee,
+		},
+		NextPoolId: testExpectedPoolId,
+	})
+
+	suite.Require().Equal(uint64(testExpectedPoolId), suite.App.SwapRouterKeeper.GetNextPoolId(suite.Ctx))
+	suite.Require().Equal(testPoolCreationFee, suite.App.SwapRouterKeeper.GetParams(suite.Ctx).PoolCreationFee)
+}
+
+func (suite *KeeperTestSuite) TestExportGenesis() {
+	suite.Setup()
+
+	suite.App.SwapRouterKeeper.InitGenesis(suite.Ctx, &types.GenesisState{
+		Params: types.Params{
+			PoolCreationFee: testPoolCreationFee,
+		},
+		NextPoolId: testExpectedPoolId,
+	})
+
+	genesis := suite.App.SwapRouterKeeper.ExportGenesis(suite.Ctx)
+	suite.Require().Equal(uint64(testExpectedPoolId), genesis.NextPoolId)
+	suite.Require().Equal(testPoolCreationFee, genesis.Params.PoolCreationFee)
 }

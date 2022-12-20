@@ -25,6 +25,75 @@ var (
 	gammKeeperType        = reflect.TypeOf(&gamm.Keeper{})
 )
 
+// TestGetPoolModule tests that the correct pool module is returned for a given pool id.
+// Additionally, validates that the expected errors are produced when expected.
+func (suite *KeeperTestSuite) TestGetPoolModule() {
+	tests := map[string]struct {
+		poolId            uint64
+		preCreatePoolType types.PoolType
+		routesOverwrite   map[types.PoolType]types.SwapI
+
+		expectedModule reflect.Type
+		expectError    error
+	}{
+		"valid balancer pool": {
+			preCreatePoolType: types.Balancer,
+			poolId:            1,
+			expectedModule:    gammKeeperType,
+		},
+		"valid stableswap pool": {
+			preCreatePoolType: types.Stableswap,
+			poolId:            1,
+			expectedModule:    gammKeeperType,
+		},
+		"non-existent pool": {
+			preCreatePoolType: types.Balancer,
+			poolId:            2,
+			expectedModule:    gammKeeperType,
+
+			expectError: types.FailedToFindRouteError{PoolId: 2},
+		},
+		"undefined route": {
+			preCreatePoolType: types.Balancer,
+			poolId:            1,
+			routesOverwrite: map[types.PoolType]types.SwapI{
+				types.Stableswap: &gamm.Keeper{}, // undefined for balancer.
+			},
+
+			expectError: types.UndefinedRouteError{PoolId: 1, PoolType: types.Balancer},
+		},
+		// TODO: valid concentrated liquidity test case.
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.SetupTest()
+			swaprouterKeeper := suite.App.SwapRouterKeeper
+
+			suite.createPoolFromType(tc.preCreatePoolType)
+
+			if len(tc.routesOverwrite) > 0 {
+				swaprouterKeeper.SetPoolRoutesUnsafe(tc.routesOverwrite)
+			}
+
+			swapModule, err := swaprouterKeeper.GetPoolModule(suite.Ctx, tc.poolId)
+
+			if tc.expectError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, tc.expectError)
+				suite.Require().Nil(swapModule)
+				return
+			}
+
+			suite.Require().NoError(err)
+			suite.Require().NotNil(swapModule)
+
+			suite.Require().Equal(tc.expectedModule, reflect.TypeOf(swapModule))
+		})
+	}
+}
+
 // TestEstimateMultihopSwapExactAmountIn tests that the estimation done via `EstimateSwapExactAmountIn`
 // results in the same amount of token out as the actual swap.
 func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
