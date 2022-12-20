@@ -52,7 +52,7 @@ jobs:
         if: env.MAJOR == 1
         uses: peter-evans/create-pull-request@v4
         with:
-          base: ${{ github.event.repository.default_branch }}
+          token: ${{ secrets.COMMIT_TO_BRANCH }}
           title: "auto: code-gen upgrade handler ${{ env.input }}"
           body: |
             Update report
@@ -61,4 +61,8 @@ jobs:
           labels: |
             T:auto
             C:e2e
+            V:state/breaking
             C:app-wiring
+          base: ${{ github.event.repository.default_branch }}
+          branch: create-pull-request/patch
+          delete-branch: true
