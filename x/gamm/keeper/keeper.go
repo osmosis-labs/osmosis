@@ -77,8 +77,8 @@ func (k *Keeper) SetPoolIncentivesKeeper(poolIncentivesKeeper types.PoolIncentiv
 	k.poolIncentivesKeeper = poolIncentivesKeeper
 }
 
-func (k *Keeper) SetPoolCreationManager(poolCreationManager types.PoolManager) {
-	k.poolManager = poolCreationManager
+func (k *Keeper) SetPoolManager(poolManager types.PoolManager) {
+	k.poolManager = poolManager
 }
 
 // GetParams returns the total set params.
