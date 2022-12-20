@@ -29,6 +29,7 @@ type GAMMKeeper interface {
 	GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error)
 	SwapExactAmountIn(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, tokenIn sdk.Coin, tokenOutDenom string, tokenOutMinAmount sdk.Int) (sdk.Int, error)
 	MultihopSwapExactAmountIn(ctx sdk.Context, sender sdk.AccAddress, routes []gammtypes.SwapAmountInRoute, tokenIn sdk.Coin, tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error)
+	MultihopEstimateOutGivenExactAmountIn(ctx sdk.Context, routes []gammtypes.SwapAmountInRoute, tokenIn sdk.Coin) (tokenOutAmount sdk.Int, err error)
 }
 
 // EpochKeeper defines the Epoch contract that must be fulfilled when

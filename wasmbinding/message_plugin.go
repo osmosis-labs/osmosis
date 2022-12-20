@@ -10,20 +10,17 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	"github.com/osmosis-labs/osmosis/v13/wasmbinding/bindings"
-	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 
 	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/keeper"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
 )
 
 // CustomMessageDecorator returns decorator for custom CosmWasm bindings messages
-func CustomMessageDecorator(gammKeeper *gammkeeper.Keeper, bank *bankkeeper.BaseKeeper, tokenFactory *tokenfactorykeeper.Keeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {
+func CustomMessageDecorator(bank *bankkeeper.BaseKeeper, tokenFactory *tokenfactorykeeper.Keeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {
 	return func(old wasmkeeper.Messenger) wasmkeeper.Messenger {
 		return &CustomMessenger{
 			wrapped:      old,
 			bank:         bank,
-			gammKeeper:   gammKeeper,
 			tokenFactory: tokenFactory,
 		}
 	}
@@ -32,7 +29,6 @@ func CustomMessageDecorator(gammKeeper *gammkeeper.Keeper, bank *bankkeeper.Base
 type CustomMessenger struct {
 	wrapped      wasmkeeper.Messenger
 	bank         *bankkeeper.BaseKeeper
-	gammKeeper   *gammkeeper.Keeper
 	tokenFactory *tokenfactorykeeper.Keeper
 }
 
@@ -58,9 +54,6 @@ func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 		}
 		if contractMsg.BurnTokens != nil {
 			return m.burnTokens(ctx, contractAddr, contractMsg.BurnTokens)
-		}
-		if contractMsg.Swap != nil {
-			return m.swapTokens(ctx, contractAddr, contractMsg.Swap)
 		}
 	}
 	return m.wrapped.DispatchMsg(ctx, contractAddr, contractIBCPortID, msg)
@@ -201,75 +194,6 @@ func PerformBurn(f *tokenfactorykeeper.Keeper, ctx sdk.Context, contractAddr sdk
 		return sdkerrors.Wrap(err, "burning coins from message")
 	}
 	return nil
-}
-
-// swapTokens swaps one denom for another.
-func (m *CustomMessenger) swapTokens(ctx sdk.Context, contractAddr sdk.AccAddress, swap *bindings.SwapMsg) ([]sdk.Event, [][]byte, error) {
-	_, err := PerformSwap(m.gammKeeper, ctx, contractAddr, swap)
-	if err != nil {
-		return nil, nil, sdkerrors.Wrap(err, "perform swap")
-	}
-	return nil, nil, nil
-}
-
-// PerformSwap can be used both for the real swap, and the EstimateSwap query
-func PerformSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, swap *bindings.SwapMsg) (*bindings.SwapAmount, error) {
-	if swap == nil {
-		return nil, wasmvmtypes.InvalidRequest{Err: "gamm perform swap null swap"}
-	}
-	if swap.Amount.ExactIn != nil {
-		routes := []gammtypes.SwapAmountInRoute{{
-			PoolId:        swap.First.PoolId,
-			TokenOutDenom: swap.First.DenomOut,
-		}}
-		for _, step := range swap.Route {
-			routes = append(routes, gammtypes.SwapAmountInRoute{
-				PoolId:        step.PoolId,
-				TokenOutDenom: step.DenomOut,
-			})
-		}
-		if swap.Amount.ExactIn.Input.IsNegative() {
-			return nil, wasmvmtypes.InvalidRequest{Err: "gamm perform swap negative amount in"}
-		}
-		tokenIn := sdk.Coin{
-			Denom:  swap.First.DenomIn,
-			Amount: swap.Amount.ExactIn.Input,
-		}
-		tokenOutMinAmount := swap.Amount.ExactIn.MinOutput
-		tokenOutAmount, err := keeper.MultihopSwapExactAmountIn(ctx, contractAddr, routes, tokenIn, tokenOutMinAmount)
-		if err != nil {
-			return nil, sdkerrors.Wrap(err, "gamm perform swap exact amount in")
-		}
-		return &bindings.SwapAmount{Out: &tokenOutAmount}, nil
-	} else if swap.Amount.ExactOut != nil {
-		routes := []gammtypes.SwapAmountOutRoute{{
-			PoolId:       swap.First.PoolId,
-			TokenInDenom: swap.First.DenomIn,
-		}}
-		output := swap.First.DenomOut
-		for _, step := range swap.Route {
-			routes = append(routes, gammtypes.SwapAmountOutRoute{
-				PoolId:       step.PoolId,
-				TokenInDenom: output,
-			})
-			output = step.DenomOut
-		}
-		tokenInMaxAmount := swap.Amount.ExactOut.MaxInput
-		if swap.Amount.ExactOut.Output.IsNegative() {
-			return nil, wasmvmtypes.InvalidRequest{Err: "gamm perform swap negative amount out"}
-		}
-		tokenOut := sdk.Coin{
-			Denom:  output,
-			Amount: swap.Amount.ExactOut.Output,
-		}
-		tokenInAmount, err := keeper.MultihopSwapExactAmountOut(ctx, contractAddr, routes, tokenInMaxAmount, tokenOut)
-		if err != nil {
-			return nil, sdkerrors.Wrap(err, "gamm perform swap exact amount out")
-		}
-		return &bindings.SwapAmount{In: &tokenInAmount}, nil
-	} else {
-		return nil, wasmvmtypes.UnsupportedRequest{Kind: "must support either Swap.ExactIn or Swap.ExactOut"}
-	}
 }
 
 // GetFullDenom is a function, not method, so the message_plugin can use it
