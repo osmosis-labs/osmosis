@@ -24,9 +24,16 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 	}
 
 	tests := []struct {
-		name       string
-		param      param
-		expectPass bool
+		name  string
+		param param
+		// Note: by default swap fee is zero in all tests
+		// It is only set to non-zero when this overwrite is non-nil
+		swapFeeOverwrite sdk.Dec
+		// Note: this is the value by which the original swap fee is divided
+		// by if it is non-nil. This is done to test the case where the given
+		// parameter swap fee is reduced by more than allowed (max factor of 0.5)
+		swapFeeOverwriteQuotient sdk.Dec
+		expectPass               bool
 	}{
 		{
 			name: "Proper swap",
@@ -47,6 +54,30 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				expectedTokenOut:  sdk.NewInt(1167843),
 			},
 			expectPass: true,
+		},
+		{
+			name: "boundary valid swap fee given (= 0.5 pool swap fee)",
+			param: param{
+				tokenIn:           sdk.NewCoin("foo", sdk.NewInt(100000)),
+				tokenOutDenom:     "bar",
+				tokenOutMinAmount: sdk.NewInt(1),
+				expectedTokenOut:  sdk.NewInt(46833),
+			},
+			swapFeeOverwrite:         sdk.MustNewDecFromStr("0.1"),
+			swapFeeOverwriteQuotient: sdk.MustNewDecFromStr("2"),
+			expectPass:               true,
+		},
+		{
+			name: "invalid swap fee given (< 0.5 pool swap fee)",
+			param: param{
+				tokenIn:           sdk.NewCoin("foo", sdk.NewInt(100000)),
+				tokenOutDenom:     "bar",
+				tokenOutMinAmount: sdk.NewInt(1),
+				expectedTokenOut:  sdk.NewInt(49262),
+			},
+			swapFeeOverwrite:         sdk.MustNewDecFromStr("0.1"),
+			swapFeeOverwriteQuotient: sdk.MustNewDecFromStr("3"),
+			expectPass:               false,
 		},
 		{
 			name: "out is lesser than min amount",
@@ -87,15 +118,25 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 	}
 
 	for _, test := range tests {
+		test := test
 		suite.Run(test.name, func() {
 			// Init suite for each test.
 			suite.SetupTest()
-			poolId := suite.PrepareBalancerPool()
+			swapFee := sdk.ZeroDec()
+			if !test.swapFeeOverwrite.IsNil() {
+				swapFee = test.swapFeeOverwrite
+			}
+			poolId := suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
+				SwapFee: swapFee,
+				ExitFee: sdk.ZeroDec(),
+			})
+			if !test.swapFeeOverwriteQuotient.IsNil() {
+				swapFee = swapFee.Quo(test.swapFeeOverwriteQuotient)
+			}
 			keeper := suite.App.GAMMKeeper
 			ctx := suite.Ctx
-			pool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
+			pool, err := suite.App.GAMMKeeper.GetPool(ctx, poolId)
 			suite.NoError(err)
-			swapFee := pool.GetSwapFee(suite.Ctx)
 
 			if test.expectPass {
 				spotPriceBefore, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
@@ -104,7 +145,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				prevGasConsumed := suite.Ctx.GasMeter().GasConsumed()
 				tokenOutAmount, err := keeper.SwapExactAmountIn(ctx, suite.TestAccs[0], pool, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, swapFee)
 				suite.NoError(err, "test: %v", test.name)
-				suite.True(tokenOutAmount.Equal(test.param.expectedTokenOut), "test: %v", test.name)
+				suite.Require().Equal(test.param.expectedTokenOut.String(), tokenOutAmount.String())
 				gasConsumedForSwap := suite.Ctx.GasMeter().GasConsumed() - prevGasConsumed
 				// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
 				suite.Assert().Greater(gasConsumedForSwap, uint64(types.BalancerGasFeeForSwap))
@@ -113,6 +154,10 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 
 				spotPriceAfter, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
 				suite.NoError(err, "test: %v", test.name)
+
+				if !test.swapFeeOverwrite.IsNil() {
+					return
+				}
 
 				// Ratio of the token out should be between the before spot price and after spot price.
 				tradeAvgPrice := test.param.tokenIn.Amount.ToDec().Quo(tokenOutAmount.ToDec())

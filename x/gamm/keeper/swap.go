@@ -33,6 +33,10 @@ func (k Keeper) SwapExactAmountIn(
 	if !pool.IsActive(ctx) {
 		return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
 	}
+	poolSwapFee := pool.GetSwapFee(ctx)
+	if swapFee.LT(poolSwapFee.QuoInt64(2)) {
+		return sdk.Int{}, fmt.Errorf("given swap fee (%s) must be greater than or equal to half of the pool's swap fee (%s)", swapFee, poolSwapFee)
+	}
 	tokensIn := sdk.Coins{tokenIn}
 
 	defer func() {
