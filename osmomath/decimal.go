@@ -1003,11 +1003,8 @@ func (d BigDec) PowerIntegerMut(power uint64) BigDec {
 // Panics if the base is negative. Does not mutate the receiver.
 // The max supported exponent is defined by the global maxSupportedExponent.
 // If a greater exponent is given, the function panics.
-// The answer is correct up to a factor of 10^-18.
-// Meaning, result = result * k for k in [1 - 10^(-18), 1 + 10^(-18)]
-// Note: our Python script plots show accuracy up to a factor of 10^22.
-// However, in Go tests we only test up to 10^18. Therefore, this is the guarantee.
-// N.B.: support for negative power can be added when needed.
+// The error is not bounded but expected to be around 10^-18, use with care.
+// See the underlying Exp2, LogBase2 and Mul for the details of their bounds.
 func (d BigDec) Power(power BigDec) BigDec {
 	if d.IsNegative() {
 		panic(fmt.Sprintf("negative base is not supported for Power(), base was (%s)", d))
