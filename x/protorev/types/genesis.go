@@ -21,6 +21,9 @@ var StepSize = sdk.NewInt(1_000_000)
 // Max iterations for binary search (log2(16_384) = 14)
 const MaxIterations = 14
 
+// Max iterable pools that can be arbitrage against per tx
+const MaxIterablePools = 5
+
 type TokenPair struct {
 	TokenA string
 	TokenB string
