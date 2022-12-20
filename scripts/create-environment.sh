@@ -1,5 +1,5 @@
 #!/bin/bash
 
-
-echo "OSMOSISD_ENVIRONMENT=mainnet" > $HOME/.osmosisd/.env
-cat $HOME/.osmosisd/.env
+if [ -d "$HOME/.osmosisd" ]; then
+  echo "OSMOSISD_ENVIRONMENT=mainnet" > $HOME/.osmosisd/.env
+fi
