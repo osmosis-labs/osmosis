@@ -39,10 +39,10 @@ func (k Keeper) UpdateDeveloperFees(ctx sdk.Context, inputCoin sdk.Coin, tokenOu
 	profit := tokenOutAmount.Sub(inputCoin.Amount)
 
 	// Calculate the developer fee
-	if daysSinceGenesis <= 365 {
+	if daysSinceGenesis < 365 {
 		// 20% of profit in the first year
 		profit = profit.MulRaw(20).QuoRaw(100)
-	} else if daysSinceGenesis <= 730 {
+	} else if daysSinceGenesis < 730 {
 		// 10% of profit in the second year
 		profit = profit.MulRaw(10).QuoRaw(100)
 	} else {
