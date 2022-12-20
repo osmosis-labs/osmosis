@@ -196,9 +196,9 @@ func (k Keeper) GetAllDeveloperFees(ctx sdk.Context) []sdk.Coin {
 }
 
 // SetDeveloperFees sets the fees the developers can withdraw from the module account
-func (k Keeper) SetDeveloperFees(ctx sdk.Context, denom string, developerFees sdk.Coin) error {
+func (k Keeper) SetDeveloperFees(ctx sdk.Context, developerFees sdk.Coin) error {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDeveloperFees)
-	key := types.GetKeyPrefixDeveloperFees(denom)
+	key := types.GetKeyPrefixDeveloperFees(developerFees.Denom)
 
 	bz, err := developerFees.Marshal()
 	if err != nil {
@@ -290,9 +290,15 @@ func (k Keeper) GetMaxPools(ctx sdk.Context) (uint64, error) {
 	return res, nil
 }
 
-// SetMaxPools sets the max number of pools that can be iterated after a swap
-func (k Keeper) SetMaxPools(ctx sdk.Context, maxPools uint64) {
+// SetMaxPools sets the max number of pools that can be iterated after a swap.
+func (k Keeper) SetMaxPools(ctx sdk.Context, maxPools uint64) error {
+	if maxPools == 0 || maxPools > types.MaxIterablePools {
+		return fmt.Errorf("max pools must be between 1 and 5")
+	}
+
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixMaxPools)
 	bz := sdk.Uint64ToBigEndian(maxPools)
 	store.Set(types.KeyPrefixMaxPools, bz)
+
+	return nil
 }
