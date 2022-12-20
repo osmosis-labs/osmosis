@@ -148,7 +148,9 @@ func (suite *KeeperTestSuite) TestGetAllTokenPairArbRoutes() {
 	suite.Require().NoError(err)
 
 	suite.Require().Equal(len(suite.tokenPairArbRoutes), len(tokenPairArbRoutes))
-	suite.Require().Equal(suite.tokenPairArbRoutes, tokenPairArbRoutes)
+	for _, tokenPair := range suite.tokenPairArbRoutes {
+		suite.Require().Contains(tokenPairArbRoutes, tokenPair)
+	}
 }
 
 // TestDeleteAllTokenPairArbRoutes tests the DeleteAllTokenPairArbRoutes function.
@@ -158,7 +160,9 @@ func (suite *KeeperTestSuite) TestDeleteAllTokenPairArbRoutes() {
 
 	suite.Require().NoError(err)
 	suite.Require().Equal(len(suite.tokenPairArbRoutes), len(tokenPairArbRoutes))
-	suite.Require().Equal(suite.tokenPairArbRoutes, tokenPairArbRoutes)
+	for _, tokenPair := range suite.tokenPairArbRoutes {
+		suite.Require().Contains(tokenPairArbRoutes, tokenPair)
+	}
 
 	// Delete all routes
 	suite.App.ProtoRevKeeper.DeleteAllTokenPairArbRoutes(suite.Ctx)

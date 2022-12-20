@@ -313,7 +313,7 @@ func (suite *KeeperTestSuite) TestIterateRoutes() {
 			params: paramm{
 				routes:                     []poolmanagertypes.SwapAmountInRoutes{routeNoArb, routeDiffDenom},
 				expectedMaxProfitAmount:    sdk.NewInt(4880),
-				expectedMaxProfitInputCoin: sdk.NewCoin("ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", sdk.NewInt(4000000)),
+				expectedMaxProfitInputCoin: sdk.NewCoin(types.AtomDenomination, sdk.NewInt(4000000)),
 				expectedOptimalRoute:       routeDiffDenom,
 				arbDenom:                   types.AtomDenomination,
 			},

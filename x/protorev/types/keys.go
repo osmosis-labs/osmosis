@@ -25,6 +25,12 @@ const (
 	prefixProfitsByDenom
 	prefixTradesByRoute
 	prefixProfitsByRoute
+	prefixProtoRevEnabled
+	prefixAdminAccount
+	prefixDeveloperAccount
+	prefixDaysSinceGenesis
+	prefixDeveloperFees
+	prefixMaxPools
 )
 
 var (
@@ -50,6 +56,25 @@ var (
 
 	// KeyPrefixProfitsByRoute is the prefix for the store that keeps track of the profits made by route
 	KeyPrefixProfitsByRoute = []byte{prefixProfitsByRoute}
+
+	// -------------- Keys for configuration/admin stores -------------- //
+	// KeyPrefixProtoRevEnabled is the prefix for store that keeps track of whether protorev is enabled
+	KeyPrefixProtoRevEnabled = []byte{prefixProtoRevEnabled}
+
+	// KeyPrefixAdminAccount is the prefix for store that keeps track of the admin account
+	KeyPrefixAdminAccount = []byte{prefixAdminAccount}
+
+	// KeyPrefixDeveloperAccount is the prefix for store that keeps track of the developer account
+	KeyPrefixDeveloperAccount = []byte{prefixDeveloperAccount}
+
+	// KeyPrefixDaysSinceGenesis is the prefix for store that keeps track of the number of days since genesis
+	KeyPrefixDaysSinceGenesis = []byte{prefixDaysSinceGenesis}
+
+	// KeyPrefixDeveloperFees is the prefix for store that keeps track of the developer fees
+	KeyPrefixDeveloperFees = []byte{prefixDeveloperFees}
+
+	// KeyPrefixMaxPools is the prefix for store that keeps track of the max number of pools that will be iterated after a swap
+	KeyPrefixMaxPools = []byte{prefixMaxPools}
 )
 
 // Returns the key needed to fetch the osmo pool for a given denom
@@ -101,4 +126,9 @@ func CreateRouteFromKey(key []byte) ([]uint64, error) {
 		route = append(route, pool)
 	}
 	return route, nil
+}
+
+// Returns the key needed to fetch the developer fees by coin
+func GetKeyPrefixDeveloperFees(denom string) []byte {
+	return append(KeyPrefixDeveloperFees, []byte(denom)...)
 }
