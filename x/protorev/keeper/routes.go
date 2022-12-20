@@ -9,20 +9,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
 )
 
-type TradeInfo struct {
-	InputDenom  string
-	OutputDenom string
-	SwapFee     sdk.Dec
-	Pool        gammtypes.CFMMPoolI
-}
-
-type Route struct {
-	Trades []TradeInfo
-}
-
 // BuildRoutes builds all of the possible arbitrage routes given the tokenIn, tokenOut and poolId that were used in the swap
-func (k Keeper) BuildRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64) []Route {
-	routes := make([]Route, 0)
+func (k Keeper) BuildRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64) []gammtypes.SwapAmountInRoutes {
+	routes := make([]gammtypes.SwapAmountInRoutes, 0)
 
 	// Append hot routes if they exist
 	if tokenPairRoutes, err := k.BuildTokenPairRoutes(ctx, tokenIn, tokenOut, poolId); err == nil {
@@ -43,17 +32,17 @@ func (k Keeper) BuildRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId ui
 }
 
 // BuildTokenPairRoutes builds all of the possible arbitrage routes from the hot routes given the tokenIn, tokenOut and poolId that were used in the swap
-func (k Keeper) BuildTokenPairRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64) ([]Route, error) {
+func (k Keeper) BuildTokenPairRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64) ([]gammtypes.SwapAmountInRoutes, error) {
 	// Get all of the routes from the store that match the given tokenIn and tokenOut
 	tokenPairArbRoutes, err := k.GetTokenPairArbRoutes(ctx, tokenIn, tokenOut)
 	if err != nil {
-		return []Route{}, err
+		return []gammtypes.SwapAmountInRoutes{}, err
 	}
 
 	// Iterate through all of the routes and build hot routes
-	routes := make([]Route, 0)
+	routes := make([]gammtypes.SwapAmountInRoutes, 0)
 	for _, route := range tokenPairArbRoutes.ArbRoutes {
-		newRoute, err := k.BuildTradeInfoHotRoute(ctx, route, tokenIn, tokenOut, poolId)
+		newRoute, err := k.BuildHotRoute(ctx, route, tokenIn, tokenOut, poolId)
 		if err == nil {
 			routes = append(routes, newRoute)
 		}
@@ -62,125 +51,107 @@ func (k Keeper) BuildTokenPairRoutes(ctx sdk.Context, tokenIn, tokenOut string, 
 	return routes, nil
 }
 
-// BuildTradeInfoHotRoute constructs a cyclic arbitrage route given a hot route from the store and information about the swap that should be placed
+// BuildHotRoute constructs a cyclic arbitrage route given a hot route from the store and information about the swap that should be placed
 // in the hot route.
-func (k Keeper) BuildTradeInfoHotRoute(ctx sdk.Context, route *types.Route, tokenIn, tokenOut string, poolId uint64) (Route, error) {
-	newRoute := Route{Trades: make([]TradeInfo, len(route.Trades))}
+func (k Keeper) BuildHotRoute(ctx sdk.Context, route *types.Route, tokenIn, tokenOut string, poolId uint64) (gammtypes.SwapAmountInRoutes, error) {
+	newRoute := make(gammtypes.SwapAmountInRoutes, 0)
 
-	for index, trade := range route.Trades {
-		var newTrade TradeInfo
-		// 0 is a placeholder for swaps that should be entered into the hot route
+	for _, trade := range route.Trades {
+		// 0 is a placeholder for pools swapped on that should be entered into the hot route
 		if trade.Pool == 0 {
-			pool, err := k.GetAndCheckPool(ctx, poolId)
-			if err != nil {
-				return Route{}, err
-			}
-
-			newTrade = TradeInfo{
-				InputDenom:  tokenOut,
-				OutputDenom: tokenIn,
-				SwapFee:     pool.GetSwapFee(ctx),
-				Pool:        pool,
-			}
+			newRoute = append(newRoute, gammtypes.SwapAmountInRoute{
+				PoolId:        poolId,
+				TokenOutDenom: trade.TokenOut,
+			})
 		} else {
-			pool, err := k.GetAndCheckPool(ctx, trade.Pool)
-			if err != nil {
-				return Route{}, err
-			}
-
-			newTrade = TradeInfo{
-				InputDenom:  trade.TokenIn,
-				OutputDenom: trade.TokenOut,
-				SwapFee:     pool.GetSwapFee(ctx),
-				Pool:        pool,
-			}
+			newRoute = append(newRoute, gammtypes.SwapAmountInRoute{
+				PoolId:        trade.Pool,
+				TokenOutDenom: trade.TokenOut,
+			})
 		}
-
-		newRoute.Trades[index] = newTrade
 	}
 
-	if err := k.CheckValidHotRoute(newRoute); err != nil {
-		return Route{}, err
+	// Check that the hot route is valid
+	if err := k.CheckValidHotRoute(ctx, newRoute); err != nil {
+		return gammtypes.SwapAmountInRoutes{}, err
 	}
 	return newRoute, nil
 }
 
-// CheckValidHotRoute checks if the cyclic arbitrage route that was built using the hot routes method is correct. The criteria for a valid hot route is that
-// the in denom and out denom must be the same, in denom must be uosmo or atom, and there must be exactly three hops in the route
-func (k Keeper) CheckValidHotRoute(route Route) error {
-	if len(route.Trades) != 3 {
+// CheckValidHotRoute checks if the cyclic arbitrage route that was built using the hot routes method is correct. Much of the stateless
+// validation achieves the desired checks, however, we also check that the route is traversing pools that
+// are active.
+func (k Keeper) CheckValidHotRoute(ctx sdk.Context, route gammtypes.SwapAmountInRoutes) error {
+	if route.Length() != 3 {
 		return fmt.Errorf("invalid hot route length")
 	}
 
-	if route.Trades[0].InputDenom != route.Trades[2].OutputDenom {
-		return fmt.Errorf("invalid hot route in and out denoms. in: %s, out: %s", route.Trades[0].InputDenom, route.Trades[2].OutputDenom)
-	}
-
-	if route.Trades[0].InputDenom != types.OsmosisDenomination && route.Trades[0].InputDenom != types.AtomDenomination {
-		return fmt.Errorf("invalid hot route in denom")
+	// Ensure that all of the pools in the route exist and are active
+	for _, poolId := range route.PoolIds() {
+		_, err := k.GetAndCheckPool(ctx, poolId)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
 // BuildOsmoRoute builds a cyclic arbitrage route that starts and ends with osmo given the tokenIn, tokenOut and poolId that were used in the swap
-func (k Keeper) BuildOsmoRoute(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64) (Route, error) {
-	return k.BuildTradeInfoRoute(ctx, types.OsmosisDenomination, tokenIn, tokenOut, poolId, k.GetOsmoPool)
+func (k Keeper) BuildOsmoRoute(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64) (gammtypes.SwapAmountInRoutes, error) {
+	return k.BuildRoute(ctx, types.OsmosisDenomination, tokenIn, tokenOut, poolId, k.GetOsmoPool)
 }
 
 // BuildAtomRoute builds a cyclic arbitrage route that starts and ends with atom given the tokenIn, tokenOut and poolId that were used in the swap
-func (k Keeper) BuildAtomRoute(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64) (Route, error) {
-	return k.BuildTradeInfoRoute(ctx, types.AtomDenomination, tokenIn, tokenOut, poolId, k.GetAtomPool)
+func (k Keeper) BuildAtomRoute(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64) (gammtypes.SwapAmountInRoutes, error) {
+	return k.BuildRoute(ctx, types.AtomDenomination, tokenIn, tokenOut, poolId, k.GetAtomPool)
 }
 
-// BuildTradeInfoRoute constructs a cyclic arbitrage route that is starts/ends with swapDenom (atom or osmo) given the swap (tokenIn, tokenOut, poolId), and
+// BuildRoute constructs a cyclic arbitrage route that is starts/ends with swapDenom (atom or osmo) given the swap (tokenIn, tokenOut, poolId), and
 // a function that can get the poolId from the store given a (token, swapDenom) pair.
-func (k Keeper) BuildTradeInfoRoute(ctx sdk.Context, swapDenom, tokenIn, tokenOut string, poolId uint64, getPoolIDFromStore func(sdk.Context, string) (uint64, error)) (Route, error) {
+func (k Keeper) BuildRoute(ctx sdk.Context, swapDenom, tokenIn, tokenOut string, poolId uint64, getPoolIDFromStore func(sdk.Context, string) (uint64, error)) (gammtypes.SwapAmountInRoutes, error) {
 	// Creating the first trade in the arb
 	entryPoolId, err := getPoolIDFromStore(ctx, tokenOut)
 	if err != nil {
-		return Route{}, err
+		return gammtypes.SwapAmountInRoutes{}, err
 	}
-	entryPool, err := k.GetAndCheckPool(ctx, entryPoolId)
+
+	// Check that the pool exists and is active
+	_, err = k.GetAndCheckPool(ctx, entryPoolId)
 	if err != nil {
-		return Route{}, err
+		return gammtypes.SwapAmountInRoutes{}, err
 	}
-	entryTrade := TradeInfo{
-		InputDenom:  swapDenom,
-		OutputDenom: tokenOut,
-		SwapFee:     entryPool.GetSwapFee(ctx),
-		Pool:        entryPool,
+	// Create the first swap for the MultiHopSwap Route
+	entryRoute := gammtypes.SwapAmountInRoute{
+		PoolId:        entryPoolId,
+		TokenOutDenom: tokenOut,
 	}
 
 	// Creating the second trade in the arb
-	middlePool, err := k.GetAndCheckPool(ctx, poolId)
+	_, err = k.GetAndCheckPool(ctx, poolId)
 	if err != nil {
-		return Route{}, err
+		return gammtypes.SwapAmountInRoutes{}, err
 	}
-	middleTrade := TradeInfo{
-		InputDenom:  tokenOut,
-		OutputDenom: tokenIn,
-		SwapFee:     middlePool.GetSwapFee(ctx),
-		Pool:        middlePool,
+	middleRoute := gammtypes.SwapAmountInRoute{
+		PoolId:        poolId,
+		TokenOutDenom: tokenIn,
 	}
 
 	// Creating the third trade in the arb
 	exitPoolId, err := getPoolIDFromStore(ctx, tokenIn)
 	if err != nil {
-		return Route{}, err
+		return gammtypes.SwapAmountInRoutes{}, err
 	}
-	exitPool, err := k.GetAndCheckPool(ctx, exitPoolId)
+	_, err = k.GetAndCheckPool(ctx, exitPoolId)
 	if err != nil {
-		return Route{}, err
+		return gammtypes.SwapAmountInRoutes{}, err
 	}
-	exitTrade := TradeInfo{
-		InputDenom:  tokenIn,
-		OutputDenom: swapDenom,
-		SwapFee:     exitPool.GetSwapFee(ctx),
-		Pool:        exitPool,
+	exitRoute := gammtypes.SwapAmountInRoute{
+		PoolId:        exitPoolId,
+		TokenOutDenom: swapDenom,
 	}
 
-	return Route{Trades: []TradeInfo{entryTrade, middleTrade, exitTrade}}, nil
+	return gammtypes.SwapAmountInRoutes{entryRoute, middleRoute, exitRoute}, nil
 }
 
 // GetAndCheckPool retrieves the pool from the x/gamm module given a poolId and ensures that the pool can be traded on
