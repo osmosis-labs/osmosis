@@ -113,9 +113,9 @@ fi
 # previousVersionInitTag  = PREV_OSMOSIS_E2E_TAG
 if [[ $version_create == v$(($(echo $PREV_OSMOSIS_E2E_TAG | awk -F . '{print $1}' | grep -Eo '[0-9]*')+1)) ]]; then	
     echo "Found previous osmosis-e2e-init-chain tag $PREV_OSMOSIS_E2E_TAG"
-	sed -i '' '/previousVersionInitTag/s/".*"/'"\"$PREV_OSMOSIS_E2E_TAG\""'/' $e2e_file
+	sed -i '/previousVersionInitTag/s/".*"/'"\"$PREV_OSMOSIS_E2E_TAG\""'/' $e2e_file
 else
     PREV_OSMOSIS_E2E_TAG=v$((${version_create:1}-1)).0.0
     echo "Using pre-defined osmosis-e2e-init-chain tag: $PREV_OSMOSIS_E2E_TAG"
-    sed -i '' '/previousVersionInitTag/s/".*"/'"\"$PREV_OSMOSIS_E2E_TAG\""'/' $e2e_file
+    sed -i '/previousVersionInitTag/s/".*"/'"\"$PREV_OSMOSIS_E2E_TAG\""'/' $e2e_file
 fi
