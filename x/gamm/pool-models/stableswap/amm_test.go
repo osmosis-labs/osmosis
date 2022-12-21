@@ -403,16 +403,20 @@ type StableSwapTestSuite struct {
 }
 
 func TestStableSwapTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(StableSwapTestSuite))
 }
 
 func TestCFMMInvariantTwoAssets(t *testing.T) {
+	t.Parallel()
 	kErrTolerance := osmomath.OneDec()
 
 	tests := twoAssetCFMMTestCases
 
 	for name, test := range tests {
+		test := test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			// system under test
 			sut := func() {
 				// ensure there are only two assets
@@ -432,12 +436,15 @@ func TestCFMMInvariantTwoAssets(t *testing.T) {
 }
 
 func TestCFMMInvariantTwoAssetsDirect(t *testing.T) {
+	t.Parallel()
 	kErrTolerance := osmomath.OneDec()
 
 	tests := twoAssetCFMMTestCases
 
 	for name, test := range tests {
+		test := test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			// system under test
 			sut := func() {
 				// using two-asset cfmm
@@ -454,12 +461,15 @@ func TestCFMMInvariantTwoAssetsDirect(t *testing.T) {
 }
 
 func TestCFMMInvariantMultiAssets(t *testing.T) {
+	t.Parallel()
 	kErrTolerance := osmomath.OneDec()
 
 	tests := multiAssetCFMMTestCases
 
 	for name, test := range tests {
+		test := test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			// system under test
 			sut := func() {
 				uReserve := calcUReserve(test.remReserves)
@@ -478,12 +488,15 @@ func TestCFMMInvariantMultiAssets(t *testing.T) {
 }
 
 func TestCFMMInvariantMultiAssetsDirect(t *testing.T) {
+	t.Parallel()
 	kErrTolerance := osmomath.OneDec()
 
 	tests := multiAssetCFMMTestCases
 
 	for name, test := range tests {
+		test := test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			// system under test
 			sut := func() {
 				wSumSquares := calcWSumSquares(test.remReserves)
@@ -501,12 +514,15 @@ func TestCFMMInvariantMultiAssetsDirect(t *testing.T) {
 }
 
 func TestCFMMInvariantMultiAssetsBinarySearch(t *testing.T) {
+	t.Parallel()
 	kErrTolerance := osmomath.OneDec()
 
 	tests := multiAssetCFMMTestCases
 
 	for name, test := range tests {
+		test := test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			// system under test
 			sut := func() {
 				wSumSquares := calcWSumSquares(test.remReserves)
@@ -781,6 +797,7 @@ func calcWSumSquares(remReserves []osmomath.BigDec) osmomath.BigDec {
 }
 
 func TestCalcSingleAssetJoinShares(t *testing.T) {
+	t.Parallel()
 	type testcase struct {
 		tokenIn        sdk.Coin
 		poolAssets     sdk.Coins
@@ -866,7 +883,10 @@ func TestCalcSingleAssetJoinShares(t *testing.T) {
 	}
 
 	for name, tc := range tests {
+		name := name
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			ctx := sdk.Context{}
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 
@@ -888,6 +908,7 @@ func TestCalcSingleAssetJoinShares(t *testing.T) {
 }
 
 func TestJoinPoolSharesInternal(t *testing.T) {
+	t.Parallel()
 	tenPercentOfTwoPoolRaw := int64(1000000000 / 10)
 	tenPercentOfTwoPoolCoins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(int64(1000000000/10))), sdk.NewCoin("bar", sdk.NewInt(int64(1000000000/10))))
 	twoAssetPlusTenPercent := twoEvenStablePoolAssets.Add(tenPercentOfTwoPoolCoins...)
@@ -985,7 +1006,9 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 	}
 
 	for name, tc := range tests {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			ctx := sdk.Context{}
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 
@@ -1002,6 +1025,7 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 }
 
 func TestSingleAssetJoinSwapFeeRatio(t *testing.T) {
+	t.Parallel()
 	largeInt, ok := sdk.NewIntFromString("123456789012345678")
 	require.True(t, ok)
 	type testcase struct {
@@ -1047,7 +1071,9 @@ func TestSingleAssetJoinSwapFeeRatio(t *testing.T) {
 		},
 	}
 	for name, tc := range tests {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			p := poolStructFromAssets(tc.poolLiquidity, tc.scalingFactors)
 
 			ratio, err := p.singleAssetJoinSwapFeeRatio(tc.tokenInDenom)

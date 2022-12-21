@@ -10,6 +10,7 @@ import (
 )
 
 func TestGetPoolShareDenom(t *testing.T) {
+	t.Parallel()
 	denom := GetPoolShareDenom(0)
 	require.NoError(t, sdk.ValidateDenom(denom))
 	require.Equal(t, "gamm/pool/0", denom)

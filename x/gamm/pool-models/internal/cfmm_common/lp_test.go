@@ -28,6 +28,7 @@ func mulCoins(coins sdk.Coins, multiplier sdk.Dec) sdk.Coins {
 }
 
 func TestCalcExitPool(t *testing.T) {
+	t.Parallel()
 	emptyContext := sdk.Context{}
 
 	twoStablePoolAssets := sdk.NewCoins(
@@ -141,6 +142,7 @@ func TestCalcExitPool(t *testing.T) {
 }
 
 func TestMaximalExactRatioJoin(t *testing.T) {
+	t.Parallel()
 	emptyContext := sdk.Context{}
 
 	balancerPoolAsset := []balancer.PoolAsset{

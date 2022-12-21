@@ -77,6 +77,7 @@ func poolStructFromAssets(assets sdk.Coins, scalingFactors []uint64) Pool {
 }
 
 func TestReorderReservesAndScalingFactors(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		denoms                [2]string
 		poolAssets            sdk.Coins
@@ -126,7 +127,9 @@ func TestReorderReservesAndScalingFactors(t *testing.T) {
 	}
 
 	for name, tc := range tests {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 
 			reserves, factors, err := p.reorderReservesAndScalingFactors(tc.denoms[0], tc.denoms[1])
@@ -140,6 +143,7 @@ func TestReorderReservesAndScalingFactors(t *testing.T) {
 }
 
 func TestScaledSortedPoolReserves(t *testing.T) {
+	t.Parallel()
 	baseEvenAmt := osmomath.NewBigDec(1000000000)
 	bigDecScalingMultiplier := osmomath.NewBigDec(types.ScalingFactorMultiplier)
 	tests := map[string]struct {
@@ -226,7 +230,9 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 	// TODO: Add for loop for trying to re-order test cases
 
 	for name, tc := range tests {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			if tc.roundMode == 0 {
 				tc.roundMode = osmomath.RoundBankers
 			}
@@ -242,6 +248,7 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 }
 
 func TestGetLiquidityIndexMap(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		poolAssets sdk.Coins
 	}{
@@ -265,7 +272,9 @@ func TestGetLiquidityIndexMap(t *testing.T) {
 	}
 
 	for name, tc := range tests {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			pool := poolStructFromAssets(tc.poolAssets, []uint64{})
 
 			indexMap := pool.getLiquidityIndexMap()
@@ -279,6 +288,7 @@ func TestGetLiquidityIndexMap(t *testing.T) {
 }
 
 func TestGetDescaledPoolAmts(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		denom          string
 		amount         osmomath.BigDec
@@ -407,7 +417,9 @@ func TestGetDescaledPoolAmts(t *testing.T) {
 	}
 
 	for name, tc := range tests {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			// system under test
 			sut := func() {
 				p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
@@ -422,6 +434,7 @@ func TestGetDescaledPoolAmts(t *testing.T) {
 }
 
 func TestScaleCoin(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		input          sdk.Coin
 		rounding       osmomath.RoundingDirection
@@ -496,7 +509,10 @@ func TestScaleCoin(t *testing.T) {
 	}
 
 	for name, tc := range tests {
+		name := name
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 
 			scaledInput, err := p.scaleCoin(tc.input, tc.rounding)
@@ -512,6 +528,7 @@ func TestScaleCoin(t *testing.T) {
 }
 
 func TestCalcJoinPoolNoSwapShares(t *testing.T) {
+	t.Parallel()
 	tenPercentOfTwoPool := int64(1000000000 / 10)
 	tenPercentOfThreePool := int64(1000000 / 10)
 	tests := map[string]struct {
@@ -663,7 +680,12 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 	}
 
 	for name, test := range tests {
+		name := name
+		test := test
+
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			ctx := sdk.Context{}
 			pool := poolStructFromAssets(test.poolAssets, test.scalingFactors)
 			numShare, tokensJoined, err := pool.CalcJoinPoolNoSwapShares(ctx, test.tokensIn, pool.GetSwapFee(ctx))
@@ -684,6 +706,7 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 }
 
 func TestSwapOutAmtGivenIn(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		poolAssets            sdk.Coins
 		scalingFactors        []uint64
@@ -754,7 +777,9 @@ func TestSwapOutAmtGivenIn(t *testing.T) {
 	}
 
 	for name, tc := range tests {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			ctx := sdk.Context{}
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 
@@ -771,6 +796,7 @@ func TestSwapOutAmtGivenIn(t *testing.T) {
 }
 
 func TestSwapInAmtGivenOut(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		poolAssets            sdk.Coins
 		scalingFactors        []uint64
@@ -822,7 +848,9 @@ func TestSwapInAmtGivenOut(t *testing.T) {
 	}
 
 	for name, tc := range tests {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			ctx := sdk.Context{}
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 
@@ -837,6 +865,7 @@ func TestSwapInAmtGivenOut(t *testing.T) {
 }
 
 func TestInverseJoinPoolExitPool(t *testing.T) {
+	t.Parallel()
 	hundredFoo := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)))
 	thousandAssetA := sdk.NewCoins(sdk.NewCoin("asset/a", sdk.NewInt(1000)))
 	tenPercentOfTwoPoolRaw := int64(1000000000 / 10)
@@ -938,7 +967,9 @@ func TestInverseJoinPoolExitPool(t *testing.T) {
 	}
 
 	for name, tc := range tests {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			ctx := sdk.Context{}
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 
@@ -981,6 +1012,7 @@ func TestInverseJoinPoolExitPool(t *testing.T) {
 }
 
 func TestExitPool(t *testing.T) {
+	t.Parallel()
 	tenPercentOfTwoPoolCoins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(int64(1000000000/10))), sdk.NewCoin("bar", sdk.NewInt(int64(1000000000/10))))
 	tenPercentOfThreePoolCoins := sdk.NewCoins(sdk.NewCoin("asset/a", sdk.NewInt(1000000/10)), sdk.NewCoin("asset/b", sdk.NewInt(1000000/10)), sdk.NewCoin("asset/c", sdk.NewInt(1000000/10)))
 	tenPercentOfUnevenThreePoolCoins := sdk.NewCoins(sdk.NewCoin("asset/a", sdk.NewInt(1000000/10)), sdk.NewCoin("asset/b", sdk.NewInt(2000000/10)), sdk.NewCoin("asset/c", sdk.NewInt(3000000/10)))
@@ -1029,7 +1061,9 @@ func TestExitPool(t *testing.T) {
 	}
 
 	for name, tc := range tests {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			ctx := sdk.Context{}
 			p := poolStructFromAssets(tc.initialPoolLiquidity, tc.scalingFactors)
 			tokenOut, err := p.ExitPool(ctx, tc.sharesIn, defaultExitFee)
@@ -1045,6 +1079,7 @@ func TestExitPool(t *testing.T) {
 }
 
 func TestValidatePoolLiquidity(t *testing.T) {
+	t.Parallel()
 	const (
 		a = "aaa"
 		b = "bbb"
@@ -1107,7 +1142,9 @@ func TestValidatePoolLiquidity(t *testing.T) {
 	}
 
 	for name, tc := range tests {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			err := validatePoolLiquidity(tc.liquidity, tc.scalingFactors)
 
 			if tc.expectError != nil {
@@ -1121,6 +1158,7 @@ func TestValidatePoolLiquidity(t *testing.T) {
 }
 
 func TestSetScalingFactors(t *testing.T) {
+	t.Parallel()
 	pk := ed25519.GenPrivKey().PubKey()
 	addr := sdk.AccAddress(pk.Address())
 
@@ -1174,7 +1212,9 @@ func TestSetScalingFactors(t *testing.T) {
 		},
 	}
 	for name, tc := range tests {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			ctx := sdk.Context{}
 			pool := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 			pool.ScalingFactorController = addr.String()
@@ -1190,6 +1230,7 @@ func TestSetScalingFactors(t *testing.T) {
 }
 
 func TestStableswapSpotPrice(t *testing.T) {
+	t.Parallel()
 	type testcase struct {
 		baseDenom      string
 		quoteDenom     string
@@ -1326,7 +1367,9 @@ func TestStableswapSpotPrice(t *testing.T) {
 	}
 
 	for name, tc := range tests {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			ctx := sdk.Context{}
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 			spotPrice, err := p.SpotPrice(ctx, tc.quoteDenom, tc.baseDenom)
@@ -1356,6 +1399,7 @@ func TestStableswapSpotPrice(t *testing.T) {
 }
 
 func TestValidateScalingFactors(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		scalingFactors []uint64
 		numAssets      int
@@ -1379,7 +1423,9 @@ func TestValidateScalingFactors(t *testing.T) {
 	}
 
 	for name, tc := range tests {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			err := validateScalingFactors(tc.scalingFactors, tc.numAssets)
 
 			if tc.expectError != false {

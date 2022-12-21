@@ -7,6 +7,7 @@ import (
 )
 
 func TestValidateContractAddress(t *testing.T) {
+	t.Parallel()
 	testCases := map[string]struct {
 		addr     interface{}
 		expected bool
@@ -27,7 +28,9 @@ func TestValidateContractAddress(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			err := validateContractAddress(tc.addr)
 
 			// Assertions.
@@ -42,6 +45,7 @@ func TestValidateContractAddress(t *testing.T) {
 }
 
 func TestValidateParams(t *testing.T) {
+	t.Parallel()
 	testCases := map[string]struct {
 		addr     interface{}
 		expected bool
@@ -58,7 +62,9 @@ func TestValidateParams(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			params := Params{
 				ContractAddress: tc.addr.(string),
 			}

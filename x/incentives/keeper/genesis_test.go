@@ -17,6 +17,7 @@ import (
 
 // TestIncentivesExportGenesis tests export genesis command for the incentives module.
 func TestIncentivesExportGenesis(t *testing.T) {
+	t.Parallel()
 	// export genesis using default configurations
 	// ensure resulting genesis params match default params
 	app := osmoapp.Setup(false)
@@ -68,6 +69,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 
 // TestIncentivesInitGenesis takes a genesis state and tests initializing that genesis for the incentives module.
 func TestIncentivesInitGenesis(t *testing.T) {
+	t.Parallel()
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 

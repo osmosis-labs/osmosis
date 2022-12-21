@@ -35,6 +35,7 @@ type MiddlewareTestSuite struct {
 
 // Setup
 func TestMiddlewareTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(MiddlewareTestSuite))
 }
 
