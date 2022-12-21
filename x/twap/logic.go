@@ -269,5 +269,5 @@ func twapPow(exponent sdk.Dec) sdk.Dec {
 	if exponent.IsNegative() {
 		return osmomath.OneDec().Quo(exp2).SDKDec()
 	}
-	return osmomath.Exp2(osmomath.BigDecFromSDKDec(exponent)).SDKDec()
+	return exp2.SDKDec()
 }
