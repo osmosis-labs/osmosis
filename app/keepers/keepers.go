@@ -284,7 +284,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.AccountKeeper,
 		appKeepers.DistrKeeper,
 	)
-	appKeepers.GAMMKeeper.SetPoolCreationManager(appKeepers.SwapRouterKeeper)
+	appKeepers.GAMMKeeper.SetPoolManager(appKeepers.SwapRouterKeeper)
 
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
 		appKeepers.keys[lockuptypes.StoreKey],
@@ -298,14 +298,14 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	protorevKeeper := protorevkeeper.NewKeeper(
 		appCodec, appKeepers.keys[protorevtypes.StoreKey],
 		appKeepers.GetSubspace(protorevtypes.ModuleName),
-		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.GAMMKeeper, appKeepers.EpochsKeeper)
+		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.GAMMKeeper, appKeepers.EpochsKeeper, appKeepers.SwapRouterKeeper)
 	appKeepers.ProtoRevKeeper = &protorevKeeper
 
 	txFeesKeeper := txfeeskeeper.NewKeeper(
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.keys[txfeestypes.StoreKey],
-		appKeepers.GAMMKeeper,
+		appKeepers.SwapRouterKeeper,
 		appKeepers.GAMMKeeper,
 	)
 	appKeepers.TxFeesKeeper = &txFeesKeeper
@@ -347,8 +347,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
 	appKeepers.SwapRouterKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
-	// TODO: remove the line below once multihop is ported to swaprouter.
-	appKeepers.GAMMKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
+	appKeepers.SwapRouterKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
 
 	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
 		appKeepers.keys[tokenfactorytypes.StoreKey],
@@ -371,7 +370,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// if we want to allow any custom callbacks
 	supportedFeatures := "iterator,staking,stargate,osmosis,cosmwasm_1_1"
 
-	wasmOpts = append(owasm.RegisterCustomPlugins(appKeepers.GAMMKeeper, appKeepers.BankKeeper, appKeepers.TwapKeeper, appKeepers.TokenFactoryKeeper), wasmOpts...)
+	wasmOpts = append(owasm.RegisterCustomPlugins(appKeepers.BankKeeper, appKeepers.TokenFactoryKeeper), wasmOpts...)
 	wasmOpts = append(owasm.RegisterStargateQueries(*bApp.GRPCQueryRouter(), appCodec), wasmOpts...)
 
 	wasmKeeper := wasm.NewKeeper(

@@ -5,6 +5,7 @@ import (
 
 	epochtypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 // AccountKeeper defines the account contract that must be fulfilled when
@@ -27,8 +28,21 @@ type GAMMKeeper interface {
 	GetPoolAndPoke(ctx sdk.Context, poolId uint64) (gammtypes.CFMMPoolI, error)
 	GetPoolsAndPoke(ctx sdk.Context) (res []gammtypes.CFMMPoolI, err error)
 	GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error)
-	SwapExactAmountIn(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, tokenIn sdk.Coin, tokenOutDenom string, tokenOutMinAmount sdk.Int) (sdk.Int, error)
-	MultihopSwapExactAmountIn(ctx sdk.Context, sender sdk.AccAddress, routes []gammtypes.SwapAmountInRoute, tokenIn sdk.Coin, tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error)
+}
+
+type SwapRouterKeeper interface {
+	RouteExactAmountIn(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		routes []swaproutertypes.SwapAmountInRoute,
+		tokenIn sdk.Coin,
+		tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error)
+
+	MultihopEstimateOutGivenExactAmountIn(
+		ctx sdk.Context,
+		routes []swaproutertypes.SwapAmountInRoute,
+		tokenIn sdk.Coin,
+	) (tokenOutAmount sdk.Int, err error)
 }
 
 // EpochKeeper defines the Epoch contract that must be fulfilled when
