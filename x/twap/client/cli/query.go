@@ -16,6 +16,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
+const (
+	flagIsArithmetic = "is-arithmetic"
+)
+
 // GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
@@ -27,7 +31,7 @@ func GetQueryCmd() *cobra.Command {
 // GetQueryTwapCommand returns multiplier of an asset by denom.
 func GetQueryTwapCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "twap [twap type] [poolid] [base denom] [start time] [end time]",
+		Use:   "twap [poolid] [base denom] [start time] [end time]",
 		Short: "Query twap",
 		Long: osmocli.FormatLongDescDirect(`Query twap for pool. Start time must be unix time. End time can be unix time or duration.
 
@@ -38,7 +42,11 @@ Example:
 		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// boilerplate parse fields
-			isArithmetic, poolId, baseDenom, startTime, endTime, err := twapQueryParseArgs(args)
+			poolId, baseDenom, startTime, endTime, err := twapQueryParseArgs(args)
+			if err != nil {
+				return err
+			}
+			isArithmetic, err := cmd.Flags().GetBool(flagIsArithmetic)
 			if err != nil {
 				return err
 			}
@@ -94,29 +102,24 @@ Example:
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	cmd.Flags().Bool(flagIsArithmetic, true, "Type of twap to query. Arithmetic TWAP if true. Geometric TWAP if false.")
 
 	return cmd
 }
 
-func twapQueryParseArgs(args []string) (isArithmetic bool, poolId uint64, baseDenom string, startTime time.Time, endTime time.Time, err error) {
-	twapTypeStr := args[0]
-	isArithmetic = twapTypeStr == "arithmetic"
-	if !isArithmetic && twapTypeStr != "geometric" {
-		panic(fmt.Sprintf("invalid twap type %s", twapTypeStr))
-	}
-
+func twapQueryParseArgs(args []string) (poolId uint64, baseDenom string, startTime time.Time, endTime time.Time, err error) {
 	// boilerplate parse fields
 	// <UINT PARSE>
-	poolId, err = osmocli.ParseUint(args[1], "poolId")
+	poolId, err = osmocli.ParseUint(args[0], "poolId")
 	if err != nil {
 		return
 	}
 
 	// <DENOM PARSE>
-	baseDenom = strings.TrimSpace(args[2])
+	baseDenom = strings.TrimSpace(args[1])
 
 	// <UNIX TIME PARSE>
-	startTime, err = osmocli.ParseUnixTime(args[3], "start time")
+	startTime, err = osmocli.ParseUnixTime(args[2], "start time")
 	if err != nil {
 		return
 	}
@@ -134,5 +137,5 @@ func twapQueryParseArgs(args []string) (isArithmetic bool, poolId uint64, baseDe
 		}
 		endTime = startTime.Add(duration)
 	}
-	return isArithmetic, poolId, baseDenom, startTime, endTime, nil
+	return poolId, baseDenom, startTime, endTime, nil
 }
