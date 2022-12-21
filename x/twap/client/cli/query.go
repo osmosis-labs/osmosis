@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/golang/protobuf/proto"
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
@@ -26,18 +27,18 @@ func GetQueryCmd() *cobra.Command {
 // GetQueryTwapCommand returns multiplier of an asset by denom.
 func GetQueryTwapCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "twap [poolid] [base denom] [start time] [end time]",
+		Use:   "twap [twap type] [poolid] [base denom] [start time] [end time]",
 		Short: "Query twap",
 		Long: osmocli.FormatLongDescDirect(`Query twap for pool. Start time must be unix time. End time can be unix time or duration.
 
 Example:
-{{.CommandPrefix}} twap 1 uosmo 1667088000 24h
-{{.CommandPrefix}} twap 1 uosmo 1667088000 1667174400
+{{.CommandPrefix}} twap geometric 1 uosmo 1667088000 24h
+{{.CommandPrefix}} twap arithmetic 1 uosmo 1667088000 1667174400
 `, types.ModuleName),
 		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// boilerplate parse fields
-			poolId, baseDenom, startTime, endTime, err := twapQueryParseArgs(args)
+			isArithmetic, poolId, baseDenom, startTime, endTime, err := twapQueryParseArgs(args)
 			if err != nil {
 				return err
 			}
@@ -65,13 +66,25 @@ Example:
 					poolId, baseDenom, liquidity.Liquidity[0], liquidity.Liquidity[1])
 			}
 
-			res, err := queryClient.ArithmeticTwap(cmd.Context(), &queryproto.ArithmeticTwapRequest{
-				PoolId:     poolId,
-				BaseAsset:  baseDenom,
-				QuoteAsset: quoteDenom,
-				StartTime:  startTime,
-				EndTime:    &endTime,
-			})
+			var res proto.Message
+			if isArithmetic {
+				res, err = queryClient.ArithmeticTwap(cmd.Context(), &queryproto.ArithmeticTwapRequest{
+					PoolId:     poolId,
+					BaseAsset:  baseDenom,
+					QuoteAsset: quoteDenom,
+					StartTime:  startTime,
+					EndTime:    &endTime,
+				})
+			} else {
+				res, err = queryClient.GeometricTwap(cmd.Context(), &queryproto.GeometricTwapRequest{
+					PoolId:     poolId,
+					BaseAsset:  baseDenom,
+					QuoteAsset: quoteDenom,
+					StartTime:  startTime,
+					EndTime:    &endTime,
+				})
+			}
+
 			if err != nil {
 				return err
 			}
@@ -85,19 +98,25 @@ Example:
 	return cmd
 }
 
-func twapQueryParseArgs(args []string) (poolId uint64, baseDenom string, startTime time.Time, endTime time.Time, err error) {
+func twapQueryParseArgs(args []string) (isArithmetic bool, poolId uint64, baseDenom string, startTime time.Time, endTime time.Time, err error) {
+	twapTypeStr := args[0]
+	isArithmetic = twapTypeStr == "arithmetic"
+	if !isArithmetic && twapTypeStr != "geometric" {
+		panic(fmt.Sprintf("invalid twap type %s", twapTypeStr))
+	}
+
 	// boilerplate parse fields
 	// <UINT PARSE>
-	poolId, err = osmocli.ParseUint(args[0], "poolId")
+	poolId, err = osmocli.ParseUint(args[1], "poolId")
 	if err != nil {
 		return
 	}
 
 	// <DENOM PARSE>
-	baseDenom = strings.TrimSpace(args[1])
+	baseDenom = strings.TrimSpace(args[2])
 
 	// <UNIX TIME PARSE>
-	startTime, err = osmocli.ParseUnixTime(args[2], "start time")
+	startTime, err = osmocli.ParseUnixTime(args[3], "start time")
 	if err != nil {
 		return
 	}
@@ -115,5 +134,5 @@ func twapQueryParseArgs(args []string) (poolId uint64, baseDenom string, startTi
 		}
 		endTime = startTime.Add(duration)
 	}
-	return poolId, baseDenom, startTime, endTime, nil
+	return isArithmetic, poolId, baseDenom, startTime, endTime, nil
 }
