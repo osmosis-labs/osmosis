@@ -13,6 +13,7 @@ type edge struct {
 }
 
 func TestTopologicalSort(t *testing.T) {
+	t.Parallel()
 	// Tests that topological sort works for various inputs.
 	// We hardcode the satisfying solution in the tests, even though it suffices
 	// to check that the partial ordering is sufficient. (and thats the only guarantee given externally)
@@ -61,6 +62,7 @@ func TestTopologicalSort(t *testing.T) {
 }
 
 func TestAddFirst(t *testing.T) {
+	t.Parallel()
 	simpleNodes := []string{"frog", "elephant", "dog", "cat", "banana", "apple"}
 	tests := []struct {
 		nodes                    []string
@@ -107,6 +109,7 @@ func TestAddFirst(t *testing.T) {
 }
 
 func TestAddLast(t *testing.T) {
+	t.Parallel()
 	simpleNodes := []string{"frog", "elephant", "dog", "cat", "banana", "apple"}
 	tests := []struct {
 		nodes                    []string

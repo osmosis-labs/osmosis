@@ -13,6 +13,7 @@ import (
 )
 
 func TestEpochsExportGenesis(t *testing.T) {
+	t.Parallel()
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -31,6 +32,7 @@ func TestEpochsExportGenesis(t *testing.T) {
 }
 
 func TestEpochsInitGenesis(t *testing.T) {
+	t.Parallel()
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 

@@ -110,7 +110,6 @@ var routeStableSwap = swaproutertypes.SwapAmountInRoutes{
 	}}
 
 func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
-
 	type param struct {
 		route          swaproutertypes.SwapAmountInRoutes
 		expectedAmtIn  sdk.Int
@@ -162,7 +161,6 @@ func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
 
 	for _, test := range tests {
 		suite.Run(test.name, func() {
-
 			amtIn, profit, err := suite.App.ProtoRevKeeper.FindMaxProfitForRoute(
 				suite.Ctx,
 				test.param.route,
@@ -181,7 +179,6 @@ func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
 }
 
 func (suite *KeeperTestSuite) TestExecuteTrade() {
-
 	type param struct {
 		route          swaproutertypes.SwapAmountInRoutes
 		inputCoin      sdk.Coin
@@ -231,7 +228,6 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 	}
 
 	for _, test := range tests {
-
 		err := suite.App.ProtoRevKeeper.ExecuteTrade(
 			suite.Ctx,
 			test.param.route,

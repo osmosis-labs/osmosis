@@ -31,6 +31,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 }
 
 func TestFullAppSimulation(t *testing.T) {
+	t.Parallel()
 	// -Enabled=true -NumBlocks=1000 -BlockSize=200 \
 	// -Period=1 -Commit=true -Seed=57 -v -timeout 24h
 	osmosim.FlagEnabledValue = true
@@ -76,6 +77,7 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 // TODO: Make another test for the fuzzer itself, which just has noOp txs
 // and doesn't depend on the application.
 func TestAppStateDeterminism(t *testing.T) {
+	t.Parallel()
 	// if !osmosim.FlagEnabledValue {
 	// 	t.Skip("skipping application simulation")
 	// }

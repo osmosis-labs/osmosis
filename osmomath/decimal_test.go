@@ -21,6 +21,7 @@ type decimalTestSuite struct {
 }
 
 func TestDecimalTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(decimalTestSuite))
 }
 
@@ -39,6 +40,7 @@ func (s *decimalTestSuite) assertMutResult(expectedResult, startValue, mutativeR
 }
 
 func TestDecApproxEq(t *testing.T) {
+	t.Parallel()
 	// d1 = 0.55, d2 = 0.6, tol = 0.1
 	d1 := osmomath.NewDecWithPrec(55, 2)
 	d2 := osmomath.NewDecWithPrec(6, 1)
@@ -1138,7 +1140,6 @@ func (s *decimalTestSuite) TestPowerInteger() {
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-
 			tolerance := expectedErrTolerance
 			if !tc.expectedToleranceOverwrite.IsNil() {
 				tolerance = tc.expectedToleranceOverwrite
@@ -1146,7 +1147,6 @@ func (s *decimalTestSuite) TestPowerInteger() {
 
 			actualResult := tc.base.PowerInteger(tc.exponent)
 			require.True(osmomath.DecApproxEq(s.T(), tc.expectedResult, actualResult, tolerance))
-
 		})
 	}
 }
@@ -1169,7 +1169,6 @@ func (s *decimalTestSuite) TestClone() {
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-
 			copy := tc.startValue.Clone()
 
 			s.Require().Equal(tc.startValue, copy)
@@ -1184,7 +1183,6 @@ func (s *decimalTestSuite) TestClone() {
 // TestMul_Mutation tests that MulMut mutates the receiver
 // while Mut is not.
 func (s *decimalTestSuite) TestMul_Mutation() {
-
 	mulBy := osmomath.MustNewDecFromStr("2")
 
 	tests := map[string]struct {
@@ -1222,7 +1220,6 @@ func (s *decimalTestSuite) TestMul_Mutation() {
 // TestMul_Mutation tests that PowerIntegerMut mutates the receiver
 // while PowerInteger is not.
 func (s *decimalTestSuite) TestPowerInteger_Mutation() {
-
 	exponent := uint64(2)
 
 	tests := map[string]struct {
@@ -1249,7 +1246,6 @@ func (s *decimalTestSuite) TestPowerInteger_Mutation() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-
 			startMut := tc.startValue.Clone()
 			startNonMut := tc.startValue.Clone()
 

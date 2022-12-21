@@ -199,7 +199,7 @@ func (s *TestSuite) TestEndBlock() {
 	}
 }
 
-// TestAfterEpochEnd tests if records get succesfully deleted via `AfterEpochEnd` hook.
+// TestAfterEpochEnd tests if records get successfully deleted via `AfterEpochEnd` hook.
 // We test details of correct implementation of pruning method in store test.
 // Specifically, the newest record that is younger than the (current block time - record keep period)
 // is kept, and the rest are deleted.

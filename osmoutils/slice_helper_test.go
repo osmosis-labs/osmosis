@@ -9,6 +9,7 @@ import (
 )
 
 func TestReverseSlice(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		s []string
 
@@ -22,7 +23,9 @@ func TestReverseSlice(t *testing.T) {
 		"Array with numbers":      {s: []string{"a", "b", "c", "1", "2", "3"}, expectedSolvedInput: []string{"3", "2", "1", "c", "b", "a"}},
 	}
 	for name, tc := range tests {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			actualSolvedInput := osmoutils.ReverseSlice(tc.s)
 			require.Equal(t, tc.expectedSolvedInput, actualSolvedInput)
 		})

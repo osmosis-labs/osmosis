@@ -11,6 +11,7 @@ import (
 )
 
 func TestOrderEndBlockers_Determinism(t *testing.T) {
+	t.Parallel()
 	db := dbm.NewMemDB()
 	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, simapp.EmptyAppOptions{}, GetWasmEnabledProposals(), EmptyWasmOpts)
 

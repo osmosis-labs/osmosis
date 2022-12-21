@@ -48,6 +48,7 @@ func TestFullDenom(t *testing.T) {
 		},
 	}
 	for name, spec := range specs {
+		spec := spec
 		t.Run(name, func(t *testing.T) {
 			// when
 			gotFullDenom, gotErr := wasmbinding.GetFullDenom(spec.addr, spec.subdenom)

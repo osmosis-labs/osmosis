@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	ibchooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
@@ -59,6 +60,7 @@ func (suite *HooksTestSuite) SetupTest() {
 }
 
 func TestIBCHooksTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(HooksTestSuite))
 }
 
@@ -456,7 +458,6 @@ func (suite *HooksTestSuite) TestAcks() {
 		&suite.Suite, addr,
 		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, addr)))
 	suite.Require().Equal(`{"count":2}`, state)
-
 }
 
 func (suite *HooksTestSuite) TestSendWithoutMemo() {
@@ -797,7 +798,6 @@ func (suite *HooksTestSuite) CreateIBCPoolOnChainB() {
 
 	_, err = chain.GetOsmosisApp().GAMMKeeper.GetPoolAndPoke(chain.GetContext(), poolId)
 	suite.Require().NoError(err)
-
 }
 
 func (suite *HooksTestSuite) SetupIBCRouteOnChainB(swaprouterAddr, owner sdk.AccAddress) {
@@ -821,7 +821,6 @@ func (suite *HooksTestSuite) SetupIBCRouteOnChainB(swaprouterAddr, owner sdk.Acc
 	suite.Require().NoError(err)
 	err = suite.path.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
-
 }
 
 func (suite *HooksTestSuite) TestCrosschainForwardWithMemo() {

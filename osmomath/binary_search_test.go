@@ -16,6 +16,7 @@ var (
 )
 
 func TestBinarySearch(t *testing.T) {
+	t.Parallel()
 	// straight line function that returns input. Simplest to binary search on,
 	// binary search directly reveals one bit of the answer in each iteration with this function.
 	lineF := func(a sdk.Int) (sdk.Int, error) {
@@ -62,7 +63,10 @@ func TestBinarySearch(t *testing.T) {
 	}
 
 	for name, tc := range tests {
+		tc := tc
+
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			actualSolvedInput, err := BinarySearch(tc.f, tc.lowerbound, tc.upperbound, tc.targetOutput, tc.errTolerance, tc.maxIterations)
 			if tc.expectErr {
 				require.Error(t, err)
@@ -117,6 +121,7 @@ type binarySearchTestCase struct {
 // This test ensures that we use exactly the expected number of iterations (one bit of x at a time)
 // to find the answer to binary search on a line.
 func TestBinarySearchLineIterationCounts(t *testing.T) {
+	t.Parallel()
 	tests := map[string]binarySearchTestCase{}
 
 	generateExactTestCases := func(lowerbound, upperbound BigDec,
@@ -154,6 +159,7 @@ var fnMap = map[string]searchFn{"line": lineF, "cubic": cubicF, "neg_cubic": neg
 
 // This function tests that any value in a given range can be reached within expected num iterations.
 func TestIterationDepthRandValue(t *testing.T) {
+	t.Parallel()
 	tests := map[string]binarySearchTestCase{}
 	exactEqual := ErrTolerance{AdditiveTolerance: sdk.ZeroDec()}
 	withinOne := ErrTolerance{AdditiveTolerance: sdk.OneDec()}
@@ -229,6 +235,7 @@ func runBinarySearchTestCases(t *testing.T, tests map[string]binarySearchTestCas
 }
 
 func TestBinarySearchBigDec(t *testing.T) {
+	t.Parallel()
 	testErrToleranceAdditive := ErrTolerance{AdditiveTolerance: sdk.NewDec(1 << 30)}
 	errToleranceBoth := ErrTolerance{AdditiveTolerance: sdk.NewDec(1 << 30), MultiplicativeTolerance: sdk.NewDec(1 << 3)}
 
@@ -281,6 +288,7 @@ func TestBinarySearchBigDec(t *testing.T) {
 }
 
 func TestBinarySearchRoundingBehavior(t *testing.T) {
+	t.Parallel()
 	withinTwoTo30 := ErrTolerance{AdditiveTolerance: sdk.NewDec(1 << 30)}
 
 	twoTo50 := NewBigDec(1 << 50)
@@ -320,6 +328,7 @@ func TestBinarySearchRoundingBehavior(t *testing.T) {
 }
 
 func TestErrTolerance_Compare(t *testing.T) {
+	t.Parallel()
 	ZeroErrTolerance := ErrTolerance{AdditiveTolerance: sdk.ZeroDec(), MultiplicativeTolerance: sdk.Dec{}}
 	NonZeroErrAdditive := ErrTolerance{AdditiveTolerance: sdk.NewDec(10), MultiplicativeTolerance: sdk.Dec{}}
 	NonZeroErrMultiplicative := ErrTolerance{AdditiveTolerance: sdk.Dec{}, MultiplicativeTolerance: sdk.NewDec(10)}
@@ -351,7 +360,9 @@ func TestErrTolerance_Compare(t *testing.T) {
 		{"Nonzero both tolerance: >", NonZeroErrBoth, 1011, 1001, 1},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			gotInt := tt.tol.Compare(sdk.NewInt(tt.intInput), sdk.NewInt(tt.intReference))
 			if gotInt != tt.expectedCompareResult {
 				t.Errorf("ErrTolerance.Compare() = %v, want %v", gotInt, tt.expectedCompareResult)

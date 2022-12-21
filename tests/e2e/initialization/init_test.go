@@ -22,6 +22,7 @@ var expectedConfigFiles = []string{
 // TestChainInit tests that chain initialization correctly initializes a full chain
 // and produces the desired output with genesis, chain and validator configs.
 func TestChainInit(t *testing.T) {
+	t.Parallel()
 	const id = initialization.ChainAID
 
 	var (
@@ -68,6 +69,7 @@ func TestChainInit(t *testing.T) {
 // TestSingleNodeInit tests that node initialization correctly initializes a single node
 // and produces the desired output with genesis, chain and validator config.
 func TestSingleNodeInit(t *testing.T) {
+	t.Parallel()
 	const (
 		id = initialization.ChainAID
 	)

@@ -634,7 +634,7 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
 		result    string
 	}{
 		{
-			name: "non-existant pool",
+			name: "non-existent pool",
 			req: &types.QuerySpotPriceRequest{
 				PoolId:          0,
 				BaseAssetDenom:  "foo",
@@ -725,7 +725,7 @@ func (suite *KeeperTestSuite) TestV2QueryBalancerPoolSpotPrice() {
 		result    string
 	}{
 		{
-			name: "non-existant pool",
+			name: "non-existent pool",
 			req: &v2types.QuerySpotPriceRequest{
 				PoolId:          0,
 				BaseAssetDenom:  "tokenA",

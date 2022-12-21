@@ -9,6 +9,8 @@ import (
 )
 
 func TestDivIntByU64ToBigDec(t *testing.T) {
+	t.Parallel()
+
 	type testcase struct {
 		i      sdk.Int
 		u      uint64
@@ -40,7 +42,9 @@ func TestDivIntByU64ToBigDec(t *testing.T) {
 	addTCForAllRoundingModes("odd divided by 2", sdk.NewInt(5), 2, NewDecWithPrec(25, 1))
 
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got, err := DivIntByU64ToBigDec(tt.i, tt.u, tt.round)
 			require.Equal(t, tt.want, got)
 			if tt.expErr {

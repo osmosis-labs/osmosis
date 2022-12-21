@@ -2,8 +2,9 @@ package v13_test
 
 import (
 	"fmt"
-	ibchookstypes "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types"
 	"testing"
+
+	ibchookstypes "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types"
 
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
 
@@ -25,6 +26,7 @@ func (suite *UpgradeTestSuite) SetupTest() {
 }
 
 func TestKeeperTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(UpgradeTestSuite))
 }
 

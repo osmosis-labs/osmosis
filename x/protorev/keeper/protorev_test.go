@@ -109,7 +109,6 @@ func (suite *KeeperTestSuite) TestGetOsmoPool() {
 			}
 		})
 	}
-
 }
 
 // TestDeleteAllOsmoPools tests the DeleteAllOsmoPools function.

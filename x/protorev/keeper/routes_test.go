@@ -228,7 +228,6 @@ func (suite *KeeperTestSuite) TestBuildTokenPairRoutes() {
 				suite.Require().Equal(len(tc.expectedRoutes), len(routes))
 
 				for index, route := range routes {
-
 					suite.Require().Equal(len(tc.expectedRoutes[index]), len(route.PoolIds()))
 
 					for index, trade := range tc.expectedRoutes[index] {
@@ -236,7 +235,6 @@ func (suite *KeeperTestSuite) TestBuildTokenPairRoutes() {
 						suite.Require().Equal(trade.OutputDenom, route[index].TokenOutDenom)
 					}
 				}
-
 			} else {
 				suite.Require().Error(err)
 			}

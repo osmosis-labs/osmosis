@@ -39,6 +39,7 @@ type IntegrationTestSuite struct {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
+	t.Parallel()
 	isEnabled := os.Getenv(e2eEnabledEnv)
 	if isEnabled != "True" {
 		t.Skip(fmt.Sprintf("e2e test is disabled. To run, set %s to True", e2eEnabledEnv))

@@ -134,7 +134,7 @@ func (suite *KeeperTestSuite) TestGetProfitsByRoute() {
 // TestUpdateStatistics tests UpdateStatistics which is a wrapper for much of the statistics keeper
 // functionality.
 func (suite *KeeperTestSuite) TestUpdateStatistics() {
-	// Psuedo execute a trade
+	// Pseudo execute a trade
 	err := suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx,
 		swaproutertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}},
 		sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(800)),
@@ -157,7 +157,7 @@ func (suite *KeeperTestSuite) TestUpdateStatistics() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(1, len(routes))
 
-	// Psuedo execute a second trade
+	// Pseudo execute a second trade
 	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx,
 		swaproutertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}, {TokenOutDenom: "", PoolId: 4}},
 		sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(850)),

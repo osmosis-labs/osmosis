@@ -8,6 +8,7 @@ import (
 )
 
 func TestDowntimeToDurationAscending(t *testing.T) {
+	t.Parallel()
 	numEntries := 0
 	lastDur := time.Duration(0)
 	DowntimeToDuration.Ascend(Downtime(0), func(_ Downtime, v time.Duration) bool {

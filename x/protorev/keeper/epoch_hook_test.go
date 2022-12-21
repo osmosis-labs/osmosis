@@ -22,7 +22,6 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 	// and so on...
 	expectedToSee := make(map[string]Pool)
 	for _, pool := range suite.pools {
-
 		// Module currently limited to two asset pools
 		// Instantiate asset and amounts for the pool
 		if len(pool.PoolAssets) == 2 {

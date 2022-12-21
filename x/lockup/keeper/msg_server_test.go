@@ -93,7 +93,6 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 				Duration:      test.param.duration,
 			})
 			suite.Require().Equal(accum.String(), "20")
-
 		} else {
 			// Fail simple lock token
 			suite.Require().Error(err)

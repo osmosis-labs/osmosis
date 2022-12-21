@@ -12,6 +12,7 @@ import (
 )
 
 func TestMsgSetValidatorSetPreference(t *testing.T) {
+	t.Parallel()
 	appParams.SetAddressPrefixes()
 	addr1, invalidAddr := apptesting.GenerateTestAddrs()
 
@@ -141,7 +142,10 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 	}
 
 	for _, test := range tests {
+		test := test
+
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			if test.expectPass {
 				require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
 				require.Equal(t, test.msg.Type(), "set_validator_set_preference")
@@ -153,5 +157,4 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 			}
 		})
 	}
-
 }

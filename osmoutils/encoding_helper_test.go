@@ -8,6 +8,7 @@ import (
 )
 
 func TestFormatFixedLengthU64(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		d    uint64
 		want string
@@ -20,7 +21,9 @@ func TestFormatFixedLengthU64(t *testing.T) {
 		"max u64": {math.MaxUint64, "18446744073709551615"},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got := FormatFixedLengthU64(tt.d)
 			assert.Equal(t, tt.want, got)
 			assert.Equal(t, len(got), 20)

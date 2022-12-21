@@ -9,6 +9,7 @@ import (
 )
 
 func TestAPI(t *testing.T) {
+	t.Parallel()
 	// begin block use case, we have a dozen modules, but only care about a couple orders.
 	// In practice this will be gotten from some API, e.g. app.AllModuleNames()
 	moduleNames := []string{
@@ -33,6 +34,7 @@ func TestAPI(t *testing.T) {
 }
 
 func TestNonStandardAPIOrder(t *testing.T) {
+	t.Parallel()
 	// This test uses direct ordering before First, and after Last
 	names := []string{"A", "B", "C", "D", "E", "F", "G"}
 	ord := partialord.NewPartialOrdering(names)
@@ -57,6 +59,7 @@ func TestNonStandardAPIOrder(t *testing.T) {
 // This test ad-hocly tests combination of multiple sequences, first elements, and an After
 // invokation.
 func TestSequence(t *testing.T) {
+	t.Parallel()
 	// This test uses direct ordering before First, and after Last
 	names := []string{"A", "B", "C", "D", "E", "F", "G"}
 	ord := partialord.NewPartialOrdering(names)

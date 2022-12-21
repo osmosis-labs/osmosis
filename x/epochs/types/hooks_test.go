@@ -19,6 +19,7 @@ type KeeperTestSuite struct {
 }
 
 func TestKeeperTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(KeeperTestSuite))
 }
 
@@ -47,7 +48,7 @@ func dummyBeforeEpochStartEvent(epochIdentifier string, epochNumber int64) sdk.E
 var dummyErr = errors.New("9", 9, "dummyError")
 
 // dummyEpochHook is a struct satisfying the epoch hook interface,
-// that maintains a counter for how many times its been succesfully called,
+// that maintains a counter for how many times its been successfully called,
 // and a boolean for whether it should panic during its execution.
 type dummyEpochHook struct {
 	successCounter int

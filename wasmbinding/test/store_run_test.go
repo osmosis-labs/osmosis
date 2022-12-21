@@ -53,7 +53,7 @@ func storeCodeViaProposal(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp
 	require.NoError(t, err)
 }
 
-func TestStoreCodeProposal(t *testing.T) {
+func TestStoreCodeProposal(t *testing.T) { //nolint:paralleltest
 	osmosis, ctx := CreateTestInput()
 	myActorAddress := RandomAccountAddress()
 	wasmKeeper := osmosis.WasmKeeper
@@ -78,7 +78,7 @@ type HackatomExampleInitMsg struct {
 	Beneficiary sdk.AccAddress `json:"beneficiary"`
 }
 
-func TestInstantiateContract(t *testing.T) {
+func TestInstantiateContract(t *testing.T) { //nolint:paralleltest
 	osmosis, ctx := CreateTestInput()
 	funder := RandomAccountAddress()
 	benefit, arb := RandomAccountAddress(), RandomAccountAddress()

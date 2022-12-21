@@ -265,7 +265,7 @@ func (s *IntegrationTestSuite) TestAddToExistingLock() {
 // TestTWAP tests TWAP by creating a pool, performing a swap.
 // These two operations should create TWAP records.
 // Then, we wait until the epoch for the records to be pruned.
-// The records are guranteed to be pruned at the next epoch
+// The records are guaranteed to be pruned at the next epoch
 // because twap keep time = epoch time / 4 and we use a timer
 // to wait for at least the twap keep time.
 func (s *IntegrationTestSuite) TestTWAP() {
@@ -393,7 +393,7 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	if !s.skipUpgrade {
 		// TODO: we should reduce the pruning time in the v11
 		// genesis to make this test run faster
-		// Currenty, we are testing the upgrade from v11 to v12,
+		// Currently, we are testing the upgrade from v11 to v12,
 		// the pruning time is set to whatever is in the upgrade
 		// handler (two days). Therefore, we cannot reasonably
 		// test twap pruning post-upgrade.

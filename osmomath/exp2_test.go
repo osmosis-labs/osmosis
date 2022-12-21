@@ -16,9 +16,10 @@ var (
 )
 
 func TestExp2ChebyshevRationalApprox(t *testing.T) {
+	t.Parallel()
 	// These values are used to test the approximated results close
 	// to 0 and 1 boundaries.
-	// With other types of approximations, there is a high likelyhood
+	// With other types of approximations, there is a high likelihood
 	// of larger errors clsoer to the boundaries. This is known as Runge's phenomenon.
 	// https://en.wikipedia.org/wiki/Runge%27s_phenomenon
 	//
@@ -155,6 +156,7 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 	for name, tc := range tests {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			osmoassert.ConditionalPanic(t, tc.expectPanic, func() {
 				// System under test.
 				result := osmomath.Exp2ChebyshevRationalApprox(tc.exponent)
@@ -171,6 +173,7 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 }
 
 func TestExp2(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		exponent       osmomath.BigDec
 		expectedResult osmomath.BigDec
@@ -289,8 +292,8 @@ func TestExp2(t *testing.T) {
 	for name, tc := range tests {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			osmoassert.ConditionalPanic(t, tc.expectPanic, func() {
-
 				// System under test.
 				result := osmomath.Exp2(tc.exponent)
 

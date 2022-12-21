@@ -88,6 +88,7 @@ var (
 )
 
 func TestOsmoUtilsTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(TestSuite))
 }
 

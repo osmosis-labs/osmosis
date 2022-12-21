@@ -17,11 +17,11 @@ type intTestSuite struct {
 }
 
 func TestIntTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(intTestSuite))
 }
 
 func (s *intTestSuite) SetupSuite() {
-	s.T().Parallel()
 }
 
 func (s *intTestSuite) TestFromInt64() {
@@ -393,6 +393,7 @@ func (s *intTestSuite) TestIntEq() {
 }
 
 func TestRoundTripMarshalToInt(t *testing.T) {
+	t.Parallel()
 	values := []int64{
 		0,
 		1,

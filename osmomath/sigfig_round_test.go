@@ -10,6 +10,7 @@ import (
 )
 
 func TestSigFigRound(t *testing.T) {
+	t.Parallel()
 	// sigfig = 8
 	tenToSigFig := sdk.NewDec(10).Power(8).TruncateInt()
 
@@ -74,7 +75,9 @@ func TestSigFigRound(t *testing.T) {
 
 	for i, tc := range testCases {
 		tc := tc
+		i := i
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			var actualResult sdk.Dec
 			ConditionalPanic(t, tc.tenToSigFig.Equal(sdk.ZeroInt()), func() {
 				actualResult = SigFigRound(tc.decimal, tc.tenToSigFig)
@@ -86,6 +89,5 @@ func TestSigFigRound(t *testing.T) {
 				)
 			})
 		})
-
 	}
 }

@@ -48,6 +48,7 @@ func TestCreateDenom(t *testing.T) {
 		},
 	}
 	for name, spec := range specs {
+		spec := spec
 		t.Run(name, func(t *testing.T) {
 			// when
 			gotErr := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, spec.createDenom)
@@ -140,6 +141,7 @@ func TestChangeAdmin(t *testing.T) {
 		},
 	}
 	for name, spec := range specs {
+		spec := spec
 		t.Run(name, func(t *testing.T) {
 			// Setup
 			osmosis, ctx := SetupCustomApp(t, tokenCreator)
@@ -271,6 +273,7 @@ func TestMint(t *testing.T) {
 		},
 	}
 	for name, spec := range specs {
+		spec := spec
 		t.Run(name, func(t *testing.T) {
 			// when
 			gotErr := wasmbinding.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, spec.mint)
@@ -383,6 +386,7 @@ func TestBurn(t *testing.T) {
 	}
 
 	for name, spec := range specs {
+		spec := spec
 		t.Run(name, func(t *testing.T) {
 			// Mint valid denom str and empty denom string for burn test
 			mintBinding := &bindings.MintTokens{

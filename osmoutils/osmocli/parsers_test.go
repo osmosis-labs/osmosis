@@ -21,6 +21,7 @@ type testingStruct struct {
 }
 
 func TestParseFieldFromArg(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		testingStruct
 		arg        string
@@ -138,7 +139,9 @@ func TestParseFieldFromArg(t *testing.T) {
 	}
 
 	for name, tc := range tests {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			val := reflect.ValueOf(&tc.testingStruct).Elem()
 			typ := reflect.TypeOf(&tc.testingStruct).Elem()
 

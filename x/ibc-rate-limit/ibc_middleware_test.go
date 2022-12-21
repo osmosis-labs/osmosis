@@ -231,10 +231,10 @@ func (suite *MiddlewareTestSuite) AssertSend(success bool, msg sdk.Msg) (*sdk.Re
 	return r, err
 }
 
-func (suite *MiddlewareTestSuite) BuildChannelQuota(name, channel, denom string, duration, send_precentage, recv_percentage uint32) string {
+func (suite *MiddlewareTestSuite) BuildChannelQuota(name, channel, denom string, duration, send_percentage, recv_percentage uint32) string {
 	return fmt.Sprintf(`
           {"channel_id": "%s", "denom": "%s", "quotas": [{"name":"%s", "duration": %d, "send_recv":[%d, %d]}] }
-    `, channel, denom, name, duration, send_precentage, recv_percentage)
+    `, channel, denom, name, duration, send_percentage, recv_percentage)
 }
 
 // Tests

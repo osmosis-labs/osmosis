@@ -19,6 +19,7 @@ func (suite *UpgradeTestSuite) SetupTest() {
 }
 
 func TestKeeperTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(UpgradeTestSuite))
 }
 

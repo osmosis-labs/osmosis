@@ -10,6 +10,7 @@ import (
 )
 
 func TestAbsDifferenceWithSign(t *testing.T) {
+	t.Parallel()
 	decA, err := sdk.NewDecFromStr("3.2")
 	require.NoError(t, err)
 	decB, err := sdk.NewDecFromStr("4.3432389")
@@ -24,6 +25,7 @@ func TestAbsDifferenceWithSign(t *testing.T) {
 }
 
 func TestPowApprox(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		base           sdk.Dec
 		exp            sdk.Dec
@@ -103,6 +105,7 @@ func TestPowApprox(t *testing.T) {
 }
 
 func TestPow(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		base           sdk.Dec
 		exp            sdk.Dec

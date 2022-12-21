@@ -126,6 +126,7 @@ func readold() []kvPair {
 }
 
 func TestMigrate(t *testing.T) {
+	t.Parallel()
 	store := setupStore()
 
 	oldpairs := readold()

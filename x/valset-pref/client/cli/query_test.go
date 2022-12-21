@@ -80,5 +80,6 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 }
 
 func TestQueryTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(QueryTestSuite))
 }

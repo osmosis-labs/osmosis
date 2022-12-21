@@ -201,7 +201,6 @@ func (suite *KeeperTestSuite) TestGaugeOperations() {
 
 		// check non-perpetual gauges (finished + rewards estimate empty)
 		if !tc.isPerpetual {
-
 			// check finished gauges
 			gauges = suite.App.IncentivesKeeper.GetFinishedGauges(suite.Ctx)
 			suite.Require().Len(gauges, 1)
@@ -222,7 +221,6 @@ func (suite *KeeperTestSuite) TestGaugeOperations() {
 			gaugeIdsByDenom = suite.App.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.Ctx, "lptoken")
 			suite.Require().Len(gaugeIdsByDenom, 0)
 		} else { // check perpetual gauges (not finished + rewards estimate empty)
-
 			// check finished gauges
 			gauges = suite.App.IncentivesKeeper.GetFinishedGauges(suite.Ctx)
 			suite.Require().Len(gauges, 0)

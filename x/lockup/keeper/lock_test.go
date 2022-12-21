@@ -175,7 +175,6 @@ func (suite *KeeperTestSuite) TestUnlock() {
 			// check lock state
 			suite.Require().Equal(ctx.BlockTime().Add(lock.Duration), lock.EndTime)
 			suite.Require().Equal(true, lock.IsUnlocking())
-
 		} else {
 			suite.Require().Error(err)
 

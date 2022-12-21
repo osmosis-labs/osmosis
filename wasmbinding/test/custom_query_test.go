@@ -22,7 +22,7 @@ import (
 // we must pay this many uosmo for every pool we create
 var poolFee int64 = 1000000000
 
-var defaultFunds = sdk.NewCoins(
+var defaultFunds = sdk.NewCoins( //nolint:unused
 	sdk.NewInt64Coin("uatom", 333000000),
 	sdk.NewInt64Coin("uosmo", 555000000+2*poolFee),
 	sdk.NewInt64Coin("ustar", 999000000),

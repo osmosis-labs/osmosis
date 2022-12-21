@@ -12,6 +12,7 @@ import (
 
 // We test the custom duration parser via this
 func TestRecoveredSinceQueryCmd(t *testing.T) {
+	t.Parallel()
 	desc, _ := cli.RecoveredSinceQueryCmd()
 	tcs := map[string]osmocli.QueryCliTestCase[*queryproto.RecoveredSinceDowntimeOfLengthRequest]{
 		"basic test": {

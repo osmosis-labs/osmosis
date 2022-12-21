@@ -9,6 +9,7 @@ import (
 )
 
 func TestSendBlockDecorator(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		from       sdk.AccAddress
 		to         sdk.AccAddress

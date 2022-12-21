@@ -9,6 +9,7 @@ import (
 )
 
 func TestGetCmdCurrentEpoch(t *testing.T) {
+	t.Parallel()
 	desc, _ := cli.GetCmdCurrentEpoch()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryCurrentEpochRequest]{
 		"basic test": {
@@ -22,6 +23,7 @@ func TestGetCmdCurrentEpoch(t *testing.T) {
 }
 
 func TestGetCmdEpochsInfo(t *testing.T) {
+	t.Parallel()
 	desc, _ := cli.GetCmdEpochInfos()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryEpochsInfoRequest]{
 		"basic test": {

@@ -35,6 +35,7 @@ func (suite *TreeTestSuite) SetupTest() {
 }
 
 func TestTreeTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(TreeTestSuite))
 }
 

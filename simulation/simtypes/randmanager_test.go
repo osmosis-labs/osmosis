@@ -33,6 +33,7 @@ func randInstancesEqual(rands []*rand.Rand) bool {
 
 // Test that the rand manager GetRand() are all independent of one another.
 func TestRandManagerGetRandIndependence(t *testing.T) {
+	t.Parallel()
 	rms := getKDefaultRandManager(3)
 	expectedEqualRands := []*rand.Rand{}
 	// We want to test that in each of the the following three scenarios, r2 is equal:
@@ -60,6 +61,7 @@ func TestRandManagerGetRandIndependence(t *testing.T) {
 
 // Test that the rand manager GetSeededRand() for the same seed are all returning the same rand instance.
 func TestRandManagerSameSeedGetSeededRand(t *testing.T) {
+	t.Parallel()
 	rms := getKDefaultRandManager(3)
 	seed := "test seed"
 	// We want to test that in each of the the following three scenarios, we generated the same 'trace' of values.

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	valPref "github.com/osmosis-labs/osmosis/v13/x/valset-pref"
 	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
 )
@@ -120,7 +121,6 @@ func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
 			} else {
 				suite.Require().Error(err)
 			}
-
 		})
 	}
 }
@@ -201,7 +201,6 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 					del, _ := suite.App.StakingKeeper.GetDelegation(suite.Ctx, test.delegator, valAddr)
 					suite.Require().Equal(del.Shares, test.expectedShares[i])
 				}
-
 			} else {
 				suite.Require().Error(err)
 			}
@@ -286,7 +285,6 @@ func (suite *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 						suite.Require().Equal(del.GetShares(), test.expectedShares[i])
 					}
 				}
-
 			} else {
 				suite.Require().Error(err)
 			}
@@ -427,7 +425,6 @@ func (suite *KeeperTestSuite) TestRedelegateValidatorSet() {
 
 	for _, test := range tests {
 		suite.Run(test.name, func() {
-
 			// fund the account that is trying to delegate
 			suite.FundAcc(test.delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)})
 
@@ -448,12 +445,12 @@ func (suite *KeeperTestSuite) TestRedelegateValidatorSet() {
 				suite.Require().NoError(err)
 			}
 
-			// RedelegateValidatorSet redelegates from an exisitng set to a new one
+			// RedelegateValidatorSet redelegates from an existing set to a new one
 			_, err := msgServer.RedelegateValidatorSet(c, types.NewMsgRedelegateValidatorSet(test.delegator, test.newPreferences))
 			if test.expectPass {
 				suite.Require().NoError(err)
 
-				// check if the validator have recieved the correct amount of tokens
+				// check if the validator have received the correct amount of tokens
 				for i, val := range test.newPreferences {
 					valAddr, err := sdk.ValAddressFromBech32(val.ValOperAddress)
 					suite.Require().NoError(err)
@@ -462,11 +459,9 @@ func (suite *KeeperTestSuite) TestRedelegateValidatorSet() {
 					del, _ := suite.App.StakingKeeper.GetDelegation(suite.Ctx, test.delegator, valAddr)
 					suite.Require().Equal(del.Shares, test.expectedShares[i])
 				}
-
 			} else {
 				suite.Require().Error(err)
 			}
-
 		})
 	}
 }

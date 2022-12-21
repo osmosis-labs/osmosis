@@ -161,6 +161,7 @@ func TestNewCreatePoolCmd(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
+		tc := tc
 		t.Run(name, func(tt *testing.T) {
 			desc := cli.NewCreatePoolCmd()
 			jsonFile := testutil.WriteToNewTempFile(tt, tc.json)
@@ -177,6 +178,7 @@ func TestNewCreatePoolCmd(t *testing.T) {
 }
 
 func TestNewJoinPoolCmd(t *testing.T) {
+	t.Parallel()
 	desc, _ := cli.NewJoinPoolCmd()
 	tcs := map[string]osmocli.TxCliTestCase[*types.MsgJoinPool]{
 		"join pool": {
@@ -193,6 +195,7 @@ func TestNewJoinPoolCmd(t *testing.T) {
 }
 
 func TestNewExitPoolCmd(t *testing.T) {
+	t.Parallel()
 	desc, _ := cli.NewExitPoolCmd()
 	tcs := map[string]osmocli.TxCliTestCase[*types.MsgExitPool]{
 		"exit pool": {
@@ -209,6 +212,7 @@ func TestNewExitPoolCmd(t *testing.T) {
 }
 
 func TestNewSwapExactAmountOutCmd(t *testing.T) {
+	t.Parallel()
 	desc, _ := cli.NewSwapExactAmountOutCmd()
 	tcs := map[string]osmocli.TxCliTestCase[*types.MsgSwapExactAmountOut]{
 		"swap exact amount out": {
@@ -225,6 +229,7 @@ func TestNewSwapExactAmountOutCmd(t *testing.T) {
 }
 
 func TestNewSwapExactAmountInCmd(t *testing.T) {
+	t.Parallel()
 	desc, _ := cli.NewSwapExactAmountInCmd()
 	tcs := map[string]osmocli.TxCliTestCase[*types.MsgSwapExactAmountIn]{
 		"swap exact amount in": {
@@ -241,6 +246,7 @@ func TestNewSwapExactAmountInCmd(t *testing.T) {
 }
 
 func TestNewJoinSwapExternAmountInCmd(t *testing.T) {
+	t.Parallel()
 	desc, _ := cli.NewJoinSwapExternAmountIn()
 	tcs := map[string]osmocli.TxCliTestCase[*types.MsgJoinSwapExternAmountIn]{
 		"swap exact amount in": {
@@ -257,6 +263,7 @@ func TestNewJoinSwapExternAmountInCmd(t *testing.T) {
 }
 
 func TestNewJoinSwapShareAmountOutCmd(t *testing.T) {
+	t.Parallel()
 	desc, _ := cli.NewJoinSwapShareAmountOut()
 	tcs := map[string]osmocli.TxCliTestCase[*types.MsgJoinSwapShareAmountOut]{
 		"swap exact amount in": {
@@ -274,6 +281,7 @@ func TestNewJoinSwapShareAmountOutCmd(t *testing.T) {
 }
 
 func TestNewExitSwapExternAmountOutCmd(t *testing.T) {
+	t.Parallel()
 	desc, _ := cli.NewExitSwapExternAmountOut()
 	tcs := map[string]osmocli.TxCliTestCase[*types.MsgExitSwapExternAmountOut]{
 		"swap exact amount in": {
@@ -290,6 +298,7 @@ func TestNewExitSwapExternAmountOutCmd(t *testing.T) {
 }
 
 func TestNewExitSwapShareAmountInCmd(t *testing.T) {
+	t.Parallel()
 	desc, _ := cli.NewExitSwapShareAmountIn()
 	tcs := map[string]osmocli.TxCliTestCase[*types.MsgExitSwapShareAmountIn]{
 		"swap exact amount in": {
@@ -307,6 +316,7 @@ func TestNewExitSwapShareAmountInCmd(t *testing.T) {
 }
 
 func TestGetCmdPools(t *testing.T) {
+	t.Parallel()
 	desc, _ := cli.GetCmdPools()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryPoolsRequest]{
 		"basic test": {
@@ -320,6 +330,7 @@ func TestGetCmdPools(t *testing.T) {
 }
 
 func TestGetCmdPool(t *testing.T) {
+	t.Parallel()
 	desc, _ := cli.GetCmdPool()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryPoolRequest]{
 		"basic test": {
@@ -331,6 +342,7 @@ func TestGetCmdPool(t *testing.T) {
 }
 
 func TestGetCmdSpotPrice(t *testing.T) {
+	t.Parallel()
 	desc, _ := cli.GetCmdSpotPrice()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.QuerySpotPriceRequest]{
 		"basic test": {
@@ -346,6 +358,7 @@ func TestGetCmdSpotPrice(t *testing.T) {
 }
 
 func TestGetCmdEstimateSwapExactAmountIn(t *testing.T) {
+	t.Parallel()
 	desc, _ := cli.GetCmdEstimateSwapExactAmountIn()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.QuerySwapExactAmountInRequest]{
 		"basic test": {
@@ -362,6 +375,7 @@ func TestGetCmdEstimateSwapExactAmountIn(t *testing.T) {
 }
 
 func TestGetCmdEstimateSwapExactAmountOut(t *testing.T) {
+	t.Parallel()
 	desc, _ := cli.GetCmdEstimateSwapExactAmountOut()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.QuerySwapExactAmountOutRequest]{
 		"basic test": {
