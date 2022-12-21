@@ -22,13 +22,6 @@ type computeTwapTestCase struct {
 	expPanic       bool
 }
 
-// geometricTwapMathBase is the base used for geometric twap calculation
-// in logarithm and power math functions.
-// See twapLog and computeGeometricTwap functions for more details.
-var (
-	geometricTwapMathBase = osmomath.NewBigDec(2)
-)
-
 // TestComputeArithmeticTwap tests computeTwap on various inputs.
 // The test vectors are structured by setting up different start and records,
 // based on time interval, and their accumulator values.
