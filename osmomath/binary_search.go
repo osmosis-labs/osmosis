@@ -69,7 +69,12 @@ func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int {
 	}
 	// Check multiplicative tolerance equations
 	if !e.MultiplicativeTolerance.IsNil() && !e.MultiplicativeTolerance.IsZero() {
-		errTerm := diff.Quo(sdk.MinInt(expected.Abs(), actual.Abs()).ToDec())
+		minValue := sdk.MinInt(expected.Abs(), actual.Abs())
+		if minValue.IsZero() {
+			return comparisonSign
+		}
+
+		errTerm := diff.Quo(minValue.ToDec())
 		if errTerm.GT(e.MultiplicativeTolerance) {
 			return comparisonSign
 		}
@@ -121,7 +126,12 @@ func (e ErrTolerance) CompareBigDec(expected BigDec, actual BigDec) int {
 	}
 	// Check multiplicative tolerance equations
 	if !e.MultiplicativeTolerance.IsNil() && !e.MultiplicativeTolerance.IsZero() {
-		errTerm := diff.Quo(MinDec(expected.Abs(), actual.Abs()))
+		minValue := MinDec(expected.Abs(), actual.Abs())
+		if minValue.IsZero() {
+			return comparisonSign
+		}
+
+		errTerm := diff.Quo(minValue)
 		// fmt.Printf("err term %v\n", errTerm)
 		if errTerm.GT(BigDecFromSDKDec(e.MultiplicativeTolerance)) {
 			return comparisonSign
