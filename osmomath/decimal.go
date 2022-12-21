@@ -997,3 +997,39 @@ func (d BigDec) PowerIntegerMut(power uint64) BigDec {
 
 	return d.MulMut(tmp)
 }
+
+// Power returns a result of raising the given big dec to
+// a positive decimal power. Panics if the power is negative.
+// Panics if the base is negative. Does not mutate the receiver.
+// The max supported exponent is defined by the global maxSupportedExponent.
+// If a greater exponent is given, the function panics.
+// The error is not bounded but expected to be around 10^-18, use with care.
+// See the underlying Exp2, LogBase2 and Mul for the details of their bounds.
+func (d BigDec) Power(power BigDec) BigDec {
+	if d.IsNegative() {
+		panic(fmt.Sprintf("negative base is not supported for Power(), base was (%s)", d))
+	}
+	if power.IsNegative() {
+		panic(fmt.Sprintf("negative power is not supported for Power(), power was (%s)", power))
+	}
+	if power.Abs().GT(maxSupportedExponent) {
+		panic(fmt.Sprintf("integer exponent %s is too large, max (%s)", power, maxSupportedExponent))
+	}
+	if power.IsInteger() {
+		return d.PowerInteger(power.TruncateInt().Uint64())
+	}
+	if power.IsZero() {
+		return OneDec()
+	}
+	if d.IsZero() {
+		return ZeroDec()
+	}
+	if d.Equal(twoBigDec) {
+		return Exp2(power)
+	}
+
+	// d^power = exp2(power * log_2{base})
+	result := Exp2(d.LogBase2().Mul(power))
+
+	return result
+}
