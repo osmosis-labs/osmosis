@@ -111,6 +111,15 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 			result: sdk.MustNewDecFromStr("1.333333330000000000").String(),
 		},
 		{
+			name:            "tokenB in terms of tokenC (rounded decimal of 2/3)",
+			poolId:          poolID,
+			baseAssetDenom:  "tokenC",
+			quoteAssetDenom: "tokenB",
+			endTime:         &newBlockTime,
+
+			result: sdk.MustNewDecFromStr("0.666666670000000000").String(),
+		},
+		{
 			name:            "tokenD in terms of tokenE (1)",
 			poolId:          poolID,
 			baseAssetDenom:  "tokenD",
@@ -151,7 +160,7 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 	for _, tc := range testCases {
 		tc := tc
 
-		suite.Run(tc.name, func() {
+		suite.Run(tc.name+" arithmetic", func() {
 			client := client.Querier{K: *suite.App.TwapKeeper}
 
 			startTime := validStartTime
@@ -186,6 +195,44 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 			} else {
 				suite.Require().NoError(err, "unexpected error - ArithmeticTwapToNow")
 				suite.Require().Equal(tc.result, resultToNow.ArithmeticTwap.String())
+			}
+		})
+
+		suite.Run(tc.name+" geometric", func() {
+			client := client.Querier{K: *suite.App.TwapKeeper}
+
+			startTime := validStartTime
+			if tc.startTimeOverwrite != nil {
+				startTime = *tc.startTimeOverwrite
+			}
+
+			result, err := client.GeometricTwap(ctx, queryproto.GeometricTwapRequest{
+				PoolId:     tc.poolId,
+				BaseAsset:  tc.baseAssetDenom,
+				QuoteAsset: tc.quoteAssetDenom,
+				StartTime:  startTime,
+				EndTime:    tc.endTime,
+			})
+
+			if tc.expectErr {
+				suite.Require().Error(err, "expected error - GeometricTwap")
+			} else {
+				suite.Require().NoError(err, "unexpected error - GeometricTwap")
+				suite.Require().Equal(result.GeometricTwap.String(), result.GeometricTwap.String())
+			}
+
+			resultToNow, err := client.GeometricTwapToNow(ctx, queryproto.GeometricTwapToNowRequest{
+				PoolId:     tc.poolId,
+				BaseAsset:  tc.baseAssetDenom,
+				QuoteAsset: tc.quoteAssetDenom,
+				StartTime:  startTime,
+			})
+
+			if tc.expectErr {
+				suite.Require().Error(err, "expected error - GeometricTwapToNow")
+			} else {
+				suite.Require().NoError(err, "unexpected error - GeometricTwapToNow")
+				suite.Require().Equal(result.GeometricTwap.String(), resultToNow.GeometricTwap.String())
 			}
 		})
 	}
