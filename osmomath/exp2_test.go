@@ -155,7 +155,7 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 	for name, tc := range tests {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			osmoassert.ConditionalPanic(t, tc.expectPanic, func() {
+			osmomath.ConditionalPanic(t, tc.expectPanic, func() {
 				// System under test.
 				result := osmomath.Exp2ChebyshevRationalApprox(tc.exponent)
 
@@ -289,7 +289,7 @@ func TestExp2(t *testing.T) {
 	for name, tc := range tests {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			osmoassert.ConditionalPanic(t, tc.expectPanic, func() {
+			osmomath.ConditionalPanic(t, tc.expectPanic, func() {
 
 				// System under test.
 				result := osmomath.Exp2(tc.exponent)
