@@ -52,7 +52,6 @@ jobs:
         if: env.MAJOR == 1
         uses: peter-evans/create-pull-request@v4
         with:
-          token: ${{ secrets.COMMIT_TO_BRANCH }}
           title: "auto: code-gen upgrade handler ${{ env.input }}"
           body: |
             Update report
