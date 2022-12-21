@@ -70,6 +70,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### API breaks
 
 * [#3763](https://github.com/osmosis-labs/osmosis/pull/3763) Move binary search and error tolerance code from `osmoutils` into `osmomath`
+* [#3817](https://github.com/osmosis-labs/osmosis/pull/3817) Move osmoassert from `app/apptesting/osmoassert` to `osmoutils/osmoassert`.
+
 
 ### Bug fixes
 
