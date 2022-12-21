@@ -574,13 +574,8 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 				pool := createTestPool(suite.T(), swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn)
 				suite.Require().NotNil(pool)
 
-<<<<<<< HEAD
 				errTolerance := osmomath.ErrTolerance{
-					AdditiveTolerance: sdk.OneInt(), MultiplicativeTolerance: sdk.Dec{}}
-=======
-				errTolerance := osmoutils.ErrTolerance{
 					AdditiveTolerance: sdk.OneDec(), MultiplicativeTolerance: sdk.Dec{}}
->>>>>>> 5ab7ebf6 (refactor(osmoutils): use Dec for additive tolerance instead of Int (#3711))
 				sut := func() {
 					test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, poolAssetIn.Token.Denom, poolAssetOut.Token.Denom, tc.initialCalcOut, swapFeeDec, errTolerance)
 				}

@@ -115,11 +115,7 @@ func (e ErrTolerance) CompareBigDec(expected BigDec, actual BigDec) int {
 			}
 		}
 
-<<<<<<< HEAD:osmomath/binary_search.go
-		if diff.GT(BigDecFromSDKDec(e.AdditiveTolerance.ToDec())) {
-=======
-		if diff.GT(osmomath.BigDecFromSDKDec(e.AdditiveTolerance)) {
->>>>>>> 5ab7ebf6 (refactor(osmoutils): use Dec for additive tolerance instead of Int (#3711)):osmoutils/binary_search.go
+		if diff.GT(BigDecFromSDKDec(e.AdditiveTolerance)) {
 			return comparisonSign
 		}
 	}
