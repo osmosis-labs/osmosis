@@ -18,6 +18,7 @@ import (
 )
 
 func TestGammInitGenesis(t *testing.T) {
+	t.Parallel()
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -67,6 +68,7 @@ func TestGammInitGenesis(t *testing.T) {
 }
 
 func TestGammExportGenesis(t *testing.T) {
+	t.Parallel()
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -115,6 +117,7 @@ func TestGammExportGenesis(t *testing.T) {
 }
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
+	t.Parallel()
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 

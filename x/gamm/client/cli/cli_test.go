@@ -27,7 +27,7 @@ type IntegrationTestSuite struct {
 	network *network.Network
 }
 
-func TestNewCreatePoolCmd(t *testing.T) {
+func TestNewCreatePoolCmd(t *testing.T) { //nolint:paralleltest
 	testCases := map[string]struct {
 		json      string
 		expectErr bool
@@ -160,7 +160,7 @@ func TestNewCreatePoolCmd(t *testing.T) {
 		},
 	}
 
-	for name, tc := range testCases {
+	for name, tc := range testCases { //nolint:paralleltest
 		tc := tc
 		t.Run(name, func(tt *testing.T) {
 			desc := cli.NewCreatePoolCmd()

@@ -17,10 +17,12 @@ type BalancerTestSuite struct {
 }
 
 func TestBalancerTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(BalancerTestSuite))
 }
 
 func TestBalancerPoolParams(t *testing.T) {
+	t.Parallel()
 	// Tests that creating a pool with the given pair of swapfee and exit fee
 	// errors or succeeds as intended. Furthermore, it checks that
 	// NewPool panics in the error case.

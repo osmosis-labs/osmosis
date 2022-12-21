@@ -35,6 +35,7 @@ var (
 // TestUpdateIntermediaryPoolAssetsLiquidity tests if `updateIntermediaryPoolAssetsLiquidity` returns poolAssetsByDenom map
 // with the updated liquidity given by the parameter
 func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
+	t.Parallel()
 	const (
 		uosmoValueOriginal = 1_000_000_000_000
 		atomValueOriginal  = 123
@@ -107,7 +108,9 @@ func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			expectedPoolAssetsByDenom := map[string]balancer.PoolAsset{}
 			for denom, asset := range tc.poolAssets {
 				expectedValue := asset
@@ -126,15 +129,16 @@ func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
 				require.Equal(t, tc.err, err)
 				require.Equal(t, expectedPoolAssetsByDenom, tc.poolAssets)
 			}
-			return
 		})
 	}
 }
 
 func TestCalcSingleAssetJoin(t *testing.T) {
+	t.Parallel()
 	for _, tc := range calcSingleAssetJoinTestCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			pool := createTestPool(t, tc.swapFee, sdk.MustNewDecFromStr("0"), tc.poolAssets...)
 
 			tokenIn := tc.tokensIn[0]
@@ -175,6 +179,7 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 }
 
 func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name           string
 		swapFee        sdk.Dec
@@ -342,6 +347,7 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
 
 			poolAssetsByDenom, err := balancer.GetPoolAssetsByDenom(pool.GetAllPoolAssets())
@@ -384,6 +390,7 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 // TestGetPoolAssetsByDenom tests if `GetPoolAssetsByDenom` successfully creates a map of denom to pool asset
 // given pool asset as parameter
 func TestGetPoolAssetsByDenom(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name                      string
 		poolAssets                []balancer.PoolAsset
@@ -451,7 +458,9 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			actualPoolAssetsByDenom, err := balancer.GetPoolAssetsByDenom(tc.poolAssets)
 
 			require.Equal(t, tc.err, err)
@@ -581,9 +590,10 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 }
 
 func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
+	t.Parallel()
 	type testcase struct {
 		initialPoolOut   int64
-		initialPoolIn    int64
+		initialPoolIn    int64 //nolint:unused
 		initialWeightOut int64
 		tokenOut         int64
 		initialWeightIn  int64
@@ -654,8 +664,11 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
+		tc := tc
 		for _, swapFee := range swapFeeCases {
+			swapFee := swapFee
 			t.Run(getTestCaseName(tc, swapFee), func(t *testing.T) {
+				t.Parallel()
 				swapFeeDec, err := sdk.NewDecFromStr(swapFee)
 				require.NoError(t, err)
 
@@ -700,6 +713,7 @@ func testTotalWeight(t *testing.T, expected sdk.Int, pool balancer.Pool) {
 
 // TODO: Refactor this into multiple tests
 func TestBalancerPoolUpdatePoolAssetBalance(t *testing.T) {
+	t.Parallel()
 	var poolId uint64 = 10
 
 	initialAssets := []balancer.PoolAsset{
@@ -761,6 +775,7 @@ func TestBalancerPoolUpdatePoolAssetBalance(t *testing.T) {
 }
 
 func TestBalancerPoolAssetsWeightAndTokenBalance(t *testing.T) {
+	t.Parallel()
 	// TODO: Add more cases
 	// asset names should be i ascending order, starting from test1
 	tests := []struct {
@@ -884,6 +899,7 @@ func TestBalancerPoolAssetsWeightAndTokenBalance(t *testing.T) {
 
 // TODO: Figure out what parts of this test, if any, make sense.
 func TestGetBalancerPoolAssets(t *testing.T) {
+	t.Parallel()
 	// Adds []PoolAssets, one after another
 	// if the addition doesn't error, adds the weight of the pool assets to a running total,
 	// and ensures the pool's total weight is equal to the expected.
@@ -935,6 +951,7 @@ func TestGetBalancerPoolAssets(t *testing.T) {
 }
 
 func TestLBPParamsEmptyStartTime(t *testing.T) {
+	t.Parallel()
 	// Test that when the start time is empty, the pool
 	// sets its start time to be the first start time it is called on
 	defaultDuration := 100 * time.Second
@@ -978,6 +995,7 @@ func TestLBPParamsEmptyStartTime(t *testing.T) {
 }
 
 func TestBalancerPoolPokeTokenWeights(t *testing.T) {
+	t.Parallel()
 	// Set default date
 	defaultStartTime := time.Unix(1618703511, 0)
 	defaultStartTimeUnix := defaultStartTime.Unix()
@@ -1191,6 +1209,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 // This test (currently trivially) checks to make sure that `IsActive` returns true for balancer pools.
 // This is mainly to make sure that if IsActive is ever used as an emergency switch, it is not accidentally left off for any (or all) pools.
 func TestIsActive(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		expectedIsActive bool
 	}{
@@ -1200,7 +1219,10 @@ func TestIsActive(t *testing.T) {
 	}
 
 	for name, tc := range tests {
+		tc := tc
+		name := name
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			ctx := sdk.Context{}
 
 			// Initialize a pool
@@ -1214,6 +1236,7 @@ func TestIsActive(t *testing.T) {
 }
 
 func TestCalcJoinPoolNoSwapShares(t *testing.T) {
+	t.Parallel()
 	balancerPoolAssets := []balancer.PoolAsset{
 		{Token: sdk.NewInt64Coin("foo", 100), Weight: sdk.NewIntFromUint64(5)},
 		{Token: sdk.NewInt64Coin("bar", 100), Weight: sdk.NewIntFromUint64(5)},
@@ -1334,7 +1357,9 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 	}
 
 	for name, test := range tests {
+		test := test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			ctx := sdk.Context{}
 			balancerPool := balancer.Pool{
 				Address:            types.NewPoolAddress(defaultPoolId).String(),

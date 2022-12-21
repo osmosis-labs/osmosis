@@ -14,6 +14,7 @@ import (
 )
 
 func TestMsgCreateBalancerPool(t *testing.T) {
+	t.Parallel()
 	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
