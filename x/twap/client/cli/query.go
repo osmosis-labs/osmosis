@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	flagIsArithmetic = "is-arithmetic"
+	flagIsGeometric = "geometric"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
@@ -34,10 +34,11 @@ func GetQueryTwapCommand() *cobra.Command {
 		Use:   "twap [poolid] [base denom] [start time] [end time]",
 		Short: "Query twap",
 		Long: osmocli.FormatLongDescDirect(`Query twap for pool. Start time must be unix time. End time can be unix time or duration.
+		Provide 'geometric' flag to specify whether to use arithmetic or geometric TWAP. Arithmetic (false) by default.
 
 Example:
-{{.CommandPrefix}} twap geometric 1 uosmo 1667088000 24h
-{{.CommandPrefix}} twap arithmetic 1 uosmo 1667088000 1667174400
+{{.CommandPrefix}} twap 1 uosmo 1667088000 24h
+{{.CommandPrefix}} twap 1 uosmo 1667088000 1667174400 --geometric
 `, types.ModuleName),
 		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -46,7 +47,7 @@ Example:
 			if err != nil {
 				return err
 			}
-			isArithmetic, err := cmd.Flags().GetBool(flagIsArithmetic)
+			isGeometric, err := cmd.Flags().GetBool(flagIsGeometric)
 			if err != nil {
 				return err
 			}
@@ -75,8 +76,8 @@ Example:
 			}
 
 			var res proto.Message
-			if isArithmetic {
-				res, err = queryClient.ArithmeticTwap(cmd.Context(), &queryproto.ArithmeticTwapRequest{
+			if isGeometric {
+				res, err = queryClient.GeometricTwap(cmd.Context(), &queryproto.GeometricTwapRequest{
 					PoolId:     poolId,
 					BaseAsset:  baseDenom,
 					QuoteAsset: quoteDenom,
@@ -84,7 +85,7 @@ Example:
 					EndTime:    &endTime,
 				})
 			} else {
-				res, err = queryClient.GeometricTwap(cmd.Context(), &queryproto.GeometricTwapRequest{
+				res, err = queryClient.ArithmeticTwap(cmd.Context(), &queryproto.ArithmeticTwapRequest{
 					PoolId:     poolId,
 					BaseAsset:  baseDenom,
 					QuoteAsset: quoteDenom,
@@ -102,7 +103,7 @@ Example:
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	cmd.Flags().Bool(flagIsArithmetic, true, "Type of twap to query. Arithmetic TWAP if true. Geometric TWAP if false.")
+	cmd.Flags().Bool(flagIsGeometric, false, "Type of twap to query. Geometric TWAP if true. Arithmetic TWAP if false.")
 
 	return cmd
 }
