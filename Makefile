@@ -241,20 +241,21 @@ run-querygen:
 PACKAGES_UNIT=$(shell go list ./... | grep -E -v 'tests/simulator|e2e')
 PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
 PACKAGES_SIM=$(shell go list ./... | grep '/tests/simulator')
+NPROC=$(shell nproc)
 TEST_PACKAGES=./...
 
 test: test-unit test-build
 
-test-all: check test-race test-cover
+test-all: test-race test-cover
 
 test-unit:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock norace' $(PACKAGES_UNIT)
+	@VERSION=$(VERSION) go test -mod=readonly -parallel $(NPROC) -tags='ledger test_ledger_mock norace' $(PACKAGES_UNIT)
 
 test-race:
-	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock' $(PACKAGES_UNIT)
+	@VERSION=$(VERSION) go test -mod=readonly -parallel $(NPROC) -race -tags='ledger test_ledger_mock' $(PACKAGES_UNIT)
 
 test-cover:
-	@VERSION=$(VERSION) go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic $(PACKAGES_UNIT)
+	@VERSION=$(VERSION) go test -mod=readonly -parallel $(NPROC) -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic $(PACKAGES_UNIT)
 
 test-sim-suite:
 	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_SIM)
