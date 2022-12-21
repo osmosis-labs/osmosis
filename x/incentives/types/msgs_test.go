@@ -19,6 +19,7 @@ import (
 
 // TestMsgCreatePool tests if valid/invalid create pool messages are properly validated/invalidated
 func TestMsgCreatePool(t *testing.T) {
+	t.Parallel()
 	// generate a private/public key pair and get the respective address
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address())
@@ -152,6 +153,7 @@ func TestMsgCreatePool(t *testing.T) {
 
 // TestMsgAddToGauge tests if valid/invalid add to gauge messages are properly validated/invalidated
 func TestMsgAddToGauge(t *testing.T) {
+	t.Parallel()
 	// generate a private/public key pair and get the respective address
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address())
@@ -218,6 +220,7 @@ func TestMsgAddToGauge(t *testing.T) {
 
 // // Test authz serialize and de-serializes for incentives msg.
 func TestAuthzMsg(t *testing.T) {
+	t.Parallel()
 	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
@@ -258,7 +261,9 @@ func TestAuthzMsg(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			apptesting.TestMessageAuthzSerialization(t, tc.incentivesMsg)
 		})
 	}

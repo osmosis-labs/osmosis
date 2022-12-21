@@ -49,6 +49,7 @@ var (
 )
 
 func TestInitGenesis(t *testing.T) {
+	t.Parallel()
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
@@ -72,6 +73,7 @@ func TestInitGenesis(t *testing.T) {
 }
 
 func TestExportGenesis(t *testing.T) {
+	t.Parallel()
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
@@ -121,6 +123,7 @@ func TestExportGenesis(t *testing.T) {
 }
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
+	t.Parallel()
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))

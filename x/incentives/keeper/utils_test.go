@@ -13,6 +13,7 @@ import (
 )
 
 func TestCombineKeys(t *testing.T) {
+	t.Parallel()
 	// create three keys, each different byte arrays
 	key1 := []byte{0x11}
 	key2 := []byte{0x12}
@@ -33,6 +34,7 @@ func TestCombineKeys(t *testing.T) {
 }
 
 func TestFindIndex(t *testing.T) {
+	t.Parallel()
 	// create an array of 5 IDs
 	IDs := []uint64{1, 2, 3, 4, 5}
 
@@ -45,6 +47,7 @@ func TestFindIndex(t *testing.T) {
 }
 
 func TestRemoveValue(t *testing.T) {
+	t.Parallel()
 	// create an array of 5 IDs
 	IDs := []uint64{1, 2, 3, 4, 5}
 
@@ -65,6 +68,7 @@ func TestRemoveValue(t *testing.T) {
 }
 
 func TestGetTimeKey(t *testing.T) {
+	t.Parallel()
 	now := time.Now()
 	timeKey := getTimeKey(now)
 	require.True(t, bytes.HasPrefix(timeKey, types.KeyPrefixTimestamp))

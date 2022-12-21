@@ -21,6 +21,7 @@ import (
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.
 // Abnormal scenarios are not tested here.
 func TestRandomizedGenState(t *testing.T) {
+	t.Parallel()
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
@@ -95,6 +96,7 @@ func TestRandomizedGenState(t *testing.T) {
 
 // TestRandomizedGenState_Invalid tests abnormal scenarios of applying RandomizedGenState.
 func TestRandomizedGenState_Invalid(t *testing.T) {
+	t.Parallel()
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 

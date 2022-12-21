@@ -13,6 +13,7 @@ import (
 var testAddresses = osmoutils.CreateRandomAccounts(3)
 
 func TestGetCmdGauges(t *testing.T) {
+	t.Parallel()
 	desc, _ := GetCmdGauges()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.GaugesRequest]{
 		"basic test": {
@@ -26,6 +27,7 @@ func TestGetCmdGauges(t *testing.T) {
 }
 
 func TestGetCmdToDistributeCoins(t *testing.T) {
+	t.Parallel()
 	desc, _ := GetCmdToDistributeCoins()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.ModuleToDistributeCoinsRequest]{
 		"basic test": {
@@ -36,6 +38,7 @@ func TestGetCmdToDistributeCoins(t *testing.T) {
 }
 
 func TestGetCmdGaugeByID(t *testing.T) {
+	t.Parallel()
 	desc, _ := GetCmdGaugeByID()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.GaugeByIDRequest]{
 		"basic test": {
@@ -46,6 +49,7 @@ func TestGetCmdGaugeByID(t *testing.T) {
 }
 
 func TestGetCmdActiveGauges(t *testing.T) {
+	t.Parallel()
 	desc, _ := GetCmdActiveGauges()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.ActiveGaugesRequest]{
 		"basic test": {
@@ -58,6 +62,7 @@ func TestGetCmdActiveGauges(t *testing.T) {
 }
 
 func TestGetCmdActiveGaugesPerDenom(t *testing.T) {
+	t.Parallel()
 	desc, _ := GetCmdActiveGaugesPerDenom()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.ActiveGaugesPerDenomRequest]{
 		"basic test": {
@@ -71,6 +76,7 @@ func TestGetCmdActiveGaugesPerDenom(t *testing.T) {
 }
 
 func TestGetCmdUpcomingGauges(t *testing.T) {
+	t.Parallel()
 	desc, _ := GetCmdUpcomingGauges()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.UpcomingGaugesRequest]{
 		"basic test": {
@@ -83,6 +89,7 @@ func TestGetCmdUpcomingGauges(t *testing.T) {
 }
 
 func TestGetCmdUpcomingGaugesPerDenom(t *testing.T) {
+	t.Parallel()
 	desc, _ := GetCmdUpcomingGaugesPerDenom()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.UpcomingGaugesPerDenomRequest]{
 		"basic test": {

@@ -5,13 +5,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestCombineKeys(t *testing.T) {
+	t.Parallel()
 	key1 := []byte{0x11}
 	key2 := []byte{0x12}
 	key3 := []byte{0x13}
@@ -25,6 +27,7 @@ func TestCombineKeys(t *testing.T) {
 }
 
 func TestGetTimeKey(t *testing.T) {
+	t.Parallel()
 	now := time.Now()
 	timeKey := getTimeKey(now)
 	require.True(t, bytes.HasPrefix(timeKey, types.KeyPrefixTimestamp))
@@ -32,6 +35,7 @@ func TestGetTimeKey(t *testing.T) {
 }
 
 func TestGetDurationKey(t *testing.T) {
+	t.Parallel()
 	durationKey := getDurationKey(time.Second)
 	require.True(t, bytes.HasPrefix(durationKey, types.KeyPrefixDuration))
 	require.True(t, bytes.HasSuffix(durationKey, sdk.Uint64ToBigEndian(uint64(time.Second))))
@@ -41,6 +45,7 @@ func TestGetDurationKey(t *testing.T) {
 }
 
 func TestLockRefKeys(t *testing.T) {
+	t.Parallel()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	// empty address and 1 coin
 	lock1 := types.NewPeriodLock(1, sdk.AccAddress{}, time.Second, time.Now(), sdk.Coins{sdk.NewInt64Coin("stake", 10)})

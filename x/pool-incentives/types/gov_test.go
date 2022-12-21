@@ -4,13 +4,15 @@ import (
 	"testing"
 
 	proto "github.com/gogo/protobuf/proto"
-	"github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestUpdatePoolIncentivesProposalMarshalUnmarshal(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		proposal *types.UpdatePoolIncentivesProposal
 	}{

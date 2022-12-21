@@ -12,6 +12,7 @@ import (
 // TestGetInflationProportion sanity checks that inflation
 // proportion equals to 1 - developer vesting proportion.
 func TestGetInflationProportion(t *testing.T) {
+	t.Parallel()
 	developerVestingProportion := sdk.NewDecWithPrec(4, 1)
 	expectedInflationProportion := sdk.OneDec().Sub(developerVestingProportion)
 
@@ -29,6 +30,7 @@ func TestGetInflationProportion(t *testing.T) {
 // vesting proportion equals to the value set by
 // parameter for dev rewards.
 func TestGetDeveloperVestingProportion(t *testing.T) {
+	t.Parallel()
 	expectedDevVestingProportion := sdk.NewDecWithPrec(4, 1)
 
 	params := types.Params{

@@ -17,6 +17,7 @@ import (
 )
 
 func TestMsgLockTokens(t *testing.T) {
+	t.Parallel()
 	appParams.SetAddressPrefixes()
 	addr1, invalidAddr := apptesting.GenerateTestAddrs()
 
@@ -69,7 +70,9 @@ func TestMsgLockTokens(t *testing.T) {
 	}
 
 	for _, test := range tests {
+		test := test
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			if test.expectPass {
 				require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
 				require.Equal(t, test.msg.Route(), types.RouterKey)
@@ -85,6 +88,7 @@ func TestMsgLockTokens(t *testing.T) {
 }
 
 func TestMsgBeginUnlockingAll(t *testing.T) {
+	t.Parallel()
 	appParams.SetAddressPrefixes()
 	addr1, invalidAddr := apptesting.GenerateTestAddrs()
 
@@ -109,7 +113,9 @@ func TestMsgBeginUnlockingAll(t *testing.T) {
 	}
 
 	for _, test := range tests {
+		test := test
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			if test.expectPass {
 				require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
 				require.Equal(t, test.msg.Route(), types.RouterKey)
@@ -125,6 +131,7 @@ func TestMsgBeginUnlockingAll(t *testing.T) {
 }
 
 func TestMsgBeginUnlocking(t *testing.T) {
+	t.Parallel()
 	appParams.SetAddressPrefixes()
 	addr1, invalidAddr := apptesting.GenerateTestAddrs()
 
@@ -187,7 +194,9 @@ func TestMsgBeginUnlocking(t *testing.T) {
 	}
 
 	for _, test := range tests {
+		test := test
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			if test.expectPass {
 				require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
 				require.Equal(t, test.msg.Route(), types.RouterKey)
@@ -203,6 +212,7 @@ func TestMsgBeginUnlocking(t *testing.T) {
 }
 
 func TestMsgExtendLockup(t *testing.T) {
+	t.Parallel()
 	appParams.SetAddressPrefixes()
 	addr1, invalidAddr := apptesting.GenerateTestAddrs()
 
@@ -247,7 +257,9 @@ func TestMsgExtendLockup(t *testing.T) {
 	}
 
 	for _, test := range tests {
+		test := test
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			if test.expectPass {
 				require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
 				require.Equal(t, test.msg.Route(), types.RouterKey)
@@ -264,6 +276,7 @@ func TestMsgExtendLockup(t *testing.T) {
 
 // // Test authz serialize and de-serializes for lockup msg.
 func TestAuthzMsg(t *testing.T) {
+	t.Parallel()
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	coin := sdk.NewCoin("denom", sdk.NewInt(1))
@@ -301,7 +314,9 @@ func TestAuthzMsg(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			apptesting.TestMessageAuthzSerialization(t, tc.msg)
 		})
 	}

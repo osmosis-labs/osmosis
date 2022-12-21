@@ -14,6 +14,7 @@ import (
 var testAddresses = osmoutils.CreateRandomAccounts(3)
 
 func TestLockTokensCmd(t *testing.T) {
+	t.Parallel()
 	desc, _ := NewLockTokensCmd()
 	tcs := map[string]osmocli.TxCliTestCase[*types.MsgLockTokens]{
 		"lock 201stake tokens for 1 day": {
@@ -29,6 +30,7 @@ func TestLockTokensCmd(t *testing.T) {
 }
 
 func TestBeginUnlockingAllCmd(t *testing.T) {
+	t.Parallel()
 	desc, _ := NewBeginUnlockingAllCmd()
 	tcs := map[string]osmocli.TxCliTestCase[*types.MsgBeginUnlockingAll]{
 		"basic test": {
@@ -42,6 +44,7 @@ func TestBeginUnlockingAllCmd(t *testing.T) {
 }
 
 func TestBeginUnlockingByIDCmd(t *testing.T) {
+	t.Parallel()
 	desc, _ := NewBeginUnlockByIDCmd()
 	tcs := map[string]osmocli.TxCliTestCase[*types.MsgBeginUnlocking]{
 		"basic test no coins": {
@@ -65,6 +68,7 @@ func TestBeginUnlockingByIDCmd(t *testing.T) {
 }
 
 func TestModuleBalanceCmd(t *testing.T) {
+	t.Parallel()
 	desc, _ := GetCmdModuleBalance()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.ModuleBalanceRequest]{
 		"basic test": {
@@ -76,6 +80,7 @@ func TestModuleBalanceCmd(t *testing.T) {
 }
 
 func TestAccountUnlockingCoinsCmd(t *testing.T) {
+	t.Parallel()
 	desc, _ := GetCmdAccountUnlockingCoins()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.AccountUnlockingCoinsRequest]{
 		"basic test": {
@@ -89,6 +94,7 @@ func TestAccountUnlockingCoinsCmd(t *testing.T) {
 }
 
 func TestCmdAccountLockedPastTime(t *testing.T) {
+	t.Parallel()
 	desc, _ := GetCmdAccountLockedPastTime()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.AccountLockedPastTimeRequest]{
 		"basic test": {
@@ -103,6 +109,7 @@ func TestCmdAccountLockedPastTime(t *testing.T) {
 }
 
 func TestCmdAccountLockedPastTimeNotUnlockingOnly(t *testing.T) {
+	t.Parallel()
 	desc, _ := GetCmdAccountLockedPastTimeNotUnlockingOnly()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.AccountLockedPastTimeNotUnlockingOnlyRequest]{
 		"basic test": {
@@ -117,6 +124,7 @@ func TestCmdAccountLockedPastTimeNotUnlockingOnly(t *testing.T) {
 }
 
 func TestCmdTotalLockedByDenom(t *testing.T) {
+	t.Parallel()
 	desc, _ := GetCmdTotalLockedByDenom()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.LockedDenomRequest]{
 		"basic test": {
