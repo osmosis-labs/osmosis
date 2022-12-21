@@ -7,6 +7,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v13/x/twap"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
@@ -20,6 +21,13 @@ type computeTwapTestCase struct {
 	expErr         bool
 	expPanic       bool
 }
+
+// geometricTwapMathBase is the base used for geometric twap calculation
+// in logarithm and power math functions.
+// See twapLog and computeGeometricTwap functions for more details.
+var (
+	geometricTwapMathBase = osmomath.NewBigDec(2)
+)
 
 // TestComputeArithmeticTwap tests computeTwap on various inputs.
 // The test vectors are structured by setting up different start and records,
@@ -299,4 +307,22 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap_ThreeAsset() {
 			}
 		})
 	}
+}
+
+// TestTwapPow_MaxSpotPrice_NoOverflow tests that no overflow occurs at log_2{max spot price values}.
+// and that the epsilon is within the tolerated multiplicative error.
+func (s *TestSuite) TestTwapLogPow_MaxSpotPrice_NoOverflow() {
+	errTolerance := osmomath.ErrTolerance{
+		MultiplicativeTolerance: sdk.OneDec().Quo(sdk.NewDec(10).Power(18)),
+		RoundingDir:             osmomath.RoundDown,
+	}
+
+	oneYear := OneSec.MulInt64(60 * 60 * 24 * 365)
+
+	oneYearTimesMaxSpotPrice := oneYear.Mul(gammtypes.MaxSpotPrice)
+
+	exponentValue := twap.TwapLog(oneYearTimesMaxSpotPrice)
+	finalValue := twap.TwapPow(exponentValue)
+
+	s.Equal(0, errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(oneYearTimesMaxSpotPrice), osmomath.BigDecFromSDKDec(finalValue)))
 }
