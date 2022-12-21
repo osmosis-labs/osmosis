@@ -151,7 +151,7 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 	for _, tc := range testCases {
 		tc := tc
 
-		suite.Run(tc.name, func() {
+		suite.Run(tc.name+" arithmetic", func() {
 			client := client.Querier{K: *suite.App.TwapKeeper}
 
 			startTime := validStartTime
@@ -186,6 +186,44 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 			} else {
 				suite.Require().NoError(err, "unexpected error - ArithmeticTwapToNow")
 				suite.Require().Equal(tc.result, resultToNow.ArithmeticTwap.String())
+			}
+		})
+
+		suite.Run(tc.name+" geometric", func() {
+			client := client.Querier{K: *suite.App.TwapKeeper}
+
+			startTime := validStartTime
+			if tc.startTimeOverwrite != nil {
+				startTime = *tc.startTimeOverwrite
+			}
+
+			result, err := client.GeometricTwap(ctx, queryproto.GeometricTwapRequest{
+				PoolId:     tc.poolId,
+				BaseAsset:  tc.baseAssetDenom,
+				QuoteAsset: tc.quoteAssetDenom,
+				StartTime:  startTime,
+				EndTime:    tc.endTime,
+			})
+
+			if tc.expectErr {
+				suite.Require().Error(err, "expected error - GeometricTwap")
+			} else {
+				suite.Require().NoError(err, "unexpected error - GeometricTwap")
+				suite.Require().Equal(tc.result, result.GeometricTwap.String())
+			}
+
+			resultToNow, err := client.GeometricTwapToNow(ctx, queryproto.GeometricTwapToNowRequest{
+				PoolId:     tc.poolId,
+				BaseAsset:  tc.baseAssetDenom,
+				QuoteAsset: tc.quoteAssetDenom,
+				StartTime:  startTime,
+			})
+
+			if tc.expectErr {
+				suite.Require().Error(err, "expected error - GeometricTwapToNow")
+			} else {
+				suite.Require().NoError(err, "unexpected error - GeometricTwapToNow")
+				suite.Require().Equal(tc.result, resultToNow.GeometricTwap.String())
 			}
 		})
 	}
