@@ -1327,12 +1327,13 @@ func (s *TestSuite) TestTwapLog() {
 	var expectedValue = osmomath.MustNewDecFromStr("99.525973560175362367")
 
 	result := twap.TwapLog(priceValue.SDKDec())
-	result_by_customBaseLog := priceValue.CustomBaseLog(osmomath.BigDecFromSDKDec(twap.GeometricTwapMathBase))
+	result_by_customBaseLog := priceValue.CustomBaseLog(geometricTwapMathBase)
 	s.Require().True(expectedValue.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
 	s.Require().True(result_by_customBaseLog.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
 }
 
-func (s *TestSuite) TestTwapPow() {
+// TestTwapPow_CorrectBase tests that the right base is used for the twap power function.
+func (s *TestSuite) TestTwapPow_CorrectBase() {
 	var expectedErrTolerance = osmomath.MustNewDecFromStr("0.00000100")
 	// "TwapPow(0.5) = 1.41421356"
 	// From: https://www.wolframalpha.com/input?i2d=true&i=power+base+2+exponent+0.5+with+9+digits
@@ -1340,7 +1341,7 @@ func (s *TestSuite) TestTwapPow() {
 	expectedValue := osmomath.MustNewDecFromStr("1.41421356")
 
 	result := twap.TwapPow(exponentValue.SDKDec())
-	result_by_mathPow := math.Pow(twap.GeometricTwapMathBase.MustFloat64(), exponentValue.SDKDec().MustFloat64())
+	result_by_mathPow := math.Pow(geometricTwapMathBase.MustFloat64(), exponentValue.SDKDec().MustFloat64())
 	s.Require().True(expectedValue.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
 	s.Require().True(osmomath.MustNewDecFromStr(fmt.Sprint(result_by_mathPow)).Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
 }
