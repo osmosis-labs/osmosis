@@ -265,5 +265,9 @@ func twapLog(price sdk.Dec) sdk.Dec {
 
 // twapPow exponentiates the geometricTwapMathBase to the given exponent.
 func twapPow(exponent sdk.Dec) sdk.Dec {
+	exp2 := osmomath.Exp2(osmomath.BigDecFromSDKDec(exponent.Abs()))
+	if exponent.IsNegative() {
+		return osmomath.OneDec().Quo(exp2).SDKDec()
+	}
 	return osmomath.Exp2(osmomath.BigDecFromSDKDec(exponent)).SDKDec()
 }
