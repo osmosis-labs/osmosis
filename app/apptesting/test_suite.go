@@ -35,6 +35,7 @@ import (
 	lockupkeeper "github.com/osmosis-labs/osmosis/v13/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 type KeeperTestHelper struct {
@@ -323,14 +324,19 @@ func (s *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset sdk.Coin
 	coins := sdk.Coins{sdk.NewInt64Coin(fromAsset.Denom, 100000000000000)}
 	s.FundAcc(acc1, coins)
 
-	_, err := s.App.GAMMKeeper.SwapExactAmountOut(
+	route := []swaproutertypes.SwapAmountOutRoute{
+		{
+			PoolId:       poolId,
+			TokenInDenom: fromAsset.Denom,
+		},
+	}
+	_, err := s.App.SwapRouterKeeper.RouteExactAmountOut(
 		s.Ctx,
 		acc1,
-		poolId,
-		fromAsset.Denom,
+		route,
 		fromAsset.Amount,
-		sdk.NewCoin(toAsset.Denom, toAsset.Amount.Quo(sdk.NewInt(4))),
-	)
+		sdk.NewCoin(toAsset.Denom,
+			toAsset.Amount.Quo(sdk.NewInt(4))))
 	s.Require().NoError(err)
 
 	spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, fromAsset.Denom, toAsset.Denom)

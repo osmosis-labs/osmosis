@@ -21,11 +21,6 @@ func (k Keeper) SetStableSwapScalingFactors(ctx sdk.Context, poolId uint64, scal
 	return k.setStableSwapScalingFactors(ctx, poolId, scalingFactors, sender)
 }
 
-func (k Keeper) GetOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.MultihopRoute) (
-	totalPathSwapFee sdk.Dec, sumOfSwapFees sdk.Dec, err error) {
-	return k.getOsmoRoutedMultihopTotalSwapFee(ctx, route)
-}
-
 func ConvertToCFMMPool(pool swaproutertypes.PoolI) (types.CFMMPoolI, error) {
 	return convertToCFMMPool(pool)
 }
