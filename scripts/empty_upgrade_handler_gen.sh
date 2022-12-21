@@ -93,7 +93,7 @@ NEW_IMPORT="$version_create $module/app/upgrades/$version_create$bracks"
 sed -i "s|.*$PREV_IMPORT.*|\t$PREV_IMPORT\n\t$NEW_IMPORT|" $app_file
 
 # change e2e version in makefile
-sed -i "s/E2E_UPGRADE_VERSION := $bracksv$latest_version$bracks/E2E_UPGRADE_VERSION := $bracks$version_create$bracks/" ./Makefile
+sed -i "s/E2E_UPGRADE_VERSION := ${bracks}v$latest_version$bracks/E2E_UPGRADE_VERSION := ${bracks}$version_create$bracks/" ./Makefile
 
 # bumps up prev e2e version
 e2e_file=./tests/e2e/containers/config.go
