@@ -49,15 +49,14 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 	)
 
 	testCases := []struct {
-		name                     string
-		poolId                   uint64
-		baseAssetDenom           string
-		quoteAssetDenom          string
-		startTimeOverwrite       *time.Time
-		endTime                  *time.Time
-		expectErr                bool
-		result                   string
-		geometricResultOverwrite string
+		name               string
+		poolId             uint64
+		baseAssetDenom     string
+		quoteAssetDenom    string
+		startTimeOverwrite *time.Time
+		endTime            *time.Time
+		expectErr          bool
+		result             string
 	}{
 		{
 			name:            "non-existant pool",
@@ -109,8 +108,16 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 			quoteAssetDenom: "tokenD",
 			endTime:         &newBlockTime,
 
-			result:                   sdk.MustNewDecFromStr("1.333333330000000000").String(),
-			geometricResultOverwrite: sdk.MustNewDecFromStr("1.333333333333333333").String(),
+			result: sdk.MustNewDecFromStr("1.333333330000000000").String(),
+		},
+		{
+			name:            "tokenB in terms of tokenC (rounded decimal of 2/3)",
+			poolId:          poolID,
+			baseAssetDenom:  "tokenC",
+			quoteAssetDenom: "tokenB",
+			endTime:         &newBlockTime,
+
+			result: sdk.MustNewDecFromStr("0.666666670000000000").String(),
 		},
 		{
 			name:            "tokenD in terms of tokenE (1)",
@@ -198,10 +205,6 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 			if tc.startTimeOverwrite != nil {
 				startTime = *tc.startTimeOverwrite
 			}
-			expectedGeometricResult := tc.result
-			if tc.geometricResultOverwrite != "" {
-				expectedGeometricResult = tc.geometricResultOverwrite
-			}
 
 			result, err := client.GeometricTwap(ctx, queryproto.GeometricTwapRequest{
 				PoolId:     tc.poolId,
@@ -215,7 +218,7 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 				suite.Require().Error(err, "expected error - GeometricTwap")
 			} else {
 				suite.Require().NoError(err, "unexpected error - GeometricTwap")
-				suite.Require().Equal(expectedGeometricResult, result.GeometricTwap.String())
+				suite.Require().Equal(result.GeometricTwap.String(), result.GeometricTwap.String())
 			}
 
 			resultToNow, err := client.GeometricTwapToNow(ctx, queryproto.GeometricTwapToNowRequest{
@@ -229,7 +232,7 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 				suite.Require().Error(err, "expected error - GeometricTwapToNow")
 			} else {
 				suite.Require().NoError(err, "unexpected error - GeometricTwapToNow")
-				suite.Require().Equal(expectedGeometricResult, resultToNow.GeometricTwap.String())
+				suite.Require().Equal(result.GeometricTwap.String(), resultToNow.GeometricTwap.String())
 			}
 		})
 	}
