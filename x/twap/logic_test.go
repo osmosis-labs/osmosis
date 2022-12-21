@@ -270,10 +270,20 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 			newTime:   time.Unix(1, 0),
 			expRecord: newExpRecord(oneDec, twoDec, pointFiveDec),
 		},
-		"zero spot price - panic": {
-			record:      withPrice0Set(defaultRecord, sdk.ZeroDec()),
-			newTime:     defaultRecord.Time.Add(time.Second),
-			expectPanic: true,
+		"sp0 - zero spot price - accum0 unchanged, accum1 updated, geom accum unchanged": {
+			record:    withPrice0Set(defaultRecord, sdk.ZeroDec()),
+			newTime:   defaultRecord.Time.Add(time.Second),
+			expRecord: newExpRecord(oneDec, twoDec.Add(sdk.NewDecWithPrec(1, 1).Mul(OneSec)), pointFiveDec),
+		},
+		"sp1 - zero spot price - accum0 updated, accum1 unchanged, geom accum updated correctly": {
+			record:    withPrice1Set(defaultRecord, sdk.ZeroDec()),
+			newTime:   defaultRecord.Time.Add(time.Second),
+			expRecord: newExpRecord(tenSecAccum.Add(oneDec), twoDec, pointFiveDec.Add(geometricTenSecAccum)),
+		},
+		"both sp - zero spot price - accum0 unchange, accum1 unchanged, geom accum unchanged": {
+			record:    withPrice1Set(withPrice0Set(defaultRecord, sdk.ZeroDec()), sdk.ZeroDec()),
+			newTime:   defaultRecord.Time.Add(time.Second),
+			expRecord: newExpRecord(oneDec, twoDec, pointFiveDec),
 		},
 		"spot price of one - geom accumulator 0": {
 			record:    withPrice1Set(withPrice0Set(defaultRecord, sdk.OneDec()), sdk.OneDec()),
@@ -1327,6 +1337,19 @@ func (s *TestSuite) TestTwapLog_CorrectBase() {
 	result := twap.TwapLog(logOf)
 
 	s.Require().Equal(expectedValue, result)
+}
+
+// TestTwapLog_ZeroInput tests that the twapLog is defined as zero at zero input.
+// Contrary to definition of log_{2}{x}, this function returns 0 if given price is zero.
+// If internal x/gamm spot price function returns a spot price error,
+// we set p0 spot price to 0 to allow the arithmetic TWAP to continue to be calculated.
+// As a result, we may encounter a 0 input here. Instead of erroring
+// or panicking, we also return zero to allow the geometric TWAP to continue.
+func (s *TestSuite) TestTwapLog_ZeroInput() {
+	zero := sdk.ZeroDec()
+	result := twap.TwapLog(zero)
+
+	s.Require().Equal(zero, result)
 }
 
 // TestTwapPow_CorrectBase tests that the base of 2 is used for the twap power function.

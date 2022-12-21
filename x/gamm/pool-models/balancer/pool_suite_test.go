@@ -766,6 +766,22 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 			baseDenomWeight:     sdk.NewInt(100),
 			expectError:         true,
 		},
+		{
+			name:                "internal error due to spot precise being too small, resulting in 0 spot price",
+			quoteDenomPoolInput: sdk.NewCoin(baseDenom, sdk.OneInt()),
+			quoteDenomWeight:    sdk.NewInt(100),
+			baseDenomPoolInput:  sdk.NewCoin(quoteDenom, sdk.NewDec(10).PowerMut(19).TruncateInt().Sub(sdk.NewInt(2))),
+			baseDenomWeight:     sdk.NewInt(100),
+			expectError:         true,
+		},
+		{
+			name:                "at min spot price",
+			quoteDenomPoolInput: sdk.NewCoin(baseDenom, sdk.OneInt()),
+			quoteDenomWeight:    sdk.NewInt(100),
+			baseDenomPoolInput:  sdk.NewCoin(quoteDenom, sdk.NewDec(10).PowerMut(18).TruncateInt()),
+			baseDenomWeight:     sdk.NewInt(100),
+			expectedOutput:      sdk.OneDec().Quo(sdk.NewDec(10).PowerMut(18)),
+		},
 	}
 
 	for _, tc := range tests {

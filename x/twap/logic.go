@@ -259,7 +259,16 @@ func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quote
 }
 
 // twapLog returns the logarithm of the given spot price, base 2.
+// Contrary to definition of log_{2}{x}, this function returns 0 if given price is zero.
 func twapLog(price sdk.Dec) sdk.Dec {
+	// N.B.: If internal x/gamm spot price function returns a spot price error,
+	// we set it to 0 to allow the arithmetic TWAP to continue to be calculated.
+	// As a result, we may encounter a 0 input here. Instead of erroring
+	// or panicking, we also return zero to allow the geometric TWAP to continue
+	if price.IsZero() {
+		return sdk.ZeroDec()
+	}
+
 	return osmomath.BigDecFromSDKDec(price).LogBase2().SDKDec()
 }
 

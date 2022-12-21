@@ -321,3 +321,21 @@ func (s *TestSuite) TestTwapLogPow_MaxSpotPrice_NoOverflow() {
 
 	s.Require().Equal(0, errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(oneHundredYearsTimesMaxSpotPrice), osmomath.BigDecFromSDKDec(finalValue)))
 }
+
+// TestTwapPow_MaxSpotPrice_NoOverflow tests that no overflow occurs at log_2{max spot price values}.
+// and that the epsilon is within the tolerated multiplicative error.
+func (s *TestSuite) TestTwapLogPow_MaxSpotPrice_NoUnderflow() {
+	errTolerance := osmomath.ErrTolerance{
+		MultiplicativeTolerance: sdk.OneDec().Quo(sdk.NewDec(10).Power(18)),
+		RoundingDir:             osmomath.RoundDown,
+	}
+
+	// minSpotPrice = oneDec.Quo(sdk.NewDec(10))
+
+	oneHundredYearsTimesMaxSpotPrice := oneHundredYears.Mul(gammtypes.MaxSpotPrice)
+
+	exponentValue := twap.TwapLog(oneHundredYearsTimesMaxSpotPrice)
+	finalValue := twap.TwapPow(exponentValue)
+
+	s.Require().Equal(0, errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(oneHundredYearsTimesMaxSpotPrice), osmomath.BigDecFromSDKDec(finalValue)))
+}
