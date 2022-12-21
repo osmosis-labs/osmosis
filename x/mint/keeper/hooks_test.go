@@ -7,7 +7,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	osmoapp "github.com/osmosis-labs/osmosis/v13/app"
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/x/mint/keeper"
 	"github.com/osmosis-labs/osmosis/v13/x/mint/types"
 

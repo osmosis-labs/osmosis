@@ -16,9 +16,9 @@ import (
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/osmoutils/noapptest"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmoassert"
 	twaptypes "github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
