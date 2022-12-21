@@ -1,13 +1,13 @@
 package twapcli
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
@@ -16,29 +16,25 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
-const (
-	flagIsGeometric = "geometric"
-)
-
 // GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
-	cmd.AddCommand(GetQueryTwapCommand())
+	cmd.AddCommand(GetQueryArithmeticCommand())
+	cmd.AddCommand(GetQueryGeometricCommand())
 
 	return cmd
 }
 
-// GetQueryTwapCommand returns multiplier of an asset by denom.
-func GetQueryTwapCommand() *cobra.Command {
+// GetQueryArithmeticCommand returns an arithmetic twap query command.
+func GetQueryArithmeticCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "twap [poolid] [base denom] [start time] [end time]",
-		Short: "Query twap",
-		Long: osmocli.FormatLongDescDirect(`Query twap for pool. Start time must be unix time. End time can be unix time or duration.
-		Provide 'geometric' flag to specify whether to use arithmetic or geometric TWAP. Arithmetic (false) by default.
+		Use:   "arithmetic [poolid] [base denom] [start time] [end time]",
+		Short: "Query arithmetic twap",
+		Long: osmocli.FormatLongDescDirect(`Query arithmetic twap for pool. Start time must be unix time. End time can be unix time or duration.
 
 Example:
-{{.CommandPrefix}} twap 1 uosmo 1667088000 24h
-{{.CommandPrefix}} twap 1 uosmo 1667088000 1667174400 --geometric
+{{.CommandPrefix}} arithmetic 1 uosmo 1667088000 24h
+{{.CommandPrefix}} arithmetic 1 uosmo 1667088000 1667174400
 `, types.ModuleName),
 		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -47,52 +43,21 @@ Example:
 			if err != nil {
 				return err
 			}
-			isGeometric, err := cmd.Flags().GetBool(flagIsGeometric)
-			if err != nil {
-				return err
-			}
 
 			clientCtx, err := client.GetClientQueryContext(cmd)
+			quoteDenom, err := getQuoteDenomFromLiquidity(cmd.Context(), clientCtx, poolId, baseDenom)
 			if err != nil {
 				return err
-			}
-			queryClient := queryproto.NewQueryClient(clientCtx)
-			gammClient := gammtypes.NewQueryClient(clientCtx)
-			liquidity, err := gammClient.TotalPoolLiquidity(cmd.Context(), &gammtypes.QueryTotalPoolLiquidityRequest{PoolId: poolId})
-			if err != nil {
-				return err
-			}
-			if len(liquidity.Liquidity) != 2 {
-				return fmt.Errorf("pool %d has %d assets of liquidity, CLI support only exists for 2 assets right now.", poolId, len(liquidity.Liquidity))
-			}
-			quoteDenom := ""
-			if liquidity.Liquidity[0].Denom == baseDenom {
-				quoteDenom = liquidity.Liquidity[1].Denom
-			} else if liquidity.Liquidity[1].Denom == baseDenom {
-				quoteDenom = liquidity.Liquidity[0].Denom
-			} else {
-				return fmt.Errorf("pool %d doesn't have provided baseDenom %s, has %s and %s",
-					poolId, baseDenom, liquidity.Liquidity[0], liquidity.Liquidity[1])
 			}
 
-			var res proto.Message
-			if isGeometric {
-				res, err = queryClient.GeometricTwap(cmd.Context(), &queryproto.GeometricTwapRequest{
-					PoolId:     poolId,
-					BaseAsset:  baseDenom,
-					QuoteAsset: quoteDenom,
-					StartTime:  startTime,
-					EndTime:    &endTime,
-				})
-			} else {
-				res, err = queryClient.ArithmeticTwap(cmd.Context(), &queryproto.ArithmeticTwapRequest{
-					PoolId:     poolId,
-					BaseAsset:  baseDenom,
-					QuoteAsset: quoteDenom,
-					StartTime:  startTime,
-					EndTime:    &endTime,
-				})
-			}
+			queryClient := queryproto.NewQueryClient(clientCtx)
+			res, err := queryClient.ArithmeticTwap(cmd.Context(), &queryproto.ArithmeticTwapRequest{
+				PoolId:     poolId,
+				BaseAsset:  baseDenom,
+				QuoteAsset: quoteDenom,
+				StartTime:  startTime,
+				EndTime:    &endTime,
+			})
 
 			if err != nil {
 				return err
@@ -103,9 +68,79 @@ Example:
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	cmd.Flags().Bool(flagIsGeometric, false, "Type of twap to query. Geometric TWAP if true. Arithmetic TWAP if false.")
 
 	return cmd
+}
+
+// GetQueryGeometricCommand returns a geometric twap query command.
+func GetQueryGeometricCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "geometric [poolid] [base denom] [start time] [end time]",
+		Short: "Query geometric twap",
+		Long: osmocli.FormatLongDescDirect(`Query geometric twap for pool. Start time must be unix time. End time can be unix time or duration.
+
+Example:
+{{.CommandPrefix}} geometric 1 uosmo 1667088000 24h
+{{.CommandPrefix}} geometric 1 uosmo 1667088000 1667174400
+`, types.ModuleName),
+		Args: cobra.ExactArgs(4),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// boilerplate parse fields
+			poolId, baseDenom, startTime, endTime, err := twapQueryParseArgs(args)
+			if err != nil {
+				return err
+			}
+
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			quoteDenom, err := getQuoteDenomFromLiquidity(cmd.Context(), clientCtx, poolId, baseDenom)
+			if err != nil {
+				return err
+			}
+
+			queryClient := queryproto.NewQueryClient(clientCtx)
+			res, err := queryClient.GeometricTwap(cmd.Context(), &queryproto.GeometricTwapRequest{
+				PoolId:     poolId,
+				BaseAsset:  baseDenom,
+				QuoteAsset: quoteDenom,
+				StartTime:  startTime,
+				EndTime:    &endTime,
+			})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// getQuoteDenomFromLiquidity gets the quote liquidity denom from the pool. In addition, validates that base denom
+// exists in the pool. Fails if not.
+func getQuoteDenomFromLiquidity(ctx context.Context, clientCtx client.Context, poolId uint64, baseDenom string) (string, error) {
+	gammClient := gammtypes.NewQueryClient(clientCtx)
+	liquidity, err := gammClient.TotalPoolLiquidity(ctx, &gammtypes.QueryTotalPoolLiquidityRequest{PoolId: poolId})
+	if err != nil {
+		return "", err
+	}
+	if len(liquidity.Liquidity) != 2 {
+		return "", fmt.Errorf("pool %d has %d assets of liquidity, CLI support only exists for 2 assets right now.", poolId, len(liquidity.Liquidity))
+	}
+
+	quoteDenom := ""
+	if liquidity.Liquidity[0].Denom == baseDenom {
+		quoteDenom = liquidity.Liquidity[1].Denom
+	} else if liquidity.Liquidity[1].Denom == baseDenom {
+		quoteDenom = liquidity.Liquidity[0].Denom
+	} else {
+		return "", fmt.Errorf("pool %d doesn't have provided baseDenom %s, has %s and %s",
+			poolId, baseDenom, liquidity.Liquidity[0], liquidity.Liquidity[1])
+	}
+	return quoteDenom, nil
 }
 
 func twapQueryParseArgs(args []string) (poolId uint64, baseDenom string, startTime time.Time, endTime time.Time, err error) {
