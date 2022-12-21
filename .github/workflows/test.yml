@@ -70,6 +70,7 @@ jobs:
             go.mod
             go.sum
             Makefile
+            Dockerfile
       -
         name: Get data from build cache
         uses: actions/cache@v2
