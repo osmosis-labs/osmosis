@@ -7,6 +7,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+>>>>>>> 079702ea (Move osmomath into its own go.mod (#3771))
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 

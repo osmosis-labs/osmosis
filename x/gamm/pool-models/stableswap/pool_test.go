@@ -7,8 +7,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+<<<<<<< HEAD
+=======
+	"github.com/tendermint/tendermint/crypto/ed25519"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
+>>>>>>> 079702ea (Move osmomath into its own go.mod (#3771))
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"

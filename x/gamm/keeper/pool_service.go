@@ -7,8 +7,12 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+>>>>>>> 079702ea (Move osmomath into its own go.mod (#3771))
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 

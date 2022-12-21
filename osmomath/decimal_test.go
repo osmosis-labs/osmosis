@@ -12,8 +12,12 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v2"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+>>>>>>> 079702ea (Move osmomath into its own go.mod (#3771))
 )
 
 type decimalTestSuite struct {
@@ -719,7 +723,7 @@ func (s *decimalTestSuite) TestLog2() {
 			expected: osmomath.MustNewDecFromStr("99.525973560175362367047484597337715868"),
 		},
 		"log_2{Max Spot Price} = 128": {
-			initialValue: osmomath.BigDecFromSDKDec(gammtypes.MaxSpotPrice), // 2^128 - 1
+			initialValue: osmomath.BigDecFromSDKDec(osmomath.MaxSpotPrice), // 2^128 - 1
 			// From: https://www.wolframalpha.com/input?i=log+base+2+of+%28%282%5E128%29+-+1%29+38+digits
 			expected: osmomath.MustNewDecFromStr("128"),
 		},
@@ -1062,21 +1066,21 @@ func (s *decimalTestSuite) TestPowerInteger() {
 		"geom twap overflow: 2^log_2{max spot price + 1}": {
 			base: osmomath.TwoBigDec,
 			// add 1 for simplicity of calculation to isolate overflow.
-			exponent: uint64(osmomath.BigDecFromSDKDec(gammtypes.MaxSpotPrice).Add(osmomath.OneDec()).LogBase2().TruncateInt().Uint64()),
+			exponent: uint64(osmomath.BigDecFromSDKDec(osmomath.MaxSpotPrice).Add(osmomath.OneDec()).LogBase2().TruncateInt().Uint64()),
 
 			// https://www.wolframalpha.com/input?i=2%5E%28floor%28+log+base+2+%282%5E128%29%29%29+++39+digits
 			expectedResult: osmomath.MustNewDecFromStr("340282366920938463463374607431768211456"),
 		},
 		"geom twap overflow: 2^log_2{max spot price}": {
 			base:     osmomath.TwoBigDec,
-			exponent: uint64(osmomath.BigDecFromSDKDec(gammtypes.MaxSpotPrice).LogBase2().TruncateInt().Uint64()),
+			exponent: uint64(osmomath.BigDecFromSDKDec(osmomath.MaxSpotPrice).LogBase2().TruncateInt().Uint64()),
 
 			// https://www.wolframalpha.com/input?i=2%5E%28floor%28+log+base+2+%282%5E128+-+1%29%29%29+++39+digits
 			expectedResult: osmomath.MustNewDecFromStr("170141183460469231731687303715884105728"),
 		},
 		"geom twap overflow: 2^log_2{max spot price / 2 - 2017}": { // 2017 is prime.
 			base:     osmomath.TwoBigDec,
-			exponent: uint64(osmomath.BigDecFromSDKDec(gammtypes.MaxSpotPrice.Quo(sdk.NewDec(2)).Sub(sdk.NewDec(2017))).LogBase2().TruncateInt().Uint64()),
+			exponent: uint64(osmomath.BigDecFromSDKDec(osmomath.MaxSpotPrice.Quo(sdk.NewDec(2)).Sub(sdk.NewDec(2017))).LogBase2().TruncateInt().Uint64()),
 
 			// https://www.wolframalpha.com/input?i=e%5E10+41+digits
 			expectedResult: osmomath.MustNewDecFromStr("85070591730234615865843651857942052864"),
@@ -1260,3 +1264,115 @@ func (s *decimalTestSuite) TestPowerInteger_Mutation() {
 		})
 	}
 }
+<<<<<<< HEAD
+=======
+
+func (s *decimalTestSuite) TestPower() {
+	tests := map[string]struct {
+		base           osmomath.BigDec
+		exponent       osmomath.BigDec
+		expectedResult osmomath.BigDec
+		expectPanic    bool
+		errTolerance   osmomath.ErrTolerance
+	}{
+		// N.B.: integer exponents are tested under TestPowerInteger.
+
+		"3 ^ 2 = 9 (integer base and integer exponent)": {
+			base:     osmomath.NewBigDec(3),
+			exponent: osmomath.NewBigDec(2),
+
+			expectedResult: osmomath.NewBigDec(9),
+
+			errTolerance: zeroAdditiveErrTolerance,
+		},
+		"2^0.5 (base of 2 and non-integer exponent)": {
+			base:     osmomath.MustNewDecFromStr("2"),
+			exponent: osmomath.MustNewDecFromStr("0.5"),
+
+			// https://www.wolframalpha.com/input?i=2%5E0.5+37+digits
+			expectedResult: osmomath.MustNewDecFromStr("1.414213562373095048801688724209698079"),
+
+			errTolerance: osmomath.ErrTolerance{
+				AdditiveTolerance: minDecTolerance,
+				RoundingDir:       osmomath.RoundDown,
+			},
+		},
+		"3^0.33 (integer base other than 2 and non-integer exponent)": {
+			base:     osmomath.MustNewDecFromStr("3"),
+			exponent: osmomath.MustNewDecFromStr("0.33"),
+
+			// https://www.wolframalpha.com/input?i=3%5E0.33+37+digits
+			expectedResult: osmomath.MustNewDecFromStr("1.436977652184851654252692986409357265"),
+
+			errTolerance: osmomath.ErrTolerance{
+				AdditiveTolerance: minDecTolerance,
+				RoundingDir:       osmomath.RoundDown,
+			},
+		},
+		"e^0.98999 (non-integer base and non-integer exponent)": {
+			base:     osmomath.EulersNumber,
+			exponent: osmomath.MustNewDecFromStr("0.9899"),
+
+			// https://www.wolframalpha.com/input?i=e%5E0.9899+37+digits
+			expectedResult: osmomath.MustNewDecFromStr("2.690965362357751196751808686902156603"),
+
+			errTolerance: osmomath.ErrTolerance{
+				AdditiveTolerance: minDecTolerance,
+				RoundingDir:       osmomath.RoundUnconstrained,
+			},
+		},
+		"10^0.001 (small non-integer exponent)": {
+			base:     osmomath.NewBigDec(10),
+			exponent: osmomath.MustNewDecFromStr("0.001"),
+
+			// https://www.wolframalpha.com/input?i=10%5E0.001+37+digits
+			expectedResult: osmomath.MustNewDecFromStr("1.002305238077899671915404889328110554"),
+
+			errTolerance: osmomath.ErrTolerance{
+				AdditiveTolerance: minDecTolerance,
+				RoundingDir:       osmomath.RoundUnconstrained,
+			},
+		},
+		"13^100.7777 (large non-integer exponent)": {
+			base:     osmomath.NewBigDec(13),
+			exponent: osmomath.MustNewDecFromStr("100.7777"),
+
+			// https://www.wolframalpha.com/input?i=13%5E100.7777+37+digits
+			expectedResult: osmomath.MustNewDecFromStr("1.822422110233759706998600329118969132").Mul(osmomath.NewBigDec(10).PowerInteger(112)),
+
+			errTolerance: osmomath.ErrTolerance{
+				MultiplicativeTolerance: minDecTolerance,
+				RoundingDir:             osmomath.RoundDown,
+			},
+		},
+		"large non-integer exponent with large non-integer base - panics": {
+			base:     osmomath.MustNewDecFromStr("169.137"),
+			exponent: osmomath.MustNewDecFromStr("100.7777"),
+
+			expectPanic: true,
+		},
+		"negative base - panic": {
+			base:     osmomath.NewBigDec(-3),
+			exponent: osmomath.MustNewDecFromStr("4"),
+
+			expectPanic: true,
+		},
+		"negative exponent - panic": {
+			base:     osmomath.NewBigDec(1),
+			exponent: osmomath.MustNewDecFromStr("-4"),
+
+			expectPanic: true,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			osmomath.ConditionalPanic(s.T(), tc.expectPanic, func() {
+				actualResult := tc.base.Power(tc.exponent)
+				s.Require().Equal(0, tc.errTolerance.CompareBigDec(tc.expectedResult, actualResult))
+			})
+		})
+	}
+}
+>>>>>>> 079702ea (Move osmomath into its own go.mod (#3771))
