@@ -16,10 +16,9 @@ import (
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/osmoutils/noapptest"
-	twaptypes "github.com/osmosis-labs/osmosis/v13/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmoassert"
 )
 
 // We need to setup a test suite with account keeper
@@ -800,7 +799,7 @@ func (s *TestSuite) TestMustGet() {
 
 			expectPanic: true,
 		},
-		"invalid proto Dec vs TwapRecord- error": {
+		"invalid proto Dec vs AuthParams- error": {
 			preSetKeyValues: map[string]proto.Message{
 				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
 			},
@@ -809,7 +808,7 @@ func (s *TestSuite) TestMustGet() {
 				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
 			},
 
-			actualResultProto: &twaptypes.TwapRecord{},
+			actualResultProto: &authtypes.Params{},
 
 			expectPanic: true,
 		},
@@ -884,7 +883,7 @@ func (s *TestSuite) TestGet() {
 
 			expectErr: false,
 		},
-		"invalid proto Dec vs TwapRecord - found but Unmarshal err": {
+		"invalid proto Dec vs AuthParams - found but Unmarshal err": {
 			preSetKeyValues: map[string]proto.Message{
 				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
 			},
@@ -893,7 +892,7 @@ func (s *TestSuite) TestGet() {
 				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
 			},
 
-			actualResultProto: &twaptypes.TwapRecord{},
+			actualResultProto: &authtypes.Params{},
 
 			expectFound: true,
 
@@ -951,13 +950,13 @@ func (s *TestSuite) TestMustSet() {
 
 			actualResultProto: &sdk.DecProto{},
 		},
-		"basic valid TwapRecord test": {
+		"basic valid AuthParams test": {
 			setKey: keyA,
-			setValue: &twaptypes.TwapRecord{
-				PoolId: 2,
+			setValue: &authtypes.Params{
+				MaxMemoCharacters: 600,
 			},
 
-			actualResultProto: &twaptypes.TwapRecord{},
+			actualResultProto: &authtypes.Params{},
 		},
 		"invalid set value": {
 			setKey:   keyA,
