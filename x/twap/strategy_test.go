@@ -310,7 +310,7 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap_ThreeAsset() {
 }
 
 // TestTwapPow_MaxSpotPrice_NoOverflow tests that no overflow occurs at log_2{max spot price values}.
-// and that the epsilot is within the tolerated multiplicative error.
+// and that the epsilon is within the tolerated multiplicative error.
 func (s *TestSuite) TestTwapLogPow_MaxSpotPrice_NoOverflow() {
 	errTolerance := osmomath.ErrTolerance{
 		MultiplicativeTolerance: sdk.OneDec().Quo(sdk.NewDec(10).Power(18)),
