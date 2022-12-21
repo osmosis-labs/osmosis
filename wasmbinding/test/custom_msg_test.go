@@ -17,7 +17,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/wasmbinding/bindings"
 )
 
-func TestCreateDenomMsg(t *testing.T) {
+func TestCreateDenomMsg(t *testing.T) { //nolint:paralleltest
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
 
@@ -48,7 +48,7 @@ func TestCreateDenomMsg(t *testing.T) {
 	require.Equal(t, resp.Denom, fmt.Sprintf("factory/%s/SUN", reflect.String()))
 }
 
-func TestMintMsg(t *testing.T) {
+func TestMintMsg(t *testing.T) { //nolint:paralleltest
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
 
@@ -176,7 +176,7 @@ func TestMintMsg(t *testing.T) {
 	require.Equal(t, resp.Denom, coin.Denom)
 }
 
-func TestBurnMsg(t *testing.T) {
+func TestBurnMsg(t *testing.T) { //nolint:paralleltest
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
 

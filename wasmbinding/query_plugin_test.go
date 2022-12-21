@@ -42,7 +42,7 @@ func (suite *StargateTestSuite) SetupTest() {
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
 }
 
-func TestStargateTestSuite(t *testing.T) {
+func TestStargateTestSuite(t *testing.T) { //nolint:paralleltest
 	suite.Run(t, new(StargateTestSuite))
 }
 

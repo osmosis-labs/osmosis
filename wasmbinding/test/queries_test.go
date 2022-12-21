@@ -12,7 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/wasmbinding"
 )
 
-func TestFullDenom(t *testing.T) {
+func TestFullDenom(t *testing.T) { //nolint:paralleltest
 	actor := RandomAccountAddress()
 
 	specs := map[string]struct {
@@ -47,7 +47,7 @@ func TestFullDenom(t *testing.T) {
 			expErr:   true,
 		},
 	}
-	for name, spec := range specs {
+	for name, spec := range specs { //nolint:paralleltest
 		spec := spec
 		t.Run(name, func(t *testing.T) {
 			// when
@@ -63,7 +63,7 @@ func TestFullDenom(t *testing.T) {
 	}
 }
 
-func TestDenomAdmin(t *testing.T) {
+func TestDenomAdmin(t *testing.T) { //nolint:paralleltest
 	addr := RandomAccountAddress()
 	app, ctx := SetupCustomApp(t, addr)
 
@@ -99,7 +99,7 @@ func TestDenomAdmin(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
+	for _, tc := range testCases { //nolint:paralleltest
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {

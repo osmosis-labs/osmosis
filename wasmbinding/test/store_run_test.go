@@ -16,7 +16,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/app"
 )
 
-func TestNoStorageWithoutProposal(t *testing.T) {
+func TestNoStorageWithoutProposal(t *testing.T) { //nolint:paralleltest
 	// we use default config
 	osmosis, ctx := CreateTestInput()
 

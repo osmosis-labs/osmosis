@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreateDenom(t *testing.T) {
+func TestCreateDenom(t *testing.T) { //nolint:paralleltest
 	actor := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, actor)
 
@@ -47,7 +47,7 @@ func TestCreateDenom(t *testing.T) {
 			expErr:      true,
 		},
 	}
-	for name, spec := range specs {
+	for name, spec := range specs { //nolint:paralleltest
 		spec := spec
 		t.Run(name, func(t *testing.T) {
 			// when
@@ -62,7 +62,7 @@ func TestCreateDenom(t *testing.T) {
 	}
 }
 
-func TestChangeAdmin(t *testing.T) {
+func TestChangeAdmin(t *testing.T) { //nolint:paralleltest
 	const validDenom = "validdenom"
 
 	tokenCreator := RandomAccountAddress()
@@ -140,7 +140,7 @@ func TestChangeAdmin(t *testing.T) {
 			expErrMsg: "invalid request: changeAdmin is nil - original request: ",
 		},
 	}
-	for name, spec := range specs {
+	for name, spec := range specs { //nolint:paralleltest
 		spec := spec
 		t.Run(name, func(t *testing.T) {
 			// Setup
@@ -167,7 +167,7 @@ func TestChangeAdmin(t *testing.T) {
 	}
 }
 
-func TestMint(t *testing.T) {
+func TestMint(t *testing.T) { //nolint:paralleltest
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
 
@@ -272,7 +272,7 @@ func TestMint(t *testing.T) {
 			expErr: true,
 		},
 	}
-	for name, spec := range specs {
+	for name, spec := range specs { //nolint:paralleltest
 		spec := spec
 		t.Run(name, func(t *testing.T) {
 			// when
@@ -287,7 +287,7 @@ func TestMint(t *testing.T) {
 	}
 }
 
-func TestBurn(t *testing.T) {
+func TestBurn(t *testing.T) { //nolint:paralleltest
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
 
@@ -385,7 +385,7 @@ func TestBurn(t *testing.T) {
 		},
 	}
 
-	for name, spec := range specs {
+	for name, spec := range specs { //nolint:paralleltest
 		spec := spec
 		t.Run(name, func(t *testing.T) {
 			// Mint valid denom str and empty denom string for burn test

@@ -566,6 +566,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
+			s.T().Parallel()
 			cmd := cli.NewCreatePoolCmd()
 			clientCtx := val.ClientCtx
 
