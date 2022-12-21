@@ -35,7 +35,6 @@ pub fn instantiate(
 
     // return OK
     Ok(Response::new().add_attribute("method", "instantiate"))
-    // .add_attribute("owner", owner.as_str()))
 }
 
 #[cfg_attr(not(feature = "imported"), entry_point)]

@@ -40,8 +40,8 @@ pub fn receive_ack(
         .add_attribute("action", "receive_ack");
 
     // Check if there is an inflight packet for the received (channel, sequence)
-    let recovery = INFLIGHT_PACKETS.may_load(deps.storage, (&source_channel, sequence))?;
-    let Some(mut recovery) = recovery else {
+    let sent_packet = INFLIGHT_PACKETS.may_load(deps.storage, (&source_channel, sequence))?;
+    let Some(mut recovery) = sent_packet else {
         // If there isn't, continue
         return Ok(response.add_attribute("msg", "received unexpected ack"))
     };

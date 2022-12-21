@@ -33,11 +33,21 @@ pub struct Recovery {
 pub enum ExecuteMsg {
     /// Execute a swap and forward it to the receiver address on the specified ibc channel
     OsmosisSwap {
+        /// The amount and denom to be swapped
         input_coin: Coin,
+        /// The final denom to be received (as represented on osmosis)
         output_denom: String,
+        /// The receiver of the IBC packet to be sent after the swap
         receiver: Addr,
+        /// Slippage for the swap
         slippage: Slippage,
+        /// IBC packets can contain an optional memo. If a sender wants the sent
+        /// packet to include a memo, this is the field where they can specify
+        /// it. If provided, the memo is expected to be a valid JSON object
         next_memo: Option<String>,
+        /// If for any reason the swap were to fail, users can specify a
+        /// "recovery address" that can clain the funds on osmosis after a
+        /// confirmed failure.
         failed_delivery: Option<Recovery>,
     },
     /// Executing a recover will transfer any recoverable tokens that the sender

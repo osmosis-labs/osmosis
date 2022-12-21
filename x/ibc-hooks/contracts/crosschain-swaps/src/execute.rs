@@ -178,6 +178,16 @@ pub fn handle_swap_reply(deps: DepsMut, msg: Reply) -> Result<Response, Contract
             .add_message(ibc_transfer));
     }
 
+    // Check that there isn't anything stored in FORWARD_REPLY_STATES. If there
+    // is, it means that the contract is already waiting for a reply and should
+    // not override the stored state. This should never happen here, but adding
+    // the check for safety. If this happens there is likely a malicious attempt
+    // modify the contract's state before it has replied.
+    if FORWARD_REPLY_STATES.may_load(deps.storage)?.is_some() {
+        return Err(ContractError::ContractLocked {
+            msg: "Already waiting for a reply".to_string(),
+        });
+    }
     // Store the ibc send information and the user's failed delivery preference
     // so that it can be handled by the response
     FORWARD_REPLY_STATES.save(
