@@ -11,15 +11,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
-// geometricTwapMathBase is the base used for geometric twap calculation
-// in logarithm and power math functions.
-// See twapLog and computeGeometricTwap functions for more details.
-var (
-	geometricTwapMathBase = sdk.NewDec(2)
-	// TODO: analyze choice.
-	geometricTwapPowPrecision = sdk.MustNewDecFromStr("0.00000001")
-)
-
 func newTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
 	denom0, denom1, err := types.LexicographicalOrderDenoms(denom0, denom1)
 	if err != nil {
@@ -268,13 +259,15 @@ func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quote
 }
 
 // twapLog returns the logarithm of the given spot price, base 2.
-// TODO: basic test
 func twapLog(price sdk.Dec) sdk.Dec {
 	return osmomath.BigDecFromSDKDec(price).LogBase2().SDKDec()
 }
 
-// twapPow exponentiates the geometricTwapMathBase to the given exponent.
-// TODO: basic test and benchmark.
+// twapPow exponentiates 2 to the given exponent.
 func twapPow(exponent sdk.Dec) sdk.Dec {
-	return osmomath.PowApprox(geometricTwapMathBase, exponent, geometricTwapPowPrecision)
+	exp2 := osmomath.Exp2(osmomath.BigDecFromSDKDec(exponent.Abs()))
+	if exponent.IsNegative() {
+		return osmomath.OneDec().Quo(exp2).SDKDec()
+	}
+	return exp2.SDKDec()
 }
