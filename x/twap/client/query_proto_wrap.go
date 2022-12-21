@@ -1,7 +1,6 @@
 package client
 
 import (
-	"errors"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,13 +47,18 @@ func (q Querier) GeometricTwap(ctx sdk.Context,
 	if (*req.EndTime == time.Time{}) {
 		*req.EndTime = ctx.BlockTime()
 	}
-	return nil, errors.New("not implemented")
+
+	twap, err := q.K.GetGeometricTwap(ctx, req.PoolId, req.BaseAsset, req.QuoteAsset, req.StartTime, *req.EndTime)
+
+	return &queryproto.GeometricTwapResponse{GeometricTwap: twap}, err
 }
 
 func (q Querier) GeometricTwapToNow(ctx sdk.Context,
 	req queryproto.GeometricTwapToNowRequest,
 ) (*queryproto.GeometricTwapToNowResponse, error) {
-	return nil, errors.New("not implemented")
+	twap, err := q.K.GetGeometricTwapToNow(ctx, req.PoolId, req.BaseAsset, req.QuoteAsset, req.StartTime)
+
+	return &queryproto.GeometricTwapToNowResponse{GeometricTwap: twap}, err
 }
 
 func (q Querier) Params(ctx sdk.Context,

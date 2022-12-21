@@ -93,7 +93,7 @@ message GeometricTwapRequest {
   ];
 }
 message GeometricTwapResponse {
-  string arithmetic_twap = 1 [
+  string geometric_twap = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"geometric_twap\"",
     (gogoproto.nullable) = false
