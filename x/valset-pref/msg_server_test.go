@@ -481,7 +481,7 @@ func (suite *KeeperTestSuite) TestWithdrawDelegationRewards() {
 		expectPass    bool
 	}{
 		{
-			name:          "Withdraw all rewards with existing delegation",
+			name:          "Withdraw all rewards with existing valset delegations",
 			delegator:     sdk.AccAddress([]byte("addr1---------------")),
 			coinToStake:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)), // delegate 20osmo
 			setValSet:     true,
