@@ -22,11 +22,8 @@ type computeTwapTestCase struct {
 	expPanic       bool
 }
 
-// geometricTwapMathBase is the base used for geometric twap calculation
-// in logarithm and power math functions.
-// See twapLog and computeGeometricTwap functions for more details.
 var (
-	geometricTwapMathBase = osmomath.NewBigDec(2)
+	oneHundredYears = OneSec.MulInt64(60 * 60 * 24 * 365 * 100)
 )
 
 // TestComputeArithmeticTwap tests computeTwap on various inputs.
@@ -317,12 +314,10 @@ func (s *TestSuite) TestTwapLogPow_MaxSpotPrice_NoOverflow() {
 		RoundingDir:             osmomath.RoundDown,
 	}
 
-	oneYear := OneSec.MulInt64(60 * 60 * 24 * 365)
+	oneHundredYearsTimesMaxSpotPrice := oneHundredYears.Mul(gammtypes.MaxSpotPrice)
 
-	oneYearTimesMaxSpotPrice := oneYear.Mul(gammtypes.MaxSpotPrice)
-
-	exponentValue := twap.TwapLog(oneYearTimesMaxSpotPrice)
+	exponentValue := twap.TwapLog(oneHundredYearsTimesMaxSpotPrice)
 	finalValue := twap.TwapPow(exponentValue)
 
-	s.Equal(0, errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(oneYearTimesMaxSpotPrice), osmomath.BigDecFromSDKDec(finalValue)))
+	s.Require().Equal(0, errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(oneHundredYearsTimesMaxSpotPrice), osmomath.BigDecFromSDKDec(finalValue)))
 }

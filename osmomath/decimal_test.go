@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v2"
 
+	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/osmomath"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
@@ -19,6 +20,12 @@ import (
 type decimalTestSuite struct {
 	suite.Suite
 }
+
+var (
+	zeroAdditiveErrTolerance = osmomath.ErrTolerance{
+		AdditiveTolerance: sdk.ZeroDec(),
+	}
+)
 
 func TestDecimalTestSuite(t *testing.T) {
 	suite.Run(t, new(decimalTestSuite))
@@ -1144,9 +1151,18 @@ func (s *decimalTestSuite) TestPowerInteger() {
 				tolerance = tc.expectedToleranceOverwrite
 			}
 
+			// Main system under test
 			actualResult := tc.base.PowerInteger(tc.exponent)
 			require.True(osmomath.DecApproxEq(s.T(), tc.expectedResult, actualResult, tolerance))
 
+			// Secondary system under test.
+			// To reduce boilerplate from the same test cases when exponent is a
+			// positive integer, we also test Power().
+			// Negative exponent and base are not supported for Power()
+			if tc.exponent >= 0 && !tc.base.IsNegative() {
+				actualResult2 := tc.base.Power(osmomath.NewDecFromInt(osmomath.NewIntFromUint64(tc.exponent)))
+				require.True(osmomath.DecApproxEq(s.T(), tc.expectedResult, actualResult2, tolerance))
+			}
 		})
 	}
 }
@@ -1219,7 +1235,7 @@ func (s *decimalTestSuite) TestMul_Mutation() {
 	}
 }
 
-// TestMul_Mutation tests that PowerIntegerMut mutates the receiver
+// TestPowerInteger_Mutation tests that PowerIntegerMut mutates the receiver
 // while PowerInteger is not.
 func (s *decimalTestSuite) TestPowerInteger_Mutation() {
 
@@ -1257,6 +1273,117 @@ func (s *decimalTestSuite) TestPowerInteger_Mutation() {
 			resultNonMut := startNonMut.PowerInteger(exponent)
 
 			s.assertMutResult(tc.expectedResult, tc.startValue, resultMut, resultNonMut, startMut, startNonMut)
+		})
+	}
+}
+
+func (s *decimalTestSuite) TestPower() {
+	tests := map[string]struct {
+		base           osmomath.BigDec
+		exponent       osmomath.BigDec
+		expectedResult osmomath.BigDec
+		expectPanic    bool
+		errTolerance   osmomath.ErrTolerance
+	}{
+		// N.B.: integer exponents are tested under TestPowerInteger.
+
+		"3 ^ 2 = 9 (integer base and integer exponent)": {
+			base:     osmomath.NewBigDec(3),
+			exponent: osmomath.NewBigDec(2),
+
+			expectedResult: osmomath.NewBigDec(9),
+
+			errTolerance: zeroAdditiveErrTolerance,
+		},
+		"2^0.5 (base of 2 and non-integer exponent)": {
+			base:     osmomath.MustNewDecFromStr("2"),
+			exponent: osmomath.MustNewDecFromStr("0.5"),
+
+			// https://www.wolframalpha.com/input?i=2%5E0.5+37+digits
+			expectedResult: osmomath.MustNewDecFromStr("1.414213562373095048801688724209698079"),
+
+			errTolerance: osmomath.ErrTolerance{
+				AdditiveTolerance: minDecTolerance,
+				RoundingDir:       osmomath.RoundDown,
+			},
+		},
+		"3^0.33 (integer base other than 2 and non-integer exponent)": {
+			base:     osmomath.MustNewDecFromStr("3"),
+			exponent: osmomath.MustNewDecFromStr("0.33"),
+
+			// https://www.wolframalpha.com/input?i=3%5E0.33+37+digits
+			expectedResult: osmomath.MustNewDecFromStr("1.436977652184851654252692986409357265"),
+
+			errTolerance: osmomath.ErrTolerance{
+				AdditiveTolerance: minDecTolerance,
+				RoundingDir:       osmomath.RoundDown,
+			},
+		},
+		"e^0.98999 (non-integer base and non-integer exponent)": {
+			base:     osmomath.EulersNumber,
+			exponent: osmomath.MustNewDecFromStr("0.9899"),
+
+			// https://www.wolframalpha.com/input?i=e%5E0.9899+37+digits
+			expectedResult: osmomath.MustNewDecFromStr("2.690965362357751196751808686902156603"),
+
+			errTolerance: osmomath.ErrTolerance{
+				AdditiveTolerance: minDecTolerance,
+				RoundingDir:       osmomath.RoundUnconstrained,
+			},
+		},
+		"10^0.001 (small non-integer exponent)": {
+			base:     osmomath.NewBigDec(10),
+			exponent: osmomath.MustNewDecFromStr("0.001"),
+
+			// https://www.wolframalpha.com/input?i=10%5E0.001+37+digits
+			expectedResult: osmomath.MustNewDecFromStr("1.002305238077899671915404889328110554"),
+
+			errTolerance: osmomath.ErrTolerance{
+				AdditiveTolerance: minDecTolerance,
+				RoundingDir:       osmomath.RoundUnconstrained,
+			},
+		},
+		"13^100.7777 (large non-integer exponent)": {
+			base:     osmomath.NewBigDec(13),
+			exponent: osmomath.MustNewDecFromStr("100.7777"),
+
+			// https://www.wolframalpha.com/input?i=13%5E100.7777+37+digits
+			expectedResult: osmomath.MustNewDecFromStr("1.822422110233759706998600329118969132").Mul(osmomath.NewBigDec(10).PowerInteger(112)),
+
+			errTolerance: osmomath.ErrTolerance{
+				MultiplicativeTolerance: minDecTolerance,
+				RoundingDir:             osmomath.RoundDown,
+			},
+		},
+		"large non-integer exponent with large non-integer base - panics": {
+			base:     osmomath.MustNewDecFromStr("169.137"),
+			exponent: osmomath.MustNewDecFromStr("100.7777"),
+
+			expectPanic: true,
+		},
+		"negative base - panic": {
+			base:     osmomath.NewBigDec(-3),
+			exponent: osmomath.MustNewDecFromStr("4"),
+
+			expectPanic: true,
+		},
+		"negative exponent - panic": {
+			base:     osmomath.NewBigDec(1),
+			exponent: osmomath.MustNewDecFromStr("-4"),
+
+			expectPanic: true,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			osmoassert.ConditionalPanic(s.T(), tc.expectPanic, func() {
+
+				actualResult := tc.base.Power(tc.exponent)
+
+				s.Require().Equal(0, tc.errTolerance.CompareBigDec(tc.expectedResult, actualResult))
+			})
 		})
 	}
 }
