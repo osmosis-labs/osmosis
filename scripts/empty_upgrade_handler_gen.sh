@@ -103,11 +103,11 @@ PREV_OSMOSIS_E2E_TAG=$(curl -L -s 'https://registry.hub.docker.com/v2/repositori
 # previousVersionOsmoTag  = PREV_OSMOSIS_DEV_TAG
 if [[ $version_create == v$(($(echo $PREV_OSMOSIS_DEV_TAG | awk -F . '{print $1}')+1)) ]]; then	
     echo "Found previous osmosis-dev tag $PREV_OSMOSIS_DEV_TAG"
-	sed -i '' '/previousVersionOsmoTag/s/".*"/'"\"$PREV_OSMOSIS_DEV_TAG\""'/' $e2e_file
+	sed -i '/previousVersionOsmoTag/s/".*"/'"\"$PREV_OSMOSIS_DEV_TAG\""'/' $e2e_file
 else
     PREV_OSMOSIS_DEV_TAG=v$((${version_create:1}-1)).0.0
     echo "Using pre-defined osmosis-dev tag: $PREV_OSMOSIS_DEV_TAG"
-    sed -i '' '/previousVersionOsmoTag/s/".*"/'"\"$PREV_OSMOSIS_DEV_TAG\""'/' $e2e_file
+    sed -i '/previousVersionOsmoTag/s/".*"/'"\"$PREV_OSMOSIS_DEV_TAG\""'/' $e2e_file
 fi
 
 # previousVersionInitTag  = PREV_OSMOSIS_E2E_TAG
