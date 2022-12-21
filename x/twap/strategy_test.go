@@ -22,6 +22,10 @@ type computeTwapTestCase struct {
 	expPanic       bool
 }
 
+var (
+	oneHundredYears = OneSec.MulInt64(60 * 60 * 24 * 365 * 100)
+)
+
 // TestComputeArithmeticTwap tests computeTwap on various inputs.
 // The test vectors are structured by setting up different start and records,
 // based on time interval, and their accumulator values.
@@ -310,12 +314,10 @@ func (s *TestSuite) TestTwapLogPow_MaxSpotPrice_NoOverflow() {
 		RoundingDir:             osmomath.RoundDown,
 	}
 
-	oneYear := OneSec.MulInt64(60 * 60 * 24 * 365)
+	oneHundredYearsTimesMaxSpotPrice := oneHundredYears.Mul(gammtypes.MaxSpotPrice)
 
-	oneYearTimesMaxSpotPrice := oneYear.Mul(gammtypes.MaxSpotPrice)
-
-	exponentValue := twap.TwapLog(oneYearTimesMaxSpotPrice)
+	exponentValue := twap.TwapLog(oneHundredYearsTimesMaxSpotPrice)
 	finalValue := twap.TwapPow(exponentValue)
 
-	s.Equal(0, errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(oneYearTimesMaxSpotPrice), osmomath.BigDecFromSDKDec(finalValue)))
+	s.Require().Equal(0, errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(oneHundredYearsTimesMaxSpotPrice), osmomath.BigDecFromSDKDec(finalValue)))
 }
