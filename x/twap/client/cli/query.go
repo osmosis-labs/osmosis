@@ -43,8 +43,10 @@ Example:
 			if err != nil {
 				return err
 			}
-
 			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
 			quoteDenom, err := getQuoteDenomFromLiquidity(cmd.Context(), clientCtx, poolId, baseDenom)
 			if err != nil {
 				return err
@@ -90,14 +92,16 @@ Example:
 			if err != nil {
 				return err
 			}
-
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			quoteDenom, err := getQuoteDenomFromLiquidity(cmd.Context(), clientCtx, poolId, baseDenom)
 			if err != nil {
 				return err
 			}
-
 			queryClient := queryproto.NewQueryClient(clientCtx)
+			if err != nil {
+				return err
+			}
+
 			res, err := queryClient.GeometricTwap(cmd.Context(), &queryproto.GeometricTwapRequest{
 				PoolId:     poolId,
 				BaseAsset:  baseDenom,
