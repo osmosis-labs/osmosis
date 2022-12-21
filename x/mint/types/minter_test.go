@@ -56,6 +56,7 @@ func BenchmarkNextEpochProvisions(b *testing.B) {
 }
 
 func TestMinterValidate(t *testing.T) {
+	t.Parallel()
 	testcases := []struct {
 		name     string
 		minter   types.Minter
@@ -81,7 +82,9 @@ func TestMinterValidate(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			actual := tc.minter.Validate()
 			if tc.expected != nil {
 				require.Error(t, actual)
@@ -95,6 +98,7 @@ func TestMinterValidate(t *testing.T) {
 
 // TestGetInflationProvisions sanity checks that inflation provisons are calculated correctly.
 func TestGetInflationProvisions(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		minter = types.NewMinter(defaultProvisionsAmount)
@@ -113,6 +117,7 @@ func TestGetInflationProvisions(t *testing.T) {
 
 // TestGetDeveloperVestingProvisions sanity checks that developer vesting provisons are calculated correctly.
 func TestGetDeveloperVestingProvisions(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		minter = types.NewMinter(defaultProvisionsAmount)

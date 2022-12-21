@@ -14,6 +14,7 @@ type GovTestSuite struct {
 }
 
 func TestGovTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(GovTestSuite))
 }
 

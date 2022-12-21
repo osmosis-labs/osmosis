@@ -33,6 +33,7 @@ var (
 )
 
 func TestGenesisState_Validate(t *testing.T) {
+	t.Parallel()
 	var (
 		basicParams = NewParams("week", 48*time.Hour)
 
@@ -130,7 +131,9 @@ func TestGenesisState_Validate(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			// Setup.
 
 			// System under test.
@@ -148,6 +151,7 @@ func TestGenesisState_Validate(t *testing.T) {
 }
 
 func TestTWAPRecord_Validate(t *testing.T) {
+	t.Parallel()
 	type testcase struct {
 		twapRecord  TwapRecord
 		expectedErr bool
@@ -338,7 +342,9 @@ func TestTWAPRecord_Validate(t *testing.T) {
 	}
 
 	for name, tc := range testCasesSym {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			// System under test.
 			err := tc.twapRecord.Validate()
 

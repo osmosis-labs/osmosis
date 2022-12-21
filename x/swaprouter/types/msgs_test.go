@@ -14,6 +14,7 @@ import (
 )
 
 func TestMsgSwapExactAmountIn(t *testing.T) {
+	t.Parallel()
 	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
@@ -144,6 +145,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 }
 
 func TestMsgSwapExactAmountOut(t *testing.T) {
+	t.Parallel()
 	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
@@ -275,6 +277,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 
 // Test authz serialize and de-serializes for swaprouter msg.
 func TestAuthzMsg(t *testing.T) {
+	t.Parallel()
 	// TODO: remove when types are registered.
 	t.SkipNow()
 
@@ -318,7 +321,9 @@ func TestAuthzMsg(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			apptesting.TestMessageAuthzSerialization(t, tc.gammMsg)
 		})
 	}

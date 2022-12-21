@@ -60,13 +60,14 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
+	t.Parallel()
 	// TODO: re-enable this once swaprouter is fully merged.
 	t.SkipNow()
 
 	suite.Run(t, new(IntegrationTestSuite))
 }
 
-func (s IntegrationTestSuite) TestNewSwapExactAmountOutCmd() {
+func (s IntegrationTestSuite) TestNewSwapExactAmountOutCmd() { //nolint:copylocks // this is a test, so copying locks is okay
 	val := s.network.Validators[0]
 
 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewSwapExactAmountOut",

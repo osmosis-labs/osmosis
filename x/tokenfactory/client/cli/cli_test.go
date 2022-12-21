@@ -9,6 +9,7 @@ import (
 )
 
 func TestGetCmdDenomAuthorityMetadata(t *testing.T) {
+	t.Parallel()
 	desc, _ := cli.GetCmdDenomAuthorityMetadata()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryDenomAuthorityMetadataRequest]{
 		"basic test": {
@@ -22,6 +23,7 @@ func TestGetCmdDenomAuthorityMetadata(t *testing.T) {
 }
 
 func TestGetCmdDenomsFromCreator(t *testing.T) {
+	t.Parallel()
 	desc, _ := cli.GetCmdDenomsFromCreator()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryDenomsFromCreatorRequest]{
 		"basic test": {

@@ -10,6 +10,7 @@ import (
 )
 
 func TestParseCoinsNoSort(t *testing.T) {
+	t.Parallel()
 	const (
 		a = "aaa"
 		b = "bbb"
@@ -60,7 +61,9 @@ func TestParseCoinsNoSort(t *testing.T) {
 	}
 
 	for name, tc := range tests {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			coins, err := cli.ParseCoinsNoSort(tc.coinsStr)
 
 			require.NoError(t, err)

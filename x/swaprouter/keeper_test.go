@@ -20,6 +20,7 @@ const testExpectedPoolId = 3
 var testPoolCreationFee = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000_000_000)}
 
 func TestKeeperTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(KeeperTestSuite))
 }
 

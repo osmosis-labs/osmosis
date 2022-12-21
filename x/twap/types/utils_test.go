@@ -11,10 +11,12 @@ import (
 )
 
 func TestMaxSpotPriceEquality(t *testing.T) {
+	t.Parallel()
 	require.Equal(t, MaxSpotPrice, types.MaxSpotPrice)
 }
 
 func TestGetAllUniqueDenomPairs(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		denoms      []string
 		wantedPairs []DenomPair
@@ -28,7 +30,9 @@ func TestGetAllUniqueDenomPairs(t *testing.T) {
 		"panics":   {[]string{"A", "A"}, []DenomPair{}, true},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			osmoassert.ConditionalPanic(t, tt.panics, func() {
 				pairs := GetAllUniqueDenomPairs(tt.denoms)
 				require.Equal(t, pairs, tt.wantedPairs)
@@ -38,6 +42,7 @@ func TestGetAllUniqueDenomPairs(t *testing.T) {
 }
 
 func TestLexicographicalOrderDenoms(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		firstDenom     string
 		secondDenom    string
@@ -54,7 +59,9 @@ func TestLexicographicalOrderDenoms(t *testing.T) {
 		"sameDenom": {"A", "A", "", "", fmt.Errorf("both assets cannot be of the same denom: assetA: %s, assetB: %s", "A", "A")},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			// system under test
 			denomA, denomB, err := LexicographicalOrderDenoms(tt.firstDenom, tt.secondDenom)
 			if tt.expectedErr != nil {

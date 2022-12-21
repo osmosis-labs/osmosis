@@ -25,6 +25,7 @@ const (
 )
 
 func TestSwapRouterEventsTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(SwapRouterEventsTestSuite))
 }
 

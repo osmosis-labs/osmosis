@@ -9,6 +9,7 @@ import (
 )
 
 func TestGenesisStateValidate(t *testing.T) {
+	t.Parallel()
 	trade1 := types.NewTrade(1, "a", "b")
 	trade2 := types.NewTrade(2, "b", "c")
 	routes := types.NewRoutes([]*types.Trade{&trade1, &trade2})
@@ -80,7 +81,9 @@ func TestGenesisStateValidate(t *testing.T) {
 	}
 
 	for _, tc := range cases {
+		tc := tc
 		t.Run(tc.description, func(t *testing.T) {
+			t.Parallel()
 			err := tc.genState.Validate()
 
 			if tc.valid {

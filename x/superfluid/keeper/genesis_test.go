@@ -50,6 +50,7 @@ var testGenesis = types.GenesisState{
 }
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
+	t.Parallel()
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
@@ -71,6 +72,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 }
 
 func TestInitGenesis(t *testing.T) {
+	t.Parallel()
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
@@ -94,6 +96,7 @@ func TestInitGenesis(t *testing.T) {
 }
 
 func TestExportGenesis(t *testing.T) {
+	t.Parallel()
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))

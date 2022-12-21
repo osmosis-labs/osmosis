@@ -15,6 +15,7 @@ type MsgsTestSuite struct {
 }
 
 func TestMsgsTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(MsgsTestSuite))
 }
 

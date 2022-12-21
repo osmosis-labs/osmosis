@@ -12,6 +12,7 @@ import (
 
 // TestDistrRecord is a test on the weights of distribution gauges.
 func TestDistrRecord(t *testing.T) {
+	t.Parallel()
 	zeroWeight := types.DistrRecord{
 		GaugeId: 1,
 		Weight:  sdk.NewInt(0),

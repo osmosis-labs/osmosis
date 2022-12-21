@@ -5,11 +5,13 @@ import (
 	"time"
 
 	proto "github.com/gogo/protobuf/proto"
-	"github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
 )
 
 func TestQueryGaugeIdsResponseMarshalUnmarshal(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		response *types.QueryGaugeIdsResponse
 	}{
@@ -39,6 +41,7 @@ func TestQueryGaugeIdsResponseMarshalUnmarshal(t *testing.T) {
 }
 
 func TestQueryIncentivizedPoolsResponseMarshalUnmarshal(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		response *types.QueryIncentivizedPoolsResponse
 	}{

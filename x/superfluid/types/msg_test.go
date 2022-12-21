@@ -13,13 +13,14 @@ import (
 
 // // Test authz serialize and de-serializes for superfluid msg.
 func TestAuthzMsg(t *testing.T) {
+	t.Parallel()
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	coin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))
 
 	const (
-		mockGranter string = "cosmos1abc"
-		mockGrantee string = "cosmos1xyz"
+		mockGranter = "cosmos1abc"
+		mockGrantee = "cosmos1xyz"
 	)
 
 	testCases := []struct {
@@ -65,7 +66,9 @@ func TestAuthzMsg(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			apptesting.TestMessageAuthzSerialization(t, tc.msg)
 		})
 	}
