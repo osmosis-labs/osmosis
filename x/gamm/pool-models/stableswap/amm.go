@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/cfmm_common"
 	types "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
@@ -326,7 +326,7 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	maxIterations := 256
 
 	// we use a geometric error tolerance that guarantees approximately 10^-12 precision on outputs
-	errTolerance := osmomath.ErrTolerance{AdditiveTolerance: sdk.Int{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12)}
+	errTolerance := osmomath.ErrTolerance{AdditiveTolerance: sdk.Dec{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12)}
 
 	// if yIn is positive, we want to under-estimate the amount of xOut.
 	// This means, we want x_out to be rounded down, as x_out = x_init - x_final, for x_init > x_final.
