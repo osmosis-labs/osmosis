@@ -44,11 +44,35 @@ type CommunityPoolKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
 
-type PoolIncentivesKeeper interface {
-	IsPoolIncentivized(ctx sdk.Context, poolId uint64) bool
-}
-
-type PoolCreationManager interface {
+// PoolManager defines the interface needed to be fulfilled for
+// the pool manger.
+type PoolManager interface {
 	CreatePool(ctx sdk.Context, msg swaproutertypes.CreatePoolMsg) (uint64, error)
+
 	GetNextPoolId(ctx sdk.Context) uint64
+
+	RouteExactAmountIn(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		routes []swaproutertypes.SwapAmountInRoute,
+		tokenIn sdk.Coin,
+		tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error)
+
+	RouteExactAmountOut(ctx sdk.Context,
+		sender sdk.AccAddress,
+		routes []swaproutertypes.SwapAmountOutRoute,
+		tokenInMaxAmount sdk.Int,
+		tokenOut sdk.Coin,
+	) (tokenInAmount sdk.Int, err error)
+
+	MultihopEstimateOutGivenExactAmountIn(
+		ctx sdk.Context,
+		routes []swaproutertypes.SwapAmountInRoute,
+		tokenIn sdk.Coin,
+	) (tokenOutAmount sdk.Int, err error)
+
+	MultihopEstimateInGivenExactAmountOut(
+		ctx sdk.Context,
+		routes []swaproutertypes.SwapAmountOutRoute,
+		tokenOut sdk.Coin) (tokenInAmount sdk.Int, err error)
 }
