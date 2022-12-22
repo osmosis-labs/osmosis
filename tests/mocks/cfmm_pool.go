@@ -623,21 +623,6 @@ func (mr *MockPoolAmountOutExtensionMockRecorder) JoinPoolNoSwap(ctx, tokensIn, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JoinPoolNoSwap", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).JoinPoolNoSwap), ctx, tokensIn, swapFee)
 }
 
-// JoinPoolTokenInMaxShareAmountOut mocks base method.
-func (m *MockPoolAmountOutExtension) JoinPoolTokenInMaxShareAmountOut(ctx types.Context, tokenInDenom string, shareOutAmount types.Int) (types.Int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "JoinPoolTokenInMaxShareAmountOut", ctx, tokenInDenom, shareOutAmount)
-	ret0, _ := ret[0].(types.Int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// JoinPoolTokenInMaxShareAmountOut indicates an expected call of JoinPoolTokenInMaxShareAmountOut.
-func (mr *MockPoolAmountOutExtensionMockRecorder) JoinPoolTokenInMaxShareAmountOut(ctx, tokenInDenom, shareOutAmount interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JoinPoolTokenInMaxShareAmountOut", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).JoinPoolTokenInMaxShareAmountOut), ctx, tokenInDenom, shareOutAmount)
-}
-
 // ProtoMessage mocks base method.
 func (m *MockPoolAmountOutExtension) ProtoMessage() {
 	m.ctrl.T.Helper()

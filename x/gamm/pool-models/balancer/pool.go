@@ -894,39 +894,6 @@ func (p *Pool) CalcTokenInShareAmountOut(
 	return tokenInAmount, nil
 }
 
-func (p *Pool) JoinPoolTokenInMaxShareAmountOut(
-	ctx sdk.Context,
-	tokenInDenom string,
-	shareOutAmount sdk.Int,
-) (tokenInAmount sdk.Int, err error) {
-	_, poolAssetIn, err := p.getPoolAssetAndIndex(tokenInDenom)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-
-	normalizedWeight := poolAssetIn.Weight.ToDec().Quo(p.GetTotalWeight().ToDec())
-
-	tokenInAmount = calcSingleAssetInGivenPoolSharesOut(
-		poolAssetIn.Token.Amount.ToDec(),
-		normalizedWeight,
-		p.GetTotalShares().ToDec(),
-		shareOutAmount.ToDec(),
-		p.GetSwapFee(ctx),
-	).TruncateInt()
-
-	if !tokenInAmount.IsPositive() {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount)
-	}
-
-	poolAssetIn.Token.Amount = poolAssetIn.Token.Amount.Add(tokenInAmount)
-	err = p.UpdatePoolAssetBalance(poolAssetIn.Token)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-
-	return tokenInAmount, nil
-}
-
 func (p *Pool) ExitSwapExactAmountOut(
 	ctx sdk.Context,
 	tokenOut sdk.Coin,
