@@ -240,12 +240,20 @@ func (d BigDec) BigInt() *big.Int {
 
 // addition
 func (d BigDec) Add(d2 BigDec) BigDec {
-	res := new(big.Int).Add(d.i, d2.i)
+	copy := d.Clone()
+	copy.AddMut(d2)
+	return copy
+}
 
-	if res.BitLen() > maxDecBitLen {
+// mutative addition
+func (d BigDec) AddMut(d2 BigDec) BigDec {
+	d.i.Add(d.i, d2.i)
+
+	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
-	return BigDec{res}
+
+	return d
 }
 
 // subtraction
@@ -319,19 +327,25 @@ func (d BigDec) MulInt64(i int64) BigDec {
 
 // quotient
 func (d BigDec) Quo(d2 BigDec) BigDec {
-	// multiply precision twice
-	mul := new(big.Int).Mul(d.i, precisionReuse)
-	mul.Mul(mul, precisionReuse)
-
-	quo := new(big.Int).Quo(mul, d2.i)
-	chopped := chopPrecisionAndRound(quo)
-
-	if chopped.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	return BigDec{chopped}
+	copy := d.Clone()
+	copy.QuoMut(d2)
+	return copy
 }
 
+// mutative quotient
+func (d BigDec) QuoMut(d2 BigDec) BigDec {
+	// multiply precision twice
+	d.i.Mul(d.i, precisionReuse)
+	d.i.Mul(d.i, precisionReuse)
+
+	d.i.Quo(d.i, d2.i)
+	chopPrecisionAndRound(d.i)
+
+	if d.i.BitLen() > maxDecBitLen {
+		panic("Int overflow")
+	}
+	return d
+}
 func (d BigDec) QuoRaw(d2 int64) BigDec {
 	// multiply precision, so we can chop it later
 	mul := new(big.Int).Mul(d.i, precisionReuse)
