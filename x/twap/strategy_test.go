@@ -314,21 +314,10 @@ func (s *TestSuite) TestTwapLogPow_MaxSpotPrice_NoOverflow() {
 		RoundingDir:             osmomath.RoundDown,
 	}
 
-<<<<<<< HEAD
-	oneYear := OneSec.MulInt64(60 * 60 * 24 * 365)
-
-	oneYearTimesMaxSpotPrice := oneYear.Mul(gammtypes.MaxSpotPrice)
-
-	exponentValue := twap.TwapLog(oneYearTimesMaxSpotPrice)
-	finalValue := twap.TwapPow(exponentValue)
-
-	s.Equal(0, errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(oneYearTimesMaxSpotPrice), osmomath.BigDecFromSDKDec(finalValue)))
-=======
 	oneHundredYearsTimesMaxSpotPrice := oneHundredYears.Mul(gammtypes.MaxSpotPrice)
 
 	exponentValue := twap.TwapLog(oneHundredYearsTimesMaxSpotPrice)
 	finalValue := twap.TwapPow(exponentValue)
 
 	s.Require().Equal(0, errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(oneHundredYearsTimesMaxSpotPrice), osmomath.BigDecFromSDKDec(finalValue)))
->>>>>>> main
 }
