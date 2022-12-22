@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v13/x/downtime-detector/client/cli"
 	"github.com/osmosis-labs/osmosis/v13/x/downtime-detector/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v13/x/downtime-detector/types"
