@@ -37,6 +37,53 @@ func (s *decimalTestSuite) assertMutResult(expectedResult, startValue, mutativeR
 	s.Require().Equal(nonMutativeStartValue, startValue)
 }
 
+func (s *decimalTestSuite) TestAddMut() {
+	toAdd := osmomath.MustNewDecFromStr("10")
+	tests := map[string]struct {
+		startValue        osmomath.BigDec
+		expectedMutResult osmomath.BigDec
+	}{
+		"0":  {osmomath.NewBigDec(0), osmomath.NewBigDec(10)},
+		"1":  {osmomath.NewBigDec(1), osmomath.NewBigDec(11)},
+		"10": {osmomath.NewBigDec(10), osmomath.NewBigDec(20)},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			startMut := tc.startValue.Clone()
+			startNonMut := tc.startValue.Clone()
+
+			resultMut := startMut.AddMut(toAdd)
+			resultNonMut := startNonMut.Add(toAdd)
+
+			s.assertMutResult(tc.expectedMutResult, tc.startValue, resultMut, resultNonMut, startMut, startNonMut)
+		})
+	}
+}
+
+func (s *decimalTestSuite) TestQuoMut() {
+	quoBy := osmomath.MustNewDecFromStr("2")
+	tests := map[string]struct {
+		startValue        osmomath.BigDec
+		expectedMutResult osmomath.BigDec
+	}{
+		"0":  {osmomath.NewBigDec(0), osmomath.NewBigDec(0)},
+		"1":  {osmomath.NewBigDec(1), osmomath.MustNewDecFromStr("0.5")},
+		"10": {osmomath.NewBigDec(10), osmomath.NewBigDec(5)},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			startMut := tc.startValue.Clone()
+			startNonMut := tc.startValue.Clone()
+
+			resultMut := startMut.QuoMut(quoBy)
+			resultNonMut := startNonMut.Quo(quoBy)
+
+			s.assertMutResult(tc.expectedMutResult, tc.startValue, resultMut, resultNonMut, startMut, startNonMut)
+		})
+	}
+}
 func TestDecApproxEq(t *testing.T) {
 	// d1 = 0.55, d2 = 0.6, tol = 0.1
 	d1 := osmomath.NewDecWithPrec(55, 2)
