@@ -42,6 +42,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* IBC features
+  * Upgrade to IBC v4.2.0
+* Cosmwasm
+  * Upgrade to wasmd v0.30.x
+
 ### Features
 
 * [#3609](https://github.com/osmosis-labs/osmosis/pull/3609) Add Downtime-detection module.
