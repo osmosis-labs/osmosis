@@ -298,7 +298,8 @@ require (
 
 replace (
 	// osmosis-patched wasmd
-	github.com/CosmWasm/wasmd => ../wasmd
+	// ToDo: replace the commit hash with v0.30.0-osmo-v14 once the version is tagged
+	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.29.2-0.20221222131554-7c8ea36a6e30
 	// dragonberry
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v13.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/8757a61551aa1ea993c85a523e18094ab555b1d7
