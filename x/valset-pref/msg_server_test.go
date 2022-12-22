@@ -490,7 +490,7 @@ func (suite *KeeperTestSuite) TestWithdrawDelegationRewards() {
 		},
 		{
 			name:                 "Withdraw all rewards with no existing valset delegation, but existing staking position",
-			delegator:            sdk.AccAddress([]byte("addr1---------------")),
+			delegator:            sdk.AccAddress([]byte("addr2---------------")),
 			coinsToDelegate:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)), // delegate 20osmo
 			setValSetDelegation:  false,
 			setStakingDelegation: true,
@@ -498,7 +498,7 @@ func (suite *KeeperTestSuite) TestWithdrawDelegationRewards() {
 		},
 		{
 			name:                 "Withdraw all rewards with existing valset delegation, but no existing staking position",
-			delegator:            sdk.AccAddress([]byte("addr1---------------")),
+			delegator:            sdk.AccAddress([]byte("addr3---------------")),
 			coinsToDelegate:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)), // delegate 20osmo
 			setValSetDelegation:  true,
 			setStakingDelegation: false,
@@ -506,7 +506,7 @@ func (suite *KeeperTestSuite) TestWithdrawDelegationRewards() {
 		},
 		{
 			name:                 "Withdraw all rewards with no existing valset delegation, no existing staking position",
-			delegator:            sdk.AccAddress([]byte("addr1---------------")),
+			delegator:            sdk.AccAddress([]byte("addr4---------------")),
 			coinsToDelegate:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)), // delegate 20osmo
 			setValSetDelegation:  false,
 			setStakingDelegation: false,
