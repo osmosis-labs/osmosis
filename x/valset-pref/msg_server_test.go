@@ -473,33 +473,44 @@ func (suite *KeeperTestSuite) TestRedelegateValidatorSet() {
 
 func (suite *KeeperTestSuite) TestWithdrawDelegationRewards() {
 	tests := []struct {
-		name          string
-		delegator     sdk.AccAddress
-		coinToStake   sdk.Coin
-		setValSet     bool
-		setDelegation bool
-		expectPass    bool
+		name                 string
+		delegator            sdk.AccAddress
+		coinsToDelegate      sdk.Coin
+		setValSetDelegation  bool
+		setStakingDelegation bool
+		expectPass           bool
 	}{
 		{
-			name:          "Withdraw all rewards with existing valset delegations",
-			delegator:     sdk.AccAddress([]byte("addr1---------------")),
-			coinToStake:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)), // delegate 20osmo
-			setValSet:     true,
-			setDelegation: true,
-			expectPass:    true,
+			name:                 "Withdraw all rewards with existing valset delegations, and existing staking position",
+			delegator:            sdk.AccAddress([]byte("addr1---------------")),
+			coinsToDelegate:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)), // delegate 20osmo
+			setValSetDelegation:  true,
+			setStakingDelegation: true,
+			expectPass:           true,
 		},
 		{
-			name:        "Withdraw all rewards, val-set doesnot exist",
-			delegator:   sdk.AccAddress([]byte("addr1---------------")),
-			coinToStake: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),
-			expectPass:  false,
+			name:                 "Withdraw all rewards with no existing valset delegation, but existing staking position",
+			delegator:            sdk.AccAddress([]byte("addr1---------------")),
+			coinsToDelegate:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)), // delegate 20osmo
+			setValSetDelegation:  false,
+			setStakingDelegation: true,
+			expectPass:           true,
 		},
 		{
-			name:          "Withdraw all rewards, delegation doesnot exist",
-			delegator:     sdk.AccAddress([]byte("addr1---------------")),
-			coinToStake:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),
-			setDelegation: true,
-			expectPass:    false,
+			name:                 "Withdraw all rewards with existing valset delegation, but no existing staking position",
+			delegator:            sdk.AccAddress([]byte("addr1---------------")),
+			coinsToDelegate:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)), // delegate 20osmo
+			setValSetDelegation:  true,
+			setStakingDelegation: false,
+			expectPass:           true,
+		},
+		{
+			name:                 "Withdraw all rewards with no existing valset delegation, no existing staking position",
+			delegator:            sdk.AccAddress([]byte("addr1---------------")),
+			coinsToDelegate:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)), // delegate 20osmo
+			setValSetDelegation:  false,
+			setStakingDelegation: false,
+			expectPass:           false,
 		},
 	}
 
@@ -515,48 +526,65 @@ func (suite *KeeperTestSuite) TestWithdrawDelegationRewards() {
 
 			// call the create validator set preference
 			preferences := suite.PrepareDelegateToValidatorSet()
+			// setup extra validator for non val-set staking position
+			valAddrs := suite.SetupMultipleValidators(1)
 			ctx := suite.Ctx
 
-			// delegators have to set val-set before delegating tokens
-			if test.setValSet {
+			// setup test for only valset delegation
+			if test.setValSetDelegation && !test.setStakingDelegation {
+				// delegators have to set val-set before delegating tokens
 				_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
 				suite.Require().NoError(err)
 
-				if test.setDelegation {
-					// call the create validator set preference
-					_, err := msgServer.DelegateToValidatorSet(c, types.NewMsgDelegateToValidatorSet(test.delegator, test.coinToStake))
-					suite.Require().NoError(err)
+				// call the delegate to validator set preference message
+				_, err = msgServer.DelegateToValidatorSet(c, types.NewMsgDelegateToValidatorSet(test.delegator, test.coinsToDelegate))
+				suite.Require().NoError(err)
 
-					// incrementing the blockheight by 1 for reward
-					ctx = suite.Ctx.WithBlockHeight(suite.Ctx.BlockHeight() + 1)
+				suite.SetupDelegationReward(ctx, test.delegator, preferences, "", test.setValSetDelegation, test.setStakingDelegation)
+			}
 
-					// only necessary if there are tokens delegated
-					for _, val := range preferences {
-						// check that there is enough reward to withdraw
-						_, validator := suite.GetDelegationRewards(ctx, val, test.delegator)
+			// setup test for only existing staking position
+			if test.setStakingDelegation && !test.setValSetDelegation {
+				suite.SetupExistingValidatorDelegations(suite.Ctx, valAddrs[0], test.delegator, test.coinsToDelegate.Amount)
 
-						// allocate some rewards
-						tokens := sdk.NewDecCoins(sdk.NewInt64DecCoin(sdk.DefaultBondDenom, 10))
-						suite.App.DistrKeeper.AllocateTokensToValidator(ctx, validator, tokens)
+				suite.SetupDelegationReward(ctx, test.delegator, nil, valAddrs[0], test.setValSetDelegation, test.setStakingDelegation)
+			}
 
-						rewardsAfterAllocation, _ := suite.GetDelegationRewards(ctx, val, test.delegator)
-						suite.Require().NotNil(rewardsAfterAllocation)
-						suite.Require().NotZero(rewardsAfterAllocation[0].Amount)
-					}
-				}
+			// setup test for existing staking position and valset delegation position
+			if test.setStakingDelegation && test.setValSetDelegation {
+				suite.SetupExistingValidatorDelegations(suite.Ctx, valAddrs[0], test.delegator, test.coinsToDelegate.Amount)
+
+				// delegators have to set val-set before delegating tokens
+				_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
+				suite.Require().NoError(err)
+
+				// call the delegate to validator set preference message
+				_, err = msgServer.DelegateToValidatorSet(c, types.NewMsgDelegateToValidatorSet(test.delegator, test.coinsToDelegate))
+				suite.Require().NoError(err)
+
+				suite.SetupDelegationReward(ctx, test.delegator, preferences, valAddrs[0], test.setValSetDelegation, test.setStakingDelegation)
 			}
 
 			_, err := msgServer.WithdrawDelegationRewards(c, types.NewMsgWithdrawDelegationRewards(test.delegator))
 			if test.expectPass {
 				suite.Require().NoError(err)
 
-				for _, val := range preferences {
-					rewardAfterWithdraw, _ := suite.GetDelegationRewards(ctx, val, test.delegator)
-					suite.Require().Nil(rewardAfterWithdraw)
+				// the rewards for valset and exising delegations should be nil
+				if test.setValSetDelegation {
+					for _, val := range preferences {
+						rewardAfterWithdrawValSet, _ := suite.GetDelegationRewards(ctx, val.ValOperAddress, test.delegator)
+						suite.Require().Nil(rewardAfterWithdrawValSet)
+					}
+				}
+
+				if test.setStakingDelegation {
+					rewardAfterWithdrawExistingSet, _ := suite.GetDelegationRewards(ctx, valAddrs[0], test.delegator)
+					suite.Require().Nil(rewardAfterWithdrawExistingSet)
 				}
 
 			} else {
 				suite.Require().Error(err)
+
 			}
 		})
 	}

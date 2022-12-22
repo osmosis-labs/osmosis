@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"math"
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -212,26 +213,74 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 // Rewards are calculated per period, and is updated each time validator delegation changes. For ex: when a delegator
 // receives new delgation the rewards can be calculated by taking (total rewards before new delegation - the total current rewards).
 func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delegatorAddr string) error {
-	// get the existing validator set preference
-	existingSet, found := k.GetValidatorSetPreference(ctx, delegatorAddr)
-	if !found {
-		return fmt.Errorf("user %s doesn't have validator set", delegatorAddr)
-	}
-
 	delegator, err := sdk.AccAddressFromBech32(delegatorAddr)
 	if err != nil {
 		return err
 	}
 
-	for _, val := range existingSet.Preferences {
-		valAddr, err := sdk.ValAddressFromBech32(val.ValOperAddress)
+	// check if there is existing staking position that's not val-set
+	delegations := k.stakingKeeper.GetDelegatorDelegations(ctx, delegator, math.MaxUint16)
+
+	// get the existing validator set preference
+	existingSet, found := k.GetValidatorSetPreference(ctx, delegatorAddr)
+	if !found && len(delegations) == 0 {
+		return fmt.Errorf("user %s doesn't have validator set or existing delegations", delegatorAddr)
+	}
+
+	// there is existing staking position, but it's not valset
+	if !found && len(delegations) != 0 {
+		err := k.withdrawExistingStakingPosition(ctx, delegator, delegations)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	// there is no existing staking position, but there is val-set delegation
+	if found && len(delegations) == 0 {
+		err := k.withdrawExistingValSetStakingPosition(ctx, delegator, existingSet.Preferences)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	// there is staking position delegation, as well as val-set delegation
+	err = k.withdrawExistingStakingPosition(ctx, delegator, delegations)
+	if err != nil {
+		return err
+	}
+
+	err = k.withdrawExistingValSetStakingPosition(ctx, delegator, existingSet.Preferences)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// withdrawExistingStakingPosition takes the existing staking delegator delegations and withdraws the rewards.
+func (k Keeper) withdrawExistingStakingPosition(ctx sdk.Context, delegator sdk.AccAddress, delegations []stakingtypes.Delegation) error {
+	for _, dels := range delegations {
+		_, err := k.distirbutionKeeper.WithdrawDelegationRewards(ctx, delegator, dels.GetValidatorAddr())
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// withdrawExistingValSetStakingPosition takes the existing valset delegator delegations and withdraws the rewards.
+func (k Keeper) withdrawExistingValSetStakingPosition(ctx sdk.Context, delegator sdk.AccAddress, delegations []types.ValidatorPreference) error {
+	for _, dels := range delegations {
+		valAddr, err := sdk.ValAddressFromBech32(dels.ValOperAddress)
 		if err != nil {
 			return fmt.Errorf("validator address not formatted")
 		}
 
 		_, err = k.distirbutionKeeper.WithdrawDelegationRewards(ctx, delegator, valAddr)
 		if err != nil {
-			return nil
+			return err
 		}
 	}
 	return nil
