@@ -9,10 +9,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
-	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
-	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
-	"github.com/cosmos/ibc-go/v3/modules/core/exported"
+	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
+	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
+	"github.com/cosmos/ibc-go/v4/modules/core/exported"
 
 	"github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
 )
@@ -38,7 +38,7 @@ func (im *IBCModule) OnChanOpenInit(ctx sdk.Context,
 	channelCap *capabilitytypes.Capability,
 	counterparty channeltypes.Counterparty,
 	version string,
-) error {
+) (string, error) {
 	return im.app.OnChanOpenInit(
 		ctx,
 		order,
@@ -125,7 +125,7 @@ func (im *IBCModule) OnRecvPacket(
 	relayer sdk.AccAddress,
 ) exported.Acknowledgement {
 	if err := ValidateReceiverAddress(packet); err != nil {
-		return channeltypes.NewErrorAcknowledgement(err.Error())
+		return channeltypes.NewErrorAcknowledgement(err)
 	}
 
 	contract := im.ics4Middleware.GetParams(ctx)
@@ -137,10 +137,10 @@ func (im *IBCModule) OnRecvPacket(
 	err := CheckAndUpdateRateLimits(ctx, im.ics4Middleware.ContractKeeper, "recv_packet", contract, packet)
 	if err != nil {
 		if strings.Contains(err.Error(), "rate limit exceeded") {
-			return channeltypes.NewErrorAcknowledgement(types.ErrRateLimitExceeded.Error())
+			return channeltypes.NewErrorAcknowledgement(types.ErrRateLimitExceeded)
 		}
 		fullError := sdkerrors.Wrap(types.ErrContractError, err.Error())
-		return channeltypes.NewErrorAcknowledgement(fullError.Error())
+		return channeltypes.NewErrorAcknowledgement(fullError)
 	}
 
 	// if this returns an Acknowledgement that isn't successful, all state changes are discarded
@@ -236,4 +236,8 @@ func (im *IBCModule) WriteAcknowledgement(
 	ack exported.Acknowledgement,
 ) error {
 	return im.ics4Middleware.WriteAcknowledgement(ctx, chanCap, packet, ack)
+}
+
+func (im *IBCModule) GetAppVersion(ctx sdk.Context, portID, channelID string) (string, bool) {
+	return im.ics4Middleware.GetAppVersion(ctx, portID, channelID)
 }
