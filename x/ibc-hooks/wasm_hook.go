@@ -4,9 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 
+<<<<<<< HEAD
+=======
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+
+	"github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/keeper"
+
+>>>>>>> 93181a45 (Move osmoutils into its own go mod (#3827))
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
