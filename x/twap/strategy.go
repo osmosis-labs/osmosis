@@ -70,7 +70,7 @@ func (s *geometric) computeTwap(startRecord types.TwapRecord, endRecord types.Tw
 	invertCase2 := !exponent.IsNegative() && quoteAsset == startRecord.Asset1Denom
 	if invertCase1 || invertCase2 {
 		if result.IsZero() {
-			return sdk.ZeroDec(), errors.New("internal geometric twap error: denominator is zero")
+			return sdk.Dec{}, errors.New("internal geometric twap error: denominator is zero")
 		}
 
 		result = osmomath.OneDec().Quo(result)
