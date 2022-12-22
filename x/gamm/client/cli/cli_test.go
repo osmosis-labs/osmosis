@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
-	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/client/cli"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"

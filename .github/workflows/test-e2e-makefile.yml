@@ -23,6 +23,8 @@ jobs:
         with:
           PATTERNS: |
             **/**.go
+            **/**.wasm
+            Dockerfile
             go.mod
             go.sum
       -
