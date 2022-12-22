@@ -23,7 +23,8 @@ type computeTwapTestCase struct {
 }
 
 var (
-	oneHundredYears = OneSec.MulInt64(60 * 60 * 24 * 365 * 100)
+	oneHundredYearsInHours int64 = 100 * 365 * 24
+	oneHundredYears              = OneSec.MulInt64(60 * 60 * oneHundredYearsInHours)
 )
 
 // TestComputeArithmeticTwap tests computeTwap on various inputs.
@@ -306,36 +307,54 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap_ThreeAsset() {
 	}
 }
 
-// TestTwapPow_MaxSpotPrice_NoOverflow tests that no overflow occurs at log_2{max spot price values}.
-// and that the epsilon is within the tolerated multiplicative error.
+// TestTwapLogPow_MaxSpotPrice_NoOverflow tests that no overflow occurs at log_2{max spot price value}.
+// Then, we assume that 100 years - 1 ms has passed to compute the arithmetic mean of log prices.
+// between the
 func (s *TestSuite) TestTwapLogPow_MaxSpotPrice_NoOverflow() {
 	errTolerance := osmomath.ErrTolerance{
 		MultiplicativeTolerance: sdk.OneDec().Quo(sdk.NewDec(10).Power(18)),
 		RoundingDir:             osmomath.RoundDown,
 	}
 
-	oneHundredYearsTimesMaxSpotPrice := oneHundredYears.Mul(gammtypes.MaxSpotPrice)
+	startRecord := baseRecord
+	startRecord.P0LastSpotPrice = gammtypes.MaxSpotPrice
 
-	exponentValue := twap.TwapLog(oneHundredYearsTimesMaxSpotPrice)
-	finalValue := twap.TwapPow(exponentValue)
+	// Take log base 2 of the price
+	maxSpotPriceLogBase2 := twap.TwapLog(gammtypes.MaxSpotPrice)
 
-	s.Require().Equal(0, errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(oneHundredYearsTimesMaxSpotPrice), osmomath.BigDecFromSDKDec(finalValue)))
+	// Subtract 1ms from 100 years to assume that we interpolate.
+	oneHundredYeasMin1Ms := oneHundredYears.Sub(oneDec)
+
+	// Calculate the geometric accumulator difference
+	geometricAccumDiff := oneHundredYeasMin1Ms.Mul(maxSpotPriceLogBase2)
+
+	endRecord := baseRecord
+	endRecord.Time = endRecord.Time.Add(time.Duration(oneHundredYearsInHours)*time.Hour - time.Millisecond)
+	endRecord.GeometricTwapAccumulator = geometricAccumDiff
+
+	geometricStrategy := twap.GeometricTwapStrategy{TwapKeeper: *s.App.TwapKeeper}
+
+	// No overflow.
+	geometricTwapAssert0 := geometricStrategy.ComputeTwap(startRecord, endRecord, startRecord.Asset0Denom)
+	s.Require().Equal(0, errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(gammtypes.MaxSpotPrice), osmomath.BigDecFromSDKDec(geometricTwapAssert0)))
+
+	// No underflow
+	geometricTwapAsset1 := geometricStrategy.ComputeTwap(startRecord, endRecord, startRecord.Asset1Denom)
+	s.Require().Equal(zeroDec.String(), geometricTwapAsset1.String())
 }
 
 // TestTwapPow_MaxSpotPrice_NoOverflow tests that no overflow occurs at log_2{max spot price values}.
 // and that the epsilon is within the tolerated multiplicative error.
-func (s *TestSuite) TestTwapLogPow_MaxSpotPrice_NoUnderflow() {
-	errTolerance := osmomath.ErrTolerance{
-		MultiplicativeTolerance: sdk.OneDec().Quo(sdk.NewDec(10).Power(18)),
-		RoundingDir:             osmomath.RoundDown,
-	}
+// func (s *TestSuite) TestTwapLogPow_MaxSpotPrice_NoUnderflow() {
+// 	errTolerance := osmomath.ErrTolerance{
+// 		MultiplicativeTolerance: sdk.OneDec().Quo(sdk.NewDec(10).Power(18)),
+// 		RoundingDir:             osmomath.RoundDown,
+// 	}
 
-	// minSpotPrice = oneDec.Quo(sdk.NewDec(10))
+// 	minSpotPrice := sdk.NewDecWithPrec(1, 18)
 
-	oneHundredYearsTimesMaxSpotPrice := oneHundredYears.Mul(gammtypes.MaxSpotPrice)
+// 	exponentValue := twap.TwapLog(minSpotPrice)
+// 	finalValue := twap.TwapPow(exponentValue)
 
-	exponentValue := twap.TwapLog(oneHundredYearsTimesMaxSpotPrice)
-	finalValue := twap.TwapPow(exponentValue)
-
-	s.Require().Equal(0, errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(oneHundredYearsTimesMaxSpotPrice), osmomath.BigDecFromSDKDec(finalValue)))
-}
+// 	s.Require().Equal(0, errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(oneHundredYearsTimesMaxSpotPrice), osmomath.BigDecFromSDKDec(finalValue)))
+// }
