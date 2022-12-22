@@ -125,7 +125,7 @@ func (im *IBCModule) OnRecvPacket(
 	relayer sdk.AccAddress,
 ) exported.Acknowledgement {
 	if err := ValidateReceiverAddress(packet); err != nil {
-		return channeltypes.NewErrorAcknowledgement(err)
+		return osmoutils.NewStringErrorAcknowledgement(err.Error())
 	}
 
 	contract := im.ics4Middleware.GetParams(ctx)
@@ -137,10 +137,10 @@ func (im *IBCModule) OnRecvPacket(
 	err := CheckAndUpdateRateLimits(ctx, im.ics4Middleware.ContractKeeper, "recv_packet", contract, packet)
 	if err != nil {
 		if strings.Contains(err.Error(), "rate limit exceeded") {
-			return channeltypes.NewErrorAcknowledgement(types.ErrRateLimitExceeded)
+			return osmoutils.NewStringErrorAcknowledgement(types.ErrRateLimitExceeded.Error())
 		}
 		fullError := sdkerrors.Wrap(types.ErrContractError, err.Error())
-		return channeltypes.NewErrorAcknowledgement(fullError)
+		return osmoutils.NewStringErrorAcknowledgement(fullError.Error())
 	}
 
 	// if this returns an Acknowledgement that isn't successful, all state changes are discarded
