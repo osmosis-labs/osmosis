@@ -93,6 +93,9 @@ Example:
 				return err
 			}
 			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
 			quoteDenom, err := getQuoteDenomFromLiquidity(cmd.Context(), clientCtx, poolId, baseDenom)
 			if err != nil {
 				return err
