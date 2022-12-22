@@ -687,7 +687,7 @@ func TestSwapOutAmtGivenIn(t *testing.T) {
 	tests := map[string]struct {
 		poolAssets            sdk.Coins
 		scalingFactors        []uint64
-		tokenIn               sdk.Coins
+		tokenIn               sdk.Coin
 		expectedTokenOut      sdk.Coin
 		expectedPoolLiquidity sdk.Coins
 		swapFee               sdk.Dec
@@ -696,7 +696,7 @@ func TestSwapOutAmtGivenIn(t *testing.T) {
 		"even pool basic trade": {
 			poolAssets:            twoEvenStablePoolAssets,
 			scalingFactors:        defaultTwoAssetScalingFactors,
-			tokenIn:               sdk.NewCoins(sdk.NewInt64Coin("foo", 100)),
+			tokenIn:               sdk.NewInt64Coin("foo", 100),
 			expectedTokenOut:      sdk.NewInt64Coin("bar", 99),
 			expectedPoolLiquidity: twoEvenStablePoolAssets.Add(sdk.NewInt64Coin("foo", 100)).Sub(sdk.NewCoins(sdk.NewInt64Coin("bar", 99))),
 			swapFee:               sdk.ZeroDec(),
@@ -708,7 +708,7 @@ func TestSwapOutAmtGivenIn(t *testing.T) {
 				sdk.NewInt64Coin("foo", 10000000),
 			),
 			scalingFactors:   []uint64{100, 1},
-			tokenIn:          sdk.NewCoins(sdk.NewInt64Coin("foo", 100)),
+			tokenIn:          sdk.NewInt64Coin("foo", 100),
 			expectedTokenOut: sdk.NewInt64Coin("bar", 9999),
 			expectedPoolLiquidity: sdk.NewCoins(
 				sdk.NewInt64Coin("bar", 1000000000).SubAmount(sdk.NewIntFromUint64(9999)),
@@ -727,7 +727,7 @@ func TestSwapOutAmtGivenIn(t *testing.T) {
 				sdk.NewInt64Coin("bar", 9_999_999_998),
 			),
 			scalingFactors:   defaultTwoAssetScalingFactors,
-			tokenIn:          sdk.NewCoins(sdk.NewInt64Coin("foo", 1)),
+			tokenIn:          sdk.NewInt64Coin("foo", 1),
 			expectedTokenOut: sdk.Coin{},
 			expectedPoolLiquidity: sdk.NewCoins(
 				sdk.NewInt64Coin("foo", 9_999_999_999),
@@ -742,7 +742,7 @@ func TestSwapOutAmtGivenIn(t *testing.T) {
 				sdk.NewInt64Coin("bar", 10_000_000_000),
 			),
 			scalingFactors:   defaultTwoAssetScalingFactors,
-			tokenIn:          sdk.NewCoins(sdk.NewInt64Coin("foo", 1)),
+			tokenIn:          sdk.NewInt64Coin("foo", 1),
 			expectedTokenOut: sdk.Coin{},
 			expectedPoolLiquidity: sdk.NewCoins(
 				sdk.NewInt64Coin("foo", 10_000_000_000),
@@ -774,7 +774,7 @@ func TestSwapInAmtGivenOut(t *testing.T) {
 	tests := map[string]struct {
 		poolAssets            sdk.Coins
 		scalingFactors        []uint64
-		tokenOut              sdk.Coins
+		tokenOut              sdk.Coin
 		expectedTokenIn       sdk.Coin
 		expectedPoolLiquidity sdk.Coins
 		swapFee               sdk.Dec
@@ -783,7 +783,7 @@ func TestSwapInAmtGivenOut(t *testing.T) {
 		"even pool basic trade": {
 			poolAssets:            twoEvenStablePoolAssets,
 			scalingFactors:        defaultTwoAssetScalingFactors,
-			tokenOut:              sdk.NewCoins(sdk.NewInt64Coin("bar", 100)),
+			tokenOut:              sdk.NewInt64Coin("bar", 100),
 			expectedTokenIn:       sdk.NewInt64Coin("foo", 100),
 			expectedPoolLiquidity: twoEvenStablePoolAssets.Add(sdk.NewInt64Coin("foo", 100)).Sub(sdk.NewCoins(sdk.NewInt64Coin("bar", 100))),
 			swapFee:               sdk.ZeroDec(),
@@ -795,7 +795,7 @@ func TestSwapInAmtGivenOut(t *testing.T) {
 				sdk.NewInt64Coin("bar", 9_999_999_997*types.ScalingFactorMultiplier),
 			),
 			scalingFactors:  defaultTwoAssetScalingFactors,
-			tokenOut:        sdk.NewCoins(sdk.NewInt64Coin("bar", 1*types.ScalingFactorMultiplier)),
+			tokenOut:        sdk.NewInt64Coin("bar", 1*types.ScalingFactorMultiplier),
 			expectedTokenIn: sdk.NewInt64Coin("foo", 1*types.ScalingFactorMultiplier),
 			expectedPoolLiquidity: sdk.NewCoins(
 				sdk.NewInt64Coin("foo", 9_999_999_998*types.ScalingFactorMultiplier),
@@ -810,7 +810,7 @@ func TestSwapInAmtGivenOut(t *testing.T) {
 				sdk.NewInt64Coin("bar", 10_000_000_000*types.ScalingFactorMultiplier),
 			),
 			scalingFactors:  defaultTwoAssetScalingFactors,
-			tokenOut:        sdk.NewCoins(sdk.NewInt64Coin("bar", 1)),
+			tokenOut:        sdk.NewInt64Coin("bar", 1),
 			expectedTokenIn: sdk.Coin{},
 			expectedPoolLiquidity: sdk.NewCoins(
 				sdk.NewInt64Coin("foo", 10_000_000_000*types.ScalingFactorMultiplier),

@@ -197,7 +197,7 @@ func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice sdk.De
 		_, err = gammMsgServer.SwapExactAmountIn(sdk.WrapSDKContext(s.Ctx), &msg)
 		s.Require().NoError(err)
 	} else {
-		swapOut := sdk.NewCoins(sdk.NewCoin(quoteDenom, sdk.NewInt(amountTrade.RoundInt64()).Abs()))
+		swapOut := sdk.NewCoin(quoteDenom, sdk.NewInt(amountTrade.RoundInt64()).Abs())
 		swapFee := pool.GetSwapFee(s.Ctx)
 		tokenIn, err := pool.CalcInAmtGivenOut(s.Ctx, swapOut, baseDenom, swapFee)
 		s.Require().NoError(err)
@@ -206,7 +206,7 @@ func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice sdk.De
 			Sender:           s.TestAccs[0].String(),
 			Routes:           []gammtypes.SwapAmountOutRoute{{PoolId: poolID, TokenInDenom: baseDenom}},
 			TokenInMaxAmount: sdk.NewInt(int64Max),
-			TokenOut:         swapOut[0],
+			TokenOut:         swapOut,
 		}
 
 		gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)

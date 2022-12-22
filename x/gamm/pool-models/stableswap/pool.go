@@ -226,10 +226,10 @@ func (p Pool) reorderReservesAndScalingFactors(first string, second string) ([]s
 // It requires caller to validate that tokensIn and tokensOut only consist of
 // denominations in the pool.
 // The function sanity checks this, and panics if not the case.
-func (p *Pool) updatePoolLiquidityForSwap(tokensIn sdk.Coins, tokensOut sdk.Coins) {
+func (p *Pool) updatePoolLiquidityForSwap(tokenIn sdk.Coin, tokenOut sdk.Coin) {
 	numTokens := p.PoolLiquidity.Len()
 	// update liquidity
-	p.PoolLiquidity = p.PoolLiquidity.Add(tokensIn...).Sub(tokensOut)
+	p.PoolLiquidity = p.PoolLiquidity.Add(tokenIn).Sub(sdk.NewCoins(tokenOut))
 	// sanity check that no new denoms were added
 	if len(p.PoolLiquidity) != numTokens {
 		panic("updatePoolLiquidityForSwap changed number of tokens in pool")
@@ -240,7 +240,12 @@ func (p *Pool) updatePoolLiquidityForSwap(tokensIn sdk.Coins, tokensOut sdk.Coin
 // The function sanity checks that not all tokens of a given denom are removed,
 // and panics if thats the case.
 func (p *Pool) updatePoolLiquidityForExit(tokensOut sdk.Coins, exitingShares sdk.Int) {
-	p.updatePoolLiquidityForSwap(sdk.Coins{}, tokensOut)
+	numTokens := p.PoolLiquidity.Len()
+	p.PoolLiquidity = p.PoolLiquidity.Sub(tokensOut)
+	if len(p.PoolLiquidity) != numTokens {
+		panic("updatePoolLiquidityForExit changed number of tokens in pool")
+	}
+
 	p.TotalShares.Amount = p.TotalShares.Amount.Sub(exitingShares)
 }
 
@@ -258,11 +263,8 @@ func (p *Pool) updatePoolForJoin(tokensIn sdk.Coins, newShares sdk.Int) {
 
 // TODO: These should all get moved to amm.go
 // CalcOutAmtGivenIn calculates expected output amount given input token
-func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
-	if tokenIn.Len() != 1 {
-		return sdk.Coin{}, errors.New("stableswap CalcOutAmtGivenIn: tokenIn is of wrong length")
-	}
-	outAmtDec, err := p.calcOutAmtGivenIn(tokenIn[0], tokenOutDenom, swapFee)
+func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
+	outAmtDec, err := p.calcOutAmtGivenIn(tokenIn, tokenOutDenom, swapFee)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -277,8 +279,8 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDeno
 }
 
 // SwapOutAmtGivenIn executes a swap given a desired input amount
-func (p *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
-	if err = validatePoolLiquidity(p.PoolLiquidity.Add(tokenIn...), p.ScalingFactors); err != nil {
+func (p *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
+	if err = validatePoolLiquidity(p.PoolLiquidity.Add(tokenIn), p.ScalingFactors); err != nil {
 		return sdk.Coin{}, err
 	}
 
@@ -287,18 +289,14 @@ func (p *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDen
 		return sdk.Coin{}, err
 	}
 
-	p.updatePoolLiquidityForSwap(tokenIn, sdk.NewCoins(tokenOut))
+	p.updatePoolLiquidityForSwap(tokenIn, tokenOut)
 
 	return tokenOut, nil
 }
 
 // CalcInAmtGivenOut calculates input amount needed to receive given output
-func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
-	if tokenOut.Len() != 1 {
-		return sdk.Coin{}, errors.New("stableswap CalcInAmtGivenOut: tokenOut is of wrong length")
-	}
-
-	amt, err := p.calcInAmtGivenOut(tokenOut[0], tokenInDenom, swapFee)
+func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
+	amt, err := p.calcInAmtGivenOut(tokenOut, tokenInDenom, swapFee)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -314,7 +312,7 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDeno
 }
 
 // SwapInAmtGivenOut executes a swap given a desired output amount
-func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
+func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
 	tokenIn, err = p.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee)
 	if err != nil {
 		return sdk.Coin{}, err
@@ -324,7 +322,7 @@ func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDen
 		return sdk.Coin{}, err
 	}
 
-	p.updatePoolLiquidityForSwap(sdk.NewCoins(tokenIn), tokenOut)
+	p.updatePoolLiquidityForSwap(tokenIn, tokenOut)
 
 	return tokenIn, nil
 }

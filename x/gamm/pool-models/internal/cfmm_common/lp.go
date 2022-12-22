@@ -174,7 +174,7 @@ func SwapAllCoinsToSingleAsset(pool types.CFMMPoolI, ctx sdk.Context, inTokens s
 		if coin.Denom == swapToDenom {
 			continue
 		}
-		tokenOut, err := pool.SwapOutAmtGivenIn(ctx, sdk.NewCoins(coin), swapToDenom, swapFee)
+		tokenOut, err := pool.SwapOutAmtGivenIn(ctx, coin, swapToDenom, swapFee)
 		if err != nil {
 			return sdk.Int{}, err
 		}

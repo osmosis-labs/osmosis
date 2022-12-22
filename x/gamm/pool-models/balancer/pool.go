@@ -261,27 +261,14 @@ func (p Pool) parsePoolAssetsByDenoms(tokenADenom, tokenBDenom string) (
 	return Aasset, Basset, nil
 }
 
-func (p Pool) parsePoolAssets(tokensA sdk.Coins, tokenBDenom string) (
-	tokenA sdk.Coin, Aasset PoolAsset, Basset PoolAsset, err error,
-) {
-	if len(tokensA) != 1 {
-		return tokenA, Aasset, Basset, errors.New("expected tokensB to be of length one")
-	}
-	Aasset, Basset, err = p.parsePoolAssetsByDenoms(tokensA[0].Denom, tokenBDenom)
-	if err != nil {
-		return sdk.Coin{}, PoolAsset{}, PoolAsset{}, err
-	}
-	return tokensA[0], Aasset, Basset, nil
-}
-
-func (p Pool) parsePoolAssetsCoins(tokensA sdk.Coins, tokensB sdk.Coins) (
+func (p Pool) parsePoolAssets(tokenA sdk.Coin, tokenBDenom string) (
 	Aasset PoolAsset, Basset PoolAsset, err error,
 ) {
-	if len(tokensB) != 1 {
-		return Aasset, Basset, errors.New("expected tokensA to be of length one")
+	Aasset, Basset, err = p.parsePoolAssetsByDenoms(tokenA.Denom, tokenBDenom)
+	if err != nil {
+		return PoolAsset{}, PoolAsset{}, err
 	}
-	_, Aasset, Basset, err = p.parsePoolAssets(tokensA, tokensB[0].Denom)
-	return Aasset, Basset, err
+	return Aasset, Basset, nil
 }
 
 func (p *Pool) IncreaseLiquidity(sharesOut sdk.Int, coinsIn sdk.Coins) {
@@ -486,11 +473,11 @@ func (p Pool) IsActive(ctx sdk.Context) bool {
 // amount and fee deducted, using solveConstantFunctionInvariant.
 func (p Pool) CalcOutAmtGivenIn(
 	ctx sdk.Context,
-	tokensIn sdk.Coins,
+	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	swapFee sdk.Dec,
 ) (sdk.Coin, error) {
-	tokenIn, poolAssetIn, poolAssetOut, err := p.parsePoolAssets(tokensIn, tokenOutDenom)
+	poolAssetIn, poolAssetOut, err := p.parsePoolAssets(tokenIn, tokenOutDenom)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -521,18 +508,18 @@ func (p Pool) CalcOutAmtGivenIn(
 // SwapOutAmtGivenIn is a mutative method for CalcOutAmtGivenIn, which includes the actual swap.
 func (p *Pool) SwapOutAmtGivenIn(
 	ctx sdk.Context,
-	tokensIn sdk.Coins,
+	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	swapFee sdk.Dec,
 ) (
 	tokenOut sdk.Coin, err error,
 ) {
-	tokenOutCoin, err := p.CalcOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
+	tokenOutCoin, err := p.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
 
-	err = p.applySwap(ctx, tokensIn, sdk.Coins{tokenOutCoin})
+	err = p.applySwap(ctx, tokenIn, tokenOutCoin)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -542,10 +529,10 @@ func (p *Pool) SwapOutAmtGivenIn(
 // CalcInAmtGivenOut calculates token to be provided, fee added,
 // given the swapped out amount, using solveConstantFunctionInvariant.
 func (p Pool) CalcInAmtGivenOut(
-	ctx sdk.Context, tokensOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (
+	ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec) (
 	tokenIn sdk.Coin, err error,
 ) {
-	tokenOut, poolAssetOut, poolAssetIn, err := p.parsePoolAssets(tokensOut, tokenInDenom)
+	poolAssetOut, poolAssetIn, err := p.parsePoolAssets(tokenOut, tokenInDenom)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -576,15 +563,15 @@ func (p Pool) CalcInAmtGivenOut(
 
 // SwapInAmtGivenOut is a mutative method for CalcOutAmtGivenIn, which includes the actual swap.
 func (p *Pool) SwapInAmtGivenOut(
-	ctx sdk.Context, tokensOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (
+	ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec) (
 	tokenIn sdk.Coin, err error,
 ) {
-	tokenInCoin, err := p.CalcInAmtGivenOut(ctx, tokensOut, tokenInDenom, swapFee)
+	tokenInCoin, err := p.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
 
-	err = p.applySwap(ctx, sdk.Coins{tokenInCoin}, tokensOut)
+	err = p.applySwap(ctx, tokenInCoin, tokenOut)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -592,16 +579,16 @@ func (p *Pool) SwapInAmtGivenOut(
 }
 
 // ApplySwap.
-func (p *Pool) applySwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coins) error {
+func (p *Pool) applySwap(ctx sdk.Context, tokenIn sdk.Coin, tokenOut sdk.Coin) error {
 	// Fixed gas consumption per swap to prevent spam
 	ctx.GasMeter().ConsumeGas(types.BalancerGasFeeForSwap, "balancer swap computation")
-	// Also ensures that len(tokensIn) = 1 = len(tokensOut)
-	inPoolAsset, outPoolAsset, err := p.parsePoolAssetsCoins(tokensIn, tokensOut)
+
+	inPoolAsset, outPoolAsset, err := p.parsePoolAssets(tokenIn, tokenOut.Denom)
 	if err != nil {
 		return err
 	}
-	inPoolAsset.Token.Amount = inPoolAsset.Token.Amount.Add(tokensIn[0].Amount)
-	outPoolAsset.Token.Amount = outPoolAsset.Token.Amount.Sub(tokensOut[0].Amount)
+	inPoolAsset.Token.Amount = inPoolAsset.Token.Amount.Add(tokenIn.Amount)
+	outPoolAsset.Token.Amount = outPoolAsset.Token.Amount.Sub(tokenOut.Amount)
 
 	return p.UpdatePoolAssetBalances(sdk.NewCoins(
 		inPoolAsset.Token,

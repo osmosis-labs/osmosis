@@ -43,15 +43,14 @@ func TestCalculateAmountOutAndIn_InverseRelationship(
 	errTolerance osmomath.ErrTolerance,
 ) {
 	initialOut := sdk.NewInt64Coin(assetOutDenom, initialCalcOut)
-	initialOutCoins := sdk.NewCoins(initialOut)
 
-	actualTokenIn, err := pool.CalcInAmtGivenOut(ctx, initialOutCoins, assetInDenom, swapFee)
+	actualTokenIn, err := pool.CalcInAmtGivenOut(ctx, initialOut, assetInDenom, swapFee)
 	require.NoError(t, err)
 
 	// we expect that any output less than 1 will always be rounded up
 	require.True(t, actualTokenIn.Amount.GTE(sdk.OneInt()))
 
-	inverseTokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(actualTokenIn), assetOutDenom, swapFee)
+	inverseTokenOut, err := pool.CalcOutAmtGivenIn(ctx, actualTokenIn, assetOutDenom, swapFee)
 	require.NoError(t, err)
 
 	require.Equal(t, initialOut.Denom, inverseTokenOut.Denom)
@@ -94,7 +93,7 @@ func TestSlippageRelationOutGivenIn(
 	initLiquidity sdk.Coins,
 ) {
 	r := rand.New(rand.NewSource(100))
-	swapInAmt := sdkrand.RandCoin(r, initLiquidity[:1])
+	swapInAmt := sdkrand.RandCoin(r, initLiquidity[:1])[0]
 	swapOutDenom := initLiquidity[1].Denom
 
 	curPool := createPoolWithLiquidity(ctx, initLiquidity)
@@ -127,7 +126,7 @@ func TestSlippageRelationInGivenOut(
 	initLiquidity sdk.Coins,
 ) {
 	r := rand.New(rand.NewSource(100))
-	swapOutAmt := sdkrand.RandCoin(r, initLiquidity[:1])
+	swapOutAmt := sdkrand.RandCoin(r, initLiquidity[:1])[0]
 	swapInDenom := initLiquidity[1].Denom
 
 	curPool := createPoolWithLiquidity(ctx, initLiquidity)
@@ -164,7 +163,7 @@ func TestSlippageRelationInGivenOut(
 }
 
 // returns true if the pool can accommodate an InGivenOut swap with `tokenOut` amount out, false otherwise
-func isWithinBounds(ctx sdk.Context, pool types.CFMMPoolI, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (b bool) {
+func isWithinBounds(ctx sdk.Context, pool types.CFMMPoolI, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec) (b bool) {
 	b = true
 	defer func() {
 		if r := recover(); r != nil {

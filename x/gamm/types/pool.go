@@ -41,17 +41,17 @@ type CFMMPoolI interface {
 	CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error)
 	// SwapOutAmtGivenIn swaps 'tokenIn' against the pool, for tokenOutDenom, with the provided swapFee charged.
 	// Balance transfers are done in the keeper, but this method updates the internal pool state.
-	SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error)
+	SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error)
 	// CalcOutAmtGivenIn returns how many coins SwapOutAmtGivenIn would return on these arguments.
 	// This does not mutate the pool, or state.
-	CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error)
+	CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error)
 
 	// SwapInAmtGivenOut swaps exactly enough tokensIn against the pool, to get the provided tokenOut amount out of the pool.
 	// Balance transfers are done in the keeper, but this method updates the internal pool state.
-	SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error)
+	SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error)
 	// CalcInAmtGivenOut returns how many coins SwapInAmtGivenOut would return on these arguments.
 	// This does not mutate the pool, or state.
-	CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error)
+	CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error)
 }
 
 // PoolAmountOutExtension is an extension of the PoolI

@@ -144,7 +144,7 @@ func RandomSwapExactAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Cont
 	randomCoinSubset := sim.RandSubsetCoins(sdk.NewCoins(sdk.NewCoin(accCoinIn.Denom, accCoinIn.Amount)))
 
 	// calculate the minimum number of tokens received from input of tokenIn
-	tokenOutMin, err := pool.CalcOutAmtGivenIn(ctx, randomCoinSubset, coinOut.Denom, pool.GetSwapFee(ctx))
+	tokenOutMin, err := pool.CalcOutAmtGivenIn(ctx, randomCoinSubset[0], coinOut.Denom, pool.GetSwapFee(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -182,11 +182,11 @@ func RandomSwapExactAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Con
 	randomCoinInSubset := osmoutils.MinCoins(sdk.NewCoins(coinIn), sdk.NewCoins(accCoin))
 
 	// utilize CalcOutAmtGivenIn to calculate tokenOut and use tokenOut to calculate tokenInMax
-	tokenOut, err := pool.CalcOutAmtGivenIn(ctx, randomCoinInSubset, coinOut.Denom, pool.GetSwapFee(ctx))
+	tokenOut, err := pool.CalcOutAmtGivenIn(ctx, randomCoinInSubset[0], coinOut.Denom, pool.GetSwapFee(ctx))
 	if err != nil {
 		return nil, err
 	}
-	tokenInMax, err := pool.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), coinIn.Denom, pool.GetSwapFee(ctx))
+	tokenInMax, err := pool.CalcInAmtGivenOut(ctx, tokenOut, coinIn.Denom, pool.GetSwapFee(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -300,7 +300,7 @@ func RandomExitSwapExternAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sd
 
 	// get amount of coinIn from exitedCoins and calculate how much of tokenOut you should get from that
 	exitedCoinsIn := exitedCoins.AmountOf(coinIn.Denom)
-	tokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(sdk.NewCoin(coinIn.Denom, exitedCoinsIn)), coinOut.Denom, pool.GetSwapFee(ctx))
+	tokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoin(coinIn.Denom, exitedCoinsIn), coinOut.Denom, pool.GetSwapFee(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -342,7 +342,7 @@ func RandomExitSwapShareAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.
 
 	// get amount of coinIn from exitedCoins and calculate how much of tokenOut you should get from that
 	exitedCoinsIn := exitedCoins.AmountOf(coinIn.Denom)
-	tokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(sdk.NewCoin(coinIn.Denom, exitedCoinsIn)), coinOut.Denom, pool.GetSwapFee(ctx))
+	tokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoin(coinIn.Denom, exitedCoinsIn), coinOut.Denom, pool.GetSwapFee(ctx))
 	if err != nil {
 		return nil, err
 	}

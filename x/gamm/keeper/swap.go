@@ -37,7 +37,6 @@ func (k Keeper) SwapExactAmountIn(
 	if swapFee.LT(poolSwapFee.QuoInt64(2)) {
 		return sdk.Int{}, fmt.Errorf("given swap fee (%s) must be greater than or equal to half of the pool's swap fee (%s)", swapFee, poolSwapFee)
 	}
-	tokensIn := sdk.Coins{tokenIn}
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -53,7 +52,7 @@ func (k Keeper) SwapExactAmountIn(
 
 	// Executes the swap in the pool and stores the output. Updates pool assets but
 	// does not actually transfer any tokens to or from the pool.
-	tokenOutCoin, err := cfmmPool.SwapOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
+	tokenOutCoin, err := cfmmPool.SwapOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -114,7 +113,7 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, err
 	}
 
-	tokenIn, err := cfmmPool.SwapInAmtGivenOut(ctx, sdk.Coins{tokenOut}, tokenInDenom, swapFee)
+	tokenIn, err := cfmmPool.SwapInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -148,7 +147,7 @@ func (k Keeper) CalcOutAmtGivenIn(
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	return cfmmPool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(tokenIn), tokenOutDenom, swapFee)
+	return cfmmPool.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee)
 }
 
 // CalcInAmtGivenOut calculates the amount of tokenIn given tokenOut and the pool's current state.
@@ -164,7 +163,7 @@ func (k Keeper) CalcInAmtGivenOut(
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	return cfmmPool.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), tokenInDenom, swapFee)
+	return cfmmPool.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee)
 }
 
 // updatePoolForSwap takes a pool, sender, and tokenIn, tokenOut amounts

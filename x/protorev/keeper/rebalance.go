@@ -64,7 +64,7 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit sdk.I
 
 	// Calculate the amount of uosmo that we can get if we swapped the
 	// profited amount of the orignal asset through the highest uosmo liquidity pool
-	conversionTokenOut, err := conversionPool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(sdk.NewCoin(inputCoin.Denom, profit)),
+	conversionTokenOut, err := conversionPool.CalcOutAmtGivenIn(ctx, sdk.NewCoin(inputCoin.Denom, profit),
 		types.OsmosisDenomination, conversionPool.GetSwapFee(ctx))
 	if err != nil {
 		return profit, err

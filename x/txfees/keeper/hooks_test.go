@@ -77,7 +77,7 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 				suite.Require().True(ok)
 
 				expectedOutput, err := pool.CalcOutAmtGivenIn(suite.Ctx,
-					sdk.Coins{sdk.Coin{Denom: tc.denoms[i], Amount: coin.Amount}},
+					sdk.Coin{Denom: tc.denoms[i], Amount: coin.Amount},
 					tc.baseDenom,
 					tc.swapFee)
 				suite.NoError(err)
