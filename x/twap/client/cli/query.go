@@ -28,8 +28,9 @@ func GetQueryCmd() *cobra.Command {
 // GetQueryArithmeticCommand returns an arithmetic twap query command.
 func GetQueryArithmeticCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "arithmetic [poolid] [base denom] [start time] [end time]",
-		Short: "Query arithmetic twap",
+		Use:     "arithmetic [poolid] [base denom] [start time] [end time]",
+		Short:   "Query arithmetic twap",
+		Aliases: []string{"twap"},
 		Long: osmocli.FormatLongDescDirect(`Query arithmetic twap for pool. Start time must be unix time. End time can be unix time or duration.
 
 Example:
