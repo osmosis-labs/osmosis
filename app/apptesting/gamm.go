@@ -3,7 +3,7 @@ package apptesting
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
@@ -130,6 +130,7 @@ func (s *KeeperTestHelper) PrepareImbalancedStableswapPool() uint64 {
 }
 
 // PrepareBalancerPoolWithPoolParams sets up a Balancer pool with poolParams.
+// Uses default pool assets.
 func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer.PoolParams) uint64 {
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
 	return s.PrepareCustomBalancerPool(DefaultPoolAssets, poolParams)

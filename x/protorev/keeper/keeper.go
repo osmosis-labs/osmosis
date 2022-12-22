@@ -19,10 +19,11 @@ type (
 		storeKey   storetypes.StoreKey
 		paramstore paramtypes.Subspace
 
-		accountKeeper types.AccountKeeper
-		bankKeeper    types.BankKeeper
-		gammKeeper    types.GAMMKeeper
-		epochKeeper   types.EpochKeeper
+		accountKeeper    types.AccountKeeper
+		bankKeeper       types.BankKeeper
+		gammKeeper       types.GAMMKeeper
+		epochKeeper      types.EpochKeeper
+		swaprouterKeeper types.SwapRouterKeeper
 	}
 )
 
@@ -34,6 +35,7 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	gammKeeper types.GAMMKeeper,
 	epochKeeper types.EpochKeeper,
+	swaprouterKeeper types.SwapRouterKeeper,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
@@ -41,13 +43,14 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		cdc:           cdc,
-		storeKey:      storeKey,
-		paramstore:    ps,
-		accountKeeper: accountKeeper,
-		bankKeeper:    bankKeeper,
-		gammKeeper:    gammKeeper,
-		epochKeeper:   epochKeeper,
+		cdc:              cdc,
+		storeKey:         storeKey,
+		paramstore:       ps,
+		accountKeeper:    accountKeeper,
+		bankKeeper:       bankKeeper,
+		gammKeeper:       gammKeeper,
+		epochKeeper:      epochKeeper,
+		swaprouterKeeper: swaprouterKeeper,
 	}
 }
 

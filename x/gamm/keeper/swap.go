@@ -9,38 +9,19 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/events"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
-
-// SwapExactAmountIn attempts to swap one asset, tokenIn, for another asset
-// denominated via tokenOutDenom through a pool denoted by poolId specifying that
-// tokenOutMinAmount must be returned in the resulting asset returning an error
-// upon failure. Upon success, the resulting tokens swapped for are returned. A
-// swap fee is applied determined by the pool's parameters.
-func (k Keeper) SwapExactAmountIn(
-	ctx sdk.Context,
-	sender sdk.AccAddress,
-	poolId uint64,
-	tokenIn sdk.Coin,
-	tokenOutDenom string,
-	tokenOutMinAmount sdk.Int,
-) (sdk.Int, error) {
-	pool, err := k.getPoolForSwap(ctx, poolId)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-
-	swapFee := pool.GetSwapFee(ctx)
-	return k.swapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
-}
 
 // swapExactAmountIn is an internal method for swapping an exact amount of tokens
 // as input to a pool, using the provided swapFee. This is intended to allow
 // different swap fees as determined by multi-hops, or when recovering from
 // chain liveness failures.
-func (k Keeper) swapExactAmountIn(
+// TODO: investigate if swapFee can be unexported
+// https://github.com/osmosis-labs/osmosis/issues/3130
+func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	pool types.CFMMPoolI,
+	pool swaproutertypes.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
@@ -48,6 +29,13 @@ func (k Keeper) swapExactAmountIn(
 ) (tokenOutAmount sdk.Int, err error) {
 	if tokenIn.Denom == tokenOutDenom {
 		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
+	}
+	if !pool.IsActive(ctx) {
+		return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
+	}
+	poolSwapFee := pool.GetSwapFee(ctx)
+	if swapFee.LT(poolSwapFee.QuoInt64(2)) {
+		return sdk.Int{}, fmt.Errorf("given swap fee (%s) must be greater than or equal to half of the pool's swap fee (%s)", swapFee, poolSwapFee)
 	}
 	tokensIn := sdk.Coins{tokenIn}
 
@@ -58,9 +46,14 @@ func (k Keeper) swapExactAmountIn(
 		}
 	}()
 
+	cfmmPool, err := convertToCFMMPool(pool)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
 	// Executes the swap in the pool and stores the output. Updates pool assets but
 	// does not actually transfer any tokens to or from the pool.
-	tokenOutCoin, err := pool.SwapOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
+	tokenOutCoin, err := cfmmPool.SwapOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -84,30 +77,14 @@ func (k Keeper) swapExactAmountIn(
 	return tokenOutAmount, nil
 }
 
-func (k Keeper) SwapExactAmountOut(
-	ctx sdk.Context,
-	sender sdk.AccAddress,
-	poolId uint64,
-	tokenInDenom string,
-	tokenInMaxAmount sdk.Int,
-	tokenOut sdk.Coin,
-) (tokenInAmount sdk.Int, err error) {
-	pool, err := k.getPoolForSwap(ctx, poolId)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-	swapFee := pool.GetSwapFee(ctx)
-	return k.swapExactAmountOut(ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
-}
-
-// swapExactAmountOut is an internal method for swapping to get an exact number of tokens out of a pool,
+// SwapExactAmountOut is a method for swapping to get an exact number of tokens out of a pool,
 // using the provided swapFee.
 // This is intended to allow different swap fees as determined by multi-hops,
 // or when recovering from chain liveness failures.
-func (k Keeper) swapExactAmountOut(
+func (k Keeper) SwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	pool types.CFMMPoolI,
+	pool swaproutertypes.PoolI,
 	tokenInDenom string,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
@@ -116,7 +93,9 @@ func (k Keeper) swapExactAmountOut(
 	if tokenInDenom == tokenOut.Denom {
 		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
 	}
-
+	if !pool.IsActive(ctx) {
+		return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
+	}
 	defer func() {
 		if r := recover(); r != nil {
 			tokenInAmount = sdk.Int{}
@@ -130,7 +109,12 @@ func (k Keeper) swapExactAmountOut(
 			"can't get more tokens out than there are tokens in the pool")
 	}
 
-	tokenIn, err := pool.SwapInAmtGivenOut(ctx, sdk.Coins{tokenOut}, tokenInDenom, swapFee)
+	cfmmPool, err := convertToCFMMPool(pool)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	tokenIn, err := cfmmPool.SwapInAmtGivenOut(ctx, sdk.Coins{tokenOut}, tokenInDenom, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -151,12 +135,44 @@ func (k Keeper) swapExactAmountOut(
 	return tokenInAmount, nil
 }
 
+// CalcOutAmtGivenIn calculates the amount of tokenOut given tokenIn and the pool's current state.
+// Returns error if the given pool is not a CFMM pool. Returns error on internal calculations.
+func (k Keeper) CalcOutAmtGivenIn(
+	ctx sdk.Context,
+	poolI swaproutertypes.PoolI,
+	tokenIn sdk.Coin,
+	tokenOutDenom string,
+	swapFee sdk.Dec,
+) (tokenOut sdk.Coin, err error) {
+	cfmmPool, err := convertToCFMMPool(poolI)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+	return cfmmPool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(tokenIn), tokenOutDenom, swapFee)
+}
+
+// CalcInAmtGivenOut calculates the amount of tokenIn given tokenOut and the pool's current state.
+// Returns error if the given pool is not a CFMM pool. Returns error on internal calculations.
+func (k Keeper) CalcInAmtGivenOut(
+	ctx sdk.Context,
+	poolI swaproutertypes.PoolI,
+	tokenOut sdk.Coin,
+	tokenInDenom string,
+	swapFee sdk.Dec,
+) (tokenIn sdk.Coin, err error) {
+	cfmmPool, err := convertToCFMMPool(poolI)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+	return cfmmPool.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), tokenInDenom, swapFee)
+}
+
 // updatePoolForSwap takes a pool, sender, and tokenIn, tokenOut amounts
 // It then updates the pool's balances to the new reserve amounts, and
 // sends the in tokens from the sender to the pool, and the out tokens from the pool to the sender.
 func (k Keeper) updatePoolForSwap(
 	ctx sdk.Context,
-	pool types.CFMMPoolI,
+	pool swaproutertypes.PoolI,
 	sender sdk.AccAddress,
 	tokenIn sdk.Coin,
 	tokenOut sdk.Coin,

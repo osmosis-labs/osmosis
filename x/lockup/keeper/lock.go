@@ -10,7 +10,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils/sumtree"
+	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
 	"github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 )
 

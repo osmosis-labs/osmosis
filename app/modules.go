@@ -9,6 +9,7 @@ import (
 	ibc "github.com/cosmos/ibc-go/v3/modules/core"
 	ibchost "github.com/cosmos/ibc-go/v3/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
+
 	ibchookstypes "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types"
 
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
@@ -49,9 +50,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/partialord"
 	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v13/osmoutils/partialord"
 	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v13/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"

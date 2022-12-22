@@ -581,7 +581,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(25),
 				},
 				{
-					Token:  sdk.NewCoin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", sdk.NewInt(6121181710)),
+					Token:  sdk.NewCoin(types.AtomDenomination, sdk.NewInt(6121181710)),
 					Weight: sdk.NewInt(25),
 				},
 			},
@@ -611,7 +611,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(70),
 				},
 				{
-					Token:  sdk.NewCoin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", sdk.NewInt(10285796639)),
+					Token:  sdk.NewCoin(types.AtomDenomination, sdk.NewInt(10285796639)),
 					Weight: sdk.NewInt(30),
 				},
 			},
