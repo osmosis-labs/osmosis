@@ -156,7 +156,8 @@ func (s *TestSuite) TestComputeArithmeticStrategyTwap() {
 		s.Run(name, func() {
 			osmoassert.ConditionalPanic(s.T(), test.expPanic, func() {
 				arithmeticStrategy := &twap.ArithmeticTwapStrategy{TwapKeeper: *s.App.TwapKeeper}
-				actualTwap := arithmeticStrategy.ComputeTwap(test.startRecord, test.endRecord, test.quoteAsset)
+				actualTwap, err := arithmeticStrategy.ComputeTwap(test.startRecord, test.endRecord, test.quoteAsset)
+				s.Require().NoError(err)
 				s.Require().Equal(test.expTwap, actualTwap)
 			})
 		})
@@ -232,7 +233,8 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap() {
 		s.Run(name, func() {
 			osmoassert.ConditionalPanic(s.T(), tc.expPanic, func() {
 				geometricStrategy := &twap.GeometricTwapStrategy{TwapKeeper: *s.App.TwapKeeper}
-				actualTwap := geometricStrategy.ComputeTwap(tc.startRecord, tc.endRecord, tc.quoteAsset)
+				actualTwap, err := geometricStrategy.ComputeTwap(tc.startRecord, tc.endRecord, tc.quoteAsset)
+				s.Require().NoError(err)
 				osmoassert.DecApproxEq(s.T(), tc.expTwap, actualTwap, osmomath.GetPowPrecision())
 			})
 		})
@@ -262,7 +264,8 @@ func (s *TestSuite) TestComputeArithmeticStrategyTwap_ThreeAsset() {
 		s.Run(name, func() {
 			for i, startRec := range test.startRecord {
 				arithmeticStrategy := &twap.ArithmeticTwapStrategy{TwapKeeper: *s.App.TwapKeeper}
-				actualTwap := arithmeticStrategy.ComputeTwap(startRec, test.endRecord[i], test.quoteAsset[i])
+				actualTwap, err := arithmeticStrategy.ComputeTwap(startRec, test.endRecord[i], test.quoteAsset[i])
+				s.Require().NoError(err)
 				s.Require().Equal(test.expTwap[i], actualTwap)
 			}
 		})
@@ -300,7 +303,8 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap_ThreeAsset() {
 		s.Run(name, func() {
 			for i, startRec := range test.startRecord {
 				geometricStrategy := &twap.GeometricTwapStrategy{TwapKeeper: *s.App.TwapKeeper}
-				actualTwap := geometricStrategy.ComputeTwap(startRec, test.endRecord[i], test.quoteAsset[i])
+				actualTwap, err := geometricStrategy.ComputeTwap(startRec, test.endRecord[i], test.quoteAsset[i])
+				s.Require().NoError(err)
 				osmoassert.DecApproxEq(s.T(), test.expTwap[i], actualTwap, errTolerance)
 			}
 		})
@@ -335,12 +339,14 @@ func (s *TestSuite) TestTwapLogPow_MaxSpotPrice_NoOverflow() {
 	geometricStrategy := twap.GeometricTwapStrategy{TwapKeeper: *s.App.TwapKeeper}
 
 	// No overflow.
-	geometricTwapAssert0 := geometricStrategy.ComputeTwap(startRecord, endRecord, startRecord.Asset0Denom)
-	s.Require().Equal(0, errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(gammtypes.MaxSpotPrice), osmomath.BigDecFromSDKDec(geometricTwapAssert0)))
+	geometricTwapAsset0, err := geometricStrategy.ComputeTwap(startRecord, endRecord, startRecord.Asset0Denom)
+	s.Require().NoError(err)
+	s.Require().Equal(0, errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(gammtypes.MaxSpotPrice), osmomath.BigDecFromSDKDec(geometricTwapAsset0)))
 
-	// No underflow
-	geometricTwapAsset1 := geometricStrategy.ComputeTwap(startRecord, endRecord, startRecord.Asset1Denom)
-	s.Require().Equal(zeroDec.String(), geometricTwapAsset1.String())
+	// No panic but error because we end up cutting precision.
+	geometricTwapAsset1, err := geometricStrategy.ComputeTwap(startRecord, endRecord, startRecord.Asset1Denom)
+	s.Require().Error(err)
+	s.Require().Equal(sdk.Dec{}, geometricTwapAsset1)
 }
 
 // TestTwapPow_MaxSpotPrice_NoOverflow tests that no overflow occurs at log_2{max spot price values}.
