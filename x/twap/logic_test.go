@@ -3,16 +3,15 @@ package twap_test
 import (
 	"errors"
 	"fmt"
-	"math"
 	"testing"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmoassert"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v13/x/twap"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
@@ -1319,31 +1318,34 @@ func (s *TestSuite) TestComputeArithmeticTwapWithSpotPriceError() {
 	}
 }
 
-func (s *TestSuite) TestTwapLog() {
-	var expectedErrTolerance = osmomath.MustNewDecFromStr("0.000000000000000100")
-	// "Twaplog{912648174127941279170121098210.928219201902041311} = 99.525973560175362367"
-	// From: https://www.wolframalpha.com/input?i2d=true&i=log+base+2+of+912648174127941279170121098210.928219201902041311+with+20+digits
-	var priceValue = osmomath.MustNewDecFromStr("912648174127941279170121098210.928219201902041311")
-	var expectedValue = osmomath.MustNewDecFromStr("99.525973560175362367")
+// TestTwapLog_CorrectBase tests that the base of 2 is used for the twap log function.
+// log_2{16} = 4
+func (s *TestSuite) TestTwapLog_CorrectBase() {
+	logOf := sdk.NewDec(16)
+	expectedValue := sdk.NewDec(4)
 
-	result := twap.TwapLog(priceValue.SDKDec())
-	result_by_customBaseLog := priceValue.CustomBaseLog(geometricTwapMathBase)
-	s.Require().True(expectedValue.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
-	s.Require().True(result_by_customBaseLog.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
+	result := twap.TwapLog(logOf)
+
+	s.Require().Equal(expectedValue, result)
 }
 
-// TestTwapPow_CorrectBase tests that the right base is used for the twap power function.
+// TestTwapPow_CorrectBase tests that the base of 2 is used for the twap power function.
+// 2^3 = 8
 func (s *TestSuite) TestTwapPow_CorrectBase() {
-	var expectedErrTolerance = osmomath.MustNewDecFromStr("0.00000100")
-	// "TwapPow(0.5) = 1.41421356"
-	// From: https://www.wolframalpha.com/input?i2d=true&i=power+base+2+exponent+0.5+with+9+digits
-	exponentValue := osmomath.MustNewDecFromStr("0.5")
-	expectedValue := osmomath.MustNewDecFromStr("1.41421356")
+	exponentValue := osmomath.NewBigDec(3)
+	expectedValue := sdk.NewDec(8)
 
 	result := twap.TwapPow(exponentValue.SDKDec())
-	result_by_mathPow := math.Pow(geometricTwapMathBase.MustFloat64(), exponentValue.SDKDec().MustFloat64())
-	s.Require().True(expectedValue.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
-	s.Require().True(osmomath.MustNewDecFromStr(fmt.Sprint(result_by_mathPow)).Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
+
+	s.Require().Equal(expectedValue, result)
+}
+
+// TestTwapPow_NegativeExponent tests that twap pow can handle a negative exponent
+// 2^-1 = 0.5
+func (s *TestSuite) TestTwapPow_NegativeExponent() {
+	expectedResult := sdk.MustNewDecFromStr("0.5")
+	result := twap.TwapPow(oneDec.Neg())
+	s.Require().Equal(expectedResult, result)
 }
 
 func testCaseFromDeltas(s *TestSuite, startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTwapTestCase {

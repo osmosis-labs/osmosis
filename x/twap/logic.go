@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
@@ -263,11 +263,11 @@ func twapLog(price sdk.Dec) sdk.Dec {
 	return osmomath.BigDecFromSDKDec(price).LogBase2().SDKDec()
 }
 
-// twapPow exponentiates the geometricTwapMathBase to the given exponent.
+// twapPow exponentiates 2 to the given exponent.
 func twapPow(exponent sdk.Dec) sdk.Dec {
 	exp2 := osmomath.Exp2(osmomath.BigDecFromSDKDec(exponent.Abs()))
 	if exponent.IsNegative() {
 		return osmomath.OneDec().Quo(exp2).SDKDec()
 	}
-	return osmomath.Exp2(osmomath.BigDecFromSDKDec(exponent)).SDKDec()
+	return exp2.SDKDec()
 }

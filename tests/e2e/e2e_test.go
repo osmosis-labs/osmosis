@@ -16,8 +16,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
+	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v13/tests/e2e/initialization"
 )
