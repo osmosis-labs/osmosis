@@ -571,7 +571,7 @@ func (s *IntegrationTestSuite) TestExpeditedProposals() {
 }
 
 // TestGeometricTWAP tests geometric twap.
-// It does the following:  creates a pool, queries twap, performs a swap ,and queries twap again.
+// It does the following:  creates a pool, queries twap, performs a swap , and queries twap again.
 // Twap is expected to change after the swap.
 // The pool is created with 1_000_000 uosmo and 2_000_000 stake and equal weights.
 // Assuming base asset is uosmo, the initial twap is 2
