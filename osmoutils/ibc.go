@@ -3,10 +3,24 @@ package osmoutils
 import (
 	"encoding/json"
 
-	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
-	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
-	ibcexported "github.com/cosmos/ibc-go/v3/modules/core/exported"
+	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
+	ibcexported "github.com/cosmos/ibc-go/v4/modules/core/exported"
 )
+
+// NewStringErrorAcknowledgement returns a new instance of Acknowledgement using an Acknowledgement_Error
+// type in the Response field. These errors differ from the IBC errors in that we use custom error strings.
+// NOTE: Acknowledgements are written into state and thus, changes made to error strings included in packet acknowledgements
+// risk an app hash divergence when nodes in a network are running different patch versions of software.
+func NewStringErrorAcknowledgement(err string) channeltypes.Acknowledgement {
+	// ToDo: Do we want to do this or do we want to use the IBC errors and emit the string?
+
+	return channeltypes.Acknowledgement{
+		Response: &channeltypes.Acknowledgement_Error{
+			Error: err,
+		},
+	}
+}
 
 // MustExtractDenomFromPacketOnRecv takes a packet with a valid ICS20 token data in the Data field and returns the
 // denom as represented in the local chain.
