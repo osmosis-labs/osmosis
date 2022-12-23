@@ -9,11 +9,6 @@ import (
 	ibc "github.com/cosmos/ibc-go/v3/modules/core"
 	ibchost "github.com/cosmos/ibc-go/v3/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
-<<<<<<< HEAD
-=======
-
-	ibchookstypes "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types"
->>>>>>> 93181a45 (Move osmoutils into its own go mod (#3827))
 
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
