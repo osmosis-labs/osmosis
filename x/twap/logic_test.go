@@ -1354,7 +1354,12 @@ func (s *TestSuite) TestTwapLog_SmallestDec() {
 	expectedResult := sdk.MustNewDecFromStr("59.794705707972522262").Neg()
 	result := twap.TwapLog(zero)
 
-	s.Require().Equal(expectedResult, result)
+	osmomath.ErrTolerance{
+		AdditiveTolerance: sdk.SmallestDec(),
+	}.CompareBigDec(
+		osmomath.BigDecFromSDKDec(expectedResult),
+		osmomath.BigDecFromSDKDec(result),
+	)
 }
 
 // TestTwapPow_CorrectBase tests that the base of 2 is used for the twap power function.
