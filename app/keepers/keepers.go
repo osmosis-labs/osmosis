@@ -36,13 +36,13 @@ import (
 
 	downtimedetector "github.com/osmosis-labs/osmosis/v13/x/downtime-detector"
 	downtimetypes "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/types"
-	ibchooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
-	ibchookskeeper "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/keeper"
-	ibchookstypes "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
+	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
+	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
 	icahost "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/keeper"
