@@ -628,7 +628,7 @@ func (s *IntegrationTestSuite) TestGeometricTWAP() {
 
 	s.T().Logf("performing swap of %s for %s", coinAIn, denomB)
 
-	// uatom out = uatom supply * (1 - (uosmo supply before / uosmo supply after)^(uosmo weight / uatom weight))
+	// stake out = stake supply * (1 - (uosmo supply before / uosmo supply after)^(uosmo weight / stake weight))
 	//           = 2_000_000 * (1 - (1_000_000 / 2_000_000)^1)
 	//           = 2_000_000 * 0.5
 	//           = 1_000_000
