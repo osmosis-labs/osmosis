@@ -575,7 +575,7 @@ func (s *IntegrationTestSuite) TestExpeditedProposals() {
 // Twap is expected to change after the swap.
 // The pool is created with 1_000_000 uosmo and 2_000_000 stake and equal weights.
 // Assuming base asset is uosmo, the initial twap is 2
-// Upon swapping 1_000_000 uosmo for uatom, supply changes, making uosmo less expensive.
+// Upon swapping 1_000_000 uosmo for stake, supply changes, making uosmo less expensive.
 // As a result of the swap, twap changes to 0.5.
 func (s *IntegrationTestSuite) TestGeometricTWAP() {
 	const (
