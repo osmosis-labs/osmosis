@@ -583,14 +583,11 @@ func (s *IntegrationTestSuite) TestBasicGeometricTWAP() {
 		epochIdentifier = "day"
 	)
 
-	coinBIn := fmt.Sprintf("1000000%s", denomB)
+	coinAIn := fmt.Sprintf("1000000%s", denomA)
 
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
-
-	balances, _ := chainANode.QueryBalances(chainA.NodeConfigs[0].PublicAddress)
-	fmt.Println("balances", balances)
 
 	// Triggers the creation of TWAP records.
 	poolId := chainANode.CreatePool(poolFile, initialization.ValidatorWalletName)
@@ -607,7 +604,7 @@ func (s *IntegrationTestSuite) TestBasicGeometricTWAP() {
 	s.Require().Equal(sdk.NewDec(2), twapFromBeforeSwapToBeforeSwapOneAB)
 	fmt.Println("twapFromBeforeSwapToBeforeSwapOneAB", twapFromBeforeSwapToBeforeSwapOneAB)
 
-	chainANode.BankSend(coinBIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
+	chainANode.BankSend(coinAIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
 
 	s.T().Log("querying for the second TWAP to now before swap, must equal to first")
 	twapFromBeforeSwapToBeforeSwapTwoAB, err := chainANode.QueryGeometricTwapToNow(poolId, denomA, denomB, timeBeforeSwap.Add(50*time.Millisecond))
@@ -617,7 +614,7 @@ func (s *IntegrationTestSuite) TestBasicGeometricTWAP() {
 	osmoassert.DecApproxEq(s.T(), twapFromBeforeSwapToBeforeSwapOneAB, twapFromBeforeSwapToBeforeSwapTwoAB, sdk.NewDecWithPrec(1, 3))
 
 	s.T().Log("performing swaps")
-	chainANode.SwapExactAmountIn(coinBIn, minAmountOut, fmt.Sprintf("%d", poolId), denomA, swapWalletAddr)
+	chainANode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", poolId), denomB, swapWalletAddr)
 
 	timeAfterSwap := chainANode.QueryLatestBlockTime()
 	chainA.WaitForNumHeights(2)
@@ -626,8 +623,8 @@ func (s *IntegrationTestSuite) TestBasicGeometricTWAP() {
 	twapFromAfterToNowAB, err := chainANode.QueryGeometricTwapToNow(poolId, denomA, denomB, timeAfterSwap)
 	s.Require().NoError(err)
 	fmt.Println("twapFromAfterToNowAB", twapFromAfterToNowAB)
-	// Because twapFromAfterToNow has a higher time weight for the after swap period,
-	// we expect the results to be flipped from the previous comparison to twapFromBeforeSwapToBeforeSwapOne
-	s.Require().True(twapFromBeforeSwapToBeforeSwapOneAB.LT(twapFromAfterToNowAB))
+	// We swap uosmo so uosmo's supply will increase and stake will decrease.
+	// The the price after will be less than the previous ones
+	s.Require().True(twapFromBeforeSwapToBeforeSwapOneAB.GT(twapFromAfterToNowAB))
 
 }
