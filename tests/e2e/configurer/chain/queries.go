@@ -230,7 +230,7 @@ func (n *NodeConfig) QueryGeometricTwapToNow(poolId uint64, baseAsset, quoteAsse
 
 	var response twapqueryproto.GeometricTwapToNowResponse
 	err = util.Cdc.UnmarshalJSON(bz, &response)
-	require.NoError(n.t, err) // this error should not happen
+	require.NoError(n.t, err)
 	return response.GeometricTwap, nil
 }
 
