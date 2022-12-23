@@ -635,7 +635,7 @@ func (s *IntegrationTestSuite) TestGeometricTWAP() {
 	chainANode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", poolId), denomB, swapWalletAddr)
 
 	// New supply post swap:
-	// uatom = 2_000_000 - 1_000_000 - 1_000_000
+	// stake = 2_000_000 - 1_000_000 - 1_000_000
 	// uosmo = 1_000_000 + 1_000_000 = 2_000_000
 
 	timeAfterSwap := chainANode.QueryLatestBlockTime()
