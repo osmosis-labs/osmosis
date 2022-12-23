@@ -8,7 +8,7 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v4/modules/core/exported"
 
-	ibchooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
+	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 )
 
 var (

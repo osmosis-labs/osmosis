@@ -53,7 +53,7 @@ import (
 	v8 "github.com/osmosis-labs/osmosis/v13/app/upgrades/v8"
 	v9 "github.com/osmosis-labs/osmosis/v13/app/upgrades/v9"
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
-	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
+	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 )
 
 const appName = "OsmosisApp"
