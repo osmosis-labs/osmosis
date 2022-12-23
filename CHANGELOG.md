@@ -54,25 +54,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#3677](https://github.com/osmosis-labs/osmosis/pull/3677) Add methods for cloning and mutative multiplication on osmomath.BigDec.
 * [#3676](https://github.com/osmosis-labs/osmosis/pull/3676) implement `PowerInteger` function on `osmomath.BigDec` 
 * [#3678](https://github.com/osmosis-labs/osmosis/pull/3678) implement mutative `PowerIntegerMut` function on `osmomath.BigDec`.
-
-### Features
-
-### Bug fixes
-
-## v13.1.2
-
-### Bug fixes
-
-* Fix state export
-* Update swagger files for v13
-
-## v13.1.1
-
-* Add a check in the makefile for using go v1.18
-
-## v13.1.0
-
-* Correctly apply DragonBerry IBC patch
+* [#3708](https://github.com/osmosis-labs/osmosis/pull/3708) `Exp2` function to compute 2^decimal.
+* [#3693](https://github.com/osmosis-labs/osmosis/pull/3693) Add `EstimateSwapExactAmountOut` query to stargate whitelist
+* [#3731](https://github.com/osmosis-labs/osmosis/pull/3731) BigDec Power functions with decimal exponent.
+* [#3847](https://github.com/osmosis-labs/osmosis/pull/3847) GeometricTwap and GeometricTwapToNow queries added to Stargate whitelist.
 
 ### API breaks
 
