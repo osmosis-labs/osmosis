@@ -848,7 +848,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow_ThreeAsset() {
 func (s *TestSuite) TestGeometricTwapToNow_BalancerPool_Randomized() {
 	seed := int64(1)
 	r := rand.New(rand.NewSource(seed))
-	retries := 1000
+	retries := 200
 
 	type randTestCase struct {
 		elapsedTimeMs int
@@ -863,9 +863,9 @@ func (s *TestSuite) TestGeometricTwapToNow_BalancerPool_Randomized() {
 	for i := 0; i < retries; i++ {
 		elapsedTimeMs := sdkrand.RandIntBetween(r, 1, int(maxUint64>>1))
 		weightA := sdk.NewInt(int64(sdkrand.RandIntBetween(r, 1, 1000)))
-		tokenASupply := sdk.NewInt(int64(sdkrand.RandIntBetween(r, 10_000, 1_000_000_000)))
+		tokenASupply := sdk.NewInt(int64(sdkrand.RandIntBetween(r, 10_000, 1_000_000_000_000_000_000)))
 
-		tokenBSupply := sdk.NewInt(int64(sdkrand.RandIntBetween(r, 10_000, 1_000_000_000)))
+		tokenBSupply := sdk.NewInt(int64(sdkrand.RandIntBetween(r, 10_000, 1_000_000_000_000_000_000)))
 		weightB := sdk.NewInt(int64(sdkrand.RandIntBetween(r, 1, 1000)))
 
 		s.Run(fmt.Sprintf("elapsedTimeMs=%d, weightA=%d, tokenASupply=%d, weightB=%d, tokenBSupply=%d", elapsedTimeMs, weightA, tokenASupply, weightB, tokenBSupply), func() {
@@ -905,7 +905,7 @@ func (s *TestSuite) TestGeometricTwapToNow_BalancerPool_Randomized() {
 			s.Require().NoError(err)
 
 			osmomath.ErrTolerance{
-				AdditiveTolerance: sdk.NewDecWithPrec(1, 4),
+				MultiplicativeTolerance: sdk.SmallestDec(),
 			}.CompareBigDec(
 				osmomath.BigDecFromSDKDec(spotPrice),
 				osmomath.BigDecFromSDKDec(twap),
