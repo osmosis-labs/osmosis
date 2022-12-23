@@ -47,7 +47,7 @@ jobs:
         run: |
           go mod download
           cd cmd/osmosisd
-          go build .
+          GOWRK=off go build .
         if: env.GIT_DIFF
 
       - uses: actions/upload-artifact@v2
