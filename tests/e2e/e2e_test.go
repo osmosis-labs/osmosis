@@ -262,16 +262,16 @@ func (s *IntegrationTestSuite) TestAddToExistingLock() {
 	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId), lockupWalletAddr, lockupWalletSuperfluidAddr)
 }
 
-// TestTWAP tests TWAP by creating a pool, performing a swap.
+// TestArithmeticTWAP tests TWAP by creating a pool, performing a swap.
 // These two operations should create TWAP records.
 // Then, we wait until the epoch for the records to be pruned.
 // The records are guranteed to be pruned at the next epoch
 // because twap keep time = epoch time / 4 and we use a timer
 // to wait for at least the twap keep time.
-func (s *IntegrationTestSuite) TestTWAP() {
+func (s *IntegrationTestSuite) TestArithmeticTWAP() {
 	const (
 		poolFile   = "nativeDenomThreeAssetPool.json"
-		walletName = "swap-exact-amount-in-wallet"
+		walletName = "arithmetic-twap-wallet"
 
 		denomA = "stake"
 		denomB = "uion"
@@ -570,10 +570,10 @@ func (s *IntegrationTestSuite) TestExpeditedProposals() {
 	close(totalTimeChan)
 }
 
-func (s *IntegrationTestSuite) TestBasicGeometricTWAP() {
+func (s *IntegrationTestSuite) TestGeometricTWAP() {
 	const (
 		poolFile   = "geometricPool.json"
-		walletName = "swap-exact-amount-in-wallet"
+		walletName = "geometric-twap-wallet"
 
 		denomA = "uosmo"
 		denomB = "stake"
