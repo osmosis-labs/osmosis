@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"

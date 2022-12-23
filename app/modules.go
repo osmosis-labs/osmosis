@@ -45,9 +45,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/partialord"
 	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v13/osmoutils/partialord"
 	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v13/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
