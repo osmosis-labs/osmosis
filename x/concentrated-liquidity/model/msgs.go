@@ -85,8 +85,6 @@ func (msg MsgCreateConcentratedPool) PoolCreator() sdk.AccAddress {
 }
 
 func (msg MsgCreateConcentratedPool) Validate(ctx sdk.Context) error {
-	// TODO: Add check that denom exists on chain
-	// https://github.com/osmosis-labs/osmosis/issues/3723
 	return msg.ValidateBasic()
 }
 
