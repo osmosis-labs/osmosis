@@ -64,17 +64,13 @@ func ParseSdkDecFromString(s string, separator string) ([]sdk.Dec, error) {
 	return parsedDec, nil
 }
 
-func ParseSdkValAddressFromString(s string, separator string) ([]sdk.ValAddress, error) {
-	var parsedAddr []sdk.ValAddress
+func ParseValAddressFromString(s string, separator string) []string {
+	var parsedStrAddr []string
 	for _, addr := range strings.Split(s, separator) {
-		valAddr, err := sdk.ValAddressFromBech32(addr)
-		if err != nil {
-			return nil, err
-		}
-		parsedAddr = append(parsedAddr, valAddr)
+		parsedStrAddr = append(parsedStrAddr, addr)
 	}
 
-	return parsedAddr, nil
+	return parsedStrAddr
 }
 
 // CreateRandomAccounts is a function return a list of randomly generated AccAddresses

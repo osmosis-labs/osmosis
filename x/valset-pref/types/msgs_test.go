@@ -76,6 +76,27 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 			expectPass: false,
 		},
 		{
+			name: "invalid validator address",
+			msg: types.MsgSetValidatorSetPreference{
+				Delegator: addr1,
+				Preferences: []types.ValidatorPreference{
+					{
+						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxay", // invalid address
+						Weight:         sdk.NewDecWithPrec(2, 1),
+					},
+					{
+						ValOperAddress: "osmovaloper1jcr68jghzm24zwe78zuhz7xahua8429erxk7vm",
+						Weight:         sdk.NewDecWithPrec(2, 1),
+					},
+					{
+						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
+						Weight:         sdk.NewDecWithPrec(6, 1),
+					},
+				},
+			},
+			expectPass: false,
+		},
+		{
 			name: "weights > 1",
 			msg: types.MsgSetValidatorSetPreference{
 				Delegator: addr1,
