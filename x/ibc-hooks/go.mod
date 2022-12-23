@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/CosmWasm/wasmd v0.29.2
 	github.com/cosmos/cosmos-sdk v0.46.7
-	github.com/cosmos/ibc-go/v3 v3.4.0
+	github.com/cosmos/ibc-go/v4 v4.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.1
@@ -35,6 +35,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.2 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.19.4 // indirect
+	github.com/cosmos/ibc-go/v3 v3.4.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.11.1 // indirect
 	github.com/cosmos/ledger-go v0.9.2 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
@@ -133,6 +134,8 @@ require (
 replace (
 	// osmosis-patched wasmd
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.29.2-osmo-v13
+	// dragonberry
+	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v13.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/8757a61551aa1ea993c85a523e18094ab555b1d7
 	// tag: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/sdk-v13.0.0-rc2
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20221118211718-545aed73e94e
