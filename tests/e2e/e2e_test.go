@@ -572,18 +572,17 @@ func (s *IntegrationTestSuite) TestExpeditedProposals() {
 
 func (s *IntegrationTestSuite) TestGeometricTWAP() {
 	const (
+		// This pool contains 1_000_000 uosmo and 2_000_000 stake.
 		poolFile   = "geometricPool.json"
 		walletName = "geometric-twap-wallet"
 
-		denomA = "uosmo"
-		denomB = "stake"
+		denomA = "uosmo" // 1_000_000 uosmo
+		denomB = "stake" // 2_000_000 stake
 
 		minAmountOut = "1"
 
 		epochIdentifier = "day"
 	)
-
-	coinAIn := fmt.Sprintf("1000000%s", denomA)
 
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
@@ -593,38 +592,44 @@ func (s *IntegrationTestSuite) TestGeometricTWAP() {
 	poolId := chainANode.CreatePool(poolFile, initialization.ValidatorWalletName)
 	swapWalletAddr := chainANode.CreateWallet(walletName)
 
-	timeBeforeSwap := chainANode.QueryLatestBlockTime()
+	// We add 5 ms to avoid landing directly on block time in twap. If block time
+	// is provided as start time, the latest spot price is used. Otherwise
+	// interpolation is done.
+	timeBeforeSwapPlus5ms := chainANode.QueryLatestBlockTime().Add(5 * time.Millisecond)
 	// Wait for the next height so that the requested twap
 	// start time (timeBeforeSwap) is not equal to the block time.
 	chainA.WaitForNumHeights(1)
 
-	s.T().Log("querying for the first TWAP to now before swap")
-	twapFromBeforeSwapToBeforeSwapOneAB, err := chainANode.QueryGeometricTwapToNow(poolId, denomA, denomB, timeBeforeSwap)
+	s.T().Log("querying for the first geometric TWAP to now (before swap)")
+	initialTwapBOverA, err := chainANode.QueryGeometricTwapToNow(poolId, denomA, denomB, timeBeforeSwapPlus5ms)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewDec(2), twapFromBeforeSwapToBeforeSwapOneAB)
-	fmt.Println("twapFromBeforeSwapToBeforeSwapOneAB", twapFromBeforeSwapToBeforeSwapOneAB)
+	s.Require().Equal(sdk.NewDec(2), initialTwapBOverA)
 
+	initialTwapAOverB, err := chainANode.QueryGeometricTwapToNow(poolId, denomB, denomA, timeBeforeSwapPlus5ms)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewDecWithPrec(5, 1), initialTwapAOverB)
+
+	coinAIn := fmt.Sprintf("1000000%s", denomA)
 	chainANode.BankSend(coinAIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
 
 	s.T().Log("querying for the second TWAP to now before swap, must equal to first")
-	twapFromBeforeSwapToBeforeSwapTwoAB, err := chainANode.QueryGeometricTwapToNow(poolId, denomA, denomB, timeBeforeSwap.Add(50*time.Millisecond))
+	secondTwapBOverA, err := chainANode.QueryGeometricTwapToNow(poolId, denomA, denomB, timeBeforeSwapPlus5ms.Add(50*time.Millisecond))
 	s.Require().NoError(err)
 
 	// // Since there were no swaps between the two queries, the TWAPs should be the same.
-	osmoassert.DecApproxEq(s.T(), twapFromBeforeSwapToBeforeSwapOneAB, twapFromBeforeSwapToBeforeSwapTwoAB, sdk.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), initialTwapBOverA, secondTwapBOverA, sdk.NewDecWithPrec(1, 3))
 
-	s.T().Log("performing swaps")
+	s.T().Logf("performing swap of %s for %s", coinAIn, denomB)
 	chainANode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", poolId), denomB, swapWalletAddr)
 
 	timeAfterSwap := chainANode.QueryLatestBlockTime()
 	chainA.WaitForNumHeights(2)
 
 	s.T().Log("querying for the TWAP from after swap to now")
-	twapFromAfterToNowAB, err := chainANode.QueryGeometricTwapToNow(poolId, denomA, denomB, timeAfterSwap)
+	afterSwapTwapBOverA, err := chainANode.QueryGeometricTwapToNow(poolId, denomA, denomB, timeAfterSwap)
 	s.Require().NoError(err)
-	fmt.Println("twapFromAfterToNowAB", twapFromAfterToNowAB)
+
 	// We swap uosmo so uosmo's supply will increase and stake will decrease.
 	// The the price after will be less than the previous ones
-	s.Require().True(twapFromBeforeSwapToBeforeSwapOneAB.GT(twapFromAfterToNowAB))
-
+	s.Require().True(initialTwapBOverA.GT(afterSwapTwapBOverA))
 }
