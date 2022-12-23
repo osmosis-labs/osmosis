@@ -270,10 +270,10 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 			newTime:   time.Unix(1, 0),
 			expRecord: newExpRecord(oneDec, twoDec, pointFiveDec),
 		},
-		"sp0 - zero spot price - accum0 unchanged, accum1 updated, geom accum unchanged": {
+		"sp0 - zero spot price - accum0 unchanged, accum1 updated, geom accum unchanged, last err time set": {
 			record:    withPrice0Set(defaultRecord, sdk.ZeroDec()),
 			newTime:   defaultRecord.Time.Add(time.Second),
-			expRecord: newExpRecord(oneDec, twoDec.Add(sdk.NewDecWithPrec(1, 1).Mul(OneSec)), pointFiveDec),
+			expRecord: withLastErrTime(newExpRecord(oneDec, twoDec.Add(sdk.NewDecWithPrec(1, 1).Mul(OneSec)), pointFiveDec), defaultRecord.Time.Add(time.Second)),
 		},
 		"sp1 - zero spot price - accum0 updated, accum1 unchanged, geom accum updated correctly": {
 			record:    withPrice1Set(defaultRecord, sdk.ZeroDec()),
@@ -283,7 +283,7 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 		"both sp - zero spot price - accum0 unchange, accum1 unchanged, geom accum unchanged": {
 			record:    withPrice1Set(withPrice0Set(defaultRecord, sdk.ZeroDec()), sdk.ZeroDec()),
 			newTime:   defaultRecord.Time.Add(time.Second),
-			expRecord: newExpRecord(oneDec, twoDec, pointFiveDec),
+			expRecord: withLastErrTime(newExpRecord(oneDec, twoDec, pointFiveDec), defaultRecord.Time.Add(time.Second)),
 		},
 		"spot price of one - geom accumulator 0": {
 			record:    withPrice1Set(withPrice0Set(defaultRecord, sdk.OneDec()), sdk.OneDec()),
