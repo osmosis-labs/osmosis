@@ -37,7 +37,7 @@ func NewSetValSetCmd() *cobra.Command {
 func NewDelValSetCmd() *cobra.Command {
 	return osmocli.TxCliDesc{
 		Use:              "delegate-valset [delegator_addr] [amount]",
-		Short:            "Delegate tokens to existing valset.",
+		Short:            "Delegate tokens to existing valset using delegatorAddress and tokenAmount.",
 		Example:          "osmosisd tx validatorsetpreference delegate-valset  osmo1... 100stake",
 		NumArgs:          2,
 		ParseAndBuildMsg: NewMsgDelegateToValidatorSet,
@@ -47,7 +47,7 @@ func NewDelValSetCmd() *cobra.Command {
 func NewUnDelValSetCmd() *cobra.Command {
 	return osmocli.TxCliDesc{
 		Use:              "undelegate-valset [delegator_addr] [amount]",
-		Short:            "UnDelegate tokens from existing valset.",
+		Short:            "UnDelegate tokens from existing valset using delegatorAddress and tokenAmount.",
 		Example:          "osmosisd tx validatorsetpreference undelegate-valset  osmo1... 100stake",
 		NumArgs:          2,
 		ParseAndBuildMsg: NewMsgUndelegateFromValidatorSet,
