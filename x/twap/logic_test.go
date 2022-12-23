@@ -1339,17 +1339,22 @@ func (s *TestSuite) TestTwapLog_CorrectBase() {
 	s.Require().Equal(expectedValue, result)
 }
 
-// TestTwapLog_ZeroInput tests that the twapLog is defined as zero at zero input.
-// Contrary to definition of log_{2}{x}, this function returns 0 if given price is zero.
-// If internal x/gamm spot price function returns a spot price error,
-// we set p0 spot price to 0 to allow the arithmetic TWAP to continue to be calculated.
-// As a result, we may encounter a 0 input here. Instead of erroring
-// or panicking, we also return zero to allow the geometric TWAP to continue.
-func (s *TestSuite) TestTwapLog_ZeroInput() {
-	zero := sdk.ZeroDec()
+func (s *TestSuite) TestTwapLog_MaxSpotPrice() {
+	price := gammtypes.MaxSpotPrice
+	// log_2{2^128 - 1} = 128
+	expectedResult := sdk.MustNewDecFromStr("127.999999999999999999")
+	result := twap.TwapLog(price)
+
+	s.Require().Equal(expectedResult, result)
+}
+
+func (s *TestSuite) TestTwapLog_SmallestDec() {
+	zero := sdk.SmallestDec()
+	// https://www.wolframalpha.com/input?i=log+base+2+of+%2810%5E-18%29+with+20+digits
+	expectedResult := sdk.MustNewDecFromStr("59.794705707972522262").Neg()
 	result := twap.TwapLog(zero)
 
-	s.Require().Equal(zero, result)
+	s.Require().Equal(expectedResult, result)
 }
 
 // TestTwapPow_CorrectBase tests that the base of 2 is used for the twap power function.
