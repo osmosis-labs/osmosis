@@ -194,6 +194,14 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 	p1NewAccum := types.SpotPriceMulDuration(record.P1LastSpotPrice, timeDelta)
 	newRecord.P1ArithmeticTwapAccumulator = newRecord.P1ArithmeticTwapAccumulator.Add(p1NewAccum)
 
+	// If the last spot price is zero, then the logarithm is undefined.
+	// As a result, we cannot update the geometric accumulator.
+	// We set the last error time to be the new time, and return the record.
+	if record.P0LastSpotPrice.IsZero() {
+		newRecord.LastErrorTime = newTime
+		return newRecord
+	}
+
 	// logP0SpotPrice = log_{2}{P_0}
 	logP0SpotPrice := twapLog(record.P0LastSpotPrice)
 	// p0NewGeomAccum = log_{2}{P_0} * timeDelta
@@ -238,28 +246,42 @@ func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA, asse
 // if (endRecord.Time == startRecord.Time) returns endRecord.LastSpotPrice
 // else returns
 // (endRecord.Accumulator - startRecord.Accumulator) / (endRecord.Time - startRecord.Time)
+// TODO: test compute error edge case
 func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string, strategy twapStrategy) (sdk.Dec, error) {
 	// see if we need to return an error, due to spot price issues
-	var err error = nil
+	var spotPriceErr error = nil
 	if endRecord.LastErrorTime.After(startRecord.Time) ||
 		endRecord.LastErrorTime.Equal(startRecord.Time) ||
 		startRecord.LastErrorTime.Equal(startRecord.Time) {
-		err = errors.New("twap: error in pool spot price occurred between start and end time, twap result may be faulty")
+		spotPriceErr = errors.New("twap: error in pool spot price occurred between start and end time, twap result may be faulty")
 	}
 	timeDelta := endRecord.Time.Sub(startRecord.Time)
 	// if time difference is 0, then return the last spot price based off of start.
 	if timeDelta == time.Duration(0) {
 		if quoteAsset == startRecord.Asset0Denom {
-			return endRecord.P0LastSpotPrice, err
+			return endRecord.P0LastSpotPrice, spotPriceErr
 		}
-		return endRecord.P1LastSpotPrice, err
+		return endRecord.P1LastSpotPrice, spotPriceErr
 	}
 
-	return strategy.computeTwap(startRecord, endRecord, quoteAsset), err
+	twap, computeErr := strategy.computeTwap(startRecord, endRecord, quoteAsset)
+	if computeErr != nil {
+		// While we return a potentially faulty result on a spot price error,
+		// we do not do so for a compute error. If a compute error occurs,
+		// there is no way to know what the result should be. Therefore, we error.
+		return sdk.Dec{}, computeErr
+	}
+
+	return twap, spotPriceErr
 }
 
 // twapLog returns the logarithm of the given spot price, base 2.
+// Panics if zero is given.
 func twapLog(price sdk.Dec) sdk.Dec {
+	if price.IsZero() {
+		panic("twap: cannot take logarithm of zero")
+	}
+
 	return osmomath.BigDecFromSDKDec(price).LogBase2().SDKDec()
 }
 

@@ -71,11 +71,11 @@ func ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quote
 	return computeTwap(startRecord, endRecord, quoteAsset, strategy)
 }
 
-func (as arithmetic) ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
+func (as arithmetic) ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) (sdk.Dec, error) {
 	return as.computeTwap(startRecord, endRecord, quoteAsset)
 }
 
-func (gs geometric) ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
+func (gs geometric) ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) (sdk.Dec, error) {
 	return gs.computeTwap(startRecord, endRecord, quoteAsset)
 }
 

@@ -154,6 +154,16 @@ func withLastErrTime(twap types.TwapRecord, lastErrorTime time.Time) types.TwapR
 	return twap
 }
 
+func withTime(twap types.TwapRecord, time time.Time) types.TwapRecord {
+	twap.Time = time
+	return twap
+}
+
+func withGeometricAccum(twap types.TwapRecord, accum sdk.Dec) types.TwapRecord {
+	twap.GeometricTwapAccumulator = accum
+	return twap
+}
+
 func withSp0(twap types.TwapRecord, sp sdk.Dec) types.TwapRecord {
 	twap.P0LastSpotPrice = sp
 	return twap
