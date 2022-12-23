@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
@@ -22,6 +22,11 @@ func (k Keeper) MarshalPool(pool swaproutertypes.PoolI) ([]byte, error) {
 func (k Keeper) UnmarshalPool(bz []byte) (types.CFMMPoolI, error) {
 	var acc types.CFMMPoolI
 	return acc, k.cdc.UnmarshalInterface(bz, &acc)
+}
+
+// GetPool returns a pool with a given id.
+func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (swaproutertypes.PoolI, error) {
+	return k.GetPoolAndPoke(ctx, poolId)
 }
 
 // GetPoolAndPoke returns a PoolI based on it's identifier if one exists. If poolId corresponds
