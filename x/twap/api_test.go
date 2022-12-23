@@ -842,6 +842,9 @@ func (s *TestSuite) TestGetArithmeticTwapToNow_ThreeAsset() {
 	}
 }
 
+// TestGeometricTwapToNow_BalancerPool_Randomized the goal of this test case is to validate
+// that no internal panics occur when computing geometric twap. It also sanity checks
+// that geometric twap is roughly close to spot price.
 func (s *TestSuite) TestGeometricTwapToNow_BalancerPool_Randomized() {
 	seed := int64(1)
 	r := rand.New(rand.NewSource(seed))
@@ -887,7 +890,9 @@ func (s *TestSuite) TestGeometricTwapToNow_BalancerPool_Randomized() {
 				ExitFee: sdk.ZeroDec(),
 			})
 
-			//
+			// We add 1ms to avoid always landing on the same block time
+			// In that case, the most recent spot price would be used
+			// instead of interpolation.
 			oldTime := ctx.BlockTime().Add(1 * time.Millisecond)
 			newTime := oldTime.Add(time.Duration(elapsedTimeMs))
 
