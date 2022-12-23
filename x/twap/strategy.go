@@ -53,7 +53,7 @@ func (s *geometric) computeTwap(startRecord types.TwapRecord, endRecord types.Tw
 
 	if arithmeticMeanOfLogPrices.IsZero() {
 		// This may happen only if every returned spot price in history had a spot price error,
-		// resulting in a spot price of zero returned.
+		// resulting in a spot price of zero returned and geometric accumulators never updated.
 		return sdk.Dec{}, errors.New("internal geometric twap error: arithmetic mean of log prices is zero")
 	}
 
@@ -69,15 +69,7 @@ func (s *geometric) computeTwap(startRecord types.TwapRecord, endRecord types.Tw
 	// https://proofwiki.org/wiki/Geometric_Mean_of_Reciprocals_is_Reciprocal_of_Geometric_Mean
 	invertCase2 := !exponent.IsNegative() && quoteAsset == startRecord.Asset1Denom
 	if invertCase1 || invertCase2 {
-		if result.IsZero() {
-			return sdk.Dec{}, errors.New("internal geometric twap error: denominator is zero")
-		}
-
 		result = osmomath.OneDec().Quo(result)
-	}
-
-	if result.IsZero() {
-		return sdk.Dec{}, errors.New("internal geometric twap error: final twap is zero")
 	}
 
 	if result.LT(osmomath.BigDecFromSDKDec(gammtypes.MinSpotPrice)) {
