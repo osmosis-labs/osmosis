@@ -653,7 +653,7 @@ func (s *IntegrationTestSuite) TestGeometricTWAP() {
 	// Assume base = uosmo, quote = stake
 	// At pool creation, we had:
 	// quote assset supply / base asset supply = 2_000_000 / 1_000_000 = 2
-	// Next, we swapped 1_000_000 usomo for uatom.
+	// Next, we swapped 1_000_000 uosmo for uatom.
 	// Now, we roughly have
 	// uatom = 1_000_000
 	// uosmo = 2_000_000
