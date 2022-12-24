@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
+	"os/exec"
 )
 
 type IBCAliases map[string]string
@@ -18,7 +20,23 @@ func GetIBCAliasesMap() IBCAliases {
 	return DenomToIbcAlias
 }
 
+func getAssetlist() {
+	err := exec.Command("python3", "get_assetlist.py").Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func makeIBCAliasesMap() IBCAliases {
+	// temporarily create an assetlist file
+	getAssetlist()
+	defer func() {
+		err := os.Remove("assetlist.json")
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
 	assetlistFile, err := os.Open("assetlist.json")
 
 	if err != nil {
@@ -31,7 +49,6 @@ func makeIBCAliasesMap() IBCAliases {
 	if err != nil {
 		panic(fmt.Sprintf("Could not read file: %s", err))
 	}
-
 	var result map[string]interface{}
 	err = json.Unmarshal(bz, &result)
 	if err != nil {
