@@ -8,23 +8,23 @@ option go_package = "github.com/osmosis-labs/osmosis/osmoutils/accum";
 
 message AccumulatorContent {
   string accum_name = 1;
-  string accum_value = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+  repeated cosmos.base.v1beta1.DecCoin accum_value = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable) = false
   ];
 }
 
 message Record {
   string num_shares = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable) = false
-  ];
-  string init_accumulator_value = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  cosmos.base.v1beta1.Coin unclaimed_rewards = 3 [
-    (gogoproto.moretags) = "yaml:\"unclaimed_rewards\"",
+  repeated cosmos.base.v1beta1.DecCoin init_accum_value = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable) = false
+  ];
+  repeated cosmos.base.v1beta1.DecCoin unclaimed_rewards = 3 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable) = false
   ];
 }

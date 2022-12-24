@@ -7,6 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
+
+	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
 // We keep this object as a way to interface with the methods, even though
@@ -19,7 +21,10 @@ type AccumulatorObject struct {
 	Name string
 
 	// Accumulator's current value (pulled from AccumulatorContent)
-	Value sdk.Dec
+	Value sdk.DecCoins
+}
+
+type PositionOptions struct {
 }
 
 // Makes a new accumulator at store/accum/{accumulator_name}
@@ -32,7 +37,7 @@ func MakeAccumulator(accum_store store.KVStore, accum_name string) error {
 
 	// New accumulator values start out at zero
 	// TODO: consider whether this should be a parameter instead of always zero
-	init_accum_value := sdk.ZeroDec()
+	init_accum_value := sdk.NewDecCoins()
 
 	var new_accum AccumulatorObject
 	new_accum.Store = accum_store
@@ -44,7 +49,7 @@ func MakeAccumulator(accum_store store.KVStore, accum_name string) error {
 
 	return nil
 }
- 
+
 // Gets the current value of the accumulator corresponding to accum_name in accum_store
 func GetAccumulator(accum_store store.KVStore, accum_name string) (AccumulatorObject, error) {
 	keybz := []byte(accum_name)
@@ -64,7 +69,7 @@ func GetAccumulator(accum_store store.KVStore, accum_name string) (AccumulatorOb
 	return accum, nil
 }
 
-func setAccumulator(accum_store store.KVStore, accum AccumulatorObject, amt sdk.Dec) error {
+func setAccumulator(accum_store store.KVStore, accum AccumulatorObject, amt sdk.DecCoins) error {
 	keybz := []byte(accum.Name)
 
 	// TODO: consider removing name as as a field from AccumulatorContent (doesn't need to be stored in state)
@@ -83,11 +88,21 @@ func setAccumulator(accum_store store.KVStore, accum AccumulatorObject, amt sdk.
 }
 
 // TODO: consider making this increment the accumulator's value instead of overwriting it
-func (accum AccumulatorObject) UpdateAccumulator(amt sdk.Dec) {
+func (accum AccumulatorObject) UpdateAccumulator(amt sdk.DecCoins) {
 	setAccumulator(accum.Store, accum, amt)
 }
 
-// func (accum AccumulatorObject) NewPosition(addr, num_units, positionOptions) error
+// NewPosition creates a new position for the given address, with the given number of units
+// It takes a snapshot of the current accumulator value, and sets the position's initial value to that
+// The position is initialized with empty unclaimed rewards
+func (accum AccumulatorObject) NewPosition(addr sdk.AccAddress, numShareUnits sdk.Dec, options PositionOptions) {
+	position := Record{
+		NumShares:        numShareUnits,
+		InitAccumValue:   accum.Value,
+		UnclaimedRewards: sdk.NewDecCoins(),
+	}
+	osmoutils.MustSet(accum.Store, addr, &position)
+}
 
 // func (accum AccumulatorObject) AddToPosition(addr, num_units) error
 
@@ -95,4 +110,21 @@ func (accum AccumulatorObject) UpdateAccumulator(amt sdk.Dec) {
 
 // func (accum AccumulatorObject) GetPositionSize(addr) (num_units, error)
 
-// func (accum AccumulatorObject) ClaimRewards(sendKeeper, addr) (amt AccumType, error)
+// ClaimRewards claims the rewards for the given address, and returns the amount of rewards claimed.
+// Upon claiming the rewards, the position at the current address is reset to have no
+// unclaimed rewards and the accumulator updates.
+func (accum AccumulatorObject) ClaimRewards(addr sdk.AccAddress) (sdk.DecCoins, error) {
+
+	position := Record{}
+	osmoutils.MustGet(accum.Store, addr, &position)
+
+	totalRewards := position.UnclaimedRewards
+
+	accumulatorRewads := accum.Value.Sub(position.InitAccumValue).MulDec(position.NumShares)
+	totalRewards = totalRewards.Add(accumulatorRewads...)
+
+	// Create a completely new position, with no rewards
+	accum.NewPosition(addr, position.NumShares, PositionOptions{})
+
+	return totalRewards, nil
+}

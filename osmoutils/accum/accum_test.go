@@ -40,20 +40,20 @@ func (suite *AccumTestSuite) TestMakeAndGetAccum() {
 	suite.SetupTest()
 
 	type testcase struct {
-		accumName string
-		expAccum accum.AccumulatorObject
-		expSetPass	bool
-		expGetPass	bool
+		accumName  string
+		expAccum   accum.AccumulatorObject
+		expSetPass bool
+		expGetPass bool
 	}
 
 	tests := map[string]testcase{
 		"create valid accumulator": {
-			accumName: "fee-accumulator",
+			accumName:  "fee-accumulator",
 			expSetPass: true,
 			expGetPass: true,
 		},
 		"create duplicate accumulator": {
-			accumName: "fee-accumulator",
+			accumName:  "fee-accumulator",
 			expSetPass: false,
 			expGetPass: true,
 		},
@@ -63,8 +63,8 @@ func (suite *AccumTestSuite) TestMakeAndGetAccum() {
 		suite.Run(name, func() {
 			expAccum := accum.AccumulatorObject{
 				Store: suite.store,
-				Name: tc.accumName,
-				Value: sdk.ZeroDec(),
+				Name:  tc.accumName,
+				Value: sdk.DecCoins(nil),
 			}
 
 			err := accum.MakeAccumulator(suite.store, tc.accumName)
