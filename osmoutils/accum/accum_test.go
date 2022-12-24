@@ -61,11 +61,8 @@ func (suite *AccumTestSuite) TestMakeAndGetAccum() {
 
 	for name, tc := range tests {
 		suite.Run(name, func() {
-			expAccum := accum.AccumulatorObject{
-				Store: suite.store,
-				Name: tc.accumName,
-				Value: sdk.ZeroDec(),
-			}
+			// Creates raw accumulator object with test case's accum name and zero initial value
+			expAccum := accum.CreateRawAccumObject(suite.store, tc.accumName, sdk.ZeroDec(),)
 
 			err := accum.MakeAccumulator(suite.store, tc.accumName)
 

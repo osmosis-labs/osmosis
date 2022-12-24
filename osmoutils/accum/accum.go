@@ -13,13 +13,13 @@ import (
 // only the Accumulator inside is stored in state
 type AccumulatorObject struct {
 	// Store where accumulator is stored
-	Store store.KVStore
+	store store.KVStore
 
 	// Accumulator's name (pulled from AccumulatorContent)
-	Name string
+	name string
 
 	// Accumulator's current value (pulled from AccumulatorContent)
-	Value sdk.Dec
+	value sdk.Dec
 }
 
 // Makes a new accumulator at store/accum/{accumulator_name}
@@ -35,9 +35,9 @@ func MakeAccumulator(accum_store store.KVStore, accum_name string) error {
 	init_accum_value := sdk.ZeroDec()
 
 	var new_accum AccumulatorObject
-	new_accum.Store = accum_store
-	new_accum.Name = accum_name
-	new_accum.Value = init_accum_value
+	new_accum.store = accum_store
+	new_accum.name = accum_name
+	new_accum.value = init_accum_value
 
 	// Stores accumulator in state
 	setAccumulator(accum_store, new_accum, init_accum_value)
@@ -65,11 +65,11 @@ func GetAccumulator(accum_store store.KVStore, accum_name string) (AccumulatorOb
 }
 
 func setAccumulator(accum_store store.KVStore, accum AccumulatorObject, amt sdk.Dec) error {
-	keybz := []byte(accum.Name)
+	keybz := []byte(accum.name)
 
 	// TODO: consider removing name as as a field from AccumulatorContent (doesn't need to be stored in state)
 	var new_accum AccumulatorContent
-	new_accum.AccumName = accum.Name
+	new_accum.AccumName = accum.name
 	new_accum.AccumValue = amt
 
 	bz, err := proto.Marshal(&new_accum)
@@ -84,7 +84,7 @@ func setAccumulator(accum_store store.KVStore, accum AccumulatorObject, amt sdk.
 
 // TODO: consider making this increment the accumulator's value instead of overwriting it
 func (accum AccumulatorObject) UpdateAccumulator(amt sdk.Dec) {
-	setAccumulator(accum.Store, accum, amt)
+	setAccumulator(accum.store, accum, amt)
 }
 
 // func (accum AccumulatorObject) NewPosition(addr, num_units, positionOptions) error
