@@ -240,13 +240,25 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 }
 
 func (suite *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
+	suite.SetupTest()
+
+	// prepare existing delegations validators
+	valAddrs := suite.SetupMultipleValidators(3)
+
+	// creates a validator preference list to delegate to
+	preferences := suite.PrepareDelegateToValidatorSet()
+
+	amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)} // 100 osmo
+
 	tests := []struct {
-		name           string
-		delegator      sdk.AccAddress
-		coinToStake    sdk.Coin
-		coinToUnStake  sdk.Coin
-		expectedShares []sdk.Dec // expected shares after undelegation
-		expectPass     bool
+		name                   string
+		delegator              sdk.AccAddress
+		coinToStake            sdk.Coin
+		coinToUnStake          sdk.Coin
+		expectedShares         []sdk.Dec // expected shares after undelegation
+		setValSet              bool
+		setExistingDelegations bool
+		expectPass             bool
 	}{
 		{
 			name:           "Unstake half from the ValSet",
@@ -269,6 +281,7 @@ func (suite *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 			delegator:     sdk.AccAddress([]byte("addr3---------------")),
 			coinToStake:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),
 			coinToUnStake: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),
+			setValSet:     true,
 			expectPass:    true,
 		},
 		{
@@ -276,32 +289,44 @@ func (suite *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 			delegator:     sdk.AccAddress([]byte("addr4---------------")),
 			coinToStake:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),
 			coinToUnStake: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(40_000_000)),
+			setValSet:     true,
 			expectPass:    false,
+		},
+		{
+			name:                   "UnDelegate from existing staking position (non valSet) ",
+			delegator:              sdk.AccAddress([]byte("addr5---------------")),
+			coinToStake:            sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
+			coinToUnStake:          sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
+			expectedShares:         []sdk.Dec{sdk.NewDec(1_000_000), sdk.NewDec(1_660_000), sdk.NewDec(600_000), sdk.NewDec(1_740_000)}, // validatorDelegatedShares - (weight * coinToUnstake)
+			setExistingDelegations: true,
+			expectPass:             true,
 		},
 	}
 
 	for _, test := range tests {
 		suite.Run(test.name, func() {
-			suite.SetupTest()
-
-			suite.FundAcc(test.delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)}) // 100 osmo
+			suite.FundAcc(test.delegator, amountToFund) // 100 osmo
 
 			// setup message server
 			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorSetPreferenceKeeper)
 			c := sdk.WrapSDKContext(suite.Ctx)
 
-			// creates a validator preference list to delegate to
-			preferences := suite.PrepareDelegateToValidatorSet()
+			if test.setValSet {
+				// SetValidatorSetPreference sets a new list of val-set
+				_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
+				suite.Require().NoError(err)
 
-			// SetValidatorSetPreference sets a new list of val-set
-			_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
-			suite.Require().NoError(err)
+				// DelegateToValidatorSet delegate to existing val-set
+				_, err = msgServer.DelegateToValidatorSet(c, types.NewMsgDelegateToValidatorSet(test.delegator, test.coinToStake))
+				suite.Require().NoError(err)
+			}
 
-			// DelegateToValidatorSet delegate to existing val-set
-			_, err = msgServer.DelegateToValidatorSet(c, types.NewMsgDelegateToValidatorSet(test.delegator, test.coinToStake))
-			suite.Require().NoError(err)
+			if test.setExistingDelegations {
+				err := suite.PrepareExistingDelegations(suite.Ctx, valAddrs, test.delegator, test.coinToStake.Amount)
+				suite.Require().NoError(err)
+			}
 
-			_, err = msgServer.UndelegateFromValidatorSet(c, types.NewMsgUndelegateFromValidatorSet(test.delegator, test.coinToUnStake))
+			_, err := msgServer.UndelegateFromValidatorSet(c, types.NewMsgUndelegateFromValidatorSet(test.delegator, test.coinToUnStake))
 			if test.expectPass {
 				suite.Require().NoError(err)
 

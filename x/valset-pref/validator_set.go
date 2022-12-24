@@ -41,7 +41,7 @@ func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, pre
 // For ex: delegate 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
 // our delegate logic would attempt to delegate 5osmo to A , 2osmo to B, 3osmo to C
 func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
-	// get the existingValSet, if not then check existingStakingPosition and return it
+	// get the existingValSet, if not check existingStakingPosition and return it
 	existingSet, err := k.GetDelegations(ctx, delegatorAddr)
 	if err != nil {
 		return fmt.Errorf("user %s doesn't have validator set", delegatorAddr)
@@ -78,7 +78,7 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 // undelegate 6osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
 // our undelegate logic would attempt to undelegate 3osmo from A, 1.8osmo from B, 1.2osmo from C
 func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
-	// get the existingValSet, if not then check existingStakingPosition and return it
+	// get the existingValSet if it exists, if not check existingStakingPosition and return it
 	existingSet, err := k.GetDelegations(ctx, delegatorAddr)
 	if err != nil {
 		return fmt.Errorf("user %s doesn't have validator set", delegatorAddr)
@@ -96,6 +96,9 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	for _, val := range existingSet.Preferences {
 		totalAmountFromWeights = totalAmountFromWeights.Add(val.Weight.Mul(tokenAmt))
 	}
+
+	// Handle rounding issue for ex: 9999.99999 = 10000
+	totalAmountFromWeights = totalAmountFromWeights.Ceil()
 
 	if !totalAmountFromWeights.Equal(tokenAmt) {
 		return fmt.Errorf("The undelegate total do not add up with the amount calculated from weights expected %s got %s", tokenAmt, totalAmountFromWeights)
