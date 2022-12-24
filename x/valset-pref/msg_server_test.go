@@ -134,12 +134,13 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 	amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)} // 100 osmo
 
 	tests := []struct {
-		name           string
-		delegator      sdk.AccAddress
-		coin           sdk.Coin  // amount to delegate
-		expectedShares []sdk.Dec // expected shares after delegation
-		expectPass     bool
-		valSetExists   bool
+		name                   string
+		delegator              sdk.AccAddress
+		coin                   sdk.Coin  // amount to delegate
+		expectedShares         []sdk.Dec // expected shares after delegation
+		setExistingDelegations bool
+		setValSet              bool
+		expectPass             bool
 	}{
 		{
 			name:           "Delegate to valid validators",
@@ -154,13 +155,21 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 			coin:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
 			expectedShares: []sdk.Dec{sdk.NewDec(4_000_000), sdk.NewDec(6_600_000), sdk.NewDec(2_400_000), sdk.NewDec(7_000_000)},
 			expectPass:     true,
-			valSetExists:   true,
 		},
 		{
 			name:       "User does not have enough tokens to stake",
-			delegator:  sdk.AccAddress([]byte("addr3---------------")),
+			delegator:  sdk.AccAddress([]byte("addr2---------------")),
 			coin:       sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(200_000_000)),
+			setValSet:  true,
 			expectPass: false,
+		},
+		{
+			name:                   "Delegate to existing staking position (non valSet) ",
+			delegator:              sdk.AccAddress([]byte("addr3---------------")),
+			coin:                   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
+			expectedShares:         []sdk.Dec{sdk.NewDec(4_000_000), sdk.NewDec(6_640_000), sdk.NewDec(2_400_000), sdk.NewDec(6_960_000)},
+			setExistingDelegations: true,
+			expectPass:             true,
 		},
 	}
 
@@ -170,11 +179,16 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorSetPreferenceKeeper)
 			c := sdk.WrapSDKContext(suite.Ctx)
 
-			// if validatorSetExist no need to refund and setValSet again
-			if !test.valSetExists {
-				suite.FundAcc(test.delegator, amountToFund)
+			suite.FundAcc(test.delegator, amountToFund)
 
+			// if validatorSetExist no need to refund and setValSet again
+			if test.setValSet {
 				_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
+				suite.Require().NoError(err)
+			}
+
+			if test.setExistingDelegations {
+				err := suite.PrepareExistingDelegations(suite.Ctx, test.delegator, test.coin.Amount)
 				suite.Require().NoError(err)
 			}
 
@@ -186,20 +200,22 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 				// check if the user balance decreased
 				balance := suite.App.BankKeeper.GetBalance(suite.Ctx, test.delegator, sdk.DefaultBondDenom)
 				expectedBalance := amountToFund[0].Amount.Sub(test.coin.Amount)
-				if test.valSetExists {
+				if !test.setValSet {
 					expectedBalance = balance.Amount
 				}
 
 				suite.Require().Equal(expectedBalance, balance.Amount)
 
-				// check if the expectedShares matches after delegation
-				for i, val := range preferences {
-					valAddr, err := sdk.ValAddressFromBech32(val.ValOperAddress)
-					suite.Require().NoError(err)
+				if test.setValSet {
+					// check if the expectedShares matches after delegation
+					for i, val := range preferences {
+						valAddr, err := sdk.ValAddressFromBech32(val.ValOperAddress)
+						suite.Require().NoError(err)
 
-					// guarantees that the delegator exists because we check it in DelegateToValidatorSet
-					del, _ := suite.App.StakingKeeper.GetDelegation(suite.Ctx, test.delegator, valAddr)
-					suite.Require().Equal(del.Shares, test.expectedShares[i])
+						// guarantees that the delegator exists because we check it in DelegateToValidatorSet
+						del, _ := suite.App.StakingKeeper.GetDelegation(suite.Ctx, test.delegator, valAddr)
+						suite.Require().Equal(del.Shares, test.expectedShares[i])
+					}
 				}
 
 			} else {

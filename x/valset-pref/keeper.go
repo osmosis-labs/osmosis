@@ -61,6 +61,7 @@ func (k Keeper) GetValidatorSetPreference(ctx sdk.Context, delegator string) (ty
 
 func (k Keeper) GetDelegations(ctx sdk.Context, delegator string) (types.ValidatorSetPreferences, error) {
 	valSet, exists := k.GetValidatorSetPreference(ctx, delegator)
+
 	if !exists {
 		existingDelsValSetFormatted, err := k.GetExistingStakingDelegations(ctx, delegator)
 		if err != nil {
@@ -93,10 +94,12 @@ func (k Keeper) GetExistingStakingDelegations(ctx sdk.Context, delegator string)
 	// for each delegation format it in types.ValidatorSetPreferences format
 	for _, existingdels := range existingDelegations {
 		existingDelsValSetFormatted = append(existingDelsValSetFormatted, types.ValidatorPreference{
-			ValOperAddress: existingdels.DelegatorAddress,
-			Weight:         existingdels.Shares.Quo(existingTotalShares).TruncateDec(),
+			ValOperAddress: existingdels.ValidatorAddress,
+			Weight:         existingdels.Shares.Quo(existingTotalShares), // TODO: only 3 places decimal
 		})
 	}
+
+	fmt.Println(existingDelsValSetFormatted)
 
 	return existingDelsValSetFormatted, nil
 }

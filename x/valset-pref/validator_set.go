@@ -41,9 +41,9 @@ func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, pre
 // For ex: delegate 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
 // our delegate logic would attempt to delegate 5osmo to A , 2osmo to B, 3osmo to C
 func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
-	// get the existing validator set preference from store
-	existingSet, found := k.GetValidatorSetPreference(ctx, delegatorAddr)
-	if !found {
+	// get the existingValSet, if not then check existingStakingPosition and return it
+	existingSet, err := k.GetDelegations(ctx, delegatorAddr)
+	if err != nil {
 		return fmt.Errorf("user %s doesn't have validator set", delegatorAddr)
 	}
 
@@ -78,9 +78,9 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 // undelegate 6osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
 // our undelegate logic would attempt to undelegate 3osmo from A, 1.8osmo from B, 1.2osmo from C
 func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
-	// get the existing validator set preference
-	existingSet, found := k.GetValidatorSetPreference(ctx, delegatorAddr)
-	if !found {
+	// get the existingValSet, if not then check existingStakingPosition and return it
+	existingSet, err := k.GetDelegations(ctx, delegatorAddr)
+	if err != nil {
 		return fmt.Errorf("user %s doesn't have validator set", delegatorAddr)
 	}
 
@@ -291,7 +291,7 @@ func (k Keeper) withdrawExistingValSetStakingPosition(ctx sdk.Context, delegator
 func (k Keeper) getValAddrAndVal(ctx sdk.Context, valOperAddress string) (sdk.ValAddress, stakingtypes.Validator, error) {
 	valAddr, err := sdk.ValAddressFromBech32(valOperAddress)
 	if err != nil {
-		return nil, stakingtypes.Validator{}, fmt.Errorf("validator address not formatted")
+		return nil, stakingtypes.Validator{}, fmt.Errorf("SISHIR validator address not formatted")
 	}
 
 	validator, found := k.stakingKeeper.GetValidator(ctx, valAddr)

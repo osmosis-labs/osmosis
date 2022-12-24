@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -100,6 +101,30 @@ func (suite *KeeperTestSuite) AllocateRewards(ctx sdk.Context, delegator sdk.Acc
 	rewardsAfterAllocation, _ := suite.GetDelegationRewards(ctx, valAddrStr, delegator)
 	suite.Require().NotNil(rewardsAfterAllocation)
 	suite.Require().NotZero(rewardsAfterAllocation[0].Amount)
+}
+
+// PrepareExistingDelegations prepares three existing non valset delegations
+func (suite *KeeperTestSuite) PrepareExistingDelegations(ctx sdk.Context, delegator sdk.AccAddress, tokenAmt sdk.Int) error {
+	valAddrs := suite.SetupMultipleValidators(3)
+	for i := 0; i < len(valAddrs); i++ {
+		valAddr, err := sdk.ValAddressFromBech32(valAddrs[i])
+		if err != nil {
+			return fmt.Errorf("validator address not formatted")
+		}
+
+		validator, found := suite.App.StakingKeeper.GetValidator(ctx, valAddr)
+		if !found {
+			return fmt.Errorf("validator not found %s", validator)
+		}
+
+		// Delegate the unbonded tokens
+		_, err = suite.App.StakingKeeper.Delegate(ctx, delegator, tokenAmt, stakingtypes.Unbonded, validator, true)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func TestKeeperTestSuite(t *testing.T) {
