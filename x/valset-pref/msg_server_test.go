@@ -128,7 +128,10 @@ func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
 func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 	suite.SetupTest()
 
-	// prepare validators to delegate to
+	// prepare existing delegations validators
+	valAddrs := suite.SetupMultipleValidators(3)
+
+	// prepare validators to delegate to valset
 	preferences := suite.PrepareDelegateToValidatorSet()
 
 	amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)} // 100 osmo
@@ -167,7 +170,7 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 			name:                   "Delegate to existing staking position (non valSet) ",
 			delegator:              sdk.AccAddress([]byte("addr3---------------")),
 			coin:                   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
-			expectedShares:         []sdk.Dec{sdk.NewDec(4_000_000), sdk.NewDec(6_640_000), sdk.NewDec(2_400_000), sdk.NewDec(6_960_000)},
+			expectedShares:         []sdk.Dec{sdk.NewDec(13_333_333), sdk.NewDec(13_333_333), sdk.NewDec(13_333_333)},
 			setExistingDelegations: true,
 			expectPass:             true,
 		},
@@ -188,7 +191,7 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 			}
 
 			if test.setExistingDelegations {
-				err := suite.PrepareExistingDelegations(suite.Ctx, test.delegator, test.coin.Amount)
+				err := suite.PrepareExistingDelegations(suite.Ctx, valAddrs, test.delegator, test.coin.Amount)
 				suite.Require().NoError(err)
 			}
 
@@ -200,6 +203,7 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 				// check if the user balance decreased
 				balance := suite.App.BankKeeper.GetBalance(suite.Ctx, test.delegator, sdk.DefaultBondDenom)
 				expectedBalance := amountToFund[0].Amount.Sub(test.coin.Amount)
+				// valset has not been set so use the (expectedBalance = account balance)
 				if !test.setValSet {
 					expectedBalance = balance.Amount
 				}
@@ -218,6 +222,16 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 					}
 				}
 
+				if test.setExistingDelegations {
+					for i, val := range valAddrs {
+						valAddr, err := sdk.ValAddressFromBech32(val)
+						suite.Require().NoError(err)
+
+						// guarantees that the delegator exists because we check it in DelegateToValidatorSet
+						del, _ := suite.App.StakingKeeper.GetDelegation(suite.Ctx, test.delegator, valAddr)
+						suite.Require().Equal(del.Shares, test.expectedShares[i])
+					}
+				}
 			} else {
 				suite.Require().Error(err)
 			}

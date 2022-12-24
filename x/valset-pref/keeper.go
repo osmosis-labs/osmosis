@@ -99,8 +99,6 @@ func (k Keeper) GetExistingStakingDelegations(ctx sdk.Context, delegator string)
 		})
 	}
 
-	fmt.Println(existingDelsValSetFormatted)
-
 	return existingDelsValSetFormatted, nil
 }
 
