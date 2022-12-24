@@ -124,6 +124,7 @@ func (accum AccumulatorObject) ClaimRewards(addr sdk.AccAddress) (sdk.DecCoins, 
 	totalRewards = totalRewards.Add(accumulatorRewads...)
 
 	// Create a completely new position, with no rewards
+	// TODO: decide how to propagate the knowledge of position options.
 	accum.NewPosition(addr, position.NumShares, PositionOptions{})
 
 	return totalRewards, nil
