@@ -114,9 +114,14 @@ func (accum AccumulatorObject) NewPosition(addr sdk.AccAddress, numShareUnits sd
 // Upon claiming the rewards, the position at the current address is reset to have no
 // unclaimed rewards and the accumulator updates.
 func (accum AccumulatorObject) ClaimRewards(addr sdk.AccAddress) (sdk.DecCoins, error) {
-
 	position := Record{}
-	osmoutils.MustGet(accum.Store, addr, &position)
+	found, err := osmoutils.Get(accum.Store, addr, &position)
+	if err != nil {
+		return sdk.DecCoins{}, err
+	}
+	if !found {
+		return sdk.DecCoins{}, fmt.Errorf("no position found for address (%s)", addr)
+	}
 
 	totalRewards := position.UnclaimedRewards
 
