@@ -1,6 +1,7 @@
 package data
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -17,4 +18,14 @@ func TestGetIBCAliasesMap(t *testing.T) {
 	// check that subsequent calls return the same map
 	secondIBCAliases := GetIBCAliasesMap()
 	require.Equal(t, ibcAliases, secondIBCAliases)
+
+	require.False(t, func() bool {
+		if _, err := os.Stat("assetlist.json"); err == nil {
+			// file exists
+			return true
+		} else {
+			// file does not exist
+			return false
+		}
+	}())
 }
