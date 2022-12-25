@@ -26,7 +26,7 @@ var (
 	testAddressTwo   = sdk.AccAddress([]byte("addr2_______________"))
 	testAddressThree = sdk.AccAddress([]byte("addr3_______________"))
 
-	emptyPositionOptions = accum.PositionOptions{}
+	emptyPositionOptions = accumPackage.PositionOptions{}
 	testNameOne          = "myaccumone"
 	testNameTwo          = "myaccumtwo"
 	testNameThree        = "myaccumthree"
@@ -37,39 +37,40 @@ var (
 
 	initialValueOne      = sdk.MustNewDecFromStr("100.1")
 	initialCoinDenomOne  = sdk.NewDecCoinFromDec(denomOne, initialValueOne)
+	initialCoinDenomTwo  = sdk.NewDecCoinFromDec(denomTwo, initialValueOne)
 	initialCoinsDenomOne = sdk.NewDecCoins(initialCoinDenomOne)
 
-	positionOne = accum.Record{
+	positionOne = accumPackage.Record{
 		NumShares:        sdk.NewDec(100),
 		InitAccumValue:   emptyCoins,
 		UnclaimedRewards: emptyCoins,
 	}
 
-	positionOneV2 = accum.Record{
+	positionOneV2 = accumPackage.Record{
 		NumShares:        sdk.NewDec(150),
 		InitAccumValue:   emptyCoins,
 		UnclaimedRewards: emptyCoins,
 	}
 
-	positionTwo = accum.Record{
+	positionTwo = accumPackage.Record{
 		NumShares:        sdk.NewDec(200),
 		InitAccumValue:   emptyCoins,
 		UnclaimedRewards: emptyCoins,
 	}
 
-	positionThree = accum.Record{
+	positionThree = accumPackage.Record{
 		NumShares:        sdk.NewDec(300),
 		InitAccumValue:   emptyCoins,
 		UnclaimedRewards: emptyCoins,
 	}
 )
 
-func withInitialAccumValue(record accum.Record, initialAccum sdk.DecCoins) accum.Record {
+func withInitialAccumValue(record accumPackage.Record, initialAccum sdk.DecCoins) accumPackage.Record {
 	record.InitAccumValue = initialAccum
 	return record
 }
 
-func withUnclaimedRewards(record accum.Record, unclaimedRewards sdk.DecCoins) accum.Record {
+func withUnclaimedRewards(record accumPackage.Record, unclaimedRewards sdk.DecCoins) accumPackage.Record {
 	record.UnclaimedRewards = unclaimedRewards
 	return record
 }
@@ -117,7 +118,7 @@ func (suite *AccumTestSuite) TestMakeAndGetAccum() {
 		tc := tc
 		suite.Run(name, func() {
 			// Creates raw accumulator object with test case's accum name and zero initial value
-			expAccum := accumPackage.CreateRawAccumObject(suite.store, tc.accumName, sdk.DecCoins(nil))
+			expAccum := accumPackage.CreateRawAccumObject(suite.store, tc.accumName, emptyCoins)
 
 			err := accumPackage.MakeAccumulator(suite.store, tc.accumName)
 
@@ -125,11 +126,11 @@ func (suite *AccumTestSuite) TestMakeAndGetAccum() {
 				suite.Require().Error(err)
 			}
 
-			actualAccum, err := accumPackage.GetAccumulator(suite.store, tc.accumName)
+			retrievedAccum, err := accumPackage.GetAccumulator(suite.store, tc.accumName)
 
 			if tc.expGetPass {
 				suite.Require().NoError(err)
-				suite.Require().Equal(expAccum, actualAccum)
+				suite.Require().Equal(expAccum, retrievedAccum)
 			} else {
 				suite.Require().Error(err)
 			}
@@ -143,14 +144,14 @@ func (suite *AccumTestSuite) TestNewPosition() {
 	suite.SetupTest()
 
 	// Setup.
-	accObject := accum.CreateRawAccumObject(suite.store, testNameOne, emptyCoins)
+	accObject := accumPackage.CreateRawAccumObject(suite.store, testNameOne, emptyCoins)
 
 	tests := map[string]struct {
-		accObject        accum.AccumulatorObject
+		accObject        accumPackage.AccumulatorObject
 		addr             sdk.AccAddress
 		numShareUnits    sdk.Dec
-		options          accum.PositionOptions
-		expectedPosition accum.Record
+		options          accumPackage.PositionOptions
+		expectedPosition accumPackage.Record
 	}{
 		"test address one - position created": {
 			accObject:        accObject,
@@ -181,7 +182,7 @@ func (suite *AccumTestSuite) TestNewPosition() {
 			expectedPosition: positionThree,
 		},
 		"test address one with non-empty accumulator - position created": {
-			accObject:        accum.CreateRawAccumObject(suite.store, testNameTwo, initialCoinsDenomOne),
+			accObject:        accumPackage.CreateRawAccumObject(suite.store, testNameTwo, initialCoinsDenomOne),
 			addr:             testAddressOne,
 			numShareUnits:    positionOne.NumShares,
 			options:          emptyPositionOptions,
@@ -219,27 +220,27 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 	// Setup.
 
 	// 1. No rewards, 2 position accumulator.
-	accumNoRewards := accum.CreateRawAccumObject(suite.store, testNameOne, emptyCoins)
+	accumNoRewards := accumPackage.CreateRawAccumObject(suite.store, testNameOne, emptyCoins)
 
 	// Create positions at testAddressOne and testAddressTwo.
 	accumNoRewards.NewPosition(testAddressOne, positionOne.NumShares, emptyPositionOptions)
 	accumNoRewards.NewPosition(testAddressTwo, positionTwo.NumShares, emptyPositionOptions)
 
 	// 2. One accumulator reward coin, 1 position accumulator, no unclaimed rewards in position.
-	accumOneReward := accum.CreateRawAccumObject(suite.store, testNameTwo, initialCoinsDenomOne)
+	accumOneReward := accumPackage.CreateRawAccumObject(suite.store, testNameTwo, initialCoinsDenomOne)
 
 	// Create position at testAddressThree.
-	accumOneReward = accum.WithPosition(accumOneReward, testAddressThree, withInitialAccumValue(positionThree, initialCoinsDenomOne))
+	accumOneReward = accumPackage.WithPosition(accumOneReward, testAddressThree, withInitialAccumValue(positionThree, initialCoinsDenomOne))
 
 	// Double the accumulator value.
 	accumOneReward.SetValue(sdk.NewDecCoins(doubleCoinsDenomOne))
 
 	// 3. Multi accumulator rewards, 2 position accumulator, some unclaimed rewards.
-	accumThreeRewards := accum.CreateRawAccumObject(suite.store, testNameThree, sdk.NewDecCoins())
+	accumThreeRewards := accumPackage.CreateRawAccumObject(suite.store, testNameThree, sdk.NewDecCoins())
 
 	// Create positions at testAddressOne
 	// This position has unclaimed rewards set.
-	accumThreeRewards = accum.WithPosition(accumThreeRewards, testAddressOne, withUnclaimedRewards(positionOne, initialCoinsDenomOne))
+	accumThreeRewards = accumPackage.WithPosition(accumThreeRewards, testAddressOne, withUnclaimedRewards(positionOne, initialCoinsDenomOne))
 
 	// Create positions at testAddressThree with no unclaimed rewards.
 	accumThreeRewards.NewPosition(testAddressTwo, positionTwo.NumShares, emptyPositionOptions)
@@ -248,7 +249,7 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 	accumThreeRewards.SetValue(tripleDenomOneAndTwo)
 
 	tests := map[string]struct {
-		accObject      accum.AccumulatorObject
+		accObject      accumPackage.AccumulatorObject
 		addr           sdk.AccAddress
 		expectedResult sdk.DecCoins
 		expectError    error
@@ -266,7 +267,7 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 		"claim at testAddressTwo with no rewards - error - no position": {
 			accObject:   accumNoRewards,
 			addr:        testAddressThree,
-			expectError: accum.NoPositionError{Address: testAddressThree},
+			expectError: accumPackage.NoPositionError{Address: testAddressThree},
 		},
 		"claim at testAddressThree with single reward token - success": {
 			accObject: accumOneReward,
@@ -363,7 +364,7 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 			newShares: sdk.OneDec(),
 			accumInit: sdk.NewDecCoins(),
 			// unclaimed rewards since last update
-			accumDelta: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
+			accumDelta: sdk.NewDecCoins(initialCoinDenomOne),
 			expPass: true,
 		},
 		"non-zero shares with new rewards in two denoms": {
@@ -371,47 +372,47 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 			startingUnclaimedRewards: sdk.NewDecCoins(),
 			newShares: sdk.OneDec(),
 			accumInit: sdk.NewDecCoins(),
-			accumDelta: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10)), sdk.NewDecCoin("bar", sdk.NewInt(10))),
+			accumDelta: sdk.NewDecCoins(initialCoinDenomOne, initialCoinDenomTwo),
 			expPass: true,
 		},
 		"non-zero shares with both existing and new rewards": {
 			startingNumShares: sdk.OneDec(),
-			startingUnclaimedRewards: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(11)), sdk.NewDecCoin("bar", sdk.NewInt(11))),
+			startingUnclaimedRewards: sdk.NewDecCoins(sdk.NewDecCoin(denomOne, sdk.NewInt(11)), sdk.NewDecCoin(denomTwo, sdk.NewInt(11))),
 			newShares: sdk.OneDec(),
 			accumInit: sdk.NewDecCoins(),
-			accumDelta: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10)), sdk.NewDecCoin("bar", sdk.NewInt(10))),
+			accumDelta: sdk.NewDecCoins(initialCoinDenomOne, initialCoinDenomTwo),
 			expPass: true,
 		},
 		"non-zero shares with both existing (one denom) and new rewards (two denoms)": {
 			startingNumShares: sdk.OneDec(),
-			startingUnclaimedRewards: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
+			startingUnclaimedRewards: sdk.NewDecCoins(initialCoinDenomOne),
 			newShares: sdk.OneDec(),
 			accumInit: sdk.NewDecCoins(),
-			accumDelta: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10)), sdk.NewDecCoin("bar", sdk.NewInt(10))),
+			accumDelta: sdk.NewDecCoins(initialCoinDenomOne, initialCoinDenomTwo),
 			expPass: true,
 		},
 		"non-zero shares with both existing (one denom) and new rewards (two new denoms)": {
 			startingNumShares: sdk.OneDec(),
-			startingUnclaimedRewards: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
+			startingUnclaimedRewards: sdk.NewDecCoins(initialCoinDenomOne),
 			newShares: sdk.OneDec(),
 			accumInit: sdk.NewDecCoins(),
-			accumDelta: sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(10)), sdk.NewDecCoin("baz", sdk.NewInt(10))),
+			accumDelta: sdk.NewDecCoins(initialCoinDenomTwo, sdk.NewDecCoin("baz", sdk.NewInt(10))),
 			expPass: true,
 		},
 		"nonzero accumulator starting value, delta with same denoms": {
 			startingNumShares: sdk.OneDec(),
-			startingUnclaimedRewards: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
+			startingUnclaimedRewards: sdk.NewDecCoins(initialCoinDenomOne),
 			newShares: sdk.OneDec(),
-			accumInit: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10)), sdk.NewDecCoin("bar", sdk.NewInt(10))),
-			accumDelta: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10)), sdk.NewDecCoin("bar", sdk.NewInt(10))),
+			accumInit: sdk.NewDecCoins(initialCoinDenomOne, initialCoinDenomTwo),
+			accumDelta: sdk.NewDecCoins(initialCoinDenomOne, initialCoinDenomTwo),
 			expPass: true,
 		},
 		"nonzero accumulator starting value, delta with new denoms": {
 			startingNumShares: sdk.OneDec(),
-			startingUnclaimedRewards: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
+			startingUnclaimedRewards: sdk.NewDecCoins(initialCoinDenomOne),
 			newShares: sdk.OneDec(),
-			accumInit: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10)), sdk.NewDecCoin("bar", sdk.NewInt(10))),
-			accumDelta: sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(10)), sdk.NewDecCoin("baz", sdk.NewInt(10))),
+			accumInit: sdk.NewDecCoins(initialCoinDenomOne, initialCoinDenomTwo),
+			accumDelta: sdk.NewDecCoins(initialCoinDenomTwo, sdk.NewDecCoin("baz", sdk.NewInt(10))),
 			expPass: true,
 		},
 
@@ -431,7 +432,6 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 			startingUnclaimedRewards: sdk.NewDecCoins(),
 			newShares: sdk.ZeroDec(),
 			accumInit: sdk.NewDecCoins(),
-			// unchanged accum value, so no unclaimed rewards
 			accumDelta: sdk.NewDecCoins(),
 			expPass: false,
 		},
@@ -440,7 +440,6 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 			startingUnclaimedRewards: sdk.NewDecCoins(),
 			newShares: sdk.OneDec().Neg(),
 			accumInit: sdk.NewDecCoins(),
-			// unchanged accum value, so no unclaimed rewards
 			accumDelta: sdk.NewDecCoins(),
 			expPass: false,
 		},
@@ -453,15 +452,15 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 			addr := osmoutils.CreateRandomAccounts(1)[0]
 
 			// Create a new accumulator with initial value specified by test case
-			curAccum := accumPackage.CreateRawAccumObject(suite.store, "test-accum", tc.accumInit)
+			curAccum := accumPackage.CreateRawAccumObject(suite.store, testNameOne, tc.accumInit)
 
 			// Create new position in store (raw to minimize dependencies)
 			if !tc.addrDNE {
-				accumPackage.CreateRawPosition(curAccum, addr, tc.startingNumShares, tc.startingUnclaimedRewards, accumPackage.PositionOptions{})
+				accumPackage.CreateRawPosition(curAccum, addr, tc.startingNumShares, tc.startingUnclaimedRewards, emptyPositionOptions)
 			}
 
 			// Update accumulator with accumDelta (increasing position's rewards by a proportional amount)
-			curAccum = accumPackage.CreateRawAccumObject(suite.store, "test-accum", tc.accumInit.Add(tc.accumDelta...))
+			curAccum = accumPackage.CreateRawAccumObject(suite.store, testNameOne, tc.accumInit.Add(tc.accumDelta...))
 
 			// Add newShares to position
 			err := curAccum.AddToPosition(addr, tc.newShares)
@@ -470,7 +469,7 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 				suite.Require().NoError(err)
 
 				// Get updated position for comparison
-				newPosition, err := accumPackage.GetPosition(accumPackage.GetStore(curAccum), addr)
+				newPosition, err := accumPackage.GetPosition(curAccum, addr)
 				suite.Require().NoError(err)
 
 				// Ensure position's accumulator value is moved up to init + delta
@@ -483,7 +482,10 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 				// Ensure address's position properly reflects new number of shares
 				suite.Require().Equal(tc.startingNumShares.Add(tc.newShares), newPosition.NumShares)
 
-				// TODO: ensure a new position isn't created in memory (only old one is overwritten)
+				// Ensure a new position isn't created in memory (only old one is overwritten)
+				allAccumPositions, err := curAccum.GetAllPositions()
+				suite.Require().NoError(err)
+				suite.Require().True(len(allAccumPositions) == 1)
 			} else {
 				suite.Require().Error(err)
 			}

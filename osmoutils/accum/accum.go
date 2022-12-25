@@ -26,7 +26,8 @@ type AccumulatorObject struct {
 type PositionOptions struct{}
 
 // Makes a new accumulator at store/accum/{accumName}
-// returns an error if already exists / theres some overlapping keys
+// Returns the accumulator for convenience, as we expect callers might need it
+// Returns error if already exists / theres some overlapping keys
 func MakeAccumulator(accumStore store.KVStore, accumName string) error {
 	if accumStore.Has(formatAccumPrefixKey(accumName)) {
 		return errors.New("Accumulator with given name already exists in store")
@@ -94,7 +95,7 @@ func (accum AccumulatorObject) AddToPosition(addr sdk.AccAddress, newShares sdk.
 	}
 
 	// Get addr's current position
-	position, err := getPosition(accum.store, addr)
+	position, err := getPosition(accum, addr)
 	if err != nil {
 		return err
 	}
@@ -114,10 +115,10 @@ func (accum AccumulatorObject) AddToPosition(addr sdk.AccAddress, newShares sdk.
 	return nil
 }
 
-// func (accum AccumulatorObject) RemovePosition(addr, num_units) error
+// func (accum AccumulatorObject) RemovePosition(addr sdk.AccAddress, numSharesToRemove sdk.Dec) error {}
 
 func (accum AccumulatorObject) GetPositionSize(addr sdk.AccAddress) (sdk.Dec, error) {
-	position, err := getPosition(accum.store, addr)
+	position, err := getPosition(accum, addr)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -131,9 +132,9 @@ func (accum AccumulatorObject) GetPositionSize(addr sdk.AccAddress) (sdk.Dec, er
 // Returns error if no position exists for the given address. Returns error if any
 // database errors occur.
 func (accum AccumulatorObject) ClaimRewards(addr sdk.AccAddress) (sdk.DecCoins, error) {
-	position, err := getPosition(accum.store, addr)
+	position, err := getPosition(accum, addr)
 	if err != nil {
-		return sdk.DecCoins{}, err
+		return sdk.DecCoins{}, NoPositionError{addr}
 	}
 
 	totalRewards := getTotalRewards(accum, position)

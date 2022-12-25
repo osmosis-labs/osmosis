@@ -43,8 +43,8 @@ func CreateRawPosition(accum AccumulatorObject, addr sdk.AccAddress, numShareUni
 	createNewPosition(accum, addr, numShareUnits, unclaimedRewards, options)
 }
 
-func GetPosition(store store.KVStore, addr sdk.AccAddress) (Record, error) {
-	return getPosition(store, addr)
+func GetPosition(accum AccumulatorObject, addr sdk.AccAddress) (Record, error) {
+	return getPosition(accum, addr)
 }
 
 // Gets store from accumulator for testing purposes

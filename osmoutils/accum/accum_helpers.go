@@ -3,7 +3,6 @@ package accum
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -16,13 +15,13 @@ func createNewPosition(accum AccumulatorObject, addr sdk.AccAddress, numShareUni
 		InitAccumValue:   accum.value,
 		UnclaimedRewards: unclaimedRewards,
 	}
-	osmoutils.MustSet(accum.store, formatPositionPrefixKey(addr.String()), &position)
+	osmoutils.MustSet(accum.store, formatPositionPrefixKey(accum.name, addr.String()), &position)
 }
 
 // Gets addr's current position from store
-func getPosition(store store.KVStore, addr sdk.AccAddress) (Record, error) {
+func getPosition(accum AccumulatorObject, addr sdk.AccAddress) (Record, error) {
 	position := Record{}
-	found, err := osmoutils.Get(store, formatPositionPrefixKey(addr.String()), &position)
+	found, err := osmoutils.Get(accum.store, formatPositionPrefixKey(accum.name, addr.String()), &position)
 	if err != nil {
 		return Record{}, err
 	}
