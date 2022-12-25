@@ -6,7 +6,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gogo/protobuf/proto"
+
+	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
 // We keep this object as a way to interface with the methods, even though
@@ -40,7 +41,7 @@ func MakeAccumulator(accum_store store.KVStore, accum_name string) error {
 	new_accum.value = init_accum_value
 
 	// Stores accumulator in state
-	setAccumulator(accum_store, new_accum, init_accum_value)
+	setAccumulator(new_accum, init_accum_value)
 
 	return nil
 }
@@ -48,15 +49,14 @@ func MakeAccumulator(accum_store store.KVStore, accum_name string) error {
 // Gets the current value of the accumulator corresponding to accum_name in accum_store
 func GetAccumulator(accum_store store.KVStore, accum_name string) (AccumulatorObject, error) {
 	keybz := []byte(accum_name)
-	if !accum_store.Has(keybz) {
-		return AccumulatorObject{}, errors.New(fmt.Sprintf("Accumulator name %s does not exist in store", accum_name))
-	}
 
-	var accum_content AccumulatorContent
-	bz := accum_store.Get(keybz)
-	err := proto.Unmarshal(bz, &accum_content)
+	accum_content := AccumulatorContent{}
+	found, err := osmoutils.Get(accum_store, keybz, &accum_content)
 	if err != nil {
 		return AccumulatorObject{}, err
+	}
+	if !found {
+		return AccumulatorObject{}, errors.New(fmt.Sprintf("Accumulator name %s does not exist in store", accum_name))
 	}
 
 	accum := AccumulatorObject{accum_store, accum_content.AccumName, accum_content.AccumValue}
@@ -64,27 +64,20 @@ func GetAccumulator(accum_store store.KVStore, accum_name string) (AccumulatorOb
 	return accum, nil
 }
 
-func setAccumulator(accum_store store.KVStore, accum AccumulatorObject, amt sdk.Dec) error {
+func setAccumulator(accum AccumulatorObject, amt sdk.Dec) error {
 	keybz := []byte(accum.name)
 
 	// TODO: consider removing name as as a field from AccumulatorContent (doesn't need to be stored in state)
-	var new_accum AccumulatorContent
-	new_accum.AccumName = accum.name
-	new_accum.AccumValue = amt
+	new_accum := AccumulatorContent{accum.name, amt}
 
-	bz, err := proto.Marshal(&new_accum)
-	if err != nil {
-		return err
-	}
-
-	accum_store.Set(keybz, bz)
+	osmoutils.MustSet(accum.store, keybz, &new_accum)
 
 	return nil
 }
 
 // TODO: consider making this increment the accumulator's value instead of overwriting it
 func (accum AccumulatorObject) UpdateAccumulator(amt sdk.Dec) {
-	setAccumulator(accum.store, accum, amt)
+	setAccumulator(accum, amt)
 }
 
 // func (accum AccumulatorObject) NewPosition(addr, num_units, positionOptions) error
