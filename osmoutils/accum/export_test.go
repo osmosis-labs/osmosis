@@ -39,7 +39,7 @@ func CreateRawAccumObject(store store.KVStore, name string, value sdk.DecCoins) 
 	}
 }
 
-// parseRecordFromBz parses a record from a byte array.
+// parseRecordFromBz parses a record from a byte slice.
 // Returns error if fails to unmarshal or if the given bytes slice
 // is empty.
 func parseRecordFromBz(bz []byte) (record Record, err error) {
