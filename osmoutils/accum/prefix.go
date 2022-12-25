@@ -9,7 +9,7 @@ func formatModulePrefixKey(key string) []byte {
 	return []byte(fmt.Sprintf("accum/%s", key))
 }
 
-// formatAccimPrefix returns the key prefix used
+// formatAccumPrefix returns the key prefix used
 // specifically for accumulator values in the KVStore.
 // Returns "accum/acc/{name}" as bytes.
 func formatAccumPrefixKey(name string) []byte {
