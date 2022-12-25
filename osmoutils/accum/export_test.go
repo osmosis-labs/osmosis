@@ -13,3 +13,16 @@ func CreateRawAccumObject(store store.KVStore, name string, value sdk.DecCoins) 
 		value: value,
 	}
 }
+
+func CreateRawPosition(accum AccumulatorObject, addr sdk.AccAddress, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options PositionOptions) {
+	createNewPosition(accum, addr, numShareUnits, unclaimedRewards, options)
+}
+
+func GetPosition(store store.KVStore, addr sdk.AccAddress) (Record, error) {
+	return getPosition(store, addr)
+}
+
+// Gets store from accumulator for testing purposes
+func GetStore(accum AccumulatorObject) store.KVStore {
+	return accum.store
+}
