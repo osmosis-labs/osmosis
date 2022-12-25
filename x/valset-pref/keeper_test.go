@@ -62,18 +62,6 @@ func (suite *KeeperTestSuite) GetDelegationRewards(ctx sdk.Context, valAddrStr s
 	return rewards, validator
 }
 
-func (suite *KeeperTestSuite) SetupExistingValidatorDelegations(ctx sdk.Context, valAddrStr string, delegator sdk.AccAddress, delegateAmt sdk.Int) {
-	valAddr, err := sdk.ValAddressFromBech32(valAddrStr)
-	suite.Require().NoError(err)
-
-	validator, found := suite.App.StakingKeeper.GetValidator(ctx, valAddr)
-	suite.Require().True(found)
-
-	_, err = suite.App.StakingKeeper.Delegate(ctx, delegator, delegateAmt, stakingtypes.Unbonded, validator, true)
-	suite.Require().NoError(err)
-
-}
-
 func (suite *KeeperTestSuite) SetupDelegationReward(ctx sdk.Context, delegator sdk.AccAddress, preferences []types.ValidatorPreference, existingValAddrStr string, setValSetDel, setExistingdel bool) {
 	// incrementing the blockheight by 1 for reward
 	ctx = suite.Ctx.WithBlockHeight(suite.Ctx.BlockHeight() + 1)

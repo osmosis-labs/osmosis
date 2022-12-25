@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"math"
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -222,37 +221,10 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delegatorAddr string)
 		return err
 	}
 
-	// check if there is existing staking position that's not val-set
-	delegations := k.stakingKeeper.GetDelegatorDelegations(ctx, delegator, math.MaxUint16)
-
 	// get the existing validator set preference
-	existingSet, found := k.GetValidatorSetPreference(ctx, delegatorAddr)
-	if !found && len(delegations) == 0 {
-		return fmt.Errorf("user %s doesn't have validator set or existing delegations", delegatorAddr)
-	}
-
-	// there is existing staking position, but it's not valset
-	if !found && len(delegations) != 0 {
-		err := k.withdrawExistingStakingPosition(ctx, delegator, delegations)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-
-	// there is no existing staking position, but there is val-set delegation
-	if found && len(delegations) == 0 {
-		err := k.withdrawExistingValSetStakingPosition(ctx, delegator, existingSet.Preferences)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-
-	// there is staking position delegation, as well as val-set delegation
-	err = k.withdrawExistingStakingPosition(ctx, delegator, delegations)
+	existingSet, err := k.GetDelegations(ctx, delegatorAddr)
 	if err != nil {
-		return err
+		return fmt.Errorf("user %s doesn't have validator set or existing delegations", delegatorAddr)
 	}
 
 	err = k.withdrawExistingValSetStakingPosition(ctx, delegator, existingSet.Preferences)
