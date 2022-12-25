@@ -15,9 +15,10 @@ import (
 // This function is currently used for testing purposes only.
 // If there is a need to use this function in production, it
 // can be moved to a non-test file.
-func (accum AccumulatorObject) GetPosition(addr sdk.AccAddress) {
+func (accum AccumulatorObject) GetPosition(addr sdk.AccAddress) Record {
 	position := Record{}
-	osmoutils.MustGet(accum.store, formatPositionPrefixKey(addr.String()), &position)
+	osmoutils.MustGet(accum.store, formatPositionPrefixKey(accum.name, addr.String()), &position)
+	return position
 }
 
 // GetAllPositions returns all positions associated with the receiver accumulator.
@@ -26,7 +27,7 @@ func (accum AccumulatorObject) GetPosition(addr sdk.AccAddress) {
 // If there is a need to use this function in production, it
 // can be moved to a non-test file.
 func (accum AccumulatorObject) GetAllPositions() ([]Record, error) {
-	return osmoutils.GatherValuesFromStorePrefix(accum.store, formatPositionPrefixKey(""), parseRecordFromBz)
+	return osmoutils.GatherValuesFromStorePrefix(accum.store, formatPositionPrefixKey(accum.name, ""), parseRecordFromBz)
 }
 
 // Creates an accumulator object for testing purposes
@@ -50,4 +51,14 @@ func parseRecordFromBz(bz []byte) (record Record, err error) {
 		return Record{}, err
 	}
 	return record, nil
+}
+
+// WithPosition is a decorator function to append a position at given address to the given accumulator.
+func WithPosition(accum AccumulatorObject, addr sdk.Address, position Record) AccumulatorObject {
+	osmoutils.MustSet(accum.store, formatPositionPrefixKey(accum.name, addr.String()), &position)
+	return accum
+}
+
+func (accum *AccumulatorObject) SetValue(amt sdk.DecCoins) {
+	accum.value = amt
 }

@@ -66,6 +66,7 @@ func setAccumulator(accum AccumulatorObject, amt sdk.DecCoins) {
 }
 
 // TODO: consider making this increment the accumulator's value instead of overwriting it
+// Note: accum receiver is not mutated, only the store representation is.
 func (accum AccumulatorObject) UpdateAccumulator(amt sdk.DecCoins) {
 	setAccumulator(accum, amt)
 }
@@ -80,7 +81,7 @@ func (accum AccumulatorObject) NewPosition(addr sdk.AccAddress, numShareUnits sd
 		InitAccumValue:   accum.value,
 		UnclaimedRewards: sdk.NewDecCoins(),
 	}
-	osmoutils.MustSet(accum.store, formatPositionPrefixKey(addr.String()), &position)
+	osmoutils.MustSet(accum.store, formatPositionPrefixKey(accum.name, addr.String()), &position)
 }
 
 // func (accum AccumulatorObject) AddToPosition(addr, num_units) error
@@ -96,12 +97,12 @@ func (accum AccumulatorObject) NewPosition(addr sdk.AccAddress, numShareUnits sd
 // database errors occur.
 func (accum AccumulatorObject) ClaimRewards(addr sdk.AccAddress) (sdk.DecCoins, error) {
 	position := Record{}
-	found, err := osmoutils.Get(accum.store, formatPositionPrefixKey(addr.String()), &position)
+	found, err := osmoutils.Get(accum.store, formatPositionPrefixKey(accum.name, addr.String()), &position)
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
 	if !found {
-		return sdk.DecCoins{}, fmt.Errorf("no position found for address (%s)", addr)
+		return sdk.DecCoins{}, NoPositionError{addr}
 	}
 
 	totalRewards := position.UnclaimedRewards
