@@ -23,43 +23,40 @@ type AccumulatorObject struct {
 	value sdk.Dec
 }
 
-// Makes a new accumulator at store/accum/{accumulator_name}
+// Makes a new accumulator at store/accum/{accumName}
 // returns an error if already exists / theres some overlapping keys
-func MakeAccumulator(accum_store store.KVStore, accum_name string) error {
-	keybz := []byte(accum_name)
-	if accum_store.Has(keybz) {
+func MakeAccumulator(accumStore store.KVStore, accumName string) error {
+	keybz := []byte(accumName)
+	if accumStore.Has(keybz) {
 		return errors.New("Accumulator with given name already exists in store")
 	}
 
 	// New accumulator values start out at zero
 	// TODO: consider whether this should be a parameter instead of always zero
-	init_accum_value := sdk.ZeroDec()
+	initAccumValue := sdk.ZeroDec()
 
-	var new_accum AccumulatorObject
-	new_accum.store = accum_store
-	new_accum.name = accum_name
-	new_accum.value = init_accum_value
+	newAccum := AccumulatorObject{accumStore, accumName, initAccumValue}
 
 	// Stores accumulator in state
-	setAccumulator(new_accum, init_accum_value)
+	setAccumulator(newAccum, initAccumValue)
 
 	return nil
 }
  
-// Gets the current value of the accumulator corresponding to accum_name in accum_store
-func GetAccumulator(accum_store store.KVStore, accum_name string) (AccumulatorObject, error) {
-	keybz := []byte(accum_name)
+// Gets the current value of the accumulator corresponding to accumName in accumStore
+func GetAccumulator(accumStore store.KVStore, accumName string) (AccumulatorObject, error) {
+	keybz := []byte(accumName)
 
-	accum_content := AccumulatorContent{}
-	found, err := osmoutils.Get(accum_store, keybz, &accum_content)
+	accumContent := AccumulatorContent{}
+	found, err := osmoutils.Get(accumStore, keybz, &accumContent)
 	if err != nil {
 		return AccumulatorObject{}, err
 	}
 	if !found {
-		return AccumulatorObject{}, errors.New(fmt.Sprintf("Accumulator name %s does not exist in store", accum_name))
+		return AccumulatorObject{}, errors.New(fmt.Sprintf("Accumulator name %s does not exist in store", accumName))
 	}
 
-	accum := AccumulatorObject{accum_store, accum_content.AccumName, accum_content.AccumValue}
+	accum := AccumulatorObject{accumStore, accumContent.AccumName, accumContent.AccumValue}
 
 	return accum, nil
 }
@@ -68,9 +65,9 @@ func setAccumulator(accum AccumulatorObject, amt sdk.Dec) error {
 	keybz := []byte(accum.name)
 
 	// TODO: consider removing name as as a field from AccumulatorContent (doesn't need to be stored in state)
-	new_accum := AccumulatorContent{accum.name, amt}
+	newAccum := AccumulatorContent{accum.name, amt}
 
-	osmoutils.MustSet(accum.store, keybz, &new_accum)
+	osmoutils.MustSet(accum.store, keybz, &newAccum)
 
 	return nil
 }
