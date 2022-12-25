@@ -7,8 +7,7 @@ import "cosmos/base/v1beta1/coin.proto";
 option go_package = "github.com/osmosis-labs/osmosis/osmoutils/accum";
 
 message AccumulatorContent {
-  string accum_name = 1;
-  repeated cosmos.base.v1beta1.DecCoin accum_value = 2 [
+  repeated cosmos.base.v1beta1.DecCoin accum_value = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable) = false
   ];
