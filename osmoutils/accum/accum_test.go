@@ -282,7 +282,7 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 			// denomTwo: (3 - 0) * 100 (accum diff * share count) = 300
 			expectedResult: tripleDenomOneAndTwo.MulDec(positionOne.NumShares).Add(initialCoinDenomOne),
 		},
-		"claim at testAddressTwi with multiple reward tokens and no unclaimed rewards - success": {
+		"claim at testAddressTwo with multiple reward tokens and no unclaimed rewards - success": {
 			accObject: accumThreeRewards,
 			addr:      testAddressTwo,
 			// denomOne: (300.3 - 0) * 200 (accum diff * share count) = 60060.6
@@ -350,16 +350,16 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 			expPass: true,
 		},
 		"non-zero shares with no new rewards": {
-			startingNumShares: sdk.OneDec(),
+			startingNumShares: initialValueOne,
 			startingUnclaimedRewards: sdk.NewDecCoins(),
-			newShares: sdk.OneDec(),
+			newShares: sdk.NewDec(10),
 			accumInit: sdk.NewDecCoins(),
 			// unchanged accum value, so no unclaimed rewards
 			accumDelta: sdk.NewDecCoins(),
 			expPass: true,
 		},
 		"non-zero shares with new rewards in one denom": {
-			startingNumShares: sdk.OneDec(),
+			startingNumShares: initialValueOne,
 			startingUnclaimedRewards: sdk.NewDecCoins(),
 			newShares: sdk.OneDec(),
 			accumInit: sdk.NewDecCoins(),
@@ -368,7 +368,7 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 			expPass: true,
 		},
 		"non-zero shares with new rewards in two denoms": {
-			startingNumShares: sdk.OneDec(),
+			startingNumShares: initialValueOne,
 			startingUnclaimedRewards: sdk.NewDecCoins(),
 			newShares: sdk.OneDec(),
 			accumInit: sdk.NewDecCoins(),
@@ -376,7 +376,7 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 			expPass: true,
 		},
 		"non-zero shares with both existing and new rewards": {
-			startingNumShares: sdk.OneDec(),
+			startingNumShares: initialValueOne,
 			startingUnclaimedRewards: sdk.NewDecCoins(sdk.NewDecCoin(denomOne, sdk.NewInt(11)), sdk.NewDecCoin(denomTwo, sdk.NewInt(11))),
 			newShares: sdk.OneDec(),
 			accumInit: sdk.NewDecCoins(),
@@ -384,7 +384,7 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 			expPass: true,
 		},
 		"non-zero shares with both existing (one denom) and new rewards (two denoms)": {
-			startingNumShares: sdk.OneDec(),
+			startingNumShares: initialValueOne,
 			startingUnclaimedRewards: sdk.NewDecCoins(initialCoinDenomOne),
 			newShares: sdk.OneDec(),
 			accumInit: sdk.NewDecCoins(),
@@ -392,7 +392,7 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 			expPass: true,
 		},
 		"non-zero shares with both existing (one denom) and new rewards (two new denoms)": {
-			startingNumShares: sdk.OneDec(),
+			startingNumShares: initialValueOne,
 			startingUnclaimedRewards: sdk.NewDecCoins(initialCoinDenomOne),
 			newShares: sdk.OneDec(),
 			accumInit: sdk.NewDecCoins(),
@@ -400,7 +400,7 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 			expPass: true,
 		},
 		"nonzero accumulator starting value, delta with same denoms": {
-			startingNumShares: sdk.OneDec(),
+			startingNumShares: initialValueOne,
 			startingUnclaimedRewards: sdk.NewDecCoins(initialCoinDenomOne),
 			newShares: sdk.OneDec(),
 			accumInit: sdk.NewDecCoins(initialCoinDenomOne, initialCoinDenomTwo),
@@ -408,11 +408,19 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 			expPass: true,
 		},
 		"nonzero accumulator starting value, delta with new denoms": {
-			startingNumShares: sdk.OneDec(),
+			startingNumShares: initialValueOne,
 			startingUnclaimedRewards: sdk.NewDecCoins(initialCoinDenomOne),
 			newShares: sdk.OneDec(),
 			accumInit: sdk.NewDecCoins(initialCoinDenomOne, initialCoinDenomTwo),
 			accumDelta: sdk.NewDecCoins(initialCoinDenomTwo, sdk.NewDecCoin("baz", sdk.NewInt(10))),
+			expPass: true,
+		},
+		"decimal shares with new rewards in two denoms": {
+			startingNumShares: initialValueOne,
+			startingUnclaimedRewards: sdk.NewDecCoins(),
+			newShares: sdk.NewDecWithPrec(983429874321, 5),
+			accumInit: sdk.NewDecCoins(),
+			accumDelta: sdk.NewDecCoins(initialCoinDenomOne, initialCoinDenomTwo),
 			expPass: true,
 		},
 
@@ -428,7 +436,7 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 			accumDelta: sdk.NewDecCoins(),
 		},
 		"attempt to add zero shares": {
-			startingNumShares: sdk.OneDec(),
+			startingNumShares: initialValueOne,
 			startingUnclaimedRewards: sdk.NewDecCoins(),
 			newShares: sdk.ZeroDec(),
 			accumInit: sdk.NewDecCoins(),
@@ -436,7 +444,7 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 			expPass: false,
 		},
 		"attempt to add negative shares": {
-			startingNumShares: sdk.OneDec(),
+			startingNumShares: initialValueOne,
 			startingUnclaimedRewards: sdk.NewDecCoins(),
 			newShares: sdk.OneDec().Neg(),
 			accumInit: sdk.NewDecCoins(),
@@ -476,13 +484,270 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 				suite.Require().Equal(tc.accumInit.Add(tc.accumDelta...), newPosition.InitAccumValue)
 
 				// Ensure accrued rewards are moved into UnclaimedRewards (both when it starts empty and not)
-				// Note: assumes only one position for accumulator, so new unclaimed rewards = accumDelta
-				suite.Require().Equal(tc.startingUnclaimedRewards.Add(tc.accumDelta...), newPosition.UnclaimedRewards)
+				suite.Require().Equal(tc.startingUnclaimedRewards.Add(tc.accumDelta.MulDec(tc.startingNumShares)...), newPosition.UnclaimedRewards)
 
 				// Ensure address's position properly reflects new number of shares
 				suite.Require().Equal(tc.startingNumShares.Add(tc.newShares), newPosition.NumShares)
 
 				// Ensure a new position isn't created in memory (only old one is overwritten)
+				allAccumPositions, err := curAccum.GetAllPositions()
+				suite.Require().NoError(err)
+				suite.Require().True(len(allAccumPositions) == 1)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *AccumTestSuite) TestRemoveFromPosition() {
+	type testcase struct {
+		startingNumShares sdk.Dec
+		startingUnclaimedRewards sdk.DecCoins
+		removedShares   sdk.Dec
+
+		// accumInit and accumDelta specify the initial accum value 
+		// and how much it has changed since the position being added 
+		// to was created
+		accumInit	sdk.DecCoins
+		accumDelta  sdk.DecCoins
+
+		// Address does not exist
+		addrDNE bool
+		expPass bool
+	}
+
+	tests := map[string]testcase{
+		"no new rewards": {
+			startingNumShares: initialValueOne,
+			startingUnclaimedRewards: sdk.NewDecCoins(),
+			removedShares: sdk.OneDec(),
+			accumInit: sdk.NewDecCoins(),
+			// unchanged accum value, so no unclaimed rewards
+			accumDelta: sdk.NewDecCoins(),
+			expPass: true,
+		},
+		"new rewards in one denom": {
+			startingNumShares: initialValueOne,
+			startingUnclaimedRewards: sdk.NewDecCoins(),
+			removedShares: sdk.OneDec(),
+			accumInit: sdk.NewDecCoins(),
+			// unclaimed rewards since last update
+			accumDelta: sdk.NewDecCoins(initialCoinDenomOne),
+			expPass: true,
+		},
+		"new rewards in two denoms": {
+			startingNumShares: initialValueOne,
+			startingUnclaimedRewards: sdk.NewDecCoins(),
+			removedShares: sdk.OneDec(),
+			accumInit: sdk.NewDecCoins(),
+			accumDelta: sdk.NewDecCoins(initialCoinDenomOne, initialCoinDenomTwo),
+			expPass: true,
+		},
+		"both existing and new rewards": {
+			startingNumShares: initialValueOne,
+			startingUnclaimedRewards: sdk.NewDecCoins(sdk.NewDecCoin(denomOne, sdk.NewInt(11)), sdk.NewDecCoin(denomTwo, sdk.NewInt(11))),
+			removedShares: sdk.OneDec(),
+			accumInit: sdk.NewDecCoins(),
+			accumDelta: sdk.NewDecCoins(initialCoinDenomOne, initialCoinDenomTwo),
+			expPass: true,
+		},
+		"both existing (one denom) and new rewards (two denoms, one overlapping)": {
+			startingNumShares: initialValueOne,
+			startingUnclaimedRewards: sdk.NewDecCoins(initialCoinDenomOne),
+			removedShares: sdk.OneDec(),
+			accumInit: sdk.NewDecCoins(),
+			accumDelta: sdk.NewDecCoins(initialCoinDenomOne, initialCoinDenomTwo),
+			expPass: true,
+		},
+		"both existing (one denom) and new rewards (two new denoms)": {
+			startingNumShares: initialValueOne,
+			startingUnclaimedRewards: sdk.NewDecCoins(initialCoinDenomOne),
+			removedShares: sdk.OneDec(),
+			accumInit: sdk.NewDecCoins(),
+			accumDelta: sdk.NewDecCoins(initialCoinDenomTwo, sdk.NewDecCoin("baz", sdk.NewInt(10))),
+			expPass: true,
+		},
+		"nonzero accumulator starting value, delta with same denoms": {
+			startingNumShares: initialValueOne,
+			startingUnclaimedRewards: sdk.NewDecCoins(initialCoinDenomOne),
+			removedShares: sdk.OneDec(),
+			accumInit: sdk.NewDecCoins(initialCoinDenomOne, initialCoinDenomTwo),
+			accumDelta: sdk.NewDecCoins(initialCoinDenomOne, initialCoinDenomTwo),
+			expPass: true,
+		},
+		"nonzero accumulator starting value, delta with new denoms": {
+			startingNumShares: initialValueOne,
+			startingUnclaimedRewards: sdk.NewDecCoins(initialCoinDenomOne),
+			removedShares: sdk.OneDec(),
+			accumInit: sdk.NewDecCoins(initialCoinDenomOne, initialCoinDenomTwo),
+			accumDelta: sdk.NewDecCoins(initialCoinDenomTwo, sdk.NewDecCoin("baz", sdk.NewInt(10))),
+			expPass: true,
+		},
+		"remove decimal shares with new rewards in two denoms": {
+			startingNumShares: sdk.NewDec(1000000),
+			startingUnclaimedRewards: sdk.NewDecCoins(),
+			removedShares: sdk.NewDecWithPrec(7489274134, 5),
+			accumInit: sdk.NewDecCoins(),
+			accumDelta: sdk.NewDecCoins(initialCoinDenomOne, initialCoinDenomTwo),
+			expPass: true,
+		},
+
+		// error catching
+		"account does not exist": {
+			addrDNE: true,
+			expPass: false,
+
+			startingNumShares: initialValueOne,
+			startingUnclaimedRewards: sdk.NewDecCoins(),
+			removedShares: sdk.OneDec(),
+			accumInit: sdk.NewDecCoins(),
+			accumDelta: sdk.NewDecCoins(),
+		},
+		"attempt to remove zero shares": {
+			startingNumShares: initialValueOne,
+			startingUnclaimedRewards: sdk.NewDecCoins(),
+			removedShares: sdk.ZeroDec(),
+			accumInit: sdk.NewDecCoins(),
+			accumDelta: sdk.NewDecCoins(),
+			expPass: false,
+		},
+		"attempt to remove negative shares": {
+			startingNumShares: sdk.OneDec(),
+			startingUnclaimedRewards: sdk.NewDecCoins(),
+			removedShares: sdk.OneDec().Neg(),
+			accumInit: sdk.NewDecCoins(),
+			accumDelta: sdk.NewDecCoins(),
+			expPass: false,
+		},
+		"attempt to remove exactly numShares": {
+			startingNumShares: sdk.OneDec(),
+			startingUnclaimedRewards: sdk.NewDecCoins(),
+			removedShares: sdk.OneDec(),
+			accumInit: sdk.NewDecCoins(),
+			accumDelta: sdk.NewDecCoins(),
+			expPass: false,
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			// We reset the store for each test
+			suite.SetupTest()
+			addr := osmoutils.CreateRandomAccounts(1)[0]
+
+			// Create a new accumulator with initial value specified by test case
+			curAccum := accumPackage.CreateRawAccumObject(suite.store, testNameOne, tc.accumInit)
+
+			// Create new position in store (raw to minimize dependencies)
+			if !tc.addrDNE {
+				accumPackage.CreateRawPosition(curAccum, addr, tc.startingNumShares, tc.startingUnclaimedRewards, emptyPositionOptions)
+			}
+
+			// Update accumulator with accumDelta (increasing position's rewards by a proportional amount)
+			curAccum = accumPackage.CreateRawAccumObject(suite.store, testNameOne, tc.accumInit.Add(tc.accumDelta...))
+
+			// Remove removedShares from position
+			err := curAccum.RemoveFromPosition(addr, tc.removedShares)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+
+				// Get updated position for comparison
+				newPosition, err := accumPackage.GetPosition(curAccum, addr)
+				suite.Require().NoError(err)
+
+				// Ensure position's accumulator value is moved up to init + delta
+				suite.Require().Equal(tc.accumInit.Add(tc.accumDelta...), newPosition.InitAccumValue)
+
+				// Ensure accrued rewards are moved into UnclaimedRewards (both when it starts empty and not)
+				suite.Require().Equal(tc.startingUnclaimedRewards.Add(tc.accumDelta.MulDec(tc.startingNumShares)...), newPosition.UnclaimedRewards)
+
+				// Ensure address's position properly reflects new number of shares
+				suite.Require().Equal(tc.startingNumShares.Sub(tc.removedShares), newPosition.NumShares)
+
+				// Ensure a new position isn't created in memory (only old one is overwritten)
+				allAccumPositions, err := curAccum.GetAllPositions()
+				suite.Require().NoError(err)
+				suite.Require().True(len(allAccumPositions) == 1)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *AccumTestSuite) TestGetPositionSize() {
+	type testcase struct {
+		numShares sdk.Dec
+		changedShares sdk.Dec
+
+		// accumInit and accumDelta specify the initial accum value 
+		// and how much it has changed since the position being added 
+		// to was created
+		accumInit	sdk.DecCoins
+		accumDelta  sdk.DecCoins
+
+		// Address does not exist
+		addrDNE bool
+		expPass bool
+	}
+
+	tests := map[string]testcase{
+		"unchanged accumulator": {
+			numShares: sdk.OneDec(),
+			accumInit: sdk.NewDecCoins(),
+			accumDelta: sdk.NewDecCoins(),
+			changedShares: sdk.ZeroDec(),
+			expPass: true,
+		},
+		"changed accumulator": {
+			numShares: sdk.OneDec(),
+			accumInit: sdk.NewDecCoins(),
+			accumDelta: sdk.NewDecCoins(initialCoinDenomOne, initialCoinDenomTwo),
+			changedShares: sdk.ZeroDec(),
+			expPass: true,
+		},
+		"changed number of shares": {
+			numShares: sdk.OneDec(),
+			accumInit: sdk.NewDecCoins(),
+			accumDelta: sdk.NewDecCoins(),
+			changedShares: sdk.OneDec(),
+			expPass: true,
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			// We reset the store for each test
+			suite.SetupTest()
+			addr := osmoutils.CreateRandomAccounts(1)[0]
+
+			// Create a new accumulator with initial value specified by test case
+			curAccum := accumPackage.CreateRawAccumObject(suite.store, testNameOne, tc.accumInit)
+
+			// Create new position in store (raw to minimize dependencies)
+			if !tc.addrDNE {
+				accumPackage.CreateRawPosition(curAccum, addr, tc.numShares, sdk.NewDecCoins(), emptyPositionOptions)
+			}
+
+			// Update accumulator with accumDelta (increasing position's rewards by a proportional amount)
+			curAccum = accumPackage.CreateRawAccumObject(suite.store, testNameOne, tc.accumInit.Add(tc.accumDelta...))
+
+			// Get position size from valid address (or from nonexistant if addrDNE)
+			positionSize, err := curAccum.GetPositionSize(addr)
+
+			if tc.changedShares.GT(sdk.ZeroDec()) {
+				accumPackage.CreateRawPosition(curAccum, addr, tc.numShares.Add(tc.changedShares), sdk.NewDecCoins(), emptyPositionOptions)
+			}
+
+			positionSize, err = curAccum.GetPositionSize(addr)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.numShares.Add(tc.changedShares), positionSize)
+
+				// Ensure nothing was added or removed from store
 				allAccumPositions, err := curAccum.GetAllPositions()
 				suite.Require().NoError(err)
 				suite.Require().True(len(allAccumPositions) == 1)

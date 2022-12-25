@@ -115,7 +115,37 @@ func (accum AccumulatorObject) AddToPosition(addr sdk.AccAddress, newShares sdk.
 	return nil
 }
 
-// func (accum AccumulatorObject) RemovePosition(addr sdk.AccAddress, numSharesToRemove sdk.Dec) error {}
+// RemovePosition removes the specified number of shares from a position. Specifically, it claims
+// the unclaimed and newly accrued rewards and returns them alongside the redeemed shares. Then, it
+// overwrites the position record with the updated number of shares. Since it accrues rewards, it
+// also moves up the position's accumulator value to the current accum val.
+//
+// TODO: consider removing the position from state entirely if all of its shares are removed
+func (accum AccumulatorObject) RemoveFromPosition(addr sdk.AccAddress, numSharesToRemove sdk.Dec) error {
+	// Get addr's current position
+	position, err := getPosition(accum, addr)
+	if err != nil {
+		return err
+	}
+
+	if numSharesToRemove.LTE(sdk.ZeroDec()) {
+		return errors.New("Attempted to remove no/negative shares")
+	} else if numSharesToRemove.GTE(position.NumShares) {
+		return errors.New("Attempted to remove more shares than exist in the position")
+	}
+
+	// Save current number of shares and unclaimed rewards
+	unclaimedRewards := getTotalRewards(accum, position)
+	oldNumShares, err := accum.GetPositionSize(addr)
+	if err != nil {
+		return err
+	}
+
+	// TODO: decide how to propagate the knowledge of position options.
+	createNewPosition(accum, addr, oldNumShares.Sub(numSharesToRemove), unclaimedRewards, PositionOptions{})
+
+	return nil
+}
 
 func (accum AccumulatorObject) GetPositionSize(addr sdk.AccAddress) (sdk.Dec, error) {
 	position, err := getPosition(accum, addr)
