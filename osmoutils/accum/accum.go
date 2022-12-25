@@ -71,8 +71,9 @@ func (accum AccumulatorObject) UpdateAccumulator(amt sdk.DecCoins) {
 }
 
 // NewPosition creates a new position for the given address, with the given number of share units
-// It takes a snapshot of the current accumulator value, and sets the position's initial value to that
+// It takes a snapshot of the current accumulator value, and sets the position's initial value to that.
 // The position is initialized with empty unclaimed rewards
+// If there is an existing position for the given address, it is overwritten.
 func (accum AccumulatorObject) NewPosition(addr sdk.AccAddress, numShareUnits sdk.Dec, options PositionOptions) {
 	position := Record{
 		NumShares:        numShareUnits,
