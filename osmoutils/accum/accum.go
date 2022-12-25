@@ -20,20 +20,21 @@ type AccumulatorObject struct {
 	name string
 
 	// Accumulator's current value (pulled from AccumulatorContent)
-	value sdk.Dec
+	value sdk.DecCoins
 }
+
+type PositionOptions struct{}
 
 // Makes a new accumulator at store/accum/{accumName}
 // returns an error if already exists / theres some overlapping keys
 func MakeAccumulator(accumStore store.KVStore, accumName string) error {
-	keybz := []byte(accumName)
-	if accumStore.Has(keybz) {
+	if accumStore.Has(formatAccumPrefixKey(accumName)) {
 		return errors.New("Accumulator with given name already exists in store")
 	}
 
 	// New accumulator values start out at zero
 	// TODO: consider whether this should be a parameter instead of always zero
-	initAccumValue := sdk.ZeroDec()
+	initAccumValue := sdk.NewDecCoins()
 
 	newAccum := AccumulatorObject{accumStore, accumName, initAccumValue}
 
@@ -42,13 +43,11 @@ func MakeAccumulator(accumStore store.KVStore, accumName string) error {
 
 	return nil
 }
- 
+
 // Gets the current value of the accumulator corresponding to accumName in accumStore
 func GetAccumulator(accumStore store.KVStore, accumName string) (AccumulatorObject, error) {
-	keybz := []byte(accumName)
-
 	accumContent := AccumulatorContent{}
-	found, err := osmoutils.Get(accumStore, keybz, &accumContent)
+	found, err := osmoutils.Get(accumStore, formatAccumPrefixKey(accumName), &accumContent)
 	if err != nil {
 		return AccumulatorObject{}, err
 	}
@@ -56,28 +55,34 @@ func GetAccumulator(accumStore store.KVStore, accumName string) (AccumulatorObje
 		return AccumulatorObject{}, errors.New(fmt.Sprintf("Accumulator name %s does not exist in store", accumName))
 	}
 
-	accum := AccumulatorObject{accumStore, accumContent.AccumName, accumContent.AccumValue}
+	accum := AccumulatorObject{accumStore, accumName, accumContent.AccumValue}
 
 	return accum, nil
 }
 
-func setAccumulator(accum AccumulatorObject, amt sdk.Dec) error {
-	keybz := []byte(accum.name)
-
-	// TODO: consider removing name as as a field from AccumulatorContent (doesn't need to be stored in state)
-	newAccum := AccumulatorContent{accum.name, amt}
-
-	osmoutils.MustSet(accum.store, keybz, &newAccum)
-
-	return nil
+func setAccumulator(accum AccumulatorObject, amt sdk.DecCoins) {
+	newAccum := AccumulatorContent{amt}
+	osmoutils.MustSet(accum.store, formatAccumPrefixKey(accum.name), &newAccum)
 }
 
 // TODO: consider making this increment the accumulator's value instead of overwriting it
-func (accum AccumulatorObject) UpdateAccumulator(amt sdk.Dec) {
+// Note: accum receiver is not mutated, only the store representation is.
+func (accum AccumulatorObject) UpdateAccumulator(amt sdk.DecCoins) {
 	setAccumulator(accum, amt)
 }
 
-// func (accum AccumulatorObject) NewPosition(addr, num_units, positionOptions) error
+// NewPosition creates a new position for the given address, with the given number of share units
+// It takes a snapshot of the current accumulator value, and sets the position's initial value to that.
+// The position is initialized with empty unclaimed rewards
+// If there is an existing position for the given address, it is overwritten.
+func (accum AccumulatorObject) NewPosition(addr sdk.AccAddress, numShareUnits sdk.Dec, options PositionOptions) {
+	position := Record{
+		NumShares:        numShareUnits,
+		InitAccumValue:   accum.value,
+		UnclaimedRewards: sdk.NewDecCoins(),
+	}
+	osmoutils.MustSet(accum.store, formatPositionPrefixKey(accum.name, addr.String()), &position)
+}
 
 // func (accum AccumulatorObject) AddToPosition(addr, num_units) error
 
@@ -85,4 +90,29 @@ func (accum AccumulatorObject) UpdateAccumulator(amt sdk.Dec) {
 
 // func (accum AccumulatorObject) GetPositionSize(addr) (num_units, error)
 
-// func (accum AccumulatorObject) ClaimRewards(sendKeeper, addr) (amt AccumType, error)
+// ClaimRewards claims the rewards for the given address, and returns the amount of rewards claimed.
+// Upon claiming the rewards, the position at the current address is reset to have no
+// unclaimed rewards. The positions'accumulato is also set to the current accumulator value.
+// Returns error if no position exists for the given address. Returns error if any
+// database errors occur.
+func (accum AccumulatorObject) ClaimRewards(addr sdk.AccAddress) (sdk.DecCoins, error) {
+	position := Record{}
+	found, err := osmoutils.Get(accum.store, formatPositionPrefixKey(accum.name, addr.String()), &position)
+	if err != nil {
+		return sdk.DecCoins{}, err
+	}
+	if !found {
+		return sdk.DecCoins{}, NoPositionError{addr}
+	}
+
+	totalRewards := position.UnclaimedRewards
+
+	accumulatorRewads := accum.value.Sub(position.InitAccumValue).MulDec(position.NumShares)
+	totalRewards = totalRewards.Add(accumulatorRewads...)
+
+	// Create a completely new position, with no rewards
+	// TODO: decide how to propagate the knowledge of position options.
+	accum.NewPosition(addr, position.NumShares, PositionOptions{})
+
+	return totalRewards, nil
+}
