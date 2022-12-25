@@ -53,12 +53,14 @@ func parseRecordFromBz(bz []byte) (record Record, err error) {
 	return record, nil
 }
 
-// WithPosition is a decorator function to append a position at given address to the given accumulator.
+// WithPosition is a decorator test function to append a position at given address to the given accumulator.
 func WithPosition(accum AccumulatorObject, addr sdk.Address, position Record) AccumulatorObject {
 	osmoutils.MustSet(accum.store, formatPositionPrefixKey(accum.name, addr.String()), &position)
 	return accum
 }
 
-func (accum *AccumulatorObject) SetValue(amt sdk.DecCoins) {
-	accum.value = amt
+// SetValue is a convinience test helper for updatung the value of an accumulator object
+// in tests.
+func (accum *AccumulatorObject) SetValue(value sdk.DecCoins) {
+	accum.value = value
 }
