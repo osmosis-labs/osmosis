@@ -74,7 +74,7 @@ func (accum AccumulatorObject) UpdateAccumulator(amt sdk.DecCoins) {
 	setAccumulator(accum, amt)
 }
 
-// NewPosition creates a new position for the given address, with the given number of units
+// NewPosition creates a new position for the given address, with the given number of share units
 // It takes a snapshot of the current accumulator value, and sets the position's initial value to that
 // The position is initialized with empty unclaimed rewards
 func (accum AccumulatorObject) NewPosition(addr sdk.AccAddress, numShareUnits sdk.Dec, options PositionOptions) {
@@ -94,7 +94,9 @@ func (accum AccumulatorObject) NewPosition(addr sdk.AccAddress, numShareUnits sd
 
 // ClaimRewards claims the rewards for the given address, and returns the amount of rewards claimed.
 // Upon claiming the rewards, the position at the current address is reset to have no
-// unclaimed rewards and the accumulator updates.
+// unclaimed rewards. The positions'accumulato is also set to the current accumulator value.
+// Returns error if no position exists for the given address. Returns error if any
+// database errors occur.
 func (accum AccumulatorObject) ClaimRewards(addr sdk.AccAddress) (sdk.DecCoins, error) {
 	position := Record{}
 	found, err := osmoutils.Get(accum.store, formatPositionPrefixKey(addr.String()), &position)
