@@ -266,7 +266,7 @@ func (k Keeper) withdrawExistingValSetStakingPosition(ctx sdk.Context, delegator
 func (k Keeper) getValAddrAndVal(ctx sdk.Context, valOperAddress string) (sdk.ValAddress, stakingtypes.Validator, error) {
 	valAddr, err := sdk.ValAddressFromBech32(valOperAddress)
 	if err != nil {
-		return nil, stakingtypes.Validator{}, fmt.Errorf("SISHIR validator address not formatted")
+		return nil, stakingtypes.Validator{}, fmt.Errorf("validator address not formatted")
 	}
 
 	validator, found := k.stakingKeeper.GetValidator(ctx, valAddr)

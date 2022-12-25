@@ -110,7 +110,6 @@ func (suite *KeeperTestSuite) PrepareExistingDelegations(ctx sdk.Context, valAdd
 			return err
 		}
 	}
-
 	return nil
 }
 
