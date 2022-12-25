@@ -2,7 +2,7 @@ package accum
 
 import "fmt"
 
-// formatAccimPrefix returns the key prefix used for any
+// formatAccumPrefix returns the key prefix used for any
 // accum module values to be stored in the KVStore.
 // Returns "accum/{key}" as bytes.
 func formatModulePrefixKey(key string) []byte {
