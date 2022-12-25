@@ -60,13 +60,9 @@ func GetAccumulator(accumStore store.KVStore, accumName string) (AccumulatorObje
 	return accum, nil
 }
 
-func setAccumulator(accum AccumulatorObject, amt sdk.DecCoins) error {
-	// TODO: consider removing name as as a field from AccumulatorContent (doesn't need to be stored in state)
+func setAccumulator(accum AccumulatorObject, amt sdk.DecCoins) {
 	newAccum := AccumulatorContent{amt}
-
 	osmoutils.MustSet(accum.store, formatAccumPrefixKey(accum.name), &newAccum)
-
-	return nil
 }
 
 // TODO: consider making this increment the accumulator's value instead of overwriting it
