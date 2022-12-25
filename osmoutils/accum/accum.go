@@ -82,11 +82,22 @@ func (accum AccumulatorObject) NewPosition(addr sdk.AccAddress, numShareUnits sd
 	osmoutils.MustSet(accum.store, formatPositionPrefixKey(addr.String()), &position)
 }
 
-// func (accum AccumulatorObject) AddToPosition(addr, num_units) error
-
 // func (accum AccumulatorObject) RemovePosition(addr, num_units) error
 
 // func (accum AccumulatorObject) GetPositionSize(addr) (num_units, error)
+
+func getPosition(store store.KVStore, addr sdk.AccAddress) (Record, error) {
+	position := Record{}
+	found, err := osmoutils.Get(store, formatPositionPrefixKey(addr.String()), &position)
+	if err != nil {
+		return Record{}, err
+	}
+	if !found {
+		return Record{}, fmt.Errorf("no position found for address (%s)", addr)
+	}
+
+	return position, nil
+}
 
 // ClaimRewards claims the rewards for the given address, and returns the amount of rewards claimed.
 // Upon claiming the rewards, the position at the current address is reset to have no
@@ -94,13 +105,9 @@ func (accum AccumulatorObject) NewPosition(addr sdk.AccAddress, numShareUnits sd
 // Returns error if no position exists for the given address. Returns error if any
 // database errors occur.
 func (accum AccumulatorObject) ClaimRewards(addr sdk.AccAddress) (sdk.DecCoins, error) {
-	position := Record{}
-	found, err := osmoutils.Get(accum.store, formatPositionPrefixKey(addr.String()), &position)
+	position, err := getPosition(accum.store, addr)
 	if err != nil {
 		return sdk.DecCoins{}, err
-	}
-	if !found {
-		return sdk.DecCoins{}, fmt.Errorf("no position found for address (%s)", addr)
 	}
 
 	totalRewards := position.UnclaimedRewards
