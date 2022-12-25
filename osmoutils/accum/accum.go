@@ -156,25 +156,6 @@ func (accum AccumulatorObject) GetPositionSize(addr sdk.AccAddress) (sdk.Dec, er
 	return position.NumShares, nil
 }
 
-// TODO: consider making this increment the accumulator's value instead of overwriting it
-// Note: accum receiver is not mutated, only the store representation is.
-func (accum AccumulatorObject) UpdateAccumulator(amt sdk.DecCoins) {
-	setAccumulator(accum, amt)
-}
-
-// NewPosition creates a new position for the given address, with the given number of share units
-// It takes a snapshot of the current accumulator value, and sets the position's initial value to that.
-// The position is initialized with empty unclaimed rewards
-// If there is an existing position for the given address, it is overwritten.
-func (accum AccumulatorObject) NewPosition(addr sdk.AccAddress, numShareUnits sdk.Dec, options PositionOptions) {
-	position := Record{
-		NumShares:        numShareUnits,
-		InitAccumValue:   accum.value,
-		UnclaimedRewards: sdk.NewDecCoins(),
-	}
-	osmoutils.MustSet(accum.store, formatPositionPrefixKey(accum.name, addr.String()), &position)
-}
-
 // ClaimRewards claims the rewards for the given address, and returns the amount of rewards claimed.
 // Upon claiming the rewards, the position at the current address is reset to have no
 // unclaimed rewards. The position's accumulator is also set to the current accumulator value.
@@ -187,33 +168,6 @@ func (accum AccumulatorObject) ClaimRewards(addr sdk.AccAddress) (sdk.DecCoins, 
 	}
 
 	totalRewards := getTotalRewards(accum, position)
-
-	// Create a completely new position, with no rewards
-	// TODO: decide how to propagate the knowledge of position options.
-	accum.NewPosition(addr, position.NumShares, PositionOptions{})
-
-
-	return totalRewards, nil
-
-// ClaimRewards claims the rewards for the given address, and returns the amount of rewards claimed.
-// Upon claiming the rewards, the position at the current address is reset to have no
-// unclaimed rewards. The positions'accumulato is also set to the current accumulator value.
-// Returns error if no position exists for the given address. Returns error if any
-// database errors occur.
-func (accum AccumulatorObject) ClaimRewards(addr sdk.AccAddress) (sdk.DecCoins, error) {
-	position := Record{}
-	found, err := osmoutils.Get(accum.store, formatPositionPrefixKey(accum.name, addr.String()), &position)
-	if err != nil {
-		return sdk.DecCoins{}, err
-	}
-	if !found {
-		return sdk.DecCoins{}, NoPositionError{addr}
-	}
-
-	totalRewards := position.UnclaimedRewards
-
-	accumulatorRewads := accum.value.Sub(position.InitAccumValue).MulDec(position.NumShares)
-	totalRewards = totalRewards.Add(accumulatorRewads...)
 
 	// Create a completely new position, with no rewards
 	// TODO: decide how to propagate the knowledge of position options.
