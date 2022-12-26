@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/iavl"
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	dbm "github.com/tendermint/tm-db"
 
@@ -786,4 +787,29 @@ func (suite *AccumTestSuite) TestGetPositionSize() {
 			}
 		})
 	}
+}
+
+// TestMarhsalUnmarshalRecord displays that we may use Records without options
+// For records with nil options, adding new fields to `Options`, should not
+// require future migrations.
+func (suite *AccumTestSuite) TestMarhsalUnmarshalRecord() {
+	suite.SetupTest()
+
+	recordNoOptions := accumPackage.Record{
+		NumShares: sdk.OneDec(),
+		InitAccumValue: sdk.NewDecCoins(
+			sdk.NewDecCoinFromDec(denomOne, sdk.OneDec()),
+		),
+		UnclaimedRewards: sdk.NewDecCoins(
+			sdk.NewDecCoinFromDec(denomOne, sdk.OneDec()),
+		),
+	}
+
+	bz, err := proto.Marshal(&recordNoOptions)
+	suite.Require().NoError(err)
+
+	var unmarshaledRecord accumPackage.Record
+	proto.Unmarshal(bz, &unmarshaledRecord)
+	// Options should be nil, not an empty struct
+	suite.Require().True(unmarshaledRecord.Options == nil)
 }
