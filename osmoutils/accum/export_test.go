@@ -39,6 +39,19 @@ func CreateRawAccumObject(store store.KVStore, name string, value sdk.DecCoins) 
 	}
 }
 
+func CreateRawPosition(accum AccumulatorObject, addr sdk.AccAddress, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options PositionOptions) {
+	createNewPosition(accum, addr, numShareUnits, unclaimedRewards, options)
+}
+
+func GetPosition(accum AccumulatorObject, addr sdk.AccAddress) (Record, error) {
+	return getPosition(accum, addr)
+}
+
+// Gets store from accumulator for testing purposes
+func GetStore(accum AccumulatorObject) store.KVStore {
+	return accum.store
+}
+
 // parseRecordFromBz parses a record from a byte slice.
 // Returns error if fails to unmarshal or if the given bytes slice
 // is empty.
