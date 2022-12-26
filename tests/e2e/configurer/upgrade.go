@@ -125,8 +125,8 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 
-	chainANode.CreatePool("pool1A.json", initialization.ValidatorWalletName)
-	chainBNode.CreatePool("pool1B.json", initialization.ValidatorWalletName)
+	chainANode.CreatePool("pool1A.json", initialization.ValidatorWalletName, true)
+	chainBNode.CreatePool("pool1B.json", initialization.ValidatorWalletName, true)
 
 	// enable superfluid assets on chainA
 	chainA.EnableSuperfluidAsset("gamm/pool/1")

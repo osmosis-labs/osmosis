@@ -12,25 +12,37 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
 	"github.com/osmosis-labs/osmosis/v13/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v13/tests/e2e/util"
+<<<<<<< HEAD
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+=======
+	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	swaprouterqueryproto "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/queryproto"
+>>>>>>> concentrated-liquidity-main
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 
-func (n *NodeConfig) CreatePool(poolFile, from string) uint64 {
+// TODO: deprecate isLegacy after concentrated-liquidity is released.
+// It is needed because pool creation module is different before and after
+// concentrated-liquidity upgrade.
+func (n *NodeConfig) CreatePool(poolFile, from string, isLegacy bool) uint64 {
 	n.LogActionF("creating pool from file %s", poolFile)
-	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--from=%s", from)}
+
+	moduleName := "swaprouter"
+	if isLegacy {
+		moduleName = "gamm"
+	}
+
+	cmd := []string{"osmosisd", "tx", moduleName, "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	path := "osmosis/gamm/v1beta1/num_pools"
-
-	bz, err := n.QueryGRPCGateway(path)
+	bz, err := n.QueryGRPCGateway(fmt.Sprintf("osmosis/%s/v1beta1/num_pools", moduleName))
 	require.NoError(n.t, err)
 
-	var numPools gammtypes.QueryNumPoolsResponse
+	var numPools swaprouterqueryproto.NumPoolsResponse
 	err = util.Cdc.UnmarshalJSON(bz, &numPools)
 	require.NoError(n.t, err)
 	poolID := numPools.NumPools
@@ -105,7 +117,7 @@ func (n *NodeConfig) FailIBCTransfer(from, recipient, amount string) {
 
 	cmd := []string{"osmosisd", "tx", "ibc-transfer", "transfer", "transfer", "channel-0", recipient, amount, fmt.Sprintf("--from=%s", from)}
 
-	_, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "rate limit exceeded")
+	_, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "Rate Limit exceeded")
 	require.NoError(n.t, err)
 
 	n.LogActionF("Failed to send IBC transfer (as expected)")
@@ -118,7 +130,7 @@ func (n *NodeConfig) FailIBCTransfer(from, recipient, amount string) {
 // docker container exec <container id> osmosisd tx gamm swap-exact-amount-in <tokeinInCoin> <tokenOutMinAmountInt> --swap-route-pool-ids <swapRoutePoolIds> --swap-route-denoms <swapRouteDenoms> --chain-id=<id>--from=<address> --keyring-backend=test -b=block --yes --log_format=json
 func (n *NodeConfig) SwapExactAmountIn(tokenInCoin, tokenOutMinAmountInt string, swapRoutePoolIds string, swapRouteDenoms string, from string) {
 	n.LogActionF("swapping %s to get a minimum of %s with pool id routes (%s) and denom routes (%s)", tokenInCoin, tokenOutMinAmountInt, swapRoutePoolIds, swapRouteDenoms)
-	cmd := []string{"osmosisd", "tx", "gamm", "swap-exact-amount-in", tokenInCoin, tokenOutMinAmountInt, fmt.Sprintf("--swap-route-pool-ids=%s", swapRoutePoolIds), fmt.Sprintf("--swap-route-denoms=%s", swapRouteDenoms), fmt.Sprintf("--from=%s", from)}
+	cmd := []string{"osmosisd", "tx", "swaprouter", "swap-exact-amount-in", tokenInCoin, tokenOutMinAmountInt, fmt.Sprintf("--swap-route-pool-ids=%s", swapRoutePoolIds), fmt.Sprintf("--swap-route-denoms=%s", swapRouteDenoms), fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully swapped")

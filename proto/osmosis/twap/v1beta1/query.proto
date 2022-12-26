@@ -19,6 +19,7 @@ service Query {
     option (google.api.http).get = "/osmosis/twap/v1beta1/Params";
   }
   rpc ArithmeticTwap(ArithmeticTwapRequest) returns (ArithmeticTwapResponse) {
+    option deprecated = true;
     option (google.api.http).get = "/osmosis/twap/v1beta1/ArithmeticTwap";
   }
   rpc ArithmeticTwapToNow(ArithmeticTwapToNowRequest)
@@ -37,6 +38,7 @@ service Query {
 }
 
 message ArithmeticTwapRequest {
+  option deprecated = true;
   uint64 pool_id = 1;
   string base_asset = 2;
   string quote_asset = 3;
@@ -52,6 +54,7 @@ message ArithmeticTwapRequest {
   ];
 }
 message ArithmeticTwapResponse {
+  option deprecated = true;
   string arithmetic_twap = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"arithmetic_twap\"",
@@ -60,6 +63,7 @@ message ArithmeticTwapResponse {
 }
 
 message ArithmeticTwapToNowRequest {
+  option deprecated = true;
   uint64 pool_id = 1;
   string base_asset = 2;
   string quote_asset = 3;
@@ -70,6 +74,7 @@ message ArithmeticTwapToNowRequest {
   ];
 }
 message ArithmeticTwapToNowResponse {
+  option deprecated = true;
   string arithmetic_twap = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"arithmetic_twap\"",

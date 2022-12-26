@@ -15,7 +15,11 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"golang.org/x/exp/maps"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/osmoutils"
+=======
+	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+>>>>>>> concentrated-liquidity-main
 	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
 )
 

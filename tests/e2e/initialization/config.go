@@ -19,7 +19,10 @@ import (
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
 	epochtypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
+<<<<<<< HEAD
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+=======
+>>>>>>> concentrated-liquidity-main
 	incentivestypes "github.com/osmosis-labs/osmosis/v13/x/incentives/types"
 	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
 	poolitypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
@@ -242,7 +245,7 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 		return err
 	}
 
-	err = updateModuleGenesis(appGenState, gammtypes.ModuleName, &gammtypes.GenesisState{}, updateGammGenesis)
+	err = updateModuleGenesis(appGenState, swaproutertypes.ModuleName, &swaproutertypes.GenesisState{}, updateSwaprouterGenesis)
 	if err != nil {
 		return err
 	}
@@ -357,7 +360,7 @@ func updateTxfeesGenesis(txfeesGenState *txfeestypes.GenesisState) {
 	txfeesGenState.Basedenom = OsmoDenom
 }
 
-func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
+func updateSwaprouterGenesis(gammGenState *swaproutertypes.GenesisState) {
 	gammGenState.Params.PoolCreationFee = tenOsmo
 }
 

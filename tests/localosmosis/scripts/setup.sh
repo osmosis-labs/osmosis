@@ -55,8 +55,14 @@ edit_genesis () {
     dasel put string -f $GENESIS '.app_state.mint.params.mint_denom' "uosmo"
     dasel put string -f $GENESIS '.app_state.mint.params.epoch_identifier' "day"
 
+<<<<<<< HEAD
     # Update swaprouter module
     dasel put string -f $GENESIS '.app_state.swaprouter.params.pool_creation_fee.[0].denom' "uosmo"
+=======
+    # TODO: Update pool creation fee params via swaprouter module instead
+    # See https://github.com/osmosis-labs/osmosis/issues/3725
+    # dasel put string -f $GENESIS '.app_state.gamm.params.pool_creation_fee.[0].denom' "uosmo"
+>>>>>>> concentrated-liquidity-main
 
     # Update txfee basedenom
     dasel put string -f $GENESIS '.app_state.txfees.basedenom' "uosmo"

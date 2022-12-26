@@ -10,6 +10,10 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	"github.com/osmosis-labs/osmosis/v13/wasmbinding/bindings"
+<<<<<<< HEAD
+=======
+	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
+>>>>>>> concentrated-liquidity-main
 
 	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/keeper"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"

@@ -11,19 +11,32 @@ option (gogoproto.goproto_getters_all) = false;
 // Query defines the gRPC querier service.
 service Query {
   // Returns the list of ValidatorPreferences for the user.
+<<<<<<< HEAD
   rpc UserValidatorPreferences(UserValidatorPreferencesRequest)
       returns (UserValidatorPreferencesResponse) {
+=======
+  rpc UserValidatorPreferences(QueryUserValidatorPreferences)
+      returns (QueryUserValidatorPreferenceResponse) {
+>>>>>>> concentrated-liquidity-main
     option (google.api.http).get = "/osmosis/valset-pref/v1beta1/{address}";
   }
 }
 
 // Request type for UserValidatorPreferences.
+<<<<<<< HEAD
 message UserValidatorPreferencesRequest {
+=======
+message QueryUserValidatorPreferences {
+>>>>>>> concentrated-liquidity-main
   // user account address
   string address = 1;
 }
 
 // Response type the QueryUserValidatorPreferences query request
+<<<<<<< HEAD
 message UserValidatorPreferencesResponse {
+=======
+message QueryUserValidatorPreferenceResponse {
+>>>>>>> concentrated-liquidity-main
   repeated ValidatorPreference preferences = 1 [ (gogoproto.nullable) = false ];
 }

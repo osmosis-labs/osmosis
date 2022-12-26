@@ -18,8 +18,13 @@
         latest_version=$num_version
      fi
  done
+<<<<<<< HEAD
  version_create=$1
  new_file=./app/upgrades/${version_create}
+=======
+ version_create=$((latest_version+1))
+ new_file=./app/upgrades/v${version_create}
+>>>>>>> concentrated-liquidity-main
 
  mkdir $new_file
  CONSTANTS_FILE=$new_file/constants.go
@@ -33,8 +38,13 @@
 
  bracks='"'
  # set packages
+<<<<<<< HEAD
  echo -e "package ${version_create}\n" >> $CONSTANTS_FILE
  echo -e "package ${version_create}\n" >> $UPGRADES_FILE
+=======
+ echo -e "package v${version_create}\n" >> $CONSTANTS_FILE
+ echo -e "package v${version_create}\n" >> $UPGRADES_FILE
+>>>>>>> concentrated-liquidity-main
 
  # imports
  echo "import (" >> $CONSTANTS_FILE
@@ -56,16 +66,25 @@
  echo -e ")\n" >> $CONSTANTS_FILE
  
  # constants.go logic
+<<<<<<< HEAD
  echo "// UpgradeName defines the on-chain upgrade name for the Osmosis $version_create upgrade." >> $CONSTANTS_FILE
  echo "const UpgradeName = ${bracks}$version_create$bracks" >> $CONSTANTS_FILE
+=======
+ echo "// UpgradeName defines the on-chain upgrade name for the Osmosis v$version_create upgrade." >> $CONSTANTS_FILE
+ echo "const UpgradeName = ${bracks}v$version_create$bracks" >> $CONSTANTS_FILE
+>>>>>>> concentrated-liquidity-main
  echo "
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
 	CreateUpgradeHandler: CreateUpgradeHandler,
+<<<<<<< HEAD
 	StoreUpgrades:        store.StoreUpgrades{
 		Added:   []string{},
 		Deleted: []string{},
     },
+=======
+	StoreUpgrades:        store.StoreUpgrades{},
+>>>>>>> concentrated-liquidity-main
 }" >> $CONSTANTS_FILE
  
  # upgrades.go logic
@@ -84,6 +103,7 @@ func CreateUpgradeHandler(
   # change app/app.go file
  app_file=./app/app.go
  UPGRADES_LINE=$(grep -F upgrades.Upgrade{ $app_file)
+<<<<<<< HEAD
  UPGRADES_LINE="${UPGRADES_LINE%?}, ${version_create}.Upgrade}"
  sed -i "s|.*upgrades.Upgrade{.*|$UPGRADES_LINE|" $app_file 
 
@@ -93,3 +113,14 @@ func CreateUpgradeHandler(
 
  # change e2e version in makefile
  sed -i "s/E2E_UPGRADE_VERSION := ${bracks}v$latest_version$bracks/E2E_UPGRADE_VERSION := ${bracks}$version_create$bracks/" ./Makefile
+=======
+ UPGRADES_LINE="${UPGRADES_LINE%?}, v${version_create}.Upgrade}"
+ sed -i "s|.*upgrades.Upgrade{.*|$UPGRADES_LINE|" $app_file 
+
+ PREV_IMPORT="v$latest_version $module/app/upgrades/v$latest_version$bracks"
+ NEW_IMPORT="v$version_create $module/app/upgrades/v$version_create$bracks"
+ sed -i "s|.*$PREV_IMPORT.*|\t$PREV_IMPORT\n\t$NEW_IMPORT|" $app_file
+
+ # change e2e version in makefile
+ sed -i "s/E2E_UPGRADE_VERSION := ${bracks}v$latest_version$bracks/E2E_UPGRADE_VERSION := ${bracks}v$version_create$bracks/" ./Makefile
+>>>>>>> concentrated-liquidity-main
