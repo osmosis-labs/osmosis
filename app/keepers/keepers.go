@@ -60,6 +60,8 @@ import (
 
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v13/wasmbinding"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	epochskeeper "github.com/osmosis-labs/osmosis/v13/x/epochs/keeper"
 	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
@@ -131,6 +133,7 @@ type AppKeepers struct {
 	ContractKeeper               *wasmkeeper.PermissionedKeeper
 	TokenFactoryKeeper           *tokenfactorykeeper.Keeper
 	SwapRouterKeeper             *swaprouter.Keeper
+	ConcentratedLiquidityKeeper  *concentratedliquidity.Keeper
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
 
 	// IBC modules
@@ -275,16 +278,24 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GetSubspace(twaptypes.ModuleName),
 		appKeepers.GAMMKeeper)
 
+	appKeepers.ConcentratedLiquidityKeeper = concentratedliquidity.NewKeeper(
+		appCodec,
+		appKeepers.keys[concentratedliquiditytypes.StoreKey],
+		appKeepers.BankKeeper,
+		appKeepers.GetSubspace(concentratedliquiditytypes.ModuleName),
+	)
+
 	appKeepers.SwapRouterKeeper = swaprouter.NewKeeper(
 		appKeepers.keys[swaproutertypes.StoreKey],
 		appKeepers.GetSubspace(swaproutertypes.ModuleName),
 		appKeepers.GAMMKeeper,
-		nil, // TODO: add concentrated liquidity keeper once it is merged
+		appKeepers.ConcentratedLiquidityKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.AccountKeeper,
 		appKeepers.DistrKeeper,
 	)
 	appKeepers.GAMMKeeper.SetPoolManager(appKeepers.SwapRouterKeeper)
+	appKeepers.ConcentratedLiquidityKeeper.SetSwapRouterKeeper(appKeepers.SwapRouterKeeper)
 
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
 		appKeepers.keys[lockuptypes.StoreKey],
@@ -554,6 +565,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
 	paramsKeeper.Subspace(twaptypes.ModuleName)
 	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
+	paramsKeeper.Subspace(concentratedliquiditytypes.ModuleName)
 
 	return paramsKeeper
 }
@@ -644,6 +656,7 @@ func KVStoreKeys() []string {
 		incentivestypes.StoreKey,
 		epochstypes.StoreKey,
 		poolincentivestypes.StoreKey,
+		concentratedliquiditytypes.StoreKey,
 		swaproutertypes.StoreKey,
 		authzkeeper.StoreKey,
 		txfeestypes.StoreKey,
