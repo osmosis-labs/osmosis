@@ -1,8 +1,6 @@
 package accum
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -26,7 +24,7 @@ func getPosition(accum AccumulatorObject, addr sdk.AccAddress) (Record, error) {
 		return Record{}, err
 	}
 	if !found {
-		return Record{}, fmt.Errorf("no position found for address (%s)", addr)
+		return Record{}, NoPositionError{addr}
 	}
 
 	return position, nil
