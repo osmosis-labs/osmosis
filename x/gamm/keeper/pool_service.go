@@ -7,7 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
@@ -342,12 +342,19 @@ func (k Keeper) ExitSwapShareAmountIn(
 	if err != nil {
 		return sdk.Int{}, err
 	}
+
+	pool, err := k.GetPool(ctx, poolId)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+	swapFee := pool.GetSwapFee(ctx)
+
 	tokenOutAmount = exitCoins.AmountOf(tokenOutDenom)
 	for _, coin := range exitCoins {
 		if coin.Denom == tokenOutDenom {
 			continue
 		}
-		swapOut, err := k.SwapExactAmountIn(ctx, sender, poolId, coin, tokenOutDenom, sdk.ZeroInt())
+		swapOut, err := k.SwapExactAmountIn(ctx, sender, pool, coin, tokenOutDenom, sdk.ZeroInt(), swapFee)
 		if err != nil {
 			return sdk.Int{}, err
 		}

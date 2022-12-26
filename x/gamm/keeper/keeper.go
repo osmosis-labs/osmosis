@@ -29,11 +29,10 @@ type Keeper struct {
 	hooks      types.GammHooks
 
 	// keepers
-	accountKeeper        types.AccountKeeper
-	bankKeeper           types.BankKeeper
-	communityPoolKeeper  types.CommunityPoolKeeper
-	poolIncentivesKeeper types.PoolIncentivesKeeper
-	poolCreationManager  types.PoolCreationManager
+	accountKeeper       types.AccountKeeper
+	bankKeeper          types.BankKeeper
+	communityPoolKeeper types.CommunityPoolKeeper
+	poolManager         types.PoolManager
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, communityPoolKeeper types.CommunityPoolKeeper) Keeper {
@@ -73,12 +72,8 @@ func (k *Keeper) SetHooks(gh types.GammHooks) *Keeper {
 	return k
 }
 
-func (k *Keeper) SetPoolIncentivesKeeper(poolIncentivesKeeper types.PoolIncentivesKeeper) {
-	k.poolIncentivesKeeper = poolIncentivesKeeper
-}
-
-func (k *Keeper) SetPoolCreationManager(poolCreationManager types.PoolCreationManager) {
-	k.poolCreationManager = poolCreationManager
+func (k *Keeper) SetPoolManager(poolManager types.PoolManager) {
+	k.poolManager = poolManager
 }
 
 // GetParams returns the total set params.

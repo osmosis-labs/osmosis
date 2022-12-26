@@ -3,6 +3,8 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 // SpotPriceCalculator defines the contract that must be fulfilled by a spot price calculator
@@ -11,16 +13,14 @@ type SpotPriceCalculator interface {
 	CalculateSpotPrice(ctx sdk.Context, poolId uint64, quoteDenom, baseDenom string) (sdk.Dec, error)
 }
 
-// GammKeeper defines the contract needed for AccountKeeper related APIs.
-type GammKeeper interface {
-	SwapExactAmountIn(
+// PoolManager defines the contract needed for swap related APIs.
+type PoolManager interface {
+	RouteExactAmountIn(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
-		poolId uint64,
+		routes []swaproutertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
-		tokenOutDenom string,
-		tokenOutMinAmount sdk.Int,
-	) (tokenOutAmount sdk.Int, err error)
+		tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error)
 }
 
 // AccountKeeper defines the contract needed for AccountKeeper related APIs.

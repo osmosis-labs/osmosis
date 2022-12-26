@@ -8,24 +8,28 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/gogo/protobuf/proto"
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
 )
 
 type Keeper struct {
-	storeKey      sdk.StoreKey
-	paramSpace    paramtypes.Subspace
-	stakingKeeper types.StakingInterface
+	storeKey           sdk.StoreKey
+	paramSpace         paramtypes.Subspace
+	stakingKeeper      types.StakingInterface
+	distirbutionKeeper types.DistributionKeeper
 }
 
 func NewKeeper(storeKey sdk.StoreKey,
 	paramSpace paramtypes.Subspace,
 	stakingKeeper types.StakingInterface,
+	distirbutionKeeper types.DistributionKeeper,
 ) Keeper {
 	return Keeper{
-		storeKey:      storeKey,
-		paramSpace:    paramSpace,
-		stakingKeeper: stakingKeeper,
+		storeKey:           storeKey,
+		paramSpace:         paramSpace,
+		stakingKeeper:      stakingKeeper,
+		distirbutionKeeper: distirbutionKeeper,
 	}
 }
 

@@ -7,17 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
-)
-
-// geometricTwapMathBase is the base used for geometric twap calculation
-// in logarithm and power math functions.
-// See twapLog and computeGeometricTwap functions for more details.
-var (
-	geometricTwapMathBase = sdk.NewDec(2)
-	// TODO: analyze choice.
-	geometricTwapPowPrecision = sdk.MustNewDecFromStr("0.00000001")
 )
 
 func newTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
@@ -203,6 +194,14 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 	p1NewAccum := types.SpotPriceMulDuration(record.P1LastSpotPrice, timeDelta)
 	newRecord.P1ArithmeticTwapAccumulator = newRecord.P1ArithmeticTwapAccumulator.Add(p1NewAccum)
 
+	// If the last spot price is zero, then the logarithm is undefined.
+	// As a result, we cannot update the geometric accumulator.
+	// We set the last error time to be the new time, and return the record.
+	if record.P0LastSpotPrice.IsZero() {
+		newRecord.LastErrorTime = newTime
+		return newRecord
+	}
+
 	// logP0SpotPrice = log_{2}{P_0}
 	logP0SpotPrice := twapLog(record.P0LastSpotPrice)
 	// p0NewGeomAccum = log_{2}{P_0} * timeDelta
@@ -247,7 +246,7 @@ func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA, asse
 // if (endRecord.Time == startRecord.Time) returns endRecord.LastSpotPrice
 // else returns
 // (endRecord.Accumulator - startRecord.Accumulator) / (endRecord.Time - startRecord.Time)
-func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string, isArithmeticTwap twapType) (sdk.Dec, error) {
+func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string, strategy twapStrategy) (sdk.Dec, error) {
 	// see if we need to return an error, due to spot price issues
 	var err error = nil
 	if endRecord.LastErrorTime.After(startRecord.Time) ||
@@ -264,54 +263,24 @@ func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quote
 		return endRecord.P1LastSpotPrice, err
 	}
 
-	if isArithmeticTwap {
-		return computeArithmeticTwap(startRecord, endRecord, quoteAsset), err
-	}
-	return computeGeometricTwap(startRecord, endRecord, quoteAsset), err
-}
-
-// computeArithmeticTwap computes and returns an arithmetic TWAP between
-// two records given the quote asset.
-func computeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
-	var accumDiff sdk.Dec
-	if quoteAsset == startRecord.Asset0Denom {
-		accumDiff = endRecord.P0ArithmeticTwapAccumulator.Sub(startRecord.P0ArithmeticTwapAccumulator)
-	} else {
-		accumDiff = endRecord.P1ArithmeticTwapAccumulator.Sub(startRecord.P1ArithmeticTwapAccumulator)
-	}
-	timeDelta := endRecord.Time.Sub(startRecord.Time)
-	return types.AccumDiffDivDuration(accumDiff, timeDelta)
-}
-
-// computeGeometricTwap computes and returns a geometric TWAP between
-// two records given the quote asset.
-// The computation works as follows:
-// - compute arithmetic mean of logarithms of spot prices.
-// - exponentiate the result to get the geometric mean.
-// - if quoted asset is asset 1, take reciprocal of the exponentiated result.
-func computeGeometricTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
-	accumDiff := endRecord.GeometricTwapAccumulator.Sub(startRecord.GeometricTwapAccumulator)
-
-	timeDelta := endRecord.Time.Sub(startRecord.Time)
-	arithmeticMeanOfLogPrices := types.AccumDiffDivDuration(accumDiff, timeDelta)
-
-	geometricMeanDenom0 := twapPow(arithmeticMeanOfLogPrices)
-	// N.B.: Geometric mean of recprocals is reciprocal of geometric mean.
-	// https://proofwiki.org/wiki/Geometric_Mean_of_Reciprocals_is_Reciprocal_of_Geometric_Mean
-	if quoteAsset == startRecord.Asset1Denom {
-		return sdk.OneDec().Quo(geometricMeanDenom0)
-	}
-	return geometricMeanDenom0
+	return strategy.computeTwap(startRecord, endRecord, quoteAsset), err
 }
 
 // twapLog returns the logarithm of the given spot price, base 2.
-// TODO: basic test
+// Panics if zero is given.
 func twapLog(price sdk.Dec) sdk.Dec {
+	if price.IsZero() {
+		panic("twap: cannot take logarithm of zero")
+	}
+
 	return osmomath.BigDecFromSDKDec(price).LogBase2().SDKDec()
 }
 
-// twapPow exponentiates the geometricTwapMathBase to the given exponent.
-// TODO: basic test and benchmark.
+// twapPow exponentiates 2 to the given exponent.
 func twapPow(exponent sdk.Dec) sdk.Dec {
-	return osmomath.PowApprox(geometricTwapMathBase, exponent, geometricTwapPowPrecision)
+	exp2 := osmomath.Exp2(osmomath.BigDecFromSDKDec(exponent.Abs()))
+	if exponent.IsNegative() {
+		return osmomath.OneDec().Quo(exp2).SDKDec()
+	}
+	return exp2.SDKDec()
 }
