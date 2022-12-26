@@ -9,10 +9,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	ibchooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
+	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
 
@@ -20,10 +20,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
-	ibctesting "github.com/cosmos/ibc-go/v3/testing"
+	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
+	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 
 	osmosisibctesting "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/testutil"
 

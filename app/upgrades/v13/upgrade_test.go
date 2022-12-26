@@ -2,6 +2,7 @@ package v13_test
 
 import (
 	"fmt"
+
 	"testing"
 
 	ibchookstypes "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types"
@@ -14,7 +15,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
+	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 )
 
 type UpgradeTestSuite struct {

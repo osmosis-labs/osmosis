@@ -7,8 +7,8 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/app"
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/cli"
 	swaprouterqueryproto "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/queryproto"
 	swaproutertestutil "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/testutil"

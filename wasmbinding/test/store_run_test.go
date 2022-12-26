@@ -1,6 +1,7 @@
 package wasmbinding
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"os"
 	"testing"
@@ -41,6 +42,8 @@ func storeCodeViaProposal(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp
 	src := types.StoreCodeProposalFixture(func(p *types.StoreCodeProposal) {
 		p.RunAs = addr.String()
 		p.WASMByteCode = wasmCode
+		checksum := sha256.Sum256(wasmCode)
+		p.CodeHash = checksum[:]
 	})
 
 	// when stored

@@ -2,7 +2,11 @@ package twap
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
+
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
 // twapStrategy is an interface for computing TWAPs.
@@ -42,11 +46,14 @@ func (s *geometric) computeTwap(startRecord types.TwapRecord, endRecord types.Tw
 	timeDelta := endRecord.Time.Sub(startRecord.Time)
 	arithmeticMeanOfLogPrices := types.AccumDiffDivDuration(accumDiff, timeDelta)
 
-	geometricMeanDenom0 := twapPow(arithmeticMeanOfLogPrices)
+	result := twapPow(arithmeticMeanOfLogPrices)
 	// N.B.: Geometric mean of recprocals is reciprocal of geometric mean.
 	// https://proofwiki.org/wiki/Geometric_Mean_of_Reciprocals_is_Reciprocal_of_Geometric_Mean
 	if quoteAsset == startRecord.Asset1Denom {
-		return sdk.OneDec().Quo(geometricMeanDenom0)
+		result = sdk.OneDec().Quo(result)
 	}
-	return geometricMeanDenom0
+
+	// N.B. we round because this is the max number of significant figures supported
+	// by the underlying spot price function.
+	return osmomath.SigFigRound(result, gammtypes.SpotPriceSigFigs)
 }

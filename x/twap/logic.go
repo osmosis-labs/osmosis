@@ -7,17 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
-)
-
-// geometricTwapMathBase is the base used for geometric twap calculation
-// in logarithm and power math functions.
-// See twapLog and computeGeometricTwap functions for more details.
-var (
-	geometricTwapMathBase = sdk.NewDec(2)
-	// TODO: analyze choice.
-	geometricTwapPowPrecision = sdk.MustNewDecFromStr("0.00000001")
 )
 
 func newTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
@@ -203,6 +194,14 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 	p1NewAccum := types.SpotPriceMulDuration(record.P1LastSpotPrice, timeDelta)
 	newRecord.P1ArithmeticTwapAccumulator = newRecord.P1ArithmeticTwapAccumulator.Add(p1NewAccum)
 
+	// If the last spot price is zero, then the logarithm is undefined.
+	// As a result, we cannot update the geometric accumulator.
+	// We set the last error time to be the new time, and return the record.
+	if record.P0LastSpotPrice.IsZero() {
+		newRecord.LastErrorTime = newTime
+		return newRecord
+	}
+
 	// logP0SpotPrice = log_{2}{P_0}
 	logP0SpotPrice := twapLog(record.P0LastSpotPrice)
 	// p0NewGeomAccum = log_{2}{P_0} * timeDelta
@@ -268,13 +267,20 @@ func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quote
 }
 
 // twapLog returns the logarithm of the given spot price, base 2.
-// TODO: basic test
+// Panics if zero is given.
 func twapLog(price sdk.Dec) sdk.Dec {
+	if price.IsZero() {
+		panic("twap: cannot take logarithm of zero")
+	}
+
 	return osmomath.BigDecFromSDKDec(price).LogBase2().SDKDec()
 }
 
-// twapPow exponentiates the geometricTwapMathBase to the given exponent.
-// TODO: basic test and benchmark.
+// twapPow exponentiates 2 to the given exponent.
 func twapPow(exponent sdk.Dec) sdk.Dec {
-	return osmomath.PowApprox(geometricTwapMathBase, exponent, geometricTwapPowPrecision)
+	exp2 := osmomath.Exp2(osmomath.BigDecFromSDKDec(exponent.Abs()))
+	if exponent.IsNegative() {
+		return osmomath.OneDec().Quo(exp2).SDKDec()
+	}
+	return exp2.SDKDec()
 }

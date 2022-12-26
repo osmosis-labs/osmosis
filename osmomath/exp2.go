@@ -93,9 +93,9 @@ func exp2ChebyshevRationalApprox(x BigDec) BigDec {
 	for i := 1; i < len(numeratorCoefficients13Param); i++ {
 		x_exp_i.MulMut(x)
 
-		h_x = h_x.Add(numeratorCoefficients13Param[i].Mul(x_exp_i))
-		p_x = p_x.Add(denominatorCoefficients13Param[i].Mul(x_exp_i))
+		h_x.AddMut(numeratorCoefficients13Param[i].Mul(x_exp_i))
+		p_x.AddMut(denominatorCoefficients13Param[i].Mul(x_exp_i))
 	}
 
-	return h_x.Quo(p_x)
+	return h_x.QuoMut(p_x)
 }

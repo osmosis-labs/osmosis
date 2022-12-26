@@ -16,7 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
 	"github.com/osmosis-labs/osmosis/v13/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v13/tests/e2e/initialization"
@@ -262,16 +262,16 @@ func (s *IntegrationTestSuite) TestAddToExistingLock() {
 	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId), lockupWalletAddr, lockupWalletSuperfluidAddr)
 }
 
-// TestTWAP tests TWAP by creating a pool, performing a swap.
+// TestArithmeticTWAP tests TWAP by creating a pool, performing a swap.
 // These two operations should create TWAP records.
 // Then, we wait until the epoch for the records to be pruned.
 // The records are guaranteed to be pruned at the next epoch
 // because twap keep time = epoch time / 4 and we use a timer
 // to wait for at least the twap keep time.
-func (s *IntegrationTestSuite) TestTWAP() {
+func (s *IntegrationTestSuite) TestArithmeticTWAP() {
 	const (
 		poolFile   = "nativeDenomThreeAssetPool.json"
-		walletName = "swap-exact-amount-in-wallet"
+		walletName = "arithmetic-twap-wallet"
 
 		denomA = "stake"
 		denomB = "uion"
@@ -568,4 +568,95 @@ func (s *IntegrationTestSuite) TestExpeditedProposals() {
 	s.Require().Less(timeDelta, 2*time.Second)
 	s.T().Logf("expeditedVotingPeriodDuration within two seconds of expected time: %v", timeDelta)
 	close(totalTimeChan)
+}
+
+// TestGeometricTWAP tests geometric twap.
+// It does the following:  creates a pool, queries twap, performs a swap , and queries twap again.
+// Twap is expected to change after the swap.
+// The pool is created with 1_000_000 uosmo and 2_000_000 stake and equal weights.
+// Assuming base asset is uosmo, the initial twap is 2
+// Upon swapping 1_000_000 uosmo for stake, supply changes, making uosmo less expensive.
+// As a result of the swap, twap changes to 0.5.
+func (s *IntegrationTestSuite) TestGeometricTWAP() {
+	const (
+		// This pool contains 1_000_000 uosmo and 2_000_000 stake.
+		// Equals weights.
+		poolFile   = "geometricPool.json"
+		walletName = "geometric-twap-wallet"
+
+		denomA = "uosmo" // 1_000_000 uosmo
+		denomB = "stake" // 2_000_000 stake
+
+		minAmountOut = "1"
+
+		epochIdentifier = "day"
+	)
+
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.NoError(err)
+
+	// Triggers the creation of TWAP records.
+	poolId := chainANode.CreatePool(poolFile, initialization.ValidatorWalletName)
+	swapWalletAddr := chainANode.CreateWallet(walletName)
+
+	// We add 5 ms to avoid landing directly on block time in twap. If block time
+	// is provided as start time, the latest spot price is used. Otherwise
+	// interpolation is done.
+	timeBeforeSwapPlus5ms := chainANode.QueryLatestBlockTime().Add(5 * time.Millisecond)
+	// Wait for the next height so that the requested twap
+	// start time (timeBeforeSwap) is not equal to the block time.
+	chainA.WaitForNumHeights(1)
+
+	s.T().Log("querying for the first geometric TWAP to now (before swap)")
+	// Assume base = uosmo, quote = stake
+	// At pool creation time, the twap should be:
+	// quote assset supply / base asset supply = 2_000_000 / 1_000_000 = 2
+	initialTwapBOverA, err := chainANode.QueryGeometricTwapToNow(poolId, denomA, denomB, timeBeforeSwapPlus5ms)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewDec(2), initialTwapBOverA)
+
+	// Assume base = stake, quote = uosmo
+	// At pool creation time, the twap should be:
+	// quote assset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
+	initialTwapAOverB, err := chainANode.QueryGeometricTwapToNow(poolId, denomB, denomA, timeBeforeSwapPlus5ms)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewDecWithPrec(5, 1), initialTwapAOverB)
+
+	coinAIn := fmt.Sprintf("1000000%s", denomA)
+	chainANode.BankSend(coinAIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
+
+	s.T().Logf("performing swap of %s for %s", coinAIn, denomB)
+
+	// stake out = stake supply * (1 - (uosmo supply before / uosmo supply after)^(uosmo weight / stake weight))
+	//           = 2_000_000 * (1 - (1_000_000 / 2_000_000)^1)
+	//           = 2_000_000 * 0.5
+	//           = 1_000_000
+	chainANode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", poolId), denomB, swapWalletAddr)
+
+	// New supply post swap:
+	// stake = 2_000_000 - 1_000_000 - 1_000_000
+	// uosmo = 1_000_000 + 1_000_000 = 2_000_000
+
+	timeAfterSwap := chainANode.QueryLatestBlockTime()
+	chainA.WaitForNumHeights(1)
+	timeAfterSwapPlus1Height := chainANode.QueryLatestBlockTime()
+
+	s.T().Log("querying for the TWAP from after swap to now")
+	afterSwapTwapBOverA, err := chainANode.QueryGeometricTwap(poolId, denomA, denomB, timeAfterSwap, timeAfterSwapPlus1Height)
+	s.Require().NoError(err)
+
+	// We swap uosmo so uosmo's supply will increase and stake will decrease.
+	// The the price after will be smaller than the previous one.
+	s.Require().True(initialTwapBOverA.GT(afterSwapTwapBOverA))
+
+	// Assume base = uosmo, quote = stake
+	// At pool creation, we had:
+	// quote assset supply / base asset supply = 2_000_000 / 1_000_000 = 2
+	// Next, we swapped 1_000_000 uosmo for stake.
+	// Now, we roughly have
+	// uatom = 1_000_000
+	// uosmo = 2_000_000
+	// quote assset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
+	osmoassert.DecApproxEq(s.T(), sdk.NewDecWithPrec(5, 1), afterSwapTwapBOverA, sdk.NewDecWithPrec(1, 2))
 }

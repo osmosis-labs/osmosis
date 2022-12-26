@@ -5,8 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v13/x/twap"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
@@ -20,6 +21,10 @@ type computeTwapTestCase struct {
 	expErr         bool
 	expPanic       bool
 }
+
+var (
+	oneHundredYears = OneSec.MulInt64(60 * 60 * 24 * 365 * 100)
+)
 
 // TestComputeArithmeticTwap tests computeTwap on various inputs.
 // The test vectors are structured by setting up different start and records,
@@ -299,4 +304,20 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap_ThreeAsset() {
 			}
 		})
 	}
+}
+
+// TestTwapPow_MaxSpotPrice_NoOverflow tests that no overflow occurs at log_2{max spot price values}.
+// and that the epsilon is within the tolerated multiplicative error.
+func (s *TestSuite) TestTwapLogPow_MaxSpotPrice_NoOverflow() {
+	errTolerance := osmomath.ErrTolerance{
+		MultiplicativeTolerance: sdk.OneDec().Quo(sdk.NewDec(10).Power(18)),
+		RoundingDir:             osmomath.RoundDown,
+	}
+
+	oneHundredYearsTimesMaxSpotPrice := oneHundredYears.Mul(gammtypes.MaxSpotPrice)
+
+	exponentValue := twap.TwapLog(oneHundredYearsTimesMaxSpotPrice)
+	finalValue := twap.TwapPow(exponentValue)
+
+	s.Require().Equal(0, errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(oneHundredYearsTimesMaxSpotPrice), osmomath.BigDecFromSDKDec(finalValue)))
 }
