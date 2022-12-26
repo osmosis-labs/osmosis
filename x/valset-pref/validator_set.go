@@ -40,7 +40,7 @@ func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, pre
 // For ex: delegate 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
 // our delegate logic would attempt to delegate 5osmo to A , 2osmo to B, 3osmo to C
 func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
-	// get the existingValSet, if not check existingStakingPosition and return it
+	// get the existingValSet if it exists, if not check existingStakingPosition and return it
 	existingSet, err := k.GetDelegations(ctx, delegatorAddr)
 	if err != nil {
 		return fmt.Errorf("user %s doesn't have validator set", delegatorAddr)
@@ -216,15 +216,15 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 // Rewards are calculated per period, and is updated each time validator delegation changes. For ex: when a delegator
 // receives new delgation the rewards can be calculated by taking (total rewards before new delegation - the total current rewards).
 func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delegatorAddr string) error {
-	delegator, err := sdk.AccAddressFromBech32(delegatorAddr)
-	if err != nil {
-		return err
-	}
-
-	// get the existing validator set preference
+	// get the existingValSet if it exists, if not check existingStakingPosition and return it
 	existingSet, err := k.GetDelegations(ctx, delegatorAddr)
 	if err != nil {
 		return fmt.Errorf("user %s doesn't have validator set or existing delegations", delegatorAddr)
+	}
+
+	delegator, err := sdk.AccAddressFromBech32(delegatorAddr)
+	if err != nil {
+		return err
 	}
 
 	err = k.withdrawExistingValSetStakingPosition(ctx, delegator, existingSet.Preferences)
@@ -232,17 +232,6 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delegatorAddr string)
 		return err
 	}
 
-	return nil
-}
-
-// withdrawExistingStakingPosition takes the existing staking delegator delegations and withdraws the rewards.
-func (k Keeper) withdrawExistingStakingPosition(ctx sdk.Context, delegator sdk.AccAddress, delegations []stakingtypes.Delegation) error {
-	for _, dels := range delegations {
-		_, err := k.distirbutionKeeper.WithdrawDelegationRewards(ctx, delegator, dels.GetValidatorAddr())
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 }
 

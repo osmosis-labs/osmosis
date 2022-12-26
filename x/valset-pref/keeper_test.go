@@ -91,7 +91,7 @@ func (suite *KeeperTestSuite) AllocateRewards(ctx sdk.Context, delegator sdk.Acc
 	suite.Require().NotZero(rewardsAfterAllocation[0].Amount)
 }
 
-// PrepareExistingDelegations prepares three existing non valset delegations
+// PrepareExistingDelegations sets up existing delegation by creating a certain number of validators and delegating tokenAmt to them.
 func (suite *KeeperTestSuite) PrepareExistingDelegations(ctx sdk.Context, valAddrs []string, delegator sdk.AccAddress, tokenAmt sdk.Int) error {
 	for i := 0; i < len(valAddrs); i++ {
 		valAddr, err := sdk.ValAddressFromBech32(valAddrs[i])
@@ -110,6 +110,7 @@ func (suite *KeeperTestSuite) PrepareExistingDelegations(ctx sdk.Context, valAdd
 			return err
 		}
 	}
+
 	return nil
 }
 
