@@ -5,10 +5,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	// ibc-go
-	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
-	ibcexported "github.com/cosmos/ibc-go/v3/modules/core/exported"
+	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
+	ibcexported "github.com/cosmos/ibc-go/v4/modules/core/exported"
 
-	ibchooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
+	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 )
 
 var (

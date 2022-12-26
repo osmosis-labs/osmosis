@@ -270,10 +270,20 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 			newTime:   time.Unix(1, 0),
 			expRecord: newExpRecord(oneDec, twoDec, pointFiveDec),
 		},
-		"zero spot price - panic": {
-			record:      withPrice0Set(defaultRecord, sdk.ZeroDec()),
-			newTime:     defaultRecord.Time.Add(time.Second),
-			expectPanic: true,
+		"sp0 - zero spot price - accum0 unchanged, accum1 updated, geom accum unchanged, last err time set": {
+			record:    withPrice0Set(defaultRecord, sdk.ZeroDec()),
+			newTime:   defaultRecord.Time.Add(time.Second),
+			expRecord: withLastErrTime(newExpRecord(oneDec, twoDec.Add(sdk.NewDecWithPrec(1, 1).Mul(OneSec)), pointFiveDec), defaultRecord.Time.Add(time.Second)),
+		},
+		"sp1 - zero spot price - accum0 updated, accum1 unchanged, geom accum updated correctly": {
+			record:    withPrice1Set(defaultRecord, sdk.ZeroDec()),
+			newTime:   defaultRecord.Time.Add(time.Second),
+			expRecord: newExpRecord(tenSecAccum.Add(oneDec), twoDec, pointFiveDec.Add(geometricTenSecAccum)),
+		},
+		"both sp - zero spot price - accum0 unchange, accum1 unchanged, geom accum unchanged": {
+			record:    withPrice1Set(withPrice0Set(defaultRecord, sdk.ZeroDec()), sdk.ZeroDec()),
+			newTime:   defaultRecord.Time.Add(time.Second),
+			expRecord: withLastErrTime(newExpRecord(oneDec, twoDec, pointFiveDec), defaultRecord.Time.Add(time.Second)),
 		},
 		"spot price of one - geom accumulator 0": {
 			record:    withPrice1Set(withPrice0Set(defaultRecord, sdk.OneDec()), sdk.OneDec()),
@@ -1327,6 +1337,53 @@ func (s *TestSuite) TestTwapLog_CorrectBase() {
 	result := twap.TwapLog(logOf)
 
 	s.Require().Equal(expectedValue, result)
+}
+
+func (s *TestSuite) TestTwapLog() {
+	smallestAdditiveTolerance := osmomath.ErrTolerance{
+		AdditiveTolerance: sdk.SmallestDec(),
+	}
+
+	testcases := []struct {
+		name        string
+		price       sdk.Dec
+		expected    sdk.Dec
+		expectPanic bool
+	}{
+		{
+			"max spot price",
+			gammtypes.MaxSpotPrice,
+			// log_2{2^128 - 1} = 128
+			sdk.MustNewDecFromStr("127.999999999999999999"),
+			false,
+		},
+		{
+			"zero price - panic",
+			sdk.ZeroDec(),
+			sdk.Dec{},
+			true,
+		},
+		{
+			"smallest dec",
+			sdk.SmallestDec(),
+			// https://www.wolframalpha.com/input?i=log+base+2+of+%2810%5E-18%29+with+20+digits
+			sdk.MustNewDecFromStr("59.794705707972522262").Neg(),
+			false,
+		},
+	}
+
+	for _, tc := range testcases {
+		s.Run(tc.name, func() {
+			osmoassert.ConditionalPanic(s.T(), tc.expectPanic, func() {
+				result := twap.TwapLog(tc.price)
+
+				smallestAdditiveTolerance.CompareBigDec(
+					osmomath.BigDecFromSDKDec(tc.expected),
+					osmomath.BigDecFromSDKDec(result),
+				)
+			})
+		})
+	}
 }
 
 // TestTwapPow_CorrectBase tests that the base of 2 is used for the twap power function.

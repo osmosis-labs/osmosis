@@ -194,6 +194,14 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 	p1NewAccum := types.SpotPriceMulDuration(record.P1LastSpotPrice, timeDelta)
 	newRecord.P1ArithmeticTwapAccumulator = newRecord.P1ArithmeticTwapAccumulator.Add(p1NewAccum)
 
+	// If the last spot price is zero, then the logarithm is undefined.
+	// As a result, we cannot update the geometric accumulator.
+	// We set the last error time to be the new time, and return the record.
+	if record.P0LastSpotPrice.IsZero() {
+		newRecord.LastErrorTime = newTime
+		return newRecord
+	}
+
 	// logP0SpotPrice = log_{2}{P_0}
 	logP0SpotPrice := twapLog(record.P0LastSpotPrice)
 	// p0NewGeomAccum = log_{2}{P_0} * timeDelta
@@ -259,7 +267,12 @@ func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quote
 }
 
 // twapLog returns the logarithm of the given spot price, base 2.
+// Panics if zero is given.
 func twapLog(price sdk.Dec) sdk.Dec {
+	if price.IsZero() {
+		panic("twap: cannot take logarithm of zero")
+	}
+
 	return osmomath.BigDecFromSDKDec(price).LogBase2().SDKDec()
 }
 
