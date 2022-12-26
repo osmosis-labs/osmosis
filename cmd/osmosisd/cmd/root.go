@@ -7,7 +7,6 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/osmosis-labs/osmosis/v13/app"
 	"github.com/osmosis-labs/osmosis/v13/app/params"
 
 	"github.com/spf13/cast"
@@ -90,12 +89,12 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 }
 
 func getHomeEnvironment() string {
-	envPath := filepath.Join(app.DefaultNodeHome, ".env")
+	envPath := filepath.Join(osmosis.DefaultNodeHome, ".env")
 
 	// Use default node home if can't get environment
 	err := godotenv.Load(envPath)
 	if err != nil {
-		return app.DefaultNodeHome
+		return osmosis.DefaultNodeHome
 	}
 	val := os.Getenv(EnvVariable)
 	return val

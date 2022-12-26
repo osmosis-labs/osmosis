@@ -175,9 +175,12 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				if err != nil {
 					return err
 				}
-				envFile.WriteString(fmt.Sprintf("OSMOSISD_ENVIRONMENT=%s", defaultNodeHome))
+				_, err = envFile.WriteString(fmt.Sprintf("OSMOSISD_ENVIRONMENT=%s", defaultNodeHome))
+				if err != nil {
+					return err
+				}
 			}
-			
+
 			return displayInfo(toPrint)
 		},
 	}
