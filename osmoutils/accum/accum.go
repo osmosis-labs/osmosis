@@ -116,7 +116,7 @@ func (accum AccumulatorObject) AddToPosition(addr sdk.AccAddress, newShares sdk.
 	// Update user's position with new number of shares while moving its unaccrued rewards
 	// into UnclaimedRewards. Starting accumulator value is moved up to accum'scurrent value
 	// TODO: decide how to propagate the knowledge of position options.
-	createNewPosition(accum, addr, oldNumShares.Add(newShares), unclaimedRewards, PositionOptions{})
+	createNewPosition(accum, addr, oldNumShares.Add(newShares), unclaimedRewards, position.Options)
 
 	return nil
 }
@@ -141,7 +141,7 @@ func (accum AccumulatorObject) RemoveFromPosition(addr sdk.AccAddress, numShares
 	if numSharesToRemove.GT(position.NumShares) {
 		return fmt.Errorf("Attempted to remove more shares  (%s) than exist in the position (%s)", numSharesToRemove, position.NumShares)
 	}
-  
+
 	// Save current number of shares and unclaimed rewards
 	unclaimedRewards := getTotalRewards(accum, position)
 	oldNumShares, err := accum.GetPositionSize(addr)
@@ -149,10 +149,8 @@ func (accum AccumulatorObject) RemoveFromPosition(addr sdk.AccAddress, numShares
 		return err
 	}
 
-	// Update user's position with new number of shares while moving its unaccrued rewards
-	// into UnclaimedRewards. Starting accumulator value is moved up to accum'scurrent value
 	// TODO: decide how to propagate the knowledge of position options.
-	createNewPosition(accum, addr, oldNumShares.Add(newShares), unclaimedRewards, position.Options)
+	createNewPosition(accum, addr, oldNumShares.Sub(numSharesToRemove), unclaimedRewards, position.Options)
 
 	return nil
 }
@@ -164,7 +162,7 @@ func (accum AccumulatorObject) GetPositionSize(addr sdk.AccAddress) (sdk.Dec, er
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-  
+
 	return position.NumShares, nil
 }
 
