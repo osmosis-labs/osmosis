@@ -13,6 +13,13 @@ message AccumulatorContent {
   ];
 }
 
+message Options {
+  string inflation_rate = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
 message Record {
   string num_shares = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
@@ -26,4 +33,5 @@ message Record {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable) = false
   ];
+  Options options = 4;
 }

@@ -39,7 +39,7 @@ func CreateRawAccumObject(store store.KVStore, name string, value sdk.DecCoins) 
 	}
 }
 
-func CreateRawPosition(accum AccumulatorObject, addr sdk.AccAddress, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options PositionOptions) {
+func CreateRawPosition(accum AccumulatorObject, addr sdk.AccAddress, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
 	createNewPosition(accum, addr, numShareUnits, unclaimedRewards, options)
 }
 

@@ -23,8 +23,6 @@ type AccumulatorObject struct {
 	value sdk.DecCoins
 }
 
-type PositionOptions struct{}
-
 // Makes a new accumulator at store/accum/{accumName}
 // Returns error if already exists / theres some overlapping keys
 func MakeAccumulator(accumStore store.KVStore, accumName string) error {
@@ -75,8 +73,12 @@ func (accum AccumulatorObject) UpdateAccumulator(amt sdk.DecCoins) {
 // It takes a snapshot of the current accumulator value, and sets the position's initial value to that.
 // The position is initialized with empty unclaimed rewards
 // If there is an existing position for the given address, it is overwritten.
-func (accum AccumulatorObject) NewPosition(addr sdk.AccAddress, numShareUnits sdk.Dec, options PositionOptions) {
+func (accum AccumulatorObject) NewPosition(addr sdk.AccAddress, numShareUnits sdk.Dec, options *Options) error {
+	if err := options.validate(); err != nil {
+		return err
+	}
 	createNewPosition(accum, addr, numShareUnits, sdk.NewDecCoins(), options)
+	return nil
 }
 
 // AddToPosition adds newShares of shares to addr's position.
@@ -114,7 +116,7 @@ func (accum AccumulatorObject) AddToPosition(addr sdk.AccAddress, newShares sdk.
 	// Update user's position with new number of shares while moving its unaccrued rewards
 	// into UnclaimedRewards. Starting accumulator value is moved up to accum'scurrent value
 	// TODO: decide how to propagate the knowledge of position options.
-	createNewPosition(accum, addr, oldNumShares.Add(newShares), unclaimedRewards, PositionOptions{})
+	createNewPosition(accum, addr, oldNumShares.Add(newShares), unclaimedRewards, position.Options)
 
 	return nil
 }
@@ -148,7 +150,7 @@ func (accum AccumulatorObject) RemoveFromPosition(addr sdk.AccAddress, numShares
 	}
 
 	// TODO: decide how to propagate the knowledge of position options.
-	createNewPosition(accum, addr, oldNumShares.Sub(numSharesToRemove), unclaimedRewards, PositionOptions{})
+	createNewPosition(accum, addr, oldNumShares.Sub(numSharesToRemove), unclaimedRewards, position.Options)
 
 	return nil
 }
@@ -180,7 +182,7 @@ func (accum AccumulatorObject) ClaimRewards(addr sdk.AccAddress) (sdk.DecCoins, 
 	// Create a completely new position, with no rewards
 	// TODO: decide how to propagate the knowledge of position options.
 	// TODO: remove the position from state entirely if numShares = zero
-	createNewPosition(accum, addr, position.NumShares, sdk.NewDecCoins(), PositionOptions{})
+	createNewPosition(accum, addr, position.NumShares, sdk.NewDecCoins(), position.Options)
 
 	return totalRewards, nil
 }
