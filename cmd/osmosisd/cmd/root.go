@@ -1,13 +1,13 @@
 package cmd
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/osmosis-labs/osmosis/v13/app"
 	"github.com/osmosis-labs/osmosis/v13/app/params"
 
 	"github.com/spf13/cast"
@@ -90,25 +90,15 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 }
 
 func getHomeEnvironment() string {
-	userHomeDir, err := os.UserHomeDir()
-	if err != nil {
-		panic(err)
-	}
-	envPath := filepath.Join(userHomeDir, ".osmosisd/.env")
+	envPath := filepath.Join(app.DefaultNodeHome, ".env")
 
-	err = godotenv.Load(envPath)
+	// Use default node home if can't get environment
+	err := godotenv.Load(envPath)
 	if err != nil {
-		panic(err)
+		return app.DefaultNodeHome
 	}
-
 	val := os.Getenv(EnvVariable)
-	if val == EnvMainnet {
-		return filepath.Join(userHomeDir, ".osmosisd")
-	} else if val == EnvLocalnet {
-		return filepath.Join(userHomeDir, ".osmosisd-local")
-	} else {
-		panic(fmt.Errorf("Invalid environment variable"))
-	}
+	return val
 }
 
 // initAppConfig helps to override default appConfig template and configs.

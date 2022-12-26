@@ -22,14 +22,14 @@ func ChangeEnvironmentCmd() *cobra.Command {
 		Short: "Set home environment variables for commands",
 		Long: `Set home environment variables for commands
 Example:
-	osmosisd set-env mainnet
-	osmosisd set-env localosmosis
+	osmosisd set-env $HOME/.osmosisd
+	osmosisd set-env $HOME/.osmosisd-local
 `,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			newEnv := args[0]
-			if newEnv != EnvMainnet && newEnv != EnvLocalnet {
-				return fmt.Errorf("invalid environment variable")
+			if _, err := os.Stat(newEnv); os.IsNotExist(err) {
+				return fmt.Errorf("directory %s does not exist", newEnv)
 			}
 
 			userHomeDir, err := os.UserHomeDir()

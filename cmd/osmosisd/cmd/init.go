@@ -26,6 +26,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+
+	"github.com/osmosis-labs/osmosis/v13/app"
 )
 
 const (
@@ -167,6 +169,15 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			tmcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
 
+			// create environment file in default node home
+			if defaultNodeHome == app.DefaultNodeHome {
+				envFile, err := os.Create(filepath.Join(defaultNodeHome, ".env"))
+				if err != nil {
+					return err
+				}
+				envFile.WriteString(fmt.Sprintf("OSMOSISD_ENVIRONMENT=%s", defaultNodeHome))
+			}
+			
 			return displayInfo(toPrint)
 		},
 	}
