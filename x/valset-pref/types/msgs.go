@@ -48,9 +48,11 @@ func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 		return fmt.Errorf("The validator operator address are duplicated")
 	}
 
+	totalWeight = totalWeight.Ceil()
+
 	// check if the total validator distribution weights equal 1
 	if !totalWeight.Equal(sdk.OneDec()) {
-		return fmt.Errorf("The weights allocated to the validators do not add up to 1, Got: %d", totalWeight)
+		return fmt.Errorf("SISHIR The weights allocated to the validators do not add up to 1, Got: %d", totalWeight)
 	}
 
 	return nil
