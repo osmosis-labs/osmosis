@@ -2,6 +2,7 @@ package types
 
 import (
 	fmt "fmt"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -48,11 +49,22 @@ func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 		return fmt.Errorf("The validator operator address are duplicated")
 	}
 
-	totalWeight = totalWeight.Ceil()
+	// Round to 2 digit after the decimal. For ex: 0.999 = 1.0, 0.874 = 0.87, 0.5123 = 0.51
+	totalWeightFloat64, err := totalWeight.Float64()
+	if err != nil {
+		return err
+	}
 
+	roundedValueStr := fmt.Sprintf("%.2f", totalWeightFloat64)
+	roundedValue, err := strconv.ParseFloat(roundedValueStr, 64)
+	if err != nil {
+		return err
+	}
+
+	// TODO: Figure out a string check for this
 	// check if the total validator distribution weights equal 1
-	if !totalWeight.Equal(sdk.OneDec()) {
-		return fmt.Errorf("SISHIR The weights allocated to the validators do not add up to 1, Got: %d", totalWeight)
+	if roundedValue != 1 {
+		return fmt.Errorf("The weights allocated to the validators do not add up to 1, Got: %f", roundedValue)
 	}
 
 	return nil

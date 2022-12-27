@@ -16,24 +16,24 @@ type valSet struct {
 	amount  sdk.Dec
 }
 
-func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, preferences []types.ValidatorPreference) error {
+func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, preferences []types.ValidatorPreference) ([]types.ValidatorPreference, error) {
 	// check if a user already has a validator-set created
 	existingValidators, found := k.GetValidatorSetPreference(ctx, delegator)
 	if found {
 		// check if the new preferences is the same as the existing preferences
 		isEqual := k.IsValidatorSetEqual(preferences, existingValidators.Preferences)
 		if isEqual {
-			return fmt.Errorf("The preferences (validator and weights) are the same")
+			return nil, fmt.Errorf("The preferences (validator and weights) are the same")
 		}
 	}
 
 	// checks that all the validators exist on chain
-	isValid := k.IsPreferenceValid(ctx, preferences)
+	valSetPref, isValid := k.IsPreferenceValid(ctx, preferences)
 	if !isValid {
-		return fmt.Errorf("The validator preference list is not valid")
+		return nil, fmt.Errorf("The validator preference list is not valid")
 	}
 
-	return nil
+	return valSetPref, nil
 }
 
 // DelegateToValidatorSet delegates to a delegators existing validator-set.
@@ -302,14 +302,38 @@ func (k Keeper) getValAddrAndVal(ctx sdk.Context, valOperAddress string) (sdk.Va
 }
 
 // IsPreferenceValid loops through the validator preferences and checks its existence and validity.
-func (k Keeper) IsPreferenceValid(ctx sdk.Context, preferences []types.ValidatorPreference) bool {
+func (k Keeper) IsPreferenceValid(ctx sdk.Context, preferences []types.ValidatorPreference) ([]types.ValidatorPreference, bool) {
+	var weightsRoundedValPrefList []types.ValidatorPreference
 	for _, val := range preferences {
-		_, _, err := k.GetValidatorInfo(ctx, val.ValOperAddress)
+		// round up weights
+		valWeightStr, err := k.RoundValidatorWeights(ctx, val.Weight)
 		if err != nil {
-			return false
+			return nil, false
 		}
+
+		_, _, err = k.GetValidatorInfo(ctx, val.ValOperAddress)
+		if err != nil {
+			return nil, false
+		}
+
+		weightsRoundedValPrefList = append(weightsRoundedValPrefList, types.ValidatorPreference{
+			ValOperAddress: val.ValOperAddress,
+			Weight:         sdk.MustNewDecFromStr(valWeightStr),
+		})
 	}
-	return true
+
+	return weightsRoundedValPrefList, true
+}
+
+// RoundValidatorWeights rounds to 2 digit after the decimal. For ex: 0.999 = 1.0, 0.874 = 0.87, 0.5123 = 0.51
+func (k Keeper) RoundValidatorWeights(ctx sdk.Context, totalWeight sdk.Dec) (string, error) {
+	totalWeightFloat64, err := totalWeight.Float64()
+	if err != nil {
+		return "", err
+	}
+
+	roundedValueStr := fmt.Sprintf("%.2f", totalWeightFloat64)
+	return roundedValueStr, nil
 }
 
 // IsValidatorSetEqual returns true if the two preferences are equal.
