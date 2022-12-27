@@ -3,11 +3,10 @@ package osmoutils
 import (
 	"errors"
 	"fmt"
-	"reflect"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	"reflect"
 )
 
 type AccountKeeper interface {
@@ -48,7 +47,7 @@ func CanCreateModuleAccountAtAddr(ctx sdk.Context, ak AccountKeeper, addr sdk.Ac
 		reflect.TypeOf(&vestingtypes.BaseVestingAccount{}):       {},
 		reflect.TypeOf(&vestingtypes.PeriodicVestingAccount{}):   {},
 		reflect.TypeOf(&vestingtypes.PermanentLockedAccount{}):   {},
-		reflect.TypeOf(&vestingtypes.ClawbackVestingAccount{}):   {},
+		//reflect.TypeOf(&vestingtypes.ClawbackVestingAccount{}):   {},
 	}
 	if _, clear := overrideAccountTypes[reflect.TypeOf(existingAcct)]; clear {
 		return nil
