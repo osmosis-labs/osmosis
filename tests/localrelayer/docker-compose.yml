@@ -2,7 +2,7 @@ version: "3"
 
 services:
 
-  localosmosis-a:
+  localosmosis:
     image: local:osmosis
     build:
       context: ../../
@@ -11,13 +11,13 @@ services:
         RUNNER_IMAGE: alpine:3.16
         GO_VERSION: 1.18
     volumes:
-      - ./scripts/setup_chain.sh:/osmosis/setup.sh
+      - ./scripts/setup_osmosis.sh:/osmosis/setup.sh
       - $HOME/.osmosisd-local-a/:/osmosis/.osmosisd/
     entrypoint:
       - /osmosis/setup.sh
     environment:
-      - CHAIN_ID=localosmosis-a
-      - VALIDATOR_MONIKER=validator-a
+      - CHAIN_ID=localosmosis
+      - VALIDATOR_MONIKER=validator
       - VALIDATOR_MNEMONIC=family album bird seek tilt color pill danger message abuse manual tent almost ridge boost blast high comic core quantum spoon coconut oyster remove
       - FAUCET_MNEMONIC=increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great
       - RELAYER_MNEMONIC=black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken
@@ -28,10 +28,10 @@ services:
     networks:
       - localosmosis
     
-  faucet-a:
+  faucet-osmosis:
     command:
       - start
-      - localosmosis-a:26657
+      - localosmosis:26657
     image: confio/faucet:0.28.11
     environment:
       FAUCET_CONCURRENCY:         1
@@ -49,59 +49,51 @@ services:
     ports:
       - 8000:8000
     depends_on:
-      - localosmosis-a
+      - localosmosis
     networks:
       - localosmosis
-
-  localosmosis-b:
-    image: local:osmosis
-    build:
-      context: ../../
-      dockerfile: Dockerfile
-      args:
-        RUNNER_IMAGE: alpine:3.16
-        GO_VERSION: 1.18
+    
+  localjuno:
+    image: osmolabs/juno-dev:main
     volumes:
-      - ./scripts/setup_chain.sh:/osmosis/setup.sh
-      - $HOME/.osmosisd-local-b/:/osmosis/.osmosisd/
+      - ./scripts/setup_juno.sh:/root/setup.sh
+      - $HOME/.junod-local-a/:/root/.juno/
     entrypoint:
-      - /osmosis/setup.sh
+      - /root/setup.sh
     environment:
-      - CHAIN_ID=localosmosis-b
-      - VALIDATOR_MONIKER=validator-b
+      - CHAIN_ID=localjuno
+      - VALIDATOR_MONIKER=validator
       - VALIDATOR_MNEMONIC=family album bird seek tilt color pill danger message abuse manual tent almost ridge boost blast high comic core quantum spoon coconut oyster remove
       - FAUCET_MNEMONIC=increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great
       - RELAYER_MNEMONIC=black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken
     ports:
-      # Can't use the same ports
       - 36657:26657
       - 31317:1317
       - 39090:9090
     networks:
       - localosmosis
     
-  faucet-b:
+  faucet-juno:
     command:
       - start
-      - localosmosis-b:26657
+      - juno:26657
     image: confio/faucet:0.28.11
     environment:
       FAUCET_CONCURRENCY:         1
       FAUCET_MNEMONIC:            "increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great"
       FAUCET_PORT:                8000
-      FAUCET_GAS_PRICE:           0.025uosmo
+      FAUCET_GAS_PRICE:           0.025ujuno
       FAUCET_PATH_PATTERN:        "m/44'/118'/0'/0/a"
-      FAUCET_ADDRESS_PREFIX:      osmo
-      FAUCET_TOKENS:              uosmo,uion
-      FAUCET_CREDIT_AMOUNT_UOSMO: 10000000   # 10 osmo  
-      FAUCET_CREDIT_AMOUNT_UION:  100000     # 0.1 ion
+      FAUCET_ADDRESS_PREFIX:      juno
+      FAUCET_TOKENS:              ujuno
+      FAUCET_CREDIT_AMOUNT_UJUNO: 10000000   # 10 juno  
       FAUCET_REFILL_FACTOR:       8
       FAUCET_REFILL_THRESHOLD:    20
       FAUCET_COOLDOWN_TIME:       30         # 30s
     ports:
       - 38000:8000
     depends_on:
-    - localosmosis-b
+    - localjuno
     networks:
       - localosmosis
 
@@ -110,19 +102,26 @@ services:
     user: root:root
     volumes:
       - ./scripts/setup_hermes.sh:/home/hermes/setup.sh
-      - ./config/hermes/config.toml:/root/.hermes/config.toml
+      - ./config/hermes/config.toml:/etc/hermes/config.toml
     entrypoint:
       - /home/hermes/setup.sh
     environment:
-      - CHAIN_A_ID=localosmosis-a
+      - CHAIN_A_ID=localosmosis
+      - CHAIN_A_HOST=localosmosis
       - CHAIN_A_MNEMONIC=black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken
-      - CHAIN_B_ID=localosmosis-b
+      - CHAIN_A_ADDRESS_PREFIX=osmo
+      - CHAIN_A_TOKEN=uosmo
+      - CHAIN_B_ID=localjuno
+      - CHAIN_B_HOST=localjuno
       - CHAIN_B_MNEMONIC=black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken
+      - CHAIN_B_ADDRESS_PREFIX=juno
+      - CHAIN_B_TOKEN=ujuno
+
     ports:
       - 3000:3000
     depends_on:
-      - localosmosis-a
-      - localosmosis-b
+      - localosmosis
+      - localjuno
     networks:
       - localosmosis
 

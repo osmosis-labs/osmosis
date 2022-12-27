@@ -165,58 +165,29 @@ Exec inside the container:
 docker exec -ti localrelayer-hermes-1 sh
 ```
 
-Send a transaction:
+Send a transaction from juno to osmosis:
 
 ```bash
 hermes tx ft-transfer --timeout-seconds 1000 \
-    --dst-chain localosmosis-a \
-    --src-chain localosmosis-b \
+    --dst-chain localosmosis \
+    --src-chain localjuno \
     --src-port transfer \
     --src-channel channel-0 \
     --amount 100 \
-    --denom uosmo
+    --denom ujuno
 ```
 
-Expected output:
+Or from osmosis container:
 
 ```bash
-2022-12-01T11:41:22.351909Z  INFO ThreadId(01) using default configuration from '/root/.hermes/config.toml'
-SUCCESS [
-    IbcEventWithHeight {
-        event: SendPacket(
-            SendPacket {
-                packet: Packet {
-                    sequence: Sequence(
-                        1,
-                    ),
-                    source_port: PortId(
-                        "transfer",
-                    ),
-                    source_channel: ChannelId(
-                        "channel-0",
-                    ),
-                    destination_port: PortId(
-                        "transfer",
-                    ),
-                    destination_channel: ChannelId(
-                        "channel-0",
-                    ),
-                    data: [123, 34, 97, 109, 111, 117, 110, 116, 34, 58, 34, 49, 48, 48, 34, 44, 34, 100, 101, 110, 111, 109, 34, 58, 34, 117, 111, 115, 109, 111, 34, 44, 34, 114, 101, 99, 101, 105, 118, 101, 114, 34, 58, 34, 111, 115, 109, 111, 49, 113, 118, 100, 101, 117, 52, 120, 51, 52, 114, 97, 112, 112, 51, 119, 99, 56, 102, 121, 109, 53, 103, 52, 119, 117, 51, 52, 51, 109, 115, 119, 120, 50, 101, 120, 107, 117, 103, 34, 44, 34, 115, 101, 110, 100, 101, 114, 34, 58, 34, 111, 115, 109, 111, 49, 113, 118, 100, 101, 117, 52, 120, 51, 52, 114, 97, 112, 112, 51, 119, 99, 56, 102, 121, 109, 53, 103, 52, 119, 117, 51, 52, 51, 109, 115, 119, 120, 50, 101, 120, 107, 117, 103, 34, 125],
-                    timeout_height: Never,
-                    timeout_timestamp: Timestamp {
-                        time: Some(
-                            Time(
-                                2022-12-01 11:57:59.365129852,
-                            ),
-                        ),
-                    },
-                },
-            },
-        ),
-        height: Height {
-            revision: 0,
-            height: 1607,
-        },
-    },
-]
+osmosisd tx ibc-transfer transfer transfer channel-0 \
+  juno1qvdeu4x34rapp3wc8fym5g4wu343mswx5skadx  \
+  --keyring-backend test \
+  --chain-id localosmosis \
+  1uosmo \
+  --from validator -y \
+  --gas auto \
+  --gas-prices 0.1uosmo \
+  --gas-adjustment 1.3 \
+  --memo '{"my-memo": "message"}'
 ```

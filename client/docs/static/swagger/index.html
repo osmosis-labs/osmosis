@@ -45,7 +45,7 @@
         deepLinking: true,
         presets: [
           SwaggerUIBundle.presets.apis,
-          SwaggerUIStandalonePreset
+          SwaggerUIStandalonePreset.slice(1) // here
         ],
         plugins: [
           SwaggerUIBundle.plugins.DownloadUrl
