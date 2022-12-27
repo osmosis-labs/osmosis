@@ -64,6 +64,8 @@ func ParseSdkDecFromString(s string, separator string) ([]sdk.Dec, error) {
 	return parsedDec, nil
 }
 
+// ParseSdkValAddressFromString seperates string address into string slice.
+// We donot check validity of address here because we do that in ValidateBasic.
 func ParseSdkValAddressFromString(s string, separator string) []string {
 	var parsedAddrStr []string
 	for _, addr := range strings.Split(s, separator) {
