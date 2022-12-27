@@ -27,7 +27,7 @@ func (suite *KeeperTestSuite) PrepareDelegateToValidatorSet() []types.ValidatorP
 		},
 		{
 			ValOperAddress: valAddrs[1],
-			Weight:         sdk.NewDecWithPrec(332, 3), // 0.332
+			Weight:         sdk.NewDecWithPrec(332, 3), // 0.33
 		},
 		{
 			ValOperAddress: valAddrs[2],
@@ -35,7 +35,7 @@ func (suite *KeeperTestSuite) PrepareDelegateToValidatorSet() []types.ValidatorP
 		},
 		{
 			ValOperAddress: valAddrs[3],
-			Weight:         sdk.NewDecWithPrec(348, 3), // 0.348
+			Weight:         sdk.NewDecWithPrec(348, 3), // 0.35
 		},
 	}
 
