@@ -43,7 +43,6 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 	if err != nil {
 		return 0, err
 	}
-	fmt.Printf("pool %v \n", pool.String())
 
 	k.SetPoolRoute(ctx, poolId, msg.GetPoolType())
 
@@ -55,11 +54,9 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 	if err := osmoutils.CreateModuleAccount(ctx, k.accountKeeper, pool.GetAddress()); err != nil {
 		return 0, fmt.Errorf("creating pool module account for id %d: %w", poolId, err)
 	}
-	fmt.Printf("msg.GetPoolType() %v \n", msg.GetPoolType())
 
 	// Run the respective pool type's initialization logic.
 	swapModule := k.routes[msg.GetPoolType()]
-	fmt.Printf("swapModule %v \n", swapModule)
 	if err := swapModule.InitializePool(ctx, pool, sender); err != nil {
 		return 0, err
 	}
