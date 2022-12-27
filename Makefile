@@ -218,7 +218,7 @@ include sims.mk
 
 test: test-unit test-build
 
-test-all: check test-race test-cover
+test-all: test-race test-cover
 
 test-unit:
 	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock norace' $(PACKAGES_UNIT)
