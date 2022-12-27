@@ -25,7 +25,7 @@ cd ..
 #
 # Note: Proto files are suffixed with the current binary version.
 cp -r github.com/osmosis-labs/osmosis/v13/* ./
-cp -r github.com/osmosis-labs/osmosis/osmoutils ./osmoutils
+cp -r github.com/osmosis-labs/osmosis/osmoutils ./
 rm -rf github.com
 
 go mod tidy -compat=1.18
