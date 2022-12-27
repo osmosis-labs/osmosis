@@ -37,6 +37,7 @@ func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, pre
 }
 
 // DelegateToValidatorSet delegates to a delegators existing validator-set.
+// If the valset doesnot exist, it delegates to existing staking position.
 // For ex: delegate 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
 // our delegate logic would attempt to delegate 5osmo to A , 2osmo to B, 3osmo to C
 func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
@@ -73,6 +74,7 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 }
 
 // UndelegateFromValidatorSet undelegates {coin} amount from the validator set.
+// If the valset doesnot exist, it undelegates from existing staking position.
 // For ex: userA has staked 10tokens with weight {Val->0.5, ValB->0.3, ValC->0.2}
 // undelegate 6osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
 // our undelegate logic would attempt to undelegate 3osmo from A, 1.8osmo from B, 1.2osmo from C
@@ -212,6 +214,7 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 }
 
 // WithdrawDelegationRewards withdraws all the delegation rewards from the validator in the val-set.
+// If the valset doesnot exist, it withdraws from existing staking position.
 // Delegation reward is collected by the validator and in doing so, they can charge commission to the delegators.
 // Rewards are calculated per period, and is updated each time validator delegation changes. For ex: when a delegator
 // receives new delgation the rewards can be calculated by taking (total rewards before new delegation - the total current rewards).
