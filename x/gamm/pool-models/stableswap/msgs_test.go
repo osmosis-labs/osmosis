@@ -3,10 +3,9 @@ package stableswap_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 
 	appParams "github.com/osmosis-labs/osmosis/v13/app/params"
 	stableswap "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
@@ -294,5 +293,46 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 		} else {
 			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
 		}
+	}
+}
+
+func (suite *TestSuite) TestMsgCreateStableswapPool() {
+	suite.SetupTest()
+	tests := map[string]struct {
+		msg         stableswap.MsgCreateStableswapPool
+		poolId      uint64
+		expectError error
+	}{
+		"basic success test": {
+			msg: stableswap.MsgCreateStableswapPool{
+				Sender:                  suite.TestAccs[0].String(),
+				PoolParams:              &stableswap.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2), ExitFee: sdk.NewDecWithPrec(1, 3)},
+				InitialPoolLiquidity:    sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(1_000_000)), sdk.NewCoin("usdt", sdk.NewInt(2_000_000))),
+				ScalingFactors:          []uint64{1, 1},
+				FuturePoolGovernor:      "",
+				ScalingFactorController: "",
+			},
+			poolId:      1,
+			expectError: nil,
+		},
+		// TODO: add more tests and assertions.
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+
+			pool, err := tc.msg.CreatePool(suite.Ctx, 1)
+
+			if tc.expectError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, tc.expectError)
+				return
+			}
+			suite.Require().NoError(err)
+
+			suite.Require().Equal(tc.poolId, pool.GetId())
+			suite.Require().Equal(tc.msg.InitialPoolLiquidity, pool.GetTotalPoolLiquidity(suite.Ctx))
+			suite.Require().Equal(types.InitPoolSharesSupply, pool.GetTotalShares())
+		})
 	}
 }

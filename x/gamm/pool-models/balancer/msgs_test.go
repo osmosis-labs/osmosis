@@ -8,12 +8,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
 	appParams "github.com/osmosis-labs/osmosis/v13/app/params"
 	balancer "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
 
-func TestMsgCreateBalancerPool(t *testing.T) {
+func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
@@ -238,5 +239,47 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		} else {
 			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
 		}
+	}
+}
+
+func (suite *KeeperTestSuite) TestMsgCreatePool() {
+	suite.SetupTest()
+	tests := map[string]struct {
+		msg         balancer.MsgCreateBalancerPool
+		poolId      uint64
+		expectError error
+	}{
+		"basic success test": {
+			msg: balancer.MsgCreateBalancerPool{
+				Sender:             suite.TestAccs[0].String(),
+				PoolParams:         &balancer.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2), ExitFee: sdk.NewDecWithPrec(1, 3)},
+				PoolAssets:         apptesting.DefaultPoolAssets,
+				FuturePoolGovernor: "",
+			},
+			poolId:      1,
+			expectError: nil,
+		},
+		// TODO: add more tests and assertions.
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			pool, err := tc.msg.CreatePool(suite.Ctx, 1)
+
+			if tc.expectError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, tc.expectError)
+				return
+			}
+			suite.Require().NoError(err)
+
+			suite.Require().Equal(tc.poolId, pool.GetId())
+			expectedPoolLiquidity := sdk.NewCoins()
+			for _, asset := range tc.msg.PoolAssets {
+				expectedPoolLiquidity = expectedPoolLiquidity.Add(asset.Token)
+			}
+			suite.Require().Equal(expectedPoolLiquidity, pool.GetTotalPoolLiquidity(suite.Ctx))
+			suite.Require().Equal(types.InitPoolSharesSupply, pool.GetTotalShares())
+		})
 	}
 }
