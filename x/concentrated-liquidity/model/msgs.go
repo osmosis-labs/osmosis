@@ -26,12 +26,14 @@ func NewMsgCreateConcentratedPool(
 	denom0 string,
 	denom1 string,
 	tickSpacing uint64,
+	precisionFactorAtPriceOne sdk.Int,
 ) MsgCreateConcentratedPool {
 	return MsgCreateConcentratedPool{
-		Sender:      sender.String(),
-		Denom0:      denom0,
-		Denom1:      denom1,
-		TickSpacing: tickSpacing,
+		Sender:                    sender.String(),
+		Denom0:                    denom0,
+		Denom1:                    denom1,
+		TickSpacing:               tickSpacing,
+		PrecisionFactorAtPriceOne: precisionFactorAtPriceOne,
 	}
 }
 
@@ -95,7 +97,7 @@ func (msg MsgCreateConcentratedPool) InitialLiquidity() sdk.Coins {
 }
 
 func (msg MsgCreateConcentratedPool) CreatePool(ctx sdk.Context, poolID uint64) (swaproutertypes.PoolI, error) {
-	poolI, err := NewConcentratedLiquidityPool(poolID, msg.Denom0, msg.Denom1, msg.TickSpacing)
+	poolI, err := NewConcentratedLiquidityPool(poolID, msg.Denom0, msg.Denom1, msg.TickSpacing, msg.PrecisionFactorAtPriceOne)
 	return &poolI, err
 }
 

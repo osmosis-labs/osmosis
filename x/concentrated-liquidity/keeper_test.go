@@ -11,21 +11,22 @@ import (
 )
 
 var (
+	DefaultPrecisionValue   = sdk.NewInt(-4)
 	DefaultLowerPrice       = sdk.NewDec(4545)
-	DefaultLowerTick        = int64(84222)
+	DefaultLowerTick        = int64(305450)
 	DefaultUpperPrice       = sdk.NewDec(5500)
-	DefaultUpperTick        = int64(86129)
+	DefaultUpperTick        = int64(315000)
 	DefaultCurrPrice        = sdk.NewDec(5000)
-	DefaultCurrTick         = sdk.NewInt(85176)
+	DefaultCurrTick         = sdk.NewInt(310000)
 	DefaultCurrSqrtPrice, _ = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
 	DefaultZeroSwapFee      = sdk.ZeroDec()
 	ETH                     = "eth"
 	DefaultAmt0             = sdk.NewInt(1000000)
-	DefaultAmt0Expected     = sdk.NewInt(998587)
+	DefaultAmt0Expected     = sdk.NewInt(998976)
 	USDC                    = "usdc"
 	DefaultAmt1             = sdk.NewInt(5000000000)
 	DefaultAmt1Expected     = sdk.NewInt(5000000000)
-	DefaultLiquidityAmt     = sdk.MustNewDecFromStr("1517818840.967515822610790519")
+	DefaultLiquidityAmt     = sdk.MustNewDecFromStr("1517882343.751510418088349649")
 	DefaultTickSpacing      = uint64(1)
 	PoolCreationFee         = swaproutertypes.DefaultParams().PoolCreationFee
 )

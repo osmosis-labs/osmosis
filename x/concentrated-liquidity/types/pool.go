@@ -14,6 +14,7 @@ type ConcentratedPoolExtension interface {
 	GetToken1() string
 	GetCurrentSqrtPrice() sdk.Dec
 	GetCurrentTick() sdk.Int
+	GetPrecisionFactorAtPriceOne() sdk.Int
 	GetTickSpacing() uint64
 	GetLiquidity() sdk.Dec
 	SetCurrentSqrtPrice(newSqrtPrice sdk.Dec)

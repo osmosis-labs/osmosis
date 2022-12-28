@@ -17,7 +17,7 @@ var (
 
 // NewConcentratedLiquidityPool creates a new ConcentratedLiquidity pool with the specified parameters.
 // The two provided denoms are ordered so that denom0 is lexicographically smaller than denom1.
-func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpacing uint64) (Pool, error) {
+func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpacing uint64, precisionValueAtPriceOne sdk.Int) (Pool, error) {
 	// Order the initial pool denoms so that denom0 is lexicographically smaller than denom1.
 	denom0, denom1, err := types.OrderInitialPoolDenoms(denom0, denom1)
 	if err != nil {
@@ -27,14 +27,15 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 	// Create a new pool struct with the specified parameters
 	pool := Pool{
 		// TODO: move gammtypes.NewPoolAddress(poolId) to swaproutertypes
-		Address:          gammtypes.NewPoolAddress(poolId).String(),
-		Id:               poolId,
-		CurrentSqrtPrice: sdk.ZeroDec(),
-		CurrentTick:      sdk.ZeroInt(),
-		Liquidity:        sdk.ZeroDec(),
-		Token0:           denom0,
-		Token1:           denom1,
-		TickSpacing:      tickSpacing,
+		Address:                   gammtypes.NewPoolAddress(poolId).String(),
+		Id:                        poolId,
+		CurrentSqrtPrice:          sdk.ZeroDec(),
+		CurrentTick:               sdk.ZeroInt(),
+		Liquidity:                 sdk.ZeroDec(),
+		Token0:                    denom0,
+		Token1:                    denom1,
+		TickSpacing:               tickSpacing,
+		PrecisionFactorAtPriceOne: precisionValueAtPriceOne,
 	}
 
 	return pool, nil
@@ -125,6 +126,11 @@ func (p Pool) GetCurrentTick() sdk.Int {
 // GetTickSpacing returns the current tick spacing parameter of the pool
 func (p Pool) GetTickSpacing() uint64 {
 	return p.TickSpacing
+}
+
+// GetPrecisionFactorAtPriceOne returns the precision factor at price one of the pool
+func (p Pool) GetPrecisionFactorAtPriceOne() sdk.Int {
+	return p.PrecisionFactorAtPriceOne
 }
 
 // GetLiquidity returns the liquidity of the pool

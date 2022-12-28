@@ -6,8 +6,8 @@ import (
 
 // TODO: decide on the values for Max tick and Min tick
 var (
-	MinTick int64 = -887272
-	MaxTick int64 = 887272
+	MinTick int64 = -9999887272
+	MaxTick int64 = 9999887272
 
 	MaxSqrtRatio = sdk.MustNewDecFromStr("18446050711097703529.7763428")
 	// TODO: this is a temp value, figure out math for this.
