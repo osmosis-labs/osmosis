@@ -44,10 +44,10 @@ func (h EpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epoch
 			return h.k.UpdatePools(ctx)
 		case "day":
 			// Increment number of days since genesis to properly calculate developer fees after cyclic arbitrage trades
-			if daysSinceGenesis, err := h.k.GetDaysSinceGenesis(ctx); err != nil {
-				h.k.SetDaysSinceGenesis(ctx, 1)
+			if daysSinceGenesis, err := h.k.GetDaysSinceModuleGenesis(ctx); err != nil {
+				h.k.SetDaysSinceModuleGenesis(ctx, 1)
 			} else {
-				h.k.SetDaysSinceGenesis(ctx, daysSinceGenesis+1)
+				h.k.SetDaysSinceModuleGenesis(ctx, daysSinceGenesis+1)
 			}
 		}
 	}

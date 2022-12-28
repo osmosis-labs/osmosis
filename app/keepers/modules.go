@@ -38,7 +38,6 @@ import (
 	poolincentives "github.com/osmosis-labs/osmosis/v13/x/pool-incentives"
 	poolincentivesclient "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/client"
 	"github.com/osmosis-labs/osmosis/v13/x/protorev"
-	protorevclient "github.com/osmosis-labs/osmosis/v13/x/protorev/client"
 	superfluid "github.com/osmosis-labs/osmosis/v13/x/superfluid"
 	superfluidclient "github.com/osmosis-labs/osmosis/v13/x/superfluid/client"
 	swaprouter "github.com/osmosis-labs/osmosis/v13/x/swaprouter/module"
@@ -70,8 +69,6 @@ var AppModuleBasics = []module.AppModuleBasic{
 			poolincentivesclient.ReplacePoolIncentivesHandler,
 			ibcclientclient.UpdateClientProposalHandler,
 			ibcclientclient.UpgradeProposalHandler,
-			protorevclient.SetProtoRevAdminAccountProposalHandler,
-			protorevclient.SetProtoRevEnabledProposalHandler,
 			superfluidclient.SetSuperfluidAssetsProposalHandler,
 			superfluidclient.RemoveSuperfluidAssetsProposalHandler,
 			superfluidclient.UpdateUnpoolWhitelistProposalHandler,

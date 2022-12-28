@@ -30,13 +30,11 @@ func (k Keeper) SendDeveloperFeesToDeveloperAccount(ctx sdk.Context) error {
 }
 
 // UpdateDeveloperFees updates the fees that developers can withdraw from the module account
-func (k Keeper) UpdateDeveloperFees(ctx sdk.Context, inputCoin sdk.Coin, tokenOutAmount sdk.Int) error {
-	daysSinceGenesis, err := k.GetDaysSinceGenesis(ctx)
+func (k Keeper) UpdateDeveloperFees(ctx sdk.Context, denom string, profit sdk.Int) error {
+	daysSinceGenesis, err := k.GetDaysSinceModuleGenesis(ctx)
 	if err != nil {
 		return err
 	}
-
-	profit := tokenOutAmount.Sub(inputCoin.Amount)
 
 	// Calculate the developer fee
 	if daysSinceGenesis < 365 {
@@ -51,9 +49,9 @@ func (k Keeper) UpdateDeveloperFees(ctx sdk.Context, inputCoin sdk.Coin, tokenOu
 	}
 
 	// Get the developer fees for the denom, if not there then set it to 0 and initialize it
-	currentDeveloperFee, err := k.GetDeveloperFees(ctx, inputCoin.Denom)
+	currentDeveloperFee, err := k.GetDeveloperFees(ctx, denom)
 	if err != nil {
-		currentDeveloperFee = sdk.NewCoin(inputCoin.Denom, sdk.ZeroInt())
+		currentDeveloperFee = sdk.NewCoin(denom, sdk.ZeroInt())
 	}
 	currentDeveloperFee.Amount = currentDeveloperFee.Amount.Add(profit)
 

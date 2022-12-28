@@ -137,7 +137,7 @@ func (suite *KeeperTestSuite) TestUpdateStatistics() {
 	// Psuedo execute a trade
 	err := suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx,
 		swaproutertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}},
-		sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(800)),
+		types.OsmosisDenomination,
 		sdk.NewInt(1000),
 	)
 	suite.Require().NoError(err)
@@ -150,7 +150,7 @@ func (suite *KeeperTestSuite) TestUpdateStatistics() {
 	// Check the result of GetProfitsByRoute
 	profit, err := suite.App.AppKeepers.ProtoRevKeeper.GetProfitsByRoute(suite.Ctx, []uint64{1, 2, 3}, types.OsmosisDenomination)
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(200)), profit)
+	suite.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(1000)), profit)
 
 	// Check the result of GetAllRoutes
 	routes, err := suite.App.AppKeepers.ProtoRevKeeper.GetAllRoutes(suite.Ctx)
@@ -160,7 +160,7 @@ func (suite *KeeperTestSuite) TestUpdateStatistics() {
 	// Psuedo execute a second trade
 	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx,
 		swaproutertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}, {TokenOutDenom: "", PoolId: 4}},
-		sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(850)),
+		types.OsmosisDenomination,
 		sdk.NewInt(1100),
 	)
 	suite.Require().NoError(err)
@@ -173,7 +173,7 @@ func (suite *KeeperTestSuite) TestUpdateStatistics() {
 	// Check the result of GetProfitsByRoute
 	profit, err = suite.App.AppKeepers.ProtoRevKeeper.GetProfitsByRoute(suite.Ctx, []uint64{2, 3, 4}, types.OsmosisDenomination)
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(250)), profit)
+	suite.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(1100)), profit)
 
 	// Check the result of GetAllRoutes
 	routes, err = suite.App.AppKeepers.ProtoRevKeeper.GetAllRoutes(suite.Ctx)

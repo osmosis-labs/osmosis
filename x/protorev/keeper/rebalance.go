@@ -128,7 +128,7 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route swaproutertypes.Swa
 }
 
 // ExecuteTrade inputs a route, amount in, and rebalances the pool
-func (k Keeper) ExecuteTrade(ctx sdk.Context, route swaproutertypes.SwapAmountInRoutes, inputCoin sdk.Coin, poolId uint64) error {
+func (k Keeper) ExecuteTrade(ctx sdk.Context, route swaproutertypes.SwapAmountInRoutes, inputCoin sdk.Coin) error {
 	// Get the module address which will execute the trade
 	protorevModuleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
 
@@ -148,13 +148,16 @@ func (k Keeper) ExecuteTrade(ctx sdk.Context, route swaproutertypes.SwapAmountIn
 		return err
 	}
 
+	// Profit from the trade
+	profit := tokenOutAmount.Sub(inputCoin.Amount)
+
 	// Update the module statistics stores
-	if err = k.UpdateStatistics(ctx, route, inputCoin, tokenOutAmount); err != nil {
+	if err = k.UpdateStatistics(ctx, route, inputCoin.Denom, profit); err != nil {
 		return err
 	}
 
 	// Update the developer fees
-	if err = k.UpdateDeveloperFees(ctx, inputCoin, tokenOutAmount); err != nil {
+	if err = k.UpdateDeveloperFees(ctx, inputCoin.Denom, profit); err != nil {
 		return err
 	}
 
