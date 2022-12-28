@@ -62,6 +62,9 @@ func TestExportGenesis(t *testing.T) {
 // TestMarshalUnmarshalGenesis tests the MarshalUnmarshalGenesis functions of the ConcentratedLiquidityKeeper.
 // It checks that the exported genesis can be marshaled and unmarshaled without panicking.
 func TestMarshalUnmarshalGenesis(t *testing.T) {
+
+	t.Skip("TODO: re-enable this when CL state-breakage PR is merged.")
+
 	// Set up the app and context
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
