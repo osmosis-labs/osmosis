@@ -17,9 +17,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v14/x/protorev/client/cli"
 	"github.com/osmosis-labs/osmosis/v14/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+=======
+	"github.com/osmosis-labs/osmosis/v13/x/protorev/client/cli"
+	"github.com/osmosis-labs/osmosis/v13/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
+>>>>>>> d1932e5b4 (rebase, logging, clean up of proposal cli)
 )
 
 var (
