@@ -3,8 +3,6 @@ package ibc_hooks_test
 import (
 	"encoding/json"
 	"fmt"
-	"testing"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
@@ -25,9 +23,10 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 
-	osmosisibctesting "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/testutil"
 
 	"github.com/osmosis-labs/osmosis/v13/tests/ibc-hooks/testutils"
+	osmosisibctesting "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/testutil"
+	"testing"
 )
 
 type HooksTestSuite struct {
