@@ -48,7 +48,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 	// Init module state
 	k.SetProtoRevEnabled(ctx, genState.Params.Enabled)
-	k.SetDaysSinceGenesis(ctx, 0)
+	k.SetDaysSinceModuleGenesis(ctx, 0)
 
 	// Default we only allow 3 pools to be arbitraged against per tx
 	if err := k.SetMaxPools(ctx, 3); err != nil {
