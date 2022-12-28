@@ -298,24 +298,42 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 
 func (suite *TestSuite) TestMsgCreateStableswapPool() {
 	suite.SetupTest()
+
+	var (
+		validParams           = &stableswap.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2), ExitFee: sdk.NewDecWithPrec(1, 3)}
+		validInitialLiquidity = sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(1_000_000)), sdk.NewCoin("usdt", sdk.NewInt(2_000_000)))
+		validScalingFactors   = []uint64{1, 1}
+		invalidScalingFactors = []uint64{1, 1, 1}
+	)
+
 	tests := map[string]struct {
 		msg         stableswap.MsgCreateStableswapPool
 		poolId      uint64
-		expectError error
+		expectError bool
 	}{
 		"basic success test": {
 			msg: stableswap.MsgCreateStableswapPool{
 				Sender:                  suite.TestAccs[0].String(),
-				PoolParams:              &stableswap.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2), ExitFee: sdk.NewDecWithPrec(1, 3)},
-				InitialPoolLiquidity:    sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(1_000_000)), sdk.NewCoin("usdt", sdk.NewInt(2_000_000))),
-				ScalingFactors:          []uint64{1, 1},
+				PoolParams:              validParams,
+				InitialPoolLiquidity:    validInitialLiquidity,
+				ScalingFactors:          validScalingFactors,
+				FuturePoolGovernor:      "",
+				ScalingFactorController: "",
+			},
+			poolId: 1,
+		},
+		"error test - more scaling factors than initial liquidity": {
+			msg: stableswap.MsgCreateStableswapPool{
+				Sender:                  suite.TestAccs[0].String(),
+				PoolParams:              validParams,
+				InitialPoolLiquidity:    validInitialLiquidity,
+				ScalingFactors:          invalidScalingFactors,
 				FuturePoolGovernor:      "",
 				ScalingFactorController: "",
 			},
 			poolId:      1,
-			expectError: nil,
+			expectError: true,
 		},
-		// TODO: add more tests and assertions.
 	}
 
 	for name, tc := range tests {
@@ -323,9 +341,8 @@ func (suite *TestSuite) TestMsgCreateStableswapPool() {
 
 			pool, err := tc.msg.CreatePool(suite.Ctx, 1)
 
-			if tc.expectError != nil {
+			if tc.expectError {
 				suite.Require().Error(err)
-				suite.Require().ErrorIs(err, tc.expectError)
 				return
 			}
 			suite.Require().NoError(err)
