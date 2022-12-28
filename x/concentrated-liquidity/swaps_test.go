@@ -1170,7 +1170,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 				s.Require().Greater(gasConsumedForSwap, uint64(cltypes.ConcentratedGasFeeForSwap))
 
 				// Assert events
-				s.AssertEventEmitted(s.Ctx, swaproutertypes.TypeEvtTokenSwapped, 1)
+				s.AssertEventEmitted(s.Ctx, cltypes.TypeEvtTokenSwapped, 1)
 
 				// Retrieve pool again post swap
 				pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
@@ -1314,7 +1314,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 				s.Require().Greater(gasConsumedForSwap, uint64(cltypes.ConcentratedGasFeeForSwap))
 
 				// Assert events
-				s.AssertEventEmitted(s.Ctx, swaproutertypes.TypeEvtTokenSwapped, 1)
+				s.AssertEventEmitted(s.Ctx, cltypes.TypeEvtTokenSwapped, 1)
 
 				// Retrieve pool again post swap
 				pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
