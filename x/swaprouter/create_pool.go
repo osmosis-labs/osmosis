@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
@@ -18,11 +18,11 @@ func (k Keeper) validateCreatedPool(
 	pool types.PoolI,
 ) error {
 	if pool.GetId() != poolId {
-		return errors.Wrapf(types.ErrInvalidPool,
+		return sdkerrors.Wrapf(types.ErrInvalidPool,
 			"Pool was attempted to be created with incorrect pool ID.")
 	}
 	if !pool.GetAddress().Equals(gammtypes.NewPoolAddress(poolId)) {
-		return errors.Wrapf(types.ErrInvalidPool,
+		return sdkerrors.Wrapf(types.ErrInvalidPool,
 			"Pool was attempted to be created with incorrect pool address.")
 	}
 	return nil
