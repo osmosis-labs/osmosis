@@ -242,12 +242,12 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 	}
 }
 
-func (suite *KeeperTestSuite) TestMsgCreatePool() {
+func (suite *KeeperTestSuite) TestMsgCreateBalancerPool() {
 	suite.SetupTest()
 	tests := map[string]struct {
 		msg         balancer.MsgCreateBalancerPool
 		poolId      uint64
-		expectError error
+		expectError bool
 	}{
 		"basic success test": {
 			msg: balancer.MsgCreateBalancerPool{
@@ -256,19 +256,26 @@ func (suite *KeeperTestSuite) TestMsgCreatePool() {
 				PoolAssets:         apptesting.DefaultPoolAssets,
 				FuturePoolGovernor: "",
 			},
-			poolId:      1,
-			expectError: nil,
+			poolId: 1,
 		},
-		// TODO: add more tests and assertions.
+		"error due to negative swap fee": {
+			msg: balancer.MsgCreateBalancerPool{
+				Sender:             suite.TestAccs[0].String(),
+				PoolParams:         &balancer.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2).Neg(), ExitFee: sdk.NewDecWithPrec(1, 3)},
+				PoolAssets:         apptesting.DefaultPoolAssets,
+				FuturePoolGovernor: "",
+			},
+			poolId:      2,
+			expectError: true,
+		},
 	}
 
 	for name, tc := range tests {
 		suite.Run(name, func() {
 			pool, err := tc.msg.CreatePool(suite.Ctx, 1)
 
-			if tc.expectError != nil {
+			if tc.expectError {
 				suite.Require().Error(err)
-				suite.Require().ErrorIs(err, tc.expectError)
 				return
 			}
 			suite.Require().NoError(err)

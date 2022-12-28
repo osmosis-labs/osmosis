@@ -331,7 +331,7 @@ func (suite *TestSuite) TestMsgCreateStableswapPool() {
 				FuturePoolGovernor:      "",
 				ScalingFactorController: "",
 			},
-			poolId:      1,
+			poolId:      2,
 			expectError: true,
 		},
 	}
