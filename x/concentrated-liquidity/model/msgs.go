@@ -100,3 +100,11 @@ func (msg MsgCreateConcentratedPool) CreatePool(ctx sdk.Context, poolID uint64) 
 func (msg MsgCreateConcentratedPool) GetPoolType() swaproutertypes.PoolType {
 	return swaproutertypes.Concentrated
 }
+
+// (msg Msg InitIncentiveAccum) Initialize Incentive Accum (instead of doing at pool creation)
+
+// (msg MsgAddIncentive) AddIncentive(id, pool, denom, amount, start time, duration) { should scale gas cost with # of denoms in incentives accumulator }
+// Note: will need to track time in accumulators and potentially create a new accum for each distr with a different rate (feels messy)
+// * alternatively, we could just pass into the accumulator an array of rates corresponding to each token and multiple the output by that (in addition to time)
+
+// (msg MsgAddIncentive) Getters

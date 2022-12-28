@@ -34,6 +34,7 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 		Liquidity:        sdk.ZeroDec(),
 		Token0:           denom0,
 		Token1:           denom1,
+		// Accumulators []AccumulatorObject (nood to add AccumulatorObject proto and update Pool proto)
 		TickSpacing:      tickSpacing,
 	}
 

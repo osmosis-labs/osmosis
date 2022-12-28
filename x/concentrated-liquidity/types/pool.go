@@ -16,6 +16,7 @@ type ConcentratedPoolExtension interface {
 	GetCurrentTick() sdk.Int
 	GetTickSpacing() uint64
 	GetLiquidity() sdk.Dec
+	// GetAccumulators() []AccumulatorObject
 	SetCurrentSqrtPrice(newSqrtPrice sdk.Dec)
 	SetCurrentTick(newTick sdk.Int)
 
