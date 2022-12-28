@@ -178,16 +178,16 @@ func (suite *KeeperTestSuite) TestDeleteAllTokenPairArbRoutes() {
 	suite.Require().Equal(0, len(tokenPairArbRoutes))
 }
 
-// TestGetDaysSinceGenesis tests the GetDaysSinceGenesis and SetDaysSinceGenesis functions.
-func (suite *KeeperTestSuite) TestGetDaysSinceGenesis() {
+// TestGetDaysSinceModuleGenesis tests the GetDaysSinceModuleGenesis and SetDaysSinceModuleGenesis functions.
+func (suite *KeeperTestSuite) TestGetDaysSinceModuleGenesis() {
 	// Should be initalized to 0 on genesis
-	daysSinceGenesis, err := suite.App.AppKeepers.ProtoRevKeeper.GetDaysSinceGenesis(suite.Ctx)
+	daysSinceGenesis, err := suite.App.AppKeepers.ProtoRevKeeper.GetDaysSinceModuleGenesis(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(0), daysSinceGenesis)
 
 	// Should be able to set the days since genesis
-	suite.App.AppKeepers.ProtoRevKeeper.SetDaysSinceGenesis(suite.Ctx, 1)
-	daysSinceGenesis, err = suite.App.AppKeepers.ProtoRevKeeper.GetDaysSinceGenesis(suite.Ctx)
+	suite.App.AppKeepers.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 1)
+	daysSinceGenesis, err = suite.App.AppKeepers.ProtoRevKeeper.GetDaysSinceModuleGenesis(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(1), daysSinceGenesis)
 }

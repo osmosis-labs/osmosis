@@ -31,7 +31,6 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	cacheCtx, write := ctx.CacheContext()
 
 	txGasWanted := cacheCtx.GasMeter().Limit()
-	// Ignore cases where limit is 0 (edge case for genUtil init)
 	if txGasWanted == 0 {
 		return next(ctx, tx, simulate)
 	}
@@ -52,21 +51,25 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 
 	// Find routes for every single pool that was swapped on (up to maxPoolsToIterate pools per tx)
 	swappedPools := ExtractSwappedPools(tx)
+	if len(swappedPools) > int(maxPoolsToIterate) {
+		swappedPools = swappedPools[:int(maxPoolsToIterate)]
+	}
+
 	tradeErr := error(nil)
-	for index, swap := range swappedPools {
-		if uint64(index) >= maxPoolsToIterate {
-			break
-		}
+	for _, swap := range swappedPools {
 		// If there was is an error executing the trade, break and set tradeErr
 		if err := protoRevDec.ProtoRevKeeper.ProtoRevTrade(cacheCtx, swap); err != nil {
 			tradeErr = err
 			break
 		}
 	}
+
 	// If there was no error, write the cache context to the main context
 	if tradeErr == nil {
 		write()
 		ctx.EventManager().EmitEvents(cacheCtx.EventManager().Events())
+	} else {
+		ctx.Logger().Error("ProtoRevTrade failed with error", tradeErr)
 	}
 
 	return next(ctx, tx, simulate)
@@ -84,7 +87,7 @@ func (k Keeper) ProtoRevTrade(ctx sdk.Context, swap SwapToBackrun) error {
 
 		// The error that returns here is particularly focused on the minting/burning of coins, and the execution of the MultiHopSwapExactAmountIn.
 		if maxProfitAmount.GT(sdk.ZeroInt()) {
-			if err := k.ExecuteTrade(ctx, optimalRoute, maxProfitInputCoin, swap.PoolId); err != nil {
+			if err := k.ExecuteTrade(ctx, optimalRoute, maxProfitInputCoin); err != nil {
 				return err
 			}
 			return nil

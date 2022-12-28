@@ -139,13 +139,13 @@ func (k Keeper) DeleteAllEntriesForKeyPrefix(ctx sdk.Context, keyPrefix []byte) 
 
 // ---------------------- Config Stores  ---------------------- //
 
-// GetDaysSinceGenesis returns the number of days since the module was initialized
-func (k Keeper) GetDaysSinceGenesis(ctx sdk.Context) (uint64, error) {
+// GetDaysSinceModuleGenesis returns the number of days since the module was initialized
+func (k Keeper) GetDaysSinceModuleGenesis(ctx sdk.Context) (uint64, error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDaysSinceGenesis)
 	bz := store.Get(types.KeyPrefixDaysSinceGenesis)
 	if bz == nil {
 		// This should never happen as the module is initialized with 0 days on genesis
-		return 0, fmt.Errorf("days since genesis not found")
+		return 0, fmt.Errorf("days since module genesis not found")
 	}
 
 	daysSinceGenesis := sdk.BigEndianToUint64(bz)
@@ -153,8 +153,8 @@ func (k Keeper) GetDaysSinceGenesis(ctx sdk.Context) (uint64, error) {
 	return daysSinceGenesis, nil
 }
 
-// SetDaysSinceGenesis updates the number of days since genesis
-func (k Keeper) SetDaysSinceGenesis(ctx sdk.Context, daysSinceGenesis uint64) {
+// SetDaysSinceModuleGenesis updates the number of days since genesis
+func (k Keeper) SetDaysSinceModuleGenesis(ctx sdk.Context, daysSinceGenesis uint64) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDaysSinceGenesis)
 	store.Set(types.KeyPrefixDaysSinceGenesis, sdk.Uint64ToBigEndian(daysSinceGenesis))
 }

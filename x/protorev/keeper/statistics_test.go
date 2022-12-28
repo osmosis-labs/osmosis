@@ -3,8 +3,8 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
 
 // TestGetNumberOfTrades tests GetNumberOfTrades and IncrementNumberOfTrades
@@ -150,7 +150,7 @@ func (suite *KeeperTestSuite) TestUpdateStatistics() {
 	// Check the result of GetProfitsByRoute
 	profit, err := suite.App.AppKeepers.ProtoRevKeeper.GetProfitsByRoute(suite.Ctx, []uint64{1, 2, 3}, types.OsmosisDenomination)
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(200)), profit)
+	suite.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(1000)), profit)
 
 	// Check the result of GetAllRoutes
 	routes, err := suite.App.AppKeepers.ProtoRevKeeper.GetAllRoutes(suite.Ctx)
@@ -173,7 +173,7 @@ func (suite *KeeperTestSuite) TestUpdateStatistics() {
 	// Check the result of GetProfitsByRoute
 	profit, err = suite.App.AppKeepers.ProtoRevKeeper.GetProfitsByRoute(suite.Ctx, []uint64{2, 3, 4}, types.OsmosisDenomination)
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(250)), profit)
+	suite.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(1100)), profit)
 
 	// Check the result of GetAllRoutes
 	routes, err = suite.App.AppKeepers.ProtoRevKeeper.GetAllRoutes(suite.Ctx)

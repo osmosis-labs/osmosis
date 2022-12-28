@@ -209,8 +209,7 @@ func (k Keeper) UpdateStatistics(ctx sdk.Context, route poolmanagertypes.SwapAmo
 	}
 
 	// Update the profits made by the ProtoRev module for the denom
-	profit := outputAmt.Sub(inputCoin.Amount)
-	if err := k.UpdateProfitsByDenom(ctx, inputCoin.Denom, profit); err != nil {
+	if err := k.UpdateProfitsByDenom(ctx, denom, profit); err != nil {
 		return err
 	}
 
@@ -220,7 +219,7 @@ func (k Keeper) UpdateStatistics(ctx sdk.Context, route poolmanagertypes.SwapAmo
 	}
 
 	// Update the profits accumulated by the ProtoRev module for the given route and denom
-	if err := k.UpdateProfitsByRoute(ctx, route.PoolIds(), inputCoin.Denom, profit); err != nil {
+	if err := k.UpdateProfitsByRoute(ctx, route.PoolIds(), denom, profit); err != nil {
 		return err
 	}
 

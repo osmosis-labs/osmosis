@@ -148,13 +148,16 @@ func (k Keeper) ExecuteTrade(ctx sdk.Context, route poolmanagertypes.SwapAmountI
 		return err
 	}
 
+	// Profit from the trade
+	profit := tokenOutAmount.Sub(inputCoin.Amount)
+
 	// Update the module statistics stores
-	if err = k.UpdateStatistics(ctx, route, inputCoin, tokenOutAmount); err != nil {
+	if err = k.UpdateStatistics(ctx, route, inputCoin.Denom, profit); err != nil {
 		return err
 	}
 
 	// Update the developer fees
-	if err = k.UpdateDeveloperFees(ctx, inputCoin, tokenOutAmount); err != nil {
+	if err = k.UpdateDeveloperFees(ctx, inputCoin.Denom, profit); err != nil {
 		return err
 	}
 

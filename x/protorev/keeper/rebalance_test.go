@@ -191,7 +191,6 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 	tests := []struct {
 		name       string
 		param      param
-		poolId     uint64
 		arbDenom   string
 		expectPass bool
 	}{
@@ -202,7 +201,6 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 				inputCoin:      sdk.NewCoin("uosmo", sdk.NewInt(10100000)),
 				expectedProfit: sdk.NewInt(24852),
 			},
-			poolId:     23,
 			arbDenom:   types.OsmosisDenomination,
 			expectPass: true,
 		},
@@ -213,7 +211,6 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 				inputCoin:      sdk.NewCoin("uosmo", sdk.NewInt(1000000)),
 				expectedProfit: sdk.NewInt(0),
 			},
-			poolId:     12,
 			arbDenom:   types.OsmosisDenomination,
 			expectPass: false,
 		},
@@ -224,7 +221,6 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 				inputCoin:      sdk.NewCoin("uosmo", sdk.NewInt(0)),
 				expectedProfit: sdk.NewInt(0),
 			},
-			poolId:     12,
 			arbDenom:   types.OsmosisDenomination,
 			expectPass: false,
 		},
@@ -236,7 +232,6 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 			suite.Ctx,
 			test.param.route,
 			test.param.inputCoin,
-			test.poolId,
 		)
 
 		if test.expectPass {
