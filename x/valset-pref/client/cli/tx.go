@@ -26,7 +26,7 @@ func NewSetValSetCmd() (*osmocli.TxCliDesc, *types.MsgSetValidatorSetPreference)
 	return &osmocli.TxCliDesc{
 		Use:              "set-valset [delegator_addr] [validators] [weights]",
 		Short:            "Creates a new validator set for the delegator with valOperAddress and weight",
-		Example:          "osmosisd tx validatorsetpreference set-valset osmo1... osmovaloper1abc...,osmovaloper1def...  0.56,0.44",
+		Example:          "osmosisd tx valset-pref set-valset osmo1... osmovaloper1abc...,osmovaloper1def...  0.56,0.44",
 		NumArgs:          3,
 		ParseAndBuildMsg: NewMsgSetValidatorSetPreference,
 	}, &types.MsgSetValidatorSetPreference{}
@@ -36,7 +36,7 @@ func NewDelValSetCmd() (*osmocli.TxCliDesc, *types.MsgDelegateToValidatorSet) {
 	return &osmocli.TxCliDesc{
 		Use:     "delegate-valset [delegator_addr] [amount]",
 		Short:   "Delegate tokens to existing valset using delegatorAddress and tokenAmount.",
-		Example: "osmosisd tx validatorsetpreference delegate-valset  osmo1... 100stake",
+		Example: "osmosisd tx valset-pref delegate-valset  osmo1... 100stake",
 		NumArgs: 2,
 	}, &types.MsgDelegateToValidatorSet{}
 }
@@ -45,7 +45,7 @@ func NewUnDelValSetCmd() (*osmocli.TxCliDesc, *types.MsgUndelegateFromValidatorS
 	return &osmocli.TxCliDesc{
 		Use:     "undelegate-valset [delegator_addr] [amount]",
 		Short:   "UnDelegate tokens from existing valset using delegatorAddress and tokenAmount.",
-		Example: "osmosisd tx validatorsetpreference undelegate-valset  osmo1... 100stake",
+		Example: "osmosisd tx valset-pref undelegate-valset  osmo1... 100stake",
 		NumArgs: 2,
 	}, &types.MsgUndelegateFromValidatorSet{}
 }
