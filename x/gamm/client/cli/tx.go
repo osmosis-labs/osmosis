@@ -23,7 +23,6 @@ func NewTxCmd() *cobra.Command {
 	txCmd := osmocli.TxIndexCmd(types.ModuleName)
 	osmocli.AddTxCmd(txCmd, NewJoinPoolCmd)
 	osmocli.AddTxCmd(txCmd, NewExitPoolCmd)
-	osmocli.AddTxCmd(txCmd, NewSwapExactAmountInCmd)
 	osmocli.AddTxCmd(txCmd, NewSwapExactAmountOutCmd)
 	osmocli.AddTxCmd(txCmd, NewJoinSwapExternAmountIn)
 	osmocli.AddTxCmd(txCmd, NewJoinSwapShareAmountOut)
@@ -101,17 +100,6 @@ func NewExitPoolCmd() (*osmocli.TxCliDesc, *types.MsgExitPool) {
 		},
 		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetExitPool()}},
 	}, &types.MsgExitPool{}
-}
-
-func NewSwapExactAmountInCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountIn) {
-	return &osmocli.TxCliDesc{
-		Use:   "swap-exact-amount-in [token-in] [token-out-min-amount]",
-		Short: "swap exact amount in",
-		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
-			"Routes": osmocli.FlagOnlyParser(swapAmountInRoutes),
-		},
-		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
-	}, &types.MsgSwapExactAmountIn{}
 }
 
 func NewSwapExactAmountOutCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountOut) {
