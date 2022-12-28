@@ -64,17 +64,6 @@ func ParseSdkDecFromString(s string, separator string) ([]sdk.Dec, error) {
 	return parsedDec, nil
 }
 
-// ParseSdkValAddressFromString seperates string address into string slice.
-// We donot check validity of address here because we do that in ValidateBasic.
-func ParseSdkValAddressFromString(s string, separator string) []string {
-	var parsedAddrStr []string
-	for _, addr := range strings.Split(s, separator) {
-		parsedAddrStr = append(parsedAddrStr, addr)
-	}
-
-	return parsedAddrStr
-}
-
 // CreateRandomAccounts is a function return a list of randomly generated AccAddresses
 func CreateRandomAccounts(numAccts int) []sdk.AccAddress {
 	testAddrs := make([]sdk.AccAddress, numAccts)

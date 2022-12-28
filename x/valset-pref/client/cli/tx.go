@@ -2,6 +2,7 @@ package valsetprefcli
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
@@ -55,7 +56,10 @@ func NewMsgSetValidatorSetPreference(clientCtx client.Context, args []string, fs
 		return nil, err
 	}
 
-	valAddrs := osmoutils.ParseSdkValAddressFromString(args[1], ",")
+	var valAddrs []string
+	for _, addr := range strings.Split(args[1], ",") {
+		valAddrs = append(valAddrs, addr)
+	}
 
 	weights, err := osmoutils.ParseSdkDecFromString(args[2], ",")
 	if err != nil {
