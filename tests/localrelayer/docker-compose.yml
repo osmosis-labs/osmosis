@@ -54,7 +54,7 @@ services:
       - localosmosis
     
   localjuno:
-    image: osmolabs/juno-dev:main
+    image: juno:local
     volumes:
       - ./scripts/setup_juno.sh:/root/setup.sh
       - $HOME/.junod-local-a/:/root/.juno/

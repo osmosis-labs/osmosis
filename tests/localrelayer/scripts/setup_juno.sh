@@ -59,7 +59,7 @@ edit_config () {
     dasel put string -f $CONFIG_FOLDER/config.toml '.p2p.seeds' ''
 
     # Expose the rpc
-    dasel put string -f $CONFIG_FOLDER/config.toml '.rpc.laddr' "tcp://0.0.0.0:26657"
+    dasel put string -f $CONFIG_FOLDER/config.toml '.rpc.laddr' "tcp://0.0.0.0:36657"
 }
 
 if [[ ! -d $CONFIG_FOLDER ]]
