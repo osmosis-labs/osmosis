@@ -57,9 +57,7 @@ func NewMsgSetValidatorSetPreference(clientCtx client.Context, args []string, fs
 	}
 
 	var valAddrs []string
-	for _, addr := range strings.Split(args[1], ",") {
-		valAddrs = append(valAddrs, addr)
-	}
+	valAddrs = append(valAddrs, strings.Split(args[1], ",")...)
 
 	weights, err := osmoutils.ParseSdkDecFromString(args[2], ",")
 	if err != nil {

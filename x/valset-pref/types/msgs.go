@@ -61,7 +61,6 @@ func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 		return err
 	}
 
-	// TODO: Figure out a string check for this
 	// check if the total validator distribution weights equal 1
 	if roundedValue != 1 {
 		return fmt.Errorf("The weights allocated to the validators do not add up to 1, Got: %f", roundedValue)
@@ -179,7 +178,7 @@ func (m MsgRedelegateValidatorSet) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid delegator address (%s)", err)
 	}
 
-	total_weight := sdk.NewDec(0)
+	totalWeight := sdk.NewDec(0)
 	validatorAddrs := []string{}
 	for _, validator := range m.Preferences {
 		_, err := sdk.ValAddressFromBech32(validator.ValOperAddress)
@@ -187,7 +186,7 @@ func (m MsgRedelegateValidatorSet) ValidateBasic() error {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid validator address (%s)", err)
 		}
 
-		total_weight = total_weight.Add(validator.Weight)
+		totalWeight = totalWeight.Add(validator.Weight)
 		validatorAddrs = append(validatorAddrs, validator.ValOperAddress)
 	}
 
@@ -197,9 +196,21 @@ func (m MsgRedelegateValidatorSet) ValidateBasic() error {
 		return fmt.Errorf("The validator operator address are duplicated")
 	}
 
+	// Round to 2 digit after the decimal. For ex: 0.999 = 1.0, 0.874 = 0.87, 0.5123 = 0.51
+	totalWeightFloat64, err := totalWeight.Float64()
+	if err != nil {
+		return err
+	}
+
+	roundedValueStr := fmt.Sprintf("%.2f", totalWeightFloat64)
+	roundedValue, err := strconv.ParseFloat(roundedValueStr, 64)
+	if err != nil {
+		return err
+	}
+
 	// check if the total validator distribution weights equal 1
-	if !total_weight.Equal(sdk.NewDec(1)) {
-		return fmt.Errorf("The weights allocated to the validators do not add up to 1, Got: %d", total_weight)
+	if roundedValue != 1 {
+		return fmt.Errorf("The weights allocated to the validators do not add up to 1, Got: %f", roundedValue)
 	}
 
 	return nil
