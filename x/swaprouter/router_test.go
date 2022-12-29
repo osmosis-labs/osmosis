@@ -1,7 +1,6 @@
 package swaprouter_test
 
 import (
-	"fmt"
 	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
