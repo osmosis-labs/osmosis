@@ -11,9 +11,9 @@ service Msg {
   rpc JoinPool(MsgJoinPool) returns (MsgJoinPoolResponse);
   rpc ExitPool(MsgExitPool) returns (MsgExitPoolResponse);
   rpc SwapExactAmountIn(MsgSwapExactAmountIn)
-      returns (MsgSwapExactAmountInResponse) {}
+      returns (MsgSwapExactAmountInResponse);
   rpc SwapExactAmountOut(MsgSwapExactAmountOut)
-      returns (MsgSwapExactAmountOutResponse) {}
+      returns (MsgSwapExactAmountOutResponse);
   rpc JoinSwapExternAmountIn(MsgJoinSwapExternAmountIn)
       returns (MsgJoinSwapExternAmountInResponse);
   rpc JoinSwapShareAmountOut(MsgJoinSwapShareAmountOut)
