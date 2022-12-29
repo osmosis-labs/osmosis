@@ -14,15 +14,20 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		panic(err)
 	}
 
-	// Init module parameters
-	k.SetParams(ctx, genState.Params)
-
 	// Init module state
+	k.SetParams(ctx, genState.Params)
 	k.SetProtoRevEnabled(ctx, genState.Params.Enabled)
 	k.SetDaysSinceModuleGenesis(ctx, 0)
+	k.SetLatestBlockHeight(ctx, uint64(ctx.BlockHeight()))
+	k.SetRouteCountForBlock(ctx, 0)
 
-	// Default we only allow 3 pools to be arbitraged against per tx
-	if err := k.SetMaxPools(ctx, 3); err != nil {
+	// configure max routes per block (default 100)
+	if err := k.SetMaxRoutesPerBlock(ctx, 100); err != nil {
+		panic(err)
+	}
+
+	// configure max routes per tx (default 6)
+	if err := k.SetMaxRoutesPerTx(ctx, 6); err != nil {
 		panic(err)
 	}
 

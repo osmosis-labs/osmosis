@@ -24,6 +24,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 		baseDenomGas        bool
 		expectedNumOfTrades sdk.Int
 		expectedProfits     []*sdk.Coin
+		expectedRouteCount  uint64
 	}
 
 	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
@@ -50,32 +51,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.ZeroInt(),
 				expectedProfits:     []*sdk.Coin{},
-			},
-			expectPass: true,
-		},
-		{
-			name: "0 Gas Limit - Expect Nothing To Happen",
-			params: param{
-				msgs: []sdk.Msg{
-					&gammtypes.MsgSwapExactAmountIn{
-						Sender: addr0.String(),
-						Routes: []gammtypes.SwapAmountInRoute{
-							{
-								PoolId:        23,
-								TokenOutDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
-							},
-						},
-						TokenIn:           sdk.NewCoin("ibc/0EF15DF2F02480ADE0BB6E85D9EBB5DAEA2836D3860E9F97F9AADE4F57A31AA0", sdk.NewInt(10000)),
-						TokenOutMinAmount: sdk.NewInt(10000),
-					},
-				},
-				txFee:               sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))),
-				minGasPrices:        sdk.NewDecCoins(),
-				gasLimit:            0,
-				isCheckTx:           false,
-				baseDenomGas:        true,
-				expectedNumOfTrades: sdk.ZeroInt(),
-				expectedProfits:     []*sdk.Coin{},
+				expectedRouteCount:  0,
 			},
 			expectPass: true,
 		},
@@ -102,6 +78,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.ZeroInt(),
 				expectedProfits:     []*sdk.Coin{},
+				expectedRouteCount:  2,
 			},
 			expectPass: true,
 		},
@@ -133,6 +110,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(24848),
 					},
 				},
+				expectedRouteCount: 3,
 			},
 			expectPass: true,
 		},
@@ -168,6 +146,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(24848),
 					},
 				},
+				expectedRouteCount: 4,
 			},
 			expectPass: true,
 		},
@@ -187,7 +166,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						TokenOutMinAmount: sdk.NewInt(100),
 					},
 				},
-				txFee:               sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
+				txFee:               sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))),
 				minGasPrices:        sdk.NewDecCoins(),
 				gasLimit:            500000,
 				isCheckTx:           false,
@@ -203,6 +182,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(56609900),
 					},
 				},
+				expectedRouteCount: 5,
 			},
 			expectPass: true,
 		},
@@ -210,7 +190,6 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-
 			suite.Ctx = suite.Ctx.WithIsCheckTx(tc.params.isCheckTx)
 			suite.Ctx = suite.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 			suite.Ctx = suite.Ctx.WithMinGasPrices(tc.params.minGasPrices)
@@ -264,6 +243,11 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				// Check that the profits are correct
 				profits := suite.App.AppKeepers.ProtoRevKeeper.GetAllProfits(suite.Ctx)
 				suite.Require().Equal(tc.params.expectedProfits, profits)
+
+				// Check the current route count
+				routeCount, err := suite.App.AppKeepers.ProtoRevKeeper.GetRouteCountForBlock(suite.Ctx)
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.params.expectedRouteCount, routeCount)
 
 			} else {
 				suite.Require().Error(err)

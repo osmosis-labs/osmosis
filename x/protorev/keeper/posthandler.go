@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
@@ -27,73 +29,136 @@ func NewProtoRevDecorator(protoRevDecorator Keeper) ProtoRevDecorator {
 func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	// Create a cache context to execute the posthandler such that
 	// 1. If there is an error, then the cache context is discarded
-	// 2. If there is no error, then the cache context is written to the main context
+	// 2. If there is no error, then the cache context is written to the main context with no gas consumed
 	cacheCtx, write := ctx.CacheContext()
-
-	txGasWanted := cacheCtx.GasMeter().Limit()
-	if txGasWanted == 0 {
-		return next(ctx, tx, simulate)
-	}
-
-	// Change the gas meter to be an infinite gas meter which allows the entire posthandler to work without consuming any gas
 	cacheCtx = cacheCtx.WithGasMeter(sdk.NewInfiniteGasMeter())
 
-	// Only execute the protoRev module if it is enabled
-	if enabled, err := protoRevDec.ProtoRevKeeper.GetProtoRevEnabled(cacheCtx); err != nil || !enabled {
+	// Check if the protorev posthandler can be executed
+	if err := protoRevDec.ProtoRevKeeper.AnteHandleCheck(cacheCtx); err != nil {
 		return next(ctx, tx, simulate)
 	}
 
-	// Get the max number of pools to iterate through
-	maxPoolsToIterate, err := protoRevDec.ProtoRevKeeper.GetMaxPools(cacheCtx)
-	if err != nil {
-		return next(ctx, tx, simulate)
-	}
-
-	// Find routes for every single pool that was swapped on (up to maxPoolsToIterate pools per tx)
+	// Extract all of the pools that were swapped in the tx
 	swappedPools := ExtractSwappedPools(tx)
-	if len(swappedPools) > int(maxPoolsToIterate) {
-		swappedPools = swappedPools[:int(maxPoolsToIterate)]
+	if len(swappedPools) == 0 {
+		return next(ctx, tx, simulate)
 	}
 
-	tradeErr := error(nil)
-	for _, swap := range swappedPools {
-		// If there was is an error executing the trade, break and set tradeErr
-		if err := protoRevDec.ProtoRevKeeper.ProtoRevTrade(cacheCtx, swap); err != nil {
-			tradeErr = err
-			break
-		}
-	}
-
-	// If there was no error, write the cache context to the main context
-	if tradeErr == nil {
+	// Attempt to execute arbitrage trades
+	if err := protoRevDec.ProtoRevKeeper.ProtoRevTrade(cacheCtx, swappedPools); err == nil {
 		write()
 		ctx.EventManager().EmitEvents(cacheCtx.EventManager().Events())
 	} else {
-		ctx.Logger().Error("ProtoRevTrade failed with error", tradeErr)
+		ctx.Logger().Error("ProtoRevTrade failed with error", err)
 	}
 
 	return next(ctx, tx, simulate)
 }
 
-// ProtoRevTrade wraps around the build routes, iterate routes, and execute trade functionality to execute an cyclic arbitrage trade
-// if it exists. It returns an error if there was an error executing the trade and a boolean if the trade was executed.
-func (k Keeper) ProtoRevTrade(ctx sdk.Context, swap SwapToBackrun) error {
-	// Build the routes for the swap
-	routes := k.BuildRoutes(ctx, swap.TokenInDenom, swap.TokenOutDenom, swap.PoolId)
+// AnteHandleCheck checks if the module is enabled and if the number of routes to be processed per block has been reached.
+func (k Keeper) AnteHandleCheck(ctx sdk.Context) error {
+	// Only execute the posthandler if the module is enabled
+	if enabled, err := k.GetProtoRevEnabled(ctx); err != nil || !enabled {
+		return fmt.Errorf("protorev is not enabled")
+	}
 
-	if len(routes) != 0 {
-		// Find optimal input amounts for routes
-		maxProfitInputCoin, maxProfitAmount, optimalRoute := k.IterateRoutes(ctx, routes)
+	latestBlockHeight, err := k.GetLatestBlockHeight(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get latest block height")
+	}
 
-		// The error that returns here is particularly focused on the minting/burning of coins, and the execution of the MultiHopSwapExactAmountIn.
-		if maxProfitAmount.GT(sdk.ZeroInt()) {
-			if err := k.ExecuteTrade(ctx, optimalRoute, maxProfitInputCoin); err != nil {
+	currentRouteCount, err := k.GetRouteCountForBlock(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get current route count")
+	}
+
+	maxRouteCount, err := k.GetMaxRoutesPerBlock(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get max iterable routes per block")
+	}
+
+	// Only execute the posthandler if the number of routes to be processed per block has not been reached
+	blockHeight := uint64(ctx.BlockHeight())
+	if blockHeight == latestBlockHeight {
+		if currentRouteCount >= maxRouteCount {
+			return fmt.Errorf("max route count for block has been reached")
+		}
+	} else {
+		// Reset the current route count
+		k.SetRouteCountForBlock(ctx, 0)
+		k.SetLatestBlockHeight(ctx, blockHeight)
+	}
+
+	return nil
+}
+
+// ProtoRevTrade wraps around the build routes, iterate routes, and execute trade functionality to execute cyclic arbitrage trades
+// if they exist. It returns an error if there was an issue executing any single trade.
+func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) error {
+	// Get the total number of routes that can be explored
+	numberOfIterableRoutes, err := k.CalcNumberOfIterableRoutes(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Iterate and build arbitrage routes for each pool that was swapped on
+	for index := 0; index < len(swappedPools) && numberOfIterableRoutes > 0; index++ {
+		// Build the routes for the pool that was swapped on
+		routes := k.BuildRoutes(ctx, swappedPools[index].TokenInDenom, swappedPools[index].TokenOutDenom, swappedPools[index].PoolId)
+		numRoutes := uint64(len(routes))
+
+		if numRoutes != 0 {
+			// filter out routes that are not iterable
+			if numberOfIterableRoutes < numRoutes {
+				routes = routes[:numberOfIterableRoutes]
+				numRoutes = numberOfIterableRoutes
+			}
+
+			// Find optimal input amounts for routes
+			maxProfitInputCoin, maxProfitAmount, optimalRoute := k.IterateRoutes(ctx, routes)
+
+			// Update route counts
+			if err := k.IncrementRouteCountForBlock(ctx, numRoutes); err != nil {
 				return err
 			}
-			return nil
+			numberOfIterableRoutes -= numRoutes
+
+			// The error that returns here is particularly focused on the minting/burning of coins, and the execution of the MultiHopSwapExactAmountIn.
+			if maxProfitAmount.GT(sdk.ZeroInt()) {
+				if err := k.ExecuteTrade(ctx, optimalRoute, maxProfitInputCoin); err != nil {
+					return err
+				}
+			}
 		}
 	}
+
 	return nil
+}
+
+// CalcNumberOfIterableRoutes calculates the number of routes that can be iterated over in the current transaction
+func (k Keeper) CalcNumberOfIterableRoutes(ctx sdk.Context) (uint64, error) {
+	maxRoutesPerTx, err := k.GetMaxRoutesPerTx(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	maxRoutesPerBlock, err := k.GetMaxRoutesPerBlock(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	currentRouteCount, err := k.GetRouteCountForBlock(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	// Calculate the number of routes that can be iterated over
+	numberOfIterableRoutes := maxRoutesPerBlock - currentRouteCount
+	if numberOfIterableRoutes > maxRoutesPerTx {
+		numberOfIterableRoutes = maxRoutesPerTx
+	}
+
+	return numberOfIterableRoutes, nil
 }
 
 // ExtractSwappedPools checks if there were any swaps made on pools and if so returns a list of all the pools that were

@@ -288,22 +288,77 @@ func (suite *KeeperTestSuite) TestGetDeveloperAccount() {
 	suite.Require().Equal(suite.TestAccs[0], developerAccount)
 }
 
-// TestGetMaxPools tests the GetMaxPools and SetMaxPools functions.
-func (suite *KeeperTestSuite) TestGetMaxPools() {
-	// Should be initalized to 3 on genesis
-	maxPools, err := suite.App.AppKeepers.ProtoRevKeeper.GetMaxPools(suite.Ctx)
+// TestGetMaxRoutesPerTx tests the GetMaxRoutesPerTx and SetMaxRoutesPerTx functions.
+func (suite *KeeperTestSuite) TestGetMaxRoutesPerTx() {
+	// Should be initalized on genesis
+	maxRoutes, err := suite.App.AppKeepers.ProtoRevKeeper.GetMaxRoutesPerTx(suite.Ctx)
 	suite.Require().NoError(err)
-	suite.Require().Equal(uint64(3), maxPools)
+	suite.Require().Equal(uint64(6), maxRoutes)
 
-	// Should be able to set the maxPools
-	suite.App.AppKeepers.ProtoRevKeeper.SetMaxPools(suite.Ctx, 4)
-	maxPools, err = suite.App.AppKeepers.ProtoRevKeeper.GetMaxPools(suite.Ctx)
+	// Should be able to set the maxRoutes
+	suite.App.AppKeepers.ProtoRevKeeper.SetMaxRoutesPerTx(suite.Ctx, 4)
+	maxRoutes, err = suite.App.AppKeepers.ProtoRevKeeper.GetMaxRoutesPerTx(suite.Ctx)
 	suite.Require().NoError(err)
-	suite.Require().Equal(uint64(4), maxPools)
+	suite.Require().Equal(uint64(4), maxRoutes)
 
-	// Can only initalize between 1 and 5 pools
-	err = suite.App.AppKeepers.ProtoRevKeeper.SetMaxPools(suite.Ctx, 0)
+	// Can only initalize between 1 and types.MaxIterableRoutesPerTx
+	err = suite.App.AppKeepers.ProtoRevKeeper.SetMaxRoutesPerTx(suite.Ctx, 0)
 	suite.Require().Error(err)
-	err = suite.App.AppKeepers.ProtoRevKeeper.SetMaxPools(suite.Ctx, 6)
+	err = suite.App.AppKeepers.ProtoRevKeeper.SetMaxRoutesPerTx(suite.Ctx, types.MaxIterableRoutesPerTx+1)
+	suite.Require().Error(err)
+}
+
+// TestGetRouteCountForBlock tests the GetRouteCountForBlock, IncrementRouteCountForBlock and SetRouteCountForBlock functions.
+func (suite *KeeperTestSuite) TestGetRouteCountForBlock() {
+	// Should be initalized to 0 on genesis
+	routeCount, err := suite.App.AppKeepers.ProtoRevKeeper.GetRouteCountForBlock(suite.Ctx)
+	suite.Require().NoError(err)
+	suite.Require().Equal(uint64(0), routeCount)
+
+	// Should be able to set the route count
+	suite.App.AppKeepers.ProtoRevKeeper.SetRouteCountForBlock(suite.Ctx, 4)
+	routeCount, err = suite.App.AppKeepers.ProtoRevKeeper.GetRouteCountForBlock(suite.Ctx)
+	suite.Require().NoError(err)
+	suite.Require().Equal(uint64(4), routeCount)
+
+	// Should be able to increment the route count
+	err = suite.App.AppKeepers.ProtoRevKeeper.IncrementRouteCountForBlock(suite.Ctx, 10)
+	suite.Require().NoError(err)
+	routeCount, err = suite.App.AppKeepers.ProtoRevKeeper.GetRouteCountForBlock(suite.Ctx)
+	suite.Require().NoError(err)
+	suite.Require().Equal(uint64(14), routeCount)
+}
+
+// TestGetLatestBlockHeight tests the GetLatestBlockHeight and SetLatestBlockHeight functions.
+func (suite *KeeperTestSuite) TestGetLatestBlockHeight() {
+	// Should be initalized to 0 on genesis
+	blockHeight, err := suite.App.AppKeepers.ProtoRevKeeper.GetLatestBlockHeight(suite.Ctx)
+	suite.Require().NoError(err)
+	suite.Require().Equal(uint64(0), blockHeight)
+
+	// Should be able to set the blockHeight
+	suite.App.AppKeepers.ProtoRevKeeper.SetLatestBlockHeight(suite.Ctx, 4)
+	blockHeight, err = suite.App.AppKeepers.ProtoRevKeeper.GetLatestBlockHeight(suite.Ctx)
+	suite.Require().NoError(err)
+	suite.Require().Equal(uint64(4), blockHeight)
+}
+
+// TestGetMaxRoutesPerBlock tests the GetMaxRoutesPerBlock and SetMaxRoutesPerBlock functions.
+func (suite *KeeperTestSuite) TestGetMaxRoutesPerBlock() {
+	// Should be initalized to 20 on genesis
+	maxRoutes, err := suite.App.AppKeepers.ProtoRevKeeper.GetMaxRoutesPerBlock(suite.Ctx)
+	suite.Require().NoError(err)
+	suite.Require().Equal(uint64(100), maxRoutes)
+
+	// Should be able to set the maxRoutes
+	suite.App.AppKeepers.ProtoRevKeeper.SetMaxRoutesPerBlock(suite.Ctx, 4)
+	maxRoutes, err = suite.App.AppKeepers.ProtoRevKeeper.GetMaxRoutesPerBlock(suite.Ctx)
+	suite.Require().NoError(err)
+	suite.Require().Equal(uint64(4), maxRoutes)
+
+	// Can only initalize between 1 and types.MaxIterableRoutesPerBlock
+	err = suite.App.AppKeepers.ProtoRevKeeper.SetMaxRoutesPerBlock(suite.Ctx, 0)
+	suite.Require().Error(err)
+	err = suite.App.AppKeepers.ProtoRevKeeper.SetMaxRoutesPerBlock(suite.Ctx, types.MaxIterableRoutesPerBlock+1)
 	suite.Require().Error(err)
 }

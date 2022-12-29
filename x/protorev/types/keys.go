@@ -30,7 +30,10 @@ const (
 	prefixDeveloperAccount
 	prefixDaysSinceGenesis
 	prefixDeveloperFees
-	prefixMaxPools
+	prefixMaxRoutesPerTx
+	prefixMaxRoutesPerBlock
+	prefixRouteCountForBlock
+	prefixLatestBlockHeight
 )
 
 var (
@@ -73,8 +76,17 @@ var (
 	// KeyPrefixDeveloperFees is the prefix for store that keeps track of the developer fees
 	KeyPrefixDeveloperFees = []byte{prefixDeveloperFees}
 
-	// KeyPrefixMaxPools is the prefix for store that keeps track of the max number of pools that will be iterated after a swap
-	KeyPrefixMaxPools = []byte{prefixMaxPools}
+	// KeyPrefixMaxRoutesPerTx is the prefix for store that keeps track of the max number of routes that can be iterated per tx
+	KeyPrefixMaxRoutesPerTx = []byte{prefixMaxRoutesPerTx}
+
+	// KeyPrefixMaxRoutesPerBlock is the prefix for store that keeps track of the max number of routes that can be iterated per block
+	KeyPrefixMaxRoutesPerBlock = []byte{prefixMaxRoutesPerBlock}
+
+	// KeyPrefixRouteCountForBlock is the prefix for store that keeps track of the current number of routes that have been iterated in the current block
+	KeyPrefixRouteCountForBlock = []byte{prefixRouteCountForBlock}
+
+	// KeyPrefixLatestBlockHeight is the prefix for store that keeps track of the latest recorded block height
+	KeyPrefixLatestBlockHeight = []byte{prefixLatestBlockHeight}
 )
 
 // Returns the key needed to fetch the osmo pool for a given denom

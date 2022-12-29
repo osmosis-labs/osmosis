@@ -241,6 +241,58 @@ func (k Keeper) SetProtoRevEnabled(ctx sdk.Context, enabled bool) {
 	store.Set(types.KeyPrefixProtoRevEnabled, bz)
 }
 
+// GetRouteCountForBlock returns the number of routes that have been traversed in the current block
+func (k Keeper) GetRouteCountForBlock(ctx sdk.Context) (uint64, error) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixRouteCountForBlock)
+	bz := store.Get(types.KeyPrefixRouteCountForBlock)
+	if bz == nil {
+		// This should never happen as this is set to 0 on genesis
+		return 0, fmt.Errorf("current route count has not been set in state")
+	}
+
+	res := sdk.BigEndianToUint64(bz)
+
+	return res, nil
+}
+
+// SetRouteCountForBlock sets the number of routes that have been traversed in the current block
+func (k Keeper) SetRouteCountForBlock(ctx sdk.Context, txCount uint64) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixRouteCountForBlock)
+	store.Set(types.KeyPrefixRouteCountForBlock, sdk.Uint64ToBigEndian(txCount))
+}
+
+// IncrementRouteCountForBlock increments the number of routes that have been traversed in the current block
+func (k Keeper) IncrementRouteCountForBlock(ctx sdk.Context, amount uint64) error {
+	routeCount, err := k.GetRouteCountForBlock(ctx)
+	if err != nil {
+		return err
+	}
+
+	k.SetRouteCountForBlock(ctx, routeCount+amount)
+
+	return nil
+}
+
+// GetLatestBlockHeight returns the latest block height that protorev was run on
+func (k Keeper) GetLatestBlockHeight(ctx sdk.Context) (uint64, error) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLatestBlockHeight)
+	bz := store.Get(types.KeyPrefixLatestBlockHeight)
+	if bz == nil {
+		// This should never happen as the module is initialized on genesis and reset in the post handler
+		return 0, fmt.Errorf("block height has not been set in state")
+	}
+
+	res := sdk.BigEndianToUint64(bz)
+
+	return res, nil
+}
+
+// SetLatestBlockHeight sets the latest block height that protorev was run on
+func (k Keeper) SetLatestBlockHeight(ctx sdk.Context, blockHeight uint64) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLatestBlockHeight)
+	store.Set(types.KeyPrefixLatestBlockHeight, sdk.Uint64ToBigEndian(blockHeight))
+}
+
 // ---------------------- Admin Stores  ---------------------- //
 
 // GetAdminAccount returns the admin account for protorev
@@ -277,28 +329,54 @@ func (k Keeper) SetDeveloperAccount(ctx sdk.Context, developerAccount sdk.AccAdd
 	store.Set(types.KeyPrefixDeveloperAccount, developerAccount.Bytes())
 }
 
-// GetMaxPools returns the max number of pools that can be iterated after a swap
-func (k Keeper) GetMaxPools(ctx sdk.Context) (uint64, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixMaxPools)
-	bz := store.Get(types.KeyPrefixMaxPools)
+// GetMaxRoutesPerTx returns the max number of routes that can be iterated per transaction
+func (k Keeper) GetMaxRoutesPerTx(ctx sdk.Context) (uint64, error) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixMaxRoutesPerTx)
+	bz := store.Get(types.KeyPrefixMaxRoutesPerTx)
 	if bz == nil {
-		// This should never happen as the module is initialized on genesis
-		return 0, fmt.Errorf("max pools configuration has not been set in state")
+		// This should never happen as it is set to the default value on genesis
+		return 0, fmt.Errorf("max routes configuration has not been set in state")
 	}
 
 	res := sdk.BigEndianToUint64(bz)
 	return res, nil
 }
 
-// SetMaxPools sets the max number of pools that can be iterated after a swap.
-func (k Keeper) SetMaxPools(ctx sdk.Context, maxPools uint64) error {
-	if maxPools == 0 || maxPools > types.MaxIterablePools {
-		return fmt.Errorf("max pools must be between 1 and 5")
+// SetMaxRoutesPerTx sets the max number of routes that can be iterated per transaction
+func (k Keeper) SetMaxRoutesPerTx(ctx sdk.Context, maxRoutes uint64) error {
+	if maxRoutes == 0 || maxRoutes > types.MaxIterableRoutesPerTx {
+		return fmt.Errorf("max routes must be between 1 and %d", types.MaxIterableRoutesPerTx)
 	}
 
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixMaxPools)
-	bz := sdk.Uint64ToBigEndian(maxPools)
-	store.Set(types.KeyPrefixMaxPools, bz)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixMaxRoutesPerTx)
+	bz := sdk.Uint64ToBigEndian(maxRoutes)
+	store.Set(types.KeyPrefixMaxRoutesPerTx, bz)
+
+	return nil
+}
+
+// GetMaxRoutesPerBlock returns the max number of routes that can be iterated per block
+func (k Keeper) GetMaxRoutesPerBlock(ctx sdk.Context) (uint64, error) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixMaxRoutesPerBlock)
+	bz := store.Get(types.KeyPrefixMaxRoutesPerBlock)
+	if bz == nil {
+		// This should never happen as it is set to the default value on genesis
+		return 0, fmt.Errorf("max routes configuration has not been set in state")
+	}
+
+	res := sdk.BigEndianToUint64(bz)
+	return res, nil
+}
+
+// SetMaxRoutesPerBlock sets the max number of routes that can be iterated per block
+func (k Keeper) SetMaxRoutesPerBlock(ctx sdk.Context, maxRoutes uint64) error {
+	if maxRoutes == 0 || maxRoutes > types.MaxIterableRoutesPerBlock {
+		return fmt.Errorf("max routes per block must be between 1 and %d", types.MaxIterableRoutesPerBlock)
+	}
+
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixMaxRoutesPerBlock)
+	bz := sdk.Uint64ToBigEndian(maxRoutes)
+	store.Set(types.KeyPrefixMaxRoutesPerBlock, bz)
 
 	return nil
 }
