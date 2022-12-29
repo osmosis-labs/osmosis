@@ -85,6 +85,37 @@ func (k Keeper) RouteExactAmountIn(
 	return tokenOutAmount, nil
 }
 
+// SwapExactAmountIn is an api for swapping an exact amount of tokens
+// as input to a pool, using the provided swapFee. 
+// transaction succeeds when tokenOutAmount is greater than tokenOutMinAmount defined.
+func (k Keeper) SwapExactAmountIn(
+	ctx sdk.Context, 
+ 	sender sdk.AccAddress, 
+ 	poolId uint64, 
+ 	tokenIn sdk.Coin, 
+ 	tokenOutDenom string, 
+ 	tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error) {
+	
+	swapModule, err := k.GetPoolModule(ctx, poolId)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	pool, poolErr := swapModule.GetPool(ctx, poolId)
+	if poolErr != nil {
+		return sdk.Int{}, poolErr
+	}
+
+	swapFee := pool.GetSwapFee(ctx)
+
+	tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	return tokenOutAmount, nil
+}
+
 func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 	ctx sdk.Context,
 	routes []types.SwapAmountInRoute,
