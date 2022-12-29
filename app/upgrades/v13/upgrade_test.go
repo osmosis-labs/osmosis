@@ -13,7 +13,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 )
 
 type UpgradeTestSuite struct {
@@ -55,8 +54,6 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 		{
 			"Test that the upgrade succeeds",
 			func() {
-				acc := suite.App.AccountKeeper.GetAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
-				suite.App.AccountKeeper.RemoveAccount(suite.Ctx, acc)
 				// Because of SDK version map bug, we can't do the following, and instaed do a massive hack
 				// vm := suite.App.UpgradeKeeper.GetModuleVersionMap(suite.Ctx)
 				// delete(vm, ibchookstypes.ModuleName)
@@ -67,14 +64,9 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				store := suite.Ctx.KVStore(upgradeStoreKey)
 				versionStore := prefix.NewStore(store, []byte{upgradetypes.VersionMapByte})
 				versionStore.Delete([]byte(ibchookstypes.ModuleName))
-
-				hasAcc := suite.App.AccountKeeper.HasAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
-				suite.Require().False(hasAcc)
 			},
 			func() { dummyUpgrade(suite) },
 			func() {
-				hasAcc := suite.App.AccountKeeper.HasAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
-				suite.Require().True(hasAcc)
 			},
 		},
 		{
