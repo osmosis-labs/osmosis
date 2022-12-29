@@ -956,7 +956,7 @@ func (suite *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 		expectError            bool
 	}{
 		{
-			name:                   "One route: Swap - [foo -> bar], 1 percent fee",
+			name:                   "Swap - [foo -> bar], 1 percent fee",
 			poolId:                 1,
 			poolCoins:              sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
 			poolFee:                defaultPoolSwapFee,
