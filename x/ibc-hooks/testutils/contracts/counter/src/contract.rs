@@ -76,24 +76,59 @@ pub mod execute {
     }
 
     pub fn reset(deps: DepsMut, info: MessageInfo, count: i32) -> Result<Response, ContractError> {
-        COUNTERS.update(
-            deps.storage,
-            info.sender.clone(),
-            |state| -> Result<_, ContractError> {
-                match state {
-                    None => Err(ContractError::Unauthorized {}),
-                    Some(state) if state.owner != info.sender.clone() => {
-                        Err(ContractError::Unauthorized {})
-                    }
-                    _ => Ok(Counter {
-                        count,
-                        total_funds: vec![],
-                        owner: info.sender.clone(),
-                    }),
-                }
+        utils::update_counter(deps, info.sender, &|_counter| count, &|_counter| vec![])?;
+        Ok(Response::new().add_attribute("action", "reset"))
+    }
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn sudo(deps: DepsMut, env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
+    match msg {
+        SudoMsg::ReceiveAck {
+            channel: _,
+            sequence: _,
+            ack: _,
+            success,
+        } => sudo::receive_ack(deps, env.contract.address, success),
+        SudoMsg::IBCTimeout {
+            channel: _,
+            sequence: _,
+        } => sudo::ibc_timeout(deps, env.contract.address),
+    }
+}
+
+pub mod sudo {
+    use cosmwasm_std::Addr;
+
+    use super::*;
+
+    pub fn receive_ack(
+        deps: DepsMut,
+        contract: Addr,
+        _success: bool,
+    ) -> Result<Response, ContractError> {
+        utils::update_counter(
+            deps,
+            contract,
+            &|counter| match counter {
+                None => 1,
+                Some(counter) => counter.count + 1,
             },
         )?;
         Ok(Response::new().add_attribute("action", "reset"))
+    }
+
+    pub(crate) fn ibc_timeout(deps: DepsMut, contract: Addr) -> Result<Response, ContractError> {
+        utils::update_counter(
+            deps,
+            contract,
+            &|counter| match counter {
+                None => 10,
+                Some(counter) => counter.count + 10,
+            },
+            &|_counter| vec![],
+        )?;
+        Ok(Response::new().add_attribute("action", "timeout"))
     }
 }
 

@@ -32,3 +32,15 @@ pub struct GetCountResponse {
 pub struct GetTotalFundsResponse {
     pub total_funds: Vec<Coin>,
 }
+
+#[cw_serde]
+pub enum SudoMsg {
+    ReceiveAck {
+        channel: String,
+        sequence: u64,
+        ack: String,
+        success: bool,
+    },
+    #[serde(rename = "ibc_timeout")]
+    IBCTimeout { channel: String, sequence: u64 },
+}

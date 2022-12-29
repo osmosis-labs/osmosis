@@ -12,6 +12,7 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v4/modules/core/exported"
@@ -203,4 +204,158 @@ func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, cont
 	}
 
 	return isWasmRouted, contractAddr, msgBytes, nil
+}
+
+func (h WasmHooks) SendPacketOverride(i ICS4Middleware, ctx sdk.Context, chanCap *capabilitytypes.Capability, packet ibcexported.PacketI) error {
+	concretePacket, ok := packet.(channeltypes.Packet)
+	if !ok {
+		return i.channel.SendPacket(ctx, chanCap, packet) // continue
+	}
+
+	isIcs20, data := isIcs20Packet(concretePacket)
+	if !isIcs20 {
+		return i.channel.SendPacket(ctx, chanCap, packet) // continue
+	}
+
+	isCallbackRouted, metadata := jsonStringHasKey(data.GetMemo(), types.IBCCallbackKey)
+	if !isCallbackRouted {
+		return i.channel.SendPacket(ctx, chanCap, packet) // continue
+	}
+
+	// We remove the callback metadata from the memo as it has already been processed.
+
+	// If the only available key in the memo is the callback, we should remove the memo
+	// from the data completely so the packet is sent without it.
+	// This way receiver chains that are on old versions of IBC will be able to process the packet
+
+	callbackRaw := metadata[types.IBCCallbackKey] // This will be used later.
+	delete(metadata, types.IBCCallbackKey)
+	bzMetadata, err := json.Marshal(metadata)
+	if err != nil {
+		return sdkerrors.Wrap(err, "Send packet with callback error")
+	}
+	stringMetadata := string(bzMetadata)
+	if stringMetadata == "{}" {
+		data.Memo = ""
+	} else {
+		data.Memo = stringMetadata
+	}
+	dataBytes, err := json.Marshal(data)
+	if err != nil {
+		return sdkerrors.Wrap(err, "Send packet with callback error")
+	}
+
+	packetWithoutCallbackMemo := channeltypes.Packet{
+		Sequence:           concretePacket.Sequence,
+		SourcePort:         concretePacket.SourcePort,
+		SourceChannel:      concretePacket.SourceChannel,
+		DestinationPort:    concretePacket.DestinationPort,
+		DestinationChannel: concretePacket.DestinationChannel,
+		Data:               dataBytes,
+		TimeoutTimestamp:   concretePacket.TimeoutTimestamp,
+		TimeoutHeight:      concretePacket.TimeoutHeight,
+	}
+
+	err = i.channel.SendPacket(ctx, chanCap, packetWithoutCallbackMemo)
+	if err != nil {
+		return err
+	}
+
+	// Make sure the callback contract is a string and a valid bech32 addr. If it isn't, ignore this packet
+	contract, ok := callbackRaw.(string)
+	if !ok {
+		return nil
+	}
+	_, err = sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return nil
+	}
+
+	h.ibcHooksKeeper.StorePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence(), contract)
+	return nil
+}
+
+func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error {
+	err := im.App.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
+	if err != nil {
+		return err
+	}
+
+	if !h.ProperlyConfigured() {
+		// Not configured. Return from the underlying implementation
+		return nil
+	}
+
+	contract := h.ibcHooksKeeper.GetPacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
+	if contract == "" {
+		// No callback configured
+		return nil
+	}
+
+	contractAddr, err := sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return sdkerrors.Wrap(err, "Ack callback error") // The callback configured is not a bech32. Error out
+	}
+
+	success := "false"
+	if !osmoutils.IsAckError(acknowledgement) {
+		success = "true"
+	}
+
+	// Notify the sender that the ack has been received
+	ackAsJson, err := json.Marshal(acknowledgement)
+	if err != nil {
+		// If the ack is not a json object, error
+		return err
+	}
+
+	sudoMsg := []byte(fmt.Sprintf(
+		`{"receive_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}`,
+		packet.SourceChannel, packet.Sequence, ackAsJson, success))
+	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
+	if err != nil {
+		// error processing the callback
+		// ToDo: Open Question: Should we also delete the callback here?
+		return sdkerrors.Wrap(err, "Ack callback error")
+	}
+	h.ibcHooksKeeper.DeletePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
+	return nil
+}
+
+func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) error {
+	err := im.App.OnTimeoutPacket(ctx, packet, relayer)
+	if err != nil {
+		return err
+	}
+
+	if !h.ProperlyConfigured() {
+		// Not configured. Return from the underlying implementation
+		return nil
+	}
+
+	contract := h.ibcHooksKeeper.GetPacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
+	if contract == "" {
+		// No callback configured
+		return nil
+	}
+
+	contractAddr, err := sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return sdkerrors.Wrap(err, "Timeout callback error") // The callback configured is not a bech32. Error out
+	}
+
+	sudoMsg := []byte(fmt.Sprintf(
+		`{"ibc_timeout": {"channel": "%s", "sequence": %d}}`,
+		packet.SourceChannel, packet.Sequence))
+	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
+	if err != nil {
+		// error processing the callback. This could be because the contract doesn't implement the message type to
+		// process the callback. Retrying this will not help, so we delete the callback from storage.
+		// Since the packet has timed out, we don't expect any other responses that may trigger the callback.
+		h.ibcHooksKeeper.DeletePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
+		return sdkerrors.Wrap(err, "Timeout callback error")
+	}
+	//
+	h.ibcHooksKeeper.DeletePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
+	return nil
 }
