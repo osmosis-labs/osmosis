@@ -90,7 +90,7 @@ func (k Keeper) RouteExactAmountIn(
 // as input to a pool to get a minimum amount of the desired token out.
 // The method succeeds when tokenOutAmount is greater than tokenOutMinAmount defined.
 // Errors otherwise. Also, errors if the pool id is invalid, if tokens do not belong to the pool with given
-// id or f sender does not have the swapped-in tokenIn.
+// id or if sender does not have the swapped-in tokenIn.
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
