@@ -21,14 +21,14 @@ type PoolManager interface {
 		routes []swaproutertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
 		tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error)
-		
-	SwapExactAmountIn( 
-		ctx sdk.Context, 
-		sender sdk.AccAddress, 
-		poolId uint64, 
-		tokenIn sdk.Coin, 
-		tokenOutDenom string, 
-		tokenOutMinAmount sdk.Int, 
+
+	SwapExactAmountIn(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		poolId uint64,
+		tokenIn sdk.Coin,
+		tokenOutDenom string,
+		tokenOutMinAmount sdk.Int,
 	) (sdk.Int, error)
 }
 

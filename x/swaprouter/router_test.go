@@ -945,57 +945,57 @@ func (suite *KeeperTestSuite) calcInAmountAsSeparateSwaps(osmoFeeReduced bool, r
 
 func (suite *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 	tests := []struct {
-		name                    string
-		poolId 					uint64
-		poolCoins               sdk.Coins
-		poolFee                 sdk.Dec
-		incentivizedGauges      []uint64
-		tokenIn                 sdk.Coin
-		tokenOutDenom			string
-		tokenOutMinAmount       sdk.Int
-		swapFee                 sdk.Dec
-		expectedTokenOutAmount  sdk.Int
-		expectError             bool
+		name                   string
+		poolId                 uint64
+		poolCoins              sdk.Coins
+		poolFee                sdk.Dec
+		incentivizedGauges     []uint64
+		tokenIn                sdk.Coin
+		tokenOutDenom          string
+		tokenOutMinAmount      sdk.Int
+		swapFee                sdk.Dec
+		expectedTokenOutAmount sdk.Int
+		expectError            bool
 	}{
 		{
-			name:      "One route: Swap - [foo -> bar], 1 percent fee",
-			poolId: 1,
-			poolCoins: sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
-			poolFee:   defaultPoolSwapFee,
-			tokenIn:           sdk.NewCoin(foo, sdk.NewInt(100000)),
-			tokenOutMinAmount: sdk.NewInt(1),
-			tokenOutDenom: bar,
+			name:                   "One route: Swap - [foo -> bar], 1 percent fee",
+			poolId:                 1,
+			poolCoins:              sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
+			poolFee:                defaultPoolSwapFee,
+			tokenIn:                sdk.NewCoin(foo, sdk.NewInt(100000)),
+			tokenOutMinAmount:      sdk.NewInt(1),
+			tokenOutDenom:          bar,
 			expectedTokenOutAmount: sdk.NewInt(98999),
 		},
 		{
-			name:      "Wrong pool id",
-			poolId: 2,
-			poolCoins: sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
-			poolFee:   defaultPoolSwapFee,
+			name:              "Wrong pool id",
+			poolId:            2,
+			poolCoins:         sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
+			poolFee:           defaultPoolSwapFee,
 			tokenIn:           sdk.NewCoin(foo, sdk.NewInt(100000)),
 			tokenOutMinAmount: sdk.NewInt(1),
-			tokenOutDenom: bar,
-			expectError: true,
+			tokenOutDenom:     bar,
+			expectError:       true,
 		},
 		{
-			name:      "In denom not exist",
-			poolId: 1,
-			poolCoins: sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
-			poolFee:   defaultPoolSwapFee,
+			name:              "In denom not exist",
+			poolId:            1,
+			poolCoins:         sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
+			poolFee:           defaultPoolSwapFee,
 			tokenIn:           sdk.NewCoin(baz, sdk.NewInt(100000)),
 			tokenOutMinAmount: sdk.NewInt(1),
-			tokenOutDenom: bar,
-			expectError: true,
+			tokenOutDenom:     bar,
+			expectError:       true,
 		},
 		{
-			name:      "Out denom not exist",
-			poolId: 1,
-			poolCoins: sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
-			poolFee:   defaultPoolSwapFee,
+			name:              "Out denom not exist",
+			poolId:            1,
+			poolCoins:         sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
+			poolFee:           defaultPoolSwapFee,
 			tokenIn:           sdk.NewCoin(foo, sdk.NewInt(100000)),
 			tokenOutMinAmount: sdk.NewInt(1),
-			tokenOutDenom: baz,
-			expectError: true,
+			tokenOutDenom:     baz,
+			expectError:       true,
 		},
 	}
 

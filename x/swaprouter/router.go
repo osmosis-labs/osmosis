@@ -17,7 +17,8 @@ func (k Keeper) RouteExactAmountIn(
 	sender sdk.AccAddress,
 	routes []types.SwapAmountInRoute,
 	tokenIn sdk.Coin,
-	tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error) {
+	tokenOutMinAmount sdk.Int,
+) (tokenOutAmount sdk.Int, err error) {
 	var (
 		isMultiHopRouted bool
 		routeSwapFee     sdk.Dec
@@ -86,16 +87,16 @@ func (k Keeper) RouteExactAmountIn(
 }
 
 // SwapExactAmountIn is an api for swapping an exact amount of tokens
-// as input to a pool, using the provided swapFee. 
+// as input to a pool, using the provided swapFee.
 // transaction succeeds when tokenOutAmount is greater than tokenOutMinAmount defined.
 func (k Keeper) SwapExactAmountIn(
-	ctx sdk.Context, 
- 	sender sdk.AccAddress, 
- 	poolId uint64, 
- 	tokenIn sdk.Coin, 
- 	tokenOutDenom string, 
- 	tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error) {
-	
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	poolId uint64,
+	tokenIn sdk.Coin,
+	tokenOutDenom string,
+	tokenOutMinAmount sdk.Int,
+) (tokenOutAmount sdk.Int, err error) {
 	swapModule, err := k.GetPoolModule(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
@@ -331,7 +332,8 @@ func (k Keeper) isOsmoRoutedMultihop(ctx sdk.Context, route types.MultihopRoute,
 }
 
 func (k Keeper) getOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.MultihopRoute) (
-	totalPathSwapFee sdk.Dec, sumOfSwapFees sdk.Dec, err error) {
+	totalPathSwapFee sdk.Dec, sumOfSwapFees sdk.Dec, err error,
+) {
 	additiveSwapFee := sdk.ZeroDec()
 	maxSwapFee := sdk.ZeroDec()
 
