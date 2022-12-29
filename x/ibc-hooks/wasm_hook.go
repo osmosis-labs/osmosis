@@ -8,18 +8,18 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/keeper"
+	"github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
-	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
-	ibcexported "github.com/cosmos/ibc-go/v3/modules/core/exported"
+	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
+	ibcexported "github.com/cosmos/ibc-go/v4/modules/core/exported"
 
-	"github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types"
+	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 )
 
 type ContractAck struct {
@@ -60,10 +60,10 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
 	if err != nil {
-		return channeltypes.NewErrorAcknowledgement(err.Error())
+		return osmoutils.NewStringErrorAcknowledgement(err.Error())
 	}
 	if msgBytes == nil || contractAddr == nil { // This should never happen
-		return channeltypes.NewErrorAcknowledgement("error in wasmhook message validation")
+		return osmoutils.NewStringErrorAcknowledgement("error in wasmhook message validation")
 	}
 
 	// The funds sent on this packet need to be transferred to the wasm hooks module address/
@@ -75,7 +75,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	data.Receiver = WasmHookModuleAccountAddr.String()
 	bz, err := json.Marshal(data)
 	if err != nil {
-		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf("cannot marshal the ICS20 packet: %s", err.Error()))
+		return osmoutils.NewStringErrorAcknowledgement(fmt.Sprintf("cannot marshal the ICS20 packet: %s", err.Error()))
 	}
 	packet.Data = bz
 
@@ -89,7 +89,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	if !ok {
 		// This should never happen, as it should've been caught in the underlaying call to OnRecvPacket,
 		// but returning here for completeness
-		return channeltypes.NewErrorAcknowledgement("Invalid packet data: Amount is not an int")
+		return osmoutils.NewStringErrorAcknowledgement("Invalid packet data: Amount is not an int")
 	}
 
 	// The packet's denom is the denom in the sender chain. This needs to be converted to the local denom.
@@ -104,13 +104,13 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	}
 	response, err := h.execWasmMsg(ctx, &execMsg)
 	if err != nil {
-		return channeltypes.NewErrorAcknowledgement(err.Error())
+		return osmoutils.NewStringErrorAcknowledgement(err.Error())
 	}
 
 	fullAck := ContractAck{ContractResult: response.Data, IbcAck: ack.Acknowledgement()}
 	bz, err = json.Marshal(fullAck)
 	if err != nil {
-		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadResponse, err.Error()))
+		return osmoutils.NewStringErrorAcknowledgement(fmt.Sprintf(types.ErrBadResponse, err.Error()))
 	}
 
 	return channeltypes.NewResultAcknowledgement(bz)
@@ -305,7 +305,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
-		return sdkerrors.Wrap(err, "Ack callback error") // The callback configured is not a beck32. Error out
+		return sdkerrors.Wrap(err, "Ack callback error") // The callback configured is not a bech32. Error out
 	}
 
 	success := "false"
@@ -326,8 +326,47 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
 		// error processing the callback
+		// ToDo: Open Question: Should we also delete the callback here?
 		return sdkerrors.Wrap(err, "Ack callback error")
 	}
+	h.ibcHooksKeeper.DeletePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
+	return nil
+}
+
+func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) error {
+	err := im.App.OnTimeoutPacket(ctx, packet, relayer)
+	if err != nil {
+		return err
+	}
+
+	if !h.ProperlyConfigured() {
+		// Not configured. Return from the underlying implementation
+		return nil
+	}
+
+	contract := h.ibcHooksKeeper.GetPacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
+	if contract == "" {
+		// No callback configured
+		return nil
+	}
+
+	contractAddr, err := sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return sdkerrors.Wrap(err, "Timeout callback error") // The callback configured is not a bech32. Error out
+	}
+
+	sudoMsg := []byte(fmt.Sprintf(
+		`{"ibc_timeout": {"channel": "%s", "sequence": %d}}`,
+		packet.SourceChannel, packet.Sequence))
+	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
+	if err != nil {
+		// error processing the callback. This could be because the contract doesn't implement the message type to
+		// process the callback. Retrying this will not help, so we delete the callback from storage.
+		// Since the packet has timed out, we don't expect any other responses that may trigger the callback.
+		h.ibcHooksKeeper.DeletePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
+		return sdkerrors.Wrap(err, "Timeout callback error")
+	}
+	//
 	h.ibcHooksKeeper.DeletePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
 	return nil
 }

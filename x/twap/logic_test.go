@@ -1339,27 +1339,51 @@ func (s *TestSuite) TestTwapLog_CorrectBase() {
 	s.Require().Equal(expectedValue, result)
 }
 
-func (s *TestSuite) TestTwapLog_MaxSpotPrice() {
-	price := gammtypes.MaxSpotPrice
-	// log_2{2^128 - 1} = 128
-	expectedResult := sdk.MustNewDecFromStr("127.999999999999999999")
-	result := twap.TwapLog(price)
-
-	s.Require().Equal(expectedResult, result)
-}
-
-func (s *TestSuite) TestTwapLog_SmallestDec() {
-	zero := sdk.SmallestDec()
-	// https://www.wolframalpha.com/input?i=log+base+2+of+%2810%5E-18%29+with+20+digits
-	expectedResult := sdk.MustNewDecFromStr("59.794705707972522262").Neg()
-	result := twap.TwapLog(zero)
-
-	osmomath.ErrTolerance{
+func (s *TestSuite) TestTwapLog() {
+	smallestAdditiveTolerance := osmomath.ErrTolerance{
 		AdditiveTolerance: sdk.SmallestDec(),
-	}.CompareBigDec(
-		osmomath.BigDecFromSDKDec(expectedResult),
-		osmomath.BigDecFromSDKDec(result),
-	)
+	}
+
+	testcases := []struct {
+		name        string
+		price       sdk.Dec
+		expected    sdk.Dec
+		expectPanic bool
+	}{
+		{
+			"max spot price",
+			gammtypes.MaxSpotPrice,
+			// log_2{2^128 - 1} = 128
+			sdk.MustNewDecFromStr("127.999999999999999999"),
+			false,
+		},
+		{
+			"zero price - panic",
+			sdk.ZeroDec(),
+			sdk.Dec{},
+			true,
+		},
+		{
+			"smallest dec",
+			sdk.SmallestDec(),
+			// https://www.wolframalpha.com/input?i=log+base+2+of+%2810%5E-18%29+with+20+digits
+			sdk.MustNewDecFromStr("59.794705707972522262").Neg(),
+			false,
+		},
+	}
+
+	for _, tc := range testcases {
+		s.Run(tc.name, func() {
+			osmoassert.ConditionalPanic(s.T(), tc.expectPanic, func() {
+				result := twap.TwapLog(tc.price)
+
+				smallestAdditiveTolerance.CompareBigDec(
+					osmomath.BigDecFromSDKDec(tc.expected),
+					osmomath.BigDecFromSDKDec(result),
+				)
+			})
+		})
+	}
 }
 
 // TestTwapPow_CorrectBase tests that the base of 2 is used for the twap power function.
