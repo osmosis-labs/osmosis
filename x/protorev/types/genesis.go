@@ -19,10 +19,13 @@ var MaxInputAmount = sdk.NewInt(16_384)
 var StepSize = sdk.NewInt(1_000_000)
 
 // Max iterations for binary search (log2(16_384) = 14)
-const MaxIterations = 14
+const MaxIterations int = 14
 
-// Max iterable pools that can be arbitrage against per tx
-const MaxIterablePools = 5
+// Max number of routes that can be arbitraged per tx (default of 6)
+const MaxIterableRoutesPerTx uint64 = 15
+
+// Max number of routes that can be arbitraged per block (default of 100)
+const MaxIterableRoutesPerBlock uint64 = 200
 
 type TokenPair struct {
 	TokenA string
