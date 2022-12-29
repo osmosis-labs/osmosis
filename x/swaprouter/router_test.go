@@ -955,6 +955,14 @@ func (suite *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 		expectedTokenOutAmount sdk.Int
 		expectError            bool
 	}{
+		// We have:
+		//  - foo: 1000000000000
+		//  - bar: 1000000000000
+		//  - swapFee: 1%
+		//  - foo in: 100000
+		//  - bar amount out will be calculated according to the formula
+		// 		https://www.wolframalpha.com/input?i=solve+%2810%5E12+%2B+10%5E5+x+0.99%29%2810%5E12+-+x%29+%3D+10%5E24
+		// We round down the token amount out, get the result is 98999
 		{
 			name:                   "Swap - [foo -> bar], 1 percent fee",
 			poolId:                 1,
