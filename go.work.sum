@@ -259,9 +259,8 @@ github.com/opencontainers/selinux v1.8.2/go.mod h1:MUIHuUEvKB1wtJjQdOyYRgOnLD2xA
 github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYrxe9dPLANfrWvHYVTgc=
 github.com/openzipkin/zipkin-go v0.2.5/go.mod h1:KpXfKdgRDnnhsxw4pNIH9Md5lyFqKUa4YDFlwRYAMyE=
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.2/go.mod h1:T7CCZKYhKWASnv5mRE8u3m0gst3NZ/sU16Brjmv4UPw=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20221229123228-22e0e54afa70/go.mod h1:JleJ+kfjhlUpYnk7VfNrpHd+P7A5Lq5VhuAxGV7FbJM=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.3/go.mod h1:bASDMbNQ0vD+2YRsEqlKXg8NiEsJpQ8B8p3nR8kB+hA=
-github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.4/go.mod h1:JleJ+kfjhlUpYnk7VfNrpHd+P7A5Lq5VhuAxGV7FbJM=
 github.com/otiai10/copy v1.7.0/go.mod h1:rmRl6QPdJj6EiUqXQ/4Nn2lLXoNQjFCQbbNrxgc/t3U=
 github.com/otiai10/mint v1.3.3 h1:7JgpsBaN0uMkyju4tbYHu0mnM55hNKVYLsXmwr15NQI=
 github.com/otiai10/mint v1.3.3/go.mod h1:/yxELlJQ0ufhjUwhshSj+wFjZ78CnZ48/1wtmBH1OTc=
