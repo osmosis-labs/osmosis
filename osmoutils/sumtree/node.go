@@ -8,6 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// NewLeaf creates a leaf node with `key` and `acc`
+// Returns pointer to new node
 func NewLeaf(key []byte, acc sdk.Int) *Leaf {
 	return &Leaf{Leaf: &Child{
 		Index:        key,
@@ -15,10 +17,12 @@ func NewLeaf(key []byte, acc sdk.Int) *Leaf {
 	}}
 }
 
+// Leaf nodes are by construction always at level 0
 func (ptr *ptr) isLeaf() bool {
 	return ptr.level == 0
 }
 
+// node gets node that ptr is pointing to
 func (ptr *ptr) node() (res *Node) {
 	res = new(Node)
 	bz := ptr.tree.store.Get(ptr.tree.nodeKey(ptr.level, ptr.key))
@@ -30,6 +34,7 @@ func (ptr *ptr) node() (res *Node) {
 	return
 }
 
+// set sets ptr's node to passed in `node`
 func (ptr *ptr) set(node *Node) {
 	bz, err := proto.Marshal(node)
 	if err != nil {
@@ -38,6 +43,7 @@ func (ptr *ptr) set(node *Node) {
 	ptr.tree.store.Set(ptr.tree.nodeKey(ptr.level, ptr.key), bz)
 }
 
+// setLeaf sets ptr's node to `leaf`, errors if ptr is not pointing to a leaf node
 func (ptr *ptr) setLeaf(leaf *Leaf) {
 	if !ptr.isLeaf() {
 		panic("setLeaf should only be called on pointers to leaf nodes. This ptr is a branch")
@@ -49,16 +55,19 @@ func (ptr *ptr) setLeaf(leaf *Leaf) {
 	ptr.tree.store.Set(ptr.tree.leafKey(ptr.key), bz)
 }
 
+// delete removes ptr's node from store
 func (ptr *ptr) delete() {
 	ptr.tree.store.Delete(ptr.tree.nodeKey(ptr.level, ptr.key))
 }
 
+// leftSibling gets closest left sibling to ptr's node
 func (ptr *ptr) leftSibling() *ptr {
 	iter := ptr.tree.ptrReverseIterator(ptr.level, nil, ptr.key)
 	defer iter.Close()
 	return iter.ptr()
 }
 
+// rightSibling gets closest right sibling to ptr's node
 func (ptr *ptr) rightSibling() *ptr {
 	iter := ptr.tree.ptrIterator(ptr.level, ptr.key, nil)
 	defer iter.Close()
@@ -72,6 +81,7 @@ func (ptr *ptr) rightSibling() *ptr {
 	return iter.ptr()
 }
 
+// child gets the nth index child of ptr's node
 func (ptr *ptr) child(n uint16) *ptr {
 	// TODO: set end to prefix iterator end
 	iter := ptr.tree.ptrIterator(ptr.level-1, ptr.node().Children[n].Index, nil)
@@ -122,6 +132,7 @@ func (ptr *ptr) updateAccumulation(c *Child) {
 	ptr.parent().updateAccumulation(&Child{ptr.key, node.accumulate()})
 }
 
+// push inserts child node `c` below ptr's node and rebalances if needed
 func (ptr *ptr) push(c *Child) {
 	if !ptr.exists() {
 		ptr.create(NewNode(c))
@@ -164,6 +175,7 @@ func (ptr *ptr) push(c *Child) {
 	ptr.set(cs)
 }
 
+// pull removes child node `key` from ptr's node
 func (ptr *ptr) pull(key []byte) {
 	if !ptr.exists() {
 		return // reached at the root
@@ -208,6 +220,7 @@ func (ptr *ptr) pull(key []byte) {
 	}
 }
 
+// accumulate update's node's Accumulate field to be the sum of its childrens'
 func (node Node) accumulate() (res sdk.Int) {
 	res = sdk.ZeroInt()
 	for _, child := range node.Children {
@@ -216,6 +229,7 @@ func (node Node) accumulate() (res sdk.Int) {
 	return
 }
 
+// NewNode creates a node with children `cs`
 func NewNode(cs ...*Child) *Node {
 	return &Node{Children: cs}
 }
@@ -237,25 +251,35 @@ func (node Node) find(key []byte) (idx int, match bool) {
 	return len(node.Children), false
 }
 
+// setAcc sets the accumulator of `node`s child at index `idx` to `acc`
 func (node *Node) setAcc(idx int, acc sdk.Int) *Node {
 	node.Children[idx] = &Child{node.Children[idx].Index, acc}
 	return node
 }
 
+// insert appends child `c` under `node` at index `idx` and returns the new node
+// The actual tree update happens in the push function
 func (node *Node) insert(idx int, c *Child) *Node {
 	arr := append(node.Children[:idx], append([]*Child{c}, node.Children[idx:]...)...)
 	return NewNode(arr...)
 }
 
+// delete removes the child at index `idx` from `node`s children and returns the new node
+// The actual tree update happens in the pull function
 func (node *Node) delete(idx int) *Node {
 	node = NewNode(append(node.Children[:idx], node.Children[idx+1:]...)...)
 	return node
 }
 
+// split splits `node`s children at index `idx` and returns two new nodes
+// This is primarily used for rebalancing when insertions lead to too many
+// children under a node
 func (node *Node) split(idx int) (*Node, *Node) {
 	return NewNode(node.Children[:idx]...), NewNode(node.Children[idx:]...)
 }
 
+// merge combines the children of `node` and `node2` and returns a new node
+// This is primarily used for rebalancing when deletions lead to too few children
 func (node *Node) merge(node2 *Node) *Node {
 	return NewNode(append(node.Children, node2.Children...)...)
 }
