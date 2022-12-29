@@ -4,14 +4,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
+
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgSetValidatorSetPreference{}, "osmosis/valset-pref/MsgSetValidatorSetPreference", nil)
-	cdc.RegisterConcrete(&MsgDelegateToValidatorSet{}, "osmosis/valset-pref/MsgDelegateToValidatorSet", nil)
-	cdc.RegisterConcrete(&MsgUndelegateFromValidatorSet{}, "osmosis/valset-pref/MsgUndelegateFromValidatorSet", nil)
-	cdc.RegisterConcrete(&MsgWithdrawDelegationRewards{}, "osmosis/valset-pref/MsgWithdrawDelegationRewards", nil)
+	cdc.RegisterConcrete(&MsgSetValidatorSetPreference{}, "osmosis/MsgSetValidatorSetPreference", nil)
+	cdc.RegisterConcrete(&MsgDelegateToValidatorSet{}, "osmosis/MsgDelegateToValidatorSet", nil)
+	cdc.RegisterConcrete(&MsgUndelegateFromValidatorSet{}, "osmosis/MsgUndelegateFromValidatorSet", nil)
+	cdc.RegisterConcrete(&MsgWithdrawDelegationRewards{}, "osmosis/MsgWithdrawDelegationRewards", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -26,6 +28,16 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 }
 
 var (
-	Amino     = codec.NewLegacyAmino()
+	amino     = codec.NewLegacyAmino()
 	ModuleCdc = codec.NewProtoCodec(cdctypes.NewInterfaceRegistry())
 )
+
+func init() {
+	RegisterCodec(amino)
+	// Register all Amino interfaces and concrete types on the authz Amino codec so that this can later be
+	// used to properly serialize MsgGrant and MsgExec instances
+	sdk.RegisterLegacyAminoCodec(amino)
+	RegisterCodec(authzcodec.Amino)
+
+	amino.Seal()
+}

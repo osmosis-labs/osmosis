@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 type AppCreator = func(homepath string, legacyInvariantPeriod uint, baseappOptions ...func(*baseapp.BaseApp)) App
@@ -15,6 +16,7 @@ type App interface {
 	AppCodec() codec.Codec
 	GetAccountKeeper() AccountKeeper
 	GetBankKeeper() BankKeeper
+	GetStakingKeeper() stakingkeeper.Keeper
 	ModuleManager() module.Manager
 }
 

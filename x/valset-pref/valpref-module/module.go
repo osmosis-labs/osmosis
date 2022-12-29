@@ -20,8 +20,7 @@ import (
 	valsetprefcli "github.com/osmosis-labs/osmosis/v13/x/valset-pref/client/cli"
 	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/client/grpc"
 	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/simulation"
-
+	simulation "github.com/osmosis-labs/osmosis/v13/x/valset-pref/simulation"
 	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -38,11 +37,10 @@ var (
 
 // AppModuleBasic implements the AppModuleBasic interface for the capability module.
 type AppModuleBasic struct {
-	cdc codec.Codec
 }
 
-func NewAppModuleBasic(cdc codec.Codec) AppModuleBasic {
-	return AppModuleBasic{cdc: cdc}
+func NewAppModuleBasic() AppModuleBasic {
+	return AppModuleBasic{}
 }
 
 // Name returns the capability module's name.
@@ -100,13 +98,21 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper keeper.Keeper
+	keeper             keeper.Keeper
+	stakingKeeper      types.StakingInterface
+	distributionKeeper types.DistributionKeeper
 }
 
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
+func NewAppModule(
+	keeper keeper.Keeper,
+	stakingKeeper types.StakingInterface,
+	distributionKeeper types.DistributionKeeper,
+) AppModule {
 	return AppModule{
-		AppModuleBasic: NewAppModuleBasic(cdc),
-		keeper:         keeper,
+		AppModuleBasic:     NewAppModuleBasic(),
+		keeper:             keeper,
+		stakingKeeper:      stakingKeeper,
+		distributionKeeper: distributionKeeper,
 	}
 }
 
@@ -167,9 +173,15 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // AppModuleSimulation functions
 
+// GenerateGenesisState creates a randomized GenState of the valset module.
+func (am AppModule) GenerateGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
+}
+
 // WeightedOperations returns the all the valset module operations with their respective weights.
 func (am AppModule) Actions() []simtypes.Action {
 	return []simtypes.Action{
 		simtypes.NewMsgBasedAction("set validator set preference", am.keeper, simulation.RandomMsgSetValSetPreference),
+		//simtypes.NewMsgBasedAction("delegate to validator set preference", am.keeper, simulation.RandomMsgDelegateToValSet),
+		//simtypes.NewMsgBasedAction("undelegate from validator set preference", am.keeper, simulation.RandomMsgUnDelegateToValSet),
 	}
 }

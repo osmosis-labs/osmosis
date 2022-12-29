@@ -2,48 +2,45 @@ package simulation
 
 import (
 	"fmt"
-	"math"
 	"math/rand"
 	"time"
 
 	osmosimtypes "github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	valsetkeeper "github.com/osmosis-labs/osmosis/v13/x/valset-pref"
 	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
 )
 
 func RandomMsgSetValSetPreference(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*types.MsgSetValidatorSetPreference, error) {
-	var sk types.StakingInterface
 	// Generate random digit from 0-1 with
-	randWeight := RandomWeight()
+	//randWeight := RandomWeight()
 
 	// Generate random validators
-	randValidator := RandomValidator(ctx, sk)
-	if randValidator == nil {
+	randValidator := RandomValidator(ctx, sim)
+	if randValidator == "" {
 		return nil, fmt.Errorf("No validator")
 	}
 
 	return &types.MsgSetValidatorSetPreference{
+		Delegator: sim.RandomSimAccount().Address.String(),
 		Preferences: []types.ValidatorPreference{
 			{
-				Weight:         randWeight,
-				ValOperAddress: randValidator.OperatorAddress,
+				Weight:         sdk.NewDec(1),
+				ValOperAddress: randValidator,
 			},
 		},
 	}, nil
 }
 
 func RandomMsgDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*types.MsgDelegateToValidatorSet, error) {
-	var sk types.StakingInterface
 	delegator := sim.RandomSimAccount()
-	// check if the delegator either a valset created or existing delegations
-	_, err := RandomDelegationAndAccount(ctx, delegator.Address, sk)
-	if err != nil {
-		return nil, err
-	}
+	// check if the delegator has either a valset created or existing delegations
+	// _, err := GetRandomDelegation(ctx, k, sim, delegator.Address)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	delegationCoin := sim.RandExponentialCoin(ctx, delegator.Address)
 	return &types.MsgDelegateToValidatorSet{
@@ -54,13 +51,12 @@ func RandomMsgDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, 
 }
 
 func RandomMsgUnDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*types.MsgUndelegateFromValidatorSet, error) {
-	var sk types.StakingInterface
 	delegator := sim.RandomSimAccount()
 	// check if the delegator either a valset created or existing delegations
-	_, err := RandomDelegationAndAccount(ctx, delegator.Address, sk)
-	if err != nil {
-		return nil, err
-	}
+	// _, err := GetRandomDelegation(ctx, k, sim, delegator.Address)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	undelegationCoin := sim.RandExponentialCoin(ctx, delegator.Address)
 	return &types.MsgUndelegateFromValidatorSet{
@@ -74,22 +70,31 @@ func RandomMsgWithdrawDelReward(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx,
 }
 
 // TODO: move this in simulator folder account.go
-func RandomValidator(ctx sdk.Context, sk types.StakingInterface) *stakingtypes.Validator {
-	var r *rand.Rand
-	validators := sk.GetAllValidators(ctx)
+func RandomValidator(ctx sdk.Context, sim *osmosimtypes.SimCtx) string {
+	validators := sim.StakingKeeper().GetValidators(ctx, 100)
 	if len(validators) == 0 {
-		return nil
+		return ""
 	}
-	return &validators[r.Intn(len(validators))]
+
+	valAddr := validators[rand.Intn(len(validators))]
+	return valAddr.OperatorAddress
 }
 
-func RandomDelegationAndAccount(ctx sdk.Context, delegatorAddr sdk.AccAddress, sk types.StakingInterface) ([]stakingtypes.Delegation, error) {
-	delegations := sk.GetDelegatorDelegations(ctx, delegatorAddr, math.MaxUint16)
-	if len(delegations) == 0 {
-		return nil, fmt.Errorf("No delegations")
-	}
-	return delegations, nil
-}
+// func GetRandomDelegation(ctx sdk.Context, k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, delegatorAddr sdk.AccAddress) (*stakingtypes.Delegation, error) {
+// 	// Get Valset delegations
+// 	valSetDelegations, found := k.GetValidatorSetPreference(ctx, delegatorAddr.String())
+// 	// TODO: Change this to user GetDelegations() once #3857 gets merged
+// 	if !found {
+// 		// gets the existing delegation
+// 		existingDelegations := sim.StakingKeeper().GetDelegatorDelegations(ctx, delegatorAddr, math.MaxUint16)
+// 		if len(existingDelegations) == 0 {
+// 			return &stakingtypes.Delegation{}, fmt.Errorf("No delegations")
+// 		}
+// 		return &existingDelegations[rand.Intn(len(existingDelegations))], nil
+// 	}
+
+// 	return &valSetDelegations[rand.Intn(len(valSetDelegations))], nil
+// }
 
 // Random float point from 0-1
 func RandomWeight() sdk.Dec {
