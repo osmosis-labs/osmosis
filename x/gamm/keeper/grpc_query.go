@@ -422,10 +422,7 @@ func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.Query
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	// TODO: remove this redundancy after making routes be shared between x/gamm and x/swaprouter.
-	swaprouterRoutes := types.ConvertAmountInRoutes(req.Routes)
-
-	tokenOutAmount, err := q.Keeper.poolManager.MultihopEstimateOutGivenExactAmountIn(sdkCtx, swaprouterRoutes, tokenIn)
+	tokenOutAmount, err := q.Keeper.poolManager.MultihopEstimateOutGivenExactAmountIn(sdkCtx, req.Routes, tokenIn)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -452,10 +449,7 @@ func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.Quer
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	// TODO: remove this redundancy after making routes be shared between x/gamm and x/swaprouter.
-	swaprouterRoutes := types.ConvertAmountOutRoutes(req.Routes)
-
-	tokenInAmount, err := q.Keeper.poolManager.MultihopEstimateInGivenExactAmountOut(sdkCtx, swaprouterRoutes, tokenOut)
+	tokenInAmount, err := q.Keeper.poolManager.MultihopEstimateInGivenExactAmountOut(sdkCtx, req.Routes, tokenOut)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
