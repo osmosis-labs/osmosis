@@ -41,4 +41,6 @@ pub enum SudoMsg {
         ack: String,
         success: bool,
     },
+    #[serde(rename = "ibc_timeout")]
+    IBCTimeout { channel: String, sequence: u64 },
 }
