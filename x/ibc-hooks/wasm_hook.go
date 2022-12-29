@@ -1,8 +1,10 @@
 package ibc_hooks
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -28,14 +30,18 @@ type ContractAck struct {
 }
 
 type WasmHooks struct {
-	ContractKeeper *wasmkeeper.PermissionedKeeper
-	ibcHooksKeeper *keeper.Keeper
+	ContractKeeper      *wasmkeeper.PermissionedKeeper
+	ibcHooksKeeper      *keeper.Keeper
+	bankKeeper          *bankkeeper.BaseKeeper
+	bech32PrefixAccAddr string
 }
 
-func NewWasmHooks(ibcHooksKeeper *keeper.Keeper, contractKeeper *wasmkeeper.PermissionedKeeper) WasmHooks {
+func NewWasmHooks(ibcHooksKeeper *keeper.Keeper, contractKeeper *wasmkeeper.PermissionedKeeper, bankKeeper *bankkeeper.BaseKeeper, bech32PrefixAccAddr string) WasmHooks {
 	return WasmHooks{
-		ContractKeeper: contractKeeper,
-		ibcHooksKeeper: ibcHooksKeeper,
+		ContractKeeper:      contractKeeper,
+		ibcHooksKeeper:      ibcHooksKeeper,
+		bankKeeper:          bankKeeper,
+		bech32PrefixAccAddr: bech32PrefixAccAddr,
 	}
 }
 
@@ -96,8 +102,25 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	denom := osmoutils.MustExtractDenomFromPacketOnRecv(packet)
 	funds := sdk.NewCoins(sdk.NewCoin(denom, amount))
 
+	// Calculate the caller based on the packet's channel and sender
+	senderStr := fmt.Sprintf("%s/%s", packet.GetDestChannel(), data.GetSender())
+	senderHash32 := sha256.Sum256([]byte(senderStr))
+	sender := sdk.AccAddress(senderHash32[:])
+	senderBech32, err := sdk.Bech32ifyAddressBytes(h.bech32PrefixAccAddr, sender)
+	if err != nil {
+		return osmoutils.NewStringErrorAcknowledgement(fmt.Sprintf("cannot convert sender address %s to bech32: %s", senderStr, err.Error()))
+	}
+
+	// We send the funds to the local caller so that wasmd can transfer the funds from that account to the contract
+	if !funds.IsZero() {
+		if err := h.bankKeeper.SendCoins(ctx, WasmHookModuleAccountAddr, sender, funds); err != nil {
+			return osmoutils.NewStringErrorAcknowledgement(fmt.Sprintf("cannot transfer funds to intermediate account %s: %s", senderStr, err.Error()))
+		}
+	}
+
+	// Execute the contract
 	execMsg := wasmtypes.MsgExecuteContract{
-		Sender:   WasmHookModuleAccountAddr.String(),
+		Sender:   senderBech32,
 		Contract: contractAddr.String(),
 		Msg:      msgBytes,
 		Funds:    funds,
