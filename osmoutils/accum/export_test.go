@@ -77,3 +77,7 @@ func WithPosition(accum AccumulatorObject, addr sdk.Address, position Record) Ac
 func (accum *AccumulatorObject) SetValue(value sdk.DecCoins) {
 	accum.value = value
 }
+
+func (o *Options) Validate() error {
+	return o.validate()
+}
