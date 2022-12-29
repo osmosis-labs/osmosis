@@ -949,11 +949,9 @@ func (suite *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 		poolId                 uint64
 		poolCoins              sdk.Coins
 		poolFee                sdk.Dec
-		incentivizedGauges     []uint64
 		tokenIn                sdk.Coin
 		tokenOutDenom          string
 		tokenOutMinAmount      sdk.Int
-		swapFee                sdk.Dec
 		expectedTokenOutAmount sdk.Int
 		expectError            bool
 	}{
