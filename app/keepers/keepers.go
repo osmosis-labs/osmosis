@@ -60,6 +60,7 @@ import (
 
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v13/wasmbinding"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
 	epochskeeper "github.com/osmosis-labs/osmosis/v13/x/epochs/keeper"
 	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
@@ -132,6 +133,10 @@ type AppKeepers struct {
 	TokenFactoryKeeper           *tokenfactorykeeper.Keeper
 	SwapRouterKeeper             *swaprouter.Keeper
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
+	// Note: this keeper is unwired. It is only present to avoid build
+	// issues in tests. However, It is not yet wired to be used
+	// in regular app code.
+	ConcentratedLiquidityKeeper *concentratedliquidity.Keeper
 
 	// IBC modules
 	// transfer module
