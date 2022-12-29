@@ -163,11 +163,12 @@ func (suite *AccumTestSuite) TestNewPosition() {
 			numShareUnits:    positionOne.NumShares,
 			expectedPosition: positionOne,
 		},
-		"test address two - position created": {
+		"test address two (non-nil options) - position created": {
 			accObject:        accObject,
 			addr:             testAddressTwo,
 			numShareUnits:    positionTwo.NumShares,
 			expectedPosition: positionTwo,
+			options:          &emptyPositionOptions,
 		},
 		"test address one - position overwritten": {
 			accObject:        accObject,
