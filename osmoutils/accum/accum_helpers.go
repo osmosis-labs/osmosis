@@ -7,11 +7,12 @@ import (
 )
 
 // Creates a new position at accumulator's current value with a specific number of shares and unclaimed rewards
-func createNewPosition(accum AccumulatorObject, addr sdk.AccAddress, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options PositionOptions) {
+func createNewPosition(accum AccumulatorObject, addr sdk.AccAddress, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
 	position := Record{
 		NumShares:        numShareUnits,
 		InitAccumValue:   accum.value,
 		UnclaimedRewards: unclaimedRewards,
+		Options:          options,
 	}
 	osmoutils.MustSet(accum.store, formatPositionPrefixKey(accum.name, addr.String()), &position)
 }

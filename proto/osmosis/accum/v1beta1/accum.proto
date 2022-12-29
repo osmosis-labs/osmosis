@@ -13,6 +13,8 @@ message AccumulatorContent {
   ];
 }
 
+message Options {}
+
 message Record {
   string num_shares = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
@@ -26,4 +28,5 @@ message Record {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable) = false
   ];
+  Options options = 4;
 }
