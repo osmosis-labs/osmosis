@@ -1008,14 +1008,11 @@ func (suite *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 				ExitFee: sdk.ZeroDec(),
 			})
 
+			// execute the swap
+			multihopTokenOutAmount, err := swaprouterKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], tc.poolId, tc.tokenIn, tc.tokenOutDenom, tc.tokenOutMinAmount)
 			if tc.expectError {
-				// execute the swap
-				_, err := swaprouterKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], tc.poolId, tc.tokenIn, tc.tokenOutDenom, tc.tokenOutMinAmount)
 				suite.Require().Error(err)
 			} else {
-				// execute the swap
-				multihopTokenOutAmount, err := swaprouterKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], tc.poolId, tc.tokenIn, tc.tokenOutDenom, tc.tokenOutMinAmount)
-				fmt.Println("multihopTokenOutAmount", multihopTokenOutAmount)
 				// compare the expected tokenOut to the actual tokenOut
 				suite.Require().NoError(err)
 				suite.Require().Equal(tc.expectedTokenOutAmount.String(), multihopTokenOutAmount.String())
