@@ -86,18 +86,15 @@ service Query {
         "/osmosis/gamm/v1beta1/pools/{pool_id}/prices";
   }
 
-  // Deprecated: please use EstimateSwapExactAmountIn in x/swaprouter.
+  // Estimate the swap.
   rpc EstimateSwapExactAmountIn(QuerySwapExactAmountInRequest)
       returns (QuerySwapExactAmountInResponse) {
-    option deprecated = true;
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_in";
   }
 
-  // Deprecated: please use EstimateSwapExactAmountOut in x/swaprouter.
   rpc EstimateSwapExactAmountOut(QuerySwapExactAmountOutRequest)
       returns (QuerySwapExactAmountOutResponse) {
-    option deprecated = true;
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_out";
   }
@@ -125,11 +122,8 @@ message QueryPoolsResponse {
 }
 
 //=============================== NumPools
-// Deprecated: use QueryNumPoolsRequest in x/swaprouter.
-message QueryNumPoolsRequest { option deprecated = true; }
-// Deprecated: use QueryNumPoolsResponse in x/swaprouter.
+message QueryNumPoolsRequest {}
 message QueryNumPoolsResponse {
-  option deprecated = true;
   uint64 num_pools = 1 [ (gogoproto.moretags) = "yaml:\"num_pools\"" ];
 }
 
@@ -265,9 +259,7 @@ message QuerySpotPriceResponse {
 }
 
 //=============================== EstimateSwapExactAmountIn
-// Deprecated: use QuerySwapExactAmountInRequest in x/swaprouter.
 message QuerySwapExactAmountInRequest {
-  option deprecated = true;
   // TODO: CHANGE THIS TO RESERVED IN A PATCH RELEASE
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
@@ -278,9 +270,7 @@ message QuerySwapExactAmountInRequest {
   ];
 }
 
-// Deprecated: use QuerySwapExactAmountInResponse in x/swaprouter.
 message QuerySwapExactAmountInResponse {
-  option deprecated = true;
   string token_out_amount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_out_amount\"",
@@ -289,9 +279,7 @@ message QuerySwapExactAmountInResponse {
 }
 
 //=============================== EstimateSwapExactAmountOut
-// Deprecated: use QuerySwapExactAmountOutRequest in x/swaprouter.
 message QuerySwapExactAmountOutRequest {
-  option deprecated = true;
   // TODO: CHANGE THIS TO RESERVED IN A PATCH RELEASE
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
@@ -302,9 +290,7 @@ message QuerySwapExactAmountOutRequest {
   string token_out = 4 [ (gogoproto.moretags) = "yaml:\"token_out\"" ];
 }
 
-// Deprecated: use QuerySwapExactAmountOutResponse in x/swaprouter.
 message QuerySwapExactAmountOutResponse {
-  option deprecated = true;
   string token_in_amount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_in_amount\"",

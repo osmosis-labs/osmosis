@@ -10,16 +10,10 @@ option go_package = "github.com/osmosis-labs/osmosis/v13/x/gamm/types";
 service Msg {
   rpc JoinPool(MsgJoinPool) returns (MsgJoinPoolResponse);
   rpc ExitPool(MsgExitPool) returns (MsgExitPoolResponse);
-  // Deprecated: use SwapExactAmountIn in x/swaprouter.
   rpc SwapExactAmountIn(MsgSwapExactAmountIn)
-      returns (MsgSwapExactAmountInResponse) {
-    option deprecated = true;
-  }
-  // Deprecated: use SwapExactAmountOut in x/swaprouter.
+      returns (MsgSwapExactAmountInResponse) {}
   rpc SwapExactAmountOut(MsgSwapExactAmountOut)
-      returns (MsgSwapExactAmountOutResponse) {
-    option deprecated = true;
-  }
+      returns (MsgSwapExactAmountOutResponse) {}
   rpc JoinSwapExternAmountIn(MsgJoinSwapExternAmountIn)
       returns (MsgJoinSwapExternAmountInResponse);
   rpc JoinSwapShareAmountOut(MsgJoinSwapShareAmountOut)
@@ -81,17 +75,14 @@ message MsgExitPoolResponse {
   ];
 }
 
-// Deprecated: use SwapAmountInRoute in x/swaprouter.
-// This route will be removed in the future.
+// ===================== MsgSwapExactAmountIn
 message SwapAmountInRoute {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string token_out_denom = 2
       [ (gogoproto.moretags) = "yaml:\"token_out_denom\"" ];
 }
 
-// Deprecated: use MsgSwapExactAmountIn in x/swaprouter.
 message MsgSwapExactAmountIn {
-  option deprecated = true;
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   repeated osmosis.swaprouter.v1beta1.SwapAmountInRoute routes = 2
       [ (gogoproto.nullable) = false ];
@@ -106,9 +97,7 @@ message MsgSwapExactAmountIn {
   ];
 }
 
-// Deprecated: use MsgSwapExactAmountInResponse in x/swaprouter.
 message MsgSwapExactAmountInResponse {
-  option deprecated = true;
   string token_out_amount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_out_amount\"",
@@ -116,9 +105,7 @@ message MsgSwapExactAmountInResponse {
   ];
 }
 
-// Deprecated: use MsgSwapExactAmountOut in x/swaprouter.
 message MsgSwapExactAmountOut {
-  option deprecated = true;
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   repeated osmosis.swaprouter.v1beta1.SwapAmountOutRoute routes = 2
       [ (gogoproto.nullable) = false ];
@@ -133,9 +120,7 @@ message MsgSwapExactAmountOut {
   ];
 }
 
-// Deprecated: use MsgSwapExactAmountOutResponse in x/swaprouter.
 message MsgSwapExactAmountOutResponse {
-  option deprecated = true;
   string token_in_amount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_in_amount\"",
