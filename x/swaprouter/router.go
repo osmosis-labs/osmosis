@@ -86,9 +86,11 @@ func (k Keeper) RouteExactAmountIn(
 	return tokenOutAmount, nil
 }
 
-// SwapExactAmountIn is an api for swapping an exact amount of tokens
-// as input to a pool, using the provided swapFee.
-// transaction succeeds when tokenOutAmount is greater than tokenOutMinAmount defined.
+// SwapExactAmountIn is an API for swapping an exact amount of tokens
+// as input to a pool to get a minimum amount of the desired token out.
+// The method succeeds when tokenOutAmount is greater than tokenOutMinAmount defined.
+// Errors otherwise. Also, errors if the pool id is invalid, if tokens do not belong to the pool with given
+// id or f sender does not have the swapped-in tokenIn.
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
