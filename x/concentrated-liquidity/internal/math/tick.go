@@ -32,9 +32,9 @@ func TickToSqrtPrice(tickIndex sdk.Int) (sqrtPrice sdk.Dec, err error) {
 	// we need to take one over the original equation in order to make the power positive.
 	var sqrtPriceOsmoMath osmomath.BigDec
 	if tickIndex.GTE(sdk.ZeroInt()) {
-		sqrtPriceOsmoMath, err = TickBase.Power(tickIndex.Uint64()).ApproxSqrt()
+		sqrtPriceOsmoMath, err = TickBase.PowerInteger(tickIndex.Uint64()).ApproxSqrt()
 	} else {
-		sqrtPriceOsmoMath, err = osmomath.OneDec().Quo(TickBase.Power(tickIndex.Abs().Uint64())).ApproxSqrt()
+		sqrtPriceOsmoMath, err = osmomath.OneDec().Quo(TickBase.PowerInteger(tickIndex.Abs().Uint64())).ApproxSqrt()
 	}
 	if err != nil {
 		return sdk.Dec{}, err

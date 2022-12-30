@@ -3,7 +3,7 @@ package math
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 // liquidity0 takes an amount of asset0 in the pool as well as the sqrtpCur and the nextPrice
