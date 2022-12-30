@@ -7,6 +7,7 @@ package osmosis.concentratedliquidity.v1beta1;
 
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model";
 
@@ -15,5 +16,10 @@ message Position {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"liquidity\"",
     (gogoproto.nullable) = false
+  ];
+  google.protobuf.Timestamp join_time = 2 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"join_time\""
   ];
 }

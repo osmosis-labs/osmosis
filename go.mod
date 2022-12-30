@@ -3,6 +3,7 @@ module github.com/osmosis-labs/osmosis/v13
 go 1.18
 
 require (
+	cosmossdk.io/errors v1.0.0-beta.7
 	github.com/CosmWasm/wasmd v0.30.0
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8
 	github.com/cosmos/cosmos-sdk v0.46.7
@@ -39,7 +40,6 @@ require (
 )
 
 require (
-	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	github.com/Abirdcfly/dupword v0.0.7 // indirect
 	github.com/Djarvur/go-err113 v0.0.0-20210108212216-aea10b59be24 // indirect
 	github.com/alingse/asasalint v0.0.11 // indirect

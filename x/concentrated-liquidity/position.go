@@ -57,6 +57,10 @@ func (k Keeper) initOrUpdatePosition(
 	// TODO: consider deleting position if liquidity becomes zero
 
 	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, position)
+
+	// Update pool's liquidity tree to reflect new position
+	k.updateLiquidityTree(ctx, poolId, position, liquidityBefore, liquidityAfter)
+
 	return nil
 }
 

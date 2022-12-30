@@ -55,6 +55,7 @@ func (t Tree) Remove(key []byte) {
 	parent.pull(key)
 }
 
+// Add amt to the accumulator value at key's node
 func (t Tree) Increase(key []byte, amt sdk.Int) {
 	value := t.Get(key)
 	t.Set(key, value.Add(amt))
