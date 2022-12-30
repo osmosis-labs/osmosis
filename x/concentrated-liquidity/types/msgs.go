@@ -54,7 +54,10 @@ func (msg MsgCreatePosition) ValidateBasic() error {
 }
 
 func (msg MsgCreatePosition) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	// TODO: re-enable this when CL state-breakage PR is merged.
+	// return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	// return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	return nil
 }
 
 func (msg MsgCreatePosition) GetSigners() []sdk.AccAddress {
@@ -95,7 +98,9 @@ func (msg MsgWithdrawPosition) ValidateBasic() error {
 }
 
 func (msg MsgWithdrawPosition) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	// TODO: re-enable this when CL state-breakage PR is merged.
+	// return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	return nil
 }
 
 func (msg MsgWithdrawPosition) GetSigners() []sdk.AccAddress {

@@ -135,6 +135,10 @@ type AppKeepers struct {
 	SwapRouterKeeper             *swaprouter.Keeper
 	ConcentratedLiquidityKeeper  *concentratedliquidity.Keeper
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
+	// Note: this keeper is unwired. It is only present to avoid build
+	// issues in tests. However, It is not yet wired to be used
+	// in regular app code.
+	ConcentratedLiquidityKeeper *concentratedliquidity.Keeper
 
 	// IBC modules
 	// transfer module

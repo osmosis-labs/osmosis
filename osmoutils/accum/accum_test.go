@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/iavl"
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	dbm "github.com/tendermint/tm-db"
 
@@ -26,7 +27,7 @@ var (
 	testAddressTwo   = sdk.AccAddress([]byte("addr2_______________"))
 	testAddressThree = sdk.AccAddress([]byte("addr3_______________"))
 
-	emptyPositionOptions = accumPackage.PositionOptions{}
+	emptyPositionOptions = accumPackage.Options{}
 	testNameOne          = "myaccumone"
 	testNameTwo          = "myaccumtwo"
 	testNameThree        = "myaccumthree"
@@ -153,42 +154,38 @@ func (suite *AccumTestSuite) TestNewPosition() {
 		accObject        accumPackage.AccumulatorObject
 		addr             sdk.AccAddress
 		numShareUnits    sdk.Dec
-		options          accumPackage.PositionOptions
+		options          *accumPackage.Options
 		expectedPosition accumPackage.Record
 	}{
 		"test address one - position created": {
 			accObject:        accObject,
 			addr:             testAddressOne,
 			numShareUnits:    positionOne.NumShares,
-			options:          emptyPositionOptions,
 			expectedPosition: positionOne,
 		},
-		"test address two - position created": {
+		"test address two (non-nil options) - position created": {
 			accObject:        accObject,
 			addr:             testAddressTwo,
 			numShareUnits:    positionTwo.NumShares,
-			options:          emptyPositionOptions,
 			expectedPosition: positionTwo,
+			options:          &emptyPositionOptions,
 		},
 		"test address one - position overwritten": {
 			accObject:        accObject,
 			addr:             testAddressOne,
 			numShareUnits:    positionOneV2.NumShares,
-			options:          emptyPositionOptions,
 			expectedPosition: positionOneV2,
 		},
 		"test address three - added": {
 			accObject:        accObject,
 			addr:             testAddressThree,
 			numShareUnits:    positionThree.NumShares,
-			options:          emptyPositionOptions,
 			expectedPosition: positionThree,
 		},
 		"test address one with non-empty accumulator - position created": {
 			accObject:        accumPackage.CreateRawAccumObject(suite.store, testNameTwo, initialCoinsDenomOne),
 			addr:             testAddressOne,
 			numShareUnits:    positionOne.NumShares,
-			options:          emptyPositionOptions,
 			expectedPosition: withInitialAccumValue(positionOne, initialCoinsDenomOne),
 		},
 	}
@@ -225,8 +222,8 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 	accumNoRewards := accumPackage.CreateRawAccumObject(suite.store, testNameOne, emptyCoins)
 
 	// Create positions at testAddressOne and testAddressTwo.
-	accumNoRewards.NewPosition(testAddressOne, positionOne.NumShares, emptyPositionOptions)
-	accumNoRewards.NewPosition(testAddressTwo, positionTwo.NumShares, emptyPositionOptions)
+	accumNoRewards.NewPosition(testAddressOne, positionOne.NumShares, nil)
+	accumNoRewards.NewPosition(testAddressTwo, positionTwo.NumShares, nil)
 
 	// 2. One accumulator reward coin, 1 position accumulator, no unclaimed rewards in position.
 	accumOneReward := accumPackage.CreateRawAccumObject(suite.store, testNameTwo, initialCoinsDenomOne)
@@ -245,7 +242,7 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 	accumThreeRewards = accumPackage.WithPosition(accumThreeRewards, testAddressOne, withUnclaimedRewards(positionOne, initialCoinsDenomOne))
 
 	// Create positions at testAddressThree with no unclaimed rewards.
-	accumThreeRewards.NewPosition(testAddressTwo, positionTwo.NumShares, emptyPositionOptions)
+	accumThreeRewards.NewPosition(testAddressTwo, positionTwo.NumShares, nil)
 
 	// Triple the accumulator value.
 	accumThreeRewards.SetValue(tripleDenomOneAndTwo)
@@ -464,7 +461,7 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 
 			// Create new position in store (raw to minimize dependencies)
 			if !tc.addrDoesNotExist {
-				accumPackage.CreateRawPosition(curAccum, addr, tc.startingNumShares, tc.startingUnclaimedRewards, emptyPositionOptions)
+				accumPackage.CreateRawPosition(curAccum, addr, tc.startingNumShares, tc.startingUnclaimedRewards, nil)
 			}
 
 			// Update accumulator with expAccumDelta (increasing position's rewards by a proportional amount)
@@ -652,7 +649,7 @@ func (suite *AccumTestSuite) TestRemoveFromPosition() {
 
 			// Create new position in store (raw to minimize dependencies)
 			if !tc.addrDoesNotExist {
-				accumPackage.CreateRawPosition(curAccum, addr, tc.startingNumShares, tc.startingUnclaimedRewards, emptyPositionOptions)
+				accumPackage.CreateRawPosition(curAccum, addr, tc.startingNumShares, tc.startingUnclaimedRewards, nil)
 			}
 
 			// Update accumulator with expAccumDelta (increasing position's rewards by a proportional amount)
@@ -763,7 +760,7 @@ func (suite *AccumTestSuite) TestGetPositionSize() {
 
 			// Create new position in store (raw to minimize dependencies)
 			if !tc.addrDoesNotExist {
-				accumPackage.CreateRawPosition(curAccum, addr, tc.numShares, sdk.NewDecCoins(), emptyPositionOptions)
+				accumPackage.CreateRawPosition(curAccum, addr, tc.numShares, sdk.NewDecCoins(), nil)
 			}
 
 			// Update accumulator with expAccumDelta (increasing position's rewards by a proportional amount)
@@ -773,7 +770,7 @@ func (suite *AccumTestSuite) TestGetPositionSize() {
 			positionSize, err := curAccum.GetPositionSize(addr)
 
 			if tc.changedShares.GT(sdk.ZeroDec()) {
-				accumPackage.CreateRawPosition(curAccum, addr, tc.numShares.Add(tc.changedShares), sdk.NewDecCoins(), emptyPositionOptions)
+				accumPackage.CreateRawPosition(curAccum, addr, tc.numShares.Add(tc.changedShares), sdk.NewDecCoins(), nil)
 			}
 
 			positionSize, err = curAccum.GetPositionSize(addr)
@@ -791,4 +788,29 @@ func (suite *AccumTestSuite) TestGetPositionSize() {
 			}
 		})
 	}
+}
+
+// TestMarhsalUnmarshalRecord displays that we may use Records without options
+// For records with nil options, adding new fields to `Options`, should not
+// require future migrations.
+func (suite *AccumTestSuite) TestMarhsalUnmarshalRecord() {
+	suite.SetupTest()
+
+	recordNoOptions := accumPackage.Record{
+		NumShares: sdk.OneDec(),
+		InitAccumValue: sdk.NewDecCoins(
+			sdk.NewDecCoinFromDec(denomOne, sdk.OneDec()),
+		),
+		UnclaimedRewards: sdk.NewDecCoins(
+			sdk.NewDecCoinFromDec(denomOne, sdk.OneDec()),
+		),
+	}
+
+	bz, err := proto.Marshal(&recordNoOptions)
+	suite.Require().NoError(err)
+
+	var unmarshaledRecord accumPackage.Record
+	proto.Unmarshal(bz, &unmarshaledRecord)
+	// Options should be nil, not an empty struct
+	suite.Require().True(unmarshaledRecord.Options == nil)
 }

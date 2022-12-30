@@ -305,7 +305,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
-		return sdkerrors.Wrap(err, "Ack callback error") // The callback configured is not a beck32. Error out
+		return sdkerrors.Wrap(err, "Ack callback error") // The callback configured is not a bech32. Error out
 	}
 
 	success := "false"
@@ -326,8 +326,47 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
 		// error processing the callback
+		// ToDo: Open Question: Should we also delete the callback here?
 		return sdkerrors.Wrap(err, "Ack callback error")
 	}
+	h.ibcHooksKeeper.DeletePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
+	return nil
+}
+
+func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) error {
+	err := im.App.OnTimeoutPacket(ctx, packet, relayer)
+	if err != nil {
+		return err
+	}
+
+	if !h.ProperlyConfigured() {
+		// Not configured. Return from the underlying implementation
+		return nil
+	}
+
+	contract := h.ibcHooksKeeper.GetPacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
+	if contract == "" {
+		// No callback configured
+		return nil
+	}
+
+	contractAddr, err := sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return sdkerrors.Wrap(err, "Timeout callback error") // The callback configured is not a bech32. Error out
+	}
+
+	sudoMsg := []byte(fmt.Sprintf(
+		`{"ibc_timeout": {"channel": "%s", "sequence": %d}}`,
+		packet.SourceChannel, packet.Sequence))
+	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
+	if err != nil {
+		// error processing the callback. This could be because the contract doesn't implement the message type to
+		// process the callback. Retrying this will not help, so we delete the callback from storage.
+		// Since the packet has timed out, we don't expect any other responses that may trigger the callback.
+		h.ibcHooksKeeper.DeletePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
+		return sdkerrors.Wrap(err, "Timeout callback error")
+	}
+	//
 	h.ibcHooksKeeper.DeletePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
 	return nil
 }
