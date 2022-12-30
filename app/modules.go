@@ -55,6 +55,8 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v13/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm"
@@ -146,6 +148,7 @@ func appModules(
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		swaprouter.NewAppModule(*app.SwapRouterKeeper, app.GAMMKeeper),
 		twapmodule.NewAppModule(*app.TwapKeeper),
+		concentratedliquidity.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper),
 		protorev.NewAppModule(appCodec, *app.ProtoRevKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper, app.GAMMKeeper),
 		txfees.NewAppModule(*app.TxFeesKeeper),
 		incentives.NewAppModule(*app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
@@ -242,6 +245,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		epochstypes.ModuleName,
 		lockuptypes.ModuleName,
 		authz.ModuleName,
+		concentratedliquiditytypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
 		// ibc_hooks after auth keeper

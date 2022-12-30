@@ -462,9 +462,9 @@ func validatePoolLiquidity(liquidity sdk.Coins, scalingFactors []uint64) error {
 		return liquidityAndScalingFactorCountMismatchError{LiquidityCount: liquidityCount, ScalingFactorCount: scalingFactorCount}
 	}
 
-	if liquidityCount < swaproutertypes.MinPoolAssets {
+	if liquidityCount < types.MinNumOfAssetsInPool {
 		return types.ErrTooFewPoolAssets
-	} else if liquidityCount > swaproutertypes.MaxPoolAssets {
+	} else if liquidityCount > types.MaxNumOfAssetsInPool {
 		return types.ErrTooManyPoolAssets
 	}
 

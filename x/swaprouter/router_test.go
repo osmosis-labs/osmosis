@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	cl "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
 	gamm "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
@@ -20,10 +21,11 @@ const (
 )
 
 var (
-	defaultInitPoolAmount = sdk.NewInt(1000000000000)
-	defaultPoolSwapFee    = sdk.NewDecWithPrec(1, 2) // 1% pool swap fee default
-	defaultSwapAmount     = sdk.NewInt(1000000)
-	gammKeeperType        = reflect.TypeOf(&gamm.Keeper{})
+	defaultInitPoolAmount  = sdk.NewInt(1000000000000)
+	defaultPoolSwapFee     = sdk.NewDecWithPrec(1, 2) // 1% pool swap fee default
+	defaultSwapAmount      = sdk.NewInt(1000000)
+	gammKeeperType         = reflect.TypeOf(&gamm.Keeper{})
+	concentratedKeeperType = reflect.TypeOf(&cl.Keeper{})
 )
 
 // TestGetPoolModule tests that the correct pool module is returned for a given pool id.
