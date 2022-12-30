@@ -178,7 +178,7 @@ func (accum AccumulatorObject) removeFromPosition(addr sdk.AccAddress, numShares
 }
 
 func (accum AccumulatorObject) UpdatePositionCustom(addr sdk.AccAddress, numShares sdk.Dec, positionAccumulatorUpdate sdk.DecCoins) error {
-	return accum.updatePosition(addr, numShares, accum.value)
+	return accum.updatePosition(addr, numShares, positionAccumulatorUpdate)
 }
 
 func (accum AccumulatorObject) UpdatePosition(addr sdk.AccAddress, numShares sdk.Dec) error {

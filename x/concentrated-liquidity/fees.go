@@ -61,7 +61,7 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 }
 
 func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec, lowerTick int64, upperTick int64) error {
-	feeGrowthInside, err := k.getFeeGrowthInside(ctx, poolId, owner, lowerTick, upperTick)
+	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, owner, lowerTick, upperTick)
 	if err != nil {
 		return err
 	}
@@ -71,14 +71,14 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, own
 		return err
 	}
 
-	if err := feeAccumulator.UpdatePositionCustom(owner, liquidityDelta, feeGrowthInside); err != nil {
+	if err := feeAccumulator.UpdatePositionCustom(owner, liquidityDelta, feeGrowthOutside); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (k Keeper) getFeeGrowthInside(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) (sdk.DecCoins, error) {
+func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) (sdk.DecCoins, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.DecCoins{}, err
@@ -106,9 +106,7 @@ func (k Keeper) getFeeGrowthInside(ctx sdk.Context, poolId uint64, owner sdk.Acc
 	feeGrowthAboveUpperTick := calculateFeeGrowthAbove(upperTick, upperTickInfo.FeeGrowthOutside, currentTick, feeGrowthGlobal)
 	feeGrowthBelowLowerTick := calculateFeeGrowthBelow(lowerTick, lowerTickInfo.FeeGrowthOutside, currentTick, feeGrowthGlobal)
 
-	feeGrowthInsideRange := feeGrowthGlobal.Sub(feeGrowthAboveUpperTick).Sub(feeGrowthBelowLowerTick)
-
-	return feeGrowthInsideRange, nil
+	return feeGrowthAboveUpperTick.Add(feeGrowthBelowLowerTick...), nil
 }
 
 // getInitialFeeGrowthOtsideForTick returns the initial value of fee growth outside for a given tick.
