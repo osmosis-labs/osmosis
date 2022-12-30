@@ -280,9 +280,11 @@ func (s *KeeperTestSuite) TestMultiplePositionsFuzz() {
 
 		// Half the time, remove a portion of the newly added liquidity from the liquidity tree
 		if rand.Int() % 2 != 0 {
-			// Remove 1/5th of the added liquidity, saving the original liquidity at `joinTime` to compare against later
-			exitAmt := joinAmt.Quo(sdk.NewDec(5))
+			// Save the original liquidity at `joinTime` to compare against later
 			liqAtJoinTimePreExit := s.App.ConcentratedLiquidityKeeper.GetLiquidityExactlyAtJoinTime(s.Ctx, validPoolId, joinTime)
+
+			// Remove 1/5th of the added liquidity
+			exitAmt := joinAmt.Quo(sdk.NewDec(5))
 			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, testAccounts[i], lowerTick, upperTick, exitAmt.Mul(sdk.NewDec(-1)))
 			s.Require().NoError(err)
 
