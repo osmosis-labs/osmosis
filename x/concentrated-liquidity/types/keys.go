@@ -22,6 +22,8 @@ var (
 	PoolPrefix     = []byte{0x03}
 	TimePrefix 	   = []byte{0x04}
 	SumtreePrefix  = []byte{0x05}
+	IncentivesInternalPrefix = []byte{0x06}
+	IncentivesExternalPrefix = []byte{0x07}
 )
 
 // TickIndexToBytes converts a tick index to a byte slice. Negative tick indexes
@@ -77,6 +79,20 @@ func KeyPosition(poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64)
 
 func KeyPool(poolId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%d", PoolPrefix, poolId))
+}
+
+func KeyIncentivesInternal(poolId uint64) []byte {
+	var key []byte
+	key = append(key, IncentivesInternalPrefix...)
+	key = append(key, sdk.Uint64ToBigEndian(poolId)...)
+	return key
+}
+
+func KeyIncentivesExternal(poolId uint64) []byte {
+	var key []byte
+	key = append(key, IncentivesExternalPrefix...)
+	key = append(key, sdk.Uint64ToBigEndian(poolId)...)
+	return key
 }
 
 func KeyAccumulationStore(poolID uint64) (res []byte) {

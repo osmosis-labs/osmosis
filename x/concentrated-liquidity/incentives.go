@@ -8,41 +8,24 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
-// Initializes incentives accumulator
-// Also initializes sumtree to track jointimes
-// Intended to only have 1-2 per pool (one for intenral/OSMO incentives, one for external ones)
-// Each incentive token, when added, should specify emission rate per second and uptime requirement for claiming
-//
-// Should test this to ensure we can get all pools before specific jointime etc. from sumtree
-// Also means this should be run at pool creation so sumtree is properly populated
+// Initializes incentives accumulators for a pool
+// TODO: wire this up with pool creation logic
 func (k Keeper) initIncentivesForPool(ctx sdk.Context, poolID uint64) {
 	// Create internal accumulator & store in pool's IntIncAccum field
+	accum.MakeAccumulator(ctx.KVStore(k.storeKey), fmt.Sprintf("%s", types.KeyIncentivesInternal(poolID)))
 	
 	// Create external accumulator & store in pool's ExtIncAccum field
-	
-	// Create sumtree & initialize.
-	// 
-	// Since running functions on non-existant sumtrees is actually well-defined behavior,
-	// this initialization process might not even be necessary and can potentially be abstracted
-	// into a separate `accumulationStore` function as in lockup module.
-	//
-	// Note that this tree can be (and should be) pulled on the fly using
-	// an equivalent of lockup module's `accumulationStore` function instead
-	// of trying to store it statically in state (since it rebalances).
-	//
-	// Reference: lock.go's impl w/ new store using custom prefix + key=10
-	
-	// Every position update should update this tree (e.g. regenerate tree & Increase() or Decrease() by amt on the relevant key)
-	// If we are doing by jointime, this might mean decrease node @ key = original jointime by full position amount and increase node @
-	// key = curBlockTime by full position amount
+	accum.MakeAccumulator(ctx.KVStore(k.storeKey), fmt.Sprintf("%s", types.KeyIncentivesExternal(poolID)))
 }
 
 // Creates an incentive for the passed in denom in either the internal or external accumulator
+// Each incentive token, when added, should specify emission rate per second and uptime requirement for claiming
 // TODO: figure out how to handle case where someone dusts with low rate for a denom & blocks that
 // denom from being used as an incentive at a higher/lower rate
 //
@@ -52,7 +35,7 @@ func (k Keeper) initIncentivesForPool(ctx sdk.Context, poolID uint64) {
 // loads up denom's incentive bucket with amount
 /* func addToIncentive(incID, pool, denom, amount) */
 
-
+// Gets the current join-time sumtree for the passed in pool ID.
 func (k Keeper) getSumtree(ctx sdk.Context, poolID uint64) sumtree.Tree {
 	return sumtree.NewTree(prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyAccumulationStore(poolID)), 10)
 }
