@@ -11,13 +11,13 @@ import (
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&Pool{}, "osmosis/concentratedliquidity/ConcentratedLiquidityPool", nil)
-	cdc.RegisterConcrete(&MsgCreateConcentratedPool{}, "osmosis/concentratedliquidity/create-concentrated-pool", nil)
+	cdc.RegisterConcrete(&Pool{}, "osmosis/cl-pool", nil)
+	cdc.RegisterConcrete(&MsgCreateConcentratedPool{}, "osmosis/cl-create-pool", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterInterface(
-		"osmosis.concentratedliquidity.v1beta1.PoolI",
+		"osmosis.swaprouter.v1beta1.PoolI",
 		(*swaproutertypes.PoolI)(nil),
 		&Pool{},
 	)
