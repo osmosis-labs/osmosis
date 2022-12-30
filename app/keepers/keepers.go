@@ -133,7 +133,6 @@ type AppKeepers struct {
 	ContractKeeper               *wasmkeeper.PermissionedKeeper
 	TokenFactoryKeeper           *tokenfactorykeeper.Keeper
 	SwapRouterKeeper             *swaprouter.Keeper
-	ConcentratedLiquidityKeeper  *concentratedliquidity.Keeper
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
 	// Note: this keeper is unwired. It is only present to avoid build
 	// issues in tests. However, It is not yet wired to be used
