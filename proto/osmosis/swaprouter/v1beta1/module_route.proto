@@ -13,7 +13,7 @@ enum PoolType {
   Balancer = 0;
   // Stableswap is the Solidly cfmm stable swap curve. Its pool model is defined
   // in x/gamm.
-  StableSwap = 1;
+  Stableswap = 1;
   // Concentrated is the pool model specific to concentrated liquidity. It is
   // defined in x/concentrated-liquidity.
   Concentrated = 2;

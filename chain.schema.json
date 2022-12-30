@@ -2,19 +2,21 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "codebase":{
     "git_repo": "https://github.com/osmosis-labs/osmosis",
-    "recommended_version": "v12.2.0",
+    "recommended_version": "v13.1.0",
     "compatible_versions": [
-      "v12.2.0"
+      "v13.1.0",
+      "v13.1.1",
+      "v13.1.2"
     ],
     "binaries": {
-      "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v12.2.0/osmosisd-12.2.0-linux-amd64?checksum=sha256:b4a0296b142b1a535f3116021d39660868a83fc66b290ab0891b06211f86fd31",
-      "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v12.2.0/osmosisd-12.2.0-linux-arm64?checksum=sha256:84717e741b61ef3616fef403aae42067614e58a0208347cd642f6d03240b7778"
+      "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v13.1.0/osmosisd-13.1.0-linux-amd64?checksum=sha256:50e734ee44e15c00927e4ce6c721bd79f5580f2b70cf37df52329224ad8089f0",
+      "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v13.1.0/osmosisd-13.1.0-linux-arm64?checksum=sha256:ddc45deb04e7f4b7bdaaf3263ff1cbc469f7bfc51d3c9dae5d6817cb9e3c0bd7"
     },
     "cosmos_sdk_version": "0.45",
     "tendermint_version": "0.34",
-    "cosmwasm_version": "0.28",
+    "cosmwasm_version": "0.29",
     "cosmwasm_enabled": true,
-    "ibc_go_version": "3.3.0",
+    "ibc_go_version": "3.4.0",
     "ics_enabled": [
       "ics20-1"
     ],
@@ -61,8 +63,14 @@
       },
       {
         "name": "v12",
-        "tag" : "v12.1.0",
-        "height" : 6246000
+        "tag" : "v12.3.0",
+        "height" : 6246000,
+        "next_version_name" : "v13"
+      },
+      {
+        "name": "v13",
+        "tag" : "v13.1.0",
+        "height" : 7241500
       }
     ]
   }

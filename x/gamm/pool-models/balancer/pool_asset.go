@@ -68,16 +68,13 @@ func sortPoolAssetsByDenom(assets []PoolAsset) {
 	})
 }
 
-// validateUserSpecifiedPoolAssets validates that the provided pool assets meet certain criteria.
-// It checks that the number of assets is at least 2 and no more than 8, that each asset's weight is valid,
-// and that each asset's token is valid and positive. If any of these checks fail, the corresponding error is returned.
 func validateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 	// The pool must be swapping between at least two assets
-	if len(assets) < 2 {
+	if len(assets) < types.MinNumOfAssetsInPool {
 		return types.ErrTooFewPoolAssets
 	}
 
-	if len(assets) > 8 {
+	if len(assets) > types.MaxNumOfAssetsInPool {
 		return sdkerrors.Wrapf(types.ErrTooManyPoolAssets, "%d", len(assets))
 	}
 

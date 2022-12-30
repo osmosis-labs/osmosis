@@ -13,7 +13,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/v2types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
@@ -434,7 +433,7 @@ func (suite *KeeperTestSuite) TestQueryPool() {
 			PoolId: poolId,
 		})
 		suite.Require().NoError(err)
-		var pool swaproutertypes.PoolI
+		var pool types.CFMMPoolI
 		err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 		suite.Require().NoError(err)
 		suite.Require().Equal(poolId, pool.GetId())
@@ -451,7 +450,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 			PoolId: poolId,
 		})
 		suite.Require().NoError(err)
-		var pool swaproutertypes.PoolI
+		var pool types.CFMMPoolI
 		err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 		suite.Require().NoError(err)
 		suite.Require().Equal(poolId, pool.GetId())
@@ -468,7 +467,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(1, len(res.Pools))
 	for _, r := range res.Pools {
-		var pool swaproutertypes.PoolI
+		var pool types.CFMMPoolI
 		err = suite.App.InterfaceRegistry().UnpackAny(r, &pool)
 		suite.Require().NoError(err)
 		suite.Require().Equal(types.NewPoolAddress(uint64(1)).String(), pool.GetAddress().String())
@@ -485,7 +484,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(5, len(res.Pools))
 	for i, r := range res.Pools {
-		var pool swaproutertypes.PoolI
+		var pool types.CFMMPoolI
 		err = suite.App.InterfaceRegistry().UnpackAny(r, &pool)
 		suite.Require().NoError(err)
 		suite.Require().Equal(types.NewPoolAddress(uint64(i+1)).String(), pool.GetAddress().String())
@@ -509,6 +508,22 @@ func (suite *KeeperTestSuite) TestPoolType() {
 		&types.QueryPoolTypeRequest{PoolId: poolIdStableswap})
 	suite.Require().NoError(err)
 	suite.Require().Equal(stableswap.PoolTypeName, res.PoolType)
+}
+
+func (suite *KeeperTestSuite) TestQueryNumPools1() {
+	res, err := suite.queryClient.NumPools(gocontext.Background(), &types.QueryNumPoolsRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal(uint64(0), res.NumPools)
+}
+
+func (suite *KeeperTestSuite) TestQueryNumPools2() {
+	for i := 0; i < 10; i++ {
+		suite.PrepareBalancerPool()
+	}
+
+	res, err := suite.queryClient.NumPools(gocontext.Background(), &types.QueryNumPoolsRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal(uint64(10), res.NumPools)
 }
 
 func (suite *KeeperTestSuite) TestQueryTotalPoolLiquidity() {

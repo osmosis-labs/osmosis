@@ -42,7 +42,8 @@ type SwapI interface {
 		tokenOutMinAmount sdk.Int,
 		swapFee sdk.Dec,
 	) (sdk.Int, error)
-
+	// CalcOutAmtGivenIn calculates the amount of tokenOut given tokenIn and the pool's current state.
+	// Returns error if the given pool is not a CFMM pool. Returns error on internal calculations.
 	CalcOutAmtGivenIn(
 		ctx sdk.Context,
 		poolI PoolI,
@@ -60,7 +61,8 @@ type SwapI interface {
 		tokenOut sdk.Coin,
 		swapFee sdk.Dec,
 	) (tokenInAmount sdk.Int, err error)
-
+	// CalcInAmtGivenOut calculates the amount of tokenIn given tokenOut and the pool's current state.
+	// Returns error if the given pool is not a CFMM pool. Returns error on internal calculations.
 	CalcInAmtGivenOut(
 		ctx sdk.Context,
 		poolI PoolI,

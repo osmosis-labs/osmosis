@@ -26,20 +26,32 @@ jobs:
     name: osmosis ${{ matrix.arch }} for ${{ matrix.targetos }}
     steps:
       - uses: actions/checkout@v2
+      - name: Get git diff
+        uses: technote-space/get-diff-action@v6.0.1
+        with:
+          PATTERNS: |
+            **/**.wasm
+            **/**!(test).go
+            go.mod
+            go.sum
+            Makefile
       - uses: actions/setup-go@v2.1.4
         with:
           go-version: '^1.18'
         env:
           GOOS: ${{ matrix.targetos }}
           GOARCH: ${{ matrix.arch }}
+        if: env.GIT_DIFF
 
       - name: Compile osmosis
         run: |
           go mod download
           cd cmd/osmosisd
-          go build .
+          GOWRK=off go build .
+        if: env.GIT_DIFF
 
       - uses: actions/upload-artifact@v2
         with:
           name: osmosisd ${{ matrix.targetos }} ${{ matrix.arch }}
           path: cmd/osmosisd/osmosisd
+        if: env.GIT_DIFF

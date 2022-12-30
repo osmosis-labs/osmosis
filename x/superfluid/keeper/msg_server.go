@@ -3,12 +3,10 @@ package keeper
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	v8constants "github.com/osmosis-labs/osmosis/v13/app/upgrades/v8/constants"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 
@@ -123,11 +121,12 @@ func (server msgServer) LockAndSuperfluidDelegate(goCtx context.Context, msg *ty
 func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.MsgUnPoolWhitelistedPool) (*types.MsgUnPoolWhitelistedPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if ctx.BlockHeight() < v8constants.UpgradeHeight {
-		return nil, errors.New("message not activated")
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
 	}
 
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	err = server.keeper.checkUnpoolWhitelisted(ctx, msg.PoolId)
 	if err != nil {
 		return nil, err
 	}

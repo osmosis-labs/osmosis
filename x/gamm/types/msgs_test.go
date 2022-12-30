@@ -7,8 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
 	appParams "github.com/osmosis-labs/osmosis/v13/app/params"
@@ -23,7 +23,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 	createMsg := func(after func(msg gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn {
 		properMsg := gammtypes.MsgSwapExactAmountIn{
 			Sender: addr1,
-			Routes: []swaproutertypes.SwapAmountInRoute{{
+			Routes: []gammtypes.SwapAmountInRoute{{
 				PoolId:        0,
 				TokenOutDenom: "test",
 			}, {
@@ -80,7 +80,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		{
 			name: "empty routes2",
 			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn {
-				msg.Routes = []swaproutertypes.SwapAmountInRoute{}
+				msg.Routes = []gammtypes.SwapAmountInRoute{}
 				return msg
 			}),
 			expectPass: false,
@@ -153,7 +153,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 	createMsg := func(after func(msg gammtypes.MsgSwapExactAmountOut) gammtypes.MsgSwapExactAmountOut) gammtypes.MsgSwapExactAmountOut {
 		properMsg := gammtypes.MsgSwapExactAmountOut{
 			Sender: addr1,
-			Routes: []swaproutertypes.SwapAmountOutRoute{{
+			Routes: []gammtypes.SwapAmountOutRoute{{
 				PoolId:       0,
 				TokenInDenom: "test",
 			}, {
@@ -210,7 +210,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		{
 			name: "empty routes2",
 			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountOut) gammtypes.MsgSwapExactAmountOut {
-				msg.Routes = []swaproutertypes.SwapAmountOutRoute{}
+				msg.Routes = []gammtypes.SwapAmountOutRoute{}
 				return msg
 			}),
 			expectPass: false,
@@ -928,10 +928,10 @@ func TestAuthzMsg(t *testing.T) {
 			},
 		},
 		{
-			name: "MsgSwapExactAmountIn",
+			name: "MsgJoinSwapShareAmountOut",
 			gammMsg: &gammtypes.MsgSwapExactAmountIn{
 				Sender: addr1,
-				Routes: []swaproutertypes.SwapAmountInRoute{{
+				Routes: []gammtypes.SwapAmountInRoute{{
 					PoolId:        0,
 					TokenOutDenom: "test",
 				}, {
@@ -946,7 +946,7 @@ func TestAuthzMsg(t *testing.T) {
 			name: "MsgSwapExactAmountOut",
 			gammMsg: &gammtypes.MsgSwapExactAmountOut{
 				Sender: addr1,
-				Routes: []swaproutertypes.SwapAmountOutRoute{{
+				Routes: []gammtypes.SwapAmountOutRoute{{
 					PoolId:       0,
 					TokenInDenom: "test",
 				}, {
@@ -955,6 +955,14 @@ func TestAuthzMsg(t *testing.T) {
 				}},
 				TokenOut:         coin,
 				TokenInMaxAmount: sdk.NewInt(1),
+			},
+		},
+		{
+			name: "MsgCreateStableswapPool",
+			gammMsg: &stableswap.MsgCreateStableswapPool{
+				Sender:               addr1,
+				PoolParams:           &stableswap.PoolParams{},
+				InitialPoolLiquidity: sdk.NewCoins(coin),
 			},
 		},
 	}

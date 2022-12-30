@@ -6,11 +6,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 var (
@@ -41,7 +40,7 @@ var (
 )
 
 func (suite *KeeperTestSuite) TestCreateBalancerPool() {
-	params := suite.App.SwapRouterKeeper.GetParams(suite.Ctx)
+	params := suite.App.GAMMKeeper.GetParams(suite.Ctx)
 	testAccount := suite.TestAccs[0]
 
 	// get raw pool creation fee(s) as DecCoins
@@ -223,106 +222,6 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestPoolCreationFee() {
-	params := suite.App.SwapRouterKeeper.GetParams(suite.Ctx)
-
-	// get raw pool creation fee(s) as DecCoins
-	poolCreationFeeDecCoins := sdk.DecCoins{}
-	for _, coin := range params.PoolCreationFee {
-		poolCreationFeeDecCoins = poolCreationFeeDecCoins.Add(sdk.NewDecCoin(coin.Denom, coin.Amount))
-	}
-
-	tests := []struct {
-		name            string
-		poolCreationFee sdk.Coins
-		msg             balancertypes.MsgCreateBalancerPool
-		expectPass      bool
-	}{
-		{
-			name:            "no pool creation fee for default asset pool",
-			poolCreationFee: sdk.Coins{},
-			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
-				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, defaultPoolAssets, defaultFutureGovernor),
-			expectPass: true,
-		}, {
-			name:            "nil pool creation fee on basic pool",
-			poolCreationFee: nil,
-			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
-				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, defaultPoolAssets, defaultFutureGovernor),
-			expectPass: true,
-		}, {
-			name:            "attempt pool creation without sufficient funds for fees",
-			poolCreationFee: sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(10000))},
-			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
-				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, defaultPoolAssets, defaultFutureGovernor),
-			expectPass: false,
-		},
-	}
-
-	for _, test := range tests {
-		suite.SetupTest()
-		gammKeeper := suite.App.GAMMKeeper
-		swaprouterKeeper := suite.App.SwapRouterKeeper
-		distributionKeeper := suite.App.DistrKeeper
-		bankKeeper := suite.App.BankKeeper
-
-		// set pool creation fee
-		swaprouterKeeper.SetParams(suite.Ctx, swaproutertypes.Params{
-			PoolCreationFee: test.poolCreationFee,
-		})
-
-		// fund sender test account
-		sender, err := sdk.AccAddressFromBech32(test.msg.Sender)
-		suite.Require().NoError(err, "test: %v", test.name)
-		suite.FundAcc(sender, defaultAcctFunds)
-
-		// note starting balances for community fee pool and pool creator account
-		feePoolBalBeforeNewPool := distributionKeeper.GetFeePoolCommunityCoins(suite.Ctx)
-		senderBalBeforeNewPool := bankKeeper.GetAllBalances(suite.Ctx, sender)
-
-		// attempt to create a pool with the given NewMsgCreateBalancerPool message
-		poolId, err := swaprouterKeeper.CreatePool(suite.Ctx, test.msg)
-
-		if test.expectPass {
-			suite.Require().NoError(err, "test: %v", test.name)
-
-			// check to make sure new pool exists and has minted the correct number of pool shares
-			pool, err := gammKeeper.GetPoolAndPoke(suite.Ctx, poolId)
-			suite.Require().NoError(err, "test: %v", test.name)
-			suite.Require().Equal(types.InitPoolSharesSupply.String(), pool.GetTotalShares().String(),
-				fmt.Sprintf("share token should be minted as %s initially", types.InitPoolSharesSupply.String()),
-			)
-
-			// make sure pool creation fee is correctly sent to community pool
-			feePool := distributionKeeper.GetFeePoolCommunityCoins(suite.Ctx)
-			suite.Require().Equal(feePool, feePoolBalBeforeNewPool.Add(sdk.NewDecCoinsFromCoins(test.poolCreationFee...)...))
-			// get expected tokens in new pool and corresponding pool shares
-			expectedPoolTokens := sdk.Coins{}
-			for _, asset := range test.msg.GetPoolAssets() {
-				expectedPoolTokens = expectedPoolTokens.Add(asset.Token)
-			}
-			expectedPoolShares := sdk.NewCoin(types.GetPoolShareDenom(pool.GetId()), types.InitPoolSharesSupply)
-
-			// make sure sender's balance is updated correctly
-			senderBal := bankKeeper.GetAllBalances(suite.Ctx, sender)
-			expectedSenderBal := senderBalBeforeNewPool.Sub(test.poolCreationFee).Sub(expectedPoolTokens).Add(expectedPoolShares)
-			suite.Require().Equal(senderBal.String(), expectedSenderBal.String())
-
-			// check pool's liquidity is correctly increased
-			liquidity := gammKeeper.GetTotalLiquidity(suite.Ctx)
-			suite.Require().Equal(expectedPoolTokens.String(), liquidity.String())
-		} else {
-			suite.Require().Error(err, "test: %v", test.name)
-		}
-	}
-}
-
 // This test creates several pools, and tests that:
 // the condition is in a case where the balancer return value returns an overflowing value
 // the SpotPrice query does not
@@ -341,8 +240,8 @@ func (suite *KeeperTestSuite) TestSpotPriceOverflow() {
 			poolLiquidity: sdk.NewCoins(sdk.NewCoin(denomA, types.MaxSpotPrice.TruncateInt().Add(sdk.OneInt())),
 				sdk.NewCoin(denomB, sdk.OneInt())),
 			poolWeights:     []int64{1, 1},
-			quoteAssetDenom: denomB,
-			baseAssetDenom:  denomA,
+			quoteAssetDenom: denomA,
+			baseAssetDenom:  denomB,
 			overflows:       true,
 		},
 		"uniV2 internal error": {
@@ -365,7 +264,7 @@ func (suite *KeeperTestSuite) TestSpotPriceOverflow() {
 			osmoassert.ConditionalPanic(suite.T(), tc.panics, func() {
 				poolSpotPrice, poolErr = pool.SpotPrice(suite.Ctx, tc.baseAssetDenom, tc.quoteAssetDenom)
 			})
-			keeperSpotPrice, keeperErr := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx, poolId, tc.baseAssetDenom, tc.quoteAssetDenom)
+			keeperSpotPrice, keeperErr := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx, poolId, tc.quoteAssetDenom, tc.baseAssetDenom)
 			if tc.overflows {
 				suite.Require().NoError(poolErr)
 				suite.Require().ErrorIs(keeperErr, types.ErrSpotPriceOverflow)
@@ -439,6 +338,15 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 			sharesRequested: types.OneShare.MulRaw(50),
 			tokenInMaxs: sdk.Coins{
 				fiveKFooAndBar[0], fiveKFooAndBar[1], sdk.NewCoin("baz", sdk.NewInt(5000)),
+			},
+			expectPass: false,
+		},
+		{
+			name:            "join no swap with TokenInMaxs not containing every token in pool",
+			txSender:        suite.TestAccs[1],
+			sharesRequested: types.OneShare.MulRaw(50),
+			tokenInMaxs: sdk.Coins{
+				fiveKFooAndBar[0],
 			},
 			expectPass: false,
 		},

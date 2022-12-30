@@ -34,7 +34,7 @@ var _ = descriptor.ForMessage
 var _ = metadata.Join
 
 func request_Query_UserValidatorPreferences_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryUserValidatorPreferences
+	var protoReq UserValidatorPreferencesRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -61,7 +61,7 @@ func request_Query_UserValidatorPreferences_0(ctx context.Context, marshaler run
 }
 
 func local_request_Query_UserValidatorPreferences_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryUserValidatorPreferences
+	var protoReq UserValidatorPreferencesRequest
 	var metadata runtime.ServerMetadata
 
 	var (

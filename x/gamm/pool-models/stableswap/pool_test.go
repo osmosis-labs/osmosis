@@ -7,8 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 )
@@ -235,6 +237,43 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 				require.Equal(t, tc.expReserves, reserves)
 			}
 			osmoassert.ConditionalError(t, tc.expError, err)
+		})
+	}
+}
+
+func TestGetLiquidityIndexMap(t *testing.T) {
+	tests := map[string]struct {
+		poolAssets sdk.Coins
+	}{
+		"2 asset pool": {
+			twoEvenStablePoolAssets,
+		},
+		"3 asset pool": {
+			threeEvenStablePoolAssets,
+		},
+		"4 asset pool": {
+			sdk.NewCoins(
+				sdk.NewInt64Coin("asset/a", 1000000000),
+				sdk.NewInt64Coin("asset/b", 1000000000),
+				sdk.NewInt64Coin("asset/c", 1000000000),
+				sdk.NewInt64Coin("asset/d", 1000000000),
+			),
+		},
+		"5 asset pool": {
+			fiveEvenStablePoolAssets,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			pool := poolStructFromAssets(tc.poolAssets, []uint64{})
+
+			indexMap := pool.getLiquidityIndexMap()
+			require.Equal(t, len(indexMap), len(tc.poolAssets))
+			for ind := 0; ind < len(tc.poolAssets); ind++ {
+				actual_ind := indexMap[tc.poolAssets[ind].Denom]
+				require.Equal(t, actual_ind, ind)
+			}
 		})
 	}
 }
@@ -1081,6 +1120,75 @@ func TestValidatePoolLiquidity(t *testing.T) {
 	}
 }
 
+func TestSetScalingFactors(t *testing.T) {
+	pk := ed25519.GenPrivKey().PubKey()
+	addr := sdk.AccAddress(pk.Address())
+
+	failPk := ed25519.GenPrivKey().PubKey()
+	failAddr := sdk.AccAddress(failPk.Address())
+
+	tests := map[string]struct {
+		scalingFactors []uint64
+		sender         string
+		poolAssets     sdk.Coins
+		expError       error
+	}{
+		"Sender is not scaling factor governor in pool": {
+			scalingFactors: defaultTwoAssetScalingFactors,
+			sender:         failAddr.String(),
+			poolAssets:     twoEvenStablePoolAssets,
+			expError:       types.ErrNotScalingFactorGovernor,
+		},
+
+		"Invalid scaling factor's length": {
+			scalingFactors: defaultTwoAssetScalingFactors,
+			sender:         addr.String(),
+			poolAssets:     threeEvenStablePoolAssets,
+			expError:       types.ErrInvalidScalingFactorLength,
+		},
+		"Invalid pool liquidity": {
+			scalingFactors: []uint64{1},
+			sender:         addr.String(),
+			poolAssets:     sdk.NewCoins(sdk.NewInt64Coin("foo", 1000000000)),
+			expError:       types.ErrTooFewPoolAssets,
+		},
+		"Valid set scaling for two assets in pool": {
+			scalingFactors: defaultTwoAssetScalingFactors,
+			sender:         addr.String(),
+			poolAssets:     twoEvenStablePoolAssets,
+		},
+		"Valid set scaling for two uneven assets in pool": {
+			scalingFactors: []uint64{2, 1},
+			sender:         addr.String(),
+			poolAssets:     twoUnevenStablePoolAssets,
+		},
+		"Valid set scaling for three assets in pool": {
+			scalingFactors: defaultThreeAssetScalingFactors,
+			sender:         addr.String(),
+			poolAssets:     threeEvenStablePoolAssets,
+		},
+		"Valid set scaling for three uneven assets in pool": {
+			scalingFactors: []uint64{1, 2, 3},
+			sender:         addr.String(),
+			poolAssets:     threeUnevenStablePoolAssets,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := sdk.Context{}
+			pool := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
+			pool.ScalingFactorController = addr.String()
+			err := pool.SetScalingFactors(ctx, tc.scalingFactors, tc.sender)
+			if tc.expError != nil {
+				require.Error(t, err)
+				require.Equal(t, err, tc.expError)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestStableswapSpotPrice(t *testing.T) {
 	type testcase struct {
 		baseDenom      string
@@ -1110,7 +1218,7 @@ func TestStableswapSpotPrice(t *testing.T) {
 			quoteDenom:     "bar",
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10000, 20000},
-			expectedPrice:  sdk.NewDec(2),
+			expectedPrice:  sdk.NewDecWithPrec(5, 1),
 			expectPass:     true,
 		},
 		"even two-asset pool with different scaling factors (bar -> foo)": {
@@ -1118,7 +1226,7 @@ func TestStableswapSpotPrice(t *testing.T) {
 			quoteDenom:     "foo",
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: []uint64{10000, 20000},
-			expectedPrice:  sdk.NewDecWithPrec(5, 1),
+			expectedPrice:  sdk.NewDec(2),
 			expectPass:     true,
 		},
 		"uneven two-asset pool": {
@@ -1221,7 +1329,7 @@ func TestStableswapSpotPrice(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx := sdk.Context{}
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
-			spotPrice, err := p.SpotPrice(ctx, tc.baseDenom, tc.quoteDenom)
+			spotPrice, err := p.SpotPrice(ctx, tc.quoteDenom, tc.baseDenom)
 
 			if tc.expectPass {
 				require.NoError(t, err)
@@ -1230,7 +1338,7 @@ func TestStableswapSpotPrice(t *testing.T) {
 				if (tc.expectedPrice != sdk.Dec{}) {
 					expectedSpotPrice = tc.expectedPrice
 				} else {
-					expectedSpotPrice, err = p.calcOutAmtGivenIn(sdk.NewInt64Coin(tc.quoteDenom, 1), tc.baseDenom, sdk.ZeroDec())
+					expectedSpotPrice, err = p.calcOutAmtGivenIn(sdk.NewInt64Coin(tc.baseDenom, 1), tc.quoteDenom, sdk.ZeroDec())
 					require.NoError(t, err)
 				}
 

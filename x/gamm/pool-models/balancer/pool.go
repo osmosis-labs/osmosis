@@ -17,9 +17,9 @@ import (
 
 //nolint:deadcode
 const (
-	nonPostiveSharesAmountErrFormat = "shares amount must be positive, was %d"
-	nonPostiveTokenAmountErrFormat  = "token amount must be positive, was %d"
-	sharesLargerThanMaxErrFormat    = "%d resulted shares is larger than the max amount of %d"
+	nonPostiveSharesAmountErrFormat = "shares amount must be positive, was %s"
+	nonPostiveTokenAmountErrFormat  = "token amount must be positive, was %s"
+	sharesLargerThanMaxErrFormat    = "%s resulted shares is larger than the max amount of %s"
 	invalidInputDenomsErrFormat     = "input denoms must already exist in the pool (%s)"
 
 	failedInterimLiquidityUpdateErrFormat        = "failed to update interim liquidity - pool asset %s does not exist"
@@ -611,14 +611,20 @@ func (p *Pool) applySwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coin
 
 // SpotPrice returns the spot price of the pool
 // This is the weight-adjusted balance of the tokens in the pool.
-// In order reduce the propagated effect of incorrect trailing digits,
+// To reduce the propagated effect of incorrect trailing digits,
 // we take the ratio of weights and divide this by ratio of supplies
-// this is equivalent to spot_price = (Base_supply / Weight_base) / (Quote_supply / Weight_quote)
-// but cancels out the common term in weight.
+// this is equivalent to spot_price = (Quote Supply / Quote Weight) / (Base Supply / Base Weight)
+//
+// As an example, assume equal weights. uosmo supply of 2 and uatom supply of 4.
+//
+// Case 1: base = uosmo, quote = uatom -> for one uosmo, get 2 uatom = 4 / 2 = 2
+// In other words, it costs 2 uatom to get one uosmo.
+//
+// Case 2: base = uatom, quote = uosmo -> for one uatom, get 0.5 uosmo = 2 / 4 = 0.5
+// In other words, it costs 0.5 uosmo to get one uatom.
 //
 // panics if the pool in state is incorrect, and has any weight that is 0.
-// TODO: Come back and improve docs for this.
-func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (spotPrice sdk.Dec, err error) {
+func (p Pool) SpotPrice(ctx sdk.Context, quoteAsset, baseAsset string) (spotPrice sdk.Dec, err error) {
 	quote, base, err := p.parsePoolAssetsByDenoms(quoteAsset, baseAsset)
 	if err != nil {
 		return sdk.Dec{}, err
@@ -627,10 +633,11 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (spotPric
 		return sdk.Dec{}, errors.New("pool is misconfigured, got 0 weight")
 	}
 
-	// spot_price = (Base_supply / Weight_base) / (Quote_supply / Weight_quote)
-	// spot_price = (weight_quote / weight_base) * (base_supply / quote_supply)
-	invWeightRatio := quote.Weight.ToDec().Quo(base.Weight.ToDec())
-	supplyRatio := base.Token.Amount.ToDec().Quo(quote.Token.Amount.ToDec())
+	// spot_price = (Quote Supply / Quote Weight) / (Base Supply / Base Weight)
+	//            = (Quote Supply / Quote Weight) * (Base Weight / Base Supply)
+	//            = (Base Weight  / Quote Weight) * (Quote Supply / Base Supply)
+	invWeightRatio := base.Weight.ToDec().Quo(quote.Weight.ToDec())
+	supplyRatio := quote.Token.Amount.ToDec().Quo(base.Token.Amount.ToDec())
 	spotPrice = supplyRatio.Mul(invWeightRatio)
 
 	return spotPrice, err
@@ -894,7 +901,7 @@ func (p *Pool) CalcTokenInShareAmountOut(
 	).Ceil().TruncateInt()
 
 	if !tokenInAmount.IsPositive() {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount.Int64())
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount)
 	}
 
 	return tokenInAmount, nil
@@ -921,7 +928,7 @@ func (p *Pool) JoinPoolTokenInMaxShareAmountOut(
 	).TruncateInt()
 
 	if !tokenInAmount.IsPositive() {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount.Int64())
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount)
 	}
 
 	poolAssetIn.Token.Amount = poolAssetIn.Token.Amount.Add(tokenInAmount)
@@ -953,11 +960,11 @@ func (p *Pool) ExitSwapExactAmountOut(
 	).TruncateInt()
 
 	if !sharesIn.IsPositive() {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrNotPositiveRequireAmount, nonPostiveSharesAmountErrFormat, sharesIn.Int64())
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrNotPositiveRequireAmount, nonPostiveSharesAmountErrFormat, sharesIn)
 	}
 
 	if sharesIn.GT(shareInMaxAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, sharesLargerThanMaxErrFormat, sharesIn.Int64(), shareInMaxAmount.Uint64())
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, sharesLargerThanMaxErrFormat, sharesIn, shareInMaxAmount)
 	}
 
 	if err := p.exitPool(ctx, sdk.NewCoins(tokenOut), sharesIn); err != nil {

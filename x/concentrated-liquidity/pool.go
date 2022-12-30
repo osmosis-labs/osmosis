@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
@@ -46,7 +46,7 @@ func (k Keeper) getPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedP
 	store := ctx.KVStore(k.storeKey)
 	pool := model.Pool{}
 	key := types.KeyPool(poolId)
-	found, err := osmoutils.GetIfFound(store, key, &pool)
+	found, err := osmoutils.Get(store, key, &pool)
 	if err != nil {
 		panic(err)
 	}
@@ -61,7 +61,7 @@ func (k Keeper) poolExists(ctx sdk.Context, poolId uint64) bool {
 	store := ctx.KVStore(k.storeKey)
 	pool := model.Pool{}
 	key := types.KeyPool(poolId)
-	found, err := osmoutils.GetIfFound(store, key, &pool)
+	found, err := osmoutils.Get(store, key, &pool)
 	if err != nil {
 		panic(err)
 	}

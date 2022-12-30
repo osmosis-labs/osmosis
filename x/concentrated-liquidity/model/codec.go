@@ -30,17 +30,19 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	msgservice.RegisterMsgServiceDesc(registry, &_MsgCreator_serviceDesc)
 }
 
-var (
-	amino     = codec.NewLegacyAmino()
-	ModuleCdc = codec.NewAminoCodec(amino)
-)
+// TODO: re-enable this when CL state-breakage PR is merged.
+// return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+// var (
+// 	amino     = codec.NewLegacyAmino()
+// 	ModuleCdc = codec.NewAminoCodec(amino)
+// )
 
-func init() {
-	RegisterCodec(amino)
-	sdk.RegisterLegacyAminoCodec(amino)
+// func init() {
+// 	RegisterCodec(amino)
+// 	sdk.RegisterLegacyAminoCodec(amino)
 
-	// Register all Amino interfaces and concrete types on the authz Amino codec so that this can later be
-	// used to properly serialize MsgGrant and MsgExec instances
-	RegisterCodec(authzcodec.Amino)
-	amino.Seal()
-}
+// 	// Register all Amino interfaces and concrete types on the authz Amino codec so that this can later be
+// 	// used to properly serialize MsgGrant and MsgExec instances
+// 	RegisterCodec(authzcodec.Amino)
+// 	amino.Seal()
+// }

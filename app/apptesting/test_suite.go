@@ -27,7 +27,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
-	db "github.com/tendermint/tm-db"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/v13/app"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
@@ -92,7 +92,7 @@ func (s *KeeperTestHelper) CreateTestContext() sdk.Context {
 
 // CreateTestContextWithMultiStore creates a test context and returns it together with multi store.
 func (s *KeeperTestHelper) CreateTestContextWithMultiStore() (sdk.Context, sdk.CommitMultiStore) {
-	db := db.NewMemDB()
+	db := dbm.NewMemDB()
 	logger := log.NewNopLogger()
 
 	ms := rootmulti.NewStore(db, logger)
@@ -165,6 +165,16 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 	s.App.SlashingKeeper.SetValidatorSigningInfo(s.Ctx, consAddr, signingInfo)
 
 	return valAddr
+}
+
+// SetupMultipleValidators setups "numValidator" validators and returns their address in string
+func (s *KeeperTestHelper) SetupMultipleValidators(numValidator int) []string {
+	valAddrs := []string{}
+	for i := 0; i < numValidator; i++ {
+		valAddr := s.SetupValidator(stakingtypes.Bonded)
+		valAddrs = append(valAddrs, valAddr.String())
+	}
+	return valAddrs
 }
 
 // BeginNewBlock starts a new block.
@@ -253,14 +263,14 @@ func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, re
 }
 
 // SetupGammPoolsWithBondDenomMultiplier uses given multipliers to set initial pool supply of bond denom.
-func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []sdk.Dec) []swaproutertypes.PoolI {
+func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []sdk.Dec) []gammtypes.CFMMPoolI {
 	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 	// TODO: use sdk crypto instead of tendermint to generate address
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
-	params := s.App.SwapRouterKeeper.GetParams(s.Ctx)
+	params := s.App.GAMMKeeper.GetParams(s.Ctx)
 
-	pools := []swaproutertypes.PoolI{}
+	pools := []gammtypes.CFMMPoolI{}
 	for index, multiplier := range multipliers {
 		token := fmt.Sprintf("token%d", index)
 		uosmoAmount := gammtypes.InitPoolSharesSupply.ToDec().Mul(multiplier).RoundInt()
@@ -314,22 +324,22 @@ func (s *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset sdk.Coin
 	coins := sdk.Coins{sdk.NewInt64Coin(fromAsset.Denom, 100000000000000)}
 	s.FundAcc(acc1, coins)
 
-	pool, err := s.App.GAMMKeeper.GetPool(s.Ctx, poolId)
-	s.Require().NoError(err)
-	swapFee := pool.GetSwapFee(s.Ctx)
-
-	_, err = s.App.GAMMKeeper.SwapExactAmountOut(
+	route := []swaproutertypes.SwapAmountOutRoute{
+		{
+			PoolId:       poolId,
+			TokenInDenom: fromAsset.Denom,
+		},
+	}
+	_, err := s.App.SwapRouterKeeper.RouteExactAmountOut(
 		s.Ctx,
 		acc1,
-		pool,
-		fromAsset.Denom,
+		route,
 		fromAsset.Amount,
-		sdk.NewCoin(toAsset.Denom, toAsset.Amount.Quo(sdk.NewInt(4))),
-		swapFee,
-	)
+		sdk.NewCoin(toAsset.Denom,
+			toAsset.Amount.Quo(sdk.NewInt(4))))
 	s.Require().NoError(err)
 
-	spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, toAsset.Denom, fromAsset.Denom)
+	spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, fromAsset.Denom, toAsset.Denom)
 	s.Require().NoError(err)
 
 	return spotPrice
@@ -370,7 +380,7 @@ func (s *KeeperTestHelper) BuildTx(
 // StateNotAltered validates that app state is not altered. Fails if it is.
 func (s *KeeperTestHelper) StateNotAltered() {
 	oldState := s.App.ExportState(s.Ctx)
-	s.Commit()
+	s.App.Commit()
 	newState := s.App.ExportState(s.Ctx)
 	s.Require().Equal(oldState, newState)
 }

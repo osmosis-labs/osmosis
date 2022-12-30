@@ -1,0 +1,48 @@
+syntax = "proto3";
+package osmosis.protorev.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "osmosis/protorev/v1beta1/protorev.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v13/x/protorev/types";
+
+service Msg {
+  // SetHotRoutes sets the hot routes that will be explored when creating
+  // cyclic arbitrage routes. Can only be called by the admin account.
+  rpc SetHotRoutes(MsgSetHotRoutes) returns (MsgSetHotRoutesResponse) {
+    option (google.api.http).post = "/osmosis/v13/protorev/set_hot_routes";
+  };
+
+  // SetDeveloperAccount sets the account that can withdraw a portion of the
+  // profits from the protorev module. This will be Skip's address.
+  rpc SetDeveloperAccount(MsgSetDeveloperAccount)
+      returns (MsgSetDeveloperAccountResponse) {
+    option (google.api.http).post =
+        "/osmosis/v13/protorev/set_developer_account";
+  };
+}
+
+// MsgSetHotRoutes defines the Msg/SetHotRoutes request type.
+message MsgSetHotRoutes {
+  // admin is the account that is authorized to set the hot routes.
+  string admin = 1;
+  // hot_routes is the list of hot routes to set.
+  repeated TokenPairArbRoutes hot_routes = 2;
+}
+
+// MsgSetHotRoutesResponse defines the Msg/SetHotRoutes response type.
+message MsgSetHotRoutesResponse {}
+
+// MsgSetDeveloperAccount defines the Msg/SetDeveloperAccount request type.
+message MsgSetDeveloperAccount {
+  // admin is the account that is authorized to set the developer account.
+  string admin = 1;
+  // developer_account is the account that will receive a portion of the profits
+  // from the protorev module.
+  string developer_account = 2;
+}
+
+// MsgSetDeveloperAccountResponse defines the Msg/SetDeveloperAccount response
+// type.
+message MsgSetDeveloperAccountResponse {}
