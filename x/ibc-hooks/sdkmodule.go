@@ -11,20 +11,19 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
+	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
+
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-type Ibcmodule struct{}
-
 var (
-	_          module.AppModule      = AppModule{}
-	_          module.AppModuleBasic = AppModuleBasic{}
-	ModuleName                       = "ibchooks"
+	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the mint module.
@@ -34,7 +33,7 @@ var _ module.AppModuleBasic = AppModuleBasic{}
 
 // Name returns the mint module's name.
 func (AppModuleBasic) Name() string {
-	return ModuleName
+	return types.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the mint module's types on the given LegacyAmino codec.
@@ -88,7 +87,7 @@ func NewAppModule(ak osmoutils.AccountKeeper) AppModule {
 
 // Name returns the mint module's name.
 func (AppModule) Name() string {
-	return ModuleName
+	return types.ModuleName
 }
 
 // RegisterInvariants registers the mint module invariants.
@@ -105,7 +104,7 @@ func (AppModule) QuerierRoute() string {
 // LegacyQuerierHandler returns the x/mint module's sdk.Querier.
 func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
-		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", ModuleName)
+		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
 	}
 }
 
@@ -121,10 +120,8 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 	return []abci.ValidatorUpdate{}
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the mint
-// module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	return json.RawMessage{}
+	return json.RawMessage([]byte("{}"))
 }
 
 // BeginBlock returns the begin blocker for the mint module.

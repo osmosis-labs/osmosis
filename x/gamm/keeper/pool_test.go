@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,6 +14,23 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+)
+
+var (
+	defaultPoolAssetsStableSwap = sdk.Coins{
+		sdk.NewCoin("atom", sdk.NewInt(100)),
+		sdk.NewCoin("osmo", sdk.NewInt(100)),
+	}
+	defaultPoolParamsStableSwap = stableswap.PoolParams{
+		SwapFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.NewDecWithPrec(1, 2),
+	}
+	defaultPoolId                        = uint64(1)
+	defaultAcctFundsStableSwap sdk.Coins = sdk.NewCoins(
+		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
+		sdk.NewCoin("atom", sdk.NewInt(100)),
+		sdk.NewCoin("osmo", sdk.NewInt(100)),
+	)
 )
 
 // import (
@@ -354,4 +372,159 @@ func (suite *KeeperTestSuite) TestConvertToCFMMPool() {
 			suite.Require().Equal(tc.pool, pool)
 		})
 	}
+}
+
+// TestMarshalUnmarshalPool tests that by changing the interfaces
+// that we marshal to and unmarshal from store, we do not
+// change the underlying bytes. This shows that migrations are
+// not necessary.
+func (suite *KeeperTestSuite) TestMarshalUnmarshalPool() {
+
+	suite.SetupTest()
+	k := suite.App.GAMMKeeper
+
+	balancerPoolId := suite.PrepareBalancerPool()
+	balancerPool, err := k.GetPoolAndPoke(suite.Ctx, balancerPoolId)
+	suite.Require().NoError(err)
+
+	stableswapPoolId := suite.PrepareBasicStableswapPool()
+	stableswapPool, err := k.GetPoolAndPoke(suite.Ctx, stableswapPoolId)
+	suite.Require().NoError(err)
+
+	tests := []struct {
+		name string
+		pool types.CFMMPoolI
+	}{
+		{
+			name: "balancer",
+			pool: balancerPool,
+		},
+		{
+			name: "stableswap",
+			pool: stableswapPool,
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			var poolI swaproutertypes.PoolI = tc.pool
+			var cfmmPoolI types.CFMMPoolI = tc.pool
+
+			// Marshal poolI as PoolI
+			bzPoolI, err := k.MarshalPool(poolI)
+			suite.Require().NoError(err)
+
+			// Marshal cfmmPoolI as PoolI
+			bzCfmmPoolI, err := k.MarshalPool(cfmmPoolI)
+			suite.Require().NoError(err)
+
+			suite.Require().Equal(bzPoolI, bzCfmmPoolI)
+
+			// Unmarshal bzPoolI as CFMMPoolI
+			unmarshalBzPoolIAsCfmmPoolI, err := k.UnmarshalPool(bzPoolI)
+			suite.Require().NoError(err)
+
+			// Unmarshal bzPoolI as PoolI
+			unmarshalBzPoolIAsPoolI, err := k.UnmarshalPoolLegacy(bzPoolI)
+			suite.Require().NoError(err)
+
+			suite.Require().Equal(unmarshalBzPoolIAsCfmmPoolI, unmarshalBzPoolIAsPoolI)
+
+			// Unmarshal bzCfmmPoolI as CFMMPoolI
+			unmarshalBzCfmmPoolIAsCfmmPoolI, err := k.UnmarshalPool(bzCfmmPoolI)
+			suite.Require().NoError(err)
+
+			// Unmarshal bzCfmmPoolI as PoolI
+			unmarshalBzCfmmPoolIAsPoolI, err := k.UnmarshalPoolLegacy(bzCfmmPoolI)
+			suite.Require().NoError(err)
+
+			// bzCfmmPoolI as CFMMPoolI equals bzCfmmPoolI as PoolI
+			suite.Require().Equal(unmarshalBzCfmmPoolIAsCfmmPoolI, unmarshalBzCfmmPoolIAsPoolI)
+
+			// All unmarshalled combinations are equal.
+			suite.Require().Equal(unmarshalBzPoolIAsCfmmPoolI, unmarshalBzCfmmPoolIAsCfmmPoolI)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestSetStableSwapScalingFactors() {
+	controllerAddr := suite.TestAccs[0]
+	failAddr := suite.TestAccs[1]
+
+	testcases := []struct {
+		name             string
+		poolId           uint64
+		scalingFactors   []uint64
+		sender           sdk.AccAddress
+		expError         error
+		isStableSwapPool bool
+	}{
+		{
+			name:             "Error: Pool does not exist",
+			poolId:           2,
+			scalingFactors:   []uint64{1, 1},
+			sender:           controllerAddr,
+			expError:         types.PoolDoesNotExistError{PoolId: defaultPoolId + 1},
+			isStableSwapPool: false,
+		},
+		{
+			name:             "Error: Pool id is not of type stableswap pool",
+			poolId:           1,
+			scalingFactors:   []uint64{1, 1},
+			sender:           controllerAddr,
+			expError:         fmt.Errorf("pool id 1 is not of type stableswap pool"),
+			isStableSwapPool: false,
+		},
+		{
+			name:             "Error: Can not set scaling factors",
+			poolId:           1,
+			scalingFactors:   []uint64{1, 1},
+			sender:           failAddr,
+			expError:         types.ErrNotScalingFactorGovernor,
+			isStableSwapPool: true,
+		},
+		{
+			name:             "Valid case",
+			poolId:           1,
+			scalingFactors:   []uint64{1, 1},
+			sender:           controllerAddr,
+			isStableSwapPool: true,
+		},
+	}
+	for _, tc := range testcases {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			if tc.isStableSwapPool == true {
+				poolId := suite.prepareCustomStableswapPool(
+					defaultAcctFunds,
+					stableswap.PoolParams{
+						SwapFee: defaultSwapFee,
+						ExitFee: defaultExitFee,
+					},
+					sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[0].Denom, defaultAcctFunds[0].Amount.QuoRaw(2)), sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount.QuoRaw(2))),
+					tc.scalingFactors,
+				)
+				pool, _ := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
+				stableswapPool, _ := pool.(*stableswap.Pool)
+				stableswapPool.ScalingFactorController = controllerAddr.String()
+				suite.App.GAMMKeeper.SetPool(suite.Ctx, stableswapPool)
+			} else {
+				suite.prepareCustomBalancerPool(
+					defaultAcctFunds,
+					defaultPoolAssets,
+					defaultPoolParams)
+			}
+			err := suite.App.GAMMKeeper.SetStableSwapScalingFactors(suite.Ctx, tc.poolId, tc.scalingFactors, tc.sender.String())
+			if tc.expError != nil {
+				suite.Require().Error(err)
+				suite.Require().EqualError(err, tc.expError.Error())
+			} else {
+				suite.Require().NoError(err)
+			}
+		})
+	}
+
 }

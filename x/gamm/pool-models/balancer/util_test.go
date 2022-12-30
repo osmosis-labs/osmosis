@@ -12,7 +12,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 )
 
@@ -42,7 +42,7 @@ func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk
 	allowedErrRatioDec, err := sdk.NewDecFromStr(allowedErrRatio)
 	require.NoError(t, err)
 
-	errTolerance := osmoutils.ErrTolerance{
+	errTolerance := osmomath.ErrTolerance{
 		MultiplicativeTolerance: allowedErrRatioDec,
 	}
 

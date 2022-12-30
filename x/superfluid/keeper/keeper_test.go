@@ -95,7 +95,7 @@ func CreateRandomAccounts(numAccts int) []sdk.AccAddress {
 }
 
 func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
-	coins := suite.App.SwapRouterKeeper.GetParams(suite.Ctx).PoolCreationFee
+	coins := suite.App.GAMMKeeper.GetParams(suite.Ctx).PoolCreationFee
 	poolAssets := []balancer.PoolAsset{}
 	for _, denom := range denoms {
 		coins = coins.Add(sdk.NewInt64Coin(denom, 1000000000000000000))

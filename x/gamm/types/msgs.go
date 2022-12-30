@@ -7,8 +7,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 // constants.
@@ -74,7 +72,7 @@ func (msg MsgSwapExactAmountIn) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	err = swaproutertypes.SwapAmountInRoutes(msg.Routes).Validate()
+	err = SwapAmountInRoutes(msg.Routes).Validate()
 	if err != nil {
 		return err
 	}
@@ -112,7 +110,7 @@ func (msg MsgSwapExactAmountOut) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	err = swaproutertypes.SwapAmountOutRoutes(msg.Routes).Validate()
+	err = SwapAmountOutRoutes(msg.Routes).Validate()
 	if err != nil {
 		return err
 	}

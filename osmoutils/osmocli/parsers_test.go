@@ -35,12 +35,6 @@ func TestParseFieldFromArg(t *testing.T) {
 			fieldIndex:     0,
 			expectedStruct: testingStruct{Int: 10},
 		},
-		"Int value changes from -20 to -10": {
-			testingStruct:  testingStruct{Int: -20},
-			arg:            "-10",
-			fieldIndex:     0,
-			expectedStruct: testingStruct{Int: -10},
-		},
 		"Attempt to change Int value 20 to string value": { // does not return error, simply does not change the struct
 			testingStruct:  testingStruct{Int: 20},
 			arg:            "hello",
@@ -125,7 +119,8 @@ func TestParseFieldFromArg(t *testing.T) {
 					sdk.NewCoin("foo", sdk.NewInt(100)),
 					sdk.NewCoin("bar", sdk.NewInt(100)),
 				},
-				Struct: sdk.NewCoin("bar", sdk.NewInt(10))},
+				Struct: sdk.NewCoin("bar", sdk.NewInt(10)),
+			},
 			arg:        "1foo,15bar",
 			fieldIndex: 6,
 			expectedStruct: testingStruct{
@@ -139,7 +134,8 @@ func TestParseFieldFromArg(t *testing.T) {
 					sdk.NewCoin("bar", sdk.NewInt(15)),
 					sdk.NewCoin("foo", sdk.NewInt(1)),
 				},
-				Struct: sdk.NewCoin("bar", sdk.NewInt(10))},
+				Struct: sdk.NewCoin("bar", sdk.NewInt(10)),
+			},
 		},
 	}
 

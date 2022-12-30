@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/utils"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
 )
 
@@ -57,7 +57,7 @@ func EmitSuperfluidDelegateEvent(ctx sdk.Context, lockId uint64, valAddress stri
 func newSuperfluidDelegateEvent(lockId uint64, valAddress string) sdk.Event {
 	return sdk.NewEvent(
 		types.TypeEvtSuperfluidDelegate,
-		sdk.NewAttribute(types.AttributeLockId, utils.Uint64ToString(lockId)),
+		sdk.NewAttribute(types.AttributeLockId, osmoutils.Uint64ToString(lockId)),
 		sdk.NewAttribute(types.AttributeValidator, valAddress),
 	)
 }

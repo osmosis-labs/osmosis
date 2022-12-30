@@ -12,6 +12,29 @@ Notice that the latest price `p_n` isn't used, as it has lasted for a time inter
 To illustrate with an example, given the sequence: `(0s, $1), (4s, $6), (5s, $1)`, the arithmetic mean TWAP is: 
 $$\frac{\$1 * (4s - 0s) + \$6 * (5s - 4s)}{5s - 0s} = \frac{\$10}{5} = \$2$$
 
+## Geometric mean TWAP
+
+While the arithmetic mean TWAPs are much more widely used, they should theoretically be less accurate in measuring a geometric Brownian motion process (which is how price movements are usually modeled)
+
+Arithmetic TWAP tends to overweight higher prices relative to lower ones.
+
+Therefore, we also support a geometric mean TWAP.
+
+The core functionality stays similar to the arithmetic mean TWAP. However, instead of computing the geometric mean TWAP naively as
+a [weighted geometric mean](https://en.wikipedia.org//wiki/Weighted_geometric_mean), we use the following property:
+
+
+$$GeometricMean(P) = 2^{ArithmeticMean(log_{2}{P})}$$
+
+$$  {(\prod_{i=a}^{b} P_i)}^{\frac{1}\{b-a}}  =  exp(\sum_{i=a}^{b}{\frac{1}{b-a} ln{(P_i)}}) $$
+
+Note that in the second expression we use a different logarithm and power bases of `e`.
+This is for brevity, and the true value used in our implementation is currently `2`.
+
+Naive computation is expensive and easily overflows. As a result, we track logarithms of prices instead of prices themselves in the accumulators.
+When geometric twap is requested, we first compute the arithmetic mean of the logarithms, and then exponentiate it with the same base as the logarithm
+to get the final result.
+
 ## Computation via accumulators method
 
 The prior example for how to compute the TWAP takes linear time in the number of time entries in a range, which is too inefficient. We require TWAP operations to have constant time complexity (in the number of records).
@@ -30,7 +53,8 @@ Given these interpolated accumulation values, we can compute the TWAP as before.
 
 ## Module API
 
-The primary intended API is `GetArithmeticTwap`, which is documented below, and has a similar cosmwasm binding.
+The primary intended APIs are `GetArithmeticTwap` and `GetGeometricTwap`, which are documented below,
+and have a similar cosmwasm binding.
 
 ```go
 // GetArithmeticTwap returns an arithmetic time weighted average price.
@@ -67,6 +91,10 @@ func (k Keeper) GetArithmeticTwap(ctx sdk.Context,
 
 There are convenience methods for `GetArithmeticTwapToNow` which sets `endTime = ctx.BlockTime()`, and has minor gas reduction.
 For users who need TWAPs outside the 48 hours stored in the state machine, you can get the latest accumulation store record from `GetBeginBlockAccumulatorRecord`.
+
+Geometric TWAP has comparable methods with the same parameters. Namely, `GetGeometricTwap` and `GetGeometricTwapToNow`.
+The semantics of these methods are the same with the arithmetic version. The only difference is the low-level
+computation of the TWAP, which is done via the geometric mean.
 
 ## Code layout
 

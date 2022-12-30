@@ -3,7 +3,7 @@ package concentrated_liquidity
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
@@ -61,7 +61,7 @@ func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 		return model.TickInfo{}, types.PoolNotFoundError{PoolId: poolId}
 	}
 
-	found, err := osmoutils.GetIfFound(store, key, &tickStruct)
+	found, err := osmoutils.Get(store, key, &tickStruct)
 	// return 0 values if key has not been initialized
 	if !found {
 		return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec()}, err

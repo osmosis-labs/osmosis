@@ -19,6 +19,7 @@ import (
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
 	epochtypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v13/x/incentives/types"
 	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
 	poolitypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
@@ -158,7 +159,6 @@ func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, forkHei
 	return genutil.ExportGenesisFile(genDoc, genFile)
 }
 
-//nolint:typecheck
 func updateModuleGenesis[V proto.Message](appGenState map[string]json.RawMessage, moduleName string, protoVal V, updateGenesis func(V)) error {
 	if err := util.Cdc.UnmarshalJSON(appGenState[moduleName], protoVal); err != nil {
 		return err
@@ -242,7 +242,12 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 		return err
 	}
 
-	err = updateModuleGenesis(appGenState, swaproutertypes.ModuleName, &swaproutertypes.GenesisState{}, updateSwaprouterGenesis)
+	err = updateModuleGenesis(appGenState, gammtypes.ModuleName, &gammtypes.GenesisState{}, updateGammGenesis)
+	if err != nil {
+		return err
+	}
+
+	err = updateModuleGenesis(appGenState, swaproutertypes.ModuleName, &swaproutertypes.GenesisState{}, updateSwaprouterGenesis(appGenState))
 	if err != nil {
 		return err
 	}
@@ -352,8 +357,18 @@ func updateTxfeesGenesis(txfeesGenState *txfeestypes.GenesisState) {
 	txfeesGenState.Basedenom = OsmoDenom
 }
 
-func updateSwaprouterGenesis(gammGenState *swaproutertypes.GenesisState) {
+func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
 	gammGenState.Params.PoolCreationFee = tenOsmo
+}
+
+func updateSwaprouterGenesis(appGenState map[string]json.RawMessage) func(*swaproutertypes.GenesisState) {
+	return func(s *swaproutertypes.GenesisState) {
+		gammGenState := &gammtypes.GenesisState{}
+		if err := util.Cdc.UnmarshalJSON(appGenState[gammtypes.ModuleName], gammGenState); err != nil {
+			panic(err)
+		}
+		s.NextPoolId = gammGenState.NextPoolNumber
+	}
 }
 
 func updateEpochGenesis(epochGenState *epochtypes.GenesisState) {

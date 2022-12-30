@@ -7,8 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 )
 
 func TestSigFigRound(t *testing.T) {
@@ -72,13 +70,20 @@ func TestSigFigRound(t *testing.T) {
 			tenToSigFig:    sdk.NewInt(100),
 			expectedResult: sdk.MustNewDecFromStr("0.087"),
 		},
+
+		{
+			name:           "minimum decimal is still kept",
+			decimal:        sdk.NewDecWithPrec(1, 18),
+			tenToSigFig:    sdk.NewInt(10),
+			expectedResult: sdk.NewDecWithPrec(1, 18),
+		},
 	}
 
 	for i, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			var actualResult sdk.Dec
-			osmoassert.ConditionalPanic(t, tc.tenToSigFig.Equal(sdk.ZeroInt()), func() {
+			ConditionalPanic(t, tc.tenToSigFig.Equal(sdk.ZeroInt()), func() {
 				actualResult = SigFigRound(tc.decimal, tc.tenToSigFig)
 				require.Equal(
 					t,

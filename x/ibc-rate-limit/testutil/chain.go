@@ -8,11 +8,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ibctesting "github.com/cosmos/ibc-go/v3/testing"
-	"github.com/cosmos/ibc-go/v3/testing/simapp/helpers"
-	"github.com/osmosis-labs/osmosis/v13/app"
-	abci "github.com/tendermint/tendermint/abci/types"
+	ibctesting "github.com/cosmos/ibc-go/v4/testing"
+	"github.com/cosmos/ibc-go/v4/testing/simapp/helpers"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"github.com/osmosis-labs/osmosis/v13/app"
 )
 
 type TestChain struct {
@@ -75,24 +75,24 @@ func SignAndDeliver(
 	)
 
 	// Simulate a sending a transaction and committing a block
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	gInfo, res, err := app.Deliver(txCfg.TxEncoder(), tx)
-
-	app.EndBlock(abci.RequestEndBlock{})
-	app.Commit()
 
 	return gInfo, res, err
 }
 
 // Move epochs to the future to avoid issues with minting
-func (chain *TestChain) MoveEpochsToTheFuture() {
+func (chain *TestChain) MoveEpochsToTheFuture() error {
 	epochsKeeper := chain.GetOsmosisApp().EpochsKeeper
 	ctx := chain.GetContext()
 	for _, epoch := range epochsKeeper.AllEpochInfos(ctx) {
 		epoch.StartTime = ctx.BlockTime().Add(time.Hour * 24 * 30)
 		epochsKeeper.DeleteEpochInfo(chain.GetContext(), epoch.Identifier)
-		_ = epochsKeeper.AddEpochInfo(ctx, epoch)
+		err := epochsKeeper.AddEpochInfo(ctx, epoch)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // GetOsmosisApp returns the current chain's app as an OsmosisApp

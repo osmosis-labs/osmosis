@@ -3,7 +3,7 @@ package concentrated_liquidity
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
@@ -72,7 +72,7 @@ func (k Keeper) getPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	positionStruct := &model.Position{}
 	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
 
-	found, err := osmoutils.GetIfFound(store, key, positionStruct)
+	found, err := osmoutils.Get(store, key, positionStruct)
 	if err != nil {
 		return nil, err
 	}

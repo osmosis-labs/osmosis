@@ -12,7 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/events"
 )
 
-type GammEventsTestSuite struct {
+type SwapRouterEventsTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
@@ -24,11 +24,11 @@ const (
 	testDenomD    = "denomd"
 )
 
-func TestGammEventsTestSuite(t *testing.T) {
-	suite.Run(t, new(GammEventsTestSuite))
+func TestSwapRouterEventsTestSuite(t *testing.T) {
+	suite.Run(t, new(SwapRouterEventsTestSuite))
 }
 
-func (suite *GammEventsTestSuite) TestEmitSwapEvent() {
+func (suite *SwapRouterEventsTestSuite) TestEmitSwapEvent() {
 	testcases := map[string]struct {
 		ctx             sdk.Context
 		testAccountAddr sdk.AccAddress
@@ -42,9 +42,6 @@ func (suite *GammEventsTestSuite) TestEmitSwapEvent() {
 			poolId:          1,
 			tokensIn:        sdk.NewCoins(sdk.NewCoin(testDenomA, sdk.NewInt(1234))),
 			tokensOut:       sdk.NewCoins(sdk.NewCoin(testDenomB, sdk.NewInt(5678))),
-		},
-		"context with no event manager": {
-			ctx: sdk.Context{},
 		},
 		"valid with multiple tokens in and out": {
 			ctx:             suite.CreateTestContext(),
@@ -86,7 +83,7 @@ func (suite *GammEventsTestSuite) TestEmitSwapEvent() {
 	}
 }
 
-func (suite *GammEventsTestSuite) TestEmitAddLiquidityEvent() {
+func (suite *SwapRouterEventsTestSuite) TestEmitAddLiquidityEvent() {
 	testcases := map[string]struct {
 		ctx             sdk.Context
 		testAccountAddr sdk.AccAddress
@@ -98,9 +95,6 @@ func (suite *GammEventsTestSuite) TestEmitAddLiquidityEvent() {
 			testAccountAddr: sdk.AccAddress([]byte(addressString)),
 			poolId:          1,
 			tokensIn:        sdk.NewCoins(sdk.NewCoin(testDenomA, sdk.NewInt(1234))),
-		},
-		"context with no event manager": {
-			ctx: sdk.Context{},
 		},
 		"valid with multiple tokens in": {
 			ctx:             suite.CreateTestContext(),
@@ -140,7 +134,7 @@ func (suite *GammEventsTestSuite) TestEmitAddLiquidityEvent() {
 	}
 }
 
-func (suite *GammEventsTestSuite) TestEmitRemoveLiquidityEvent() {
+func (suite *SwapRouterEventsTestSuite) TestEmitRemoveLiquidityEvent() {
 	testcases := map[string]struct {
 		ctx             sdk.Context
 		testAccountAddr sdk.AccAddress
@@ -152,9 +146,6 @@ func (suite *GammEventsTestSuite) TestEmitRemoveLiquidityEvent() {
 			testAccountAddr: sdk.AccAddress([]byte(addressString)),
 			poolId:          1,
 			tokensOut:       sdk.NewCoins(sdk.NewCoin(testDenomA, sdk.NewInt(1234))),
-		},
-		"context with no event manager": {
-			ctx: sdk.Context{},
 		},
 		"valid with multiple tokens out": {
 			ctx:             suite.CreateTestContext(),

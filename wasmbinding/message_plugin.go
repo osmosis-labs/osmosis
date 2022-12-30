@@ -10,19 +10,17 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	"github.com/osmosis-labs/osmosis/v13/wasmbinding/bindings"
-	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
 
 	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/keeper"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
 )
 
 // CustomMessageDecorator returns decorator for custom CosmWasm bindings messages
-func CustomMessageDecorator(gammKeeper *gammkeeper.Keeper, bank *bankkeeper.BaseKeeper, tokenFactory *tokenfactorykeeper.Keeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {
+func CustomMessageDecorator(bank *bankkeeper.BaseKeeper, tokenFactory *tokenfactorykeeper.Keeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {
 	return func(old wasmkeeper.Messenger) wasmkeeper.Messenger {
 		return &CustomMessenger{
 			wrapped:      old,
 			bank:         bank,
-			gammKeeper:   gammKeeper,
 			tokenFactory: tokenFactory,
 		}
 	}
@@ -31,7 +29,6 @@ func CustomMessageDecorator(gammKeeper *gammkeeper.Keeper, bank *bankkeeper.Base
 type CustomMessenger struct {
 	wrapped      wasmkeeper.Messenger
 	bank         *bankkeeper.BaseKeeper
-	gammKeeper   *gammkeeper.Keeper
 	tokenFactory *tokenfactorykeeper.Keeper
 }
 

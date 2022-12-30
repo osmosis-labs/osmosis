@@ -2,13 +2,9 @@ package swaprouter
 
 import (
 	"context"
-	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
@@ -16,80 +12,10 @@ type msgServer struct {
 	keeper *Keeper
 }
 
-var (
-	_ balancer.MsgServer          = (*msgServer)(nil)
-	_ stableswap.MsgCreatorServer = (*msgServer)(nil)
-)
-
 func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	return &msgServer{
 		keeper: keeper,
 	}
-}
-
-func NewBalancerMsgServerImpl(keeper *Keeper) balancer.MsgServer {
-	return &msgServer{
-		keeper: keeper,
-	}
-}
-
-func NewStableswapMsgServerImpl(keeper *Keeper) stableswap.MsgCreatorServer {
-	return &msgServer{
-		keeper: keeper,
-	}
-}
-
-// CreateBalancerPool is a create balancer pool message.
-func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.MsgCreateBalancerPool) (*balancer.MsgCreateBalancerPoolResponse, error) {
-	poolId, err := server.CreatePool(goCtx, msg)
-	if err != nil {
-		return nil, err
-	}
-	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolId}, nil
-}
-
-func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stableswap.MsgCreateStableswapPool) (*stableswap.MsgCreateStableswapPoolResponse, error) {
-	poolId, err := server.CreatePool(goCtx, msg)
-	if err != nil {
-		return nil, err
-	}
-	return &stableswap.MsgCreateStableswapPoolResponse{PoolID: poolId}, nil
-}
-
-// func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, msg *stableswap.MsgStableSwapAdjustScalingFactors) (*stableswap.MsgStableSwapAdjustScalingFactorsResponse, error) {
-// 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-// 	if err := server.keeper.SetStableSwapScalingFactors(ctx, msg.ScalingFactors, msg.PoolID, msg.ScalingFactorGovernor); err != nil {
-// 		return nil, err
-// 	}
-
-// 	return &stableswap.MsgStableSwapAdjustScalingFactorsResponse{}, nil
-// }
-
-// CreatePool attempts to create a pool returning the newly created pool ID or an error upon failure.
-// The pool creation fee is used to fund the community pool.
-// It will create a dedicated module account for the pool and sends the initial liquidity to the created module account.
-func (server msgServer) CreatePool(goCtx context.Context, msg types.CreatePoolMsg) (poolId uint64, err error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	poolId, err = server.keeper.CreatePool(ctx, msg)
-	if err != nil {
-		return 0, err
-	}
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			gammtypes.TypeEvtPoolCreated,
-			sdk.NewAttribute(gammtypes.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.PoolCreator().String()),
-		),
-	})
-
-	return poolId, nil
 }
 
 // TODO: spec and tests, including events

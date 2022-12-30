@@ -65,7 +65,8 @@ func (msg MsgCreateConcentratedPool) ValidateBasic() error {
 }
 
 func (msg MsgCreateConcentratedPool) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	return nil
+	// return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgCreateConcentratedPool) GetSigners() []sdk.AccAddress {

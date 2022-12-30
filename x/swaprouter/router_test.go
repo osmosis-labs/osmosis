@@ -29,15 +29,81 @@ var (
 	concentratedKeeperType = reflect.TypeOf(&cl.Keeper{})
 )
 
+// TestGetPoolModule tests that the correct pool module is returned for a given pool id.
+// Additionally, validates that the expected errors are produced when expected.
+func (suite *KeeperTestSuite) TestGetPoolModule() {
+	tests := map[string]struct {
+		poolId            uint64
+		preCreatePoolType types.PoolType
+		routesOverwrite   map[types.PoolType]types.SwapI
+
+		expectedModule reflect.Type
+		expectError    error
+	}{
+		"valid balancer pool": {
+			preCreatePoolType: types.Balancer,
+			poolId:            1,
+			expectedModule:    gammKeeperType,
+		},
+		"valid stableswap pool": {
+			preCreatePoolType: types.Stableswap,
+			poolId:            1,
+			expectedModule:    gammKeeperType,
+		},
+		"non-existent pool": {
+			preCreatePoolType: types.Balancer,
+			poolId:            2,
+			expectedModule:    gammKeeperType,
+
+			expectError: types.FailedToFindRouteError{PoolId: 2},
+		},
+		"undefined route": {
+			preCreatePoolType: types.Balancer,
+			poolId:            1,
+			routesOverwrite: map[types.PoolType]types.SwapI{
+				types.Stableswap: &gamm.Keeper{}, // undefined for balancer.
+			},
+
+			expectError: types.UndefinedRouteError{PoolId: 1, PoolType: types.Balancer},
+		},
+		// TODO: valid concentrated liquidity test case.
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.SetupTest()
+			swaprouterKeeper := suite.App.SwapRouterKeeper
+
+			suite.createPoolFromType(tc.preCreatePoolType)
+
+			if len(tc.routesOverwrite) > 0 {
+				swaprouterKeeper.SetPoolRoutesUnsafe(tc.routesOverwrite)
+			}
+
+			swapModule, err := swaprouterKeeper.GetPoolModule(suite.Ctx, tc.poolId)
+
+			if tc.expectError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, tc.expectError)
+				suite.Require().Nil(swapModule)
+				return
+			}
+
+			suite.Require().NoError(err)
+			suite.Require().NotNil(swapModule)
+
+			suite.Require().Equal(tc.expectedModule, reflect.TypeOf(swapModule))
+		})
+	}
+}
+
 // TestMultihopSwapExactAmountIn tests that the swaps are routed correctly.
 // That is:
 // - to the correct module (concentrated-liquidity or gamm)
 // - over the right routes (hops)
-// This test does not actually validate the math behind the swaps.
+// - fee reduction is applied correctly
 func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
-	type param struct {
-	}
-
 	tests := []struct {
 		name                    string
 		poolCoins               []sdk.Coins
@@ -276,9 +342,8 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 // That is:
 // - to the correct module (concentrated-liquidity or gamm)
 // - over the right routes (hops)
-// This test does not actually validate the math behind the swaps.
+// - fee reduction is applied correctly
 func (suite *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
-
 	tests := []struct {
 		name                    string
 		poolCoins               []sdk.Coins
@@ -510,71 +575,6 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 				suite.Require().NoError(err)
 				suite.Require().Equal(expectedMultihopTokenOutAmount.Amount.String(), multihopTokenOutAmount.String())
 			}
-		})
-	}
-}
-
-// TestGetSwapModule tests that the correct swap module is returned for a given pool id.
-// Additionally, validates that the expected errors are produced when expected.
-func (suite *KeeperTestSuite) TestGetSwapModule() {
-
-	tests := map[string]struct {
-		poolId            uint64
-		preCreatePoolType types.PoolType
-		routesOverwrite   map[types.PoolType]types.SwapI
-
-		expectedModule reflect.Type
-		expectError    error
-	}{
-		"valid balancer pool": {
-			preCreatePoolType: types.Balancer,
-			poolId:            1,
-			expectedModule:    gammKeeperType,
-		},
-		"non-existent pool": {
-			preCreatePoolType: types.Balancer,
-			poolId:            2,
-			expectedModule:    gammKeeperType,
-
-			expectError: types.FailedToFindRouteError{PoolId: 2},
-		},
-		"undefined route": {
-			preCreatePoolType: types.Balancer,
-			poolId:            1,
-			routesOverwrite: map[types.PoolType]types.SwapI{
-				types.StableSwap: &gamm.Keeper{}, // undefined for balancer.
-			},
-
-			expectError: types.UndefinedRouteError{PoolId: 1, PoolType: types.Balancer},
-		},
-		// TODO: valid stableswap test case.
-		// TODO: valid concentrated liquidity test case.
-	}
-
-	for name, tc := range tests {
-		tc := tc
-		suite.Run(name, func() {
-			suite.SetupTest()
-			swaprouterKeeper := suite.App.SwapRouterKeeper
-
-			suite.createPoolFromType(tc.preCreatePoolType)
-
-			if len(tc.routesOverwrite) > 0 {
-				swaprouterKeeper.SetPoolRoutesUnsafe(tc.routesOverwrite)
-			}
-
-			swapModule, err := swaprouterKeeper.GetSwapModule(suite.Ctx, tc.poolId)
-
-			if tc.expectError != nil {
-				suite.Require().Error(err)
-				suite.Require().Nil(swapModule)
-				return
-			}
-
-			suite.Require().NoError(err)
-			suite.Require().NotNil(swapModule)
-
-			suite.Require().Equal(tc.expectedModule, reflect.TypeOf(swapModule))
 		})
 	}
 }
@@ -942,5 +942,91 @@ func (suite *KeeperTestSuite) calcInAmountAsSeparateSwaps(osmoFeeReduced bool, r
 			nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
 		}
 		return nextTokenIn
+	}
+}
+
+func (suite *KeeperTestSuite) TestSingleSwapExactAmountIn() {
+	tests := []struct {
+		name                   string
+		poolId                 uint64
+		poolCoins              sdk.Coins
+		poolFee                sdk.Dec
+		tokenIn                sdk.Coin
+		tokenOutDenom          string
+		tokenOutMinAmount      sdk.Int
+		expectedTokenOutAmount sdk.Int
+		expectError            bool
+	}{
+		// We have:
+		//  - foo: 1000000000000
+		//  - bar: 1000000000000
+		//  - swapFee: 1%
+		//  - foo in: 100000
+		//  - bar amount out will be calculated according to the formula
+		// 		https://www.wolframalpha.com/input?i=solve+%2810%5E12+%2B+10%5E5+x+0.99%29%2810%5E12+-+x%29+%3D+10%5E24
+		// We round down the token amount out, get the result is 98999
+		{
+			name:                   "Swap - [foo -> bar], 1 percent fee",
+			poolId:                 1,
+			poolCoins:              sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
+			poolFee:                defaultPoolSwapFee,
+			tokenIn:                sdk.NewCoin(foo, sdk.NewInt(100000)),
+			tokenOutMinAmount:      sdk.NewInt(1),
+			tokenOutDenom:          bar,
+			expectedTokenOutAmount: sdk.NewInt(98999),
+		},
+		{
+			name:              "Wrong pool id",
+			poolId:            2,
+			poolCoins:         sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
+			poolFee:           defaultPoolSwapFee,
+			tokenIn:           sdk.NewCoin(foo, sdk.NewInt(100000)),
+			tokenOutMinAmount: sdk.NewInt(1),
+			tokenOutDenom:     bar,
+			expectError:       true,
+		},
+		{
+			name:              "In denom not exist",
+			poolId:            1,
+			poolCoins:         sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
+			poolFee:           defaultPoolSwapFee,
+			tokenIn:           sdk.NewCoin(baz, sdk.NewInt(100000)),
+			tokenOutMinAmount: sdk.NewInt(1),
+			tokenOutDenom:     bar,
+			expectError:       true,
+		},
+		{
+			name:              "Out denom not exist",
+			poolId:            1,
+			poolCoins:         sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
+			poolFee:           defaultPoolSwapFee,
+			tokenIn:           sdk.NewCoin(foo, sdk.NewInt(100000)),
+			tokenOutMinAmount: sdk.NewInt(1),
+			tokenOutDenom:     baz,
+			expectError:       true,
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			swaprouterKeeper := suite.App.SwapRouterKeeper
+
+			suite.FundAcc(suite.TestAccs[0], tc.poolCoins)
+			suite.PrepareCustomBalancerPoolFromCoins(tc.poolCoins, balancer.PoolParams{
+				SwapFee: tc.poolFee,
+				ExitFee: sdk.ZeroDec(),
+			})
+
+			// execute the swap
+			multihopTokenOutAmount, err := swaprouterKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], tc.poolId, tc.tokenIn, tc.tokenOutDenom, tc.tokenOutMinAmount)
+			if tc.expectError {
+				suite.Require().Error(err)
+			} else {
+				// compare the expected tokenOut to the actual tokenOut
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.expectedTokenOutAmount.String(), multihopTokenOutAmount.String())
+			}
+		})
 	}
 }

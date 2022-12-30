@@ -1,6 +1,7 @@
 package wasmbinding
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"os"
 	"testing"
@@ -29,7 +30,7 @@ func TestNoStorageWithoutProposal(t *testing.T) {
 	// upload reflect code
 	wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")
 	require.NoError(t, err)
-	_, err = contractKeeper.Create(ctx, creator, wasmCode, nil)
+	_, _, err = contractKeeper.Create(ctx, creator, wasmCode, nil)
 	require.Error(t, err)
 }
 
@@ -41,6 +42,8 @@ func storeCodeViaProposal(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp
 	src := types.StoreCodeProposalFixture(func(p *types.StoreCodeProposal) {
 		p.RunAs = addr.String()
 		p.WASMByteCode = wasmCode
+		checksum := sha256.Sum256(wasmCode)
+		p.CodeHash = checksum[:]
 	})
 
 	// when stored

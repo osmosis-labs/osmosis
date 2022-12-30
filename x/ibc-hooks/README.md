@@ -114,6 +114,42 @@ In wasm hooks, post packet execution:
 * if wasm message has error, return ErrAck
 * otherwise continue through middleware
 
+## Ack callbacks
 
+A contract that sends an IBC transfer, may need to listen for the ACK from that packet. To allow
+contracts to listen on the ack of specific packets, we provide Ack callbacks. 
 
-### Testing strategy
+### Design
+
+The sender of an IBC transfer packet may specify a callback for when the ack of that packet is received in the memo 
+field of the transfer packet. 
+
+Crucially, _only_ the IBC packet sender can set the callback.
+
+### Use case
+
+The crosschain swaps implementation sends an IBC transfer. If the transfer were to fail, we want to allow the sender
+to be able to retrieve their funds (which would otherwise be stuck in the contract). To do this, we allow users to 
+retrieve the funds after the timeout has passed, but without the ack information, we cannot guarantee that the send 
+hasn't failed (i.e.: returned an error ack notifying that the receiving change didn't accept it)
+
+### Implementation
+
+#### Callback information in memo
+
+For the callback to be processed, the transfer packet's memo should contain the following in its JSON:
+
+`{"ibc_callback": "osmo1contractAddr"}`
+
+The wasm hooks will keep the mapping from the packet's channel and sequence to the contract in storage. When an ack is
+received, it will notify the specified contract via a sudo message.
+
+#### Interface for receiving the Ack
+
+The contract that awaits the callback should implement the following interface for a sudo message:
+
+* `ReceiveAck { channel: String, sequence: u64, ack: String, success: bool }`
+
+# Testing strategy
+
+See go tests.

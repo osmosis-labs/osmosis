@@ -57,6 +57,12 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 			&types.QueryPoolsResponse{},
 		},
 		{
+			"Query num pools",
+			"/osmosis.gamm.v1beta1.Query/NumPools",
+			&types.QueryNumPoolsRequest{},
+			&types.QueryNumPoolsResponse{},
+		},
+		{
 			"Query pool params",
 			"/osmosis.gamm.v1beta1.Query/PoolParams",
 			&types.QueryPoolParamsRequest{PoolId: 1},

@@ -30,6 +30,13 @@ func (k Keeper) SwapExactAmountIn(
 	if tokenIn.Denom == tokenOutDenom {
 		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
 	}
+	if !pool.IsActive(ctx) {
+		return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
+	}
+	poolSwapFee := pool.GetSwapFee(ctx)
+	if swapFee.LT(poolSwapFee.QuoInt64(2)) {
+		return sdk.Int{}, fmt.Errorf("given swap fee (%s) must be greater than or equal to half of the pool's swap fee (%s)", swapFee, poolSwapFee)
+	}
 	tokensIn := sdk.Coins{tokenIn}
 
 	defer func() {
@@ -70,7 +77,7 @@ func (k Keeper) SwapExactAmountIn(
 	return tokenOutAmount, nil
 }
 
-// swapExactAmountIn is a method for swapping to get an exact number of tokens out of a pool,
+// SwapExactAmountOut is a method for swapping to get an exact number of tokens out of a pool,
 // using the provided swapFee.
 // This is intended to allow different swap fees as determined by multi-hops,
 // or when recovering from chain liveness failures.
@@ -86,14 +93,9 @@ func (k Keeper) SwapExactAmountOut(
 	if tokenInDenom == tokenOut.Denom {
 		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
 	}
-
-	defer func() {
-		if r := recover(); r != nil {
-			tokenInAmount = sdk.Int{}
-			err = fmt.Errorf("function swapExactAmountOut failed due to internal reason: %v", r)
-		}
-	}()
-
+	if !pool.IsActive(ctx) {
+		return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
+	}
 	defer func() {
 		if r := recover(); r != nil {
 			tokenInAmount = sdk.Int{}
@@ -133,6 +135,8 @@ func (k Keeper) SwapExactAmountOut(
 	return tokenInAmount, nil
 }
 
+// CalcOutAmtGivenIn calculates the amount of tokenOut given tokenIn and the pool's current state.
+// Returns error if the given pool is not a CFMM pool. Returns error on internal calculations.
 func (k Keeper) CalcOutAmtGivenIn(
 	ctx sdk.Context,
 	poolI swaproutertypes.PoolI,
@@ -147,6 +151,8 @@ func (k Keeper) CalcOutAmtGivenIn(
 	return cfmmPool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(tokenIn), tokenOutDenom, swapFee)
 }
 
+// CalcInAmtGivenOut calculates the amount of tokenIn given tokenOut and the pool's current state.
+// Returns error if the given pool is not a CFMM pool. Returns error on internal calculations.
 func (k Keeper) CalcInAmtGivenOut(
 	ctx sdk.Context,
 	poolI swaproutertypes.PoolI,

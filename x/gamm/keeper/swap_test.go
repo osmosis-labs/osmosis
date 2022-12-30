@@ -4,8 +4,10 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/v13/tests/mocks"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
@@ -22,9 +24,16 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 	}
 
 	tests := []struct {
-		name       string
-		param      param
-		expectPass bool
+		name  string
+		param param
+		// Note: by default swap fee is zero in all tests
+		// It is only set to non-zero when this overwrite is non-nil
+		swapFeeOverwrite sdk.Dec
+		// Note: this is the value by which the original swap fee is divided
+		// by if it is non-nil. This is done to test the case where the given
+		// parameter swap fee is reduced by more than allowed (max factor of 0.5)
+		swapFeeOverwriteQuotient sdk.Dec
+		expectPass               bool
 	}{
 		{
 			name: "Proper swap",
@@ -45,6 +54,30 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				expectedTokenOut:  sdk.NewInt(1167843),
 			},
 			expectPass: true,
+		},
+		{
+			name: "boundary valid swap fee given (= 0.5 pool swap fee)",
+			param: param{
+				tokenIn:           sdk.NewCoin("foo", sdk.NewInt(100000)),
+				tokenOutDenom:     "bar",
+				tokenOutMinAmount: sdk.NewInt(1),
+				expectedTokenOut:  sdk.NewInt(46833),
+			},
+			swapFeeOverwrite:         sdk.MustNewDecFromStr("0.1"),
+			swapFeeOverwriteQuotient: sdk.MustNewDecFromStr("2"),
+			expectPass:               true,
+		},
+		{
+			name: "invalid swap fee given (< 0.5 pool swap fee)",
+			param: param{
+				tokenIn:           sdk.NewCoin("foo", sdk.NewInt(100000)),
+				tokenOutDenom:     "bar",
+				tokenOutMinAmount: sdk.NewInt(1),
+				expectedTokenOut:  sdk.NewInt(49262),
+			},
+			swapFeeOverwrite:         sdk.MustNewDecFromStr("0.1"),
+			swapFeeOverwriteQuotient: sdk.MustNewDecFromStr("3"),
+			expectPass:               false,
 		},
 		{
 			name: "out is lesser than min amount",
@@ -85,15 +118,25 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 	}
 
 	for _, test := range tests {
+		test := test
 		suite.Run(test.name, func() {
 			// Init suite for each test.
 			suite.SetupTest()
-			poolId := suite.PrepareBalancerPool()
+			swapFee := sdk.ZeroDec()
+			if !test.swapFeeOverwrite.IsNil() {
+				swapFee = test.swapFeeOverwrite
+			}
+			poolId := suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
+				SwapFee: swapFee,
+				ExitFee: sdk.ZeroDec(),
+			})
+			if !test.swapFeeOverwriteQuotient.IsNil() {
+				swapFee = swapFee.Quo(test.swapFeeOverwriteQuotient)
+			}
 			keeper := suite.App.GAMMKeeper
 			ctx := suite.Ctx
-			pool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
+			pool, err := suite.App.GAMMKeeper.GetPool(ctx, poolId)
 			suite.NoError(err)
-			swapFee := pool.GetSwapFee(suite.Ctx)
 
 			if test.expectPass {
 				spotPriceBefore, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
@@ -102,7 +145,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				prevGasConsumed := suite.Ctx.GasMeter().GasConsumed()
 				tokenOutAmount, err := keeper.SwapExactAmountIn(ctx, suite.TestAccs[0], pool, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, swapFee)
 				suite.NoError(err, "test: %v", test.name)
-				suite.True(tokenOutAmount.Equal(test.param.expectedTokenOut), "test: %v", test.name)
+				suite.Require().Equal(test.param.expectedTokenOut.String(), tokenOutAmount.String())
 				gasConsumedForSwap := suite.Ctx.GasMeter().GasConsumed() - prevGasConsumed
 				// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
 				suite.Assert().Greater(gasConsumedForSwap, uint64(types.BalancerGasFeeForSwap))
@@ -111,6 +154,10 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 
 				spotPriceAfter, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
 				suite.NoError(err, "test: %v", test.name)
+
+				if !test.swapFeeOverwrite.IsNil() {
+					return
+				}
 
 				// Ratio of the token out should be between the before spot price and after spot price.
 				tradeAvgPrice := test.param.tokenIn.Amount.ToDec().Quo(tokenOutAmount.ToDec())
@@ -124,6 +171,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 }
 
 // TestCalcOutAmtGivenIn only tests that balancer and stableswap pools are type casted correctly while concentratedliquidity pools fail
+// TODO: add failing CL pool tests.
 func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	type param struct {
 		poolType      string
@@ -154,15 +202,6 @@ func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			},
 			expectPass: true,
 		},
-		{
-			name: "concentratedliquidity",
-			param: param{
-				poolType:      "concentratedliquidity",
-				tokenIn:       sdk.NewCoin("foo", sdk.NewInt(100000)),
-				tokenOutDenom: "bar",
-			},
-			expectPass: false,
-		},
 	}
 
 	for _, test := range tests {
@@ -183,9 +222,6 @@ func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
 				pool = poolExt.(swaproutertypes.PoolI)
-			} else if test.param.poolType == "concentratedliquidity" {
-				poolExt := suite.PrepareConcentratedPool()
-				pool = poolExt.(swaproutertypes.PoolI)
 			}
 
 			swapFee := pool.GetSwapFee(suite.Ctx)
@@ -202,6 +238,7 @@ func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 }
 
 // TestCalcInAmtGivenOut only tests that balancer and stableswap pools are type casted correctly while concentratedliquidity pools fail
+// TODO: add failing CL pool tests.
 func (suite *KeeperTestSuite) TestCalcInAmtGivenOut() {
 	type param struct {
 		poolType     string
@@ -232,15 +269,6 @@ func (suite *KeeperTestSuite) TestCalcInAmtGivenOut() {
 			},
 			expectPass: true,
 		},
-		{
-			name: "concentratedliquidity",
-			param: param{
-				poolType:     "concentratedliquidity",
-				tokenOut:     sdk.NewCoin("foo", sdk.NewInt(100000)),
-				tokenInDenom: "bar",
-			},
-			expectPass: false,
-		},
 	}
 
 	for _, test := range tests {
@@ -260,9 +288,6 @@ func (suite *KeeperTestSuite) TestCalcInAmtGivenOut() {
 				poolId := suite.PrepareBasicStableswapPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
-				pool = poolExt.(swaproutertypes.PoolI)
-			} else if test.param.poolType == "concentratedliquidity" {
-				poolExt := suite.PrepareConcentratedPool()
 				pool = poolExt.(swaproutertypes.PoolI)
 			}
 
@@ -435,5 +460,60 @@ func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 				suite.Require().Error(err)
 			}
 		}
+	}
+}
+
+// Test two pools -- one is active and should have swaps allowed,
+// while the other is inactive and should have swaps frozen.
+// As shown in the following test, we can mock a pool by calling
+// `mocks.NewMockPool()`, then adding `EXPECT` statements to
+// match argument calls, add return values, and more.
+// More info at https://github.com/golang/mock
+func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
+	// Setup test
+	suite.SetupTest()
+	testCoin := sdk.NewCoin("foo", sdk.NewInt(10))
+	suite.FundAcc(suite.TestAccs[0], defaultAcctFunds)
+
+	// Setup active pool
+	activePoolId := suite.PrepareBalancerPool()
+	activePool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, activePoolId)
+	suite.Require().NoError(err)
+
+	// Setup mock inactive pool
+	gammKeeper := suite.App.GAMMKeeper
+	ctrl := gomock.NewController(suite.T())
+	defer ctrl.Finish()
+	inactivePool := mocks.NewMockCFMMPoolI(ctrl)
+	inactivePoolId := activePoolId + 1
+	// Add mock return values for pool -- we need to do this because
+	// mock objects don't have interface functions implemented by default.
+	inactivePool.EXPECT().IsActive(suite.Ctx).Return(false).AnyTimes()
+	inactivePool.EXPECT().GetId().Return(inactivePoolId).AnyTimes()
+	gammKeeper.SetPool(suite.Ctx, inactivePool)
+
+	type testCase struct {
+		pool       swaproutertypes.PoolI
+		expectPass bool
+		name       string
+	}
+	testCases := []testCase{
+		{activePool, true, "swap succeeds on active pool"},
+		{inactivePool, false, "swap fails on inactive pool"},
+	}
+
+	for _, test := range testCases {
+		suite.Run(test.name, func() {
+			// Check swaps
+			_, swapInErr := gammKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], test.pool, testCoin, "bar", sdk.ZeroInt(), sdk.ZeroDec())
+			_, swapOutErr := gammKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], test.pool, "bar", sdk.NewInt(1000000000000000000), testCoin, sdk.ZeroDec())
+			if test.expectPass {
+				suite.Require().NoError(swapInErr)
+				suite.Require().NoError(swapOutErr)
+			} else {
+				suite.Require().Error(swapInErr)
+				suite.Require().Error(swapOutErr)
+			}
+		})
 	}
 }

@@ -1,0 +1,149 @@
+syntax = "proto3";
+package osmosis.protorev.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "osmosis/protorev/v1beta1/params.proto";
+import "osmosis/protorev/v1beta1/protorev.proto";
+
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v13/x/protorev/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Params queries the parameters of the module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/osmosis/v13/protorev/params";
+  }
+
+  // GetProtoRevNumberOfTrades queries the number of arbitrage trades the module
+  // has executed
+  rpc GetProtoRevNumberOfTrades(QueryGetProtoRevNumberOfTradesRequest)
+      returns (QueryGetProtoRevNumberOfTradesResponse) {
+    option (google.api.http).get = "/osmosis/v13/protorev/number_of_trades";
+  }
+
+  // GetProtoRevProfitsByDenom queries the profits of the module by denom
+  rpc GetProtoRevProfitsByDenom(QueryGetProtoRevProfitsByDenomRequest)
+      returns (QueryGetProtoRevProfitsByDenomResponse) {
+    option (google.api.http).get = "/osmosis/v13/protorev/profits_by_denom";
+  }
+
+  // GetProtoRevAllProfits queries all of the profits from the module
+  rpc GetProtoRevAllProfits(QueryGetProtoRevAllProfitsRequest)
+      returns (QueryGetProtoRevAllProfitsResponse) {
+    option (google.api.http).get = "/osmosis/v13/protorev/all_profits";
+  }
+
+  // GetProtoRevStatisticsByPool queries the number of arbitrages and profits
+  // that have been executed for a given pool
+  rpc GetProtoRevStatisticsByPool(QueryGetProtoRevStatisticsByPoolRequest)
+      returns (QueryGetProtoRevStatisticsByPoolResponse) {
+    option (google.api.http).get = "/osmosis/v13/protorev/statistics_by_pool";
+  }
+
+  // GetProtoRevAllStatistics queries all of pools that the module has arbitrage
+  // against and the number of trades and profits that have been executed for
+  // each pool
+  rpc GetProtoRevAllStatistics(QueryGetProtoRevAllStatisticsRequest)
+      returns (QueryGetProtoRevAllStatisticsResponse) {
+    option (google.api.http).get = "/osmosis/v13/protorev/all_statistics";
+  }
+
+  // GetProtoRevTokenPairArbRoutes queries all of the hot routes that the module
+  // is currently arbitraging
+  rpc GetProtoRevTokenPairArbRoutes(QueryGetProtoRevTokenPairArbRoutesRequest)
+      returns (QueryGetProtoRevTokenPairArbRoutesResponse) {
+    option (google.api.http).get =
+        "/osmosis/v13/protorev/token_pair_arb_routes";
+  }
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params holds all the parameters of this module.
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryGetProtoRevNumberOfTradesRequest is request type for the
+// Query/GetProtoRevNumberOfTrades RPC method.
+message QueryGetProtoRevNumberOfTradesRequest {}
+
+// QueryGetProtoRevNumberOfTradesResponse is response type for the
+// Query/GetProtoRevNumberOfTrades RPC method.
+message QueryGetProtoRevNumberOfTradesResponse {
+  // number_of_trades is the number of trades the module has executed
+  string number_of_trades = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryGetProtoRevProfitsByDenomRequest is request type for the
+// Query/GetProtoRevProfitsByDenom RPC method.
+message QueryGetProtoRevProfitsByDenomRequest {
+  // denom is the denom to query profits by
+  string denom = 1;
+}
+
+// QueryGetProtoRevProfitsByDenomResponse is response type for the
+// Query/GetProtoRevProfitsByDenom RPC method.
+message QueryGetProtoRevProfitsByDenomResponse {
+  // profit is the profits of the module by the selected denom
+  cosmos.base.v1beta1.Coin profit = 1;
+}
+
+// QueryGetProtoRevAllProfitsRequest is request type for the
+// Query/GetProtoRevAllProfits RPC method.
+message QueryGetProtoRevAllProfitsRequest {}
+
+// QueryGetProtoRevAllProfitsResponse is response type for the
+// Query/GetProtoRevAllProfits RPC method.
+message QueryGetProtoRevAllProfitsResponse {
+  // profits is a list of all of the profits from the module
+  repeated cosmos.base.v1beta1.Coin profits = 1;
+}
+
+// QueryGetProtoRevStatisticsByPoolRequest is request type for the
+// Query/GetProtoRevStatisticsByPool RPC method.
+message QueryGetProtoRevStatisticsByPoolRequest {
+  // pool_id is the pool id to query statistics by
+  uint64 pool_id = 1;
+}
+
+// QueryGetProtoRevStatisticsByPoolResponse is response type for the
+// Query/GetProtoRevStatisticsByPool RPC method.
+message QueryGetProtoRevStatisticsByPoolResponse {
+  // statistics contains the number of trades the module has executed after a
+  // swap on a given pool and the profits from the trades
+  PoolStatistics statistics = 1;
+}
+
+// QueryGetProtoRevAllStatisticsRequest is request type for the
+// Query/GetProtoRevAllStatistics RPC method.
+message QueryGetProtoRevAllStatisticsRequest {}
+
+// QueryGetProtoRevAllStatisticsResponse is response type for the
+// Query/GetProtoRevAllStatistics RPC method.
+message QueryGetProtoRevAllStatisticsResponse {
+  // statistics contains the number of trades the module has executed after a
+  // swap on a given pool and the profits from the trades for all pools
+  repeated PoolStatistics statistics = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryGetProtoRevTokenPairArbRoutesRequest is request type for the
+// Query/GetProtoRevTokenPairArbRoutes RPC method.
+message QueryGetProtoRevTokenPairArbRoutesRequest {}
+
+// QueryGetProtoRevTokenPairArbRoutesResponse is response type for the
+// Query/GetProtoRevTokenPairArbRoutes RPC method.
+message QueryGetProtoRevTokenPairArbRoutesResponse {
+  // routes is a list of all of the hot routes that the module is currently
+  // arbitraging
+  repeated TokenPairArbRoutes routes = 1;
+}

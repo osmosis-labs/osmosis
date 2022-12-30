@@ -17,6 +17,9 @@ type StrategyTestSuite struct {
 }
 
 func TestStrategyTestSuite(t *testing.T) {
+
+	t.Skip("TODO: re-enable this when CL state-breakage PR is merged.")
+
 	suite.Run(t, new(StrategyTestSuite))
 }
 

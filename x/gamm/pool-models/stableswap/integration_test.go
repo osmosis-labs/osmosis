@@ -31,7 +31,7 @@ func (s *TestSuite) TestSetScalingFactors() {
 	s.SetupTest()
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address())
-	nextPoolId := s.App.SwapRouterKeeper.GetNextPoolId(s.Ctx)
+	nextPoolId := s.App.GAMMKeeper.GetNextPoolId(s.Ctx)
 	defaultCreatePoolMsg := *baseCreatePoolMsgGen(addr1)
 	defaultCreatePoolMsg.ScalingFactorController = defaultCreatePoolMsg.Sender
 	defaultAdjustSFMsg := stableswap.NewMsgStableSwapAdjustScalingFactors(defaultCreatePoolMsg.Sender, nextPoolId, []uint64{1, 1})
@@ -48,7 +48,7 @@ func (s *TestSuite) TestSetScalingFactors() {
 		s.Run(name, func() {
 			s.SetupTest()
 			sender := tc.createMsg.GetSigners()[0]
-			s.FundAcc(sender, s.App.SwapRouterKeeper.GetParams(s.Ctx).PoolCreationFee)
+			s.FundAcc(sender, s.App.GAMMKeeper.GetParams(s.Ctx).PoolCreationFee)
 			s.FundAcc(sender, tc.createMsg.InitialPoolLiquidity.Sort())
 			_, err := s.RunMsg(&tc.createMsg)
 			s.Require().NoError(err)

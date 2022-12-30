@@ -10,17 +10,26 @@ import (
 // SpotPriceCalculator defines the contract that must be fulfilled by a spot price calculator
 // The x/gamm keeper is expected to satisfy this interface.
 type SpotPriceCalculator interface {
-	CalculateSpotPrice(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error)
+	CalculateSpotPrice(ctx sdk.Context, poolId uint64, quoteDenom, baseDenom string) (sdk.Dec, error)
 }
 
-// SwapRouterKeeper defines the contract needed for swap related APIs.
-type SwapRouterKeeper interface {
+// PoolManager defines the contract needed for swap related APIs.
+type PoolManager interface {
 	RouteExactAmountIn(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
 		routes []swaproutertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
 		tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error)
+
+	SwapExactAmountIn(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		poolId uint64,
+		tokenIn sdk.Coin,
+		tokenOutDenom string,
+		tokenOutMinAmount sdk.Int,
+	) (sdk.Int, error)
 }
 
 // AccountKeeper defines the contract needed for AccountKeeper related APIs.
