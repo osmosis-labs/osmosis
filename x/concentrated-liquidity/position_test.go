@@ -1,6 +1,8 @@
 package concentrated_liquidity_test
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
@@ -92,11 +94,25 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				// If we had a position before, ensure the position info displays proper liquidity
 				s.Require().NoError(err)
 				s.Require().Equal(preexistingLiquidity, positionInfo.Liquidity)
+
+				// Ensure JoinTime tracker has logged existing liquidity in sumtree
+				liqAtBeforeCurTime := s.App.ConcentratedLiquidityKeeper.GetLiquidityBeforeJoinTime(s.Ctx, validPoolId, s.Ctx.BlockTime())
+				s.Require().Equal(preexistingLiquidity, liqAtBeforeCurTime)
 			} else {
 				// If we did not have a position before, ensure getting the non-existent position returns an error
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, types.PositionNotFoundError{PoolId: validPoolId, LowerTick: test.param.lowerTick, UpperTick: test.param.upperTick}.Error())
+
+				// Ensure JoinTime tracker has *not* logged existing liquidity in sumtree
+				liqAtBeforeCurTime := s.App.ConcentratedLiquidityKeeper.GetLiquidityBeforeJoinTime(s.Ctx, validPoolId, s.Ctx.BlockTime())
+				s.Require().Equal(preexistingLiquidity, liqAtBeforeCurTime)
 			}
+
+			// Move block time up by 5 seconds, saving old and new join times for testing
+			oldJoinTime := s.Ctx.BlockTime()
+			newJoinTime := s.Ctx.BlockTime().Add(5 * time.Second)
+			newCtx := s.Ctx.WithBlockTime(newJoinTime)
+			s.Ctx = newCtx
 
 			// System under test. Initialize or update the position according to the test case
 			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, test.param.poolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.liquidityDelta)
@@ -113,6 +129,14 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 
 			// Check that the initialized or updated position matches our expectation
 			s.Require().Equal(test.expectedLiquidity, positionInfo.Liquidity)
+
+			// Liquidity at & before old join time should be cleared
+			liqAtBeforeOldJoinTime := s.App.ConcentratedLiquidityKeeper.GetLiquidityBeforeJoinTime(s.Ctx, validPoolId, oldJoinTime)
+			s.Require().Equal(sdk.ZeroDec(), liqAtBeforeOldJoinTime)
+
+			// Liquidity at & before new join time should be equal to position's liquidity
+			liqAtBeforeNewJoinTime := s.App.ConcentratedLiquidityKeeper.GetLiquidityBeforeJoinTime(s.Ctx, validPoolId, newJoinTime)
+			s.Require().Equal(positionInfo.Liquidity, liqAtBeforeNewJoinTime)
 		})
 	}
 }
@@ -162,6 +186,11 @@ func (s *KeeperTestSuite) TestGetPosition() {
 		s.Run(test.name, func() {
 			// Init suite for each test.
 			s.Setup()
+
+			// Update expectedPos time to current context's blocktime
+			if test.expectedPosition != nil {
+				test.expectedPosition.JoinTime = s.Ctx.BlockTime()
+			}
 
 			// Create a default CL pool
 			s.PrepareConcentratedPool()

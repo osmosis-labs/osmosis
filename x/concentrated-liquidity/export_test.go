@@ -1,6 +1,8 @@
 package concentrated_liquidity
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
@@ -76,6 +78,10 @@ func (k Keeper) IsInitialPosition(initialSqrtPrice sdk.Dec, initialTick sdk.Int)
 
 func (k Keeper) InitializeInitialPosition(ctx sdk.Context, pool types.ConcentratedPoolExtension, amount0Desired, amount1Desired sdk.Int) error {
 	return k.initializeInitialPosition(ctx, pool, amount0Desired, amount1Desired)
+}
+
+func (k Keeper) GetLiquidityBeforeJoinTime(ctx sdk.Context, poolId uint64, joinTime time.Time) sdk.Dec {
+	return k.getLiquidityBeforeJoinTime(ctx, poolId, joinTime)
 }
 
 func ConvertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (swaproutertypes.PoolI, error) {
