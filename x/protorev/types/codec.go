@@ -15,8 +15,15 @@ var (
 )
 
 const (
-	setHotRoutes        = "osmosis/MsgSetHotRoutes"
-	setDeveloperAccount = "osmosis/MsgSetDeveloperAccount"
+	// msgs
+	setHotRoutes         = "osmosis/MsgSetHotRoutes"
+	setDeveloperAccount  = "osmosis/MsgSetDeveloperAccount"
+	setMaxRoutesPerTx    = "osmosis/MsgSetMaxRoutesPerTx"
+	setMaxRoutesPerBlock = "osmosis/MsgSetMaxRoutesPerBlock"
+
+	// proposals
+	setProtoRevEnabledProposal      = "osmosis/SetProtoRevEnabledProposal"
+	setProtoRevAdminAccountProposal = "osmosis/SetProtoRevAdminAccountProposal"
 )
 
 func init() {
@@ -25,15 +32,27 @@ func init() {
 }
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
+	// msgs
 	cdc.RegisterConcrete(&MsgSetHotRoutes{}, setHotRoutes, nil)
 	cdc.RegisterConcrete(&MsgSetDeveloperAccount{}, setDeveloperAccount, nil)
+	cdc.RegisterConcrete(&MsgSetMaxRoutesPerTx{}, setMaxRoutesPerTx, nil)
+	cdc.RegisterConcrete(&MsgSetMaxRoutesPerBlock{}, setMaxRoutesPerBlock, nil)
+
+	// proposals
+	cdc.RegisterConcrete(&SetProtoRevEnabledProposal{}, setProtoRevEnabledProposal, nil)
+	cdc.RegisterConcrete(&SetProtoRevAdminAccountProposal{}, setProtoRevAdminAccountProposal, nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+	// msgs
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSetHotRoutes{},
 		&MsgSetDeveloperAccount{},
+		&MsgSetMaxRoutesPerTx{},
+		&MsgSetMaxRoutesPerBlock{},
 	)
+
+	// proposals
 	registry.RegisterImplementations(
 		(*govtypes.Content)(nil),
 		&SetProtoRevEnabledProposal{},

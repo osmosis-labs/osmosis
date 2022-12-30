@@ -308,6 +308,98 @@ func (suite *MsgsTestSuite) TestMsgSetDeveloperAccount() {
 	}
 }
 
+func (suite *MsgsTestSuite) TestMsgSetMaxRoutesPerTx() {
+	cases := []struct {
+		description string
+		admin       string
+		maxRoutes   uint64
+		pass        bool
+	}{
+		{
+			"Invalid message (invalid admin)",
+			"admin",
+			1,
+			false,
+		},
+		{
+			"Invalid message (invalid max routes)",
+			createAccount().String(),
+			0,
+			false,
+		},
+		{
+			"Valid message",
+			createAccount().String(),
+			1,
+			true,
+		},
+		{
+			"Invalid message (invalid max routes)",
+			createAccount().String(),
+			100,
+			false,
+		},
+	}
+
+	for _, tc := range cases {
+		suite.Run(tc.description, func() {
+			msg := types.NewMsgSetMaxRoutesPerTx(tc.admin, tc.maxRoutes)
+			err := msg.ValidateBasic()
+			if tc.pass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *MsgsTestSuite) TestMsgSetMaxRoutesPerBlock() {
+	cases := []struct {
+		description string
+		admin       string
+		maxRoutes   uint64
+		pass        bool
+	}{
+		{
+			"Invalid message (invalid admin)",
+			"admin",
+			1,
+			false,
+		},
+		{
+			"Invalid message (invalid max routes)",
+			createAccount().String(),
+			0,
+			false,
+		},
+		{
+			"Valid message",
+			createAccount().String(),
+			10,
+			true,
+		},
+		{
+			"Invalid message (invalid max routes)",
+			createAccount().String(),
+			300,
+			false,
+		},
+	}
+
+	for _, tc := range cases {
+		suite.Run(tc.description, func() {
+			msg := types.NewMsgSetMaxRoutesPerBlock(tc.admin, tc.maxRoutes)
+			err := msg.ValidateBasic()
+			if tc.pass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
 func createAccount() sdk.AccAddress {
 	pk := ed25519.GenPrivKey().PubKey()
 	return sdk.AccAddress(pk.Address())

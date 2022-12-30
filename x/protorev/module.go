@@ -90,7 +90,7 @@ func (a AppModuleBasic) GetTxCmd() *cobra.Command {
 
 // GetQueryCmd returns the root query command for the module. The subcommands of this root command are used by end-users to generate new queries to the subset of the state defined by the module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
+	return cli.NewCmdQuery()
 }
 
 // ----------------------------------------------------------------------------
@@ -141,6 +141,8 @@ func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 
 // RegisterServices registers a gRPC query service to respond to the module-specific gRPC queries
 func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.keeper))
 }
 
 func (a AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {

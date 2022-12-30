@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
@@ -125,6 +126,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.adminAccount = apptesting.CreateRandomAccounts(1)[0]
 	err := protorev.HandleSetProtoRevAdminAccount(suite.Ctx, *suite.App.ProtoRevKeeper, &types.SetProtoRevAdminAccountProposal{Account: suite.adminAccount.String()})
 	suite.Require().NoError(err)
+
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.Ctx, suite.App.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, protorevkeeper.NewQuerier(*suite.App.AppKeepers.ProtoRevKeeper))
+	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
 // setUpPools sets up the pools needed for testing

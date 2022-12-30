@@ -202,29 +202,30 @@ func (m *Trade) GetTokenOut() string {
 	return ""
 }
 
-// PoolStatistics contains the number of trades the module has executed after a
-// swap on a given pool and the profits from the trades
-type PoolStatistics struct {
-	// profits is the total profit from all trades on this pool
+// RouteStatistics contains the number of trades the module has executed after a
+// swap on a given route and the profits from the trades
+type RouteStatistics struct {
+	// profits is the total profit from all trades on this route
 	Profits []*types.Coin `protobuf:"bytes,1,rep,name=profits,proto3" json:"profits,omitempty"`
-	// number_of_trades is the number of trades the module has executed
+	// number_of_trades is the number of trades the module has executed using this
+	// route
 	NumberOfTrades github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=number_of_trades,json=numberOfTrades,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"number_of_trades"`
-	// pool_id is the id of the pool
-	PoolId uint64 `protobuf:"varint,3,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
+	// route is the route that was used
+	Route []uint64 `protobuf:"varint,3,rep,packed,name=route,proto3" json:"route,omitempty"`
 }
 
-func (m *PoolStatistics) Reset()         { *m = PoolStatistics{} }
-func (m *PoolStatistics) String() string { return proto.CompactTextString(m) }
-func (*PoolStatistics) ProtoMessage()    {}
-func (*PoolStatistics) Descriptor() ([]byte, []int) {
+func (m *RouteStatistics) Reset()         { *m = RouteStatistics{} }
+func (m *RouteStatistics) String() string { return proto.CompactTextString(m) }
+func (*RouteStatistics) ProtoMessage()    {}
+func (*RouteStatistics) Descriptor() ([]byte, []int) {
 	return fileDescriptor_1e9f2391fd9fec01, []int{3}
 }
-func (m *PoolStatistics) XXX_Unmarshal(b []byte) error {
+func (m *RouteStatistics) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *PoolStatistics) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *RouteStatistics) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_PoolStatistics.Marshal(b, m, deterministic)
+		return xxx_messageInfo_RouteStatistics.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -234,30 +235,30 @@ func (m *PoolStatistics) XXX_Marshal(b []byte, deterministic bool) ([]byte, erro
 		return b[:n], nil
 	}
 }
-func (m *PoolStatistics) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PoolStatistics.Merge(m, src)
+func (m *RouteStatistics) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RouteStatistics.Merge(m, src)
 }
-func (m *PoolStatistics) XXX_Size() int {
+func (m *RouteStatistics) XXX_Size() int {
 	return m.Size()
 }
-func (m *PoolStatistics) XXX_DiscardUnknown() {
-	xxx_messageInfo_PoolStatistics.DiscardUnknown(m)
+func (m *RouteStatistics) XXX_DiscardUnknown() {
+	xxx_messageInfo_RouteStatistics.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PoolStatistics proto.InternalMessageInfo
+var xxx_messageInfo_RouteStatistics proto.InternalMessageInfo
 
-func (m *PoolStatistics) GetProfits() []*types.Coin {
+func (m *RouteStatistics) GetProfits() []*types.Coin {
 	if m != nil {
 		return m.Profits
 	}
 	return nil
 }
 
-func (m *PoolStatistics) GetPoolId() uint64 {
+func (m *RouteStatistics) GetRoute() []uint64 {
 	if m != nil {
-		return m.PoolId
+		return m.Route
 	}
-	return 0
+	return nil
 }
 
 // PoolWeights contains the weights of all of the different pool types. This
@@ -600,7 +601,7 @@ func (m *Trade) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *PoolStatistics) Marshal() (dAtA []byte, err error) {
+func (m *RouteStatistics) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -610,20 +611,33 @@ func (m *PoolStatistics) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *PoolStatistics) MarshalTo(dAtA []byte) (int, error) {
+func (m *RouteStatistics) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *PoolStatistics) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *RouteStatistics) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.PoolId != 0 {
-		i = encodeVarintProtorev(dAtA, i, uint64(m.PoolId))
+	if len(m.Route) > 0 {
+		dAtA2 := make([]byte, len(m.Route)*10)
+		var j1 int
+		for _, num := range m.Route {
+			for num >= 1<<7 {
+				dAtA2[j1] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j1++
+			}
+			dAtA2[j1] = uint8(num)
+			j1++
+		}
+		i -= j1
+		copy(dAtA[i:], dAtA2[:j1])
+		i = encodeVarintProtorev(dAtA, i, uint64(j1))
 		i--
-		dAtA[i] = 0x18
+		dAtA[i] = 0x1a
 	}
 	{
 		size := m.NumberOfTrades.Size()
@@ -759,7 +773,7 @@ func (m *Trade) Size() (n int) {
 	return n
 }
 
-func (m *PoolStatistics) Size() (n int) {
+func (m *RouteStatistics) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -773,8 +787,12 @@ func (m *PoolStatistics) Size() (n int) {
 	}
 	l = m.NumberOfTrades.Size()
 	n += 1 + l + sovProtorev(uint64(l))
-	if m.PoolId != 0 {
-		n += 1 + sovProtorev(uint64(m.PoolId))
+	if len(m.Route) > 0 {
+		l = 0
+		for _, e := range m.Route {
+			l += sovProtorev(uint64(e))
+		}
+		n += 1 + sovProtorev(uint64(l)) + l
 	}
 	return n
 }
@@ -1168,7 +1186,7 @@ func (m *Trade) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *PoolStatistics) Unmarshal(dAtA []byte) error {
+func (m *RouteStatistics) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1191,10 +1209,10 @@ func (m *PoolStatistics) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: PoolStatistics: wiretype end group for non-group")
+			return fmt.Errorf("proto: RouteStatistics: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PoolStatistics: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: RouteStatistics: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1266,23 +1284,80 @@ func (m *PoolStatistics) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
-			}
-			m.PoolId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowProtorev
+			if wireType == 0 {
+				var v uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowProtorev
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
 				}
-				if iNdEx >= l {
+				m.Route = append(m.Route, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowProtorev
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthProtorev
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthProtorev
+				}
+				if postIndex > l {
 					return io.ErrUnexpectedEOF
 				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.PoolId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
 				}
+				elementCount = count
+				if elementCount != 0 && len(m.Route) == 0 {
+					m.Route = make([]uint64, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowProtorev
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.Route = append(m.Route, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field Route", wireType)
 			}
 		default:
 			iNdEx = preIndex

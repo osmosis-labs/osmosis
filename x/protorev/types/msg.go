@@ -13,8 +13,10 @@ var (
 )
 
 const (
-	TypeMsgSetHotRoutes        = "set_hot_routes"
-	TypeMsgSetDeveloperAccount = "set_developer_account"
+	TypeMsgSetHotRoutes         = "set_hot_routes"
+	TypeMsgSetDeveloperAccount  = "set_developer_account"
+	TypeMsgSetMaxRoutesPerTx    = "set_max_routes_per_tx"
+	TypeMsgSetMaxRoutesPerBlock = "set_max_routes_per_block"
 )
 
 // ---------------------- Interface for MsgSetHotRoutes ---------------------- //
@@ -121,6 +123,96 @@ func (msg MsgSetDeveloperAccount) GetSignBytes() []byte {
 
 // GetSigners defines whose signature is required
 func (msg MsgSetDeveloperAccount) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Admin)
+	return []sdk.AccAddress{addr}
+}
+
+// ---------------------- Interface for MsgSetMaxRoutesPerTx ---------------------- //
+// NewMsgSetMaxRoutesPerTx creates a new MsgSetMaxRoutesPerTx instance
+func NewMsgSetMaxRoutesPerTx(admin string, maxRoutesPerTx uint64) *MsgSetMaxRoutesPerTx {
+	return &MsgSetMaxRoutesPerTx{
+		Admin:          admin,
+		MaxRoutesPerTx: maxRoutesPerTx,
+	}
+}
+
+// Route returns the name of the module
+func (msg MsgSetMaxRoutesPerTx) Route() string {
+	return RouterKey
+}
+
+// Type returns the type of the message
+func (msg MsgSetMaxRoutesPerTx) Type() string {
+	return TypeMsgSetMaxRoutesPerTx
+}
+
+// ValidateBasic validates the MsgSetMaxRoutesPerTx
+func (msg MsgSetMaxRoutesPerTx) ValidateBasic() error {
+	// Account must be a valid bech32 address
+	_, err := sdk.AccAddressFromBech32(msg.Admin)
+	if err != nil {
+		return sdkerrors.Wrap(err, "invalid admin address (must be bech32)")
+	}
+
+	if msg.MaxRoutesPerTx > MaxIterableRoutesPerTx || msg.MaxRoutesPerTx == 0 {
+		return fmt.Errorf("max routes per tx must be less than or equal to %d and greater than 0", MaxIterableRoutesPerTx)
+	}
+
+	return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgSetMaxRoutesPerTx) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgSetMaxRoutesPerTx) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Admin)
+	return []sdk.AccAddress{addr}
+}
+
+// ---------------------- Interface for MsgSetMaxRoutesPerBlock ---------------------- //
+// NewMsgSetMaxRoutesPerBlock creates a new MsgSetMaxRoutesPerBlock instance
+func NewMsgSetMaxRoutesPerBlock(admin string, maxRoutesPerBlock uint64) *MsgSetMaxRoutesPerBlock {
+	return &MsgSetMaxRoutesPerBlock{
+		Admin:             admin,
+		MaxRoutesPerBlock: maxRoutesPerBlock,
+	}
+}
+
+// Route returns the name of the module
+func (msg MsgSetMaxRoutesPerBlock) Route() string {
+	return RouterKey
+}
+
+// Type returns the type of the message
+func (msg MsgSetMaxRoutesPerBlock) Type() string {
+	return TypeMsgSetMaxRoutesPerBlock
+}
+
+// ValidateBasic validates the MsgSetMaxRoutesPerBlock
+func (msg MsgSetMaxRoutesPerBlock) ValidateBasic() error {
+	// Account must be a valid bech32 address
+	_, err := sdk.AccAddressFromBech32(msg.Admin)
+	if err != nil {
+		return sdkerrors.Wrap(err, "invalid admin address (must be bech32)")
+	}
+
+	if msg.MaxRoutesPerBlock > MaxIterableRoutesPerBlock || msg.MaxRoutesPerBlock == 0 {
+		return fmt.Errorf("max routes per block must be less than or equal to %d and greater than 0", MaxIterableRoutesPerBlock)
+	}
+
+	return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgSetMaxRoutesPerBlock) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgSetMaxRoutesPerBlock) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Admin)
 	return []sdk.AccAddress{addr}
 }
