@@ -71,7 +71,8 @@ func accumulationStorePrefix(poolID uint64) (res []byte) {
 	return
 }
 
-// Derives liquidity tree key given a timestamp (primarily used for tracking JoinTimes)
+// Derives liquidity tree key given a timestamp (primarily used for tracking JoinTimes).
+// This is inspired by how we handle time keys in our lockup module.
 func accumulationTimeKey(timestamp time.Time) (res []byte) {
 	timeBz := sdk.FormatTimeBytes(timestamp)
 	timeBzL := len(timeBz)
@@ -90,12 +91,17 @@ func accumulationTimeKey(timestamp time.Time) (res []byte) {
 	return bz
 }
 
-// Updates position's liquidity in Liquidity tree, setting its JoinTime to current block time.
+// Adds to a position's liquidity in Liquidity tree, setting its JoinTime to current block time.
 // Since we want to reset a position's JoinTime every time they update their liquidity, any
 // liquidity update is equivalent to removing the old JoinTime node from the liquidity tree
-// and replacing it with a new one.
+// and replacing it with a new one. Thus, this function simply takes in the old and new liquidity
+// amounts and leaves liquidity delta calculations to the caller.
 // TODO: move to incentives_helpers.go file
-func (k Keeper) updateLiquidityTree(ctx sdk.Context, poolId uint64, position *model.Position, oldLiquidity sdk.Dec, newLiquidity sdk.Dec, posOwner sdk.AccAddress, posLowerTick int64, posUpperTick int64) error {
+func (k Keeper) addToLiquidityTree(ctx sdk.Context, poolId uint64, position *model.Position, oldLiquidity sdk.Dec, newLiquidity sdk.Dec, posOwner sdk.AccAddress, posLowerTick int64, posUpperTick int64) error {
+	if newLiquidity.LT(oldLiquidity) {
+		return fmt.Errorf("Attempted to add a negative amount of liquidity. Should be using `removeFromLiquidityTree`")
+	}
+
 	// Clear old liquidity from position tree
 	// Note: we use Decrease instead of Remove to accommodate multiple positions with the same join time
 	k.accumulationStore(ctx, poolId).Decrease(accumulationTimeKey(position.JoinTime), oldLiquidity)
@@ -110,6 +116,27 @@ func (k Keeper) updateLiquidityTree(ctx sdk.Context, poolId uint64, position *mo
 	return nil
 }
 
+// Remove liquidity from `position`s join time without resetting position.JoinTime.
+// This is to allow for LPs to remove a portion of their liquidity without forfeiting their uptime
+// on their remaining liquidity.
+func (k Keeper) removeFromLiquidityTree(ctx sdk.Context, poolId uint64, position *model.Position, liquidityToRemove sdk.Dec, posOwner sdk.AccAddress, posLowerTick int64, posUpperTick int64) error {
+	if liquidityToRemove.GT(position.Liquidity) {
+		return fmt.Errorf("Attempted to remove more liquidity than the position has")
+	}
+
+	if liquidityToRemove.IsPositive() {
+		return fmt.Errorf("Liquidity delta for removing liquidity must be negative")
+	}
+
+	liquidityToRemove = liquidityToRemove.Neg()
+	
+	// Remove liquidity from position's JoinTime node in tree
+	// Note: we use Decrease instead of Remove to accommodate multiple positions with the same join time
+	k.accumulationStore(ctx, poolId).Decrease(accumulationTimeKey(position.JoinTime), liquidityToRemove)
+
+	return nil
+}
+
 // Gets total liquidity that has joined at time <= `joinTime`
 // TODO: move to incentives_helpers.go file
 func (k Keeper) getLiquidityBeforeOrAtJoinTime(ctx sdk.Context, poolId uint64, joinTime time.Time) sdk.Dec {
@@ -117,6 +144,13 @@ func (k Keeper) getLiquidityBeforeOrAtJoinTime(ctx sdk.Context, poolId uint64, j
 }
 
 // Gets total liquidity that joined after time `joinTime`
+// TODO: move to incentives_helpers.go file
 func (k Keeper) getLiquidityAfterJoinTime(ctx sdk.Context, poolId uint64, joinTime time.Time) sdk.Dec {
 	return k.accumulationStore(ctx, poolId).SubsetAccumulation(accumulationTimeKey(joinTime.Add(1 * time.Second)), nil)
+}
+
+// Gets all liquidity that joined exactly at `joinTime`. This is primarily intended for use in validation logic.
+// TODO: move to incentives_helpers.go file
+func (k Keeper) getLiquidityExactlyAtJoinTime(ctx sdk.Context, poolId uint64, joinTime time.Time) sdk.Dec {
+	return k.accumulationStore(ctx, poolId).SubsetAccumulation(accumulationTimeKey(joinTime), accumulationTimeKey(joinTime))
 }

@@ -59,7 +59,11 @@ func (k Keeper) initOrUpdatePosition(
 	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, position)
 
 	// Update pool's liquidity tree to reflect new position
-	k.updateLiquidityTree(ctx, poolId, position, liquidityBefore, liquidityAfter, owner, lowerTick, upperTick)
+	if liquidityDelta.GT(sdk.ZeroDec()) {
+		k.addToLiquidityTree(ctx, poolId, position, liquidityBefore, liquidityAfter, owner, lowerTick, upperTick)
+	} else {
+		k.removeFromLiquidityTree(ctx, poolId, position, liquidityDelta, owner, lowerTick, upperTick)
+	}
 
 	return nil
 }

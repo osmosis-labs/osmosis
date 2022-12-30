@@ -215,15 +215,16 @@ func (s *KeeperTestSuite) TestGetPosition() {
 	}
 }
 
+// Thorough fuzz testing for join-time sumtrees
 func (s *KeeperTestSuite) TestMultiplePositionsFuzz() {
-	// Init suite for each test.
+	// Init suite for fuzz testing
 	s.Setup()
 
 	// Create a default CL pool
 	s.PrepareConcentratedPool()
 
 	// Test 100 random positions in same pool at random jointimes
-	// Note: can fuzz these values in the future as well
+	// Note: we can fuzz these values if needed as well
 	numPositions := 100
 	validPoolId := uint64(1)
 
@@ -255,10 +256,12 @@ func (s *KeeperTestSuite) TestMultiplePositionsFuzz() {
 
 	for i := 0; i < numPositions; i++ {
 		// Generate random time elapsed since last join and update block time
-		// Half the time, we simply add to the same join time as the previous position (time elapsed = 0)
-		addToSameJoinTime := int64(rand.Int() % 2)
-		timeElapsed := time.Duration((int64(rand.Int31()) % int64(timeElapsedUpperBound)) * addToSameJoinTime) * time.Second
+		timeElapsed := time.Duration(rand.Int() % timeElapsedUpperBound) * time.Second
 
+		// Half the time, override time elapsed and add to the same join time as the previous position (time elapsed = 0)
+		timeElapsed = timeElapsed * time.Duration(rand.Int() % 2)
+
+		// Update current block time to reflect time elapsed
 		joinTime := s.Ctx.BlockTime().Add(timeElapsed)
 		s.Ctx = s.Ctx.WithBlockTime(joinTime)
 
@@ -267,10 +270,29 @@ func (s *KeeperTestSuite) TestMultiplePositionsFuzz() {
 		upperTick := rand.Int63() % tickUpperBound
 
 		// Generate random liquidity to join with
-		// Note: might need to make these int32 due to overflows
 		baseAmt := rand.Int63()
 		prec := rand.Int63() % 18
 		joinAmt := sdk.NewDecWithPrec(baseAmt, prec)
+
+		// Create position with account `i` given our randomly generated constraints
+		err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, testAccounts[i], lowerTick, upperTick, joinAmt)
+		s.Require().NoError(err)
+
+		// Half the time, remove a portion of the newly added liquidity from the liquidity tree
+		if rand.Int() % 2 != 0 {
+			// Remove 1/5th of the added liquidity, saving the original liquidity at `joinTime` to compare against later
+			exitAmt := joinAmt.Quo(sdk.NewDec(5))
+			liqAtJoinTimePreExit := s.App.ConcentratedLiquidityKeeper.GetLiquidityExactlyAtJoinTime(s.Ctx, validPoolId, joinTime)
+			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, testAccounts[i], lowerTick, upperTick, exitAmt.Mul(sdk.NewDec(-1)))
+			s.Require().NoError(err)
+
+			// Ensure total liquidity at old join time has decreased by exactly `exitAmt`
+			liqAtJoinTimePostExit := s.App.ConcentratedLiquidityKeeper.GetLiquidityExactlyAtJoinTime(s.Ctx, validPoolId, joinTime)
+			s.Require().Equal(liqAtJoinTimePreExit.Sub(exitAmt), liqAtJoinTimePostExit)
+			
+			// Update tracker for joined liquidity to reflect the exited amount
+			joinAmt = joinAmt.Sub(exitAmt)			
+		}
 
 		// Track total liq entered before and after reference time
 		if joinTime.After(referenceTime) {
@@ -278,10 +300,6 @@ func (s *KeeperTestSuite) TestMultiplePositionsFuzz() {
 		} else {
 			expLiqBeforeOrAtRefTime = expLiqBeforeOrAtRefTime.Add(joinAmt)
 		}
-
-		// Create position with account `i` given our randomly generated constraints
-		err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, testAccounts[i], lowerTick, upperTick, joinAmt)
-		s.Require().NoError(err)
 
 		// Debug prints:
 		// fmt.Println("--------------------------------")

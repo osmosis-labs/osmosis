@@ -88,6 +88,10 @@ func (k Keeper) GetLiquidityAfterJoinTime(ctx sdk.Context, poolId uint64, joinTi
 	return k.getLiquidityAfterJoinTime(ctx, poolId, joinTime)
 }
 
+func (k Keeper) GetLiquidityExactlyAtJoinTime(ctx sdk.Context, poolId uint64, joinTime time.Time) sdk.Dec {
+	return k.getLiquidityExactlyAtJoinTime(ctx, poolId, joinTime)
+}
+
 func ConvertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (swaproutertypes.PoolI, error) {
 	return convertConcentratedToPoolInterface(concentratedPool)
 }
