@@ -21,6 +21,22 @@ service Msg {
     option (google.api.http).post =
         "/osmosis/v13/protorev/set_developer_account";
   };
+
+  // SetMaxRoutesPerTx sets the maximum number of routes that can be iterated
+  // per transaction. Can only be called by the admin account.
+  rpc SetMaxRoutesPerTx(MsgSetMaxRoutesPerTx)
+      returns (MsgSetMaxRoutesPerTxResponse) {
+    option (google.api.http).post =
+        "/osmosis/v13/protorev/set_max_routes_per_tx";
+  };
+
+  // SetMaxRoutesPerBlock sets the maximum number of routes that can be iterated
+  // per block. Can only be called by the admin account.
+  rpc SetMaxRoutesPerBlock(MsgSetMaxRoutesPerBlock)
+      returns (MsgSetMaxRoutesPerBlockResponse) {
+    option (google.api.http).post =
+        "/osmosis/v13/protorev/set_max_routes_per_block";
+  };
 }
 
 // MsgSetHotRoutes defines the Msg/SetHotRoutes request type.
@@ -46,3 +62,28 @@ message MsgSetDeveloperAccount {
 // MsgSetDeveloperAccountResponse defines the Msg/SetDeveloperAccount response
 // type.
 message MsgSetDeveloperAccountResponse {}
+
+// MsgSetMaxRoutesPerTx defines the Msg/SetMaxRoutesPerTx request type.
+message MsgSetMaxRoutesPerTx {
+  // admin is the account that is authorized to set the max routes per tx.
+  string admin = 1;
+  // max_routes_per_tx is the maximum number of routes that can be iterated per
+  // transaction.
+  uint64 max_routes_per_tx = 2;
+}
+
+// MsgSetMaxRoutesPerTxResponse defines the Msg/SetMaxRoutesPerTx response type.
+message MsgSetMaxRoutesPerTxResponse {}
+
+// MsgSetMaxRoutesPerBlock defines the Msg/SetMaxRoutesPerBlock request type.
+message MsgSetMaxRoutesPerBlock {
+  // admin is the account that is authorized to set the max routes per block.
+  string admin = 1;
+  // max_routes_per_block is the maximum number of routes that can be iterated
+  // per block.
+  uint64 max_routes_per_block = 2;
+}
+
+// MsgSetMaxRoutesPerBlockResponse defines the Msg/SetMaxRoutesPerBlock response
+// type.
+message MsgSetMaxRoutesPerBlockResponse {}
