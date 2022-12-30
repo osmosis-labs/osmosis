@@ -143,6 +143,13 @@ func (k Keeper) SwapOutAmtGivenIn(
 		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
+	// Upcharge the feeAmount.
+	feeAmount := tokenIn.Amount.ToDec().Mul(swapFee)
+
+	if err := k.chargeFee(ctx, poolId, sdk.NewDecCoinFromDec(tokenIn.Denom, feeAmount)); err != nil {
+		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
+	}
+
 	err = k.applySwap(ctx, tokenIn, tokenOut, poolId, newLiquidity, newCurrentTick, newSqrtPrice)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
@@ -216,7 +223,11 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 	}
 	asset0 := p.GetToken0()
 	asset1 := p.GetToken1()
-	tokenAmountInAfterFee := tokenInMin.Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
+
+	// Upcharge the fee.
+	// TODO: either 1) pass this in as parameter or 2) return fee
+	fee := tokenInMin.Amount.ToDec().Mul(swapFee)
+	tokenAmountInAfterFee := tokenInMin.Amount.ToDec().Sub(fee)
 
 	// if swapping asset0 for asset1, zeroForOne is true
 	zeroForOne := tokenInMin.Denom == asset0
@@ -329,7 +340,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 
 	// coin amounts require int values
 	// round amountIn up to avoid under charging
-	amt0 := tokenAmountInAfterFee.Sub(swapState.amountSpecifiedRemaining).RoundInt()
+	amt0 := tokenAmountInAfterFee.Sub(swapState.amountSpecifiedRemaining).Ceil().TruncateInt()
 	amt1 := swapState.amountCalculated.TruncateInt()
 
 	tokenIn = sdk.NewCoin(tokenInMin.Denom, amt0)

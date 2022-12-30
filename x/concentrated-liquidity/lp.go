@@ -47,19 +47,24 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	initialSqrtPrice := pool.GetCurrentSqrtPrice()
 	initialTick := pool.GetCurrentTick()
 
-	// If the current square root price and current tick are zero, then this is the first position to be created for this pool.
-	// In this case, we calculate the square root price and current tick based on the inputs of this position.
-	if k.isInitialPosition(initialSqrtPrice, initialTick) {
-		err := k.initializeInitialPosition(cacheCtx, pool, amount0Desired, amount1Desired)
-		if err != nil {
-			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
-		}
-	}
-
 	// Calculate the amount of liquidity that will be added to the pool by creating this position.
 	liquidityDelta := math.GetLiquidityFromAmounts(pool.GetCurrentSqrtPrice(), sqrtPriceLowerTick, sqrtPriceUpperTick, amount0Desired, amount1Desired)
 	if liquidityDelta.IsZero() {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, errors.New("liquidityDelta calculated equals zero")
+	}
+
+	// If the current square root price and current tick are zero, then this is the first position to be created for this pool.
+	// In this case, we calculate the square root price and current tick based on the inputs of this position.
+	if k.isInitialPosition(initialSqrtPrice, initialTick) {
+
+		if err := k.initializeFeeAccumulatorPosition(cacheCtx, poolId, owner, liquidityDelta); err != nil {
+			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		}
+
+		err = k.initializeInitialPosition(cacheCtx, pool, amount0Desired, amount1Desired)
+		if err != nil {
+			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		}
 	}
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
@@ -184,6 +189,10 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	pool.UpdateLiquidityIfActivePosition(ctx, lowerTick, upperTick, liquidityDelta)
 
 	if err := k.setPool(ctx, pool); err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	if err := k.updateFeeAccumulatorPosition(ctx, poolId, owner, liquidityDelta, lowerTick, upperTick); err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 

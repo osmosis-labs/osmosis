@@ -863,6 +863,14 @@ func (k Keeper) collectFees(
 }
 ```
 
+TODOs:
+- index positions by strings in the accum module. Make sure that CL
+  positions are indexed by pool, owner and tick range.
+- make sure accumulator module allows for prefixes that preserve data locality.
+- try moving fees logic into the internal package
+- figure out how to make calcs non-mutative
+- make sure fees are updated in the right places
+
 ##### Swaps
 
 Swapping within a single tick works as the regular `xy = k` curve. For swaps

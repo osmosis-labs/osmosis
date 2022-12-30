@@ -3,7 +3,6 @@ package concentrated_liquidity
 import (
 	"errors"
 	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -16,6 +15,10 @@ import (
 func (k Keeper) InitializePool(ctx sdk.Context, poolI swaproutertypes.PoolI, creatorAddress sdk.AccAddress) error {
 	concentratedPool, err := convertPoolInterfaceToConcentrated(poolI)
 	if err != nil {
+		return err
+	}
+
+	if err := k.createFeeAccumulator(ctx, concentratedPool.GetId()); err != nil {
 		return err
 	}
 

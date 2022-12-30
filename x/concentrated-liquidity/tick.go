@@ -49,6 +49,16 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liqu
 		return sdk.Dec{}, err
 	}
 
+	accum, err := k.getFeeAccumulator(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	tickInfo.FeeGrowthOutside = tickInfo.FeeGrowthOutside.Sub(accum.GetValue())
+
+	// Update the crossed tick as its fees have changed
+	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
+
 	return tickInfo.LiquidityNet, nil
 }
 
@@ -64,10 +74,18 @@ func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 	found, err := osmoutils.Get(store, key, &tickStruct)
 	// return 0 values if key has not been initialized
 	if !found {
-		return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec()}, err
+
+		// If tick has not yet been initialized, we create a new one and initialize
+		// the fee growth outside,
+		initialFeeGrowthOutside, err := k.getInitialFeeGrowthOtsideForTick(ctx, poolId, tickIndex)
+		if err != nil {
+			return model.TickInfo{}, err
+		}
+
+		return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: initialFeeGrowthOutside}, nil
 	}
 	if err != nil {
-		return tickStruct, err
+		return model.TickInfo{}, err
 	}
 
 	return tickStruct, nil
