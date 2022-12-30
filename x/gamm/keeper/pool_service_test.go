@@ -222,6 +222,111 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestInitializePool() {
+	params := suite.App.GAMMKeeper.GetParams(suite.Ctx)
+	testAccount := suite.TestAccs[0]
+
+	// get raw pool creation fee(s) as DecCoins
+	poolCreationFeeDecCoins := sdk.DecCoins{}
+	for _, coin := range params.PoolCreationFee {
+		poolCreationFeeDecCoins = poolCreationFeeDecCoins.Add(sdk.NewDecCoin(coin.Denom, coin.Amount))
+	}
+
+	tests := []struct {
+		name        string
+		msg         balancertypes.MsgCreateBalancerPool
+		emptySender bool
+		expectPass  bool
+	}{
+		{
+			name:        "initialize pool with default assets",
+			msg:         balancer.NewMsgCreateBalancerPool(testAccount, defaultPoolParams, defaultPoolAssets, defaultFutureGovernor),
+			emptySender: false,
+			expectPass:  true,
+		},
+		{
+			name:        "initialize pool with empty sender",
+			msg:         balancer.NewMsgCreateBalancerPool(testAccount, defaultPoolParams, defaultPoolAssets, defaultFutureGovernor),
+			emptySender: true,
+			expectPass:  false,
+		},
+	}
+
+	for _, test := range tests {
+		suite.SetupTest()
+		gammKeeper := suite.App.GAMMKeeper
+		swaprouterKeeper := suite.App.SwapRouterKeeper
+		bankKeeper := suite.App.BankKeeper
+		poolIncentivesKeeper := suite.App.PoolIncentivesKeeper
+
+		// fund sender test account
+		sender, err := sdk.AccAddressFromBech32(test.msg.Sender)
+		suite.Require().NoError(err, "test: %v", test.name)
+		if !test.emptySender {
+			suite.FundAcc(sender, defaultAcctFunds)
+		}
+
+		// note starting balances for community fee pool and pool creator account
+		senderBalBeforeNewPool := bankKeeper.GetAllBalances(suite.Ctx, sender)
+
+		// attempt to create a pool with the given NewMsgCreateBalancerPool message. After that,
+		// this function calls the InitializePool function
+		poolId, err := swaprouterKeeper.CreatePool(suite.Ctx, test.msg)
+
+		if test.expectPass {
+			suite.Require().NoError(err, "test: %v", test.name)
+
+			// check to make sure new pool exists and has minted the correct number of pool shares
+			pool, err := gammKeeper.GetPoolAndPoke(suite.Ctx, poolId)
+			suite.Require().NoError(err, "test: %v", test.name)
+			suite.Require().Equal(types.InitPoolSharesSupply.String(), pool.GetTotalShares().String(),
+				fmt.Sprintf("share token should be minted as %s initially", types.InitPoolSharesSupply.String()),
+			)
+
+			// get expected tokens in new pool and corresponding pool shares
+			expectedPoolTokens := sdk.Coins{}
+			for _, asset := range test.msg.GetPoolAssets() {
+				expectedPoolTokens = expectedPoolTokens.Add(asset.Token)
+			}
+			expectedPoolShares := sdk.NewCoin(types.GetPoolShareDenom(pool.GetId()), types.InitPoolSharesSupply)
+
+			// make sure sender's balance is updated correctly
+			senderBal := bankKeeper.GetAllBalances(suite.Ctx, sender)
+			expectedSenderBal := senderBalBeforeNewPool.Sub(params.PoolCreationFee).Sub(expectedPoolTokens).Add(expectedPoolShares)
+			suite.Require().Equal(senderBal.String(), expectedSenderBal.String())
+
+			// check pool metadata
+			poolShareBaseDenom := types.GetPoolShareDenom(pool.GetId())
+			poolShareDisplayDenom := fmt.Sprintf("GAMM-%d", pool.GetId())
+			metadata, found := bankKeeper.GetDenomMetaData(suite.Ctx, poolShareBaseDenom)
+			suite.Require().Equal(found, true, fmt.Sprintf("Pool share denom %s is not set", poolShareDisplayDenom))
+			suite.Require().Equal(metadata.Base, poolShareBaseDenom, fmt.Sprintf("Pool share base denom %s is not correctly set", poolShareBaseDenom))
+			suite.Require().Equal(metadata.Display, poolShareDisplayDenom, fmt.Sprintf("Pool share display denom %s is not correctly set", poolShareDisplayDenom))
+			suite.Require().Equal(metadata.DenomUnits[0].Denom, poolShareBaseDenom)
+			suite.Require().Equal(metadata.DenomUnits[0].Exponent, uint32(0x0))
+			suite.Require().Equal(metadata.DenomUnits[0].Aliases, []string{
+				"attopoolshare",
+			})
+			suite.Require().Equal(metadata.DenomUnits[1].Denom, poolShareDisplayDenom)
+			suite.Require().Equal(metadata.DenomUnits[1].Exponent, uint32(types.OneShareExponent))
+			suite.Require().Equal(metadata.DenomUnits[1].Aliases, []string(nil))
+
+			// check AfterPoolCreated hook
+			for _, lockableDuration := range poolIncentivesKeeper.GetLockableDurations(suite.Ctx) {
+				gaugeId, err := poolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDuration)
+				suite.Require().NoError(err, "test: %v", test.name)
+
+				poolIdFromPoolIncentives, err := poolIncentivesKeeper.GetPoolIdFromGaugeId(suite.Ctx, gaugeId, lockableDuration)
+				suite.Require().NoError(err, "test: %v", test.name)
+				suite.Require().Equal(poolIdFromPoolIncentives, poolId)
+			}
+
+		} else {
+			suite.Require().Error(err, "test: %v", test.name)
+		}
+	}
+}
+
 // This test creates several pools, and tests that:
 // the condition is in a case where the balancer return value returns an overflowing value
 // the SpotPrice query does not
