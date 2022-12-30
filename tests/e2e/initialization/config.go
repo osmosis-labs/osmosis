@@ -57,10 +57,12 @@ const (
 	ValidatorWalletName = "val"
 	// chainA
 	ChainAID      = "osmo-test-a"
-	OsmoBalanceA  = 200000000000
+	OsmoBalanceA  = 2000000000000
 	IonBalanceA   = 100000000000
 	StakeBalanceA = 110000000000
 	StakeAmountA  = 100000000000
+	UstBalanceA   = 500000000000000
+	LuncBalanceA  = 500000000000000
 	// chainB
 	ChainBID      = "osmo-test-b"
 	OsmoBalanceB  = 500000000000
@@ -68,8 +70,9 @@ const (
 	StakeBalanceB = 440000000000
 	StakeAmountB  = 400000000000
 
-	EpochDuration         = time.Second * 60
-	TWAPPruningKeepPeriod = EpochDuration / 4
+	EpochDayDuration      = time.Second * 60
+	EpochWeekDuration     = time.Second * 120
+	TWAPPruningKeepPeriod = EpochDayDuration / 4
 )
 
 var (
@@ -78,7 +81,7 @@ var (
 	StakeAmountIntB  = sdk.NewInt(StakeAmountB)
 	StakeAmountCoinB = sdk.NewCoin(OsmoDenom, StakeAmountIntB)
 
-	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s,%d%s", OsmoBalanceA, OsmoDenom, StakeBalanceA, StakeDenom, IonBalanceA, IonDenom)
+	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s,%d%s,%d%s,%d%s", OsmoBalanceA, OsmoDenom, StakeBalanceA, StakeDenom, IonBalanceA, IonDenom, UstBalanceA, UstIBCDenom, LuncBalanceA, LuncIBCDenom)
 	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s,%d%s", OsmoBalanceB, OsmoDenom, StakeBalanceB, StakeDenom, IonBalanceB, IonDenom)
 	OsmoToken       = sdk.NewInt64Coin(OsmoDenom, IbcSendAmount)  // 3,300uosmo
 	StakeToken      = sdk.NewInt64Coin(StakeDenom, IbcSendAmount) // 3,300ustake
@@ -365,7 +368,8 @@ func updatePoolManagerGenesis(appGenState map[string]json.RawMessage) func(*pool
 
 func updateEpochGenesis(epochGenState *epochtypes.GenesisState) {
 	epochGenState.Epochs = []epochtypes.EpochInfo{
-		epochtypes.NewGenesisEpochInfo("week", time.Hour*24*7),
+		// override week epochs which are in default integrations, to be 2min
+		epochtypes.NewGenesisEpochInfo("week", time.Second*120),
 		// override day epochs which are in default integrations, to be 1min
 		epochtypes.NewGenesisEpochInfo("day", time.Second*60),
 	}

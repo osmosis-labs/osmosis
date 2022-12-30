@@ -333,6 +333,86 @@ func (n *NodeConfig) QueryGeometricTwap(poolId uint64, baseAsset, quoteAsset str
 	return response.GeometricTwap, nil
 }
 
+// QueryProtoRevParams gets the current params for the protorev module.
+func (n *NodeConfig) QueryProtoRevParams() (bool, error) {
+	path := "/osmosis/v13/protorev/params"
+
+	bz, err := n.QueryGRPCGateway(path)
+	if err != nil {
+		return false, err
+	}
+
+	// nolint: staticcheck
+	var response protorevtypes.QueryParamsResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err) // this error should not happen
+	return response.Params.Enabled, nil
+}
+
+// QueryProtoRevNumberOfTrades gets the number of trades the protorev module has executed.
+func (n *NodeConfig) QueryProtoRevNumberOfTrades() (sdk.Int, error) {
+	path := "/osmosis/v13/protorev/number_of_trades"
+
+	bz, err := n.QueryGRPCGateway(path)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	// nolint: staticcheck
+	var response protorevtypes.QueryGetProtoRevNumberOfTradesResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err) // this error should not happen
+	return response.NumberOfTrades, nil
+}
+
+// QueryProtoRevProfits gets the profits the protorev module has made.
+func (n *NodeConfig) QueryProtoRevProfits() ([]*sdk.Coin, error) {
+	path := "/osmosis/v13/protorev/all_profits"
+
+	bz, err := n.QueryGRPCGateway(path)
+	if err != nil {
+		return []*sdk.Coin{}, err
+	}
+
+	// nolint: staticcheck
+	var response protorevtypes.QueryGetProtoRevAllProfitsResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err) // this error should not happen
+	return response.Profits, nil
+}
+
+// QueryProtoRevAllRouteStatistics gets all of the route statistics that the module has recorded.
+func (n *NodeConfig) QueryProtoRevAllRouteStatistics() ([]protorevtypes.RouteStatistics, error) {
+	path := "/osmosis/v13/protorev/all_route_statistics"
+
+	bz, err := n.QueryGRPCGateway(path)
+	if err != nil {
+		return []protorevtypes.RouteStatistics{}, err
+	}
+
+	// nolint: staticcheck
+	var response protorevtypes.QueryGetProtoRevAllRouteStatisticsResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err) // this error should not happen
+	return response.Statistics, nil
+}
+
+// QueryProtoRevTokenPairArbRoutes gets all of the token pair hot routes that the module is currently using.
+func (n *NodeConfig) QueryProtoRevTokenPairArbRoutes() ([]*protorevtypes.TokenPairArbRoutes, error) {
+	path := "/osmosis/v13/protorev/token_pair_arb_routes"
+
+	bz, err := n.QueryGRPCGateway(path)
+	if err != nil {
+		return []*protorevtypes.TokenPairArbRoutes{}, err
+	}
+
+	// nolint: staticcheck
+	var response protorevtypes.QueryGetProtoRevTokenPairArbRoutesResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err) // this error should not happen
+	return response.Routes, nil
+}
+
 // QueryHashFromBlock gets block hash at a specific height. Otherwise, error.
 func (n *NodeConfig) QueryHashFromBlock(height int64) (string, error) {
 	block, err := n.rpcClient.Block(context.Background(), &height)

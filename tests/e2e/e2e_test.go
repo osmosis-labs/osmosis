@@ -87,6 +87,92 @@ func (s *IntegrationTestSuite) TestGeometricTwapMigration() {
 	node.SwapExactAmountIn(uosmoIn, minAmountOut, fmt.Sprintf("%d", oldPoolId), otherDenom, swapWalletAddr)
 }
 
+// TestProtoRev is a test that ensures that the protorev module is working as expected. In particular, this tests and ensures that:
+// 1. the protorev module is successfully keeping track of the highest liquidity pools paired with osmo/atom
+// 2. the epoch hook correctly updates the pools if any new ones were made
+// 3. the antehandler is correctly arbing by submitting swap txs in an environment where an arbitrage opportunity should exist
+// 4. the proposal to add an admin account can pass
+// 5. the admin account can add new hot routes
+// 6. the developer account is successfully accumulating rewards
+// 7. the developer account can successfully withdraw rewards
+// 8. the statistics of the module are correctly updating
+// 9. the module account is correctly accumulating rewards
+// 10. the proposal to disable protorev can pass
+func (s *IntegrationTestSuite) TestProtoRev() {
+	const (
+		poolFile1 = "protorevPool1.json"
+		poolFile2 = "protorevPool2.json"
+		poolFile3 = "protorevPool3.json"
+
+		walletName = "swap-that-creates-an-arb"
+
+		denomIn  = "ibc/0EF15DF2F02480ADE0BB6E85D9EBB5DAEA2836D3860E9F97F9AADE4F57A31AA0"
+		denomOut = "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC"
+
+		amount       = "10000"
+		minAmountOut = "1"
+
+		epochIdentifier = "week"
+	)
+
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.NoError(err)
+
+	// The module should be enabled by default.
+	enabled, err := chainANode.QueryProtoRevParams()
+	s.T().Logf("checking that the protorev module is enabled: %t", enabled)
+	s.Require().NoError(err)
+	s.Require().True(enabled)
+
+	// The module should have no new hot routes by default.
+	hotRoutes, err := chainANode.QueryProtoRevTokenPairArbRoutes()
+	s.T().Logf("checking that the protorev module has no new hot routes: %v", hotRoutes)
+	s.Require().NoError(err)
+	s.Require().Len(hotRoutes, 0)
+
+	// Create all of the pools that will be used in the test.
+	chainANode.CreatePool(poolFile1, initialization.ValidatorWalletName)
+	swapPoolId := chainANode.CreatePool(poolFile2, initialization.ValidatorWalletName)
+	chainANode.CreatePool(poolFile3, initialization.ValidatorWalletName)
+
+	// Wait for the creation to be propogated to the other nodes + for the protorev module to
+	// correctly update the highest liquidity pools.
+	s.T().Logf("waiting for the protorev module to update the highest liquidity pools (wait %.f sec) after the week epoch duration", initialization.EpochWeekDuration.Seconds())
+	chainA.WaitForNumEpochs(1, epochIdentifier)
+
+	// Create a wallet to use for the swap txs.
+	swapWalletAddr := chainANode.CreateWallet(walletName)
+	coinIn := fmt.Sprintf("%s%s", amount, denomIn)
+	chainANode.BankSend(coinIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
+
+	// Performing the swap that creates a cyclic arbitrage opportunity.
+	chainANode.SwapExactAmountIn(coinIn, minAmountOut, fmt.Sprintf("%d", swapPoolId), denomOut, swapWalletAddr)
+
+	// Check that the number of trades executed by the protorev module is 1.
+	numTrades, err := chainANode.QueryProtoRevNumberOfTrades()
+	s.T().Logf("checking that the protorev module has executed 1 trade: %d", numTrades.Uint64())
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(1), numTrades.Uint64())
+
+	// Check that the profits of the protorev module are not nil.
+	profits, err := chainANode.QueryProtoRevProfits()
+	s.T().Logf("checking that the protorev module has non-nil profits: %s", profits)
+	s.Require().NoError(err)
+	s.Require().NotNil(profits)
+	s.Require().Len(profits, 1)
+
+	// Check that the route statistics of the protorev module are not nil.
+	routeStats, err := chainANode.QueryProtoRevAllRouteStatistics()
+	s.T().Logf("checking that the protorev module has non-nil route statistics: %x", routeStats)
+	s.Require().NoError(err)
+	s.Require().NotNil(routeStats)
+	s.Require().Len(routeStats, 1)
+	s.Require().Equal(sdk.OneInt(), routeStats[0].NumberOfTrades)
+	s.Require().Equal([]uint64{swapPoolId - 1, swapPoolId, swapPoolId + 1}, routeStats[0].Route)
+	s.Require().Equal(profits, routeStats[0].Profits)
+}
+
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.
 // Additionally, it attempst to create a pool with IBC denoms.
 func (s *IntegrationTestSuite) TestIBCTokenTransferAndCreatePool() {
