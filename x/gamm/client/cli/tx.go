@@ -356,37 +356,6 @@ func stringArrayCoinsParser(flagName string, fs *flag.FlagSet) (sdk.Coins, error
 	return coins, nil
 }
 
-func swapAmountOutRoutes(fs *flag.FlagSet) ([]types.SwapAmountOutRoute, error) {
-	swapRoutePoolIds, err := fs.GetString(FlagSwapRoutePoolIds)
-	swapRoutePoolIdsArray := strings.Split(swapRoutePoolIds, ",")
-	if err != nil {
-		return nil, err
-	}
-
-	swapRouteDenoms, err := fs.GetString(FlagSwapRouteDenoms)
-	swapRouteDenomsArray := strings.Split(swapRouteDenoms, ",")
-	if err != nil {
-		return nil, err
-	}
-
-	if len(swapRoutePoolIdsArray) != len(swapRouteDenomsArray) {
-		return nil, errors.New("swap route pool ids and denoms mismatch")
-	}
-
-	routes := []types.SwapAmountOutRoute{}
-	for index, poolIDStr := range swapRoutePoolIdsArray {
-		pID, err := strconv.Atoi(poolIDStr)
-		if err != nil {
-			return nil, err
-		}
-		routes = append(routes, types.SwapAmountOutRoute{
-			PoolId:       uint64(pID),
-			TokenInDenom: swapRouteDenomsArray[index],
-		})
-	}
-	return routes, nil
-}
-
 func NewStableSwapAdjustScalingFactorsMsg(clientCtx client.Context, _args []string, fs *flag.FlagSet) (sdk.Msg, error) {
 	poolID, err := fs.GetUint64(FlagPoolId)
 	if err != nil {
