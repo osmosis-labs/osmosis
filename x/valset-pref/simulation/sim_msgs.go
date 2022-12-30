@@ -48,7 +48,6 @@ func RandomMsgDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, 
 		Delegator: delegator.Address.String(),
 		Coin:      delegationCoin,
 	}, nil
-
 }
 
 func RandomMsgUnDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*types.MsgUndelegateFromValidatorSet, error) {
