@@ -117,6 +117,13 @@ service Query {
         "/osmosis/superfluid/v1beta1/"
         "total_delegation_by_delegator/{delegator_address}";
   }
+
+  // Returns a list of whitelisted pool ids to unpool.
+  rpc UnpoolWhitelist(QueryUnpoolWhitelistRequest)
+      returns (QueryUnpoolWhitelistResponse) {
+    option (google.api.http).get = "/osmosis/superfluid/v1beta1/"
+                                   "unpool_whitelist";
+  }
 }
 
 message QueryParamsRequest {}
@@ -271,3 +278,7 @@ message QueryTotalDelegationByDelegatorResponse {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
   ];
 }
+
+message QueryUnpoolWhitelistRequest {}
+
+message QueryUnpoolWhitelistResponse { repeated uint64 pool_ids = 1; }

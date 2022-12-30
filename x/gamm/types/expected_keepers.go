@@ -44,10 +44,12 @@ type CommunityPoolKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
 
-// SwaprouterKeeper defines the interface needed to be fulfilled for
-// the swaprouter keeper.
-type SwaprouterKeeper interface {
+// PoolManager defines the interface needed to be fulfilled for
+// the pool manger.
+type PoolManager interface {
 	CreatePool(ctx sdk.Context, msg swaproutertypes.CreatePoolMsg) (uint64, error)
+
+	GetNextPoolId(ctx sdk.Context) uint64
 
 	RouteExactAmountIn(
 		ctx sdk.Context,
@@ -73,10 +75,4 @@ type SwaprouterKeeper interface {
 		ctx sdk.Context,
 		routes []swaproutertypes.SwapAmountOutRoute,
 		tokenOut sdk.Coin) (tokenInAmount sdk.Int, err error)
-
-	GetNextPoolId(ctx sdk.Context) uint64
-}
-
-type PoolIncentivesKeeper interface {
-	IsPoolIncentivized(ctx sdk.Context, poolId uint64) bool
 }

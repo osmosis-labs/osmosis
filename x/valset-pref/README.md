@@ -29,13 +29,13 @@ How does this module work?
 
 Staking Calculation 
 
-- The user provides an amount to delegate and our `MsgStakeToValidatorSet` divides the amount based on validator weight distribution.
+- The user provides an amount to delegate and our `MsgDelegateToValidatorSet` divides the amount based on validator weight distribution.
   For example: Stake 100osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
   our delegate logic will attempt to delegate (100 * 0.5) 50osmo for ValA , (100 * 0.3) 30osmo from ValB and (100 * 0.2) 20osmo from ValC.
 
 UnStaking Calculation 
 
-- The user provides an amount to undelegate and our `MsgUnStakeFromValidatorSet` divides the amount based on validator weight distribution.
+- The user provides an amount to undelegate and our `MsgUnDelegateToValidatorSet` divides the amount based on validator weight distribution.
 - Here, the user can either undelegate the entire amount or partial amount 
   - Entire amount unstaking: UnStake 100osmo from validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2},
     our undelegate logic will attempt to undelegate 50osmo from ValA , 30osmo from ValB, 20osmo from ValC
@@ -88,10 +88,10 @@ restaking to a new set is going to happen behind the scenes.
 - Update the `KVStore` value for the specific owner address key.
 - Run the undelegate logic and restake the tokens with updated weights. 
 
-### StakeToValidatorSet
+### DelegateToValidatorSet
 
 Gets the existing validator-set of the delegator and delegates the given amount. The given amount 
-will be divided based on the weights distributed to the validators. The weights will be unchanged! 
+will be divided based on the weights distributed to the validators. The weights will be unchanged 
 
 ```go
     string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
@@ -153,3 +153,43 @@ The Code Layout is very similar to TWAP module.
 - keeper.go - generic SDK boilerplate (defining a wrapper for store keys + params)
 - msg_server.go - handle messages request from client and process responses. 
 - store.go - Managing logic for getting and setting things to underlying stores (KVStore)
+
+## Redelegate algorithm logic pseudocode
+
+Existing ValSet   20osmos {ValA-> 0.5, ValB-> 0.3, ValC-> 0.2} [ValA-> 10osmo, ValB-> 6osmo, ValC-> 4osmo]
+New ValSet        20osmos {ValD-> 0.2, ValE-> 0.2, ValF-> 0.6} [ValD-> 4osmo, ValE-> 4osmo, ValD-> 12osmo]
+
+- // Rearranging the existingValSet and newValSet to to add extra validator padding
+  - existing_valset_updated = [ValA: 10, ValB: 6, ValC: 4, ValD: 0, ValE: 0, ValF: 0]
+  - new_valset_updated = [ValD: 4, ValE: 4, ValF: 12, ValA: 0, ValB: 0, ValC: 0]
+
+  // calculate the difference between two sets
+  - diff_arr = [ValA: 10, ValB: 6, ValC: 4, ValD: -4, ValE: -4, ValF: -12]
+
+	// Algorithm starts here
+- for i, validator in diff_arr: 
+    - for validator.amount > 0: 
+        source_validator = validator.address
+        // FindMin returns the index and MinAmt of the minimum amount in diffValSet
+        target_validator, idx = FindMin(diff_arr)   // gets the index of minValue and the minValue
+
+        // reDelegationAmt to is the amount to redelegate, which is the min of diffAmount and target_validator
+        reDelegationAmt = FindMin(abs(target_validator.amount), validator.amount)
+        sdk.BeginRedelegation(ctx, delegator, source_validator, target_validator, reDelegationAmt) 
+
+        // Update the current diffAmount by subtracting it with the reDelegationAmount
+        validator.amount = validator.amount - reDelegationAmt
+        // Find target_validator through idx in diffValSet and set that to (target_validatorAmount - reDelegationAmount)
+        diff_arr[idx].amount = target_validator.amount + reDelegationAmt 
+
+- Result 
+  1. diff_arr = [ValA: 0, ValB: 0, ValC: 0, ValD: 0, ValE: 0, ValF: 0]
+  2. [ValA: 0, ValB: 0, ValC: 0, ValD: 4, ValE: 4, ValF: 12] // final result
+
+
+## Redelegation Constraints 
+1. ValA -> ValB redelegate upto 7 times in 21 day period 
+2. ValA -> ValB (redelegate) ValB -> ValC (redelegate) **CONSECUTIVE REDELEGATION DOES NOT WORK**
+3. Once you redelegate from ValA -> ValB, you will not be able to redelegate from ValB to another validator for the next 21 days.
+  - the validator on the receiving end of redelegation will be on a 21-day redelegation lock
+4. Cannot redelegate to same validator 

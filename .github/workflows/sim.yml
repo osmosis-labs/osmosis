@@ -14,11 +14,23 @@ jobs:
       - uses: actions/setup-go@v2.1.4
         with:
           go-version: 1.18
-      - name: Display go version
-        run: go version
+      -
+        name: Get git diff
+        uses: technote-space/get-diff-action@v6.0.1
+        with:
+          PATTERNS: |
+            **/**.wasm
+            **/**!(test).go
+            tests/**/**.go
+            go.mod
+            go.sum
+            Makefile
       - name: Run full application simulation
         run: |
           make test-sim-app
+        if: env.GIT_DIFF
+
       - name: Run simulation determinism check
         run: |
           make test-sim-determinism
+        if: env.GIT_DIFF

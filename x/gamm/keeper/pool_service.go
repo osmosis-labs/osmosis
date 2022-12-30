@@ -5,9 +5,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 // CalculateSpotPrice returns the spot price of the quote asset in terms of the base asset,
@@ -21,8 +23,8 @@ import (
 func (k Keeper) CalculateSpotPrice(
 	ctx sdk.Context,
 	poolID uint64,
-	baseAssetDenom string,
 	quoteAssetDenom string,
+	baseAssetDenom string,
 ) (spotPrice sdk.Dec, err error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolID)
 	if err != nil {
@@ -37,7 +39,7 @@ func (k Keeper) CalculateSpotPrice(
 		}
 	}()
 
-	spotPrice, err = pool.SpotPrice(ctx, baseAssetDenom, quoteAssetDenom)
+	spotPrice, err = pool.SpotPrice(ctx, quoteAssetDenom, baseAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -52,6 +54,51 @@ func (k Keeper) CalculateSpotPrice(
 	// we want to round this to `SpotPriceSigFigs` of precision
 	spotPrice = osmomath.SigFigRound(spotPrice, types.SpotPriceSigFigs)
 	return spotPrice, err
+}
+
+// This function:
+// - saves the pool to state
+// - Mints LP shares to the pool creator
+// - Sets bank metadata for the LP denom
+// - Records total liquidity increase
+// - Calls the AfterPoolCreated hook
+func (k Keeper) InitializePool(ctx sdk.Context, pool swaproutertypes.PoolI, sender sdk.AccAddress) (err error) {
+	// Mint the initial pool shares share token to the sender
+	err = k.MintPoolShareToAccount(ctx, pool, sender, pool.GetTotalShares())
+	if err != nil {
+		return err
+	}
+
+	// Finally, add the share token's meta data to the bank keeper.
+	poolShareBaseDenom := types.GetPoolShareDenom(pool.GetId())
+	poolShareDisplayDenom := fmt.Sprintf("GAMM-%d", pool.GetId())
+	k.bankKeeper.SetDenomMetaData(ctx, banktypes.Metadata{
+		Description: fmt.Sprintf("The share token of the gamm pool %d", pool.GetId()),
+		DenomUnits: []*banktypes.DenomUnit{
+			{
+				Denom:    poolShareBaseDenom,
+				Exponent: 0,
+				Aliases: []string{
+					"attopoolshare",
+				},
+			},
+			{
+				Denom:    poolShareDisplayDenom,
+				Exponent: types.OneShareExponent,
+				Aliases:  nil,
+			},
+		},
+		Base:    poolShareBaseDenom,
+		Display: poolShareDisplayDenom,
+	})
+
+	if err := k.setPool(ctx, pool); err != nil {
+		return err
+	}
+
+	k.hooks.AfterPoolCreated(ctx, sender, pool.GetId())
+	k.RecordTotalLiquidityIncrease(ctx, pool.GetTotalPoolLiquidity(ctx))
+	return nil
 }
 
 // JoinPoolNoSwap aims to LP exactly enough to pool #{poolId} to get shareOutAmount number of LP shares.
@@ -90,14 +137,18 @@ func (k Keeper) JoinPoolNoSwap(
 	}
 
 	// check that needed lp liquidity does not exceed the given `tokenInMaxs` parameter. Return error if so.
-	// if tokenInMaxs == 0, don't do this check.
+	//if tokenInMaxs == 0, don't do this check.
 	if tokenInMaxs.Len() != 0 {
-		if !(neededLpLiquidity.DenomsSubsetOf(tokenInMaxs) && tokenInMaxs.IsAllGTE(neededLpLiquidity)) {
-			return nil, sdk.ZeroInt(), sdkerrors.Wrapf(types.ErrLimitMaxAmount, "TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap,"+
+		if !(neededLpLiquidity.DenomsSubsetOf(tokenInMaxs)) {
+			return nil, sdk.ZeroInt(), sdkerrors.Wrapf(types.ErrLimitMaxAmount, "TokenInMaxs does not include all the tokens that are part of the target pool,"+
 				" upperbound: %v, needed %v", tokenInMaxs, neededLpLiquidity)
 		} else if !(tokenInMaxs.DenomsSubsetOf(neededLpLiquidity)) {
 			return nil, sdk.ZeroInt(), sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, "TokenInMaxs includes tokens that are not part of the target pool,"+
 				" input tokens: %v, pool tokens %v", tokenInMaxs, neededLpLiquidity)
+		}
+		if !(tokenInMaxs.IsAllGTE(neededLpLiquidity)) {
+			return nil, sdk.ZeroInt(), sdkerrors.Wrapf(types.ErrLimitMaxAmount, "TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap,"+
+				" upperbound: %v, needed %v", tokenInMaxs, neededLpLiquidity)
 		}
 	}
 
@@ -225,7 +276,7 @@ func (k Keeper) JoinSwapShareAmountOut(
 	}
 
 	if tokenInAmount.GT(tokenInMaxAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%d resulted tokens is larger than the max amount of %d", tokenInAmount.Int64(), tokenInMaxAmount.Int64())
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%s resulted tokens is larger than the max amount of %s", tokenInAmount, tokenInMaxAmount)
 	}
 
 	tokenIn := sdk.NewCoins(sdk.NewCoin(tokenInDenom, tokenInAmount))
@@ -291,7 +342,6 @@ func (k Keeper) ExitSwapShareAmountIn(
 	if err != nil {
 		return sdk.Int{}, err
 	}
-	tokenOutAmount = exitCoins.AmountOf(tokenOutDenom)
 
 	pool, err := k.GetPool(ctx, poolId)
 	if err != nil {
@@ -299,6 +349,7 @@ func (k Keeper) ExitSwapShareAmountIn(
 	}
 	swapFee := pool.GetSwapFee(ctx)
 
+	tokenOutAmount = exitCoins.AmountOf(tokenOutDenom)
 	for _, coin := range exitCoins {
 		if coin.Denom == tokenOutDenom {
 			continue

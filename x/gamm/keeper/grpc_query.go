@@ -16,6 +16,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/v2types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -108,12 +109,12 @@ func (q Querier) Pools(
 	}, nil
 }
 
-// Deprecated: use NumPools in x/swaprouter.
+// TODO: mark deprecated and move to swaprouter.
 func (q Querier) NumPools(ctx context.Context, _ *types.QueryNumPoolsRequest) (*types.QueryNumPoolsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	return &types.QueryNumPoolsResponse{
-		NumPools: q.swaprouterKeeper.GetNextPoolId(sdkCtx) - 1,
+		NumPools: q.poolManager.GetNextPoolId(sdkCtx) - 1,
 	}, nil
 }
 
@@ -125,8 +126,13 @@ func (q Querier) PoolType(ctx context.Context, req *types.QueryPoolTypeRequest) 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	poolType, err := q.Keeper.GetPoolType(sdkCtx, req.PoolId)
 
+	poolTypeStr, ok := swaproutertypes.PoolType_name[int32(poolType)]
+	if !ok {
+		return nil, status.Errorf(codes.Internal, "invalid pool type: %d", poolType)
+	}
+
 	return &types.QueryPoolTypeResponse{
-		PoolType: poolType,
+		PoolType: poolTypeStr,
 	}, err
 }
 
@@ -158,91 +164,63 @@ func (q Querier) CalcJoinPoolShares(ctx context.Context, req *types.QueryCalcJoi
 
 // PoolsWithFilter query allows to query pools with specific parameters
 func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithFilterRequest) (*types.QueryPoolsWithFilterResponse, error) {
-	res, err := q.Pools(ctx, &types.QueryPoolsRequest{
-		Pagination: &query.PageRequest{},
-	})
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	store := sdkCtx.KVStore(q.Keeper.storeKey)
+	poolStore := prefix.NewStore(store, types.KeyPrefixPools)
 
-	if err != nil {
-		return nil, err
-	}
-
-	pools := res.Pools
-
-	var response = []*codectypes.Any{}
-
-	// set filters
-	min_liquidity := req.MinLiquidity
-	pool_type := req.PoolType
-	checks_needed := 0
-	// increase amount of needed checks for each filter by 1
-	if min_liquidity != nil {
-		checks_needed++
-	}
-
-	if pool_type != "" {
-		checks_needed++
-	}
-
-	for _, p := range pools {
-		var checks = 0
-		var pool types.CFMMPoolI
-
-		err := q.cdc.UnpackAny(p, &pool)
+	response := []*codectypes.Any{}
+	pageRes, err := query.FilteredPaginate(poolStore, req.Pagination, func(_, value []byte, accumulate bool) (bool, error) {
+		pool, err := q.Keeper.UnmarshalPool(value)
 		if err != nil {
-			return nil, sdkerrors.ErrUnpackAny
+			return false, err
 		}
+
 		poolId := pool.GetId()
 
 		// if liquidity specified in request
-		if min_liquidity != nil {
+		if len(req.MinLiquidity) > 0 {
 			poolLiquidity := pool.GetTotalPoolLiquidity(sdkCtx)
-			amount_of_denoms := 0
-			check_amount := false
-			check_denoms := false
 
-			if poolLiquidity.IsAllGTE(min_liquidity) {
-				check_amount = true
-			}
-
-			for _, req_coin := range min_liquidity {
-				for _, coin := range poolLiquidity {
-					if req_coin.Denom == coin.Denom {
-						amount_of_denoms++
-					}
-				}
-			}
-
-			if amount_of_denoms == len(min_liquidity) {
-				check_denoms = true
-			}
-
-			if check_amount && check_denoms {
-				checks++
+			if !poolLiquidity.IsAllGTE(req.MinLiquidity) {
+				return false, nil
 			}
 		}
 
 		// if pool type specified in request
-		if pool_type != "" {
+		if req.PoolType != "" {
 			poolType, err := q.GetPoolType(sdkCtx, poolId)
 			if err != nil {
-				return nil, types.ErrPoolNotFound
+				return false, types.ErrPoolNotFound
 			}
 
-			if poolType == pool_type {
-				checks++
-			} else {
-				continue
+			poolTypeStr, ok := swaproutertypes.PoolType_name[int32(poolType)]
+			if !ok {
+				return false, fmt.Errorf("%d pool type not found", int32(poolType))
+			}
+
+			if poolTypeStr != req.PoolType {
+				return false, nil
 			}
 		}
 
-		if checks == checks_needed {
-			response = append(response, p)
+		any, err := codectypes.NewAnyWithValue(pool)
+		if err != nil {
+			return false, err
 		}
+
+		if accumulate {
+			response = append(response, any)
+		}
+
+		return true, nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryPoolsWithFilterResponse{
-		Pools: response,
+		Pools:      response,
+		Pagination: pageRes,
 	}, nil
 }
 
@@ -381,6 +359,8 @@ func (q Querier) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
+	// Note: the base and quote asset argument order is intentionally incorrect
+	// due to a historic bug in the original implementation.
 	sp, err := q.Keeper.CalculateSpotPrice(sdkCtx, req.PoolId, req.BaseAssetDenom, req.QuoteAssetDenom)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -425,7 +405,7 @@ func (q Querier) TotalLiquidity(ctx context.Context, _ *types.QueryTotalLiquidit
 	}, nil
 }
 
-// Deprecated: use EstimateSwapExactAmountIn in x/swaprouter.
+// EstimateSwapExactAmountIn estimates input token amount for a swap.
 func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.QuerySwapExactAmountInRequest) (*types.QuerySwapExactAmountInResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -442,7 +422,10 @@ func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.Query
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	tokenOutAmount, err := q.swaprouterKeeper.MultihopEstimateOutGivenExactAmountIn(sdkCtx, req.Routes, tokenIn)
+	// TODO: remove this redundancy after making routes be shared between x/gamm and x/swaprouter.
+	swaprouterRoutes := types.ConvertAmountInRoutes(req.Routes)
+
+	tokenOutAmount, err := q.Keeper.poolManager.MultihopEstimateOutGivenExactAmountIn(sdkCtx, swaprouterRoutes, tokenIn)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -452,7 +435,7 @@ func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.Query
 	}, nil
 }
 
-// Deprecated: use EstimateSwapExactAmountOut in x/swaprouter.
+// EstimateSwapExactAmountOut estimates token output amount for a swap.
 func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.QuerySwapExactAmountOutRequest) (*types.QuerySwapExactAmountOutResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -469,7 +452,10 @@ func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.Quer
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	tokenInAmount, err := q.swaprouterKeeper.MultihopEstimateInGivenExactAmountOut(sdkCtx, req.Routes, tokenOut)
+	// TODO: remove this redundancy after making routes be shared between x/gamm and x/swaprouter.
+	swaprouterRoutes := types.ConvertAmountOutRoutes(req.Routes)
+
+	tokenInAmount, err := q.Keeper.poolManager.MultihopEstimateInGivenExactAmountOut(sdkCtx, swaprouterRoutes, tokenOut)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

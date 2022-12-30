@@ -19,7 +19,6 @@ const (
 )
 
 var (
-	// TODO: deprecate
 	// KeyNextGlobalPoolId defines key to store the next Pool ID to be used.
 	KeyNextGlobalPoolId = []byte{0x01}
 	// KeyPrefixPools defines prefix to store pools.

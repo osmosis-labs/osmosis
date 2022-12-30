@@ -15,12 +15,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/gamm"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 func TestGammInitGenesis(t *testing.T) {
-	const poolCount uint64 = 1
-
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -43,14 +40,14 @@ func TestGammInitGenesis(t *testing.T) {
 	require.NoError(t, err)
 
 	app.GAMMKeeper.InitGenesis(ctx, types.GenesisState{
-		Pools: []*codectypes.Any{any},
-	}, app.AppCodec())
-	app.SwapRouterKeeper.InitGenesis(ctx, &swaproutertypes.GenesisState{
-		Params: swaproutertypes.Params{
+		Pools:          []*codectypes.Any{any},
+		NextPoolNumber: 2,
+		Params: types.Params{
 			PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000_000_000)},
 		},
-	})
+	}, app.AppCodec())
 
+	require.Equal(t, app.SwapRouterKeeper.GetNextPoolId(ctx), uint64(1))
 	poolStored, err := app.GAMMKeeper.GetPoolAndPoke(ctx, 1)
 	require.NoError(t, err)
 	require.Equal(t, balancerPool.GetId(), poolStored.GetId())
@@ -108,6 +105,12 @@ func TestGammExportGenesis(t *testing.T) {
 	require.NoError(t, err)
 
 	genesis := app.GAMMKeeper.ExportGenesis(ctx)
+	// Note: the next pool number index has been migrated to
+	// swaprouter.
+	// The reason it is kept in gamm is for migrations.
+	// As a result, it is 1 here. This index is to be removed
+	// in a subsequent upgrade.
+	require.Equal(t, genesis.NextPoolNumber, uint64(1))
 	require.Len(t, genesis.Pools, 2)
 }
 

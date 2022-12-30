@@ -43,9 +43,46 @@ env:
   DELTA_HALT_HEIGHT: 50
 
 jobs:
+
+  compare_versions:
+  # Compare current mainnet osmosis major version with the major version of github branch
+  # Skip the next job if the current github major is greater than the current mainnet major
+    runs-on: self-hosted
+    outputs:
+      should_i_run: ${{ steps.compare_versions.outputs.should_i_run }}
+      mainnet_major_version: ${{ steps.mainnet_version.outputs.mainnet_major_version }}
+    steps:
+      -
+        name: Get mainnet major version
+        id: mainnet_version
+        run:  |
+          # Find current major version via rpc.osmosis.zone/abci_info
+          RPC_ABCI_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" ${{ env.RPC_ENDPOINT }}/abci_info)
+          MAINNET_MAJOR_VERSION=$(echo $RPC_ABCI_INFO | dasel --plain -r json  'result.response.version' | cut -f 1 -d '.')
+
+          echo "MAINNET_MAJOR_VERSION=$MAINNET_MAJOR_VERSION" >> $GITHUB_ENV
+          echo "mainnet_major_version=$MAINNET_MAJOR_VERSION" >> $GITHUB_OUTPUT
+      -
+        name: Get GitHub branch major version
+        id: compare_versions
+        run:  |
+          CURRENT_BRANCH_MAJOR_VERSION=$(echo ${{ github.event.pull_request.base.ref }} | tr -dc '0-9')
+          SHOULD_I_RUN=$(( $CURRENT_BRANCH_MAJOR_VERSION <= $MAINNET_MAJOR_VERSION ))
+
+          echo -n "Mainnet version: $MAINNET_MAJOR_VERSION | Branch version: $CURRENT_BRANCH_MAJOR_VERSION | Should I run: "
+          if (( $CURRENT_BRANCH_MAJOR_VERSION <= $MAINNET_MAJOR_VERSION )); 
+          then
+            echo 'should_i_run=true' >> $GITHUB_OUTPUT;
+            echo "true"
+          else
+            echo 'should_i_run=false' >> $GITHUB_OUTPUT;
+            echo "false"
+          fi
+
   check_state_compatibility:
     # DO NOT CHANGE THIS: please read the note above
-    if: ${{ github.event.pull_request.head.repo.full_name == 'osmosis-labs/osmosis' }}
+    if: ${{ github.event.pull_request.head.repo.full_name == 'osmosis-labs/osmosis' && needs.compare_versions.outputs.should_i_run == 'true' }}
+    needs: compare_versions
     runs-on: self-hosted
     steps:
       - 
@@ -102,15 +139,11 @@ jobs:
         name: 🧪 Configure Osmosis Node
         run:  |
           CONFIG_FOLDER=$HOME/.osmosisd/config
-
-          # Find current major version via rpc.osmosis.zone/abci_info
-          RPC_ABCI_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" ${{ env.RPC_ENDPOINT }}/abci_info)
-          CHAIN_MAJOR_VERSION=$(echo $RPC_ABCI_INFO | dasel --plain -r json  'result.response.version' | cut -f 1 -d '.')
           
           # Find last epoch block comparing repo version to current chain version
           REPO_MAJOR_VERSION=$(echo $(git describe --tags) | sed 's/^v//' | cut -f 1 -d '.') # without v prefix
 
-          if [ $REPO_MAJOR_VERSION == $CHAIN_MAJOR_VERSION ]; then
+          if [ $REPO_MAJOR_VERSION == $MAINNET_MAJOR_VERSION ]; then
             # I'm in the latest major, fetch the epoch info from the lcd endpoint
             LAST_EPOCH_BLOCK_HEIGHT=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 ${{ env.LCD_ENDPOINT }}/osmosis/epochs/v1beta1/epochs | dasel --plain -r json 'epochs.(identifier=day).current_epoch_start_height')
           else

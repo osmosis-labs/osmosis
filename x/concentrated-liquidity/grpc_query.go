@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
@@ -68,7 +68,7 @@ func (q Querier) Pools(
 	pageRes, err := query.Paginate(poolStore, req.Pagination, func(key, _ []byte) error {
 		pool := model.Pool{}
 		// Get the next pool from the poolStore and pass it to the pool variable
-		_, err := osmoutils.GetIfFound(poolStore, key, &pool)
+		_, err := osmoutils.Get(poolStore, key, &pool)
 		if err != nil {
 			return err
 		}

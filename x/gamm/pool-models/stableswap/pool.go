@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
@@ -190,7 +190,7 @@ func (p Pool) scaledSortedPoolReserves(first string, second string, round osmoma
 // reorderReservesAndScalingFactors takes the pool liquidity and scaling factors, and reorders them s.t.
 // reorderedReserves[0] = p.GetLiquidity().AmountOf(first)
 // reorderedScalingFactors[0] = p.ScalingFactors[p.getLiquidityIndexMap()[first]]
-// and the same for index 1.
+// Similarly, reordering happens for second and index 1.
 //
 // The remainder of the lists includes every remaining (reserve asset, scaling factor) pair,
 // in a deterministic but unspecified order.
@@ -331,8 +331,8 @@ func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDen
 
 // SpotPrice calculates the approximate amount of `baseDenom` one would receive for
 // an input dx of `quoteDenom` (to simplify calculations, we approximate dx = 1)
-func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error) {
-	return p.spotPrice(baseAssetDenom, quoteAssetDenom)
+func (p Pool) SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom string) (sdk.Dec, error) {
+	return p.spotPrice(quoteAssetDenom, baseAssetDenom)
 }
 
 func (p Pool) Copy() Pool {

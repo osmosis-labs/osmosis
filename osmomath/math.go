@@ -4,21 +4,20 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"golang.org/x/exp/constraints"
 )
 
 // Don't EVER change after initializing
 // TODO: Analyze choice here.
 var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
 
-// Singletons.
-// nolint: deadcode, unused
-var zero sdk.Dec = sdk.ZeroDec()
-
 var (
 	one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
 	one      sdk.Dec = sdk.OneDec()
 	two      sdk.Dec = sdk.MustNewDecFromStr("2")
+
+	// https://www.wolframalpha.com/input?i=2.718281828459045235360287471352662498&assumption=%22ClashPrefs%22+-%3E+%7B%22Math%22%7D
+	// nolint: unused
+	eulersNumber = MustNewDecFromStr("2.718281828459045235360287471352662498")
 )
 
 // Returns the internal "power precision".
@@ -171,13 +170,4 @@ func PowApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 		}
 	}
 	return sum
-}
-
-// Max returns the maximum value between two Ordered types.
-func Max[T constraints.Ordered](x, y T) T {
-	if x < y {
-		return y
-	}
-
-	return x
 }

@@ -9,10 +9,6 @@ import (
 )
 
 func EmitSwapEvent(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
-	if ctx.EventManager() == nil {
-		return
-	}
-
 	ctx.EventManager().EmitEvents(sdk.Events{
 		newSwapEvent(sender, poolId, input, output),
 	})
@@ -30,10 +26,6 @@ func newSwapEvent(sender sdk.AccAddress, poolId uint64, input sdk.Coins, output 
 }
 
 func EmitAddLiquidityEvent(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, liquidity sdk.Coins) {
-	if ctx.EventManager() == nil {
-		return
-	}
-
 	ctx.EventManager().EmitEvents(sdk.Events{
 		newAddLiquidityEvent(sender, poolId, liquidity),
 	})
@@ -50,10 +42,6 @@ func newAddLiquidityEvent(sender sdk.AccAddress, poolId uint64, liquidity sdk.Co
 }
 
 func EmitRemoveLiquidityEvent(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, liquidity sdk.Coins) {
-	if ctx.EventManager() == nil {
-		return
-	}
-
 	ctx.EventManager().EmitEvents(sdk.Events{
 		newRemoveLiquidityEvent(sender, poolId, liquidity),
 	})

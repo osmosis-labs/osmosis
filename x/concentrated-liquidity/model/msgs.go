@@ -63,7 +63,8 @@ func (msg MsgCreateConcentratedPool) ValidateBasic() error {
 }
 
 func (msg MsgCreateConcentratedPool) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	return nil
+	// return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgCreateConcentratedPool) GetSigners() []sdk.AccAddress {
@@ -85,8 +86,6 @@ func (msg MsgCreateConcentratedPool) PoolCreator() sdk.AccAddress {
 }
 
 func (msg MsgCreateConcentratedPool) Validate(ctx sdk.Context) error {
-	// TODO: Add check that denom exists on chain
-	// https://github.com/osmosis-labs/osmosis/issues/3723
 	return msg.ValidateBasic()
 }
 

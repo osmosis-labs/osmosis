@@ -3,7 +3,7 @@ package math
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 var TickBase = osmomath.MustNewDecFromStr("1.0001")

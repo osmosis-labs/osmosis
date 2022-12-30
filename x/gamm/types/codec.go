@@ -24,7 +24,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterInterface(
-		"osmosis.gamm.v1beta1.CFMMPoolI",
+		"osmosis.gamm.v1beta1.PoolI", // N.B.: the old proto-path is preserved for backwards-compatibility.
 		(*CFMMPoolI)(nil),
 	)
 

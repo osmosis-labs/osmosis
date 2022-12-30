@@ -1,10 +1,10 @@
 package wasmbinding
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -16,7 +16,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v13/app"
-	"github.com/osmosis-labs/osmosis/v13/wasmbinding"
 	"github.com/osmosis-labs/osmosis/v13/wasmbinding/bindings"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 )
@@ -61,115 +60,6 @@ func TestQueryFullDenom(t *testing.T) {
 
 	expected := fmt.Sprintf("factory/%s/ustart", reflect.String())
 	require.EqualValues(t, expected, resp.Denom)
-}
-
-func TestQueryPool(t *testing.T) {
-	actor := RandomAccountAddress()
-	osmosis, ctx := SetupCustomApp(t, actor)
-
-	fundAccount(t, ctx, osmosis, actor, defaultFunds)
-
-	poolFunds := []sdk.Coin{
-		sdk.NewInt64Coin("uosmo", 12000000),
-		sdk.NewInt64Coin("ustar", 240000000),
-	}
-	// 2 star to 1 osmo
-	starPool := preparePool(t, ctx, osmosis, actor, poolFunds)
-
-	pool2Funds := []sdk.Coin{
-		sdk.NewInt64Coin("uatom", 6000000),
-		sdk.NewInt64Coin("uosmo", 12000000),
-	}
-	// 2 star to 1 osmo
-	atomPool := preparePool(t, ctx, osmosis, actor, pool2Funds)
-
-	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
-	require.NotEmpty(t, reflect)
-
-	// query pool state
-	query := bindings.OsmosisQuery{
-		PoolState: &bindings.PoolState{PoolId: starPool},
-	}
-	resp := bindings.PoolStateResponse{}
-	queryCustom(t, ctx, osmosis, reflect, query, &resp)
-	expected := wasmbinding.ConvertSdkCoinsToWasmCoins(poolFunds)
-	require.EqualValues(t, expected, resp.Assets)
-	assertValidShares(t, resp.Shares, starPool)
-
-	// query second pool state
-	query = bindings.OsmosisQuery{
-		PoolState: &bindings.PoolState{PoolId: atomPool},
-	}
-	resp = bindings.PoolStateResponse{}
-	queryCustom(t, ctx, osmosis, reflect, query, &resp)
-	expected = wasmbinding.ConvertSdkCoinsToWasmCoins(pool2Funds)
-	require.EqualValues(t, expected, resp.Assets)
-	assertValidShares(t, resp.Shares, atomPool)
-}
-
-func TestQuerySpotPrice(t *testing.T) {
-	actor := RandomAccountAddress()
-	osmosis, ctx := SetupCustomApp(t, actor)
-	swapFee := 0. // FIXME: Set / support an actual fee
-	epsilon := 1e-6
-
-	fundAccount(t, ctx, osmosis, actor, defaultFunds)
-
-	poolFunds := []sdk.Coin{
-		sdk.NewInt64Coin("uosmo", 12000000),
-		sdk.NewInt64Coin("ustar", 240000000),
-	}
-	// 20 star to 1 osmo
-	starPool := preparePool(t, ctx, osmosis, actor, poolFunds)
-
-	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
-	require.NotEmpty(t, reflect)
-
-	// query spot price
-	query := bindings.OsmosisQuery{
-		SpotPrice: &bindings.SpotPrice{
-			Swap: bindings.Swap{
-				PoolId:   starPool,
-				DenomIn:  "ustar",
-				DenomOut: "uosmo",
-			},
-			WithSwapFee: false,
-		},
-	}
-	resp := bindings.SpotPriceResponse{}
-	queryCustom(t, ctx, osmosis, reflect, query, &resp)
-
-	price, err := strconv.ParseFloat(resp.Price, 64)
-	require.NoError(t, err)
-
-	uosmo, err := poolFunds[0].Amount.ToDec().Float64()
-	require.NoError(t, err)
-	ustar, err := poolFunds[1].Amount.ToDec().Float64()
-	require.NoError(t, err)
-
-	expected := ustar / uosmo
-	require.InEpsilonf(t, expected, price, epsilon, fmt.Sprintf("Outside of tolerance (%f)", epsilon))
-
-	// and the reverse conversion (with swap fee)
-	// query spot price
-	query = bindings.OsmosisQuery{
-		SpotPrice: &bindings.SpotPrice{
-			Swap: bindings.Swap{
-				PoolId:   starPool,
-				DenomIn:  "uosmo",
-				DenomOut: "ustar",
-			},
-			WithSwapFee: true,
-		},
-	}
-	resp = bindings.SpotPriceResponse{}
-	queryCustom(t, ctx, osmosis, reflect, query, &resp)
-
-	price, err = strconv.ParseFloat(resp.Price, 32)
-	require.NoError(t, err)
-
-	expected = 1. / expected
-	require.InEpsilonf(t, expected+swapFee, price, epsilon, fmt.Sprintf("Outside of tolerance (%f)", epsilon))
 }
 
 type ReflectQuery struct {
@@ -220,6 +110,8 @@ func storeReflectCode(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, ad
 	src := wasmtypes.StoreCodeProposalFixture(func(p *wasmtypes.StoreCodeProposal) {
 		p.RunAs = addr.String()
 		p.WASMByteCode = wasmCode
+		checksum := sha256.Sum256(wasmCode)
+		p.CodeHash = checksum[:]
 	})
 
 	// when stored

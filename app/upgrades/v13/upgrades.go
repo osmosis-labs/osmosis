@@ -11,15 +11,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 
 	"github.com/osmosis-labs/osmosis/v13/app/keepers"
 	"github.com/osmosis-labs/osmosis/v13/app/upgrades"
-	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 //go:embed rate_limiter.wasm
@@ -33,7 +30,7 @@ func setupRateLimiting(ctx sdk.Context, keepers *keepers.AppKeepers) error {
 	}
 	contractKeeper := wasmkeeper.NewGovPermissionKeeper(keepers.WasmKeeper)
 	instantiateConfig := wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeOnlyAddress, Address: govModule.String()}
-	codeID, err := contractKeeper.Create(ctx, govModule, code, &instantiateConfig)
+	codeID, _, err := contractKeeper.Create(ctx, govModule, code, &instantiateConfig)
 	if err != nil {
 		return err
 	}
@@ -75,32 +72,9 @@ func CreateUpgradeHandler(
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		keepers.LockupKeeper.SetParams(ctx, lockuptypes.DefaultParams())
-
-		keepers.SwapRouterKeeper.SetParams(ctx, swaproutertypes.DefaultParams())
-
-		// N.B: pool id in gamm is to be deprecated in the future
-		// Instead,it is moved to swaprouter.
-		migrateNextPoolId(ctx, keepers.GAMMKeeper, keepers.SwapRouterKeeper)
-
-		//  N.B.: this is done to avoid initializing genesis for swaprouter module.
-		// Otherwise, it would overwrite migrations with InitGenesis().
-		// See RunMigrations() for details.
-		fromVM[swaproutertypes.ModuleName] = 0
-
 		if err := setupRateLimiting(ctx, keepers); err != nil {
 			return nil, err
 		}
 		return mm.RunMigrations(ctx, configurator, fromVM)
-	}
-}
-
-func migrateNextPoolId(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, swaprouterKeeper *swaprouter.Keeper) {
-	// N.B: pool id in gamm is to be deprecated in the future
-	// Instead,it is moved to swaprouter.
-	nextPoolId := gammKeeper.GetNextPoolId(ctx)
-	swaprouterKeeper.SetNextPoolId(ctx, nextPoolId)
-
-	for poolId := uint64(1); poolId < nextPoolId; poolId++ {
-		swaprouterKeeper.SetModuleRoute(ctx, poolId, swaproutertypes.Balancer)
 	}
 }

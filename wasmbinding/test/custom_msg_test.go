@@ -240,46 +240,6 @@ type BaseState struct {
 	RegenPool uint64
 }
 
-// test setup for each run through the table test above
-func prepareSwapState(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp) BaseState {
-	actor := RandomAccountAddress()
-
-	swapperFunds := sdk.NewCoins(
-		sdk.NewInt64Coin("uatom", 333000000),
-		sdk.NewInt64Coin("uosmo", 555000000+3*poolFee),
-		sdk.NewInt64Coin("uregen", 777000000),
-		sdk.NewInt64Coin("ustar", 999000000),
-	)
-	fundAccount(t, ctx, osmosis, actor, swapperFunds)
-
-	// 20 star to 1 osmo
-	funds1 := []sdk.Coin{
-		sdk.NewInt64Coin("uosmo", 12000000),
-		sdk.NewInt64Coin("ustar", 240000000),
-	}
-	starPool := preparePool(t, ctx, osmosis, actor, funds1)
-
-	// 2 osmo to 1 atom
-	funds2 := []sdk.Coin{
-		sdk.NewInt64Coin("uatom", 6000000),
-		sdk.NewInt64Coin("uosmo", 12000000),
-	}
-	atomPool := preparePool(t, ctx, osmosis, actor, funds2)
-
-	// 16 regen to 1 atom
-	funds3 := []sdk.Coin{
-		sdk.NewInt64Coin("uatom", 6000000),
-		sdk.NewInt64Coin("uregen", 96000000),
-	}
-	regenPool := preparePool(t, ctx, osmosis, actor, funds3)
-
-	return BaseState{
-		StarPool:  starPool,
-		AtomPool:  atomPool,
-		RegenPool: regenPool,
-	}
-}
-
 type ReflectExec struct {
 	ReflectMsg    *ReflectMsgs    `json:"reflect_msg,omitempty"`
 	ReflectSubMsg *ReflectSubMsgs `json:"reflect_sub_msg,omitempty"`

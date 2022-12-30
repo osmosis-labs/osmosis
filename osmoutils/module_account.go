@@ -41,7 +41,7 @@ func CanCreateModuleAccountAtAddr(ctx sdk.Context, ak AccountKeeper, addr sdk.Ac
 		return fmt.Errorf("cannot create module account %s, "+
 			"due to an account at that address already existing & having sent txs", addr)
 	}
-	var overrideAccountTypes = map[reflect.Type]struct{}{
+	overrideAccountTypes := map[reflect.Type]struct{}{
 		reflect.TypeOf(&authtypes.BaseAccount{}):                 {},
 		reflect.TypeOf(&vestingtypes.DelayedVestingAccount{}):    {},
 		reflect.TypeOf(&vestingtypes.ContinuousVestingAccount{}): {},
