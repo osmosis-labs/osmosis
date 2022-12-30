@@ -179,7 +179,7 @@ func (am AppModule) GenerateGenesisState(simState *module.SimulationState, s *si
 func (am AppModule) Actions() []simtypes.Action {
 	return []simtypes.Action{
 		simtypes.NewMsgBasedAction("SetValidatorSetPreference", am.keeper, simulation.RandomMsgSetValSetPreference),
-		//simtypes.NewMsgBasedAction("delegate to validator set preference", am.keeper, simulation.RandomMsgDelegateToValSet),
-		//simtypes.NewMsgBasedAction("undelegate from validator set preference", am.keeper, simulation.RandomMsgUnDelegateToValSet),
+		simtypes.NewMsgBasedAction("MsgDelegateToValidatorSet", am.keeper, simulation.RandomMsgDelegateToValSet),
+		simtypes.NewMsgBasedAction("MsgUndelegateFromValidatorSet", am.keeper, simulation.RandomMsgUnDelegateToValSet),
 	}
 }
