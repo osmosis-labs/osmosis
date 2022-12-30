@@ -47,7 +47,7 @@ func compareBranch(oldValueBz []byte, valueBz []byte) (err error) {
 
 	for i, c := range oldValue {
 		c2 := value.Children[i]
-		if !bytes.Equal(c.Index, c2.Index) || !c.Acc.Equal(c2.Accumulation) {
+		if !bytes.Equal(c.Index, c2.Index) || !c.Acc.Equal(c2.Accumulation.RoundInt()) {
 			err = fmt.Errorf("branch value mismatch: %+v / %+v", oldValue, value)
 			return
 		}
@@ -67,7 +67,7 @@ func compareLeaf(oldValueBz []byte, valueBz []byte) (err error) {
 		return
 	}
 
-	if !oldValue.Equal(value.Leaf.Accumulation) {
+	if !oldValue.Equal(value.Leaf.Accumulation.RoundInt()) {
 		return fmt.Errorf("leaf value mismatch: %+v / %+v", oldValue, value)
 	}
 	return

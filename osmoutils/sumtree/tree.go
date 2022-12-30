@@ -28,7 +28,7 @@ type Tree struct {
 func NewTree(store store.KVStore, m uint8) Tree {
 	tree := Tree{store, m}
 	if tree.IsEmpty() {
-		tree.Set(nil, sdk.ZeroInt())
+		tree.Set(nil, sdk.ZeroDec())
 	}
 	return tree
 }
@@ -37,7 +37,7 @@ func (t Tree) IsEmpty() bool {
 	return !t.store.Has(t.leafKey(nil))
 }
 
-func (t Tree) Set(key []byte, acc sdk.Int) {
+func (t Tree) Set(key []byte, acc sdk.Dec) {
 	ptr := t.ptrGet(0, key)
 	leaf := NewLeaf(key, acc)
 	ptr.setLeaf(leaf)
@@ -56,12 +56,12 @@ func (t Tree) Remove(key []byte) {
 }
 
 // Add amt to the accumulator value at key's node
-func (t Tree) Increase(key []byte, amt sdk.Int) {
+func (t Tree) Increase(key []byte, amt sdk.Dec) {
 	value := t.Get(key)
 	t.Set(key, value.Add(amt))
 }
 
-func (t Tree) Decrease(key []byte, amt sdk.Int) {
+func (t Tree) Decrease(key []byte, amt sdk.Dec) {
 	t.Increase(key, amt.Neg())
 }
 
@@ -136,12 +136,12 @@ func (t Tree) root() *ptr {
 	}
 }
 
-// Get returns the (sdk.Int) accumulation value at a given leaf.
-func (t Tree) Get(key []byte) sdk.Int {
+// Get returns the (sdk.Dec) accumulation value at a given leaf.
+func (t Tree) Get(key []byte) sdk.Dec {
 	res := new(Leaf)
 	keybz := t.leafKey(key)
 	if !t.store.Has(keybz) {
-		return sdk.ZeroInt()
+		return sdk.ZeroDec()
 	}
 	bz := t.store.Get(keybz)
 	err := proto.Unmarshal(bz, res)
@@ -209,8 +209,8 @@ func (t Tree) ReverseIterator(begin, end []byte) store.Iterator {
 // exact: leaf with key = provided key
 // right: all leaves under nodePointer with key > provided key
 // Note that the equalities here are _exclusive_.
-func (ptr *ptr) accumulationSplit(key []byte) (left sdk.Int, exact sdk.Int, right sdk.Int) {
-	left, exact, right = sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt()
+func (ptr *ptr) accumulationSplit(key []byte) (left sdk.Dec, exact sdk.Dec, right sdk.Dec) {
+	left, exact, right = sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()
 	if ptr.isLeaf() {
 		var leaf Leaf
 		bz := ptr.tree.store.Get(ptr.tree.leafKey(ptr.key))
@@ -244,12 +244,12 @@ func (ptr *ptr) accumulationSplit(key []byte) (left sdk.Int, exact sdk.Int, righ
 }
 
 // TotalAccumulatedValue returns the sum of the weights for all leaves.
-func (t Tree) TotalAccumulatedValue() sdk.Int {
+func (t Tree) TotalAccumulatedValue() sdk.Dec {
 	return t.SubsetAccumulation(nil, nil)
 }
 
 // Prefix sum returns the total weight of all leaves with keys <= to the provided key.
-func (t Tree) PrefixSum(key []byte) sdk.Int {
+func (t Tree) PrefixSum(key []byte) sdk.Dec {
 	return t.SubsetAccumulation(nil, key)
 }
 
@@ -257,7 +257,7 @@ func (t Tree) PrefixSum(key []byte) sdk.Int {
 // between start and end (inclusive of both ends)
 // if start is nil, it is the beginning of the tree.
 // if end is nil, it is the end of the tree.
-func (t Tree) SubsetAccumulation(start []byte, end []byte) sdk.Int {
+func (t Tree) SubsetAccumulation(start []byte, end []byte) sdk.Dec {
 	if start == nil {
 		left, exact, _ := t.root().accumulationSplit(end)
 		return left.Add(exact)
@@ -271,11 +271,11 @@ func (t Tree) SubsetAccumulation(start []byte, end []byte) sdk.Int {
 	return leftexact.Add(leftrest).Sub(rightest)
 }
 
-func (t Tree) SplitAcc(key []byte) (sdk.Int, sdk.Int, sdk.Int) {
+func (t Tree) SplitAcc(key []byte) (sdk.Dec, sdk.Dec, sdk.Dec) {
 	return t.root().accumulationSplit(key)
 }
 
-func (ptr *ptr) visualize(depth int, acc sdk.Int) {
+func (ptr *ptr) visualize(depth int, acc sdk.Dec) {
 	if !ptr.exists() {
 		return
 	}
@@ -292,5 +292,5 @@ func (ptr *ptr) visualize(depth int, acc sdk.Int) {
 
 // DebugVisualize prints the entire tree to stdout.
 func (t Tree) DebugVisualize() {
-	t.root().visualize(0, sdk.Int{})
+	t.root().visualize(0, sdk.Dec{})
 }

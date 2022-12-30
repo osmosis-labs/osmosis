@@ -29,7 +29,7 @@ func migrateBranchValue(oldValueBz []byte) *sumtree.Node {
 	}
 	cs := make([]*sumtree.Child, len(oldValue))
 	for i, oldChild := range oldValue {
-		cs[i] = &sumtree.Child{Index: oldChild.Index, Accumulation: oldChild.Acc}
+		cs[i] = &sumtree.Child{Index: oldChild.Index, Accumulation: oldChild.Acc.ToDec()}
 	}
 	return &sumtree.Node{Children: cs}
 }
@@ -40,7 +40,7 @@ func migrateLeafValue(index []byte, oldValueBz []byte) *sumtree.Leaf {
 	if err != nil {
 		panic(err)
 	}
-	return sumtree.NewLeaf(index, oldValue)
+	return sumtree.NewLeaf(index, oldValue.ToDec())
 }
 
 func nodeKey(level uint16, key []byte) []byte {

@@ -72,7 +72,7 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 	suite.SetupTest()
 
 	pairs := pairs{pair{[]byte("hello"), 100}}
-	suite.tree.Set([]byte("hello"), sdk.NewIntFromUint64(100))
+	suite.tree.Set([]byte("hello"), sdk.NewDec(100))
 
 	// tested up to 2000
 	for i := 0; i < 500; i++ {
@@ -92,11 +92,11 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 			pairs = append(pairs, pair{key, value})
 		}
 
-		suite.tree.Set(key, sdk.NewIntFromUint64(value))
+		suite.tree.Set(key, sdk.NewDec(int64(value)))
 
 		// check all is right
 		for _, pair := range pairs {
-			suite.Require().Equal(suite.tree.Get(pair.key).Uint64(), pair.value)
+			suite.Require().Equal(uint64(suite.tree.Get(pair.key).RoundInt64()), pair.value)
 			// XXX: check all branch nodes
 		}
 
@@ -104,9 +104,9 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 		left, exact, right := uint64(0), pairs[0].value, pairs[1:].sum()
 		for idx, pair := range pairs {
 			tleft, texact, tright := suite.tree.SplitAcc(pair.key)
-			suite.Require().Equal(left, tleft.Uint64())
-			suite.Require().Equal(exact, texact.Uint64())
-			suite.Require().Equal(right, tright.Uint64())
+			suite.Require().Equal(left, uint64(tleft.RoundInt64()))
+			suite.Require().Equal(exact, uint64(texact.RoundInt64()))
+			suite.Require().Equal(right, uint64(tright.RoundInt64()))
 
 			key := append(pair.key, 0x00)
 			if idx == len(pairs)-1 {
@@ -117,9 +117,9 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 			}
 
 			tleft, texact, tright = suite.tree.SplitAcc(key)
-			suite.Require().Equal(left+exact, tleft.Uint64())
-			suite.Require().Equal(uint64(0), texact.Uint64())
-			suite.Require().Equal(right, tright.Uint64())
+			suite.Require().Equal(left+exact, uint64(tleft.RoundInt64()))
+			suite.Require().Equal(uint64(0), uint64(texact.RoundInt64()))
+			suite.Require().Equal(right, uint64(tright.RoundInt64()))
 
 			left += exact
 			exact = pairs[idx+1].value

@@ -10,7 +10,7 @@ import (
 
 // NewLeaf creates a leaf node with `key` and `acc`
 // Returns pointer to new node
-func NewLeaf(key []byte, acc sdk.Int) *Leaf {
+func NewLeaf(key []byte, acc sdk.Dec) *Leaf {
 	return &Leaf{Leaf: &Child{
 		Index:        key,
 		Accumulation: acc,
@@ -221,8 +221,8 @@ func (ptr *ptr) pull(key []byte) {
 }
 
 // accumulate update's node's Accumulate field to be the sum of its childrens'
-func (node Node) accumulate() (res sdk.Int) {
-	res = sdk.ZeroInt()
+func (node Node) accumulate() (res sdk.Dec) {
+	res = sdk.ZeroDec()
 	for _, child := range node.Children {
 		res = res.Add(child.Accumulation)
 	}
@@ -252,7 +252,7 @@ func (node Node) find(key []byte) (idx int, match bool) {
 }
 
 // setAcc sets the accumulator of `node`s child at index `idx` to `acc`
-func (node *Node) setAcc(idx int, acc sdk.Int) *Node {
+func (node *Node) setAcc(idx int, acc sdk.Dec) *Node {
 	node.Children[idx] = &Child{node.Children[idx].Index, acc}
 	return node
 }
