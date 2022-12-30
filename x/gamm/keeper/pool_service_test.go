@@ -269,6 +269,12 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 		// note starting balances for community fee pool and pool creator account
 		senderBalBeforeNewPool := bankKeeper.GetAllBalances(suite.Ctx, sender)
 
+		// note starting balance of pool
+		poolBalanceBefore := sdk.Coins{}
+		for _, asset := range test.msg.GetPoolAssets() {
+			poolBalanceBefore = poolBalanceBefore.Add(sdk.NewCoin(asset.Token.Denom, gammKeeper.GetDenomLiquidity(suite.Ctx, asset.Token.Denom)))
+		}
+
 		// attempt to create a pool with the given NewMsgCreateBalancerPool message. After that,
 		// this function calls the InitializePool function
 		poolId, err := swaprouterKeeper.CreatePool(suite.Ctx, test.msg)
@@ -321,11 +327,9 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 				suite.Require().Equal(poolIdFromPoolIncentives, poolId)
 			}
 
-			// make sure liquidity recorded
-			for _, coin := range pool.GetTotalPoolLiquidity(suite.Ctx) {
-				recordedLiquidity := gammKeeper.GetDenomLiquidity(suite.Ctx, coin.Denom)
-				suite.Require().Equal(recordedLiquidity, coin.Amount)
-			}
+			// make sure total liquidity increase recored
+			expectedPoolBalance := poolBalanceBefore.Add(test.msg.InitialLiquidity()...)
+			suite.Require().Equal(expectedPoolBalance, pool.GetTotalPoolLiquidity(suite.Ctx))
 
 		} else {
 			suite.Require().Error(err, "test: %v", test.name)
