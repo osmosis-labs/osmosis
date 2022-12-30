@@ -25,7 +25,8 @@ func NewMsgSetValidatorSetPreference(delegator sdk.AccAddress, preferences []Val
 	}
 }
 
-func (m MsgSetValidatorSetPreference) Type() string { return TypeMsgSetValidatorSetPreference }
+func (m MsgSetValidatorSetPreference) Route() string { return RouterKey }
+func (m MsgSetValidatorSetPreference) Type() string  { return TypeMsgSetValidatorSetPreference }
 func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Delegator)
 	if err != nil {
@@ -85,7 +86,8 @@ func NewMsgDelegateToValidatorSet(delegator sdk.AccAddress, coin sdk.Coin) *MsgD
 	}
 }
 
-func (m MsgDelegateToValidatorSet) Type() string { return TypeMsgDelegateToValidatorSet }
+func (m MsgDelegateToValidatorSet) Route() string { return RouterKey }
+func (m MsgDelegateToValidatorSet) Type() string  { return TypeMsgDelegateToValidatorSet }
 func (m MsgDelegateToValidatorSet) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Delegator)
 	if err != nil {
@@ -123,7 +125,8 @@ func NewMsgUndelegateFromValidatorSet(delegator sdk.AccAddress, coin sdk.Coin) *
 	}
 }
 
-func (m MsgUndelegateFromValidatorSet) Type() string { return TypeMsgUndelegateFromValidatorSet }
+func (m MsgUndelegateFromValidatorSet) Route() string { return RouterKey }
+func (m MsgUndelegateFromValidatorSet) Type() string  { return TypeMsgUndelegateFromValidatorSet }
 func (m MsgUndelegateFromValidatorSet) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Delegator)
 	if err != nil {
@@ -221,7 +224,8 @@ func NewMsgWithdrawDelegationRewards(delegator sdk.AccAddress) *MsgWithdrawDeleg
 	}
 }
 
-func (m MsgWithdrawDelegationRewards) Type() string { return TypeMsgWithdrawDelegationRewards }
+func (m MsgWithdrawDelegationRewards) Route() string { return RouterKey }
+func (m MsgWithdrawDelegationRewards) Type() string  { return TypeMsgWithdrawDelegationRewards }
 func (m MsgWithdrawDelegationRewards) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Delegator)
 	if err != nil {
