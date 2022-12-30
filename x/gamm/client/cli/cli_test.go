@@ -208,22 +208,6 @@ func TestNewExitPoolCmd(t *testing.T) {
 	osmocli.RunTxTestCases(t, desc, tcs)
 }
 
-func TestNewSwapExactAmountOutCmd(t *testing.T) {
-	desc, _ := cli.NewSwapExactAmountOutCmd()
-	tcs := map[string]osmocli.TxCliTestCase[*types.MsgSwapExactAmountOut]{
-		"swap exact amount out": {
-			Cmd: "10stake 20 --swap-route-pool-ids=1 --swap-route-denoms=node0token --from=" + testAddresses[0].String(),
-			ExpectedMsg: &types.MsgSwapExactAmountOut{
-				Sender:           testAddresses[0].String(),
-				Routes:           []types.SwapAmountOutRoute{{PoolId: 1, TokenInDenom: "node0token"}},
-				TokenInMaxAmount: sdk.NewIntFromUint64(20),
-				TokenOut:         sdk.NewInt64Coin("stake", 10),
-			},
-		},
-	}
-	osmocli.RunTxTestCases(t, desc, tcs)
-}
-
 func TestNewJoinSwapExternAmountInCmd(t *testing.T) {
 	desc, _ := cli.NewJoinSwapExternAmountIn()
 	tcs := map[string]osmocli.TxCliTestCase[*types.MsgJoinSwapExternAmountIn]{

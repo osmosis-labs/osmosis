@@ -71,68 +71,20 @@ func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }
 
-func (s IntegrationTestSuite) TestNewSwapExactAmountOutCmd() {
-	val := s.network.Validators[0]
-
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewSwapExactAmountOut",
-		keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	s.Require().NoError(err)
-
-	newAddr := sdk.AccAddress(info.GetPubKey().Address())
-
-	_, err = banktestutil.MsgSendExec(
-		val.ClientCtx,
-		val.Address,
-		newAddr,
-		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 20000), sdk.NewInt64Coin("node0token", 20000)), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		osmoutils.DefaultFeeString(s.cfg),
-	)
-	s.Require().NoError(err)
-
-	testCases := []struct {
-		name string
-		args []string
-
-		expectErr    bool
-		respType     proto.Message
-		expectedCode uint32
-	}{
-		{
-			"swap exact amount out", // osmosisd tx swaprouter swap-exact-amount-out 10stake 20 --swap-route-pool-ids=1 --swap-route-denoms=node0token --from=validator --keyring-backend=test --chain-id=testing --yes
-			[]string{
-				"10stake", "20",
-				fmt.Sprintf("--%s=%d", cli.FlagSwapRoutePoolIds, 1),
-				fmt.Sprintf("--%s=%s", cli.FlagSwapRouteDenoms, "node0token"),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
-				// common args
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+func TestNewSwapExactAmountOutCmd(t *testing.T) {
+	desc, _ := cli.NewSwapExactAmountOutCmd()
+	tcs := map[string]osmocli.TxCliTestCase[*types.MsgSwapExactAmountOut]{
+		"swap exact amount out": {
+			Cmd: "10stake 20 --swap-route-pool-ids=1 --swap-route-denoms=node0token --from=" + testAddresses[0].String(),
+			ExpectedMsg: &types.MsgSwapExactAmountOut{
+				Sender:           testAddresses[0].String(),
+				Routes:           []types.SwapAmountOutRoute{{PoolId: 1, TokenInDenom: "node0token"}},
+				TokenInMaxAmount: sdk.NewIntFromUint64(20),
+				TokenOut:         sdk.NewInt64Coin("stake", 10),
 			},
-			false, &sdk.TxResponse{}, 0,
 		},
 	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.NewSwapExactAmountOutCmd()
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
-			}
-		})
-	}
+	osmocli.RunTxTestCases(t, desc, tcs)
 }
 
 // func (s *IntegrationTestSuite) TestGetCmdEstimateSwapExactAmountIn() {

@@ -23,7 +23,6 @@ func NewTxCmd() *cobra.Command {
 	txCmd := osmocli.TxIndexCmd(types.ModuleName)
 	osmocli.AddTxCmd(txCmd, NewJoinPoolCmd)
 	osmocli.AddTxCmd(txCmd, NewExitPoolCmd)
-	osmocli.AddTxCmd(txCmd, NewSwapExactAmountOutCmd)
 	osmocli.AddTxCmd(txCmd, NewJoinSwapExternAmountIn)
 	osmocli.AddTxCmd(txCmd, NewJoinSwapShareAmountOut)
 	osmocli.AddTxCmd(txCmd, NewExitSwapExternAmountOut)
@@ -100,17 +99,6 @@ func NewExitPoolCmd() (*osmocli.TxCliDesc, *types.MsgExitPool) {
 		},
 		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetExitPool()}},
 	}, &types.MsgExitPool{}
-}
-
-func NewSwapExactAmountOutCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountOut) {
-	// Can't get rid of this parser without a break, because the args are out of order.
-	return &osmocli.TxCliDesc{
-		Use:              "swap-exact-amount-out [token-out] [token-in-max-amount]",
-		Short:            "swap exact amount out",
-		NumArgs:          2,
-		ParseAndBuildMsg: NewBuildSwapExactAmountOutMsg,
-		Flags:            osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
-	}, &types.MsgSwapExactAmountOut{}
 }
 
 func NewJoinSwapExternAmountIn() (*osmocli.TxCliDesc, *types.MsgJoinSwapExternAmountIn) {
@@ -428,30 +416,6 @@ func swapAmountOutRoutes(fs *flag.FlagSet) ([]types.SwapAmountOutRoute, error) {
 		})
 	}
 	return routes, nil
-}
-
-func NewBuildSwapExactAmountOutMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
-	tokenOutStr, tokenInMaxAmountStr := args[0], args[1]
-	routes, err := swapAmountOutRoutes(fs)
-	if err != nil {
-		return nil, err
-	}
-
-	tokenOut, err := sdk.ParseCoinNormalized(tokenOutStr)
-	if err != nil {
-		return nil, err
-	}
-
-	tokenInMaxAmount, ok := sdk.NewIntFromString(tokenInMaxAmountStr)
-	if !ok {
-		return nil, errors.New("invalid token in max amount")
-	}
-	return &types.MsgSwapExactAmountOut{
-		Sender:           clientCtx.GetFromAddress().String(),
-		Routes:           routes,
-		TokenInMaxAmount: tokenInMaxAmount,
-		TokenOut:         tokenOut,
-	}, nil
 }
 
 func NewStableSwapAdjustScalingFactorsMsg(clientCtx client.Context, _args []string, fs *flag.FlagSet) (sdk.Msg, error) {
