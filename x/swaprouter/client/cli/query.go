@@ -10,24 +10,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      fmt.Sprintf("Querying commands for the %s module", types.ModuleName),
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
+	cmd := osmocli.QueryIndexCmd(types.ModuleName)
 
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdNumPools)
 	cmd.AddCommand(
 		GetCmdEstimateSwapExactAmountIn(),
 		GetCmdEstimateSwapExactAmountOut(),
-		GetCmdNumPools(),
 	)
 
 	return cmd
@@ -140,36 +135,10 @@ $ %s query swaprouter estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vx
 }
 
 // GetCmdNumPools return number of pools available.
-func GetCmdNumPools() *cobra.Command {
-	cmd := &cobra.Command{
+func GetCmdNumPools() (*osmocli.QueryDescriptor, *queryproto.NumPoolsRequest) {
+	return &osmocli.QueryDescriptor{
 		Use:   "num-pools",
 		Short: "Query number of pools",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query number of pools.
-Example:
-$ %s query swaprouter num-pools
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := queryproto.NewQueryClient(clientCtx)
-
-			res, err := queryClient.NumPools(cmd.Context(), &queryproto.NumPoolsRequest{})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+		Long:  "{{.Short}}",
+	}, &queryproto.NumPoolsRequest{}
 }

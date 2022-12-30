@@ -29,7 +29,6 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdEstimateSwapExactAmountIn)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdEstimateSwapExactAmountOut)
 	cmd.AddCommand(
-		GetCmdNumPools(),
 		GetCmdPoolParams(),
 		GetCmdTotalShares(),
 		GetCmdQueryTotalLiquidity(),
@@ -77,15 +76,6 @@ func GetCmdPools() (*osmocli.QueryDescriptor, *types.QueryPoolsRequest) {
 		Short: "Query pools",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} pools`}, &types.QueryPoolsRequest{}
-}
-
-func GetCmdNumPools() *cobra.Command {
-	return osmocli.SimpleQueryCmd[*types.QueryNumPoolsRequest](
-		"num-pools",
-		"Query number of pools",
-		"{{.Short}}",
-		types.ModuleName, types.NewQueryClient,
-	)
 }
 
 // GetCmdPoolParams return pool params.
