@@ -43,7 +43,7 @@ func (k Keeper) initIncentivesForPool(ctx sdk.Context, poolID uint64) {
 }
 
 // Creates an incentive for the passed in denom in either the internal or external accumulator
-// TODO: figure out how to handle attack where someone dusts with low rate for a denom & blocks that
+// TODO: figure out how to handle case where someone dusts with low rate for a denom & blocks that
 // denom from being used as an incentive at a higher/lower rate
 //
 // Could potentially allow for multiple incentives of same denom type using incID if they are in diff accums
@@ -62,7 +62,6 @@ func (k Keeper) getSumtree(ctx sdk.Context, poolID uint64) sumtree.Tree {
 // liquidity update is equivalent to removing the old JoinTime node from the liquidity tree
 // and replacing it with a new one. Thus, this function simply takes in the old and new liquidity
 // amounts and leaves liquidity delta calculations to the caller.
-// TODO: move to incentives_helpers.go file
 func (k Keeper) addToLiquidityTree(ctx sdk.Context, poolId uint64, position *model.Position, oldLiquidity sdk.Dec, newLiquidity sdk.Dec, posOwner sdk.AccAddress, posLowerTick int64, posUpperTick int64) error {
 	if newLiquidity.LT(oldLiquidity) {
 		return fmt.Errorf("Attempted to add a negative amount of liquidity. Should be using `removeFromLiquidityTree`")
@@ -104,19 +103,16 @@ func (k Keeper) removeFromLiquidityTree(ctx sdk.Context, poolId uint64, position
 }
 
 // Gets total liquidity that has joined at time <= `joinTime`
-// TODO: move to incentives_helpers.go file
 func (k Keeper) getLiquidityBeforeOrAtJoinTime(ctx sdk.Context, poolId uint64, joinTime time.Time) sdk.Dec {
 	return k.getSumtree(ctx, poolId).PrefixSum(types.KeyJoinTime(joinTime))
 }
 
 // Gets total liquidity that joined after time `joinTime`
-// TODO: move to incentives_helpers.go file
 func (k Keeper) getLiquidityAfterJoinTime(ctx sdk.Context, poolId uint64, joinTime time.Time) sdk.Dec {
 	return k.getSumtree(ctx, poolId).SubsetAccumulation(types.KeyJoinTime(joinTime.Add(1 * time.Second)), nil)
 }
 
 // Gets all liquidity that joined exactly at `joinTime`. This is primarily intended for use in validation logic.
-// TODO: move to incentives_helpers.go file
 func (k Keeper) getLiquidityExactlyAtJoinTime(ctx sdk.Context, poolId uint64, joinTime time.Time) sdk.Dec {
 	return k.getSumtree(ctx, poolId).SubsetAccumulation(types.KeyJoinTime(joinTime), types.KeyJoinTime(joinTime))
 }
