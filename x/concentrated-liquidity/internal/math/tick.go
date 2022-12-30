@@ -6,6 +6,8 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
+var TickBase = osmomath.MustNewDecFromStr("1.0001")
+
 // TicksToSqrtPrice returns the sqrt price for the lower and upper ticks.
 // Returns error if fails to calculate sqrt price.
 // TODO: spec and tests
@@ -28,20 +30,23 @@ func TickToSqrtPrice(tickIndex sdk.Int) (sqrtPrice sdk.Dec, err error) {
 	// If the tick index is positive, we can use the normal equation to calculate the square root price.
 	// However, if the tick index is negative, since we cannot take negative powers with the sdk,
 	// we need to take one over the original equation in order to make the power positive.
+	var sqrtPriceOsmoMath osmomath.BigDec
 	if tickIndex.GTE(sdk.ZeroInt()) {
-		sqrtPrice, err = sdk.NewDecWithPrec(10001, 4).Power(tickIndex.Uint64()).ApproxSqrt()
+		sqrtPriceOsmoMath, err = TickBase.PowerInteger(tickIndex.Uint64()).ApproxSqrt()
 	} else {
-		sqrtPrice, err = sdk.OneDec().Quo(sdk.NewDecWithPrec(10001, 4).Power(tickIndex.Abs().Uint64())).ApproxSqrt()
+		sqrtPriceOsmoMath, err = osmomath.OneDec().Quo(TickBase.PowerInteger(tickIndex.Abs().Uint64())).ApproxSqrt()
 	}
 	if err != nil {
 		return sdk.Dec{}, err
 	}
+
+	sqrtPrice = sqrtPriceOsmoMath.SDKDec()
 
 	return sqrtPrice, nil
 }
 
 // PriceToTick takes a price and returns the corresponding tick index
 func PriceToTick(price sdk.Dec) sdk.Int {
-	tick := osmomath.BigDecFromSDKDec(price).CustomBaseLog(osmomath.NewDecWithPrec(10001, 4))
+	tick := osmomath.BigDecFromSDKDec(price).CustomBaseLog(TickBase)
 	return tick.SDKDec().TruncateInt()
 }
