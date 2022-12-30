@@ -321,6 +321,12 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 				suite.Require().Equal(poolIdFromPoolIncentives, poolId)
 			}
 
+			// make sure liquidity recorded
+			for _, coin := range pool.GetTotalPoolLiquidity(suite.Ctx) {
+				recordedLiquidity := gammKeeper.GetDenomLiquidity(suite.Ctx, coin.Denom)
+				suite.Require().Equal(recordedLiquidity, coin.Amount)
+			}
+
 		} else {
 			suite.Require().Error(err, "test: %v", test.name)
 		}
