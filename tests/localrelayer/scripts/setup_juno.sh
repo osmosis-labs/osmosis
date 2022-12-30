@@ -25,6 +25,13 @@ edit_genesis () {
 
     GENESIS=$CONFIG_FOLDER/genesis.json
 
+    # Update crisis module
+    dasel put string -f $GENESIS '.app_state.crisis.constant_fee.denom' 'ujuno'
+
+    # Udpate gov module
+    dasel put string -f $GENESIS '.app_state.gov.voting_params.voting_period' '60s'
+    dasel put string -f $GENESIS '.app_state.gov.deposit_params.min_deposit.[0].denom' 'ujuno'
+
     # Update staking module
     dasel put string -f $GENESIS '.app_state.staking.params.bond_denom' 'ujuno'
     dasel put string -f $GENESIS '.app_state.staking.params.unbonding_time' '10000s'
@@ -65,7 +72,7 @@ edit_config () {
 if [[ ! -d $CONFIG_FOLDER ]]
 then
     install_prerequisites
-    echo "🧪 Creating Osmosis home for $VALIDATOR_MONIKER"
+    echo "🧪 Creating Juno home for $VALIDATOR_MONIKER"
     echo $VALIDATOR_MNEMONIC | junod init -o --chain-id=$CHAIN_ID --home $CHAIN_HOME --recover $VALIDATOR_MONIKER
     edit_genesis
     add_genesis_accounts
