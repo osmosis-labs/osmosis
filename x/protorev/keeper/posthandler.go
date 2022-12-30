@@ -95,33 +95,33 @@ func (k Keeper) AnteHandleCheck(ctx sdk.Context) error {
 // ProtoRevTrade wraps around the build routes, iterate routes, and execute trade functionality to execute cyclic arbitrage trades
 // if they exist. It returns an error if there was an issue executing any single trade.
 func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) error {
-	// Get the total number of routes that can be explored
-	numberOfIterableRoutes, err := k.CalcNumberOfIterableRoutes(ctx)
+	// Get the total number of routes that can be iterated
+	numIterableRoutes, err := k.CalcNumberOfIterableRoutes(ctx)
 	if err != nil {
 		return err
 	}
 
 	// Iterate and build arbitrage routes for each pool that was swapped on
-	for index := 0; index < len(swappedPools) && numberOfIterableRoutes > 0; index++ {
-		// Build the routes for the pool that was swapped on
+	for index := 0; index < len(swappedPools) && numIterableRoutes > 0; index++ {
+		// Build the routes for the pool that was swapped on and the number of routes that will be explored
 		routes := k.BuildRoutes(ctx, swappedPools[index].TokenInDenom, swappedPools[index].TokenOutDenom, swappedPools[index].PoolId)
-		numRoutes := uint64(len(routes))
+		numExploredRoutes := uint64(len(routes))
 
-		if numRoutes != 0 {
+		if numExploredRoutes != 0 {
 			// filter out routes that are not iterable
-			if numberOfIterableRoutes < numRoutes {
-				routes = routes[:numberOfIterableRoutes]
-				numRoutes = numberOfIterableRoutes
+			if numIterableRoutes < numExploredRoutes {
+				routes = routes[:numIterableRoutes]
+				numExploredRoutes = numIterableRoutes
 			}
 
 			// Find optimal input amounts for routes
 			maxProfitInputCoin, maxProfitAmount, optimalRoute := k.IterateRoutes(ctx, routes)
 
 			// Update route counts
-			if err := k.IncrementRouteCountForBlock(ctx, numRoutes); err != nil {
+			if err := k.IncrementRouteCountForBlock(ctx, numExploredRoutes); err != nil {
 				return err
 			}
-			numberOfIterableRoutes -= numRoutes
+			numIterableRoutes -= numExploredRoutes
 
 			// The error that returns here is particularly focused on the minting/burning of coins, and the execution of the MultiHopSwapExactAmountIn.
 			if maxProfitAmount.GT(sdk.ZeroInt()) {
