@@ -8,7 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/queryproto"
@@ -20,8 +22,9 @@ func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
 
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdNumPools)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdEstimateSwapExactAmountIn)
+
 	cmd.AddCommand(
-		GetCmdEstimateSwapExactAmountIn(),
 		GetCmdEstimateSwapExactAmountOut(),
 	)
 
@@ -29,56 +32,15 @@ func GetQueryCmd() *cobra.Command {
 }
 
 // GetCmdEstimateSwapExactAmountIn returns estimation of output coin when amount of x token input.
-func GetCmdEstimateSwapExactAmountIn() *cobra.Command {
-	cmd := &cobra.Command{
+func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *queryproto.EstimateSwapExactAmountInRequest) {
+	return &osmocli.QueryDescriptor{
 		Use:   "estimate-swap-exact-amount-in <poolID> <sender> <tokenIn>",
 		Short: "Query estimate-swap-exact-amount-in",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query estimate-swap-exact-amount-in.
-Example:
-$ %s query swaprouter estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-pool-ids=3
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := queryproto.NewQueryClient(clientCtx)
-
-			poolID, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-
-			routes, err := swapAmountInRoutes(cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.EstimateSwapExactAmountIn(cmd.Context(), &queryproto.EstimateSwapExactAmountInRequest{
-				Sender:  args[1],        // TODO: where sender is used?
-				PoolId:  uint64(poolID), // TODO: is this poolId used?
-				TokenIn: args[2],
-				Routes:  routes,
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	cmd.Flags().AddFlagSet(FlagSetQuerySwapRoutes())
-	flags.AddQueryFlagsToCmd(cmd)
-	_ = cmd.MarkFlagRequired(FlagSwapRoutePoolIds)
-	_ = cmd.MarkFlagRequired(FlagSwapRouteDenoms)
-
-	return cmd
+		Long: `Query estimate-swap-exact-amount-in.{{.ExampleHeader}}
+{{.CommandPrefix}} estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
+		ParseQuery: EstimateSwapExactAmountInParseArgs,
+		Flags:      osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
+	}, &queryproto.EstimateSwapExactAmountInRequest{}
 }
 
 // GetCmdEstimateSwapExactAmountOut returns estimation of input coin to get exact amount of x token output.
@@ -141,4 +103,23 @@ func GetCmdNumPools() (*osmocli.QueryDescriptor, *queryproto.NumPoolsRequest) {
 		Short: "Query number of pools",
 		Long:  "{{.Short}}",
 	}, &queryproto.NumPoolsRequest{}
+}
+
+func EstimateSwapExactAmountInParseArgs(args []string, fs *flag.FlagSet) (proto.Message, error) {
+	poolID, err := strconv.Atoi(args[0])
+	if err != nil {
+		return nil, err
+	}
+
+	routes, err := swapAmountInRoutes(fs)
+	if err != nil {
+		return nil, err
+	}
+
+	return &queryproto.EstimateSwapExactAmountInRequest{
+		Sender:  args[1],        // TODO: where sender is used?
+		PoolId:  uint64(poolID), // TODO: is this poolId used?
+		TokenIn: args[2],
+		Routes:  routes,
+	}, nil
 }

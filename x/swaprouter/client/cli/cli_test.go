@@ -195,6 +195,21 @@ func (s *IntegrationTestSuite) TestGetCmdNumPools(t *testing.T) {
 	osmocli.RunQueryTestCases(t, desc, tcs)
 }
 
+func TestGetCmdEstimateSwapExactAmountIn(t *testing.T) {
+	desc, _ := cli.GetCmdEstimateSwapExactAmountIn()
+	tcs := map[string]osmocli.QueryCliTestCase[*queryproto.EstimateSwapExactAmountInRequest]{
+		"basic test": {
+			Cmd: "1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 10stake --swap-route-pool-ids=2 --swap-route-denoms=node0token",
+			ExpectedQuery: &queryproto.EstimateSwapExactAmountInRequest{
+				Sender:  "osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7",
+				PoolId:  1,
+				TokenIn: "10stake",
+				Routes:  []types.SwapAmountInRoute{{PoolId: 2, TokenOutDenom: "node0token"}},
+			},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}
 func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 	val := s.network.Validators[0]
 

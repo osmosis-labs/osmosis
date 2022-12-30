@@ -313,22 +313,6 @@ func TestGetCmdSpotPrice(t *testing.T) {
 	osmocli.RunQueryTestCases(t, desc, tcs)
 }
 
-func TestGetCmdEstimateSwapExactAmountIn(t *testing.T) {
-	desc, _ := cli.GetCmdEstimateSwapExactAmountIn()
-	tcs := map[string]osmocli.QueryCliTestCase[*types.QuerySwapExactAmountInRequest]{
-		"basic test": {
-			Cmd: "1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 10stake --swap-route-pool-ids=2 --swap-route-denoms=node0token",
-			ExpectedQuery: &types.QuerySwapExactAmountInRequest{
-				Sender:  "osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7",
-				PoolId:  1,
-				TokenIn: "10stake",
-				Routes:  []types.SwapAmountInRoute{{PoolId: 2, TokenOutDenom: "node0token"}},
-			},
-		},
-	}
-	osmocli.RunQueryTestCases(t, desc, tcs)
-}
-
 func TestGetCmdEstimateSwapExactAmountOut(t *testing.T) {
 	desc, _ := cli.GetCmdEstimateSwapExactAmountOut()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.QuerySwapExactAmountOutRequest]{
