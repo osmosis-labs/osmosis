@@ -137,7 +137,7 @@ func (k Keeper) CreateSyntheticLockup(ctx sdk.Context, lockID uint64, synthDenom
 		return err
 	}
 
-	k.accumulationStore(ctx, synthLock.SynthDenom).Increase(accumulationKey(unlockDuration), coin.Amount)
+	k.accumulationStore(ctx, synthLock.SynthDenom).Increase(accumulationKey(unlockDuration), coin.Amount.ToDec())
 	return nil
 }
 
@@ -189,7 +189,7 @@ func (k Keeper) DeleteSyntheticLockup(ctx sdk.Context, lockID uint64, synthdenom
 	if err != nil {
 		return err
 	}
-	k.accumulationStore(ctx, synthLock.SynthDenom).Decrease(accumulationKey(lock.Duration), coin.Amount)
+	k.accumulationStore(ctx, synthLock.SynthDenom).Decrease(accumulationKey(lock.Duration), coin.Amount.ToDec())
 	return nil
 }
 

@@ -38,7 +38,7 @@ func (k Keeper) GetModuleLockedCoins(ctx sdk.Context) sdk.Coins {
 // query.Duration.
 func (k Keeper) GetPeriodLocksAccumulation(ctx sdk.Context, query types.QueryCondition) sdk.Int {
 	beginKey := accumulationKey(query.Duration)
-	return k.accumulationStore(ctx, query.Denom).SubsetAccumulation(beginKey, nil)
+	return k.accumulationStore(ctx, query.Denom).SubsetAccumulation(beginKey, nil).RoundInt()
 }
 
 // BeginUnlockAllNotUnlockings begins unlock for all not unlocking locks of the given account.
@@ -96,7 +96,7 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.Ac
 	}
 
 	for _, synthlock := range k.GetAllSyntheticLockupsByLockup(ctx, lock.ID) {
-		k.accumulationStore(ctx, synthlock.SynthDenom).Increase(accumulationKey(synthlock.Duration), tokensToAdd.Amount)
+		k.accumulationStore(ctx, synthlock.SynthDenom).Increase(accumulationKey(synthlock.Duration), tokensToAdd.Amount.ToDec())
 	}
 
 	if k.hooks == nil {
@@ -152,7 +152,7 @@ func (k Keeper) lock(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Co
 
 	// add to accumulation store
 	for _, coin := range tokensToLock {
-		k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
+		k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount.ToDec())
 	}
 
 	k.hooks.OnTokenLocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
@@ -383,7 +383,7 @@ func (k Keeper) unlockMaturedLockInternalLogic(ctx sdk.Context, lock types.Perio
 
 	// remove from accumulation store
 	for _, coin := range lock.Coins {
-		k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
+		k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount.ToDec())
 	}
 
 	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
@@ -429,8 +429,8 @@ func (k Keeper) ExtendLockup(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 
 		// update accumulation store
 		for _, coin := range lock.Coins {
-			k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
-			k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(newDuration), coin.Amount)
+			k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount.ToDec())
+			k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(newDuration), coin.Amount.ToDec())
 		}
 
 		lock.Duration = newDuration
@@ -512,7 +512,7 @@ func (k Keeper) InitializeAllLocks(ctx sdk.Context, locks []types.PeriodLock) er
 		ctx.Logger().Info(msg)
 		for _, d := range durations {
 			amt := curDurationMap[d]
-			k.accumulationStore(ctx, denom).Increase(accumulationKey(d), amt)
+			k.accumulationStore(ctx, denom).Increase(accumulationKey(d), amt.ToDec())
 		}
 	}
 
@@ -579,7 +579,7 @@ func (k Keeper) InitializeAllSyntheticLocks(ctx sdk.Context, syntheticLocks []ty
 		ctx.Logger().Info(msg)
 		for _, d := range durations {
 			amt := curDurationMap[d]
-			k.accumulationStore(ctx, denom).Increase(accumulationKey(d), amt)
+			k.accumulationStore(ctx, denom).Increase(accumulationKey(d), amt.ToDec())
 		}
 	}
 
@@ -630,7 +630,7 @@ func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, co
 
 	// modifications to accumulation store
 	for _, coin := range coins {
-		k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
+		k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount.ToDec())
 	}
 
 	// increase synthetic lockup's accumulation store
@@ -639,7 +639,7 @@ func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, co
 	// Note: since synthetic lockup deletion is using native lockup's coins to reduce accumulation store
 	// all the synthetic lockups' accumulation should be decreased
 	for _, synthlock := range synthLocks {
-		k.accumulationStore(ctx, synthlock.SynthDenom).Decrease(accumulationKey(synthlock.Duration), coins[0].Amount)
+		k.accumulationStore(ctx, synthlock.SynthDenom).Decrease(accumulationKey(synthlock.Duration), coins[0].Amount.ToDec())
 	}
 	return nil
 }
