@@ -1,10 +1,12 @@
 package concentrated_liquidity_test
 
 import (
+	"math/rand"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
@@ -96,7 +98,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				s.Require().Equal(preexistingLiquidity, positionInfo.Liquidity)
 
 				// Ensure JoinTime tracker has logged existing liquidity in sumtree
-				liqAtBeforeCurTime := s.App.ConcentratedLiquidityKeeper.GetLiquidityBeforeJoinTime(s.Ctx, validPoolId, s.Ctx.BlockTime())
+				liqAtBeforeCurTime := s.App.ConcentratedLiquidityKeeper.GetLiquidityBeforeOrAtJoinTime(s.Ctx, validPoolId, s.Ctx.BlockTime())
 				s.Require().Equal(preexistingLiquidity, liqAtBeforeCurTime)
 			} else {
 				// If we did not have a position before, ensure getting the non-existent position returns an error
@@ -104,7 +106,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				s.Require().ErrorContains(err, types.PositionNotFoundError{PoolId: validPoolId, LowerTick: test.param.lowerTick, UpperTick: test.param.upperTick}.Error())
 
 				// Ensure JoinTime tracker has *not* logged existing liquidity in sumtree
-				liqAtBeforeCurTime := s.App.ConcentratedLiquidityKeeper.GetLiquidityBeforeJoinTime(s.Ctx, validPoolId, s.Ctx.BlockTime())
+				liqAtBeforeCurTime := s.App.ConcentratedLiquidityKeeper.GetLiquidityBeforeOrAtJoinTime(s.Ctx, validPoolId, s.Ctx.BlockTime())
 				s.Require().Equal(preexistingLiquidity, liqAtBeforeCurTime)
 			}
 
@@ -131,11 +133,11 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			s.Require().Equal(test.expectedLiquidity, positionInfo.Liquidity)
 
 			// Liquidity at & before old join time should be cleared
-			liqAtBeforeOldJoinTime := s.App.ConcentratedLiquidityKeeper.GetLiquidityBeforeJoinTime(s.Ctx, validPoolId, oldJoinTime)
+			liqAtBeforeOldJoinTime := s.App.ConcentratedLiquidityKeeper.GetLiquidityBeforeOrAtJoinTime(s.Ctx, validPoolId, oldJoinTime)
 			s.Require().Equal(sdk.ZeroDec(), liqAtBeforeOldJoinTime)
 
 			// Liquidity at & before new join time should be equal to position's liquidity
-			liqAtBeforeNewJoinTime := s.App.ConcentratedLiquidityKeeper.GetLiquidityBeforeJoinTime(s.Ctx, validPoolId, newJoinTime)
+			liqAtBeforeNewJoinTime := s.App.ConcentratedLiquidityKeeper.GetLiquidityBeforeOrAtJoinTime(s.Ctx, validPoolId, newJoinTime)
 			s.Require().Equal(positionInfo.Liquidity, liqAtBeforeNewJoinTime)
 		})
 	}
@@ -211,4 +213,91 @@ func (s *KeeperTestSuite) TestGetPosition() {
 
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestMultiplePositionsFuzz() {
+	// Init suite for each test.
+	s.Setup()
+
+	// Create a default CL pool
+	s.PrepareConcentratedPool()
+
+	// Test 100 random positions in same pool at random jointimes
+	// Note: can fuzz these values in the future as well
+	numPositions := 100
+	validPoolId := uint64(1)
+
+	// Max lower and upper ticks
+	tickLowerBound := int64(100)
+	tickUpperBound := int64(100)
+
+	// Max time elapsed between positions (in seconds)
+	timeElapsedUpperBound := 1000
+
+	// We generate a new test account per position for robustness
+	testAccounts := osmoutils.CreateRandomAccounts(numPositions)
+
+	// We use the reference time to check if our sumtree properly accumulates liquidity
+	// Max seconds set at 32 bits & max nanoseconds at 30 bits to comply with bounds
+	// specified in the Time package
+	referenceTime := time.Unix(int64(rand.Int31()), int64(rand.Int31()) % (1 << 30))
+	maxElapsedTimeFromStart := timeElapsedUpperBound * numPositions
+
+	// Set start time = ref time - one tenth of max time elapsed
+	// This should mean we end up with at least some liquidity on each side of the
+	// ref time, ensuring testability while still having some variance in join times
+	startTime := referenceTime.Add(time.Duration(-1 * maxElapsedTimeFromStart / 10) * time.Second)
+	s.Ctx = s.Ctx.WithBlockTime(startTime)
+
+	// Trackers for total liquidity on either side of our reference join time
+	expLiqBeforeOrAtRefTime := sdk.ZeroDec()
+	expLiqAfterRefTime := sdk.ZeroDec()
+
+	for i := 0; i < numPositions; i++ {
+		// Generate random time elapsed since last join and update block time
+		// Half the time, we simply add to the same join time as the previous position (time elapsed = 0)
+		addToSameJoinTime := int64(rand.Int() % 2)
+		timeElapsed := time.Duration((int64(rand.Int31()) % int64(timeElapsedUpperBound)) * addToSameJoinTime) * time.Second
+
+		joinTime := s.Ctx.BlockTime().Add(timeElapsed)
+		s.Ctx = s.Ctx.WithBlockTime(joinTime)
+
+		// Generate random lower and upper ticks
+		lowerTick := (-1) * (rand.Int63() % tickLowerBound)
+		upperTick := rand.Int63() % tickUpperBound
+
+		// Generate random liquidity to join with
+		// Note: might need to make these int32 due to overflows
+		baseAmt := rand.Int63()
+		prec := rand.Int63() % 18
+		joinAmt := sdk.NewDecWithPrec(baseAmt, prec)
+
+		// Track total liq entered before and after reference time
+		if joinTime.After(referenceTime) {
+			expLiqAfterRefTime = expLiqAfterRefTime.Add(joinAmt)
+		} else {
+			expLiqBeforeOrAtRefTime = expLiqBeforeOrAtRefTime.Add(joinAmt)
+		}
+
+		// Create position with account `i` given our randomly generated constraints
+		err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, testAccounts[i], lowerTick, upperTick, joinAmt)
+		s.Require().NoError(err)
+
+		// Debug prints:
+		// fmt.Println("--------------------------------")
+		// fmt.Println("Position number: ", i)
+		// fmt.Println("Liquidity added: ", joinAmt)
+		// fmt.Println("Accumulated liq before ref time: ", expLiqBeforeOrAtRefTime)
+		// fmt.Println("Accumulated liq after ref time: ", expLiqAfterRefTime)
+		// fmt.Println("Liquidity in tree before ref time: ", s.App.ConcentratedLiquidityKeeper.GetLiquidityBeforeOrAtJoinTime(s.Ctx, validPoolId, referenceTime))
+		// fmt.Println("Liquidity in tree after ref time: ", s.App.ConcentratedLiquidityKeeper.GetLiquidityAfterJoinTime(s.Ctx, validPoolId, referenceTime))
+	}
+
+	// Get liquidity at or before ref time and ensure sumtree tracked it correctly
+	liqBeforeOrAtRefTime := s.App.ConcentratedLiquidityKeeper.GetLiquidityBeforeOrAtJoinTime(s.Ctx, validPoolId, referenceTime)
+	s.Require().Equal(expLiqBeforeOrAtRefTime, liqBeforeOrAtRefTime)
+
+	// Get liquidity after ref time and ensure sumtree tracked it correctly
+	liqAfterRefTime := s.App.ConcentratedLiquidityKeeper.GetLiquidityAfterJoinTime(s.Ctx, validPoolId, referenceTime)
+	s.Require().Equal(expLiqAfterRefTime, liqAfterRefTime)
 }

@@ -80,8 +80,12 @@ func (k Keeper) InitializeInitialPosition(ctx sdk.Context, pool types.Concentrat
 	return k.initializeInitialPosition(ctx, pool, amount0Desired, amount1Desired)
 }
 
-func (k Keeper) GetLiquidityBeforeJoinTime(ctx sdk.Context, poolId uint64, joinTime time.Time) sdk.Dec {
-	return k.getLiquidityBeforeJoinTime(ctx, poolId, joinTime)
+func (k Keeper) GetLiquidityBeforeOrAtJoinTime(ctx sdk.Context, poolId uint64, joinTime time.Time) sdk.Dec {
+	return k.getLiquidityBeforeOrAtJoinTime(ctx, poolId, joinTime)
+}
+
+func (k Keeper) GetLiquidityAfterJoinTime(ctx sdk.Context, poolId uint64, joinTime time.Time) sdk.Dec {
+	return k.getLiquidityAfterJoinTime(ctx, poolId, joinTime)
 }
 
 func ConvertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (swaproutertypes.PoolI, error) {
