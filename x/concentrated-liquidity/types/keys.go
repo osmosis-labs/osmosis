@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -19,6 +20,8 @@ var (
 	TickPrefix     = []byte{0x01}
 	PositionPrefix = []byte{0x02}
 	PoolPrefix     = []byte{0x03}
+	TimePrefix 	   = []byte{0x04}
+	SumtreePrefix  = []byte{0x05}
 )
 
 // TickIndexToBytes converts a tick index to a byte slice. Negative tick indexes
@@ -74,4 +77,30 @@ func KeyPosition(poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64)
 
 func KeyPool(poolId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%d", PoolPrefix, poolId))
+}
+
+func KeyAccumulationStore(poolID uint64) (res []byte) {
+	capacity := len(SumtreePrefix) + len(fmt.Sprint(poolID)) + 1
+	res = make([]byte, len(SumtreePrefix), capacity)
+	copy(res, SumtreePrefix)
+	res = append(res, KeyPool(poolID)...)
+	return
+}
+
+func KeyJoinTime(joinTime time.Time) (res []byte) {
+	timeBz := sdk.FormatTimeBytes(joinTime)
+	timeBzL := len(timeBz)
+	prefixL := len(TimePrefix)
+
+	bz := make([]byte, prefixL+8+timeBzL)
+
+	// copy the prefix
+	copy(bz[:prefixL], TimePrefix)
+
+	// copy the encoded time bytes length
+	copy(bz[prefixL:prefixL+8], sdk.Uint64ToBigEndian(uint64(timeBzL)))
+
+	// copy the encoded time bytes
+	copy(bz[prefixL+8:prefixL+8+timeBzL], timeBz)
+	return bz
 }

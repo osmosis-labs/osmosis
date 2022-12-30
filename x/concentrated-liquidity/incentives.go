@@ -10,6 +10,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
 // Initializes incentives accumulator
@@ -51,44 +52,9 @@ func (k Keeper) initIncentivesForPool(ctx sdk.Context, poolID uint64) {
 // loads up denom's incentive bucket with amount
 /* func addToIncentive(incID, pool, denom, amount) */
 
-// TODO: move to types folder
-// TODO: reconsider whether these are appropriate prefixes
-var KeyPrefixJoinTimeAccumulation = []byte("join-time-sumtree")
-var KeyPrefixTimestamp = []byte("timestamp")
 
-func (k Keeper) accumulationStore(ctx sdk.Context, poolID uint64) sumtree.Tree {
-	return sumtree.NewTree(prefix.NewStore(ctx.KVStore(k.storeKey), accumulationStorePrefix(poolID)), 10)
-}
-
-// Internal fn to generate store prefixes for pool sumtree store
-// TODO: move to store.go file along with other store helpers
-func accumulationStorePrefix(poolID uint64) (res []byte) {
-	// Does it make sense to take len(string(poolID)) here to represent capacity in bytes?
-	capacity := len(KeyPrefixJoinTimeAccumulation) + len(fmt.Sprint(poolID)) + 1
-	res = make([]byte, len(KeyPrefixJoinTimeAccumulation), capacity)
-	copy(res, KeyPrefixJoinTimeAccumulation)
-	res = append(res, []byte("pool"+fmt.Sprint(poolID)+"/")...)
-	return
-}
-
-// Derives liquidity tree key given a timestamp (primarily used for tracking JoinTimes).
-// This is inspired by how we handle time keys in our lockup module.
-func accumulationTimeKey(timestamp time.Time) (res []byte) {
-	timeBz := sdk.FormatTimeBytes(timestamp)
-	timeBzL := len(timeBz)
-	prefixL := len(KeyPrefixTimestamp)
-
-	bz := make([]byte, prefixL+8+timeBzL)
-
-	// copy the prefix
-	copy(bz[:prefixL], KeyPrefixTimestamp)
-
-	// copy the encoded time bytes length
-	copy(bz[prefixL:prefixL+8], sdk.Uint64ToBigEndian(uint64(timeBzL)))
-
-	// copy the encoded time bytes
-	copy(bz[prefixL+8:prefixL+8+timeBzL], timeBz)
-	return bz
+func (k Keeper) getSumtree(ctx sdk.Context, poolID uint64) sumtree.Tree {
+	return sumtree.NewTree(prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyAccumulationStore(poolID)), 10)
 }
 
 // Adds to a position's liquidity in Liquidity tree, setting its JoinTime to current block time.
@@ -104,14 +70,14 @@ func (k Keeper) addToLiquidityTree(ctx sdk.Context, poolId uint64, position *mod
 
 	// Clear old liquidity from position tree
 	// Note: we use Decrease instead of Remove to accommodate multiple positions with the same join time
-	k.accumulationStore(ctx, poolId).Decrease(accumulationTimeKey(position.JoinTime), oldLiquidity)
+	k.getSumtree(ctx, poolId).Decrease(types.KeyJoinTime(position.JoinTime), oldLiquidity)
 
 	// Update position's JoinTime to current block time
 	position.JoinTime = ctx.BlockTime()
 	k.setPosition(ctx, poolId, posOwner, posLowerTick, posUpperTick, position)
 
 	// Add new position time to JoinTime sumtree
-	k.accumulationStore(ctx, poolId).Increase(accumulationTimeKey(position.JoinTime), newLiquidity)
+	k.getSumtree(ctx, poolId).Increase(types.KeyJoinTime(position.JoinTime), newLiquidity)
 
 	return nil
 }
@@ -132,7 +98,7 @@ func (k Keeper) removeFromLiquidityTree(ctx sdk.Context, poolId uint64, position
 	
 	// Remove liquidity from position's JoinTime node in tree
 	// Note: we use Decrease instead of Remove to accommodate multiple positions with the same join time
-	k.accumulationStore(ctx, poolId).Decrease(accumulationTimeKey(position.JoinTime), liquidityToRemove)
+	k.getSumtree(ctx, poolId).Decrease(types.KeyJoinTime(position.JoinTime), liquidityToRemove)
 
 	return nil
 }
@@ -140,17 +106,17 @@ func (k Keeper) removeFromLiquidityTree(ctx sdk.Context, poolId uint64, position
 // Gets total liquidity that has joined at time <= `joinTime`
 // TODO: move to incentives_helpers.go file
 func (k Keeper) getLiquidityBeforeOrAtJoinTime(ctx sdk.Context, poolId uint64, joinTime time.Time) sdk.Dec {
-	return k.accumulationStore(ctx, poolId).PrefixSum(accumulationTimeKey(joinTime))
+	return k.getSumtree(ctx, poolId).PrefixSum(types.KeyJoinTime(joinTime))
 }
 
 // Gets total liquidity that joined after time `joinTime`
 // TODO: move to incentives_helpers.go file
 func (k Keeper) getLiquidityAfterJoinTime(ctx sdk.Context, poolId uint64, joinTime time.Time) sdk.Dec {
-	return k.accumulationStore(ctx, poolId).SubsetAccumulation(accumulationTimeKey(joinTime.Add(1 * time.Second)), nil)
+	return k.getSumtree(ctx, poolId).SubsetAccumulation(types.KeyJoinTime(joinTime.Add(1 * time.Second)), nil)
 }
 
 // Gets all liquidity that joined exactly at `joinTime`. This is primarily intended for use in validation logic.
 // TODO: move to incentives_helpers.go file
 func (k Keeper) getLiquidityExactlyAtJoinTime(ctx sdk.Context, poolId uint64, joinTime time.Time) sdk.Dec {
-	return k.accumulationStore(ctx, poolId).SubsetAccumulation(accumulationTimeKey(joinTime), accumulationTimeKey(joinTime))
+	return k.getSumtree(ctx, poolId).SubsetAccumulation(types.KeyJoinTime(joinTime), types.KeyJoinTime(joinTime))
 }
