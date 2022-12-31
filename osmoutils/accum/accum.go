@@ -72,7 +72,7 @@ func (accum *AccumulatorObject) UpdateAccumulator(amt sdk.DecCoins) {
 }
 
 // NewPosition creates a new position for the given name, with the given number of share units.
-// The name cam be an owner's address, or any other unique identifier for a position.
+// The name can be an owner's address, or any other unique identifier for a position.
 // It takes a snapshot of the current accumulator value, and sets the position's initial value to that.
 // The position is initialized with empty unclaimed rewards
 // If there is an existing position for the given address, it is overwritten.
