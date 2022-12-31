@@ -210,7 +210,6 @@ func (s *KeeperTestSuite) TestGetPosition() {
 				s.Require().NoError(err)
 				s.Require().Equal(test.expectedPosition, position)
 			}
-
 		})
 	}
 }
@@ -241,13 +240,13 @@ func (s *KeeperTestSuite) TestMultiplePositionsFuzz() {
 	// We use the reference time to check if our sumtree properly accumulates liquidity
 	// Max seconds set at 32 bits & max nanoseconds at 30 bits to comply with bounds
 	// specified in the Time package
-	referenceTime := time.Unix(int64(rand.Int31()), int64(rand.Int31()) % (1 << 30))
+	referenceTime := time.Unix(int64(rand.Int31()), int64(rand.Int31())%(1<<30))
 	maxElapsedTimeFromStart := timeElapsedUpperBound * numPositions
 
 	// Set start time = ref time - one tenth of max time elapsed
 	// This should mean we end up with at least some liquidity on each side of the
 	// ref time, ensuring testability while still having some variance in join times
-	startTime := referenceTime.Add(time.Duration(-1 * maxElapsedTimeFromStart / 10) * time.Second)
+	startTime := referenceTime.Add(time.Duration(-1*maxElapsedTimeFromStart/10) * time.Second)
 	s.Ctx = s.Ctx.WithBlockTime(startTime)
 
 	// Trackers for total liquidity on either side of our reference join time
@@ -256,10 +255,10 @@ func (s *KeeperTestSuite) TestMultiplePositionsFuzz() {
 
 	for i := 0; i < numPositions; i++ {
 		// Generate random time elapsed since last join and update block time
-		timeElapsed := time.Duration(rand.Int() % timeElapsedUpperBound) * time.Second
+		timeElapsed := time.Duration(rand.Int()%timeElapsedUpperBound) * time.Second
 
 		// Half the time, override time elapsed and add to the same join time as the previous position (time elapsed = 0)
-		timeElapsed = timeElapsed * time.Duration(rand.Int() % 2)
+		timeElapsed = timeElapsed * time.Duration(rand.Int()%2)
 
 		// Update current block time to reflect time elapsed
 		joinTime := s.Ctx.BlockTime().Add(timeElapsed)
@@ -279,7 +278,7 @@ func (s *KeeperTestSuite) TestMultiplePositionsFuzz() {
 		s.Require().NoError(err)
 
 		// Half the time, remove a portion of the newly added liquidity from the liquidity tree
-		if rand.Int() % 2 != 0 {
+		if rand.Int()%2 != 0 {
 			// Save the original liquidity at `joinTime` to compare against later
 			liqAtJoinTimePreExit := s.App.ConcentratedLiquidityKeeper.GetLiquidityExactlyAtJoinTime(s.Ctx, validPoolId, joinTime)
 
@@ -291,9 +290,9 @@ func (s *KeeperTestSuite) TestMultiplePositionsFuzz() {
 			// Ensure total liquidity at old join time has decreased by exactly `exitAmt`
 			liqAtJoinTimePostExit := s.App.ConcentratedLiquidityKeeper.GetLiquidityExactlyAtJoinTime(s.Ctx, validPoolId, joinTime)
 			s.Require().Equal(liqAtJoinTimePreExit.Sub(exitAmt), liqAtJoinTimePostExit)
-			
+
 			// Update tracker for joined liquidity to reflect the exited amount
-			joinAmt = joinAmt.Sub(exitAmt)			
+			joinAmt = joinAmt.Sub(exitAmt)
 		}
 
 		// Track total liq entered before and after reference time

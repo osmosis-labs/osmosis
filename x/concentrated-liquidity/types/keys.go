@@ -17,11 +17,11 @@ const (
 
 // Key prefixes
 var (
-	TickPrefix     = []byte{0x01}
-	PositionPrefix = []byte{0x02}
-	PoolPrefix     = []byte{0x03}
-	TimePrefix 	   = []byte{0x04}
-	SumtreePrefix  = []byte{0x05}
+	TickPrefix               = []byte{0x01}
+	PositionPrefix           = []byte{0x02}
+	PoolPrefix               = []byte{0x03}
+	TimePrefix               = []byte{0x04}
+	SumtreePrefix            = []byte{0x05}
 	IncentivesInternalPrefix = []byte{0x06}
 	IncentivesExternalPrefix = []byte{0x07}
 )

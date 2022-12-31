@@ -64,7 +64,7 @@ func (k Keeper) initOrUpdatePosition(
 	} else {
 		err = k.removeFromLiquidityTree(ctx, poolId, position, liquidityDelta, owner, lowerTick, upperTick)
 	}
-	
+
 	if err != nil {
 		return err
 	}
