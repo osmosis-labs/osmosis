@@ -63,10 +63,12 @@ func setAccumulator(accum AccumulatorObject, amt sdk.DecCoins) {
 	osmoutils.MustSet(accum.store, formatAccumPrefixKey(accum.name), &newAccum)
 }
 
-// TODO: consider making this increment the accumulator's value instead of overwriting it
-// Note: accum receiver is not mutated, only the store representation is.
-func (accum AccumulatorObject) UpdateAccumulator(amt sdk.DecCoins) {
-	setAccumulator(accum, amt)
+// UpdateAccumulator updates the accumulator's value by amt.
+// It does so by incresing the value of the accumulator by
+// the given amount. Persists to store. Mutates the receiver.
+func (accum *AccumulatorObject) UpdateAccumulator(amt sdk.DecCoins) {
+	accum.value = accum.value.Add(amt...)
+	setAccumulator(*accum, accum.value)
 }
 
 // NewPosition creates a new position for the given address, with the given number of share units
@@ -162,6 +164,11 @@ func (accum AccumulatorObject) GetPositionSize(addr sdk.AccAddress) (sdk.Dec, er
 	}
 
 	return position.NumShares, nil
+}
+
+// GetValue returns the current value of the accumulator.
+func (accum AccumulatorObject) GetValue() sdk.DecCoins {
+	return accum.value
 }
 
 // ClaimRewards claims the rewards for the given address, and returns the amount of rewards claimed.
