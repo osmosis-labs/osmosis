@@ -3,7 +3,6 @@ package concentrated_liquidity
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -271,7 +270,7 @@ func (k Keeper) GetSecondsPerLiquidityInside(ctx sdk.Context, poolId uint64, low
 
 	globalSecondsPerLiquidity := pool.GetGlobalSecondsPerLiquidity()
 
-	// If tick is active, we need to calculate a new seconds per liquidity inside since we only update these when crossing ticks
+	// If range is active, we need to calculate a new seconds per liquidity inside since we only update these when crossing ticks
 	if pool.GetCurrentTick().GTE(sdk.NewInt(lowerTick)) || pool.GetCurrentTick().LT(sdk.NewInt(upperTick)) {
 		// Get the current tick
 		currentTick := pool.GetCurrentTick().Int64()
@@ -286,7 +285,7 @@ func (k Keeper) GetSecondsPerLiquidityInside(ctx sdk.Context, poolId uint64, low
 
 		// Determine the seconds that have passed since the last time the last initialized tick was crossed
 		// Update the global time with this difference and calculate the new global seconds per liquidity outside
-		newSecondsInactive := time.Duration(ctx.BlockTime().Sub(pool.GetTimeOfCreation())) + lastInitializedTickInfo.SecondsInactive
+		newSecondsInactive := ctx.BlockTime().Sub(pool.GetTimeOfCreation()) + lastInitializedTickInfo.SecondsInactive
 		newSecondsPerLiquidityOutside := sdk.MustNewDecFromStr(fmt.Sprintf("%f", newSecondsInactive.Seconds())).Quo(lastInitializedTickInfo.LiquidityGross)
 		globalSecondsPerLiquidity = globalSecondsPerLiquidity.Add(newSecondsPerLiquidityOutside)
 	}

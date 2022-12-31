@@ -2,7 +2,6 @@ package concentrated_liquidity
 
 import (
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -33,7 +32,7 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 			return err
 		}
 
-		tickInfo.SecondsInactive = time.Duration(ctx.BlockTime().Sub(pool.GetTimeOfCreation()))
+		tickInfo.SecondsInactive = ctx.BlockTime().Sub(pool.GetTimeOfCreation())
 	}
 
 	// calculate liquidityGross, which does not care about whether liquidityIn is positive or negative
@@ -68,7 +67,7 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liqu
 		return sdk.Dec{}, err
 	}
 
-	newSecondsInactive := time.Duration(ctx.BlockTime().Sub(pool.GetTimeOfCreation())) + tickInfo.SecondsInactive
+	newSecondsInactive := ctx.BlockTime().Sub(pool.GetTimeOfCreation()) + tickInfo.SecondsInactive
 	tickInfo.SecondsInactive = newSecondsInactive
 
 	// Update seconds per liquidity outside
@@ -79,7 +78,10 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liqu
 
 	// Set new global seconds per liquidity
 	pool.SetGlobalSecondsPerLiquidity(pool.GetGlobalSecondsPerLiquidity().Add(tickInfo.SecondsPerLiquidityOutside))
-	k.setPool(ctx, pool)
+	err = k.setPool(ctx, pool)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
 
 	return tickInfo.LiquidityNet, nil
 }
