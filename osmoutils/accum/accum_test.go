@@ -211,6 +211,12 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 			sdk.NewDecCoinFromDec(denomTwo, sdk.OneDec())).MulDec(sdk.NewDec(3))
 	)
 
+	// single output convenience wrapper.
+	toCoins := func(decCoins sdk.DecCoins) sdk.Coins {
+		coins, _ := decCoins.TruncateDecimal()
+		return coins
+	}
+
 	// We setup store and accum
 	// once at beginning so we can test duplicate positions
 	suite.SetupTest()
@@ -249,18 +255,18 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 	tests := map[string]struct {
 		accObject      accumPackage.AccumulatorObject
 		name           string
-		expectedResult sdk.DecCoins
+		expectedResult sdk.Coins
 		expectError    error
 	}{
 		"claim at testAddressOne with no rewards - success": {
 			accObject:      accumNoRewards,
 			name:           testAddressOne,
-			expectedResult: emptyCoins,
+			expectedResult: toCoins(emptyCoins),
 		},
 		"claim at testAddressTwo with no rewards - success": {
 			accObject:      accumNoRewards,
 			name:           testAddressTwo,
-			expectedResult: emptyCoins,
+			expectedResult: toCoins(emptyCoins),
 		},
 		"claim at testAddressTwo with no rewards - error - no position": {
 			accObject:   accumNoRewards,
@@ -271,24 +277,21 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 			accObject: accumOneReward,
 			name:      testAddressThree,
 			// denomOne: (200.2 - 100.1) * 300 (accum diff * share count) = 30030
-			expectedResult: initialCoinsDenomOne.MulDec(positionThree.NumShares),
+			expectedResult: toCoins(initialCoinsDenomOne.MulDec(positionThree.NumShares)),
 		},
 		"claim at testAddressOne with multiple reward tokens and unclaimed rewards - success": {
 			accObject: accumThreeRewards,
 			name:      testAddressOne,
 			// denomOne: (300.3 - 0) * 100 (accum diff * share count) + 100.1 (unclaimed rewards) = 30130.1
 			// denomTwo: (3 - 0) * 100 (accum diff * share count) = 300
-			expectedResult: tripleDenomOneAndTwo.MulDec(positionOne.NumShares).Add(initialCoinDenomOne),
+			expectedResult: toCoins(tripleDenomOneAndTwo.MulDec(positionOne.NumShares).Add(initialCoinDenomOne)),
 		},
 		"claim at testAddressTwo with multiple reward tokens and no unclaimed rewards - success": {
 			accObject: accumThreeRewards,
 			name:      testAddressTwo,
 			// denomOne: (300.3 - 0) * 200 (accum diff * share count) = 60060.6
 			// denomTwo: (3 - 0) * 200  (accum diff * share count) = 600
-			expectedResult: sdk.NewDecCoins(
-				initialCoinDenomOne,
-				sdk.NewDecCoinFromDec(denomTwo, sdk.OneDec()),
-			).MulDec(positionTwo.NumShares).MulDec(sdk.NewDec(3)),
+			expectedResult: toCoins(sdk.NewDecCoins(initialCoinDenomOne, sdk.NewDecCoinFromDec(denomTwo, sdk.OneDec())).MulDec(positionTwo.NumShares).MulDec(sdk.NewDec(3))),
 		},
 	}
 
@@ -314,7 +317,7 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 			suite.Require().NoError(err)
 
 			// Unclaimed rewards are reset.
-			suite.Require().True(finalPosition.UnclaimedRewards.IsZero())
+			suite.Require().Equal(emptyCoins, finalPosition.UnclaimedRewards)
 		})
 	}
 }
