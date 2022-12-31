@@ -732,13 +732,13 @@ func (s *KeeperTestSuite) TestSecondsPerLiquidityInside() {
 			fmt.Printf("secondsPerLiquidityInsideOne: %v \n", secondsPerLiquidityInsideOne)
 			fmt.Printf("secondsPerLiquidityInsideTwo: %v \n", secondsPerLiquidityInsideTwo)
 
-			s.Require().Equal(1, 3)
+			// s.Require().Equal(1, 3)
 
 			if tc.expectedError != nil {
-				err = fmt.Errorf("test")
-				s.Require().NoError(err)
+				//err = fmt.Errorf("test")
+				s.Require().Error(err)
 			} else {
-				err = fmt.Errorf("test")
+				//err = fmt.Errorf("test")
 				s.Require().NoError(err)
 			}
 

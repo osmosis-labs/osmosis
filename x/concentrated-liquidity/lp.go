@@ -251,17 +251,17 @@ func (k Keeper) initializeInitialPosition(ctx sdk.Context, pool types.Concentrat
 
 // GetSecondsPerLiquidityInside returns the seconds per liquidity between two ticks in a given pool
 func (k Keeper) GetSecondsPerLiquidityInside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.Dec, error) {
-	// Get the Seconds Per Liquidity Outside for the lower tick
-	lowerTickInfo, err := k.getTickInfo(ctx, poolId, lowerTick)
-	if err != nil {
-		return sdk.Dec{}, err
-	}
+	// // Get the Seconds Per Liquidity Outside for the lower tick
+	// lowerTickInfo, err := k.getTickInfo(ctx, poolId, lowerTick)
+	// if err != nil {
+	// 	return sdk.Dec{}, err
+	// }
 
-	// Get the Seconds Per Liquidity Outside for the upper tick
-	upperTickInfo, err := k.getTickInfo(ctx, poolId, upperTick)
-	if err != nil {
-		return sdk.Dec{}, err
-	}
+	// // Get the Seconds Per Liquidity Outside for the upper tick
+	// upperTickInfo, err := k.getTickInfo(ctx, poolId, upperTick)
+	// if err != nil {
+	// 	return sdk.Dec{}, err
+	// }
 
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -270,9 +270,13 @@ func (k Keeper) GetSecondsPerLiquidityInside(ctx sdk.Context, poolId uint64, low
 
 	globalSecondsPerLiquidity := pool.GetGlobalSecondsPerLiquidity()
 
-	// If range is active, we need to calculate a new seconds per liquidity inside since we only update these when crossing ticks
-	if pool.GetCurrentTick().GTE(sdk.NewInt(lowerTick)) || pool.GetCurrentTick().LT(sdk.NewInt(upperTick)) {
+	// TODO: Re-enable this once new tick logic is in place
+	// If range is active, we need to calculate a new global seconds per liquidity inside since we only update these when crossing ticks
+	// In other words, since the active tick is within our range, and we don't update ticks until after we cross them,
+	// the time this tick has been active needs to be taken into account
+	if pool.GetCurrentTick().GTE(sdk.NewInt(lowerTick)) && pool.GetCurrentTick().LT(sdk.NewInt(upperTick)) {
 		// Get the current tick
+		fmt.Printf("I think the tick is active \n")
 		currentTick := pool.GetCurrentTick().Int64()
 
 		// Utilize a zeroForOne swap strategy since we want to look left or equal to the current tick
@@ -285,11 +289,57 @@ func (k Keeper) GetSecondsPerLiquidityInside(ctx sdk.Context, poolId uint64, low
 
 		// Determine the seconds that have passed since the last time the last initialized tick was crossed
 		// Update the global time with this difference and calculate the new global seconds per liquidity outside
-		newSecondsInactive := ctx.BlockTime().Sub(pool.GetTimeOfCreation()) + lastInitializedTickInfo.SecondsInactive
-		newSecondsPerLiquidityOutside := sdk.MustNewDecFromStr(fmt.Sprintf("%f", newSecondsInactive.Seconds())).Quo(lastInitializedTickInfo.LiquidityGross)
-		globalSecondsPerLiquidity = globalSecondsPerLiquidity.Add(newSecondsPerLiquidityOutside)
+		newSecondsInactive := ctx.BlockTime().Sub(pool.GetTimeOfCreation())
+		// newSecondsInactive := ctx.BlockTime().Sub(pool.GetTimeOfCreation()) + lastInitializedTickInfo.SecondsInactive
+		additionalSecondsPerLiquidityInside := sdk.MustNewDecFromStr(fmt.Sprintf("%f", newSecondsInactive.Seconds())).Quo(lastInitializedTickInfo.LiquidityGross)
+		globalSecondsPerLiquidity = globalSecondsPerLiquidity.Add(additionalSecondsPerLiquidityInside)
 	}
 
-	secondsPerLiquidityInside := globalSecondsPerLiquidity.Sub(lowerTickInfo.SecondsPerLiquidityOutside).Sub(upperTickInfo.SecondsPerLiquidityOutside)
+	lowerTickSPLBelow, upperTickSPLBelow, err := k.calcSecondsPerLiquidityBelowPosition(ctx, poolId, globalSecondsPerLiquidity, lowerTick, upperTick)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	upperTickSPLAbove := globalSecondsPerLiquidity.Sub(upperTickSPLBelow)
+
+	fmt.Printf("globalSecondsPerLiquidity %v, lowerTickSPLBelow %v, upperTickSPLAbove %v \n", globalSecondsPerLiquidity, lowerTickSPLBelow, upperTickSPLAbove)
+
+	secondsPerLiquidityInside := globalSecondsPerLiquidity.Sub(lowerTickSPLBelow).Sub(upperTickSPLAbove)
 	return secondsPerLiquidityInside, nil
+}
+
+// calcSecondsPerLiquidityBelow returns the seconds per liquidity below for both the lower and upper tick
+func (k Keeper) calcSecondsPerLiquidityBelowPosition(ctx sdk.Context, poolId uint64, globalSecondsPerLiquidity sdk.Dec, lowerTick, upperTick int64) (lowerTickSPLBelow sdk.Dec, upperTickSPLBelow sdk.Dec, err error) {
+	lowerTickSPLBelow, err = k.calcSecondsPerLiquidityBelowTick(ctx, poolId, globalSecondsPerLiquidity, lowerTick)
+	if err != nil {
+		return sdk.Dec{}, sdk.Dec{}, err
+	}
+
+	upperTickSPLBelow, err = k.calcSecondsPerLiquidityBelowTick(ctx, poolId, globalSecondsPerLiquidity, upperTick)
+	if err != nil {
+		return sdk.Dec{}, sdk.Dec{}, err
+	}
+
+	return lowerTickSPLBelow, upperTickSPLBelow, nil
+}
+
+func (k Keeper) calcSecondsPerLiquidityBelowTick(ctx sdk.Context, poolId uint64, globalSecondsPerLiquidity sdk.Dec, tick int64) (sdk.Dec, error) {
+	pool, _ := k.getPoolById(ctx, poolId)
+	currentTick := pool.GetCurrentTick()
+
+	if currentTick.LT(sdk.NewInt(tick)) {
+		tickInfo, err := k.getTickInfo(ctx, poolId, tick)
+		if err != nil {
+			return sdk.Dec{}, err
+		}
+		secondsPerLiquidityOutside := globalSecondsPerLiquidity.Sub(tickInfo.SecondsPerLiquidityOutside)
+		return secondsPerLiquidityOutside, nil
+	} else if currentTick.GTE(sdk.NewInt(tick)) {
+		tickInfo, err := k.getTickInfo(ctx, poolId, tick)
+		if err != nil {
+			return sdk.Dec{}, err
+		}
+		return tickInfo.SecondsPerLiquidityOutside, nil
+	}
+	return sdk.Dec{}, fmt.Errorf("error calculating seconds per liquidity below")
 }

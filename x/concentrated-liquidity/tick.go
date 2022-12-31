@@ -67,7 +67,8 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liqu
 		return sdk.Dec{}, err
 	}
 
-	newSecondsInactive := ctx.BlockTime().Sub(pool.GetTimeOfCreation()) + tickInfo.SecondsInactive
+	//newSecondsInactive := ctx.BlockTime().Sub(pool.GetTimeOfCreation()) - tickInfo.SecondsInactive
+	newSecondsInactive := ctx.BlockTime().Sub(pool.GetTimeOfCreation())
 	tickInfo.SecondsInactive = newSecondsInactive
 
 	// Update seconds per liquidity outside
