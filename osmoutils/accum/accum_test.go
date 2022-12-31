@@ -266,7 +266,7 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 		"claim at testAddressTwo with no rewards - error - no position": {
 			accObject:   accumNoRewards,
 			name:        testAddressThree,
-			expectError: accumPackage.NoPositionError{Address: testAddressThree},
+			expectError: accumPackage.NoPositionError{Name: testAddressThree},
 		},
 		"claim at testAddressThree with single reward token - success": {
 			accObject: accumOneReward,
