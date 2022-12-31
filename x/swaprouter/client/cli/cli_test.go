@@ -95,7 +95,7 @@ func TestNewSwapExactAmountOutCmd(t *testing.T) {
 // 		expectErr bool
 // 	}{
 // 		{
-// 			"query pool estimate swap exact amount in", // osmosisd query gamm estimate-swap-exact-amount-in 1 cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq 10.0stake --swap-route-pool-ids=1 --swap-route-denoms=node0token
+// 			"query pool estimate swap exact amount in", // osmosisd query swaprouter estimate-swap-exact-amount-in 1 cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq 10.0stake --swap-route-pool-ids=1 --swap-route-denoms=node0token
 // 			[]string{
 // 				"1",
 // 				"cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq",
@@ -136,7 +136,7 @@ func TestNewSwapExactAmountOutCmd(t *testing.T) {
 // 		expectErr bool
 // 	}{
 // 		{
-// 			"query pool estimate swap exact amount in", // osmosisd query gamm estimate-swap-exact-amount-in 1 cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq 10.0stake --swap-route-pool-ids=1 --swap-route-denoms=node0token
+// 			"query pool estimate swap exact amount in", // osmosisd query swaprouter estimate-swap-exact-amount-in 1 cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq 10.0stake --swap-route-pool-ids=1 --swap-route-denoms=node0token
 // 			[]string{
 // 				"1",
 // 				val.Address.String(),

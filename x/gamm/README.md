@@ -402,7 +402,7 @@ osmosisd tx gamm exit-swap-share-amount-in uosmo 14563185400026723131 298548 --p
 Swap an **exact** amount of tokens for a **minimum** of another token, similar to swapping a token on the trade screen GUI.
 
 ```sh
-osmosisd tx gamm swap-exact-amount-in [token-in] [token-out-min-amount] --pool-id --from --chain-id
+osmosisd tx swaprouter swap-exact-amount-in [token-in] [token-out-min-amount] --pool-id --from --chain-id
 ```
 
 ::: details Example
@@ -410,7 +410,7 @@ osmosisd tx gamm swap-exact-amount-in [token-in] [token-out-min-amount] --pool-i
 Swap **exactly** `.407239 AKT` through `pool 3` into a **minimum** of `.140530 OSMO` using `WALLET_NAME` on the osmosis mainnet:
 
 ```sh
-osmosisd tx gamm swap-exact-amount-in 407239ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4 140530 --swap-route-pool-ids 3 --swap-route-denoms uosmo --from WALLET_NAME --chain-id osmosis-1
+osmosisd tx swaprouter swap-exact-amount-in 407239ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4 140530 --swap-route-pool-ids 3 --swap-route-denoms uosmo --from WALLET_NAME --chain-id osmosis-1
 ```
 
 :::
@@ -420,7 +420,7 @@ osmosisd tx gamm swap-exact-amount-in 407239ibc/1480B8FD20AD5FCAE81EA87584D26954
 Swap a **maximum** amount of tokens for an **exact** amount of another token, similar to swapping a token on the trade screen GUI.
 
 ```sh
-osmosisd tx gamm swap-exact-amount-out [token-out] [token-out-max-amount] --swap-route-pool-ids --from --chain-id
+osmosisd tx swaprouter swap-exact-amount-out [token-out] [token-out-max-amount] --swap-route-pool-ids --from --chain-id
 ```
 
 ::: details Example
@@ -428,7 +428,7 @@ osmosisd tx gamm swap-exact-amount-out [token-out] [token-out-max-amount] --swap
 Swap a **maximum** of `.407239 AKT` through `pool 3` into **exactly** `.140530 OSMO` using `WALLET_NAME` on the osmosis mainnet:
 
 ```sh
-osmosisd tx gamm swap-exact-amount-out 140530uosmo 407239 --swap-route-pool-ids 3 --swap-route-denoms ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4 --from WALLET_NAME --chain-id osmosis-1
+osmosisd tx swaprouter swap-exact-amount-out 140530uosmo 407239 --swap-route-pool-ids 3 --swap-route-denoms ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4 --from WALLET_NAME --chain-id osmosis-1
 ```
 
 [comment]: <> (Other resources Creating a liquidity bootstrapping pool and Creating a pool with a pool file)
@@ -458,7 +458,7 @@ Query the estimated result of the [Swap Exact Amount In](#swap-exact-amount-in) 
 #### Usage
 
 ```sh
-osmosisd query gamm estimate-swap-exact-amount-in <poolID> <sender> <tokenIn> [flags]
+osmosisd query swaprouter estimate-swap-exact-amount-in <poolID> <sender> <tokenIn> [flags]
 ```
 
 #### Example
@@ -466,7 +466,7 @@ osmosisd query gamm estimate-swap-exact-amount-in <poolID> <sender> <tokenIn> [f
 Query the amount of ATOM the sender would receive for swapping 1 OSMO in pool 1.
 
 ```sh
-osmosisd query gamm estimate-swap-exact-amount-in 1 osmo123nfq6m8f88m4g3sky570unsnk4zng4uqv7cm8 1000000uosmo --swap-route-pool-ids 1 --swap-route-denoms ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2 
+osmosisd query swaprouter estimate-swap-exact-amount-in 1 osmo123nfq6m8f88m4g3sky570unsnk4zng4uqv7cm8 1000000uosmo --swap-route-pool-ids 1 --swap-route-denoms ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2 
 ```
 
 ### Estimate Swap Exact Amount Out
@@ -476,7 +476,7 @@ Query the estimated result of the [Swap Exact Amount Out](#swap-exact-amount-out
 #### Usage
 
 ```sh
-osmosisd query gamm estimate-swap-exact-amount-out <poolID> <sender> <tokenOut> [flags]
+osmosisd query swaprouter estimate-swap-exact-amount-out <poolID> <sender> <tokenOut> [flags]
 ```
 
 #### Example
@@ -484,7 +484,7 @@ osmosisd query gamm estimate-swap-exact-amount-out <poolID> <sender> <tokenOut> 
 Query the amount of OSMO the sender would require to swap 1 ATOM out of pool 1.
 
 ```sh
-osmosisd query gamm estimate-swap-exact-amount-out 1 osmo123nfq6m8f88m4g3sky570unsnk4zng4uqv7cm8 1000000ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2 --swap-route-pool-ids 1 --swap-route-denoms uosmo
+osmosisd query swaprouter estimate-swap-exact-amount-out 1 osmo123nfq6m8f88m4g3sky570unsnk4zng4uqv7cm8 1000000ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2 --swap-route-pool-ids 1 --swap-route-denoms uosmo
 ```
 
 ### Num Pools
@@ -494,7 +494,7 @@ Query the number of active pools.
 #### Usage
 
 ```sh
-osmosisd query gamm num-pools
+osmosisd query swaprouter num-pools
 ```
 
 ## Pool
