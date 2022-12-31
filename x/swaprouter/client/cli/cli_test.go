@@ -184,11 +184,11 @@ func TestNewSwapExactAmountInCmd(t *testing.T) {
 	osmocli.RunTxTestCases(t, desc, tcs)
 }
 
-func (s *IntegrationTestSuite) TestGetCmdNumPools(t *testing.T) {
+func TestGetCmdNumPools(t *testing.T) {
 	desc, _ := cli.GetCmdNumPools()
 	tcs := map[string]osmocli.QueryCliTestCase[*queryproto.NumPoolsRequest]{
 		"basic test": {
-			Cmd:           "--offset=2",
+			Cmd:           "",
 			ExpectedQuery: &queryproto.NumPoolsRequest{},
 		},
 	}
