@@ -218,7 +218,7 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 		return coins
 	}
 
-	// single output convinience wrapper.
+	// single output convenience wrapper.
 	toChange := func(decCoins sdk.DecCoins) sdk.DecCoins {
 		_, change := decCoins.TruncateDecimal()
 		return change
