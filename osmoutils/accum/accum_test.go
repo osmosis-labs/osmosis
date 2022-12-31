@@ -212,7 +212,7 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 			sdk.NewDecCoinFromDec(denomTwo, sdk.OneDec())).MulDec(sdk.NewDec(3))
 	)
 
-	// single output convinience wrapper.
+	// single output convenience wrapper.
 	toCoins := func(decCoins sdk.DecCoins) sdk.Coins {
 		coins, _ := decCoins.TruncateDecimal()
 		return coins
