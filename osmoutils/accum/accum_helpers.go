@@ -7,20 +7,20 @@ import (
 )
 
 // Creates a new position at accumulator's current value with a specific number of shares and unclaimed rewards
-func createNewPosition(accum AccumulatorObject, addr sdk.AccAddress, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
+func createNewPosition(name AccumulatorObject, index string, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
 	position := Record{
 		NumShares:        numShareUnits,
-		InitAccumValue:   accum.value,
+		InitAccumValue:   name.value,
 		UnclaimedRewards: unclaimedRewards,
 		Options:          options,
 	}
-	osmoutils.MustSet(accum.store, formatPositionPrefixKey(accum.name, addr.String()), &position)
+	osmoutils.MustSet(name.store, formatPositionPrefixKey(name.name, index), &position)
 }
 
 // Gets addr's current position from store
-func getPosition(accum AccumulatorObject, addr sdk.AccAddress) (Record, error) {
+func getPosition(accum AccumulatorObject, addr string) (Record, error) {
 	position := Record{}
-	found, err := osmoutils.Get(accum.store, formatPositionPrefixKey(accum.name, addr.String()), &position)
+	found, err := osmoutils.Get(accum.store, formatPositionPrefixKey(accum.name, addr), &position)
 	if err != nil {
 		return Record{}, err
 	}

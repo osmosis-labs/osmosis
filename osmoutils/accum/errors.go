@@ -2,12 +2,10 @@ package accum
 
 import (
 	"fmt"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type NoPositionError struct {
-	Address sdk.AccAddress
+	Address string
 }
 
 func (e NoPositionError) Error() string {
