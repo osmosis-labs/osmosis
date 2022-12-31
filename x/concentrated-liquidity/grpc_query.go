@@ -97,6 +97,29 @@ func (q Querier) Pools(
 	}, nil
 }
 
+// Pool checks if a pool exists and returns the desired pool.
+func (q Querier) TickInfo(
+	ctx context.Context,
+	req *types.QueryTickInfoRequest,
+) (*types.QueryTickInfoResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	tickInfo, err := q.Keeper.getTickInfo(sdkCtx, req.PoolId, req.Tick)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	any, err := codectypes.NewAnyWithValue(&tickInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryTickInfoResponse{TickInfo: any}, nil
+}
+
 // Params returns module params
 func (q Querier) Params(goCtx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

@@ -25,6 +25,12 @@ service Query {
         "/osmosis/concentratedliquidity/v1beta1/pools/{pool_id}";
   }
 
+  // Pool returns the Pool specified by the pool id
+  rpc TickInfo(QueryTickInfoRequest) returns (QueryTickInfoResponse) {
+    option (google.api.http).get =
+        "/osmosis/concentratedliquidity/v1beta1/pools/{pool_id}/{tick}";
+  }
+
   // Params returns concentrated liquidity module params.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get =
@@ -51,6 +57,16 @@ message QueryPoolsResponse {
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+//=============================== TickInfo
+message QueryTickInfoRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  int64 tick = 2 [ (gogoproto.moretags) = "yaml:\"tick\"" ];
+}
+message QueryTickInfoResponse {
+  google.protobuf.Any tick_info = 1
+      [ (cosmos_proto.accepts_interface) = "TickInfo" ];
 }
 
 //=============================== ModuleParams

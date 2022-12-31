@@ -34,7 +34,7 @@ func (s *KeeperTestSuite) TestInitializePool() {
 
 	// Create a concentrated liquidity pool with invalid tick spacing
 	invalidTickSpacing := uint64(0)
-	invalidConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(2, ETH, USDC, invalidTickSpacing)
+	invalidConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(2, ETH, USDC, invalidTickSpacing, s.Ctx.BlockTime())
 	s.Require().NoError(err)
 
 	// Create an invalid PoolI that doesn't implement ConcentratedPoolExtension

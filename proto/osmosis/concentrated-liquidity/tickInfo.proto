@@ -4,6 +4,8 @@ syntax = "proto3";
 // until clear steps for migration logic and the unknowns for state breaking are
 // investigated for changing proto package.
 package osmosis.concentratedliquidity.v1beta1;
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
 
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
@@ -19,6 +21,16 @@ message TickInfo {
   string liquidity_net = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"liquidity_net\"",
+    (gogoproto.nullable) = false
+  ];
+  google.protobuf.Duration seconds_inactive = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags) = "yaml:\"seconds_inactive\""
+  ];
+  string seconds_per_liquidity_outside = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"seconds_per_liquidity_outside\"",
     (gogoproto.nullable) = false
   ];
 }

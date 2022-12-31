@@ -4,6 +4,7 @@ syntax = "proto3";
 // until clear steps for migration logic and the unknowns for state breaking are
 // investigated for changing proto package.
 package osmosis.concentratedliquidity.v1beta1;
+import "google/protobuf/timestamp.proto";
 
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
@@ -41,4 +42,14 @@ message Pool {
   // tick_spacing must be one of the authorized_tick_spacing values set in the
   // concentrated-liquidity parameters
   uint64 tick_spacing = 8 [ (gogoproto.moretags) = "yaml:\"tick_spacing\"" ];
+  google.protobuf.Timestamp creation_timestamp = 9 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"creation_timestamp\""
+  ];
+  string seconds_per_liquidity_global = 10 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"seconds_per_liquidity_global\"",
+    (gogoproto.nullable) = false
+  ];
 }

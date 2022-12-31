@@ -2,7 +2,6 @@ package concentrated_liquidity
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,15 +37,16 @@ var (
 func (server msgServer) CreateConcentratedPool(goCtx context.Context, msg *clmodel.MsgCreateConcentratedPool) (*clmodel.MsgCreateConcentratedPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	_, denomExists := server.keeper.bankKeeper.GetDenomMetaData(ctx, msg.Denom0)
-	if !denomExists {
-		return nil, fmt.Errorf("received denom0 with invalid metadata: %s", msg.Denom0)
-	}
+	// TODO: At least in local osmosis, this check fails, because the denom metadata is not set.
+	// _, denomExists := server.keeper.bankKeeper.GetDenomMetaData(ctx, msg.Denom0)
+	// if !denomExists {
+	// 	return nil, fmt.Errorf("received denom0 with invalid metadata: %s", msg.Denom0)
+	// }
 
-	_, denomExists = server.keeper.bankKeeper.GetDenomMetaData(ctx, msg.Denom1)
-	if !denomExists {
-		return nil, fmt.Errorf("received denom1 with invalid metadata: %s", msg.Denom1)
-	}
+	// _, denomExists = server.keeper.bankKeeper.GetDenomMetaData(ctx, msg.Denom1)
+	// if !denomExists {
+	// 	return nil, fmt.Errorf("received denom1 with invalid metadata: %s", msg.Denom1)
+	// }
 
 	poolId, err := server.keeper.swaprouterKeeper.CreatePool(ctx, msg)
 	if err != nil {
@@ -77,7 +77,7 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
 		sdk.NewEvent(
-			types.TypeEvtWithdrawPosition,
+			types.TypeEvtCreatePosition,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
@@ -126,4 +126,26 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 	})
 
 	return &types.MsgWithdrawPositionResponse{Amount0: amount0, Amount1: amount1}, nil
+}
+
+// stub just for testing
+func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgSwapExactAmountIn) (*types.MsgSwapExactAmountInResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	pool, err := server.keeper.getPoolById(ctx, msg.Routes[0].PoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	tokenOutAmount, err := server.keeper.SwapExactAmountIn(ctx, sender, pool, msg.TokenIn, msg.Routes[0].TokenOutDenom, msg.TokenOutMinAmount, sdk.ZeroDec())
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgSwapExactAmountInResponse{TokenOutAmount: tokenOutAmount}, nil
 }

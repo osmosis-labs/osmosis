@@ -12,6 +12,7 @@ func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPool)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPools)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdTickInfo)
 	cmd.AddCommand(
 		osmocli.GetParams[*types.QueryParamsRequest](
 			types.ModuleName, types.NewQueryClient),
@@ -33,4 +34,12 @@ func GetCmdPools() (*osmocli.QueryDescriptor, *types.QueryPoolsRequest) {
 		Short: "Query pools",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} pools`}, &types.QueryPoolsRequest{}
+}
+
+func GetCmdTickInfo() (*osmocli.QueryDescriptor, *types.QueryTickInfoRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "tick-info",
+		Short: "Query a tick for the specified pool",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} pools`}, &types.QueryTickInfoRequest{}
 }

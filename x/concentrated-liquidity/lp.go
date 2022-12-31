@@ -2,10 +2,13 @@ package concentrated_liquidity
 
 import (
 	"errors"
+	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/swapstrategy"
 	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
@@ -233,7 +236,9 @@ func (k Keeper) initializeInitialPosition(ctx sdk.Context, pool types.Concentrat
 	}
 
 	// Calculate the initial tick from the initial spot price
+	fmt.Printf("initialSpotPrice %v \n", initialSpotPrice)
 	initialTick := math.PriceToTick(initialSpotPrice)
+	fmt.Printf("initialTick %v \n", initialTick)
 
 	// Set the pool's current sqrt price and current tick to the above calculated values
 	pool.SetCurrentSqrtPrice(initialSqrtPrice)
@@ -243,4 +248,49 @@ func (k Keeper) initializeInitialPosition(ctx sdk.Context, pool types.Concentrat
 		return err
 	}
 	return nil
+}
+
+// GetSecondsPerLiquidityInside returns the seconds per liquidity between two ticks in a given pool
+func (k Keeper) GetSecondsPerLiquidityInside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.Dec, error) {
+	// Get the Seconds Per Liquidity Outside for the lower tick
+	lowerTickInfo, err := k.getTickInfo(ctx, poolId, lowerTick)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	// Get the Seconds Per Liquidity Outside for the upper tick
+	upperTickInfo, err := k.getTickInfo(ctx, poolId, upperTick)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	globalSecondsPerLiquidity := pool.GetGlobalSecondsPerLiquidity()
+
+	// If tick is active, we need to calculate a new seconds per liquidity inside since we only update these when crossing ticks
+	if pool.GetCurrentTick().GTE(sdk.NewInt(lowerTick)) || pool.GetCurrentTick().LT(sdk.NewInt(upperTick)) {
+		// Get the current tick
+		currentTick := pool.GetCurrentTick().Int64()
+
+		// Utilize a zeroForOne swap strategy since we want to look left or equal to the current tick
+		swapStrategy := swapstrategy.New(true, sdk.NewDec(99999999), k.storeKey)
+		lastInitializedTick, _ := swapStrategy.NextInitializedTick(ctx, pool.GetId(), currentTick)
+		lastInitializedTickInfo, err := k.getTickInfo(ctx, poolId, lastInitializedTick.Int64())
+		if err != nil {
+			return sdk.Dec{}, err
+		}
+
+		// Determine the seconds that have passed since the last time the last initialized tick was crossed
+		// Update the global time with this difference and calculate the new global seconds per liquidity outside
+		newSecondsInactive := time.Duration(ctx.BlockTime().Sub(pool.GetTimeOfCreation())) + lastInitializedTickInfo.SecondsInactive
+		newSecondsPerLiquidityOutside := sdk.MustNewDecFromStr(fmt.Sprintf("%f", newSecondsInactive.Seconds())).Quo(lastInitializedTickInfo.LiquidityGross)
+		globalSecondsPerLiquidity = globalSecondsPerLiquidity.Add(newSecondsPerLiquidityOutside)
+	}
+
+	secondsPerLiquidityInside := globalSecondsPerLiquidity.Sub(lowerTickInfo.SecondsPerLiquidityOutside).Sub(upperTickInfo.SecondsPerLiquidityOutside)
+	return secondsPerLiquidityInside, nil
 }

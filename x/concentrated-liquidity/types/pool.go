@@ -1,6 +1,8 @@
 package types
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
@@ -16,8 +18,11 @@ type ConcentratedPoolExtension interface {
 	GetCurrentTick() sdk.Int
 	GetTickSpacing() uint64
 	GetLiquidity() sdk.Dec
+	GetTimeOfCreation() time.Time
+	GetGlobalSecondsPerLiquidity() sdk.Dec
 	SetCurrentSqrtPrice(newSqrtPrice sdk.Dec)
 	SetCurrentTick(newTick sdk.Int)
+	SetGlobalSecondsPerLiquidity(newGlobalSecondsPerLiquidity sdk.Dec)
 
 	UpdateLiquidity(newLiquidity sdk.Dec)
 	ApplySwap(newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurrentSqrtPrice sdk.Dec) error

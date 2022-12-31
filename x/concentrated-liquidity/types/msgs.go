@@ -10,6 +10,7 @@ import (
 const (
 	TypeMsgCreatePosition   = "create-position"
 	TypeMsgWithdrawPosition = "withdraw-position"
+	TypeSwapExactAmountIn   = "swap-exact-amount-in"
 )
 
 var _ sdk.Msg = &MsgCreatePosition{}
@@ -104,6 +105,27 @@ func (msg MsgWithdrawPosition) GetSignBytes() []byte {
 }
 
 func (msg MsgWithdrawPosition) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+// stub for testing
+var _ sdk.Msg = &MsgSwapExactAmountIn{}
+
+func (msg MsgSwapExactAmountIn) Route() string { return RouterKey }
+func (msg MsgSwapExactAmountIn) Type() string  { return TypeSwapExactAmountIn }
+func (msg MsgSwapExactAmountIn) ValidateBasic() error {
+	return nil
+}
+
+func (msg MsgSwapExactAmountIn) GetSignBytes() []byte {
+	return nil
+}
+
+func (msg MsgSwapExactAmountIn) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)

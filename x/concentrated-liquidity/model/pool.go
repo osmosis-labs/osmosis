@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	fmt "fmt"
+	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -17,7 +18,7 @@ var (
 
 // NewConcentratedLiquidityPool creates a new ConcentratedLiquidity pool with the specified parameters.
 // The two provided denoms are ordered so that denom0 is lexicographically smaller than denom1.
-func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpacing uint64) (Pool, error) {
+func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpacing uint64, blockTime time.Time) (Pool, error) {
 	// Order the initial pool denoms so that denom0 is lexicographically smaller than denom1.
 	denom0, denom1, err := types.OrderInitialPoolDenoms(denom0, denom1)
 	if err != nil {
@@ -27,14 +28,15 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 	// Create a new pool struct with the specified parameters
 	pool := Pool{
 		// TODO: move gammtypes.NewPoolAddress(poolId) to swaproutertypes
-		Address:          gammtypes.NewPoolAddress(poolId).String(),
-		Id:               poolId,
-		CurrentSqrtPrice: sdk.ZeroDec(),
-		CurrentTick:      sdk.ZeroInt(),
-		Liquidity:        sdk.ZeroDec(),
-		Token0:           denom0,
-		Token1:           denom1,
-		TickSpacing:      tickSpacing,
+		Address:           gammtypes.NewPoolAddress(poolId).String(),
+		Id:                poolId,
+		CurrentSqrtPrice:  sdk.ZeroDec(),
+		CurrentTick:       sdk.ZeroInt(),
+		Liquidity:         sdk.ZeroDec(),
+		Token0:            denom0,
+		Token1:            denom1,
+		TickSpacing:       tickSpacing,
+		CreationTimestamp: blockTime,
 	}
 
 	return pool, nil
@@ -132,6 +134,16 @@ func (p Pool) GetLiquidity() sdk.Dec {
 	return p.Liquidity
 }
 
+// GetTimeOfCreation returns the timestamp of when the pool was created
+func (p Pool) GetTimeOfCreation() time.Time {
+	return p.CreationTimestamp
+}
+
+// GetGlobalSecondsPerLiquidity returns the global seconds per liquidity of the pool
+func (p Pool) GetGlobalSecondsPerLiquidity() sdk.Dec {
+	return p.SecondsPerLiquidityGlobal
+}
+
 // UpdateLiquidity updates the liquidity of the pool. Note that this method is mutative.
 func (p *Pool) UpdateLiquidity(newLiquidity sdk.Dec) {
 	p.Liquidity = p.Liquidity.Add(newLiquidity)
@@ -145,6 +157,11 @@ func (p *Pool) SetCurrentSqrtPrice(newSqrtPrice sdk.Dec) {
 // SetCurrentTick updates the current tick of the pool when the first position is created.
 func (p *Pool) SetCurrentTick(newTick sdk.Int) {
 	p.CurrentTick = newTick
+}
+
+// SetGlobalSecondsPerLiquidity updates the current globalSecondsPerLiquidity of the pool
+func (p *Pool) SetGlobalSecondsPerLiquidity(newGlobalSecondsPerLiquidity sdk.Dec) {
+	p.SecondsPerLiquidityGlobal = newGlobalSecondsPerLiquidity
 }
 
 // updateLiquidityIfActivePosition updates the pool's liquidity if the position is active.
@@ -171,7 +188,9 @@ func (p *Pool) UpdateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upper
 //    * The provided liquidity is distributed in token1 only.
 // TODO: add tests.
 func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, sqrtRatioLowerTick, sqrtRatioUpperTick sdk.Dec, liquidityDelta sdk.Dec) (actualAmountDenom0 sdk.Dec, actualAmountDenom1 sdk.Dec) {
+	fmt.Printf("CURRENTLY POOL IS AT %v \n", p.CurrentTick)
 	if p.isCurrentTickInRange(lowerTick, upperTick) {
+		fmt.Printf("CURRENTLY POOL IS IN RANGE \n")
 		// outcome one: the current price falls within the position
 		// if this is the case, we attempt to provide liquidity evenly between asset0 and asset1
 		// we also update the pool liquidity since the virtual liquidity is modified by this position's creation

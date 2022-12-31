@@ -2,6 +2,8 @@ package concentrated_liquidity_test
 
 import (
 	"errors"
+	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -594,6 +596,149 @@ func (s *KeeperTestSuite) TestInitializeInitialPosition() {
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, &tc.expectedError)
 			} else {
+				s.Require().NoError(err)
+			}
+
+		})
+	}
+}
+
+// stub for testing
+func (s *KeeperTestSuite) TestSecondsPerLiquidityInside() {
+	type sendTest struct {
+		lowerTick     int64
+		upperTick     int64
+		expectedError error
+	}
+	tests := map[string]sendTest{
+		"happy path": {
+			lowerTick: 85188,
+			upperTick: 87407,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			tc := tc
+			s.SetupTest()
+
+			// create a CL pool
+			s.PrepareConcentratedPool()
+
+			// Set the block time to 5 seconds after the current time
+			now := s.Ctx.BlockTime()
+			s.Ctx = s.Ctx.WithBlockTime(now.Add(time.Second * 5))
+
+			// Fund test account and create the desired position
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0.Mul(sdk.NewInt(2))), sdk.NewCoin(USDC, DefaultAmt1.Mul(sdk.NewInt(2)))))
+
+			// System under test
+			_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, 1, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+			_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, 1, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), tc.lowerTick, tc.upperTick)
+
+			positionOneLower, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, DefaultLowerTick)
+			s.Require().NoError(err)
+			positionOneUpper, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, DefaultUpperTick)
+			s.Require().NoError(err)
+			positionTwoLower, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, tc.lowerTick)
+			s.Require().NoError(err)
+			positionTwoUpper, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, tc.upperTick)
+			s.Require().NoError(err)
+
+			fmt.Printf("positionOneLower: %v \n", positionOneLower)
+			fmt.Printf("positionOneUpper: %v \n", positionOneUpper)
+			fmt.Printf("positionTwoLower: %v \n", positionTwoLower)
+			fmt.Printf("positionTwoUpper: %v \n", positionTwoUpper)
+
+			secondsPerLiquidityInsideOne, _ := s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, DefaultLowerTick, DefaultUpperTick)
+			secondsPerLiquidityInsideTwo, _ := s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, tc.lowerTick, tc.upperTick)
+
+			fmt.Printf("secondsPerLiquidityInsideOne: %v \n", secondsPerLiquidityInsideOne)
+			fmt.Printf("secondsPerLiquidityInsideTwo: %v \n", secondsPerLiquidityInsideTwo)
+
+			// Set the block time to 5 seconds after the current time: Total time elapsed is 10 seconds
+			now = s.Ctx.BlockTime()
+			s.Ctx = s.Ctx.WithBlockTime(now.Add(time.Second * 5))
+
+			// if tick is active we need to calculate how long it has been active for
+			secondsPerLiquidityInsideOne, _ = s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, DefaultLowerTick, DefaultUpperTick)
+			secondsPerLiquidityInsideTwo, _ = s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, tc.lowerTick, tc.upperTick)
+
+			fmt.Printf("secondsPerLiquidityInsideOne: %v \n", secondsPerLiquidityInsideOne)
+			fmt.Printf("secondsPerLiquidityInsideTwo: %v \n", secondsPerLiquidityInsideTwo)
+
+			pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, 1)
+			s.Require().NoError(err)
+			fmt.Println()
+			fmt.Printf("pool: %v \n", pool)
+
+			// Fund test account and create the desired position
+			now = s.Ctx.BlockTime()
+			s.Ctx = s.Ctx.WithBlockTime(now.Add(time.Second * 5))
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1)))
+			s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, sdk.NewCoin(USDC, DefaultAmt1), ETH, sdk.NewInt(0), sdk.NewDec(0))
+
+			positionOneLower, err = s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, 84222)
+			s.Require().NoError(err)
+			positionOneUpper, err = s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, 86129)
+			s.Require().NoError(err)
+			positionTwoLower, err = s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, 85188)
+			s.Require().NoError(err)
+			positionTwoUpper, err = s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, 87407)
+			s.Require().NoError(err)
+			fmt.Println()
+			fmt.Printf("positionOneLower: %v \n", positionOneLower)
+			fmt.Printf("positionOneUpper: %v \n", positionOneUpper)
+			fmt.Printf("positionTwoLower: %v \n", positionTwoLower)
+			fmt.Printf("positionTwoUpper: %v \n", positionTwoUpper)
+
+			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, 1)
+			s.Require().NoError(err)
+			fmt.Printf("pool: %v \n", pool)
+
+			secondsPerLiquidityInsideOne, _ = s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, DefaultLowerTick, DefaultUpperTick)
+			secondsPerLiquidityInsideTwo, _ = s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, tc.lowerTick, tc.upperTick)
+
+			fmt.Printf("secondsPerLiquidityInsideOne: %v \n", secondsPerLiquidityInsideOne)
+			fmt.Printf("secondsPerLiquidityInsideTwo: %v \n", secondsPerLiquidityInsideTwo)
+
+			// Fund test account and create the desired position
+			now = s.Ctx.BlockTime()
+			s.Ctx = s.Ctx.WithBlockTime(now.Add(time.Second * 5))
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1)))
+			s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, sdk.NewCoin(USDC, DefaultAmt1), ETH, sdk.NewInt(0), sdk.NewDec(0))
+
+			positionOneLower, err = s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, 84222)
+			s.Require().NoError(err)
+			positionOneUpper, err = s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, 86129)
+			s.Require().NoError(err)
+			positionTwoLower, err = s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, 85188)
+			s.Require().NoError(err)
+			positionTwoUpper, err = s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, 87407)
+			s.Require().NoError(err)
+			fmt.Println()
+			fmt.Printf("positionOneLower: %v \n", positionOneLower)
+			fmt.Printf("positionOneUpper: %v \n", positionOneUpper)
+			fmt.Printf("positionTwoLower: %v \n", positionTwoLower)
+			fmt.Printf("positionTwoUpper: %v \n", positionTwoUpper)
+
+			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, 1)
+			s.Require().NoError(err)
+			fmt.Printf("pool: %v \n", pool)
+
+			secondsPerLiquidityInsideOne, _ = s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, DefaultLowerTick, DefaultUpperTick)
+			secondsPerLiquidityInsideTwo, _ = s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, tc.lowerTick, tc.upperTick)
+
+			fmt.Printf("secondsPerLiquidityInsideOne: %v \n", secondsPerLiquidityInsideOne)
+			fmt.Printf("secondsPerLiquidityInsideTwo: %v \n", secondsPerLiquidityInsideTwo)
+
+			s.Require().Equal(1, 3)
+
+			if tc.expectedError != nil {
+				err = fmt.Errorf("test")
+				s.Require().NoError(err)
+			} else {
+				err = fmt.Errorf("test")
 				s.Require().NoError(err)
 			}
 

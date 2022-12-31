@@ -1,6 +1,9 @@
 package concentrated_liquidity
 
 import (
+	"fmt"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -20,6 +23,17 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 	tickInfo, err := k.getTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
 		return err
+	}
+
+	// if the following is true, we are either initializing a tick for the first time or initializing it after it was inactive.
+	// therefore, we must set the seconds inactive to the length of time the pool has existed.
+	if tickInfo.LiquidityGross.Equal(sdk.ZeroDec()) && tickInfo.LiquidityNet.Equal(sdk.ZeroDec()) {
+		pool, err := k.getPoolById(ctx, poolId)
+		if err != nil {
+			return err
+		}
+
+		tickInfo.SecondsInactive = time.Duration(ctx.BlockTime().Sub(pool.GetTimeOfCreation()))
 	}
 
 	// calculate liquidityGross, which does not care about whether liquidityIn is positive or negative
@@ -48,6 +62,24 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liqu
 	if err != nil {
 		return sdk.Dec{}, err
 	}
+
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	newSecondsInactive := time.Duration(ctx.BlockTime().Sub(pool.GetTimeOfCreation())) + tickInfo.SecondsInactive
+	tickInfo.SecondsInactive = newSecondsInactive
+
+	// Update seconds per liquidity outside
+	// fmt.Printf("Seconds inactive: %v \n", tickInfo.SecondsInactive.Seconds())
+	// fmt.Printf("Liquidity gross: %v \n", tickInfo.LiquidityGross)
+	tickInfo.SecondsPerLiquidityOutside = sdk.MustNewDecFromStr(fmt.Sprintf("%f", tickInfo.SecondsInactive.Seconds())).Quo(tickInfo.LiquidityGross)
+	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
+
+	// Set new global seconds per liquidity
+	pool.SetGlobalSecondsPerLiquidity(pool.GetGlobalSecondsPerLiquidity().Add(tickInfo.SecondsPerLiquidityOutside))
+	k.setPool(ctx, pool)
 
 	return tickInfo.LiquidityNet, nil
 }
