@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/store"
+	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/iavl"
 	"github.com/gogo/protobuf/proto"
@@ -12,8 +13,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	accumPackage "github.com/osmosis-labs/osmosis/osmoutils/accum"
-
-	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
 )
 
 type AccumTestSuite struct {
@@ -813,4 +812,54 @@ func (suite *AccumTestSuite) TestMarhsalUnmarshalRecord() {
 	proto.Unmarshal(bz, &unmarshaledRecord)
 	// Options should be nil, not an empty struct
 	suite.Require().True(unmarshaledRecord.Options == nil)
+}
+
+func (suite *AccumTestSuite) TestUpdateAccumulator() {
+	tests := map[string]struct {
+		updateAmmount sdk.DecCoins
+
+		expectedValue sdk.DecCoins
+	}{
+		"positive": {
+			updateAmmount: initialCoinsDenomOne,
+
+			expectedValue: initialCoinsDenomOne,
+		},
+		"negative": {
+			updateAmmount: initialCoinsDenomOne.MulDec(sdk.NewDec(-1)),
+
+			expectedValue: initialCoinsDenomOne.MulDec(sdk.NewDec(-1)),
+		},
+		"multiple coins": {
+			updateAmmount: initialCoinsDenomOne.Add(initialCoinDenomTwo),
+
+			expectedValue: initialCoinsDenomOne.Add(initialCoinDenomTwo),
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			// Setup
+			suite.SetupTest()
+
+			err := accumPackage.MakeAccumulator(suite.store, testNameOne)
+			suite.Require().NoError(err)
+			originalAccum, err := accumPackage.GetAccumulator(suite.store, testNameOne)
+			suite.Require().NoError(err)
+
+			// System under test.
+			originalAccum.UpdateAccumulator(tc.updateAmmount)
+
+			// Validations.
+
+			// validate that the reciever is mutated.
+			suite.Require().Equal(tc.expectedValue, originalAccum.GetValue())
+
+			accumFromStore, err := accumPackage.GetAccumulator(suite.store, testNameOne)
+			suite.Require().NoError(err)
+
+			// validate that store is updated.
+			suite.Require().Equal(tc.expectedValue, accumFromStore.GetValue())
+		})
+	}
 }
