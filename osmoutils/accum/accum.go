@@ -178,12 +178,13 @@ func (accum AccumulatorObject) ClaimRewards(addr sdk.AccAddress) (sdk.Coins, err
 	totalRewards := getTotalRewards(accum, position)
 
 	// Return the integer coins to the user
-	// The remaining change is reinvested into the new position.
-	truncatedRewards, remainingChange := totalRewards.TruncateDecimal()
+	// The remaining change is thrown away.
+	// This is acceptable because we round in favour of the protocol.
+	truncatedRewards, _ := totalRewards.TruncateDecimal()
 
 	// Create a completely new position, with no rewards
 	// TODO: remove the position from state entirely if numShares = zero
-	createNewPosition(accum, addr, position.NumShares, remainingChange, position.Options)
+	createNewPosition(accum, addr, position.NumShares, sdk.NewDecCoins(), position.Options)
 
 	return truncatedRewards, nil
 }
