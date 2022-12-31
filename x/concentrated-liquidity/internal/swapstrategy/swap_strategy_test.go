@@ -50,7 +50,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState() {
 			sqrtPriceLimit:        sdk.MustNewDecFromStr("70.666662070529219856").Sub(sdk.OneDec()),
 			zeroForOne:            true,
 			expectedSqrtPriceNext: "70.666662070529219856",
-			expectedAmountIn:      "13369.999999903622360944",
+			expectedAmountIn:      "13369.999999903166306066",
 			expectedAmountOut:     "66808387.149866264039333362",
 		},
 		"happy path: trade asset1 for asset0": {
@@ -64,7 +64,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState() {
 			zeroForOne:            false,
 			expectedSqrtPriceNext: "70.738349405152439867",
 			expectedAmountIn:      "42000000.000000000650233591",
-			expectedAmountOut:     "8396.714104746015980302",
+			expectedAmountOut:     "8396.714104746079432666",
 		},
 	}
 

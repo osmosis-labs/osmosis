@@ -4,13 +4,29 @@ import (
 	"fmt"
 	"strconv"
 
-	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
+
+func (k Keeper) validateCreatedPool(
+	ctx sdk.Context,
+	poolId uint64,
+	pool types.PoolI,
+) error {
+	if pool.GetId() != poolId {
+		return sdkerrors.Wrapf(types.ErrInvalidPool,
+			"Pool was attempted to be created with incorrect pool ID.")
+	}
+	if !pool.GetAddress().Equals(gammtypes.NewPoolAddress(poolId)) {
+		return sdkerrors.Wrapf(types.ErrInvalidPool,
+			"Pool was attempted to be created with incorrect pool address.")
+	}
+	return nil
+}
 
 // CreatePool attempts to create a pool returning the newly created pool ID or
 // an error upon failure. The pool creation fee is used to fund the community
@@ -70,22 +86,6 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 
 	emitCreatePoolEvents(ctx, poolId, msg)
 	return pool.GetId(), nil
-}
-
-func (k Keeper) validateCreatedPool(
-	ctx sdk.Context,
-	poolId uint64,
-	pool types.PoolI,
-) error {
-	if pool.GetId() != poolId {
-		return errors.Wrapf(types.ErrInvalidPool,
-			"Pool was attempted to be created with incorrect pool ID.")
-	}
-	if !pool.GetAddress().Equals(gammtypes.NewPoolAddress(poolId)) {
-		return errors.Wrapf(types.ErrInvalidPool,
-			"Pool was attempted to be created with incorrect pool address.")
-	}
-	return nil
 }
 
 func emitCreatePoolEvents(ctx sdk.Context, poolId uint64, msg types.CreatePoolMsg) {

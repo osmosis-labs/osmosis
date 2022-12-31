@@ -134,10 +134,7 @@ type AppKeepers struct {
 	TokenFactoryKeeper           *tokenfactorykeeper.Keeper
 	SwapRouterKeeper             *swaprouter.Keeper
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
-	// Note: this keeper is unwired. It is only present to avoid build
-	// issues in tests. However, It is not yet wired to be used
-	// in regular app code.
-	ConcentratedLiquidityKeeper *concentratedliquidity.Keeper
+	ConcentratedLiquidityKeeper  *concentratedliquidity.Keeper
 
 	// IBC modules
 	// transfer module
