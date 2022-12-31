@@ -9,7 +9,9 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 var (
@@ -19,6 +21,11 @@ var (
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}
+	defaultStableSwapPoolParams = stableswap.PoolParams{
+		SwapFee: defaultSwapFee,
+		ExitFee: defaultExitFee,
+	}
+	defaultScalingFactor  = []uint64{1, 1}
 	defaultFutureGovernor = ""
 
 	// pool assets
@@ -30,8 +37,12 @@ var (
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 	}
-	defaultPoolAssets           = []balancertypes.PoolAsset{defaultFooAsset, defaultBarAsset}
-	defaultAcctFunds  sdk.Coins = sdk.NewCoins(
+	defaultPoolAssets                     = []balancertypes.PoolAsset{defaultFooAsset, defaultBarAsset}
+	defaultStableSwapPoolAssets sdk.Coins = sdk.NewCoins(
+		sdk.NewCoin("foo", sdk.NewInt(10000)),
+		sdk.NewCoin("bar", sdk.NewInt(10000)),
+	)
+	defaultAcctFunds sdk.Coins = sdk.NewCoins(
 		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 		sdk.NewCoin("foo", sdk.NewInt(10000000)),
 		sdk.NewCoin("bar", sdk.NewInt(10000000)),
@@ -234,34 +245,40 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 
 	tests := []struct {
 		name        string
-		msg         balancertypes.MsgCreateBalancerPool
+		msg         swaproutertypes.CreatePoolMsg
 		emptySender bool
 		expectPass  bool
 	}{
 		{
-			name:        "initialize pool with default assets",
+			name:        "initialize balancer pool with default assets",
 			msg:         balancer.NewMsgCreateBalancerPool(testAccount, defaultPoolParams, defaultPoolAssets, defaultFutureGovernor),
 			emptySender: false,
 			expectPass:  true,
 		},
 		{
-			name:        "initialize pool with empty sender",
+			name:        "initialize balancer pool with empty sender",
 			msg:         balancer.NewMsgCreateBalancerPool(testAccount, defaultPoolParams, defaultPoolAssets, defaultFutureGovernor),
 			emptySender: true,
 			expectPass:  false,
+		},
+		{
+			name:        "initialize stableswap pool with default assetsr",
+			msg:         stableswap.NewMsgCreateStableswapPool(testAccount, defaultStableSwapPoolParams, defaultStableSwapPoolAssets, defaultScalingFactor, ""),
+			emptySender: false,
+			expectPass:  true,
 		},
 	}
 
 	for _, test := range tests {
 		suite.SetupTest()
+
 		gammKeeper := suite.App.GAMMKeeper
 		swaprouterKeeper := suite.App.SwapRouterKeeper
 		bankKeeper := suite.App.BankKeeper
 		poolIncentivesKeeper := suite.App.PoolIncentivesKeeper
 
 		// fund sender test account
-		sender, err := sdk.AccAddressFromBech32(test.msg.Sender)
-		suite.Require().NoError(err, "test: %v", test.name)
+		sender := test.msg.PoolCreator()
 		if !test.emptySender {
 			suite.FundAcc(sender, defaultAcctFunds)
 		}
@@ -271,8 +288,8 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 
 		// note starting balance of pool
 		poolBalanceBefore := sdk.Coins{}
-		for _, asset := range test.msg.GetPoolAssets() {
-			poolBalanceBefore = poolBalanceBefore.Add(sdk.NewCoin(asset.Token.Denom, gammKeeper.GetDenomLiquidity(suite.Ctx, asset.Token.Denom)))
+		for _, asset := range test.msg.InitialLiquidity() {
+			poolBalanceBefore = poolBalanceBefore.Add(sdk.NewCoin(asset.Denom, gammKeeper.GetDenomLiquidity(suite.Ctx, asset.Denom)))
 		}
 
 		// attempt to create a pool with the given NewMsgCreateBalancerPool message. After that,
@@ -291,8 +308,8 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 
 			// get expected tokens in new pool and corresponding pool shares
 			expectedPoolTokens := sdk.Coins{}
-			for _, asset := range test.msg.GetPoolAssets() {
-				expectedPoolTokens = expectedPoolTokens.Add(asset.Token)
+			for _, asset := range test.msg.InitialLiquidity() {
+				expectedPoolTokens = expectedPoolTokens.Add(asset)
 			}
 			expectedPoolShares := sdk.NewCoin(types.GetPoolShareDenom(pool.GetId()), types.InitPoolSharesSupply)
 
