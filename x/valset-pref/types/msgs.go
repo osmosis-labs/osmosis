@@ -2,11 +2,11 @@ package types
 
 import (
 	fmt "fmt"
-	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
@@ -50,19 +50,10 @@ func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 	}
 
 	// Round to 2 digit after the decimal. For ex: 0.999 = 1.0, 0.874 = 0.87, 0.5123 = 0.51
-	totalWeightFloat64, err := totalWeight.Float64()
-	if err != nil {
-		return err
-	}
-
-	roundedValueStr := fmt.Sprintf("%.2f", totalWeightFloat64)
-	roundedValue, err := strconv.ParseFloat(roundedValueStr, 64)
-	if err != nil {
-		return err
-	}
+	roundedValue := osmomath.SigFigRound(totalWeight, sdk.NewDec(10).Power(2).TruncateInt())
 
 	// check if the total validator distribution weights equal 1
-	if roundedValue != 1 {
+	if !roundedValue.Equal(sdk.OneDec()) {
 		return fmt.Errorf("The weights allocated to the validators do not add up to 1, Got: %f", roundedValue)
 	}
 
@@ -197,19 +188,10 @@ func (m MsgRedelegateValidatorSet) ValidateBasic() error {
 	}
 
 	// Round to 2 digit after the decimal. For ex: 0.999 = 1.0, 0.874 = 0.87, 0.5123 = 0.51
-	totalWeightFloat64, err := totalWeight.Float64()
-	if err != nil {
-		return err
-	}
-
-	roundedValueStr := fmt.Sprintf("%.2f", totalWeightFloat64)
-	roundedValue, err := strconv.ParseFloat(roundedValueStr, 64)
-	if err != nil {
-		return err
-	}
+	roundedValue := osmomath.SigFigRound(totalWeight, sdk.NewDec(10).Power(2).TruncateInt())
 
 	// check if the total validator distribution weights equal 1
-	if roundedValue != 1 {
+	if !roundedValue.Equal(sdk.OneDec()) {
 		return fmt.Errorf("The weights allocated to the validators do not add up to 1, Got: %f", roundedValue)
 	}
 

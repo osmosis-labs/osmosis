@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
 )
 
@@ -306,34 +307,20 @@ func (k Keeper) IsPreferenceValid(ctx sdk.Context, preferences []types.Validator
 	var weightsRoundedValPrefList []types.ValidatorPreference
 	for _, val := range preferences {
 		// round up weights
-		valWeightStr, err := k.RoundValidatorWeights(ctx, val.Weight)
-		if err != nil {
-			return nil, false
-		}
+		valWeightStr := osmomath.SigFigRound(val.Weight, sdk.NewDec(10).Power(2).TruncateInt())
 
-		_, _, err = k.GetValidatorInfo(ctx, val.ValOperAddress)
+		_, _, err := k.GetValidatorInfo(ctx, val.ValOperAddress)
 		if err != nil {
 			return nil, false
 		}
 
 		weightsRoundedValPrefList = append(weightsRoundedValPrefList, types.ValidatorPreference{
 			ValOperAddress: val.ValOperAddress,
-			Weight:         sdk.MustNewDecFromStr(valWeightStr),
+			Weight:         valWeightStr,
 		})
 	}
 
 	return weightsRoundedValPrefList, true
-}
-
-// RoundValidatorWeights rounds to 2 digit after the decimal. For ex: 0.999 = 1.0, 0.874 = 0.87, 0.5123 = 0.51
-func (k Keeper) RoundValidatorWeights(ctx sdk.Context, totalWeight sdk.Dec) (string, error) {
-	totalWeightFloat64, err := totalWeight.Float64()
-	if err != nil {
-		return "", err
-	}
-
-	roundedValueStr := fmt.Sprintf("%.2f", totalWeightFloat64)
-	return roundedValueStr, nil
 }
 
 // IsValidatorSetEqual returns true if the two preferences are equal.
