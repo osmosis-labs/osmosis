@@ -8,7 +8,7 @@ require (
 	github.com/cosmos/ibc-go/v4 v4.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230101091201-931acfca2ffb
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230101095308-fa4e70e17dbf
 	github.com/spf13/cobra v1.6.1
 	github.com/tendermint/tendermint v0.34.24
 )
