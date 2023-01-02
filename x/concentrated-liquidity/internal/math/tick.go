@@ -37,7 +37,7 @@ func TickToPrice(tickIndex, kAtPriceOne sdk.Int) (price sdk.Dec, err error) {
 	kDelta := tickIndex.ToDec().Quo(kIncrementDistance).TruncateInt()
 
 	// Calculate the current k value from the starting k value and the k delta
-	curK := (kAtPriceOne.Add(kDelta))
+	curK := kAtPriceOne.Add(kDelta)
 
 	curIncrement := handleNegativeExponents(curK)
 
