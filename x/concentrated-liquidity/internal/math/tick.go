@@ -42,17 +42,20 @@ func TickToPrice(tickIndex, kAtPriceOne sdk.Int) (price sdk.Dec, err error) {
 	// Calculate the current k value from the starting k value and the k delta
 	curK := kAtPriceOne.Add(kDelta)
 
+	// Knowing what our curK is, we can then figure out what power of 10 this k corresponds to
 	curIncrement := handleNegativeExponents(curK)
 
+	// Now, starting at the minimum tick of the current increment, we calculate how many ticks in the current k we have passed
 	numAdditiveTicks := tickIndex.ToDec().Sub(kDelta.ToDec().Mul(kIncrementDistance))
 
+	// Finally, we can calculate the price
 	price = handleNegativeExponents(kDelta).Add(numAdditiveTicks.Mul(curIncrement))
 
 	return price, nil
 }
 
 // PriceToTick takes a price and returns the corresponding tick index
-func PriceToTick(price sdk.Dec, kAtPriceOne sdk.Int) (tickIndex sdk.Int) {
+func PriceToTick(price sdk.Dec, kAtPriceOne sdk.Int) sdk.Int {
 	if price.Equal(sdk.OneDec()) {
 		return sdk.ZeroInt()
 	}
@@ -61,12 +64,17 @@ func PriceToTick(price sdk.Dec, kAtPriceOne sdk.Int) (tickIndex sdk.Int) {
 	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**k_at_price_1)
 	kIncrementDistance := sdkNineDec.Mul(handleNegativeExponents(kAtPriceOne.Neg()))
 
+	// Initialize the total price to 1, the current k to k_at_price_1, and the number of ticks passed to 0
 	total := sdk.OneDec()
 	ticksPassed := sdk.ZeroInt()
 	currentK := kAtPriceOne
 
+	// Set the currentIncrement to the kAtPriceOne
 	curIncrement := handleNegativeExponents(currentK)
 
+	// Now, we loop through the k increments until we have passed the price
+	// Once we pass the price, we can determine what which k values we have filled in their entirety,
+	// as well as how many ticks that corresponds to
 	for total.LT(price) {
 		curIncrement = handleNegativeExponents(currentK)
 		maxPriceForCurrentIncrement := kIncrementDistance.Mul(curIncrement)
@@ -78,11 +86,13 @@ func PriceToTick(price sdk.Dec, kAtPriceOne sdk.Int) (tickIndex sdk.Int) {
 			break
 		}
 	}
+	// Determine how many ticks we have passed in the current k increment
 	ticksToBeFulfilledByCurrentK := price.Sub(total).Quo(curIncrement)
 
-	ticksPassed = ticksPassed.Add(ticksToBeFulfilledByCurrentK.TruncateInt())
+	// Finally, add the ticks we have passed from the completed k values, as well as the ticks we have passed in the current k value
+	tickIndex := ticksPassed.Add(ticksToBeFulfilledByCurrentK.TruncateInt())
 
-	return ticksPassed
+	return tickIndex
 }
 
 // handleNegativeExponents treats negative exponents as 1/(10**|exponent|) instead of 10**-exponent
