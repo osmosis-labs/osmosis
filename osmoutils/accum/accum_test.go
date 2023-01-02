@@ -252,7 +252,7 @@ func (suite *AccumTestSuite) TestNewPositionCustomAcc() {
 			},
 			options: &emptyPositionOptions,
 		},
-		"negative acc value equals to acc": {
+		"negative acc value - error": {
 			accObject:     accObject,
 			name:          testAddressOne,
 			numShareUnits: positionOne.NumShares,
@@ -640,12 +640,19 @@ func (suite *AccumTestSuite) TestAddToPositionCustomAcc() {
 				UnclaimedRewards: emptyCoins,
 			},
 		},
-		"negative acc value equals to acc": {
+		"negative acc value - error": {
 			accObject:     accObject,
 			name:          testAddressOne,
 			numShareUnits: positionOne.NumShares,
 			customAcc:     accObject.GetValue().MulDec(sdk.NewDec(-1)),
 			expectedError: accumPackage.NegativeCustomAccError{accObject.GetValue().MulDec(sdk.NewDec(-1))},
+		},
+		"update is smaller than old value - error": {
+			accObject:     accObject,
+			name:          testAddressOne,
+			numShareUnits: positionOne.NumShares,
+			customAcc:     accObject.GetValue().MulDec(sdk.NewDecWithPrec(5, 1)),
+			expectedError: accumPackage.NegativeAccDifferenceError{accObject.GetValue().MulDec(sdk.NewDecWithPrec(5, 1).Neg())},
 		},
 	}
 
@@ -653,10 +660,11 @@ func (suite *AccumTestSuite) TestAddToPositionCustomAcc() {
 		tc := tc
 		suite.Run(name, func() {
 			// Setup
-			tc.accObject.NewPositionCustomAcc(tc.name, sdk.ZeroDec(), sdk.NewDecCoins(), nil)
+			err := tc.accObject.NewPositionCustomAcc(tc.name, sdk.ZeroDec(), tc.accObject.GetValue(), nil)
+			suite.Require().NoError(err)
 
 			// System under test.
-			err := tc.accObject.AddToPositionCustomAcc(tc.name, tc.numShareUnits, tc.customAcc)
+			err = tc.accObject.AddToPositionCustomAcc(tc.name, tc.numShareUnits, tc.customAcc)
 
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
@@ -864,6 +872,99 @@ func (suite *AccumTestSuite) TestRemoveFromPosition() {
 					suite.Require().Equal(tc.startingUnclaimedRewards, newPosition.UnclaimedRewards)
 				}
 			}
+		})
+	}
+}
+
+// TestRemoveFromPositionCustomAcc this test only focuses on testing the
+// custom accumulator value functionality of adding to position.
+func (suite *AccumTestSuite) TestRemoveFromPositionCustomAcc() {
+	// We setup store and accum
+	// once at beginning so we can test duplicate positions
+	suite.SetupTest()
+
+	baseAccumValue := initialCoinsDenomOne
+
+	// Setup.
+	accObject := accumPackage.CreateRawAccumObject(suite.store, testNameOne, baseAccumValue)
+
+	tests := map[string]struct {
+		accObject        accumPackage.AccumulatorObject
+		name             string
+		numShareUnits    sdk.Dec
+		customAcc        sdk.DecCoins
+		expectedPosition accumPackage.Record
+		expectedError    error
+	}{
+		"custom acc value equals to acc": {
+			accObject:     accObject,
+			name:          testAddressOne,
+			numShareUnits: positionOne.NumShares,
+			customAcc:     baseAccumValue,
+			expectedPosition: accumPackage.Record{
+				NumShares:      sdk.ZeroDec(),
+				InitAccumValue: baseAccumValue,
+				// base value - 0.5 * base = base value
+				UnclaimedRewards: baseAccumValue.MulDec(sdk.NewDecWithPrec(5, 1)).MulDec(positionOne.NumShares),
+			},
+		},
+		"custom acc value does not equal to acc": {
+			accObject:     accObject,
+			name:          testAddressTwo,
+			numShareUnits: positionTwo.NumShares,
+			customAcc:     baseAccumValue.MulDec(sdk.NewDecWithPrec(75, 2)),
+			expectedPosition: accumPackage.Record{
+				NumShares:      sdk.ZeroDec(),
+				InitAccumValue: baseAccumValue.MulDec(sdk.NewDecWithPrec(75, 2)),
+				// base value - 0.75 * base = 0.25 * base
+				UnclaimedRewards: baseAccumValue.MulDec(sdk.NewDecWithPrec(25, 2)).MulDec(positionTwo.NumShares),
+			},
+		},
+		"negative acc value equals to acc": {
+			accObject:     accObject,
+			name:          testAddressOne,
+			numShareUnits: positionOne.NumShares,
+			customAcc:     baseAccumValue.MulDec(sdk.NewDec(-1)),
+			expectedError: accumPackage.NegativeCustomAccError{baseAccumValue.MulDec(sdk.NewDec(-1))},
+		},
+		"update is smaller than old value - error": {
+			accObject:     accObject,
+			name:          testAddressOne,
+			numShareUnits: positionOne.NumShares,
+			customAcc:     baseAccumValue.MulDec(sdk.NewDecWithPrec(25, 2)),
+			// base * 0.25 - base * 0.5 = -0.25 * base
+			expectedError: accumPackage.NegativeAccDifferenceError{baseAccumValue.MulDec(sdk.NewDecWithPrec(25, 2).Neg())},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			// Setup
+
+			// Original position's accum is always set to 0.5 * base value.
+			err := tc.accObject.NewPositionCustomAcc(tc.name, tc.numShareUnits, initialCoinsDenomOne.MulDec(sdk.NewDecWithPrec(5, 1)), nil)
+			suite.Require().NoError(err)
+
+			tc.accObject.SetValue(tc.customAcc)
+
+			// System under test.
+			err = tc.accObject.RemoveFromPositionCustomAcc(tc.name, tc.numShareUnits, tc.customAcc)
+
+			if tc.expectedError != nil {
+				suite.Require().Error(err)
+				suite.Require().Equal(tc.expectedError, err)
+				return
+			}
+			suite.Require().NoError(err)
+
+			// Assertions.
+			position := tc.accObject.GetPosition(tc.name)
+
+			suite.Require().Equal(tc.expectedPosition.NumShares, position.NumShares)
+			suite.Require().Equal(tc.expectedPosition.InitAccumValue, position.InitAccumValue)
+			suite.Require().Equal(tc.expectedPosition.UnclaimedRewards, position.UnclaimedRewards)
+			suite.Require().Nil(position.Options)
 		})
 	}
 }

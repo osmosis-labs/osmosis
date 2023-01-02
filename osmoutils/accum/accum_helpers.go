@@ -35,17 +35,9 @@ func getPosition(accum AccumulatorObject, name string) (Record, error) {
 func getTotalRewards(accum AccumulatorObject, position Record) sdk.DecCoins {
 	totalRewards := position.UnclaimedRewards
 
+	// TODO: add a check that accum.value is greater than position.InitAccumValue
 	accumulatorRewards := accum.value.Sub(position.InitAccumValue).MulDec(position.NumShares)
 	totalRewards = totalRewards.Add(accumulatorRewards...)
 
 	return totalRewards
-}
-
-// validateCustomAccumulatorValue validates the provided accumulator.
-// All coins must be non-negative. Fails if any coin is negative. On success, returns nil.
-func validateCustomAccumulatorValue(customAccumulatorValue sdk.DecCoins) error {
-	if customAccumulatorValue.IsAnyNegative() {
-		return NegativeCustomAccError{customAccumulatorValue}
-	}
-	return nil
 }

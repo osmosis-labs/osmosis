@@ -21,3 +21,11 @@ type NegativeCustomAccError struct {
 func (e NegativeCustomAccError) Error() string {
 	return fmt.Sprintf("customAccumulatorValue must be non-negative, was (%s)", e.CustomAccumulatorValue)
 }
+
+type NegativeAccDifferenceError struct {
+	AccumulatorDifference sdk.DecCoins
+}
+
+func (e NegativeAccDifferenceError) Error() string {
+	return fmt.Sprintf("difference (%s) between the old and the new accumulator value is negative", e.AccumulatorDifference)
+}
