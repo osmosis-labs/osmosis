@@ -1132,3 +1132,70 @@ func (suite *AccumTestSuite) TestUpdateAccumulator() {
 		})
 	}
 }
+
+func (suite *AccumTestSuite) TestUpdatePosition() {
+	// Setup.
+	accObject := accumPackage.CreateRawAccumObject(suite.store, testNameOne, initialCoinsDenomOne)
+
+	tests := map[string]struct {
+		name             string
+		numShares        sdk.Dec
+		expectedPosition accumPackage.Record
+		expectError      error
+	}{
+		"positive - acts as AddToPosition": {
+			name:      testAddressOne,
+			numShares: sdk.OneDec(),
+
+			expectedPosition: accumPackage.Record{
+				NumShares:        sdk.OneDec().MulInt64(2),
+				InitAccumValue:   initialCoinsDenomOne,
+				UnclaimedRewards: emptyCoins,
+			},
+		},
+		"negative - acts as RemoveFromPosition": {
+			name:      testAddressOne,
+			numShares: sdk.OneDec().Neg(),
+
+			expectedPosition: accumPackage.Record{
+				NumShares:        sdk.ZeroDec(),
+				InitAccumValue:   initialCoinsDenomOne,
+				UnclaimedRewards: emptyCoins,
+			},
+		},
+		"zero - error": {
+			name:      testAddressOne,
+			numShares: sdk.ZeroDec(),
+
+			expectError: accumPackage.ZeroSharesError,
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			suite.SetupTest()
+
+			err := accObject.NewPosition(tc.name, sdk.OneDec(), nil)
+			suite.Require().NoError(err)
+
+			err = accObject.UpdatePosition(tc.name, tc.numShares)
+
+			if tc.expectError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, tc.expectError)
+				return
+			}
+			suite.Require().NoError(err)
+
+			updatedPosition := accObject.GetPosition(tc.name)
+
+			// Assertions.
+			position := accObject.GetPosition(tc.name)
+
+			suite.Require().Equal(tc.expectedPosition.NumShares, updatedPosition.NumShares)
+			suite.Require().Equal(tc.expectedPosition.InitAccumValue, updatedPosition.InitAccumValue)
+			suite.Require().Equal(tc.expectedPosition.UnclaimedRewards, updatedPosition.UnclaimedRewards)
+			suite.Require().Nil(position.Options)
+		})
+	}
+}

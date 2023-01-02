@@ -1,9 +1,14 @@
 package accum
 
 import (
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+var (
+	ZeroSharesError = errors.New("shares must be non-zero")
 )
 
 type NoPositionError struct {

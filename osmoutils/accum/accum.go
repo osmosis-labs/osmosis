@@ -232,7 +232,7 @@ func (accum AccumulatorObject) UpdatePositionCustomAcc(name string, numShares sd
 
 func (accum AccumulatorObject) updatePosition(name string, numShares sdk.Dec, positionAccumulatorUpdate sdk.DecCoins) error {
 	if numShares.Equal(sdk.ZeroDec()) {
-		return fmt.Errorf("attempted to update position with zero shares")
+		return ZeroSharesError
 	}
 
 	if numShares.IsNegative() {
