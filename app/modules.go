@@ -165,7 +165,7 @@ func appModules(
 			app.EpochsKeeper,
 		),
 		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
-		valsetprefmodule.NewAppModule(appCodec, *app.ValidatorSetPreferenceKeeper, *app.StakingKeeper, *app.DistrKeeper),
+		valsetprefmodule.NewAppModule(appCodec, *app.ValidatorSetPreferenceKeeper),
 		ibc_hooks.NewAppModule(app.AccountKeeper),
 	}
 }
