@@ -24,6 +24,11 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 		return Pool{}, err
 	}
 
+	// Only allow precision values in specified range
+	if precisionValueAtPriceOne.LT(types.PrecisionValueAtPriceOneMin) || precisionValueAtPriceOne.GT(types.PrecisionValueAtPriceOneMax) {
+		return Pool{}, fmt.Errorf("precisionValueAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax)
+	}
+
 	// Create a new pool struct with the specified parameters
 	pool := Pool{
 		// TODO: move gammtypes.NewPoolAddress(poolId) to swaproutertypes
@@ -168,7 +173,7 @@ func (p *Pool) UpdateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upper
 // lower and upper ticks.
 // There are 3 possible cases:
 // -The position is active ( lowerTick <= p.CurrentTick < upperTick).
-//    * The provided liqudity is distributed in both tokens.
+//    * The provided liquidity is distributed in both tokens.
 //    * Actual amounts might differ from desired because we recalculate them from liquidity delta and sqrt price.
 //      the calculations lead to amounts being off. // TODO: confirm logic is correct
 // - Current tick is below the position ( p.CurrentTick < lowerTick).

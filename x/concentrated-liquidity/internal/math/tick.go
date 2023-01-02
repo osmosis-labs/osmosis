@@ -1,7 +1,11 @@
 package math
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
 var sdkNineDec = sdk.NewDec(9)
@@ -32,6 +36,10 @@ func TickToPrice(tickIndex, kAtPriceOne sdk.Int) (price sdk.Dec, err error) {
 		return sdk.OneDec(), nil
 	}
 
+	if kAtPriceOne.LT(types.PrecisionValueAtPriceOneMin) || kAtPriceOne.GT(types.PrecisionValueAtPriceOneMax) {
+		return sdk.Dec{}, fmt.Errorf("kAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax)
+	}
+
 	// The formula is as follows: k_increment_distance = 9 * 10**(-k_at_price_1)
 	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**k_at_price_1)
 	kIncrementDistance := sdkNineDec.Mul(handleNegativeExponents(kAtPriceOne.Neg()))
@@ -55,9 +63,13 @@ func TickToPrice(tickIndex, kAtPriceOne sdk.Int) (price sdk.Dec, err error) {
 }
 
 // PriceToTick takes a price and returns the corresponding tick index
-func PriceToTick(price sdk.Dec, kAtPriceOne sdk.Int) sdk.Int {
+func PriceToTick(price sdk.Dec, kAtPriceOne sdk.Int) (sdk.Int, error) {
 	if price.Equal(sdk.OneDec()) {
-		return sdk.ZeroInt()
+		return sdk.ZeroInt(), nil
+	}
+
+	if kAtPriceOne.LT(types.PrecisionValueAtPriceOneMin) || kAtPriceOne.GT(types.PrecisionValueAtPriceOneMax) {
+		return sdk.Int{}, fmt.Errorf("kAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax)
 	}
 
 	// The formula is as follows: k_increment_distance = 9 * 10**(-k_at_price_1)
@@ -92,7 +104,7 @@ func PriceToTick(price sdk.Dec, kAtPriceOne sdk.Int) sdk.Int {
 	// Finally, add the ticks we have passed from the completed k values, as well as the ticks we have passed in the current k value
 	tickIndex := ticksPassed.Add(ticksToBeFulfilledByCurrentK.TruncateInt())
 
-	return tickIndex
+	return tickIndex, nil
 }
 
 // handleNegativeExponents treats negative exponents as 1/(10**|exponent|) instead of 10**-exponent

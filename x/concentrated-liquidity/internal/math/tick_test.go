@@ -6,7 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
 )
 
-func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
+func (suite *ConcentratedMathTestSuite) TestTickToPrice() {
 	testCases := map[string]struct {
 		tickIndex     sdk.Int
 		kAtPriceOne   sdk.Int
@@ -154,7 +154,8 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			tick := math.PriceToTick(tc.price, tc.kAtPriceOne)
+			tick, err := math.PriceToTick(tc.price, tc.kAtPriceOne)
+			suite.Require().NoError(err)
 			suite.Require().Equal(tc.tickExpected, tick.String())
 		})
 	}
