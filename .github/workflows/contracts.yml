@@ -16,7 +16,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        contract: [{workdir: ./x/ibc-rate-limit/, output: bytecode/rate_limiter.wasm, build: artifacts/rate_limiter.wasm, name: rate_limiter}]
+        contract: [
+          {workdir: ./x/ibc-rate-limit/, output: bytecode/rate_limiter.wasm, build: artifacts/rate_limiter.wasm, name: rate_limiter},
+          {workdir: ./x/ibc-hooks/, output: bytecode/crosschain_swaps.wasm, build: artifacts/crosschain_swaps.wasm, name: crosschain_swaps},
+          {workdir: ./x/ibc-hooks/, output: bytecode/swaprouter.wasm, build: artifacts/swaprouter.wasm, name: swaprouter},
+        ]
 
     steps:
       - name: Checkout sources
@@ -82,7 +86,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        workdir: [./x/ibc-rate-limit]
+        workdir: [./x/ibc-rate-limit, ./x/ibc-hooks/]
 
     steps:
       - name: Checkout sources
