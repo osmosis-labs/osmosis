@@ -321,7 +321,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 	}
 
 	sudoMsg := []byte(fmt.Sprintf(
-		`{"receive_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}`,
+		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}}`,
 		packet.SourceChannel, packet.Sequence, ackAsJson, success))
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
@@ -356,7 +356,7 @@ func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdk.Context, pa
 	}
 
 	sudoMsg := []byte(fmt.Sprintf(
-		`{"ibc_timeout": {"channel": "%s", "sequence": %d}}`,
+		`{"ibc_lifecycle_complete": {"ibc_timeout": {"channel": "%s", "sequence": %d}}}`,
 		packet.SourceChannel, packet.Sequence))
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
