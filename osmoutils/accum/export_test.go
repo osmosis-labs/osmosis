@@ -15,9 +15,9 @@ import (
 // This function is currently used for testing purposes only.
 // If there is a need to use this function in production, it
 // can be moved to a non-test file.
-func (accum AccumulatorObject) GetPosition(addr sdk.AccAddress) Record {
+func (accum AccumulatorObject) GetPosition(name string) Record {
 	position := Record{}
-	osmoutils.MustGet(accum.store, formatPositionPrefixKey(accum.name, addr.String()), &position)
+	osmoutils.MustGet(accum.store, formatPositionPrefixKey(accum.name, name), &position)
 	return position
 }
 
@@ -39,12 +39,12 @@ func CreateRawAccumObject(store store.KVStore, name string, value sdk.DecCoins) 
 	}
 }
 
-func CreateRawPosition(accum AccumulatorObject, addr sdk.AccAddress, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
-	createNewPosition(accum, accum.value, addr, numShareUnits, unclaimedRewards, options)
+func CreateRawPosition(accum AccumulatorObject, name string, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
+	createNewPosition(accum, accum.value, name, numShareUnits, unclaimedRewards, options)
 }
 
-func GetPosition(accum AccumulatorObject, addr sdk.AccAddress) (Record, error) {
-	return getPosition(accum, addr)
+func GetPosition(accum AccumulatorObject, name string) (Record, error) {
+	return getPosition(accum, name)
 }
 
 // Gets store from accumulator for testing purposes
@@ -66,9 +66,9 @@ func parseRecordFromBz(bz []byte) (record Record, err error) {
 	return record, nil
 }
 
-// WithPosition is a decorator test function to append a position at given address to the given accumulator.
-func WithPosition(accum AccumulatorObject, addr sdk.Address, position Record) AccumulatorObject {
-	osmoutils.MustSet(accum.store, formatPositionPrefixKey(accum.name, addr.String()), &position)
+// WithPosition is a decorator test function to append a position with the given name to the given accumulator.
+func WithPosition(accum AccumulatorObject, name string, position Record) AccumulatorObject {
+	osmoutils.MustSet(accum.store, formatPositionPrefixKey(accum.name, name), &position)
 	return accum
 }
 
