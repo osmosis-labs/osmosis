@@ -89,7 +89,7 @@ func (suite *AccumTestSuite) SetupTest() {
 	suite.store = kvstore
 }
 
-func TestTreeTestSuite(t *testing.T) {
+func TestAccumTestSuite(t *testing.T) {
 	suite.Run(t, new(AccumTestSuite))
 }
 
@@ -196,8 +196,18 @@ func (suite *AccumTestSuite) TestNewPosition() {
 			tc.accObject.NewPosition(tc.name, tc.numShareUnits, tc.options)
 
 			// Assertions.
-			positions := tc.accObject.GetPosition(tc.name)
-			suite.Require().Equal(tc.expectedPosition, positions)
+			position := tc.accObject.GetPosition(tc.name)
+
+			suite.Require().Equal(tc.expectedPosition.NumShares, position.NumShares)
+			suite.Require().Equal(tc.expectedPosition.InitAccumValue, position.InitAccumValue)
+			suite.Require().Equal(tc.expectedPosition.UnclaimedRewards, position.UnclaimedRewards)
+
+			if tc.options == nil {
+				suite.Require().Nil(position.Options)
+				return
+			}
+
+			suite.Require().Equal(*tc.options, *position.Options)
 		})
 	}
 }

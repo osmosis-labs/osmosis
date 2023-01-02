@@ -7,10 +7,10 @@ import (
 )
 
 // Creates a new position at accumulator's current value with a specific number of shares and unclaimed rewards
-func createNewPosition(accum AccumulatorObject, index string, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
+func createNewPosition(accum AccumulatorObject, accumulatorValue sdk.DecCoins, index string, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
 	position := Record{
 		NumShares:        numShareUnits,
-		InitAccumValue:   accum.value,
+		InitAccumValue:   accumulatorValue,
 		UnclaimedRewards: unclaimedRewards,
 		Options:          options,
 	}
