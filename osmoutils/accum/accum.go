@@ -86,6 +86,9 @@ func (accum AccumulatorObject) NewPosition(name string, numShareUnits sdk.Dec, o
 // The position is initialized with empty unclaimed rewards
 // If there is an existing position for the given address, it is overwritten.
 func (accum AccumulatorObject) NewPositionCustomAcc(name string, numShareUnits sdk.Dec, customAccumulatorValue sdk.DecCoins, options *Options) error {
+	if err := validateCustomAccumulatorValue(customAccumulatorValue); err != nil {
+		return err
+	}
 	return accum.newPosition(name, numShareUnits, customAccumulatorValue, options)
 }
 
@@ -130,6 +133,9 @@ func (accum AccumulatorObject) AddToPosition(name string, newShares sdk.Dec) err
 // - there is no existing position at the given address
 // - other internal or database error occurs.
 func (accum AccumulatorObject) AddToPositionCustomAcc(name string, newShares sdk.Dec, customAccumulatorValue sdk.DecCoins) error {
+	if err := validateCustomAccumulatorValue(customAccumulatorValue); err != nil {
+		return err
+	}
 	return accum.addToPosition(name, newShares, customAccumulatorValue)
 }
 
@@ -166,11 +172,14 @@ func (accum AccumulatorObject) RemoveFromPosition(name string, numSharesToRemove
 	return accum.removeFromPosition(name, numSharesToRemove, accum.value)
 }
 
-// RemovePosition removes the specified number of shares from a position. Specifically, it claims
+// RemovePositionCustomAcc removes the specified number of shares from a position. Specifically, it claims
 // the unclaimed and newly accrued rewards and returns them alongside the redeemed shares. Then, it
 // overwrites the position record with the updated number of shares. Since it accrues rewards, it
 // also resets the position's accumulator value to the given customAccumulatorValue.
 func (accum AccumulatorObject) RemoveFromPositionCustomAcc(name string, numSharesToRemove sdk.Dec, customAccumulatorValue sdk.DecCoins) error {
+	if err := validateCustomAccumulatorValue(customAccumulatorValue); err != nil {
+		return err
+	}
 	return accum.removeFromPosition(name, numSharesToRemove, customAccumulatorValue)
 }
 

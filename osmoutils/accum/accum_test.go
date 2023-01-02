@@ -227,6 +227,7 @@ func (suite *AccumTestSuite) TestNewPositionCustomAcc() {
 		customAcc        sdk.DecCoins
 		options          *accumPackage.Options
 		expectedPosition accumPackage.Record
+		expectedError    error
 	}{
 		"custom acc value equals to acc": {
 			accObject:     accObject,
@@ -251,13 +252,27 @@ func (suite *AccumTestSuite) TestNewPositionCustomAcc() {
 			},
 			options: &emptyPositionOptions,
 		},
+		"negative acc value equals to acc": {
+			accObject:     accObject,
+			name:          testAddressOne,
+			numShareUnits: positionOne.NumShares,
+			customAcc:     accObject.GetValue().MulDec(sdk.NewDec(-1)),
+			expectedError: accumPackage.NegativeCustomAccError{accObject.GetValue().MulDec(sdk.NewDec(-1))},
+		},
 	}
 
 	for name, tc := range tests {
 		tc := tc
 		suite.Run(name, func() {
 			// System under test.
-			tc.accObject.NewPositionCustomAcc(tc.name, tc.numShareUnits, tc.customAcc, tc.options)
+			err := tc.accObject.NewPositionCustomAcc(tc.name, tc.numShareUnits, tc.customAcc, tc.options)
+
+			if tc.expectedError != nil {
+				suite.Require().Error(err)
+				suite.Require().Equal(tc.expectedError, err)
+				return
+			}
+			suite.Require().NoError(err)
 
 			// Assertions.
 			position := tc.accObject.GetPosition(tc.name)
@@ -581,6 +596,82 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 					suite.Require().Equal(tc.startingUnclaimedRewards, newPosition.UnclaimedRewards)
 				}
 			}
+		})
+	}
+}
+
+// TestAddToPositionCustomAcc this test only focuses on testing the
+// custom accumulator value functionality of adding to position.
+func (suite *AccumTestSuite) TestAddToPositionCustomAcc() {
+	// We setup store and accum
+	// once at beginning so we can test duplicate positions
+	suite.SetupTest()
+
+	// Setup.
+	accObject := accumPackage.CreateRawAccumObject(suite.store, testNameOne, initialCoinsDenomOne)
+
+	tests := map[string]struct {
+		accObject        accumPackage.AccumulatorObject
+		name             string
+		numShareUnits    sdk.Dec
+		customAcc        sdk.DecCoins
+		expectedPosition accumPackage.Record
+		expectedError    error
+	}{
+		"custom acc value equals to acc": {
+			accObject:     accObject,
+			name:          testAddressOne,
+			numShareUnits: positionOne.NumShares,
+			customAcc:     accObject.GetValue(),
+			expectedPosition: accumPackage.Record{
+				NumShares:        positionOne.NumShares,
+				InitAccumValue:   accObject.GetValue(),
+				UnclaimedRewards: emptyCoins,
+			},
+		},
+		"custom acc value does not equal to acc": {
+			accObject:     accObject,
+			name:          testAddressTwo,
+			numShareUnits: positionTwo.NumShares,
+			customAcc:     accObject.GetValue().MulDec(sdk.NewDec(2)),
+			expectedPosition: accumPackage.Record{
+				NumShares:        positionTwo.NumShares,
+				InitAccumValue:   accObject.GetValue().MulDec(sdk.NewDec(2)),
+				UnclaimedRewards: emptyCoins,
+			},
+		},
+		"negative acc value equals to acc": {
+			accObject:     accObject,
+			name:          testAddressOne,
+			numShareUnits: positionOne.NumShares,
+			customAcc:     accObject.GetValue().MulDec(sdk.NewDec(-1)),
+			expectedError: accumPackage.NegativeCustomAccError{accObject.GetValue().MulDec(sdk.NewDec(-1))},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			// Setup
+			tc.accObject.NewPositionCustomAcc(tc.name, sdk.ZeroDec(), sdk.NewDecCoins(), nil)
+
+			// System under test.
+			err := tc.accObject.AddToPositionCustomAcc(tc.name, tc.numShareUnits, tc.customAcc)
+
+			if tc.expectedError != nil {
+				suite.Require().Error(err)
+				suite.Require().Equal(tc.expectedError, err)
+				return
+			}
+			suite.Require().NoError(err)
+
+			// Assertions.
+			position := tc.accObject.GetPosition(tc.name)
+
+			suite.Require().Equal(tc.expectedPosition.NumShares, position.NumShares)
+			suite.Require().Equal(tc.expectedPosition.InitAccumValue, position.InitAccumValue)
+			suite.Require().Equal(tc.expectedPosition.UnclaimedRewards, position.UnclaimedRewards)
+			suite.Require().Nil(position.Options)
 		})
 	}
 }
