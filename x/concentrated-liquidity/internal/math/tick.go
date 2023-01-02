@@ -4,6 +4,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+var sdkNineDec = sdk.NewDec(9)
+var sdkTenDec = sdk.NewDec(10)
+
 // TicksToPrice returns the price for the lower and upper ticks.
 // Returns error if fails to calculate price.
 // TODO: spec and tests
@@ -31,7 +34,7 @@ func TickToPrice(tickIndex, kAtPriceOne sdk.Int) (price sdk.Dec, err error) {
 
 	// The formula is as follows: k_increment_distance = 9 * 10**(-k_at_price_1)
 	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**k_at_price_1)
-	kIncrementDistance := sdk.NewDec(9).Mul(handleNegativeExponents(kAtPriceOne.Neg()))
+	kIncrementDistance := sdkNineDec.Mul(handleNegativeExponents(kAtPriceOne.Neg()))
 
 	// Use floor division to determine how many k increments we have passed
 	kDelta := tickIndex.ToDec().Quo(kIncrementDistance).TruncateInt()
@@ -56,7 +59,7 @@ func PriceToTick(price sdk.Dec, kAtPriceOne sdk.Int) (tickIndex sdk.Int) {
 
 	// The formula is as follows: k_increment_distance = 9 * 10**(-k_at_price_1)
 	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**k_at_price_1)
-	kIncrementDistance := sdk.NewDec(9).Mul(handleNegativeExponents(kAtPriceOne.Neg()))
+	kIncrementDistance := sdkNineDec.Mul(handleNegativeExponents(kAtPriceOne.Neg()))
 
 	total := sdk.OneDec()
 	ticksPassed := sdk.ZeroInt()
@@ -86,7 +89,7 @@ func PriceToTick(price sdk.Dec, kAtPriceOne sdk.Int) (tickIndex sdk.Int) {
 // This is because the sdk.Dec.Power function does not support negative exponents
 func handleNegativeExponents(exponent sdk.Int) sdk.Dec {
 	if exponent.GTE(sdk.ZeroInt()) {
-		return sdk.NewDec(10).Power(exponent.Uint64())
+		return sdkTenDec.Power(exponent.Uint64())
 	}
-	return sdk.OneDec().Quo(sdk.NewDec(10).Power(exponent.Abs().Uint64()))
+	return sdk.OneDec().Quo(sdkTenDec.Power(exponent.Abs().Uint64()))
 }
