@@ -19,30 +19,19 @@ func TicksToPrice(lowerTick, upperTick int64, kAtPriceOne sdk.Int) (sdk.Dec, sdk
 	return priceLowerTick, priceUpperTick, nil
 }
 
-// TickToSqrtPrice calculates the price at a given tick index based on the provided
-// starting price of 1 at k=0. The price is calculated using a square root function
-// with a coefficient of 9, where the price increases by a factor of 10 for every
-// increment of k.
-//
-// The function takes in two arguments:
+// TickToPrice returns the price given the following two arguments:
 // 	- tickIndex: the tick index to calculate the price for
 // 	- kAtPriceOne: the value of k at which the starting price of 1 is set
 //
-// It returns a sdk.Dec representing the calculated price and an error if any errors
-// occurred during the calculation.
+// If tickIndex is zero, the function returns sdk.OneDec().
 func TickToPrice(tickIndex, kAtPriceOne sdk.Int) (price sdk.Dec, err error) {
 	if tickIndex.IsZero() {
 		return sdk.OneDec(), nil
 	}
 
-	var kIncrementDistance sdk.Dec
 	// The formula is as follows: k_increment_distance = 9 * 10**(-k_at_price_1)
 	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**k_at_price_1)
-	if kAtPriceOne.GTE(sdk.ZeroInt()) {
-		kIncrementDistance = sdk.NewDec(9).Mul(sdk.OneDec().Quo(sdk.NewInt(10).ToDec().Power(kAtPriceOne.Uint64())))
-	} else {
-		kIncrementDistance = sdk.NewDec(9).Mul(sdk.NewInt(10).ToDec().Power(kAtPriceOne.Abs().Uint64()))
-	}
+	kIncrementDistance := sdk.NewDec(9).Mul(handleNegativeExponents(kAtPriceOne.Neg()))
 
 	// Use floor division to determine how many k increments we have passed
 	kDelta := tickIndex.ToDec().Quo(kIncrementDistance).TruncateInt()
@@ -50,20 +39,12 @@ func TickToPrice(tickIndex, kAtPriceOne sdk.Int) (price sdk.Dec, err error) {
 	// Calculate the current k value from the starting k value and the k delta
 	curK := (kAtPriceOne.Add(kDelta))
 
-	var curIncrement sdk.Dec
-	if curK.GTE(sdk.ZeroInt()) {
-		curIncrement = sdk.NewDec(10).Power(curK.Uint64())
-	} else {
-		curIncrement = sdk.NewDec(1).Quo(sdk.NewDec(10).Power(curK.Abs().Uint64()))
-	}
+	curIncrement := handleNegativeExponents(curK)
 
 	numAdditiveTicks := tickIndex.ToDec().Sub(kDelta.ToDec().Mul(kIncrementDistance))
 
-	if kDelta.GTE(sdk.ZeroInt()) {
-		price = sdk.NewDec(10).Power(kDelta.Uint64()).Add(numAdditiveTicks.Mul(curIncrement))
-	} else {
-		price = sdk.OneDec().Quo(sdk.NewDec(10).Power(kDelta.Abs().Uint64())).Add(numAdditiveTicks.Mul(curIncrement))
-	}
+	price = handleNegativeExponents(kDelta).Add(numAdditiveTicks.Mul(curIncrement))
+
 	return price, nil
 }
 
@@ -73,47 +54,25 @@ func PriceToTick(price sdk.Dec, kAtPriceOne sdk.Int) (tickIndex sdk.Int) {
 		return sdk.ZeroInt()
 	}
 
-	var kIncrementDistance sdk.Dec
 	// The formula is as follows: k_increment_distance = 9 * 10**(-k_at_price_1)
 	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**k_at_price_1)
-	if kAtPriceOne.GTE(sdk.ZeroInt()) {
-		kIncrementDistance = sdk.NewDec(9).Mul(sdk.OneDec().Quo(sdk.NewInt(10).ToDec().Power(kAtPriceOne.Uint64())))
-	} else {
-		kIncrementDistance = sdk.NewDec(9).Mul(sdk.NewInt(10).ToDec().Power(kAtPriceOne.Abs().Uint64()))
-	}
+	kIncrementDistance := sdk.NewDec(9).Mul(handleNegativeExponents(kAtPriceOne.Neg()))
 
 	total := sdk.OneDec()
 	ticksPassed := sdk.ZeroInt()
 	currentK := kAtPriceOne
 
-	var curIncrement sdk.Dec
-	if currentK.GTE(sdk.ZeroInt()) {
-		curIncrement = sdk.NewDec(10).Power(currentK.Uint64())
-	} else {
-		curIncrement = sdk.NewDec(1).Quo(sdk.NewDec(10).Power(currentK.Abs().Uint64()))
-	}
+	curIncrement := handleNegativeExponents(currentK)
 
 	for total.LT(price) {
-		if currentK.GTE(sdk.ZeroInt()) {
-			curIncrement = sdk.NewDec(10).Power(currentK.Uint64())
-			maxPriceForCurrentIncrement := kIncrementDistance.Mul(curIncrement)
-			if total.Add(maxPriceForCurrentIncrement).LT(price) {
-				total = total.Add(maxPriceForCurrentIncrement)
-				currentK = currentK.Add(sdk.OneInt())
-				ticksPassed = ticksPassed.Add(kIncrementDistance.TruncateInt())
-			} else {
-				break
-			}
+		curIncrement = handleNegativeExponents(currentK)
+		maxPriceForCurrentIncrement := kIncrementDistance.Mul(curIncrement)
+		if total.Add(maxPriceForCurrentIncrement).LT(price) {
+			total = total.Add(maxPriceForCurrentIncrement)
+			currentK = currentK.Add(sdk.OneInt())
+			ticksPassed = ticksPassed.Add(kIncrementDistance.TruncateInt())
 		} else {
-			curIncrement = sdk.NewDec(1).Quo(sdk.NewDec(10).Power(currentK.Abs().Uint64()))
-			maxPriceForCurrentIncrement := kIncrementDistance.Mul(curIncrement)
-			if total.Add(maxPriceForCurrentIncrement).LT(price) {
-				total = total.Add(maxPriceForCurrentIncrement)
-				currentK = currentK.Add(sdk.OneInt())
-				ticksPassed = ticksPassed.Add(kIncrementDistance.TruncateInt())
-			} else {
-				break
-			}
+			break
 		}
 	}
 	ticksToBeFulfilledByCurrentK := price.Sub(total).Quo(curIncrement)
@@ -121,4 +80,13 @@ func PriceToTick(price sdk.Dec, kAtPriceOne sdk.Int) (tickIndex sdk.Int) {
 	ticksPassed = ticksPassed.Add(ticksToBeFulfilledByCurrentK.TruncateInt())
 
 	return ticksPassed
+}
+
+// handleNegativeExponents treats negative exponents as 1/(10**|exponent|) instead of 10**-exponent
+// This is because the sdk.Dec.Power function does not support negative exponents
+func handleNegativeExponents(exponent sdk.Int) sdk.Dec {
+	if exponent.GTE(sdk.ZeroInt()) {
+		return sdk.NewDec(10).Power(exponent.Uint64())
+	}
+	return sdk.OneDec().Quo(sdk.NewDec(10).Power(exponent.Abs().Uint64()))
 }
