@@ -222,8 +222,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			sutConfigOverwrite: &lpTest{
 				liquidityAmount: baseCase.liquidityAmount.QuoInt64(2),
 
-				amount0Expected: baseCase.amount0Expected.QuoRaw(2),                   // 0.4992935 / 2 eth
-				amount1Expected: baseCase.amount1Expected.QuoRaw(2).Sub(sdk.OneInt()), // 2499 usdc, one is lost due to truncation
+				amount0Expected: baseCase.amount0Expected.QuoRaw(2), // 0.4992935 / 2 eth
+				amount1Expected: baseCase.amount1Expected.QuoRaw(2), // 2499 usdc
 			},
 		},
 		"error: no position created": {

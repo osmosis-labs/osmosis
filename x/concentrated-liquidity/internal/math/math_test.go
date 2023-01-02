@@ -63,7 +63,7 @@ func (suite *ConcentratedMathTestSuite) TestLiquidity0() {
 			currentSqrtP:      sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
 			sqrtPHigh:         sdk.MustNewDecFromStr("74.161984870956629487"), // 5500
 			amount0Desired:    sdk.NewInt(1000000),
-			expectedLiquidity: "1519437308.014768571720938768",
+			expectedLiquidity: "1519437308.014768571720923239",
 			// https://www.wolframalpha.com/input?i=1000000+*+%2870.710678118654752440*+74.161984870956629487%29+%2F+%2874.161984870956629487+-+70.710678118654752440%29
 		},
 	}

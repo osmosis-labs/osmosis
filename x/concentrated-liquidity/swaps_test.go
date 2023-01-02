@@ -14,20 +14,21 @@ var _ = suite.TestingSuite(nil)
 
 func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 	tests := map[string]struct {
-		positionAmount0  sdk.Int
-		positionAmount1  sdk.Int
-		addPositions     func(ctx sdk.Context, poolId uint64)
-		tokenIn          sdk.Coin
-		tokenOutDenom    string
-		priceLimit       sdk.Dec
-		expectedTokenIn  sdk.Coin
-		expectedTokenOut sdk.Coin
-		expectedTick     sdk.Int
-		newLowerPrice    sdk.Dec
-		newUpperPrice    sdk.Dec
-		poolLiqAmount0   sdk.Int
-		poolLiqAmount1   sdk.Int
-		expectErr        bool
+		positionAmount0   sdk.Int
+		positionAmount1   sdk.Int
+		addPositions      func(ctx sdk.Context, poolId uint64)
+		tokenIn           sdk.Coin
+		tokenOutDenom     string
+		priceLimit        sdk.Dec
+		expectedTokenIn   sdk.Coin
+		expectedTokenOut  sdk.Coin
+		expectedTick      sdk.Int
+		expectedSqrtPrice sdk.Dec
+		newLowerPrice     sdk.Dec
+		newUpperPrice     sdk.Dec
+		poolLiqAmount0    sdk.Int
+		poolLiqAmount1    sdk.Int
+		expectErr         bool
 	}{
 		//  One price range
 		//
@@ -503,7 +504,53 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			test.addPositions(s.Ctx, pool.GetId())
 
 			// perform calc
-			tokenIn, tokenOut, updatedTick, updatedLiquidity, _, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenInInternal(
+			tokenIn, tokenOut, updatedTick, updatedLiquidity, updatedSqrtPrice, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenInInternal(
+				s.Ctx,
+				test.tokenIn, test.tokenOutDenom,
+				DefaultZeroSwapFee, test.priceLimit, pool.GetId())
+			if test.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				// check that tokenIn, tokenOut, tick, and sqrtPrice from CalcOut are all what we expected
+				s.Require().Equal(test.expectedTick.String(), updatedTick.String())
+				s.Require().Equal(test.expectedSqrtPrice.String(), updatedSqrtPrice.String())
+				s.Require().Equal(test.expectedTokenIn.String(), tokenIn.String())
+				s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
+
+				if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
+					test.newLowerPrice = DefaultLowerPrice
+					test.newUpperPrice = DefaultUpperPrice
+				}
+
+				newLowerTick, err := math.PriceToTick(test.newLowerPrice, pool.GetPrecisionFactorAtPriceOne())
+				s.Require().NoError(err)
+				newUpperTick, err := math.PriceToTick(test.newUpperPrice, pool.GetPrecisionFactorAtPriceOne())
+				s.Require().NoError(err)
+
+				// TODO: Dont hardcode
+				lowerPrice, err := math.TickToPrice(newLowerTick, pool.GetPrecisionFactorAtPriceOne())
+				s.Require().NoError(err)
+				lowerSqrtPrice, err := lowerPrice.ApproxSqrt()
+				s.Require().NoError(err)
+				upperPrice, err := math.TickToPrice(newUpperTick, pool.GetPrecisionFactorAtPriceOne())
+				s.Require().NoError(err)
+				upperSqrtPrice, err := upperPrice.ApproxSqrt()
+				s.Require().NoError(err)
+
+				if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
+					test.poolLiqAmount0 = DefaultAmt0
+					test.poolLiqAmount1 = DefaultAmt1
+				}
+
+				// check that liquidity is what we expected
+				expectedLiquidity := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
+				s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
+			}
+
+			// perform swap
+			tokenIn, tokenOut, updatedTick, updatedLiquidity, updatedSqrtPrice, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
 				s.Ctx,
 				test.tokenIn, test.tokenOutDenom,
 				DefaultZeroSwapFee, test.priceLimit, pool.GetId())
@@ -543,58 +590,6 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 				expectedLiquidity := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
 				s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
 			}
-
-			// perform swap
-			_, tokenOut, _, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
-				s.Ctx,
-				test.tokenIn, test.tokenOutDenom,
-				DefaultZeroSwapFee, test.priceLimit, pool.GetId())
-			if test.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-
-				pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-				s.Require().NoError(err)
-
-				// check that the pool's current tick was updated correctly
-				s.Require().Equal(test.expectedTick.String(), pool.GetCurrentTick().String())
-				// check that we produced the same token out from the swap function that we expected
-				s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
-
-				// the following is needed to get the expected liquidity to later compare to what the pool was updated to
-				if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
-					test.newLowerPrice = DefaultLowerPrice
-					test.newUpperPrice = DefaultUpperPrice
-				}
-
-				newLowerTick, err := math.PriceToTick(test.newLowerPrice, pool.GetPrecisionFactorAtPriceOne())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTick(test.newUpperPrice, pool.GetPrecisionFactorAtPriceOne())
-				s.Require().NoError(err)
-
-				// TODO: Dont hardcode
-				lowerPrice, err := math.TickToPrice(newLowerTick, pool.GetPrecisionFactorAtPriceOne())
-				s.Require().NoError(err)
-				lowerSqrtPrice, err := lowerPrice.ApproxSqrt()
-				s.Require().NoError(err)
-				upperPrice, err := math.TickToPrice(newUpperTick, pool.GetPrecisionFactorAtPriceOne())
-				s.Require().NoError(err)
-				upperSqrtPrice, err := upperPrice.ApproxSqrt()
-				s.Require().NoError(err)
-
-				if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
-					test.poolLiqAmount0 = DefaultAmt0
-					test.poolLiqAmount1 = DefaultAmt1
-				}
-
-				expectedLiquidity := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
-				// check that the pools liquidity was updated correctly
-				s.Require().Equal(expectedLiquidity.String(), pool.GetLiquidity().String())
-
-				// TODO: need to figure out a good way to test that the currentSqrtPrice that the pool is set to makes sense
-				// right now we calculate this value through iterations, so unsure how to do this here / if its needed
-			}
 		})
 
 	}
@@ -602,20 +597,21 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 
 func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 	tests := map[string]struct {
-		positionAmount0  sdk.Int
-		positionAmount1  sdk.Int
-		addPositions     func(ctx sdk.Context, poolId uint64)
-		tokenOut         sdk.Coin
-		tokenInDenom     string
-		priceLimit       sdk.Dec
-		expectedTokenIn  sdk.Coin
-		expectedTokenOut sdk.Coin
-		expectedTick     sdk.Int
-		newLowerPrice    sdk.Dec
-		newUpperPrice    sdk.Dec
-		poolLiqAmount0   sdk.Int
-		poolLiqAmount1   sdk.Int
-		expectErr        bool
+		positionAmount0   sdk.Int
+		positionAmount1   sdk.Int
+		addPositions      func(ctx sdk.Context, poolId uint64)
+		tokenOut          sdk.Coin
+		tokenInDenom      string
+		priceLimit        sdk.Dec
+		expectedTokenIn   sdk.Coin
+		expectedTokenOut  sdk.Coin
+		expectedTick      sdk.Int
+		expectedSqrtPrice sdk.Dec
+		newLowerPrice     sdk.Dec
+		newUpperPrice     sdk.Dec
+		poolLiqAmount0    sdk.Int
+		poolLiqAmount1    sdk.Int
+		expectErr         bool
 	}{
 		//  One price range
 		//
@@ -962,7 +958,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 			test.addPositions(s.Ctx, pool.GetId())
 
 			// perform calc
-			tokenIn, tokenOut, updatedTick, updatedLiquidity, _, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOutInternal(
+			tokenIn, tokenOut, updatedTick, updatedLiquidity, updatedSqrtPrice, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOutInternal(
 				s.Ctx,
 				test.tokenOut, test.tokenInDenom,
 				DefaultZeroSwapFee, test.priceLimit, pool.GetId())
@@ -971,9 +967,11 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 			} else {
 				s.Require().NoError(err)
 
+				// check that tokenIn, tokenOut, tick, and sqrtPrice from CalcOut are all what we expected
 				s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
 				s.Require().Equal(test.expectedTokenIn.String(), tokenIn.String())
 				s.Require().Equal(test.expectedTick.String(), updatedTick.String())
+				s.Require().Equal(test.expectedSqrtPrice.String(), updatedSqrtPrice.String())
 
 				if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
 					test.newLowerPrice = DefaultLowerPrice
@@ -999,12 +997,13 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 					test.poolLiqAmount1 = DefaultAmt1
 				}
 
+				// check that liquidity is what we expected
 				expectedLiquidity := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
 				s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
 			}
 
 			// perform swap
-			tokenIn, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
+			tokenIn, tokenOut, updatedTick, updatedLiquidity, updatedSqrtPrice, err = s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
 				s.Ctx,
 				test.tokenOut, test.tokenInDenom,
 				DefaultZeroSwapFee, test.priceLimit, pool.GetId())
@@ -1016,12 +1015,15 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 				pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 				s.Require().NoError(err)
 
-				// check that the pool's current tick was updated correctly
-				s.Require().Equal(test.expectedTick.String(), pool.GetCurrentTick().String())
-				// check that we produced the same token out from the swap function that we expected
+				// check that tokenIn, tokenOut, tick, and sqrtPrice from SwapOut are all what we expected
+				s.Require().Equal(test.expectedTick.String(), updatedTick.String())
+				s.Require().Equal(test.expectedSqrtPrice.String(), updatedSqrtPrice.String())
 				s.Require().Equal(test.expectedTokenIn.String(), tokenIn.String())
+				s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
+				// also ensure the pool's currentTick and currentSqrtPrice was updated due to calling a mutative method
+				s.Require().Equal(test.expectedTick.String(), pool.GetCurrentTick().String())
+				s.Require().Equal(test.expectedSqrtPrice.String(), pool.GetCurrentSqrtPrice().String())
 
-				// the following is needed to get the expected liquidity to later compare to what the pool was updated to
 				if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
 					test.newLowerPrice = DefaultLowerPrice
 					test.newUpperPrice = DefaultUpperPrice
@@ -1047,11 +1049,10 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 				}
 
 				expectedLiquidity := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
-				// check that the pools liquidity was updated correctly
+				// check that liquidity is what we expected
 				s.Require().Equal(expectedLiquidity.String(), pool.GetLiquidity().String())
-
-				// TODO: need to figure out a good way to test that the currentSqrtPrice that the pool is set to makes sense
-				// right now we calculate this value through iterations, so unsure how to do this here / if its needed
+				// also ensure the pool's currentLiquidity was updated due to calling a mutative method
+				s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
 			}
 		})
 
