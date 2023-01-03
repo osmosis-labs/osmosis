@@ -570,6 +570,16 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 				// check that liquidity is what we expected
 				expectedLiquidity := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
 				s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
+
+				// check that the pool has not been modified after performing calc
+				poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+				s.Require().NoError(err)
+
+				s.Require().Equal(pool.GetCurrentSqrtPrice(), poolAfterCalc.GetCurrentSqrtPrice())
+				s.Require().Equal(pool.GetCurrentTick(), poolAfterCalc.GetCurrentTick())
+				s.Require().Equal(pool.GetTotalShares(), poolAfterCalc.GetTotalShares())
+				s.Require().Equal(pool.GetLiquidity(), poolAfterCalc.GetLiquidity())
+				s.Require().Equal(pool.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
 			}
 
 			// perform swap
@@ -1036,6 +1046,16 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 				// check that liquidity is what we expected
 				expectedLiquidity := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
 				s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
+
+				// check that the pool has not been modified after performing calc
+				poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+				s.Require().NoError(err)
+
+				s.Require().Equal(pool.GetCurrentSqrtPrice(), poolAfterCalc.GetCurrentSqrtPrice())
+				s.Require().Equal(pool.GetCurrentTick(), poolAfterCalc.GetCurrentTick())
+				s.Require().Equal(pool.GetTotalShares(), poolAfterCalc.GetTotalShares())
+				s.Require().Equal(pool.GetLiquidity(), poolAfterCalc.GetLiquidity())
+				s.Require().Equal(pool.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
 			}
 
 			// perform swap
