@@ -15,10 +15,6 @@ func (k Keeper) GetOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.M
 	return k.getOsmoRoutedMultihopTotalSwapFee(ctx, route)
 }
 
-func (k *Keeper) FundCommunityPool(ctx sdk.Context, fee sdk.Coins, sender sdk.AccAddress) error {
-	return k.communityPoolKeeper.FundCommunityPool(ctx, fee, sender)
-}
-
 // SetPoolRoutesUnsafe sets the given routes to the swaprouter keeper
 // to allow routing from a pool type to a certain swap module.
 // For example, balancer -> gamm.
