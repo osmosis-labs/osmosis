@@ -35,6 +35,8 @@ const (
 	maxLog2Iterations = 300
 )
 
+// test...
+
 var (
 	precisionReuse       = new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision), nil)
 	fivePrecision        = new(big.Int).Quo(precisionReuse, big.NewInt(2))

@@ -12,23 +12,82 @@ def main():
     G = build_di_graph(names, paths)
 
     # now we go commit every go mod file in order, replacing dependencies of prior ones.
-    sorted_dependencies = list(nx.topological_sort(G))
+    sorted_dependencies = list(nx.topological_sort(G))[::-1]
+    update_dep_versions = {}
     for dependency in sorted_dependencies:
-      if check_for_diff(names_to_path[dependency]):
-        print(dependency)
+      # see if we need to change anything per update_dep_versions
+      mod_path = names_to_path[dependency]
+      update_dependencies(mod_path, update_dep_versions)
+      if check_for_diff_against_main(mod_path):
+        print("detected diff relative to main in " + dependency)
+        if check_for_diff_since_last_commit():
+          print("detected diff relative to last commit, committing" + dependency)
+          subprocess.run("git add .".split(" "))
+          subprocess.run("git commit -m".split(" ") + ["(auto) locking dependency versions for " + dependency])
+        v = get_go_sum_version()
+        update_dep_versions[dependency] = str(v)
+        print(update_dep_versions)
     print(sorted_dependencies)
 
-def check_for_diff(path):
-  # Run the 'git diff' command and store the output in a variable
-  output = subprocess.run(['git', 'diff', 'main', '--', path], stdout=subprocess.PIPE)
+def update_dependencies(mod_path, dependencies):
+    # Open the go.mod file in read mode
+    with open(mod_path + "/go.mod", 'r') as mod_file:
+        # Read the contents of the file into a list of lines
+        lines = mod_file.readlines()
+    changed = False
+    # Loop through the lines of the go.mod file
+    for i, line in enumerate(lines):
+        # Check if the line starts with "require"
+        # Split the line by spaces
+        parts = line.split(' ')
+        if len(parts) < 2: # not a require line
+            continue
+        # Get the dependency name and version from the line
+        name = parts[0].strip()
+        version = parts[1].strip()
+        rem_parts = ' '.join(parts[2:]).strip()
+        # Check if the dependency name is in the dictionary of desired versions
+        if name in dependencies:
+            human_version = version
+            if "-" in human_version:
+                human_version = version.split("-")[0]
+            new_version = human_version + "-" + dependencies[name]
+            # Update the version in the go.mod file
+            print(lines[i])
+            print(dependencies[name])
+            lines[i] = f"\t{name} {new_version} {rem_parts}\n"
+            print(lines[i])
+            changed = True
 
-  # Check the exit status of the command
-  if output.returncode == 0:
-    # print("No differences found")
-    return False
-  else:
-    # print("Differences found")
-    return True
+    if not changed:
+        return
+    # Open the go.mod file in write mode
+    with open(mod_path + "/go.mod", 'w') as mod_file:
+        # Write the modified lines to the file
+        mod_file.writelines(lines)
+    
+    result = subprocess.run(['go', 'mod', 'tidy'], cwd=mod_path, capture_output=True)
+
+def get_go_sum_version():
+  # Define the command as a list of strings
+  command = "git --no-pager show --quiet --abbrev=12 --date=format-local:%Y%m%d%H%M%S --format=%cd-%h".split(" ")
+  # print(command)
+  env = {'TZ': 'UTC'}
+
+  # Run the command
+  result = subprocess.run(command, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  # Print the output
+  return result.stdout.decode('utf-8').strip()
+
+def check_for_diff_against_main(path):
+  # Run the 'git diff' command and store the output in a variable
+  output = subprocess.run(['git', 'diff', 'main', "--exit-code", '--', path], stdout=subprocess.PIPE)
+  # Check the exit status of the command (!- 0 means there was a diff)
+  return output.returncode != 0
+
+def check_for_diff_since_last_commit():
+  output = subprocess.run(['git', 'diff', "--exit-code"], stdout=subprocess.PIPE)
+  return output.returncode != 0
 
 def build_di_graph(names, mod_filepaths):
   # Create an empty directed graph
