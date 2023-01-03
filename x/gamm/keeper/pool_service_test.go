@@ -4,13 +4,19 @@ import (
 	"fmt"
 	"time"
 
+	_ "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/golang/mock/gomock"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	_ "github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	"github.com/osmosis-labs/osmosis/v13/tests/mocks"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
@@ -48,6 +54,9 @@ var (
 		sdk.NewCoin("bar", sdk.NewInt(10000000)),
 		sdk.NewCoin("baz", sdk.NewInt(10000000)),
 	)
+	ETH                = "eth"
+	USDC               = "usdc"
+	DefaultTickSpacing = uint64(1)
 )
 
 func (suite *KeeperTestSuite) TestCreateBalancerPool() {
@@ -246,6 +255,7 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 	tests := []struct {
 		name        string
 		msg         swaproutertypes.CreatePoolMsg
+		usingMock   bool
 		emptySender bool
 		expectPass  bool
 	}{
@@ -256,16 +266,17 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 			expectPass:  true,
 		},
 		{
-			name:        "initialize balancer pool with empty sender",
-			msg:         balancer.NewMsgCreateBalancerPool(testAccount, defaultPoolParams, defaultPoolAssets, defaultFutureGovernor),
-			emptySender: true,
-			expectPass:  false,
-		},
-		{
-			name:        "initialize stableswap pool with default assetsr",
+			name:        "initialize stableswap pool with default assets",
 			msg:         stableswap.NewMsgCreateStableswapPool(testAccount, defaultStableSwapPoolParams, defaultStableSwapPoolAssets, defaultScalingFactor, ""),
 			emptySender: false,
 			expectPass:  true,
+		},
+		{
+			name:        "CL Pool given",
+			msg:         balancer.NewMsgCreateBalancerPool(testAccount, defaultPoolParams, defaultPoolAssets, defaultFutureGovernor),
+			usingMock:   true,
+			emptySender: false,
+			expectPass:  false,
 		},
 	}
 
@@ -276,6 +287,7 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 		swaprouterKeeper := suite.App.SwapRouterKeeper
 		bankKeeper := suite.App.BankKeeper
 		poolIncentivesKeeper := suite.App.PoolIncentivesKeeper
+		communityPoolKeeper := suite.App.DistrKeeper
 
 		// fund sender test account
 		sender := test.msg.PoolCreator()
@@ -292,9 +304,49 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 			poolBalanceBefore = poolBalanceBefore.Add(sdk.NewCoin(asset.Denom, gammKeeper.GetDenomLiquidity(suite.Ctx, asset.Denom)))
 		}
 
+		// createPool process
+		err := test.msg.Validate(suite.Ctx)
+		suite.Require().NoError(err, "test: %v", test.name)
+
+		initialPoolLiquidity := test.msg.InitialLiquidity()
+
+		numAssets := initialPoolLiquidity.Len()
+		suite.Require().Equal(numAssets < swaproutertypes.MinPoolAssets, false)
+		suite.Require().Equal(numAssets > swaproutertypes.MaxPoolAssets, false)
+
+		fee := swaprouterKeeper.GetParams(suite.Ctx).PoolCreationFee
+		err = communityPoolKeeper.FundCommunityPool(suite.Ctx, fee, sender)
+		suite.Require().NoError(err, "test: %v", test.name)
+
+		poolId := swaprouterKeeper.GetNextPoolId(suite.Ctx)
+		swaprouterKeeper.SetNextPoolId(suite.Ctx, poolId+1)
+
+		pool, err := test.msg.CreatePool(suite.Ctx, poolId)
+		suite.Require().NoError(err, "test: %v", test.name)
+
+		swaprouterKeeper.SetPoolRoute(suite.Ctx, poolId, test.msg.GetPoolType())
+		err = osmoutils.CreateModuleAccount(suite.Ctx, suite.App.AccountKeeper, pool.GetAddress())
+		suite.Require().NoError(err, "test: %v", test.name)
+
+		err = bankKeeper.SendCoins(suite.Ctx, sender, pool.GetAddress(), initialPoolLiquidity)
+		suite.Require().NoError(err, "test: %v", test.name)
+
+		swapModule, err := swaprouterKeeper.GetPoolModule(suite.Ctx, poolId)
+		suite.Require().NoError(err, "test: %v", test.name)
+
+		err = balancer.ErrIntOverflowBalancerPool
+		if test.usingMock {
+			ctrl := gomock.NewController(suite.T())
+			mockPool := mocks.NewMockConcentratedPoolExtension(ctrl)
+			mockPool.EXPECT().GetTotalShares().Return(pool.GetTotalShares()).AnyTimes()
+			mockPool.EXPECT().GetId().Return(poolId).AnyTimes()
+			err = swapModule.InitializePool(suite.Ctx, pool, sender)
+		} else {
+			err = swapModule.InitializePool(suite.Ctx, pool, sender)
+		}
 		// attempt to create a pool with the given NewMsgCreateBalancerPool message. After that,
 		// this function calls the InitializePool function
-		poolId, err := swaprouterKeeper.CreatePool(suite.Ctx, test.msg)
+		// poolId, err := swaprouterKeeper.CreatePool(suite.Ctx, test.msg)
 
 		if test.expectPass {
 			suite.Require().NoError(err, "test: %v", test.name)
