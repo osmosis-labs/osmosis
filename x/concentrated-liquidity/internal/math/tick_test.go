@@ -14,6 +14,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToPrice() {
 		tickIndex     sdk.Int
 		kAtPriceOne   sdk.Int
 		expectedPrice string
+		expectedError error
 	}{
 		"One dollar increments at the ten thousands place: 1": {
 			tickIndex:     sdk.NewInt(400000),
@@ -95,6 +96,16 @@ func (suite *ConcentratedMathTestSuite) TestTickToPrice() {
 			kAtPriceOne:   sdk.NewInt(-5),
 			expectedPrice: "53030.100000000000000000",
 		},
+		"error: kAtPriceOne less than minimum": {
+			tickIndex:     sdk.NewInt(100),
+			kAtPriceOne:   types.PrecisionValueAtPriceOneMin.Sub(sdk.OneInt()),
+			expectedError: fmt.Errorf("kAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax),
+		},
+		"error: kAtPriceOne greater than maximum": {
+			tickIndex:     sdk.NewInt(100),
+			kAtPriceOne:   types.PrecisionValueAtPriceOneMax.Add(sdk.OneInt()),
+			expectedError: fmt.Errorf("kAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax),
+		},
 	}
 
 	for name, tc := range testCases {
@@ -102,6 +113,11 @@ func (suite *ConcentratedMathTestSuite) TestTickToPrice() {
 
 		suite.Run(name, func() {
 			sqrtPrice, err := math.TickToPrice(tc.tickIndex, tc.kAtPriceOne)
+			if tc.expectedError != nil {
+				suite.Require().Error(err)
+				suite.Require().Equal(tc.expectedError.Error(), err.Error())
+				return
+			}
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.expectedPrice, sqrtPrice.String())
 
