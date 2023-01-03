@@ -1,13 +1,12 @@
 package ibc_hooks
 
 import (
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -70,7 +69,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 
 	// Calculate the receiver / contract caller based on the packet's channel and sender
 	senderStr := fmt.Sprintf("%s/%s", packet.GetDestChannel(), data.GetSender())
-	senderHash32 := sha256.Sum256([]byte(senderStr))
+	senderHash32 := address.Hash("ibc-memo-action", []byte(senderStr))
 	sender := sdk.AccAddress(senderHash32[:])
 	senderBech32, err := sdk.Bech32ifyAddressBytes(h.bech32PrefixAccAddr, sender)
 	if err != nil {

@@ -1,9 +1,9 @@
 package ibc_hooks_test
 
 import (
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"testing"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -328,7 +328,7 @@ func (suite *HooksTestSuite) TestFundTracking() {
 		fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"increment": {} } } }`, addr))
 
 	localAccountStr := fmt.Sprintf("%s/%s", "channel-0", suite.chainB.SenderAccount.GetAddress().String())
-	localAccountHash32 := sha256.Sum256([]byte(localAccountStr))
+	localAccountHash32 := address.Hash("ibc-memo-action", []byte(localAccountStr))
 	localAccount := sdk.AccAddress(localAccountHash32[:])
 	senderLocalAcc := sdk.MustBech32ifyAddressBytes("osmo", localAccount)
 
