@@ -88,12 +88,14 @@ service Query {
   // Estimate the swap.
   rpc EstimateSwapExactAmountIn(QuerySwapExactAmountInRequest)
       returns (QuerySwapExactAmountInResponse) {
+    option deprecated = true;
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_in";
   }
 
   rpc EstimateSwapExactAmountOut(QuerySwapExactAmountOutRequest)
       returns (QuerySwapExactAmountOutResponse) {
+    option deprecated = true;
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_out";
   }
@@ -257,7 +259,7 @@ message QuerySpotPriceResponse {
 
 //=============================== EstimateSwapExactAmountIn
 message QuerySwapExactAmountInRequest {
-  // TODO: CHANGE THIS TO RESERVED IN A PATCH RELEASE
+  option deprecated = true;
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string token_in = 3 [ (gogoproto.moretags) = "yaml:\"token_in\"" ];
@@ -268,6 +270,7 @@ message QuerySwapExactAmountInRequest {
 }
 
 message QuerySwapExactAmountInResponse {
+  option deprecated = true;
   string token_out_amount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_out_amount\"",
@@ -277,7 +280,7 @@ message QuerySwapExactAmountInResponse {
 
 //=============================== EstimateSwapExactAmountOut
 message QuerySwapExactAmountOutRequest {
-  // TODO: CHANGE THIS TO RESERVED IN A PATCH RELEASE
+  option deprecated = true;
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   repeated SwapAmountOutRoute routes = 3 [
@@ -288,6 +291,7 @@ message QuerySwapExactAmountOutRequest {
 }
 
 message QuerySwapExactAmountOutResponse {
+  option deprecated = true;
   string token_in_amount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_in_amount\"",
