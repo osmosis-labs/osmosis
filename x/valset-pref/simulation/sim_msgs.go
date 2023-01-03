@@ -47,7 +47,7 @@ func RandomMsgSetValSetPreference(k valsetkeeper.Keeper, sim *osmosimtypes.SimCt
 
 func RandomMsgDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*types.MsgDelegateToValidatorSet, error) {
 	delegator := sim.RandomSimAccount()
-	// check if the delegator has either a valset created
+	// check if the delegator valset created
 	err := GetRandomExistingValSet(ctx, k, sim, delegator.Address)
 	if err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func RandomMsgDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, 
 
 func RandomMsgUnDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*types.MsgUndelegateFromValidatorSet, error) {
 	delegator := sim.RandomSimAccount()
-	// check if the delegator either a valset created
+	// check if the delegator valset created
 	err := GetRandomExistingValSet(ctx, k, sim, delegator.Address)
 	if err != nil {
 		return nil, err
