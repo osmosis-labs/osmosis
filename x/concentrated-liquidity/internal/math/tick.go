@@ -90,13 +90,9 @@ func PriceToTick(price sdk.Dec, kAtPriceOne sdk.Int) (sdk.Int, error) {
 	for total.LT(price) {
 		curIncrement = handleNegativeExponents(currentK)
 		maxPriceForCurrentIncrement := kIncrementDistance.Mul(curIncrement)
-		if total.Add(maxPriceForCurrentIncrement).LT(price) {
-			total = total.Add(maxPriceForCurrentIncrement)
-			currentK = currentK.Add(sdk.OneInt())
-			ticksPassed = ticksPassed.Add(kIncrementDistance.TruncateInt())
-		} else {
-			break
-		}
+		total = total.Add(maxPriceForCurrentIncrement)
+		currentK = currentK.Add(sdk.OneInt())
+		ticksPassed = ticksPassed.Add(kIncrementDistance.TruncateInt())
 	}
 	// Determine how many ticks we have passed in the current k increment
 	ticksToBeFulfilledByCurrentK := price.Sub(total).Quo(curIncrement)
