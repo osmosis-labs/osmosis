@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	routertypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 
 	"github.com/osmosis-labs/osmosis/v13/app/keepers"
 	"github.com/osmosis-labs/osmosis/v13/app/upgrades"
@@ -26,6 +27,9 @@ func CreateUpgradeHandler(
 		// N.B: pool id in gamm is to be deprecated in the future
 		// Instead,it is moved to swaprouter.
 		migrateNextPoolId(ctx, keepers.GAMMKeeper, keepers.SwapRouterKeeper)
+
+		// Router module, set default param
+		keepers.RouterKeeper.SetParams(ctx, routertypes.DefaultParams())
 
 		//  N.B.: this is done to avoid initializing genesis for swaprouter module.
 		// Otherwise, it would overwrite migrations with InitGenesis().
