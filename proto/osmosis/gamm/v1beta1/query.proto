@@ -234,11 +234,9 @@ message QuerySpotPriceRequest {
 //=============================== PoolsWithFilter
 
 message QueryPoolsWithFilterRequest {
-  repeated cosmos.base.v1beta1.Coin min_liquidity = 1 [
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags) = "yaml:\"min_liquidity\"",
-    (gogoproto.nullable) = false
-  ];
+  // String of the coins in single string seperated by comma. Ex)
+  // 10uatom,100uosmo
+  string min_liquidity = 1 [ (gogoproto.moretags) = "yaml:\"min_liquidity\"" ];
   string pool_type = 2;
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
