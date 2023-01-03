@@ -66,6 +66,10 @@ func parseRecordFromBz(bz []byte) (record Record, err error) {
 	return record, nil
 }
 
+func ValidateAccumulatorValue(customAccumulatorValue, oldPositionAccumulatorValue sdk.DecCoins) error {
+	return validateAccumulatorValue(customAccumulatorValue, oldPositionAccumulatorValue)
+}
+
 // WithPosition is a decorator test function to append a position with the given name to the given accumulator.
 func WithPosition(accum AccumulatorObject, name string, position Record) AccumulatorObject {
 	osmoutils.MustSet(accum.store, formatPositionPrefixKey(accum.name, name), &position)

@@ -282,16 +282,3 @@ func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, err
 
 	return truncatedRewards, nil
 }
-
-// validateAccumulatorValue validates the provided accumulator.
-// All coins must be non-negative. Fails if any coin is negative. On success, returns nil.
-func validateAccumulatorValue(customAccumulatorValue, oldPositionAccumulatorValue sdk.DecCoins) error {
-	if customAccumulatorValue.IsAnyNegative() {
-		return NegativeCustomAccError{customAccumulatorValue}
-	}
-	newValue, IsAnyNegative := customAccumulatorValue.SafeSub(oldPositionAccumulatorValue)
-	if IsAnyNegative {
-		return NegativeAccDifferenceError{newValue}
-	}
-	return nil
-}

@@ -652,7 +652,7 @@ func (suite *AccumTestSuite) TestAddToPositionCustomAcc() {
 			name:          testAddressOne,
 			numShareUnits: positionOne.NumShares,
 			customAcc:     accObject.GetValue().MulDec(sdk.NewDecWithPrec(5, 1)),
-			expectedError: accumPackage.NegativeAccDifferenceError{accObject.GetValue().MulDec(sdk.NewDecWithPrec(5, 1).Neg())},
+			expectedError: accumPackage.NegativeAccDifferenceError{accObject.GetValue().MulDec(sdk.NewDecWithPrec(5, 1))},
 		},
 	}
 
@@ -933,7 +933,7 @@ func (suite *AccumTestSuite) TestRemoveFromPositionCustomAcc() {
 			numShareUnits: positionOne.NumShares,
 			customAcc:     baseAccumValue.MulDec(sdk.NewDecWithPrec(25, 2)),
 			// base * 0.25 - base * 0.5 = -0.25 * base
-			expectedError: accumPackage.NegativeAccDifferenceError{baseAccumValue.MulDec(sdk.NewDecWithPrec(25, 2).Neg())},
+			expectedError: accumPackage.NegativeAccDifferenceError{baseAccumValue.MulDec(sdk.NewDecWithPrec(25, 2))},
 		},
 	}
 
@@ -1257,7 +1257,7 @@ func (suite *AccumTestSuite) TestUpdatePositionCustomAcc() {
 			name:          testAddressOne,
 			numShareUnits: positionOne.NumShares,
 			customAcc:     accObject.GetValue().MulDec(sdk.NewDecWithPrec(5, 1)),
-			expectedError: accumPackage.NegativeAccDifferenceError{accObject.GetValue().MulDec(sdk.NewDecWithPrec(5, 1).Neg())},
+			expectedError: accumPackage.NegativeAccDifferenceError{accObject.GetValue().MulDec(sdk.NewDecWithPrec(5, 1))},
 		},
 	}
 
