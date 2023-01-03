@@ -7,30 +7,41 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	osmosimtypes "github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
-
 	valsetkeeper "github.com/osmosis-labs/osmosis/v13/x/valset-pref"
 	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
 )
 
 func RandomMsgSetValSetPreference(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*types.MsgSetValidatorSetPreference, error) {
-	// Generate random digit from 0-1 with
-	//randWeight := RandomWeight()
+	var preferences []types.ValidatorPreference
 
-	// Generate random validators
-	randValidator := RandomValidator(ctx, sim)
-	if randValidator == "" {
-		return nil, fmt.Errorf("No validator")
+	// Start with a weight of 1
+	remainingWeight := sdk.NewDec(1)
+
+	// Generate a random number of validators
+	for remainingWeight.GT(sdk.ZeroDec()) {
+		randValidator := RandomValidator(ctx, sim)
+		if randValidator == nil {
+			return nil, fmt.Errorf("No validator")
+		}
+
+		randValue, err := RandomWeight(remainingWeight)
+		if err != nil {
+			return nil, fmt.Errorf("Error with random weights")
+		}
+
+		remainingWeight = remainingWeight.Sub(randValue)
+
+		preferences = append(preferences, types.ValidatorPreference{
+			ValOperAddress: randValidator.OperatorAddress,
+			Weight:         randValue,
+		})
 	}
 
 	return &types.MsgSetValidatorSetPreference{
-		Delegator: sim.RandomSimAccount().Address.String(),
-		Preferences: []types.ValidatorPreference{
-			{
-				Weight:         sdk.NewDec(1),
-				ValOperAddress: randValidator,
-			},
-		},
+		Delegator:   sim.RandomSimAccount().Address.String(),
+		Preferences: preferences,
 	}, nil
 }
 
@@ -71,14 +82,15 @@ func RandomMsgUnDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx
 	}, nil
 }
 
-func RandomValidator(ctx sdk.Context, sim *osmosimtypes.SimCtx) string {
-	validators := sim.StakingKeeper().GetValidators(ctx, 100)
+func RandomValidator(ctx sdk.Context, sim *osmosimtypes.SimCtx) *stakingtypes.Validator {
+	rand.Seed(time.Now().UnixNano())
+
+	validators := sim.StakingKeeper().GetAllValidators(ctx)
 	if len(validators) == 0 {
-		return ""
+		return nil
 	}
 
-	valAddr := validators[rand.Intn(len(validators))]
-	return valAddr.OperatorAddress
+	return &validators[rand.Intn(len(validators))]
 }
 
 // TODO: Change this to user GetDelegations() once #3857 gets merged
@@ -103,9 +115,15 @@ func GetRandomExistingDelegation(ctx sdk.Context, k valsetkeeper.Keeper, sim *os
 }
 
 // Random float point from 0-1
-func RandomWeight() sdk.Dec {
+func RandomWeight(maxVal sdk.Dec) (sdk.Dec, error) {
 	rand.Seed(time.Now().UnixNano())
-	valWeightStr := fmt.Sprintf("%.2f", rand.Float64())
+	val, err := maxVal.Float64()
+	if err != nil {
+		return sdk.Dec{}, err
+	}
 
-	return sdk.MustNewDecFromStr(valWeightStr)
+	randVal := rand.Float64() * val
+	valWeightStr := fmt.Sprintf("%.2f", randVal)
+
+	return sdk.MustNewDecFromStr(valWeightStr), nil
 }
