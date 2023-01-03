@@ -47,7 +47,9 @@ func getTotalRewards(accum AccumulatorObject, position Record) sdk.DecCoins {
 }
 
 // validateAccumulatorValue validates the provided accumulator.
-// All coins must be non-negative. Fails if any coin is negative. On success, returns nil.
+// All coins in custom accumulator value must be non-negative.
+// Custom accumulator value must be a suoerset of the old accumulator value.
+// Fails if any coin is negative. On success, returns nil.
 func validateAccumulatorValue(customAccumulatorValue, oldPositionAccumulatorValue sdk.DecCoins) error {
 	if customAccumulatorValue.IsAnyNegative() {
 		return NegativeCustomAccError{customAccumulatorValue}
