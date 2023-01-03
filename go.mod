@@ -19,7 +19,7 @@ require (
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.2
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230101095308-fa4e70e17dbf
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230103082101-dffd2a29ffd4
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230103084141-bf777c2a8c76
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.5.0
