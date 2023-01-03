@@ -877,7 +877,7 @@ func (suite *AccumTestSuite) TestRemoveFromPosition() {
 }
 
 // TestRemoveFromPositionCustomAcc this test only focuses on testing the
-// custom accumulator value functionality of adding to position.
+// custom accumulator value functionality of removing from a position.
 func (suite *AccumTestSuite) TestRemoveFromPositionCustomAcc() {
 	// We setup store and accum
 	// once at beginning so we can test duplicate positions
@@ -1195,6 +1195,95 @@ func (suite *AccumTestSuite) TestUpdatePosition() {
 			suite.Require().Equal(tc.expectedPosition.NumShares, updatedPosition.NumShares)
 			suite.Require().Equal(tc.expectedPosition.InitAccumValue, updatedPosition.InitAccumValue)
 			suite.Require().Equal(tc.expectedPosition.UnclaimedRewards, updatedPosition.UnclaimedRewards)
+			suite.Require().Nil(position.Options)
+		})
+	}
+}
+
+// TestUpdatePositionCustomAcc this test only focuses on testing the
+// custom accumulator value functionality of updating a position.
+func (suite *AccumTestSuite) TestUpdatePositionCustomAcc() {
+	// We setup store and accum
+	// once at beginning so we can test duplicate positions
+	suite.SetupTest()
+
+	// Setup.
+	accObject := accumPackage.CreateRawAccumObject(suite.store, testNameOne, initialCoinsDenomOne)
+
+	tests := map[string]struct {
+		accObject        accumPackage.AccumulatorObject
+		initialShares    sdk.Dec
+		name             string
+		numShareUnits    sdk.Dec
+		customAcc        sdk.DecCoins
+		expectedPosition accumPackage.Record
+		expectedError    error
+	}{
+		"custom acc value equals to acc; positive shares -> acts as AddToPosition": {
+			accObject:     accObject,
+			initialShares: sdk.ZeroDec(),
+			name:          testAddressOne,
+			numShareUnits: positionOne.NumShares,
+			customAcc:     accObject.GetValue(),
+			expectedPosition: accumPackage.Record{
+				NumShares:        positionOne.NumShares,
+				InitAccumValue:   accObject.GetValue(),
+				UnclaimedRewards: emptyCoins,
+			},
+		},
+		"custom acc value does not equal to acc; negative shares -> acts as RemoveFromPosition": {
+			accObject:     accObject,
+			initialShares: positionTwo.NumShares,
+			name:          testAddressTwo,
+			numShareUnits: positionTwo.NumShares.Neg(), // note: negative shares
+			customAcc:     accObject.GetValue().MulDec(sdk.NewDec(2)),
+			expectedPosition: accumPackage.Record{
+				NumShares:        sdk.ZeroDec(), // results in zero shares
+				InitAccumValue:   accObject.GetValue().MulDec(sdk.NewDec(2)),
+				UnclaimedRewards: emptyCoins,
+			},
+		},
+		"negative acc value - error": {
+			accObject:     accObject,
+			initialShares: sdk.ZeroDec(),
+			name:          testAddressOne,
+			numShareUnits: positionOne.NumShares,
+			customAcc:     accObject.GetValue().MulDec(sdk.NewDec(-1)),
+			expectedError: accumPackage.NegativeCustomAccError{accObject.GetValue().MulDec(sdk.NewDec(-1))},
+		},
+		"update is smaller than old value - error": {
+			accObject:     accObject,
+			initialShares: sdk.ZeroDec(),
+			name:          testAddressOne,
+			numShareUnits: positionOne.NumShares,
+			customAcc:     accObject.GetValue().MulDec(sdk.NewDecWithPrec(5, 1)),
+			expectedError: accumPackage.NegativeAccDifferenceError{accObject.GetValue().MulDec(sdk.NewDecWithPrec(5, 1).Neg())},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			// Setup
+			err := tc.accObject.NewPositionCustomAcc(tc.name, tc.initialShares, tc.accObject.GetValue(), nil)
+			suite.Require().NoError(err)
+
+			// System under test.
+			err = tc.accObject.UpdatePositionCustomAcc(tc.name, tc.numShareUnits, tc.customAcc)
+
+			if tc.expectedError != nil {
+				suite.Require().Error(err)
+				suite.Require().Equal(tc.expectedError, err)
+				return
+			}
+			suite.Require().NoError(err)
+
+			// Assertions.
+			position := tc.accObject.GetPosition(tc.name)
+
+			suite.Require().Equal(tc.expectedPosition.NumShares, position.NumShares)
+			suite.Require().Equal(tc.expectedPosition.InitAccumValue, position.InitAccumValue)
+			suite.Require().Equal(tc.expectedPosition.UnclaimedRewards, position.UnclaimedRewards)
 			suite.Require().Nil(position.Options)
 		})
 	}
