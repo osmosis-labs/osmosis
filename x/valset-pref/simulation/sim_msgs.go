@@ -32,11 +32,12 @@ func RandomMsgSetValSetPreference(k valsetkeeper.Keeper, sim *osmosimtypes.SimCt
 		}
 
 		remainingWeight = remainingWeight.Sub(randValue)
-
-		preferences = append(preferences, types.ValidatorPreference{
-			ValOperAddress: randValidator.OperatorAddress,
-			Weight:         randValue,
-		})
+		if !randValue.Equal(sdk.ZeroDec()) {
+			preferences = append(preferences, types.ValidatorPreference{
+				ValOperAddress: randValidator.OperatorAddress,
+				Weight:         randValue,
+			})
+		}
 	}
 
 	return &types.MsgSetValidatorSetPreference{
