@@ -54,6 +54,10 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 		{
 			"Test that the upgrade succeeds",
 			func() {
+				// The module doesn't need an account anymore, but when the upgrade happened we did:
+				//acc := suite.App.AccountKeeper.GetAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
+				//suite.App.AccountKeeper.RemoveAccount(suite.Ctx, acc)
+
 				// Because of SDK version map bug, we can't do the following, and instaed do a massive hack
 				// vm := suite.App.UpgradeKeeper.GetModuleVersionMap(suite.Ctx)
 				// delete(vm, ibchookstypes.ModuleName)
@@ -64,9 +68,17 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				store := suite.Ctx.KVStore(upgradeStoreKey)
 				versionStore := prefix.NewStore(store, []byte{upgradetypes.VersionMapByte})
 				versionStore.Delete([]byte(ibchookstypes.ModuleName))
+
+				// Same comment as above: this was the case when the upgrade happened, but we don't have accounts anymore
+				//hasAcc := suite.App.AccountKeeper.HasAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
+				//suite.Require().False(hasAcc)
+
 			},
 			func() { dummyUpgrade(suite) },
 			func() {
+				// Same comment as pre-upgrade. We had an account, but now we don't anymore
+				//hasAcc := suite.App.AccountKeeper.HasAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
+				//suite.Require().True(hasAcc)
 			},
 		},
 		{
