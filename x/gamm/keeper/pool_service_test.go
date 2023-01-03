@@ -406,9 +406,18 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 				expectedPoolBalance := poolBalanceBefore.Add(test.msg.InitialLiquidity()...)
 				suite.Require().Equal(expectedPoolBalance, pool.GetTotalPoolLiquidity(suite.Ctx))
 
+<<<<<<< HEAD
 			} else {
 				suite.Require().Error(err, "test: %v", test.name)
 			}
+=======
+			// make sure total liquidity increase recorded
+			expectedPoolBalance := poolBalanceBefore.Add(test.msg.InitialLiquidity()...)
+			suite.Require().Equal(expectedPoolBalance, pool.GetTotalPoolLiquidity(suite.Ctx))
+
+		} else {
+			suite.Require().Error(err, "test: %v", test.name)
+>>>>>>> 9623c45c326331855bc5c9e6e198b95ba463e502
 		}
 		// attempt to create a pool with the given NewMsgCreateBalancerPool message. After that,
 		// this function calls the InitializePool function
