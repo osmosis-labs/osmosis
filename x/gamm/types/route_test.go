@@ -14,8 +14,18 @@ import (
 // are proto-generated from different modules, they are identical in terms
 // of serialization and deserialization.
 func TestSwapRoutes_MarshalUnmarshal(t *testing.T) {
-	swapRouterExactAmountInRoute := swaproutertypes.SwapAmountInRoute{}
-	gammExactAmountInRoute := gammtypes.SwapAmountInRoute{}
+	const (
+		testPoolId        = 2
+		testTokenOutDenom = "uosmo"
+	)
+	swapRouterExactAmountInRoute := swaproutertypes.SwapAmountInRoute{
+		PoolId:        testPoolId,
+		TokenOutDenom: testTokenOutDenom,
+	}
+	gammExactAmountInRoute := gammtypes.SwapAmountInRoute{
+		PoolId:        testPoolId,
+		TokenOutDenom: testTokenOutDenom,
+	}
 
 	swapRouterBz, err := proto.Marshal(&swapRouterExactAmountInRoute)
 	require.NoError(t, err)
