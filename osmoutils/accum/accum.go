@@ -222,6 +222,7 @@ func (accum AccumulatorObject) removeFromPosition(name string, numSharesToRemove
 // UpdatePosition updates the position with the given name by adding or removing
 // the given number of shares. If numShares is positive, it is equivalent to calling
 // AddToPosition. If numShares is negative, it is equivalent to calling RemoveFromPosition.
+// Also, it moves up the position's accumulator value to the current accum value.
 // Fails with error if numShares is zero. Returns nil on success.
 func (accum AccumulatorObject) UpdatePosition(name string, numShares sdk.Dec) error {
 	return accum.updatePosition(name, numShares, accum.value)
