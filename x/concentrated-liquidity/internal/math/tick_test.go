@@ -1,9 +1,12 @@
 package math_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
 func (suite *ConcentratedMathTestSuite) TestTickToPrice() {
@@ -107,54 +110,63 @@ func (suite *ConcentratedMathTestSuite) TestTickToPrice() {
 }
 
 func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
-	testCases := []struct {
-		name         string
-		price        sdk.Dec
-		kAtPriceOne  sdk.Int
-		tickExpected string
+	testCases := map[string]struct {
+		price         sdk.Dec
+		kAtPriceOne   sdk.Int
+		tickExpected  string
+		expectedError error
 	}{
-		{
-			"50000 to tick with -4 k at price one",
-			sdk.NewDec(50000),
-			sdk.NewInt(-4),
-			"400000",
+		"50000 to tick with -4 k at price one": {
+			price:        sdk.NewDec(50000),
+			kAtPriceOne:  sdk.NewInt(-4),
+			tickExpected: "400000",
 		},
-		{
-			"5.01 to tick with -2 k at price one",
-			sdk.MustNewDecFromStr("5.010000000000000000"),
-			sdk.NewInt(-2),
-			"401",
+		"5.01 to tick with -2 k at price one": {
+			price:        sdk.MustNewDecFromStr("5.010000000000000000"),
+			kAtPriceOne:  sdk.NewInt(-2),
+			tickExpected: "401",
 		},
-		{
-			"50000.01 to tick with -6 k at price one",
-			sdk.MustNewDecFromStr("50000.010000000000000000"),
-			sdk.NewInt(-6),
-			"40000001",
+		"50000.01 to tick with -6 k at price one": {
+			price:        sdk.MustNewDecFromStr("50000.010000000000000000"),
+			kAtPriceOne:  sdk.NewInt(-6),
+			tickExpected: "40000001",
 		},
-		{
-			"0.00000889 to tick with -8 k at price one",
-			sdk.MustNewDecFromStr("0.000008890000000000"),
-			sdk.NewInt(-8),
-			"-99999111",
+		"0.00000889 to tick with -8 k at price one": {
+			price:        sdk.MustNewDecFromStr("0.000008890000000000"),
+			kAtPriceOne:  sdk.NewInt(-8),
+			tickExpected: "-99999111",
 		},
-		{
-			"0.9998 to tick with -4 k at price one",
-			sdk.MustNewDecFromStr("0.999800000000000000"),
-			sdk.NewInt(-4),
-			"-2",
+		"0.9998 to tick with -4 k at price one": {
+			price:        sdk.MustNewDecFromStr("0.999800000000000000"),
+			kAtPriceOne:  sdk.NewInt(-4),
+			tickExpected: "-2",
 		},
-		{
-			"53030.10 to tick with -5 k at price one",
-			sdk.MustNewDecFromStr("53030.100000000000000000"),
-			sdk.NewInt(-5),
-			"4030301",
+		"53030.10 to tick with -5 k at price one": {
+			price:        sdk.MustNewDecFromStr("53030.100000000000000000"),
+			kAtPriceOne:  sdk.NewInt(-5),
+			tickExpected: "4030301",
+		},
+		"error: kAtPriceOne less than minimum": {
+			price:         sdk.NewDec(50000),
+			kAtPriceOne:   types.PrecisionValueAtPriceOneMin.Sub(sdk.OneInt()),
+			expectedError: fmt.Errorf("kAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax),
+		},
+		"error: kAtPriceOne greater than maximum": {
+			price:         sdk.NewDec(50000),
+			kAtPriceOne:   types.PrecisionValueAtPriceOneMax.Add(sdk.OneInt()),
+			expectedError: fmt.Errorf("kAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax),
 		},
 	}
-	for _, tc := range testCases {
+	for name, tc := range testCases {
 		tc := tc
 
-		suite.Run(tc.name, func() {
+		suite.Run(name, func() {
 			tick, err := math.PriceToTick(tc.price, tc.kAtPriceOne)
+			if tc.expectedError != nil {
+				suite.Require().Error(err)
+				suite.Require().Equal(tc.expectedError.Error(), err.Error())
+				return
+			}
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.tickExpected, tick.String())
 		})
