@@ -19,7 +19,7 @@ func RandomMsgSetValSetPreference(k valsetkeeper.Keeper, sim *osmosimtypes.SimCt
 	// Start with a weight of 1
 	remainingWeight := sdk.NewDec(1)
 
-	// Generate a random number of validators
+	// Generate random validators with random weights that sums to 1
 	for remainingWeight.GT(sdk.ZeroDec()) {
 		randValidator := RandomValidator(ctx, sim)
 		if randValidator == nil {
@@ -93,7 +93,7 @@ func RandomValidator(ctx sdk.Context, sim *osmosimtypes.SimCtx) *stakingtypes.Va
 	return &validators[rand.Intn(len(validators))]
 }
 
-// TODO: Change this to user GetDelegations() once #3857 gets merged
+// TODO: Change this to user GetDelegations() once #3857 gets merged, issue created
 func GetRandomExistingValSet(ctx sdk.Context, k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, delegatorAddr sdk.AccAddress) error {
 	// Get Valset delegations
 	_, found := k.GetValidatorSetPreference(ctx, delegatorAddr.String())
