@@ -40,6 +40,15 @@ func TickToPrice(tickIndex, kAtPriceOne sdk.Int) (price sdk.Dec, err error) {
 		return sdk.Dec{}, fmt.Errorf("kAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax)
 	}
 
+	// Check that the tick index is between min and max value for the given k
+	minTick, maxTick := GetMinAndMaxTicksFromK(kAtPriceOne)
+	if tickIndex.LT(minTick) {
+		return sdk.Dec{}, fmt.Errorf("tickIndex must be greater than or equal to %s", minTick)
+	}
+	if tickIndex.GT(maxTick) {
+		return sdk.Dec{}, fmt.Errorf("tickIndex must be less than or equal to %s", maxTick)
+	}
+
 	// The formula is as follows: k_increment_distance = 9 * 10**(-k_at_price_1)
 	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**k_at_price_1)
 	kIncrementDistance := sdkNineDec.Mul(handleNegativeExponents(kAtPriceOne.Neg()))
@@ -100,6 +109,15 @@ func PriceToTick(price sdk.Dec, kAtPriceOne sdk.Int) (sdk.Int, error) {
 	// Finally, add the ticks we have passed from the completed k values, as well as the ticks we have passed in the current k value
 	tickIndex := ticksPassed.Add(ticksToBeFulfilledByCurrentK.TruncateInt())
 
+	// Add a check to make sure that the tick index is within the allowed range
+	minTick, maxTick := GetMinAndMaxTicksFromK(kAtPriceOne)
+	if tickIndex.LT(minTick) {
+		return sdk.Int{}, fmt.Errorf("tickIndex must be greater than or equal to %s", minTick)
+	}
+	if tickIndex.GT(maxTick) {
+		return sdk.Int{}, fmt.Errorf("tickIndex must be less than or equal to %s", maxTick)
+	}
+
 	return tickIndex, nil
 }
 
@@ -110,4 +128,20 @@ func handleNegativeExponents(exponent sdk.Int) sdk.Dec {
 		return sdkTenDec.Power(exponent.Uint64())
 	}
 	return sdk.OneDec().Quo(sdkTenDec.Power(exponent.Abs().Uint64()))
+}
+
+// GetMinAndMaxTicksFromK determines min and max ticks allowed for a given k value
+// This allows for a min spot price of 0 and a max spot price of 200_000_000_000 for every k value
+func GetMinAndMaxTicksFromK(kAtPriceOne sdk.Int) (minTick, maxTick sdk.Int) {
+	minTick = handleNegativeExponents(kAtPriceOne.Neg()).RoundInt().Neg()
+	maxTick = handleNegativeExponents(kAtPriceOne.Neg().Add(sdk.NewInt(2))).RoundInt()
+	return minTick, maxTick
+}
+
+// GetMinAndMaxTicksFromK determines min and max ticks allowed for a given k value
+// This allows for a min spot price of 0 and a max spot price of 200_000_000_000 for every k value
+func GetMinAndMaxPriceFromK(kAtPriceOne sdk.Int) (minTick, maxTick sdk.Int) {
+	minTick = handleNegativeExponents(kAtPriceOne.Neg()).RoundInt().Neg()
+	maxTick = handleNegativeExponents(kAtPriceOne.Neg().Add(sdk.NewInt(2))).RoundInt()
+	return minTick, maxTick
 }

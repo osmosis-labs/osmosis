@@ -96,6 +96,16 @@ func (suite *ConcentratedMathTestSuite) TestTickToPrice() {
 			kAtPriceOne:   sdk.NewInt(-5),
 			expectedPrice: "53030.100000000000000000",
 		},
+		"error: tickIndex less than minimum": {
+			tickIndex:     sdk.NewInt(-11),
+			kAtPriceOne:   sdk.NewInt(-1),
+			expectedError: fmt.Errorf("tickIndex must be greater than or equal to %s", "-10"),
+		},
+		"error: tickIndex greater than maximum": {
+			tickIndex:     sdk.NewInt(1001),
+			kAtPriceOne:   sdk.NewInt(-1),
+			expectedError: fmt.Errorf("tickIndex must be less than or equal to %s", "1000"),
+		},
 		"error: kAtPriceOne less than minimum": {
 			tickIndex:     sdk.NewInt(100),
 			kAtPriceOne:   types.PrecisionValueAtPriceOneMin.Sub(sdk.OneInt()),
@@ -161,6 +171,16 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 			price:        sdk.MustNewDecFromStr("53030.100000000000000000"),
 			kAtPriceOne:  sdk.NewInt(-5),
 			tickExpected: "4030301",
+		},
+		"error: resulting tickIndex too small": {
+			price:         sdk.NewDec(-1),
+			kAtPriceOne:   sdk.NewInt(-6),
+			expectedError: fmt.Errorf("tickIndex must be greater than or equal to %s", "-1000000"),
+		},
+		"error: resulting tickIndex too large": {
+			price:         sdk.NewDec(200000000001),
+			kAtPriceOne:   sdk.NewInt(-6),
+			expectedError: fmt.Errorf("tickIndex must be less than or equal to %s", "100000000"),
 		},
 		"error: kAtPriceOne less than minimum": {
 			price:         sdk.NewDec(50000),
