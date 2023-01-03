@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
@@ -38,7 +39,6 @@ func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 		if err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid validator address (%s)", err)
 		}
-
 		totalWeight = totalWeight.Add(validator.Weight)
 		validatorAddrs = append(validatorAddrs, validator.ValOperAddress)
 	}
@@ -49,9 +49,12 @@ func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 		return fmt.Errorf("The validator operator address are duplicated")
 	}
 
+	// Round to 2 digit after the decimal. For ex: 0.999 = 1.0, 0.874 = 0.87, 0.5123 = 0.51
+	roundedValue := osmomath.SigFigRound(totalWeight, sdk.NewDec(10).Power(2).TruncateInt())
+
 	// check if the total validator distribution weights equal 1
-	if !totalWeight.Equal(sdk.OneDec()) {
-		return fmt.Errorf("The weights allocated to the validators do not add up to 1, Got: %d", totalWeight)
+	if !roundedValue.Equal(sdk.OneDec()) {
+		return fmt.Errorf("The weights allocated to the validators do not add up to 1, Got: %f", roundedValue)
 	}
 
 	return nil
@@ -166,7 +169,7 @@ func (m MsgRedelegateValidatorSet) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid delegator address (%s)", err)
 	}
 
-	total_weight := sdk.NewDec(0)
+	totalWeight := sdk.NewDec(0)
 	validatorAddrs := []string{}
 	for _, validator := range m.Preferences {
 		_, err := sdk.ValAddressFromBech32(validator.ValOperAddress)
@@ -174,7 +177,7 @@ func (m MsgRedelegateValidatorSet) ValidateBasic() error {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid validator address (%s)", err)
 		}
 
-		total_weight = total_weight.Add(validator.Weight)
+		totalWeight = totalWeight.Add(validator.Weight)
 		validatorAddrs = append(validatorAddrs, validator.ValOperAddress)
 	}
 
@@ -184,9 +187,12 @@ func (m MsgRedelegateValidatorSet) ValidateBasic() error {
 		return fmt.Errorf("The validator operator address are duplicated")
 	}
 
+	// Round to 2 digit after the decimal. For ex: 0.999 = 1.0, 0.874 = 0.87, 0.5123 = 0.51
+	roundedValue := osmomath.SigFigRound(totalWeight, sdk.NewDec(10).Power(2).TruncateInt())
+
 	// check if the total validator distribution weights equal 1
-	if !total_weight.Equal(sdk.NewDec(1)) {
-		return fmt.Errorf("The weights allocated to the validators do not add up to 1, Got: %d", total_weight)
+	if !roundedValue.Equal(sdk.OneDec()) {
+		return fmt.Errorf("The weights allocated to the validators do not add up to 1, Got: %f", roundedValue)
 	}
 
 	return nil

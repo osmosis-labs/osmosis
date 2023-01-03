@@ -25,13 +25,13 @@ var _ types.MsgServer = msgServer{}
 func (server msgServer) SetValidatorSetPreference(goCtx context.Context, msg *types.MsgSetValidatorSetPreference) (*types.MsgSetValidatorSetPreferenceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	err := server.keeper.SetValidatorSetPreference(ctx, msg.Delegator, msg.Preferences)
+	valSetPref, err := server.keeper.SetValidatorSetPreference(ctx, msg.Delegator, msg.Preferences)
 	if err != nil {
 		return nil, err
 	}
 
 	setMsg := types.ValidatorSetPreferences{
-		Preferences: msg.Preferences,
+		Preferences: valSetPref,
 	}
 
 	server.keeper.SetValidatorSetPreferences(ctx, msg.Delegator, setMsg)
