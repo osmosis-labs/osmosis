@@ -334,7 +334,6 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 		swapModule, err := swaprouterKeeper.GetPoolModule(suite.Ctx, poolId)
 		suite.Require().NoError(err, "test: %v", test.name)
 
-		err = balancer.ErrIntOverflowBalancerPool
 		if test.usingMock {
 			ctrl := gomock.NewController(suite.T())
 			mockPool := mocks.NewMockConcentratedPoolExtension(ctrl)
