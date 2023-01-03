@@ -395,7 +395,7 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 				suite.Require().Equal(poolIdFromPoolIncentives, poolId)
 			}
 
-			// make sure total liquidity increase recored
+			// make sure total liquidity increase recorded
 			expectedPoolBalance := poolBalanceBefore.Add(test.msg.InitialLiquidity()...)
 			suite.Require().Equal(expectedPoolBalance, pool.GetTotalPoolLiquidity(suite.Ctx))
 
