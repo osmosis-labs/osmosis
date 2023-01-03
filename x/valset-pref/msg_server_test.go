@@ -10,16 +10,18 @@ func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
 	suite.SetupTest()
 
 	// setup 3 validators
-	valAddrs := suite.SetupMultipleValidators(3)
+	valAddrs := suite.SetupMultipleValidators(6)
 
 	tests := []struct {
-		name        string
-		delegator   sdk.AccAddress
-		preferences []types.ValidatorPreference
-		expectPass  bool
+		name                   string
+		delegator              sdk.AccAddress
+		preferences            []types.ValidatorPreference
+		coin                   sdk.Coin // amount to delegate
+		setExistingDelegations bool
+		expectPass             bool
 	}{
 		{
-			name:      "creation of new validator set",
+			name:      "creation of new validator set, user doesnot have existing delegation",
 			delegator: sdk.AccAddress([]byte("addr1---------------")),
 			preferences: []types.ValidatorPreference{
 				{
@@ -105,6 +107,59 @@ func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
 			},
 			expectPass: false,
 		},
+		{
+			name:      "user doesnot have valset, but has existing delegation",
+			delegator: sdk.AccAddress([]byte("addr2---------------")),
+			preferences: []types.ValidatorPreference{
+				{
+					ValOperAddress: valAddrs[3],
+					Weight:         sdk.NewDecWithPrec(5, 1),
+				},
+				{
+					ValOperAddress: valAddrs[4],
+					Weight:         sdk.NewDecWithPrec(5, 1),
+				},
+			},
+			coin:                   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
+			setExistingDelegations: true,
+			expectPass:             true, //SetValidatorSetPreference sets the existing delegations as valset and ignores test.preferences
+		},
+		{
+			name:      "user has valset, but doesnot have existing delegation",
+			delegator: sdk.AccAddress([]byte("addr1---------------")),
+			preferences: []types.ValidatorPreference{
+				{
+					ValOperAddress: valAddrs[3],
+					Weight:         sdk.NewDecWithPrec(3, 1),
+				},
+				{
+					ValOperAddress: valAddrs[4],
+					Weight:         sdk.NewDecWithPrec(7, 1),
+				},
+			},
+			expectPass: true, // SetValidatorSetPreference modifies the existing delegations
+		},
+		{
+			name:      "user has existing valset and existing delegation",
+			delegator: sdk.AccAddress([]byte("addr1---------------")),
+			preferences: []types.ValidatorPreference{
+				{
+					ValOperAddress: valAddrs[3],
+					Weight:         sdk.NewDecWithPrec(3, 1),
+				},
+				{
+					ValOperAddress: valAddrs[4],
+					Weight:         sdk.NewDecWithPrec(3, 1),
+				},
+				{
+					ValOperAddress: valAddrs[5],
+					Weight:         sdk.NewDecWithPrec(4, 1),
+				},
+			},
+			coin:                   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
+			setExistingDelegations: true,
+			expectPass:             true,
+		}, // SetValidatorSetPreference ignores the existing delegation and modifies the existing valset
 	}
 
 	for _, test := range tests {
@@ -113,6 +168,14 @@ func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
 			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorSetPreferenceKeeper)
 			c := sdk.WrapSDKContext(suite.Ctx)
 
+			if test.setExistingDelegations {
+				amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)} // 100 osmo
+				suite.FundAcc(test.delegator, amountToFund)
+
+				err := suite.PrepareExistingDelegations(suite.Ctx, valAddrs, test.delegator, test.coin.Amount)
+				suite.Require().NoError(err)
+			}
+
 			// call the create validator set preference
 			_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, test.preferences))
 			if test.expectPass {
@@ -120,7 +183,6 @@ func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
 			} else {
 				suite.Require().Error(err)
 			}
-
 		})
 	}
 }

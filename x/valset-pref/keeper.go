@@ -62,12 +62,16 @@ func (k Keeper) GetValidatorSetPreference(ctx sdk.Context, delegator string) (ty
 }
 
 // GetDelegations checks if valset position exists, if it does return that
-// else return existing staking position thats not valset.
+// else return existing delegation that's not valset.
 func (k Keeper) GetDelegations(ctx sdk.Context, delegator string) (types.ValidatorSetPreferences, error) {
 	valSet, exists := k.GetValidatorSetPreference(ctx, delegator)
-
 	if !exists {
-		existingDelsValSetFormatted, err := k.GetExistingStakingDelegations(ctx, delegator)
+		delAddr, err := sdk.AccAddressFromBech32(delegator)
+		if err != nil {
+			return types.ValidatorSetPreferences{}, err
+		}
+
+		existingDelsValSetFormatted, err := k.GetExistingStakingDelegations(ctx, delAddr)
 		if err != nil {
 			return types.ValidatorSetPreferences{}, err
 		}
@@ -78,19 +82,18 @@ func (k Keeper) GetDelegations(ctx sdk.Context, delegator string) (types.Validat
 	return valSet, nil
 }
 
-// GetExistingStakingDelegations returns the existing staking position that's not valset.
+// GetExistingStakingDelegations returns the existing delegation that's not valset.
 // This function also formats the output into ValidatorSetPreference struct where with {valAddr, weight}.
 // The weight is calculated based on (valDelegation / totalDelegations) for each validator.
-func (k Keeper) GetExistingStakingDelegations(ctx sdk.Context, delegator string) ([]types.ValidatorPreference, error) {
+func (k Keeper) GetExistingStakingDelegations(ctx sdk.Context, delAddr sdk.AccAddress) ([]types.ValidatorPreference, error) {
 	var existingDelsValSetFormatted []types.ValidatorPreference
-
-	delAddr, err := sdk.AccAddressFromBech32(delegator)
-	if err != nil {
-		return nil, err
-	}
 
 	// valset delegation does not exist, so get all the existing delegations
 	existingDelegations := k.stakingKeeper.GetDelegatorDelegations(ctx, delAddr, math.MaxUint16)
+	if len(existingDelegations) == 0 {
+		return nil, fmt.Errorf("No Existing delegation")
+	}
+
 	existingTotalShares := sdk.NewDec(0)
 
 	// calculate total shares that currently exists

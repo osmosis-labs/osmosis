@@ -16,15 +16,57 @@ type valSet struct {
 	amount  sdk.Dec
 }
 
-func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, preferences []types.ValidatorPreference) ([]types.ValidatorPreference, error) {
-	// check if a user already has a validator-set created
-	existingValidators, found := k.GetValidatorSetPreference(ctx, delegator)
-	if found {
-		// check if the new preferences is the same as the existing preferences
-		isEqual := k.IsValidatorSetEqual(preferences, existingValidators.Preferences)
-		if isEqual {
-			return nil, fmt.Errorf("The preferences (validator and weights) are the same")
+// SetValidatorSetPreference creates or updates delegators validator set.
+// 1. if valset doesnot exist & user doesnot have existing delegation, store new valset.
+// 2. if valset doesnot exist, but user has existing delegation, convert it to valset and store it.
+// 3. if valset exists, but user doesnot have existing delegation, modify current valset.
+// 4. if valset exists & user has existing delegation, modify current valset.
+func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, preferences []types.ValidatorPreference) (types.ValidatorSetPreferences, error) {
+	existingValSet, found := k.GetValidatorSetPreference(ctx, delegator)
+	if !found {
+		delAddr, err := sdk.AccAddressFromBech32(delegator)
+		if err != nil {
+			return types.ValidatorSetPreferences{}, err
 		}
+
+		// check if there is existing delegations
+		existingDelegations, err := k.GetExistingStakingDelegations(ctx, delAddr)
+		if err != nil {
+			// check if the new preferences are valid
+			err := k.validatePreferences(ctx, existingValSet.Preferences, preferences)
+			if err != nil {
+				return types.ValidatorSetPreferences{}, err
+			}
+
+			// (1) no valset and no existing delegation, so store new valset
+			return types.ValidatorSetPreferences{Preferences: preferences}, nil
+		}
+
+		// check if the existing delegations are valid
+		err = k.validatePreferences(ctx, existingValSet.Preferences, existingDelegations)
+		if err != nil {
+			return types.ValidatorSetPreferences{}, err
+		}
+
+		//(2) no valset but existing delegation, so convert existing delegation into valset and store it
+		return types.ValidatorSetPreferences{Preferences: existingDelegations}, nil
+	}
+
+	err := k.validatePreferences(ctx, existingValSet.Preferences, preferences)
+	if err != nil {
+		return types.ValidatorSetPreferences{}, err
+	}
+
+	// (3) & (4) if valset exists even if user have existing delegation or not, modify current valsets
+	return types.ValidatorSetPreferences{Preferences: preferences}, nil
+}
+
+// validatePreferences checks if the two preference sets are equal and if its valid or not on chain.
+func (k Keeper) validatePreferences(ctx sdk.Context, existingPreferences, newPreferences []types.ValidatorPreference) error {
+	// check if the new preferences is the same as the existing preferences
+	isEqual := k.IsValidatorSetEqual(existingPreferences, newPreferences)
+	if isEqual {
+		return fmt.Errorf("The preferences (validator and weights) are the same")
 	}
 
 	// checks that all the validators exist on chain
@@ -99,7 +141,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	}
 
 	// Handle rounding issue for ex: 9999.99999 = 10000
-	totalAmountFromWeights = totalAmountFromWeights.Ceil()
+	totalAmountFromWeights = totalAmountFromWeights.RoundInt().ToDec()
 
 	if !totalAmountFromWeights.Equal(tokenAmt) {
 		return fmt.Errorf("The undelegate total do not add up with the amount calculated from weights expected %s got %s", tokenAmt, totalAmountFromWeights)
