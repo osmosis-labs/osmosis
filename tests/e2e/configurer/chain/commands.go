@@ -12,8 +12,8 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
 	"github.com/osmosis-labs/osmosis/v13/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v13/tests/e2e/util"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	swaprouterqueryproto "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/queryproto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -25,12 +25,12 @@ func (n *NodeConfig) CreatePool(poolFile, from string) uint64 {
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	path := "osmosis/gamm/v1beta1/num_pools"
+	path := "osmosis/swaprouter/v1beta1/num_pools"
 
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
-	var numPools gammtypes.QueryNumPoolsResponse
+	var numPools swaprouterqueryproto.NumPoolsResponse
 	err = util.Cdc.UnmarshalJSON(bz, &numPools)
 	require.NoError(n.t, err)
 	poolID := numPools.NumPools
