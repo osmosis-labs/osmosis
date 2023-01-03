@@ -343,7 +343,7 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 		} else {
 			err = swapModule.InitializePool(suite.Ctx, pool, sender)
 		}
-		// attempt to create a pool with the given NewMsgCreateBalancerPool message. After that,
+		// attempt to create a pool with the given CreatePool message of the pool. After that,
 		// this function calls the InitializePool function
 		// poolId, err := swaprouterKeeper.CreatePool(suite.Ctx, test.msg)
 
