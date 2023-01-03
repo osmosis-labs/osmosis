@@ -1,19 +1,24 @@
 import re
 import networkx as nx
 import subprocess
+import time
 
 def main():
     # Get the paths to the go modules
     paths = parse_go_work_paths()
+      # Create a mapping from the paths to the names of the modules
     path_to_name = {path: parse_go_mod_name(path) for path in paths}
     names = sorted(path_to_name.values())
     names_to_path = {path_to_name[path]: path for path in path_to_name}
     # build dependency graph for our commit order
     G = build_di_graph(names, paths)
+    
+    # Perform a topological sort on the dependency graph and reverse the resulting list
+    sorted_dependencies = list(nx.topological_sort(G))[::-1]
 
     # now we go commit every go mod file in order, replacing dependencies of prior ones.
-    sorted_dependencies = list(nx.topological_sort(G))[::-1]
     update_dep_versions = {}
+    num_commits = 0
     for dependency in sorted_dependencies:
       # see if we need to change anything per update_dep_versions
       mod_path = names_to_path[dependency]
@@ -22,12 +27,29 @@ def main():
         print("detected diff relative to main in " + dependency)
         if check_for_diff_since_last_commit():
           print("detected diff relative to last commit, committing" + dependency)
-          subprocess.run("git add .".split(" "))
+          subprocess.run("git add .".split(" "), capture_output=True)
           subprocess.run("git commit -m".split(" ") + ["(auto) locking dependency versions for " + dependency])
+          num_commits += 1
         v = get_go_sum_version()
         update_dep_versions[dependency] = str(v)
         print(update_dep_versions)
+
     print(sorted_dependencies)
+    gitResetStr = "git reset HEAD" + "~"*num_commits
+    input("going to run git push, hit enter to confirm. Ctrl-C to cancel." + 
+      " (And if so, you likely want to do " + gitResetStr + " to undo the commits)")
+
+    result = subprocess.run("git push".split(" "))
+    if result.returncode != 0:
+      print("branch isn't already pushed yet, aborting. Push the branch to github, then re-run script.")
+      result = subprocess.run(gitResetStr.split(" "))
+      return
+    
+    print("waiting a bit for golang server caches to propogate, sleeping 5 seconds")
+    time.sleep(5)
+
+    for dependency in update_dep_versions:
+      subprocess.run("go mod tidy".split(" "), cwd=names_to_path[dependency])
 
 def update_dependencies(mod_path, dependencies):
     # Open the go.mod file in read mode
@@ -65,8 +87,6 @@ def update_dependencies(mod_path, dependencies):
     with open(mod_path + "/go.mod", 'w') as mod_file:
         # Write the modified lines to the file
         mod_file.writelines(lines)
-    
-    result = subprocess.run(['go', 'mod', 'tidy'], cwd=mod_path, capture_output=True)
 
 def get_go_sum_version():
   # Define the command as a list of strings
