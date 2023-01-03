@@ -40,6 +40,12 @@ func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 		if err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid validator address (%s)", err)
 		}
+
+		// all the weights should be positive
+		if !(validator.Weight.IsPositive()) {
+			return fmt.Errorf("Invalid weight, validator weight needs to be positive, got %d", validator.Weight)
+		}
+
 		totalWeight = totalWeight.Add(validator.Weight)
 		validatorAddrs = append(validatorAddrs, validator.ValOperAddress)
 	}
