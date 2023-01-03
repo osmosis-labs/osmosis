@@ -77,7 +77,7 @@ func PriceToTick(price sdk.Dec, kAtPriceOne sdk.Int) (sdk.Int, error) {
 	kIncrementDistance := sdkNineDec.Mul(handleNegativeExponents(kAtPriceOne.Neg()))
 
 	// Initialize the total price to 1, the current k to k_at_price_1, and the number of ticks passed to 0
-	total := sdk.OneDec()
+	totalPrice := sdk.OneDec()
 	ticksPassed := sdk.ZeroInt()
 	currentK := kAtPriceOne
 
@@ -87,15 +87,15 @@ func PriceToTick(price sdk.Dec, kAtPriceOne sdk.Int) (sdk.Int, error) {
 	// Now, we loop through the k increments until we have passed the price
 	// Once we pass the price, we can determine what which k values we have filled in their entirety,
 	// as well as how many ticks that corresponds to
-	for total.LT(price) {
+	for totalPrice.LT(price) {
 		curIncrement = handleNegativeExponents(currentK)
 		maxPriceForCurrentIncrement := kIncrementDistance.Mul(curIncrement)
-		total = total.Add(maxPriceForCurrentIncrement)
+		totalPrice = totalPrice.Add(maxPriceForCurrentIncrement)
 		currentK = currentK.Add(sdk.OneInt())
 		ticksPassed = ticksPassed.Add(kIncrementDistance.TruncateInt())
 	}
 	// Determine how many ticks we have passed in the current k increment
-	ticksToBeFulfilledByCurrentK := price.Sub(total).Quo(curIncrement)
+	ticksToBeFulfilledByCurrentK := price.Sub(totalPrice).Quo(curIncrement)
 
 	// Finally, add the ticks we have passed from the completed k values, as well as the ticks we have passed in the current k value
 	tickIndex := ticksPassed.Add(ticksToBeFulfilledByCurrentK.TruncateInt())
