@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"testing"
+	"time"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
@@ -461,6 +462,39 @@ func (suite *HooksTestSuite) TestAcks() {
 		&suite.Suite, addr,
 		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, addr)))
 	suite.Require().Equal(`{"count":2}`, state)
+
+}
+
+func (suite *HooksTestSuite) TestTimeouts() {
+	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/counter.wasm")
+	addr := suite.chainA.InstantiateContract(&suite.Suite, `{"count": 0}`, 1)
+
+	// Generate swap instructions for the contract
+	callbackMemo := fmt.Sprintf(`{"ibc_callback":"%s"}`, addr)
+	// Send IBC transfer with the memo with crosschain-swap instructions
+	transferMsg := NewMsgTransfer(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)), suite.chainA.SenderAccount.GetAddress().String(), addr.String(), callbackMemo)
+	transferMsg.TimeoutTimestamp = uint64(suite.coordinator.CurrentTime.Add(time.Minute).UnixNano())
+	sendResult, err := suite.chainA.SendMsgsNoCheck(transferMsg)
+	suite.Require().NoError(err)
+
+	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents())
+	suite.Require().NoError(err)
+
+	// Move chainB forward one block
+	suite.chainB.NextBlock()
+	// One month later
+	suite.coordinator.IncrementTimeBy(time.Hour)
+	err = suite.path.EndpointA.UpdateClient()
+	suite.Require().NoError(err)
+
+	err = suite.path.EndpointA.TimeoutPacket(packet)
+	suite.Require().NoError(err)
+
+	// The test contract will increment the counter for itself by 10 when a packet times out
+	state := suite.chainA.QueryContract(
+		&suite.Suite, addr,
+		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, addr)))
+	suite.Require().Equal(`{"count":10}`, state)
 
 }
 

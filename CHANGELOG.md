@@ -171,6 +171,8 @@ which acts as a fuzz testing tool tailored for the SDK state machine.
 * [#2473](https://github.com/osmosis-labs/osmosis/pull/2473) x/superfluid `AddNewSuperfluidAsset` now returns error, if any occurs instead of ignoring it.
 * [#2714](https://github.com/osmosis-labs/osmosis/pull/2714) Upgrade wasmd to v0.28.0.
 * Remove x/Bech32IBC
+* [#3737](https://github.com/osmosis-labs/osmosis/pull/3737) Change FilteredPools MinLiquidity field from sdk.Coins struct to string.
+
 
 #### Golang API breaks
 

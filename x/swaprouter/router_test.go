@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	cl "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
 	gamm "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
@@ -20,10 +21,11 @@ const (
 )
 
 var (
-	defaultInitPoolAmount = sdk.NewInt(1000000000000)
-	defaultPoolSwapFee    = sdk.NewDecWithPrec(1, 2) // 1% pool swap fee default
-	defaultSwapAmount     = sdk.NewInt(1000000)
-	gammKeeperType        = reflect.TypeOf(&gamm.Keeper{})
+	defaultInitPoolAmount  = sdk.NewInt(1000000000000)
+	defaultPoolSwapFee     = sdk.NewDecWithPrec(1, 2) // 1% pool swap fee default
+	defaultSwapAmount      = sdk.NewInt(1000000)
+	gammKeeperType         = reflect.TypeOf(&gamm.Keeper{})
+	concentratedKeeperType = reflect.TypeOf(&cl.Keeper{})
 )
 
 // TestGetPoolModule tests that the correct pool module is returned for a given pool id.
@@ -939,5 +941,91 @@ func (suite *KeeperTestSuite) calcInAmountAsSeparateSwaps(osmoFeeReduced bool, r
 			nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
 		}
 		return nextTokenIn
+	}
+}
+
+func (suite *KeeperTestSuite) TestSingleSwapExactAmountIn() {
+	tests := []struct {
+		name                   string
+		poolId                 uint64
+		poolCoins              sdk.Coins
+		poolFee                sdk.Dec
+		tokenIn                sdk.Coin
+		tokenOutDenom          string
+		tokenOutMinAmount      sdk.Int
+		expectedTokenOutAmount sdk.Int
+		expectError            bool
+	}{
+		// We have:
+		//  - foo: 1000000000000
+		//  - bar: 1000000000000
+		//  - swapFee: 1%
+		//  - foo in: 100000
+		//  - bar amount out will be calculated according to the formula
+		// 		https://www.wolframalpha.com/input?i=solve+%2810%5E12+%2B+10%5E5+x+0.99%29%2810%5E12+-+x%29+%3D+10%5E24
+		// We round down the token amount out, get the result is 98999
+		{
+			name:                   "Swap - [foo -> bar], 1 percent fee",
+			poolId:                 1,
+			poolCoins:              sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
+			poolFee:                defaultPoolSwapFee,
+			tokenIn:                sdk.NewCoin(foo, sdk.NewInt(100000)),
+			tokenOutMinAmount:      sdk.NewInt(1),
+			tokenOutDenom:          bar,
+			expectedTokenOutAmount: sdk.NewInt(98999),
+		},
+		{
+			name:              "Wrong pool id",
+			poolId:            2,
+			poolCoins:         sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
+			poolFee:           defaultPoolSwapFee,
+			tokenIn:           sdk.NewCoin(foo, sdk.NewInt(100000)),
+			tokenOutMinAmount: sdk.NewInt(1),
+			tokenOutDenom:     bar,
+			expectError:       true,
+		},
+		{
+			name:              "In denom not exist",
+			poolId:            1,
+			poolCoins:         sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
+			poolFee:           defaultPoolSwapFee,
+			tokenIn:           sdk.NewCoin(baz, sdk.NewInt(100000)),
+			tokenOutMinAmount: sdk.NewInt(1),
+			tokenOutDenom:     bar,
+			expectError:       true,
+		},
+		{
+			name:              "Out denom not exist",
+			poolId:            1,
+			poolCoins:         sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
+			poolFee:           defaultPoolSwapFee,
+			tokenIn:           sdk.NewCoin(foo, sdk.NewInt(100000)),
+			tokenOutMinAmount: sdk.NewInt(1),
+			tokenOutDenom:     baz,
+			expectError:       true,
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			swaprouterKeeper := suite.App.SwapRouterKeeper
+
+			suite.FundAcc(suite.TestAccs[0], tc.poolCoins)
+			suite.PrepareCustomBalancerPoolFromCoins(tc.poolCoins, balancer.PoolParams{
+				SwapFee: tc.poolFee,
+				ExitFee: sdk.ZeroDec(),
+			})
+
+			// execute the swap
+			multihopTokenOutAmount, err := swaprouterKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], tc.poolId, tc.tokenIn, tc.tokenOutDenom, tc.tokenOutMinAmount)
+			if tc.expectError {
+				suite.Require().Error(err)
+			} else {
+				// compare the expected tokenOut to the actual tokenOut
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.expectedTokenOutAmount.String(), multihopTokenOutAmount.String())
+			}
+		})
 	}
 }
