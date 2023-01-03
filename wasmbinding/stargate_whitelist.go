@@ -22,6 +22,7 @@ import (
 	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
+	swaprouterqueryproto "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/queryproto"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
 	twapquerytypes "github.com/osmosis-labs/osmosis/v13/x/twap/client/queryproto"
 	txfeestypes "github.com/osmosis-labs/osmosis/v13/x/txfees/types"
@@ -84,8 +85,6 @@ func init() {
 	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/CalcJoinPoolNoSwapShares", &gammtypes.QueryCalcJoinPoolNoSwapSharesResponse{})
 	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/PoolType", &gammtypes.QueryPoolTypeResponse{})
 	setWhitelistedQuery("/osmosis.gamm.v2.Query/SpotPrice", &gammv2types.QuerySpotPriceResponse{})
-	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/EstimateSwapExactAmountIn", &gammtypes.QuerySwapExactAmountInResponse{})
-	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/EstimateSwapExactAmountOut", &gammtypes.QuerySwapExactAmountOutResponse{})
 
 	// incentives
 	setWhitelistedQuery("/osmosis.incentives.Query/ModuleToDistributeCoins", &incentivestypes.ModuleToDistributeCoinsResponse{})
@@ -110,6 +109,11 @@ func init() {
 	setWhitelistedQuery("/osmosis.superfluid.Query/AssetType", &superfluidtypes.AssetTypeResponse{})
 	setWhitelistedQuery("/osmosis.superfluid.Query/AllAssets", &superfluidtypes.AllAssetsResponse{})
 	setWhitelistedQuery("/osmosis.superfluid.Query/AssetMultiplier", &superfluidtypes.AssetMultiplierResponse{})
+
+	// swaprouter
+	setWhitelistedQuery("/osmosis.swaprouter.v1beta1.Query/NumPools", &swaprouterqueryproto.NumPoolsResponse{})
+	setWhitelistedQuery("/osmosis.swaprouter.v1beta1.Query/EstimateSwapExactAmountIn", &swaprouterqueryproto.EstimateSwapExactAmountInResponse{})
+	setWhitelistedQuery("/osmosis.swaprouter.v1beta1.Query/EstimateSwapExactAmountOut", &swaprouterqueryproto.EstimateSwapExactAmountOutRequest{})
 
 	// txfees
 	setWhitelistedQuery("/osmosis.txfees.v1beta1.Query/FeeTokens", &txfeestypes.QueryFeeTokensResponse{})
