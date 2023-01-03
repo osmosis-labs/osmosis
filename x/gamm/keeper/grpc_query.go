@@ -109,7 +109,7 @@ func (q Querier) Pools(
 	}, nil
 }
 
-// TODO: mark deprecated and move to swaprouter.
+// This query has been deprecated and has been moved to swaprouter module.
 func (q Querier) NumPools(ctx context.Context, _ *types.QueryNumPoolsRequest) (*types.QueryNumPoolsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 

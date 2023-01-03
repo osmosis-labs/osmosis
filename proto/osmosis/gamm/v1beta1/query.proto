@@ -17,7 +17,9 @@ service Query {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/pools";
   }
 
+  // Deprecated: please use the alternative in x/swaprouter
   rpc NumPools(QueryNumPoolsRequest) returns (QueryNumPoolsResponse) {
+    option deprecated = true;
     option (google.api.http).get = "/osmosis/gamm/v1beta1/num_pools";
   }
 
@@ -85,7 +87,7 @@ service Query {
         "/osmosis/gamm/v1beta1/pools/{pool_id}/prices";
   }
 
-  // Estimate the swap.
+  // Deprecated: please use the alternative in x/swaprouter
   rpc EstimateSwapExactAmountIn(QuerySwapExactAmountInRequest)
       returns (QuerySwapExactAmountInResponse) {
     option deprecated = true;
@@ -93,6 +95,7 @@ service Query {
         "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_in";
   }
 
+  // Deprecated: please use the alternative in x/swaprouter
   rpc EstimateSwapExactAmountOut(QuerySwapExactAmountOutRequest)
       returns (QuerySwapExactAmountOutResponse) {
     option deprecated = true;
@@ -123,8 +126,9 @@ message QueryPoolsResponse {
 }
 
 //=============================== NumPools
-message QueryNumPoolsRequest {}
+message QueryNumPoolsRequest { option deprecated = true; }
 message QueryNumPoolsResponse {
+  option deprecated = true;
   uint64 num_pools = 1 [ (gogoproto.moretags) = "yaml:\"num_pools\"" ];
 }
 
