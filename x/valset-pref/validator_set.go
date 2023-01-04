@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
 )
 
@@ -16,24 +17,24 @@ type valSet struct {
 	amount  sdk.Dec
 }
 
-func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, preferences []types.ValidatorPreference) error {
+func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, preferences []types.ValidatorPreference) ([]types.ValidatorPreference, error) {
 	// check if a user already has a validator-set created
 	existingValidators, found := k.GetValidatorSetPreference(ctx, delegator)
 	if found {
 		// check if the new preferences is the same as the existing preferences
 		isEqual := k.IsValidatorSetEqual(preferences, existingValidators.Preferences)
 		if isEqual {
-			return fmt.Errorf("The preferences (validator and weights) are the same")
+			return nil, fmt.Errorf("The preferences (validator and weights) are the same")
 		}
 	}
 
 	// checks that all the validators exist on chain
-	isValid := k.IsPreferenceValid(ctx, preferences)
+	valSetPref, isValid := k.IsPreferenceValid(ctx, preferences)
 	if !isValid {
-		return fmt.Errorf("The validator preference list is not valid")
+		return nil, fmt.Errorf("The validator preference list is not valid")
 	}
 
-	return nil
+	return valSetPref, nil
 }
 
 // DelegateToValidatorSet delegates to a delegators existing validator-set.
@@ -302,14 +303,24 @@ func (k Keeper) getValAddrAndVal(ctx sdk.Context, valOperAddress string) (sdk.Va
 }
 
 // IsPreferenceValid loops through the validator preferences and checks its existence and validity.
-func (k Keeper) IsPreferenceValid(ctx sdk.Context, preferences []types.ValidatorPreference) bool {
+func (k Keeper) IsPreferenceValid(ctx sdk.Context, preferences []types.ValidatorPreference) ([]types.ValidatorPreference, bool) {
+	var weightsRoundedValPrefList []types.ValidatorPreference
 	for _, val := range preferences {
+		// round up weights
+		valWeightStr := osmomath.SigFigRound(val.Weight, sdk.NewDec(10).Power(2).TruncateInt())
+
 		_, _, err := k.GetValidatorInfo(ctx, val.ValOperAddress)
 		if err != nil {
-			return false
+			return nil, false
 		}
+
+		weightsRoundedValPrefList = append(weightsRoundedValPrefList, types.ValidatorPreference{
+			ValOperAddress: val.ValOperAddress,
+			Weight:         valWeightStr,
+		})
 	}
-	return true
+
+	return weightsRoundedValPrefList, true
 }
 
 // IsValidatorSetEqual returns true if the two preferences are equal.

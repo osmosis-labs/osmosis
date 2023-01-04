@@ -275,21 +275,17 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 
 // Test authz serialize and de-serializes for swaprouter msg.
 func TestAuthzMsg(t *testing.T) {
-
-	// TODO: remove when types are registered.
-	t.SkipNow()
-
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	coin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))
 
 	testCases := []struct {
-		name    string
-		gammMsg sdk.Msg
+		name string
+		msg  sdk.Msg
 	}{
 		{
-			name: "MsgJoinSwapShareAmountOut",
-			gammMsg: &types.MsgSwapExactAmountIn{
+			name: "MsgSwapExactAmountOut",
+			msg: &types.MsgSwapExactAmountIn{
 				Sender: addr1,
 				Routes: []types.SwapAmountInRoute{{
 					PoolId:        0,
@@ -304,7 +300,7 @@ func TestAuthzMsg(t *testing.T) {
 		},
 		{
 			name: "MsgSwapExactAmountOut",
-			gammMsg: &types.MsgSwapExactAmountOut{
+			msg: &types.MsgSwapExactAmountOut{
 				Sender: addr1,
 				Routes: []types.SwapAmountOutRoute{{
 					PoolId:       0,
@@ -320,7 +316,7 @@ func TestAuthzMsg(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			apptesting.TestMessageAuthzSerialization(t, tc.gammMsg)
+			apptesting.TestMessageAuthzSerialization(t, tc.msg)
 		})
 	}
 }
