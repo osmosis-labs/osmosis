@@ -13,6 +13,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	downtimequerytypes "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/client/queryproto"
 	epochtypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	gammv2types "github.com/osmosis-labs/osmosis/v13/x/gamm/v2types"
@@ -120,10 +121,13 @@ func init() {
 	setWhitelistedQuery("/osmosis.tokenfactory.v1beta1.Query/DenomAuthorityMetadata", &tokenfactorytypes.QueryDenomAuthorityMetadataResponse{})
 	// Does not include denoms_from_creator, TBD if this is the index we want contracts to use instead of admin
 
-	// twap
+	// twap TODO: ADD GEO QUERIES
 	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/ArithmeticTwap", &twapquerytypes.ArithmeticTwapResponse{})
 	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/ArithmeticTwapToNow", &twapquerytypes.ArithmeticTwapToNowResponse{})
 	setWhitelistedQuery("/osmosis.twap.v1beta1.Query/Params", &twapquerytypes.ParamsResponse{})
+
+	// downtime-detector
+	setWhitelistedQuery("/osmosis.downtimedetector.v1beta1.Query/RecoveredSinceDowntimeOfLength", &downtimequerytypes.RecoveredSinceDowntimeOfLengthResponse{})
 }
 
 // GetWhitelistedQuery returns the whitelisted query at the provided path.
