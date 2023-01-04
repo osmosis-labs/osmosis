@@ -62,10 +62,9 @@ func (chain *TestChain) InstantiateRLContract(suite *suite.Suite, quotas string)
 	return addr
 }
 
-func (chain *TestChain) InstantiateContract(suite *suite.Suite, msg string) sdk.AccAddress {
+func (chain *TestChain) InstantiateContract(suite *suite.Suite, msg string, codeID uint64) sdk.AccAddress {
 	osmosisApp := chain.GetOsmosisApp()
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
-	codeID := uint64(1)
 	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
 	addr, _, err := contractKeeper.Instantiate(chain.GetContext(), codeID, creator, creator, []byte(msg), "contract", nil)
 	suite.Require().NoError(err)

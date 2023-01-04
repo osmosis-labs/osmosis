@@ -510,12 +510,12 @@ const (
 )
 
 // This is a copy of the SetupGammPoolsWithBondDenomMultiplier from the  test helpers, but using chainA instead of the default
-func (suite *HooksTestSuite) SetupPools(chainName Chain, multipliers []sdk.Dec) []gammtypes.CFMMPoolI {
+func (suite *HooksTestSuite) SetupPools(chainName Chain, multipliers []sdk.Dec) []gammtypes.PoolI {
 	chain := suite.GetChain(chainName)
 	acc1 := chain.SenderAccount.GetAddress()
 	bondDenom := chain.GetOsmosisApp().StakingKeeper.BondDenom(chain.GetContext())
 
-	pools := []gammtypes.CFMMPoolI{}
+	pools := []gammtypes.PoolI{}
 	for index, multiplier := range multipliers {
 		token := fmt.Sprintf("token%d", index)
 		uosmoAmount := gammtypes.InitPoolSharesSupply.ToDec().Mul(multiplier).RoundInt()
@@ -542,7 +542,7 @@ func (suite *HooksTestSuite) SetupPools(chainName Chain, multipliers []sdk.Dec) 
 		}
 		msg := balancer.NewMsgCreateBalancerPool(acc1, poolParams, poolAssets, defaultFutureGovernor)
 
-		poolId, err := chain.GetOsmosisApp().SwapRouterKeeper.CreatePool(chain.GetContext(), msg)
+		poolId, err := chain.GetOsmosisApp().GAMMKeeper.CreatePool(chain.GetContext(), msg)
 		suite.Require().NoError(err)
 
 		pool, err := chain.GetOsmosisApp().GAMMKeeper.GetPoolAndPoke(chain.GetContext(), poolId)
@@ -827,7 +827,7 @@ func (suite *HooksTestSuite) CreateIBCPoolOnChainB() {
 	}
 	msg := balancer.NewMsgCreateBalancerPool(acc1, poolParams, poolAssets, defaultFutureGovernor)
 
-	poolId, err := chain.GetOsmosisApp().SwapRouterKeeper.CreatePool(chain.GetContext(), msg)
+	poolId, err := chain.GetOsmosisApp().GAMMKeeper.CreatePool(chain.GetContext(), msg)
 	suite.Require().NoError(err)
 
 	_, err = chain.GetOsmosisApp().GAMMKeeper.GetPoolAndPoke(chain.GetContext(), poolId)
