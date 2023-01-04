@@ -12,6 +12,7 @@ import (
 	_ "github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/tests/mocks"
+	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
@@ -255,7 +256,7 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 	tests := []struct {
 		name        string
 		msg         swaproutertypes.CreatePoolMsg
-		usingMock   bool
+		isCLPool    bool
 		emptySender bool
 		expectPass  bool
 	}{
@@ -272,149 +273,148 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 			expectPass:  true,
 		},
 		{
-			name:      "initialize a CL pool which cause panic",
-			msg:       balancer.NewMsgCreateBalancerPool(testAccount, defaultPoolParams, defaultPoolAssets, defaultFutureGovernor),
-			usingMock: true,
+			name:     "initialize a CL pool which cause panic",
+			isCLPool: true,
 		},
 	}
 
 	for _, test := range tests {
-	    test := test
-		suite.SetupTest()
+		test := test
+		suite.Run(test.name, func() {
+			suite.SetupTest()
 
-		gammKeeper := suite.App.GAMMKeeper
-		swaprouterKeeper := suite.App.SwapRouterKeeper
-		bankKeeper := suite.App.BankKeeper
-		poolIncentivesKeeper := suite.App.PoolIncentivesKeeper
-		communityPoolKeeper := suite.App.DistrKeeper
+			gammKeeper := suite.App.GAMMKeeper
+			swaprouterKeeper := suite.App.SwapRouterKeeper
+			bankKeeper := suite.App.BankKeeper
+			poolIncentivesKeeper := suite.App.PoolIncentivesKeeper
+			communityPoolKeeper := suite.App.DistrKeeper
 
-		// fund sender test account
-		sender := test.msg.PoolCreator()
-		if !test.emptySender {
-			suite.FundAcc(sender, defaultAcctFunds)
-		}
-
-		// note starting balances for community fee pool and pool creator account
-		senderBalBeforeNewPool := bankKeeper.GetAllBalances(suite.Ctx, sender)
-
-		// note starting balance of pool
-		poolBalanceBefore := sdk.Coins{}
-		for _, asset := range test.msg.InitialLiquidity() {
-			poolBalanceBefore = poolBalanceBefore.Add(sdk.NewCoin(asset.Denom, gammKeeper.GetDenomLiquidity(suite.Ctx, asset.Denom)))
-		}
-
-		// createPool process
-		err := test.msg.Validate(suite.Ctx)
-		suite.Require().NoError(err, "test: %v", test.name)
-
-		initialPoolLiquidity := test.msg.InitialLiquidity()
-
-		numAssets := initialPoolLiquidity.Len()
-		suite.Require().Equal(numAssets < swaproutertypes.MinPoolAssets, false)
-		suite.Require().Equal(numAssets > swaproutertypes.MaxPoolAssets, false)
-
-		fee := swaprouterKeeper.GetParams(suite.Ctx).PoolCreationFee
-		err = communityPoolKeeper.FundCommunityPool(suite.Ctx, fee, sender)
-		suite.Require().NoError(err, "test: %v", test.name)
-
-		poolId := swaprouterKeeper.GetNextPoolId(suite.Ctx)
-		swaprouterKeeper.SetNextPoolId(suite.Ctx, poolId+1)
-
-		pool, err := test.msg.CreatePool(suite.Ctx, poolId)
-		suite.Require().NoError(err, "test: %v", test.name)
-
-		swaprouterKeeper.SetPoolRoute(suite.Ctx, poolId, test.msg.GetPoolType())
-		err = osmoutils.CreateModuleAccount(suite.Ctx, suite.App.AccountKeeper, pool.GetAddress())
-		suite.Require().NoError(err, "test: %v", test.name)
-
-		poolAddr := pool.GetAddress()
-		err = bankKeeper.SendCoins(suite.Ctx, sender, poolAddr, initialPoolLiquidity)
-		suite.Require().NoError(err, "test: %v", test.name)
-
-		swapModule, err := swaprouterKeeper.GetPoolModule(suite.Ctx, poolId)
-		suite.Require().NoError(err, "test: %v", test.name)
-		if test.usingMock {
-			ctrl := gomock.NewController(suite.T())
-			mockPool := mocks.NewMockConcentratedPoolExtension(ctrl)
-			mockPool.EXPECT().GetTotalShares().Return(pool.GetTotalShares()).AnyTimes()
-			mockPool.EXPECT().GetId().Return(poolId).AnyTimes()
-			suite.Require().Panics(func() { swapModule.InitializePool(suite.Ctx, mockPool, sender) })
-		} else {
-			err = swapModule.InitializePool(suite.Ctx, pool, sender)
-
-			if test.expectPass {
-				suite.Require().NoError(err, "test: %v", test.name)
-
-				// check to make sure new pool exists and has minted the correct number of pool shares
-				pool, err := gammKeeper.GetPoolAndPoke(suite.Ctx, poolId)
-				suite.Require().NoError(err, "test: %v", test.name)
-				suite.Require().Equal(types.InitPoolSharesSupply.String(), pool.GetTotalShares().String(),
-					fmt.Sprintf("share token should be minted as %s initially", types.InitPoolSharesSupply.String()),
-				)
-
-				// get expected tokens in new pool and corresponding pool shares
-				expectedPoolTokens := sdk.Coins{}
-				for _, asset := range test.msg.InitialLiquidity() {
-					expectedPoolTokens = expectedPoolTokens.Add(asset)
-				}
-				expectedPoolShares := sdk.NewCoin(types.GetPoolShareDenom(pool.GetId()), types.InitPoolSharesSupply)
-
-				// make sure sender's balance is updated correctly
-				senderBal := bankKeeper.GetAllBalances(suite.Ctx, sender)
-				expectedSenderBal := senderBalBeforeNewPool.Sub(params.PoolCreationFee).Sub(expectedPoolTokens).Add(expectedPoolShares)
-				suite.Require().Equal(senderBal.String(), expectedSenderBal.String())
-
-				// make sure expected pool tokens and expected pool shares matches the actual tokens and shares in the pool
-				suite.Require().Equal(expectedPoolTokens.String(), pool.GetTotalPoolLiquidity(suite.Ctx).String())
-				suite.Require().Equal(expectedPoolShares.Amount.String(), pool.GetTotalShares().String())
-				if test.msg.GetPoolType() == swaproutertypes.Balancer {
-					poolParsed, ok := pool.(*balancer.Pool)
-					suite.Require().Equal(ok, true)
-					suite.Require().Equal(expectedPoolShares.Denom, poolParsed.TotalShares.Denom)
-				} else if test.msg.GetPoolType() == swaproutertypes.Stableswap {
-					poolParsed, ok := pool.(*stableswap.Pool)
-					suite.Require().Equal(ok, true)
-					suite.Require().Equal(expectedPoolShares.Denom, poolParsed.TotalShares.Denom)
-				}
-
-				// check pool metadata
-				poolShareBaseDenom := types.GetPoolShareDenom(pool.GetId())
-				poolShareDisplayDenom := fmt.Sprintf("GAMM-%d", pool.GetId())
-				metadata, found := bankKeeper.GetDenomMetaData(suite.Ctx, poolShareBaseDenom)
-				suite.Require().Equal(found, true, fmt.Sprintf("Pool share denom %s is not set", poolShareDisplayDenom))
-				suite.Require().Equal(metadata.Base, poolShareBaseDenom, fmt.Sprintf("Pool share base denom %s is not correctly set", poolShareBaseDenom))
-				suite.Require().Equal(metadata.Display, poolShareDisplayDenom, fmt.Sprintf("Pool share display denom %s is not correctly set", poolShareDisplayDenom))
-				suite.Require().Equal(metadata.DenomUnits[0].Denom, poolShareBaseDenom)
-				suite.Require().Equal(metadata.DenomUnits[0].Exponent, uint32(0x0))
-				suite.Require().Equal(metadata.DenomUnits[0].Aliases, []string{
-					"attopoolshare",
-				})
-				suite.Require().Equal(metadata.DenomUnits[1].Denom, poolShareDisplayDenom)
-				suite.Require().Equal(metadata.DenomUnits[1].Exponent, uint32(types.OneShareExponent))
-				suite.Require().Equal(metadata.DenomUnits[1].Aliases, []string(nil))
-
-				// check AfterPoolCreated hook
-				for _, lockableDuration := range poolIncentivesKeeper.GetLockableDurations(suite.Ctx) {
-					gaugeId, err := poolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDuration)
-					suite.Require().NoError(err, "test: %v", test.name)
-
-					poolIdFromPoolIncentives, err := poolIncentivesKeeper.GetPoolIdFromGaugeId(suite.Ctx, gaugeId, lockableDuration)
-					suite.Require().NoError(err, "test: %v", test.name)
-					suite.Require().Equal(poolIdFromPoolIncentives, poolId)
-				}
-
-				// make sure total liquidity increase recored
-				expectedPoolBalance := poolBalanceBefore.Add(test.msg.InitialLiquidity()...)
-				suite.Require().Equal(expectedPoolBalance, pool.GetTotalPoolLiquidity(suite.Ctx))
-
-			} else {
-				suite.Require().Error(err, "test: %v", test.name)
+			// fund sender test account
+			sender := test.msg.PoolCreator()
+			if !test.emptySender {
+				suite.FundAcc(sender, defaultAcctFunds)
 			}
-		}
-		// attempt to create a pool with the given NewMsgCreateBalancerPool message. After that,
-		// this function calls the InitializePool function
-		// poolId, err := swaprouterKeeper.CreatePool(suite.Ctx, test.msg)
 
+			// note starting balances for community fee pool and pool creator account
+			senderBalBeforeNewPool := bankKeeper.GetAllBalances(suite.Ctx, sender)
+
+			// note starting balance of pool
+			poolBalanceBefore := sdk.Coins{}
+			for _, asset := range test.msg.InitialLiquidity() {
+				poolBalanceBefore = poolBalanceBefore.Add(sdk.NewCoin(asset.Denom, gammKeeper.GetDenomLiquidity(suite.Ctx, asset.Denom)))
+			}
+
+			// createPool process
+			err := test.msg.Validate(suite.Ctx)
+			suite.Require().NoError(err, "test: %v", test.name)
+
+			if test.isCLPool {
+				ctrl := gomock.NewController(suite.T())
+				mockPool := mocks.NewMockConcentratedPoolExtension(ctrl)
+				mockPool.EXPECT().GetTotalShares().Return(sdk.NewInt(100)).AnyTimes()
+				mockPool.EXPECT().GetId().Return(uint64(1)).AnyTimes()
+				suite.Require().Panics(func() { gammKeeper.InitializePool(suite.Ctx, mockPool, sender) })
+			} else {
+				// create pool process which happens previous the initializePool phase
+				initialPoolLiquidity := test.msg.InitialLiquidity()
+
+				numAssets := initialPoolLiquidity.Len()
+				suite.Require().Equal(numAssets < swaproutertypes.MinPoolAssets, false)
+				suite.Require().Equal(numAssets > swaproutertypes.MaxPoolAssets, false)
+
+				fee := swaprouterKeeper.GetParams(suite.Ctx).PoolCreationFee
+				err = communityPoolKeeper.FundCommunityPool(suite.Ctx, fee, sender)
+				suite.Require().NoError(err, "test: %v", test.name)
+
+				poolId := swaprouterKeeper.GetNextPoolId(suite.Ctx)
+				swaprouterKeeper.SetNextPoolId(suite.Ctx, poolId+1)
+
+				pool, err := test.msg.CreatePool(suite.Ctx, poolId)
+				suite.Require().NoError(err, "test: %v", test.name)
+
+				swaprouterKeeper.SetPoolRoute(suite.Ctx, poolId, test.msg.GetPoolType())
+				err = osmoutils.CreateModuleAccount(suite.Ctx, suite.App.AccountKeeper, pool.GetAddress())
+				suite.Require().NoError(err, "test: %v", test.name)
+
+				poolAddr := pool.GetAddress()
+				err = bankKeeper.SendCoins(suite.Ctx, sender, poolAddr, initialPoolLiquidity)
+				suite.Require().NoError(err, "test: %v", test.name)
+
+				swapModule, err := swaprouterKeeper.GetPoolModule(suite.Ctx, poolId)
+				suite.Require().NoError(err, "test: %v", test.name)
+
+				err = swapModule.InitializePool(suite.Ctx, pool, sender)
+
+				if test.expectPass {
+					suite.Require().NoError(err, "test: %v", test.name)
+
+					// check to make sure new pool exists and has minted the correct number of pool shares
+					pool, err := gammKeeper.GetPoolAndPoke(suite.Ctx, poolId)
+					suite.Require().NoError(err, "test: %v", test.name)
+					suite.Require().Equal(types.InitPoolSharesSupply.String(), pool.GetTotalShares().String(),
+						fmt.Sprintf("share token should be minted as %s initially", types.InitPoolSharesSupply.String()),
+					)
+
+					// get expected tokens in new pool and corresponding pool shares
+					expectedPoolTokens := sdk.Coins{}
+					for _, asset := range test.msg.InitialLiquidity() {
+						expectedPoolTokens = expectedPoolTokens.Add(asset)
+					}
+					expectedPoolShares := sdk.NewCoin(types.GetPoolShareDenom(pool.GetId()), types.InitPoolSharesSupply)
+
+					// make sure sender's balance is updated correctly
+					senderBal := bankKeeper.GetAllBalances(suite.Ctx, sender)
+					expectedSenderBal := senderBalBeforeNewPool.Sub(params.PoolCreationFee).Sub(expectedPoolTokens).Add(expectedPoolShares)
+					suite.Require().Equal(senderBal.String(), expectedSenderBal.String())
+
+					// make sure expected pool tokens and expected pool shares matches the actual tokens and shares in the pool
+					suite.Require().Equal(expectedPoolTokens.String(), pool.GetTotalPoolLiquidity(suite.Ctx).String())
+					suite.Require().Equal(expectedPoolShares.Amount.String(), pool.GetTotalShares().String())
+					if test.msg.GetPoolType() == swaproutertypes.Balancer {
+						poolParsed, ok := pool.(*balancer.Pool)
+						suite.Require().Equal(ok, true)
+						suite.Require().Equal(expectedPoolShares.Denom, poolParsed.TotalShares.Denom)
+					} else if test.msg.GetPoolType() == swaproutertypes.Stableswap {
+						poolParsed, ok := pool.(*stableswap.Pool)
+						suite.Require().Equal(ok, true)
+						suite.Require().Equal(expectedPoolShares.Denom, poolParsed.TotalShares.Denom)
+					}
+
+					// check pool metadata
+					poolShareBaseDenom := types.GetPoolShareDenom(pool.GetId())
+					poolShareDisplayDenom := fmt.Sprintf("GAMM-%d", pool.GetId())
+					metadata, found := bankKeeper.GetDenomMetaData(suite.Ctx, poolShareBaseDenom)
+					suite.Require().Equal(found, true, fmt.Sprintf("Pool share denom %s is not set", poolShareDisplayDenom))
+					suite.Require().Equal(metadata.Base, poolShareBaseDenom, fmt.Sprintf("Pool share base denom %s is not correctly set", poolShareBaseDenom))
+					suite.Require().Equal(metadata.Display, poolShareDisplayDenom, fmt.Sprintf("Pool share display denom %s is not correctly set", poolShareDisplayDenom))
+					suite.Require().Equal(metadata.DenomUnits[0].Denom, poolShareBaseDenom)
+					suite.Require().Equal(metadata.DenomUnits[0].Exponent, uint32(0x0))
+					suite.Require().Equal(metadata.DenomUnits[0].Aliases, []string{
+						"attopoolshare",
+					})
+					suite.Require().Equal(metadata.DenomUnits[1].Denom, poolShareDisplayDenom)
+					suite.Require().Equal(metadata.DenomUnits[1].Exponent, uint32(types.OneShareExponent))
+					suite.Require().Equal(metadata.DenomUnits[1].Aliases, []string(nil))
+
+					// check AfterPoolCreated hook
+					for _, lockableDuration := range poolIncentivesKeeper.GetLockableDurations(suite.Ctx) {
+						gaugeId, err := poolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDuration)
+						suite.Require().NoError(err, "test: %v", test.name)
+
+						poolIdFromPoolIncentives, err := poolIncentivesKeeper.GetPoolIdFromGaugeId(suite.Ctx, gaugeId, lockableDuration)
+						suite.Require().NoError(err, "test: %v", test.name)
+						suite.Require().Equal(poolIdFromPoolIncentives, poolId)
+					}
+
+					// make sure total liquidity increase recored
+					expectedPoolBalance := poolBalanceBefore.Add(test.msg.InitialLiquidity()...)
+					suite.Require().Equal(expectedPoolBalance, pool.GetTotalPoolLiquidity(suite.Ctx))
+
+				} else {
+					suite.Require().Error(err, "test: %v", test.name)
+				}
+			}
+		})
 	}
 }
 
