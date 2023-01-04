@@ -96,6 +96,11 @@ func (suite *ConcentratedMathTestSuite) TestTickToPrice() {
 			kAtPriceOne:   sdk.NewInt(-5),
 			expectedPrice: "53030.100000000000000000",
 		},
+		"Max tick and min k": {
+			tickIndex:     sdk.NewInt(1000),
+			kAtPriceOne:   sdk.NewInt(-1),
+			expectedPrice: "200000000000.000000000000000000",
+		},
 		"error: tickIndex less than minimum": {
 			tickIndex:     sdk.NewInt(-163),
 			kAtPriceOne:   sdk.NewInt(-1),
@@ -173,7 +178,7 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 			tickExpected: "4030301",
 		},
 		"max spot price and minimum kAtPriceOne": {
-			price:        sdk.MustNewDecFromStr("20000000000"),
+			price:        sdk.MustNewDecFromStr("200000000000"),
 			kAtPriceOne:  sdk.NewInt(-1),
 			tickExpected: "1000",
 		},
