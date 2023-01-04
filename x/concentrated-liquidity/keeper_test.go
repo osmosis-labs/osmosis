@@ -36,9 +36,6 @@ type KeeperTestSuite struct {
 }
 
 func TestKeeperTestSuite(t *testing.T) {
-
-	t.Skip("TODO: re-enable this when CL state-breakage PR is merged.")
-
 	suite.Run(t, new(KeeperTestSuite))
 }
 
