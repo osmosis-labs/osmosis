@@ -32,18 +32,17 @@ func (h EpochHooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, ep
 
 // AfterEpochEnd is the epoch end hook.
 func (h EpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
-	enabled, err := h.k.GetProtoRevEnabled(ctx)
-	if err == nil && enabled {
+	if enabled, err := h.k.GetProtoRevEnabled(ctx); err == nil && enabled {
 		switch epochIdentifier {
 		case "week":
 			// Distribute developer fees to the developer account. We do not error check because the developer account
-			// may not have been set by this point (gets set in a proposal after genesis)
+			// may not have been set by this point (gets set by the admin account after module genesis)
 			_ = h.k.SendDeveloperFeesToDeveloperAccount(ctx)
 
 			// Update the pools in the store
 			return h.k.UpdatePools(ctx)
 		case "day":
-			// Increment number of days since genesis to properly calculate developer fees after cyclic arbitrage trades
+			// Increment number of days since module genesis to properly calculate developer fees after cyclic arbitrage trades
 			if daysSinceGenesis, err := h.k.GetDaysSinceModuleGenesis(ctx); err != nil {
 				h.k.SetDaysSinceModuleGenesis(ctx, 1)
 			} else {

@@ -27,6 +27,10 @@ func NewProtoRevDecorator(protoRevDecorator Keeper) ProtoRevDecorator {
 // This posthandler will first check if there were any swaps in the tx. If so, collect all of the pools, build three
 // pool routes for cyclic arbitrage, and then execute the optimal route if it exists.
 func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+	if ctx.IsCheckTx() {
+		return next(ctx, tx, simulate)
+	}
+
 	// Create a cache context to execute the posthandler such that
 	// 1. If there is an error, then the cache context is discarded
 	// 2. If there is no error, then the cache context is written to the main context with no gas consumed
