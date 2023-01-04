@@ -163,11 +163,12 @@ func (s *TestSuite) TestComputeArithmeticStrategyTwap() {
 // this function should panic in case of zero delta.
 func (s *TestSuite) TestComputeGeometricStrategyTwap() {
 	var (
+		smallestDec = sdk.SmallestDec()
+
 		errTolerance = osmomath.ErrTolerance{
-			MultiplicativeTolerance: sdk.SmallestDec(),
+			MultiplicativeTolerance: smallestDec,
 			RoundingDir:             osmomath.RoundDown,
 		}
-		smallestDec = sdk.SmallestDec()
 
 		// Compute accumulator difference for the underflow test case by
 		// taking log base 2 of the max spot price
