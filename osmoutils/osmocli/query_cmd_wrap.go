@@ -112,7 +112,8 @@ func BuildQueryCli[reqP proto.Message, querier any](desc *QueryDescriptor, newQu
 // with just the "Query" and "Request" args chopped off.
 // It expects all proto fields to appear as arguments, in order.
 func SimpleQueryCmd[reqP proto.Message, querier any](use string, short string, long string,
-	moduleName string, newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
+	moduleName string, newQueryClientFn func(grpc1.ClientConn) querier,
+) *cobra.Command {
 	desc := QueryDescriptor{
 		Use:   use,
 		Short: short,
@@ -122,7 +123,8 @@ func SimpleQueryCmd[reqP proto.Message, querier any](use string, short string, l
 }
 
 func GetParams[reqP proto.Message, querier any](moduleName string,
-	newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
+	newQueryClientFn func(grpc1.ClientConn) querier,
+) *cobra.Command {
 	return BuildQueryCli[reqP](&QueryDescriptor{
 		Use:         "params [flags]",
 		Short:       fmt.Sprintf("Get the params for the x/%s module", moduleName),
@@ -156,7 +158,8 @@ func callQueryClientFn(ctx context.Context, fnName string, req proto.Message, q 
 }
 
 func queryLogic[querier any](desc *QueryDescriptor,
-	newQueryClientFn func(grpc1.ClientConn) querier) func(cmd *cobra.Command, args []string) error {
+	newQueryClientFn func(grpc1.ClientConn) querier,
+) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		clientCtx, err := client.GetClientQueryContext(cmd)
 		if err != nil {

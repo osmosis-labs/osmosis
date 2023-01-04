@@ -4,10 +4,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 
+	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
-var WasmHookModuleAccountAddr sdk.AccAddress = address.Module(ModuleName, []byte("wasm-hook intermediary account"))
+var WasmHookModuleAccountAddr sdk.AccAddress = address.Module(types.ModuleName, []byte("wasm-hook intermediary account"))
 
 func IbcHooksInitGenesis(ctx sdk.Context, ak osmoutils.AccountKeeper) {
 	err := osmoutils.CreateModuleAccount(ctx, ak, WasmHookModuleAccountAddr)
