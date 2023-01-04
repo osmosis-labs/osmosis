@@ -36,7 +36,7 @@ func NewDelValSetCmd() (*osmocli.TxCliDesc, *types.MsgDelegateToValidatorSet) {
 	return &osmocli.TxCliDesc{
 		Use:     "delegate-valset [delegator_addr] [amount]",
 		Short:   "Delegate tokens to existing valset using delegatorAddress and tokenAmount.",
-		Example: "osmosisd tx valset-pref delegate-valset  osmo1... 100stake",
+		Example: "osmosisd tx valset-pref delegate-valset osmo1... 100stake",
 		NumArgs: 2,
 	}, &types.MsgDelegateToValidatorSet{}
 }
@@ -45,7 +45,7 @@ func NewUnDelValSetCmd() (*osmocli.TxCliDesc, *types.MsgUndelegateFromValidatorS
 	return &osmocli.TxCliDesc{
 		Use:     "undelegate-valset [delegator_addr] [amount]",
 		Short:   "UnDelegate tokens from existing valset using delegatorAddress and tokenAmount.",
-		Example: "osmosisd tx valset-pref undelegate-valset  osmo1... 100stake",
+		Example: "osmosisd tx valset-pref undelegate-valset osmo1... 100stake",
 		NumArgs: 2,
 	}, &types.MsgUndelegateFromValidatorSet{}
 }
@@ -62,9 +62,9 @@ func NewReDelValSetCmd() (*osmocli.TxCliDesc, *types.MsgRedelegateValidatorSet) 
 
 func NewWithDelRewCmd() (*osmocli.TxCliDesc, *types.MsgWithdrawDelegationRewards) {
 	return &osmocli.TxCliDesc{
-		Use:     "withdraw-valset [delegator_addr]",
+		Use:     "withdraw-reward-valset [delegator_addr]",
 		Short:   "Withdraw delegation reward form the new validator set.",
-		Example: "osmosisd tx valset-pref withdraw-valset  osmo1...",
+		Example: "osmosisd tx valset-pref withdraw-valset osmo1...",
 		NumArgs: 1,
 	}, &types.MsgWithdrawDelegationRewards{}
 }
