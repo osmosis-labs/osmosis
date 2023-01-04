@@ -170,7 +170,7 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap() {
 
 		// Compute accumulator difference for the underflow test case by
 		// taking log base 2 of the min spot price
-		smallestDecLog = twap.TwapLog(gammtypes.MinSpotPrice)
+		minSpotPriceLogBase2 = twap.TwapLog(gammtypes.MinSpotPrice)
 
 		// Compute accumulator difference for the overflow test case by
 		// taking log base 2 of the max spot price
@@ -187,7 +187,7 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap() {
 		overflowTestCaseAccumDiff = oneHundredYearsMin1Ms.Mul(maxSpotPriceLogBase2)
 
 		// Calculate the geometric accumulator difference for underflow test case.
-		underflowTestCaseAccumDiff = oneHundredYearsMin1Ms.Mul(smallestDecLog)
+		underflowTestCaseAccumDiff = oneHundredYearsMin1Ms.Mul(minSpotPriceLogBase2)
 	)
 
 	tests := map[string]computeTwapTestCase{
