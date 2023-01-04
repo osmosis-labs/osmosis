@@ -24,7 +24,7 @@ func NewProtoRevProposalHandler(k keeper.Keeper) govtypes.Handler {
 }
 
 // handleSetProtoRevAdminAccount handles a proposal to set the admin account. The admin account has the ability to
-// update the hot routes, the developer account, and the number of pools that can be iterated over in a single transaction.
+// update the hot routes, the developer account, and the number of pools that can be iterated over in a single transaction + block.
 func HandleSetProtoRevAdminAccount(ctx sdk.Context, k keeper.Keeper, p *types.SetProtoRevAdminAccountProposal) error {
 	// Validate the account address
 	account, err := sdk.AccAddressFromBech32(p.Account)
