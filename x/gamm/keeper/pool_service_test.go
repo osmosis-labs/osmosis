@@ -12,7 +12,6 @@ import (
 	_ "github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/tests/mocks"
-	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
@@ -290,23 +289,19 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 			communityPoolKeeper := suite.App.DistrKeeper
 
 			// fund sender test account
-			sender := test.msg.PoolCreator()
+			var sender sdk.AccAddress
+			if test.msg == nil {
+				sender = testAccount
+			} else {
+				sender = test.msg.PoolCreator()
+
+			}
 			if !test.emptySender {
 				suite.FundAcc(sender, defaultAcctFunds)
 			}
 
 			// note starting balances for community fee pool and pool creator account
 			senderBalBeforeNewPool := bankKeeper.GetAllBalances(suite.Ctx, sender)
-
-			// note starting balance of pool
-			poolBalanceBefore := sdk.Coins{}
-			for _, asset := range test.msg.InitialLiquidity() {
-				poolBalanceBefore = poolBalanceBefore.Add(sdk.NewCoin(asset.Denom, gammKeeper.GetDenomLiquidity(suite.Ctx, asset.Denom)))
-			}
-
-			// createPool process
-			err := test.msg.Validate(suite.Ctx)
-			suite.Require().NoError(err, "test: %v", test.name)
 
 			if test.isCLPool {
 				ctrl := gomock.NewController(suite.T())
@@ -315,6 +310,16 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 				mockPool.EXPECT().GetId().Return(uint64(1)).AnyTimes()
 				suite.Require().Panics(func() { gammKeeper.InitializePool(suite.Ctx, mockPool, sender) })
 			} else {
+				// createPool process
+				err := test.msg.Validate(suite.Ctx)
+				suite.Require().NoError(err, "test: %v", test.name)
+
+				// note starting balance of pool
+				poolBalanceBefore := sdk.Coins{}
+				for _, asset := range test.msg.InitialLiquidity() {
+					poolBalanceBefore = poolBalanceBefore.Add(sdk.NewCoin(asset.Denom, gammKeeper.GetDenomLiquidity(suite.Ctx, asset.Denom)))
+				}
+
 				// create pool process which happens previous the initializePool phase
 				initialPoolLiquidity := test.msg.InitialLiquidity()
 
