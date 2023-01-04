@@ -5,14 +5,16 @@ import (
 	"fmt"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+
+	"github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v4/modules/core/exported"
@@ -27,14 +29,22 @@ type ContractAck struct {
 
 type WasmHooks struct {
 	ContractKeeper *wasmkeeper.PermissionedKeeper
+	ibcHooksKeeper *keeper.Keeper
 }
 
-func NewWasmHooks(contractKeeper *wasmkeeper.PermissionedKeeper) WasmHooks {
-	return WasmHooks{ContractKeeper: contractKeeper}
+func NewWasmHooks(ibcHooksKeeper *keeper.Keeper, contractKeeper *wasmkeeper.PermissionedKeeper) WasmHooks {
+	return WasmHooks{
+		ContractKeeper: contractKeeper,
+		ibcHooksKeeper: ibcHooksKeeper,
+	}
+}
+
+func (h WasmHooks) ProperlyConfigured() bool {
+	return h.ContractKeeper != nil && h.ibcHooksKeeper != nil
 }
 
 func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
-	if h.ContractKeeper == nil {
+	if !h.ProperlyConfigured() {
 		// Not configured
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
@@ -122,33 +132,34 @@ func isIcs20Packet(packet channeltypes.Packet) (isIcs20 bool, ics20data transfer
 	return true, data
 }
 
-func isMemoWasmRouted(memo string) (isWasmRouted bool, metadata map[string]interface{}) {
-	metadata = make(map[string]interface{})
+// jsonStringHasKey parses the memo as a json object and checks if it contains the key.
+func jsonStringHasKey(memo, key string) (found bool, jsonObject map[string]interface{}) {
+	jsonObject = make(map[string]interface{})
 
 	// If there is no memo, the packet was either sent with an earlier version of IBC, or the memo was
 	// intentionally left blank. Nothing to do here. Ignore the packet and pass it down the stack.
 	if len(memo) == 0 {
-		return false, metadata
+		return false, jsonObject
 	}
 
-	// the metadata must be a valid JSON object
-	err := json.Unmarshal([]byte(memo), &metadata)
+	// the jsonObject must be a valid JSON object
+	err := json.Unmarshal([]byte(memo), &jsonObject)
 	if err != nil {
-		return false, metadata
+		return false, jsonObject
 	}
 
-	// If the key "wasm" doesn't exist, there's nothing to do on this hook. Continue by passing the packet
+	// If the key doesn't exist, there's nothing to do on this hook. Continue by passing the packet
 	// down the stack
-	_, ok := metadata["wasm"]
+	_, ok := jsonObject[key]
 	if !ok {
-		return false, metadata
+		return false, jsonObject
 	}
 
-	return true, metadata
+	return true, jsonObject
 }
 
 func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, contractAddr sdk.AccAddress, msgBytes []byte, err error) {
-	isWasmRouted, metadata := isMemoWasmRouted(memo)
+	isWasmRouted, metadata := jsonStringHasKey(memo, "wasm")
 	if !isWasmRouted {
 		return isWasmRouted, sdk.AccAddress{}, nil, nil
 	}

@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
@@ -241,7 +242,7 @@ func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA, asse
 // if (endRecord.Time == startRecord.Time) returns endRecord.LastSpotPrice
 // else returns
 // (endRecord.Accumulator - startRecord.Accumulator) / (endRecord.Time - startRecord.Time)
-func computeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) (sdk.Dec, error) {
+func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string, strategy twapStrategy) (sdk.Dec, error) {
 	// see if we need to return an error, due to spot price issues
 	var err error = nil
 	if endRecord.LastErrorTime.After(startRecord.Time) ||
@@ -277,5 +278,5 @@ func twapPow(exponent sdk.Dec) sdk.Dec {
 	if exponent.IsNegative() {
 		return osmomath.OneDec().Quo(exp2).SDKDec()
 	}
-	return types.AccumDiffDivDuration(accumDiff, timeDelta), err
+	return exp2.SDKDec()
 }

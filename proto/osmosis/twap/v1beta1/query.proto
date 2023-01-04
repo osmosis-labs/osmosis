@@ -75,5 +75,46 @@ message ArithmeticTwapToNowResponse {
   ];
 }
 
+message GeometricTwapRequest {
+  uint64 pool_id = 1;
+  string base_asset = 2;
+  string quote_asset = 3;
+  google.protobuf.Timestamp start_time = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"start_time\""
+  ];
+  google.protobuf.Timestamp end_time = 5 [
+    (gogoproto.nullable) = true,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"end_time\""
+  ];
+}
+message GeometricTwapResponse {
+  string geometric_twap = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"geometric_twap\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message GeometricTwapToNowRequest {
+  uint64 pool_id = 1;
+  string base_asset = 2;
+  string quote_asset = 3;
+  google.protobuf.Timestamp start_time = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"start_time\""
+  ];
+}
+message GeometricTwapToNowResponse {
+  string geometric_twap = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"geometric_twap\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
 message ParamsRequest {}
 message ParamsResponse { Params params = 1 [ (gogoproto.nullable) = false ]; }

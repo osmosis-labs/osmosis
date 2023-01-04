@@ -257,6 +257,224 @@ func (m *ArithmeticTwapToNowResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ArithmeticTwapToNowResponse proto.InternalMessageInfo
 
+type GeometricTwapRequest struct {
+	PoolId     uint64     `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
+	BaseAsset  string     `protobuf:"bytes,2,opt,name=base_asset,json=baseAsset,proto3" json:"base_asset,omitempty"`
+	QuoteAsset string     `protobuf:"bytes,3,opt,name=quote_asset,json=quoteAsset,proto3" json:"quote_asset,omitempty"`
+	StartTime  time.Time  `protobuf:"bytes,4,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time" yaml:"start_time"`
+	EndTime    *time.Time `protobuf:"bytes,5,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time,omitempty" yaml:"end_time"`
+}
+
+func (m *GeometricTwapRequest) Reset()         { *m = GeometricTwapRequest{} }
+func (m *GeometricTwapRequest) String() string { return proto.CompactTextString(m) }
+func (*GeometricTwapRequest) ProtoMessage()    {}
+func (*GeometricTwapRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_141a22dba58615af, []int{4}
+}
+func (m *GeometricTwapRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GeometricTwapRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GeometricTwapRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GeometricTwapRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GeometricTwapRequest.Merge(m, src)
+}
+func (m *GeometricTwapRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *GeometricTwapRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GeometricTwapRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GeometricTwapRequest proto.InternalMessageInfo
+
+func (m *GeometricTwapRequest) GetPoolId() uint64 {
+	if m != nil {
+		return m.PoolId
+	}
+	return 0
+}
+
+func (m *GeometricTwapRequest) GetBaseAsset() string {
+	if m != nil {
+		return m.BaseAsset
+	}
+	return ""
+}
+
+func (m *GeometricTwapRequest) GetQuoteAsset() string {
+	if m != nil {
+		return m.QuoteAsset
+	}
+	return ""
+}
+
+func (m *GeometricTwapRequest) GetStartTime() time.Time {
+	if m != nil {
+		return m.StartTime
+	}
+	return time.Time{}
+}
+
+func (m *GeometricTwapRequest) GetEndTime() *time.Time {
+	if m != nil {
+		return m.EndTime
+	}
+	return nil
+}
+
+type GeometricTwapResponse struct {
+	GeometricTwap github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=geometric_twap,json=geometricTwap,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"geometric_twap" yaml:"geometric_twap"`
+}
+
+func (m *GeometricTwapResponse) Reset()         { *m = GeometricTwapResponse{} }
+func (m *GeometricTwapResponse) String() string { return proto.CompactTextString(m) }
+func (*GeometricTwapResponse) ProtoMessage()    {}
+func (*GeometricTwapResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_141a22dba58615af, []int{5}
+}
+func (m *GeometricTwapResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GeometricTwapResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GeometricTwapResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GeometricTwapResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GeometricTwapResponse.Merge(m, src)
+}
+func (m *GeometricTwapResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *GeometricTwapResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GeometricTwapResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GeometricTwapResponse proto.InternalMessageInfo
+
+type GeometricTwapToNowRequest struct {
+	PoolId     uint64    `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
+	BaseAsset  string    `protobuf:"bytes,2,opt,name=base_asset,json=baseAsset,proto3" json:"base_asset,omitempty"`
+	QuoteAsset string    `protobuf:"bytes,3,opt,name=quote_asset,json=quoteAsset,proto3" json:"quote_asset,omitempty"`
+	StartTime  time.Time `protobuf:"bytes,4,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time" yaml:"start_time"`
+}
+
+func (m *GeometricTwapToNowRequest) Reset()         { *m = GeometricTwapToNowRequest{} }
+func (m *GeometricTwapToNowRequest) String() string { return proto.CompactTextString(m) }
+func (*GeometricTwapToNowRequest) ProtoMessage()    {}
+func (*GeometricTwapToNowRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_141a22dba58615af, []int{6}
+}
+func (m *GeometricTwapToNowRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GeometricTwapToNowRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GeometricTwapToNowRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GeometricTwapToNowRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GeometricTwapToNowRequest.Merge(m, src)
+}
+func (m *GeometricTwapToNowRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *GeometricTwapToNowRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GeometricTwapToNowRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GeometricTwapToNowRequest proto.InternalMessageInfo
+
+func (m *GeometricTwapToNowRequest) GetPoolId() uint64 {
+	if m != nil {
+		return m.PoolId
+	}
+	return 0
+}
+
+func (m *GeometricTwapToNowRequest) GetBaseAsset() string {
+	if m != nil {
+		return m.BaseAsset
+	}
+	return ""
+}
+
+func (m *GeometricTwapToNowRequest) GetQuoteAsset() string {
+	if m != nil {
+		return m.QuoteAsset
+	}
+	return ""
+}
+
+func (m *GeometricTwapToNowRequest) GetStartTime() time.Time {
+	if m != nil {
+		return m.StartTime
+	}
+	return time.Time{}
+}
+
+type GeometricTwapToNowResponse struct {
+	GeometricTwap github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=geometric_twap,json=geometricTwap,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"geometric_twap" yaml:"geometric_twap"`
+}
+
+func (m *GeometricTwapToNowResponse) Reset()         { *m = GeometricTwapToNowResponse{} }
+func (m *GeometricTwapToNowResponse) String() string { return proto.CompactTextString(m) }
+func (*GeometricTwapToNowResponse) ProtoMessage()    {}
+func (*GeometricTwapToNowResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_141a22dba58615af, []int{7}
+}
+func (m *GeometricTwapToNowResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GeometricTwapToNowResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GeometricTwapToNowResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GeometricTwapToNowResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GeometricTwapToNowResponse.Merge(m, src)
+}
+func (m *GeometricTwapToNowResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *GeometricTwapToNowResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GeometricTwapToNowResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GeometricTwapToNowResponse proto.InternalMessageInfo
+
 type ParamsRequest struct {
 }
 
@@ -264,7 +482,7 @@ func (m *ParamsRequest) Reset()         { *m = ParamsRequest{} }
 func (m *ParamsRequest) String() string { return proto.CompactTextString(m) }
 func (*ParamsRequest) ProtoMessage()    {}
 func (*ParamsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_141a22dba58615af, []int{4}
+	return fileDescriptor_141a22dba58615af, []int{8}
 }
 func (m *ParamsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -301,7 +519,7 @@ func (m *ParamsResponse) Reset()         { *m = ParamsResponse{} }
 func (m *ParamsResponse) String() string { return proto.CompactTextString(m) }
 func (*ParamsResponse) ProtoMessage()    {}
 func (*ParamsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_141a22dba58615af, []int{5}
+	return fileDescriptor_141a22dba58615af, []int{9}
 }
 func (m *ParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -342,6 +560,10 @@ func init() {
 	proto.RegisterType((*ArithmeticTwapResponse)(nil), "osmosis.twap.v1beta1.ArithmeticTwapResponse")
 	proto.RegisterType((*ArithmeticTwapToNowRequest)(nil), "osmosis.twap.v1beta1.ArithmeticTwapToNowRequest")
 	proto.RegisterType((*ArithmeticTwapToNowResponse)(nil), "osmosis.twap.v1beta1.ArithmeticTwapToNowResponse")
+	proto.RegisterType((*GeometricTwapRequest)(nil), "osmosis.twap.v1beta1.GeometricTwapRequest")
+	proto.RegisterType((*GeometricTwapResponse)(nil), "osmosis.twap.v1beta1.GeometricTwapResponse")
+	proto.RegisterType((*GeometricTwapToNowRequest)(nil), "osmosis.twap.v1beta1.GeometricTwapToNowRequest")
+	proto.RegisterType((*GeometricTwapToNowResponse)(nil), "osmosis.twap.v1beta1.GeometricTwapToNowResponse")
 	proto.RegisterType((*ParamsRequest)(nil), "osmosis.twap.v1beta1.ParamsRequest")
 	proto.RegisterType((*ParamsResponse)(nil), "osmosis.twap.v1beta1.ParamsResponse")
 }
@@ -417,6 +639,8 @@ type QueryClient interface {
 	Params(ctx context.Context, in *ParamsRequest, opts ...grpc.CallOption) (*ParamsResponse, error)
 	ArithmeticTwap(ctx context.Context, in *ArithmeticTwapRequest, opts ...grpc.CallOption) (*ArithmeticTwapResponse, error)
 	ArithmeticTwapToNow(ctx context.Context, in *ArithmeticTwapToNowRequest, opts ...grpc.CallOption) (*ArithmeticTwapToNowResponse, error)
+	GeometricTwap(ctx context.Context, in *GeometricTwapRequest, opts ...grpc.CallOption) (*GeometricTwapResponse, error)
+	GeometricTwapToNow(ctx context.Context, in *GeometricTwapToNowRequest, opts ...grpc.CallOption) (*GeometricTwapToNowResponse, error)
 }
 
 type queryClient struct {
@@ -477,6 +701,8 @@ type QueryServer interface {
 	Params(context.Context, *ParamsRequest) (*ParamsResponse, error)
 	ArithmeticTwap(context.Context, *ArithmeticTwapRequest) (*ArithmeticTwapResponse, error)
 	ArithmeticTwapToNow(context.Context, *ArithmeticTwapToNowRequest) (*ArithmeticTwapToNowResponse, error)
+	GeometricTwap(context.Context, *GeometricTwapRequest) (*GeometricTwapResponse, error)
+	GeometricTwapToNow(context.Context, *GeometricTwapToNowRequest) (*GeometricTwapToNowResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -491,6 +717,12 @@ func (*UnimplementedQueryServer) ArithmeticTwap(ctx context.Context, req *Arithm
 }
 func (*UnimplementedQueryServer) ArithmeticTwapToNow(ctx context.Context, req *ArithmeticTwapToNowRequest) (*ArithmeticTwapToNowResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ArithmeticTwapToNow not implemented")
+}
+func (*UnimplementedQueryServer) GeometricTwap(ctx context.Context, req *GeometricTwapRequest) (*GeometricTwapResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GeometricTwap not implemented")
+}
+func (*UnimplementedQueryServer) GeometricTwapToNow(ctx context.Context, req *GeometricTwapToNowRequest) (*GeometricTwapToNowResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GeometricTwapToNow not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -551,6 +783,42 @@ func _Query_ArithmeticTwapToNow_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GeometricTwap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GeometricTwapRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GeometricTwap(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.twap.v1beta1.Query/GeometricTwap",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GeometricTwap(ctx, req.(*GeometricTwapRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GeometricTwapToNow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GeometricTwapToNowRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GeometricTwapToNow(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.twap.v1beta1.Query/GeometricTwapToNow",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GeometricTwapToNow(ctx, req.(*GeometricTwapToNowRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.twap.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -566,6 +834,14 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ArithmeticTwapToNow",
 			Handler:    _Query_ArithmeticTwapToNow_Handler,
+		},
+		{
+			MethodName: "GeometricTwap",
+			Handler:    _Query_GeometricTwap_Handler,
+		},
+		{
+			MethodName: "GeometricTwapToNow",
+			Handler:    _Query_GeometricTwapToNow_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -748,6 +1024,182 @@ func (m *ArithmeticTwapToNowResponse) MarshalToSizedBuffer(dAtA []byte) (int, er
 	return len(dAtA) - i, nil
 }
 
+func (m *GeometricTwapRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GeometricTwapRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GeometricTwapRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.EndTime != nil {
+		n4, err4 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.EndTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(*m.EndTime):])
+		if err4 != nil {
+			return 0, err4
+		}
+		i -= n4
+		i = encodeVarintQuery(dAtA, i, uint64(n4))
+		i--
+		dAtA[i] = 0x2a
+	}
+	n5, err5 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime):])
+	if err5 != nil {
+		return 0, err5
+	}
+	i -= n5
+	i = encodeVarintQuery(dAtA, i, uint64(n5))
+	i--
+	dAtA[i] = 0x22
+	if len(m.QuoteAsset) > 0 {
+		i -= len(m.QuoteAsset)
+		copy(dAtA[i:], m.QuoteAsset)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.QuoteAsset)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.BaseAsset) > 0 {
+		i -= len(m.BaseAsset)
+		copy(dAtA[i:], m.BaseAsset)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.BaseAsset)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.PoolId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.PoolId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GeometricTwapResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GeometricTwapResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GeometricTwapResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.GeometricTwap.Size()
+		i -= size
+		if _, err := m.GeometricTwap.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *GeometricTwapToNowRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GeometricTwapToNowRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GeometricTwapToNowRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	n6, err6 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime):])
+	if err6 != nil {
+		return 0, err6
+	}
+	i -= n6
+	i = encodeVarintQuery(dAtA, i, uint64(n6))
+	i--
+	dAtA[i] = 0x22
+	if len(m.QuoteAsset) > 0 {
+		i -= len(m.QuoteAsset)
+		copy(dAtA[i:], m.QuoteAsset)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.QuoteAsset)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.BaseAsset) > 0 {
+		i -= len(m.BaseAsset)
+		copy(dAtA[i:], m.BaseAsset)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.BaseAsset)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.PoolId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.PoolId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GeometricTwapToNowResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GeometricTwapToNowResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GeometricTwapToNowResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.GeometricTwap.Size()
+		i -= size
+		if _, err := m.GeometricTwap.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
 func (m *ParamsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -881,6 +1333,76 @@ func (m *ArithmeticTwapToNowResponse) Size() (n int) {
 	var l int
 	_ = l
 	l = m.ArithmeticTwap.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *GeometricTwapRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.PoolId != 0 {
+		n += 1 + sovQuery(uint64(m.PoolId))
+	}
+	l = len(m.BaseAsset)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.QuoteAsset)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime)
+	n += 1 + l + sovQuery(uint64(l))
+	if m.EndTime != nil {
+		l = github_com_gogo_protobuf_types.SizeOfStdTime(*m.EndTime)
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *GeometricTwapResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.GeometricTwap.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *GeometricTwapToNowRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.PoolId != 0 {
+		n += 1 + sovQuery(uint64(m.PoolId))
+	}
+	l = len(m.BaseAsset)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.QuoteAsset)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime)
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *GeometricTwapToNowResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.GeometricTwap.Size()
 	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
@@ -1423,6 +1945,542 @@ func (m *ArithmeticTwapToNowResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.ArithmeticTwap.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GeometricTwapRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GeometricTwapRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GeometricTwapRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+			}
+			m.PoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BaseAsset", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BaseAsset = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QuoteAsset", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.QuoteAsset = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EndTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.EndTime == nil {
+				m.EndTime = new(time.Time)
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(m.EndTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GeometricTwapResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GeometricTwapResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GeometricTwapResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GeometricTwap", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.GeometricTwap.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GeometricTwapToNowRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GeometricTwapToNowRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GeometricTwapToNowRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+			}
+			m.PoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BaseAsset", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BaseAsset = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QuoteAsset", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.QuoteAsset = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GeometricTwapToNowResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GeometricTwapToNowResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GeometricTwapToNowResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GeometricTwap", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.GeometricTwap.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
