@@ -172,6 +172,11 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 			kAtPriceOne:  sdk.NewInt(-5),
 			tickExpected: "4030301",
 		},
+		"max spot price and minimum kAtPriceOne": {
+			price:        sdk.MustNewDecFromStr("20000000000"),
+			kAtPriceOne:  sdk.NewInt(-1),
+			tickExpected: "1000",
+		},
 		"error: price must be positive": {
 			price:         sdk.NewDec(-1),
 			kAtPriceOne:   sdk.NewInt(-6),
