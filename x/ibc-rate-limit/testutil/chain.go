@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 	"github.com/cosmos/ibc-go/v4/testing/simapp/helpers"
-	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/v13/app"
@@ -76,11 +75,7 @@ func SignAndDeliver(
 	)
 
 	// Simulate a sending a transaction and committing a block
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	gInfo, res, err := app.Deliver(txCfg.TxEncoder(), tx)
-
-	app.EndBlock(abci.RequestEndBlock{})
-	app.Commit()
 
 	return gInfo, res, err
 }
