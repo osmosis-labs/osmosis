@@ -279,6 +279,7 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 	}
 
 	for _, test := range tests {
+	    test := test
 		suite.SetupTest()
 
 		gammKeeper := suite.App.GAMMKeeper
