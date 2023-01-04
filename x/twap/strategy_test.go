@@ -163,16 +163,14 @@ func (s *TestSuite) TestComputeArithmeticStrategyTwap() {
 // this function should panic in case of zero delta.
 func (s *TestSuite) TestComputeGeometricStrategyTwap() {
 	var (
-		smallestDec = sdk.SmallestDec()
-
 		errTolerance = osmomath.ErrTolerance{
-			MultiplicativeTolerance: smallestDec,
+			MultiplicativeTolerance: sdk.SmallestDec(),
 			RoundingDir:             osmomath.RoundDown,
 		}
 
 		// Compute accumulator difference for the underflow test case by
-		// taking log base 2 of the max spot price
-		smallestDecLog = twap.TwapLog(smallestDec)
+		// taking log base 2 of the min spot price
+		smallestDecLog = twap.TwapLog(gammtypes.MinSpotPrice)
 
 		// Compute accumulator difference for the overflow test case by
 		// taking log base 2 of the max spot price
@@ -262,18 +260,18 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap() {
 			expPanic: true,
 		},
 
-		"no underflow test: spot price is smallest dec possible denom0 quote": {
+		"no underflow test: spot price is smallestpossible denom0 quote": {
 			startRecord: newOneSidedGeometricRecord(baseTime, sdk.ZeroDec()),
 			endRecord:   newOneSidedGeometricRecord(baseRecord.Time.Add(oneHundredYearsMin1MsDuration), underflowTestCaseAccumDiff),
 			quoteAsset:  denom0,
-			expTwap:     smallestDec,
+			expTwap:     gammtypes.MinSpotPrice,
 		},
 
-		"no underflow test: spot price is smallest dec possible denom1 quote": {
+		"no underflow test: spot price is smallest possible denom1 quote": {
 			startRecord: newOneSidedGeometricRecord(baseTime, sdk.ZeroDec()),
 			endRecord:   newOneSidedGeometricRecord(baseRecord.Time.Add(oneHundredYearsMin1MsDuration), underflowTestCaseAccumDiff),
 			quoteAsset:  denom1,
-			expTwap:     sdk.OneDec().Quo(smallestDec),
+			expTwap:     sdk.OneDec().Quo(gammtypes.MinSpotPrice),
 		},
 
 		"zero accum difference ": {
