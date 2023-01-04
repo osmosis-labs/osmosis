@@ -28,6 +28,7 @@ func newTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0,
 		P1LastSpotPrice:             sp1,
 		P0ArithmeticTwapAccumulator: sdk.ZeroDec(),
 		P1ArithmeticTwapAccumulator: sdk.ZeroDec(),
+		GeometricTwapAccumulator:    sdk.ZeroDec(),
 		LastErrorTime:               lastErrorTime,
 	}, nil
 }
@@ -45,7 +46,9 @@ func getSpotPrices(
 	previousErrorTime time.Time,
 ) (sp0 sdk.Dec, sp1 sdk.Dec, latestErrTime time.Time) {
 	latestErrTime = previousErrorTime
+	// sp0 = denom0 quote, denom1 base.
 	sp0, err0 := k.CalculateSpotPrice(ctx, poolId, denom0, denom1)
+	// sp1 = denom0 base, denom1 quote.
 	sp1, err1 := k.CalculateSpotPrice(ctx, poolId, denom1, denom0)
 	if err0 != nil || err1 != nil {
 		latestErrTime = ctx.BlockTime()
@@ -234,8 +237,9 @@ func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA, asse
 	return record, nil
 }
 
-// computeArithmeticTwap computes and returns an arithmetic TWAP between
-// two records given the quote asset.
+// computeTwap computes and returns a TWAP of a given
+// type - arithmetic or geometric.
+// Between two records given the quote asset.
 // precondition: endRecord.Time >= startRecord.Time
 // if (endRecord.LastErrorTime >= startRecord.Time) returns an error at end + result
 // if (startRecord.LastErrorTime == startRecord.Time) returns an error at end + result

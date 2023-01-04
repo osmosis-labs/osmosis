@@ -30,6 +30,26 @@ func (q Querier) Params(grpcCtx context.Context,
 	return q.Q.Params(ctx, *req)
 }
 
+func (q Querier) GeometricTwapToNow(grpcCtx context.Context,
+	req *queryproto.GeometricTwapToNowRequest,
+) (*queryproto.GeometricTwapToNowResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.GeometricTwapToNow(ctx, *req)
+}
+
+func (q Querier) GeometricTwap(grpcCtx context.Context,
+	req *queryproto.GeometricTwapRequest,
+) (*queryproto.GeometricTwapResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.GeometricTwap(ctx, *req)
+}
+
 func (q Querier) ArithmeticTwapToNow(grpcCtx context.Context,
 	req *queryproto.ArithmeticTwapToNowRequest,
 ) (*queryproto.ArithmeticTwapToNowResponse, error) {

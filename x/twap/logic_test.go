@@ -19,10 +19,15 @@ import (
 )
 
 var (
-	zeroDec = sdk.ZeroDec()
-	oneDec  = sdk.OneDec()
-	twoDec  = oneDec.Add(oneDec)
-	OneSec  = sdk.MustNewDecFromStr("1000.000000000000000000")
+	zeroDec              = sdk.ZeroDec()
+	oneDec               = sdk.OneDec()
+	twoDec               = oneDec.Add(oneDec)
+	pointFiveDec         = sdk.OneDec().Quo(twoDec)
+	OneSec               = sdk.MustNewDecFromStr("1000.000000000000000000")
+	logTen               = twap.TwapLog(sdk.NewDec(10))
+	logOneOverTen        = twap.TwapLog(sdk.OneDec().QuoInt64(10))
+	tenSecAccum          = OneSec.MulInt64(10)
+	geometricTenSecAccum = OneSec.Mul(logTen)
 )
 
 func (s *TestSuite) TestGetSpotPrices() {
@@ -144,6 +149,7 @@ func (s *TestSuite) TestNewTwapRecord() {
 				s.Require().Equal(s.Ctx.BlockTime(), twapRecord.Time)
 				s.Require().Equal(sdk.ZeroDec(), twapRecord.P0ArithmeticTwapAccumulator)
 				s.Require().Equal(sdk.ZeroDec(), twapRecord.P1ArithmeticTwapAccumulator)
+				s.Require().Equal(sdk.ZeroDec(), twapRecord.GeometricTwapAccumulator)
 			}
 		})
 	}
@@ -161,8 +167,8 @@ func (s *TestSuite) TestUpdateRecord() {
 	updateTime := time.Unix(3, 0).UTC()
 	baseTimeMinusOne := time.Unix(1, 0).UTC()
 
-	zeroAccumNoErrSp10Record := newRecord(poolId, baseTime, sdk.NewDec(10), zeroDec, zeroDec)
-	sp10OneTimeUnitAccumRecord := newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10))
+	zeroAccumNoErrSp10Record := newRecord(poolId, baseTime, sdk.NewDec(10), zeroDec, zeroDec, zeroDec)
+	sp10OneTimeUnitAccumRecord := newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10), geometricTenSecAccum)
 	// all tests occur with updateTime = base time + time.Unix(1, 0)
 	tests := map[string]struct {
 		record           types.TwapRecord
@@ -237,26 +243,27 @@ func (s *TestSuite) TestUpdateRecord() {
 
 func TestRecordWithUpdatedAccumulators(t *testing.T) {
 	poolId := uint64(1)
-	defaultRecord := newRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), oneDec, twoDec)
+	defaultRecord := newRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), oneDec, twoDec, pointFiveDec)
 	tests := map[string]struct {
-		record    types.TwapRecord
-		newTime   time.Time
-		expRecord types.TwapRecord
+		record      types.TwapRecord
+		newTime     time.Time
+		expRecord   types.TwapRecord
+		expectPanic bool
 	}{
 		"accum with zero value": {
-			record:    newRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), zeroDec, zeroDec),
+			record:    newRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), zeroDec, zeroDec, zeroDec),
 			newTime:   time.Unix(2, 0),
-			expRecord: newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)),
+			expRecord: newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10), geometricTenSecAccum),
 		},
 		"small starting accumulators": {
 			record:    defaultRecord,
 			newTime:   time.Unix(2, 0),
-			expRecord: newExpRecord(oneDec.Add(OneSec.MulInt64(10)), twoDec.Add(OneSec.QuoInt64(10))),
+			expRecord: newExpRecord(oneDec.Add(OneSec.MulInt64(10)), twoDec.Add(OneSec.QuoInt64(10)), pointFiveDec.Add(geometricTenSecAccum)),
 		},
 		"larger time interval": {
-			record:    newRecord(poolId, time.Unix(11, 0), sdk.NewDec(10), oneDec, twoDec),
+			record:    newRecord(poolId, time.Unix(11, 0), sdk.NewDec(10), oneDec, twoDec, pointFiveDec),
 			newTime:   time.Unix(55, 0),
-			expRecord: newExpRecord(oneDec.Add(OneSec.MulInt64(44*10)), twoDec.Add(OneSec.MulInt64(44).QuoInt64(10))),
+			expRecord: newExpRecord(oneDec.Add(OneSec.MulInt64(44*10)), twoDec.Add(OneSec.MulInt64(44).QuoInt64(10)), pointFiveDec.Add(OneSec.MulInt64(44).Mul(logTen))),
 		},
 		"same time, accumulator should not change": {
 			record:    defaultRecord,
@@ -293,8 +300,10 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 			test.expRecord.P0LastSpotPrice = test.record.P0LastSpotPrice
 			test.expRecord.P1LastSpotPrice = test.record.P1LastSpotPrice
 
-			gotRecord := twap.RecordWithUpdatedAccumulators(test.record, test.newTime)
-			require.Equal(t, test.expRecord, gotRecord)
+			osmoassert.ConditionalPanic(t, test.expectPanic, func() {
+				gotRecord := twap.RecordWithUpdatedAccumulators(test.record, test.newTime)
+				require.Equal(t, test.expRecord, gotRecord)
+			})
 		})
 	}
 }
@@ -307,19 +316,19 @@ func TestRecordWithUpdatedAccumulators_ThreeAsset(t *testing.T) {
 		expRecord       []types.TwapRecord
 	}{
 		"accum with zero value": {
-			record:          newThreeAssetRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), zeroDec, zeroDec, zeroDec),
+			record:          newThreeAssetRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), zeroDec, zeroDec, zeroDec, zeroDec, zeroDec, zeroDec),
 			interpolateTime: time.Unix(2, 0),
-			expRecord:       newThreeAssetExpRecord(poolId, OneSec.MulInt64(10), OneSec.QuoInt64(10), OneSec.MulInt64(20)),
+			expRecord:       newThreeAssetExpRecord(poolId, OneSec.MulInt64(10), OneSec.QuoInt64(10), OneSec.MulInt64(20), geometricTenSecAccum, geometricTenSecAccum, OneSec.Mul(logOneOverTen)),
 		},
 		"small starting accumulators": {
-			record:          newThreeAssetRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), twoDec, oneDec, twoDec),
+			record:          newThreeAssetRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), twoDec, oneDec, twoDec, oneDec, twoDec, oneDec),
 			interpolateTime: time.Unix(2, 0),
-			expRecord:       newThreeAssetExpRecord(poolId, twoDec.Add(OneSec.MulInt64(10)), oneDec.Add(OneSec.QuoInt64(10)), twoDec.Add(OneSec.MulInt64(20))),
+			expRecord:       newThreeAssetExpRecord(poolId, twoDec.Add(OneSec.MulInt64(10)), oneDec.Add(OneSec.QuoInt64(10)), twoDec.Add(OneSec.MulInt64(20)), oneDec.Add(geometricTenSecAccum), twoDec.Add(geometricTenSecAccum), oneDec.Add(OneSec.Mul(logOneOverTen))),
 		},
 		"larger time interval": {
-			record:          newThreeAssetRecord(poolId, time.Unix(11, 0), sdk.NewDec(10), twoDec, oneDec, twoDec),
+			record:          newThreeAssetRecord(poolId, time.Unix(11, 0), sdk.NewDec(10), twoDec, oneDec, twoDec, oneDec, twoDec, oneDec),
 			interpolateTime: time.Unix(55, 0),
-			expRecord:       newThreeAssetExpRecord(poolId, twoDec.Add(OneSec.MulInt64(44*10)), oneDec.Add(OneSec.MulInt64(44).QuoInt64(10)), twoDec.Add(OneSec.MulInt64(44*20))),
+			expRecord:       newThreeAssetExpRecord(poolId, twoDec.Add(OneSec.MulInt64(44*10)), oneDec.Add(OneSec.MulInt64(44).QuoInt64(10)), twoDec.Add(OneSec.MulInt64(44*20)), oneDec.Add(OneSec.MulInt64(44).Mul(logTen)), twoDec.Add(OneSec.MulInt64(44).Mul(logTen)), oneDec.Add(OneSec.MulInt64(44).Mul(logOneOverTen))),
 		},
 	}
 
@@ -339,7 +348,7 @@ func TestRecordWithUpdatedAccumulators_ThreeAsset(t *testing.T) {
 }
 
 func (s *TestSuite) TestGetInterpolatedRecord() {
-	baseRecord := newTwoAssetPoolTwapRecordWithDefaults(baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec())
+	baseRecord := newTwoAssetPoolTwapRecordWithDefaults(baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec().Quo(twoDec))
 
 	// all tests occur with updateTime = base time + time.Unix(1, 0)
 	tests := map[string]struct {
@@ -437,7 +446,7 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 }
 
 func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
-	baseRecord := newThreeAssetRecord(2, baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	baseRecord := newThreeAssetRecord(2, baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	// all tests occur with updateTime = base time + time.Unix(1, 0)
 	tests := map[string]struct {
 		recordsToPreSet       []types.TwapRecord
@@ -539,202 +548,12 @@ func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
 	}
 }
 
-type computeArithmeticTwapTestCase struct {
-	startRecord types.TwapRecord
-	endRecord   types.TwapRecord
-	quoteAsset  string
-	expTwap     sdk.Dec
-	expErr      bool
-}
-
 type computeThreeAssetArithmeticTwapTestCase struct {
 	startRecord []types.TwapRecord
 	endRecord   []types.TwapRecord
 	quoteAsset  []string
 	expTwap     []sdk.Dec
 	expErr      bool
-}
-
-// TestComputeArithmeticTwap tests ComputeArithmeticTwap on various inputs.
-// The test vectors are structured by setting up different start and records,
-// based on time interval, and their accumulator values.
-// Then an expected TWAP is provided in each test case, to compare against computed.
-func TestComputeArithmeticTwap(t *testing.T) {
-	testCaseFromDeltas := func(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeArithmeticTwapTestCase {
-		return computeArithmeticTwapTestCase{
-			newOneSidedRecord(baseTime, startAccum, true),
-			newOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), true),
-			denom0,
-			expectedTwap,
-			false,
-		}
-	}
-	testCaseFromDeltasAsset1 := func(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeArithmeticTwapTestCase {
-		return computeArithmeticTwapTestCase{
-			newOneSidedRecord(baseTime, startAccum, false),
-			newOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), false),
-			denom1,
-			expectedTwap,
-			false,
-		}
-	}
-	tenSecAccum := OneSec.MulInt64(10)
-	pointOneAccum := OneSec.QuoInt64(10)
-	tests := map[string]computeArithmeticTwapTestCase{
-		"basic: spot price = 1 for one second, 0 init accumulator": {
-			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			endRecord:   newOneSidedRecord(tPlusOne, OneSec, true),
-			quoteAsset:  denom0,
-			expTwap:     sdk.OneDec(),
-		},
-		// this test just shows what happens in case the records are reversed.
-		// It should return the correct result, even though this is incorrect internal API usage
-		"invalid call: reversed records of above": {
-			startRecord: newOneSidedRecord(tPlusOne, OneSec, true),
-			endRecord:   newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			quoteAsset:  denom0,
-			expTwap:     sdk.OneDec(),
-		},
-		"same record: denom0, end spot price = 0": {
-			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			endRecord:   newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			quoteAsset:  denom0,
-			expTwap:     sdk.ZeroDec(),
-		},
-		"same record: denom1, end spot price = 1": {
-			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			endRecord:   newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			quoteAsset:  denom1,
-			expTwap:     sdk.OneDec(),
-		},
-		"accumulator = 10*OneSec, t=5s. 0 base accum": testCaseFromDeltas(
-			sdk.ZeroDec(), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
-		"accumulator = 10*OneSec, t=3s. 0 base accum": testCaseFromDeltas(
-			sdk.ZeroDec(), tenSecAccum, 3*time.Second, ThreePlusOneThird),
-		"accumulator = 10*OneSec, t=100s. 0 base accum": testCaseFromDeltas(
-			sdk.ZeroDec(), tenSecAccum, 100*time.Second, sdk.NewDecWithPrec(1, 1)),
-
-		// test that base accum has no impact
-		"accumulator = 10*OneSec, t=5s. 10 base accum": testCaseFromDeltas(
-			sdk.NewDec(10), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
-		"accumulator = 10*OneSec, t=3s. 10*second base accum": testCaseFromDeltas(
-			tenSecAccum, tenSecAccum, 3*time.Second, ThreePlusOneThird),
-		"accumulator = 10*OneSec, t=100s. .1*second base accum": testCaseFromDeltas(
-			pointOneAccum, tenSecAccum, 100*time.Second, sdk.NewDecWithPrec(1, 1)),
-
-		"accumulator = 10*OneSec, t=100s. 0 base accum (asset 1)": testCaseFromDeltasAsset1(sdk.ZeroDec(), OneSec.MulInt64(10), 100*time.Second, sdk.NewDecWithPrec(1, 1)),
-	}
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			actualTwap, err := twap.ComputeArithmeticTwap(test.startRecord, test.endRecord, test.quoteAsset)
-			require.Equal(t, test.expTwap, actualTwap)
-			require.NoError(t, err)
-		})
-	}
-}
-
-func TestComputeArithmeticTwap_ThreeAsset(t *testing.T) {
-	testThreeAssetCaseFromDeltas := func(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeThreeAssetArithmeticTwapTestCase {
-		return computeThreeAssetArithmeticTwapTestCase{
-			newThreeAssetOneSidedRecord(baseTime, startAccum, true),
-			newThreeAssetOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), true),
-			[]string{denom0, denom0, denom1},
-			[]sdk.Dec{expectedTwap, expectedTwap, expectedTwap},
-			false,
-		}
-	}
-
-	tenSecAccum := OneSec.MulInt64(10)
-	pointOneAccum := OneSec.QuoInt64(10)
-	tests := map[string]computeThreeAssetArithmeticTwapTestCase{
-		"three asset basic: spot price = 1 for one second, 0 init accumulator": {
-			startRecord: newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			endRecord:   newThreeAssetOneSidedRecord(tPlusOne, OneSec, true),
-			quoteAsset:  []string{denom0, denom0, denom1},
-			expTwap:     []sdk.Dec{sdk.OneDec(), sdk.OneDec(), sdk.OneDec()},
-		},
-		"three asset same record: asset1, end spot price = 1": {
-			startRecord: newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			endRecord:   newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			quoteAsset:  []string{denom1, denom2, denom2},
-			expTwap:     []sdk.Dec{sdk.OneDec(), sdk.OneDec(), sdk.OneDec()},
-		},
-		"three asset. accumulator = 10*OneSec, t=5s. 0 base accum": testThreeAssetCaseFromDeltas(
-			sdk.ZeroDec(), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
-
-		// test that base accum has no impact
-		"three asset. accumulator = 10*OneSec, t=5s. 10 base accum": testThreeAssetCaseFromDeltas(
-			sdk.NewDec(10), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
-		"three asset. accumulator = 10*OneSec, t=100s. .1*second base accum": testThreeAssetCaseFromDeltas(
-			pointOneAccum, tenSecAccum, 100*time.Second, sdk.NewDecWithPrec(1, 1)),
-	}
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			for i, startRec := range test.startRecord {
-				actualTwap, err := twap.ComputeArithmeticTwap(startRec, test.endRecord[i], test.quoteAsset[i])
-				require.Equal(t, test.expTwap[i], actualTwap)
-				require.NoError(t, err)
-			}
-		})
-	}
-}
-
-// This tests the behavior of computeArithmeticTwap, around error returning
-// when there has been an intermediate spot price error.
-func TestComputeArithmeticTwapWithSpotPriceError(t *testing.T) {
-	newOneSidedRecordWErrorTime := func(time time.Time, accum sdk.Dec, useP0 bool, errTime time.Time) types.TwapRecord {
-		record := newOneSidedRecord(time, accum, useP0)
-		record.LastErrorTime = errTime
-		return record
-	}
-	tests := map[string]computeArithmeticTwapTestCase{
-		// should error, since end time may have been used to interpolate this value
-		"errAtEndTime from end record": {
-			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			endRecord:   newOneSidedRecordWErrorTime(tPlusOne, OneSec, true, tPlusOne),
-			quoteAsset:  denom0,
-			expTwap:     sdk.OneDec(),
-			expErr:      true,
-		},
-		// should error, since start time may have been used to interpolate this value
-		"err at StartTime exactly from end record": {
-			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			endRecord:   newOneSidedRecordWErrorTime(tPlusOne, OneSec, true, baseTime),
-			quoteAsset:  denom0,
-			expTwap:     sdk.OneDec(),
-			expErr:      true,
-		},
-		// should error, since start record is erroneous
-		"err at StartTime exactly from start record": {
-			startRecord: newOneSidedRecordWErrorTime(baseTime, sdk.ZeroDec(), true, baseTime),
-			endRecord:   newOneSidedRecord(tPlusOne, OneSec, true),
-			quoteAsset:  denom0,
-			expTwap:     sdk.OneDec(),
-			expErr:      true,
-		},
-		"err before StartTime": {
-			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			endRecord:   newOneSidedRecordWErrorTime(tPlusOne, OneSec, true, tMinOne),
-			quoteAsset:  denom0,
-			expTwap:     sdk.OneDec(),
-			expErr:      false,
-		},
-		// Should not happen, but if it did would error
-		"err after EndTime": {
-			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			endRecord:   newOneSidedRecordWErrorTime(tPlusOne, OneSec.MulInt64(2), true, baseTime.Add(20*time.Second)),
-			quoteAsset:  denom0,
-			expTwap:     sdk.OneDec().MulInt64(2),
-			expErr:      true,
-		},
-	}
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			actualTwap, err := twap.ComputeArithmeticTwap(test.startRecord, test.endRecord, test.quoteAsset)
-			require.Equal(t, test.expTwap, actualTwap)
-			osmoassert.ConditionalError(t, test.expErr, err)
-		})
-	}
 }
 
 // TestPruneRecords tests that twap records earlier than

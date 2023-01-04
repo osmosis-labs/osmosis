@@ -26,28 +26,38 @@ var (
 	ThreePlusOneThird sdk.Dec = sdk.MustNewDecFromStr("3.333333333333333333")
 
 	// base record is a record with t=baseTime, sp0=10(sp1=0.1) accumulators set to 0
-	baseRecord types.TwapRecord = newTwoAssetPoolTwapRecordWithDefaults(baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec())
+	baseRecord types.TwapRecord = newTwoAssetPoolTwapRecordWithDefaults(baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 
 	threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC types.TwapRecord = newThreeAssetPoolTwapRecordWithDefaults(
 		baseTime,
 		sdk.NewDec(10), // spot price 0
 		sdk.ZeroDec(),  // accum A
 		sdk.ZeroDec(),  // accum B
-		sdk.ZeroDec())  // accum C
+		sdk.ZeroDec(),  // accum C
+		sdk.ZeroDec(),  // geomAccum AB
+		sdk.ZeroDec(),  // geomAccum AC
+		sdk.ZeroDec(),  // geomAccum BC
+	)
 
 	// accumA = 10 seconds * (spot price = 10) = OneSec * 10 * 10
 	// accumB = 10 seconds * (spot price = 0.1) = OneSec
 	// accumC = 10 seconds * (spot price = 20) = OneSec * 10 * 20
 	accumA, accumB, accumC sdk.Dec = OneSec.MulInt64(10 * 10), OneSec, OneSec.MulInt64(10 * 20)
 
+	// geomAccumAB = 10 seconds * (log_{1.0001}{spot price = 10})
+	geomAccumAB = geometricTenSecAccum.MulInt64(10)
+	geomAccumAC = geomAccumAB
+	// geomAccumBC = 10 seconds * (log_{1.0001}{spot price = 0.1})
+	geomAccumBC = OneSec.Mul(logOneOverTen).MulInt64(10)
+
 	// accumulators updated from baseRecord with
 	// t = baseTime + 10
 	// spA = 5, spB = 0.2, spC = 10
 	tPlus10sp5Record = newTwoAssetPoolTwapRecordWithDefaults(
-		baseTime.Add(10*time.Second), sdk.NewDec(5), accumA, accumB)
+		baseTime.Add(10*time.Second), sdk.NewDec(5), accumA, accumB, geomAccumAB)
 
 	tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC = newThreeAssetPoolTwapRecordWithDefaults(
-		baseTime.Add(10*time.Second), sdk.NewDec(5), accumA, accumB, accumC)
+		baseTime.Add(10*time.Second), sdk.NewDec(5), accumA, accumB, accumC, geomAccumAB, geomAccumAC, geomAccumBC)
 
 	// accumulators updated from tPlus10sp5Record with
 	// t = baseTime + 20
@@ -56,21 +66,27 @@ var (
 		baseTime.Add(20*time.Second),
 		sdk.NewDec(2),               // spot price 0
 		OneSec.MulInt64(10*10+5*10), // accum A
-		OneSec.MulInt64(3))          // accum B
+		OneSec.MulInt64(3),          // accum B
+		sdk.ZeroDec(),               // TODO: choose correct
+	)
 
 	tPlus20sp2ThreeAssetRecordAB, tPlus20sp2ThreeAssetRecordAC, tPlus20sp2ThreeAssetRecordBC = newThreeAssetPoolTwapRecordWithDefaults(
 		baseTime.Add(20*time.Second),
 		sdk.NewDec(2),                // spot price 0
 		OneSec.MulInt64(10*10+5*10),  // accum A
 		OneSec.MulInt64(3),           // accum B
-		OneSec.MulInt64(20*10+10*10)) // accum C
+		OneSec.MulInt64(20*10+10*10), // accum C
+		sdk.ZeroDec(),                // TODO: choose correct
+		sdk.ZeroDec(),                // TODO: choose correct
+		sdk.ZeroDec(),                // TODO: choose correct
+	)
 
 	spotPriceError = errors.New("twap: error in pool spot price occurred between start and end time, twap result may be faulty")
 )
 
 func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 	poolId, denomA, denomB := s.setupDefaultPool()
-	initStartRecord := newRecord(poolId, s.Ctx.BlockTime(), sdk.OneDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	initStartRecord := newRecord(poolId, s.Ctx.BlockTime(), sdk.OneDec(), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	initStartRecord.PoolId, initStartRecord.Height = poolId, s.Ctx.BlockHeight()
 	initStartRecord.Asset0Denom, initStartRecord.Asset1Denom = denomB, denomA
 
@@ -91,12 +107,12 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 		"default record":                                    {initStartRecord, initStartRecord, baseTime, 1, denomA, denomB, nil},
 		"default record but same denom":                     {initStartRecord, initStartRecord, baseTime, 1, denomA, denomA, fmt.Errorf("both assets cannot be of the same denom: assetA: %s, assetB: %s", denomA, denomA)},
 		"default record wrong order (should get reordered)": {initStartRecord, initStartRecord, baseTime, 1, denomB, denomA, nil},
-		"one second later record":                           {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec), tPlusOne, 1, denomA, denomB, nil},
+		"one second later record":                           {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec, sdk.ZeroDec()), tPlusOne, 1, denomA, denomB, nil},
 		"idempotent overwrite":                              {initStartRecord, initStartRecord, baseTime, 1, denomA, denomB, nil},
-		"idempotent overwrite2":                             {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec), tPlusOne, 1, denomA, denomB, nil},
+		"idempotent overwrite2":                             {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec, sdk.ZeroDec()), tPlusOne, 1, denomA, denomB, nil},
 		"diff spot price": {
 			zeroAccumTenPoint1Record,
-			recordWithUpdatedAccum(zeroAccumTenPoint1Record, OneSec.MulInt64(10), OneSec.QuoInt64(10)),
+			recordWithUpdatedAccum(zeroAccumTenPoint1Record, OneSec.MulInt64(10), OneSec.QuoInt64(10), geometricTenSecAccum),
 			tPlusOne, 1, denomA, denomB, nil,
 		},
 	}
@@ -456,8 +472,9 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 
 		periodBetweenBaseAndOneHourBeforeThreshold           = (defaultRecordHistoryKeepPeriod.Milliseconds() - time.Hour.Milliseconds())
 		accumBeforeKeepThreshold0, accumBeforeKeepThreshold1 = sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10), sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10)
+		geomAccumBeforeKeepThreshold                         = sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold).Mul(logTen)
 		// recordBeforeKeepThreshold is a record with t=baseTime+keepPeriod-1h, sp0=30(sp1=0.3) accumulators set relative to baseRecord
-		recordBeforeKeepThreshold types.TwapRecord = newTwoAssetPoolTwapRecordWithDefaults(oneHourBeforeKeepThreshold, sdk.NewDec(30), accumBeforeKeepThreshold0, accumBeforeKeepThreshold1)
+		recordBeforeKeepThreshold types.TwapRecord = newTwoAssetPoolTwapRecordWithDefaults(oneHourBeforeKeepThreshold, sdk.NewDec(30), accumBeforeKeepThreshold0, accumBeforeKeepThreshold1, geomAccumBeforeKeepThreshold)
 	)
 
 	// N.B.: when ctxTime = end time, we trigger the "TWAP to now path".
@@ -594,7 +611,16 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod_ThreeAsset() {
 		periodBetweenBaseAndOneHourBeforeThreshold                                      = (defaultRecordHistoryKeepPeriod.Milliseconds() - time.Hour.Milliseconds())
 		accumBeforeKeepThresholdA, accumBeforeKeepThresholdB, accumBeforeKeepThresholdC = sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10), sdk.NewDecWithPrec(1, 1).MulInt64(periodBetweenBaseAndOneHourBeforeThreshold), sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 20)
 		// recordBeforeKeepThreshold is a record with t=baseTime+keepPeriod-1h, spA=30(spB=0.3)(spC=60) accumulators set relative to baseRecord
-		recordBeforeKeepThresholdAB, recordBeforeKeepThresholdAC, recordBeforeKeepThresholdBC = newThreeAssetPoolTwapRecordWithDefaults(oneHourBeforeKeepThreshold, sdk.NewDec(30), accumBeforeKeepThresholdA, accumBeforeKeepThresholdB, accumBeforeKeepThresholdC)
+		recordBeforeKeepThresholdAB, recordBeforeKeepThresholdAC, recordBeforeKeepThresholdBC = newThreeAssetPoolTwapRecordWithDefaults(
+			oneHourBeforeKeepThreshold,
+			sdk.NewDec(30),
+			accumBeforeKeepThresholdA,
+			accumBeforeKeepThresholdB,
+			accumBeforeKeepThresholdC,
+			sdk.ZeroDec(), // TODO: choose correct
+			sdk.ZeroDec(), // TODO: choose correct
+			sdk.ZeroDec(), // TODO: choose correct
+		)
 	)
 
 	tests := map[string]struct {
