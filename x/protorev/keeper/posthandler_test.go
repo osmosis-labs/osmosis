@@ -182,7 +182,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(56609900),
 					},
 				},
-				expectedRouteCount: 5,
+				expectedRouteCount: 6,
 			},
 			expectPass: true,
 		},
