@@ -257,7 +257,7 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap() {
 			expTwap: sdk.ZeroDec(),
 		},
 
-		"no underflow test: spot price is smallestpossible denom0 quote": {
+		"no underflow test: spot price is smallest possible denom0 quote": {
 			startRecord: newOneSidedGeometricRecord(baseTime, sdk.ZeroDec()),
 			endRecord:   newOneSidedGeometricRecord(baseRecord.Time.Add(oneHundredYearsMin1MsDuration), underflowTestCaseAccumDiff),
 			quoteAsset:  denom0,
