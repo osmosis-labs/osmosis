@@ -249,15 +249,12 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap() {
 			expTwap:     gammtypes.MaxSpotPrice,
 		},
 
-		"expected precision loss test: - at spot price denom1 quote - panic": {
+		"expected precision loss test: - at spot price denom1 quote - return zero": {
 			startRecord: withSp0(baseRecord, gammtypes.MaxSpotPrice),
 			endRecord:   newOneSidedGeometricRecord(baseRecord.Time.Add(oneHundredYearsMin1MsDuration), overflowTestCaseAccumDiff),
 			quoteAsset:  denom1,
 
-			// TODO: analyze if panic is acceptable.
-			// Should be acceptable since underlying logic is
-			// only called from the query path.
-			expPanic: true,
+			expTwap: sdk.ZeroDec(),
 		},
 
 		"no underflow test: spot price is smallestpossible denom0 quote": {
@@ -274,15 +271,12 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap() {
 			expTwap:     sdk.OneDec().Quo(gammtypes.MinSpotPrice),
 		},
 
-		"zero accum difference ": {
+		"zero accum difference - return zero": {
 			startRecord: newOneSidedGeometricRecord(baseTime, sdk.ZeroDec()),
 			endRecord:   newOneSidedGeometricRecord(baseRecord.Time.Add(time.Millisecond), sdk.ZeroDec()),
 			quoteAsset:  denom1,
 
-			// TODO: analyze if panic is acceptable.
-			// Should be acceptable since underlying logic is
-			// only called from the query path.
-			expPanic: true,
+			expTwap: sdk.ZeroDec(),
 		},
 	}
 
@@ -297,7 +291,7 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap() {
 				// Sig fig round the expected value.
 				tc.expTwap = osmomath.SigFigRound(tc.expTwap, gammtypes.SpotPriceSigFigs)
 
-				s.Require().Equal(0, errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(tc.expTwap), osmomath.BigDecFromSDKDec(actualTwap)))
+				s.Require().Equal(0, errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(tc.expTwap), osmomath.BigDecFromSDKDec(actualTwap)), "expected %s, got %s", tc.expTwap, actualTwap)
 			})
 		})
 	}
