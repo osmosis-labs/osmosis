@@ -19,6 +19,10 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI swaproutertypes.PoolI, cre
 		return err
 	}
 
+	if err := k.createFeeAccumulator(ctx, concentratedPool.GetId()); err != nil {
+		return err
+	}
+
 	tickSpacing := concentratedPool.GetTickSpacing()
 
 	if !k.validateTickSpacing(ctx, tickSpacing) {
