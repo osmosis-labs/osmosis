@@ -5,6 +5,7 @@ import (
 
 	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 type EpochHooks struct {
@@ -92,6 +93,12 @@ func (k Keeper) GetHighestLiquidityPools(ctx sdk.Context) (map[string]LiquidityP
 	// Iterate through all pools and find valid matches
 	for _, pool := range pools {
 		coins := pool.GetTotalPoolLiquidity(ctx)
+
+		// Pool must be a non-stableswap pool
+		pooltype, err := k.gammKeeper.GetPoolType(ctx, pool.GetId())
+		if err != nil || pooltype == swaproutertypes.Stableswap {
+			continue
+		}
 
 		// Pool must be active and the number of coins must be 2
 		if pool.IsActive(ctx) && len(coins) == 2 {
