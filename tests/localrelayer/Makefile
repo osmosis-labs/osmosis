@@ -20,4 +20,4 @@ restartd: stop
 
 clean:
 	@rm -rfI $(HOME)/.osmosisd-local-a/
-	@rm -rfI $(HOME)/.junod-local/
+	@rm -rfI $(HOME)/.junod-local-a/

@@ -48,13 +48,13 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 		// Not configured
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
-
 	isIcs20, data := isIcs20Packet(packet)
 	if !isIcs20 {
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
 
 	// Validate the memo
+	fmt.Println("receiving packet for wasm. Memo:", data.GetMemo())
 	isWasmRouted, contractAddr, msgBytes, err := ValidateAndParseMemo(data.GetMemo(), data.Receiver)
 	if !isWasmRouted {
 		return im.App.OnRecvPacket(ctx, packet, relayer)

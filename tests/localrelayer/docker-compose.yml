@@ -63,7 +63,7 @@ services:
     environment:
       - CHAIN_ID=localjuno
       - VALIDATOR_MONIKER=validator
-      - VALIDATOR_MNEMONIC=family album bird seek tilt color pill danger message abuse manual tent almost ridge boost blast high comic core quantum spoon coconut oyster remove
+      - VALIDATOR_MNEMONIC=bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort
       - FAUCET_MNEMONIC=increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great
       - RELAYER_MNEMONIC=black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken
     ports:
