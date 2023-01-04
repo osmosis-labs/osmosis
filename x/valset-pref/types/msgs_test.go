@@ -27,15 +27,15 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 				Preferences: []types.ValidatorPreference{
 					{
 						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
-						Weight:         sdk.NewDecWithPrec(5, 1),
+						Weight:         sdk.NewDecWithPrec(322, 3),
 					},
 					{
 						ValOperAddress: "osmovaloper1jcr68jghzm24zwe78zuhz7xahua8429erxk7vm",
-						Weight:         sdk.NewDecWithPrec(3, 1),
+						Weight:         sdk.NewDecWithPrec(332, 3),
 					},
 					{
 						ValOperAddress: "osmovaloper1gqsr38e4zteekwr6kq5se5jpadafqmcfyz8jds",
-						Weight:         sdk.NewDecWithPrec(2, 1),
+						Weight:         sdk.NewDecWithPrec(348, 3),
 					},
 				},
 			},

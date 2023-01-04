@@ -594,6 +594,10 @@ github.com/openzipkin-contrib/zipkin-go-opentracing v0.4.5 h1:ZCnq+JUrvXcDVhX/xR
 github.com/openzipkin/zipkin-go v0.2.5 h1:UwtQQx2pyPIgWYHRg+epgdx1/HnBQTgN3/oIYEJTQzU=
 github.com/openzipkin/zipkin-go v0.2.5/go.mod h1:KpXfKdgRDnnhsxw4pNIH9Md5lyFqKUa4YDFlwRYAMyE=
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
+<<<<<<< HEAD
+=======
+github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230103093812-a17356c326b8/go.mod h1:IpoXO7lvmfsBFfQzaqovs541hpqtrnM+GJSZDi/TZtc=
+>>>>>>> main
 github.com/osmosis-labs/osmosis/osmoutils v0.0.2-flexible/go.mod h1:T7CCZKYhKWASnv5mRE8u3m0gst3NZ/sU16Brjmv4UPw=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.3/go.mod h1:bASDMbNQ0vD+2YRsEqlKXg8NiEsJpQ8B8p3nR8kB+hA=
 github.com/otiai10/copy v1.7.0/go.mod h1:rmRl6QPdJj6EiUqXQ/4Nn2lLXoNQjFCQbbNrxgc/t3U=

@@ -38,10 +38,8 @@ func (msg MsgSwapExactAmountIn) ValidateBasic() error {
 	return nil
 }
 
-// TODO: uncomment when types are registered.
 func (msg MsgSwapExactAmountIn) GetSignBytes() []byte {
-	// return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-	panic("not implemented")
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgSwapExactAmountIn) GetSigners() []sdk.AccAddress {
@@ -78,10 +76,8 @@ func (msg MsgSwapExactAmountOut) ValidateBasic() error {
 	return nil
 }
 
-// TODO: uncomment when types are registered.
 func (msg MsgSwapExactAmountOut) GetSignBytes() []byte {
-	// return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-	panic("not implemented")
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgSwapExactAmountOut) GetSigners() []sdk.AccAddress {
