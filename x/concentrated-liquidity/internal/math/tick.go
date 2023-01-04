@@ -40,18 +40,23 @@ func TickToPrice(tickIndex, kAtPriceOne sdk.Int) (price sdk.Dec, err error) {
 		return sdk.Dec{}, fmt.Errorf("kAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax)
 	}
 
+	// The formula is as follows: k_increment_distance = 9 * 10**(-k_at_price_1)
+	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**k_at_price_1)
+	kIncrementDistance := sdkNineDec.Mul(handleNegativeExponents(kAtPriceOne.Neg()))
+
+	// If the price is below 1, we decrement the increment distance by a factor of 10
+	if tickIndex.IsNegative() {
+		kIncrementDistance = kIncrementDistance.Quo(sdkTenDec)
+	}
+
 	// Check that the tick index is between min and max value for the given k
-	minTick, maxTick := GetMinAndMaxTicksFromK(kAtPriceOne)
+	minTick, maxTick := GetMinAndMaxTicksFromK(kAtPriceOne, kIncrementDistance)
 	if tickIndex.LT(minTick) {
 		return sdk.Dec{}, fmt.Errorf("tickIndex must be greater than or equal to %s", minTick)
 	}
 	if tickIndex.GT(maxTick) {
 		return sdk.Dec{}, fmt.Errorf("tickIndex must be less than or equal to %s", maxTick)
 	}
-
-	// The formula is as follows: k_increment_distance = 9 * 10**(-k_at_price_1)
-	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**k_at_price_1)
-	kIncrementDistance := sdkNineDec.Mul(handleNegativeExponents(kAtPriceOne.Neg()))
 
 	// Use floor division to determine how many k increments we have passed
 	kDelta := tickIndex.ToDec().Quo(kIncrementDistance).TruncateInt()
@@ -77,6 +82,10 @@ func PriceToTick(price sdk.Dec, kAtPriceOne sdk.Int) (sdk.Int, error) {
 		return sdk.ZeroInt(), nil
 	}
 
+	if price.LTE(sdk.ZeroDec()) {
+		return sdk.ZeroInt(), fmt.Errorf("price must be greater than zero")
+	}
+
 	if kAtPriceOne.LT(types.PrecisionValueAtPriceOneMin) || kAtPriceOne.GT(types.PrecisionValueAtPriceOneMax) {
 		return sdk.Int{}, fmt.Errorf("kAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax)
 	}
@@ -85,23 +94,40 @@ func PriceToTick(price sdk.Dec, kAtPriceOne sdk.Int) (sdk.Int, error) {
 	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**k_at_price_1)
 	kIncrementDistance := sdkNineDec.Mul(handleNegativeExponents(kAtPriceOne.Neg()))
 
+	// If the price is less than 1, we must reduce the increment distance by a factor of 10
+	if price.LT(sdk.OneDec()) {
+		kIncrementDistance = kIncrementDistance.Quo(sdkTenDec)
+	}
+
 	// Initialize the total price to 1, the current k to k_at_price_1, and the number of ticks passed to 0
 	totalPrice := sdk.OneDec()
 	ticksPassed := sdk.ZeroInt()
 	currentK := kAtPriceOne
 
 	// Set the currentIncrement to the kAtPriceOne
-	curIncrement := handleNegativeExponents(currentK)
+	curIncrement := handleNegativeExponents(kAtPriceOne)
 
 	// Now, we loop through the k increments until we have passed the price
 	// Once we pass the price, we can determine what which k values we have filled in their entirety,
 	// as well as how many ticks that corresponds to
-	for totalPrice.LT(price) {
-		curIncrement = handleNegativeExponents(currentK)
-		maxPriceForCurrentIncrement := kIncrementDistance.Mul(curIncrement)
-		totalPrice = totalPrice.Add(maxPriceForCurrentIncrement)
-		currentK = currentK.Add(sdk.OneInt())
-		ticksPassed = ticksPassed.Add(kIncrementDistance.TruncateInt())
+	// In the opposite direction (price < 1), we do the same thing (just decrement k instead of incrementing).
+	// The only difference is we must reduce the increment distance by a factor of 10.
+	if price.GT(sdk.OneDec()) {
+		for totalPrice.LT(price) {
+			curIncrement = handleNegativeExponents(currentK)
+			maxPriceForCurrentIncrement := kIncrementDistance.Mul(curIncrement)
+			totalPrice = totalPrice.Add(maxPriceForCurrentIncrement)
+			currentK = currentK.Add(sdk.OneInt())
+			ticksPassed = ticksPassed.Add(kIncrementDistance.TruncateInt())
+		}
+	} else {
+		for totalPrice.GT(price) {
+			curIncrement = handleNegativeExponents(currentK)
+			maxPriceForCurrentIncrement := kIncrementDistance.Mul(curIncrement)
+			totalPrice = totalPrice.Sub(maxPriceForCurrentIncrement)
+			currentK = currentK.Sub(sdk.OneInt())
+			ticksPassed = ticksPassed.Sub(kIncrementDistance.TruncateInt())
+		}
 	}
 	// Determine how many ticks we have passed in the current k increment
 	ticksToBeFulfilledByCurrentK := price.Sub(totalPrice).Quo(curIncrement)
@@ -110,7 +136,7 @@ func PriceToTick(price sdk.Dec, kAtPriceOne sdk.Int) (sdk.Int, error) {
 	tickIndex := ticksPassed.Add(ticksToBeFulfilledByCurrentK.TruncateInt())
 
 	// Add a check to make sure that the tick index is within the allowed range
-	minTick, maxTick := GetMinAndMaxTicksFromK(kAtPriceOne)
+	minTick, maxTick := GetMinAndMaxTicksFromK(kAtPriceOne, kIncrementDistance)
 	if tickIndex.LT(minTick) {
 		return sdk.Int{}, fmt.Errorf("tickIndex must be greater than or equal to %s", minTick)
 	}
@@ -131,17 +157,9 @@ func handleNegativeExponents(exponent sdk.Int) sdk.Dec {
 }
 
 // GetMinAndMaxTicksFromK determines min and max ticks allowed for a given k value
-// This allows for a min spot price of 0 and a max spot price of 200_000_000_000 for every k value
-func GetMinAndMaxTicksFromK(kAtPriceOne sdk.Int) (minTick, maxTick sdk.Int) {
-	minTick = handleNegativeExponents(kAtPriceOne.Neg()).RoundInt().Neg()
-	maxTick = handleNegativeExponents(kAtPriceOne.Neg().Add(sdk.NewInt(2))).RoundInt()
-	return minTick, maxTick
-}
-
-// GetMinAndMaxTicksFromK determines min and max ticks allowed for a given k value
-// This allows for a min spot price of 0 and a max spot price of 200_000_000_000 for every k value
-func GetMinAndMaxPriceFromK(kAtPriceOne sdk.Int) (minTick, maxTick sdk.Int) {
-	minTick = handleNegativeExponents(kAtPriceOne.Neg()).RoundInt().Neg()
+// This allows for a min spot price of 0.000000000000000001 and a max spot price of 200000000000 for every k value
+func GetMinAndMaxTicksFromK(kAtPriceOne sdk.Int, kIncrementDistance sdk.Dec) (minTick, maxTick sdk.Int) {
+	minTick = sdk.NewDec(18).Mul(kIncrementDistance).Neg().RoundInt()
 	maxTick = handleNegativeExponents(kAtPriceOne.Neg().Add(sdk.NewInt(2))).RoundInt()
 	return minTick, maxTick
 }

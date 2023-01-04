@@ -89,7 +89,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToPrice() {
 		"One ten millionth of a cent increments at the hundred millionths place: 2": {
 			tickIndex:     sdk.NewInt(-99999111),
 			kAtPriceOne:   sdk.NewInt(-8),
-			expectedPrice: "0.000008890000000000",
+			expectedPrice: "0.090000889000000000",
 		},
 		"More variety of numbers in each place": {
 			tickIndex:     sdk.NewInt(4030301),
@@ -97,9 +97,9 @@ func (suite *ConcentratedMathTestSuite) TestTickToPrice() {
 			expectedPrice: "53030.100000000000000000",
 		},
 		"error: tickIndex less than minimum": {
-			tickIndex:     sdk.NewInt(-11),
+			tickIndex:     sdk.NewInt(-163),
 			kAtPriceOne:   sdk.NewInt(-1),
-			expectedError: fmt.Errorf("tickIndex must be greater than or equal to %s", "-10"),
+			expectedError: fmt.Errorf("tickIndex must be greater than or equal to %s", "-162"),
 		},
 		"error: tickIndex greater than maximum": {
 			tickIndex:     sdk.NewInt(1001),
@@ -157,8 +157,8 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 			kAtPriceOne:  sdk.NewInt(-6),
 			tickExpected: "40000001",
 		},
-		"0.00000889 to tick with -8 k at price one": {
-			price:        sdk.MustNewDecFromStr("0.000008890000000000"),
+		"0.090000889 to tick with -8 k at price one": {
+			price:        sdk.MustNewDecFromStr("0.090000889000000000"),
 			kAtPriceOne:  sdk.NewInt(-8),
 			tickExpected: "-99999111",
 		},
@@ -172,10 +172,10 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 			kAtPriceOne:  sdk.NewInt(-5),
 			tickExpected: "4030301",
 		},
-		"error: resulting tickIndex too small": {
+		"error: price must be positive": {
 			price:         sdk.NewDec(-1),
 			kAtPriceOne:   sdk.NewInt(-6),
-			expectedError: fmt.Errorf("tickIndex must be greater than or equal to %s", "-1000000"),
+			expectedError: fmt.Errorf("price must be greater than zero"),
 		},
 		"error: resulting tickIndex too large": {
 			price:         sdk.NewDec(200000000001),
