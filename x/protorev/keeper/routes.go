@@ -213,3 +213,55 @@ func (k Keeper) RemainingPoolPointsForTx(ctx sdk.Context) (*uint64, error) {
 
 	return &numberOfIterableRoutes, nil
 }
+
+// GetRouteWeight retrieves the weight of a route. The weight of a route is determined by the pools that are used in the route.
+// If the route includes a stable pool, the weight of the route is 2. Otherwise, the weight of the route is 1.
+func (k Keeper) GetRouteWeight(ctx sdk.Context, route swaproutertypes.SwapAmountInRoutes) (uint64, error) {
+	// Routes must always be of length 3
+	if route.Length() != 3 {
+		return 0, fmt.Errorf("invalid route length")
+	}
+
+	// The middle pool is the pool that may be a stable pool (outside pools will always be balancer pools)
+	middlePool := route.PoolIds()[1]
+	poolType, err := k.gammKeeper.GetPoolType(ctx, middlePool)
+	if err != nil {
+		return 0, err
+	}
+
+	switch poolType {
+	case swaproutertypes.Balancer:
+		return 1, nil
+	case swaproutertypes.Stableswap:
+		return 2, nil
+	default:
+		return 0, fmt.Errorf("invalid pool type")
+	}
+}
+
+// CalcNumberOfIterableRoutes calculates the number of routes that can be iterated over in the current transaction.
+// Returns a pointer that will be used throughout the lifetime of a transaction.
+func (k Keeper) CalcNumberOfIterableRoutes(ctx sdk.Context) (*uint64, error) {
+	maxRoutesPerTx, err := k.GetMaxRoutesPerTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	maxRoutesPerBlock, err := k.GetMaxRoutesPerBlock(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	currentRouteCount, err := k.GetRouteCountForBlock(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate the number of routes that can be iterated over
+	numberOfIterableRoutes := maxRoutesPerBlock - currentRouteCount
+	if numberOfIterableRoutes > maxRoutesPerTx {
+		numberOfIterableRoutes = maxRoutesPerTx
+	}
+
+	return &numberOfIterableRoutes, nil
+}

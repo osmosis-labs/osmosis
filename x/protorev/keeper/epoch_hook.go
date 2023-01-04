@@ -94,6 +94,12 @@ func (k Keeper) GetHighestLiquidityPools(ctx sdk.Context, baseDenomPools map[str
 	for _, pool := range pools {
 		coins := pool.GetTotalPoolLiquidity(ctx)
 
+		// Pool must be a non-stableswap pool
+		pooltype, err := k.gammKeeper.GetPoolType(ctx, pool.GetId())
+		if err != nil || pooltype == swaproutertypes.Stableswap {
+			continue
+		}
+
 		// Pool must be active and the number of coins must be 2
 		if pool.IsActive(ctx) && len(coins) == 2 {
 			tokenA := coins[0]

@@ -142,61 +142,28 @@ func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) err
 // if they exist. It returns an error if there was an issue executing any single trade.
 func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) error {
 	// Get the total number of routes that can be iterated
-	numIterableRoutes, err := k.CalcNumberOfIterableRoutes(ctx)
+	maxIterableRoutes, err := k.CalcNumberOfIterableRoutes(ctx)
 	if err != nil {
 		return err
 	}
 
 	// Iterate and build arbitrage routes for each pool that was swapped on
-	for index := 0; index < len(swappedPools) && numIterableRoutes > 0; index++ {
-		// Build the routes for the pool that was swapped on and the number of routes that will be explored
-		routes := k.BuildRoutes(ctx, swappedPools[index].TokenInDenom, swappedPools[index].TokenOutDenom, swappedPools[index].PoolId)
-		numExploredRoutes := uint64(len(routes))
+	for index := 0; index < len(swappedPools) && *maxIterableRoutes > 0; index++ {
+		// Build the routes for the pool that was swapped on
+		routes := k.BuildRoutes(ctx, swappedPools[index].TokenInDenom, swappedPools[index].TokenOutDenom, swappedPools[index].PoolId, maxIterableRoutes)
 
-		if numExploredRoutes != 0 {
-			// filter out routes that are not iterable
-			if numIterableRoutes < numExploredRoutes {
-				routes = routes[:numIterableRoutes]
-				numExploredRoutes = numIterableRoutes
-			}
+		// Find optimal input amounts for routes
+		maxProfitInputCoin, maxProfitAmount, optimalRoute := k.IterateRoutes(ctx, routes)
 
-			// Find optimal input amounts for routes
-			maxProfitInputCoin, maxProfitAmount, optimalRoute := k.IterateRoutes(ctx, routes)
-
-			// Update route counts
-			if err := k.IncrementRouteCountForBlock(ctx, numExploredRoutes); err != nil {
+		// The error that returns here is particularly focused on the minting/burning of coins, and the execution of the MultiHopSwapExactAmountIn.
+		if maxProfitAmount.GT(sdk.ZeroInt()) {
+			if err := k.ExecuteTrade(ctx, optimalRoute, maxProfitInputCoin); err != nil {
 				return err
 			}
 		}
 	}
 
 	return nil
-}
-
-// CalcNumberOfIterableRoutes calculates the number of routes that can be iterated over in the current transaction
-func (k Keeper) CalcNumberOfIterableRoutes(ctx sdk.Context) (uint64, error) {
-	maxRoutesPerTx, err := k.GetMaxRoutesPerTx(ctx)
-	if err != nil {
-		return 0, err
-	}
-
-	maxRoutesPerBlock, err := k.GetMaxRoutesPerBlock(ctx)
-	if err != nil {
-		return 0, err
-	}
-
-	currentRouteCount, err := k.GetRouteCountForBlock(ctx)
-	if err != nil {
-		return 0, err
-	}
-
-	// Calculate the number of routes that can be iterated over
-	numberOfIterableRoutes := maxRoutesPerBlock - currentRouteCount
-	if numberOfIterableRoutes > maxRoutesPerTx {
-		numberOfIterableRoutes = maxRoutesPerTx
-	}
-
-	return numberOfIterableRoutes, nil
 }
 
 // ExtractSwappedPools checks if there were any swaps made on pools and if so returns a list of all the pools that were
