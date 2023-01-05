@@ -53,7 +53,7 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 		return err
 	}
 
-	if err := feeAccumulator.NewPositionCustom(owner.String(), zero, sdk.NewDecCoins(), nil); err != nil {
+	if err := feeAccumulator.NewPositionCustomAcc(owner.String(), zero, sdk.NewDecCoins(), nil); err != nil {
 		return err
 	}
 
@@ -71,7 +71,7 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, own
 		return err
 	}
 
-	if err := feeAccumulator.UpdatePositionCustom(owner.String(), liquidityDelta, feeGrowthOutside); err != nil {
+	if err := feeAccumulator.UpdatePositionCustomAcc(owner.String(), liquidityDelta, feeGrowthOutside); err != nil {
 		return err
 	}
 
