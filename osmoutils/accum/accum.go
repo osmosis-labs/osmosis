@@ -119,7 +119,7 @@ func (accum AccumulatorObject) AddToPosition(name string, newShares sdk.Dec) err
 	return accum.AddToPositionCustomAcc(name, newShares, accum.value)
 }
 
-// AddToPosition adds newShares of shares to an existing position with the given name.
+// AddToPositionCustomAcc adds newShares of shares to an existing position with the given name.
 // This is functionally equivalent to claiming rewards, closing down the position, and
 // opening a fresh one with the new number of shares. We can represent this behavior by
 // claiming rewards. The accumulator of the new position is set to given customAccumulatorValue.
