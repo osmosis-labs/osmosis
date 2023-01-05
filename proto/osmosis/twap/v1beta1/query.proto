@@ -23,7 +23,6 @@ service Query {
   }
   rpc ArithmeticTwapToNow(ArithmeticTwapToNowRequest)
       returns (ArithmeticTwapToNowResponse) {
-    option deprecated = true;
     option (google.api.http).get = "/osmosis/twap/v1beta1/ArithmeticTwapToNow";
   }
   rpc GeometricTwap(GeometricTwapRequest) returns (GeometricTwapResponse) {
@@ -31,7 +30,6 @@ service Query {
   }
   rpc GeometricTwapToNow(GeometricTwapToNowRequest)
       returns (GeometricTwapToNowResponse) {
-    option deprecated = true;
     option (google.api.http).get = "/osmosis/twap/v1beta1/GeometricTwapToNow";
   }
 }
