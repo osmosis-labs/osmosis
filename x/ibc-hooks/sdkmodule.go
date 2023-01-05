@@ -116,7 +116,6 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 // InitGenesis performs genesis initialization for the ibc-hooks module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	IbcHooksInitGenesis(ctx, am.authKeeper)
 	return []abci.ValidatorUpdate{}
 }
 
