@@ -16,7 +16,7 @@ osmosisd tx gamm create-pool --pool-file=./stake-uosmo.json --from=validator1 --
 sleep 7
 
 # test swap in pool created
-osmosisd tx swaprouter swap-exact-amount-in 100000uosmo 50000 --swap-route-pool-ids=1 --swap-route-denoms=stake --from=validator1 --keyring-backend=test --chain-id=testing --yes --home=$HOME/.osmosisd/validator1
+osmosisd tx gamm swap-exact-amount-in 100000uosmo 50000 --swap-route-pool-ids=1 --swap-route-denoms=stake --from=validator1 --keyring-backend=test --chain-id=testing --yes --home=$HOME/.osmosisd/validator1
 sleep 7
 
 # create a lock up with lockable duration 360h
