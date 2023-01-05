@@ -6,7 +6,11 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
+
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/gorilla/mux"
@@ -54,7 +58,6 @@ import (
 	v8 "github.com/osmosis-labs/osmosis/v13/app/upgrades/v8"
 	v9 "github.com/osmosis-labs/osmosis/v13/app/upgrades/v9"
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
-	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 )
 
 const appName = "OsmosisApp"
@@ -72,7 +75,7 @@ var (
 	maccPerms = moduleAccountPermissions
 
 	// module accounts that are allowed to receive tokens.
-	allowedReceivingModAcc = map[string]bool{ibc_hooks.WasmHookModuleAccountAddr.String(): true}
+	allowedReceivingModAcc = map[string]bool{}
 
 	// TODO: Refactor wasm items into a wasm.go file
 	// WasmProposalsEnabled enables all x/wasm proposals when it's value is "true"
@@ -144,6 +147,16 @@ func init() {
 	DefaultNodeHome = filepath.Join(userHomeDir, ".osmosisd")
 }
 
+// initReusablePackageInjections injects data available within osmosis into the reusable packages.
+// This is done to ensure they can be built without depending on at compilation time and thus imported by other chains
+// This should always be called before any other function to avoid inconsistent data
+func initReusablePackageInjections() {
+	// Inject ClawbackVestingAccount account type into osmoutils
+	osmoutils.OsmoUtilsExtraAccountTypes = map[reflect.Type]struct{}{
+		reflect.TypeOf(&vestingtypes.ClawbackVestingAccount{}): {},
+	}
+}
+
 // NewOsmosisApp returns a reference to an initialized Osmosis.
 func NewOsmosisApp(
 	logger log.Logger,
@@ -158,6 +171,7 @@ func NewOsmosisApp(
 	wasmOpts []wasm.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
+	initReusablePackageInjections() // This should run before anything else to make sure the variables are properly initialized
 	encodingConfig := GetEncodingConfig()
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
@@ -179,10 +193,8 @@ func NewOsmosisApp(
 
 	wasmDir := filepath.Join(homePath, "wasm")
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
-
 	// Uncomment this for debugging contracts. In the future this could be made into a param passed by the tests
-	//wasmConfig.ContractDebugMode = true
-
+	// wasmConfig.ContractDebugMode = true
 	if err != nil {
 		panic(fmt.Sprintf("error while reading wasm config: %s", err))
 	}

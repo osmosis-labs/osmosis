@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogotypes "github.com/gogo/protobuf/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -35,7 +35,7 @@ func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper
 
 	routes := map[types.PoolType]types.SwapI{
 		types.Balancer:     gammKeeper,
-		types.StableSwap:   gammKeeper,
+		types.Stableswap:   gammKeeper,
 		types.Concentrated: concentratedKeeper,
 	}
 

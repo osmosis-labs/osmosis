@@ -37,7 +37,7 @@ func (suite *KeeperTestSuite) prepareCustomBalancerPool(
 ) uint64 {
 	suite.fundAllAccountsWith(balances)
 
-	poolID, err := suite.App.GAMMKeeper.CreatePool(
+	poolID, err := suite.App.SwapRouterKeeper.CreatePool(
 		suite.Ctx,
 		balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], poolParams, poolAssets, ""),
 	)
@@ -54,7 +54,7 @@ func (suite *KeeperTestSuite) prepareCustomStableswapPool(
 ) uint64 {
 	suite.fundAllAccountsWith(balances)
 
-	poolID, err := suite.App.GAMMKeeper.CreatePool(
+	poolID, err := suite.App.SwapRouterKeeper.CreatePool(
 		suite.Ctx,
 		stableswap.NewMsgCreateStableswapPool(suite.TestAccs[0], poolParams, initialLiquidity, scalingFactors, ""),
 	)

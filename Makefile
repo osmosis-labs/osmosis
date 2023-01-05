@@ -99,7 +99,7 @@ BUILD_TARGETS := build install
 build: BUILD_ARGS=-o $(BUILDDIR)/
 
 $(BUILD_TARGETS): check_version go.sum $(BUILDDIR)/
-	go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
+	GOWORK=off go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
 
 $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
@@ -245,7 +245,7 @@ TEST_PACKAGES=./...
 
 test: test-unit test-build
 
-test-all: check test-race test-cover
+test-all: test-race test-cover
 
 test-unit:
 	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock norace' $(PACKAGES_UNIT)
@@ -282,7 +282,7 @@ test-e2e: e2e-setup test-e2e-ci
 # does not do any validation about the state of the Docker environment
 # As a result, avoid using this locally.
 test-e2e-ci:
-	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=True OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION)  go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=False OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION)  go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 # test-e2e-debug runs a full e2e test suite but does
 # not attempt to delete Docker resources at the end.
@@ -308,6 +308,10 @@ build-e2e-script:
 
 docker-build-debug:
 	@DOCKER_BUILDKIT=1 docker build -t osmosis:${COMMIT} --build-arg BASE_IMG_TAG=debug -f Dockerfile .
+	@DOCKER_BUILDKIT=1 docker tag osmosis:${COMMIT} osmosis:debug
+
+docker-build-debug-alpine:
+	@DOCKER_BUILDKIT=1 docker build -t osmosis:${COMMIT} --build-arg BASE_IMG_TAG=debug --build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_ALPINE) -f Dockerfile .
 	@DOCKER_BUILDKIT=1 docker tag osmosis:${COMMIT} osmosis:debug
 
 docker-build-e2e-init-chain:

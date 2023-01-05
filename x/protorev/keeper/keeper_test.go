@@ -581,7 +581,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(25),
 				},
 				{
-					Token:  sdk.NewCoin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", sdk.NewInt(6121181710)),
+					Token:  sdk.NewCoin(types.AtomDenomination, sdk.NewInt(6121181710)),
 					Weight: sdk.NewInt(25),
 				},
 			},
@@ -611,7 +611,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(70),
 				},
 				{
-					Token:  sdk.NewCoin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", sdk.NewInt(10285796639)),
+					Token:  sdk.NewCoin(types.AtomDenomination, sdk.NewInt(10285796639)),
 					Weight: sdk.NewInt(30),
 				},
 			},
@@ -649,7 +649,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 
 // createStableswapPool creates a stableswap pool with the given pool assets and params
 func (suite *KeeperTestSuite) createStableswapPool(initialLiquidity sdk.Coins, poolParams stableswap.PoolParams, scalingFactors []uint64) {
-	_, err := suite.App.GAMMKeeper.CreatePool(
+	_, err := suite.App.SwapRouterKeeper.CreatePool(
 		suite.Ctx,
 		stableswap.NewMsgCreateStableswapPool(suite.TestAccs[1], poolParams, initialLiquidity, scalingFactors, ""))
 	suite.Require().NoError(err)
@@ -670,7 +670,7 @@ func (suite *KeeperTestSuite) prepareCustomBalancerPool(
 	poolAssets []balancertypes.PoolAsset,
 	poolParams balancer.PoolParams,
 ) uint64 {
-	poolID, err := suite.App.GAMMKeeper.CreatePool(
+	poolID, err := suite.App.SwapRouterKeeper.CreatePool(
 		suite.Ctx,
 		balancer.NewMsgCreateBalancerPool(suite.TestAccs[1], poolParams, poolAssets, ""),
 	)

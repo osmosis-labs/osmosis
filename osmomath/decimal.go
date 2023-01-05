@@ -52,7 +52,7 @@ var (
 	tickLogOf2 = MustNewDecFromStr("0.000144262291094554178391070900057480")
 	// initialized in init() since requires
 	// precision to be defined.
-	twoBigDec BigDec
+	twoBigDec BigDec = MustNewDecFromStr("2")
 )
 
 // Decimal errors
@@ -68,8 +68,6 @@ func init() {
 	for i := 0; i <= Precision; i++ {
 		precisionMultipliers[i] = calcPrecisionMultiplier(int64(i))
 	}
-
-	twoBigDec = NewBigDec(2)
 }
 
 func precisionInt() *big.Int {
@@ -242,12 +240,20 @@ func (d BigDec) BigInt() *big.Int {
 
 // addition
 func (d BigDec) Add(d2 BigDec) BigDec {
-	res := new(big.Int).Add(d.i, d2.i)
+	copy := d.Clone()
+	copy.AddMut(d2)
+	return copy
+}
 
-	if res.BitLen() > maxDecBitLen {
+// mutative addition
+func (d BigDec) AddMut(d2 BigDec) BigDec {
+	d.i.Add(d.i, d2.i)
+
+	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
-	return BigDec{res}
+
+	return d
 }
 
 // subtraction
@@ -321,19 +327,25 @@ func (d BigDec) MulInt64(i int64) BigDec {
 
 // quotient
 func (d BigDec) Quo(d2 BigDec) BigDec {
-	// multiply precision twice
-	mul := new(big.Int).Mul(d.i, precisionReuse)
-	mul.Mul(mul, precisionReuse)
-
-	quo := new(big.Int).Quo(mul, d2.i)
-	chopped := chopPrecisionAndRound(quo)
-
-	if chopped.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	return BigDec{chopped}
+	copy := d.Clone()
+	copy.QuoMut(d2)
+	return copy
 }
 
+// mutative quotient
+func (d BigDec) QuoMut(d2 BigDec) BigDec {
+	// multiply precision twice
+	d.i.Mul(d.i, precisionReuse)
+	d.i.Mul(d.i, precisionReuse)
+
+	d.i.Quo(d.i, d2.i)
+	chopPrecisionAndRound(d.i)
+
+	if d.i.BitLen() > maxDecBitLen {
+		panic("Int overflow")
+	}
+	return d
+}
 func (d BigDec) QuoRaw(d2 int64) BigDec {
 	// multiply precision, so we can chop it later
 	mul := new(big.Int).Mul(d.i, precisionReuse)
@@ -423,7 +435,7 @@ func (d BigDec) ApproxRoot(root uint64) (guess BigDec, err error) {
 	guess, delta := OneDec(), OneDec()
 
 	for iter := 0; delta.Abs().GT(SmallestDec()) && iter < maxApproxRootIterations; iter++ {
-		prev := guess.Power(root - 1)
+		prev := guess.PowerInteger(root - 1)
 		if prev.IsZero() {
 			prev = SmallestDec()
 		}
@@ -435,24 +447,6 @@ func (d BigDec) ApproxRoot(root uint64) (guess BigDec, err error) {
 	}
 
 	return guess, nil
-}
-
-// Power returns a the result of raising to a positive integer power
-func (d BigDec) Power(power uint64) BigDec {
-	if power == 0 {
-		return OneDec()
-	}
-	tmp := OneDec()
-
-	for i := power; i > 1; {
-		if i%2 != 0 {
-			tmp = tmp.Mul(d)
-		}
-		i /= 2
-		d = d.Mul(d)
-	}
-
-	return d.Mul(tmp)
 }
 
 // ApproxSqrt is a wrapper around ApproxRoot for the common special case
@@ -1016,4 +1010,40 @@ func (d BigDec) PowerIntegerMut(power uint64) BigDec {
 	}
 
 	return d.MulMut(tmp)
+}
+
+// Power returns a result of raising the given big dec to
+// a positive decimal power. Panics if the power is negative.
+// Panics if the base is negative. Does not mutate the receiver.
+// The max supported exponent is defined by the global maxSupportedExponent.
+// If a greater exponent is given, the function panics.
+// The error is not bounded but expected to be around 10^-18, use with care.
+// See the underlying Exp2, LogBase2 and Mul for the details of their bounds.
+func (d BigDec) Power(power BigDec) BigDec {
+	if d.IsNegative() {
+		panic(fmt.Sprintf("negative base is not supported for Power(), base was (%s)", d))
+	}
+	if power.IsNegative() {
+		panic(fmt.Sprintf("negative power is not supported for Power(), power was (%s)", power))
+	}
+	if power.Abs().GT(maxSupportedExponent) {
+		panic(fmt.Sprintf("integer exponent %s is too large, max (%s)", power, maxSupportedExponent))
+	}
+	if power.IsInteger() {
+		return d.PowerInteger(power.TruncateInt().Uint64())
+	}
+	if power.IsZero() {
+		return OneDec()
+	}
+	if d.IsZero() {
+		return ZeroDec()
+	}
+	if d.Equal(twoBigDec) {
+		return Exp2(power)
+	}
+
+	// d^power = exp2(power * log_2{base})
+	result := Exp2(d.LogBase2().Mul(power))
+
+	return result
 }

@@ -8,8 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v13/x/twap"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
@@ -583,6 +583,7 @@ func newThreeAssetOneSidedRecord(time time.Time, accum sdk.Dec, useP0 bool) []ty
 	} else {
 		record.P1ArithmeticTwapAccumulator = accum
 	}
+	record.GeometricTwapAccumulator = accum
 	record.P0LastSpotPrice = sdk.ZeroDec()
 	record.P1LastSpotPrice = sdk.OneDec()
 	records := []types.TwapRecord{record, record, record}

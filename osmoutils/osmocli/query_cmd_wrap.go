@@ -112,7 +112,8 @@ func BuildQueryCli[reqP proto.Message, querier any](desc *QueryDescriptor, newQu
 // with just the "Query" and "Request" args chopped off.
 // It expects all proto fields to appear as arguments, in order.
 func SimpleQueryCmd[reqP proto.Message, querier any](use string, short string, long string,
-	moduleName string, newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
+	moduleName string, newQueryClientFn func(grpc1.ClientConn) querier,
+) *cobra.Command {
 	desc := QueryDescriptor{
 		Use:   use,
 		Short: short,
@@ -122,7 +123,8 @@ func SimpleQueryCmd[reqP proto.Message, querier any](use string, short string, l
 }
 
 func GetParams[reqP proto.Message, querier any](moduleName string,
-	newQueryClientFn func(grpc1.ClientConn) querier) *cobra.Command {
+	newQueryClientFn func(grpc1.ClientConn) querier,
+) *cobra.Command {
 	return BuildQueryCli[reqP](&QueryDescriptor{
 		Use:         "params [flags]",
 		Short:       fmt.Sprintf("Get the params for the x/%s module", moduleName),
@@ -133,6 +135,10 @@ func GetParams[reqP proto.Message, querier any](moduleName string,
 func callQueryClientFn(ctx context.Context, fnName string, req proto.Message, q any) (res proto.Message, err error) {
 	qVal := reflect.ValueOf(q)
 	method := qVal.MethodByName(fnName)
+	if (method == reflect.Value{}) {
+		return nil, fmt.Errorf("Method %s does not exist on the querier."+
+			" You likely need to override QueryFnName in your Query descriptor", fnName)
+	}
 	args := []reflect.Value{
 		reflect.ValueOf(ctx),
 		reflect.ValueOf(req),
@@ -152,7 +158,8 @@ func callQueryClientFn(ctx context.Context, fnName string, req proto.Message, q 
 }
 
 func queryLogic[querier any](desc *QueryDescriptor,
-	newQueryClientFn func(grpc1.ClientConn) querier) func(cmd *cobra.Command, args []string) error {
+	newQueryClientFn func(grpc1.ClientConn) querier,
+) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		clientCtx, err := client.GetClientQueryContext(cmd)
 		if err != nil {

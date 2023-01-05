@@ -16,6 +16,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/v2types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -108,12 +109,12 @@ func (q Querier) Pools(
 	}, nil
 }
 
-// NumPools returns total number of pools.
+// TODO: mark deprecated and move to swaprouter.
 func (q Querier) NumPools(ctx context.Context, _ *types.QueryNumPoolsRequest) (*types.QueryNumPoolsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	return &types.QueryNumPoolsResponse{
-		NumPools: q.Keeper.GetNextPoolId(sdkCtx) - 1,
+		NumPools: q.poolManager.GetNextPoolId(sdkCtx) - 1,
 	}, nil
 }
 
@@ -125,8 +126,13 @@ func (q Querier) PoolType(ctx context.Context, req *types.QueryPoolTypeRequest) 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	poolType, err := q.Keeper.GetPoolType(sdkCtx, req.PoolId)
 
+	poolTypeStr, ok := swaproutertypes.PoolType_name[int32(poolType)]
+	if !ok {
+		return nil, status.Errorf(codes.Internal, "invalid pool type: %d", poolType)
+	}
+
 	return &types.QueryPoolTypeResponse{
-		PoolType: poolType,
+		PoolType: poolTypeStr,
 	}, err
 }
 
@@ -161,8 +167,12 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	store := sdkCtx.KVStore(q.Keeper.storeKey)
 	poolStore := prefix.NewStore(store, types.KeyPrefixPools)
+	minLiquidity, err := sdk.ParseCoinsNormalized(req.MinLiquidity)
+	if err != nil {
+		return nil, err
+	}
 
-	var response = []*codectypes.Any{}
+	response := []*codectypes.Any{}
 	pageRes, err := query.FilteredPaginate(poolStore, req.Pagination, func(_, value []byte, accumulate bool) (bool, error) {
 		pool, err := q.Keeper.UnmarshalPool(value)
 		if err != nil {
@@ -172,10 +182,10 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 		poolId := pool.GetId()
 
 		// if liquidity specified in request
-		if len(req.MinLiquidity) > 0 {
+		if len(minLiquidity) > 0 {
 			poolLiquidity := pool.GetTotalPoolLiquidity(sdkCtx)
 
-			if !poolLiquidity.IsAllGTE(req.MinLiquidity) {
+			if !poolLiquidity.IsAllGTE(minLiquidity) {
 				return false, nil
 			}
 		}
@@ -187,7 +197,12 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 				return false, types.ErrPoolNotFound
 			}
 
-			if poolType != req.PoolType {
+			poolTypeStr, ok := swaproutertypes.PoolType_name[int32(poolType)]
+			if !ok {
+				return false, fmt.Errorf("%d pool type not found", int32(poolType))
+			}
+
+			if poolTypeStr != req.PoolType {
 				return false, nil
 			}
 		}
@@ -203,7 +218,6 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 
 		return true, nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -349,6 +363,8 @@ func (q Querier) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
+	// Note: the base and quote asset argument order is intentionally incorrect
+	// due to a historic bug in the original implementation.
 	sp, err := q.Keeper.CalculateSpotPrice(sdkCtx, req.PoolId, req.BaseAssetDenom, req.QuoteAssetDenom)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -410,7 +426,10 @@ func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.Query
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	tokenOutAmount, err := q.Keeper.MultihopEstimateOutGivenExactAmountIn(sdkCtx, req.Routes, tokenIn)
+	// TODO: remove this redundancy after making routes be shared between x/gamm and x/swaprouter.
+	swaprouterRoutes := types.ConvertAmountInRoutes(req.Routes)
+
+	tokenOutAmount, err := q.Keeper.poolManager.MultihopEstimateOutGivenExactAmountIn(sdkCtx, swaprouterRoutes, tokenIn)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -437,7 +456,10 @@ func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.Quer
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	tokenInAmount, err := q.Keeper.MultihopEstimateInGivenExactAmountOut(sdkCtx, req.Routes, tokenOut)
+	// TODO: remove this redundancy after making routes be shared between x/gamm and x/swaprouter.
+	swaprouterRoutes := types.ConvertAmountOutRoutes(req.Routes)
+
+	tokenInAmount, err := q.Keeper.poolManager.MultihopEstimateInGivenExactAmountOut(sdkCtx, swaprouterRoutes, tokenOut)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

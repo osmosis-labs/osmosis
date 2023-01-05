@@ -47,7 +47,7 @@ func TestGammInitGenesis(t *testing.T) {
 		},
 	}, app.AppCodec())
 
-	require.Equal(t, app.GAMMKeeper.GetNextPoolIdAndIncrement(ctx), uint64(2))
+	require.Equal(t, app.SwapRouterKeeper.GetNextPoolId(ctx), uint64(1))
 	poolStored, err := app.GAMMKeeper.GetPoolAndPoke(ctx, 1)
 	require.NoError(t, err)
 	require.Equal(t, balancerPool.GetId(), poolStored.GetId())
@@ -88,7 +88,7 @@ func TestGammExportGenesis(t *testing.T) {
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 	}}, "")
-	_, err = app.GAMMKeeper.CreatePool(ctx, msg)
+	_, err = app.SwapRouterKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
 
 	msg = balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
@@ -101,11 +101,16 @@ func TestGammExportGenesis(t *testing.T) {
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 	}}, "")
-	_, err = app.GAMMKeeper.CreatePool(ctx, msg)
+	_, err = app.SwapRouterKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
 
 	genesis := app.GAMMKeeper.ExportGenesis(ctx)
-	require.Equal(t, genesis.NextPoolNumber, uint64(3))
+	// Note: the next pool number index has been migrated to
+	// swaprouter.
+	// The reason it is kept in gamm is for migrations.
+	// As a result, it is 1 here. This index is to be removed
+	// in a subsequent upgrade.
+	require.Equal(t, genesis.NextPoolNumber, uint64(1))
 	require.Len(t, genesis.Pools, 2)
 }
 
@@ -134,7 +139,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 	}}, "")
-	_, err = app.GAMMKeeper.CreatePool(ctx, msg)
+	_, err = app.SwapRouterKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
 
 	genesis := am.ExportGenesis(ctx, appCodec)

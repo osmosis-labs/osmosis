@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v13/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"

@@ -3,9 +3,9 @@ package keepers
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
-	transfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer"
-	ibc "github.com/cosmos/ibc-go/v3/modules/core"
-	ibcclientclient "github.com/cosmos/ibc-go/v3/modules/core/02-client/client"
+	transfer "github.com/cosmos/ibc-go/v4/modules/apps/transfer"
+	ibc "github.com/cosmos/ibc-go/v4/modules/core"
+	ibcclientclient "github.com/cosmos/ibc-go/v4/modules/core/02-client/client"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -25,12 +25,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
-	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
+	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
 
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
+	downtimemodule "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/module"
 	"github.com/osmosis-labs/osmosis/v13/x/epochs"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm"
-	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 	ibc_rate_limit "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit"
 	"github.com/osmosis-labs/osmosis/v13/x/incentives"
 	"github.com/osmosis-labs/osmosis/v13/x/lockup"
@@ -40,10 +41,12 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/protorev"
 	superfluid "github.com/osmosis-labs/osmosis/v13/x/superfluid"
 	superfluidclient "github.com/osmosis-labs/osmosis/v13/x/superfluid/client"
+	swaprouter "github.com/osmosis-labs/osmosis/v13/x/swaprouter/module"
 	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/twapmodule"
 	"github.com/osmosis-labs/osmosis/v13/x/txfees"
 	valsetprefmodule "github.com/osmosis-labs/osmosis/v13/x/valset-pref/valpref-module"
+	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 )
 
 // AppModuleBasics returns ModuleBasics for the module BasicManager.
@@ -54,6 +57,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 	capability.AppModuleBasic{},
 	staking.AppModuleBasic{},
 	mint.AppModuleBasic{},
+	downtimemodule.AppModuleBasic{},
 	distr.AppModuleBasic{},
 	gov.NewAppModuleBasic(
 		append(
@@ -81,7 +85,9 @@ var AppModuleBasics = []module.AppModuleBasic{
 	transfer.AppModuleBasic{},
 	vesting.AppModuleBasic{},
 	gamm.AppModuleBasic{},
+	swaprouter.AppModuleBasic{},
 	twapmodule.AppModuleBasic{},
+	concentratedliquidity.AppModuleBasic{},
 	protorev.AppModuleBasic{},
 	txfees.AppModuleBasic{},
 	incentives.AppModuleBasic{},

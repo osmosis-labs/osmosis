@@ -38,7 +38,7 @@ COPY . .
 # Build osmosisd binary
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/root/go/pkg/mod \
-    go build \
+    GOWORK=off go build \
         -mod=readonly \
         -tags "netgo,ledger,muslc" \
         -ldflags \

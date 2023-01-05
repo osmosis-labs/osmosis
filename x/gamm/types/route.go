@@ -2,6 +2,8 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 type SwapAmountInRoutes []SwapAmountInRoute
@@ -90,4 +92,32 @@ type MultihopRoute interface {
 	Length() int
 	PoolIds() []uint64
 	IntermediateDenoms() []string
+}
+
+// ConvertAmountInRoutes converts gamm swap exact amount in routes to swaprouter routes.
+// This is a temporary function to be used until we make the route protos be shared between
+// x/gamm and x/swaprouter instead of duplicating them in each module.
+func ConvertAmountInRoutes(gammRoutes []SwapAmountInRoute) []swaproutertypes.SwapAmountInRoute {
+	swaprouterRoutes := make([]swaproutertypes.SwapAmountInRoute, 0, len(gammRoutes))
+	for _, route := range gammRoutes {
+		swaprouterRoutes = append(swaprouterRoutes, swaproutertypes.SwapAmountInRoute{
+			PoolId:        route.PoolId,
+			TokenOutDenom: route.TokenOutDenom,
+		})
+	}
+	return swaprouterRoutes
+}
+
+// ConvertAmountOutRoutes converts gamm swap exact amount out routes to swaprouter routes.
+// This is a temporary function to be used until we make the route protos be shared between
+// x/gamm and x/swaprouter instead of duplicating them in each module.
+func ConvertAmountOutRoutes(gammRoutes []SwapAmountOutRoute) []swaproutertypes.SwapAmountOutRoute {
+	swaprouterRoutes := make([]swaproutertypes.SwapAmountOutRoute, 0, len(gammRoutes))
+	for _, route := range gammRoutes {
+		swaprouterRoutes = append(swaprouterRoutes, swaproutertypes.SwapAmountOutRoute{
+			PoolId:       route.PoolId,
+			TokenInDenom: route.TokenInDenom,
+		})
+	}
+	return swaprouterRoutes
 }

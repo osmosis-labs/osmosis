@@ -22,8 +22,8 @@ type BankKeeper interface {
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 }
 
-// GAMMKeeper gets the pool interface from poolID.
-type GAMMKeeper interface {
+// SwapRouterKeeper gets the pool interface from poolID.
+type SwapRouterKeeper interface {
 	GetNextPoolId(ctx sdk.Context) uint64
 }
 

@@ -3,7 +3,7 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v13/x/epochs/types"
 )
 
@@ -21,7 +21,8 @@ func GetCmdEpochInfos() (*osmocli.QueryDescriptor, *types.QueryEpochsInfoRequest
 		Use:   "epoch-infos",
 		Short: "Query running epoch infos.",
 		Long: `{{.Short}}{{.ExampleHeader}}
-		{{.CommandPrefix}}`}, &types.QueryEpochsInfoRequest{}
+{{.CommandPrefix}}`,
+		QueryFnName: "EpochInfos"}, &types.QueryEpochsInfoRequest{}
 }
 
 func GetCmdCurrentEpoch() (*osmocli.QueryDescriptor, *types.QueryCurrentEpochRequest) {
@@ -29,5 +30,5 @@ func GetCmdCurrentEpoch() (*osmocli.QueryDescriptor, *types.QueryCurrentEpochReq
 		Use:   "current-epoch",
 		Short: "Query current epoch by specified identifier.",
 		Long: `{{.Short}}{{.ExampleHeader}}
-		{{.CommandPrefix}} day`}, &types.QueryCurrentEpochRequest{}
+{{.CommandPrefix}} day`}, &types.QueryCurrentEpochRequest{}
 }

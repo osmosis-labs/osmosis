@@ -22,7 +22,7 @@ const (
 	maxDebugLogsPerCommand = 3
 )
 
-var errRegex = regexp.MustCompile(`(E|e)rror`)
+var defaultErrRegex = regexp.MustCompile(`(E|e)rror`)
 
 // Manager is a wrapper around all Docker instances, and the Docker API.
 // It provides utilities to run and interact with all Docker containers used within e2e testing.
@@ -125,7 +125,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 			// Note that this does not match all errors.
 			// This only works if CLI outpurs "Error" or "error"
 			// to stderr.
-			if (errRegex.MatchString(errBufString) || m.isDebugLogEnabled) && maxDebugLogTriesLeft > 0 {
+			if (defaultErrRegex.MatchString(errBufString) || m.isDebugLogEnabled) && maxDebugLogTriesLeft > 0 {
 				t.Log("\nstderr:")
 				t.Log(errBufString)
 
@@ -147,7 +147,8 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 		},
 		time.Minute,
 		50*time.Millisecond,
-		"tx returned a non-zero code",
+		fmt.Sprintf("success condition (%s) was not met.\nstdout:\n %s\nstderr:\n %s\n",
+			success, outBuf.String(), errBuf.String()),
 	)
 
 	return outBuf, errBuf, nil

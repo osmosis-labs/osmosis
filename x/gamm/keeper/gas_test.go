@@ -124,7 +124,7 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 			},
 		}
 		msg := balancer.NewMsgCreateBalancerPool(defaultAddr, defaultPoolParams, poolAssets, "")
-		_, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
+		_, err := suite.App.SwapRouterKeeper.CreatePool(suite.Ctx, msg)
 		suite.Require().NoError(err)
 	}
 

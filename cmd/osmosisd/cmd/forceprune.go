@@ -107,7 +107,6 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 		return 0, 0, err
 	}
 
-	// nolint: staticcheck
 	defer db_bs.Close()
 
 	bs := tmstore.NewBlockStore(db_bs)

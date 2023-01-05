@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
@@ -22,6 +22,11 @@ func (k Keeper) MarshalPool(pool swaproutertypes.PoolI) ([]byte, error) {
 func (k Keeper) UnmarshalPool(bz []byte) (types.CFMMPoolI, error) {
 	var acc types.CFMMPoolI
 	return acc, k.cdc.UnmarshalInterface(bz, &acc)
+}
+
+// GetPool returns a pool with a given id.
+func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (swaproutertypes.PoolI, error) {
+	return k.GetPoolAndPoke(ctx, poolId)
 }
 
 // GetPoolAndPoke returns a PoolI based on it's identifier if one exists. If poolId corresponds
@@ -222,7 +227,7 @@ func (k Keeper) setNextPoolId(ctx sdk.Context, poolId uint64) {
 	store.Set(types.KeyNextGlobalPoolId, bz)
 }
 
-// GetNextPoolId returns the next pool Id.
+// Deprecated: pool id index has been moved to x/swaprouter.
 func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 	var nextPoolId uint64
 	store := ctx.KVStore(k.storeKey)
@@ -243,28 +248,21 @@ func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 	return nextPoolId
 }
 
-func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (string, error) {
+func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (swaproutertypes.PoolType, error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
-		return "", err
+		return -1, err
 	}
 
 	switch pool := pool.(type) {
 	case *balancer.Pool:
-		return balancer.PoolTypeName, nil
+		return swaproutertypes.Balancer, nil
 	case *stableswap.Pool:
-		return stableswap.PoolTypeName, nil
+		return swaproutertypes.Stableswap, nil
 	default:
 		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
-		return "", sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
+		return -1, sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
 	}
-}
-
-// getNextPoolIdAndIncrement returns the next pool Id, and increments the corresponding state entry.
-func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
-	nextPoolId := k.GetNextPoolId(ctx)
-	k.setNextPoolId(ctx, nextPoolId+1)
-	return nextPoolId
 }
 
 // setStableSwapScalingFactors sets the stable swap scaling factors.

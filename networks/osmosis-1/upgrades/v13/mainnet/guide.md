@@ -1,8 +1,8 @@
 # v12 to v13 Mainnet Upgrade Guide
 
-Osmosis v13 Gov Prop: <https://www.mintscan.io/osmosis/proposals/335> TODO: Update prop link
+Osmosis v13 Gov Prop: <https://www.mintscan.io/osmosis/proposals/370>
 
-Countdown: <https://www.mintscan.io/osmosis/blocks/6246000> TODO: Update upgrade height
+Countdown: <https://www.mintscan.io/osmosis/blocks/7241500>
 
 Height: 6246000 TODO: Update upgrade height
 

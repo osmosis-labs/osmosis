@@ -42,23 +42,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-### Features
+* IBC features
+  * Upgrade to IBC v4.2.0
+* Cosmwasm
+  * Upgrade to wasmd v0.30.x
 
+### Features
+* [#2387](https://github.com/osmosis-labs/osmosis/pull/3838) Upgrade to IBC v4.2.0, and as a requirement for it wasmd to 0.30.0
 * [#3609](https://github.com/osmosis-labs/osmosis/pull/3609) Add Downtime-detection module.
 * [#2788](https://github.com/osmosis-labs/osmosis/pull/2788) Add logarithm base 2 implementation.
 * [#3677](https://github.com/osmosis-labs/osmosis/pull/3677) Add methods for cloning and mutative multiplication on osmomath.BigDec.
 * [#3676](https://github.com/osmosis-labs/osmosis/pull/3676) implement `PowerInteger` function on `osmomath.BigDec` 
 * [#3678](https://github.com/osmosis-labs/osmosis/pull/3678) implement mutative `PowerIntegerMut` function on `osmomath.BigDec`.
+* [#3708](https://github.com/osmosis-labs/osmosis/pull/3708) `Exp2` function to compute 2^decimal.
 * [#3693](https://github.com/osmosis-labs/osmosis/pull/3693) Add `EstimateSwapExactAmountOut` query to stargate whitelist
+* [#3731](https://github.com/osmosis-labs/osmosis/pull/3731) BigDec Power functions with decimal exponent.
+* [#3847](https://github.com/osmosis-labs/osmosis/pull/3847) GeometricTwap and GeometricTwapToNow queries added to Stargate whitelist.
+* [#3899](https://github.com/osmosis-labs/osmosis/pull/3899) Fixed osmoutils so its importable by chains that don't use the osmosis CosmosSDK fork 
+  
+### API breaks
+
+* [#3763](https://github.com/osmosis-labs/osmosis/pull/3763) Move binary search and error tolerance code from `osmoutils` into `osmomath`
+* [#376x](https://github.com/osmosis-labs/osmosis/pull/3763) Remove Osmosis gamm and twap `bindings` that were previously supported as custom wasm plugins.
+* [#3817](https://github.com/osmosis-labs/osmosis/pull/3817) Move osmoassert from `app/apptesting/osmoassert` to `osmoutils/osmoassert`.
+* [#3771](https://github.com/osmosis-labs/osmosis/pull/3771) Move osmomath into its own go.mod
+* [#3827](https://github.com/osmosis-labs/osmosis/pull/3827) Move osmoutils into its own go.mod
+
+
 
 ### Bug fixes
 
 * [#3608](https://github.com/osmosis-labs/osmosis/pull/3608) Make it possible to state export from any directory.
+* [#3715](https://github.com/osmosis-labs/osmosis/pull/3715) Fix x/gamm CalculateSpotPrice, balancer.SpotPrice and Stableswap.SpotPrice base and quote asset.
 
 ### Misc Improvements
 
 * [#3611](https://github.com/osmosis-labs/osmosis/pull/3611),[#3647](https://github.com/osmosis-labs/osmosis/pull/3647) Introduce osmocli, to automate thousands of lines of CLI boilerplate
 * [#3634](https://github.com/osmosis-labs/osmosis/pull/3634) (Makefile) Ensure correct golang version in make build and make install. (Thank you @jhernandezb )
+* [#3712](https://github.com/osmosis-labs/osmosis/pull/3712) replace `osmomath.BigDec` `Power` with `PowerInteger` 
+* [#3711](https://github.com/osmosis-labs/osmosis/pull/3711) Use Dec instead of Int for additive `ErrTolerace` in `osmoutils`.
+
 
 ## v13.0.0
 
@@ -149,6 +172,8 @@ which acts as a fuzz testing tool tailored for the SDK state machine.
 * [#2473](https://github.com/osmosis-labs/osmosis/pull/2473) x/superfluid `AddNewSuperfluidAsset` now returns error, if any occurs instead of ignoring it.
 * [#2714](https://github.com/osmosis-labs/osmosis/pull/2714) Upgrade wasmd to v0.28.0.
 * Remove x/Bech32IBC
+* [#3737](https://github.com/osmosis-labs/osmosis/pull/3737) Change FilteredPools MinLiquidity field from sdk.Coins struct to string.
+
 
 #### Golang API breaks
 

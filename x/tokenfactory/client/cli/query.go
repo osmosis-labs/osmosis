@@ -9,7 +9,7 @@ import (
 	// "github.com/cosmos/cosmos-sdk/client/flags"
 	// sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
 )
 
@@ -17,28 +17,31 @@ import (
 func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
 
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdDenomAuthorityMetadata)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdDenomAuthorityMetadata)
+
 	cmd.AddCommand(
 		osmocli.GetParams[*types.QueryParamsRequest](
 			types.ModuleName, types.NewQueryClient),
-		GetCmdDenomAuthorityMetadata(),
-		GetCmdDenomsFromCreator(),
 	)
 
 	return cmd
 }
 
-func GetCmdDenomAuthorityMetadata() *cobra.Command {
-	return osmocli.SimpleQueryCmd[*types.QueryDenomAuthorityMetadataRequest](
-		"denom-authority-metadata [denom] [flags]",
-		"Get the authority metadata for a specific denom", "",
-		types.ModuleName, types.NewQueryClient,
-	)
+func GetCmdDenomAuthorityMetadata() (*osmocli.QueryDescriptor, *types.QueryDenomAuthorityMetadataRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "denom-authority-metadata [denom] [flags]",
+		Short: "Get the authority metadata for a specific denom",
+		Long: `{{.Short}}{{.ExampleHeader}}
+		{{.CommandPrefix}} uatom`,
+	}, &types.QueryDenomAuthorityMetadataRequest{}
 }
 
-func GetCmdDenomsFromCreator() *cobra.Command {
-	return osmocli.SimpleQueryCmd[*types.QueryDenomsFromCreatorRequest](
-		"denoms-from-creator [creator address] [flags]",
-		"Returns a list of all tokens created by a specific creator address", "",
-		types.ModuleName, types.NewQueryClient,
-	)
+func GetCmdDenomsFromCreator() (*osmocli.QueryDescriptor, *types.QueryDenomsFromCreatorRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "denoms-from-creator [creator address] [flags]",
+		Short: "Returns a list of all tokens created by a specific creator address",
+		Long: `{{.Short}}{{.ExampleHeader}}
+		{{.CommandPrefix}} <address>`,
+	}, &types.QueryDenomsFromCreatorRequest{}
 }

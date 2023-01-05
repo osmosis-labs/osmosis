@@ -86,57 +86,6 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 
 			return bz, nil
 
-		case contractQuery.PoolState != nil:
-			poolId := contractQuery.PoolState.PoolId
-
-			state, err := qp.GetPoolState(ctx, poolId)
-			if err != nil {
-				return nil, sdkerrors.Wrap(err, "osmo pool state query")
-			}
-
-			assets := ConvertSdkCoinsToWasmCoins(state.Assets)
-			shares := ConvertSdkCoinToWasmCoin(state.Shares)
-
-			res := bindings.PoolStateResponse{
-				Assets: assets,
-				Shares: shares,
-			}
-
-			bz, err := json.Marshal(res)
-			if err != nil {
-				return nil, sdkerrors.Wrap(err, "osmo pool state query response")
-			}
-
-			return bz, nil
-
-		case contractQuery.SpotPrice != nil:
-			spotPrice, err := qp.GetSpotPrice(ctx, contractQuery.SpotPrice)
-			if err != nil {
-				return nil, sdkerrors.Wrap(err, "osmo spot price query")
-			}
-
-			res := bindings.SpotPriceResponse{Price: spotPrice.String()}
-			bz, err := json.Marshal(res)
-			if err != nil {
-				return nil, sdkerrors.Wrap(err, "osmo spot price query response")
-			}
-
-			return bz, nil
-
-		case contractQuery.EstimateSwap != nil:
-			swapAmount, err := qp.EstimateSwap(ctx, contractQuery.EstimateSwap)
-			if err != nil {
-				return nil, sdkerrors.Wrap(err, "osmo estimate swap query")
-			}
-
-			res := bindings.EstimatePriceResponse{Amount: *swapAmount}
-			bz, err := json.Marshal(res)
-			if err != nil {
-				return nil, sdkerrors.Wrap(err, "osmo estimate swap query response")
-			}
-
-			return bz, nil
-
 		default:
 			return nil, wasmvmtypes.UnsupportedRequest{Kind: "unknown osmosis query variant"}
 		}

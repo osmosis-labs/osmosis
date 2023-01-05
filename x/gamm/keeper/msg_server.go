@@ -70,7 +70,7 @@ func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, ms
 func (server msgServer) CreatePool(goCtx context.Context, msg swaproutertypes.CreatePoolMsg) (poolId uint64, err error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	poolId, err = server.keeper.CreatePool(ctx, msg)
+	poolId, err = server.keeper.poolManager.CreatePool(ctx, msg)
 	if err != nil {
 		return 0, err
 	}
@@ -100,12 +100,8 @@ func (server msgServer) CreatePool(goCtx context.Context, msg swaproutertypes.Cr
 // This can result in negotiable difference between the number of shares provided within the msg
 // and the actual number of share amount resulted from joining pool.
 // Internal logic flow for each pool model is as follows:
-// Balancer: TokensIn provided as the argument must be either a single token or tokens containing all assets in the pool.
-// * For the case of a single token, we simply perform single asset join (balancer notation: pAo, pool shares amount out,
-// given single asset in).
-// * For the case of multi-asset join, we first calculate the maximal amount of tokens that can be joined whilst maintaining
-// pool asset's ratio without swap. We then iterate through the remaining coins that couldn't be joined
-// and perform single asset join on each token.
+// Balancer: TokensInMaxs provided as the argument must either contain no tokens or containing all assets in the pool.
+// * For the case of a not containing tokens, we simply perform calculation of sharesOut and needed amount of tokens for joining the pool
 func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) (*types.MsgJoinPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -167,7 +163,10 @@ func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgS
 		return nil, err
 	}
 
-	tokenOutAmount, err := server.keeper.MultihopSwapExactAmountIn(ctx, sender, msg.Routes, msg.TokenIn, msg.TokenOutMinAmount)
+	// TODO: remove this redundancy after making routes be shared between x/gamm and x/swaprouter.
+	swaprouterRoutes := types.ConvertAmountInRoutes(msg.Routes)
+
+	tokenOutAmount, err := server.keeper.poolManager.RouteExactAmountIn(ctx, sender, swaprouterRoutes, msg.TokenIn, msg.TokenOutMinAmount)
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +191,10 @@ func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	tokenInAmount, err := server.keeper.MultihopSwapExactAmountOut(ctx, sender, msg.Routes, msg.TokenInMaxAmount, msg.TokenOut)
+	// TODO: remove this redundancy after making routes be shared between x/gamm and x/swaprouter.
+	swaprouterRoutes := types.ConvertAmountOutRoutes(msg.Routes)
+
+	tokenInAmount, err := server.keeper.poolManager.RouteExactAmountOut(ctx, sender, swaprouterRoutes, msg.TokenInMaxAmount, msg.TokenOut)
 	if err != nil {
 		return nil, err
 	}
@@ -209,6 +211,10 @@ func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.Msg
 	return &types.MsgSwapExactAmountOutResponse{TokenInAmount: tokenInAmount}, nil
 }
 
+// JoinSwapExactAmountIn is an LP transaction, that will LP all of the provided tokensIn coins.
+// * For the case of a single token, we simply perform single asset join (balancer notation: pAo, pool shares amount out,
+// given single asset in).
+// For more details on the calculation of the number of shares look at the CalcJoinPoolShares function for the appropriate pool style
 func (server msgServer) JoinSwapExternAmountIn(goCtx context.Context, msg *types.MsgJoinSwapExternAmountIn) (*types.MsgJoinSwapExternAmountInResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
