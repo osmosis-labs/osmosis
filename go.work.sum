@@ -259,9 +259,10 @@ github.com/opencontainers/selinux v1.8.2/go.mod h1:MUIHuUEvKB1wtJjQdOyYRgOnLD2xA
 github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYrxe9dPLANfrWvHYVTgc=
 github.com/openzipkin/zipkin-go v0.2.5/go.mod h1:KpXfKdgRDnnhsxw4pNIH9Md5lyFqKUa4YDFlwRYAMyE=
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
-github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230105100058-2ad8dafc6e4f/go.mod h1:KrzYoNtnWUH75rj1XAsSR4nymlHFU7jeVOx7/1KMe0k=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230105100058-2ad8dafc6e4f/go.mod h1:K4de+n3DtLdueen98dOzaRXZvqMd8JvigL8O1xW445o=
-github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230105100058-2ad8dafc6e4f/go.mod h1:iHEtAvQf7wZb4sTxMRQZinu3k9QjRPWzFvkADwsfvFQ=
+github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230105183030-bccf5202f260/go.mod h1:KrzYoNtnWUH75rj1XAsSR4nymlHFU7jeVOx7/1KMe0k=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230105183030-bccf5202f260/go.mod h1:K4de+n3DtLdueen98dOzaRXZvqMd8JvigL8O1xW445o=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230105184425-1e6fcd979d99/go.mod h1:K4de+n3DtLdueen98dOzaRXZvqMd8JvigL8O1xW445o=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230105184425-1e6fcd979d99/go.mod h1:eRI3o4uWiHirGc6Cik6rmcTE1LjZH+A8VBwa6ZSABHo=
 github.com/otiai10/copy v1.7.0/go.mod h1:rmRl6QPdJj6EiUqXQ/4Nn2lLXoNQjFCQbbNrxgc/t3U=
 github.com/otiai10/mint v1.3.3/go.mod h1:/yxELlJQ0ufhjUwhshSj+wFjZ78CnZ48/1wtmBH1OTc=
 github.com/pelletier/go-toml v1.9.3/go.mod h1:u1nR/EPcESfeI/szUZKdtJ0xRNbUoANCkoOuaOx1Y+c=
