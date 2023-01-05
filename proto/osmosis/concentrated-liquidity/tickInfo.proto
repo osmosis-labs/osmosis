@@ -23,14 +23,25 @@ message TickInfo {
     (gogoproto.moretags) = "yaml:\"liquidity_net\"",
     (gogoproto.nullable) = false
   ];
-  google.protobuf.Duration seconds_inactive = 3 [
+  string incentivized_liquidity_gross = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"incentivized_liquidity_gross\"",
+    (gogoproto.nullable) = false
+  ];
+  string incentivized_liquidity_net = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"incentivized_liquidity_net\"",
+    (gogoproto.nullable) = false
+  ];
+  google.protobuf.Duration seconds_inactive = 5 [
     (gogoproto.nullable) = false,
     (gogoproto.stdduration) = true,
     (gogoproto.moretags) = "yaml:\"seconds_inactive\""
   ];
-  string seconds_per_liquidity_outside = 4 [
+  string seconds_per_incentivized_liquidity_outside = 6 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"seconds_per_liquidity_outside\"",
+    (gogoproto.moretags) =
+        "yaml:\"seconds_per_incentivized_liquidity_outside\"",
     (gogoproto.nullable) = false
   ];
 }

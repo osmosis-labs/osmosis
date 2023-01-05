@@ -15,6 +15,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 		upperTick      int64
 		liquidityDelta sdk.Dec
 		liquidityIn    sdk.Dec
+		isIncentivized bool
 	}
 
 	tests := []struct {
@@ -31,6 +32,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				lowerTick:      -50,
 				upperTick:      50,
 				liquidityDelta: DefaultLiquidityAmt,
+				isIncentivized: true,
 			},
 			positionExists:    false,
 			expectedLiquidity: DefaultLiquidityAmt,
@@ -42,6 +44,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				lowerTick:      -50,
 				upperTick:      50,
 				liquidityDelta: DefaultLiquidityAmt,
+				isIncentivized: true,
 			},
 			positionExists:    true,
 			expectedLiquidity: DefaultLiquidityAmt.Add(DefaultLiquidityAmt),
@@ -53,6 +56,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				lowerTick:      -50,
 				upperTick:      50,
 				liquidityDelta: DefaultLiquidityAmt,
+				isIncentivized: true,
 			},
 			positionExists: false,
 			expectedErr:    types.PoolNotFoundError{PoolId: 2},
@@ -64,6 +68,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				lowerTick:      -50,
 				upperTick:      50,
 				liquidityDelta: DefaultLiquidityAmt.Neg(),
+				isIncentivized: true,
 			},
 			positionExists: false,
 			expectedErr:    types.NegativeLiquidityError{Liquidity: DefaultLiquidityAmt.Neg()},
@@ -81,13 +86,13 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			// If positionExists set, initialize the specified position with defaultLiquidityAmt
 			preexistingLiquidity := sdk.ZeroDec()
 			if test.positionExists {
-				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, test.param.poolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.liquidityDelta)
+				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, test.param.poolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.liquidityDelta, test.param.isIncentivized)
 				s.Require().NoError(err)
 				preexistingLiquidity = DefaultLiquidityAmt
 			}
 
 			// Get the position info for poolId 1
-			positionInfo, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, validPoolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick)
+			positionInfo, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, validPoolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.isIncentivized)
 			if test.positionExists {
 				// If we had a position before, ensure the position info displays proper liquidity
 				s.Require().NoError(err)
@@ -99,7 +104,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			}
 
 			// System under test. Initialize or update the position according to the test case
-			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, test.param.poolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.liquidityDelta)
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, test.param.poolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.liquidityDelta, test.param.isIncentivized)
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, test.expectedErr.Error())
@@ -108,7 +113,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			s.Require().NoError(err)
 
 			// Get the tick info for poolId 1
-			positionInfo, err = s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, validPoolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick)
+			positionInfo, err = s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, validPoolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.isIncentivized)
 			s.Require().NoError(err)
 
 			// Check that the initialized or updated position matches our expectation
@@ -124,6 +129,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 		ownerIndex       uint64
 		lowerTick        int64
 		upperTick        int64
+		isIncentivized   bool
 		expectedPosition *model.Position
 		expectedErr      error
 	}{
@@ -132,29 +138,33 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			poolToGet:        validPoolId,
 			lowerTick:        DefaultLowerTick,
 			upperTick:        DefaultUpperTick,
+			isIncentivized:   true,
 			expectedPosition: &model.Position{Liquidity: DefaultLiquidityAmt},
 		},
 		{
-			name:        "Get position info on existing pool and existing position but wrong owner",
-			poolToGet:   validPoolId,
-			ownerIndex:  1,
-			lowerTick:   DefaultLowerTick,
-			upperTick:   DefaultUpperTick,
-			expectedErr: types.PositionNotFoundError{PoolId: validPoolId, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick},
+			name:           "Get position info on existing pool and existing position but wrong owner",
+			poolToGet:      validPoolId,
+			ownerIndex:     1,
+			lowerTick:      DefaultLowerTick,
+			upperTick:      DefaultUpperTick,
+			isIncentivized: true,
+			expectedErr:    types.PositionNotFoundError{PoolId: validPoolId, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick},
 		},
 		{
-			name:        "Get position info on existing pool with no existing position",
-			poolToGet:   validPoolId,
-			lowerTick:   DefaultLowerTick - 1,
-			upperTick:   DefaultUpperTick + 1,
-			expectedErr: types.PositionNotFoundError{PoolId: validPoolId, LowerTick: DefaultLowerTick - 1, UpperTick: DefaultUpperTick + 1},
+			name:           "Get position info on existing pool with no existing position",
+			poolToGet:      validPoolId,
+			lowerTick:      DefaultLowerTick - 1,
+			upperTick:      DefaultUpperTick + 1,
+			isIncentivized: true,
+			expectedErr:    types.PositionNotFoundError{PoolId: validPoolId, LowerTick: DefaultLowerTick - 1, UpperTick: DefaultUpperTick + 1},
 		},
 		{
-			name:        "Get position info on a non-existing pool with no existing position",
-			poolToGet:   2,
-			lowerTick:   DefaultLowerTick - 1,
-			upperTick:   DefaultUpperTick + 1,
-			expectedErr: types.PositionNotFoundError{PoolId: 2, LowerTick: DefaultLowerTick - 1, UpperTick: DefaultUpperTick + 1},
+			name:           "Get position info on a non-existing pool with no existing position",
+			poolToGet:      2,
+			lowerTick:      DefaultLowerTick - 1,
+			upperTick:      DefaultUpperTick + 1,
+			isIncentivized: true,
+			expectedErr:    types.PositionNotFoundError{PoolId: 2, LowerTick: DefaultLowerTick - 1, UpperTick: DefaultUpperTick + 1},
 		},
 	}
 
@@ -167,10 +177,10 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			s.PrepareConcentratedPool()
 
 			// Set up a default initialized position
-			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt)
+			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, true)
 
 			// System under test
-			position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, test.poolToGet, s.TestAccs[test.ownerIndex], test.lowerTick, test.upperTick)
+			position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, test.poolToGet, s.TestAccs[test.ownerIndex], test.lowerTick, test.upperTick, test.isIncentivized)
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, test.expectedErr)

@@ -14,12 +14,13 @@ func (k Keeper) getOrInitPosition(
 	poolId uint64,
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
+	isIncentivized bool,
 ) (*model.Position, error) {
 	if !k.poolExists(ctx, poolId) {
 		return nil, types.PoolNotFoundError{PoolId: poolId}
 	}
-	if k.hasPosition(ctx, poolId, owner, lowerTick, upperTick) {
-		position, err := k.getPosition(ctx, poolId, owner, lowerTick, upperTick)
+	if k.hasPosition(ctx, poolId, owner, lowerTick, upperTick, isIncentivized) {
+		position, err := k.getPosition(ctx, poolId, owner, lowerTick, upperTick, isIncentivized)
 		if err != nil {
 			return nil, err
 		}
@@ -37,8 +38,9 @@ func (k Keeper) initOrUpdatePosition(
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
 	liquidityDelta sdk.Dec,
+	isIncentivized bool,
 ) (err error) {
-	position, err := k.getOrInitPosition(ctx, poolId, owner, lowerTick, upperTick)
+	position, err := k.getOrInitPosition(ctx, poolId, owner, lowerTick, upperTick, isIncentivized)
 	if err != nil {
 		return err
 	}
@@ -60,17 +62,17 @@ func (k Keeper) initOrUpdatePosition(
 	return nil
 }
 
-func (k Keeper) hasPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) bool {
+func (k Keeper) hasPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, isIncentivized bool) bool {
 	store := ctx.KVStore(k.storeKey)
-	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
+	key := types.KeyPosition(poolId, owner, lowerTick, upperTick, isIncentivized)
 	return store.Has(key)
 }
 
 // getPosition checks if a position exists at the provided upper and lower ticks for the given owner. Returns position if found.
-func (k Keeper) getPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) (*model.Position, error) {
+func (k Keeper) getPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, isIncentivized bool) (*model.Position, error) {
 	store := ctx.KVStore(k.storeKey)
 	positionStruct := &model.Position{}
-	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
+	key := types.KeyPosition(poolId, owner, lowerTick, upperTick, isIncentivized)
 
 	found, err := osmoutils.Get(store, key, positionStruct)
 	if err != nil {
@@ -91,6 +93,6 @@ func (k Keeper) setPosition(ctx sdk.Context,
 	position *model.Position,
 ) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
+	key := types.KeyPosition(poolId, owner, lowerTick, upperTick, position.IsIncentivized)
 	osmoutils.MustSet(store, key, position)
 }

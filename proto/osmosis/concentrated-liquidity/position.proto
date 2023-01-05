@@ -16,4 +16,5 @@ message Position {
     (gogoproto.moretags) = "yaml:\"liquidity\"",
     (gogoproto.nullable) = false
   ];
+  bool is_incentivized = 2;
 }

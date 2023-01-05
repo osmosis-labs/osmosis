@@ -38,6 +38,7 @@ message MsgCreatePosition {
     (gogoproto.moretags) = "yaml:\"token_min_amount1\"",
     (gogoproto.nullable) = false
   ];
+  bool is_incentivized = 9;
 }
 
 message MsgCreatePositionResponse {
@@ -69,6 +70,7 @@ message MsgWithdrawPosition {
     (gogoproto.moretags) = "yaml:\"liquidity_amount\"",
     (gogoproto.nullable) = false
   ];
+  bool is_incentivized = 6;
 }
 
 message MsgWithdrawPositionResponse {

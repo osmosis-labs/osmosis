@@ -27,6 +27,7 @@ var (
 	DefaultAmt1Expected     = sdk.NewInt(4999999999)
 	DefaultLiquidityAmt     = sdk.MustNewDecFromStr("1517818840.967415409394235163")
 	DefaultTickSpacing      = uint64(1)
+	DefaultIsIncentivized   = true
 	PoolCreationFee         = swaproutertypes.DefaultParams().PoolCreationFee
 )
 
@@ -42,15 +43,21 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 }
 
-func (s *KeeperTestSuite) SetupPosition(poolId uint64) {
+func (s *KeeperTestSuite) SetupIncentivizedPosition(poolId uint64) {
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-	_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick, true)
+	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) SetupUnincentivizedPosition(poolId uint64) {
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+	_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick, false)
 	s.Require().NoError(err)
 }
 
 // validatePositionUpdate validates that position with given parameters has expectedRemainingLiquidity left.
-func (s *KeeperTestSuite) validatePositionUpdate(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, expectedRemainingLiquidity sdk.Dec) {
-	position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(ctx, poolId, owner, lowerTick, upperTick)
+func (s *KeeperTestSuite) validatePositionUpdate(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, expectedRemainingLiquidity sdk.Dec, isIncentivized bool) {
+	position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(ctx, poolId, owner, lowerTick, upperTick, isIncentivized)
 	s.Require().NoError(err)
 	newPositionLiquidity := position.Liquidity
 	s.Require().Equal(expectedRemainingLiquidity.String(), newPositionLiquidity.String())
