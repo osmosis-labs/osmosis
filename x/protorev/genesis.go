@@ -21,13 +21,25 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	k.SetLatestBlockHeight(ctx, uint64(ctx.BlockHeight()))
 	k.SetRouteCountForBlock(ctx, 0)
 
-	// configure max routes per block (default 100)
+	// Configure max routes per block. This roughly correlates to the ms of execution time protorev will
+	// take per block
 	if err := k.SetMaxRoutesPerBlock(ctx, 100); err != nil {
 		panic(err)
 	}
 
-	// configure max routes per tx (default 6)
+	// Configure max routes per tx. This roughly correlates to the ms of execution time protorev will take
+	// per tx
 	if err := k.SetMaxRoutesPerTx(ctx, 6); err != nil {
+		panic(err)
+	}
+
+	// Configure the route weights for genesis. This roughly correlates to the ms of execution time
+	// by route type
+	routeWeights := types.RouteWeights{
+		StableWeight:   5, // it takes around 5 ms to execute a stable swap route
+		BalancerWeight: 2, // it takes around 2 ms to execute a balancer swap route
+	}
+	if err := k.SetRouteWeights(ctx, routeWeights); err != nil {
 		panic(err)
 	}
 

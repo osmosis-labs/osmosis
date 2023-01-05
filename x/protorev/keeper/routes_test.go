@@ -37,7 +37,7 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 					{PoolId: 7, InputDenom: "akash", OutputDenom: types.OsmosisDenomination},
 				},
 			},
-			expectedRouteCount: 2,
+			expectedRouteCount: 4,
 			maxIterableRoutes:  15,
 		},
 		{
@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 					{PoolId: 10, InputDenom: "bitcoin", OutputDenom: types.OsmosisDenomination},
 				},
 			},
-			expectedRouteCount: 1,
+			expectedRouteCount: 2,
 			maxIterableRoutes:  15,
 		},
 		{
@@ -72,7 +72,7 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 					{PoolId: 4, InputDenom: "bitcoin", OutputDenom: types.AtomDenomination},
 				},
 			},
-			expectedRouteCount: 2,
+			expectedRouteCount: 4,
 			maxIterableRoutes:  15,
 		},
 		{
@@ -96,7 +96,7 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 					{PoolId: 30, InputDenom: "busd", OutputDenom: types.OsmosisDenomination},
 				},
 			},
-			expectedRouteCount: 2,
+			expectedRouteCount: 5,
 			maxIterableRoutes:  15,
 		},
 		{
@@ -106,7 +106,7 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 			poolID:             29,
 			expected:           [][]TestRoute{},
 			expectedRouteCount: 0,
-			maxIterableRoutes:  1,
+			maxIterableRoutes:  3,
 		},
 		{
 			description: "Two routes exist but only 1 route left to be explored (osmo route chosen)",
@@ -120,8 +120,8 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 					{PoolId: 10, InputDenom: "bitcoin", OutputDenom: types.OsmosisDenomination},
 				},
 			},
-			expectedRouteCount: 1,
-			maxIterableRoutes:  1,
+			expectedRouteCount: 2,
+			maxIterableRoutes:  2,
 		},
 	}
 
@@ -163,7 +163,7 @@ func (suite *KeeperTestSuite) TestBuildAtomRoute() {
 			poolId:             7,
 			expectedRoute:      []TestRoute{{1, types.AtomDenomination, "akash"}, {7, "akash", types.OsmosisDenomination}, {25, types.OsmosisDenomination, types.AtomDenomination}},
 			hasRoute:           true,
-			expectedRouteCount: 1,
+			expectedRouteCount: 2,
 		},
 		{
 			description:        "Route exists for swap in Akash and swap out Osmo",
@@ -172,7 +172,7 @@ func (suite *KeeperTestSuite) TestBuildAtomRoute() {
 			poolId:             7,
 			expectedRoute:      []TestRoute{{25, types.AtomDenomination, types.OsmosisDenomination}, {7, types.OsmosisDenomination, "akash"}, {1, "akash", types.AtomDenomination}},
 			hasRoute:           true,
-			expectedRouteCount: 1,
+			expectedRouteCount: 2,
 		},
 		{
 			description:        "Route does not exist for swap in Terra and swap out Osmo because the pool does not exist",
@@ -234,7 +234,7 @@ func (suite *KeeperTestSuite) TestBuildOsmoRoute() {
 			poolId:             1,
 			expectedRoute:      []TestRoute{{7, types.OsmosisDenomination, "akash"}, {1, "akash", types.AtomDenomination}, {25, types.AtomDenomination, types.OsmosisDenomination}},
 			hasRoute:           true,
-			expectedRouteCount: 1,
+			expectedRouteCount: 2,
 		},
 		{
 			description:        "Route exists for swap in Akash and swap out Atom",
@@ -243,7 +243,7 @@ func (suite *KeeperTestSuite) TestBuildOsmoRoute() {
 			poolId:             1,
 			expectedRoute:      []TestRoute{{25, types.OsmosisDenomination, types.AtomDenomination}, {1, types.AtomDenomination, "akash"}, {7, "akash", types.OsmosisDenomination}},
 			hasRoute:           true,
-			expectedRouteCount: 1,
+			expectedRouteCount: 2,
 		},
 		{
 			description:        "Route does not exist for swap in Terra and swap out Atom because the pool does not exist",

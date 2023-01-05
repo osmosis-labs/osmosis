@@ -362,3 +362,21 @@ func (suite *KeeperTestSuite) TestGetMaxRoutesPerBlock() {
 	err = suite.App.AppKeepers.ProtoRevKeeper.SetMaxRoutesPerBlock(suite.Ctx, types.MaxIterableRoutesPerBlock+1)
 	suite.Require().Error(err)
 }
+
+// TestGetRouteWeights tests the GetRouteWeights and SetRouteWeights functions.
+func (suite *KeeperTestSuite) TestGetRouteWeights() {
+	// Should be initalized on genesis
+	routeWeights, err := suite.App.AppKeepers.ProtoRevKeeper.GetRouteWeights(suite.Ctx)
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.RouteWeights{StableWeight: 5, BalancerWeight: 2}, *routeWeights)
+
+	// Should be able to set the routeWeights
+	newRouteWeights := types.RouteWeights{
+		StableWeight:   10,
+		BalancerWeight: 2,
+	}
+	suite.App.AppKeepers.ProtoRevKeeper.SetRouteWeights(suite.Ctx, newRouteWeights)
+	routeWeights, err = suite.App.AppKeepers.ProtoRevKeeper.GetRouteWeights(suite.Ctx)
+	suite.Require().NoError(err)
+	suite.Require().Equal(newRouteWeights, *routeWeights)
+}

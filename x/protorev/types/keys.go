@@ -34,6 +34,7 @@ const (
 	prefixMaxRoutesPerBlock
 	prefixRouteCountForBlock
 	prefixLatestBlockHeight
+	prefixRouteWeights
 )
 
 var (
@@ -87,6 +88,9 @@ var (
 
 	// KeyPrefixLatestBlockHeight is the prefix for store that keeps track of the latest recorded block height
 	KeyPrefixLatestBlockHeight = []byte{prefixLatestBlockHeight}
+
+	// KeyPrefixRouteWeights is the prefix for store that keeps track of the weights for different route types
+	KeyPrefixRouteWeights = []byte{prefixRouteWeights}
 )
 
 // Returns the key needed to fetch the osmo pool for a given denom

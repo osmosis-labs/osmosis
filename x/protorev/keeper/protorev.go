@@ -380,3 +380,40 @@ func (k Keeper) SetMaxRoutesPerBlock(ctx sdk.Context, maxRoutes uint64) error {
 
 	return nil
 }
+
+// GetRouteWeights sets the weights of different route types. Route are broken up into different types depending on
+// the pool types in the route.
+func (k Keeper) GetRouteWeights(ctx sdk.Context) (*types.RouteWeights, error) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixRouteWeights)
+	bz := store.Get(types.KeyPrefixRouteWeights)
+	if bz == nil {
+		// This should never happen as it is set to the default value on genesis
+		return nil, fmt.Errorf("route weights have not been set in state")
+	}
+
+	routeWeights := &types.RouteWeights{}
+	err := routeWeights.Unmarshal(bz)
+	if err != nil {
+		return nil, err
+	}
+
+	return routeWeights, nil
+}
+
+// SetRouteWeights sets the weights of different route types.
+func (k Keeper) SetRouteWeights(ctx sdk.Context, routeWeights types.RouteWeights) error {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixRouteWeights)
+
+	if routeWeights.BalancerWeight == 0 || routeWeights.StableWeight == 0 {
+		return fmt.Errorf("route weights must be greater than 0")
+	}
+
+	bz, err := routeWeights.Marshal()
+	if err != nil {
+		return err
+	}
+
+	store.Set(types.KeyPrefixRouteWeights, bz)
+
+	return nil
+}
