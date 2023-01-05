@@ -3,10 +3,11 @@ package ibc_hooks
 import (
 	"encoding/json"
 	"fmt"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -27,16 +28,14 @@ type ContractAck struct {
 }
 
 type WasmHooks struct {
-	ContractKeeper      *wasmkeeper.PermissionedKeeper
-	ibcHooksKeeper      *keeper.Keeper
-	bech32PrefixAccAddr string
+	ContractKeeper *wasmkeeper.PermissionedKeeper
+	ibcHooksKeeper *keeper.Keeper
 }
 
-func NewWasmHooks(ibcHooksKeeper *keeper.Keeper, contractKeeper *wasmkeeper.PermissionedKeeper, bech32PrefixAccAddr string) WasmHooks {
+func NewWasmHooks(ibcHooksKeeper *keeper.Keeper, contractKeeper *wasmkeeper.PermissionedKeeper) WasmHooks {
 	return WasmHooks{
-		ContractKeeper:      contractKeeper,
-		ibcHooksKeeper:      ibcHooksKeeper,
-		bech32PrefixAccAddr: bech32PrefixAccAddr,
+		ContractKeeper: contractKeeper,
+		ibcHooksKeeper: ibcHooksKeeper,
 	}
 }
 
@@ -67,22 +66,13 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 		return osmoutils.NewStringErrorAcknowledgement("error in wasmhook message validation")
 	}
 
-	// Calculate the receiver / contract caller based on the packet's channel and sender
-	senderStr := fmt.Sprintf("%s/%s", packet.GetDestChannel(), data.GetSender())
-	senderHash32 := address.Hash("ibc-memo-action", []byte(senderStr))
-	sender := sdk.AccAddress(senderHash32[:])
-	senderBech32, err := sdk.Bech32ifyAddressBytes(h.bech32PrefixAccAddr, sender)
-	if err != nil {
-		return osmoutils.NewStringErrorAcknowledgement(fmt.Sprintf("cannot convert sender address %s to bech32: %s", senderStr, err.Error()))
-	}
-
-	// The funds sent on this packet need to be transferred to the intermediary account for the sender.
-	// For this, we override the ICS20 packet's Receiver (essentially hijacking the funds to this new address)
+	// The funds sent on this packet need to be transferred to the wasm hooks module address/
+	// For this, we override the ICS20 packet's Receiver (essentially hijacking the funds for the module)
 	// and execute the underlying OnRecvPacket() call (which should eventually land on the transfer app's
-	// relay.go and send the sunds to the intermediary account.
+	// relay.go and send the sunds to the module.
 	//
 	// If that succeeds, we make the contract call
-	data.Receiver = senderBech32
+	data.Receiver = WasmHookModuleAccountAddr.String()
 	bz, err := json.Marshal(data)
 	if err != nil {
 		return osmoutils.NewStringErrorAcknowledgement(fmt.Sprintf("cannot marshal the ICS20 packet: %s", err.Error()))
@@ -106,9 +96,8 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	denom := osmoutils.MustExtractDenomFromPacketOnRecv(packet)
 	funds := sdk.NewCoins(sdk.NewCoin(denom, amount))
 
-	// Execute the contract
 	execMsg := wasmtypes.MsgExecuteContract{
-		Sender:   senderBech32,
+		Sender:   WasmHookModuleAccountAddr.String(),
 		Contract: contractAddr.String(),
 		Msg:      msgBytes,
 		Funds:    funds,
@@ -332,7 +321,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 	}
 
 	sudoMsg := []byte(fmt.Sprintf(
-		`{"receive_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}`,
+		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}}`,
 		packet.SourceChannel, packet.Sequence, ackAsJson, success))
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
@@ -367,7 +356,7 @@ func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdk.Context, pa
 	}
 
 	sudoMsg := []byte(fmt.Sprintf(
-		`{"ibc_timeout": {"channel": "%s", "sequence": %d}}`,
+		`{"ibc_lifecycle_complete": {"ibc_timeout": {"channel": "%s", "sequence": %d}}}`,
 		packet.SourceChannel, packet.Sequence))
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
