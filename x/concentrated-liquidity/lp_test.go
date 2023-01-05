@@ -209,7 +209,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// system under test parameters
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
-				amount0Expected: baseCase.amount0Expected, // 0.998587 eth
+				amount0Expected: baseCase.amount0Expected, // 0.998976 eth
 				amount1Expected: baseCase.amount1Expected, // 5000 usdc
 			},
 		},
@@ -220,10 +220,10 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// system under test parameters
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
-				liquidityAmount: baseCase.liquidityAmount.QuoInt64(2),
+				liquidityAmount: baseCase.liquidityAmount.QuoRoundUp(sdk.NewDec(2)),
 
-				amount0Expected: baseCase.amount0Expected.QuoRaw(2), // 0.4992935 / 2 eth
-				amount1Expected: baseCase.amount1Expected.QuoRaw(2), // 2499 usdc
+				amount0Expected: baseCase.amount0Expected.QuoRaw(2), // 0.499488
+				amount1Expected: baseCase.amount1Expected.QuoRaw(2), // 2500 usdc
 			},
 		},
 		"error: no position created": {

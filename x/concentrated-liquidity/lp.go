@@ -2,6 +2,7 @@ package concentrated_liquidity
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -137,6 +138,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
+	fmt.Printf("liq: %s, actualAmount0: %s, actualAmount1: %s \n", requestedLiqudityAmountToWithdraw, actualAmount0, actualAmount1)
 
 	// Transfer the actual amounts of tokens 0 and 1 from the pool to the position owner.
 	err = k.sendCoinsBetweenPoolAndUser(ctx, pool.GetToken0(), pool.GetToken1(), actualAmount0, actualAmount1, pool.GetAddress(), owner)
