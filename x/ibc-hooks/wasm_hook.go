@@ -3,11 +3,10 @@ package ibc_hooks
 import (
 	"encoding/json"
 	"fmt"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -28,14 +27,16 @@ type ContractAck struct {
 }
 
 type WasmHooks struct {
-	ContractKeeper *wasmkeeper.PermissionedKeeper
-	ibcHooksKeeper *keeper.Keeper
+	ContractKeeper      *wasmkeeper.PermissionedKeeper
+	ibcHooksKeeper      *keeper.Keeper
+	bech32PrefixAccAddr string
 }
 
-func NewWasmHooks(ibcHooksKeeper *keeper.Keeper, contractKeeper *wasmkeeper.PermissionedKeeper) WasmHooks {
+func NewWasmHooks(ibcHooksKeeper *keeper.Keeper, contractKeeper *wasmkeeper.PermissionedKeeper, bech32PrefixAccAddr string) WasmHooks {
 	return WasmHooks{
-		ContractKeeper: contractKeeper,
-		ibcHooksKeeper: ibcHooksKeeper,
+		ContractKeeper:      contractKeeper,
+		ibcHooksKeeper:      ibcHooksKeeper,
+		bech32PrefixAccAddr: bech32PrefixAccAddr,
 	}
 }
 
@@ -66,13 +67,22 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 		return osmoutils.NewStringErrorAcknowledgement("error in wasmhook message validation")
 	}
 
-	// The funds sent on this packet need to be transferred to the wasm hooks module address/
-	// For this, we override the ICS20 packet's Receiver (essentially hijacking the funds for the module)
+	// Calculate the receiver / contract caller based on the packet's channel and sender
+	senderStr := fmt.Sprintf("%s/%s", packet.GetDestChannel(), data.GetSender())
+	senderHash32 := address.Hash("ibc-memo-action", []byte(senderStr))
+	sender := sdk.AccAddress(senderHash32[:])
+	senderBech32, err := sdk.Bech32ifyAddressBytes(h.bech32PrefixAccAddr, sender)
+	if err != nil {
+		return osmoutils.NewStringErrorAcknowledgement(fmt.Sprintf("cannot convert sender address %s to bech32: %s", senderStr, err.Error()))
+	}
+
+	// The funds sent on this packet need to be transferred to the intermediary account for the sender.
+	// For this, we override the ICS20 packet's Receiver (essentially hijacking the funds to this new address)
 	// and execute the underlying OnRecvPacket() call (which should eventually land on the transfer app's
-	// relay.go and send the sunds to the module.
+	// relay.go and send the sunds to the intermediary account.
 	//
 	// If that succeeds, we make the contract call
-	data.Receiver = WasmHookModuleAccountAddr.String()
+	data.Receiver = senderBech32
 	bz, err := json.Marshal(data)
 	if err != nil {
 		return osmoutils.NewStringErrorAcknowledgement(fmt.Sprintf("cannot marshal the ICS20 packet: %s", err.Error()))
@@ -96,8 +106,9 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	denom := osmoutils.MustExtractDenomFromPacketOnRecv(packet)
 	funds := sdk.NewCoins(sdk.NewCoin(denom, amount))
 
+	// Execute the contract
 	execMsg := wasmtypes.MsgExecuteContract{
-		Sender:   WasmHookModuleAccountAddr.String(),
+		Sender:   senderBech32,
 		Contract: contractAddr.String(),
 		Msg:      msgBytes,
 		Funds:    funds,
