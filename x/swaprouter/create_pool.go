@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -15,7 +14,6 @@ import (
 
 func (k Keeper) validateCreatedPool(
 	ctx sdk.Context,
-	initialPoolLiquidity sdk.Coins,
 	poolId uint64,
 	pool types.PoolI,
 ) error {
@@ -26,37 +24,6 @@ func (k Keeper) validateCreatedPool(
 	if !pool.GetAddress().Equals(gammtypes.NewPoolAddress(poolId)) {
 		return sdkerrors.Wrapf(types.ErrInvalidPool,
 			"Pool was attempted to be created with incorrect pool address.")
-	}
-	// Notably we use the initial pool liquidity at the start of the messages definition
-	// just in case CreatePool was mutative.
-	if !pool.GetTotalPoolLiquidity(ctx).IsEqual(initialPoolLiquidity) {
-		return sdkerrors.Wrapf(types.ErrInvalidPool,
-			"Pool was attempted to be created, with initial liquidity not equal to what was specified.")
-	}
-	// This check can be removed later, and replaced with a minimum.
-	if !pool.GetTotalShares().Equal(gammtypes.InitPoolSharesSupply) {
-		return sdkerrors.Wrapf(types.ErrInvalidPool,
-			"Pool was attempted to be created with incorrect number of initial shares.")
-	}
-	return nil
-}
-
-func validateCreatePoolMsg(ctx sdk.Context, msg types.CreatePoolMsg) error {
-	err := msg.Validate(ctx)
-	if err != nil {
-		return err
-	}
-
-	initialPoolLiquidity := msg.InitialLiquidity()
-	numAssets := initialPoolLiquidity.Len()
-	if numAssets < types.MinPoolAssets {
-		return types.ErrTooFewPoolAssets
-	}
-	if numAssets > types.MaxPoolAssets {
-		return sdkerrors.Wrapf(
-			types.ErrTooManyPoolAssets,
-			"pool has too many PoolAssets (%d)", numAssets,
-		)
 	}
 	return nil
 }
@@ -72,20 +39,21 @@ func validateCreatePoolMsg(ctx sdk.Context, msg types.CreatePoolMsg) error {
 // - Minting LP shares to pool creator
 // - Setting metadata for the shares
 func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, error) {
-	err := validateCreatePoolMsg(ctx, msg)
+	// Run validate basic on the message.
+	err := msg.Validate(ctx)
 	if err != nil {
 		return 0, err
 	}
 
+	// Send pool creation fee to community pool
+	params := k.GetParams(ctx)
 	sender := msg.PoolCreator()
-	initialPoolLiquidity := msg.InitialLiquidity()
-
-	// send pool creation fee to community pool
-	fee := k.GetParams(ctx).PoolCreationFee
-	if err := k.communityPoolKeeper.FundCommunityPool(ctx, fee, sender); err != nil {
+	if err := k.communityPoolKeeper.FundCommunityPool(ctx, params.PoolCreationFee, sender); err != nil {
 		return 0, err
 	}
 
+	// Get the next pool ID and increment the pool ID counter
+	// Create the pool with the given pool ID
 	poolId := k.getNextPoolIdAndIncrement(ctx)
 	pool, err := msg.CreatePool(ctx, poolId)
 	if err != nil {
@@ -94,7 +62,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 
 	k.SetPoolRoute(ctx, poolId, msg.GetPoolType())
 
-	if err := k.validateCreatedPool(ctx, initialPoolLiquidity, poolId, pool); err != nil {
+	if err := k.validateCreatedPool(ctx, poolId, pool); err != nil {
 		return 0, err
 	}
 
@@ -103,15 +71,16 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 		return 0, fmt.Errorf("creating pool module account for id %d: %w", poolId, err)
 	}
 
-	// send initial liquidity to the pool
-	err = k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), initialPoolLiquidity)
-	if err != nil {
+	// Run the respective pool type's initialization logic.
+	swapModule := k.routes[msg.GetPoolType()]
+	if err := swapModule.InitializePool(ctx, pool, sender); err != nil {
 		return 0, err
 	}
 
-	swapModule := k.routes[msg.GetPoolType()]
-
-	if err := swapModule.InitializePool(ctx, pool, sender); err != nil {
+	// Send initial liquidity to the pool's address.
+	initialPoolLiquidity := msg.InitialLiquidity()
+	err = k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), initialPoolLiquidity)
+	if err != nil {
 		return 0, err
 	}
 
@@ -145,7 +114,7 @@ func (k Keeper) SetPoolRoute(ctx sdk.Context, poolId uint64, poolType types.Pool
 	osmoutils.MustSet(store, types.FormatModuleRouteKey(poolId), &types.ModuleRoute{PoolType: poolType})
 }
 
-// GetSwapModule returns the swap module for the given pool ID.
+// GetPoolModule returns the swap module for the given pool ID.
 // Returns error if:
 // - any database error occurs.
 // - fails to find a pool with the given id.
