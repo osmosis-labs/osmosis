@@ -80,7 +80,7 @@ func (accum AccumulatorObject) NewPosition(name string, numShareUnits sdk.Dec, o
 	return accum.newPosition(name, numShareUnits, accum.value, options)
 }
 
-// NewPosition creates a new position for the given name, with the given number of share units.
+// NewPositionCustomAcc creates a new position for the given name, with the given number of share units.
 // The name can be an owner's address, or any other unique identifier for a position.
 // It sets the position's accumulator to the given value of customAccumulatorValue.
 // All custom accumulator values must be non-negative.
