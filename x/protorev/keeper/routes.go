@@ -200,7 +200,7 @@ func (k Keeper) GetAndCheckPool(ctx sdk.Context, poolId uint64) (gammtypes.CFMMP
 }
 
 // GetRouteWeight retrieves the weight of a route. The weight of a route is determined by the pools that are used in the route.
-// If the route includes a stable pool, the weight of the route is 2. Otherwise, the weight of the route is 1.
+// Different pools will have different execution times hence the need for a weighted point system.
 func (k Keeper) GetRouteWeight(ctx sdk.Context, route swaproutertypes.SwapAmountInRoutes) (uint64, error) {
 	// Routes must always be of length 3
 	if route.Length() != 3 {
@@ -214,11 +214,17 @@ func (k Keeper) GetRouteWeight(ctx sdk.Context, route swaproutertypes.SwapAmount
 		return 0, err
 	}
 
+	// Get the weights of the route types
+	routeWeights, err := k.GetRouteWeights(ctx)
+	if err != nil {
+		return 0, err
+	}
+
 	switch poolType {
 	case swaproutertypes.Balancer:
-		return 1, nil
+		return routeWeights.BalancerWeight, nil
 	case swaproutertypes.Stableswap:
-		return 2, nil
+		return routeWeights.StableWeight, nil
 	default:
 		return 0, fmt.Errorf("invalid pool type")
 	}

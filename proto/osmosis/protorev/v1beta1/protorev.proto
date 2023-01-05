@@ -55,3 +55,14 @@ message PoolStatistics {
   // pool_id is the id of the pool
   uint64 pool_id = 3;
 }
+
+// RouteWeights contains the weights of all of the different route types. Routes
+// are broken up into different types based on the pool that is sandwiched in
+// between the arbitrage route. This distinction is made and necessary because
+// the execution time ranges fairly between the different route types.
+message RouteWeights {
+  // The weight of a route that includes a stableswap pool
+  uint64 stable_weight = 1;
+  // The weight of a route that includes a balancer pool
+  uint64 balancer_weight = 2;
+}
