@@ -11,4 +11,5 @@ var (
 	ErrInvalidPacket = sdkerrors.Register("wasm-hooks", 3, "invalid packet data")
 	ErrBadResponse   = sdkerrors.Register("wasm-hooks", 4, "cannot create response")
 	ErrWasmError     = sdkerrors.Register("wasm-hooks", 5, "wasm error")
+	ErrBadSender     = sdkerrors.Register("wasm-hooks", 6, "bad sender")
 )

@@ -73,7 +73,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	sender := sdk.AccAddress(senderHash32[:])
 	senderBech32, err := sdk.Bech32ifyAddressBytes(h.bech32PrefixAccAddr, sender)
 	if err != nil {
-		return osmoutils.NewStringErrorAcknowledgement(fmt.Sprintf("cannot convert sender address %s to bech32: %s", senderStr, err.Error()))
+		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadSender, fmt.Sprintf("cannot convert sender address %s to bech32: %s", senderStr, err.Error()))
 	}
 
 	// The funds sent on this packet need to be transferred to the intermediary account for the sender.
