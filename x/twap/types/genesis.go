@@ -81,5 +81,9 @@ func (t TwapRecord) validate() error {
 	if t.P1ArithmeticTwapAccumulator.IsNil() || t.P1ArithmeticTwapAccumulator.IsNegative() {
 		return fmt.Errorf("twap record p1 accumulator cannot be negative, was (%s)", t.P1ArithmeticTwapAccumulator)
 	}
+
+	if t.GeometricTwapAccumulator.IsNil() || t.GeometricTwapAccumulator.IsNegative() {
+		return fmt.Errorf("twap record geometric accumulator cannot be negative, was (%s)", t.GeometricTwapAccumulator)
+	}
 	return nil
 }

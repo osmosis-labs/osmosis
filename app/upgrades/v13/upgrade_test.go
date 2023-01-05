@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
+
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -12,7 +14,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
+	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 )
 
 type UpgradeTestSuite struct {
@@ -65,7 +67,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				upgradeStoreKey := suite.App.AppKeepers.GetKey(upgradetypes.StoreKey)
 				store := suite.Ctx.KVStore(upgradeStoreKey)
 				versionStore := prefix.NewStore(store, []byte{upgradetypes.VersionMapByte})
-				versionStore.Delete([]byte(ibc_hooks.ModuleName))
+				versionStore.Delete([]byte(ibchookstypes.ModuleName))
 
 				hasAcc := suite.App.AccountKeeper.HasAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
 				suite.Require().False(hasAcc)

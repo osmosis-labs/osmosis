@@ -34,23 +34,27 @@ import (
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	ibchooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
+	downtimedetector "github.com/osmosis-labs/osmosis/v13/x/downtime-detector"
+	downtimetypes "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/types"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
+	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
+	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
+	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
-	icahost "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host"
-	icahostkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/keeper"
-	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v3/modules/apps/transfer/keeper"
-	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
-	ibcclient "github.com/cosmos/ibc-go/v3/modules/core/02-client"
-	ibcclienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
-	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
-	ibchost "github.com/cosmos/ibc-go/v3/modules/core/24-host"
-	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
+	icahost "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host"
+	icahostkeeper "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/keeper"
+	icahosttypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/types"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v4/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	ibcclient "github.com/cosmos/ibc-go/v4/modules/core/02-client"
+	ibcclienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
+	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
+	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
+	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
 
 	// IBC Transfer: Defines the "transfer" IBC port
-	transfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer"
+	transfer "github.com/cosmos/ibc-go/v4/modules/apps/transfer"
 
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v13/wasmbinding"
@@ -99,8 +103,10 @@ type AppKeepers struct {
 	AuthzKeeper          *authzkeeper.Keeper
 	StakingKeeper        *stakingkeeper.Keeper
 	DistrKeeper          *distrkeeper.Keeper
+	DowntimeKeeper       *downtimedetector.Keeper
 	SlashingKeeper       *slashingkeeper.Keeper
 	IBCKeeper            *ibckeeper.Keeper
+	IBCHooksKeeper       *ibchookskeeper.Keeper
 	ICAHostKeeper        *icahostkeeper.Keeper
 	TransferKeeper       *ibctransferkeeper.Keeper
 	EvidenceKeeper       *evidencekeeper.Keeper
@@ -188,6 +194,10 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.DistrKeeper = &distrKeeper
 
+	appKeepers.DowntimeKeeper = downtimedetector.NewKeeper(
+		appKeepers.keys[downtimetypes.StoreKey],
+	)
+
 	slashingKeeper := slashingkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[slashingtypes.StoreKey],
@@ -206,7 +216,13 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.ScopedIBCKeeper,
 	)
 
-	appKeepers.WireICS20PreWasmKeeper(appCodec, bApp)
+	// Configure the hooks keeper
+	hooksKeeper := ibchookskeeper.NewKeeper(
+		appKeepers.keys[ibchookstypes.StoreKey],
+	)
+	appKeepers.IBCHooksKeeper = &hooksKeeper
+
+	appKeepers.WireICS20PreWasmKeeper(appCodec, bApp, appKeepers.IBCHooksKeeper)
 
 	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, appKeepers.keys[icahosttypes.StoreKey],
@@ -349,7 +365,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.Ics20WasmHooks.ContractKeeper = appKeepers.ContractKeeper
 
 	// wire up x/wasm to IBC
-	ibcRouter.AddRoute(wasm.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper))
+	ibcRouter.AddRoute(wasm.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper, appKeepers.IBCKeeper.ChannelKeeper))
 	appKeepers.IBCKeeper.SetRouter(ibcRouter)
 
 	// register the proposal types
@@ -387,9 +403,10 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 // appkeepers.WasmHooks AND appKeepers.RateLimitingICS4Wrapper
 func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
 	appCodec codec.Codec,
-	bApp *baseapp.BaseApp) {
+	bApp *baseapp.BaseApp,
+	hooksKeeper *ibchookskeeper.Keeper) {
 	// Setup the ICS4Wrapper used by the hooks middleware
-	wasmHooks := ibchooks.NewWasmHooks(nil) // The contract keeper needs to be set later
+	wasmHooks := ibchooks.NewWasmHooks(hooksKeeper, nil) // The contract keeper needs to be set later
 	appKeepers.Ics20WasmHooks = &wasmHooks
 	appKeepers.HooksICS4Wrapper = ibchooks.NewICS4Middleware(
 		appKeepers.IBCKeeper.ChannelKeeper,
@@ -572,6 +589,7 @@ func KVStoreKeys() []string {
 		stakingtypes.StoreKey,
 		minttypes.StoreKey,
 		distrtypes.StoreKey,
+		downtimetypes.StoreKey,
 		slashingtypes.StoreKey,
 		govtypes.StoreKey,
 		paramstypes.StoreKey,
@@ -592,5 +610,6 @@ func KVStoreKeys() []string {
 		superfluidtypes.StoreKey,
 		wasm.StoreKey,
 		tokenfactorytypes.StoreKey,
+		ibchookstypes.StoreKey,
 	}
 }

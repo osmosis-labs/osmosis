@@ -83,3 +83,13 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		Twaps:  twapRecords,
 	}
 }
+
+// GetGeometricStrategy gets geometric TWAP keeper.
+func (k Keeper) GetGeometricStrategy() *geometric {
+	return &geometric{k}
+}
+
+// GetArithmeticStrategy gets arithmetic TWAP keeper.
+func (k Keeper) GetArithmeticStrategy() *arithmetic {
+	return &arithmetic{k}
+}

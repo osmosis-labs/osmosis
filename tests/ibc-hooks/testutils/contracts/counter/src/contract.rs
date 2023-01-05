@@ -36,6 +36,40 @@ pub fn instantiate(
         .add_attribute("count", msg.count.to_string()))
 }
 
+pub mod utils {
+    use cosmwasm_std::Addr;
+
+    use super::*;
+
+    pub fn update_counter(
+        deps: DepsMut,
+        sender: Addr,
+        update_counter: &dyn Fn(&Option<Counter>) -> i32,
+        update_funds: &dyn Fn(&Option<Counter>) -> Vec<Coin>,
+    ) -> Result<bool, ContractError> {
+        COUNTERS
+            .update(
+                deps.storage,
+                sender.clone(),
+                |state| -> Result<_, ContractError> {
+                    match state {
+                        None => Ok(Counter {
+                            count: update_counter(&None),
+                            total_funds: update_funds(&None),
+                            owner: sender,
+                        }),
+                        Some(counter) => Ok(Counter {
+                            count: update_counter(&Some(counter.clone())),
+                            total_funds: update_funds(&Some(counter)),
+                            owner: sender,
+                        }),
+                    }
+                },
+            )
+            .map(|_r| true)
+    }
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
@@ -53,47 +87,76 @@ pub mod execute {
     use super::*;
 
     pub fn increment(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
-        COUNTERS.update(
-            deps.storage,
-            info.sender.clone(),
-            |state| -> Result<_, ContractError> {
-                match state {
-                    None => Ok(Counter {
-                        count: 0,
-                        total_funds: vec![],
-                        owner: info.sender.clone(),
-                    }),
-                    Some(counter) => Ok(Counter {
-                        count: counter.count + 1,
-                        total_funds: naive_add_coins(&info.funds, &counter.total_funds),
-                        owner: info.sender.clone(),
-                    }),
-                }
+        utils::update_counter(
+            deps,
+            info.sender,
+            &|counter| match counter {
+                None => 0,
+                Some(counter) => counter.count + 1,
+            },
+            &|counter| match counter {
+                None => info.funds.clone(),
+                Some(counter) => naive_add_coins(&info.funds, &counter.total_funds),
             },
         )?;
-
         Ok(Response::new().add_attribute("action", "increment"))
     }
 
     pub fn reset(deps: DepsMut, info: MessageInfo, count: i32) -> Result<Response, ContractError> {
-        COUNTERS.update(
-            deps.storage,
-            info.sender.clone(),
-            |state| -> Result<_, ContractError> {
-                match state {
-                    None => Err(ContractError::Unauthorized {}),
-                    Some(state) if state.owner != info.sender.clone() => {
-                        Err(ContractError::Unauthorized {})
-                    }
-                    _ => Ok(Counter {
-                        count,
-                        total_funds: vec![],
-                        owner: info.sender.clone(),
-                    }),
-                }
-            },
-        )?;
+        utils::update_counter(deps, info.sender, &|_counter| count, &|_counter| vec![])?;
         Ok(Response::new().add_attribute("action", "reset"))
+    }
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn sudo(deps: DepsMut, env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
+    match msg {
+        SudoMsg::ReceiveAck {
+            channel: _,
+            sequence: _,
+            ack: _,
+            success,
+        } => sudo::receive_ack(deps, env.contract.address, success),
+        SudoMsg::IBCTimeout {
+            channel: _,
+            sequence: _,
+        } => sudo::ibc_timeout(deps, env.contract.address),
+    }
+}
+
+pub mod sudo {
+    use cosmwasm_std::Addr;
+
+    use super::*;
+
+    pub fn receive_ack(
+        deps: DepsMut,
+        contract: Addr,
+        _success: bool,
+    ) -> Result<Response, ContractError> {
+        utils::update_counter(
+            deps,
+            contract,
+            &|counter| match counter {
+                None => 1,
+                Some(counter) => counter.count + 1,
+            },
+            &|_counter| vec![],
+        )?;
+        Ok(Response::new().add_attribute("action", "ack"))
+    }
+
+    pub(crate) fn ibc_timeout(deps: DepsMut, contract: Addr) -> Result<Response, ContractError> {
+        utils::update_counter(
+            deps,
+            contract,
+            &|counter| match counter {
+                None => 10,
+                Some(counter) => counter.count + 10,
+            },
+            &|_counter| vec![],
+        )?;
+        Ok(Response::new().add_attribute("action", "timeout"))
     }
 }
 
@@ -105,7 +168,6 @@ pub fn naive_add_coins(lhs: &Vec<Coin>, rhs: &Vec<Coin>) -> Vec<Coin> {
     for coin in lhs {
         coins.insert(coin.denom.clone(), coin.amount);
     }
-
 
     for coin in rhs {
         coins
@@ -260,12 +322,20 @@ mod tests {
 
         // beneficiary can release it
         let unauth_info = mock_info("anyone", &coins(2, "token"));
-        let msg = ExecuteMsg::Reset { count: 5 };
-        let res = execute(deps.as_mut(), mock_env(), unauth_info, msg);
-        match res {
-            Err(ContractError::Unauthorized {}) => {}
-            _ => panic!("Must return unauthorized error"),
-        }
+        let msg = ExecuteMsg::Reset { count: 7 };
+        let _res = execute(deps.as_mut(), mock_env(), unauth_info, msg);
+
+        // should be 7
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetCount {
+                addr: Addr::unchecked("anyone"),
+            },
+        )
+        .unwrap();
+        let value: GetCountResponse = from_binary(&res).unwrap();
+        assert_eq!(7, value.count);
 
         // only the original creator can reset the counter
         let auth_info = mock_info("creator", &coins(2, "token"));
@@ -283,5 +353,43 @@ mod tests {
         .unwrap();
         let value: GetCountResponse = from_binary(&res).unwrap();
         assert_eq!(5, value.count);
+    }
+
+    #[test]
+    fn acks() {
+        let mut deps = mock_dependencies();
+        let env = mock_env();
+        let get_msg = QueryMsg::GetCount {
+            addr: Addr::unchecked(env.clone().contract.address),
+        };
+
+        // No acks
+        query(deps.as_ref(), env.clone(), get_msg.clone()).unwrap_err();
+
+        let msg = SudoMsg::ReceiveAck {
+            channel: format!("channel-0"),
+            sequence: 1,
+            ack: String::new(),
+            success: true,
+        };
+        let _res = sudo(deps.as_mut(), env.clone(), msg).unwrap();
+
+        // should increase counter by 1
+        let res = query(deps.as_ref(), env.clone(), get_msg.clone()).unwrap();
+        let value: GetCountResponse = from_binary(&res).unwrap();
+        assert_eq!(1, value.count);
+
+        let msg = SudoMsg::ReceiveAck {
+            channel: format!("channel-0"),
+            sequence: 1,
+            ack: String::new(),
+            success: true,
+        };
+        let _res = sudo(deps.as_mut(), env.clone(), msg).unwrap();
+
+        // should increase counter by 1
+        let res = query(deps.as_ref(), env, get_msg).unwrap();
+        let value: GetCountResponse = from_binary(&res).unwrap();
+        assert_eq!(2, value.count);
     }
 }
