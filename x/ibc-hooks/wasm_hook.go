@@ -49,7 +49,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 		// Not configured
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
-
+	fmt.Println("executing wasm hook on recv packet")
 	isIcs20, data := isIcs20Packet(packet)
 	if !isIcs20 {
 		return im.App.OnRecvPacket(ctx, packet, relayer)
@@ -75,6 +75,8 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	if err != nil {
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadSender, fmt.Sprintf("cannot convert sender address %s to bech32: %s", senderStr, err.Error()))
 	}
+	fmt.Println("original sender", senderStr)
+	fmt.Println("sender", senderBech32)
 
 	// The funds sent on this packet need to be transferred to the intermediary account for the sender.
 	// For this, we override the ICS20 packet's Receiver (essentially hijacking the funds to this new address)
@@ -106,6 +108,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	denom := osmoutils.MustExtractDenomFromPacketOnRecv(packet)
 	funds := sdk.NewCoins(sdk.NewCoin(denom, amount))
 
+	fmt.Println("contract address", contractAddr.String())
 	// Execute the contract
 	execMsg := wasmtypes.MsgExecuteContract{
 		Sender:   senderBech32,
@@ -114,11 +117,13 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 		Funds:    funds,
 	}
 	response, err := h.execWasmMsg(ctx, &execMsg)
+	fmt.Println("response", response, err)
 	if err != nil {
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrWasmError, err.Error())
 	}
 
 	fullAck := ContractAck{ContractResult: response.Data, IbcAck: ack.Acknowledgement()}
+	fmt.Println("full ack", fullAck)
 	bz, err = json.Marshal(fullAck)
 	if err != nil {
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadResponse, err.Error())

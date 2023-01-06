@@ -3,6 +3,7 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"io"
 	"os"
 	"path/filepath"
@@ -163,7 +164,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	s.NoError(err)
 
 	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
-	chainA.LatestCodeId = 1
+	chainA.LatestCodeId = int(node.QueryLatestWasmCodeID())
 	node.InstantiateWasmContract(
 		strconv.Itoa(chainA.LatestCodeId),
 		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [{"channel_id": "channel-0", "denom": "%s", "quotas": [{"name":"testQuota", "duration": 86400, "send_recv": [1, 1]}] } ] }`, node.PublicAddress, node.PublicAddress, initialization.OsmoToken.Denom),
@@ -237,9 +238,8 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 
 	nodeA, err := chainA.GetDefaultNode()
 	s.NoError(err)
-
-	// Sending >1%
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
+	nodeB, err := chainB.GetDefaultNode()
+	s.NoError(err)
 
 	// copy the contract from x/rate-limit/testdata/
 	wd, err := os.Getwd()
@@ -250,70 +250,52 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	err = copyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
 	s.NoError(err)
 
-	nodeA.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
-	chainA.LatestCodeId = 1
+	nodeA.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
+	chainA.LatestCodeId = int(nodeA.QueryLatestWasmCodeID())
 	nodeA.InstantiateWasmContract(
 		strconv.Itoa(chainA.LatestCodeId),
-		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [{"channel_id": "channel-0", "denom": "%s", "quotas": [{"name":"testQuota", "duration": 86400, "send_recv": [1, 1]}] } ] }`, nodeA.PublicAddress, nodeA.PublicAddress, initialization.OsmoToken.Denom),
+		`{"count": 0}`,
 		initialization.ValidatorWalletName)
 
 	// Using code_id 1 because this is the only contract right now. This may need to change if more contracts are added
 	contracts, err := nodeA.QueryContractsFromId(chainA.LatestCodeId)
 	s.NoError(err)
-	s.Require().Len(contracts, 1, "Wrong number of contracts for the rate limiter")
+	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
+	contractAddr := contracts[0]
 
-	proposal := paramsutils.ParamChangeProposalJSON{
-		Title:       "Param Change",
-		Description: "Changing the rate limit contract param",
-		Changes: paramsutils.ParamChangesJSON{
-			paramsutils.ParamChangeJSON{
-				Subspace: ibcratelimittypes.ModuleName,
-				Key:      "contract",
-				Value:    []byte(fmt.Sprintf(`"%s"`, contracts[0])),
-			},
-		},
-		Deposit: "625000000uosmo",
-	}
-	proposalJson, err := json.Marshal(proposal)
-	s.NoError(err)
+	nodeB.SendIBCTransfer(initialization.ValidatorWalletName, contractAddr, "10uosmo",
+		fmt.Sprintf(`"{\"wasm\":{\"contract\":\"%s\",\"msg\": {\"increment\": {}} }}"`, contractAddr))
 
-	nodeA.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
-	chainA.LatestProposalNumber += 1
-
-	for _, n := range chainA.NodeConfigs {
-		n.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
-	}
-
-	// The value is returned as a string, so we have to unmarshal twice
-	type Params struct {
-		Key      string `json:"key"`
-		Subspace string `json:"subspace"`
-		Value    string `json:"value"`
-	}
-
-	s.Eventually(
-		func() bool {
-			var params Params
-			nodeA.QueryParams(ibcratelimittypes.ModuleName, "contract", &params)
-			var val string
-			err := json.Unmarshal([]byte(params.Value), &val)
-			if err != nil {
-				return false
-			}
-			return val == contracts[0]
-		},
+	// check the balance of the contract
+	s.Eventually(func() bool {
+		balance, err := nodeA.QueryBalances(contractAddr)
+		s.Require().NoError(err)
+		if len(balance) == 0 {
+			return false
+		}
+		return balance[0].Amount.Int64() == 10
+	},
 		1*time.Minute,
 		10*time.Millisecond,
-		"Osmosis nodeA failed to retrieve params",
 	)
 
-	// Sending <1%. Should work
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
-	// Sending >1%. Should fail
-	nodeA.FailIBCTransfer(initialization.ValidatorWalletName, chainB.NodeConfigs[0].PublicAddress, fmt.Sprintf("%duosmo", int(over)))
+	// sender wasm addr
+	validatorAddr := nodeB.GetWallet(initialization.ValidatorWalletName)
+	fmt.Println("validatorAddr", validatorAddr)
+	senderStr := fmt.Sprintf("%s/%s", "channel-0", validatorAddr)
+	senderHash32 := address.Hash("ibc-memo-action", []byte(senderStr))
+	sender := sdk.AccAddress(senderHash32[:])
+	senderBech32, err := sdk.Bech32ifyAddressBytes("osmo", sender)
 
-	// Removing the rate limit so it doesn't affect other tests
-	nodeA.WasmExecute(contracts[0], `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
+	s.Eventually(func() bool {
+		x := nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
+		fmt.Println(x)
+		return len(x) > 0
+	},
+		1*time.Minute,
+		10*time.Millisecond,
+	)
+
 }
 
 // TestAddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.

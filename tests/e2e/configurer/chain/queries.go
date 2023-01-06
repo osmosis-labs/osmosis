@@ -2,6 +2,7 @@ package chain
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -108,6 +109,40 @@ func (n *NodeConfig) QueryContractsFromId(codeId int) ([]string, error) {
 	}
 
 	return contractsResponse.Contracts, nil
+}
+
+func (n *NodeConfig) QueryLatestWasmCodeID() uint64 {
+	path := "/cosmwasm/wasm/v1/code"
+
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var response wasmtypes.QueryCodesResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err)
+	if len(response.CodeInfos) == 0 {
+		return 0
+	}
+	return response.CodeInfos[len(response.CodeInfos)-1].CodeID
+}
+
+func (n *NodeConfig) QueryWasmSmart(contract string, msg string) map[string]interface{} {
+	// base64-encode the msg
+	fmt.Println(msg)
+	encodedMsg := base64.StdEncoding.EncodeToString([]byte(msg))
+	path := fmt.Sprintf("/cosmwasm/wasm/v1/contract/%s/smart/%s", contract, encodedMsg)
+	fmt.Println(path)
+
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var response wasmtypes.QuerySmartContractStateResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err)
+	var responseJSON map[string]interface{}
+	err = json.Unmarshal(response.Data, &response)
+	require.NoError(n.t, err)
+	return responseJSON
 }
 
 func (n *NodeConfig) QueryPropTally(proposalNumber int) (sdk.Int, sdk.Int, sdk.Int, sdk.Int, error) {
