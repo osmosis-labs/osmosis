@@ -228,6 +228,94 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	node.WasmExecute(contracts[0], `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
 }
 
+func (s *IntegrationTestSuite) TestIBCWasmHooks() {
+	if s.skipIBC {
+		s.T().Skip("Skipping IBC tests")
+	}
+	chainA := s.configurer.GetChainConfig(0)
+	chainB := s.configurer.GetChainConfig(1)
+
+	nodeA, err := chainA.GetDefaultNode()
+	s.NoError(err)
+
+	// Sending >1%
+	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
+
+	// copy the contract from x/rate-limit/testdata/
+	wd, err := os.Getwd()
+	s.NoError(err)
+	// co up two levels
+	projectDir := filepath.Dir(filepath.Dir(wd))
+	fmt.Println(wd, projectDir)
+	err = copyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
+	s.NoError(err)
+
+	nodeA.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
+	chainA.LatestCodeId = 1
+	nodeA.InstantiateWasmContract(
+		strconv.Itoa(chainA.LatestCodeId),
+		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [{"channel_id": "channel-0", "denom": "%s", "quotas": [{"name":"testQuota", "duration": 86400, "send_recv": [1, 1]}] } ] }`, nodeA.PublicAddress, nodeA.PublicAddress, initialization.OsmoToken.Denom),
+		initialization.ValidatorWalletName)
+
+	// Using code_id 1 because this is the only contract right now. This may need to change if more contracts are added
+	contracts, err := nodeA.QueryContractsFromId(chainA.LatestCodeId)
+	s.NoError(err)
+	s.Require().Len(contracts, 1, "Wrong number of contracts for the rate limiter")
+
+	proposal := paramsutils.ParamChangeProposalJSON{
+		Title:       "Param Change",
+		Description: "Changing the rate limit contract param",
+		Changes: paramsutils.ParamChangesJSON{
+			paramsutils.ParamChangeJSON{
+				Subspace: ibcratelimittypes.ModuleName,
+				Key:      "contract",
+				Value:    []byte(fmt.Sprintf(`"%s"`, contracts[0])),
+			},
+		},
+		Deposit: "625000000uosmo",
+	}
+	proposalJson, err := json.Marshal(proposal)
+	s.NoError(err)
+
+	nodeA.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
+	chainA.LatestProposalNumber += 1
+
+	for _, n := range chainA.NodeConfigs {
+		n.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
+	}
+
+	// The value is returned as a string, so we have to unmarshal twice
+	type Params struct {
+		Key      string `json:"key"`
+		Subspace string `json:"subspace"`
+		Value    string `json:"value"`
+	}
+
+	s.Eventually(
+		func() bool {
+			var params Params
+			nodeA.QueryParams(ibcratelimittypes.ModuleName, "contract", &params)
+			var val string
+			err := json.Unmarshal([]byte(params.Value), &val)
+			if err != nil {
+				return false
+			}
+			return val == contracts[0]
+		},
+		1*time.Minute,
+		10*time.Millisecond,
+		"Osmosis nodeA failed to retrieve params",
+	)
+
+	// Sending <1%. Should work
+	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
+	// Sending >1%. Should fail
+	nodeA.FailIBCTransfer(initialization.ValidatorWalletName, chainB.NodeConfigs[0].PublicAddress, fmt.Sprintf("%duosmo", int(over)))
+
+	// Removing the rate limit so it doesn't affect other tests
+	nodeA.WasmExecute(contracts[0], `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
+}
+
 // TestAddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.
 func (s *IntegrationTestSuite) TestAddToExistingLockPostUpgrade() {
 	if s.skipUpgrade {
