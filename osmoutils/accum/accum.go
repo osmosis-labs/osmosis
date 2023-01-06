@@ -77,7 +77,7 @@ func (accum *AccumulatorObject) UpdateAccumulator(amt sdk.DecCoins) {
 // The position is initialized with empty unclaimed rewards
 // If there is an existing position for the given address, it is overwritten.
 func (accum AccumulatorObject) NewPosition(name string, numShareUnits sdk.Dec, options *Options) error {
-	return accum.newPosition(name, numShareUnits, accum.value, options)
+	return accum.NewPositionCustomAcc(name, numShareUnits, accum.value, options)
 }
 
 // NewPositionCustomAcc creates a new position for the given name, with the given number of share units.
@@ -90,17 +90,12 @@ func (accum AccumulatorObject) NewPositionCustomAcc(name string, numShareUnits s
 	if customAccumulatorValue.IsAnyNegative() {
 		return NegativeCustomAccError{customAccumulatorValue}
 	}
-	return accum.newPosition(name, numShareUnits, customAccumulatorValue, options)
-}
 
-func (accum AccumulatorObject) newPosition(name string, numShareUnits sdk.Dec, positionAccumulatorInit sdk.DecCoins, options *Options) error {
 	if err := options.validate(); err != nil {
 		return err
 	}
 
-	// TODO: add a check that a position does not exist to avoid erroneous override.
-
-	createNewPosition(accum, positionAccumulatorInit, name, numShareUnits, sdk.NewDecCoins(), options)
+	createNewPosition(accum, customAccumulatorValue, name, numShareUnits, sdk.NewDecCoins(), options)
 	return nil
 }
 
