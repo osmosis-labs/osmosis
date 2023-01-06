@@ -413,14 +413,19 @@ func TestMessageConcentratedLiquiditySerialization(t *testing.T, msg sdk.Msg) {
 		bz := json.RawMessage(sdk.MustSortJSON(clCdc.MustMarshalJSON(m)))
 		err := clCdc.UnmarshalJSON(bz, &mockMsgCreateConcentratedPool)
 		require.NoError(t, err)
+		require.Equal(t, m, &mockMsgCreateConcentratedPool)
 	} else if m, ok := msg.(*cltypes.MsgWithdrawPosition); ok {
 		bz := json.RawMessage(sdk.MustSortJSON(clCdc.MustMarshalJSON(m)))
 		err := clCdc.UnmarshalJSON(bz, &mockMsgWithdrawPosition)
 		require.NoError(t, err)
+		require.Equal(t, m, &mockMsgWithdrawPosition)
 	} else if m, ok := msg.(*cltypes.MsgCreatePosition); ok {
 		bz := json.RawMessage(sdk.MustSortJSON(clCdc.MustMarshalJSON(m)))
 		err := clCdc.UnmarshalJSON(bz, &mockMsgCreatePosition)
 		require.NoError(t, err)
+		require.Equal(t, m, &mockMsgCreatePosition)
+	} else {
+		t.Errorf("%s not supported by TestMessageConcentratedLiquiditySerialization", msg)
 	}
 }
 
