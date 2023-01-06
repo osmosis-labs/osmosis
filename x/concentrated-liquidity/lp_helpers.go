@@ -1,6 +1,8 @@
 package concentrated_liquidity
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -58,6 +60,11 @@ func (k Keeper) initOrUpdatePosition(
 
 	// TODO: consider deleting position if liquidity becomes zero
 
+	if isIncentivized {
+		position.FrozenUntil = ctx.BlockTime().Add(types.IncentivizedPositionFreezeTime)
+	}
+	fmt.Printf("position frozen until: %v \n", position.FrozenUntil)
+
 	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, position)
 	return nil
 }
@@ -93,6 +100,24 @@ func (k Keeper) setPosition(ctx sdk.Context,
 	position *model.Position,
 ) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.KeyPosition(poolId, owner, lowerTick, upperTick, position.IsIncentivized)
+	// If the position has any entry for FrozenUntil, it is incentivized.
+	positionIsIncentivized := !position.FrozenUntil.IsZero()
+	fmt.Printf("positionIsIncentivized: %v \n", positionIsIncentivized)
+	// We key by bool isIncentivized rather than the position's FrozenUntil field, because it is a better design
+	// choice to group a user's incentivized and non-incentivized positions together rather than creating
+	// a new entry for every one.
+	key := types.KeyPosition(poolId, owner, lowerTick, upperTick, positionIsIncentivized)
 	osmoutils.MustSet(store, key, position)
+}
+
+// checkPositionFreezeTime checks in the provided position has existed for longer than the incentivized position freeze time.
+// If the position has existed for longer than the incentivized position freeze time, it returns true.
+// If the position has not existed for longer than the incentivized position freeze time, it returns false.
+func (k Keeper) checkPositionIsFrozen(ctx sdk.Context, position *model.Position) bool {
+	// If the position has any entry for FrozenUntil, it is incentivized.
+	positionIsIncentivized := !position.FrozenUntil.IsZero()
+	if positionIsIncentivized {
+		return ctx.BlockTime().Before(position.FrozenUntil)
+	}
+	return false
 }

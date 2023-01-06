@@ -54,6 +54,9 @@ var (
 func (s *KeeperTestSuite) TestCreatePosition() {
 	tests := map[string]lpTest{
 		"base case": {},
+		"base case without incentives": {
+			isIncentivized: false,
+		},
 		"create a position with non default tick spacing (10) with ticks that fall into tick spacing requirements": {
 			lowerTick:       int64(84220),
 			upperTick:       int64(86130),
@@ -204,7 +207,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		// when this is set, it ovewrites the setupConfig
 		// and gives the overwritten configuration to
 		// the system under test.
-		sutConfigOverwrite *lpTest
+		sutConfigOverwrite           *lpTest
+		withdrawIncentivizedPosition bool
 	}{
 		"base case: withdraw full liquidity amount": {
 			// setup parameters for creating a pool and position.
@@ -215,7 +219,9 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			sutConfigOverwrite: &lpTest{
 				amount0Expected: baseCase.amount0Expected, // 0.998587 eth
 				amount1Expected: baseCase.amount1Expected, // 5000 usdc
+				isIncentivized:  false,
 			},
+			withdrawIncentivizedPosition: false,
 		},
 		"withdraw partial liquidity amount": {
 			// setup parameters for creating a pool and position.
@@ -228,7 +234,21 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 				amount0Expected: baseCase.amount0Expected.QuoRaw(2), // 0.4992935 / 2 eth
 				amount1Expected: baseCase.amount1Expected.QuoRaw(2), // 2499 usdc
+				isIncentivized:  false,
 			},
+			withdrawIncentivizedPosition: false,
+		},
+		"error: withdraw position but incentives mismatch": {
+			// setup parameters for creation a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			// for withdrawing a position.
+			sutConfigOverwrite: &lpTest{
+				isIncentivized: true,
+				expectedError:  types.PositionNotFoundError{PoolId: 1, LowerTick: -1, UpperTick: 86129},
+			},
+			withdrawIncentivizedPosition: false,
 		},
 		"error: no position created": {
 			// setup parameters for creation a pool and position.
@@ -240,6 +260,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				lowerTick:     -1, // valid tick at which no position exists
 				expectedError: types.PositionNotFoundError{PoolId: 1, LowerTick: -1, UpperTick: 86129},
 			},
+			withdrawIncentivizedPosition: true,
 		},
 		"error: pool id for pool that does not exist": {
 			// setup parameters for creating a pool and position.
@@ -251,6 +272,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				poolId:        2, // does not exist
 				expectedError: types.PoolNotFoundError{PoolId: 2},
 			},
+			withdrawIncentivizedPosition: true,
 		},
 		"error: upper tick out of bounds": {
 			// setup parameters for creating a pool and position.
@@ -262,6 +284,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				upperTick:     types.MaxTick + 1, // invalid tick
 				expectedError: types.InvalidTickError{Tick: types.MaxTick + 1, IsLower: false},
 			},
+			withdrawIncentivizedPosition: true,
 		},
 		"error: lower tick out of bounds": {
 			// setup parameters for creating a pool and position.
@@ -273,6 +296,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				lowerTick:     types.MinTick - 1, // invalid tick
 				expectedError: types.InvalidTickError{Tick: types.MinTick - 1, IsLower: true},
 			},
+			withdrawIncentivizedPosition: true,
 		},
 		"error: insufficient liquidity": {
 			// setup parameters for creating a pool and position.
@@ -284,6 +308,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				liquidityAmount: baseCase.liquidityAmount.Add(sdk.OneDec()), // 1 more than available
 				expectedError:   types.InsufficientLiquidityError{Actual: baseCase.liquidityAmount.Add(sdk.OneDec()), Available: baseCase.liquidityAmount},
 			},
+			withdrawIncentivizedPosition: true,
 		},
 		"error: upper tick is below the lower tick, but both are in bounds": {
 			// setup parameters for creating a pool and position.
@@ -296,6 +321,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				upperTick:     40,
 				expectedError: types.InvalidLowerUpperTickError{LowerTick: 50, UpperTick: 40},
 			},
+			withdrawIncentivizedPosition: true,
 		},
 		// TODO: test with custom amounts that potentially lead to truncations.
 	}
@@ -315,20 +341,21 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				sutConfigOverwrite          = *tc.sutConfigOverwrite
 			)
 
+			// If specific configs are provided in the test case, overwrite the config with those values.
+			mergeConfigs(&config, &sutConfigOverwrite)
+
 			// If a setupConfig is provided, use it to create a pool and position.
 			if tc.setupConfig != nil {
 				s.PrepareConcentratedPool()
 				var err error
+				fmt.Printf("config.isIncentivized %v \n", config.isIncentivized)
 				s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 				_, _, liquidityCreated, err = concentratedLiquidityKeeper.CreatePosition(ctx, config.poolId, owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), config.lowerTick, config.upperTick, config.isIncentivized)
 				s.Require().NoError(err)
 			}
 
-			// If specific configs are provided in the test case, overwrite the config with those values.
-			mergeConfigs(&config, &sutConfigOverwrite)
-
 			// System under test.
-			amtDenom0, amtDenom1, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, config.poolId, owner, config.lowerTick, config.upperTick, config.liquidityAmount, config.isIncentivized)
+			amtDenom0, amtDenom1, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, config.poolId, owner, config.lowerTick, config.upperTick, config.liquidityAmount, tc.withdrawIncentivizedPosition)
 
 			if config.expectedError != nil {
 				s.Require().Error(err)
@@ -397,6 +424,9 @@ func mergeConfigs(dst *lpTest, overwrite *lpTest) {
 		}
 		if overwrite.isNotFirstPosition != false {
 			dst.isNotFirstPosition = overwrite.isNotFirstPosition
+		}
+		if overwrite.isIncentivized != true {
+			dst.isIncentivized = overwrite.isIncentivized
 		}
 	}
 }

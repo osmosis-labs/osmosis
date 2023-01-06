@@ -113,6 +113,14 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
+	// If position was created as an incentivized position, check that the position has existed longer than the freeze time.
+	if isIncentivized {
+		positionIsFrozen := k.checkPositionIsFrozen(ctx, position)
+		if positionIsFrozen {
+			return sdk.Int{}, sdk.Int{}, types.PositionFrozenError{FrozenUntil: position.FrozenUntil, CurrentBlockTime: ctx.BlockTime()}
+		}
+	}
+
 	// Check if the requested liquidity amount to withdraw is less than or equal to the available liquidity for the position.
 	// If it is greater than the available liquidity, return an error.
 	availableLiquidity := position.Liquidity

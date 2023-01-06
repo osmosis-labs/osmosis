@@ -2,6 +2,7 @@ package types
 
 import (
 	fmt "fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -182,4 +183,13 @@ type InitialLiquidityZeroError struct {
 
 func (e InitialLiquidityZeroError) Error() string {
 	return fmt.Sprintf("first position must contain non-zero value of both assets to determine spot price: Amount0 (%s) Amount1 (%s)", e.Amount0, e.Amount1)
+}
+
+type PositionFrozenError struct {
+	FrozenUntil      time.Time
+	CurrentBlockTime time.Time
+}
+
+func (e PositionFrozenError) Error() string {
+	return fmt.Sprintf("position is frozen until: (%s) Current block time is: (%s)", e.FrozenUntil, e.CurrentBlockTime)
 }

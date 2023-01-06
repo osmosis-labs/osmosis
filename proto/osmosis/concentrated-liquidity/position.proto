@@ -6,6 +6,7 @@ syntax = "proto3";
 package osmosis.concentratedliquidity.v1beta1;
 
 import "cosmos_proto/cosmos.proto";
+import "google/protobuf/timestamp.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model";
@@ -16,5 +17,9 @@ message Position {
     (gogoproto.moretags) = "yaml:\"liquidity\"",
     (gogoproto.nullable) = false
   ];
-  bool is_incentivized = 2;
+  google.protobuf.Timestamp frozen_until = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"frozen_until\""
+  ];
 }
