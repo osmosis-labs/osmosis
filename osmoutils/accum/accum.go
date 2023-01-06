@@ -244,6 +244,8 @@ func (accum AccumulatorObject) UpdatePositionCustomAcc(name string, numShares sd
 
 // SetPositionCustomAcc sets the position's accumulator the given value.
 // Does not update shares or attempt to claim rewards.
+// The new accumulator value must be greater than or equal to the old accumulator value.
+// Returns nil on success, error otherwise.
 func (accum AccumulatorObject) SetPositionCustomAcc(name string, customAccumulatorValue sdk.DecCoins) error {
 	// Get addr's current position
 	position, err := getPosition(accum, name)
