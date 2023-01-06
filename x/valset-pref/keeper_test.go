@@ -18,6 +18,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 }
 
+// PrepareDelegateToValidatorSet generates 4 validators for the valsetpref.
+// We self assign weights and round up to 2 decimal places in validateBasic.
 func (suite *KeeperTestSuite) PrepareDelegateToValidatorSet() []types.ValidatorPreference {
 	valAddrs := suite.SetupMultipleValidators(4)
 	valPreferences := []types.ValidatorPreference{
@@ -27,7 +29,7 @@ func (suite *KeeperTestSuite) PrepareDelegateToValidatorSet() []types.ValidatorP
 		},
 		{
 			ValOperAddress: valAddrs[1],
-			Weight:         sdk.NewDecWithPrec(332, 3), // 0.332
+			Weight:         sdk.NewDecWithPrec(332, 3), // 0.33
 		},
 		{
 			ValOperAddress: valAddrs[2],
@@ -35,7 +37,7 @@ func (suite *KeeperTestSuite) PrepareDelegateToValidatorSet() []types.ValidatorP
 		},
 		{
 			ValOperAddress: valAddrs[3],
-			Weight:         sdk.NewDecWithPrec(348, 3), // 0.348
+			Weight:         sdk.NewDecWithPrec(348, 3), // 0.35
 		},
 	}
 

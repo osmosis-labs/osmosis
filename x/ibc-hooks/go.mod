@@ -4,11 +4,11 @@ go 1.18
 
 require (
 	github.com/CosmWasm/wasmd v0.29.2
-	github.com/cosmos/cosmos-sdk v0.46.7
+	github.com/cosmos/cosmos-sdk v0.45.11
 	github.com/cosmos/ibc-go/v4 v4.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230101095308-fa4e70e17dbf
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230105180642-3de6477ab495
 	github.com/spf13/cobra v1.6.1
 	github.com/tendermint/tendermint v0.34.24
 )
