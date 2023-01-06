@@ -22,6 +22,7 @@ import (
 	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
+	swaprouterqueryproto "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/queryproto"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
 	twapquerytypes "github.com/osmosis-labs/osmosis/v13/x/twap/client/queryproto"
 	txfeestypes "github.com/osmosis-labs/osmosis/v13/x/txfees/types"
@@ -110,6 +111,11 @@ func init() {
 	setWhitelistedQuery("/osmosis.superfluid.Query/AssetType", &superfluidtypes.AssetTypeResponse{})
 	setWhitelistedQuery("/osmosis.superfluid.Query/AllAssets", &superfluidtypes.AllAssetsResponse{})
 	setWhitelistedQuery("/osmosis.superfluid.Query/AssetMultiplier", &superfluidtypes.AssetMultiplierResponse{})
+
+	// swaprouter
+	setWhitelistedQuery("/osmosis.swaprouter.v1beta1.Query/NumPools", &swaprouterqueryproto.NumPoolsResponse{})
+	setWhitelistedQuery("/osmosis.swaprouter.v1beta1.Query/EstimateSwapExactAmountIn", &swaprouterqueryproto.EstimateSwapExactAmountInResponse{})
+	setWhitelistedQuery("/osmosis.swaprouter.v1beta1.Query/EstimateSwapExactAmountOut", &swaprouterqueryproto.EstimateSwapExactAmountOutRequest{})
 
 	// txfees
 	setWhitelistedQuery("/osmosis.txfees.v1beta1.Query/FeeTokens", &txfeestypes.QueryFeeTokensResponse{})
