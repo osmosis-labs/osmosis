@@ -100,7 +100,8 @@ For instance, if $k_{p1} = -4$ , then each tick starting at 1 and ending at the 
 * $tick_3 = 1.0003$
 
 This continues on until we reach a spot price of 10. At this point, since we have increased by a factor of 10, our $k_{current}$ increases from -4 to -3, and the ticks will increase as follows:
-* $tick_{90000} = 10$
+* $tick_{89999} =  9.9999$
+* $tick_{90000} = 10.000$
 * $tick_{90001} = 10.001$
 * $tick_{90002} = 10.002$
 
