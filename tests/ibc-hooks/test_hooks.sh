@@ -42,7 +42,7 @@ new_balance=$(chainA query bank balances "$CONTRACT_ADDRESS" -o json | jq -r '.b
 echo "denom: $denom, old balance: $balance, new balance: $new_balance"
 export ADDR_IN_CHAIN_A=$(chainA q ibchooks wasm-sender channel-0 "$VALIDATOR")
 QUERY=$(jenv -c -r '{"get_total_funds": {"addr": $ADDR_IN_CHAIN_A}}')
-funds=$(chainA query wasm contract-state smart "$CONTRACT_ADDRESS" "$QUERY" -o json | jq -r '.data.total_funds[].denom')
+funds=$(chainA query wasm contract-state smart "$CONTRACT_ADDRESS" "$QUERY" -o json | jq -c -r '.data.total_funds[]')
 QUERY=$(jenv -c -r '{"get_count": {"addr": $ADDR_IN_CHAIN_A}}')
-count=$(chainA query wasm contract-state smart "$CONTRACT_ADDRESS" "$QUERY" -o json |  jq -r '.data.total_funds[].amount')
+count=$(chainA query wasm contract-state smart "$CONTRACT_ADDRESS" "$QUERY" -o json |  jq -r '.data.count')
 echo "funds: $funds, count: $count"
