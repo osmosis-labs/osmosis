@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
@@ -44,13 +43,6 @@ func (h WasmHooks) ProperlyConfigured() bool {
 	return h.ContractKeeper != nil && h.ibcHooksKeeper != nil
 }
 
-func DeriveIntermediateSender(channel, originalSender, bech32Prefix string) (string, error) {
-	senderStr := fmt.Sprintf("%s/%s", channel, originalSender)
-	senderHash32 := address.Hash(types.SenderPrefix, []byte(senderStr))
-	sender := sdk.AccAddress(senderHash32[:])
-	return sdk.Bech32ifyAddressBytes(bech32Prefix, sender)
-}
-
 func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
 	if !h.ProperlyConfigured() {
 		// Not configured
@@ -76,7 +68,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	// Calculate the receiver / contract caller based on the packet's channel and sender
 	channel := packet.GetDestChannel()
 	sender := data.GetSender()
-	senderBech32, err := DeriveIntermediateSender(channel, sender, h.bech32PrefixAccAddr)
+	senderBech32, err := keeper.DeriveIntermediateSender(channel, sender, h.bech32PrefixAccAddr)
 	if err != nil {
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadSender, fmt.Sprintf("cannot convert sender address %s/%s to bech32: %s", channel, sender, err.Error()))
 	}
