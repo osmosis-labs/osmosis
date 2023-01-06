@@ -7,7 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
 	appParams "github.com/osmosis-labs/osmosis/v13/app/params"
+	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
+
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
@@ -283,5 +286,31 @@ func TestMsgWithdrawPosition(t *testing.T) {
 		} else {
 			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
 		}
+	}
+}
+
+func TestConcentratedLiquiditySerialization(t *testing.T) {
+	pk1 := ed25519.GenPrivKey().PubKey()
+	addr1 := sdk.AccAddress(pk1.Address()).String()
+	defaultTickSpacing := uint64(1)
+
+	testCases := []struct {
+		name  string
+		clMsg sdk.Msg
+	}{
+		{
+			name: "MsgCreateConcentratedPool",
+			clMsg: &clmodel.MsgCreateConcentratedPool{
+				Sender:      addr1,
+				Denom0:      "foo",
+				Denom1:      "bar",
+				TickSpacing: defaultTickSpacing,
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			apptesting.TestMessageConcentratedLiquiditySerialization(t, tc.clMsg)
+		})
 	}
 }
