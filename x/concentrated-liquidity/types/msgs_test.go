@@ -9,7 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
 	appParams "github.com/osmosis-labs/osmosis/v13/app/params"
-	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
+	model "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
@@ -293,6 +293,7 @@ func TestConcentratedLiquiditySerialization(t *testing.T) {
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	defaultTickSpacing := uint64(1)
+	defaultPoolId := uint64(1)
 
 	testCases := []struct {
 		name  string
@@ -300,11 +301,21 @@ func TestConcentratedLiquiditySerialization(t *testing.T) {
 	}{
 		{
 			name: "MsgCreateConcentratedPool",
-			clMsg: &clmodel.MsgCreateConcentratedPool{
+			clMsg: &model.MsgCreateConcentratedPool{
 				Sender:      addr1,
 				Denom0:      "foo",
 				Denom1:      "bar",
 				TickSpacing: defaultTickSpacing,
+			},
+		},
+		{
+			name: "MsgWithdrawPosition",
+			clMsg: &types.MsgWithdrawPosition{
+				PoolId:          defaultPoolId,
+				Sender:          addr1,
+				LowerTick:       int64(10000),
+				UpperTick:       int64(20000),
+				LiquidityAmount: sdk.NewInt(100),
 			},
 		},
 	}
