@@ -15,7 +15,8 @@ const (
 	uintBase              = 10
 )
 
-// createFeeAccumulator creates an accumulator object in the store using the given poolId
+// createFeeAccumulator creates an accumulator object in the store using the given poolId.
+// The accumulator is initialized with the default(zero) values.
 func (k Keeper) createFeeAccumulator(ctx sdk.Context, poolId uint64) error {
 	err := accum.MakeAccumulator(ctx.KVStore(k.storeKey), getFeeAccumulatorName(poolId))
 	if err != nil {
