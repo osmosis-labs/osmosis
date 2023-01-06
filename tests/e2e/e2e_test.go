@@ -3,11 +3,12 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/address"
+	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	"io"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
@@ -282,21 +283,17 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	)
 
 	// sender wasm addr
-	senderStr := fmt.Sprintf("%s/%s", "channel-0", validatorAddr)
-	senderHash32 := address.Hash("ibc-wasm-hook-intermediary", []byte(senderStr))
-	sender := sdk.AccAddress(senderHash32[:])
-	senderBech32, err := sdk.Bech32ifyAddressBytes("osmo", sender)
-
+	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
 	fmt.Println("sender", senderBech32)
 
 	var response map[string]interface{}
 	s.Eventually(func() bool {
 		response, err = nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
 		totalFunds := response["total_funds"].([]interface{})[0]
-		fmt.Println("totalFunds", totalFunds)
-		amount := totalFunds.(map[string]interface{})["amount"]
-		fmt.Println("amount", amount)
-		return err == nil && amount == float64(10)
+		amount := totalFunds.(map[string]interface{})["amount"].(string)
+		denom := totalFunds.(map[string]interface{})["denom"].(string)
+		// check if denom contains "uosmo"
+		return err == nil && amount == "10" && strings.Contains(denom, "ibc")
 	},
 		15*time.Second,
 		10*time.Millisecond,
