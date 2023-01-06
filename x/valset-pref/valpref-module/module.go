@@ -176,6 +176,7 @@ func (am AppModule) Actions() []simtypes.Action {
 		simtypes.NewMsgBasedAction("SetValidatorSetPreference", am.keeper, simulation.RandomMsgSetValSetPreference),
 		simtypes.NewMsgBasedAction("MsgDelegateToValidatorSet", am.keeper, simulation.RandomMsgDelegateToValSet),
 		simtypes.NewMsgBasedAction("MsgUndelegateFromValidatorSet", am.keeper, simulation.RandomMsgUnDelegateFromValSet),
-		//simtypes.NewMsgBasedAction("MsgWithdrawDelegationRewards", am.keeper, simulation.RandomMsgWithdrawRewardsFromValSet),
+		simtypes.NewMsgBasedAction("MsgRedelegateValSet", am.keeper, simulation.RandomMsgReDelegateToValSet),
+		simtypes.NewMsgBasedAction("MsgWithdrawDelegationRewards", am.keeper, simulation.RandomMsgWithdrawRewardsFromValSet),
 	}
 }

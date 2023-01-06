@@ -14,30 +14,12 @@ import (
 )
 
 func RandomMsgSetValSetPreference(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*types.MsgSetValidatorSetPreference, error) {
-	var preferences []types.ValidatorPreference
-
 	// Start with a weight of 1
 	remainingWeight := sdk.NewDec(1)
 
-	// Generate random validators with random weights that sums to 1
-	for remainingWeight.GT(sdk.ZeroDec()) {
-		randValidator := RandomValidator(ctx, sim)
-		if randValidator == nil {
-			return nil, fmt.Errorf("No validator")
-		}
-
-		randValue, err := RandomWeight(remainingWeight)
-		if err != nil {
-			return nil, fmt.Errorf("Error with random weights")
-		}
-
-		remainingWeight = remainingWeight.Sub(randValue)
-		if !randValue.Equal(sdk.ZeroDec()) {
-			preferences = append(preferences, types.ValidatorPreference{
-				ValOperAddress: randValidator.OperatorAddress,
-				Weight:         randValue,
-			})
-		}
+	preferences, err := GetRandomValAndWeights(ctx, k, sim, remainingWeight)
+	if err != nil {
+		return nil, err
 	}
 
 	return &types.MsgSetValidatorSetPreference{
@@ -84,8 +66,29 @@ func RandomMsgUnDelegateFromValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimC
 }
 
 func RandomMsgReDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*types.MsgRedelegateValidatorSet, error) {
-	// TODO: check if this is gonna be the same as SetValSetPreference
-	return nil, nil
+	delegator := sim.RandomSimAccount()
+	// check if the delegator valset created
+	err := GetRandomExistingValSet(ctx, k, sim, delegator.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	// check that the delegator has delegated tokens
+	_, err = GetRandomExistingDelegation(ctx, k, sim, delegator.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	remainingWeight := sdk.NewDec(1)
+	preferences, err := GetRandomValAndWeights(ctx, k, sim, remainingWeight)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgRedelegateValidatorSet{
+		Delegator:   delegator.Address.String(),
+		Preferences: preferences,
+	}, nil
 }
 
 func RandomMsgWithdrawRewardsFromValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*types.MsgWithdrawDelegationRewards, error) {
@@ -122,6 +125,33 @@ func RandomValidator(ctx sdk.Context, sim *osmosimtypes.SimCtx) *stakingtypes.Va
 	}
 
 	return &validators[rand.Intn(len(validators))]
+}
+
+func GetRandomValAndWeights(ctx sdk.Context, k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, remainingWeight sdk.Dec) ([]types.ValidatorPreference, error) {
+	var preferences []types.ValidatorPreference
+
+	// Generate random validators with random weights that sums to 1
+	for remainingWeight.GT(sdk.ZeroDec()) {
+		randValidator := RandomValidator(ctx, sim)
+		if randValidator == nil {
+			return nil, fmt.Errorf("No validator")
+		}
+
+		randValue, err := RandomWeight(remainingWeight)
+		if err != nil {
+			return nil, fmt.Errorf("Error with random weights")
+		}
+
+		remainingWeight = remainingWeight.Sub(randValue)
+		if !randValue.Equal(sdk.ZeroDec()) {
+			preferences = append(preferences, types.ValidatorPreference{
+				ValOperAddress: randValidator.OperatorAddress,
+				Weight:         randValue,
+			})
+		}
+	}
+
+	return preferences, nil
 }
 
 // TODO: Change this to user GetDelegations() once #3857 gets merged, issue created
