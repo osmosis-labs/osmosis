@@ -1,8 +1,6 @@
 package concentrated_liquidity_test
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
@@ -59,9 +57,88 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 				s.Require().NoError(err)
 				// position should have been properly initialzied to liquidityDelta provided
 				s.Require().Equal(positionSize, defaultLiquidityDelta)
-				fmt.Println(poolFeeAccumulator.GetValue())
 			} else {
 				s.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
+	type feeGrowthOutsideTest struct {
+		poolSetup           bool
+		tickSetup           bool
+		feeAccumulatorSetup bool
+		expectedError       bool
+	}
+
+	tests := map[string]feeGrowthOutsideTest{
+		// TODO: uncomment this once tickInfo feeGrowthOutside logic has been implemented
+		// "happy path": {
+		// 	poolSetup:           true,
+		// 	tickSetup:           true,
+		// 	feeAccumulatorSetup: true,
+		// 	expectedError:       false,
+		// },
+		// "tick has not been initialized": {
+		// 	poolSetup:           true,
+		// 	tickSetup:           false,
+		// 	feeAccumulatorSetup: true,
+		// 	expectedError:       false,
+		// },
+		"error: pool has not been setup": {
+			poolSetup:           false,
+			tickSetup:           false,
+			feeAccumulatorSetup: false,
+			expectedError:       true,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			defaultPoolId := uint64(1)
+			defaultLiquidityForTick := sdk.MustNewDecFromStr("10.0")
+			defaultUpperTickIndex := int64(5)
+			defaultLowerTickIndex := int64(3)
+
+			// if pool set up true, set up default pool
+			if tc.poolSetup {
+				s.PrepareConcentratedPool()
+			}
+
+			// if tick set up true, set upper and lower ticks to default values
+			if tc.tickSetup {
+				// first initialize upper tick
+				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(
+					s.Ctx,
+					defaultPoolId,
+					defaultUpperTickIndex,
+					defaultLiquidityForTick,
+					true,
+				)
+				s.Require().NoError(err)
+
+				// initialize lower tick
+				err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(
+					s.Ctx,
+					defaultPoolId,
+					defaultLowerTickIndex,
+					defaultLiquidityForTick,
+					true,
+				)
+				s.Require().NoError(err)
+			}
+
+			// system under test
+			feeGrowthOutside, err := s.App.ConcentratedLiquidityKeeper.GetFeeGrowthOutside(s.Ctx, defaultPoolId, defaultLowerTickIndex, defaultUpperTickIndex)
+			if tc.expectedError {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				// check if returned fee growth outside has correct value
+				s.Require().Equal(feeGrowthOutside, sdk.DecCoins{})
 			}
 		})
 	}
