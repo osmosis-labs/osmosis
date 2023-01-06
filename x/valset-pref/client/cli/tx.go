@@ -19,6 +19,8 @@ func GetTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, NewSetValSetCmd)
 	osmocli.AddTxCmd(txCmd, NewDelValSetCmd)
 	osmocli.AddTxCmd(txCmd, NewUnDelValSetCmd)
+	osmocli.AddTxCmd(txCmd, NewReDelValSetCmd)
+	osmocli.AddTxCmd(txCmd, NewWithRewValSetCmd)
 	return txCmd
 }
 
@@ -60,7 +62,7 @@ func NewReDelValSetCmd() (*osmocli.TxCliDesc, *types.MsgRedelegateValidatorSet) 
 	}, &types.MsgRedelegateValidatorSet{}
 }
 
-func NewWithDelRewCmd() (*osmocli.TxCliDesc, *types.MsgWithdrawDelegationRewards) {
+func NewWithRewValSetCmd() (*osmocli.TxCliDesc, *types.MsgWithdrawDelegationRewards) {
 	return &osmocli.TxCliDesc{
 		Use:     "withdraw-reward-valset [delegator_addr]",
 		Short:   "Withdraw delegation reward form the new validator set.",
