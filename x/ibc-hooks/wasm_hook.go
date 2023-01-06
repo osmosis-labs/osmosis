@@ -44,44 +44,42 @@ func (h WasmHooks) ProperlyConfigured() bool {
 	return h.ContractKeeper != nil && h.ibcHooksKeeper != nil
 }
 
+func DeriveIntermediateSender(channel, originalSender, bech32Prefix string) (string, error) {
+	senderStr := fmt.Sprintf("%s/%s", channel, originalSender)
+	senderHash32 := address.Hash(types.SenderPrefix, []byte(senderStr))
+	sender := sdk.AccAddress(senderHash32[:])
+	return sdk.Bech32ifyAddressBytes(bech32Prefix, sender)
+}
+
 func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
 	if !h.ProperlyConfigured() {
 		// Not configured
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
-	fmt.Println("WASM: executing wasm hook on recv packet")
 	isIcs20, data := isIcs20Packet(packet)
 	if !isIcs20 {
-		fmt.Println("WASM: not ics20")
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
 
 	// Validate the memo
 	isWasmRouted, contractAddr, msgBytes, err := ValidateAndParseMemo(data.GetMemo(), data.Receiver)
 	if !isWasmRouted {
-		fmt.Println("WASM: not routed")
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
 	if err != nil {
-		fmt.Println("WASM: err in validate")
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrMsgValidation, err.Error())
 	}
 	if msgBytes == nil || contractAddr == nil { // This should never happen
-		fmt.Println("WASM: other error")
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrMsgValidation)
 	}
 
 	// Calculate the receiver / contract caller based on the packet's channel and sender
-	senderStr := fmt.Sprintf("%s/%s", packet.GetDestChannel(), data.GetSender())
-	senderHash32 := address.Hash("ibc-memo-action", []byte(senderStr))
-	sender := sdk.AccAddress(senderHash32[:])
-	senderBech32, err := sdk.Bech32ifyAddressBytes(h.bech32PrefixAccAddr, sender)
+	channel := packet.GetDestChannel()
+	sender := data.GetSender()
+	senderBech32, err := DeriveIntermediateSender(channel, sender, h.bech32PrefixAccAddr)
 	if err != nil {
-		fmt.Println("WASM: err in sender")
-		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadSender, fmt.Sprintf("cannot convert sender address %s to bech32: %s", senderStr, err.Error()))
+		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadSender, fmt.Sprintf("cannot convert sender address %s/%s to bech32: %s", channel, sender, err.Error()))
 	}
-	fmt.Println("WASM: original sender", senderStr)
-	fmt.Println("WASM: sender", senderBech32)
 
 	// The funds sent on this packet need to be transferred to the intermediary account for the sender.
 	// For this, we override the ICS20 packet's Receiver (essentially hijacking the funds to this new address)
@@ -92,7 +90,6 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	data.Receiver = senderBech32
 	bz, err := json.Marshal(data)
 	if err != nil {
-		fmt.Println("WASM: err marshaling")
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrMarshaling, err.Error())
 	}
 	packet.Data = bz
@@ -100,7 +97,6 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	// Execute the receive
 	ack := im.App.OnRecvPacket(ctx, packet, relayer)
 	if !ack.Success() {
-		fmt.Println("WASM: err underlying")
 		return ack
 	}
 
@@ -108,7 +104,6 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	if !ok {
 		// This should never happen, as it should've been caught in the underlaying call to OnRecvPacket,
 		// but returning here for completeness
-		fmt.Println("WASM: err in validate")
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrInvalidPacket, "Amount is not an int")
 	}
 
@@ -116,7 +111,6 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	denom := osmoutils.MustExtractDenomFromPacketOnRecv(packet)
 	funds := sdk.NewCoins(sdk.NewCoin(denom, amount))
 
-	fmt.Println("contract address", contractAddr.String())
 	// Execute the contract
 	execMsg := wasmtypes.MsgExecuteContract{
 		Sender:   senderBech32,
@@ -126,12 +120,10 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	}
 	response, err := h.execWasmMsg(ctx, &execMsg)
 	if err != nil {
-		fmt.Println("WASM: err in execute")
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrWasmError, err.Error())
 	}
 
 	fullAck := ContractAck{ContractResult: response.Data, IbcAck: ack.Acknowledgement()}
-	fmt.Println("full ack", fullAck)
 	bz, err = json.Marshal(fullAck)
 	if err != nil {
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadResponse, err.Error())

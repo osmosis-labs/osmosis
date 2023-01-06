@@ -128,10 +128,8 @@ func (n *NodeConfig) QueryLatestWasmCodeID() uint64 {
 
 func (n *NodeConfig) QueryWasmSmart(contract string, msg string) (map[string]interface{}, error) {
 	// base64-encode the msg
-	fmt.Println(msg)
 	encodedMsg := base64.StdEncoding.EncodeToString([]byte(msg))
 	path := fmt.Sprintf("/cosmwasm/wasm/v1/contract/%s/smart/%s", contract, encodedMsg)
-	fmt.Println(path)
 
 	bz, err := n.QueryGRPCGateway(path)
 	if err != nil {
@@ -145,7 +143,7 @@ func (n *NodeConfig) QueryWasmSmart(contract string, msg string) (map[string]int
 	}
 
 	var responseJSON map[string]interface{}
-	err = json.Unmarshal(response.Data, &response)
+	err = json.Unmarshal(response.Data, &responseJSON)
 	if err != nil {
 		return nil, err
 	}

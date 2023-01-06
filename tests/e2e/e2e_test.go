@@ -266,7 +266,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	validatorAddr := nodeB.GetWallet(initialization.ValidatorWalletName)
 	fmt.Println("validatorAddr", validatorAddr)
 	nodeB.SendIBCTransfer(validatorAddr, contractAddr, "10uosmo",
-		fmt.Sprintf(`"{\"wasm\":{\"contract\":\"%s\",\"msg\": {\"increment\": {}} }}"`, contractAddr))
+		fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr))
 
 	// check the balance of the contract
 	s.Eventually(func() bool {
@@ -283,17 +283,25 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 
 	// sender wasm addr
 	senderStr := fmt.Sprintf("%s/%s", "channel-0", validatorAddr)
-	senderHash32 := address.Hash("ibc-memo-action", []byte(senderStr))
+	senderHash32 := address.Hash("ibc-wasm-hook-intermediary", []byte(senderStr))
 	sender := sdk.AccAddress(senderHash32[:])
 	senderBech32, err := sdk.Bech32ifyAddressBytes("osmo", sender)
 
+	fmt.Println("sender", senderBech32)
+
+	var response map[string]interface{}
 	s.Eventually(func() bool {
-		_, err := nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
-		return err == nil
+		response, err = nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
+		totalFunds := response["total_funds"].([]interface{})[0]
+		fmt.Println("totalFunds", totalFunds)
+		amount := totalFunds.(map[string]interface{})["amount"]
+		fmt.Println("amount", amount)
+		return err == nil && amount == float64(10)
 	},
-		1*time.Minute,
+		15*time.Second,
 		10*time.Millisecond,
 	)
+	fmt.Println("response", response)
 
 }
 

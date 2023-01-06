@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/version"
+	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 	"github.com/spf13/cobra"
 	"strings"
 
@@ -39,13 +39,9 @@ $ %s query ibc-hooks wasm-hooks-sender channel-42 juno12smx2wdlyttvyzvzg54y2vnqw
 		RunE: func(cmd *cobra.Command, args []string) error {
 			channelID := args[0]
 			originalSender := args[1]
-
-			senderStr := fmt.Sprintf("%s/%s", channelID, originalSender)
-			senderHash32 := address.Hash("ibc-memo-action", []byte(senderStr))
-			sender := sdk.AccAddress(senderHash32[:])
 			// ToDo: Make this flexible as an arg
 			prefix := sdk.GetConfig().GetBech32AccountAddrPrefix()
-			senderBech32, err := sdk.Bech32ifyAddressBytes(prefix, sender)
+			senderBech32, err := ibchooks.DeriveIntermediateSender(channelID, originalSender, prefix)
 			if err != nil {
 				return err
 			}

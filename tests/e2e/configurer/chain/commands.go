@@ -104,7 +104,7 @@ func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) {
 func (n *NodeConfig) SendIBCTransfer(from, recipient, amount, memo string) {
 	n.LogActionF("IBC sending %s from %s to %s. memo: %s", amount, from, recipient, memo)
 
-	cmd := []string{"osmosisd", "tx", "ibc-transfer", "transfer", "transfer", "channel-0", recipient, amount, fmt.Sprintf("--from=%s", from), fmt.Sprintf("--memo=%s", memo)}
+	cmd := []string{"osmosisd", "tx", "ibc-transfer", "transfer", "transfer", "channel-0", recipient, amount, fmt.Sprintf("--from=%s", from), "--memo", memo}
 
 	_, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "code: 0")
 	require.NoError(n.t, err)
