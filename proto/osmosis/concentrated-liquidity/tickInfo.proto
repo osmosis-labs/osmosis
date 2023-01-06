@@ -7,6 +7,7 @@ package osmosis.concentratedliquidity.v1beta1;
 
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model";
 
@@ -19,6 +20,10 @@ message TickInfo {
   string liquidity_net = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"liquidity_net\"",
+    (gogoproto.nullable) = false
+  ];
+  repeated cosmos.base.v1beta1.DecCoin fee_growth_outside = 3 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable) = false
   ];
 }
