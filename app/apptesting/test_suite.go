@@ -405,11 +405,16 @@ func TestMessageConcentratedLiquiditySerialization(t *testing.T, msg sdk.Msg) {
 
 	var (
 		mockMsgCreateConcentratedPool clmodel.MsgCreateConcentratedPool
+		mockMsgWithdrawPosition       cltypes.MsgWithdrawPosition
 	)
 
 	if m, ok := msg.(*clmodel.MsgCreateConcentratedPool); ok {
 		bz := json.RawMessage(sdk.MustSortJSON(clCdc.MustMarshalJSON(m)))
 		err := clCdc.UnmarshalJSON(bz, &mockMsgCreateConcentratedPool)
+		require.NoError(t, err)
+	} else if m, ok := msg.(*cltypes.MsgWithdrawPosition); ok {
+		bz := json.RawMessage(sdk.MustSortJSON(clCdc.MustMarshalJSON(m)))
+		err := clCdc.UnmarshalJSON(bz, &mockMsgWithdrawPosition)
 		require.NoError(t, err)
 	}
 }
