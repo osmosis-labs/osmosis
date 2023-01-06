@@ -30,6 +30,7 @@ func (n *NodeConfig) CreatePool(poolFile, from string) uint64 {
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
+	//nolint:staticcheck
 	var numPools gammtypes.QueryNumPoolsResponse
 	err = util.Cdc.UnmarshalJSON(bz, &numPools)
 	require.NoError(n.t, err)
