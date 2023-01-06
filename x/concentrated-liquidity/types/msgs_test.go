@@ -318,6 +318,19 @@ func TestConcentratedLiquiditySerialization(t *testing.T) {
 				LiquidityAmount: sdk.NewInt(100),
 			},
 		},
+		{
+			name: "MsgCreatePosition",
+			clMsg: &types.MsgCreatePosition{
+				PoolId:          defaultPoolId,
+				Sender:          addr1,
+				LowerTick:       int64(10000),
+				UpperTick:       int64(20000),
+				TokenDesired0:   sdk.NewCoin("foo", sdk.NewInt(1000)),
+				TokenDesired1:   sdk.NewCoin("bar", sdk.NewInt(1000)),
+				TokenMinAmount0: sdk.OneInt(),
+				TokenMinAmount1: sdk.OneInt(),
+			},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
