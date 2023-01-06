@@ -34,6 +34,7 @@ import (
 // thread safe sync.Map.
 var stargateWhitelist sync.Map
 
+//nolint:staticcheck
 func init() {
 	// cosmos-sdk queries
 
