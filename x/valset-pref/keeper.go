@@ -61,9 +61,10 @@ func (k Keeper) GetValidatorSetPreference(ctx sdk.Context, delegator string) (ty
 	return valsetPref, true
 }
 
-// GetDelegations checks if valset position exists, if it does return that
+// TODO: Write unit test
+// GetDelegationPreferences checks if valset position exists, if it does return that
 // else return existing delegation that's not valset.
-func (k Keeper) GetDelegations(ctx sdk.Context, delegator string) (types.ValidatorSetPreferences, error) {
+func (k Keeper) GetDelegationPreferences(ctx sdk.Context, delegator string) (types.ValidatorSetPreferences, error) {
 	valSet, exists := k.GetValidatorSetPreference(ctx, delegator)
 	if !exists {
 		delAddr, err := sdk.AccAddressFromBech32(delegator)
@@ -97,15 +98,15 @@ func (k Keeper) GetExistingStakingDelegations(ctx sdk.Context, delAddr sdk.AccAd
 	existingTotalShares := sdk.NewDec(0)
 
 	// calculate total shares that currently exists
-	for _, existingdels := range existingDelegations {
-		existingTotalShares = existingTotalShares.Add(existingdels.Shares)
+	for _, existingDelegation := range existingDelegations {
+		existingTotalShares = existingTotalShares.Add(existingDelegation.Shares)
 	}
 
 	// for each delegation format it in types.ValidatorSetPreferences format
-	for _, existingdels := range existingDelegations {
+	for _, existingDelegation := range existingDelegations {
 		existingDelsValSetFormatted = append(existingDelsValSetFormatted, types.ValidatorPreference{
-			ValOperAddress: existingdels.ValidatorAddress,
-			Weight:         existingdels.Shares.Quo(existingTotalShares),
+			ValOperAddress: existingDelegation.ValidatorAddress,
+			Weight:         existingDelegation.Shares.Quo(existingTotalShares),
 		})
 	}
 

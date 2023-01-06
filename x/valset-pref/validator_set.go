@@ -18,9 +18,10 @@ type valSet struct {
 
 // SetValidatorSetPreference creates or updates delegators validator set.
 // 1. if valset doesnot exist & user doesnot have existing delegation, store new valset.
-// 2. if valset doesnot exist, but user has existing delegation, convert it to valset and store it.
+// 2. if valset doesnot exist, but user has existing delegation, store new valset.
 // 3. if valset exists, but user doesnot have existing delegation, modify current valset.
 // 4. if valset exists & user has existing delegation, modify current valset.
+// 5. if set validator list provides empty list or not, use existing delegation and store it as valset.
 func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, preferences []types.ValidatorPreference) (types.ValidatorSetPreferences, error) {
 	existingValSet, found := k.GetValidatorSetPreference(ctx, delegator)
 	if !found {
@@ -48,7 +49,7 @@ func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, pre
 			return types.ValidatorSetPreferences{}, err
 		}
 
-		//(2) no valset but existing delegation, so convert existing delegation into valset and store it
+		//(2) list provided is empty, no valset but existing delegation, so convert existing delegation into valset and store it
 		return types.ValidatorSetPreferences{Preferences: validPreference}, nil
 	}
 
@@ -84,7 +85,7 @@ func (k Keeper) validatePreferences(ctx sdk.Context, existingPreferences, newPre
 // our delegate logic would attempt to delegate 5osmo to A , 2osmo to B, 3osmo to C
 func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
 	// get the existingValSet if it exists, if not check existingStakingPosition and return it
-	existingSet, err := k.GetDelegations(ctx, delegatorAddr)
+	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
 	if err != nil {
 		return fmt.Errorf("user %s doesn't have validator set", delegatorAddr)
 	}
@@ -122,7 +123,7 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 // our undelegate logic would attempt to undelegate 3osmo from A, 1.8osmo from B, 1.2osmo from C
 func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
 	// get the existingValSet if it exists, if not check existingStakingPosition and return it
-	existingSet, err := k.GetDelegations(ctx, delegatorAddr)
+	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
 	if err != nil {
 		return fmt.Errorf("user %s doesn't have validator set", delegatorAddr)
 	}
@@ -140,7 +141,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 		totalAmountFromWeights = totalAmountFromWeights.Add(val.Weight.Mul(tokenAmt))
 	}
 
-	// Handle rounding issue for ex: 9999.99999 = 10000
+	// Handles rounding for ex: 9999.99999 = 10000.0
 	totalAmountFromWeights = totalAmountFromWeights.RoundInt().ToDec()
 
 	if !totalAmountFromWeights.Equal(tokenAmt) {
@@ -262,7 +263,7 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 // receives new delgation the rewards can be calculated by taking (total rewards before new delegation - the total current rewards).
 func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delegatorAddr string) error {
 	// get the existingValSet if it exists, if not check existingStakingPosition and return it
-	existingSet, err := k.GetDelegations(ctx, delegatorAddr)
+	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
 	if err != nil {
 		return fmt.Errorf("user %s doesn't have validator set or existing delegations", delegatorAddr)
 	}

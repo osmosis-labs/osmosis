@@ -21,7 +21,7 @@ func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
 		expectPass             bool
 	}{
 		{
-			name:      "creation of new validator set, user doesnot have existing delegation",
+			name:      "creation of new validator set, user does not have existing delegation",
 			delegator: sdk.AccAddress([]byte("addr1---------------")),
 			preferences: []types.ValidatorPreference{
 				{
@@ -108,7 +108,7 @@ func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
 			expectPass: false,
 		},
 		{
-			name:      "user doesnot have valset, but has existing delegation",
+			name:      "user does not have valset, but has existing delegation",
 			delegator: sdk.AccAddress([]byte("addr2---------------")),
 			preferences: []types.ValidatorPreference{
 				{
@@ -125,7 +125,7 @@ func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
 			expectPass:             true, //SetValidatorSetPreference sets the existing delegations as valset and ignores test.preferences
 		},
 		{
-			name:      "user has valset, but doesnot have existing delegation",
+			name:      "user has valset, but does not have existing delegation",
 			delegator: sdk.AccAddress([]byte("addr1---------------")),
 			preferences: []types.ValidatorPreference{
 				{
@@ -617,7 +617,7 @@ func (suite *KeeperTestSuite) TestWithdrawDelegationRewards() {
 			expectPass:          true,
 		},
 		{
-			name:                  "Withdraw all rewards from existing staking delegations ",
+			name:                  "Withdraw all rewards from existing staking delegations (no val-set)",
 			delegator:             sdk.AccAddress([]byte("addr2---------------")),
 			coinsToDelegate:       sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),
 			setExistingDelegation: true,
