@@ -11,7 +11,8 @@ echo "increase bread alpha rigid glide amused approve oblige print asset idea en
 
 VALIDATOR=$(osmosisd keys show validator -a)
 
-TX_FLAGS=(--keyring-backend test --gas auto --gas-prices 0.1uosmo --gas-adjustment 1.3 -y -b block)
+args="--keyring-backend test --gas auto --gas-prices 0.1uosmo --gas-adjustment 1.3 --broadcast-mode block --yes"
+TX_FLAGS=($args)
 
 # send money to the validator on both chains
 chainA tx bank send faucet "$VALIDATOR" 1000000000uosmo "${TX_FLAGS[@]}"
@@ -38,6 +39,10 @@ chainB tx ibc-transfer transfer transfer channel-0 $CONTRACT_ADDRESS 10uosmo \
 sleep 16
 
 new_balance=$(chainA query bank balances "$CONTRACT_ADDRESS" -o json | jq -r '.balances[0].amount')
-
 echo "denom: $denom, old balance: $balance, new balance: $new_balance"
-#
+export ADDR_IN_CHAIN_A=$(chainA q ibchooks wasm-sender channel-0 "$VALIDATOR")
+QUERY=$(jenv -c -r '{"get_total_funds": {"addr": $ADDR_IN_CHAIN_A}}')
+funds=$(chainA query wasm contract-state smart "$CONTRACT_ADDRESS" "$QUERY" -o json | jq -r '.data.total_funds[].denom')
+QUERY=$(jenv -c -r '{"get_count": {"addr": $ADDR_IN_CHAIN_A}}')
+count=$(chainA query wasm contract-state smart "$CONTRACT_ADDRESS" "$QUERY" -o json |  jq -r '.data.total_funds[].amount')
+echo "funds: $funds, count: $count"
