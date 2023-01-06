@@ -73,6 +73,22 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, own
 	return nil
 }
 
+// initOrUpdateFeeAccumulatorPosition either updates or initializes a fee accumulator position.
+// if fails upon getting and updating fee accumulator position for the given pool + owner accumulator,
+// initializes the fee accumulator position.
+func (k Keeper) initOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec, lowerTick int64, upperTick int64) error {
+	// first try updating fee accum position
+	err := k.updateFeeAccumulatorPosition(ctx, poolId, owner, liquidityDelta, lowerTick, upperTick)
+	if err != nil {
+		err = k.initializeFeeAccumulatorPosition(ctx, poolId, owner, liquidityDelta)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // getFeeGrowthOutside returns fee growth upper tick - fee growth lower tick
 func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.DecCoins, error) {
 	pool, err := k.getPoolById(ctx, poolId)
