@@ -53,7 +53,7 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 		return err
 	}
 
-	if err := feeAccumulator.NewPositionCustomAcc(owner.String(), zero, sdk.NewDecCoins(), nil); err != nil {
+	if err := feeAccumulator.NewPositionCustomAcc(owner.String(), liquidityDelta, sdk.NewDecCoins(), nil); err != nil {
 		return err
 	}
 
@@ -134,33 +134,42 @@ func (k Keeper) getInitialFeeGrowthOtsideForTick(ctx sdk.Context, poolId uint64,
 	return sdk.NewDecCoins(), nil
 }
 
-func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64) error {
+func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64) (sdk.Coins, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
-		return err
+		return sdk.Coins{}, err
 	}
+
+	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, owner, lowerTick, upperTick)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	// TODO: change to owner + lower tick + upper tick.
+	// TODO: add check that position exists.
+	positionKey := owner.String()
 
 	feeAccumulator, err := k.getFeeAccumulator(ctx, poolId)
 	if err != nil {
-		return err
+		return sdk.Coins{}, err
 	}
 
 	// We need to update the position's accumulator before we claim rewards.
 	// Note that liquidity delta is zero in this case.
-	if err := k.updateFeeAccumulatorPosition(ctx, poolId, owner, zero, lowerTick, upperTick); err != nil {
-		return err
+	if err := feeAccumulator.SetPositionCustomAcc(positionKey, feeGrowthOutside); err != nil {
+		return sdk.Coins{}, err
 	}
 
-	rewardsClaimed, err := feeAccumulator.ClaimRewards(owner.String())
+	rewardsClaimed, err := feeAccumulator.ClaimRewards(positionKey)
 	if err != nil {
-		return err
+		return sdk.Coins{}, err
 	}
 
 	if err := k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, rewardsClaimed); err != nil {
-		return err
+		return sdk.Coins{}, err
 	}
 
-	return nil
+	return rewardsClaimed, nil
 }
 
 func getFeeAccumulatorName(poolId uint64) string {

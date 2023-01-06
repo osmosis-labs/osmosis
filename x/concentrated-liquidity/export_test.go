@@ -78,6 +78,22 @@ func (k Keeper) InitializeInitialPosition(ctx sdk.Context, pool types.Concentrat
 	return k.initializeInitialPosition(ctx, pool, amount0Desired, amount1Desired)
 }
 
+func (k Keeper) CollectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64) (sdk.Coins, error) {
+	return k.collectFees(ctx, poolId, owner, lowerTick, upperTick)
+}
+
+func (k Keeper) CreateFeeAccumulator(ctx sdk.Context, poolId uint64) error {
+	return k.createFeeAccumulator(ctx, poolId)
+}
+
+func (k Keeper) InitializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec) error {
+	return k.initializeFeeAccumulatorPosition(ctx, poolId, owner, liquidityDelta)
+}
+
+func (k Keeper) ChargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin) error {
+	return k.chargeFee(ctx, poolId, feeUpdate)
+}
+
 func ConvertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (swaproutertypes.PoolI, error) {
 	return convertConcentratedToPoolInterface(concentratedPool)
 }
