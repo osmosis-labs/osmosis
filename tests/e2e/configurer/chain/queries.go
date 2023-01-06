@@ -126,7 +126,7 @@ func (n *NodeConfig) QueryLatestWasmCodeID() uint64 {
 	return response.CodeInfos[len(response.CodeInfos)-1].CodeID
 }
 
-func (n *NodeConfig) QueryWasmSmart(contract string, msg string) map[string]interface{} {
+func (n *NodeConfig) QueryWasmSmart(contract string, msg string) (map[string]interface{}, error) {
 	// base64-encode the msg
 	fmt.Println(msg)
 	encodedMsg := base64.StdEncoding.EncodeToString([]byte(msg))
@@ -134,15 +134,22 @@ func (n *NodeConfig) QueryWasmSmart(contract string, msg string) map[string]inte
 	fmt.Println(path)
 
 	bz, err := n.QueryGRPCGateway(path)
-	require.NoError(n.t, err)
+	if err != nil {
+		return nil, err
+	}
 
 	var response wasmtypes.QuerySmartContractStateResponse
 	err = util.Cdc.UnmarshalJSON(bz, &response)
-	require.NoError(n.t, err)
+	if err != nil {
+		return nil, err
+	}
+
 	var responseJSON map[string]interface{}
 	err = json.Unmarshal(response.Data, &response)
-	require.NoError(n.t, err)
-	return responseJSON
+	if err != nil {
+		return nil, err
+	}
+	return responseJSON, nil
 }
 
 func (n *NodeConfig) QueryPropTally(proposalNumber int) (sdk.Int, sdk.Int, sdk.Int, sdk.Int, error) {
