@@ -8,6 +8,7 @@ import "google/protobuf/timestamp.proto";
 
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "osmosis/concentrated-liquidity/types/pool.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model";
 
@@ -47,9 +48,6 @@ message Pool {
     (gogoproto.stdtime) = true,
     (gogoproto.moretags) = "yaml:\"creation_timestamp\""
   ];
-  string seconds_per_liquidity_global = 10 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"seconds_per_liquidity_global\"",
-    (gogoproto.nullable) = false
-  ];
+  repeated osmosis.concentratedliquidity.v1beta1.PoolIncentivizedLiquidityRecord
+      pool_incentivized_liquidity_records = 10 [ (gogoproto.nullable) = false ];
 }

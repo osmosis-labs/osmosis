@@ -17,9 +17,11 @@ message Position {
     (gogoproto.moretags) = "yaml:\"liquidity\"",
     (gogoproto.nullable) = false
   ];
-  google.protobuf.Timestamp frozen_until = 3 [
+  google.protobuf.Timestamp frozen_until = 2 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true,
     (gogoproto.moretags) = "yaml:\"frozen_until\""
   ];
+  repeated uint64 incentive_ids_committed_to = 3
+      [ (gogoproto.moretags) = "yaml:\"incentive_ids_committed_to\"" ];
 }

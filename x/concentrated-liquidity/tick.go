@@ -14,7 +14,7 @@ import (
 // initOrUpdateTick retrieves the tickInfo from the specified tickIndex and updates both the liquidityNet and LiquidityGross.
 // if we are initializing or updating an upper tick, we subtract the liquidityIn from the LiquidityNet
 // if we are initializing or updating an lower tick, we add the liquidityIn from the LiquidityNet
-func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Dec, upper, isIncentivized bool) (err error) {
+func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Dec, upper bool, incentiveIDsCommittedTo []uint64) (err error) {
 	if !k.poolExists(ctx, poolId) {
 		return types.PoolNotFoundError{PoolId: poolId}
 	}
@@ -46,18 +46,33 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 	tickInfo.LiquidityGross = liquidityAfter
 
 	// START STUB do this for incentivized liquidity gross
-	if isIncentivized {
-		incentivizedLiquidityBefore := tickInfo.IncentivizedLiquidityGross
-		fmt.Printf("Incentivized liquidity before: %v \n", incentivizedLiquidityBefore)
-		fmt.Printf("liquidityIn: %v \n", liquidityIn)
-		incentivizedLiquidityAfter := math.AddLiquidity(incentivizedLiquidityBefore, liquidityIn)
-		tickInfo.IncentivizedLiquidityGross = incentivizedLiquidityAfter
-		if upper {
-			tickInfo.IncentivizedLiquidityNet = tickInfo.IncentivizedLiquidityNet.Sub(liquidityIn)
-		} else {
-			tickInfo.IncentivizedLiquidityNet = tickInfo.IncentivizedLiquidityNet.Add(liquidityIn)
+	// if isIncentivized {
+	// 	incentivizedLiquidityBefore := tickInfo.IncentivizedLiquidityGross
+	// 	fmt.Printf("Incentivized liquidity before: %v \n", incentivizedLiquidityBefore)
+	// 	fmt.Printf("liquidityIn: %v \n", liquidityIn)
+	// 	incentivizedLiquidityAfter := math.AddLiquidity(incentivizedLiquidityBefore, liquidityIn)
+	// 	tickInfo.IncentivizedLiquidityGross = incentivizedLiquidityAfter
+	// 	if upper {
+	// 		tickInfo.IncentivizedLiquidityNet = tickInfo.IncentivizedLiquidityNet.Sub(liquidityIn)
+	// 	} else {
+	// 		tickInfo.IncentivizedLiquidityNet = tickInfo.IncentivizedLiquidityNet.Add(liquidityIn)
+	// 	}
+	// }
+	for i, incentiveID := range incentiveIDsCommittedTo {
+		if tickInfo.TickIncentivizedLiquidityRecords[i].ID == incentiveID {
+			incentivizedLiquidityBefore := tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityGross
+			incentivizedLiquidityAfter := math.AddLiquidity(incentivizedLiquidityBefore, liquidityIn)
+			tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityGross = incentivizedLiquidityAfter
+			if upper {
+				tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityNet = tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityNet.Sub(liquidityIn)
+			} else {
+				tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityNet = tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityNet.Add(liquidityIn)
+			}
 		}
+
 	}
+	// for _, incentiveID := range incentiveIDsCommittedTo {
+	// 	incentivizedLiquidityBefore := tickInfo
 	// END STUB
 
 	// calculate liquidityNet, which we take into account and track depending on whether liquidityIn is positive or negative
@@ -90,11 +105,17 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liqu
 	// Update seconds per liquidity outside
 	// fmt.Printf("Seconds inactive: %v \n", tickInfo.SecondsInactive.Seconds())
 	// fmt.Printf("Liquidity gross: %v \n", tickInfo.LiquidityGross)
-	tickInfo.SecondsPerIncentivizedLiquidityOutside = sdk.MustNewDecFromStr(fmt.Sprintf("%f", tickInfo.SecondsInactive.Seconds())).Quo(tickInfo.IncentivizedLiquidityGross)
+	for _, tickIncentivizedLiquidityRecord := range tickInfo.TickIncentivizedLiquidityRecords {
+		tickIncentivizedLiquidityRecord.SecondsPerIncentivizedLiquidityOutside = sdk.MustNewDecFromStr(fmt.Sprintf("%f", tickInfo.SecondsInactive.Seconds())).Quo(tickIncentivizedLiquidityRecord.IncentivizedLiquidityGross)
+	}
 	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
 
 	// Set new global seconds per liquidity
-	pool.SetGlobalSecondsPerLiquidity(pool.GetGlobalSecondsPerLiquidity().Add(tickInfo.SecondsPerIncentivizedLiquidityOutside))
+	poolIncentivizedLiquidityRecords := pool.GetPoolIncentivizedLiquidityRecords()
+	for i, poolRecord := range poolIncentivizedLiquidityRecords {
+		poolRecord.SecondsPerIncentivizedLiquidityGlobal = poolRecord.SecondsPerIncentivizedLiquidityGlobal.Add(tickInfo.TickIncentivizedLiquidityRecords[i].SecondsPerIncentivizedLiquidityOutside)
+	}
+	pool.SetPoolIncentivizedLiquidityRecords(poolIncentivizedLiquidityRecords)
 	err = k.setPool(ctx, pool)
 	if err != nil {
 		return sdk.Dec{}, err
@@ -115,7 +136,7 @@ func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 	found, err := osmoutils.Get(store, key, &tickStruct)
 	// return 0 values if key has not been initialized
 	if !found {
-		return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), IncentivizedLiquidityGross: sdk.ZeroDec(), IncentivizedLiquidityNet: sdk.ZeroDec()}, err
+		return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec()}, err
 	}
 	if err != nil {
 		return tickStruct, err

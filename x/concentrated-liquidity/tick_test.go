@@ -64,11 +64,11 @@ func (s *KeeperTestSuite) TestTickOrdering() {
 
 func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 	type param struct {
-		poolId         uint64
-		tickIndex      int64
-		liquidityIn    sdk.Dec
-		upper          bool
-		isIncentivized bool
+		poolId                  uint64
+		tickIndex               int64
+		liquidityIn             sdk.Dec
+		upper                   bool
+		incentiveIDsCommittedTo []uint64
 	}
 
 	tests := []struct {
@@ -83,11 +83,11 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		{
 			name: "Init tick 50 with DefaultLiquidityAmt liquidity, upper",
 			param: param{
-				poolId:         validPoolId,
-				tickIndex:      50,
-				liquidityIn:    DefaultLiquidityAmt,
-				upper:          true,
-				isIncentivized: true,
+				poolId:                  validPoolId,
+				tickIndex:               50,
+				liquidityIn:             DefaultLiquidityAmt,
+				upper:                   true,
+				incentiveIDsCommittedTo: []uint64{1},
 			},
 			tickExists:             false,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Neg(),
@@ -96,11 +96,11 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		{
 			name: "Init tick 50 with DefaultLiquidityAmt liquidity, lower",
 			param: param{
-				poolId:         validPoolId,
-				tickIndex:      50,
-				liquidityIn:    DefaultLiquidityAmt,
-				upper:          false,
-				isIncentivized: true,
+				poolId:                  validPoolId,
+				tickIndex:               50,
+				liquidityIn:             DefaultLiquidityAmt,
+				upper:                   false,
+				incentiveIDsCommittedTo: []uint64{1},
 			},
 			tickExists:             false,
 			expectedLiquidityNet:   DefaultLiquidityAmt,
@@ -109,11 +109,11 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		{
 			name: "Update tick 50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity, upper",
 			param: param{
-				poolId:         validPoolId,
-				tickIndex:      50,
-				liquidityIn:    DefaultLiquidityAmt,
-				upper:          true,
-				isIncentivized: true,
+				poolId:                  validPoolId,
+				tickIndex:               50,
+				liquidityIn:             DefaultLiquidityAmt,
+				upper:                   true,
+				incentiveIDsCommittedTo: []uint64{1},
 			},
 			tickExists:             true,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(sdk.NewDec(2)).Neg(),
@@ -122,11 +122,11 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		{
 			name: "Update tick 50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity, lower",
 			param: param{
-				poolId:         validPoolId,
-				tickIndex:      50,
-				liquidityIn:    DefaultLiquidityAmt,
-				upper:          false,
-				isIncentivized: true,
+				poolId:                  validPoolId,
+				tickIndex:               50,
+				liquidityIn:             DefaultLiquidityAmt,
+				upper:                   false,
+				incentiveIDsCommittedTo: []uint64{1},
 			},
 			tickExists:             true,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
@@ -135,11 +135,11 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		{
 			name: "Init tick -50 with DefaultLiquidityAmt liquidity, upper",
 			param: param{
-				poolId:         validPoolId,
-				tickIndex:      -50,
-				liquidityIn:    DefaultLiquidityAmt,
-				upper:          true,
-				isIncentivized: true,
+				poolId:                  validPoolId,
+				tickIndex:               -50,
+				liquidityIn:             DefaultLiquidityAmt,
+				upper:                   true,
+				incentiveIDsCommittedTo: []uint64{1},
 			},
 			tickExists:             false,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Neg(),
@@ -148,11 +148,11 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		{
 			name: "Init tick -50 with DefaultLiquidityAmt liquidity, lower",
 			param: param{
-				poolId:         validPoolId,
-				tickIndex:      -50,
-				liquidityIn:    DefaultLiquidityAmt,
-				upper:          false,
-				isIncentivized: true,
+				poolId:                  validPoolId,
+				tickIndex:               -50,
+				liquidityIn:             DefaultLiquidityAmt,
+				upper:                   false,
+				incentiveIDsCommittedTo: []uint64{1},
 			},
 			tickExists:             false,
 			expectedLiquidityNet:   DefaultLiquidityAmt,
@@ -161,11 +161,11 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		{
 			name: "Update tick -50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity, upper",
 			param: param{
-				poolId:         validPoolId,
-				tickIndex:      -50,
-				liquidityIn:    DefaultLiquidityAmt,
-				upper:          true,
-				isIncentivized: true,
+				poolId:                  validPoolId,
+				tickIndex:               -50,
+				liquidityIn:             DefaultLiquidityAmt,
+				upper:                   true,
+				incentiveIDsCommittedTo: []uint64{1},
 			},
 			tickExists:             true,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(sdk.NewDec(2)).Neg(),
@@ -174,11 +174,11 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		{
 			name: "Update tick -50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity, lower",
 			param: param{
-				poolId:         validPoolId,
-				tickIndex:      -50,
-				liquidityIn:    DefaultLiquidityAmt,
-				upper:          false,
-				isIncentivized: true,
+				poolId:                  validPoolId,
+				tickIndex:               -50,
+				liquidityIn:             DefaultLiquidityAmt,
+				upper:                   false,
+				incentiveIDsCommittedTo: []uint64{1},
 			},
 			tickExists:             true,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
@@ -187,11 +187,11 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		{
 			name: "Init tick 50 with Negative DefaultLiquidityAmt liquidity, upper",
 			param: param{
-				poolId:         validPoolId,
-				tickIndex:      50,
-				liquidityIn:    DefaultLiquidityAmt.Neg(),
-				upper:          true,
-				isIncentivized: true,
+				poolId:                  validPoolId,
+				tickIndex:               50,
+				liquidityIn:             DefaultLiquidityAmt.Neg(),
+				upper:                   true,
+				incentiveIDsCommittedTo: []uint64{1},
 			},
 			tickExists:             false,
 			expectedLiquidityNet:   DefaultLiquidityAmt,
@@ -200,11 +200,11 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		{
 			name: "Update tick 50 that already contains DefaultLiquidityAmt liquidity with -DefaultLiquidityAmt liquidity, upper",
 			param: param{
-				poolId:         validPoolId,
-				tickIndex:      50,
-				liquidityIn:    DefaultLiquidityAmt.Neg(),
-				upper:          true,
-				isIncentivized: true,
+				poolId:                  validPoolId,
+				tickIndex:               50,
+				liquidityIn:             DefaultLiquidityAmt.Neg(),
+				upper:                   true,
+				incentiveIDsCommittedTo: []uint64{1},
 			},
 			tickExists:             true,
 			expectedLiquidityNet:   sdk.ZeroDec(),
@@ -213,11 +213,11 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		{
 			name: "Update tick -50 that already contains DefaultLiquidityAmt liquidity with negative DefaultLiquidityAmt liquidity, lower",
 			param: param{
-				poolId:         validPoolId,
-				tickIndex:      -50,
-				liquidityIn:    DefaultLiquidityAmt.Neg(),
-				upper:          false,
-				isIncentivized: true,
+				poolId:                  validPoolId,
+				tickIndex:               -50,
+				liquidityIn:             DefaultLiquidityAmt.Neg(),
+				upper:                   false,
+				incentiveIDsCommittedTo: []uint64{1},
 			},
 			tickExists:             true,
 			expectedLiquidityNet:   sdk.ZeroDec(),
@@ -226,11 +226,11 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		{
 			name: "Init tick for non-existing pool",
 			param: param{
-				poolId:         2,
-				tickIndex:      50,
-				liquidityIn:    DefaultLiquidityAmt,
-				upper:          true,
-				isIncentivized: true,
+				poolId:                  2,
+				tickIndex:               50,
+				liquidityIn:             DefaultLiquidityAmt,
+				upper:                   true,
+				incentiveIDsCommittedTo: []uint64{1},
 			},
 			tickExists:  false,
 			expectedErr: types.PoolNotFoundError{PoolId: 2},
@@ -248,7 +248,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			// If tickExists set, initialize the specified tick with defaultLiquidityAmt
 			preexistingLiquidity := sdk.ZeroDec()
 			if test.tickExists {
-				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, test.param.poolId, test.param.tickIndex, DefaultLiquidityAmt, test.param.upper, test.param.isIncentivized)
+				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, test.param.poolId, test.param.tickIndex, DefaultLiquidityAmt, test.param.upper, test.param.incentiveIDsCommittedTo)
 				s.Require().NoError(err)
 				preexistingLiquidity = DefaultLiquidityAmt
 			}
@@ -260,7 +260,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			s.Require().Equal(preexistingLiquidity, tickInfo.LiquidityGross)
 
 			// Initialize or update the tick according to the test case
-			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, test.param.poolId, test.param.tickIndex, test.param.liquidityIn, test.param.upper, test.param.isIncentivized)
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, test.param.poolId, test.param.tickIndex, test.param.liquidityIn, test.param.upper, test.param.incentiveIDsCommittedTo)
 			if test.expectedErr != nil {
 				s.Require().ErrorIs(err, test.expectedErr)
 				return
@@ -280,33 +280,33 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 
 func (s *KeeperTestSuite) TestGetTickInfo() {
 	tests := []struct {
-		name             string
-		poolToGet        uint64
-		tickToGet        int64
-		isIncentivized   bool
-		expectedTickInfo model.TickInfo
-		expectedErr      error
+		name                    string
+		poolToGet               uint64
+		tickToGet               int64
+		incentiveIDsCommittedTo []uint64
+		expectedTickInfo        model.TickInfo
+		expectedErr             error
 	}{
 		{
-			name:             "Get tick info on existing pool and existing tick",
-			poolToGet:        validPoolId,
-			tickToGet:        DefaultCurrTick.Int64(),
-			isIncentivized:   true,
-			expectedTickInfo: model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg()},
+			name:                    "Get tick info on existing pool and existing tick",
+			poolToGet:               validPoolId,
+			tickToGet:               DefaultCurrTick.Int64(),
+			incentiveIDsCommittedTo: []uint64{1},
+			expectedTickInfo:        model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg()},
 		},
 		{
-			name:             "Get tick info on existing pool with no existing tick",
-			poolToGet:        validPoolId,
-			tickToGet:        DefaultCurrTick.Int64() + 1,
-			isIncentivized:   true,
-			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec()},
+			name:                    "Get tick info on existing pool with no existing tick",
+			poolToGet:               validPoolId,
+			tickToGet:               DefaultCurrTick.Int64() + 1,
+			incentiveIDsCommittedTo: []uint64{1},
+			expectedTickInfo:        model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec()},
 		},
 		{
-			name:           "Get tick info on a non-existing pool with no existing tick",
-			poolToGet:      2,
-			tickToGet:      DefaultCurrTick.Int64() + 1,
-			isIncentivized: true,
-			expectedErr:    types.PoolNotFoundError{PoolId: 2},
+			name:                    "Get tick info on a non-existing pool with no existing tick",
+			poolToGet:               2,
+			tickToGet:               DefaultCurrTick.Int64() + 1,
+			incentiveIDsCommittedTo: []uint64{1},
+			expectedErr:             types.PoolNotFoundError{PoolId: 2},
 		},
 	}
 
@@ -319,7 +319,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			s.PrepareConcentratedPool()
 
 			// Set up an initialized tick
-			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, 1, DefaultCurrTick.Int64(), DefaultLiquidityAmt, true, test.isIncentivized)
+			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, 1, DefaultCurrTick.Int64(), DefaultLiquidityAmt, true, test.incentiveIDsCommittedTo)
 
 			// System under test
 			tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, test.poolToGet, test.tickToGet)

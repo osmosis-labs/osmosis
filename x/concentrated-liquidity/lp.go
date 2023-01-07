@@ -23,7 +23,7 @@ import (
 // - the liquidity delta is zero
 // - the amount0 or amount1 returned from the position update is less than the given minimums
 // - the pool or user does not have enough tokens to satisfy the requested amount
-func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64, isIncentivized bool) (sdk.Int, sdk.Int, sdk.Dec, error) {
+func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64, incentiveIDsCommittedTo []uint64) (sdk.Int, sdk.Int, sdk.Dec, error) {
 	// Retrieve the pool associated with the given pool ID.
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -65,7 +65,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
-	actualAmount0, actualAmount1, err := k.updatePosition(cacheCtx, poolId, owner, lowerTick, upperTick, liquidityDelta, isIncentivized)
+	actualAmount0, actualAmount1, err := k.updatePosition(cacheCtx, poolId, owner, lowerTick, upperTick, liquidityDelta, incentiveIDsCommittedTo)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
@@ -95,7 +95,12 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 // - there is no position in the given tick ranges
 // - if tick ranges are invalid
 // - if attempts to withdraw an amount higher than originally provided in createPosition for a given range.
-func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, requestedLiqudityAmountToWithdraw sdk.Dec, isIncentivized bool) (amtDenom0, amtDenom1 sdk.Int, err error) {
+func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, requestedLiqudityAmountToWithdraw sdk.Dec, incentiveIDsCommittedTo []uint64) (amtDenom0, amtDenom1 sdk.Int, err error) {
+	var isIncentivized bool
+	if len(incentiveIDsCommittedTo) > 0 {
+		isIncentivized = true
+	}
+
 	// Retrieve the pool associated with the given pool ID.
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -133,7 +138,13 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	liquidityDelta := requestedLiqudityAmountToWithdraw.Neg()
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
-	actualAmount0, actualAmount1, err := k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, isIncentivized)
+	// var incentiveIDsCommittedTo []uint64
+	// var frozenUntil time.Time
+	// if isIncentivized {
+	// 	incentiveIDsCommittedTo = position.IncentiveIdsCommittedTo
+	// 	frozenUntil = position.FrozenUntil
+	// }
+	actualAmount0, actualAmount1, err := k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, incentiveIDsCommittedTo)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
@@ -154,23 +165,23 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 // Negative returned amounts imply that tokens are removed from the pool.
 // Positive returned amounts imply that tokens are added to the pool.
 // TODO: tests.
-func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, isIncentivized bool) (sdk.Int, sdk.Int, error) {
+func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, incentiveIDsCommittedTo []uint64) (sdk.Int, sdk.Int, error) {
 	// update tickInfo state
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
-	err := k.initOrUpdateTick(ctx, poolId, lowerTick, liquidityDelta, false, isIncentivized)
+	err := k.initOrUpdateTick(ctx, poolId, lowerTick, liquidityDelta, false, incentiveIDsCommittedTo)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
-	err = k.initOrUpdateTick(ctx, poolId, upperTick, liquidityDelta, true, isIncentivized)
+	err = k.initOrUpdateTick(ctx, poolId, upperTick, liquidityDelta, true, incentiveIDsCommittedTo)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
 	// update position state
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
-	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, isIncentivized)
+	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, incentiveIDsCommittedTo)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
@@ -258,7 +269,7 @@ func (k Keeper) initializeInitialPosition(ctx sdk.Context, pool types.Concentrat
 }
 
 // GetSecondsPerLiquidityInside returns the seconds per liquidity between two ticks in a given pool
-func (k Keeper) GetSecondsPerLiquidityInside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.Dec, error) {
+func (k Keeper) GetSecondsPerLiquidityInside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, incentiveID uint64) (sdk.Dec, error) {
 	// // Get the Seconds Per Liquidity Outside for the lower tick
 	// lowerTickInfo, err := k.getTickInfo(ctx, poolId, lowerTick)
 	// if err != nil {
@@ -276,7 +287,14 @@ func (k Keeper) GetSecondsPerLiquidityInside(ctx sdk.Context, poolId uint64, low
 		return sdk.Dec{}, err
 	}
 
-	globalSecondsPerLiquidity := pool.GetGlobalSecondsPerLiquidity()
+	var globalSecondsPerLiquidity sdk.Dec
+	poolIncentivizedLiquidityRecords := pool.GetPoolIncentivizedLiquidityRecords()
+	for _, record := range poolIncentivizedLiquidityRecords {
+		if record.ID == incentiveID {
+			globalSecondsPerLiquidity = record.SecondsPerIncentivizedLiquidityGlobal
+		}
+	}
+	//globalSecondsPerLiquidity := pool.GetPoolIncentivizedLiquidityRecords()
 
 	// TODO: Re-enable this once new tick logic is in place
 	// If range is active, we need to calculate a new global seconds per liquidity inside since we only update these when crossing ticks
@@ -294,16 +312,22 @@ func (k Keeper) GetSecondsPerLiquidityInside(ctx sdk.Context, poolId uint64, low
 		if err != nil {
 			return sdk.Dec{}, err
 		}
+		var incentivizedLiquidityGross sdk.Dec
+		for _, record := range lastInitializedTickInfo.TickIncentivizedLiquidityRecords {
+			if record.ID == incentiveID {
+				incentivizedLiquidityGross = record.IncentivizedLiquidityGross
+			}
+		}
 
 		// Determine the seconds that have passed since the last time the last initialized tick was crossed
 		// Update the global time with this difference and calculate the new global seconds per liquidity outside
 		newSecondsInactive := ctx.BlockTime().Sub(pool.GetTimeOfCreation())
 		// newSecondsInactive := ctx.BlockTime().Sub(pool.GetTimeOfCreation()) + lastInitializedTickInfo.SecondsInactive
-		additionalSecondsPerLiquidityInside := sdk.MustNewDecFromStr(fmt.Sprintf("%f", newSecondsInactive.Seconds())).Quo(lastInitializedTickInfo.IncentivizedLiquidityGross)
+		additionalSecondsPerLiquidityInside := sdk.MustNewDecFromStr(fmt.Sprintf("%f", newSecondsInactive.Seconds())).Quo(incentivizedLiquidityGross)
 		globalSecondsPerLiquidity = globalSecondsPerLiquidity.Add(additionalSecondsPerLiquidityInside)
 	}
 
-	lowerTickSPLBelow, upperTickSPLBelow, err := k.calcSecondsPerLiquidityBelowPosition(ctx, poolId, globalSecondsPerLiquidity, lowerTick, upperTick)
+	lowerTickSPLBelow, upperTickSPLBelow, err := k.calcSecondsPerLiquidityBelowPosition(ctx, poolId, globalSecondsPerLiquidity, lowerTick, upperTick, incentiveID)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -317,13 +341,13 @@ func (k Keeper) GetSecondsPerLiquidityInside(ctx sdk.Context, poolId uint64, low
 }
 
 // calcSecondsPerLiquidityBelow returns the seconds per liquidity below for both the lower and upper tick
-func (k Keeper) calcSecondsPerLiquidityBelowPosition(ctx sdk.Context, poolId uint64, globalSecondsPerLiquidity sdk.Dec, lowerTick, upperTick int64) (lowerTickSPLBelow sdk.Dec, upperTickSPLBelow sdk.Dec, err error) {
-	lowerTickSPLBelow, err = k.calcSecondsPerLiquidityBelowTick(ctx, poolId, globalSecondsPerLiquidity, lowerTick)
+func (k Keeper) calcSecondsPerLiquidityBelowPosition(ctx sdk.Context, poolId uint64, globalSecondsPerLiquidity sdk.Dec, lowerTick, upperTick int64, incentiveID uint64) (lowerTickSPLBelow sdk.Dec, upperTickSPLBelow sdk.Dec, err error) {
+	lowerTickSPLBelow, err = k.calcSecondsPerLiquidityBelowTick(ctx, poolId, globalSecondsPerLiquidity, lowerTick, incentiveID)
 	if err != nil {
 		return sdk.Dec{}, sdk.Dec{}, err
 	}
 
-	upperTickSPLBelow, err = k.calcSecondsPerLiquidityBelowTick(ctx, poolId, globalSecondsPerLiquidity, upperTick)
+	upperTickSPLBelow, err = k.calcSecondsPerLiquidityBelowTick(ctx, poolId, globalSecondsPerLiquidity, upperTick, incentiveID)
 	if err != nil {
 		return sdk.Dec{}, sdk.Dec{}, err
 	}
@@ -331,23 +355,26 @@ func (k Keeper) calcSecondsPerLiquidityBelowPosition(ctx sdk.Context, poolId uin
 	return lowerTickSPLBelow, upperTickSPLBelow, nil
 }
 
-func (k Keeper) calcSecondsPerLiquidityBelowTick(ctx sdk.Context, poolId uint64, globalSecondsPerLiquidity sdk.Dec, tick int64) (sdk.Dec, error) {
+func (k Keeper) calcSecondsPerLiquidityBelowTick(ctx sdk.Context, poolId uint64, globalSecondsPerLiquidity sdk.Dec, tick int64, incentiveID uint64) (sdk.Dec, error) {
 	pool, _ := k.getPoolById(ctx, poolId)
 	currentTick := pool.GetCurrentTick()
+	tickInfo, err := k.getTickInfo(ctx, poolId, tick)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	var secondsPerIncentivizedLiquidityOutside sdk.Dec
+	for _, record := range tickInfo.TickIncentivizedLiquidityRecords {
+		if record.ID == incentiveID {
+			secondsPerIncentivizedLiquidityOutside = record.SecondsPerIncentivizedLiquidityOutside
+		}
+	}
 
 	if currentTick.LT(sdk.NewInt(tick)) {
-		tickInfo, err := k.getTickInfo(ctx, poolId, tick)
-		if err != nil {
-			return sdk.Dec{}, err
-		}
-		secondsPerLiquidityOutside := globalSecondsPerLiquidity.Sub(tickInfo.SecondsPerIncentivizedLiquidityOutside)
+		secondsPerLiquidityOutside := globalSecondsPerLiquidity.Sub(secondsPerIncentivizedLiquidityOutside)
 		return secondsPerLiquidityOutside, nil
 	} else if currentTick.GTE(sdk.NewInt(tick)) {
-		tickInfo, err := k.getTickInfo(ctx, poolId, tick)
-		if err != nil {
-			return sdk.Dec{}, err
-		}
-		return tickInfo.SecondsPerIncentivizedLiquidityOutside, nil
+		return secondsPerIncentivizedLiquidityOutside, nil
 	}
 	return sdk.Dec{}, fmt.Errorf("error calculating seconds per liquidity below")
 }

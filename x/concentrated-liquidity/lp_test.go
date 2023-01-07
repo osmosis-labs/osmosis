@@ -12,42 +12,42 @@ import (
 )
 
 type lpTest struct {
-	poolId             uint64
-	owner              sdk.AccAddress
-	currentTick        sdk.Int
-	lowerTick          int64
-	upperTick          int64
-	currentSqrtP       sdk.Dec
-	amount0Desired     sdk.Int
-	amount0Minimum     sdk.Int
-	amount0Expected    sdk.Int
-	amount1Desired     sdk.Int
-	amount1Minimum     sdk.Int
-	amount1Expected    sdk.Int
-	liquidityAmount    sdk.Dec
-	tickSpacing        uint64
-	isIncentivized     bool
-	isNotFirstPosition bool
-	expectedError      error
+	poolId                  uint64
+	owner                   sdk.AccAddress
+	currentTick             sdk.Int
+	lowerTick               int64
+	upperTick               int64
+	currentSqrtP            sdk.Dec
+	amount0Desired          sdk.Int
+	amount0Minimum          sdk.Int
+	amount0Expected         sdk.Int
+	amount1Desired          sdk.Int
+	amount1Minimum          sdk.Int
+	amount1Expected         sdk.Int
+	liquidityAmount         sdk.Dec
+	tickSpacing             uint64
+	incentiveIDsCommittedTo []uint64
+	isNotFirstPosition      bool
+	expectedError           error
 }
 
 var (
 	baseCase = &lpTest{
-		isNotFirstPosition: false,
-		poolId:             1,
-		currentTick:        DefaultCurrTick,
-		lowerTick:          DefaultLowerTick,
-		upperTick:          DefaultUpperTick,
-		currentSqrtP:       DefaultCurrSqrtPrice,
-		amount0Desired:     DefaultAmt0,
-		amount0Minimum:     sdk.ZeroInt(),
-		amount0Expected:    DefaultAmt0Expected,
-		amount1Desired:     DefaultAmt1,
-		amount1Minimum:     sdk.ZeroInt(),
-		amount1Expected:    DefaultAmt1Expected,
-		liquidityAmount:    DefaultLiquidityAmt,
-		tickSpacing:        DefaultTickSpacing,
-		isIncentivized:     DefaultIsIncentivized,
+		isNotFirstPosition:      false,
+		poolId:                  1,
+		currentTick:             DefaultCurrTick,
+		lowerTick:               DefaultLowerTick,
+		upperTick:               DefaultUpperTick,
+		currentSqrtP:            DefaultCurrSqrtPrice,
+		amount0Desired:          DefaultAmt0,
+		amount0Minimum:          sdk.ZeroInt(),
+		amount0Expected:         DefaultAmt0Expected,
+		amount1Desired:          DefaultAmt1,
+		amount1Minimum:          sdk.ZeroInt(),
+		amount1Expected:         DefaultAmt1Expected,
+		liquidityAmount:         DefaultLiquidityAmt,
+		tickSpacing:             DefaultTickSpacing,
+		incentiveIDsCommittedTo: DefaultIncentiveIDsCommittedTo,
 	}
 )
 
@@ -55,7 +55,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 	tests := map[string]lpTest{
 		"base case": {},
 		"base case without incentives": {
-			isIncentivized: false,
+			incentiveIDsCommittedTo: []uint64{},
 		},
 		"create a position with non default tick spacing (10) with ticks that fall into tick spacing requirements": {
 			lowerTick:       int64(84220),
@@ -138,11 +138,16 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			pool, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, poolID)
 			s.Require().NoError(err)
 
+			var isIncentivized bool
+			if len(tc.incentiveIDsCommittedTo) > 0 {
+				isIncentivized = true
+			}
+
 			// If we want to test a non-first position, we create a first position with a separate account
 			if tc.isNotFirstPosition {
 				// Fund test account and create the desired position
 				s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1)))
-				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, 1, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), tc.lowerTick, tc.upperTick, tc.isIncentivized)
+				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, 1, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), tc.lowerTick, tc.upperTick, tc.incentiveIDsCommittedTo)
 				s.Require().NoError(err)
 			}
 
@@ -153,7 +158,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			userBalancePrePositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
 			poolBalancePrePositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
 
-			asset0, asset1, liquidityCreated, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.amount0Desired, tc.amount1Desired, tc.amount0Minimum, tc.amount1Minimum, tc.lowerTick, tc.upperTick, tc.isIncentivized)
+			asset0, asset1, liquidityCreated, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.amount0Desired, tc.amount1Desired, tc.amount0Minimum, tc.amount1Minimum, tc.lowerTick, tc.upperTick, tc.incentiveIDsCommittedTo)
 
 			// Note user and pool account balances to compare after create position is called
 			userBalancePostPositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
@@ -175,7 +180,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 				s.Require().Equal(poolBalancePrePositionCreation.String(), poolBalancePostPositionCreation.String())
 
 				// Redundantly ensure that position was not created
-				position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, tc.isIncentivized)
+				position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, isIncentivized)
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, &types.PositionNotFoundError{PoolId: tc.poolId, LowerTick: tc.lowerTick, UpperTick: tc.upperTick})
 				s.Require().Nil(position)
@@ -193,7 +198,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			s.Require().Equal(poolBalancePrePositionCreation.Add(sdk.NewCoin(ETH, asset0), (sdk.NewCoin(USDC, asset1))).String(), poolBalancePostPositionCreation.String())
 
 			// Check position state
-			s.validatePositionUpdate(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, tc.liquidityAmount, tc.isIncentivized)
+			s.validatePositionUpdate(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, tc.liquidityAmount, isIncentivized)
 
 			// Check tick state
 			s.validateTickUpdates(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, tc.liquidityAmount)
@@ -208,7 +213,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		// and gives the overwritten configuration to
 		// the system under test.
 		sutConfigOverwrite           *lpTest
-		withdrawIncentivizedPosition bool
+		withdrawIncentivizedPosition []uint64
 	}{
 		"base case: withdraw full liquidity amount": {
 			// setup parameters for creating a pool and position.
@@ -217,11 +222,11 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// system under test parameters
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
-				amount0Expected: baseCase.amount0Expected, // 0.998587 eth
-				amount1Expected: baseCase.amount1Expected, // 5000 usdc
-				isIncentivized:  false,
+				amount0Expected:         baseCase.amount0Expected, // 0.998587 eth
+				amount1Expected:         baseCase.amount1Expected, // 5000 usdc
+				incentiveIDsCommittedTo: []uint64{},
 			},
-			withdrawIncentivizedPosition: false,
+			withdrawIncentivizedPosition: []uint64{},
 		},
 		"withdraw partial liquidity amount": {
 			// setup parameters for creating a pool and position.
@@ -232,11 +237,11 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			sutConfigOverwrite: &lpTest{
 				liquidityAmount: baseCase.liquidityAmount.QuoInt64(2),
 
-				amount0Expected: baseCase.amount0Expected.QuoRaw(2), // 0.4992935 / 2 eth
-				amount1Expected: baseCase.amount1Expected.QuoRaw(2), // 2499 usdc
-				isIncentivized:  false,
+				amount0Expected:         baseCase.amount0Expected.QuoRaw(2), // 0.4992935 / 2 eth
+				amount1Expected:         baseCase.amount1Expected.QuoRaw(2), // 2499 usdc
+				incentiveIDsCommittedTo: []uint64{},
 			},
-			withdrawIncentivizedPosition: false,
+			withdrawIncentivizedPosition: []uint64{},
 		},
 		"error: withdraw position but incentives mismatch": {
 			// setup parameters for creation a pool and position.
@@ -245,10 +250,9 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// system under test parameters
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
-				isIncentivized: true,
-				expectedError:  types.PositionNotFoundError{PoolId: 1, LowerTick: -1, UpperTick: 86129},
+				expectedError: types.PositionNotFoundError{PoolId: 1, LowerTick: -1, UpperTick: 86129},
 			},
-			withdrawIncentivizedPosition: false,
+			withdrawIncentivizedPosition: []uint64{},
 		},
 		"error: no position created": {
 			// setup parameters for creation a pool and position.
@@ -260,7 +264,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				lowerTick:     -1, // valid tick at which no position exists
 				expectedError: types.PositionNotFoundError{PoolId: 1, LowerTick: -1, UpperTick: 86129},
 			},
-			withdrawIncentivizedPosition: true,
+			withdrawIncentivizedPosition: []uint64{1},
 		},
 		"error: pool id for pool that does not exist": {
 			// setup parameters for creating a pool and position.
@@ -272,7 +276,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				poolId:        2, // does not exist
 				expectedError: types.PoolNotFoundError{PoolId: 2},
 			},
-			withdrawIncentivizedPosition: true,
+			withdrawIncentivizedPosition: []uint64{1},
 		},
 		"error: upper tick out of bounds": {
 			// setup parameters for creating a pool and position.
@@ -284,7 +288,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				upperTick:     types.MaxTick + 1, // invalid tick
 				expectedError: types.InvalidTickError{Tick: types.MaxTick + 1, IsLower: false},
 			},
-			withdrawIncentivizedPosition: true,
+			withdrawIncentivizedPosition: []uint64{1},
 		},
 		"error: lower tick out of bounds": {
 			// setup parameters for creating a pool and position.
@@ -296,7 +300,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				lowerTick:     types.MinTick - 1, // invalid tick
 				expectedError: types.InvalidTickError{Tick: types.MinTick - 1, IsLower: true},
 			},
-			withdrawIncentivizedPosition: true,
+			withdrawIncentivizedPosition: []uint64{1},
 		},
 		"error: insufficient liquidity": {
 			// setup parameters for creating a pool and position.
@@ -308,7 +312,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				liquidityAmount: baseCase.liquidityAmount.Add(sdk.OneDec()), // 1 more than available
 				expectedError:   types.InsufficientLiquidityError{Actual: baseCase.liquidityAmount.Add(sdk.OneDec()), Available: baseCase.liquidityAmount},
 			},
-			withdrawIncentivizedPosition: true,
+			withdrawIncentivizedPosition: []uint64{1},
 		},
 		"error: upper tick is below the lower tick, but both are in bounds": {
 			// setup parameters for creating a pool and position.
@@ -321,7 +325,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				upperTick:     40,
 				expectedError: types.InvalidLowerUpperTickError{LowerTick: 50, UpperTick: 40},
 			},
-			withdrawIncentivizedPosition: true,
+			withdrawIncentivizedPosition: []uint64{1},
 		},
 		// TODO: test with custom amounts that potentially lead to truncations.
 	}
@@ -348,9 +352,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			if tc.setupConfig != nil {
 				s.PrepareConcentratedPool()
 				var err error
-				fmt.Printf("config.isIncentivized %v \n", config.isIncentivized)
 				s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-				_, _, liquidityCreated, err = concentratedLiquidityKeeper.CreatePosition(ctx, config.poolId, owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), config.lowerTick, config.upperTick, config.isIncentivized)
+				_, _, liquidityCreated, err = concentratedLiquidityKeeper.CreatePosition(ctx, config.poolId, owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), config.lowerTick, config.upperTick, config.incentiveIDsCommittedTo)
 				s.Require().NoError(err)
 			}
 
@@ -372,8 +375,13 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// Determine the liquidity expected to remain after the withdraw.
 			expectedRemainingLiquidity := liquidityCreated.Sub(config.liquidityAmount)
 
+			var isIncentivized bool
+			if len(config.incentiveIDsCommittedTo) > 0 {
+				isIncentivized = true
+			}
+
 			// Check that the position was updated.
-			s.validatePositionUpdate(ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity, config.isIncentivized)
+			s.validatePositionUpdate(ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity, isIncentivized)
 
 			// check tick state
 			// TODO: add is incentivized check
@@ -425,8 +433,8 @@ func mergeConfigs(dst *lpTest, overwrite *lpTest) {
 		if overwrite.isNotFirstPosition != false {
 			dst.isNotFirstPosition = overwrite.isNotFirstPosition
 		}
-		if overwrite.isIncentivized != true {
-			dst.isIncentivized = overwrite.isIncentivized
+		if overwrite.incentiveIDsCommittedTo != nil {
+			dst.incentiveIDsCommittedTo = overwrite.incentiveIDsCommittedTo
 		}
 	}
 }
@@ -639,16 +647,16 @@ func (s *KeeperTestSuite) TestInitializeInitialPosition() {
 // stub for testing
 func (s *KeeperTestSuite) TestSecondsPerLiquidityInside() {
 	type sendTest struct {
-		lowerTick      int64
-		upperTick      int64
-		isIncentivized bool
-		expectedError  error
+		lowerTick     int64
+		upperTick     int64
+		incentiveID   uint64
+		expectedError error
 	}
 	tests := map[string]sendTest{
 		"happy path": {
-			lowerTick:      85188,
-			upperTick:      87407,
-			isIncentivized: true,
+			lowerTick:   85188,
+			upperTick:   87407,
+			incentiveID: 1,
 		},
 	}
 
@@ -668,8 +676,8 @@ func (s *KeeperTestSuite) TestSecondsPerLiquidityInside() {
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0.Mul(sdk.NewInt(2))), sdk.NewCoin(USDC, DefaultAmt1.Mul(sdk.NewInt(2)))))
 
 			// System under test
-			_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, 1, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick, DefaultIsIncentivized)
-			_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, 1, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), tc.lowerTick, tc.upperTick, tc.isIncentivized)
+			_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, 1, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick, DefaultIncentiveIDsCommittedTo)
+			_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, 1, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), tc.lowerTick, tc.upperTick, DefaultIncentiveIDsCommittedTo)
 
 			positionOneLower, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, DefaultLowerTick)
 			s.Require().NoError(err)
@@ -685,8 +693,8 @@ func (s *KeeperTestSuite) TestSecondsPerLiquidityInside() {
 			fmt.Printf("positionTwoLower: %v \n", positionTwoLower)
 			fmt.Printf("positionTwoUpper: %v \n", positionTwoUpper)
 
-			secondsPerLiquidityInsideOne, _ := s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, DefaultLowerTick, DefaultUpperTick)
-			secondsPerLiquidityInsideTwo, _ := s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, tc.lowerTick, tc.upperTick)
+			secondsPerLiquidityInsideOne, _ := s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, DefaultLowerTick, DefaultUpperTick, tc.incentiveID)
+			secondsPerLiquidityInsideTwo, _ := s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, tc.lowerTick, tc.upperTick, tc.incentiveID)
 
 			fmt.Printf("secondsPerLiquidityInsideOne: %v \n", secondsPerLiquidityInsideOne)
 			fmt.Printf("secondsPerLiquidityInsideTwo: %v \n", secondsPerLiquidityInsideTwo)
@@ -696,8 +704,8 @@ func (s *KeeperTestSuite) TestSecondsPerLiquidityInside() {
 			s.Ctx = s.Ctx.WithBlockTime(now.Add(time.Second * 5))
 
 			// if tick is active we need to calculate how long it has been active for
-			secondsPerLiquidityInsideOne, _ = s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, DefaultLowerTick, DefaultUpperTick)
-			secondsPerLiquidityInsideTwo, _ = s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, tc.lowerTick, tc.upperTick)
+			secondsPerLiquidityInsideOne, _ = s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, DefaultLowerTick, DefaultUpperTick, tc.incentiveID)
+			secondsPerLiquidityInsideTwo, _ = s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, tc.lowerTick, tc.upperTick, tc.incentiveID)
 
 			fmt.Printf("secondsPerLiquidityInsideOne: %v \n", secondsPerLiquidityInsideOne)
 			fmt.Printf("secondsPerLiquidityInsideTwo: %v \n", secondsPerLiquidityInsideTwo)
@@ -731,8 +739,8 @@ func (s *KeeperTestSuite) TestSecondsPerLiquidityInside() {
 			s.Require().NoError(err)
 			fmt.Printf("pool: %v \n", pool)
 
-			secondsPerLiquidityInsideOne, _ = s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, DefaultLowerTick, DefaultUpperTick)
-			secondsPerLiquidityInsideTwo, _ = s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, tc.lowerTick, tc.upperTick)
+			secondsPerLiquidityInsideOne, _ = s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, DefaultLowerTick, DefaultUpperTick, tc.incentiveID)
+			secondsPerLiquidityInsideTwo, _ = s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, tc.lowerTick, tc.upperTick, tc.incentiveID)
 
 			fmt.Printf("secondsPerLiquidityInsideOne: %v \n", secondsPerLiquidityInsideOne)
 			fmt.Printf("secondsPerLiquidityInsideTwo: %v \n", secondsPerLiquidityInsideTwo)
@@ -761,8 +769,8 @@ func (s *KeeperTestSuite) TestSecondsPerLiquidityInside() {
 			s.Require().NoError(err)
 			fmt.Printf("pool: %v \n", pool)
 
-			secondsPerLiquidityInsideOne, _ = s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, DefaultLowerTick, DefaultUpperTick)
-			secondsPerLiquidityInsideTwo, _ = s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, tc.lowerTick, tc.upperTick)
+			secondsPerLiquidityInsideOne, _ = s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, DefaultLowerTick, DefaultUpperTick, tc.incentiveID)
+			secondsPerLiquidityInsideTwo, _ = s.App.ConcentratedLiquidityKeeper.GetSecondsPerLiquidityInside(s.Ctx, 1, tc.lowerTick, tc.upperTick, tc.incentiveID)
 
 			fmt.Printf("secondsPerLiquidityInsideOne: %v \n", secondsPerLiquidityInsideOne)
 			fmt.Printf("secondsPerLiquidityInsideTwo: %v \n", secondsPerLiquidityInsideTwo)

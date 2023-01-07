@@ -140,8 +140,8 @@ func (p Pool) GetTimeOfCreation() time.Time {
 }
 
 // GetGlobalSecondsPerLiquidity returns the global seconds per liquidity of the pool
-func (p Pool) GetGlobalSecondsPerLiquidity() sdk.Dec {
-	return p.SecondsPerLiquidityGlobal
+func (p Pool) GetPoolIncentivizedLiquidityRecords() []types.PoolIncentivizedLiquidityRecord {
+	return p.PoolIncentivizedLiquidityRecords
 }
 
 // UpdateLiquidity updates the liquidity of the pool. Note that this method is mutative.
@@ -160,8 +160,8 @@ func (p *Pool) SetCurrentTick(newTick sdk.Int) {
 }
 
 // SetGlobalSecondsPerLiquidity updates the current globalSecondsPerLiquidity of the pool
-func (p *Pool) SetGlobalSecondsPerLiquidity(newGlobalSecondsPerLiquidity sdk.Dec) {
-	p.SecondsPerLiquidityGlobal = newGlobalSecondsPerLiquidity
+func (p *Pool) SetPoolIncentivizedLiquidityRecords(newPoolIncentivizedLiquidityRecords []types.PoolIncentivizedLiquidityRecord) {
+	p.PoolIncentivizedLiquidityRecords = newPoolIncentivizedLiquidityRecords
 }
 
 // updateLiquidityIfActivePosition updates the pool's liquidity if the position is active.

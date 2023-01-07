@@ -19,10 +19,10 @@ type ConcentratedPoolExtension interface {
 	GetTickSpacing() uint64
 	GetLiquidity() sdk.Dec
 	GetTimeOfCreation() time.Time
-	GetGlobalSecondsPerLiquidity() sdk.Dec
+	GetPoolIncentivizedLiquidityRecords() []PoolIncentivizedLiquidityRecord
 	SetCurrentSqrtPrice(newSqrtPrice sdk.Dec)
 	SetCurrentTick(newTick sdk.Int)
-	SetGlobalSecondsPerLiquidity(newGlobalSecondsPerLiquidity sdk.Dec)
+	SetPoolIncentivizedLiquidityRecords(newPoolIncentivizedLiquidityRecords []PoolIncentivizedLiquidityRecord)
 
 	UpdateLiquidity(newLiquidity sdk.Dec)
 	ApplySwap(newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurrentSqrtPrice sdk.Dec) error

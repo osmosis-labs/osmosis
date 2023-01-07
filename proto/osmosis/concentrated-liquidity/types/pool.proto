@@ -1,0 +1,23 @@
+syntax = "proto3";
+// This is a legacy package that requires additional migration logic
+// in order to use the correct package. Decision made to use legacy package path
+// until clear steps for migration logic and the unknowns for state breaking are
+// investigated for changing proto package.
+package osmosis.concentratedliquidity.v1beta1;
+import "google/protobuf/timestamp.proto";
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types";
+
+message PoolIncentivizedLiquidityRecord {
+  option (gogoproto.equal) = true;
+
+  uint64 ID = 1;
+  string seconds_per_incentivized_liquidity_global = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"seconds_per_incentivized_liquidity_global\"",
+    (gogoproto.nullable) = false
+  ];
+}

@@ -11,24 +11,24 @@ import (
 )
 
 var (
-	DefaultLowerPrice       = sdk.NewDec(4545)
-	DefaultLowerTick        = int64(84222)
-	DefaultUpperPrice       = sdk.NewDec(5500)
-	DefaultUpperTick        = int64(86129)
-	DefaultCurrPrice        = sdk.NewDec(5000)
-	DefaultCurrTick         = sdk.NewInt(85176)
-	DefaultCurrSqrtPrice, _ = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
-	DefaultZeroSwapFee      = sdk.ZeroDec()
-	ETH                     = "eth"
-	DefaultAmt0             = sdk.NewInt(1000000)
-	DefaultAmt0Expected     = sdk.NewInt(998587)
-	USDC                    = "usdc"
-	DefaultAmt1             = sdk.NewInt(5000000000)
-	DefaultAmt1Expected     = sdk.NewInt(4999999999)
-	DefaultLiquidityAmt     = sdk.MustNewDecFromStr("1517818840.967415409394235163")
-	DefaultTickSpacing      = uint64(1)
-	DefaultIsIncentivized   = true
-	PoolCreationFee         = swaproutertypes.DefaultParams().PoolCreationFee
+	DefaultLowerPrice              = sdk.NewDec(4545)
+	DefaultLowerTick               = int64(84222)
+	DefaultUpperPrice              = sdk.NewDec(5500)
+	DefaultUpperTick               = int64(86129)
+	DefaultCurrPrice               = sdk.NewDec(5000)
+	DefaultCurrTick                = sdk.NewInt(85176)
+	DefaultCurrSqrtPrice, _        = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
+	DefaultZeroSwapFee             = sdk.ZeroDec()
+	ETH                            = "eth"
+	DefaultAmt0                    = sdk.NewInt(1000000)
+	DefaultAmt0Expected            = sdk.NewInt(998587)
+	USDC                           = "usdc"
+	DefaultAmt1                    = sdk.NewInt(5000000000)
+	DefaultAmt1Expected            = sdk.NewInt(4999999999)
+	DefaultLiquidityAmt            = sdk.MustNewDecFromStr("1517818840.967415409394235163")
+	DefaultTickSpacing             = uint64(1)
+	DefaultIncentiveIDsCommittedTo = []uint64{1}
+	PoolCreationFee                = swaproutertypes.DefaultParams().PoolCreationFee
 )
 
 type KeeperTestSuite struct {
@@ -45,13 +45,13 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 func (s *KeeperTestSuite) SetupIncentivizedPosition(poolId uint64) {
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-	_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick, true)
+	_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick, []uint64{1})
 	s.Require().NoError(err)
 }
 
 func (s *KeeperTestSuite) SetupUnincentivizedPosition(poolId uint64) {
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-	_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick, false)
+	_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick, []uint64{})
 	s.Require().NoError(err)
 }
 

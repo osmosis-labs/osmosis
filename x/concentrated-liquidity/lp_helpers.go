@@ -2,6 +2,7 @@ package concentrated_liquidity
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -40,8 +41,13 @@ func (k Keeper) initOrUpdatePosition(
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
 	liquidityDelta sdk.Dec,
-	isIncentivized bool,
+	incentiveIDsCommittedTo []uint64,
 ) (err error) {
+	var isIncentivized bool
+	if len(incentiveIDsCommittedTo) > 0 {
+		isIncentivized = true
+	}
+
 	position, err := k.getOrInitPosition(ctx, poolId, owner, lowerTick, upperTick, isIncentivized)
 	if err != nil {
 		return err
@@ -60,8 +66,11 @@ func (k Keeper) initOrUpdatePosition(
 
 	// TODO: consider deleting position if liquidity becomes zero
 
+	// STUB: assume we are getting the max freeze time from the IDs themselves
+	maxFreezeTime := time.Second * 30
+
 	if isIncentivized {
-		position.FrozenUntil = ctx.BlockTime().Add(types.IncentivizedPositionFreezeTime)
+		position.FrozenUntil = ctx.BlockTime().Add(maxFreezeTime)
 	}
 	fmt.Printf("position frozen until: %v \n", position.FrozenUntil)
 

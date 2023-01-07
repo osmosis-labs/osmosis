@@ -23,22 +23,30 @@ message TickInfo {
     (gogoproto.moretags) = "yaml:\"liquidity_net\"",
     (gogoproto.nullable) = false
   ];
-  string incentivized_liquidity_gross = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"incentivized_liquidity_gross\"",
-    (gogoproto.nullable) = false
-  ];
-  string incentivized_liquidity_net = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"incentivized_liquidity_net\"",
-    (gogoproto.nullable) = false
-  ];
-  google.protobuf.Duration seconds_inactive = 5 [
+  repeated TickIncentivizedLiquidityRecord tick_incentivized_liquidity_records =
+      3 [ (gogoproto.nullable) = false ];
+  google.protobuf.Duration seconds_inactive = 4 [
     (gogoproto.nullable) = false,
     (gogoproto.stdduration) = true,
     (gogoproto.moretags) = "yaml:\"seconds_inactive\""
   ];
-  string seconds_per_incentivized_liquidity_outside = 6 [
+}
+
+message TickIncentivizedLiquidityRecord {
+  option (gogoproto.equal) = true;
+
+  uint64 ID = 1;
+  string incentivized_liquidity_gross = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"incentivized_liquidity_gross\"",
+    (gogoproto.nullable) = false
+  ];
+  string incentivized_liquidity_net = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"incentivized_liquidity_net\"",
+    (gogoproto.nullable) = false
+  ];
+  string seconds_per_incentivized_liquidity_outside = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) =
         "yaml:\"seconds_per_incentivized_liquidity_outside\"",

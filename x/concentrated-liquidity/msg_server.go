@@ -65,7 +65,7 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 		return nil, err
 	}
 
-	actualAmount0, actualAmount1, liquidityCreated, err := server.keeper.createPosition(ctx, msg.PoolId, sender, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick, msg.IsIncentivized)
+	actualAmount0, actualAmount1, liquidityCreated, err := server.keeper.createPosition(ctx, msg.PoolId, sender, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick, msg.IncentiveIdsCommittedTo)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 		return nil, err
 	}
 
-	amount0, amount1, err := server.keeper.withdrawPosition(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick, msg.LiquidityAmount.ToDec(), msg.IsIncentivized)
+	amount0, amount1, err := server.keeper.withdrawPosition(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick, msg.LiquidityAmount.ToDec(), msg.IncentiveIdsCommittedTo)
 	if err != nil {
 		return nil, err
 	}
