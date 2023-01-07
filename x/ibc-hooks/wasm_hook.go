@@ -3,10 +3,12 @@ package ibc_hooks
 import (
 	"encoding/json"
 	"fmt"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -73,17 +75,13 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	sender := sdk.AccAddress(senderHash32[:])
 	senderBech32, err := sdk.Bech32ifyAddressBytes(h.bech32PrefixAccAddr, sender)
 	if err != nil {
-		return osmoutils.NewStringErrorAcknowledgement(fmt.Sprintf("cannot convert sender address %s to bech32: %s", senderStr, err.Error()))
+		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadSender, fmt.Sprintf("cannot convert sender address %s to bech32: %s", sender, err.Error()))
 	}
 
 	// The funds sent on this packet need to be transferred to the intermediary account for the sender.
 	// For this, we override the ICS20 packet's Receiver (essentially hijacking the funds to this new address)
 	// and execute the underlying OnRecvPacket() call (which should eventually land on the transfer app's
-<<<<<<< HEAD
-	// relay.go and send the funds to the module.
-=======
-	// relay.go and send the sunds to the intermediary account.
->>>>>>> 6436e520 (Add sender to wasm hooks (#3879))
+	// relay.go and send the funds to the intermediary account.
 	//
 	// If that succeeds, we make the contract call
 	data.Receiver = senderBech32

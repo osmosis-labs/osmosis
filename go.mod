@@ -17,15 +17,9 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-<<<<<<< HEAD
 	github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230106133904-bf95f2df4908
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230106095152-4f77cc5e42af
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230106110415-61e4300ada92
-=======
-	github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230105100058-2ad8dafc6e4f
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230105100058-2ad8dafc6e4f
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230105100058-2ad8dafc6e4f
->>>>>>> 6436e520 (Add sender to wasm hooks (#3879))
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.5.0
