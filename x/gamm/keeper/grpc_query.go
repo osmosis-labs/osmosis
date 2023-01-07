@@ -109,7 +109,8 @@ func (q Querier) Pools(
 	}, nil
 }
 
-// TODO: mark deprecated and move to swaprouter.
+// This query has been deprecated and has been moved to swaprouter module.
+// nolint: staticcheck
 func (q Querier) NumPools(ctx context.Context, _ *types.QueryNumPoolsRequest) (*types.QueryNumPoolsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -410,6 +411,8 @@ func (q Querier) TotalLiquidity(ctx context.Context, _ *types.QueryTotalLiquidit
 }
 
 // EstimateSwapExactAmountIn estimates input token amount for a swap.
+// This query is deprecated and has been moved to swaprouter module.
+// nolint: staticcheck
 func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.QuerySwapExactAmountInRequest) (*types.QuerySwapExactAmountInResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -440,6 +443,8 @@ func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.Query
 }
 
 // EstimateSwapExactAmountOut estimates token output amount for a swap.
+// This query is deprecated and has been moved to swaprouter module.
+// nolint: staticcheck
 func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.QuerySwapExactAmountOutRequest) (*types.QuerySwapExactAmountOutResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

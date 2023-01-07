@@ -80,6 +80,11 @@ func (s *KeeperTestSuite) TestInitializePool() {
 			if test.expectedErr == nil {
 				// Ensure no error is returned
 				s.Require().NoError(err)
+
+				// ensure that fee accumulator has been properly initialized
+				feeAccumulator, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, test.poolI.GetId())
+				s.Require().NoError(err)
+				s.Require().Equal(sdk.DecCoins(nil), feeAccumulator.GetValue())
 			} else {
 				// Ensure specified error is returned
 				s.Require().Error(err)

@@ -111,16 +111,16 @@ pub mod execute {
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn sudo(deps: DepsMut, env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
     match msg {
-        SudoMsg::ReceiveAck {
+        SudoMsg::IBCLifecycleComplete(IBCLifecycleComplete::IBCAck {
             channel: _,
             sequence: _,
             ack: _,
             success,
-        } => sudo::receive_ack(deps, env.contract.address, success),
-        SudoMsg::IBCTimeout {
+        }) => sudo::receive_ack(deps, env.contract.address, success),
+        SudoMsg::IBCLifecycleComplete(IBCLifecycleComplete::IBCTimeout {
             channel: _,
             sequence: _,
-        } => sudo::ibc_timeout(deps, env.contract.address),
+        }) => sudo::ibc_timeout(deps, env.contract.address),
     }
 }
 

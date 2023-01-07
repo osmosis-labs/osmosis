@@ -177,9 +177,11 @@ func (p *Pool) UpdateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upper
 //    * Actual amounts might differ from desired because we recalculate them from liquidity delta and sqrt price.
 //      the calculations lead to amounts being off. // TODO: confirm logic is correct
 // - Current tick is below the position ( p.CurrentTick < lowerTick).
-//    * The provided liquidity is distributed in token0 only.
+//   - The provided liquidity is distributed in token0 only.
+//
 // - Current tick is above the position ( p.CurrentTick >= p.upperTick ).
-//    * The provided liquidity is distributed in token1 only.
+//   - The provided liquidity is distributed in token1 only.
+//
 // TODO: add tests.
 func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, sqrtRatioLowerTick, sqrtRatioUpperTick sdk.Dec, liquidityDelta sdk.Dec) (actualAmountDenom0 sdk.Dec, actualAmountDenom1 sdk.Dec) {
 	if p.isCurrentTickInRange(lowerTick, upperTick) {

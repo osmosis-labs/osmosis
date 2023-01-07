@@ -3,6 +3,7 @@ package concentrated_liquidity
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	cltypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
@@ -76,6 +77,10 @@ func (k Keeper) IsInitialPosition(initialSqrtPrice sdk.Dec, initialTick sdk.Int)
 
 func (k Keeper) InitializeInitialPosition(ctx sdk.Context, pool types.ConcentratedPoolExtension, amount0Desired, amount1Desired sdk.Int) error {
 	return k.initializeInitialPosition(ctx, pool, amount0Desired, amount1Desired)
+}
+
+func (k Keeper) GetFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.AccumulatorObject, error) {
+	return k.getFeeAccumulator(ctx, poolId)
 }
 
 func ConvertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (swaproutertypes.PoolI, error) {

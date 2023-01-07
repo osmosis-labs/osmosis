@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
 )
 
@@ -91,8 +92,14 @@ func TwapLog(x sdk.Dec) sdk.Dec {
 	return twapLog(x)
 }
 
-func TwapPow(x sdk.Dec) sdk.Dec {
-	return twapPow(x)
+// twapPow exponentiates 2 to the given exponent.
+// Used as a test-helper for the power function used in geometric twap.
+func TwapPow(exponent sdk.Dec) sdk.Dec {
+	exp2 := osmomath.Exp2(osmomath.BigDecFromSDKDec(exponent.Abs()))
+	if exponent.IsNegative() {
+		return osmomath.OneDec().Quo(exp2).SDKDec()
+	}
+	return exp2.SDKDec()
 }
 
 func GetSpotPrices(
