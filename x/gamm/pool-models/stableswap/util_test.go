@@ -10,10 +10,12 @@ import (
 )
 
 func createTestPool(t *testing.T, poolLiquidity sdk.Coins, swapFee, exitFee sdk.Dec, scalingFactors []uint64) types.PoolI {
+	scalingFactors, _ = applyScalingFactorMultiplier(scalingFactors)
+
 	pool, err := NewStableswapPool(1, PoolParams{
 		SwapFee: swapFee,
 		ExitFee: exitFee,
-	}, poolLiquidity, applyScalingFactorMultiplier(scalingFactors), "", "")
+	}, poolLiquidity, scalingFactors, "", "")
 
 	require.NoError(t, err)
 

@@ -64,13 +64,15 @@ var (
 
 // we create a pool struct directly to bypass checks in NewStableswapPool()
 func poolStructFromAssets(assets sdk.Coins, scalingFactors []uint64) Pool {
+	scalingFactors, _ = applyScalingFactorMultiplier(scalingFactors)
+
 	p := Pool{
 		Address:            types.NewPoolAddress(defaultPoolId).String(),
 		Id:                 defaultPoolId,
 		PoolParams:         defaultStableswapPoolParams,
 		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),
 		PoolLiquidity:      assets,
-		ScalingFactors:     applyScalingFactorMultiplier(scalingFactors),
+		ScalingFactors:     scalingFactors,
 		FuturePoolGovernor: defaultFutureGovernor,
 	}
 	return p
@@ -241,39 +243,45 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 	}
 }
 
-func TestGetLiquidityIndexMap(t *testing.T) {
+func TestGetScalingFactorByDenom(t *testing.T) {
 	tests := map[string]struct {
-		poolAssets sdk.Coins
+		denom          string
+		poolAssets     sdk.Coins
+		scalingFactors []uint64
+		expResult      uint64
 	}{
-		"2 asset pool": {
-			twoEvenStablePoolAssets,
+		"pass in no denoms": {
+			denom:          "",
+			poolAssets:     twoEvenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			expResult:      0,
 		},
-		"3 asset pool": {
-			threeEvenStablePoolAssets,
+		"get scaling factor for first asset (two-asset pool)": {
+			denom:          "bar",
+			poolAssets:     twoEvenStablePoolAssets,
+			scalingFactors: []uint64{1, 2},
+			expResult:      1,
 		},
-		"4 asset pool": {
-			sdk.NewCoins(
-				sdk.NewInt64Coin("asset/a", 1000000000),
-				sdk.NewInt64Coin("asset/b", 1000000000),
-				sdk.NewInt64Coin("asset/c", 1000000000),
-				sdk.NewInt64Coin("asset/d", 1000000000),
-			),
+		"get scaling factor for second asset (two-asset pool)": {
+			denom:          "foo",
+			poolAssets:     twoEvenStablePoolAssets,
+			scalingFactors: []uint64{1, 2},
+			expResult:      2,
 		},
-		"5 asset pool": {
-			fiveEvenStablePoolAssets,
+		"get scaling factor for second asset (three-asset pool)": {
+			denom:          "asset/b",
+			poolAssets:     threeEvenStablePoolAssets,
+			scalingFactors: []uint64{1, 2, 3},
+			expResult:      2,
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			pool := poolStructFromAssets(tc.poolAssets, []uint64{})
+			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 
-			indexMap := pool.getLiquidityIndexMap()
-			require.Equal(t, len(indexMap), len(tc.poolAssets))
-			for ind := 0; ind < len(tc.poolAssets); ind++ {
-				actual_ind := indexMap[tc.poolAssets[ind].Denom]
-				require.Equal(t, actual_ind, ind)
-			}
+			factor := p.GetScalingFactorByDenom(tc.denom)
+			require.Equal(t, tc.expResult, factor)
 		})
 	}
 }
@@ -1082,7 +1090,7 @@ func TestValidatePoolLiquidity(t *testing.T) {
 				coinB,
 			},
 			scalingFactors: []uint64{10, 10, 10, 10},
-			expectError: unsortedPoolLiqError{ActualLiquidity: sdk.Coins{
+			expectError: types.UnsortedPoolLiqError{ActualLiquidity: sdk.Coins{
 				coinD,
 				coinA,
 				coinC,
@@ -1097,7 +1105,7 @@ func TestValidatePoolLiquidity(t *testing.T) {
 				coinD,
 			},
 			scalingFactors: []uint64{10, 10},
-			expectError: liquidityAndScalingFactorCountMismatchError{
+			expectError: types.LiquidityAndScalingFactorCountMismatchError{
 				LiquidityCount:     4,
 				ScalingFactorCount: 2,
 			},
