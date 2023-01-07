@@ -1,6 +1,6 @@
 module github.com/osmosis-labs/osmosis/x/ibc-hooks
 
-go 1.18
+go 1.19
 
 require (
 	github.com/CosmWasm/wasmd v0.29.2
@@ -8,7 +8,7 @@ require (
 	github.com/cosmos/ibc-go/v4 v4.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230107103045-bd927ebeed7e
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.3-rc0
 	github.com/spf13/cobra v1.6.1
 	github.com/tendermint/tendermint v0.34.24
 )
