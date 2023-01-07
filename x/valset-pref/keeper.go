@@ -61,7 +61,6 @@ func (k Keeper) GetValidatorSetPreference(ctx sdk.Context, delegator string) (ty
 	return valsetPref, true
 }
 
-// TODO: Write unit test
 // GetDelegationPreferences checks if valset position exists, if it does return that
 // else return existing delegation that's not valset.
 func (k Keeper) GetDelegationPreferences(ctx sdk.Context, delegator string) (types.ValidatorSetPreferences, error) {
