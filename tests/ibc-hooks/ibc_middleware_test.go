@@ -3,6 +3,10 @@ package ibc_hooks_test
 import (
 	"encoding/json"
 	"fmt"
+<<<<<<< HEAD
+=======
+	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
+>>>>>>> 637f3f3d (Wasm hooks E2E test & change intermediary address prefix (#3937))
 	"testing"
 	"time"
 
@@ -329,6 +333,12 @@ func (suite *HooksTestSuite) TestFundTracking() {
 		addr.String(),
 		fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"increment": {} } } }`, addr))
 
+<<<<<<< HEAD
+=======
+	senderLocalAcc, err := ibchookskeeper.DeriveIntermediateSender("channel-0", suite.chainB.SenderAccount.GetAddress().String(), "osmo")
+	suite.Require().NoError(err)
+
+>>>>>>> 637f3f3d (Wasm hooks E2E test & change intermediary address prefix (#3937))
 	state := suite.chainA.QueryContract(
 		&suite.Suite, addr,
 		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, ibchooks.WasmHookModuleAccountAddr)))

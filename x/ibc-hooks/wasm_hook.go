@@ -48,7 +48,6 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 		// Not configured
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
-
 	isIcs20, data := isIcs20Packet(packet)
 	if !isIcs20 {
 		return im.App.OnRecvPacket(ctx, packet, relayer)
@@ -66,8 +65,21 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrMsgValidation)
 	}
 
+<<<<<<< HEAD
 	// The funds sent on this packet need to be transferred to the wasm hooks module address/
 	// For this, we override the ICS20 packet's Receiver (essentially hijacking the funds for the module)
+=======
+	// Calculate the receiver / contract caller based on the packet's channel and sender
+	channel := packet.GetDestChannel()
+	sender := data.GetSender()
+	senderBech32, err := keeper.DeriveIntermediateSender(channel, sender, h.bech32PrefixAccAddr)
+	if err != nil {
+		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadSender, fmt.Sprintf("cannot convert sender address %s/%s to bech32: %s", channel, sender, err.Error()))
+	}
+
+	// The funds sent on this packet need to be transferred to the intermediary account for the sender.
+	// For this, we override the ICS20 packet's Receiver (essentially hijacking the funds to this new address)
+>>>>>>> 637f3f3d (Wasm hooks E2E test & change intermediary address prefix (#3937))
 	// and execute the underlying OnRecvPacket() call (which should eventually land on the transfer app's
 	// relay.go and send the funds to the module.
 	//

@@ -17,9 +17,15 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
+<<<<<<< HEAD
 	github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230106133904-bf95f2df4908
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230106095152-4f77cc5e42af
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230106110415-61e4300ada92
+=======
+	github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230105183030-bccf5202f260
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230105184425-1e6fcd979d99
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230106184722-bdbb70f3d69b
+>>>>>>> 637f3f3d (Wasm hooks E2E test & change intermediary address prefix (#3937))
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.5.0

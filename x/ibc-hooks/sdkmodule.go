@@ -11,6 +11,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
+	"github.com/osmosis-labs/osmosis/x/ibc-hooks/client/cli"
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -26,17 +27,17 @@ var (
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
-// AppModuleBasic defines the basic application module used by the mint module.
+// AppModuleBasic defines the basic application module used by the ibc-hooks module.
 type AppModuleBasic struct{}
 
 var _ module.AppModuleBasic = AppModuleBasic{}
 
-// Name returns the mint module's name.
+// Name returns the ibc-hooks module's name.
 func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterLegacyAminoCodec registers the mint module's types on the given LegacyAmino codec.
+// RegisterLegacyAminoCodec registers the ibc-hooks module's types on the given LegacyAmino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
 
 // RegisterInterfaces registers the module's interface types.
@@ -49,28 +50,28 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	return []byte(emptyString)
 }
 
-// ValidateGenesis performs genesis state validation for the mint module.
+// ValidateGenesis performs genesis state validation for the ibc-hooks module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
 	return nil
 }
 
-// RegisterRESTRoutes registers the REST routes for the mint module.
+// RegisterRESTRoutes registers the REST routes for the ibc-hooks module.
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {}
 
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the mint module.
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the ibc-hooks module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {}
 
-// GetTxCmd returns no root tx command for the mint module.
+// GetTxCmd returns no root tx command for the ibc-hooks module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
 
-// GetQueryCmd returns the root query command for the mint module.
+// GetQueryCmd returns the root query command for the ibc-hooks module.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
+	return cli.GetQueryCmd()
 }
 
 // ___________________________________________________________________________
 
-// AppModule implements an application module for the mint module.
+// AppModule implements an application module for the ibc-hooks module.
 type AppModule struct {
 	AppModuleBasic
 
@@ -85,15 +86,15 @@ func NewAppModule(ak osmoutils.AccountKeeper) AppModule {
 	}
 }
 
-// Name returns the mint module's name.
+// Name returns the ibc-hooks module's name.
 func (AppModule) Name() string {
 	return types.ModuleName
 }
 
-// RegisterInvariants registers the mint module invariants.
+// RegisterInvariants registers the ibc-hooks module invariants.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Route returns the message routing key for the mint module.
+// Route returns the message routing key for the ibc-hooks module.
 func (AppModule) Route() sdk.Route { return sdk.Route{} }
 
 // QuerierRoute returns the module's querier route name.
@@ -101,7 +102,7 @@ func (AppModule) QuerierRoute() string {
 	return ""
 }
 
-// LegacyQuerierHandler returns the x/mint module's sdk.Querier.
+// LegacyQuerierHandler returns the x/ibc-hooks module's sdk.Querier.
 func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
 		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
@@ -124,11 +125,11 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 	return json.RawMessage([]byte("{}"))
 }
 
-// BeginBlock returns the begin blocker for the mint module.
+// BeginBlock returns the begin blocker for the ibc-hooks module.
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 }
 
-// EndBlock returns the end blocker for the mint module. It returns no validator
+// EndBlock returns the end blocker for the ibc-hooks module. It returns no validator
 // updates.
 func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}

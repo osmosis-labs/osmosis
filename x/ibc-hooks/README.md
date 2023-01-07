@@ -33,7 +33,12 @@ So we detail where we want to get each of these fields from:
 
 * Sender: We cannot trust the sender of an IBC packet, the counterparty chain has full ability to lie about it. 
 We cannot risk this sender being confused for a particular user or module address on Osmosis.
+<<<<<<< HEAD
 So we hardcode the sender to be a particular module account made in IBC.
+=======
+So we replace the sender with an account to represent the sender prefixed by the channel and a wasm module prefix.
+This is done by setting the sender to `Bech32(Hash("ibc-wasm-hook-intermediaryg" || channelID || sender))`, where the channelId is the channel id on the local chain. 
+>>>>>>> 637f3f3d (Wasm hooks E2E test & change intermediary address prefix (#3937))
 * Contract: This field should be directly obtained from the ICS-20 packet metadata
 * Msg: This field should be directly obtained from the ICS-20 packet metadata.
 * Funds: This field is set to the amount of funds being sent over in the ICS 20 packet. One detail is that the denom in the packet is the counterparty chains representation of the denom, so we have to translate it to Osmosis' representation.
