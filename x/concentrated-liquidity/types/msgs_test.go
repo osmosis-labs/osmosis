@@ -334,7 +334,7 @@ func TestConcentratedLiquiditySerialization(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			apptesting.TestMessageConcentratedLiquiditySerialization(t, tc.clMsg)
+			apptesting.TestMessageAuthzSerialization(t, tc.clMsg)
 		})
 	}
 }
