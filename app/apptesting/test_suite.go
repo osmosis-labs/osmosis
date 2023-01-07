@@ -30,8 +30,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/v13/app"
-	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
@@ -398,35 +396,6 @@ func CreateRandomAccounts(numAccts int) []sdk.AccAddress {
 	}
 
 	return testAddrs
-}
-
-func TestMessageConcentratedLiquiditySerialization(t *testing.T, msg sdk.Msg) {
-	clCdc := cltypes.ModuleCdc
-
-	var (
-		mockMsgCreateConcentratedPool clmodel.MsgCreateConcentratedPool
-		mockMsgWithdrawPosition       cltypes.MsgWithdrawPosition
-		mockMsgCreatePosition         cltypes.MsgCreatePosition
-	)
-
-	if m, ok := msg.(*clmodel.MsgCreateConcentratedPool); ok {
-		bz := json.RawMessage(sdk.MustSortJSON(clCdc.MustMarshalJSON(m)))
-		err := clCdc.UnmarshalJSON(bz, &mockMsgCreateConcentratedPool)
-		require.NoError(t, err)
-		require.Equal(t, m, &mockMsgCreateConcentratedPool)
-	} else if m, ok := msg.(*cltypes.MsgWithdrawPosition); ok {
-		bz := json.RawMessage(sdk.MustSortJSON(clCdc.MustMarshalJSON(m)))
-		err := clCdc.UnmarshalJSON(bz, &mockMsgWithdrawPosition)
-		require.NoError(t, err)
-		require.Equal(t, m, &mockMsgWithdrawPosition)
-	} else if m, ok := msg.(*cltypes.MsgCreatePosition); ok {
-		bz := json.RawMessage(sdk.MustSortJSON(clCdc.MustMarshalJSON(m)))
-		err := clCdc.UnmarshalJSON(bz, &mockMsgCreatePosition)
-		require.NoError(t, err)
-		require.Equal(t, m, &mockMsgCreatePosition)
-	} else {
-		t.Errorf("%s not supported by TestMessageConcentratedLiquiditySerialization", msg)
-	}
 }
 
 func TestMessageAuthzSerialization(t *testing.T, msg sdk.Msg) {
