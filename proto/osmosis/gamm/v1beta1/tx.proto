@@ -166,14 +166,14 @@ message MsgJoinSwapShareAmountOut {
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string token_in_denom = 3
       [ (gogoproto.moretags) = "yaml:\"token_in_denom\"" ];
-  string share_out_amount = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"share_out_amount\"",
-    (gogoproto.nullable) = false
-  ];
-  string token_in_max_amount = 5 [
+  string token_in_max_amount = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_in_max_amount\"",
+    (gogoproto.nullable) = false
+  ];
+  string share_out_amount = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"share_out_amount\"",
     (gogoproto.nullable) = false
   ];
 }
