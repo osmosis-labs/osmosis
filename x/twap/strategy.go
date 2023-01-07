@@ -43,6 +43,10 @@ func (s *arithmetic) computeTwap(startRecord types.TwapRecord, endRecord types.T
 func (s *geometric) computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
 	accumDiff := endRecord.GeometricTwapAccumulator.Sub(startRecord.GeometricTwapAccumulator)
 
+	if accumDiff.IsZero() {
+		return sdk.ZeroDec()
+	}
+
 	timeDelta := endRecord.Time.Sub(startRecord.Time)
 	arithmeticMeanOfLogPrices := types.AccumDiffDivDuration(accumDiff, timeDelta)
 

@@ -37,6 +37,9 @@ var (
 	// Other tests depend on being equal to MaxSpotPrice,
 	// but don't directly import it due to import issues.
 	MaxSpotPrice = sdk.NewDec(2).Power(128).Sub(sdk.OneDec())
+	// MinSpotPrice is the minimum supported spot price. Anything less than this will error.
+	// It is limited by sdk.Dec's precision.
+	MinSpotPrice = sdk.SmallestDec()
 
 	// MultihopSwapFeeMultiplierForOsmoPools if a swap fees multiplier for trades consists of just two OSMO pools during a single transaction.
 	MultihopSwapFeeMultiplierForOsmoPools = sdk.NewDecWithPrec(5, 1) // 0.5

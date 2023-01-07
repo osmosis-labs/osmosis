@@ -107,7 +107,7 @@ func (e ErrTolerance) CompareBigDec(expected BigDec, actual BigDec) int {
 	comparisonSign := 0
 	if expected.GT(actual) {
 		comparisonSign = 1
-	} else {
+	} else if expected.LT(actual) {
 		comparisonSign = -1
 	}
 
