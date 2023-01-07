@@ -95,30 +95,10 @@ Additionally, the swagger files for v13 have been updated to improve compatibili
 * [#3712](https://github.com/osmosis-labs/osmosis/pull/3712) replace `osmomath.BigDec` `Power` with `PowerInteger`
 * [#3711](https://github.com/osmosis-labs/osmosis/pull/3711) Use Dec instead of Int for additive `ErrTolerace` in `osmoutils`.
 
-## v14.0.0
-### Features
-* [#3609](https://github.com/osmosis-labs/osmosis/pull/3609) Add Downtime-detection module.
-* [#2788](https://github.com/osmosis-labs/osmosis/pull/2788) Add logarithm base 2 implementation.
-* [#3693](https://github.com/osmosis-labs/osmosis/pull/3693) Add `EstimateSwapExactAmountOut` query to stargate whitelist
-* [#3852](https://github.com/osmosis-labs/osmosis/pull/3852) GeometricTwap and GeometricTwapToNow queries added to Stargate whitelist.
-* [#3812](https://github.com/osmosis-labs/osmosis/pull/3812) Add geometric option to TWAP cli.
-* IBC features
-  * [#3838](https://github.com/osmosis-labs/osmosis/pull/3838)Upgrade to IBC v4.2.0
-* Cosmwasm
-  * Upgrade to wasmd v0.30.x
-
 ### Bug fixes
+
 * [#3608](https://github.com/osmosis-labs/osmosis/pull/3608) Make it possible to state export from any directory.
 
-### Misc Improvements
-* [#3678](https://github.com/osmosis-labs/osmosis/pull/3678) Add methods for cloning and mutative multiplication on osmomath.BigDec.
-* [#3899](https://github.com/osmosis-labs/osmosis/pull/3899) Fixed osmoutils so its importable by chains that don't use the osmosis CosmosSDK fork 
-* [#3676](https://github.com/osmosis-labs/osmosis/pull/3676) Implement `PowerInteger` function on `osmomath.BigDec` 
-* [#3678](https://github.com/osmosis-labs/osmosis/pull/3678) Implement mutative `PowerIntegerMut` function on `osmomath.BigDec`.
-* [#3708](https://github.com/osmosis-labs/osmosis/pull/3708) `Exp2` function to compute 2^decimal.
-* [#3763](https://github.com/osmosis-labs/osmosis/pull/3763) Move binary search and error tolerance code from `osmoutils` into `osmomath`
-* [#3771](https://github.com/osmosis-labs/osmosis/pull/3771) Move osmomath into its own go.mod
-* [#3827](https://github.com/osmosis-labs/osmosis/pull/3827) Move osmoutils into its own go.mod
 
 ## v13.0.0
 
