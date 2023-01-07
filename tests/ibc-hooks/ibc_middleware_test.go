@@ -3,7 +3,7 @@ package ibc_hooks_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/address"
+	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	"testing"
 	"time"
 
@@ -328,10 +328,8 @@ func (suite *HooksTestSuite) TestFundTracking() {
 		addr.String(),
 		fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"increment": {} } } }`, addr))
 
-	localAccountStr := fmt.Sprintf("%s/%s", "channel-0", suite.chainB.SenderAccount.GetAddress().String())
-	localAccountHash32 := address.Hash("ibc-memo-action", []byte(localAccountStr))
-	localAccount := sdk.AccAddress(localAccountHash32[:])
-	senderLocalAcc := sdk.MustBech32ifyAddressBytes("osmo", localAccount)
+	senderLocalAcc, err := ibchookskeeper.DeriveIntermediateSender("channel-0", suite.chainB.SenderAccount.GetAddress().String(), "osmo")
+	suite.Require().NoError(err)
 
 	state := suite.chainA.QueryContract(
 		&suite.Suite, addr,
