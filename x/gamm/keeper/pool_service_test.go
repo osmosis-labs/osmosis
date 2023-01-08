@@ -259,7 +259,7 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 
 	tests := []struct {
 		name        string
-		pool        func() swaproutertypes.PoolI
+		createPool        func() swaproutertypes.PoolI
 		expectPass  bool
 		expectPanic bool
 	}{
