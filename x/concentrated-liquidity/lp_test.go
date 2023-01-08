@@ -666,7 +666,7 @@ func (s *KeeperTestSuite) TestSecondsPerLiquidityInside() {
 			s.SetupTest()
 
 			// create a CL pool
-			s.PrepareConcentratedPool()
+			s.PrepareConcentratedPoolWithIncentives()
 
 			// Set the block time to 5 seconds after the current time
 			now := s.Ctx.BlockTime()

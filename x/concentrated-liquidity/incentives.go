@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -53,6 +54,8 @@ func (k Keeper) CreatePoolIncentive(ctx sdk.Context, poolId uint64, minimumFreez
 		MinimumFreezeDuration:                 minimumFreezeDuration,
 		SecondsPerIncentivizedLiquidityGlobal: sdk.ZeroDec(),
 	})
+
+	fmt.Printf("poolIncentivizedLiquidityRecord ID: %v \n", poolIncentivizedLiquidityRecord[0].ID)
 
 	// Set the pool liquidity record then set the pool
 	k.SetLastFreezeID(ctx, k.GetLastFreezeID(ctx)+1)

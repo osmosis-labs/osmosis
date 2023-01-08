@@ -88,19 +88,18 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 				})
 			}
 		}
-	} else {
-		// Otherwise, update the incentivized liquidity records in the tickInfo object based on
-		// the given `incentiveIDsCommittedTo` and the amount of liquidity being added.
-		for i, incentiveID := range incentiveIDsCommittedTo {
-			if tickInfo.TickIncentivizedLiquidityRecords[i].ID == incentiveID {
-				incentivizedLiquidityBefore := tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityGross
-				incentivizedLiquidityAfter := math.AddLiquidity(incentivizedLiquidityBefore, liquidityIn)
-				tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityGross = incentivizedLiquidityAfter
-				if upper {
-					tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityNet = tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityNet.Sub(liquidityIn)
-				} else {
-					tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityNet = tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityNet.Add(liquidityIn)
-				}
+	}
+	// Otherwise, update the incentivized liquidity records in the tickInfo object based on
+	// the given `incentiveIDsCommittedTo` and the amount of liquidity being added.
+	for i, incentiveID := range incentiveIDsCommittedTo {
+		if tickInfo.TickIncentivizedLiquidityRecords[i].ID == incentiveID {
+			incentivizedLiquidityBefore := tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityGross
+			incentivizedLiquidityAfter := math.AddLiquidity(incentivizedLiquidityBefore, liquidityIn)
+			tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityGross = incentivizedLiquidityAfter
+			if upper {
+				tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityNet = tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityNet.Sub(liquidityIn)
+			} else {
+				tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityNet = tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityNet.Add(liquidityIn)
 			}
 		}
 	}
