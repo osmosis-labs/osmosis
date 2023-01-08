@@ -321,8 +321,7 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 				poolIncentivesKeeper := suite.App.PoolIncentivesKeeper
 
 				// fund sender test account
-				var sender sdk.AccAddress
-				sender = testAccount
+				sender := testAccount
 
 				// initializePool with a poolI
 				err = gammKeeper.InitializePool(suite.Ctx, test.pool(), sender)
