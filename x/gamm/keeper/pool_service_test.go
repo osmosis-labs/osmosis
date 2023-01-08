@@ -337,7 +337,7 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 					)
 
 					// get expected tokens in new pool and corresponding pool shares
-					expectedPoolTokens := sdk.Coins{}
+					expectedPoolTokens := sdk.NewCoins()
 					for _, asset := range test.pool().GetTotalPoolLiquidity(suite.Ctx) {
 						expectedPoolTokens = expectedPoolTokens.Add(asset)
 					}
