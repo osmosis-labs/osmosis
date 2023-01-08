@@ -4,7 +4,7 @@ syntax = "proto3";
 // until clear steps for migration logic and the unknowns for state breaking are
 // investigated for changing proto package.
 package osmosis.concentratedliquidity.v1beta1;
-import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
@@ -15,7 +15,12 @@ message PoolIncentivizedLiquidityRecord {
   option (gogoproto.equal) = true;
 
   uint64 ID = 1;
-  string seconds_per_incentivized_liquidity_global = 2 [
+  google.protobuf.Duration minimum_freeze_duration = 2 [
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"minimum_freeze_duration\""
+  ];
+  string seconds_per_incentivized_liquidity_global = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"seconds_per_incentivized_liquidity_global\"",
     (gogoproto.nullable) = false

@@ -24,13 +24,18 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 		return err
 	}
 
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
 	// if the following is true, we are either initializing a tick for the first time or initializing it after it was inactive.
 	// therefore, we must set the seconds inactive to the length of time the pool has existed.
 	if tickInfo.LiquidityGross.Equal(sdk.ZeroDec()) && tickInfo.LiquidityNet.Equal(sdk.ZeroDec()) {
-		pool, err := k.getPoolById(ctx, poolId)
-		if err != nil {
-			return err
-		}
+		// pool, err := k.getPoolById(ctx, poolId)
+		// if err != nil {
+		// 	return err
+		// }
 
 		tickInfo.SecondsInactive = ctx.BlockTime().Sub(pool.GetTimeOfCreation())
 	}
@@ -45,41 +50,59 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 
 	tickInfo.LiquidityGross = liquidityAfter
 
-	// START STUB do this for incentivized liquidity gross
-	// if isIncentivized {
-	// 	incentivizedLiquidityBefore := tickInfo.IncentivizedLiquidityGross
-	// 	fmt.Printf("Incentivized liquidity before: %v \n", incentivizedLiquidityBefore)
-	// 	fmt.Printf("liquidityIn: %v \n", liquidityIn)
-	// 	incentivizedLiquidityAfter := math.AddLiquidity(incentivizedLiquidityBefore, liquidityIn)
-	// 	tickInfo.IncentivizedLiquidityGross = incentivizedLiquidityAfter
-	// 	if upper {
-	// 		tickInfo.IncentivizedLiquidityNet = tickInfo.IncentivizedLiquidityNet.Sub(liquidityIn)
-	// 	} else {
-	// 		tickInfo.IncentivizedLiquidityNet = tickInfo.IncentivizedLiquidityNet.Add(liquidityIn)
-	// 	}
-	// }
-	for i, incentiveID := range incentiveIDsCommittedTo {
-		if tickInfo.TickIncentivizedLiquidityRecords[i].ID == incentiveID {
-			incentivizedLiquidityBefore := tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityGross
-			incentivizedLiquidityAfter := math.AddLiquidity(incentivizedLiquidityBefore, liquidityIn)
-			tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityGross = incentivizedLiquidityAfter
-			if upper {
-				tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityNet = tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityNet.Sub(liquidityIn)
-			} else {
-				tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityNet = tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityNet.Add(liquidityIn)
-			}
-		}
-
-	}
-	// for _, incentiveID := range incentiveIDsCommittedTo {
-	// 	incentivizedLiquidityBefore := tickInfo
-	// END STUB
-
 	// calculate liquidityNet, which we take into account and track depending on whether liquidityIn is positive or negative
 	if upper {
 		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Sub(liquidityIn)
 	} else {
 		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Add(liquidityIn)
+	}
+
+	// Incentivized Liquidity
+
+	if len(tickInfo.TickIncentivizedLiquidityRecords) == 0 {
+		// If the tickInfo object has no incentivized liquidity records, create new records for
+		// each of the pool's incentivized liquidity records and set the gross and net liquidity
+		// to zero.
+		poolIncentivizedLiquidityRecord := pool.GetPoolIncentivizedLiquidityRecords()
+		for _, record := range poolIncentivizedLiquidityRecord {
+			tickInfo.TickIncentivizedLiquidityRecords = append(tickInfo.TickIncentivizedLiquidityRecords, model.TickIncentivizedLiquidityRecord{
+				ID:                         record.ID,
+				IncentivizedLiquidityGross: sdk.ZeroDec(),
+				IncentivizedLiquidityNet:   sdk.ZeroDec(),
+			})
+		}
+	} else if len(pool.GetPoolIncentivizedLiquidityRecords()) != len(tickInfo.TickIncentivizedLiquidityRecords) {
+		// If the tickInfo object has a different number of incentivized liquidity records than
+		// the pool, create new records for any missing records in the tickInfo object and set
+		// the gross and net liquidity to zero.
+		poolIncentivizedLiquidityRecord := pool.GetPoolIncentivizedLiquidityRecords()
+		var newTickIncentivizedLiquidityRecords []model.TickIncentivizedLiquidityRecord
+		for i, record := range poolIncentivizedLiquidityRecord {
+			if tickInfo.TickIncentivizedLiquidityRecords[i].ID == record.ID {
+				newTickIncentivizedLiquidityRecords = append(newTickIncentivizedLiquidityRecords, tickInfo.TickIncentivizedLiquidityRecords[i])
+			} else {
+				newTickIncentivizedLiquidityRecords = append(tickInfo.TickIncentivizedLiquidityRecords, model.TickIncentivizedLiquidityRecord{
+					ID:                         record.ID,
+					IncentivizedLiquidityGross: sdk.ZeroDec(),
+					IncentivizedLiquidityNet:   sdk.ZeroDec(),
+				})
+			}
+		}
+	} else {
+		// Otherwise, update the incentivized liquidity records in the tickInfo object based on
+		// the given `incentiveIDsCommittedTo` and the amount of liquidity being added.
+		for i, incentiveID := range incentiveIDsCommittedTo {
+			if tickInfo.TickIncentivizedLiquidityRecords[i].ID == incentiveID {
+				incentivizedLiquidityBefore := tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityGross
+				incentivizedLiquidityAfter := math.AddLiquidity(incentivizedLiquidityBefore, liquidityIn)
+				tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityGross = incentivizedLiquidityAfter
+				if upper {
+					tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityNet = tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityNet.Sub(liquidityIn)
+				} else {
+					tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityNet = tickInfo.TickIncentivizedLiquidityRecords[i].IncentivizedLiquidityNet.Add(liquidityIn)
+				}
+			}
+		}
 	}
 
 	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)

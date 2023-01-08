@@ -19,6 +19,7 @@ var (
 	TickPrefix     = []byte{0x01}
 	PositionPrefix = []byte{0x02}
 	PoolPrefix     = []byte{0x03}
+	LastFreezeID   = []byte{0x04}
 )
 
 // TickIndexToBytes converts a tick index to a byte slice. Negative tick indexes
