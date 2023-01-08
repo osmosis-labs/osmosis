@@ -46,6 +46,16 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	cacheCtx, writeCacheCtx := ctx.CacheContext()
 	initialSqrtPrice := pool.GetCurrentSqrtPrice()
 	initialTick := pool.GetCurrentTick()
+	isInitialPositionForPool := k.isInitialPositionForPool(initialSqrtPrice, initialTick)
+
+	// If the current square root price and current tick are zero, then this is the first position to be created for this pool.
+	// In this case, we calculate the square root price and current tick based on the inputs of this position.
+	if isInitialPositionForPool {
+		err := k.initializeInitialPositionForPool(cacheCtx, pool, amount0Desired, amount1Desired)
+		if err != nil {
+			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		}
+	}
 
 	// Calculate the amount of liquidity that will be added to the pool by creating this position.
 	liquidityDelta := math.GetLiquidityFromAmounts(pool.GetCurrentSqrtPrice(), sqrtPriceLowerTick, sqrtPriceUpperTick, amount0Desired, amount1Desired)
@@ -53,16 +63,10 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, errors.New("liquidityDelta calculated equals zero")
 	}
 
-	// If the current square root price and current tick are zero, then this is the first position to be created for this pool.
-	// In this case, we calculate the square root price and current tick based on the inputs of this position.
-	if k.isInitialPositionForPool(initialSqrtPrice, initialTick) {
+	// if it was a initial position for the pool, initialize the fee accumulator using liquidity Delta calculated
+	if isInitialPositionForPool {
 		// initialize fee accumulator position
 		if err := k.initializeFeeAccumulatorPosition(cacheCtx, poolId, owner, liquidityDelta); err != nil {
-			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
-		}
-
-		err := k.initializeInitialPositionForPool(cacheCtx, pool, amount0Desired, amount1Desired)
-		if err != nil {
 			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 		}
 	}
