@@ -68,7 +68,7 @@ func TickToPrice(tickIndex, kAtPriceOne sdk.Int) (price sdk.Dec, err error) {
 	curIncrement := powTen(curK)
 
 	// Now, starting at the minimum tick of the current increment, we calculate how many ticks in the current k we have passed
-	numAdditiveTicks := tickIndex.Sub(kDelta).ToDec().Mul(kIncrementDistance))
+	numAdditiveTicks := tickIndex.Sub(kDelta).ToDec().Mul(kIncrementDistance)
 
 	// Finally, we can calculate the price
 	price = powTen(kDelta).Add(numAdditiveTicks.Mul(curIncrement))
