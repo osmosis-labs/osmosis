@@ -91,7 +91,7 @@ Since we know what range a pair will generally trade in, how do we go about prov
 
 In Osmosis' implementation of concentrated liquidity, we will instead make use of geometric tick spacing with additive ranges.
 
-We start by defining a precision factor at a spot price of one ($k_{p1}$).
+We start by defining an exponent for the precision factor of 10 at a spot price of one - ($k_{p1}$).
 
 For instance, if $k_{p1} = -4$ , then each tick starting at 1 and ending at the first factor of 10 will represents a spot price increase of 0.0001. At this precision factor:
 * $tick_0 = 1$ (tick 0 is always equal to 1 regardless of precision factor)
