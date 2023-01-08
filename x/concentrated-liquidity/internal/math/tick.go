@@ -14,12 +14,12 @@ var sdkTenDec = sdk.NewDec(10)
 // TicksToPrice returns the price for the lower and upper ticks.
 // Returns error if fails to calculate price.
 // TODO: spec and tests
-func TicksToPrice(lowerTick, upperTick int64, kAtPriceOne sdk.Int) (sdk.Dec, sdk.Dec, error) {
-	priceUpperTick, err := TickToPrice(sdk.NewInt(upperTick), kAtPriceOne)
+func TicksToPrice(lowerTick, upperTick int64, exponentAtPriceOne sdk.Int) (sdk.Dec, sdk.Dec, error) {
+	priceUpperTick, err := TickToPrice(sdk.NewInt(upperTick), exponentAtPriceOne)
 	if err != nil {
 		return sdk.Dec{}, sdk.Dec{}, err
 	}
-	priceLowerTick, err := TickToPrice(sdk.NewInt(lowerTick), kAtPriceOne)
+	priceLowerTick, err := TickToPrice(sdk.NewInt(lowerTick), exponentAtPriceOne)
 	if err != nil {
 		return sdk.Dec{}, sdk.Dec{}, err
 	}
@@ -28,29 +28,29 @@ func TicksToPrice(lowerTick, upperTick int64, kAtPriceOne sdk.Int) (sdk.Dec, sdk
 
 // TickToPrice returns the price given the following two arguments:
 // 	- tickIndex: the tick index to calculate the price for
-// 	- kAtPriceOne: the value of k at which the starting price of 1 is set
+// 	- exponentAtPriceOne: the value of the exponent (and therefore the precision) at which the starting price of 1 is set
 //
 // If tickIndex is zero, the function returns sdk.OneDec().
-func TickToPrice(tickIndex, kAtPriceOne sdk.Int) (price sdk.Dec, err error) {
+func TickToPrice(tickIndex, exponentAtPriceOne sdk.Int) (price sdk.Dec, err error) {
 	if tickIndex.IsZero() {
 		return sdk.OneDec(), nil
 	}
 
-	if kAtPriceOne.LT(types.PrecisionValueAtPriceOneMin) || kAtPriceOne.GT(types.PrecisionValueAtPriceOneMax) {
-		return sdk.Dec{}, fmt.Errorf("kAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax)
+	if exponentAtPriceOne.LT(types.PrecisionValueAtPriceOneMin) || exponentAtPriceOne.GT(types.PrecisionValueAtPriceOneMax) {
+		return sdk.Dec{}, fmt.Errorf("exponentAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax)
 	}
 
-	// The formula is as follows: k_increment_distance = 9 * 10**(-k_at_price_1)
-	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**k_at_price_1)
-	kIncrementDistance := sdkNineDec.Mul(powTen(kAtPriceOne.Neg()))
+	// The formula is as follows: geometricExponentIncrementDistanceInTicks = 9 * 10**(-exponentAtPriceOne)
+	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**exponentAtPriceOne)
+	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(powTen(exponentAtPriceOne.Neg()))
 
 	// If the price is below 1, we decrement the increment distance by a factor of 10
 	if tickIndex.IsNegative() {
-		kIncrementDistance = kIncrementDistance.Quo(sdkTenDec)
+		geometricExponentIncrementDistanceInTicks = geometricExponentIncrementDistanceInTicks.Quo(sdkTenDec)
 	}
 
-	// Check that the tick index is between min and max value for the given k
-	minTick, maxTick := GetMinAndMaxTicksFromK(kAtPriceOne, kIncrementDistance)
+	// Check that the tick index is between min and max value for the given exponentAtPriceOne
+	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne, geometricExponentIncrementDistanceInTicks)
 	if tickIndex.LT(minTick) {
 		return sdk.Dec{}, fmt.Errorf("tickIndex must be greater than or equal to %s", minTick)
 	}
@@ -58,26 +58,26 @@ func TickToPrice(tickIndex, kAtPriceOne sdk.Int) (price sdk.Dec, err error) {
 		return sdk.Dec{}, fmt.Errorf("tickIndex must be less than or equal to %s", maxTick)
 	}
 
-	// Use floor division to determine how many k increments we have passed
-	kDelta := tickIndex.ToDec().Quo(kIncrementDistance).TruncateInt()
+	// Use floor division to determine what the geometricExponent is now (the delta)
+	geometricExponentDelta := tickIndex.ToDec().Quo(geometricExponentIncrementDistanceInTicks).TruncateInt()
 
-	// Calculate the current k value from the starting k value and the k delta
-	curK := kAtPriceOne.Add(kDelta)
+	// Calculate the exponentAtCurrentTick from the starting exponentAtPriceOne and the geometricExponentDelta
+	exponentAtCurrentTick := exponentAtPriceOne.Add(geometricExponentDelta)
 
-	// Knowing what our curK is, we can then figure out what power of 10 this k corresponds to
-	curIncrement := powTen(curK)
+	// Knowing what our exponentAtCurrentTick is, we can then figure out what power of 10 this exponent corresponds to
+	currentAdditiveIncrementInTicks := powTen(exponentAtCurrentTick)
 
-	// Now, starting at the minimum tick of the current increment, we calculate how many ticks in the current k we have passed
-	numAdditiveTicks := tickIndex.Sub(kDelta).ToDec().Mul(kIncrementDistance)
+	// Now, starting at the minimum tick of the current increment, we calculate how many ticks in the current geometricExponent we have passed
+	numAdditiveTicks := tickIndex.Sub(geometricExponentDelta).ToDec().Mul(geometricExponentIncrementDistanceInTicks)
 
 	// Finally, we can calculate the price
-	price = powTen(kDelta).Add(numAdditiveTicks.Mul(curIncrement))
+	price = powTen(geometricExponentDelta).Add(numAdditiveTicks.Mul(currentAdditiveIncrementInTicks))
 
 	return price, nil
 }
 
 // PriceToTick takes a price and returns the corresponding tick index
-func PriceToTick(price sdk.Dec, kAtPriceOne sdk.Int) (sdk.Int, error) {
+func PriceToTick(price sdk.Dec, exponentAtPriceOne sdk.Int) (sdk.Int, error) {
 	if price.Equal(sdk.OneDec()) {
 		return sdk.ZeroInt(), nil
 	}
@@ -86,57 +86,57 @@ func PriceToTick(price sdk.Dec, kAtPriceOne sdk.Int) (sdk.Int, error) {
 		return sdk.Int{}, fmt.Errorf("price must be greater than zero")
 	}
 
-	if kAtPriceOne.LT(types.PrecisionValueAtPriceOneMin) || kAtPriceOne.GT(types.PrecisionValueAtPriceOneMax) {
-		return sdk.Int{}, fmt.Errorf("kAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax)
+	if exponentAtPriceOne.LT(types.PrecisionValueAtPriceOneMin) || exponentAtPriceOne.GT(types.PrecisionValueAtPriceOneMax) {
+		return sdk.Int{}, fmt.Errorf("exponentAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax)
 	}
 
-	// The formula is as follows: k_increment_distance = 9 * 10**(-k_at_price_1)
-	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**k_at_price_1)
-	kIncrementDistance := sdkNineDec.Mul(powTen(kAtPriceOne.Neg()))
+	// The formula is as follows: geometricExponentIncrementDistanceInTicks = 9 * 10**(-exponentAtPriceOne)
+	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**exponentAtPriceOne)
+	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(powTen(exponentAtPriceOne.Neg()))
 
 	// If the price is less than 1, we must reduce the increment distance by a factor of 10
 	if price.LT(sdk.OneDec()) {
-		kIncrementDistance = kIncrementDistance.Quo(sdkTenDec)
+		geometricExponentIncrementDistanceInTicks = geometricExponentIncrementDistanceInTicks.Quo(sdkTenDec)
 	}
 
-	// Initialize the total price to 1, the current k to k_at_price_1, and the number of ticks passed to 0
+	// Initialize the total price to 1, the current precision to exponentAtPriceOne, and the number of ticks passed to 0
 	totalPrice := sdk.OneDec()
 	ticksPassed := sdk.ZeroInt()
-	currentK := kAtPriceOne
+	exponentAtCurrentTick := exponentAtPriceOne
 
-	// Set the currentIncrement to the kAtPriceOne
-	curIncrement := powTen(kAtPriceOne)
+	// Set the currentAdditiveIncrementInTicks to the exponentAtPriceOne
+	currentAdditiveIncrementInTicks := powTen(exponentAtPriceOne)
 
 	// Now, we loop through the k increments until we have passed the price
-	// Once we pass the price, we can determine what which k values we have filled in their entirety,
+	// Once we pass the price, we can determine what which geometric exponents we have filled in their entirety,
 	// as well as how many ticks that corresponds to
-	// In the opposite direction (price < 1), we do the same thing (just decrement k instead of incrementing).
+	// In the opposite direction (price < 1), we do the same thing (just decrement the geometric exponent instead of incrementing).
 	// The only difference is we must reduce the increment distance by a factor of 10.
 	if price.GT(sdk.OneDec()) {
 		for totalPrice.LT(price) {
-			curIncrement = powTen(currentK)
-			maxPriceForCurrentIncrement := kIncrementDistance.Mul(curIncrement)
-			totalPrice = totalPrice.Add(maxPriceForCurrentIncrement)
-			currentK = currentK.Add(sdk.OneInt())
-			ticksPassed = ticksPassed.Add(kIncrementDistance.TruncateInt())
+			currentAdditiveIncrementInTicks = powTen(exponentAtCurrentTick)
+			maxPriceForcurrentAdditiveIncrementInTicks := geometricExponentIncrementDistanceInTicks.Mul(currentAdditiveIncrementInTicks)
+			totalPrice = totalPrice.Add(maxPriceForcurrentAdditiveIncrementInTicks)
+			exponentAtCurrentTick = exponentAtCurrentTick.Add(sdk.OneInt())
+			ticksPassed = ticksPassed.Add(geometricExponentIncrementDistanceInTicks.TruncateInt())
 		}
 	} else {
 		for totalPrice.GT(price) {
-			curIncrement = powTen(currentK)
-			maxPriceForCurrentIncrement := kIncrementDistance.Mul(curIncrement)
-			totalPrice = totalPrice.Sub(maxPriceForCurrentIncrement)
-			currentK = currentK.Sub(sdk.OneInt())
-			ticksPassed = ticksPassed.Sub(kIncrementDistance.TruncateInt())
+			currentAdditiveIncrementInTicks = powTen(exponentAtCurrentTick)
+			maxPriceForcurrentAdditiveIncrementInTicks := geometricExponentIncrementDistanceInTicks.Mul(currentAdditiveIncrementInTicks)
+			totalPrice = totalPrice.Sub(maxPriceForcurrentAdditiveIncrementInTicks)
+			exponentAtCurrentTick = exponentAtCurrentTick.Sub(sdk.OneInt())
+			ticksPassed = ticksPassed.Sub(geometricExponentIncrementDistanceInTicks.TruncateInt())
 		}
 	}
-	// Determine how many ticks we have passed in the current k increment
-	ticksToBeFulfilledByCurrentK := price.Sub(totalPrice).Quo(curIncrement)
+	// Determine how many ticks we have passed in the exponentAtCurrentTick
+	ticksToBeFulfilledByexponentAtCurrentTick := price.Sub(totalPrice).Quo(currentAdditiveIncrementInTicks)
 
-	// Finally, add the ticks we have passed from the completed k values, as well as the ticks we have passed in the current k value
-	tickIndex := ticksPassed.Add(ticksToBeFulfilledByCurrentK.TruncateInt())
+	// Finally, add the ticks we have passed from the completed geometricExponent values, as well as the ticks we have passed in the current geometricExponent value
+	tickIndex := ticksPassed.Add(ticksToBeFulfilledByexponentAtCurrentTick.TruncateInt())
 
 	// Add a check to make sure that the tick index is within the allowed range
-	minTick, maxTick := GetMinAndMaxTicksFromK(kAtPriceOne, kIncrementDistance)
+	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne, geometricExponentIncrementDistanceInTicks)
 	if tickIndex.LT(minTick) {
 		return sdk.Int{}, fmt.Errorf("tickIndex must be greater than or equal to %s", minTick)
 	}
@@ -156,10 +156,10 @@ func powTen(exponent sdk.Int) sdk.Dec {
 	return sdk.OneDec().Quo(sdkTenDec.Power(exponent.Abs().Uint64()))
 }
 
-// GetMinAndMaxTicksFromK determines min and max ticks allowed for a given k value
+// GetMinAndMaxTicksFromExponentAtPriceOne determines min and max ticks allowed for a given exponentAtPriceOne value
 // This allows for a min spot price of 0.000000000000000001 and a max spot price of 200000000000 for every k value
-func GetMinAndMaxTicksFromK(kAtPriceOne sdk.Int, kIncrementDistance sdk.Dec) (minTick, maxTick sdk.Int) {
-	minTick = sdk.NewDec(18).Mul(kIncrementDistance).Neg().RoundInt()
-	maxTick = powTen(kAtPriceOne.Neg().Add(sdk.NewInt(2))).RoundInt()
+func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int, geometricExponentIncrementDistanceInTicks sdk.Dec) (minTick, maxTick sdk.Int) {
+	minTick = sdk.NewDec(18).Mul(geometricExponentIncrementDistanceInTicks).Neg().RoundInt()
+	maxTick = powTen(exponentAtPriceOne.Neg().Add(sdk.NewInt(2))).RoundInt()
 	return minTick, maxTick
 }

@@ -91,27 +91,27 @@ Since we know what range a pair will generally trade in, how do we go about prov
 
 In Osmosis' implementation of concentrated liquidity, we will instead make use of geometric tick spacing with additive ranges.
 
-We start by defining an exponent for the precision factor of 10 at a spot price of one - ($k_{p1}$).
+We start by defining an exponent for the precision factor of 10 at a spot price of one - ($exponentAtPriceOne$).
 
-For instance, if $k_{p1} = -4$ , then each tick starting at 1 and ending at the first factor of 10 will represents a spot price increase of 0.0001. At this precision factor:
+For instance, if $exponentAtPriceOne = -4$ , then each tick starting at 1 and ending at the first factor of 10 will represents a spot price increase of 0.0001. At this precision factor:
 * $tick_0 = 1$ (tick 0 is always equal to 1 regardless of precision factor)
 * $tick_1 = 1.0001$
 * $tick_2 = 1.0002$
 * $tick_3 = 1.0003$
 
-This continues on until we reach a spot price of 10. At this point, since we have increased by a factor of 10, our $k_{current}$ increases from -4 to -3, and the ticks will increase as follows:
+This continues on until we reach a spot price of 10. At this point, since we have increased by a factor of 10, our $exponentAtCurrentTick$ increases from -4 to -3, and the ticks will increase as follows:
 * $tick_{89999} =  9.9999$
 * $tick_{90000} = 10.000$
 * $tick_{90001} = 10.001$
 * $tick_{90002} = 10.002$
 
-For spot prices less than a dollar, the precision factor decreases at every factor of 10. For example, with a $k_{p1}$ of -4:
+For spot prices less than a dollar, the precision factor decreases at every factor of 10. For example, with a $exponentAtPriceOne$ of -4:
 * $tick_{-1} = 0.9999$
 * $tick_{-2} = 0.9998$
 * $tick_{-5001} = 0.4999$
 * $tick_{-5002} = 0.4998$
 
-With a $k_{p1}$ of -6:
+With a $exponentAtPriceOne$ of -6:
 * $tick_{-1} = 0.999999$
 * $tick_{-2} = 0.999998$
 * $tick_{-5001} = 0.994999$
@@ -119,43 +119,45 @@ With a $k_{p1}$ of -6:
 
 ### Formulas
 
-After we define $k_{p1}$ (this is chosen by the user based on what precision they desire the asset pair to trade at), we can then calculate how many ticks must be crossed in order for k to be incremented ($kIncrementDistance$):
+After we define $exponentAtPriceOne$ (this is chosen by the user based on what precision they desire the asset pair to trade at), we can then calculate how many ticks must be crossed in order for k to be incremented ($geometricExponentIncrementDistanceInTicks$).
 
-$$ kIncrementDistance = 9 * 10^{(-k_{p1})} $$
+$$ geometricExponentIncrementDistanceInTicks = 9 * 10^{(-exponentAtPriceOne)} $$
+
+Since we define k at price one and utilize this as the increment starting point instead of price zero, we must multiply the result by 9 as shown above. In other words, starting at 1, it takes 9 ticks to get to the first power of 10. Then, starting at 10, it takes 9*10 ticks to get to the next power of 10, etc.
 
 Now that we know how many ticks must be crossed in order for our k to be incremented, we can then figure out what our change in k will be based on what tick we are trading at:
 
-$$ kΔ = ⌊ tick / kIncrementDistance ⌋ $$
+$$ geometricExponentDelta = ⌊ tick / geometricExponentIncrementDistanceInTicks ⌋ $$
 
 
-With $kΔ$ and $k_{p1}$, we can figure out what the k value we will be at when we reach the provided tick:
+With $geometricExponentDelta$ and $exponentAtPriceOne$, we can figure out what the k value we will be at when we reach the provided tick:
 
-$$ k_{current} = k_{p1} + kΔ $$
+$$ exponentAtCurrentTick = exponentAtPriceOne + geometricExponentDelta $$
 
-Knowing what our $k_{current}$ is, we must then figure out what power of 10 this k corresponds to:
+Knowing what our $exponentAtCurrentTick$ is, we must then figure out what power of 10 this k corresponds to:
 
-$$ currentIncrement = 10^{(k_{current})} $$
+$$ currentAdditiveIncrementInTicks = 10^{(exponentAtCurrentTick)} $$
 
 Lastly, we must determine how many ticks above the current increment we are at:
 
-$$ numAdditiveTicks = tick - (kΔ * kIncrementDistance) $$
+$$ numAdditiveTicks = tick - (geometricExponentDelta * geometricExponentIncrementDistanceInTicks) $$
 
 With this, we can determine the price:
 
-$$ price = (10^{kΔ}) + (numAdditiveTicks * currentIncrement) $$
+$$ price = (10^{geometricExponentDelta}) + (numAdditiveTicks * currentAdditiveIncrementInTicks) $$
 
 ### Tick Spacing Example
 
-Bob sets a limit order on the USD<>BTC pool at tick 36650010. This pool's $k_{p1}$ is -6. What price did Bob set his limit order at?
+Bob sets a limit order on the USD<>BTC pool at tick 36650010. This pool's $exponentAtPriceOne$ is -6. What price did Bob set his limit order at?
 
 
-$$ kIncrementDistance = 9 * 10^{(6)} = 9000000$$
+$$ geometricExponentIncrementDistanceInTicks = 9 * 10^{(6)} = 9000000$$
 
-$$ kΔ = ⌊ 36650010 / 9000000 ⌋ = 4$$
+$$ geometricExponentDelta = ⌊ 36650010 / 9000000 ⌋ = 4$$
 
-$$ k_{current} = -6 + 4 = -2$$
+$$ exponentAtCurrentTick = -6 + 4 = -2$$
 
-$$ currentIncrement = 10^{(-2)} = 0.01$$
+$$ currentAdditiveIncrementInTicks = 10^{(-2)} = 0.01$$
 
 $$ numAdditiveTicks = 36650010 - (4 * 9000000) = 650010$$
 
@@ -170,7 +172,7 @@ This decision allows us to define ticks at spot prices that users actually desir
 a) Preventing trade at a desirable spot price or
 b) Having the front end round the tick's actual price to the nearest human readable/desirable spot price
 
-One draw back of this implementation is the requirement to create many ticks that will likely never be used. For example, in order to create ticks at 10 cent increments for spot prices greater than $10000, a $k_{p1}$ value of -5 must be set, requiring us to traverse ticks 1-3600000 before reaching $10,000. This should simply be an inconvenience and should not present any valid DOS vector for the chain.
+One draw back of this implementation is the requirement to create many ticks that will likely never be used. For example, in order to create ticks at 10 cent increments for spot prices greater than $10000, a $exponentAtPriceOne$ value of -5 must be set, requiring us to traverse ticks 1-3600000 before reaching $10,000. This should simply be an inconvenience and should not present any valid DOS vector for the chain.
 
 ### User Stories
 
