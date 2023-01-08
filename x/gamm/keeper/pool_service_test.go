@@ -333,7 +333,7 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 					pool, err := gammKeeper.GetPoolAndPoke(suite.Ctx, defaultPoolId)
 					suite.Require().NoError(err, "test: %v", test.name)
 					suite.Require().Equal(types.InitPoolSharesSupply.String(), pool.GetTotalShares().String(),
-						fmt.Sprintf("share token should be minted as %s initially", types.InitPoolSharesSupply.String()),
+						fmt.Sprintf("share token should be minted as %s initially", types.InitPoolSharesSupply),
 					)
 
 					// get expected tokens in new pool and corresponding pool shares
