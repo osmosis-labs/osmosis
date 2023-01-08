@@ -57,6 +57,9 @@ func (k Keeper) CreatePoolIncentive(ctx sdk.Context, poolId uint64, minimumFreez
 	// Set the pool liquidity record then set the pool
 	k.SetLastFreezeID(ctx, k.GetLastFreezeID(ctx)+1)
 	pool.SetPoolIncentivizedLiquidityRecords(poolIncentivizedLiquidityRecord)
-	k.setPool(ctx, pool)
+	err = k.setPool(ctx, pool)
+	if err != nil {
+		return err
+	}
 	return nil
 }
