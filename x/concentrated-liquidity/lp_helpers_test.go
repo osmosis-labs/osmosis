@@ -143,7 +143,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			poolToGet:               validPoolId,
 			lowerTick:               DefaultLowerTick,
 			upperTick:               DefaultUpperTick,
-			incentiveIDsCommittedTo: []uint64{1},
+			incentiveIDsCommittedTo: []uint64{},
 			expectedPosition:        &model.Position{Liquidity: DefaultLiquidityAmt},
 		},
 		{
@@ -152,7 +152,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			ownerIndex:              1,
 			lowerTick:               DefaultLowerTick,
 			upperTick:               DefaultUpperTick,
-			incentiveIDsCommittedTo: []uint64{1},
+			incentiveIDsCommittedTo: []uint64{},
 			expectedErr:             types.PositionNotFoundError{PoolId: validPoolId, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick},
 		},
 		{
@@ -160,7 +160,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			poolToGet:               validPoolId,
 			lowerTick:               DefaultLowerTick - 1,
 			upperTick:               DefaultUpperTick + 1,
-			incentiveIDsCommittedTo: []uint64{1},
+			incentiveIDsCommittedTo: []uint64{},
 			expectedErr:             types.PositionNotFoundError{PoolId: validPoolId, LowerTick: DefaultLowerTick - 1, UpperTick: DefaultUpperTick + 1},
 		},
 		{
@@ -168,7 +168,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			poolToGet:               2,
 			lowerTick:               DefaultLowerTick - 1,
 			upperTick:               DefaultUpperTick + 1,
-			incentiveIDsCommittedTo: []uint64{1},
+			incentiveIDsCommittedTo: []uint64{},
 			expectedErr:             types.PositionNotFoundError{PoolId: 2, LowerTick: DefaultLowerTick - 1, UpperTick: DefaultUpperTick + 1},
 		},
 	}
