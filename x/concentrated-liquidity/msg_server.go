@@ -2,6 +2,7 @@ package concentrated_liquidity
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,15 +39,15 @@ func (server msgServer) CreateConcentratedPool(goCtx context.Context, msg *clmod
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// TODO: At least in local osmosis, this check fails, because the denom metadata is not set.
-	// _, denomExists := server.keeper.bankKeeper.GetDenomMetaData(ctx, msg.Denom0)
-	// if !denomExists {
-	// 	return nil, fmt.Errorf("received denom0 with invalid metadata: %s", msg.Denom0)
-	// }
+	_, denomExists := server.keeper.bankKeeper.GetDenomMetaData(ctx, msg.Denom0)
+	if !denomExists {
+		return nil, fmt.Errorf("received denom0 with invalid metadata: %s", msg.Denom0)
+	}
 
-	// _, denomExists = server.keeper.bankKeeper.GetDenomMetaData(ctx, msg.Denom1)
-	// if !denomExists {
-	// 	return nil, fmt.Errorf("received denom1 with invalid metadata: %s", msg.Denom1)
-	// }
+	_, denomExists = server.keeper.bankKeeper.GetDenomMetaData(ctx, msg.Denom1)
+	if !denomExists {
+		return nil, fmt.Errorf("received denom1 with invalid metadata: %s", msg.Denom1)
+	}
 
 	poolId, err := server.keeper.swaprouterKeeper.CreatePool(ctx, msg)
 	if err != nil {
