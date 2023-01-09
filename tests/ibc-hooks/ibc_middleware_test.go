@@ -787,7 +787,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadSwap() {
 	// We use the receive result here because the receive adds another packet to be sent back
 	suite.Require().NoError(err)
 	suite.Require().NotNil(receiveResult)
-	suite.Require().Contains(ack, "calculated amount is lesser than min amount")
+	suite.Require().Contains(ack, "ABCI code: 6") // calculated amount is lesser than min output amount
 
 	balanceToken0After := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), initializer, token0IBC)
 	suite.Require().Equal(balanceToken0.Amount, balanceToken0After.Amount)
