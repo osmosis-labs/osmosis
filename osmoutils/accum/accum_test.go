@@ -13,7 +13,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	accumPackage "github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 )
 
 type AccumTestSuite struct {
@@ -1219,7 +1218,6 @@ func (suite *AccumTestSuite) TestUpdatePositionCustomAcc() {
 		customAcc        sdk.DecCoins
 		expectedPosition accumPackage.Record
 		expectedError    error
-		expectPanic      bool
 	}{
 		"custom acc value equals to acc; positive shares -> acts as AddToPosition": {
 			accObject:     accObject,
@@ -1233,18 +1231,12 @@ func (suite *AccumTestSuite) TestUpdatePositionCustomAcc() {
 				UnclaimedRewards: emptyCoins,
 			},
 		},
-		"custom acc value does not equal to acc; remove same amount -> acts as RemoveFromPosition, delete position accum": {
+		"custom acc value does not equal to acc; remove same amount -> acts as RemoveFromPosition": {
 			accObject:     accObject,
 			initialShares: positionTwo.NumShares,
 			name:          testAddressTwo,
 			numShareUnits: positionTwo.NumShares.Neg(), // note: negative shares
 			customAcc:     accObject.GetValue().MulDec(sdk.NewDec(2)),
-			// expectedPosition: accumPackage.Record{
-			// 	NumShares:        sdk.ZeroDec(), // results in zero shares
-			// 	InitAccumValue:   accObject.GetValue().MulDec(sdk.NewDec(2)),
-			// 	UnclaimedRewards: emptyCoins,
-			// },
-			expectPanic: true,
 		},
 		"custom acc value does not equal to acc; remove diff amount -> acts as RemoveFromPosition": {
 			accObject:     accObject,
@@ -1301,15 +1293,13 @@ func (suite *AccumTestSuite) TestUpdatePositionCustomAcc() {
 			tc.accObject, err = accumPackage.GetAccumulator(suite.store, testNameOne)
 			suite.Require().NoError(err)
 
-			osmoassert.ConditionalPanic(suite.T(), tc.expectPanic, func() {
-				position := tc.accObject.GetPosition(tc.name)
-				// Assertions.
+			position := tc.accObject.GetPosition(tc.name)
+			// Assertions.
 
-				suite.Require().Equal(tc.expectedPosition.NumShares, position.NumShares)
-				suite.Require().Equal(tc.expectedPosition.InitAccumValue, position.InitAccumValue)
-				suite.Require().Equal(tc.expectedPosition.UnclaimedRewards, position.UnclaimedRewards)
-				suite.Require().Nil(position.Options)
-			})
+			suite.Require().Equal(tc.expectedPosition.NumShares, position.NumShares)
+			suite.Require().Equal(tc.expectedPosition.InitAccumValue, position.InitAccumValue)
+			suite.Require().Equal(tc.expectedPosition.UnclaimedRewards, position.UnclaimedRewards)
+			suite.Require().Nil(position.Options)
 		})
 	}
 }

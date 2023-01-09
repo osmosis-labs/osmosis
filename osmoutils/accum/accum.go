@@ -206,14 +206,6 @@ func (accum AccumulatorObject) RemoveFromPositionCustomAcc(name string, numShare
 		return err
 	}
 
-	newNumShares := oldNumShares.Sub(numSharesToRemove)
-
-	// remove the position from state entirely if numShares = zero
-	if newNumShares.Equal(sdk.ZeroDec()) {
-		accum.DeletePosition(name)
-		return nil
-	}
-
 	createNewPosition(accum, customAccumulatorValue, name, oldNumShares.Sub(numSharesToRemove), unclaimedRewards, position.Options)
 
 	return nil
@@ -247,7 +239,7 @@ func (accum AccumulatorObject) UpdatePositionCustomAcc(name string, numShares sd
 	return accum.AddToPositionCustomAcc(name, numShares, customAccumulatorValue)
 }
 
-func (accum AccumulatorObject) DeletePosition(name string) {
+func (accum AccumulatorObject) deletePosition(name string) {
 	accum.store.Delete(formatPositionPrefixKey(accum.name, name))
 }
 
@@ -285,8 +277,12 @@ func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, err
 	// This is acceptable because we round in favour of the protocol.
 	truncatedRewards, _ := totalRewards.TruncateDecimal()
 
-	// Create a completely new position, with no rewards
-	createNewPosition(accum, accum.value, positionName, position.NumShares, sdk.NewDecCoins(), position.Options)
+	// remove the position from state entirely if numShares = zero
+	if position.NumShares.Equal(sdk.ZeroDec()) {
+		accum.deletePosition(positionName)
+	} else { // else, create a completely new position, with no rewards
+		createNewPosition(accum, accum.value, positionName, position.NumShares, sdk.NewDecCoins(), position.Options)
+	}
 
 	return truncatedRewards, nil
 }
