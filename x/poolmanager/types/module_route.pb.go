@@ -59,7 +59,7 @@ func (PoolType) EnumDescriptor() ([]byte, []int) {
 
 // ModuleRouter defines a route encapsulating pool type.
 // It is used as the value of a mapping from pool id to the pool type,
-// allowing the swap router to know which module to route swaps to given the
+// allowing the pool manager to know which module to route swaps to given the
 // pool id.
 type ModuleRoute struct {
 	// pool_type specifies the type of the pool
