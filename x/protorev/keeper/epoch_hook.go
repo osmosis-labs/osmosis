@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 type EpochHooks struct {
@@ -95,7 +95,7 @@ func (k Keeper) GetHighestLiquidityPools(ctx sdk.Context) (map[string]LiquidityP
 
 		// Pool must be a non-stableswap pool
 		pooltype, err := k.gammKeeper.GetPoolType(ctx, pool.GetId())
-		if err != nil || pooltype == swaproutertypes.Stableswap {
+		if err != nil || pooltype == poolmanagertypes.Stableswap {
 			continue
 		}
 

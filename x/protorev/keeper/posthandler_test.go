@@ -9,6 +9,7 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v13/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
 )
@@ -61,7 +62,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				msgs: []sdk.Msg{
 					&gammtypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
-						Routes: []gammtypes.SwapAmountInRoute{
+						Routes: []poolmanagertypes.SwapAmountInRoute{
 							{
 								PoolId:        12,
 								TokenOutDenom: "akash",
@@ -88,7 +89,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				msgs: []sdk.Msg{
 					&gammtypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
-						Routes: []gammtypes.SwapAmountInRoute{
+						Routes: []poolmanagertypes.SwapAmountInRoute{
 							{
 								PoolId:        23,
 								TokenOutDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
@@ -120,7 +121,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				msgs: []sdk.Msg{
 					&gammtypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
-						Routes: []gammtypes.SwapAmountInRoute{
+						Routes: []poolmanagertypes.SwapAmountInRoute{
 							{
 								PoolId:        33,
 								TokenOutDenom: "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293",
@@ -156,7 +157,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				msgs: []sdk.Msg{
 					&gammtypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
-						Routes: []gammtypes.SwapAmountInRoute{
+						Routes: []poolmanagertypes.SwapAmountInRoute{
 							{
 								PoolId:        29,
 								TokenOutDenom: types.OsmosisDenomination,
@@ -284,7 +285,7 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 				msgs: []sdk.Msg{
 					&gammtypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
-						Routes: []gammtypes.SwapAmountInRoute{
+						Routes: []poolmanagertypes.SwapAmountInRoute{
 							{
 								PoolId:        28,
 								TokenOutDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
@@ -316,7 +317,7 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 				msgs: []sdk.Msg{
 					&gammtypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
-						Routes: []gammtypes.SwapAmountInRoute{
+						Routes: []poolmanagertypes.SwapAmountInRoute{
 							{
 								PoolId:        28,
 								TokenOutDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
@@ -327,7 +328,7 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 					},
 					&gammtypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
-						Routes: []gammtypes.SwapAmountInRoute{
+						Routes: []poolmanagertypes.SwapAmountInRoute{
 							{
 								PoolId:        22,
 								TokenOutDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
