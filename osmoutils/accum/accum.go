@@ -50,7 +50,7 @@ func GetAccumulator(accumStore store.KVStore, accumName string) (AccumulatorObje
 		return AccumulatorObject{}, err
 	}
 	if !found {
-		return AccumulatorObject{}, errors.New(fmt.Sprintf("Accumulator name %s does not exist in store", accumName))
+		return AccumulatorObject{}, AccumDoesNotExistError{AccumName: accumName}
 	}
 
 	accum := AccumulatorObject{accumStore, accumName, accumContent.AccumValue}
