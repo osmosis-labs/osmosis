@@ -7,14 +7,22 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&Pool{}, "osmosis/concentratedliquidity/ConcentratedLiquidityPool", nil)
-	cdc.RegisterConcrete(&MsgCreateConcentratedPool{}, "osmosis/concentratedliquidity/create-concentrated-pool", nil)
+	cdc.RegisterConcrete(&Pool{}, "osmosis/cl-pool", nil)
+	cdc.RegisterConcrete(&MsgCreateConcentratedPool{}, "osmosis/cl-create-pool", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+	registry.RegisterInterface(
+		"osmosis.swaprouter.v1beta1.PoolI",
+		(*swaproutertypes.PoolI)(nil),
+		&Pool{},
+	)
+
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgCreateConcentratedPool{},
