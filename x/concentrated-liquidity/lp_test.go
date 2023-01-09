@@ -125,7 +125,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			s.FundAcc(s.TestAccs[0], PoolCreationFee)
 
 			// Create a CL pool with custom tickSpacing
-			poolID, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, tc.precisionFactorAtPriceOne))
+			poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, tc.precisionFactorAtPriceOne))
 			s.Require().NoError(err)
 
 			pool, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, poolID)
@@ -508,7 +508,7 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 	}
 }
 
-func (s *KeeperTestSuite) TestIsInitialPosition() {
+func (s *KeeperTestSuite) TestisInitialPositionForPool() {
 	type sendTest struct {
 		initialSqrtPrice sdk.Dec
 		initialTick      sdk.Int
@@ -540,7 +540,7 @@ func (s *KeeperTestSuite) TestIsInitialPosition() {
 	for name, tc := range tests {
 		s.Run(name, func() {
 			// System under test
-			if s.App.ConcentratedLiquidityKeeper.IsInitialPosition(tc.initialSqrtPrice, tc.initialTick) {
+			if s.App.ConcentratedLiquidityKeeper.IsInitialPositionForPool(tc.initialSqrtPrice, tc.initialTick) {
 				// If we expect the response to be true, then we should check that it is true
 				s.Require().True(tc.expectedResponse)
 			} else {
@@ -551,7 +551,7 @@ func (s *KeeperTestSuite) TestIsInitialPosition() {
 	}
 }
 
-func (s *KeeperTestSuite) TestInitializeInitialPosition() {
+func (s *KeeperTestSuite) TestinitializeInitialPositionForPool() {
 	type sendTest struct {
 		amount0Desired sdk.Int
 		amount1Desired sdk.Int
@@ -588,7 +588,7 @@ func (s *KeeperTestSuite) TestInitializeInitialPosition() {
 			pool := s.PrepareConcentratedPool()
 
 			// System under test
-			err := s.App.ConcentratedLiquidityKeeper.InitializeInitialPosition(s.Ctx, pool, tc.amount0Desired, tc.amount1Desired)
+			err := s.App.ConcentratedLiquidityKeeper.InitializeInitialPositionForPool(s.Ctx, pool, tc.amount0Desired, tc.amount1Desired)
 
 			if tc.expectedError != nil {
 				s.Require().Error(err)

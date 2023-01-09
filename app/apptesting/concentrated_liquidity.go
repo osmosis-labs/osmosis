@@ -20,7 +20,7 @@ func (s *KeeperTestHelper) PrepareConcentratedPool() types.ConcentratedPoolExten
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
 
 	// Create a concentrated pool via the swaprouter
-	poolID, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne))
+	poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne))
 	s.Require().NoError(err)
 
 	// Retrieve the poolInterface via the poolID

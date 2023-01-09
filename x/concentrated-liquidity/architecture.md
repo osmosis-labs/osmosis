@@ -286,8 +286,8 @@ func (k Keeper) SwapExactAmountIn(
 }
 ```
 
-This method should be called from the new `swap-router` module's `RouteExactAmountIn` initiated by the `MsgSwapExactAmountIn`.
-See the next `"Swap Router Module"` section of this document for more details.
+This method should be called from the new `pool-manager` module's `RouteExactAmountIn` initiated by the `MsgSwapExactAmountIn`.
+See the next `"Pool Manager Module"` section of this document for more details.
 
 ##### `SwapExactAmountOut` Keeper Method
 
@@ -310,13 +310,13 @@ func (k Keeper) SwapExactAmountOut(
 }
 ```
 
-This method should be called from the new `swap-router` module's `RouteExactAmountOut` initiated by the `MsgSwapExactAmountOut`.
-See the next `"Swap Router Module"` section of this document for more details.
+This method should be called from the new `pool-manager` module's `RouteExactAmountOut` initiated by the `MsgSwapExactAmountOut`.
+See the next `"Pool Manager Module"` section of this document for more details.
 
 ##### `InitializePool` Keeper Method
 
-This method is part of the implementation of the `SwapI` interface in `swaprouter`
-module. "Swap Router Module" section discussed the interface in more detail.
+This method is part of the implementation of the `SwapI` interface in `poolmanager`
+module. "Pool Manager Module" section discussed the interface in more detail.
 
 ```go
 // x/concentrated-liquidity/pool.go InitializePool(...)
@@ -329,10 +329,10 @@ func (k Keeper) InitializePool(
 }
 ```
 
-This method should be called from the new `swap-router` module's `CreatePool` initiated by the `MsgCreatePool`.
-See the next `"Swap Router Module"` section of this document for more details.
+This method should be called from the new `pool-manager` module's `CreatePool` initiated by the `MsgCreatePool`.
+See the next `"Pool Manager Module"` section of this document for more details.
 
-#### Swap Router Module
+#### Pool Manager Module
 
 > As a user, I would like to have a unified entrypoint for my swaps regardless of the underlying pool implementation so that I don't need to reason about API complexity
 
@@ -342,7 +342,7 @@ With the new `concentrated-liquidity` module, we now have a new entrypoint for s
 the same with the existing `gamm` module.
 
 To avoid fragmenting swap and pool creation entrypoints and duplicating their boilerplate logic,
-we would like to define a new `swaprouter` module. Its purpose is twofold:
+we would like to define a new `poolmanager` module. Its purpose is twofold:
 1. Handle pool creation messages
    * Assign ids to pools
    * Store the mapping from pool id to one of the swap modules (`gamm` or `concentrated-liquidity`)
@@ -351,10 +351,10 @@ we would like to define a new `swaprouter` module. Its purpose is twofold:
    * Cover & share multihop logic
    * Propagate intra-pool swaps to the appropriate module depending on the pool type.
 
-Therefore, we move several existing `gamm` messages and tests to the new `swap-router` module,
-connecting them to the `swaprouter` keeper that propagates execution to the appropriate swap module.
+Therefore, we move several existing `gamm` messages and tests to the new `pool-manager` module,
+connecting them to the `poolmanager` keeper that propagates execution to the appropriate swap module.
 
-The messages to move from `gamm` to `swaprouter` are:
+The messages to move from `gamm` to `poolmanager` are:
 - `CreatePoolMsg`
 - `MsgSwapExactAmountIn`
 - `MsgSwapExactAmountOut`
@@ -364,9 +364,9 @@ Let's consider pool creation and swaps separately and in more detail.
 ##### Pool Creation & Id Management
 
 To make sure that the pool ids are unique across the two modules, we unify pool id management
-in the `swaprouter`.
+in the `poolmanager`.
 
-We migrate the store index `next_pool_id` from `gamm` to `swaprouter`. This index represents
+We migrate the store index `next_pool_id` from `gamm` to `poolmanager`. This index represents
 the next available pool id to assign to a newly created pool.
 
 When `CreatePoolMsg` is received, we get the next pool id, assign it to the new pool and propagate
@@ -397,8 +397,8 @@ Note the `PoolType` type. This is an enumeration of all supported pool types.
 We proto-generate this enumeration:
 
 ```go
-// proto/osmosis/swaprouter/v1beta1/module_route.proto
-// generates to x/swaprouter/types/module_route.pb.go
+// proto/osmosis/poolmanager/v1beta1/module_route.proto
+// generates to x/poolmanager/types/module_route.pb.go
 
 // PoolType is an enumeration of all supported pool types.
 enum PoolType {
@@ -417,12 +417,12 @@ enum PoolType {
 
 Let's begin by considering the execution flow of the pool creation message.
 
-1. `CreatePoolMsg` is received by the `swaprouter` message server.
+1. `CreatePoolMsg` is received by the `poolmanager` message server.
 
-2. `CreatePool` `swaprouter` keeper method is called.
+2. `CreatePool` `poolmanager` keeper method is called.
 
 ```go
-// x/swaprouter/creator.go CreatePool(...)
+// x/poolmanager/creator.go CreatePool(...)
 
 // CreatePool attempts to create a pool returning the newly created pool ID or
 // an error upon failure. The pool creation fee is used to fund the community
@@ -441,12 +441,12 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 3. The keeper utilizes `CreatePoolMsg` interface methods to execute the logic specific
 to each pool type.
 
-4. Lastly, `swaprouter.CreatePool` routes the execution to the appropriate module.
+4. Lastly, `poolmanager.CreatePool` routes the execution to the appropriate module.
 
-The propagation to the desired module is ensured by the routing table stored in memory in the `swaprouter` keeper.
+The propagation to the desired module is ensured by the routing table stored in memory in the `poolmanager` keeper.
 
 ```go
-// x/swaprouter/keeper.go NewKeeper(...)
+// x/poolmanager/keeper.go NewKeeper(...)
 
 func NewKeeper(...) *Keeper {
     ...
@@ -463,11 +463,11 @@ func NewKeeper(...) *Keeper {
 
 `MsgCreatePool` interface defines the following method: `GetPoolType() PoolType`
 
-As a result, `swaprouterkeeper.CreatePool` can route the execution to the appropriate module in
+As a result, `poolmanagerkeeper.CreatePool` can route the execution to the appropriate module in
 the following way:
 
 ```go
-// x/swaprouter/creator.go CreatePool(...)
+// x/poolmanager/creator.go CreatePool(...)
 
 swapModule := k.routes[msg.GetPoolType()]
 
@@ -481,7 +481,7 @@ Where swapmodule is either `gamm` or `concentrated-liquidity` keeper.
 Both of these modules implement the `SwapI` interface:
 
 ```go
-// x/swaprouter/types/routes.go SwapI interface
+// x/poolmanager/types/routes.go SwapI interface
 
 type SwapI interface {
     ...
@@ -490,15 +490,15 @@ type SwapI interface {
 }
 ```
 
-As a result, the `swaprouter` module propagates core execution to the appropriate swap module.
+As a result, the `poolmanager` module propagates core execution to the appropriate swap module.
 
-Lastly, the `swaprouter` keeper stores a mapping from the pool id to the pool type.
+Lastly, the `poolmanager` keeper stores a mapping from the pool id to the pool type.
 This mapping is going to be neccessary for knowing where to route the swap messages.
 
 To achieve this, we create the following store index:
 
 ```go
-// x/swaprouter/types/keys.go
+// x/poolmanager/types/keys.go
 
 var	(
     ...
@@ -536,7 +536,7 @@ Their implementation of routing is similar. As a result, we only focus on `MsgSw
 Once the message is received, it calls `RouteExactAmountIn`
 
 ```go
-// x/swaprouter/router.go RouteExactAmountIn(...)
+// x/poolmanager/router.go RouteExactAmountIn(...)
 
 // RouteExactAmountIn defines the input denom and input amount for the first pool,
 // the output of the first pool is chained as the input for the next routed pool
@@ -555,14 +555,14 @@ Essentially, the method iterates over the routes and calls a `SwapExactAmountIn`
 for each, subsequently updating the inter-pool swap state.
 
 The routing works by querying the index `SwapModuleRouterPrefix`,
-searching up the `swaprouterkeeper.router` mapping, and callig
+searching up the `poolmanagerkeeper.router` mapping, and callig
 the appropriate `SwapExactAmountIn` method.
 
 ```go
-// x/swaprouter/router.go RouteExactAmountIn(...)
+// x/poolmanager/router.go RouteExactAmountIn(...)
 
-moduleRouteBytes := osmoutils.MustGet(swaproutertypes.FormatModuleRouteIndex(poolId))
-moduleRoute, _ := swaproutertypes.ModuleRouteFromBytes(moduleRouteBytes)
+moduleRouteBytes := osmoutils.MustGet(poolmanagertypes.FormatModuleRouteIndex(poolId))
+moduleRoute, _ := poolmanagertypes.ModuleRouteFromBytes(moduleRouteBytes)
 
 swapModule := k.routes[moduleRoute.PoolType]
 
@@ -574,7 +574,7 @@ Similar to pool creation logic, we are able to call `SwapExactAmountIn` on any o
 modules by implementing the `SwapI` interface:
 
 ```go
-// x/swaprouter/types/routes.go SwapI interface
+// x/poolmanager/types/routes.go SwapI interface
 
 type SwapI interface {
     ...
@@ -594,7 +594,7 @@ type SwapI interface {
 ##### GAMM Migrations
 
 Previously we managed and stored "next pool id" and "pool creation fee" in gamm. Now, these values
-are stored in the `swaprouter` module. As a result, we perform store migration in the
+are stored in the `poolmanager` module. As a result, we perform store migration in the
 upgrade handler.
 
 Some of the queries such as `x/gamm` `NumPools depended on the "next pool id" being present in `x/gamm`.
@@ -602,8 +602,8 @@ Since it is now moved, we introduce a new "pool count" index in `x/gamm` to keep
 of pools. TODO: do we even need this? Consider removing before release. Path forward TBD.
 
 In summary, we perform the following store migrations in the upgrade handler:
-- migrate "next pool id` from `x/gamm` to `x/swaprouter`
-- migrate "pool creation fee" from `x/gamm` to `x/swaprouter`
+- migrate "next pool id` from `x/gamm` to `x/poolmanager`
+- migrate "pool creation fee" from `x/gamm` to `x/poolmanager`
 - create "pool count" index in `x/gamm` TODO: do we even need this? Consider removing before release. Path forward TBD.
 
 #### GAMM Refactor
@@ -612,7 +612,7 @@ In summary, we perform the following store migrations in the upgrade handler:
 related to the `TraditionalAmmInterface` pool implementations.
 
 TODO: describe and document all the changes in the gamm module in more detail.
-- refer to previous sections ("Swap Router Module" and "Concentrated Liquidity Module")
+- refer to previous sections ("Pool Manager Module" and "Concentrated Liquidity Module")
 to avoid repetition.
 
 ##### Swaps
@@ -621,15 +621,15 @@ We rely on the pre-existing swap methods located in `x/gamm/keeper/pool.go`:
 - `SwapExactAmountIn`
 - `SwapExactAmountOut`
 
-Similarly to `concentrated-liquidity` module, these methods now implement the `swaprouter` `SwapI` interface.
+Similarly to `concentrated-liquidity` module, these methods now implement the `poolmanager` `SwapI` interface.
 However, the concrete implementations of the methods are unchanged from before the refactor.
 
 ##### New Functionality
 
 ##### `InitializePool` Keeper Method
 
-This method is part of the implementation of the `SwapI` interface in `swaprouter`
-module. "Swap Router Module" section discussed the interface in more detail.
+This method is part of the implementation of the `SwapI` interface in `poolmanager`
+module. "Pool Manager Module" section discussed the interface in more detail.
 
 This is the second implementation of the interface, the first being in the `concentrated-liquidity` module.
 
@@ -644,8 +644,8 @@ func (k Keeper) InitializePool(
 }
 ```
 
-This method should be called from the new `swap-router` module's `CreatePool` initiated by the `MsgCreatePool`.
-See the next `"Swap Router Module"` section of this document for more details.
+This method should be called from the new `pool-manager` module's `CreatePool` initiated by the `MsgCreatePool`.
+See the next `"Pool Manager Module"` section of this document for more details.
 
 ##### Removed Functionality
 

@@ -8,7 +8,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	cltypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 )
 
 // constants.
@@ -17,8 +17,8 @@ const (
 )
 
 var (
-	_ sdk.Msg                       = &MsgCreateConcentratedPool{}
-	_ swaproutertypes.CreatePoolMsg = &MsgCreateConcentratedPool{}
+	_ sdk.Msg                        = &MsgCreateConcentratedPool{}
+	_ poolmanagertypes.CreatePoolMsg = &MsgCreateConcentratedPool{}
 )
 
 func NewMsgCreateConcentratedPool(
@@ -103,11 +103,11 @@ func (msg MsgCreateConcentratedPool) InitialLiquidity() sdk.Coins {
 	return sdk.Coins{}
 }
 
-func (msg MsgCreateConcentratedPool) CreatePool(ctx sdk.Context, poolID uint64) (swaproutertypes.PoolI, error) {
+func (msg MsgCreateConcentratedPool) CreatePool(ctx sdk.Context, poolID uint64) (poolmanagertypes.PoolI, error) {
 	poolI, err := NewConcentratedLiquidityPool(poolID, msg.Denom0, msg.Denom1, msg.TickSpacing, msg.PrecisionFactorAtPriceOne)
 	return &poolI, err
 }
 
-func (msg MsgCreateConcentratedPool) GetPoolType() swaproutertypes.PoolType {
-	return swaproutertypes.Concentrated
+func (msg MsgCreateConcentratedPool) GetPoolType() poolmanagertypes.PoolType {
+	return poolmanagertypes.Concentrated
 }

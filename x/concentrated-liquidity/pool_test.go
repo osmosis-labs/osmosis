@@ -8,7 +8,7 @@ import (
 	cl "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
 	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 )
 
 func (s *KeeperTestSuite) TestOrderInitialPoolDenoms() {
@@ -30,7 +30,7 @@ func (s *KeeperTestSuite) TestOrderInitialPoolDenoms() {
 func (s *KeeperTestSuite) TestInitializePool() {
 	// Create a valid PoolI from a valid ConcentratedPoolExtension
 	validConcentratedPool := s.PrepareConcentratedPool()
-	validPoolI := validConcentratedPool.(swaproutertypes.PoolI)
+	validPoolI := validConcentratedPool.(poolmanagertypes.PoolI)
 
 	// Create a concentrated liquidity pool with invalid tick spacing
 	invalidTickSpacing := uint64(0)
@@ -38,13 +38,13 @@ func (s *KeeperTestSuite) TestInitializePool() {
 	s.Require().NoError(err)
 
 	// Create an invalid PoolI that doesn't implement ConcentratedPoolExtension
-	var invalidPoolI swaproutertypes.PoolI
+	var invalidPoolI poolmanagertypes.PoolI
 
 	validCreatorAddress := sdk.AccAddress([]byte("addr1---------------"))
 
 	tests := []struct {
 		name           string
-		poolI          swaproutertypes.PoolI
+		poolI          poolmanagertypes.PoolI
 		creatorAddress sdk.AccAddress
 		expectedErr    error
 	}{
@@ -176,7 +176,7 @@ func (s *KeeperTestSuite) TestPoolIToConcentratedPool() {
 
 	// Create default CL pool
 	concentratedPool := s.PrepareConcentratedPool()
-	poolI := concentratedPool.(swaproutertypes.PoolI)
+	poolI := concentratedPool.(poolmanagertypes.PoolI)
 
 	// Ensure no error occurs when converting to ConcentratedPool
 	_, err := cl.ConvertPoolInterfaceToConcentrated(poolI)

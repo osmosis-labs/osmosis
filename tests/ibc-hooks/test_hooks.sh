@@ -1,4 +1,10 @@
 #!/bin/bash
+#
+# This script can be used to manually test the ibc hooks. It is meant as a guide and not to be run directly 
+# without taking into account the context in which it's being run.
+# The script uses `jenv` (https://github.com/nicolaslara/jenv) to easily generate the json strings passed
+# to some of the commands. If you don't want to use it you can generate the json manually or modify this script.
+#
 set -o errexit -o nounset -o pipefail -o xtrace
 shopt -s expand_aliases
 

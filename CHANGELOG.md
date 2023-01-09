@@ -46,7 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#3763](https://github.com/osmosis-labs/osmosis/pull/3763) Remove Osmosis gamm and twap `bindings` that were previously supported as custom wasm plugins.
 * [#3905](https://github.com/osmosis-labs/osmosis/pull/3905) Deprecate gamm queries `NumPools`, `EstimateSwapExactAmountIn` and `EstimateSwapExactAmountOut`.
-* [#3907](https://github.com/osmosis-labs/osmosis/pull/3907) Add `NumPools`, `EstimateSwapExactAmountIn` and `EstimateSwapExactAmountOut` query in swaprouter module to stargate whitelist.
+* [#3907](https://github.com/osmosis-labs/osmosis/pull/3907) Add `NumPools`, `EstimateSwapExactAmountIn` and `EstimateSwapExactAmountOut` query in poolmanager module to stargate whitelist.
+* [#3880](https://github.com/osmosis-labs/osmosis/pull/3880) Switch usage of proto-generated SwapAmountInRoute and SwapAmountOutRoute in x/gamm to import the structs from x/poolmanager module.
 
 ### Bug Fix
 
@@ -110,6 +111,7 @@ Additionally, the swagger files for v13 have been updated to improve compatibili
 * [#3634](https://github.com/osmosis-labs/osmosis/pull/3634) (Makefile) Ensure correct golang version in make build and make install. (Thank you @jhernandezb )
 * [#3712](https://github.com/osmosis-labs/osmosis/pull/3712) replace `osmomath.BigDec` `Power` with `PowerInteger` 
 * [#3711](https://github.com/osmosis-labs/osmosis/pull/3711) Use Dec instead of Int for additive `ErrTolerace` in `osmoutils`.
+* [3647](https://github.com/osmosis-labs/osmosis/pull/3647), [3942](https://github.com/osmosis-labs/osmosis/pull/3942) (CLI) re-order the command line arguments for `osmosisd tx gamm join-swap-share-amount-out`
 
 
 ## v13.0.0

@@ -80,7 +80,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				msg := balancer.NewMsgCreateBalancerPool(sender,
 					balancer.NewPoolParams(sdk.ZeroDec(), sdk.ZeroDec(), nil),
 					apptesting.DefaultPoolAssets, "")
-				_, err = suite.app.SwapRouterKeeper.CreatePool(suite.ctx, msg)
+				_, err = suite.app.PoolManagerKeeper.CreatePool(suite.ctx, msg)
 				suite.NoError(err)
 			},
 			requestData: func() []byte {
