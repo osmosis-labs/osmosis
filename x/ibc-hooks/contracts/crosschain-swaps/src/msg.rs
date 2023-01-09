@@ -67,7 +67,7 @@ pub enum ExecuteMsg {
 #[derive(QueryResponses)]
 pub enum QueryMsg {
     /// Returns the list of transfers that are recoverable for an Addr
-    #[returns(Vec<crate::state::IBCTransfer>)]
+    #[returns(Vec<crate::state::ibc::IBCTransfer>)]
     Recoverable { addr: Addr },
 }
 
