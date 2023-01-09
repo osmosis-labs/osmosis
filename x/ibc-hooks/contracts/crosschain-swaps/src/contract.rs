@@ -5,7 +5,7 @@ use cosmwasm_std::{
 };
 use cw2::set_contract_version;
 
-use crate::consts::{FORWARD_REPLY_ID, SWAP_REPLY_ID};
+use crate::consts::MsgReplyID;
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, IBCLifecycleComplete, InstantiateMsg, MigrateMsg, QueryMsg, SudoMsg};
 use crate::state::{Config, CHANNEL_MAP, CONFIG, RECOVERY_STATES};
@@ -108,9 +108,9 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, Contract
 pub fn reply(deps: DepsMut, _env: Env, reply: Reply) -> Result<Response, ContractError> {
     deps.api
         .debug(&format!("executing crosschain reply: {reply:?}"));
-    match reply.id {
-        SWAP_REPLY_ID => execute::handle_swap_reply(deps, reply),
-        FORWARD_REPLY_ID => execute::handle_forward_reply(deps, reply),
-        id => Err(ContractError::InvalidReplyID { id }),
+    match MsgReplyID::from_repr(reply.id) {
+        Some(MsgReplyID::Swap) => execute::handle_swap_reply(deps, reply),
+        Some(MsgReplyID::Forward) => execute::handle_forward_reply(deps, reply),
+        None => Err(ContractError::InvalidReplyID { id: reply.id }),
     }
 }
