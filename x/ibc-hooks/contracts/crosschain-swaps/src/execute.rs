@@ -226,7 +226,6 @@ pub fn handle_forward_reply(
             msg: format!("could not decode response: {b}"),
         })?;
 
-    // Similar consideration as the warning above. Is it safe for this to be an Item?
     let ForwardMsgReplyState {
         channel_id,
         to_address,
