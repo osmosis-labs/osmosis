@@ -34,3 +34,11 @@ type NegativeAccDifferenceError struct {
 func (e NegativeAccDifferenceError) Error() string {
 	return fmt.Sprintf("difference (%s) between the old and the new accumulator value is negative", e.AccumulatorDifference)
 }
+
+type AccumDoesNotExistError struct {
+	AccumName string
+}
+
+func (e AccumDoesNotExistError) Error() string {
+	return fmt.Sprintf("Accumulator name %s does not exist in store", e.AccumName)
+}

@@ -3,7 +3,11 @@ package concentrated_liquidity_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
+	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
 func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
@@ -201,4 +205,98 @@ func (s *KeeperTestSuite) TestCalculateFeeGrowth() {
 		})
 	}
 
+}
+
+func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOtsideForTick() {
+	const (
+		validPoolId = 1
+	)
+
+	var (
+		initialPoolTick = math.PriceToTick(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec())).Int64()
+	)
+
+	tests := map[string]struct {
+		poolId                   uint64
+		tick                     int64
+		initialGlobalFeeGrowth   sdk.DecCoin
+		shouldAvoidCreatingAccum bool
+
+		expectedInitialFeeGrowthOutside sdk.DecCoins
+		expectError                     error
+	}{
+		"current tick > tick -> fee growth global": {
+			poolId:                 validPoolId,
+			tick:                   initialPoolTick - 1,
+			initialGlobalFeeGrowth: sdk.NewDecCoin(ETH, sdk.OneInt()),
+
+			expectedInitialFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.OneInt())),
+		},
+		"current tick == tick -> fee growth global": {
+			poolId:                 validPoolId,
+			tick:                   initialPoolTick,
+			initialGlobalFeeGrowth: sdk.NewDecCoin(ETH, sdk.OneInt()),
+
+			expectedInitialFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.OneInt())),
+		},
+		"current tick < tick -> fee growth global": {
+			poolId:                 validPoolId,
+			tick:                   initialPoolTick + 1,
+			initialGlobalFeeGrowth: sdk.NewDecCoin(ETH, sdk.OneInt()),
+
+			expectedInitialFeeGrowthOutside: concentratedliquidity.EmptyCoins,
+		},
+		"pool does not exist": {
+			poolId:                 validPoolId + 1,
+			tick:                   initialPoolTick - 1,
+			initialGlobalFeeGrowth: sdk.NewDecCoin(ETH, sdk.OneInt()),
+
+			expectError: types.PoolNotFoundError{PoolId: validPoolId + 1},
+		},
+		"accumulator does not exist": {
+			poolId:                   validPoolId,
+			tick:                     0,
+			initialGlobalFeeGrowth:   sdk.NewDecCoin(ETH, sdk.OneInt()),
+			shouldAvoidCreatingAccum: true,
+
+			expectError: accum.AccumDoesNotExistError{AccumName: concentratedliquidity.GetFeeAccumulatorName(validPoolId)},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.SetupTest()
+			ctx := suite.Ctx
+			k := suite.App.ConcentratedLiquidityKeeper
+
+			pool, err := clmodel.NewConcentratedLiquidityPool(validPoolId, USDC, ETH, DefaultTickSpacing)
+			suite.Require().NoError(err)
+
+			err = k.SetPool(ctx, &pool)
+			suite.Require().NoError(err)
+
+			if !tc.shouldAvoidCreatingAccum {
+				err = k.CreateFeeAccumulator(ctx, validPoolId)
+				suite.Require().NoError(err)
+
+				// Setup test position to make sure that tick is initialized
+				suite.SetupPosition(validPoolId)
+
+				err = k.ChargeFee(ctx, validPoolId, tc.initialGlobalFeeGrowth)
+				suite.Require().NoError(err)
+			}
+
+			// System under test.
+			initialFeeGrowthOutside, err := k.GetInitialFeeGrowthOtsideForTick(ctx, tc.poolId, tc.tick)
+
+			if tc.expectError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, tc.expectError)
+				return
+			}
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.expectedInitialFeeGrowthOutside, initialFeeGrowthOutside)
+		})
+	}
 }
