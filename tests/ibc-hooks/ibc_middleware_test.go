@@ -750,6 +750,50 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 	suite.Require().Greater(balanceRecovery.Amount.Int64(), int64(0))
 }
 
+// CrosschainSwapsViaIBCBadSwap tests that if the crosschain-swap fails, the tokens are returned to the sender
+// This is very similar to the two tests above, but the swap is done incorrectly
+func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadSwap() {
+	initializer := suite.chainB.SenderAccount.GetAddress()
+	_, crosschainAddr := suite.SetupCrosschainSwaps(ChainA, false)
+	// Send some token0 tokens to B so that there are ibc tokens to send to A and crosschain-swap
+	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "")
+	suite.FullSend(transferMsg, AtoB)
+
+	// Calculate the names of the tokens when swapped via IBC
+	denomTrace0 := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "token0"))
+	token0IBC := denomTrace0.IBCDenom()
+	denomTrace1 := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "token1"))
+	token1IBC := denomTrace1.IBCDenom()
+
+	osmosisAppB := suite.chainB.GetOsmosisApp()
+	balanceToken0 := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), initializer, token0IBC)
+	receiver := initializer
+	balanceToken1 := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), receiver, token1IBC)
+
+	suite.Require().Equal(int64(0), balanceToken1.Amount.Int64())
+
+	// Generate swap instructions for the contract. The min output amount here is too high, so the swap will fail
+	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"input_coin":{"denom":"token0","amount":"1000"},"output_denom":"token1","slippage":{"min_output_amount":"50000"},"receiver":"%s"}}`,
+		receiver,
+	)
+	// Generate full memo
+	msg := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, swapMsg)
+	// Send IBC transfer with the memo with crosschain-swap instructions
+	transferMsg = NewMsgTransfer(sdk.NewCoin(token0IBC, sdk.NewInt(1000)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), msg)
+	_, receiveResult, ack, err := suite.FullSend(transferMsg, BtoA)
+
+	// We use the receive result here because the receive adds another packet to be sent back
+	suite.Require().NoError(err)
+	suite.Require().NotNil(receiveResult)
+	suite.Require().Contains(ack, "calculated amount is lesser than min amount")
+
+	balanceToken0After := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), initializer, token0IBC)
+	suite.Require().Equal(balanceToken0.Amount, balanceToken0After.Amount)
+
+	balanceToken1After := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), receiver, token1IBC)
+	suite.Require().Equal(balanceToken1After.Amount.Int64(), int64(0))
+}
+
 func (suite *HooksTestSuite) TestBadCrosschainSwapsNextMemoMessages() {
 	initializer := suite.chainB.SenderAccount.GetAddress()
 	_, crosschainAddr := suite.SetupCrosschainSwaps(ChainA, true)
