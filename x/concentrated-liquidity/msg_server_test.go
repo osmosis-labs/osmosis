@@ -9,7 +9,7 @@ import (
 	cl "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
 	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 )
 
 // TestCreateConcentratedPool_Events tests that events are correctly emitted
@@ -53,11 +53,11 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			suite.Setup()
 			ctx := suite.Ctx
 
-			// Retrieve the pool creation fee from swaprouter params.
-			swaprouterParams := swaproutertypes.DefaultParams()
+			// Retrieve the pool creation fee from poolmanager params.
+			poolmanagerParams := poolmanagertypes.DefaultParams()
 
 			// Fund account to pay for the pool creation fee.
-			suite.FundAcc(suite.TestAccs[0], swaprouterParams.PoolCreationFee)
+			suite.FundAcc(suite.TestAccs[0], poolmanagerParams.PoolCreationFee)
 
 			msgServer := cl.NewMsgCreatorServerImpl(suite.App.ConcentratedLiquidityKeeper)
 

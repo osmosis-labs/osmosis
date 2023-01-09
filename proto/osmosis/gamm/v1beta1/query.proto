@@ -3,7 +3,7 @@ package osmosis.gamm.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "osmosis/gamm/v1beta1/tx.proto";
-import "osmosis/swaprouter/v1beta1/swap_route.proto";
+import "osmosis/poolmanager/v1beta1/swap_route.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
@@ -18,7 +18,7 @@ service Query {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/pools";
   }
 
-  // Deprecated: please use the alternative in x/swaprouter
+  // Deprecated: please use the alternative in x/poolmanager
   rpc NumPools(QueryNumPoolsRequest) returns (QueryNumPoolsResponse) {
     option deprecated = true;
     option (google.api.http).get = "/osmosis/gamm/v1beta1/num_pools";
@@ -88,7 +88,7 @@ service Query {
         "/osmosis/gamm/v1beta1/pools/{pool_id}/prices";
   }
 
-  // Deprecated: please use the alternative in x/swaprouter
+  // Deprecated: please use the alternative in x/poolmanager
   rpc EstimateSwapExactAmountIn(QuerySwapExactAmountInRequest)
       returns (QuerySwapExactAmountInResponse) {
     option deprecated = true;
@@ -96,7 +96,7 @@ service Query {
         "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_in";
   }
 
-  // Deprecated: please use the alternative in x/swaprouter
+  // Deprecated: please use the alternative in x/poolmanager
   rpc EstimateSwapExactAmountOut(QuerySwapExactAmountOutRequest)
       returns (QuerySwapExactAmountOutResponse) {
     option deprecated = true;
@@ -268,7 +268,7 @@ message QuerySwapExactAmountInRequest {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string token_in = 3 [ (gogoproto.moretags) = "yaml:\"token_in\"" ];
-  repeated osmosis.swaprouter.v1beta1.SwapAmountInRoute routes = 4 [
+  repeated osmosis.poolmanager.v1beta1.SwapAmountInRoute routes = 4 [
     (gogoproto.moretags) = "yaml:\"routes\"",
     (gogoproto.nullable) = false
   ];
@@ -288,7 +288,7 @@ message QuerySwapExactAmountOutRequest {
   option deprecated = true;
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  repeated osmosis.swaprouter.v1beta1.SwapAmountOutRoute routes = 3 [
+  repeated osmosis.poolmanager.v1beta1.SwapAmountOutRoute routes = 3 [
     (gogoproto.moretags) = "yaml:\"routes\"",
     (gogoproto.nullable) = false
   ];

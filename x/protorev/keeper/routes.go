@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 // BuildRoutes builds all of the possible arbitrage routes given the tokenIn, tokenOut and poolId that were used in the swap
@@ -60,12 +60,12 @@ func (k Keeper) BuildHotRoute(ctx sdk.Context, route *types.Route, tokenIn, toke
 	for _, trade := range route.Trades {
 		// 0 is a placeholder for pools swapped on that should be entered into the hot route
 		if trade.Pool == 0 {
-			newRoute = append(newRoute, swaproutertypes.SwapAmountInRoute{
+			newRoute = append(newRoute, poolmanagertypes.SwapAmountInRoute{
 				PoolId:        poolId,
 				TokenOutDenom: trade.TokenOut,
 			})
 		} else {
-			newRoute = append(newRoute, swaproutertypes.SwapAmountInRoute{
+			newRoute = append(newRoute, poolmanagertypes.SwapAmountInRoute{
 				PoolId:        trade.Pool,
 				TokenOutDenom: trade.TokenOut,
 			})
@@ -123,7 +123,7 @@ func (k Keeper) BuildRoute(ctx sdk.Context, swapDenom, tokenIn, tokenOut string,
 		return gammtypes.SwapAmountInRoutes{}, err
 	}
 	// Create the first swap for the MultiHopSwap Route
-	entryRoute := swaproutertypes.SwapAmountInRoute{
+	entryRoute := poolmanagertypes.SwapAmountInRoute{
 		PoolId:        entryPoolId,
 		TokenOutDenom: tokenOut,
 	}
@@ -133,7 +133,7 @@ func (k Keeper) BuildRoute(ctx sdk.Context, swapDenom, tokenIn, tokenOut string,
 	if err != nil {
 		return gammtypes.SwapAmountInRoutes{}, err
 	}
-	middleRoute := swaproutertypes.SwapAmountInRoute{
+	middleRoute := poolmanagertypes.SwapAmountInRoute{
 		PoolId:        poolId,
 		TokenOutDenom: tokenIn,
 	}
@@ -147,7 +147,7 @@ func (k Keeper) BuildRoute(ctx sdk.Context, swapDenom, tokenIn, tokenOut string,
 	if err != nil {
 		return gammtypes.SwapAmountInRoutes{}, err
 	}
-	exitRoute := swaproutertypes.SwapAmountInRoute{
+	exitRoute := poolmanagertypes.SwapAmountInRoute{
 		PoolId:        exitPoolId,
 		TokenOutDenom: swapDenom,
 	}

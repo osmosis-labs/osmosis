@@ -3,7 +3,7 @@ package osmosis.gamm.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "osmosis/swaprouter/v1beta1/swap_route.proto";
+import "osmosis/poolmanager/v1beta1/swap_route.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v13/x/gamm/types";
 
@@ -84,7 +84,7 @@ message SwapAmountInRoute {
 
 message MsgSwapExactAmountIn {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  repeated osmosis.swaprouter.v1beta1.SwapAmountInRoute routes = 2
+  repeated osmosis.poolmanager.v1beta1.SwapAmountInRoute routes = 2
       [ (gogoproto.nullable) = false ];
   cosmos.base.v1beta1.Coin token_in = 3 [
     (gogoproto.moretags) = "yaml:\"token_in\"",
@@ -107,7 +107,7 @@ message MsgSwapExactAmountInResponse {
 
 message MsgSwapExactAmountOut {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  repeated osmosis.swaprouter.v1beta1.SwapAmountOutRoute routes = 2
+  repeated osmosis.poolmanager.v1beta1.SwapAmountOutRoute routes = 2
       [ (gogoproto.nullable) = false ];
   string token_in_max_amount = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",

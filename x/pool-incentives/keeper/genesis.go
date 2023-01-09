@@ -26,7 +26,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	distrInfo := k.GetDistrInfo(ctx)
-	lastPoolId := k.swaprouterKeeper.GetNextPoolId(ctx)
+	lastPoolId := k.poolmanagerKeeper.GetNextPoolId(ctx)
 	lockableDurations := k.GetLockableDurations(ctx)
 	var poolToGauges types.PoolToGauges
 	for i := 1; i < int(lastPoolId); i++ {

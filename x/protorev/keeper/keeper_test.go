@@ -649,7 +649,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 
 // createStableswapPool creates a stableswap pool with the given pool assets and params
 func (suite *KeeperTestSuite) createStableswapPool(initialLiquidity sdk.Coins, poolParams stableswap.PoolParams, scalingFactors []uint64) {
-	_, err := suite.App.SwapRouterKeeper.CreatePool(
+	_, err := suite.App.PoolManagerKeeper.CreatePool(
 		suite.Ctx,
 		stableswap.NewMsgCreateStableswapPool(suite.TestAccs[1], poolParams, initialLiquidity, scalingFactors, ""))
 	suite.Require().NoError(err)
@@ -670,7 +670,7 @@ func (suite *KeeperTestSuite) prepareCustomBalancerPool(
 	poolAssets []balancertypes.PoolAsset,
 	poolParams balancer.PoolParams,
 ) uint64 {
-	poolID, err := suite.App.SwapRouterKeeper.CreatePool(
+	poolID, err := suite.App.PoolManagerKeeper.CreatePool(
 		suite.Ctx,
 		balancer.NewMsgCreateBalancerPool(suite.TestAccs[1], poolParams, poolAssets, ""),
 	)

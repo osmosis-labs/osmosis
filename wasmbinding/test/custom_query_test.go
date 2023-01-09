@@ -159,7 +159,7 @@ func preparePool(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sd
 	}
 
 	msg := balancer.NewMsgCreateBalancerPool(addr, poolParams, assets, "")
-	poolId, err := osmosis.SwapRouterKeeper.CreatePool(ctx, &msg)
+	poolId, err := osmosis.PoolManagerKeeper.CreatePool(ctx, &msg)
 	require.NoError(t, err)
 	return poolId
 }

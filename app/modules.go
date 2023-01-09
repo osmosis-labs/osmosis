@@ -69,12 +69,12 @@ import (
 	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
 	poolincentives "github.com/osmosis-labs/osmosis/v13/x/pool-incentives"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
+	poolmanager "github.com/osmosis-labs/osmosis/v13/x/poolmanager/module"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v13/x/protorev"
 	protorevtypes "github.com/osmosis-labs/osmosis/v13/x/protorev/types"
 	superfluid "github.com/osmosis-labs/osmosis/v13/x/superfluid"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
-	swaprouter "github.com/osmosis-labs/osmosis/v13/x/swaprouter/module"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/twapmodule"
@@ -146,7 +146,7 @@ func appModules(
 		params.NewAppModule(*app.ParamsKeeper),
 		app.RawIcs20TransferAppModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
-		swaprouter.NewAppModule(*app.SwapRouterKeeper, app.GAMMKeeper),
+		poolmanager.NewAppModule(*app.PoolManagerKeeper, app.GAMMKeeper),
 		twapmodule.NewAppModule(*app.TwapKeeper),
 		concentratedliquidity.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper),
 		protorev.NewAppModule(appCodec, *app.ProtoRevKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper, app.GAMMKeeper),
@@ -227,7 +227,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		ibchost.ModuleName,
 		icatypes.ModuleName,
 		gammtypes.ModuleName,
-		swaproutertypes.ModuleName,
+		poolmanagertypes.ModuleName,
 		protorevtypes.ModuleName,
 		twaptypes.ModuleName,
 		txfeestypes.ModuleName,

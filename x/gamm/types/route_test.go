@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 )
 
 // TestSwapRoutesSerialization tests that while swap routes
@@ -19,7 +19,7 @@ func TestSwapRoutes_MarshalUnmarshal(t *testing.T) {
 		testPoolId        = 2
 		testTokenOutDenom = "uosmo"
 	)
-	swapRouterExactAmountInRoute := swaproutertypes.SwapAmountInRoute{
+	poolManagertypesExactAmountInRoute := poolmanagertypes.SwapAmountInRoute{
 		PoolId:        testPoolId,
 		TokenOutDenom: testTokenOutDenom,
 	}
@@ -28,17 +28,17 @@ func TestSwapRoutes_MarshalUnmarshal(t *testing.T) {
 		TokenOutDenom: testTokenOutDenom,
 	}
 
-	swapRouterBz, err := proto.Marshal(&swapRouterExactAmountInRoute)
+	poolManagerBz, err := proto.Marshal(&poolManagertypesExactAmountInRoute)
 	require.NoError(t, err)
 	gammBz, err := proto.Marshal(&gammExactAmountInRoute)
 	require.NoError(t, err)
 
-	require.Equal(t, swapRouterBz, gammBz)
+	require.Equal(t, poolManagerBz, gammBz)
 
-	jsonSwaprouterBz, err := json.Marshal(&swapRouterExactAmountInRoute)
+	jsonPoolmanagerBz, err := json.Marshal(&poolManagertypesExactAmountInRoute)
 	require.NoError(t, err)
 
 	jsonGammBz, err := json.Marshal(&gammExactAmountInRoute)
 	require.NoError(t, err)
-	require.Equal(t, jsonSwaprouterBz, jsonGammBz)
+	require.Equal(t, jsonPoolmanagerBz, jsonGammBz)
 }

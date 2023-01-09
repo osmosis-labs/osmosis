@@ -5,7 +5,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 )
 
 const (
@@ -23,7 +23,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 	)
 
 	testcases := map[string]struct {
-		routes                []swaproutertypes.SwapAmountInRoute
+		routes                []poolmanagertypes.SwapAmountInRoute
 		tokenIn               sdk.Coin
 		tokenOutMinAmount     sdk.Int
 		expectError           bool
@@ -31,13 +31,13 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 		expectedMessageEvents int
 	}{
 		"zero hops": {
-			routes:            []swaproutertypes.SwapAmountInRoute{},
+			routes:            []poolmanagertypes.SwapAmountInRoute{},
 			tokenIn:           sdk.NewCoin("foo", sdk.NewInt(tokenIn)),
 			tokenOutMinAmount: sdk.NewInt(tokenInMinAmount),
 			expectError:       true,
 		},
 		"one hop": {
-			routes: []swaproutertypes.SwapAmountInRoute{
+			routes: []poolmanagertypes.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: "bar",
@@ -49,7 +49,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			expectedMessageEvents: 3, // 1 gamm + 2 events emitted by other keeper methods.
 		},
 		"two hops": {
-			routes: []swaproutertypes.SwapAmountInRoute{
+			routes: []poolmanagertypes.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: "bar",
@@ -65,7 +65,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			expectedMessageEvents: 5, // 1 gamm + 4 events emitted by other keeper methods.
 		},
 		"invalid - two hops, denom does not exist": {
-			routes: []swaproutertypes.SwapAmountInRoute{
+			routes: []poolmanagertypes.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: "bar",
@@ -122,7 +122,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 	)
 
 	testcases := map[string]struct {
-		routes                []swaproutertypes.SwapAmountOutRoute
+		routes                []poolmanagertypes.SwapAmountOutRoute
 		tokenOut              sdk.Coin
 		tokenInMaxAmount      sdk.Int
 		expectError           bool
@@ -130,13 +130,13 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 		expectedMessageEvents int
 	}{
 		"zero hops": {
-			routes:           []swaproutertypes.SwapAmountOutRoute{},
+			routes:           []poolmanagertypes.SwapAmountOutRoute{},
 			tokenOut:         sdk.NewCoin("foo", sdk.NewInt(tokenOut)),
 			tokenInMaxAmount: sdk.NewInt(tokenInMaxAmount),
 			expectError:      true,
 		},
 		"one hop": {
-			routes: []swaproutertypes.SwapAmountOutRoute{
+			routes: []poolmanagertypes.SwapAmountOutRoute{
 				{
 					PoolId:       1,
 					TokenInDenom: "bar",
@@ -148,7 +148,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 			expectedMessageEvents: 3, // 1 gamm + 2 events emitted by other keeper methods.
 		},
 		"two hops": {
-			routes: []swaproutertypes.SwapAmountOutRoute{
+			routes: []poolmanagertypes.SwapAmountOutRoute{
 				{
 					PoolId:       1,
 					TokenInDenom: "bar",
@@ -164,7 +164,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 			expectedMessageEvents: 5, // 1 gamm + 4 events emitted by other keeper methods.
 		},
 		"invalid - two hops, denom does not exist": {
-			routes: []swaproutertypes.SwapAmountOutRoute{
+			routes: []poolmanagertypes.SwapAmountOutRoute{
 				{
 					PoolId:       1,
 					TokenInDenom: "bar",

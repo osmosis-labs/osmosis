@@ -3,10 +3,10 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 )
 
-type SwapAmountInRoutes []swaproutertypes.SwapAmountInRoute
+type SwapAmountInRoutes []poolmanagertypes.SwapAmountInRoute
 
 func (routes SwapAmountInRoutes) Validate() error {
 	if len(routes) == 0 {
@@ -47,7 +47,7 @@ func (routes SwapAmountInRoutes) Length() int {
 	return len(routes)
 }
 
-type SwapAmountOutRoutes []swaproutertypes.SwapAmountOutRoute
+type SwapAmountOutRoutes []poolmanagertypes.SwapAmountOutRoute
 
 func (routes SwapAmountOutRoutes) Validate() error {
 	if len(routes) == 0 {
