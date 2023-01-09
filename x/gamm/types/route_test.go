@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	proto "github.com/gogo/protobuf/proto"
@@ -33,4 +34,11 @@ func TestSwapRoutes_MarshalUnmarshal(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, swapRouterBz, gammBz)
+
+	jsonSwaprouterBz, err := json.Marshal(&swapRouterExactAmountInRoute)
+	require.NoError(t, err)
+
+	jsonGammBz, err := json.Marshal(&gammExactAmountInRoute)
+	require.NoError(t, err)
+	require.Equal(t, jsonSwaprouterBz, jsonGammBz)
 }
