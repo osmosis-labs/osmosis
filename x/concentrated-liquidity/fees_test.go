@@ -211,7 +211,7 @@ func (s *KeeperTestSuite) TestCalculateFeeGrowth() {
 
 }
 
-func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOtsideForTick() {
+func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 	const (
 		validPoolId = 1
 	)
@@ -292,7 +292,7 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOtsideForTick() {
 			}
 
 			// System under test.
-			initialFeeGrowthOutside, err := clKeeper.GetInitialFeeGrowthOtsideForTick(ctx, tc.poolId, tc.tick)
+			initialFeeGrowthOutside, err := clKeeper.GetInitialFeeGrowthOutsideForTick(ctx, tc.poolId, tc.tick)
 
 			if tc.expectError != nil {
 				suite.Require().Error(err)

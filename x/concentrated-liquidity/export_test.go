@@ -116,8 +116,8 @@ func CalculateFeeGrowth(targetTick int64, feeGrowthOutside sdk.DecCoins, current
 	return calculateFeeGrowth(targetTick, feeGrowthOutside, currentTick, feesGrowthGlobal, isUpperTick)
 }
 
-func (k Keeper) GetInitialFeeGrowthOtsideForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
-	return k.getInitialFeeGrowthOtsideForTick(ctx, poolId, tick)
+func (k Keeper) GetInitialFeeGrowthOutsideForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
+	return k.getInitialFeeGrowthOutsideForTick(ctx, poolId, tick)
 }
 
 func GetFeeAccumulatorName(poolId uint64) string {
