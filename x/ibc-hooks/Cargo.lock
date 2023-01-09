@@ -365,6 +365,7 @@ dependencies = [
  "cw-storage-plus 1.0.1",
  "cw-utils 1.0.0",
  "cw2 1.0.0",
+ "enum-repr",
  "osmosis-std",
  "osmosis-std-derive",
  "osmosis-testing",
@@ -636,6 +637,17 @@ dependencies = [
  "sec1",
  "subtle",
  "zeroize",
+]
+
+[[package]]
+name = "enum-repr"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bad30c9c0fa1aaf1ae5010dab11f1117b15d35faf62cda4bbbc53b9987950f18"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

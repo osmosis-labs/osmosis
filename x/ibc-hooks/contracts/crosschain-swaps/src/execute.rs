@@ -3,7 +3,7 @@ use cosmwasm_std::{Addr, Coin, DepsMut, Response, SubMsg, SubMsgResponse, SubMsg
 use swaprouter::msg::{ExecuteMsg as SwapRouterExecute, Slippage, SwapResponse};
 
 use crate::checks::{validate_memo, validate_receiver};
-use crate::consts::{CALLBACK_KEY, FORWARD_REPLY_ID, PACKET_LIFETIME, SWAP_REPLY_ID};
+use crate::consts::{MsgReplyID, CALLBACK_KEY, PACKET_LIFETIME};
 use crate::ibc::{MsgTransfer, MsgTransferResponse};
 use crate::msg::{CrosschainSwapResponse, Recovery};
 
@@ -74,7 +74,7 @@ pub fn swap_and_forward(
         },
     )?;
 
-    Ok(Response::new().add_submessage(SubMsg::reply_on_success(msg, SWAP_REPLY_ID)))
+    Ok(Response::new().add_submessage(SubMsg::reply_on_success(msg, MsgReplyID::Swap.repr())))
 }
 
 pub fn handle_swap_reply(
@@ -205,7 +205,10 @@ pub fn handle_swap_reply(
         },
     )?;
 
-    Ok(response.add_submessage(SubMsg::reply_on_success(ibc_transfer, FORWARD_REPLY_ID)))
+    Ok(response.add_submessage(SubMsg::reply_on_success(
+        ibc_transfer,
+        MsgReplyID::Forward.repr(),
+    )))
 }
 
 use ::prost::Message; // Proveides ::decode() for MsgTransferResponse

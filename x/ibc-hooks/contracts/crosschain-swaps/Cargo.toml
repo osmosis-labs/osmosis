@@ -62,6 +62,7 @@ serde-cw-value = "0.7.0"
 prost = {version = "0.11.2", default-features = false, features = ["prost-derive"]}
 osmosis-std-derive = "0.13.2"
 bech32 = "0.9.1"
+enum-repr = "0.2.6"
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }
