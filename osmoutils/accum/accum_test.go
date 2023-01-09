@@ -13,6 +13,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	accumPackage "github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 )
 
 type AccumTestSuite struct {
@@ -342,15 +343,22 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 	accumThreeRewards.SetValue(tripleDenomOneAndTwo)
 
 	tests := map[string]struct {
-		accObject      accumPackage.AccumulatorObject
-		name           string
-		expectedResult sdk.Coins
-		expectError    error
+		accObject             accumPackage.AccumulatorObject
+		name                  string
+		expectedResult        sdk.Coins
+		updateNumSharesToZero bool
+		expectError           error
 	}{
 		"claim at testAddressOne with no rewards - success": {
 			accObject:      accumNoRewards,
 			name:           testAddressOne,
 			expectedResult: toCoins(emptyCoins),
+		},
+		"delete accum - claim at testAddressOne with no rewards - success": {
+			accObject:             accumNoRewards,
+			name:                  testAddressOne,
+			updateNumSharesToZero: true,
+			expectedResult:        toCoins(emptyCoins),
 		},
 		"claim at testAddressTwo with no rewards - success": {
 			accObject:      accumNoRewards,
@@ -375,6 +383,14 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 			// denomTwo: (3 - 0) * 100 (accum diff * share count) = 300
 			expectedResult: toCoins(tripleDenomOneAndTwo.MulDec(positionOne.NumShares).Add(initialCoinDenomOne)),
 		},
+		"delete accum - claim at testAddressOne with multiple reward tokens and unclaimed rewards - success": {
+			accObject:             accumThreeRewards,
+			name:                  testAddressOne,
+			updateNumSharesToZero: true,
+			// denomOne: (300.3 - 0) * 100 (accum diff * share count) + 100.1 (unclaimed rewards) = 30130.1
+			// denomTwo: (3 - 0) * 100 (accum diff * share count) = 300
+			expectedResult: toCoins(tripleDenomOneAndTwo.MulDec(positionOne.NumShares).Add(initialCoinDenomOne)),
+		},
 		"claim at testAddressTwo with multiple reward tokens and no unclaimed rewards - success": {
 			accObject: accumThreeRewards,
 			name:      testAddressTwo,
@@ -387,6 +403,12 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 	for name, tc := range tests {
 		tc := tc
 		suite.Run(name, func() {
+			if tc.updateNumSharesToZero {
+				positionSize, err := tc.accObject.GetPositionSize(tc.name)
+				suite.Require().NoError(err)
+				err = tc.accObject.UpdatePosition(tc.name, positionSize.Neg())
+				suite.Require().NoError(err)
+			}
 			// System under test.
 			actualResult, err := tc.accObject.ClaimRewards(tc.name)
 
@@ -399,14 +421,15 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 			}
 
 			suite.Require().NoError(err)
-
 			suite.Require().Equal(tc.expectedResult, actualResult)
 
-			finalPosition := tc.accObject.GetPosition(tc.name)
-			suite.Require().NoError(err)
+			osmoassert.ConditionalPanic(suite.T(), tc.updateNumSharesToZero, func() {
+				finalPosition := tc.accObject.GetPosition(tc.name)
+				suite.Require().NoError(err)
 
-			// Unclaimed rewards are reset.
-			suite.Require().Equal(emptyCoins, finalPosition.UnclaimedRewards)
+				// Unclaimed rewards are reset.
+				suite.Require().Equal(emptyCoins, finalPosition.UnclaimedRewards)
+			})
 		})
 	}
 }
