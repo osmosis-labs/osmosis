@@ -1386,25 +1386,6 @@ func (s *TestSuite) TestTwapLog() {
 	}
 }
 
-// TestTwapPow_CorrectBase tests that the base of 2 is used for the twap power function.
-// 2^3 = 8
-func (s *TestSuite) TestTwapPow_CorrectBase() {
-	exponentValue := osmomath.NewBigDec(3)
-	expectedValue := sdk.NewDec(8)
-
-	result := twap.TwapPow(exponentValue.SDKDec())
-
-	s.Require().Equal(expectedValue, result)
-}
-
-// TestTwapPow_NegativeExponent tests that twap pow can handle a negative exponent
-// 2^-1 = 0.5
-func (s *TestSuite) TestTwapPow_NegativeExponent() {
-	expectedResult := sdk.MustNewDecFromStr("0.5")
-	result := twap.TwapPow(oneDec.Neg())
-	s.Require().Equal(expectedResult, result)
-}
-
 func testCaseFromDeltas(s *TestSuite, startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTwapTestCase {
 	return computeTwapTestCase{
 		newOneSidedRecord(baseTime, startAccum, true),

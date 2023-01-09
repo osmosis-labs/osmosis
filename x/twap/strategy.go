@@ -43,17 +43,32 @@ func (s *arithmetic) computeTwap(startRecord types.TwapRecord, endRecord types.T
 func (s *geometric) computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
 	accumDiff := endRecord.GeometricTwapAccumulator.Sub(startRecord.GeometricTwapAccumulator)
 
+	if accumDiff.IsZero() {
+		return sdk.ZeroDec()
+	}
+
 	timeDelta := endRecord.Time.Sub(startRecord.Time)
 	arithmeticMeanOfLogPrices := types.AccumDiffDivDuration(accumDiff, timeDelta)
 
-	result := twapPow(arithmeticMeanOfLogPrices)
-	// N.B.: Geometric mean of recprocals is reciprocal of geometric mean.
+	exponent := arithmeticMeanOfLogPrices
+	// result = 2^exponent = 2^arithmeticMeanOfLogPrices
+	result := osmomath.Exp2(osmomath.BigDecFromSDKDec(exponent.Abs()))
+
+	isExponentNegative := exponent.IsNegative()
+	isQuoteAsset0 := quoteAsset == startRecord.Asset0Denom
+
+	// Case 1: exponent is negative and quoteAsset is asset 0.
+	// This means that we need to invert the result to get the true value of the geometric mean.
+	invertCase1 := isExponentNegative && isQuoteAsset0
+	// Case 2: exponent is positive and quoteAsset is asset 1.
+	// We need to use the following property: geometric mean of recprocals is reciprocal of geometric mean.
 	// https://proofwiki.org/wiki/Geometric_Mean_of_Reciprocals_is_Reciprocal_of_Geometric_Mean
-	if quoteAsset == startRecord.Asset1Denom {
-		result = sdk.OneDec().Quo(result)
+	invertCase2 := !isExponentNegative && !isQuoteAsset0
+	if invertCase1 || invertCase2 {
+		result = osmomath.OneDec().Quo(result)
 	}
 
 	// N.B. we round because this is the max number of significant figures supported
 	// by the underlying spot price function.
-	return osmomath.SigFigRound(result, gammtypes.SpotPriceSigFigs)
+	return osmomath.SigFigRound(result.SDKDec(), gammtypes.SpotPriceSigFigs)
 }

@@ -163,10 +163,7 @@ func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgS
 		return nil, err
 	}
 
-	// TODO: remove this redundancy after making routes be shared between x/gamm and x/swaprouter.
-	swaprouterRoutes := types.ConvertAmountInRoutes(msg.Routes)
-
-	tokenOutAmount, err := server.keeper.poolManager.RouteExactAmountIn(ctx, sender, swaprouterRoutes, msg.TokenIn, msg.TokenOutMinAmount)
+	tokenOutAmount, err := server.keeper.poolManager.RouteExactAmountIn(ctx, sender, msg.Routes, msg.TokenIn, msg.TokenOutMinAmount)
 	if err != nil {
 		return nil, err
 	}
@@ -191,10 +188,7 @@ func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	// TODO: remove this redundancy after making routes be shared between x/gamm and x/swaprouter.
-	swaprouterRoutes := types.ConvertAmountOutRoutes(msg.Routes)
-
-	tokenInAmount, err := server.keeper.poolManager.RouteExactAmountOut(ctx, sender, swaprouterRoutes, msg.TokenInMaxAmount, msg.TokenOut)
+	tokenInAmount, err := server.keeper.poolManager.RouteExactAmountOut(ctx, sender, msg.Routes, msg.TokenInMaxAmount, msg.TokenOut)
 	if err != nil {
 		return nil, err
 	}

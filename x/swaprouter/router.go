@@ -2,6 +2,7 @@ package swaprouter
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -67,6 +68,11 @@ func (k Keeper) RouteExactAmountIn(
 			return sdk.Int{}, poolErr
 		}
 
+		// check if pool is active, if not error
+		if !pool.IsActive(ctx) {
+			return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
+		}
+
 		swapFee := pool.GetSwapFee(ctx)
 
 		// If we determined the route is an osmo multi-hop and both routes are incentivized,
@@ -107,6 +113,11 @@ func (k Keeper) SwapExactAmountIn(
 	pool, poolErr := swapModule.GetPool(ctx, poolId)
 	if poolErr != nil {
 		return sdk.Int{}, poolErr
+	}
+
+	// check if pool is active, if not error
+	if !pool.IsActive(ctx) {
+		return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
 	}
 
 	swapFee := pool.GetSwapFee(ctx)
@@ -250,6 +261,11 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		pool, poolErr := swapModule.GetPool(ctx, route.PoolId)
 		if poolErr != nil {
 			return sdk.Int{}, poolErr
+		}
+
+		// check if pool is active, if not error
+		if !pool.IsActive(ctx) {
+			return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
 		}
 
 		swapFee := pool.GetSwapFee(ctx)

@@ -453,7 +453,8 @@ func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
 	bApp *baseapp.BaseApp,
 	hooksKeeper *ibchookskeeper.Keeper) {
 	// Setup the ICS4Wrapper used by the hooks middleware
-	wasmHooks := ibchooks.NewWasmHooks(hooksKeeper, nil) // The contract keeper needs to be set later
+	osmoPrefix := sdk.GetConfig().GetBech32AccountAddrPrefix()
+	wasmHooks := ibchooks.NewWasmHooks(hooksKeeper, nil, osmoPrefix) // The contract keeper needs to be set later
 	appKeepers.Ics20WasmHooks = &wasmHooks
 	appKeepers.HooksICS4Wrapper = ibchooks.NewICS4Middleware(
 		appKeepers.IBCKeeper.ChannelKeeper,

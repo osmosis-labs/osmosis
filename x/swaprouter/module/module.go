@@ -33,6 +33,7 @@ type AppModuleBasic struct{}
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
 }
 
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
@@ -69,6 +70,7 @@ func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
 
 // RegisterInterfaces registers interfaces and implementations of the gamm module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
 }
 
 type AppModule struct {
@@ -137,8 +139,6 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // **** simulation implementation ****
 // GenerateGenesisState creates a randomized GenState of the swaprouter module.
-// **** simulation implementation ****
-// GenerateGenesisState creates a randomized GenState of the gamm module.
 func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
 	swaprouterGen := types.DefaultGenesis()
 	// change the pool creation fee denom from uosmo to stake
@@ -148,7 +148,5 @@ func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *s
 }
 
 func (am AppModule) Actions() []simtypes.Action {
-	// TODO: uncomment this once simulation is enabled.
-	// return swaproutersimulation.DefaultActions(am.k, am.gammKeeper)
 	return nil
 }
