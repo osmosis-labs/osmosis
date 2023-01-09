@@ -15,6 +15,9 @@ pub enum ContractError {
     #[error("invalid receiver: {receiver}")]
     InvalidReceiver { receiver: String },
 
+    #[error("invalid json: {error}. Got: {json}")]
+    InvalidJson { error: String, json: String },
+
     #[error("invalid memo: {error}. Got: {memo}")]
     InvalidMemo { error: String, memo: String },
 
