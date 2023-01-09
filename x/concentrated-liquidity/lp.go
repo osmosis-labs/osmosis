@@ -27,9 +27,8 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
-
 	// Check if the provided tick range is valid according to the pool's tick spacing and module parameters.
-	if err := validateTickRangeIsValid(pool.GetTickSpacing(), lowerTick, upperTick); err != nil {
+	if err := validateTickRangeIsValid(pool.GetTickSpacing(), pool.GetPrecisionFactorAtPriceOne(), lowerTick, upperTick); err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
@@ -111,7 +110,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	}
 
 	// Check if the provided tick range is valid according to the pool's tick spacing and module parameters.
-	if err := validateTickRangeIsValid(pool.GetTickSpacing(), lowerTick, upperTick); err != nil {
+	if err := validateTickRangeIsValid(pool.GetTickSpacing(), pool.GetPrecisionFactorAtPriceOne(), lowerTick, upperTick); err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 

@@ -6,29 +6,34 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
+
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 var (
-	DefaultPrecisionValue   = sdk.NewInt(-4)
-	DefaultLowerPrice       = sdk.NewDec(4545)
-	DefaultLowerTick        = int64(305450)
-	DefaultUpperPrice       = sdk.NewDec(5500)
-	DefaultUpperTick        = int64(315000)
-	DefaultCurrPrice        = sdk.NewDec(5000)
-	DefaultCurrTick         = sdk.NewInt(310000)
-	DefaultCurrSqrtPrice, _ = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
-	DefaultZeroSwapFee      = sdk.ZeroDec()
-	ETH                     = "eth"
-	DefaultAmt0             = sdk.NewInt(1000000)
-	DefaultAmt0Expected     = sdk.NewInt(998976)
-	USDC                    = "usdc"
-	DefaultAmt1             = sdk.NewInt(5000000000)
-	DefaultAmt1Expected     = sdk.NewInt(5000000000)
-	DefaultLiquidityAmt     = sdk.MustNewDecFromStr("1517882343.751510418088349649")
-	DefaultTickSpacing      = uint64(1)
-	PoolCreationFee         = swaproutertypes.DefaultParams().PoolCreationFee
+	DefaultExponentAtPriceOne      = sdk.NewInt(-4)
+	DefaultMinTick, DefaultMaxTick = math.GetMinAndMaxTicksFromExponentAtPriceOne(DefaultExponentAtPriceOne)
+	DefaultLowerPrice              = sdk.NewDec(4545)
+	DefaultLowerTick               = int64(305450)
+	DefaultUpperPrice              = sdk.NewDec(5500)
+	DefaultUpperTick               = int64(315000)
+	DefaultCurrPrice               = sdk.NewDec(5000)
+	DefaultCurrTick                = sdk.NewInt(310000)
+	DefaultCurrSqrtPrice, _        = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
+	DefaultZeroSwapFee             = sdk.ZeroDec()
+	MaxSpotPrice                   = sdk.MustNewDecFromStr("100000000000000000000000000000000000000")
+	MinSpotPrice                   = sdk.MustNewDecFromStr("0.000000000000000001")
+	ETH                            = "eth"
+	DefaultAmt0                    = sdk.NewInt(1000000)
+	DefaultAmt0Expected            = sdk.NewInt(998976)
+	USDC                           = "usdc"
+	DefaultAmt1                    = sdk.NewInt(5000000000)
+	DefaultAmt1Expected            = sdk.NewInt(5000000000)
+	DefaultLiquidityAmt            = sdk.MustNewDecFromStr("1517882343.751510418088349649")
+	DefaultTickSpacing             = uint64(1)
+	PoolCreationFee                = swaproutertypes.DefaultParams().PoolCreationFee
 )
 
 type KeeperTestSuite struct {

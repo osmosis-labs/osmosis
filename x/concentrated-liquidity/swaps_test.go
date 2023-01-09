@@ -149,10 +149,10 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(5500)
-				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultPrecisionValue) // 315000
+				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 315000
 				s.Require().NoError(err)
 				newUpperPrice := sdk.NewDec(6250)
-				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultPrecisionValue) // 322500
+				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 322500
 				s.Require().NoError(err)
 
 				// add position two with the new price range above
@@ -196,10 +196,10 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(4000)
-				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultPrecisionValue) // 300000
+				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 300000
 				s.Require().NoError(err)
 				newUpperPrice := sdk.NewDec(4545)
-				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultPrecisionValue) // 305450
+				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 305450
 				s.Require().NoError(err)
 
 				// add position two with the new price range above
@@ -244,10 +244,10 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(5001)
-				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultPrecisionValue) // 310010
+				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 310010
 				s.Require().NoError(err)
 				newUpperPrice := sdk.NewDec(6250)
-				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultPrecisionValue) // 322500
+				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 322500
 				s.Require().NoError(err)
 
 				// add position two with the new price range above
@@ -285,10 +285,10 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(5001)
-				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultPrecisionValue) // 310010
+				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 310010
 				s.Require().NoError(err)
 				newUpperPrice := sdk.NewDec(6250)
-				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultPrecisionValue) // 322500
+				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 322500
 				s.Require().NoError(err)
 
 				// add position two with the new price range above
@@ -332,10 +332,10 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(4000)
-				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultPrecisionValue) // 300000
+				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 300000
 				s.Require().NoError(err)
 				newUpperPrice := sdk.NewDec(4999)
-				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultPrecisionValue) // 309990
+				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 309990
 				s.Require().NoError(err)
 
 				// add position two with the new price range above
@@ -373,10 +373,10 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(4000)
-				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultPrecisionValue) // 300000
+				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 300000
 				s.Require().NoError(err)
 				newUpperPrice := sdk.NewDec(4999)
-				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultPrecisionValue) // 309990
+				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 309990
 				s.Require().NoError(err)
 
 				// add position two with the new price range above
@@ -420,10 +420,10 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(5501)
-				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultPrecisionValue) // 315010
+				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 315010
 				s.Require().NoError(err)
 				newUpperPrice := sdk.NewDec(6250)
-				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultPrecisionValue) // 322500
+				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 322500
 				s.Require().NoError(err)
 
 				// add position two with the new price range above
@@ -703,10 +703,10 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(5500)
-				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultPrecisionValue) // 315000
+				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 315000
 				s.Require().NoError(err)
 				newUpperPrice := sdk.NewDec(6250)
-				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultPrecisionValue) // 322500
+				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 322500
 				s.Require().NoError(err)
 
 				// add position two with the new price range above
@@ -736,10 +736,10 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(4000)
-				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultPrecisionValue) // 300000
+				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 300000
 				s.Require().NoError(err)
 				newUpperPrice := sdk.NewDec(4545)
-				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultPrecisionValue) // 305450
+				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 305450
 				s.Require().NoError(err)
 
 				// add position two with the new price range above
@@ -769,10 +769,10 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(5001)
-				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultPrecisionValue) // 310010
+				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 310010
 				s.Require().NoError(err)
 				newUpperPrice := sdk.NewDec(6250)
-				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultPrecisionValue) // 322500
+				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 322500
 				s.Require().NoError(err)
 
 				// add position two with the new price range above
@@ -796,10 +796,10 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(5001)
-				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultPrecisionValue) // 310010
+				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 310010
 				s.Require().NoError(err)
 				newUpperPrice := sdk.NewDec(6250)
-				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultPrecisionValue) // 322500
+				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 322500
 				s.Require().NoError(err)
 
 				// add position two with the new price range above
@@ -829,10 +829,10 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(4000)
-				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultPrecisionValue) // 300000
+				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 300000
 				s.Require().NoError(err)
 				newUpperPrice := sdk.NewDec(4999)
-				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultPrecisionValue) // 309990
+				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 309990
 				s.Require().NoError(err)
 
 				// add position two with the new price range above
@@ -856,10 +856,10 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(4000)
-				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultPrecisionValue) // 300000
+				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 300000
 				s.Require().NoError(err)
 				newUpperPrice := sdk.NewDec(4999)
-				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultPrecisionValue) // 309990
+				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 309990
 				s.Require().NoError(err)
 
 				// add position two with the new price range above
@@ -889,10 +889,10 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 
 				// create second position parameters
 				newLowerPrice := sdk.NewDec(5501)
-				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultPrecisionValue) // 315010
+				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 315010
 				s.Require().NoError(err)
 				newUpperPrice := sdk.NewDec(6250)
-				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultPrecisionValue) // 322500
+				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 322500
 				s.Require().NoError(err)
 
 				// add position two with the new price range above

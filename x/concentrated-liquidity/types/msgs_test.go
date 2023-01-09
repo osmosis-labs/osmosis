@@ -65,34 +65,6 @@ func TestMsgCreatePosition(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "lower tick < min tick",
-			msg: types.MsgCreatePosition{
-				PoolId:          1,
-				Sender:          addr1,
-				LowerTick:       types.MinTick - 1,
-				UpperTick:       1,
-				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
-				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
-				TokenMinAmount0: sdk.OneInt(),
-				TokenMinAmount1: sdk.OneInt(),
-			},
-			expectPass: false,
-		},
-		{
-			name: "upper tick > max tick",
-			msg: types.MsgCreatePosition{
-				PoolId:          1,
-				Sender:          addr1,
-				LowerTick:       1,
-				UpperTick:       types.MaxTick + 1,
-				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
-				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
-				TokenMinAmount0: sdk.OneInt(),
-				TokenMinAmount1: sdk.OneInt(),
-			},
-			expectPass: false,
-		},
-		{
 			name: "negative token 0 desire",
 			msg: types.MsgCreatePosition{
 				PoolId:          1,
@@ -220,28 +192,6 @@ func TestMsgWithdrawPosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       10,
 				UpperTick:       1,
-				LiquidityAmount: sdk.OneInt(),
-			},
-			expectPass: false,
-		},
-		{
-			name: "lower tick < min tick",
-			msg: types.MsgWithdrawPosition{
-				PoolId:          1,
-				Sender:          addr1,
-				LowerTick:       types.MinTick - 1,
-				UpperTick:       1,
-				LiquidityAmount: sdk.OneInt(),
-			},
-			expectPass: false,
-		},
-		{
-			name: "upper tick > max tick",
-			msg: types.MsgWithdrawPosition{
-				PoolId:          1,
-				Sender:          addr1,
-				LowerTick:       1,
-				UpperTick:       types.MaxTick + 1,
 				LiquidityAmount: sdk.OneInt(),
 			},
 			expectPass: false,

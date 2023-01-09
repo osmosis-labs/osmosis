@@ -29,26 +29,26 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			denom0:                    ETH,
 			denom1:                    USDC,
 			tickSpacing:               DefaultTickSpacing,
-			precisionFactorAtPriceOne: DefaultPrecisionValue,
+			precisionFactorAtPriceOne: DefaultExponentAtPriceOne,
 			expectedPoolCreatedEvent:  1,
 			expectedMessageEvents:     3, // 1 for pool created, 1 for coin spent, 1 for coin received
 		},
 		"error: missing denom0": {
 			denom1:                    USDC,
 			tickSpacing:               DefaultTickSpacing,
-			precisionFactorAtPriceOne: DefaultPrecisionValue,
+			precisionFactorAtPriceOne: DefaultExponentAtPriceOne,
 			expectedError:             fmt.Errorf("received denom0 with invalid metadata: %s", ""),
 		},
 		"error: missing denom1": {
 			denom0:                    ETH,
 			tickSpacing:               DefaultTickSpacing,
-			precisionFactorAtPriceOne: DefaultPrecisionValue,
+			precisionFactorAtPriceOne: DefaultExponentAtPriceOne,
 			expectedError:             fmt.Errorf("received denom1 with invalid metadata: %s", ""),
 		},
 		"error: missing tickSpacing": {
 			denom0:                    ETH,
 			denom1:                    USDC,
-			precisionFactorAtPriceOne: DefaultPrecisionValue,
+			precisionFactorAtPriceOne: DefaultExponentAtPriceOne,
 			expectedError:             fmt.Errorf("tick spacing must be positive"),
 		},
 		"error: precision value below minimum": {

@@ -20,14 +20,14 @@ const (
 )
 
 var (
-	DefaultSpotPrice        = sdk.MustNewDecFromStr("0.2")
-	DefaultReverseSpotPrice = sdk.NewDec(1).Quo(DefaultSpotPrice)
-	DefaultSqrtSpotPrice, _ = DefaultSpotPrice.ApproxSqrt()
-	DefaultLiquidityAmt     = sdk.MustNewDecFromStr("1517882343.751510418088349649")
-	DefaultCurrTick         = sdk.NewInt(310000)
-	DefaultCurrPrice        = sdk.NewDec(5000)
-	DefaultCurrSqrtPrice, _ = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
-	DefaultPrecisionValue   = sdk.NewInt(-4)
+	DefaultSpotPrice          = sdk.MustNewDecFromStr("0.2")
+	DefaultReverseSpotPrice   = sdk.NewDec(1).Quo(DefaultSpotPrice)
+	DefaultSqrtSpotPrice, _   = DefaultSpotPrice.ApproxSqrt()
+	DefaultLiquidityAmt       = sdk.MustNewDecFromStr("1517882343.751510418088349649")
+	DefaultCurrTick           = sdk.NewInt(310000)
+	DefaultCurrPrice          = sdk.NewDec(5000)
+	DefaultCurrSqrtPrice, _   = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
+	DefaultExponentAtPriceOne = sdk.NewInt(-4)
 )
 
 type ConcentratedPoolTestSuite struct {
@@ -186,7 +186,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 				denom0:         ETH,
 				denom1:         USDC,
 				tickSpacing:    DefaultTickSpacing,
-				precisionValue: DefaultPrecisionValue,
+				precisionValue: DefaultExponentAtPriceOne,
 			},
 			expectedPoolId:      DefaultValidPoolID,
 			expectedDenom0:      ETH,
@@ -200,7 +200,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 				denom0:         USDC,
 				denom1:         ETH,
 				tickSpacing:    DefaultTickSpacing,
-				precisionValue: DefaultPrecisionValue,
+				precisionValue: DefaultExponentAtPriceOne,
 			},
 			expectedPoolId:      DefaultValidPoolID,
 			expectedDenom0:      ETH,
@@ -214,7 +214,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 				denom0:         USDC,
 				denom1:         USDC,
 				tickSpacing:    DefaultTickSpacing,
-				precisionValue: DefaultPrecisionValue,
+				precisionValue: DefaultExponentAtPriceOne,
 			},
 			expectedErr: fmt.Errorf("cannot have the same asset in a single pool"),
 		},

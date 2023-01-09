@@ -16,22 +16,6 @@ func (e InvalidLowerUpperTickError) Error() string {
 	return fmt.Sprintf("Lower tick must be lesser than upper. Got lower: %d, upper: %d", e.LowerTick, e.UpperTick)
 }
 
-type InvalidLowerTickError struct {
-	LowerTick int64
-}
-
-func (e InvalidLowerTickError) Error() string {
-	return fmt.Sprintf("Lower tick must be in range [%d, %d]. Got: %d", MinTick, MaxTick, e.LowerTick)
-}
-
-type InvalidUpperTickError struct {
-	UpperTick int64
-}
-
-func (e InvalidUpperTickError) Error() string {
-	return fmt.Sprintf("Upper tick must be in range [%d, %d]. Got: %d", MinTick, MaxTick, e.UpperTick)
-}
-
 type NotPositiveRequireAmountError struct {
 	Amount string
 }
@@ -61,6 +45,8 @@ func (e PoolNotFoundError) Error() string {
 type InvalidTickError struct {
 	Tick    int64
 	IsLower bool
+	MinTick int64
+	MaxTick int64
 }
 
 func (e InvalidTickError) Error() string {
@@ -68,7 +54,7 @@ func (e InvalidTickError) Error() string {
 	if e.IsLower {
 		tickStr = "lower"
 	}
-	return fmt.Sprintf("%s tick (%d) is invalid, Must be >= %d and <= %d", tickStr, e.Tick, MinTick, MaxTick)
+	return fmt.Sprintf("%s tick (%d) is invalid, Must be >= %d and <= %d", tickStr, e.Tick, e.MinTick, e.MaxTick)
 }
 
 type InsufficientLiquidityError struct {

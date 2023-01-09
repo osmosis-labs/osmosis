@@ -50,12 +50,12 @@ func TickToPrice(tickIndex, exponentAtPriceOne sdk.Int) (price sdk.Dec, err erro
 	}
 
 	// Check that the tick index is between min and max value for the given exponentAtPriceOne
-	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne, geometricExponentIncrementDistanceInTicks)
-	if tickIndex.LT(minTick) {
-		return sdk.Dec{}, fmt.Errorf("tickIndex must be greater than or equal to %s", minTick)
+	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
+	if tickIndex.LT(sdk.NewInt(minTick)) {
+		return sdk.Dec{}, fmt.Errorf("tickIndex must be greater than or equal to %d", minTick)
 	}
-	if tickIndex.GT(maxTick) {
-		return sdk.Dec{}, fmt.Errorf("tickIndex must be less than or equal to %s", maxTick)
+	if tickIndex.GT(sdk.NewInt(maxTick)) {
+		return sdk.Dec{}, fmt.Errorf("tickIndex must be less than or equal to %d", maxTick)
 	}
 
 	// Use floor division to determine what the geometricExponent is now (the delta)
@@ -130,18 +130,18 @@ func PriceToTick(price sdk.Dec, exponentAtPriceOne sdk.Int) (sdk.Int, error) {
 		}
 	}
 	// Determine how many ticks we have passed in the exponentAtCurrentTick
-	ticksToBeFulfilledByexponentAtCurrentTick := price.Sub(totalPrice).Quo(currentAdditiveIncrementInTicks)
+	ticksToBeFulfilledByExponentAtCurrentTick := price.Sub(totalPrice).Quo(currentAdditiveIncrementInTicks)
 
 	// Finally, add the ticks we have passed from the completed geometricExponent values, as well as the ticks we have passed in the current geometricExponent value
-	tickIndex := ticksPassed.Add(ticksToBeFulfilledByexponentAtCurrentTick.TruncateInt())
+	tickIndex := ticksPassed.Add(ticksToBeFulfilledByExponentAtCurrentTick.TruncateInt())
 
 	// Add a check to make sure that the tick index is within the allowed range
-	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne, geometricExponentIncrementDistanceInTicks)
-	if tickIndex.LT(minTick) {
-		return sdk.Int{}, fmt.Errorf("tickIndex must be greater than or equal to %s", minTick)
+	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
+	if tickIndex.LT(sdk.NewInt(minTick)) {
+		return sdk.Int{}, fmt.Errorf("tickIndex must be greater than or equal to %d", minTick)
 	}
-	if tickIndex.GT(maxTick) {
-		return sdk.Int{}, fmt.Errorf("tickIndex must be less than or equal to %s", maxTick)
+	if tickIndex.GT(sdk.NewInt(maxTick)) {
+		return sdk.Int{}, fmt.Errorf("tickIndex must be less than or equal to %d", maxTick)
 	}
 
 	return tickIndex, nil
@@ -157,9 +157,10 @@ func powTen(exponent sdk.Int) sdk.Dec {
 }
 
 // GetMinAndMaxTicksFromExponentAtPriceOne determines min and max ticks allowed for a given exponentAtPriceOne value
-// This allows for a min spot price of 0.000000000000000001 and a max spot price of 200000000000 for every k value
-func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int, geometricExponentIncrementDistanceInTicks sdk.Dec) (minTick, maxTick sdk.Int) {
-	minTick = sdk.NewDec(18).Mul(geometricExponentIncrementDistanceInTicks).Neg().RoundInt()
-	maxTick = powTen(exponentAtPriceOne.Neg().Add(sdk.NewInt(2))).RoundInt()
+// This allows for a min spot price of 0.000000000000000001 and a max spot price of 100000000000000000000000000000000000000 for every exponentAtPriceOne value
+func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTick, maxTick int64) {
+	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(powTen(exponentAtPriceOne.Neg()))
+	minTick = sdk.NewDec(18).Mul(geometricExponentIncrementDistanceInTicks).Neg().RoundInt().Int64()
+	maxTick = sdk.NewDec(38).Mul(geometricExponentIncrementDistanceInTicks).RoundInt().Int64()
 	return minTick, maxTick
 }

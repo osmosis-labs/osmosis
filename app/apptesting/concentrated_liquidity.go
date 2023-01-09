@@ -8,10 +8,10 @@ import (
 )
 
 var (
-	ETH                   = "eth"
-	USDC                  = "usdc"
-	DefaultTickSpacing    = uint64(1)
-	DefaultPrecisionValue = sdk.NewInt(-4)
+	ETH                       = "eth"
+	USDC                      = "usdc"
+	DefaultTickSpacing        = uint64(1)
+	DefaultExponentAtPriceOne = sdk.NewInt(-4)
 )
 
 // PrepareConcentratedPool sets up an eth usdc concentrated liquidity pool with pool ID 1, tick spacing of 1, and no liquidity
@@ -20,7 +20,7 @@ func (s *KeeperTestHelper) PrepareConcentratedPool() types.ConcentratedPoolExten
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
 
 	// Create a concentrated pool via the swaprouter
-	poolID, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultPrecisionValue))
+	poolID, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne))
 	s.Require().NoError(err)
 
 	// Retrieve the poolInterface via the poolID

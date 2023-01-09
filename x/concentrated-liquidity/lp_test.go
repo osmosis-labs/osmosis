@@ -45,7 +45,7 @@ var (
 		amount1Expected:           DefaultAmt1Expected,
 		liquidityAmount:           DefaultLiquidityAmt,
 		tickSpacing:               DefaultTickSpacing,
-		precisionFactorAtPriceOne: DefaultPrecisionValue,
+		precisionFactorAtPriceOne: DefaultExponentAtPriceOne,
 	}
 )
 
@@ -60,12 +60,12 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			expectedError: types.PoolNotFoundError{PoolId: 2},
 		},
 		"error: lower tick out of bounds": {
-			lowerTick:     types.MinTick - 1,
-			expectedError: types.InvalidTickError{Tick: types.MinTick - 1, IsLower: true},
+			lowerTick:     DefaultMinTick - 1,
+			expectedError: types.InvalidTickError{Tick: DefaultMinTick - 1, IsLower: true, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
 		},
 		"error: upper tick out of bounds": {
-			upperTick:     types.MaxTick + 1,
-			expectedError: types.InvalidTickError{Tick: types.MaxTick + 1, IsLower: false},
+			upperTick:     DefaultMaxTick + 1,
+			expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 1, IsLower: false, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
 		},
 		"error: upper tick is below the lower tick, but both are in bounds": {
 			lowerTick:     50,
@@ -255,8 +255,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// system under test parameters
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
-				upperTick:     types.MaxTick + 1, // invalid tick
-				expectedError: types.InvalidTickError{Tick: types.MaxTick + 1, IsLower: false},
+				upperTick:     DefaultMaxTick + 1, // invalid tick
+				expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 1, IsLower: false},
 			},
 		},
 		"error: lower tick out of bounds": {
@@ -266,8 +266,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// system under test parameters
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
-				lowerTick:     types.MinTick - 1, // invalid tick
-				expectedError: types.InvalidTickError{Tick: types.MinTick - 1, IsLower: true},
+				lowerTick:     DefaultMinTick - 1, // invalid tick
+				expectedError: types.InvalidTickError{Tick: DefaultMinTick - 1, IsLower: true},
 			},
 		},
 		"error: insufficient liquidity": {

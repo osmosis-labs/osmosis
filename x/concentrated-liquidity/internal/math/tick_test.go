@@ -102,14 +102,14 @@ func (suite *ConcentratedMathTestSuite) TestTickToPrice() {
 			expectedPrice:      "200000000000.000000000000000000",
 		},
 		"error: tickIndex less than minimum": {
-			tickIndex:          sdk.NewInt(-163),
-			exponentAtPriceOne: sdk.NewInt(-1),
-			expectedError:      fmt.Errorf("tickIndex must be greater than or equal to %s", "-162"),
+			tickIndex:          sdk.NewInt(DefaultMinTick - 1),
+			exponentAtPriceOne: DefaultExponentAtPriceOne,
+			expectedError:      fmt.Errorf("tickIndex must be greater than or equal to %d", DefaultMinTick),
 		},
 		"error: tickIndex greater than maximum": {
-			tickIndex:          sdk.NewInt(1001),
-			exponentAtPriceOne: sdk.NewInt(-1),
-			expectedError:      fmt.Errorf("tickIndex must be less than or equal to %s", "1000"),
+			tickIndex:          sdk.NewInt(DefaultMaxTick + 1),
+			exponentAtPriceOne: DefaultExponentAtPriceOne,
+			expectedError:      fmt.Errorf("tickIndex must be less than or equal to %d", DefaultMaxTick),
 		},
 		"error: exponentAtPriceOne less than minimum": {
 			tickIndex:          sdk.NewInt(100),
@@ -178,9 +178,9 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 			tickExpected:       "4030301",
 		},
 		"max spot price and minimum exponentAtPriceOne": {
-			price:              sdk.MustNewDecFromStr("200000000000"),
+			price:              MaxSpotPrice,
 			exponentAtPriceOne: sdk.NewInt(-1),
-			tickExpected:       "1000",
+			tickExpected:       "3420",
 		},
 		"error: price must be positive": {
 			price:              sdk.NewDec(-1),
@@ -188,9 +188,9 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 			expectedError:      fmt.Errorf("price must be greater than zero"),
 		},
 		"error: resulting tickIndex too large": {
-			price:              sdk.NewDec(200000000001),
-			exponentAtPriceOne: sdk.NewInt(-6),
-			expectedError:      fmt.Errorf("tickIndex must be less than or equal to %s", "100000000"),
+			price:              MaxSpotPrice.Mul(sdk.NewDec(2)),
+			exponentAtPriceOne: DefaultExponentAtPriceOne,
+			expectedError:      fmt.Errorf("tickIndex must be less than or equal to %d", DefaultMaxTick),
 		},
 		"error: exponentAtPriceOne less than minimum": {
 			price:              sdk.NewDec(50000),
