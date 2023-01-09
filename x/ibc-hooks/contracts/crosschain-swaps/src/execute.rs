@@ -1,6 +1,7 @@
 use cosmwasm_std::{coins, from_binary, to_binary, wasm_execute, BankMsg, Timestamp};
 use cosmwasm_std::{Addr, Coin, DepsMut, Response, SubMsg, SubMsgResponse, SubMsgResult};
-use swaprouter::msg::{ExecuteMsg as SwapRouterExecute, Slippage, SwapResponse};
+use swaprouter;
+use swaprouter::msg::{ExecuteMsg as SwapRouterExecute, SwapResponse};
 
 use crate::checks::{validate_memo, validate_receiver};
 use crate::consts::{MsgReplyID, CALLBACK_KEY, PACKET_LIFETIME};
@@ -25,7 +26,7 @@ pub fn swap_and_forward(
     contract_addr: Addr,
     input_coin: Coin,
     output_denom: String,
-    slippage: Slippage,
+    slippage: swaprouter::Slippage,
     receiver: Addr,
     next_memo: Option<String>,
     failed_delivery: Option<Recovery>,

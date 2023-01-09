@@ -10,3 +10,4 @@ pub mod state;
 mod contract_tests;
 
 pub use crate::error::ContractError;
+pub use crate::msg::Slippage;
