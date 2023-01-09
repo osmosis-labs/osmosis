@@ -8,7 +8,6 @@ use crate::ibc::{MsgTransfer, MsgTransferResponse};
 use crate::msg::{CrosschainSwapResponse, Recovery};
 
 use crate::state;
-use crate::state::ibc::IBCTransfer;
 use crate::state::{
     ForwardMsgReplyState, ForwardTo, SwapMsgReplyState, CONFIG, FORWARD_REPLY_STATES,
     INFLIGHT_PACKETS, RECOVERY_STATES, SWAP_REPLY_STATES,
@@ -240,7 +239,7 @@ pub fn handle_forward_reply(
     // If a recovery address was provided, store sent IBC transfer so that it
     // can later be recovered by that addr.
     if let Some(Recovery { recovery_addr }) = failed_delivery {
-        let recovery = IBCTransfer {
+        let recovery = state::ibc::IBCTransfer {
             recovery_addr,
             channel_id: channel_id.clone(),
             sequence: response.sequence,
