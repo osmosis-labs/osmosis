@@ -68,27 +68,27 @@ func (suite *ConcentratedMathTestSuite) TestTickToPrice() {
 		},
 		"One cent increments at the tenths place: 1": {
 			tickIndex:          sdk.NewInt(-2),
-			exponentAtPriceOne: sdk.NewInt(-2),
+			exponentAtPriceOne: sdk.NewInt(-1),
 			expectedPrice:      sdk.MustNewDecFromStr("0.98"),
 		},
 		"One tenth of a cent increments at the hundredths place: 1": {
 			tickIndex:          sdk.NewInt(-2),
-			exponentAtPriceOne: sdk.NewInt(-3),
+			exponentAtPriceOne: sdk.NewInt(-2),
 			expectedPrice:      sdk.MustNewDecFromStr("0.998"),
 		},
 		"One hundredths of a cent increments at the thousandths place: 1": {
 			tickIndex:          sdk.NewInt(-2),
-			exponentAtPriceOne: sdk.NewInt(-4),
+			exponentAtPriceOne: sdk.NewInt(-3),
 			expectedPrice:      sdk.MustNewDecFromStr("0.9998"),
 		},
 		"One ten millionth of a cent increments at the hundred millionths place: 1": {
 			tickIndex:          sdk.NewInt(-2),
-			exponentAtPriceOne: sdk.NewInt(-8),
+			exponentAtPriceOne: sdk.NewInt(-7),
 			expectedPrice:      sdk.MustNewDecFromStr("0.99999998"),
 		},
 		"One ten millionth of a cent increments at the hundred millionths place: 2": {
 			tickIndex:          sdk.NewInt(-99999111),
-			exponentAtPriceOne: sdk.NewInt(-8),
+			exponentAtPriceOne: sdk.NewInt(-7),
 			expectedPrice:      sdk.MustNewDecFromStr("0.090000889"),
 		},
 		"More variety of numbers in each place": {
@@ -165,12 +165,12 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 		"0.090000889 to tick with -8 k at price one": {
 			price:              sdk.MustNewDecFromStr("0.090000889"),
 			exponentAtPriceOne: sdk.NewInt(-8),
-			tickExpected:       "-99999111",
+			tickExpected:       "-999991110",
 		},
 		"0.9998 to tick with -4 k at price one": {
 			price:              sdk.MustNewDecFromStr("0.9998"),
 			exponentAtPriceOne: sdk.NewInt(-4),
-			tickExpected:       "-2",
+			tickExpected:       "-20",
 		},
 		"53030.10 to tick with -5 k at price one": {
 			price:              sdk.MustNewDecFromStr("53030.1"),
