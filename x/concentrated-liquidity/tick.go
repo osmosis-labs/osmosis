@@ -65,7 +65,7 @@ func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 	// return 0 values if key has not been initialized
 	if !found {
 		// If tick has not yet been initialized, we create a new one and initialize
-		// the fee growth outside,
+		// the fee growth outside.
 		initialFeeGrowthOutside, err := k.getInitialFeeGrowthOtsideForTick(ctx, poolId, tickIndex)
 		if err != nil {
 			return tickStruct, err
