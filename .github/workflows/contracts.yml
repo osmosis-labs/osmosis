@@ -61,7 +61,6 @@ jobs:
           path: ${{ matrix.contract.workdir }}${{ matrix.contract.build }}
           retention-days: 1
         if: env.GIT_DIFF
-<<<<<<< HEAD
 
       - name: 'Upload Cargo.lock artifact'
         uses: actions/upload-artifact@v3
@@ -70,8 +69,6 @@ jobs:
           path: ${{ matrix.contract.workdir }}Cargo.lock
           retention-days: 1
         if: env.GIT_DIFF
-=======
->>>>>>> d216b283 (Add more file-awareness for tests (#3697))
 
       - name: 'Upload Cargo.lock artifact'
         uses: actions/upload-artifact@v3
@@ -86,7 +83,6 @@ jobs:
         if: env.GIT_DIFF
         run: >
           diff ${{ matrix.contract.output }} ${{ matrix.contract.build }}
-        if: env.GIT_DIFF
   
 
   lints:
