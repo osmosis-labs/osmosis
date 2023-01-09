@@ -40,7 +40,7 @@ pub mod ibc {
     use super::*;
 
     #[cw_serde]
-    pub enum Status {
+    pub enum PacketLifecycleStatus {
         Sent,
         AckSuccess,
         AckFailure,
@@ -56,7 +56,7 @@ pub mod ibc {
         pub sequence: u64,
         pub amount: u128,
         pub denom: String,
-        pub status: Status,
+        pub status: PacketLifecycleStatus,
     }
 }
 

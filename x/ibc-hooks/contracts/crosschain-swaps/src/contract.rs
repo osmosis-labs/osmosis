@@ -9,7 +9,7 @@ use crate::consts::MsgReplyID;
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, IBCLifecycleComplete, InstantiateMsg, MigrateMsg, QueryMsg, SudoMsg};
 use crate::state::{Config, CHANNEL_MAP, CONFIG, RECOVERY_STATES};
-use crate::{execute, sudo};
+use crate::{execute, ibc_lifecycle};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:crosschain-swaps";
@@ -97,9 +97,9 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, Contract
             sequence,
             ack,
             success,
-        }) => sudo::receive_ack(deps, channel, sequence, ack, success),
-        SudoMsg::IBCLifecycleComplete(IBCLifecycleComplete::IBCTimeout { .. }) => {
-            unimplemented!()
+        }) => ibc_lifecycle::receive_ack(deps, channel, sequence, ack, success),
+        SudoMsg::IBCLifecycleComplete(IBCLifecycleComplete::IBCTimeout { channel, sequence }) => {
+            ibc_lifecycle::receive_timeout(deps, channel, sequence)
         }
     }
 }

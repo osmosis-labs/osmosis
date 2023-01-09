@@ -253,7 +253,7 @@ pub fn handle_forward_reply(
             sequence: response.sequence,
             amount,
             denom: denom.clone(),
-            status: state::ibc::Status::Sent,
+            status: state::ibc::PacketLifecycleStatus::Sent,
         };
 
         // Save as in-flight to be able to manipulate when the ack/timeout is received
