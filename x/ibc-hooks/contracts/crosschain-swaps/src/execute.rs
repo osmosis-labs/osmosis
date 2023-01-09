@@ -162,9 +162,9 @@ pub fn handle_swap_reply(deps: DepsMut, msg: Reply) -> Result<Response, Contract
     if !config.track_ibc_callbacks || swap_msg_state.forward_to.failed_delivery.is_none() {
         // If we're not tracking callbacks, or there isn't any recovery addres,
         // then there's no need to listen to the response of the send.
-        // The response data
 
-        // Add the response data since it won't be added in the reply.
+        // The response data needs to be added for consistency. it would
+        // normally be added in the next message (after the forward succeeds)
         let amount = swap_response.amount;
         let denom = swap_response.token_out_denom;
         let channel_id = swap_msg_state.forward_to.channel;
