@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 )
 
 // ----------------------- Statistics Stores  ----------------------- //
@@ -202,7 +202,7 @@ func (k Keeper) UpdateProfitsByRoute(ctx sdk.Context, route []uint64, denom stri
 }
 
 // UpdateStatistics updates the module statistics after each trade is executed
-func (k Keeper) UpdateStatistics(ctx sdk.Context, route swaproutertypes.SwapAmountInRoutes, inputCoin sdk.Coin, outputAmt sdk.Int) error {
+func (k Keeper) UpdateStatistics(ctx sdk.Context, route poolmanagertypes.SwapAmountInRoutes, inputCoin sdk.Coin, outputAmt sdk.Int) error {
 	// Increment the number of trades executed by the ProtoRev module
 	if err := k.IncrementNumberOfTrades(ctx); err != nil {
 		return err

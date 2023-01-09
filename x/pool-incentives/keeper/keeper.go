@@ -26,10 +26,10 @@ type Keeper struct {
 	bankKeeper       types.BankKeeper
 	incentivesKeeper types.IncentivesKeeper
 	distrKeeper      types.DistrKeeper
-	swaprouterKeeper types.SwapRouterKeeper
+	poolmanagerKeeper types.PoolManagerKeeper
 }
 
-func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, incentivesKeeper types.IncentivesKeeper, distrKeeper types.DistrKeeper, swaprouterKeeper types.SwapRouterKeeper) Keeper {
+func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, incentivesKeeper types.IncentivesKeeper, distrKeeper types.DistrKeeper, poolmanagerKeeper types.PoolManagerKeeper) Keeper {
 	// ensure pool-incentives module account is set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -49,7 +49,7 @@ func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKee
 		bankKeeper:       bankKeeper,
 		incentivesKeeper: incentivesKeeper,
 		distrKeeper:      distrKeeper,
-		swaprouterKeeper: swaprouterKeeper,
+		poolmanagerKeeper: poolmanagerKeeper,
 	}
 }
 

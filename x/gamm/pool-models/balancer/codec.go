@@ -2,7 +2,7 @@ package balancer
 
 import (
 	types "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -21,8 +21,8 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface(
-		"osmosis.swaprouter.v1beta1.PoolI",
-		(*swaproutertypes.PoolI)(nil),
+		"osmosis.poolmanager.v1beta1.PoolI",
+		(*poolmanagertypes.PoolI)(nil),
 		&Pool{},
 	)
 	registry.RegisterInterface(

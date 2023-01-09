@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 )
 
 var (
@@ -27,7 +27,7 @@ var (
 	DefaultAmt1Expected     = sdk.NewInt(4999999999)
 	DefaultLiquidityAmt     = sdk.MustNewDecFromStr("1517818840.967415409394235163")
 	DefaultTickSpacing      = uint64(1)
-	PoolCreationFee         = swaproutertypes.DefaultParams().PoolCreationFee
+	PoolCreationFee         = poolmanagertypes.DefaultParams().PoolCreationFee
 )
 
 type KeeperTestSuite struct {

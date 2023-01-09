@@ -14,7 +14,7 @@ import (
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
-	types2 "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	types2 "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -1646,7 +1646,7 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
 	Pools(ctx context.Context, in *QueryPoolsRequest, opts ...grpc.CallOption) (*QueryPoolsResponse, error)
-	// Deprecated: please use the alternative in x/swaprouter
+	// Deprecated: please use the alternative in x/poolmanager
 	NumPools(ctx context.Context, in *QueryNumPoolsRequest, opts ...grpc.CallOption) (*QueryNumPoolsResponse, error)
 	TotalLiquidity(ctx context.Context, in *QueryTotalLiquidityRequest, opts ...grpc.CallOption) (*QueryTotalLiquidityResponse, error)
 	// PoolsWithFilter allows you to query specific pools with requested
@@ -1669,9 +1669,9 @@ type QueryClient interface {
 	// SpotPrice defines a gRPC query handler that returns the spot price given
 	// a base denomination and a quote denomination.
 	SpotPrice(ctx context.Context, in *QuerySpotPriceRequest, opts ...grpc.CallOption) (*QuerySpotPriceResponse, error)
-	// Deprecated: please use the alternative in x/swaprouter
+	// Deprecated: please use the alternative in x/poolmanager
 	EstimateSwapExactAmountIn(ctx context.Context, in *QuerySwapExactAmountInRequest, opts ...grpc.CallOption) (*QuerySwapExactAmountInResponse, error)
-	// Deprecated: please use the alternative in x/swaprouter
+	// Deprecated: please use the alternative in x/poolmanager
 	EstimateSwapExactAmountOut(ctx context.Context, in *QuerySwapExactAmountOutRequest, opts ...grpc.CallOption) (*QuerySwapExactAmountOutResponse, error)
 }
 
@@ -1825,7 +1825,7 @@ func (c *queryClient) EstimateSwapExactAmountOut(ctx context.Context, in *QueryS
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	Pools(context.Context, *QueryPoolsRequest) (*QueryPoolsResponse, error)
-	// Deprecated: please use the alternative in x/swaprouter
+	// Deprecated: please use the alternative in x/poolmanager
 	NumPools(context.Context, *QueryNumPoolsRequest) (*QueryNumPoolsResponse, error)
 	TotalLiquidity(context.Context, *QueryTotalLiquidityRequest) (*QueryTotalLiquidityResponse, error)
 	// PoolsWithFilter allows you to query specific pools with requested
@@ -1848,9 +1848,9 @@ type QueryServer interface {
 	// SpotPrice defines a gRPC query handler that returns the spot price given
 	// a base denomination and a quote denomination.
 	SpotPrice(context.Context, *QuerySpotPriceRequest) (*QuerySpotPriceResponse, error)
-	// Deprecated: please use the alternative in x/swaprouter
+	// Deprecated: please use the alternative in x/poolmanager
 	EstimateSwapExactAmountIn(context.Context, *QuerySwapExactAmountInRequest) (*QuerySwapExactAmountInResponse, error)
-	// Deprecated: please use the alternative in x/swaprouter
+	// Deprecated: please use the alternative in x/poolmanager
 	EstimateSwapExactAmountOut(context.Context, *QuerySwapExactAmountOutRequest) (*QuerySwapExactAmountOutResponse, error)
 }
 

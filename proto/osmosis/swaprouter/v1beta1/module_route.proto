@@ -1,9 +1,9 @@
 syntax = "proto3";
-package osmosis.swaprouter.v1beta1;
+package osmosis.poolmanager.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types";
+option go_package = "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types";
 
 // PoolType is an enumeration of all supported pool types.
 enum PoolType {

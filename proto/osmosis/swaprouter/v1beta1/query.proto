@@ -1,10 +1,10 @@
 syntax = "proto3";
-package osmosis.swaprouter.v1beta1;
+package osmosis.poolmanager.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "osmosis/swaprouter/v1beta1/genesis.proto";
-import "osmosis/swaprouter/v1beta1/tx.proto";
-import "osmosis/swaprouter/v1beta1/swap_route.proto";
+import "osmosis/poolmanager/v1beta1/genesis.proto";
+import "osmosis/poolmanager/v1beta1/tx.proto";
+import "osmosis/poolmanager/v1beta1/swap_route.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
@@ -13,11 +13,11 @@ import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client/queryproto";
+option go_package = "github.com/osmosis-labs/osmosis/v13/x/poolmanager/client/queryproto";
 
 service Query {
   rpc Params(ParamsRequest) returns (ParamsResponse) {
-    option (google.api.http).get = "/osmosis/swaprouter/v1beta1/Params";
+    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/Params";
   }
 
   // Estimates swap amount out given in.
@@ -35,7 +35,7 @@ service Query {
   }
 
   rpc NumPools(NumPoolsRequest) returns (NumPoolsResponse) {
-    option (google.api.http).get = "/osmosis/swaprouter/v1beta1/num_pools";
+    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/num_pools";
   }
 }
 

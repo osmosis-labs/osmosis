@@ -5,13 +5,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	events "github.com/osmosis-labs/osmosis/v13/x/swaprouter/events"
+	events "github.com/osmosis-labs/osmosis/v13/x/poolmanager/events"
 
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 )
 
 type SwapState struct {
@@ -25,7 +25,7 @@ type SwapState struct {
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolI swaproutertypes.PoolI,
+	poolI poolmanagertypes.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
@@ -78,7 +78,7 @@ func (k Keeper) SwapExactAmountIn(
 func (k Keeper) SwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolI swaproutertypes.PoolI,
+	poolI poolmanagertypes.PoolI,
 	tokenInDenom string,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
@@ -174,7 +174,7 @@ func (k *Keeper) SwapInAmtGivenOut(
 
 func (k Keeper) CalcOutAmtGivenIn(
 	ctx sdk.Context,
-	poolI swaproutertypes.PoolI,
+	poolI poolmanagertypes.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	swapFee sdk.Dec,
@@ -188,7 +188,7 @@ func (k Keeper) CalcOutAmtGivenIn(
 
 func (k Keeper) CalcInAmtGivenOut(
 	ctx sdk.Context,
-	poolI swaproutertypes.PoolI,
+	poolI poolmanagertypes.PoolI,
 	tokenOut sdk.Coin,
 	tokenInDenom string,
 	swapFee sdk.Dec,
@@ -504,7 +504,7 @@ func (k *Keeper) applySwap(
 // sends the in tokens from the sender to the pool, and the out tokens from the pool to the sender.
 func (k Keeper) updatePoolForSwap(
 	ctx sdk.Context,
-	pool swaproutertypes.PoolI,
+	pool poolmanagertypes.PoolI,
 	sender sdk.AccAddress,
 	tokenIn sdk.Coin,
 	tokenOut sdk.Coin,

@@ -8,13 +8,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v13/x/txfees/types"
 )
 
 var defaultPooledAssetAmount = int64(500)
 
-func (suite *KeeperTestSuite) preparePool(denom string) (poolID uint64, pool swaproutertypes.PoolI) {
+func (suite *KeeperTestSuite) preparePool(denom string) (poolID uint64, pool poolmanagertypes.PoolI) {
 	baseDenom, _ := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)
 	poolID = suite.PrepareBalancerPoolWithCoins(
 		sdk.NewInt64Coin(baseDenom, defaultPooledAssetAmount),
@@ -43,7 +43,7 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 		coins      sdk.Coins
 		baseDenom  string
 		denoms     []string
-		poolTypes  []swaproutertypes.PoolI
+		poolTypes  []poolmanagertypes.PoolI
 		swapFee    sdk.Dec
 		expectPass bool
 	}{
@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 			coins:     sdk.Coins{sdk.NewInt64Coin(uion, 10)},
 			baseDenom: baseDenom,
 			denoms:    []string{uion},
-			poolTypes: []swaproutertypes.PoolI{uionPool},
+			poolTypes: []poolmanagertypes.PoolI{uionPool},
 			swapFee:   sdk.MustNewDecFromStr("0"),
 		},
 		{
@@ -60,7 +60,7 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 			coins:     sdk.Coins{sdk.NewInt64Coin(atom, 20), sdk.NewInt64Coin(ust, 30)},
 			baseDenom: baseDenom,
 			denoms:    []string{atom, ust},
-			poolTypes: []swaproutertypes.PoolI{atomPool, ustPool},
+			poolTypes: []poolmanagertypes.PoolI{atomPool, ustPool},
 			swapFee:   sdk.MustNewDecFromStr("0"),
 		},
 	}

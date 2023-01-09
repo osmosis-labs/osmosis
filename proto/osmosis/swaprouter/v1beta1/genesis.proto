@@ -1,5 +1,5 @@
 syntax = "proto3";
-package osmosis.swaprouter.v1beta1;
+package osmosis.poolmanager.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
@@ -7,9 +7,9 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types";
+option go_package = "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types";
 
-// Params holds parameters for the swaprouter module
+// Params holds parameters for the poolmanager module
 message Params {
   repeated cosmos.base.v1beta1.Coin pool_creation_fee = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
@@ -18,10 +18,10 @@ message Params {
   ];
 }
 
-// GenesisState defines the swaprouter module's genesis state.
+// GenesisState defines the poolmanager module's genesis state.
 message GenesisState {
   // the next_pool_id
   uint64 next_pool_id = 1;
-  // params is the container of swaprouter parameters.
+  // params is the container of poolmanager parameters.
   Params params = 2 [ (gogoproto.nullable) = false ];
 }

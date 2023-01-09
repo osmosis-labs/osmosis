@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 )
 
 // TestGetNumberOfTrades tests GetNumberOfTrades and IncrementNumberOfTrades
@@ -136,7 +136,7 @@ func (suite *KeeperTestSuite) TestGetProfitsByRoute() {
 func (suite *KeeperTestSuite) TestUpdateStatistics() {
 	// Psuedo execute a trade
 	err := suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx,
-		swaproutertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}},
+		poolmanagertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}},
 		sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(800)),
 		sdk.NewInt(1000),
 	)
@@ -159,7 +159,7 @@ func (suite *KeeperTestSuite) TestUpdateStatistics() {
 
 	// Psuedo execute a second trade
 	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx,
-		swaproutertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}, {TokenOutDenom: "", PoolId: 4}},
+		poolmanagertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}, {TokenOutDenom: "", PoolId: 4}},
 		sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(850)),
 		sdk.NewInt(1100),
 	)

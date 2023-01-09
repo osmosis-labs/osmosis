@@ -1,7 +1,7 @@
 keeper: 
-  path: "github.com/osmosis-labs/osmosis/v13/x/swaprouter"
+  path: "github.com/osmosis-labs/osmosis/v13/x/poolmanager"
   struct: "Keeper"
-client_path: "github.com/osmosis-labs/osmosis/v13/x/swaprouter/client"
+client_path: "github.com/osmosis-labs/osmosis/v13/x/poolmanager/client"
 queries:
   Params:
     proto_wrapper:

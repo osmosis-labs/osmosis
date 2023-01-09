@@ -16,7 +16,7 @@ type Keeper struct {
 	paramSpace paramtypes.Subspace
 
 	// keepers
-	swaprouterKeeper types.SwaprouterKeeper
+	poolmanagerKeeper types.PoolManagerKeeper
 	bankKeeper       types.BankKeeper
 }
 
@@ -44,7 +44,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
 
-// Set the swaprouter keeper.
-func (k *Keeper) SetSwapRouterKeeper(swaprouterKeeper types.SwaprouterKeeper) {
-	k.swaprouterKeeper = swaprouterKeeper
+// Set the poolmanager keeper.
+func (k *Keeper) SetPoolManagerKeeper(poolmanagerKeeper types.PoolManagerKeeper) {
+	k.poolmanagerKeeper = poolmanagerKeeper
 }

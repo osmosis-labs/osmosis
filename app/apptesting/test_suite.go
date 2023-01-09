@@ -37,7 +37,7 @@ import (
 	lockupkeeper "github.com/osmosis-labs/osmosis/v13/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 )
 
 type KeeperTestHelper struct {
@@ -304,7 +304,7 @@ func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []s
 		}
 		msg := balancer.NewMsgCreateBalancerPool(acc1, poolParams, poolAssets, defaultFutureGovernor)
 
-		poolId, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, msg)
+		poolId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, msg)
 		s.Require().NoError(err)
 
 		pool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
@@ -326,13 +326,13 @@ func (s *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset sdk.Coin
 	coins := sdk.Coins{sdk.NewInt64Coin(fromAsset.Denom, 100000000000000)}
 	s.FundAcc(acc1, coins)
 
-	route := []swaproutertypes.SwapAmountOutRoute{
+	route := []poolmanagertypes.SwapAmountOutRoute{
 		{
 			PoolId:       poolId,
 			TokenInDenom: fromAsset.Denom,
 		},
 	}
-	_, err := s.App.SwapRouterKeeper.RouteExactAmountOut(
+	_, err := s.App.PoolManagerKeeper.RouteExactAmountOut(
 		s.Ctx,
 		acc1,
 		route,

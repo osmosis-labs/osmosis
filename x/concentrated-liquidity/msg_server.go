@@ -48,7 +48,7 @@ func (server msgServer) CreateConcentratedPool(goCtx context.Context, msg *clmod
 		return nil, fmt.Errorf("received denom1 with invalid metadata: %s", msg.Denom1)
 	}
 
-	poolId, err := server.keeper.swaprouterKeeper.CreatePool(ctx, msg)
+	poolId, err := server.keeper.poolmanagerKeeper.CreatePool(ctx, msg)
 	if err != nil {
 		return nil, err
 	}
