@@ -27,6 +27,20 @@ jobs:
         name: Display go version
         run: go version
       -
+        name: Get git diff
+        uses: technote-space/get-diff-action@v6.0.1
+        with:
+          PATTERNS: |
+            **/**.wasm
+            **/**.go
+            go.mod
+            go.sum
+            go.work
+            go.work.sum
+            Makefile
+            Dockerfile
+            .github/*
+      -
         name: Get data from build cache
         uses: actions/cache@v2
         with:
@@ -43,9 +57,11 @@ jobs:
           key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-${{ matrix.go-version }}-
+        if: env.GIT_DIFF
       -
         name: Run unit tests
         run: make test-unit
+        if: env.GIT_DIFF
   
   e2e:
     runs-on: ubuntu-latest
