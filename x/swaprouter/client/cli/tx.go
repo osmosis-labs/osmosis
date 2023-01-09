@@ -16,89 +16,46 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 func NewTxCmd() *cobra.Command {
-	txCmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      "Swap transaction subcommands",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
+	txCmd := osmocli.TxIndexCmd(types.ModuleName)
+
+	osmocli.AddTxCmd(txCmd, NewSwapExactAmountInCmd)
+	osmocli.AddTxCmd(txCmd, NewSwapExactAmountOutCmd)
 
 	txCmd.AddCommand(
 		NewCreatePoolCmd(),
-		NewSwapExactAmountInCmd(),
-		NewSwapExactAmountOutCmd(),
 	)
 
 	return txCmd
 }
 
-func NewSwapExactAmountInCmd() *cobra.Command {
-	cmd := &cobra.Command{
+func NewSwapExactAmountInCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountIn) {
+	return &osmocli.TxCliDesc{
 		Use:   "swap-exact-amount-in [token-in] [token-out-min-amount]",
 		Short: "swap exact amount in",
-		Args:  cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			txf, msg, err := NewBuildSwapExactAmountInMsg(clientCtx, args[0], args[1], txf, cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
+			"Routes": osmocli.FlagOnlyParser(swapAmountInRoutes),
 		},
-	}
-
-	cmd.Flags().AddFlagSet(FlagSetQuerySwapRoutes())
-	flags.AddTxFlagsToCmd(cmd)
-	_ = cmd.MarkFlagRequired(FlagSwapRoutePoolIds)
-	_ = cmd.MarkFlagRequired(FlagSwapRouteDenoms)
-
-	return cmd
+		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
+	}, &types.MsgSwapExactAmountIn{}
 }
 
-func NewSwapExactAmountOutCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "swap-exact-amount-out [token-out] [token-in-max-amount]",
-		Short: "swap exact amount out",
-		Args:  cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			txf, msg, err := NewBuildSwapExactAmountOutMsg(clientCtx, args[0], args[1], txf, cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
-		},
-	}
-
-	cmd.Flags().AddFlagSet(FlagSetSwapAmountOutRoutes())
-	flags.AddTxFlagsToCmd(cmd)
-	_ = cmd.MarkFlagRequired(FlagSwapRoutePoolIds)
-	_ = cmd.MarkFlagRequired(FlagSwapRouteDenoms)
-
-	return cmd
+func NewSwapExactAmountOutCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountOut) {
+	// Can't get rid of this parser without a break, because the args are out of order.
+	return &osmocli.TxCliDesc{
+		Use:              "swap-exact-amount-out [token-out] [token-in-max-amount]",
+		Short:            "swap exact amount out",
+		NumArgs:          2,
+		ParseAndBuildMsg: NewBuildSwapExactAmountOutMsg,
+		Flags:            osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
+	}, &types.MsgSwapExactAmountOut{}
 }
-
 func NewBuildSwapExactAmountInMsg(clientCtx client.Context, tokenInStr, tokenOutMinAmtStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
 	routes, err := swapAmountInRoutes(fs)
 	if err != nil {
@@ -124,29 +81,28 @@ func NewBuildSwapExactAmountInMsg(clientCtx client.Context, tokenInStr, tokenOut
 	return txf, msg, nil
 }
 
-func NewBuildSwapExactAmountOutMsg(clientCtx client.Context, tokenOutStr, tokenInMaxAmountStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+func NewBuildSwapExactAmountOutMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
+	tokenOutStr, tokenInMaxAmountStr := args[0], args[1]
 	routes, err := swapAmountOutRoutes(fs)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	tokenOut, err := sdk.ParseCoinNormalized(tokenOutStr)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
 	tokenInMaxAmount, ok := sdk.NewIntFromString(tokenInMaxAmountStr)
 	if !ok {
-		return txf, nil, errors.New("invalid token in max amount")
+		return nil, errors.New("invalid token in max amount")
 	}
-	msg := &types.MsgSwapExactAmountOut{
+	return &types.MsgSwapExactAmountOut{
 		Sender:           clientCtx.GetFromAddress().String(),
 		Routes:           routes,
 		TokenInMaxAmount: tokenInMaxAmount,
 		TokenOut:         tokenOut,
-	}
-
-	return txf, msg, nil
+	}, nil
 }
 
 func NewCreatePoolCmd() *cobra.Command {

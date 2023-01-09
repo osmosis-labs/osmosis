@@ -79,6 +79,7 @@ func GetCmdPools() (*osmocli.QueryDescriptor, *types.QueryPoolsRequest) {
 {{.CommandPrefix}} pools`}, &types.QueryPoolsRequest{}
 }
 
+// nolint: staticcheck
 func GetCmdNumPools() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.QueryNumPoolsRequest](
 		"num-pools",
@@ -195,6 +196,7 @@ func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *types.QuerySpotPriceRequest) 
 }
 
 // GetCmdEstimateSwapExactAmountIn returns estimation of output coin when amount of x token input.
+// nolint: staticcheck
 func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *types.QuerySwapExactAmountInRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "estimate-swap-exact-amount-in <poolID> <sender> <tokenIn>",
@@ -207,6 +209,7 @@ func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *types.QuerySw
 }
 
 // GetCmdEstimateSwapExactAmountOut returns estimation of input coin to get exact amount of x token output.
+// nolint: staticcheck
 func GetCmdEstimateSwapExactAmountOut() (*osmocli.QueryDescriptor, *types.QuerySwapExactAmountOutRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "estimate-swap-exact-amount-out <poolID> <sender> <tokenOut>",
@@ -218,6 +221,7 @@ func GetCmdEstimateSwapExactAmountOut() (*osmocli.QueryDescriptor, *types.QueryS
 	}, &types.QuerySwapExactAmountOutRequest{}
 }
 
+// nolint: staticcheck
 func EstimateSwapExactAmountInParseArgs(args []string, fs *flag.FlagSet) (proto.Message, error) {
 	poolID, err := strconv.Atoi(args[0])
 	if err != nil {
@@ -237,6 +241,7 @@ func EstimateSwapExactAmountInParseArgs(args []string, fs *flag.FlagSet) (proto.
 	}, nil
 }
 
+// nolint: staticcheck
 func EstimateSwapExactAmountOutParseArgs(args []string, fs *flag.FlagSet) (proto.Message, error) {
 	poolID, err := strconv.Atoi(args[0])
 	if err != nil {
