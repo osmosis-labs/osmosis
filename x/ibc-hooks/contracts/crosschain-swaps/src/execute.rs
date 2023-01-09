@@ -1,6 +1,5 @@
 use cosmwasm_std::{coins, from_binary, to_binary, wasm_execute, BankMsg, Timestamp};
 use cosmwasm_std::{Addr, Coin, DepsMut, Response, SubMsg, SubMsgResponse, SubMsgResult};
-use swaprouter;
 use swaprouter::msg::{ExecuteMsg as SwapRouterExecute, SwapResponse};
 
 use crate::checks::{ensure_key_missing, parse_json, validate_receiver};

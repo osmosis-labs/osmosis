@@ -50,7 +50,7 @@ pub fn ensure_key_missing(
     json_object: &serde_cw_value::Value,
     key: &str,
 ) -> Result<(), ContractError> {
-    ensure_map(&json_object)?;
+    ensure_map(json_object)?;
     let serde_cw_value::Value::Map(m) = json_object else {
         unreachable!()
     };
