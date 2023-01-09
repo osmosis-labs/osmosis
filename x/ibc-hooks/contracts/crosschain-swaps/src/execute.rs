@@ -1,4 +1,4 @@
-use cosmwasm_std::{coins, from_binary, to_binary, wasm_execute, BankMsg, Reply, Timestamp};
+use cosmwasm_std::{coins, from_binary, to_binary, wasm_execute, BankMsg, Timestamp};
 use cosmwasm_std::{Addr, Coin, DepsMut, Response, SubMsg, SubMsgResponse, SubMsgResult};
 use swaprouter::msg::{ExecuteMsg as SwapRouterExecute, Slippage, SwapResponse};
 
@@ -76,7 +76,10 @@ pub fn swap_and_forward(
     Ok(Response::new().add_submessage(SubMsg::reply_on_success(msg, SWAP_REPLY_ID)))
 }
 
-pub fn handle_swap_reply(deps: DepsMut, msg: Reply) -> Result<Response, ContractError> {
+pub fn handle_swap_reply(
+    deps: DepsMut,
+    msg: cosmwasm_std::Reply,
+) -> Result<Response, ContractError> {
     deps.api.debug(&format!("handle_swap_reply"));
     let swap_msg_state = SWAP_REPLY_STATES.load(deps.storage)?;
     SWAP_REPLY_STATES.remove(deps.storage);
@@ -206,7 +209,10 @@ pub fn handle_swap_reply(deps: DepsMut, msg: Reply) -> Result<Response, Contract
 
 use ::prost::Message; // Proveides ::decode() for MsgTransferResponse
 
-pub fn handle_forward_reply(deps: DepsMut, msg: Reply) -> Result<Response, ContractError> {
+pub fn handle_forward_reply(
+    deps: DepsMut,
+    msg: cosmwasm_std::Reply,
+) -> Result<Response, ContractError> {
     // Parse the result from the underlying chain call (IBC send)
     let SubMsgResult::Ok(SubMsgResponse { data: Some(b), .. }) = msg.result else {
         return Err(ContractError::FailedIBCTransfer { msg: format!("failed reply: {:?}", msg.result) })
