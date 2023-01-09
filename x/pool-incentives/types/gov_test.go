@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	proto "github.com/gogo/protobuf/proto"
-	"github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v14/x/pool-incentives/types"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

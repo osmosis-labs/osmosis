@@ -9,12 +9,12 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
-	"github.com/osmosis-labs/osmosis/v13/wasmbinding/bindings"
-	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v14/wasmbinding/bindings"
+	gammkeeper "github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 
-	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/keeper"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v14/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v14/x/tokenfactory/types"
 )
 
 // CustomMessageDecorator returns decorator for custom CosmWasm bindings messages

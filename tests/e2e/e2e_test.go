@@ -13,15 +13,15 @@ import (
 
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
-	"github.com/osmosis-labs/osmosis/v13/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v13/tests/e2e/initialization"
+	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
 )
 
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.

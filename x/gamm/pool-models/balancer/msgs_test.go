@@ -8,9 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appParams "github.com/osmosis-labs/osmosis/v13/app/params"
-	balancer "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	appParams "github.com/osmosis-labs/osmosis/v14/app/params"
+	balancer "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 )
 
 func TestMsgCreateBalancerPool(t *testing.T) {
