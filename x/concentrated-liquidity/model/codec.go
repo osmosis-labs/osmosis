@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
@@ -19,7 +19,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterInterface(
 		"osmosis.swaprouter.v1beta1.PoolI",
-		(*swaproutertypes.PoolI)(nil),
+		(*poolmanagertypes.PoolI)(nil),
 		&Pool{},
 	)
 
