@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
 	appParams "github.com/osmosis-labs/osmosis/v13/app/params"
 
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
@@ -297,15 +298,15 @@ func TestConcentratedLiquiditySerialization(t *testing.T) {
 		name  string
 		clMsg sdk.Msg
 	}{
-		// {
-		// 	name: "MsgCreateConcentratedPool",
-		// 	clMsg: &model.MsgCreateConcentratedPool{
-		// 		Sender:      addr1,
-		// 		Denom0:      "foo",
-		// 		Denom1:      "bar",
-		// 		TickSpacing: uint64(1),
-		// 	},
-		// },
+		{
+			name: "MsgCreateConcentratedPool",
+			clMsg: &model.MsgCreateConcentratedPool{
+				Sender:      addr1,
+				Denom0:      "foo",
+				Denom1:      "bar",
+				TickSpacing: uint64(1),
+			},
+		},
 		{
 			name: "MsgWithdrawPosition",
 			clMsg: &types.MsgWithdrawPosition{
