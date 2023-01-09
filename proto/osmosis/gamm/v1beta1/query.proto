@@ -3,6 +3,7 @@ package osmosis.gamm.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "osmosis/gamm/v1beta1/tx.proto";
+import "osmosis/swaprouter/v1beta1/swap_route.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
@@ -267,7 +268,7 @@ message QuerySwapExactAmountInRequest {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string token_in = 3 [ (gogoproto.moretags) = "yaml:\"token_in\"" ];
-  repeated SwapAmountInRoute routes = 4 [
+  repeated osmosis.swaprouter.v1beta1.SwapAmountInRoute routes = 4 [
     (gogoproto.moretags) = "yaml:\"routes\"",
     (gogoproto.nullable) = false
   ];
@@ -287,7 +288,7 @@ message QuerySwapExactAmountOutRequest {
   option deprecated = true;
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  repeated SwapAmountOutRoute routes = 3 [
+  repeated osmosis.swaprouter.v1beta1.SwapAmountOutRoute routes = 3 [
     (gogoproto.moretags) = "yaml:\"routes\"",
     (gogoproto.nullable) = false
   ];

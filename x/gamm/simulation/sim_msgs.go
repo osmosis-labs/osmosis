@@ -13,6 +13,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
 	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
@@ -129,7 +130,7 @@ func RandomSwapExactAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Cont
 	}
 
 	// set the swap route to use this pool
-	route := []types.SwapAmountInRoute{{
+	route := []swaproutertypes.SwapAmountInRoute{{
 		PoolId:        pool_id,
 		TokenOutDenom: coinOut.Denom,
 	}}
@@ -167,7 +168,7 @@ func RandomSwapExactAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Con
 	}
 
 	// set the swap route to use this pool
-	route := []types.SwapAmountOutRoute{{
+	route := []swaproutertypes.SwapAmountOutRoute{{
 		PoolId:       pool_id,
 		TokenInDenom: coinIn.Denom,
 	}}
