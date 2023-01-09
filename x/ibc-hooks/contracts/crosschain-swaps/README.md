@@ -25,7 +25,7 @@ To instantiate the contract, you need to specify the following parameters:
 
 ### Via IBC
 
-Assuming the current implementation of the wasm middleware on Osmosis, the memo
+Assuming the current implementation of the wasm middleware on Osmosis v14 (`x/ibc-hooks/v0.0.5`), the memo
 of an IBC transfer to do crosschain swaps would look as follows:
 
 ``` json
