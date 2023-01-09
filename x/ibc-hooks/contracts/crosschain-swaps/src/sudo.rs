@@ -1,7 +1,8 @@
 use cosmwasm_std::{DepsMut, Response};
 
+use crate::state;
 use crate::{
-    state::{Status, INFLIGHT_PACKETS, RECOVERY_STATES},
+    state::{INFLIGHT_PACKETS, RECOVERY_STATES},
     ContractError,
 };
 
@@ -59,7 +60,7 @@ pub fn receive_ack(
         // Since the recovery state and the in-flight packet store the same
         // data, we can just modify the status and store the object in the
         // RECOVERY_STATES map.
-        recovery.status = Status::AckFailure;
+        recovery.status = state::ibc::Status::AckFailure;
         let Some(mut recoveries) = recoveries else {
             return Ok::<_, ContractError>(vec![recovery])
         };
