@@ -21,6 +21,7 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v13/x/poolmanager/client/queryproto"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
 	twapquerytypes "github.com/osmosis-labs/osmosis/v13/x/twap/client/queryproto"
@@ -34,6 +35,7 @@ import (
 // thread safe sync.Map.
 var stargateWhitelist sync.Map
 
+//nolint:staticcheck
 func init() {
 	// cosmos-sdk queries
 
@@ -110,6 +112,11 @@ func init() {
 	setWhitelistedQuery("/osmosis.superfluid.Query/AssetType", &superfluidtypes.AssetTypeResponse{})
 	setWhitelistedQuery("/osmosis.superfluid.Query/AllAssets", &superfluidtypes.AllAssetsResponse{})
 	setWhitelistedQuery("/osmosis.superfluid.Query/AssetMultiplier", &superfluidtypes.AssetMultiplierResponse{})
+
+	// poolmanager
+	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/NumPools", &poolmanagerqueryproto.NumPoolsResponse{})
+	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/EstimateSwapExactAmountIn", &poolmanagerqueryproto.EstimateSwapExactAmountInResponse{})
+	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/EstimateSwapExactAmountOut", &poolmanagerqueryproto.EstimateSwapExactAmountOutRequest{})
 
 	// txfees
 	setWhitelistedQuery("/osmosis.txfees.v1beta1.Query/FeeTokens", &txfeestypes.QueryFeeTokensResponse{})

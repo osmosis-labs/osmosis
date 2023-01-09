@@ -38,9 +38,9 @@ import (
 	downtimetypes "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/types"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v13/x/poolmanager"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v13/x/protorev"
-	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
@@ -61,6 +61,8 @@ import (
 
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v13/wasmbinding"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	epochskeeper "github.com/osmosis-labs/osmosis/v13/x/epochs/keeper"
 	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
@@ -131,8 +133,9 @@ type AppKeepers struct {
 	WasmKeeper                   *wasm.Keeper
 	ContractKeeper               *wasmkeeper.PermissionedKeeper
 	TokenFactoryKeeper           *tokenfactorykeeper.Keeper
-	SwapRouterKeeper             *swaprouter.Keeper
+	PoolManagerKeeper            *poolmanager.Keeper
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
+	ConcentratedLiquidityKeeper  *concentratedliquidity.Keeper
 
 	// IBC modules
 	// transfer module
@@ -276,16 +279,24 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GetSubspace(twaptypes.ModuleName),
 		appKeepers.GAMMKeeper)
 
-	appKeepers.SwapRouterKeeper = swaprouter.NewKeeper(
-		appKeepers.keys[swaproutertypes.StoreKey],
-		appKeepers.GetSubspace(swaproutertypes.ModuleName),
+	appKeepers.ConcentratedLiquidityKeeper = concentratedliquidity.NewKeeper(
+		appCodec,
+		appKeepers.keys[concentratedliquiditytypes.StoreKey],
+		appKeepers.BankKeeper,
+		appKeepers.GetSubspace(concentratedliquiditytypes.ModuleName),
+	)
+
+	appKeepers.PoolManagerKeeper = poolmanager.NewKeeper(
+		appKeepers.keys[poolmanagertypes.StoreKey],
+		appKeepers.GetSubspace(poolmanagertypes.ModuleName),
 		appKeepers.GAMMKeeper,
-		nil, // TODO: add concentrated liquidity keeper once it is merged
+		appKeepers.ConcentratedLiquidityKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.AccountKeeper,
 		appKeepers.DistrKeeper,
 	)
-	appKeepers.GAMMKeeper.SetPoolManager(appKeepers.SwapRouterKeeper)
+	appKeepers.GAMMKeeper.SetPoolManager(appKeepers.PoolManagerKeeper)
+	appKeepers.ConcentratedLiquidityKeeper.SetPoolManagerKeeper(appKeepers.PoolManagerKeeper)
 
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
 		appKeepers.keys[lockuptypes.StoreKey],
@@ -299,14 +310,14 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	protorevKeeper := protorevkeeper.NewKeeper(
 		appCodec, appKeepers.keys[protorevtypes.StoreKey],
 		appKeepers.GetSubspace(protorevtypes.ModuleName),
-		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.GAMMKeeper, appKeepers.EpochsKeeper, appKeepers.SwapRouterKeeper)
+		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.GAMMKeeper, appKeepers.EpochsKeeper, appKeepers.PoolManagerKeeper)
 	appKeepers.ProtoRevKeeper = &protorevKeeper
 
 	txFeesKeeper := txfeeskeeper.NewKeeper(
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.keys[txfeestypes.StoreKey],
-		appKeepers.SwapRouterKeeper,
+		appKeepers.PoolManagerKeeper,
 		appKeepers.GAMMKeeper,
 	)
 	appKeepers.TxFeesKeeper = &txFeesKeeper
@@ -344,11 +355,11 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.IncentivesKeeper,
 		appKeepers.DistrKeeper,
-		appKeepers.SwapRouterKeeper,
+		appKeepers.PoolManagerKeeper,
 	)
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
-	appKeepers.SwapRouterKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
-	appKeepers.SwapRouterKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
+	appKeepers.PoolManagerKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
+	appKeepers.PoolManagerKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
 
 	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
 		appKeepers.keys[tokenfactorytypes.StoreKey],
@@ -444,7 +455,8 @@ func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
 	bApp *baseapp.BaseApp,
 	hooksKeeper *ibchookskeeper.Keeper) {
 	// Setup the ICS4Wrapper used by the hooks middleware
-	wasmHooks := ibchooks.NewWasmHooks(hooksKeeper, nil) // The contract keeper needs to be set later
+	osmoPrefix := sdk.GetConfig().GetBech32AccountAddrPrefix()
+	wasmHooks := ibchooks.NewWasmHooks(hooksKeeper, nil, osmoPrefix) // The contract keeper needs to be set later
 	appKeepers.Ics20WasmHooks = &wasmHooks
 	appKeepers.HooksICS4Wrapper = ibchooks.NewICS4Middleware(
 		appKeepers.IBCKeeper.ChannelKeeper,
@@ -550,12 +562,13 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
 	paramsKeeper.Subspace(protorevtypes.ModuleName)
 	paramsKeeper.Subspace(superfluidtypes.ModuleName)
-	paramsKeeper.Subspace(swaproutertypes.ModuleName)
+	paramsKeeper.Subspace(poolmanagertypes.ModuleName)
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
 	paramsKeeper.Subspace(twaptypes.ModuleName)
 	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
+	paramsKeeper.Subspace(concentratedliquiditytypes.ModuleName)
 
 	return paramsKeeper
 }
@@ -646,7 +659,8 @@ func KVStoreKeys() []string {
 		incentivestypes.StoreKey,
 		epochstypes.StoreKey,
 		poolincentivestypes.StoreKey,
-		swaproutertypes.StoreKey,
+		concentratedliquiditytypes.StoreKey,
+		poolmanagertypes.StoreKey,
 		authzkeeper.StoreKey,
 		txfeestypes.StoreKey,
 		superfluidtypes.StoreKey,

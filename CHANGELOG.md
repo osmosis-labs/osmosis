@@ -42,12 +42,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### API breaks
+
+* [#3763](https://github.com/osmosis-labs/osmosis/pull/3763) Remove Osmosis gamm and twap `bindings` that were previously supported as custom wasm plugins.
+* [#3905](https://github.com/osmosis-labs/osmosis/pull/3905) Deprecate gamm queries `NumPools`, `EstimateSwapExactAmountIn` and `EstimateSwapExactAmountOut`.
+* [#3907](https://github.com/osmosis-labs/osmosis/pull/3907) Add `NumPools`, `EstimateSwapExactAmountIn` and `EstimateSwapExactAmountOut` query in poolmanager module to stargate whitelist.
+* [#3880](https://github.com/osmosis-labs/osmosis/pull/3880) Switch usage of proto-generated SwapAmountInRoute and SwapAmountOutRoute in x/gamm to import the structs from x/poolmanager module.
+
+### Bug Fix
+
+* [#3715](https://github.com/osmosis-labs/osmosis/pull/3715) Fix x/gamm (golang API) CalculateSpotPrice, balancer.SpotPrice and Stableswap.SpotPrice base and quote asset.
+
+## v14
+
+This release's main features are utility helpers for smart contract developers. This release contains:
+
+- IBC composability work
+  - IBC -> wasm hooks now gives sender information
+  - IBC contracts can register a callback that forwards into a smart contract
+  - This work is importable by external repositories, intended as an ecosystem standards
+- Downtime detection tooling
+  - There is now an on-chain query, allowing you to test if the chain is recovering from a downtime of a given duration.
+    - The querier defines what recovering means, e.g. for a 1 hour downtime, do you consider the chain as recovering until at least 10 minutes since last 1 hr downtime? 
+- Geometric TWAP
+  - Every AMM pool now exposes a geometric TWAP, in addition to the existing arithmetic TWAP
 * IBC features
   * Upgrade to IBC v4.2.0
 * Cosmwasm
   * Upgrade to wasmd v0.30.x
+* Update go build version to go 1.19
 
 ### Features
+
 * [#2387](https://github.com/osmosis-labs/osmosis/pull/3838) Upgrade to IBC v4.2.0, and as a requirement for it wasmd to 0.30.0
 * [#3609](https://github.com/osmosis-labs/osmosis/pull/3609) Add Downtime-detection module.
 * [#2788](https://github.com/osmosis-labs/osmosis/pull/2788) Add logarithm base 2 implementation.
@@ -58,21 +84,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#3693](https://github.com/osmosis-labs/osmosis/pull/3693) Add `EstimateSwapExactAmountOut` query to stargate whitelist
 * [#3731](https://github.com/osmosis-labs/osmosis/pull/3731) BigDec Power functions with decimal exponent.
 * [#3847](https://github.com/osmosis-labs/osmosis/pull/3847) GeometricTwap and GeometricTwapToNow queries added to Stargate whitelist.
-
+* [#3899](https://github.com/osmosis-labs/osmosis/pull/3899) Fixed osmoutils so its importable by chains that don't use the osmosis CosmosSDK fork 
+  
 ### API breaks
 
 * [#3763](https://github.com/osmosis-labs/osmosis/pull/3763) Move binary search and error tolerance code from `osmoutils` into `osmomath`
-* [#376x](https://github.com/osmosis-labs/osmosis/pull/3763) Remove Osmosis gamm and twap `bindings` that were previously supported as custom wasm plugins.
 * [#3817](https://github.com/osmosis-labs/osmosis/pull/3817) Move osmoassert from `app/apptesting/osmoassert` to `osmoutils/osmoassert`.
 * [#3771](https://github.com/osmosis-labs/osmosis/pull/3771) Move osmomath into its own go.mod
 * [#3827](https://github.com/osmosis-labs/osmosis/pull/3827) Move osmoutils into its own go.mod
 
-
-
 ### Bug fixes
 
 * [#3608](https://github.com/osmosis-labs/osmosis/pull/3608) Make it possible to state export from any directory.
-* [#3715](https://github.com/osmosis-labs/osmosis/pull/3715) Fix x/gamm CalculateSpotPrice, balancer.SpotPrice and Stableswap.SpotPrice base and quote asset.
+
+## v13.1.2
+
+Osmosis v13.1.2 is a minor patch release that includes several bug fixes and updates.
+
+The main bug fix in this release is for the state export feature, which was not working properly in previous versions. This issue has now been resolved, and state export should work as expected in v13.1.2.
+
+Additionally, the swagger files for v13 have been updated to improve compatibility and ensure that all API endpoints are properly documented.
 
 ### Misc Improvements
 
@@ -80,6 +111,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#3634](https://github.com/osmosis-labs/osmosis/pull/3634) (Makefile) Ensure correct golang version in make build and make install. (Thank you @jhernandezb )
 * [#3712](https://github.com/osmosis-labs/osmosis/pull/3712) replace `osmomath.BigDec` `Power` with `PowerInteger` 
 * [#3711](https://github.com/osmosis-labs/osmosis/pull/3711) Use Dec instead of Int for additive `ErrTolerace` in `osmoutils`.
+* [3647](https://github.com/osmosis-labs/osmosis/pull/3647), [3942](https://github.com/osmosis-labs/osmosis/pull/3942) (CLI) re-order the command line arguments for `osmosisd tx gamm join-swap-share-amount-out`
 
 
 ## v13.0.0
@@ -171,6 +203,8 @@ which acts as a fuzz testing tool tailored for the SDK state machine.
 * [#2473](https://github.com/osmosis-labs/osmosis/pull/2473) x/superfluid `AddNewSuperfluidAsset` now returns error, if any occurs instead of ignoring it.
 * [#2714](https://github.com/osmosis-labs/osmosis/pull/2714) Upgrade wasmd to v0.28.0.
 * Remove x/Bech32IBC
+* [#3737](https://github.com/osmosis-labs/osmosis/pull/3737) Change FilteredPools MinLiquidity field from sdk.Coins struct to string.
+
 
 #### Golang API breaks
 

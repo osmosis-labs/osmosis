@@ -38,10 +38,6 @@ func cfmmConstant(xReserve, yReserve osmomath.BigDec) osmomath.BigDec {
 // We use this version for calculations since the u
 // term in the full CFMM is constant.
 func cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares osmomath.BigDec) osmomath.BigDec {
-	if !xReserve.IsPositive() || !yReserve.IsPositive() || wSumSquares.IsNegative() {
-		panic("invalid input: reserves must be positive")
-	}
-
 	return cfmmConstantMultiNoVY(xReserve, yReserve, wSumSquares).Mul(yReserve)
 }
 
@@ -263,19 +259,19 @@ func targetKCalculator(x0, y0, w, yf osmomath.BigDec) osmomath.BigDec {
 
 // $$k_{iter}(x_f) = -x_{out}^3 + 3 x_0 x_{out}^2 - (y_f^2 + w + 3x_0^2)x_{out}$$
 // where x_out = x_0 - x_f
-func iterKCalculator(x0, w, yf osmomath.BigDec) func(osmomath.BigDec) (osmomath.BigDec, error) {
+func iterKCalculator(x0, w, yf osmomath.BigDec) func(osmomath.BigDec) osmomath.BigDec {
 	// compute coefficients first
 	cubicCoeff := osmomath.OneDec().Neg()
 	quadraticCoeff := x0.MulInt64(3)
 	linearCoeff := quadraticCoeff.Mul(x0).Add(w).Add(yf.Mul(yf)).Neg()
-	return func(xf osmomath.BigDec) (osmomath.BigDec, error) {
+	return func(xf osmomath.BigDec) osmomath.BigDec {
 		xOut := x0.Sub(xf)
 		// horners method
 		// ax^3 + bx^2 + cx = x(c + x(b + ax))
 		res := cubicCoeff.Mul(xOut)
 		res = res.Add(quadraticCoeff).Mul(xOut)
 		res = res.Add(linearCoeff).Mul(xOut)
-		return res, nil
+		return res
 	}
 }
 
@@ -487,6 +483,7 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 	if !tokensIn.DenomsSubsetOf(p.GetTotalPoolLiquidity(ctx)) {
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("attempted joining pool with assets that do not exist in pool")
 	}
+
 	if len(tokensIn) == 1 && tokensIn[0].Amount.GT(sdk.OneInt()) {
 		numShares, err = p.calcSingleAssetJoinShares(tokensIn[0], swapFee)
 		if err != nil {
@@ -494,27 +491,21 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 		}
 
 		tokensJoined = tokensIn
-
-		p.updatePoolForJoin(tokensJoined, numShares)
-
-		if err = validatePoolLiquidity(p.PoolLiquidity, p.ScalingFactors); err != nil {
-			return sdk.ZeroInt(), sdk.NewCoins(), err
-		}
-
-		return numShares, tokensJoined, nil
 	} else if len(tokensIn) != p.NumAssets() {
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New(
 			"stableswap pool only supports LP'ing with one asset, or all assets in pool")
+	} else {
+		// Add all exact coins we can (no swap). ctx arg doesn't matter for Stableswap
+		var remCoins sdk.Coins
+		numShares, remCoins, err = cfmm_common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
+		if err != nil {
+			return sdk.ZeroInt(), sdk.NewCoins(), err
+		}
+
+		tokensJoined = tokensIn.Sub(remCoins)
 	}
 
-	// Add all exact coins we can (no swap). ctx arg doesn't matter for Stableswap
-	numShares, remCoins, err := cfmm_common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
-	if err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), err
-	}
-	p.updatePoolForJoin(tokensIn.Sub(remCoins), numShares)
-
-	tokensJoined = tokensIn.Sub(remCoins)
+	p.updatePoolForJoin(tokensJoined, numShares)
 
 	if err = validatePoolLiquidity(p.PoolLiquidity, p.ScalingFactors); err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err

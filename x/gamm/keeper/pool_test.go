@@ -13,7 +13,7 @@ import (
 	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 )
 
 var (
@@ -343,7 +343,7 @@ func (suite *KeeperTestSuite) TestConvertToCFMMPool() {
 	ctrl := gomock.NewController(suite.T())
 
 	tests := map[string]struct {
-		pool        swaproutertypes.PoolI
+		pool        poolmanagertypes.PoolI
 		expectError bool
 	}{
 		"cfmm pool": {
@@ -410,7 +410,7 @@ func (suite *KeeperTestSuite) TestMarshalUnmarshalPool() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 
-			var poolI swaproutertypes.PoolI = tc.pool
+			var poolI poolmanagertypes.PoolI = tc.pool
 			var cfmmPoolI types.CFMMPoolI = tc.pool
 
 			// Marshal poolI as PoolI

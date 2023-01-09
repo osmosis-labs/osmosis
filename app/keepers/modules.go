@@ -28,6 +28,7 @@ import (
 	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
 
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
 	downtimemodule "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/module"
 	"github.com/osmosis-labs/osmosis/v13/x/epochs"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm"
@@ -37,10 +38,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/mint"
 	poolincentives "github.com/osmosis-labs/osmosis/v13/x/pool-incentives"
 	poolincentivesclient "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/client"
+	poolmanager "github.com/osmosis-labs/osmosis/v13/x/poolmanager/module"
 	"github.com/osmosis-labs/osmosis/v13/x/protorev"
 	superfluid "github.com/osmosis-labs/osmosis/v13/x/superfluid"
 	superfluidclient "github.com/osmosis-labs/osmosis/v13/x/superfluid/client"
-	swaprouter "github.com/osmosis-labs/osmosis/v13/x/swaprouter/module"
 	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/twapmodule"
 	"github.com/osmosis-labs/osmosis/v13/x/txfees"
@@ -84,8 +85,9 @@ var AppModuleBasics = []module.AppModuleBasic{
 	transfer.AppModuleBasic{},
 	vesting.AppModuleBasic{},
 	gamm.AppModuleBasic{},
-	swaprouter.AppModuleBasic{},
+	poolmanager.AppModuleBasic{},
 	twapmodule.AppModuleBasic{},
+	concentratedliquidity.AppModuleBasic{},
 	protorev.AppModuleBasic{},
 	txfees.AppModuleBasic{},
 	incentives.AppModuleBasic{},

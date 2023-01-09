@@ -55,6 +55,8 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
 	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v13/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm"
@@ -67,12 +69,12 @@ import (
 	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
 	poolincentives "github.com/osmosis-labs/osmosis/v13/x/pool-incentives"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
+	poolmanager "github.com/osmosis-labs/osmosis/v13/x/poolmanager/module"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v13/x/protorev"
 	protorevtypes "github.com/osmosis-labs/osmosis/v13/x/protorev/types"
 	superfluid "github.com/osmosis-labs/osmosis/v13/x/superfluid"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
-	swaprouter "github.com/osmosis-labs/osmosis/v13/x/swaprouter/module"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
 	"github.com/osmosis-labs/osmosis/v13/x/twap/twapmodule"
@@ -144,8 +146,9 @@ func appModules(
 		params.NewAppModule(*app.ParamsKeeper),
 		app.RawIcs20TransferAppModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
-		swaprouter.NewAppModule(*app.SwapRouterKeeper, app.GAMMKeeper),
+		poolmanager.NewAppModule(*app.PoolManagerKeeper, app.GAMMKeeper),
 		twapmodule.NewAppModule(*app.TwapKeeper),
+		concentratedliquidity.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper),
 		protorev.NewAppModule(appCodec, *app.ProtoRevKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper, app.GAMMKeeper),
 		txfees.NewAppModule(*app.TxFeesKeeper),
 		incentives.NewAppModule(*app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
@@ -224,7 +227,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		ibchost.ModuleName,
 		icatypes.ModuleName,
 		gammtypes.ModuleName,
-		swaproutertypes.ModuleName,
+		poolmanagertypes.ModuleName,
 		protorevtypes.ModuleName,
 		twaptypes.ModuleName,
 		txfeestypes.ModuleName,
@@ -242,6 +245,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		epochstypes.ModuleName,
 		lockuptypes.ModuleName,
 		authz.ModuleName,
+		concentratedliquiditytypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
 		// ibc_hooks after auth keeper

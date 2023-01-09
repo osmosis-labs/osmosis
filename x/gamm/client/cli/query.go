@@ -7,12 +7,9 @@ import (
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -82,6 +79,7 @@ func GetCmdPools() (*osmocli.QueryDescriptor, *types.QueryPoolsRequest) {
 {{.CommandPrefix}} pools`}, &types.QueryPoolsRequest{}
 }
 
+// nolint: staticcheck
 func GetCmdNumPools() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.QueryNumPoolsRequest](
 		"num-pools",
@@ -198,6 +196,7 @@ func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *types.QuerySpotPriceRequest) 
 }
 
 // GetCmdEstimateSwapExactAmountIn returns estimation of output coin when amount of x token input.
+// nolint: staticcheck
 func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *types.QuerySwapExactAmountInRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "estimate-swap-exact-amount-in <poolID> <sender> <tokenIn>",
@@ -210,6 +209,7 @@ func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *types.QuerySw
 }
 
 // GetCmdEstimateSwapExactAmountOut returns estimation of input coin to get exact amount of x token output.
+// nolint: staticcheck
 func GetCmdEstimateSwapExactAmountOut() (*osmocli.QueryDescriptor, *types.QuerySwapExactAmountOutRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "estimate-swap-exact-amount-out <poolID> <sender> <tokenOut>",
@@ -221,6 +221,7 @@ func GetCmdEstimateSwapExactAmountOut() (*osmocli.QueryDescriptor, *types.QueryS
 	}, &types.QuerySwapExactAmountOutRequest{}
 }
 
+// nolint: staticcheck
 func EstimateSwapExactAmountInParseArgs(args []string, fs *flag.FlagSet) (proto.Message, error) {
 	poolID, err := strconv.Atoi(args[0])
 	if err != nil {
@@ -240,6 +241,7 @@ func EstimateSwapExactAmountInParseArgs(args []string, fs *flag.FlagSet) (proto.
 	}, nil
 }
 
+// nolint: staticcheck
 func EstimateSwapExactAmountOutParseArgs(args []string, fs *flag.FlagSet) (proto.Message, error) {
 	poolID, err := strconv.Atoi(args[0])
 	if err != nil {
@@ -286,24 +288,11 @@ $ %s query gamm pools-with-filter <min_liquidity> <pool_type>
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			var min_liquidity sdk.Coins
 			var pool_type string
-			if len(args) == 1 {
-				coins, err := sdk.ParseCoinsNormalized(args[0])
-				if err != nil {
-					pool_type = args[0]
-				}
-				min_liquidity = coins
-			} else {
-				coins, err := sdk.ParseCoinsNormalized(args[0])
-				if err != nil {
-					return status.Errorf(codes.InvalidArgument, "invalid token: %s", err.Error())
-				}
-
-				min_liquidity = coins
+			min_liquidity := args[0]
+			if len(args) > 1 {
 				pool_type = args[1]
 			}
-
 			res, err := queryClient.PoolsWithFilter(cmd.Context(), &types.QueryPoolsWithFilterRequest{
 				MinLiquidity: min_liquidity,
 				PoolType:     pool_type,

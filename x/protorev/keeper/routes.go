@@ -6,13 +6,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 // BuildRoutes builds all of the possible arbitrage routes given the tokenIn, tokenOut and poolId that were used in the swap
-func (k Keeper) BuildRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64, maxIterableRoutes *uint64) []swaproutertypes.SwapAmountInRoutes {
-	routes := make([]swaproutertypes.SwapAmountInRoutes, 0)
+func (k Keeper) BuildRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64, maxIterableRoutes *uint64) []poolmanagertypes.SwapAmountInRoutes {
+	routes := make([]poolmanagertypes.SwapAmountInRoutes, 0)
 
 	// Append hot routes if they exist
 	if tokenPairRoutes, err := k.BuildTokenPairRoutes(ctx, tokenIn, tokenOut, poolId, maxIterableRoutes); err == nil {
@@ -33,19 +33,19 @@ func (k Keeper) BuildRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId ui
 }
 
 // BuildTokenPairRoutes builds all of the possible arbitrage routes from the hot routes given the tokenIn, tokenOut and poolId that were used in the swap
-func (k Keeper) BuildTokenPairRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64, maxIterableRoutes *uint64) ([]swaproutertypes.SwapAmountInRoutes, error) {
+func (k Keeper) BuildTokenPairRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64, maxIterableRoutes *uint64) ([]poolmanagertypes.SwapAmountInRoutes, error) {
 	if *maxIterableRoutes <= 0 {
-		return []swaproutertypes.SwapAmountInRoutes{}, fmt.Errorf("the number of routes that can be iterated through has been exceeded")
+		return []poolmanagertypes.SwapAmountInRoutes{}, fmt.Errorf("the number of routes that can be iterated through has been exceeded")
 	}
 
 	// Get all of the routes from the store that match the given tokenIn and tokenOut
 	tokenPairArbRoutes, err := k.GetTokenPairArbRoutes(ctx, tokenIn, tokenOut)
 	if err != nil {
-		return []swaproutertypes.SwapAmountInRoutes{}, err
+		return []poolmanagertypes.SwapAmountInRoutes{}, err
 	}
 
 	// Iterate through all of the routes and build hot routes
-	routes := make([]swaproutertypes.SwapAmountInRoutes, 0)
+	routes := make([]poolmanagertypes.SwapAmountInRoutes, 0)
 	for index := 0; index < len(tokenPairArbRoutes.ArbRoutes) && *maxIterableRoutes > 0; index++ {
 		if newRoute, err := k.BuildHotRoute(ctx, tokenPairArbRoutes.ArbRoutes[index], tokenIn, tokenOut, poolId, maxIterableRoutes); err == nil {
 			routes = append(routes, newRoute)
@@ -57,18 +57,18 @@ func (k Keeper) BuildTokenPairRoutes(ctx sdk.Context, tokenIn, tokenOut string, 
 
 // BuildHotRoute constructs a cyclic arbitrage route given a hot route from the store and information about the swap that should be placed
 // in the hot route.
-func (k Keeper) BuildHotRoute(ctx sdk.Context, route *types.Route, tokenIn, tokenOut string, poolId uint64, maxIterableRoutes *uint64) (swaproutertypes.SwapAmountInRoutes, error) {
-	newRoute := make(swaproutertypes.SwapAmountInRoutes, 0)
+func (k Keeper) BuildHotRoute(ctx sdk.Context, route *types.Route, tokenIn, tokenOut string, poolId uint64, maxIterableRoutes *uint64) (poolmanagertypes.SwapAmountInRoutes, error) {
+	newRoute := make(poolmanagertypes.SwapAmountInRoutes, 0)
 
 	for _, trade := range route.Trades {
 		// 0 is a placeholder for pools swapped on that should be entered into the hot route
 		if trade.Pool == 0 {
-			newRoute = append(newRoute, swaproutertypes.SwapAmountInRoute{
+			newRoute = append(newRoute, poolmanagertypes.SwapAmountInRoute{
 				PoolId:        poolId,
 				TokenOutDenom: trade.TokenOut,
 			})
 		} else {
-			newRoute = append(newRoute, swaproutertypes.SwapAmountInRoute{
+			newRoute = append(newRoute, poolmanagertypes.SwapAmountInRoute{
 				PoolId:        trade.Pool,
 				TokenOutDenom: trade.TokenOut,
 			})
@@ -77,27 +77,27 @@ func (k Keeper) BuildHotRoute(ctx sdk.Context, route *types.Route, tokenIn, toke
 
 	// Check that the hot route is valid
 	if err := k.CheckValidHotRoute(ctx, newRoute); err != nil {
-		return swaproutertypes.SwapAmountInRoutes{}, err
+		return poolmanagertypes.SwapAmountInRoutes{}, err
 	}
 
 	// Check that the route can be iterated
 	if weight, err := k.GetRouteWeight(ctx, newRoute); err == nil && *maxIterableRoutes >= weight {
 		err := k.IncrementRouteCountForBlock(ctx, weight)
 		if err != nil {
-			return swaproutertypes.SwapAmountInRoutes{}, err
+			return poolmanagertypes.SwapAmountInRoutes{}, err
 		}
 
 		*maxIterableRoutes -= weight
 		return newRoute, nil
 	}
 
-	return swaproutertypes.SwapAmountInRoutes{}, fmt.Errorf("the number of routes that can be iterated through has been exceeded")
+	return poolmanagertypes.SwapAmountInRoutes{}, fmt.Errorf("the number of routes that can be iterated through has been exceeded")
 }
 
 // CheckValidHotRoute checks if the cyclic arbitrage route that was built using the hot routes method is correct. Much of the stateless
 // validation achieves the desired checks, however, we also check that the route is traversing pools that
 // are active.
-func (k Keeper) CheckValidHotRoute(ctx sdk.Context, route swaproutertypes.SwapAmountInRoutes) error {
+func (k Keeper) CheckValidHotRoute(ctx sdk.Context, route poolmanagertypes.SwapAmountInRoutes) error {
 	if route.Length() != 3 {
 		return fmt.Errorf("invalid hot route length")
 	}
@@ -114,35 +114,35 @@ func (k Keeper) CheckValidHotRoute(ctx sdk.Context, route swaproutertypes.SwapAm
 }
 
 // BuildOsmoRoute builds a cyclic arbitrage route that starts and ends with osmo given the tokenIn, tokenOut and poolId that were used in the swap
-func (k Keeper) BuildOsmoRoute(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64, maxIterableRoutes *uint64) (swaproutertypes.SwapAmountInRoutes, error) {
+func (k Keeper) BuildOsmoRoute(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64, maxIterableRoutes *uint64) (poolmanagertypes.SwapAmountInRoutes, error) {
 	return k.BuildRoute(ctx, types.OsmosisDenomination, tokenIn, tokenOut, poolId, maxIterableRoutes, k.GetOsmoPool)
 }
 
 // BuildAtomRoute builds a cyclic arbitrage route that starts and ends with atom given the tokenIn, tokenOut and poolId that were used in the swap
-func (k Keeper) BuildAtomRoute(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64, maxIterableRoutes *uint64) (swaproutertypes.SwapAmountInRoutes, error) {
+func (k Keeper) BuildAtomRoute(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64, maxIterableRoutes *uint64) (poolmanagertypes.SwapAmountInRoutes, error) {
 	return k.BuildRoute(ctx, types.AtomDenomination, tokenIn, tokenOut, poolId, maxIterableRoutes, k.GetAtomPool)
 }
 
 // BuildRoute constructs a cyclic arbitrage route that is starts/ends with swapDenom (atom or osmo) given the swap (tokenIn, tokenOut, poolId), and
 // a function that can get the poolId from the store given a (token, swapDenom) pair.
-func (k Keeper) BuildRoute(ctx sdk.Context, swapDenom, tokenIn, tokenOut string, poolId uint64, maxIterableRoutes *uint64, getPoolIDFromStore func(sdk.Context, string) (uint64, error)) (swaproutertypes.SwapAmountInRoutes, error) {
+func (k Keeper) BuildRoute(ctx sdk.Context, swapDenom, tokenIn, tokenOut string, poolId uint64, maxIterableRoutes *uint64, getPoolIDFromStore func(sdk.Context, string) (uint64, error)) (poolmanagertypes.SwapAmountInRoutes, error) {
 	if *maxIterableRoutes <= 0 {
-		return swaproutertypes.SwapAmountInRoutes{}, fmt.Errorf("the number of routes that can be iterated through has been exceeded")
+		return poolmanagertypes.SwapAmountInRoutes{}, fmt.Errorf("the number of routes that can be iterated through has been exceeded")
 	}
 
 	// Creating the first trade in the arb
 	entryPoolId, err := getPoolIDFromStore(ctx, tokenOut)
 	if err != nil {
-		return swaproutertypes.SwapAmountInRoutes{}, err
+		return poolmanagertypes.SwapAmountInRoutes{}, err
 	}
 
 	// Check that the pool exists and is active
 	_, err = k.GetAndCheckPool(ctx, entryPoolId)
 	if err != nil {
-		return swaproutertypes.SwapAmountInRoutes{}, err
+		return poolmanagertypes.SwapAmountInRoutes{}, err
 	}
 	// Create the first swap for the MultiHopSwap Route
-	entryRoute := swaproutertypes.SwapAmountInRoute{
+	entryRoute := poolmanagertypes.SwapAmountInRoute{
 		PoolId:        entryPoolId,
 		TokenOutDenom: tokenOut,
 	}
@@ -150,9 +150,9 @@ func (k Keeper) BuildRoute(ctx sdk.Context, swapDenom, tokenIn, tokenOut string,
 	// Creating the second trade in the arb
 	_, err = k.GetAndCheckPool(ctx, poolId)
 	if err != nil {
-		return swaproutertypes.SwapAmountInRoutes{}, err
+		return poolmanagertypes.SwapAmountInRoutes{}, err
 	}
-	middleRoute := swaproutertypes.SwapAmountInRoute{
+	middleRoute := poolmanagertypes.SwapAmountInRoute{
 		PoolId:        poolId,
 		TokenOutDenom: tokenIn,
 	}
@@ -160,31 +160,31 @@ func (k Keeper) BuildRoute(ctx sdk.Context, swapDenom, tokenIn, tokenOut string,
 	// Creating the third trade in the arb
 	exitPoolId, err := getPoolIDFromStore(ctx, tokenIn)
 	if err != nil {
-		return swaproutertypes.SwapAmountInRoutes{}, err
+		return poolmanagertypes.SwapAmountInRoutes{}, err
 	}
 	_, err = k.GetAndCheckPool(ctx, exitPoolId)
 	if err != nil {
-		return swaproutertypes.SwapAmountInRoutes{}, err
+		return poolmanagertypes.SwapAmountInRoutes{}, err
 	}
-	exitRoute := swaproutertypes.SwapAmountInRoute{
+	exitRoute := poolmanagertypes.SwapAmountInRoute{
 		PoolId:        exitPoolId,
 		TokenOutDenom: swapDenom,
 	}
 
-	newRoute := swaproutertypes.SwapAmountInRoutes{entryRoute, middleRoute, exitRoute}
+	newRoute := poolmanagertypes.SwapAmountInRoutes{entryRoute, middleRoute, exitRoute}
 
 	// Check that the route can be iterated
 	if weight, err := k.GetRouteWeight(ctx, newRoute); err == nil && *maxIterableRoutes >= weight {
 		err := k.IncrementRouteCountForBlock(ctx, weight)
 		if err != nil {
-			return swaproutertypes.SwapAmountInRoutes{}, err
+			return poolmanagertypes.SwapAmountInRoutes{}, err
 		}
 
 		*maxIterableRoutes -= weight
 		return newRoute, nil
 	}
 
-	return swaproutertypes.SwapAmountInRoutes{}, fmt.Errorf("the number of routes that can be iterated through has been exceeded")
+	return poolmanagertypes.SwapAmountInRoutes{}, fmt.Errorf("the number of routes that can be iterated through has been exceeded")
 }
 
 // GetAndCheckPool retrieves the pool from the x/gamm module given a poolId and ensures that the pool can be traded on
@@ -201,7 +201,7 @@ func (k Keeper) GetAndCheckPool(ctx sdk.Context, poolId uint64) (gammtypes.CFMMP
 
 // GetRouteWeight retrieves the weight of a route. The weight of a route is determined by the pools that are used in the route.
 // Different pools will have different execution times hence the need for a weighted point system.
-func (k Keeper) GetRouteWeight(ctx sdk.Context, route swaproutertypes.SwapAmountInRoutes) (uint64, error) {
+func (k Keeper) GetRouteWeight(ctx sdk.Context, route poolmanagertypes.SwapAmountInRoutes) (uint64, error) {
 	// Routes must always be of length 3
 	if route.Length() != 3 {
 		return 0, fmt.Errorf("invalid route length")
@@ -221,9 +221,9 @@ func (k Keeper) GetRouteWeight(ctx sdk.Context, route swaproutertypes.SwapAmount
 	}
 
 	switch poolType {
-	case swaproutertypes.Balancer:
+	case poolmanagertypes.Balancer:
 		return routeWeights.BalancerWeight, nil
-	case swaproutertypes.Stableswap:
+	case poolmanagertypes.Stableswap:
 		return routeWeights.StableWeight, nil
 	default:
 		return 0, fmt.Errorf("invalid pool type")

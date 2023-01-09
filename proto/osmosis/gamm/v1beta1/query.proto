@@ -3,6 +3,7 @@ package osmosis.gamm.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "osmosis/gamm/v1beta1/tx.proto";
+import "osmosis/poolmanager/v1beta1/swap_route.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
@@ -17,7 +18,9 @@ service Query {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/pools";
   }
 
+  // Deprecated: please use the alternative in x/poolmanager
   rpc NumPools(QueryNumPoolsRequest) returns (QueryNumPoolsResponse) {
+    option deprecated = true;
     option (google.api.http).get = "/osmosis/gamm/v1beta1/num_pools";
   }
 
@@ -85,15 +88,18 @@ service Query {
         "/osmosis/gamm/v1beta1/pools/{pool_id}/prices";
   }
 
-  // Estimate the swap.
+  // Deprecated: please use the alternative in x/poolmanager
   rpc EstimateSwapExactAmountIn(QuerySwapExactAmountInRequest)
       returns (QuerySwapExactAmountInResponse) {
+    option deprecated = true;
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_in";
   }
 
+  // Deprecated: please use the alternative in x/poolmanager
   rpc EstimateSwapExactAmountOut(QuerySwapExactAmountOutRequest)
       returns (QuerySwapExactAmountOutResponse) {
+    option deprecated = true;
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_out";
   }
@@ -121,8 +127,9 @@ message QueryPoolsResponse {
 }
 
 //=============================== NumPools
-message QueryNumPoolsRequest {}
+message QueryNumPoolsRequest { option deprecated = true; }
 message QueryNumPoolsResponse {
+  option deprecated = true;
   uint64 num_pools = 1 [ (gogoproto.moretags) = "yaml:\"num_pools\"" ];
 }
 
@@ -233,11 +240,9 @@ message QuerySpotPriceRequest {
 //=============================== PoolsWithFilter
 
 message QueryPoolsWithFilterRequest {
-  repeated cosmos.base.v1beta1.Coin min_liquidity = 1 [
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags) = "yaml:\"min_liquidity\"",
-    (gogoproto.nullable) = false
-  ];
+  // String of the coins in single string seperated by comma. Ex)
+  // 10uatom,100uosmo
+  string min_liquidity = 1 [ (gogoproto.moretags) = "yaml:\"min_liquidity\"" ];
   string pool_type = 2;
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
@@ -259,17 +264,18 @@ message QuerySpotPriceResponse {
 
 //=============================== EstimateSwapExactAmountIn
 message QuerySwapExactAmountInRequest {
-  // TODO: CHANGE THIS TO RESERVED IN A PATCH RELEASE
+  option deprecated = true;
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string token_in = 3 [ (gogoproto.moretags) = "yaml:\"token_in\"" ];
-  repeated SwapAmountInRoute routes = 4 [
+  repeated osmosis.poolmanager.v1beta1.SwapAmountInRoute routes = 4 [
     (gogoproto.moretags) = "yaml:\"routes\"",
     (gogoproto.nullable) = false
   ];
 }
 
 message QuerySwapExactAmountInResponse {
+  option deprecated = true;
   string token_out_amount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_out_amount\"",
@@ -279,10 +285,10 @@ message QuerySwapExactAmountInResponse {
 
 //=============================== EstimateSwapExactAmountOut
 message QuerySwapExactAmountOutRequest {
-  // TODO: CHANGE THIS TO RESERVED IN A PATCH RELEASE
+  option deprecated = true;
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  repeated SwapAmountOutRoute routes = 3 [
+  repeated osmosis.poolmanager.v1beta1.SwapAmountOutRoute routes = 3 [
     (gogoproto.moretags) = "yaml:\"routes\"",
     (gogoproto.nullable) = false
   ];
@@ -290,6 +296,7 @@ message QuerySwapExactAmountOutRequest {
 }
 
 message QuerySwapExactAmountOutResponse {
+  option deprecated = true;
   string token_in_amount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_in_amount\"",

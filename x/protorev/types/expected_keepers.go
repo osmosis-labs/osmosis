@@ -5,7 +5,7 @@ import (
 
 	epochtypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 )
 
 // AccountKeeper defines the account contract that must be fulfilled when
@@ -31,17 +31,17 @@ type GAMMKeeper interface {
 	GetPoolType(ctx sdk.Context, poolId uint64) (swaproutertypes.PoolType, error)
 }
 
-type SwapRouterKeeper interface {
+type PoolManagerKeeper interface {
 	RouteExactAmountIn(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
-		routes []swaproutertypes.SwapAmountInRoute,
+		routes []poolmanagertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
 		tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error)
 
 	MultihopEstimateOutGivenExactAmountIn(
 		ctx sdk.Context,
-		routes []swaproutertypes.SwapAmountInRoute,
+		routes []poolmanagertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
 	) (tokenOutAmount sdk.Int, err error)
 }

@@ -1,0 +1,60 @@
+syntax = "proto3";
+package osmosis.concentratedliquidity.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "osmosis/concentrated-liquidity/params.proto";
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types";
+
+service Query {
+  // Pools returns all concentrated liquidity pools
+  rpc Pools(QueryPoolsRequest) returns (QueryPoolsResponse) {
+    option (google.api.http).get =
+        "/osmosis/concentratedliquidity/v1beta1/pools";
+  }
+
+  // Pool returns the Pool specified by the pool id
+  rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
+    option (google.api.http).get =
+        "/osmosis/concentratedliquidity/v1beta1/pools/{pool_id}";
+  }
+
+  // Params returns concentrated liquidity module params.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get =
+        "/osmosis/concentratedliquidity/v1beta1/params";
+  }
+}
+
+//=============================== Pool
+message QueryPoolRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+message QueryPoolResponse {
+  google.protobuf.Any pool = 1 [ (cosmos_proto.accepts_interface) = "PoolI" ];
+}
+
+//=============================== Pools
+message QueryPoolsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+message QueryPoolsResponse {
+  repeated google.protobuf.Any pools = 1
+      [ (cosmos_proto.accepts_interface) = "PoolI" ];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+//=============================== ModuleParams
+message QueryParamsRequest {}
+message QueryParamsResponse {
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}

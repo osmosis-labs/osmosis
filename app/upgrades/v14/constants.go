@@ -2,12 +2,14 @@ package v14
 
 import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
+
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
 	"github.com/osmosis-labs/osmosis/v13/app/upgrades"
+	cltypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	downtimetypes "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v13/x/protorev/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 	valsetpreftypes "github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
 )
 
@@ -18,7 +20,7 @@ var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
 	CreateUpgradeHandler: CreateUpgradeHandler,
 	StoreUpgrades: store.StoreUpgrades{
-		Added:   []string{valsetpreftypes.StoreKey, protorevtypes.StoreKey, swaproutertypes.StoreKey, downtimetypes.StoreKey, ibchookstypes.StoreKey},
+		Added:   []string{valsetpreftypes.StoreKey, protorevtypes.StoreKey, poolmanagertypes.StoreKey, downtimetypes.StoreKey, ibchookstypes.StoreKey, cltypes.StoreKey},
 		Deleted: []string{},
 	},
 }

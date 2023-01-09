@@ -3,14 +3,14 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
 // IterateRoutes checks the profitability of every single route that is passed in
 // and returns the optimal route if there is one
-func (k Keeper) IterateRoutes(ctx sdk.Context, routes []swaproutertypes.SwapAmountInRoutes) (sdk.Coin, sdk.Int, swaproutertypes.SwapAmountInRoutes) {
-	var optimalRoute swaproutertypes.SwapAmountInRoutes
+func (k Keeper) IterateRoutes(ctx sdk.Context, routes []poolmanagertypes.SwapAmountInRoutes) (sdk.Coin, sdk.Int, poolmanagertypes.SwapAmountInRoutes) {
+	var optimalRoute poolmanagertypes.SwapAmountInRoutes
 	var maxProfitInputCoin sdk.Coin
 	maxProfit := sdk.ZeroInt()
 
@@ -77,9 +77,9 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit sdk.I
 // EstimateMultihopProfit estimates the profit for a given route
 // by estimating the amount out given the amount in for the first pool in the route
 // and then subtracting the amount in from the amount out to get the profit
-func (k Keeper) EstimateMultihopProfit(ctx sdk.Context, inputDenom string, amount sdk.Int, route swaproutertypes.SwapAmountInRoutes) (sdk.Coin, sdk.Int, error) {
+func (k Keeper) EstimateMultihopProfit(ctx sdk.Context, inputDenom string, amount sdk.Int, route poolmanagertypes.SwapAmountInRoutes) (sdk.Coin, sdk.Int, error) {
 	tokenIn := sdk.NewCoin(inputDenom, amount)
-	amtOut, err := k.swaprouterKeeper.MultihopEstimateOutGivenExactAmountIn(ctx, route, tokenIn)
+	amtOut, err := k.poolmanagerKeeper.MultihopEstimateOutGivenExactAmountIn(ctx, route, tokenIn)
 	if err != nil {
 		return sdk.Coin{}, sdk.ZeroInt(), err
 	}
@@ -88,7 +88,7 @@ func (k Keeper) EstimateMultihopProfit(ctx sdk.Context, inputDenom string, amoun
 }
 
 // FindMaxProfitRoute runs a binary search to find the max profit for a given route
-func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route swaproutertypes.SwapAmountInRoutes, inputDenom string) (sdk.Coin, sdk.Int, error) {
+func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route poolmanagertypes.SwapAmountInRoutes, inputDenom string) (sdk.Coin, sdk.Int, error) {
 	tokenIn := sdk.Coin{}
 	profit := sdk.ZeroInt()
 
@@ -128,7 +128,7 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route swaproutertypes.Swa
 }
 
 // ExecuteTrade inputs a route, amount in, and rebalances the pool
-func (k Keeper) ExecuteTrade(ctx sdk.Context, route swaproutertypes.SwapAmountInRoutes, inputCoin sdk.Coin) error {
+func (k Keeper) ExecuteTrade(ctx sdk.Context, route poolmanagertypes.SwapAmountInRoutes, inputCoin sdk.Coin) error {
 	// Get the module address which will execute the trade
 	protorevModuleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
 
@@ -138,7 +138,7 @@ func (k Keeper) ExecuteTrade(ctx sdk.Context, route swaproutertypes.SwapAmountIn
 	}
 
 	// Use the inputCoin.Amount as the min amount out to ensure profitability
-	tokenOutAmount, err := k.swaprouterKeeper.RouteExactAmountIn(ctx, protorevModuleAddress, route, inputCoin, inputCoin.Amount)
+	tokenOutAmount, err := k.poolmanagerKeeper.RouteExactAmountIn(ctx, protorevModuleAddress, route, inputCoin, inputCoin.Amount)
 	if err != nil {
 		return err
 	}

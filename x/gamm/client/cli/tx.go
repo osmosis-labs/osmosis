@@ -14,6 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -136,7 +137,7 @@ func NewJoinSwapExternAmountIn() (*osmocli.TxCliDesc, *types.MsgJoinSwapExternAm
 
 func NewJoinSwapShareAmountOut() (*osmocli.TxCliDesc, *types.MsgJoinSwapShareAmountOut) {
 	return &osmocli.TxCliDesc{
-		Use:                 "join-swap-share-amount-out [token-in-denom] [token-in-max-amount] [share-out-amount]",
+		Use:                 "join-swap-share-amount-out [token-in-denom] [share-out-amount] [token-in-max-amount] ",
 		Short:               "join swap share amount out",
 		CustomFlagOverrides: poolIdFlagOverride,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
@@ -380,7 +381,7 @@ func stringArrayCoinsParser(flagName string, fs *flag.FlagSet) (sdk.Coins, error
 	return coins, nil
 }
 
-func swapAmountInRoutes(fs *flag.FlagSet) ([]types.SwapAmountInRoute, error) {
+func swapAmountInRoutes(fs *flag.FlagSet) ([]poolmanagertypes.SwapAmountInRoute, error) {
 	swapRoutePoolIds, err := fs.GetString(FlagSwapRoutePoolIds)
 	swapRoutePoolIdsArray := strings.Split(swapRoutePoolIds, ",")
 	if err != nil {
@@ -397,13 +398,13 @@ func swapAmountInRoutes(fs *flag.FlagSet) ([]types.SwapAmountInRoute, error) {
 		return nil, errors.New("swap route pool ids and denoms mismatch")
 	}
 
-	routes := []types.SwapAmountInRoute{}
+	routes := []poolmanagertypes.SwapAmountInRoute{}
 	for index, poolIDStr := range swapRoutePoolIdsArray {
 		pID, err := strconv.Atoi(poolIDStr)
 		if err != nil {
 			return nil, err
 		}
-		routes = append(routes, types.SwapAmountInRoute{
+		routes = append(routes, poolmanagertypes.SwapAmountInRoute{
 			PoolId:        uint64(pID),
 			TokenOutDenom: swapRouteDenomsArray[index],
 		})
@@ -411,7 +412,7 @@ func swapAmountInRoutes(fs *flag.FlagSet) ([]types.SwapAmountInRoute, error) {
 	return routes, nil
 }
 
-func swapAmountOutRoutes(fs *flag.FlagSet) ([]types.SwapAmountOutRoute, error) {
+func swapAmountOutRoutes(fs *flag.FlagSet) ([]poolmanagertypes.SwapAmountOutRoute, error) {
 	swapRoutePoolIds, err := fs.GetString(FlagSwapRoutePoolIds)
 	swapRoutePoolIdsArray := strings.Split(swapRoutePoolIds, ",")
 	if err != nil {
@@ -428,13 +429,13 @@ func swapAmountOutRoutes(fs *flag.FlagSet) ([]types.SwapAmountOutRoute, error) {
 		return nil, errors.New("swap route pool ids and denoms mismatch")
 	}
 
-	routes := []types.SwapAmountOutRoute{}
+	routes := []poolmanagertypes.SwapAmountOutRoute{}
 	for index, poolIDStr := range swapRoutePoolIdsArray {
 		pID, err := strconv.Atoi(poolIDStr)
 		if err != nil {
 			return nil, err
 		}
-		routes = append(routes, types.SwapAmountOutRoute{
+		routes = append(routes, poolmanagertypes.SwapAmountOutRoute{
 			PoolId:       uint64(pID),
 			TokenInDenom: swapRouteDenomsArray[index],
 		})

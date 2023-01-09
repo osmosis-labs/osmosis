@@ -37,16 +37,16 @@ func (suite *UpgradeTestSuite) TestMigrateNextPoolIdAndCreatePool() {
 
 	ctx := suite.Ctx
 	gammKeeper := suite.App.GAMMKeeper
-	swaprouterKeeper := suite.App.SwapRouterKeeper
+	poolmanagerKeeper := suite.App.PoolManagerKeeper
 
 	nextPoolId := gammKeeper.GetNextPoolId(ctx)
 	suite.Require().Equal(expectedNextPoolId, nextPoolId)
 
 	// system under test.
-	v14.MigrateNextPoolId(ctx, gammKeeper, swaprouterKeeper)
+	v14.MigrateNextPoolId(ctx, gammKeeper, poolmanagerKeeper)
 
-	// validate swaprouter's next pool id.
-	actualNextPoolId := swaprouterKeeper.GetNextPoolId(ctx)
+	// validate poolmanager's next pool id.
+	actualNextPoolId := poolmanagerKeeper.GetNextPoolId(ctx)
 	suite.Require().Equal(expectedNextPoolId, actualNextPoolId)
 
 	// create a pool after migration.
@@ -55,7 +55,7 @@ func (suite *UpgradeTestSuite) TestMigrateNextPoolIdAndCreatePool() {
 
 	// validate that module route mapping has been created for each pool id.
 	for poolId := uint64(1); poolId < expectedNextPoolId; poolId++ {
-		swapModule, err := swaprouterKeeper.GetPoolModule(ctx, poolId)
+		swapModule, err := poolmanagerKeeper.GetPoolModule(ctx, poolId)
 		suite.Require().NoError(err)
 
 		suite.Require().Equal(gammKeeperType, reflect.TypeOf(swapModule))
@@ -63,6 +63,6 @@ func (suite *UpgradeTestSuite) TestMigrateNextPoolIdAndCreatePool() {
 
 	// validate params
 	gammPoolCreationFee := gammKeeper.GetParams(ctx).PoolCreationFee
-	swaprouterPoolCreationFee := swaprouterKeeper.GetParams(ctx).PoolCreationFee
-	suite.Require().Equal(gammPoolCreationFee, swaprouterPoolCreationFee)
+	poolmanagerPoolCreationFee := poolmanagerKeeper.GetParams(ctx).PoolCreationFee
+	suite.Require().Equal(gammPoolCreationFee, poolmanagerPoolCreationFee)
 }
