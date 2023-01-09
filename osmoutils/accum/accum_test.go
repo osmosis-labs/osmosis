@@ -13,6 +13,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	accumPackage "github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 )
 
 type AccumTestSuite struct {
@@ -1218,6 +1219,7 @@ func (suite *AccumTestSuite) TestUpdatePositionCustomAcc() {
 		customAcc        sdk.DecCoins
 		expectedPosition accumPackage.Record
 		expectedError    error
+		expectPanic      bool
 	}{
 		"custom acc value equals to acc; positive shares -> acts as AddToPosition": {
 			accObject:     accObject,
@@ -1231,14 +1233,27 @@ func (suite *AccumTestSuite) TestUpdatePositionCustomAcc() {
 				UnclaimedRewards: emptyCoins,
 			},
 		},
-		"custom acc value does not equal to acc; negative shares -> acts as RemoveFromPosition": {
+		"custom acc value does not equal to acc; remove same amount -> acts as RemoveFromPosition, delete position accum": {
 			accObject:     accObject,
 			initialShares: positionTwo.NumShares,
 			name:          testAddressTwo,
 			numShareUnits: positionTwo.NumShares.Neg(), // note: negative shares
 			customAcc:     accObject.GetValue().MulDec(sdk.NewDec(2)),
+			// expectedPosition: accumPackage.Record{
+			// 	NumShares:        sdk.ZeroDec(), // results in zero shares
+			// 	InitAccumValue:   accObject.GetValue().MulDec(sdk.NewDec(2)),
+			// 	UnclaimedRewards: emptyCoins,
+			// },
+			expectPanic: true,
+		},
+		"custom acc value does not equal to acc; remove diff amount -> acts as RemoveFromPosition": {
+			accObject:     accObject,
+			initialShares: positionTwo.NumShares,
+			name:          testAddressTwo,
+			numShareUnits: positionOne.NumShares.Neg(), // note: negative shares
+			customAcc:     accObject.GetValue().MulDec(sdk.NewDec(2)),
 			expectedPosition: accumPackage.Record{
-				NumShares:        sdk.ZeroDec(), // results in zero shares
+				NumShares:        positionOne.NumShares, // results in 100 shares (200 - 100)
 				InitAccumValue:   accObject.GetValue().MulDec(sdk.NewDec(2)),
 				UnclaimedRewards: emptyCoins,
 			},
@@ -1264,6 +1279,11 @@ func (suite *AccumTestSuite) TestUpdatePositionCustomAcc() {
 	for name, tc := range tests {
 		tc := tc
 		suite.Run(name, func() {
+			// make accumualtor based off of tc.accObject
+			accumPackage.MakeAccumulator(suite.store, testNameOne)
+			// manually update accumulator value
+			tc.accObject.UpdateAccumulator(initialCoinsDenomOne)
+
 			// Setup
 			err := tc.accObject.NewPositionCustomAcc(tc.name, tc.initialShares, tc.accObject.GetValue(), nil)
 			suite.Require().NoError(err)
@@ -1278,13 +1298,18 @@ func (suite *AccumTestSuite) TestUpdatePositionCustomAcc() {
 			}
 			suite.Require().NoError(err)
 
-			// Assertions.
-			position := tc.accObject.GetPosition(tc.name)
+			tc.accObject, err = accumPackage.GetAccumulator(suite.store, testNameOne)
+			suite.Require().NoError(err)
 
-			suite.Require().Equal(tc.expectedPosition.NumShares, position.NumShares)
-			suite.Require().Equal(tc.expectedPosition.InitAccumValue, position.InitAccumValue)
-			suite.Require().Equal(tc.expectedPosition.UnclaimedRewards, position.UnclaimedRewards)
-			suite.Require().Nil(position.Options)
+			osmoassert.ConditionalPanic(suite.T(), tc.expectPanic, func() {
+				position := tc.accObject.GetPosition(tc.name)
+				// Assertions.
+
+				suite.Require().Equal(tc.expectedPosition.NumShares, position.NumShares)
+				suite.Require().Equal(tc.expectedPosition.InitAccumValue, position.InitAccumValue)
+				suite.Require().Equal(tc.expectedPosition.UnclaimedRewards, position.UnclaimedRewards)
+				suite.Require().Nil(position.Options)
+			})
 		})
 	}
 }

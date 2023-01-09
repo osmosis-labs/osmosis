@@ -196,7 +196,7 @@ func (accum AccumulatorObject) RemoveFromPositionCustomAcc(name string, numShare
 
 	// Ensure not removing more shares than exist
 	if numSharesToRemove.GT(position.NumShares) {
-		return fmt.Errorf("Attempted to remove more shares  (%s) than exist in the position (%s)", numSharesToRemove, position.NumShares)
+		return fmt.Errorf("Attempted to remove more shares (%s) than exist in the position (%s)", numSharesToRemove, position.NumShares)
 	}
 
 	// Save current number of shares and unclaimed rewards
@@ -204,6 +204,14 @@ func (accum AccumulatorObject) RemoveFromPositionCustomAcc(name string, numShare
 	oldNumShares, err := accum.GetPositionSize(name)
 	if err != nil {
 		return err
+	}
+
+	newNumShares := oldNumShares.Sub(numSharesToRemove)
+
+	// remove the position from state entirely if numShares = zero
+	if newNumShares.Equal(sdk.ZeroDec()) {
+		accum.DeletePosition(name)
+		return nil
 	}
 
 	createNewPosition(accum, customAccumulatorValue, name, oldNumShares.Sub(numSharesToRemove), unclaimedRewards, position.Options)
@@ -237,6 +245,10 @@ func (accum AccumulatorObject) UpdatePositionCustomAcc(name string, numShares sd
 	}
 
 	return accum.AddToPositionCustomAcc(name, numShares, customAccumulatorValue)
+}
+
+func (accum AccumulatorObject) DeletePosition(name string) {
+	accum.store.Delete(formatPositionPrefixKey(accum.name, name))
 }
 
 // GetPositionSize returns the number of shares the position corresponding to `addr`
@@ -274,7 +286,6 @@ func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, err
 	truncatedRewards, _ := totalRewards.TruncateDecimal()
 
 	// Create a completely new position, with no rewards
-	// TODO: remove the position from state entirely if numShares = zero
 	createNewPosition(accum, accum.value, positionName, position.NumShares, sdk.NewDecCoins(), position.Options)
 
 	return truncatedRewards, nil
