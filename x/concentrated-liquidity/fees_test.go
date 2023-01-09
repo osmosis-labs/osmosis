@@ -243,7 +243,7 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 
 			expectedInitialFeeGrowthOutside: sdk.NewDecCoins(oneEth),
 		},
-		"current tick < tick -> fee growth global": {
+		"current tick < tick -> empty coins": {
 			poolId:                 validPoolId,
 			tick:                   initialPoolTick + 1,
 			initialGlobalFeeGrowth: oneEth,
