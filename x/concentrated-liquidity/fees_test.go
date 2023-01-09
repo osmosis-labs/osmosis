@@ -216,9 +216,9 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 		validPoolId = 1
 	)
 
-	var (
-		initialPoolTick = math.PriceToTick(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec())).Int64()
-	)
+	initialPoolTickInt, err := math.PriceToTick(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()), DefaultExponentAtPriceOne)
+	initialPoolTick := initialPoolTickInt.Int64()
+	suite.Require().NoError(err)
 
 	tests := map[string]struct {
 		poolId                   uint64
@@ -274,7 +274,7 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 			ctx := suite.Ctx
 			clKeeper := suite.App.ConcentratedLiquidityKeeper
 
-			pool, err := clmodel.NewConcentratedLiquidityPool(validPoolId, USDC, ETH, DefaultTickSpacing)
+			pool, err := clmodel.NewConcentratedLiquidityPool(validPoolId, USDC, ETH, DefaultTickSpacing, DefaultExponentAtPriceOne)
 			suite.Require().NoError(err)
 
 			err = clKeeper.SetPool(ctx, &pool)
