@@ -138,14 +138,14 @@ func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, u
 	return feeGrowthAboveUpperTick.Add(feeGrowthBelowLowerTick...), nil
 }
 
-// getInitialFeeGrowthOtsideForTick returns the initial value of fee growth outside for a given tick.
+// getInitialFeeGrowthOutsideForTick returns the initial value of fee growth outside for a given tick.
 // This value depends on the tick's location relative to the current tick.
 //
 // feeGrowthOutside = { feeGrowthGlobal current tick >= tick }
 //                    { 0               current tick <  tick }
 //
 // The value is chosen as if all of the fees earned to date had occurrd below the tick.
-func (k Keeper) getInitialFeeGrowthOtsideForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
+func (k Keeper) getInitialFeeGrowthOutsideForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.DecCoins{}, err
