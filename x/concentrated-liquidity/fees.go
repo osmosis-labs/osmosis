@@ -38,6 +38,7 @@ func (k Keeper) getFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.Accumul
 }
 
 // initializeFeeAccumulatorPosition initializes the pool fee accumulator with given liquidity delta and zero value for the accumulator.
+// nolint: unused
 func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec) error {
 	// get fee accumulator for the pool
 	feeAccumulator, err := k.getFeeAccumulator(ctx, poolId)
@@ -54,6 +55,7 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 }
 
 // updateFeeAccumulatorPosition updates the owner's position
+// nolint: unused
 func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec, lowerTick int64, upperTick int64) error {
 	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
 	if err != nil {
@@ -76,6 +78,7 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, own
 // initOrUpdateFeeAccumulatorPosition either updates or initializes a fee accumulator position.
 // if fails upon getting and updating fee accumulator position for the given pool + owner accumulator,
 // initializes the fee accumulator position.
+// nolint: unused
 func (k Keeper) initOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec, lowerTick int64, upperTick int64) error {
 	// first try updating fee accum position
 	err := k.updateFeeAccumulatorPosition(ctx, poolId, owner, liquidityDelta, lowerTick, upperTick)
@@ -90,6 +93,7 @@ func (k Keeper) initOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint6
 }
 
 // getFeeGrowthOutside returns fee growth upper tick - fee growth lower tick
+// nolint: unused
 func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.DecCoins, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -130,6 +134,7 @@ func getFeeAccumulatorName(poolId uint64) string {
 // 1. currentTick >= upperTick: If current Tick is GTE than the upper Tick, the fee growth would be pool fee growth - uppertick's fee growth outside
 // 2. currentTick < upperTick: If current tick is smaller than upper tick, fee growth would be the upper tick's fee growth outside
 // this goes vice versa for calculating fee growth for lower tick.
+// nolint: unused
 func calculateFeeGrowth(targetTick int64, feeGrowthOutside sdk.DecCoins, currentTick int64, feesGrowthGlobal sdk.DecCoins, isUpperTick bool) sdk.DecCoins {
 	if (isUpperTick && currentTick >= targetTick) || (!isUpperTick && currentTick < targetTick) {
 		return feesGrowthGlobal.Sub(feeGrowthOutside)

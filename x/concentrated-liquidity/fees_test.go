@@ -74,12 +74,12 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 
 	tests := map[string]feeGrowthOutsideTest{
 		// TODO: uncomment this once tickInfo feeGrowthOutside logic has been implemented
-		// "happy path": {
-		// 	poolSetup:           true,
-		// 	tickSetup:           true,
-		// 	feeAccumulatorSetup: true,
-		// 	expectedError:       false,
-		// },
+		"happy path": {
+			poolSetup:           true,
+			tickSetup:           true,
+			feeAccumulatorSetup: true,
+			expectedError:       false,
+		},
 		// "tick has not been initialized": {
 		// 	poolSetup:           true,
 		// 	tickSetup:           false,
