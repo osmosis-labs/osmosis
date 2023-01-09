@@ -143,7 +143,7 @@ func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, u
 	return feeGrowthAboveUpperTick.Add(feeGrowthBelowLowerTick...), nil
 }
 
-// getInitialFeeGrowthOtsideForTick returns the initial value of fee growth outside for a given tick.
+// getInitialFeeGrowthOutsideForTick returns the initial value of fee growth outside for a given tick.
 // This value depends on the tick's location relative to the current tick.
 //
 // feeGrowthOutside = { feeGrowthGlobal current tick >= tick }
