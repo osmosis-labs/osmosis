@@ -138,7 +138,7 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 				s.Require().NoError(err)
 
 				// check if returned fee growth outside has correct value
-				s.Require().Equal(feeGrowthOutside, sdk.DecCoins{})
+				s.Require().Equal(feeGrowthOutside, sdk.DecCoins(nil))
 			}
 		})
 	}
