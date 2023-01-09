@@ -104,7 +104,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			expectedTokenIn:   sdk.NewCoin("usdc", sdk.NewInt(42000000)),
 			expectedTokenOut:  sdk.NewCoin("eth", sdk.NewInt(8398)),
 			expectedTick:      sdk.NewInt(85180),
-			expectedSqrtPrice: sdk.MustNewDecFromStr("70.724513761903597069"),
+			expectedSqrtPrice: sdk.MustNewDecFromStr("70.724513761903597068"),
 			// two positions with same liquidity entered
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
 			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
@@ -169,7 +169,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 				s.Require().NoError(err)
 				// params
 				// liquidity (2nd):  1198107969.043941799742686113
-				// sqrtPriceNext:    78.136538612066933125 which is 6105.318666275026731905 https://www.wolframalpha.com/input?i=74.160724590950847045+%2B+4763454462.135821429683179+%2F+1198107969.043941799742686113
+				// sqrtPriceNext:    78.136538612066933124 which is 6105.318666275026731905 https://www.wolframalpha.com/input?i=74.160724590950847045+%2B+4763454462.135821429683179+%2F+1198107969.043941799742686113
 				// sqrtPriceCurrent: 74.160724590950847045 which is 5499.813071854861679877 https://www.wolframalpha.com/input?i2d=true&i=Power%5B1.0001%2CDivide%5B86129%2C2%5D%5D
 				// expectedTokenIn:  4763454462.13582143006801819 rounded up https://www.wolframalpha.com/input?i=1198107969.043941799742686113+*+%2878.136538612066933125+-+74.160724590950847045%29
 				// expectedTokenOut: 822041.7685 rounded down https://www.wolframalpha.com/input?i=%281198107969.043941799742686113+*+%2878.136538612066933125+-+74.160724590950847045+%29%29+%2F+%2874.160724590950847045+*+78.136538612066933125%29
@@ -183,7 +183,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			expectedTokenIn:   sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
 			expectedTokenOut:  sdk.NewCoin("eth", sdk.NewInt(1820628)),
 			expectedTick:      sdk.NewInt(87173),
-			expectedSqrtPrice: sdk.MustNewDecFromStr("78.136538612066933125"),
+			expectedSqrtPrice: sdk.MustNewDecFromStr("78.136538612066933124"),
 			newLowerPrice:     sdk.NewDec(5500),
 			newUpperPrice:     sdk.NewDec(6250),
 		},
@@ -238,11 +238,10 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			newUpperPrice:     sdk.NewDec(4545),
 		},
 		//  Partially overlapping price ranges
-		//
+
 		//          5000
 		//  4545 -----|----- 5500
 		//        5001 ----------- 6250
-		//
 		"two positions with partially overlapping price ranges: usdc -> eth": {
 			addPositions: func(ctx sdk.Context, poolId uint64) {
 				// add first position
@@ -327,7 +326,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			expectedTokenIn:   sdk.NewCoin("usdc", sdk.NewInt(8500000000)),
 			expectedTokenOut:  sdk.NewCoin("eth", sdk.NewInt(1609141)),
 			expectedTick:      sdk.NewInt(86509),
-			expectedSqrtPrice: sdk.MustNewDecFromStr("75.583797338122787359"),
+			expectedSqrtPrice: sdk.MustNewDecFromStr("75.583797338122787358"),
 			newLowerPrice:     sdk.NewDec(5001),
 			newUpperPrice:     sdk.NewDec(6250),
 		},
@@ -696,7 +695,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 			expectedTokenOut:  sdk.NewCoin("usdc", sdk.NewInt(42000000)),
 			expectedTokenIn:   sdk.NewCoin("eth", sdk.NewInt(8398)),
 			expectedTick:      sdk.NewInt(85180),
-			expectedSqrtPrice: sdk.MustNewDecFromStr("70.724513761903597069"),
+			expectedSqrtPrice: sdk.MustNewDecFromStr("70.724513761903597068"),
 			// two positions with same liquidity entered
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
 			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
@@ -752,7 +751,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 			expectedTokenOut:  sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
 			expectedTokenIn:   sdk.NewCoin("eth", sdk.NewInt(1820628)),
 			expectedTick:      sdk.NewInt(87173),
-			expectedSqrtPrice: sdk.MustNewDecFromStr("78.136538612066933125"),
+			expectedSqrtPrice: sdk.MustNewDecFromStr("78.136538612066933124"),
 			newLowerPrice:     sdk.NewDec(5500),
 			newUpperPrice:     sdk.NewDec(6250),
 		},
@@ -848,7 +847,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 			expectedTokenOut:  sdk.NewCoin("usdc", sdk.NewInt(8500000000)),
 			expectedTokenIn:   sdk.NewCoin("eth", sdk.NewInt(1609141)),
 			expectedTick:      sdk.NewInt(86509),
-			expectedSqrtPrice: sdk.MustNewDecFromStr("75.583797338122787359"),
+			expectedSqrtPrice: sdk.MustNewDecFromStr("75.583797338122787358"),
 			newLowerPrice:     sdk.NewDec(5001),
 			newUpperPrice:     sdk.NewDec(6250),
 		},

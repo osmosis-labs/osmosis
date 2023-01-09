@@ -308,10 +308,14 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		// originally had.
 		feeCharge := feeOnFullAmountRemainingIn
 		if !nextSqrtPrice.Equal(sqrtPrice) {
-			// This means that the current tick had enough liquidity to fulfill the swap
-			// In that case, the fee is the difference between
-			// the amount needed to fulfill and the actual amount we ended up charging.
-			feeCharge = swapState.amountSpecifiedRemaining.Sub(amountIn)
+			if swapState.amountSpecifiedRemaining.Equal(amountIn) {
+				feeCharge = sdk.ZeroDec()
+			} else {
+				// This means that the current tick had enough liquidity to fulfill the swap
+				// In that case, the fee is the difference between
+				// the amount needed to fulfill and the actual amount we ended up charging.
+				feeCharge = swapState.amountSpecifiedRemaining.Sub(amountIn)
+			}
 		}
 
 		// TODO: figure out why panics
