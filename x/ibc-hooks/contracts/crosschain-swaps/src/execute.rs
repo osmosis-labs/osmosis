@@ -7,9 +7,11 @@ use crate::consts::{CALLBACK_KEY, FORWARD_REPLY_ID, PACKET_LIFETIME, SWAP_REPLY_
 use crate::ibc::{MsgTransfer, MsgTransferResponse};
 use crate::msg::{CrosschainSwapResponse, Recovery};
 
+use crate::state;
+use crate::state::ibc::IBCTransfer;
 use crate::state::{
-    ForwardMsgReplyState, ForwardTo, IBCTransfer, Status, SwapMsgReplyState, CONFIG,
-    FORWARD_REPLY_STATES, INFLIGHT_PACKETS, RECOVERY_STATES, SWAP_REPLY_STATES,
+    ForwardMsgReplyState, ForwardTo, SwapMsgReplyState, CONFIG, FORWARD_REPLY_STATES,
+    INFLIGHT_PACKETS, RECOVERY_STATES, SWAP_REPLY_STATES,
 };
 use crate::ContractError;
 
@@ -244,7 +246,7 @@ pub fn handle_forward_reply(
             sequence: response.sequence,
             amount,
             denom: denom.clone(),
-            status: Status::Sent,
+            status: state::ibc::Status::Sent,
         };
 
         // Save as in-flight to be able to manipulate when the ack/timeout is received
