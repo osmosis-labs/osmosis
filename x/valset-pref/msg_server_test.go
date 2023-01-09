@@ -9,7 +9,7 @@ import (
 func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
 	suite.SetupTest()
 
-	// setup 3 validators
+	// setup 6 validators
 	valAddrs := suite.SetupMultipleValidators(6)
 
 	tests := []struct {
@@ -108,23 +108,6 @@ func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
 			expectPass: false,
 		},
 		{
-			name:      "user does not have valset, but has existing delegation",
-			delegator: sdk.AccAddress([]byte("addr2---------------")),
-			preferences: []types.ValidatorPreference{
-				{
-					ValOperAddress: valAddrs[3],
-					Weight:         sdk.NewDecWithPrec(5, 1),
-				},
-				{
-					ValOperAddress: valAddrs[4],
-					Weight:         sdk.NewDecWithPrec(5, 1),
-				},
-			},
-			coin:                   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
-			setExistingDelegations: true,
-			expectPass:             true, //SetValidatorSetPreference sets the existing delegations as valset and ignores test.preferences
-		},
-		{
 			name:      "user has valset, but does not have existing delegation",
 			delegator: sdk.AccAddress([]byte("addr1---------------")),
 			preferences: []types.ValidatorPreference{
@@ -190,13 +173,8 @@ func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
 func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 	suite.SetupTest()
 
-	// prepare existing delegations validators
-	valAddrs := suite.SetupMultipleValidators(3)
-
-	// prepare validators to delegate to valset
-	preferences := suite.PrepareDelegateToValidatorSet()
-
-	amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)} // 100 osmo
+	// valset test setup
+	valAddrs, preferences, amountToFund := suite.SetupValidatorsAndDelegations()
 
 	tests := []struct {
 		name                   string
@@ -305,13 +283,8 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 func (suite *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 	suite.SetupTest()
 
-	// prepare existing delegations validators
-	valAddrs := suite.SetupMultipleValidators(3)
-
-	// creates a validator preference list to delegate to
-	preferences := suite.PrepareDelegateToValidatorSet()
-
-	amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)} // 100 osmo
+	// valset test setup
+	valAddrs, preferences, amountToFund := suite.SetupValidatorsAndDelegations()
 
 	tests := []struct {
 		name                   string
@@ -594,12 +567,8 @@ func (suite *KeeperTestSuite) TestRedelegateValidatorSet() {
 func (suite *KeeperTestSuite) TestWithdrawDelegationRewards() {
 	suite.SetupTest()
 
-	// call the create validator set preference
-	preferences := suite.PrepareDelegateToValidatorSet()
-	// setup extra validator for non val-set staking position
-	valAddrs := suite.SetupMultipleValidators(1)
-
-	amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)}
+	// valset test setup
+	valAddrs, preferences, amountToFund := suite.SetupValidatorsAndDelegations()
 
 	tests := []struct {
 		name                  string

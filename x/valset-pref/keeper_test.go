@@ -187,6 +187,18 @@ func (suite *KeeperTestSuite) TestGetDelegationPreference() {
 			}
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) SetupValidatorsAndDelegations() ([]string, []types.ValidatorPreference, sdk.Coins) {
+	// prepare existing delegations validators
+	valAddrs := suite.SetupMultipleValidators(3)
+
+	// prepare validators to delegate to valset
+	preferences := suite.PrepareDelegateToValidatorSet()
+
+	amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)} // 100 osmo
+
+	return valAddrs, preferences, amountToFund
 
 }
 
