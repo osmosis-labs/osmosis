@@ -16,7 +16,7 @@ func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
 		name                   string
 		delegator              sdk.AccAddress
 		preferences            []types.ValidatorPreference
-		coin                   sdk.Coin // amount to delegate
+		amountToDelegate       sdk.Coin // amount to delegate
 		setExistingDelegations bool
 		expectPass             bool
 	}{
@@ -139,7 +139,7 @@ func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
 					Weight:         sdk.NewDecWithPrec(4, 1),
 				},
 			},
-			coin:                   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
+			amountToDelegate:       sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
 			setExistingDelegations: true,
 			expectPass:             true,
 		}, // SetValidatorSetPreference ignores the existing delegation and modifies the existing valset
@@ -155,7 +155,7 @@ func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
 				amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)} // 100 osmo
 				suite.FundAcc(test.delegator, amountToFund)
 
-				err := suite.PrepareExistingDelegations(suite.Ctx, valAddrs, test.delegator, test.coin.Amount)
+				err := suite.PrepareExistingDelegations(suite.Ctx, valAddrs, test.delegator, test.amountToDelegate.Amount)
 				suite.Require().NoError(err)
 			}
 
@@ -179,38 +179,38 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 	tests := []struct {
 		name                   string
 		delegator              sdk.AccAddress
-		coin                   sdk.Coin  // amount to delegate
+		amountToDelegate       sdk.Coin  // amount to delegate
 		expectedShares         []sdk.Dec // expected shares after delegation
 		setExistingDelegations bool
 		setValSet              bool
 		expectPass             bool
 	}{
 		{
-			name:           "Delegate to valid validators",
-			delegator:      sdk.AccAddress([]byte("addr1---------------")),
-			coin:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
-			setValSet:      true,
-			expectedShares: []sdk.Dec{sdk.NewDec(2_000_000), sdk.NewDec(3_300_000), sdk.NewDec(1_200_000), sdk.NewDec(3_500_000)},
-			expectPass:     true,
+			name:             "Delegate to valid validators",
+			delegator:        sdk.AccAddress([]byte("addr1---------------")),
+			amountToDelegate: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
+			setValSet:        true,
+			expectedShares:   []sdk.Dec{sdk.NewDec(2_000_000), sdk.NewDec(3_300_000), sdk.NewDec(1_200_000), sdk.NewDec(3_500_000)},
+			expectPass:       true,
 		},
 		{
-			name:           "Delegate more tokens to existing validator-set",
-			delegator:      sdk.AccAddress([]byte("addr1---------------")),
-			coin:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
-			expectedShares: []sdk.Dec{sdk.NewDec(4_000_000), sdk.NewDec(6_600_000), sdk.NewDec(2_400_000), sdk.NewDec(7_000_000)},
-			expectPass:     true,
+			name:             "Delegate more tokens to existing validator-set",
+			delegator:        sdk.AccAddress([]byte("addr1---------------")),
+			amountToDelegate: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
+			expectedShares:   []sdk.Dec{sdk.NewDec(4_000_000), sdk.NewDec(6_600_000), sdk.NewDec(2_400_000), sdk.NewDec(7_000_000)},
+			expectPass:       true,
 		},
 		{
-			name:       "User does not have enough tokens to stake",
-			delegator:  sdk.AccAddress([]byte("addr2---------------")),
-			coin:       sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(200_000_000)),
-			setValSet:  true,
-			expectPass: false,
+			name:             "User does not have enough tokens to stake",
+			delegator:        sdk.AccAddress([]byte("addr2---------------")),
+			amountToDelegate: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(200_000_000)),
+			setValSet:        true,
+			expectPass:       false,
 		},
 		{
 			name:                   "Delegate to existing staking position (non valSet) ",
 			delegator:              sdk.AccAddress([]byte("addr3---------------")),
-			coin:                   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
+			amountToDelegate:       sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
 			expectedShares:         []sdk.Dec{sdk.NewDec(13_333_333), sdk.NewDec(13_333_333), sdk.NewDec(13_333_333)},
 			setExistingDelegations: true,
 			expectPass:             true,
@@ -232,18 +232,18 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 			}
 
 			if test.setExistingDelegations {
-				err := suite.PrepareExistingDelegations(suite.Ctx, valAddrs, test.delegator, test.coin.Amount)
+				err := suite.PrepareExistingDelegations(suite.Ctx, valAddrs, test.delegator, test.amountToDelegate.Amount)
 				suite.Require().NoError(err)
 			}
 
 			// call the create validator set preference
-			_, err := msgServer.DelegateToValidatorSet(c, types.NewMsgDelegateToValidatorSet(test.delegator, test.coin))
+			_, err := msgServer.DelegateToValidatorSet(c, types.NewMsgDelegateToValidatorSet(test.delegator, test.amountToDelegate))
 			if test.expectPass {
 				suite.Require().NoError(err)
 
 				// check if the user balance decreased
 				balance := suite.App.BankKeeper.GetBalance(suite.Ctx, test.delegator, sdk.DefaultBondDenom)
-				expectedBalance := amountToFund[0].Amount.Sub(test.coin.Amount)
+				expectedBalance := amountToFund[0].Amount.Sub(test.amountToDelegate.Amount)
 				// valset has not been set so use the (expectedBalance = account balance)
 				if !test.setValSet {
 					expectedBalance = balance.Amount
