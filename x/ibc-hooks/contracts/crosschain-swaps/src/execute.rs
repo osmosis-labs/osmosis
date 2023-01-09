@@ -44,7 +44,8 @@ pub fn swap_and_forward(
 
     // Check that the received is valid and retrieve its channel
     let (valid_channel, valid_receiver) = validate_receiver(deps.as_ref(), receiver)?;
-    // If there is a memo, check that it is valid
+    // If there is a memo, check that it is valid (i.e. a valud json object that
+    // doesn't contain the key that we will insert later)
     if let Some(memo) = &next_memo {
         // Parse the string as valid json
         let json = parse_json(memo)?;
