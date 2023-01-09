@@ -3,9 +3,10 @@ package ibc_hooks_test
 import (
 	"encoding/json"
 	"fmt"
-	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	"testing"
 	"time"
+
+	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
@@ -573,8 +574,8 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain, withAckTracki
 	suite.SetupPools(chainName, []sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 	// Setup contract
-	chain.StoreContractCode(&suite.Suite, "./bytecode/poolmanager.wasm")
-	poolmanagerAddr := chain.InstantiateContract(&suite.Suite,
+	chain.StoreContractCode(&suite.Suite, "./bytecode/swaprouter.wasm")
+	swaprouterAddr := chain.InstantiateContract(&suite.Suite,
 		fmt.Sprintf(`{"owner": "%s"}`, owner), 1)
 	chain.StoreContractCode(&suite.Suite, "./bytecode/crosschain_swaps.wasm")
 	trackAcks := "false"
@@ -584,7 +585,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain, withAckTracki
 	// Configuring two prefixes for the same channel here. This is so that we can test bad acks when the receiver can't handle the receiving addr
 	channels := `[["osmo", "channel-0"],["juno", "channel-0"]]`
 	crosschainAddr := chain.InstantiateContract(&suite.Suite,
-		fmt.Sprintf(`{"swap_contract": "%s", "track_ibc_sends": %s, "channels": %s}`, poolmanagerAddr, trackAcks, channels), 2)
+		fmt.Sprintf(`{"swap_contract": "%s", "track_ibc_sends": %s, "channels": %s}`, swaprouterAddr, trackAcks, channels), 2)
 
 	osmosisApp := chain.GetOsmosisApp()
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
@@ -593,7 +594,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain, withAckTracki
 
 	// ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, msg []byte, coins sdk.Coins
 	msg := `{"set_route":{"input_denom":"token0","output_denom":"token1","pool_route":[{"pool_id":"1","token_out_denom":"stake"},{"pool_id":"2","token_out_denom":"token1"}]}}`
-	_, err = contractKeeper.Execute(ctx, poolmanagerAddr, owner, []byte(msg), sdk.NewCoins())
+	_, err = contractKeeper.Execute(ctx, swaprouterAddr, owner, []byte(msg), sdk.NewCoins())
 	suite.Require().NoError(err)
 
 	// Move forward one block
@@ -606,7 +607,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain, withAckTracki
 	err = suite.path.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
 
-	return poolmanagerAddr, crosschainAddr
+	return swaprouterAddr, crosschainAddr
 }
 
 func (suite *HooksTestSuite) TestCrosschainSwaps() {
