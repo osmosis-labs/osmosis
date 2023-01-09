@@ -52,16 +52,16 @@ func (suite *StrategyTestSuite) TestComputeSwapState() {
 		},
 		"happy path: trade asset1 for asset0": {
 			sqrtPCurrent:    sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
-			nextSqrtPrice:   sdk.MustNewDecFromStr("70.738349405152439867"), // 5003.91407656543054317
+			nextSqrtPrice:   sdk.MustNewDecFromStr("70.738349405152439866"), // 5003.91407656543054317
 			liquidity:       sdk.MustNewDecFromStr("1517818840.967515822610790519"),
 			amountRemaining: sdk.NewDec(42000000),
 			// sqrt price limit is less than sqrt price target so it does not affect the result
 			// TODO: test case where it does affect.
 			sqrtPriceLimit:        sdk.MustNewDecFromStr("70.666662070529219856").Add(sdk.OneDec()),
 			zeroForOne:            false,
-			expectedSqrtPriceNext: "70.738349405152439867",
-			expectedAmountIn:      "42000000.000000000650233591",
-			expectedAmountOut:     "8396.714104746079432666",
+			expectedSqrtPriceNext: "70.738349405152439866",
+			expectedAmountIn:      "41999999.999999999132414751",
+			expectedAmountOut:     "8396.714104746079129338",
 		},
 	}
 
