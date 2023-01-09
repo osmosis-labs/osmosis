@@ -49,8 +49,8 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	// If the current square root price and current tick are zero, then this is the first position to be created for this pool.
 	// In this case, we calculate the square root price and current tick based on the inputs of this position.
-	if k.isInitialPosition(initialSqrtPrice, initialTick) {
-		err = k.initializeInitialPosition(cacheCtx, pool, amount0Desired, amount1Desired)
+	if k.isInitialPositionForPool(initialSqrtPrice, initialTick) {
+		err := k.initializeInitialPositionForPool(cacheCtx, pool, amount0Desired, amount1Desired)
 		if err != nil {
 			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 		}
@@ -217,10 +217,10 @@ func (k Keeper) sendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 stri
 	return nil
 }
 
-// isInitialPosition checks if the initial sqrtPrice and initial tick are equal to zero.
+// isInitialPositionForPool checks if the initial sqrtPrice and initial tick are equal to zero.
 // If so, this is the first position to be created for this pool, and we return true.
 // If not, we return false.
-func (k Keeper) isInitialPosition(initialSqrtPrice sdk.Dec, initialTick sdk.Int) bool {
+func (k Keeper) isInitialPositionForPool(initialSqrtPrice sdk.Dec, initialTick sdk.Int) bool {
 	if initialSqrtPrice.Equal(sdk.ZeroDec()) && initialTick.Equal(sdk.ZeroInt()) {
 		return true
 	}
@@ -229,7 +229,7 @@ func (k Keeper) isInitialPosition(initialSqrtPrice sdk.Dec, initialTick sdk.Int)
 
 // createInitialPosition ensures that the first position created on this pool includes both asset0 and asset1
 // This is required so we can set the pool's sqrtPrice and calculate it's initial tick from this
-func (k Keeper) initializeInitialPosition(ctx sdk.Context, pool types.ConcentratedPoolExtension, amount0Desired, amount1Desired sdk.Int) error {
+func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.ConcentratedPoolExtension, amount0Desired, amount1Desired sdk.Int) error {
 	// Check that the position includes some amount of both asset0 and asset1
 	if !amount0Desired.GT(sdk.ZeroInt()) || !amount1Desired.GT(sdk.ZeroInt()) {
 		return types.InitialLiquidityZeroError{Amount0: amount0Desired, Amount1: amount1Desired}

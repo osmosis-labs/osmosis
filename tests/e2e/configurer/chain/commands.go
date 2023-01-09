@@ -30,6 +30,7 @@ func (n *NodeConfig) CreatePool(poolFile, from string) uint64 {
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
+	//nolint:staticcheck
 	var numPools gammtypes.QueryNumPoolsResponse
 	err = util.Cdc.UnmarshalJSON(bz, &numPools)
 	require.NoError(n.t, err)
@@ -98,6 +99,17 @@ func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) {
 	require.NoError(n.t, err)
 
 	n.LogActionF("successfully submitted param change proposal")
+}
+
+func (n *NodeConfig) SendIBCTransfer(from, recipient, amount, memo string) {
+	n.LogActionF("IBC sending %s from %s to %s. memo: %s", amount, from, recipient, memo)
+
+	cmd := []string{"osmosisd", "tx", "ibc-transfer", "transfer", "transfer", "channel-0", recipient, amount, fmt.Sprintf("--from=%s", from), "--memo", memo}
+
+	_, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "code: 0")
+	require.NoError(n.t, err)
+
+	n.LogActionF("successfully submitted sent IBC transfer")
 }
 
 func (n *NodeConfig) FailIBCTransfer(from, recipient, amount string) {

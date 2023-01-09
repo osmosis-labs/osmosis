@@ -3,6 +3,7 @@ package concentrated_liquidity
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 	cltypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
@@ -70,28 +71,16 @@ func (k Keeper) PoolExists(ctx sdk.Context, poolId uint64) bool {
 	return k.poolExists(ctx, poolId)
 }
 
-func (k Keeper) IsInitialPosition(initialSqrtPrice sdk.Dec, initialTick sdk.Int) bool {
-	return k.isInitialPosition(initialSqrtPrice, initialTick)
+func (k Keeper) IsInitialPositionForPool(initialSqrtPrice sdk.Dec, initialTick sdk.Int) bool {
+	return k.isInitialPositionForPool(initialSqrtPrice, initialTick)
 }
 
-func (k Keeper) InitializeInitialPosition(ctx sdk.Context, pool types.ConcentratedPoolExtension, amount0Desired, amount1Desired sdk.Int) error {
-	return k.initializeInitialPosition(ctx, pool, amount0Desired, amount1Desired)
+func (k Keeper) InitializeInitialPositionForPool(ctx sdk.Context, pool types.ConcentratedPoolExtension, amount0Desired, amount1Desired sdk.Int) error {
+	return k.initializeInitialPositionForPool(ctx, pool, amount0Desired, amount1Desired)
 }
 
 func (k Keeper) CollectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64) (sdk.Coins, error) {
 	return k.collectFees(ctx, poolId, owner, lowerTick, upperTick)
-}
-
-func (k Keeper) CreateFeeAccumulator(ctx sdk.Context, poolId uint64) error {
-	return k.createFeeAccumulator(ctx, poolId)
-}
-
-func (k Keeper) InitializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec) error {
-	return k.initializeFeeAccumulatorPosition(ctx, poolId, owner, liquidityDelta)
-}
-
-func (k Keeper) ChargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin) error {
-	return k.chargeFee(ctx, poolId, feeUpdate)
 }
 
 func ConvertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (swaproutertypes.PoolI, error) {
@@ -100,4 +89,33 @@ func ConvertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolE
 
 func ConvertPoolInterfaceToConcentrated(poolI swaproutertypes.PoolI) (types.ConcentratedPoolExtension, error) {
 	return convertPoolInterfaceToConcentrated(poolI)
+}
+
+// fees methods
+func (k Keeper) CreateFeeAccumulator(ctx sdk.Context, poolId uint64) error {
+	return k.createFeeAccumulator(ctx, poolId)
+}
+
+func (k Keeper) ChargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin) error {
+	return k.chargeFee(ctx, poolId, feeUpdate)
+}
+
+func (k Keeper) GetFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.AccumulatorObject, error) {
+	return k.getFeeAccumulator(ctx, poolId)
+}
+
+func (k Keeper) InitializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec) error {
+	return k.initializeFeeAccumulatorPosition(ctx, poolId, owner, liquidityDelta)
+}
+
+func (k Keeper) UpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec, lowerTick int64, upperTick int64) error {
+	return k.updateFeeAccumulatorPosition(ctx, poolId, owner, liquidityDelta, lowerTick, upperTick)
+}
+
+func (k Keeper) GetFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.DecCoins, error) {
+	return k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
+}
+
+func CalculateFeeGrowth(targetTick int64, feeGrowthOutside sdk.DecCoins, currentTick int64, feesGrowthGlobal sdk.DecCoins, isUpperTick bool) sdk.DecCoins {
+	return calculateFeeGrowth(targetTick, feeGrowthOutside, currentTick, feesGrowthGlobal, isUpperTick)
 }

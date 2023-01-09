@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
@@ -49,7 +48,6 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 		// Not configured
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
-
 	isIcs20, data := isIcs20Packet(packet)
 	if !isIcs20 {
 		return im.App.OnRecvPacket(ctx, packet, relayer)
@@ -61,19 +59,18 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
 	if err != nil {
-		return osmoutils.NewStringErrorAcknowledgement(err.Error())
+		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrMsgValidation, err.Error())
 	}
 	if msgBytes == nil || contractAddr == nil { // This should never happen
-		return osmoutils.NewStringErrorAcknowledgement("error in wasmhook message validation")
+		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrMsgValidation)
 	}
 
 	// Calculate the receiver / contract caller based on the packet's channel and sender
-	senderStr := fmt.Sprintf("%s/%s", packet.GetDestChannel(), data.GetSender())
-	senderHash32 := address.Hash("ibc-memo-action", []byte(senderStr))
-	sender := sdk.AccAddress(senderHash32[:])
-	senderBech32, err := sdk.Bech32ifyAddressBytes(h.bech32PrefixAccAddr, sender)
+	channel := packet.GetDestChannel()
+	sender := data.GetSender()
+	senderBech32, err := keeper.DeriveIntermediateSender(channel, sender, h.bech32PrefixAccAddr)
 	if err != nil {
-		return osmoutils.NewStringErrorAcknowledgement(fmt.Sprintf("cannot convert sender address %s to bech32: %s", senderStr, err.Error()))
+		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadSender, fmt.Sprintf("cannot convert sender address %s/%s to bech32: %s", channel, sender, err.Error()))
 	}
 
 	// The funds sent on this packet need to be transferred to the intermediary account for the sender.
@@ -85,7 +82,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	data.Receiver = senderBech32
 	bz, err := json.Marshal(data)
 	if err != nil {
-		return osmoutils.NewStringErrorAcknowledgement(fmt.Sprintf("cannot marshal the ICS20 packet: %s", err.Error()))
+		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrMarshaling, err.Error())
 	}
 	packet.Data = bz
 
@@ -99,7 +96,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	if !ok {
 		// This should never happen, as it should've been caught in the underlaying call to OnRecvPacket,
 		// but returning here for completeness
-		return osmoutils.NewStringErrorAcknowledgement("Invalid packet data: Amount is not an int")
+		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrInvalidPacket, "Amount is not an int")
 	}
 
 	// The packet's denom is the denom in the sender chain. This needs to be converted to the local denom.
@@ -115,13 +112,13 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	}
 	response, err := h.execWasmMsg(ctx, &execMsg)
 	if err != nil {
-		return osmoutils.NewStringErrorAcknowledgement(err.Error())
+		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrWasmError, err.Error())
 	}
 
 	fullAck := ContractAck{ContractResult: response.Data, IbcAck: ack.Acknowledgement()}
 	bz, err = json.Marshal(fullAck)
 	if err != nil {
-		return osmoutils.NewStringErrorAcknowledgement(fmt.Sprintf(types.ErrBadResponse, err.Error()))
+		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadResponse, err.Error())
 	}
 
 	return channeltypes.NewResultAcknowledgement(bz)
@@ -332,7 +329,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 	}
 
 	sudoMsg := []byte(fmt.Sprintf(
-		`{"receive_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}`,
+		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}}`,
 		packet.SourceChannel, packet.Sequence, ackAsJson, success))
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
@@ -367,7 +364,7 @@ func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdk.Context, pa
 	}
 
 	sudoMsg := []byte(fmt.Sprintf(
-		`{"ibc_timeout": {"channel": "%s", "sequence": %d}}`,
+		`{"ibc_lifecycle_complete": {"ibc_timeout": {"channel": "%s", "sequence": %d}}}`,
 		packet.SourceChannel, packet.Sequence))
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {

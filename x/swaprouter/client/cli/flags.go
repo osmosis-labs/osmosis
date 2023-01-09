@@ -47,6 +47,13 @@ type smoothWeightChangeParamsInputs struct {
 	TargetPoolWeights string `json:"target-pool-weights"`
 }
 
+func FlagSetMultihopSwapRoutes() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+	fs.String(FlagSwapRoutePoolIds, "", "swap route pool id")
+	fs.String(FlagSwapRouteDenoms, "", "swap route amount")
+	return fs
+}
+
 func FlagSetQuerySwapRoutes() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
