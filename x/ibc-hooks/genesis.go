@@ -10,7 +10,11 @@ import (
 var WasmHookModuleAccountAddr sdk.AccAddress = address.Module(ModuleName, []byte("wasm-hook intermediary account"))
 
 func IbcHooksInitGenesis(ctx sdk.Context, ak osmoutils.AccountKeeper) {
-	err := osmoutils.CreateModuleAccount(ctx, ak, WasmHookModuleAccountAddr)
+	err := osmoutils.CanCreateModuleAccountAtAddr(ctx, ak, WasmHookModuleAccountAddr)
+	if err != nil {
+		return
+	}
+	err = osmoutils.CreateModuleAccount(ctx, ak, WasmHookModuleAccountAddr)
 	if err != nil {
 		panic(err)
 	}
