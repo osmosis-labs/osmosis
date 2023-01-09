@@ -14,7 +14,7 @@ const (
 )
 
 var (
-	_ sdk.Msg                       = &MsgCreateStableswapPool{}
+	_ sdk.Msg                        = &MsgCreateStableswapPool{}
 	_ poolmanagertypes.CreatePoolMsg = &MsgCreateStableswapPool{}
 )
 

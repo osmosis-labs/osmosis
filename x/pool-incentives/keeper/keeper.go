@@ -22,10 +22,10 @@ type Keeper struct {
 
 	paramSpace paramtypes.Subspace
 
-	accountKeeper    types.AccountKeeper
-	bankKeeper       types.BankKeeper
-	incentivesKeeper types.IncentivesKeeper
-	distrKeeper      types.DistrKeeper
+	accountKeeper     types.AccountKeeper
+	bankKeeper        types.BankKeeper
+	incentivesKeeper  types.IncentivesKeeper
+	distrKeeper       types.DistrKeeper
 	poolmanagerKeeper types.PoolManagerKeeper
 }
 
@@ -45,10 +45,10 @@ func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKee
 
 		paramSpace: paramSpace,
 
-		accountKeeper:    accountKeeper,
-		bankKeeper:       bankKeeper,
-		incentivesKeeper: incentivesKeeper,
-		distrKeeper:      distrKeeper,
+		accountKeeper:     accountKeeper,
+		bankKeeper:        bankKeeper,
+		incentivesKeeper:  incentivesKeeper,
+		distrKeeper:       distrKeeper,
 		poolmanagerKeeper: poolmanagerKeeper,
 	}
 }

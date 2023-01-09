@@ -16,7 +16,7 @@ import (
 
 var (
 	_ poolmanagertypes.PoolI = &Pool{}
-	_ types.CFMMPoolI       = &Pool{}
+	_ types.CFMMPoolI        = &Pool{}
 )
 
 // NewStableswapPool returns a stableswap pool

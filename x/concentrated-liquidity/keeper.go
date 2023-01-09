@@ -17,7 +17,7 @@ type Keeper struct {
 
 	// keepers
 	poolmanagerKeeper types.PoolManagerKeeper
-	bankKeeper       types.BankKeeper
+	bankKeeper        types.BankKeeper
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.BankKeeper, paramSpace paramtypes.Subspace) *Keeper {

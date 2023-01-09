@@ -17,7 +17,7 @@ const (
 )
 
 var (
-	_ sdk.Msg                       = &MsgCreateConcentratedPool{}
+	_ sdk.Msg                        = &MsgCreateConcentratedPool{}
 	_ poolmanagertypes.CreatePoolMsg = &MsgCreateConcentratedPool{}
 )
 

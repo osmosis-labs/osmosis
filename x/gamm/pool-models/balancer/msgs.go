@@ -13,7 +13,7 @@ const (
 )
 
 var (
-	_ sdk.Msg                       = &MsgCreateBalancerPool{}
+	_ sdk.Msg                        = &MsgCreateBalancerPool{}
 	_ poolmanagertypes.CreatePoolMsg = &MsgCreateBalancerPool{}
 )
 

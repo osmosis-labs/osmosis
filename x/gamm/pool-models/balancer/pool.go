@@ -28,7 +28,7 @@ const (
 )
 
 var (
-	_ poolmanagertypes.PoolI        = &Pool{}
+	_ poolmanagertypes.PoolI       = &Pool{}
 	_ types.PoolAmountOutExtension = &Pool{}
 	_ types.WeightedPoolExtension  = &Pool{}
 	_ types.CFMMPoolI              = &Pool{}
