@@ -505,8 +505,32 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	for _, test := range testCases {
 		suite.Run(test.name, func() {
 			// Check swaps
-			_, swapInErr := gammKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], test.pool, testCoin, "bar", sdk.ZeroInt(), sdk.ZeroDec())
-			_, swapOutErr := gammKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], test.pool, "bar", sdk.NewInt(1000000000000000000), testCoin, sdk.ZeroDec())
+			_, swapInErr := suite.App.SwapRouterKeeper.RouteExactAmountIn(
+				suite.Ctx,
+				suite.TestAccs[0],
+				[]swaproutertypes.SwapAmountInRoute{
+					{
+						PoolId:        test.pool.GetId(),
+						TokenOutDenom: "bar",
+					},
+				},
+				testCoin,
+				sdk.ZeroInt(),
+			)
+
+			_, swapOutErr := suite.App.SwapRouterKeeper.RouteExactAmountOut(
+				suite.Ctx,
+				suite.TestAccs[0],
+				[]swaproutertypes.SwapAmountOutRoute{
+					{
+						PoolId:       test.pool.GetId(),
+						TokenInDenom: "bar",
+					},
+				},
+				sdk.NewInt(1000000000000000000),
+				testCoin,
+			)
+
 			if test.expectPass {
 				suite.Require().NoError(swapInErr)
 				suite.Require().NoError(swapOutErr)
