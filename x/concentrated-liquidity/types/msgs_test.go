@@ -7,7 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
 	appParams "github.com/osmosis-labs/osmosis/v13/app/params"
+
+	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
 )
 
@@ -283,5 +286,54 @@ func TestMsgWithdrawPosition(t *testing.T) {
 		} else {
 			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
 		}
+	}
+}
+
+func TestConcentratedLiquiditySerialization(t *testing.T) {
+	pk1 := ed25519.GenPrivKey().PubKey()
+	addr1 := sdk.AccAddress(pk1.Address()).String()
+	defaultPoolId := uint64(1)
+
+	testCases := []struct {
+		name  string
+		clMsg sdk.Msg
+	}{
+		{
+			name: "MsgCreateConcentratedPool",
+			clMsg: &model.MsgCreateConcentratedPool{
+				Sender:      addr1,
+				Denom0:      "foo",
+				Denom1:      "bar",
+				TickSpacing: uint64(1),
+			},
+		},
+		{
+			name: "MsgWithdrawPosition",
+			clMsg: &types.MsgWithdrawPosition{
+				PoolId:          defaultPoolId,
+				Sender:          addr1,
+				LowerTick:       int64(10000),
+				UpperTick:       int64(20000),
+				LiquidityAmount: sdk.NewInt(100),
+			},
+		},
+		{
+			name: "MsgCreatePosition",
+			clMsg: &types.MsgCreatePosition{
+				PoolId:          defaultPoolId,
+				Sender:          addr1,
+				LowerTick:       int64(10000),
+				UpperTick:       int64(20000),
+				TokenDesired0:   sdk.NewCoin("foo", sdk.NewInt(1000)),
+				TokenDesired1:   sdk.NewCoin("bar", sdk.NewInt(1000)),
+				TokenMinAmount0: sdk.OneInt(),
+				TokenMinAmount1: sdk.OneInt(),
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			apptesting.TestMessageAuthzSerialization(t, tc.clMsg)
+		})
 	}
 }
