@@ -291,7 +291,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec()},
 		},
 		{
-			name:      "Get tick info on existing pool with no existing tick (cur pool tick == tick)",
+			name:      "Get tick info on existing pool with no existing tick (cur pool tick == tick), initialized fee growth outside",
 			poolToGet: validPoolId,
 			tickToGet: DefaultCurrTick.Int64(),
 			// Note that FeeGrowthOutside is initialized.
