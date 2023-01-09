@@ -10,6 +10,10 @@ import (
 	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
 )
 
+var (
+	EmptyCoins = emptyCoins
+)
+
 // OrderInitialPoolDenoms sets the pool denoms of a cl pool
 func OrderInitialPoolDenoms(denom0, denom1 string) (string, string, error) {
 	return cltypes.OrderInitialPoolDenoms(denom0, denom1)
@@ -110,4 +114,16 @@ func (k Keeper) GetFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, u
 
 func CalculateFeeGrowth(targetTick int64, feeGrowthOutside sdk.DecCoins, currentTick int64, feesGrowthGlobal sdk.DecCoins, isUpperTick bool) sdk.DecCoins {
 	return calculateFeeGrowth(targetTick, feeGrowthOutside, currentTick, feesGrowthGlobal, isUpperTick)
+}
+
+func (k Keeper) GetInitialFeeGrowthOutsideForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
+	return k.getInitialFeeGrowthOutsideForTick(ctx, poolId, tick)
+}
+
+func GetFeeAccumulatorName(poolId uint64) string {
+	return getFeeAccumulatorName(poolId)
+}
+
+func (k Keeper) ChargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin) error {
+	return k.chargeFee(ctx, poolId, feeUpdate)
 }
