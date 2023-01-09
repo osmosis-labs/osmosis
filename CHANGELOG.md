@@ -71,6 +71,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#3763](https://github.com/osmosis-labs/osmosis/pull/3763) Move binary search and error tolerance code from `osmoutils` into `osmomath`
 * [#3817](https://github.com/osmosis-labs/osmosis/pull/3817) Move osmoassert from `app/apptesting/osmoassert` to `osmoutils/osmoassert`.
+* [#3771](https://github.com/osmosis-labs/osmosis/pull/3771) Move osmomath into its own go.mod
+* [#3827](https://github.com/osmosis-labs/osmosis/pull/3827) Move osmoutils into its own go.mod
+* [#3647](https://github.com/osmosis-labs/osmosis/pull/3647), [3942](https://github.com/osmosis-labs/osmosis/pull/3942) (CLI) re-order the command line arguments for `osmosisd tx gamm join-swap-share-amount-out`
 
 
 ### Bug fixes
@@ -81,12 +84,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#3611](https://github.com/osmosis-labs/osmosis/pull/3611),[#3647](https://github.com/osmosis-labs/osmosis/pull/3647) Introduce osmocli, to automate thousands of lines of CLI boilerplate
 * [#3634](https://github.com/osmosis-labs/osmosis/pull/3634) (Makefile) Ensure correct golang version in make build and make install. (Thank you @jhernandezb )
-<<<<<<< HEAD
-* [#3712](https://github.com/osmosis-labs/osmosis/pull/3712) replace `osmomath.BigDec` `Power` with `PowerInteger` 
-
-=======
 * [#3711](https://github.com/osmosis-labs/osmosis/pull/3711) Use Dec instead of Int for additive `ErrTolerace` in `osmoutils`.
->>>>>>> 5ab7ebf6 (refactor(osmoutils): use Dec for additive tolerance instead of Int (#3711))
+* [#3712](https://github.com/osmosis-labs/osmosis/pull/3712) replace `osmomath.BigDec` `Power` with `PowerInteger` 
 
 ## v13.0.0
 
@@ -178,6 +177,8 @@ which acts as a fuzz testing tool tailored for the SDK state machine.
 * [#2473](https://github.com/osmosis-labs/osmosis/pull/2473) x/superfluid `AddNewSuperfluidAsset` now returns error, if any occurs instead of ignoring it.
 * [#2714](https://github.com/osmosis-labs/osmosis/pull/2714) Upgrade wasmd to v0.28.0.
 * Remove x/Bech32IBC
+* [#3737](https://github.com/osmosis-labs/osmosis/pull/3737) Change FilteredPools MinLiquidity field from sdk.Coins struct to string.
+
 
 #### Golang API breaks
 

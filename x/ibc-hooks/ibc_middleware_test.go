@@ -7,7 +7,7 @@ import (
 
 	ibc_hooks "github.com/osmosis-labs/osmosis/v13/x/ibc-hooks"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
 
