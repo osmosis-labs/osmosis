@@ -10,8 +10,8 @@ use crate::msg::{CrosschainSwapResponse, Recovery};
 
 use crate::state;
 use crate::state::{
-    ForwardMsgReplyState, ForwardTo, SwapMsgReplyState, CONFIG, FORWARD_REPLY_STATES,
-    INFLIGHT_PACKETS, RECOVERY_STATES, SWAP_REPLY_STATES,
+    ForwardMsgReplyState, ForwardTo, SwapMsgReplyState, CONFIG, FORWARD_REPLY_STATE,
+    INFLIGHT_PACKETS, RECOVERY_STATES, SWAP_REPLY_STATE,
 };
 use crate::ContractError;
 
@@ -58,13 +58,13 @@ pub fn swap_and_forward(
     // override the stored state. This should only happen if a contract we call
     // calls back to this one. This is likely a malicious attempt modify the
     // contract's state before it has replied.
-    if SWAP_REPLY_STATES.may_load(deps.storage)?.is_some() {
+    if SWAP_REPLY_STATE.may_load(deps.storage)?.is_some() {
         return Err(ContractError::ContractLocked {
             msg: "Already waiting for a reply".to_string(),
         });
     }
     // Store information about the original message to be used in the reply
-    SWAP_REPLY_STATES.save(
+    SWAP_REPLY_STATE.save(
         deps.storage,
         &SwapMsgReplyState {
             swap_msg,
@@ -87,8 +87,8 @@ pub fn handle_swap_reply(
     msg: cosmwasm_std::Reply,
 ) -> Result<Response, ContractError> {
     deps.api.debug(&format!("handle_swap_reply"));
-    let swap_msg_state = SWAP_REPLY_STATES.load(deps.storage)?;
-    SWAP_REPLY_STATES.remove(deps.storage);
+    let swap_msg_state = SWAP_REPLY_STATE.load(deps.storage)?;
+    SWAP_REPLY_STATE.remove(deps.storage);
 
     // If the swaprouter swap failed, return an error
     let SubMsgResult::Ok(SubMsgResponse { data: Some(b), .. }) = msg.result else {
@@ -192,14 +192,14 @@ pub fn handle_swap_reply(
     // not override the stored state. This should never happen here, but adding
     // the check for safety. If this happens there is likely a malicious attempt
     // modify the contract's state before it has replied.
-    if FORWARD_REPLY_STATES.may_load(deps.storage)?.is_some() {
+    if FORWARD_REPLY_STATE.may_load(deps.storage)?.is_some() {
         return Err(ContractError::ContractLocked {
             msg: "Already waiting for a reply".to_string(),
         });
     }
     // Store the ibc send information and the user's failed delivery preference
     // so that it can be handled by the response
-    FORWARD_REPLY_STATES.save(
+    FORWARD_REPLY_STATE.save(
         deps.storage,
         &ForwardMsgReplyState {
             channel_id: swap_msg_state.forward_to.channel,
@@ -241,8 +241,8 @@ pub fn handle_forward_reply(
         amount,
         denom,
         failed_delivery,
-    } = FORWARD_REPLY_STATES.load(deps.storage)?;
-    FORWARD_REPLY_STATES.remove(deps.storage);
+    } = FORWARD_REPLY_STATE.load(deps.storage)?;
+    FORWARD_REPLY_STATE.remove(deps.storage);
 
     // If a recovery address was provided, store sent IBC transfer so that it
     // can later be recovered by that addr.

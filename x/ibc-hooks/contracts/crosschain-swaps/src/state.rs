@@ -61,8 +61,8 @@ pub mod ibc {
 }
 
 pub const CONFIG: Item<Config> = Item::new("config");
-pub const SWAP_REPLY_STATES: Item<SwapMsgReplyState> = Item::new("swap_reply_states");
-pub const FORWARD_REPLY_STATES: Item<ForwardMsgReplyState> = Item::new("forward_reply_states");
+pub const SWAP_REPLY_STATE: Item<SwapMsgReplyState> = Item::new("swap_reply_states");
+pub const FORWARD_REPLY_STATE: Item<ForwardMsgReplyState> = Item::new("forward_reply_states");
 
 /// In-Flight packets by (source_channel_id, sequence)
 pub const INFLIGHT_PACKETS: Map<(&str, u64), ibc::IBCTransfer> = Map::new("inflight");
