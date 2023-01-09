@@ -8,7 +8,7 @@ pub enum MsgReplyID {
 }
 
 // IBC timeout
-pub const PACKET_LIFETIME: u64 = 86400u64;
+pub const PACKET_LIFETIME: u64 = 604_800u64; // One week in seconds
 
 // Callback key
 pub const CALLBACK_KEY: &str = "ibc_callback";
