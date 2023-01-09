@@ -68,7 +68,7 @@ func TickToPrice(tickIndex, exponentAtPriceOne sdk.Int) (price sdk.Dec, err erro
 	currentAdditiveIncrementInTicks := powTen(exponentAtCurrentTick)
 
 	// Now, starting at the minimum tick of the current increment, we calculate how many ticks in the current geometricExponent we have passed
-	numAdditiveTicks := tickIndex.ToDec().Sub(geometricExponentDelta.ToDec()).Mul(geometricExponentIncrementDistanceInTicks)
+	numAdditiveTicks := tickIndex.ToDec().Sub(geometricExponentDelta.ToDec().Mul(geometricExponentIncrementDistanceInTicks))
 
 	// Finally, we can calculate the price
 	price = powTen(geometricExponentDelta).Add(numAdditiveTicks.Mul(currentAdditiveIncrementInTicks))
