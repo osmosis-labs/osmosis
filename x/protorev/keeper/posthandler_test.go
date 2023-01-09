@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v13/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
 )
@@ -59,9 +59,9 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 			name: "No Arb",
 			params: param{
 				msgs: []sdk.Msg{
-					&gammtypes.MsgSwapExactAmountIn{
+					&poolmanagertypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
-						Routes: []gammtypes.SwapAmountInRoute{
+						Routes: []poolmanagertypes.SwapAmountInRoute{
 							{
 								PoolId:        12,
 								TokenOutDenom: "akash",
@@ -86,9 +86,9 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 			name: "Mainnet Arb (Block: 5905150) - Highest Liquidity Pool Build",
 			params: param{
 				msgs: []sdk.Msg{
-					&gammtypes.MsgSwapExactAmountIn{
+					&poolmanagertypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
-						Routes: []gammtypes.SwapAmountInRoute{
+						Routes: []poolmanagertypes.SwapAmountInRoute{
 							{
 								PoolId:        23,
 								TokenOutDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
@@ -118,9 +118,9 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 			name: "Mainnet Arb Route - Multi Asset, Same Weights (Block: 6906570) - Hot Route Build - Atom Arb",
 			params: param{
 				msgs: []sdk.Msg{
-					&gammtypes.MsgSwapExactAmountIn{
+					&poolmanagertypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
-						Routes: []gammtypes.SwapAmountInRoute{
+						Routes: []poolmanagertypes.SwapAmountInRoute{
 							{
 								PoolId:        33,
 								TokenOutDenom: "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293",
@@ -154,9 +154,9 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 			name: "Stableswap Test Arb Route - Hot Route Build",
 			params: param{
 				msgs: []sdk.Msg{
-					&gammtypes.MsgSwapExactAmountIn{
+					&poolmanagertypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
-						Routes: []gammtypes.SwapAmountInRoute{
+						Routes: []poolmanagertypes.SwapAmountInRoute{
 							{
 								PoolId:        29,
 								TokenOutDenom: types.OsmosisDenomination,
@@ -282,9 +282,9 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 			name: "Single Swap",
 			params: param{
 				msgs: []sdk.Msg{
-					&gammtypes.MsgSwapExactAmountIn{
+					&poolmanagertypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
-						Routes: []gammtypes.SwapAmountInRoute{
+						Routes: []poolmanagertypes.SwapAmountInRoute{
 							{
 								PoolId:        28,
 								TokenOutDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
@@ -314,9 +314,9 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 			name: "Two Swaps",
 			params: param{
 				msgs: []sdk.Msg{
-					&gammtypes.MsgSwapExactAmountIn{
+					&poolmanagertypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
-						Routes: []gammtypes.SwapAmountInRoute{
+						Routes: []poolmanagertypes.SwapAmountInRoute{
 							{
 								PoolId:        28,
 								TokenOutDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
@@ -325,9 +325,9 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 						TokenIn:           sdk.NewCoin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", sdk.NewInt(10000)),
 						TokenOutMinAmount: sdk.NewInt(10000),
 					},
-					&gammtypes.MsgSwapExactAmountIn{
+					&poolmanagertypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
-						Routes: []gammtypes.SwapAmountInRoute{
+						Routes: []poolmanagertypes.SwapAmountInRoute{
 							{
 								PoolId:        22,
 								TokenOutDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",

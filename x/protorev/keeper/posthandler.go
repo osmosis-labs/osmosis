@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
 )
 
 type SwapToBackrun struct {
@@ -131,14 +131,14 @@ func ExtractSwappedPools(tx sdk.Tx) []SwapToBackrun {
 
 	// Extract only swaps types and the swapped pools from the tx
 	for _, msg := range tx.GetMsgs() {
-		if swap, ok := msg.(*gammtypes.MsgSwapExactAmountIn); ok {
+		if swap, ok := msg.(*poolmanagertypes.MsgSwapExactAmountIn); ok {
 			for _, route := range swap.Routes {
 				swappedPools = append(swappedPools, SwapToBackrun{
 					PoolId:        route.PoolId,
 					TokenOutDenom: route.TokenOutDenom,
 					TokenInDenom:  swap.TokenIn.Denom})
 			}
-		} else if swap, ok := msg.(*gammtypes.MsgSwapExactAmountOut); ok {
+		} else if swap, ok := msg.(*poolmanagertypes.MsgSwapExactAmountOut); ok {
 			for _, route := range swap.Routes {
 				swappedPools = append(swappedPools, SwapToBackrun{
 					PoolId:        route.PoolId,

@@ -137,8 +137,7 @@ func (suite *KeeperTestSuite) TestUpdateStatistics() {
 	// Psuedo execute a trade
 	err := suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx,
 		poolmanagertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}},
-		sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(800)),
-		sdk.NewInt(1000),
+		types.OsmosisDenomination, sdk.NewInt(1000),
 	)
 	suite.Require().NoError(err)
 
@@ -160,8 +159,7 @@ func (suite *KeeperTestSuite) TestUpdateStatistics() {
 	// Psuedo execute a second trade
 	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx,
 		poolmanagertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}, {TokenOutDenom: "", PoolId: 4}},
-		sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(850)),
-		sdk.NewInt(1100),
+		types.OsmosisDenomination, sdk.NewInt(1100),
 	)
 	suite.Require().NoError(err)
 
