@@ -96,7 +96,7 @@ func (k Keeper) GetHighestLiquidityPools(ctx sdk.Context, baseDenomPools map[str
 
 		// Pool must be a non-stableswap pool
 		pooltype, err := k.gammKeeper.GetPoolType(ctx, pool.GetId())
-		if err != nil || pooltype == swaproutertypes.Stableswap {
+		if err != nil || pooltype == poolmanagertypes.Stableswap {
 			continue
 		}
 
