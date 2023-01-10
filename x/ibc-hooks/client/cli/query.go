@@ -9,13 +9,34 @@ import (
 	"github.com/spf13/cobra"
 	"strings"
 
-	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 )
 
+func indexRunCmd(cmd *cobra.Command, args []string) error {
+	usageTemplate := `Usage:{{if .HasAvailableSubCommands}}
+  {{.CommandPath}} [command]{{end}}
+  
+{{if .HasAvailableSubCommands}}Available Commands:{{range .Commands}}{{if .IsAvailableCommand}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}
+
+Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}
+`
+	cmd.SetUsageTemplate(usageTemplate)
+	return cmd.Help()
+}
+
 // GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd() *cobra.Command {
-	cmd := osmocli.QueryIndexCmd(types.ModuleName)
+	cmd := &cobra.Command{
+		Use:                        types.ModuleName,
+		Short:                      fmt.Sprintf("Querying commands for the %s module", types.ModuleName),
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       indexRunCmd,
+	}
+
+	cmd.Short = fmt.Sprintf("Querying commands for the %s module", types.ModuleName)
+
 	cmd.AddCommand(
 		GetCmdWasmSender(),
 	)

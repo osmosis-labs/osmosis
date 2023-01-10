@@ -2,9 +2,8 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
+	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 	"strings"
-
-	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -125,7 +124,7 @@ func (im *IBCModule) OnRecvPacket(
 	relayer sdk.AccAddress,
 ) exported.Acknowledgement {
 	if err := ValidateReceiverAddress(packet); err != nil {
-		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadMessage, err.Error())
+		return ibchooks.NewEmitErrorAcknowledgement(ctx, types.ErrBadMessage, err.Error())
 	}
 
 	contract := im.ics4Middleware.GetParams(ctx)
@@ -137,10 +136,10 @@ func (im *IBCModule) OnRecvPacket(
 	err := CheckAndUpdateRateLimits(ctx, im.ics4Middleware.ContractKeeper, "recv_packet", contract, packet)
 	if err != nil {
 		if strings.Contains(err.Error(), "rate limit exceeded") {
-			return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrRateLimitExceeded)
+			return ibchooks.NewEmitErrorAcknowledgement(ctx, types.ErrRateLimitExceeded)
 		}
 		fullError := sdkerrors.Wrap(types.ErrContractError, err.Error())
-		return osmoutils.NewEmitErrorAcknowledgement(ctx, fullError)
+		return ibchooks.NewEmitErrorAcknowledgement(ctx, fullError)
 	}
 
 	// if this returns an Acknowledgement that isn't successful, all state changes are discarded
@@ -159,7 +158,7 @@ func (im *IBCModule) OnAcknowledgementPacket(
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet acknowledgement: %v", err)
 	}
 
-	if osmoutils.IsAckError(acknowledgement) {
+	if ibchooks.IsAckError(acknowledgement) {
 		err := im.RevertSentPacket(ctx, packet) // If there is an error here we should still handle the ack
 		if err != nil {
 			ctx.EventManager().EmitEvent(

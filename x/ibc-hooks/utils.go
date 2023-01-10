@@ -1,4 +1,4 @@
-package osmoutils
+package ibc_hooks
 
 import (
 	"encoding/json"
@@ -25,6 +25,16 @@ func NewEmitErrorAcknowledgement(ctx sdk.Context, err error, errorContexts ...st
 	})
 
 	return channeltypes.NewErrorAcknowledgement(err)
+}
+
+// IsAckError checks an IBC acknowledgement to see if it's an error.
+// This is a replacement for ack.Success() which is currently not working on some circumstances
+func IsAckError(acknowledgement []byte) bool {
+	var ackErr channeltypes.Acknowledgement_Error
+	if err := json.Unmarshal(acknowledgement, &ackErr); err == nil && len(ackErr.Error) > 0 {
+		return true
+	}
+	return false
 }
 
 // MustExtractDenomFromPacketOnRecv takes a packet with a valid ICS20 token data in the Data field and returns the
@@ -57,14 +67,4 @@ func MustExtractDenomFromPacketOnRecv(packet ibcexported.PacketI) string {
 		denom = transfertypes.ParseDenomTrace(prefixedDenom).IBCDenom()
 	}
 	return denom
-}
-
-// IsAckError checks an IBC acknowledgement to see if it's an error.
-// This is a replacement for ack.Success() which is currently not working on some circumstances
-func IsAckError(acknowledgement []byte) bool {
-	var ackErr channeltypes.Acknowledgement_Error
-	if err := json.Unmarshal(acknowledgement, &ackErr); err == nil && len(ackErr.Error) > 0 {
-		return true
-	}
-	return false
 }
