@@ -109,6 +109,11 @@ func (suite *ConcentratedMathTestSuite) TestTickToPrice() {
 			exponentAtPriceOne: sdk.NewInt(-1),
 			expectedPrice:      MaxSpotPrice,
 		},
+		"Min tick and max k": {
+			tickIndex:          sdk.NewInt(-162000000000000),
+			exponentAtPriceOne: sdk.NewInt(-12),
+			expectedPrice:      MinSpotPrice,
+		},
 		"error: tickIndex less than minimum": {
 			tickIndex:          sdk.NewInt(DefaultMinTick - 1),
 			exponentAtPriceOne: DefaultExponentAtPriceOne,
@@ -128,6 +133,11 @@ func (suite *ConcentratedMathTestSuite) TestTickToPrice() {
 			tickIndex:          sdk.NewInt(100),
 			exponentAtPriceOne: types.PrecisionValueAtPriceOneMax.Add(sdk.OneInt()),
 			expectedError:      fmt.Errorf("exponentAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax),
+		},
+		"random": {
+			tickIndex:          sdk.NewInt(-9111000000),
+			exponentAtPriceOne: sdk.NewInt(-8),
+			expectedPrice:      sdk.MustNewDecFromStr("0.000000000088900000"),
 		},
 	}
 
@@ -195,6 +205,11 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 			exponentAtPriceOne: sdk.NewInt(-6),
 			expectedError:      fmt.Errorf("price must be greater than zero"),
 		},
+		"error: price must lead to an exact tick, not in between ticks": {
+			price:              sdk.MustNewDecFromStr("5.01"),
+			exponentAtPriceOne: sdk.NewInt(-1),
+			expectedError:      fmt.Errorf("resulting tick is between two ticks: %s and %s", sdk.NewInt(40).String(), sdk.NewInt(39).String()),
+		},
 		"error: resulting tickIndex too large": {
 			price:              MaxSpotPrice.Mul(sdk.NewDec(2)),
 			exponentAtPriceOne: DefaultExponentAtPriceOne,
@@ -209,6 +224,11 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 			price:              sdk.NewDec(50000),
 			exponentAtPriceOne: types.PrecisionValueAtPriceOneMax.Add(sdk.OneInt()),
 			expectedError:      fmt.Errorf("exponentAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax),
+		},
+		"random": {
+			price:              sdk.MustNewDecFromStr("0.0000000000889"),
+			exponentAtPriceOne: sdk.NewInt(-8),
+			tickExpected:       "-9111000000",
 		},
 	}
 	for name, tc := range testCases {

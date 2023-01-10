@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
@@ -65,13 +66,14 @@ func TickToPrice(tickIndex, exponentAtPriceOne sdk.Int) (price sdk.Dec, err erro
 	}
 
 	// Knowing what our exponentAtCurrentTick is, we can then figure out what power of 10 this exponent corresponds to
-	currentAdditiveIncrementInTicks := powTen(exponentAtCurrentTick)
+	// We need to utilize bigDec here since increments can go beyond the 10^-18 limits set by the sdk
+	currentAdditiveIncrementInTicks := powTenBigDec(exponentAtCurrentTick)
 
 	// Now, starting at the minimum tick of the current increment, we calculate how many ticks in the current geometricExponent we have passed
 	numAdditiveTicks := tickIndex.ToDec().Sub(geometricExponentDelta.ToDec().Mul(geometricExponentIncrementDistanceInTicks))
 
 	// Finally, we can calculate the price
-	price = powTen(geometricExponentDelta).Add(numAdditiveTicks.Mul(currentAdditiveIncrementInTicks))
+	price = powTen(geometricExponentDelta).Add(osmomath.BigDecFromSDKDec(numAdditiveTicks).Mul(currentAdditiveIncrementInTicks).SDKDec())
 
 	return price, nil
 }
@@ -100,7 +102,7 @@ func PriceToTick(price sdk.Dec, exponentAtPriceOne sdk.Int) (sdk.Int, error) {
 	exponentAtCurrentTick := exponentAtPriceOne
 
 	// Set the currentAdditiveIncrementInTicks to the exponentAtPriceOne
-	currentAdditiveIncrementInTicks := powTen(exponentAtPriceOne)
+	currentAdditiveIncrementInTicks := powTenBigDec(exponentAtPriceOne)
 
 	// Now, we loop through the k increments until we have passed the price
 	// Once we pass the price, we can determine what which geometric exponents we have filled in their entirety,
@@ -109,9 +111,9 @@ func PriceToTick(price sdk.Dec, exponentAtPriceOne sdk.Int) (sdk.Int, error) {
 	// The only difference is we must reduce the increment distance by a factor of 10.
 	if price.GT(sdk.OneDec()) {
 		for totalPrice.LT(price) {
-			currentAdditiveIncrementInTicks = powTen(exponentAtCurrentTick)
-			maxPriceForcurrentAdditiveIncrementInTicks := geometricExponentIncrementDistanceInTicks.Mul(currentAdditiveIncrementInTicks)
-			totalPrice = totalPrice.Add(maxPriceForcurrentAdditiveIncrementInTicks)
+			currentAdditiveIncrementInTicks = powTenBigDec(exponentAtCurrentTick)
+			maxPriceForcurrentAdditiveIncrementInTicks := osmomath.BigDecFromSDKDec(geometricExponentIncrementDistanceInTicks).Mul(currentAdditiveIncrementInTicks)
+			totalPrice = totalPrice.Add(maxPriceForcurrentAdditiveIncrementInTicks.SDKDec())
 			exponentAtCurrentTick = exponentAtCurrentTick.Add(sdk.OneInt())
 			ticksPassed = ticksPassed.Add(geometricExponentIncrementDistanceInTicks.TruncateInt())
 		}
@@ -120,18 +122,25 @@ func PriceToTick(price sdk.Dec, exponentAtPriceOne sdk.Int) (sdk.Int, error) {
 		// Otherwise, from tick 0 to tick -(geometricExponentIncrementDistanceInTicks), we would use the same exponent as the exponentAtPriceOne
 		exponentAtCurrentTick := exponentAtPriceOne.Sub(sdk.OneInt())
 		for totalPrice.GT(price) {
-			currentAdditiveIncrementInTicks = powTen(exponentAtCurrentTick)
-			maxPriceForcurrentAdditiveIncrementInTicks := geometricExponentIncrementDistanceInTicks.Mul(currentAdditiveIncrementInTicks)
-			totalPrice = totalPrice.Sub(maxPriceForcurrentAdditiveIncrementInTicks)
+			currentAdditiveIncrementInTicks = powTenBigDec(exponentAtCurrentTick)
+			maxPriceForcurrentAdditiveIncrementInTicks := osmomath.BigDecFromSDKDec(geometricExponentIncrementDistanceInTicks).Mul(currentAdditiveIncrementInTicks)
+			totalPrice = totalPrice.Sub(maxPriceForcurrentAdditiveIncrementInTicks.SDKDec())
 			exponentAtCurrentTick = exponentAtCurrentTick.Sub(sdk.OneInt())
 			ticksPassed = ticksPassed.Sub(geometricExponentIncrementDistanceInTicks.TruncateInt())
 		}
 	}
 	// Determine how many ticks we have passed in the exponentAtCurrentTick
-	ticksToBeFulfilledByExponentAtCurrentTick := price.Sub(totalPrice).Quo(currentAdditiveIncrementInTicks)
+	ticksToBeFulfilledByExponentAtCurrentTick := osmomath.BigDecFromSDKDec(price.Sub(totalPrice)).Quo(currentAdditiveIncrementInTicks)
+
+	// If the ticksToBeFulfilledByExponentAtCurrentTick is not an integer, then we are in between ticks and therefore isn't a valid tick
+	if !ticksToBeFulfilledByExponentAtCurrentTick.IsInteger() {
+		tickIndexAbove := ticksPassed.Add(ticksToBeFulfilledByExponentAtCurrentTick.SDKDec().RoundInt())
+		tickIndexBelow := tickIndexAbove.Sub(sdk.OneInt())
+		return sdk.Int{}, fmt.Errorf("resulting tick is between two ticks: %s and %s", tickIndexAbove, tickIndexBelow)
+	}
 
 	// Finally, add the ticks we have passed from the completed geometricExponent values, as well as the ticks we have passed in the current geometricExponent value
-	tickIndex := ticksPassed.Add(ticksToBeFulfilledByExponentAtCurrentTick.TruncateInt())
+	tickIndex := ticksPassed.Add(ticksToBeFulfilledByExponentAtCurrentTick.SDKDec().TruncateInt())
 
 	// Add a check to make sure that the tick index is within the allowed range
 	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
@@ -152,6 +161,13 @@ func powTen(exponent sdk.Int) sdk.Dec {
 		return sdkTenDec.Power(exponent.Uint64())
 	}
 	return sdk.OneDec().Quo(sdkTenDec.Power(exponent.Abs().Uint64()))
+}
+
+func powTenBigDec(exponent sdk.Int) osmomath.BigDec {
+	if exponent.GTE(sdk.ZeroInt()) {
+		return osmomath.NewBigDec(10).Power(osmomath.NewBigDec(exponent.Int64()))
+	}
+	return osmomath.OneDec().Quo(osmomath.NewBigDec(10).Power(osmomath.NewBigDec(exponent.Abs().Int64())))
 }
 
 // GetMinAndMaxTicksFromExponentAtPriceOne determines min and max ticks allowed for a given exponentAtPriceOne value
