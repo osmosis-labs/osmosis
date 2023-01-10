@@ -19,7 +19,7 @@ func NewMigrator(keeper Keeper) Migrator {
 }
 
 func (m Migrator) Migrate1To2(ctx sdk.Context) error {
-	return m.keeper.initializeGeometricTwap(ctx)
+	return m.keeper.initializeGeometricTwapAcc(ctx, sdk.ZeroDec())
 }
 
 // MigrateExistingPools iterates through all pools and creates state entry for the twap module.
@@ -68,7 +68,7 @@ func (k Keeper) MigrateTwapRecordsToGeometric(ctx sdk.Context) error {
 	return nil
 }
 
-func (k Keeper) initializeGeometricTwap(ctx sdk.Context) error {
+func (k Keeper) initializeGeometricTwapAcc(ctx sdk.Context, value sdk.Dec) error {
 	// In ascending order by time.
 	historicalTimeIndexed, err := k.getAllHistoricalTimeIndexedTWAPs(ctx)
 	if err != nil {
@@ -82,17 +82,19 @@ func (k Keeper) initializeGeometricTwap(ctx sdk.Context) error {
 	// Since we are iterate over time-indexed records in ascending order,
 	// most recent record should also be updated correctly.
 	for i, record := range historicalTimeIndexed {
+		record := record
 		// Sanity check order.
 		if i > 0 {
 			previousRecord := historicalTimeIndexed[i-1]
 
+			isSamePool := previousRecord.PoolId == record.PoolId
 			isCorrectOrder := previousRecord.Time.Before(record.Time)
-			if !isCorrectOrder {
+			if !isCorrectOrder && !isSamePool {
 				return fmt.Errorf("error: historical twap records are not in ascending order, (%v), was after (%v)", previousRecord, record)
 			}
 		}
 
-		record.GeometricTwapAccumulator = sdk.ZeroDec()
+		record.GeometricTwapAccumulator = value
 		k.storeNewRecord(ctx, record)
 	}
 	return nil

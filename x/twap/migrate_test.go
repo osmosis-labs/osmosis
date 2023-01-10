@@ -96,6 +96,13 @@ func (suite *TestSuite) TestTwapRecord_GeometricTwap_MarshalUnmarshal() {
 
 func (suite *TestSuite) TestInitializeGeometricTwap() {
 
+	setGeometricAccumToOne := func(records []types.TwapRecord) []types.TwapRecord {
+		for i := range records {
+			records[i].GeometricTwapAccumulator = sdk.OneDec()
+		}
+		return records
+	}
+
 	tests := map[string]struct {
 		expectError bool
 
@@ -104,15 +111,22 @@ func (suite *TestSuite) TestInitializeGeometricTwap() {
 		// pool id -> most recent records
 		expectedMostRecent map[uint64][]types.TwapRecord
 	}{
-		"one record, one pool": {
-			preExistingRecords: []types.TwapRecord{
-				baseRecord,
-			},
+		// "one record, one pool": {
+		// 	preExistingRecords: []types.TwapRecord{
+		// 		baseRecord,
+		// 	},
+
+		// 	expectedMostRecent: map[uint64][]types.TwapRecord{
+		// 		1: {
+		// 			baseRecord,
+		// 		},
+		// 	},
+		// },
+		"three records, one pool": {
+			preExistingRecords: newThreeAssetRecord(basePoolId, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
 
 			expectedMostRecent: map[uint64][]types.TwapRecord{
-				1: {
-					baseRecord,
-				},
+				1: setGeometricAccumToOne(newThreeAssetRecord(basePoolId, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
 			},
 		},
 	}
@@ -125,8 +139,7 @@ func (suite *TestSuite) TestInitializeGeometricTwap() {
 			ctx := suite.Ctx
 
 			suite.preSetRecords(tc.preExistingRecords)
-
-			err := k.InitializeGeometricTwap(ctx)
+			err := k.InitializeGeometricTwap(ctx, sdk.OneDec())
 
 			if tc.expectError {
 				suite.Require().Error(err)

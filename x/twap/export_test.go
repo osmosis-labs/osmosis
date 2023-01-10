@@ -124,6 +124,6 @@ func (k *Keeper) AfterCreatePool(ctx sdk.Context, poolId uint64) error {
 	return k.afterCreatePool(ctx, poolId)
 }
 
-func (k Keeper) InitializeGeometricTwap(ctx sdk.Context) error {
-	return k.initializeGeometricTwap(ctx)
+func (k Keeper) InitializeGeometricTwap(ctx sdk.Context, value sdk.Dec) error {
+	return k.initializeGeometricTwapAcc(ctx, value)
 }
