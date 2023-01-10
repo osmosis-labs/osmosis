@@ -8,14 +8,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	balancertypes "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/stableswap"
 
-	osmosisapp "github.com/osmosis-labs/osmosis/v13/app"
+	osmosisapp "github.com/osmosis-labs/osmosis/v14/app"
 )
 
 type KeeperTestSuite struct {
@@ -649,7 +649,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 
 // createStableswapPool creates a stableswap pool with the given pool assets and params
 func (suite *KeeperTestSuite) createStableswapPool(initialLiquidity sdk.Coins, poolParams stableswap.PoolParams, scalingFactors []uint64) {
-	_, err := suite.App.SwapRouterKeeper.CreatePool(
+	_, err := suite.App.PoolManagerKeeper.CreatePool(
 		suite.Ctx,
 		stableswap.NewMsgCreateStableswapPool(suite.TestAccs[1], poolParams, initialLiquidity, scalingFactors, ""))
 	suite.Require().NoError(err)
@@ -670,7 +670,7 @@ func (suite *KeeperTestSuite) prepareCustomBalancerPool(
 	poolAssets []balancertypes.PoolAsset,
 	poolParams balancer.PoolParams,
 ) uint64 {
-	poolID, err := suite.App.SwapRouterKeeper.CreatePool(
+	poolID, err := suite.App.PoolManagerKeeper.CreatePool(
 		suite.Ctx,
 		balancer.NewMsgCreateBalancerPool(suite.TestAccs[1], poolParams, poolAssets, ""),
 	)

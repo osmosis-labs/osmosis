@@ -4,9 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v13/x/txfees/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v14/x/txfees/types"
 )
 
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
@@ -35,13 +34,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			// The only thing that could be done is a costly griefing attack to reduce the amount of osmo given as tx fees.
 			// However the idea of the txfees FeeToken gating is that the pool is sufficiently liquid for that base token.
 			minAmountOut := sdk.ZeroInt()
-			routes := []swaproutertypes.SwapAmountInRoute{
-				{
-					PoolId:        feetoken.PoolID,
-					TokenOutDenom: baseDenom,
-				},
-			}
-			_, err := k.poolManager.RouteExactAmountIn(cacheCtx, nonNativeFeeAddr, routes, coinBalance, minAmountOut)
+			_, err := k.poolManager.SwapExactAmountIn(cacheCtx, nonNativeFeeAddr, feetoken.PoolID, coinBalance, baseDenom, minAmountOut)
 			return err
 		})
 	}

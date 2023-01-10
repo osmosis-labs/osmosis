@@ -6,9 +6,9 @@ import (
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory/keeper"
-	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v14/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v14/x/tokenfactory/keeper"
+	"github.com/osmosis-labs/osmosis/v14/x/tokenfactory/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

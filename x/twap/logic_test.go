@@ -12,10 +12,10 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v13/x/twap"
-	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
-	"github.com/osmosis-labs/osmosis/v13/x/twap/types/twapmock"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v14/x/twap"
+	"github.com/osmosis-labs/osmosis/v14/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v14/x/twap/types/twapmock"
 )
 
 var (
@@ -1384,25 +1384,6 @@ func (s *TestSuite) TestTwapLog() {
 			})
 		})
 	}
-}
-
-// TestTwapPow_CorrectBase tests that the base of 2 is used for the twap power function.
-// 2^3 = 8
-func (s *TestSuite) TestTwapPow_CorrectBase() {
-	exponentValue := osmomath.NewBigDec(3)
-	expectedValue := sdk.NewDec(8)
-
-	result := twap.TwapPow(exponentValue.SDKDec())
-
-	s.Require().Equal(expectedValue, result)
-}
-
-// TestTwapPow_NegativeExponent tests that twap pow can handle a negative exponent
-// 2^-1 = 0.5
-func (s *TestSuite) TestTwapPow_NegativeExponent() {
-	expectedResult := sdk.MustNewDecFromStr("0.5")
-	result := twap.TwapPow(oneDec.Neg())
-	s.Require().Equal(expectedResult, result)
 }
 
 func testCaseFromDeltas(s *TestSuite, startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTwapTestCase {

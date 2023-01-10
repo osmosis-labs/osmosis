@@ -3,23 +3,25 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
+	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	"io"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
-	"github.com/osmosis-labs/osmosis/v13/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v13/tests/e2e/initialization"
+	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
 )
 
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.
@@ -163,7 +165,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	s.NoError(err)
 
 	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
-	chainA.LatestCodeId = 1
+	chainA.LatestCodeId = int(node.QueryLatestWasmCodeID())
 	node.InstantiateWasmContract(
 		strconv.Itoa(chainA.LatestCodeId),
 		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [{"channel_id": "channel-0", "denom": "%s", "quotas": [{"name":"testQuota", "duration": 86400, "send_recv": [1, 1]}] } ] }`, node.PublicAddress, node.PublicAddress, initialization.OsmoToken.Denom),
@@ -226,6 +228,78 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 
 	// Removing the rate limit so it doesn't affect other tests
 	node.WasmExecute(contracts[0], `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
+}
+
+func (s *IntegrationTestSuite) TestIBCWasmHooks() {
+	if s.skipIBC {
+		s.T().Skip("Skipping IBC tests")
+	}
+	chainA := s.configurer.GetChainConfig(0)
+	chainB := s.configurer.GetChainConfig(1)
+
+	nodeA, err := chainA.GetDefaultNode()
+	s.NoError(err)
+	nodeB, err := chainB.GetDefaultNode()
+	s.NoError(err)
+
+	// copy the contract from x/rate-limit/testdata/
+	wd, err := os.Getwd()
+	s.NoError(err)
+	// co up two levels
+	projectDir := filepath.Dir(filepath.Dir(wd))
+	fmt.Println(wd, projectDir)
+	err = copyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
+	s.NoError(err)
+
+	nodeA.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
+	chainA.LatestCodeId = int(nodeA.QueryLatestWasmCodeID())
+	nodeA.InstantiateWasmContract(
+		strconv.Itoa(chainA.LatestCodeId),
+		`{"count": 0}`,
+		initialization.ValidatorWalletName)
+
+	// Using code_id 1 because this is the only contract right now. This may need to change if more contracts are added
+	contracts, err := nodeA.QueryContractsFromId(chainA.LatestCodeId)
+	s.NoError(err)
+	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
+	contractAddr := contracts[0]
+
+	validatorAddr := nodeB.GetWallet(initialization.ValidatorWalletName)
+	fmt.Println("validatorAddr", validatorAddr)
+	nodeB.SendIBCTransfer(validatorAddr, contractAddr, "10uosmo",
+		fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr))
+
+	// check the balance of the contract
+	s.Eventually(func() bool {
+		balance, err := nodeA.QueryBalances(contractAddr)
+		s.Require().NoError(err)
+		if len(balance) == 0 {
+			return false
+		}
+		return balance[0].Amount.Int64() == 10
+	},
+		1*time.Minute,
+		10*time.Millisecond,
+	)
+
+	// sender wasm addr
+	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
+	fmt.Println("sender", senderBech32)
+
+	var response map[string]interface{}
+	s.Eventually(func() bool {
+		response, err = nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
+		totalFunds := response["total_funds"].([]interface{})[0]
+		amount := totalFunds.(map[string]interface{})["amount"].(string)
+		denom := totalFunds.(map[string]interface{})["denom"].(string)
+		// check if denom contains "uosmo"
+		return err == nil && amount == "10" && strings.Contains(denom, "ibc")
+	},
+		15*time.Second,
+		10*time.Millisecond,
+	)
+	fmt.Println("response", response)
+
 }
 
 // TestAddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.

@@ -3,9 +3,9 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 // AccountKeeper defines the account contract that must be fulfilled when
@@ -30,17 +30,17 @@ type GAMMKeeper interface {
 	GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error)
 }
 
-type SwapRouterKeeper interface {
+type PoolManagerKeeper interface {
 	RouteExactAmountIn(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
-		routes []swaproutertypes.SwapAmountInRoute,
+		routes []poolmanagertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
 		tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error)
 
 	MultihopEstimateOutGivenExactAmountIn(
 		ctx sdk.Context,
-		routes []swaproutertypes.SwapAmountInRoute,
+		routes []poolmanagertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
 	) (tokenOutAmount sdk.Int, err error)
 }

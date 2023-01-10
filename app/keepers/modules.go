@@ -27,24 +27,25 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
 
-	_ "github.com/osmosis-labs/osmosis/v13/client/docs/statik"
-	downtimemodule "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/module"
-	"github.com/osmosis-labs/osmosis/v13/x/epochs"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm"
-	ibc_rate_limit "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit"
-	"github.com/osmosis-labs/osmosis/v13/x/incentives"
-	"github.com/osmosis-labs/osmosis/v13/x/lockup"
-	"github.com/osmosis-labs/osmosis/v13/x/mint"
-	poolincentives "github.com/osmosis-labs/osmosis/v13/x/pool-incentives"
-	poolincentivesclient "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/client"
-	"github.com/osmosis-labs/osmosis/v13/x/protorev"
-	superfluid "github.com/osmosis-labs/osmosis/v13/x/superfluid"
-	superfluidclient "github.com/osmosis-labs/osmosis/v13/x/superfluid/client"
-	swaprouter "github.com/osmosis-labs/osmosis/v13/x/swaprouter/module"
-	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory"
-	"github.com/osmosis-labs/osmosis/v13/x/twap/twapmodule"
-	"github.com/osmosis-labs/osmosis/v13/x/txfees"
-	valsetprefmodule "github.com/osmosis-labs/osmosis/v13/x/valset-pref/valpref-module"
+	_ "github.com/osmosis-labs/osmosis/v14/client/docs/statik"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	downtimemodule "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/module"
+	"github.com/osmosis-labs/osmosis/v14/x/epochs"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm"
+	ibc_rate_limit "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit"
+	"github.com/osmosis-labs/osmosis/v14/x/incentives"
+	"github.com/osmosis-labs/osmosis/v14/x/lockup"
+	"github.com/osmosis-labs/osmosis/v14/x/mint"
+	poolincentives "github.com/osmosis-labs/osmosis/v14/x/pool-incentives"
+	poolincentivesclient "github.com/osmosis-labs/osmosis/v14/x/pool-incentives/client"
+	poolmanager "github.com/osmosis-labs/osmosis/v14/x/poolmanager/module"
+	"github.com/osmosis-labs/osmosis/v14/x/protorev"
+	superfluid "github.com/osmosis-labs/osmosis/v14/x/superfluid"
+	superfluidclient "github.com/osmosis-labs/osmosis/v14/x/superfluid/client"
+	"github.com/osmosis-labs/osmosis/v14/x/tokenfactory"
+	"github.com/osmosis-labs/osmosis/v14/x/twap/twapmodule"
+	"github.com/osmosis-labs/osmosis/v14/x/txfees"
+	valsetprefmodule "github.com/osmosis-labs/osmosis/v14/x/valset-pref/valpref-module"
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 )
 
@@ -84,8 +85,9 @@ var AppModuleBasics = []module.AppModuleBasic{
 	transfer.AppModuleBasic{},
 	vesting.AppModuleBasic{},
 	gamm.AppModuleBasic{},
-	swaprouter.AppModuleBasic{},
+	poolmanager.AppModuleBasic{},
 	twapmodule.AppModuleBasic{},
+	concentratedliquidity.AppModuleBasic{},
 	protorev.AppModuleBasic{},
 	txfees.AppModuleBasic{},
 	incentives.AppModuleBasic{},
