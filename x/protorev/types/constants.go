@@ -11,6 +11,7 @@ var AtomDenomination string = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9C
 var OsmosisDenomination string = "uosmo"
 
 // ----------------- Module Execution Time Constants ----------------- //
+
 // MaxInputAmount is the upper bound index for finding the optimal in amount when determining route profitability (2 ^ 14) = 16,384
 var MaxInputAmount = sdk.NewInt(16_384)
 
@@ -20,13 +21,16 @@ var StepSize = sdk.NewInt(1_000_000)
 // Max iterations for binary search (log2(16_384) = 14)
 const MaxIterations int = 14
 
-// Max number of routes that can be arbitraged per tx (default of 6)
+// Max number of routes that can be arbitraged per tx (default of 6) this roughly corresponds
+// to the maximum execution time (in ms) of protorev per tx
 const MaxIterableRoutesPerTx uint64 = 15
 
-// Max number of routes that can be arbitraged per block (default of 100)
+// Max number of routes that can be arbitraged per block (default of 100) this roughly corresponds
+// to the maximum execution time (in ms) of protorev per block
 const MaxIterableRoutesPerBlock uint64 = 200
 
 // ---------------- Module Profit Splitting Constants ---------------- //
+
 // Year 1 (20% of total profit)
 const Phase1Length uint64 = 365
 const ProfitSplitPhase1 int64 = 20
