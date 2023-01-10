@@ -25,10 +25,18 @@ import (
 	"github.com/osmosis-labs/osmosis/v13/tests/e2e/initialization"
 )
 
-func (s *IntegrationTestSuite) TestTwapMigration() {
-	// Swap against pre-upgrade pool to trigger twap record update
-
+// TestGeometricTwapMigration tests that the geometric twap record
+// migration runs succesfully. It does so by attempting to execute
+// the swap on the pool created pre-upgrade. When a pool is created
+// pre-upgrade, twap records are initialized for a pool. By runnning
+// a swap post-upgrade, we confirm that the geometric twap was initialized
+// correctly and does not cause a chain halt. This test was created
+// in-response to a testnet incident when performing the geometric twap
+// upgrade. Upon adding the migrations logic, the tests began to pass.
+func (s *IntegrationTestSuite) TestGeometricTwapMigration() {
 	const (
+		// Configurations for tests/e2e/scripts/pool1A.json
+		// This pool gets initialized pre-upgrade.
 		oldPoolId       = 1
 		minAmountOut    = "1"
 		otherDenom      = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
@@ -45,9 +53,8 @@ func (s *IntegrationTestSuite) TestTwapMigration() {
 
 	node.BankSend(uosmoIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
 
-	// Swap to create new twap records on pre-upgrade pool.
+	// Swap to create new twap records on the pool that was created pre-upgrade.
 	node.SwapExactAmountIn(uosmoIn, minAmountOut, fmt.Sprintf("%d", oldPoolId), otherDenom, swapWalletAddr)
-
 }
 
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.
