@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
 
 // TestEpochHook tests that the epoch hook is correctly setting the pool IDs for the osmo and atom pools.

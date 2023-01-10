@@ -6,12 +6,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
+	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	balancertypes "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 func (suite *KeeperTestSuite) TestPoolCreationFee() {

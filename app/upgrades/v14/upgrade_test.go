@@ -4,12 +4,12 @@ import (
 	"reflect"
 	"testing"
 
-	gamm "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
+	gamm "github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	v14 "github.com/osmosis-labs/osmosis/v13/app/upgrades/v14"
+	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
+	v14 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v14"
 )
 
 type UpgradeTestSuite struct {

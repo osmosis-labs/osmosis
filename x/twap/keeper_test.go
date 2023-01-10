@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v13/x/twap"
-	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v14/x/twap"
+	"github.com/osmosis-labs/osmosis/v14/x/twap/types"
 )
 
 // TODO: Consider switching this everywhere

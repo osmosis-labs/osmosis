@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
 	"github.com/stretchr/testify/suite"
 )
 

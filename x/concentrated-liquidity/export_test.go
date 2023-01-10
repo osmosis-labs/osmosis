@@ -4,10 +4,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 var (

@@ -8,7 +8,7 @@ package osmosis.concentratedliquidity.v1beta1;
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model";
+option go_package = "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model";
 
 message Pool {
   option (gogoproto.goproto_getters) = false;

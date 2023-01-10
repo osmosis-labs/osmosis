@@ -3,8 +3,8 @@ package protorev
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v14/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
 
 // InitGenesis initializes the module's state from a provided genesis state.
