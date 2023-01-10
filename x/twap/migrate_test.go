@@ -95,14 +95,21 @@ func (suite *TestSuite) TestTwapRecord_GeometricTwap_MarshalUnmarshal() {
 }
 
 func (suite *TestSuite) TestInitializeGeometricTwap() {
+	var (
+		expectedGeometricAccumUpdate = sdk.OneDec()
+	)
 
-	setGeometricAccumToOne := func(records []types.TwapRecord) []types.TwapRecord {
+	// sets the geometric accumulator of every given record to expectedGeometricAccumUpdate
+	// and returns the result.
+	updateGeometricAccum := func(records []types.TwapRecord) []types.TwapRecord {
 		for i := range records {
-			records[i].GeometricTwapAccumulator = sdk.OneDec()
+			records[i].GeometricTwapAccumulator = expectedGeometricAccumUpdate
 		}
 		return records
 	}
 
+	// concatenates all element slices into a single slice and
+	// returns the result.
 	merge := func(records [][]types.TwapRecord) []types.TwapRecord {
 		var result []types.TwapRecord
 		for _, r := range records {
@@ -110,6 +117,11 @@ func (suite *TestSuite) TestInitializeGeometricTwap() {
 			result = append(result, r...)
 		}
 		return result
+	}
+
+	// returns three asset record with the given pool id and time, everything other parameter set to 1.
+	threeAssetRecordWithPoolIdAndTime := func(poolId uint64, time time.Time) []types.TwapRecord {
+		return newThreeAssetRecord(poolId, time, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())
 	}
 
 	tests := map[string]struct {
@@ -126,14 +138,14 @@ func (suite *TestSuite) TestInitializeGeometricTwap() {
 			},
 
 			expectedMostRecent: map[uint64][]types.TwapRecord{
-				baseRecord.PoolId: setGeometricAccumToOne([]types.TwapRecord{baseRecord}),
+				baseRecord.PoolId: updateGeometricAccum([]types.TwapRecord{baseRecord}),
 			},
 		},
 		"three records, one pool": {
-			preExistingRecords: newThreeAssetRecord(basePoolId, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
+			preExistingRecords: threeAssetRecordWithPoolIdAndTime(basePoolId, baseTime),
 
 			expectedMostRecent: map[uint64][]types.TwapRecord{
-				basePoolId: setGeometricAccumToOne(newThreeAssetRecord(basePoolId, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
+				basePoolId: updateGeometricAccum(threeAssetRecordWithPoolIdAndTime(basePoolId, baseTime)),
 			},
 		},
 		"two pools, one record each": {
@@ -143,70 +155,70 @@ func (suite *TestSuite) TestInitializeGeometricTwap() {
 			},
 
 			expectedMostRecent: map[uint64][]types.TwapRecord{
-				baseRecord.PoolId:     setGeometricAccumToOne([]types.TwapRecord{baseRecord}),
-				baseRecord.PoolId + 1: setGeometricAccumToOne([]types.TwapRecord{withPoolId(baseRecord, baseRecord.PoolId+1)}),
+				baseRecord.PoolId:     updateGeometricAccum([]types.TwapRecord{baseRecord}),
+				baseRecord.PoolId + 1: updateGeometricAccum([]types.TwapRecord{withPoolId(baseRecord, baseRecord.PoolId+1)}),
 			},
 		},
 		"two pools, multiple records each at the same time": {
 			preExistingRecords: append(
-				newThreeAssetRecord(basePoolId, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
-				newThreeAssetRecord(basePoolId+1, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())...),
+				threeAssetRecordWithPoolIdAndTime(baseRecord.PoolId, baseTime),
+				threeAssetRecordWithPoolIdAndTime(baseRecord.PoolId+1, baseTime)...),
 
 			expectedMostRecent: map[uint64][]types.TwapRecord{
-				baseRecord.PoolId:     setGeometricAccumToOne(newThreeAssetRecord(basePoolId, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
-				baseRecord.PoolId + 1: setGeometricAccumToOne(newThreeAssetRecord(basePoolId+1, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
+				baseRecord.PoolId:     updateGeometricAccum(threeAssetRecordWithPoolIdAndTime(basePoolId, baseTime)),
+				baseRecord.PoolId + 1: updateGeometricAccum(threeAssetRecordWithPoolIdAndTime(basePoolId+1, baseTime)),
 			},
 		},
 		"two pools, multiple records each at different times": {
 			preExistingRecords: append(
-				newThreeAssetRecord(basePoolId, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
-				newThreeAssetRecord(basePoolId+1, baseTime.Add(time.Second), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())...),
+				threeAssetRecordWithPoolIdAndTime(basePoolId, baseTime),
+				threeAssetRecordWithPoolIdAndTime(basePoolId+1, baseTime.Add(time.Second))...),
 
 			expectedMostRecent: map[uint64][]types.TwapRecord{
-				baseRecord.PoolId:     setGeometricAccumToOne(newThreeAssetRecord(basePoolId, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
-				baseRecord.PoolId + 1: setGeometricAccumToOne(newThreeAssetRecord(basePoolId+1, baseTime.Add(time.Second), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
+				baseRecord.PoolId:     updateGeometricAccum(threeAssetRecordWithPoolIdAndTime(basePoolId, baseTime)),
+				baseRecord.PoolId + 1: updateGeometricAccum(threeAssetRecordWithPoolIdAndTime(basePoolId+1, baseTime.Add(time.Second))),
 			},
 		},
 		"three pools, 2 at the same time, 1 is not, entries and different time for each": {
 			preExistingRecords: merge([][]types.TwapRecord{
-				newThreeAssetRecord(basePoolId, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
-				newThreeAssetRecord(basePoolId+1, baseTime.Add(time.Second), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
-				newThreeAssetRecord(basePoolId+2, baseTime.Add(time.Second), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
+				threeAssetRecordWithPoolIdAndTime(basePoolId, baseTime),
+				threeAssetRecordWithPoolIdAndTime(basePoolId+1, baseTime.Add(time.Second)),
+				threeAssetRecordWithPoolIdAndTime(basePoolId+2, baseTime.Add(time.Second)),
 			}),
 
 			expectedMostRecent: map[uint64][]types.TwapRecord{
-				baseRecord.PoolId:     setGeometricAccumToOne(newThreeAssetRecord(basePoolId, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
-				baseRecord.PoolId + 1: setGeometricAccumToOne(newThreeAssetRecord(basePoolId+1, baseTime.Add(time.Second), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
-				baseRecord.PoolId + 2: setGeometricAccumToOne(newThreeAssetRecord(basePoolId+2, baseTime.Add(time.Second), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
+				baseRecord.PoolId:     updateGeometricAccum(threeAssetRecordWithPoolIdAndTime(basePoolId, baseTime)),
+				baseRecord.PoolId + 1: updateGeometricAccum(threeAssetRecordWithPoolIdAndTime(basePoolId+1, baseTime.Add(time.Second))),
+				baseRecord.PoolId + 2: updateGeometricAccum(threeAssetRecordWithPoolIdAndTime(basePoolId+2, baseTime.Add(time.Second))),
 			},
 		},
 		"three pools, 2 at the same time, 1 is not, entries and different time for each. entries at various times per pool": {
 			preExistingRecords: merge([][]types.TwapRecord{
 				// pool 1
-				newThreeAssetRecord(basePoolId, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
-				newThreeAssetRecord(basePoolId, baseTime.Add(time.Second), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
-				newThreeAssetRecord(basePoolId, baseTime.Add(time.Second*2), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
+				threeAssetRecordWithPoolIdAndTime(basePoolId, baseTime),
+				threeAssetRecordWithPoolIdAndTime(basePoolId, baseTime.Add(time.Second)),
+				threeAssetRecordWithPoolIdAndTime(basePoolId, baseTime.Add(time.Second*2)),
 				// pool 2
-				newThreeAssetRecord(basePoolId+1, baseTime.Add(time.Second), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
-				newThreeAssetRecord(basePoolId+1, baseTime.Add(time.Second*3), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
+				threeAssetRecordWithPoolIdAndTime(basePoolId+1, baseTime.Add(time.Second)),
+				threeAssetRecordWithPoolIdAndTime(basePoolId+1, baseTime.Add(time.Second*3)),
 				// pool 3
-				newThreeAssetRecord(basePoolId+2, baseTime.Add(time.Second), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
-				newThreeAssetRecord(basePoolId+2, baseTime.Add(time.Second*2), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
-				newThreeAssetRecord(basePoolId+2, baseTime.Add(time.Second*3), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
-				newThreeAssetRecord(basePoolId+2, baseTime.Add(time.Second*4), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
+				threeAssetRecordWithPoolIdAndTime(basePoolId+2, baseTime.Add(time.Second)),
+				threeAssetRecordWithPoolIdAndTime(basePoolId+2, baseTime.Add(time.Second*2)),
+				threeAssetRecordWithPoolIdAndTime(basePoolId+2, baseTime.Add(time.Second*3)),
+				threeAssetRecordWithPoolIdAndTime(basePoolId+2, baseTime.Add(time.Second*4)),
 			}),
 
 			expectedMostRecent: map[uint64][]types.TwapRecord{
 				baseRecord.PoolId: merge([][]types.TwapRecord{
-					setGeometricAccumToOne(newThreeAssetRecord(basePoolId, baseTime.Add(time.Second*2), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
+					updateGeometricAccum(threeAssetRecordWithPoolIdAndTime(basePoolId, baseTime.Add(time.Second*2))),
 				},
 				),
 				baseRecord.PoolId + 1: merge([][]types.TwapRecord{
-					setGeometricAccumToOne(newThreeAssetRecord(basePoolId+1, baseTime.Add(time.Second*3), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
+					updateGeometricAccum(threeAssetRecordWithPoolIdAndTime(basePoolId+1, baseTime.Add(time.Second*3))),
 				},
 				),
 				baseRecord.PoolId + 2: merge([][]types.TwapRecord{
-					setGeometricAccumToOne(newThreeAssetRecord(basePoolId+2, baseTime.Add(time.Second*4), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
+					updateGeometricAccum(threeAssetRecordWithPoolIdAndTime(basePoolId+2, baseTime.Add(time.Second*4))),
 				},
 				),
 			},
