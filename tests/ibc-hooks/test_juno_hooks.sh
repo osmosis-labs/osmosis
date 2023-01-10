@@ -1,30 +1,61 @@
 #!/bin/bash
+#
+# This script can be used to manually test the ibc hooks. It is meant as a guide and not to be run directly
+# without taking into account the context in which it's being run.
+# The script uses `jenv` (https://github.com/nicolaslara/jenv) to easily generate the json strings passed
+# to some of the commands. If you don't want to use it you can generate the json manually or modify this script.
+#
 set -o errexit -o nounset -o pipefail -o xtrace
 shopt -s expand_aliases
 
-alias osmosisd="~/devel/osmosis/build/osmosisd"
-alias junod="~/devel/juno/bin/junod"
+alias chainA="junod --node http://localhost:36657 --chain-id localjuno"
+alias chainB="osmosisd --node http://localhost:26657 --chain-id localosmosis"
 
 # setup the keys
-echo "bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort" | ~/devel/osmosis/build/osmosisd --keyring-backend test keys add validator --recover || echo "key exists"
-echo "increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great" | ~/devel/osmosis/build/osmosisd --keyring-backend test  keys add faucet --recover || echo "key exists"
+echo "bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort" | osmosisd --keyring-backend test keys add validator --recover || echo "key exists"
+echo "increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great" | osmosisd --keyring-backend test  keys add faucet --recover || echo "key exists"
+echo "bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort" | junod --keyring-backend test keys add validator --recover || echo "key exists"
+echo "increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great" | junod --keyring-backend test  keys add faucet --recover || echo "key exists"
 
-echo "bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort" | ~/devel/juno/bin/junod --keyring-backend test keys add validator --recover || echo "key exists"
-echo "increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great" | ~/devel/juno/bin/junod --keyring-backend test keys add faucet --recover || echo "key exists"
+VALIDATOR_OSMO=$(osmosisd keys show validator -a)
+VALIDATOR_JUNO=$(junod keys show validator -a)
+
+args_a="--keyring-backend test --gas auto --gas-prices 0.1ujuno --gas-adjustment 1.3 --broadcast-mode block --yes"
+TX_FLAGS_A=($args_a)
+
+args_b="--keyring-backend test --gas auto --gas-prices 0.1uosmo --gas-adjustment 1.3 --broadcast-mode block --yes"
+TX_FLAGS_B=($args_b)
+
+# send money to the validator on both chains
+chainA tx bank send faucet "$VALIDATOR_JUNO" 1000000000ujuno "${TX_FLAGS_A[@]}"
+chainB tx bank send faucet "$VALIDATOR_OSMO" 1000000000uosmo "${TX_FLAGS_B[@]}"
 
 # store and instantiate the contract
-junod tx wasm store ./bytecode/counter.wasm --from validator  --gas auto --gas-prices 0.1ujuno --gas-adjustment 1.3 -y
-CONTRACT_ID=$( junod query wasm list-code -o json | jq -r '.code_infos[-1].code_id')
-junod tx wasm instantiate "$CONTRACT_ID" '{"count": 0}' --from validator --no-admin --label=counter --yes
+chainA tx wasm store ./bytecode/counter.wasm --from validator  "${TX_FLAGS_A[@]}"
+CONTRACT_ID=$(chainA query wasm list-code -o json | jq -r '.code_infos[-1].code_id')
+chainA tx wasm instantiate "$CONTRACT_ID" '{"count": 0}' --from validator --no-admin --label=counter "${TX_FLAGS_A[@]}"
 
 # get the contract address
-export CONTRACT_ADDRESS=$(junod query wasm list-contract-by-code 1 -o json | jq -r '.contracts | [last][0]')
+export CONTRACT_ADDRESS=$(chainA query wasm list-contract-by-code 1 -o json | jq -r '.contracts | [last][0]')
 
-# Fund the validator
-osmosisd tx bank send faucet osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj 1000000000uosmo -y
+denom=$(chainA query bank balances "$CONTRACT_ADDRESS" -o json | jq -r '.balances[0].denom')
+balance=$(chainA query bank balances "$CONTRACT_ADDRESS" -o json | jq -r '.balances[0].amount')
 
 # send ibc transaction to execite the contract
 MEMO=$(jenv -c '{"wasm":{"contract":$CONTRACT_ADDRESS,"msg": {"increment": {}} }}' )
-osmosisd tx ibc-transfer transfer transfer channel-0 $CONTRACT_ADDRESS 10uosmo \
-         --from validator -y --gas auto --gas-prices 0.1uosmo --gas-adjustment 1.3 \
-         --memo "$MEMO"
+chainB tx ibc-transfer transfer transfer channel-0 $CONTRACT_ADDRESS 10uosmo \
+       --from validator -y  \
+       --memo "$MEMO"
+
+# wait for the ibc round trip
+sleep 16
+
+new_balance=$(chainA query bank balances "$CONTRACT_ADDRESS" -o json | jq -r '.balances[0].amount')
+export ADDR_IN_CHAIN_A=$(chainA q ibchooks wasm-sender channel-0 "$VALIDATOR_JUNO")
+QUERY=$(jenv -c -r '{"get_total_funds": {"addr": $ADDR_IN_CHAIN_A}}')
+funds=$(chainA query wasm contract-state smart "$CONTRACT_ADDRESS" "$QUERY" -o json | jq -c -r '.data.total_funds[]')
+QUERY=$(jenv -c -r '{"get_count": {"addr": $ADDR_IN_CHAIN_A}}')
+count=$(chainA query wasm contract-state smart "$CONTRACT_ADDRESS" "$QUERY" -o json |  jq -r '.data.count')
+
+echo "funds: $funds, count: $count"
+echo "denom: $denom, old balance: $balance, new balance: $new_balance"
