@@ -205,11 +205,6 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 			exponentAtPriceOne: sdk.NewInt(-6),
 			expectedError:      fmt.Errorf("price must be greater than zero"),
 		},
-		"error: price must lead to an exact tick, not in between ticks": {
-			price:              sdk.MustNewDecFromStr("5.01"),
-			exponentAtPriceOne: sdk.NewInt(-1),
-			expectedError:      fmt.Errorf("resulting tick is between two ticks: %s and %s", sdk.NewInt(40).String(), sdk.NewInt(39).String()),
-		},
 		"error: resulting tickIndex too large": {
 			price:              MaxSpotPrice.Mul(sdk.NewDec(2)),
 			exponentAtPriceOne: DefaultExponentAtPriceOne,

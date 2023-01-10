@@ -132,13 +132,6 @@ func PriceToTick(price sdk.Dec, exponentAtPriceOne sdk.Int) (sdk.Int, error) {
 	// Determine how many ticks we have passed in the exponentAtCurrentTick
 	ticksToBeFulfilledByExponentAtCurrentTick := osmomath.BigDecFromSDKDec(price.Sub(totalPrice)).Quo(currentAdditiveIncrementInTicks)
 
-	// If the ticksToBeFulfilledByExponentAtCurrentTick is not an integer, then we are in between ticks and therefore isn't a valid tick
-	if !ticksToBeFulfilledByExponentAtCurrentTick.IsInteger() {
-		tickIndexAbove := ticksPassed.Add(ticksToBeFulfilledByExponentAtCurrentTick.SDKDec().RoundInt())
-		tickIndexBelow := tickIndexAbove.Sub(sdk.OneInt())
-		return sdk.Int{}, fmt.Errorf("resulting tick is between two ticks: %s and %s", tickIndexAbove, tickIndexBelow)
-	}
-
 	// Finally, add the ticks we have passed from the completed geometricExponent values, as well as the ticks we have passed in the current geometricExponent value
 	tickIndex := ticksPassed.Add(ticksToBeFulfilledByExponentAtCurrentTick.SDKDec().TruncateInt())
 
