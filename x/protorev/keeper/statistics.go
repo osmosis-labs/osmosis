@@ -7,8 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
 
 // ----------------------- Statistics Stores  ----------------------- //

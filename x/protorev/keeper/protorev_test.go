@@ -1,6 +1,6 @@
 package keeper_test
 
-import "github.com/osmosis-labs/osmosis/v13/x/protorev/types"
+import "github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 
 // TestGetAtomPool tests the GetAtomPool function.
 func (suite *KeeperTestSuite) TestGetAtomPool() {

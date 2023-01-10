@@ -8,8 +8,8 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v13/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.

@@ -7,8 +7,8 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 // TestSwapRoutesSerialization tests that while swap routes

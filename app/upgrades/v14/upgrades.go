@@ -5,11 +5,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v13/app/keepers"
-	"github.com/osmosis-labs/osmosis/v13/app/upgrades"
-	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v13/x/poolmanager"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v14/app/keepers"
+	"github.com/osmosis-labs/osmosis/v14/app/upgrades"
+	gammkeeper "github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v14/x/poolmanager"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 func CreateUpgradeHandler(
