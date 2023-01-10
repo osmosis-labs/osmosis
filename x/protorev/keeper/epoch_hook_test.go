@@ -55,7 +55,7 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 		foundEitherOne := false
 		// Check if there is a match with osmo
 		if otherDenom, match := types.CheckOsmoAtomDenomMatch(pool.Asset1, pool.Asset2, types.OsmosisDenomination); match {
-			poolId, err := suite.App.AppKeepers.ProtoRevKeeper.GetOsmoPool(suite.Ctx, otherDenom)
+			poolId, err := suite.App.ProtoRevKeeper.GetOsmoPool(suite.Ctx, otherDenom)
 
 			// pool ID must exist
 			suite.Require().NoError(err)
@@ -66,7 +66,7 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 
 		// Check if there is a match with atom
 		if otherDenom, match := types.CheckOsmoAtomDenomMatch(pool.Asset1, pool.Asset2, types.AtomDenomination); match {
-			poolId, err := suite.App.AppKeepers.ProtoRevKeeper.GetAtomPool(suite.Ctx, otherDenom)
+			poolId, err := suite.App.ProtoRevKeeper.GetAtomPool(suite.Ctx, otherDenom)
 
 			// pool ID must exist
 			suite.Require().NoError(err)

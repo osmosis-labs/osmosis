@@ -237,15 +237,15 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				suite.Ctx = suite.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 
 				// Check that the number of trades is correct
-				numOfTrades, _ := suite.App.AppKeepers.ProtoRevKeeper.GetNumberOfTrades(suite.Ctx)
+				numOfTrades, _ := suite.App.ProtoRevKeeper.GetNumberOfTrades(suite.Ctx)
 				suite.Require().Equal(tc.params.expectedNumOfTrades, numOfTrades)
 
 				// Check that the profits are correct
-				profits := suite.App.AppKeepers.ProtoRevKeeper.GetAllProfits(suite.Ctx)
+				profits := suite.App.ProtoRevKeeper.GetAllProfits(suite.Ctx)
 				suite.Require().Equal(tc.params.expectedProfits, profits)
 
 				// Check the current route count
-				routeCount, err := suite.App.AppKeepers.ProtoRevKeeper.GetRouteCountForBlock(suite.Ctx)
+				routeCount, err := suite.App.ProtoRevKeeper.GetRouteCountForBlock(suite.Ctx)
 				suite.Require().NoError(err)
 				suite.Require().Equal(tc.params.expectedRouteCount, routeCount)
 

@@ -95,7 +95,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	// Set the Admin Account
 	suite.adminAccount = apptesting.CreateRandomAccounts(1)[0]
-	err := protorev.HandleSetProtoRevAdminAccount(suite.Ctx, *suite.App.AppKeepers.ProtoRevKeeper, &types.SetProtoRevAdminAccountProposal{Account: suite.adminAccount.String()})
+	err := protorev.HandleSetProtoRevAdminAccount(suite.Ctx, *suite.App.ProtoRevKeeper, &types.SetProtoRevAdminAccountProposal{Account: suite.adminAccount.String()})
 	suite.Require().NoError(err)
 }
 
@@ -650,7 +650,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 	}
 
 	// Set all of the pool info into the stores
-	suite.App.AppKeepers.ProtoRevKeeper.EpochHooks().AfterEpochEnd(suite.Ctx, "week", 1)
+	suite.App.ProtoRevKeeper.EpochHooks().AfterEpochEnd(suite.Ctx, "week", 1)
 }
 
 // createStableswapPool creates a stableswap pool with the given pool assets and params
@@ -740,6 +740,6 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 	}
 
 	for _, tokenPair := range suite.tokenPairArbRoutes {
-		suite.App.AppKeepers.ProtoRevKeeper.SetTokenPairArbRoutes(suite.Ctx, tokenPair.TokenIn, tokenPair.TokenOut, tokenPair)
+		suite.App.ProtoRevKeeper.SetTokenPairArbRoutes(suite.Ctx, tokenPair.TokenIn, tokenPair.TokenOut, tokenPair)
 	}
 }

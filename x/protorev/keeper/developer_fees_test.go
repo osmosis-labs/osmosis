@@ -25,7 +25,7 @@ func (suite *KeeperTestSuite) TestSendDeveloperFeesToDeveloperAccount() {
 			description: "Send with set developer account",
 			alterState: func() {
 				account := apptesting.CreateRandomAccounts(1)[0]
-				suite.App.AppKeepers.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, account)
+				suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, account)
 
 				err := suite.pseudoExecuteTrade(types.OsmosisDenomination, sdk.NewInt(2000), 0)
 				suite.Require().NoError(err)
@@ -37,7 +37,7 @@ func (suite *KeeperTestSuite) TestSendDeveloperFeesToDeveloperAccount() {
 			description: "Send with set developer account (after multiple trades)",
 			alterState: func() {
 				account := apptesting.CreateRandomAccounts(1)[0]
-				suite.App.AppKeepers.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, account)
+				suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, account)
 
 				// Trade 1
 				err := suite.pseudoExecuteTrade(types.OsmosisDenomination, sdk.NewInt(2000), 0)
@@ -54,7 +54,7 @@ func (suite *KeeperTestSuite) TestSendDeveloperFeesToDeveloperAccount() {
 			description: "Send with set developer account (after multiple trades across epochs)",
 			alterState: func() {
 				account := apptesting.CreateRandomAccounts(1)[0]
-				suite.App.AppKeepers.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, account)
+				suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, account)
 
 				// Trade 1
 				err := suite.pseudoExecuteTrade(types.OsmosisDenomination, sdk.NewInt(2000), 0)
@@ -82,17 +82,19 @@ func (suite *KeeperTestSuite) TestSendDeveloperFeesToDeveloperAccount() {
 			suite.SetupTest()
 			tc.alterState()
 
-			err := suite.App.AppKeepers.ProtoRevKeeper.SendDeveloperFeesToDeveloperAccount(suite.Ctx)
+			err := suite.App.ProtoRevKeeper.SendDeveloperFeesToDeveloperAccount(suite.Ctx)
 			if tc.expectedErr {
 				suite.Require().Error(err)
 			} else {
 				suite.Require().NoError(err)
 			}
 
-			developerAccount, err := suite.App.AppKeepers.ProtoRevKeeper.GetDeveloperAccount(suite.Ctx)
-			if err == nil {
+			developerAccount, err := suite.App.ProtoRevKeeper.GetDeveloperAccount(suite.Ctx)
+			if !tc.expectedErr {
 				developerFees := suite.App.AppKeepers.BankKeeper.GetAllBalances(suite.Ctx, developerAccount)
 				suite.Require().Equal(tc.expectedCoins, developerFees)
+			} else {
+				suite.Require().Error(err)
 			}
 		})
 	}
@@ -119,7 +121,7 @@ func (suite *KeeperTestSuite) TestUpdateDeveloperFees() {
 			denom:       types.OsmosisDenomination,
 			profit:      sdk.NewInt(200),
 			alterState: func() {
-				suite.App.AppKeepers.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 366)
+				suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 366)
 			},
 			expected: sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(20)),
 		},
@@ -128,7 +130,7 @@ func (suite *KeeperTestSuite) TestUpdateDeveloperFees() {
 			denom:       types.OsmosisDenomination,
 			profit:      sdk.NewInt(200),
 			alterState: func() {
-				suite.App.AppKeepers.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 731)
+				suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 731)
 
 			},
 			expected: sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10)),
@@ -138,7 +140,7 @@ func (suite *KeeperTestSuite) TestUpdateDeveloperFees() {
 			denom:       types.OsmosisDenomination,
 			profit:      sdk.NewInt(200),
 			alterState: func() {
-				suite.App.AppKeepers.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 365*10+1)
+				suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 365*10+1)
 
 			},
 			expected: sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10)),
@@ -150,10 +152,10 @@ func (suite *KeeperTestSuite) TestUpdateDeveloperFees() {
 			suite.SetupTest()
 			tc.alterState()
 
-			err := suite.App.AppKeepers.ProtoRevKeeper.UpdateDeveloperFees(suite.Ctx, tc.denom, tc.profit)
+			err := suite.App.ProtoRevKeeper.UpdateDeveloperFees(suite.Ctx, tc.denom, tc.profit)
 			suite.Require().NoError(err)
 
-			developerFees, err := suite.App.AppKeepers.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, tc.denom)
+			developerFees, err := suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, tc.denom)
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.expected, developerFees)
 		})
@@ -163,9 +165,9 @@ func (suite *KeeperTestSuite) TestUpdateDeveloperFees() {
 // pseudoExecuteTrade is a helper function to execute a trade given denom of profit, profit, and days since genesis
 func (suite *KeeperTestSuite) pseudoExecuteTrade(denom string, profit sdk.Int, daysSinceGenesis uint64) error {
 	// Initialize the number of days since genesis
-	suite.App.AppKeepers.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, daysSinceGenesis)
+	suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, daysSinceGenesis)
 	// Mint the profit to the module account (which will be sent to the developer account later)
 	suite.App.AppKeepers.BankKeeper.MintCoins(suite.Ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(denom, profit)))
 	// Update the developer fees
-	return suite.App.AppKeepers.ProtoRevKeeper.UpdateDeveloperFees(suite.Ctx, denom, profit)
+	return suite.App.ProtoRevKeeper.UpdateDeveloperFees(suite.Ctx, denom, profit)
 }

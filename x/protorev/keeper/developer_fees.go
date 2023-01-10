@@ -37,15 +37,12 @@ func (k Keeper) UpdateDeveloperFees(ctx sdk.Context, denom string, profit sdk.In
 	}
 
 	// Calculate the developer fee
-	if daysSinceGenesis < 365 {
-		// 20% of profit in the first year
-		profit = profit.MulRaw(20).QuoRaw(100)
-	} else if daysSinceGenesis < 730 {
-		// 10% of profit in the second year
-		profit = profit.MulRaw(10).QuoRaw(100)
+	if daysSinceGenesis < types.Phase1Length {
+		profit = profit.MulRaw(types.ProfitSplitPhase1).QuoRaw(100)
+	} else if daysSinceGenesis < types.Phase2Length {
+		profit = profit.MulRaw(types.ProfitSplitPhase2).QuoRaw(100)
 	} else {
-		// 5% of profit in subsequent years
-		profit = profit.MulRaw(5).QuoRaw(100)
+		profit = profit.MulRaw(types.ProfitSplitPhase3).QuoRaw(100)
 	}
 
 	// Get the developer fees for the denom, if not there then set it to 0 and initialize it

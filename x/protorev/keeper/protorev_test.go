@@ -62,12 +62,12 @@ func (suite *KeeperTestSuite) TestGetAtomPool() {
 
 // TestDeleteAllAtomPools tests the DeleteAllAtomPools function.
 func (suite *KeeperTestSuite) TestDeleteAllAtomPools() {
-	suite.App.AppKeepers.ProtoRevKeeper.DeleteAllAtomPools(suite.Ctx)
+	suite.App.ProtoRevKeeper.DeleteAllAtomPools(suite.Ctx)
 
 	// Iterate through all of the pools and check if any paired with Atom exist
 	for _, pool := range suite.pools {
 		if otherDenom, match := types.CheckOsmoAtomDenomMatch(pool.Asset1, pool.Asset2, types.AtomDenomination); match {
-			_, err := suite.App.AppKeepers.ProtoRevKeeper.GetAtomPool(suite.Ctx, otherDenom)
+			_, err := suite.App.ProtoRevKeeper.GetAtomPool(suite.Ctx, otherDenom)
 			suite.Require().Error(err)
 		}
 	}
@@ -118,12 +118,12 @@ func (suite *KeeperTestSuite) TestGetOsmoPool() {
 
 // TestDeleteAllOsmoPools tests the DeleteAllOsmoPools function.
 func (suite *KeeperTestSuite) TestDeleteAllOsmoPools() {
-	suite.App.AppKeepers.ProtoRevKeeper.DeleteAllOsmoPools(suite.Ctx)
+	suite.App.ProtoRevKeeper.DeleteAllOsmoPools(suite.Ctx)
 
 	// Iterate through all of the pools and check if any paired with Osmo exist
 	for _, pool := range suite.pools {
 		if otherDenom, match := types.CheckOsmoAtomDenomMatch(pool.Asset1, pool.Asset2, types.OsmosisDenomination); match {
-			_, err := suite.App.AppKeepers.ProtoRevKeeper.GetOsmoPool(suite.Ctx, otherDenom)
+			_, err := suite.App.ProtoRevKeeper.GetOsmoPool(suite.Ctx, otherDenom)
 			suite.Require().Error(err)
 		}
 	}
@@ -181,13 +181,13 @@ func (suite *KeeperTestSuite) TestDeleteAllTokenPairArbRoutes() {
 // TestGetDaysSinceModuleGenesis tests the GetDaysSinceModuleGenesis and SetDaysSinceModuleGenesis functions.
 func (suite *KeeperTestSuite) TestGetDaysSinceModuleGenesis() {
 	// Should be initalized to 0 on genesis
-	daysSinceGenesis, err := suite.App.AppKeepers.ProtoRevKeeper.GetDaysSinceModuleGenesis(suite.Ctx)
+	daysSinceGenesis, err := suite.App.ProtoRevKeeper.GetDaysSinceModuleGenesis(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(0), daysSinceGenesis)
 
 	// Should be able to set the days since genesis
-	suite.App.AppKeepers.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 1)
-	daysSinceGenesis, err = suite.App.AppKeepers.ProtoRevKeeper.GetDaysSinceModuleGenesis(suite.Ctx)
+	suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 1)
+	daysSinceGenesis, err = suite.App.ProtoRevKeeper.GetDaysSinceModuleGenesis(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(1), daysSinceGenesis)
 }
@@ -195,33 +195,33 @@ func (suite *KeeperTestSuite) TestGetDaysSinceModuleGenesis() {
 // TestGetDeveloperFees tests the GetDeveloperFees, SetDeveloperFees, and GetAllDeveloperFees functions.
 func (suite *KeeperTestSuite) TestGetDeveloperFees() {
 	// Should be initalized to [] on genesis
-	fees := suite.App.AppKeepers.ProtoRevKeeper.GetAllDeveloperFees(suite.Ctx)
+	fees := suite.App.ProtoRevKeeper.GetAllDeveloperFees(suite.Ctx)
 	suite.Require().Equal(0, len(fees))
 
 	// Should be no osmo fees on genesis
-	osmoFees, err := suite.App.AppKeepers.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.OsmosisDenomination)
+	osmoFees, err := suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.OsmosisDenomination)
 	suite.Require().Error(err)
 	suite.Require().Equal(sdk.Coin{}, osmoFees)
 
 	// Should be no atom fees on genesis
-	atomFees, err := suite.App.AppKeepers.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.AtomDenomination)
+	atomFees, err := suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.AtomDenomination)
 	suite.Require().Error(err)
 	suite.Require().Equal(sdk.Coin{}, atomFees)
 
 	// Should be able to set the fees
-	err = suite.App.AppKeepers.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)))
+	err = suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)))
 	suite.Require().NoError(err)
-	err = suite.App.AppKeepers.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, sdk.NewCoin(types.AtomDenomination, sdk.NewInt(100)))
+	err = suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, sdk.NewCoin(types.AtomDenomination, sdk.NewInt(100)))
 	suite.Require().NoError(err)
 
 	// Should be able to get the fees
-	osmoFees, err = suite.App.AppKeepers.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.OsmosisDenomination)
+	osmoFees, err = suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.OsmosisDenomination)
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)), osmoFees)
-	atomFees, err = suite.App.AppKeepers.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.AtomDenomination)
+	atomFees, err = suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.AtomDenomination)
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewCoin(types.AtomDenomination, sdk.NewInt(100)), atomFees)
-	fees = suite.App.AppKeepers.ProtoRevKeeper.GetAllDeveloperFees(suite.Ctx)
+	fees = suite.App.ProtoRevKeeper.GetAllDeveloperFees(suite.Ctx)
 	suite.Require().Equal(2, len(fees))
 	suite.Require().Contains(fees, osmoFees)
 	suite.Require().Contains(fees, atomFees)
@@ -229,19 +229,19 @@ func (suite *KeeperTestSuite) TestGetDeveloperFees() {
 
 // TestDeleteDeveloperFees tests the DeleteDeveloperFees function.
 func (suite *KeeperTestSuite) TestDeleteDeveloperFees() {
-	err := suite.App.AppKeepers.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)))
+	err := suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)))
 	suite.Require().NoError(err)
 
 	// Should be able to get the fees
-	osmoFees, err := suite.App.AppKeepers.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.OsmosisDenomination)
+	osmoFees, err := suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.OsmosisDenomination)
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)), osmoFees)
 
 	// Should be able to delete the fees
-	suite.App.AppKeepers.ProtoRevKeeper.DeleteDeveloperFees(suite.Ctx, types.OsmosisDenomination)
+	suite.App.ProtoRevKeeper.DeleteDeveloperFees(suite.Ctx, types.OsmosisDenomination)
 
 	// Should be no osmo fees after deletion
-	osmoFees, err = suite.App.AppKeepers.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.OsmosisDenomination)
+	osmoFees, err = suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.OsmosisDenomination)
 	suite.Require().Error(err)
 	suite.Require().Equal(sdk.Coin{}, osmoFees)
 }
@@ -249,13 +249,13 @@ func (suite *KeeperTestSuite) TestDeleteDeveloperFees() {
 // TestGetProtoRevEnabled tests the GetProtoRevEnabled and SetProtoRevEnabled functions.
 func (suite *KeeperTestSuite) TestGetProtoRevEnabled() {
 	// Should be initalized to true on genesis
-	protoRevEnabled, err := suite.App.AppKeepers.ProtoRevKeeper.GetProtoRevEnabled(suite.Ctx)
+	protoRevEnabled, err := suite.App.ProtoRevKeeper.GetProtoRevEnabled(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(true, protoRevEnabled)
 
 	// Should be able to set the protoRevEnabled
-	suite.App.AppKeepers.ProtoRevKeeper.SetProtoRevEnabled(suite.Ctx, false)
-	protoRevEnabled, err = suite.App.AppKeepers.ProtoRevKeeper.GetProtoRevEnabled(suite.Ctx)
+	suite.App.ProtoRevKeeper.SetProtoRevEnabled(suite.Ctx, false)
+	protoRevEnabled, err = suite.App.ProtoRevKeeper.GetProtoRevEnabled(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(false, protoRevEnabled)
 }
@@ -263,13 +263,13 @@ func (suite *KeeperTestSuite) TestGetProtoRevEnabled() {
 // TestGetAdminAccount tests the GetAdminAccount and SetAdminAccount functions.
 func (suite *KeeperTestSuite) TestGetAdminAccount() {
 	// Should be initalized (look at keeper_test.go)
-	adminAccount, err := suite.App.AppKeepers.ProtoRevKeeper.GetAdminAccount(suite.Ctx)
+	adminAccount, err := suite.App.ProtoRevKeeper.GetAdminAccount(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(suite.adminAccount, adminAccount)
 
 	// Should be able to set the admin account
-	suite.App.AppKeepers.ProtoRevKeeper.SetAdminAccount(suite.Ctx, suite.TestAccs[0])
-	adminAccount, err = suite.App.AppKeepers.ProtoRevKeeper.GetAdminAccount(suite.Ctx)
+	suite.App.ProtoRevKeeper.SetAdminAccount(suite.Ctx, suite.TestAccs[0])
+	adminAccount, err = suite.App.ProtoRevKeeper.GetAdminAccount(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(suite.TestAccs[0], adminAccount)
 }
@@ -277,13 +277,13 @@ func (suite *KeeperTestSuite) TestGetAdminAccount() {
 // TestGetDeveloperAccount tests the GetDeveloperAccount and SetDeveloperAccount functions.
 func (suite *KeeperTestSuite) TestGetDeveloperAccount() {
 	// Should be null on genesis
-	developerAccount, err := suite.App.AppKeepers.ProtoRevKeeper.GetDeveloperAccount(suite.Ctx)
+	developerAccount, err := suite.App.ProtoRevKeeper.GetDeveloperAccount(suite.Ctx)
 	suite.Require().Error(err)
 	suite.Require().Nil(developerAccount)
 
 	// Should be able to set the developer account
-	suite.App.AppKeepers.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, suite.TestAccs[0])
-	developerAccount, err = suite.App.AppKeepers.ProtoRevKeeper.GetDeveloperAccount(suite.Ctx)
+	suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, suite.TestAccs[0])
+	developerAccount, err = suite.App.ProtoRevKeeper.GetDeveloperAccount(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(suite.TestAccs[0], developerAccount)
 }
@@ -291,40 +291,40 @@ func (suite *KeeperTestSuite) TestGetDeveloperAccount() {
 // TestGetMaxRoutesPerTx tests the GetMaxRoutesPerTx and SetMaxRoutesPerTx functions.
 func (suite *KeeperTestSuite) TestGetMaxRoutesPerTx() {
 	// Should be initalized on genesis
-	maxRoutes, err := suite.App.AppKeepers.ProtoRevKeeper.GetMaxRoutesPerTx(suite.Ctx)
+	maxRoutes, err := suite.App.ProtoRevKeeper.GetMaxRoutesPerTx(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(6), maxRoutes)
 
 	// Should be able to set the maxRoutes
-	suite.App.AppKeepers.ProtoRevKeeper.SetMaxRoutesPerTx(suite.Ctx, 4)
-	maxRoutes, err = suite.App.AppKeepers.ProtoRevKeeper.GetMaxRoutesPerTx(suite.Ctx)
+	suite.App.ProtoRevKeeper.SetMaxRoutesPerTx(suite.Ctx, 4)
+	maxRoutes, err = suite.App.ProtoRevKeeper.GetMaxRoutesPerTx(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(4), maxRoutes)
 
 	// Can only initalize between 1 and types.MaxIterableRoutesPerTx
-	err = suite.App.AppKeepers.ProtoRevKeeper.SetMaxRoutesPerTx(suite.Ctx, 0)
+	err = suite.App.ProtoRevKeeper.SetMaxRoutesPerTx(suite.Ctx, 0)
 	suite.Require().Error(err)
-	err = suite.App.AppKeepers.ProtoRevKeeper.SetMaxRoutesPerTx(suite.Ctx, types.MaxIterableRoutesPerTx+1)
+	err = suite.App.ProtoRevKeeper.SetMaxRoutesPerTx(suite.Ctx, types.MaxIterableRoutesPerTx+1)
 	suite.Require().Error(err)
 }
 
 // TestGetRouteCountForBlock tests the GetRouteCountForBlock, IncrementRouteCountForBlock and SetRouteCountForBlock functions.
 func (suite *KeeperTestSuite) TestGetRouteCountForBlock() {
 	// Should be initalized to 0 on genesis
-	routeCount, err := suite.App.AppKeepers.ProtoRevKeeper.GetRouteCountForBlock(suite.Ctx)
+	routeCount, err := suite.App.ProtoRevKeeper.GetRouteCountForBlock(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(0), routeCount)
 
 	// Should be able to set the route count
-	suite.App.AppKeepers.ProtoRevKeeper.SetRouteCountForBlock(suite.Ctx, 4)
-	routeCount, err = suite.App.AppKeepers.ProtoRevKeeper.GetRouteCountForBlock(suite.Ctx)
+	suite.App.ProtoRevKeeper.SetRouteCountForBlock(suite.Ctx, 4)
+	routeCount, err = suite.App.ProtoRevKeeper.GetRouteCountForBlock(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(4), routeCount)
 
 	// Should be able to increment the route count
-	err = suite.App.AppKeepers.ProtoRevKeeper.IncrementRouteCountForBlock(suite.Ctx, 10)
+	err = suite.App.ProtoRevKeeper.IncrementRouteCountForBlock(suite.Ctx, 10)
 	suite.Require().NoError(err)
-	routeCount, err = suite.App.AppKeepers.ProtoRevKeeper.GetRouteCountForBlock(suite.Ctx)
+	routeCount, err = suite.App.ProtoRevKeeper.GetRouteCountForBlock(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(14), routeCount)
 }
@@ -332,13 +332,13 @@ func (suite *KeeperTestSuite) TestGetRouteCountForBlock() {
 // TestGetLatestBlockHeight tests the GetLatestBlockHeight and SetLatestBlockHeight functions.
 func (suite *KeeperTestSuite) TestGetLatestBlockHeight() {
 	// Should be initalized to 0 on genesis
-	blockHeight, err := suite.App.AppKeepers.ProtoRevKeeper.GetLatestBlockHeight(suite.Ctx)
+	blockHeight, err := suite.App.ProtoRevKeeper.GetLatestBlockHeight(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(0), blockHeight)
 
 	// Should be able to set the blockHeight
-	suite.App.AppKeepers.ProtoRevKeeper.SetLatestBlockHeight(suite.Ctx, 4)
-	blockHeight, err = suite.App.AppKeepers.ProtoRevKeeper.GetLatestBlockHeight(suite.Ctx)
+	suite.App.ProtoRevKeeper.SetLatestBlockHeight(suite.Ctx, 4)
+	blockHeight, err = suite.App.ProtoRevKeeper.GetLatestBlockHeight(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(4), blockHeight)
 }
@@ -346,27 +346,27 @@ func (suite *KeeperTestSuite) TestGetLatestBlockHeight() {
 // TestGetMaxRoutesPerBlock tests the GetMaxRoutesPerBlock and SetMaxRoutesPerBlock functions.
 func (suite *KeeperTestSuite) TestGetMaxRoutesPerBlock() {
 	// Should be initalized to 20 on genesis
-	maxRoutes, err := suite.App.AppKeepers.ProtoRevKeeper.GetMaxRoutesPerBlock(suite.Ctx)
+	maxRoutes, err := suite.App.ProtoRevKeeper.GetMaxRoutesPerBlock(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(100), maxRoutes)
 
 	// Should be able to set the maxRoutes
-	suite.App.AppKeepers.ProtoRevKeeper.SetMaxRoutesPerBlock(suite.Ctx, 4)
-	maxRoutes, err = suite.App.AppKeepers.ProtoRevKeeper.GetMaxRoutesPerBlock(suite.Ctx)
+	suite.App.ProtoRevKeeper.SetMaxRoutesPerBlock(suite.Ctx, 4)
+	maxRoutes, err = suite.App.ProtoRevKeeper.GetMaxRoutesPerBlock(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(4), maxRoutes)
 
 	// Can only initalize between 1 and types.MaxIterableRoutesPerBlock
-	err = suite.App.AppKeepers.ProtoRevKeeper.SetMaxRoutesPerBlock(suite.Ctx, 0)
+	err = suite.App.ProtoRevKeeper.SetMaxRoutesPerBlock(suite.Ctx, 0)
 	suite.Require().Error(err)
-	err = suite.App.AppKeepers.ProtoRevKeeper.SetMaxRoutesPerBlock(suite.Ctx, types.MaxIterableRoutesPerBlock+1)
+	err = suite.App.ProtoRevKeeper.SetMaxRoutesPerBlock(suite.Ctx, types.MaxIterableRoutesPerBlock+1)
 	suite.Require().Error(err)
 }
 
 // TestGetRouteWeights tests the GetRouteWeights and SetRouteWeights functions.
 func (suite *KeeperTestSuite) TestGetRouteWeights() {
 	// Should be initalized on genesis
-	routeWeights, err := suite.App.AppKeepers.ProtoRevKeeper.GetRouteWeights(suite.Ctx)
+	routeWeights, err := suite.App.ProtoRevKeeper.GetRouteWeights(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(types.RouteWeights{StableWeight: 5, BalancerWeight: 2}, *routeWeights)
 
@@ -375,8 +375,8 @@ func (suite *KeeperTestSuite) TestGetRouteWeights() {
 		StableWeight:   10,
 		BalancerWeight: 2,
 	}
-	suite.App.AppKeepers.ProtoRevKeeper.SetRouteWeights(suite.Ctx, newRouteWeights)
-	routeWeights, err = suite.App.AppKeepers.ProtoRevKeeper.GetRouteWeights(suite.Ctx)
+	suite.App.ProtoRevKeeper.SetRouteWeights(suite.Ctx, newRouteWeights)
+	routeWeights, err = suite.App.ProtoRevKeeper.GetRouteWeights(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(newRouteWeights, *routeWeights)
 }
