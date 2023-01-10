@@ -9,7 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 )
 
 // CalculateSpotPrice returns the spot price of the quote asset in terms of the base asset,

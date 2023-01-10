@@ -1,7 +1,7 @@
 package balancer
 
 import (
-	types "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	types "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

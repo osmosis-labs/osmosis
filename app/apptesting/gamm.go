@@ -4,10 +4,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	gammkeeper "github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/stableswap"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 )
 
 var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
