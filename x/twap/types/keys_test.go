@@ -61,52 +61,37 @@ func TestFormatHistoricalTwapKeys(t *testing.T) {
 
 func TestParseTwapFromBz(t *testing.T) {
 	baseTime := time.Unix(1257894000, 0).UTC()
+	baseParseRecord := TwapRecord{
+		PoolId:                      123,
+		Asset0Denom:                 "B",
+		Asset1Denom:                 "A",
+		Height:                      1,
+		Time:                        baseTime,
+		P0LastSpotPrice:             sdk.NewDecWithPrec(1, 5),
+		P1LastSpotPrice:             sdk.NewDecWithPrec(2, 5), // inconsistent value
+		P0ArithmeticTwapAccumulator: sdk.ZeroDec(),
+		P1ArithmeticTwapAccumulator: sdk.ZeroDec(),
+	}
+
+	withGeomAcc := func(r TwapRecord, acc sdk.Dec) TwapRecord {
+		r.GeometricTwapAccumulator = acc
+		return r
+	}
+
 	tests := map[string]struct {
 		record              TwapRecord
 		isGeometricAccumNil bool
 	}{
 		"standard": {
-			TwapRecord{
-				PoolId:                      123,
-				Asset0Denom:                 "B",
-				Asset1Denom:                 "A",
-				Height:                      1,
-				Time:                        baseTime,
-				P0LastSpotPrice:             sdk.NewDecWithPrec(1, 5),
-				P1LastSpotPrice:             sdk.NewDecWithPrec(2, 5), // inconsistent value
-				P0ArithmeticTwapAccumulator: sdk.ZeroDec(),
-				P1ArithmeticTwapAccumulator: sdk.ZeroDec(),
-			},
+			baseParseRecord,
 			false,
 		},
 		"with nil geometric twap accumulator -> set to zero": {
-			TwapRecord{
-				PoolId:                      123,
-				Asset0Denom:                 "B",
-				Asset1Denom:                 "A",
-				Height:                      1,
-				Time:                        baseTime,
-				P0LastSpotPrice:             sdk.NewDecWithPrec(1, 5),
-				P1LastSpotPrice:             sdk.NewDecWithPrec(2, 5), // inconsistent value
-				GeometricTwapAccumulator:    sdk.Dec{},                // nil value
-				P0ArithmeticTwapAccumulator: sdk.ZeroDec(),
-				P1ArithmeticTwapAccumulator: sdk.ZeroDec(),
-			},
+			withGeomAcc(baseParseRecord, sdk.Dec{}),
 			true,
 		},
 		"with non-nil geometric twap accumulator -> not overwritten": {
-			TwapRecord{
-				PoolId:                      123,
-				Asset0Denom:                 "B",
-				Asset1Denom:                 "A",
-				Height:                      1,
-				Time:                        baseTime,
-				P0LastSpotPrice:             sdk.NewDecWithPrec(1, 5),
-				P1LastSpotPrice:             sdk.NewDecWithPrec(2, 5), // inconsistent value
-				GeometricTwapAccumulator:    sdk.OneDec(),
-				P0ArithmeticTwapAccumulator: sdk.ZeroDec(),
-				P1ArithmeticTwapAccumulator: sdk.ZeroDec(),
-			},
+			withGeomAcc(baseParseRecord, sdk.OneDec()),
 			false,
 		},
 	}
