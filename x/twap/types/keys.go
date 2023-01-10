@@ -87,5 +87,8 @@ func ParseTwapFromBz(bz []byte) (twap TwapRecord, err error) {
 		return TwapRecord{}, errors.New("twap not found")
 	}
 	err = proto.Unmarshal(bz, &twap)
+	if twap.GeometricTwapAccumulator.IsNil() {
+		twap.GeometricTwapAccumulator = sdk.ZeroDec()
+	}
 	return twap, err
 }
