@@ -43,13 +43,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		panic(err)
 	}
 
-	// Init module state
-	k.SetProtoRevEnabled(ctx, genState.Params.Enabled)
-	k.SetDaysSinceModuleGenesis(ctx, 0)
-
-	// Default we only allow 3 pools to be arbitraged against per tx
-	k.SetMaxPools(ctx, 3)
-
 	// Update the pools on genesis
 	if err := k.UpdatePools(ctx); err != nil {
 		panic(err)

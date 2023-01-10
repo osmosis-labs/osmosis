@@ -3,9 +3,9 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
 
 // TestParams tests the query for params
@@ -25,7 +25,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevNumberOfTrades() {
 	suite.Require().Error(err)
 
 	// Pseudo execute a trade
-	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, swaproutertypes.SwapAmountInRoutes{}, types.OsmosisDenomination, sdk.NewInt(10000))
+	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, poolmanagertypes.SwapAmountInRoutes{}, types.OsmosisDenomination, sdk.NewInt(10000))
 	suite.Require().NoError(err)
 
 	// Check the updated result
@@ -34,13 +34,13 @@ func (suite *KeeperTestSuite) TestGetProtoRevNumberOfTrades() {
 	suite.Require().Equal(sdk.NewInt(1), res.NumberOfTrades)
 
 	// Pseudo execute 3 more trades
-	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, swaproutertypes.SwapAmountInRoutes{}, types.OsmosisDenomination, sdk.NewInt(10000))
+	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, poolmanagertypes.SwapAmountInRoutes{}, types.OsmosisDenomination, sdk.NewInt(10000))
 	suite.Require().NoError(err)
 
-	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, swaproutertypes.SwapAmountInRoutes{}, types.OsmosisDenomination, sdk.NewInt(10000))
+	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, poolmanagertypes.SwapAmountInRoutes{}, types.OsmosisDenomination, sdk.NewInt(10000))
 	suite.Require().NoError(err)
 
-	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, swaproutertypes.SwapAmountInRoutes{}, types.OsmosisDenomination, sdk.NewInt(10000))
+	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, poolmanagertypes.SwapAmountInRoutes{}, types.OsmosisDenomination, sdk.NewInt(10000))
 	suite.Require().NoError(err)
 
 	res, err = suite.queryClient.GetProtoRevNumberOfTrades(sdk.WrapSDKContext(suite.Ctx), &types.QueryGetProtoRevNumberOfTradesRequest{})
@@ -57,7 +57,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevProfitsByDenom() {
 	suite.Require().Error(err)
 
 	// Pseudo execute a trade
-	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, swaproutertypes.SwapAmountInRoutes{}, types.OsmosisDenomination, sdk.NewInt(10000))
+	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, poolmanagertypes.SwapAmountInRoutes{}, types.OsmosisDenomination, sdk.NewInt(10000))
 
 	suite.Require().NoError(err)
 	suite.Commit()
@@ -75,9 +75,9 @@ func (suite *KeeperTestSuite) TestGetProtoRevAllProfits() {
 	suite.Require().Equal(0, len(res.Profits))
 
 	// Pseudo execute a trade
-	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, swaproutertypes.SwapAmountInRoutes{}, types.OsmosisDenomination, sdk.NewInt(9000))
+	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, poolmanagertypes.SwapAmountInRoutes{}, types.OsmosisDenomination, sdk.NewInt(9000))
 	suite.Require().NoError(err)
-	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, swaproutertypes.SwapAmountInRoutes{}, types.AtomDenomination, sdk.NewInt(3000))
+	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, poolmanagertypes.SwapAmountInRoutes{}, types.AtomDenomination, sdk.NewInt(3000))
 	suite.Require().NoError(err)
 
 	res, err = suite.queryClient.GetProtoRevAllProfits(sdk.WrapSDKContext(suite.Ctx), req)
@@ -99,7 +99,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevStatisticsByRoute() {
 	suite.Require().Nil(res)
 
 	// Pseudo execute a trade
-	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, swaproutertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}}, types.AtomDenomination, sdk.NewInt(10000))
+	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, poolmanagertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}}, types.AtomDenomination, sdk.NewInt(10000))
 	suite.Require().NoError(err)
 
 	// Verify statistics
@@ -110,7 +110,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevStatisticsByRoute() {
 	suite.Require().Equal([]*sdk.Coin{{Denom: types.AtomDenomination, Amount: sdk.NewInt(10000)}}, res.Statistics.Profits)
 
 	// Pseudo execute another trade
-	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, swaproutertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}}, types.AtomDenomination, sdk.NewInt(80000))
+	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, poolmanagertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}}, types.AtomDenomination, sdk.NewInt(80000))
 	suite.Require().NoError(err)
 
 	// Verify statistics
@@ -121,7 +121,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevStatisticsByRoute() {
 	suite.Require().Equal([]*sdk.Coin{{Denom: types.AtomDenomination, Amount: sdk.NewInt(90000)}}, res.Statistics.Profits)
 
 	// Pseudo execute another trade in a different denom
-	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, swaproutertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}}, types.OsmosisDenomination, sdk.NewInt(80000))
+	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, poolmanagertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}}, types.OsmosisDenomination, sdk.NewInt(80000))
 	suite.Require().NoError(err)
 
 	// Verify statistics
@@ -141,7 +141,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
 	suite.Require().Nil(res)
 
 	// Pseudo execute a trade
-	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, swaproutertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}}, types.OsmosisDenomination, sdk.NewInt(10000))
+	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, poolmanagertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}}, types.OsmosisDenomination, sdk.NewInt(10000))
 	suite.Require().NoError(err)
 
 	// Verify statistics
@@ -153,7 +153,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
 	suite.Require().Equal([]*sdk.Coin{{Denom: types.OsmosisDenomination, Amount: sdk.NewInt(10000)}}, res.Statistics[0].Profits)
 
 	// Pseudo execute another trade
-	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, swaproutertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}}, types.OsmosisDenomination, sdk.NewInt(80000))
+	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, poolmanagertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}}, types.OsmosisDenomination, sdk.NewInt(80000))
 	suite.Require().NoError(err)
 
 	// Verify statistics
@@ -165,7 +165,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
 	suite.Require().Equal([]*sdk.Coin{{Denom: types.OsmosisDenomination, Amount: sdk.NewInt(90000)}}, res.Statistics[0].Profits)
 
 	// Pseudo execute another trade on a different route
-	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, swaproutertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 4}}, types.OsmosisDenomination, sdk.NewInt(80000))
+	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, poolmanagertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 4}}, types.OsmosisDenomination, sdk.NewInt(80000))
 	suite.Require().NoError(err)
 
 	// Verify statistics
@@ -180,7 +180,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
 	suite.Require().Equal([]*sdk.Coin{{Denom: types.OsmosisDenomination, Amount: sdk.NewInt(80000)}}, res.Statistics[1].Profits)
 
 	// Pseudo execute another trade on a different route and denom
-	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, swaproutertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 5}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 4}}, types.AtomDenomination, sdk.NewInt(80000))
+	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, poolmanagertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 5}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 4}}, types.AtomDenomination, sdk.NewInt(80000))
 	suite.Require().NoError(err)
 
 	// Verify statistics
