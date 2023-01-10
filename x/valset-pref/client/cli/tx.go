@@ -19,6 +19,8 @@ func GetTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, NewSetValSetCmd)
 	osmocli.AddTxCmd(txCmd, NewDelValSetCmd)
 	osmocli.AddTxCmd(txCmd, NewUnDelValSetCmd)
+	osmocli.AddTxCmd(txCmd, NewReDelValSetCmd)
+	osmocli.AddTxCmd(txCmd, NewWithRewValSetCmd)
 	return txCmd
 }
 
@@ -36,7 +38,7 @@ func NewDelValSetCmd() (*osmocli.TxCliDesc, *types.MsgDelegateToValidatorSet) {
 	return &osmocli.TxCliDesc{
 		Use:     "delegate-valset [delegator_addr] [amount]",
 		Short:   "Delegate tokens to existing valset using delegatorAddress and tokenAmount.",
-		Example: "osmosisd tx valset-pref delegate-valset  osmo1... 100stake",
+		Example: "osmosisd tx valset-pref delegate-valset osmo1... 100stake",
 		NumArgs: 2,
 	}, &types.MsgDelegateToValidatorSet{}
 }
@@ -45,9 +47,28 @@ func NewUnDelValSetCmd() (*osmocli.TxCliDesc, *types.MsgUndelegateFromValidatorS
 	return &osmocli.TxCliDesc{
 		Use:     "undelegate-valset [delegator_addr] [amount]",
 		Short:   "UnDelegate tokens from existing valset using delegatorAddress and tokenAmount.",
-		Example: "osmosisd tx valset-pref undelegate-valset  osmo1... 100stake",
+		Example: "osmosisd tx valset-pref undelegate-valset osmo1... 100stake",
 		NumArgs: 2,
 	}, &types.MsgUndelegateFromValidatorSet{}
+}
+
+func NewReDelValSetCmd() (*osmocli.TxCliDesc, *types.MsgRedelegateValidatorSet) {
+	return &osmocli.TxCliDesc{
+		Use:              "redelegate-valset [delegator_addr] [validators] [weights]",
+		Short:            "Redelegate tokens from existing validators to new sets of validators",
+		Example:          "osmosisd tx valset-pref redelegate-valset  osmo1... osmovaloper1efg...,osmovaloper1hij...  0.56,0.44",
+		NumArgs:          3,
+		ParseAndBuildMsg: NewMsgReDelValidatorSetPreference,
+	}, &types.MsgRedelegateValidatorSet{}
+}
+
+func NewWithRewValSetCmd() (*osmocli.TxCliDesc, *types.MsgWithdrawDelegationRewards) {
+	return &osmocli.TxCliDesc{
+		Use:     "withdraw-reward-valset [delegator_addr]",
+		Short:   "Withdraw delegation reward form the new validator set.",
+		Example: "osmosisd tx valset-pref withdraw-valset osmo1...",
+		NumArgs: 1,
+	}, &types.MsgWithdrawDelegationRewards{}
 }
 
 func NewMsgSetValidatorSetPreference(clientCtx client.Context, args []string, fs *pflag.FlagSet) (sdk.Msg, error) {
@@ -56,6 +77,35 @@ func NewMsgSetValidatorSetPreference(clientCtx client.Context, args []string, fs
 		return nil, err
 	}
 
+	valset, err := ValidateValAddrAndWeight(args)
+	if err != nil {
+		return nil, err
+	}
+
+	return types.NewMsgSetValidatorSetPreference(
+		delAddr,
+		valset,
+	), nil
+}
+
+func NewMsgReDelValidatorSetPreference(clientCtx client.Context, args []string, fs *pflag.FlagSet) (sdk.Msg, error) {
+	delAddr, err := sdk.AccAddressFromBech32(args[0])
+	if err != nil {
+		return nil, err
+	}
+
+	valset, err := ValidateValAddrAndWeight(args)
+	if err != nil {
+		return nil, err
+	}
+
+	return types.NewMsgRedelegateValidatorSet(
+		delAddr,
+		valset,
+	), nil
+}
+
+func ValidateValAddrAndWeight(args []string) ([]types.ValidatorPreference, error) {
 	var valAddrs []string
 	valAddrs = append(valAddrs, strings.Split(args[1], ",")...)
 
@@ -80,8 +130,5 @@ func NewMsgSetValidatorSetPreference(clientCtx client.Context, args []string, fs
 		})
 	}
 
-	return types.NewMsgSetValidatorSetPreference(
-		delAddr,
-		valset,
-	), nil
+	return valset, nil
 }
