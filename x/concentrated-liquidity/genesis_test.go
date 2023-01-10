@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	osmoapp "github.com/osmosis-labs/osmosis/v13/app"
-	cl "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
+	osmoapp "github.com/osmosis-labs/osmosis/v14/app"
+	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 var (

@@ -10,7 +10,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
 )
 
 type Keeper struct {

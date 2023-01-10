@@ -5,9 +5,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cl "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
+	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 const validPoolId = 1

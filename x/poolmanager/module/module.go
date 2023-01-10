@@ -15,12 +15,12 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
-	gammsimulation "github.com/osmosis-labs/osmosis/v13/x/gamm/simulation"
-	"github.com/osmosis-labs/osmosis/v13/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v13/x/poolmanager/client/cli"
-	"github.com/osmosis-labs/osmosis/v13/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v14/simulation/simtypes"
+	gammsimulation "github.com/osmosis-labs/osmosis/v14/x/gamm/simulation"
+	"github.com/osmosis-labs/osmosis/v14/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/client/cli"
+	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 var (

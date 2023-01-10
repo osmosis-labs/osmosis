@@ -5,9 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
 
 // BuildRoutes builds all of the possible arbitrage routes given the tokenIn, tokenOut and poolId that were used in the swap

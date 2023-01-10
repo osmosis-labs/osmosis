@@ -6,8 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
-	"github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
+	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
+	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 // RouteExactAmountIn defines the input denom and input amount for the first pool,

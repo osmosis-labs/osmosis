@@ -11,11 +11,11 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/v14/x/mint/types"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
 
 	"github.com/stretchr/testify/suite"
 
@@ -26,9 +26,9 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 
-	osmosisibctesting "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/testutil"
+	osmosisibctesting "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/testutil"
 
-	"github.com/osmosis-labs/osmosis/v13/tests/ibc-hooks/testutils"
+	"github.com/osmosis-labs/osmosis/v14/tests/ibc-hooks/testutils"
 )
 
 type HooksTestSuite struct {

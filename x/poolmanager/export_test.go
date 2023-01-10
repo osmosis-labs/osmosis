@@ -3,7 +3,7 @@ package poolmanager
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 func (k Keeper) GetNextPoolIdAndIncrement(ctx sdk.Context) uint64 {

@@ -8,10 +8,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v13/x/twap/client"
-	"github.com/osmosis-labs/osmosis/v13/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v14/x/twap/client"
+	"github.com/osmosis-labs/osmosis/v14/x/twap/client/queryproto"
 )
 
 type QueryTestSuite struct {

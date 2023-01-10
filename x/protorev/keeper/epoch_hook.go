@@ -3,8 +3,8 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
 
 type EpochHooks struct {

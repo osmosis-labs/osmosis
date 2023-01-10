@@ -1,4 +1,4 @@
-module github.com/osmosis-labs/osmosis/v13
+module github.com/osmosis-labs/osmosis/v14
 
 go 1.18
 

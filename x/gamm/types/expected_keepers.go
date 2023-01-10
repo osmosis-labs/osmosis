@@ -5,7 +5,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v13/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 // AccountKeeper defines the account contract that must be fulfilled when
