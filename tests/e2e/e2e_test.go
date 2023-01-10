@@ -34,6 +34,10 @@ import (
 // in-response to a testnet incident when performing the geometric twap
 // upgrade. Upon adding the migrations logic, the tests began to pass.
 func (s *IntegrationTestSuite) TestGeometricTwapMigration() {
+	if s.skipUpgrade {
+		s.T().Skip("Skipping upgrade tests")
+	}
+
 	const (
 		// Configurations for tests/e2e/scripts/pool1A.json
 		// This pool gets initialized pre-upgrade.
@@ -60,10 +64,6 @@ func (s *IntegrationTestSuite) TestGeometricTwapMigration() {
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.
 // Additionally, it attempst to create a pool with IBC denoms.
 func (s *IntegrationTestSuite) TestIBCTokenTransferAndCreatePool() {
-
-	// TODO: remove
-	s.T().SkipNow()
-
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
@@ -87,10 +87,6 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferAndCreatePool() {
 // - voting no on the proposal from the delegator wallet
 // - ensuring that delegator's wallet overwrites the validator's vote
 func (s *IntegrationTestSuite) TestSuperfluidVoting() {
-
-	// TODO: remove
-	s.T().SkipNow()
-
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
@@ -176,10 +172,6 @@ func copyFile(a, b string) error {
 }
 
 func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
-
-	// TODO: remove
-	s.T().SkipNow()
-
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
@@ -276,10 +268,6 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 }
 
 func (s *IntegrationTestSuite) TestIBCWasmHooks() {
-
-	// TODO: remove
-	s.T().SkipNow()
-
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
@@ -353,10 +341,6 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 
 // TestAddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.
 func (s *IntegrationTestSuite) TestAddToExistingLockPostUpgrade() {
-
-	// TODO: remove
-	s.T().SkipNow()
-
 	if s.skipUpgrade {
 		s.T().Skip("Skipping AddToExistingLockPostUpgrade test")
 	}
@@ -372,10 +356,6 @@ func (s *IntegrationTestSuite) TestAddToExistingLockPostUpgrade() {
 
 // TestAddToExistingLock tests lockups to both regular and superfluid locks.
 func (s *IntegrationTestSuite) TestAddToExistingLock() {
-
-	// TODO: remove
-	s.T().SkipNow()
-
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
@@ -400,10 +380,6 @@ func (s *IntegrationTestSuite) TestAddToExistingLock() {
 // because twap keep time = epoch time / 4 and we use a timer
 // to wait for at least the twap keep time.
 func (s *IntegrationTestSuite) TestArithmeticTWAP() {
-
-	// TODO: remove
-	s.T().SkipNow()
-
 	const (
 		poolFile   = "nativeDenomThreeAssetPool.json"
 		walletName = "arithmetic-twap-wallet"
@@ -581,10 +557,6 @@ func (s *IntegrationTestSuite) TestArithmeticTWAP() {
 }
 
 func (s *IntegrationTestSuite) TestStateSync() {
-
-	// TODO: remove
-	s.T().SkipNow()
-
 	if s.skipStateSync {
 		s.T().Skip()
 	}
@@ -678,10 +650,6 @@ func (s *IntegrationTestSuite) TestStateSync() {
 }
 
 func (s *IntegrationTestSuite) TestExpeditedProposals() {
-
-	// TODO: remove
-	s.T().SkipNow()
-
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
@@ -721,10 +689,6 @@ func (s *IntegrationTestSuite) TestExpeditedProposals() {
 // Upon swapping 1_000_000 uosmo for stake, supply changes, making uosmo less expensive.
 // As a result of the swap, twap changes to 0.5.
 func (s *IntegrationTestSuite) TestGeometricTWAP() {
-
-	// TODO: remove
-	s.T().SkipNow()
-
 	const (
 		// This pool contains 1_000_000 uosmo and 2_000_000 stake.
 		// Equals weights.
