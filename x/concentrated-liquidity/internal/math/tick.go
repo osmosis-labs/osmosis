@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 var sdkNineDec = sdk.NewDec(9)
