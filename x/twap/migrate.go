@@ -15,7 +15,10 @@ func NewMigrator(keeper Keeper) Migrator {
 	return Migrator{keeper: keeper}
 }
 
-func (m Migrator) Migrate1To2(ctx sdk.Context) error {
+// Migrate1To2GeometricTwapAcc migrates all existing twap records
+// by initializing their geometric twap accumulator to zero.
+// Return nil on success, error otherwise.
+func (m Migrator) Migrate1To2GeometricTwapAcc(ctx sdk.Context) error {
 	return m.keeper.initializeGeometricTwapAcc(ctx, sdk.ZeroDec())
 }
 
@@ -30,6 +33,14 @@ func (k Keeper) MigrateExistingPools(ctx sdk.Context, latestPoolId uint64) error
 	return nil
 }
 
+// initializeGeometricTwapAcc initializes all existing twap records in state
+// with the given value. Returns nil on success, error otherwise.
+// Returns error if:
+// - fails to get historical time indexed records.
+// - does not find any time indexed records.
+// - the time indexed records returned from state are written back
+// in incorrect order. The order must be ascending by time so that
+// we update the "most recent" index with the right records correctly.
 func (k Keeper) initializeGeometricTwapAcc(ctx sdk.Context, value sdk.Dec) error {
 	// In ascending order by time.
 	historicalTimeIndexed, err := k.getAllHistoricalTimeIndexedTWAPs(ctx)
@@ -56,6 +67,10 @@ func (k Keeper) initializeGeometricTwapAcc(ctx sdk.Context, value sdk.Dec) error
 		}
 
 		record.GeometricTwapAccumulator = value
+		// The call to this updates all of:
+		// - time-indexed records
+		// - pool-indexed records
+		// - most recent records
 		k.storeNewRecord(ctx, record)
 	}
 	return nil

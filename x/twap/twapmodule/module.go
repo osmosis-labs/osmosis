@@ -81,7 +81,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: twapclient.Querier{K: am.k}})
 
 	m := twap.NewMigrator(am.k)
-	err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1To2)
+	err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1To2GeometricTwapAcc)
 	if err != nil {
 		panic(err)
 	}
