@@ -241,7 +241,7 @@ func (suite *TestSuite) TestInitializeGeometricTwap() {
 			// Initialize the geometric accumulator to get the expected values.
 			expectedHistoricalPoolIndexed := updateGeometricAccum(oldHistoricalPoolIndexed)
 
-			// Repeate for historical time indexed records.
+			// Repeat for historical time indexed records.
 			oldHistoricalTimeIndexed, err := k.GetAllHistoricalTimeIndexedTWAPs(ctx)
 			suite.Require().NoError(err)
 			expectedHistoricalTimeIndexed := updateGeometricAccum(oldHistoricalTimeIndexed)
