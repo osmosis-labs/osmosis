@@ -233,7 +233,20 @@ func (suite *TestSuite) TestInitializeGeometricTwap() {
 			ctx := suite.Ctx
 
 			suite.preSetRecords(tc.preExistingRecords)
-			err := k.InitializeGeometricTwap(ctx, sdk.OneDec())
+
+			// Grab all historical pool indexed twap records prior to initializing the
+			// geometric accumulator.
+			oldHistoricalPoolIndexed, err := k.GetAllHistoricalPoolIndexedTWAPs(ctx)
+			suite.Require().NoError(err)
+			// Initialize the geometric accumulator to get the expected values.
+			expectedHistoricalPoolIndexed := updateGeometricAccum(oldHistoricalPoolIndexed)
+
+			// Repeate for historical time indexed records.
+			oldHistoricalTimeIndexed, err := k.GetAllHistoricalTimeIndexedTWAPs(ctx)
+			suite.Require().NoError(err)
+			expectedHistoricalTimeIndexed := updateGeometricAccum(oldHistoricalTimeIndexed)
+
+			err = k.InitializeGeometricTwap(ctx, sdk.OneDec())
 
 			if tc.expectError {
 				suite.Require().Error(err)
@@ -242,6 +255,17 @@ func (suite *TestSuite) TestInitializeGeometricTwap() {
 
 			suite.Require().NoError(err)
 
+			// Validate pool indexed
+			actualHistoricalPoolIndexed, err := k.GetAllHistoricalPoolIndexedTWAPs(ctx)
+			suite.Require().NoError(err)
+			suite.Require().Equal(expectedHistoricalPoolIndexed, actualHistoricalPoolIndexed)
+
+			// Validate time indexed
+			actualHistoricalTimeIndexed, err := k.GetAllHistoricalTimeIndexedTWAPs(ctx)
+			suite.Require().NoError(err)
+			suite.Require().Equal(expectedHistoricalTimeIndexed, actualHistoricalTimeIndexed)
+
+			// Validate most recent
 			for poolId, expectedMostRecentRecord := range tc.expectedMostRecent {
 				actualMostRecentRecord, err := k.GetAllMostRecentRecordsForPool(ctx, poolId)
 				suite.Require().NoError(err)
