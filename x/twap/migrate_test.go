@@ -103,6 +103,15 @@ func (suite *TestSuite) TestInitializeGeometricTwap() {
 		return records
 	}
 
+	merge := func(records [][]types.TwapRecord) []types.TwapRecord {
+		var result []types.TwapRecord
+		for _, r := range records {
+			r := r
+			result = append(result, r...)
+		}
+		return result
+	}
+
 	tests := map[string]struct {
 		expectError bool
 
@@ -111,22 +120,95 @@ func (suite *TestSuite) TestInitializeGeometricTwap() {
 		// pool id -> most recent records
 		expectedMostRecent map[uint64][]types.TwapRecord
 	}{
-		// "one record, one pool": {
-		// 	preExistingRecords: []types.TwapRecord{
-		// 		baseRecord,
-		// 	},
+		"one record, one pool": {
+			preExistingRecords: []types.TwapRecord{
+				baseRecord,
+			},
 
-		// 	expectedMostRecent: map[uint64][]types.TwapRecord{
-		// 		1: {
-		// 			baseRecord,
-		// 		},
-		// 	},
-		// },
+			expectedMostRecent: map[uint64][]types.TwapRecord{
+				baseRecord.PoolId: setGeometricAccumToOne([]types.TwapRecord{baseRecord}),
+			},
+		},
 		"three records, one pool": {
 			preExistingRecords: newThreeAssetRecord(basePoolId, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
 
 			expectedMostRecent: map[uint64][]types.TwapRecord{
-				1: setGeometricAccumToOne(newThreeAssetRecord(basePoolId, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
+				basePoolId: setGeometricAccumToOne(newThreeAssetRecord(basePoolId, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
+			},
+		},
+		"two pools, one record each": {
+			preExistingRecords: []types.TwapRecord{
+				baseRecord,
+				withPoolId(baseRecord, baseRecord.PoolId+1),
+			},
+
+			expectedMostRecent: map[uint64][]types.TwapRecord{
+				baseRecord.PoolId:     setGeometricAccumToOne([]types.TwapRecord{baseRecord}),
+				baseRecord.PoolId + 1: setGeometricAccumToOne([]types.TwapRecord{withPoolId(baseRecord, baseRecord.PoolId+1)}),
+			},
+		},
+		"two pools, multiple records each at the same time": {
+			preExistingRecords: append(
+				newThreeAssetRecord(basePoolId, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
+				newThreeAssetRecord(basePoolId+1, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())...),
+
+			expectedMostRecent: map[uint64][]types.TwapRecord{
+				baseRecord.PoolId:     setGeometricAccumToOne(newThreeAssetRecord(basePoolId, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
+				baseRecord.PoolId + 1: setGeometricAccumToOne(newThreeAssetRecord(basePoolId+1, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
+			},
+		},
+		"two pools, multiple records each at different times": {
+			preExistingRecords: append(
+				newThreeAssetRecord(basePoolId, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
+				newThreeAssetRecord(basePoolId+1, baseTime.Add(time.Second), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())...),
+
+			expectedMostRecent: map[uint64][]types.TwapRecord{
+				baseRecord.PoolId:     setGeometricAccumToOne(newThreeAssetRecord(basePoolId, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
+				baseRecord.PoolId + 1: setGeometricAccumToOne(newThreeAssetRecord(basePoolId+1, baseTime.Add(time.Second), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
+			},
+		},
+		"three pools, 2 at the same time, 1 is not, entries and different time for each": {
+			preExistingRecords: merge([][]types.TwapRecord{
+				newThreeAssetRecord(basePoolId, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
+				newThreeAssetRecord(basePoolId+1, baseTime.Add(time.Second), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
+				newThreeAssetRecord(basePoolId+2, baseTime.Add(time.Second), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
+			}),
+
+			expectedMostRecent: map[uint64][]types.TwapRecord{
+				baseRecord.PoolId:     setGeometricAccumToOne(newThreeAssetRecord(basePoolId, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
+				baseRecord.PoolId + 1: setGeometricAccumToOne(newThreeAssetRecord(basePoolId+1, baseTime.Add(time.Second), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
+				baseRecord.PoolId + 2: setGeometricAccumToOne(newThreeAssetRecord(basePoolId+2, baseTime.Add(time.Second), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
+			},
+		},
+		"three pools, 2 at the same time, 1 is not, entries and different time for each. entries at various times per pool": {
+			preExistingRecords: merge([][]types.TwapRecord{
+				// pool 1
+				newThreeAssetRecord(basePoolId, baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
+				newThreeAssetRecord(basePoolId, baseTime.Add(time.Second), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
+				newThreeAssetRecord(basePoolId, baseTime.Add(time.Second*2), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
+				// pool 2
+				newThreeAssetRecord(basePoolId+1, baseTime.Add(time.Second), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
+				newThreeAssetRecord(basePoolId+1, baseTime.Add(time.Second*3), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
+				// pool 3
+				newThreeAssetRecord(basePoolId+2, baseTime.Add(time.Second), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
+				newThreeAssetRecord(basePoolId+2, baseTime.Add(time.Second*2), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
+				newThreeAssetRecord(basePoolId+2, baseTime.Add(time.Second*3), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
+				newThreeAssetRecord(basePoolId+2, baseTime.Add(time.Second*4), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
+			}),
+
+			expectedMostRecent: map[uint64][]types.TwapRecord{
+				baseRecord.PoolId: merge([][]types.TwapRecord{
+					setGeometricAccumToOne(newThreeAssetRecord(basePoolId, baseTime.Add(time.Second*2), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
+				},
+				),
+				baseRecord.PoolId + 1: merge([][]types.TwapRecord{
+					setGeometricAccumToOne(newThreeAssetRecord(basePoolId+1, baseTime.Add(time.Second*3), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
+				},
+				),
+				baseRecord.PoolId + 2: merge([][]types.TwapRecord{
+					setGeometricAccumToOne(newThreeAssetRecord(basePoolId+2, baseTime.Add(time.Second*4), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())),
+				},
+				),
 			},
 		},
 	}
@@ -148,16 +230,16 @@ func (suite *TestSuite) TestInitializeGeometricTwap() {
 
 			suite.Require().NoError(err)
 
-			suite.Require().Greater(len(tc.expectedMostRecent), 0)
 			for poolId, expectedMostRecentRecord := range tc.expectedMostRecent {
 				actualMostRecentRecord, err := k.GetAllMostRecentRecordsForPool(ctx, poolId)
 				suite.Require().NoError(err)
+
+				suite.Require().Equal(len(tc.expectedMostRecent[poolId]), len(actualMostRecentRecord))
 
 				for i, expectedRecord := range expectedMostRecentRecord {
 					suite.Require().Equal(expectedRecord, actualMostRecentRecord[i])
 				}
 			}
-
 		})
 	}
 }

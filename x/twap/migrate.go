@@ -87,9 +87,8 @@ func (k Keeper) initializeGeometricTwapAcc(ctx sdk.Context, value sdk.Dec) error
 		if i > 0 {
 			previousRecord := historicalTimeIndexed[i-1]
 
-			isSamePool := previousRecord.PoolId == record.PoolId
-			isCorrectOrder := previousRecord.Time.Before(record.Time)
-			if !isCorrectOrder && !isSamePool {
+			isInvalidOrder := previousRecord.Time.After(record.Time)
+			if isInvalidOrder {
 				return fmt.Errorf("error: historical twap records are not in ascending order, (%v), was after (%v)", previousRecord, record)
 			}
 		}
