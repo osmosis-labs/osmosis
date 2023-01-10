@@ -35,7 +35,7 @@ var (
 
 	// format is just pool id | denom1 | denom2
 	// made for getting most recent key
-	mostRecentTWAPsPrefix = mostRecentTWAPsNoSeparator + KeySeparator
+	MostRecentTWAPsPrefix = mostRecentTWAPsNoSeparator + KeySeparator
 	// format is time | pool id | denom1 | denom2
 	// made for efficiently deleting records by time in pruning
 	HistoricalTWAPTimeIndexPrefix = historicalTWAPTimeIndexNoSeparator + KeySeparator
@@ -48,7 +48,7 @@ var (
 
 func FormatMostRecentTWAPKey(poolId uint64, denom1, denom2 string) []byte {
 	poolIdS := osmoutils.FormatFixedLengthU64(poolId)
-	return []byte(fmt.Sprintf("%s%s%s%s%s%s", mostRecentTWAPsPrefix, poolIdS, KeySeparator, denom1, KeySeparator, denom2))
+	return []byte(fmt.Sprintf("%s%s%s%s%s%s", MostRecentTWAPsPrefix, poolIdS, KeySeparator, denom1, KeySeparator, denom2))
 }
 
 // TODO: Replace historical management with ORM, we currently accept 2x write amplification right now.
@@ -77,8 +77,8 @@ func FormatHistoricalPoolIndexTimeSuffix(poolId uint64, denom1, denom2 string, a
 func GetAllMostRecentTwapsForPool(store sdk.KVStore, poolId uint64) ([]TwapRecord, error) {
 	poolIdS := osmoutils.FormatFixedLengthU64(poolId)
 	poolIdPlusOneS := osmoutils.FormatFixedLengthU64(poolId + 1)
-	startPrefix := fmt.Sprintf("%s%s%s", mostRecentTWAPsPrefix, poolIdS, KeySeparator)
-	endPrefix := fmt.Sprintf("%s%s%s", mostRecentTWAPsPrefix, poolIdPlusOneS, KeySeparator)
+	startPrefix := fmt.Sprintf("%s%s%s", MostRecentTWAPsPrefix, poolIdS, KeySeparator)
+	endPrefix := fmt.Sprintf("%s%s%s", MostRecentTWAPsPrefix, poolIdPlusOneS, KeySeparator)
 	return osmoutils.GatherValuesFromStore(store, []byte(startPrefix), []byte(endPrefix), ParseTwapFromBz)
 }
 
