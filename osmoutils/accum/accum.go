@@ -254,6 +254,8 @@ func (accum AccumulatorObject) GetPositionSize(name string) (sdk.Dec, error) {
 	return position.NumShares, nil
 }
 
+// HasPosition returns true if a position with the given name exists,
+// false otherwise. Returns error if internal database error occurs.
 func (accum AccumulatorObject) HasPosition(name string) (bool, error) {
 	_, err := getPosition(accum, name)
 
