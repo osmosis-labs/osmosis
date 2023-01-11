@@ -4,19 +4,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 // initOrUpdateTick retrieves the tickInfo from the specified tickIndex and updates both the liquidityNet and LiquidityGross.
 // if we are initializing or updating an upper tick, we subtract the liquidityIn from the LiquidityNet
 // if we are initializing or updating an lower tick, we add the liquidityIn from the LiquidityNet
 func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
-	if !k.poolExists(ctx, poolId) {
-		return types.PoolNotFoundError{PoolId: poolId}
-	}
-
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return err
@@ -45,6 +41,7 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Add(liquidityIn)
 	}
 
+	// if given tickIndex is LTE to current tick, tick's fee growth outside is set as fee accumulator's value
 	if tickIndex <= currentTick {
 		accum, err := k.getFeeAccumulator(ctx, poolId)
 		if err != nil {

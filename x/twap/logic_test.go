@@ -12,10 +12,10 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v13/x/twap"
-	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
-	"github.com/osmosis-labs/osmosis/v13/x/twap/types/twapmock"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v14/x/twap"
+	"github.com/osmosis-labs/osmosis/v14/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v14/x/twap/types/twapmock"
 )
 
 var (

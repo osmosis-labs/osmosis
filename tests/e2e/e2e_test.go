@@ -3,7 +3,6 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
-	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	"io"
 	"os"
 	"path/filepath"
@@ -11,18 +10,56 @@ import (
 	"strings"
 	"time"
 
+	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
+
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
-	"github.com/osmosis-labs/osmosis/v13/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v13/tests/e2e/initialization"
+	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
 )
+
+// TestGeometricTwapMigration tests that the geometric twap record
+// migration runs succesfully. It does so by attempting to execute
+// the swap on the pool created pre-upgrade. When a pool is created
+// pre-upgrade, twap records are initialized for a pool. By runnning
+// a swap post-upgrade, we confirm that the geometric twap was initialized
+// correctly and does not cause a chain halt. This test was created
+// in-response to a testnet incident when performing the geometric twap
+// upgrade. Upon adding the migrations logic, the tests began to pass.
+func (s *IntegrationTestSuite) TestGeometricTwapMigration() {
+	if s.skipUpgrade {
+		s.T().Skip("Skipping upgrade tests")
+	}
+
+	const (
+		// Configurations for tests/e2e/scripts/pool1A.json
+		// This pool gets initialized pre-upgrade.
+		oldPoolId       = 1
+		minAmountOut    = "1"
+		otherDenom      = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
+		migrationWallet = "migration"
+	)
+
+	chainA := s.configurer.GetChainConfig(0)
+	node, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
+
+	uosmoIn := fmt.Sprintf("1000000%s", "uosmo")
+
+	swapWalletAddr := node.CreateWallet(migrationWallet)
+
+	node.BankSend(uosmoIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
+
+	// Swap to create new twap records on the pool that was created pre-upgrade.
+	node.SwapExactAmountIn(uosmoIn, minAmountOut, fmt.Sprintf("%d", oldPoolId), otherDenom, swapWalletAddr)
+}
 
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.
 // Additionally, it attempst to create a pool with IBC denoms.

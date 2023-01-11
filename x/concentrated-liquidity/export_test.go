@@ -4,10 +4,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 var (
@@ -87,11 +87,11 @@ func (k Keeper) CollectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	return k.collectFees(ctx, poolId, owner, lowerTick, upperTick)
 }
 
-func ConvertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (swaproutertypes.PoolI, error) {
+func ConvertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (poolmanagertypes.PoolI, error) {
 	return convertConcentratedToPoolInterface(concentratedPool)
 }
 
-func ConvertPoolInterfaceToConcentrated(poolI swaproutertypes.PoolI) (types.ConcentratedPoolExtension, error) {
+func ConvertPoolInterfaceToConcentrated(poolI poolmanagertypes.PoolI) (types.ConcentratedPoolExtension, error) {
 	return convertPoolInterfaceToConcentrated(poolI)
 }
 

@@ -7,10 +7,10 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v13/tests/mocks"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/v14/tests/mocks"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -211,17 +211,17 @@ func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			keeper := suite.App.GAMMKeeper
 			ctx := suite.Ctx
 
-			var pool swaproutertypes.PoolI
+			var pool poolmanagertypes.PoolI
 			if test.param.poolType == "balancer" {
 				poolId := suite.PrepareBalancerPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
-				pool = poolExt.(swaproutertypes.PoolI)
+				pool = poolExt.(poolmanagertypes.PoolI)
 			} else if test.param.poolType == "stableswap" {
 				poolId := suite.PrepareBasicStableswapPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
-				pool = poolExt.(swaproutertypes.PoolI)
+				pool = poolExt.(poolmanagertypes.PoolI)
 			}
 
 			swapFee := pool.GetSwapFee(suite.Ctx)
@@ -278,17 +278,17 @@ func (suite *KeeperTestSuite) TestCalcInAmtGivenOut() {
 			keeper := suite.App.GAMMKeeper
 			ctx := suite.Ctx
 
-			var pool swaproutertypes.PoolI
+			var pool poolmanagertypes.PoolI
 			if test.param.poolType == "balancer" {
 				poolId := suite.PrepareBalancerPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
-				pool = poolExt.(swaproutertypes.PoolI)
+				pool = poolExt.(poolmanagertypes.PoolI)
 			} else if test.param.poolType == "stableswap" {
 				poolId := suite.PrepareBasicStableswapPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
-				pool = poolExt.(swaproutertypes.PoolI)
+				pool = poolExt.(poolmanagertypes.PoolI)
 			}
 
 			swapFee := pool.GetSwapFee(suite.Ctx)
@@ -493,7 +493,7 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	gammKeeper.SetPool(suite.Ctx, inactivePool)
 
 	type testCase struct {
-		pool       swaproutertypes.PoolI
+		pool       poolmanagertypes.PoolI
 		expectPass bool
 		name       string
 	}
@@ -505,10 +505,10 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	for _, test := range testCases {
 		suite.Run(test.name, func() {
 			// Check swaps
-			_, swapInErr := suite.App.SwapRouterKeeper.RouteExactAmountIn(
+			_, swapInErr := suite.App.PoolManagerKeeper.RouteExactAmountIn(
 				suite.Ctx,
 				suite.TestAccs[0],
-				[]swaproutertypes.SwapAmountInRoute{
+				[]poolmanagertypes.SwapAmountInRoute{
 					{
 						PoolId:        test.pool.GetId(),
 						TokenOutDenom: "bar",
@@ -518,10 +518,10 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 				sdk.ZeroInt(),
 			)
 
-			_, swapOutErr := suite.App.SwapRouterKeeper.RouteExactAmountOut(
+			_, swapOutErr := suite.App.PoolManagerKeeper.RouteExactAmountOut(
 				suite.Ctx,
 				suite.TestAccs[0],
-				[]swaproutertypes.SwapAmountOutRoute{
+				[]poolmanagertypes.SwapAmountOutRoute{
 					{
 						PoolId:       test.pool.GetId(),
 						TokenInDenom: "bar",

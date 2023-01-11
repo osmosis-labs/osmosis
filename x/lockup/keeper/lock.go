@@ -11,7 +11,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
-	"github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v14/x/lockup/types"
 )
 
 // WithdrawAllMaturedLocks withdraws every lock thats in the process of unlocking, and has finished unlocking by

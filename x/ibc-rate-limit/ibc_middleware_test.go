@@ -15,9 +15,9 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	osmosisibctesting "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/testutil"
-	"github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
+	osmosisibctesting "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/testutil"
+	"github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 )
 
 type MiddlewareTestSuite struct {

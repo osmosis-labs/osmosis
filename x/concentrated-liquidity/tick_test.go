@@ -5,9 +5,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cl "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
+	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 const validPoolId = 1
@@ -230,6 +230,13 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 
 			// Create a default CL pool
 			s.PrepareConcentratedPool()
+			_, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			s.Require().NoError(err)
+
+			// manually update accumulator for testing
+			defaultAccumCoins := sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
+			feeAccum.UpdateAccumulator(defaultAccumCoins)
 
 			// If tickExists set, initialize the specified tick with defaultLiquidityAmt
 			preexistingLiquidity := sdk.ZeroDec()
@@ -260,6 +267,12 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			// Check that the initialized or updated tick matches our expectation
 			s.Require().Equal(test.expectedLiquidityNet, tickInfo.LiquidityNet)
 			s.Require().Equal(test.expectedLiquidityGross, tickInfo.LiquidityGross)
+
+			if test.param.tickIndex <= 0 {
+				s.Require().Equal(defaultAccumCoins, tickInfo.FeeGrowthOutside)
+			} else {
+				s.Require().Equal(sdk.DecCoins(nil), tickInfo.FeeGrowthOutside)
+			}
 		})
 	}
 }

@@ -8,14 +8,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v14/x/protorev"
+	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	balancertypes "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/stableswap"
 
-	osmosisapp "github.com/osmosis-labs/osmosis/v13/app"
+	osmosisapp "github.com/osmosis-labs/osmosis/v14/app"
 )
 
 type KeeperTestSuite struct {
@@ -91,6 +92,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 	// Init search routes
 	suite.setUpTokenPairRoutes()
 	suite.Commit()
+
+	// Set the Admin Account
+	suite.adminAccount = apptesting.CreateRandomAccounts(1)[0]
+	err := protorev.HandleSetProtoRevAdminAccount(suite.Ctx, *suite.App.ProtoRevKeeper, &types.SetProtoRevAdminAccountProposal{Account: suite.adminAccount.String()})
+	suite.Require().NoError(err)
 }
 
 // setUpPools sets up the pools needed for testing
@@ -644,12 +650,12 @@ func (suite *KeeperTestSuite) setUpPools() {
 	}
 
 	// Set all of the pool info into the stores
-	suite.App.AppKeepers.ProtoRevKeeper.EpochHooks().AfterEpochEnd(suite.Ctx, "week", 1)
+	suite.App.ProtoRevKeeper.EpochHooks().AfterEpochEnd(suite.Ctx, "week", 1)
 }
 
 // createStableswapPool creates a stableswap pool with the given pool assets and params
 func (suite *KeeperTestSuite) createStableswapPool(initialLiquidity sdk.Coins, poolParams stableswap.PoolParams, scalingFactors []uint64) {
-	_, err := suite.App.SwapRouterKeeper.CreatePool(
+	_, err := suite.App.PoolManagerKeeper.CreatePool(
 		suite.Ctx,
 		stableswap.NewMsgCreateStableswapPool(suite.TestAccs[1], poolParams, initialLiquidity, scalingFactors, ""))
 	suite.Require().NoError(err)
@@ -670,7 +676,7 @@ func (suite *KeeperTestSuite) prepareCustomBalancerPool(
 	poolAssets []balancertypes.PoolAsset,
 	poolParams balancer.PoolParams,
 ) uint64 {
-	poolID, err := suite.App.SwapRouterKeeper.CreatePool(
+	poolID, err := suite.App.PoolManagerKeeper.CreatePool(
 		suite.Ctx,
 		balancer.NewMsgCreateBalancerPool(suite.TestAccs[1], poolParams, poolAssets, ""),
 	)
@@ -688,9 +694,20 @@ func (suite *KeeperTestSuite) fundAllAccountsWith() {
 
 // setUpTokenPairRoutes sets up the searcher routes for testing
 func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
+	// General Test Route
 	atomAkash := types.NewTrade(0, types.AtomDenomination, "akash")
 	akashBitcoin := types.NewTrade(14, "akash", "bitcoin")
 	atomBitcoin := types.NewTrade(4, "bitcoin", types.AtomDenomination)
+
+	// Stableswap Route
+	uosmoUSDC := types.NewTrade(29, types.OsmosisDenomination, "usdc")
+	usdcBUSD := types.NewTrade(34, "usdc", "busd")
+	busdUOSMO := types.NewTrade(30, "busd", types.OsmosisDenomination)
+
+	// Atom Route
+	atomIBC1 := types.NewTrade(31, types.AtomDenomination, "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC")
+	ibc1IBC2 := types.NewTrade(32, "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC", "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293")
+	ibc2ATOM := types.NewTrade(33, "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293", types.AtomDenomination)
 
 	suite.tokenPairArbRoutes = []*types.TokenPairArbRoutes{
 		{
@@ -702,9 +719,27 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 				},
 			},
 		},
+		{
+			TokenIn:  "usdc",
+			TokenOut: types.OsmosisDenomination,
+			ArbRoutes: []*types.Route{
+				{
+					Trades: []*types.Trade{&uosmoUSDC, &usdcBUSD, &busdUOSMO},
+				},
+			},
+		},
+		{
+			TokenIn:  types.AtomDenomination,
+			TokenOut: "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293",
+			ArbRoutes: []*types.Route{
+				{
+					Trades: []*types.Trade{&atomIBC1, &ibc1IBC2, &ibc2ATOM},
+				},
+			},
+		},
 	}
 
 	for _, tokenPair := range suite.tokenPairArbRoutes {
-		suite.App.AppKeepers.ProtoRevKeeper.SetTokenPairArbRoutes(suite.Ctx, tokenPair.TokenIn, tokenPair.TokenOut, tokenPair)
+		suite.App.ProtoRevKeeper.SetTokenPairArbRoutes(suite.Ctx, tokenPair.TokenIn, tokenPair.TokenOut, tokenPair)
 	}
 }
