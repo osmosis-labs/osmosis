@@ -38,7 +38,7 @@ func TickToPrice(tickIndex, exponentAtPriceOne sdk.Int) (price sdk.Dec, err erro
 	}
 
 	if exponentAtPriceOne.LT(types.PrecisionValueAtPriceOneMin) || exponentAtPriceOne.GT(types.PrecisionValueAtPriceOneMax) {
-		return sdk.Dec{}, fmt.Errorf("exponentAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax)
+		return sdk.Dec{}, types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: exponentAtPriceOne, PrecisionValueAtPriceOneMin: types.PrecisionValueAtPriceOneMin, PrecisionValueAtPriceOneMax: types.PrecisionValueAtPriceOneMax}
 	}
 
 	// The formula is as follows: geometricExponentIncrementDistanceInTicks = 9 * 10**(-exponentAtPriceOne)
@@ -48,10 +48,10 @@ func TickToPrice(tickIndex, exponentAtPriceOne sdk.Int) (price sdk.Dec, err erro
 	// Check that the tick index is between min and max value for the given exponentAtPriceOne
 	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
 	if tickIndex.LT(sdk.NewInt(minTick)) {
-		return sdk.Dec{}, fmt.Errorf("tickIndex must be greater than or equal to %d", minTick)
+		return sdk.Dec{}, types.TickIndexMinimumError{MinTick: minTick}
 	}
 	if tickIndex.GT(sdk.NewInt(maxTick)) {
-		return sdk.Dec{}, fmt.Errorf("tickIndex must be less than or equal to %d", maxTick)
+		return sdk.Dec{}, types.TickIndexMaximumError{MaxTick: maxTick}
 	}
 
 	// Use floor division to determine what the geometricExponent is now (the delta)
@@ -89,7 +89,7 @@ func PriceToTick(price sdk.Dec, exponentAtPriceOne sdk.Int) (sdk.Int, error) {
 	}
 
 	if exponentAtPriceOne.LT(types.PrecisionValueAtPriceOneMin) || exponentAtPriceOne.GT(types.PrecisionValueAtPriceOneMax) {
-		return sdk.Int{}, fmt.Errorf("exponentAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax)
+		return sdk.Int{}, types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: exponentAtPriceOne, PrecisionValueAtPriceOneMin: types.PrecisionValueAtPriceOneMin, PrecisionValueAtPriceOneMax: types.PrecisionValueAtPriceOneMax}
 	}
 
 	// The formula is as follows: geometricExponentIncrementDistanceInTicks = 9 * 10**(-exponentAtPriceOne)
@@ -138,10 +138,10 @@ func PriceToTick(price sdk.Dec, exponentAtPriceOne sdk.Int) (sdk.Int, error) {
 	// Add a check to make sure that the tick index is within the allowed range
 	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
 	if tickIndex.LT(sdk.NewInt(minTick)) {
-		return sdk.Int{}, fmt.Errorf("tickIndex must be greater than or equal to %d", minTick)
+		return sdk.Int{}, types.TickIndexMinimumError{MinTick: minTick}
 	}
 	if tickIndex.GT(sdk.NewInt(maxTick)) {
-		return sdk.Int{}, fmt.Errorf("tickIndex must be less than or equal to %d", maxTick)
+		return sdk.Int{}, types.TickIndexMaximumError{MaxTick: maxTick}
 	}
 
 	return tickIndex, nil

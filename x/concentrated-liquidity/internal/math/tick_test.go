@@ -117,22 +117,22 @@ func (suite *ConcentratedMathTestSuite) TestTickToPrice() {
 		"error: tickIndex less than minimum": {
 			tickIndex:          sdk.NewInt(DefaultMinTick - 1),
 			exponentAtPriceOne: DefaultExponentAtPriceOne,
-			expectedError:      fmt.Errorf("tickIndex must be greater than or equal to %d", DefaultMinTick),
+			expectedError:      types.TickIndexMinimumError{MinTick: DefaultMinTick},
 		},
 		"error: tickIndex greater than maximum": {
 			tickIndex:          sdk.NewInt(DefaultMaxTick + 1),
 			exponentAtPriceOne: DefaultExponentAtPriceOne,
-			expectedError:      fmt.Errorf("tickIndex must be less than or equal to %d", DefaultMaxTick),
+			expectedError:      types.TickIndexMaximumError{MaxTick: DefaultMaxTick},
 		},
 		"error: exponentAtPriceOne less than minimum": {
 			tickIndex:          sdk.NewInt(100),
 			exponentAtPriceOne: types.PrecisionValueAtPriceOneMin.Sub(sdk.OneInt()),
-			expectedError:      fmt.Errorf("exponentAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax),
+			expectedError:      types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: types.PrecisionValueAtPriceOneMin.Sub(sdk.OneInt()), PrecisionValueAtPriceOneMin: types.PrecisionValueAtPriceOneMin, PrecisionValueAtPriceOneMax: types.PrecisionValueAtPriceOneMax},
 		},
 		"error: exponentAtPriceOne greater than maximum": {
 			tickIndex:          sdk.NewInt(100),
 			exponentAtPriceOne: types.PrecisionValueAtPriceOneMax.Add(sdk.OneInt()),
-			expectedError:      fmt.Errorf("exponentAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax),
+			expectedError:      types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: types.PrecisionValueAtPriceOneMax.Add(sdk.OneInt()), PrecisionValueAtPriceOneMin: types.PrecisionValueAtPriceOneMin, PrecisionValueAtPriceOneMax: types.PrecisionValueAtPriceOneMax},
 		},
 		"random": {
 			tickIndex:          sdk.NewInt(-9111000000),
@@ -208,17 +208,17 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 		"error: resulting tickIndex too large": {
 			price:              MaxSpotPrice.Mul(sdk.NewDec(2)),
 			exponentAtPriceOne: DefaultExponentAtPriceOne,
-			expectedError:      fmt.Errorf("tickIndex must be less than or equal to %d", DefaultMaxTick),
+			expectedError:      types.TickIndexMaximumError{MaxTick: DefaultMaxTick},
 		},
 		"error: exponentAtPriceOne less than minimum": {
 			price:              sdk.NewDec(50000),
 			exponentAtPriceOne: types.PrecisionValueAtPriceOneMin.Sub(sdk.OneInt()),
-			expectedError:      fmt.Errorf("exponentAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax),
+			expectedError:      types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: types.PrecisionValueAtPriceOneMin.Sub(sdk.OneInt()), PrecisionValueAtPriceOneMin: types.PrecisionValueAtPriceOneMin, PrecisionValueAtPriceOneMax: types.PrecisionValueAtPriceOneMax},
 		},
 		"error: exponentAtPriceOne greater than maximum": {
 			price:              sdk.NewDec(50000),
 			exponentAtPriceOne: types.PrecisionValueAtPriceOneMax.Add(sdk.OneInt()),
-			expectedError:      fmt.Errorf("exponentAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax),
+			expectedError:      types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: types.PrecisionValueAtPriceOneMax.Add(sdk.OneInt()), PrecisionValueAtPriceOneMin: types.PrecisionValueAtPriceOneMin, PrecisionValueAtPriceOneMax: types.PrecisionValueAtPriceOneMax},
 		},
 		"random": {
 			price:              sdk.MustNewDecFromStr("0.0000000000889"),

@@ -169,3 +169,29 @@ type InitialLiquidityZeroError struct {
 func (e InitialLiquidityZeroError) Error() string {
 	return fmt.Sprintf("first position must contain non-zero value of both assets to determine spot price: Amount0 (%s) Amount1 (%s)", e.Amount0, e.Amount1)
 }
+
+type TickIndexMaximumError struct {
+	MaxTick int64
+}
+
+func (e TickIndexMaximumError) Error() string {
+	return fmt.Sprintf("tickIndex must be less than or equal to %d", e.MaxTick)
+}
+
+type TickIndexMinimumError struct {
+	MinTick int64
+}
+
+func (e TickIndexMinimumError) Error() string {
+	return fmt.Sprintf("tickIndex must be greater than or equal to %d", e.MinTick)
+}
+
+type ExponentAtPriceOneError struct {
+	ProvidedExponentAtPriceOne  sdk.Int
+	PrecisionValueAtPriceOneMin sdk.Int
+	PrecisionValueAtPriceOneMax sdk.Int
+}
+
+func (e ExponentAtPriceOneError) Error() string {
+	return fmt.Sprintf("exponentAtPriceOne provided (%s) must be in the range (%s, %s)", e.ProvidedExponentAtPriceOne, e.PrecisionValueAtPriceOneMin, e.PrecisionValueAtPriceOneMax)
+}
