@@ -251,12 +251,6 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 		poolCreationFeeDecCoins = poolCreationFeeDecCoins.Add(sdk.NewDecCoin(coin.Denom, coin.Amount))
 	}
 
-	_, err := balancer.NewBalancerPool(1, defaultPoolParams, defaultPoolAssets, defaultFutureGovernor, time.Now())
-	require.NoError(suite.T(), err)
-
-	_, err = stableswap.NewStableswapPool(1, defaultStableSwapPoolParams, defaultStableSwapPoolAssets, defaultScalingFactor, "", defaultFutureGovernor)
-	require.NoError(suite.T(), err)
-
 	tests := []struct {
 		name        string
 		pool        func() swaproutertypes.PoolI
@@ -276,7 +270,7 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 				require.NoError(suite.T(), err)
 				return &balancerPool
 			},
-			expectPass:  true,
+			expectPass: true,
 		},
 		{
 			name: "initialize stableswap pool with default assets",
@@ -292,7 +286,7 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 				require.NoError(suite.T(), err)
 				return &stableswapPool
 			},
-			expectPass:  true,
+			expectPass: true,
 		},
 		{
 			name: "initialize a CL pool which cause panic",
@@ -325,7 +319,7 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 				sender = testAccount
 
 				// initializePool with a poolI
-				err = gammKeeper.InitializePool(suite.Ctx, test.pool(), sender)
+				err := gammKeeper.InitializePool(suite.Ctx, test.pool(), sender)
 
 				if test.expectPass {
 					suite.Require().NoError(err, "test: %v", test.name)
