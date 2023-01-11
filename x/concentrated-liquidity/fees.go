@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -10,9 +11,9 @@ import (
 )
 
 const (
-	feeAccumPrefix        = "fee"
-	feeAccumNameSeparator = "/"
-	uintBase              = 10
+	feeAccumPrefix = "fee"
+	keySeparator   = "/"
+	uintBase       = 10
 )
 
 var (
@@ -57,16 +58,38 @@ func (k Keeper) chargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 }
 
 // initializeFeeAccumulatorPosition initializes the pool fee accumulator with given liquidity delta and zero value for the accumulator.
+// Returns nil on success. Returns error if:
+// - fails to get an accumulator for a given poold id
+// - attempts to re-initialize an existing non-zero liqudity position
+// - fails to create a position
 // nolint: unused
-func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec) error {
+func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec) error {
 	// get fee accumulator for the pool
 	feeAccumulator, err := k.getFeeAccumulator(ctx, poolId)
 	if err != nil {
 		return err
 	}
 
+	positionKey := formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
+
+	hasPosition, err := feeAccumulator.HasPosition(positionKey)
+	if err != nil {
+		return err
+	}
+
+	if hasPosition {
+		positionSize, err := feeAccumulator.GetPositionSize(positionKey)
+		if err != nil {
+			return err
+		}
+
+		if !positionSize.IsZero() {
+			return fmt.Errorf("attempted to re-initialize fee accumulator position (%s) with non-zero liquidity", positionKey)
+		}
+	}
+
 	// initialize the owner's position with liquidity Delta and zero accumulator value
-	if err := feeAccumulator.NewPositionCustomAcc(owner.String(), liquidityDelta, sdk.NewDecCoins(), nil); err != nil {
+	if err := feeAccumulator.NewPosition(positionKey, liquidityDelta, nil); err != nil {
 		return err
 	}
 
@@ -75,6 +98,7 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 
 // updateFeeAccumulatorPosition updates the owner's position
 // nolint: unused
+// TODO: test
 func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec, lowerTick int64, upperTick int64) error {
 	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
 	if err != nil {
@@ -87,7 +111,11 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, own
 	}
 
 	// replace position's accumulator with the updated liquidity and the feeGrowthOutside
-	if err := feeAccumulator.UpdatePositionCustomAcc(owner.String(), liquidityDelta, feeGrowthOutside); err != nil {
+	err = feeAccumulator.UpdatePositionCustomAcc(
+		formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick),
+		liquidityDelta,
+		feeGrowthOutside)
+	if err != nil {
 		return err
 	}
 
@@ -102,7 +130,7 @@ func (k Keeper) initOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint6
 	// first try updating fee accum position
 	err := k.updateFeeAccumulatorPosition(ctx, poolId, owner, liquidityDelta, lowerTick, upperTick)
 	if err != nil {
-		err = k.initializeFeeAccumulatorPosition(ctx, poolId, owner, liquidityDelta)
+		err = k.initializeFeeAccumulatorPosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta)
 		if err != nil {
 			return err
 		}
@@ -146,8 +174,9 @@ func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, u
 // getInitialFeeGrowthOutsideForTick returns the initial value of fee growth outside for a given tick.
 // This value depends on the tick's location relative to the current tick.
 //
-// feeGrowthOutside = { feeGrowthGlobal current tick >= tick }
-//                    { 0               current tick <  tick }
+// feeGrowthOutside =
+// { feeGrowthGlobal current tick >= tick }
+// { 0               current tick <  tick }
 //
 // The value is chosen as if all of the fees earned to date had occurrd below the tick.
 // Returns error if the pool with the given id does exist or if fails to get the fee accumulator.
@@ -185,4 +214,10 @@ func calculateFeeGrowth(targetTick int64, feeGrowthOutside sdk.DecCoins, current
 		return feesGrowthGlobal.Sub(feeGrowthOutside)
 	}
 	return feeGrowthOutside
+}
+
+// formatPositionAccumulatorKey formats the position accumulator key prefixed by pool id, owner, lower tick
+// and upper tick with a key separator in-between.
+func formatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) string {
+	return strings.Join([]string{strconv.FormatUint(poolId, uintBase), owner.String(), strconv.FormatInt(lowerTick, uintBase), strconv.FormatInt(upperTick, uintBase)}, keySeparator)
 }

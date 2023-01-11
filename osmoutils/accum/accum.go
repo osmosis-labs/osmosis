@@ -254,6 +254,20 @@ func (accum AccumulatorObject) GetPositionSize(name string) (sdk.Dec, error) {
 	return position.NumShares, nil
 }
 
+func (accum AccumulatorObject) HasPosition(name string) (bool, error) {
+	_, err := getPosition(accum, name)
+
+	if err != nil {
+		isNoPositionError := errors.Is(err, NoPositionError{Name: name})
+		if isNoPositionError {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
+}
+
 // GetValue returns the current value of the accumulator.
 func (accum AccumulatorObject) GetValue() sdk.DecCoins {
 	return accum.value

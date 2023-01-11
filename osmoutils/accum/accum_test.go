@@ -1326,3 +1326,43 @@ func (suite *AccumTestSuite) TestUpdatePositionCustomAcc() {
 		})
 	}
 }
+
+func (suite *AccumTestSuite) TestHasPosition() {
+	// We setup store and accum
+	// once at beginning.
+	suite.SetupTest()
+
+	const (
+		defaultPositionName = "posname"
+	)
+
+	// Setup.
+	accObject := accumPackage.CreateRawAccumObject(suite.store, testNameOne, initialCoinsDenomOne)
+
+	tests := map[string]struct {
+		preCreatePosition bool
+	}{
+		"position exists -> true": {
+			preCreatePosition: true,
+		},
+		"position does not exist -> false": {
+			preCreatePosition: false,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			// Setup
+			if tc.preCreatePosition {
+				err := accObject.NewPosition(defaultPositionName, sdk.ZeroDec(), nil)
+				suite.Require().NoError(err)
+			}
+
+			hasPosition, err := accObject.HasPosition(defaultPositionName)
+			suite.NoError(err)
+
+			suite.Equal(tc.preCreatePosition, hasPosition)
+		})
+	}
+}

@@ -10,61 +10,134 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
+// fields used to identify a fee position.
+type positionIdentifiers struct {
+	poolId    uint64
+	owner     sdk.AccAddress
+	lowerTick int64
+	upperTick int64
+}
+
 var (
 	oneEth = sdk.NewDecCoin(ETH, sdk.OneInt())
 )
 
 func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
-	defaultPoolId := uint64(1)
-	defaultLiquidityDelta := sdk.MustNewDecFromStr("10.0")
+	// Setup is done once so that we test
+	// the relationship between test cases.
+	// For example, that positions with non-zero liquidity
+	// cannot be overriden.
+	s.SetupTest()
+
+	var (
+		defaultPoolId         = uint64(1)
+		defaultLiquidityDelta = sdk.MustNewDecFromStr("10.0")
+		defaultPositionId     = positionIdentifiers{
+			defaultPoolId,
+			s.TestAccs[0],
+			DefaultLowerTick,
+			DefaultUpperTick,
+		}
+	)
+
+	withOwner := func(posId positionIdentifiers, owner sdk.AccAddress) positionIdentifiers {
+		posId.owner = owner
+		return posId
+	}
+
+	withUpperTick := func(posId positionIdentifiers, upperTick int64) positionIdentifiers {
+		posId.upperTick = upperTick
+		return posId
+	}
+
+	withLowerTick := func(posId positionIdentifiers, lowerTick int64) positionIdentifiers {
+		posId.lowerTick = lowerTick
+		return posId
+	}
+
+	clKeeper := s.App.ConcentratedLiquidityKeeper
+
+	err := clKeeper.CreateFeeAccumulator(s.Ctx, defaultPoolId)
+	s.Require().NoError(err)
+
 	type initFeeAccumTest struct {
-		setPoolAccumulator  bool
-		setExistingPosition bool
-		expectedPass        bool
+		name           string
+		liquidityDelta sdk.Dec
+		positionId     positionIdentifiers
+
+		expectedPass bool
 	}
-	tests := map[string]initFeeAccumTest{
-		"existing accumulator, new position": {
-			setPoolAccumulator:  true,
-			setExistingPosition: false,
-			expectedPass:        true,
+	tests := []initFeeAccumTest{
+		{
+			name:           "new zero liqudidity position",
+			liquidityDelta: sdk.ZeroDec(),
+			// Gets overwritten by the next test case
+			positionId:   defaultPositionId,
+			expectedPass: true,
 		},
-		"existing accumulator, try overriding existing position": {
-			setPoolAccumulator:  true,
-			setExistingPosition: true,
-			expectedPass:        true,
+		{
+			name: "new non-zero liqudidity position",
+			// Does not get overwritten by the next test case
+			// because contains non-zero liquidity.
+			liquidityDelta: defaultLiquidityDelta,
+			positionId:     defaultPositionId,
+			expectedPass:   true,
 		},
-		"error: non-existing accumulator": {
-			setPoolAccumulator: false,
-			expectedPass:       false,
+		{
+			name:           "overriding existing position with non-zero liqudity - error",
+			liquidityDelta: defaultLiquidityDelta.Add(sdk.OneDec()),
+			positionId:     defaultPositionId,
+			expectedPass:   false,
+		},
+		{
+			name:           "error: non-existing accumulator",
+			liquidityDelta: defaultLiquidityDelta,
+			positionId: positionIdentifiers{
+				defaultPoolId + 1, // non-existing pool
+				s.TestAccs[0],
+				DefaultLowerTick,
+				DefaultUpperTick,
+			},
+			expectedPass: false,
+		},
+		{
+			name:           "existing accumulator, different owner - different position",
+			liquidityDelta: defaultLiquidityDelta,
+			positionId:     withOwner(defaultPositionId, s.TestAccs[1]),
+			expectedPass:   true,
+		},
+		{
+			name:           "existing accumulator, different upper tick - different position",
+			liquidityDelta: defaultLiquidityDelta,
+			positionId:     withUpperTick(defaultPositionId, DefaultUpperTick+1),
+			expectedPass:   true,
+		},
+		{
+			name:           "existing accumulator, different lower tick - different position",
+			liquidityDelta: defaultLiquidityDelta,
+			positionId:     withLowerTick(defaultPositionId, DefaultUpperTick+1),
+			expectedPass:   true,
 		},
 	}
 
-	for name, tc := range tests {
-		s.Run(name, func() {
-			s.SetupTest()
-			clKeeper := s.App.ConcentratedLiquidityKeeper
-			if tc.setPoolAccumulator {
-				err := clKeeper.CreateFeeAccumulator(s.Ctx, defaultPoolId)
-				s.Require().NoError(err)
-			}
-			if tc.setExistingPosition {
-				// initialize with default liquidity delta * 2 to see if sut correctly initializes
-				err := clKeeper.InitializeFeeAccumulatorPosition(s.Ctx, defaultPoolId, s.TestAccs[0], defaultLiquidityDelta.Add(defaultLiquidityDelta))
-				s.Require().NoError(err)
-			}
-
+	for _, tc := range tests {
+		tc := tc
+		s.Run(tc.name, func() {
 			// system under test
-			err := clKeeper.InitializeFeeAccumulatorPosition(s.Ctx, defaultPoolId, s.TestAccs[0], defaultLiquidityDelta)
+			err := clKeeper.InitializeFeeAccumulatorPosition(s.Ctx, tc.positionId.poolId, tc.positionId.owner, tc.positionId.lowerTick, tc.positionId.upperTick, tc.liquidityDelta)
 			if tc.expectedPass {
 				s.Require().NoError(err)
 
 				// get fee accum and see if position size has been properly initialized
 				poolFeeAccumulator, err := clKeeper.GetFeeAccumulator(s.Ctx, defaultPoolId)
 				s.Require().NoError(err)
-				positionSize, err := poolFeeAccumulator.GetPositionSize(string(s.TestAccs[0].String()))
+
+				positionKey := concentratedliquidity.FormatPositionAccumulatorKey(tc.positionId.poolId, tc.positionId.owner, tc.positionId.lowerTick, tc.positionId.upperTick)
+
+				positionSize, err := poolFeeAccumulator.GetPositionSize(positionKey)
 				s.Require().NoError(err)
 				// position should have been properly initialzied to liquidityDelta provided
-				s.Require().Equal(positionSize, defaultLiquidityDelta)
+				s.Require().Equal(positionSize, tc.liquidityDelta)
 			} else {
 				s.Require().Error(err)
 			}
