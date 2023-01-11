@@ -253,13 +253,13 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 
 	tests := []struct {
 		name        string
-		pool        func() swaproutertypes.PoolI
+		createPool  func() swaproutertypes.PoolI
 		expectPass  bool
 		expectPanic bool
 	}{
 		{
 			name: "initialize balancer pool with default assets",
-			pool: func() swaproutertypes.PoolI {
+			createPool: func() swaproutertypes.PoolI {
 				balancerPool, err := balancer.NewBalancerPool(
 					defaultPoolId,
 					defaultPoolParams,
@@ -274,7 +274,7 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 		},
 		{
 			name: "initialize stableswap pool with default assets",
-			pool: func() swaproutertypes.PoolI {
+			createPool: func() swaproutertypes.PoolI {
 				stableswapPool, err := stableswap.NewStableswapPool(
 					defaultPoolId,
 					defaultPoolParamsStableSwap,
@@ -290,7 +290,7 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 		},
 		{
 			name: "initialize a CL pool which cause panic",
-			pool: func() swaproutertypes.PoolI {
+			createPool: func() swaproutertypes.PoolI {
 				clPool, err := clmodel.NewConcentratedLiquidityPool(
 					defaultPoolId,
 					ETH,
@@ -314,12 +314,12 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 				bankKeeper := suite.App.BankKeeper
 				poolIncentivesKeeper := suite.App.PoolIncentivesKeeper
 
-				// fund sender test account
-				var sender sdk.AccAddress
-				sender = testAccount
+				// sender test account
+				sender := testAccount
+				senderBalBeforeNewPool := bankKeeper.GetAllBalances(suite.Ctx, sender)
 
 				// initializePool with a poolI
-				err := gammKeeper.InitializePool(suite.Ctx, test.pool(), sender)
+				err := gammKeeper.InitializePool(suite.Ctx, test.createPool(), sender)
 
 				if test.expectPass {
 					suite.Require().NoError(err, "test: %v", test.name)
@@ -328,12 +328,18 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 					pool, err := gammKeeper.GetPoolAndPoke(suite.Ctx, defaultPoolId)
 					suite.Require().NoError(err, "test: %v", test.name)
 					suite.Require().Equal(types.InitPoolSharesSupply.String(), pool.GetTotalShares().String(),
-						fmt.Sprintf("share token should be minted as %s initially", types.InitPoolSharesSupply.String()),
+						fmt.Sprintf("share token should be minted as %s initially", types.InitPoolSharesSupply),
+					)
+
+					// check to make sure user user balance increase correct number of pool shares
+					suite.Require().Equal(
+						senderBalBeforeNewPool.Add(sdk.NewCoin(types.GetPoolShareDenom(pool.GetId()), types.InitPoolSharesSupply)),
+						bankKeeper.GetAllBalances(suite.Ctx, sender),
 					)
 
 					// get expected tokens in new pool and corresponding pool shares
-					expectedPoolTokens := sdk.Coins{}
-					for _, asset := range test.pool().GetTotalPoolLiquidity(suite.Ctx) {
+					expectedPoolTokens := sdk.NewCoins()
+					for _, asset := range pool.GetTotalPoolLiquidity(suite.Ctx) {
 						expectedPoolTokens = expectedPoolTokens.Add(asset)
 					}
 					expectedPoolShares := sdk.NewCoin(types.GetPoolShareDenom(pool.GetId()), types.InitPoolSharesSupply)
