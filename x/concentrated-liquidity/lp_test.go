@@ -553,26 +553,51 @@ func (s *KeeperTestSuite) TestIsInitialPosition() {
 
 func (s *KeeperTestSuite) TestUpdatePosition() {
 	type updatePositionTest struct {
-		poolId          uint64
-		owner           sdk.AccAddress
-		lowerTick       int64
-		upperTick       int64
-		liquidityDelta  sdk.Dec
-		amount0Expected sdk.Int
-		amount1Expected sdk.Int
-		expectedError   bool
+		poolId                uint64
+		owner                 sdk.AccAddress
+		lowerTick             int64
+		upperTick             int64
+		liquidityDelta        sdk.Dec
+		amount0Expected       sdk.Int
+		amount1Expected       sdk.Int
+		expectedPoolLiquidity sdk.Dec
+		expectedError         bool
 	}
 
 	tests := map[string]updatePositionTest{
-		"happy path": {
+		"update existing position with positive amount": {
+			poolId:                1,
+			owner:                 s.TestAccs[0],
+			lowerTick:             DefaultLowerTick,
+			upperTick:             DefaultUpperTick,
+			liquidityDelta:        DefaultLiquidityAmt,
+			amount0Expected:       DefaultAmt0Expected,
+			amount1Expected:       DefaultAmt1Expected,
+			expectedPoolLiquidity: DefaultLiquidityAmt.Add(DefaultLiquidityAmt),
+			expectedError:         false,
+		},
+		"error - update existing position with negative amount": {
 			poolId:          1,
 			owner:           s.TestAccs[0],
 			lowerTick:       DefaultLowerTick,
 			upperTick:       DefaultUpperTick,
-			liquidityDelta:  DefaultLiquidityAmt,
+			liquidityDelta:  DefaultLiquidityAmt.Neg(),
 			amount0Expected: DefaultAmt0Expected,
 			amount1Expected: DefaultAmt1Expected,
-			expectedError:   false,
+			expectedError:   true,
+		},
+		"try updating with ticks outside existing position's tick range": {
+			poolId:          1,
+			owner:           s.TestAccs[0],
+			lowerTick:       DefaultUpperTick + 1,
+			upperTick:       DefaultUpperTick + 100,
+			liquidityDelta:  DefaultLiquidityAmt,
+			amount0Expected: sdk.NewInt(101049),
+			amount1Expected: sdk.ZeroInt(),
+			// only liquidity that has been added from create position.
+			// no liquidity has been added by updating position since tick was outside range.
+			expectedPoolLiquidity: DefaultLiquidityAmt,
+			expectedError:         false,
 		},
 		"error: invalid pool id": {
 			poolId:          2,
@@ -606,7 +631,14 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			// create position
 			// Fund test account and create the desired position
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1)))
-			_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, originalPool.GetId(), s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), tc.lowerTick, tc.upperTick)
+			_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(
+				s.Ctx,
+				originalPool.GetId(),
+				s.TestAccs[0],
+				DefaultAmt0, DefaultAmt1,
+				sdk.ZeroInt(), sdk.ZeroInt(),
+				DefaultLowerTick, DefaultUpperTick,
+			)
 			s.Require().NoError(err)
 
 			// system under test
@@ -633,7 +665,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 				poolI, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, tc.poolId)
 				s.Require().NoError(err)
 				concentratedPool := poolI.(types.ConcentratedPoolExtension)
-				s.Require().Equal(originalPool.GetLiquidity().Add(tc.liquidityDelta).Add(tc.liquidityDelta), concentratedPool.GetLiquidity())
+				s.Require().Equal(tc.expectedPoolLiquidity, concentratedPool.GetLiquidity())
 
 			}
 		})
