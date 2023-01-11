@@ -55,15 +55,15 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			denom0:                    ETH,
 			denom1:                    USDC,
 			tickSpacing:               DefaultTickSpacing,
-			precisionFactorAtPriceOne: cltypes.PrecisionValueAtPriceOneMin.Sub(sdk.OneInt()),
-			expectedError:             fmt.Errorf("precision factor at price one must be greater than or equal to %s", cltypes.PrecisionValueAtPriceOneMin.String()),
+			precisionFactorAtPriceOne: cltypes.ExponentAtPriceOneMin.Sub(sdk.OneInt()),
+			expectedError:             cltypes.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: cltypes.ExponentAtPriceOneMin.Sub(sdk.OneInt()), PrecisionValueAtPriceOneMin: cltypes.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: cltypes.ExponentAtPriceOneMax},
 		},
 		"error: precision value above maximum": {
 			denom0:                    ETH,
 			denom1:                    USDC,
 			tickSpacing:               DefaultTickSpacing,
-			precisionFactorAtPriceOne: cltypes.PrecisionValueAtPriceOneMax.Add(sdk.OneInt()),
-			expectedError:             fmt.Errorf("precision factor at price one must be less than or equal to %s", cltypes.PrecisionValueAtPriceOneMax.String()),
+			precisionFactorAtPriceOne: cltypes.ExponentAtPriceOneMax.Add(sdk.OneInt()),
+			expectedError:             cltypes.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: cltypes.ExponentAtPriceOneMax.Add(sdk.OneInt()), PrecisionValueAtPriceOneMin: cltypes.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: cltypes.ExponentAtPriceOneMax},
 		},
 	}
 

@@ -126,13 +126,13 @@ func (suite *ConcentratedMathTestSuite) TestTickToPrice() {
 		},
 		"error: exponentAtPriceOne less than minimum": {
 			tickIndex:          sdk.NewInt(100),
-			exponentAtPriceOne: types.PrecisionValueAtPriceOneMin.Sub(sdk.OneInt()),
-			expectedError:      types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: types.PrecisionValueAtPriceOneMin.Sub(sdk.OneInt()), PrecisionValueAtPriceOneMin: types.PrecisionValueAtPriceOneMin, PrecisionValueAtPriceOneMax: types.PrecisionValueAtPriceOneMax},
+			exponentAtPriceOne: types.ExponentAtPriceOneMin.Sub(sdk.OneInt()),
+			expectedError:      types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: types.ExponentAtPriceOneMin.Sub(sdk.OneInt()), PrecisionValueAtPriceOneMin: types.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: types.ExponentAtPriceOneMax},
 		},
 		"error: exponentAtPriceOne greater than maximum": {
 			tickIndex:          sdk.NewInt(100),
-			exponentAtPriceOne: types.PrecisionValueAtPriceOneMax.Add(sdk.OneInt()),
-			expectedError:      types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: types.PrecisionValueAtPriceOneMax.Add(sdk.OneInt()), PrecisionValueAtPriceOneMin: types.PrecisionValueAtPriceOneMin, PrecisionValueAtPriceOneMax: types.PrecisionValueAtPriceOneMax},
+			exponentAtPriceOne: types.ExponentAtPriceOneMax.Add(sdk.OneInt()),
+			expectedError:      types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: types.ExponentAtPriceOneMax.Add(sdk.OneInt()), PrecisionValueAtPriceOneMin: types.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: types.ExponentAtPriceOneMax},
 		},
 		"random": {
 			tickIndex:          sdk.NewInt(-9111000000),
@@ -212,13 +212,13 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 		},
 		"error: exponentAtPriceOne less than minimum": {
 			price:              sdk.NewDec(50000),
-			exponentAtPriceOne: types.PrecisionValueAtPriceOneMin.Sub(sdk.OneInt()),
-			expectedError:      types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: types.PrecisionValueAtPriceOneMin.Sub(sdk.OneInt()), PrecisionValueAtPriceOneMin: types.PrecisionValueAtPriceOneMin, PrecisionValueAtPriceOneMax: types.PrecisionValueAtPriceOneMax},
+			exponentAtPriceOne: types.ExponentAtPriceOneMin.Sub(sdk.OneInt()),
+			expectedError:      types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: types.ExponentAtPriceOneMin.Sub(sdk.OneInt()), PrecisionValueAtPriceOneMin: types.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: types.ExponentAtPriceOneMax},
 		},
 		"error: exponentAtPriceOne greater than maximum": {
 			price:              sdk.NewDec(50000),
-			exponentAtPriceOne: types.PrecisionValueAtPriceOneMax.Add(sdk.OneInt()),
-			expectedError:      types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: types.PrecisionValueAtPriceOneMax.Add(sdk.OneInt()), PrecisionValueAtPriceOneMin: types.PrecisionValueAtPriceOneMin, PrecisionValueAtPriceOneMax: types.PrecisionValueAtPriceOneMax},
+			exponentAtPriceOne: types.ExponentAtPriceOneMax.Add(sdk.OneInt()),
+			expectedError:      types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: types.ExponentAtPriceOneMax.Add(sdk.OneInt()), PrecisionValueAtPriceOneMin: types.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: types.ExponentAtPriceOneMax},
 		},
 		"random": {
 			price:              sdk.MustNewDecFromStr("0.0000000000889"),

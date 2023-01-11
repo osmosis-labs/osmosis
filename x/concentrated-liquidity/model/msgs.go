@@ -53,12 +53,8 @@ func (msg MsgCreateConcentratedPool) ValidateBasic() error {
 		return fmt.Errorf("denom0 and denom1 must be different")
 	}
 
-	if msg.PrecisionFactorAtPriceOne.GT(cltypes.PrecisionValueAtPriceOneMax) {
-		return fmt.Errorf("precision factor at price one must be less than or equal to %s", cltypes.PrecisionValueAtPriceOneMax.String())
-	}
-
-	if msg.PrecisionFactorAtPriceOne.LT(cltypes.PrecisionValueAtPriceOneMin) {
-		return fmt.Errorf("precision factor at price one must be greater than or equal to %s", cltypes.PrecisionValueAtPriceOneMin.String())
+	if msg.PrecisionFactorAtPriceOne.GT(cltypes.ExponentAtPriceOneMax) || msg.PrecisionFactorAtPriceOne.LT(cltypes.ExponentAtPriceOneMin) {
+		return cltypes.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: msg.PrecisionFactorAtPriceOne, PrecisionValueAtPriceOneMin: cltypes.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: cltypes.ExponentAtPriceOneMax}
 	}
 
 	if sdk.ValidateDenom(msg.Denom0) != nil {

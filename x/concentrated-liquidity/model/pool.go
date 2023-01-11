@@ -17,7 +17,7 @@ var (
 
 // NewConcentratedLiquidityPool creates a new ConcentratedLiquidity pool with the specified parameters.
 // The two provided denoms are ordered so that denom0 is lexicographically smaller than denom1.
-func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpacing uint64, precisionValueAtPriceOne sdk.Int) (Pool, error) {
+func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpacing uint64, exponentAtPriceOne sdk.Int) (Pool, error) {
 	// Order the initial pool denoms so that denom0 is lexicographically smaller than denom1.
 	denom0, denom1, err := types.OrderInitialPoolDenoms(denom0, denom1)
 	if err != nil {
@@ -25,8 +25,8 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 	}
 
 	// Only allow precision values in specified range
-	if precisionValueAtPriceOne.LT(types.PrecisionValueAtPriceOneMin) || precisionValueAtPriceOne.GT(types.PrecisionValueAtPriceOneMax) {
-		return Pool{}, fmt.Errorf("precisionValueAtPriceOne must be in the range (%s, %s)", types.PrecisionValueAtPriceOneMin, types.PrecisionValueAtPriceOneMax)
+	if exponentAtPriceOne.LT(types.ExponentAtPriceOneMin) || exponentAtPriceOne.GT(types.ExponentAtPriceOneMax) {
+		return Pool{}, types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: exponentAtPriceOne, PrecisionValueAtPriceOneMin: types.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: types.ExponentAtPriceOneMax}
 	}
 
 	// Create a new pool struct with the specified parameters
@@ -40,7 +40,7 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 		Token0:                    denom0,
 		Token1:                    denom1,
 		TickSpacing:               tickSpacing,
-		PrecisionFactorAtPriceOne: precisionValueAtPriceOne,
+		PrecisionFactorAtPriceOne: exponentAtPriceOne,
 	}
 
 	return pool, nil

@@ -37,8 +37,8 @@ func TickToPrice(tickIndex, exponentAtPriceOne sdk.Int) (price sdk.Dec, err erro
 		return sdk.OneDec(), nil
 	}
 
-	if exponentAtPriceOne.LT(types.PrecisionValueAtPriceOneMin) || exponentAtPriceOne.GT(types.PrecisionValueAtPriceOneMax) {
-		return sdk.Dec{}, types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: exponentAtPriceOne, PrecisionValueAtPriceOneMin: types.PrecisionValueAtPriceOneMin, PrecisionValueAtPriceOneMax: types.PrecisionValueAtPriceOneMax}
+	if exponentAtPriceOne.LT(types.ExponentAtPriceOneMin) || exponentAtPriceOne.GT(types.ExponentAtPriceOneMax) {
+		return sdk.Dec{}, types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: exponentAtPriceOne, PrecisionValueAtPriceOneMin: types.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: types.ExponentAtPriceOneMax}
 	}
 
 	// The formula is as follows: geometricExponentIncrementDistanceInTicks = 9 * 10**(-exponentAtPriceOne)
@@ -88,8 +88,8 @@ func PriceToTick(price sdk.Dec, exponentAtPriceOne sdk.Int) (sdk.Int, error) {
 		return sdk.Int{}, fmt.Errorf("price must be greater than zero")
 	}
 
-	if exponentAtPriceOne.LT(types.PrecisionValueAtPriceOneMin) || exponentAtPriceOne.GT(types.PrecisionValueAtPriceOneMax) {
-		return sdk.Int{}, types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: exponentAtPriceOne, PrecisionValueAtPriceOneMin: types.PrecisionValueAtPriceOneMin, PrecisionValueAtPriceOneMax: types.PrecisionValueAtPriceOneMax}
+	if exponentAtPriceOne.LT(types.ExponentAtPriceOneMin) || exponentAtPriceOne.GT(types.ExponentAtPriceOneMax) {
+		return sdk.Int{}, types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: exponentAtPriceOne, PrecisionValueAtPriceOneMin: types.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: types.ExponentAtPriceOneMax}
 	}
 
 	// The formula is as follows: geometricExponentIncrementDistanceInTicks = 9 * 10**(-exponentAtPriceOne)

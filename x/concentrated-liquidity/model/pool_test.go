@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 const (
@@ -208,6 +209,28 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 			expectedTickSpacing: DefaultTickSpacing,
 		},
 		{
+			name: "Error: precisionValue greater than maximum",
+			param: param{
+				poolId:         DefaultValidPoolID,
+				denom0:         ETH,
+				denom1:         USDC,
+				tickSpacing:    DefaultTickSpacing,
+				precisionValue: types.ExponentAtPriceOneMax.Add(sdk.OneInt()),
+			},
+			expectedErr: types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: types.ExponentAtPriceOneMax.Add(sdk.OneInt()), PrecisionValueAtPriceOneMin: types.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: types.ExponentAtPriceOneMax},
+		},
+		{
+			name: "Error: precisionValue less than minimum",
+			param: param{
+				poolId:         DefaultValidPoolID,
+				denom0:         ETH,
+				denom1:         USDC,
+				tickSpacing:    DefaultTickSpacing,
+				precisionValue: types.ExponentAtPriceOneMin.Sub(sdk.OneInt()),
+			},
+			expectedErr: types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: types.ExponentAtPriceOneMin.Sub(sdk.OneInt()), PrecisionValueAtPriceOneMin: types.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: types.ExponentAtPriceOneMax},
+		},
+		{
 			name: "Error: same denom not allowed",
 			param: param{
 				poolId:         DefaultValidPoolID,
@@ -231,7 +254,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 			if test.expectedErr != nil {
 				// If the test is expected to produce an error, check if it does.
 				s.Require().Error(err)
-				s.Require().ErrorAs(err, &test.expectedErr)
+				s.Require().ErrorContains(err, test.expectedErr.Error())
 			} else {
 				// If the test is not expected to produce an error, check if it doesn't.
 				s.Require().NoError(err)
