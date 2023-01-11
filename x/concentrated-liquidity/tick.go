@@ -13,9 +13,12 @@ import (
 // if we are initializing or updating an upper tick, we subtract the liquidityIn from the LiquidityNet
 // if we are initializing or updating an lower tick, we add the liquidityIn from the LiquidityNet
 func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
-	if !k.poolExists(ctx, poolId) {
-		return types.PoolNotFoundError{PoolId: poolId}
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return err
 	}
+
+	currentTick := pool.GetCurrentTick().Int64()
 
 	tickInfo, err := k.getTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
@@ -36,6 +39,16 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Sub(liquidityIn)
 	} else {
 		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Add(liquidityIn)
+	}
+
+	// if given tickIndex is LTE to current tick, tick's fee growth outside is set as fee accumulator's value
+	if tickIndex <= currentTick {
+		accum, err := k.getFeeAccumulator(ctx, poolId)
+		if err != nil {
+			return err
+		}
+
+		tickInfo.FeeGrowthOutside = accum.GetValue()
 	}
 
 	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
