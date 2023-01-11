@@ -145,22 +145,25 @@ pub fn calculate_min_output_from_twap(
                 Some(start_time.clone()),
                 Some(end_time.clone()),
             )
-            .map_err(|_e| ContractError::CustomError {
-                val: format!("failed to fetch twap price for {route_part:?} in {sell_denom}"),
+            .map_err(|_e| ContractError::TwapNotFound {
+                denom: route_part.token_out_denom.clone(),
+                sell_denom,
+                pool_id: route_part.pool_id,
             })?
             .arithmetic_twap;
 
         deps.api.debug(&format!("twap = {twap}"));
 
-        let twap: Decimal = twap.parse().map_err(|_e| ContractError::CustomError {
-            val: "Invalid twap value received from the chain".to_string(),
-        })?;
+        let twap: Decimal = twap
+            .parse()
+            .map_err(|_e| ContractError::InvalidTwapString { twap })?;
 
-        twap_price = twap_price
-            .checked_mul(twap)
-            .map_err(|_e| ContractError::CustomError {
-                val: format!("Invalid value for twap price: {twap_price} * {twap}"),
-            })?;
+        twap_price =
+            twap_price
+                .checked_mul(twap)
+                .map_err(|_e| ContractError::InvalidTwapOperation {
+                    operation: format!("{twap_price} * {twap}"),
+                })?;
 
         // the current output is the input for the next route_part
         sell_denom = route_part.token_out_denom;

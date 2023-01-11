@@ -21,7 +21,22 @@ pub enum ContractError {
     #[error("Query Error: {val:?}")]
     QueryError { val: String },
 
-    #[error("Custom Error val: {val:?}")]
+    #[error("TwapNotFound: Twap price not found for {denom} in {sell_denom} via pool {pool_id}")]
+    TwapNotFound {
+        denom: String,
+        sell_denom: String,
+        pool_id: u64,
+    },
+
+    #[error(
+        "InvalidTwap: Invalid twap value received from the chain: {twap}. Should be a Decimal"
+    )]
+    InvalidTwapString { twap: String },
+
+    #[error("InvalidTwap: Invalid value for twap price: {operation}.")]
+    InvalidTwapOperation { operation: String },
+
+    #[error("Custom Error: {val:?}")]
     CustomError { val: String },
     // Add any other custom errors you like here.
     // Look at https://docs.rs/thiserror/1.0.21/thiserror/ for details.

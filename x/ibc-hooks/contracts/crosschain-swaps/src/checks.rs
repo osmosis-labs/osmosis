@@ -32,7 +32,7 @@ pub fn parse_json(maybe_json: &str) -> Result<serde_cw_value::Value, ContractErr
 
 fn stringify(json: &serde_cw_value::Value) -> Result<String, ContractError> {
     serde_json_wasm::to_string(&json).map_err(|_| ContractError::CustomError {
-        msg: "invalid value".to_string(),
+        msg: "invalid value".to_string(), // This shouldn't happen.
     })
 }
 
