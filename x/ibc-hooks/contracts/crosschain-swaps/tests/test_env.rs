@@ -71,7 +71,6 @@ impl TestEnv {
             get_crosschain_swaps_wasm(),
             &CrosschainInstantiate {
                 swap_contract: swaprouter_address.clone(),
-                track_ibc_sends: None,
                 channels: vec![("osmo".to_string(), "channel-0".to_string())],
             },
         );

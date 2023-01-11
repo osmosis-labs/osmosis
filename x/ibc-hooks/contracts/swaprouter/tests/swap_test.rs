@@ -84,11 +84,10 @@ test_swap!(
 test_swap!(
     twap_based_swap
     should succeed,
-
     msg = ExecuteMsg::Swap {
         input_coin: Coin::new(1000, "uosmo"),
         output_denom: "uion".to_string(),
-        slippage: Slippage::MaxSlippagePercentage(Decimal::from_str("5").unwrap()),
+        slippage: Slippage::Twap{ window_seconds: Some(1), slippage_percentage: Decimal::from_str("5").unwrap() },
     },
     funds: [
         Coin::new(10000, "uosmo")
@@ -117,8 +116,8 @@ const INITIAL_AMOUNT: u128 = 1_000_000_000_000;
 
 fn test_swap_success_case(msg: ExecuteMsg, funds: &[Coin]) {
     let (app, sender, _res) = setup_route_and_execute_swap(&msg, &funds);
-    //dbg!(res);
-    //println!("{:?}", String::from_utf8(to_vec(&msg).unwrap()).unwrap());
+    // dbg!(res);
+    // println!("{:?}", String::from_utf8(to_vec(&msg).unwrap()).unwrap());
     assert_input_decreased_and_output_increased(&app, &sender.address(), &msg);
 }
 

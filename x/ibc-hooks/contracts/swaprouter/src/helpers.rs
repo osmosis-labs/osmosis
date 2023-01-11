@@ -97,6 +97,7 @@ pub fn calculate_min_output_from_twap(
     input_token: Coin,
     output_denom: String,
     now: Timestamp,
+    window: Option<u64>,
     percentage_impact: Decimal,
 ) -> Result<Coin, ContractError> {
     // get trade route
@@ -118,7 +119,8 @@ pub fn calculate_min_output_from_twap(
     //  price of <out> is X<in> (i.e.: price of atom is Xosmo)
     let mut sell_denom = input_token.denom;
 
-    let start_time = now.minus_seconds(1);
+    // if duration is not provided, default to 1h
+    let start_time = now.minus_seconds(window.unwrap_or(3600));
     let start_time = OsmosisTimestamp {
         seconds: start_time.seconds() as i64,
         nanos: 0_i32,

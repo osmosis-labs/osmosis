@@ -9,7 +9,10 @@ pub struct InstantiateMsg {
 
 #[cw_serde]
 pub enum Slippage {
-    MaxSlippagePercentage(Decimal),
+    Twap {
+        window_seconds: Option<u64>,
+        slippage_percentage: Decimal,
+    },
     MinOutputAmount(Uint128),
 }
 

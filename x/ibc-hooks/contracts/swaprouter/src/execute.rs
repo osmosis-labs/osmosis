@@ -67,12 +67,16 @@ pub fn trade_with_slippage_limit(
     }
 
     let min_output_token = match slippage {
-        Slippage::MaxSlippagePercentage(percentage) => calculate_min_output_from_twap(
+        Slippage::Twap {
+            window_seconds,
+            slippage_percentage,
+        } => calculate_min_output_from_twap(
             deps.as_ref(),
             input_token.clone(),
             output_denom,
             env.block.time,
-            percentage,
+            window_seconds,
+            slippage_percentage,
         )?,
         Slippage::MinOutputAmount(minimum_output_amount) => {
             coin(minimum_output_amount.u128(), output_denom)
