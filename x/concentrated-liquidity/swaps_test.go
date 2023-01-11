@@ -529,7 +529,6 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 				newUpperTick, err := math.PriceToTick(test.newUpperPrice, pool.GetPrecisionFactorAtPriceOne())
 				s.Require().NoError(err)
 
-				// TODO: Dont hardcode
 				lowerPrice, err := math.TickToPrice(newLowerTick, pool.GetPrecisionFactorAtPriceOne())
 				s.Require().NoError(err)
 				lowerSqrtPrice, err := lowerPrice.ApproxSqrt()

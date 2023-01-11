@@ -9,8 +9,12 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
-var sdkNineDec = sdk.NewDec(9)
-var sdkTenDec = sdk.NewDec(10)
+var (
+	sdkNineDec        = sdk.NewDec(9)
+	sdkTenDec         = sdk.NewDec(10)
+	sdkEighteenDec    = sdk.NewDec(18)
+	sdkThirtyEightDec = sdk.NewDec(38)
+)
 
 // TicksToPrice returns the price for the lower and upper ticks.
 // Returns error if fails to calculate price.
@@ -167,7 +171,7 @@ func powTenBigDec(exponent sdk.Int) osmomath.BigDec {
 // This allows for a min spot price of 0.000000000000000001 and a max spot price of 100000000000000000000000000000000000000 for every exponentAtPriceOne value
 func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTick, maxTick int64) {
 	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(powTen(exponentAtPriceOne.Neg()))
-	minTick = sdk.NewDec(18).Mul(geometricExponentIncrementDistanceInTicks).Neg().RoundInt().Int64()
-	maxTick = sdk.NewDec(38).Mul(geometricExponentIncrementDistanceInTicks).RoundInt().Int64()
+	minTick = sdkEighteenDec.Mul(geometricExponentIncrementDistanceInTicks).Neg().RoundInt64()
+	maxTick = sdkThirtyEightDec.Mul(geometricExponentIncrementDistanceInTicks).TruncateInt64()
 	return minTick, maxTick
 }
