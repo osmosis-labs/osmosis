@@ -208,7 +208,6 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [{"channel_id": "channel-0", "denom": "%s", "quotas": [{"name":"testQuota", "duration": 86400, "send_recv": [1, 1]}] } ] }`, node.PublicAddress, node.PublicAddress, initialization.OsmoToken.Denom),
 		initialization.ValidatorWalletName)
 
-	// Using code_id 1 because this is the only contract right now. This may need to change if more contracts are added
 	contracts, err := node.QueryContractsFromId(chainA.LatestCodeId)
 	s.NoError(err)
 	s.Require().Len(contracts, 1, "Wrong number of contracts for the rate limiter")
@@ -294,7 +293,6 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 		`{"count": 0}`,
 		initialization.ValidatorWalletName)
 
-	// Using code_id 1 because this is the only contract right now. This may need to change if more contracts are added
 	contracts, err := nodeA.QueryContractsFromId(chainA.LatestCodeId)
 	s.NoError(err)
 	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
@@ -331,7 +329,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	},
 		15*time.Second,
 		10*time.Millisecond,
-	)g
+	)
 }
 
 // TestAddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.
