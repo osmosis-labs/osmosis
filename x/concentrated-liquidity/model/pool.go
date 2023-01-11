@@ -31,7 +31,7 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 
 	// Create a new pool struct with the specified parameters
 	pool := Pool{
-		// TODO: move gammtypes.NewPoolAddress(poolId) to swaproutertypes
+		// TODO: move gammtypes.NewPoolAddress(poolId) to poolmanagertypes
 		Address:                   gammtypes.NewPoolAddress(poolId).String(),
 		Id:                        poolId,
 		CurrentSqrtPrice:          sdk.ZeroDec(),
