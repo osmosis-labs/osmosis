@@ -44,24 +44,31 @@ func (h WasmHooks) ProperlyConfigured() bool {
 }
 
 func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
+	fmt.Println("WASM: OnRecvPacketOverride")
 	if !h.ProperlyConfigured() {
 		// Not configured
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
+	fmt.Println("WASM: checking if packet is ICS20")
 	isIcs20, data := isIcs20Packet(packet)
 	if !isIcs20 {
+		fmt.Println("WASM: not ICS20, passing down stack")
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
 
 	// Validate the memo
+	fmt.Println("WASM: checking memo")
 	isWasmRouted, contractAddr, msgBytes, err := ValidateAndParseMemo(data.GetMemo(), data.Receiver)
 	if !isWasmRouted {
+		fmt.Println("WASM: not wasm routed, passing down stack")
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
 	if err != nil {
+		fmt.Println("WASM: memo invalid, passing down stack")
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrMsgValidation, err.Error())
 	}
 	if msgBytes == nil || contractAddr == nil { // This should never happen
+		fmt.Println("WASM: memo invalid, passing down stack")
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrMsgValidation)
 	}
 
@@ -69,7 +76,9 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	channel := packet.GetDestChannel()
 	sender := data.GetSender()
 	senderBech32, err := keeper.DeriveIntermediateSender(channel, sender, h.bech32PrefixAccAddr)
+	fmt.Println("WASM: senderBech32", senderBech32)
 	if err != nil {
+		fmt.Println("WASM: error deriving intermediate sender, passing down stack")
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadSender, fmt.Sprintf("cannot convert sender address %s/%s to bech32: %s", channel, sender, err.Error()))
 	}
 
@@ -82,13 +91,16 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	data.Receiver = senderBech32
 	bz, err := json.Marshal(data)
 	if err != nil {
+		fmt.Println("WASM: error marshaling data, passing down stack")
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrMarshaling, err.Error())
 	}
 	packet.Data = bz
 
 	// Execute the receive
+	fmt.Println("WASM: executing receive")
 	ack := im.App.OnRecvPacket(ctx, packet, relayer)
 	if !ack.Success() {
+		fmt.Println("WASM: receive failed, passing down stack")
 		return ack
 	}
 
@@ -96,6 +108,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	if !ok {
 		// This should never happen, as it should've been caught in the underlaying call to OnRecvPacket,
 		// but returning here for completeness
+		fmt.Println("WASM: amount invalid, passing down stack")
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrInvalidPacket, "Amount is not an int")
 	}
 
@@ -103,6 +116,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	denom := osmoutils.MustExtractDenomFromPacketOnRecv(packet)
 	funds := sdk.NewCoins(sdk.NewCoin(denom, amount))
 
+	fmt.Println("WASM: calling contract", contractAddr.String())
 	// Execute the contract
 	execMsg := wasmtypes.MsgExecuteContract{
 		Sender:   senderBech32,
@@ -112,15 +126,19 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	}
 	response, err := h.execWasmMsg(ctx, &execMsg)
 	if err != nil {
+		fmt.Println("WASM: contract call failed, passing down stack")
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrWasmError, err.Error())
 	}
 
 	fullAck := ContractAck{ContractResult: response.Data, IbcAck: ack.Acknowledgement()}
 	bz, err = json.Marshal(fullAck)
+	fmt.Println("WASM: fullAck", fullAck)
 	if err != nil {
+		fmt.Println("WASM: error marshaling ack, passing down stack", err.Error())
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadResponse, err.Error())
 	}
 
+	fmt.Println("WASM: contract call succeeded, returning ack")
 	return channeltypes.NewResultAcknowledgement(bz)
 }
 
@@ -226,18 +244,22 @@ func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, cont
 }
 
 func (h WasmHooks) SendPacketOverride(i ICS4Middleware, ctx sdk.Context, chanCap *capabilitytypes.Capability, packet ibcexported.PacketI) error {
+	fmt.Println("WASM: SendPacketOverride called")
 	concretePacket, ok := packet.(channeltypes.Packet)
 	if !ok {
 		return i.channel.SendPacket(ctx, chanCap, packet) // continue
 	}
 
+	fmt.Println("WASM: SendPacketOverride: packet is a channeltypes.Packet")
 	isIcs20, data := isIcs20Packet(concretePacket)
 	if !isIcs20 {
+		fmt.Println("WASM: SendPacketOverride: packet is not an ICS20 packet")
 		return i.channel.SendPacket(ctx, chanCap, packet) // continue
 	}
 
 	isCallbackRouted, metadata := jsonStringHasKey(data.GetMemo(), types.IBCCallbackKey)
 	if !isCallbackRouted {
+		fmt.Println("WASM: SendPacketOverride: packet is not a wasm callback")
 		return i.channel.SendPacket(ctx, chanCap, packet) // continue
 	}
 
@@ -259,6 +281,7 @@ func (h WasmHooks) SendPacketOverride(i ICS4Middleware, ctx sdk.Context, chanCap
 	} else {
 		data.Memo = stringMetadata
 	}
+	fmt.Println("WASM: SendPacketOverride: data.Memo is", data.Memo)
 	dataBytes, err := json.Marshal(data)
 	if err != nil {
 		return sdkerrors.Wrap(err, "Send packet with callback error")
@@ -295,6 +318,7 @@ func (h WasmHooks) SendPacketOverride(i ICS4Middleware, ctx sdk.Context, chanCap
 }
 
 func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error {
+	fmt.Println("WASM: OnAcknowledgementPacketOverride called")
 	err := im.App.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
 	if err != nil {
 		return err
@@ -306,6 +330,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 	}
 
 	contract := h.ibcHooksKeeper.GetPacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
+	fmt.Println("WASM: OnAcknowledgementPacketOverride: callback contract is", contract)
 	if contract == "" {
 		// No callback configured
 		return nil
@@ -332,6 +357,8 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}}`,
 		packet.SourceChannel, packet.Sequence, ackAsJson, success))
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
+	fmt.Println("WASM: OnAcknowledgementPacketOverride: sudoMsg is", string(sudoMsg))
+	fmt.Println("WASM: OnAcknowledgementPacketOverride: err is", err)
 	if err != nil {
 		// error processing the callback
 		// ToDo: Open Question: Should we also delete the callback here?
@@ -342,6 +369,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 }
 
 func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) error {
+	fmt.Println("WASM: OnTimeoutPacketOverride called")
 	err := im.App.OnTimeoutPacket(ctx, packet, relayer)
 	if err != nil {
 		return err
