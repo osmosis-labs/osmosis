@@ -534,7 +534,8 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			test.addPositions(s.Ctx, pool.GetId())
 
 			// perform calc
-			tokenIn, tokenOut, updatedTick, updatedLiquidity, updatedSqrtPrice, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenInInternal(
+
+			writeCtx, tokenIn, tokenOut, updatedTick, updatedLiquidity, updatedSqrtPrice, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenInInternal(
 				s.Ctx,
 				test.tokenIn, test.tokenOutDenom,
 				DefaultZeroSwapFee, test.priceLimit, pool.GetId())
@@ -580,6 +581,16 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 				s.Require().Equal(pool.GetTotalShares(), poolAfterCalc.GetTotalShares())
 				s.Require().Equal(pool.GetLiquidity(), poolAfterCalc.GetLiquidity())
 				s.Require().Equal(pool.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
+
+				writeCtx()
+				poolAfterWrite, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+				s.Require().NoError(err)
+				s.Require().Equal(pool.GetCurrentSqrtPrice(), poolAfterWrite.GetCurrentSqrtPrice())
+				s.Require().Equal(pool.GetCurrentTick(), poolAfterWrite.GetCurrentTick())
+				s.Require().Equal(pool.GetTotalShares(), poolAfterWrite.GetTotalShares())
+				s.Require().Equal(pool.GetLiquidity(), poolAfterWrite.GetLiquidity())
+				s.Require().Equal(pool.GetTickSpacing(), poolAfterWrite.GetTickSpacing())
+
 			}
 
 			// perform swap
