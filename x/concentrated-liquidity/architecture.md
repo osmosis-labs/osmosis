@@ -119,7 +119,7 @@ With a $exponentAtPriceOne$ of -6:
 
 ### Formulas
 
-After we define $exponentAtPriceOne$ (this is chosen by the user based on what precision they desire the asset pair to trade at), we can then calculate how many ticks must be crossed in order for k to be incremented ($geometricExponentIncrementDistanceInTicks$).
+After we define $exponentAtPriceOne$ (this is chosen by the pool creator based on what precision they desire the asset pair to trade at), we can then calculate how many ticks must be crossed in order for k to be incremented ($geometricExponentIncrementDistanceInTicks$).
 
 $$ geometricExponentIncrementDistanceInTicks = 9 * 10^{(-exponentAtPriceOne)} $$
 
