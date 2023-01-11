@@ -14,4 +14,6 @@ var (
 	LowerPriceLimit           = sdk.NewDec(1)
 	ExponentAtPriceOneMax     = sdk.NewInt(-1)
 	ExponentAtPriceOneMin     = sdk.NewInt(-12)
+	MaxSpotPrice              = sdk.MustNewDecFromStr("100000000000000000000000000000000000000")
+	MinSpotPrice              = sdk.MustNewDecFromStr("0.000000000000000001")
 )

@@ -107,12 +107,12 @@ func (suite *ConcentratedMathTestSuite) TestTickToPrice() {
 		"Max tick and min k": {
 			tickIndex:          sdk.NewInt(3420),
 			exponentAtPriceOne: sdk.NewInt(-1),
-			expectedPrice:      MaxSpotPrice,
+			expectedPrice:      types.MaxSpotPrice,
 		},
 		"Min tick and max k": {
 			tickIndex:          sdk.NewInt(-162000000000000),
 			exponentAtPriceOne: sdk.NewInt(-12),
-			expectedPrice:      MinSpotPrice,
+			expectedPrice:      types.MinSpotPrice,
 		},
 		"error: tickIndex less than minimum": {
 			tickIndex:          sdk.NewInt(DefaultMinTick - 1),
@@ -196,7 +196,7 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 			tickExpected:       "4030301",
 		},
 		"max spot price and minimum exponentAtPriceOne": {
-			price:              MaxSpotPrice,
+			price:              types.MaxSpotPrice,
 			exponentAtPriceOne: sdk.NewInt(-1),
 			tickExpected:       "3420",
 		},
@@ -206,7 +206,7 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 			expectedError:      fmt.Errorf("price must be greater than zero"),
 		},
 		"error: resulting tickIndex too large": {
-			price:              MaxSpotPrice.Mul(sdk.NewDec(2)),
+			price:              types.MaxSpotPrice.Mul(sdk.NewDec(2)),
 			exponentAtPriceOne: DefaultExponentAtPriceOne,
 			expectedError:      types.TickIndexMaximumError{MaxTick: DefaultMaxTick},
 		},

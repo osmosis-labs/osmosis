@@ -23,8 +23,6 @@ var (
 	DefaultCurrTick                = sdk.NewInt(310000)
 	DefaultCurrSqrtPrice, _        = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
 	DefaultZeroSwapFee             = sdk.ZeroDec()
-	MaxSpotPrice                   = sdk.MustNewDecFromStr("100000000000000000000000000000000000000")
-	MinSpotPrice                   = sdk.MustNewDecFromStr("0.000000000000000001")
 	ETH                            = "eth"
 	DefaultAmt0                    = sdk.NewInt(1000000)
 	DefaultAmt0Expected            = sdk.NewInt(998976)
