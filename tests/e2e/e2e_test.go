@@ -284,7 +284,6 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	s.NoError(err)
 	// co up two levels
 	projectDir := filepath.Dir(filepath.Dir(wd))
-	fmt.Println(wd, projectDir)
 	err = copyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
 	s.NoError(err)
 
@@ -302,7 +301,6 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	contractAddr := contracts[0]
 
 	validatorAddr := nodeB.GetWallet(initialization.ValidatorWalletName)
-	fmt.Println("validatorAddr", validatorAddr)
 	nodeB.SendIBCTransfer(validatorAddr, contractAddr, "10uosmo",
 		fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr))
 
@@ -321,7 +319,6 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
-	fmt.Println("sender", senderBech32)
 
 	var response map[string]interface{}
 	s.Eventually(func() bool {
@@ -334,9 +331,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	},
 		15*time.Second,
 		10*time.Millisecond,
-	)
-	fmt.Println("response", response)
-
+	)g
 }
 
 // TestAddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.
