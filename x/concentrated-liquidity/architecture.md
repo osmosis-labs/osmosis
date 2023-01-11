@@ -129,7 +129,6 @@ Now that we know how many ticks must be crossed in order for our k to be increme
 
 $$geometricExponentDelta = ⌊ tick / geometricExponentIncrementDistanceInTicks ⌋$$
 
-
 With $geometricExponentDelta$ and $exponentAtPriceOne$, we can figure out what the k value we will be at when we reach the provided tick:
 
 $$exponentAtCurrentTick = exponentAtPriceOne + geometricExponentDelta$$
@@ -175,25 +174,35 @@ $$geometricExponentIncrementDistanceInTicks = 9 * 10^{(6)} = 9000000$$
 We must loop through increasing exponents until we find the first exponent that is greater than or equal to the desired price
 
 $$currentPrice = 1$$
+
 $$ticksPassed = 0$$
 
 $$currentAdditiveIncrementInTicks = 10^{(-6)} = 0.000001$$
+
 $$maxPriceForCurrentAdditiveIncrementInTicks = geometricExponentIncrementDistanceInTicks * currentAdditiveIncrementInTicks = 9000000 * 0.000001 = 9$$
+
 $$ticksPassed = ticksPassed + geometricExponentIncrementDistanceInTicks = 0 + 9000000 = 9000000$$
+
 $$totalPrice = totalPrice + maxPriceForCurrentAdditiveIncrementInTicks = 1 + 9 = 10$$
 
 10 is less than 16,500.10, so we must increase our exponent and try again
 
 $$currentAdditiveIncrementInTicks = 10^{(-5)} = 0.00001$$
+
 $$maxPriceForCurrentAdditiveIncrementInTicks = geometricExponentIncrementDistanceInTicks * currentAdditiveIncrementInTicks = 9000000 * 0.00001 = 90$$
+
 $$ticksPassed = ticksPassed + geometricExponentIncrementDistanceInTicks = 9000000 + 9000000 = 18000000$$
+
 $$totalPrice = totalPrice + maxPriceForCurrentAdditiveIncrementInTicks = 10 + 90 = 100$$
 
 100 is less than 16,500.10, so we must increase our exponent and try again. This goes on until...
 
 $$currentAdditiveIncrementInTicks = 10^{(-2)} = 0.01$$
+
 $$maxPriceForCurrentAdditiveIncrementInTicks = geometricExponentIncrementDistanceInTicks * currentAdditiveIncrementInTicks = 9000000 * 0.01 = 90000$$
+
 $$ticksPassed = ticksPassed + geometricExponentIncrementDistanceInTicks = 36000000 + 9000000 = 45000000$$
+
 $$totalPrice = totalPrice + maxPriceForCurrentAdditiveIncrementInTicks = 10000 + 90000 = 100000$$
 
 100000 is greater than 16,500.10. This means we must now find out how many additive tick in the currentAdditiveIncrementInTicks of -2 we must pass in order to reach 16,500.10.
