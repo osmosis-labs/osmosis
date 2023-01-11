@@ -60,7 +60,7 @@ func TickToPrice(tickIndex, exponentAtPriceOne sdk.Int) (price sdk.Dec, err erro
 	// Calculate the exponentAtCurrentTick from the starting exponentAtPriceOne and the geometricExponentDelta
 	exponentAtCurrentTick := exponentAtPriceOne.Add(geometricExponentDelta)
 	if tickIndex.IsNegative() {
-		// We must decrement the exponentAtCurrentTick when traversing negative ticks in order to constantly step up in precision when going further down in ticks
+		// We must decrement the exponentAtCurrentTick when entering the negative tick range in order to constantly step up in precision when going further down in ticks
 		// Otherwise, from tick 0 to tick -(geometricExponentIncrementDistanceInTicks), we would use the same exponent as the exponentAtPriceOne
 		exponentAtCurrentTick = exponentAtCurrentTick.Sub(sdk.OneInt())
 	}
@@ -97,23 +97,23 @@ func PriceToTick(price sdk.Dec, exponentAtPriceOne sdk.Int) (sdk.Int, error) {
 	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(powTen(exponentAtPriceOne.Neg()))
 
 	// Initialize the total price to 1, the current precision to exponentAtPriceOne, and the number of ticks passed to 0
-	totalPrice := sdk.OneDec()
+	currentPrice := sdk.OneDec()
 	ticksPassed := sdk.ZeroInt()
 	exponentAtCurrentTick := exponentAtPriceOne
 
 	// Set the currentAdditiveIncrementInTicks to the exponentAtPriceOne
 	currentAdditiveIncrementInTicks := powTenBigDec(exponentAtPriceOne)
 
-	// Now, we loop through the k increments until we have passed the price
+	// Now, we loop through the exponentAtCurrentTicks until we have passed the price
 	// Once we pass the price, we can determine what which geometric exponents we have filled in their entirety,
 	// as well as how many ticks that corresponds to
 	// In the opposite direction (price < 1), we do the same thing (just decrement the geometric exponent instead of incrementing).
 	// The only difference is we must reduce the increment distance by a factor of 10.
 	if price.GT(sdk.OneDec()) {
-		for totalPrice.LT(price) {
+		for currentPrice.LT(price) {
 			currentAdditiveIncrementInTicks = powTenBigDec(exponentAtCurrentTick)
-			maxPriceForcurrentAdditiveIncrementInTicks := osmomath.BigDecFromSDKDec(geometricExponentIncrementDistanceInTicks).Mul(currentAdditiveIncrementInTicks)
-			totalPrice = totalPrice.Add(maxPriceForcurrentAdditiveIncrementInTicks.SDKDec())
+			maxPriceForCurrentAdditiveIncrementInTicks := osmomath.BigDecFromSDKDec(geometricExponentIncrementDistanceInTicks).Mul(currentAdditiveIncrementInTicks)
+			currentPrice = currentPrice.Add(maxPriceForCurrentAdditiveIncrementInTicks.SDKDec())
 			exponentAtCurrentTick = exponentAtCurrentTick.Add(sdk.OneInt())
 			ticksPassed = ticksPassed.Add(geometricExponentIncrementDistanceInTicks.TruncateInt())
 		}
@@ -121,16 +121,16 @@ func PriceToTick(price sdk.Dec, exponentAtPriceOne sdk.Int) (sdk.Int, error) {
 		// We must decrement the exponentAtCurrentTick by one when traversing negative ticks in order to constantly step up in precision when going further down in ticks
 		// Otherwise, from tick 0 to tick -(geometricExponentIncrementDistanceInTicks), we would use the same exponent as the exponentAtPriceOne
 		exponentAtCurrentTick := exponentAtPriceOne.Sub(sdk.OneInt())
-		for totalPrice.GT(price) {
+		for currentPrice.GT(price) {
 			currentAdditiveIncrementInTicks = powTenBigDec(exponentAtCurrentTick)
-			maxPriceForcurrentAdditiveIncrementInTicks := osmomath.BigDecFromSDKDec(geometricExponentIncrementDistanceInTicks).Mul(currentAdditiveIncrementInTicks)
-			totalPrice = totalPrice.Sub(maxPriceForcurrentAdditiveIncrementInTicks.SDKDec())
+			maxPriceForCurrentAdditiveIncrementInTicks := osmomath.BigDecFromSDKDec(geometricExponentIncrementDistanceInTicks).Mul(currentAdditiveIncrementInTicks)
+			currentPrice = currentPrice.Sub(maxPriceForCurrentAdditiveIncrementInTicks.SDKDec())
 			exponentAtCurrentTick = exponentAtCurrentTick.Sub(sdk.OneInt())
 			ticksPassed = ticksPassed.Sub(geometricExponentIncrementDistanceInTicks.TruncateInt())
 		}
 	}
 	// Determine how many ticks we have passed in the exponentAtCurrentTick
-	ticksToBeFulfilledByExponentAtCurrentTick := osmomath.BigDecFromSDKDec(price.Sub(totalPrice)).Quo(currentAdditiveIncrementInTicks)
+	ticksToBeFulfilledByExponentAtCurrentTick := osmomath.BigDecFromSDKDec(price.Sub(currentPrice)).Quo(currentAdditiveIncrementInTicks)
 
 	// Finally, add the ticks we have passed from the completed geometricExponent values, as well as the ticks we have passed in the current geometricExponent value
 	tickIndex := ticksPassed.Add(ticksToBeFulfilledByExponentAtCurrentTick.SDKDec().TruncateInt())
