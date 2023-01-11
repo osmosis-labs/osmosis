@@ -15,7 +15,7 @@ var sdkTenDec = sdk.NewDec(10)
 // TicksToPrice returns the price for the lower and upper ticks.
 // Returns error if fails to calculate price.
 // TODO: spec and tests
-func TicksToPrice(lowerTick, upperTick int64, exponentAtPriceOne sdk.Int) (sdk.Dec, sdk.Dec, error) {
+func TicksToSqrtPrice(lowerTick, upperTick int64, exponentAtPriceOne sdk.Int) (sdk.Dec, sdk.Dec, error) {
 	priceUpperTick, err := TickToPrice(sdk.NewInt(upperTick), exponentAtPriceOne)
 	if err != nil {
 		return sdk.Dec{}, sdk.Dec{}, err
@@ -24,7 +24,15 @@ func TicksToPrice(lowerTick, upperTick int64, exponentAtPriceOne sdk.Int) (sdk.D
 	if err != nil {
 		return sdk.Dec{}, sdk.Dec{}, err
 	}
-	return priceLowerTick, priceUpperTick, nil
+	sqrtPriceUpperTick, err := priceLowerTick.ApproxSqrt()
+	if err != nil {
+		return sdk.Dec{}, sdk.Dec{}, err
+	}
+	sqrtPriceLowerTick, err := priceUpperTick.ApproxSqrt()
+	if err != nil {
+		return sdk.Dec{}, sdk.Dec{}, err
+	}
+	return sqrtPriceLowerTick, sqrtPriceUpperTick, nil
 }
 
 // TickToPrice returns the price given the following two arguments:
