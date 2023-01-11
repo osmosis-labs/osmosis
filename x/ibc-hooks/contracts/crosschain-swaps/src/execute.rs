@@ -106,30 +106,27 @@ pub fn handle_swap_reply(
     // Build an IBC packet to forward the swap.
     let contract_addr = &swap_msg_state.contract_addr;
     let ts = swap_msg_state.block_time.plus_seconds(PACKET_LIFETIME);
-    let config = CONFIG.load(deps.storage)?;
 
-    // If the memo is provided we want to include it in the IBC message
+    // If the memo is provided we want to include it in the IBC message. If not,
+    // we default to an empty object
     let memo: serde_cw_value::Value = if let Some(memo) = &swap_msg_state.forward_to.next_memo {
         serde_json_wasm::from_str(&memo.to_string()).map_err(|_e| ContractError::InvalidMemo {
-            error: format!("this should be unreachable"),
+            error: format!("this should be unreachable"), // because the memo has been validated above
             memo: memo.to_string(),
         })?
     } else {
         serde_json_wasm::from_str("{}").unwrap()
     };
 
-    // If tracking callbacks, we want to include the callback key in the memo
-    // without otherwise modifying the provided one
-    let memo = match config.track_ibc_callbacks {
-        true => {
-            let serde_cw_value::Value::Map(mut m) = memo else { unreachable!() };
-            m.insert(
-                serde_cw_value::Value::String(CALLBACK_KEY.to_string()),
-                serde_cw_value::Value::String(contract_addr.to_string()),
-            );
-            serde_cw_value::Value::Map(m)
-        }
-        false => memo,
+    // Include the callback key in the memo without modifying the rest of the
+    // provided memo
+    let memo = {
+        let serde_cw_value::Value::Map(mut m) = memo else { unreachable!() };
+        m.insert(
+            serde_cw_value::Value::String(CALLBACK_KEY.to_string()),
+            serde_cw_value::Value::String(contract_addr.to_string()),
+        );
+        serde_cw_value::Value::Map(m)
     };
 
     // Serialize the memo. If it is an empty json object, set it to ""
@@ -167,19 +164,18 @@ pub fn handle_swap_reply(
         .add_attribute("status", "ibc_message_created")
         .add_attribute("ibc_message", format!("{:?}", ibc_transfer));
 
-    if !config.track_ibc_callbacks || swap_msg_state.forward_to.failed_delivery.is_none() {
-        // If we're not tracking callbacks, or there isn't any recovery addres,
-        // then there's no need to listen to the response of the send.
+    if swap_msg_state.forward_to.failed_delivery.is_none() {
+        // If there isn't any recovery addres, then there's no need to listen to
+        // the response of the send, so we short-circuit here.
 
-        // The response data needs to be added for consistency. it would
+        // The response data needs to be added for consistency here. It would
         // normally be added in the next message (after the forward succeeds)
-        let amount = swap_response.amount;
-        let denom = swap_response.token_out_denom;
-        let channel_id = swap_msg_state.forward_to.channel;
-        let to_address = swap_msg_state.forward_to.receiver;
-        let data = CrosschainSwapResponse {
-            msg: format!("Sent {amount}{denom} to {channel_id}/{to_address}"),
-        };
+        let data = CrosschainSwapResponse::base(
+            &swap_response.amount,
+            &swap_response.token_out_denom,
+            &swap_msg_state.forward_to.channel,
+            swap_msg_state.forward_to.receiver.as_str(),
+        );
 
         return Ok(response
             .set_data(to_binary(&data)?)
@@ -260,9 +256,7 @@ pub fn handle_forward_reply(
     };
 
     // The response data
-    let response = CrosschainSwapResponse {
-        msg: format!("Sent {amount}{denom} to {channel_id}/{to_address}"),
-    };
+    let response = CrosschainSwapResponse::base(&amount.into(), &denom, &channel_id, &to_address);
 
     Ok(Response::new()
         .set_data(to_binary(&response)?)

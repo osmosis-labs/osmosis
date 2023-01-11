@@ -1,5 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Addr, Coin};
+use cosmwasm_std::{Addr, Coin, Uint128};
 use swaprouter::msg::Slippage;
 
 /// Message type for `instantiate` entry_point
@@ -7,14 +7,7 @@ use swaprouter::msg::Slippage;
 pub struct InstantiateMsg {
     /// This should be an instance of the Osmosis swaprouter contract
     pub swap_contract: String,
-    /// If set to true, the contract will add a callback request on the packet
-    /// so that it gets notified when an ack is received or if the packet timed
-    /// out. If set to false, any funds sent on a packet that fails after a swap
-    /// will be stuck in this contract.
-    ///
-    /// The information about the packet sender and recovery address is still
-    /// stored, so recovery could be possible after a contract upgrade.
-    pub track_ibc_sends: Option<bool>,
+
     /// These are the channels that will be accepted by the contract. This is
     /// needed to avoid sending packets to addresses not supported by the
     /// receiving chain. The channels are specified as (bech32_prefix, channel_id)
@@ -75,6 +68,14 @@ pub enum QueryMsg {
 #[cw_serde]
 pub struct CrosschainSwapResponse {
     pub msg: String, // Do we want to provide more detailed information here?
+}
+
+impl CrosschainSwapResponse {
+    pub fn base(amount: &Uint128, denom: &str, channel_id: &str, receiver: &str) -> Self {
+        CrosschainSwapResponse {
+            msg: format!("Sent {amount}{denom} to {channel_id}/{receiver}"),
+        }
+    }
 }
 
 /// Message type for `migrate` entry_point

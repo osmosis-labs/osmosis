@@ -8,7 +8,6 @@ use crate::msg::Recovery;
 #[cw_serde]
 pub struct Config {
     pub swap_contract: Addr,
-    pub track_ibc_callbacks: bool,
 }
 
 #[cw_serde]
@@ -48,7 +47,7 @@ pub mod ibc {
     }
 
     /// A transfer packet sent by this contract that is expected to be received but
-    /// needs to be tracked in case it is not
+    /// needs to be tracked in case the receive fails or times-out
     #[cw_serde]
     pub struct IBCTransfer {
         pub recovery_addr: Addr,

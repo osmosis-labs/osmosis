@@ -27,10 +27,7 @@ pub fn instantiate(
 
     // validate contract addresses and save to config
     let swap_contract = deps.api.addr_validate(&msg.swap_contract)?;
-    let state = Config {
-        swap_contract,
-        track_ibc_callbacks: msg.track_ibc_sends.unwrap_or(false),
-    };
+    let state = Config { swap_contract };
     CONFIG.save(deps.storage, &state)?;
     for (prefix, channel) in msg.channels.into_iter() {
         CHANNEL_MAP.save(deps.storage, &prefix, &channel)?;
