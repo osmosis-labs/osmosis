@@ -298,8 +298,9 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
 	contractAddr := contracts[0]
 
+	transferAmount := int64(10)
 	validatorAddr := nodeB.GetWallet(initialization.ValidatorWalletName)
-	nodeB.SendIBCTransfer(validatorAddr, contractAddr, "10uosmo",
+	nodeB.SendIBCTransfer(validatorAddr, contractAddr, fmt.Sprintf("%duosmo", transferAmount),
 		fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr))
 
 	// check the balance of the contract
@@ -309,7 +310,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 		if len(balance) == 0 {
 			return false
 		}
-		return balance[0].Amount.Int64() == 10
+		return balance[0].Amount.Int64() == transferAmount
 	},
 		1*time.Minute,
 		10*time.Millisecond,
@@ -325,7 +326,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 		amount := totalFunds.(map[string]interface{})["amount"].(string)
 		denom := totalFunds.(map[string]interface{})["denom"].(string)
 		// check if denom contains "uosmo"
-		return err == nil && amount == "10" && strings.Contains(denom, "ibc")
+		return err == nil && amount == strconv.FormatInt(transferAmount, 10) && strings.Contains(denom, "ibc")
 	},
 		15*time.Second,
 		10*time.Millisecond,
