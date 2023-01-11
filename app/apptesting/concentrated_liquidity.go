@@ -19,7 +19,7 @@ func (s *KeeperTestHelper) PrepareConcentratedPool() types.ConcentratedPoolExten
 	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
 
-	// Create a concentrated pool via the swaprouter
+	// Create a concentrated pool via the poolmanager
 	poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne))
 	s.Require().NoError(err)
 

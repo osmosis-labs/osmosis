@@ -75,9 +75,9 @@ Conversely, we calculate liquidity from the other token in the pool:
 
 $$\Delta x = \Delta \frac {1}{\sqrt P}  L$$
 
-## Ticks
+### Ticks
 
-### Context
+#### Context
 
 In Uniswap V3, discrete points (called ticks) are used when providing liquidity in a concentrated liquidity pool. The price [p] corresponding to a tick [t] is defined by the equation:
 
@@ -87,7 +87,7 @@ This results in a .01% difference between adjacent tick prices. However, this do
 
 Since we know what range a pair will generally trade in, how do we go about providing more granularity at that range and provide a more optimal price range between ticks instead of the "one-size-fits-all" approach explained above?
 
-### Geometric Tick Spacing with Additive Ranges
+#### Geometric Tick Spacing with Additive Ranges
 
 In Osmosis' implementation of concentrated liquidity, we will instead make use of geometric tick spacing with additive ranges.
 
@@ -117,9 +117,9 @@ With a $exponentAtPriceOne$ of -6:
 * $tick_{-5001} = 0.994999$
 * $tick_{-5002} = 0.994998$
 
-### Formulas
+#### Formulas
 
-After we define $exponentAtPriceOne$ (this is chosen by the pool creator based on what precision they desire the asset pair to trade at), we can then calculate how many ticks must be crossed in order for k to be incremented ($geometricExponentIncrementDistanceInTicks$).
+After we define $exponentAtPriceOne$ (this is chosen by the pool creator based on what precision they desire the asset pair to trade at), we can then calculate how many ticks must be crossed in order for k to be incremented ( $geometricExponentIncrementDistanceInTicks$ ).
 
 $$ geometricExponentIncrementDistanceInTicks = 9 * 10^{(-exponentAtPriceOne)} $$
 
@@ -146,7 +146,7 @@ With this, we can determine the price:
 
 $$ price = (10^{geometricExponentDelta}) + (numAdditiveTicks * currentAdditiveIncrementInTicks) $$
 
-### Tick Spacing Example
+#### Tick Spacing Example
 
 Bob sets a limit order on the USD<>BTC pool at tick 36650010. This pool's $exponentAtPriceOne$ is -6. What price did Bob set his limit order at?
 
@@ -165,7 +165,7 @@ $$ price = (10^{4}) + (650010 * 0.01) = $16,500.10$$
 
 Bob set his limit order at price $16,500.10
 
-### Consequences
+#### Consequences
 
 This decision allows us to define ticks at spot prices that users actually desire to trade on, rather than arbitrarily defining ticks at .01% distance between each other. This will also make integration with UX seamless, instead of either
 
