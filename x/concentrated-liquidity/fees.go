@@ -218,6 +218,7 @@ func calculateFeeGrowth(targetTick int64, feeGrowthOutside sdk.DecCoins, current
 
 // formatPositionAccumulatorKey formats the position accumulator key prefixed by pool id, owner, lower tick
 // and upper tick with a key separator in-between.
+// nolint: unused
 func formatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) string {
 	return strings.Join([]string{strconv.FormatUint(poolId, uintBase), owner.String(), strconv.FormatInt(lowerTick, uintBase), strconv.FormatInt(upperTick, uintBase)}, keySeparator)
 }
