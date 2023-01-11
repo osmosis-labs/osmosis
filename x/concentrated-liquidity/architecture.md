@@ -146,24 +146,63 @@ With this, we can determine the price:
 
 $$ price = (10^{geometricExponentDelta}) + (numAdditiveTicks * currentAdditiveIncrementInTicks) $$
 
-#### Tick Spacing Example
+#### Tick Spacing Example: Tick to Price
 
 Bob sets a limit order on the USD<>BTC pool at tick 36650010. This pool's $exponentAtPriceOne$ is -6. What price did Bob set his limit order at?
 
 
-$$ geometricExponentIncrementDistanceInTicks = 9 * 10^{(6)} = 9000000$$
+$$ geometricExponentIncrementDistanceInTicks = 9 * 10^{(6)} = 9000000 $$
 
-$$ geometricExponentDelta = ⌊ 36650010 / 9000000 ⌋ = 4$$
+$$ geometricExponentDelta = ⌊ 36650010 / 9000000 ⌋ = 4 $$
 
-$$ exponentAtCurrentTick = -6 + 4 = -2$$
+$$ exponentAtCurrentTick = -6 + 4 = -2 $$
 
-$$ currentAdditiveIncrementInTicks = 10^{(-2)} = 0.01$$
+$$ currentAdditiveIncrementInTicks = 10^{(-2)} = 0.01 $$
 
-$$ numAdditiveTicks = 36650010 - (4 * 9000000) = 650010$$
+$$ numAdditiveTicks = 36650010 - (4 * 9000000) = 650010 $$
 
-$$ price = (10^{4}) + (650010 * 0.01) = $16,500.10$$
+$$ price = (10^{4}) + (650010 * 0.01) = $16,500.10 $$
 
 Bob set his limit order at price $16,500.10
+
+#### Tick Spacing Example: Price to Tick
+
+Bob sets a limit order on the USD<>BTC pool at price $16,500.10. This pool's $exponentAtPriceOne$ is -6. What tick did Bob set his limit order at?
+
+
+$$ geometricExponentIncrementDistanceInTicks = 9 * 10^{(6)} = 9000000$$
+
+We must loop through increasing exponents until we find the first exponent that is greater than or equal to the desired price
+
+$$ currentPrice = 1 $$
+$$ ticksPassed = 0 $$
+
+$$ currentAdditiveIncrementInTicks = 10^{(-6)} = 0.000001 $$
+$$ maxPriceForCurrentAdditiveIncrementInTicks = geometricExponentIncrementDistanceInTicks * currentAdditiveIncrementInTicks = 9000000 * 0.000001 = 9 $$
+$$ ticksPassed = ticksPassed + geometricExponentIncrementDistanceInTicks = 0 + 9000000 = 9000000 $$
+$$ totalPrice = totalPrice + maxPriceForCurrentAdditiveIncrementInTicks = 1 + 9 = 10 $$
+
+10 is less than 16,500.10, so we must increase our exponent and try again
+
+$$ currentAdditiveIncrementInTicks = 10^{(-5)} = 0.00001 $$
+$$ maxPriceForCurrentAdditiveIncrementInTicks = geometricExponentIncrementDistanceInTicks * currentAdditiveIncrementInTicks = 9000000 * 0.00001 = 90 $$
+$$ ticksPassed = ticksPassed + geometricExponentIncrementDistanceInTicks = 9000000 + 9000000 = 18000000 $$
+$$ totalPrice = totalPrice + maxPriceForCurrentAdditiveIncrementInTicks = 10 + 90 = 100 $$
+
+100 is less than 16,500.10, so we must increase our exponent and try again. This goes on until...
+
+$$ currentAdditiveIncrementInTicks = 10^{(-2)} = 0.01 $$
+$$ maxPriceForCurrentAdditiveIncrementInTicks = geometricExponentIncrementDistanceInTicks * currentAdditiveIncrementInTicks = 9000000 * 0.01 = 90000 $$
+$$ ticksPassed = ticksPassed + geometricExponentIncrementDistanceInTicks = 36000000 + 9000000 = 45000000 $$
+$$ totalPrice = totalPrice + maxPriceForCurrentAdditiveIncrementInTicks = 10000 + 90000 = 100000 $$
+
+100000 is greater than 16,500.10. This means we must now find out how many additive tick in the currentAdditiveIncrementInTicks of -2 we must pass in order to reach 16,500.10.
+
+$$ ticksToBeFulfilledByExponentAtCurrentTick = (desiredPrice - totalPrice) / currentAdditiveIncrementInTicks = (16500.10 - 100000) / 0.01 = -8349990 $$
+
+$$ tickIndex = ticksPassed + ticksToBeFulfilledByExponentAtCurrentTick = 45000000 + -8349990 = 36650010 $$
+
+Bob set his limit order at tick 36650010
 
 #### Consequences
 
