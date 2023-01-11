@@ -248,6 +248,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 
 			// Get the tick info for poolId 1
 			tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, test.param.tickIndex)
+			s.Require().NoError(err)
 
 			// Ensure tick state contains any preexistingLiquidity (zero otherwise)
 			s.Require().Equal(preexistingLiquidity, tickInfo.LiquidityGross)

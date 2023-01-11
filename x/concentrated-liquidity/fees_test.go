@@ -74,41 +74,44 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 
 func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 	type feeGrowthOutsideTest struct {
-		poolSetup           bool
-		tickSetup           bool
-		feeAccumulatorSetup bool
-		expectedError       bool
+		poolSetup                bool
+		tickSetup                bool
+		expectedFeeGrowthOutside sdk.DecCoins
+		invalidTick              bool
+		expectedError            bool
 	}
 
+	defaultAccumCoins := sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
+	defaultPoolId := uint64(1)
+	defaultLiquidityForLowerTick := sdk.MustNewDecFromStr("10.0")
+	defaultLiquidityForUpperTick := sdk.MustNewDecFromStr("20.0")
+
+	defaultUpperTickIndex := int64(5)
+	defaultLowerTickIndex := int64(3)
+
 	tests := map[string]feeGrowthOutsideTest{
-		// TODO: uncomment this once tickInfo feeGrowthOutside logic has been implemented
-		"happy path": {
-			poolSetup:           true,
-			tickSetup:           true,
-			feeAccumulatorSetup: true,
-			expectedError:       false,
+		"fee growth outside with tick initialized": {
+			poolSetup:                true,
+			tickSetup:                true,
+			expectedFeeGrowthOutside: defaultAccumCoins,
+			expectedError:            false,
 		},
-		// "tick has not been initialized": {
-		// 	poolSetup:           true,
-		// 	tickSetup:           false,
-		// 	feeAccumulatorSetup: true,
-		// 	expectedError:       false,
-		// },
+		"tick has not been initialized": {
+			poolSetup:                true,
+			tickSetup:                false,
+			expectedFeeGrowthOutside: sdk.DecCoins(nil),
+			expectedError:            false,
+		},
 		"error: pool has not been setup": {
-			poolSetup:           false,
-			tickSetup:           false,
-			feeAccumulatorSetup: false,
-			expectedError:       true,
+			poolSetup:     false,
+			tickSetup:     false,
+			expectedError: true,
 		},
 	}
 
 	for name, tc := range tests {
 		s.Run(name, func() {
 			s.SetupTest()
-			defaultPoolId := uint64(1)
-			defaultLiquidityForTick := sdk.MustNewDecFromStr("10.0")
-			defaultUpperTickIndex := int64(5)
-			defaultLowerTickIndex := int64(3)
 
 			// if pool set up true, set up default pool
 			if tc.poolSetup {
@@ -117,12 +120,18 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 
 			// if tick set up true, set upper and lower ticks to default values
 			if tc.tickSetup {
+				feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+				s.Require().NoError(err)
+
+				// manually update accumulator value to properly initialize tick's fee growth outside
+				feeAccum.UpdateAccumulator(defaultAccumCoins)
+
 				// first initialize upper tick
-				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(
+				err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(
 					s.Ctx,
 					defaultPoolId,
 					defaultUpperTickIndex,
-					defaultLiquidityForTick,
+					defaultLiquidityForUpperTick,
 					true,
 				)
 				s.Require().NoError(err)
@@ -132,7 +141,7 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 					s.Ctx,
 					defaultPoolId,
 					defaultLowerTickIndex,
-					defaultLiquidityForTick,
+					defaultLiquidityForLowerTick,
 					true,
 				)
 				s.Require().NoError(err)
@@ -146,7 +155,7 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 				s.Require().NoError(err)
 
 				// check if returned fee growth outside has correct value
-				s.Require().Equal(feeGrowthOutside, sdk.DecCoins(nil))
+				s.Require().Equal(feeGrowthOutside, tc.expectedFeeGrowthOutside)
 			}
 		})
 	}
