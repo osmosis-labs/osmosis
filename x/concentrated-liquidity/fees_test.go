@@ -318,32 +318,37 @@ func (suite *KeeperTestSuite) TestChargeFee() {
 	err = clKeeper.CreateFeeAccumulator(ctx, 2)
 	suite.Require().NoError(err)
 
-	tests := map[string]struct {
+	tests := []struct {
+		name      string
 		poolId    uint64
 		feeUpdate sdk.DecCoin
 
 		expectedGlobalGrowth sdk.DecCoins
 		expectError          error
 	}{
-		"pool id 1 - one eth": {
+		{
+			name:      "pool id 1 - one eth",
 			poolId:    1,
 			feeUpdate: oneEth,
 
 			expectedGlobalGrowth: sdk.NewDecCoins(oneEth),
 		},
-		"pool id 1 - 2 usdc": {
+		{
+			name:      "pool id 1 - 2 usdc",
 			poolId:    1,
 			feeUpdate: sdk.NewDecCoin(USDC, sdk.NewInt(2)),
 
 			expectedGlobalGrowth: sdk.NewDecCoins(oneEth).Add(sdk.NewDecCoin(USDC, sdk.NewInt(2))),
 		},
-		"pool id 2 - 1 usdc": {
+		{
+			name:      "pool id 2 - 1 usdc",
 			poolId:    2,
 			feeUpdate: oneEth,
 
 			expectedGlobalGrowth: sdk.NewDecCoins(oneEth),
 		},
-		"accumulator does not exist": {
+		{
+			name:      "accumulator does not exist",
 			poolId:    3,
 			feeUpdate: oneEth,
 
@@ -351,9 +356,9 @@ func (suite *KeeperTestSuite) TestChargeFee() {
 		},
 	}
 
-	for name, tc := range tests {
+	for _, tc := range tests {
 		tc := tc
-		suite.Run(name, func() {
+		suite.Run(tc.name, func() {
 			// System under test.
 			err := clKeeper.ChargeFee(ctx, tc.poolId, tc.feeUpdate)
 
