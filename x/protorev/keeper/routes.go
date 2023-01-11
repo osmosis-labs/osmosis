@@ -243,6 +243,7 @@ func (k Keeper) GetRouteWeight(ctx sdk.Context, route poolmanagertypes.SwapAmoun
 	default:
 		return 0, fmt.Errorf("invalid pool type")
 	}
+	return nil
 }
 
 // CalcNumberOfIterableRoutes calculates the number of routes that can be iterated over in the current transaction.

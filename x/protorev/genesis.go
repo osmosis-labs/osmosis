@@ -67,13 +67,18 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 	// Configure the route weights for genesis. This roughly correlates to the ms of execution time
 	// by route type
-	routeWeights := types.RouteWeights{
-		StableWeight:   5, // it takes around 5 ms to execute a stable swap route
-		BalancerWeight: 2, // it takes around 2 ms to execute a balancer swap route
+	routeWeights := types.PoolWeights{
+		StableWeight:       5, // it takes around 5 ms to simulate and execute a stable swap
+		BalancerWeight:     2, // it takes around 2 ms to simulate and execute a balancer swap
+		ConcentratedWeight: 2, // it takes around 2 ms to simulate and execute a concentrated swap
 	}
-	if err := k.SetRouteWeights(ctx, routeWeights); err != nil {
+	if err := k.SetPoolWeights(ctx, routeWeights); err != nil {
 		panic(err)
 	}
+
+	// Configure the initial base denoms used for cyclic route building
+	baseDenomPriorities := []string{types.OsmosisDenomination, types.AtomDenomination}
+	k.SetBaseDenoms(ctx, baseDenomPriorities)
 
 	// Update the pools on genesis
 	if err := k.UpdatePools(ctx); err != nil {

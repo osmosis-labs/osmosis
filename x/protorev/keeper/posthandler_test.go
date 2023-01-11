@@ -225,7 +225,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 			gasBefore := suite.Ctx.GasMeter().GasConsumed()
 			gasLimitBefore := suite.Ctx.GasMeter().Limit()
 
-			_, err := posthandlerProtoRev(suite.Ctx, tx, false)
+			_, err = posthandlerProtoRev(suite.Ctx, tx, false)
 
 			gasAfter := suite.Ctx.GasMeter().GasConsumed()
 			gasLimitAfter := suite.Ctx.GasMeter().Limit()

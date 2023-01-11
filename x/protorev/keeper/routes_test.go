@@ -222,6 +222,36 @@ func (suite *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 			hasRoute:           false,
 			expectedPointCount: 0,
 		},
+		{
+			description:        "Route exists for swap in Osmo and swap out Akash",
+			swapDenom:          types.AtomDenomination,
+			swapIn:             types.OsmosisDenomination,
+			swapOut:            "akash",
+			poolId:             7,
+			expectedRoute:      []TestRoute{{1, types.AtomDenomination, "akash"}, {7, "akash", types.OsmosisDenomination}, {25, types.OsmosisDenomination, types.AtomDenomination}},
+			hasRoute:           true,
+			expectedRouteCount: 6,
+		},
+		{
+			description:        "Route exists for swap in Akash and swap out Osmo",
+			swapDenom:          types.AtomDenomination,
+			swapIn:             "akash",
+			swapOut:            types.OsmosisDenomination,
+			poolId:             7,
+			expectedRoute:      []TestRoute{{25, types.AtomDenomination, types.OsmosisDenomination}, {7, types.OsmosisDenomination, "akash"}, {1, "akash", types.AtomDenomination}},
+			hasRoute:           true,
+			expectedRouteCount: 6,
+		},
+		{
+			description:        "Route does not exist for swap in Terra and swap out Osmo because the pool does not exist",
+			swapDenom:          types.AtomDenomination,
+			swapIn:             "terra",
+			swapOut:            types.OsmosisDenomination,
+			poolId:             7,
+			expectedRoute:      []TestRoute{},
+			hasRoute:           false,
+			expectedRouteCount: 0,
+		},
 	}
 
 	for _, tc := range cases {
