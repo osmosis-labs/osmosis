@@ -576,7 +576,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			expectedPoolLiquidity: DefaultLiquidityAmt.Add(DefaultLiquidityAmt),
 			expectedError:         false,
 		},
-		"error - update existing position with negative amount": {
+		"error: update existing position with negative amount": {
 			poolId:          1,
 			owner:           s.TestAccs[0],
 			lowerTick:       DefaultLowerTick,
@@ -610,14 +610,15 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			expectedError:   true,
 		},
 		"new position when calling update position": {
-			poolId:          1,
-			owner:           s.TestAccs[1],
-			lowerTick:       DefaultLowerTick,
-			upperTick:       DefaultUpperTick,
-			liquidityDelta:  DefaultLiquidityAmt,
-			amount0Expected: DefaultAmt0Expected,
-			amount1Expected: DefaultAmt1Expected,
-			expectedError:   false,
+			poolId:                1,
+			owner:                 s.TestAccs[1],
+			lowerTick:             DefaultLowerTick,
+			upperTick:             DefaultUpperTick,
+			liquidityDelta:        DefaultLiquidityAmt,
+			amount0Expected:       DefaultAmt0Expected,
+			amount1Expected:       DefaultAmt1Expected,
+			expectedPoolLiquidity: DefaultLiquidityAmt.Add(DefaultLiquidityAmt),
+			expectedError:         false,
 		},
 	}
 	for name, tc := range tests {
