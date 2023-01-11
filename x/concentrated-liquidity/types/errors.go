@@ -195,3 +195,13 @@ type ExponentAtPriceOneError struct {
 func (e ExponentAtPriceOneError) Error() string {
 	return fmt.Sprintf("exponentAtPriceOne provided (%s) must be in the range (%s, %s)", e.ProvidedExponentAtPriceOne, e.PrecisionValueAtPriceOneMin, e.PrecisionValueAtPriceOneMax)
 }
+
+type PriceBoundError struct {
+	ProvidedPrice sdk.Dec
+	MinSpotPrice  sdk.Dec
+	MaxSpotPrice  sdk.Dec
+}
+
+func (e PriceBoundError) Error() string {
+	return fmt.Sprintf("provided price (%s) must be between %s and %s", e.ProvidedPrice, e.MinSpotPrice, e.MaxSpotPrice)
+}

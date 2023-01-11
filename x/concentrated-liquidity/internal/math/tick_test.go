@@ -200,15 +200,20 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 			exponentAtPriceOne: sdk.NewInt(-1),
 			tickExpected:       "3420",
 		},
+		"min spot price and minimum exponentAtPriceOne": {
+			price:              types.MinSpotPrice,
+			exponentAtPriceOne: sdk.NewInt(-1),
+			tickExpected:       "-1620",
+		},
+		"error: max spot price plus one and minimum exponentAtPriceOne": {
+			price:              types.MaxSpotPrice.Add(sdk.OneDec()),
+			exponentAtPriceOne: sdk.NewInt(-1),
+			expectedError:      types.PriceBoundError{ProvidedPrice: types.MaxSpotPrice.Add(sdk.OneDec()), MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice},
+		},
 		"error: price must be positive": {
 			price:              sdk.NewDec(-1),
 			exponentAtPriceOne: sdk.NewInt(-6),
 			expectedError:      fmt.Errorf("price must be greater than zero"),
-		},
-		"error: resulting tickIndex too large": {
-			price:              types.MaxSpotPrice.Mul(sdk.NewDec(2)),
-			exponentAtPriceOne: DefaultExponentAtPriceOne,
-			expectedError:      types.TickIndexMaximumError{MaxTick: DefaultMaxTick},
 		},
 		"error: exponentAtPriceOne less than minimum": {
 			price:              sdk.NewDec(50000),

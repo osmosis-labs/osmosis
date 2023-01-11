@@ -79,6 +79,10 @@ func TickToPrice(tickIndex, exponentAtPriceOne sdk.Int) (price sdk.Dec, err erro
 	// Finally, we can calculate the price
 	price = powTen(geometricExponentDelta).Add(osmomath.BigDecFromSDKDec(numAdditiveTicks).Mul(currentAdditiveIncrementInTicks).SDKDec())
 
+	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
+		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
+	}
+
 	return price, nil
 }
 
@@ -90,6 +94,10 @@ func PriceToTick(price sdk.Dec, exponentAtPriceOne sdk.Int) (sdk.Int, error) {
 
 	if price.IsNegative() {
 		return sdk.Int{}, fmt.Errorf("price must be greater than zero")
+	}
+
+	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
+		return sdk.Int{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
 	}
 
 	if exponentAtPriceOne.LT(types.ExponentAtPriceOneMin) || exponentAtPriceOne.GT(types.ExponentAtPriceOneMax) {
