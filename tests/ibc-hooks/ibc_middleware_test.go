@@ -697,7 +697,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 
 	// Generate swap instructions for the contract. This will send correctly on chainA, but fail to be received on chainB
 	recoverAddr := suite.chainA.SenderAccounts[8].SenderAccount.GetAddress()
-	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"input_coin":{"denom":"token0","amount":"1000"},"output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}"},"receiver":"%s","failed_delivery": {"recovery_addr": "%s"}}}`,
+	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"input_coin":{"denom":"token0","amount":"1000"},"output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s","failed_delivery": {"recovery_addr": "%s"}}}`,
 		receiver, // Note that this is the chain A account, which does not exist on chain B
 		recoverAddr,
 	)
