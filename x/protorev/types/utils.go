@@ -1,15 +1,6 @@
 package types
 
-// Checks if the matching variable matches one of the tokens and if so returns the other and true
-func CheckOsmoAtomDenomMatch(tokenA, tokenB, match string) (string, bool) {
-	if tokenA == match {
-		return tokenB, true
-	} else if tokenB == match {
-		return tokenA, true
-	}
-	return "", false
-}
-
+// CreateSeacherRoutes creates a new TokenPairArbRoutes for testing purposes
 func CreateSeacherRoutes(numRoutes int, swapIn, swapOut, tokenInDenom, tokenOutDenom string) TokenPairArbRoutes {
 	routes := make([]*Route, numRoutes)
 	for i := 0; i < numRoutes; i++ {

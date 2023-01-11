@@ -656,7 +656,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 	}
 
 	// Set all of the pool info into the stores
-	suite.App.ProtoRevKeeper.EpochHooks().AfterEpochEnd(suite.Ctx, "week", 1)
+	suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
 }
 
 // createStableswapPool creates a stableswap pool with the given pool assets and params

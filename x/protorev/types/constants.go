@@ -21,9 +21,9 @@ var StepSize = sdk.NewInt(1_000_000)
 // Max iterations for binary search (log2(16_384) = 14)
 const MaxIterations int = 14
 
-// Max number of routes that can be arbitraged per tx (default of 6) this roughly corresponds
+// Max number of routes that can be arbitraged per tx (default of 25) this roughly corresponds
 // to the maximum execution time (in ms) of protorev per tx
-const MaxIterableRoutesPerTx uint64 = 15
+const MaxIterableRoutesPerTx uint64 = 50
 
 // Max number of routes that can be arbitraged per block (default of 100) this roughly corresponds
 // to the maximum execution time (in ms) of protorev per block

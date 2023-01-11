@@ -57,13 +57,16 @@ message RouteStatistics {
   repeated uint64 route = 3;
 }
 
-// RouteWeights contains the weights of all of the different route types. Routes
-// are broken up into different types based on the pool that is sandwiched in
-// between the arbitrage route. This distinction is made and necessary because
-// the execution time ranges fairly between the different route types.
-message RouteWeights {
-  // The weight of a route that includes a stableswap pool
+// PoolWeights contains the weights of all of the different pool types. This
+// distinction is made and necessary because the execution time ranges
+// significantly between the different pool types. Each weight roughly
+// corresponds to the amount of time (in ms) it takes to execute a swap on that
+// pool type.
+message PoolWeights {
+  // The weight of a stableswap pool
   uint64 stable_weight = 1;
-  // The weight of a route that includes a balancer pool
+  // The weight of a balancer pool
   uint64 balancer_weight = 2;
+  // The weight of a concentrated pool
+  uint64 concentrated_weight = 3;
 }

@@ -72,58 +72,62 @@ func (k Keeper) DeleteAllTokenPairArbRoutes(ctx sdk.Context) {
 	k.DeleteAllEntriesForKeyPrefix(ctx, types.KeyPrefixTokenPairRoutes)
 }
 
-// GetOsmoPool returns the pool id of the Osmo pool for the given denom paired with Osmo
-func (k Keeper) GetOsmoPool(ctx sdk.Context, denom string) (uint64, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixOsmoPools)
-	key := types.GetKeyPrefixOsmoPool(denom)
+// GetAllBaseDenoms returns all of the base denoms (sorted by priority) used to build cyclic arbitrage routes
+func (k Keeper) GetAllBaseDenoms(ctx sdk.Context) []string {
+	baseDenoms := make([]string, 0)
+
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixBaseDenoms)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		baseDenoms = append(baseDenoms, string(iterator.Value()))
+	}
+
+	return baseDenoms
+}
+
+// SetBaseDenoms sets all of the base denoms (sorted by priority) used to build cyclic arbitrage routes
+func (k Keeper) SetBaseDenoms(ctx sdk.Context, baseDenoms []string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixBaseDenoms)
+
+	for i, baseDenom := range baseDenoms {
+		key := types.GetKeyPrefixBaseDenom(uint64(i))
+		store.Set(key, []byte(baseDenom))
+	}
+}
+
+// DeleteBaseDenoms deletes all of the base denoms
+func (k Keeper) DeleteBaseDenoms(ctx sdk.Context) {
+	k.DeleteAllEntriesForKeyPrefix(ctx, types.KeyPrefixBaseDenoms)
+}
+
+// GetPoolForDenomPair returns the id of the highest liquidty pool between the base denom and the denom to match
+func (k Keeper) GetPoolForDenomPair(ctx sdk.Context, baseDenom, denomToMatch string) (uint64, error) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDenomPairToPool)
+	key := types.GetKeyPrefixDenomPairToPool(baseDenom, denomToMatch)
 
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return 0, fmt.Errorf("no osmo pool for denom %s", denom)
+		return 0, fmt.Errorf("highest liquidity pool between base %s and match denom %s not found", baseDenom, denomToMatch)
 	}
 
 	poolId := sdk.BigEndianToUint64(bz)
 	return poolId, nil
 }
 
-// SetOsmoPool sets the pool id of the Osmo pool for the given denom paired with Osmo
-func (k Keeper) SetOsmoPool(ctx sdk.Context, denom string, poolId uint64) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixOsmoPools)
-	key := types.GetKeyPrefixOsmoPool(denom)
+// SetPoolForDenomPair sets the id of the highest liquidty pool between the base denom and the denom to match
+func (k Keeper) SetPoolForDenomPair(ctx sdk.Context, baseDenom, denomToMatch string, poolId uint64) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDenomPairToPool)
+	key := types.GetKeyPrefixDenomPairToPool(baseDenom, denomToMatch)
 
 	store.Set(key, sdk.Uint64ToBigEndian(poolId))
 }
 
-// DeleteAllOsmoPools deletes all the Osmo pools from modules store
-func (k Keeper) DeleteAllOsmoPools(ctx sdk.Context) {
-	k.DeleteAllEntriesForKeyPrefix(ctx, types.KeyPrefixOsmoPools)
-}
-
-// GetAtomPool returns the pool id of the Atom pool for the given denom paired with Atom
-func (k Keeper) GetAtomPool(ctx sdk.Context, denom string) (uint64, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixAtomPools)
-	key := types.GetKeyPrefixAtomPool(denom)
-
-	bz := store.Get(key)
-	if len(bz) == 0 {
-		return 0, fmt.Errorf("no atom pool for denom %s", denom)
-	}
-
-	poolId := sdk.BigEndianToUint64(bz)
-	return poolId, nil
-}
-
-// SetAtomPool sets the pool id of the Atom pool for the given denom paired with Atom
-func (k Keeper) SetAtomPool(ctx sdk.Context, denom string, poolId uint64) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixAtomPools)
-	key := types.GetKeyPrefixAtomPool(denom)
-
-	store.Set(key, sdk.Uint64ToBigEndian(poolId))
-}
-
-// DeleteAllAtomPools deletes all the Atom pools from modules store
-func (k Keeper) DeleteAllAtomPools(ctx sdk.Context) {
-	k.DeleteAllEntriesForKeyPrefix(ctx, types.KeyPrefixAtomPools)
+// DeleteAllPoolsForBaseDenom deletes all the pools for the given base denom
+func (k Keeper) DeleteAllPoolsForBaseDenom(ctx sdk.Context, baseDenom string) {
+	key := append(types.KeyPrefixDenomPairToPool, types.GetKeyPrefixDenomPairToPool(baseDenom, "")...)
+	k.DeleteAllEntriesForKeyPrefix(ctx, key)
 }
 
 // DeleteAllEntriesForKeyPrefix deletes all the entries from the store for the given key prefix
@@ -178,21 +182,24 @@ func (k Keeper) GetDeveloperFees(ctx sdk.Context, denom string) (sdk.Coin, error
 	return developerFees, nil
 }
 
-// GetAllDeveloperFees returns all the developer fees (Osmo and Atom since these are the only two tradable assets)
-func (k Keeper) GetAllDeveloperFees(ctx sdk.Context) []sdk.Coin {
+// GetAllDeveloperFees returns all the developer fees
+func (k Keeper) GetAllDeveloperFees(ctx sdk.Context) ([]sdk.Coin, error) {
 	fees := make([]sdk.Coin, 0)
 
-	// Get Osmo fees
-	if fee, err := k.GetDeveloperFees(ctx, types.OsmosisDenomination); err == nil {
-		fees = append(fees, fee)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDeveloperFees)
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixDeveloperFees)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		developerFees := sdk.Coin{}
+		if err := developerFees.Unmarshal(iterator.Value()); err != nil {
+			return nil, fmt.Errorf("error unmarshalling developer fees: %w", err)
+		}
+
+		fees = append(fees, developerFees)
 	}
 
-	// Get Atom fees
-	if fee, err := k.GetDeveloperFees(ctx, types.AtomDenomination); err == nil {
-		fees = append(fees, fee)
-	}
-
-	return fees
+	return fees, nil
 }
 
 // SetDeveloperFees sets the fees the developers can withdraw from the module account
@@ -381,39 +388,39 @@ func (k Keeper) SetMaxRoutesPerBlock(ctx sdk.Context, maxRoutes uint64) error {
 	return nil
 }
 
-// GetRouteWeights sets the weights of different route types. Route are broken up into different types depending on
-// the pool types in the route.
-func (k Keeper) GetRouteWeights(ctx sdk.Context) (*types.RouteWeights, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixRouteWeights)
-	bz := store.Get(types.KeyPrefixRouteWeights)
+// GetPoolWeights retrieves the weights of different pool types. The weight of a pool type roughly
+// corresponds to the amount of time it will take to simulate and execute a swap on that pool type (in ms).
+func (k Keeper) GetPoolWeights(ctx sdk.Context) (*types.PoolWeights, error) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPoolWeights)
+	bz := store.Get(types.KeyPrefixPoolWeights)
 	if bz == nil {
 		// This should never happen as it is set to the default value on genesis
-		return nil, fmt.Errorf("route weights have not been set in state")
+		return nil, fmt.Errorf("pool weights have not been set in state")
 	}
 
-	routeWeights := &types.RouteWeights{}
-	err := routeWeights.Unmarshal(bz)
+	poolWeights := &types.PoolWeights{}
+	err := poolWeights.Unmarshal(bz)
 	if err != nil {
 		return nil, err
 	}
 
-	return routeWeights, nil
+	return poolWeights, nil
 }
 
-// SetRouteWeights sets the weights of different route types.
-func (k Keeper) SetRouteWeights(ctx sdk.Context, routeWeights types.RouteWeights) error {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixRouteWeights)
+// SetPoolWeights sets the weights of different pool types.
+func (k Keeper) SetPoolWeights(ctx sdk.Context, poolWeights types.PoolWeights) error {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPoolWeights)
 
-	if routeWeights.BalancerWeight == 0 || routeWeights.StableWeight == 0 {
-		return fmt.Errorf("route weights must be greater than 0")
+	if poolWeights.BalancerWeight == 0 || poolWeights.StableWeight == 0 || poolWeights.ConcentratedWeight == 0 {
+		return fmt.Errorf("pool weights must be greater than 0")
 	}
 
-	bz, err := routeWeights.Marshal()
+	bz, err := poolWeights.Marshal()
 	if err != nil {
 		return err
 	}
 
-	store.Set(types.KeyPrefixRouteWeights, bz)
+	store.Set(types.KeyPrefixPoolWeights, bz)
 
 	return nil
 }

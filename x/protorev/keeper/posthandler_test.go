@@ -14,7 +14,6 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestAnteHandle() {
-
 	type param struct {
 		msgs                []sdk.Msg
 		txFee               sdk.Coins
@@ -78,7 +77,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.ZeroInt(),
 				expectedProfits:     []*sdk.Coin{},
-				expectedRouteCount:  4,
+				expectedRouteCount:  12,
 			},
 			expectPass: true,
 		},
@@ -110,7 +109,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(24848),
 					},
 				},
-				expectedRouteCount: 6,
+				expectedRouteCount: 18,
 			},
 			expectPass: true,
 		},
@@ -146,7 +145,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(24848),
 					},
 				},
-				expectedRouteCount: 8,
+				expectedRouteCount: 24,
 			},
 			expectPass: true,
 		},
@@ -182,11 +181,16 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(56609900),
 					},
 				},
-				expectedRouteCount: 13,
+				expectedRouteCount: 33,
 			},
 			expectPass: true,
 		},
 	}
+
+	// Ensure that the max routes per tx is enough for the test suite
+	suite.App.ProtoRevKeeper.SetMaxRoutesPerTx(suite.Ctx, 40)
+	err := suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2})
+	suite.Require().NoError(err)
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
@@ -222,7 +226,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 			gasBefore := suite.Ctx.GasMeter().GasConsumed()
 			gasLimitBefore := suite.Ctx.GasMeter().Limit()
 
-			_, err := posthandlerProtoRev(suite.Ctx, tx, false)
+			_, err = posthandlerProtoRev(suite.Ctx, tx, false)
 
 			gasAfter := suite.Ctx.GasMeter().GasConsumed()
 			gasLimitAfter := suite.Ctx.GasMeter().Limit()

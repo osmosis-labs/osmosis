@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
 
@@ -10,6 +11,7 @@ type TestRoute struct {
 	OutputDenom string
 }
 
+// TestBuildRoutes tests the BuildRoutes function
 func (suite *KeeperTestSuite) TestBuildRoutes() {
 	cases := []struct {
 		description        string
@@ -37,7 +39,7 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 					{PoolId: 7, InputDenom: "akash", OutputDenom: types.OsmosisDenomination},
 				},
 			},
-			expectedRouteCount: 4,
+			expectedRouteCount: 12,
 			maxIterableRoutes:  15,
 		},
 		{
@@ -52,7 +54,7 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 					{PoolId: 10, InputDenom: "bitcoin", OutputDenom: types.OsmosisDenomination},
 				},
 			},
-			expectedRouteCount: 2,
+			expectedRouteCount: 6,
 			maxIterableRoutes:  15,
 		},
 		{
@@ -72,7 +74,7 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 					{PoolId: 4, InputDenom: "bitcoin", OutputDenom: types.AtomDenomination},
 				},
 			},
-			expectedRouteCount: 4,
+			expectedRouteCount: 12,
 			maxIterableRoutes:  15,
 		},
 		{
@@ -96,7 +98,7 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 					{PoolId: 30, InputDenom: "busd", OutputDenom: types.OsmosisDenomination},
 				},
 			},
-			expectedRouteCount: 5,
+			expectedRouteCount: 7,
 			maxIterableRoutes:  15,
 		},
 		{
@@ -120,14 +122,17 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 					{PoolId: 10, InputDenom: "bitcoin", OutputDenom: types.OsmosisDenomination},
 				},
 			},
-			expectedRouteCount: 2,
-			maxIterableRoutes:  2,
+			expectedRouteCount: 6,
+			maxIterableRoutes:  6,
 		},
 	}
 
 	for _, tc := range cases {
 		suite.Run(tc.description, func() {
 			suite.SetupTest()
+
+			err := suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, types.PoolWeights{StableWeight: 3, BalancerWeight: 2, ConcentratedWeight: 1})
+			suite.Require().NoError(err)
 
 			routes := suite.App.ProtoRevKeeper.BuildRoutes(suite.Ctx, tc.inputDenom, tc.outputDenom, tc.poolID, &tc.maxIterableRoutes)
 
@@ -146,80 +151,11 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestBuildAtomRoute() {
+// TestBuildHighestLiquidityRoute tests the BuildHighestLiquidityRoute function
+func (suite *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 	cases := []struct {
 		description        string
-		swapIn             string
-		swapOut            string
-		poolId             uint64
-		expectedRoute      []TestRoute
-		hasRoute           bool
-		expectedRouteCount uint64
-	}{
-		{
-			description:        "Route exists for swap in Osmo and swap out Akash",
-			swapIn:             types.OsmosisDenomination,
-			swapOut:            "akash",
-			poolId:             7,
-			expectedRoute:      []TestRoute{{1, types.AtomDenomination, "akash"}, {7, "akash", types.OsmosisDenomination}, {25, types.OsmosisDenomination, types.AtomDenomination}},
-			hasRoute:           true,
-			expectedRouteCount: 2,
-		},
-		{
-			description:        "Route exists for swap in Akash and swap out Osmo",
-			swapIn:             "akash",
-			swapOut:            types.OsmosisDenomination,
-			poolId:             7,
-			expectedRoute:      []TestRoute{{25, types.AtomDenomination, types.OsmosisDenomination}, {7, types.OsmosisDenomination, "akash"}, {1, "akash", types.AtomDenomination}},
-			hasRoute:           true,
-			expectedRouteCount: 2,
-		},
-		{
-			description:        "Route does not exist for swap in Terra and swap out Osmo because the pool does not exist",
-			swapIn:             "terra",
-			swapOut:            types.OsmosisDenomination,
-			poolId:             7,
-			expectedRoute:      []TestRoute{},
-			hasRoute:           false,
-			expectedRouteCount: 0,
-		},
-	}
-
-	for _, tc := range cases {
-		suite.Run(tc.description, func() {
-			suite.SetupTest()
-
-			// Track the number of iterable routes before the route is built
-			numberIterable, err := suite.App.ProtoRevKeeper.CalcNumberOfIterableRoutes(suite.Ctx)
-			suite.Require().NoError(err)
-			before := *numberIterable
-
-			route, buildErr := suite.App.ProtoRevKeeper.BuildAtomRoute(suite.Ctx, tc.swapIn, tc.swapOut, tc.poolId, numberIterable)
-			routeCount, err := suite.App.ProtoRevKeeper.GetRouteCountForBlock(suite.Ctx)
-			suite.Require().NoError(err)
-
-			// BuildAtomRoute should increment the number of routes by 1
-			suite.Require().Equal(tc.expectedRouteCount, routeCount)
-			suite.Require().Equal(*numberIterable+routeCount, before)
-
-			if tc.hasRoute {
-				suite.Require().NoError(buildErr)
-				suite.Require().Equal(len(tc.expectedRoute), len(route.PoolIds()))
-
-				for index, trade := range tc.expectedRoute {
-					suite.Require().Equal(trade.PoolId, route[index].PoolId)
-					suite.Require().Equal(trade.OutputDenom, route[index].TokenOutDenom)
-				}
-			} else {
-				suite.Require().Error(buildErr)
-			}
-		})
-	}
-}
-
-func (suite *KeeperTestSuite) TestBuildOsmoRoute() {
-	cases := []struct {
-		description        string
+		swapDenom          string
 		swapIn             string
 		swapOut            string
 		poolId             uint64
@@ -229,26 +165,59 @@ func (suite *KeeperTestSuite) TestBuildOsmoRoute() {
 	}{
 		{
 			description:        "Route exists for swap in Atom and swap out Akash",
+			swapDenom:          types.OsmosisDenomination,
 			swapIn:             types.AtomDenomination,
 			swapOut:            "akash",
 			poolId:             1,
 			expectedRoute:      []TestRoute{{7, types.OsmosisDenomination, "akash"}, {1, "akash", types.AtomDenomination}, {25, types.AtomDenomination, types.OsmosisDenomination}},
 			hasRoute:           true,
-			expectedRouteCount: 2,
+			expectedRouteCount: 6,
 		},
 		{
 			description:        "Route exists for swap in Akash and swap out Atom",
+			swapDenom:          types.OsmosisDenomination,
 			swapIn:             "akash",
 			swapOut:            types.AtomDenomination,
 			poolId:             1,
 			expectedRoute:      []TestRoute{{25, types.OsmosisDenomination, types.AtomDenomination}, {1, types.AtomDenomination, "akash"}, {7, "akash", types.OsmosisDenomination}},
 			hasRoute:           true,
-			expectedRouteCount: 2,
+			expectedRouteCount: 6,
 		},
 		{
 			description:        "Route does not exist for swap in Terra and swap out Atom because the pool does not exist",
+			swapDenom:          types.OsmosisDenomination,
 			swapIn:             "terra",
 			swapOut:            types.AtomDenomination,
+			poolId:             7,
+			expectedRoute:      []TestRoute{},
+			hasRoute:           false,
+			expectedRouteCount: 0,
+		},
+		{
+			description:        "Route exists for swap in Osmo and swap out Akash",
+			swapDenom:          types.AtomDenomination,
+			swapIn:             types.OsmosisDenomination,
+			swapOut:            "akash",
+			poolId:             7,
+			expectedRoute:      []TestRoute{{1, types.AtomDenomination, "akash"}, {7, "akash", types.OsmosisDenomination}, {25, types.OsmosisDenomination, types.AtomDenomination}},
+			hasRoute:           true,
+			expectedRouteCount: 6,
+		},
+		{
+			description:        "Route exists for swap in Akash and swap out Osmo",
+			swapDenom:          types.AtomDenomination,
+			swapIn:             "akash",
+			swapOut:            types.OsmosisDenomination,
+			poolId:             7,
+			expectedRoute:      []TestRoute{{25, types.AtomDenomination, types.OsmosisDenomination}, {7, types.OsmosisDenomination, "akash"}, {1, "akash", types.AtomDenomination}},
+			hasRoute:           true,
+			expectedRouteCount: 6,
+		},
+		{
+			description:        "Route does not exist for swap in Terra and swap out Osmo because the pool does not exist",
+			swapDenom:          types.AtomDenomination,
+			swapIn:             "terra",
+			swapOut:            types.OsmosisDenomination,
 			poolId:             7,
 			expectedRoute:      []TestRoute{},
 			hasRoute:           false,
@@ -264,7 +233,7 @@ func (suite *KeeperTestSuite) TestBuildOsmoRoute() {
 			suite.Require().NoError(err)
 			before := *numberIterable
 
-			route, buildErr := suite.App.ProtoRevKeeper.BuildOsmoRoute(suite.Ctx, tc.swapIn, tc.swapOut, tc.poolId, numberIterable)
+			route, buildErr := suite.App.ProtoRevKeeper.BuildHighestLiquidityRoute(suite.Ctx, tc.swapDenom, tc.swapIn, tc.swapOut, tc.poolId, numberIterable)
 			routeCount, err := suite.App.ProtoRevKeeper.GetRouteCountForBlock(suite.Ctx)
 			suite.Require().NoError(err)
 
@@ -286,7 +255,8 @@ func (suite *KeeperTestSuite) TestBuildOsmoRoute() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestBuildTokenPairRoutes() {
+// TestBuildHotRoutes tests the BuildHotRoutes function
+func (suite *KeeperTestSuite) TestBuildHotRoutes() {
 	cases := []struct {
 		description    string
 		swapIn         string
@@ -309,7 +279,8 @@ func (suite *KeeperTestSuite) TestBuildTokenPairRoutes() {
 		suite.Run(tc.description, func() {
 			numberIterable, err := suite.App.ProtoRevKeeper.CalcNumberOfIterableRoutes(suite.Ctx)
 			suite.Require().NoError(err)
-			routes, err := suite.App.ProtoRevKeeper.BuildTokenPairRoutes(suite.Ctx, tc.swapIn, tc.swapOut, tc.poolId, numberIterable)
+
+			routes, err := suite.App.ProtoRevKeeper.BuildHotRoutes(suite.Ctx, tc.swapIn, tc.swapOut, tc.poolId, numberIterable)
 
 			if tc.hasRoutes {
 				suite.Require().NoError(err)
@@ -332,6 +303,81 @@ func (suite *KeeperTestSuite) TestBuildTokenPairRoutes() {
 	}
 }
 
+// TestCheckAndUpdateRouteState tests the CheckAndUpdateRouteState function
+func (suite *KeeperTestSuite) TestCheckAndUpdateRouteState() {
+	cases := []struct {
+		description                     string
+		route                           poolmanagertypes.SwapAmountInRoutes
+		maxIterableRoutes               uint64
+		expectedRemainingIterableRoutes uint64
+		expectedPass                    bool
+	}{
+		{
+			description:                     "Valid route containing only balancer pools",
+			route:                           []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 2, TokenOutDenom: ""}, {PoolId: 3, TokenOutDenom: ""}},
+			maxIterableRoutes:               10,
+			expectedRemainingIterableRoutes: 4,
+			expectedPass:                    true,
+		},
+		{
+			description:                     "Valid route containing only balancer pools but not enough iterable routes",
+			route:                           []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 2, TokenOutDenom: ""}, {PoolId: 3, TokenOutDenom: ""}},
+			maxIterableRoutes:               2,
+			expectedRemainingIterableRoutes: 2,
+			expectedPass:                    false,
+		},
+		{
+			description:                     "Valid route containing only balancer pools and equal number of iterable routes",
+			route:                           []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 2, TokenOutDenom: ""}, {PoolId: 3, TokenOutDenom: ""}},
+			maxIterableRoutes:               6,
+			expectedRemainingIterableRoutes: 0,
+			expectedPass:                    true,
+		},
+		{
+			description:                     "Valid route containing only stable swap pools",
+			route:                           []poolmanagertypes.SwapAmountInRoute{{PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}},
+			maxIterableRoutes:               10,
+			expectedRemainingIterableRoutes: 1,
+			expectedPass:                    true,
+		},
+		{
+			description:                     "Valid route with more than 3 hops",
+			route:                           []poolmanagertypes.SwapAmountInRoute{{PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}, {PoolId: 1, TokenOutDenom: ""}},
+			maxIterableRoutes:               12,
+			expectedRemainingIterableRoutes: 1,
+			expectedPass:                    true,
+		},
+		{
+			description:                     "Valid route with more than 3 hops",
+			route:                           []poolmanagertypes.SwapAmountInRoute{{PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}, {PoolId: 1, TokenOutDenom: ""}, {PoolId: 2, TokenOutDenom: ""}, {PoolId: 3, TokenOutDenom: ""}},
+			maxIterableRoutes:               12,
+			expectedRemainingIterableRoutes: 12,
+			expectedPass:                    false,
+		},
+	}
+
+	for _, tc := range cases {
+		suite.Run(tc.description, func() {
+			suite.SetupTest()
+
+			err := suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, types.PoolWeights{StableWeight: 3, BalancerWeight: 2, ConcentratedWeight: 1})
+			suite.Require().NoError(err)
+
+			var maxIterable *uint64 = &tc.maxIterableRoutes
+
+			err = suite.App.ProtoRevKeeper.CheckAndUpdateRouteState(suite.Ctx, tc.route, maxIterable)
+			if tc.expectedPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+
+			suite.Require().Equal(tc.expectedRemainingIterableRoutes, tc.maxIterableRoutes)
+		})
+	}
+}
+
+// TestCalcNumberOfIterableRoutes tests the CalcNumberOfIterableRoutes function.
 func (suite *KeeperTestSuite) TestCalcNumberOfIterableRoutes() {
 	cases := []struct {
 		description        string

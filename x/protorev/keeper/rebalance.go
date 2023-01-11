@@ -16,7 +16,8 @@ func (k Keeper) IterateRoutes(ctx sdk.Context, routes []poolmanagertypes.SwapAmo
 
 	for _, route := range routes {
 		// Find the max profit for the route using the token out denom of the last pool in the route as the input token denom
-		inputCoin, profit, err := k.FindMaxProfitForRoute(ctx, route, route[2].TokenOutDenom)
+		inputDenom := route[len(route)-1].TokenOutDenom
+		inputCoin, profit, err := k.FindMaxProfitForRoute(ctx, route, inputDenom)
 		if err != nil {
 			k.Logger(ctx).Error("Error finding max profit for route: ", err)
 			continue
@@ -51,7 +52,7 @@ func (k Keeper) IterateRoutes(ctx sdk.Context, routes []poolmanagertypes.SwapAmo
 // ConvertProfits converts the profit denom to uosmo to allow for a fair comparison of profits
 func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit sdk.Int) (sdk.Int, error) {
 	// Get highest liquidity pool ID for the input coin and uosmo
-	conversionPoolID, err := k.GetOsmoPool(ctx, inputCoin.Denom)
+	conversionPoolID, err := k.GetPoolForDenomPair(ctx, types.OsmosisDenomination, inputCoin.Denom)
 	if err != nil {
 		return profit, err
 	}
@@ -64,8 +65,13 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit sdk.I
 
 	// Calculate the amount of uosmo that we can get if we swapped the
 	// profited amount of the orignal asset through the highest uosmo liquidity pool
-	conversionTokenOut, err := conversionPool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(sdk.NewCoin(inputCoin.Denom, profit)),
-		types.OsmosisDenomination, conversionPool.GetSwapFee(ctx))
+	conversionTokenOut, err := conversionPool.CalcOutAmtGivenIn(
+		ctx,
+		sdk.NewCoins(sdk.NewCoin(inputCoin.Denom, profit)),
+		types.OsmosisDenomination,
+		conversionPool.GetSwapFee(ctx),
+	)
+
 	if err != nil {
 		return profit, err
 	}
@@ -129,7 +135,7 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route poolmanagertypes.Sw
 
 // ExecuteTrade inputs a route, amount in, and rebalances the pool
 func (k Keeper) ExecuteTrade(ctx sdk.Context, route poolmanagertypes.SwapAmountInRoutes, inputCoin sdk.Coin) error {
-	// Get the module address which will execute the trade
+	// module address which will execute the trade
 	protorevModuleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
 
 	// Mint the module account the input coin to trade
