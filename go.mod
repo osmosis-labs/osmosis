@@ -19,7 +19,7 @@ require (
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230105183030-bccf5202f260
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230105184425-1e6fcd979d99
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230110104305-322e8478dbe8
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230111155848-bed9568d0681
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.5.0
@@ -301,7 +301,7 @@ require (
 replace (
 	// osmosis-patched wasmd
 	// ToDo: replace the commit hash with v0.30.0-osmo-v14 once the version is tagged
-	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.29.2-0.20221222131554-7c8ea36a6e30
+	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.29.2-0.20230111160235-66a23fc5b021
 	// dragonberry
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v13.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/8757a61551aa1ea993c85a523e18094ab555b1d7

@@ -126,7 +126,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	}
 	response, err := h.execWasmMsg(ctx, &execMsg)
 	if err != nil {
-		fmt.Println("WASM: contract call failed, passing down stack")
+		fmt.Println("WASM: contract call failed, passing down stack", err.Error())
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrWasmError, err.Error())
 	}
 
