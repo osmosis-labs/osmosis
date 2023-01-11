@@ -13,10 +13,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/v2types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/v2types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -109,7 +109,7 @@ func (q Querier) Pools(
 	}, nil
 }
 
-// This query has been deprecated and has been moved to swaprouter module.
+// This query has been deprecated and has been moved to poolmanager module.
 // nolint: staticcheck
 func (q Querier) NumPools(ctx context.Context, _ *types.QueryNumPoolsRequest) (*types.QueryNumPoolsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -127,7 +127,7 @@ func (q Querier) PoolType(ctx context.Context, req *types.QueryPoolTypeRequest) 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	poolType, err := q.Keeper.GetPoolType(sdkCtx, req.PoolId)
 
-	poolTypeStr, ok := swaproutertypes.PoolType_name[int32(poolType)]
+	poolTypeStr, ok := poolmanagertypes.PoolType_name[int32(poolType)]
 	if !ok {
 		return nil, status.Errorf(codes.Internal, "invalid pool type: %d", poolType)
 	}
@@ -198,7 +198,7 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 				return false, types.ErrPoolNotFound
 			}
 
-			poolTypeStr, ok := swaproutertypes.PoolType_name[int32(poolType)]
+			poolTypeStr, ok := poolmanagertypes.PoolType_name[int32(poolType)]
 			if !ok {
 				return false, fmt.Errorf("%d pool type not found", int32(poolType))
 			}
@@ -411,7 +411,7 @@ func (q Querier) TotalLiquidity(ctx context.Context, _ *types.QueryTotalLiquidit
 }
 
 // EstimateSwapExactAmountIn estimates input token amount for a swap.
-// This query is deprecated and has been moved to swaprouter module.
+// This query is deprecated and has been moved to poolmanager module.
 // nolint: staticcheck
 func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.QuerySwapExactAmountInRequest) (*types.QuerySwapExactAmountInResponse, error) {
 	if req == nil {
@@ -440,7 +440,7 @@ func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.Query
 }
 
 // EstimateSwapExactAmountOut estimates token output amount for a swap.
-// This query is deprecated and has been moved to swaprouter module.
+// This query is deprecated and has been moved to poolmanager module.
 // nolint: staticcheck
 func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.QuerySwapExactAmountOutRequest) (*types.QuerySwapExactAmountOutResponse, error) {
 	if req == nil {

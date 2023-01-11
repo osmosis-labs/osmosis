@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"

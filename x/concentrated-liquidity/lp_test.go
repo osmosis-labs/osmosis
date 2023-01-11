@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
+	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 type lpTest struct {
@@ -125,7 +125,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			s.FundAcc(s.TestAccs[0], PoolCreationFee)
 
 			// Create a CL pool with custom tickSpacing
-			poolID, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing))
+			poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing))
 			s.Require().NoError(err)
 
 			pool, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, poolID)

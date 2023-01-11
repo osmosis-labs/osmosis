@@ -6,10 +6,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 type msgServer struct {
@@ -67,7 +67,7 @@ func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, ms
 // CreatePool attempts to create a pool returning the newly created pool ID or an error upon failure.
 // The pool creation fee is used to fund the community pool.
 // It will create a dedicated module account for the pool and sends the initial liquidity to the created module account.
-func (server msgServer) CreatePool(goCtx context.Context, msg swaproutertypes.CreatePoolMsg) (poolId uint64, err error) {
+func (server msgServer) CreatePool(goCtx context.Context, msg poolmanagertypes.CreatePoolMsg) (poolId uint64, err error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	poolId, err = server.keeper.poolManager.CreatePool(ctx, msg)

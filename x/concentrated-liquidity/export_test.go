@@ -4,10 +4,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+)
+
+var (
+	EmptyCoins = emptyCoins
 )
 
 // OrderInitialPoolDenoms sets the pool denoms of a cl pool
@@ -79,11 +83,11 @@ func (k Keeper) InitializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 	return k.initializeInitialPositionForPool(ctx, pool, amount0Desired, amount1Desired)
 }
 
-func ConvertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (swaproutertypes.PoolI, error) {
+func ConvertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (poolmanagertypes.PoolI, error) {
 	return convertConcentratedToPoolInterface(concentratedPool)
 }
 
-func ConvertPoolInterfaceToConcentrated(poolI swaproutertypes.PoolI) (types.ConcentratedPoolExtension, error) {
+func ConvertPoolInterfaceToConcentrated(poolI poolmanagertypes.PoolI) (types.ConcentratedPoolExtension, error) {
 	return convertPoolInterfaceToConcentrated(poolI)
 }
 
@@ -110,4 +114,16 @@ func (k Keeper) GetFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, u
 
 func CalculateFeeGrowth(targetTick int64, feeGrowthOutside sdk.DecCoins, currentTick int64, feesGrowthGlobal sdk.DecCoins, isUpperTick bool) sdk.DecCoins {
 	return calculateFeeGrowth(targetTick, feeGrowthOutside, currentTick, feesGrowthGlobal, isUpperTick)
+}
+
+func (k Keeper) GetInitialFeeGrowthOutsideForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
+	return k.getInitialFeeGrowthOutsideForTick(ctx, poolId, tick)
+}
+
+func GetFeeAccumulatorName(poolId uint64) string {
+	return getFeeAccumulatorName(poolId)
+}
+
+func (k Keeper) ChargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin) error {
+	return k.chargeFee(ctx, poolId, feeUpdate)
 }

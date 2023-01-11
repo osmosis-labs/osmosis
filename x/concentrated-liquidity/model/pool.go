@@ -6,9 +6,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/math"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 )
 
 var (
@@ -26,7 +26,7 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 
 	// Create a new pool struct with the specified parameters
 	pool := Pool{
-		// TODO: move gammtypes.NewPoolAddress(poolId) to swaproutertypes
+		// TODO: move gammtypes.NewPoolAddress(poolId) to poolmanagertypes
 		Address:          gammtypes.NewPoolAddress(poolId).String(),
 		Id:               poolId,
 		CurrentSqrtPrice: sdk.ZeroDec(),

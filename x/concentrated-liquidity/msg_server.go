@@ -7,8 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
+	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 type msgServer struct {
@@ -48,7 +48,7 @@ func (server msgServer) CreateConcentratedPool(goCtx context.Context, msg *clmod
 		return nil, fmt.Errorf("received denom1 with invalid metadata: %s", msg.Denom1)
 	}
 
-	poolId, err := server.keeper.swaprouterKeeper.CreatePool(ctx, msg)
+	poolId, err := server.keeper.poolmanagerKeeper.CreatePool(ctx, msg)
 	if err != nil {
 		return nil, err
 	}

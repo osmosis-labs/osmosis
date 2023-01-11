@@ -3,11 +3,11 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 type ConcentratedPoolExtension interface {
-	swaproutertypes.PoolI
+	poolmanagertypes.PoolI
 
 	// TODO: move these to separate interfaces
 	GetToken0() string
