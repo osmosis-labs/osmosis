@@ -35,7 +35,7 @@ def main():
 
     gitResetStr = "git reset HEAD" + "~"*num_commits
     input("going to run git push, hit enter to confirm. Ctrl-C to cancel." + 
-      " (And if so, you likely want to do " + gitResetStr + " to undo the commits)")
+      " (If you cancel, you likely want to do " + gitResetStr + " to undo the commits)")
 
     result = subprocess.run("git push".split(" "))
     if result.returncode != 0:
