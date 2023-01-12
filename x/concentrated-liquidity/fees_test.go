@@ -511,7 +511,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			expectedFeesClaimed: sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(20))),
 		},
-		"single swap left -> right: 2 ticks, one share - current price == upper tick": {
+		"single swap left -> right: 2 ticks, one share - current tick == upper tick": {
 			initialLiquidity: sdk.OneDec(),
 
 			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
