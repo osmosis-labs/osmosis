@@ -343,3 +343,100 @@ func (suite *KeeperTestSuite) TestMsgSetMaxRoutesPerBlock() {
 		})
 	}
 }
+
+// TestMsgSetPoolWeights tests the MsgSetPoolWeights message.
+func (suite *KeeperTestSuite) TestMsgSetPoolWeights() {
+	cases := []struct {
+		description       string
+		admin             string
+		poolWeights       types.PoolWeights
+		passValidateBasic bool
+		pass              bool
+	}{
+		{
+			"Invalid message (invalid admin)",
+			"admin",
+			types.PoolWeights{
+				StableWeight:       1,
+				BalancerWeight:     2,
+				ConcentratedWeight: 3,
+			},
+			false,
+			false,
+		},
+		{
+			"Invalid message (invalid pool weight)",
+			suite.adminAccount.String(),
+			types.PoolWeights{
+				StableWeight:       0,
+				BalancerWeight:     2,
+				ConcentratedWeight: 1,
+			},
+			false,
+			false,
+		},
+		{
+			"Invalid message (unset pool weight)",
+			suite.adminAccount.String(),
+			types.PoolWeights{
+				StableWeight: 1,
+			},
+			false,
+			false,
+		},
+		{
+			"Invalid message (wrong admin)",
+			suite.adminAccount.String(),
+			types.PoolWeights{
+				StableWeight:       1,
+				BalancerWeight:     2,
+				ConcentratedWeight: 3,
+			},
+			true,
+			false,
+		},
+		{
+			"Valid message (correct admin)",
+			suite.adminAccount.String(),
+			types.PoolWeights{
+				StableWeight:       1,
+				BalancerWeight:     2,
+				ConcentratedWeight: 3,
+			},
+			true,
+			true,
+		},
+	}
+
+	for _, testCase := range cases {
+		suite.Run(testCase.description, func() {
+			suite.SetupTest()
+			msg := types.NewMsgSetPoolWeights(testCase.admin, testCase.poolWeights)
+			if testCase.pass {
+				msg.Admin = suite.adminAccount.String()
+			}
+
+			err := msg.ValidateBasic()
+			if testCase.passValidateBasic {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+				return
+			}
+
+			server := keeper.NewMsgServer(*suite.App.AppKeepers.ProtoRevKeeper)
+			wrappedCtx := sdk.WrapSDKContext(suite.Ctx)
+			response, err := server.SetPoolWeights(wrappedCtx, msg)
+			if testCase.pass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(response, &types.MsgSetPoolWeightsResponse{})
+
+				poolWeights, err := suite.App.AppKeepers.ProtoRevKeeper.GetPoolWeights(suite.Ctx)
+				suite.Require().NoError(err)
+				suite.Require().Equal(testCase.poolWeights, *poolWeights)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
