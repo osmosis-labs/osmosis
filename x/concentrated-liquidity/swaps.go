@@ -142,6 +142,10 @@ func (k Keeper) SwapOutAmtGivenIn(
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 	}
+
+        // N.B. making the call below ensures that any mutations done inside calcOutAmtGivenIn
+        // are written to store. If this call were skipped, calcOutAmtGivenIn would be non-mutative.
+        // An example of a store write done in calcOutAmtGivenIn is updating ticks as we cross them.
 	writeCtx()
 
 	err = k.applySwap(ctx, tokenIn, tokenOut, poolId, newLiquidity, newCurrentTick, newSqrtPrice)
