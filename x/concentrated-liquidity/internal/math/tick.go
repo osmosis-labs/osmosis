@@ -16,7 +16,7 @@ var (
 	sdkThirtyEightDec = sdk.NewDec(38)
 )
 
-// TicksToPrice returns the price for the lower and upper ticks.
+// TicksToSqrtPrice returns the sqrtPrice for the lower and upper ticks.
 // Returns error if fails to calculate price.
 // TODO: spec and tests
 func TicksToSqrtPrice(lowerTick, upperTick int64, exponentAtPriceOne sdk.Int) (sdk.Dec, sdk.Dec, error) {
@@ -82,6 +82,8 @@ func TickToSqrtPrice(tickIndex, exponentAtPriceOne sdk.Int) (price sdk.Dec, err 
 	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
 		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
 	}
+
+	// Determine the sqrtPrice from the price
 	sqrtPrice, err := price.ApproxSqrt()
 	if err != nil {
 		return sdk.Dec{}, err
