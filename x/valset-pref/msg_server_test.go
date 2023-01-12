@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	valPref "github.com/osmosis-labs/osmosis/v14/x/valset-pref"
 	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
 )
@@ -159,7 +160,7 @@ func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
 				suite.Require().NoError(err)
 			}
 
-			// call the create validator set preference
+			// call the sets new validator set preference
 			_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, test.preferences))
 			if test.expectPass {
 				suite.Require().NoError(err)
@@ -181,8 +182,8 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 		delegator              sdk.AccAddress
 		amountToDelegate       sdk.Coin  // amount to delegate
 		expectedShares         []sdk.Dec // expected shares after delegation
-		setExistingDelegations bool
-		setValSet              bool
+		setExistingDelegations bool      // if true, create new delegation (non-valset) with {delegator, valAddrs}
+		setValSet              bool      // if true, create a new valset {delegator, preferences}
 		expectPass             bool
 	}{
 		{
@@ -225,7 +226,6 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 
 			suite.FundAcc(test.delegator, amountToFund)
 
-			// if validatorSetExist no need to refund and setValSet again
 			if test.setValSet {
 				_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
 				suite.Require().NoError(err)
@@ -236,7 +236,6 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 				suite.Require().NoError(err)
 			}
 
-			// call the create validator set preference
 			_, err := msgServer.DelegateToValidatorSet(c, types.NewMsgDelegateToValidatorSet(test.delegator, test.amountToDelegate))
 			if test.expectPass {
 				suite.Require().NoError(err)

@@ -148,13 +148,13 @@ func (suite *KeeperTestSuite) TestGetDelegationPreference() {
 			expectPass:             true,
 		},
 		{
-			name:                   "ValSet doesnot exist, but existing delegations exist",
+			name:                   "ValSet does not exist, but existing delegations exist",
 			delegator:              sdk.AccAddress([]byte("addr3---------------")),
 			setExistingDelegations: true,
 			expectPass:             true,
 		},
 		{
-			name:       "ValSet doesnot exist, no existing delebgations",
+			name:       "ValSet does not exist, no existing delegations",
 			delegator:  sdk.AccAddress([]byte("addr4---------------")),
 			expectPass: false,
 		},

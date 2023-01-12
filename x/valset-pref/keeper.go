@@ -83,7 +83,7 @@ func (k Keeper) GetDelegationPreferences(ctx sdk.Context, delegator string) (typ
 }
 
 // GetExistingStakingDelegations returns the existing delegation that's not valset.
-// This function also formats the output into ValidatorSetPreference struct where with {valAddr, weight}.
+// This function also formats the output into ValidatorSetPreference struct {valAddr, weight}.
 // The weight is calculated based on (valDelegation / totalDelegations) for each validator.
 func (k Keeper) GetExistingStakingDelegations(ctx sdk.Context, delAddr sdk.AccAddress) ([]types.ValidatorPreference, error) {
 	var existingDelsValSetFormatted []types.ValidatorPreference
