@@ -75,24 +75,154 @@ Conversely, we calculate liquidity from the other token in the pool:
 
 $$\Delta x = \Delta \frac {1}{\sqrt P}  L$$
 
-## Ticks
+### Ticks
 
-To allow for providing liquidity within certain price ranges, we will introduce the concept of a `tick`. Each tick is a function of price, allowing to partition the price
-range into discrete segments (which we refer to here as ticks):
+#### Context
 
-$$p(i) = 1.0001^i$$
+In Uniswap V3, discrete points (called ticks) are used when providing liquidity in a concentrated liquidity pool. The price [p] corresponding to a tick [t] is defined by the equation:
 
-where `p(i)` is the price at tick `i`. Taking powers of 1.0001 has a property of two ticks being 0.01% apart (1 basis point away).
+$$ p(i) = 1.0001^t $$
 
-Therefore, we get values like:
+This results in a .01% difference between adjacent tick prices. However, this does not allow for control over the specific prices that the ticks correspond to. For example, if a user wants to make a limit order at the $17,100.50 price point, they would have to interact with either tick 97473 (corresponding to price $17,099.60) or tick 97474 (price $17101.30).
 
-$$\sqrt{p(-1)} = 1.0001^{-1/2} \approx 0.99995$$
+Since we know what range a pair will generally trade in, how do we go about providing more granularity at that range and provide a more optimal price range between ticks instead of the "one-size-fits-all" approach explained above?
 
-$$\sqrt{p(0)} = 1.0001^{0/2} = 1$$
+#### Geometric Tick Spacing with Additive Ranges
 
-$$\sqrt{p(1)} = \sqrt{1.0001} = 1.0001^{1/2} \approx 1.00005$$
+In Osmosis' implementation of concentrated liquidity, we will instead make use of geometric tick spacing with additive ranges.
 
-TODO: tick range bounds
+We start by defining an exponent for the precision factor of 10 at a spot price of one - ($exponentAtPriceOne$).
+
+For instance, if $exponentAtPriceOne = -4$ , then each tick starting at 1 and ending at the first factor of 10 will represents a spot price increase of 0.0001. At this precision factor:
+* $tick_0 = 1$ (tick 0 is always equal to 1 regardless of precision factor)
+* $tick_1 = 1.0001$
+* $tick_2 = 1.0002$
+* $tick_3 = 1.0003$
+
+This continues on until we reach a spot price of 10. At this point, since we have increased by a factor of 10, our $exponentAtCurrentTick$ increases from -4 to -3, and the ticks will increase as follows:
+* $tick_{89999} =  9.9999$
+* $tick_{90000} = 10.000$
+* $tick_{90001} = 10.001$
+* $tick_{90002} = 10.002$
+
+For spot prices less than a dollar, the precision factor decreases at every factor of 10. For example, with a $exponentAtPriceOne$ of -4:
+* $tick_{-1} = 0.9999$
+* $tick_{-2} = 0.9998$
+* $tick_{-5001} = 0.4999$
+* $tick_{-5002} = 0.4998$
+
+With a $exponentAtPriceOne$ of -6:
+* $tick_{-1} = 0.999999$
+* $tick_{-2} = 0.999998$
+* $tick_{-5001} = 0.994999$
+* $tick_{-5002} = 0.994998$
+
+This goes on in the negative direction until we reach a spot price of 0.000000000000000001 or in the positive direction until we reach a spot price of 100000000000000000000000000000000000000, regardless of what the exponentAtPriceOne was. The minimum spot price was chosen as this is the smallest possible number supported by the sdk.Dec type. As for the maximum spot price, the above number was based on gamm's max spot price of 340282366920938463463374607431768211455. While these numbers are not the same, the max spot price used in concentrated liquidity utilizes the same number of significant digits as gamm's max spot price and it is less than gamm's max spot price which satisfies the requirements of the initial design requirements.
+
+#### Formulas
+
+After we define $exponentAtPriceOne$ (this is chosen by the pool creator based on what precision they desire the asset pair to trade at), we can then calculate how many ticks must be crossed in order for k to be incremented ( $geometricExponentIncrementDistanceInTicks$ ).
+
+$$geometricExponentIncrementDistanceInTicks = 9 * 10^{(-exponentAtPriceOne)}$$
+
+Since we define k at price one and utilize this as the increment starting point instead of price zero, we must multiply the result by 9 as shown above. In other words, starting at 1, it takes 9 ticks to get to the first power of 10. Then, starting at 10, it takes 9*10 ticks to get to the next power of 10, etc.
+
+Now that we know how many ticks must be crossed in order for our k to be incremented, we can then figure out what our change in k will be based on what tick we are trading at:
+
+$$geometricExponentDelta = ⌊ tick / geometricExponentIncrementDistanceInTicks ⌋$$
+
+With $geometricExponentDelta$ and $exponentAtPriceOne$, we can figure out what the k value we will be at when we reach the provided tick:
+
+$$exponentAtCurrentTick = exponentAtPriceOne + geometricExponentDelta$$
+
+Knowing what our $exponentAtCurrentTick$ is, we must then figure out what power of 10 this k corresponds to:
+
+$$currentAdditiveIncrementInTicks = 10^{(exponentAtCurrentTick)}$$
+
+Lastly, we must determine how many ticks above the current increment we are at:
+
+$$numAdditiveTicks = tick - (geometricExponentDelta * geometricExponentIncrementDistanceInTicks)$$
+
+With this, we can determine the price:
+
+$$price = (10^{geometricExponentDelta}) + (numAdditiveTicks * currentAdditiveIncrementInTicks)$$
+
+#### Tick Spacing Example: Tick to Price
+
+Bob sets a limit order on the USD<>BTC pool at tick 36650010. This pool's $exponentAtPriceOne$ is -6. What price did Bob set his limit order at?
+
+
+$$geometricExponentIncrementDistanceInTicks = 9 * 10^{(6)} = 9000000$$
+
+$$geometricExponentDelta = ⌊ 36650010 / 9000000 ⌋ = 4$$
+
+$$exponentAtCurrentTick = -6 + 4 = -2$$
+
+$$currentAdditiveIncrementInTicks = 10^{(-2)} = 0.01$$
+
+$$numAdditiveTicks = 36650010 - (4 * 9000000) = 650010$$
+
+$$price = (10^{4}) + (650010 * 0.01) = 16,500.10$$
+
+Bob set his limit order at price $16,500.10
+
+#### Tick Spacing Example: Price to Tick
+
+Bob sets a limit order on the USD<>BTC pool at price $16,500.10. This pool's $exponentAtPriceOne$ is -6. What tick did Bob set his limit order at?
+
+
+$$geometricExponentIncrementDistanceInTicks = 9 * 10^{(6)} = 9000000$$
+
+We must loop through increasing exponents until we find the first exponent that is greater than or equal to the desired price
+
+$$currentPrice = 1$$
+
+$$ticksPassed = 0$$
+
+$$currentAdditiveIncrementInTicks = 10^{(-6)} = 0.000001$$
+
+$$maxPriceForCurrentAdditiveIncrementInTicks = geometricExponentIncrementDistanceInTicks * currentAdditiveIncrementInTicks = 9000000 * 0.000001 = 9$$
+
+$$ticksPassed = ticksPassed + geometricExponentIncrementDistanceInTicks = 0 + 9000000 = 9000000$$
+
+$$totalPrice = totalPrice + maxPriceForCurrentAdditiveIncrementInTicks = 1 + 9 = 10$$
+
+10 is less than 16,500.10, so we must increase our exponent and try again
+
+$$currentAdditiveIncrementInTicks = 10^{(-5)} = 0.00001$$
+
+$$maxPriceForCurrentAdditiveIncrementInTicks = geometricExponentIncrementDistanceInTicks * currentAdditiveIncrementInTicks = 9000000 * 0.00001 = 90$$
+
+$$ticksPassed = ticksPassed + geometricExponentIncrementDistanceInTicks = 9000000 + 9000000 = 18000000$$
+
+$$totalPrice = totalPrice + maxPriceForCurrentAdditiveIncrementInTicks = 10 + 90 = 100$$
+
+100 is less than 16,500.10, so we must increase our exponent and try again. This goes on until...
+
+$$currentAdditiveIncrementInTicks = 10^{(-2)} = 0.01$$
+
+$$maxPriceForCurrentAdditiveIncrementInTicks = geometricExponentIncrementDistanceInTicks * currentAdditiveIncrementInTicks = 9000000 * 0.01 = 90000$$
+
+$$ticksPassed = ticksPassed + geometricExponentIncrementDistanceInTicks = 36000000 + 9000000 = 45000000$$
+
+$$totalPrice = totalPrice + maxPriceForCurrentAdditiveIncrementInTicks = 10000 + 90000 = 100000$$
+
+100000 is greater than 16,500.10. This means we must now find out how many additive tick in the currentAdditiveIncrementInTicks of -2 we must pass in order to reach 16,500.10.
+
+$$ticksToBeFulfilledByExponentAtCurrentTick = (desiredPrice - totalPrice) / currentAdditiveIncrementInTicks = (16500.10 - 100000) / 0.01 = -8349990$$
+
+$$tickIndex = ticksPassed + ticksToBeFulfilledByExponentAtCurrentTick = 45000000 + -8349990 = 36650010$$
+
+Bob set his limit order at tick 36650010
+
+#### Consequences
+
+This decision allows us to define ticks at spot prices that users actually desire to trade on, rather than arbitrarily defining ticks at .01% distance between each other. This will also make integration with UX seamless, instead of either
+
+a) Preventing trade at a desirable spot price or
+b) Having the front end round the tick's actual price to the nearest human readable/desirable spot price
+
+One draw back of this implementation is the requirement to create many ticks that will likely never be used. For example, in order to create ticks at 10 cent increments for spot prices greater than $10000, a $exponentAtPriceOne$ value of -5 must be set, requiring us to traverse ticks 1-3600000 before reaching $10,000. This should simply be an inconvenience and should not present any valid DOS vector for the chain.
 
 ### User Stories
 

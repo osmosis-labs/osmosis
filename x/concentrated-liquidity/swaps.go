@@ -285,10 +285,16 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 			return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("there are no more ticks initialized to fill the swap")
 		}
 
-		// utilizing the next initialized tick, we find the corresponding nextSqrtPrice (the target sqrtPrice)
-		nextSqrtPrice, err := math.TickToSqrtPrice(nextTick)
+		// utilizing the next initialized tick, we find the corresponding nextPrice (the target price)
+		nextPrice, err := math.TickToPrice(nextTick, p.GetPrecisionFactorAtPriceOne())
 		if err != nil {
-			return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
+			return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextPrice", nextTick)
+		}
+
+		// transform to sqrtPrice
+		nextSqrtPrice, err := nextPrice.ApproxSqrt()
+		if err != nil {
+			return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next price (%v) to nextSqrtPrice", nextPrice)
 		}
 
 		// Charge fee
@@ -340,7 +346,10 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		} else if !sqrtPriceStart.Equal(sqrtPrice) {
 			// otherwise if the sqrtPrice calculated from computeSwapStep does not equal the sqrtPrice we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the sqrtPrice calculated from computeSwapStep
-			swapState.tick = math.PriceToTick(sqrtPrice.Power(2))
+			swapState.tick, err = math.PriceToTick(sqrtPrice.Power(2), p.GetPrecisionFactorAtPriceOne())
+			if err != nil {
+				return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
+			}
 		}
 
 		// update the swapState with the new sqrtPrice from the above swap
@@ -445,10 +454,16 @@ func (k Keeper) calcInAmtGivenOut(
 			return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("there are no more ticks initialized to fill the swap")
 		}
 
-		// utilizing the next initialized tick, we find the corresponding nextSqrtPrice (the target sqrtPrice)
-		nextSqrtPrice, err := math.TickToSqrtPrice(nextTick)
+		// utilizing the next initialized tick, we find the corresponding nextPrice (the target price)
+		nextPrice, err := math.TickToPrice(nextTick, p.GetPrecisionFactorAtPriceOne())
 		if err != nil {
-			return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
+			return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextPrice", nextTick)
+		}
+
+		// transform to sqrtPrice
+		nextSqrtPrice, err := nextPrice.ApproxSqrt()
+		if err != nil {
+			return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert nextPrice (%v) to nextSqrtPrice", nextPrice)
 		}
 
 		// utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn
@@ -483,7 +498,10 @@ func (k Keeper) calcInAmtGivenOut(
 		} else if !sqrtPriceStart.Equal(sqrtPrice) {
 			// otherwise if the sqrtPrice calculated from computeSwapStep does not equal the sqrtPrice we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the sqrtPrice calculated from computeSwapStep
-			swapState.tick = math.PriceToTick(sqrtPrice.Power(2))
+			swapState.tick, err = math.PriceToTick(sqrtPrice.Power(2), p.GetPrecisionFactorAtPriceOne())
+			if err != nil {
+				return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
+			}
 		}
 
 		// coin amounts require int values
