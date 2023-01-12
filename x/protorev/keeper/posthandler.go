@@ -24,8 +24,8 @@ func NewProtoRevDecorator(protoRevDecorator Keeper) ProtoRevDecorator {
 	}
 }
 
-// This posthandler will first check if there were any swaps in the tx. If so, collect all of the pools, build three
-// pool routes for cyclic arbitrage, and then execute the optimal route if it exists.
+// This posthandler will first check if there were any swaps in the tx. If so, collect all of the pools, build routes for cyclic arbitrage,
+// and then execute the optimal route if it exists.
 func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	if ctx.IsCheckTx() {
 		return next(ctx, tx, simulate)
@@ -71,25 +71,25 @@ func (k Keeper) AnteHandleCheck(ctx sdk.Context) error {
 		return fmt.Errorf("failed to get latest block height")
 	}
 
-	currentRouteCount, err := k.GetRouteCountForBlock(ctx)
+	currentRouteCount, err := k.GetPointCountForBlock(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get current route count")
+		return fmt.Errorf("failed to get current pool point count")
 	}
 
-	maxRouteCount, err := k.GetMaxRoutesPerBlock(ctx)
+	maxRouteCount, err := k.GetMaxPointsPerBlock(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get max iterable routes per block")
+		return fmt.Errorf("failed to get max pool points per block")
 	}
 
 	// Only execute the posthandler if the number of routes to be processed per block has not been reached
 	blockHeight := uint64(ctx.BlockHeight())
 	if blockHeight == latestBlockHeight {
 		if currentRouteCount >= maxRouteCount {
-			return fmt.Errorf("max route count for block has been reached")
+			return fmt.Errorf("max pool points for the current block has been reached")
 		}
 	} else {
-		// Reset the current route count
-		k.SetRouteCountForBlock(ctx, 0)
+		// Reset the current pool point count
+		k.SetPointCountForBlock(ctx, 0)
 		k.SetLatestBlockHeight(ctx, blockHeight)
 	}
 
@@ -99,16 +99,16 @@ func (k Keeper) AnteHandleCheck(ctx sdk.Context) error {
 // ProtoRevTrade wraps around the build routes, iterate routes, and execute trade functionality to execute cyclic arbitrage trades
 // if they exist. It returns an error if there was an issue executing any single trade.
 func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) error {
-	// Get the total number of routes that can be iterated
-	maxIterableRoutes, err := k.CalcNumberOfIterableRoutes(ctx)
+	// Get the total number of pool points that can be consumed in this transaction
+	maxPoolPoints, err := k.CalcMaxPoolPointsForTx(ctx)
 	if err != nil {
 		return err
 	}
 
 	// Iterate and build arbitrage routes for each pool that was swapped on
-	for index := 0; index < len(swappedPools) && *maxIterableRoutes > 0; index++ {
+	for index := 0; index < len(swappedPools) && *maxPoolPoints > 0; index++ {
 		// Build the routes for the pool that was swapped on
-		routes := k.BuildRoutes(ctx, swappedPools[index].TokenInDenom, swappedPools[index].TokenOutDenom, swappedPools[index].PoolId, maxIterableRoutes)
+		routes := k.BuildRoutes(ctx, swappedPools[index].TokenInDenom, swappedPools[index].TokenOutDenom, swappedPools[index].PoolId, maxPoolPoints)
 
 		// Find optimal input amounts for routes
 		maxProfitInputCoin, maxProfitAmount, optimalRoute := k.IterateRoutes(ctx, routes)

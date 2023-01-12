@@ -26,28 +26,13 @@ func (tp *TokenPairArbRoutes) Validate() error {
 
 	// Iterate through all of the possible routes for this pool
 	for _, route := range tp.ArbRoutes {
-		if len(route.Trades) != 3 {
-			return fmt.Errorf("there must be exactly 3 trades in a route")
-		}
-
-		// In denoms must match either osmo or atom
-		if route.Trades[0].TokenIn != AtomDenomination && route.Trades[0].TokenIn != OsmosisDenomination {
-			return fmt.Errorf("the first trade must have either osmo or atom as the in denom")
+		if len(route.Trades) < 3 {
+			return fmt.Errorf("there must be at least 3 trades in a route")
 		}
 
 		// Out and in denoms must match
-		if route.Trades[0].TokenIn != route.Trades[2].TokenOut {
+		if route.Trades[0].TokenIn != route.Trades[len(route.Trades)-1].TokenOut {
 			return fmt.Errorf("the first and last trades must have matching denoms")
-		}
-
-		uniquePools := make(map[uint64]bool)
-		for _, trade := range route.Trades {
-			uniquePools[trade.Pool] = true
-		}
-
-		// There must be at least three pools hops for it to be a valid route
-		if len(uniquePools) != 3 {
-			return fmt.Errorf("There must be exactly 3 unique pools in a route")
 		}
 	}
 

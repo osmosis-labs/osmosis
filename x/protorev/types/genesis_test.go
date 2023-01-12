@@ -54,7 +54,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			valid: false,
 		},
 		{
-			description: "Default parameters with invalid routes (4 pool route)",
+			description: "Default parameters with invalid routes (too few trades in a route)",
 			genState: &types.GenesisState{
 				Params:     types.DefaultParams(),
 				TokenPairs: invalidSearchRoutes,
@@ -66,14 +66,6 @@ func TestGenesisStateValidate(t *testing.T) {
 			genState: &types.GenesisState{
 				Params:     types.DefaultParams(),
 				TokenPairs: []types.TokenPairArbRoutes{types.CreateSeacherRoutes(3, types.OsmosisDenomination, "ethereum", types.AtomDenomination, types.OsmosisDenomination)},
-			},
-			valid: false,
-		},
-		{
-			description: "Default parameters with invalid routes (invalid in arb denom)",
-			genState: &types.GenesisState{
-				Params:     types.DefaultParams(),
-				TokenPairs: []types.TokenPairArbRoutes{types.CreateSeacherRoutes(3, types.OsmosisDenomination, "ethereum", "juno", "juno")},
 			},
 			valid: false,
 		},

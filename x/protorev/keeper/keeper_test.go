@@ -56,6 +56,34 @@ func TestKeeperTestSuite(t *testing.T) {
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 
+	// Init module state for testing (params may differ from default params)
+	suite.App.ProtoRevKeeper.SetProtoRevEnabled(suite.Ctx, true)
+	suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 0)
+	suite.App.ProtoRevKeeper.SetLatestBlockHeight(suite.Ctx, uint64(suite.Ctx.BlockHeight()))
+	suite.App.ProtoRevKeeper.SetPointCountForBlock(suite.Ctx, 0)
+
+	// Configure max pool points per block. This roughly correlates to the ms of execution time protorev will
+	// take per block
+	if err := suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 100); err != nil {
+		panic(err)
+	}
+	// Configure max pool points per tx. This roughly correlates to the ms of execution time protorev will take
+	// per tx
+	if err := suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 18); err != nil {
+		panic(err)
+	}
+
+	poolWeights := types.PoolWeights{
+		StableWeight:       5, // it takes around 5 ms to simulate and execute a stable swap
+		BalancerWeight:     2, // it takes around 2 ms to simulate and execute a balancer swap
+		ConcentratedWeight: 2, // it takes around 2 ms to simulate and execute a concentrated swap
+	}
+	suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, poolWeights)
+
+	// Configure the initial base denoms used for cyclic route building
+	baseDenomPriorities := []string{types.OsmosisDenomination, types.AtomDenomination}
+	suite.App.ProtoRevKeeper.SetBaseDenoms(suite.Ctx, baseDenomPriorities)
+
 	encodingConfig := osmosisapp.MakeEncodingConfig()
 	suite.clientCtx = client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
@@ -650,7 +678,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 	}
 
 	// Set all of the pool info into the stores
-	suite.App.ProtoRevKeeper.EpochHooks().AfterEpochEnd(suite.Ctx, "week", 1)
+	suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
 }
 
 // createStableswapPool creates a stableswap pool with the given pool assets and params
