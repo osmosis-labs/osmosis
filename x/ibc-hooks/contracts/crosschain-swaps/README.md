@@ -99,10 +99,21 @@ You will need:
 * Tokens on the non-osmosis testnet
 * A pool on the osmosis testnet between the IBC'd native asset of the
   non-osmosis testnet and osmo
-  
-### Example
 
-For the purpose of this test, we used the following testnets:
+### Localrelayer
+
+An option for testing this is to use Osmosis' localrelayer. To test with that, we procide a script for running 
+all the necessary steps to setup the contract: `test_crosschain_swaps.sh`. The script is not robust and meant 
+to be used blindly, however. It's more of a guide to simplify manual testing.
+  
+### Manual example
+
+Alternatively, we can test this on the existing testnets. 
+
+For the purpose of this test, we used the following testnets: 
+
+(TODO: update this with the juno testnet that supports memo when it's available and update the commands based on the
+script)
 
 Osmosis:
 
@@ -123,13 +134,13 @@ Gaia:
 
 ``` toml
 # The network chain ID
-chain-id = "theta-testnet-001"
+chain-id = "..."
 # The keyring's backend, where the keys are stored (os|file|kwallet|pass|test|memory)
 keyring-backend = "test"
 # CLI output format (text|json)
 output = "json"
 # <host>:<port> to Tendermint RPC interface for this chain
-node = "http://seed-02.theta-testnet.polypore.xyz:26657"
+node = "..."
 # Transaction broadcasting mode (sync|async|block)
 broadcast-mode = "block"
 ```
