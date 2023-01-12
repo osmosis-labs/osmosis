@@ -77,7 +77,7 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 		return err
 	}
 
-        // assure that existing position has zero liquidity
+	// assure that existing position has zero liquidity
 	if hasPosition {
 		positionSize, err := feeAccumulator.GetPositionSize(positionKey)
 		if err != nil {
