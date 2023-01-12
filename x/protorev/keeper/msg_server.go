@@ -136,3 +136,33 @@ func (m MsgServer) SetMaxRoutesPerBlock(c context.Context, msg *types.MsgSetMaxR
 
 	return &types.MsgSetMaxRoutesPerBlockResponse{}, nil
 }
+
+// SetPoolWeights sets the weights corresponding to each pool type. This distinction is necessary because the
+// pool types have different execution times. Each weight roughly corresponds to the amount of time it takes
+// to simulate and execute a trade.
+func (m MsgServer) SetPoolWeights(c context.Context, msg *types.MsgSetPoolWeights) (*types.MsgSetPoolWeightsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Admin)
+	if err != nil {
+		return nil, err
+	}
+
+	// If the admin account has not been set, ignore
+	admin, err := m.k.GetAdminAccount(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Ensure the admin and sender are the same
+	if !admin.Equals(sender) {
+		return nil, fmt.Errorf("sender account %s is not authorized to set pool weights. sender must be %s", sender.String(), admin.String())
+	}
+
+	// Set the pool weights
+	if err := m.k.SetPoolWeights(ctx, *msg.PoolWeights); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgSetPoolWeightsResponse{}, nil
+}

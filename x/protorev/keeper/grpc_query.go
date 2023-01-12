@@ -199,3 +199,17 @@ func (q Querier) GetProtoRevDeveloperAccount(c context.Context, req *types.Query
 
 	return &types.QueryGetProtoRevDeveloperAccountResponse{DeveloperAccount: developerAccount.String()}, nil
 }
+
+// GetProtoRevPoolWeights queries the weights of each pool type that is being used for arbitrage
+func (q Querier) GetProtoRevPoolWeights(c context.Context, req *types.QueryGetProtoRevPoolWeightsRequest) (*types.QueryGetProtoRevPoolWeightsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	poolWeights, err := q.Keeper.GetPoolWeights(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryGetProtoRevPoolWeightsResponse{PoolWeights: poolWeights}, nil
+}
