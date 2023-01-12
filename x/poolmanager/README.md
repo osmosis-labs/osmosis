@@ -41,7 +41,7 @@ storage, assign it to the new pool and propagate the execution to either `gamm`
 or `concentrated-liquidity` modules.
 
 Note that we define a `CreatePoolMsg` interface:
-https://github.com/osmosis-labs/osmosis/blob/main/x/poolmanager/types/msg_create_pool.go#L9
+<https://github.com/osmosis-labs/osmosis/blob/main/x/poolmanager/types/msg_create_pool.go#L9>
 
 For each of `balancer`, `stableswap` and `concentrated-liquidity` pools, we have their
 own implementation of `CreatePoolMsg`.

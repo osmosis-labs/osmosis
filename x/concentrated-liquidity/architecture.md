@@ -415,7 +415,7 @@ we define a `poolmanager` module. Its purpose is twofold:
 
 Let's consider pool creation and swaps separately and in more detail.
 
-## Pool Creation & Id Management
+##### Pool Creation & Id Management
 
 To make sure that the pool ids are unique across the two modules, we unify pool id management
 in the `poolmanager`.
@@ -425,7 +425,7 @@ storage, assign it to the new pool and propagate the execution to either `gamm`
 or `concentrated-liquidity` modules.
 
 Note that we define a `CreatePoolMsg` interface:
-https://github.com/osmosis-labs/osmosis/blob/main/x/poolmanager/types/msg_create_pool.go#L9
+<https://github.com/osmosis-labs/osmosis/blob/main/x/poolmanager/types/msg_create_pool.go#L9>
 
 For each of `balancer`, `stableswap` and `concentrated-liquidity` pools, we have their
 own implementation of `CreatePoolMsg`.
@@ -564,7 +564,7 @@ func ParseModuleRouteFromBz(bz []byte) (ModuleRoute, error) {
 }
 ```
 
-## Swaps
+##### Swaps
 
 There are 2 swap messages:
 
