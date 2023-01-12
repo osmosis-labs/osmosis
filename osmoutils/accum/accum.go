@@ -252,8 +252,8 @@ func (accum AccumulatorObject) SetPositionCustomAcc(name string, customAccumulat
 		return err
 	}
 
-	// Update user's position with new number of shares while moving its unaccrued rewards
-	// into UnclaimedRewards. Starting accumulator value is moved up to accum'scurrent value
+	// Update the user's position with the new accumulator value. The unclaimed rewards, options, and 
+	// the number of shares stays the same as in the original position.
 	createNewPosition(accum, customAccumulatorValue, name, position.NumShares, position.UnclaimedRewards, position.Options)
 
 	return nil
