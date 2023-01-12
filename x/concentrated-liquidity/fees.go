@@ -147,7 +147,8 @@ func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, u
 // This value depends on the tick's location relative to the current tick.
 //
 // feeGrowthOutside = { feeGrowthGlobal current tick >= tick }
-//                    { 0               current tick <  tick }
+//
+//	{ 0               current tick <  tick }
 //
 // The value is chosen as if all of the fees earned to date had occurrd below the tick.
 // Returns error if the pool with the given id does exist or if fails to get the fee accumulator.

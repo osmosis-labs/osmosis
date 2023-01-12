@@ -32,8 +32,8 @@ func TicksToPrice(lowerTick, upperTick int64, exponentAtPriceOne sdk.Int) (sdk.D
 }
 
 // TickToPrice returns the price given the following two arguments:
-// 	- tickIndex: the tick index to calculate the price for
-// 	- exponentAtPriceOne: the value of the exponent (and therefore the precision) at which the starting price of 1 is set
+//   - tickIndex: the tick index to calculate the price for
+//   - exponentAtPriceOne: the value of the exponent (and therefore the precision) at which the starting price of 1 is set
 //
 // If tickIndex is zero, the function returns sdk.OneDec().
 func TickToPrice(tickIndex, exponentAtPriceOne sdk.Int) (price sdk.Dec, err error) {

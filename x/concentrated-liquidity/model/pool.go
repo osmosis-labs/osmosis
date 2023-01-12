@@ -173,9 +173,10 @@ func (p *Pool) UpdateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upper
 // lower and upper ticks.
 // There are 3 possible cases:
 // -The position is active ( lowerTick <= p.CurrentTick < upperTick).
-//    * The provided liquidity is distributed in both tokens.
-//    * Actual amounts might differ from desired because we recalculate them from liquidity delta and sqrt price.
-//      the calculations lead to amounts being off. // TODO: confirm logic is correct
+//   - The provided liquidity is distributed in both tokens.
+//   - Actual amounts might differ from desired because we recalculate them from liquidity delta and sqrt price.
+//     the calculations lead to amounts being off. // TODO: confirm logic is correct
+//
 // - Current tick is below the position ( p.CurrentTick < lowerTick).
 //   - The provided liquidity is distributed in token0 only.
 //
