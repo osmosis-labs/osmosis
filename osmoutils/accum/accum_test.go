@@ -1368,7 +1368,6 @@ func (suite *AccumTestSuite) TestHasPosition() {
 }
 
 func (suite *AccumTestSuite) TestSetPositionCustomAcc() {
-
 	// We setup store and accum
 	// once at beginning.
 	suite.SetupTest()
