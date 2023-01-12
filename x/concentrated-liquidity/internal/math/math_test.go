@@ -10,6 +10,11 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
 )
 
+var (
+	DefaultExponentAtPriceOne      = sdk.NewInt(-4)
+	DefaultMinTick, DefaultMaxTick = math.GetMinAndMaxTicksFromExponentAtPriceOne(DefaultExponentAtPriceOne)
+)
+
 type ConcentratedMathTestSuite struct {
 	apptesting.KeeperTestHelper
 }

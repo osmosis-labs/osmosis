@@ -27,14 +27,23 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
-
 	// Check if the provided tick range is valid according to the pool's tick spacing and module parameters.
-	if err := validateTickRangeIsValid(pool.GetTickSpacing(), lowerTick, upperTick); err != nil {
+	if err := validateTickRangeIsValid(pool.GetTickSpacing(), pool.GetPrecisionFactorAtPriceOne(), lowerTick, upperTick); err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
-	// Transform the provided ticks into their corresponding square root prices.
-	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
+	// Transform the provided ticks into their corresponding prices.
+	priceLowerTick, priceUpperTick, err := math.TicksToPrice(lowerTick, upperTick, pool.GetPrecisionFactorAtPriceOne())
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+	}
+
+	// Transform the provided prices into their corresponding square root prices.
+	sqrtPriceLowerTick, err := priceLowerTick.ApproxSqrt()
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+	}
+	sqrtPriceUpperTick, err := priceUpperTick.ApproxSqrt()
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
@@ -101,7 +110,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	}
 
 	// Check if the provided tick range is valid according to the pool's tick spacing and module parameters.
-	if err := validateTickRangeIsValid(pool.GetTickSpacing(), lowerTick, upperTick); err != nil {
+	if err := validateTickRangeIsValid(pool.GetTickSpacing(), pool.GetPrecisionFactorAtPriceOne(), lowerTick, upperTick); err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
@@ -171,7 +180,18 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
+	// Transform the provided ticks into their corresponding prices.
+	priceLowerTick, priceUpperTick, err := math.TicksToPrice(lowerTick, upperTick, pool.GetPrecisionFactorAtPriceOne())
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	// Transform the provided prices into their corresponding square root prices.
+	sqrtPriceLowerTick, err := priceLowerTick.ApproxSqrt()
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+	sqrtPriceUpperTick, err := priceUpperTick.ApproxSqrt()
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
@@ -233,7 +253,10 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 	}
 
 	// Calculate the initial tick from the initial spot price
-	initialTick := math.PriceToTick(initialSpotPrice)
+	initialTick, err := math.PriceToTick(initialSpotPrice, pool.GetPrecisionFactorAtPriceOne())
+	if err != nil {
+		return err
+	}
 
 	// Set the pool's current sqrt price and current tick to the above calculated values
 	pool.SetCurrentSqrtPrice(initialSqrtPrice)

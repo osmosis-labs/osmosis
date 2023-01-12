@@ -26,14 +26,6 @@ func (msg MsgCreatePosition) ValidateBasic() error {
 		return InvalidLowerUpperTickError{LowerTick: msg.LowerTick, UpperTick: msg.UpperTick}
 	}
 
-	if msg.LowerTick < MinTick || msg.LowerTick > MaxTick {
-		return InvalidLowerTickError{LowerTick: msg.LowerTick}
-	}
-
-	if msg.UpperTick < MinTick || msg.UpperTick > MaxTick {
-		return InvalidUpperTickError{UpperTick: msg.UpperTick}
-	}
-
 	if !msg.TokenDesired0.IsValid() || msg.TokenDesired0.IsZero() {
 		return fmt.Errorf("Invalid coins (%s)", msg.TokenDesired0.String())
 	}
@@ -77,14 +69,6 @@ func (msg MsgWithdrawPosition) ValidateBasic() error {
 
 	if msg.LowerTick >= msg.UpperTick {
 		return InvalidLowerUpperTickError{LowerTick: msg.LowerTick, UpperTick: msg.UpperTick}
-	}
-
-	if msg.LowerTick < MinTick || msg.LowerTick > MaxTick {
-		return InvalidLowerTickError{LowerTick: msg.LowerTick}
-	}
-
-	if msg.UpperTick < MinTick || msg.UpperTick > MaxTick {
-		return InvalidUpperTickError{UpperTick: msg.UpperTick}
 	}
 
 	if !msg.LiquidityAmount.IsPositive() {
