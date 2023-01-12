@@ -59,9 +59,9 @@ func (suite *StrategyTestSuite) TestComputeSwapState() {
 			// TODO: test case where it does affect.
 			sqrtPriceLimit:        sdk.MustNewDecFromStr("70.738956735309575810").Add(sdk.OneDec()), // 5003
 			zeroForOne:            false,
-			expectedSqrtPriceNext: "70.738348247484497718",
-			expectedAmountIn:      "42000000.000000000749226725",
-			expectedAmountOut:     "8396.714242162445246671",
+			expectedSqrtPriceNext: "70.738348247484497717",
+			expectedAmountIn:      "41999999.999999999231344381",
+			expectedAmountOut:     "8396.714242162444943332",
 		},
 	}
 
