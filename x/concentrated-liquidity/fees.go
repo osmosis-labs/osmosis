@@ -119,6 +119,9 @@ func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, u
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
+	currentTick := pool.GetCurrentTick().Int64()
+
+	// get lower, upper tick info
 	lowerTickInfo, err := k.getTickInfo(ctx, poolId, lowerTick)
 	if err != nil {
 		return sdk.DecCoins{}, err
@@ -128,17 +131,15 @@ func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, u
 		return sdk.DecCoins{}, err
 	}
 
-	currentTick := pool.GetCurrentTick().Int64()
-
-	feeGlobalAccumulator, err := k.getFeeAccumulator(ctx, poolId)
+	poolFeeAccumulator, err := k.getFeeAccumulator(ctx, poolId)
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
+	poolFeeGrowth := poolFeeAccumulator.GetValue()
 
-	feeGrowthGlobal := feeGlobalAccumulator.GetValue()
-
-	feeGrowthAboveUpperTick := calculateFeeGrowthAbove(upperTick, upperTickInfo.FeeGrowthOutside, currentTick, feeGrowthGlobal)
-	feeGrowthBelowLowerTick := calculateFeeGrowthBelow(lowerTick, lowerTickInfo.FeeGrowthOutside, currentTick, feeGrowthGlobal)
+	// calculate fee growth for upper tick and lower tick
+	feeGrowthAboveUpperTick := calculateFeeGrowth(upperTick, upperTickInfo.FeeGrowthOutside, currentTick, poolFeeGrowth, true)
+	feeGrowthBelowLowerTick := calculateFeeGrowth(lowerTick, lowerTickInfo.FeeGrowthOutside, currentTick, poolFeeGrowth, false)
 
 	return feeGrowthAboveUpperTick.Add(feeGrowthBelowLowerTick...), nil
 }
@@ -147,7 +148,8 @@ func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, u
 // This value depends on the tick's location relative to the current tick.
 //
 // feeGrowthOutside = { feeGrowthGlobal current tick >= tick }
-//                    { 0               current tick <  tick }
+//
+//	{ 0               current tick <  tick }
 //
 // The value is chosen as if all of the fees earned to date had occurrd below the tick.
 // Returns error if the pool with the given id does exist or if fails to get the fee accumulator.
@@ -210,20 +212,6 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 func getFeeAccumulatorName(poolId uint64) string {
 	poolIdStr := strconv.FormatUint(poolId, uintBase)
 	return strings.Join([]string{feeAccumPrefix, poolIdStr}, "/")
-}
-
-func calculateFeeGrowthAbove(upperTick int64, feeGrowthOutsideUpperTick sdk.DecCoins, currentTick int64, feesGrowthGlobal sdk.DecCoins) sdk.DecCoins {
-	if currentTick >= upperTick {
-		return feesGrowthGlobal.Sub(feeGrowthOutsideUpperTick)
-	}
-	return feeGrowthOutsideUpperTick
-}
-
-func calculateFeeGrowthBelow(lowerTick int64, feeGrowthOutsideLowerTick sdk.DecCoins, currentTick int64, feesGrowthGlobal sdk.DecCoins) sdk.DecCoins {
-	if currentTick >= lowerTick {
-		return feeGrowthOutsideLowerTick
-	}
-	return feesGrowthGlobal.Sub(feeGrowthOutsideLowerTick)
 }
 
 // calculateFeeGrowth for the given targetTicks.
