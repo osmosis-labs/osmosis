@@ -26,14 +26,6 @@ func (msg MsgCreatePosition) ValidateBasic() error {
 		return InvalidLowerUpperTickError{LowerTick: msg.LowerTick, UpperTick: msg.UpperTick}
 	}
 
-	if msg.LowerTick < MinTick || msg.LowerTick > MaxTick {
-		return InvalidLowerTickError{LowerTick: msg.LowerTick}
-	}
-
-	if msg.UpperTick < MinTick || msg.UpperTick > MaxTick {
-		return InvalidUpperTickError{UpperTick: msg.UpperTick}
-	}
-
 	if !msg.TokenDesired0.IsValid() || msg.TokenDesired0.IsZero() {
 		return fmt.Errorf("Invalid coins (%s)", msg.TokenDesired0.String())
 	}
@@ -54,10 +46,7 @@ func (msg MsgCreatePosition) ValidateBasic() error {
 }
 
 func (msg MsgCreatePosition) GetSignBytes() []byte {
-	// TODO: re-enable this when CL state-breakage PR is merged.
-	// return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-	// return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-	return nil
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgCreatePosition) GetSigners() []sdk.AccAddress {
@@ -82,14 +71,6 @@ func (msg MsgWithdrawPosition) ValidateBasic() error {
 		return InvalidLowerUpperTickError{LowerTick: msg.LowerTick, UpperTick: msg.UpperTick}
 	}
 
-	if msg.LowerTick < MinTick || msg.LowerTick > MaxTick {
-		return InvalidLowerTickError{LowerTick: msg.LowerTick}
-	}
-
-	if msg.UpperTick < MinTick || msg.UpperTick > MaxTick {
-		return InvalidUpperTickError{UpperTick: msg.UpperTick}
-	}
-
 	if !msg.LiquidityAmount.IsPositive() {
 		return NotPositiveRequireAmountError{Amount: msg.LiquidityAmount.String()}
 	}
@@ -98,9 +79,7 @@ func (msg MsgWithdrawPosition) ValidateBasic() error {
 }
 
 func (msg MsgWithdrawPosition) GetSignBytes() []byte {
-	// TODO: re-enable this when CL state-breakage PR is merged.
-	// return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-	return nil
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgWithdrawPosition) GetSigners() []sdk.AccAddress {

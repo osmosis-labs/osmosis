@@ -107,7 +107,7 @@ func (e ErrTolerance) CompareBigDec(expected BigDec, actual BigDec) int {
 	comparisonSign := 0
 	if expected.GT(actual) {
 		comparisonSign = 1
-	} else {
+	} else if expected.LT(actual) {
 		comparisonSign = -1
 	}
 
@@ -144,7 +144,7 @@ func (e ErrTolerance) CompareBigDec(expected BigDec, actual BigDec) int {
 // Binary search inputs between [lowerbound, upperbound] to a monotonic increasing function f.
 // We stop once f(found_input) meets the ErrTolerance constraints.
 // If we perform more than maxIterations (or equivalently lowerbound = upperbound), we return an error.
-func BinarySearch(f func(input sdk.Int) (sdk.Int, error),
+func BinarySearch(f func(sdk.Int) (sdk.Int, error),
 	lowerbound sdk.Int,
 	upperbound sdk.Int,
 	targetOutput sdk.Int,
@@ -192,7 +192,7 @@ type SdkDec[D any] interface {
 //
 // It binary searches on the input range, until it finds an input y s.t. f(y) meets the err tolerance constraints for how close it is to x.
 // If we perform more than maxIterations (or equivalently lowerbound = upperbound), we return an error.
-func BinarySearchBigDec(f func(input BigDec) BigDec,
+func BinarySearchBigDec(f func(BigDec) BigDec,
 	lowerbound BigDec,
 	upperbound BigDec,
 	targetOutput BigDec,
