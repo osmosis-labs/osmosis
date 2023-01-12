@@ -1407,7 +1407,6 @@ func (suite *AccumTestSuite) TestSetPositionCustomAcc() {
 			err = accObject.SetPositionCustomAcc(tc.positionName, tc.customAccumulatorValue)
 
 			// Assertions.
-
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().Equal(tc.expectedError, err)
