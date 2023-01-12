@@ -237,7 +237,7 @@ func (accum AccumulatorObject) UpdatePositionCustomAcc(name string, numShares sd
 	return accum.AddToPositionCustomAcc(name, numShares, customAccumulatorValue)
 }
 
-// SetPositionCustomAcc sets the position's accumulator the given value.
+// SetPositionCustomAcc sets the position's accumulator to the given value.
 // Does not update shares or attempt to claim rewards.
 // The new accumulator value must be greater than or equal to the old accumulator value.
 // Returns nil on success, error otherwise.
