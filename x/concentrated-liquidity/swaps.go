@@ -143,9 +143,9 @@ func (k Keeper) SwapOutAmtGivenIn(
 		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
-        // N.B. making the call below ensures that any mutations done inside calcOutAmtGivenIn
-        // are written to store. If this call were skipped, calcOutAmtGivenIn would be non-mutative.
-        // An example of a store write done in calcOutAmtGivenIn is updating ticks as we cross them.
+	// N.B. making the call below ensures that any mutations done inside calcOutAmtGivenIn
+	// are written to store. If this call were skipped, calcOutAmtGivenIn would be non-mutative.
+	// An example of a store write done in calcOutAmtGivenIn is updating ticks as we cross them.
 	writeCtx()
 
 	err = k.applySwap(ctx, tokenIn, tokenOut, poolId, newLiquidity, newCurrentTick, newSqrtPrice)
@@ -169,9 +169,9 @@ func (k *Keeper) SwapInAmtGivenOut(
 		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
-        // N.B. making the call below ensures that any mutations done inside calcInAmtGivenOut
-        // are written to store. If this call were skipped, calcInAmtGivenOut would be non-mutative.
-        // An example of a store write done in calcInAmtGivenOut is updating ticks as we cross them.
+	// N.B. making the call below ensures that any mutations done inside calcInAmtGivenOut
+	// are written to store. If this call were skipped, calcInAmtGivenOut would be non-mutative.
+	// An example of a store write done in calcInAmtGivenOut is updating ticks as we cross them.
 	writeCtx()
 
 	err = k.applySwap(ctx, tokenIn, tokenOut, poolId, newLiquidity, newCurrentTick, newSqrtPrice)
@@ -359,6 +359,10 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 	return writeCtx, tokenIn, tokenOut, swapState.tick, swapState.liquidity, swapState.sqrtPrice, nil
 }
 
+// calcInAmtGivenOut calculates tokens to be swapped in given the desired token out and fee deducted. It also returns
+// what the updated tick, liquidity, and currentSqrtPrice for the pool would be after this swap.
+// Note this method is non-mutative, so the values returned by calcInAmtGivenOut do not get stored
+// Instead, we return writeCtx function so that the caller of this method can decide to write the cached ctx to store or not.
 func (k Keeper) calcInAmtGivenOut(
 	ctx sdk.Context,
 	desiredTokenOut sdk.Coin,
