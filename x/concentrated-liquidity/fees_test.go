@@ -529,7 +529,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 		},
 
 		// imagine single swap over entire position
-		// crossing right > left and stopping at lower tick
+		// crossing right -> left and stopping at lower tick
 		// In this case, all fees must have been accrued inside the tick
 		// Since we track fees accrued below a tick, both upper and lower position
 		// ticks are zero
