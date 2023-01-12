@@ -224,18 +224,20 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 		return sdk.Coins{}, cltypes.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick}
 	}
 
+	// compute fee growth outside of the range between lower tick and upper tick.
 	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
 
-	// We need to update the position's accumulator before we claim rewards.
-	// Note that liquidity delta is zero in this case.
+	// We need to update the position's accumulator to the current fee growth outside
+	// before we claim rewards.
 	if err := feeAccumulator.SetPositionCustomAcc(positionKey, feeGrowthOutside); err != nil {
 		return sdk.Coins{}, err
 	}
 
-	rewardsClaimed, err := feeAccumulator.ClaimRewards(positionKey)
+	// claim fees.
+	feesClaimed, err := feeAccumulator.ClaimRewards(positionKey)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -245,11 +247,12 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 		return sdk.Coins{}, err
 	}
 
-	if err := k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, rewardsClaimed); err != nil {
+	// distribute the fees from pool to the position owner.
+	if err := k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, feesClaimed); err != nil {
 		return sdk.Coins{}, err
 	}
 
-	return rewardsClaimed, nil
+	return feesClaimed, nil
 }
 
 func getFeeAccumulatorName(poolId uint64) string {
