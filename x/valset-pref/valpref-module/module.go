@@ -7,8 +7,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/osmosis-labs/osmosis/v14/simulation/simtypes"
-	simulation "github.com/osmosis-labs/osmosis/v14/x/valset-pref/simulation"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -16,14 +14,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	keeper "github.com/osmosis-labs/osmosis/v14/x/valset-pref"
 	validatorprefclient "github.com/osmosis-labs/osmosis/v14/x/valset-pref/client"
 	valsetprefcli "github.com/osmosis-labs/osmosis/v14/x/valset-pref/client/cli"
 	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/client/grpc"
 	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (
@@ -166,17 +165,17 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // AppModuleSimulation functions
 
-// GenerateGenesisState creates a randomized GenState of the valset module.
-func (am AppModule) GenerateGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
-}
+// // GenerateGenesisState creates a randomized GenState of the valset module.
+// func (am AppModule) GenerateGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
+// }
 
-// WeightedOperations returns the all the valset module operations with their respective weights.
-func (am AppModule) Actions() []simtypes.Action {
-	return []simtypes.Action{
-		simtypes.NewMsgBasedAction("SetValidatorSetPreference", am.keeper, simulation.RandomMsgSetValSetPreference),
-		simtypes.NewMsgBasedAction("MsgDelegateToValidatorSet", am.keeper, simulation.RandomMsgDelegateToValSet),
-		simtypes.NewMsgBasedAction("MsgUndelegateFromValidatorSet", am.keeper, simulation.RandomMsgUnDelegateFromValSet),
-		simtypes.NewMsgBasedAction("MsgRedelegateValSet", am.keeper, simulation.RandomMsgReDelegateToValSet),
-		simtypes.NewMsgBasedAction("MsgWithdrawDelegationRewards", am.keeper, simulation.RandomMsgWithdrawRewardsFromValSet),
-	}
-}
+// // WeightedOperations returns the all the valset module operations with their respective weights.
+// func (am AppModule) Actions() []simtypes.Action {
+// 	return []simtypes.Action{
+// 		simtypes.NewMsgBasedAction("SetValidatorSetPreference", am.keeper, simulation.RandomMsgSetValSetPreference),
+// 		simtypes.NewMsgBasedAction("MsgDelegateToValidatorSet", am.keeper, simulation.RandomMsgDelegateToValSet),
+// 		simtypes.NewMsgBasedAction("MsgUndelegateFromValidatorSet", am.keeper, simulation.RandomMsgUnDelegateFromValSet),
+// 		simtypes.NewMsgBasedAction("MsgRedelegateValSet", am.keeper, simulation.RandomMsgReDelegateToValSet),
+// 		simtypes.NewMsgBasedAction("MsgWithdrawDelegationRewards", am.keeper, simulation.RandomMsgWithdrawRewardsFromValSet),
+// 	}
+// }
