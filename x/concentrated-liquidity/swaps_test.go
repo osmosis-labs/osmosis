@@ -502,9 +502,11 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			// add positions
 			test.addPositions(s.Ctx, pool.GetId())
 
+			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+
 			// perform calc
-			// TODO: Add sqrtPrice check
-			tokenIn, tokenOut, updatedTick, updatedLiquidity, _, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenInInternal(
+			_, tokenIn, tokenOut, updatedTick, updatedLiquidity, _, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenInInternal(
 				s.Ctx,
 				test.tokenIn, test.tokenOutDenom,
 				DefaultZeroSwapFee, test.priceLimit, pool.GetId())
@@ -545,6 +547,16 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 				// check that liquidity is what we expected
 				expectedLiquidity := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
 				s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
+
+				// check that the pool has not been modified after performing calc
+				poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+				s.Require().NoError(err)
+
+				s.Require().Equal(poolBeforeCalc.GetCurrentSqrtPrice(), poolAfterCalc.GetCurrentSqrtPrice())
+				s.Require().Equal(poolBeforeCalc.GetCurrentTick(), poolAfterCalc.GetCurrentTick())
+				s.Require().Equal(poolBeforeCalc.GetTotalShares(), poolAfterCalc.GetTotalShares())
+				s.Require().Equal(poolBeforeCalc.GetLiquidity(), poolAfterCalc.GetLiquidity())
+				s.Require().Equal(poolBeforeCalc.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
 			}
 
 			// perform swap
@@ -956,9 +968,11 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 			// add positions
 			test.addPositions(s.Ctx, pool.GetId())
 
+			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+
 			// perform calc
-			// TODO: Add sqrtPrice check
-			tokenIn, tokenOut, updatedTick, updatedLiquidity, _, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOutInternal(
+			_, tokenIn, tokenOut, updatedTick, updatedLiquidity, _, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOutInternal(
 				s.Ctx,
 				test.tokenOut, test.tokenInDenom,
 				DefaultZeroSwapFee, test.priceLimit, pool.GetId())
@@ -999,6 +1013,16 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 				// check that liquidity is what we expected
 				expectedLiquidity := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
 				s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
+
+				// check that the pool has not been modified after performing calc
+				poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+				s.Require().NoError(err)
+
+				s.Require().Equal(poolBeforeCalc.GetCurrentSqrtPrice(), poolAfterCalc.GetCurrentSqrtPrice())
+				s.Require().Equal(poolBeforeCalc.GetCurrentTick(), poolAfterCalc.GetCurrentTick())
+				s.Require().Equal(poolBeforeCalc.GetTotalShares(), poolAfterCalc.GetTotalShares())
+				s.Require().Equal(poolBeforeCalc.GetLiquidity(), poolAfterCalc.GetLiquidity())
+				s.Require().Equal(poolBeforeCalc.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
 			}
 
 			// perform swap

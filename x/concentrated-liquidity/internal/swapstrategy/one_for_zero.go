@@ -40,7 +40,6 @@ func (s oneForZeroStrategy) ComputeSwapStep(sqrtPriceCurrent, nextSqrtPrice, liq
 		nextSqrtPrice = math.GetNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemaining)
 		amountIn = math.CalcAmount1Delta(liquidity, nextSqrtPrice, sqrtPriceCurrent, false)
 	}
-
 	amountOut := math.CalcAmount0Delta(liquidity, nextSqrtPrice, sqrtPriceCurrent, false)
 
 	return nextSqrtPrice, amountIn, amountOut

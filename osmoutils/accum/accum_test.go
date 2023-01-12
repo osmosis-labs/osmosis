@@ -1327,60 +1327,42 @@ func (suite *AccumTestSuite) TestUpdatePositionCustomAcc() {
 	}
 }
 
-func (suite *AccumTestSuite) TestSetPositionCustomAcc() {
-
+func (suite *AccumTestSuite) TestHasPosition() {
 	// We setup store and accum
 	// once at beginning.
 	suite.SetupTest()
+
+	const (
+		defaultPositionName = "posname"
+	)
 
 	// Setup.
 	accObject := accumPackage.CreateRawAccumObject(suite.store, testNameOne, initialCoinsDenomOne)
 
 	tests := map[string]struct {
-		positionName           string
-		customAccumulatorValue sdk.DecCoins
-		expectedError          error
+		preCreatePosition bool
 	}{
-		"valid update greater than initial value": {
-			positionName:           testAddressThree,
-			customAccumulatorValue: initialCoinsDenomOne.Add(initialCoinDenomOne),
+		"position exists -> true": {
+			preCreatePosition: true,
 		},
-		"valid update equal to the initial value": {
-			positionName:           testAddressThree,
-			customAccumulatorValue: initialCoinsDenomOne,
-		},
-		"invalid update smaller than the initial value": {
-			positionName:           testAddressThree,
-			customAccumulatorValue: emptyCoins,
-
-			expectedError: accumPackage.NegativeAccDifferenceError{AccumulatorDifference: initialCoinsDenomOne},
+		"position does not exist -> false": {
+			preCreatePosition: false,
 		},
 	}
 
 	for name, tc := range tests {
+		tc := tc
 		suite.Run(name, func() {
-
 			// Setup
-			err := accObject.NewPositionCustomAcc(tc.positionName, sdk.OneDec(), initialCoinsDenomOne, nil)
-			suite.Require().NoError(err)
-
-			// System under test.
-			err = accObject.SetPositionCustomAcc(tc.positionName, tc.customAccumulatorValue)
-
-			// Assertions.
-
-			if tc.expectedError != nil {
-				suite.Require().Error(err)
-				suite.Require().Equal(tc.expectedError, err)
-				return
+			if tc.preCreatePosition {
+				err := accObject.NewPosition(defaultPositionName, sdk.ZeroDec(), nil)
+				suite.Require().NoError(err)
 			}
-			suite.Require().NoError(err)
 
-			position := accObject.GetPosition(tc.positionName)
-			suite.Require().Equal(tc.customAccumulatorValue, position.GetInitAccumValue())
-			// unchanged
-			suite.Require().Equal(sdk.OneDec(), position.NumShares)
-			suite.Require().Equal(emptyCoins, position.GetUnclaimedRewards())
+			hasPosition, err := accObject.HasPosition(defaultPositionName)
+			suite.NoError(err)
+
+			suite.Equal(tc.preCreatePosition, hasPosition)
 		})
 	}
 }

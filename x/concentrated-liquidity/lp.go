@@ -72,7 +72,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	if !k.hasPosition(cacheCtx, poolId, owner, lowerTick, upperTick) {
-		if err := k.initializeFeeAccumulatorPosition(cacheCtx, poolId, owner, liquidityDelta); err != nil {
+		if err := k.initializeFeeAccumulatorPosition(cacheCtx, poolId, owner, lowerTick, upperTick, liquidityDelta); err != nil {
 			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 		}
 	}
