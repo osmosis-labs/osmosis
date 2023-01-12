@@ -200,6 +200,12 @@ func (k Keeper) getInitialFeeGrowthOutsideForTick(ctx sdk.Context, poolId uint64
 	return emptyCoins, nil
 }
 
+// collectFees collects fees from the fee accumulator for the position given by pool id, owner, lower tick and upper tick.
+// Upon successful collection, it bank sends the fees from the pool address to the owner and returns the collected coins.
+// Returns error if:
+// - pool with the given id does not exist
+// - position given by pool id, owner, lower tick and upper tick does not exist
+// - other internal database or math errors.
 // nolint: unused
 func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64) (sdk.Coins, error) {
 	feeAccumulator, err := k.getFeeAccumulator(ctx, poolId)
