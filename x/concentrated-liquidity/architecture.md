@@ -384,61 +384,48 @@ See the next `"Pool Manager Module"` section of this document for more details.
 
 #### Pool Manager Module
 
-> As a user, I would like to have a unified entrypoint for my swaps regardless of the underlying pool implementation so that I don't need to reason about API complexity
+The poolmanager module exists as a swap entrypoint for any pool model
+that exists on the chain. The poolmanager module is responsible for routing
+swaps across various pools. It also performs pool-id management for
+any on-chain pool.
 
-> As a user, I would like the pool management to be unified so that I don't have to reason about additional complexity stemming from divergent pool sources.
+The user-stories for this module follow: 
 
-With the new `concentrated-liquidity` module, we now have a new entrypoint for swaps that is
-the same with the existing `gamm` module.
+> As a user, I would like to have a unified entrypoint for my swaps regardless
+of the underlying pool implementation so that I don't need to reason about 
+API complexity
+
+> As a user, I would like the pool management to be unified so that I don't
+have to reason about additional complexity stemming from divergent pool sources.
+
+We have multiple pool-storage modules. Namely, `x/gamm` and `x/concentrated-liquidity`.
 
 To avoid fragmenting swap and pool creation entrypoints and duplicating their boilerplate logic,
-we would like to define a new `poolmanager` module. Its purpose is twofold:
-1. Handle pool creation messages
+we define a `poolmanager` module. Its purpose is twofold:
+1. Handle pool creation
    * Assign ids to pools
    * Store the mapping from pool id to one of the swap modules (`gamm` or `concentrated-liquidity`)
-   * Propagate the execution the appropriate module depending on the pool type.
-2. Handle swap messages
+   * Propagate the execution to the appropriate module depending on the pool type.
+   * Note, that pool creation messages are recieved by the pool model's message server.
+   Each module's message server then calls the `x/poolmanager` keeper method `CreatePool`.
+2. Handle swaps
    * Cover & share multihop logic
    * Propagate intra-pool swaps to the appropriate module depending on the pool type.
-
-Therefore, we move several existing `gamm` messages and tests to the new `pool-manager` module,
-connecting them to the `poolmanager` keeper that propagates execution to the appropriate swap module.
-
-The messages to move from `gamm` to `poolmanager` are:
-- `CreatePoolMsg`
-- `MsgSwapExactAmountIn`
-- `MsgSwapExactAmountOut`
+   * Contrary to pool creation, swap messages are recieved by the `x/poolmanager` message server.
 
 Let's consider pool creation and swaps separately and in more detail.
 
-##### Pool Creation & Id Management
+## Pool Creation & Id Management
 
 To make sure that the pool ids are unique across the two modules, we unify pool id management
 in the `poolmanager`.
 
-We migrate the store index `next_pool_id` from `gamm` to `poolmanager`. This index represents
-the next available pool id to assign to a newly created pool.
-
-When `CreatePoolMsg` is received, we get the next pool id, assign it to the new pool and propagate
-the execution to either `gamm` or `concentrated-liquidity` modules.
+When a call to `CreatePool` keeper method is received, we get the next pool id from the module
+storage, assign it to the new pool and propagate the execution to either `gamm`
+or `concentrated-liquidity` modules.
 
 Note that we define a `CreatePoolMsg` interface:
-
-```go
-type CreatePoolMsg interface {
-	// GetPoolType returns the type of the pool to create.
-	GetPoolType() PoolType
-	// The creator of the pool, who pays the PoolCreationFee, provides initial liquidity,
-	// and gets the initial LP shares.
-	PoolCreator() sdk.AccAddress
-	// A stateful validation function.
-	Validate(ctx sdk.Context) error
-	// Initial Liquidity for the pool that the sender is required to send to the pool account
-	InitialLiquidity() sdk.Coins
-	// CreatePool creates a pool implementing PoolI, using data from the message.
-	CreatePool(ctx sdk.Context, poolID uint64) (gammtypes.TraditionalAmmInterface, error)
-}
-```
+https://github.com/osmosis-labs/osmosis/blob/main/x/poolmanager/types/msg_create_pool.go#L9
 
 For each of `balancer`, `stableswap` and `concentrated-liquidity` pools, we have their
 own implementation of `CreatePoolMsg`.
@@ -466,10 +453,12 @@ enum PoolType {
 ```
 
 Let's begin by considering the execution flow of the pool creation message.
+Assume `balancer` pool is being created.
 
-1. `CreatePoolMsg` is received by the `poolmanager` message server.
+1. `CreatePoolMsg` is received by the `x/gamm` message server.
 
-2. `CreatePool` `poolmanager` keeper method is called.
+2. `CreatePool` `poolmanager` keeper method is called, propagating
+the appropriate implemenation of the `CreatePoolMsg` interface.
 
 ```go
 // x/poolmanager/creator.go CreatePool(...)
@@ -479,10 +468,11 @@ Let's begin by considering the execution flow of the pool creation message.
 // pool. It will create a dedicated module account for the pool and sends the
 // initial liquidity to the created module account.
 //
-// After the initial liquidity is sent to the pool's account, shares are minted
-// and sent to the pool creator. The shares are created using a denomination in
-// the form of < swap module name >/pool/{poolID}. In addition, the x/bank metadata is updated
-// to reflect the newly created GAMM share denomination.
+// After the initial liquidity is sent to the pool's account, this function calls an
+// InitializePool function from the source module. That module is responsible for:
+// - saving the pool into its own state
+// - Minting LP shares to pool creator
+// - Setting metadata for the shares
 func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, error) {
     ...
 }
@@ -574,7 +564,7 @@ func ParseModuleRouteFromBz(bz []byte) (ModuleRoute, error) {
 }
 ```
 
-##### Swaps
+## Swaps
 
 There are 2 swap messages:
 
@@ -600,13 +590,12 @@ func (k Keeper) RouteExactAmountIn(
 }
 ```
 
-The bulk of its implementation is ported from `gamm`'s `MultihopSwapExactAmountIn`.
 Essentially, the method iterates over the routes and calls a `SwapExactAmountIn` method
 for each, subsequently updating the inter-pool swap state.
 
 The routing works by querying the index `SwapModuleRouterPrefix`,
 searching up the `poolmanagerkeeper.router` mapping, and callig
-the appropriate `SwapExactAmountIn` method.
+`SwapExactAmountIn` method of the appropriate module.
 
 ```go
 // x/poolmanager/router.go RouteExactAmountIn(...)
