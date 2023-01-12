@@ -20,6 +20,7 @@ const (
 	setDeveloperAccount  = "osmosis/MsgSetDeveloperAccount"
 	setMaxRoutesPerTx    = "osmosis/MsgSetMaxRoutesPerTx"
 	setMaxRoutesPerBlock = "osmosis/MsgSetMaxRoutesPerBlock"
+	setPoolWeights       = "osmosis/MsgSetPoolWeights"
 
 	// proposals
 	setProtoRevEnabledProposal      = "osmosis/SetProtoRevEnabledProposal"
@@ -37,6 +38,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgSetDeveloperAccount{}, setDeveloperAccount, nil)
 	cdc.RegisterConcrete(&MsgSetMaxRoutesPerTx{}, setMaxRoutesPerTx, nil)
 	cdc.RegisterConcrete(&MsgSetMaxRoutesPerBlock{}, setMaxRoutesPerBlock, nil)
+	cdc.RegisterConcrete(&MsgSetPoolWeights{}, setPoolWeights, nil)
 
 	// proposals
 	cdc.RegisterConcrete(&SetProtoRevEnabledProposal{}, setProtoRevEnabledProposal, nil)
@@ -50,6 +52,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgSetDeveloperAccount{},
 		&MsgSetMaxRoutesPerTx{},
 		&MsgSetMaxRoutesPerBlock{},
+		&MsgSetPoolWeights{},
 	)
 
 	// proposals

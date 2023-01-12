@@ -37,6 +37,12 @@ service Msg {
     option (google.api.http).post =
         "/osmosis/v13/protorev/set_max_routes_per_block";
   };
+
+  // SetPoolWeights sets the weights of each pool type in the store. Can only be
+  // called by the admin account.
+  rpc SetPoolWeights(MsgSetPoolWeights) returns (MsgSetPoolWeightsResponse) {
+    option (google.api.http).post = "/osmosis/v13/protorev/set_pool_weights";
+  };
 }
 
 // MsgSetHotRoutes defines the Msg/SetHotRoutes request type.
@@ -87,3 +93,14 @@ message MsgSetMaxRoutesPerBlock {
 // MsgSetMaxRoutesPerBlockResponse defines the Msg/SetMaxRoutesPerBlock response
 // type.
 message MsgSetMaxRoutesPerBlockResponse {}
+
+// MsgSetPoolWeights defines the Msg/SetPoolWeights request type.
+message MsgSetPoolWeights {
+  // admin is the account that is authorized to set the pool weights.
+  string admin = 1;
+  // pool_weights is the list of pool weights to set.
+  PoolWeights pool_weights = 2;
+}
+
+// MsgSetPoolWeightsResponse defines the Msg/SetPoolWeights response type.
+message MsgSetPoolWeightsResponse {}

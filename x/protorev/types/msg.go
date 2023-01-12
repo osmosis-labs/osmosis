@@ -17,6 +17,7 @@ const (
 	TypeMsgSetDeveloperAccount  = "set_developer_account"
 	TypeMsgSetMaxRoutesPerTx    = "set_max_routes_per_tx"
 	TypeMsgSetMaxRoutesPerBlock = "set_max_routes_per_block"
+	TypeMsgSetPoolWeights       = "set_pool_weights"
 )
 
 // ---------------------- Interface for MsgSetHotRoutes ---------------------- //
@@ -213,6 +214,51 @@ func (msg MsgSetMaxRoutesPerBlock) GetSignBytes() []byte {
 
 // GetSigners defines whose signature is required
 func (msg MsgSetMaxRoutesPerBlock) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Admin)
+	return []sdk.AccAddress{addr}
+}
+
+// ---------------------- Interface for MsgSetPoolWeights ---------------------- //
+// NewMsgSetPoolWeights creates a new MsgSetPoolWeights instance
+func NewMsgSetPoolWeights(admin string, poolWeights PoolWeights) *MsgSetPoolWeights {
+	return &MsgSetPoolWeights{
+		Admin:       admin,
+		PoolWeights: &poolWeights,
+	}
+}
+
+// Route returns the name of the module
+func (msg MsgSetPoolWeights) Route() string {
+	return RouterKey
+}
+
+// Type returns the type of the message
+func (msg MsgSetPoolWeights) Type() string {
+	return TypeMsgSetPoolWeights
+}
+
+// ValidateBasic validates the MsgSetPoolWeights
+func (msg MsgSetPoolWeights) ValidateBasic() error {
+	// Account must be a valid bech32 address
+	_, err := sdk.AccAddressFromBech32(msg.Admin)
+	if err != nil {
+		return sdkerrors.Wrap(err, "invalid admin address (must be bech32)")
+	}
+
+	if msg.PoolWeights.BalancerWeight == 0 || msg.PoolWeights.StableWeight == 0 || msg.PoolWeights.ConcentratedWeight == 0 {
+		return fmt.Errorf("pool weights cannot be 0")
+	}
+
+	return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgSetPoolWeights) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgSetPoolWeights) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Admin)
 	return []sdk.AccAddress{addr}
 }
