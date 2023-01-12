@@ -6,7 +6,7 @@ import (
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 type Keeper struct {
@@ -16,8 +16,8 @@ type Keeper struct {
 	paramSpace paramtypes.Subspace
 
 	// keepers
-	swaprouterKeeper types.SwaprouterKeeper
-	bankKeeper       types.BankKeeper
+	poolmanagerKeeper types.PoolManagerKeeper
+	bankKeeper        types.BankKeeper
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.BankKeeper, paramSpace paramtypes.Subspace) *Keeper {
@@ -44,7 +44,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
 
-// Set the swaprouter keeper.
-func (k *Keeper) SetSwapRouterKeeper(swaprouterKeeper types.SwaprouterKeeper) {
-	k.swaprouterKeeper = swaprouterKeeper
+// Set the poolmanager keeper.
+func (k *Keeper) SetPoolManagerKeeper(poolmanagerKeeper types.PoolManagerKeeper) {
+	k.poolmanagerKeeper = poolmanagerKeeper
 }

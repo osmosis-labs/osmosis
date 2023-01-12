@@ -7,11 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v13/app/params"
+	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v14/app/params"
 
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 func TestMsgCreatePosition(t *testing.T) {
@@ -60,34 +60,6 @@ func TestMsgCreatePosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       10,
 				UpperTick:       1,
-				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
-				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
-				TokenMinAmount0: sdk.OneInt(),
-				TokenMinAmount1: sdk.OneInt(),
-			},
-			expectPass: false,
-		},
-		{
-			name: "lower tick < min tick",
-			msg: types.MsgCreatePosition{
-				PoolId:          1,
-				Sender:          addr1,
-				LowerTick:       types.MinTick - 1,
-				UpperTick:       1,
-				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
-				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
-				TokenMinAmount0: sdk.OneInt(),
-				TokenMinAmount1: sdk.OneInt(),
-			},
-			expectPass: false,
-		},
-		{
-			name: "upper tick > max tick",
-			msg: types.MsgCreatePosition{
-				PoolId:          1,
-				Sender:          addr1,
-				LowerTick:       1,
-				UpperTick:       types.MaxTick + 1,
 				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
 				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
 				TokenMinAmount0: sdk.OneInt(),
@@ -223,28 +195,6 @@ func TestMsgWithdrawPosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       10,
 				UpperTick:       1,
-				LiquidityAmount: sdk.OneInt(),
-			},
-			expectPass: false,
-		},
-		{
-			name: "lower tick < min tick",
-			msg: types.MsgWithdrawPosition{
-				PoolId:          1,
-				Sender:          addr1,
-				LowerTick:       types.MinTick - 1,
-				UpperTick:       1,
-				LiquidityAmount: sdk.OneInt(),
-			},
-			expectPass: false,
-		},
-		{
-			name: "upper tick > max tick",
-			msg: types.MsgWithdrawPosition{
-				PoolId:          1,
-				Sender:          addr1,
-				LowerTick:       1,
-				UpperTick:       types.MaxTick + 1,
 				LiquidityAmount: sdk.OneInt(),
 			},
 			expectPass: false,

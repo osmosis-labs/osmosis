@@ -15,6 +15,10 @@ const (
 	uintBase              = 10
 )
 
+var (
+	emptyCoins = sdk.DecCoins(nil)
+)
+
 // createFeeAccumulator creates an accumulator object in the store using the given poolId.
 // The accumulator is initialized with the default(zero) values.
 func (k Keeper) createFeeAccumulator(ctx sdk.Context, poolId uint64) error {
@@ -35,6 +39,21 @@ func (k Keeper) getFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.Accumul
 	}
 
 	return acc, nil
+}
+
+// chargeFee charges the given fee on the pool with the given id by updating
+// the internal per-pool accumulator that tracks fee growth per one unit of
+// liquidity. Returns error if fails to get accumulator.
+// nolint: unused
+func (k Keeper) chargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin) error {
+	feeAccumulator, err := k.getFeeAccumulator(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	feeAccumulator.UpdateAccumulator(sdk.NewDecCoins(feeUpdate))
+
+	return nil
 }
 
 // initializeFeeAccumulatorPosition initializes the pool fee accumulator with given liquidity delta and zero value for the accumulator.
@@ -122,6 +141,32 @@ func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, u
 	feeGrowthBelowLowerTick := calculateFeeGrowth(lowerTick, lowerTickInfo.FeeGrowthOutside, currentTick, poolFeeGrowth, false)
 
 	return feeGrowthAboveUpperTick.Add(feeGrowthBelowLowerTick...), nil
+}
+
+// getInitialFeeGrowthOutsideForTick returns the initial value of fee growth outside for a given tick.
+// This value depends on the tick's location relative to the current tick.
+//
+// feeGrowthOutside = { feeGrowthGlobal current tick >= tick }
+//                    { 0               current tick <  tick }
+//
+// The value is chosen as if all of the fees earned to date had occurrd below the tick.
+// Returns error if the pool with the given id does exist or if fails to get the fee accumulator.
+func (k Keeper) getInitialFeeGrowthOutsideForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return sdk.DecCoins{}, err
+	}
+
+	currentTick := pool.GetCurrentTick().Int64()
+	if currentTick >= tick {
+		feeAccumulator, err := k.getFeeAccumulator(ctx, poolId)
+		if err != nil {
+			return sdk.DecCoins{}, err
+		}
+		return feeAccumulator.GetValue(), nil
+	}
+
+	return emptyCoins, nil
 }
 
 func getFeeAccumulatorName(poolId uint64) string {

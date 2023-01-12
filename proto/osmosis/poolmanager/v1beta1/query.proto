@@ -1,0 +1,90 @@
+syntax = "proto3";
+package osmosis.poolmanager.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "osmosis/poolmanager/v1beta1/genesis.proto";
+import "osmosis/poolmanager/v1beta1/tx.proto";
+import "osmosis/poolmanager/v1beta1/swap_route.proto";
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v14/x/poolmanager/client/queryproto";
+
+service Query {
+  rpc Params(ParamsRequest) returns (ParamsResponse) {
+    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/Params";
+  }
+
+  // Estimates swap amount out given in.
+  rpc EstimateSwapExactAmountIn(EstimateSwapExactAmountInRequest)
+      returns (EstimateSwapExactAmountInResponse) {
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_in";
+  }
+
+  // Estimates swap amount in given out.
+  rpc EstimateSwapExactAmountOut(EstimateSwapExactAmountOutRequest)
+      returns (EstimateSwapExactAmountOutResponse) {
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_out";
+  }
+
+  rpc NumPools(NumPoolsRequest) returns (NumPoolsResponse) {
+    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/num_pools";
+  }
+}
+
+//=============================== Params
+message ParamsRequest {}
+message ParamsResponse { Params params = 1 [ (gogoproto.nullable) = false ]; }
+
+//=============================== EstimateSwapExactAmountIn
+message EstimateSwapExactAmountInRequest {
+  // TODO: CHANGE THIS TO RESERVED IN A PATCH RELEASE
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string token_in = 3 [ (gogoproto.moretags) = "yaml:\"token_in\"" ];
+  repeated SwapAmountInRoute routes = 4 [
+    (gogoproto.moretags) = "yaml:\"routes\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message EstimateSwapExactAmountInResponse {
+  string token_out_amount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_out_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+//=============================== EstimateSwapExactAmountOut
+message EstimateSwapExactAmountOutRequest {
+  // TODO: CHANGE THIS TO RESERVED IN A PATCH RELEASE
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  repeated SwapAmountOutRoute routes = 3 [
+    (gogoproto.moretags) = "yaml:\"routes\"",
+    (gogoproto.nullable) = false
+  ];
+  string token_out = 4 [ (gogoproto.moretags) = "yaml:\"token_out\"" ];
+}
+
+message EstimateSwapExactAmountOutResponse {
+  string token_in_amount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_in_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+//=============================== NumPools
+message NumPoolsRequest {}
+message NumPoolsResponse {
+  uint64 num_pools = 1 [ (gogoproto.moretags) = "yaml:\"num_pools\"" ];
+}

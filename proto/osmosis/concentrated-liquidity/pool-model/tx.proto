@@ -4,7 +4,7 @@ package osmosis.concentratedliquidity.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model";
+option go_package = "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model";
 
 service MsgCreator {
   rpc CreateConcentratedPool(MsgCreateConcentratedPool)
@@ -17,6 +17,11 @@ message MsgCreateConcentratedPool {
   string denom0 = 2 [ (gogoproto.moretags) = "yaml:\"denom0\"" ];
   string denom1 = 3 [ (gogoproto.moretags) = "yaml:\"denom1\"" ];
   uint64 tick_spacing = 4 [ (gogoproto.moretags) = "yaml:\"tick_spacing\"" ];
+  string precision_factor_at_price_one = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"precision_factor_at_price_one\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // Returns a unique poolID to identify the pool with.

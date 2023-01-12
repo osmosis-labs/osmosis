@@ -11,10 +11,10 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	osmoapp "github.com/osmosis-labs/osmosis/v13/app"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	osmoapp "github.com/osmosis-labs/osmosis/v14/app"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 )
 
 func TestGammInitGenesis(t *testing.T) {
@@ -47,7 +47,7 @@ func TestGammInitGenesis(t *testing.T) {
 		},
 	}, app.AppCodec())
 
-	require.Equal(t, app.SwapRouterKeeper.GetNextPoolId(ctx), uint64(1))
+	require.Equal(t, app.PoolManagerKeeper.GetNextPoolId(ctx), uint64(1))
 	poolStored, err := app.GAMMKeeper.GetPoolAndPoke(ctx, 1)
 	require.NoError(t, err)
 	require.Equal(t, balancerPool.GetId(), poolStored.GetId())
@@ -88,7 +88,7 @@ func TestGammExportGenesis(t *testing.T) {
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 	}}, "")
-	_, err = app.SwapRouterKeeper.CreatePool(ctx, msg)
+	_, err = app.PoolManagerKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
 
 	msg = balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
@@ -101,12 +101,12 @@ func TestGammExportGenesis(t *testing.T) {
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 	}}, "")
-	_, err = app.SwapRouterKeeper.CreatePool(ctx, msg)
+	_, err = app.PoolManagerKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
 
 	genesis := app.GAMMKeeper.ExportGenesis(ctx)
 	// Note: the next pool number index has been migrated to
-	// swaprouter.
+	// poolmanager.
 	// The reason it is kept in gamm is for migrations.
 	// As a result, it is 1 here. This index is to be removed
 	// in a subsequent upgrade.
@@ -139,7 +139,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 	}}, "")
-	_, err = app.SwapRouterKeeper.CreatePool(ctx, msg)
+	_, err = app.PoolManagerKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
 
 	genesis := am.ExportGenesis(ctx, appCodec)

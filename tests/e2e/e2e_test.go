@@ -3,7 +3,6 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
-	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	"io"
 	"os"
 	"path/filepath"
@@ -11,18 +10,56 @@ import (
 	"strings"
 	"time"
 
+	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
+
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
-	"github.com/osmosis-labs/osmosis/v13/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v13/tests/e2e/initialization"
+	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
 )
+
+// TestGeometricTwapMigration tests that the geometric twap record
+// migration runs succesfully. It does so by attempting to execute
+// the swap on the pool created pre-upgrade. When a pool is created
+// pre-upgrade, twap records are initialized for a pool. By runnning
+// a swap post-upgrade, we confirm that the geometric twap was initialized
+// correctly and does not cause a chain halt. This test was created
+// in-response to a testnet incident when performing the geometric twap
+// upgrade. Upon adding the migrations logic, the tests began to pass.
+func (s *IntegrationTestSuite) TestGeometricTwapMigration() {
+	if s.skipUpgrade {
+		s.T().Skip("Skipping upgrade tests")
+	}
+
+	const (
+		// Configurations for tests/e2e/scripts/pool1A.json
+		// This pool gets initialized pre-upgrade.
+		oldPoolId       = 1
+		minAmountOut    = "1"
+		otherDenom      = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
+		migrationWallet = "migration"
+	)
+
+	chainA := s.configurer.GetChainConfig(0)
+	node, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
+
+	uosmoIn := fmt.Sprintf("1000000%s", "uosmo")
+
+	swapWalletAddr := node.CreateWallet(migrationWallet)
+
+	node.BankSend(uosmoIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
+
+	// Swap to create new twap records on the pool that was created pre-upgrade.
+	node.SwapExactAmountIn(uosmoIn, minAmountOut, fmt.Sprintf("%d", oldPoolId), otherDenom, swapWalletAddr)
+}
 
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.
 // Additionally, it attempst to create a pool with IBC denoms.
@@ -171,7 +208,6 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [{"channel_id": "channel-0", "denom": "%s", "quotas": [{"name":"testQuota", "duration": 86400, "send_recv": [1, 1]}] } ] }`, node.PublicAddress, node.PublicAddress, initialization.OsmoToken.Denom),
 		initialization.ValidatorWalletName)
 
-	// Using code_id 1 because this is the only contract right now. This may need to change if more contracts are added
 	contracts, err := node.QueryContractsFromId(chainA.LatestCodeId)
 	s.NoError(err)
 	s.Require().Len(contracts, 1, "Wrong number of contracts for the rate limiter")
@@ -247,7 +283,6 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	s.NoError(err)
 	// co up two levels
 	projectDir := filepath.Dir(filepath.Dir(wd))
-	fmt.Println(wd, projectDir)
 	err = copyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
 	s.NoError(err)
 
@@ -258,15 +293,14 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 		`{"count": 0}`,
 		initialization.ValidatorWalletName)
 
-	// Using code_id 1 because this is the only contract right now. This may need to change if more contracts are added
 	contracts, err := nodeA.QueryContractsFromId(chainA.LatestCodeId)
 	s.NoError(err)
 	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
 	contractAddr := contracts[0]
 
+	transferAmount := int64(10)
 	validatorAddr := nodeB.GetWallet(initialization.ValidatorWalletName)
-	fmt.Println("validatorAddr", validatorAddr)
-	nodeB.SendIBCTransfer(validatorAddr, contractAddr, "10uosmo",
+	nodeB.SendIBCTransfer(validatorAddr, contractAddr, fmt.Sprintf("%duosmo", transferAmount),
 		fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr))
 
 	// check the balance of the contract
@@ -276,7 +310,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 		if len(balance) == 0 {
 			return false
 		}
-		return balance[0].Amount.Int64() == 10
+		return balance[0].Amount.Int64() == transferAmount
 	},
 		1*time.Minute,
 		10*time.Millisecond,
@@ -284,7 +318,6 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
-	fmt.Println("sender", senderBech32)
 
 	var response map[string]interface{}
 	s.Eventually(func() bool {
@@ -293,13 +326,11 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 		amount := totalFunds.(map[string]interface{})["amount"].(string)
 		denom := totalFunds.(map[string]interface{})["denom"].(string)
 		// check if denom contains "uosmo"
-		return err == nil && amount == "10" && strings.Contains(denom, "ibc")
+		return err == nil && amount == strconv.FormatInt(transferAmount, 10) && strings.Contains(denom, "ibc")
 	},
 		15*time.Second,
 		10*time.Millisecond,
 	)
-	fmt.Println("response", response)
-
 }
 
 // TestAddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.
