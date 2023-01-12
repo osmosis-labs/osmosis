@@ -46,7 +46,7 @@ UnStaking Calculation
 
 ## Messages
 
-### CreateValidatorSetPreference
+### MsgSetValidatorSetPreference
 
 Creates a validator-set of `{valAddr, Weight}` given the delegator address.
 and preferences. The weights are in decimal format from 0 to 1 and must add up to 1.
@@ -67,37 +67,22 @@ and preferences. The weights are in decimal format from 0 to 1 and must add up t
   - check if the validator-set add up to 1.
 - Add owner address to the `KVStore`, where a state of validator-set is stored. 
 
-### UpdateValidatorSetPreference
 
-Updates a validator-set of `{valAddr, Weight}` given the delegator address
-and existing preferences. The weights calculations follow the same rule as `CreateValidatorSetPreference`.
-If a user changes their preferences list, the unstaking logic will run from the old set and 
-restaking to a new set is going to happen behind the scenes.
-
-```go
-    string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
-    repeated ValidatorPreference preferences = 2 [
-      (gogoproto.moretags) = "yaml:\"preferences\"",
-      (gogoproto.nullable) = false
-    ];
-```
-
-**State Modifications:**
-
-- Follows the same rule as `CreateValidatorSetPreference` for weights checks.
-- Update the `KVStore` value for the specific owner address key.
-- Run the undelegate logic and restake the tokens with updated weights. 
-
-### DelegateToValidatorSet
+### MsgDelegateToValidatorSet
 
 Gets the existing validator-set of the delegator and delegates the given amount. The given amount 
-will be divided based on the weights distributed to the validators. The weights will be unchanged 
+will be divided based on the weights distributed to the validators. The weights will be unchanged.
+If the user doesnot have an existing validator set use delegators' current staking position.
 
 ```go
     string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
-    repeated ValidatorPreference preferences = 2 [
-      (gogoproto.moretags) = "yaml:\"preferences\"",
-      (gogoproto.nullable) = false
+    // the amount of tokens the user is trying to delegate.
+    // For ex: delegate 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC
+    // -> 0.2} our staking logic would attempt to delegate 5osmo to A , 3osmo to
+    // B, 2osmo to C.
+    cosmos.base.v1beta1.Coin coin = 2 [
+      (gogoproto.nullable) = false,
+      (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
     ];
 ```
 
@@ -109,18 +94,23 @@ will be divided based on the weights distributed to the validators. The weights 
   - check overflow/underflow since `Delegate` method takes `sdk.Int` as tokenAmount.
 - use the [Delegate](https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/keeper/delegation.go#L614) method from the cosmos-sdk to handle delegation. 
 
-### UnStakeFromValidatorSet
+### MsgUndelegateFromValidatorSet
 
 Gets the existing validator-set of the delegator and undelegate the given amount. The amount to undelegate will
 will be divided based on the weights distributed to the validators. The weights will be unchanged! 
-
+If the user doesnot have an existing validator set use delegators' current staking position.
 The given amount will be divided based on the weights distributed to the validators.
 
 ```go
     string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
-    repeated ValidatorPreference preferences = 2 [
-      (gogoproto.moretags) = "yaml:\"preferences\"",
-      (gogoproto.nullable) = false
+    // the amount the user wants to undelegate
+    // For ex: Undelegate 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3,
+    // ValC
+    // -> 0.2} our undelegate logic would attempt to undelegate 5osmo from A ,
+    // 3osmo from B, 2osmo from C
+    cosmos.base.v1beta1.Coin coin = 3 [
+      (gogoproto.nullable) = false,
+      (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
     ];
 ```
 
@@ -133,29 +123,33 @@ The given amount will be divided based on the weights distributed to the validat
   - `UnDelegate` method takes `sdk.Dec` as tokenAmount, so check if overflow/underflow case is relevant.
 - use the [UnDelegate](https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/keeper/delegation.go#L614) method from the cosmos-sdk to handle delegation. 
 
-### WithdrawDelegationRewards
+### MsgWithdrawDelegationRewards
 
 Allows the user to claim rewards based from the existing validator-set. The user can claim rewards from all the validators at once. 
+If the user doesnot have an existing validator set use delegators' current staking position.
 
 ```go
     string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
 ```
 
-## Code Layout 
+### MsgRedelegateValidatorSet
 
-The Code Layout is very similar to TWAP module.
+The redelegation command allows delegators to instantly switch validators. Once the unbonding period has passed, 
+the redelegation is automatically completed in the EndBlocker. If the user doesnot have an existing validator set use delegators' current staking position.
 
-- client/* - Implementation of GRPC and CLI queries
-- types/* - Implement ValidatorSetPreference, GenesisState. Define the interface and setup keys.
-- twapmodule/validatorsetpreference.go - SDK AppModule interface implementation.
-- api.go - Public API, that other users / modules can/should depend on
-- listeners.go - Defines hooks & calls to logic.go, for triggering actions on 
-- keeper.go - generic SDK boilerplate (defining a wrapper for store keys + params)
-- msg_server.go - handle messages request from client and process responses. 
-- store.go - Managing logic for getting and setting things to underlying stores (KVStore)
+```go
+  // delegator is the user who is trying to create a validator-set.
+  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
+
+  // list of {valAddr, weight} to delegate to
+  repeated ValidatorPreference preferences = 2 [
+    (gogoproto.moretags) = "yaml:\"preferences\"",
+    (gogoproto.nullable) = false
+  ];
+```
 
 ## Redelegate algorithm logic pseudocode
-
+```
 Existing ValSet   20osmos {ValA-> 0.5, ValB-> 0.3, ValC-> 0.2} [ValA-> 10osmo, ValB-> 6osmo, ValC-> 4osmo]
 New ValSet        20osmos {ValD-> 0.2, ValE-> 0.2, ValF-> 0.6} [ValD-> 4osmo, ValE-> 4osmo, ValD-> 12osmo]
 
@@ -185,7 +179,7 @@ New ValSet        20osmos {ValD-> 0.2, ValE-> 0.2, ValF-> 0.6} [ValD-> 4osmo, Va
 - Result 
   1. diff_arr = [ValA: 0, ValB: 0, ValC: 0, ValD: 0, ValE: 0, ValF: 0]
   2. [ValA: 0, ValB: 0, ValC: 0, ValD: 4, ValE: 4, ValF: 12] // final result
-
+```
 
 ## Redelegation Constraints 
 1. ValA -> ValB redelegate upto 7 times in 21 day period 
@@ -193,3 +187,17 @@ New ValSet        20osmos {ValD-> 0.2, ValE-> 0.2, ValF-> 0.6} [ValD-> 4osmo, Va
 3. Once you redelegate from ValA -> ValB, you will not be able to redelegate from ValB to another validator for the next 21 days.
   - the validator on the receiving end of redelegation will be on a 21-day redelegation lock
 4. Cannot redelegate to same validator 
+
+
+## Code Layout 
+
+The Code Layout is very similar to TWAP module.
+
+- client/* - Implementation of GRPC and CLI queries
+- types/* - Implement ValidatorSetPreference, GenesisState. Define the interface and setup keys.
+- valset-pref/module.go - SDK AppModule interface implementation.
+- api.go - Public API, that other users / modules can/should depend on
+- listeners.go - Defines hooks & calls to logic.go, for triggering actions on 
+- keeper.go - generic SDK boilerplate (defining a wrapper for store keys + params)
+- msg_server.go - handle messages request from client and process responses. 
+- store.go - Managing logic for getting and setting things to underlying stores (KVStore)

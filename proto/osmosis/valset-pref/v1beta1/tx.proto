@@ -87,7 +87,7 @@ message MsgUndelegateFromValidatorSet {
 message MsgUndelegateFromValidatorSetResponse {}
 
 message MsgRedelegateValidatorSet {
-  // delegator is the user who is trying to create a validator-set.
+  // delegator is the user who is trying to redelegate. 
   string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
 
   // list of {valAddr, weight} to delegate to
