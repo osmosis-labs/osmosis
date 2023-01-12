@@ -644,18 +644,22 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			// Assertions.
 
+			poolBalanceAfterCollect := s.App.BankKeeper.GetBalance(ctx, validPool.GetAddress(), ETH)
+			ownerBalancerAfterCollect := s.App.BankKeeper.GetBalance(ctx, tc.owner, ETH)
+
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, &tc.expectedError)
 				s.Require().Equal(sdk.Coins{}, actualFeesClaimed)
+
+				// balances are unchanged
+				s.Require().Equal(poolBalanceBeforeCollect, poolBalanceAfterCollect)
+				s.Require().Equal(ownerBalancerAfterCollect, ownerBalancerBeforeCollect)
 				return
 			}
 
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedFeesClaimed, actualFeesClaimed)
-
-			poolBalanceAfterCollect := s.App.BankKeeper.GetBalance(ctx, validPool.GetAddress(), ETH)
-			ownerBalancerAfterCollect := s.App.BankKeeper.GetBalance(ctx, tc.owner, ETH)
 
 			expectedETHAmount := tc.expectedFeesClaimed.AmountOf(ETH)
 			s.Require().Equal(expectedETHAmount, poolBalanceBeforeCollect.Sub(poolBalanceAfterCollect).Amount)
