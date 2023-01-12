@@ -479,7 +479,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 		// been updated when crossed.
 		// Since we track fees accrued below a tick, upper tick is updated
 		// while lower tick is zero.
-		"single swap left -> right: 2 ticks, one share - current price > upper tick": {
+		"single swap left -> right: 2 ticks, one share, current tick > upper tick": {
 			initialLiquidity: sdk.OneDec(),
 
 			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
@@ -495,7 +495,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			expectedFeesClaimed: sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(10))),
 		},
-		"single swap left -> right: 3 ticks, two shares - current price > upper tick": {
+		"single swap left -> right: 3 ticks, two shares, current tick > upper tick": {
 			initialLiquidity: sdk.NewDec(2),
 
 			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
@@ -511,7 +511,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			expectedFeesClaimed: sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(20))),
 		},
-		"single swap left -> right: 2 ticks, one share - current tick == upper tick": {
+		"single swap left -> right: 2 ticks, one share, current tick == upper tick": {
 			initialLiquidity: sdk.OneDec(),
 
 			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
@@ -533,7 +533,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 		// In this case, all fees must have been accrued inside the tick
 		// Since we track fees accrued below a tick, both upper and lower position
 		// ticks are zero
-		"single swap right -> left: 2 ticks, one share - current price == lower tick": {
+		"single swap right -> left: 2 ticks, one share, current tick == lower tick": {
 			initialLiquidity: sdk.OneDec(),
 
 			// lower tick accumulator is not updated yet.
@@ -550,7 +550,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			expectedFeesClaimed: sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(10))),
 		},
-		"single swap right -> left: 2 ticks, one share - current price < lower tick": {
+		"single swap right -> left: 2 ticks, one share, current price < lower tick": {
 			initialLiquidity: sdk.OneDec(),
 
 			// lower tick accumulator updated when crossed.
