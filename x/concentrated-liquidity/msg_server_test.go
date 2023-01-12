@@ -6,45 +6,64 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	cl "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
-	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 // TestCreateConcentratedPool_Events tests that events are correctly emitted
 // when calling CreateConcentratedPool.
 func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 	testcases := map[string]struct {
-		sender                   string
-		denom0                   string
-		denom1                   string
-		tickSpacing              uint64
-		expectedPoolCreatedEvent int
-		expectedMessageEvents    int
-		expectedError            error
+		sender                    string
+		denom0                    string
+		denom1                    string
+		tickSpacing               uint64
+		precisionFactorAtPriceOne sdk.Int
+		expectedPoolCreatedEvent  int
+		expectedMessageEvents     int
+		expectedError             error
 	}{
 		"happy path": {
-			denom0:                   ETH,
-			denom1:                   USDC,
-			tickSpacing:              DefaultTickSpacing,
-			expectedPoolCreatedEvent: 1,
-			expectedMessageEvents:    3, // 1 for pool created, 1 for coin spent, 1 for coin received
+			denom0:                    ETH,
+			denom1:                    USDC,
+			tickSpacing:               DefaultTickSpacing,
+			precisionFactorAtPriceOne: DefaultExponentAtPriceOne,
+			expectedPoolCreatedEvent:  1,
+			expectedMessageEvents:     3, // 1 for pool created, 1 for coin spent, 1 for coin received
 		},
 		"error: missing denom0": {
-			denom1:        USDC,
-			tickSpacing:   DefaultTickSpacing,
-			expectedError: fmt.Errorf("received denom0 with invalid metadata: %s", ""),
+			denom1:                    USDC,
+			tickSpacing:               DefaultTickSpacing,
+			precisionFactorAtPriceOne: DefaultExponentAtPriceOne,
+			expectedError:             fmt.Errorf("received denom0 with invalid metadata: %s", ""),
 		},
 		"error: missing denom1": {
-			denom0:        ETH,
-			tickSpacing:   DefaultTickSpacing,
-			expectedError: fmt.Errorf("received denom1 with invalid metadata: %s", ""),
+			denom0:                    ETH,
+			tickSpacing:               DefaultTickSpacing,
+			precisionFactorAtPriceOne: DefaultExponentAtPriceOne,
+			expectedError:             fmt.Errorf("received denom1 with invalid metadata: %s", ""),
 		},
 		"error: missing tickSpacing": {
-			denom0:        ETH,
-			denom1:        USDC,
-			expectedError: fmt.Errorf("tick spacing must be positive"),
+			denom0:                    ETH,
+			denom1:                    USDC,
+			precisionFactorAtPriceOne: DefaultExponentAtPriceOne,
+			expectedError:             fmt.Errorf("tick spacing must be positive"),
+		},
+		"error: precision value below minimum": {
+			denom0:                    ETH,
+			denom1:                    USDC,
+			tickSpacing:               DefaultTickSpacing,
+			precisionFactorAtPriceOne: cltypes.ExponentAtPriceOneMin.Sub(sdk.OneInt()),
+			expectedError:             cltypes.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: cltypes.ExponentAtPriceOneMin.Sub(sdk.OneInt()), PrecisionValueAtPriceOneMin: cltypes.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: cltypes.ExponentAtPriceOneMax},
+		},
+		"error: precision value above maximum": {
+			denom0:                    ETH,
+			denom1:                    USDC,
+			tickSpacing:               DefaultTickSpacing,
+			precisionFactorAtPriceOne: cltypes.ExponentAtPriceOneMax.Add(sdk.OneInt()),
+			expectedError:             cltypes.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: cltypes.ExponentAtPriceOneMax.Add(sdk.OneInt()), PrecisionValueAtPriceOneMin: cltypes.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: cltypes.ExponentAtPriceOneMax},
 		},
 	}
 
@@ -53,11 +72,11 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			suite.Setup()
 			ctx := suite.Ctx
 
-			// Retrieve the pool creation fee from swaprouter params.
-			swaprouterParams := swaproutertypes.DefaultParams()
+			// Retrieve the pool creation fee from poolmanager params.
+			poolmanagerParams := poolmanagertypes.DefaultParams()
 
 			// Fund account to pay for the pool creation fee.
-			suite.FundAcc(suite.TestAccs[0], swaprouterParams.PoolCreationFee)
+			suite.FundAcc(suite.TestAccs[0], poolmanagerParams.PoolCreationFee)
 
 			msgServer := cl.NewMsgCreatorServerImpl(suite.App.ConcentratedLiquidityKeeper)
 
@@ -88,10 +107,11 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			suite.Equal(0, len(ctx.EventManager().Events()))
 
 			response, err := msgServer.CreateConcentratedPool(sdk.WrapSDKContext(ctx), &clmodel.MsgCreateConcentratedPool{
-				Sender:      suite.TestAccs[0].String(),
-				Denom0:      tc.denom0,
-				Denom1:      tc.denom1,
-				TickSpacing: tc.tickSpacing,
+				Sender:                    suite.TestAccs[0].String(),
+				Denom0:                    tc.denom0,
+				Denom1:                    tc.denom1,
+				TickSpacing:               tc.tickSpacing,
+				PrecisionFactorAtPriceOne: tc.precisionFactorAtPriceOne,
 			})
 
 			if tc.expectedError == nil {

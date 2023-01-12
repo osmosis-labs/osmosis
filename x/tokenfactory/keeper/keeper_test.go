@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory/keeper"
-	"github.com/osmosis-labs/osmosis/v13/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v14/x/tokenfactory/keeper"
+	"github.com/osmosis-labs/osmosis/v14/x/tokenfactory/types"
 )
 
 type KeeperTestSuite struct {

@@ -6,11 +6,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/cfmm_common"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/stableswap"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -150,14 +150,14 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		pool        func() swaproutertypes.PoolI
+		pool        func() poolmanagertypes.PoolI
 		tokensIn    sdk.Coins
 		expNumShare sdk.Int
 		expRemCoin  sdk.Coins
 	}{
 		{
 			name: "two asset pool, same tokenIn ratio",
-			pool: func() swaproutertypes.PoolI {
+			pool: func() poolmanagertypes.PoolI {
 				balancerPool, err := balancer.NewBalancerPool(
 					1,
 					balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
@@ -174,7 +174,7 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 		},
 		{
 			name: "two asset pool, different tokenIn ratio with pool",
-			pool: func() swaproutertypes.PoolI {
+			pool: func() poolmanagertypes.PoolI {
 				balancerPool, err := balancer.NewBalancerPool(
 					1,
 					balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
