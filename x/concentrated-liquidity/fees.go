@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 const (
@@ -201,20 +202,23 @@ func (k Keeper) getInitialFeeGrowthOutsideForTick(ctx sdk.Context, poolId uint64
 
 // nolint: unused
 func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64) (sdk.Coins, error) {
-	pool, err := k.getPoolById(ctx, poolId)
+	feeAccumulator, err := k.getFeeAccumulator(ctx, poolId)
 	if err != nil {
 		return sdk.Coins{}, err
+	}
+
+	positionKey := formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
+
+	hasPosition, err := feeAccumulator.HasPosition(positionKey)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	if !hasPosition {
+		return sdk.Coins{}, cltypes.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick}
 	}
 
 	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
-	if err != nil {
-		return sdk.Coins{}, err
-	}
-
-	// TODO: add check that position exists.
-	positionKey := formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
-
-	feeAccumulator, err := k.getFeeAccumulator(ctx, poolId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -226,6 +230,11 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	}
 
 	rewardsClaimed, err := feeAccumulator.ClaimRewards(positionKey)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}

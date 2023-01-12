@@ -451,6 +451,10 @@ func (suite *KeeperTestSuite) TestChargeFee() {
 }
 
 func (s *KeeperTestSuite) TestCollectFees() {
+	var (
+		ownerWithValidPosition = s.TestAccs[0]
+	)
+
 	tests := map[string]struct {
 		// setup parameters.
 		initialLiquidity          sdk.Dec
@@ -483,7 +487,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:     s.TestAccs[0],
+			owner:     ownerWithValidPosition,
 			lowerTick: 0,
 			upperTick: 1,
 
@@ -499,7 +503,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:     s.TestAccs[0],
+			owner:     ownerWithValidPosition,
 			lowerTick: 0,
 			upperTick: 2,
 
@@ -515,7 +519,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:     s.TestAccs[0],
+			owner:     ownerWithValidPosition,
 			lowerTick: 0,
 			upperTick: 1,
 
@@ -538,7 +542,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:     s.TestAccs[0],
+			owner:     ownerWithValidPosition,
 			lowerTick: 0,
 			upperTick: 1,
 
@@ -555,7 +559,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:     s.TestAccs[0],
+			owner:     ownerWithValidPosition,
 			lowerTick: 0,
 			upperTick: 1,
 
@@ -563,6 +567,8 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			expectedFeesClaimed: sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(10))),
 		},
+
+		// error cases.
 
 		"invalid pool id given": {
 			initialLiquidity: sdk.OneDec(),
@@ -572,7 +578,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:     s.TestAccs[0],
+			owner:     ownerWithValidPosition,
 			lowerTick: 0,
 			upperTick: 1,
 
@@ -580,8 +586,22 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			isInvalidPoolIdGiven: true,
 			expectedError:        cltypes.PoolNotFoundError{PoolId: 2},
+		},
+		"position does not exist": {
+			initialLiquidity: sdk.OneDec(),
 
-			expectedFeesClaimed: sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(10))),
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			owner:     s.TestAccs[1], // different owner from the one who initialized the position.
+			lowerTick: 0,
+			upperTick: 1,
+
+			currentTick: 2,
+
+			expectedError: cltypes.PositionNotFoundError{PoolId: 1, LowerTick: 0, UpperTick: 1},
 		},
 	}
 
@@ -598,7 +618,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 			ctx := s.Ctx
 
-			err := clKeeper.InitializeFeeAccumulatorPosition(ctx, validPoolId, tc.owner, tc.lowerTick, tc.upperTick, tc.initialLiquidity)
+			err := clKeeper.InitializeFeeAccumulatorPosition(ctx, validPoolId, ownerWithValidPosition, tc.lowerTick, tc.upperTick, tc.initialLiquidity)
 			s.Require().NoError(err)
 
 			s.initializeTick(ctx, tc.lowerTick, tc.initialLiquidity, tc.lowerTickFeeGrowthOutside, false)
@@ -627,6 +647,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, &tc.expectedError)
+				s.Require().Equal(sdk.Coins{}, actualFeesClaimed)
 				return
 			}
 
