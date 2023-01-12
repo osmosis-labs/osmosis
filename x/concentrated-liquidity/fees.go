@@ -16,7 +16,6 @@ const (
 )
 
 var (
-	zero       = sdk.ZeroDec()
 	emptyCoins = sdk.DecCoins(nil)
 )
 
@@ -171,6 +170,7 @@ func (k Keeper) getInitialFeeGrowthOutsideForTick(ctx sdk.Context, poolId uint64
 	return emptyCoins, nil
 }
 
+// nolint: unused
 func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64) (sdk.Coins, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
