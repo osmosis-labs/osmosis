@@ -1373,7 +1373,11 @@ func (suite *AccumTestSuite) TestSetPositionCustomAcc() {
 	suite.SetupTest()
 
 	// Setup.
-	accObject := accumPackage.CreateRawAccumObject(suite.store, testNameOne, initialCoinsDenomOne)
+	var (
+		accObject           = accumPackage.CreateRawAccumObject(suite.store, testNameOne, initialCoinsDenomOne)
+		validPositionName   = testAddressThree
+		invalidPositionName = testAddressTwo
+	)
 
 	tests := map[string]struct {
 		positionName           string
@@ -1381,18 +1385,22 @@ func (suite *AccumTestSuite) TestSetPositionCustomAcc() {
 		expectedError          error
 	}{
 		"valid update greater than initial value": {
-			positionName:           testAddressThree,
+			positionName:           validPositionName,
 			customAccumulatorValue: initialCoinsDenomOne.Add(initialCoinDenomOne),
 		},
 		"valid update equal to the initial value": {
-			positionName:           testAddressThree,
+			positionName:           validPositionName,
 			customAccumulatorValue: initialCoinsDenomOne,
 		},
 		"invalid update smaller than the initial value": {
-			positionName:           testAddressThree,
+			positionName:           validPositionName,
 			customAccumulatorValue: emptyCoins,
 
 			expectedError: accumPackage.NegativeAccDifferenceError{AccumulatorDifference: initialCoinsDenomOne},
+		},
+		"invalid position - different name": {
+			positionName:  invalidPositionName,
+			expectedError: accumPackage.NoPositionError{Name: invalidPositionName},
 		},
 	}
 
@@ -1400,7 +1408,7 @@ func (suite *AccumTestSuite) TestSetPositionCustomAcc() {
 		suite.Run(name, func() {
 
 			// Setup
-			err := accObject.NewPositionCustomAcc(tc.positionName, sdk.OneDec(), initialCoinsDenomOne, nil)
+			err := accObject.NewPositionCustomAcc(validPositionName, sdk.OneDec(), initialCoinsDenomOne, nil)
 			suite.Require().NoError(err)
 
 			// System under test.
