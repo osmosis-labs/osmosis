@@ -146,8 +146,9 @@ func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, u
 // getInitialFeeGrowthOutsideForTick returns the initial value of fee growth outside for a given tick.
 // This value depends on the tick's location relative to the current tick.
 //
-// feeGrowthOutside = { feeGrowthGlobal current tick >= tick }
-//                    { 0               current tick <  tick }
+// feeGrowthOutside =
+// { feeGrowthGlobal current tick >= tick }
+// { 0               current tick <  tick }
 //
 // The value is chosen as if all of the fees earned to date had occurrd below the tick.
 // Returns error if the pool with the given id does exist or if fails to get the fee accumulator.
@@ -167,6 +168,45 @@ func (k Keeper) getInitialFeeGrowthOutsideForTick(ctx sdk.Context, poolId uint64
 	}
 
 	return emptyCoins, nil
+}
+
+// nolint: unused
+func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64) (sdk.Coins, error) {
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	// TODO: change to owner + lower tick + upper tick.
+	// TODO: add check that position exists.
+	positionKey := owner.String()
+
+	feeAccumulator, err := k.getFeeAccumulator(ctx, poolId)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	// We need to update the position's accumulator before we claim rewards.
+	// Note that liquidity delta is zero in this case.
+	if err := feeAccumulator.SetPositionCustomAcc(positionKey, feeGrowthOutside); err != nil {
+		return sdk.Coins{}, err
+	}
+
+	rewardsClaimed, err := feeAccumulator.ClaimRewards(positionKey)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	if err := k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, rewardsClaimed); err != nil {
+		return sdk.Coins{}, err
+	}
+
+	return rewardsClaimed, nil
 }
 
 func getFeeAccumulatorName(poolId uint64) string {

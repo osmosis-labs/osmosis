@@ -1326,3 +1326,61 @@ func (suite *AccumTestSuite) TestUpdatePositionCustomAcc() {
 		})
 	}
 }
+
+func (suite *AccumTestSuite) TestSetPositionCustomAcc() {
+
+	// We setup store and accum
+	// once at beginning.
+	suite.SetupTest()
+
+	// Setup.
+	accObject := accumPackage.CreateRawAccumObject(suite.store, testNameOne, initialCoinsDenomOne)
+
+	tests := map[string]struct {
+		positionName           string
+		customAccumulatorValue sdk.DecCoins
+		expectedError          error
+	}{
+		"valid update greater than initial value": {
+			positionName:           testAddressThree,
+			customAccumulatorValue: initialCoinsDenomOne.Add(initialCoinDenomOne),
+		},
+		"valid update equal to the initial value": {
+			positionName:           testAddressThree,
+			customAccumulatorValue: initialCoinsDenomOne,
+		},
+		"invalid update smaller than the initial value": {
+			positionName:           testAddressThree,
+			customAccumulatorValue: emptyCoins,
+
+			expectedError: accumPackage.NegativeAccDifferenceError{AccumulatorDifference: initialCoinsDenomOne},
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+
+			// Setup
+			err := accObject.NewPositionCustomAcc(tc.positionName, sdk.OneDec(), initialCoinsDenomOne, nil)
+			suite.Require().NoError(err)
+
+			// System under test.
+			err = accObject.SetPositionCustomAcc(tc.positionName, tc.customAccumulatorValue)
+
+			// Assertions.
+
+			if tc.expectedError != nil {
+				suite.Require().Error(err)
+				suite.Require().Equal(tc.expectedError, err)
+				return
+			}
+			suite.Require().NoError(err)
+
+			position := accObject.GetPosition(tc.positionName)
+			suite.Require().Equal(tc.customAccumulatorValue, position.GetInitAccumValue())
+			// unchanged
+			suite.Require().Equal(sdk.OneDec(), position.NumShares)
+			suite.Require().Equal(emptyCoins, position.GetUnclaimedRewards())
+		})
+	}
+}
