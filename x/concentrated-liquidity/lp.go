@@ -149,6 +149,14 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
+	// If current withdrawal drains all liqudiity, delete the position
+	// and claim rewards.
+	if position.Liquidity.Add(liquidityDelta).IsZero() {
+		// TODO: delete position
+
+		// TODO: claim rewards. It should
+	}
+
 	return actualAmount0.Neg(), actualAmount1.Neg(), nil
 }
 

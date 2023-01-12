@@ -1000,6 +1000,9 @@ TODOs:
 - try moving fees logic into the internal package
 - figure out how to make calcs non-mutative
 - make sure fees are updated in the right places
+- document that if we withdraw all shares, the rewards are claimed and the
+fee accumulator position is deleted. As a result, next time we add liqudity for the same
+ticks, we need to re-initialzie the 
 
 ##### Swaps
 
