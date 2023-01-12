@@ -1015,7 +1015,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 				expectedLiquidity := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
 				s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
 
-				// // check that the pool has not been modified after performing calc
+				// check that the pool has not been modified after performing calc
 				poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 				s.Require().NoError(err)
 
