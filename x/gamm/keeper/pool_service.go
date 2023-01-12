@@ -61,7 +61,7 @@ func (k Keeper) CalculateSpotPrice(
 // - Mints LP shares to the pool creator
 // - Sets bank metadata for the LP denom
 // - Records total liquidity increase
-// - Calls the AfterPoolCreated hook (see app module wiring for what may be running on this)
+// - Calls the AfterPoolCreated hook
 func (k Keeper) InitializePool(ctx sdk.Context, pool poolmanagertypes.PoolI, sender sdk.AccAddress) (err error) {
 	// Mint the initial pool shares share token to the sender
 	err = k.MintPoolShareToAccount(ctx, pool, sender, pool.GetTotalShares())

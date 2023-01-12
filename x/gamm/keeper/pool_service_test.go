@@ -242,14 +242,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 }
 
 func (suite *KeeperTestSuite) TestInitializePool() {
-	params := suite.App.GAMMKeeper.GetParams(suite.Ctx)
 	testAccount := suite.TestAccs[0]
-
-	// get raw pool creation fee(s) as DecCoins
-	poolCreationFeeDecCoins := sdk.DecCoins{}
-	for _, coin := range params.PoolCreationFee {
-		poolCreationFeeDecCoins = poolCreationFeeDecCoins.Add(sdk.NewDecCoin(coin.Denom, coin.Amount))
-	}
 
 	tests := []struct {
 		name        string
