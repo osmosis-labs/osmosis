@@ -611,7 +611,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 		},
 		"new position when calling update position": {
 			poolId:                1,
-			owner:                 s.TestAccs[1],
+			owner:                 s.TestAccs[1], // using a different address makes this a new position
 			lowerTick:             DefaultLowerTick,
 			upperTick:             DefaultUpperTick,
 			liquidityDelta:        DefaultLiquidityAmt,
