@@ -12,8 +12,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 
-	osmosim "github.com/osmosis-labs/osmosis/v13/simulation/executor"
-	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes/simlogger"
+	osmosim "github.com/osmosis-labs/osmosis/v14/simulation/executor"
+	"github.com/osmosis-labs/osmosis/v14/simulation/simtypes/simlogger"
 )
 
 // Profile with:

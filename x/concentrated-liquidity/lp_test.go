@@ -5,45 +5,47 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
+	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 type lpTest struct {
-	poolId             uint64
-	owner              sdk.AccAddress
-	currentTick        sdk.Int
-	lowerTick          int64
-	upperTick          int64
-	currentSqrtP       sdk.Dec
-	amount0Desired     sdk.Int
-	amount0Minimum     sdk.Int
-	amount0Expected    sdk.Int
-	amount1Desired     sdk.Int
-	amount1Minimum     sdk.Int
-	amount1Expected    sdk.Int
-	liquidityAmount    sdk.Dec
-	tickSpacing        uint64
-	isNotFirstPosition bool
-	expectedError      error
+	poolId                    uint64
+	owner                     sdk.AccAddress
+	currentTick               sdk.Int
+	lowerTick                 int64
+	upperTick                 int64
+	currentSqrtP              sdk.Dec
+	amount0Desired            sdk.Int
+	amount0Minimum            sdk.Int
+	amount0Expected           sdk.Int
+	amount1Desired            sdk.Int
+	amount1Minimum            sdk.Int
+	amount1Expected           sdk.Int
+	liquidityAmount           sdk.Dec
+	tickSpacing               uint64
+	precisionFactorAtPriceOne sdk.Int
+	isNotFirstPosition        bool
+	expectedError             error
 }
 
 var (
 	baseCase = &lpTest{
-		isNotFirstPosition: false,
-		poolId:             1,
-		currentTick:        DefaultCurrTick,
-		lowerTick:          DefaultLowerTick,
-		upperTick:          DefaultUpperTick,
-		currentSqrtP:       DefaultCurrSqrtPrice,
-		amount0Desired:     DefaultAmt0,
-		amount0Minimum:     sdk.ZeroInt(),
-		amount0Expected:    DefaultAmt0Expected,
-		amount1Desired:     DefaultAmt1,
-		amount1Minimum:     sdk.ZeroInt(),
-		amount1Expected:    DefaultAmt1Expected,
-		liquidityAmount:    DefaultLiquidityAmt,
-		tickSpacing:        DefaultTickSpacing,
+		isNotFirstPosition:        false,
+		poolId:                    1,
+		currentTick:               DefaultCurrTick,
+		lowerTick:                 DefaultLowerTick,
+		upperTick:                 DefaultUpperTick,
+		currentSqrtP:              DefaultCurrSqrtPrice,
+		amount0Desired:            DefaultAmt0,
+		amount0Minimum:            sdk.ZeroInt(),
+		amount0Expected:           DefaultAmt0Expected,
+		amount1Desired:            DefaultAmt1,
+		amount1Minimum:            sdk.ZeroInt(),
+		amount1Expected:           DefaultAmt1Expected,
+		liquidityAmount:           DefaultLiquidityAmt,
+		tickSpacing:               DefaultTickSpacing,
+		precisionFactorAtPriceOne: DefaultExponentAtPriceOne,
 	}
 )
 
@@ -51,23 +53,19 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 	tests := map[string]lpTest{
 		"base case": {},
 		"create a position with non default tick spacing (10) with ticks that fall into tick spacing requirements": {
-			lowerTick:       int64(84220),
-			upperTick:       int64(86130),
-			amount0Expected: sdk.NewInt(997568),
-			liquidityAmount: sdk.MustNewDecFromStr("1514719247.706987476085061790"),
-			tickSpacing:     10,
+			tickSpacing: 10,
 		},
 		"error: non-existent pool": {
 			poolId:        2,
 			expectedError: types.PoolNotFoundError{PoolId: 2},
 		},
 		"error: lower tick out of bounds": {
-			lowerTick:     types.MinTick - 1,
-			expectedError: types.InvalidTickError{Tick: types.MinTick - 1, IsLower: true},
+			lowerTick:     DefaultMinTick - 1,
+			expectedError: types.InvalidTickError{Tick: DefaultMinTick - 1, IsLower: true, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
 		},
 		"error: upper tick out of bounds": {
-			upperTick:     types.MaxTick + 1,
-			expectedError: types.InvalidTickError{Tick: types.MaxTick + 1, IsLower: false},
+			upperTick:     DefaultMaxTick + 1,
+			expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 1, IsLower: false, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
 		},
 		"error: upper tick is below the lower tick, but both are in bounds": {
 			lowerTick:     50,
@@ -89,8 +87,10 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			expectedError:      errors.New("liquidityDelta calculated equals zero"),
 		},
 		"error: attempt to use and upper and lower tick that are not divisible by tick spacing": {
+			lowerTick:     int64(305451),
+			upperTick:     int64(315001),
 			tickSpacing:   10,
-			expectedError: types.TickSpacingError{TickSpacing: 10, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick},
+			expectedError: types.TickSpacingError{TickSpacing: 10, LowerTick: int64(305451), UpperTick: int64(315001)},
 		},
 		"error: first position cannot have a zero amount for denom0": {
 			amount0Desired: sdk.ZeroInt(),
@@ -125,7 +125,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			s.FundAcc(s.TestAccs[0], PoolCreationFee)
 
 			// Create a CL pool with custom tickSpacing
-			poolID, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing))
+			poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, tc.precisionFactorAtPriceOne))
 			s.Require().NoError(err)
 
 			pool, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, poolID)
@@ -209,7 +209,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// system under test parameters
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
-				amount0Expected: baseCase.amount0Expected, // 0.998587 eth
+				amount0Expected: baseCase.amount0Expected, // 0.998976 eth
 				amount1Expected: baseCase.amount1Expected, // 5000 usdc
 			},
 		},
@@ -220,10 +220,10 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// system under test parameters
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
-				liquidityAmount: baseCase.liquidityAmount.QuoInt64(2),
+				liquidityAmount: baseCase.liquidityAmount.QuoRoundUp(sdk.NewDec(2)),
 
-				amount0Expected: baseCase.amount0Expected.QuoRaw(2),                   // 0.4992935 / 2 eth
-				amount1Expected: baseCase.amount1Expected.QuoRaw(2).Sub(sdk.OneInt()), // 2499 usdc, one is lost due to truncation
+				amount0Expected: baseCase.amount0Expected.QuoRaw(2), // 0.499488
+				amount1Expected: baseCase.amount1Expected.QuoRaw(2), // 2500 usdc
 			},
 		},
 		"error: no position created": {
@@ -255,8 +255,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// system under test parameters
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
-				upperTick:     types.MaxTick + 1, // invalid tick
-				expectedError: types.InvalidTickError{Tick: types.MaxTick + 1, IsLower: false},
+				upperTick:     DefaultMaxTick + 1, // invalid tick
+				expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 1, IsLower: false},
 			},
 		},
 		"error: lower tick out of bounds": {
@@ -266,8 +266,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// system under test parameters
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
-				lowerTick:     types.MinTick - 1, // invalid tick
-				expectedError: types.InvalidTickError{Tick: types.MinTick - 1, IsLower: true},
+				lowerTick:     DefaultMinTick - 1, // invalid tick
+				expectedError: types.InvalidTickError{Tick: DefaultMinTick - 1, IsLower: true},
 			},
 		},
 		"error: insufficient liquidity": {
@@ -508,7 +508,7 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 	}
 }
 
-func (s *KeeperTestSuite) TestIsInitialPosition() {
+func (s *KeeperTestSuite) TestisInitialPositionForPool() {
 	type sendTest struct {
 		initialSqrtPrice sdk.Dec
 		initialTick      sdk.Int
@@ -540,7 +540,7 @@ func (s *KeeperTestSuite) TestIsInitialPosition() {
 	for name, tc := range tests {
 		s.Run(name, func() {
 			// System under test
-			if s.App.ConcentratedLiquidityKeeper.IsInitialPosition(tc.initialSqrtPrice, tc.initialTick) {
+			if s.App.ConcentratedLiquidityKeeper.IsInitialPositionForPool(tc.initialSqrtPrice, tc.initialTick) {
 				// If we expect the response to be true, then we should check that it is true
 				s.Require().True(tc.expectedResponse)
 			} else {
@@ -551,7 +551,7 @@ func (s *KeeperTestSuite) TestIsInitialPosition() {
 	}
 }
 
-func (s *KeeperTestSuite) TestInitializeInitialPosition() {
+func (s *KeeperTestSuite) TestinitializeInitialPositionForPool() {
 	type sendTest struct {
 		amount0Desired sdk.Int
 		amount1Desired sdk.Int
@@ -588,7 +588,7 @@ func (s *KeeperTestSuite) TestInitializeInitialPosition() {
 			pool := s.PrepareConcentratedPool()
 
 			// System under test
-			err := s.App.ConcentratedLiquidityKeeper.InitializeInitialPosition(s.Ctx, pool, tc.amount0Desired, tc.amount1Desired)
+			err := s.App.ConcentratedLiquidityKeeper.InitializeInitialPositionForPool(s.Ctx, pool, tc.amount0Desired, tc.amount1Desired)
 
 			if tc.expectedError != nil {
 				s.Require().Error(err)

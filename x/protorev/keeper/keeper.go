@@ -10,7 +10,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
 
 type (
@@ -19,11 +19,11 @@ type (
 		storeKey   storetypes.StoreKey
 		paramstore paramtypes.Subspace
 
-		accountKeeper    types.AccountKeeper
-		bankKeeper       types.BankKeeper
-		gammKeeper       types.GAMMKeeper
-		epochKeeper      types.EpochKeeper
-		swaprouterKeeper types.SwapRouterKeeper
+		accountKeeper     types.AccountKeeper
+		bankKeeper        types.BankKeeper
+		gammKeeper        types.GAMMKeeper
+		epochKeeper       types.EpochKeeper
+		poolmanagerKeeper types.PoolManagerKeeper
 	}
 )
 
@@ -35,7 +35,7 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	gammKeeper types.GAMMKeeper,
 	epochKeeper types.EpochKeeper,
-	swaprouterKeeper types.SwapRouterKeeper,
+	poolmanagerKeeper types.PoolManagerKeeper,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
@@ -43,14 +43,14 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		cdc:              cdc,
-		storeKey:         storeKey,
-		paramstore:       ps,
-		accountKeeper:    accountKeeper,
-		bankKeeper:       bankKeeper,
-		gammKeeper:       gammKeeper,
-		epochKeeper:      epochKeeper,
-		swaprouterKeeper: swaprouterKeeper,
+		cdc:               cdc,
+		storeKey:          storeKey,
+		paramstore:        ps,
+		accountKeeper:     accountKeeper,
+		bankKeeper:        bankKeeper,
+		gammKeeper:        gammKeeper,
+		epochKeeper:       epochKeeper,
+		poolmanagerKeeper: poolmanagerKeeper,
 	}
 }
 

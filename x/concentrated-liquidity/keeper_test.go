@@ -6,28 +6,32 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+
+	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
 )
 
 var (
-	DefaultLowerPrice       = sdk.NewDec(4545)
-	DefaultLowerTick        = int64(84222)
-	DefaultUpperPrice       = sdk.NewDec(5500)
-	DefaultUpperTick        = int64(86129)
-	DefaultCurrPrice        = sdk.NewDec(5000)
-	DefaultCurrTick         = sdk.NewInt(85176)
-	DefaultCurrSqrtPrice, _ = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
-	DefaultZeroSwapFee      = sdk.ZeroDec()
-	ETH                     = "eth"
-	DefaultAmt0             = sdk.NewInt(1000000)
-	DefaultAmt0Expected     = sdk.NewInt(998587)
-	USDC                    = "usdc"
-	DefaultAmt1             = sdk.NewInt(5000000000)
-	DefaultAmt1Expected     = sdk.NewInt(5000000000)
-	DefaultLiquidityAmt     = sdk.MustNewDecFromStr("1517818840.967515822610790519")
-	DefaultTickSpacing      = uint64(1)
-	PoolCreationFee         = swaproutertypes.DefaultParams().PoolCreationFee
+	DefaultExponentAtPriceOne      = sdk.NewInt(-4)
+	DefaultMinTick, DefaultMaxTick = math.GetMinAndMaxTicksFromExponentAtPriceOne(DefaultExponentAtPriceOne)
+	DefaultLowerPrice              = sdk.NewDec(4545)
+	DefaultLowerTick               = int64(305450)
+	DefaultUpperPrice              = sdk.NewDec(5500)
+	DefaultUpperTick               = int64(315000)
+	DefaultCurrPrice               = sdk.NewDec(5000)
+	DefaultCurrTick                = sdk.NewInt(310000)
+	DefaultCurrSqrtPrice, _        = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
+	DefaultZeroSwapFee             = sdk.ZeroDec()
+	ETH                            = "eth"
+	DefaultAmt0                    = sdk.NewInt(1000000)
+	DefaultAmt0Expected            = sdk.NewInt(998976)
+	USDC                           = "usdc"
+	DefaultAmt1                    = sdk.NewInt(5000000000)
+	DefaultAmt1Expected            = sdk.NewInt(5000000000)
+	DefaultLiquidityAmt            = sdk.MustNewDecFromStr("1517882343.751510418088349649")
+	DefaultTickSpacing             = uint64(1)
+	PoolCreationFee                = poolmanagertypes.DefaultParams().PoolCreationFee
 )
 
 type KeeperTestSuite struct {
@@ -35,9 +39,6 @@ type KeeperTestSuite struct {
 }
 
 func TestKeeperTestSuite(t *testing.T) {
-
-	t.Skip("TODO: re-enable this when CL state-breakage PR is merged.")
-
 	suite.Run(t, new(KeeperTestSuite))
 }
 
