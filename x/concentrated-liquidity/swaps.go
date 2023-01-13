@@ -466,13 +466,18 @@ func (k Keeper) calcInAmtGivenOut(
 				return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 			}
 
-			// update pool's current tick after crossing tick
-			p.SetCurrentTick(nextTick)
-
 			liquidityNet = swapStrategy.SetLiquidityDeltaSign(liquidityNet)
 			// update the swapState's liquidity with the new tick's liquidity
 			newLiquidity := math.AddLiquidity(swapState.liquidity, liquidityNet)
 			swapState.liquidity = newLiquidity
+
+			// drain liquidity from existing tick after crossing to the next tick
+			tickInfo, err := k.getTickInfo(ctx, poolId, swapState.tick.Int64())
+			if err != nil {
+				return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
+			}
+			tickInfo.LiquidityNet = sdk.ZeroDec()
+			k.SetTickInfo(ctx, poolId, swapState.tick.Int64(), tickInfo)
 
 			// update the swapState's tick with the tick we retrieved liquidity from
 			swapState.tick = nextTick
