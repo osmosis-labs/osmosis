@@ -78,7 +78,7 @@ jobs:
         working-directory: ${{ matrix.contract.workdir }}
         if: env.GIT_DIFF
         run: >
-          diff "${{ GITHUB_WORKSPACE }}/${{ matrix.contract.bytecode }}" ${{ matrix.contract.build }}
+          diff "${GITHUB_WORKSPACE}/${{ matrix.contract.bytecode }}" ${{ matrix.contract.build }}
   
 
   lints:
