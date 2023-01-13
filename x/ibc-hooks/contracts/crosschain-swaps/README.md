@@ -210,14 +210,14 @@ Export the swaprouter contract address:
 export SWAPROUTER_ADDRESS=$(chainB query wasm list-contract-by-code "$SWAPROUTER_CODE_ID" -o json | jq -r '.contracts[-1].address')
 ```
 
-### Add the pool to the swaprouter
+#### Add the pool to the swaprouter
 
 ```bash
 MSG=$(jenv -c '{"set_route":{"input_denom":$DENOM,"output_denom":"uosmo","pool_route":[{"pool_id":$POOL_ID,"token_out_denom":"uosmo"}]}}')
 chainB tx wasm execute "$SWAPROUTER_ADDRESS" "$MSG" --from validator -y
 ```
 
-### Store and instantiate the crosschain swaps contract
+#### Store and instantiate the crosschain swaps contract
 
 Store the contract:
 
