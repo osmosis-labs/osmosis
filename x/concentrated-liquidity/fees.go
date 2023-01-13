@@ -43,6 +43,20 @@ func (k Keeper) getFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.Accumul
 	return acc, nil
 }
 
+// nolint: unused
+// getFeeAccumulator gets the fee accumulator object using the given poolOd
+// returns error if accumulator for the given poolId does not exist.
+func (k Keeper) updateFeeAccumulator(ctx sdk.Context, poolId uint64, amount sdk.DecCoins) error {
+	acc, err := accum.GetAccumulator(ctx.KVStore(k.storeKey), getFeeAccumulatorName(poolId))
+	if err != nil {
+		return err
+	}
+
+	acc.UpdateAccumulator(amount)
+
+	return nil
+}
+
 // chargeFee charges the given fee on the pool with the given id by updating
 // the internal per-pool accumulator that tracks fee growth per one unit of
 // liquidity. Returns error if fails to get accumulator.

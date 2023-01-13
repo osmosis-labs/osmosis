@@ -64,7 +64,7 @@ func setAccumulator(accum AccumulatorObject, amt sdk.DecCoins) {
 }
 
 // UpdateAccumulator updates the accumulator's value by amt.
-// It does so by incresing the value of the accumulator by
+// It does so by increasing the value of the accumulator by
 // the given amount. Persists to store. Mutates the receiver.
 func (accum *AccumulatorObject) UpdateAccumulator(amt sdk.DecCoins) {
 	accum.value = accum.value.Add(amt...)
@@ -252,7 +252,7 @@ func (accum AccumulatorObject) SetPositionCustomAcc(name string, customAccumulat
 		return err
 	}
 
-	// Update the user's position with the new accumulator value. The unclaimed rewards, options, and 
+	// Update the user's position with the new accumulator value. The unclaimed rewards, options, and
 	// the number of shares stays the same as in the original position.
 	createNewPosition(accum, customAccumulatorValue, name, position.NumShares, position.UnclaimedRewards, position.Options)
 
