@@ -12,20 +12,19 @@ and forwarding to a different chain.
 To instantiate the contract, you need to specify the following parameters:
 
  * swap_contract: the swaprouter contract to be used
- * track_ibc_sends: true|false. Specifies if the contract should track the sent ibc packets for recovery. This should be false in v1
  * channels: a list of (bech32 prefix, channel_id) that the contract will allow. 
 
 ### Example instantiation message
 
 ``` json
-{"swap_contract": "osmo1thiscontract", "track_ibc_sends": false, "channels": [["cosmos", "channel-0"], ["juno", "channel-42"]]}
+{"swap_contract": "osmo1thiscontract", "channels": [["cosmos", "channel-0"], ["juno", "channel-42"]]}
 ```
 
 ## Usage
 
 ### Via IBC
 
-Assuming the current implementation of the wasm middleware on Osmosis v14 (`x/ibc-hooks/v0.0.5`), the memo
+Assuming the current implementation of the wasm middleware on Osmosis v14 (`x/ibc-hooks/v0.0.6`), the memo
 of an IBC transfer to do crosschain swaps would look as follows:
 
 ``` json
@@ -35,9 +34,9 @@ of an IBC transfer to do crosschain swaps would look as follows:
         "osmosis_swap": {
             "input_coin": {"denom":"token0","amount":"1000"}, 
             "output_denom":"token1",
-            "slippage":{"max_slippage_percentage":"5"},
+            "slippage":{"twap": {"slippage_percentage":"20", "window_seconds": 10}},
             "receiver":"juno1receiver",
-            "failed_delivery":null
+            "on_failed_delivery": "do_nothing",
             "next_memo":null
         }
     }
@@ -46,25 +45,31 @@ of an IBC transfer to do crosschain swaps would look as follows:
 
 Channels are determined by the prefixes specified in the contract during
 instantiation, so the user needs to provide a receiver with the supported
-prefix. In future (once ack/timeout tracking is supported by the chain), we
-could enable support for any channel by specifying it as a parameter.
+prefix. This will probably change in the future 
 
 The `slippage` can be set to a percentage of the twap price (as shown above), or as
 the minimum amount of tokens expected to be received: `{"min_output_amount": "100"}`.
 
+The `on_failed_delivery` field can be set to `do_nothing` or a local recovery addr 
+via `{"local_recovery_addr": "osmo1..."}`. If set to `do_nothing`, the contract will
+not track the packet, and the user will not be able to recover the funds if the packet 
+fails. If set to a local recovery addr, the contract will track the packet, and 
+the specified address will be able to execute `{"recover": {}}` on the crosschain swaps 
+contract to recover the funds. 
+
+
 
 #### Optional keys
-
-If `track_ibc_sends` is enabled during instantiation, the `failed_delivery` key
-can be set to an address on Osmosis that will be allowed to recover the tokens
-in case of a failure. This key is optional and if ommited will default to
-`false`.
 
 The `next_memo` key, if provided, will be added to the IBC transfer as the memo
 for that transfer. This can be useful if the receiving chain also has IBC hooks
 on transfers. In that case, this can be used to specify how the receiver should
 deal with the received tokens (mostly useful when the receiver is a contract or
 another ibc actor).
+
+Any JSON object is accepted as a valid memo, as long as it doesn't contain the 
+key "ibc_callback". That key is used internally for the contract to track the 
+success or failure of the packet delivery.
 
 
 ## Requirements
@@ -74,16 +79,6 @@ To use this contract for crosschain swaps, the following are needed:
  * The chain needs a wasm execute middleware that executes a contract when
    receiving a wasm directive in the memo.
  * The swaprouter contract should be instantiated
- 
-Optional:
-
-This contract can be configured to track the acks or timeouts of the sent
-packets. For that we needed:
-
- * The chain to provide a way to call a contract when the ack or timeout for a
-   packet is received. 
- * Instantiate the contract with the `track_ibc_sends` set to true. Defaults
-   to false.
 
 
 ## Testing
