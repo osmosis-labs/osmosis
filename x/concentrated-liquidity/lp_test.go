@@ -674,9 +674,6 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				fmt.Println("=======")
-				fmt.Println(actualAmount0.String())
-				fmt.Println(actualAmount1.String())
 				s.Require().Equal(actualAmount0, tc.amount0Expected)
 				s.Require().Equal(actualAmount1, tc.amount1Expected)
 
