@@ -97,7 +97,7 @@ func (accum AccumulatorObject) newPosition(name string, numShareUnits sdk.Dec, p
 	if err := options.validate(); err != nil {
 		return err
 	}
-	createNewPosition(accum, positionAccumulatorInit, name, numShareUnits, sdk.NewDecCoins(), options)
+	initOrUpdatePosition(accum, positionAccumulatorInit, name, numShareUnits, sdk.NewDecCoins(), options)
 	return nil
 }
 
@@ -159,7 +159,7 @@ func (accum AccumulatorObject) AddToPositionCustomAcc(name string, newShares sdk
 
 	// Update user's position with new number of shares while moving its unaccrued rewards
 	// into UnclaimedRewards. Starting accumulator value is moved up to accum'scurrent value
-	createNewPosition(accum, customAccumulatorValue, name, oldNumShares.Add(newShares), unclaimedRewards, position.Options)
+	initOrUpdatePosition(accum, customAccumulatorValue, name, oldNumShares.Add(newShares), unclaimedRewards, position.Options)
 
 	return nil
 }
@@ -206,7 +206,7 @@ func (accum AccumulatorObject) RemoveFromPositionCustomAcc(name string, numShare
 		return err
 	}
 
-	createNewPosition(accum, customAccumulatorValue, name, oldNumShares.Sub(numSharesToRemove), unclaimedRewards, position.Options)
+	initOrUpdatePosition(accum, customAccumulatorValue, name, oldNumShares.Sub(numSharesToRemove), unclaimedRewards, position.Options)
 
 	return nil
 }
@@ -297,7 +297,7 @@ func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, err
 	if position.NumShares.Equal(sdk.ZeroDec()) {
 		accum.deletePosition(positionName)
 	} else { // else, create a completely new position, with no rewards
-		createNewPosition(accum, accum.value, positionName, position.NumShares, sdk.NewDecCoins(), position.Options)
+		initOrUpdatePosition(accum, accum.value, positionName, position.NumShares, sdk.NewDecCoins(), position.Options)
 	}
 
 	return truncatedRewards, nil
