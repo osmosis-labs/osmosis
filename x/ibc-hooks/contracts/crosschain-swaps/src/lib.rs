@@ -9,5 +9,6 @@ mod ibc;
 mod ibc_lifecycle;
 pub mod msg;
 pub mod state;
+mod utils;
 
 pub use crate::error::ContractError;
