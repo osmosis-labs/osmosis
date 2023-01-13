@@ -2,7 +2,6 @@ package concentrated_liquidity_test
 
 import (
 	"errors"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -562,6 +561,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 		amount0Expected           sdk.Int
 		amount1Expected           sdk.Int
 		expectedPositionLiquidity sdk.Dec
+		expectedTickLiquidity     sdk.Dec
 		expectedPoolLiquidity     sdk.Dec
 		expectedError             bool
 	}
@@ -576,6 +576,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			amount0Expected:           DefaultAmt0Expected,
 			amount1Expected:           DefaultAmt1Expected,
 			expectedPositionLiquidity: DefaultLiquidityAmt.Add(DefaultLiquidityAmt),
+			expectedTickLiquidity:     DefaultLiquidityAmt.Add(DefaultLiquidityAmt),
 			expectedPoolLiquidity:     DefaultLiquidityAmt.Add(DefaultLiquidityAmt),
 			expectedError:             false,
 		},
@@ -588,6 +589,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			amount0Expected:           DefaultAmt0Expected.Neg(),
 			amount1Expected:           DefaultAmt1Expected.Neg(),
 			expectedPositionLiquidity: sdk.ZeroDec(),
+			expectedTickLiquidity:     sdk.ZeroDec(),
 			expectedPoolLiquidity:     sdk.ZeroDec(),
 			expectedError:             false,
 		},
@@ -599,6 +601,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			liquidityDelta:        DefaultLiquidityAmt.Neg().Mul(sdk.NewDec(2)),
 			amount0Expected:       DefaultAmt0Expected.Neg(),
 			amount1Expected:       DefaultAmt1Expected.Neg(),
+			expectedTickLiquidity: sdk.ZeroDec(),
 			expectedPoolLiquidity: sdk.ZeroDec(),
 			expectedError:         true,
 		},
@@ -610,6 +613,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			liquidityDelta:            DefaultLiquidityAmt,
 			amount0Expected:           sdk.NewInt(18395),
 			amount1Expected:           sdk.ZeroInt(),
+			expectedTickLiquidity:     DefaultLiquidityAmt,
 			expectedPositionLiquidity: DefaultLiquidityAmt,
 			// only liquidity that has been added from create position.
 			// no liquidity has been added by updating position since tick was outside range.
@@ -635,6 +639,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			amount0Expected:           DefaultAmt0Expected,
 			amount1Expected:           DefaultAmt1Expected,
 			expectedPositionLiquidity: DefaultLiquidityAmt,
+			expectedTickLiquidity:     DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
 			expectedPoolLiquidity:     DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
 			expectedError:             false,
 		},
@@ -679,6 +684,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 
 				// validate if position has been properly updated
 				s.validatePositionUpdate(s.Ctx, tc.poolId, s.TestAccs[tc.ownerIndex], tc.lowerTick, tc.upperTick, tc.expectedPositionLiquidity)
+				s.validateTickUpdates(s.Ctx, tc.poolId, s.TestAccs[tc.ownerIndex], tc.lowerTick, tc.upperTick, tc.expectedTickLiquidity)
 
 				// validate if pool liquidity has been updated properly
 				poolI, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, tc.poolId)
