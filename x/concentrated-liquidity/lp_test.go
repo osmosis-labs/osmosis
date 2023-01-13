@@ -677,6 +677,8 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 
 			if tc.expectedError {
 				s.Require().Error(err)
+				s.Require().Equal(sdk.Int{}, actualAmount0)
+				s.Require().Equal(sdk.Int{}, actualAmount1)
 			} else {
 				s.Require().NoError(err)
 				s.Require().Equal(actualAmount0, tc.amount0Expected)
