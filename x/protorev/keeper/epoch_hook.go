@@ -105,11 +105,11 @@ func (k Keeper) GetHighestLiquidityPools(ctx sdk.Context, baseDenomPools map[str
 			}
 
 			// Update happens both ways to ensure the pools that contain multiple base denoms are properly updated
-			if pools, ok := baseDenomPools[tokenA.Denom]; ok {
-				k.updateHighestLiquidityPool(tokenB.Denom, pools, newPool)
+			if highestLiquidityPools, ok := baseDenomPools[tokenA.Denom]; ok {
+				k.updateHighestLiquidityPool(tokenB.Denom, highestLiquidityPools, newPool)
 			}
-			if pools, ok := baseDenomPools[tokenB.Denom]; ok {
-				k.updateHighestLiquidityPool(tokenA.Denom, pools, newPool)
+			if highestLiquidityPools, ok := baseDenomPools[tokenB.Denom]; ok {
+				k.updateHighestLiquidityPool(tokenA.Denom, highestLiquidityPools, newPool)
 			}
 		}
 	}
