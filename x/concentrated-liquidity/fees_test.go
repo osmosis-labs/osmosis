@@ -8,6 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
 	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 // fields used to identify a fee position.
@@ -445,6 +446,261 @@ func (suite *KeeperTestSuite) TestChargeFee() {
 			feeAcumulator, err := clKeeper.GetFeeAccumulator(ctx, tc.poolId)
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.expectedGlobalGrowth, feeAcumulator.GetValue())
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestCollectFees() {
+	var (
+		ownerWithValidPosition = s.TestAccs[0]
+	)
+
+	tests := map[string]struct {
+		// setup parameters.
+		initialLiquidity          sdk.Dec
+		lowerTickFeeGrowthOutside sdk.DecCoins
+		upperTickFeeGrowthOutside sdk.DecCoins
+		globalFeeGrowth           sdk.DecCoins
+		currentTick               int64
+		isInvalidPoolIdGiven      bool
+
+		// inputs parameters.
+		owner     sdk.AccAddress
+		lowerTick int64
+		upperTick int64
+
+		// expectations.
+		expectedFeesClaimed sdk.Coins
+		expectedError       error
+	}{
+		// imagine single swap over entire position
+		// crossing left > right and stopping above upper tick
+		// In this case, only the upper tick accumulator must have
+		// been updated when crossed.
+		// Since we track fees accrued below a tick, upper tick is updated
+		// while lower tick is zero.
+		"single swap left -> right: 2 ticks, one share, current tick > upper tick": {
+			initialLiquidity: sdk.OneDec(),
+
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			owner:     ownerWithValidPosition,
+			lowerTick: 0,
+			upperTick: 1,
+
+			currentTick: 2,
+
+			expectedFeesClaimed: sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(10))),
+		},
+		"single swap left -> right: 3 ticks, two shares, current tick > upper tick": {
+			initialLiquidity: sdk.NewDec(2),
+
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			owner:     ownerWithValidPosition,
+			lowerTick: 0,
+			upperTick: 2,
+
+			currentTick: 3,
+
+			expectedFeesClaimed: sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(20))),
+		},
+		"single swap left -> right: 2 ticks, one share, current tick == upper tick": {
+			initialLiquidity: sdk.OneDec(),
+
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			owner:     ownerWithValidPosition,
+			lowerTick: 0,
+			upperTick: 1,
+
+			currentTick: 1,
+
+			expectedFeesClaimed: sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(10))),
+		},
+
+		// imagine single swap over entire position
+		// crossing right -> left and stopping at lower tick
+		// In this case, all fees must have been accrued inside the tick
+		// Since we track fees accrued below a tick, both upper and lower position
+		// ticks are zero
+		"single swap right -> left: 2 ticks, one share, current tick == lower tick": {
+			initialLiquidity: sdk.OneDec(),
+
+			// lower tick accumulator is not updated yet.
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			owner:     ownerWithValidPosition,
+			lowerTick: 0,
+			upperTick: 1,
+
+			currentTick: 0,
+
+			expectedFeesClaimed: sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(10))),
+		},
+		"single swap right -> left: 2 ticks, one share, current tick < lower tick": {
+			initialLiquidity: sdk.OneDec(),
+
+			// lower tick accumulator updated when crossed.
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			owner:     ownerWithValidPosition,
+			lowerTick: 0,
+			upperTick: 1,
+
+			currentTick: -1,
+
+			expectedFeesClaimed: sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(10))),
+		},
+
+		// imagine swap occurring outside of the position
+		// As a result, lower and upper ticks are not updated.
+		"swap occurs above the position, current tick > upper tick": {
+			initialLiquidity: sdk.OneDec(),
+
+			// none are updated.
+			lowerTickFeeGrowthOutside: concentratedliquidity.EmptyCoins,
+			upperTickFeeGrowthOutside: concentratedliquidity.EmptyCoins,
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			owner:     ownerWithValidPosition,
+			lowerTick: 0,
+			upperTick: 1,
+
+			currentTick: 5,
+
+			expectedFeesClaimed: sdk.NewCoins(),
+		},
+		"swap occurs below the position, current tick < lower tick": {
+			initialLiquidity: sdk.OneDec(),
+
+			// none are updated.
+			lowerTickFeeGrowthOutside: concentratedliquidity.EmptyCoins,
+			upperTickFeeGrowthOutside: concentratedliquidity.EmptyCoins,
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			owner:     ownerWithValidPosition,
+			lowerTick: -10,
+			upperTick: -4,
+
+			currentTick: -13,
+
+			expectedFeesClaimed: sdk.NewCoins(),
+		},
+
+		// error cases.
+
+		"invalid pool id given": {
+			initialLiquidity: sdk.OneDec(),
+
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			owner:     ownerWithValidPosition,
+			lowerTick: 0,
+			upperTick: 1,
+
+			currentTick: 2,
+
+			isInvalidPoolIdGiven: true,
+			expectedError:        cltypes.PoolNotFoundError{PoolId: 2},
+		},
+		"position does not exist": {
+			initialLiquidity: sdk.OneDec(),
+
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			owner:     s.TestAccs[1], // different owner from the one who initialized the position.
+			lowerTick: 0,
+			upperTick: 1,
+
+			currentTick: 2,
+
+			expectedError: cltypes.PositionNotFoundError{PoolId: 1, LowerTick: 0, UpperTick: 1},
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			tc := tc
+			s.SetupTest()
+
+			validPool := s.PrepareConcentratedPool()
+			validPoolId := validPool.GetId()
+
+			s.FundAcc(validPool.GetAddress(), tc.expectedFeesClaimed)
+
+			clKeeper := s.App.ConcentratedLiquidityKeeper
+			ctx := s.Ctx
+
+			err := clKeeper.InitializeFeeAccumulatorPosition(ctx, validPoolId, ownerWithValidPosition, tc.lowerTick, tc.upperTick, tc.initialLiquidity)
+			s.Require().NoError(err)
+
+			s.initializeTick(ctx, tc.lowerTick, tc.initialLiquidity, tc.lowerTickFeeGrowthOutside, false)
+
+			s.initializeTick(ctx, tc.upperTick, tc.initialLiquidity, tc.upperTickFeeGrowthOutside, true)
+
+			validPool.SetCurrentTick(sdk.NewInt(tc.currentTick))
+			clKeeper.SetPool(ctx, validPool)
+
+			err = clKeeper.ChargeFee(ctx, validPoolId, tc.globalFeeGrowth[0])
+			s.Require().NoError(err)
+
+			poolBalanceBeforeCollect := s.App.BankKeeper.GetBalance(ctx, validPool.GetAddress(), ETH)
+			ownerBalancerBeforeCollect := s.App.BankKeeper.GetBalance(ctx, tc.owner, ETH)
+
+			sutPoolId := validPoolId
+			if tc.isInvalidPoolIdGiven {
+				sutPoolId = sutPoolId + 1
+			}
+
+			// System under test
+			actualFeesClaimed, err := clKeeper.CollectFees(ctx, sutPoolId, tc.owner, tc.lowerTick, tc.upperTick)
+
+			// Assertions.
+
+			poolBalanceAfterCollect := s.App.BankKeeper.GetBalance(ctx, validPool.GetAddress(), ETH)
+			ownerBalancerAfterCollect := s.App.BankKeeper.GetBalance(ctx, tc.owner, ETH)
+
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &tc.expectedError)
+				s.Require().Equal(sdk.Coins{}, actualFeesClaimed)
+
+				// balances are unchanged
+				s.Require().Equal(poolBalanceBeforeCollect, poolBalanceAfterCollect)
+				s.Require().Equal(ownerBalancerAfterCollect, ownerBalancerBeforeCollect)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedFeesClaimed.String(), actualFeesClaimed.String())
+
+			expectedETHAmount := tc.expectedFeesClaimed.AmountOf(ETH)
+			s.Require().Equal(expectedETHAmount, poolBalanceBeforeCollect.Sub(poolBalanceAfterCollect).Amount)
+			s.Require().Equal(expectedETHAmount, ownerBalancerAfterCollect.Sub(ownerBalancerBeforeCollect).Amount)
 		})
 	}
 }
