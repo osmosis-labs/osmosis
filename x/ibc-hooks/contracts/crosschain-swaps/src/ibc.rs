@@ -9,7 +9,7 @@ use osmosis_std_derive::CosmwasmExt;
     serde::Deserialize,
     schemars::JsonSchema,
 )]
-pub struct Height {
+pub struct IbcCounterpartyHeight {
     #[prost(uint64, optional, tag = "1")]
     revision_number: Option<u64>,
     #[prost(uint64, optional, tag = "2")]
@@ -41,7 +41,7 @@ pub struct MsgTransfer {
     #[prost(string, tag = "5")]
     pub receiver: String,
     #[prost(message, optional, tag = "6")]
-    pub timeout_height: Option<Height>,
+    pub timeout_height: Option<IbcCounterpartyHeight>,
     #[prost(uint64, optional, tag = "7")]
     pub timeout_timestamp: ::core::option::Option<u64>,
     #[prost(string, tag = "8")]
