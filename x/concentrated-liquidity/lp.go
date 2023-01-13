@@ -32,18 +32,8 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
-	// Transform the provided ticks into their corresponding prices.
-	priceLowerTick, priceUpperTick, err := math.TicksToPrice(lowerTick, upperTick, pool.GetPrecisionFactorAtPriceOne())
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
-	}
-
-	// Transform the provided prices into their corresponding square root prices.
-	sqrtPriceLowerTick, err := priceLowerTick.ApproxSqrt()
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
-	}
-	sqrtPriceUpperTick, err := priceUpperTick.ApproxSqrt()
+	// Transform the provided ticks into their corresponding sqrtPrices.
+	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick, pool.GetPrecisionFactorAtPriceOne())
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
@@ -152,7 +142,6 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 // Updates ticks and pool liquidity. Returns how much of each token is either added or removed.
 // Negative returned amounts imply that tokens are removed from the pool.
 // Positive returned amounts imply that tokens are added to the pool.
-// TODO: tests.
 func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec) (sdk.Int, sdk.Int, error) {
 	// update tickInfo state
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
@@ -180,18 +169,8 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	// Transform the provided ticks into their corresponding prices.
-	priceLowerTick, priceUpperTick, err := math.TicksToPrice(lowerTick, upperTick, pool.GetPrecisionFactorAtPriceOne())
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, err
-	}
-
-	// Transform the provided prices into their corresponding square root prices.
-	sqrtPriceLowerTick, err := priceLowerTick.ApproxSqrt()
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, err
-	}
-	sqrtPriceUpperTick, err := priceUpperTick.ApproxSqrt()
+	// Transform the provided ticks into their corresponding sqrtPrices.
+	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick, pool.GetPrecisionFactorAtPriceOne())
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}

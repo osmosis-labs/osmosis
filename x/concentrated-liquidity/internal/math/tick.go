@@ -16,27 +16,27 @@ var (
 	sdkThirtyEightDec = sdk.NewDec(38)
 )
 
-// TicksToPrice returns the price for the lower and upper ticks.
+// TicksToSqrtPrice returns the sqrtPrice for the lower and upper ticks.
 // Returns error if fails to calculate price.
 // TODO: spec and tests
-func TicksToPrice(lowerTick, upperTick int64, exponentAtPriceOne sdk.Int) (sdk.Dec, sdk.Dec, error) {
-	priceUpperTick, err := TickToPrice(sdk.NewInt(upperTick), exponentAtPriceOne)
+func TicksToSqrtPrice(lowerTick, upperTick int64, exponentAtPriceOne sdk.Int) (sdk.Dec, sdk.Dec, error) {
+	sqrtPriceUpperTick, err := TickToSqrtPrice(sdk.NewInt(upperTick), exponentAtPriceOne)
 	if err != nil {
 		return sdk.Dec{}, sdk.Dec{}, err
 	}
-	priceLowerTick, err := TickToPrice(sdk.NewInt(lowerTick), exponentAtPriceOne)
+	sqrtPriceLowerTick, err := TickToSqrtPrice(sdk.NewInt(lowerTick), exponentAtPriceOne)
 	if err != nil {
 		return sdk.Dec{}, sdk.Dec{}, err
 	}
-	return priceLowerTick, priceUpperTick, nil
+	return sqrtPriceLowerTick, sqrtPriceUpperTick, nil
 }
 
-// TickToPrice returns the price given the following two arguments:
+// TickToSqrtPrice returns the sqrtPrice given the following two arguments:
 //   - tickIndex: the tick index to calculate the price for
 //   - exponentAtPriceOne: the value of the exponent (and therefore the precision) at which the starting price of 1 is set
 //
 // If tickIndex is zero, the function returns sdk.OneDec().
-func TickToPrice(tickIndex, exponentAtPriceOne sdk.Int) (price sdk.Dec, err error) {
+func TickToSqrtPrice(tickIndex, exponentAtPriceOne sdk.Int) (price sdk.Dec, err error) {
 	if tickIndex.IsZero() {
 		return sdk.OneDec(), nil
 	}
@@ -83,7 +83,12 @@ func TickToPrice(tickIndex, exponentAtPriceOne sdk.Int) (price sdk.Dec, err erro
 		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
 	}
 
-	return price, nil
+	// Determine the sqrtPrice from the price
+	sqrtPrice, err := price.ApproxSqrt()
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+	return sqrtPrice, nil
 }
 
 // PriceToTick takes a price and returns the corresponding tick index
