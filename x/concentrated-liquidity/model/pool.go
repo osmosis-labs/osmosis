@@ -17,24 +17,30 @@ var (
 
 // NewConcentratedLiquidityPool creates a new ConcentratedLiquidity pool with the specified parameters.
 // The two provided denoms are ordered so that denom0 is lexicographically smaller than denom1.
-func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpacing uint64) (Pool, error) {
+func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpacing uint64, exponentAtPriceOne sdk.Int) (Pool, error) {
 	// Order the initial pool denoms so that denom0 is lexicographically smaller than denom1.
 	denom0, denom1, err := types.OrderInitialPoolDenoms(denom0, denom1)
 	if err != nil {
 		return Pool{}, err
 	}
 
+	// Only allow precision values in specified range
+	if exponentAtPriceOne.LT(types.ExponentAtPriceOneMin) || exponentAtPriceOne.GT(types.ExponentAtPriceOneMax) {
+		return Pool{}, types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: exponentAtPriceOne, PrecisionValueAtPriceOneMin: types.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: types.ExponentAtPriceOneMax}
+	}
+
 	// Create a new pool struct with the specified parameters
 	pool := Pool{
 		// TODO: move gammtypes.NewPoolAddress(poolId) to poolmanagertypes
-		Address:          gammtypes.NewPoolAddress(poolId).String(),
-		Id:               poolId,
-		CurrentSqrtPrice: sdk.ZeroDec(),
-		CurrentTick:      sdk.ZeroInt(),
-		Liquidity:        sdk.ZeroDec(),
-		Token0:           denom0,
-		Token1:           denom1,
-		TickSpacing:      tickSpacing,
+		Address:                   gammtypes.NewPoolAddress(poolId).String(),
+		Id:                        poolId,
+		CurrentSqrtPrice:          sdk.ZeroDec(),
+		CurrentTick:               sdk.ZeroInt(),
+		Liquidity:                 sdk.ZeroDec(),
+		Token0:                    denom0,
+		Token1:                    denom1,
+		TickSpacing:               tickSpacing,
+		PrecisionFactorAtPriceOne: exponentAtPriceOne,
 	}
 
 	return pool, nil
@@ -127,6 +133,11 @@ func (p Pool) GetTickSpacing() uint64 {
 	return p.TickSpacing
 }
 
+// GetPrecisionFactorAtPriceOne returns the precision factor at price one of the pool
+func (p Pool) GetPrecisionFactorAtPriceOne() sdk.Int {
+	return p.PrecisionFactorAtPriceOne
+}
+
 // GetLiquidity returns the liquidity of the pool
 func (p Pool) GetLiquidity() sdk.Dec {
 	return p.Liquidity
@@ -162,7 +173,7 @@ func (p *Pool) UpdateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upper
 // lower and upper ticks.
 // There are 3 possible cases:
 // -The position is active ( lowerTick <= p.CurrentTick < upperTick).
-//   - The provided liqudity is distributed in both tokens.
+//   - The provided liquidity is distributed in both tokens.
 //   - Actual amounts might differ from desired because we recalculate them from liquidity delta and sqrt price.
 //     the calculations lead to amounts being off. // TODO: confirm logic is correct
 //

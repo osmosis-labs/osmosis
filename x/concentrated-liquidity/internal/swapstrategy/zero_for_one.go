@@ -38,8 +38,8 @@ func (s zeroForOneStrategy) ComputeSwapStep(sqrtPriceCurrent, nextSqrtPrice, liq
 	amountIn := math.CalcAmount0Delta(liquidity, nextSqrtPrice, sqrtPriceCurrent, false)
 	if amountRemaining.LT(amountIn) {
 		nextSqrtPrice = math.GetNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining)
+		amountIn = math.CalcAmount0Delta(liquidity, nextSqrtPrice, sqrtPriceCurrent, false)
 	}
-	amountIn = math.CalcAmount0Delta(liquidity, nextSqrtPrice, sqrtPriceCurrent, false)
 	amountOut := math.CalcAmount1Delta(liquidity, nextSqrtPrice, sqrtPriceCurrent, false)
 
 	return nextSqrtPrice, amountIn, amountOut

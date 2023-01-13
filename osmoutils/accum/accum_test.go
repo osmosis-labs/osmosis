@@ -1326,3 +1326,113 @@ func (suite *AccumTestSuite) TestUpdatePositionCustomAcc() {
 		})
 	}
 }
+
+func (suite *AccumTestSuite) TestHasPosition() {
+	// We setup store and accum
+	// once at beginning.
+	suite.SetupTest()
+
+	const (
+		defaultPositionName = "posname"
+	)
+
+	// Setup.
+	accObject := accumPackage.CreateRawAccumObject(suite.store, testNameOne, initialCoinsDenomOne)
+
+	tests := map[string]struct {
+		preCreatePosition bool
+	}{
+		"position exists -> true": {
+			preCreatePosition: true,
+		},
+		"position does not exist -> false": {
+			preCreatePosition: false,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			// Setup
+			if tc.preCreatePosition {
+				err := accObject.NewPosition(defaultPositionName, sdk.ZeroDec(), nil)
+				suite.Require().NoError(err)
+			}
+
+			hasPosition, err := accObject.HasPosition(defaultPositionName)
+			suite.NoError(err)
+
+			suite.Equal(tc.preCreatePosition, hasPosition)
+		})
+	}
+}
+
+func (suite *AccumTestSuite) TestSetPositionCustomAcc() {
+	// We setup store and accum
+	// once at beginning.
+	suite.SetupTest()
+
+	// Setup.
+	var (
+		accObject           = accumPackage.CreateRawAccumObject(suite.store, testNameOne, initialCoinsDenomOne)
+		validPositionName   = testAddressThree
+		invalidPositionName = testAddressTwo
+	)
+
+	tests := map[string]struct {
+		positionName           string
+		customAccumulatorValue sdk.DecCoins
+		expectedError          error
+	}{
+		"valid update greater than initial value": {
+			positionName:           validPositionName,
+			customAccumulatorValue: initialCoinsDenomOne.Add(initialCoinDenomOne),
+		},
+		"valid update equal to the initial value": {
+			positionName:           validPositionName,
+			customAccumulatorValue: initialCoinsDenomOne,
+		},
+		"invalid update smaller than the initial value": {
+			positionName:           validPositionName,
+			customAccumulatorValue: emptyCoins,
+
+			expectedError: accumPackage.NegativeAccDifferenceError{AccumulatorDifference: initialCoinsDenomOne},
+		},
+		"invalid update smaller than the initial value (non-empty custom value)": {
+			positionName:           validPositionName,
+			customAccumulatorValue: initialCoinsDenomOne.QuoDec(sdk.NewDec(2)),
+
+			expectedError: accumPackage.NegativeAccDifferenceError{AccumulatorDifference: initialCoinsDenomOne.QuoDec(sdk.NewDec(2))},
+		},
+		"invalid position - different name": {
+			positionName:  invalidPositionName,
+			expectedError: accumPackage.NoPositionError{Name: invalidPositionName},
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+
+			// Setup
+			err := accObject.NewPositionCustomAcc(validPositionName, sdk.OneDec(), initialCoinsDenomOne, nil)
+			suite.Require().NoError(err)
+
+			// System under test.
+			err = accObject.SetPositionCustomAcc(tc.positionName, tc.customAccumulatorValue)
+
+			// Assertions.
+			if tc.expectedError != nil {
+				suite.Require().Error(err)
+				suite.Require().Equal(tc.expectedError, err)
+				return
+			}
+			suite.Require().NoError(err)
+
+			position := accObject.GetPosition(tc.positionName)
+			suite.Require().Equal(tc.customAccumulatorValue, position.GetInitAccumValue())
+			// unchanged
+			suite.Require().Equal(sdk.OneDec(), position.NumShares)
+			suite.Require().Equal(emptyCoins, position.GetUnclaimedRewards())
+		})
+	}
+}

@@ -113,7 +113,7 @@ func GetNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRe
 // getNextSqrtPriceFromAmount1RoundingDown utilizes the current squareRootPrice, liquidity of denom1, and amount of denom1 that still needs
 // to be swapped in order to determine the next squareRootPrice
 func GetNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
-	return sqrtPriceCurrent.Add(amountRemaining.Quo(liquidity))
+	return sqrtPriceCurrent.Add(amountRemaining.QuoTruncate(liquidity))
 }
 
 // getLiquidityFromAmounts takes the current sqrtPrice and the sqrtPrice for the upper and lower ticks as well as the amounts of asset0 and asset1

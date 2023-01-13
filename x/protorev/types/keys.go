@@ -25,6 +25,16 @@ const (
 	prefixProfitsByDenom
 	prefixTradesByRoute
 	prefixProfitsByRoute
+	prefixProtoRevEnabled
+	prefixAdminAccount
+	prefixDeveloperAccount
+	prefixDaysSinceGenesis
+	prefixDeveloperFees
+	prefixMaxRoutesPerTx
+	prefixMaxRoutesPerBlock
+	prefixRouteCountForBlock
+	prefixLatestBlockHeight
+	prefixRouteWeights
 )
 
 var (
@@ -50,6 +60,37 @@ var (
 
 	// KeyPrefixProfitsByRoute is the prefix for the store that keeps track of the profits made by route
 	KeyPrefixProfitsByRoute = []byte{prefixProfitsByRoute}
+
+	// -------------- Keys for configuration/admin stores -------------- //
+	// KeyPrefixProtoRevEnabled is the prefix for store that keeps track of whether protorev is enabled
+	KeyPrefixProtoRevEnabled = []byte{prefixProtoRevEnabled}
+
+	// KeyPrefixAdminAccount is the prefix for store that keeps track of the admin account
+	KeyPrefixAdminAccount = []byte{prefixAdminAccount}
+
+	// KeyPrefixDeveloperAccount is the prefix for store that keeps track of the developer account
+	KeyPrefixDeveloperAccount = []byte{prefixDeveloperAccount}
+
+	// KeyPrefixDaysSinceGenesis is the prefix for store that keeps track of the number of days since genesis
+	KeyPrefixDaysSinceGenesis = []byte{prefixDaysSinceGenesis}
+
+	// KeyPrefixDeveloperFees is the prefix for store that keeps track of the developer fees
+	KeyPrefixDeveloperFees = []byte{prefixDeveloperFees}
+
+	// KeyPrefixMaxRoutesPerTx is the prefix for store that keeps track of the max number of routes that can be iterated per tx
+	KeyPrefixMaxRoutesPerTx = []byte{prefixMaxRoutesPerTx}
+
+	// KeyPrefixMaxRoutesPerBlock is the prefix for store that keeps track of the max number of routes that can be iterated per block
+	KeyPrefixMaxRoutesPerBlock = []byte{prefixMaxRoutesPerBlock}
+
+	// KeyPrefixRouteCountForBlock is the prefix for store that keeps track of the current number of routes that have been iterated in the current block
+	KeyPrefixRouteCountForBlock = []byte{prefixRouteCountForBlock}
+
+	// KeyPrefixLatestBlockHeight is the prefix for store that keeps track of the latest recorded block height
+	KeyPrefixLatestBlockHeight = []byte{prefixLatestBlockHeight}
+
+	// KeyPrefixRouteWeights is the prefix for store that keeps track of the weights for different route types
+	KeyPrefixRouteWeights = []byte{prefixRouteWeights}
 )
 
 // Returns the key needed to fetch the osmo pool for a given denom
@@ -101,4 +142,9 @@ func CreateRouteFromKey(key []byte) ([]uint64, error) {
 		route = append(route, pool)
 	}
 	return route, nil
+}
+
+// Returns the key needed to fetch the developer fees by coin
+func GetKeyPrefixDeveloperFees(denom string) []byte {
+	return append(KeyPrefixDeveloperFees, []byte(denom)...)
 }

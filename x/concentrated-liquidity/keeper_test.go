@@ -6,28 +6,32 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+
+	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
 )
 
 var (
-	DefaultLowerPrice       = sdk.NewDec(4545)
-	DefaultLowerTick        = int64(84222)
-	DefaultUpperPrice       = sdk.NewDec(5500)
-	DefaultUpperTick        = int64(86129)
-	DefaultCurrPrice        = sdk.NewDec(5000)
-	DefaultCurrTick         = sdk.NewInt(85176)
-	DefaultCurrSqrtPrice, _ = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
-	DefaultZeroSwapFee      = sdk.ZeroDec()
-	ETH                     = "eth"
-	DefaultAmt0             = sdk.NewInt(1000000)
-	DefaultAmt0Expected     = sdk.NewInt(998587)
-	USDC                    = "usdc"
-	DefaultAmt1             = sdk.NewInt(5000000000)
-	DefaultAmt1Expected     = sdk.NewInt(4999999999)
-	DefaultLiquidityAmt     = sdk.MustNewDecFromStr("1517818840.967415409394235163")
-	DefaultTickSpacing      = uint64(1)
-	PoolCreationFee         = poolmanagertypes.DefaultParams().PoolCreationFee
+	DefaultExponentAtPriceOne      = sdk.NewInt(-4)
+	DefaultMinTick, DefaultMaxTick = math.GetMinAndMaxTicksFromExponentAtPriceOne(DefaultExponentAtPriceOne)
+	DefaultLowerPrice              = sdk.NewDec(4545)
+	DefaultLowerTick               = int64(305450)
+	DefaultUpperPrice              = sdk.NewDec(5500)
+	DefaultUpperTick               = int64(315000)
+	DefaultCurrPrice               = sdk.NewDec(5000)
+	DefaultCurrTick                = sdk.NewInt(310000)
+	DefaultCurrSqrtPrice, _        = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
+	DefaultZeroSwapFee             = sdk.ZeroDec()
+	ETH                            = "eth"
+	DefaultAmt0                    = sdk.NewInt(1000000)
+	DefaultAmt0Expected            = sdk.NewInt(998976)
+	USDC                           = "usdc"
+	DefaultAmt1                    = sdk.NewInt(5000000000)
+	DefaultAmt1Expected            = sdk.NewInt(5000000000)
+	DefaultLiquidityAmt            = sdk.MustNewDecFromStr("1517882343.751510418088349649")
+	DefaultTickSpacing             = uint64(1)
+	PoolCreationFee                = poolmanagertypes.DefaultParams().PoolCreationFee
 )
 
 type KeeperTestSuite struct {
@@ -68,4 +72,16 @@ func (s *KeeperTestSuite) validateTickUpdates(ctx sdk.Context, poolId uint64, ow
 	s.Require().NoError(err)
 	s.Require().Equal(expectedRemainingLiquidity.String(), upperTickInfo.LiquidityGross.String())
 	s.Require().Equal(expectedRemainingLiquidity.Neg().String(), upperTickInfo.LiquidityNet.String())
+}
+
+func (s *KeeperTestSuite) initializeTick(ctx sdk.Context, tickIndex int64, initialLiquidity sdk.Dec, feeGrowthOutside sdk.DecCoins, isLower bool) {
+	err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(ctx, validPoolId, tickIndex, initialLiquidity, isLower)
+	s.Require().NoError(err)
+
+	tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(ctx, validPoolId, tickIndex)
+	s.Require().NoError(err)
+
+	tickInfo.FeeGrowthOutside = feeGrowthOutside
+
+	s.App.ConcentratedLiquidityKeeper.SetTickInfo(ctx, validPoolId, tickIndex, tickInfo)
 }
