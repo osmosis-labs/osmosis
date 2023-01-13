@@ -99,7 +99,7 @@ pub fn handle_swap_reply(
     // Parse underlying response from the chain
     let parsed =
         cw_utils::parse_execute_response_data(&b).map_err(|e| ContractError::FailedSwap {
-            msg: format!("failed to parse: {e}"),
+            msg: format!("failed to parse swaprouter response: {e}"),
         })?;
     let swap_response: SwapResponse = from_binary(&parsed.data.unwrap_or_default())?;
 
