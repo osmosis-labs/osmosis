@@ -204,6 +204,7 @@ func (accum AccumulatorObject) RemoveFromPositionCustomAcc(name string, numShare
 		return err
 	}
 
+	// Update user's position with new number of shares
 	initOrUpdatePosition(accum, customAccumulatorValue, name, oldNumShares.Sub(numSharesToRemove), unclaimedRewards, position.Options)
 
 	return nil
