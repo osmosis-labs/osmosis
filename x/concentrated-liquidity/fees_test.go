@@ -550,7 +550,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			expectedFeesClaimed: sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(10))),
 		},
-		"single swap right -> left: 2 ticks, one share, current price < lower tick": {
+		"single swap right -> left: 2 ticks, one share, current tick < lower tick": {
 			initialLiquidity: sdk.OneDec(),
 
 			// lower tick accumulator updated when crossed.
@@ -566,6 +566,43 @@ func (s *KeeperTestSuite) TestCollectFees() {
 			currentTick: -1,
 
 			expectedFeesClaimed: sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(10))),
+		},
+
+		// imagine swap occurring outside of the position
+		// As a result, lower and upper ticks are not updated.
+		"swap occurs above the position, current tick > upper tick": {
+			initialLiquidity: sdk.OneDec(),
+
+			// none are updated.
+			lowerTickFeeGrowthOutside: concentratedliquidity.EmptyCoins,
+			upperTickFeeGrowthOutside: concentratedliquidity.EmptyCoins,
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			owner:     ownerWithValidPosition,
+			lowerTick: 0,
+			upperTick: 1,
+
+			currentTick: 5,
+
+			expectedFeesClaimed: sdk.NewCoins(),
+		},
+		"swap occurs below the position, current tick < lower tick": {
+			initialLiquidity: sdk.OneDec(),
+
+			// none are updated.
+			lowerTickFeeGrowthOutside: concentratedliquidity.EmptyCoins,
+			upperTickFeeGrowthOutside: concentratedliquidity.EmptyCoins,
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			owner:     ownerWithValidPosition,
+			lowerTick: -10,
+			upperTick: -4,
+
+			currentTick: -13,
+
+			expectedFeesClaimed: sdk.NewCoins(),
 		},
 
 		// error cases.
@@ -659,7 +696,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 			}
 
 			s.Require().NoError(err)
-			s.Require().Equal(tc.expectedFeesClaimed, actualFeesClaimed)
+			s.Require().Equal(tc.expectedFeesClaimed.String(), actualFeesClaimed.String())
 
 			expectedETHAmount := tc.expectedFeesClaimed.AmountOf(ETH)
 			s.Require().Equal(expectedETHAmount, poolBalanceBeforeCollect.Sub(poolBalanceAfterCollect).Amount)
