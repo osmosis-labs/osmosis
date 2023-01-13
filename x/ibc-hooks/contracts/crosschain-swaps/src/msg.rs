@@ -14,11 +14,16 @@ pub struct InstantiateMsg {
     pub channels: Vec<(String, String)>,
 }
 
+/// An enum specifying what resolution the user expects in the case of a bad IBC
+/// delviery
 #[cw_serde]
-pub struct Recovery {
+pub enum FailedDeliveryAction {
+    DoNothing,
     /// An osmosis addres used to recover any tokens that get stuck in the
     /// contract due to IBC failures
-    pub recovery_addr: Addr,
+    LocalRecoveryAddr(Addr),
+    // Here we could potentially add new actions in the future
+    // example: SendBackToSender, SwapBackAndReturn, etc
 }
 
 /// Message type for `execute` entry_point
@@ -41,7 +46,7 @@ pub enum ExecuteMsg {
         /// If for any reason the swap were to fail, users can specify a
         /// "recovery address" that can clain the funds on osmosis after a
         /// confirmed failure.
-        failed_delivery: Option<Recovery>,
+        on_failed_delivery: FailedDeliveryAction,
     },
     /// Executing a recover will transfer any recoverable tokens that the sender
     /// has in this contract to its account.

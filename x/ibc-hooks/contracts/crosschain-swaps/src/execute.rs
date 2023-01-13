@@ -5,7 +5,7 @@ use swaprouter::msg::{ExecuteMsg as SwapRouterExecute, SwapResponse};
 use crate::checks::{ensure_key_missing, parse_json, validate_receiver};
 use crate::consts::{MsgReplyID, CALLBACK_KEY, PACKET_LIFETIME};
 use crate::ibc::{MsgTransfer, MsgTransferResponse};
-use crate::msg::{CrosschainSwapResponse, Recovery};
+use crate::msg::{CrosschainSwapResponse, FailedDeliveryAction};
 
 use crate::state;
 use crate::state::{
@@ -28,7 +28,7 @@ pub fn swap_and_forward(
     slippage: swaprouter::Slippage,
     receiver: Addr,
     next_memo: Option<String>,
-    failed_delivery: Option<Recovery>,
+    failed_delivery_action: FailedDeliveryAction,
 ) -> Result<Response, ContractError> {
     deps.api.debug(&format!("executing swap and forward"));
     let config = CONFIG.load(deps.storage)?;
@@ -73,7 +73,7 @@ pub fn swap_and_forward(
                 channel: valid_channel,
                 receiver: valid_receiver,
                 next_memo,
-                failed_delivery,
+                on_failed_delivery: failed_delivery_action,
             },
         },
     )?;
@@ -164,7 +164,10 @@ pub fn handle_swap_reply(
         .add_attribute("status", "ibc_message_created")
         .add_attribute("ibc_message", format!("{:?}", ibc_transfer));
 
-    if swap_msg_state.forward_to.failed_delivery.is_none() {
+    if matches!(
+        swap_msg_state.forward_to.on_failed_delivery,
+        FailedDeliveryAction::DoNothing,
+    ) {
         // If there isn't any recovery addres, then there's no need to listen to
         // the response of the send, so we short-circuit here.
 
@@ -201,7 +204,7 @@ pub fn handle_swap_reply(
             to_address: swap_msg_state.forward_to.receiver.into(),
             amount: swap_response.amount.into(),
             denom: swap_response.token_out_denom,
-            failed_delivery: swap_msg_state.forward_to.failed_delivery,
+            on_failed_delivery: swap_msg_state.forward_to.on_failed_delivery,
         },
     )?;
 
@@ -235,31 +238,35 @@ pub fn handle_forward_reply(
         to_address,
         amount,
         denom,
-        failed_delivery,
+        on_failed_delivery: failed_delivery_action,
     } = FORWARD_REPLY_STATE.load(deps.storage)?;
     FORWARD_REPLY_STATE.remove(deps.storage);
 
     // If a recovery address was provided, store sent IBC transfer so that it
     // can later be recovered by that addr.
-    if let Some(Recovery { recovery_addr }) = failed_delivery {
-        let recovery = state::ibc::IBCTransfer {
-            recovery_addr,
-            channel_id: channel_id.clone(),
-            sequence: response.sequence,
-            amount,
-            denom: denom.clone(),
-            status: state::ibc::PacketLifecycleStatus::Sent,
-        };
+    match failed_delivery_action {
+        FailedDeliveryAction::DoNothing => {}
+        FailedDeliveryAction::LocalRecoveryAddr(recovery_addr) => {
+            let recovery = state::ibc::IBCTransfer {
+                recovery_addr,
+                channel_id: channel_id.clone(),
+                sequence: response.sequence,
+                amount,
+                denom: denom.clone(),
+                status: state::ibc::PacketLifecycleStatus::Sent,
+            };
 
-        // Save as in-flight to be able to manipulate when the ack/timeout is received
-        INFLIGHT_PACKETS.save(deps.storage, (&channel_id, response.sequence), &recovery)?;
-    };
+            // Save as in-flight to be able to manipulate when the ack/timeout is received
+            INFLIGHT_PACKETS.save(deps.storage, (&channel_id, response.sequence), &recovery)?;
+        }
+    }
 
     // The response data
-    let response = CrosschainSwapResponse::base(&amount.into(), &denom, &channel_id, &to_address);
+    let response_data =
+        CrosschainSwapResponse::base(&amount.into(), &denom, &channel_id, &to_address);
 
     Ok(Response::new()
-        .set_data(to_binary(&response)?)
+        .set_data(to_binary(&response_data)?)
         .add_attribute("status", "ibc_message_created")
         .add_attribute("amount", amount.to_string())
         .add_attribute("denom", denom)

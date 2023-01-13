@@ -58,7 +58,7 @@ pub fn execute(
             receiver,
             slippage,
             next_memo,
-            failed_delivery,
+            on_failed_delivery,
         } => execute::swap_and_forward(
             deps,
             env.block.time,
@@ -68,7 +68,7 @@ pub fn execute(
             slippage,
             receiver,
             next_memo,
-            failed_delivery,
+            on_failed_delivery,
         ),
         ExecuteMsg::Recover {} => execute::recover(deps, info.sender),
     }

@@ -3,7 +3,7 @@ use cosmwasm_std::{Addr, Timestamp};
 use cw_storage_plus::{Item, Map};
 use swaprouter::msg::ExecuteMsg as SwapRouterExecute;
 
-use crate::msg::Recovery;
+use crate::msg::FailedDeliveryAction;
 
 #[cw_serde]
 pub struct Config {
@@ -15,7 +15,7 @@ pub struct ForwardTo {
     pub channel: String,
     pub receiver: Addr,
     pub next_memo: Option<String>,
-    pub failed_delivery: Option<Recovery>,
+    pub on_failed_delivery: FailedDeliveryAction,
 }
 
 #[cw_serde]
@@ -32,7 +32,7 @@ pub struct ForwardMsgReplyState {
     pub to_address: String,
     pub amount: u128,
     pub denom: String,
-    pub failed_delivery: Option<Recovery>,
+    pub on_failed_delivery: FailedDeliveryAction,
 }
 
 pub mod ibc {
