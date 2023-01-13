@@ -8,7 +8,7 @@ use cosmwasm_std::{Addr, Coin, Decimal};
 use osmosis_std::types::osmosis::gamm::v1beta1::SwapAmountInRoute;
 use osmosis_testing::cosmrs::proto::cosmos::bank::v1beta1::QueryAllBalancesRequest;
 
-use crosschain_swaps::msg::ExecuteMsg as CrossChainExecute;
+use crosschain_swaps::msg::{ExecuteMsg as CrossChainExecute, FailedDeliveryAction};
 use osmosis_testing::{Account, Bank, Module, Wasm};
 use swaprouter::msg::{ExecuteMsg as SwapRouterExecute, Slippage};
 use test_env::*;
@@ -67,7 +67,7 @@ fn crosschain_swap() {
             slippage_percentage: Decimal::from_str("5").unwrap(),
         },
         receiver: Addr::unchecked("osmo1l4u56l7cvx8n0n6c7w650k02vz67qudjlcut89"),
-        failed_delivery: None,
+        on_failed_delivery: FailedDeliveryAction::DoNothing,
         next_memo: None,
     };
     let funds: &[Coin] = &[Coin::new(10000, "uosmo")];

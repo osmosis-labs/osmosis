@@ -114,9 +114,13 @@ fn get_swaprouter_wasm() -> Vec<u8> {
     let wasm_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("..")
         .join("..")
+        .join("..")
+        .join("..")
+        .join("tests")
+        .join("ibc-hooks")
         .join("bytecode")
         .join("swaprouter.wasm");
-    println!("{wasm_path:?}");
+    println!("reading swaprouter wasm: {wasm_path:?}");
     std::fs::read(wasm_path).unwrap()
 }
 
@@ -124,8 +128,12 @@ fn get_crosschain_swaps_wasm() -> Vec<u8> {
     let wasm_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("..")
         .join("..")
+        .join("..")
+        .join("..")
+        .join("tests")
+        .join("ibc-hooks")
         .join("bytecode")
         .join("crosschain_swaps.wasm");
-    println!("{wasm_path:?}");
+    println!("reading crosschain swaps wasm: {wasm_path:?}");
     std::fs::read(wasm_path).unwrap()
 }
