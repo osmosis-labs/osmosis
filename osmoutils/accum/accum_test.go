@@ -1106,7 +1106,7 @@ func (suite *AccumTestSuite) TestMarhsalUnmarshalRecord() {
 	suite.Require().True(unmarshaledRecord.Options == nil)
 }
 
-func (suite *AccumTestSuite) TestUpdateAccumulator() {
+func (suite *AccumTestSuite) TestAddToAccumulator() {
 	tests := map[string]struct {
 		updateAmmount sdk.DecCoins
 
@@ -1140,7 +1140,7 @@ func (suite *AccumTestSuite) TestUpdateAccumulator() {
 			suite.Require().NoError(err)
 
 			// System under test.
-			originalAccum.UpdateAccumulator(tc.updateAmmount)
+			originalAccum.AddToAccumulator(tc.updateAmmount)
 
 			// Validations.
 
@@ -1297,7 +1297,7 @@ func (suite *AccumTestSuite) TestUpdatePositionCustomAcc() {
 			// make accumualtor based off of tc.accObject
 			accumPackage.MakeAccumulator(suite.store, testNameOne)
 			// manually update accumulator value
-			tc.accObject.UpdateAccumulator(initialCoinsDenomOne)
+			tc.accObject.AddToAccumulator(initialCoinsDenomOne)
 
 			// Setup
 			err := tc.accObject.NewPositionCustomAcc(tc.name, tc.initialShares, tc.accObject.GetValue(), nil)

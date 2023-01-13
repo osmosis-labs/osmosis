@@ -63,12 +63,25 @@ func setAccumulator(accum AccumulatorObject, amt sdk.DecCoins) {
 	osmoutils.MustSet(accum.store, formatAccumPrefixKey(accum.name), &newAccum)
 }
 
-// UpdateAccumulator updates the accumulator's value by amt.
+// AddToAccumulator updates the accumulator's value by amt.
 // It does so by increasing the value of the accumulator by
 // the given amount. Persists to store. Mutates the receiver.
-func (accum *AccumulatorObject) UpdateAccumulator(amt sdk.DecCoins) {
+// make this safely return error when negative dec coins
+func (accum *AccumulatorObject) AddToAccumulator(amt sdk.DecCoins) {
 	accum.value = accum.value.Add(amt...)
 	setAccumulator(*accum, accum.value)
+}
+
+func (accum *AccumulatorObject) SubFromAccumulator(amt sdk.DecCoins) error {
+	updatedValue, neg := accum.value.SafeSub(amt)
+	// check that the updated value is not negative
+	if neg {
+		return NegativeAccDifferenceError{updatedValue}
+	}
+
+	accum.value = updatedValue
+	setAccumulator(*accum, accum.value)
+	return nil
 }
 
 // NewPosition creates a new position for the given name, with the given number of share units.

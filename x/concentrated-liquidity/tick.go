@@ -62,14 +62,9 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liqu
 		return sdk.Dec{}, err
 	}
 
-	// turn all amounts of current fee growth outside to negative to call the `updateFeeAccumulator` API
-	amountToUpdate := tickInfo.FeeGrowthOutside
-	for i, coin := range amountToUpdate {
-		amountToUpdate[i] = sdk.NewDecCoinFromDec(coin.Denom, coin.Amount.Neg())
-	}
-
 	// subtract tick's fee growth outside from current fee accumulator
-	err = k.updateFeeAccumulator(ctx, poolId, amountToUpdate)
+	amountToUpdate := tickInfo.FeeGrowthOutside
+	err = k.subFromFeeAccumulator(ctx, poolId, amountToUpdate)
 	if err != nil {
 		return sdk.Dec{}, err
 	}

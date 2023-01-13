@@ -43,16 +43,18 @@ func (k Keeper) getFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.Accumul
 	return acc, nil
 }
 
-// nolint: unused
 // getFeeAccumulator gets the fee accumulator object using the given poolOd
 // returns error if accumulator for the given poolId does not exist.
-func (k Keeper) updateFeeAccumulator(ctx sdk.Context, poolId uint64, amount sdk.DecCoins) error {
+func (k Keeper) subFromFeeAccumulator(ctx sdk.Context, poolId uint64, amount sdk.DecCoins) error {
 	acc, err := accum.GetAccumulator(ctx.KVStore(k.storeKey), getFeeAccumulatorName(poolId))
 	if err != nil {
 		return err
 	}
 
-	acc.UpdateAccumulator(amount)
+	err = acc.SubFromAccumulator(amount)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -67,7 +69,7 @@ func (k Keeper) chargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 		return err
 	}
 
-	feeAccumulator.UpdateAccumulator(sdk.NewDecCoins(feeUpdate))
+	feeAccumulator.AddToAccumulator(sdk.NewDecCoins(feeUpdate))
 
 	return nil
 }

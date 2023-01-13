@@ -236,7 +236,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 
 			// manually update accumulator for testing
 			defaultAccumCoins := sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
-			feeAccum.UpdateAccumulator(defaultAccumCoins)
+			feeAccum.AddToAccumulator(defaultAccumCoins)
 
 			// If tickExists set, initialize the specified tick with defaultLiquidityAmt
 			preexistingLiquidity := sdk.ZeroDec()
