@@ -1398,6 +1398,12 @@ func (suite *AccumTestSuite) TestSetPositionCustomAcc() {
 
 			expectedError: accumPackage.NegativeAccDifferenceError{AccumulatorDifference: initialCoinsDenomOne},
 		},
+		"invalid update smaller than the initial value (non-empty custom value)": {
+			positionName:           validPositionName,
+			customAccumulatorValue: initialCoinsDenomOne.QuoDec(sdk.NewDec(2)),
+
+			expectedError: accumPackage.NegativeAccDifferenceError{AccumulatorDifference: initialCoinsDenomOne.QuoDec(sdk.NewDec(2))},
+		},
 		"invalid position - different name": {
 			positionName:  invalidPositionName,
 			expectedError: accumPackage.NoPositionError{Name: invalidPositionName},
