@@ -1,6 +1,6 @@
-use cosmwasm_std::{coins, from_binary, to_binary, wasm_execute, BankMsg, Timestamp};
+use cosmwasm_std::{coins, to_binary, wasm_execute, BankMsg, Timestamp};
 use cosmwasm_std::{Addr, Coin, DepsMut, Response, SubMsg, SubMsgResponse, SubMsgResult};
-use swaprouter::msg::{ExecuteMsg as SwapRouterExecute, SwapResponse};
+use swaprouter::msg::ExecuteMsg as SwapRouterExecute;
 
 use crate::checks::{ensure_key_missing, parse_json, validate_receiver};
 use crate::consts::{MsgReplyID, CALLBACK_KEY, PACKET_LIFETIME};
@@ -12,6 +12,7 @@ use crate::state::{
     ForwardMsgReplyState, ForwardTo, SwapMsgReplyState, CONFIG, FORWARD_REPLY_STATE,
     INFLIGHT_PACKETS, RECOVERY_STATES, SWAP_REPLY_STATE,
 };
+use crate::utils::{build_memo, parse_swaprouter_reply};
 use crate::ContractError;
 
 /// This is the main execute call of this contract.
@@ -81,6 +82,7 @@ pub fn swap_and_forward(
     Ok(Response::new().add_submessage(SubMsg::reply_on_success(msg, MsgReplyID::Swap.repr())))
 }
 
+// The swap has succeeded and we need to generate the forward IBC transfer
 pub fn handle_swap_reply(
     deps: DepsMut,
     msg: cosmwasm_std::Reply,
@@ -89,55 +91,17 @@ pub fn handle_swap_reply(
     let swap_msg_state = SWAP_REPLY_STATE.load(deps.storage)?;
     SWAP_REPLY_STATE.remove(deps.storage);
 
-    // If the swaprouter swap failed, return an error
-    let SubMsgResult::Ok(SubMsgResponse { data: Some(b), .. }) = msg.result else {
-        return Err(ContractError::FailedSwap {
-            msg: format!("No data"),
-        })
-    };
-
-    // Parse underlying response from the chain
-    let parsed =
-        cw_utils::parse_execute_response_data(&b).map_err(|e| ContractError::FailedSwap {
-            msg: format!("failed to parse swaprouter response: {e}"),
-        })?;
-    let swap_response: SwapResponse = from_binary(&parsed.data.unwrap_or_default())?;
+    // Extract the relevant response from the swaprouter reply
+    let swap_response = parse_swaprouter_reply(msg)?;
 
     // Build an IBC packet to forward the swap.
     let contract_addr = &swap_msg_state.contract_addr;
     let ts = swap_msg_state.block_time.plus_seconds(PACKET_LIFETIME);
 
     // If the memo is provided we want to include it in the IBC message. If not,
-    // we default to an empty object
-    let memo: serde_cw_value::Value = if let Some(memo) = &swap_msg_state.forward_to.next_memo {
-        serde_json_wasm::from_str(&memo.to_string()).map_err(|_e| ContractError::InvalidMemo {
-            error: format!("this should be unreachable"), // because the memo has been validated above
-            memo: memo.to_string(),
-        })?
-    } else {
-        serde_json_wasm::from_str("{}").unwrap()
-    };
-
-    // Include the callback key in the memo without modifying the rest of the
-    // provided memo
-    let memo = {
-        let serde_cw_value::Value::Map(mut m) = memo else { unreachable!() };
-        m.insert(
-            serde_cw_value::Value::String(CALLBACK_KEY.to_string()),
-            serde_cw_value::Value::String(contract_addr.to_string()),
-        );
-        serde_cw_value::Value::Map(m)
-    };
-
-    // Serialize the memo. If it is an empty json object, set it to ""
-    let mut memo_str =
-        serde_json_wasm::to_string(&memo).map_err(|_e| ContractError::InvalidMemo {
-            error: "could not serialize".to_string(),
-            memo: format!("{:?}", swap_msg_state.forward_to.next_memo),
-        })?;
-    if memo_str == "{}" {
-        memo_str = String::new();
-    }
+    // we default to an empty object. The resulting memo will always include the
+    // callback so this contract can track the IBC send
+    let memo = build_memo(swap_msg_state.forward_to.next_memo, contract_addr.as_str())?;
 
     // Cosmwasm's  IBCMsg::Transfer  does not support memo.
     // To build and send the packet properly, we need to send it using stargate messages.
@@ -156,7 +120,7 @@ pub fn handle_swap_reply(
         receiver: swap_msg_state.forward_to.receiver.clone().into(),
         timeout_height: None,
         timeout_timestamp: Some(ts.nanos()),
-        memo: memo_str,
+        memo,
     };
 
     // Base response
@@ -164,15 +128,14 @@ pub fn handle_swap_reply(
         .add_attribute("status", "ibc_message_created")
         .add_attribute("ibc_message", format!("{:?}", ibc_transfer));
 
+    // If there isn't any recovery addres, then there's no need to listen to
+    // the response of the send, so we short-circuit here.
     if matches!(
         swap_msg_state.forward_to.on_failed_delivery,
         FailedDeliveryAction::DoNothing,
     ) {
-        // If there isn't any recovery addres, then there's no need to listen to
-        // the response of the send, so we short-circuit here.
-
         // The response data needs to be added for consistency here. It would
-        // normally be added in the next message (after the forward succeeds)
+        // normally be added in the next reply (after the forward succeeds)
         let data = CrosschainSwapResponse::base(
             &swap_response.amount,
             &swap_response.token_out_denom,
@@ -214,8 +177,12 @@ pub fn handle_swap_reply(
     )))
 }
 
+// Included here so it's closer to the trait that needs it.
 use ::prost::Message; // Proveides ::decode() for MsgTransferResponse
 
+// The ibc transfer has been "sent" successfully. We create an inflight packet
+// in storage for potential recovery.
+// If recovery is set to "do_nothing", we just return a response.
 pub fn handle_forward_reply(
     deps: DepsMut,
     msg: cosmwasm_std::Reply,
