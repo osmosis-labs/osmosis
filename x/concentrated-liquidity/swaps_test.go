@@ -531,13 +531,9 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 				newUpperTick, err := math.PriceToTick(test.newUpperPrice, pool.GetPrecisionFactorAtPriceOne())
 				s.Require().NoError(err)
 
-				lowerPrice, err := math.TickToPrice(newLowerTick, pool.GetPrecisionFactorAtPriceOne())
+				lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick, pool.GetPrecisionFactorAtPriceOne())
 				s.Require().NoError(err)
-				lowerSqrtPrice, err := lowerPrice.ApproxSqrt()
-				s.Require().NoError(err)
-				upperPrice, err := math.TickToPrice(newUpperTick, pool.GetPrecisionFactorAtPriceOne())
-				s.Require().NoError(err)
-				upperSqrtPrice, err := upperPrice.ApproxSqrt()
+				upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick, pool.GetPrecisionFactorAtPriceOne())
 				s.Require().NoError(err)
 
 				if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
@@ -585,13 +581,9 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 				newUpperTick, err := math.PriceToTick(test.newUpperPrice, pool.GetPrecisionFactorAtPriceOne())
 				s.Require().NoError(err)
 
-				lowerPrice, err := math.TickToPrice(newLowerTick, pool.GetPrecisionFactorAtPriceOne())
+				lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick, pool.GetPrecisionFactorAtPriceOne())
 				s.Require().NoError(err)
-				lowerSqrtPrice, err := lowerPrice.ApproxSqrt()
-				s.Require().NoError(err)
-				upperPrice, err := math.TickToPrice(newUpperTick, pool.GetPrecisionFactorAtPriceOne())
-				s.Require().NoError(err)
-				upperSqrtPrice, err := upperPrice.ApproxSqrt()
+				upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick, pool.GetPrecisionFactorAtPriceOne())
 				s.Require().NoError(err)
 
 				if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
@@ -997,13 +989,9 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 				newUpperTick, err := math.PriceToTick(test.newUpperPrice, pool.GetPrecisionFactorAtPriceOne())
 				s.Require().NoError(err)
 
-				lowerPrice, err := math.TickToPrice(newLowerTick, pool.GetPrecisionFactorAtPriceOne())
+				lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick, pool.GetPrecisionFactorAtPriceOne())
 				s.Require().NoError(err)
-				lowerSqrtPrice, err := lowerPrice.ApproxSqrt()
-				s.Require().NoError(err)
-				upperPrice, err := math.TickToPrice(newUpperTick, pool.GetPrecisionFactorAtPriceOne())
-				s.Require().NoError(err)
-				upperSqrtPrice, err := upperPrice.ApproxSqrt()
+				upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick, pool.GetPrecisionFactorAtPriceOne())
 				s.Require().NoError(err)
 
 				if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
@@ -1057,13 +1045,9 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 				newUpperTick, err := math.PriceToTick(test.newUpperPrice, pool.GetPrecisionFactorAtPriceOne())
 				s.Require().NoError(err)
 
-				lowerPrice, err := math.TickToPrice(newLowerTick, pool.GetPrecisionFactorAtPriceOne())
+				lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick, pool.GetPrecisionFactorAtPriceOne())
 				s.Require().NoError(err)
-				lowerSqrtPrice, err := lowerPrice.ApproxSqrt()
-				s.Require().NoError(err)
-				upperPrice, err := math.TickToPrice(newUpperTick, pool.GetPrecisionFactorAtPriceOne())
-				s.Require().NoError(err)
-				upperSqrtPrice, err := upperPrice.ApproxSqrt()
+				upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick, pool.GetPrecisionFactorAtPriceOne())
 				s.Require().NoError(err)
 
 				if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
