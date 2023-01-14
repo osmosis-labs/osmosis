@@ -133,7 +133,7 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 
 				positionSize, err := poolFeeAccumulator.GetPositionSize(positionKey)
 				s.Require().NoError(err)
-				// position should have been properly initialzied to liquidityDelta provided
+				// position should have been properly initialized to zero
 				s.Require().Equal(positionSize, sdk.ZeroDec())
 			} else {
 				s.Require().Error(err)
