@@ -196,7 +196,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			pool, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, poolID)
 			s.Require().NoError(err)
 
-			// Pre-set fee gowth accumulator
+			// Pre-set fee growth accumulator
 			if !tc.preSetChargeFee.IsZero() {
 				err = clKeeper.ChargeFee(s.Ctx, 1, tc.preSetChargeFee)
 				s.Require().NoError(err)
