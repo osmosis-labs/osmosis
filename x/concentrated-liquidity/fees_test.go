@@ -69,17 +69,17 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 	}
 	tests := []initFeeAccumTest{
 		{
-			name:         "first position with zero liquidity",
+			name:         "first position",
 			positionId:   defaultPositionId,
 			expectedPass: true,
 		},
 		{
-			name:         "second position with non-zero liquidity",
+			name:         "second position",
 			positionId:   withLowerTick(defaultPositionId, DefaultLowerTick+1),
 			expectedPass: true,
 		},
 		{
-			name:       "overriding first position",
+			name:       "overriding first position - error",
 			positionId: defaultPositionId,
 			// Does not get overwritten by the next test case.
 			expectedPass: false,
