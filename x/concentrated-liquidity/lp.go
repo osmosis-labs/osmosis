@@ -99,7 +99,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 // - there is no position in the given tick ranges
 // - if tick ranges are invalid
 // - if attempts to withdraw an amount higher than originally provided in createPosition for a given range.
-func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, requestedLiqudityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
+func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
 	// Retrieve the pool associated with the given pool ID.
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -120,13 +120,13 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	// Check if the requested liquidity amount to withdraw is less than or equal to the available liquidity for the position.
 	// If it is greater than the available liquidity, return an error.
 	availableLiquidity := position.Liquidity
-	if requestedLiqudityAmountToWithdraw.GT(availableLiquidity) {
-		return sdk.Int{}, sdk.Int{}, types.InsufficientLiquidityError{Actual: requestedLiqudityAmountToWithdraw, Available: availableLiquidity}
+	if requestedLiquidityAmountToWithdraw.GT(availableLiquidity) {
+		return sdk.Int{}, sdk.Int{}, types.InsufficientLiquidityError{Actual: requestedLiquidityAmountToWithdraw, Available: availableLiquidity}
 	}
 
 	// Calculate the change in liquidity for the pool based on the requested amount to withdraw.
 	// This amount is negative because that liquidity is being withdrawn from the pool.
-	liquidityDelta := requestedLiqudityAmountToWithdraw.Neg()
+	liquidityDelta := requestedLiquidityAmountToWithdraw.Neg()
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
 	actualAmount0, actualAmount1, err := k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta)
@@ -138,6 +138,13 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	err = k.sendCoinsBetweenPoolAndUser(ctx, pool.GetToken0(), pool.GetToken1(), actualAmount0, actualAmount1, pool.GetAddress(), owner)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	// If the requested liquidity amount to withdraw is equal to the available liquidity, delete the position from state.
+	if requestedLiquidityAmountToWithdraw.Equal(availableLiquidity) {
+		if err := k.deletePosition(ctx, poolId, owner, lowerTick, upperTick); err != nil {
+			return sdk.Int{}, sdk.Int{}, err
+		}
 	}
 
 	return actualAmount0.Neg(), actualAmount1.Neg(), nil

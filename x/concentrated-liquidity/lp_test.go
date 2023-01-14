@@ -280,7 +280,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 func (s *KeeperTestSuite) TestWithdrawPosition() {
 	tests := map[string]struct {
 		setupConfig *lpTest
-		// when this is set, it ovewrites the setupConfig
+		// when this is set, it overwrites the setupConfig
 		// and gives the overwritten configuration to
 		// the system under test.
 		sutConfigOverwrite *lpTest
@@ -424,8 +424,16 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// Determine the liquidity expected to remain after the withdraw.
 			expectedRemainingLiquidity := liquidityCreated.Sub(config.liquidityAmount)
 
-			// Check that the position was updated.
-			s.validatePositionUpdate(ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity)
+			if expectedRemainingLiquidity.IsZero() {
+				// If the remaining liquidity is zero, the position should be deleted.
+				position, err := concentratedLiquidityKeeper.GetPosition(ctx, config.poolId, owner, config.lowerTick, config.upperTick)
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &types.PositionNotFoundError{PoolId: config.poolId, LowerTick: config.lowerTick, UpperTick: config.upperTick})
+				s.Require().Nil(position)
+			} else {
+				// Check that the position was updated.
+				s.validatePositionUpdate(ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity)
+			}
 
 			// check tick state
 			s.validateTickUpdates(ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity, cl.EmptyCoins, cl.EmptyCoins)
