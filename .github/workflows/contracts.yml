@@ -16,7 +16,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        contract: [{workdir: ./x/ibc-rate-limit/, output: bytecode/rate_limiter.wasm, build: artifacts/rate_limiter.wasm, name: rate_limiter}]
+        contract: [
+          {workdir: ./x/ibc-rate-limit/, bytecode: x/ibc-rate-limit/bytecode/rate_limiter.wasm, build: artifacts/rate_limiter.wasm, name: rate_limiter},
+          {workdir: ./x/ibc-hooks/, bytecode: tests/ibc-hooks/bytecode/crosschain_swaps.wasm, build: artifacts/crosschain_swaps.wasm, name: crosschain_swaps},
+          {workdir: ./x/ibc-hooks/, bytecode: tests/ibc-hooks/bytecode/swaprouter.wasm, build: artifacts/swaprouter.wasm, name: swaprouter},
+        ]
 
     steps:
       - name: Checkout sources
@@ -74,7 +78,7 @@ jobs:
         working-directory: ${{ matrix.contract.workdir }}
         if: env.GIT_DIFF
         run: >
-          diff ${{ matrix.contract.output }} ${{ matrix.contract.build }}
+          diff "${GITHUB_WORKSPACE}/${{ matrix.contract.bytecode }}" ${{ matrix.contract.build }}
   
 
   lints:
@@ -82,7 +86,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        workdir: [./x/ibc-rate-limit]
+        workdir: [./x/ibc-rate-limit, ./x/ibc-hooks/]
 
     steps:
       - name: Checkout sources

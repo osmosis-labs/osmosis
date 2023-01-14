@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	concentrated_liquidity "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
 	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
@@ -60,7 +60,7 @@ var (
 		// the fee accumulator for ticks <= current tick are updated.
 		expectedFeeGrowthOutsideLower: oneEthCoins,
 		// as a result, the upper tick is not updated.
-		expectedFeeGrowthOutsideUpper: concentrated_liquidity.EmptyCoins,
+		expectedFeeGrowthOutsideUpper: cl.EmptyCoins,
 	}
 )
 
@@ -85,8 +85,8 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			currentTick: sdk.NewInt(DefaultUpperTick + 1),
 
 			preSetChargeFee:               sdk.NewDecCoin(ETH, sdk.ZeroInt()), // zero fee
-			expectedFeeGrowthOutsideLower: concentrated_liquidity.EmptyCoins,
-			expectedFeeGrowthOutsideUpper: concentrated_liquidity.EmptyCoins,
+			expectedFeeGrowthOutsideLower: cl.EmptyCoins,
+			expectedFeeGrowthOutsideUpper: cl.EmptyCoins,
 		},
 		"current tick < lower tick < upper tick -> both tick's fee accumulators are unitilialized": {
 			lowerTick:   DefaultLowerTick,
@@ -94,8 +94,8 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			currentTick: sdk.NewInt(DefaultLowerTick - 1),
 
 			preSetChargeFee:               oneEth,
-			expectedFeeGrowthOutsideLower: concentrated_liquidity.EmptyCoins,
-			expectedFeeGrowthOutsideUpper: concentrated_liquidity.EmptyCoins,
+			expectedFeeGrowthOutsideLower: cl.EmptyCoins,
+			expectedFeeGrowthOutsideUpper: cl.EmptyCoins,
 		},
 		"lower tick < upper tick == current tick -> both tick's fee accumulators are updated with one eth": {
 			lowerTick:   DefaultLowerTick,
@@ -196,7 +196,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			pool, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, poolID)
 			s.Require().NoError(err)
 
-			// Pre-set fee gowth accumulator
+			// Pre-set fee growth accumulator
 			if !tc.preSetChargeFee.IsZero() {
 				err = clKeeper.ChargeFee(s.Ctx, 1, tc.preSetChargeFee)
 				s.Require().NoError(err)
@@ -428,7 +428,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			s.validatePositionUpdate(ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity)
 
 			// check tick state
-			s.validateTickUpdates(ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity, concentrated_liquidity.EmptyCoins, concentrated_liquidity.EmptyCoins)
+			s.validateTickUpdates(ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity, cl.EmptyCoins, cl.EmptyCoins)
 		})
 	}
 }
@@ -680,36 +680,28 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			expectedError:             false,
 		},
 		"error - update existing position with negative amount (more than liquidity provided)": {
-			poolId:                1,
-			ownerIndex:            0,
-			lowerTick:             DefaultLowerTick,
-			upperTick:             DefaultUpperTick,
-			liquidityDelta:        DefaultLiquidityAmt.Neg().Mul(sdk.NewDec(2)),
-			amount0Expected:       DefaultAmt0Expected.Neg(),
-			amount1Expected:       DefaultAmt1Expected.Neg(),
-			expectedTickLiquidity: sdk.ZeroDec(),
-			expectedPoolLiquidity: sdk.ZeroDec(),
-			expectedError:         true,
+			poolId:         1,
+			ownerIndex:     0,
+			lowerTick:      DefaultLowerTick,
+			upperTick:      DefaultUpperTick,
+			liquidityDelta: DefaultLiquidityAmt.Neg().Mul(sdk.NewDec(2)),
+			expectedError:  true,
 		},
 		"try updating with ticks outside existing position's tick range - error because fee accumulator is uninitialized": {
-			poolId:          1,
-			ownerIndex:      0,
-			lowerTick:       DefaultUpperTick + 1,
-			upperTick:       DefaultUpperTick + 100,
-			liquidityDelta:  DefaultLiquidityAmt,
-			amount0Expected: sdk.NewInt(18395),
-			amount1Expected: sdk.ZeroInt(),
-			expectedError:   true,
+			poolId:         1,
+			ownerIndex:     0,
+			lowerTick:      DefaultUpperTick + 1,
+			upperTick:      DefaultUpperTick + 100,
+			liquidityDelta: DefaultLiquidityAmt,
+			expectedError:  true,
 		},
 		"error: invalid pool id": {
-			poolId:          2,
-			ownerIndex:      0,
-			lowerTick:       DefaultLowerTick,
-			upperTick:       DefaultUpperTick,
-			liquidityDelta:  DefaultLiquidityAmt,
-			amount0Expected: DefaultAmt0Expected,
-			amount1Expected: DefaultAmt1Expected,
-			expectedError:   true,
+			poolId:         2,
+			ownerIndex:     0,
+			lowerTick:      DefaultLowerTick,
+			upperTick:      DefaultUpperTick,
+			liquidityDelta: DefaultLiquidityAmt,
+			expectedError:  true,
 		},
 		"new position when calling update position - error because fee accumulator is not initialized": {
 			poolId:          1,
@@ -764,7 +756,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 
 				// validate if position has been properly updated
 				s.validatePositionUpdate(s.Ctx, tc.poolId, s.TestAccs[tc.ownerIndex], tc.lowerTick, tc.upperTick, tc.expectedPositionLiquidity)
-				s.validateTickUpdates(s.Ctx, tc.poolId, s.TestAccs[tc.ownerIndex], tc.lowerTick, tc.upperTick, tc.expectedTickLiquidity, concentrated_liquidity.EmptyCoins, concentrated_liquidity.EmptyCoins)
+				s.validateTickUpdates(s.Ctx, tc.poolId, s.TestAccs[tc.ownerIndex], tc.lowerTick, tc.upperTick, tc.expectedTickLiquidity, cl.EmptyCoins, cl.EmptyCoins)
 
 				// validate if pool liquidity has been updated properly
 				poolI, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, tc.poolId)
