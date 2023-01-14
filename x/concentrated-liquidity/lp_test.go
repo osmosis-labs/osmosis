@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	concentrated_liquidity "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
 	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
@@ -60,7 +60,7 @@ var (
 		// the fee accumulator for ticks <= current tick are updated.
 		expectedFeeGrowthOutsideLower: oneEthCoins,
 		// as a result, the upper tick is not updated.
-		expectedFeeGrowthOutsideUpper: concentrated_liquidity.EmptyCoins,
+		expectedFeeGrowthOutsideUpper: cl.EmptyCoins,
 	}
 )
 
@@ -85,8 +85,8 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			currentTick: sdk.NewInt(DefaultUpperTick + 1),
 
 			preSetChargeFee:               sdk.NewDecCoin(ETH, sdk.ZeroInt()), // zero fee
-			expectedFeeGrowthOutsideLower: concentrated_liquidity.EmptyCoins,
-			expectedFeeGrowthOutsideUpper: concentrated_liquidity.EmptyCoins,
+			expectedFeeGrowthOutsideLower: cl.EmptyCoins,
+			expectedFeeGrowthOutsideUpper: cl.EmptyCoins,
 		},
 		"current tick < lower tick < upper tick -> both tick's fee accumulators are unitilialized": {
 			lowerTick:   DefaultLowerTick,
@@ -94,8 +94,8 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			currentTick: sdk.NewInt(DefaultLowerTick - 1),
 
 			preSetChargeFee:               oneEth,
-			expectedFeeGrowthOutsideLower: concentrated_liquidity.EmptyCoins,
-			expectedFeeGrowthOutsideUpper: concentrated_liquidity.EmptyCoins,
+			expectedFeeGrowthOutsideLower: cl.EmptyCoins,
+			expectedFeeGrowthOutsideUpper: cl.EmptyCoins,
 		},
 		"lower tick < upper tick == current tick -> both tick's fee accumulators are updated with one eth": {
 			lowerTick:   DefaultLowerTick,
@@ -428,7 +428,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			s.validatePositionUpdate(ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity)
 
 			// check tick state
-			s.validateTickUpdates(ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity, concentrated_liquidity.EmptyCoins, concentrated_liquidity.EmptyCoins)
+			s.validateTickUpdates(ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity, cl.EmptyCoins, cl.EmptyCoins)
 		})
 	}
 }
@@ -764,7 +764,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 
 				// validate if position has been properly updated
 				s.validatePositionUpdate(s.Ctx, tc.poolId, s.TestAccs[tc.ownerIndex], tc.lowerTick, tc.upperTick, tc.expectedPositionLiquidity)
-				s.validateTickUpdates(s.Ctx, tc.poolId, s.TestAccs[tc.ownerIndex], tc.lowerTick, tc.upperTick, tc.expectedTickLiquidity, concentrated_liquidity.EmptyCoins, concentrated_liquidity.EmptyCoins)
+				s.validateTickUpdates(s.Ctx, tc.poolId, s.TestAccs[tc.ownerIndex], tc.lowerTick, tc.upperTick, tc.expectedTickLiquidity, cl.EmptyCoins, cl.EmptyCoins)
 
 				// validate if pool liquidity has been updated properly
 				poolI, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, tc.poolId)
