@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
 	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
@@ -69,17 +69,17 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 	}
 	tests := []initFeeAccumTest{
 		{
-			name:         "first position with zero liquidity",
+			name:         "first position",
 			positionId:   defaultPositionId,
 			expectedPass: true,
 		},
 		{
-			name:         "second position with non-zero liquidity",
+			name:         "second position",
 			positionId:   withLowerTick(defaultPositionId, DefaultLowerTick+1),
 			expectedPass: true,
 		},
 		{
-			name:       "overriding first position",
+			name:       "overriding first position - error",
 			positionId: defaultPositionId,
 			// Does not get overwritten by the next test case.
 			expectedPass: false,
@@ -129,11 +129,11 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 				poolFeeAccumulator, err := clKeeper.GetFeeAccumulator(s.Ctx, defaultPoolId)
 				s.Require().NoError(err)
 
-				positionKey := concentratedliquidity.FormatPositionAccumulatorKey(tc.positionId.poolId, tc.positionId.owner, tc.positionId.lowerTick, tc.positionId.upperTick)
+				positionKey := cl.FormatPositionAccumulatorKey(tc.positionId.poolId, tc.positionId.owner, tc.positionId.lowerTick, tc.positionId.upperTick)
 
 				positionSize, err := poolFeeAccumulator.GetPositionSize(positionKey)
 				s.Require().NoError(err)
-				// position should have been properly initialzied to liquidityDelta provided
+				// position should have been properly initialized to zero
 				s.Require().Equal(positionSize, sdk.ZeroDec())
 			} else {
 				s.Require().Error(err)
@@ -268,7 +268,7 @@ func (s *KeeperTestSuite) TestCalculateFeeGrowth() {
 			} else {
 				targetTick = defaultLargerTargetTick
 			}
-			feeGrowth := concentratedliquidity.CalculateFeeGrowth(
+			feeGrowth := cl.CalculateFeeGrowth(
 				targetTick,
 				defaultGeeFrowthOutside,
 				defaultCurrentTick,
@@ -318,7 +318,7 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 			tick:                   initialPoolTick + 1,
 			initialGlobalFeeGrowth: oneEth,
 
-			expectedInitialFeeGrowthOutside: concentratedliquidity.EmptyCoins,
+			expectedInitialFeeGrowthOutside: cl.EmptyCoins,
 		},
 		"pool does not exist": {
 			poolId:                 validPoolId + 1,
@@ -333,7 +333,7 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 			initialGlobalFeeGrowth:   oneEth,
 			shouldAvoidCreatingAccum: true,
 
-			expectError: accum.AccumDoesNotExistError{AccumName: concentratedliquidity.GetFeeAccumulatorName(validPoolId)},
+			expectError: accum.AccumDoesNotExistError{AccumName: cl.GetFeeAccumulatorName(validPoolId)},
 		},
 	}
 
@@ -422,7 +422,7 @@ func (suite *KeeperTestSuite) TestChargeFee() {
 			poolId:    3,
 			feeUpdate: oneEth,
 
-			expectError: accum.AccumDoesNotExistError{AccumName: concentratedliquidity.GetFeeAccumulatorName(3)},
+			expectError: accum.AccumDoesNotExistError{AccumName: cl.GetFeeAccumulatorName(3)},
 		},
 	}
 
@@ -570,8 +570,8 @@ func (s *KeeperTestSuite) TestCollectFees() {
 			initialLiquidity: sdk.OneDec(),
 
 			// none are updated.
-			lowerTickFeeGrowthOutside: concentratedliquidity.EmptyCoins,
-			upperTickFeeGrowthOutside: concentratedliquidity.EmptyCoins,
+			lowerTickFeeGrowthOutside: cl.EmptyCoins,
+			upperTickFeeGrowthOutside: cl.EmptyCoins,
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
@@ -587,8 +587,8 @@ func (s *KeeperTestSuite) TestCollectFees() {
 			initialLiquidity: sdk.OneDec(),
 
 			// none are updated.
-			lowerTickFeeGrowthOutside: concentratedliquidity.EmptyCoins,
-			upperTickFeeGrowthOutside: concentratedliquidity.EmptyCoins,
+			lowerTickFeeGrowthOutside: cl.EmptyCoins,
+			upperTickFeeGrowthOutside: cl.EmptyCoins,
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 

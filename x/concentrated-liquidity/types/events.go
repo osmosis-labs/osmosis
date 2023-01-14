@@ -3,6 +3,7 @@ package types
 const (
 	TypeEvtCreatePosition   = "create_position"
 	TypeEvtWithdrawPosition = "withdraw_position"
+	TypeEvtCollectFees      = "collect_fees"
 
 	AttributeValueCategory = ModuleName
 	AttributeKeyPoolId     = "pool_id"

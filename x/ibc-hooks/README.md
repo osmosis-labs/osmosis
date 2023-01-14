@@ -145,11 +145,40 @@ For the callback to be processed, the transfer packet's memo should contain the 
 The wasm hooks will keep the mapping from the packet's channel and sequence to the contract in storage. When an ack is
 received, it will notify the specified contract via a sudo message.
 
-#### Interface for receiving the Ack
+#### Interface for receiving the Acks and Timeouts
 
 The contract that awaits the callback should implement the following interface for a sudo message:
 
-* `ReceiveAck { channel: String, sequence: u64, ack: String, success: bool }`
+```rust
+#[cw_serde]
+pub enum IBCLifecycleComplete {
+    #[serde(rename = "ibc_ack")]
+    IBCAck {
+        /// The source channel (osmosis side) of the IBC packet
+        channel: String,
+        /// The sequence number that the packet was sent with
+        sequence: u64,
+        /// String encoded version of the ack as seen by OnAcknowledgementPacket(..)
+        ack: String,
+        /// Weather an ack is a success of failure according to the transfer spec
+        success: bool,
+    },
+    #[serde(rename = "ibc_timeout")]
+    IBCTimeout {
+        /// The source channel (osmosis side) of the IBC packet
+        channel: String,
+        /// The sequence number that the packet was sent with
+        sequence: u64,
+    },
+}
+
+/// Message type for `sudo` entry_point
+#[cw_serde]
+pub enum SudoMsg {
+    #[serde(rename = "ibc_lifecycle_complete")]
+    IBCLifecycleComplete(IBCLifecycleComplete),
+}
+```
 
 # Testing strategy
 
