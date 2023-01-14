@@ -9,7 +9,8 @@
       ],
       "properties": {
         "get_owner": {
-          "type": "object"
+          "type": "object",
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
@@ -33,7 +34,8 @@
             "output_denom": {
               "type": "string"
             }
-          }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

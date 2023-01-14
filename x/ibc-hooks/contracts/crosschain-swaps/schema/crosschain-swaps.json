@@ -8,19 +8,30 @@
     "description": "Message type for `instantiate` entry_point",
     "type": "object",
     "required": [
+      "channels",
       "swap_contract"
     ],
     "properties": {
+      "channels": {
+        "description": "These are the channels that will be accepted by the contract. This is needed to avoid sending packets to addresses not supported by the receiving chain. The channels are specified as (bech32_prefix, channel_id)",
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "maxItems": 2,
+          "minItems": 2
+        }
+      },
       "swap_contract": {
         "description": "This should be an instance of the Osmosis swaprouter contract",
         "type": "string"
-      },
-      "track_ibc_sends": {
-        "description": "If set to true, the contract will add a callback request on the packet so that it gets notified when an ack is received or if the packet timed out. If set to false, any funds sent on a packet that fails after a swap will be stuck in this contract.\n\nThe information about the packet sender and recovery address is still stored, so recovery could be possible after a contract upgrade.",
-        "type": [
-          "boolean",
-          "null"
-        ]
       }
     },
     "additionalProperties": false
@@ -40,37 +51,55 @@
           "osmosis_swap": {
             "type": "object",
             "required": [
-              "channel",
               "input_coin",
+              "on_failed_delivery",
               "output_denom",
               "receiver",
               "slippage"
             ],
             "properties": {
-              "channel": {
-                "type": "string"
-              },
-              "failed_delivery": {
-                "anyOf": [
+              "input_coin": {
+                "description": "The amount and denom to be swapped",
+                "allOf": [
                   {
-                    "$ref": "#/definitions/Recovery"
-                  },
-                  {
-                    "type": "null"
+                    "$ref": "#/definitions/Coin"
                   }
                 ]
               },
-              "input_coin": {
-                "$ref": "#/definitions/Coin"
+              "next_memo": {
+                "description": "IBC packets can contain an optional memo. If a sender wants the sent packet to include a memo, this is the field where they can specify it. If provided, the memo is expected to be a valid JSON object",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "on_failed_delivery": {
+                "description": "If for any reason the swap were to fail, users can specify a \"recovery address\" that can clain the funds on osmosis after a confirmed failure.",
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/FailedDeliveryAction"
+                  }
+                ]
               },
               "output_denom": {
+                "description": "The final denom to be received (as represented on osmosis)",
                 "type": "string"
               },
               "receiver": {
-                "$ref": "#/definitions/Addr"
+                "description": "The receiver of the IBC packet to be sent after the swap",
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/Addr"
+                  }
+                ]
               },
               "slippage": {
-                "$ref": "#/definitions/Slippage"
+                "description": "Slippage for the swap",
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/Slippage"
+                  }
+                ]
               }
             },
             "additionalProperties": false
@@ -117,33 +146,57 @@
         "description": "A fixed-point decimal value with 18 fractional digits, i.e. Decimal(1_000_000_000_000_000_000) == 1.0\n\nThe greatest possible value that can be represented is 340282366920938463463.374607431768211455 (which is (2^128 - 1) / 10^18)",
         "type": "string"
       },
-      "Recovery": {
-        "type": "object",
-        "required": [
-          "recovery_addr"
-        ],
-        "properties": {
-          "recovery_addr": {
+      "FailedDeliveryAction": {
+        "description": "An enum specifying what resolution the user expects in the case of a bad IBC delviery",
+        "oneOf": [
+          {
+            "type": "string",
+            "enum": [
+              "do_nothing"
+            ]
+          },
+          {
             "description": "An osmosis addres used to recover any tokens that get stuck in the contract due to IBC failures",
-            "allOf": [
-              {
+            "type": "object",
+            "required": [
+              "local_recovery_addr"
+            ],
+            "properties": {
+              "local_recovery_addr": {
                 "$ref": "#/definitions/Addr"
               }
-            ]
+            },
+            "additionalProperties": false
           }
-        },
-        "additionalProperties": false
+        ]
       },
       "Slippage": {
         "oneOf": [
           {
             "type": "object",
             "required": [
-              "max_slippage_percentage"
+              "twap"
             ],
             "properties": {
-              "max_slippage_percentage": {
-                "$ref": "#/definitions/Decimal"
+              "twap": {
+                "type": "object",
+                "required": [
+                  "slippage_percentage"
+                ],
+                "properties": {
+                  "slippage_percentage": {
+                    "$ref": "#/definitions/Decimal"
+                  },
+                  "window_seconds": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "format": "uint64",
+                    "minimum": 0.0
+                  }
+                },
+                "additionalProperties": false
               }
             },
             "additionalProperties": false
@@ -219,7 +272,7 @@
           "type": "string"
         },
         "IBCTransfer": {
-          "description": "A transfer packet sent by this contract that is expected to be received but needs to be tracked in case it is not",
+          "description": "A transfer packet sent by this contract that is expected to be received but needs to be tracked in case the receive fails or times-out",
           "type": "object",
           "required": [
             "amount",
@@ -250,12 +303,12 @@
               "minimum": 0.0
             },
             "status": {
-              "$ref": "#/definitions/Status"
+              "$ref": "#/definitions/PacketLifecycleStatus"
             }
           },
           "additionalProperties": false
         },
-        "Status": {
+        "PacketLifecycleStatus": {
           "type": "string",
           "enum": [
             "sent",

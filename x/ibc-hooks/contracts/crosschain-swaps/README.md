@@ -12,20 +12,19 @@ and forwarding to a different chain.
 To instantiate the contract, you need to specify the following parameters:
 
  * swap_contract: the swaprouter contract to be used
- * track_ibc_sends: true|false. Specifies if the contract should track the sent ibc packets for recovery. This should be false in v1
  * channels: a list of (bech32 prefix, channel_id) that the contract will allow. 
 
 ### Example instantiation message
 
 ``` json
-{"swap_contract": "osmo1thiscontract", "track_ibc_sends": false, "channels": [["cosmos", "channel-0"], ["juno", "channel-42"]]}
+{"swap_contract": "osmo1thiscontract", "channels": [["cosmos", "channel-0"], ["juno", "channel-42"]]}
 ```
 
 ## Usage
 
 ### Via IBC
 
-Assuming the current implementation of the wasm middleware on Osmosis v14 (`x/ibc-hooks/v0.0.5`), the memo
+Assuming the current implementation of the wasm middleware on Osmosis v14 (`x/ibc-hooks/v0.0.6`), the memo
 of an IBC transfer to do crosschain swaps would look as follows:
 
 ``` json
@@ -35,9 +34,9 @@ of an IBC transfer to do crosschain swaps would look as follows:
         "osmosis_swap": {
             "input_coin": {"denom":"token0","amount":"1000"}, 
             "output_denom":"token1",
-            "slippage":{"max_slippage_percentage":"5"},
+            "slippage":{"twap": {"slippage_percentage":"20", "window_seconds": 10}},
             "receiver":"juno1receiver",
-            "failed_delivery":null
+            "on_failed_delivery": "do_nothing",
             "next_memo":null
         }
     }
@@ -46,25 +45,31 @@ of an IBC transfer to do crosschain swaps would look as follows:
 
 Channels are determined by the prefixes specified in the contract during
 instantiation, so the user needs to provide a receiver with the supported
-prefix. In future (once ack/timeout tracking is supported by the chain), we
-could enable support for any channel by specifying it as a parameter.
+prefix. This will probably change in the future 
 
 The `slippage` can be set to a percentage of the twap price (as shown above), or as
 the minimum amount of tokens expected to be received: `{"min_output_amount": "100"}`.
 
+The `on_failed_delivery` field can be set to `do_nothing` or a local recovery addr 
+via `{"local_recovery_addr": "osmo1..."}`. If set to `do_nothing`, the contract will
+not track the packet, and the user will not be able to recover the funds if the packet 
+fails. If set to a local recovery addr, the contract will track the packet, and 
+the specified address will be able to execute `{"recover": {}}` on the crosschain swaps 
+contract to recover the funds. 
+
+
 
 #### Optional keys
-
-If `track_ibc_sends` is enabled during instantiation, the `failed_delivery` key
-can be set to an address on Osmosis that will be allowed to recover the tokens
-in case of a failure. This key is optional and if ommited will default to
-`false`.
 
 The `next_memo` key, if provided, will be added to the IBC transfer as the memo
 for that transfer. This can be useful if the receiving chain also has IBC hooks
 on transfers. In that case, this can be used to specify how the receiver should
 deal with the received tokens (mostly useful when the receiver is a contract or
 another ibc actor).
+
+Any JSON object is accepted as a valid memo, as long as it doesn't contain the 
+key "ibc_callback". That key is used internally for the contract to track the 
+success or failure of the packet delivery.
 
 
 ## Requirements
@@ -74,152 +79,240 @@ To use this contract for crosschain swaps, the following are needed:
  * The chain needs a wasm execute middleware that executes a contract when
    receiving a wasm directive in the memo.
  * The swaprouter contract should be instantiated
- 
-Optional:
-
-This contract can be configured to track the acks or timeouts of the sent
-packets. For that we needed:
-
- * The chain to provide a way to call a contract when the ack or timeout for a
-   packet is received. 
- * Instantiate the contract with the `track_ibc_sends` set to true. Defaults
-   to false.
 
 
 ## Testing
+  
+### Manual testing with localrelayer
+
+This guide will walk you through the process of manually testing the cross-chain swapping functionality in Osmosis.
+
+To test this contract, we will use the 
+[localrelayer tool](https://github.com/osmosis-labs/osmosis/tree/main/tests/localrelayer). This tool will setup two 
+osmosis testnets and a relayer between them.
+
+
+#### Prerequisites
+* osmosisd command line tool installed and configured.
+* [jenv](https://github.com/nicolaslara/jenv) command line tool installed, if you don't have it you can generate the json manually or modify the commands accordingly.
+* jq command line tool installed.
+* localrelayer tool installed, configured and running.
+
+#### Setup
+
+Create an alias for chainA and chainB commands that will be used throughout the guide:
+
+```bash
+alias chainA="osmosisd --node http://localhost:26657 --chain-id localosmosis-a"
+alias chainB="osmosisd --node http://localhost:36657 --chain-id localosmosis-b"
+```
+
+Prepare other variables that we will use across the test:
+
+```bash
+VALIDATOR=$(osmosisd keys show validator -a)
+CHANNEL_ID="channel-0"
+args="--keyring-backend test --gas auto --gas-prices 0.1uosmo --gas-adjustment 1.3 --broadcast-mode block --yes"
+TX_FLAGS=($args)
+```
+
+#### Generate Keys
+First, you need to generate the keys that will be used in the test:
+
+```bash
+echo "bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort" | osmosisd --keyring-backend test keys add validator --recover
+echo "increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great" | osmosisd --keyring-backend test  keys add faucet --recover
+```
+This will generate two keys, validator and faucet and will be used to send money to the validator on both chains.
+
+#### Fund accounts on both chains
+
+```bash
+chainA tx bank send faucet "$VALIDATOR" 1000000000uosmo "${TX_FLAGS[@]}"
+chainB tx bank send faucet "$VALIDATOR" 1000000000uosmo "${TX_FLAGS[@]}"
+```
+We will use the validator account as our main account for this test. This sends 1000000000uosmo from the faucet that account.
+
+#### Transfer IBC tokens
+
+Chain B will be the chain that represents osmosis, so it needs to have IBC'd tokens from chain A so that we can setup 
+a pool in it
+
+```bash
+chainA tx ibc-transfer transfer transfer $CHANNEL_ID "$VALIDATOR" 600000000uosmo --from validator "${TX_FLAGS[@]}"
+```
+
+Get the denomination of the token:
+
+```bash
+export DENOM=$(chainB q bank balances "$VALIDATOR" -o json | jq -r '.balances[] | select(.denom | contains("ibc")) | .denom')
+```
+
+Here, we export DENOM so that it later can be used with `jenv`.
+
+#### Create the pool
+
+To create the pool we will need a pool definition file:
+
+```bash
+cat > sample_pool.json <<EOF
+{
+        "weights": "1${DENOM},1uosmo",
+        "initial-deposit": "1000000${DENOM},1000000uosmo",
+        "swap-fee": "0.01",
+        "exit-fee": "0.01",
+        "future-governor": "168h"
+}
+EOF
+```
+
+Create the pool:
+
+```bash
+chainB tx gamm create-pool --pool-file sample_pool.json --from validator --yes  -b block
+```
+
+export the pool id:
+
+```bash
+export POOL_ID=$(chainB query gamm pools -o json | jq -r '.pools[-1].id')
+```
+
+#### Store and instantiate the swaprouter contract
+
+Store the contract:
+
+```bash
+chainB tx wasm store ./bytecode/swaprouter.wasm --from validator "${TX_FLAGS[@]}"
+```
+
+Get the code id:
+
+```bash
+SWAPROUTER_CODE_ID=$(chainB query wasm list-code -o json | jq -r '.code_infos[-1].code_id')
+```
+
+Instantiate the contract:
+
+```bash
+MSG=$(jenv -c '{"owner": $VALIDATOR}')
+chainB tx wasm instantiate "$SWAPROUTER_CODE_ID" "$MSG" --from validator --admin $VALIDATOR --label swaprouter --yes  -b block
+```
+
+Export the swaprouter contract address:
+
+```bash
+export SWAPROUTER_ADDRESS=$(chainB query wasm list-contract-by-code "$SWAPROUTER_CODE_ID" -o json | jq -r '.contracts[-1].address')
+```
+
+#### Add the pool to the swaprouter
+
+```bash
+MSG=$(jenv -c '{"set_route":{"input_denom":$DENOM,"output_denom":"uosmo","pool_route":[{"pool_id":$POOL_ID,"token_out_denom":"uosmo"}]}}')
+chainB tx wasm execute "$SWAPROUTER_ADDRESS" "$MSG" --from validator -y
+```
+
+#### Store and instantiate the crosschain swaps contract
+
+Store the contract:
+
+```bash
+chainB tx wasm store ./bytecode/crosschainswaps.wasm --from validator "${TX_FLAGS[@]}"
+```
+
+Get the code id:
+
+```bash
+CROSSCHAINSWAPS_CODE_ID=$(chainA query wasm list-code -o json | jq -r '.code_infos[-1].code_id')
+```
+
+Instantiate the contract:
+
+```bash
+MSG=$(jenv -c '{"swap_contract": $SWAPROUTER_ADDRESS, "channels": [["osmo", $CHANNEL_ID]]}')
+chainB tx wasm instantiate "$CROSSCHAIN_SWAPS_CODE_ID" "$MSG" --from validator --admin $VALIDATOR --label=crosschain_swaps --yes  -b block
+```
+
+The channels here describe the allowed channels that the cross chain swap contract will accept for the receiver.
+
+They are represented as a list of pairs of the source chain bech32 address prefix and the channel id. 
+
+In this case, if the receiver is "osmo", then the tokens will be sent through the channel with id $CHANNEL_ID. 
+No other bech32 prefixes are allowed in this example. 
+
+
+```bash
+export CROSSCHAIN_SWAPS_ADDRESS=$(chainB query wasm list-contract-by-code "$CROSSCHAIN_SWAPS_CODE_ID" -o json | jq -r '.contracts | [last][0]')
+```
+
+#### Prepare to perform the crosschain swap
+
+Now we're ready to perform the swap. To be able to verify that the swap was successful, we need to check the balance of 
+the receiver before executing this swap:
+
+```bash
+chainA query bank balances "$VALIDATOR"
+```
+Note this so that we can later check how it has changed.
+
+#### Perform the crosschain swap
+
+
+Now the exciting bit! We will perform a crosschain swap from chainA/osmo to chainB/uosmo.
+
+This will send 100 uosmo from chainA to chainB, swap it for 100 uosmo on chainB, and then send it via IBC back to chain A.
+
+The command to do this is:
+
+```bash
+MEMO=$(jenv -c '{"wasm": {"contract": $CROSSCHAIN_SWAPS_ADDRESS, "msg": {"osmosis_swap":{"input_coin":{"denom":$DENOM,"amount":"100"},"output_denom":"uosmo","slippage":{"twap": {"slippage_percentage":"20", "window_seconds": 10}},"receiver":$VALIDATOR, "on_failed_delivery": "do_nothing"}}}}')
+chainA tx ibc-transfer transfer transfer $CHANNEL_ID $CROSSCHAIN_SWAPS_ADDRESS 100uosmo \
+    --from validator -y "${TX_FLAGS[@]}" \
+    --memo "$MEMO"
+```
+
+The memo here is a JSON object that describes what osmosis should execute when it receives the transaction. 
+The "contract" field is the address of a smart contract to be executed and the "msg" field is the message to be
+passed to that contract.
+
+The msg describes the specific details of the cross-chain swap. 
+
+The "osmosis_swap" containes the following required fields: input_coin, output_denom, slippage, receiver, 
+and on_failed_delivery fields. All denominations inside the memo are expressed in the denoms 
+on the chain doing the swap (chainB).
+
+* The input_coin field contains the denomination and amount of the coin being swapped, which is the ibc denom and 100.
+* The output_denom field specifies the denomination of the coin being received in the swap, which is "uosmo".
+* The slippage field is used to specify the acceptable price slippage for the swap, here we use a 20% of the time-weighted-average price with a 10-second window.
+* The receiver field specifies the address of the recipient of the swap. 
+* The on_failed_delivery field specifies what should happen in case the swap cannot be executed, which is set to "do_nothing"
+
+After executing this transaction, the relayer will send it to chain A, which will process it, and generate a new 
+IBC package to be sent to chain B with the resulting (swapped) tokens. This will be relayed to chain B and an 
+acknowledgement sent back to chain A to finalize the IBC transaction.
+
+#### Verifying the swap
+
+To verify the swap, check the balance of the validator on chain A:
+
+```bash
+chainA query bank balances "$VALIDATOR"
+```
+
+It should contain IBC'd tokens with the appropriate denom.
+
+### Manual testing on testnets
+
+TODO: Add instructions for testing on testnets.
+
+Right now the testnets are not configured to allow crosschain swaps. We can update this when those are available.
 
 The following is the procedure to test the contracts on a testnet.
 
 ### Requirements
 
-You will need: 
+You will need:
 
 * An osmosis testnet
-* Another testnet with an open channel to the osmosis testnet
-* Tokens on the non-osmosis testnet
-* A pool on the osmosis testnet between the IBC'd native asset of the
-  non-osmosis testnet and osmo
-
-### Localrelayer
-
-An option for testing this is to use Osmosis' localrelayer. To test with that, we procide a script for running 
-all the necessary steps to setup the contract: `test_crosschain_swaps.sh`. The script is not robust and meant 
-to be used blindly, however. It's more of a guide to simplify manual testing.
-  
-### Manual example
-
-Alternatively, we can test this on the existing testnets. 
-
-For the purpose of this test, we used the following testnets: 
-
-(TODO: update this with the juno testnet that supports memo when it's available and update the commands based on the
-script)
-
-Osmosis:
-
-``` toml
-# The network chain ID
-chain-id = "osmo-test-4"
-# The keyring's backend, where the keys are stored (os|file|kwallet|pass|test|memory)
-keyring-backend = "test"
-# CLI output format (text|json)
-output = "text"
-# <host>:<port> to Tendermint RPC interface for this chain
-node = "https://rpc-test.osmosis.zone:443"
-# Transaction broadcasting mode (sync|async|block)
-broadcast-mode = "block"
-```
-
-Gaia:
-
-``` toml
-# The network chain ID
-chain-id = "..."
-# The keyring's backend, where the keys are stored (os|file|kwallet|pass|test|memory)
-keyring-backend = "test"
-# CLI output format (text|json)
-output = "json"
-# <host>:<port> to Tendermint RPC interface for this chain
-node = "..."
-# Transaction broadcasting mode (sync|async|block)
-broadcast-mode = "block"
-```
-
-### Deploying the contracts
-
-Store the swaprouter code:
-
-``` sh
-> osmosisd-testnet tx wasm store ./bytecode/swaprouter.wasm --from owner  --gas auto --gas-prices 0.1uosmo --gas-adjustment 1.3 -y
-> export swaprouter_id=<the code id from above>
-```
-
-Instantiate the swaprouter using the code id received from the previous command:
-
-``` sh
-> export owner=<your account>
-> osmosisd-testnet tx wasm instantiate $swaprouter_id '{"owner": "<owner bech32 addr>"}' --from owner --admin $owner --label swaprouter --yes
-> export swaprouter_addr=<addr received from the above command>
-```
-
-Store the crosschain swaps code:
-
-``` sh
-> osmosisd-testnet tx wasm store ./bytecode/crosschain_swaps.wasm --from owner  --gas auto --gas-prices 0.1uosmo --gas-adjustment 1.3 -y
-> export crosschain_swaps_id=<code id from the output of the prev command>
-```
-
-Instantiate the crosschain swaps contract using the code id received above. For
-this you'll have to figure out the proper channel and prefix to use for the
-testnet you're using and pass it in thge "channels" key:
-
-
-``` sh
-> osmosisd-testnet tx wasm instantiate $crosschain_swaps_id '{"swap_contract": "osmo1jd8fhpudhy8n77t57uqgq8jltc80khtrp2x0sflr0sa9useuyc7qcwc5ea", "track_ibc_sends": false, "channels": [["cosmos", "channel-314"]]}' --from owner --admin $owner --label=crosschain_swaps --yes
-> export crosschain_swaps_addr=<contract addr from the response of the prec command>
-```
-
-### Transfer tokens
-
-Make sure you have IBC tokens from the gaia testnet in the osmois one. If you don't, you can transfer with:
-
-``` sh
-> gaiad tx ibc-transfer transfer transfer channel-1238 osmo1pr8ktmhe095fc5stt5xrh4caw09xgtnasnwwf7 5850086uatom --from hub1 -y --gas auto --gas-prices 0.1uatom --gas-adjustment 1.3
-```
-
-You can also check the expected ibc denom on the osmosis side once you receive it
-
-Note: For this the channels need to be active an a relayer needs to exist (or you have to manually relay the packets).
-
-### Configuring the pools and swaprouter
-
-Create a pool between the IBC'd atom and osmo:
-
-``` sh
-> osmosisd-testnet tx gamm create-pool --pool-file sample_pool.json --from owner
-```
-
-My pool file looks as follows:
-
-``` json
-{
-        "weights": "1ibc/960B9755A955E1610CDE0F8AA35DDFCD1C31BDB35AE72E2702E1C2C2E778E603,1uosmo",
-        "initial-deposit": "1000000ibc/960B9755A955E1610CDE0F8AA35DDFCD1C31BDB35AE72E2702E1C2C2E778E603,1000000uosmo",
-        "swap-fee": "0.01",
-        "exit-fee": "0.01",
-        "future-governor": "168h"
-}
-```
-
-Add the route to the swaprouter:
-
-``` sh
- > osmosisd-testnet tx wasm execute $swaprouter_addr '{"set_route":{"input_denom":"ibc/960B9755A955E1610CDE0F8AA35DDFCD1C31BDB35AE72E2702E1C2C2E778E603","output_denom":"uosmo","pool_route":[{"pool_id":"720","token_out_denom":"uosmo"}]}}' --from owner -y
-```
-
-### Executing a crosschain swap
-
-``` sh
-gaiad tx ibc-transfer transfer transfer channel-1238 osmo1pr8ktmhe095fc5stt5xrh4caw09xgtnasnwwf7 1uatom --from hub1 -y --gas auto --gas-prices 0.1uatom --gas-adjustment 1.3 --memo '{"wasm": {"contract": "osmo1jx6d8x33yrysq0dyxpkwz48d2fn795y5p26ptsy4vchsjq52lteskp8n2q", "msg": {"osmosis_swap":{"input_coin":{"denom":"ibc/960B9755A955E1610CDE0F8AA35DDFCD1C31BDB35AE72E2702E1C2C2E778E603","amount":"100"},"output_denom":"uosmo","slippage":{"max_slippage_percentage":"20"},"receiver":"cosmos1qraj684l2deqwhe2x0dcz26xf28j5hrml8dlv5"}}}}'
-```
-
+* Another testnet that supports IBC memo with an open channel to the osmosis testnet
+* Tokens on the both osmosis testnets

@@ -13,6 +13,7 @@
       }
     }
   },
+  "additionalProperties": false,
   "definitions": {
     "SwapAmountInRoute": {
       "description": "===================== MsgSwapExactAmountIn",

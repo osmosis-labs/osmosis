@@ -3,6 +3,28 @@
   "title": "ExecuteMsg",
   "oneOf": [
     {
+      "description": "The contract's owner determines how can update the routes. This method allows the owner to be transfered to someone else.",
+      "type": "object",
+      "required": [
+        "transfer_ownership"
+      ],
+      "properties": {
+        "transfer_ownership": {
+          "type": "object",
+          "required": [
+            "new_owner"
+          ],
+          "properties": {
+            "new_owner": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
       "type": "object",
       "required": [
         "set_route"
@@ -28,7 +50,8 @@
                 "$ref": "#/definitions/SwapAmountInRoute"
               }
             }
-          }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
@@ -56,7 +79,8 @@
             "slippage": {
               "$ref": "#/definitions/Slippage"
             }
-          }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
@@ -87,11 +111,28 @@
         {
           "type": "object",
           "required": [
-            "max_slippage_percentage"
+            "twap"
           ],
           "properties": {
-            "max_slippage_percentage": {
-              "$ref": "#/definitions/Decimal"
+            "twap": {
+              "type": "object",
+              "required": [
+                "slippage_percentage"
+              ],
+              "properties": {
+                "slippage_percentage": {
+                  "$ref": "#/definitions/Decimal"
+                },
+                "window_seconds": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "uint64",
+                  "minimum": 0.0
+                }
+              },
+              "additionalProperties": false
             }
           },
           "additionalProperties": false
