@@ -183,15 +183,15 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 			amount:  diffAmount,
 		}
 		diffValSet = append(diffValSet, &diff_val)
-		//fmt.Println("DIFF SET", diff_val.valAddr, diff_val.amount)
 	}
 
 	// Algorithm starts here
 	for _, diff_val := range diffValSet {
 		for diff_val.amount.GT(sdk.NewDec(0)) {
 			source_val := diff_val.valAddr
-			// FindMin returns the index and MinAmt of the minimum amount in diffValSet
 			target_val, idx := k.FindMin(diffValSet, source_val)
+
+			// checks if there are any more redelegation possible
 			if target_val.amount.Equal(sdk.NewDec(0)) {
 				break
 			}
@@ -388,7 +388,8 @@ func (k Keeper) GetValSetStruct(validator types.ValidatorPreference, amountFromS
 	return val_struct, val_struct_zero_amount
 }
 
-// FindMin takes in a valSet struct array and computes the minimum val set based on the amount delegated to a validator.
+// FindMin takes in a valSet struct array and computes the minimum val set that's not source validator
+//  based on the amount delegated to a validator.
 func (k Keeper) FindMin(valPrefs []*valSet, sourceVal string) (min valSet, idx int) {
 	min = *valPrefs[0]
 	idx = 0
