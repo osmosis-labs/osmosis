@@ -107,7 +107,7 @@ func (server msgServer) WithdrawDelegationRewards(goCtx context.Context, msg *ty
 func (server msgServer) DelegateBondedTokens(goCtx context.Context, msg *types.MsgDelegateBondedTokens) (*types.MsgDelegateBondedTokensResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// get the existing validator set preference from store
+	// get the existingValSet if it exists, if not check existingStakingPosition and return it
 	_, err := server.keeper.GetDelegationPreferences(ctx, msg.Delegator)
 	if err != nil {
 		return nil, fmt.Errorf("user %s doesn't have validator set", msg.Delegator)
