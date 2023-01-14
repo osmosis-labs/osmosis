@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	appParams "github.com/osmosis-labs/osmosis/v14/app/params"
@@ -740,12 +738,13 @@ func (suite *KeeperTestSuite) TestDelegateBondedTokens() {
 				suite.Require().NoError(err)
 			}
 
-			balance := suite.App.BankKeeper.GetBalance(suite.Ctx, test.delegator, appParams.BaseCoinUnit)
-			fmt.Println(balance)
-
 			_, err := msgServer.DelegateBondedTokens(c, types.NewMsgDelegateBondedTokens(test.delegator, test.lockId))
 			if test.expectPass {
 				suite.Require().NoError(err)
+
+				// check that the lock has been successfully unlocked
+				balance := suite.App.BankKeeper.GetBalance(suite.Ctx, test.delegator, appParams.BaseCoinUnit)
+				suite.Require().Equal(balance, test.expectedUnlockedOsmo)
 
 				// check if delegation has been done by checking if expectedDelegations matches after delegation
 				for i, val := range preferences {
@@ -758,9 +757,6 @@ func (suite *KeeperTestSuite) TestDelegateBondedTokens() {
 				}
 			} else {
 				suite.Require().Error(err)
-
-				balance := suite.App.BankKeeper.GetBalance(suite.Ctx, test.delegator, appParams.BaseCoinUnit)
-				suite.Require().Equal(balance, sdk.NewInt(50_000_000)) // balance delegator has after creating all the locks
 			}
 		})
 	}

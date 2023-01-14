@@ -8,9 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	appParams "github.com/osmosis-labs/osmosis/v14/app/params"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
+	appParams "github.com/osmosis-labs/osmosis/v14/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
 )
 

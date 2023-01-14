@@ -108,8 +108,8 @@ func (server msgServer) DelegateBondedTokens(goCtx context.Context, msg *types.M
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// get the existing validator set preference from store
-	_, found := server.keeper.GetValidatorSetPreference(ctx, msg.Delegator)
-	if !found {
+	_, err := server.keeper.GetDelegationPreferences(ctx, msg.Delegator)
+	if err != nil {
 		return nil, fmt.Errorf("user %s doesn't have validator set", msg.Delegator)
 	}
 
