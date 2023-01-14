@@ -29,12 +29,15 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v13/app"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v13/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v14/app"
+
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+
+	lockupkeeper "github.com/osmosis-labs/osmosis/v14/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v14/x/mint/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 type KeeperTestHelper struct {
@@ -301,7 +304,7 @@ func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []s
 		}
 		msg := balancer.NewMsgCreateBalancerPool(acc1, poolParams, poolAssets, defaultFutureGovernor)
 
-		poolId, err := s.App.GAMMKeeper.CreatePool(s.Ctx, msg)
+		poolId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, msg)
 		s.Require().NoError(err)
 
 		pool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
@@ -323,17 +326,22 @@ func (s *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset sdk.Coin
 	coins := sdk.Coins{sdk.NewInt64Coin(fromAsset.Denom, 100000000000000)}
 	s.FundAcc(acc1, coins)
 
-	_, err := s.App.GAMMKeeper.SwapExactAmountOut(
+	route := []poolmanagertypes.SwapAmountOutRoute{
+		{
+			PoolId:       poolId,
+			TokenInDenom: fromAsset.Denom,
+		},
+	}
+	_, err := s.App.PoolManagerKeeper.RouteExactAmountOut(
 		s.Ctx,
 		acc1,
-		poolId,
-		fromAsset.Denom,
+		route,
 		fromAsset.Amount,
-		sdk.NewCoin(toAsset.Denom, toAsset.Amount.Quo(sdk.NewInt(4))),
-	)
+		sdk.NewCoin(toAsset.Denom,
+			toAsset.Amount.Quo(sdk.NewInt(4))))
 	s.Require().NoError(err)
 
-	spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, toAsset.Denom, fromAsset.Denom)
+	spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, fromAsset.Denom, toAsset.Denom)
 	s.Require().NoError(err)
 
 	return spotPrice

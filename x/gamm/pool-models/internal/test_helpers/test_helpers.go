@@ -12,10 +12,9 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
-	sdkrand "github.com/osmosis-labs/osmosis/v13/simulation/simtypes/random"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	sdkrand "github.com/osmosis-labs/osmosis/v14/simulation/simtypes/random"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 )
 
 // CfmmCommonTestSuite is the common test suite struct of Constant Function Market Maker,
@@ -41,7 +40,7 @@ func TestCalculateAmountOutAndIn_InverseRelationship(
 	assetOutDenom string,
 	initialCalcOut int64,
 	swapFee sdk.Dec,
-	errTolerance osmoutils.ErrTolerance,
+	errTolerance osmomath.ErrTolerance,
 ) {
 	initialOut := sdk.NewInt64Coin(assetOutDenom, initialCalcOut)
 	initialOutCoins := sdk.NewCoins(initialOut)

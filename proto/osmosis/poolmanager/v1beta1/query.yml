@@ -1,0 +1,25 @@
+keeper: 
+  path: "github.com/osmosis-labs/osmosis/v14/x/poolmanager"
+  struct: "Keeper"
+client_path: "github.com/osmosis-labs/osmosis/v14/x/poolmanager/client"
+queries:
+  Params:
+    proto_wrapper:
+      query_func: "k.GetParams"
+    cli:
+      cmd: "GetParams"
+  EstimateSwapExactAmountIn:
+    proto_wrapper:
+      query_func: "k.EstimateSwapExactAmountIn"
+    cli:
+      cmd: "EstimateSwapExactAmountIn"
+  EstimateSwapExactAmountOut:
+    proto_wrapper:
+      query_func: "k.EstimateSwapExactAmountOut"
+    cli:
+      cmd: "EstimateSwapExactAmountOut"
+  NumPools:
+    proto_wrapper:
+      query_func: "k.NumPools"
+    cli:
+      cmd: "NumPools"

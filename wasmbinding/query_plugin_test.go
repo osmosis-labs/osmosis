@@ -19,15 +19,15 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	gammv2types "github.com/osmosis-labs/osmosis/v13/x/gamm/v2types"
+	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	gammv2types "github.com/osmosis-labs/osmosis/v14/x/gamm/v2types"
 
-	"github.com/osmosis-labs/osmosis/v13/app"
-	epochtypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v14/app"
+	epochtypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
 
-	"github.com/osmosis-labs/osmosis/v13/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v14/wasmbinding"
 )
 
 type StargateTestSuite struct {
@@ -80,7 +80,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				msg := balancer.NewMsgCreateBalancerPool(sender,
 					balancer.NewPoolParams(sdk.ZeroDec(), sdk.ZeroDec(), nil),
 					apptesting.DefaultPoolAssets, "")
-				_, err = suite.app.GAMMKeeper.CreatePool(suite.ctx, msg)
+				_, err = suite.app.PoolManagerKeeper.CreatePool(suite.ctx, msg)
 				suite.NoError(err)
 			},
 			requestData: func() []byte {

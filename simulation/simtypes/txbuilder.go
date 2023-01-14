@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
-	"github.com/osmosis-labs/osmosis/v13/app/params"
+	"github.com/osmosis-labs/osmosis/v14/app/params"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -112,7 +112,7 @@ func genTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, ch
 		if err != nil {
 			panic(err)
 		}
-		//nolint:forcetypeassert
+
 		sigs[i] = sig
 		err = txBuilder.SetSignatures(sigs...)
 		if err != nil {

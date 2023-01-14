@@ -6,9 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 )
 
 const errMsgFormatSharesLargerThanMax = "%s resulted shares is larger than the max amount of %s"
@@ -155,9 +154,9 @@ func BinarySearchSingleAssetJoin(
 	}
 
 	// We accept an additive tolerance of 1 LP share error and round down
-	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: sdk.OneDec(), MultiplicativeTolerance: sdk.Dec{}, RoundingDir: osmomath.RoundDown}
+	errTolerance := osmomath.ErrTolerance{AdditiveTolerance: sdk.OneDec(), MultiplicativeTolerance: sdk.Dec{}, RoundingDir: osmomath.RoundDown}
 
-	numLPShares, err = osmoutils.BinarySearch(
+	numLPShares, err = osmomath.BinarySearch(
 		estimateCoinOutGivenShares,
 		LPShareLowerBound, LPShareUpperBound, tokenIn.Amount, errTolerance, maxIterations)
 	if err != nil {

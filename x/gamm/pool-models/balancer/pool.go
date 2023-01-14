@@ -10,9 +10,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/cfmm_common"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 //nolint:deadcode
@@ -28,7 +28,7 @@ const (
 )
 
 var (
-	_ swaproutertypes.PoolI        = &Pool{}
+	_ poolmanagertypes.PoolI       = &Pool{}
 	_ types.PoolAmountOutExtension = &Pool{}
 	_ types.WeightedPoolExtension  = &Pool{}
 	_ types.CFMMPoolI              = &Pool{}
@@ -611,14 +611,20 @@ func (p *Pool) applySwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coin
 
 // SpotPrice returns the spot price of the pool
 // This is the weight-adjusted balance of the tokens in the pool.
-// In order reduce the propagated effect of incorrect trailing digits,
+// To reduce the propagated effect of incorrect trailing digits,
 // we take the ratio of weights and divide this by ratio of supplies
-// this is equivalent to spot_price = (Base_supply / Weight_base) / (Quote_supply / Weight_quote)
-// but cancels out the common term in weight.
+// this is equivalent to spot_price = (Quote Supply / Quote Weight) / (Base Supply / Base Weight)
+//
+// As an example, assume equal weights. uosmo supply of 2 and uatom supply of 4.
+//
+// Case 1: base = uosmo, quote = uatom -> for one uosmo, get 2 uatom = 4 / 2 = 2
+// In other words, it costs 2 uatom to get one uosmo.
+//
+// Case 2: base = uatom, quote = uosmo -> for one uatom, get 0.5 uosmo = 2 / 4 = 0.5
+// In other words, it costs 0.5 uosmo to get one uatom.
 //
 // panics if the pool in state is incorrect, and has any weight that is 0.
-// TODO: Come back and improve docs for this.
-func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (spotPrice sdk.Dec, err error) {
+func (p Pool) SpotPrice(ctx sdk.Context, quoteAsset, baseAsset string) (spotPrice sdk.Dec, err error) {
 	quote, base, err := p.parsePoolAssetsByDenoms(quoteAsset, baseAsset)
 	if err != nil {
 		return sdk.Dec{}, err
@@ -627,10 +633,11 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (spotPric
 		return sdk.Dec{}, errors.New("pool is misconfigured, got 0 weight")
 	}
 
-	// spot_price = (Base_supply / Weight_base) / (Quote_supply / Weight_quote)
-	// spot_price = (weight_quote / weight_base) * (base_supply / quote_supply)
-	invWeightRatio := quote.Weight.ToDec().Quo(base.Weight.ToDec())
-	supplyRatio := base.Token.Amount.ToDec().Quo(quote.Token.Amount.ToDec())
+	// spot_price = (Quote Supply / Quote Weight) / (Base Supply / Base Weight)
+	//            = (Quote Supply / Quote Weight) * (Base Weight / Base Supply)
+	//            = (Base Weight  / Quote Weight) * (Quote Supply / Base Supply)
+	invWeightRatio := base.Weight.ToDec().Quo(quote.Weight.ToDec())
+	supplyRatio := quote.Token.Amount.ToDec().Quo(base.Token.Amount.ToDec())
 	spotPrice = supplyRatio.Mul(invWeightRatio)
 
 	return spotPrice, err

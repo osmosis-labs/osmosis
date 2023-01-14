@@ -6,11 +6,11 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v13/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v14/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v14/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -22,14 +22,14 @@ type Keeper struct {
 
 	paramSpace paramtypes.Subspace
 
-	accountKeeper    types.AccountKeeper
-	bankKeeper       types.BankKeeper
-	incentivesKeeper types.IncentivesKeeper
-	distrKeeper      types.DistrKeeper
-	gammKeeper       types.GAMMKeeper
+	accountKeeper     types.AccountKeeper
+	bankKeeper        types.BankKeeper
+	incentivesKeeper  types.IncentivesKeeper
+	distrKeeper       types.DistrKeeper
+	poolmanagerKeeper types.PoolManagerKeeper
 }
 
-func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, incentivesKeeper types.IncentivesKeeper, distrKeeper types.DistrKeeper, gammKeeper types.GAMMKeeper) Keeper {
+func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, incentivesKeeper types.IncentivesKeeper, distrKeeper types.DistrKeeper, poolmanagerKeeper types.PoolManagerKeeper) Keeper {
 	// ensure pool-incentives module account is set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -45,11 +45,11 @@ func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKee
 
 		paramSpace: paramSpace,
 
-		accountKeeper:    accountKeeper,
-		bankKeeper:       bankKeeper,
-		incentivesKeeper: incentivesKeeper,
-		distrKeeper:      distrKeeper,
-		gammKeeper:       gammKeeper,
+		accountKeeper:     accountKeeper,
+		bankKeeper:        bankKeeper,
+		incentivesKeeper:  incentivesKeeper,
+		distrKeeper:       distrKeeper,
+		poolmanagerKeeper: poolmanagerKeeper,
 	}
 }
 

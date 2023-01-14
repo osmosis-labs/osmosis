@@ -5,7 +5,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 // AccountKeeper defines the account contract that must be fulfilled when
@@ -44,10 +44,35 @@ type CommunityPoolKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
 
-type PoolIncentivesKeeper interface {
-	IsPoolIncentivized(ctx sdk.Context, poolId uint64) bool
-}
+// PoolManager defines the interface needed to be fulfilled for
+// the pool manger.
+type PoolManager interface {
+	CreatePool(ctx sdk.Context, msg poolmanagertypes.CreatePoolMsg) (uint64, error)
 
-type PoolCreationManager interface {
-	CreatePool(ctx sdk.Context, msg swaproutertypes.CreatePoolMsg) (uint64, error)
+	GetNextPoolId(ctx sdk.Context) uint64
+
+	RouteExactAmountIn(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		routes []poolmanagertypes.SwapAmountInRoute,
+		tokenIn sdk.Coin,
+		tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error)
+
+	RouteExactAmountOut(ctx sdk.Context,
+		sender sdk.AccAddress,
+		routes []poolmanagertypes.SwapAmountOutRoute,
+		tokenInMaxAmount sdk.Int,
+		tokenOut sdk.Coin,
+	) (tokenInAmount sdk.Int, err error)
+
+	MultihopEstimateOutGivenExactAmountIn(
+		ctx sdk.Context,
+		routes []poolmanagertypes.SwapAmountInRoute,
+		tokenIn sdk.Coin,
+	) (tokenOutAmount sdk.Int, err error)
+
+	MultihopEstimateInGivenExactAmountOut(
+		ctx sdk.Context,
+		routes []poolmanagertypes.SwapAmountOutRoute,
+		tokenOut sdk.Coin) (tokenInAmount sdk.Int, err error)
 }

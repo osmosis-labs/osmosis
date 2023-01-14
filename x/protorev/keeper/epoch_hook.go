@@ -3,8 +3,9 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
 
 type EpochHooks struct {
@@ -30,18 +31,30 @@ func (h EpochHooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, ep
 	return nil
 }
 
-// AfterEpochEnd is the epoch end hook. The module will update all of the pools in the store that are
-// used for trading.
+// AfterEpochEnd is the epoch end hook.
 func (h EpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
-	switch epochIdentifier {
-	case "week":
-		// Update the pools in the store
-		return h.k.UpdatePools(ctx)
+	if enabled, err := h.k.GetProtoRevEnabled(ctx); err == nil && enabled {
+		switch epochIdentifier {
+		case "week":
+			// Distribute developer fees to the developer account. We do not error check because the developer account
+			// may not have been set by this point (gets set by the admin account after module genesis)
+			_ = h.k.SendDeveloperFeesToDeveloperAccount(ctx)
+
+			// Update the pools in the store
+			return h.k.UpdatePools(ctx)
+		case "day":
+			// Increment number of days since module genesis to properly calculate developer fees after cyclic arbitrage trades
+			if daysSinceGenesis, err := h.k.GetDaysSinceModuleGenesis(ctx); err != nil {
+				h.k.SetDaysSinceModuleGenesis(ctx, 1)
+			} else {
+				h.k.SetDaysSinceModuleGenesis(ctx, daysSinceGenesis+1)
+			}
+		}
 	}
+
 	return nil
 }
 
-// Update pools requests the highest liquidity pools from the gamm module and updates the pools in the store
 func (k Keeper) UpdatePools(ctx sdk.Context) error {
 	// Reset the pools in the store
 	k.DeleteAllAtomPools(ctx)
@@ -79,6 +92,12 @@ func (k Keeper) GetHighestLiquidityPools(ctx sdk.Context) (map[string]LiquidityP
 	// Iterate through all pools and find valid matches
 	for _, pool := range pools {
 		coins := pool.GetTotalPoolLiquidity(ctx)
+
+		// Pool must be a non-stableswap pool
+		pooltype, err := k.gammKeeper.GetPoolType(ctx, pool.GetId())
+		if err != nil || pooltype == poolmanagertypes.Stableswap {
+			continue
+		}
 
 		// Pool must be active and the number of coins must be 2
 		if pool.IsActive(ctx) && len(coins) == 2 {

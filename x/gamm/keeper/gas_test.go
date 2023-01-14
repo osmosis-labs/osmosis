@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	balancertypes "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -124,7 +124,7 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 			},
 		}
 		msg := balancer.NewMsgCreateBalancerPool(defaultAddr, defaultPoolParams, poolAssets, "")
-		_, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
+		_, err := suite.App.PoolManagerKeeper.CreatePool(suite.Ctx, msg)
 		suite.Require().NoError(err)
 	}
 

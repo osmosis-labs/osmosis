@@ -3,8 +3,8 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/v14/x/pool-incentives/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.

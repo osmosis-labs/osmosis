@@ -2,6 +2,7 @@ package chain
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -18,10 +19,10 @@ import (
 	"github.com/stretchr/testify/require"
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v13/tests/e2e/util"
-	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
-	twapqueryproto "github.com/osmosis-labs/osmosis/v13/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
+	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
+	twapqueryproto "github.com/osmosis-labs/osmosis/v14/x/twap/client/queryproto"
 )
 
 func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte, error) {
@@ -110,6 +111,45 @@ func (n *NodeConfig) QueryContractsFromId(codeId int) ([]string, error) {
 	return contractsResponse.Contracts, nil
 }
 
+func (n *NodeConfig) QueryLatestWasmCodeID() uint64 {
+	path := "/cosmwasm/wasm/v1/code"
+
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var response wasmtypes.QueryCodesResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err)
+	if len(response.CodeInfos) == 0 {
+		return 0
+	}
+	return response.CodeInfos[len(response.CodeInfos)-1].CodeID
+}
+
+func (n *NodeConfig) QueryWasmSmart(contract string, msg string) (map[string]interface{}, error) {
+	// base64-encode the msg
+	encodedMsg := base64.StdEncoding.EncodeToString([]byte(msg))
+	path := fmt.Sprintf("/cosmwasm/wasm/v1/contract/%s/smart/%s", contract, encodedMsg)
+
+	bz, err := n.QueryGRPCGateway(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var response wasmtypes.QuerySmartContractStateResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	var responseJSON map[string]interface{}
+	err = json.Unmarshal(response.Data, &responseJSON)
+	if err != nil {
+		return nil, err
+	}
+	return responseJSON, nil
+}
+
 func (n *NodeConfig) QueryPropTally(proposalNumber int) (sdk.Int, sdk.Int, sdk.Int, sdk.Int, error) {
 	path := fmt.Sprintf("cosmos/gov/v1beta1/proposals/%d/tally", proposalNumber)
 	bz, err := n.QueryGRPCGateway(path)
@@ -187,7 +227,6 @@ func (n *NodeConfig) QueryArithmeticTwapToNow(poolId uint64, baseAsset, quoteAss
 		return sdk.Dec{}, err
 	}
 
-	// nolint: staticcheck
 	var response twapqueryproto.ArithmeticTwapToNowResponse
 	err = util.Cdc.UnmarshalJSON(bz, &response)
 	require.NoError(n.t, err) // this error should not happen
@@ -209,11 +248,51 @@ func (n *NodeConfig) QueryArithmeticTwap(poolId uint64, baseAsset, quoteAsset st
 		return sdk.Dec{}, err
 	}
 
-	// nolint: staticcheck
 	var response twapqueryproto.ArithmeticTwapResponse
 	err = util.Cdc.UnmarshalJSON(bz, &response)
 	require.NoError(n.t, err) // this error should not happen
 	return response.ArithmeticTwap, nil
+}
+
+func (n *NodeConfig) QueryGeometricTwapToNow(poolId uint64, baseAsset, quoteAsset string, startTime time.Time) (sdk.Dec, error) {
+	path := "osmosis/twap/v1beta1/GeometricTwapToNow"
+
+	bz, err := n.QueryGRPCGateway(
+		path,
+		"pool_id", strconv.FormatInt(int64(poolId), 10),
+		"base_asset", baseAsset,
+		"quote_asset", quoteAsset,
+		"start_time", startTime.Format(time.RFC3339Nano),
+	)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	var response twapqueryproto.GeometricTwapToNowResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err)
+	return response.GeometricTwap, nil
+}
+
+func (n *NodeConfig) QueryGeometricTwap(poolId uint64, baseAsset, quoteAsset string, startTime time.Time, endTime time.Time) (sdk.Dec, error) {
+	path := "osmosis/twap/v1beta1/GeometricTwap"
+
+	bz, err := n.QueryGRPCGateway(
+		path,
+		"pool_id", strconv.FormatInt(int64(poolId), 10),
+		"base_asset", baseAsset,
+		"quote_asset", quoteAsset,
+		"start_time", startTime.Format(time.RFC3339Nano),
+		"end_time", endTime.Format(time.RFC3339Nano),
+	)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	var response twapqueryproto.GeometricTwapResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err)
+	return response.GeometricTwap, nil
 }
 
 // QueryHashFromBlock gets block hash at a specific height. Otherwise, error.

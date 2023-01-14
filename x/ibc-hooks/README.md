@@ -33,7 +33,8 @@ So we detail where we want to get each of these fields from:
 
 * Sender: We cannot trust the sender of an IBC packet, the counterparty chain has full ability to lie about it. 
 We cannot risk this sender being confused for a particular user or module address on Osmosis.
-So we hardcode the sender to be a particular module account made in IBC.
+So we replace the sender with an account to represent the sender prefixed by the channel and a wasm module prefix.
+This is done by setting the sender to `Bech32(Hash("ibc-wasm-hook-intermediary" || channelID || sender))`, where the channelId is the channel id on the local chain. 
 * Contract: This field should be directly obtained from the ICS-20 packet metadata
 * Msg: This field should be directly obtained from the ICS-20 packet metadata.
 * Funds: This field is set to the amount of funds being sent over in the ICS 20 packet. One detail is that the denom in the packet is the counterparty chains representation of the denom, so we have to translate it to Osmosis' representation.
@@ -43,7 +44,7 @@ So our constructed cosmwasm message that we execute will look like:
 ```go
 msg := MsgExecuteContract{
 	// Sender is the that actor that signed the messages
-	Sender: "osmo1-hardcoded-moduleAccount",
+	Sender: "osmo1-hash-of-channel-and-sender",
 	// Contract is the address of the smart contract
 	Contract: packet.data.memo["wasm"]["ContractAddress"],
 	// Msg json encoded message to be passed to the contract
@@ -61,9 +62,9 @@ ICS20 is JSON native, so we use JSON for the memo format.
 {
     //... other ibc fields that we don't care about
     "data":{
-    	"denom": "denom on counterparty chain (e.g. uatom)",
+    	"denom": "denom on counterparty chain (e.g. uatom)",  // will be transformed to the local denom (ibc/...)
         "amount": "1000",
-        "sender": "...", // ignored
+        "sender": "addr on counterparty chain", // will be transformed
         "receiver": "contract addr or blank",
     	"memo": {
            "wasm": {
@@ -114,6 +115,71 @@ In wasm hooks, post packet execution:
 * if wasm message has error, return ErrAck
 * otherwise continue through middleware
 
+## Ack callbacks
 
+A contract that sends an IBC transfer, may need to listen for the ACK from that packet. To allow
+contracts to listen on the ack of specific packets, we provide Ack callbacks. 
 
-### Testing strategy
+### Design
+
+The sender of an IBC transfer packet may specify a callback for when the ack of that packet is received in the memo 
+field of the transfer packet. 
+
+Crucially, _only_ the IBC packet sender can set the callback.
+
+### Use case
+
+The crosschain swaps implementation sends an IBC transfer. If the transfer were to fail, we want to allow the sender
+to be able to retrieve their funds (which would otherwise be stuck in the contract). To do this, we allow users to 
+retrieve the funds after the timeout has passed, but without the ack information, we cannot guarantee that the send 
+hasn't failed (i.e.: returned an error ack notifying that the receiving change didn't accept it)
+
+### Implementation
+
+#### Callback information in memo
+
+For the callback to be processed, the transfer packet's memo should contain the following in its JSON:
+
+`{"ibc_callback": "osmo1contractAddr"}`
+
+The wasm hooks will keep the mapping from the packet's channel and sequence to the contract in storage. When an ack is
+received, it will notify the specified contract via a sudo message.
+
+#### Interface for receiving the Acks and Timeouts
+
+The contract that awaits the callback should implement the following interface for a sudo message:
+
+```rust
+#[cw_serde]
+pub enum IBCLifecycleComplete {
+    #[serde(rename = "ibc_ack")]
+    IBCAck {
+        /// The source channel (osmosis side) of the IBC packet
+        channel: String,
+        /// The sequence number that the packet was sent with
+        sequence: u64,
+        /// String encoded version of the ack as seen by OnAcknowledgementPacket(..)
+        ack: String,
+        /// Weather an ack is a success of failure according to the transfer spec
+        success: bool,
+    },
+    #[serde(rename = "ibc_timeout")]
+    IBCTimeout {
+        /// The source channel (osmosis side) of the IBC packet
+        channel: String,
+        /// The sequence number that the packet was sent with
+        sequence: u64,
+    },
+}
+
+/// Message type for `sudo` entry_point
+#[cw_serde]
+pub enum SudoMsg {
+    #[serde(rename = "ibc_lifecycle_complete")]
+    IBCLifecycleComplete(IBCLifecycleComplete),
+}
+```
+
+# Testing strategy
+
+See go tests.

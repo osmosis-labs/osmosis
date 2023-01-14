@@ -7,11 +7,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	balancertypes "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 )
 
 type KeeperTestSuite struct {
@@ -37,7 +37,7 @@ func (suite *KeeperTestSuite) prepareCustomBalancerPool(
 ) uint64 {
 	suite.fundAllAccountsWith(balances)
 
-	poolID, err := suite.App.GAMMKeeper.CreatePool(
+	poolID, err := suite.App.PoolManagerKeeper.CreatePool(
 		suite.Ctx,
 		balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], poolParams, poolAssets, ""),
 	)
@@ -54,7 +54,7 @@ func (suite *KeeperTestSuite) prepareCustomStableswapPool(
 ) uint64 {
 	suite.fundAllAccountsWith(balances)
 
-	poolID, err := suite.App.GAMMKeeper.CreatePool(
+	poolID, err := suite.App.PoolManagerKeeper.CreatePool(
 		suite.Ctx,
 		stableswap.NewMsgCreateStableswapPool(suite.TestAccs[0], poolParams, initialLiquidity, scalingFactors, ""),
 	)

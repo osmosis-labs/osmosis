@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	"github.com/osmosis-labs/osmosis/v13/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v14/x/txfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -179,7 +179,9 @@ func (suite *KeeperTestSuite) TestFeeTokenConversions() {
 			baseDenomPoolInput: sdk.NewInt64Coin(baseDenom, 100),
 			feeTokenPoolInput:  sdk.NewInt64Coin("foo", 200),
 			inputFee:           sdk.NewInt64Coin("foo", 10),
-			// expected to get 5.000000000005368710 baseDenom without rounding
+			// expected to get approximately 5 base denom
+			// foo supply / stake supply =  200 / 100 = 2 foo for 1 stake
+			// 10 foo in / 2 foo for 1 stake = 5 base denom
 			expectedOutput:      sdk.NewInt64Coin(baseDenom, 5),
 			expectedConvertable: true,
 		},
@@ -215,7 +217,7 @@ func (suite *KeeperTestSuite) TestFeeTokenConversions() {
 			converted, err := suite.App.TxFeesKeeper.ConvertToBaseToken(suite.Ctx, tc.inputFee)
 			if tc.expectedConvertable {
 				suite.Require().NoError(err, "test: %s", tc.name)
-				suite.Require().True(converted.IsEqual(tc.expectedOutput), "test: %s", tc.name)
+				suite.Require().Equal(tc.expectedOutput, converted)
 			} else {
 				suite.Require().Error(err, "test: %s", tc.name)
 			}

@@ -3,7 +3,7 @@ package twapmock
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v14/x/twap/types"
 )
 
 var _ types.AmmInterface = &ProgrammedAmmInterface{}
@@ -52,7 +52,7 @@ func (p *ProgrammedAmmInterface) ProgramPoolDenomsOverride(poolId uint64, overri
 }
 
 func (p *ProgrammedAmmInterface) ProgramPoolSpotPriceOverride(poolId uint64,
-	baseDenom, quoteDenom string, overrideSp sdk.Dec, overrideErr error,
+	quoteDenom, baseDenom string, overrideSp sdk.Dec, overrideErr error,
 ) {
 	input := SpotPriceInput{poolId, baseDenom, quoteDenom}
 	p.programmedSpotPrice[input] = SpotPriceResult{overrideSp, overrideErr}
@@ -71,12 +71,12 @@ func (p *ProgrammedAmmInterface) GetPoolDenoms(ctx sdk.Context, poolId uint64) (
 
 func (p *ProgrammedAmmInterface) CalculateSpotPrice(ctx sdk.Context,
 	poolId uint64,
-	baseDenom,
-	quoteDenom string,
+	quoteDenom,
+	baseDenom string,
 ) (price sdk.Dec, err error) {
 	input := SpotPriceInput{poolId, baseDenom, quoteDenom}
 	if res, ok := p.programmedSpotPrice[input]; ok {
 		return res.Sp, res.Err
 	}
-	return p.underlyingKeeper.CalculateSpotPrice(ctx, poolId, baseDenom, quoteDenom)
+	return p.underlyingKeeper.CalculateSpotPrice(ctx, poolId, quoteDenom, baseDenom)
 }

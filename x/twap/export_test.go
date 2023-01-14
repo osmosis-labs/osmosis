@@ -5,20 +5,16 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v14/x/twap/types"
 )
 
 type (
-	TimeTooOldError = timeTooOldError
-	TwapType        = twapType
+	TimeTooOldError        = timeTooOldError
+	TwapStrategy           = twapStrategy
+	ArithmeticTwapStrategy = arithmetic
+	GeometricTwapStrategy  = geometric
 )
-
-const (
-	ArithmeticTwapType = arithmeticTwapType
-	GeometricTwapType  = geometricTwapType
-)
-
-var GeometricTwapMathBase = geometricTwapMathBase
 
 func (k Keeper) StoreNewRecord(ctx sdk.Context, record types.TwapRecord) {
 	k.storeNewRecord(ctx, record)
@@ -72,16 +68,16 @@ func (k Keeper) GetInterpolatedRecord(ctx sdk.Context, poolId uint64, asset0Deno
 	return k.getInterpolatedRecord(ctx, poolId, t, asset0Denom, asset1Denom)
 }
 
-func ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string, twapType twapType) (sdk.Dec, error) {
-	return computeTwap(startRecord, endRecord, quoteAsset, twapType)
+func ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string, strategy twapStrategy) (sdk.Dec, error) {
+	return computeTwap(startRecord, endRecord, quoteAsset, strategy)
 }
 
-func ComputeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
-	return computeArithmeticTwap(startRecord, endRecord, quoteAsset)
+func (as arithmetic) ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
+	return as.computeTwap(startRecord, endRecord, quoteAsset)
 }
 
-func ComputeGeometricTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
-	return computeGeometricTwap(startRecord, endRecord, quoteAsset)
+func (gs geometric) ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
+	return gs.computeTwap(startRecord, endRecord, quoteAsset)
 }
 
 func RecordWithUpdatedAccumulators(record types.TwapRecord, t time.Time) types.TwapRecord {
@@ -96,8 +92,14 @@ func TwapLog(x sdk.Dec) sdk.Dec {
 	return twapLog(x)
 }
 
-func TwapPow(x sdk.Dec) sdk.Dec {
-	return twapPow(x)
+// twapPow exponentiates 2 to the given exponent.
+// Used as a test-helper for the power function used in geometric twap.
+func TwapPow(exponent sdk.Dec) sdk.Dec {
+	exp2 := osmomath.Exp2(osmomath.BigDecFromSDKDec(exponent.Abs()))
+	if exponent.IsNegative() {
+		return osmomath.OneDec().Quo(exp2).SDKDec()
+	}
+	return exp2.SDKDec()
 }
 
 func GetSpotPrices(

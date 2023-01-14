@@ -153,3 +153,43 @@ The Code Layout is very similar to TWAP module.
 - keeper.go - generic SDK boilerplate (defining a wrapper for store keys + params)
 - msg_server.go - handle messages request from client and process responses. 
 - store.go - Managing logic for getting and setting things to underlying stores (KVStore)
+
+## Redelegate algorithm logic pseudocode
+
+Existing ValSet   20osmos {ValA-> 0.5, ValB-> 0.3, ValC-> 0.2} [ValA-> 10osmo, ValB-> 6osmo, ValC-> 4osmo]
+New ValSet        20osmos {ValD-> 0.2, ValE-> 0.2, ValF-> 0.6} [ValD-> 4osmo, ValE-> 4osmo, ValD-> 12osmo]
+
+- // Rearranging the existingValSet and newValSet to to add extra validator padding
+  - existing_valset_updated = [ValA: 10, ValB: 6, ValC: 4, ValD: 0, ValE: 0, ValF: 0]
+  - new_valset_updated = [ValD: 4, ValE: 4, ValF: 12, ValA: 0, ValB: 0, ValC: 0]
+
+  // calculate the difference between two sets
+  - diff_arr = [ValA: 10, ValB: 6, ValC: 4, ValD: -4, ValE: -4, ValF: -12]
+
+	// Algorithm starts here
+- for i, validator in diff_arr: 
+    - for validator.amount > 0: 
+        source_validator = validator.address
+        // FindMin returns the index and MinAmt of the minimum amount in diffValSet
+        target_validator, idx = FindMin(diff_arr)   // gets the index of minValue and the minValue
+
+        // reDelegationAmt to is the amount to redelegate, which is the min of diffAmount and target_validator
+        reDelegationAmt = FindMin(abs(target_validator.amount), validator.amount)
+        sdk.BeginRedelegation(ctx, delegator, source_validator, target_validator, reDelegationAmt) 
+
+        // Update the current diffAmount by subtracting it with the reDelegationAmount
+        validator.amount = validator.amount - reDelegationAmt
+        // Find target_validator through idx in diffValSet and set that to (target_validatorAmount - reDelegationAmount)
+        diff_arr[idx].amount = target_validator.amount + reDelegationAmt 
+
+- Result 
+  1. diff_arr = [ValA: 0, ValB: 0, ValC: 0, ValD: 0, ValE: 0, ValF: 0]
+  2. [ValA: 0, ValB: 0, ValC: 0, ValD: 4, ValE: 4, ValF: 12] // final result
+
+
+## Redelegation Constraints 
+1. ValA -> ValB redelegate upto 7 times in 21 day period 
+2. ValA -> ValB (redelegate) ValB -> ValC (redelegate) **CONSECUTIVE REDELEGATION DOES NOT WORK**
+3. Once you redelegate from ValA -> ValB, you will not be able to redelegate from ValB to another validator for the next 21 days.
+  - the validator on the receiving end of redelegation will be on a 21-day redelegation lock
+4. Cannot redelegate to same validator 

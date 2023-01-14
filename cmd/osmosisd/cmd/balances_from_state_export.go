@@ -12,10 +12,10 @@ import (
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -24,8 +24,10 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-const FlagSelectPoolIds = "breakdown-by-pool-ids"
-const FlagMinimumStakeAmount = "minimum-stake-amount"
+const (
+	FlagSelectPoolIds      = "breakdown-by-pool-ids"
+	FlagMinimumStakeAmount = "minimum-stake-amount"
+)
 
 type DeriveSnapshot struct {
 	NumberAccounts uint64                    `json:"num_accounts"`

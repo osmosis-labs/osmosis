@@ -2,10 +2,11 @@ syntax = "proto3";
 package osmosis.valsetpref.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/valset-pref/v1beta1/state.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v13/x/valset-pref/types";
+option go_package = "github.com/osmosis-labs/osmosis/v14/x/valset-pref/types";
 
 // Msg defines the valset-pref modules's gRPC message service.
 service Msg {
@@ -24,6 +25,11 @@ service Msg {
   // the sdk.
   rpc UndelegateFromValidatorSet(MsgUndelegateFromValidatorSet)
       returns (MsgUndelegateFromValidatorSetResponse);
+
+  // RedelegateValidatorSet takes the existing validator set and redelegates to
+  // a new set.
+  rpc RedelegateValidatorSet(MsgRedelegateValidatorSet)
+      returns (MsgRedelegateValidatorSetResponse);
 
   // WithdrawDelegationRewards allows users to claim rewards from the
   // validator-set.
@@ -79,6 +85,19 @@ message MsgUndelegateFromValidatorSet {
 }
 
 message MsgUndelegateFromValidatorSetResponse {}
+
+message MsgRedelegateValidatorSet {
+  // delegator is the user who is trying to create a validator-set.
+  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
+
+  // list of {valAddr, weight} to delegate to
+  repeated ValidatorPreference preferences = 2 [
+    (gogoproto.moretags) = "yaml:\"preferences\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgRedelegateValidatorSetResponse {}
 
 // MsgWithdrawDelegationRewards allows user to claim staking rewards from the
 // validator set.

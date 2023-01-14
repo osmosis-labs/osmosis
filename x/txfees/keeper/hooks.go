@@ -3,9 +3,9 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
-	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v13/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v14/x/txfees/types"
 )
 
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
@@ -34,7 +34,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			// The only thing that could be done is a costly griefing attack to reduce the amount of osmo given as tx fees.
 			// However the idea of the txfees FeeToken gating is that the pool is sufficiently liquid for that base token.
 			minAmountOut := sdk.ZeroInt()
-			_, err := k.gammKeeper.SwapExactAmountIn(cacheCtx, nonNativeFeeAddr, feetoken.PoolID, coinBalance, baseDenom, minAmountOut)
+			_, err := k.poolManager.SwapExactAmountIn(cacheCtx, nonNativeFeeAddr, feetoken.PoolID, coinBalance, baseDenom, minAmountOut)
 			return err
 		})
 	}

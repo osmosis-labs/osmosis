@@ -7,9 +7,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 // CalculateSpotPrice returns the spot price of the quote asset in terms of the base asset,
@@ -23,8 +23,8 @@ import (
 func (k Keeper) CalculateSpotPrice(
 	ctx sdk.Context,
 	poolID uint64,
-	baseAssetDenom string,
 	quoteAssetDenom string,
+	baseAssetDenom string,
 ) (spotPrice sdk.Dec, err error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolID)
 	if err != nil {
@@ -39,7 +39,7 @@ func (k Keeper) CalculateSpotPrice(
 		}
 	}()
 
-	spotPrice, err = pool.SpotPrice(ctx, baseAssetDenom, quoteAssetDenom)
+	spotPrice, err = pool.SpotPrice(ctx, quoteAssetDenom, baseAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -56,36 +56,13 @@ func (k Keeper) CalculateSpotPrice(
 	return spotPrice, err
 }
 
-// CreatePool attempts to create a pool returning the newly created pool ID or
-// an error upon failure. The pool creation fee is used to fund the community
-// pool. It will create a dedicated module account for the pool and sends the
-// initial liquidity to the created module account.
-//
-// After the initial liquidity is sent to the pool's account, shares are minted
-// and sent to the pool creator. The shares are created using a denomination in
-// the form of gamm/pool/{poolID}. In addition, the x/bank metadata is updated
-// to reflect the newly created GAMM share denomination.
-// LEGACY, consider removing in subsequent PR
-func (k Keeper) CreatePool(ctx sdk.Context, msg swaproutertypes.CreatePoolMsg) (uint64, error) {
-	poolId, err := k.poolCreationManager.CreatePool(ctx, msg)
-	if err != nil {
-		return 0, err
-	}
-	expectedPoolId := k.getNextPoolIdAndIncrement(ctx)
-	if poolId != expectedPoolId {
-		return 0, fmt.Errorf("Intermediate code that will get removed in swaprouter transition"+
-			"expected pool id %d, got %d", expectedPoolId, poolId)
-	}
-	return poolId, err
-}
-
 // This function:
 // - saves the pool to state
 // - Mints LP shares to the pool creator
 // - Sets bank metadata for the LP denom
 // - Records total liquidity increase
 // - Calls the AfterPoolCreated hook
-func (k Keeper) InitializePool(ctx sdk.Context, pool swaproutertypes.PoolI, sender sdk.AccAddress) (err error) {
+func (k Keeper) InitializePool(ctx sdk.Context, pool poolmanagertypes.PoolI, sender sdk.AccAddress) (err error) {
 	// Mint the initial pool shares share token to the sender
 	err = k.MintPoolShareToAccount(ctx, pool, sender, pool.GetTotalShares())
 	if err != nil {
@@ -365,12 +342,19 @@ func (k Keeper) ExitSwapShareAmountIn(
 	if err != nil {
 		return sdk.Int{}, err
 	}
+
+	pool, err := k.GetPool(ctx, poolId)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+	swapFee := pool.GetSwapFee(ctx)
+
 	tokenOutAmount = exitCoins.AmountOf(tokenOutDenom)
 	for _, coin := range exitCoins {
 		if coin.Denom == tokenOutDenom {
 			continue
 		}
-		swapOut, err := k.SwapExactAmountIn(ctx, sender, poolId, coin, tokenOutDenom, sdk.ZeroInt())
+		swapOut, err := k.SwapExactAmountIn(ctx, sender, pool, coin, tokenOutDenom, sdk.ZeroInt(), swapFee)
 		if err != nil {
 			return sdk.Int{}, err
 		}

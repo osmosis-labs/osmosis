@@ -7,10 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v13/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v14/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
 )
 
 var (
@@ -96,6 +96,7 @@ func (suite *KeeperTestSuite) TestUnpool() {
 			superfluidKeeper := suite.App.SuperfluidKeeper
 			lockupKeeper := suite.App.LockupKeeper
 			stakingKeeper := suite.App.StakingKeeper
+			poolmanagerKeeper := suite.App.PoolManagerKeeper
 
 			// generate one delegator Addr, one gamm pool
 			delAddrs := CreateRandomAccounts(2)
@@ -115,7 +116,7 @@ func (suite *KeeperTestSuite) TestUnpool() {
 				ExitFee: sdk.NewDec(0),
 			}, defaultPoolAssets, defaultFutureGovernor)
 
-			poolId, err := gammKeeper.CreatePool(ctx, msg)
+			poolId, err := poolmanagerKeeper.CreatePool(ctx, msg)
 			suite.Require().NoError(err)
 
 			// join pool

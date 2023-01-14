@@ -1,6 +1,7 @@
 package osmosisibctesting
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"os"
 
@@ -10,10 +11,10 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 )
 
 func (chain *TestChain) StoreContractCode(suite *suite.Suite, path string) {
@@ -27,6 +28,8 @@ func (chain *TestChain) StoreContractCode(suite *suite.Suite, path string) {
 	src := wasmtypes.StoreCodeProposalFixture(func(p *wasmtypes.StoreCodeProposal) {
 		p.RunAs = addr.String()
 		p.WASMByteCode = wasmCode
+		checksum := sha256.Sum256(wasmCode)
+		p.CodeHash = checksum[:]
 	})
 
 	// when stored
@@ -59,10 +62,9 @@ func (chain *TestChain) InstantiateRLContract(suite *suite.Suite, quotas string)
 	return addr
 }
 
-func (chain *TestChain) InstantiateContract(suite *suite.Suite, msg string) sdk.AccAddress {
+func (chain *TestChain) InstantiateContract(suite *suite.Suite, msg string, codeID uint64) sdk.AccAddress {
 	osmosisApp := chain.GetOsmosisApp()
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
-	codeID := uint64(1)
 	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
 	addr, _, err := contractKeeper.Instantiate(chain.GetContext(), codeID, creator, creator, []byte(msg), "contract", nil)
 	suite.Require().NoError(err)

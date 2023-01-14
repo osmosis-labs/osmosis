@@ -2,19 +2,7 @@ package types
 
 import (
 	"fmt"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-// InputAmountList contains a list of input amounts to test when creating the optimal amount to swap in the
-// binary search method
-var InputAmountList []sdk.Int
-
-// AtomDenomination stores the native denom name for Atom on chain used for route building
-var AtomDenomination string = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
-
-// OsmosisDenomination stores the native denom name for Osmosis on chain used for route building
-var OsmosisDenomination string = "uosmo"
 
 type TokenPair struct {
 	TokenA string
@@ -40,11 +28,7 @@ func (gs GenesisState) Validate() error {
 }
 
 func init() {
-	// Init all of the input amounts
-	InputAmountList = make([]sdk.Int, 0)
-	for i := 0; i < 1000000000; i += 100000 {
-		InputAmountList = append(InputAmountList, sdk.NewInt(int64(i)))
-	}
+	// no-op
 }
 
 // Routes entered into the genesis state must start and end with the same denomination and

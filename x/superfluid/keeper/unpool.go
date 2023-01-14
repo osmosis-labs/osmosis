@@ -5,11 +5,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
 )
 
 // Returns a list of newly created lockIDs, or an error.
