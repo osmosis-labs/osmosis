@@ -1,6 +1,8 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
@@ -759,6 +761,18 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 			lowerTick: DefaultLowerTick,
 			upperTick: DefaultUpperTick + 1,
 		},
+		"err: pool does not exist": {
+			poolId:        3,
+			expectedError: cltypes.PoolNotFoundError{PoolId: 3},
+		},
+		"err: position does not exist": {
+			poolId:        1,
+			owner:         ownerOne,
+			liquidity:     DefaultLiquidityAmt,
+			lowerTick:     DefaultLowerTick - 1,
+			upperTick:     DefaultUpperTick,
+			expectedError: accum.NoPositionError{Name: fmt.Sprintf("%s,%s,%d,%d", "1", ownerOne.String(), DefaultLowerTick-1, DefaultUpperTick)},
+		},
 	}
 
 	for name, tc := range tests {
@@ -784,7 +798,6 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 			// System under test
 			// Update one of the positions as per the test case
 			err := s.App.ConcentratedLiquidityKeeper.UpdateFeeAccumulatorPosition(s.Ctx, tc.poolId, tc.owner, tc.liquidity, tc.lowerTick, tc.upperTick)
-			s.Require().NoError(err)
 
 			if tc.expectedError != nil {
 				s.Require().Error(err)
