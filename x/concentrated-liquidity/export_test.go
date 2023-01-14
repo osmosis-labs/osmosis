@@ -136,6 +136,10 @@ func (k Keeper) ChargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 	return k.chargeFee(ctx, poolId, feeUpdate)
 }
 
+func (k Keeper) SubFromFeeAccumulator(ctx sdk.Context, poolId uint64, amount sdk.DecCoins) error {
+	return k.subFromFeeAccumulator(ctx, poolId, amount)
+}
+
 func FormatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) string {
 	return formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
 }

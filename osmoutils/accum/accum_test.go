@@ -1108,22 +1108,22 @@ func (suite *AccumTestSuite) TestMarhsalUnmarshalRecord() {
 
 func (suite *AccumTestSuite) TestAddToAccumulator() {
 	tests := map[string]struct {
-		updateAmmount sdk.DecCoins
+		updateAmount sdk.DecCoins
 
 		expectedValue sdk.DecCoins
 	}{
 		"positive": {
-			updateAmmount: initialCoinsDenomOne,
+			updateAmount: initialCoinsDenomOne,
 
 			expectedValue: initialCoinsDenomOne,
 		},
 		"negative": {
-			updateAmmount: initialCoinsDenomOne.MulDec(sdk.NewDec(-1)),
+			updateAmount: initialCoinsDenomOne.MulDec(sdk.NewDec(-1)),
 
 			expectedValue: initialCoinsDenomOne.MulDec(sdk.NewDec(-1)),
 		},
 		"multiple coins": {
-			updateAmmount: initialCoinsDenomOne.Add(initialCoinDenomTwo),
+			updateAmount: initialCoinsDenomOne.Add(initialCoinDenomTwo),
 
 			expectedValue: initialCoinsDenomOne.Add(initialCoinDenomTwo),
 		},
@@ -1140,7 +1140,7 @@ func (suite *AccumTestSuite) TestAddToAccumulator() {
 			suite.Require().NoError(err)
 
 			// System under test.
-			originalAccum.AddToAccumulator(tc.updateAmmount)
+			originalAccum.AddToAccumulator(tc.updateAmount)
 
 			// Validations.
 
@@ -1152,6 +1152,71 @@ func (suite *AccumTestSuite) TestAddToAccumulator() {
 
 			// validate that store is updated.
 			suite.Require().Equal(tc.expectedValue, accumFromStore.GetValue())
+		})
+	}
+}
+
+func (suite *AccumTestSuite) TestSubFromAccumulator() {
+	defaultAccumCoins1 := sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
+	defaultAccumCoins2 := sdk.NewDecCoin("bar", sdk.NewInt(50))
+
+	tests := map[string]struct {
+		initialAccumVal sdk.DecCoins
+		subAmount       sdk.DecCoins
+		expectedValue   sdk.DecCoins
+		expectedError   bool
+	}{
+		"subtract less amount then initial accum value": {
+			initialAccumVal: defaultAccumCoins1,
+			subAmount:       sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(30))),
+			expectedValue:   sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(20))),
+		},
+		"subtract same amount as initial accum value": {
+			initialAccumVal: defaultAccumCoins1,
+			subAmount:       defaultAccumCoins1,
+		},
+		"subtract more amount than initial accum value": {
+			initialAccumVal: defaultAccumCoins1,
+			subAmount:       defaultAccumCoins1.MulDec(sdk.NewDec(2)),
+			expectedError:   true,
+		},
+		"subtract multiple coins": {
+			initialAccumVal: defaultAccumCoins1.Add(defaultAccumCoins2),
+			subAmount:       sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(30)), sdk.NewDecCoin("foo", sdk.NewInt(20))),
+			expectedValue:   sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(20)), sdk.NewDecCoin("foo", sdk.NewInt(30))),
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			// Setup
+			suite.SetupTest()
+
+			err := accumPackage.MakeAccumulator(suite.store, testNameOne)
+			suite.Require().NoError(err)
+			originalAccum, err := accumPackage.GetAccumulator(suite.store, testNameOne)
+			suite.Require().NoError(err)
+
+			// set testing environment with initial accum value to test subtraction
+			originalAccum.AddToAccumulator(tc.initialAccumVal)
+
+			// System under test.
+			err = originalAccum.SubFromAccumulator(tc.subAmount)
+
+			// Validations.
+
+			if tc.expectedError {
+				suite.Require().Error(err)
+			} else {
+				accumFromStore, err := accumPackage.GetAccumulator(suite.store, testNameOne)
+				suite.Require().NoError(err)
+
+				// validate that the reciever is mutated.
+				suite.Require().Equal(tc.expectedValue, originalAccum.GetValue())
+
+				// validate that store is updated.
+				suite.Require().Equal(tc.expectedValue, accumFromStore.GetValue())
+			}
 		})
 	}
 }

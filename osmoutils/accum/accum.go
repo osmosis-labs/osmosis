@@ -72,6 +72,9 @@ func (accum *AccumulatorObject) AddToAccumulator(amt sdk.DecCoins) {
 	setAccumulator(*accum, accum.value)
 }
 
+// SubFromAccumulator subtracts the given amt from the fee accumulator.
+// Safesub is used to panic and if given amt is greater than the value of accumulator,
+// returns error.
 func (accum *AccumulatorObject) SubFromAccumulator(amt sdk.DecCoins) error {
 	updatedValue, neg := accum.value.SafeSub(amt)
 	// check that the updated value is not negative
