@@ -159,8 +159,6 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 		existingValSet = append(existingValSet, existing_val)
 		newValSet = append(newValSet, existing_val_zero_amount)
 		totalTokenAmount = totalTokenAmount.Add(tokenFromShares)
-
-		//fmt.Println("Existing SET", existingVals.ValOperAddress, tokenFromShares)
 	}
 
 	for _, newVals := range newSet {
@@ -169,8 +167,6 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 		new_val, new_val_zero_amount := k.GetValSetStruct(newVals, amountToDelegate)
 		newValSet = append(newValSet, new_val)
 		existingValSet = append(existingValSet, new_val_zero_amount)
-
-		//fmt.Println("New SET", newVals.ValOperAddress, amountToDelegate)
 	}
 
 	// calculate the difference between two sets
@@ -208,7 +204,6 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 
 			// reDelegationAmt to is the amount to redelegate, which is the min of diffAmount and target_validator
 			reDelegationAmt := sdk.MinDec(target_val.amount.Abs(), diff_val.amount).TruncateDec()
-			//fmt.Println("Redelegate: ", source_val, target_val.valAddr, reDelegationAmt)
 			_, err = k.stakingKeeper.BeginRedelegation(ctx, delegator, validator_source, validator_target, reDelegationAmt)
 			if err != nil {
 				return err

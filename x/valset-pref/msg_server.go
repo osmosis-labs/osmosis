@@ -68,7 +68,7 @@ func (server msgServer) RedelegateValidatorSet(goCtx context.Context, msg *types
 		return nil, err
 	}
 
-	// get existing delegation if there is not valset set, else get valset
+	// get existing delegation if there is no valset set, else get valset
 	existingSet, err := server.keeper.GetDelegationPreferences(ctx, msg.Delegator)
 	if err != nil {
 		return nil, fmt.Errorf("user has no delegation")
