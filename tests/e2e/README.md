@@ -116,22 +116,13 @@ Conceptually, we can split the e2e setup into 2 parts:
 
 The `initialization` package introduces the logic necessary for initializing a
 chain by creating a genesis file and all required configuration files
-such as the `app.toml`. This package directly depends on the Osmosis
-codebase.
+such as the `app.toml`. In addition, it starts chain initialization.
+This package directly depends on the Osmosis codebase.
 
-## `upgrade` Package
-
-***This package has been removed and it's logic has been moved to `initialization` package***
-
-The `upgrade` package starts chain initialization. In addition, there is
-a Dockerfile `init-e2e.Dockerfile`. When executed, its container
-produces all files necessary for starting up a new chain. These
+In addition, there is a Dockerfile `init-e2e.Dockerfile`.
+When executed, its container produces all files necessary for starting up a new chain. These
 resulting files can be mounted on a volume and propagated to our
 production osmosis container to start the `osmosisd` service.
-
-The decoupling between chain initialization and start-up allows to
-minimize the differences between our test suite and the production
-environment.
 
 ## `containers` Package
 
