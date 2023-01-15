@@ -10,6 +10,7 @@ import (
 const (
 	TypeMsgCreatePosition   = "create-position"
 	TypeMsgWithdrawPosition = "withdraw-position"
+	TypeMsgCollectFees      = "collect-fees"
 )
 
 var _ sdk.Msg = &MsgCreatePosition{}
@@ -83,6 +84,35 @@ func (msg MsgWithdrawPosition) GetSignBytes() []byte {
 }
 
 func (msg MsgWithdrawPosition) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgCollectFees{}
+
+func (msg MsgCollectFees) Route() string { return RouterKey }
+func (msg MsgCollectFees) Type() string  { return TypeMsgCollectFees }
+func (msg MsgCollectFees) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return fmt.Errorf("Invalid sender address (%s)", err)
+	}
+
+	if msg.LowerTick >= msg.UpperTick {
+		return InvalidLowerUpperTickError{LowerTick: msg.LowerTick, UpperTick: msg.UpperTick}
+	}
+
+	return nil
+}
+
+func (msg MsgCollectFees) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgCollectFees) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)

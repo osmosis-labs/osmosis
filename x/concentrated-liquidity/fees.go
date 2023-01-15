@@ -74,13 +74,13 @@ func (k Keeper) chargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 	return nil
 }
 
-// initializeFeeAccumulatorPosition initializes the pool fee accumulator with given liquidity delta and zero value for the accumulator.
+// initializeFeeAccumulatorPosition initializes the pool fee accumulator with zero liquidity delta
+// and zero value for the accumulator.
 // Returns nil on success. Returns error if:
 // - fails to get an accumulator for a given poold id
-// - attempts to re-initialize an existing non-zero liqudity position
+// - attempts to re-initialize an existing fee accumulator liqudity position
 // - fails to create a position
-// nolint: unused
-func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec) error {
+func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) error {
 	// get fee accumulator for the pool
 	feeAccumulator, err := k.getFeeAccumulator(ctx, poolId)
 	if err != nil {
@@ -96,18 +96,11 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 
 	// assure that existing position has zero liquidity
 	if hasPosition {
-		positionSize, err := feeAccumulator.GetPositionSize(positionKey)
-		if err != nil {
-			return err
-		}
-
-		if !positionSize.IsZero() {
-			return fmt.Errorf("attempted to re-initialize fee accumulator position (%s) with non-zero liquidity", positionKey)
-		}
+		return fmt.Errorf("attempted to re-initialize fee accumulator position (%s) with non-zero liquidity", positionKey)
 	}
 
 	// initialize the owner's position with liquidity Delta and zero accumulator value
-	if err := feeAccumulator.NewPosition(positionKey, liquidityDelta, nil); err != nil {
+	if err := feeAccumulator.NewPosition(positionKey, sdk.ZeroDec(), nil); err != nil {
 		return err
 	}
 
@@ -115,7 +108,6 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 }
 
 // updateFeeAccumulatorPosition updates the owner's position
-// nolint: unused
 // TODO: test
 func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec, lowerTick int64, upperTick int64) error {
 	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
@@ -135,23 +127,6 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, own
 		feeGrowthOutside)
 	if err != nil {
 		return err
-	}
-
-	return nil
-}
-
-// initOrUpdateFeeAccumulatorPosition either updates or initializes a fee accumulator position.
-// if fails upon getting and updating fee accumulator position for the given pool + owner accumulator,
-// initializes the fee accumulator position.
-// nolint: unused
-func (k Keeper) initOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec, lowerTick int64, upperTick int64) error {
-	// first try updating fee accum position
-	err := k.updateFeeAccumulatorPosition(ctx, poolId, owner, liquidityDelta, lowerTick, upperTick)
-	if err != nil {
-		err = k.initializeFeeAccumulatorPosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
