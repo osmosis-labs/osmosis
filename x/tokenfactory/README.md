@@ -153,3 +153,34 @@ Please note, if the SDK increases the maximum length of a denom from 128 bytes,
 these caps should increase.
 
 So please don't make code rely on these max lengths for parsing.
+
+# Examples
+To create a new token, use the create-denom command from the tokenfactory module. The following example uses the address osmo1c584m4lq25h83yp6ag8hh4htjr92d954vklzja from mylocalwallet as the default admin for the new token.
+
+## Creating a token
+To create a new token we can use the create-denom command.
+```
+osmosisd tx tokenfactory create-denom ufoo --keyring-backend=test --from mylocalwallet
+```
+
+## Mint a new token
+Once a new token is created, it can be minted using the mint command in the tokenfactory module. Note that the complete tokenfactory address, in the format of factory/{creator address}/{subdenom}, must be used to mint the token.
+
+```
+osmosisd tx tokenfactory mint 100000000000factory/osmo1c584m4lq25h83yp6ag8hh4htjr92d954vklzja/ufoo --keyring-backend=test --from mylocalwallet
+```
+
+## Checking Token metadata
+To view a token's metadata, use the denom-metadata command in the bank module. The following example queries the metadata for the token factory/osmo1c584m4lq25h83yp6ag8hh4htjr92d954vklzja/ufoo:
+
+
+```
+osmosisd query bank denom-metadata --denom factory/osmo1c584m4lq25h83yp6ag8hh4htjr92d954vklzja/ufoo
+```
+
+## Check the tokens created by an account
+To see a list of tokens created by a specific account, use the denoms-from-creator command in the tokenfactory module. The following example shows tokens created by the account osmo1c584m4lq25h83yp6ag8hh4htjr92d954vklzja:
+
+```
+osmosisd query tokenfactory denoms-from-creator osmo1c584m4lq25h83yp6ag8hh4htjr92d954vklzja
+```
