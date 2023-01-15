@@ -398,7 +398,9 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			// Charge fee to make sure that the global fee accumulator is always updates.
 			// This is to test that the per-tick fee growth accumulator gets initialized.
 			if test.poolToGet == validPoolId {
-				s.SetupPosition(test.poolToGet)
+				s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+				// _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+				s.SetupPosition(test.poolToGet, s.TestAccs[0], DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick)
 			}
 
 			// manually update accumulator for testing before initializing ticks
