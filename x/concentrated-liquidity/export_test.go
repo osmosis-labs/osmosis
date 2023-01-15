@@ -63,6 +63,10 @@ func (k Keeper) CalcOutAmtGivenInInternal(ctx sdk.Context, tokenInMin sdk.Coin, 
 	return k.calcOutAmtGivenIn(ctx, tokenInMin, tokenOutDenom, swapFee, priceLimit, poolId)
 }
 
+func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec) (sdk.Int, sdk.Int, error) {
+	return k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta)
+}
+
 func (k Keeper) InitOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
 	return k.initOrUpdateTick(ctx, poolId, tickIndex, liquidityIn, upper)
 }
@@ -104,8 +108,8 @@ func (k Keeper) GetFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.Accumul
 	return k.getFeeAccumulator(ctx, poolId)
 }
 
-func (k Keeper) InitializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec) error {
-	return k.initializeFeeAccumulatorPosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta)
+func (k Keeper) InitializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) error {
+	return k.initializeFeeAccumulatorPosition(ctx, poolId, owner, lowerTick, upperTick)
 }
 
 func (k Keeper) UpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec, lowerTick int64, upperTick int64) error {

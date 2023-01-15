@@ -298,15 +298,9 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		}
 
 		// utilizing the next initialized tick, we find the corresponding nextPrice (the target price)
-		nextPrice, err := math.TickToPrice(nextTick, p.GetPrecisionFactorAtPriceOne())
+		nextSqrtPrice, err := math.TickToSqrtPrice(nextTick, p.GetPrecisionFactorAtPriceOne())
 		if err != nil {
 			return nil, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
-		}
-
-		// transform to sqrtPrice
-		nextSqrtPrice, err := nextPrice.ApproxSqrt()
-		if err != nil {
-			return nil, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextSqrtPrice)
 		}
 
 		// Charge fee
@@ -472,15 +466,9 @@ func (k Keeper) calcInAmtGivenOut(
 		}
 
 		// utilizing the next initialized tick, we find the corresponding nextPrice (the target price)
-		nextPrice, err := math.TickToPrice(nextTick, p.GetPrecisionFactorAtPriceOne())
+		nextSqrtPrice, err := math.TickToSqrtPrice(nextTick, p.GetPrecisionFactorAtPriceOne())
 		if err != nil {
 			return nil, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
-		}
-
-		// transform to sqrtPrice
-		nextSqrtPrice, err := nextPrice.ApproxSqrt()
-		if err != nil {
-			return nil, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextSqrtPrice)
 		}
 
 		// utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn

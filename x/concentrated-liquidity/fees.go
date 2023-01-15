@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 const (
@@ -57,13 +58,13 @@ func (k Keeper) chargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 	return nil
 }
 
-// initializeFeeAccumulatorPosition initializes the pool fee accumulator with given liquidity delta and zero value for the accumulator.
+// initializeFeeAccumulatorPosition initializes the pool fee accumulator with zero liquidity delta
+// and zero value for the accumulator.
 // Returns nil on success. Returns error if:
 // - fails to get an accumulator for a given poold id
-// - attempts to re-initialize an existing non-zero liqudity position
+// - attempts to re-initialize an existing fee accumulator liqudity position
 // - fails to create a position
-// nolint: unused
-func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec) error {
+func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) error {
 	// get fee accumulator for the pool
 	feeAccumulator, err := k.getFeeAccumulator(ctx, poolId)
 	if err != nil {
@@ -79,18 +80,11 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 
 	// assure that existing position has zero liquidity
 	if hasPosition {
-		positionSize, err := feeAccumulator.GetPositionSize(positionKey)
-		if err != nil {
-			return err
-		}
-
-		if !positionSize.IsZero() {
-			return fmt.Errorf("attempted to re-initialize fee accumulator position (%s) with non-zero liquidity", positionKey)
-		}
+		return fmt.Errorf("attempted to re-initialize fee accumulator position (%s) with non-zero liquidity", positionKey)
 	}
 
 	// initialize the owner's position with liquidity Delta and zero accumulator value
-	if err := feeAccumulator.NewPosition(positionKey, liquidityDelta, nil); err != nil {
+	if err := feeAccumulator.NewPosition(positionKey, sdk.ZeroDec(), nil); err != nil {
 		return err
 	}
 
@@ -98,7 +92,6 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 }
 
 // updateFeeAccumulatorPosition updates the owner's position
-// nolint: unused
 // TODO: test
 func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec, lowerTick int64, upperTick int64) error {
 	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
@@ -118,23 +111,6 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, own
 		feeGrowthOutside)
 	if err != nil {
 		return err
-	}
-
-	return nil
-}
-
-// initOrUpdateFeeAccumulatorPosition either updates or initializes a fee accumulator position.
-// if fails upon getting and updating fee accumulator position for the given pool + owner accumulator,
-// initializes the fee accumulator position.
-// nolint: unused
-func (k Keeper) initOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec, lowerTick int64, upperTick int64) error {
-	// first try updating fee accum position
-	err := k.updateFeeAccumulatorPosition(ctx, poolId, owner, liquidityDelta, lowerTick, upperTick)
-	if err != nil {
-		err = k.initializeFeeAccumulatorPosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -199,43 +175,59 @@ func (k Keeper) getInitialFeeGrowthOutsideForTick(ctx sdk.Context, poolId uint64
 	return emptyCoins, nil
 }
 
+// collectFees collects fees from the fee accumulator for the position given by pool id, owner, lower tick and upper tick.
+// Upon successful collection, it bank sends the fees from the pool address to the owner and returns the collected coins.
+// Returns error if:
+// - pool with the given id does not exist
+// - position given by pool id, owner, lower tick and upper tick does not exist
+// - other internal database or math errors.
 // nolint: unused
 func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64) (sdk.Coins, error) {
-	pool, err := k.getPoolById(ctx, poolId)
-	if err != nil {
-		return sdk.Coins{}, err
-	}
-
-	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
-	if err != nil {
-		return sdk.Coins{}, err
-	}
-
-	// TODO: change to owner + lower tick + upper tick.
-	// TODO: add check that position exists.
-	positionKey := owner.String()
-
 	feeAccumulator, err := k.getFeeAccumulator(ctx, poolId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
 
-	// We need to update the position's accumulator before we claim rewards.
-	// Note that liquidity delta is zero in this case.
-	if err := feeAccumulator.SetPositionCustomAcc(positionKey, feeGrowthOutside); err != nil {
-		return sdk.Coins{}, err
-	}
+	positionKey := formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
 
-	rewardsClaimed, err := feeAccumulator.ClaimRewards(positionKey)
+	hasPosition, err := feeAccumulator.HasPosition(positionKey)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
 
-	if err := k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, rewardsClaimed); err != nil {
+	if !hasPosition {
+		return sdk.Coins{}, cltypes.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick}
+	}
+
+	// compute fee growth outside of the range between lower tick and upper tick.
+	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
+	if err != nil {
 		return sdk.Coins{}, err
 	}
 
-	return rewardsClaimed, nil
+	// We need to update the position's accumulator to the current fee growth outside
+	// before we claim rewards.
+	if err := feeAccumulator.SetPositionCustomAcc(positionKey, feeGrowthOutside); err != nil {
+		return sdk.Coins{}, err
+	}
+
+	// claim fees.
+	feesClaimed, err := feeAccumulator.ClaimRewards(positionKey)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	// distribute the fees from pool to the position owner.
+	if err := k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, feesClaimed); err != nil {
+		return sdk.Coins{}, err
+	}
+
+	return feesClaimed, nil
 }
 
 func getFeeAccumulatorName(poolId uint64) string {

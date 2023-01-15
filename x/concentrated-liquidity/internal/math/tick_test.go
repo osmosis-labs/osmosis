@@ -17,7 +17,7 @@ import (
 // numAdditiveTicks(tickIndex, exponentAtPriceOne) = tickIndex - (geometricExponentDelta(tickIndex, exponentAtPriceOne) * geometricExponentIncrementDistanceInTicks(exponentAtPriceOne)
 // price(tickIndex, exponentAtPriceOne) = pow(10, geometricExponentDelta(tickIndex, exponentAtPriceOne)) +
 // (numAdditiveTicks(tickIndex, exponentAtPriceOne) * currentAdditiveIncrementInTicks(tickIndex, exponentAtPriceOne))
-func (suite *ConcentratedMathTestSuite) TestTickToPrice() {
+func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 	testCases := map[string]struct {
 		tickIndex          sdk.Int
 		exponentAtPriceOne sdk.Int
@@ -145,14 +145,16 @@ func (suite *ConcentratedMathTestSuite) TestTickToPrice() {
 		tc := tc
 
 		suite.Run(name, func() {
-			sqrtPrice, err := math.TickToPrice(tc.tickIndex, tc.exponentAtPriceOne)
+			sqrtPrice, err := math.TickToSqrtPrice(tc.tickIndex, tc.exponentAtPriceOne)
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().Equal(tc.expectedError.Error(), err.Error())
 				return
 			}
 			suite.Require().NoError(err)
-			suite.Require().Equal(tc.expectedPrice.String(), sqrtPrice.String())
+			expectedSqrtPrice, err := tc.expectedPrice.ApproxSqrt()
+			suite.Require().NoError(err)
+			suite.Require().Equal(expectedSqrtPrice.String(), sqrtPrice.String())
 
 		})
 	}

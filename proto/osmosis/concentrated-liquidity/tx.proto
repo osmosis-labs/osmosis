@@ -10,6 +10,7 @@ service Msg {
   rpc CreatePosition(MsgCreatePosition) returns (MsgCreatePositionResponse);
   rpc WithdrawPosition(MsgWithdrawPosition)
       returns (MsgWithdrawPositionResponse);
+  rpc CollectFees(MsgCollectFees) returns (MsgCollectFeesResponse);
 }
 
 // ===================== MsgCreatePosition
@@ -78,6 +79,21 @@ message MsgWithdrawPositionResponse {
   string amount1 = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"amount1\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// ===================== MsgCollectFees
+message MsgCollectFees {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  int64 lower_tick = 3 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
+  int64 upper_tick = 4 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
+}
+
+message MsgCollectFeesResponse {
+  repeated cosmos.base.v1beta1.Coin token_out = 1 [
+    (gogoproto.moretags) = "yaml:\"token_out\"",
     (gogoproto.nullable) = false
   ];
 }

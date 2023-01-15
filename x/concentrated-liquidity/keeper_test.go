@@ -9,6 +9,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 
+	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+
 	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
 )
 
@@ -26,9 +28,11 @@ var (
 	ETH                            = "eth"
 	DefaultAmt0                    = sdk.NewInt(1000000)
 	DefaultAmt0Expected            = sdk.NewInt(998976)
+	DefaultCoin0                   = sdk.NewCoin(ETH, DefaultAmt0)
 	USDC                           = "usdc"
 	DefaultAmt1                    = sdk.NewInt(5000000000)
 	DefaultAmt1Expected            = sdk.NewInt(5000000000)
+	DefaultCoin1                   = sdk.NewCoin(USDC, DefaultAmt1)
 	DefaultLiquidityAmt            = sdk.MustNewDecFromStr("1517882343.751510418088349649")
 	DefaultTickSpacing             = uint64(1)
 	PoolCreationFee                = poolmanagertypes.DefaultParams().PoolCreationFee
@@ -46,9 +50,13 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 }
 
-func (s *KeeperTestSuite) SetupPosition(poolId uint64) {
-	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-	_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+func (s *KeeperTestSuite) SetupDefaultPosition(poolId uint64) {
+	s.SetupPosition(poolId, s.TestAccs[0], DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick)
+}
+
+func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, coin0, coin1 sdk.Coin, lowerTick, upperTick int64) {
+	s.FundAcc(owner, sdk.NewCoins(coin0, coin1))
+	_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, coin0.Amount, coin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
 	s.Require().NoError(err)
 }
 
@@ -62,14 +70,49 @@ func (s *KeeperTestSuite) validatePositionUpdate(ctx sdk.Context, poolId uint64,
 }
 
 // validateTickUpdates validates that ticks with the given parameters have expectedRemainingLiquidity left.
-func (s *KeeperTestSuite) validateTickUpdates(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, expectedRemainingLiquidity sdk.Dec) {
+func (s *KeeperTestSuite) validateTickUpdates(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, expectedRemainingLiquidity sdk.Dec, expectedLowerFeeGrowthOutside, expectedUpperFeeGrowthOutside sdk.DecCoins) {
 	lowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, poolId, lowerTick)
 	s.Require().NoError(err)
 	s.Require().Equal(expectedRemainingLiquidity.String(), lowerTickInfo.LiquidityGross.String())
 	s.Require().Equal(expectedRemainingLiquidity.String(), lowerTickInfo.LiquidityNet.String())
+	s.Require().Equal(lowerTickInfo.FeeGrowthOutside.String(), expectedLowerFeeGrowthOutside.String())
 
 	upperTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, poolId, upperTick)
 	s.Require().NoError(err)
 	s.Require().Equal(expectedRemainingLiquidity.String(), upperTickInfo.LiquidityGross.String())
 	s.Require().Equal(expectedRemainingLiquidity.Neg().String(), upperTickInfo.LiquidityNet.String())
+	s.Require().Equal(upperTickInfo.FeeGrowthOutside.String(), expectedUpperFeeGrowthOutside.String())
+}
+
+func (s *KeeperTestSuite) initializeTick(ctx sdk.Context, tickIndex int64, initialLiquidity sdk.Dec, feeGrowthOutside sdk.DecCoins, isLower bool) {
+	err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(ctx, validPoolId, tickIndex, initialLiquidity, isLower)
+	s.Require().NoError(err)
+
+	tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(ctx, validPoolId, tickIndex)
+	s.Require().NoError(err)
+
+	tickInfo.FeeGrowthOutside = feeGrowthOutside
+
+	s.App.ConcentratedLiquidityKeeper.SetTickInfo(ctx, validPoolId, tickIndex, tickInfo)
+}
+
+// initializeFeeAccumulatorPositionWithLiquidity initializes fee accumulator position with given parameters and updates it with given liquidity.
+func (s *KeeperTestSuite) initializeFeeAccumulatorPositionWithLiquidity(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidity sdk.Dec) {
+	err := s.App.ConcentratedLiquidityKeeper.InitializeFeeAccumulatorPosition(ctx, poolId, owner, lowerTick, upperTick)
+	s.Require().NoError(err)
+
+	err = s.App.ConcentratedLiquidityKeeper.UpdateFeeAccumulatorPosition(ctx, poolId, owner, liquidity, lowerTick, upperTick)
+	s.Require().NoError(err)
+}
+
+// validatePositionFeeAccUpdate validates that the position's accumulator with given parameters
+// has been updated with liquidity.
+func (s *KeeperTestSuite) validatePositionFeeAccUpdate(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, liquidity sdk.Dec) {
+	accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(ctx, poolId)
+	s.Require().NoError(err)
+
+	accumulatorPosition, err := accum.GetPositionSize(cl.FormatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick))
+	s.Require().NoError(err)
+
+	s.Require().Equal(liquidity.String(), accumulatorPosition.String())
 }
