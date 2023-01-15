@@ -141,7 +141,11 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	}
 
 	// If the requested liquidity amount to withdraw is equal to the available liquidity, delete the position from state.
+	// Ensure we collect any outstanding fees prior to deleting the position from state
 	if requestedLiquidityAmountToWithdraw.Equal(availableLiquidity) {
+		if _, err := k.collectFees(ctx, poolId, owner, lowerTick, upperTick); err != nil {
+			return sdk.Int{}, sdk.Int{}, err
+		}
 		if err := k.deletePosition(ctx, poolId, owner, lowerTick, upperTick); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
