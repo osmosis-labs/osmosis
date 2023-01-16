@@ -167,10 +167,6 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // AppModuleSimulation functions
 
-// // GenerateGenesisState creates a randomized GenState of the valset module.
-// func (am AppModule) GenerateGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
-// }
-
 // WeightedOperations returns the all the valset module operations with their respective weights.
 func (am AppModule) Actions() []simtypes.Action {
 	return []simtypes.Action{
