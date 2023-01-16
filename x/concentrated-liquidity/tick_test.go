@@ -330,7 +330,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, validPoolId, preInitializedTickIndex, DefaultLiquidityAmt, true)
 			s.Require().NoError(err)
 
-			// Charge fee to make sure that the global fee accumulator is always updates.
+			// Charge fee to make sure that the global fee accumulator is always updated.
 			// This is to test that the per-tick fee growth accumulator gets initialized.
 			if test.poolToGet == validPoolId {
 				s.SetupDefaultPosition(test.poolToGet)
@@ -362,22 +362,16 @@ func (s *KeeperTestSuite) TestCrossTick() {
 		tickToGet int64
 		// upon setting this to true, we manipulate tick's fee growth
 		// to a value that is greater than that of accumulator
-		manipulateTickFeeGrowth bool
-		expectedLiquidityDelta  sdk.Dec
-		expectedErr             bool
+		manipulateTickFeeGrowth      bool
+		expectedLiquidityDelta       sdk.Dec
+		expectedTickFeeGrowthOutside sdk.Dec
+		expectedErr                  bool
 	}{
 		{
 			name:                   "Get tick info on existing pool and existing tick",
 			poolToGet:              validPoolId,
 			tickToGet:              preInitializedTickIndex,
 			expectedLiquidityDelta: DefaultLiquidityAmt.Neg(),
-		},
-		{
-			name:                    "Error when trying to cross tick with more than what's in fee accumulator",
-			poolToGet:               validPoolId,
-			tickToGet:               preInitializedTickIndex,
-			manipulateTickFeeGrowth: true,
-			expectedErr:             true,
 		},
 		{
 			name:        "Try invalid tick",
@@ -395,15 +389,13 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			// Create a default CL pool
 			s.PrepareConcentratedPool()
 
-			// Charge fee to make sure that the global fee accumulator is always updates.
-			// This is to test that the per-tick fee growth accumulator gets initialized.
 			if test.poolToGet == validPoolId {
 				s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-				// _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 				s.SetupPosition(test.poolToGet, s.TestAccs[0], DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick)
 			}
 
-			// manually update accumulator for testing before initializing ticks
+			// Charge fee to make sure that the global fee accumulator is always updated.
+			// This is to test that the per-tick fee growth accumulator gets initialized.
 			defaultAccumCoins := sdk.NewDecCoin("foo", sdk.NewInt(50))
 			err := s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, defaultAccumCoins)
 			s.Require().NoError(err)
@@ -412,16 +404,18 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, validPoolId, preInitializedTickIndex, DefaultLiquidityAmt, true)
 			s.Require().NoError(err)
 
-			// manipulate tick fee growth
+			// update the fee accumulator so that we have accum value > tick fee growth value
+			// now we have 100 foo coins inside the pool accumulator
+			err = s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, defaultAccumCoins)
+			s.Require().NoError(err)
+
+			// // manipulate tick fee growth
 			if test.manipulateTickFeeGrowth {
 				err = s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, defaultAccumCoins)
 				s.Require().NoError(err)
 
 				err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, validPoolId, preInitializedTickIndex, DefaultLiquidityAmt, true)
 				s.Require().NoError(err)
-
-				// now reduce fee accumulator manually to create erroring env
-				s.App.ConcentratedLiquidityKeeper.SubFromFeeAccumulator(s.Ctx, validPoolId, DefaultFeeAccumCoins)
 			}
 
 			// System under test
@@ -430,15 +424,19 @@ func (s *KeeperTestSuite) TestCrossTick() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-
 				s.Require().Equal(test.expectedLiquidityDelta, liquidityDelta)
 
 				// now check if fee accumulator has been properly updated
 				accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, test.poolToGet)
 				s.Require().NoError(err)
 
-				// accum value should have gone back to 0 (50 - 50)
-				s.Require().Equal(accum.GetValue(), sdk.DecCoins(nil))
+				// accum value should not have changed
+				s.Require().Equal(accum.GetValue(), sdk.DecCoins{defaultAccumCoins}.MulDec(sdk.NewDec(2)))
+
+				// check if the tick fee growth outside has been correctly subtracted
+				tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, test.poolToGet, preInitializedTickIndex)
+				s.Require().NoError(err)
+				s.Require().Equal(test.expectedTickFeeGrowthOutside, tickInfo.FeeGrowthOutside)
 			}
 		})
 	}
