@@ -159,6 +159,7 @@ To create a new token, use the create-denom command from the tokenfactory module
 
 ## Creating a token
 To create a new token we can use the create-denom command.
+
 ```
 osmosisd tx tokenfactory create-denom ufoo --keyring-backend=test --from mylocalwallet
 ```
@@ -172,7 +173,6 @@ osmosisd tx tokenfactory mint 100000000000factory/osmo1c584m4lq25h83yp6ag8hh4htj
 
 ## Checking Token metadata
 To view a token's metadata, use the denom-metadata command in the bank module. The following example queries the metadata for the token factory/osmo1c584m4lq25h83yp6ag8hh4htjr92d954vklzja/ufoo:
-
 
 ```
 osmosisd query bank denom-metadata --denom factory/osmo1c584m4lq25h83yp6ag8hh4htjr92d954vklzja/ufoo
