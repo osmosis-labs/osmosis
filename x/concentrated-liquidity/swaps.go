@@ -318,21 +318,26 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		// The current tick does not have enough liqudity to fulfill the swap.
 		// Therefore we charge fee on the full amount that the tick
 		// originally had.
-		feeCharge := feeOnFullAmountRemainingIn
+		feeChargeTotal := feeOnFullAmountRemainingIn
 		if !nextSqrtPrice.Equal(sqrtPrice) {
 			if swapState.amountSpecifiedRemaining.Equal(amountIn) {
-				feeCharge = sdk.ZeroDec()
+				feeChargeTotal = sdk.ZeroDec()
 			} else {
 				// This means that the current tick had enough liquidity to fulfill the swap
 				// In that case, the fee is the difference between
 				// the amount needed to fulfill and the actual amount we ended up charging.
-				feeCharge = swapState.amountSpecifiedRemaining.Sub(amountIn)
+				feeChargeTotal = swapState.amountSpecifiedRemaining.Sub(amountIn)
 			}
 		}
 
-		// TODO: figure out why panics
-		// feeCharge = feeCharge.Quo(swapState.liquidity)
-		swapState.feeGrowthGlobal = swapState.feeGrowthGlobal.Add(feeCharge)
+		// This may happen when there is no liquidity between the ticks. This case occurs
+		// if in the range, there are only 2 positions with no overlapping ranges.
+		// As a result, the range from the end of position 1 to the beginning of position
+		// two has no liquidity and can be skipped.
+		if !swapState.liquidity.IsZero() {
+			feeChargePerUnitOfLiquidity := feeChargeTotal.Quo(swapState.liquidity)
+			swapState.feeGrowthGlobal = swapState.feeGrowthGlobal.Add(feeChargePerUnitOfLiquidity)
+		}
 
 		// if the computeSwapStep calculated a sqrtPrice that is equal to the nextSqrtPrice, this means all liquidity in the current
 		// tick has been consumed and we must move on to the next tick to complete the swap
