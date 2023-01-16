@@ -72,21 +72,6 @@ func (accum *AccumulatorObject) AddToAccumulator(amt sdk.DecCoins) {
 	setAccumulator(*accum, accum.value)
 }
 
-// SubFromAccumulator subtracts the given amt from the fee accumulator.
-// Safesub is used to panic and if given amt is greater than the value of accumulator,
-// returns error.
-func (accum *AccumulatorObject) SubFromAccumulator(amt sdk.DecCoins) error {
-	updatedValue, neg := accum.value.SafeSub(amt)
-	// check that the updated value is not negative
-	if neg {
-		return NegativeAccDifferenceError{updatedValue}
-	}
-
-	accum.value = updatedValue
-	setAccumulator(*accum, accum.value)
-	return nil
-}
-
 // NewPosition creates a new position for the given name, with the given number of share units.
 // The name can be an owner's address, or any other unique identifier for a position.
 // It takes a snapshot of the current accumulator value, and sets the position's initial value to that.
