@@ -229,7 +229,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 	}
 	asset0 := p.GetToken0()
 	asset1 := p.GetToken1()
-	tokenAmountInAfterFee := tokenInMin.Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
+	tokenAmountInSpecified := tokenInMin.Amount.ToDec()
 
 	// if swapping asset0 for asset1, zeroForOne is true
 	zeroForOne := tokenInMin.Denom == asset0
@@ -272,8 +272,8 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 	// initialize swap state with the following parameters:
 	// as we iterate through the following for loop, this swap state will get updated after each required iteration
 	swapState := SwapState{
-		amountSpecifiedRemaining: tokenAmountInAfterFee, // tokenIn
-		amountCalculated:         sdk.ZeroDec(),         // tokenOut
+		amountSpecifiedRemaining: tokenAmountInSpecified, // tokenIn
+		amountCalculated:         sdk.ZeroDec(),          // tokenOut
 		sqrtPrice:                curSqrtPrice,
 		tick:                     swapStrategy.InitializeTickValue(p.GetCurrentTick()),
 		liquidity:                p.GetLiquidity(),
@@ -319,8 +319,9 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		// Therefore we charge fee on the full amount that the tick
 		// originally had.
 		feeChargeTotal := feeOnFullAmountRemainingIn
-		if !nextSqrtPrice.Equal(sqrtPrice) {
+		if !nextSqrtPrice.Equal(sqrtPrice) && swapFee.IsPositive() {
 			if swapState.amountSpecifiedRemaining.Equal(amountIn) {
+				// TODO: understand if this case is needed. Looks like not.
 				feeChargeTotal = sdk.ZeroDec()
 			} else {
 				// This means that the current tick had enough liquidity to fulfill the swap
@@ -366,7 +367,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		// update the swapState with the new sqrtPrice from the above swap
 		swapState.sqrtPrice = sqrtPrice
 		// we deduct the amount of tokens we input in the computeSwapStep above from the user's defined tokenIn amount
-		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn)
+		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn.Add(feeChargeTotal))
 		// we add the amount of tokens we received (amountOut) from the computeSwapStep above to the amountCalculated accumulator
 		swapState.amountCalculated = swapState.amountCalculated.Add(amountOut)
 	}
@@ -377,7 +378,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 
 	// coin amounts require int values
 	// round amountIn up to avoid under charging
-	amt0 := tokenAmountInAfterFee.Sub(swapState.amountSpecifiedRemaining).RoundInt()
+	amt0 := tokenAmountInSpecified.Sub(swapState.amountSpecifiedRemaining).RoundInt()
 	amt1 := swapState.amountCalculated.TruncateInt()
 
 	tokenIn = sdk.NewCoin(tokenInMin.Denom, amt0)

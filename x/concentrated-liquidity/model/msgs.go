@@ -27,6 +27,7 @@ func NewMsgCreateConcentratedPool(
 	denom1 string,
 	tickSpacing uint64,
 	precisionFactorAtPriceOne sdk.Int,
+	swapFee sdk.Dec,
 ) MsgCreateConcentratedPool {
 	return MsgCreateConcentratedPool{
 		Sender:                    sender.String(),
