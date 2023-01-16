@@ -33,4 +33,4 @@ osmosis-std = { path = "./osmosis-std"}
 serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
 cw-multi-test = "0.16.1"
-osmosis-testing = "0.13.2"
+osmosis-testing = { path = "./osmosis-testing"}

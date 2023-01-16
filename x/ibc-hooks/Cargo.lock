@@ -45,7 +45,7 @@ version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d9b39be18770d11421cdb1b9947a45dd3f37e93092cbf377614828a319d5fee8"
 dependencies = [
- "hermit-abi",
+ "hermit-abi 0.1.19",
  "libc",
  "winapi",
 ]
@@ -354,6 +354,49 @@ dependencies = [
 ]
 
 [[package]]
+name = "crossbeam-channel"
+version = "0.5.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c2dd04ddaf88237dc3b8d8f9a3c1004b506b54b3313403944054d23c0870c521"
+dependencies = [
+ "cfg-if",
+ "crossbeam-utils",
+]
+
+[[package]]
+name = "crossbeam-deque"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "715e8152b692bba2d374b53d4875445368fdf21a94751410af607a5ac677d1fc"
+dependencies = [
+ "cfg-if",
+ "crossbeam-epoch",
+ "crossbeam-utils",
+]
+
+[[package]]
+name = "crossbeam-epoch"
+version = "0.9.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "01a9af1f4c2ef74bb8aa1f7e19706bc72d03598c8a570bb5de72243c7a9d9d5a"
+dependencies = [
+ "autocfg",
+ "cfg-if",
+ "crossbeam-utils",
+ "memoffset",
+ "scopeguard",
+]
+
+[[package]]
+name = "crossbeam-utils"
+version = "0.8.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4fb766fa798726286dbbb842f174001dab8abc7b627a1dd86e0b7222a95d929f"
+dependencies = [
+ "cfg-if",
+]
+
+[[package]]
 name = "crosschain-swaps"
 version = "0.1.0"
 dependencies = [
@@ -366,7 +409,7 @@ dependencies = [
  "cw-utils 1.0.0",
  "cw2 1.0.0",
  "enum-repr",
- "osmosis-std 0.13.2",
+ "osmosis-std",
  "osmosis-std-derive 0.13.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "osmosis-testing",
  "prost 0.11.3",
@@ -440,6 +483,17 @@ dependencies = [
 
 [[package]]
 name = "cw-storage-plus"
+version = "0.15.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc6cf70ef7686e2da9ad7b067c5942cd3e88dd9453f7af42f54557f8af300fb0"
+dependencies = [
+ "cosmwasm-std",
+ "schemars",
+ "serde",
+]
+
+[[package]]
+name = "cw-storage-plus"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d9b6f91c0b94481a3e9ef1ceb183c37d00764f8751e39b45fc09f4d9b970d469"
@@ -458,6 +512,21 @@ dependencies = [
  "cosmwasm-std",
  "schemars",
  "serde",
+]
+
+[[package]]
+name = "cw-utils"
+version = "0.15.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ae0b69fa7679de78825b4edeeec045066aa2b2c4b6e063d80042e565bb4da5c"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw2 0.15.1",
+ "schemars",
+ "semver",
+ "serde",
+ "thiserror",
 ]
 
 [[package]]
@@ -490,6 +559,48 @@ dependencies = [
  "semver",
  "serde",
  "thiserror",
+]
+
+[[package]]
+name = "cw1"
+version = "0.15.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dbe0783ec4210ba4e0cdfed9874802f469c6db0880f742ad427cb950e940b21c"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "schemars",
+ "serde",
+]
+
+[[package]]
+name = "cw1-whitelist"
+version = "0.15.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "233dd13f61495f1336da57c8bdca0536fa9f8dd59c12d2bbfc59928ea580e478"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus 0.15.1",
+ "cw-utils 0.15.1",
+ "cw1",
+ "cw2 0.15.1",
+ "schemars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "cw2"
+version = "0.15.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5abb8ecea72e09afff830252963cb60faf945ce6cef2c20a43814516082653da"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus 0.15.1",
+ "schemars",
+ "serde",
 ]
 
 [[package]]
@@ -825,6 +936,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "hermit-abi"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee512640fe35acbfb4bb779db6f0d80704c2cacfa2e39b601ef3e3f47d1ae4c7"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -951,6 +1071,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 
 [[package]]
+name = "memoffset"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5de893c32cde5f383baa4c04c5d6dbdd735cfd4a794b0debdb2bb1b421da5ff4"
+dependencies = [
+ "autocfg",
+]
+
+[[package]]
 name = "minimal-lexical"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -997,6 +1126,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "num_cpus"
+version = "1.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0fac9e2da13b5eb447a6ce3d392f23a29d8694bff781bf03a16cd9ac8697593b"
+dependencies = [
+ "hermit-abi 0.2.6",
+ "libc",
+]
+
+[[package]]
 name = "num_threads"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1038,22 +1177,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "osmosis-std"
-version = "0.13.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "10d6fe6ac7fcba45ed61d738091d33c838c4cabbcf4892dc7aa56d19d39cc976"
-dependencies = [
- "chrono",
- "cosmwasm-std",
- "osmosis-std-derive 0.13.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "prost 0.11.3",
- "prost-types",
- "schemars",
- "serde",
- "serde-cw-value",
-]
-
-[[package]]
 name = "osmosis-std-derive"
 version = "0.13.2"
 dependencies = [
@@ -1082,15 +1205,15 @@ dependencies = [
 [[package]]
 name = "osmosis-testing"
 version = "0.13.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42636a83a181b7c4f94658eb3bb219caa51ff55bcc69750cd7ae4bf50b12cb2f"
 dependencies = [
  "base64",
  "bindgen",
  "cosmrs",
  "cosmwasm-std",
- "osmosis-std 0.13.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cw1-whitelist",
+ "osmosis-std",
  "prost 0.11.3",
+ "rayon",
  "serde",
  "serde_json",
  "thiserror",
@@ -1229,6 +1352,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "rayon"
+version = "1.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6db3a213adf02b3bcfd2d3846bb41cb22857d131789e01df434fb7e7bc0759b7"
+dependencies = [
+ "either",
+ "rayon-core",
+]
+
+[[package]]
+name = "rayon-core"
+version = "1.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cac410af5d00ab6884528b4ab69d1e8e146e8d471201800fa1b4524126de6ad3"
+dependencies = [
+ "crossbeam-channel",
+ "crossbeam-deque",
+ "crossbeam-utils",
+ "num_cpus",
+]
+
+[[package]]
 name = "regex"
 version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1311,6 +1456,12 @@ dependencies = [
  "serde_derive_internals",
  "syn",
 ]
+
+[[package]]
+name = "scopeguard"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
 
 [[package]]
 name = "sec1"
@@ -1517,7 +1668,7 @@ dependencies = [
  "cosmwasm-storage",
  "cw-storage-plus 1.0.1",
  "cw2 1.0.0",
- "osmosis-std 0.13.2",
+ "osmosis-std",
  "osmosis-testing",
  "schemars",
  "serde",

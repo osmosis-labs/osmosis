@@ -1,7 +1,9 @@
 use cosmwasm_std::{Empty, QueryRequest};
 use osmosis_std_derive::CosmwasmExt;
 
-#[derive(Clone, PartialEq, Eq, ::prost::Message, serde::Serialize, serde::Deserialize, CosmwasmExt)]
+#[derive(
+    Clone, PartialEq, Eq, ::prost::Message, serde::Serialize, serde::Deserialize, CosmwasmExt,
+)]
 #[proto_message(type_url = "/osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorRequest")]
 #[proto_query(
     path = "/osmosis.tokenfactory.v1beta1.Query/DenomsFromCreator",
@@ -11,7 +13,9 @@ pub struct QueryDenomsFromCreatorRequest {
     #[prost(string, tag = "1")]
     pub creator: ::prost::alloc::string::String,
 }
-#[derive(Clone, PartialEq, Eq, ::prost::Message, serde::Serialize, serde::Deserialize, CosmwasmExt)]
+#[derive(
+    Clone, PartialEq, Eq, ::prost::Message, serde::Serialize, serde::Deserialize, CosmwasmExt,
+)]
 #[proto_message(type_url = "/osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorResponse")]
 pub struct QueryDenomsFromCreatorResponse {
     #[prost(string, repeated, tag = "1")]

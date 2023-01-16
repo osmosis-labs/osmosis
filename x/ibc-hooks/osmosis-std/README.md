@@ -60,7 +60,7 @@ fn query_creator_denoms(deps: Deps, env: Env) -> StdResult<QueryDenomsFromCreato
 
 When querying pool related values, eg. `Gamm::pool`, you might find that return type contains `Any`. It's a cosmos' way to implement polymorphism in protobuf.
 
-https://github.com/osmosis-labs/osmosis/blob/f024498f1e8e0d2a1fe259cd9cc4223803fea0cd/proto/osmosis/gamm/v1beta1/query.proto#L82-L84
+<https://github.com/osmosis-labs/osmosis/blob/f024498f1e8e0d2a1fe259cd9cc4223803fea0cd/proto/osmosis/gamm/v1beta1/query.proto#L82-L84>
 
 ```proto
 message QueryPoolResponse {
