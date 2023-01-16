@@ -44,12 +44,6 @@ jobs:
           rustup target add wasm32-unknown-unknown;
         if: env.GIT_DIFF
 
-      - name: Test
-        working-directory: ${{ matrix.contract.workdir }}
-        run: >
-          cargo test
-        if: env.GIT_DIFF
-
       - name: Optimize
         working-directory: ${{ matrix.contract.workdir }}
         run: >
@@ -80,7 +74,13 @@ jobs:
         if: env.GIT_DIFF
         run: >
           diff "${GITHUB_WORKSPACE}/${{ matrix.contract.bytecode }}" ${{ matrix.contract.build }}
-  
+
+      - name: Test
+        working-directory: ${{ matrix.contract.workdir }}
+        run: >
+          cargo test
+        if: env.GIT_DIFF
+
 
   lints:
     name: Cosmwasm Lints
