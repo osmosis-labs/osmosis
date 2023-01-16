@@ -53,10 +53,10 @@ func NewWithdrawPositionCmd() (*osmocli.TxCliDesc, *types.MsgWithdrawPosition) {
 
 func NewCollectFeesCmd() (*osmocli.TxCliDesc, *types.MsgCollectFees) {
 	return &osmocli.TxCliDesc{
-		Use: "collect-fees [lower-tick] [upper-tick]",
-		Short: "collect fees from a liquidity position",
-		Example: "collect-fees [-69082] 69082 --pool-id 1 --from val --chain-id osmosis-1",
+		Use:                 "collect-fees [lower-tick] [upper-tick]",
+		Short:               "collect fees from a liquidity position",
+		Example:             "collect-fees [-69082] 69082 --pool-id 1 --from val --chain-id osmosis-1",
 		CustomFlagOverrides: poolIdFlagOverride,
-		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
+		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
 	}, &types.MsgCollectFees{}
 }
