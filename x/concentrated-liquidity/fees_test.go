@@ -74,37 +74,92 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 
 func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 	type feeGrowthOutsideTest struct {
-		poolSetup                bool
-		tickSetup                bool
+		poolSetup bool
+
+		lowerTick                 int64
+		upperTick                 int64
+		currentTick               int64
+		lowerTickFeeGrowthOutside sdk.DecCoins
+		upperTickFeeGrowthOutside sdk.DecCoins
+		globalFeeGrowth           sdk.DecCoin
+
 		expectedFeeGrowthOutside sdk.DecCoins
 		invalidTick              bool
 		expectedError            bool
 	}
 
-	defaultAccumCoins := sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
+	defaultAccumCoins := sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10)))
 	defaultPoolId := uint64(1)
-	defaultLiquidityForLowerTick := sdk.MustNewDecFromStr("10.0")
-	defaultLiquidityForUpperTick := sdk.MustNewDecFromStr("20.0")
+	defaultInitialLiquidity := sdk.OneDec()
+	// defaultLiquidityForLowerTick := sdk.MustNewDecFromStr("10.0")
+	// defaultLiquidityForUpperTick := sdk.MustNewDecFromStr("20.0")
 
 	defaultUpperTickIndex := int64(5)
 	defaultLowerTickIndex := int64(3)
 
 	tests := map[string]feeGrowthOutsideTest{
-		"fee growth outside with tick initialized": {
-			poolSetup:                true,
-			tickSetup:                true,
-			expectedFeeGrowthOutside: defaultAccumCoins,
-			expectedError:            false,
+		"single swap left -> right: 2 ticks, one share - current price > upper tick": {
+			poolSetup:                 true,
+			lowerTick:                 0,
+			upperTick:                 1,
+			currentTick:               2,
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+			globalFeeGrowth:           sdk.NewDecCoin(ETH, sdk.NewInt(10)),
+			expectedFeeGrowthOutside:  defaultAccumCoins,
+			expectedError:             false,
 		},
-		"tick has not been initialized": {
-			poolSetup:                true,
-			tickSetup:                false,
-			expectedFeeGrowthOutside: sdk.DecCoins(nil),
-			expectedError:            false,
+		"single swap left -> right: 3 ticks, two shares - current price > upper tick": {
+			poolSetup:                 true,
+			lowerTick:                 0,
+			upperTick:                 2,
+			currentTick:               3,
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+			globalFeeGrowth:           sdk.NewDecCoin(ETH, sdk.NewInt(10)),
+			expectedFeeGrowthOutside:  defaultAccumCoins,
+			expectedError:             false,
+		},
+		"single swap left -> right: 2 ticks, one share - current price == upper tick": {
+			poolSetup:                 true,
+			lowerTick:                 0,
+			upperTick:                 1,
+			currentTick:               0,
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+			globalFeeGrowth:           sdk.NewDecCoin(ETH, sdk.NewInt(10)),
+			expectedFeeGrowthOutside:  defaultAccumCoins,
+			expectedError:             false,
+		},
+		// imagine single swap over entire position
+		// crossing right > left and stopping at lower tick
+		// In this case, all fees must have been accrued inside the tick
+		// Since we track fees accrued below a tick, both upper and lower position
+		// ticks are zero
+		"single swap right -> left: 2 ticks, one share - current price == lower tick": {
+			poolSetup:                 true,
+			lowerTick:                 0,
+			upperTick:                 1,
+			currentTick:               0,
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+			globalFeeGrowth:           sdk.NewDecCoin(ETH, sdk.NewInt(10)),
+			expectedFeeGrowthOutside:  defaultAccumCoins,
+			expectedError:             false,
+		},
+		"single swap right -> left: 2 ticks, one share - current price < lower tick": {
+			poolSetup:                 true,
+			lowerTick:                 0,
+			upperTick:                 1,
+			currentTick:               -1,
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+			globalFeeGrowth:           sdk.NewDecCoin(ETH, sdk.NewInt(10)),
+			expectedFeeGrowthOutside:  defaultAccumCoins,
+			expectedError:             false,
 		},
 		"error: pool has not been setup": {
 			poolSetup:     false,
-			tickSetup:     false,
 			expectedError: true,
 		},
 	}
@@ -114,36 +169,16 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 			s.SetupTest()
 
 			// if pool set up true, set up default pool
+			var pool types.ConcentratedPoolExtension
 			if tc.poolSetup {
-				s.PrepareConcentratedPool()
-			}
+				pool = s.PrepareConcentratedPool()
 
-			// if tick set up true, set upper and lower ticks to default values
-			if tc.tickSetup {
-				feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
-				s.Require().NoError(err)
-
-				// manually update accumulator value to properly initialize tick's fee growth outside
-				feeAccum.UpdateAccumulator(defaultAccumCoins)
-
-				// first initialize upper tick
-				err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(
-					s.Ctx,
-					defaultPoolId,
-					defaultUpperTickIndex,
-					defaultLiquidityForUpperTick,
-					true,
-				)
-				s.Require().NoError(err)
-
-				// initialize lower tick
-				err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(
-					s.Ctx,
-					defaultPoolId,
-					defaultLowerTickIndex,
-					defaultLiquidityForLowerTick,
-					true,
-				)
+				s.initializeTick(s.Ctx, tc.lowerTick, defaultInitialLiquidity, tc.lowerTickFeeGrowthOutside, false)
+				s.initializeTick(s.Ctx, tc.upperTick, defaultInitialLiquidity, tc.upperTickFeeGrowthOutside, true)
+				pool.SetCurrentTick(sdk.NewInt(tc.currentTick))
+				s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+				// poolId = pool.GetId()
+				err := s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, tc.globalFeeGrowth)
 				s.Require().NoError(err)
 			}
 
@@ -378,4 +413,16 @@ func (suite *KeeperTestSuite) TestChargeFee() {
 			suite.Require().Equal(tc.expectedGlobalGrowth, feeAcumulator.GetValue())
 		})
 	}
+}
+
+func (s *KeeperTestSuite) initializeTick(ctx sdk.Context, tickIndex int64, initialLiquidity sdk.Dec, feeGrowthOutside sdk.DecCoins, isLower bool) {
+	err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(ctx, validPoolId, tickIndex, initialLiquidity, isLower)
+	s.Require().NoError(err)
+
+	tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(ctx, validPoolId, tickIndex)
+	s.Require().NoError(err)
+
+	tickInfo.FeeGrowthOutside = feeGrowthOutside
+
+	s.App.ConcentratedLiquidityKeeper.SetTickInfo(ctx, validPoolId, tickIndex, tickInfo)
 }
