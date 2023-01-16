@@ -99,28 +99,31 @@ func (suite *AccumTestSuite) TestMakeAndGetAccum() {
 	suite.SetupTest()
 
 	type testcase struct {
+		testName   string
 		accumName  string
 		expAccum   accumPackage.AccumulatorObject
 		expSetPass bool
 		expGetPass bool
 	}
 
-	tests := map[string]testcase{
-		"create valid accumulator": {
+	tests := []testcase{
+		{
+			testName:   "create valid accumulator",
 			accumName:  "fee-accumulator",
 			expSetPass: true,
 			expGetPass: true,
 		},
-		"create duplicate accumulator": {
+		{
+			testName:   "create duplicate accumulator",
 			accumName:  "fee-accumulator",
 			expSetPass: false,
 			expGetPass: true,
 		},
 	}
 
-	for name, tc := range tests {
+	for _, tc := range tests {
 		tc := tc
-		suite.Run(name, func() {
+		suite.Run(tc.testName, func() {
 			// Creates raw accumulator object with test case's accum name and zero initial value
 			expAccum := accumPackage.CreateRawAccumObject(suite.store, tc.accumName, emptyCoins)
 
