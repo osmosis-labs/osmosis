@@ -5,7 +5,9 @@ use cosmwasm_std::{
     coin, coins, has_coins, to_binary, BankMsg, Coin, DepsMut, Env, MessageInfo, Reply, Response,
     SubMsg, SubMsgResponse, SubMsgResult, Uint128,
 };
-use osmosis_std::types::osmosis::poolmanager::v1beta1::{MsgSwapExactAmountInResponse, SwapAmountInRoute};
+use osmosis_std::types::osmosis::poolmanager::v1beta1::{
+    MsgSwapExactAmountInResponse, SwapAmountInRoute,
+};
 
 use crate::contract::SWAP_REPLY_ID;
 use crate::error::ContractError;
