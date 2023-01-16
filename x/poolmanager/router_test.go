@@ -21,11 +21,12 @@ const (
 )
 
 var (
-	defaultInitPoolAmount  = sdk.NewInt(1000000000000)
-	defaultPoolSwapFee     = sdk.NewDecWithPrec(1, 2) // 1% pool swap fee default
-	defaultSwapAmount      = sdk.NewInt(1000000)
-	gammKeeperType         = reflect.TypeOf(&gamm.Keeper{})
-	concentratedKeeperType = reflect.TypeOf(&cl.Keeper{})
+	defaultInitPoolAmount     = sdk.NewInt(1000000000000)
+	DefaultExponentAtPriceOne = sdk.NewInt(-4)
+	defaultPoolSwapFee        = sdk.NewDecWithPrec(1, 2) // 1% pool swap fee default
+	defaultSwapAmount         = sdk.NewInt(1000000)
+	gammKeeperType            = reflect.TypeOf(&gamm.Keeper{})
+	concentratedKeeperType    = reflect.TypeOf(&cl.Keeper{})
 )
 
 // TestGetPoolModule tests that the correct pool module is returned for a given pool id.

@@ -333,7 +333,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			// Charge fee to make sure that the global fee accumulator is always updates.
 			// This is to test that the per-tick fee growth accumulator gets initialized.
 			if test.poolToGet == validPoolId {
-				s.SetupPosition(test.poolToGet)
+				s.SetupDefaultPosition(test.poolToGet)
 			}
 			s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, test.poolToGet, oneEth)
 
