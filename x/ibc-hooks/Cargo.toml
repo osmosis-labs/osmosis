@@ -29,7 +29,7 @@ cosmwasm-storage = "1.1.2"
 cw-storage-plus = "1.0.1"
 cw2 = "1.0.0"
 schemars = "0.8.8"
-osmosis-std = "0.13.2"
+osmosis-std = { path = "./osmosis-std"}
 serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
 cw-multi-test = "0.16.1"

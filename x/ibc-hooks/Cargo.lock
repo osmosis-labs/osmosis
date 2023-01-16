@@ -366,8 +366,8 @@ dependencies = [
  "cw-utils 1.0.0",
  "cw2 1.0.0",
  "enum-repr",
- "osmosis-std",
- "osmosis-std-derive",
+ "osmosis-std 0.13.2",
+ "osmosis-std-derive 0.13.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "osmosis-testing",
  "prost 0.11.3",
  "schemars",
@@ -558,6 +558,12 @@ dependencies = [
  "crypto-common",
  "subtle",
 ]
+
+[[package]]
+name = "dissimilar"
+version = "1.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bd5f0c7e4bd266b8ab2550e6238d2e74977c23c15536ac7be45e9c95e2e3fbbb"
 
 [[package]]
 name = "dyn-clone"
@@ -1020,17 +1026,45 @@ checksum = "9b7820b9daea5457c9f21c69448905d723fbd21136ccf521748f23fd49e723ee"
 [[package]]
 name = "osmosis-std"
 version = "0.13.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "10d6fe6ac7fcba45ed61d738091d33c838c4cabbcf4892dc7aa56d19d39cc976"
 dependencies = [
  "chrono",
  "cosmwasm-std",
- "osmosis-std-derive",
+ "osmosis-std-derive 0.13.2",
  "prost 0.11.3",
  "prost-types",
  "schemars",
  "serde",
  "serde-cw-value",
+]
+
+[[package]]
+name = "osmosis-std"
+version = "0.13.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "10d6fe6ac7fcba45ed61d738091d33c838c4cabbcf4892dc7aa56d19d39cc976"
+dependencies = [
+ "chrono",
+ "cosmwasm-std",
+ "osmosis-std-derive 0.13.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "prost 0.11.3",
+ "prost-types",
+ "schemars",
+ "serde",
+ "serde-cw-value",
+]
+
+[[package]]
+name = "osmosis-std-derive"
+version = "0.13.2"
+dependencies = [
+ "cosmwasm-std",
+ "itertools",
+ "proc-macro2",
+ "prost 0.11.3",
+ "quote",
+ "serde",
+ "syn",
+ "trybuild",
 ]
 
 [[package]]
@@ -1055,7 +1089,7 @@ dependencies = [
  "bindgen",
  "cosmrs",
  "cosmwasm-std",
- "osmosis-std",
+ "osmosis-std 0.13.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "prost 0.11.3",
  "serde",
  "serde_json",
@@ -1483,7 +1517,7 @@ dependencies = [
  "cosmwasm-storage",
  "cw-storage-plus 1.0.1",
  "cw2 1.0.0",
- "osmosis-std",
+ "osmosis-std 0.13.2",
  "osmosis-testing",
  "schemars",
  "serde",
@@ -1613,6 +1647,31 @@ name = "time-macros"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42657b1a6f4d817cda8e7a0ace261fe0cc946cf3a80314390b22cc61ae080792"
+
+[[package]]
+name = "toml"
+version = "0.5.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1333c76748e868a4d9d1017b5ab53171dfd095f70c712fdb4653a406547f598f"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "trybuild"
+version = "1.0.76"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6ed2c57956f91546d4d33614265a85d55c8e1ab91484853a10335894786d7db6"
+dependencies = [
+ "dissimilar",
+ "glob",
+ "once_cell",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "termcolor",
+ "toml",
+]
 
 [[package]]
 name = "typenum"
