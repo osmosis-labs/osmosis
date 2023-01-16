@@ -1,11 +1,11 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdResult};
+use cosmwasm_std::{DepsMut, Env, MessageInfo, Reply, Response};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::execute::execute_swap;
-use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
 use crate::state::{Config, CONFIG};
 
 // version info for migration info
@@ -25,12 +25,12 @@ pub fn instantiate(
     // This needs to be done with bech32 because the prefix may be different than the current chain
     let Ok((prefix, _, _)) = bech32::decode(msg.crosschain_swaps_contract.as_str()) else {
         return Err(ContractError::InvalidCrosschainSwapsContract {
-            contract: msg.crosschain_swaps_contract.clone(),
+            contract: msg.crosschain_swaps_contract,
         })
     };
     if prefix != "osmo" {
         return Err(ContractError::InvalidCrosschainSwapsContract {
-            contract: format!("invalid prefix: {}", msg.crosschain_swaps_contract.clone()),
+            contract: format!("invalid prefix: {}", msg.crosschain_swaps_contract),
         });
     }
 
