@@ -76,7 +76,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferAndCreatePool() {
 
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
-	chainANode.CreatePool("ibcDenomPool.json", initialization.ValidatorWalletName)
+	chainANode.CreateBalancerPool("ibcDenomPool.json", initialization.ValidatorWalletName)
 }
 
 // TestSuperfluidVoting tests that superfluid voting is functioning as expected.
@@ -91,7 +91,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
 
-	poolId := chainANode.CreatePool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
+	poolId := chainANode.CreateBalancerPool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
 
 	// enable superfluid assets
 	chainA.EnableSuperfluidAsset(fmt.Sprintf("gamm/pool/%d", poolId))
@@ -355,7 +355,7 @@ func (s *IntegrationTestSuite) TestAddToExistingLock() {
 	s.NoError(err)
 	// ensure we can add to new locks and superfluid locks
 	// create pool and enable superfluid assets
-	poolId := chainANode.CreatePool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
+	poolId := chainANode.CreateBalancerPool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
 	chainA.EnableSuperfluidAsset(fmt.Sprintf("gamm/pool/%d", poolId))
 
 	// setup wallets and send gamm tokens to these wallets on chainA
@@ -394,7 +394,7 @@ func (s *IntegrationTestSuite) TestArithmeticTWAP() {
 	s.NoError(err)
 
 	// Triggers the creation of TWAP records.
-	poolId := chainANode.CreatePool(poolFile, initialization.ValidatorWalletName)
+	poolId := chainANode.CreateBalancerPool(poolFile, initialization.ValidatorWalletName)
 	swapWalletAddr := chainANode.CreateWallet(walletName)
 
 	timeBeforeSwap := chainANode.QueryLatestBlockTime()
@@ -702,7 +702,7 @@ func (s *IntegrationTestSuite) TestGeometricTWAP() {
 	s.NoError(err)
 
 	// Triggers the creation of TWAP records.
-	poolId := chainANode.CreatePool(poolFile, initialization.ValidatorWalletName)
+	poolId := chainANode.CreateBalancerPool(poolFile, initialization.ValidatorWalletName)
 	swapWalletAddr := chainANode.CreateWallet(walletName)
 
 	// We add 5 ms to avoid landing directly on block time in twap. If block time
