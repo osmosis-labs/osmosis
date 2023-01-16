@@ -12,6 +12,9 @@ pub enum ContractError {
     #[error("Invalid Json: could not serialize msg into json: {error}")]
     InvalidJson { error: String },
 
+    #[error("Invalid Crosschain Swpas Contract: {contract}")]
+    InvalidCrosschainSwapsContract { contract: String },
+
     #[error("Custom Error val: {val:?}")]
     CustomError { val: String },
     // Add any other custom errors you like here.

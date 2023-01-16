@@ -6,6 +6,7 @@ use cw2::set_contract_version;
 use crate::error::ContractError;
 use crate::execute::execute_swap;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use crate::state::{Config, CONFIG};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:outpost";
@@ -16,16 +17,30 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
-    info: MessageInfo,
-    _msg: InstantiateMsg,
+    _info: MessageInfo,
+    msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-    // TODO: Validate and store XC swap contract
-    // TODO: Store osmosis channel
+    // Validate the XC swap contract addr.
+    // This needs to be done with bech32 because the prefix may be different than the current chain
+    let Ok((prefix, _, _)) = bech32::decode(msg.crosschain_swaps_contract.as_str()) else {
+        return Err(ContractError::InvalidCrosschainSwapsContract {
+            contract: msg.crosschain_swaps_contract.clone(),
+        })
+    };
+    if prefix != "osmo" {
+        return Err(ContractError::InvalidCrosschainSwapsContract {
+            contract: format!("invalid prefix: {}", msg.crosschain_swaps_contract.clone()),
+        });
+    }
 
-    Ok(Response::new()
-        .add_attribute("method", "instantiate")
-        .add_attribute("owner", info.sender))
+    // Store the contract addr and the osmosis channel
+    let state = Config {
+        osmosis_channel: msg.osmosis_channel,
+        crosschain_swaps_contract: msg.crosschain_swaps_contract,
+    };
+    CONFIG.save(deps.storage, &state)?;
+    Ok(Response::new().add_attribute("method", "instantiate"))
 }
 
 #[cfg_attr(not(feature = "imported"), entry_point)]

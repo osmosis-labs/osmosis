@@ -6,7 +6,10 @@ use crate::ContractError;
 
 /// Message type for `instantiate` entry_point
 #[cw_serde]
-pub struct InstantiateMsg {}
+pub struct InstantiateMsg {
+    pub osmosis_channel: String,
+    pub crosschain_swaps_contract: String,
+}
 
 /// Information about which contract to call
 #[cw_serde]
