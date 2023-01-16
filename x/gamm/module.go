@@ -33,6 +33,8 @@ import (
 	simulation "github.com/osmosis-labs/osmosis/v14/x/gamm/simulation"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/v2types"
+	"github.com/osmosis-labs/osmosis/v14/x/poolmanager"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 var (
@@ -99,6 +101,7 @@ type AppModule struct {
 
 	ak     types.AccountKeeper
 	bk     types.BankKeeper
+	pk     poolmanager.Keeper
 	keeper keeper.Keeper
 }
 
@@ -106,18 +109,20 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(&am.keeper))
 	balancer.RegisterMsgServer(cfg.MsgServer(), keeper.NewBalancerMsgServerImpl(&am.keeper))
 	stableswap.RegisterMsgServer(cfg.MsgServer(), keeper.NewStableswapMsgServerImpl(&am.keeper))
+	poolmanagertypes.RegisterMsgServer(cfg.MsgServer(), poolmanager.NewMsgServerImpl(&am.pk))
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
 	v2types.RegisterQueryServer(cfg.QueryServer(), keeper.NewV2Querier(am.keeper))
 }
 
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
-	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper,
+	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, poolmanagerKeeper poolmanager.Keeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 		ak:             accountKeeper,
 		bk:             bankKeeper,
+		pk:             poolmanagerKeeper,
 	}
 }
 

@@ -5,10 +5,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	gammkeeper "github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
- 	poolmanagerkeeper "github.com/osmosis-labs/osmosis/v14/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagerkeeper "github.com/osmosis-labs/osmosis/v14/x/poolmanager"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 

@@ -87,22 +87,6 @@ service Query {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{pool_id}/prices";
   }
-
-  // Deprecated: please use the alternative in x/poolmanager
-  rpc EstimateSwapExactAmountIn(QuerySwapExactAmountInRequest)
-      returns (QuerySwapExactAmountInResponse) {
-    option deprecated = true;
-    option (google.api.http).get =
-        "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_in";
-  }
-
-  // Deprecated: please use the alternative in x/poolmanager
-  rpc EstimateSwapExactAmountOut(QuerySwapExactAmountOutRequest)
-      returns (QuerySwapExactAmountOutResponse) {
-    option deprecated = true;
-    option (google.api.http).get =
-        "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_out";
-  }
 }
 
 //=============================== Pool
@@ -260,48 +244,6 @@ message QuerySpotPriceResponse {
   option deprecated = true;
   // String of the Dec. Ex) 10.203uatom
   string spot_price = 1 [ (gogoproto.moretags) = "yaml:\"spot_price\"" ];
-}
-
-//=============================== EstimateSwapExactAmountIn
-message QuerySwapExactAmountInRequest {
-  option deprecated = true;
-  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  string token_in = 3 [ (gogoproto.moretags) = "yaml:\"token_in\"" ];
-  repeated osmosis.poolmanager.v1beta1.SwapAmountInRoute routes = 4 [
-    (gogoproto.moretags) = "yaml:\"routes\"",
-    (gogoproto.nullable) = false
-  ];
-}
-
-message QuerySwapExactAmountInResponse {
-  option deprecated = true;
-  string token_out_amount = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"token_out_amount\"",
-    (gogoproto.nullable) = false
-  ];
-}
-
-//=============================== EstimateSwapExactAmountOut
-message QuerySwapExactAmountOutRequest {
-  option deprecated = true;
-  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  repeated osmosis.poolmanager.v1beta1.SwapAmountOutRoute routes = 3 [
-    (gogoproto.moretags) = "yaml:\"routes\"",
-    (gogoproto.nullable) = false
-  ];
-  string token_out = 4 [ (gogoproto.moretags) = "yaml:\"token_out\"" ];
-}
-
-message QuerySwapExactAmountOutResponse {
-  option deprecated = true;
-  string token_in_amount = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"token_in_amount\"",
-    (gogoproto.nullable) = false
-  ];
 }
 
 message QueryTotalLiquidityRequest {}

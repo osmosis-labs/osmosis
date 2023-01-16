@@ -2,8 +2,9 @@ use std::ops::{Div, Mul};
 
 use cosmwasm_std::{Addr, Coin, Decimal, Deps, Timestamp, Uint128};
 use osmosis_std::shim::Timestamp as OsmosisTimestamp;
-use osmosis_std::types::osmosis::gamm::v1beta1::{
-    MsgSwapExactAmountIn, QueryTotalPoolLiquidityRequest, SwapAmountInRoute,
+use osmosis_std::types::osmosis::gamm::v1beta1::QueryTotalPoolLiquidityRequest;
+use osmosis_std::types::osmosis::poolmanager::v1beta1::{
+    MsgSwapExactAmountIn, SwapAmountInRoute,
 };
 use osmosis_std::types::osmosis::twap::v1beta1::TwapQuerier;
 

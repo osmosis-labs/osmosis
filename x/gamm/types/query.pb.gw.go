@@ -627,10 +627,6 @@ func local_request_Query_SpotPrice_0(ctx context.Context, marshaler runtime.Mars
 
 }
 
-var (
-	filter_Query_EstimateSwapExactAmountIn_0 = &utilities.DoubleArray{Encoding: map[string]int{"pool_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
-)
-
 // RegisterQueryHandlerServer registers the http handlers for service Query to "mux".
 // UnaryRPC     :call QueryServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
@@ -1221,10 +1217,6 @@ var (
 	pattern_Query_TotalShares_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"osmosis", "gamm", "v1beta1", "pools", "pool_id", "total_shares"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_SpotPrice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"osmosis", "gamm", "v1beta1", "pools", "pool_id", "prices"}, "", runtime.AssumeColonVerbOpt(false)))
-
-	pattern_Query_EstimateSwapExactAmountIn_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"osmosis", "gamm", "v1beta1", "pool_id", "estimate", "swap_exact_amount_in"}, "", runtime.AssumeColonVerbOpt(false)))
-
-	pattern_Query_EstimateSwapExactAmountOut_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"osmosis", "gamm", "v1beta1", "pool_id", "estimate", "swap_exact_amount_out"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (
@@ -1251,8 +1243,4 @@ var (
 	forward_Query_TotalShares_0 = runtime.ForwardResponseMessage
 
 	forward_Query_SpotPrice_0 = runtime.ForwardResponseMessage
-
-	forward_Query_EstimateSwapExactAmountIn_0 = runtime.ForwardResponseMessage
-
-	forward_Query_EstimateSwapExactAmountOut_0 = runtime.ForwardResponseMessage
 )

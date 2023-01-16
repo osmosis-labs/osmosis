@@ -29911,16 +29911,6 @@ components:
         QuerySpotPriceResponse defines the gRPC response structure for a SpotPrice
 
         query.
-    osmosis.gamm.v1beta1.QuerySwapExactAmountInResponse:
-      type: object
-      properties:
-        token_out_amount:
-          type: string
-    osmosis.gamm.v1beta1.QuerySwapExactAmountOutResponse:
-      type: object
-      properties:
-        token_in_amount:
-          type: string
     osmosis.gamm.v1beta1.QueryTotalLiquidityResponse:
       type: object
       properties:

@@ -5,7 +5,7 @@ mod test_env;
 use std::str::FromStr;
 
 use cosmwasm_std::{Addr, Coin, Decimal};
-use osmosis_std::types::osmosis::gamm::v1beta1::SwapAmountInRoute;
+use osmosis_std::types::osmosis::poolmanager::v1beta1::SwapAmountInRoute;
 use osmosis_testing::cosmrs::proto::cosmos::bank::v1beta1::QueryAllBalancesRequest;
 
 use crosschain_swaps::msg::{ExecuteMsg as CrossChainExecute, FailedDeliveryAction};
