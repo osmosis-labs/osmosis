@@ -28,6 +28,7 @@ jobs:
       - uses: technote-space/get-diff-action@v6.0.1
         with:
           PATTERNS: |
+            **/bytecode/*.wasm
             **/**.rs
             **/**Cargo.toml
             **/**Cargo.lock
