@@ -48,7 +48,7 @@ message Pool {
   ];
 
   // swap_fee is the ratio that is charged on the amount of token in.
-  string swap_fee = 9 [
+  string swap_fee = 10 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"swap_fee\"",
     (gogoproto.nullable) = false
