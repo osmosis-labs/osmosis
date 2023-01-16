@@ -24,7 +24,7 @@ func formatAccumPrefixKey(name string) []byte {
 
 // formatPositionPrefixKey returns the key prefix used
 // specifically for position values in the KVStore.
-// Returns "accum/pos/{accumName}/{address}" as bytes.
-func formatPositionPrefixKey(accumName, address string) []byte {
-	return formatAccumPrefixKey(fmt.Sprintf("%s/%s/%s", positionPrefix, accumName, address))
+// Returns "accum/pos/{accumName}/{name}" as bytes.
+func formatPositionPrefixKey(accumName, name string) []byte {
+	return formatAccumPrefixKey(fmt.Sprintf("%s/%s/%s", positionPrefix, accumName, name))
 }
