@@ -3,20 +3,19 @@ package twap_test
 import (
 	"errors"
 	"fmt"
-	"math"
 	"testing"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v13/x/twap"
-	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
-	"github.com/osmosis-labs/osmosis/v13/x/twap/types/twapmock"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v14/x/twap"
+	"github.com/osmosis-labs/osmosis/v14/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v14/x/twap/types/twapmock"
 )
 
 var (
@@ -271,10 +270,20 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 			newTime:   time.Unix(1, 0),
 			expRecord: newExpRecord(oneDec, twoDec, pointFiveDec),
 		},
-		"zero spot price - panic": {
-			record:      withPrice0Set(defaultRecord, sdk.ZeroDec()),
-			newTime:     defaultRecord.Time.Add(time.Second),
-			expectPanic: true,
+		"sp0 - zero spot price - accum0 unchanged, accum1 updated, geom accum unchanged, last err time set": {
+			record:    withPrice0Set(defaultRecord, sdk.ZeroDec()),
+			newTime:   defaultRecord.Time.Add(time.Second),
+			expRecord: withLastErrTime(newExpRecord(oneDec, twoDec.Add(sdk.NewDecWithPrec(1, 1).Mul(OneSec)), pointFiveDec), defaultRecord.Time.Add(time.Second)),
+		},
+		"sp1 - zero spot price - accum0 updated, accum1 unchanged, geom accum updated correctly": {
+			record:    withPrice1Set(defaultRecord, sdk.ZeroDec()),
+			newTime:   defaultRecord.Time.Add(time.Second),
+			expRecord: newExpRecord(tenSecAccum.Add(oneDec), twoDec, pointFiveDec.Add(geometricTenSecAccum)),
+		},
+		"both sp - zero spot price - accum0 unchange, accum1 unchanged, geom accum unchanged": {
+			record:    withPrice1Set(withPrice0Set(defaultRecord, sdk.ZeroDec()), sdk.ZeroDec()),
+			newTime:   defaultRecord.Time.Add(time.Second),
+			expRecord: withLastErrTime(newExpRecord(oneDec, twoDec, pointFiveDec), defaultRecord.Time.Add(time.Second)),
 		},
 		"spot price of one - geom accumulator 0": {
 			record:    withPrice1Set(withPrice0Set(defaultRecord, sdk.OneDec()), sdk.OneDec()),
@@ -1319,30 +1328,62 @@ func (s *TestSuite) TestComputeArithmeticTwapWithSpotPriceError() {
 	}
 }
 
-func (s *TestSuite) TestTwapLog() {
-	var expectedErrTolerance = osmomath.MustNewDecFromStr("0.000000000000000100")
-	// "Twaplog{912648174127941279170121098210.928219201902041311} = 99.525973560175362367"
-	// From: https://www.wolframalpha.com/input?i2d=true&i=log+base+2+of+912648174127941279170121098210.928219201902041311+with+20+digits
-	var priceValue = osmomath.MustNewDecFromStr("912648174127941279170121098210.928219201902041311")
-	var expectedValue = osmomath.MustNewDecFromStr("99.525973560175362367")
+// TestTwapLog_CorrectBase tests that the base of 2 is used for the twap log function.
+// log_2{16} = 4
+func (s *TestSuite) TestTwapLog_CorrectBase() {
+	logOf := sdk.NewDec(16)
+	expectedValue := sdk.NewDec(4)
 
-	result := twap.TwapLog(priceValue.SDKDec())
-	result_by_customBaseLog := priceValue.CustomBaseLog(osmomath.BigDecFromSDKDec(twap.GeometricTwapMathBase))
-	s.Require().True(expectedValue.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
-	s.Require().True(result_by_customBaseLog.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
+	result := twap.TwapLog(logOf)
+
+	s.Require().Equal(expectedValue, result)
 }
 
-func (s *TestSuite) TestTwapPow() {
-	var expectedErrTolerance = osmomath.MustNewDecFromStr("0.00000100")
-	// "TwapPow(0.5) = 1.41421356"
-	// From: https://www.wolframalpha.com/input?i2d=true&i=power+base+2+exponent+0.5+with+9+digits
-	exponentValue := osmomath.MustNewDecFromStr("0.5")
-	expectedValue := osmomath.MustNewDecFromStr("1.41421356")
+func (s *TestSuite) TestTwapLog() {
+	smallestAdditiveTolerance := osmomath.ErrTolerance{
+		AdditiveTolerance: sdk.SmallestDec(),
+	}
 
-	result := twap.TwapPow(exponentValue.SDKDec())
-	result_by_mathPow := math.Pow(twap.GeometricTwapMathBase.MustFloat64(), exponentValue.SDKDec().MustFloat64())
-	s.Require().True(expectedValue.Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
-	s.Require().True(osmomath.MustNewDecFromStr(fmt.Sprint(result_by_mathPow)).Sub(osmomath.BigDecFromSDKDec(result)).Abs().LTE(expectedErrTolerance))
+	testcases := []struct {
+		name        string
+		price       sdk.Dec
+		expected    sdk.Dec
+		expectPanic bool
+	}{
+		{
+			"max spot price",
+			gammtypes.MaxSpotPrice,
+			// log_2{2^128 - 1} = 128
+			sdk.MustNewDecFromStr("127.999999999999999999"),
+			false,
+		},
+		{
+			"zero price - panic",
+			sdk.ZeroDec(),
+			sdk.Dec{},
+			true,
+		},
+		{
+			"smallest dec",
+			sdk.SmallestDec(),
+			// https://www.wolframalpha.com/input?i=log+base+2+of+%2810%5E-18%29+with+20+digits
+			sdk.MustNewDecFromStr("59.794705707972522262").Neg(),
+			false,
+		},
+	}
+
+	for _, tc := range testcases {
+		s.Run(tc.name, func() {
+			osmoassert.ConditionalPanic(s.T(), tc.expectPanic, func() {
+				result := twap.TwapLog(tc.price)
+
+				smallestAdditiveTolerance.CompareBigDec(
+					osmomath.BigDecFromSDKDec(tc.expected),
+					osmomath.BigDecFromSDKDec(result),
+				)
+			})
+		})
+	}
 }
 
 func testCaseFromDeltas(s *TestSuite, startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTwapTestCase {

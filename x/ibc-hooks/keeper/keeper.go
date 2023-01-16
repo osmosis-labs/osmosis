@@ -2,10 +2,11 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/address"
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/osmosis-labs/osmosis/v13/x/ibc-hooks/types"
+	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -50,4 +51,11 @@ func (k Keeper) GetPacketCallback(ctx sdk.Context, channel string, packetSequenc
 func (k Keeper) DeletePacketCallback(ctx sdk.Context, channel string, packetSequence uint64) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(GetPacketKey(channel, packetSequence))
+}
+
+func DeriveIntermediateSender(channel, originalSender, bech32Prefix string) (string, error) {
+	senderStr := fmt.Sprintf("%s/%s", channel, originalSender)
+	senderHash32 := address.Hash(types.SenderPrefix, []byte(senderStr))
+	sender := sdk.AccAddress(senderHash32[:])
+	return sdk.Bech32ifyAddressBytes(bech32Prefix, sender)
 }

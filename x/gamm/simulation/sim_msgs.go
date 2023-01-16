@@ -8,11 +8,12 @@ import (
 
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
-	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
-	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v14/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
+	balancertypes "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
@@ -129,7 +130,7 @@ func RandomSwapExactAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Cont
 	}
 
 	// set the swap route to use this pool
-	route := []types.SwapAmountInRoute{{
+	route := []poolmanagertypes.SwapAmountInRoute{{
 		PoolId:        pool_id,
 		TokenOutDenom: coinOut.Denom,
 	}}
@@ -167,7 +168,7 @@ func RandomSwapExactAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Con
 	}
 
 	// set the swap route to use this pool
-	route := []types.SwapAmountOutRoute{{
+	route := []poolmanagertypes.SwapAmountOutRoute{{
 		PoolId:       pool_id,
 		TokenInDenom: coinIn.Denom,
 	}}

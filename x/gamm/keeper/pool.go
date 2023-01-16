@@ -8,14 +8,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
-func (k Keeper) MarshalPool(pool swaproutertypes.PoolI) ([]byte, error) {
+func (k Keeper) MarshalPool(pool poolmanagertypes.PoolI) ([]byte, error) {
 	return k.cdc.MarshalInterface(pool)
 }
 
@@ -25,7 +25,7 @@ func (k Keeper) UnmarshalPool(bz []byte) (types.CFMMPoolI, error) {
 }
 
 // GetPool returns a pool with a given id.
-func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (swaproutertypes.PoolI, error) {
+func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error) {
 	return k.GetPoolAndPoke(ctx, poolId)
 }
 
@@ -92,7 +92,7 @@ func (k Keeper) GetPoolsAndPoke(ctx sdk.Context) (res []types.CFMMPoolI, err err
 	return res, nil
 }
 
-func (k Keeper) setPool(ctx sdk.Context, pool swaproutertypes.PoolI) error {
+func (k Keeper) setPool(ctx sdk.Context, pool poolmanagertypes.PoolI) error {
 	bz, err := k.MarshalPool(pool)
 	if err != nil {
 		return err
@@ -227,7 +227,7 @@ func (k Keeper) setNextPoolId(ctx sdk.Context, poolId uint64) {
 	store.Set(types.KeyNextGlobalPoolId, bz)
 }
 
-// Deprecated: pool id index has been moved to x/swaprouter.
+// Deprecated: pool id index has been moved to x/poolmanager.
 func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 	var nextPoolId uint64
 	store := ctx.KVStore(k.storeKey)
@@ -248,7 +248,7 @@ func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 	return nextPoolId
 }
 
-func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (swaproutertypes.PoolType, error) {
+func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolType, error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
 		return -1, err
@@ -256,9 +256,9 @@ func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (swaproutertypes.Poo
 
 	switch pool := pool.(type) {
 	case *balancer.Pool:
-		return swaproutertypes.Balancer, nil
+		return poolmanagertypes.Balancer, nil
 	case *stableswap.Pool:
-		return swaproutertypes.Stableswap, nil
+		return poolmanagertypes.Stableswap, nil
 	default:
 		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
 		return -1, sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
@@ -288,7 +288,7 @@ func (k Keeper) setStableSwapScalingFactors(ctx sdk.Context, poolId uint64, scal
 // Returns the pool of the CFMMPoolI or error if the given pool does not implement
 // CFMMPoolI.
 // nolint: unused
-func convertToCFMMPool(pool swaproutertypes.PoolI) (types.CFMMPoolI, error) {
+func convertToCFMMPool(pool poolmanagertypes.PoolI) (types.CFMMPoolI, error) {
 	cfmmPool, ok := pool.(types.CFMMPoolI)
 	if !ok {
 		return nil, fmt.Errorf("given pool does not implement CFMMPoolI, implements %T", pool)

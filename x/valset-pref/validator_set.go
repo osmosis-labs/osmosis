@@ -6,7 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
 )
 
 type valSet struct {
@@ -15,33 +16,34 @@ type valSet struct {
 	amount  sdk.Dec
 }
 
-func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, preferences []types.ValidatorPreference) error {
-	// check if a user already has a validator-set created
-	existingValidators, found := k.GetValidatorSetPreference(ctx, delegator)
+// SetValidatorSetPreference creates or updates delegators validator set.
+func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, preferences []types.ValidatorPreference) (types.ValidatorSetPreferences, error) {
+	existingValSet, found := k.GetValidatorSetPreference(ctx, delegator)
 	if found {
 		// check if the new preferences is the same as the existing preferences
-		isEqual := k.IsValidatorSetEqual(preferences, existingValidators.Preferences)
+		isEqual := k.IsValidatorSetEqual(existingValSet.Preferences, preferences)
 		if isEqual {
-			return fmt.Errorf("The preferences (validator and weights) are the same")
+			return types.ValidatorSetPreferences{}, fmt.Errorf("The preferences (validator and weights) are the same")
 		}
 	}
 
 	// checks that all the validators exist on chain
-	isValid := k.IsPreferenceValid(ctx, preferences)
+	valSetPref, isValid := k.IsPreferenceValid(ctx, preferences)
 	if !isValid {
-		return fmt.Errorf("The validator preference list is not valid")
+		return types.ValidatorSetPreferences{}, fmt.Errorf("The validator preference list is not valid")
 	}
 
-	return nil
+	return types.ValidatorSetPreferences{Preferences: valSetPref}, nil
 }
 
 // DelegateToValidatorSet delegates to a delegators existing validator-set.
+// If the valset does not exist, it delegates to existing staking position.
 // For ex: delegate 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
 // our delegate logic would attempt to delegate 5osmo to A , 2osmo to B, 3osmo to C
 func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
-	// get the existing validator set preference from store
-	existingSet, found := k.GetValidatorSetPreference(ctx, delegatorAddr)
-	if !found {
+	// get the existingValSet if it exists, if not check existingStakingPosition and return it
+	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
+	if err != nil {
 		return fmt.Errorf("user %s doesn't have validator set", delegatorAddr)
 	}
 
@@ -72,13 +74,14 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 }
 
 // UndelegateFromValidatorSet undelegates {coin} amount from the validator set.
+// If the valset does not exist, it undelegates from existing staking position.
 // For ex: userA has staked 10tokens with weight {Val->0.5, ValB->0.3, ValC->0.2}
 // undelegate 6osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
-// our undelegate logic would attempt to undelegate 3osmo from A , 1.8osmo from B, 1.2osmo from C
+// our undelegate logic would attempt to undelegate 3osmo from A, 1.8osmo from B, 1.2osmo from C
 func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
-	// get the existing validator set preference
-	existingSet, found := k.GetValidatorSetPreference(ctx, delegatorAddr)
-	if !found {
+	// get the existingValSet if it exists, if not check existingStakingPosition and return it
+	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
+	if err != nil {
 		return fmt.Errorf("user %s doesn't have validator set", delegatorAddr)
 	}
 
@@ -94,6 +97,9 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	for _, val := range existingSet.Preferences {
 		totalAmountFromWeights = totalAmountFromWeights.Add(val.Weight.Mul(tokenAmt))
 	}
+
+	// Handles rounding for ex: 9999.99999 = 10000.0
+	totalAmountFromWeights = totalAmountFromWeights.RoundInt().ToDec()
 
 	if !totalAmountFromWeights.Equal(tokenAmt) {
 		return fmt.Errorf("The undelegate total do not add up with the amount calculated from weights expected %s got %s", tokenAmt, totalAmountFromWeights)
@@ -207,6 +213,47 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 	return nil
 }
 
+// WithdrawDelegationRewards withdraws all the delegation rewards from the validator in the val-set.
+// If the valset does not exist, it withdraws from existing staking position.
+// Delegation reward is collected by the validator and in doing so, they can charge commission to the delegators.
+// Rewards are calculated per period, and is updated each time validator delegation changes. For ex: when a delegator
+// receives new delgation the rewards can be calculated by taking (total rewards before new delegation - the total current rewards).
+func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delegatorAddr string) error {
+	// get the existingValSet if it exists, if not check existingStakingPosition and return it
+	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
+	if err != nil {
+		return fmt.Errorf("user %s doesn't have validator set or existing delegations", delegatorAddr)
+	}
+
+	delegator, err := sdk.AccAddressFromBech32(delegatorAddr)
+	if err != nil {
+		return err
+	}
+
+	err = k.withdrawExistingValSetStakingPosition(ctx, delegator, existingSet.Preferences)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// withdrawExistingValSetStakingPosition takes the existing valset delegator delegations and withdraws the rewards.
+func (k Keeper) withdrawExistingValSetStakingPosition(ctx sdk.Context, delegator sdk.AccAddress, delegations []types.ValidatorPreference) error {
+	for _, dels := range delegations {
+		valAddr, err := sdk.ValAddressFromBech32(dels.ValOperAddress)
+		if err != nil {
+			return fmt.Errorf("validator address not formatted")
+		}
+
+		_, err = k.distirbutionKeeper.WithdrawDelegationRewards(ctx, delegator, valAddr)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // GetValAddrAndVal checks if the validator address is valid and the validator provided exists on chain.
 func (k Keeper) getValAddrAndVal(ctx sdk.Context, valOperAddress string) (sdk.ValAddress, stakingtypes.Validator, error) {
 	valAddr, err := sdk.ValAddressFromBech32(valOperAddress)
@@ -223,14 +270,24 @@ func (k Keeper) getValAddrAndVal(ctx sdk.Context, valOperAddress string) (sdk.Va
 }
 
 // IsPreferenceValid loops through the validator preferences and checks its existence and validity.
-func (k Keeper) IsPreferenceValid(ctx sdk.Context, preferences []types.ValidatorPreference) bool {
+func (k Keeper) IsPreferenceValid(ctx sdk.Context, preferences []types.ValidatorPreference) ([]types.ValidatorPreference, bool) {
+	var weightsRoundedValPrefList []types.ValidatorPreference
 	for _, val := range preferences {
+		// round up weights
+		valWeightStr := osmomath.SigFigRound(val.Weight, sdk.NewDec(10).Power(2).TruncateInt())
+
 		_, _, err := k.GetValidatorInfo(ctx, val.ValOperAddress)
 		if err != nil {
-			return false
+			return nil, false
 		}
+
+		weightsRoundedValPrefList = append(weightsRoundedValPrefList, types.ValidatorPreference{
+			ValOperAddress: val.ValOperAddress,
+			Weight:         valWeightStr,
+		})
 	}
-	return true
+
+	return weightsRoundedValPrefList, true
 }
 
 // IsValidatorSetEqual returns true if the two preferences are equal.

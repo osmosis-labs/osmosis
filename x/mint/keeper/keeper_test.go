@@ -13,11 +13,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
-	"github.com/osmosis-labs/osmosis/v13/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v13/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v14/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v14/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v14/x/pool-incentives/types"
 )
 
 type KeeperTestSuite struct {

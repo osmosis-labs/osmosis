@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
 )
 
 type msgServer struct {
@@ -25,16 +25,12 @@ var _ types.MsgServer = msgServer{}
 func (server msgServer) SetValidatorSetPreference(goCtx context.Context, msg *types.MsgSetValidatorSetPreference) (*types.MsgSetValidatorSetPreferenceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	err := server.keeper.SetValidatorSetPreference(ctx, msg.Delegator, msg.Preferences)
+	preferences, err := server.keeper.SetValidatorSetPreference(ctx, msg.Delegator, msg.Preferences)
 	if err != nil {
 		return nil, err
 	}
 
-	setMsg := types.ValidatorSetPreferences{
-		Preferences: msg.Preferences,
-	}
-
-	server.keeper.SetValidatorSetPreferences(ctx, msg.Delegator, setMsg)
+	server.keeper.SetValidatorSetPreferences(ctx, msg.Delegator, preferences)
 	return &types.MsgSetValidatorSetPreferenceResponse{}, nil
 }
 
@@ -92,5 +88,12 @@ func (server msgServer) RedelegateValidatorSet(goCtx context.Context, msg *types
 }
 
 func (server msgServer) WithdrawDelegationRewards(goCtx context.Context, msg *types.MsgWithdrawDelegationRewards) (*types.MsgWithdrawDelegationRewardsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	err := server.keeper.WithdrawDelegationRewards(ctx, msg.Delegator)
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.MsgWithdrawDelegationRewardsResponse{}, nil
 }

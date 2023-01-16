@@ -5,10 +5,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
-	"github.com/osmosis-labs/osmosis/v13/x/twap"
-	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v14/x/twap"
+	"github.com/osmosis-labs/osmosis/v14/x/twap/types"
 )
 
 type computeTwapTestCase struct {
@@ -161,6 +162,34 @@ func (s *TestSuite) TestComputeArithmeticStrategyTwap() {
 // Contrary to computeTwap function (logic.go) that handles the cases with zero delta correctly,
 // this function should panic in case of zero delta.
 func (s *TestSuite) TestComputeGeometricStrategyTwap() {
+	var (
+		errTolerance = osmomath.ErrTolerance{
+			MultiplicativeTolerance: sdk.SmallestDec(),
+			RoundingDir:             osmomath.RoundDown,
+		}
+
+		// Compute accumulator difference for the underflow test case by
+		// taking log base 2 of the min spot price
+		minSpotPriceLogBase2 = twap.TwapLog(gammtypes.MinSpotPrice)
+
+		// Compute accumulator difference for the overflow test case by
+		// taking log base 2 of the max spot price
+		maxSpotPriceLogBase2 = twap.TwapLog(gammtypes.MaxSpotPrice)
+
+		oneHundredYearsInHours        int64 = 100 * 365 * 24
+		oneHundredYears                     = OneSec.MulInt64(60 * 60 * oneHundredYearsInHours)
+		oneHundredYearsMin1MsDuration       = time.Duration(oneHundredYearsInHours)*time.Hour - time.Millisecond
+
+		// Subtract 1ms from 100 years to assume that we interpolate.
+		oneHundredYearsMin1Ms = oneHundredYears.Sub(oneDec)
+
+		// Calculate the geometric accumulator difference for overflow test case.
+		overflowTestCaseAccumDiff = oneHundredYearsMin1Ms.Mul(maxSpotPriceLogBase2)
+
+		// Calculate the geometric accumulator difference for underflow test case.
+		underflowTestCaseAccumDiff = oneHundredYearsMin1Ms.Mul(minSpotPriceLogBase2)
+	)
+
 	tests := map[string]computeTwapTestCase{
 		// basic test for both denom with zero start accumulator
 		"basic denom0: spot price = 1 for one second, 0 init accumulator": {
@@ -206,28 +235,63 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap() {
 		"accumulator = 10*OneSec, t=100s. .1*second base accum": geometricTestCaseFromDeltas0(
 			s, OneSec.MulInt64(10).Mul(logOneOverTen), geometricTenSecAccum, 100*time.Second, twap.TwapPow(geometricTenSecAccum.QuoInt64(100*1000))),
 
-		// TODO: this is the highest price we currently support with the given precision bounds.
-		// Need to choose better base and potentially improve math functions to mitigate.
 		"price of 1_000_000 for an hour": {
 			startRecord: newOneSidedGeometricRecord(baseTime, sdk.ZeroDec()),
 			endRecord:   newOneSidedGeometricRecord(baseTime.Add(time.Hour), OneSec.MulInt64(60*60).Mul(twap.TwapLog(sdk.NewDec(1_000_000)))),
 			quoteAsset:  denom0,
 			expTwap:     sdk.NewDec(1_000_000),
 		},
-		// TODO: overflow tests
-		// - max spot price
-		// - large time delta
-		// - both
 
-		// TODO: hand calculated tests
+		"no overflow test: at max spot price denom0 quote - get max spot price": {
+			startRecord: withSp0(baseRecord, gammtypes.MaxSpotPrice),
+			endRecord:   newOneSidedGeometricRecord(baseRecord.Time.Add(oneHundredYearsMin1MsDuration), overflowTestCaseAccumDiff),
+			quoteAsset:  denom0,
+			expTwap:     gammtypes.MaxSpotPrice,
+		},
+
+		"expected precision loss test: - at spot price denom1 quote - return zero": {
+			startRecord: withSp0(baseRecord, gammtypes.MaxSpotPrice),
+			endRecord:   newOneSidedGeometricRecord(baseRecord.Time.Add(oneHundredYearsMin1MsDuration), overflowTestCaseAccumDiff),
+			quoteAsset:  denom1,
+
+			expTwap: sdk.ZeroDec(),
+		},
+
+		"no underflow test: spot price is smallest possible denom0 quote": {
+			startRecord: newOneSidedGeometricRecord(baseTime, sdk.ZeroDec()),
+			endRecord:   newOneSidedGeometricRecord(baseRecord.Time.Add(oneHundredYearsMin1MsDuration), underflowTestCaseAccumDiff),
+			quoteAsset:  denom0,
+			expTwap:     gammtypes.MinSpotPrice,
+		},
+
+		"no underflow test: spot price is smallest possible denom1 quote": {
+			startRecord: newOneSidedGeometricRecord(baseTime, sdk.ZeroDec()),
+			endRecord:   newOneSidedGeometricRecord(baseRecord.Time.Add(oneHundredYearsMin1MsDuration), underflowTestCaseAccumDiff),
+			quoteAsset:  denom1,
+			expTwap:     sdk.OneDec().Quo(gammtypes.MinSpotPrice),
+		},
+
+		"zero accum difference - return zero": {
+			startRecord: newOneSidedGeometricRecord(baseTime, sdk.ZeroDec()),
+			endRecord:   newOneSidedGeometricRecord(baseRecord.Time.Add(time.Millisecond), sdk.ZeroDec()),
+			quoteAsset:  denom1,
+
+			expTwap: sdk.ZeroDec(),
+		},
 	}
 
 	for name, tc := range tests {
+		tc := tc
 		s.Run(name, func() {
 			osmoassert.ConditionalPanic(s.T(), tc.expPanic, func() {
+
 				geometricStrategy := &twap.GeometricTwapStrategy{TwapKeeper: *s.App.TwapKeeper}
 				actualTwap := geometricStrategy.ComputeTwap(tc.startRecord, tc.endRecord, tc.quoteAsset)
-				osmoassert.DecApproxEq(s.T(), tc.expTwap, actualTwap, osmomath.GetPowPrecision())
+
+				// Sig fig round the expected value.
+				tc.expTwap = osmomath.SigFigRound(tc.expTwap, gammtypes.SpotPriceSigFigs)
+
+				s.Require().Equal(0, errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(tc.expTwap), osmomath.BigDecFromSDKDec(actualTwap)), "expected %s, got %s", tc.expTwap, actualTwap)
 			})
 		})
 	}

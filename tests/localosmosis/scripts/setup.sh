@@ -55,8 +55,8 @@ edit_genesis () {
     dasel put string -f $GENESIS '.app_state.mint.params.mint_denom' "uosmo"
     dasel put string -f $GENESIS '.app_state.mint.params.epoch_identifier' "day"
 
-    # Update gamm module
-    dasel put string -f $GENESIS '.app_state.gamm.params.pool_creation_fee.[0].denom' "uosmo"
+    # Update poolmanager module
+    dasel put string -f $GENESIS '.app_state.poolmanager.params.pool_creation_fee.[0].denom' "uosmo"
 
     # Update txfee basedenom
     dasel put string -f $GENESIS '.app_state.txfees.basedenom' "uosmo"

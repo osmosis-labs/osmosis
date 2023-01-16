@@ -7,20 +7,59 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
+
+	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
-	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
-	"github.com/osmosis-labs/osmosis/v13/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v13/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
 )
+
+// TestGeometricTwapMigration tests that the geometric twap record
+// migration runs succesfully. It does so by attempting to execute
+// the swap on the pool created pre-upgrade. When a pool is created
+// pre-upgrade, twap records are initialized for a pool. By runnning
+// a swap post-upgrade, we confirm that the geometric twap was initialized
+// correctly and does not cause a chain halt. This test was created
+// in-response to a testnet incident when performing the geometric twap
+// upgrade. Upon adding the migrations logic, the tests began to pass.
+func (s *IntegrationTestSuite) TestGeometricTwapMigration() {
+	if s.skipUpgrade {
+		s.T().Skip("Skipping upgrade tests")
+	}
+
+	const (
+		// Configurations for tests/e2e/scripts/pool1A.json
+		// This pool gets initialized pre-upgrade.
+		oldPoolId       = 1
+		minAmountOut    = "1"
+		otherDenom      = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
+		migrationWallet = "migration"
+	)
+
+	chainA := s.configurer.GetChainConfig(0)
+	node, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
+
+	uosmoIn := fmt.Sprintf("1000000%s", "uosmo")
+
+	swapWalletAddr := node.CreateWallet(migrationWallet)
+
+	node.BankSend(uosmoIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
+
+	// Swap to create new twap records on the pool that was created pre-upgrade.
+	node.SwapExactAmountIn(uosmoIn, minAmountOut, fmt.Sprintf("%d", oldPoolId), otherDenom, swapWalletAddr)
+}
 
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.
 // Additionally, it attempst to create a pool with IBC denoms.
@@ -163,13 +202,12 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	s.NoError(err)
 
 	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
-	chainA.LatestCodeId = 1
+	chainA.LatestCodeId = int(node.QueryLatestWasmCodeID())
 	node.InstantiateWasmContract(
 		strconv.Itoa(chainA.LatestCodeId),
 		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [{"channel_id": "channel-0", "denom": "%s", "quotas": [{"name":"testQuota", "duration": 86400, "send_recv": [1, 1]}] } ] }`, node.PublicAddress, node.PublicAddress, initialization.OsmoToken.Denom),
 		initialization.ValidatorWalletName)
 
-	// Using code_id 1 because this is the only contract right now. This may need to change if more contracts are added
 	contracts, err := node.QueryContractsFromId(chainA.LatestCodeId)
 	s.NoError(err)
 	s.Require().Len(contracts, 1, "Wrong number of contracts for the rate limiter")
@@ -228,6 +266,73 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	node.WasmExecute(contracts[0], `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
 }
 
+func (s *IntegrationTestSuite) TestIBCWasmHooks() {
+	if s.skipIBC {
+		s.T().Skip("Skipping IBC tests")
+	}
+	chainA := s.configurer.GetChainConfig(0)
+	chainB := s.configurer.GetChainConfig(1)
+
+	nodeA, err := chainA.GetDefaultNode()
+	s.NoError(err)
+	nodeB, err := chainB.GetDefaultNode()
+	s.NoError(err)
+
+	// copy the contract from x/rate-limit/testdata/
+	wd, err := os.Getwd()
+	s.NoError(err)
+	// co up two levels
+	projectDir := filepath.Dir(filepath.Dir(wd))
+	err = copyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
+	s.NoError(err)
+
+	nodeA.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
+	chainA.LatestCodeId = int(nodeA.QueryLatestWasmCodeID())
+	nodeA.InstantiateWasmContract(
+		strconv.Itoa(chainA.LatestCodeId),
+		`{"count": 0}`,
+		initialization.ValidatorWalletName)
+
+	contracts, err := nodeA.QueryContractsFromId(chainA.LatestCodeId)
+	s.NoError(err)
+	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
+	contractAddr := contracts[0]
+
+	transferAmount := int64(10)
+	validatorAddr := nodeB.GetWallet(initialization.ValidatorWalletName)
+	nodeB.SendIBCTransfer(validatorAddr, contractAddr, fmt.Sprintf("%duosmo", transferAmount),
+		fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr))
+
+	// check the balance of the contract
+	s.Eventually(func() bool {
+		balance, err := nodeA.QueryBalances(contractAddr)
+		s.Require().NoError(err)
+		if len(balance) == 0 {
+			return false
+		}
+		return balance[0].Amount.Int64() == transferAmount
+	},
+		1*time.Minute,
+		10*time.Millisecond,
+	)
+
+	// sender wasm addr
+	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
+
+	var response map[string]interface{}
+	s.Eventually(func() bool {
+		response, err = nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
+		totalFunds := response["total_funds"].([]interface{})[0]
+		amount := totalFunds.(map[string]interface{})["amount"].(string)
+		denom := totalFunds.(map[string]interface{})["denom"].(string)
+		// check if denom contains "uosmo"
+		return err == nil && amount == strconv.FormatInt(transferAmount, 10) && strings.Contains(denom, "ibc")
+	},
+		15*time.Second,
+		10*time.Millisecond,
+	)
+}
+
 // TestAddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.
 func (s *IntegrationTestSuite) TestAddToExistingLockPostUpgrade() {
 	if s.skipUpgrade {
@@ -262,16 +367,16 @@ func (s *IntegrationTestSuite) TestAddToExistingLock() {
 	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId), lockupWalletAddr, lockupWalletSuperfluidAddr)
 }
 
-// TestTWAP tests TWAP by creating a pool, performing a swap.
+// TestArithmeticTWAP tests TWAP by creating a pool, performing a swap.
 // These two operations should create TWAP records.
 // Then, we wait until the epoch for the records to be pruned.
 // The records are guranteed to be pruned at the next epoch
 // because twap keep time = epoch time / 4 and we use a timer
 // to wait for at least the twap keep time.
-func (s *IntegrationTestSuite) TestTWAP() {
+func (s *IntegrationTestSuite) TestArithmeticTWAP() {
 	const (
 		poolFile   = "nativeDenomThreeAssetPool.json"
-		walletName = "swap-exact-amount-in-wallet"
+		walletName = "arithmetic-twap-wallet"
 
 		denomA = "stake"
 		denomB = "uion"
@@ -568,4 +673,95 @@ func (s *IntegrationTestSuite) TestExpeditedProposals() {
 	s.Require().Less(timeDelta, 2*time.Second)
 	s.T().Logf("expeditedVotingPeriodDuration within two seconds of expected time: %v", timeDelta)
 	close(totalTimeChan)
+}
+
+// TestGeometricTWAP tests geometric twap.
+// It does the following:  creates a pool, queries twap, performs a swap , and queries twap again.
+// Twap is expected to change after the swap.
+// The pool is created with 1_000_000 uosmo and 2_000_000 stake and equal weights.
+// Assuming base asset is uosmo, the initial twap is 2
+// Upon swapping 1_000_000 uosmo for stake, supply changes, making uosmo less expensive.
+// As a result of the swap, twap changes to 0.5.
+func (s *IntegrationTestSuite) TestGeometricTWAP() {
+	const (
+		// This pool contains 1_000_000 uosmo and 2_000_000 stake.
+		// Equals weights.
+		poolFile   = "geometricPool.json"
+		walletName = "geometric-twap-wallet"
+
+		denomA = "uosmo" // 1_000_000 uosmo
+		denomB = "stake" // 2_000_000 stake
+
+		minAmountOut = "1"
+
+		epochIdentifier = "day"
+	)
+
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.NoError(err)
+
+	// Triggers the creation of TWAP records.
+	poolId := chainANode.CreatePool(poolFile, initialization.ValidatorWalletName)
+	swapWalletAddr := chainANode.CreateWallet(walletName)
+
+	// We add 5 ms to avoid landing directly on block time in twap. If block time
+	// is provided as start time, the latest spot price is used. Otherwise
+	// interpolation is done.
+	timeBeforeSwapPlus5ms := chainANode.QueryLatestBlockTime().Add(5 * time.Millisecond)
+	// Wait for the next height so that the requested twap
+	// start time (timeBeforeSwap) is not equal to the block time.
+	chainA.WaitForNumHeights(1)
+
+	s.T().Log("querying for the first geometric TWAP to now (before swap)")
+	// Assume base = uosmo, quote = stake
+	// At pool creation time, the twap should be:
+	// quote assset supply / base asset supply = 2_000_000 / 1_000_000 = 2
+	initialTwapBOverA, err := chainANode.QueryGeometricTwapToNow(poolId, denomA, denomB, timeBeforeSwapPlus5ms)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewDec(2), initialTwapBOverA)
+
+	// Assume base = stake, quote = uosmo
+	// At pool creation time, the twap should be:
+	// quote assset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
+	initialTwapAOverB, err := chainANode.QueryGeometricTwapToNow(poolId, denomB, denomA, timeBeforeSwapPlus5ms)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewDecWithPrec(5, 1), initialTwapAOverB)
+
+	coinAIn := fmt.Sprintf("1000000%s", denomA)
+	chainANode.BankSend(coinAIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
+
+	s.T().Logf("performing swap of %s for %s", coinAIn, denomB)
+
+	// stake out = stake supply * (1 - (uosmo supply before / uosmo supply after)^(uosmo weight / stake weight))
+	//           = 2_000_000 * (1 - (1_000_000 / 2_000_000)^1)
+	//           = 2_000_000 * 0.5
+	//           = 1_000_000
+	chainANode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", poolId), denomB, swapWalletAddr)
+
+	// New supply post swap:
+	// stake = 2_000_000 - 1_000_000 - 1_000_000
+	// uosmo = 1_000_000 + 1_000_000 = 2_000_000
+
+	timeAfterSwap := chainANode.QueryLatestBlockTime()
+	chainA.WaitForNumHeights(1)
+	timeAfterSwapPlus1Height := chainANode.QueryLatestBlockTime()
+
+	s.T().Log("querying for the TWAP from after swap to now")
+	afterSwapTwapBOverA, err := chainANode.QueryGeometricTwap(poolId, denomA, denomB, timeAfterSwap, timeAfterSwapPlus1Height)
+	s.Require().NoError(err)
+
+	// We swap uosmo so uosmo's supply will increase and stake will decrease.
+	// The the price after will be smaller than the previous one.
+	s.Require().True(initialTwapBOverA.GT(afterSwapTwapBOverA))
+
+	// Assume base = uosmo, quote = stake
+	// At pool creation, we had:
+	// quote assset supply / base asset supply = 2_000_000 / 1_000_000 = 2
+	// Next, we swapped 1_000_000 uosmo for stake.
+	// Now, we roughly have
+	// uatom = 1_000_000
+	// uosmo = 2_000_000
+	// quote assset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
+	osmoassert.DecApproxEq(s.T(), sdk.NewDecWithPrec(5, 1), afterSwapTwapBOverA, sdk.NewDecWithPrec(1, 2))
 }
