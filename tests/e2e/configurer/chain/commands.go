@@ -12,15 +12,17 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
+	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+
 	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 
-func (n *NodeConfig) CreatePool(poolFile, from string) uint64 {
-	n.LogActionF("creating pool from file %s", poolFile)
+func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
+	n.LogActionF("creating balancer pool from file %s", poolFile)
 	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
@@ -35,10 +37,35 @@ func (n *NodeConfig) CreatePool(poolFile, from string) uint64 {
 	err = util.Cdc.UnmarshalJSON(bz, &numPools)
 	require.NoError(n.t, err)
 	poolID := numPools.NumPools
-	n.LogActionF("successfully created pool %d", poolID)
+	n.LogActionF("successfully created balancer pool %d", poolID)
 	return poolID
 }
 
+func (n *NodeConfig) CreateConcentratedPool(from string) {
+	n.LogActionF("creating concentrated pool")
+
+	var (
+		denom1             = "uosmo"
+		denom2             = "uion"
+		tickSpacing        = 1
+		exponentAtPriceOne = -1
+	)
+
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-concentrated-pool", denom1, denom2, fmt.Sprintf("%s", tickSpacing), fmt.Sprintf("%s", exponentAtPriceOne), fmt.Sprintf("--from=%s", from)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+
+	path := "/osmosis/concentratedliquidity/v1beta1/pools"
+
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var pools cltypes.QueryPoolsResponse
+	err = util.Cdc.UnmarshalJSON(bz, &pools)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully created concentrated pool")
+	// TODO: return poolID
+}
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 	n.LogActionF("storing wasm code from file %s", wasmFile)
 	cmd := []string{"osmosisd", "tx", "wasm", "store", wasmFile, fmt.Sprintf("--from=%s", from), "--gas=auto", "--gas-prices=0.1uosmo", "--gas-adjustment=1.3"}
