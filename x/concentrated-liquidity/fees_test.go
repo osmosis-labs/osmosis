@@ -1,8 +1,6 @@
 package concentrated_liquidity_test
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
@@ -771,7 +769,7 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 			liquidity:     DefaultLiquidityAmt,
 			lowerTick:     DefaultLowerTick - 1,
 			upperTick:     DefaultUpperTick,
-			expectedError: accum.NoPositionError{Name: fmt.Sprintf("%s,%s,%d,%d", "1", ownerOne.String(), DefaultLowerTick-1, DefaultUpperTick)},
+			expectedError: accum.NoPositionError{Name: cl.FormatPositionAccumulatorKey(1, ownerOne, DefaultLowerTick-1, DefaultUpperTick)},
 		},
 	}
 
