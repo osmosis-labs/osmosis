@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"fmt"
-	"math"
 	"math/rand"
 	"time"
 
@@ -32,7 +31,7 @@ func RandomMsgSetValSetPreference(k valsetkeeper.Keeper, sim *osmosimtypes.SimCt
 func RandomMsgDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*types.MsgDelegateToValidatorSet, error) {
 	delegator := sim.RandomSimAccount()
 	// check if the delegator valset created
-	err := GetRandomExistingValSet(ctx, k, sim, delegator.Address)
+	_, err := GetRandomDelegations(ctx, k, sim, delegator.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -46,59 +45,36 @@ func RandomMsgDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, 
 }
 
 func RandomMsgUnDelegateFromValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*types.MsgUndelegateFromValidatorSet, error) {
+	// random delegator
+	delegator := sim.RandomSimAccount()
+
 	// get a random validafor
-	val, ok := RandSliceElem(sim.StakingKeeper().GetAllValidators(ctx))
-	if !ok {
-		return nil, fmt.Errorf("validator is not ok")
-	}
-
-	// get validator delegations
-	valAddr := val.GetOperator()
-	delegations := sim.StakingKeeper().GetValidatorDelegations(ctx, val.GetOperator())
-	if delegations == nil {
-		return nil, fmt.Errorf("keeper does have any delegation entries")
-	}
-
-	// get delegation information including the delegator
-	delegation := delegations[rand.Intn(len(delegations))]
-	delAddr := delegation.GetDelegatorAddr()
-
-	// check if the delegator has valset created
-	err := GetRandomExistingValSet(ctx, k, sim, delAddr)
+	validatorDelegations, err := GetRandomDelegations(ctx, k, sim, delegator.Address)
 	if err != nil {
 		return nil, err
 	}
 
-	// check if unbonding delegation has maximum number of entries
-	if sim.StakingKeeper().HasMaxUnbondingDelegationEntries(ctx, delAddr, valAddr) {
-		return nil, fmt.Errorf("keeper does have a max unbonding delegation entries")
+	delegatorDels := sim.StakingKeeper().GetAllDelegatorDelegations(ctx, delegator.Address)
+	if len(delegatorDels) == 0 {
+		return nil, fmt.Errorf("number of delegators equal 0")
 	}
 
-	// Set the max amount to undelegate
-	totalBond := val.TokensFromShares(delegation.GetShares()).TruncateInt()
-	if !totalBond.IsPositive() {
-		return nil, fmt.Errorf("total bond is negative")
+	for _, vals := range validatorDelegations {
+		dels := sim.StakingKeeper().GetValidatorDelegations(ctx, sdk.ValAddress(vals.ValOperAddress))
+		if dels == nil {
+			return nil, fmt.Errorf("keeper does have any delegation entries")
+		}
+
 	}
 
-	// unbond a random amount form 0 to totalBond(maxAmt)
-	unbondAmt := rand.Intn(int(totalBond.Int64()))
-	if unbondAmt == 0 {
-		return nil, fmt.Errorf("unbond amount is zero")
-	}
-
+	undelegationCoin := sim.RandExponentialCoin(ctx, delegator.Address)
 	return &types.MsgUndelegateFromValidatorSet{
-		Delegator: delAddr.String(),
-		Coin:      sdk.NewCoin(sim.StakingKeeper().BondDenom(ctx), totalBond),
+		Delegator: delegator.Address.String(),
+		Coin:      undelegationCoin,
 	}, nil
 }
 
 func RandomMsgReDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*types.MsgRedelegateValidatorSet, error) {
-	// check if the delegator valset created
-	// err := GetRandomExistingValSet(ctx, k, sim, delegator.Address)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	valSource, ok := RandSliceElem(sim.StakingKeeper().GetAllValidators(ctx))
 	if !ok {
 		return nil, fmt.Errorf("validator is not ok")
@@ -113,6 +89,12 @@ func RandomMsgReDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx
 	// get random delegator from src validator
 	delegation := delegations[rand.Intn(len(delegations))]
 	delAddr := delegation.GetDelegatorAddr()
+
+	// check if the delegator valset created
+	_, err := GetRandomDelegations(ctx, k, sim, delAddr)
+	if err != nil {
+		return nil, err
+	}
 
 	if sim.StakingKeeper().HasReceivingRedelegation(ctx, delAddr, srcAddr) {
 		return nil, fmt.Errorf("receveing redelegation is not allowed")
@@ -135,19 +117,13 @@ func RandomMsgReDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx
 func RandomMsgWithdrawRewardsFromValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*types.MsgWithdrawDelegationRewards, error) {
 	delegator := sim.RandomSimAccount()
 
-	err := GetRandomExistingValSet(ctx, k, sim, delegator.Address)
-	if err != nil {
-		return nil, err
-	}
-
-	// check that the delegator has delegated tokens
-	delegations, err := GetRandomExistingDelegation(ctx, k, sim, delegator.Address)
+	delegations, err := GetRandomDelegations(ctx, k, sim, delegator.Address)
 	if err != nil {
 		return nil, err
 	}
 
 	delegation := delegations[rand.Intn(len(delegations))]
-	validator := sim.StakingKeeper().Validator(ctx, delegation.GetValidatorAddr())
+	validator := sim.StakingKeeper().Validator(ctx, sdk.ValAddress(delegation.ValOperAddress))
 	if validator == nil {
 		return nil, fmt.Errorf("validator not found")
 	}
@@ -196,24 +172,14 @@ func GetRandomValAndWeights(ctx sdk.Context, k valsetkeeper.Keeper, sim *osmosim
 }
 
 // TODO: Change this to user GetDelegations() once #3857 gets merged, issue created
-func GetRandomExistingValSet(ctx sdk.Context, k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, delegatorAddr sdk.AccAddress) error {
+func GetRandomDelegations(ctx sdk.Context, k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, delegatorAddr sdk.AccAddress) ([]types.ValidatorPreference, error) {
 	// Get Valset delegations
-	_, found := k.GetValidatorSetPreference(ctx, delegatorAddr.String())
-	if !found {
-		return fmt.Errorf("No val set preference")
+	delegations, err := k.GetDelegationPreferences(ctx, delegatorAddr.String())
+	if err != nil {
+		return nil, fmt.Errorf("No delegations found")
 	}
 
-	return nil
-}
-
-func GetRandomExistingDelegation(ctx sdk.Context, k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, delegatorAddr sdk.AccAddress) ([]stakingtypes.Delegation, error) {
-	// gets the existing delegation
-	existingDelegations := sim.StakingKeeper().GetDelegatorDelegations(ctx, delegatorAddr, math.MaxUint16)
-	if len(existingDelegations) == 0 {
-		return nil, fmt.Errorf("No existing delegation")
-	}
-
-	return existingDelegations, nil
+	return delegations.Preferences, err
 }
 
 // Random float point from 0-1
