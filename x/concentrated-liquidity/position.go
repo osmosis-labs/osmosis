@@ -94,3 +94,19 @@ func (k Keeper) setPosition(ctx sdk.Context,
 	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
 	osmoutils.MustSet(store, key, position)
 }
+
+func (k Keeper) deletePosition(ctx sdk.Context,
+	poolId uint64,
+	owner sdk.AccAddress,
+	lowerTick, upperTick int64,
+) error {
+	store := ctx.KVStore(k.storeKey)
+	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
+
+	if !store.Has(key) {
+		return types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick}
+	}
+
+	store.Delete(key)
+	return nil
+}

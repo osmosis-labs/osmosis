@@ -39,6 +39,10 @@ func (k Keeper) HasPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	return k.hasPosition(ctx, poolId, owner, lowerTick, upperTick)
 }
 
+func (k Keeper) DeletePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) error {
+	return k.deletePosition(ctx, poolId, owner, lowerTick, upperTick)
+}
+
 func (k Keeper) GetPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedPoolExtension, error) {
 	return k.getPoolById(ctx, poolId)
 }
