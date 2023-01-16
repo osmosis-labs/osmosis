@@ -364,14 +364,15 @@ func (s *KeeperTestSuite) TestCrossTick() {
 		// to a value that is greater than that of accumulator
 		manipulateTickFeeGrowth      bool
 		expectedLiquidityDelta       sdk.Dec
-		expectedTickFeeGrowthOutside sdk.Dec
+		expectedTickFeeGrowthOutside sdk.DecCoins
 		expectedErr                  bool
 	}{
 		{
-			name:                   "Get tick info on existing pool and existing tick",
-			poolToGet:              validPoolId,
-			tickToGet:              preInitializedTickIndex,
-			expectedLiquidityDelta: DefaultLiquidityAmt.Neg(),
+			name:                         "Get tick info on existing pool and existing tick",
+			poolToGet:                    validPoolId,
+			tickToGet:                    preInitializedTickIndex,
+			expectedLiquidityDelta:       DefaultLiquidityAmt.Neg(),
+			expectedTickFeeGrowthOutside: DefaultFeeAccumCoins,
 		},
 		{
 			name:        "Try invalid tick",
