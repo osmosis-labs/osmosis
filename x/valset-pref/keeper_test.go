@@ -1,13 +1,18 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
+
+	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
+
 	"github.com/stretchr/testify/suite"
+
+	valPref "github.com/osmosis-labs/osmosis/v14/x/valset-pref"
 )
 
 type KeeperTestSuite struct {
@@ -61,18 +66,6 @@ func (suite *KeeperTestSuite) GetDelegationRewards(ctx sdk.Context, valAddrStr s
 	return rewards, validator
 }
 
-func (suite *KeeperTestSuite) SetupExistingValidatorDelegations(ctx sdk.Context, valAddrStr string, delegator sdk.AccAddress, delegateAmt sdk.Int) {
-	valAddr, err := sdk.ValAddressFromBech32(valAddrStr)
-	suite.Require().NoError(err)
-
-	validator, found := suite.App.StakingKeeper.GetValidator(ctx, valAddr)
-	suite.Require().True(found)
-
-	_, err = suite.App.StakingKeeper.Delegate(ctx, delegator, delegateAmt, stakingtypes.Unbonded, validator, true)
-	suite.Require().NoError(err)
-
-}
-
 func (suite *KeeperTestSuite) SetupDelegationReward(ctx sdk.Context, delegator sdk.AccAddress, preferences []types.ValidatorPreference, existingValAddrStr string, setValSetDel, setExistingdel bool) {
 	// incrementing the blockheight by 1 for reward
 	ctx = suite.Ctx.WithBlockHeight(suite.Ctx.BlockHeight() + 1)
@@ -100,6 +93,113 @@ func (suite *KeeperTestSuite) AllocateRewards(ctx sdk.Context, delegator sdk.Acc
 	rewardsAfterAllocation, _ := suite.GetDelegationRewards(ctx, valAddrStr, delegator)
 	suite.Require().NotNil(rewardsAfterAllocation)
 	suite.Require().NotZero(rewardsAfterAllocation[0].Amount)
+}
+
+// PrepareExistingDelegations sets up existing delegation by creating a certain number of validators and delegating tokenAmt to them.
+func (suite *KeeperTestSuite) PrepareExistingDelegations(ctx sdk.Context, valAddrs []string, delegator sdk.AccAddress, tokenAmt sdk.Int) error {
+	for i := 0; i < len(valAddrs); i++ {
+		valAddr, err := sdk.ValAddressFromBech32(valAddrs[i])
+		if err != nil {
+			return fmt.Errorf("validator address not formatted")
+		}
+
+		validator, found := suite.App.StakingKeeper.GetValidator(ctx, valAddr)
+		if !found {
+			return fmt.Errorf("validator not found %s", validator)
+		}
+
+		// Delegate the unbonded tokens
+		_, err = suite.App.StakingKeeper.Delegate(ctx, delegator, tokenAmt, stakingtypes.Unbonded, validator, true)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (suite *KeeperTestSuite) TestGetDelegationPreference() {
+	suite.SetupTest()
+
+	// prepare existing delegations validators
+	valAddrs := suite.SetupMultipleValidators(3)
+
+	// prepare validators to delegate to valset
+	preferences := suite.PrepareDelegateToValidatorSet()
+
+	tests := []struct {
+		name                   string
+		setValSet              bool
+		delegator              sdk.AccAddress
+		setExistingDelegations bool
+		expectPass             bool
+	}{
+		{
+			name:       "ValSet exist, existing delegations does not exist",
+			delegator:  sdk.AccAddress([]byte("addr1---------------")),
+			setValSet:  true,
+			expectPass: true,
+		},
+		{
+			name:                   "ValSet exists, existing delegations exist",
+			delegator:              sdk.AccAddress([]byte("addr2---------------")),
+			setValSet:              true,
+			setExistingDelegations: true,
+			expectPass:             true,
+		},
+		{
+			name:                   "ValSet does not exist, but existing delegations exist",
+			delegator:              sdk.AccAddress([]byte("addr3---------------")),
+			setExistingDelegations: true,
+			expectPass:             true,
+		},
+		{
+			name:       "ValSet does not exist, no existing delegations",
+			delegator:  sdk.AccAddress([]byte("addr4---------------")),
+			expectPass: false,
+		},
+	}
+
+	for _, test := range tests {
+		suite.Run(test.name, func() {
+			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorSetPreferenceKeeper)
+			c := sdk.WrapSDKContext(suite.Ctx)
+
+			amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)} // 100 osmo
+
+			suite.FundAcc(test.delegator, amountToFund)
+
+			if test.setValSet {
+				_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
+				suite.Require().NoError(err)
+			}
+
+			if test.setExistingDelegations {
+				err := suite.PrepareExistingDelegations(suite.Ctx, valAddrs, test.delegator, sdk.NewInt(10_000_000))
+				suite.Require().NoError(err)
+			}
+
+			_, err := suite.App.ValidatorSetPreferenceKeeper.GetDelegationPreferences(suite.Ctx, test.delegator.String())
+			if test.expectPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) SetupValidatorsAndDelegations() ([]string, []types.ValidatorPreference, sdk.Coins) {
+	// prepare existing delegations validators
+	valAddrs := suite.SetupMultipleValidators(3)
+
+	// prepare validators to delegate to valset
+	preferences := suite.PrepareDelegateToValidatorSet()
+
+	amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)} // 100 osmo
+
+	return valAddrs, preferences, amountToFund
+
 }
 
 func TestKeeperTestSuite(t *testing.T) {

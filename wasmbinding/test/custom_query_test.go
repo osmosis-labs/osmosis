@@ -15,9 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/app"
-	"github.com/osmosis-labs/osmosis/v13/wasmbinding/bindings"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v14/app"
+	"github.com/osmosis-labs/osmosis/v14/wasmbinding/bindings"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
 )
 
 // we must pay this many uosmo for every pool we create
@@ -159,7 +159,7 @@ func preparePool(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sd
 	}
 
 	msg := balancer.NewMsgCreateBalancerPool(addr, poolParams, assets, "")
-	poolId, err := osmosis.SwapRouterKeeper.CreatePool(ctx, &msg)
+	poolId, err := osmosis.PoolManagerKeeper.CreatePool(ctx, &msg)
 	require.NoError(t, err)
 	return poolId
 }

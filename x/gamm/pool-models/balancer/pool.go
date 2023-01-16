@@ -10,9 +10,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/cfmm_common"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 //nolint:deadcode
@@ -28,10 +28,10 @@ const (
 )
 
 var (
-	_ swaproutertypes.PoolI         = &Pool{}
-	_ types.PoolAmountOutExtension  = &Pool{}
-	_ types.WeightedPoolExtension   = &Pool{}
-	_ types.CFMMPoolI               = &Pool{}
+	_ poolmanagertypes.PoolI       = &Pool{}
+	_ types.PoolAmountOutExtension = &Pool{}
+	_ types.WeightedPoolExtension  = &Pool{}
+	_ types.CFMMPoolI              = &Pool{}
 	_ types.TraditionalAmmInterface = &Pool{}
 )
 

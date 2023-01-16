@@ -98,8 +98,8 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				"7c66126b64cd66bafd9ccfc721f068df451d31a3@osmosis-seed.sunshinevalidation.io:9393",         // Sunshine Validation
 			}
 			config.P2P.Seeds = strings.Join(seeds, ",")
-			config.P2P.MaxNumInboundPeers = 320
-			config.P2P.MaxNumOutboundPeers = 40
+			config.P2P.MaxNumInboundPeers = 80
+			config.P2P.MaxNumOutboundPeers = 60
 			config.Mempool.Size = 10000
 			config.StateSync.TrustPeriod = 112 * time.Hour
 			config.FastSync.Version = "v0"

@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v13/x/swaprouter/events"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/events"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 // swapExactAmountIn is an internal method for swapping an exact amount of tokens
@@ -21,7 +21,7 @@ import (
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	pool swaproutertypes.PoolI,
+	pool poolmanagertypes.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
@@ -29,9 +29,6 @@ func (k Keeper) SwapExactAmountIn(
 ) (tokenOutAmount sdk.Int, err error) {
 	if tokenIn.Denom == tokenOutDenom {
 		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
-	}
-	if !pool.IsActive(ctx) {
-		return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
 	}
 	poolSwapFee := pool.GetSwapFee(ctx)
 	if swapFee.LT(poolSwapFee.QuoInt64(2)) {
@@ -84,7 +81,7 @@ func (k Keeper) SwapExactAmountIn(
 func (k Keeper) SwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	pool swaproutertypes.PoolI,
+	pool poolmanagertypes.PoolI,
 	tokenInDenom string,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
@@ -92,9 +89,6 @@ func (k Keeper) SwapExactAmountOut(
 ) (tokenInAmount sdk.Int, err error) {
 	if tokenInDenom == tokenOut.Denom {
 		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
-	}
-	if !pool.IsActive(ctx) {
-		return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
 	}
 	defer func() {
 		if r := recover(); r != nil {
@@ -139,7 +133,7 @@ func (k Keeper) SwapExactAmountOut(
 // Returns error if the given pool is not a CFMM pool. Returns error on internal calculations.
 func (k Keeper) CalcOutAmtGivenIn(
 	ctx sdk.Context,
-	poolI swaproutertypes.PoolI,
+	poolI poolmanagertypes.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	swapFee sdk.Dec,
@@ -155,7 +149,7 @@ func (k Keeper) CalcOutAmtGivenIn(
 // Returns error if the given pool is not a CFMM pool. Returns error on internal calculations.
 func (k Keeper) CalcInAmtGivenOut(
 	ctx sdk.Context,
-	poolI swaproutertypes.PoolI,
+	poolI poolmanagertypes.PoolI,
 	tokenOut sdk.Coin,
 	tokenInDenom string,
 	swapFee sdk.Dec,
@@ -172,7 +166,7 @@ func (k Keeper) CalcInAmtGivenOut(
 // sends the in tokens from the sender to the pool, and the out tokens from the pool to the sender.
 func (k Keeper) updatePoolForSwap(
 	ctx sdk.Context,
-	pool swaproutertypes.PoolI,
+	pool poolmanagertypes.PoolI,
 	sender sdk.AccAddress,
 	tokenIn sdk.Coin,
 	tokenOut sdk.Coin,

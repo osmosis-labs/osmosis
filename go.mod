@@ -1,11 +1,11 @@
-module github.com/osmosis-labs/osmosis/v13
+module github.com/osmosis-labs/osmosis/v14
 
 go 1.18
 
 require (
 	github.com/CosmWasm/wasmd v0.30.0
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8
-	github.com/cosmos/cosmos-sdk v0.45.11
+	github.com/cosmos/cosmos-sdk v0.46.7
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/ibc-go/v4 v4.2.0
 	github.com/gogo/protobuf v1.3.3
@@ -17,9 +17,9 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230105100058-2ad8dafc6e4f
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230105100058-2ad8dafc6e4f
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230105100058-2ad8dafc6e4f
+	github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230105183030-bccf5202f260
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230112084519-84d6450e1670
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230110104305-322e8478dbe8
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.5.0
@@ -309,6 +309,8 @@ replace (
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20221118211718-545aed73e94e
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+	// Informal Tendermint fork
+	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.24
 	// use grpc compatible with cosmos protobufs
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )

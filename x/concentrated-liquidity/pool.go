@@ -7,15 +7,19 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 // InitializePool initializes a concentrated liquidity pool and sets it in state.
-func (k Keeper) InitializePool(ctx sdk.Context, poolI swaproutertypes.PoolI, creatorAddress sdk.AccAddress) error {
+func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, creatorAddress sdk.AccAddress) error {
 	concentratedPool, err := convertPoolInterfaceToConcentrated(poolI)
 	if err != nil {
+		return err
+	}
+
+	if err := k.createFeeAccumulator(ctx, concentratedPool.GetId()); err != nil {
 		return err
 	}
 
@@ -29,7 +33,7 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI swaproutertypes.PoolI, cre
 }
 
 // GetPool returns a pool with a given id.
-func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (swaproutertypes.PoolI, error) {
+func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error) {
 	concentratedPool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return nil, types.PoolNotFoundError{PoolId: poolId}
@@ -54,6 +58,19 @@ func (k Keeper) getPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedP
 		return nil, types.PoolNotFoundError{PoolId: poolId}
 	}
 	return &pool, nil
+}
+
+func (k Keeper) GetAllPools(ctx sdk.Context) ([]types.ConcentratedPoolExtension, error) {
+	return osmoutils.GatherValuesFromStorePrefix(
+		ctx.KVStore(k.storeKey), types.PoolPrefix, func(value []byte) (types.ConcentratedPoolExtension, error) {
+			pool := model.Pool{}
+			err := k.cdc.Unmarshal(value, &pool)
+			if err != nil {
+				return nil, err
+			}
+			return &pool, nil
+		},
+	)
 }
 
 // poolExists returns true if a pool with the given id exists. False otherwise.
@@ -81,11 +98,11 @@ func (k Keeper) setPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) e
 }
 
 // convertConcentratedToPoolInterface takes a types.ConcentratedPoolExtension and attempts to convert it to a
-// swaproutertypes.PoolI. If the conversion is successful, the converted value is returned. If the conversion fails,
+// poolmanagertypes.PoolI. If the conversion is successful, the converted value is returned. If the conversion fails,
 // an error is returned.
-func convertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (swaproutertypes.PoolI, error) {
-	// Attempt to convert the concentratedPool to a swaproutertypes.PoolI
-	pool, ok := concentratedPool.(swaproutertypes.PoolI)
+func convertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (poolmanagertypes.PoolI, error) {
+	// Attempt to convert the concentratedPool to a poolmanagertypes.PoolI
+	pool, ok := concentratedPool.(poolmanagertypes.PoolI)
 	if !ok {
 		// If the conversion fails, return an error
 		return nil, fmt.Errorf("given pool does not implement CFMMPoolI, implements %T", pool)
@@ -94,11 +111,11 @@ func convertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolE
 	return pool, nil
 }
 
-// convertPoolInterfaceToConcentrated takes a swaproutertypes.PoolI and attempts to convert it to a
+// convertPoolInterfaceToConcentrated takes a poolmanagertypes.PoolI and attempts to convert it to a
 // types.ConcentratedPoolExtension. If the conversion is successful, the converted value is returned. If the conversion fails,
 // an error is returned.
-func convertPoolInterfaceToConcentrated(poolI swaproutertypes.PoolI) (types.ConcentratedPoolExtension, error) {
-	// Attempt to convert swaproutertypes.PoolI to a concentratedPool
+func convertPoolInterfaceToConcentrated(poolI poolmanagertypes.PoolI) (types.ConcentratedPoolExtension, error) {
+	// Attempt to convert poolmanagertypes.PoolI to a concentratedPool
 	concentratedPool, ok := poolI.(types.ConcentratedPoolExtension)
 	if !ok {
 		// If the conversion fails, return an error

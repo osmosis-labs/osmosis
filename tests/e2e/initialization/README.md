@@ -56,39 +56,39 @@ Additionally, it takes the following arguments:
 - `--config`
   - serialized node configurats (e.g. Pruning and Snapshot options).
     These correspond to the stuct `NodeConfig`, located in
-    `tests/e2e/chain/config.go` The number of initialized
+    `tests/e2e/initialization/config.go` The number of initialized
     validators on the new chain corresponds to the number of
     `NodeConfig`s provided by this parameter
 - `--voting-period`
   - The configurable voting period duration for the chain
 
 ```go
-    tmpDir, _ := os.MkdirTemp("", "osmosis-e2e-testnet-")
-
- initResource, _ = s.dkrPool.RunWithOptions(
-  &dockertest.RunOptions{
-   Name:       fmt.Sprintf("%s", chainId),
-   Repository: s.dockerImages.InitRepository,
-   Tag:        s.dockerImages.InitTag,
-   NetworkID:  s.dkrNet.Network.ID,
-   Cmd: []string{
-    fmt.Sprintf("--data-dir=%s", tmpDir),
-    fmt.Sprintf("--chain-id=%s", chainId),
-    fmt.Sprintf("--config=%s", nodeConfigBytes),
-    fmt.Sprintf("--voting-period=%v", votingPeriodDuration),
-   },
-   User: "root:root",
-   Mounts: []string{
-    fmt.Sprintf("%s:%s", tmpDir, tmpDir), 
-   },
-  },
-  noRestart,
- )
+initResource, err := m.pool.RunWithOptions(
+		&dockertest.RunOptions{
+			Name:       chainId,
+			Repository: m.ImageConfig.InitRepository,
+			Tag:        m.ImageConfig.InitTag,
+			NetworkID:  m.network.Network.ID,
+			Cmd: []string{
+				fmt.Sprintf("--data-dir=%s", mountDir),
+				fmt.Sprintf("--chain-id=%s", chainId),
+				fmt.Sprintf("--config=%s", validatorConfigBytes),
+				fmt.Sprintf("--voting-period=%v", votingPeriodDuration),
+				fmt.Sprintf("--expedited-voting-period=%v", expeditedVotingPeriodDuration),
+				fmt.Sprintf("--fork-height=%v", forkHeight),
+			},
+			User: "root:root",
+			Mounts: []string{
+				fmt.Sprintf("%s:%s", mountDir, mountDir),
+			},
+		},
+		noRestart,
+	)
 ```
 
 #### Container Output
 
-Assumming that a the container was correctly mounted on a volume,
+Assumming that the container was correctly mounted on a volume,
 it produces the following:
 
 - `osmo-test-< chain id >-encode` file
@@ -118,8 +118,8 @@ config  data  keyring-test  wasm
 `/tmp/osmosis-e2e-testnet-1167397304/osmo-test`as a volume
 - < chain id > = "a"
 - 4 `NodeConfig`s were provided via the `--config` flag
-- `osmo-test-a-encode` output file corresponds to the serialized `Chain` struct
-defined in `tests/e2e/chain/chain.go`
+- `osmo-test-a-encode` output file corresponds to the serialized `internalChain` struct
+defined in `tests/e2e/initialization/chain.go`
 
 ### Initializing a Node (`node`)
 
