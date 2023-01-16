@@ -14,8 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 
-	ibcratelimitcli "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/client/cli"
-	"github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
+	ibcratelimitcli "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/client/cli"
+	"github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 )
 
 var _ module.AppModuleBasic = AppModuleBasic{}

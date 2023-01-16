@@ -3,9 +3,9 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 // AccountKeeper defines the account contract that must be fulfilled when
@@ -28,19 +28,22 @@ type GAMMKeeper interface {
 	GetPoolAndPoke(ctx sdk.Context, poolId uint64) (gammtypes.CFMMPoolI, error)
 	GetPoolsAndPoke(ctx sdk.Context) (res []gammtypes.CFMMPoolI, err error)
 	GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error)
+	GetPoolType(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolType, error)
 }
 
-type SwapRouterKeeper interface {
+// PoolManagerKeeper defines the PoolManager contract that must be fulfilled when
+// creating a x/protorev keeper.
+type PoolManagerKeeper interface {
 	RouteExactAmountIn(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
-		routes []swaproutertypes.SwapAmountInRoute,
+		routes []poolmanagertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
 		tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error)
 
 	MultihopEstimateOutGivenExactAmountIn(
 		ctx sdk.Context,
-		routes []swaproutertypes.SwapAmountInRoute,
+		routes []poolmanagertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
 	) (tokenOutAmount sdk.Int, err error)
 }

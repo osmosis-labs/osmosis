@@ -75,24 +75,154 @@ Conversely, we calculate liquidity from the other token in the pool:
 
 $$\Delta x = \Delta \frac {1}{\sqrt P}  L$$
 
-## Ticks
+### Ticks
 
-To allow for providing liquidity within certain price ranges, we will introduce the concept of a `tick`. Each tick is a function of price, allowing to partition the price
-range into discrete segments (which we refer to here as ticks):
+#### Context
 
-$$p(i) = 1.0001^i$$
+In Uniswap V3, discrete points (called ticks) are used when providing liquidity in a concentrated liquidity pool. The price [p] corresponding to a tick [t] is defined by the equation:
 
-where `p(i)` is the price at tick `i`. Taking powers of 1.0001 has a property of two ticks being 0.01% apart (1 basis point away).
+$$ p(i) = 1.0001^t $$
 
-Therefore, we get values like:
+This results in a .01% difference between adjacent tick prices. However, this does not allow for control over the specific prices that the ticks correspond to. For example, if a user wants to make a limit order at the $17,100.50 price point, they would have to interact with either tick 97473 (corresponding to price $17,099.60) or tick 97474 (price $17101.30).
 
-$$\sqrt{p(-1)} = 1.0001^{-1/2} \approx 0.99995$$
+Since we know what range a pair will generally trade in, how do we go about providing more granularity at that range and provide a more optimal price range between ticks instead of the "one-size-fits-all" approach explained above?
 
-$$\sqrt{p(0)} = 1.0001^{0/2} = 1$$
+#### Geometric Tick Spacing with Additive Ranges
 
-$$\sqrt{p(1)} = \sqrt{1.0001} = 1.0001^{1/2} \approx 1.00005$$
+In Osmosis' implementation of concentrated liquidity, we will instead make use of geometric tick spacing with additive ranges.
 
-TODO: tick range bounds
+We start by defining an exponent for the precision factor of 10 at a spot price of one - ($exponentAtPriceOne$).
+
+For instance, if $exponentAtPriceOne = -4$ , then each tick starting at 1 and ending at the first factor of 10 will represents a spot price increase of 0.0001. At this precision factor:
+* $tick_0 = 1$ (tick 0 is always equal to 1 regardless of precision factor)
+* $tick_1 = 1.0001$
+* $tick_2 = 1.0002$
+* $tick_3 = 1.0003$
+
+This continues on until we reach a spot price of 10. At this point, since we have increased by a factor of 10, our $exponentAtCurrentTick$ increases from -4 to -3, and the ticks will increase as follows:
+* $tick_{89999} =  9.9999$
+* $tick_{90000} = 10.000$
+* $tick_{90001} = 10.001$
+* $tick_{90002} = 10.002$
+
+For spot prices less than a dollar, the precision factor decreases at every factor of 10. For example, with a $exponentAtPriceOne$ of -4:
+* $tick_{-1} = 0.9999$
+* $tick_{-2} = 0.9998$
+* $tick_{-5001} = 0.4999$
+* $tick_{-5002} = 0.4998$
+
+With a $exponentAtPriceOne$ of -6:
+* $tick_{-1} = 0.999999$
+* $tick_{-2} = 0.999998$
+* $tick_{-5001} = 0.994999$
+* $tick_{-5002} = 0.994998$
+
+This goes on in the negative direction until we reach a spot price of 0.000000000000000001 or in the positive direction until we reach a spot price of 100000000000000000000000000000000000000, regardless of what the exponentAtPriceOne was. The minimum spot price was chosen as this is the smallest possible number supported by the sdk.Dec type. As for the maximum spot price, the above number was based on gamm's max spot price of 340282366920938463463374607431768211455. While these numbers are not the same, the max spot price used in concentrated liquidity utilizes the same number of significant digits as gamm's max spot price and it is less than gamm's max spot price which satisfies the requirements of the initial design requirements.
+
+#### Formulas
+
+After we define $exponentAtPriceOne$ (this is chosen by the pool creator based on what precision they desire the asset pair to trade at), we can then calculate how many ticks must be crossed in order for k to be incremented ( $geometricExponentIncrementDistanceInTicks$ ).
+
+$$geometricExponentIncrementDistanceInTicks = 9 * 10^{(-exponentAtPriceOne)}$$
+
+Since we define k at price one and utilize this as the increment starting point instead of price zero, we must multiply the result by 9 as shown above. In other words, starting at 1, it takes 9 ticks to get to the first power of 10. Then, starting at 10, it takes 9*10 ticks to get to the next power of 10, etc.
+
+Now that we know how many ticks must be crossed in order for our k to be incremented, we can then figure out what our change in k will be based on what tick we are trading at:
+
+$$geometricExponentDelta = ⌊ tick / geometricExponentIncrementDistanceInTicks ⌋$$
+
+With $geometricExponentDelta$ and $exponentAtPriceOne$, we can figure out what the k value we will be at when we reach the provided tick:
+
+$$exponentAtCurrentTick = exponentAtPriceOne + geometricExponentDelta$$
+
+Knowing what our $exponentAtCurrentTick$ is, we must then figure out what power of 10 this k corresponds to:
+
+$$currentAdditiveIncrementInTicks = 10^{(exponentAtCurrentTick)}$$
+
+Lastly, we must determine how many ticks above the current increment we are at:
+
+$$numAdditiveTicks = tick - (geometricExponentDelta * geometricExponentIncrementDistanceInTicks)$$
+
+With this, we can determine the price:
+
+$$price = (10^{geometricExponentDelta}) + (numAdditiveTicks * currentAdditiveIncrementInTicks)$$
+
+#### Tick Spacing Example: Tick to Price
+
+Bob sets a limit order on the USD<>BTC pool at tick 36650010. This pool's $exponentAtPriceOne$ is -6. What price did Bob set his limit order at?
+
+
+$$geometricExponentIncrementDistanceInTicks = 9 * 10^{(6)} = 9000000$$
+
+$$geometricExponentDelta = ⌊ 36650010 / 9000000 ⌋ = 4$$
+
+$$exponentAtCurrentTick = -6 + 4 = -2$$
+
+$$currentAdditiveIncrementInTicks = 10^{(-2)} = 0.01$$
+
+$$numAdditiveTicks = 36650010 - (4 * 9000000) = 650010$$
+
+$$price = (10^{4}) + (650010 * 0.01) = 16,500.10$$
+
+Bob set his limit order at price $16,500.10
+
+#### Tick Spacing Example: Price to Tick
+
+Bob sets a limit order on the USD<>BTC pool at price $16,500.10. This pool's $exponentAtPriceOne$ is -6. What tick did Bob set his limit order at?
+
+
+$$geometricExponentIncrementDistanceInTicks = 9 * 10^{(6)} = 9000000$$
+
+We must loop through increasing exponents until we find the first exponent that is greater than or equal to the desired price
+
+$$currentPrice = 1$$
+
+$$ticksPassed = 0$$
+
+$$currentAdditiveIncrementInTicks = 10^{(-6)} = 0.000001$$
+
+$$maxPriceForCurrentAdditiveIncrementInTicks = geometricExponentIncrementDistanceInTicks * currentAdditiveIncrementInTicks = 9000000 * 0.000001 = 9$$
+
+$$ticksPassed = ticksPassed + geometricExponentIncrementDistanceInTicks = 0 + 9000000 = 9000000$$
+
+$$totalPrice = totalPrice + maxPriceForCurrentAdditiveIncrementInTicks = 1 + 9 = 10$$
+
+10 is less than 16,500.10, so we must increase our exponent and try again
+
+$$currentAdditiveIncrementInTicks = 10^{(-5)} = 0.00001$$
+
+$$maxPriceForCurrentAdditiveIncrementInTicks = geometricExponentIncrementDistanceInTicks * currentAdditiveIncrementInTicks = 9000000 * 0.00001 = 90$$
+
+$$ticksPassed = ticksPassed + geometricExponentIncrementDistanceInTicks = 9000000 + 9000000 = 18000000$$
+
+$$totalPrice = totalPrice + maxPriceForCurrentAdditiveIncrementInTicks = 10 + 90 = 100$$
+
+100 is less than 16,500.10, so we must increase our exponent and try again. This goes on until...
+
+$$currentAdditiveIncrementInTicks = 10^{(-2)} = 0.01$$
+
+$$maxPriceForCurrentAdditiveIncrementInTicks = geometricExponentIncrementDistanceInTicks * currentAdditiveIncrementInTicks = 9000000 * 0.01 = 90000$$
+
+$$ticksPassed = ticksPassed + geometricExponentIncrementDistanceInTicks = 36000000 + 9000000 = 45000000$$
+
+$$totalPrice = totalPrice + maxPriceForCurrentAdditiveIncrementInTicks = 10000 + 90000 = 100000$$
+
+100000 is greater than 16,500.10. This means we must now find out how many additive tick in the currentAdditiveIncrementInTicks of -2 we must pass in order to reach 16,500.10.
+
+$$ticksToBeFulfilledByExponentAtCurrentTick = (desiredPrice - totalPrice) / currentAdditiveIncrementInTicks = (16500.10 - 100000) / 0.01 = -8349990$$
+
+$$tickIndex = ticksPassed + ticksToBeFulfilledByExponentAtCurrentTick = 45000000 + -8349990 = 36650010$$
+
+Bob set his limit order at tick 36650010
+
+#### Consequences
+
+This decision allows us to define ticks at spot prices that users actually desire to trade on, rather than arbitrarily defining ticks at .01% distance between each other. This will also make integration with UX seamless, instead of either
+
+a) Preventing trade at a desirable spot price or
+b) Having the front end round the tick's actual price to the nearest human readable/desirable spot price
+
+One draw back of this implementation is the requirement to create many ticks that will likely never be used. For example, in order to create ticks at 10 cent increments for spot prices greater than $10000, a $exponentAtPriceOne$ value of -5 must be set, requiring us to traverse ticks 1-3600000 before reaching $10,000. This should simply be an inconvenience and should not present any valid DOS vector for the chain.
 
 ### User Stories
 
@@ -159,7 +289,8 @@ This message should call the `createPosition` keeper method that is introduced i
 
 This message allows LPs to withdraw their position in a given pool and range (given by ticks), potentially in partial
 amount of liquidity. It should fail if there is no position in the given tick ranges, if tick ranges are invalid,
-or if attempting to withdraw an amount higher than originally provided.
+or if attempting to withdraw an amount higher than originally provided. If an LP withdraws all of their liquidity
+from a position, the collectFees method is called and then the position is deleted from state.
 
 ```go
 type MsgWithdrawPosition struct {
@@ -173,7 +304,7 @@ type MsgWithdrawPosition struct {
 
 - **Response**
 
-On succesful response, we receive the amounts of each token withdrawn
+On successful response, we receive the amounts of each token withdrawn
 for the provided share liquidity amount.
 
 ```go
@@ -206,8 +337,8 @@ func (k Keeper) SwapExactAmountIn(
 }
 ```
 
-This method should be called from the new `swap-router` module's `RouteExactAmountIn` initiated by the `MsgSwapExactAmountIn`.
-See the next `"Swap Router Module"` section of this document for more details.
+This method should be called from the new `pool-manager` module's `RouteExactAmountIn` initiated by the `MsgSwapExactAmountIn`.
+See the next `"Pool Manager Module"` section of this document for more details.
 
 ##### `SwapExactAmountOut` Keeper Method
 
@@ -230,13 +361,13 @@ func (k Keeper) SwapExactAmountOut(
 }
 ```
 
-This method should be called from the new `swap-router` module's `RouteExactAmountOut` initiated by the `MsgSwapExactAmountOut`.
-See the next `"Swap Router Module"` section of this document for more details.
+This method should be called from the new `pool-manager` module's `RouteExactAmountOut` initiated by the `MsgSwapExactAmountOut`.
+See the next `"Pool Manager Module"` section of this document for more details.
 
 ##### `InitializePool` Keeper Method
 
-This method is part of the implementation of the `SwapI` interface in `swaprouter`
-module. "Swap Router Module" section discussed the interface in more detail.
+This method is part of the implementation of the `SwapI` interface in `poolmanager`
+module. "Pool Manager Module" section discussed the interface in more detail.
 
 ```go
 // x/concentrated-liquidity/pool.go InitializePool(...)
@@ -249,10 +380,10 @@ func (k Keeper) InitializePool(
 }
 ```
 
-This method should be called from the new `swap-router` module's `CreatePool` initiated by the `MsgCreatePool`.
-See the next `"Swap Router Module"` section of this document for more details.
+This method should be called from the new `pool-manager` module's `CreatePool` initiated by the `MsgCreatePool`.
+See the next `"Pool Manager Module"` section of this document for more details.
 
-#### Swap Router Module
+#### Pool Manager Module
 
 > As a user, I would like to have a unified entrypoint for my swaps regardless of the underlying pool implementation so that I don't need to reason about API complexity
 
@@ -262,7 +393,7 @@ With the new `concentrated-liquidity` module, we now have a new entrypoint for s
 the same with the existing `gamm` module.
 
 To avoid fragmenting swap and pool creation entrypoints and duplicating their boilerplate logic,
-we would like to define a new `swaprouter` module. Its purpose is twofold:
+we would like to define a new `poolmanager` module. Its purpose is twofold:
 1. Handle pool creation messages
    * Assign ids to pools
    * Store the mapping from pool id to one of the swap modules (`gamm` or `concentrated-liquidity`)
@@ -271,10 +402,10 @@ we would like to define a new `swaprouter` module. Its purpose is twofold:
    * Cover & share multihop logic
    * Propagate intra-pool swaps to the appropriate module depending on the pool type.
 
-Therefore, we move several existing `gamm` messages and tests to the new `swap-router` module,
-connecting them to the `swaprouter` keeper that propagates execution to the appropriate swap module.
+Therefore, we move several existing `gamm` messages and tests to the new `pool-manager` module,
+connecting them to the `poolmanager` keeper that propagates execution to the appropriate swap module.
 
-The messages to move from `gamm` to `swaprouter` are:
+The messages to move from `gamm` to `poolmanager` are:
 - `CreatePoolMsg`
 - `MsgSwapExactAmountIn`
 - `MsgSwapExactAmountOut`
@@ -284,9 +415,9 @@ Let's consider pool creation and swaps separately and in more detail.
 ##### Pool Creation & Id Management
 
 To make sure that the pool ids are unique across the two modules, we unify pool id management
-in the `swaprouter`.
+in the `poolmanager`.
 
-We migrate the store index `next_pool_id` from `gamm` to `swaprouter`. This index represents
+We migrate the store index `next_pool_id` from `gamm` to `poolmanager`. This index represents
 the next available pool id to assign to a newly created pool.
 
 When `CreatePoolMsg` is received, we get the next pool id, assign it to the new pool and propagate
@@ -317,8 +448,8 @@ Note the `PoolType` type. This is an enumeration of all supported pool types.
 We proto-generate this enumeration:
 
 ```go
-// proto/osmosis/swaprouter/v1beta1/module_route.proto
-// generates to x/swaprouter/types/module_route.pb.go
+// proto/osmosis/poolmanager/v1beta1/module_route.proto
+// generates to x/poolmanager/types/module_route.pb.go
 
 // PoolType is an enumeration of all supported pool types.
 enum PoolType {
@@ -337,12 +468,12 @@ enum PoolType {
 
 Let's begin by considering the execution flow of the pool creation message.
 
-1. `CreatePoolMsg` is received by the `swaprouter` message server.
+1. `CreatePoolMsg` is received by the `poolmanager` message server.
 
-2. `CreatePool` `swaprouter` keeper method is called.
+2. `CreatePool` `poolmanager` keeper method is called.
 
 ```go
-// x/swaprouter/creator.go CreatePool(...)
+// x/poolmanager/creator.go CreatePool(...)
 
 // CreatePool attempts to create a pool returning the newly created pool ID or
 // an error upon failure. The pool creation fee is used to fund the community
@@ -361,12 +492,12 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 3. The keeper utilizes `CreatePoolMsg` interface methods to execute the logic specific
 to each pool type.
 
-4. Lastly, `swaprouter.CreatePool` routes the execution to the appropriate module.
+4. Lastly, `poolmanager.CreatePool` routes the execution to the appropriate module.
 
-The propagation to the desired module is ensured by the routing table stored in memory in the `swaprouter` keeper.
+The propagation to the desired module is ensured by the routing table stored in memory in the `poolmanager` keeper.
 
 ```go
-// x/swaprouter/keeper.go NewKeeper(...)
+// x/poolmanager/keeper.go NewKeeper(...)
 
 func NewKeeper(...) *Keeper {
     ...
@@ -383,11 +514,11 @@ func NewKeeper(...) *Keeper {
 
 `MsgCreatePool` interface defines the following method: `GetPoolType() PoolType`
 
-As a result, `swaprouterkeeper.CreatePool` can route the execution to the appropriate module in
+As a result, `poolmanagerkeeper.CreatePool` can route the execution to the appropriate module in
 the following way:
 
 ```go
-// x/swaprouter/creator.go CreatePool(...)
+// x/poolmanager/creator.go CreatePool(...)
 
 swapModule := k.routes[msg.GetPoolType()]
 
@@ -401,7 +532,7 @@ Where swapmodule is either `gamm` or `concentrated-liquidity` keeper.
 Both of these modules implement the `SwapI` interface:
 
 ```go
-// x/swaprouter/types/routes.go SwapI interface
+// x/poolmanager/types/routes.go SwapI interface
 
 type SwapI interface {
     ...
@@ -410,15 +541,15 @@ type SwapI interface {
 }
 ```
 
-As a result, the `swaprouter` module propagates core execution to the appropriate swap module.
+As a result, the `poolmanager` module propagates core execution to the appropriate swap module.
 
-Lastly, the `swaprouter` keeper stores a mapping from the pool id to the pool type.
+Lastly, the `poolmanager` keeper stores a mapping from the pool id to the pool type.
 This mapping is going to be neccessary for knowing where to route the swap messages.
 
 To achieve this, we create the following store index:
 
 ```go
-// x/swaprouter/types/keys.go
+// x/poolmanager/types/keys.go
 
 var	(
     ...
@@ -456,7 +587,7 @@ Their implementation of routing is similar. As a result, we only focus on `MsgSw
 Once the message is received, it calls `RouteExactAmountIn`
 
 ```go
-// x/swaprouter/router.go RouteExactAmountIn(...)
+// x/poolmanager/router.go RouteExactAmountIn(...)
 
 // RouteExactAmountIn defines the input denom and input amount for the first pool,
 // the output of the first pool is chained as the input for the next routed pool
@@ -475,14 +606,14 @@ Essentially, the method iterates over the routes and calls a `SwapExactAmountIn`
 for each, subsequently updating the inter-pool swap state.
 
 The routing works by querying the index `SwapModuleRouterPrefix`,
-searching up the `swaprouterkeeper.router` mapping, and callig
+searching up the `poolmanagerkeeper.router` mapping, and callig
 the appropriate `SwapExactAmountIn` method.
 
 ```go
-// x/swaprouter/router.go RouteExactAmountIn(...)
+// x/poolmanager/router.go RouteExactAmountIn(...)
 
-moduleRouteBytes := osmoutils.MustGet(swaproutertypes.FormatModuleRouteIndex(poolId))
-moduleRoute, _ := swaproutertypes.ModuleRouteFromBytes(moduleRouteBytes)
+moduleRouteBytes := osmoutils.MustGet(poolmanagertypes.FormatModuleRouteIndex(poolId))
+moduleRoute, _ := poolmanagertypes.ModuleRouteFromBytes(moduleRouteBytes)
 
 swapModule := k.routes[moduleRoute.PoolType]
 
@@ -494,7 +625,7 @@ Similar to pool creation logic, we are able to call `SwapExactAmountIn` on any o
 modules by implementing the `SwapI` interface:
 
 ```go
-// x/swaprouter/types/routes.go SwapI interface
+// x/poolmanager/types/routes.go SwapI interface
 
 type SwapI interface {
     ...
@@ -514,7 +645,7 @@ type SwapI interface {
 ##### GAMM Migrations
 
 Previously we managed and stored "next pool id" and "pool creation fee" in gamm. Now, these values
-are stored in the `swaprouter` module. As a result, we perform store migration in the
+are stored in the `poolmanager` module. As a result, we perform store migration in the
 upgrade handler.
 
 Some of the queries such as `x/gamm` `NumPools depended on the "next pool id" being present in `x/gamm`.
@@ -522,8 +653,8 @@ Since it is now moved, we introduce a new "pool count" index in `x/gamm` to keep
 of pools. TODO: do we even need this? Consider removing before release. Path forward TBD.
 
 In summary, we perform the following store migrations in the upgrade handler:
-- migrate "next pool id` from `x/gamm` to `x/swaprouter`
-- migrate "pool creation fee" from `x/gamm` to `x/swaprouter`
+- migrate "next pool id` from `x/gamm` to `x/poolmanager`
+- migrate "pool creation fee" from `x/gamm` to `x/poolmanager`
 - create "pool count" index in `x/gamm` TODO: do we even need this? Consider removing before release. Path forward TBD.
 
 #### GAMM Refactor
@@ -532,7 +663,7 @@ In summary, we perform the following store migrations in the upgrade handler:
 related to the `TraditionalAmmInterface` pool implementations.
 
 TODO: describe and document all the changes in the gamm module in more detail.
-- refer to previous sections ("Swap Router Module" and "Concentrated Liquidity Module")
+- refer to previous sections ("Pool Manager Module" and "Concentrated Liquidity Module")
 to avoid repetition.
 
 ##### Swaps
@@ -541,15 +672,15 @@ We rely on the pre-existing swap methods located in `x/gamm/keeper/pool.go`:
 - `SwapExactAmountIn`
 - `SwapExactAmountOut`
 
-Similarly to `concentrated-liquidity` module, these methods now implement the `swaprouter` `SwapI` interface.
+Similarly to `concentrated-liquidity` module, these methods now implement the `poolmanager` `SwapI` interface.
 However, the concrete implementations of the methods are unchanged from before the refactor.
 
 ##### New Functionality
 
 ##### `InitializePool` Keeper Method
 
-This method is part of the implementation of the `SwapI` interface in `swaprouter`
-module. "Swap Router Module" section discussed the interface in more detail.
+This method is part of the implementation of the `SwapI` interface in `poolmanager`
+module. "Pool Manager Module" section discussed the interface in more detail.
 
 This is the second implementation of the interface, the first being in the `concentrated-liquidity` module.
 
@@ -564,8 +695,8 @@ func (k Keeper) InitializePool(
 }
 ```
 
-This method should be called from the new `swap-router` module's `CreatePool` initiated by the `MsgCreatePool`.
-See the next `"Swap Router Module"` section of this document for more details.
+This method should be called from the new `pool-manager` module's `CreatePool` initiated by the `MsgCreatePool`.
+See the next `"Pool Manager Module"` section of this document for more details.
 
 ##### Removed Functionality
 

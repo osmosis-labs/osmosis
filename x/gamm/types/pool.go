@@ -7,13 +7,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 // CFMMPoolI defines an interface for pools representing constant function
 // AMM.
 type CFMMPoolI interface {
-	swaproutertypes.PoolI
+	poolmanagertypes.PoolI
 
 	// JoinPool joins the pool using all of the tokensIn provided.
 	// The AMM swaps to the correct internal ratio should be and returns the number of shares created.
@@ -108,7 +108,7 @@ type WeightedPoolExtension interface {
 	GetTokenWeight(denom string) (sdk.Int, error)
 }
 
-// TODO: move to swaprouter
+// TODO: move to poolmanager
 func NewPoolAddress(poolId uint64) sdk.AccAddress {
 	key := append([]byte("pool"), sdk.Uint64ToBigEndian(poolId)...)
 	return address.Module(ModuleName, key)

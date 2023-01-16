@@ -7,8 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
+	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 type msgServer struct {
@@ -48,22 +48,10 @@ func (server msgServer) CreateConcentratedPool(goCtx context.Context, msg *clmod
 		return nil, fmt.Errorf("received denom1 with invalid metadata: %s", msg.Denom1)
 	}
 
-	poolId, err := server.keeper.swaprouterKeeper.CreatePool(ctx, msg)
+	poolId, err := server.keeper.poolmanagerKeeper.CreatePool(ctx, msg)
 	if err != nil {
 		return nil, err
 	}
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.TypeEvtPoolCreated,
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.PoolCreator().String()),
-		),
-	})
 
 	return &clmodel.MsgCreateConcentratedPoolResponse{PoolID: poolId}, nil
 }
@@ -138,4 +126,37 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 	})
 
 	return &types.MsgWithdrawPositionResponse{Amount0: amount0, Amount1: amount1}, nil
+}
+
+func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollectFees) (*types.MsgCollectFeesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	tokenOut, err := server.keeper.collectFees(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+		),
+		sdk.NewEvent(
+			types.TypeEvtCollectFees,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
+			sdk.NewAttribute(types.AttributeKeyTokensOut, tokenOut.String()),
+			sdk.NewAttribute(types.AttributeLowerTick, strconv.FormatInt(msg.LowerTick, 10)),
+			sdk.NewAttribute(types.AttributeUpperTick, strconv.FormatInt(msg.UpperTick, 10)),
+		),
+	})
+
+	return &types.MsgCollectFeesResponse{TokenOut: tokenOut}, nil
 }

@@ -1,14 +1,17 @@
 package apptesting
 
 import (
-	clmodel "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 var (
-	ETH                = "eth"
-	USDC               = "usdc"
-	DefaultTickSpacing = uint64(1)
+	ETH                       = "eth"
+	USDC                      = "usdc"
+	DefaultTickSpacing        = uint64(1)
+	DefaultExponentAtPriceOne = sdk.NewInt(-4)
 )
 
 // PrepareConcentratedPool sets up an eth usdc concentrated liquidity pool with pool ID 1, tick spacing of 1, and no liquidity
@@ -16,8 +19,8 @@ func (s *KeeperTestHelper) PrepareConcentratedPool() types.ConcentratedPoolExten
 	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
 
-	// Create a concentrated pool via the swaprouter
-	poolID, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing))
+	// Create a concentrated pool via the poolmanager
+	poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne))
 	s.Require().NoError(err)
 
 	// Retrieve the poolInterface via the poolID

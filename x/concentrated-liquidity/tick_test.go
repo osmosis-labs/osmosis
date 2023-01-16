@@ -5,9 +5,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cl "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
+	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 const validPoolId = 1
@@ -230,6 +230,13 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 
 			// Create a default CL pool
 			s.PrepareConcentratedPool()
+			_, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			s.Require().NoError(err)
+
+			// manually update accumulator for testing
+			defaultAccumCoins := sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
+			feeAccum.UpdateAccumulator(defaultAccumCoins)
 
 			// If tickExists set, initialize the specified tick with defaultLiquidityAmt
 			preexistingLiquidity := sdk.ZeroDec()
@@ -260,11 +267,21 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			// Check that the initialized or updated tick matches our expectation
 			s.Require().Equal(test.expectedLiquidityNet, tickInfo.LiquidityNet)
 			s.Require().Equal(test.expectedLiquidityGross, tickInfo.LiquidityGross)
+
+			if test.param.tickIndex <= 0 {
+				s.Require().Equal(defaultAccumCoins, tickInfo.FeeGrowthOutside)
+			} else {
+				s.Require().Equal(sdk.DecCoins(nil), tickInfo.FeeGrowthOutside)
+			}
 		})
 	}
 }
 
 func (s *KeeperTestSuite) TestGetTickInfo() {
+	var (
+		preInitializedTickIndex = DefaultCurrTick.Int64() + 2
+	)
+
 	tests := []struct {
 		name             string
 		poolToGet        uint64
@@ -273,16 +290,25 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 		expectedErr      error
 	}{
 		{
-			name:             "Get tick info on existing pool and existing tick",
-			poolToGet:        validPoolId,
-			tickToGet:        DefaultCurrTick.Int64(),
+			name:      "Get tick info on existing pool and existing tick",
+			poolToGet: validPoolId,
+			tickToGet: preInitializedTickIndex,
+			// Note that FeeGrowthOutside is not updated.
 			expectedTickInfo: model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg()},
 		},
 		{
-			name:             "Get tick info on existing pool with no existing tick",
-			poolToGet:        validPoolId,
-			tickToGet:        DefaultCurrTick.Int64() + 1,
+			name:      "Get tick info on existing pool with no existing tick (cur pool tick > tick)",
+			poolToGet: validPoolId,
+			tickToGet: DefaultCurrTick.Int64() + 1,
+			// Note that FeeGrowthOutside is not initialized.
 			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec()},
+		},
+		{
+			name:      "Get tick info on existing pool with no existing tick (cur pool tick == tick), initialized fee growth outside",
+			poolToGet: validPoolId,
+			tickToGet: DefaultCurrTick.Int64(),
+			// Note that FeeGrowthOutside is initialized.
+			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: sdk.NewDecCoins(oneEth)},
 		},
 		{
 			name:        "Get tick info on a non-existing pool with no existing tick",
@@ -301,7 +327,14 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			s.PrepareConcentratedPool()
 
 			// Set up an initialized tick
-			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, 1, DefaultCurrTick.Int64(), DefaultLiquidityAmt, true)
+			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, validPoolId, preInitializedTickIndex, DefaultLiquidityAmt, true)
+
+			// Charge fee to make sure that the global fee accumulator is always updates.
+			// This is to test that the per-tick fee growth accumulator gets initialized.
+			if test.poolToGet == validPoolId {
+				s.SetupDefaultPosition(test.poolToGet)
+			}
+			s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, test.poolToGet, oneEth)
 
 			// System under test
 			tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, test.poolToGet, test.tickToGet)

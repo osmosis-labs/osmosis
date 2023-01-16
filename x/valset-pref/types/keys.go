@@ -2,7 +2,7 @@ package types
 
 var (
 	// ModuleName defines the module name
-	ModuleName = "validatorsetpreference"
+	ModuleName = "valsetpref"
 
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
