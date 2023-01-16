@@ -67,8 +67,6 @@ func CreateUpgradeHandler(
 				sdk.MsgTypeURL(&authz.MsgRevoke{}),
 				sdk.MsgTypeURL(&gammtypes.MsgJoinPool{}),
 				sdk.MsgTypeURL(&gammtypes.MsgExitPool{}),
-				sdk.MsgTypeURL(&gammtypes.MsgSwapExactAmountIn{}),
-				sdk.MsgTypeURL(&gammtypes.MsgSwapExactAmountOut{}),
 				sdk.MsgTypeURL(&gammtypes.MsgJoinSwapExternAmountIn{}),
 				sdk.MsgTypeURL(&gammtypes.MsgJoinSwapShareAmountOut{}),
 				sdk.MsgTypeURL(&gammtypes.MsgExitSwapExternAmountOut{}),

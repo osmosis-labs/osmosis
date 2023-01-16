@@ -122,7 +122,7 @@ func RandomCreateUniV2Msg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context
 
 // RandomSwapExactAmountIn utilizes a random pool and swaps and exact amount in for minimum of the secondary pool token
 // TODO: Improve this to swap through multiple pools
-func RandomSwapExactAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgSwapExactAmountIn, error) {
+func RandomSwapExactAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*poolmanagertypes.MsgSwapExactAmountIn, error) {
 	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
 	pool_id, pool, coinIn, coinOut, _, _, err := getRandPool(k, sim, ctx)
 	if err != nil {
@@ -150,7 +150,7 @@ func RandomSwapExactAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Cont
 		return nil, err
 	}
 
-	return &types.MsgSwapExactAmountIn{
+	return &poolmanagertypes.MsgSwapExactAmountIn{
 		Sender:            sender.Address.String(),
 		Routes:            route,
 		TokenIn:           randomCoinSubset[0],
@@ -160,7 +160,7 @@ func RandomSwapExactAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Cont
 
 // RandomSwapExactAmountOut utilizes a random pool and swaps a max amount amount in for an exact amount of the secondary pool token
 // TODO: Improve this to swap through multiple pools
-func RandomSwapExactAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgSwapExactAmountOut, error) {
+func RandomSwapExactAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*poolmanagertypes.MsgSwapExactAmountOut, error) {
 	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
 	pool_id, pool, coinIn, coinOut, _, _, err := getRandPool(k, sim, ctx)
 	if err != nil {
@@ -192,7 +192,7 @@ func RandomSwapExactAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Con
 		return nil, err
 	}
 
-	return &types.MsgSwapExactAmountOut{
+	return &poolmanagertypes.MsgSwapExactAmountOut{
 		Sender:           senderAcc.Address.String(),
 		Routes:           route,
 		TokenInMaxAmount: tokenInMax.Amount,

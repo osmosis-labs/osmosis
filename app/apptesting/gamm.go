@@ -5,6 +5,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	gammkeeper "github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
+ 	poolmanagerkeeper "github.com/osmosis-labs/osmosis/v14/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
@@ -187,15 +188,15 @@ func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice sdk.De
 	if amountTrade.IsPositive() {
 		swapIn := sdk.NewCoins(sdk.NewCoin(quoteDenom, sdk.NewInt(amountTrade.RoundInt64())))
 		s.FundAcc(s.TestAccs[0], swapIn)
-		msg := gammtypes.MsgSwapExactAmountIn{
+		msg := poolmanagertypes.MsgSwapExactAmountIn{
 			Sender:            s.TestAccs[0].String(),
 			Routes:            []poolmanagertypes.SwapAmountInRoute{{PoolId: poolID, TokenOutDenom: baseDenom}},
 			TokenIn:           swapIn[0],
 			TokenOutMinAmount: sdk.ZeroInt(),
 		}
 
-		gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
-		_, err = gammMsgServer.SwapExactAmountIn(sdk.WrapSDKContext(s.Ctx), &msg)
+		poolmanagerMsgServer := poolmanagerkeeper.NewMsgServerImpl(s.App.PoolManagerKeeper)
+		_, err = poolmanagerMsgServer.SwapExactAmountIn(sdk.WrapSDKContext(s.Ctx), &msg)
 		s.Require().NoError(err)
 	} else {
 		swapOut := sdk.NewCoins(sdk.NewCoin(quoteDenom, sdk.NewInt(amountTrade.RoundInt64()).Abs()))
@@ -203,15 +204,15 @@ func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice sdk.De
 		tokenIn, err := pool.CalcInAmtGivenOut(s.Ctx, swapOut, baseDenom, swapFee)
 		s.Require().NoError(err)
 		s.FundAcc(s.TestAccs[0], sdk.NewCoins(tokenIn))
-		msg := gammtypes.MsgSwapExactAmountOut{
+		msg := poolmanagertypes.MsgSwapExactAmountOut{
 			Sender:           s.TestAccs[0].String(),
 			Routes:           []poolmanagertypes.SwapAmountOutRoute{{PoolId: poolID, TokenInDenom: baseDenom}},
 			TokenInMaxAmount: sdk.NewInt(int64Max),
 			TokenOut:         swapOut[0],
 		}
 
-		gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
-		_, err = gammMsgServer.SwapExactAmountOut(sdk.WrapSDKContext(s.Ctx), &msg)
+		poolmanagerMsgServer := poolmanagerkeeper.NewMsgServerImpl(s.App.PoolManagerKeeper)
+		_, err = poolmanagerMsgServer.SwapExactAmountOut(sdk.WrapSDKContext(s.Ctx), &msg)
 		s.Require().NoError(err)
 	}
 }
@@ -223,15 +224,15 @@ func (s *KeeperTestHelper) RunBasicSwap(poolId uint64) {
 	swapIn := sdk.NewCoins(sdk.NewCoin(denoms[0], sdk.NewInt(1000)))
 	s.FundAcc(s.TestAccs[0], swapIn)
 
-	msg := gammtypes.MsgSwapExactAmountIn{
+	msg := poolmanagertypes.MsgSwapExactAmountIn{
 		Sender:            s.TestAccs[0].String(),
 		Routes:            []poolmanagertypes.SwapAmountInRoute{{PoolId: poolId, TokenOutDenom: denoms[1]}},
 		TokenIn:           swapIn[0],
 		TokenOutMinAmount: sdk.ZeroInt(),
 	}
 
-	gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
-	_, err = gammMsgServer.SwapExactAmountIn(sdk.WrapSDKContext(s.Ctx), &msg)
+	poolmanagerMsgServer := poolmanagerkeeper.NewMsgServerImpl(s.App.PoolManagerKeeper)
+	_, err = poolmanagerMsgServer.SwapExactAmountIn(sdk.WrapSDKContext(s.Ctx), &msg)
 	s.Require().NoError(err)
 }
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagerkeeper "github.com/osmosis-labs/osmosis/v14/x/poolmanager"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
@@ -89,13 +90,13 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			suite.PrepareBalancerPool()
 			suite.PrepareBalancerPool()
 
-			msgServer := keeper.NewMsgServerImpl(suite.App.GAMMKeeper)
+			msgServer := poolmanagerkeeper.NewMsgServerImpl(suite.App.PoolManagerKeeper)
 
 			// Reset event counts to 0 by creating a new manager.
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
 			suite.Equal(0, len(ctx.EventManager().Events()))
 
-			response, err := msgServer.SwapExactAmountIn(sdk.WrapSDKContext(ctx), &types.MsgSwapExactAmountIn{
+			response, err := msgServer.SwapExactAmountIn(sdk.WrapSDKContext(ctx), &poolmanagertypes.MsgSwapExactAmountIn{
 				Sender:            suite.TestAccs[0].String(),
 				Routes:            tc.routes,
 				TokenIn:           tc.tokenIn,
@@ -188,13 +189,13 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 			suite.PrepareBalancerPool()
 			suite.PrepareBalancerPool()
 
-			msgServer := keeper.NewMsgServerImpl(suite.App.GAMMKeeper)
+			msgServer := poolmanagerkeeper.NewMsgServerImpl(suite.App.PoolManagerKeeper)
 
 			// Reset event counts to 0 by creating a new manager.
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
 			suite.Equal(0, len(ctx.EventManager().Events()))
 
-			response, err := msgServer.SwapExactAmountOut(sdk.WrapSDKContext(ctx), &types.MsgSwapExactAmountOut{
+			response, err := msgServer.SwapExactAmountOut(sdk.WrapSDKContext(ctx), &poolmanagertypes.MsgSwapExactAmountOut{
 				Sender:           suite.TestAccs[0].String(),
 				Routes:           tc.routes,
 				TokenOut:         tc.tokenOut,

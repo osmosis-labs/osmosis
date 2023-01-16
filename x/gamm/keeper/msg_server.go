@@ -155,56 +155,6 @@ func (server msgServer) ExitPool(goCtx context.Context, msg *types.MsgExitPool) 
 	}, nil
 }
 
-func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgSwapExactAmountIn) (*types.MsgSwapExactAmountInResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return nil, err
-	}
-
-	tokenOutAmount, err := server.keeper.poolManager.RouteExactAmountIn(ctx, sender, msg.Routes, msg.TokenIn, msg.TokenOutMinAmount)
-	if err != nil {
-		return nil, err
-	}
-
-	// Swap event is handled elsewhere
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-		),
-	})
-
-	return &types.MsgSwapExactAmountInResponse{TokenOutAmount: tokenOutAmount}, nil
-}
-
-func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.MsgSwapExactAmountOut) (*types.MsgSwapExactAmountOutResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return nil, err
-	}
-
-	tokenInAmount, err := server.keeper.poolManager.RouteExactAmountOut(ctx, sender, msg.Routes, msg.TokenInMaxAmount, msg.TokenOut)
-	if err != nil {
-		return nil, err
-	}
-
-	// Swap event is handled elsewhere
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-		),
-	})
-
-	return &types.MsgSwapExactAmountOutResponse{TokenInAmount: tokenInAmount}, nil
-}
-
 // JoinSwapExactAmountIn is an LP transaction, that will LP all of the provided tokensIn coins.
 // * For the case of a single token, we simply perform single asset join (balancer notation: pAo, pool shares amount out,
 // given single asset in).

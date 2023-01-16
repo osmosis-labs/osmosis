@@ -1,9 +1,10 @@
 package txfee_filters
 
 import (
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 // We check if a tx is an arbitrage for the mempool right now by seeing:
@@ -33,7 +34,7 @@ func IsArbTxLoose(tx sdk.Tx) bool {
 			}
 		}
 
-		swapMsg, isSwapMsg := m.(gammtypes.SwapMsgRoute)
+		swapMsg, isSwapMsg := m.(poolmanagertypes.SwapMsgRoute)
 		if !isSwapMsg {
 			continue
 		}

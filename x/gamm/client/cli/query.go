@@ -6,13 +6,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
 	"gopkg.in/yaml.v2"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
@@ -26,8 +23,6 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdSpotPrice)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPool)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPools)
-	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdEstimateSwapExactAmountIn)
-	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdEstimateSwapExactAmountOut)
 	cmd.AddCommand(
 		GetCmdNumPools(),
 		GetCmdPoolParams(),
@@ -193,72 +188,6 @@ func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *types.QuerySpotPriceRequest) 
 		Long: `Query spot price (Legacy).{{.ExampleHeader}}
 {{.CommandPrefix}} spot-price 1 uosmo ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
 `}, &types.QuerySpotPriceRequest{}
-}
-
-// GetCmdEstimateSwapExactAmountIn returns estimation of output coin when amount of x token input.
-// nolint: staticcheck
-func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *types.QuerySwapExactAmountInRequest) {
-	return &osmocli.QueryDescriptor{
-		Use:   "estimate-swap-exact-amount-in <poolID> <sender> <tokenIn>",
-		Short: "Query estimate-swap-exact-amount-in",
-		Long: `Query estimate-swap-exact-amount-in.{{.ExampleHeader}}
-{{.CommandPrefix}} estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
-		ParseQuery: EstimateSwapExactAmountInParseArgs,
-		Flags:      osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
-	}, &types.QuerySwapExactAmountInRequest{}
-}
-
-// GetCmdEstimateSwapExactAmountOut returns estimation of input coin to get exact amount of x token output.
-// nolint: staticcheck
-func GetCmdEstimateSwapExactAmountOut() (*osmocli.QueryDescriptor, *types.QuerySwapExactAmountOutRequest) {
-	return &osmocli.QueryDescriptor{
-		Use:   "estimate-swap-exact-amount-out <poolID> <sender> <tokenOut>",
-		Short: "Query estimate-swap-exact-amount-out",
-		Long: `Query estimate-swap-exact-amount-out.{{.ExampleHeader}}
-{{.CommandPrefix}} estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
-		ParseQuery: EstimateSwapExactAmountOutParseArgs,
-		Flags:      osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
-	}, &types.QuerySwapExactAmountOutRequest{}
-}
-
-// nolint: staticcheck
-func EstimateSwapExactAmountInParseArgs(args []string, fs *flag.FlagSet) (proto.Message, error) {
-	poolID, err := strconv.Atoi(args[0])
-	if err != nil {
-		return nil, err
-	}
-
-	routes, err := swapAmountInRoutes(fs)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.QuerySwapExactAmountInRequest{
-		Sender:  args[1],        // TODO: where sender is used?
-		PoolId:  uint64(poolID), // TODO: is this poolId used?
-		TokenIn: args[2],
-		Routes:  routes,
-	}, nil
-}
-
-// nolint: staticcheck
-func EstimateSwapExactAmountOutParseArgs(args []string, fs *flag.FlagSet) (proto.Message, error) {
-	poolID, err := strconv.Atoi(args[0])
-	if err != nil {
-		return nil, err
-	}
-
-	routes, err := swapAmountOutRoutes(fs)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.QuerySwapExactAmountOutRequest{
-		Sender:   args[1],        // TODO: where sender is used?
-		PoolId:   uint64(poolID), // TODO: is this poolId used?
-		Routes:   routes,
-		TokenOut: args[2],
-	}, nil
 }
 
 // GetCmdQueryPoolsWithFilter returns pool with filter

@@ -14,7 +14,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,8 +23,6 @@ func NewTxCmd() *cobra.Command {
 	txCmd := osmocli.TxIndexCmd(types.ModuleName)
 	osmocli.AddTxCmd(txCmd, NewJoinPoolCmd)
 	osmocli.AddTxCmd(txCmd, NewExitPoolCmd)
-	osmocli.AddTxCmd(txCmd, NewSwapExactAmountInCmd)
-	osmocli.AddTxCmd(txCmd, NewSwapExactAmountOutCmd)
 	osmocli.AddTxCmd(txCmd, NewJoinSwapExternAmountIn)
 	osmocli.AddTxCmd(txCmd, NewJoinSwapShareAmountOut)
 	osmocli.AddTxCmd(txCmd, NewExitSwapExternAmountOut)
@@ -102,28 +99,6 @@ func NewExitPoolCmd() (*osmocli.TxCliDesc, *types.MsgExitPool) {
 		},
 		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetExitPool()}},
 	}, &types.MsgExitPool{}
-}
-
-func NewSwapExactAmountInCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountIn) {
-	return &osmocli.TxCliDesc{
-		Use:   "swap-exact-amount-in [token-in] [token-out-min-amount]",
-		Short: "swap exact amount in",
-		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
-			"Routes": osmocli.FlagOnlyParser(swapAmountInRoutes),
-		},
-		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
-	}, &types.MsgSwapExactAmountIn{}
-}
-
-func NewSwapExactAmountOutCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountOut) {
-	// Can't get rid of this parser without a break, because the args are out of order.
-	return &osmocli.TxCliDesc{
-		Use:              "swap-exact-amount-out [token-out] [token-in-max-amount]",
-		Short:            "swap exact amount out",
-		NumArgs:          2,
-		ParseAndBuildMsg: NewBuildSwapExactAmountOutMsg,
-		Flags:            osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
-	}, &types.MsgSwapExactAmountOut{}
 }
 
 func NewJoinSwapExternAmountIn() (*osmocli.TxCliDesc, *types.MsgJoinSwapExternAmountIn) {
@@ -379,92 +354,6 @@ func stringArrayCoinsParser(flagName string, fs *flag.FlagSet) (sdk.Coins, error
 		coins = coins.Add(parsed...)
 	}
 	return coins, nil
-}
-
-func swapAmountInRoutes(fs *flag.FlagSet) ([]poolmanagertypes.SwapAmountInRoute, error) {
-	swapRoutePoolIds, err := fs.GetString(FlagSwapRoutePoolIds)
-	swapRoutePoolIdsArray := strings.Split(swapRoutePoolIds, ",")
-	if err != nil {
-		return nil, err
-	}
-
-	swapRouteDenoms, err := fs.GetString(FlagSwapRouteDenoms)
-	swapRouteDenomsArray := strings.Split(swapRouteDenoms, ",")
-	if err != nil {
-		return nil, err
-	}
-
-	if len(swapRoutePoolIdsArray) != len(swapRouteDenomsArray) {
-		return nil, errors.New("swap route pool ids and denoms mismatch")
-	}
-
-	routes := []poolmanagertypes.SwapAmountInRoute{}
-	for index, poolIDStr := range swapRoutePoolIdsArray {
-		pID, err := strconv.Atoi(poolIDStr)
-		if err != nil {
-			return nil, err
-		}
-		routes = append(routes, poolmanagertypes.SwapAmountInRoute{
-			PoolId:        uint64(pID),
-			TokenOutDenom: swapRouteDenomsArray[index],
-		})
-	}
-	return routes, nil
-}
-
-func swapAmountOutRoutes(fs *flag.FlagSet) ([]poolmanagertypes.SwapAmountOutRoute, error) {
-	swapRoutePoolIds, err := fs.GetString(FlagSwapRoutePoolIds)
-	swapRoutePoolIdsArray := strings.Split(swapRoutePoolIds, ",")
-	if err != nil {
-		return nil, err
-	}
-
-	swapRouteDenoms, err := fs.GetString(FlagSwapRouteDenoms)
-	swapRouteDenomsArray := strings.Split(swapRouteDenoms, ",")
-	if err != nil {
-		return nil, err
-	}
-
-	if len(swapRoutePoolIdsArray) != len(swapRouteDenomsArray) {
-		return nil, errors.New("swap route pool ids and denoms mismatch")
-	}
-
-	routes := []poolmanagertypes.SwapAmountOutRoute{}
-	for index, poolIDStr := range swapRoutePoolIdsArray {
-		pID, err := strconv.Atoi(poolIDStr)
-		if err != nil {
-			return nil, err
-		}
-		routes = append(routes, poolmanagertypes.SwapAmountOutRoute{
-			PoolId:       uint64(pID),
-			TokenInDenom: swapRouteDenomsArray[index],
-		})
-	}
-	return routes, nil
-}
-
-func NewBuildSwapExactAmountOutMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
-	tokenOutStr, tokenInMaxAmountStr := args[0], args[1]
-	routes, err := swapAmountOutRoutes(fs)
-	if err != nil {
-		return nil, err
-	}
-
-	tokenOut, err := sdk.ParseCoinNormalized(tokenOutStr)
-	if err != nil {
-		return nil, err
-	}
-
-	tokenInMaxAmount, ok := sdk.NewIntFromString(tokenInMaxAmountStr)
-	if !ok {
-		return nil, errors.New("invalid token in max amount")
-	}
-	return &types.MsgSwapExactAmountOut{
-		Sender:           clientCtx.GetFromAddress().String(),
-		Routes:           routes,
-		TokenInMaxAmount: tokenInMaxAmount,
-		TokenOut:         tokenOut,
-	}, nil
 }
 
 func NewStableSwapAdjustScalingFactorsMsg(clientCtx client.Context, _args []string, fs *flag.FlagSet) (sdk.Msg, error) {
