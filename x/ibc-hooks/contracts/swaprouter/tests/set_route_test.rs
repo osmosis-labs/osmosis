@@ -223,8 +223,8 @@ fn test_set_route_success_case(msg: ExecuteMsg) {
             ..
         } => {
             let query = QueryMsg::GetRoute {
-                input_denom: input_denom,
-                output_denom: output_denom,
+                input_denom,
+                output_denom,
             };
 
             // expect route to always be found in this case`
