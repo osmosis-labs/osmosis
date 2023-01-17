@@ -58,6 +58,8 @@ jobs:
           retention-days: 1
         if: env.GIT_DIFF
 
+      # TODO: workspace optimizer compiles all contracts in the workspace, so we could just run that once
+      # and then check the diff of all the bytecode files
       - name: Check Test Data
         working-directory: ${{ matrix.contract.workdir }}
         if: env.GIT_DIFF
