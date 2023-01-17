@@ -246,58 +246,6 @@ func (m *MsgExitPoolResponse) GetTokenOut() []types.Coin {
 }
 
 // ===================== MsgSwapExactAmountIn
-type SwapAmountInRoute struct {
-	PoolId        uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
-	TokenOutDenom string `protobuf:"bytes,2,opt,name=token_out_denom,json=tokenOutDenom,proto3" json:"token_out_denom,omitempty" yaml:"token_out_denom"`
-}
-
-func (m *SwapAmountInRoute) Reset()         { *m = SwapAmountInRoute{} }
-func (m *SwapAmountInRoute) String() string { return proto.CompactTextString(m) }
-func (*SwapAmountInRoute) ProtoMessage()    {}
-func (*SwapAmountInRoute) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{4}
-}
-func (m *SwapAmountInRoute) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *SwapAmountInRoute) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_SwapAmountInRoute.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *SwapAmountInRoute) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SwapAmountInRoute.Merge(m, src)
-}
-func (m *SwapAmountInRoute) XXX_Size() int {
-	return m.Size()
-}
-func (m *SwapAmountInRoute) XXX_DiscardUnknown() {
-	xxx_messageInfo_SwapAmountInRoute.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_SwapAmountInRoute proto.InternalMessageInfo
-
-func (m *SwapAmountInRoute) GetPoolId() uint64 {
-	if m != nil {
-		return m.PoolId
-	}
-	return 0
-}
-
-func (m *SwapAmountInRoute) GetTokenOutDenom() string {
-	if m != nil {
-		return m.TokenOutDenom
-	}
-	return ""
-}
-
 type MsgSwapExactAmountIn struct {
 	Sender            string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
 	Routes            []types1.SwapAmountInRoute             `protobuf:"bytes,2,rep,name=routes,proto3" json:"routes"`
@@ -898,7 +846,6 @@ func init() {
 	proto.RegisterType((*MsgJoinPoolResponse)(nil), "osmosis.gamm.v1beta1.MsgJoinPoolResponse")
 	proto.RegisterType((*MsgExitPool)(nil), "osmosis.gamm.v1beta1.MsgExitPool")
 	proto.RegisterType((*MsgExitPoolResponse)(nil), "osmosis.gamm.v1beta1.MsgExitPoolResponse")
-	proto.RegisterType((*SwapAmountInRoute)(nil), "osmosis.gamm.v1beta1.SwapAmountInRoute")
 	proto.RegisterType((*MsgSwapExactAmountIn)(nil), "osmosis.gamm.v1beta1.MsgSwapExactAmountIn")
 	proto.RegisterType((*MsgSwapExactAmountInResponse)(nil), "osmosis.gamm.v1beta1.MsgSwapExactAmountInResponse")
 	proto.RegisterType((*MsgSwapExactAmountOut)(nil), "osmosis.gamm.v1beta1.MsgSwapExactAmountOut")
@@ -1520,41 +1467,6 @@ func (m *MsgExitPoolResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0xa
 		}
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *SwapAmountInRoute) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *SwapAmountInRoute) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *SwapAmountInRoute) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.TokenOutDenom) > 0 {
-		i -= len(m.TokenOutDenom)
-		copy(dAtA[i:], m.TokenOutDenom)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.TokenOutDenom)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if m.PoolId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.PoolId))
-		i--
-		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -2206,22 +2118,6 @@ func (m *MsgExitPoolResponse) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovTx(uint64(l))
 		}
-	}
-	return n
-}
-
-func (m *SwapAmountInRoute) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.PoolId != 0 {
-		n += 1 + sovTx(uint64(m.PoolId))
-	}
-	l = len(m.TokenOutDenom)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
 	}
 	return n
 }
@@ -2950,107 +2846,6 @@ func (m *MsgExitPoolResponse) Unmarshal(dAtA []byte) error {
 			if err := m.TokenOut[len(m.TokenOut)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *SwapAmountInRoute) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: SwapAmountInRoute: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SwapAmountInRoute: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
-			}
-			m.PoolId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.PoolId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TokenOutDenom", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.TokenOutDenom = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

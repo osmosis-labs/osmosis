@@ -7,7 +7,6 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
@@ -23,7 +22,7 @@ func TestSwapRoutes_MarshalUnmarshal(t *testing.T) {
 		PoolId:        testPoolId,
 		TokenOutDenom: testTokenOutDenom,
 	}
-	gammExactAmountInRoute := gammtypes.SwapAmountInRoute{
+	gammExactAmountInRoute := poolmanagertypes.SwapAmountInRoute{
 		PoolId:        testPoolId,
 		TokenOutDenom: testTokenOutDenom,
 	}
