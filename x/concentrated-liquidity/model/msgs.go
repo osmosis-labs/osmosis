@@ -39,11 +39,14 @@ func NewMsgCreateConcentratedPool(
 
 func (msg MsgCreateConcentratedPool) Route() string { return cltypes.RouterKey }
 func (msg MsgCreateConcentratedPool) Type() string  { return TypeMsgCreateConcentratedPool }
-func (msg MsgCreateConcentratedPool) ValidateBasic() error {
+func (msg *MsgCreateConcentratedPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
+
+	// invert PrecisionFactorAtPriceOne (https://github.com/osmosis-labs/osmosis/issues/4041)
+	msg.PrecisionFactorAtPriceOne = msg.PrecisionFactorAtPriceOne.Sub(msg.PrecisionFactorAtPriceOne.Mul(sdk.NewInt(2)))
 
 	if msg.TickSpacing <= 0 {
 		return fmt.Errorf("tick spacing must be positive")
