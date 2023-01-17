@@ -44,6 +44,12 @@ func (suite *KeeperTestSuite) TestValidateLockForForceUnlock() {
 			delegatorAddr: "addr1---------------",
 			expectPass:    false,
 		},
+		{
+			name:          "Invalid lock: non bonded lockId",
+			lockID:        locks[4].ID,
+			delegatorAddr: "addr1---------------",
+			expectPass:    false,
+		},
 	}
 
 	for _, test := range tests {

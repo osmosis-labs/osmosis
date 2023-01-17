@@ -652,7 +652,6 @@ func (suite *KeeperTestSuite) TestDelegateBondedTokens() {
 	suite.SetupTest()
 
 	testLock := suite.SetupLocks(sdk.AccAddress([]byte("addr1---------------")))
-	testLock_addr2 := suite.SetupLocks(sdk.AccAddress([]byte("addr2---------------")))
 
 	tests := []struct {
 		name                 string
@@ -674,51 +673,44 @@ func (suite *KeeperTestSuite) TestDelegateBondedTokens() {
 		},
 		{
 			name:       "DelegateBondedTokens with existing stake denom lockId, bonded and <= 2 weeks bond duration",
-			delegator:  sdk.AccAddress([]byte("addr9---------------")),
+			delegator:  sdk.AccAddress([]byte("addr1---------------")),
 			lockId:     testLock[1].ID,
 			expectPass: false,
 		},
 		{
 			name:       "DelegateBondedTokens with non existing lockId",
-			delegator:  sdk.AccAddress([]byte("addr3---------------")),
+			delegator:  sdk.AccAddress([]byte("addr1---------------")),
 			lockId:     10,
 			expectPass: false,
 		},
 		{
 			name:       "DelegateBondedTokens with lockOwner != delegatorOwner",
-			delegator:  sdk.AccAddress([]byte("addr4---------------")),
+			delegator:  sdk.AccAddress([]byte("addr1---------------")),
 			lockId:     testLock[2].ID,
 			expectPass: false,
 		},
 		{
 			name:       "DelegateBondedTokens with lock duration > 2 weeks",
-			delegator:  sdk.AccAddress([]byte("addr5---------------")),
+			delegator:  sdk.AccAddress([]byte("addr1---------------")),
 			lockId:     testLock[3].ID,
 			expectPass: false,
 		},
 		{
 			name:       "DelegateBondedTokens with non bonded lockId",
-			delegator:  sdk.AccAddress([]byte("addr6---------------")),
+			delegator:  sdk.AccAddress([]byte("addr1---------------")),
 			lockId:     testLock[4].ID,
 			expectPass: false,
 		},
 		{
 			name:       "DelegateBondedTokens with synthetic locks",
-			delegator:  sdk.AccAddress([]byte("addr7---------------")),
+			delegator:  sdk.AccAddress([]byte("addr1---------------")),
 			lockId:     testLock[5].ID,
 			expectPass: false,
 		},
 		{
 			name:       "DelegateBondedTokens with multiple asset lock",
-			delegator:  sdk.AccAddress([]byte("addr8---------------")),
+			delegator:  sdk.AccAddress([]byte("addr1---------------")),
 			lockId:     testLock[6].ID,
-			expectPass: false,
-		},
-		{
-			name:       "Force Unlocks tokens, but doesnot have delegations",
-			delegator:  sdk.AccAddress([]byte("addr2---------------")),
-			lockId:     testLock_addr2[0].ID,
-			setValSet:  false,
 			expectPass: false,
 		},
 	}

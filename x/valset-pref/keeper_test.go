@@ -213,7 +213,7 @@ func (suite *KeeperTestSuite) SetupLocks(delegator sdk.AccAddress) []lockuptypes
 	multipleCoinsToLock := sdk.Coins{coinsToLock[0], osmoToLock[0]}
 	suite.FundAcc(delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000), sdk.NewInt64Coin(appParams.BaseCoinUnit, 100_000_000)})
 
-	// happy lock case
+	// lock with osmo
 	twoWeekDuration, err := time.ParseDuration("336h")
 	suite.Require().NoError(err)
 	workingLock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, delegator, osmoToLock, twoWeekDuration)
@@ -227,7 +227,7 @@ func (suite *KeeperTestSuite) SetupLocks(delegator sdk.AccAddress) []lockuptypes
 
 	locks = append(locks, stakeDenomLock)
 
-	// lock case where lock owner != delegation owner
+	// lock case where lock owner != delegator
 	suite.FundAcc(sdk.AccAddress([]byte("addr5---------------")), osmoToLock)
 	lockWithDifferentOwner, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, sdk.AccAddress([]byte("addr5---------------")), osmoToLock, twoWeekDuration)
 	suite.Require().NoError(err)
