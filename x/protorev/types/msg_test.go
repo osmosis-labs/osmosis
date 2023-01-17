@@ -19,9 +19,6 @@ func TestMsgsTestSuite(t *testing.T) {
 }
 
 func (suite *MsgsTestSuite) TestMsgSetHotRoutes() {
-	validArbRoutes := types.CreateSeacherRoutes(3, types.OsmosisDenomination, "ethereum", types.AtomDenomination, types.AtomDenomination)
-
-	mismatchedDenoms := types.CreateSeacherRoutes(3, types.OsmosisDenomination, "ethereum", types.AtomDenomination, types.OsmosisDenomination)
 	cases := []struct {
 		description string
 		admin       string
@@ -43,20 +40,218 @@ func (suite *MsgsTestSuite) TestMsgSetHotRoutes() {
 		{
 			"Valid message (with arb routes)",
 			createAccount().String(),
-			[]*types.TokenPairArbRoutes{&validArbRoutes},
+			[]*types.TokenPairArbRoutes{
+				{
+					ArbRoutes: []*types.Route{
+						{
+							Trades: []*types.Trade{
+								{
+									Pool:     1,
+									TokenIn:  types.AtomDenomination,
+									TokenOut: "Juno",
+								},
+								{
+									Pool:     0,
+									TokenIn:  "Juno",
+									TokenOut: types.OsmosisDenomination,
+								},
+								{
+									Pool:     3,
+									TokenIn:  types.OsmosisDenomination,
+									TokenOut: types.AtomDenomination,
+								},
+							},
+						},
+					},
+					TokenIn:  types.OsmosisDenomination,
+					TokenOut: "Juno",
+				},
+			},
 			true,
+		},
+		{
+			"Invalid message (mismatched arb denoms)",
+			createAccount().String(),
+			[]*types.TokenPairArbRoutes{
+				{
+					ArbRoutes: []*types.Route{
+						{
+							Trades: []*types.Trade{
+								{
+									Pool:     1,
+									TokenIn:  types.AtomDenomination,
+									TokenOut: "Juno",
+								},
+								{
+									Pool:     0,
+									TokenIn:  "Juno",
+									TokenOut: types.OsmosisDenomination,
+								},
+								{
+									Pool:     3,
+									TokenIn:  types.OsmosisDenomination,
+									TokenOut: "eth",
+								},
+							},
+						},
+					},
+					TokenIn:  types.OsmosisDenomination,
+					TokenOut: "Juno",
+				},
+			},
+			false,
 		},
 		{
 			"Invalid message (with duplicate arb routes)",
 			createAccount().String(),
-			[]*types.TokenPairArbRoutes{&validArbRoutes, &validArbRoutes},
+			[]*types.TokenPairArbRoutes{
+				{
+					ArbRoutes: []*types.Route{
+						{
+							Trades: []*types.Trade{
+								{
+									Pool:     1,
+									TokenIn:  types.AtomDenomination,
+									TokenOut: "Juno",
+								},
+								{
+									Pool:     0,
+									TokenIn:  "Juno",
+									TokenOut: types.OsmosisDenomination,
+								},
+								{
+									Pool:     3,
+									TokenIn:  types.OsmosisDenomination,
+									TokenOut: types.AtomDenomination,
+								},
+							},
+						},
+					},
+					TokenIn:  types.OsmosisDenomination,
+					TokenOut: "Juno",
+				},
+				{
+					ArbRoutes: []*types.Route{
+						{
+							Trades: []*types.Trade{
+								{
+									Pool:     1,
+									TokenIn:  types.AtomDenomination,
+									TokenOut: "Juno",
+								},
+								{
+									Pool:     0,
+									TokenIn:  "Juno",
+									TokenOut: types.OsmosisDenomination,
+								},
+								{
+									Pool:     3,
+									TokenIn:  types.OsmosisDenomination,
+									TokenOut: types.AtomDenomination,
+								},
+							},
+						},
+					},
+					TokenIn:  types.OsmosisDenomination,
+					TokenOut: "Juno",
+				},
+			},
 			false,
 		},
 		{
-			"Invalid message (with mismatched arb denoms)",
+			"Invalid message (with missing trade)",
 			createAccount().String(),
-			[]*types.TokenPairArbRoutes{&mismatchedDenoms},
+			[]*types.TokenPairArbRoutes{
+				{
+					ArbRoutes: []*types.Route{
+						{
+							Trades: []*types.Trade{
+								{
+									Pool:     1,
+									TokenIn:  types.AtomDenomination,
+									TokenOut: "Juno",
+								},
+								{
+									Pool:     3,
+									TokenIn:  types.OsmosisDenomination,
+									TokenOut: types.AtomDenomination,
+								},
+							},
+						},
+					},
+					TokenIn:  types.OsmosisDenomination,
+					TokenOut: "Juno",
+				},
+			},
 			false,
+		},
+		{
+			"Invalid message (with invalid route length)",
+			createAccount().String(),
+			[]*types.TokenPairArbRoutes{
+				{
+					ArbRoutes: []*types.Route{
+						{
+							Trades: []*types.Trade{
+								{
+									Pool:     3,
+									TokenIn:  types.OsmosisDenomination,
+									TokenOut: types.AtomDenomination,
+								},
+							},
+						},
+					},
+					TokenIn:  types.OsmosisDenomination,
+					TokenOut: "Juno",
+				},
+			},
+			false,
+		},
+		{
+			"Valid message (with multiple routes)",
+			createAccount().String(),
+			[]*types.TokenPairArbRoutes{
+				{
+					ArbRoutes: []*types.Route{
+						{
+							Trades: []*types.Trade{
+								{
+									Pool:     1,
+									TokenIn:  types.AtomDenomination,
+									TokenOut: "Juno",
+								},
+								{
+									Pool:     0,
+									TokenIn:  "Juno",
+									TokenOut: types.OsmosisDenomination,
+								},
+								{
+									Pool:     3,
+									TokenIn:  types.OsmosisDenomination,
+									TokenOut: types.AtomDenomination,
+								},
+							},
+						},
+						{
+							Trades: []*types.Trade{
+								{
+									Pool:     0,
+									TokenIn:  "Juno",
+									TokenOut: types.OsmosisDenomination,
+								},
+								{
+									Pool:     5,
+									TokenIn:  types.OsmosisDenomination,
+									TokenOut: "Juno",
+								},
+							},
+						},
+					},
+					TokenIn:  types.OsmosisDenomination,
+					TokenOut: "Juno",
+				},
+			},
+			true,
 		},
 	}
 

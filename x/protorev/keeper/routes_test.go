@@ -228,7 +228,7 @@ func (suite *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 		suite.Run(tc.description, func() {
 			suite.SetupTest()
 
-			pointCount, err := suite.App.ProtoRevKeeper.CalcMaxPoolPointsForTx(suite.Ctx)
+			pointCount, err := suite.App.ProtoRevKeeper.RemainingPoolPointsForTx(suite.Ctx)
 			suite.Require().NoError(err)
 			before := *pointCount
 
@@ -276,7 +276,7 @@ func (suite *KeeperTestSuite) TestBuildHotRoutes() {
 
 	for _, tc := range cases {
 		suite.Run(tc.description, func() {
-			maxPoints, err := suite.App.ProtoRevKeeper.CalcMaxPoolPointsForTx(suite.Ctx)
+			maxPoints, err := suite.App.ProtoRevKeeper.RemainingPoolPointsForTx(suite.Ctx)
 			suite.Require().NoError(err)
 
 			routes, err := suite.App.ProtoRevKeeper.BuildHotRoutes(suite.Ctx, tc.swapIn, tc.swapOut, tc.poolId, maxPoints)
@@ -375,8 +375,8 @@ func (suite *KeeperTestSuite) TestCheckAndUpdateRouteState() {
 	}
 }
 
-// TestCalcMaxPoolPointsForTx tests the CalcMaxPoolPointsForTx function.
-func (suite *KeeperTestSuite) TestCalcMaxPoolPointsForTx() {
+// TestRemainingPoolPointsForTx tests the RemainingPoolPointsForTx function.
+func (suite *KeeperTestSuite) TestRemainingPoolPointsForTx() {
 	cases := []struct {
 		description        string
 		maxRoutesPerTx     uint64
@@ -422,7 +422,7 @@ func (suite *KeeperTestSuite) TestCalcMaxPoolPointsForTx() {
 			suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, tc.maxRoutesPerBlock)
 			suite.App.ProtoRevKeeper.SetPointCountForBlock(suite.Ctx, tc.currentRouteCount)
 
-			points, err := suite.App.ProtoRevKeeper.CalcMaxPoolPointsForTx(suite.Ctx)
+			points, err := suite.App.ProtoRevKeeper.RemainingPoolPointsForTx(suite.Ctx)
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.expectedPointCount, *points)
 		})

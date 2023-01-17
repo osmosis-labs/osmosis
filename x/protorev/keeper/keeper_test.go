@@ -728,14 +728,14 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 	atomBitcoin := types.NewTrade(4, "bitcoin", types.AtomDenomination)
 
 	// Stableswap Route
-	uosmoUSDC := types.NewTrade(29, types.OsmosisDenomination, "usdc")
+	uosmoUSDC := types.NewTrade(0, types.OsmosisDenomination, "usdc")
 	usdcBUSD := types.NewTrade(34, "usdc", "busd")
 	busdUOSMO := types.NewTrade(30, "busd", types.OsmosisDenomination)
 
 	// Atom Route
 	atomIBC1 := types.NewTrade(31, types.AtomDenomination, "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC")
 	ibc1IBC2 := types.NewTrade(32, "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC", "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293")
-	ibc2ATOM := types.NewTrade(33, "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293", types.AtomDenomination)
+	ibc2ATOM := types.NewTrade(0, "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293", types.AtomDenomination)
 
 	suite.tokenPairArbRoutes = []*types.TokenPairArbRoutes{
 		{
@@ -768,6 +768,8 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 	}
 
 	for _, tokenPair := range suite.tokenPairArbRoutes {
+		err := tokenPair.Validate()
+		suite.Require().NoError(err)
 		suite.App.ProtoRevKeeper.SetTokenPairArbRoutes(suite.Ctx, tokenPair.TokenIn, tokenPair.TokenOut, tokenPair)
 	}
 }
