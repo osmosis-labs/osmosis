@@ -281,7 +281,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 func (s *KeeperTestSuite) TestWithdrawPosition() {
 	tests := map[string]struct {
 		setupConfig *lpTest
-		// when this is set, it ovewrites the setupConfig
+		// when this is set, it overwrites the setupConfig
 		// and gives the overwritten configuration to
 		// the system under test.
 		sutConfigOverwrite *lpTest
@@ -396,13 +396,26 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			)
 
 			// If a setupConfig is provided, use it to create a pool and position.
-			if tc.setupConfig != nil {
-				s.PrepareConcentratedPool()
-				var err error
-				s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-				_, _, liquidityCreated, err = concentratedLiquidityKeeper.CreatePosition(ctx, config.poolId, owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), config.lowerTick, config.upperTick)
-				s.Require().NoError(err)
-			}
+			pool := s.PrepareConcentratedPool()
+			s.FundAcc(owner, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+
+			// Create a position from the parameters in the test case.
+			_, _, liquidityCreated, err := concentratedLiquidityKeeper.CreatePosition(ctx, config.poolId, owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), config.lowerTick, config.upperTick)
+			s.Require().NoError(err)
+
+			// Set global fee growth to 1 ETH and charge the fee to the pool.
+			globalFeeGrowth := sdk.NewDecCoin(ETH, sdk.NewInt(1))
+			err = concentratedLiquidityKeeper.ChargeFee(ctx, pool.GetId(), globalFeeGrowth)
+			s.Require().NoError(err)
+
+			// Set the expected fees claimed to the amount of liquidity created since the global fee growth is 1.
+			// Fund the pool account with the expected fees claimed.
+			expectedFeesClaimed := sdk.NewCoins(sdk.NewCoin(ETH, liquidityCreated.TruncateInt()))
+			s.FundAcc(pool.GetAddress(), expectedFeesClaimed)
+
+			// Note the pool and owner balances before collecting fees.
+			poolBalanceBeforeCollect := s.App.BankKeeper.GetBalance(ctx, pool.GetAddress(), ETH)
+			ownerBalancerBeforeCollect := s.App.BankKeeper.GetBalance(ctx, owner, ETH)
 
 			// If specific configs are provided in the test case, overwrite the config with those values.
 			mergeConfigs(&config, &sutConfigOverwrite)
@@ -425,11 +438,27 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// Determine the liquidity expected to remain after the withdraw.
 			expectedRemainingLiquidity := liquidityCreated.Sub(config.liquidityAmount)
 
-			// Check that the position was updated.
-			s.validatePositionUpdate(ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity)
+			if expectedRemainingLiquidity.IsZero() {
+				// If the remaining liquidity is zero, all fees should be collected and the position should be deleted.
+				// Check if all fees were collected.
+				poolBalanceAfterCollect := s.App.BankKeeper.GetBalance(ctx, pool.GetAddress(), ETH)
+				ownerBalancerAfterCollect := s.App.BankKeeper.GetBalance(ctx, owner, ETH)
+				expectedETHAmount := expectedFeesClaimed.AmountOf(ETH)
+				s.Require().Equal(expectedETHAmount.String(), poolBalanceBeforeCollect.Sub(poolBalanceAfterCollect).Amount.String())
+				s.Require().Equal(expectedETHAmount.String(), ownerBalancerAfterCollect.Sub(ownerBalancerBeforeCollect).Amount.String())
 
-			// check tick state
-			s.validateTickUpdates(ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity, cl.EmptyCoins, cl.EmptyCoins)
+				// Check that the position was deleted.
+				position, err := concentratedLiquidityKeeper.GetPosition(ctx, config.poolId, owner, config.lowerTick, config.upperTick)
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &types.PositionNotFoundError{PoolId: config.poolId, LowerTick: config.lowerTick, UpperTick: config.upperTick})
+				s.Require().Nil(position)
+			} else {
+				// Check that the position was updated.
+				s.validatePositionUpdate(ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity)
+			}
+
+			// Check tick state.
+			s.validateTickUpdates(ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity, config.expectedFeeGrowthOutsideLower, config.expectedFeeGrowthOutsideUpper)
 		})
 	}
 }
