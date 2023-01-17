@@ -159,7 +159,6 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 		existingValSet = append(existingValSet, existing_val)
 		newValSet = append(newValSet, existing_val_zero_amount)
 		totalTokenAmount = totalTokenAmount.Add(tokenFromShares)
-		fmt.Println("EXISTING DELS: ", valAddr.String(), tokenFromShares)
 	}
 
 	for _, newVals := range newSet {
@@ -168,7 +167,6 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 		new_val, new_val_zero_amount := k.GetValSetStruct(newVals, amountToDelegate)
 		newValSet = append(newValSet, new_val)
 		existingValSet = append(existingValSet, new_val_zero_amount)
-		fmt.Println("NEW DELS: ", newVals, amountToDelegate)
 	}
 
 	// calculate the difference between two sets
@@ -182,8 +180,6 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 		}
 		diffValSet = append(diffValSet, &diff_val)
 	}
-
-	fmt.Println("DIFF AMOUNT: ", diffValSet)
 
 	// Algorithm starts here
 	for _, diff_val := range diffValSet {
@@ -208,7 +204,6 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 
 			// reDelegationAmt to is the amount to redelegate, which is the min of diffAmount and target_validator
 			reDelegationAmt := sdk.MinDec(target_val.amount.Abs(), diff_val.amount).TruncateDec()
-			fmt.Println("REDELEGATE: ", source_val, target_val.valAddr, reDelegationAmt)
 			_, err = k.stakingKeeper.BeginRedelegation(ctx, delegator, validator_source, validator_target, reDelegationAmt)
 			if err != nil {
 				return err
@@ -374,7 +369,7 @@ func (k Keeper) GetValidatorInfo(ctx sdk.Context, existingValAddr string) (sdk.V
 // GetValSetStruct initializes valSet struct with valAddr, weight and amount.
 // It also creates an extra struct with zero amount, that can be appended to newValSet that will be created.
 // We do this to make sure the struct array length is the same to calculate their difference.
-func (k Keeper) GetValSetStruct(validator types.ValidatorPreference, amountFromShares sdk.Dec) (existingValSet valSet, existingValsSetZeroFormatted valSet) {
+func (k Keeper) GetValSetStruct(validator types.ValidatorPreference, amountFromShares sdk.Dec) (existingValSet valSet, existingValsSetZeroFormat valSet) {
 	val_struct := valSet{
 		valAddr: validator.ValOperAddress,
 		amount:  amountFromShares,
