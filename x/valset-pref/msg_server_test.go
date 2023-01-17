@@ -735,6 +735,12 @@ func (suite *KeeperTestSuite) TestDelegateBondedTokens() {
 				suite.Require().NoError(err)
 
 				// check that the lock has been successfully unlocked
+				// existingLocks should not contain the current lock
+				existingLocks, err := suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
+
+				suite.Require().NoError(err)
+				suite.Require().Equal(len(existingLocks), len(testLock)-1)
+
 				balance := suite.App.BankKeeper.GetBalance(suite.Ctx, test.delegator, appParams.BaseCoinUnit)
 				suite.Require().Equal(balance, test.expectedUnlockedOsmo)
 
