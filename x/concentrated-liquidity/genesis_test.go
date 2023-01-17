@@ -26,12 +26,12 @@ var (
 )
 
 func init() {
-	pool1, err := model.NewConcentratedLiquidityPool(1, "uosmo", "uatom", 5, sdk.NewInt(-4))
+	pool1, err := model.NewConcentratedLiquidityPool(1, "uosmo", "uatom", 5, sdk.NewInt(-4), DefaultZeroSwapFee)
 	if err != nil {
 		panic(err)
 	}
 	testGenesisPools = append(testGenesisPools, pool1)
-	pool2, err := model.NewConcentratedLiquidityPool(7, "uusdc", "uatom", 4, sdk.NewInt(-2))
+	pool2, err := model.NewConcentratedLiquidityPool(7, "uusdc", "uatom", 4, sdk.NewInt(-2), DefaultZeroSwapFee)
 	if err != nil {
 		panic(err)
 	}

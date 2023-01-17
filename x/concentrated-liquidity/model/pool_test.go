@@ -249,7 +249,8 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 			s.Setup()
 
 			// Call NewConcentratedLiquidityPool with the parameters from the current test.
-			pool, err := model.NewConcentratedLiquidityPool(test.param.poolId, test.param.denom0, test.param.denom1, test.param.tickSpacing, test.param.precisionValue)
+			// TODO: test fee
+			pool, err := model.NewConcentratedLiquidityPool(test.param.poolId, test.param.denom0, test.param.denom1, test.param.tickSpacing, test.param.precisionValue, sdk.ZeroDec())
 
 			if test.expectedErr != nil {
 				// If the test is expected to produce an error, check if it does.

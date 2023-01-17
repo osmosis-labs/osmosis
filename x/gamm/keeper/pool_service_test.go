@@ -290,6 +290,7 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 					USDC,
 					defaultTickSpacing,
 					DefaultExponentAtPriceOne,
+					sdk.ZeroDec(),
 				)
 				require.NoError(suite.T(), err)
 				return &clPool
