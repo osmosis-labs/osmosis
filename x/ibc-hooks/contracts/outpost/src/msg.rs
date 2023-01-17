@@ -13,6 +13,12 @@ pub struct InstantiateMsg {
 
 /// Information about which contract to call
 #[cw_serde]
+pub struct Wasm {
+    pub wasm: WasmHookExecute,
+}
+
+#[cw_serde]
+#[serde(rename = "wasm")]
 pub struct WasmHookExecute {
     pub contract: String,
     pub msg: crosschain_swaps::ExecuteMsg,

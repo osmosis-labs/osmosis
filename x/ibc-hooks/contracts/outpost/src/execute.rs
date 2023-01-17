@@ -1,5 +1,5 @@
 use crate::{
-    msg::{Callback, ExecuteMsg, WasmHookExecute},
+    msg::{Callback, ExecuteMsg, Wasm, WasmHookExecute},
     state::CONFIG,
     ContractError,
 };
@@ -9,7 +9,7 @@ use cosmwasm_std::{Addr, Coin, DepsMut, Response, Timestamp};
 pub const PACKET_LIFETIME: u64 = 604_800u64; // One week in seconds
 
 //#[cfg(feature = "callbacks")]
-fn build_memo(callback: Option<Callback>) -> Result<String, ContractError> {
+fn build_callback_memo(callback: Option<Callback>) -> Result<String, ContractError> {
     match callback {
         Some(callback) => callback.try_string(),
         None => Ok(String::new()),
@@ -20,6 +20,7 @@ pub fn execute_swap(
     deps: DepsMut,
     own_addr: Addr,
     now: Timestamp,
+    funds: Vec<Coin>,
     user_msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     let ExecuteMsg::OsmosisSwap {
@@ -31,14 +32,22 @@ pub fn execute_swap(
         #[cfg(feature = "callbacks")]
         callback,
     } = user_msg;
-
     let config = CONFIG.load(deps.storage)?;
+
+    // IBC transfers support only one token at a time
+    if funds.is_empty() || funds.len() > 1 {
+        return Err(ContractError::InvalidFunds { funds });
+    }
+    let Some(funds): Option<&Coin> = funds.first() else {
+        // This shoild never happen
+        return Err(ContractError::InvalidFunds { funds });
+    };
 
     // If the callbacks feature is not active, the variable won't exist. Create it here with the default
     #[cfg(not(feature = "callbacks"))]
     let callback = None;
 
-    let next_memo = build_memo(callback)?;
+    let next_memo = build_callback_memo(callback)?;
     // Wrap in an option, as expected by MsgTransfer bellow
     let next_memo = if next_memo.is_empty() {
         None
@@ -59,9 +68,11 @@ pub fn execute_swap(
         on_failed_delivery,
     };
 
-    let msg = WasmHookExecute {
-        contract: config.crosschain_swaps_contract.clone(),
-        msg: instruction,
+    let msg = Wasm {
+        wasm: WasmHookExecute {
+            contract: config.crosschain_swaps_contract.clone(),
+            msg: instruction,
+        },
     };
     let memo = serde_json_wasm::to_string(&msg).map_err(|e| ContractError::InvalidJson {
         error: e.to_string(),
@@ -70,7 +81,7 @@ pub fn execute_swap(
     let ibc_transfer_msg = crosschain_swaps::ibc::MsgTransfer {
         source_port: "transfer".to_string(),
         source_channel: "channel-0".to_string(),
-        token: Some(Coin::new(input_coin.amount.into(), input_coin.denom).into()),
+        token: Some(Coin::new(funds.amount.into(), funds.denom.to_string()).into()),
         sender: own_addr.to_string(),
         receiver: config.crosschain_swaps_contract,
         timeout_height: None,

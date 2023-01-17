@@ -53,12 +53,12 @@ pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, C
 pub fn execute(
     deps: DepsMut,
     env: Env,
-    _info: MessageInfo,
+    info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::OsmosisSwap { .. } => {
-            execute_swap(deps, env.contract.address, env.block.time, msg)
+            execute_swap(deps, env.contract.address, env.block.time, info.funds, msg)
         }
     }
 }

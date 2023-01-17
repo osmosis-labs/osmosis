@@ -1,4 +1,4 @@
-use cosmwasm_std::StdError;
+use cosmwasm_std::{Coin, StdError};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -11,6 +11,9 @@ pub enum ContractError {
 
     #[error("Invalid Json: could not serialize msg into json: {error}")]
     InvalidJson { error: String },
+
+    #[error("Invalid Funds: Should be exactly one token. Got: {funds:?}")]
+    InvalidFunds { funds: Vec<Coin> },
 
     #[error("Invalid Crosschain Swpas Contract: {contract}")]
     InvalidCrosschainSwapsContract { contract: String },
