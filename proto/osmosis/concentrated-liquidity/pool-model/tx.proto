@@ -22,7 +22,7 @@ message MsgCreateConcentratedPool {
     (gogoproto.moretags) = "yaml:\"precision_factor_at_price_one\"",
     (gogoproto.nullable) = false
   ];
-string swap_fee = 9 [
+  string swap_fee = 9 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"swap_fee\"",
     (gogoproto.nullable) = false
