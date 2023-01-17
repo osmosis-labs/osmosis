@@ -10,6 +10,7 @@ import (
 
 const (
 	TypeMsgCreateBalancerPool = "create_balancer_pool"
+	TypeMsgMigrateShares      = "migrate_shares"
 )
 
 var (
@@ -102,4 +103,29 @@ func (msg MsgCreateBalancerPool) CreatePool(ctx sdk.Context, poolID uint64) (poo
 
 func (msg MsgCreateBalancerPool) GetPoolType() poolmanagertypes.PoolType {
 	return poolmanagertypes.Balancer
+}
+
+var _ sdk.Msg = &MsgMigrateSharesToFullRangeConcentratedPosition{}
+
+func (msg MsgMigrateSharesToFullRangeConcentratedPosition) Route() string { return types.RouterKey }
+func (msg MsgMigrateSharesToFullRangeConcentratedPosition) Type() string  { return TypeMsgMigrateShares }
+func (msg MsgMigrateSharesToFullRangeConcentratedPosition) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	return nil
+}
+
+func (msg MsgMigrateSharesToFullRangeConcentratedPosition) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgMigrateSharesToFullRangeConcentratedPosition) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
 }

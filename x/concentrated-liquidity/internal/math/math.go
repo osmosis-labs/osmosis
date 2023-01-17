@@ -1,6 +1,8 @@
 package math
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -53,8 +55,14 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
+	fmt.Printf("0 sqrta: %s \n", sqrtPriceA.String())
+	fmt.Printf("0 sqrtb: %s \n", sqrtPriceB.String())
+
+	fmt.Printf("liq: %s \n", liq.String())
 	diff := sqrtPriceB.Sub(sqrtPriceA)
+	fmt.Printf("diff: %s \n", diff.String())
 	denom := sqrtPriceA.Mul(sqrtPriceB)
+	fmt.Printf("denom: %s \n", denom.String())
 	// if calculating for amountIn, we round up
 	// if calculating for amountOut, we don't round at all
 	// this is to prevent removing more from the pool than expected due to rounding
@@ -65,6 +73,7 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 	if roundUp {
 		return liq.Mul(diff).Quo(denom).Ceil()
 	}
+	fmt.Printf("result: %v \n", liq.Mul(diff).Quo(denom))
 	return liq.Mul(diff).Quo(denom)
 }
 
@@ -76,7 +85,12 @@ func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
+	fmt.Printf("1 sqrta: %s \n", sqrtPriceA.String())
+	fmt.Printf("1 sqrtb: %s \n", sqrtPriceB.String())
+
+	fmt.Printf("liq: %s \n", liq.String())
 	diff := sqrtPriceB.Sub(sqrtPriceA)
+	fmt.Printf("diff: %s \n", diff.String())
 	// if calculating for amountIn, we round up
 	// if calculating for amountOut, we don't round at all
 	// this is to prevent removing more from the pool than expected due to rounding
@@ -87,6 +101,7 @@ func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 	if roundUp {
 		return liq.Mul(diff).Ceil()
 	}
+	fmt.Printf("result: %v \n", liq.Mul(diff))
 	return liq.Mul(diff)
 }
 

@@ -2,6 +2,7 @@ package cfmm_common
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -15,6 +16,7 @@ const errMsgFormatSharesLargerThanMax = "%s resulted shares is larger than the m
 // CalcExitPool returns how many tokens should come out, when exiting k LP shares against a "standard" CFMM
 func CalcExitPool(ctx sdk.Context, pool types.CFMMPoolI, exitingShares sdk.Int, exitFee sdk.Dec) (sdk.Coins, error) {
 	totalShares := pool.GetTotalShares()
+	fmt.Printf("totalShares: %v \n", totalShares)
 	if exitingShares.GTE(totalShares) {
 		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, errMsgFormatSharesLargerThanMax, exitingShares, totalShares)
 	}
@@ -38,6 +40,7 @@ func CalcExitPool(ctx sdk.Context, pool types.CFMMPoolI, exitingShares sdk.Int, 
 	for _, asset := range poolLiquidity {
 		// round down here, due to not wanting to over-exit
 		exitAmt := shareOutRatio.MulInt(asset.Amount).TruncateInt()
+		fmt.Printf("exitAmt: %v \n", exitAmt)
 		if exitAmt.LTE(sdk.ZeroInt()) {
 			continue
 		}

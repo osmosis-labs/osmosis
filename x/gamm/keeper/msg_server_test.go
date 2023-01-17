@@ -1,9 +1,12 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
+	balancer "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
@@ -354,5 +357,106 @@ func (suite *KeeperTestSuite) TestExitPool_Events() {
 			suite.AssertEventEmitted(ctx, types.TypeEvtPoolExited, tc.expectedRemoveLiquidityEvents)
 			suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestMsgMigrateShares() {
+	defaultAccount := suite.TestAccs[0]
+	defaultAccountFunds := sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100000000000)), sdk.NewCoin("usdc", sdk.NewInt(100000000000)))
+	joinPoolLiquidity := sdk.MustNewDecFromStr("100000000000000000000").RoundInt()
+
+	type param struct {
+		sender            sdk.AccAddress
+		sharesToMigrate   sdk.Coin
+		poolIdLeaving     uint64
+		poolIdEntering    uint64
+		minTick           int64
+		maxTick           int64
+		withdrawLiquidity sdk.Dec
+	}
+
+	tests := []struct {
+		name       string
+		param      param
+		expectPass bool
+	}{
+		{
+			name: "happy path",
+			param: param{
+				sender:            defaultAccount,
+				sharesToMigrate:   sdk.NewCoin("gamm/pool/1", joinPoolLiquidity),
+				poolIdLeaving:     1,
+				poolIdEntering:    2,
+				minTick:           -1620000,
+				maxTick:           3420000,
+				withdrawLiquidity: sdk.MustNewDecFromStr("100000000000.000000000000000000"),
+			},
+			expectPass: true,
+		},
+	}
+
+	for _, test := range tests {
+		suite.SetupTest()
+		msgServer := keeper.NewBalancerMsgServerImpl(suite.App.GAMMKeeper)
+		ctx := sdk.WrapSDKContext(suite.Ctx)
+
+		// Prepare both balancer and concentrated pools
+		suite.FundAcc(test.param.sender, defaultAccountFunds)
+		suite.PrepareBalancerPoolWithCoins(sdk.NewCoin("eth", sdk.NewInt(100000000000)), sdk.NewCoin("usdc", sdk.NewInt(100000000000)))
+		clPool := suite.PrepareConcentratedPool()
+
+		// Note balance before
+		ethBalanceBefore := suite.App.BankKeeper.GetBalance(suite.Ctx, test.param.sender, ETH)
+		usdcBalanceBefore := suite.App.BankKeeper.GetBalance(suite.Ctx, test.param.sender, USDC)
+		fmt.Printf("user eth balance before joining pool 1: %v \n", ethBalanceBefore)
+		fmt.Printf("user usdc balance before joining pool 1: %v \n", usdcBalanceBefore)
+
+		_, _, err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, test.param.sender, test.param.poolIdLeaving, joinPoolLiquidity, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(999999999999999)), sdk.NewCoin("usdc", sdk.NewInt(999999999999999))))
+		suite.Require().NoError(err)
+
+		ethBalanceAfter := suite.App.BankKeeper.GetBalance(suite.Ctx, test.param.sender, ETH)
+		usdcBalanceAfter := suite.App.BankKeeper.GetBalance(suite.Ctx, test.param.sender, USDC)
+		fmt.Printf("user eth balance after joining pool 1: %v \n", ethBalanceAfter)
+		fmt.Printf("user usdc balance after joining pool 1: %v \n", usdcBalanceAfter)
+
+		fmt.Printf("test sender %v \n", test.param.sender.String())
+		fmt.Printf("test receiver %v \n", clPool.GetAddress().String())
+
+		msg := &balancer.MsgMigrateSharesToFullRangeConcentratedPosition{
+			Sender:          test.param.sender.String(),
+			SharesToMigrate: test.param.sharesToMigrate,
+			PoolIdLeaving:   test.param.poolIdLeaving,
+			PoolIdEntering:  test.param.poolIdEntering,
+		}
+
+		_, err = msgServer.MigrateSharesToFullRangeConcentratedPosition(ctx, msg)
+		suite.Require().NoError(err)
+
+		ethBalanceAfter = suite.App.BankKeeper.GetBalance(suite.Ctx, test.param.sender, ETH)
+		usdcBalanceAfter = suite.App.BankKeeper.GetBalance(suite.Ctx, test.param.sender, USDC)
+		fmt.Printf("user eth balance after joining pool 2: %v \n", ethBalanceAfter)
+		fmt.Printf("user usdc balance after joining pool 2: %v \n", usdcBalanceAfter)
+
+		clPoolAddress := clPool.GetAddress()
+
+		ethBalanceAfter = suite.App.BankKeeper.GetBalance(suite.Ctx, clPoolAddress, ETH)
+		usdcBalanceAfter = suite.App.BankKeeper.GetBalance(suite.Ctx, clPoolAddress, USDC)
+		fmt.Printf("pool eth balance after user joining pool 2: %v \n", ethBalanceAfter)
+		fmt.Printf("pool usdc balance after user joining pool 2: %v \n", usdcBalanceAfter)
+
+		// withdraw concentrated liquidity position
+		amt0, amt1, err := suite.App.ConcentratedLiquidityKeeper.WithdrawPosition(suite.Ctx, test.param.poolIdEntering, test.param.sender, test.param.minTick, test.param.maxTick, test.param.withdrawLiquidity)
+		suite.Require().NoError(err)
+		fmt.Printf("amt0: %v, amt1: %v \n", amt0, amt1)
+
+		ethBalanceAfter = suite.App.BankKeeper.GetBalance(suite.Ctx, test.param.sender, ETH)
+		usdcBalanceAfter = suite.App.BankKeeper.GetBalance(suite.Ctx, test.param.sender, USDC)
+		fmt.Printf("user eth balance after leaving pool 2: %v \n", ethBalanceAfter)
+		fmt.Printf("user usdc balance after leaving pool 2: %v \n", usdcBalanceAfter)
+
+		ethBalanceAfter = suite.App.BankKeeper.GetBalance(suite.Ctx, clPoolAddress, ETH)
+		usdcBalanceAfter = suite.App.BankKeeper.GetBalance(suite.Ctx, clPoolAddress, USDC)
+		fmt.Printf("pool eth balance after user leaving pool 2: %v \n", ethBalanceAfter)
+		fmt.Printf("pool usdc balance after user leaving pool 2: %v \n", usdcBalanceAfter)
 	}
 }

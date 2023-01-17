@@ -290,3 +290,52 @@ func (suite *KeeperTestSuite) TestMsgCreateBalancerPool() {
 		})
 	}
 }
+
+// func (suite *KeeperTestSuite) TestMsgMigrateShares() {
+// 	suite.SetupTest()
+// 	tests := map[string]struct {
+// 		msg         balancer.MsgMigrateSharesToFullRangeConcentratedPosition
+// 		poolId      uint64
+// 		expectError bool
+// 	}{
+// 		"basic success test": {
+// 			msg: balancer.MsgMigrateSharesToFullRangeConcentratedPosition{
+// 				Sender:             suite.TestAccs[0].String(),
+// 				PoolParams:         &balancer.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2), ExitFee: sdk.NewDecWithPrec(1, 3)},
+// 				PoolAssets:         apptesting.DefaultPoolAssets,
+// 				FuturePoolGovernor: "",
+// 			},
+// 			poolId: 1,
+// 		},
+// 		// "error due to negative swap fee": {
+// 		// 	msg: balancer.MsgCreateBalancerPool{
+// 		// 		Sender:             suite.TestAccs[0].String(),
+// 		// 		PoolParams:         &balancer.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2).Neg(), ExitFee: sdk.NewDecWithPrec(1, 3)},
+// 		// 		PoolAssets:         apptesting.DefaultPoolAssets,
+// 		// 		FuturePoolGovernor: "",
+// 		// 	},
+// 		// 	poolId:      2,
+// 		// 	expectError: true,
+// 		// },
+// 	}
+
+// 	for name, tc := range tests {
+// 		suite.Run(name, func() {
+// 			pool, err := tc.msg.CreatePool(suite.Ctx, 1)
+
+// 			if tc.expectError {
+// 				suite.Require().Error(err)
+// 				return
+// 			}
+// 			suite.Require().NoError(err)
+
+// 			suite.Require().Equal(tc.poolId, pool.GetId())
+// 			expectedPoolLiquidity := sdk.NewCoins()
+// 			for _, asset := range tc.msg.PoolAssets {
+// 				expectedPoolLiquidity = expectedPoolLiquidity.Add(asset.Token)
+// 			}
+// 			suite.Require().Equal(expectedPoolLiquidity, pool.GetTotalPoolLiquidity(suite.Ctx))
+// 			suite.Require().Equal(types.InitPoolSharesSupply, pool.GetTotalShares())
+// 		})
+// 	}
+// }

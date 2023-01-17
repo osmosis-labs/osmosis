@@ -3,12 +3,16 @@ package osmosis.gamm.poolmodels.balancer.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "osmosis/gamm/pool-models/balancer/balancerPool.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer";
 
 service Msg {
   rpc CreateBalancerPool(MsgCreateBalancerPool)
       returns (MsgCreateBalancerPoolResponse);
+  rpc MigrateSharesToFullRangeConcentratedPosition(
+      MsgMigrateSharesToFullRangeConcentratedPosition)
+      returns (MsgMigrateSharesToFullRangeConcentratedPositionResponse);
 }
 
 // ===================== MsgCreatePool
@@ -29,3 +33,21 @@ message MsgCreateBalancerPool {
 message MsgCreateBalancerPoolResponse {
   uint64 pool_id = 1 [ (gogoproto.customname) = "PoolID" ];
 }
+
+// ===================== MsgMigrateSharesToFullRangeConcentratedPosition
+message MsgMigrateSharesToFullRangeConcentratedPosition {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+
+  cosmos.base.v1beta1.Coin shares_to_migrate = 2 [
+    (gogoproto.moretags) = "yaml:\"shares_to_migrate\"",
+    (gogoproto.nullable) = false
+  ];
+
+  // temporary field, will discern pool id from shares in future
+  uint64 pool_id_leaving = 3;
+  // temporary field, will discern pool id from shares in future
+  uint64 pool_id_entering = 4;
+}
+
+// Returns the poolID
+message MsgMigrateSharesToFullRangeConcentratedPositionResponse {}

@@ -222,7 +222,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 	poolId uint64,
 ) (writeCtx func(), tokenIn, tokenOut sdk.Coin, updatedTick sdk.Int, updatedLiquidity, updatedSqrtPrice sdk.Dec, err error) {
 	ctx, writeCtx = ctx.CacheContext()
-	p, err := k.getPoolById(ctx, poolId)
+	p, err := k.GetPoolById(ctx, poolId)
 	if err != nil {
 		return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 	}
@@ -366,7 +366,7 @@ func (k Keeper) calcInAmtGivenOut(
 	poolId uint64,
 ) (writeCtx func(), tokenIn, tokenOut sdk.Coin, updatedTick sdk.Int, updatedLiquidity, updatedSqrtPrice sdk.Dec, err error) {
 	ctx, writeCtx = ctx.CacheContext()
-	p, err := k.getPoolById(ctx, poolId)
+	p, err := k.GetPoolById(ctx, poolId)
 	if err != nil {
 		return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 	}
@@ -506,7 +506,7 @@ func (k *Keeper) applySwap(
 ) error {
 	// Fixed gas consumption per swap to prevent spam
 	ctx.GasMeter().ConsumeGas(gammtypes.BalancerGasFeeForSwap, "cl pool swap computation")
-	pool, err := k.getPoolById(ctx, poolId)
+	pool, err := k.GetPoolById(ctx, poolId)
 	if err != nil {
 		return err
 	}

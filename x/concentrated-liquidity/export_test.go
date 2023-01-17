@@ -19,17 +19,17 @@ func OrderInitialPoolDenoms(denom0, denom1 string) (string, string, error) {
 	return cltypes.OrderInitialPoolDenoms(denom0, denom1)
 }
 
-func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (amtDenom0, amtDenom1 sdk.Int, liquidityCreated sdk.Dec, err error) {
-	return k.createPosition(ctx, poolId, owner, amount0Desired, amount1Desired, amount0Min, amount1Min, lowerTick, upperTick)
-}
+// func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (amtDenom0, amtDenom1 sdk.Int, liquidityCreated sdk.Dec, err error) {
+// 	return k.createPosition(ctx, poolId, owner, amount0Desired, amount1Desired, amount0Min, amount1Min, lowerTick, upperTick)
+// }
 
 func (k Keeper) SetPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) error {
 	return k.setPool(ctx, pool)
 }
 
-func (k Keeper) WithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityAmount sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
-	return k.withdrawPosition(ctx, poolId, owner, lowerTick, upperTick, liquidityAmount)
-}
+// func (k Keeper) WithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityAmount sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
+// 	return k.withdrawPosition(ctx, poolId, owner, lowerTick, upperTick, liquidityAmount)
+// }
 
 func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) (*model.Position, error) {
 	return k.getPosition(ctx, poolId, owner, lowerTick, upperTick)
@@ -43,9 +43,9 @@ func (k Keeper) DeletePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	return k.deletePosition(ctx, poolId, owner, lowerTick, upperTick)
 }
 
-func (k Keeper) GetPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedPoolExtension, error) {
-	return k.getPoolById(ctx, poolId)
-}
+// func (k Keeper) GetPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedPoolExtension, error) {
+// 	return k.GetPoolById(ctx, poolId)
+// }
 
 func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Dec, err error) {
 	return k.crossTick(ctx, poolId, tickIndex)

@@ -50,12 +50,16 @@ func TickToSqrtPrice(tickIndex, exponentAtPriceOne sdk.Int) (price sdk.Dec, err 
 	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(powTen(exponentAtPriceOne.Neg()))
 
 	// Check that the tick index is between min and max value for the given exponentAtPriceOne
-	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
+	minTick, maxTick := getMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
 	if tickIndex.LT(sdk.NewInt(minTick)) {
 		return sdk.Dec{}, types.TickIndexMinimumError{MinTick: minTick}
 	}
 	if tickIndex.GT(sdk.NewInt(maxTick)) {
 		return sdk.Dec{}, types.TickIndexMaximumError{MaxTick: maxTick}
+	}
+
+	if tickIndex.Equal(sdk.NewInt(minTick)) {
+		return sdk.ZeroDec(), nil
 	}
 
 	// Use floor division to determine what the geometricExponent is now (the delta)
@@ -82,6 +86,7 @@ func TickToSqrtPrice(tickIndex, exponentAtPriceOne sdk.Int) (price sdk.Dec, err 
 	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
 		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
 	}
+	fmt.Printf("price: %s \n", price.String())
 
 	// Determine the sqrtPrice from the price
 	sqrtPrice, err := price.ApproxSqrt()
@@ -153,7 +158,7 @@ func PriceToTick(price sdk.Dec, exponentAtPriceOne sdk.Int) (sdk.Int, error) {
 	tickIndex := ticksPassed.Add(ticksToBeFulfilledByExponentAtCurrentTick.SDKDec().TruncateInt())
 
 	// Add a check to make sure that the tick index is within the allowed range
-	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
+	minTick, maxTick := getMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
 	if tickIndex.LT(sdk.NewInt(minTick)) {
 		return sdk.Int{}, types.TickIndexMinimumError{MinTick: minTick}
 	}
@@ -180,9 +185,9 @@ func powTenBigDec(exponent sdk.Int) osmomath.BigDec {
 	return osmomath.OneDec().Quo(osmomath.NewBigDec(10).Power(osmomath.NewBigDec(exponent.Abs().Int64())))
 }
 
-// GetMinAndMaxTicksFromExponentAtPriceOne determines min and max ticks allowed for a given exponentAtPriceOne value
+// getMinAndMaxTicksFromExponentAtPriceOne determines min and max ticks allowed for a given exponentAtPriceOne value
 // This allows for a min spot price of 0.000000000000000001 and a max spot price of 100000000000000000000000000000000000000 for every exponentAtPriceOne value
-func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTick, maxTick int64) {
+func getMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTick, maxTick int64) {
 	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(powTen(exponentAtPriceOne.Neg()))
 	minTick = sdkEighteenDec.Mul(geometricExponentIncrementDistanceInTicks).Neg().RoundInt64()
 	maxTick = sdkThirtyEightDec.Mul(geometricExponentIncrementDistanceInTicks).TruncateInt64()

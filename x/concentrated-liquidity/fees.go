@@ -119,7 +119,7 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, own
 // getFeeGrowthOutside returns fee growth upper tick - fee growth lower tick
 // nolint: unused
 func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.DecCoins, error) {
-	pool, err := k.getPoolById(ctx, poolId)
+	pool, err := k.GetPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
@@ -158,7 +158,7 @@ func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, u
 // The value is chosen as if all of the fees earned to date had occurrd below the tick.
 // Returns error if the pool with the given id does exist or if fails to get the fee accumulator.
 func (k Keeper) getInitialFeeGrowthOutsideForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
-	pool, err := k.getPoolById(ctx, poolId)
+	pool, err := k.GetPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
@@ -217,7 +217,7 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 		return sdk.Coins{}, err
 	}
 
-	pool, err := k.getPoolById(ctx, poolId)
+	pool, err := k.GetPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
