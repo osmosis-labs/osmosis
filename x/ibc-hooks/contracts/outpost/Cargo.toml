@@ -3,6 +3,7 @@ name = "outpost"
 version = "0.1.0"
 authors = ["Nicolas Lara <nicolaslara@gmail.com>"]
 edition = "2021"
+rust-version  = "1.65.0"
 
 exclude = [
   # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
@@ -28,12 +29,12 @@ callbacks = []
 optimize = """docker run --rm -v "$(pwd)":/code \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  cosmwasm/rust-optimizer:0.12.10
+  cosmwasm/rust-optimizer:0.12.11
 """
 optimize-m1 = """docker run --rm -v "$(pwd)":/code \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  cosmwasm/rust-optimizer-arm64:0.12.10
+  cosmwasm/rust-optimizer-arm64:0.12.11
 """
 
 [[bin]]
@@ -50,12 +51,13 @@ schemars = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
 osmosis-std = { workspace = true }
+serde-json-wasm = { workspace = true }
+serde-cw-value = { workspace = true }
+bech32 = { workspace = true }
+cw-utils = { workspace = true }
 
 swaprouter = { path = "../swaprouter", features = ["imported"]}
 crosschain-swaps = { path = "../crosschain-swaps", features = ["imported"]}
-serde-json-wasm = "0.5.0"
-serde-cw-value = "0.7.0"
-bech32 = "0.9.1"
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }

@@ -20,7 +20,7 @@ pub fn execute_swap(
     deps: DepsMut,
     own_addr: Addr,
     now: Timestamp,
-    funds: Vec<Coin>,
+    coin: Coin,
     user_msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     let ExecuteMsg::OsmosisSwap {
@@ -33,15 +33,6 @@ pub fn execute_swap(
         callback,
     } = user_msg;
     let config = CONFIG.load(deps.storage)?;
-
-    // IBC transfers support only one token at a time
-    if funds.is_empty() || funds.len() > 1 {
-        return Err(ContractError::InvalidFunds { funds });
-    }
-    let Some(funds): Option<&Coin> = funds.first() else {
-        // This shoild never happen
-        return Err(ContractError::InvalidFunds { funds });
-    };
 
     // If the callbacks feature is not active, the variable won't exist. Create it here with the default
     #[cfg(not(feature = "callbacks"))]
@@ -68,8 +59,8 @@ pub fn execute_swap(
         on_failed_delivery,
     };
 
-    let msg = Wasm {
-        wasm: WasmHookExecute {
+    let msg = WasmHookExecute {
+        wasm: Wasm {
             contract: config.crosschain_swaps_contract.clone(),
             msg: instruction,
         },
@@ -81,7 +72,7 @@ pub fn execute_swap(
     let ibc_transfer_msg = crosschain_swaps::ibc::MsgTransfer {
         source_port: "transfer".to_string(),
         source_channel: "channel-0".to_string(),
-        token: Some(Coin::new(funds.amount.into(), funds.denom.to_string()).into()),
+        token: Some(Coin::new(coin.amount.into(), coin.denom.to_string()).into()),
         sender: own_addr.to_string(),
         receiver: config.crosschain_swaps_contract,
         timeout_height: None,

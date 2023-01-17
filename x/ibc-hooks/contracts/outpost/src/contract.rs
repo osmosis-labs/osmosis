@@ -1,6 +1,6 @@
-#[cfg(not(feature = "library"))]
+#[cfg(not(feature = "imported"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{DepsMut, Env, MessageInfo, Reply, Response};
+use cosmwasm_std::{DepsMut, Env, MessageInfo, Response};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
@@ -58,13 +58,9 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::OsmosisSwap { .. } => {
-            execute_swap(deps, env.contract.address, env.block.time, info.funds, msg)
+            // IBC transfers support only one token at a time
+            let coin = cw_utils::one_coin(&info)?;
+            execute_swap(deps, env.contract.address, env.block.time, coin, msg)
         }
     }
-}
-
-/// Handling submessage reply.
-#[cfg_attr(not(feature = "imported"), entry_point)]
-pub fn reply(_deps: DepsMut, _env: Env, _msg: Reply) -> Result<Response, ContractError> {
-    todo!()
 }
