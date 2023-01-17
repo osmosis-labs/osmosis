@@ -183,3 +183,71 @@ func (s *KeeperTestSuite) TestGetPosition() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestDeletePosition() {
+	tests := []struct {
+		name        string
+		poolToGet   uint64
+		ownerIndex  uint64
+		lowerTick   int64
+		upperTick   int64
+		expectedErr error
+	}{
+		{
+			name:      "Delete position info on existing pool and existing position",
+			poolToGet: validPoolId,
+			lowerTick: DefaultLowerTick,
+			upperTick: DefaultUpperTick,
+		},
+		{
+			name:        "Delete position on existing pool and existing position but wrong owner",
+			poolToGet:   validPoolId,
+			ownerIndex:  1,
+			lowerTick:   DefaultLowerTick,
+			upperTick:   DefaultUpperTick,
+			expectedErr: types.PositionNotFoundError{PoolId: validPoolId, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick},
+		},
+		{
+			name:        "Delete position on existing pool with no existing position",
+			poolToGet:   validPoolId,
+			lowerTick:   DefaultLowerTick - 1,
+			upperTick:   DefaultUpperTick + 1,
+			expectedErr: types.PositionNotFoundError{PoolId: validPoolId, LowerTick: DefaultLowerTick - 1, UpperTick: DefaultUpperTick + 1},
+		},
+		{
+			name:        "Delete position on a non-existing pool with no existing position",
+			poolToGet:   2,
+			lowerTick:   DefaultLowerTick - 1,
+			upperTick:   DefaultUpperTick + 1,
+			expectedErr: types.PositionNotFoundError{PoolId: 2, LowerTick: DefaultLowerTick - 1, UpperTick: DefaultUpperTick + 1},
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			// Init suite for each test.
+			s.Setup()
+
+			// Create a default CL pool
+			s.PrepareConcentratedPool()
+
+			// Set up a default initialized position
+			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt)
+			s.Require().NoError(err)
+
+			err = s.App.ConcentratedLiquidityKeeper.DeletePosition(s.Ctx, test.poolToGet, s.TestAccs[test.ownerIndex], test.lowerTick, test.upperTick)
+			if test.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, test.expectedErr)
+			} else {
+				s.Require().NoError(err)
+
+				// Since the position is deleted, retrieving it should return an error.
+				position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, test.poolToGet, s.TestAccs[test.ownerIndex], test.lowerTick, test.upperTick)
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, types.PositionNotFoundError{PoolId: test.poolToGet, LowerTick: test.lowerTick, UpperTick: test.upperTick})
+				s.Require().Nil(position)
+			}
+		})
+	}
+}
