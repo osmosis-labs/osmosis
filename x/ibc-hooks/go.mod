@@ -8,7 +8,7 @@ require (
 	github.com/cosmos/ibc-go/v4 v4.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.3-rc0
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.3
 	github.com/spf13/cobra v1.6.1
 	github.com/tendermint/tendermint v0.34.24
 )
@@ -134,7 +134,7 @@ require (
 
 replace (
 	// osmosis-patched wasmd
-	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.29.2-0.20221222131554-7c8ea36a6e30
+	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.30.0-osmo-v14
 	// dragonberry
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v13.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/8757a61551aa1ea993c85a523e18094ab555b1d7
