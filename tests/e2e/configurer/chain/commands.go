@@ -14,6 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
 	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
 
@@ -41,7 +42,7 @@ func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
 	return poolID
 }
 
-func (n *NodeConfig) CreateConcentratedPool(from string) {
+func (n *NodeConfig) CreateConcentratedPool(from string) poolmanagertypes.PoolI {
 	n.LogActionF("creating concentrated pool")
 
 	var (
@@ -51,7 +52,7 @@ func (n *NodeConfig) CreateConcentratedPool(from string) {
 		exponentAtPriceOne = -1
 	)
 
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-concentrated-pool", denom1, denom2, fmt.Sprintf("%s", tickSpacing), fmt.Sprintf("%s", exponentAtPriceOne), fmt.Sprintf("--from=%s", from)}
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-concentrated-pool", denom1, denom2, fmt.Sprintf("%d", tickSpacing), fmt.Sprintf("%d", exponentAtPriceOne), fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
@@ -64,7 +65,12 @@ func (n *NodeConfig) CreateConcentratedPool(from string) {
 	err = util.Cdc.UnmarshalJSON(bz, &pools)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully created concentrated pool")
-	// TODO: return poolID
+
+	var createdPool poolmanagertypes.PoolI
+	anyPool := pools.Pools[len(pools.Pools)-1]
+	err = util.Cdc.UnpackAny(anyPool, &createdPool)
+	require.NoError(n.t, err)
+	return createdPool
 }
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 	n.LogActionF("storing wasm code from file %s", wasmFile)
