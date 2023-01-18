@@ -48,7 +48,7 @@ pub fn execute_swap(
 
     // note that this is not the same osmosis swap as the one above (which is
     // defined in this create). The one in crosschain_swaps doesn't accept a
-    // callback and . They are share the same name because that's the name we want to
+    // callback and . They share the same name because that's the name we want to
     // expose to the user
     let instruction = crosschain_swaps::ExecuteMsg::OsmosisSwap {
         input_coin,
