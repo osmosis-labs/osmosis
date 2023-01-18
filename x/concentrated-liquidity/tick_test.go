@@ -231,6 +231,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			// Create a default CL pool
 			s.PrepareConcentratedPool()
 			_, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			s.Require().NoError(err)
 			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
 
@@ -248,6 +249,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 
 			// Get the tick info for poolId 1
 			tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, test.param.tickIndex)
+			s.Require().NoError(err)
 
 			// Ensure tick state contains any preexistingLiquidity (zero otherwise)
 			s.Require().Equal(preexistingLiquidity, tickInfo.LiquidityGross)
@@ -328,13 +330,15 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 
 			// Set up an initialized tick
 			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, validPoolId, preInitializedTickIndex, DefaultLiquidityAmt, true)
+			s.Require().NoError(err)
 
 			// Charge fee to make sure that the global fee accumulator is always updates.
 			// This is to test that the per-tick fee growth accumulator gets initialized.
 			if test.poolToGet == validPoolId {
 				s.SetupDefaultPosition(test.poolToGet)
 			}
-			s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, test.poolToGet, oneEth)
+			err = s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, oneEth)
+			s.Require().NoError(err)
 
 			// System under test
 			tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, test.poolToGet, test.tickToGet)

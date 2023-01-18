@@ -380,6 +380,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 	}
 
 	for name, tc := range tests {
+		tc := tc
 		s.Run(name, func() {
 			// Setup.
 			s.SetupTest()
@@ -407,17 +408,25 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			err = concentratedLiquidityKeeper.ChargeFee(ctx, pool.GetId(), globalFeeGrowth)
 			s.Require().NoError(err)
 
-			// Set the expected fees claimed to the amount of liquidity created since the global fee growth is 1.
-			// Fund the pool account with the expected fees claimed.
-			expectedFeesClaimed := sdk.NewCoins(sdk.NewCoin(ETH, liquidityCreated.TruncateInt()))
-			s.FundAcc(pool.GetAddress(), expectedFeesClaimed)
-
-			// Note the pool and owner balances before collecting fees.
-			poolBalanceBeforeCollect := s.App.BankKeeper.GetBalance(ctx, pool.GetAddress(), ETH)
-			ownerBalancerBeforeCollect := s.App.BankKeeper.GetBalance(ctx, owner, ETH)
-
 			// If specific configs are provided in the test case, overwrite the config with those values.
 			mergeConfigs(&config, &sutConfigOverwrite)
+
+			// Determine the liquidity expected to remain after the withdraw.
+			expectedRemainingLiquidity := liquidityCreated.Sub(config.liquidityAmount)
+
+			expectedFeesClaimed := sdk.NewCoins()
+			// Set the expected fees claimed to the amount of liquidity created since the global fee growth is 1.
+			// Fund the pool account with the expected fees claimed.
+			if expectedRemainingLiquidity.IsZero() {
+				expectedFeesClaimed = expectedFeesClaimed.Add(sdk.NewCoin(ETH, liquidityCreated.TruncateInt()))
+				s.FundAcc(pool.GetAddress(), expectedFeesClaimed)
+			}
+
+			// Note the pool and owner balances before collecting fees.
+			poolBalanceBeforeCollect := s.App.BankKeeper.GetAllBalances(ctx, pool.GetAddress())
+			ownerBalancerBeforeCollect := s.App.BankKeeper.GetAllBalances(ctx, owner)
+
+			expectedBalanceDelta := expectedFeesClaimed.Add(sdk.NewCoin(ETH, config.amount0Expected.Abs())).Add(sdk.NewCoin(USDC, config.amount1Expected.Abs()))
 
 			// System under test.
 			amtDenom0, amtDenom1, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, config.poolId, owner, config.lowerTick, config.upperTick, config.liquidityAmount)
@@ -434,18 +443,15 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			s.Require().Equal(config.amount0Expected.String(), amtDenom0.String())
 			s.Require().Equal(config.amount1Expected.String(), amtDenom1.String())
 
-			// Determine the liquidity expected to remain after the withdraw.
-			expectedRemainingLiquidity := liquidityCreated.Sub(config.liquidityAmount)
+			// If the remaining liquidity is zero, all fees should be collected and the position should be deleted.
+			// Check if all fees were collected.
+			poolBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, pool.GetAddress())
+			ownerBalancerAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, owner)
+
+			s.Require().Equal(expectedBalanceDelta.String(), poolBalanceBeforeCollect.Sub(poolBalanceAfterCollect).String())
+			s.Require().Equal(expectedBalanceDelta.String(), ownerBalancerAfterCollect.Sub(ownerBalancerBeforeCollect).String())
 
 			if expectedRemainingLiquidity.IsZero() {
-				// If the remaining liquidity is zero, all fees should be collected and the position should be deleted.
-				// Check if all fees were collected.
-				poolBalanceAfterCollect := s.App.BankKeeper.GetBalance(ctx, pool.GetAddress(), ETH)
-				ownerBalancerAfterCollect := s.App.BankKeeper.GetBalance(ctx, owner, ETH)
-				expectedETHAmount := expectedFeesClaimed.AmountOf(ETH)
-				s.Require().Equal(expectedETHAmount.String(), poolBalanceBeforeCollect.Sub(poolBalanceAfterCollect).Amount.String())
-				s.Require().Equal(expectedETHAmount.String(), ownerBalancerAfterCollect.Sub(ownerBalancerBeforeCollect).Amount.String())
-
 				// Check that the position was deleted.
 				position, err := concentratedLiquidityKeeper.GetPosition(ctx, config.poolId, owner, config.lowerTick, config.upperTick)
 				s.Require().Error(err)
@@ -567,6 +573,26 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 			coin1:       sdk.NewCoin("usdc", sdk.NewInt(100000000000000)),
 			poolToUser:  true,
 			expectError: true,
+		},
+		"asset0 is negative - error": {
+			coin0: sdk.Coin{Denom: "eth", Amount: sdk.NewInt(1000000).Neg()},
+			coin1: sdk.NewCoin("usdc", sdk.NewInt(1000000)),
+
+			expectError: true,
+		},
+		"asset1 is negative - error": {
+			coin0: sdk.NewCoin("eth", sdk.NewInt(1000000)),
+			coin1: sdk.Coin{Denom: "usdc", Amount: sdk.NewInt(1000000).Neg()},
+
+			expectError: true,
+		},
+		"asset0 is zero - passes": {
+			coin0: sdk.NewCoin("eth", sdk.ZeroInt()),
+			coin1: sdk.NewCoin("usdc", sdk.NewInt(1000000)),
+		},
+		"asset1 is zero - passes": {
+			coin0: sdk.NewCoin("eth", sdk.NewInt(1000000)),
+			coin1: sdk.NewCoin("usdc", sdk.ZeroInt()),
 		},
 	}
 
