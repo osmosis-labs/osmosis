@@ -45,7 +45,7 @@ jobs:
             --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
             --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
             cosmwasm/workspace-optimizer:0.12.10
-        if: env.GIT_DIFF && matrix_prev.contract.workdir == matrix.contract.workdir
+        if: env.GIT_DIFF && env.matrix_prev.contract.workdir == matrix.contract.workdir
 
       - name: 'Upload Cargo.lock artifact'
         uses: actions/upload-artifact@v3
@@ -53,7 +53,7 @@ jobs:
           name: Cargo.lock
           path: ${{ matrix.contract.workdir }}Cargo.lock
           retention-days: 1
-        if: env.GIT_DIFF && matrix_prev.contract.workdir == matrix.contract.workdir
+        if: env.GIT_DIFF && env.matrix_prev.contract.workdir == matrix.contract.workdir
 
       - name: 'Upload optimized contract artifact'
         uses: actions/upload-artifact@v3
