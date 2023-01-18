@@ -786,9 +786,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 		},
 		{ // Pool 41 - Used for doomsday testing
 			initialLiquidity: sdk.NewCoins(
-				sdk.NewCoin("usdc", sdk.NewInt(5000)),
-				sdk.NewCoin("usdt", sdk.NewInt(5000)),
-				sdk.NewCoin("busd", sdk.NewInt(5000)),
+				sdk.NewCoin("usdc", sdk.NewInt(1000000000000000)),
+				sdk.NewCoin("usdt", sdk.NewInt(1000000000000000)),
+				sdk.NewCoin("busd", sdk.NewInt(1000000000000000)),
 			),
 			poolParams: stableswap.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 4),

@@ -251,20 +251,20 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(15_767_231),
 					},
 					{
-						Denom:  types.OsmosisDenomination,
-						Amount: sdk.NewInt(56_609_900),
-					},
-					{
 						Denom:  "test/3",
 						Amount: sdk.NewInt(218_149_058),
+					},
+					{
+						Denom:  types.OsmosisDenomination,
+						Amount: sdk.NewInt(56_609_900),
 					},
 				},
 				expectedPoolPoints: 51,
 			},
 			expectPass: true,
 		},
-		{
-			name: "Doomsday Test - Stableswap",
+		{ // This test the tx pool points limit caps the number of iterations
+			name: "Doomsday Test - Stableswap - Tx Pool Points Limit",
 			params: param{
 				msgs: []sdk.Msg{
 					&poolmanagertypes.MsgSwapExactAmountIn{
@@ -284,22 +284,102 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				gasLimit:            500000,
 				isCheckTx:           false,
 				baseDenomGas:        true,
-				expectedNumOfTrades: sdk.NewInt(6),
+				expectedNumOfTrades: sdk.NewInt(5),
 				expectedProfits: []*sdk.Coin{
 					{
 						Denom:  types.AtomDenomination,
 						Amount: sdk.NewInt(15_767_231),
 					},
 					{
+						Denom:  "test/3",
+						Amount: sdk.NewInt(218_149_058),
+					},
+					{
 						Denom:  types.OsmosisDenomination,
 						Amount: sdk.NewInt(56_609_900),
+					},
+				},
+				expectedPoolPoints: 87,
+			},
+			expectPass: true,
+		},
+		{ // This test the block pool points limit caps the number of iterations within a tx
+			name: "Doomsday Test - Stableswap - Block Pool Points Limit - Within a tx",
+			params: param{
+				msgs: []sdk.Msg{
+					&poolmanagertypes.MsgSwapExactAmountIn{
+						Sender: addr0.String(),
+						Routes: []poolmanagertypes.SwapAmountInRoute{
+							{
+								PoolId:        41,
+								TokenOutDenom: "usdc",
+							},
+						},
+						TokenIn:           sdk.NewCoin("busd", sdk.NewInt(10000)),
+						TokenOutMinAmount: sdk.NewInt(100),
+					},
+				},
+				txFee:               sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))),
+				minGasPrices:        sdk.NewDecCoins(),
+				gasLimit:            500000,
+				isCheckTx:           false,
+				baseDenomGas:        true,
+				expectedNumOfTrades: sdk.NewInt(5),
+				expectedProfits: []*sdk.Coin{
+					{
+						Denom:  types.AtomDenomination,
+						Amount: sdk.NewInt(15_767_231),
 					},
 					{
 						Denom:  "test/3",
 						Amount: sdk.NewInt(218_149_058),
 					},
+					{
+						Denom:  types.OsmosisDenomination,
+						Amount: sdk.NewInt(56_609_900),
+					},
 				},
-				expectedPoolPoints: 91,
+				expectedPoolPoints: 96,
+			},
+			expectPass: true,
+		},
+		{ // This test the block pool points limit caps the number of txs processed if already reached the limit
+			name: "Doomsday Test - Stableswap - Block Pool Points Limit Already Reached - New tx",
+			params: param{
+				msgs: []sdk.Msg{
+					&poolmanagertypes.MsgSwapExactAmountIn{
+						Sender: addr0.String(),
+						Routes: []poolmanagertypes.SwapAmountInRoute{
+							{
+								PoolId:        41,
+								TokenOutDenom: "usdc",
+							},
+						},
+						TokenIn:           sdk.NewCoin("busd", sdk.NewInt(10000)),
+						TokenOutMinAmount: sdk.NewInt(100),
+					},
+				},
+				txFee:               sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))),
+				minGasPrices:        sdk.NewDecCoins(),
+				gasLimit:            500000,
+				isCheckTx:           false,
+				baseDenomGas:        true,
+				expectedNumOfTrades: sdk.NewInt(5),
+				expectedProfits: []*sdk.Coin{
+					{
+						Denom:  types.AtomDenomination,
+						Amount: sdk.NewInt(15_767_231),
+					},
+					{
+						Denom:  "test/3",
+						Amount: sdk.NewInt(218_149_058),
+					},
+					{
+						Denom:  types.OsmosisDenomination,
+						Amount: sdk.NewInt(56_609_900),
+					},
+				},
+				expectedPoolPoints: 96,
 			},
 			expectPass: true,
 		},
@@ -307,6 +387,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 
 	// Ensure that the max points per tx is enough for the test suite
 	suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 40)
+	suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 100)
 	suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2})
 
 	for _, tc := range tests {
