@@ -161,8 +161,6 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 	defaultAccumCoins := sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10)))
 	defaultPoolId := uint64(1)
 	defaultInitialLiquidity := sdk.OneDec()
-	// defaultLiquidityForLowerTick := sdk.MustNewDecFromStr("10.0")
-	// defaultLiquidityForUpperTick := sdk.MustNewDecFromStr("20.0")
 
 	defaultUpperTickIndex := int64(5)
 	defaultLowerTickIndex := int64(3)
