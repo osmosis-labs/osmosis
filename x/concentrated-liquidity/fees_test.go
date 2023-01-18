@@ -699,3 +699,125 @@ func (s *KeeperTestSuite) TestCollectFees() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
+	var (
+		ownerOne = s.TestAccs[0]
+		ownerTwo = s.TestAccs[1]
+	)
+
+	type updateFeeAccumPositionTest struct {
+		poolId        uint64
+		owner         sdk.AccAddress
+		liquidity     sdk.Dec
+		lowerTick     int64
+		upperTick     int64
+		expectedError error
+	}
+
+	positions := map[int]updateFeeAccumPositionTest{
+		1: {
+			lowerTick: DefaultLowerTick,
+			upperTick: DefaultUpperTick,
+		},
+		2: {
+			lowerTick: DefaultLowerTick + 1,
+			upperTick: DefaultUpperTick,
+		},
+		3: {
+			lowerTick: DefaultLowerTick,
+			upperTick: DefaultUpperTick + 1,
+		},
+	}
+
+	tests := map[string]updateFeeAccumPositionTest{
+		"update position with a different pool ID": {
+			poolId:    2,
+			owner:     ownerOne,
+			liquidity: DefaultLiquidityAmt,
+			lowerTick: DefaultLowerTick,
+			upperTick: DefaultUpperTick,
+		},
+		"update position with a different owner": {
+			poolId:    1,
+			owner:     ownerTwo,
+			liquidity: DefaultLiquidityAmt,
+			lowerTick: DefaultLowerTick,
+			upperTick: DefaultUpperTick,
+		},
+		"update position with a different lower tick": {
+			poolId:    1,
+			owner:     ownerOne,
+			liquidity: DefaultLiquidityAmt,
+			lowerTick: DefaultLowerTick + 1,
+			upperTick: DefaultUpperTick,
+		},
+		"update position with a different upper tick": {
+			poolId:    1,
+			owner:     ownerOne,
+			liquidity: DefaultLiquidityAmt,
+			lowerTick: DefaultLowerTick,
+			upperTick: DefaultUpperTick + 1,
+		},
+		"err: pool does not exist": {
+			poolId:        3,
+			expectedError: cltypes.PoolNotFoundError{PoolId: 3},
+		},
+		"err: position does not exist": {
+			poolId:        1,
+			owner:         ownerOne,
+			liquidity:     DefaultLiquidityAmt,
+			lowerTick:     DefaultLowerTick - 1,
+			upperTick:     DefaultUpperTick,
+			expectedError: accum.NoPositionError{Name: cl.FormatPositionAccumulatorKey(1, ownerOne, DefaultLowerTick-1, DefaultUpperTick)},
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+
+			// Setup two cl pools
+			poolOne := s.PrepareConcentratedPool()
+			poolTwo := s.PrepareConcentratedPool()
+
+			pools := []cltypes.ConcentratedPoolExtension{poolOne, poolTwo}
+			owners := []sdk.AccAddress{ownerOne, ownerTwo}
+
+			// Initialize three base positions in each pool for each owner (total of 12 positions)
+			for _, pos := range positions {
+				for _, pool := range pools {
+					for _, owner := range owners {
+						s.initializeFeeAccumulatorPositionWithLiquidity(s.Ctx, pool.GetId(), owner, pos.lowerTick, pos.upperTick, DefaultLiquidityAmt)
+					}
+				}
+			}
+
+			// System under test
+			// Update one of the positions as per the test case
+			err := s.App.ConcentratedLiquidityKeeper.UpdateFeeAccumulatorPosition(s.Ctx, tc.poolId, tc.owner, tc.liquidity, tc.lowerTick, tc.upperTick)
+
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &tc.expectedError)
+				return
+			}
+
+			s.Require().NoError(err)
+
+			// Validate the test case position was updated and all other positions did not change
+			for _, pos := range positions {
+				for _, pool := range pools {
+					for _, owner := range owners {
+						liq := DefaultLiquidityAmt
+						if pool.GetId() == tc.poolId && owner.Equals(tc.owner) && pos.lowerTick == tc.lowerTick && pos.upperTick == tc.upperTick {
+							liq = DefaultLiquidityAmt.Mul(sdk.NewDec(2))
+						}
+						s.validatePositionFeeAccUpdate(s.Ctx, pool.GetId(), owner, pos.lowerTick, pos.upperTick, liq)
+					}
+				}
+			}
+		})
+	}
+
+}
