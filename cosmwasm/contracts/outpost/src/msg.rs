@@ -1,5 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Addr, Coin, Uint128};
+use cosmwasm_std::Addr;
 use serde::Serialize;
 
 use crate::ContractError;
@@ -56,7 +56,7 @@ pub enum ExecuteMsg {
     /// Execute a swap and forward it to the receiver address on the specified ibc channel
     OsmosisSwap {
         /// The amount to be swapped
-        input_amount: u128,
+        swap_amount: u128,
         /// The final denom to be received (as represented on osmosis)
         output_denom: String,
         /// The receiver of the IBC packet to be sent after the swap

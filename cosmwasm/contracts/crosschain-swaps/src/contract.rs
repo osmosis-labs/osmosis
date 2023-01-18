@@ -51,25 +51,30 @@ pub fn execute(
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
+    // IBC transfers support only one token at a time
     match msg {
         ExecuteMsg::OsmosisSwap {
-            input_coin,
+            swap_amount,
             output_denom,
             receiver,
             slippage,
             next_memo,
             on_failed_delivery,
-        } => execute::swap_and_forward(
-            deps,
-            env.block.time,
-            env.contract.address,
-            input_coin,
-            output_denom,
-            slippage,
-            receiver,
-            next_memo,
-            on_failed_delivery,
-        ),
+        } => {
+            let coin = cw_utils::one_coin(&info)?;
+            execute::swap_and_forward(
+                deps,
+                env.block.time,
+                env.contract.address,
+                swap_amount,
+                coin,
+                output_denom,
+                slippage,
+                receiver,
+                next_memo,
+                on_failed_delivery,
+            )
+        }
         ExecuteMsg::Recover {} => execute::recover(deps, info.sender),
     }
 }

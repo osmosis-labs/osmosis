@@ -25,7 +25,7 @@ pub fn execute_swap(
     user_msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     let ExecuteMsg::OsmosisSwap {
-        input_amount,
+        swap_amount,
         output_denom,
         receiver,
         slippage,
@@ -47,21 +47,21 @@ pub fn execute_swap(
         Some(next_memo)
     };
 
-    if input_amount > coin.amount.into() {
+    if swap_amount > coin.amount.into() {
         return Err(ContractError::SwapAmountTooHigh {
-            received: input_amount,
+            received: swap_amount,
             max: coin.amount.into(),
         });
     }
 
-    validate_input_amount(input_amount, coin.amount)?;
+    validate_input_amount(swap_amount, coin.amount)?;
 
     // note that this is not the same osmosis swap as the one above (which is
     // defined in this create). The one in crosschain_swaps doesn't accept a
     // callback and . They are share the same name because that's the name we want to
     // expose to the user
     let instruction = crosschain_swaps::ExecuteMsg::OsmosisSwap {
-        input_coin: Coin::new(input_amount, &coin.denom),
+        swap_amount,
         output_denom,
         receiver,
         slippage,
