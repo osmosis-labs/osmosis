@@ -759,14 +759,12 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			expectedError:  true,
 		},
 		"new position when calling update position - error because fee accumulator is not initialized": {
-			poolId:          1,
-			ownerIndex:      1, // using a different address makes this a new position
-			lowerTick:       DefaultLowerTick,
-			upperTick:       DefaultUpperTick,
-			liquidityDelta:  DefaultLiquidityAmt,
-			amount0Expected: DefaultAmt0Expected,
-			amount1Expected: DefaultAmt1Expected,
-			expectedError:   true,
+			poolId:         1,
+			ownerIndex:     1, // using a different address makes this a new position
+			lowerTick:      DefaultLowerTick,
+			upperTick:      DefaultUpperTick,
+			liquidityDelta: DefaultLiquidityAmt,
+			expectedError:  true,
 		},
 	}
 	for name, tc := range tests {
