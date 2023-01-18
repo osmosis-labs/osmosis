@@ -394,7 +394,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			s.PrepareConcentratedPool()
 
 			if test.poolToGet == validPoolId {
-				s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+				s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("ETH", sdk.NewInt(10000000000000)), sdk.NewCoin("USDC", sdk.NewInt(1000000000000))))
 				s.SetupPosition(test.poolToGet, s.TestAccs[0], DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick)
 			}
 
@@ -413,7 +413,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			err = s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, defaultAccumCoins)
 			s.Require().NoError(err)
 
-			// // manipulate tick fee growth
+			// manipulate tick fee growth
 			if test.manipulateTickFeeGrowth {
 				err = s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, defaultAccumCoins)
 				s.Require().NoError(err)
@@ -435,7 +435,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 				s.Require().NoError(err)
 
 				// accum value should not have changed
-				s.Require().Equal(accum.GetValue(), sdk.DecCoins{defaultAccumCoins}.MulDec(sdk.NewDec(2)))
+				s.Require().Equal(accum.GetValue(), sdk.NewDecCoins(defaultAccumCoins).MulDec(sdk.NewDec(2)))
 
 				// check if the tick fee growth outside has been correctly subtracted
 				tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, test.poolToGet, preInitializedTickIndex)
