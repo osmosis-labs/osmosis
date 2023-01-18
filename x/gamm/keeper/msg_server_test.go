@@ -377,11 +377,13 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares() {
 	}
 
 	tests := []struct {
-		name              string
-		param             param
-		expectedErr       error
-		withdrawLiquidity sdk.Dec
-		sharesToCreate    sdk.Int
+		name                       string
+		param                      param
+		expectedErr                error
+		withdrawLiquidity          sdk.Dec
+		sharesToCreate             sdk.Int
+		expectedMigrateShareEvents int
+		expectedMessageEvents      int
 	}{
 		{
 			name: "migrate all of the shares",
@@ -391,8 +393,10 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares() {
 				sharesToMigrateAmount: defaultGammShares.Amount,
 				poolIdEntering:        2,
 			},
-			sharesToCreate:    defaultGammShares.Amount,
-			withdrawLiquidity: sdk.MustNewDecFromStr("100000000000.000000000000000000"),
+			sharesToCreate:             defaultGammShares.Amount,
+			withdrawLiquidity:          sdk.MustNewDecFromStr("100000000000.000000000000000000"),
+			expectedMigrateShareEvents: 1,
+			expectedMessageEvents:      3, // 1 exitPool, 1 createPosition, 1 migrateShares.
 		},
 		{
 			name: "migrate half of the shares",
@@ -402,8 +406,10 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares() {
 				sharesToMigrateAmount: defaultGammShares.Amount.Quo(sdk.NewInt(2)),
 				poolIdEntering:        2,
 			},
-			sharesToCreate:    defaultGammShares.Amount,
-			withdrawLiquidity: sdk.MustNewDecFromStr("50000000000.000000000000000000"),
+			expectedMigrateShareEvents: 1,
+			expectedMessageEvents:      3, // 1 exitPool, 1 createPosition, 1 migrateShares.
+			sharesToCreate:             defaultGammShares.Amount,
+			withdrawLiquidity:          sdk.MustNewDecFromStr("50000000000.000000000000000000"),
 		},
 		{
 			name: "double the created shares, migrate 1/4 of the shares",
@@ -413,8 +419,10 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares() {
 				sharesToMigrateAmount: defaultGammShares.Amount.Quo(sdk.NewInt(2)),
 				poolIdEntering:        2,
 			},
-			sharesToCreate:    defaultGammShares.Amount.Mul(sdk.NewInt(2)),
-			withdrawLiquidity: sdk.MustNewDecFromStr("49999999999.000000000000000000"),
+			expectedMigrateShareEvents: 1,
+			expectedMessageEvents:      3, // 1 exitPool, 1 createPosition, 1 migrateShares.
+			sharesToCreate:             defaultGammShares.Amount.Mul(sdk.NewInt(2)),
+			withdrawLiquidity:          sdk.MustNewDecFromStr("49999999999.000000000000000000"),
 		},
 		{
 			name: "error: attempt to migrate shares from non-existent pool",
@@ -445,7 +453,7 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares() {
 	for _, test := range tests {
 		suite.SetupTest()
 		msgServer := keeper.NewBalancerMsgServerImpl(suite.App.GAMMKeeper)
-		ctx := sdk.WrapSDKContext(suite.Ctx)
+		//ctx := sdk.WrapSDKContext(suite.Ctx)
 
 		// Prepare both balancer and concentrated pools
 		suite.FundAcc(test.param.sender, defaultAccountFunds)
@@ -482,8 +490,12 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares() {
 		clPoolEthBalanceBeforeMigration := suite.App.BankKeeper.GetBalance(suite.Ctx, clPoolAddress, ETH)
 		clPoolUsdcBalanceBeforeMigration := suite.App.BankKeeper.GetBalance(suite.Ctx, clPoolAddress, USDC)
 
+		// Reset event counts to 0 by creating a new manager.
+		suite.Ctx = suite.Ctx.WithEventManager(sdk.NewEventManager())
+		suite.Require().Equal(0, len(suite.Ctx.EventManager().Events()))
+
 		// Migrate the user's gamm shares to a full range concentrated liquidity position
-		resp, err := msgServer.MigrateSharesToFullRangeConcentratedPosition(ctx, msg)
+		resp, err := msgServer.MigrateSharesToFullRangeConcentratedPosition(sdk.WrapSDKContext(suite.Ctx), msg)
 		if test.expectedErr != nil {
 			suite.Require().Error(err)
 			suite.Require().ErrorContains(err, test.expectedErr.Error())
@@ -491,6 +503,10 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares() {
 		}
 
 		suite.Require().NoError(err)
+
+		// Assert events are emitted
+		suite.AssertEventEmitted(suite.Ctx, types.TypeEvtMigrateShares, test.expectedMigrateShareEvents)
+		suite.AssertEventEmitted(suite.Ctx, sdk.EventTypeMessage, test.expectedMessageEvents)
 
 		// Note gamm pool balance after migration
 		gammPoolEthBalancePostMigrate := suite.App.BankKeeper.GetBalance(suite.Ctx, gammPoolAddress, ETH)

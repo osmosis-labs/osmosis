@@ -324,7 +324,7 @@ func (server msgServer) MigrateShares(goCtx context.Context, msg *balancer.MsgMi
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
-	// get poolId we are leaving from the provided gamm share
+	// get the poolId by parsing the gamm share denom
 	poolIdLeaving, err := GetPoolIdFromSharesDenom(msg.SharesToMigrate.Denom)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
@@ -347,22 +347,18 @@ func (server msgServer) MigrateShares(goCtx context.Context, msg *balancer.MsgMi
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
-	// poolId, err = server.keeper.poolManager.CreatePool(ctx, msg)
-	// if err != nil {
-	// 	return 0, err
-	// }
-
-	// ctx.EventManager().EmitEvents(sdk.Events{
-	// 	sdk.NewEvent(
-	// 		types.TypeEvtPoolCreated,
-	// 		sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
-	// 	),
-	// 	sdk.NewEvent(
-	// 		sdk.EventTypeMessage,
-	// 		sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-	// 		sdk.NewAttribute(sdk.AttributeKeySender, msg.PoolCreator().String()),
-	// 	),
-	// })
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtMigrateShares,
+			sdk.NewAttribute(types.AttributeKeyPoolIdEntering, strconv.FormatUint(msg.PoolIdEntering, 10)),
+			sdk.NewAttribute(types.AttributeKeyPoolIdLeaving, strconv.FormatUint(poolIdLeaving, 10)),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+		),
+	})
 
 	return amount0, amount1, liquidity, err
 }
