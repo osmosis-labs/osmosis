@@ -115,14 +115,14 @@ macro_rules! test_swap {
 const INITIAL_AMOUNT: u128 = 1_000_000_000_000;
 
 fn test_swap_success_case(msg: ExecuteMsg, funds: &[Coin]) {
-    let (app, sender, _res) = setup_route_and_execute_swap(&msg, &funds);
+    let (app, sender, _res) = setup_route_and_execute_swap(&msg, funds);
     // dbg!(res);
     // println!("{:?}", String::from_utf8(to_vec(&msg).unwrap()).unwrap());
     assert_input_decreased_and_output_increased(&app, &sender.address(), &msg);
 }
 
 fn test_swap_failed_case(msg: ExecuteMsg, funds: &[Coin], expected_error: &str) {
-    let (_app, _sender, res) = setup_route_and_execute_swap(&msg, &funds);
+    let (_app, _sender, res) = setup_route_and_execute_swap(&msg, funds);
     let err = res.unwrap_err();
     assert_eq!(
         err,
@@ -208,7 +208,7 @@ fn assert_input_decreased_and_output_increased(
             ..
         } => {
             let input_amount = get_amount(&balances, &input_coin.denom);
-            let output_amount = get_amount(&balances, &output_denom);
+            let output_amount = get_amount(&balances, output_denom);
 
             assert!(
                 input_amount < INITIAL_AMOUNT,

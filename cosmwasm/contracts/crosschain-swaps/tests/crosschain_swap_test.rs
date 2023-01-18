@@ -60,8 +60,8 @@ fn crosschain_swap() {
     let input_coin = Coin::new(1000, "uosmo");
     let output_denom = "uion".to_string();
     let msg = CrossChainExecute::OsmosisSwap {
-        input_coin: input_coin.clone(),
-        output_denom: output_denom.clone(),
+        input_coin,
+        output_denom,
         slippage: Slippage::Twap {
             window_seconds: Some(1),
             slippage_percentage: Decimal::from_str("5").unwrap(),

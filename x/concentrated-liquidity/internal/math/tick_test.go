@@ -248,3 +248,75 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 		})
 	}
 }
+
+// TestTickToSqrtPricePriceToTick_InverseRelationship tests that ensuring the inverse calculation 
+// between the two methods: tick to square root price to power of 2 and price to tick
+func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRelationship() {
+	testCases := map[string]struct{
+		price              sdk.Dec
+		exponentAtPriceOne sdk.Int
+		tickExpected       string
+	}{
+		"50000 to tick with -4 k at price one": {
+			price:              sdk.NewDec(50000),
+			exponentAtPriceOne: sdk.NewInt(-4),
+			tickExpected:       "400000",
+		},
+		"5.01 to tick with -2 k at price one": {
+			price:              sdk.MustNewDecFromStr("5.01"),
+			exponentAtPriceOne: sdk.NewInt(-2),
+			tickExpected:       "401",
+		},
+		"50000.01 to tick with -6 k at price one": {
+			price:              sdk.MustNewDecFromStr("50000.01"),
+			exponentAtPriceOne: sdk.NewInt(-6),
+			tickExpected:       "40000001",
+		},
+		"0.090000889 to tick with -8 k at price one": {
+			price:              sdk.MustNewDecFromStr("0.090000889"),
+			exponentAtPriceOne: sdk.NewInt(-8),
+			tickExpected:       "-999991110",
+		},
+		"0.9998 to tick with -4 k at price one": {
+			price:              sdk.MustNewDecFromStr("0.9998"),
+			exponentAtPriceOne: sdk.NewInt(-4),
+			tickExpected:       "-20",
+		},
+		"53030.10 to tick with -5 k at price one": {
+			price:              sdk.MustNewDecFromStr("53030.1"),
+			exponentAtPriceOne: sdk.NewInt(-5),
+			tickExpected:       "4030301",
+		},
+		"max spot price and minimum exponentAtPriceOne": {
+			price:              types.MaxSpotPrice,
+			exponentAtPriceOne: sdk.NewInt(-1),
+			tickExpected:       "3420",
+		},
+		"min spot price and minimum exponentAtPriceOne": {
+			price:              types.MinSpotPrice,
+			exponentAtPriceOne: sdk.NewInt(-1),
+			tickExpected:       "-1620",
+		},
+		"random": {
+			price:              sdk.MustNewDecFromStr("0.0000000000889"),
+			exponentAtPriceOne: sdk.NewInt(-8),
+			tickExpected:       "-9111000000",
+		},
+	}
+	for name, tc := range testCases {
+		tc := tc 
+
+		suite.Run(name, func () {
+			tick, err := math.PriceToTick(tc.price, tc.exponentAtPriceOne)
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.tickExpected, tick.String())
+
+			sqrtPrice, err := math.TickToSqrtPrice(tick, tc.exponentAtPriceOne)
+			price := sqrtPrice.Power(2)
+			deltaPrice := tc.price.Sub(price).Abs()
+
+			roundingTolerance := sdk.MustNewDecFromStr("0.0001")
+			suite.Require().True(deltaPrice.LTE(roundingTolerance))
+		})
+	}
+}

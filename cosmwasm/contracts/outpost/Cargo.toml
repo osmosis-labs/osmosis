@@ -1,14 +1,8 @@
-# This feature has been stabilized in 1.64. If using an earlier version (like in
-# rust-optimizer-arm:0.12.8) you should uncomment this like to be able to
-# compile the contract
-#
-#cargo-features = ["workspace-inheritance"]
-
 [package]
-authors = ["Sunny Aggarwal <sunnya97@protonmail.ch>"]
-edition = "2021"
-name = "swaprouter"
+name = "outpost"
 version = "0.1.0"
+authors = ["Nicolas Lara <nicolaslara@gmail.com>"]
+edition = "2021"
 rust-version  = "1.65.0"
 
 exclude = [
@@ -22,22 +16,25 @@ exclude = [
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+
 [features]
 # for more explicit tests, cargo test --features=backtraces
 backtraces = ["cosmwasm-std/backtraces"]
 # use imported feature to disable all instantiate/execute/query exports
 imported = []
+# use callback feature to indicate the chain supports wasm hooks and allow for callbacks
+callbacks = []
 
 [package.metadata.scripts]
 optimize = """docker run --rm -v "$(pwd)":/code \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  cosmwasm/rust-optimizer:0.12.10
+  cosmwasm/rust-optimizer:0.12.11
 """
 optimize-m1 = """docker run --rm -v "$(pwd)":/code \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  cosmwasm/rust-optimizer-arm64:0.12.10
+  cosmwasm/rust-optimizer-arm64:0.12.11
 """
 
 [[bin]]
@@ -51,9 +48,16 @@ cosmwasm-storage = { workspace = true }
 cw-storage-plus = { workspace = true }
 cw2 = { workspace = true }
 schemars = { workspace = true }
-osmosis-std = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
+osmosis-std = { workspace = true }
+serde-json-wasm = { workspace = true }
+serde-cw-value = { workspace = true }
+bech32 = { workspace = true }
+cw-utils = { workspace = true }
+
+swaprouter = { path = "../swaprouter", features = ["imported"]}
+crosschain-swaps = { path = "../crosschain-swaps", features = ["imported"]}
 
 [dev-dependencies]
-osmosis-testing = { workspace = true }
+cw-multi-test = { workspace = true }

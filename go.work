@@ -1,6 +1,9 @@
 go 1.18
 
 use ./osmomath
+
 use ./osmoutils
+
 use ./x/ibc-hooks
+
 use .
