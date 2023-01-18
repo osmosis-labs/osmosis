@@ -77,7 +77,7 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 
 	// 8) Begin unlocking every new lock
 	for _, newLock := range newLocks {
-		err = k.lk.BeginForceUnlock(ctx, newLock.ID, newLock.Coins)
+		_, err = k.lk.BeginForceUnlock(ctx, newLock.ID, newLock.Coins)
 		if err != nil {
 			return []uint64{}, err
 		}

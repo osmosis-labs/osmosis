@@ -284,7 +284,12 @@ func (k Keeper) SuperfluidUnbondLock(ctx sdk.Context, underlyingLockId uint64, s
 	if !synthLocks[0].IsUnlocking() {
 		return types.ErrBondingLockupNotSupported
 	}
-	return k.lk.BeginForceUnlock(ctx, underlyingLockId, sdk.Coins{})
+	_, err = k.lk.BeginForceUnlock(ctx, underlyingLockId, sdk.Coins{})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // alreadySuperfluidStaking returns true if underlying lock used in superfluid staking.

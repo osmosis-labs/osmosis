@@ -172,18 +172,29 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) err
 		return fmt.Errorf("cannot BeginUnlocking a lock with synthetic lockup")
 	}
 
-	return k.beginUnlock(ctx, *lock, coins)
+	_, err = k.beginUnlock(ctx, *lock, coins)
+	if err != nil {
+		return err
+	}
+	
+	return nil
 }
 
 // BeginForceUnlock begins force unlock of the given lock.
 // This method should be called by the superfluid module ONLY, as it does not check whether
 // the lock has a synthetic lock or not before unlocking.
-func (k Keeper) BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) error {
+func (k Keeper) BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) (uint64, error) {
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return k.beginUnlock(ctx, *lock, coins)
+	
+	lockID, err = k.beginUnlock(ctx, *lock, coins)
+	if err != nil {
+		return 0, err
+	}
+
+	return lockID, nil
 }
 
 // beginUnlock unlocks specified tokens from the given lock. Existing lock refs
@@ -191,14 +202,14 @@ func (k Keeper) BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins
 // EndTime of the lock is set within this method.
 // Coins provided as the parameter does not require to have all the tokens in the lock,
 // as we allow partial unlockings of a lock.
-func (k Keeper) beginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins) error {
+func (k Keeper) beginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins) (uint64, error) {
 	// sanity check
 	if !coins.IsAllLTE(lock.Coins) {
-		return fmt.Errorf("requested amount to unlock exceeds locked tokens")
+		return 0, fmt.Errorf("requested amount to unlock exceeds locked tokens")
 	}
 
 	if lock.IsUnlocking() {
-		return fmt.Errorf("trying to unlock a lock that is already unlocking")
+		return 0, fmt.Errorf("trying to unlock a lock that is already unlocking")
 	}
 
 	// If the amount were unlocking is empty, or the entire coins amount, unlock the entire lock.
@@ -207,7 +218,7 @@ func (k Keeper) beginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Co
 	if len(coins) != 0 && !coins.IsEqual(lock.Coins) {
 		splitLock, err := k.splitLock(ctx, lock, coins, false)
 		if err != nil {
-			return err
+			return 0, err
 		}
 		lock = splitLock
 	}
@@ -215,20 +226,20 @@ func (k Keeper) beginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Co
 	// remove existing lock refs from not unlocking queue
 	err := k.deleteLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	// store lock with the end time set to current block time + duration
 	lock.EndTime = ctx.BlockTime().Add(lock.Duration)
 	err = k.setLock(ctx, lock)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	// add lock refs into unlocking queue
 	err = k.addLockRefs(ctx, lock)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	if k.hooks != nil {
@@ -239,7 +250,7 @@ func (k Keeper) beginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Co
 		createBeginUnlockEvent(&lock),
 	})
 
-	return nil
+	return lock.ID, nil
 }
 
 func (k Keeper) clearKeysByPrefix(ctx sdk.Context, prefix []byte) {
