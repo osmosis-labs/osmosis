@@ -210,7 +210,6 @@ func (m *MsgMigrateSharesToFullRangeConcentratedPosition) GetPoolIdEntering() ui
 	return 0
 }
 
-// Returns the poolID
 type MsgMigrateSharesToFullRangeConcentratedPositionResponse struct {
 	Amount0          github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=amount0,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount0" yaml:"amount0"`
 	Amount1          github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=amount1,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount1" yaml:"amount1"`
