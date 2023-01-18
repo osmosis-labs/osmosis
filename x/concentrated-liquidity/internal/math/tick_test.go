@@ -112,7 +112,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 		"Min tick and max k": {
 			tickIndex:          sdk.NewInt(-162000000000000),
 			exponentAtPriceOne: sdk.NewInt(-12),
-			expectedPrice:      types.MinSpotPrice,
+			expectedPrice:      sdk.ZeroDec(),
 		},
 		"error: tickIndex less than minimum": {
 			tickIndex:          sdk.NewInt(DefaultMinTick - 1),
