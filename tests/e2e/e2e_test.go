@@ -31,8 +31,8 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().NoError(err)
 
 	var (
-		denom0                    string = "uosmo"
-		denom1                    string = "uion"
+		denom0                    string = "uion"
+		denom1                    string = "uosmo"
 		tickSpacing               uint64 = 1
 		precisionFactorAtPriceOne int64  = -1
 	)
