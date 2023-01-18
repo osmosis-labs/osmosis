@@ -10,6 +10,7 @@ var (
 	ErrInvalidPool       = errors.New("attempting to create an invalid pool")
 	ErrTooFewPoolAssets  = errors.New("pool should have at least 2 assets, as they must be swapping between at least two assets")
 	ErrTooManyPoolAssets = errors.New("pool has too many assets (currently capped at 8 assets per pool)")
+	ErrRouteLength       = errors.New("route shuld be length of 2")
 )
 
 type nonPositiveAmountError struct {
