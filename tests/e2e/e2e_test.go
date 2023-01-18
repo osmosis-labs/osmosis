@@ -30,7 +30,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	node, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
 
-	concentratedPool := node.CreateConcentratedPool(initialization.ValidatorWalletName)
+	concentratedPool := node.CreateConcentratedPool(initialization.ValidatorWalletName, "uosmo", "gamm/pool/1", 1, -1)
 	fmt.Println("CONCENTRATED POOL: ", concentratedPool)
 }
 

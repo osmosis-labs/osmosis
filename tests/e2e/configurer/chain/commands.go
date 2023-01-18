@@ -42,15 +42,8 @@ func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
 	return poolID
 }
 
-func (n *NodeConfig) CreateConcentratedPool(from string) poolmanagertypes.PoolI {
+func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpacing uint64, exponentAtPriceOne int64) poolmanagertypes.PoolI {
 	n.LogActionF("creating concentrated pool")
-
-	var (
-		denom1             = "uosmo"
-		denom2             = "gamm/pool/1"
-		tickSpacing        = 1
-		exponentAtPriceOne = -1
-	)
 
 	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-concentrated-pool", denom1, denom2, fmt.Sprintf("%d", tickSpacing), fmt.Sprintf("[%d]", exponentAtPriceOne), fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
