@@ -18,9 +18,9 @@ jobs:
       matrix:
         contract: [
           {workdir: ./x/ibc-rate-limit/, bytecode: x/ibc-rate-limit/bytecode/rate_limiter.wasm, build: artifacts/rate_limiter.wasm, name: rate_limiter},
-          {workdir: ./x/ibc-hooks/, bytecode: tests/ibc-hooks/bytecode/crosschain_swaps.wasm, build: artifacts/crosschain_swaps.wasm, name: crosschain_swaps},
-          {workdir: ./x/ibc-hooks/, bytecode: tests/ibc-hooks/bytecode/swaprouter.wasm, build: artifacts/swaprouter.wasm, name: swaprouter},
-          {workdir: ./x/ibc-hooks/, bytecode: tests/ibc-hooks/bytecode/outpost.wasm, build: artifacts/outpost.wasm, name: outpost},
+          {workdir: ./cosmwasm/, bytecode: tests/ibc-hooks/bytecode/crosschain_swaps.wasm, build: artifacts/crosschain_swaps.wasm, name: crosschain_swaps},
+          {workdir: ./cosmwasm/, bytecode: tests/ibc-hooks/bytecode/swaprouter.wasm, build: artifacts/swaprouter.wasm, name: swaprouter},
+          {workdir: ./cosmwasm/, bytecode: tests/ibc-hooks/bytecode/outpost.wasm, build: artifacts/outpost.wasm, name: outpost},
         ]
 
     steps:
@@ -74,9 +74,9 @@ jobs:
       matrix:
         contract: [
           {workdir: ./x/ibc-rate-limit/, bytecode: x/ibc-rate-limit/bytecode/rate_limiter.wasm, build: artifacts/rate_limiter.wasm, name: rate_limiter},
-          {workdir: ./x/ibc-hooks/, bytecode: tests/ibc-hooks/bytecode/crosschain_swaps.wasm, build: artifacts/crosschain_swaps.wasm, name: crosschain_swaps},
-          {workdir: ./x/ibc-hooks/, bytecode: tests/ibc-hooks/bytecode/swaprouter.wasm, build: artifacts/swaprouter.wasm, name: swaprouter},
-          {workdir: ./x/ibc-hooks/, bytecode: tests/ibc-hooks/bytecode/outpost.wasm, build: artifacts/outpost.wasm, name: outpost},
+          {workdir: ./cosmwasm/, bytecode: tests/ibc-hooks/bytecode/crosschain_swaps.wasm, build: artifacts/crosschain_swaps.wasm, name: crosschain_swaps},
+          {workdir: ./cosmwasm/, bytecode: tests/ibc-hooks/bytecode/swaprouter.wasm, build: artifacts/swaprouter.wasm, name: swaprouter},
+          {workdir: ./cosmwasm/, bytecode: tests/ibc-hooks/bytecode/outpost.wasm, build: artifacts/outpost.wasm, name: outpost},
         ]
 
     steps:
@@ -113,7 +113,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        workdir: [./x/ibc-rate-limit, ./x/ibc-hooks/]
+        workdir: [./x/ibc-rate-limit, ./cosmwasm]
 
     steps:
       - name: Checkout sources
