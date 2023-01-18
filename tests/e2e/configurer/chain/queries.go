@@ -104,7 +104,7 @@ func (n *NodeConfig) QueryConcentratedPool(poolId uint64) (cltypes.ConcentratedP
 	poolCLextension, ok := pool.(cltypes.ConcentratedPoolExtension)
 
 	if !ok {
-		return nil, fmt.Errorf("Could not typecast %#v to type ConcentratedPoolExtension", pool.String())
+		return nil, fmt.Errorf("invalid parameter type: %T", pool)
 	}
 
 	return poolCLextension, nil
