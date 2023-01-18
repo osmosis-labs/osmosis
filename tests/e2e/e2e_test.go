@@ -27,7 +27,7 @@ import (
 
 func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	chainA := s.configurer.GetChainConfig(0)
-	node, err := chainA.GetDefaultNode()
+	node1, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
 
 	var (
@@ -36,10 +36,10 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		tickSpacing               uint64 = 1
 		precisionFactorAtPriceOne int64  = -1
 	)
-	poolID := node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, precisionFactorAtPriceOne)
+	poolID := node1.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, precisionFactorAtPriceOne)
 	fmt.Println("Concentrated Pool ID: ", poolID)
 
-	concentratedPool, err := node.QueryConcentratedPool(poolID)
+	concentratedPool, err := node1.QueryConcentratedPool(poolID)
 	s.Require().NoError(err)
 
 	// assert contents of the pool are valid
