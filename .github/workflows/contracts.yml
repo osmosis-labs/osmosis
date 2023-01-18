@@ -28,6 +28,7 @@ jobs:
       - uses: technote-space/get-diff-action@v6.0.1
         with:
           PATTERNS: |
+            .github/workflows/contracts.yml
             **/**/*.wasm
             **/**.rs
             **/**Cargo.toml
@@ -42,6 +43,14 @@ jobs:
             cosmwasm/workspace-optimizer:0.12.10
         if: env.GIT_DIFF && matrix.run == '1'
 
+      - name: 'Upload Cargo.lock artifact'
+        uses: actions/upload-artifact@v3
+        with:
+          name: Cargo.lock
+          path: ${{ matrix.contract.workdir }}Cargo.lock
+          retention-days: 1
+        if: env.GIT_DIFF && matrix.run == '1'
+
       - name: 'Upload optimized contract artifact'
         uses: actions/upload-artifact@v3
         with:
@@ -50,17 +59,9 @@ jobs:
           retention-days: 1
         if: env.GIT_DIFF
 
-      - name: 'Upload Cargo.lock artifact'
-        uses: actions/upload-artifact@v3
-        with:
-          name: Cargo.lock
-          path: ${{ matrix.contract.workdir }}Cargo.lock
-          retention-days: 1
-        if: env.GIT_DIFF
-
       - name: Check Test Data
         working-directory: ${{ matrix.contract.workdir }}
-        if: env.GIT_DIFF
+        if: env.GIT_DIFF && matrix.completed == true
         run: >
           diff "${GITHUB_WORKSPACE}/${{ matrix.contract.bytecode }}" ${{ matrix.contract.build }}
 
@@ -81,6 +82,7 @@ jobs:
       - uses: technote-space/get-diff-action@v6.0.1
         with:
           PATTERNS: |
+            .github/workflows/contracts.yml
             **/bytecode/*.wasm
             **/**.rs
             **/**Cargo.toml
@@ -117,6 +119,7 @@ jobs:
       - uses: technote-space/get-diff-action@v6.0.1
         with:
           PATTERNS: |
+            .github/workflows/contracts.yml
             **/**.rs
             **/**Cargo.toml
             **/**Cargo.lock
