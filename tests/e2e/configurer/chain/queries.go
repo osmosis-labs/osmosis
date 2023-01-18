@@ -22,6 +22,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
 	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
 	twapqueryproto "github.com/osmosis-labs/osmosis/v14/x/twap/client/queryproto"
@@ -74,6 +75,19 @@ func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte
 	return bz, nil
 }
 
+func (n *NodeConfig) QueryNumPools() uint64 {
+	path := "osmosis/gamm/v1beta1/num_pools"
+
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	//nolint:staticcheck
+	var numPools gammtypes.QueryNumPoolsResponse
+	err = util.Cdc.UnmarshalJSON(bz, &numPools)
+	require.NoError(n.t, err)
+	return numPools.NumPools
+}
+
 func (n *NodeConfig) QueryConcentratedPool(poolId uint64) (cltypes.ConcentratedPoolExtension, error) {
 	path := fmt.Sprintf("/osmosis/concentratedliquidity/v1beta1/pools/%d", poolId)
 	bz, err := n.QueryGRPCGateway(path)
@@ -90,7 +104,7 @@ func (n *NodeConfig) QueryConcentratedPool(poolId uint64) (cltypes.ConcentratedP
 	poolCLextension, ok := pool.(cltypes.ConcentratedPoolExtension)
 
 	if !ok {
-		return nil, fmt.Errorf("Could not typecast QueryPoolResponse.Pool to type cltypes.ConcentratedPoolExtension")
+		return nil, fmt.Errorf("Could not typecast %#v to type ConcentratedPoolExtension", pool.String())
 	}
 
 	return poolCLextension, nil

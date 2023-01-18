@@ -12,9 +12,6 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
-	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
 
@@ -28,16 +25,7 @@ func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	path := "osmosis/gamm/v1beta1/num_pools"
-
-	bz, err := n.QueryGRPCGateway(path)
-	require.NoError(n.t, err)
-
-	//nolint:staticcheck
-	var numPools gammtypes.QueryNumPoolsResponse
-	err = util.Cdc.UnmarshalJSON(bz, &numPools)
-	require.NoError(n.t, err)
-	poolID := numPools.NumPools
+	poolID := n.QueryNumPools()
 	n.LogActionF("successfully created balancer pool %d", poolID)
 	return poolID
 }
@@ -49,21 +37,8 @@ func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpa
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	path := "/osmosis/concentratedliquidity/v1beta1/pools"
-
-	bz, err := n.QueryGRPCGateway(path)
-	require.NoError(n.t, err)
-
-	var pools cltypes.QueryPoolsResponse
-	err = util.Cdc.UnmarshalJSON(bz, &pools)
-	require.NoError(n.t, err)
-	n.LogActionF("successfully created concentrated pool")
-
-	var createdPool poolmanagertypes.PoolI
-	anyPool := pools.Pools[len(pools.Pools)-1]
-	err = util.Cdc.UnpackAny(anyPool, &createdPool)
-	require.NoError(n.t, err)
-	return createdPool.GetId()
+	poolID := n.QueryNumPools()
+	return poolID
 }
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
