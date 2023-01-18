@@ -129,7 +129,6 @@ fn get_crosschain_swaps_wasm() -> Vec<u8> {
         .join("..")
         .join("..")
         .join("..")
-        .join("..")
         .join("tests")
         .join("ibc-hooks")
         .join("bytecode")
