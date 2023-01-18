@@ -102,7 +102,7 @@ where
             Some(&owner.address()),
             None,
             &[],
-            &owner,
+            owner,
         )
         .unwrap()
         .data

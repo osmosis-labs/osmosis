@@ -1,18 +1,12 @@
-# This feature has been stabilized in 1.64. If using an earlier version (like in
-# rust-optimizer-arm:0.12.8) you should uncomment this like to be able to
-# compile the contract
-#
-#cargo-features = ["workspace-inheritance"]
-
 [package]
-name = "crosschain-swaps"
+name = "outpost"
 version = "0.1.0"
 authors = ["Nicolas Lara <nicolaslara@gmail.com>"]
 edition = "2021"
 rust-version  = "1.65.0"
 
 exclude = [
-  # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the crates publication.
+  # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
   "contract.wasm",
   "hash.txt",
 ]
@@ -22,11 +16,14 @@ exclude = [
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+
 [features]
 # for more explicit tests, cargo test --features=backtraces
 backtraces = ["cosmwasm-std/backtraces"]
 # use imported feature to disable all instantiate/execute/query exports
 imported = []
+# use callback feature to indicate the chain supports wasm hooks and allow for callbacks
+callbacks = []
 
 [package.metadata.scripts]
 optimize = """docker run --rm -v "$(pwd)":/code \
@@ -51,19 +48,16 @@ cosmwasm-storage = { workspace = true }
 cw-storage-plus = { workspace = true }
 cw2 = { workspace = true }
 schemars = { workspace = true }
-osmosis-std = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
+osmosis-std = { workspace = true }
 serde-json-wasm = { workspace = true }
 serde-cw-value = { workspace = true }
 bech32 = { workspace = true }
 cw-utils = { workspace = true }
 
 swaprouter = { path = "../swaprouter", features = ["imported"]}
-prost = {version = "0.11.2", default-features = false, features = ["prost-derive"]}
-osmosis-std-derive = "0.13.2"
-enum-repr = "0.2.6"
+crosschain-swaps = { path = "../crosschain-swaps", features = ["imported"]}
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }
-osmosis-testing = { workspace = true }
