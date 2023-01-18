@@ -43,13 +43,11 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().NoError(err)
 
 	// assert contents of the pool are valid
-	s.Require().True(
-		concentratedPool.GetId() == poolID &&
-			concentratedPool.GetToken0() == denom0 &&
-			concentratedPool.GetToken1() == denom1 &&
-			concentratedPool.GetTickSpacing() == tickSpacing &&
-			concentratedPool.GetPrecisionFactorAtPriceOne() == sdk.NewInt(precisionFactorAtPriceOne),
-	)
+	s.Require().Equal(concentratedPool.GetId(), poolID)
+	s.Require().Equal(concentratedPool.GetToken0(), denom0)
+	s.Require().Equal(concentratedPool.GetToken1(), denom1)
+	s.Require().Equal(concentratedPool.GetTickSpacing(), tickSpacing)
+	s.Require().Equal(concentratedPool.GetPrecisionFactorAtPriceOne(), sdk.NewInt(precisionFactorAtPriceOne))
 }
 
 // TestGeometricTwapMigration tests that the geometric twap record
