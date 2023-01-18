@@ -30,8 +30,8 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	node, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
 
-	concentratedPool := node.CreateConcentratedPool(initialization.ValidatorWalletName, "uosmo", "gamm/pool/1", 1, -1)
-	fmt.Println("CONCENTRATED POOL: ", concentratedPool)
+	poolID := node.CreateConcentratedPool(initialization.ValidatorWalletName, "uosmo", "uion", 1, -1)
+	fmt.Println("Concentrated Pool ID: ", poolID)
 }
 
 // TestGeometricTwapMigration tests that the geometric twap record

@@ -42,7 +42,7 @@ func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
 	return poolID
 }
 
-func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpacing uint64, exponentAtPriceOne int64) poolmanagertypes.PoolI {
+func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpacing uint64, exponentAtPriceOne int64) uint64 {
 	n.LogActionF("creating concentrated pool")
 
 	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-concentrated-pool", denom1, denom2, fmt.Sprintf("%d", tickSpacing), fmt.Sprintf("[%d]", exponentAtPriceOne), fmt.Sprintf("--from=%s", from)}
@@ -63,8 +63,9 @@ func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpa
 	anyPool := pools.Pools[len(pools.Pools)-1]
 	err = util.Cdc.UnpackAny(anyPool, &createdPool)
 	require.NoError(n.t, err)
-	return createdPool
+	return createdPool.GetId()
 }
+
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 	n.LogActionF("storing wasm code from file %s", wasmFile)
 	cmd := []string{"osmosisd", "tx", "wasm", "store", wasmFile, fmt.Sprintf("--from=%s", from), "--gas=auto", "--gas-prices=0.1uosmo", "--gas-adjustment=1.3"}
