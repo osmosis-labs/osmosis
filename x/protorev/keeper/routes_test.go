@@ -94,7 +94,7 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 			expected: [][]TestRoute{
 				{
 					{PoolId: 29, InputDenom: types.OsmosisDenomination, OutputDenom: "usdc"},
-					{PoolId: 34, InputDenom: "usdc", OutputDenom: "busd"},
+					{PoolId: 40, InputDenom: "usdc", OutputDenom: "busd"},
 					{PoolId: 30, InputDenom: "busd", OutputDenom: types.OsmosisDenomination},
 				},
 			},
@@ -334,21 +334,21 @@ func (suite *KeeperTestSuite) TestCheckAndUpdateRouteState() {
 		},
 		{
 			description:                 "Valid route containing only stable swap pools",
-			route:                       []poolmanagertypes.SwapAmountInRoute{{PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}},
+			route:                       []poolmanagertypes.SwapAmountInRoute{{PoolId: 40, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}},
 			maxPoolPoints:               10,
 			expectedRemainingPoolPoints: 1,
 			expectedPass:                true,
 		},
 		{
 			description:                 "Valid route with more than 3 hops",
-			route:                       []poolmanagertypes.SwapAmountInRoute{{PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}, {PoolId: 1, TokenOutDenom: ""}},
+			route:                       []poolmanagertypes.SwapAmountInRoute{{PoolId: 40, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 1, TokenOutDenom: ""}},
 			maxPoolPoints:               12,
 			expectedRemainingPoolPoints: 1,
 			expectedPass:                true,
 		},
 		{
 			description:                 "Valid route with more than 3 hops",
-			route:                       []poolmanagertypes.SwapAmountInRoute{{PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}, {PoolId: 1, TokenOutDenom: ""}, {PoolId: 2, TokenOutDenom: ""}, {PoolId: 3, TokenOutDenom: ""}},
+			route:                       []poolmanagertypes.SwapAmountInRoute{{PoolId: 40, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 1, TokenOutDenom: ""}, {PoolId: 2, TokenOutDenom: ""}, {PoolId: 3, TokenOutDenom: ""}},
 			maxPoolPoints:               12,
 			expectedRemainingPoolPoints: 12,
 			expectedPass:                false,

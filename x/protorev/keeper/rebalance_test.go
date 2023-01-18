@@ -101,13 +101,49 @@ var routeStableSwap = poolmanagertypes.SwapAmountInRoutes{
 		TokenOutDenom: "usdc",
 	},
 	poolmanagertypes.SwapAmountInRoute{
-		PoolId:        34,
+		PoolId:        40,
 		TokenOutDenom: "busd",
 	},
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        30,
 		TokenOutDenom: "uosmo",
 	}}
+
+// Four Pool Test Route (Mainnet Block: 1855422)
+// expectedAmtIn:  sdk.NewInt(1_147_000_000)
+// expectedProfit: sdk.NewInt(15_761_405)
+var fourPoolRoute = poolmanagertypes.SwapAmountInRoutes{
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        34,
+		TokenOutDenom: "test/1",
+	},
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        35,
+		TokenOutDenom: types.OsmosisDenomination,
+	},
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        36,
+		TokenOutDenom: "test/2",
+	},
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        37,
+		TokenOutDenom: types.AtomDenomination,
+	},
+}
+
+// Two Pool Test Route (Mainnet Block: 6_300_675)
+// expectedAmtIn:  sdk.NewInt(989_000_000)
+// expectedProfit: sdk.NewInt(218_149_058)
+var twoPoolRoute = poolmanagertypes.SwapAmountInRoutes{
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        38,
+		TokenOutDenom: types.OsmosisDenomination,
+	},
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        39,
+		TokenOutDenom: "test/3",
+	},
+}
 
 func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
 
@@ -158,6 +194,18 @@ func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
 				expectedAmtIn:  sdk.Int{},
 				expectedProfit: sdk.NewInt(0)},
 			expectPass: true},
+		{name: "Four Pool Test Route",
+			param: param{
+				route:          fourPoolRoute,
+				expectedAmtIn:  sdk.NewInt(1_147_000_000),
+				expectedProfit: sdk.NewInt(15_761_405)},
+			expectPass: true},
+		{name: "Two Pool Test Route",
+			param: param{
+				route:          twoPoolRoute,
+				expectedAmtIn:  sdk.NewInt(989_000_000),
+				expectedProfit: sdk.NewInt(218_149_058)},
+			expectPass: true},
 	}
 
 	for _, test := range tests {
@@ -166,7 +214,7 @@ func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
 			amtIn, profit, err := suite.App.ProtoRevKeeper.FindMaxProfitForRoute(
 				suite.Ctx,
 				test.param.route,
-				test.param.route[2].TokenOutDenom,
+				test.param.route[len(test.param.route)-1].TokenOutDenom,
 			)
 
 			if test.expectPass {
@@ -189,10 +237,11 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 	}
 
 	tests := []struct {
-		name       string
-		param      param
-		arbDenom   string
-		expectPass bool
+		name                string
+		param               param
+		arbDenom            string
+		expectPass          bool
+		expectedNumOfTrades sdk.Int
 	}{
 		{
 			name: "Mainnet Arb Route",
@@ -201,8 +250,9 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 				inputCoin:      sdk.NewCoin("uosmo", sdk.NewInt(10100000)),
 				expectedProfit: sdk.NewInt(24852),
 			},
-			arbDenom:   types.OsmosisDenomination,
-			expectPass: true,
+			arbDenom:            types.OsmosisDenomination,
+			expectPass:          true,
+			expectedNumOfTrades: sdk.NewInt(1),
 		},
 		{
 			name: "No arbitrage opportunity - expect error at multihopswap due to profitability invariant",
@@ -223,6 +273,28 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 			},
 			arbDenom:   types.OsmosisDenomination,
 			expectPass: false,
+		},
+		{
+			name: "4-Pool Route Arb",
+			param: param{
+				route:          fourPoolRoute,
+				inputCoin:      sdk.NewCoin(types.AtomDenomination, sdk.NewInt(1_147_000_000)),
+				expectedProfit: sdk.NewInt(15_761_405),
+			},
+			arbDenom:            types.AtomDenomination,
+			expectPass:          true,
+			expectedNumOfTrades: sdk.NewInt(2),
+		},
+		{
+			name: "2-Pool Route Arb",
+			param: param{
+				route:          twoPoolRoute,
+				inputCoin:      sdk.NewCoin("test/3", sdk.NewInt(989_000_000)),
+				expectedProfit: sdk.NewInt(218_149_058),
+			},
+			arbDenom:            "test/3",
+			expectPass:          true,
+			expectedNumOfTrades: sdk.NewInt(3),
 		},
 	}
 
@@ -252,7 +324,7 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 
 			totalNumberOfTrades, err := suite.App.ProtoRevKeeper.GetNumberOfTrades(suite.Ctx)
 			suite.Require().NoError(err)
-			suite.Require().Equal(sdk.OneInt(), totalNumberOfTrades)
+			suite.Require().Equal(test.expectedNumOfTrades, totalNumberOfTrades)
 		} else {
 			suite.Require().Error(err)
 		}
@@ -311,6 +383,26 @@ func (suite *KeeperTestSuite) TestIterateRoutes() {
 				expectedMaxProfitInputCoin: sdk.NewCoin(types.AtomDenomination, sdk.NewInt(4000000)),
 				expectedOptimalRoute:       routeDiffDenom,
 				arbDenom:                   types.AtomDenomination,
+			},
+			expectPass: true,
+		},
+		{name: "Four-pool route test",
+			params: paramm{
+				routes:                     []poolmanagertypes.SwapAmountInRoutes{fourPoolRoute},
+				expectedMaxProfitAmount:    sdk.NewInt(13_202_729),
+				expectedMaxProfitInputCoin: sdk.NewCoin(types.AtomDenomination, sdk.NewInt(1_147_000_000)),
+				expectedOptimalRoute:       fourPoolRoute,
+				arbDenom:                   types.AtomDenomination,
+			},
+			expectPass: true,
+		},
+		{name: "Two-pool route test",
+			params: paramm{
+				routes:                     []poolmanagertypes.SwapAmountInRoutes{twoPoolRoute},
+				expectedMaxProfitAmount:    sdk.NewInt(198_653_535),
+				expectedMaxProfitInputCoin: sdk.NewCoin("test/3", sdk.NewInt(989_000_000)),
+				expectedOptimalRoute:       twoPoolRoute,
+				arbDenom:                   "test/3",
 			},
 			expectPass: true,
 		},

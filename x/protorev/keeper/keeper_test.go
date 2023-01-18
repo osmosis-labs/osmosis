@@ -92,6 +92,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 			Denom:    types.AtomDenomination,
 			StepSize: sdk.NewInt(1_000_000),
 		},
+		{
+			Denom:    "test/3",
+			StepSize: sdk.NewInt(1_000_000),
+		},
 	}
 	suite.App.ProtoRevKeeper.SetBaseDenoms(suite.Ctx, baseDenomPriorities)
 
@@ -120,6 +124,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 		sdk.NewCoin("usdt", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("busd", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293", sdk.NewInt(9000000000000000000)),
+		sdk.NewCoin("test/1", sdk.NewInt(9000000000000000000)),
+		sdk.NewCoin("test/2", sdk.NewInt(9000000000000000000)),
+		sdk.NewCoin("test/3", sdk.NewInt(9000000000000000000)),
 	)
 	suite.fundAllAccountsWith()
 	suite.Commit()
@@ -668,6 +675,96 @@ func (suite *KeeperTestSuite) setUpPools() {
 			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  33,
 		},
+		{ // Pool 34
+			PoolAssets: []balancertypes.PoolAsset{
+				{
+					Token:  sdk.NewCoin(types.AtomDenomination, sdk.NewInt(364647340206)),
+					Weight: sdk.NewInt(1),
+				},
+				{
+					Token:  sdk.NewCoin("test/1", sdk.NewInt(1569764554938)),
+					Weight: sdk.NewInt(1),
+				},
+			},
+			SwapFee: sdk.NewDecWithPrec(3, 3),
+			ExitFee: sdk.NewDecWithPrec(0, 2),
+			PoolId:  34,
+		},
+		{ // Pool 35
+			PoolAssets: []balancertypes.PoolAsset{
+				{
+					Token:  sdk.NewCoin("test/1", sdk.NewInt(1026391517901)),
+					Weight: sdk.NewInt(1),
+				},
+				{
+					Token:  sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(1694086377216)),
+					Weight: sdk.NewInt(1),
+				},
+			},
+			SwapFee: sdk.NewDecWithPrec(2, 3),
+			ExitFee: sdk.NewDecWithPrec(0, 2),
+			PoolId:  35,
+		},
+		{ // Pool 36
+			PoolAssets: []balancertypes.PoolAsset{
+				{
+					Token:  sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(2774812791932)),
+					Weight: sdk.NewInt(1),
+				},
+				{
+					Token:  sdk.NewCoin("test/2", sdk.NewInt(1094837653970)),
+					Weight: sdk.NewInt(1),
+				},
+			},
+			SwapFee: sdk.NewDecWithPrec(3, 3),
+			ExitFee: sdk.NewDecWithPrec(0, 2),
+			PoolId:  36,
+		},
+		{ // Pool 37
+			PoolAssets: []balancertypes.PoolAsset{
+				{
+					Token:  sdk.NewCoin(types.AtomDenomination, sdk.NewInt(406165719545)),
+					Weight: sdk.NewInt(1),
+				},
+				{
+					Token:  sdk.NewCoin("test/2", sdk.NewInt(1095887931673)),
+					Weight: sdk.NewInt(1),
+				},
+			},
+			SwapFee: sdk.NewDecWithPrec(3, 3),
+			ExitFee: sdk.NewDecWithPrec(0, 2),
+			PoolId:  37,
+		},
+		{ // Pool 38
+			PoolAssets: []balancertypes.PoolAsset{
+				{
+					Token:  sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(6111815027)),
+					Weight: sdk.NewInt(1),
+				},
+				{
+					Token:  sdk.NewCoin("test/3", sdk.NewInt(4478366578)),
+					Weight: sdk.NewInt(1),
+				},
+			},
+			SwapFee: sdk.NewDecWithPrec(2, 3),
+			ExitFee: sdk.NewDecWithPrec(0, 2),
+			PoolId:  38,
+		},
+		{ // Pool 39
+			PoolAssets: []balancertypes.PoolAsset{
+				{
+					Token:  sdk.NewCoin("test/3", sdk.NewInt(18631000485558)),
+					Weight: sdk.NewInt(1),
+				},
+				{
+					Token:  sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(17000185817963)),
+					Weight: sdk.NewInt(1),
+				},
+			},
+			SwapFee: sdk.NewDecWithPrec(2, 3),
+			ExitFee: sdk.NewDecWithPrec(0, 2),
+			PoolId:  39,
+		},
 	}
 
 	for _, pool := range suite.pools {
@@ -675,7 +772,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 	}
 
 	suite.stableSwapPools = []StableSwapPool{
-		{ // Pool 34
+		{ // Pool 40
 			initialLiquidity: sdk.NewCoins(
 				sdk.NewCoin("usdc", sdk.NewInt(1000000000000000)),
 				sdk.NewCoin("usdt", sdk.NewInt(1000000000000000)),
@@ -744,13 +841,23 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 
 	// Stableswap Route
 	uosmoUSDC := types.NewTrade(0, types.OsmosisDenomination, "usdc")
-	usdcBUSD := types.NewTrade(34, "usdc", "busd")
+	usdcBUSD := types.NewTrade(40, "usdc", "busd")
 	busdUOSMO := types.NewTrade(30, "busd", types.OsmosisDenomination)
 
 	// Atom Route
 	atomIBC1 := types.NewTrade(31, types.AtomDenomination, "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC")
 	ibc1IBC2 := types.NewTrade(32, "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC", "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293")
 	ibc2ATOM := types.NewTrade(0, "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293", types.AtomDenomination)
+
+	// Four-Pool Route
+	fourPool0 := types.NewTrade(34, types.AtomDenomination, "test/1")
+	fourPool1 := types.NewTrade(35, "test/1", types.OsmosisDenomination)
+	fourPool2 := types.NewTrade(36, types.OsmosisDenomination, "test/2")
+	fourPool3 := types.NewTrade(0, "test/2", types.AtomDenomination)
+
+	// Two-Pool Route
+	twoPool0 := types.NewTrade(0, "test/3", types.OsmosisDenomination)
+	twoPool1 := types.NewTrade(39, types.OsmosisDenomination, "test/3")
 
 	suite.tokenPairArbRoutes = []*types.TokenPairArbRoutes{
 		{
@@ -777,6 +884,24 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 			ArbRoutes: []*types.Route{
 				{
 					Trades: []*types.Trade{&atomIBC1, &ibc1IBC2, &ibc2ATOM},
+				},
+			},
+		},
+		{
+			TokenIn:  types.AtomDenomination,
+			TokenOut: "test/2",
+			ArbRoutes: []*types.Route{
+				{
+					Trades: []*types.Trade{&fourPool0, &fourPool1, &fourPool2, &fourPool3},
+				},
+			},
+		},
+		{
+			TokenIn:  types.OsmosisDenomination,
+			TokenOut: "test/3",
+			ArbRoutes: []*types.Route{
+				{
+					Trades: []*types.Trade{&twoPool0, &twoPool1},
 				},
 			},
 		},

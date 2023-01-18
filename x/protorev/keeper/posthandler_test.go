@@ -185,6 +185,82 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 			},
 			expectPass: true,
 		},
+		{
+			name: "Four Pool Arb Route - Hot Route Build",
+			params: param{
+				msgs: []sdk.Msg{
+					&poolmanagertypes.MsgSwapExactAmountIn{
+						Sender: addr0.String(),
+						Routes: []poolmanagertypes.SwapAmountInRoute{
+							{
+								PoolId:        37,
+								TokenOutDenom: "test/2",
+							},
+						},
+						TokenIn:           sdk.NewCoin(types.AtomDenomination, sdk.NewInt(10000)),
+						TokenOutMinAmount: sdk.NewInt(100),
+					},
+				},
+				txFee:               sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))),
+				minGasPrices:        sdk.NewDecCoins(),
+				gasLimit:            500000,
+				isCheckTx:           false,
+				baseDenomGas:        true,
+				expectedNumOfTrades: sdk.NewInt(4),
+				expectedProfits: []*sdk.Coin{
+					{
+						Denom:  types.AtomDenomination,
+						Amount: sdk.NewInt(15_767_231),
+					},
+					{
+						Denom:  types.OsmosisDenomination,
+						Amount: sdk.NewInt(56_609_900),
+					},
+				},
+				expectedPoolPoints: 47,
+			},
+			expectPass: true,
+		},
+		{
+			name: "Two Pool Arb Route - Hot Route Build",
+			params: param{
+				msgs: []sdk.Msg{
+					&poolmanagertypes.MsgSwapExactAmountIn{
+						Sender: addr0.String(),
+						Routes: []poolmanagertypes.SwapAmountInRoute{
+							{
+								PoolId:        38,
+								TokenOutDenom: "test/3",
+							},
+						},
+						TokenIn:           sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000)),
+						TokenOutMinAmount: sdk.NewInt(100),
+					},
+				},
+				txFee:               sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))),
+				minGasPrices:        sdk.NewDecCoins(),
+				gasLimit:            500000,
+				isCheckTx:           false,
+				baseDenomGas:        true,
+				expectedNumOfTrades: sdk.NewInt(5),
+				expectedProfits: []*sdk.Coin{
+					{
+						Denom:  types.AtomDenomination,
+						Amount: sdk.NewInt(15_767_231),
+					},
+					{
+						Denom:  types.OsmosisDenomination,
+						Amount: sdk.NewInt(56_609_900),
+					},
+					{
+						Denom:  "test/3",
+						Amount: sdk.NewInt(218_149_058),
+					},
+				},
+				expectedPoolPoints: 51,
+			},
+			expectPass: true,
+		},
 	}
 
 	// Ensure that the max points per tx is enough for the test suite
