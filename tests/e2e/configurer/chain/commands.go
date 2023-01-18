@@ -47,12 +47,12 @@ func (n *NodeConfig) CreateConcentratedPool(from string) poolmanagertypes.PoolI 
 
 	var (
 		denom1             = "uosmo"
-		denom2             = "uion"
+		denom2             = "gamm/pool/1"
 		tickSpacing        = 1
 		exponentAtPriceOne = -1
 	)
 
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-concentrated-pool", denom1, denom2, fmt.Sprintf("%d", tickSpacing), fmt.Sprintf("%d", exponentAtPriceOne), fmt.Sprintf("--from=%s", from)}
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-concentrated-pool", denom1, denom2, fmt.Sprintf("%d", tickSpacing), fmt.Sprintf("[%d]", exponentAtPriceOne), fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
