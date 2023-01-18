@@ -42,6 +42,14 @@ func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpa
 	return poolID
 }
 
+func (n *NodeConfig) CreatePosition(from string, lowerTick, upperTick int64, token0, token1 string, token0MinAmt, token1MinAmt int64, poolId uint64) {
+	n.LogActionF("creating a concentrated position")
+
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", fmt.Sprintf("%d", lowerTick), fmt.Sprintf("%d", upperTick), token0, token1, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+}
+
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 	n.LogActionF("storing wasm code from file %s", wasmFile)
 	cmd := []string{"osmosisd", "tx", "wasm", "store", wasmFile, fmt.Sprintf("--from=%s", from), "--gas=auto", "--gas-prices=0.1uosmo", "--gas-adjustment=1.3"}
