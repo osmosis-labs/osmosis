@@ -86,7 +86,6 @@ func TickToSqrtPrice(tickIndex, exponentAtPriceOne sdk.Int) (price sdk.Dec, err 
 	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
 		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
 	}
-	fmt.Printf("price: %s \n", price.String())
 
 	// Determine the sqrtPrice from the price
 	sqrtPrice, err := price.ApproxSqrt()
@@ -169,7 +168,7 @@ func PriceToTick(price sdk.Dec, exponentAtPriceOne sdk.Int) (sdk.Int, error) {
 	return tickIndex, nil
 }
 
-// handleNegativeExponents treats negative exponents as 1/(10**|exponent|) instead of 10**-exponent
+// powTen treats negative exponents as 1/(10**|exponent|) instead of 10**-exponent
 // This is because the sdk.Dec.Power function does not support negative exponents
 func powTen(exponent sdk.Int) sdk.Dec {
 	if exponent.GTE(sdk.ZeroInt()) {

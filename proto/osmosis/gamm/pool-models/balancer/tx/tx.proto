@@ -46,7 +46,6 @@ message MsgMigrateSharesToFullRangeConcentratedPosition {
   uint64 pool_id_entering = 3;
 }
 
-// Returns the poolID
 message MsgMigrateSharesToFullRangeConcentratedPositionResponse {
   string amount0 = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",

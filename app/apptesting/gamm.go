@@ -16,8 +16,6 @@ var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
 	sdk.NewCoin("foo", sdk.NewInt(10000000)),
 	sdk.NewCoin("bar", sdk.NewInt(10000000)),
 	sdk.NewCoin("baz", sdk.NewInt(10000000)),
-	sdk.NewCoin("eth", sdk.NewInt(10000000)),
-	sdk.NewCoin("usdc", sdk.NewInt(10000000)),
 )
 
 var DefaultPoolAssets = []balancer.PoolAsset{
