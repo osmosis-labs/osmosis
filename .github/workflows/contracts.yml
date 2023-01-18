@@ -40,7 +40,7 @@ jobs:
             --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
             --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
             cosmwasm/workspace-optimizer:0.12.10
-        if: env.GIT_DIFF
+        if: env.GIT_DIFF && matrix.run == '1'
 
       - name: 'Upload optimized contract artifact'
         uses: actions/upload-artifact@v3
