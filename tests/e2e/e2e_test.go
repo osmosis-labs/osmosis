@@ -25,6 +25,15 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
 )
 
+func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
+	chainA := s.configurer.GetChainConfig(0)
+	node, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
+
+	concentratedPool := node.CreateConcentratedPool(initialization.ValidatorWalletName)
+	fmt.Println("CONCENTRATED POOL: ", concentratedPool)
+}
+
 // TestGeometricTwapMigration tests that the geometric twap record
 // migration runs succesfully. It does so by attempting to execute
 // the swap on the pool created pre-upgrade. When a pool is created
