@@ -313,7 +313,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 
 			sqrtPrice, err := math.TickToSqrtPrice(tick, tc.exponentAtPriceOne)
 			price := sqrtPrice.Power(2)
-			deltaPrice, _ := tc.price.SafeSub(price)
+			deltaPrice := tc.price.Sub(price).Abs()
 
 			roundingTolerance := sdk.MustNewDecFromStr("0.0001")
 			suite.Require().True(deltaPrice.LTE(roundingTolerance))
