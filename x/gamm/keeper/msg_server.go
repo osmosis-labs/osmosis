@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -49,8 +48,8 @@ func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.
 }
 
 func (server msgServer) MigrateSharesToFullRangeConcentratedPosition(goCtx context.Context, msg *balancer.MsgMigrateSharesToFullRangeConcentratedPosition) (*balancer.MsgMigrateSharesToFullRangeConcentratedPositionResponse, error) {
-	err := server.MigrateShares(goCtx, msg)
-	return &balancer.MsgMigrateSharesToFullRangeConcentratedPositionResponse{}, err
+	amount0, amount1, liquidity, err := server.MigrateShares(goCtx, msg)
+	return &balancer.MsgMigrateSharesToFullRangeConcentratedPositionResponse{Amount0: amount0, Amount1: amount1, LiquidityCreated: liquidity}, err
 }
 
 func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stableswap.MsgCreateStableswapPool) (*stableswap.MsgCreateStableswapPoolResponse, error) {
@@ -317,36 +316,36 @@ func (server msgServer) ExitSwapShareAmountIn(goCtx context.Context, msg *types.
 	return &types.MsgExitSwapShareAmountInResponse{TokenOutAmount: tokenOutAmount}, nil
 }
 
-func (server msgServer) MigrateShares(goCtx context.Context, msg *balancer.MsgMigrateSharesToFullRangeConcentratedPosition) (err error) {
+func (server msgServer) MigrateShares(goCtx context.Context, msg *balancer.MsgMigrateSharesToFullRangeConcentratedPosition) (amount0, amount1 sdk.Int, liquidity sdk.Dec, err error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	fmt.Printf("pre sender err \n")
 	if err != nil {
-		return err
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
-	exitCoins, err := server.keeper.ExitPool(ctx, sender, msg.PoolIdLeaving, msg.SharesToMigrate.Amount, sdk.NewCoins())
-	fmt.Printf("exitCoins %v \n", exitCoins.String())
+	// get poolId we are leaving from the provided gamm share
+	poolIdLeaving, err := GetPoolIdFromSharesDenom(msg.SharesToMigrate.Denom)
 	if err != nil {
-		return err
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+	}
+
+	exitCoins, err := server.keeper.ExitPool(ctx, sender, poolIdLeaving, msg.SharesToMigrate.Amount, sdk.NewCoins())
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
 	pool, err := server.keeper.clKeeper.GetPoolById(ctx, msg.PoolIdEntering)
-	fmt.Printf("pre pool err \n")
 	if err != nil {
-		return err
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
 	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(pool.GetPrecisionFactorAtPriceOne())
-	fmt.Printf("minTick %v \n", minTick)
-	fmt.Printf("maxTick %v \n", maxTick)
 
-	_, _, liq, err := server.keeper.clKeeper.CreatePosition(ctx, msg.PoolIdEntering, sender, exitCoins.AmountOf(pool.GetToken0()), exitCoins.AmountOf(pool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), minTick, maxTick)
+	amount0, amount1, liquidity, err = server.keeper.clKeeper.CreatePosition(ctx, msg.PoolIdEntering, sender, exitCoins.AmountOf(pool.GetToken0()), exitCoins.AmountOf(pool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), minTick, maxTick)
 	if err != nil {
-		return err
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
-	fmt.Printf("liq %v \n", liq)
 
 	// poolId, err = server.keeper.poolManager.CreatePool(ctx, msg)
 	// if err != nil {
@@ -365,5 +364,5 @@ func (server msgServer) MigrateShares(goCtx context.Context, msg *balancer.MsgMi
 	// 	),
 	// })
 
-	return nil
+	return amount0, amount1, liquidity, err
 }

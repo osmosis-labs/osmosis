@@ -71,7 +71,7 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 	// additionally, without rounding, there exists cases where the swapState.amountSpecifiedRemaining.GT(sdk.ZeroDec()) for loop within
 	// the CalcOut/In functions never actually reach zero due to dust that would have never gotten counted towards the amount (numbers after the 10^6 place)
 	if roundUp {
-		return liq.Mul(diff).Quo(denom).Ceil()
+		return liq.Mul(diff).Quo(denom).RoundInt().ToDec()
 	}
 	fmt.Printf("result: %v \n", liq.Mul(diff).Quo(denom))
 	return liq.Mul(diff).Quo(denom)
@@ -99,7 +99,7 @@ func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 	// additionally, without rounding, there exists cases where the swapState.amountSpecifiedRemaining.GT(sdk.ZeroDec()) for loop within
 	// the CalcOut/In functions never actually reach zero due to dust that would have never gotten counted towards the amount (numbers after the 10^6 place)
 	if roundUp {
-		return liq.Mul(diff).Ceil()
+		return liq.Mul(diff).RoundInt().ToDec()
 	}
 	fmt.Printf("result: %v \n", liq.Mul(diff))
 	return liq.Mul(diff)

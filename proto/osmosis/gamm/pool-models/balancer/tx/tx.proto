@@ -42,12 +42,25 @@ message MsgMigrateSharesToFullRangeConcentratedPosition {
     (gogoproto.moretags) = "yaml:\"shares_to_migrate\"",
     (gogoproto.nullable) = false
   ];
-
-  // temporary field, will discern pool id from shares in future
-  uint64 pool_id_leaving = 3;
-  // temporary field, will discern pool id from shares in future
-  uint64 pool_id_entering = 4;
+  // temporary field, eventually gamm pool should be linked to cl pool
+  uint64 pool_id_entering = 3;
 }
 
 // Returns the poolID
-message MsgMigrateSharesToFullRangeConcentratedPositionResponse {}
+message MsgMigrateSharesToFullRangeConcentratedPositionResponse {
+  string amount0 = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"amount0\"",
+    (gogoproto.nullable) = false
+  ];
+  string amount1 = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"amount1\"",
+    (gogoproto.nullable) = false
+  ];
+  string liquidity_created = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"liquidity_created\"",
+    (gogoproto.nullable) = false
+  ];
+}

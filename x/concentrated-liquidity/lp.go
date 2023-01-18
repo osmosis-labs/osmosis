@@ -24,8 +24,6 @@ import (
 // - the pool or user does not have enough tokens to satisfy the requested amount
 func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (sdk.Int, sdk.Int, sdk.Dec, error) {
 	// Retrieve the pool associated with the given pool ID.
-	fmt.Printf("amount0Desired: %s \n", amount0Desired.String())
-	fmt.Printf("amount1Desired: %s \n", amount1Desired.String())
 	pool, err := k.GetPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
