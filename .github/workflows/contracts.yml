@@ -12,7 +12,7 @@ on:
 
 jobs:
   test:
-    name: Test Cosmwasm Contracts
+    name: Optimize Cosmwasm Contracts
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -28,26 +28,10 @@ jobs:
       - uses: technote-space/get-diff-action@v6.0.1
         with:
           PATTERNS: |
+            **/**/*.wasm
             **/**.rs
             **/**Cargo.toml
             **/**Cargo.lock
-      - name: Install toolchain
-        uses: dtolnay/rust-toolchain@1.65.0
-        with:
-          target: wasm32-unknown-unknown
-        if: env.GIT_DIFF
-
-      - name: Add the wasm target
-        working-directory: ${{ matrix.contract.workdir }}
-        run: >
-          rustup target add wasm32-unknown-unknown;
-        if: env.GIT_DIFF
-
-      - name: Test
-        working-directory: ${{ matrix.contract.workdir }}
-        run: >
-          cargo test
-        if: env.GIT_DIFF
 
       - name: Optimize
         working-directory: ${{ matrix.contract.workdir }}
@@ -79,7 +63,46 @@ jobs:
         if: env.GIT_DIFF
         run: >
           diff "${GITHUB_WORKSPACE}/${{ matrix.contract.bytecode }}" ${{ matrix.contract.build }}
-  
+
+  tests:
+    name: Test Cosmwasm Contracts
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        contract: [
+          {workdir: ./x/ibc-rate-limit/, bytecode: x/ibc-rate-limit/bytecode/rate_limiter.wasm, build: artifacts/rate_limiter.wasm, name: rate_limiter},
+          {workdir: ./x/ibc-hooks/, bytecode: tests/ibc-hooks/bytecode/crosschain_swaps.wasm, build: artifacts/crosschain_swaps.wasm, name: crosschain_swaps},
+          {workdir: ./x/ibc-hooks/, bytecode: tests/ibc-hooks/bytecode/swaprouter.wasm, build: artifacts/swaprouter.wasm, name: swaprouter},
+        ]
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+      - uses: technote-space/get-diff-action@v6.0.1
+        with:
+          PATTERNS: |
+            **/bytecode/*.wasm
+            **/**.rs
+            **/**Cargo.toml
+            **/**Cargo.lock
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@1.65.0
+        with:
+          target: wasm32-unknown-unknown
+        if: env.GIT_DIFF
+
+      - name: Add the wasm target
+        working-directory: ${{ matrix.contract.workdir }}
+        run: >
+          rustup target add wasm32-unknown-unknown;
+        if: env.GIT_DIFF
+
+      - name: Test
+        working-directory: ${{ matrix.contract.workdir }}
+        run: >
+          cargo test
+        if: env.GIT_DIFF
+
 
   lints:
     name: Cosmwasm Lints
