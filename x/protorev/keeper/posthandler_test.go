@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"strings"
+
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -261,6 +263,46 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 			},
 			expectPass: true,
 		},
+		{
+			name: "Doomsday Test - Stableswap",
+			params: param{
+				msgs: []sdk.Msg{
+					&poolmanagertypes.MsgSwapExactAmountIn{
+						Sender: addr0.String(),
+						Routes: []poolmanagertypes.SwapAmountInRoute{
+							{
+								PoolId:        41,
+								TokenOutDenom: "usdc",
+							},
+						},
+						TokenIn:           sdk.NewCoin("busd", sdk.NewInt(10000)),
+						TokenOutMinAmount: sdk.NewInt(100),
+					},
+				},
+				txFee:               sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))),
+				minGasPrices:        sdk.NewDecCoins(),
+				gasLimit:            500000,
+				isCheckTx:           false,
+				baseDenomGas:        true,
+				expectedNumOfTrades: sdk.NewInt(6),
+				expectedProfits: []*sdk.Coin{
+					{
+						Denom:  types.AtomDenomination,
+						Amount: sdk.NewInt(15_767_231),
+					},
+					{
+						Denom:  types.OsmosisDenomination,
+						Amount: sdk.NewInt(56_609_900),
+					},
+					{
+						Denom:  "test/3",
+						Amount: sdk.NewInt(218_149_058),
+					},
+				},
+				expectedPoolPoints: 91,
+			},
+			expectPass: true,
+		},
 	}
 
 	// Ensure that the max points per tx is enough for the test suite
@@ -272,7 +314,6 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 			suite.Ctx = suite.Ctx.WithIsCheckTx(tc.params.isCheckTx)
 			suite.Ctx = suite.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 			suite.Ctx = suite.Ctx.WithMinGasPrices(tc.params.minGasPrices)
-			msgs := tc.params.msgs
 
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0}, []uint64{0}, []uint64{0}
 			signerData := authsigning.SignerData{
@@ -290,7 +331,25 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				accSeqs[0],
 			)
 			simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, tc.params.txFee)
-			tx := suite.BuildTx(txBuilder, msgs, sigV2, "", tc.params.txFee, gasLimit)
+
+			var tx authsigning.Tx
+			var msgs []sdk.Msg
+			if strings.Contains(tc.name, "Doomsday") {
+				for i := 0; i < 100; i++ {
+					msgs = append(msgs, tc.params.msgs...)
+				}
+
+				txBuilder.SetMsgs(msgs...)
+				txBuilder.SetSignatures(sigV2)
+				txBuilder.SetMemo("")
+				txBuilder.SetFeeAmount(tc.params.txFee)
+				txBuilder.SetGasLimit(gasLimit)
+				tx = txBuilder.GetTx()
+			} else {
+				msgs = tc.params.msgs
+				tx = suite.BuildTx(txBuilder, msgs, sigV2, "", tc.params.txFee, gasLimit)
+			}
+
 			protoRevDecorator := keeper.NewProtoRevDecorator(*suite.App.ProtoRevKeeper)
 			posthandlerProtoRev := sdk.ChainAnteDecorators(protoRevDecorator)
 

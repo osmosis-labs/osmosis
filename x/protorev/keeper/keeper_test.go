@@ -783,7 +783,20 @@ func (suite *KeeperTestSuite) setUpPools() {
 				ExitFee: sdk.NewDecWithPrec(0, 2),
 			},
 			scalingFactors: []uint64{1, 1, 1},
-		}}
+		},
+		{ // Pool 41 - Used for doomsday testing
+			initialLiquidity: sdk.NewCoins(
+				sdk.NewCoin("usdc", sdk.NewInt(5000)),
+				sdk.NewCoin("usdt", sdk.NewInt(5000)),
+				sdk.NewCoin("busd", sdk.NewInt(5000)),
+			),
+			poolParams: stableswap.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(1, 4),
+				ExitFee: sdk.NewDecWithPrec(0, 2),
+			},
+			scalingFactors: []uint64{1, 1, 1},
+		},
+	}
 
 	for _, pool := range suite.stableSwapPools {
 		suite.createStableswapPool(pool.initialLiquidity, pool.poolParams, pool.scalingFactors)
@@ -859,6 +872,11 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 	twoPool0 := types.NewTrade(0, "test/3", types.OsmosisDenomination)
 	twoPool1 := types.NewTrade(39, types.OsmosisDenomination, "test/3")
 
+	// Doomsday Route - Stableswap
+	doomsdayStable0 := types.NewTrade(29, types.OsmosisDenomination, "usdc")
+	doomsdayStable1 := types.NewTrade(0, "usdc", "busd")
+	doomsdayStable2 := types.NewTrade(30, "busd", types.OsmosisDenomination)
+
 	suite.tokenPairArbRoutes = []*types.TokenPairArbRoutes{
 		{
 			TokenIn:  "akash",
@@ -902,6 +920,15 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 			ArbRoutes: []*types.Route{
 				{
 					Trades: []*types.Trade{&twoPool0, &twoPool1},
+				},
+			},
+		},
+		{
+			TokenIn:  "busd",
+			TokenOut: "usdc",
+			ArbRoutes: []*types.Route{
+				{
+					Trades: []*types.Trade{&doomsdayStable0, &doomsdayStable1, &doomsdayStable2},
 				},
 			},
 		},
