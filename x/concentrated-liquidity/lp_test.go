@@ -952,7 +952,7 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			s.Require().Nil(position)
 
 			// 4. Check that pool has come back to original state
-			poolAfter, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, poolID)
+			poolAfter, err := clKeeper.GetPool(s.Ctx, poolID)
 			s.Require().NoError(err)
 			s.Require().Equal(poolBefore.GetTotalShares(), poolAfter.GetTotalShares())
 			s.Require().Equal(poolBefore.GetTotalPoolLiquidity(s.Ctx), poolAfter.GetTotalPoolLiquidity(s.Ctx))
