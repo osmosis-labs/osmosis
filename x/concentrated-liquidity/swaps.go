@@ -297,8 +297,6 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 
 		// utilizing the next initialized tick, we find the corresponding nextPrice (the target price)
 		nextSqrtPrice, err := math.TickToSqrtPrice(nextTick, p.GetPrecisionFactorAtPriceOne())
-		fmt.Println("******")
-		fmt.Println(nextSqrtPrice.String())
 		if err != nil {
 			return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
 		}
