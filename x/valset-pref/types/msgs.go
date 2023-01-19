@@ -272,6 +272,10 @@ func (m MsgDelegateBondedTokens) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
+	if m.LockID <= 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "lock id should be bigger than 1 (%s)", err)
+	}
+
 	return nil
 }
 
