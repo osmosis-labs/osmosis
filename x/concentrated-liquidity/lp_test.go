@@ -906,7 +906,7 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			// Create a CL pool with custom tickSpacing
 			poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, tc.precisionFactorAtPriceOne))
 			s.Require().NoError(err)
-			poolBefore, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, poolID)
+			poolBefore, err := clKeeper.GetPool(s.Ctx, poolID)
 			s.Require().NoError(err)
 
 			// Pre-set fee growth accumulator
