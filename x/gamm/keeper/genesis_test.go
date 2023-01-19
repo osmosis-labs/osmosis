@@ -39,12 +39,19 @@ func TestGammInitGenesis(t *testing.T) {
 	any, err := codectypes.NewAnyWithValue(&balancerPool)
 	require.NoError(t, err)
 
+	initGenMigrationRecords := types.MigrationRecords{GammToConcentratedPoolLinks: []types.GammToConcentratedPoolLink{
+		{GammPoolId: 1, ClPoolId: 50},
+		{GammPoolId: 2, ClPoolId: 51},
+		{GammPoolId: 3, ClPoolId: 52},
+	}}
+
 	app.GAMMKeeper.InitGenesis(ctx, types.GenesisState{
 		Pools:          []*codectypes.Any{any},
 		NextPoolNumber: 2,
 		Params: types.Params{
 			PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000_000_000)},
 		},
+		MigrationRecords: &initGenMigrationRecords,
 	}, app.AppCodec())
 
 	require.Equal(t, app.PoolManagerKeeper.GetNextPoolId(ctx), uint64(1))
@@ -64,6 +71,9 @@ func TestGammInitGenesis(t *testing.T) {
 
 	liquidity := app.GAMMKeeper.GetTotalLiquidity(ctx)
 	require.Equal(t, liquidity, sdk.Coins{sdk.NewInt64Coin("nodetoken", 10), sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)})
+
+	postInitGenMigrationRecords := app.GAMMKeeper.GetMigrationInfo(ctx)
+	require.Equal(t, initGenMigrationRecords, postInitGenMigrationRecords)
 }
 
 func TestGammExportGenesis(t *testing.T) {
@@ -104,6 +114,14 @@ func TestGammExportGenesis(t *testing.T) {
 	_, err = app.PoolManagerKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
 
+	initGenMigrationRecords := types.MigrationRecords{GammToConcentratedPoolLinks: []types.GammToConcentratedPoolLink{
+		{GammPoolId: 1, ClPoolId: 50},
+		{GammPoolId: 2, ClPoolId: 51},
+		{GammPoolId: 3, ClPoolId: 52},
+	}}
+
+	app.GAMMKeeper.SetMigrationInfo(ctx, initGenMigrationRecords)
+
 	genesis := app.GAMMKeeper.ExportGenesis(ctx)
 	// Note: the next pool number index has been migrated to
 	// poolmanager.
@@ -112,6 +130,7 @@ func TestGammExportGenesis(t *testing.T) {
 	// in a subsequent upgrade.
 	require.Equal(t, genesis.NextPoolNumber, uint64(1))
 	require.Len(t, genesis.Pools, 2)
+	require.Equal(t, genesis.MigrationRecords, &initGenMigrationRecords)
 }
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
@@ -141,6 +160,14 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	}}, "")
 	_, err = app.PoolManagerKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
+
+	initGenMigrationRecords := types.MigrationRecords{GammToConcentratedPoolLinks: []types.GammToConcentratedPoolLink{
+		{GammPoolId: 1, ClPoolId: 50},
+		{GammPoolId: 2, ClPoolId: 51},
+		{GammPoolId: 3, ClPoolId: 52},
+	}}
+
+	app.GAMMKeeper.SetMigrationInfo(ctx, initGenMigrationRecords)
 
 	genesis := am.ExportGenesis(ctx, appCodec)
 	assert.NotPanics(t, func() {

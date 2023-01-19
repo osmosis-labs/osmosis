@@ -24,4 +24,21 @@ message GenesisState {
   // will be renamed to next_pool_id in an upcoming version
   uint64 next_pool_number = 2;
   Params params = 3 [ (gogoproto.nullable) = false ];
+  MigrationRecords migration_records = 4;
+}
+
+// MigrationRecords contains all the links between gamm and concentrated pools
+message MigrationRecords {
+  repeated GammToConcentratedPoolLink gamm_to_concentrated_pool_links = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+// GammToConcentratedPoolLink defines a single link between a single gamm pool
+// and a single concentrated liquidity pool. This link is used to allow a gamm
+// pool to migrate to a single canonical concentrated liquidity pool
+message GammToConcentratedPoolLink {
+  option (gogoproto.equal) = true;
+
+  uint64 gamm_pool_id = 1;
+  uint64 cl_pool_id = 2;
 }
