@@ -55,11 +55,13 @@ func (k Keeper) validateRecords(ctx sdk.Context, records ...types.BalancerToConc
 			return fmt.Errorf("Balancer pool ID #%d is not of type balancer", record.BalancerPoolId)
 		}
 
-		// Ensure the concentrated pool exists
+		// Ensure the concentrated pool exists. If record is 0, its a removal, so we skip this check.
 		// TODO: Get GetPoolType to work for cl pools from gamm
-		_, err = k.poolManager.GetPoolModule(ctx, record.ClPoolId)
-		if err != nil {
-			return err
+		if record.ClPoolId != 0 {
+			_, err = k.poolManager.GetPoolModule(ctx, record.ClPoolId)
+			if err != nil {
+				return err
+			}
 		}
 
 		lastBalancerPoolID = record.BalancerPoolId

@@ -4,7 +4,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 )
 
-func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
+func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 	tests := []struct {
 		name                    string
 		testingMigrationRecords []types.BalancerToConcentratedPoolLink
@@ -114,7 +114,7 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestUpdateDistrRecords() {
+func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 	tests := []struct {
 		name                     string
 		testingMigrationRecords  []types.BalancerToConcentratedPoolLink
