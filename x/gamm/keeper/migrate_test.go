@@ -29,6 +29,21 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 				},
 				{
 					BalancerPoolId: 1,
+					ClPoolId:       4,
+				},
+			},
+			isPoolPrepared: true,
+			expectErr:      true,
+		},
+		{
+			name: "Adding two of the same cl pool id at once should error",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 1,
+					ClPoolId:       3,
+				},
+				{
+					BalancerPoolId: 2,
 					ClPoolId:       3,
 				},
 			},
@@ -120,7 +135,7 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 		testingMigrationRecords  []types.BalancerToConcentratedPoolLink
 		expectedResultingRecords []types.BalancerToConcentratedPoolLink
 		isPoolPrepared           bool
-		isPrexistingRecordsSet   bool
+		isPreexistingRecordsSet  bool
 		expectErr                bool
 	}{
 		{
@@ -129,9 +144,9 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 				BalancerPoolId: 1,
 				ClPoolId:       6,
 			}},
-			isPoolPrepared:         false,
-			isPrexistingRecordsSet: false,
-			expectErr:              true,
+			isPoolPrepared:          false,
+			isPreexistingRecordsSet: false,
+			expectErr:               true,
 		},
 		{
 			name: "Adding two of the same balancer pool ids at once should error",
@@ -142,12 +157,28 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 				},
 				{
 					BalancerPoolId: 1,
+					ClPoolId:       7,
+				},
+			},
+			isPoolPrepared:          true,
+			isPreexistingRecordsSet: true,
+			expectErr:               true,
+		},
+		{
+			name: "Adding two of the same cl pool ids at once should error",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 1,
+					ClPoolId:       6,
+				},
+				{
+					BalancerPoolId: 2,
 					ClPoolId:       6,
 				},
 			},
-			isPoolPrepared:         true,
-			isPrexistingRecordsSet: true,
-			expectErr:              true,
+			isPoolPrepared:          true,
+			isPreexistingRecordsSet: true,
+			expectErr:               true,
 		},
 		{
 			name: "Adding unsorted balancer pools should error",
@@ -161,9 +192,9 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 					ClPoolId:       6,
 				},
 			},
-			isPoolPrepared:         true,
-			isPrexistingRecordsSet: true,
-			expectErr:              true,
+			isPoolPrepared:          true,
+			isPreexistingRecordsSet: true,
+			expectErr:               true,
 		},
 		{
 			name: "Normal case with two records",
@@ -191,9 +222,9 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 					ClPoolId:       7,
 				},
 			},
-			isPoolPrepared:         true,
-			isPrexistingRecordsSet: true,
-			expectErr:              false,
+			isPoolPrepared:          true,
+			isPreexistingRecordsSet: true,
+			expectErr:               false,
 		},
 		{
 			name: "Modify existing record, delete existing record, leave a record alone, add new record",
@@ -225,9 +256,9 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 					ClPoolId:       8,
 				},
 			},
-			isPoolPrepared:         true,
-			isPrexistingRecordsSet: true,
-			expectErr:              false,
+			isPoolPrepared:          true,
+			isPreexistingRecordsSet: true,
+			expectErr:               false,
 		},
 		{
 			name: "Try to set one of the BalancerPoolIds to a cl pool Id",
@@ -241,9 +272,9 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 					ClPoolId:       6,
 				},
 			},
-			isPoolPrepared:         true,
-			isPrexistingRecordsSet: true,
-			expectErr:              true,
+			isPoolPrepared:          true,
+			isPreexistingRecordsSet: true,
+			expectErr:               true,
 		},
 	}
 
@@ -266,7 +297,7 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 				suite.PrepareConcentratedPool()
 			}
 
-			if test.isPrexistingRecordsSet {
+			if test.isPreexistingRecordsSet {
 				// Set up existing records so we can update them
 				existingRecords := []types.BalancerToConcentratedPoolLink{
 					{

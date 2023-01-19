@@ -29,12 +29,20 @@ func (k Keeper) SetMigrationInfo(ctx sdk.Context, migrationInfo types.MigrationR
 func (k Keeper) validateRecords(ctx sdk.Context, records ...types.BalancerToConcentratedPoolLink) error {
 	lastBalancerPoolID := uint64(0)
 	balancerIdFlags := make(map[uint64]bool)
+	clIdFlags := make(map[uint64]bool)
 
 	for _, record := range records {
 		if balancerIdFlags[record.BalancerPoolId] {
 			return fmt.Errorf(
 				"Balancer pool ID #%d has duplications.",
 				record.BalancerPoolId,
+			)
+		}
+
+		if clIdFlags[record.ClPoolId] {
+			return fmt.Errorf(
+				"Concentrated pool ID #%d has duplications.",
+				record.ClPoolId,
 			)
 		}
 
@@ -67,6 +75,7 @@ func (k Keeper) validateRecords(ctx sdk.Context, records ...types.BalancerToConc
 		lastBalancerPoolID = record.BalancerPoolId
 
 		balancerIdFlags[record.BalancerPoolId] = true
+		clIdFlags[record.ClPoolId] = true
 	}
 	return nil
 }
