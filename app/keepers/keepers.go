@@ -36,6 +36,7 @@ import (
 
 	downtimedetector "github.com/osmosis-labs/osmosis/v14/x/downtime-detector"
 	downtimetypes "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/types"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 	"github.com/osmosis-labs/osmosis/v14/x/poolmanager"
@@ -427,7 +428,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(*appKeepers.PoolIncentivesKeeper)).
 		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*appKeepers.TxFeesKeeper)).
 		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*appKeepers.SuperfluidKeeper, *appKeepers.EpochsKeeper, *appKeepers.GAMMKeeper)).
-		AddRoute(protorevtypes.RouterKey, protorev.NewProtoRevProposalHandler(*appKeepers.ProtoRevKeeper))
+		AddRoute(protorevtypes.RouterKey, protorev.NewProtoRevProposalHandler(*appKeepers.ProtoRevKeeper)).
+		AddRoute(gammtypes.RouterKey, gamm.NewMigrationRecordHandler(*appKeepers.GAMMKeeper))
 
 	// The gov proposal types can be individually enabled
 	if len(wasmEnabledProposals) != 0 {
