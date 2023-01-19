@@ -173,22 +173,19 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) err
 	}
 
 	_, err = k.beginUnlock(ctx, *lock, coins)
-	if err != nil {
-		return err
-	}
-	
-	return nil
+	return err
 }
 
 // BeginForceUnlock begins force unlock of the given lock.
 // This method should be called by the superfluid module ONLY, as it does not check whether
 // the lock has a synthetic lock or not before unlocking.
+// Returns lock id, new lock id if the lock was split, else same lock id.
 func (k Keeper) BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) (uint64, error) {
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {
 		return 0, err
 	}
-	
+
 	lockID, err = k.beginUnlock(ctx, *lock, coins)
 	if err != nil {
 		return 0, err
@@ -202,6 +199,7 @@ func (k Keeper) BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins
 // EndTime of the lock is set within this method.
 // Coins provided as the parameter does not require to have all the tokens in the lock,
 // as we allow partial unlockings of a lock.
+// Returns lock id, new lock id if the lock was split, else same lock id.
 func (k Keeper) beginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins) (uint64, error) {
 	// sanity check
 	if !coins.IsAllLTE(lock.Coins) {
