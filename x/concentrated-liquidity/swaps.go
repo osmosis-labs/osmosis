@@ -318,17 +318,14 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		// The current tick does not have enough liqudity to fulfill the swap.
 		// Therefore we charge fee on the full amount that the tick
 		// originally had.
-		feeChargeTotal := feeOnFullAmountRemainingIn
+		feeChargeTotal := sdk.ZeroDec()
 		if !nextSqrtPrice.Equal(sqrtPrice) && swapFee.IsPositive() {
-			if swapState.amountSpecifiedRemaining.Equal(amountIn) {
-				// TODO: understand if this case is needed. Looks like not.
-				feeChargeTotal = sdk.ZeroDec()
-			} else {
-				// This means that the current tick had enough liquidity to fulfill the swap
-				// In that case, the fee is the difference between
-				// the amount needed to fulfill and the actual amount we ended up charging.
-				feeChargeTotal = swapState.amountSpecifiedRemaining.Sub(amountIn)
-			}
+			// This means that the current tick had enough liquidity to fulfill the swap
+			// In that case, the fee is the difference between
+			// the amount needed to fulfill and the actual amount we ended up charging.
+			feeChargeTotal = swapState.amountSpecifiedRemaining.Sub(amountIn)
+		} else if swapFee.IsPositive() {
+			feeChargeTotal = amountIn.Mul(swapFee)
 		}
 
 		// This may happen when there is no liquidity between the ticks. This case occurs

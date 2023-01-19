@@ -18,7 +18,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 	feeAdditiveTolerance := osmomath.ErrTolerance{
 		// smallest dec * 10 = 10^-17
 		AdditiveTolerance: sdk.SmallestDec().Mul(sdk.NewDec(10)),
-		RoundingDir:       osmomath.RoundDown,
+		RoundingDir:       osmomath.RoundUp, // we want the actual fee to be higher the expected while withing tolerance.
 	}
 
 	tests := map[string]struct {
@@ -183,7 +183,6 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			swapFee:       sdk.MustNewDecFromStr("0.03"),
 			// params
 			// liquidity: 		 3035764687.503020836176699298
-			//                   70.689324382628080101
 			// sqrtPriceNext:    70.689324382628080101 which is 4996.98058167241679801 https://www.wolframalpha.com/input?i=%28%283035764687.503020836176699298%29%29+%2F+%28%28%283035764687.503020836176699298%29+%2F+%2870.710678118654752440%29%29+%2B+%2813370+*+%281+-+0.03%29%29%29
 			// sqrtPriceCurrent: 70.710678118654752440 which is 5000
 			// expectedTokenIn:  13370.0000 rounded up https://www.wolframalpha.com/input?i=%283035764687.503020836176699298+*+%2870.710678118654752440+-+70.688664163408836319+%29%29+%2F+%2870.688664163408836319+*+70.710678118654752440%29
@@ -293,6 +292,62 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			expectedTick:     sdk.NewInt(300952),
 			newLowerPrice:    sdk.NewDec(4000),
 			newUpperPrice:    sdk.NewDec(4545),
+		},
+		//  Consecutive price ranges
+		//
+		//                     5000
+		//             4545 -----|----- 5500
+		//  4000 ----------- 4545
+		//
+		// Ticks:
+		// pos1:    305450, 315000,
+		// pos2:    300000, 305450
+		// current: 310000
+		"fee 3 - two positions with consecutive price ranges: eth -> usdc (5% fee)": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+				s.Require().NoError(err)
+				// params computed with sage scripts in scripts/cl/main.py
+				// liquidity (1st):  1517882343.751510418088349649
+				// sqrtPriceNext:    67.416615162732695594 which is 4545
+				// sqrtPriceCurrent: 70.710678118654752440 which is 5000
+				// expectedTokenIn:  1048861.292545921016650960
+				// expectedTokenOut: 4999999999.99999999999999999970
+				// expectedFeeGrowthAccumulatorValue: 0.000034550151296760
+
+				// create second position parameters
+				newLowerPrice := sdk.NewDec(4000)
+				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 300000
+				s.Require().NoError(err)
+				newUpperPrice := sdk.NewDec(4545)
+				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 305450
+				s.Require().NoError(err)
+
+				// add position two with the new price range above
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				s.Require().NoError(err)
+				// params computed with sage scripts in scripts/cl/main.py
+				// liquidity (2nd):  1198735489.597250295669959398
+				// sqrtPriceNext:    64.3278909344373169748576312422 which is 4138.07755207286274968064829159
+				// sqrtPriceCurrent: 67.416615162732695594 which is 4545
+				// expectedTokenIn:  898695.642826782932516526784010 = 2000000 - 1048861.292545921016650960
+				// expectedTokenOut: 3702563350.03654978405015422548
+				// expectedFeeGrowthAccumulatorValue: 0.0000374851520884196734228699332666
+			},
+			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(2000000)),
+			tokenOutDenom: "usdc",
+			priceLimit:    sdk.NewDec(4094),
+			swapFee:       sdk.MustNewDecFromStr("0.05"),
+			// expectedTokenIn: 1101304.35717321706748347321599 + 898695.642826782932516526784010 = 2000000 eth
+			// expectedTokenOut: 4999999999.99999999999999999970 + 3702563350.03654978405015422548 = 8702563350.03654978405015422518 round down = 8702.563350 usdc
+			// expectedFeeGrowthAccumulatorValue:   0.000034550151296760 + 0.0000374851520884196734228699332666 = 0.0000720353033851796734228699332666
+			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(2000000)),
+			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(8702563350)),
+			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000072035303385179"),
+			expectedTick:                      sdk.NewInt(301381),
+			newLowerPrice:                     sdk.NewDec(4000),
+			newUpperPrice:                     sdk.NewDec(4545),
 		},
 		//  Partially overlapping price ranges
 
@@ -592,6 +647,8 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			if test.expectErr {
 				s.Require().Error(err)
 			} else {
+				// writeCtx()
+
 				s.Require().NoError(err)
 
 				// check that tokenIn, tokenOut, tick, and sqrtPrice from CalcOut are all what we expected
@@ -685,7 +742,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 					// The epsilon is 10^-17.
 					isExpectedLTEActual := feeAdditiveTolerance.CompareBigDec(
 						osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
-						osmomath.BigDecFromSDKDec(feeGrowthAccumulatorValue)) <= 0
+						osmomath.BigDecFromSDKDec(feeGrowthAccumulatorValue)) == 0
 
 					s.Require().True(isExpectedLTEActual, "expected (%s) <= actual (%s)", test.expectedFeeGrowthAccumulatorValue, feeGrowthAccumulatorValue)
 				}
