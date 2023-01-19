@@ -302,7 +302,7 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 func updateBankGenesis(bankGenState *banktypes.GenesisState) {
 	denomsToRegister := []string{StakeDenom, IonDenom, OsmoDenom, AtomDenom}
 	for _, denom := range denomsToRegister {
-		setDenomMetaData(bankGenState, denom)
+		setDenomMetadata(bankGenState, denom)
 	}
 }
 
@@ -422,7 +422,7 @@ func updateGenUtilGenesis(c *internalChain) func(*genutiltypes.GenesisState) {
 	}
 }
 
-func setDenomMetaData(genState *banktypes.GenesisState, denom string) {
+func setDenomMetadata(genState *banktypes.GenesisState, denom string) {
 	genState.DenomMetadata = append(genState.DenomMetadata, banktypes.Metadata{
 		Description: fmt.Sprintf("Registered denom %s for e2e testing", denom),
 		Display:     denom,
