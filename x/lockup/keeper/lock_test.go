@@ -45,6 +45,52 @@ func (suite *KeeperTestSuite) TestBeginUnlocking() { // test for all unlockable 
 	suite.Require().NotEqual(locks[0].IsUnlocking(), false)
 }
 
+func (suite *KeeperTestSuite) TestBeginForceUnlock() {
+	suite.SetupTest()
+
+	// initial check
+	locks, err := suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 0)
+
+	// lock coins
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+
+	// check locks
+	locks, err = suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
+	suite.Require().NoError(err)
+
+	for _, lock := range locks {
+		suite.Require().Equal(lock.EndTime, time.Time{})
+		suite.Require().Equal(lock.IsUnlocking(), false)
+
+		// test force unlock partial amount
+		coins = sdk.Coins{}
+		for _, coin := range lock.Coins {
+			coins = append(coins, sdk.NewCoin(coin.Denom, coin.Amount.Sub(sdk.NewInt(1))))
+		}
+
+		lockID, err := suite.App.LockupKeeper.BeginForceUnlock(suite.Ctx, lock.ID, coins)
+		suite.Require().NoError(err)
+		suite.Require().NotEqual(lockID, lock.ID)
+
+		newLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
+		suite.Require().NoError(err)
+		suite.Require().True(newLock.IsUnlocking())
+
+		// test force unlock remainder
+		lockID, err = suite.App.LockupKeeper.BeginForceUnlock(suite.Ctx, lock.ID, sdk.Coins{})
+		suite.Require().NoError(err)
+		suite.Require().Equal(lockID, lock.ID)
+
+		updatedLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lock.ID)
+		suite.Require().NoError(err)
+		suite.Require().True(updatedLock.IsUnlocking())
+	}
+}
+
 func (suite *KeeperTestSuite) TestGetPeriodLocks() {
 	suite.SetupTest()
 
