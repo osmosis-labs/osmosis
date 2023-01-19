@@ -68,9 +68,10 @@ var xxx_messageInfo_ReplaceMigrationRecordsProposal proto.InternalMessageInfo
 
 // For example: if the existing DistrRecords were:
 // [(Balancer 1, CL 5), (Balancer 2, CL 6), (Balancer 3, CL 7)]
-// An UpdateMigrationRecordsProposal includes
+// And an UpdateMigrationRecordsProposal includes
 // [(Balancer 2, CL 0), (Balancer 3, CL 4), (Balancer 4, CL 10)]
-// This would delete Balancer 2, Edit Balancer 3, and Add Balancer 4
+// This would leave Balancer 1 record, delete Balancer 2 record,
+// Edit Balancer 3 record, and Add Balancer 4 record
 // The result MigrationRecords in state would be:
 // [(Balancer 1, CL 5), (Balancer 3, CL 4), (Balancer 4, CL 10)]
 type UpdateMigrationRecordsProposal struct {

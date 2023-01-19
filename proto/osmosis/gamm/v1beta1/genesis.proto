@@ -38,6 +38,8 @@ message MigrationRecords {
 // balancer pool and a single concentrated liquidity pool. This link is used to
 // allow a balancer pool to migrate to a single canonical full range
 // concentrated liquidity pool position
+// A balancer pool can be linked to a maximum of one cl pool, and a cl pool can
+// be linked to a maximum of one balancer pool.
 message BalancerToConcentratedPoolLink {
   option (gogoproto.equal) = true;
 

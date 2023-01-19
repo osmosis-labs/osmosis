@@ -192,6 +192,8 @@ func (m *MigrationRecords) GetBalancerToConcentratedPoolLinks() []BalancerToConc
 // balancer pool and a single concentrated liquidity pool. This link is used to
 // allow a balancer pool to migrate to a single canonical full range
 // concentrated liquidity pool position
+// A balancer pool can be linked to a maximum of one cl pool, and a cl pool can
+// be linked to a maximum of one balancer pool.
 type BalancerToConcentratedPoolLink struct {
 	BalancerPoolId uint64 `protobuf:"varint,1,opt,name=balancer_pool_id,json=balancerPoolId,proto3" json:"balancer_pool_id,omitempty"`
 	ClPoolId       uint64 `protobuf:"varint,2,opt,name=cl_pool_id,json=clPoolId,proto3" json:"cl_pool_id,omitempty"`

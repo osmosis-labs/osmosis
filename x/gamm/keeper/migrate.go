@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// GetMigrationInfo returns the balancer to gamm pool migration info from the store
 func (k Keeper) GetMigrationInfo(ctx sdk.Context) types.MigrationRecords {
 	store := ctx.KVStore(k.storeKey)
 	migrationInfo := types.MigrationRecords{}
@@ -17,21 +18,23 @@ func (k Keeper) GetMigrationInfo(ctx sdk.Context) types.MigrationRecords {
 	return migrationInfo
 }
 
+// SetMigrationInfo sets the balancer to gamm pool migration info to the store
 func (k Keeper) SetMigrationInfo(ctx sdk.Context, migrationInfo types.MigrationRecords) {
 	store := ctx.KVStore(k.storeKey)
 	osmoutils.MustSet(store, types.KeyMigrationInfo, &migrationInfo)
 }
 
-// validateRecords validates a list of records to ensure that:
+// validateRecords validates a list of BalancerToConcentratedPoolLink records to ensure that:
 // 1) there are no duplicates,
 // 2) the records are in sorted order.
-// 3) the pool IDs are valid
+// 3) both the balancer and gamm pool IDs are valid
 func (k Keeper) validateRecords(ctx sdk.Context, records ...types.BalancerToConcentratedPoolLink) error {
 	lastBalancerPoolID := uint64(0)
 	balancerIdFlags := make(map[uint64]bool)
 	clIdFlags := make(map[uint64]bool)
 
 	for _, record := range records {
+		// If the balancer ID has already been seen, we have a duplicate
 		if balancerIdFlags[record.BalancerPoolId] {
 			return fmt.Errorf(
 				"Balancer pool ID #%d has duplications.",
@@ -39,6 +42,7 @@ func (k Keeper) validateRecords(ctx sdk.Context, records ...types.BalancerToConc
 			)
 		}
 
+		// If the concentrated ID has already been seen, we have a duplicate
 		if clIdFlags[record.ClPoolId] {
 			return fmt.Errorf(
 				"Concentrated pool ID #%d has duplications.",
@@ -46,15 +50,15 @@ func (k Keeper) validateRecords(ctx sdk.Context, records ...types.BalancerToConc
 			)
 		}
 
-		// Ensure records are sorted
+		// Ensure records are sorted from lowest to highest balancer pool ID
 		if record.BalancerPoolId < lastBalancerPoolID {
 			return fmt.Errorf(
-				"Balancer pool ID #%d came after Gauge ID #%d.",
+				"Balancer pool ID #%d came after Balancer pool ID #%d.",
 				record.BalancerPoolId, lastBalancerPoolID,
 			)
 		}
 
-		// Ensure the first pool exists and that it is of type balancer
+		// Ensure the provided balancerPoolId exists and that it is of type balancer
 		poolType, err := k.GetPoolType(ctx, record.BalancerPoolId)
 		if err != nil {
 			return err
@@ -63,7 +67,7 @@ func (k Keeper) validateRecords(ctx sdk.Context, records ...types.BalancerToConc
 			return fmt.Errorf("Balancer pool ID #%d is not of type balancer", record.BalancerPoolId)
 		}
 
-		// Ensure the concentrated pool exists. If record is 0, its a removal, so we skip this check.
+		// Ensure the concentrated pool exists. If clPoolID is 0, this signals a removal, so we skip this check.
 		// TODO: Get GetPoolType to work for cl pools from gamm
 		if record.ClPoolId != 0 {
 			_, err = k.poolManager.GetPoolModule(ctx, record.ClPoolId)
@@ -80,7 +84,8 @@ func (k Keeper) validateRecords(ctx sdk.Context, records ...types.BalancerToConc
 	return nil
 }
 
-// This is checked for no err when a proposal is made, and executed when a proposal passes.
+// ReplaceMigrationRecords gets the current migration records and replaces it in its entirety with the provided records.
+// It is checked for no err when a proposal is made, and executed when a proposal passes.
 func (k Keeper) ReplaceMigrationRecords(ctx sdk.Context, records ...types.BalancerToConcentratedPoolLink) error {
 	migrationInfo := k.GetMigrationInfo(ctx)
 
@@ -95,10 +100,12 @@ func (k Keeper) ReplaceMigrationRecords(ctx sdk.Context, records ...types.Balanc
 	return nil
 }
 
-// UpdateDistrRecords is checked for no err when a proposal is made, and executed when a proposal passes.
+// UpdateDistrRecords gets the current migration records and only updates the records that are provided.
+// It is checked for no err when a proposal is made, and executed when a proposal passes.
 func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records ...types.BalancerToConcentratedPoolLink) error {
 	recordsMap := make(map[uint64]types.BalancerToConcentratedPoolLink)
 
+	// Set up a map of the existing records
 	for _, existingRecord := range k.GetMigrationInfo(ctx).BalancerToConcentratedPoolLinks {
 		recordsMap[existingRecord.BalancerPoolId] = existingRecord
 	}
@@ -108,12 +115,14 @@ func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records ...types.Balance
 		return err
 	}
 
+	// Update the map with the new records
 	for _, record := range records {
 		recordsMap[record.BalancerPoolId] = record
 	}
 
 	newRecords := []types.BalancerToConcentratedPoolLink{}
 
+	// Iterate through the map and add all the records to a new list
 	// if the clPoolId is 0, we remove the entire record
 	for _, val := range recordsMap {
 		if val.ClPoolId != 0 {
@@ -121,6 +130,7 @@ func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records ...types.Balance
 		}
 	}
 
+	// Sort the new records by balancer pool ID
 	sort.SliceStable(newRecords, func(i, j int) bool {
 		return newRecords[i].BalancerPoolId < newRecords[j].BalancerPoolId
 	})

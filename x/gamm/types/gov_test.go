@@ -49,7 +49,7 @@ func TestUpdateMigrationRecordsProposalMarshalUnmarshal(t *testing.T) {
 		{ // two records
 			proposal: &types.UpdateMigrationRecordsProposal{
 				Title:       "title",
-				Description: "proposal to update pool incentives",
+				Description: "proposal to update migration records",
 				Records: []types.BalancerToConcentratedPoolLink{
 					{
 						BalancerPoolId: 1,

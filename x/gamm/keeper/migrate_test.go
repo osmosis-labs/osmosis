@@ -8,17 +8,23 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 	tests := []struct {
 		name                    string
 		testingMigrationRecords []types.BalancerToConcentratedPoolLink
-		isPoolPrepared          bool
 		expectErr               bool
 	}{
 		{
-			name: "Non existent pool.",
+			name: "Non existent balancer pool",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{{
-				BalancerPoolId: 1,
+				BalancerPoolId: 5,
 				ClPoolId:       3,
 			}},
-			isPoolPrepared: false,
-			expectErr:      true,
+			expectErr: true,
+		},
+		{
+			name: "Non existent concentrated pool",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{{
+				BalancerPoolId: 1,
+				ClPoolId:       5,
+			}},
+			expectErr: true,
 		},
 		{
 			name: "Adding two of the same balancer pool id at once should error",
@@ -32,8 +38,7 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 					ClPoolId:       4,
 				},
 			},
-			isPoolPrepared: true,
-			expectErr:      true,
+			expectErr: true,
 		},
 		{
 			name: "Adding two of the same cl pool id at once should error",
@@ -47,8 +52,7 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 					ClPoolId:       3,
 				},
 			},
-			isPoolPrepared: true,
-			expectErr:      true,
+			expectErr: true,
 		},
 		{
 			name: "Adding unsorted balancer pools should error",
@@ -62,8 +66,7 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 					ClPoolId:       3,
 				},
 			},
-			isPoolPrepared: true,
-			expectErr:      true,
+			expectErr: true,
 		},
 		{
 			name: "Normal case with two records",
@@ -77,8 +80,7 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 					ClPoolId:       4,
 				},
 			},
-			isPoolPrepared: true,
-			expectErr:      false,
+			expectErr: false,
 		},
 		{
 			name: "Try to set one of the BalancerPoolIds to a cl pool Id",
@@ -92,8 +94,7 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 					ClPoolId:       1,
 				},
 			},
-			isPoolPrepared: true,
-			expectErr:      true,
+			expectErr: true,
 		},
 	}
 
@@ -102,15 +103,13 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			suite.SetupTest()
 			keeper := suite.App.GAMMKeeper
 
-			if test.isPoolPrepared {
-				// Our testing environment is as follows:
-				// Balancer pool IDs: 1, 2
-				// Concentrated pool IDs: 3, 4
-				suite.PrepareBalancerPool()
-				suite.PrepareBalancerPool()
-				suite.PrepareConcentratedPool()
-				suite.PrepareConcentratedPool()
-			}
+			// Our testing environment is as follows:
+			// Balancer pool IDs: 1, 2
+			// Concentrated pool IDs: 3, 4
+			suite.PrepareBalancerPool()
+			suite.PrepareBalancerPool()
+			suite.PrepareConcentratedPool()
+			suite.PrepareConcentratedPool()
 
 			err := keeper.ReplaceMigrationRecords(suite.Ctx, test.testingMigrationRecords...)
 			if test.expectErr {
@@ -139,12 +138,20 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 		expectErr                bool
 	}{
 		{
-			name: "Non existent pool.",
+			name: "Non existent balancer pool.",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{{
-				BalancerPoolId: 1,
+				BalancerPoolId: 9,
 				ClPoolId:       6,
 			}},
-			isPoolPrepared:          false,
+			isPreexistingRecordsSet: false,
+			expectErr:               true,
+		},
+		{
+			name: "Non existent concentrated pool.",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{{
+				BalancerPoolId: 1,
+				ClPoolId:       9,
+			}},
 			isPreexistingRecordsSet: false,
 			expectErr:               true,
 		},
@@ -160,7 +167,6 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 					ClPoolId:       7,
 				},
 			},
-			isPoolPrepared:          true,
 			isPreexistingRecordsSet: true,
 			expectErr:               true,
 		},
@@ -176,7 +182,6 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 					ClPoolId:       6,
 				},
 			},
-			isPoolPrepared:          true,
 			isPreexistingRecordsSet: true,
 			expectErr:               true,
 		},
@@ -192,7 +197,6 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 					ClPoolId:       6,
 				},
 			},
-			isPoolPrepared:          true,
 			isPreexistingRecordsSet: true,
 			expectErr:               true,
 		},
@@ -222,8 +226,32 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 					ClPoolId:       7,
 				},
 			},
-			isPoolPrepared:          true,
 			isPreexistingRecordsSet: true,
+			expectErr:               false,
+		},
+		{
+			name: "Normal case with two records no preexisting records",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 1,
+					ClPoolId:       6,
+				},
+				{
+					BalancerPoolId: 2,
+					ClPoolId:       8,
+				},
+			},
+			expectedResultingRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 1,
+					ClPoolId:       6,
+				},
+				{
+					BalancerPoolId: 2,
+					ClPoolId:       8,
+				},
+			},
+			isPreexistingRecordsSet: false,
 			expectErr:               false,
 		},
 		{
@@ -256,7 +284,6 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 					ClPoolId:       8,
 				},
 			},
-			isPoolPrepared:          true,
 			isPreexistingRecordsSet: true,
 			expectErr:               false,
 		},
@@ -272,7 +299,6 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 					ClPoolId:       6,
 				},
 			},
-			isPoolPrepared:          true,
 			isPreexistingRecordsSet: true,
 			expectErr:               true,
 		},
@@ -283,19 +309,17 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 			suite.SetupTest()
 			keeper := suite.App.GAMMKeeper
 
-			if test.isPoolPrepared {
-				// Our testing environment is as follows:
-				// Balancer pool IDs: 1, 2, 3, 4
-				// Concentrated pool IDs: 5, 6, 7, 8
-				suite.PrepareBalancerPool()
-				suite.PrepareBalancerPool()
-				suite.PrepareBalancerPool()
-				suite.PrepareBalancerPool()
-				suite.PrepareConcentratedPool()
-				suite.PrepareConcentratedPool()
-				suite.PrepareConcentratedPool()
-				suite.PrepareConcentratedPool()
-			}
+			// Our testing environment is as follows:
+			// Balancer pool IDs: 1, 2, 3, 4
+			// Concentrated pool IDs: 5, 6, 7, 8
+			suite.PrepareBalancerPool()
+			suite.PrepareBalancerPool()
+			suite.PrepareBalancerPool()
+			suite.PrepareBalancerPool()
+			suite.PrepareConcentratedPool()
+			suite.PrepareConcentratedPool()
+			suite.PrepareConcentratedPool()
+			suite.PrepareConcentratedPool()
 
 			if test.isPreexistingRecordsSet {
 				// Set up existing records so we can update them
