@@ -41,7 +41,6 @@ func TestFullAppSimulation(t *testing.T) {
 	osmosim.FlagPeriodValue = 10
 	osmosim.FlagSeedValue = 11
 	osmosim.FlagWriteStatsToDB = true
-	osmosim.FlagSeedValue = 5577006791947779410
 	fullAppSimulation(t, true)
 }
 
@@ -85,7 +84,6 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.ExportConfig.ExportParamsPath = ""
 	config.NumBlocks = 50
 	config.BlockSize = 5
-	config.Seed = 5577006791947779410
 	config.OnOperation = false
 	config.AllInvariants = false
 	config.InitializationConfig.ChainID = helpers.SimAppChainID
