@@ -183,7 +183,7 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 
 	// Algorithm starts here
 	for _, diff_val := range diffValSet {
-		for diff_val.amount.GT(sdk.NewDec(0)) {
+		for diff_val.amount.TruncateDec().GT(sdk.NewDec(0)) {
 			source_val := diff_val.valAddr
 			target_val, idx := k.FindMin(diffValSet, source_val)
 
