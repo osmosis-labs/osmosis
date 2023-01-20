@@ -96,12 +96,12 @@ func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConce
 // ReplaceMigrationRecords gets the current migration records and replaces it in its entirety with the provided records.
 // It is checked for no err when a proposal is made, and executed when a proposal passes.
 func (k Keeper) ReplaceMigrationRecords(ctx sdk.Context, records []types.BalancerToConcentratedPoolLink) error {
-	migrationInfo := k.GetMigrationInfo(ctx)
-
 	err := k.validateRecords(ctx, records)
 	if err != nil {
 		return err
 	}
+
+	migrationInfo := k.GetMigrationInfo(ctx)
 
 	migrationInfo.BalancerToConcentratedPoolLinks = records
 
@@ -112,16 +112,16 @@ func (k Keeper) ReplaceMigrationRecords(ctx sdk.Context, records []types.Balance
 // UpdateDistrRecords gets the current migration records and only updates the records that are provided.
 // It is checked for no err when a proposal is made, and executed when a proposal passes.
 func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []types.BalancerToConcentratedPoolLink) error {
+	err := k.validateRecords(ctx, records)
+	if err != nil {
+		return err
+	}
+
 	recordsMap := make(map[uint64]types.BalancerToConcentratedPoolLink, len(records))
 
 	// Set up a map of the existing records
 	for _, existingRecord := range k.GetMigrationInfo(ctx).BalancerToConcentratedPoolLinks {
 		recordsMap[existingRecord.BalancerPoolId] = existingRecord
-	}
-
-	err := k.validateRecords(ctx, records)
-	if err != nil {
-		return err
 	}
 
 	// Update the map with the new records
