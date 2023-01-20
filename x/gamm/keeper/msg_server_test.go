@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
 	balancer "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
@@ -389,6 +390,7 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares() {
 		sharesToCreate             sdk.Int
 		expectedMigrateShareEvents int
 		expectedMessageEvents      int
+		expectedPosition           *model.Position
 		errTolerance               osmomath.ErrTolerance
 	}{
 		{
@@ -402,6 +404,7 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares() {
 			sharesToCreate:             defaultGammShares.Amount,
 			expectedMigrateShareEvents: 1,
 			expectedMessageEvents:      3, // 1 exitPool, 1 createPosition, 1 migrateShares.
+			expectedPosition:           &model.Position{Liquidity: sdk.MustNewDecFromStr("100000000000.000000010000000000")},
 			errTolerance:               defaultErrorTolerance,
 		},
 		{
@@ -415,6 +418,7 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares() {
 			sharesToCreate:             defaultGammShares.Amount,
 			expectedMigrateShareEvents: 1,
 			expectedMessageEvents:      3, // 1 exitPool, 1 createPosition, 1 migrateShares.
+			expectedPosition:           &model.Position{Liquidity: sdk.MustNewDecFromStr("50000000000.000000005000000000")},
 			errTolerance:               defaultErrorTolerance,
 		},
 		{
@@ -428,6 +432,7 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares() {
 			sharesToCreate:             defaultGammShares.Amount.Mul(sdk.NewInt(2)),
 			expectedMigrateShareEvents: 1,
 			expectedMessageEvents:      3, // 1 exitPool, 1 createPosition, 1 migrateShares.
+			expectedPosition:           &model.Position{Liquidity: sdk.MustNewDecFromStr("49999999999.000000004999999999")},
 			errTolerance:               defaultErrorTolerance,
 		},
 		{
@@ -479,6 +484,7 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares() {
 		// Note gamm and cl pool addresses
 		gammPoolAddress := gammPool.GetAddress()
 		clPoolAddress := clPool.GetAddress()
+		minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetPrecisionFactorAtPriceOne())
 
 		// Join gamm pool to create gamm shares directed in the test case
 		_, _, err = suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, test.param.sender, gammPoolId, test.sharesToCreate, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(999999999999999)), sdk.NewCoin("usdc", sdk.NewInt(999999999999999))))
@@ -520,12 +526,16 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares() {
 			suite.Require().Equal(sdk.NewInt(0), clPoolUsdcBalanceAfterFailedMigration.Amount)
 
 			// Assure the position was not created.
-			minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetPrecisionFactorAtPriceOne())
 			_, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick)
 			suite.Require().Error(err)
 			continue
 		}
 		suite.Require().NoError(err)
+
+		// Assure the expected position was created.
+		position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick)
+		suite.Require().NoError(err)
+		suite.Require().Equal(test.expectedPosition, position)
 
 		// Assert events are emitted
 		suite.AssertEventEmitted(suite.Ctx, types.TypeEvtMigrateShares, test.expectedMigrateShareEvents)
