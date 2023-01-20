@@ -71,7 +71,7 @@ and preferences. The weights are in decimal format from 0 to 1 and must add up t
 
 Gets the existing validator-set of the delegator and delegates the given amount. The given amount 
 will be divided based on the weights distributed to the validators. The weights will be unchanged.
-If the user doesnot have an existing validator set use delegators' current staking position.
+If the user does not have an existing validator set use delegators' current staking position.
 
 ```go
     string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
@@ -97,7 +97,7 @@ If the user doesnot have an existing validator set use delegators' current staki
 
 Gets the existing validator-set of the delegator and undelegate the given amount. The amount to undelegate will
 will be divided based on the weights distributed to the validators. The weights will be unchanged! 
-If the user doesnot have an existing validator set use delegators' current staking position.
+If the user does not have an existing validator set use delegators' current staking position.
 The given amount will be divided based on the weights distributed to the validators.
 
 ```go
@@ -125,7 +125,7 @@ The given amount will be divided based on the weights distributed to the validat
 ### MsgWithdrawDelegationRewards
 
 Allows the user to claim rewards based from the existing validator-set. The user can claim rewards from all the validators at once. 
-If the user doesnot have an existing validator set use delegators' current staking position.
+If the user does not have an existing validator set use delegators' current staking position.
 
 ```go
     string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
@@ -134,7 +134,7 @@ If the user doesnot have an existing validator set use delegators' current staki
 ### MsgRedelegateValidatorSet
 
 The redelegation command allows delegators to instantly switch validators. Once the unbonding period has passed, 
-the redelegation is automatically completed in the EndBlocker. If the user doesnot have an existing validator set use delegators' current staking position.
+the redelegation is automatically completed in the EndBlocker. If the user does not have an existing validator set use delegators' current staking position.
 
 ```go
   // delegator is the user who is trying to create a validator-set.
