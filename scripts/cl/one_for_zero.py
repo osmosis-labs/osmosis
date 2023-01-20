@@ -1,3 +1,4 @@
+from typing import Tuple
 import sympy as sp
 from common import *
 
@@ -16,8 +17,10 @@ def get_expected_token_in(liquidity: sp.Float, sqrt_price_current: sp.Float, sqr
     """
     return liquidity * sp.Abs((sqrt_price_current - sqrt_price_next))
 
-def calc_test_case(liquidity: sp.Float, sqrt_price_current: sp.Float, token_in: sp.Float, swap_fee: sp.Float):
-    """ Computes and prints all one for zero test case parameters. 
+def calc_test_case(liquidity: sp.Float, sqrt_price_current: sp.Float, token_in: sp.Float, swap_fee: sp.Float) -> Tuple[sp.Float, sp.Float, sp.Float]:
+    """ Computes and prints all one for zero test case parameters.
+
+    Returns the next square root price, token out and fee amount per share.
     """
     sqrt_price_next = get_next_sqrt_price(liquidity, sqrt_price_current, token_in, swap_fee)
     price_next = sp.Pow(sqrt_price_next, 2)
@@ -29,8 +32,12 @@ def calc_test_case(liquidity: sp.Float, sqrt_price_current: sp.Float, token_in: 
     print(F"token_out: {token_out}")
     print(F"fee_amount_per_share: {fee_amount_per_share}")
 
-def calc_test_case_with_next_sqrt_price(liquidity: sp.Float, sqrt_price_current: sp.Float, sqrt_price_next: sp.Float, swap_fee: sp.Float):
-    """ Computes and prints one for zero test case parameters when next square root price is known. 
+    return sqrt_price_next, token_out, fee_amount_per_share
+
+def calc_test_case_with_next_sqrt_price(liquidity: sp.Float, sqrt_price_current: sp.Float, sqrt_price_next: sp.Float, swap_fee: sp.Float) -> Tuple[sp.Float, sp.Float, sp.Float]:
+    """ Computes and prints one for zero test case parameters when next square root price is known.
+
+    Returns the expected token in, token out and fee amount per share. 
     """
     price_next = sp.Pow(sqrt_price_next, 2)
     expected_token_in_before_fee = get_expected_token_in(liquidity, sqrt_price_current, sqrt_price_next)
@@ -45,3 +52,5 @@ def calc_test_case_with_next_sqrt_price(liquidity: sp.Float, sqrt_price_current:
     print(F"expected_token_in: {expected_token_in}")
     print(F"token_out: {token_out}")
     print(F"fee_amount_per_share: {fee_amount_per_share}")
+
+    return expected_token_in, token_out, fee_amount_per_share

@@ -1,6 +1,8 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
@@ -434,6 +436,10 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 				// add position two with the new price range above
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
 				s.Require().NoError(err)
+
+				pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(ctx, 1)
+				fmt.Println(pool.GetCurrentSqrtPrice().Mul(pool.GetCurrentSqrtPrice()).String())
+
 				// params
 				// liquidity (2nd):  670416088.605668727039250938
 				// sqrtPriceNext:    76.4063193467682254976579845167 which is 5837.925636120329
