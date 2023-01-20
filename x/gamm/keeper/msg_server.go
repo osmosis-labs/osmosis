@@ -327,7 +327,7 @@ func (server msgServer) MigrateShares(goCtx context.Context, msg *balancer.MsgMi
 	}
 
 	// Get the balancer poolId by parsing the gamm share denom.
-	poolIdLeaving, err := GetPoolIdFromSharesDenom(msg.SharesToMigrate.Denom)
+	poolIdLeaving, err := getPoolIdFromSharesDenom(msg.SharesToMigrate.Denom)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
