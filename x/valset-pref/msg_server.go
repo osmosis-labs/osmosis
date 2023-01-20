@@ -75,16 +75,15 @@ func (server msgServer) RedelegateValidatorSet(goCtx context.Context, msg *types
 	}
 
 	// Message 1: override the validator set preference set entry
-	_, err = server.SetValidatorSetPreference(goCtx, &types.MsgSetValidatorSetPreference{
-		Delegator:   msg.Delegator,
-		Preferences: msg.Preferences,
-	})
+	newPreferences, err := server.keeper.SetValidatorSetPreference(ctx, msg.Delegator, msg.Preferences)
 	if err != nil {
 		return nil, err
 	}
 
+	server.keeper.SetValidatorSetPreferences(ctx, msg.Delegator, newPreferences)
+
 	// Message 2: Perform the actual redelegation
-	err = server.keeper.PreformRedelegation(ctx, delegator, existingSet.Preferences, msg.Preferences)
+	err = server.keeper.PreformRedelegation(ctx, delegator, existingSet.Preferences, newPreferences.Preferences)
 	if err != nil {
 		return nil, err
 	}

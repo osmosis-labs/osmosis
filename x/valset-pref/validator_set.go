@@ -188,7 +188,7 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 			target_val, idx := k.FindMin(diffValSet, source_val)
 
 			// checks if there are any more redelegation possible
-			if target_val.amount.Equal(sdk.NewDec(0)) {
+			if target_val.amount.TruncateDec().Equal(sdk.NewDec(0)) {
 				break
 			}
 
