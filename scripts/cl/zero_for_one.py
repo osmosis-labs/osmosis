@@ -23,12 +23,12 @@ def calc_test_case(liquidity: sp.Float, sqrt_price_current: sp.Float, token_in: 
     Returns the next square root price, token out and fee amount per share.
     """
     sqrt_price_next = get_next_sqrt_price(liquidity, sqrt_price_current, token_in, swap_fee)
-    price_next = sp.Pow(sqrt_price_next, 2)
     token_out = get_token_out(liquidity, sqrt_price_current, sqrt_price_next)
     fee_amount_per_share = get_fee_amount_per_share(token_in, swap_fee, liquidity)
 
+    print(F"current sqrt price: {sqrt_price_current}")
     print(F"sqrt_price_next: {sqrt_price_next}")
-    print(F"price_next: {price_next}")
+    print(F"liquidity: {liquidity}")
     print(F"token_out: {token_out}")
     print(F"fee_amount_per_share: {fee_amount_per_share}")
 
@@ -39,15 +39,15 @@ def calc_test_case_with_next_sqrt_price(liquidity: sp.Float, sqrt_price_current:
     
     Returns the expected token in, token out and fee amount per share. 
     """
-    price_next = sp.Pow(sqrt_price_next, 2)
     expected_token_in_before_fee = get_expected_token_in(liquidity, sqrt_price_current, sqrt_price_next)
     expected_token_in = expected_token_in_before_fee * (1 + swap_fee)
 
     token_out = get_token_out(liquidity, sqrt_price_current, sqrt_price_next)
     fee_amount_per_share = get_fee_amount_per_share(expected_token_in_before_fee, swap_fee, liquidity)
 
+    print(F"current sqrt price: {sqrt_price_current}")
     print(F"given sqrt_price_next: {sqrt_price_next}")
-    print(F"price_next: {price_next}")
+    print(F"liquidity: {liquidity}")
     print(F"expected_token_in: {expected_token_in}")
     print(F"token_out: {token_out}")
     print(F"fee_amount_per_share: {fee_amount_per_share}")

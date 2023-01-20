@@ -633,6 +633,43 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			newLowerPrice:    sdk.NewDec(4000),
 			newUpperPrice:    sdk.NewDec(4999),
 		},
+		"fee 5 - two positions with partially overlapping price ranges, not utilizing full liquidity of second position: eth -> usdc (0.5% fee)": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+				s.Require().NoError(err)
+				// params are calculates by utilizing scripts from scripts/cl/main.py
+				// liquidity (1st):  1517882343.751510418088349649
+				// sqrtPriceNext:    67.416615162732695594 which is 4545
+				// sqrtPriceCurrent: 70.710678118654752440 which is 5000
+
+				// create second position parameters
+				newLowerPrice := sdk.NewDec(4000)
+				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 300000
+				s.Require().NoError(err)
+				newUpperPrice := sdk.NewDec(4999)
+				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 309990
+				s.Require().NoError(err)
+
+				// add position two with the new price range above
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				s.Require().NoError(err)
+				// params
+				// liquidity (2nd):  670416215.718827443660400594
+				// sqrtPriceNext:    65.513813187509027302 which is 4292.059718367831736
+				// sqrtPriceCurrent: 70.703606697254136612 which is 4999.00
+			},
+			tokenIn:                           sdk.NewCoin("eth", sdk.NewInt(1800000)),
+			tokenOutDenom:                     "usdc",
+			priceLimit:                        sdk.NewDec(4128),
+			swapFee:                           sdk.MustNewDecFromStr("0.005"),
+			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(1800000)),
+			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(8440821620)),
+			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000005552752757027"),
+			expectedTick:                      sdk.NewInt(302996),
+			newLowerPrice:                     sdk.NewDec(4000),
+			newUpperPrice:                     sdk.NewDec(4999),
+		},
 		//  Sequential price ranges with a gap
 		//
 		//          5000

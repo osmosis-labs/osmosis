@@ -44,8 +44,6 @@ def estimate_test_case(tick_ranges: list[SqrtPriceRange], token_in_initial: sp.F
             token_out, fee_growth_per_share = zero, zero
             if is_zero_for_one:
                 _, token_out, fee_growth_per_share = zfo.calc_test_case(tick_range.liquidity, tick_range.sqrt_price_start, token_in_remaining, swap_fee)
-
-
             else:
                 _, token_out, fee_growth_per_share = ofz.calc_test_case(tick_range.liquidity, tick_range.sqrt_price_start, token_in_remaining, swap_fee)
 
@@ -167,6 +165,30 @@ def estimate_overlapping_price_range_ofz_test():
 
     validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
 
+def estimate_overlapping_price_range_zfo_test():
+    """Estimates and prints the results of a calc concentrated liquidity test case with overlapping price ranges
+    when swapping token zero for one (zfo) and not consuming full liquidity of the second position.
+
+     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_5 github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity
+    """
+
+    is_zero_for_one = True
+    swap_fee = sdk_dec("0.005")
+    token_in_initial = sdk_dec("1800000")
+
+    tick_ranges = [
+        SqrtPriceRange(5000, 4999, sdk_dec("1517882343.751510418088349649")),
+        SqrtPriceRange(4999, 4545, sdk_dec("1517882343.751510418088349649") + sdk_dec("670416215.718827443660400594")), # first and second position's liquidity.
+        SqrtPriceRange(4545, None, sdk_dec("670416215.718827443660400594")), # last one must be computed based on remaining token in, therefore it is None
+    ]
+
+    token_out_total, fee_growth_per_share_total = estimate_test_case(tick_ranges, token_in_initial, swap_fee, is_zero_for_one)
+
+    expected_token_out_total = sdk_dec("8440821620.46523833169832895388")
+    expected_fee_growth_per_share_total = sdk_dec("0.00000555275275702765744105956374059")
+
+    validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
+
 def main():
     # fee 1
     estimate_single_position_within_one_tick_ofz()
@@ -179,6 +201,9 @@ def main():
 
     # fee 4
     estimate_overlapping_price_range_ofz_test()
+
+    # fee 5
+    estimate_overlapping_price_range_zfo_test()
 
 if __name__ == "__main__":
     main()

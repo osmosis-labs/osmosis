@@ -330,9 +330,9 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 			feeChargeTotal = amountIn.Mul(swapFee)
 		}
 
-		fmt.Println("current tick", swapState.tick)
+		fmt.Println("current sqrtPrice", swapState.sqrtPrice)
+		fmt.Println("next sqrtPrice", nextSqrtPrice)
 		fmt.Println("liquidity", swapState.liquidity)
-		fmt.Println("next tick", nextTick)
 		fmt.Println("amountSpecifiedRemaining", swapState.amountSpecifiedRemaining)
 		fmt.Println("amountIn", amountIn)
 		fmt.Println("amountOut", amountOut)
