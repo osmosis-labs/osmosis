@@ -95,12 +95,7 @@ def estimate_single_position_within_one_tick_ofz():
     expected_token_out_total = sdk_dec("8312.77961614650590788243077782")
     expected_fee_growth_per_share_total = sdk_dec("0.000276701288297452775064000000017")
 
-    # This validation exists to make sure that subsequent changes to the code do not break the test
-    if sp.N(token_out_total, 18) != sp.N(expected_token_out_total, 18):
-        raise Exception(F"token_out_total {token_out_total} does not match expected_token_out_total {expected_token_out_total}")
-    
-    if sp.N(fee_growth_per_share_total, 18) != sp.N(expected_fee_growth_per_share_total, 18):
-        raise Exception(F"fee_growth_per_share_total {fee_growth_per_share_total} does not match expected_fee_growth_per_share_total {expected_fee_growth_per_share_total}")
+    validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
 
 def estimate_overlapping_price_range_ofz_test():
     """Estimates and prints the results of a calc concentrated liquidity test case with overlapping price ranges
@@ -124,19 +119,14 @@ def estimate_overlapping_price_range_ofz_test():
     expected_token_out_total = sdk_dec("1708743.47809184831586199935191")
     expected_fee_growth_per_share_total = sdk_dec("0.598328101473707318285291820984")
 
-    # This validation exists to make sure that subsequent changes to the code do not break the test
-    if sp.N(token_out_total, 18) != sp.N(expected_token_out_total, 18):
-        raise Exception(F"token_out_total {token_out_total} does not match expected_token_out_total {expected_token_out_total}")
-    
-    if sp.N(fee_growth_per_share_total, 18) != sp.N(expected_fee_growth_per_share_total, 18):
-        raise Exception(F"fee_growth_per_share_total {fee_growth_per_share_total} does not match expected_fee_growth_per_share_total {expected_fee_growth_per_share_total}")
+    validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
 
 def main():
     # fee 1
     estimate_single_position_within_one_tick_ofz()
 
     # fee 4
-    #estimate_overlapping_price_range_ofz_test()
+    estimate_overlapping_price_range_ofz_test()
 
 if __name__ == "__main__":
     main()
