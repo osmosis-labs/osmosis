@@ -4,7 +4,7 @@
     "git_repo": "https://github.com/osmosis-labs/osmosis",
     "recommended_version": "v14.0.0",
     "compatible_versions": [
-      "v14.0.0",
+      "v14.0.0"
     ],
     "binaries": {
       "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v14.0.0/osmosisd-14.0.0-linux-amd64?checksum=sha256:441cac2f9094b63ec7a363f4d5442f16c28f65390cf286a589be62ee1ba66cc1",
