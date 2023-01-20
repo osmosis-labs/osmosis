@@ -64,9 +64,37 @@ def estimate_test_case(tick_ranges: list[SqrtPriceRange], token_in_initial: sp.F
 
     return token_out_total, fee_growth_per_share_total
 
+def estimate_single_position_within_one_tick_ofz():
+    """Estimates and prints the results of a calc concentrated liquidity test case with a single position within one tick.
+
+     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_1 github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity
+    """
+
+    is_zero_for_one = False
+    swap_fee = sdk_dec("0.01")
+    token_in_initial = sdk_dec("42000000")
+
+    tick_ranges = [
+        SqrtPriceRange(5000, None, sdk_dec("1517882343.751510418088349649")), # last one must be computed based on remaining token in, therefore it is None
+    ]
+
+    token_out_total, fee_growth_per_share_total = estimate_test_case(tick_ranges, token_in_initial, swap_fee, is_zero_for_one)
+
+    expected_token_out_total = sdk_dec("8312.77961614650590788243077782")
+    expected_fee_growth_per_share_total = sdk_dec("0.000276701288297452775064000000017")
+
+    # This validation exists to make sure that subsequent changes to the code do not break the test
+    if sp.N(token_out_total, 18) != sp.N(expected_token_out_total, 18):
+        raise Exception(F"token_out_total {token_out_total} does not match expected_token_out_total {expected_token_out_total}")
+    
+    if sp.N(fee_growth_per_share_total, 18) != sp.N(expected_fee_growth_per_share_total, 18):
+        raise Exception(F"fee_growth_per_share_total {fee_growth_per_share_total} does not match expected_fee_growth_per_share_total {expected_fee_growth_per_share_total}")
+
 def estimate_overlapping_price_range_ofz_test():
     """Estimates and prints the results of a calc concentrated liquidity test case with overlapping price ranges
     when swapping token zero for one.
+
+     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_4 github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity
     """
 
     is_zero_for_one = False
@@ -92,7 +120,11 @@ def estimate_overlapping_price_range_ofz_test():
         raise Exception(F"fee_growth_per_share_total {fee_growth_per_share_total} does not match expected_fee_growth_per_share_total {expected_fee_growth_per_share_total}")
 
 def main():
-    estimate_overlapping_price_range_ofz_test()
+    # fee 1
+    estimate_single_position_within_one_tick_ofz()
+
+    # fee 4
+    #estimate_overlapping_price_range_ofz_test()
 
 if __name__ == "__main__":
     main()
