@@ -135,20 +135,8 @@ func validateTickRangeIsValid(tickSpacing uint64, exponentAtPriceOne sdk.Int, lo
 	return nil
 }
 
-// powTen treats negative exponents as 1/(10**|exponent|) instead of 10**-exponent
-// This is because the sdk.Dec.Power function does not support negative exponents
-func powTen(exponent sdk.Int) sdk.Dec {
-	if exponent.GTE(sdk.ZeroInt()) {
-		return sdkTenDec.Power(exponent.Uint64())
-	}
-	return sdk.OneDec().Quo(sdkTenDec.Power(exponent.Abs().Uint64()))
-}
-
 // getMinAndMaxTicksFromExponentAtPriceOne determines min and max ticks allowed for a given exponentAtPriceOne value
 // This allows for a min spot price of 0.000000000000000001 and a max spot price of 100000000000000000000000000000000000000 for every exponentAtPriceOne value
 func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTick, maxTick int64) {
-	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(powTen(exponentAtPriceOne.Neg()))
-	minTick = sdkEighteenDec.Mul(geometricExponentIncrementDistanceInTicks).Neg().RoundInt64()
-	maxTick = sdkThirtyEightDec.Mul(geometricExponentIncrementDistanceInTicks).TruncateInt64()
-	return minTick, maxTick
+	return math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
 }
