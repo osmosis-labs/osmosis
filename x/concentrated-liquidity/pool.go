@@ -6,6 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
@@ -95,6 +97,21 @@ func (k Keeper) setPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) e
 	key := types.KeyPool(pool.GetId())
 	osmoutils.MustSet(store, key, poolModel)
 	return nil
+}
+
+func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolType, error) {
+	concentratedPool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return -1, err
+	}
+
+	switch pool := concentratedPool.(type) {
+	case types.ConcentratedPoolExtension:
+		return poolmanagertypes.Concentrated, nil
+	default:
+		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
+		return -1, sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
+	}
 }
 
 // convertConcentratedToPoolInterface takes a types.ConcentratedPoolExtension and attempts to convert it to a

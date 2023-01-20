@@ -96,6 +96,16 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			},
 			expectErr: true,
 		},
+		{
+			name: "Try to set one of the ClPoolIds to a balancer pool Id",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 2,
+					ClPoolId:       1,
+				},
+			},
+			expectErr: true,
+		},
 	}
 
 	for _, test := range tests {
@@ -297,6 +307,17 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 				{
 					BalancerPoolId: 5,
 					ClPoolId:       6,
+				},
+			},
+			isPreexistingRecordsSet: true,
+			expectErr:               true,
+		},
+		{
+			name: "Try to set one of the ClPoolIds to a balancer pool Id",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 2,
+					ClPoolId:       1,
 				},
 			},
 			isPreexistingRecordsSet: true,
