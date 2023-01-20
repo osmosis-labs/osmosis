@@ -9,13 +9,6 @@ import (
 	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
-var (
-	sdkNineDec        = sdk.NewDec(9)
-	sdkTenDec         = sdk.NewDec(10)
-	sdkEighteenDec    = sdk.NewDec(18)
-	sdkThirtyEightDec = sdk.NewDec(38)
-)
-
 // initOrUpdateTick retrieves the tickInfo from the specified tickIndex and updates both the liquidityNet and LiquidityGross.
 // if we are initializing or updating an upper tick, we subtract the liquidityIn from the LiquidityNet
 // if we are initializing or updating an lower tick, we add the liquidityIn from the LiquidityNet
