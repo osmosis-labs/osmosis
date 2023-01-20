@@ -26,12 +26,17 @@ func (k Keeper) SetMigrationInfo(ctx sdk.Context, migrationInfo types.MigrationR
 
 // validateRecords validates a list of BalancerToConcentratedPoolLink records to ensure that:
 // 1) there are no duplicates
-// 2) the records are from lowest to highest balancer pool ID
-// 3) both the balancer and gamm pool IDs are valid
-func (k Keeper) validateRecords(ctx sdk.Context, records ...types.BalancerToConcentratedPoolLink) error {
+// 2) both the balancer and gamm pool IDs are valid
+// It also reorders records from lowest to highest balancer pool ID if they are not provided in order already.
+func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConcentratedPoolLink) error {
 	lastBalancerPoolID := uint64(0)
 	balancerIdFlags := make(map[uint64]bool, len(records))
 	clIdFlags := make(map[uint64]bool, len(records))
+
+	// Sort the provided records by balancer pool ID
+	sort.SliceStable(records, func(i, j int) bool {
+		return records[i].BalancerPoolId < records[j].BalancerPoolId
+	})
 
 	for _, record := range records {
 		// If the balancer ID has already been seen, we have a duplicate
@@ -89,10 +94,10 @@ func (k Keeper) validateRecords(ctx sdk.Context, records ...types.BalancerToConc
 
 // ReplaceMigrationRecords gets the current migration records and replaces it in its entirety with the provided records.
 // It is checked for no err when a proposal is made, and executed when a proposal passes.
-func (k Keeper) ReplaceMigrationRecords(ctx sdk.Context, records ...types.BalancerToConcentratedPoolLink) error {
+func (k Keeper) ReplaceMigrationRecords(ctx sdk.Context, records []types.BalancerToConcentratedPoolLink) error {
 	migrationInfo := k.GetMigrationInfo(ctx)
 
-	err := k.validateRecords(ctx, records...)
+	err := k.validateRecords(ctx, records)
 	if err != nil {
 		return err
 	}
@@ -105,7 +110,7 @@ func (k Keeper) ReplaceMigrationRecords(ctx sdk.Context, records ...types.Balanc
 
 // UpdateDistrRecords gets the current migration records and only updates the records that are provided.
 // It is checked for no err when a proposal is made, and executed when a proposal passes.
-func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records ...types.BalancerToConcentratedPoolLink) error {
+func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []types.BalancerToConcentratedPoolLink) error {
 	recordsMap := make(map[uint64]types.BalancerToConcentratedPoolLink, len(records))
 
 	// Set up a map of the existing records
@@ -113,7 +118,7 @@ func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records ...types.Balance
 		recordsMap[existingRecord.BalancerPoolId] = existingRecord
 	}
 
-	err := k.validateRecords(ctx, records...)
+	err := k.validateRecords(ctx, records)
 	if err != nil {
 		return err
 	}

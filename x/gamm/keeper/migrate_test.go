@@ -55,20 +55,6 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			expectErr: true,
 		},
 		{
-			name: "Adding unsorted balancer pools should error",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
-				{
-					BalancerPoolId: 2,
-					ClPoolId:       4,
-				},
-				{
-					BalancerPoolId: 1,
-					ClPoolId:       3,
-				},
-			},
-			expectErr: true,
-		},
-		{
 			name: "Normal case with two records",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
 				{
@@ -120,7 +106,7 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			suite.PrepareMultipleBalancerPools(2)
 			suite.PrepareMultipleConcentratedPools(2)
 
-			err := keeper.ReplaceMigrationRecords(suite.Ctx, test.testingMigrationRecords...)
+			err := keeper.ReplaceMigrationRecords(suite.Ctx, test.testingMigrationRecords)
 			if test.expectErr {
 				suite.Require().Error(err)
 			} else {
@@ -188,21 +174,6 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 				},
 				{
 					BalancerPoolId: 2,
-					ClPoolId:       6,
-				},
-			},
-			isPreexistingRecordsSet: true,
-			expectErr:               true,
-		},
-		{
-			name: "Adding unsorted balancer pools should error",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
-				{
-					BalancerPoolId: 2,
-					ClPoolId:       7,
-				},
-				{
-					BalancerPoolId: 1,
 					ClPoolId:       6,
 				},
 			},
@@ -351,11 +322,11 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 						ClPoolId:       7,
 					},
 				}
-				err := keeper.ReplaceMigrationRecords(suite.Ctx, existingRecords...)
+				err := keeper.ReplaceMigrationRecords(suite.Ctx, existingRecords)
 				suite.Require().NoError(err)
 			}
 
-			err := keeper.UpdateMigrationRecords(suite.Ctx, test.testingMigrationRecords...)
+			err := keeper.UpdateMigrationRecords(suite.Ctx, test.testingMigrationRecords)
 			if test.expectErr {
 				suite.Require().Error(err)
 			} else {
