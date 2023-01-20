@@ -57,10 +57,10 @@ fn crosschain_swap() {
         .expect("Setup route fixture must always succeed");
 
     // execute swap
-    let input_coin = Coin::new(1000, "uosmo");
+    let swap_amount = 1000;
     let output_denom = "uion".to_string();
     let msg = CrossChainExecute::OsmosisSwap {
-        input_coin,
+        swap_amount,
         output_denom,
         slippage: Slippage::Twap {
             window_seconds: Some(1),
