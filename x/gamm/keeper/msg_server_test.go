@@ -503,15 +503,17 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares() {
 		clPoolEthBalanceAfterMigration := suite.App.BankKeeper.GetBalance(suite.Ctx, clPoolAddress, ETH)
 		clPoolUsdcBalanceAfterMigration := suite.App.BankKeeper.GetBalance(suite.Ctx, clPoolAddress, USDC)
 
-		// The balance in the cl pool should be equal to what the user previously had in the gamm pool (within 1 share due to safety rounding)
+		// The balance in the cl pool should be equal to what the user previously had in the gamm pool
+		// This test is within 100 shares due to rounding that occurs from utilizing .000000000000000001 instead of 0
 		poolEthBalanceInTolerance := userEthBalanceTransferredToClPool.Amount.Sub(clPoolEthBalanceAfterMigration.Amount).LTE(sdk.NewInt(1))
-		poolUsdcBalanceInTolerance := userUsdcBalanceTransferredToClPool.Amount.Sub(clPoolUsdcBalanceAfterMigration.Amount).LTE(sdk.NewInt(1))
+		poolUsdcBalanceInTolerance := userUsdcBalanceTransferredToClPool.Amount.Sub(clPoolUsdcBalanceAfterMigration.Amount).LTE(sdk.NewInt(100))
 		suite.Require().True(poolEthBalanceInTolerance)
 		suite.Require().True(poolUsdcBalanceInTolerance)
 
 		// Assert user amount transferred to cl pool from gamm pool should be equal to the amount we migrated from the migrate message (within 1 share due to safety rounding)
+		// This test is within 100 shares due to rounding that occurs from utilizing .000000000000000001 instead of 0
 		userEthBalanceInTolerance := userEthBalanceTransferredToClPool.Amount.Sub(resp.Amount0).LTE(sdk.NewInt(1))
-		userUsdcBalanceInTolerance := userUsdcBalanceTransferredToClPool.Amount.Sub(resp.Amount1).LTE(sdk.NewInt(1))
+		userUsdcBalanceInTolerance := userUsdcBalanceTransferredToClPool.Amount.Sub(resp.Amount1).LTE(sdk.NewInt(100))
 		suite.Require().True(userEthBalanceInTolerance)
 		suite.Require().True(userUsdcBalanceInTolerance)
 	}
