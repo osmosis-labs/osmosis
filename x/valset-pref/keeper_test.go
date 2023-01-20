@@ -33,20 +33,20 @@ func (suite *KeeperTestSuite) PrepareDelegateToValidatorSet() []types.ValidatorP
 	valPreferences := []types.ValidatorPreference{
 		{
 			ValOperAddress: valAddrs[0],
-			Weight:         sdk.OneDec(), // 0.2
+			Weight:         sdk.NewDecWithPrec(2, 1), // 0.2
 		},
-		// {
-		// 	ValOperAddress: valAddrs[1],
-		// 	Weight:         sdk.NewDecWithPrec(332, 3), // 0.33
-		// },
-		// {
-		// 	ValOperAddress: valAddrs[2],
-		// 	Weight:         sdk.NewDecWithPrec(12, 2), // 0.12
-		// },
-		// {
-		// 	ValOperAddress: valAddrs[3],
-		// 	Weight:         sdk.NewDecWithPrec(348, 3), // 0.35
-		// },
+		{
+			ValOperAddress: valAddrs[1],
+			Weight:         sdk.NewDecWithPrec(332, 3), // 0.33
+		},
+		{
+			ValOperAddress: valAddrs[2],
+			Weight:         sdk.NewDecWithPrec(12, 2), // 0.12
+		},
+		{
+			ValOperAddress: valAddrs[3],
+			Weight:         sdk.NewDecWithPrec(348, 3), // 0.35
+		},
 	}
 
 	return valPreferences
