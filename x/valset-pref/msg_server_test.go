@@ -494,10 +494,6 @@ func (suite *KeeperTestSuite) TestRedelegateToValidatorSet() {
 
 	for _, test := range tests {
 		suite.Run(test.name, func() {
-
-			// fund the account that is trying to delegate
-			suite.FundAcc(test.delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000_000_000)})
-
 			// setup message server
 			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorSetPreferenceKeeper)
 			c := sdk.WrapSDKContext(suite.Ctx)
