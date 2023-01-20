@@ -287,9 +287,30 @@ on the chain doing the swap (chainB).
 * The receiver field specifies the address of the recipient of the swap. 
 * The on_failed_delivery field specifies what should happen in case the swap cannot be executed, which is set to "do_nothing"
 
-After executing this transaction, the relayer will send it to chain A, which will process it, and generate a new 
-IBC package to be sent to chain B with the resulting (swapped) tokens. This will be relayed to chain B and an 
-acknowledgement sent back to chain A to finalize the IBC transaction.
+After executing this transaction, the relayer will send it to chain B, which will process it, and generate a new 
+IBC package to be sent back to chain A with the resulting (swapped) tokens. This will be relayed to chain A and an 
+acknowledgement sent back to chain B to finalize the second IBC transaction.
+
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Alice
+    actor Alice
+    Alice->>ChainA: Send Transfer M1
+    Note over ChainA,Relayer: Block commited. 
+    Relayer-->>ChainB: Relay M1
+    critical Execute Contract
+            ChainB->>ChainB: Swap tokens
+            ChainB->>ChainB: Send IBC tx M2
+    end
+    Note over ChainB,Relayer: Block commited. 
+    Relayer-->>ChainA: Ack M1
+    Relayer-->>ChainA: Relay M2
+    ChainA->>Alice: Send Swapped Tokens
+    Note over ChainA,Relayer: Block commited. 
+    Relayer-->>ChainB: Relay M2
+```
 
 #### Verifying the swap
 
