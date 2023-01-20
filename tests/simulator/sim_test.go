@@ -41,6 +41,7 @@ func TestFullAppSimulation(t *testing.T) {
 	osmosim.FlagPeriodValue = 10
 	osmosim.FlagSeedValue = 11
 	osmosim.FlagWriteStatsToDB = true
+	osmosim.FlagSeedValue = 5577006791947779410
 	fullAppSimulation(t, true)
 }
 

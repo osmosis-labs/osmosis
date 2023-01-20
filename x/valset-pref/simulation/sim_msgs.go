@@ -50,20 +50,9 @@ func RandomMsgDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, 
 }
 
 func RandomMsgUnDelegateFromValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*types.MsgUndelegateFromValidatorSet, error) {
-	val, ok := RandSliceElem(sim.StakingKeeper().GetAllValidators(ctx))
-	if !ok {
-		return nil, fmt.Errorf("validator is not ok")
-	}
-
-	// get delegator with delegations
-	delegations := sim.StakingKeeper().GetValidatorDelegations(ctx, val.GetOperator())
-	if delegations == nil {
-		return nil, fmt.Errorf("keeper does have any delegation entries")
-	}
-
-	// get random delegator from validator
-	delegation := delegations[rand.Intn(len(delegations))]
-	delAddr := delegation.GetDelegatorAddr()
+	// random delegator account
+	delegator := sim.RandomSimAccount()
+	delAddr := delegator.Address
 
 	// get delegator valset preferences
 	preferences, err := k.GetDelegationPreferences(ctx, delAddr.String())
@@ -71,37 +60,33 @@ func RandomMsgUnDelegateFromValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimC
 		return nil, fmt.Errorf("no delegations found")
 	}
 
-	for _, valSet := range preferences.Preferences {
-		val, err := sdk.ValAddressFromBech32(valSet.ValOperAddress)
-		if err != nil {
-			return nil, fmt.Errorf("validator address not formatted")
-		}
-
-		_, valfound := sim.StakingKeeper().GetValidator(ctx, val)
-		if !valfound {
-			return nil, fmt.Errorf("validator not found %s", val.String())
-		}
-
-		_, found := sim.StakingKeeper().GetDelegation(ctx, delAddr, val)
-		if !found {
-			return nil, fmt.Errorf("delegator delegation not found")
-		}
-
-		if sim.StakingKeeper().HasMaxUnbondingDelegationEntries(ctx, delAddr, val) {
-			return nil, fmt.Errorf("keeper does have a max unbonding delegation entries")
-		}
+	delegation := preferences.Preferences[rand.Intn(len(preferences.Preferences))]
+	val, err := sdk.ValAddressFromBech32(delegation.ValOperAddress)
+	if err != nil {
+		return nil, fmt.Errorf("validator address not formatted")
 	}
 
-	totalBond := val.TokensFromShares(delegation.GetShares()).TruncateInt()
+	validator, found := sim.StakingKeeper().GetValidator(ctx, val)
+	if !found {
+		return nil, fmt.Errorf("Validatot not found")
+	}
+
+	// check if the user has delegated tokens to the valset
+	del, found := sim.StakingKeeper().GetDelegation(ctx, delAddr, val)
+	if !found {
+		return nil, fmt.Errorf("user hasn't delegated tokens to the validator, %s", val.String())
+	}
+
+	totalBond := validator.TokensFromShares(del.GetShares()).TruncateInt()
 	if !totalBond.IsPositive() {
 		return nil, fmt.Errorf("total bond is negative")
 	}
 
-	unDelegationCoin := rand.Intn(int(totalBond.Int64()))
+	undelegationCoin := rand.Intn(int(totalBond.Int64()))
 
 	return &types.MsgUndelegateFromValidatorSet{
 		Delegator: delAddr.String(),
-		Coin:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(int64(unDelegationCoin))),
+		Coin:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(int64(undelegationCoin))),
 	}, nil
 }
 
@@ -126,6 +111,10 @@ func RandomMsgReDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx
 			return nil, fmt.Errorf("receveing redelegation is not allowed for source validators")
 		}
 
+		if sim.StakingKeeper().HasMaxUnbondingDelegationEntries(ctx, delAddr, val) {
+			return nil, fmt.Errorf("keeper does have a max unbonding delegation entries")
+		}
+
 		// check if the user has delegated tokens to the valset
 		_, found := sim.StakingKeeper().GetDelegation(ctx, delAddr, val)
 		if !found {
@@ -145,6 +134,10 @@ func RandomMsgReDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx
 		val, err := sdk.ValAddressFromBech32(vals.ValOperAddress)
 		if err != nil {
 			return nil, fmt.Errorf("validator address not formatted")
+		}
+
+		if sim.StakingKeeper().HasMaxUnbondingDelegationEntries(ctx, delAddr, val) {
+			return nil, fmt.Errorf("keeper does have a max unbonding delegation entries")
 		}
 
 		if sim.StakingKeeper().HasReceivingRedelegation(ctx, delAddr, val) {
