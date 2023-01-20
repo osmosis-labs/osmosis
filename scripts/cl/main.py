@@ -64,6 +64,18 @@ def estimate_test_case(tick_ranges: list[SqrtPriceRange], token_in_initial: sp.F
 
     return token_out_total, fee_growth_per_share_total
 
+def validate_confirmed_results(token_out_total: sp.Float, fee_growth_per_share_total: sp.Float, expected_token_out_total: sp.Float, expected_fee_growth_per_share_total: sp.Float):
+    """Validates the results of a calc concentrated liquidity test case estimateds.
+
+    This validation exists to make sure that subsequent changes to the script do not break it.
+    """
+
+    if sp.N(token_out_total, 18) != sp.N(expected_token_out_total, 18):
+        raise Exception(F"token_out_total {token_out_total} does not match expected_token_out_total {expected_token_out_total}")
+    
+    if sp.N(fee_growth_per_share_total, 18) != sp.N(expected_fee_growth_per_share_total, 18):
+        raise Exception(F"fee_growth_per_share_total {fee_growth_per_share_total} does not match expected_fee_growth_per_share_total {expected_fee_growth_per_share_total}")
+
 def estimate_single_position_within_one_tick_ofz():
     """Estimates and prints the results of a calc concentrated liquidity test case with a single position within one tick.
 
