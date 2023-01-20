@@ -300,9 +300,9 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 		//  4000 ----------- 4545
 		//
 		// Ticks:
-		// pos1:    305450, 315000,
-		// pos2:    300000, 305450
-		// current: 310000
+		// position   1:    305450, 315000,
+		// posisition 2:    300000, 305450
+		// current tick: 310000
 		"fee 3 - two positions with consecutive price ranges: eth -> usdc (5% fee)": {
 			addPositions: func(ctx sdk.Context, poolId uint64) {
 				// add first position
@@ -354,6 +354,11 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 		//          5000
 		//  4545 -----|----- 5500
 		//        5001 ----------- 6250
+		//
+		// Ticks
+		// position 1: 305450, 315000
+		// position 2: 310010, 322500
+		// current tick: 310000
 		"two positions with partially overlapping price ranges: usdc -> eth (zero fee)": {
 			addPositions: func(ctx sdk.Context, poolId uint64) {
 				// add first position
@@ -395,6 +400,103 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			expectedTick:     sdk.NewInt(320560),
 			newLowerPrice:    sdk.NewDec(5001),
 			newUpperPrice:    sdk.NewDec(6250),
+		},
+		// Partially overlapping price ranges with fee
+
+		//          5000
+		//  4545 -----|----- 5500
+		//        5001 ----------- 5843
+		//
+		// Ticks
+		// position 1: 305450, 315000
+		// position 2: 310010, 322500
+		// current tick: 310000
+		"fee 4 - two positions with partially overlapping price ranges: usdc -> eth (10% fee)": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+				s.Require().NoError(err)
+				// params are calculates by utilizing scripts from scripts/cl/main.py
+				// liquidity (1st):  1517882343.751510418088349649
+				// sqrtPriceNext:    74.161984870956629487 which is 5500
+				// sqrtPriceCurrent: 70.710678118654752440 which is 5000
+				// expectedTokenIn:  5762545340.40832543134898983723
+				// expectedTokenOut: 998976.618347426388356629926971
+
+				// create second position parameters
+				newLowerPrice := sdk.NewDec(5001)
+				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 310010
+				s.Require().NoError(err)
+				newUpperPrice := sdk.NewDec(6250)
+				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 322500
+				s.Require().NoError(err)
+
+				// add position two with the new price range above
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				s.Require().NoError(err)
+				// params
+				// liquidity (2nd):  670416088.605668727039250938
+				// sqrtPriceNext:    76.4063193467682254976579845167 which is 5837.925636120329
+				// sqrtPriceCurrent: 70.717748832948578243 which is 5001
+				// expectedTokenIn:  4237454659.59167456865101016277 = 10000000000 - 5762545340.40832543134898983723
+				// expectedTokenOut: 705813.347855134472186382130036
+
+				//////////////////////////////////////////////////
+				// 1. Only position 1
+				// * tick 310000 to 310010
+				// * price range: 5000 to 5001
+				// * sqrt price: 70.710678118654752440 to 70.717748832948578243
+
+				// liquidity:  1517882343.751510418088349649 (1st)
+
+				// expectedTokenIn (no fee): 10732512.384309615746632728158
+				// expectedTokenOut (with fee): 11805763.622740577321296000974
+				// expectedTokenOut: 2146.28785880640879265591374059
+				// expectedFeeGrowthAccumulatorValue: 0.000707071429382580300000000000073
+
+				// expectedRemainingTokenIn = 10000000000 - 11805763.622740577321296000974 = 9988194236.37725942267870399903
+
+				//////////////////////////////////////////////////
+				// 2. Both position 1 and 2
+				// * tick 310000 to 315000
+				// * price range: 5001 to 5500
+				// * sqrt price: 70.717748832948578243 to 74.161984870956629487
+
+				// liquidity: 1517882343.751510418088349649 (1st) + 670416088.605668727039250938 (2nd) = 2188298432.35717914512760058700
+
+				// expectedTokenIn (no fee): 7537016322.64112022429423919467
+				// expectedTokenIn (with fee): 8290717954.9052322467236631141
+				// expectedTokenOut: 1437108.91592757237716789250871
+				// expectedFeeGrowthAccumulatorValue: 0.344423603800805124400000000000
+
+				// expectedRemainingTokenIn = 9988194236.37725942267870399903 - 8290717954.9052322467236631141 = 1697476281.47202717595504088493
+
+				//////////////////////////////////////////////////
+				// 3. Only position 2
+				// * tick 315000 to 322500
+				// * price range: 5500 to 5843
+				// * sqrt price: 74.161984870956629487 to 76.4422024931482315166509926684
+
+				// liquidity: 670416088.605668727039250938 (2nd)
+
+				// remaining token in (with fee): 1697476281.47202717595504088493
+				// expectedTokenOut: 269488.274305469529889078712213
+				// expectedFeeGrowthAccumulatorValue: 0.253197426243519613677553835191
+
+			},
+			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenOutDenom: "eth",
+			priceLimit:    sdk.NewDec(6056),
+			swapFee:       sdk.MustNewDecFromStr("0.1"),
+			// expectedTokenIn:  5762545340.40832543134898983723 + 4237454659.59167456865101016277 = 10000000000.0000 = 10000.00 usdc
+			// expectedTokenOut: 2146.28785880640879265591374059 + "1437108.91592757237716789250871 + 269488.274305469529889078712213 = 1708743.47809184831584962713466 eth
+			// expectedFeeGrowthAccumulatorValue: 0.000707071429382580300000000000073 + 0.344423603800805124400000000000 + 0.253197426243519613677553835191 = 0.598328101473707318377553835191
+			expectedTokenIn:                   sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			expectedTokenOut:                  sdk.NewCoin("eth", sdk.NewInt(1708743)),
+			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.598328101473707318"),
+			expectedTick:                      sdk.NewInt(318432),
+			newLowerPrice:                     sdk.NewDec(5001),
+			newUpperPrice:                     sdk.NewDec(6250),
 		},
 		"two positions with partially overlapping price ranges, not utilizing full liquidity of second position: usdc -> eth (zero fee)": {
 			addPositions: func(ctx sdk.Context, poolId uint64) {

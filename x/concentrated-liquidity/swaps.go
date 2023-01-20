@@ -306,6 +306,8 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		// Charge fee
 		feeOnFullAmountRemainingIn := swapState.amountSpecifiedRemaining.Mul(swapFee)
 
+		fmt.Println("sqrtPrice before swap step", swapState.sqrtPrice)
+
 		// utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn
 		// we also calculate the swap state's new sqrtPrice after this swap
 		sqrtPrice, amountIn, amountOut := swapStrategy.ComputeSwapStep(
@@ -328,14 +330,26 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 			feeChargeTotal = amountIn.Mul(swapFee)
 		}
 
+		fmt.Println("current tick", swapState.tick)
+		fmt.Println("liquidity", swapState.liquidity)
+		fmt.Println("next tick", nextTick)
+		fmt.Println("amountSpecifiedRemaining", swapState.amountSpecifiedRemaining)
+		fmt.Println("amountIn", amountIn)
+		fmt.Println("amountOut", amountOut)
+
+		fmt.Println("feeChargeTotal", feeChargeTotal)
+
 		// This may happen when there is no liquidity between the ticks. This case occurs
 		// if in the range, there are only 2 positions with no overlapping ranges.
 		// As a result, the range from the end of position 1 to the beginning of position
 		// two has no liquidity and can be skipped.
 		if !swapState.liquidity.IsZero() {
 			feeChargePerUnitOfLiquidity := feeChargeTotal.Quo(swapState.liquidity)
+			fmt.Println("feeChargePerUnitOfLiquidity", feeChargePerUnitOfLiquidity)
 			swapState.feeGrowthGlobal = swapState.feeGrowthGlobal.Add(feeChargePerUnitOfLiquidity)
 		}
+
+		fmt.Print("\n\n")
 
 		// if the computeSwapStep calculated a sqrtPrice that is equal to the nextSqrtPrice, this means all liquidity in the current
 		// tick has been consumed and we must move on to the next tick to complete the swap
