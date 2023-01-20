@@ -166,6 +166,12 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 	defaultLowerTickIndex := int64(3)
 
 	tests := map[string]feeGrowthOutsideTest{
+		// imagine single swap over entire position
+		// crossing left > right and stopping above upper tick
+		// In this case, only the upper tick accumulator must have
+		// been updated when crossed.
+		// Since we track fees accrued below a tick, upper tick is updated
+		// while lower tick is zero.
 		"single swap left -> right: 2 ticks, one share - current price > upper tick": {
 			poolSetup:                 true,
 			lowerTick:                 0,
@@ -177,7 +183,7 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 			expectedFeeGrowthOutside:  defaultAccumCoins,
 			expectedError:             false,
 		},
-		"single swap left -> right: 3 ticks, two shares - current price > upper tick": {
+		"single swap left -> right: 3 ticks, two shares - current tick > upper tick": {
 			poolSetup:                 true,
 			lowerTick:                 0,
 			upperTick:                 2,
@@ -188,11 +194,33 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 			expectedFeeGrowthOutside:  defaultAccumCoins,
 			expectedError:             false,
 		},
-		"single swap left -> right: 2 ticks, one share - current price == upper tick": {
+		"single swap left -> right: 2 ticks, one share - current tick == lower tick": {
 			poolSetup:                 true,
 			lowerTick:                 0,
 			upperTick:                 1,
 			currentTick:               0,
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+			globalFeeGrowth:           sdk.NewDecCoin(ETH, sdk.NewInt(10)),
+			expectedFeeGrowthOutside:  defaultAccumCoins,
+			expectedError:             false,
+		},
+		"single swap left -> right: 2 ticks, one share - current tick < lower tick": {
+			poolSetup:                 true,
+			lowerTick:                 1,
+			upperTick:                 2,
+			currentTick:               0,
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+			globalFeeGrowth:           sdk.NewDecCoin(ETH, sdk.NewInt(10)),
+			expectedFeeGrowthOutside:  defaultAccumCoins,
+			expectedError:             false,
+		},
+		"single swap left -> right: 2 ticks, one share - current tick == upper tick": {
+			poolSetup:                 true,
+			lowerTick:                 0,
+			upperTick:                 1,
+			currentTick:               1,
 			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
 			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 			globalFeeGrowth:           sdk.NewDecCoin(ETH, sdk.NewInt(10)),
@@ -204,7 +232,7 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 		// In this case, all fees must have been accrued inside the tick
 		// Since we track fees accrued below a tick, both upper and lower position
 		// ticks are zero
-		"single swap right -> left: 2 ticks, one share - current price == lower tick": {
+		"single swap right -> left: 2 ticks, one share - current tick == lower tick": {
 			poolSetup:                 true,
 			lowerTick:                 0,
 			upperTick:                 1,
@@ -215,11 +243,33 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 			expectedFeeGrowthOutside:  defaultAccumCoins,
 			expectedError:             false,
 		},
-		"single swap right -> left: 2 ticks, one share - current price < lower tick": {
+		"single swap right -> left: 2 ticks, one share - current tick == upper tick": {
+			poolSetup:                 true,
+			lowerTick:                 0,
+			upperTick:                 1,
+			currentTick:               0,
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+			globalFeeGrowth:           sdk.NewDecCoin(ETH, sdk.NewInt(10)),
+			expectedFeeGrowthOutside:  defaultAccumCoins,
+			expectedError:             false,
+		},
+		"single swap right -> left: 2 ticks, one share - current tick < lower tick": {
 			poolSetup:                 true,
 			lowerTick:                 0,
 			upperTick:                 1,
 			currentTick:               -1,
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+			globalFeeGrowth:           sdk.NewDecCoin(ETH, sdk.NewInt(10)),
+			expectedFeeGrowthOutside:  defaultAccumCoins,
+			expectedError:             false,
+		},
+		"single swap right -> left: 2 ticks, one share - current tick > lower tick": {
+			poolSetup:                 true,
+			lowerTick:                 -1,
+			upperTick:                 1,
+			currentTick:               0,
 			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
 			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 			globalFeeGrowth:           sdk.NewDecCoin(ETH, sdk.NewInt(10)),
