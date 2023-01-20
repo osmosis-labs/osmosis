@@ -34,7 +34,7 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 
 // GetPool returns a pool with a given id.
 func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error) {
-	concentratedPool, err := k.GetPoolById(ctx, poolId)
+	concentratedPool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return nil, types.PoolNotFoundError{PoolId: poolId}
 	}
@@ -45,8 +45,8 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI,
 	return poolI, nil
 }
 
-// GetPoolById returns a concentratedPoolExtension that corresponds to the requested pool id. Returns error if pool id is not found.
-func (k Keeper) GetPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedPoolExtension, error) {
+// getPoolById returns a concentratedPoolExtension that corresponds to the requested pool id. Returns error if pool id is not found.
+func (k Keeper) getPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedPoolExtension, error) {
 	store := ctx.KVStore(k.storeKey)
 	pool := model.Pool{}
 	key := types.KeyPool(poolId)

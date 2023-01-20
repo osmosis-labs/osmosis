@@ -9,18 +9,11 @@ import (
 	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
-var (
-	sdkNineDec        = sdk.NewDec(9)
-	sdkTenDec         = sdk.NewDec(10)
-	sdkEighteenDec    = sdk.NewDec(18)
-	sdkThirtyEightDec = sdk.NewDec(38)
-)
-
 // initOrUpdateTick retrieves the tickInfo from the specified tickIndex and updates both the liquidityNet and LiquidityGross.
 // if we are initializing or updating an upper tick, we subtract the liquidityIn from the LiquidityNet
 // if we are initializing or updating an lower tick, we add the liquidityIn from the LiquidityNet
 func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
-	pool, err := k.GetPoolById(ctx, poolId)
+	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return err
 	}
@@ -135,20 +128,8 @@ func validateTickRangeIsValid(tickSpacing uint64, exponentAtPriceOne sdk.Int, lo
 	return nil
 }
 
-// powTen treats negative exponents as 1/(10**|exponent|) instead of 10**-exponent
-// This is because the sdk.Dec.Power function does not support negative exponents
-func powTen(exponent sdk.Int) sdk.Dec {
-	if exponent.GTE(sdk.ZeroInt()) {
-		return sdkTenDec.Power(exponent.Uint64())
-	}
-	return sdk.OneDec().Quo(sdkTenDec.Power(exponent.Abs().Uint64()))
-}
-
 // getMinAndMaxTicksFromExponentAtPriceOne determines min and max ticks allowed for a given exponentAtPriceOne value
 // This allows for a min spot price of 0.000000000000000001 and a max spot price of 100000000000000000000000000000000000000 for every exponentAtPriceOne value
 func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTick, maxTick int64) {
-	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(powTen(exponentAtPriceOne.Neg()))
-	minTick = sdkEighteenDec.Mul(geometricExponentIncrementDistanceInTicks).Neg().RoundInt64()
-	maxTick = sdkThirtyEightDec.Mul(geometricExponentIncrementDistanceInTicks).TruncateInt64()
-	return minTick, maxTick
+	return math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
 }

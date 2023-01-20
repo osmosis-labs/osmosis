@@ -32,7 +32,7 @@ of an IBC transfer to do crosschain swaps would look as follows:
     "contract": "osmo1crosschainswapscontract", 
     "msg": {
         "osmosis_swap": {
-            "input_coin": {"denom":"token0","amount":"1000"}, 
+            "swap_amount": "1000", 
             "output_denom":"token1",
             "slippage":{"twap": {"slippage_percentage":"20", "window_seconds": 10}},
             "receiver":"juno1receiver",
@@ -265,7 +265,7 @@ This will send 100 uosmo from chainA to chainB, swap it for 100 uosmo on chainB,
 The command to do this is:
 
 ```bash
-MEMO=$(jenv -c '{"wasm": {"contract": $CROSSCHAIN_SWAPS_ADDRESS, "msg": {"osmosis_swap":{"input_coin":{"denom":$DENOM,"amount":"100"},"output_denom":"uosmo","slippage":{"twap": {"slippage_percentage":"20", "window_seconds": 10}},"receiver":$VALIDATOR, "on_failed_delivery": "do_nothing"}}}}')
+MEMO=$(jenv -c '{"wasm": {"contract": $CROSSCHAIN_SWAPS_ADDRESS, "msg": {"osmosis_swap":{"swap_amount":"100","output_denom":"uosmo","slippage":{"twap": {"slippage_percentage":"20", "window_seconds": 10}},"receiver":$VALIDATOR, "on_failed_delivery": "do_nothing"}}}}')
 chainA tx ibc-transfer transfer transfer $CHANNEL_ID $CROSSCHAIN_SWAPS_ADDRESS 100uosmo \
     --from validator -y "${TX_FLAGS[@]}" \
     --memo "$MEMO"
@@ -277,19 +277,43 @@ passed to that contract.
 
 The msg describes the specific details of the cross-chain swap. 
 
-The "osmosis_swap" containes the following required fields: input_coin, output_denom, slippage, receiver, 
+The "osmosis_swap" containes the following required fields: swap_amount, output_denom, slippage, receiver, 
 and on_failed_delivery fields. All denominations inside the memo are expressed in the denoms 
 on the chain doing the swap (chainB).
 
-* The input_coin field contains the denomination and amount of the coin being swapped, which is the ibc denom and 100.
+* The swap_amount field contains the amount of the sent coin to be swapped, here it's 100.
 * The output_denom field specifies the denomination of the coin being received in the swap, which is "uosmo".
 * The slippage field is used to specify the acceptable price slippage for the swap, here we use a 20% of the time-weighted-average price with a 10-second window.
 * The receiver field specifies the address of the recipient of the swap. 
 * The on_failed_delivery field specifies what should happen in case the swap cannot be executed, which is set to "do_nothing"
 
-After executing this transaction, the relayer will send it to chain A, which will process it, and generate a new 
-IBC package to be sent to chain B with the resulting (swapped) tokens. This will be relayed to chain B and an 
-acknowledgement sent back to chain A to finalize the IBC transaction.
+After executing this transaction, the relayer will send it to chain B, which will process it, and generate a new 
+IBC package to be sent back to chain A with the resulting (swapped) tokens. This will be relayed to chain A and an 
+acknowledgement sent back to chain B to finalize the second IBC transaction.
+
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Alice
+    actor Alice
+    Alice->>ChainA: Send Transfer M1
+    Note over ChainA,Relayer: Block commited. 
+    Relayer-->>ChainB: Relay M1
+    critical Execute Contract
+            ChainB->>ChainB: Swap tokens
+            ChainB->>ChainB: Send IBC tx M2
+    end
+    Note over ChainB,Relayer: Block commited. 
+    Relayer-->>ChainA: Ack M1
+    Relayer-->>ChainA: Relay M2
+    ChainA->>Alice: Send Swapped Tokens
+    Note over ChainA,Relayer: Block commited. 
+    Relayer-->>ChainB: Ack M2
+```
+
+where M1 is the message sent above, and M2 is the transfer of the swapped tokens to the receiver (in this case, 
+the receiver is the same as the sender)
 
 #### Verifying the swap
 

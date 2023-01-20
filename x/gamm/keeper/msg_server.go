@@ -2,11 +2,13 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
@@ -324,25 +326,34 @@ func (server msgServer) MigrateShares(goCtx context.Context, msg *balancer.MsgMi
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
-	// get the poolId by parsing the gamm share denom
-	poolIdLeaving, err := GetPoolIdFromSharesDenom(msg.SharesToMigrate.Denom)
+	// Get the balancer poolId by parsing the gamm share denom.
+	poolIdLeaving, err := getPoolIdFromSharesDenom(msg.SharesToMigrate.Denom)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
+	// Get the concentrated pool from the message and type cast it to ConcentratedPoolExtension.
+	poolI, err := server.keeper.clKeeper.GetPool(ctx, msg.PoolIdEntering)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+	}
+	concentratedPool, ok := poolI.(cltypes.ConcentratedPoolExtension)
+	if !ok {
+		// If the conversion fails, return an error.
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, fmt.Errorf("given pool does not implement ConcentratedPoolExtension, implements %T", poolI)
+	}
+
+	// Exit the concentrated pool position.
 	exitCoins, err := server.keeper.ExitPool(ctx, sender, poolIdLeaving, msg.SharesToMigrate.Amount, sdk.NewCoins())
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
-	pool, err := server.keeper.clKeeper.GetPoolById(ctx, msg.PoolIdEntering)
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
-	}
+	// Determine the max and min ticks for the concentrated pool we are migrating to.
+	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(concentratedPool.GetPrecisionFactorAtPriceOne())
 
-	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(pool.GetPrecisionFactorAtPriceOne())
-
-	amount0, amount1, liquidity, err = server.keeper.clKeeper.CreatePosition(ctx, msg.PoolIdEntering, sender, exitCoins.AmountOf(pool.GetToken0()), exitCoins.AmountOf(pool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), minTick, maxTick)
+	// Create a full range (min to max tick) concentrated liquidity position.
+	amount0, amount1, liquidity, err = server.keeper.clKeeper.CreatePosition(ctx, msg.PoolIdEntering, sender, exitCoins.AmountOf(concentratedPool.GetToken0()), exitCoins.AmountOf(concentratedPool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), minTick, maxTick)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}

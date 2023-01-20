@@ -298,7 +298,9 @@ func convertToCFMMPool(pool poolmanagertypes.PoolI) (types.CFMMPoolI, error) {
 	return cfmmPool, nil
 }
 
-func GetPoolIdFromSharesDenom(denom string) (uint64, error) {
+// getPoolIdFromSharesDenom takes in a string representing a pool share denom and extracts the pool ID.
+// It returns the pool ID as a uint64 and an error if the denom is invalid.
+func getPoolIdFromSharesDenom(denom string) (uint64, error) {
 	if !strings.HasPrefix(denom, "gamm/pool/") {
 		return 0, fmt.Errorf("invalid pool share denom %s", denom)
 	}

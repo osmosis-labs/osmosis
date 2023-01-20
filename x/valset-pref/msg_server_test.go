@@ -3,6 +3,7 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	appParams "github.com/osmosis-labs/osmosis/v14/app/params"
 	valPref "github.com/osmosis-labs/osmosis/v14/x/valset-pref"
 	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
 )
@@ -642,7 +643,118 @@ func (suite *KeeperTestSuite) TestWithdrawDelegationRewards() {
 
 			} else {
 				suite.Require().Error(err)
+			}
+		})
+	}
+}
 
+func (suite *KeeperTestSuite) TestDelegateBondedTokens() {
+	suite.SetupTest()
+
+	testLock := suite.SetupLocks(sdk.AccAddress([]byte("addr1---------------")))
+
+	tests := []struct {
+		name                 string
+		delegator            sdk.AccAddress
+		lockId               uint64
+		expectedUnlockedOsmo sdk.Coin
+		expectedDelegations  []sdk.Dec
+		setValSet            bool
+		expectPass           bool
+	}{
+		{
+			name:                 "DelegateBondedTokens with existing osmo denom lockId, bonded and <= 2 weeks bond duration",
+			delegator:            sdk.AccAddress([]byte("addr1---------------")),
+			lockId:               testLock[0].ID,
+			expectedUnlockedOsmo: sdk.NewCoin(appParams.BaseCoinUnit, sdk.NewInt(60_000_000)), // delegator has 100osmo and creates 5 locks 10osmo each, forceUnlock only 1 lock
+			expectedDelegations:  []sdk.Dec{sdk.NewDec(2_000_000), sdk.NewDec(3_300_000), sdk.NewDec(1_200_000), sdk.NewDec(3_500_000)},
+			setValSet:            true,
+			expectPass:           true,
+		},
+		{
+			name:       "DelegateBondedTokens with existing stake denom lockId, bonded and <= 2 weeks bond duration",
+			delegator:  sdk.AccAddress([]byte("addr1---------------")),
+			lockId:     testLock[1].ID,
+			expectPass: false,
+		},
+		{
+			name:       "DelegateBondedTokens with non existing lockId",
+			delegator:  sdk.AccAddress([]byte("addr1---------------")),
+			lockId:     10,
+			expectPass: false,
+		},
+		{
+			name:       "DelegateBondedTokens with lockOwner != delegatorOwner",
+			delegator:  sdk.AccAddress([]byte("addr1---------------")),
+			lockId:     testLock[2].ID,
+			expectPass: false,
+		},
+		{
+			name:       "DelegateBondedTokens with lock duration > 2 weeks",
+			delegator:  sdk.AccAddress([]byte("addr1---------------")),
+			lockId:     testLock[3].ID,
+			expectPass: false,
+		},
+		{
+			name:       "DelegateBondedTokens with non bonded lockId",
+			delegator:  sdk.AccAddress([]byte("addr1---------------")),
+			lockId:     testLock[4].ID,
+			expectPass: false,
+		},
+		{
+			name:       "DelegateBondedTokens with synthetic locks",
+			delegator:  sdk.AccAddress([]byte("addr1---------------")),
+			lockId:     testLock[5].ID,
+			expectPass: false,
+		},
+		{
+			name:       "DelegateBondedTokens with multiple asset lock",
+			delegator:  sdk.AccAddress([]byte("addr1---------------")),
+			lockId:     testLock[6].ID,
+			expectPass: false,
+		},
+	}
+
+	for _, test := range tests {
+		suite.Run(test.name, func() {
+			// setup message server
+			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorSetPreferenceKeeper)
+			c := sdk.WrapSDKContext(suite.Ctx)
+
+			// creates a validator preference list to delegate to
+			preferences := suite.PrepareDelegateToValidatorSet()
+
+			if test.setValSet {
+				// SetValidatorSetPreference sets a new list of val-set
+				_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
+				suite.Require().NoError(err)
+			}
+
+			_, err := msgServer.DelegateBondedTokens(c, types.NewMsgDelegateBondedTokens(test.delegator, test.lockId))
+			if test.expectPass {
+				suite.Require().NoError(err)
+
+				// check that the lock has been successfully unlocked
+				// existingLocks should not contain the current lock
+				existingLocks, err := suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
+
+				suite.Require().NoError(err)
+				suite.Require().Equal(len(existingLocks), len(testLock)-1)
+
+				balance := suite.App.BankKeeper.GetBalance(suite.Ctx, test.delegator, appParams.BaseCoinUnit)
+				suite.Require().Equal(balance, test.expectedUnlockedOsmo)
+
+				// check if delegation has been done by checking if expectedDelegations matches after delegation
+				for i, val := range preferences {
+					valAddr, err := sdk.ValAddressFromBech32(val.ValOperAddress)
+					suite.Require().NoError(err)
+
+					// guarantees that the delegator exists because we check it in DelegateToValidatorSet
+					del, _ := suite.App.StakingKeeper.GetDelegation(suite.Ctx, test.delegator, valAddr)
+					suite.Require().Equal(del.Shares, test.expectedDelegations[i])
+				}
+			} else {
+				suite.Require().Error(err)
 			}
 		})
 	}

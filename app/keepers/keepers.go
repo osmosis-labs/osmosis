@@ -376,6 +376,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GetSubspace(valsetpreftypes.ModuleName),
 		appKeepers.StakingKeeper,
 		appKeepers.DistrKeeper,
+		appKeepers.LockupKeeper,
 	)
 
 	appKeepers.ValidatorSetPreferenceKeeper = &validatorSetPreferenceKeeper
