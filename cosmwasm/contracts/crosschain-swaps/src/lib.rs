@@ -5,10 +5,12 @@ pub mod consts;
 pub mod contract;
 mod error;
 mod execute;
-mod ibc;
+pub mod ibc;
 mod ibc_lifecycle;
 pub mod msg;
 pub mod state;
 mod utils;
 
 pub use crate::error::ContractError;
+pub use crate::msg::ExecuteMsg;
+pub use crate::msg::FailedDeliveryAction;

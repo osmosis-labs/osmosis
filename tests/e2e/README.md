@@ -67,6 +67,9 @@ Conceptually, we can split the e2e setup into 2 parts:
     configurations is hapenning in the background. The appropriate logic is selected
     depending on what the values of the arguments to `configurer.New(...)` are.
 
+    `CurrentBranchConfigurer` configures chains from current Git branch.
+    `UpgradeConfigurer` takes older osmosis versions and configures chains from them. 
+
     The configurer constructor is using a factory design pattern
     to decide on what kind of configurer to return. Factory design
     pattern is used to decouple the client from the initialization

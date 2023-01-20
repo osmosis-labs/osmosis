@@ -62,11 +62,8 @@ var (
 		// as a result, the upper tick is not updated.
 		expectedFeeGrowthOutsideUpper: cl.EmptyCoins,
 	}
-)
 
-// TODO: update test with swap fee.
-func (s *KeeperTestSuite) TestCreatePosition() {
-	tests := map[string]lpTest{
+	positionCases = map[string]lpTest{
 		"base case": {},
 		"create a position with non default tick spacing (10) with ticks that fall into tick spacing requirements": {
 			tickSpacing: 10,
@@ -119,6 +116,11 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			expectedFeeGrowthOutsideLower: oneEthCoins,
 			expectedFeeGrowthOutsideUpper: oneEthCoins,
 		},
+	}
+)
+
+func (s *KeeperTestSuite) TestCreatePosition() {
+	tests := map[string]lpTest{
 		"error: non-existent pool": {
 			poolId:        2,
 			expectedError: types.PoolNotFoundError{PoolId: 2},
@@ -173,6 +175,11 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 		// - custom hand-picked values
 		// - think of overflows
 		// - think of truncations
+	}
+
+	// add test cases for different positions
+	for name, test := range positionCases {
+		tests[name] = test
 	}
 
 	for name, tc := range tests {
@@ -869,6 +876,86 @@ func (s *KeeperTestSuite) TestinitializeInitialPositionForPool() {
 				s.Require().NoError(err)
 			}
 
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() {
+	tests := map[string]lpTest{}
+
+	// add test cases for different positions
+	for name, test := range positionCases {
+		tests[name] = test
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+
+			// Merge tc with baseCase and update tc to the merged result. This is done to reduce the amount of boilerplate in test cases.
+			baseConfigCopy := *baseCase
+			mergeConfigs(&baseConfigCopy, &tc)
+			tc = baseConfigCopy
+
+			clKeeper := s.App.ConcentratedLiquidityKeeper
+
+			// Fund account to pay for the pool creation fee.
+			s.FundAcc(s.TestAccs[0], PoolCreationFee)
+
+			// Create a CL pool with custom tickSpacing
+			poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, tc.precisionFactorAtPriceOne, sdk.ZeroDec()))
+			s.Require().NoError(err)
+			poolBefore, err := clKeeper.GetPool(s.Ctx, poolID)
+			s.Require().NoError(err)
+
+			// Pre-set fee growth accumulator
+			if !tc.preSetChargeFee.IsZero() {
+				err = clKeeper.ChargeFee(s.Ctx, 1, tc.preSetChargeFee)
+				s.Require().NoError(err)
+			}
+
+			// If we want to test a non-first position, we create a first position with a separate account
+			if tc.isNotFirstPosition {
+				s.SetupPosition(1, s.TestAccs[1], DefaultCoin0, DefaultCoin1, tc.lowerTick, tc.upperTick)
+			}
+
+			// Fund test account and create the desired position
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(DefaultCoin0, DefaultCoin1))
+
+			// Note user and pool account balances before create position is called
+			userBalancePrePositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
+			poolBalancePrePositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, poolBefore.GetAddress())
+
+			// System under test.
+			amtDenom0CreatePosition, amtDenom1CreatePosition, liquidityCreated, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.amount0Desired, tc.amount1Desired, tc.amount0Minimum, tc.amount1Minimum, tc.lowerTick, tc.upperTick)
+			s.Require().NoError(err)
+			amtDenom0WithdrawPosition, amtDenom1WithdrawPosition, err := clKeeper.WithdrawPosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, liquidityCreated)
+			s.Require().NoError(err)
+
+			// INVARIANTS
+
+			// 1. amount for denom0 and denom1 upon creating and withdraw position should be same
+			s.Require().Equal(amtDenom0CreatePosition, amtDenom0WithdrawPosition)
+			s.Require().Equal(amtDenom1CreatePosition, amtDenom1WithdrawPosition)
+
+			// 2. user balance and pool balance after creating / withdrawing position should be same
+			userBalancePostPositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
+			poolBalancePostPositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, poolBefore.GetAddress())
+			s.Require().Equal(userBalancePrePositionCreation, userBalancePostPositionCreation)
+			s.Require().Equal(poolBalancePrePositionCreation, poolBalancePostPositionCreation)
+
+			// 3. Check that position was deleted
+			position, err := clKeeper.GetPosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick)
+			s.Require().Error(err)
+			s.Require().ErrorAs(err, &types.PositionNotFoundError{PoolId: tc.poolId, LowerTick: tc.lowerTick, UpperTick: tc.upperTick})
+			s.Require().Nil(position)
+
+			// 4. Check that pool has come back to original state
+			poolAfter, err := clKeeper.GetPool(s.Ctx, poolID)
+			s.Require().NoError(err)
+			s.Require().Equal(poolBefore.GetTotalShares(), poolAfter.GetTotalShares())
+			s.Require().Equal(poolBefore.GetTotalPoolLiquidity(s.Ctx), poolAfter.GetTotalPoolLiquidity(s.Ctx))
 		})
 	}
 }

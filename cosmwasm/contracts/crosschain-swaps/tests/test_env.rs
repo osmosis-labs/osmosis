@@ -102,7 +102,7 @@ where
             Some(&owner.address()),
             None,
             &[],
-            &owner,
+            owner,
         )
         .unwrap()
         .data
@@ -112,7 +112,6 @@ where
 
 fn get_swaprouter_wasm() -> Vec<u8> {
     let wasm_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("..")
         .join("..")
         .join("..")
         .join("..")
@@ -126,7 +125,6 @@ fn get_swaprouter_wasm() -> Vec<u8> {
 
 fn get_crosschain_swaps_wasm() -> Vec<u8> {
     let wasm_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("..")
         .join("..")
         .join("..")
         .join("..")

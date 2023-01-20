@@ -84,7 +84,6 @@ fn get_wasm() -> Vec<u8> {
         .join("..")
         .join("..")
         .join("..")
-        .join("..")
         .join("tests")
         .join("ibc-hooks")
         .join("bytecode")
