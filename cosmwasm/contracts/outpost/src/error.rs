@@ -18,6 +18,9 @@ pub enum ContractError {
     #[error("Invalid Funds: Should be exactly one token. Got: {funds:?}")]
     InvalidFunds { funds: Vec<Coin> },
 
+    #[error("SwapAmountTooHigh: got {received}, max allowed: {max}")]
+    SwapAmountTooHigh { received: u128, max: u128 },
+
     #[error("Invalid Crosschain Swpas Contract: {contract}")]
     InvalidCrosschainSwapsContract { contract: String },
 

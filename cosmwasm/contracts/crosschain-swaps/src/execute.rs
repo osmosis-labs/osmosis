@@ -24,7 +24,8 @@ pub fn swap_and_forward(
     deps: DepsMut,
     block_time: Timestamp,
     contract_addr: Addr,
-    input_coin: Coin,
+    swap_amount: u128,
+    received_coin: Coin,
     output_denom: String,
     slippage: swaprouter::Slippage,
     receiver: Addr,
@@ -34,13 +35,16 @@ pub fn swap_and_forward(
     deps.api.debug(&format!("executing swap and forward"));
     let config = CONFIG.load(deps.storage)?;
 
+    // TODO: Here we can take the fees
+    let swap_coin = Coin::new(swap_amount, received_coin.denom);
+
     // Message to swap tokens in the underlying swaprouter contract
     let swap_msg = SwapRouterExecute::Swap {
-        input_coin: input_coin.clone(),
+        input_coin: swap_coin.clone(),
         output_denom,
         slippage,
     };
-    let msg = wasm_execute(config.swap_contract, &swap_msg, vec![input_coin])?;
+    let msg = wasm_execute(config.swap_contract, &swap_msg, vec![swap_coin])?;
 
     // Check that the received is valid and retrieve its channel
     let (valid_channel, valid_receiver) = validate_receiver(deps.as_ref(), receiver)?;

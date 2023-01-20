@@ -1,4 +1,5 @@
 use crate::{
+    checks::validate_input_amount,
     msg::{Callback, ExecuteMsg, Wasm, WasmHookExecute},
     state::CONFIG,
     ContractError,
@@ -24,7 +25,7 @@ pub fn execute_swap(
     user_msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     let ExecuteMsg::OsmosisSwap {
-        input_coin,
+        swap_amount,
         output_denom,
         receiver,
         slippage,
@@ -46,12 +47,21 @@ pub fn execute_swap(
         Some(next_memo)
     };
 
+    if swap_amount > coin.amount.into() {
+        return Err(ContractError::SwapAmountTooHigh {
+            received: swap_amount,
+            max: coin.amount.into(),
+        });
+    }
+
+    validate_input_amount(swap_amount, coin.amount)?;
+
     // note that this is not the same osmosis swap as the one above (which is
     // defined in this create). The one in crosschain_swaps doesn't accept a
-    // callback and . They share the same name because that's the name we want to
+    // callback. They share the same name because that's the name we want to
     // expose to the user
     let instruction = crosschain_swaps::ExecuteMsg::OsmosisSwap {
-        input_coin,
+        swap_amount,
         output_denom,
         receiver,
         slippage,
