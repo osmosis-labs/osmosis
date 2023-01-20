@@ -25,13 +25,13 @@ func (k Keeper) SetMigrationInfo(ctx sdk.Context, migrationInfo types.MigrationR
 }
 
 // validateRecords validates a list of BalancerToConcentratedPoolLink records to ensure that:
-// 1) there are no duplicates,
-// 2) the records are in sorted order.
+// 1) there are no duplicates
+// 2) the records are from lowest to highest balancer pool ID
 // 3) both the balancer and gamm pool IDs are valid
 func (k Keeper) validateRecords(ctx sdk.Context, records ...types.BalancerToConcentratedPoolLink) error {
 	lastBalancerPoolID := uint64(0)
-	balancerIdFlags := make(map[uint64]bool)
-	clIdFlags := make(map[uint64]bool)
+	balancerIdFlags := make(map[uint64]bool, len(records))
+	clIdFlags := make(map[uint64]bool, len(records))
 
 	for _, record := range records {
 		// If the balancer ID has already been seen, we have a duplicate
@@ -106,7 +106,7 @@ func (k Keeper) ReplaceMigrationRecords(ctx sdk.Context, records ...types.Balanc
 // UpdateDistrRecords gets the current migration records and only updates the records that are provided.
 // It is checked for no err when a proposal is made, and executed when a proposal passes.
 func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records ...types.BalancerToConcentratedPoolLink) error {
-	recordsMap := make(map[uint64]types.BalancerToConcentratedPoolLink)
+	recordsMap := make(map[uint64]types.BalancerToConcentratedPoolLink, len(records))
 
 	// Set up a map of the existing records
 	for _, existingRecord := range k.GetMigrationInfo(ctx).BalancerToConcentratedPoolLinks {
