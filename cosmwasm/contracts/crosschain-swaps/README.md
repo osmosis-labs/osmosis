@@ -309,8 +309,11 @@ sequenceDiagram
     Relayer-->>ChainA: Relay M2
     ChainA->>Alice: Send Swapped Tokens
     Note over ChainA,Relayer: Block commited. 
-    Relayer-->>ChainB: Relay M2
+    Relayer-->>ChainB: Ack M2
 ```
+
+where M1 is the message sent above, and M2 is the transfer of the swapped tokens to the receiver (in this case, 
+the receiver is the same as the sender)
 
 #### Verifying the swap
 
