@@ -326,30 +326,33 @@ func (server msgServer) MigrateShares(goCtx context.Context, msg *balancer.MsgMi
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
-	// get the poolId by parsing the gamm share denom
+	// Get the balancer poolId by parsing the gamm share denom.
 	poolIdLeaving, err := GetPoolIdFromSharesDenom(msg.SharesToMigrate.Denom)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
+	// Get the concentrated pool from the message and type cast it to ConcentratedPoolExtension.
+	poolI, err := server.keeper.clKeeper.GetPool(ctx, msg.PoolIdEntering)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+	}
+	concentratedPool, ok := poolI.(cltypes.ConcentratedPoolExtension)
+	if !ok {
+		// If the conversion fails, return an error.
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, fmt.Errorf("given pool does not implement ConcentratedPoolExtension, implements %T", poolI)
+	}
+
+	// Exit the concentrated pool position.
 	exitCoins, err := server.keeper.ExitPool(ctx, sender, poolIdLeaving, msg.SharesToMigrate.Amount, sdk.NewCoins())
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
-	poolI, err := server.keeper.clKeeper.GetPool(ctx, msg.PoolIdEntering)
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
-	}
-
-	concentratedPool, ok := poolI.(cltypes.ConcentratedPoolExtension)
-	if !ok {
-		// If the conversion fails, return an error
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, fmt.Errorf("given pool does not implement ConcentratedPoolExtension, implements %T", poolI)
-	}
-
+	// Determine the max and min ticks for the concentrated pool we are migrating to.
 	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(concentratedPool.GetPrecisionFactorAtPriceOne())
 
+	// Create a full range (min to max tick) concentrated liquidity position.
 	amount0, amount1, liquidity, err = server.keeper.clKeeper.CreatePosition(ctx, msg.PoolIdEntering, sender, exitCoins.AmountOf(concentratedPool.GetToken0()), exitCoins.AmountOf(concentratedPool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), minTick, maxTick)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
