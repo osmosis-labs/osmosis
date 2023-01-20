@@ -24,7 +24,7 @@ import (
 // - the pool or user does not have enough tokens to satisfy the requested amount
 func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (sdk.Int, sdk.Int, sdk.Dec, error) {
 	// Retrieve the pool associated with the given pool ID.
-	pool, err := k.GetPoolById(ctx, poolId)
+	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
@@ -103,7 +103,7 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 // - if attempts to withdraw an amount higher than originally provided in createPosition for a given range.
 func (k Keeper) WithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
 	// Retrieve the pool associated with the given pool ID.
-	pool, err := k.GetPoolById(ctx, poolId)
+	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
@@ -184,7 +184,7 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	// now calculate amount for token0 and token1
-	pool, err := k.GetPoolById(ctx, poolId)
+	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}

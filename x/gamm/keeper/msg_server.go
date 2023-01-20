@@ -2,11 +2,13 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
@@ -335,14 +337,20 @@ func (server msgServer) MigrateShares(goCtx context.Context, msg *balancer.MsgMi
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
-	pool, err := server.keeper.clKeeper.GetPoolById(ctx, msg.PoolIdEntering)
+	poolI, err := server.keeper.clKeeper.GetPool(ctx, msg.PoolIdEntering)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
-	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(pool.GetPrecisionFactorAtPriceOne())
+	concentratedPool, ok := poolI.(cltypes.ConcentratedPoolExtension)
+	if !ok {
+		// If the conversion fails, return an error
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, fmt.Errorf("given pool does not implement ConcentratedPoolExtension, implements %T", poolI)
+	}
 
-	amount0, amount1, liquidity, err = server.keeper.clKeeper.CreatePosition(ctx, msg.PoolIdEntering, sender, exitCoins.AmountOf(pool.GetToken0()), exitCoins.AmountOf(pool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), minTick, maxTick)
+	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(concentratedPool.GetPrecisionFactorAtPriceOne())
+
+	amount0, amount1, liquidity, err = server.keeper.clKeeper.CreatePosition(ctx, msg.PoolIdEntering, sender, exitCoins.AmountOf(concentratedPool.GetToken0()), exitCoins.AmountOf(concentratedPool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), minTick, maxTick)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
