@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"fmt"
-	"math"
 	"math/rand"
 	"time"
 
@@ -39,7 +38,7 @@ func RandomMsgDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, 
 
 	amount := sim.BankKeeper().GetBalance(ctx, delegator.Address, sdk.DefaultBondDenom).Amount
 	if !amount.IsPositive() {
-		return nil, fmt.Errorf(" balance is negative")
+		return nil, fmt.Errorf("balance is negative")
 	}
 
 	delegationCoin := rand.Intn(int(amount.Int64()))
@@ -56,37 +55,39 @@ func RandomMsgUnDelegateFromValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimC
 		return nil, fmt.Errorf("validator is not ok")
 	}
 
-	// check if validator has delegation entries
+	// get delegator with delegations
 	delegations := sim.StakingKeeper().GetValidatorDelegations(ctx, val.GetOperator())
 	if delegations == nil {
 		return nil, fmt.Errorf("keeper does have any delegation entries")
 	}
 
-	// get a random delegator that has delegations
+	// get random delegator from validator
 	delegation := delegations[rand.Intn(len(delegations))]
 	delAddr := delegation.GetDelegatorAddr()
 
-	// gets the existing delegation
-	existingDelegations := sim.StakingKeeper().GetDelegatorDelegations(ctx, delAddr, math.MaxUint16)
-	if len(existingDelegations) == 0 {
-		return nil, fmt.Errorf("No existing delegation")
-	}
-
-	// get the delegations in valset format
-	validatorDelegations, err := GetRandomDelegations(ctx, k, sim, delAddr)
+	// get delegator valset preferences
+	preferences, err := k.GetDelegationPreferences(ctx, delAddr.String())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("no delegations found")
 	}
 
-	// check for each validator in valset that they have delegations and enough delegated tokens
-	for _, valDels := range validatorDelegations {
-		// check if the validator contains delegation from the delegator
-		dels := sim.StakingKeeper().GetValidatorDelegations(ctx, sdk.ValAddress(valDels.ValOperAddress))
-		if len(dels) == 0 {
-			return nil, fmt.Errorf("validator doesnot have delegations")
+	for _, valSet := range preferences.Preferences {
+		val, err := sdk.ValAddressFromBech32(valSet.ValOperAddress)
+		if err != nil {
+			return nil, fmt.Errorf("validator address not formatted")
 		}
 
-		if sim.StakingKeeper().HasMaxUnbondingDelegationEntries(ctx, delAddr, sdk.ValAddress(valDels.ValOperAddress)) {
+		_, valfound := sim.StakingKeeper().GetValidator(ctx, val)
+		if !valfound {
+			return nil, fmt.Errorf("validator not found %s", val.String())
+		}
+
+		_, found := sim.StakingKeeper().GetDelegation(ctx, delAddr, val)
+		if !found {
+			return nil, fmt.Errorf("delegator delegation not found")
+		}
+
+		if sim.StakingKeeper().HasMaxUnbondingDelegationEntries(ctx, delAddr, val) {
 			return nil, fmt.Errorf("keeper does have a max unbonding delegation entries")
 		}
 	}
@@ -105,29 +106,34 @@ func RandomMsgUnDelegateFromValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimC
 }
 
 func RandomMsgReDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*types.MsgRedelegateValidatorSet, error) {
+	// random delegator account
 	delegator := sim.RandomSimAccount()
 	delAddr := delegator.Address
 
-	// source validator
-	_, err := GetRandomDelegations(ctx, k, sim, delAddr)
+	// existing delegations
+	delegations, err := k.GetDelegationPreferences(ctx, delAddr.String())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("no delegations found")
 	}
 
-	// gets the existing delegation
-	existingDelegations := sim.StakingKeeper().GetDelegatorDelegations(ctx, delAddr, math.MaxUint16)
-	if len(existingDelegations) == 0 {
-		return nil, fmt.Errorf("No existing delegation")
-	}
+	for _, dels := range delegations.Preferences {
+		val, err := sdk.ValAddressFromBech32(dels.ValOperAddress)
+		if err != nil {
+			return nil, fmt.Errorf("validator address not formatted")
+		}
 
-	// check if existing validators aren't already involved in redelegation
-	for _, exVals := range existingDelegations {
-		if len(sim.StakingKeeper().GetRedelegationsFromSrcValidator(ctx, exVals.GetValidatorAddr())) != 0 || sim.StakingKeeper().HasReceivingRedelegation(ctx, delAddr, exVals.GetValidatorAddr()) {
+		if sim.StakingKeeper().HasReceivingRedelegation(ctx, delAddr, val) {
 			return nil, fmt.Errorf("receveing redelegation is not allowed for source validators")
+		}
+
+		// check if the user has delegated tokens to the valset
+		_, found := sim.StakingKeeper().GetDelegation(ctx, delAddr, val)
+		if !found {
+			return nil, fmt.Errorf("user hasn't delegated tokens to the validator, %s", val.String())
 		}
 	}
 
-	// Destination validators
+	// new delegations to redelegate to
 	remainingWeight := sdk.NewDec(1)
 	preferences, err := GetRandomValAndWeights(ctx, k, sim, remainingWeight)
 	if err != nil {
@@ -136,7 +142,12 @@ func RandomMsgReDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx
 
 	// check if redelegation is possible to new validators
 	for _, vals := range preferences {
-		if len(sim.StakingKeeper().GetRedelegationsFromSrcValidator(ctx, sdk.ValAddress(vals.ValOperAddress))) != 0 || sim.StakingKeeper().HasReceivingRedelegation(ctx, delAddr, sdk.ValAddress(vals.ValOperAddress)) {
+		val, err := sdk.ValAddressFromBech32(vals.ValOperAddress)
+		if err != nil {
+			return nil, fmt.Errorf("validator address not formatted")
+		}
+
+		if sim.StakingKeeper().HasReceivingRedelegation(ctx, delAddr, val) {
 			return nil, fmt.Errorf("receveing redelegation is not allowed for target validators")
 		}
 	}
@@ -180,6 +191,16 @@ func GetRandomValAndWeights(ctx sdk.Context, k valsetkeeper.Keeper, sim *osmosim
 				Weight:         randValue,
 			})
 		}
+	}
+
+	totalWeight := sdk.ZeroDec()
+	// check if all the weights in preferences equal 1
+	for _, prefs := range preferences {
+		totalWeight = totalWeight.Add(prefs.Weight)
+	}
+
+	if !totalWeight.Equal(sdk.OneDec()) {
+		return nil, fmt.Errorf("generated weights donot equal 1 got: %d", totalWeight)
 	}
 
 	return preferences, nil

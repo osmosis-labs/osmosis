@@ -151,7 +151,7 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 		// check if the user has delegated tokens to the valset
 		delegation, found := k.stakingKeeper.GetDelegation(ctx, delegator, valAddr)
 		if !found {
-			return fmt.Errorf("No delegation found")
+			return fmt.Errorf("user hasn't delegated tokens to the validator, %s", valAddr.String())
 		}
 
 		tokenFromShares := validator.TokensFromShares(delegation.Shares)
@@ -159,6 +159,7 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 		existingValSet = append(existingValSet, existing_val)
 		newValSet = append(newValSet, existing_val_zero_amount)
 		totalTokenAmount = totalTokenAmount.Add(tokenFromShares)
+		//fmt.Println("EXISTING VAL: ", existingVals.ValOperAddress, tokenFromShares)
 	}
 
 	for _, newVals := range newSet {
@@ -167,6 +168,7 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 		new_val, new_val_zero_amount := k.GetValSetStruct(newVals, amountToDelegate)
 		newValSet = append(newValSet, new_val)
 		existingValSet = append(existingValSet, new_val_zero_amount)
+		//fmt.Println("NEW VAL: ", newVals.ValOperAddress, amountToDelegate)
 	}
 
 	// calculate the difference between two sets
@@ -174,6 +176,7 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 	for i, newVals := range existingValSet {
 		diffAmount := newVals.amount.Sub(newValSet[i].amount)
 
+		//fmt.Println("Internal DIFF AMOUNT", newVals.valAddr, diffAmount)
 		diff_val := valSet{
 			valAddr: newVals.valAddr,
 			amount:  diffAmount,
@@ -308,6 +311,7 @@ func (k Keeper) getValAddrAndVal(ctx sdk.Context, valOperAddress string) (sdk.Va
 func (k Keeper) IsPreferenceValid(ctx sdk.Context, preferences []types.ValidatorPreference) ([]types.ValidatorPreference, bool) {
 	var weightsRoundedValPrefList []types.ValidatorPreference
 	for _, val := range preferences {
+
 		// round up weights
 		valWeightStr := osmomath.SigFigRound(val.Weight, sdk.NewDec(10).Power(2).TruncateInt())
 

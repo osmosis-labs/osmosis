@@ -98,7 +98,6 @@ func (k Keeper) GetExistingStakingDelegations(ctx sdk.Context, delAddr sdk.AccAd
 	}
 
 	existingTotalShares := sdk.NewDec(0)
-
 	// calculate total shares that currently exists
 	for _, existingDelegation := range existingDelegations {
 		existingTotalShares = existingTotalShares.Add(existingDelegation.Shares)
