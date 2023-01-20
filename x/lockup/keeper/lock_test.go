@@ -46,48 +46,63 @@ func (suite *KeeperTestSuite) TestBeginUnlocking() { // test for all unlockable 
 }
 
 func (suite *KeeperTestSuite) TestBeginForceUnlock() {
-	suite.SetupTest()
-
-	// initial check
-	locks, err := suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
-	suite.Require().NoError(err)
-	suite.Require().Len(locks, 0)
-
-	// lock coins
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	// coins to lock
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
 
-	// check locks
-	locks, err = suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
-	suite.Require().NoError(err)
+	testCases := []struct {
+		name             string
+		coins            sdk.Coins
+		unlockCoins      sdk.Coins
+		expectSameLockID bool
+	}{
+		{
+			name:             "new lock id is returned if the lock was split",
+			coins:            coins,
+			unlockCoins:      sdk.Coins{sdk.NewInt64Coin("stake", 1)},
+			expectSameLockID: false,
+		},
+		{
+			name:             "same lock id is returned if the lock was not split",
+			coins:            coins,
+			unlockCoins:      sdk.Coins{},
+			expectSameLockID: true,
+		},
+	}
 
-	for _, lock := range locks {
-		suite.Require().Equal(lock.EndTime, time.Time{})
-		suite.Require().Equal(lock.IsUnlocking(), false)
+	for _, tc := range testCases {
+		suite.SetupTest()
 
-		// test force unlock partial amount
-		coins = sdk.Coins{}
-		for _, coin := range lock.Coins {
-			coins = append(coins, sdk.NewCoin(coin.Denom, coin.Amount.Sub(sdk.NewInt(1))))
+		// initial check
+		locks, err := suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
+		suite.Require().NoError(err)
+		suite.Require().Len(locks, 0)
+
+		// lock coins
+		addr1 := sdk.AccAddress([]byte("addr1---------------"))
+		suite.LockTokens(addr1, tc.coins, time.Second)
+
+		// check locks
+		locks, err = suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
+		suite.Require().NoError(err)
+
+		for _, lock := range locks {
+			suite.Require().Equal(lock.EndTime, time.Time{})
+			suite.Require().Equal(lock.IsUnlocking(), false)
+
+			lockID, err := suite.App.LockupKeeper.BeginForceUnlock(suite.Ctx, lock.ID, tc.unlockCoins)
+			suite.Require().NoError(err)
+
+			if tc.expectSameLockID {
+				suite.Require().Equal(lockID, lock.ID)
+			} else {
+				suite.Require().Equal(lockID, lock.ID + 1)
+			}
+
+			// new or updated lock
+			newLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
+			suite.Require().NoError(err)
+			suite.Require().True(newLock.IsUnlocking())
 		}
-
-		lockID, err := suite.App.LockupKeeper.BeginForceUnlock(suite.Ctx, lock.ID, coins)
-		suite.Require().NoError(err)
-		suite.Require().NotEqual(lockID, lock.ID)
-
-		newLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
-		suite.Require().NoError(err)
-		suite.Require().True(newLock.IsUnlocking())
-
-		// test force unlock remainder
-		lockID, err = suite.App.LockupKeeper.BeginForceUnlock(suite.Ctx, lock.ID, sdk.Coins{})
-		suite.Require().NoError(err)
-		suite.Require().Equal(lockID, lock.ID)
-
-		updatedLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lock.ID)
-		suite.Require().NoError(err)
-		suite.Require().True(updatedLock.IsUnlocking())
 	}
 }
 
