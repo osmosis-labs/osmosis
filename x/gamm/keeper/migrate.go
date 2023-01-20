@@ -11,6 +11,7 @@ import (
 )
 
 // GetMigrationInfo returns the balancer to gamm pool migration info from the store
+// Returns an empty MigrationRecords struct if migration info does not exist
 func (k Keeper) GetMigrationInfo(ctx sdk.Context) types.MigrationRecords {
 	store := ctx.KVStore(k.storeKey)
 	migrationInfo := types.MigrationRecords{}
