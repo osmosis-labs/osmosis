@@ -112,7 +112,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 		"Min tick and max k": {
 			tickIndex:          sdk.NewInt(-162000000000000),
 			exponentAtPriceOne: sdk.NewInt(-12),
-			expectedPrice:      sdk.ZeroDec(),
+			expectedPrice:      types.MinSpotPrice,
 		},
 		"error: tickIndex less than minimum": {
 			tickIndex:          sdk.NewInt(DefaultMinTick - 1),
@@ -249,10 +249,10 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 	}
 }
 
-// TestTickToSqrtPricePriceToTick_InverseRelationship tests that ensuring the inverse calculation 
+// TestTickToSqrtPricePriceToTick_InverseRelationship tests that ensuring the inverse calculation
 // between the two methods: tick to square root price to power of 2 and price to tick
 func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRelationship() {
-	testCases := map[string]struct{
+	testCases := map[string]struct {
 		price              sdk.Dec
 		exponentAtPriceOne sdk.Int
 		tickExpected       string
@@ -304,9 +304,9 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 		},
 	}
 	for name, tc := range testCases {
-		tc := tc 
+		tc := tc
 
-		suite.Run(name, func () {
+		suite.Run(name, func() {
 			tick, err := math.PriceToTick(tc.price, tc.exponentAtPriceOne)
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.tickExpected, tick.String())
