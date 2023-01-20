@@ -7,6 +7,7 @@ import (
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
 	balancer "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
@@ -429,6 +430,17 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares() {
 			},
 			sharesToCreate: defaultGammShares.Amount,
 			expectedErr:    fmt.Errorf("pool with ID %d does not exist", 1000),
+		},
+		{
+			name: "error: attempt to migrate shares to non-existent pool",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  defaultGammShares.Denom,
+				sharesToMigrateAmount: defaultGammShares.Amount,
+				poolIdEntering:        3,
+			},
+			sharesToCreate: defaultGammShares.Amount,
+			expectedErr:    cltypes.PoolNotFoundError{PoolId: 3},
 		},
 		{
 			name: "error: attempt to migrate more shares than the user has",
