@@ -109,6 +109,7 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 	}
 
 	for _, test := range tests {
+	        test := test
 		suite.Run(test.name, func() {
 			suite.SetupTest()
 			keeper := suite.App.GAMMKeeper
