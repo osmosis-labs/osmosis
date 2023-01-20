@@ -58,6 +58,8 @@ func TickToSqrtPrice(tickIndex, exponentAtPriceOne sdk.Int) (price sdk.Dec, err 
 		return sdk.Dec{}, types.TickIndexMaximumError{MaxTick: maxTick}
 	}
 
+	// Since the minTick should represent 0, instead of using the minimum spot price (.000000000001)
+	// we use the actual number 0 for even more precision
 	if tickIndex.Equal(sdk.NewInt(minTick)) {
 		return sdk.ZeroDec(), nil
 	}
