@@ -109,7 +109,7 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 	}
 
 	for _, test := range tests {
-	        test := test
+		test := test
 		suite.Run(test.name, func() {
 			suite.SetupTest()
 			keeper := suite.App.GAMMKeeper
@@ -117,10 +117,8 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			// Our testing environment is as follows:
 			// Balancer pool IDs: 1, 2
 			// Concentrated pool IDs: 3, 4
-			suite.PrepareBalancerPool()
-			suite.PrepareBalancerPool()
-			suite.PrepareConcentratedPool()
-			suite.PrepareConcentratedPool()
+			suite.PrepareMultipleBalancerPools(2)
+			suite.PrepareMultipleConcentratedPools(2)
 
 			err := keeper.ReplaceMigrationRecords(suite.Ctx, test.testingMigrationRecords...)
 			if test.expectErr {
@@ -334,14 +332,8 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 			// Our testing environment is as follows:
 			// Balancer pool IDs: 1, 2, 3, 4
 			// Concentrated pool IDs: 5, 6, 7, 8
-			suite.PrepareBalancerPool()
-			suite.PrepareBalancerPool()
-			suite.PrepareBalancerPool()
-			suite.PrepareBalancerPool()
-			suite.PrepareConcentratedPool()
-			suite.PrepareConcentratedPool()
-			suite.PrepareConcentratedPool()
-			suite.PrepareConcentratedPool()
+			suite.PrepareMultipleBalancerPools(4)
+			suite.PrepareMultipleConcentratedPools(4)
 
 			if test.isPreexistingRecordsSet {
 				// Set up existing records so we can update them
