@@ -77,7 +77,8 @@ def validate_confirmed_results(token_out_total: sp.Float, fee_growth_per_share_t
         raise Exception(F"fee_growth_per_share_total {fee_growth_per_share_total} does not match expected_fee_growth_per_share_total {expected_fee_growth_per_share_total}")
 
 def estimate_single_position_within_one_tick_ofz():
-    """Estimates and prints the results of a calc concentrated liquidity test case with a single position within one tick.
+    """Estimates and prints the results of a calc concentrated liquidity test case with a single position within one tick
+    when swapping token one for token zero (ofz).
 
      go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_1 github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity
     """
@@ -97,9 +98,31 @@ def estimate_single_position_within_one_tick_ofz():
 
     validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
 
+def estimate_two_positions_within_one_tick_zfo():
+    """Estimates and prints the results of a calc concentrated liquidity test case with two positions within one tick
+    when swapping token zero for one (zfo).
+
+     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_1 github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity
+    """
+
+    is_zero_for_one = True
+    swap_fee = sdk_dec("0.03")
+    token_in_initial = sdk_dec("13370")
+
+    tick_ranges = [
+        SqrtPriceRange(5000, None, sdk_dec("3035764687.503020836176699298")), # last one must be computed based on remaining token in, therefore it is None
+    ]
+
+    token_out_total, fee_growth_per_share_total = estimate_test_case(tick_ranges, token_in_initial, swap_fee, is_zero_for_one)
+
+    expected_token_out_total = sdk_dec("64824917.7760329489344598324379")
+    expected_fee_growth_per_share_total = sdk_dec("0.000000132124865162033700093060000008")
+
+    validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
+
 def estimate_overlapping_price_range_ofz_test():
     """Estimates and prints the results of a calc concentrated liquidity test case with overlapping price ranges
-    when swapping token zero for one.
+    when swapping token one for token zero (ofz).
 
      go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_4 github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity
     """
@@ -124,6 +147,9 @@ def estimate_overlapping_price_range_ofz_test():
 def main():
     # fee 1
     estimate_single_position_within_one_tick_ofz()
+
+    # fee 2
+    estimate_two_positions_within_one_tick_zfo()
 
     # fee 4
     estimate_overlapping_price_range_ofz_test()

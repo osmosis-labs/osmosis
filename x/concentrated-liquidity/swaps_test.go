@@ -183,11 +183,10 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			swapFee:       sdk.MustNewDecFromStr("0.03"),
 			// params
 			// liquidity: 		 3035764687.503020836176699298
-			// sqrtPriceNext:    70.689324382628080101 which is 4996.98058167241679801 https://www.wolframalpha.com/input?i=%28%283035764687.503020836176699298%29%29+%2F+%28%28%283035764687.503020836176699298%29+%2F+%2870.710678118654752440%29%29+%2B+%2813370+*+%281+-+0.03%29%29%29
 			// sqrtPriceCurrent: 70.710678118654752440 which is 5000
-			// expectedTokenIn:  13370.0000 rounded up https://www.wolframalpha.com/input?i=%283035764687.503020836176699298+*+%2870.710678118654752440+-+70.688664163408836319+%29%29+%2F+%2870.688664163408836319+*+70.710678118654752440%29
-			// expectedTokenOut: 64824917.7760 rounded down https://www.wolframalpha.com/input?i=3035764687.503020836176699298+*+%2870.710678118654752440+-+70.689324382628080101%29
-			// expectedFeeGrowthAccumulatorValue: 0.000000132124865162 https://www.wolframalpha.com/input?i=%2813370+*+0.03%29+%2F+3035764687.503020836176699298
+			// given tokenIn:  13370
+			// expectedTokenOut: 64824917.7760329489344598324379
+			// expectedFeeGrowthAccumulatorValue: 0.000000132124865162033700093060000008
 			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(13370)),
 			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(64824917)),
 			expectedTick:                      sdk.NewInt(309970),
