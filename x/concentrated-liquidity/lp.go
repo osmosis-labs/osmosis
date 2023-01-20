@@ -114,7 +114,7 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	}
 
 	// Retrieve the position in the pool for the provided owner and tick range.
-	position, err := k.getPosition(ctx, poolId, owner, lowerTick, upperTick)
+	position, err := k.GetPosition(ctx, poolId, owner, lowerTick, upperTick)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}

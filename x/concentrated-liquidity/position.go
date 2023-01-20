@@ -19,7 +19,7 @@ func (k Keeper) getOrInitPosition(
 		return nil, types.PoolNotFoundError{PoolId: poolId}
 	}
 	if k.hasPosition(ctx, poolId, owner, lowerTick, upperTick) {
-		position, err := k.getPosition(ctx, poolId, owner, lowerTick, upperTick)
+		position, err := k.GetPosition(ctx, poolId, owner, lowerTick, upperTick)
 		if err != nil {
 			return nil, err
 		}
@@ -66,8 +66,8 @@ func (k Keeper) hasPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	return store.Has(key)
 }
 
-// getPosition checks if a position exists at the provided upper and lower ticks for the given owner. Returns position if found.
-func (k Keeper) getPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) (*model.Position, error) {
+// GetPosition checks if a position exists at the provided upper and lower ticks for the given owner. Returns position if found.
+func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) (*model.Position, error) {
 	store := ctx.KVStore(k.storeKey)
 	positionStruct := &model.Position{}
 	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
