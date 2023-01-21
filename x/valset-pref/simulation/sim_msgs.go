@@ -108,7 +108,7 @@ func RandomMsgReDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx
 		}
 
 		if sim.StakingKeeper().HasReceivingRedelegation(ctx, delAddr, val) {
-			return nil, fmt.Errorf("receveing redelegation is not allowed for source validators")
+			return nil, fmt.Errorf("receiving redelegation is not allowed for source validators")
 		}
 
 		if sim.StakingKeeper().HasMaxUnbondingDelegationEntries(ctx, delAddr, val) {
@@ -221,13 +221,4 @@ func RandomWeight(maxVal sdk.Dec) (sdk.Dec, error) {
 	valWeightStr := fmt.Sprintf("%.2f", randVal)
 
 	return sdk.MustNewDecFromStr(valWeightStr), nil
-}
-
-func RandSliceElem[E any](elems []E) (E, bool) {
-	if len(elems) == 0 {
-		var e E
-		return e, false
-	}
-
-	return elems[rand.Intn(len(elems))], true
 }
