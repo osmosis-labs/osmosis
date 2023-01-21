@@ -38,7 +38,7 @@ func RandomMsgDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, 
 
 	amount := sim.BankKeeper().GetBalance(ctx, delegator.Address, sdk.DefaultBondDenom).Amount
 	if !amount.IsPositive() {
-		return nil, fmt.Errorf("balance is negative")
+		return nil, fmt.Errorf("%s is not present", sdk.DefaultBondDenom)
 	}
 
 	delegationCoin := rand.Intn(int(amount.Int64()))
@@ -68,7 +68,7 @@ func RandomMsgUnDelegateFromValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimC
 
 	validator, found := sim.StakingKeeper().GetValidator(ctx, val)
 	if !found {
-		return nil, fmt.Errorf("Validatot not found")
+		return nil, fmt.Errorf("Validator not found")
 	}
 
 	// check if the user has delegated tokens to the valset
@@ -79,7 +79,7 @@ func RandomMsgUnDelegateFromValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimC
 
 	totalBond := validator.TokensFromShares(del.GetShares()).TruncateInt()
 	if !totalBond.IsPositive() {
-		return nil, fmt.Errorf("total bond is negative")
+		return nil, fmt.Errorf("%s is not present", sdk.DefaultBondDenom)
 	}
 
 	undelegationCoin := rand.Intn(int(totalBond.Int64()))
