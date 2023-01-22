@@ -718,6 +718,44 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			newLowerPrice:    sdk.NewDec(5501),
 			newUpperPrice:    sdk.NewDec(6250),
 		},
+		"fee 6 - two sequential positions with a gap (3% fee)": {
+			addPositions: func(ctx sdk.Context, poolId uint64) {
+				// add first position
+				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+				s.Require().NoError(err)
+				// params are calculates by utilizing scripts from scripts/cl/main.py
+				//
+				// liquidity (1st):  1517882343.751510418088349649
+				// sqrtPriceNext:    74.161984870956629487 which is 5500
+				// sqrtPriceCurrent: 70.710678118654752440 which is 5000
+
+				// create second position parameters
+				newLowerPrice := sdk.NewDec(5501)
+				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 315010
+				s.Require().NoError(err)
+				newUpperPrice := sdk.NewDec(6250)
+				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 322500
+				s.Require().NoError(err)
+
+				// add position two with the new price range above
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				s.Require().NoError(err)
+				// params
+				// liquidity (2nd):  1199528406.187413669220037261
+				// sqrtPriceNext:    78.138055170339538272 which is 6105.5556658030254493528
+				// sqrtPriceCurrent: 74.168726563154635303 which is 5501
+			},
+			tokenIn:                           sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenOutDenom:                     "eth",
+			priceLimit:                        sdk.NewDec(6106),
+			swapFee:                           sdk.MustNewDecFromStr("0.03"),
+			expectedTokenIn:                   sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			expectedTokenOut:                  sdk.NewCoin("eth", sdk.NewInt(1772029)),
+			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.218688507910948644"),
+			expectedTick:                      sdk.NewInt(320672),
+			newLowerPrice:                     sdk.NewDec(5501),
+			newUpperPrice:                     sdk.NewDec(6250),
+		},
 		// Slippage protection doesn't cause a failure but interrupts early.
 		"single position within one tick, trade completes but slippage protection interrupts trade early: eth -> usdc (zero fee)": {
 			addPositions: func(ctx sdk.Context, poolId uint64) {
