@@ -5,10 +5,63 @@ import (
 	"sort"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+func (k Keeper) Migrate(ctx sdk.Context, sender sdk.AccAddress, sharesToMigrate sdk.Coin, poolIdEntering uint64) (amount0, amount1 sdk.Int, liquidity sdk.Dec, poolIdLeaving uint64, err error) {
+	// Get the balancer poolId by parsing the gamm share denom.
+	poolIdLeaving, err = getPoolIdFromSharesDenom(sharesToMigrate.Denom)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, err
+	}
+
+	// Ensure a governance sanctioned link exists between the balancer pool and the concentrated pool.
+	migrationInfo := k.GetMigrationInfo(ctx)
+	matchFound := false
+	for _, info := range migrationInfo.BalancerToConcentratedPoolLinks {
+		if info.BalancerPoolId == poolIdLeaving {
+			if info.ClPoolId != poolIdEntering {
+				return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, types.InvalidPoolMigrationLinkError{PoolIdEntering: poolIdEntering, CanonicalId: info.ClPoolId}
+			}
+			matchFound = true
+			break
+		}
+	}
+	if !matchFound {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, types.PoolMigrationLinkNotFoundError{PoolIdLeaving: poolIdLeaving}
+	}
+
+	// Get the concentrated pool from the message and type cast it to ConcentratedPoolExtension.
+	poolI, err := k.clKeeper.GetPool(ctx, poolIdEntering)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, err
+	}
+	concentratedPool, ok := poolI.(cltypes.ConcentratedPoolExtension)
+	if !ok {
+		// If the conversion fails, return an error.
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, fmt.Errorf("given pool does not implement ConcentratedPoolExtension, implements %T", poolI)
+	}
+
+	// Exit the concentrated pool position.
+	exitCoins, err := k.ExitPool(ctx, sender, poolIdLeaving, sharesToMigrate.Amount, sdk.NewCoins())
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, err
+	}
+
+	// Determine the max and min ticks for the concentrated pool we are migrating to.
+	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(concentratedPool.GetPrecisionFactorAtPriceOne())
+
+	// Create a full range (min to max tick) concentrated liquidity position.
+	amount0, amount1, liquidity, err = k.clKeeper.CreatePosition(ctx, poolIdEntering, sender, exitCoins.AmountOf(concentratedPool.GetToken0()), exitCoins.AmountOf(concentratedPool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), minTick, maxTick)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, err
+	}
+	return amount0, amount1, liquidity, poolIdLeaving, nil
+}
 
 // GetMigrationInfo returns the balancer to gamm pool migration info from the store
 // Returns an empty MigrationRecords struct if migration info does not exist

@@ -1,8 +1,210 @@
 package keeper_test
 
 import (
+	"fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
+	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 )
+
+func (suite *KeeperTestSuite) TestMigrate() {
+	defaultAccount := suite.TestAccs[0]
+	defaultGammShares := sdk.NewCoin("gamm/pool/1", sdk.MustNewDecFromStr("100000000000000000000").RoundInt())
+	invalidGammShares := sdk.NewCoin("gamm/pool/1", sdk.MustNewDecFromStr("100000000000000000001").RoundInt())
+	defaultAccountFunds := sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(200000000000)), sdk.NewCoin("usdc", sdk.NewInt(200000000000)))
+	defaultErrorTolerance := osmomath.ErrTolerance{
+		AdditiveTolerance: sdk.NewDec(100),
+		RoundingDir:       osmomath.RoundDown,
+	}
+
+	type param struct {
+		sender                sdk.AccAddress
+		sharesToMigrateDenom  string
+		sharesToMigrateAmount sdk.Int
+		poolIdEntering        uint64
+	}
+
+	tests := []struct {
+		name                   string
+		param                  param
+		expectedErr            error
+		sharesToCreate         sdk.Int
+		expectedPosition       *model.Position
+		setupPoolMigrationLink bool
+		errTolerance           osmomath.ErrTolerance
+	}{
+		{
+			name: "migrate all of the shares (with pool migration link)",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  defaultGammShares.Denom,
+				sharesToMigrateAmount: defaultGammShares.Amount,
+				poolIdEntering:        2,
+			},
+			sharesToCreate:         defaultGammShares.Amount,
+			expectedPosition:       &model.Position{Liquidity: sdk.MustNewDecFromStr("100000000000.000000010000000000")},
+			setupPoolMigrationLink: true,
+			errTolerance:           defaultErrorTolerance,
+		},
+		{
+			name: "migrate all of the shares (no pool migration link)",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  defaultGammShares.Denom,
+				sharesToMigrateAmount: defaultGammShares.Amount,
+				poolIdEntering:        2,
+			},
+			sharesToCreate:         defaultGammShares.Amount,
+			expectedPosition:       &model.Position{Liquidity: sdk.MustNewDecFromStr("100000000000.000000010000000000")},
+			setupPoolMigrationLink: false,
+			expectedErr:            types.PoolMigrationLinkNotFoundError{PoolIdLeaving: 1},
+			errTolerance:           defaultErrorTolerance,
+		},
+		{
+			name: "migrate half of the shares",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  defaultGammShares.Denom,
+				sharesToMigrateAmount: defaultGammShares.Amount.Quo(sdk.NewInt(2)),
+				poolIdEntering:        2,
+			},
+			sharesToCreate:         defaultGammShares.Amount,
+			expectedPosition:       &model.Position{Liquidity: sdk.MustNewDecFromStr("50000000000.000000005000000000")},
+			setupPoolMigrationLink: true,
+			errTolerance:           defaultErrorTolerance,
+		},
+		{
+			name: "double the created shares, migrate 1/4 of the shares",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  defaultGammShares.Denom,
+				sharesToMigrateAmount: defaultGammShares.Amount.Quo(sdk.NewInt(2)),
+				poolIdEntering:        2,
+			},
+			sharesToCreate:         defaultGammShares.Amount.Mul(sdk.NewInt(2)),
+			expectedPosition:       &model.Position{Liquidity: sdk.MustNewDecFromStr("49999999999.000000004999999999")},
+			setupPoolMigrationLink: true,
+			errTolerance:           defaultErrorTolerance,
+		},
+		{
+			name: "error: attempt to migrate more shares than the user has",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  defaultGammShares.Denom,
+				sharesToMigrateAmount: defaultGammShares.Amount.Add(sdk.NewInt(1)),
+				poolIdEntering:        2,
+			},
+			sharesToCreate:         defaultGammShares.Amount,
+			setupPoolMigrationLink: true,
+			expectedErr:            sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("%s is smaller than %s", defaultGammShares, invalidGammShares)),
+		},
+		{
+			name: "error: poolIdEntering is not the canonical link",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  defaultGammShares.Denom,
+				sharesToMigrateAmount: defaultGammShares.Amount,
+				poolIdEntering:        1,
+			},
+			sharesToCreate:         defaultGammShares.Amount,
+			setupPoolMigrationLink: true,
+			expectedErr:            types.InvalidPoolMigrationLinkError{PoolIdEntering: 1, CanonicalId: 2},
+		},
+	}
+
+	for _, test := range tests {
+		suite.SetupTest()
+		keeper := suite.App.GAMMKeeper
+
+		// Prepare both balancer and concentrated pools
+		suite.FundAcc(test.param.sender, defaultAccountFunds)
+		balancerPoolId := suite.PrepareBalancerPoolWithCoins(sdk.NewCoin("eth", sdk.NewInt(100000000000)), sdk.NewCoin("usdc", sdk.NewInt(100000000000)))
+		balancerPool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, balancerPoolId)
+		suite.Require().NoError(err)
+		clPool := suite.PrepareConcentratedPool()
+
+		// Set up canonical link between gamm and cl pool
+		if test.setupPoolMigrationLink {
+			record := types.BalancerToConcentratedPoolLink{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()}
+			err = keeper.ReplaceMigrationRecords(suite.Ctx, []types.BalancerToConcentratedPoolLink{record})
+			suite.Require().NoError(err)
+		}
+
+		// Note gamm and cl pool addresses
+		gammPoolAddress := balancerPool.GetAddress()
+		clPoolAddress := clPool.GetAddress()
+		minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetPrecisionFactorAtPriceOne())
+
+		// Join gamm pool to create gamm shares directed in the test case
+		_, _, err = suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, test.param.sender, balancerPoolId, test.sharesToCreate, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(999999999999999)), sdk.NewCoin("usdc", sdk.NewInt(999999999999999))))
+		suite.Require().NoError(err)
+
+		// Note gamm pool balance after joining gamm pool
+		gammPoolEthBalancePostJoin := suite.App.BankKeeper.GetBalance(suite.Ctx, gammPoolAddress, ETH)
+		gammPoolUsdcBalancePostJoin := suite.App.BankKeeper.GetBalance(suite.Ctx, gammPoolAddress, USDC)
+
+		// Note users gamm share balance after joining gamm pool
+		userGammBalancePostJoin := suite.App.BankKeeper.GetBalance(suite.Ctx, test.param.sender, "gamm/pool/1")
+
+		// Create migrate message
+		sharesToMigrate := sdk.NewCoin(test.param.sharesToMigrateDenom, test.param.sharesToMigrateAmount)
+
+		// Migrate the user's gamm shares to a full range concentrated liquidity position
+		amount0, amount1, _, _, err := keeper.Migrate(suite.Ctx, test.param.sender, sharesToMigrate, test.param.poolIdEntering)
+		if test.expectedErr != nil {
+			suite.Require().Error(err)
+			suite.Require().ErrorContains(err, test.expectedErr.Error())
+
+			// Assure the user's gamm shares still exist
+			userGammBalanceAfterFailedMigration := suite.App.BankKeeper.GetBalance(suite.Ctx, test.param.sender, "gamm/pool/1")
+			suite.Require().Equal(userGammBalancePostJoin.String(), userGammBalanceAfterFailedMigration.String())
+
+			// Assure cl pool has no balance after a failed migration.
+			clPoolEthBalanceAfterFailedMigration := suite.App.BankKeeper.GetBalance(suite.Ctx, clPoolAddress, ETH)
+			clPoolUsdcBalanceAfterFailedMigration := suite.App.BankKeeper.GetBalance(suite.Ctx, clPoolAddress, USDC)
+			suite.Require().Equal(sdk.NewInt(0), clPoolEthBalanceAfterFailedMigration.Amount)
+			suite.Require().Equal(sdk.NewInt(0), clPoolUsdcBalanceAfterFailedMigration.Amount)
+
+			// Assure the position was not created.
+			_, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick)
+			suite.Require().Error(err)
+			continue
+		}
+		suite.Require().NoError(err)
+
+		// Assure the expected position was created.
+		position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick)
+		suite.Require().NoError(err)
+		suite.Require().Equal(test.expectedPosition, position)
+
+		// Note gamm pool balance after migration
+		gammPoolEthBalancePostMigrate := suite.App.BankKeeper.GetBalance(suite.Ctx, gammPoolAddress, ETH)
+		gammPoolUsdcBalancePostMigrate := suite.App.BankKeeper.GetBalance(suite.Ctx, gammPoolAddress, USDC)
+
+		// Note user amount transferred to cl pool from gamm pool
+		userEthBalanceTransferredToClPool := gammPoolEthBalancePostJoin.Sub(gammPoolEthBalancePostMigrate)
+		userUsdcBalanceTransferredToClPool := gammPoolUsdcBalancePostJoin.Sub(gammPoolUsdcBalancePostMigrate)
+
+		// Note cl pool balance after migration
+		clPoolEthBalanceAfterMigration := suite.App.BankKeeper.GetBalance(suite.Ctx, clPoolAddress, ETH)
+		clPoolUsdcBalanceAfterMigration := suite.App.BankKeeper.GetBalance(suite.Ctx, clPoolAddress, USDC)
+
+		// The balance in the cl pool should be equal to what the user previously had in the gamm pool.
+		// This test is within 100 shares due to rounding that occurs from utilizing .000000000000000001 instead of 0.
+		suite.Require().Equal(0, test.errTolerance.Compare(userEthBalanceTransferredToClPool.Amount, clPoolEthBalanceAfterMigration.Amount))
+		suite.Require().Equal(0, test.errTolerance.Compare(userUsdcBalanceTransferredToClPool.Amount, clPoolUsdcBalanceAfterMigration.Amount))
+
+		// Assert user amount transferred to cl pool from gamm pool should be equal to the amount we migrated from the migrate message.
+		// This test is within 100 shares due to rounding that occurs from utilizing .000000000000000001 instead of 0.
+		suite.Require().Equal(0, test.errTolerance.Compare(userEthBalanceTransferredToClPool.Amount, amount0))
+		suite.Require().Equal(0, test.errTolerance.Compare(userUsdcBalanceTransferredToClPool.Amount, amount1))
+	}
+}
 
 func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 	tests := []struct {
