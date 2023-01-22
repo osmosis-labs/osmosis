@@ -41,6 +41,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+* Validator-Set Preference
+  * [#2892](https://github.com/osmosis-labs/osmosis/pull/2892) Module Wired up and created MsgSetValidatorSetPreference
+  * [#3620](https://github.com/osmosis-labs/osmosis/pull/3260) Add Msgs for Delegate and Undelegate Tokens
+  * [#3599](https://github.com/osmosis-labs/osmosis/pull/3599) Add RedelegateValidatorSet message
+  * [#3686](https://github.com/osmosis-labs/osmosis/pull/3686) Add WithdrawDelegationRewards message
+  * [#3843](https://github.com/osmosis-labs/osmosis/pull/3843) Cli support and tested SetValSet, DelValSet, UnDelValSet
+  * [#3810](https://github.com/osmosis-labs/osmosis/pull/3810) Allow migration of x/lockup uosmo to staking to a valset preference
+  * [#3966](https://github.com/osmosis-labs/osmosis/pull/3966) Add Redelegate, Withdraw cli commands and sim_msgs
 
 ### API breaks
 
