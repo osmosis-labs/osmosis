@@ -350,7 +350,10 @@ var (
 )
 
 func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
-	tests := swapOutGivenInCases
+	tests := make(map[string]SwapOutGivenInTest)
+	for name, test := range tests {
+		tests[name] = test
+	}
 
 	// add error cases as well
 	for name, test := range swapOutGivenInErrorCases {
