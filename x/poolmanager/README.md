@@ -73,7 +73,7 @@ Assume `balancer` pool is being created.
 
 1. `CreatePoolMsg` is received by the `x/gamm` message server.
 
-2. `CreatePool` `poolmanager` keeper method is called, propagating
+2. `CreatePool` keeper method is called  from `poolmanager`, propagating
 the appropriate implemenation of the `CreatePoolMsg` interface.
 
 ```go
