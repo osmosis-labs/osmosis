@@ -3,6 +3,7 @@ package gammsimulation
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -167,10 +168,12 @@ func RandomSwapExactAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Con
 		return nil, err
 	}
 
+	coins := pool.GetTotalPoolLiquidity(ctx)
+
 	// set the swap route to use this pool
 	route := []poolmanagertypes.SwapAmountOutRoute{{
 		PoolId:       pool_id,
-		TokenInDenom: coinIn.Denom,
+		TokenInDenom: coins[0].Denom,
 	}}
 
 	// find an address that has a balance of the coinIn
@@ -421,13 +424,9 @@ func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64
 		return 0, nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), []string{}, "", fmt.Errorf("no pools exist")
 	}
 
-	pool_id := uint64(simtypes.RandLTBound(sim, numPools) + 1)
+	pool := pools[rand.Intn(numPools)]
 
-	pool := pools[pool_id-1]
-	if err != nil {
-		return 0, nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), []string{}, "", err
-	}
-
+	pool_id := pool.GetId()
 	poolCoins := pool.GetTotalPoolLiquidity(ctx)
 
 	// TODO: Improve this, don't just assume two asset pools
