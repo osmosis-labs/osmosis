@@ -290,4 +290,4 @@ the swap fees on each hop would be automatically halved.
 Example: for converting `ATOM -> OSMO -> LUNA` using two pools with swap fees `0.3% + 0.2%`,
 instead `0.15% + 0.1%` fees will be aplied. 
 
-[Multi-Hop](https://github.com/osmosis-labs/osmosis/blob/main/x/poolmanager/router.go#)
+[Multi-Hop](https://github.com/osmosis-labs/osmosis/blob/f26ceb958adaaf31510e17ed88f5eab47e2bac03/x/poolmanager/router.go#L16)
