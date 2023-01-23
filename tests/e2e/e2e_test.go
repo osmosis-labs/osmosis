@@ -35,8 +35,9 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		denom1                    string = "uosmo"
 		tickSpacing               uint64 = 1
 		precisionFactorAtPriceOne int64  = -1
+		swapFee                          = "0.01"
 	)
-	poolID := node1.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, precisionFactorAtPriceOne)
+	poolID := node1.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, precisionFactorAtPriceOne, swapFee)
 
 	concentratedPool, err := node1.QueryConcentratedPool(poolID)
 	s.Require().NoError(err)
@@ -47,6 +48,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().Equal(concentratedPool.GetToken1(), denom1)
 	s.Require().Equal(concentratedPool.GetTickSpacing(), tickSpacing)
 	s.Require().Equal(concentratedPool.GetPrecisionFactorAtPriceOne(), sdk.NewInt(precisionFactorAtPriceOne))
+	s.Require().Equal(concentratedPool.GetSwapFee(sdk.Context{}), sdk.MustNewDecFromStr(swapFee))
 }
 
 // TestGeometricTwapMigration tests that the geometric twap record
