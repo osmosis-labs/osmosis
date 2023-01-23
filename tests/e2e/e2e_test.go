@@ -37,7 +37,6 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		precisionFactorAtPriceOne int64  = -1
 	)
 	poolID := node1.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, precisionFactorAtPriceOne)
-	fmt.Println("Concentrated Pool ID: ", poolID)
 
 	concentratedPool, err := node1.QueryConcentratedPool(poolID)
 	s.Require().NoError(err)
