@@ -601,6 +601,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(twaptypes.ModuleName)
 	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
 	paramsKeeper.Subspace(concentratedliquiditytypes.ModuleName)
+	paramsKeeper.Subspace(packetforwardtypes.ModuleName).WithKeyTable(packetforwardtypes.ParamKeyTable())
 
 	return paramsKeeper
 }
@@ -637,7 +638,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.IncentivesKeeper.SetHooks(
 		incentivestypes.NewMultiIncentiveHooks(
-		// insert incentive hooks receivers here
+			// insert incentive hooks receivers here
 		),
 	)
 
@@ -662,7 +663,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.GovKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// insert governance hooks receivers here
+			// insert governance hooks receivers here
 		),
 	)
 }
