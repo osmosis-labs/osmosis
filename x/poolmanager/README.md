@@ -210,7 +210,7 @@ Essentially, the method iterates over the routes and calls a `SwapExactAmountIn`
 for each, subsequently updating the inter-pool swap state.
 
 The routing works by querying the index `SwapModuleRouterPrefix`,
-searching up the `poolmanagerkeeper.router` mapping, and callig
+searching up the `poolmanagerkeeper.router` mapping, and calling
 `SwapExactAmountIn` method of the appropriate module.
 
 ```go
