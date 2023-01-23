@@ -123,18 +123,9 @@ the following formula:
 
 #### Multi-Hop
 
-All tokens are swapped using a multi-hop mechanism. That is, all swaps
-are routed via the most cost-efficient way, swapping in and out from
-multiple pools in the process. 
-The most cost-efficient route is determined offline and the list of the pools is provided externally, by user, during the broadcasting of the swapping transaction. 
-In the moment of the execution the provided route may not be the most cost efficient one anymore.
-
-When a trade consists of just two OSMO-included routes during a single transaction,
-the swap fees on each hop would be automatically halved. 
-Example: for converting `ATOM -> OSMO -> LUNA` using two pools with swap fees `0.3% + 0.2%`,
-instead `0.15% + 0.1%` fees will be aplied. 
-
-[Multi-Hop](https://github.com/osmosis-labs/osmosis/blob/main/x/gamm/keeper/multihop.go)
+The multi-hop logic is handled via `x/poolmanager` module.
+Please see for details:
+- https://github.com/osmosis-labs/osmosis/blob/main/x/poolmanager/README.md
 
 ## Weights
 
@@ -218,9 +209,15 @@ The `x/gamm` module supports the following message types:
 
 [MsgSwapExactAmountIn](https://github.com/osmosis-labs/osmosis/blob/v7.1.0/proto/osmosis/gamm/v1beta1/tx.proto#L68-L80)
 
+Note, that this message was deprecated and moved to `x/poolmanager`. Please use the `MsgSwapExactAmountIn` message
+in `x/poolmanager` instead.
+
 ### MsgSwapExactAmountOut
 
 [MsgSwapExactAmountOut](https://github.com/osmosis-labs/osmosis/blob/v7.1.0/proto/osmosis/gamm/v1beta1/tx.proto#L90-L102)
+
+Note, that this message was deprecated and moved to `x/poolmanager`. Please use the `MsgSwapExactAmountOut` message
+in `x/poolmanager` instead.
 
 ### MsgJoinSwapExternAmountIn
 

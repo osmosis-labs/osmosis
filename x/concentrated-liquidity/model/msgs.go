@@ -35,6 +35,7 @@ func NewMsgCreateConcentratedPool(
 		Denom1:                    denom1,
 		TickSpacing:               tickSpacing,
 		PrecisionFactorAtPriceOne: precisionFactorAtPriceOne,
+		SwapFee:                   swapFee,
 	}
 }
 
@@ -66,7 +67,10 @@ func (msg MsgCreateConcentratedPool) ValidateBasic() error {
 		return fmt.Errorf("denom1 is invalid: %s", sdk.ValidateDenom(msg.Denom1))
 	}
 
-	// TODO: validate swap fee and test
+	swapFee := msg.SwapFee
+	if swapFee.IsNegative() || swapFee.GTE(one) {
+		return cltypes.InvalidSwapFeeError{ActualFee: swapFee}
+	}
 
 	return nil
 }

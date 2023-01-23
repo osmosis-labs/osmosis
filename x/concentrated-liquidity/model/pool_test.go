@@ -29,6 +29,7 @@ var (
 	DefaultCurrPrice          = sdk.NewDec(5000)
 	DefaultCurrSqrtPrice, _   = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
 	DefaultExponentAtPriceOne = sdk.NewInt(-4)
+	DefaultSwapFee            = sdk.MustNewDecFromStr("0.01")
 )
 
 type ConcentratedPoolTestSuite struct {
@@ -169,6 +170,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 		denom1         string
 		tickSpacing    uint64
 		precisionValue sdk.Int
+		swapFee        sdk.Dec
 	}
 
 	tests := []struct {
@@ -188,6 +190,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 				denom1:         USDC,
 				tickSpacing:    DefaultTickSpacing,
 				precisionValue: DefaultExponentAtPriceOne,
+				swapFee:        DefaultSwapFee,
 			},
 			expectedPoolId:      DefaultValidPoolID,
 			expectedDenom0:      ETH,
@@ -202,6 +205,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 				denom1:         ETH,
 				tickSpacing:    DefaultTickSpacing,
 				precisionValue: DefaultExponentAtPriceOne,
+				swapFee:        sdk.ZeroDec(),
 			},
 			expectedPoolId:      DefaultValidPoolID,
 			expectedDenom0:      ETH,
@@ -216,6 +220,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 				denom1:         USDC,
 				tickSpacing:    DefaultTickSpacing,
 				precisionValue: types.ExponentAtPriceOneMax.Add(sdk.OneInt()),
+				swapFee:        DefaultSwapFee,
 			},
 			expectedErr: types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: types.ExponentAtPriceOneMax.Add(sdk.OneInt()), PrecisionValueAtPriceOneMin: types.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: types.ExponentAtPriceOneMax},
 		},
@@ -227,6 +232,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 				denom1:         USDC,
 				tickSpacing:    DefaultTickSpacing,
 				precisionValue: types.ExponentAtPriceOneMin.Sub(sdk.OneInt()),
+				swapFee:        DefaultSwapFee,
 			},
 			expectedErr: types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: types.ExponentAtPriceOneMin.Sub(sdk.OneInt()), PrecisionValueAtPriceOneMin: types.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: types.ExponentAtPriceOneMax},
 		},
@@ -238,8 +244,33 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 				denom1:         USDC,
 				tickSpacing:    DefaultTickSpacing,
 				precisionValue: DefaultExponentAtPriceOne,
+				swapFee:        DefaultSwapFee,
 			},
 			expectedErr: fmt.Errorf("cannot have the same asset in a single pool"),
+		},
+		{
+			name: "Error: negative swap fee",
+			param: param{
+				poolId:         DefaultValidPoolID,
+				denom0:         ETH,
+				denom1:         USDC,
+				tickSpacing:    DefaultTickSpacing,
+				precisionValue: DefaultExponentAtPriceOne,
+				swapFee:        sdk.ZeroDec().Sub(sdk.SmallestDec()),
+			},
+			expectedErr: types.InvalidSwapFeeError{ActualFee: sdk.ZeroDec().Sub(sdk.SmallestDec())},
+		},
+		{
+			name: "Error: swap fee == 1",
+			param: param{
+				poolId:         DefaultValidPoolID,
+				denom0:         ETH,
+				denom1:         USDC,
+				tickSpacing:    DefaultTickSpacing,
+				precisionValue: DefaultExponentAtPriceOne,
+				swapFee:        sdk.OneDec(),
+			},
+			expectedErr: types.InvalidSwapFeeError{ActualFee: sdk.OneDec()},
 		},
 	}
 
@@ -249,8 +280,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 			s.Setup()
 
 			// Call NewConcentratedLiquidityPool with the parameters from the current test.
-			// TODO: test fee
-			pool, err := model.NewConcentratedLiquidityPool(test.param.poolId, test.param.denom0, test.param.denom1, test.param.tickSpacing, test.param.precisionValue, sdk.ZeroDec())
+			pool, err := model.NewConcentratedLiquidityPool(test.param.poolId, test.param.denom0, test.param.denom1, test.param.tickSpacing, test.param.precisionValue, test.param.swapFee)
 
 			if test.expectedErr != nil {
 				// If the test is expected to produce an error, check if it does.
@@ -265,6 +295,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 				s.Require().Equal(test.expectedDenom0, pool.Token0)
 				s.Require().Equal(test.expectedDenom1, pool.Token1)
 				s.Require().Equal(test.expectedTickSpacing, pool.TickSpacing)
+				s.Require().Equal(test.param.swapFee, pool.SwapFee)
 			}
 		})
 	}
