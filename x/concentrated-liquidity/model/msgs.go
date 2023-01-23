@@ -7,7 +7,6 @@ import (
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
@@ -70,7 +69,7 @@ func (msg MsgCreateConcentratedPool) ValidateBasic() error {
 
 	swapFee := msg.SwapFee
 	if swapFee.IsNegative() || swapFee.GTE(one) {
-		return types.InvalidSwapFeeError{ActualFee: swapFee}
+		return cltypes.InvalidSwapFeeError{ActualFee: swapFee}
 	}
 
 	return nil
