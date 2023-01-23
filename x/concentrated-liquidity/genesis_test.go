@@ -63,7 +63,7 @@ func TestInitGenesis(t *testing.T) {
 	require.Equal(t, testGenesis.Params.String(), clParamsAfterInitialization.String())
 	clPoolsAfterInitialization, err := app.ConcentratedLiquidityKeeper.GetAllPools(ctx)
 	require.NoError(t, err)
-	require.GreaterOrEqual(t, len(clPoolsAfterInitialization), 0)
+	require.Equal(t, len(clPoolsAfterInitialization), 2)
 	for i := 0; i < len(clPoolsAfterInitialization); i++ {
 		require.Equal(t, &testGenesisPools[i], clPoolsAfterInitialization[i])
 	}
