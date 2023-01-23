@@ -283,8 +283,7 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 		{
 			name: "initialize a CL pool which cause panic",
 			createPool: func() poolmanagertypes.PoolI {
-				clPool := suite.PrepareConcentratedPool()
-				return clPool
+				return suite.PrepareConcentratedPool()
 			},
 			expectPanic: true,
 		},
